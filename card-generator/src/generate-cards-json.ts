@@ -1,3 +1,4 @@
+import { sortBy } from 'lodash'
 import type { Song } from './data/songs'
 import { shuffleArrayWithSeed } from './utils/arrays'
 
@@ -18,13 +19,14 @@ function makeQuinaCard(id: string, allSongs: Song[], seed: string) {
   }
 
   const shuffledSongs = shuffleArrayWithSeed(allSongs, seed)
+  const cardSongs = sortBy(shuffledSongs.slice(0, 12), 'title')
 
   const quinaCard: QuinaCard = {
     id: id,
     lines: [
-      shuffledSongs.slice(0, 4),
-      shuffledSongs.slice(4, 8),
-      shuffledSongs.slice(8, 12),
+      cardSongs.slice(0, 4),
+      cardSongs.slice(4, 8),
+      cardSongs.slice(8, 12),
     ] as QuinaCard['lines'],
   }
 
