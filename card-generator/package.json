@@ -1,0 +1,33 @@
+{
+  "name": "card-generator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx nodemon",
+    "start": "npm run build && node build/index.js",
+    "build": "rimraf ./build && rimraf ./dist && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/barrakudesbegur/quina-musical.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/barrakudesbegur/quina-musical/issues"
+  },
+  "homepage": "https://github.com/barrakudesbegur/quina-musical#readme",
+  "description": "",
+  "dependencies": {
+    "jspdf": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/seedrandom": "^3.0.8",
+    "nodemon": "^3.1.9",
+    "rimraf": "^6.0.1",
+    "seedrandom": "^3.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

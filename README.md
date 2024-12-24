@@ -1,1 +1,1 @@
-# quina-musical
+# Quina Musical
