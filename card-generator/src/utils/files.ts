@@ -21,6 +21,4 @@ export async function saveJsonToFile(
     : JSON.stringify(data)
 
   await writeFile(outputPath, jsonData, 'utf-8')
-
-  console.log(`File saved as ${filename}`)
 }

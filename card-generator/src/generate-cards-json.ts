@@ -2,7 +2,7 @@ import type { Song } from './data/songs'
 import { shuffleArrayWithSeed } from './utils/arrays'
 
 export type QuinaCard = {
-  id: number
+  id: string
   lines: [
     [Song, Song, Song, Song],
     [Song, Song, Song, Song],
@@ -10,7 +10,7 @@ export type QuinaCard = {
   ]
 }
 
-function makeQuinaCard(id: number, allSongs: Song[], seed: string) {
+function makeQuinaCard(id: string, allSongs: Song[], seed: string) {
   if (allSongs.length < 12) {
     throw new Error(
       'Not enough songs to generate a card - need at least 12 songs'
@@ -37,6 +37,7 @@ export function generateQuinaCardsJson(
   seed: string
 ) {
   return Array.from({ length: amount }, (_, i) => {
-    return makeQuinaCard(i + 1, songs, `${seed}${i}`)
+    const id = (i + 1).toLocaleString()
+    return makeQuinaCard(id, songs, `${seed}-${id}`)
   })
 }
