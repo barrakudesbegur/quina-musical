@@ -13,7 +13,7 @@ import { Style } from '@react-pdf/types'
 import { chunk } from 'lodash'
 import { join } from 'path'
 import React from 'react'
-import { QuinaCard } from './generate-cards-json'
+import { Card } from './generate-cards-json'
 
 ////////////////////////////////////////////////////////////////////////////////
 // 1) Register Fonts
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
 ////////////////////////////////////////////////////////////////////////////////
 
 const QuinaCardComponent: React.FC<{
-  card: QuinaCard
+  card: Card
   style?: Style
 }> = ({ card, style }) => {
   return (
@@ -245,7 +245,7 @@ const QuinaCardComponent: React.FC<{
 ////////////////////////////////////////////////////////////////////////////////
 
 const QuinaPDF: React.FC<{
-  quinaCards: QuinaCard[]
+  quinaCards: Card[]
 }> = ({ quinaCards }) => {
   const chunkedCards = chunk(quinaCards, 3)
 
@@ -280,6 +280,6 @@ const QuinaPDF: React.FC<{
 // 5) Generate the PDF
 ////////////////////////////////////////////////////////////////////////////////
 
-export function generateQuinaCardsPDF(data: QuinaCard[], outputPath: string) {
+export function generateQuinaCardsPDF(data: Card[], outputPath: string) {
   render(<QuinaPDF quinaCards={data} />, outputPath)
 }
