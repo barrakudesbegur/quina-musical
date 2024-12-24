@@ -1,6 +1,6 @@
 import { generateQuinaCardsJson } from './generate-cards-json'
 import { songs } from './data/songs'
-import { generateQuinaCardsPDF } from './generate-cards-pdf'
+import { generateQuinaCardsPDF } from './generate-cards-pdf-with-jspdf'
 import { saveJsonToFile } from './utils/files'
 
 const SEED = 'barrakudes-2024-cigronet'
