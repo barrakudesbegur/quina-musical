@@ -20,7 +20,6 @@
   "description": "",
   "dependencies": {
     "@react-pdf/renderer": "^4.1.5",
-    "jspdf": "^2.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
