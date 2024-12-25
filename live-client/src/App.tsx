@@ -1,12 +1,11 @@
-import ExampleComponent from './components/ExampleComponent'
+import { FC } from 'react'
+import { Main } from './components/Main'
 import { Providers } from './components/Providers'
 
-function App() {
+export const App: FC = () => {
   return (
     <Providers>
-      <ExampleComponent />
+      <Main />
     </Providers>
   )
 }
-
-export default App
