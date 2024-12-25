@@ -2,9 +2,13 @@ import { createHTTPServer } from '@trpc/server/adapters/standalone'
 import { appRouter } from './api/index.js'
 import cors from 'cors'
 
+if (!process.env.CLIENT_URL) {
+  throw new Error('Environment variable "CLIENT_URL" is missing.')
+}
+
 const server = createHTTPServer({
   middleware: cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CLIENT_URL,
     credentials: true,
   }),
   router: appRouter,

@@ -8,6 +8,10 @@ import {
 import { FC, PropsWithChildren, useState } from 'react'
 import { trpc } from '../utils/trpc'
 
+if (!import.meta.env.VITE_API_URL) {
+  throw new Error('Environment variable "VITE_API_URL" is missing.')
+}
+
 export const Providers: FC<PropsWithChildren> = ({ children }) => {
   const [queryClient] = useState(() => new QueryClient())
   const [trpcClient] = useState(() =>
@@ -16,10 +20,10 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
         splitLink({
           condition: (op) => op.type === 'subscription',
           true: unstable_httpSubscriptionLink({
-            url: 'http://localhost:3000',
+            url: import.meta.env.VITE_API_URL,
           }),
           false: unstable_httpBatchStreamLink({
-            url: 'http://localhost:3000',
+            url: import.meta.env.VITE_API_URL,
             fetch(url, options) {
               return fetch(url, {
                 ...options,

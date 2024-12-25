@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src"
+    "dev": "tsx --env-file=.env.development --watch src"
   },
   "dependencies": {
     "@trpc/client": "^11.0.0-rc.666",
