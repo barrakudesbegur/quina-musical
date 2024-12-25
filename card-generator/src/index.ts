@@ -5,7 +5,7 @@ import { saveJsonToFile } from './utils/files'
 
 const SEED = 'barrakudes-2024-cigronet'
 
-const quinaCards = generateQuinaCardsJson(201, songs, SEED)
+const quinaCards = generateQuinaCardsJson(300, songs, SEED)
 saveJsonToFile(quinaCards, './dist/quinaCards.json')
 
 generateQuinaCardsPDF(quinaCards, './dist/quinaCards.pdf')
