@@ -1,16 +1,20 @@
 import { songs } from './data/songs'
-import { generateQuinaCardsJson } from './generate-cards-json'
-import { generateQuinaCardsPDF } from './generate-cards-pdf'
+import { generateCardsJson } from './generate-cards-json'
+import { generateCardsPDF } from './generate-cards-pdf'
 import { saveJsonToFile } from './utils/files'
 
 const SEED = 'barrakudes-2024-cigronet'
 
-const quinaCards = generateQuinaCardsJson(300, songs, SEED)
-saveJsonToFile(quinaCards, './dist/quinaCards.json')
+const cards = generateCardsJson(300, songs, SEED)
+saveJsonToFile(cards, './dist/cards.json')
 
-generateQuinaCardsPDF(quinaCards, './dist/quinaCards.pdf')
-
-// prettier-ignore
-const emojis = ['🎄','🎅','🎁','❄️','⛄','🔔','🕯️','🦌','🤶','🌟','🎶','🎵','🎉','🎊','🎈','🎂','🎇','🎆','🎑','🎀']
-const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-console.log(`${emoji} Quina cards generated successfully!`)
+generateCardsPDF(cards, './dist/cards.pdf')
+  .then(() => {
+    // prettier-ignore
+    const emojis = ['🎄','🎅','🎁','❄️','⛄','🔔','🕯️','🦌','🤶','🌟','🎶','🎵','🎉','🎊','🎈','🎂','🎇','🎆','🎑','🎀']
+    const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+    console.log(`${emoji} Cards generated successfully!`)
+  })
+  .catch((error) => {
+    throw error
+  })

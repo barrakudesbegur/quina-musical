@@ -182,10 +182,10 @@ const styles = StyleSheet.create({
 })
 
 ////////////////////////////////////////////////////////////////////////////////
-// 3) Quina Card Component
+// 3) Card Component
 ////////////////////////////////////////////////////////////////////////////////
 
-const QuinaCardComponent: React.FC<{
+const CardComponent: React.FC<{
   card: Card
   style?: Style
 }> = ({ card, style }) => {
@@ -244,10 +244,10 @@ const QuinaCardComponent: React.FC<{
 // 4) The Main PDF Document
 ////////////////////////////////////////////////////////////////////////////////
 
-const QuinaPDF: React.FC<{
-  quinaCards: Card[]
-}> = ({ quinaCards }) => {
-  const chunkedCards = chunk(quinaCards, 3)
+const AllCardsDocument: React.FC<{
+  cards: Card[]
+}> = ({ cards }) => {
+  const chunkedCards = chunk(cards, 3)
 
   return (
     <Document>
@@ -260,7 +260,7 @@ const QuinaPDF: React.FC<{
           {threeCards.map((card, index) => {
             const isLast = index === threeCards.length - 1
             return (
-              <QuinaCardComponent
+              <CardComponent
                 card={card}
                 style={{
                   borderBottom: isLast ? undefined : '1px dashed #f0f0f0',
@@ -280,6 +280,6 @@ const QuinaPDF: React.FC<{
 // 5) Generate the PDF
 ////////////////////////////////////////////////////////////////////////////////
 
-export function generateQuinaCardsPDF(data: Card[], outputPath: string) {
-  render(<QuinaPDF quinaCards={data} />, outputPath)
+export async function generateCardsPDF(data: Card[], outputPath: string) {
+  await render(<AllCardsDocument cards={data} />, outputPath)
 }

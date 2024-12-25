@@ -23,7 +23,7 @@ function makeCard(id: string, allSongs: Song[], seed: string) {
 
   const shuffledSongs = shuffleArrayWithSeed(allSongs, seed)
 
-  const quinaCard: Card = {
+  const card: Card = {
     id: id,
     lines: [
       sortBy(shuffledSongs.slice(0, 4), 'title'),
@@ -32,7 +32,7 @@ function makeCard(id: string, allSongs: Song[], seed: string) {
     ] as Card['lines'],
   }
 
-  return quinaCard
+  return card
 }
 
 function cardToUniqueKey(card: Card) {
@@ -44,11 +44,7 @@ function cardToUniqueKey(card: Card) {
   )
 }
 
-export function generateQuinaCardsJson(
-  amount: number,
-  songs: Song[],
-  seed: string
-) {
+export function generateCardsJson(amount: number, songs: Song[], seed: string) {
   const ids = Array.from({ length: amount }, (_, i) => (i + 1).toLocaleString())
 
   const bingosSoFar = new Set<string>()
