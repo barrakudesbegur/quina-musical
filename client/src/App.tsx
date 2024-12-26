@@ -1,11 +1,15 @@
 import { FC } from 'react'
+import { GameStatusScreen } from './components/GameStatusScreen'
 import { Main } from './components/Main'
-import { Providers } from './components/Providers'
+import { trpc } from './utils/trpc'
 
 export const App: FC = () => {
-  return (
-    <Providers>
-      <Main />
-    </Providers>
+  const gameStatus = trpc.game.getStatus.useQuery()
+
+  return gameStatus.data?.status === 'ongoing' ||
+    gameStatus.data?.status === 'paused' ? (
+    <Main />
+  ) : (
+    <GameStatusScreen status={gameStatus.data?.status ?? 'not-avilable'} />
   )
 }
