@@ -77,7 +77,7 @@ export const GameStatusScreen: FC<{
   return (
     <main className="min-h-dvh w-dvw flex items-center justify-center flex-col text-center text-balance gap-4 px-4">
       <Icon size={48} stroke={1.5} />
-      <h1 className="text-3xl font-bold uppercase tracking-wide">{label}</h1>
+      <h1 className="text-4xl font-normal uppercase">{label}</h1>
       {description && <p className="text-lg">{description}</p>}
     </main>
   )

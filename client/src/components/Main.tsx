@@ -7,10 +7,12 @@ export const Main: FC = () => {
 
   return (
     <main className="container mx-auto px-4 py-16">
-      <h1 className="text-3xl mb-2">Quina musical</h1>
+      <h1 className="text-4xl font-normal text-center tracking-widest mb-2 uppercase">
+        Quina musical
+      </h1>
       <Card>
         <CardHeader>
-          <h1 className="text-lg font-bold">Totes les cançons</h1>
+          <h1 className="text-xl font-normal uppercase">Totes les cançons</h1>
         </CardHeader>
         <Divider />
         <CardBody>
