@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "install",
+      "type": "shell",
+      "command": "npm i",
+      "presentation": {
+        "echo": true,
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "close": true
+      }
+    },
+    {
+      "label": "dev:client",
+      "type": "shell",
+      "command": "npm run dev:client",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "dev:server",
+      "type": "shell",
+      "command": "npm run dev:server",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "dev",
+      "type": "shell",
+      "dependsOrder": "parallel",
+      "dependsOn": ["dev:client", "dev:server"]
+    },
+    {
+      "label": "Install and run",
+      "dependsOrder": "sequence",
+      "dependsOn": ["install", "dev"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    }
+  ]
+}
