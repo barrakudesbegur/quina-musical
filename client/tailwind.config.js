@@ -21,6 +21,10 @@ export default {
         'widest-3': '0.2em',
         'widest-4': '0.4em',
       },
+      screens: {
+        xs: '475px',
+        xs2: '375px',
+      },
     },
   },
   darkMode: 'class',

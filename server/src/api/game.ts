@@ -1,7 +1,7 @@
 import { publicProcedure, router } from '../trpc.js'
 import songs from '../../db/default/songs.json' with { type: 'json' }
 
-const shuffledSongs = songs.sort(() => Math.random() - 0.5)
+// const shuffledSongs = songs.sort(() => Math.random() - 0.5)
 
 export const gameRouter = router({
   getStatus: publicProcedure.query(async () => {
@@ -12,13 +12,17 @@ export const gameRouter = router({
   // TODO: This is fake data
   playedSongs: publicProcedure.query(async () => {
     const nowSeconds = Math.floor(Date.now() / 1000)
-    const count = Math.floor((nowSeconds / 5) % shuffledSongs.length)
-    return shuffledSongs
+    const count = Math.floor((nowSeconds / 5) % songs.length)
+    // const count = 43
+    const playedSongs = songs
       .slice(0, count)
       .map((song, index) => ({
         ...song,
         position: index + 1,
       }))
-      .toReversed()
+      // Sort in descending order
+      .sort((a, b) => b.position - a.position)
+
+    return playedSongs
   }),
 })
