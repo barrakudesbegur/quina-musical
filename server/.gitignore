@@ -1,6 +1,7 @@
 node_modules
-dist
+/dist
 .DS_Store
-db/local
+/db/local
 *.local
 .env
+/cloudflared/credentials.json

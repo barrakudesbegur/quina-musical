@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --env-file=.env.development --watch src"
+    "dev": "tsx --env-file=.env.development --watch src",
+    "start": "node --env-file=.env.production dist/src/index.js",
+    "production": "run-p cloudflared start",
+    "cloudflared": "cloudflared tunnel --config ./cloudflared/config.yaml run quina-api"
   },
   "dependencies": {
     "@trpc/server": "^11.0.0-rc.666",
