@@ -3,7 +3,9 @@ import { FC } from 'react'
 import { trpc } from '../utils/trpc'
 
 export const Main: FC = () => {
-  const songs = trpc.song.getAll.useQuery()
+  const playedSongs = trpc.game.playedSongs.useQuery(undefined, {
+    refetchInterval: 1_000,
+  })
 
   return (
     <main className="container mx-auto px-4 py-16">
@@ -17,7 +19,7 @@ export const Main: FC = () => {
         <Divider />
         <CardBody>
           <pre>
-            <code>{JSON.stringify(songs.data, null, 2)}</code>
+            <code>{JSON.stringify(playedSongs.data, null, 2)}</code>
           </pre>
         </CardBody>
       </Card>
