@@ -9,6 +9,7 @@ import {
   IconPower,
   IconGift,
   TablerIcon,
+  IconLoader,
 } from '@tabler/icons-react'
 
 type GameStatusInfo<T extends string | null | undefined = string> = {
@@ -32,6 +33,12 @@ const {
     icon: IconPlayerPause,
   }),
   [
+    {
+      id: 'loading',
+      label: 'Carregant',
+      description: 'Espera un segon...',
+      icon: IconLoader,
+    },
     {
       id: 'not-avilable',
       label: 'Sistema apagat',
@@ -69,6 +76,7 @@ const {
 type GameStatus =
   | inferProcedureOutput<AppRouter['game']['getStatus']>['status']
   | 'not-avilable'
+  | 'loading'
 
 export const GameStatusScreen: FC<{
   status: GameStatus
