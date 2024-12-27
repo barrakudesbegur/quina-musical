@@ -16,6 +16,7 @@ export const Main: FC = () => {
   const playedSongs = trpc.game.playedSongs.useQuery(undefined, {
     refetchInterval: 1_000,
   })
+  const gameRound = trpc.game.gameRound.useQuery()
 
   const lastPlayedSong = useMemo(
     () => playedSongs.data?.[0],
@@ -32,7 +33,7 @@ export const Main: FC = () => {
 
   return (
     <main className="bg-[#8B1538] text-white min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
-      <div className="sticky top-0 inset-x-0 z-30">
+      <div className="sticky top-0 inset-x-0 z-30 overflow-hidden">
         <img
           src={decorationLeft}
           alt="Decoration Left"
@@ -105,13 +106,13 @@ export const Main: FC = () => {
       </div>
 
       <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] hidden md:grid grid-cols-[repeat(3,1fr)] items-center justify-center content-end overflow-visible">
-        <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] w-full flex items-center self-end justify-center col-span-2 z-10">
+        <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] w-full flex items-center self-end justify-center col-span-2 z-10 min-w-0">
           <p className="text-[calc(clamp(10rem,20dvw,30dvh)*0.25)] -mt-4 uppercase tracking-widest text-[#FFD7A3] leading-none -mr-[calc(100dvw/3/6)]">
             quina.barrakudesbegur.org
           </p>
         </div>
 
-        <div className="h-full w-full relative col-span-1 bg-[#8B1538] pt-2">
+        <div className="h-full w-full relative col-span-1 bg-[#8B1538] pt-2 flex justify-between">
           <div className="absolute bottom-[calc(100%-1px)] left-0 w-full h-[calc(clamp(5rem,20dvw,30dvh)*0.75)] bg-gradient-to-b from-transparent to-[#8B1538]"></div>
           <div className="w-[clamp(5rem,20dvw,30dvh)] p-[calc(clamp(5rem,20dvw,30dvh)*0.06)] ml-[calc(100dvw/3/6)] bg-white rounded-t-[7%] aspect-square">
             <QRCode
@@ -119,6 +120,24 @@ export const Main: FC = () => {
               className="w-full h-full z-20"
             />
           </div>
+          {gameRound.data && (
+            <p className="text-[calc(clamp(10rem,20dvw,30dvh)*0.125)] px-2 flex flex-1 flex-col items-center justify-center leading-none gap-[0.25em] uppercase tracking-widest">
+              <span className="font-light">quina</span>
+              <span
+                className={cn(
+                  gameRound.data.name.length <= 1
+                    ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.4)] font-thin'
+                    : gameRound.data.name.length <= 3
+                      ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.35)] font-thin'
+                      : 'tracking-normal',
+                  gameRound.data.name.length >= 6 &&
+                    'text-[calc(clamp(10rem,20dvw,30dvh)*0.1)]'
+                )}
+              >
+                {gameRound.data.name}
+              </span>
+            </p>
+          )}
         </div>
       </div>
     </main>

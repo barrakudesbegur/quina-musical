@@ -23,4 +23,9 @@ export const gameRouter = router({
 
     return playedSongs
   }),
+  gameRound: publicProcedure.query(async () => {
+    return {
+      name: '12',
+    }
+  }),
 })

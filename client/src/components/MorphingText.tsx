@@ -80,7 +80,7 @@ export const MorphingText: FC<{
       {/* Invisible placeholder to maintain height */}
       <span
         className={cn(
-          'invisible transition-[font-size] duration-1000',
+          'invisible transition-[font-size,letter-spacing] duration-1000',
           classNames.text
         )}
       >
@@ -94,7 +94,7 @@ export const MorphingText: FC<{
         <span
           ref={text1Ref}
           className={cn(
-            'absolute inset-0 flex items-center justify-center transition-[font-size] duration-1000',
+            'absolute inset-0 flex items-center justify-center transition-[font-size,letter-spacing] duration-1000',
             classNames.text
           )}
         >
@@ -103,7 +103,7 @@ export const MorphingText: FC<{
         <span
           ref={text2Ref}
           className={cn(
-            'absolute inset-0 flex items-center justify-center transition-[font-size] duration-1000',
+            'absolute inset-0 flex items-center justify-center transition-[font-size,letter-spacing] duration-1000',
             classNames.text
           )}
         >
