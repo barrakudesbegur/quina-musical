@@ -23,6 +23,11 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
           true: unstable_httpSubscriptionLink({
             url: import.meta.env.VITE_API_URL,
             transformer: superjson,
+            eventSourceOptions() {
+              return {
+                withCredentials: true,
+              }
+            },
           }),
           false: unstable_httpBatchStreamLink({
             url: import.meta.env.VITE_API_URL,
