@@ -92,7 +92,7 @@ export const Main: FC = () => {
           {game.data?.playedSongs.map((song) => (
             <li
               className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance"
-              key={song.id}
+              key={`${song.id}-${song.position}`}
             >
               <span className="text-white/40 font-thin">{song.position}.</span>{' '}
               {song.title}
