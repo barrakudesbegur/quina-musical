@@ -1,7 +1,10 @@
+import { EventEmitter, on } from 'events'
 import { z } from 'zod'
-import { publicProcedure, router } from '../trpc.js'
 import songs from '../../db/default/songs.json' with { type: 'json' }
 import { gameDb } from '../db/game.js'
+import { publicProcedure, router } from '../trpc.js'
+
+const ee = new EventEmitter()
 
 export const gameRouter = router({
   getStatus: publicProcedure.query(async () => {
@@ -78,6 +81,7 @@ export const gameRouter = router({
           playedAt: Date.now(),
         })
         await gameDb.write()
+        emitUpdate()
       }
     }),
 
@@ -86,6 +90,7 @@ export const gameRouter = router({
     if (gameDb.data.currentRound.playedSongs.length > 0) {
       gameDb.data.currentRound.playedSongs.pop()
       await gameDb.write()
+      emitUpdate()
     }
   }),
 
@@ -94,11 +99,12 @@ export const gameRouter = router({
   }),
 
   updateRoundName: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
+    .input(z.object({ name: z.string() }))
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return
       gameDb.data.currentRound.name = input.name
       await gameDb.write()
+      emitUpdate()
     }),
 
   finishRound: publicProcedure
@@ -133,6 +139,7 @@ export const gameRouter = router({
       }
 
       await gameDb.write()
+      emitUpdate()
     }),
 
   resumeGame: publicProcedure.mutation(async () => {
@@ -153,6 +160,7 @@ export const gameRouter = router({
     }
 
     await gameDb.write()
+    emitUpdate()
   }),
 
   getPastRounds: publicProcedure.query(async () => {
@@ -179,5 +187,38 @@ export const gameRouter = router({
     }
 
     await gameDb.write()
+    emitUpdate()
+  }),
+
+  onStateChange: publicProcedure.subscription(async function* ({ signal }) {
+    const getState = () =>
+      !gameDb.data.currentRound
+        ? { round: null, playedSongs: [] }
+        : {
+            round: {
+              name: gameDb.data.currentRound.name,
+              position: gameDb.data.currentRound.position,
+            },
+            playedSongs: gameDb.chain
+              .get('currentRound.playedSongs')
+              .map((played) => {
+                const song = songs.find((s) => s.id === played.id)
+                if (!song) return null
+                return { ...song, position: played.position }
+              })
+              .filter((song) => song !== null)
+              .orderBy(['position'], ['desc'])
+              .value(),
+          }
+
+    // Emit initial state
+    yield getState()
+
+    // Listen for updates
+    for await (const [_] of on(ee, 'update', { signal })) {
+      yield getState()
+    }
   }),
 })
+
+const emitUpdate = () => ee.emit('update')

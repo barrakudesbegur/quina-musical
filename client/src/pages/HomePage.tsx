@@ -13,11 +13,16 @@ export const HomePage: FC = () => {
     if (parent.current) autoAnimate(parent.current)
   }, [parent])
 
-  const game = trpc.game.getState.useQuery(undefined, {
-    refetchInterval: 1_000,
+  const gameState = trpc.game.onStateChange.useSubscription(undefined, {
+    onError(err) {
+      console.error('Subscription error:', err)
+    },
   })
 
-  const lastPlayedSong = useMemo(() => game.data?.playedSongs[0], [game.data])
+  const lastPlayedSong = useMemo(
+    () => gameState.data?.playedSongs[0],
+    [gameState.data]
+  )
 
   const previousTitle = useRef(lastPlayedSong?.title ?? '')
   const previousArtist = useRef(lastPlayedSong?.artist ?? '')
@@ -89,7 +94,7 @@ export const HomePage: FC = () => {
           ref={parent}
           className="flex flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2"
         >
-          {game.data?.playedSongs.map((song) => (
+          {gameState.data?.playedSongs.map((song) => (
             <li
               className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance"
               key={`${song.id}-${song.position}`}
@@ -116,21 +121,21 @@ export const HomePage: FC = () => {
               className="w-full h-full z-20"
             />
           </div>
-          {game.data?.round && (
+          {gameState.data?.round?.name && (
             <p className="text-[calc(clamp(10rem,20dvw,30dvh)*0.125)] px-2 flex flex-1 flex-col items-center justify-center leading-none gap-[0.25em] uppercase tracking-widest">
               <span className="font-light">quina</span>
               <span
                 className={cn(
-                  game.data.round.name.length <= 1
+                  gameState.data.round.name.length <= 1
                     ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.4)] font-thin'
-                    : game.data.round.name.length <= 3
+                    : gameState.data.round.name.length <= 3
                       ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.35)] font-thin'
                       : 'tracking-normal',
-                  game.data.round.name.length >= 6 &&
+                  gameState.data.round.name.length >= 6 &&
                     'text-[calc(clamp(10rem,20dvw,30dvh)*0.1)]'
                 )}
               >
-                {game.data.round.name}
+                {gameState.data.round.name}
               </span>
             </p>
           )}

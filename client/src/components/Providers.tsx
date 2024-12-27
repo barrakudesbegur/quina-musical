@@ -7,6 +7,7 @@ import {
 } from '@trpc/client'
 import { FC, PropsWithChildren, useState } from 'react'
 import { trpc } from '../utils/trpc'
+import superjson from 'superjson'
 
 if (!import.meta.env.VITE_API_URL) {
   throw new Error('Environment variable "VITE_API_URL" is missing.')
@@ -21,9 +22,11 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
           condition: (op) => op.type === 'subscription',
           true: unstable_httpSubscriptionLink({
             url: import.meta.env.VITE_API_URL,
+            transformer: superjson,
           }),
           false: unstable_httpBatchStreamLink({
             url: import.meta.env.VITE_API_URL,
+            transformer: superjson,
             fetch(url, options) {
               return fetch(url, {
                 ...options,
