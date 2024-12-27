@@ -1,5 +1,15 @@
+import { z } from 'zod'
 import { publicProcedure, router } from '../trpc.js'
 import songs from '../../db/default/songs.json' with { type: 'json' }
+
+interface PlayedSong {
+  id: string
+  position: number
+  playedAt: number
+}
+
+// Store played songs with their position
+const playedSongs: PlayedSong[] = []
 
 export const gameRouter = router({
   getStatus: publicProcedure.query(async () => {
@@ -29,6 +39,33 @@ export const gameRouter = router({
     }
   }),
   getAllSongs: publicProcedure.query(async () => {
-    return songs.slice().sort((a, b) => a.title.localeCompare(b.title))
+    return songs
+      .slice()
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map((song) => {
+        const played = playedSongs.find((p) => p.id === song.id)
+        return {
+          ...song,
+          isPlayed: !!played,
+          playedPosition: played?.position,
+        }
+      })
+  }),
+  playSong: publicProcedure
+    .input(z.object({ songId: z.string() }))
+    .mutation(async ({ input }) => {
+      const alreadyPlayed = playedSongs.some((p) => p.id === input.songId)
+      if (!alreadyPlayed) {
+        playedSongs.push({
+          id: input.songId,
+          position: playedSongs.length + 1,
+          playedAt: Date.now(),
+        })
+      }
+    }),
+  undoLastPlayed: publicProcedure.mutation(async () => {
+    if (playedSongs.length > 0) {
+      playedSongs.pop()
+    }
   }),
 })
