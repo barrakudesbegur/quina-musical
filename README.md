@@ -8,12 +8,15 @@ Use it here: <https://quina.barrakudesbegur.org>
 
 Features:
 
-- 🎶 Displays the curently playing song.
-- ⏳ Displays the played songs history.
+- 🎶 Displays the curently playing song, history, and round info.
 - 📱 Big screen view and mobile view.
 - ⚡️ Real-time updates.
+- 💰 Free deployment.
+- 🎯 Admin to pick the next song, undo, manage rounds, etc.
+- 📄 Saves history in a `json` file.
+- 🦖 System down screen.
 
-https://github.com/user-attachments/assets/eacd44d1-6aec-4d63-bb7c-5e443f72a0bb
+<https://github.com/user-attachments/assets/eacd44d1-6aec-4d63-bb7c-5e443f72a0bb>
 
 ## Deployment
 
