@@ -9,8 +9,8 @@ export const gameRouter = router({
   }),
   getState: publicProcedure.query(async () => {
     const nowSeconds = Math.floor(Date.now() / 1000)
-    const count = Math.floor((nowSeconds / 2) % songs.length)
-    // const count = 50
+    // const count = Math.floor((nowSeconds / 2) % songs.length)
+    const count = 50
     const playedSongs = songs
       .slice(0, count)
       .map((song, index) => ({
