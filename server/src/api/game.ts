@@ -134,6 +134,7 @@ export const gameRouter = router({
           name: input.nextRoundName || `${position}`,
           position,
           startedAt: now,
+          finishedAt: null,
           playedSongs: [],
         }
       }
@@ -156,6 +157,7 @@ export const gameRouter = router({
       name: `${position}`,
       position,
       startedAt: now,
+      finishedAt: null,
       playedSongs: [],
     }
 
@@ -183,6 +185,7 @@ export const gameRouter = router({
       name: `${position}`,
       position,
       startedAt: now,
+      finishedAt: null,
       playedSongs: [],
     }
 

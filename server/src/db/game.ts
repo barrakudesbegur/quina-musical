@@ -14,8 +14,8 @@ interface Round {
   name: string
   position: number
   playedSongs: PlayedSong[]
-  startedAt?: string
-  finishedAt?: string
+  startedAt: string | null
+  finishedAt: string | null
 }
 
 interface GameData {
