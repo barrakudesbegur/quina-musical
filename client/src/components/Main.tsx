@@ -4,6 +4,8 @@ import { FC, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
 import { trpc } from '../utils/trpc'
 import { MorphingText } from './MorphingText'
+import decorationLeft from '../assets/decoration-left.svg'
+import decorationRight from '../assets/decoration-right.svg'
 
 export const Main: FC = () => {
   const parent = useRef<HTMLOListElement>(null)
@@ -30,29 +32,54 @@ export const Main: FC = () => {
 
   return (
     <main className="bg-[#8B1538] text-white min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
-      <div className="bg-white sticky top-0 inset-x-0 p-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden z-30">
-        <MorphingText
-          texts={[previousTitle.current, lastPlayedSong?.title ?? '']}
-          classNames={{
-            container: 'leading-none',
-            text: cn(
-              'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance uppercase font-normal',
-              !lastPlayedSong || lastPlayedSong.title.length < 20
-                ? 'text-[clamp(3rem,9dvw,15dvh)] tracking-wider'
-                : 'text-[clamp(3rem,7.2dvw,calc(15dvh*7.2/9))] tracking-wide'
-            ),
-          }}
+      <div className="sticky top-0 inset-x-0 z-30">
+        <img
+          src={decorationLeft}
+          alt="Decoration Left"
+          className="absolute left-0 top-0 h-[calc(clamp(3rem,9dvw,15dvh)*1.7)] pointer-events-none hidden md:block"
         />
-        <MorphingText
-          texts={[previousArtist.current, lastPlayedSong?.artist ?? '']}
-          classNames={{
-            container: 'leading-tight',
-            text: cn(
-              'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance text-stone-700',
-              !lastPlayedSong || lastPlayedSong.title.length < 20
-                ? 'text-[clamp(2rem,5dvw,calc(15dvh*5/9))] tracking-wider'
-                : 'text-[clamp(2rem,4dvw,calc(15dvh*5/9*4/5))] tracking-wide'
-            ),
+        <img
+          src={decorationRight}
+          alt="Decoration Right"
+          className="absolute right-0 top-0 h-[calc(clamp(3rem,9dvw,15dvh)*1.7)] pointer-events-none hidden md:block"
+        />
+
+        <div className="bg-white py-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden">
+          <MorphingText
+            texts={[previousTitle.current, lastPlayedSong?.title ?? '']}
+            classNames={{
+              container: 'leading-none',
+              text: cn(
+                'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance uppercase font-normal',
+                !lastPlayedSong || lastPlayedSong.title.length < 20
+                  ? 'text-[clamp(3rem,9dvw,15dvh)] tracking-wider'
+                  : 'text-[clamp(3rem,7.2dvw,calc(15dvh*7.2/9))] tracking-wide'
+              ),
+            }}
+          />
+          <MorphingText
+            texts={[previousArtist.current, lastPlayedSong?.artist ?? '']}
+            classNames={{
+              container: 'leading-tight',
+              text: cn(
+                'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance text-stone-700',
+                !lastPlayedSong || lastPlayedSong.title.length < 20
+                  ? 'text-[clamp(2rem,5dvw,calc(15dvh*5/9))] tracking-wider'
+                  : 'text-[clamp(2rem,4dvw,calc(15dvh*5/9*4/5))] tracking-wide'
+              ),
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            height: '12px',
+            width: '100%',
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23fff'/%3E%3C/svg%3E\")",
+            backgroundSize: '64px 12px',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'repeat-x',
           }}
         />
       </div>

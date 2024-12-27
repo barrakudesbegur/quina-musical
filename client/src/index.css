@@ -14,3 +14,12 @@
 .filter-gooey {
   filter: url(#gooey-filter) blur(0.5px);
 }
+
+.divider-custom {
+  height: 12px;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23fff'/%3E%3C/svg%3E");
+  background-size: 64px 12px;
+  background-position: center top;
+  background-repeat: repeat-x;
+}
