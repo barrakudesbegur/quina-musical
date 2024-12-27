@@ -10,3 +10,7 @@
     @apply font-normal tracking-normal;
   }
 }
+
+.filter-gooey {
+  filter: url(#gooey-filter) blur(0.5px);
+}

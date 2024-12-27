@@ -3,6 +3,7 @@ import { cn } from '@nextui-org/react'
 import { FC, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
 import { trpc } from '../utils/trpc'
+import { MorphingText } from './MorphingText'
 
 export const Main: FC = () => {
   const parent = useRef<HTMLOListElement>(null)
@@ -19,34 +20,44 @@ export const Main: FC = () => {
     [playedSongs.data]
   )
 
+  const previousTitle = useRef(lastPlayedSong?.title ?? '')
+  const previousArtist = useRef(lastPlayedSong?.artist ?? '')
+
+  useEffect(() => {
+    previousTitle.current = lastPlayedSong?.title ?? ''
+    previousArtist.current = lastPlayedSong?.artist ?? ''
+  }, [lastPlayedSong])
+
   return (
     <main className="bg-[#8B1538] text-white min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
       <div className="bg-white sticky top-0 inset-x-0 p-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden z-30">
-        <h1
-          className={cn(
-            'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap max-w-full leading-tight text-balance -my-[0.125em] uppercase font-normal',
-            !lastPlayedSong || lastPlayedSong.title.length < 20
-              ? 'text-[clamp(3rem,9dvw,15dvh)] tracking-wider'
-              : 'text-[clamp(3rem,7.2dvw,calc(15dvh*7.2/9))] tracking-wide'
-          )}
-        >
-          {lastPlayedSong?.title ?? <span className="text-transparent">-</span>}
-        </h1>
-        <h2
-          className={cn(
-            'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap max-w-full leading-tight text-balance -my-[0.125em] text-stone-700',
-            !lastPlayedSong || lastPlayedSong.title.length < 20
-              ? 'text-[clamp(2rem,5dvw,calc(15dvh*5/9))] tracking-wider'
-              : 'text-[clamp(2rem,4dvw,calc(15dvh*5/9*4/5))] tracking-wide'
-          )}
-        >
-          {lastPlayedSong?.artist ?? (
-            <span className="text-transparent">-</span>
-          )}
-        </h2>
+        <MorphingText
+          texts={[previousTitle.current, lastPlayedSong?.title ?? '']}
+          classNames={{
+            container: 'leading-none',
+            text: cn(
+              'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance uppercase font-normal',
+              !lastPlayedSong || lastPlayedSong.title.length < 20
+                ? 'text-[clamp(3rem,9dvw,15dvh)] tracking-wider'
+                : 'text-[clamp(3rem,7.2dvw,calc(15dvh*7.2/9))] tracking-wide'
+            ),
+          }}
+        />
+        <MorphingText
+          texts={[previousArtist.current, lastPlayedSong?.artist ?? '']}
+          classNames={{
+            container: 'leading-tight',
+            text: cn(
+              'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance text-stone-700',
+              !lastPlayedSong || lastPlayedSong.title.length < 20
+                ? 'text-[clamp(2rem,5dvw,calc(15dvh*5/9))] tracking-wider'
+                : 'text-[clamp(2rem,4dvw,calc(15dvh*5/9*4/5))] tracking-wide'
+            ),
+          }}
+        />
       </div>
 
-      <div className="md:h-full w-full md:min-h-0 pb-[calc(100dvh/3)] py-12 md:py-0 text-center">
+      <div className="md:h-full box-border w-full md:min-h-0 pb-[calc(100dvh/3)] py-12 md:py-0 text-center">
         <h2 className="text-4xl block md:hidden uppercase font-normal underline underline-offset-4 decoration-white/30 tracking-wider leading-none mb-4">
           Historial
         </h2>
