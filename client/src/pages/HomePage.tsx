@@ -28,7 +28,7 @@ export const HomePage: FC = () => {
   }, [lastPlayedSong])
 
   return (
-    <main className="bg-[#8B1538] text-white min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
+    <main className="bg-[#8B1538] text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
       <div className="sticky top-0 inset-x-0 z-30 overflow-hidden">
         <img
           src={decorationLeft}
