@@ -9,8 +9,15 @@ if (!process.env.CLIENT_URL) {
 const server = createHTTPServer({
   middleware: cors({
     origin: process.env.CLIENT_URL,
-    allowedHeaders: ['Content-Type', 'Authorization', 'trpc-accept'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'trpc-batch',
+      'trpc-accept',
+      'trpc-content-type',
+    ],
     credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
   }),
   router: appRouter,
   createContext() {
