@@ -8,6 +8,7 @@ import { FC, useEffect, useMemo, useState } from 'react'
 import { useDebounceCallback } from 'usehooks-ts'
 import { FinishRoundDialog } from '../components/FinishRoundDialog'
 import { trpc } from '../utils/trpc'
+import { useNavigate } from 'react-router-dom'
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false)
@@ -16,6 +17,7 @@ export const AdminPage: FC = () => {
   const songsQuery = trpc.game.getAllSongs.useQuery()
   const roundQuery = trpc.game.getCurrentRound.useQuery()
   const statusQuery = trpc.game.getStatus.useQuery()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (roundQuery.data?.name) {
@@ -187,6 +189,11 @@ export const AdminPage: FC = () => {
     },
   })
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminAuth')
+    navigate('/login')
+  }
+
   if (!roundQuery.data) {
     return (
       <main className="container mx-auto p-4 pb-32 space-y-12">
@@ -213,6 +220,14 @@ export const AdminPage: FC = () => {
             {statusQuery.data?.status === 'finished' ? 'Reprendre' : 'Començar'}
           </Button>
         </div>
+        <Button
+          onPress={handleLogout}
+          variant="faded"
+          className="mx-auto block"
+          color="primary"
+        >
+          Logout
+        </Button>
       </main>
     )
   }
@@ -305,6 +320,14 @@ export const AdminPage: FC = () => {
         onClose={() => setIsFinishRoundDialogOpen(false)}
         onConfirm={handleFinishRound}
       />
+      <Button
+        onPress={handleLogout}
+        variant="faded"
+        className="mx-auto block"
+        color="primary"
+      >
+        Logout
+      </Button>
     </main>
   )
 }
