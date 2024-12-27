@@ -13,15 +13,11 @@ export const Main: FC = () => {
     if (parent.current) autoAnimate(parent.current)
   }, [parent])
 
-  const playedSongs = trpc.game.playedSongs.useQuery(undefined, {
+  const game = trpc.game.getState.useQuery(undefined, {
     refetchInterval: 1_000,
   })
-  const gameRound = trpc.game.gameRound.useQuery()
 
-  const lastPlayedSong = useMemo(
-    () => playedSongs.data?.[0],
-    [playedSongs.data]
-  )
+  const lastPlayedSong = useMemo(() => game.data?.playedSongs[0], [game.data])
 
   const previousTitle = useRef(lastPlayedSong?.title ?? '')
   const previousArtist = useRef(lastPlayedSong?.artist ?? '')
@@ -93,7 +89,7 @@ export const Main: FC = () => {
           ref={parent}
           className="flex flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2"
         >
-          {playedSongs.data?.map((song) => (
+          {game.data?.playedSongs.map((song) => (
             <li
               className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance"
               key={song.id}
@@ -120,21 +116,21 @@ export const Main: FC = () => {
               className="w-full h-full z-20"
             />
           </div>
-          {gameRound.data && (
+          {game.data?.round && (
             <p className="text-[calc(clamp(10rem,20dvw,30dvh)*0.125)] px-2 flex flex-1 flex-col items-center justify-center leading-none gap-[0.25em] uppercase tracking-widest">
               <span className="font-light">quina</span>
               <span
                 className={cn(
-                  gameRound.data.name.length <= 1
+                  game.data.round.name.length <= 1
                     ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.4)] font-thin'
-                    : gameRound.data.name.length <= 3
+                    : game.data.round.name.length <= 3
                       ? 'text-[calc(clamp(10rem,20dvw,30dvh)*0.35)] font-thin'
                       : 'tracking-normal',
-                  gameRound.data.name.length >= 6 &&
+                  game.data.round.name.length >= 6 &&
                     'text-[calc(clamp(10rem,20dvw,30dvh)*0.1)]'
                 )}
               >
-                {gameRound.data.name}
+                {game.data.round.name}
               </span>
             </p>
           )}

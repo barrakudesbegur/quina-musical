@@ -7,8 +7,7 @@ export const gameRouter = router({
       status: 'ongoing' as 'not-started' | 'ongoing' | 'paused' | 'finished',
     }
   }),
-  // TODO: This is fake data
-  playedSongs: publicProcedure.query(async () => {
+  getState: publicProcedure.query(async () => {
     const nowSeconds = Math.floor(Date.now() / 1000)
     const count = Math.floor((nowSeconds / 2) % songs.length)
     // const count = 50
@@ -21,11 +20,12 @@ export const gameRouter = router({
       // Sort in descending order
       .sort((a, b) => b.position - a.position)
 
-    return playedSongs
-  }),
-  gameRound: publicProcedure.query(async () => {
     return {
-      name: '12',
+      round: {
+        name: '12',
+        position: 12,
+      },
+      playedSongs,
     }
   }),
 })
