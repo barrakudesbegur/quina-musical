@@ -1,9 +1,15 @@
+import autoAnimate from '@formkit/auto-animate'
 import { cn } from '@nextui-org/react'
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
 import { trpc } from '../utils/trpc'
 
 export const Main: FC = () => {
+  const parent = useRef<HTMLOListElement>(null)
+  useEffect(() => {
+    if (parent.current) autoAnimate(parent.current)
+  }, [parent])
+
   const playedSongs = trpc.game.playedSongs.useQuery(undefined, {
     refetchInterval: 1_000,
   })
@@ -44,7 +50,10 @@ export const Main: FC = () => {
         <h2 className="text-4xl block md:hidden uppercase font-normal underline underline-offset-4 decoration-white/30 tracking-wider leading-none mb-4">
           Historial
         </h2>
-        <ol className="flex flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2">
+        <ol
+          ref={parent}
+          className="flex flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2"
+        >
           {playedSongs.data?.map((song) => (
             <li
               className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance"
