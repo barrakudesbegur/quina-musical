@@ -9,22 +9,21 @@ import {
   ModalFooter,
   ModalHeader,
 } from '@nextui-org/react'
-import { IconChevronsRight, IconDeviceFloppy } from '@tabler/icons-react'
+import { IconChevronsRight, IconDeviceFloppy, IconX } from '@tabler/icons-react'
 import { FC, useState } from 'react'
 
 export const FinishRoundDialog: FC<{
   isOpen: boolean
   defaultValue: string
   onClose: () => void
-  onConfirm: (name: string, isLastRound: boolean) => void
+  onConfirm: (name: string | undefined, isLastRound: boolean) => void
 }> = ({ isOpen, defaultValue, onClose, onConfirm }) => {
   const [isLastRound, setIsLastRound] = useState(false)
+  const [roundName, setRoundName] = useState(defaultValue)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const name = formData.get('name') as string
-    onConfirm(name, isLastRound)
+    onConfirm(isLastRound ? undefined : roundName, isLastRound)
   }
 
   return (
@@ -38,9 +37,9 @@ export const FinishRoundDialog: FC<{
             <ModalBody className="gap-4">
               <Input
                 autoFocus
-                name="name"
+                value={roundName}
+                onValueChange={setRoundName}
                 label="Nom de la següent quina"
-                defaultValue={defaultValue}
                 variant="bordered"
                 disabled={isLastRound}
                 minLength={1}
@@ -67,13 +66,23 @@ export const FinishRoundDialog: FC<{
               <Button color="danger" variant="light" onPress={onClose}>
                 Cancel·lar
               </Button>
-              <Button
-                color="primary"
-                type="submit"
-                startContent={<IconChevronsRight size={20} />}
-              >
-                Següent quina
-              </Button>
+              {isLastRound ? (
+                <Button
+                  color="danger"
+                  type="submit"
+                  startContent={<IconX size={20} />}
+                >
+                  Acabar totes les quines
+                </Button>
+              ) : (
+                <Button
+                  color="primary"
+                  type="submit"
+                  startContent={<IconChevronsRight size={20} />}
+                >
+                  Següent quina
+                </Button>
+              )}
             </ModalFooter>
           </form>
         )}

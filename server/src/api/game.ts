@@ -1,48 +1,29 @@
 import { z } from 'zod'
 import { publicProcedure, router } from '../trpc.js'
 import songs from '../../db/default/songs.json' with { type: 'json' }
-
-interface PlayedSong {
-  id: string
-  position: number
-  playedAt: number
-}
-
-interface Round {
-  name: string
-  position: number
-  playedSongs: PlayedSong[]
-  finishedAt?: number
-}
-
-// Store current and past rounds
-const pastRounds: Round[] = []
-let currentRound: Round | null = null
-
-// Initialize first round
-if (!currentRound) {
-  currentRound = {
-    name: '1',
-    position: 1,
-    playedSongs: [],
-  }
-}
+import { gameDb } from '../db/game.js'
 
 export const gameRouter = router({
   getStatus: publicProcedure.query(async () => {
     return {
-      status: 'ongoing' as 'not-started' | 'ongoing' | 'paused' | 'finished',
+      status: gameDb.chain.get('finishedAt').value()
+        ? ('finished' as const)
+        : !gameDb.chain.get('currentRound').value()
+          ? ('not-started' as const)
+          : ('ongoing' as const),
     }
   }),
+
   getState: publicProcedure.query(async () => {
-    if (!currentRound) {
+    if (!gameDb.data.currentRound) {
       return {
         round: null,
         playedSongs: [],
       }
     }
 
-    const playedSongs = currentRound.playedSongs
+    const playedSongs = gameDb.chain
+      .get('currentRound.playedSongs')
       .map((played) => {
         const song = songs.find((s) => s.id === played.id)
         if (!song) return null
@@ -52,25 +33,28 @@ export const gameRouter = router({
         }
       })
       .filter((song) => song !== null)
-      // Sort in descending order (newest first)
-      .sort((a, b) => b.position - a.position)
+      .orderBy(['position'], ['desc'])
+      .value()
 
     return {
       round: {
-        name: currentRound.name,
-        position: currentRound.position,
+        name: gameDb.data.currentRound.name,
+        position: gameDb.data.currentRound.position,
       },
       playedSongs,
     }
   }),
+
   getAllSongs: publicProcedure.query(async () => {
-    if (!currentRound) return []
+    if (!gameDb.data.currentRound) return []
 
     return songs
       .slice()
       .sort((a, b) => a.title.localeCompare(b.title))
       .map((song) => {
-        const played = currentRound?.playedSongs.find((p) => p.id === song.id)
+        const played = gameDb.data.currentRound?.playedSongs.find(
+          (p) => p.id === song.id
+        )
         return {
           ...song,
           isPlayed: !!played,
@@ -78,66 +62,122 @@ export const gameRouter = router({
         }
       })
   }),
-  playSong: publicProcedure
-    .input(z.object({ songId: z.string() }))
-    .mutation(async ({ input }) => {
-      if (!currentRound) return
 
-      const alreadyPlayed = currentRound.playedSongs.some(
+  playSong: publicProcedure
+    .input(z.object({ songId: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      if (!gameDb.data.currentRound) return
+
+      const alreadyPlayed = gameDb.data.currentRound.playedSongs.some(
         (p) => p.id === input.songId
       )
       if (!alreadyPlayed) {
-        currentRound.playedSongs.push({
+        gameDb.data.currentRound.playedSongs.push({
           id: input.songId,
-          position: currentRound.playedSongs.length + 1,
+          position: gameDb.data.currentRound.playedSongs.length + 1,
           playedAt: Date.now(),
         })
+        await gameDb.write()
       }
     }),
+
   undoLastPlayed: publicProcedure.mutation(async () => {
-    if (!currentRound) return
-    if (currentRound.playedSongs.length > 0) {
-      currentRound.playedSongs.pop()
+    if (!gameDb.data.currentRound) return
+    if (gameDb.data.currentRound.playedSongs.length > 0) {
+      gameDb.data.currentRound.playedSongs.pop()
+      await gameDb.write()
     }
   }),
+
   getCurrentRound: publicProcedure.query(async () => {
-    return currentRound
+    return gameDb.data.currentRound
   }),
+
   updateRoundName: publicProcedure
-    .input(z.object({ name: z.string() }))
+    .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ input }) => {
-      if (!currentRound) return
-      currentRound.name = input.name
+      if (!gameDb.data.currentRound) return
+      gameDb.data.currentRound.name = input.name
+      await gameDb.write()
     }),
+
   finishRound: publicProcedure
     .input(
       z.object({
-        nextRoundName: z.string(),
+        nextRoundName: z.string().optional(),
         isLastRound: z.boolean(),
       })
     )
     .mutation(async ({ input }) => {
-      if (!currentRound) return
+      if (!gameDb.data.currentRound) return
 
-      // Store current round in past rounds
-      pastRounds.push({
-        ...currentRound,
-        finishedAt: Date.now(),
+      const now = Date.now()
+
+      gameDb.data.pastRounds.push({
+        ...gameDb.data.currentRound,
+        finishedAt: now,
       })
 
-      // TODO: Implement later
-      // if (input.isLastRound) {
-      //   currentRound = null
-      //   return
-      // }
+      if (input.isLastRound) {
+        gameDb.data.finishedAt = now
+        gameDb.data.currentRound = null
+      } else {
+        const position = gameDb.data.currentRound.position + 1
 
-      currentRound = {
-        name: input.nextRoundName,
-        position: currentRound.position + 1,
-        playedSongs: [],
+        gameDb.data.currentRound = {
+          name: input.nextRoundName || `${position}`,
+          position,
+          startedAt: now,
+          playedSongs: [],
+        }
       }
+
+      await gameDb.write()
     }),
+
+  resumeGame: publicProcedure.mutation(async () => {
+    if (gameDb.data.currentRound) {
+      throw new Error('Game is already in progress')
+    }
+
+    const now = Date.now()
+    const position = gameDb.data.pastRounds.length + 1
+
+    gameDb.data.finishedAt = null
+
+    gameDb.data.currentRound = {
+      name: `${position}`,
+      position,
+      startedAt: now,
+      playedSongs: [],
+    }
+
+    await gameDb.write()
+  }),
+
   getPastRounds: publicProcedure.query(async () => {
-    return pastRounds
+    return gameDb.data.pastRounds
+  }),
+
+  startGame: publicProcedure.mutation(async ({ input }) => {
+    if (gameDb.data.currentRound) return
+
+    const now = Date.now()
+
+    if (!gameDb.data.startedAt) {
+      gameDb.data.startedAt = now
+    }
+
+    const position = gameDb.data.pastRounds.length + 1
+
+    gameDb.data.finishedAt = null
+    gameDb.data.currentRound = {
+      name: `${position}`,
+      position,
+      startedAt: now,
+      playedSongs: [],
+    }
+
+    await gameDb.write()
   }),
 })

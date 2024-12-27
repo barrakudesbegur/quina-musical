@@ -10,6 +10,14 @@ export const App: FC = () => {
       <Routes>
         <Route element={<GameStateGuard />}>
           <Route path="/" element={<HomePage />} />
+        </Route>
+        <Route
+          element={
+            <GameStateGuard
+              allowedStatuses={['finished', 'not-started', 'ongoing']}
+            />
+          }
+        >
           <Route path="/admin" element={<AdminPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

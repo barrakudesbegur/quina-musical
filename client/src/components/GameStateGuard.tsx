@@ -1,9 +1,11 @@
 import { FC, useMemo } from 'react'
 import { Outlet } from 'react-router-dom'
 import { trpc } from '../utils/trpc'
-import { GameStatusScreen } from './GameStatusScreen'
+import { GameStatus, GameStatusScreen } from './GameStatusScreen'
 
-export const GameStateGuard: FC = () => {
+export const GameStateGuard: FC<{
+  allowedStatuses?: GameStatus[]
+}> = ({ allowedStatuses = ['ongoing'] }) => {
   const gameStatusQuery = trpc.game.getStatus.useQuery(undefined, {
     retryDelay: 5_000,
     retry: Infinity,
@@ -17,7 +19,7 @@ export const GameStateGuard: FC = () => {
     return 'not-avilable'
   }, [gameStatusQuery])
 
-  return gameStatus === 'ongoing' || gameStatus === 'paused' ? (
+  return allowedStatuses.includes(gameStatus) ? (
     <Outlet />
   ) : (
     <GameStatusScreen status={gameStatus} />

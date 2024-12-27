@@ -1,16 +1,21 @@
 import { Button, Card, CardBody, Chip, Input, cn } from '@nextui-org/react'
-import { IconArrowBackUp, IconCircleCheckFilled } from '@tabler/icons-react'
+import {
+  IconArrowBackUp,
+  IconCircleCheckFilled,
+  IconPlayerPlay,
+} from '@tabler/icons-react'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useDebounceCallback } from 'usehooks-ts'
 import { FinishRoundDialog } from '../components/FinishRoundDialog'
 import { trpc } from '../utils/trpc'
 
 export const AdminPage: FC = () => {
-  const [isRoundNameDialogOpen, setIsRoundNameDialogOpen] = useState(false)
+  const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false)
   const [roundName, setRoundName] = useState('')
   const utils = trpc.useUtils()
   const songsQuery = trpc.game.getAllSongs.useQuery()
   const roundQuery = trpc.game.getCurrentRound.useQuery()
+  const statusQuery = trpc.game.getStatus.useQuery()
 
   useEffect(() => {
     if (roundQuery.data?.name) {
@@ -152,20 +157,64 @@ export const AdminPage: FC = () => {
   )
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
-    onSuccess: () => {
-      utils.game.getAllSongs.invalidate()
-      utils.game.getCurrentRound.invalidate()
-      setIsRoundNameDialogOpen(false)
+    onSettled: () => {
+      utils.game.invalidate()
+      setIsFinishRoundDialogOpen(false)
     },
   })
 
-  const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
+  const resumeGameMutation = trpc.game.resumeGame.useMutation({
+    onSettled: () => {
+      utils.game.invalidate()
+    },
+  })
+
+  const handleFinishRound = (
+    nextRoundName: string | undefined,
+    isLastRound: boolean
+  ) => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound })
   }
 
   const handleRoundNameChange = (value: string) => {
     setRoundName(value)
     debouncedUpdateRoundName(value)
+  }
+
+  const startGameMutation = trpc.game.startGame.useMutation({
+    onSettled: () => {
+      utils.game.invalidate()
+    },
+  })
+
+  if (!roundQuery.data) {
+    return (
+      <main className="container mx-auto p-4 pb-32 space-y-12">
+        <div className="flex flex-col items-center justify-center min-h-[50dvh] gap-4">
+          <h1 className="text-4xl font-brand uppercase text-center tracking-widest">
+            {statusQuery.data?.status === 'finished'
+              ? 'Quina finalitzada'
+              : 'Començar quina'}
+          </h1>
+          <Button
+            size="lg"
+            color="success"
+            variant="shadow"
+            onPress={() => {
+              if (statusQuery.data?.status === 'finished') {
+                resumeGameMutation.mutate()
+              } else {
+                startGameMutation.mutate()
+              }
+            }}
+            className="font-brand uppercase tracking-widest text-xl"
+            startContent={<IconPlayerPlay size={24} />}
+          >
+            {statusQuery.data?.status === 'finished' ? 'Reprendre' : 'Començar'}
+          </Button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -186,7 +235,7 @@ export const AdminPage: FC = () => {
           <Button
             color="danger"
             variant="flat"
-            onPress={() => setIsRoundNameDialogOpen(true)}
+            onPress={() => setIsFinishRoundDialogOpen(true)}
             className="font-brand uppercase text-lg tracking-widest"
           >
             Finalitzar quina
@@ -249,11 +298,11 @@ export const AdminPage: FC = () => {
       </section>
 
       <FinishRoundDialog
-        isOpen={isRoundNameDialogOpen}
+        isOpen={isFinishRoundDialogOpen}
         defaultValue={String(
           roundQuery.data ? roundQuery.data.position + 1 : 1
         )}
-        onClose={() => setIsRoundNameDialogOpen(false)}
+        onClose={() => setIsFinishRoundDialogOpen(false)}
         onConfirm={handleFinishRound}
       />
     </main>

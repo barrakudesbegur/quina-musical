@@ -59,12 +59,6 @@ const {
       icon: IconPlayerPlay,
     },
     {
-      id: 'paused',
-      label: 'Hem fet una pausa',
-      description: 'Recarrega la pàgina',
-      icon: IconPlayerPause,
-    },
-    {
       id: 'finished',
       label: 'Ja hem acavat',
       description: 'Gràcies per participar',
@@ -73,7 +67,7 @@ const {
   ] as const
 )
 
-type GameStatus =
+export type GameStatus =
   | inferProcedureOutput<AppRouter['game']['getStatus']>['status']
   | 'not-avilable'
   | 'loading'
