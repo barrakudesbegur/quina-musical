@@ -1,6 +1,5 @@
 import {
   IconGift,
-  IconLoader,
   IconPlayerPause,
   IconPlayerPlay,
   IconPower,
@@ -33,12 +32,6 @@ const {
     icon: IconPlayerPause,
   }),
   [
-    {
-      id: 'loading',
-      label: 'Carregant',
-      description: 'Espera un segon...',
-      icon: IconLoader,
-    },
     {
       id: 'not-avilable',
       label: 'Sistema apagat',
@@ -75,7 +68,6 @@ type ExtractedStatus<G extends AsyncIterable<unknown>> =
 export type GameStatus =
   | ExtractedStatus<inferProcedureOutput<AppRouter['game']['getStatus']>>
   | 'not-avilable'
-  | 'loading'
 
 export const GameStatusScreen: FC<{
   status: GameStatus
