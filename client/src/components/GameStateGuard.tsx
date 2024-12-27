@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { trpc } from '../utils/trpc'
 import { GameStatusScreen } from './GameStatusScreen'
 
-export const GameStatusWrapper: FC = () => {
+export const GameStateGuard: FC = () => {
   const gameStatusQuery = trpc.game.getStatus.useQuery(undefined, {
     retryDelay: 5_000,
     retry: Infinity,
