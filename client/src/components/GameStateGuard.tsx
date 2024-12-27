@@ -6,18 +6,12 @@ import { GameStatus, GameStatusScreen } from './GameStatusScreen'
 export const GameStateGuard: FC<{
   allowedStatuses?: GameStatus[]
 }> = ({ allowedStatuses = ['ongoing'] }) => {
-  const gameStatusQuery = trpc.game.getStatus.useQuery(undefined, {
-    retryDelay: 5_000,
-    retry: Infinity,
-    refetchInterval: 60 * 1_000,
-  })
+  const gameStatusSub = trpc.game.getStatus.useSubscription()
 
   const gameStatus = useMemo(() => {
-    if (gameStatusQuery.failureCount >= 1) return 'not-avilable'
-    if (gameStatusQuery.status === 'success') return gameStatusQuery.data.status
-    if (gameStatusQuery.status === 'pending') return 'loading'
-    return 'not-avilable'
-  }, [gameStatusQuery])
+    if (!gameStatusSub.data) return 'not-avilable'
+    return gameStatusSub.data.status
+  }, [gameStatusSub.data])
 
   return allowedStatuses.includes(gameStatus) ? (
     <Outlet />

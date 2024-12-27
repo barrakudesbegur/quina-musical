@@ -7,13 +7,19 @@ import { publicProcedure, router } from '../trpc.js'
 const ee = new EventEmitter()
 
 export const gameRouter = router({
-  getStatus: publicProcedure.query(async () => {
-    return {
+  getStatus: publicProcedure.subscription(async function* ({ signal }) {
+    const getStatus = () => ({
       status: gameDb.chain.get('finishedAt').value()
         ? ('finished' as const)
         : !gameDb.chain.get('currentRound').value()
           ? ('not-started' as const)
           : ('ongoing' as const),
+    })
+
+    yield getStatus()
+
+    for await (const [_] of on(ee, 'update', { signal })) {
+      yield getStatus()
     }
   }),
 

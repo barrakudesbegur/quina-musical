@@ -16,7 +16,7 @@ export const AdminPage: FC = () => {
   const utils = trpc.useUtils()
   const songsQuery = trpc.game.getAllSongs.useQuery()
   const roundQuery = trpc.game.getCurrentRound.useQuery()
-  const statusQuery = trpc.game.getStatus.useQuery()
+  const statusQuery = trpc.game.getStatus.useSubscription()
   const navigate = useNavigate()
 
   useEffect(() => {

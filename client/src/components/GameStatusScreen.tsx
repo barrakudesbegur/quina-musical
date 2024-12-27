@@ -1,16 +1,15 @@
+import {
+  IconGift,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPower,
+  TablerIcon,
+} from '@tabler/icons-react'
 import { inferProcedureOutput } from '@trpc/server'
 import { FC } from 'react'
 import { AppRouter } from '../../../server/src/api'
 import { makeHelpersForOptions } from '../utils/makeHelpersForOptions'
 import { transformCase } from '../utils/strings'
-import {
-  IconPlayerPause,
-  IconPlayerPlay,
-  IconPower,
-  IconGift,
-  TablerIcon,
-  IconLoader,
-} from '@tabler/icons-react'
 
 type GameStatusInfo<T extends string | null | undefined = string> = {
   id: T
@@ -33,12 +32,6 @@ const {
     icon: IconPlayerPause,
   }),
   [
-    {
-      id: 'loading',
-      label: 'Carregant',
-      description: 'Espera un segon...',
-      icon: IconLoader,
-    },
     {
       id: 'not-avilable',
       label: 'Sistema apagat',
@@ -67,10 +60,14 @@ const {
   ] as const
 )
 
+type ExtractedStatus<G extends AsyncIterable<unknown>> =
+  G extends AsyncIterable<infer T extends { status: unknown }>
+    ? T['status']
+    : never
+
 export type GameStatus =
-  | inferProcedureOutput<AppRouter['game']['getStatus']>['status']
+  | ExtractedStatus<inferProcedureOutput<AppRouter['game']['getStatus']>>
   | 'not-avilable'
-  | 'loading'
 
 export const GameStatusScreen: FC<{
   status: GameStatus
