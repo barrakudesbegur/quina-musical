@@ -2,12 +2,12 @@ import autoAnimate from '@formkit/auto-animate'
 import { cn } from '@nextui-org/react'
 import { FC, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
-import { trpc } from '../utils/trpc'
-import { MorphingText } from './MorphingText'
 import decorationLeft from '../assets/decoration-left.svg'
 import decorationRight from '../assets/decoration-right.svg'
+import { MorphingText } from '../components/MorphingText'
+import { trpc } from '../utils/trpc'
 
-export const Main: FC = () => {
+export const HomePage: FC = () => {
   const parent = useRef<HTMLOListElement>(null)
   useEffect(() => {
     if (parent.current) autoAnimate(parent.current)
