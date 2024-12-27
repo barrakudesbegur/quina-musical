@@ -1,11 +1,22 @@
-import { Card, CardBody, Chip, cn } from '@nextui-org/react'
+import { Button, Card, CardBody, Chip, Input, cn } from '@nextui-org/react'
 import { IconArrowBackUp, IconCircleCheckFilled } from '@tabler/icons-react'
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
+import { useDebounceCallback } from 'usehooks-ts'
+import { FinishRoundDialog } from '../components/FinishRoundDialog'
 import { trpc } from '../utils/trpc'
 
 export const AdminPage: FC = () => {
+  const [isRoundNameDialogOpen, setIsRoundNameDialogOpen] = useState(false)
+  const [roundName, setRoundName] = useState('')
   const utils = trpc.useUtils()
   const songsQuery = trpc.game.getAllSongs.useQuery()
+  const roundQuery = trpc.game.getCurrentRound.useQuery()
+
+  useEffect(() => {
+    if (roundQuery.data?.name) {
+      setRoundName(roundQuery.data.name)
+    }
+  }, [roundQuery.data?.name])
 
   const maxPosition = useMemo(() => {
     if (!songsQuery.data) return 0
@@ -104,58 +115,147 @@ export const AdminPage: FC = () => {
     }
   }
 
-  return (
-    <main className="container mx-auto p-4 pb-16">
-      <h1 className="text-4xl font-brand uppercase mb-6">Admin Dashboard</h1>
+  const updateRoundNameMutation = trpc.game.updateRoundName.useMutation({
+    onMutate: async ({ name }) => {
+      await utils.game.getCurrentRound.cancel()
 
-      <div className="flex flex-col gap-2 -mx-2">
-        {songsWithLastPlayed?.map((song) => (
-          <Card
-            key={song.id}
-            isPressable
-            isDisabled={song.isPlayed && !song.isLastPlayed}
-            onPress={() => handleCardPress(song)}
-            className={cn('flex items-center relative', {
-              'opacity-50': song.isPlayed && !song.isLastPlayed,
-              'border-success': song.isLastPlayed,
-            })}
-            radius="sm"
+      const previousRound = utils.game.getCurrentRound.getData()
+
+      utils.game.getCurrentRound.setData(undefined, (old) => {
+        if (!old) return previousRound
+        return {
+          ...old,
+          name,
+        }
+      })
+
+      return { previousRound }
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousRound) {
+        utils.game.getCurrentRound.setData(undefined, context.previousRound)
+      }
+    },
+    onSettled: () => {
+      utils.game.getCurrentRound.invalidate()
+    },
+  })
+
+  const debouncedUpdateRoundName = useDebounceCallback(
+    (name: string) => {
+      updateRoundNameMutation.mutate({ name })
+    },
+    1000,
+    {
+      leading: true,
+    }
+  )
+
+  const finishRoundMutation = trpc.game.finishRound.useMutation({
+    onSuccess: () => {
+      utils.game.getAllSongs.invalidate()
+      utils.game.getCurrentRound.invalidate()
+      setIsRoundNameDialogOpen(false)
+    },
+  })
+
+  const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
+    finishRoundMutation.mutate({ nextRoundName, isLastRound })
+  }
+
+  const handleRoundNameChange = (value: string) => {
+    setRoundName(value)
+    debouncedUpdateRoundName(value)
+  }
+
+  return (
+    <main className="container mx-auto p-4 pb-32 space-y-12">
+      <section>
+        <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
+          Gestió de la quina
+        </h2>
+        <div className="flex flex-col gap-2">
+          <Input
+            value={roundName}
+            onValueChange={handleRoundNameChange}
+            variant="bordered"
+            label="Nom de la quina"
+            labelPlacement="outside"
+            className="max-w-full"
+          />
+          <Button
+            color="danger"
+            variant="flat"
+            onPress={() => setIsRoundNameDialogOpen(true)}
+            className="font-brand uppercase text-lg tracking-widest"
           >
-            <CardBody className="gap-3 justify-between flex-row items-center">
-              <div className="flex flex-col flex-grow">
-                <p className="text-lg leading-tight">{song.title}</p>
-                <p className="text-xs text-default-500 leading-tight">
-                  {song.artist}
-                </p>
-              </div>
-              <div className="flex gap-1">
-                {song.isLastPlayed && (
-                  <Chip
-                    color="warning"
-                    variant="flat"
-                    className="font-brand tracking-widest text-lg uppercase"
-                    classNames={{
-                      base: 'p-0',
-                    }}
-                  >
-                    <IconArrowBackUp size={20} />
-                  </Chip>
-                )}
-                {song.isPlayed && (
-                  <Chip
-                    color="success"
-                    variant="flat"
-                    className="font-brand tracking-widest uppercase text-2xl font-light"
-                    startContent={<IconCircleCheckFilled size={24} />}
-                  >
-                    {song.playedPosition}
-                  </Chip>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        ))}
-      </div>
+            Finalitzar quina
+          </Button>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
+          Cançons
+        </h2>
+        <div className="flex flex-col gap-2 -mx-2">
+          {songsWithLastPlayed?.map((song) => (
+            <Card
+              key={song.id}
+              isPressable
+              isDisabled={song.isPlayed && !song.isLastPlayed}
+              onPress={() => handleCardPress(song)}
+              className={cn('flex items-center relative', {
+                'opacity-50': song.isPlayed && !song.isLastPlayed,
+                'border-success': song.isLastPlayed,
+              })}
+              radius="sm"
+            >
+              <CardBody className="gap-3 justify-between flex-row items-center">
+                <div className="flex flex-col flex-grow">
+                  <p className="text-lg leading-tight">{song.title}</p>
+                  <p className="text-xs text-default-500 leading-tight">
+                    {song.artist}
+                  </p>
+                </div>
+                <div className="flex gap-1">
+                  {song.isLastPlayed && (
+                    <Chip
+                      color="warning"
+                      variant="flat"
+                      className="font-brand tracking-widest text-lg uppercase"
+                      classNames={{
+                        base: 'p-0',
+                      }}
+                    >
+                      <IconArrowBackUp size={20} />
+                    </Chip>
+                  )}
+                  {song.isPlayed && (
+                    <Chip
+                      color="success"
+                      variant="flat"
+                      className="font-brand tracking-widest uppercase text-2xl font-light"
+                      startContent={<IconCircleCheckFilled size={24} />}
+                    >
+                      {song.playedPosition}
+                    </Chip>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <FinishRoundDialog
+        isOpen={isRoundNameDialogOpen}
+        defaultValue={String(
+          roundQuery.data ? roundQuery.data.position + 1 : 1
+        )}
+        onClose={() => setIsRoundNameDialogOpen(false)}
+        onConfirm={handleFinishRound}
+      />
     </main>
   )
 }
