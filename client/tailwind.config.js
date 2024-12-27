@@ -13,10 +13,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Londrina solid', ...defaultTheme.fontFamily.sans],
+        brand: ['Londrina solid', ...defaultTheme.fontFamily.sans],
       },
       letterSpacing: {
         ...defaultTheme.letterSpacing,
+        'widest-1': defaultTheme.letterSpacing.widest,
         'widest-2': '0.15em',
         'widest-3': '0.2em',
         'widest-4': '0.4em',

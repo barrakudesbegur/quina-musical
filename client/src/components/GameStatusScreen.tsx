@@ -83,7 +83,7 @@ export const GameStatusScreen: FC<{
 }> = ({ status }) => {
   const { label, description, icon: Icon } = useGameStatusInfo(status)
   return (
-    <main className="bg-slate-900 pb-16 pt-4 text-white min-h-dvh w-dvw flex items-center justify-center flex-col text-center text-balance gap-4 px-4">
+    <main className="bg-slate-900 font-brand font-light tracking-wider pb-16 pt-4 text-white min-h-dvh w-dvw flex items-center justify-center flex-col text-center text-balance gap-4 px-4">
       <Icon size={48} stroke={1.5} />
       <h1 className="text-4xl font-normal uppercase tracking-widest-2">
         {label}

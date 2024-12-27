@@ -28,4 +28,7 @@ export const gameRouter = router({
       playedSongs,
     }
   }),
+  getAllSongs: publicProcedure.query(async () => {
+    return songs.slice().sort((a, b) => a.title.localeCompare(b.title))
+  }),
 })

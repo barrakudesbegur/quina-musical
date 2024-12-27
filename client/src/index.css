@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply font-light tracking-wider;
-  }
-  code {
-    @apply font-normal tracking-normal;
-  }
-}
-
 .filter-gooey {
   filter: url(#gooey-filter) blur(0.5px);
 }
