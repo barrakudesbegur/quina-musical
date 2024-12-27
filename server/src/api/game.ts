@@ -78,7 +78,7 @@ export const gameRouter = router({
         gameDb.data.currentRound.playedSongs.push({
           id: input.songId,
           position: gameDb.data.currentRound.playedSongs.length + 1,
-          playedAt: Date.now(),
+          playedAt: new Date().toISOString(),
         })
         await gameDb.write()
         emitUpdate()
@@ -117,7 +117,7 @@ export const gameRouter = router({
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return
 
-      const now = Date.now()
+      const now = new Date().toISOString()
 
       gameDb.data.pastRounds.push({
         ...gameDb.data.currentRound,
@@ -147,7 +147,7 @@ export const gameRouter = router({
       throw new Error('Game is already in progress')
     }
 
-    const now = Date.now()
+    const now = new Date().toISOString()
     const position = gameDb.data.pastRounds.length + 1
 
     gameDb.data.finishedAt = null
@@ -170,7 +170,7 @@ export const gameRouter = router({
   startGame: publicProcedure.mutation(async ({ input }) => {
     if (gameDb.data.currentRound) return
 
-    const now = Date.now()
+    const now = new Date().toISOString()
 
     if (!gameDb.data.startedAt) {
       gameDb.data.startedAt = now

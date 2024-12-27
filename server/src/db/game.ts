@@ -7,20 +7,20 @@ const now = new Date().toISOString()
 interface PlayedSong {
   id: string
   position: number
-  playedAt: number
+  playedAt: string
 }
 
 interface Round {
   name: string
   position: number
   playedSongs: PlayedSong[]
-  startedAt?: number
-  finishedAt?: number
+  startedAt?: string
+  finishedAt?: string
 }
 
 interface GameData {
-  startedAt: number | null
-  finishedAt: number | null
+  startedAt: string | null
+  finishedAt: string | null
   currentRound: Round | null
   pastRounds: Round[]
 }
