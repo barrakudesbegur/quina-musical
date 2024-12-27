@@ -169,7 +169,7 @@ export const gameRouter = router({
     return gameDb.data.pastRounds
   }),
 
-  startGame: publicProcedure.mutation(async ({ input }) => {
+  startGame: publicProcedure.mutation(async () => {
     if (gameDb.data.currentRound) return
 
     const now = new Date().toISOString()
