@@ -124,6 +124,7 @@ Improvement for the next version
 - imprive admin password security? haha
 - Provide a 100% manual alternative in case there is a problem.
 - Find a way that the system outputs the songs, as they are played somewhere. In case of a problem, to be able to resume the game manually.
+- Prevent screen locking.
 
 ### Card generator
 - Print the cards so when they are cut, they end up in order. Consider the different colors, create multiple files, one per color. And the eaxh color defines the thousands digit (red is 1000-1999, blue 2000-2999, etc)
