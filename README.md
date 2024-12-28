@@ -103,6 +103,7 @@ Improvement for the next version
 
 ### Live
 
+- There's a bug when changing round, and the pre-filled name is not correct.
 - Don't create a new file for every server restart, because when it fails, we loose the progress. Instead create a "Clear database" button that saves de json in a folder and clears the one used as db.
 - Make a nice-looking screen for when a round doesn't have any sing yet.
 - Update in real time the Admin too.
