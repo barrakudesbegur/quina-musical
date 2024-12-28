@@ -10,6 +10,7 @@ Features:
 
 - 🎶 Displays the curently playing song, history, and round info.
 - 📱 Big screen view and mobile view.
+- 🌠 Animations.
 - ⚡️ Real-time updates.
 - 💰 Free deployment.
 - 🎯 Admin to pick the next song, undo, manage rounds, etc.
@@ -95,3 +96,38 @@ npm run start:client # Client
 npm run start:server # Server
 
 ```
+
+## Roadmap
+
+Improvement for the next version
+
+### Live
+
+- Don't create a new file for every server restart, because when it fails, we loose the progress. Instead create a "Clear database" button that saves de json in a folder and clears the one used as db.
+- Make a nice-looking screen for when a round doesn't have any sing yet.
+- Update in real time the Admin too.
+- Make the the app reproduce the songs, so there's no delay/mistakes. 
+- Song shuffling: Pseudo-random. This ensures that the shuffling is actually random while making people happy. Modify the algorithm so it counts how many times a song has been played, and the max played song vs the min played song difference is always 1 or 2. Consider that songs that come after the round has finished shouldn't count. So the shuffling can't be known in advance. Well, think this more and ensure that it is fair and everyone has the same chances of winning.
+- Playing next queue. In admin, show the next playing songs, and enable moving or "re-shufling".
+- Maybe improve the animation of the song. The full list can be just in the phone, and the big screen just show the last 3 or 5.
+- Ensure that 300 people can be connected at the same time. There was a limit of 10 people for SSE...
+- Ensure it works on mobile hotspot or find another way of hosting it. Using a server should be better I think.
+- Enable Card checking for Line and Quina by providing the card number. This is for admin, and it tells the songs the card has, with a check or cross to the played ones.
+- Save time to organizers by automatically downloading the songs from YT or by playing them in Spotify. on the actual timestamp.
+- [idea] a round where we play remixes of the song instead of the actual one. or maybe do it in more rounds so there's variety.
+- it takes 60-63 songs to get a quina. Play the first ones normal, then move to fast, and getting closer to the end slower.
+- Add a pause button, that keeps playing the song in loop at lower volume. this is for when someone has Quina to not stop playing music. Or maybe play a special "pause" song, like the ones in elevators.
+- Enable the app to be controlled with a remote by the showman.
+- The laptop presenting has 2 screens, the big one, and a showman one. in the showman one we show the current/next/prev song, the count, the auto-play switch, the card-cheking feature (by card numer, and show all songs), etc.
+- Auto-play has a toggle, so we can do it manually too.
+- when te music is paused, it brings automatically the card checking ui.
+- imprive admin password security? haha
+- Provide a 100% manual alternative in case there is a problem.
+- Find a way that the system outputs the songs, as they are played somewhere. In case of a problem, to be able to resume the game manually.
+
+### Card generator
+- Print the cards so when they are cut, they end up in order. Consider the different colors, create multiple files, one per color. And the eaxh color defines the thousands digit (red is 1000-1999, blue 2000-2999, etc)
+- Add the QR to the card.
+- The cards could be smaller if we want. (4 for page)
+- There was 1 round what 2 people had bingo at the same time! it should not be possible.
+- Make a test suit for the generation to ensure no mistakes, as this is very important.
