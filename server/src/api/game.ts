@@ -202,7 +202,7 @@ export const gameRouter = router({
 
   onStateChange: publicProcedure.subscription(async function* ({ signal }) {
     const getState = () => {
-      !gameDb.data.currentRound
+      return !gameDb.data.currentRound
         ? { round: null, playedSongs: [] }
         : {
             round: {
