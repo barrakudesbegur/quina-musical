@@ -104,10 +104,10 @@ Improvement for the next version
 ### Live
 
 - There's a bug when changing round, and the pre-filled name is not correct.
-- Don't create a new file for every server restart, because when it fails, we loose the progress. Instead create a "Clear database" button that saves de json in a folder and clears the one used as db.
+- Create a "Clear database" button that saves de json in a folder and clears the one used as db.
 - Make a nice-looking screen for when a round doesn't have any sing yet.
 - Update in real time the Admin too.
-- Make the the app reproduce the songs, so there's no delay/mistakes. 
+- Make the the app reproduce the songs, so there's no delay/mistakes.
 - Song shuffling: Pseudo-random. This ensures that the shuffling is actually random while making people happy. Modify the algorithm so it counts how many times a song has been played, and the max played song vs the min played song difference is always 1 or 2. Consider that songs that come after the round has finished shouldn't count. So the shuffling can't be known in advance. Well, think this more and ensure that it is fair and everyone has the same chances of winning.
 - Playing next queue. In admin, show the next playing songs, and enable moving or "re-shufling".
 - Maybe improve the animation of the song. The full list can be just in the phone, and the big screen just show the last 3 or 5.
@@ -128,6 +128,7 @@ Improvement for the next version
 - Prevent screen locking.
 
 ### Card generator
+
 - Print the cards so when they are cut, they end up in order. Consider the different colors, create multiple files, one per color. And the eaxh color defines the thousands digit (red is 1000-1999, blue 2000-2999, etc)
 - Add the QR to the card.
 - The cards could be smaller if we want. (4 for page)

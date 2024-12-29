@@ -2,8 +2,6 @@ import { Low } from 'lowdb'
 import { JSONFile } from 'lowdb/node'
 import lodash from 'lodash'
 
-const now = new Date().toISOString()
-
 interface PlayedSong {
   id: string
   position: number
@@ -38,7 +36,7 @@ const defaultData: GameData = {
 
 const adapter = new JSONFile<GameData>(
   process.env.NODE_ENV === 'production'
-    ? `./db/local/game-${now}.json`
+    ? './db/local/game-prod.json'
     : './db/local/game-dev.json'
 )
 
