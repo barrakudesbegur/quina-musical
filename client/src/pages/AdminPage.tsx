@@ -171,10 +171,12 @@ export const AdminPage: FC = () => {
     },
   })
 
-  const handleFinishRound = (
-    nextRoundName: string | undefined,
-    isLastRound: boolean
-  ) => {
+  const defaultNextRoundName = useMemo(() => {
+    if (!roundQuery.data) return '1'
+    return String(roundQuery.data.position + 1)
+  }, [roundQuery.data])
+
+  const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound })
   }
 
@@ -314,11 +316,10 @@ export const AdminPage: FC = () => {
 
       <FinishRoundDialog
         isOpen={isFinishRoundDialogOpen}
-        defaultValue={String(
-          roundQuery.data ? roundQuery.data.position + 1 : 1
-        )}
+        defaultValue={defaultNextRoundName}
         onClose={() => setIsFinishRoundDialogOpen(false)}
         onConfirm={handleFinishRound}
+        loading={finishRoundMutation.isPending}
       />
       <Button
         onPress={handleLogout}

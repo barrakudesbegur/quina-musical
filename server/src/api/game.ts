@@ -116,7 +116,7 @@ export const gameRouter = router({
   finishRound: publicProcedure
     .input(
       z.object({
-        nextRoundName: z.string().optional(),
+        nextRoundName: z.string(),
         isLastRound: z.boolean(),
       })
     )
@@ -137,7 +137,7 @@ export const gameRouter = router({
         const position = gameDb.data.currentRound.position + 1
 
         gameDb.data.currentRound = {
-          name: input.nextRoundName || `${position}`,
+          name: input.nextRoundName,
           position,
           startedAt: now,
           finishedAt: null,

@@ -16,14 +16,15 @@ export const FinishRoundDialog: FC<{
   isOpen: boolean
   defaultValue: string
   onClose: () => void
-  onConfirm: (name: string | undefined, isLastRound: boolean) => void
-}> = ({ isOpen, defaultValue, onClose, onConfirm }) => {
+  onConfirm: (name: string, isLastRound: boolean) => void
+  loading: boolean
+}> = ({ isOpen, defaultValue, onClose, onConfirm, loading }) => {
   const [isLastRound, setIsLastRound] = useState(false)
   const [roundName, setRoundName] = useState(defaultValue)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    onConfirm(isLastRound ? undefined : roundName, isLastRound)
+    onConfirm(roundName, isLastRound)
   }
 
   return (
@@ -71,6 +72,7 @@ export const FinishRoundDialog: FC<{
                   color="danger"
                   type="submit"
                   startContent={<IconX size={20} />}
+                  isLoading={loading}
                 >
                   Acabar totes les quines
                 </Button>
@@ -79,6 +81,7 @@ export const FinishRoundDialog: FC<{
                   color="primary"
                   type="submit"
                   startContent={<IconChevronsRight size={20} />}
+                  isLoading={loading}
                 >
                   Següent quina
                 </Button>
