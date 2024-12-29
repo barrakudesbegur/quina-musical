@@ -5,6 +5,7 @@ import { gameDb } from '../db/game.js'
 import { publicProcedure, router } from '../trpc.js'
 
 const ee = new EventEmitter()
+ee.setMaxListeners(Infinity)
 
 export const gameRouter = router({
   getStatus: publicProcedure.subscription(async function* ({ signal }) {

@@ -110,7 +110,6 @@ Improvement for the next version
 - Song shuffling: Pseudo-random. This ensures that the shuffling is actually random while making people happy. Modify the algorithm so it counts how many times a song has been played, and the max played song vs the min played song difference is always 1 or 2. Consider that songs that come after the round has finished shouldn't count. So the shuffling can't be known in advance. Well, think this more and ensure that it is fair and everyone has the same chances of winning.
 - Playing next queue. In admin, show the next playing songs, and enable moving or "re-shufling".
 - Maybe improve the animation of the song. The full list can be just in the phone, and the big screen just show the last 3 or 5.
-- Ensure that 300 people can be connected at the same time. There was a limit of 10 people for SSE...
 - Ensure it works on mobile hotspot or find another way of hosting it. Using a server should be better I think.
 - Enable Card checking for Line and Quina by providing the card number. This is for admin, and it tells the songs the card has, with a check or cross to the played ones.
 - Save time to organizers by automatically downloading the songs from YT or by playing them in Spotify. on the actual timestamp.
