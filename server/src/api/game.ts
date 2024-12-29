@@ -201,7 +201,7 @@ export const gameRouter = router({
   }),
 
   onStateChange: publicProcedure.subscription(async function* ({ signal }) {
-    const getState = () =>
+    const getState = () => {
       !gameDb.data.currentRound
         ? { round: null, playedSongs: [] }
         : {
@@ -220,6 +220,7 @@ export const gameRouter = router({
               .orderBy(['position'], ['desc'])
               .value(),
           }
+    }
 
     // Emit initial state
     yield getState()
