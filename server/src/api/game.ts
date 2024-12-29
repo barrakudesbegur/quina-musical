@@ -4,8 +4,8 @@ import songs from '../../db/default/songs.json' with { type: 'json' }
 import { gameDb } from '../db/game.js'
 import { publicProcedure, router } from '../trpc.js'
 
-const ee = new EventEmitter()
-ee.setMaxListeners(Infinity)
+const gameEventEmitter = new EventEmitter()
+gameEventEmitter.setMaxListeners(Infinity)
 
 export const gameRouter = router({
   getStatus: publicProcedure.subscription(async function* ({ signal }) {
@@ -19,7 +19,7 @@ export const gameRouter = router({
 
     yield getStatus()
 
-    for await (const [_] of on(ee, 'update', { signal })) {
+    for await (const [_] of on(gameEventEmitter, 'update', { signal })) {
       yield getStatus()
     }
   }),
@@ -225,10 +225,10 @@ export const gameRouter = router({
     yield getState()
 
     // Listen for updates
-    for await (const [_] of on(ee, 'update', { signal })) {
+    for await (const [_] of on(gameEventEmitter, 'update', { signal })) {
       yield getState()
     }
   }),
 })
 
-const emitUpdate = () => ee.emit('update')
+const emitUpdate = () => gameEventEmitter.emit('update')
