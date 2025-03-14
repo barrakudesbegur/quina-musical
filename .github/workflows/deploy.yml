@@ -17,6 +17,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_API_URL: 'https://quina-api.barrakudesbegur.org'
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
