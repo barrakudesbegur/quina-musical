@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from '@react-pdf/renderer';
-import { Style } from '@react-pdf/types';
+import { Orientation, Style } from '@react-pdf/types';
 import { chunk } from 'lodash';
 import { join } from 'path';
 import React from 'react';
@@ -39,6 +39,11 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
+    flexGrow: 1,
+  },
+  pageColumns: {
+    display: 'flex',
+    flexDirection: 'row',
     flexGrow: 1,
   },
   cardContainer: {
@@ -244,33 +249,57 @@ const CardComponent: React.FC<{
 // 4) The Main PDF Document
 ////////////////////////////////////////////////////////////////////////////////
 
+const pageRows = 3;
+const pageColumns = 1;
+const pageOrientation: Orientation = 'portrait';
+
 const AllCardsDocument: React.FC<{
   cards: Card[];
 }> = ({ cards }) => {
-  const chunkedCards = chunk(cards, 3);
+  const chunkedCards = chunk(cards, pageRows * pageColumns);
 
   return (
     <Document>
-      {chunkedCards.map((threeCards) => (
-        <Page
-          size="A4"
-          style={styles.page}
-          key={threeCards.map((c) => c.id).join('-')}
-        >
-          {threeCards.map((card, index) => {
-            const isLast = index === threeCards.length - 1;
-            return (
-              <CardComponent
-                card={card}
-                style={{
-                  borderBottom: isLast ? undefined : '1px dashed #f0f0f0',
-                }}
-                key={card.id}
-              />
-            );
-          })}
-        </Page>
-      ))}
+      {chunkedCards.map((cardsInPage) => {
+        const cols = chunk(cardsInPage, pageColumns);
+
+        return (
+          <Page
+            size="A4"
+            orientation={pageOrientation}
+            style={styles.page}
+            key={cardsInPage.map((c) => c.id).join('-')}
+          >
+            {cols.map((col, colIndex) => (
+              <View
+                style={[
+                  styles.pageColumns,
+                  {
+                    borderBottom:
+                      colIndex === pageColumns - 1
+                        ? undefined
+                        : '1px dashed #f0f0f0',
+                  },
+                ]}
+              >
+                {col.map((card, index) => {
+                  const isLast = index === col.length - 1;
+                  return (
+                    <CardComponent
+                      card={card}
+                      style={{
+                        borderRight: isLast ? undefined : '1px dashed #f0f0f0',
+                        width: `${100 / pageColumns}%`,
+                      }}
+                      key={card.id}
+                    />
+                  );
+                })}
+              </View>
+            ))}
+          </Page>
+        );
+      })}
     </Document>
   );
   return;
