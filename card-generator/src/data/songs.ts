@@ -1,8 +1,8 @@
 export type Song = {
-  id: string
-  title: string
-  artist: string
-}
+  id: string;
+  title: string;
+  artist: string;
+};
 
 // prettier-ignore
 export const songs: Song[] = [

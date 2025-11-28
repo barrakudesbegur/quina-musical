@@ -8,17 +8,17 @@ import {
   Svg,
   Text,
   View,
-} from '@react-pdf/renderer'
-import { Style } from '@react-pdf/types'
-import { chunk } from 'lodash'
-import { join } from 'path'
-import React from 'react'
-import { Card } from './generate-cards-json'
+} from '@react-pdf/renderer';
+import { Style } from '@react-pdf/types';
+import { chunk } from 'lodash';
+import { join } from 'path';
+import React from 'react';
+import { Card } from './generate-cards-json';
 
 ////////////////////////////////////////////////////////////////////////////////
 // 1) Register Fonts
 ////////////////////////////////////////////////////////////////////////////////
-const fontPath = join(__dirname, 'assets/LondrinaSolid')
+const fontPath = join(__dirname, 'assets/LondrinaSolid');
 Font.register({
   family: 'LondrinaSolid',
   fonts: [
@@ -31,7 +31,7 @@ Font.register({
       fontWeight: 'light',
     },
   ],
-})
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 // 2) Define Styles
@@ -179,15 +179,15 @@ const styles = StyleSheet.create({
     height: 70,
     transform: 'rotate(15deg)',
   },
-})
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 // 3) Card Component
 ////////////////////////////////////////////////////////////////////////////////
 
 const CardComponent: React.FC<{
-  card: Card
-  style?: Style
+  card: Card;
+  style?: Style;
 }> = ({ card, style }) => {
   return (
     <View style={style ? [styles.cardContainer, style] : styles.cardContainer}>
@@ -237,17 +237,17 @@ const CardComponent: React.FC<{
         />
       </Svg>
     </View>
-  )
-}
+  );
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // 4) The Main PDF Document
 ////////////////////////////////////////////////////////////////////////////////
 
 const AllCardsDocument: React.FC<{
-  cards: Card[]
+  cards: Card[];
 }> = ({ cards }) => {
-  const chunkedCards = chunk(cards, 3)
+  const chunkedCards = chunk(cards, 3);
 
   return (
     <Document>
@@ -258,7 +258,7 @@ const AllCardsDocument: React.FC<{
           key={threeCards.map((c) => c.id).join('-')}
         >
           {threeCards.map((card, index) => {
-            const isLast = index === threeCards.length - 1
+            const isLast = index === threeCards.length - 1;
             return (
               <CardComponent
                 card={card}
@@ -267,19 +267,19 @@ const AllCardsDocument: React.FC<{
                 }}
                 key={card.id}
               />
-            )
+            );
           })}
         </Page>
       ))}
     </Document>
-  )
-  return
-}
+  );
+  return;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // 5) Generate the PDF
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function generateCardsPDF(data: Card[], outputPath: string) {
-  await render(<AllCardsDocument cards={data} />, outputPath)
+  await render(<AllCardsDocument cards={data} />, outputPath);
 }

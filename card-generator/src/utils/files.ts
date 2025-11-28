@@ -1,5 +1,5 @@
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 /**
  * Saves a JSON object to a file asynchronously.
@@ -13,12 +13,12 @@ export async function saveJsonToFile(
   filename: string,
   prettyPrint: boolean = false
 ) {
-  const outputPath = path.resolve(filename)
-  await mkdir(path.dirname(outputPath), { recursive: true })
+  const outputPath = path.resolve(filename);
+  await mkdir(path.dirname(outputPath), { recursive: true });
 
   const jsonData = prettyPrint
     ? JSON.stringify(data, null, 2)
-    : JSON.stringify(data)
+    : JSON.stringify(data);
 
-  await writeFile(outputPath, jsonData, 'utf-8')
+  await writeFile(outputPath, jsonData, 'utf-8');
 }
