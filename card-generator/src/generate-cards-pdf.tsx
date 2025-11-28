@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     height: 70,
     transform: 'rotate(15deg)',
   },
-});
+} as const);
 
 ////////////////////////////////////////////////////////////////////////////////
 // 3) Card Component
