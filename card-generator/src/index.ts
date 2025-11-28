@@ -10,11 +10,9 @@ saveJsonToFile(cards, './dist/cards.json');
 
 generateCardsPDF(cards, './dist/cards.pdf')
   .then(() => {
-    // prettier-ignore
-    const emojis = ['🎄','🎅','🎁','❄️','⛄','🔔','🕯️','🦌','🤶','🌟','🎶','🎵','🎉','🎊','🎈','🎂','🎇','🎆','🎑','🎀']
-    const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-    console.log(`${emoji} Cards generated successfully!`);
+    console.log('✅ Cards generated successfully!');
   })
   .catch((error) => {
+    console.error('❌ Error generating cards:', error);
     throw error;
   });
