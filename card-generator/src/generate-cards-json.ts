@@ -1,11 +1,16 @@
 import { sortBy } from 'lodash';
-import type { Song } from './data/songs';
 import { shuffleArrayWithSeed } from './utils/arrays';
 
 const LINES = 3;
 const COLUMNS = 4;
 const ATEMPTS_BINGO = 30;
 const ATEMPTS_LINE = 30;
+
+type Song = {
+  id: number;
+  title: string;
+  artist: string;
+};
 
 export type Card = {
   id: string;

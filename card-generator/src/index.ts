@@ -1,4 +1,4 @@
-import { songs } from './data/songs';
+import songs from './songs.json';
 import { generateCardsJson } from './generate-cards-json';
 import { generateCardsPDF } from './generate-cards-pdf';
 import { saveJsonToFile } from './utils/files';
