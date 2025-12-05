@@ -1,8 +1,9 @@
 import { EventEmitter, on } from 'events';
 import { z } from 'zod';
 import songs from '../../db/default/songs.json' with { type: 'json' };
-import { gameDb } from '../db/game.js';
+import { gameDb, Round } from '../db/game.js';
 import { publicProcedure, router } from '../trpc.js';
+import { shuffleArrayWithSeed } from '../utils/arrays.js';
 
 const gameEventEmitter = new EventEmitter();
 gameEventEmitter.setMaxListeners(Infinity);
@@ -58,9 +59,22 @@ export const gameRouter = router({
   getAllSongs: publicProcedure.query(async () => {
     if (!gameDb.data.currentRound) return [];
 
+    const shuffledSongsWithoutPlayed = gameDb.data.currentRound.shuffledSongs
+      .toSorted((a, b) => a.position - b.position)
+      .filter(
+        (song) =>
+          !gameDb.data.currentRound ||
+          !gameDb.data.currentRound.playedSongs.some((p) => p.id === song.id)
+      )
+      .map((song, index) => ({
+        ...song,
+        expectedPlayedPosition:
+          index + 1 + (gameDb.data.currentRound?.playedSongs.length ?? 0),
+      }));
+
     return songs
       .slice()
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .sort((a, b) => a.id - b.id)
       .map((song) => {
         const played = gameDb.data.currentRound?.playedSongs.find(
           (p) => p.id === song.id
@@ -69,12 +83,16 @@ export const gameRouter = router({
           ...song,
           isPlayed: !!played,
           playedPosition: played?.position,
+          expectedPlayedPosition:
+            played?.position ??
+            shuffledSongsWithoutPlayed.find((p) => p.id === song.id)
+              ?.expectedPlayedPosition,
         };
       });
   }),
 
   playSong: publicProcedure
-    .input(z.object({ songId: z.string().min(1) }))
+    .input(z.object({ songId: z.number().min(1) }))
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return;
 
@@ -101,6 +119,28 @@ export const gameRouter = router({
     }
   }),
 
+  playNextSong: publicProcedure.mutation(async () => {
+    if (!gameDb.data.currentRound) return;
+
+    const nextSong = gameDb.data.currentRound.shuffledSongs
+      .toSorted((a, b) => a.position - b.position)
+      .find(
+        (song) =>
+          !gameDb.data.currentRound?.playedSongs.some((p) => p.id === song.id)
+      );
+
+    if (!nextSong) return;
+
+    gameDb.data.currentRound.playedSongs.push({
+      id: nextSong.id,
+      position: gameDb.data.currentRound.playedSongs.length + 1,
+      playedAt: new Date().toISOString(),
+    });
+
+    await gameDb.write();
+    emitUpdate();
+  }),
+
   getCurrentRound: publicProcedure.query(async () => {
     return gameDb.data.currentRound;
   }),
@@ -110,6 +150,15 @@ export const gameRouter = router({
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return;
       gameDb.data.currentRound.name = input.name;
+      await gameDb.write();
+      emitUpdate();
+    }),
+
+  updatePlaybackMode: publicProcedure
+    .input(z.object({ playbackMode: z.enum(['manual', 'auto']) }))
+    .mutation(async ({ input }) => {
+      if (!gameDb.data.currentRound) return;
+      gameDb.data.currentRound.playbackMode = input.playbackMode;
       await gameDb.write();
       emitUpdate();
     }),
@@ -142,7 +191,9 @@ export const gameRouter = router({
           position,
           startedAt: now,
           finishedAt: null,
+          shuffledSongs: shuffleSongs(now),
           playedSongs: [],
+          playbackMode: 'auto',
         };
       }
 
@@ -165,7 +216,9 @@ export const gameRouter = router({
       position,
       startedAt: now,
       finishedAt: null,
+      shuffledSongs: shuffleSongs(now),
       playedSongs: [],
+      playbackMode: 'auto',
     };
 
     await gameDb.write();
@@ -193,7 +246,9 @@ export const gameRouter = router({
       position,
       startedAt: now,
       finishedAt: null,
+      shuffledSongs: shuffleSongs(now),
       playedSongs: [],
+      playbackMode: 'auto',
     };
 
     await gameDb.write();
@@ -233,3 +288,13 @@ export const gameRouter = router({
 });
 
 const emitUpdate = () => gameEventEmitter.emit('update');
+
+function shuffleSongs(seed: string) {
+  return shuffleArrayWithSeed(
+    songs.map((song) => song.id),
+    seed
+  ).map((id, index) => ({
+    id,
+    position: index + 1,
+  })) satisfies Round['shuffledSongs'];
+}

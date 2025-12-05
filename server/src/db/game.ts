@@ -2,21 +2,25 @@ import lodash from 'lodash';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 
-interface PlayedSong {
-  id: string;
+type SongId = number;
+
+export interface PlayedSong {
+  id: SongId;
   position: number;
   playedAt: string;
 }
 
-interface Round {
+export interface Round {
   name: string;
   position: number;
+  shuffledSongs: { id: SongId; position: number }[];
   playedSongs: PlayedSong[];
   startedAt: string | null;
   finishedAt: string | null;
+  playbackMode: 'manual' | 'auto';
 }
 
-interface GameData {
+export interface GameData {
   startedAt: string | null;
   finishedAt: string | null;
   currentRound: Round | null;
