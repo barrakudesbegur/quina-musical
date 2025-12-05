@@ -1,6 +1,6 @@
 import autoAnimate from '@formkit/auto-animate';
 import { cn } from '@heroui/react';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import decorationLeft from '../assets/decoration-left.svg';
 import decorationRight from '../assets/decoration-right.svg';
@@ -13,24 +13,29 @@ export const HomePage: FC = () => {
     if (parent.current) autoAnimate(parent.current);
   }, [parent]);
 
+  type Song = NonNullable<(typeof gameState)['data']>['playedSongs'][number];
+
+  const [lastSongs, setLastSongs] = useState<{
+    current: Song | null;
+    prev: Song | null;
+  }>({
+    current: null,
+    prev: null,
+  });
+  const prevSong = lastSongs.prev;
+
   const gameState = trpc.game.onStateChange.useSubscription(undefined, {
+    onData(data) {
+      setLastSongs((prevValues) => ({
+        current: data.playedSongs[0] ?? null,
+        prev: prevValues.current,
+      }));
+    },
     onError(err) {
       console.error('Subscription error:', err);
     },
   });
-
-  const lastPlayedSong = useMemo(
-    () => gameState.data?.playedSongs[0],
-    [gameState.data]
-  );
-
-  const previousTitle = useRef(lastPlayedSong?.title ?? '');
-  const previousArtist = useRef(lastPlayedSong?.artist ?? '');
-
-  useEffect(() => {
-    previousTitle.current = lastPlayedSong?.title ?? '';
-    previousArtist.current = lastPlayedSong?.artist ?? '';
-  }, [lastPlayedSong]);
+  const currentSong = gameState.data?.playedSongs[0] ?? null;
 
   return (
     <main className="bg-[#8B1538] font-brand font-light tracking-wider text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
@@ -48,24 +53,24 @@ export const HomePage: FC = () => {
 
         <div className="bg-white py-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden">
           <MorphingText
-            texts={[previousTitle.current, lastPlayedSong?.title ?? '']}
+            texts={[prevSong?.title ?? '', currentSong?.title ?? '']}
             classNames={{
               container: 'leading-none',
               text: cn(
                 'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance uppercase font-normal',
-                !lastPlayedSong || lastPlayedSong.title.length < 20
+                !currentSong || currentSong.title.length < 20
                   ? 'text-[clamp(3rem,9dvw,15dvh)] tracking-wider'
                   : 'text-[clamp(3rem,7.2dvw,calc(15dvh*7.2/9))] tracking-wide'
               ),
             }}
           />
           <MorphingText
-            texts={[previousArtist.current, lastPlayedSong?.artist ?? '']}
+            texts={[prevSong?.artist ?? '', currentSong?.artist ?? '']}
             classNames={{
               container: 'leading-tight',
               text: cn(
                 'md:text-ellipsis md:overflow-hidden md:whitespace-nowrap text-balance text-stone-700',
-                !lastPlayedSong || lastPlayedSong.title.length < 20
+                !currentSong || currentSong.title.length < 20
                   ? 'text-[clamp(2rem,5dvw,calc(15dvh*5/9))] tracking-wider'
                   : 'text-[clamp(2rem,4dvw,calc(15dvh*5/9*4/5))] tracking-wide'
               ),
