@@ -1,4 +1,4 @@
-import { NextUIProvider } from '@nextui-org/react';
+import { HeroUIProvider } from '@heroui/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   splitLink,
@@ -47,7 +47,7 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <NextUIProvider>{children}</NextUIProvider>
+        <HeroUIProvider>{children}</HeroUIProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

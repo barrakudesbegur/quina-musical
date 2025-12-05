@@ -1,5 +1,5 @@
 import autoAnimate from '@formkit/auto-animate';
-import { cn } from '@nextui-org/react';
+import { cn } from '@heroui/react';
 import { FC, useEffect, useMemo, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import decorationLeft from '../assets/decoration-left.svg';

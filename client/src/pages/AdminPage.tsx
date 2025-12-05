@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Chip, Input, cn } from '@nextui-org/react';
+import { Button, Card, CardBody, Chip, Input, cn } from '@heroui/react';
 import {
   IconArrowBackUp,
   IconCircleCheckFilled,
@@ -253,9 +253,8 @@ export const AdminPage: FC = () => {
             color="danger"
             variant="flat"
             onPress={() => setIsFinishRoundDialogOpen(true)}
-            className="font-brand uppercase text-lg tracking-widest"
           >
-            Finalitzar quina
+            Finalitzar quina...
           </Button>
         </div>
       </section>

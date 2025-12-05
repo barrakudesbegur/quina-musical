@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Input } from '@nextui-org/react';
+import { Button, Card, CardBody, Input } from '@heroui/react';
 import { FC, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 

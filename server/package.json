@@ -10,19 +10,19 @@
     "cloudflared": "cloudflared tunnel --config ./cloudflared/config.yaml run quina-api"
   },
   "dependencies": {
-    "@trpc/server": "^11.0.0-rc.666",
-    "cors": "^2.8.5",
-    "lowdb": "^7.0.1",
-    "superjson": "^2.2.2",
-    "zod": "^3.24.1"
+    "@trpc/server": "11.7.2",
+    "cors": "2.8.5",
+    "lowdb": "7.0.1",
+    "superjson": "2.2.6",
+    "zod": "4.1.13"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/node": "^22.9.0",
-    "npm-run-all": "^4.1.5",
-    "start-server-and-test": "^1.12.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.7.2",
-    "wait-port": "^1.0.1"
+    "@types/cors": "2.8.19",
+    "@types/node": "24.10.1",
+    "npm-run-all": "4.1.5",
+    "start-server-and-test": "2.1.3",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "wait-port": "1.1.0"
   }
 }
