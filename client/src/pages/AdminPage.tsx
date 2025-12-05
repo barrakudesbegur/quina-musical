@@ -129,7 +129,7 @@ export const AdminPage: FC = () => {
   }
 
   return (
-    <main className="max-w-7xl mx-auto p-4 pb-32 space-y-12">
+    <main className="max-w-xl mx-auto p-4 pb-32 space-y-12">
       <section className="space-y-4">
         <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
           Gestió de la quina
