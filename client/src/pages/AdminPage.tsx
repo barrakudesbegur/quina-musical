@@ -6,6 +6,7 @@ import { useDebounceCallback } from 'usehooks-ts';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
+import { GameInsightsSection } from '../components/GameInsightsSection';
 import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
@@ -159,7 +160,7 @@ export const AdminPage: FC = () => {
   }
 
   return (
-    <main className="container mx-auto p-4 pb-32 space-y-12">
+    <main className="max-w-7xl mx-auto p-4 pb-32 space-y-12">
       <section>
         <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
           Gestió de la quina
@@ -200,6 +201,8 @@ export const AdminPage: FC = () => {
         />
       </div>
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
+
+      <GameInsightsSection />
 
       <Button
         onPress={handleLogout}

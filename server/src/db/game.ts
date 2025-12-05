@@ -3,6 +3,7 @@ import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 
 type SongId = number;
+type CardId = number;
 
 export interface PlayedSong {
   id: SongId;
@@ -25,6 +26,7 @@ export interface GameData {
   finishedAt: string | null;
   currentRound: Round | null;
   pastRounds: Round[];
+  cardsPlaying: CardId[];
 }
 
 class LowWithLodash<T> extends Low<T> {
@@ -36,6 +38,7 @@ const defaultData: GameData = {
   finishedAt: null,
   currentRound: null,
   pastRounds: [],
+  cardsPlaying: [],
 };
 
 const adapter = new JSONFile<GameData>(

@@ -1,6 +1,7 @@
 import { EventEmitter, on } from 'events';
 import { z } from 'zod';
 import songs from '../../db/default/songs.json' with { type: 'json' };
+import cards from '../../db/default/cards.json' with { type: 'json' };
 import { gameDb, Round } from '../db/game.js';
 import { publicProcedure, router } from '../trpc.js';
 import { shuffleArrayWithSeed } from '../utils/arrays.js';
@@ -90,6 +91,19 @@ export const gameRouter = router({
         };
       });
   }),
+
+  getCardsPlaying: publicProcedure.query(async () => {
+    return gameDb.data.cardsPlaying;
+  }),
+
+  updateCardsPlaying: publicProcedure
+    .input(z.object({ cardIds: z.array(z.number().positive()) }))
+    .mutation(async ({ input }) => {
+      gameDb.data.cardsPlaying = input.cardIds.filter((id) =>
+        cards.some((c) => c.id === id)
+      );
+      await gameDb.write();
+    }),
 
   playSong: publicProcedure
     .input(z.object({ songId: z.number().min(1).optional() }))

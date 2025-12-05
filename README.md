@@ -14,6 +14,7 @@ Features:
 - ⚡️ Real-time updates.
 - 💰 Free deployment.
 - 🎯 Admin to pick the next song, undo, manage rounds, etc.
+- 📊 Admin insights with a cards-per-song progress chart.
 - 📄 Saves history in a `json` file.
 - 🦖 System down screen.
 
