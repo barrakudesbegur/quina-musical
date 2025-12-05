@@ -1,12 +1,12 @@
-import { Button, Input, Switch } from '@heroui/react';
+import { Button, Switch } from '@heroui/react';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDebounceCallback } from 'usehooks-ts';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
+import { GameInsightsSection } from '../components/GameInsightsSection';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
-import { GameInsightsSection } from '../components/GameInsightsSection';
+import { RoundNameForm } from '../components/RoundNameForm';
 import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
@@ -15,32 +15,6 @@ export const AdminPage: FC = () => {
   const roundQuery = trpc.game.getCurrentRound.useQuery();
   const statusQuery = trpc.game.getStatus.useSubscription();
   const navigate = useNavigate();
-
-  const updateRoundNameMutation = trpc.game.updateRoundName.useMutation({
-    onMutate: async ({ name }) => {
-      await utils.game.getCurrentRound.cancel();
-
-      const previousRound = utils.game.getCurrentRound.getData();
-
-      utils.game.getCurrentRound.setData(undefined, (old) => {
-        if (!old) return previousRound;
-        return {
-          ...old,
-          name,
-        };
-      });
-
-      return { previousRound };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousRound) {
-        utils.game.getCurrentRound.setData(undefined, context.previousRound);
-      }
-    },
-    onSettled: () => {
-      utils.game.getCurrentRound.invalidate();
-    },
-  });
 
   const updatePlaybackModeMutation = trpc.game.updatePlaybackMode.useMutation({
     onMutate: async ({ playbackMode }) => {
@@ -68,10 +42,6 @@ export const AdminPage: FC = () => {
     },
   });
 
-  const debouncedUpdateRoundName = useDebounceCallback((name: string) => {
-    updateRoundNameMutation.mutate({ name });
-  }, 500);
-
   const finishRoundMutation = trpc.game.finishRound.useMutation({
     onSettled: () => {
       utils.game.invalidate();
@@ -94,14 +64,6 @@ export const AdminPage: FC = () => {
 
   const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound });
-  };
-
-  const handleRoundNameChange = (value: string) => {
-    utils.game.getCurrentRound.setData(undefined, (old) => {
-      if (!old) return old;
-      return { ...old, name: value };
-    });
-    debouncedUpdateRoundName(value);
   };
 
   const handlePlaybackModeChange = (value: boolean) => {
@@ -165,32 +127,8 @@ export const AdminPage: FC = () => {
         <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
           Gestió de la quina
         </h2>
-        <div className="flex flex-col gap-2">
-          <Input
-            value={roundQuery.data?.name ?? ''}
-            onValueChange={handleRoundNameChange}
-            variant="bordered"
-            label="Nom de la quina"
-            labelPlacement="outside"
-            className="max-w-full"
-          />
-          <Button
-            color="danger"
-            variant="flat"
-            onPress={() => setIsFinishRoundDialogOpen(true)}
-          >
-            Finalitzar quina...
-          </Button>
-        </div>
+        <RoundNameForm />
       </section>
-
-      <FinishRoundDialog
-        isOpen={isFinishRoundDialogOpen}
-        defaultValue={defaultNextRoundName}
-        onClose={() => setIsFinishRoundDialogOpen(false)}
-        onConfirm={handleFinishRound}
-        loading={finishRoundMutation.isPending}
-      />
 
       <div className="flex items-center gap-3 mt-8">
         <span className="font-semibold">Mode manual</span>
@@ -203,6 +141,24 @@ export const AdminPage: FC = () => {
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
 
       <GameInsightsSection />
+
+      <section>
+        <Button
+          color="danger"
+          variant="flat"
+          onPress={() => setIsFinishRoundDialogOpen(true)}
+          className="mx-auto block"
+        >
+          Finalitzar quina...
+        </Button>
+        <FinishRoundDialog
+          isOpen={isFinishRoundDialogOpen}
+          defaultValue={defaultNextRoundName}
+          onClose={() => setIsFinishRoundDialogOpen(false)}
+          onConfirm={handleFinishRound}
+          loading={finishRoundMutation.isPending}
+        />
+      </section>
 
       <Button
         onPress={handleLogout}
