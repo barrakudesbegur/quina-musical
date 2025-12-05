@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Prettify } from 'ts-essentials'
-import type TB from 'ts-toolbelt'
+import { Prettify } from 'ts-essentials';
+import type TB from 'ts-toolbelt';
 
 export function removeUndefined(obj: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined)
-  )
+  );
 }
 
 type RemoveUndefinedProps<T extends Record<string, unknown>> = {
-  [key in keyof T]-?: Exclude<T[key], undefined>
-}
+  [key in keyof T]-?: Exclude<T[key], undefined>;
+};
 
 /**
  * Assigns properties from `obj2` to `obj1`, but only if they are defined in `obj2`.
@@ -26,33 +26,33 @@ export const assignDefinedOnly = <
 ): Omit<T1, keyof T2> & {
   [key in keyof T2 & keyof T1]-?: undefined extends T2[key]
     ? Exclude<T2[key], undefined> | T1[key]
-    : T2[key]
+    : T2[key];
 } & Omit<RemoveUndefinedProps<T2>, keyof T1> => {
-  return { ...obj1, ...removeUndefined(obj2) } as any
-}
+  return { ...obj1, ...removeUndefined(obj2) } as any;
+};
 
 export type Paths<T> = T extends object
   ? {
-      [K in keyof T]: `${Exclude<K, symbol>}${'' | `.${Paths<T[K]>}`}`
+      [K in keyof T]: `${Exclude<K, symbol>}${'' | `.${Paths<T[K]>}`}`;
     }[keyof T]
-  : never
+  : never;
 
 export type PathValue<T, K extends string> = TB.Object.Path<
   T,
   TB.String.Split<K, '.'>
->
+>;
 
 export type Leaves<T> = T extends object
   ? {
-      [K in keyof T]: `${Exclude<K, symbol>}${Leaves<T[K]> extends never ? '' : `.${Leaves<T[K]>}`}`
+      [K in keyof T]: `${Exclude<K, symbol>}${Leaves<T[K]> extends never ? '' : `.${Leaves<T[K]>}`}`;
     }[keyof T]
-  : never
+  : never;
 
 // Start of paths with nested
-type Digit = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-type NextDigit = [1, 2, 3, 4, 5, 6, 7, 'STOP']
-type Inc<T> = T extends Digit ? NextDigit[T] : 'STOP'
-type StringOrNumKeys<TObj> = TObj extends unknown[] ? 0 : keyof TObj & string
+type Digit = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type NextDigit = [1, 2, 3, 4, 5, 6, 7, 'STOP'];
+type Inc<T> = T extends Digit ? NextDigit[T] : 'STOP';
+type StringOrNumKeys<TObj> = TObj extends unknown[] ? 0 : keyof TObj & string;
 type NestedPath<
   TValue,
   Prefix extends string,
@@ -60,22 +60,22 @@ type NestedPath<
   TDepth,
 > = TValue extends object
   ? `${Prefix}.${TDepth extends 'STOP' ? string : NestedFieldPaths<TValue, TValueNestedChild, TDepth>}`
-  : never
+  : never;
 type GetValue<T, K extends string | number> = T extends unknown[]
   ? K extends number
     ? T[K]
     : never
   : K extends keyof T
     ? T[K]
-    : never
+    : never;
 type NestedFieldPaths<TData = any, TValue = any, TDepth = 0> = {
   [TKey in StringOrNumKeys<TData>]:
     | (GetValue<TData, TKey> extends TValue ? `${TKey}` : never)
-    | NestedPath<GetValue<TData, TKey>, `${TKey}`, TValue, Inc<TDepth>>
-}[StringOrNumKeys<TData>]
+    | NestedPath<GetValue<TData, TKey>, `${TKey}`, TValue, Inc<TDepth>>;
+}[StringOrNumKeys<TData>];
 export type PathsWithNested<TData = any> = TData extends any
   ? NestedFieldPaths<TData, any, 1>
-  : never
+  : never;
 // End of paths with nested
 
 /**
@@ -93,18 +93,18 @@ export type PathsWithNested<TData = any> = TData extends any
 export const typedGroupBy = <
   K extends string,
   T extends {
-    [key in K]: string
+    [key in K]: string;
   } & {
-    [k in string]: unknown
+    [k in string]: unknown;
   },
 >(
   array: readonly T[] | T[],
   key: K
 ) => {
   return Object.fromEntries(array.map((option) => [option[key], option])) as {
-    [Id in T[K]]: Extract<T, { [key in K]: Id }>
-  }
-}
+    [Id in T[K]]: Extract<T, { [key in K]: Id }>;
+  };
+};
 
 /**
  * Merges two objects, so that each property is the union of that property from each object.
@@ -124,12 +124,12 @@ export type UnionizeTwo<
   : keyof T2 extends undefined
     ? T1
     : {
-        [K in keyof T1 & keyof T2]-?: T1[K] | T2[K]
+        [K in keyof T1 & keyof T2]-?: T1[K] | T2[K];
       } & {
         [K in Exclude<keyof T1 | keyof T2, keyof T1 & keyof T2>]+?:
           | (K extends keyof T1 ? T1[K] : never)
-          | (K extends keyof T2 ? T2[K] : never)
-      }
+          | (K extends keyof T2 ? T2[K] : never);
+      };
 
 /**
  * Merges multiple objects, so that each property is the union of that property from each object.
@@ -161,4 +161,4 @@ export type Unionize<T extends Record<string, unknown>[]> = Prettify<
           : undefined
         : First
       : undefined
->
+>;

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo } from 'react'
-import { typedGroupBy } from './objects'
+import { useMemo } from 'react';
+import { typedGroupBy } from './objects';
 
 /**
  * Creates utility functions to work with an array of options.
@@ -12,7 +12,7 @@ import { typedGroupBy } from './objects'
 export function makeHelpersForOptions<
   K extends string,
   Fallback extends { [key in K]: string | null | undefined } & {
-    [k in string]: unknown
+    [k in string]: unknown;
   },
   TArray extends readonly ({ [key in K]: string } & Fallback)[],
 >(
@@ -20,25 +20,25 @@ export function makeHelpersForOptions<
   makeFallback: (key: string | null | undefined) => Fallback,
   dataArray: TArray
 ) {
-  const dataObject = typedGroupBy<K, TArray[number]>(dataArray, key)
+  const dataObject = typedGroupBy<K, TArray[number]>(dataArray, key);
 
   function getFn<T extends TArray[number][K]>(
     status: T
-  ): Extract<TArray[number], { [key in K]: T }>
+  ): Extract<TArray[number], { [key in K]: T }>;
   function getFn<T extends string | null | undefined>(
     status: T
-  ): Fallback | Extract<TArray[number], { [key in K]: T }>
+  ): Fallback | Extract<TArray[number], { [key in K]: T }>;
   function getFn<T extends string | null | undefined>(
     status: T
   ): Fallback | Extract<TArray[number], { [key in K]: T }> {
     return typeof status === 'string' && status in dataObject
       ? dataObject[status as unknown as keyof typeof dataObject]
-      : makeFallback(status)
+      : makeFallback(status);
   }
 
   const useGetHook: typeof getFn = ((status: any) => {
-    return useMemo(() => getFn(status), [status])
-  }) as typeof getFn
+    return useMemo(() => getFn(status), [status]);
+  }) as typeof getFn;
 
   const exposedMakeFallback = <O extends Omit<Partial<Fallback>, K>>(
     status: Parameters<typeof makeFallback>[0],
@@ -47,8 +47,8 @@ export function makeHelpersForOptions<
     return {
       ...makeFallback(status),
       ...options,
-    } as Fallback & O
-  }
+    } as Fallback & O;
+  };
 
   return {
     dataArray: dataArray,
@@ -59,5 +59,5 @@ export function makeHelpersForOptions<
     useGetHook: useGetHook,
     /** Generates a fallback value */
     makeFallback: exposedMakeFallback,
-  }
+  };
 }

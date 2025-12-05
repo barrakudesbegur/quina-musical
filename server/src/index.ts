@@ -1,9 +1,9 @@
-import { createHTTPServer } from '@trpc/server/adapters/standalone'
-import { appRouter } from './api/index.js'
-import cors from 'cors'
+import { createHTTPServer } from '@trpc/server/adapters/standalone';
+import cors from 'cors';
+import { appRouter } from './api/index.js';
 
 if (!process.env.CLIENT_URL) {
-  throw new Error('Environment variable "CLIENT_URL" is missing.')
+  throw new Error('Environment variable "CLIENT_URL" is missing.');
 }
 
 const server = createHTTPServer({
@@ -21,8 +21,8 @@ const server = createHTTPServer({
   }),
   router: appRouter,
   createContext() {
-    return {}
+    return {};
   },
-})
+});
 
-server.listen(3000)
+server.listen(3000);

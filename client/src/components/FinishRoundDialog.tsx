@@ -8,24 +8,28 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-} from '@nextui-org/react'
-import { IconChevronsRight, IconDeviceFloppy, IconX } from '@tabler/icons-react'
-import { FC, useState } from 'react'
+} from '@nextui-org/react';
+import {
+  IconChevronsRight,
+  IconDeviceFloppy,
+  IconX,
+} from '@tabler/icons-react';
+import { FC, useState } from 'react';
 
 export const FinishRoundDialog: FC<{
-  isOpen: boolean
-  defaultValue: string
-  onClose: () => void
-  onConfirm: (name: string, isLastRound: boolean) => void
-  loading: boolean
+  isOpen: boolean;
+  defaultValue: string;
+  onClose: () => void;
+  onConfirm: (name: string, isLastRound: boolean) => void;
+  loading: boolean;
 }> = ({ isOpen, defaultValue, onClose, onConfirm, loading }) => {
-  const [isLastRound, setIsLastRound] = useState(false)
-  const [roundName, setRoundName] = useState(defaultValue)
+  const [isLastRound, setIsLastRound] = useState(false);
+  const [roundName, setRoundName] = useState(defaultValue);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    onConfirm(roundName, isLastRound)
-  }
+    e.preventDefault();
+    onConfirm(roundName, isLastRound);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -91,5 +95,5 @@ export const FinishRoundDialog: FC<{
         )}
       </ModalContent>
     </Modal>
-  )
-}
+  );
+};

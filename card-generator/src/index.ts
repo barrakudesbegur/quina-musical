@@ -1,6 +1,6 @@
-import songs from './songs.json';
 import { generateCardsJson } from './generate-cards-json';
 import { generateCardsPDF } from './generate-cards-pdf';
+import songs from './songs.json';
 import { saveJsonToFile } from './utils/files';
 
 const SEED = 'barrakudes-2024-cigronet';

@@ -1,36 +1,36 @@
-import autoAnimate from '@formkit/auto-animate'
-import { cn } from '@nextui-org/react'
-import { FC, useEffect, useMemo, useRef } from 'react'
-import QRCode from 'react-qr-code'
-import decorationLeft from '../assets/decoration-left.svg'
-import decorationRight from '../assets/decoration-right.svg'
-import { MorphingText } from '../components/MorphingText'
-import { trpc } from '../utils/trpc'
+import autoAnimate from '@formkit/auto-animate';
+import { cn } from '@nextui-org/react';
+import { FC, useEffect, useMemo, useRef } from 'react';
+import QRCode from 'react-qr-code';
+import decorationLeft from '../assets/decoration-left.svg';
+import decorationRight from '../assets/decoration-right.svg';
+import { MorphingText } from '../components/MorphingText';
+import { trpc } from '../utils/trpc';
 
 export const HomePage: FC = () => {
-  const parent = useRef<HTMLOListElement>(null)
+  const parent = useRef<HTMLOListElement>(null);
   useEffect(() => {
-    if (parent.current) autoAnimate(parent.current)
-  }, [parent])
+    if (parent.current) autoAnimate(parent.current);
+  }, [parent]);
 
   const gameState = trpc.game.onStateChange.useSubscription(undefined, {
     onError(err) {
-      console.error('Subscription error:', err)
+      console.error('Subscription error:', err);
     },
-  })
+  });
 
   const lastPlayedSong = useMemo(
     () => gameState.data?.playedSongs[0],
     [gameState.data]
-  )
+  );
 
-  const previousTitle = useRef(lastPlayedSong?.title ?? '')
-  const previousArtist = useRef(lastPlayedSong?.artist ?? '')
+  const previousTitle = useRef(lastPlayedSong?.title ?? '');
+  const previousArtist = useRef(lastPlayedSong?.artist ?? '');
 
   useEffect(() => {
-    previousTitle.current = lastPlayedSong?.title ?? ''
-    previousArtist.current = lastPlayedSong?.artist ?? ''
-  }, [lastPlayedSong])
+    previousTitle.current = lastPlayedSong?.title ?? '';
+    previousArtist.current = lastPlayedSong?.artist ?? '';
+  }, [lastPlayedSong]);
 
   return (
     <main className="bg-[#8B1538] font-brand font-light tracking-wider text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
@@ -142,5 +142,5 @@ export const HomePage: FC = () => {
         </div>
       </div>
     </main>
-  )
-}
+  );
+};

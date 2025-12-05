@@ -1,10 +1,10 @@
-import { FC } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AdminAuthGuard } from './components/AdminAuthGuard'
-import { GameStateGuard } from './components/GameStateGuard'
-import { AdminPage } from './pages/AdminPage'
-import { HomePage } from './pages/HomePage'
-import { LoginPage } from './pages/LoginPage'
+import { FC } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AdminAuthGuard } from './components/AdminAuthGuard';
+import { GameStateGuard } from './components/GameStateGuard';
+import { AdminPage } from './pages/AdminPage';
+import { HomePage } from './pages/HomePage';
+import { LoginPage } from './pages/LoginPage';
 
 export const App: FC = () => {
   return (
@@ -33,5 +33,5 @@ export const App: FC = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  )
-}
+  );
+};

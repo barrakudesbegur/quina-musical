@@ -4,19 +4,19 @@ import {
   IconPlayerPlay,
   IconPower,
   TablerIcon,
-} from '@tabler/icons-react'
-import { inferProcedureOutput } from '@trpc/server'
-import { FC } from 'react'
-import { AppRouter } from '../../../server/src/api'
-import { makeHelpersForOptions } from '../utils/makeHelpersForOptions'
-import { transformCase } from '../utils/strings'
+} from '@tabler/icons-react';
+import { inferProcedureOutput } from '@trpc/server';
+import { FC } from 'react';
+import { AppRouter } from '../../../server/src/api';
+import { makeHelpersForOptions } from '../utils/makeHelpersForOptions';
+import { transformCase } from '../utils/strings';
 
 type GameStatusInfo<T extends string | null | undefined = string> = {
-  id: T
-  label: string
-  description: string | null
-  icon: TablerIcon
-}
+  id: T;
+  label: string;
+  description: string | null;
+  icon: TablerIcon;
+};
 
 const {
   // dataArray: gameStatusInfo,
@@ -58,21 +58,21 @@ const {
       icon: IconGift,
     },
   ] as const
-)
+);
 
 type ExtractedStatus<G extends AsyncIterable<unknown>> =
   G extends AsyncIterable<infer T extends { status: unknown }>
     ? T['status']
-    : never
+    : never;
 
 export type GameStatus =
   | ExtractedStatus<inferProcedureOutput<AppRouter['game']['getStatus']>>
-  | 'not-avilable'
+  | 'not-avilable';
 
 export const GameStatusScreen: FC<{
-  status: GameStatus
+  status: GameStatus;
 }> = ({ status }) => {
-  const { label, description, icon: Icon } = useGameStatusInfo(status)
+  const { label, description, icon: Icon } = useGameStatusInfo(status);
   return (
     <main className="bg-slate-900 font-brand font-light tracking-wider pb-16 pt-4 text-white min-h-dvh w-dvw flex items-center justify-center flex-col text-center text-balance gap-4 px-4">
       <Icon size={48} stroke={1.5} />
@@ -81,5 +81,5 @@ export const GameStatusScreen: FC<{
       </h1>
       {description && <p className="text-lg tracking-widest">{description}</p>}
     </main>
-  )
-}
+  );
+};

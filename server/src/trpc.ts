@@ -1,5 +1,5 @@
-import { initTRPC } from '@trpc/server'
-import superjson from 'superjson'
+import { initTRPC } from '@trpc/server';
+import superjson from 'superjson';
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -13,7 +13,7 @@ const t = initTRPC.create({
       reconnectAfterInactivityMs: 5_000,
     },
   },
-})
+});
 
-export const router = t.router
-export const publicProcedure = t.procedure
+export const router = t.router;
+export const publicProcedure = t.procedure;

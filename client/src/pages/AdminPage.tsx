@@ -1,34 +1,34 @@
-import { Button, Card, CardBody, Chip, Input, cn } from '@nextui-org/react'
+import { Button, Card, CardBody, Chip, Input, cn } from '@nextui-org/react';
 import {
   IconArrowBackUp,
   IconCircleCheckFilled,
   IconPlayerPlay,
-} from '@tabler/icons-react'
-import { FC, useEffect, useMemo, useState } from 'react'
-import { useDebounceCallback } from 'usehooks-ts'
-import { FinishRoundDialog } from '../components/FinishRoundDialog'
-import { trpc } from '../utils/trpc'
-import { useNavigate } from 'react-router-dom'
+} from '@tabler/icons-react';
+import { FC, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDebounceCallback } from 'usehooks-ts';
+import { FinishRoundDialog } from '../components/FinishRoundDialog';
+import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
-  const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false)
-  const [roundName, setRoundName] = useState('')
-  const utils = trpc.useUtils()
-  const songsQuery = trpc.game.getAllSongs.useQuery()
-  const roundQuery = trpc.game.getCurrentRound.useQuery()
-  const statusQuery = trpc.game.getStatus.useSubscription()
-  const navigate = useNavigate()
+  const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
+  const [roundName, setRoundName] = useState('');
+  const utils = trpc.useUtils();
+  const songsQuery = trpc.game.getAllSongs.useQuery();
+  const roundQuery = trpc.game.getCurrentRound.useQuery();
+  const statusQuery = trpc.game.getStatus.useSubscription();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (roundQuery.data?.name) {
-      setRoundName(roundQuery.data.name)
+      setRoundName(roundQuery.data.name);
     }
-  }, [roundQuery.data?.name])
+  }, [roundQuery.data?.name]);
 
   const maxPosition = useMemo(() => {
-    if (!songsQuery.data) return 0
-    return Math.max(0, ...songsQuery.data.map((s) => s.playedPosition || 0))
-  }, [songsQuery.data])
+    if (!songsQuery.data) return 0;
+    return Math.max(0, ...songsQuery.data.map((s) => s.playedPosition || 0));
+  }, [songsQuery.data]);
 
   const songsWithLastPlayed = useMemo(() => {
     return (
@@ -36,165 +36,165 @@ export const AdminPage: FC = () => {
         ...song,
         isLastPlayed: song.playedPosition === maxPosition,
       })) ?? []
-    )
-  }, [songsQuery.data, maxPosition])
+    );
+  }, [songsQuery.data, maxPosition]);
 
   const playSongMutation = trpc.game.playSong.useMutation({
     onMutate: async ({ songId }) => {
-      await utils.game.getAllSongs.cancel()
+      await utils.game.getAllSongs.cancel();
 
-      const previousSongs = utils.game.getAllSongs.getData()
+      const previousSongs = utils.game.getAllSongs.getData();
 
       // Calculate next position
-      const currentSongs = previousSongs || []
+      const currentSongs = previousSongs || [];
       const nextPosition =
-        Math.max(0, ...currentSongs.map((s) => s.playedPosition || 0)) + 1
+        Math.max(0, ...currentSongs.map((s) => s.playedPosition || 0)) + 1;
 
       utils.game.getAllSongs.setData(undefined, (old) => {
-        if (!old) return previousSongs
+        if (!old) return previousSongs;
         return old.map((song) => ({
           ...song,
           isPlayed: song.isPlayed || song.id === songId,
           playedPosition:
             song.id === songId ? nextPosition : song.playedPosition,
-        }))
-      })
+        }));
+      });
 
-      return { previousSongs }
+      return { previousSongs };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousSongs) {
-        utils.game.getAllSongs.setData(undefined, context.previousSongs)
+        utils.game.getAllSongs.setData(undefined, context.previousSongs);
       }
     },
     onSettled: () => {
-      utils.game.getAllSongs.invalidate()
+      utils.game.getAllSongs.invalidate();
     },
-  })
+  });
 
   const undoLastPlayedMutation = trpc.game.undoLastPlayed.useMutation({
     onMutate: async () => {
-      await utils.game.getAllSongs.cancel()
+      await utils.game.getAllSongs.cancel();
 
-      const previousSongs = utils.game.getAllSongs.getData()
-      if (!previousSongs) return { previousSongs }
+      const previousSongs = utils.game.getAllSongs.getData();
+      if (!previousSongs) return { previousSongs };
 
       const maxPos = Math.max(
         0,
         ...previousSongs.map((s) => s.playedPosition || 0)
-      )
+      );
       const lastPlayedSong = previousSongs.find(
         (s) => s.playedPosition === maxPos
-      )
-      if (!lastPlayedSong) return { previousSongs }
+      );
+      if (!lastPlayedSong) return { previousSongs };
 
       utils.game.getAllSongs.setData(undefined, (old) => {
-        if (!old) return previousSongs
+        if (!old) return previousSongs;
         return old.map((song) => ({
           ...song,
           isPlayed: song.isPlayed && song.playedPosition !== maxPos,
           playedPosition:
             song.playedPosition === maxPos ? undefined : song.playedPosition,
-        }))
-      })
+        }));
+      });
 
-      return { previousSongs }
+      return { previousSongs };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousSongs) {
-        utils.game.getAllSongs.setData(undefined, context.previousSongs)
+        utils.game.getAllSongs.setData(undefined, context.previousSongs);
       }
     },
     onSettled: () => {
-      utils.game.getAllSongs.invalidate()
+      utils.game.getAllSongs.invalidate();
     },
-  })
+  });
 
   const handlePlaySong = (songId: string) => {
-    playSongMutation.mutate({ songId })
-  }
+    playSongMutation.mutate({ songId });
+  };
 
   const handleCardPress = (song: (typeof songsWithLastPlayed)[number]) => {
     if (song.isLastPlayed) {
-      undoLastPlayedMutation.mutate()
+      undoLastPlayedMutation.mutate();
     } else if (!song.isPlayed) {
-      handlePlaySong(song.id)
+      handlePlaySong(song.id);
     }
-  }
+  };
 
   const updateRoundNameMutation = trpc.game.updateRoundName.useMutation({
     onMutate: async ({ name }) => {
-      await utils.game.getCurrentRound.cancel()
+      await utils.game.getCurrentRound.cancel();
 
-      const previousRound = utils.game.getCurrentRound.getData()
+      const previousRound = utils.game.getCurrentRound.getData();
 
       utils.game.getCurrentRound.setData(undefined, (old) => {
-        if (!old) return previousRound
+        if (!old) return previousRound;
         return {
           ...old,
           name,
-        }
-      })
+        };
+      });
 
-      return { previousRound }
+      return { previousRound };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousRound) {
-        utils.game.getCurrentRound.setData(undefined, context.previousRound)
+        utils.game.getCurrentRound.setData(undefined, context.previousRound);
       }
     },
     onSettled: () => {
-      utils.game.getCurrentRound.invalidate()
+      utils.game.getCurrentRound.invalidate();
     },
-  })
+  });
 
   const debouncedUpdateRoundName = useDebounceCallback(
     (name: string) => {
-      updateRoundNameMutation.mutate({ name })
+      updateRoundNameMutation.mutate({ name });
     },
     1000,
     {
       leading: true,
     }
-  )
+  );
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
     onSettled: () => {
-      utils.game.invalidate()
-      setIsFinishRoundDialogOpen(false)
+      utils.game.invalidate();
+      setIsFinishRoundDialogOpen(false);
     },
-  })
+  });
 
   const resumeGameMutation = trpc.game.resumeGame.useMutation({
     onSettled: () => {
-      utils.game.invalidate()
+      utils.game.invalidate();
     },
-  })
+  });
 
   const defaultNextRoundName = useMemo(() => {
-    if (!roundQuery.data) return '1'
-    return String(roundQuery.data.position + 1)
-  }, [roundQuery.data])
+    if (!roundQuery.data) return '1';
+    return String(roundQuery.data.position + 1);
+  }, [roundQuery.data]);
 
   const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
-    finishRoundMutation.mutate({ nextRoundName, isLastRound })
-  }
+    finishRoundMutation.mutate({ nextRoundName, isLastRound });
+  };
 
   const handleRoundNameChange = (value: string) => {
-    setRoundName(value)
-    debouncedUpdateRoundName(value)
-  }
+    setRoundName(value);
+    debouncedUpdateRoundName(value);
+  };
 
   const startGameMutation = trpc.game.startGame.useMutation({
     onSettled: () => {
-      utils.game.invalidate()
+      utils.game.invalidate();
     },
-  })
+  });
 
   const handleLogout = () => {
-    sessionStorage.removeItem('adminAuth')
-    navigate('/login')
-  }
+    sessionStorage.removeItem('adminAuth');
+    navigate('/login');
+  };
 
   if (!roundQuery.data) {
     return (
@@ -211,9 +211,9 @@ export const AdminPage: FC = () => {
             variant="shadow"
             onPress={() => {
               if (statusQuery.data?.status === 'finished') {
-                resumeGameMutation.mutate()
+                resumeGameMutation.mutate();
               } else {
-                startGameMutation.mutate()
+                startGameMutation.mutate();
               }
             }}
             className="font-brand uppercase tracking-widest text-xl"
@@ -231,7 +231,7 @@ export const AdminPage: FC = () => {
           Logout
         </Button>
       </main>
-    )
+    );
   }
 
   return (
@@ -330,5 +330,5 @@ export const AdminPage: FC = () => {
         Logout
       </Button>
     </main>
-  )
-}
+  );
+};

@@ -1,32 +1,32 @@
-import { Button, Card, CardBody, Input } from '@nextui-org/react'
-import { FC, useState } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Button, Card, CardBody, Input } from '@nextui-org/react';
+import { FC, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 
-const ADMIN_PASSWORD = 'desgraciat'
+const ADMIN_PASSWORD = 'desgraciat';
 
 export const LoginPage: FC = () => {
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('adminAuth') === 'true'
-  })
-  const [error, setError] = useState('')
-  const location = useLocation()
+    return sessionStorage.getItem('adminAuth') === 'true';
+  });
+  const [error, setError] = useState('');
+  const location = useLocation();
 
   if (isAuthenticated) {
-    return <Navigate to="/admin" state={{ from: location }} replace />
+    return <Navigate to="/admin" state={{ from: location }} replace />;
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // In a real app, you'd want to hash this password and store it securely
     if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('adminAuth', 'true')
-      setIsAuthenticated(true)
+      sessionStorage.setItem('adminAuth', 'true');
+      setIsAuthenticated(true);
     } else {
-      setError('Invalid password')
+      setError('Invalid password');
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -58,5 +58,5 @@ export const LoginPage: FC = () => {
         </CardBody>
       </Card>
     </div>
-  )
-}
+  );
+};

@@ -9,15 +9,15 @@ const normalize = (str: string): string => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .trim()
-}
+    .trim();
+};
 
 /**
  * Compare two strings after normalizing them.
  */
 export const areSameNormalized = (str1: string, str2: string): boolean => {
-  return normalize(str1) === normalize(str2)
-}
+  return normalize(str1) === normalize(str2);
+};
 
 /**
  * Transform a string to a different case.
@@ -35,20 +35,20 @@ export const transformCase = (
 ) => {
   switch (caseType) {
     case 'lower':
-      return str.toLowerCase()
+      return str.toLowerCase();
     case 'upper':
-      return str.toUpperCase()
+      return str.toUpperCase();
     case 'sentence':
-      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     case 'title':
       return str
         .split(' ')
         .map(
           (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         )
-        .join(' ')
+        .join(' ');
     case 'original':
     default:
-      return str
+      return str;
   }
-}
+};
