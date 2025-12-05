@@ -114,7 +114,7 @@ export const HomePage: FC = () => {
         </div>
 
         <div className="h-full w-full relative col-span-1 bg-[#8B1538] pt-2 flex justify-between">
-          <div className="absolute bottom-[calc(100%-1px)] left-0 w-full h-[calc(clamp(5rem,20dvw,30dvh)*0.75)] bg-gradient-to-b from-transparent to-[#8B1538]"></div>
+          <div className="absolute bottom-[calc(100%-1px)] left-0 w-full h-[calc(clamp(5rem,20dvw,30dvh)*0.75)] bg-linear-to-b from-transparent to-[#8B1538]"></div>
           <div className="w-[clamp(5rem,20dvw,30dvh)] p-[calc(clamp(5rem,20dvw,30dvh)*0.06)] ml-[calc(100dvw/3/6)] bg-white rounded-t-[7%] aspect-square">
             <QRCode
               value="https://quina.barrakudesbegur.org"

@@ -4,7 +4,7 @@ import {
   IconCircleCheckFilled,
   IconPlayerPlay,
 } from '@tabler/icons-react';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounceCallback } from 'usehooks-ts';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
@@ -12,18 +12,11 @@ import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
-  const [roundName, setRoundName] = useState('');
   const utils = trpc.useUtils();
   const songsQuery = trpc.game.getAllSongs.useQuery();
   const roundQuery = trpc.game.getCurrentRound.useQuery();
   const statusQuery = trpc.game.getStatus.useSubscription();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (roundQuery.data?.name) {
-      setRoundName(roundQuery.data.name);
-    }
-  }, [roundQuery.data?.name]);
 
   const maxPosition = useMemo(() => {
     if (!songsQuery.data) return 0;
@@ -148,15 +141,9 @@ export const AdminPage: FC = () => {
     },
   });
 
-  const debouncedUpdateRoundName = useDebounceCallback(
-    (name: string) => {
-      updateRoundNameMutation.mutate({ name });
-    },
-    1000,
-    {
-      leading: true,
-    }
-  );
+  const debouncedUpdateRoundName = useDebounceCallback((name: string) => {
+    updateRoundNameMutation.mutate({ name });
+  }, 500);
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
     onSettled: () => {
@@ -181,7 +168,10 @@ export const AdminPage: FC = () => {
   };
 
   const handleRoundNameChange = (value: string) => {
-    setRoundName(value);
+    utils.game.getCurrentRound.setData(undefined, (old) => {
+      if (!old) return old;
+      return { ...old, name: value };
+    });
     debouncedUpdateRoundName(value);
   };
 
@@ -242,7 +232,7 @@ export const AdminPage: FC = () => {
         </h2>
         <div className="flex flex-col gap-2">
           <Input
-            value={roundName}
+            value={roundQuery.data?.name ?? ''}
             onValueChange={handleRoundNameChange}
             variant="bordered"
             label="Nom de la quina"
@@ -277,7 +267,7 @@ export const AdminPage: FC = () => {
               radius="sm"
             >
               <CardBody className="gap-3 justify-between flex-row items-center">
-                <div className="flex flex-col flex-grow">
+                <div className="flex flex-col grow">
                   <p className="text-lg leading-tight">{song.title}</p>
                   <p className="text-xs text-default-500 leading-tight">
                     {song.artist}
