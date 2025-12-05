@@ -36,7 +36,7 @@ export const PlaybackSection: FC = () => {
         <Button
           isIconOnly
           aria-label="Següent"
-          className="w-full aspect-square h-auto"
+          className="w-full aspect-square h-auto max-w-3xs ml-auto"
           onPress={handlePlayPrevious}
           isLoading={undoLastPlayedMutation.isPending}
         >
@@ -45,7 +45,7 @@ export const PlaybackSection: FC = () => {
         <Button
           isIconOnly
           aria-label="Següent"
-          className="w-full aspect-square h-auto"
+          className="w-full aspect-square h-auto max-w-3xs mr-auto"
           onPress={handlePlay}
           isLoading={playSongMutation.isPending}
         >
