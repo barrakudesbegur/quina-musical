@@ -2,6 +2,7 @@ import { Button, Switch } from '@heroui/react';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
 import { PlaybackSection } from '../components/PlaybackSection';
@@ -11,6 +12,7 @@ import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
+  const [isCheckCardDialogOpen, setIsCheckCardDialogOpen] = useState(false);
   const utils = trpc.useUtils();
   const roundQuery = trpc.game.getCurrentRound.useQuery();
   const statusQuery = trpc.game.getStatus.useSubscription();
@@ -83,6 +85,11 @@ export const AdminPage: FC = () => {
     navigate('/login');
   };
 
+  const openFinishRoundDialog = () => {
+    setIsFinishRoundDialogOpen(true);
+    setIsCheckCardDialogOpen(false);
+  };
+
   if (!roundQuery.data) {
     return (
       <main className="container mx-auto p-4 pb-32 space-y-12">
@@ -123,33 +130,30 @@ export const AdminPage: FC = () => {
 
   return (
     <main className="max-w-7xl mx-auto p-4 pb-32 space-y-12">
-      <section>
-        <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
+      <section className="space-y-4">
+        <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
           Gestió de la quina
         </h2>
         <RoundNameForm />
-      </section>
-
-      <div className="flex items-center gap-3 mt-8">
-        <span className="font-semibold">Mode manual</span>
-        <Switch
-          isSelected={isManualMode}
-          onValueChange={handlePlaybackModeChange}
+        <Button
           color="primary"
+          onPress={() => setIsCheckCardDialogOpen(true)}
+          className="w-full block"
+        >
+          Comprovar cartó
+        </Button>
+        <CheckCardDialog
+          isOpen={isCheckCardDialogOpen}
+          onClose={() => setIsCheckCardDialogOpen(false)}
+          onFinishRound={openFinishRoundDialog}
         />
-      </div>
-      {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
-
-      <GameInsightsSection />
-
-      <section>
         <Button
           color="danger"
-          variant="flat"
+          variant="bordered"
           onPress={() => setIsFinishRoundDialogOpen(true)}
-          className="mx-auto block"
+          className="w-full block"
         >
-          Finalitzar quina...
+          Finalitzar quina
         </Button>
         <FinishRoundDialog
           isOpen={isFinishRoundDialogOpen}
@@ -158,7 +162,18 @@ export const AdminPage: FC = () => {
           onConfirm={handleFinishRound}
           loading={finishRoundMutation.isPending}
         />
+        <Switch
+          isSelected={isManualMode}
+          onValueChange={handlePlaybackModeChange}
+          color="primary"
+        >
+          Mode manual
+        </Switch>
       </section>
+
+      {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
+
+      <GameInsightsSection />
 
       <Button
         onPress={handleLogout}
