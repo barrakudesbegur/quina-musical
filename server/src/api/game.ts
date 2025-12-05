@@ -97,7 +97,7 @@ export const gameRouter = router({
   }),
 
   updateCardsPlaying: publicProcedure
-    .input(z.object({ cardIds: z.array(z.number().positive()) }))
+    .input(z.object({ cardIds: z.array(z.number().nonnegative()) }))
     .mutation(async ({ input }) => {
       gameDb.data.cardsPlaying = input.cardIds.filter((id) =>
         cards.some((c) => c.id === id)
