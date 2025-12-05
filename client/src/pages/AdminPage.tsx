@@ -183,6 +183,14 @@ export const AdminPage: FC = () => {
         </div>
       </section>
 
+      <FinishRoundDialog
+        isOpen={isFinishRoundDialogOpen}
+        defaultValue={defaultNextRoundName}
+        onClose={() => setIsFinishRoundDialogOpen(false)}
+        onConfirm={handleFinishRound}
+        loading={finishRoundMutation.isPending}
+      />
+
       <div className="flex items-center gap-3 mt-8">
         <span className="font-semibold">Mode manual</span>
         <Switch
@@ -193,13 +201,6 @@ export const AdminPage: FC = () => {
       </div>
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
 
-      <FinishRoundDialog
-        isOpen={isFinishRoundDialogOpen}
-        defaultValue={defaultNextRoundName}
-        onClose={() => setIsFinishRoundDialogOpen(false)}
-        onConfirm={handleFinishRound}
-        loading={finishRoundMutation.isPending}
-      />
       <Button
         onPress={handleLogout}
         variant="faded"
