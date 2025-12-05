@@ -92,22 +92,34 @@ export const gameRouter = router({
   }),
 
   playSong: publicProcedure
-    .input(z.object({ songId: z.number().min(1) }))
+    .input(z.object({ songId: z.number().min(1).optional() }))
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return;
 
+      const songId =
+        input.songId ??
+        gameDb.data.currentRound.shuffledSongs
+          .toSorted((a, b) => a.position - b.position)
+          .find(
+            (song) =>
+              !gameDb.data.currentRound?.playedSongs.some(
+                (p) => p.id === song.id
+              )
+          )?.id;
+      if (!songId) return;
+
       const alreadyPlayed = gameDb.data.currentRound.playedSongs.some(
-        (p) => p.id === input.songId
+        (p) => p.id === songId
       );
-      if (!alreadyPlayed) {
-        gameDb.data.currentRound.playedSongs.push({
-          id: input.songId,
-          position: gameDb.data.currentRound.playedSongs.length + 1,
-          playedAt: new Date().toISOString(),
-        });
-        await gameDb.write();
-        emitUpdate();
-      }
+      if (alreadyPlayed) return;
+
+      gameDb.data.currentRound.playedSongs.push({
+        id: songId,
+        position: gameDb.data.currentRound.playedSongs.length + 1,
+        playedAt: new Date().toISOString(),
+      });
+      await gameDb.write();
+      emitUpdate();
     }),
 
   undoLastPlayed: publicProcedure.mutation(async () => {
@@ -117,28 +129,6 @@ export const gameRouter = router({
       await gameDb.write();
       emitUpdate();
     }
-  }),
-
-  playNextSong: publicProcedure.mutation(async () => {
-    if (!gameDb.data.currentRound) return;
-
-    const nextSong = gameDb.data.currentRound.shuffledSongs
-      .toSorted((a, b) => a.position - b.position)
-      .find(
-        (song) =>
-          !gameDb.data.currentRound?.playedSongs.some((p) => p.id === song.id)
-      );
-
-    if (!nextSong) return;
-
-    gameDb.data.currentRound.playedSongs.push({
-      id: nextSong.id,
-      position: gameDb.data.currentRound.playedSongs.length + 1,
-      playedAt: new Date().toISOString(),
-    });
-
-    await gameDb.write();
-    emitUpdate();
   }),
 
   getCurrentRound: publicProcedure.query(async () => {

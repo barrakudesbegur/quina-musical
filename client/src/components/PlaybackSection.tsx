@@ -7,7 +7,7 @@ import { trpc } from '../utils/trpc';
 export const PlaybackSection: FC = () => {
   const utils = trpc.useUtils();
 
-  const playNextSongMutation = trpc.game.playNextSong.useMutation({
+  const playSongMutation = trpc.game.playSong.useMutation({
     onSettled: () => {
       utils.game.invalidate();
     },
@@ -23,8 +23,8 @@ export const PlaybackSection: FC = () => {
     undoLastPlayedMutation.mutate();
   };
 
-  const handlePlayNext = () => {
-    playNextSongMutation.mutate();
+  const handlePlay = () => {
+    playSongMutation.mutate({ songId: undefined });
   };
 
   return (
@@ -46,8 +46,8 @@ export const PlaybackSection: FC = () => {
           isIconOnly
           aria-label="Següent"
           className="w-full aspect-square h-auto"
-          onPress={handlePlayNext}
-          isLoading={playNextSongMutation.isPending}
+          onPress={handlePlay}
+          isLoading={playSongMutation.isPending}
         >
           <IconPlayerSkipForward className="size-16 stroke-1" />
         </Button>
