@@ -16,6 +16,7 @@ Features:
 - 🎯 Admin to pick the next song, undo, manage rounds, etc.
 - 🔍 Admin card checker with played/missing songs and winner indicator.
 - 📊 Admin insights with a cards-per-song progress chart.
+- 🔀 Optional manual song picking.
 - 📄 Saves history in a `json` file.
 - 🦖 System down screen.
 

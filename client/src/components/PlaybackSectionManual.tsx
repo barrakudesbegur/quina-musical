@@ -1,11 +1,29 @@
-import { Card, CardBody, Chip, cn } from '@heroui/react';
+import { Card, CardBody, Chip, Tab, Tabs, cn } from '@heroui/react';
 import { IconArrowBackUp, IconCircleCheckFilled } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
+import { sortBy } from 'lodash-es';
 import { trpc } from '../utils/trpc';
+import { useSessionStorage } from 'usehooks-ts';
+
+const sortStorageKey = 'playback-manual-sort';
 
 export const PlaybackSectionManual: FC = () => {
   const utils = trpc.useUtils();
   const songsQuery = trpc.game.getAllSongs.useQuery();
+
+  const sortOptions = [
+    { key: 'expectedPlayedPosition', label: 'Reproducció' },
+    { key: 'title', label: 'Títol' },
+    { key: 'id', label: 'Playlist' },
+  ] as const satisfies readonly {
+    key: keyof (typeof songsWithLastPlayed)[number];
+    label: string;
+  }[];
+  type SortKey = (typeof sortOptions)[number]['key'];
+  const [sortKey, setSortKey] = useSessionStorage<SortKey>(
+    sortStorageKey,
+    sortOptions[0].key
+  );
 
   const maxPosition = useMemo(() => {
     if (!songsQuery.data) return 0;
@@ -20,6 +38,10 @@ export const PlaybackSectionManual: FC = () => {
       })) ?? []
     );
   }, [songsQuery.data, maxPosition]);
+
+  const sortedSongs = useMemo(() => {
+    return sortBy(songsWithLastPlayed, [sortKey, 'id']);
+  }, [songsWithLastPlayed, sortKey]);
 
   const playSongMutation = trpc.game.playSong.useMutation({
     onMutate: async ({ songId }) => {
@@ -105,8 +127,19 @@ export const PlaybackSectionManual: FC = () => {
       <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
         Cançons
       </h2>
+      <Tabs
+        aria-label="Ordenar cançons"
+        selectedKey={sortKey}
+        onSelectionChange={(key) => setSortKey(key as SortKey)}
+        className="mb-2"
+        fullWidth
+      >
+        {sortOptions.map(({ key, label }) => (
+          <Tab key={key} title={label} />
+        ))}
+      </Tabs>
       <div className="flex flex-col gap-2 -mx-2">
-        {songsWithLastPlayed?.map((song) => (
+        {sortedSongs.map((song) => (
           <Card
             key={song.id}
             isPressable
