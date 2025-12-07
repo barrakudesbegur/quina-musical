@@ -66,6 +66,19 @@ def fetch_playlist(playlist_id: str) -> dict:
     playlist_data['content']['items'] = all_items
     return playlist_data
 
+def get_largest_cover_url(sources: list) -> str:
+    """Return the URL of the largest cover art source available."""
+    if not sources:
+        return ''
+    best = max(
+        sources,
+        key=lambda src: (
+            src.get('height') or 0,
+            src.get('width') or 0
+        )
+    )
+    return best.get('url', '')
+
 def save_json(data, filename: str) -> None:
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -85,16 +98,21 @@ def save_csv(playlist_data: dict, filename: str) -> list:
         artists_items = item_data.get('artists', {}).get('items', [])
         artist_names = [a.get('profile', {}).get('name', '') for a in artists_items]
         artist = ', '.join(filter(None, artist_names)) or 'Unknown'
+
+        # Get largest available cover
+        cover_sources = item_data.get('albumOfTrack', {}).get('coverArt', {}).get('sources', [])
+        cover_url = get_largest_cover_url(cover_sources)
         
         tracks.append({
             'id': position,
             'title': title,
-            'artist': artist
+            'artist': artist,
+            'cover': cover_url
         })
     
     # Write CSV
     with open(filename, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['id', 'title', 'artist'])
+        writer = csv.DictWriter(f, fieldnames=['id', 'title', 'artist', 'cover'])
         writer.writeheader()
         writer.writerows(tracks)
     
