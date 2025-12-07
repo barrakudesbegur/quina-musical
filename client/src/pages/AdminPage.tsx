@@ -1,11 +1,16 @@
 import { Button, Divider, Slider, Switch, Tab, Tabs } from '@heroui/react';
 import {
+  IconCarambolaFilled,
+  IconFlameFilled,
   IconLoader2,
   IconPlayerPause,
   IconPlayerPlay,
+  IconSquareRotated,
+  IconTriangleSquareCircleFilled,
   IconVolume,
   IconVolume2,
   IconVolume3,
+  TablerIcon,
 } from '@tabler/icons-react';
 import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,17 +21,19 @@ import { GameInsightsSection } from '../components/GameInsightsSection';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
 import { RoundNameForm } from '../components/RoundNameForm';
+import { MiniPlayer } from '../components/MiniPlayer';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
 
 const songTimestampOptions = [
-  { value: 'main', label: 'Principals' },
-  { value: 'secondary', label: 'Secundaris' },
-  { value: 'any', label: 'Tots' },
-  { value: 'constant', label: 'Igual' },
+  { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
+  { value: 'main', label: 'Principals', icon: IconFlameFilled },
+  { value: 'secondary', label: 'Secundaris', icon: IconSquareRotated },
+  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircleFilled },
 ] as const satisfies readonly {
   value: SongTimestampCategory;
   label: string;
+  icon: TablerIcon;
 }[];
 
 export const AdminPage: FC = () => {
@@ -34,6 +41,9 @@ export const AdminPage: FC = () => {
   const [isCheckCardDialogOpen, setIsCheckCardDialogOpen] = useState(false);
   const utils = trpc.useUtils();
   const roundQuery = trpc.game.getCurrentRound.useQuery();
+  const songsQuery = trpc.game.getAllSongs.useQuery(undefined, {
+    enabled: !!roundQuery.data,
+  });
   const statusQuery = trpc.game.getStatus.useSubscription();
   const navigate = useNavigate();
 
@@ -76,6 +86,18 @@ export const AdminPage: FC = () => {
     },
   });
 
+  const playSongMutation = trpc.game.playSong.useMutation({
+    onSettled: () => {
+      utils.game.invalidate();
+    },
+  });
+
+  const undoLastPlayedMutation = trpc.game.undoLastPlayed.useMutation({
+    onSettled: () => {
+      utils.game.invalidate();
+    },
+  });
+
   const defaultNextRoundName = useMemo(() => {
     if (!roundQuery.data) return '1';
     return String(roundQuery.data.position + 1);
@@ -85,13 +107,19 @@ export const AdminPage: FC = () => {
 
   const {
     start: startSongPlayer,
-    playById,
+    loadSong,
     pause,
+    resume,
     isPlaying,
     isLoading: isPlayerLoading,
     preloadStatuses: playerSongs,
     playSilence,
     setVolume,
+    seek,
+    currentTime,
+    duration,
+    currentSongId,
+    canResume,
   } = useSongPlayer();
 
   useEffect(() => {
@@ -121,19 +149,37 @@ export const AdminPage: FC = () => {
     [roundQuery.data?.playedSongs]
   );
 
+  const currentSong = useMemo(
+    () => songsQuery.data?.find((song) => song.id === lastPlayedSongId) ?? null,
+    [lastPlayedSongId, songsQuery.data]
+  );
+
+  const canPlayPrevious = (roundQuery.data?.playedSongs.length ?? 0) > 0;
+  const playerControlLoading =
+    isPlayerLoading ||
+    playSongMutation.isPending ||
+    undoLastPlayedMutation.isPending ||
+    songsQuery.isFetching ||
+    songsQuery.isLoading;
+
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      if (lastPlayedSongId) {
+        loadSong(lastPlayedSongId, timestampType, { autoplay: false });
+      }
+      return;
+    }
 
     if (lastPlayedKeyRef.current === lastPlayedSongId) return;
     lastPlayedKeyRef.current = lastPlayedSongId;
 
     if (lastPlayedSongId) {
-      void playById(lastPlayedSongId, timestampType);
+      void loadSong(lastPlayedSongId, timestampType, { autoplay: true });
     } else {
       playSilence();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastPlayedSongId, playById, timestampType]);
+  }, [lastPlayedSongId, loadSong, timestampType]);
 
   const handleTogglePlayback = async () => {
     if (isPlaying) {
@@ -143,7 +189,11 @@ export const AdminPage: FC = () => {
 
     try {
       if (lastPlayedSongId) {
-        await playById(lastPlayedSongId, timestampType);
+        if (canResume && currentSongId && currentSongId === lastPlayedSongId) {
+          await resume();
+        } else {
+          await loadSong(lastPlayedSongId, timestampType, { autoplay: true });
+        }
       } else {
         playSilence();
       }
@@ -153,6 +203,7 @@ export const AdminPage: FC = () => {
   };
 
   const playerPreloadProgress = useMemo(() => {
+    if (!playerSongs.length) return 0;
     return (
       playerSongs.filter((song) => song.preloaded).length / playerSongs.length
     );
@@ -166,6 +217,15 @@ export const AdminPage: FC = () => {
     updatePlaybackModeMutation.mutate({
       playbackMode: value ? 'manual' : 'auto',
     });
+  };
+
+  const handlePlayNextSong = () => {
+    playSongMutation.mutate({ songId: undefined });
+  };
+
+  const handlePlayPreviousSong = () => {
+    if (!canPlayPrevious) return;
+    undoLastPlayedMutation.mutate();
   };
 
   const startGameMutation = trpc.game.startGame.useMutation({
@@ -335,8 +395,16 @@ export const AdminPage: FC = () => {
           className="mb-2"
           fullWidth
         >
-          {songTimestampOptions.map(({ value, label }) => (
-            <Tab key={value} title={label} />
+          {songTimestampOptions.map(({ value, label, icon: Icon }) => (
+            <Tab
+              key={value}
+              title={
+                <div className="flex items-center space-x-2">
+                  <Icon className="size-4" stroke={3} />
+                  <span>{label}</span>
+                </div>
+              }
+            />
           ))}
         </Tabs>
 
@@ -350,6 +418,18 @@ export const AdminPage: FC = () => {
           Mode manual
         </Switch>
       </section>
+
+      <MiniPlayer
+        song={currentSong}
+        isPlaying={isPlaying}
+        isLoading={playerControlLoading}
+        currentTime={currentTime}
+        duration={duration}
+        onTogglePlay={handleTogglePlayback}
+        onNext={handlePlayNextSong}
+        onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
+        onSeek={seek}
+      />
 
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
 

@@ -33,8 +33,12 @@ export const useSongPlayer = () => {
   const [preloadedSongIds, setPreloadedSongIds] = useState<Set<SongId>>(
     new Set()
   );
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [canResume, setCanResume] = useState(false);
   const volumeRef = useRef(1);
   const volumeAutomationRef = useRef<VolumeAutomation | null>(null);
+  const pausedTimeRef = useRef<number | null>(null);
 
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined);
   const startedAtQuery = trpc.game.getStartedAt.useQuery();
@@ -49,6 +53,37 @@ export const useSongPlayer = () => {
       `/songs/${songId}.mp3${startedAtQuery.data ? `?v=${new Date(startedAtQuery.data).getTime()}` : ''}`,
     [startedAtQuery.data]
   );
+
+  const audioListenersCleanupRef = useRef<(() => void) | null>(null);
+
+  const attachAudioListeners = useCallback((audioEl: HTMLAudioElement) => {
+    audioListenersCleanupRef.current?.();
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audioEl.currentTime);
+    };
+
+    const handleDurationChange = () => {
+      setDuration(Number.isFinite(audioEl.duration) ? audioEl.duration : null);
+    };
+
+    const handleEmptied = () => {
+      setCurrentTime(0);
+      setDuration(null);
+    };
+
+    audioEl.addEventListener('timeupdate', handleTimeUpdate);
+    audioEl.addEventListener('loadedmetadata', handleDurationChange);
+    audioEl.addEventListener('durationchange', handleDurationChange);
+    audioEl.addEventListener('emptied', handleEmptied);
+
+    audioListenersCleanupRef.current = () => {
+      audioEl.removeEventListener('timeupdate', handleTimeUpdate);
+      audioEl.removeEventListener('loadedmetadata', handleDurationChange);
+      audioEl.removeEventListener('durationchange', handleDurationChange);
+      audioEl.removeEventListener('emptied', handleEmptied);
+    };
+  }, []);
 
   const preloadSong = useCallback(
     async (songId: SongId, signal?: AbortSignal) => {
@@ -151,12 +186,17 @@ export const useSongPlayer = () => {
       gainNodeRef.current = gain;
       mediaSourceRef.current = mediaSource;
       audioElRef.current = audioEl;
+
+      attachAudioListeners(audioEl);
+      setCurrentTime(audioEl.currentTime);
+      setDuration(Number.isFinite(audioEl.duration) ? audioEl.duration : null);
+      setCanResume(false);
     }
 
     const ctx = audioContextRef.current!;
 
     return ctx;
-  }, []);
+  }, [attachAudioListeners]);
 
   const start = useCallback(async () => {
     if (startedRef.current && !startPromiseRef.current) {
@@ -222,10 +262,11 @@ export const useSongPlayer = () => {
     [songsQuery.data]
   );
 
-  const playById = useCallback(
+  const loadSong = useCallback(
     async (
       songId: SongId,
-      timestampSelection?: SongTimestampCategory | number
+      timestampSelection?: SongTimestampCategory | number,
+      options?: { autoplay?: boolean }
     ) => {
       await start();
 
@@ -239,8 +280,10 @@ export const useSongPlayer = () => {
 
       audioEl.loop = true;
       const src = getSongSrc(songId);
-      audioEl.src = src;
-      audioEl.currentTime = 0;
+      if (audioEl.src !== src) {
+        audioEl.src = src;
+      }
+
       const startSeconds = pickStartTimeMs(songId, timestampSelection);
       const applyStart = () => {
         try {
@@ -248,17 +291,46 @@ export const useSongPlayer = () => {
         } catch {
           // Ignore seek failures; playback will start from current time.
         }
+        setCurrentTime(audioEl.currentTime);
+        pausedTimeRef.current = audioEl.currentTime;
       };
-      applyStart();
-      if (audioEl.readyState < HTMLMediaElement.HAVE_METADATA) {
-        audioEl.addEventListener('loadedmetadata', applyStart, { once: true });
+
+      const handleMetadata = () => {
+        setDuration(
+          Number.isFinite(audioEl.duration) ? audioEl.duration : null
+        );
+        applyStart();
+      };
+
+      audioEl.preload = 'auto';
+      if (audioEl.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        handleMetadata();
+      } else {
+        audioEl.addEventListener('loadedmetadata', handleMetadata, {
+          once: true,
+        });
       }
+
+      setCurrentSongId(songId);
+
+      if (!options?.autoplay) {
+        setIsPlaying(false);
+        setCanResume(true);
+        if (ctx.state === 'suspended') {
+          await ctx.resume();
+        }
+        return;
+      }
+
+      setDuration(null);
+      pausedTimeRef.current = null;
+      setCanResume(false);
 
       try {
         await audioEl.play();
         void preloadSong(songId);
-        setCurrentSongId(songId);
         setIsPlaying(true);
+        setCanResume(true);
         if (ctx.state === 'suspended') {
           await ctx.resume();
         }
@@ -272,6 +344,7 @@ export const useSongPlayer = () => {
           prev.includes(songId) ? prev : [...prev, songId]
         );
         setIsPlaying(false);
+        setCanResume(false);
         throw error;
       }
     },
@@ -284,14 +357,82 @@ export const useSongPlayer = () => {
       audioElRef.current.currentTime = 0;
     }
     setIsPlaying(true);
+    setCurrentTime(0);
+    setDuration(null);
+    pausedTimeRef.current = null;
+    setCanResume(false);
   }, []);
 
   const pause = useCallback(() => {
-    if (!audioElRef.current) return;
-    audioElRef.current.pause();
-    audioElRef.current.currentTime = 0;
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      pausedTimeRef.current = audioElRef.current.currentTime;
+      setCurrentTime(audioElRef.current.currentTime);
+      setCanResume(!!audioElRef.current.src);
+    } else {
+      setCurrentTime(0);
+      setCanResume(false);
+    }
     setIsPlaying(false);
   }, []);
+
+  const seek = useCallback(async (nextTime: number) => {
+    const audioEl = audioElRef.current;
+    if (!audioEl) return;
+
+    const maxTime = Number.isFinite(audioEl.duration)
+      ? audioEl.duration
+      : Number.POSITIVE_INFINITY;
+    const clampedTime = Math.max(0, Math.min(maxTime, nextTime));
+
+    try {
+      audioEl.currentTime = clampedTime;
+      setCurrentTime(clampedTime);
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+    } catch {
+      // Ignore seek failures; player will keep current time.
+    }
+  }, []);
+
+  const resume = useCallback(async () => {
+    await start();
+    const audioEl = audioElRef.current;
+    if (!audioEl || !audioEl.src) return;
+
+    const ctx = await ensureAudioContext();
+
+    if (pausedTimeRef.current !== null) {
+      const maxTime = Number.isFinite(audioEl.duration)
+        ? audioEl.duration
+        : Number.POSITIVE_INFINITY;
+      const clamped = Math.max(0, Math.min(maxTime, pausedTimeRef.current));
+      try {
+        audioEl.currentTime = clamped;
+      } catch {
+        // Ignore seek failures when resuming.
+      }
+    }
+
+    try {
+      await audioEl.play();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      setIsPlaying(true);
+      setCanResume(true);
+    } catch (err) {
+      const error =
+        err instanceof Error
+          ? err
+          : new Error('Playback was prevented by the browser.');
+      setLastError(error);
+      setIsPlaying(false);
+      setCanResume(false);
+      throw error;
+    }
+  }, [ensureAudioContext, start]);
 
   const getCurrentGainValue = useCallback((gainNode: GainNode, now: number) => {
     const automation = volumeAutomationRef.current;
@@ -360,6 +501,9 @@ export const useSongPlayer = () => {
     const preloadedUrls = preloadedUrlsRef.current;
 
     return () => {
+      audioListenersCleanupRef.current?.();
+      audioListenersCleanupRef.current = null;
+
       if (audioElRef.current) {
         audioElRef.current.pause();
         audioElRef.current.src = '';
@@ -367,6 +511,7 @@ export const useSongPlayer = () => {
       }
 
       setIsPlaying(false);
+      setCanResume(false);
 
       if (mediaSourceRef.current) {
         mediaSourceRef.current.disconnect();
@@ -384,6 +529,8 @@ export const useSongPlayer = () => {
       preloadedUrls.clear();
       setPreloadedSongIds(new Set());
       volumeAutomationRef.current = null;
+      setCurrentTime(0);
+      setDuration(null);
     };
   }, []);
 
@@ -398,16 +545,21 @@ export const useSongPlayer = () => {
 
   return {
     start,
-    playById,
+    loadSong,
     playSilence,
     pause,
+    resume,
+    seek,
     setVolume,
     volume,
     isLoading,
     isPreloadingSongs,
     isPlaying,
+    currentTime,
+    duration,
     preloadStatuses,
     currentSongId,
+    canResume,
     failedSongIds,
     lastError,
   };
