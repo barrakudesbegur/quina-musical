@@ -138,20 +138,28 @@ export const PlaybackSectionManual: FC = () => {
           <Tab key={key} title={label} />
         ))}
       </Tabs>
-      <div className="flex flex-col gap-2 -mx-2">
+      <div className="space-y-2 -mx-2">
         {sortedSongs.map((song) => (
           <Card
             key={song.id}
             isPressable
             isDisabled={song.isPlayed && !song.isLastPlayed}
             onPress={() => handleCardPress(song)}
-            className={cn('flex items-center relative', {
+            className={cn('relative', {
               'opacity-50': song.isPlayed && !song.isLastPlayed,
               'border-success': song.isLastPlayed,
             })}
+            classNames={{
+              base: 'w-full',
+            }}
             radius="sm"
           >
-            <CardBody className="gap-3 justify-between flex-row items-center">
+            <CardBody className="gap-3 justify-between flex-row min-h-0 items-center">
+              <img
+                src={song.cover}
+                alt={song.title}
+                className="size-16 -m-3 mr-0 object-cover rounded-l-lg "
+              />
               <div className="flex flex-col grow">
                 <p className="text-lg leading-tight">
                   <span className="text-default-400  ">{song.id}.</span>{' '}
