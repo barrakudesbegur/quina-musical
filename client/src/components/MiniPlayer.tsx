@@ -1,4 +1,12 @@
-import { Button, Card, CardBody, Image, Slider, cn } from '@heroui/react';
+import {
+  Button,
+  Card,
+  CardBody,
+  CircularProgress,
+  Image,
+  Slider,
+  cn,
+} from '@heroui/react';
 import {
   IconSquareRotated,
   IconPlayerPauseFilled,
@@ -35,6 +43,7 @@ export const MiniPlayer: FC<
     onNext?: () => void;
     onPrevious?: () => void;
     onSeek?: (nextTime: number) => void;
+    playerPreloadProgress: number;
   }>
 > = ({
   song,
@@ -48,6 +57,7 @@ export const MiniPlayer: FC<
   onNext,
   onPrevious,
   onSeek,
+  playerPreloadProgress,
 }) => {
   const formattedTimes = useMemo(() => {
     const formatTime = (value: number | null) => {
@@ -107,8 +117,8 @@ export const MiniPlayer: FC<
             </Card>
           )}
           <div className="flex flex-col grow">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-0 min-w-0">
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex flex-col gap-0 min-w-0 mr-auto">
                 <h1 className="text-xl font-bold tracking-wide truncate">
                   {song ? song.title : 'Silenci'}
                 </h1>
@@ -116,22 +126,34 @@ export const MiniPlayer: FC<
                   {song?.artist ?? '-'}
                 </h3>
               </div>
-              <Button
-                isIconOnly
-                radius="full"
-                variant="light"
-                aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
-                onPress={onTogglePlay}
-                isLoading={isLoading}
-              >
-                <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
-                  {isPlaying ? (
-                    <IconPlayerPauseFilled className="size-6" />
-                  ) : (
-                    <IconPlayerPlayFilled className="size-6" />
-                  )}
-                </div>
-              </Button>
+
+              <div className="relative flex items-center justify-center">
+                <Button
+                  isIconOnly
+                  radius="full"
+                  variant="light"
+                  aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
+                  onPress={onTogglePlay}
+                  isLoading={isLoading}
+                >
+                  <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
+                    {isPlaying ? (
+                      <IconPlayerPauseFilled className="size-6" />
+                    ) : (
+                      <IconPlayerPlayFilled className="size-6" />
+                    )}
+                  </div>
+                </Button>
+                {playerPreloadProgress < 1 && (
+                  <CircularProgress
+                    aria-label="Carregant cançons"
+                    size="lg"
+                    value={playerPreloadProgress * 100}
+                    disableAnimation
+                    className="absolute inset-0 pointer-events-none"
+                  />
+                )}
+              </div>
             </div>
 
             <div className="mt-1 -mb-3">

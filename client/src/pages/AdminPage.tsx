@@ -2,8 +2,6 @@ import { Button, Divider, Slider, Switch, Tab, Tabs } from '@heroui/react';
 import {
   IconCarambolaFilled,
   IconFlameFilled,
-  IconLoader2,
-  IconPlayerPause,
   IconPlayerPlay,
   IconSquareRotated,
   IconTriangleSquareCircleFilled,
@@ -12,16 +10,16 @@ import {
   IconVolume3,
   TablerIcon,
 } from '@tabler/icons-react';
-import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
 import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
+import { MiniPlayer } from '../components/MiniPlayer';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
 import { RoundNameForm } from '../components/RoundNameForm';
-import { MiniPlayer } from '../components/MiniPlayer';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
 
@@ -322,37 +320,28 @@ export const AdminPage: FC = () => {
 
         <Divider />
 
-        <div className="relative rounded-xl overflow-hidden">
-          <Button
-            onPress={handleTogglePlayback}
-            color={isPlaying ? 'warning' : 'success'}
-            className="w-full "
-            variant="flat"
-            isLoading={isPlayerLoading}
-            startContent={
-              playerPreloadProgress < 1 ? (
-                <IconLoader2 className="animate-spin" size={20} />
-              ) : isPlaying ? (
-                <IconPlayerPause size={20} />
-              ) : (
-                <IconPlayerPlay size={20} />
-              )
-            }
-          >
-            {isPlaying ? 'Desactivar so' : 'Activar so'}
-          </Button>
-
-          {playerPreloadProgress < 1 && (
-            <div
-              style={
-                {
-                  '--progress': playerPreloadProgress,
-                } as CSSProperties
+        <div className="text-sm mb-1">Punt d'inici de la cançó</div>
+        <Tabs
+          aria-label="Punt d'inici"
+          selectedKey={timestampType}
+          onSelectionChange={(key) =>
+            setTimestampType(key as SongTimestampCategory)
+          }
+          className="mb-2"
+          fullWidth
+        >
+          {songTimestampOptions.map(({ value, label, icon: Icon }) => (
+            <Tab
+              key={value}
+              title={
+                <div className="flex items-center space-x-2">
+                  <Icon className="size-4" stroke={3} />
+                  <span>{label}</span>
+                </div>
               }
-              className="absolute inset-0 pointer-events-none  scale-x-(--progress) origin-left   bg-black/10 mix-blend-multiply"
             />
-          )}
-        </div>
+          ))}
+        </Tabs>
 
         <Slider
           label="Mode volum baix"
@@ -385,29 +374,6 @@ export const AdminPage: FC = () => {
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
 
-        <div className="text-sm mb-1">Punt d'inici de la cançó</div>
-        <Tabs
-          aria-label="Punt d'inici"
-          selectedKey={timestampType}
-          onSelectionChange={(key) =>
-            setTimestampType(key as SongTimestampCategory)
-          }
-          className="mb-2"
-          fullWidth
-        >
-          {songTimestampOptions.map(({ value, label, icon: Icon }) => (
-            <Tab
-              key={value}
-              title={
-                <div className="flex items-center space-x-2">
-                  <Icon className="size-4" stroke={3} />
-                  <span>{label}</span>
-                </div>
-              }
-            />
-          ))}
-        </Tabs>
-
         <Divider />
 
         <Switch
@@ -431,6 +397,7 @@ export const AdminPage: FC = () => {
         onNext={handlePlayNextSong}
         onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
         onSeek={seek}
+        playerPreloadProgress={playerPreloadProgress}
       />
 
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
