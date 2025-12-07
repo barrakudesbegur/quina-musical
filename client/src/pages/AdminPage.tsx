@@ -1,4 +1,4 @@
-import { Button, Divider, Slider, Switch } from '@heroui/react';
+import { Button, Divider, Slider, Switch, Tab, Tabs } from '@heroui/react';
 import {
   IconLoader2,
   IconPlayerPause,
@@ -16,8 +16,18 @@ import { GameInsightsSection } from '../components/GameInsightsSection';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
 import { RoundNameForm } from '../components/RoundNameForm';
-import { useSongPlayer } from '../hooks/useSongPlayer';
+import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
+
+const songTimestampOptions = [
+  { value: 'main', label: 'Principals' },
+  { value: 'secondary', label: 'Secundaris' },
+  { value: 'any', label: 'Tots' },
+  { value: 'constant', label: 'Igual' },
+] as const satisfies readonly {
+  value: SongTimestampCategory;
+  label: string;
+}[];
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -97,6 +107,8 @@ export const AdminPage: FC = () => {
     'admin-low-volume-setting',
     0.2
   );
+  const [timestampType, setTimestampType] =
+    useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
 
   useEffect(() => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : 1);
@@ -116,12 +128,12 @@ export const AdminPage: FC = () => {
     lastPlayedKeyRef.current = lastPlayedSongId;
 
     if (lastPlayedSongId) {
-      void playById(lastPlayedSongId);
+      void playById(lastPlayedSongId, timestampType);
     } else {
       playSilence();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastPlayedSongId, playById]);
+  }, [lastPlayedSongId, playById, timestampType]);
 
   const handleTogglePlayback = async () => {
     if (isPlaying) {
@@ -131,7 +143,7 @@ export const AdminPage: FC = () => {
 
     try {
       if (lastPlayedSongId) {
-        await playById(lastPlayedSongId);
+        await playById(lastPlayedSongId, timestampType);
       } else {
         playSilence();
       }
@@ -312,6 +324,21 @@ export const AdminPage: FC = () => {
           }
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
+
+        <div className="text-sm mb-1">Punt d'inici de la cançó</div>
+        <Tabs
+          aria-label="Punt d'inici"
+          selectedKey={timestampType}
+          onSelectionChange={(key) =>
+            setTimestampType(key as SongTimestampCategory)
+          }
+          className="mb-2"
+          fullWidth
+        >
+          {songTimestampOptions.map(({ value, label }) => (
+            <Tab key={value} title={label} />
+          ))}
+        </Tabs>
 
         <Divider />
 

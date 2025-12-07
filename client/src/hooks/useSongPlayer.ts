@@ -9,9 +9,8 @@ type VolumeAutomation = {
   duration: number;
 };
 
-// Handles preloading and playback for the static `/songs/{id}.mp3` assets using
-// the Web Audio API. Call `start` from a user gesture to warm up the audio
-// context, then use `playById` to trigger playback for a specific song id.
+export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
+
 export const useSongPlayer = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -38,6 +37,7 @@ export const useSongPlayer = () => {
   const volumeAutomationRef = useRef<VolumeAutomation | null>(null);
 
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined);
+  const startedAtQuery = trpc.game.getStartedAt.useQuery();
 
   const songIdsToPreload = useMemo(() => {
     return songsQuery.data?.map((song) => song.id) ?? [];
@@ -45,8 +45,9 @@ export const useSongPlayer = () => {
 
   const getSongSrc = useCallback(
     (songId: SongId) =>
-      preloadedUrlsRef.current.get(songId) ?? `/songs/${songId}.mp3`,
-    []
+      preloadedUrlsRef.current.get(songId) ??
+      `/songs/${songId}.mp3${startedAtQuery.data ? `?v=${new Date(startedAtQuery.data).getTime()}` : ''}`,
+    [startedAtQuery.data]
   );
 
   const preloadSong = useCallback(
@@ -56,10 +57,13 @@ export const useSongPlayer = () => {
       preloadingIdsRef.current.add(songId);
 
       try {
-        const response = await fetch(`/songs/${songId}.mp3`, {
-          cache: 'force-cache',
-          signal,
-        });
+        const response = await fetch(
+          `/songs/${songId}.mp3?v=${startedAtQuery.data}`,
+          {
+            cache: 'force-cache',
+            signal,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to preload song ${songId}.`);
@@ -83,7 +87,7 @@ export const useSongPlayer = () => {
         preloadingIdsRef.current.delete(songId);
       }
     },
-    []
+    [startedAtQuery.data]
   );
 
   const preloadAllSongs = useCallback(() => {
@@ -191,8 +195,38 @@ export const useSongPlayer = () => {
     }
   }, [ensureAudioContext, preloadAllSongs]);
 
+  const pickStartTimeMs = useCallback(
+    (songId: SongId, category: SongTimestampCategory | number = 'constant') => {
+      if (typeof category === 'number') {
+        return Math.max(0, category);
+      }
+
+      const song = songsQuery.data?.find((s) => s.id === songId);
+      const timestamps = song?.timestamps;
+      if (!timestamps) return 0;
+
+      const list =
+        (category === 'any'
+          ? Object.values(timestamps).flat()
+          : category === 'constant'
+            ? timestamps.main.slice(0, 1)
+            : timestamps[category]
+        )
+          ?.filter((t) => Number.isFinite(t))
+          .map((t) => Math.max(0, t)) ?? [];
+      if (!list.length) return 0;
+
+      const index = Math.floor(Math.random() * list.length);
+      return list[index];
+    },
+    [songsQuery.data]
+  );
+
   const playById = useCallback(
-    async (songId: SongId) => {
+    async (
+      songId: SongId,
+      timestampSelection?: SongTimestampCategory | number
+    ) => {
       await start();
 
       const ctx = await ensureAudioContext();
@@ -207,6 +241,18 @@ export const useSongPlayer = () => {
       const src = getSongSrc(songId);
       audioEl.src = src;
       audioEl.currentTime = 0;
+      const startSeconds = pickStartTimeMs(songId, timestampSelection);
+      const applyStart = () => {
+        try {
+          audioEl.currentTime = startSeconds;
+        } catch {
+          // Ignore seek failures; playback will start from current time.
+        }
+      };
+      applyStart();
+      if (audioEl.readyState < HTMLMediaElement.HAVE_METADATA) {
+        audioEl.addEventListener('loadedmetadata', applyStart, { once: true });
+      }
 
       try {
         await audioEl.play();
@@ -229,7 +275,7 @@ export const useSongPlayer = () => {
         throw error;
       }
     },
-    [ensureAudioContext, getSongSrc, preloadSong, start]
+    [ensureAudioContext, getSongSrc, pickStartTimeMs, preloadSong, start]
   );
 
   const playSilence = useCallback(() => {

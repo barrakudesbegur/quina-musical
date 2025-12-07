@@ -3,517 +3,603 @@
     "id": 1,
     "title": "Mamma mia",
     "artist": "ABBA",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27392d0747a634fcc351c6ac3c2"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27392d0747a634fcc351c6ac3c2",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 2,
     "title": "Ni tu ni nadie",
     "artist": "Alaska Y Dinarama",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2737b7974ddc07f66321035ccf9"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737b7974ddc07f66321035ccf9",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 3,
     "title": "Fiebre",
     "artist": "Bad Gyal",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bdb8d291b4b7a5feca2db8a7"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bdb8d291b4b7a5feca2db8a7",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 4,
     "title": "Single Ladies",
     "artist": "Beyoncé",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273801c4d205accdba0a468a10b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273801c4d205accdba0a468a10b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 5,
     "title": "Las Divinas",
     "artist": "Brenda Asnicar",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273a71a3b021e23694e3fedd1bb"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a71a3b021e23694e3fedd1bb",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 6,
     "title": "Yo Te Esperaré",
     "artist": "Cali y El Dandee",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2737b5ce333949f95a6ec6e0e11"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737b5ce333949f95a6ec6e0e11",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 7,
     "title": "Atrévete-Te-Te",
     "artist": "Calle 13",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bf3d37f1fd6a7e2cb5fd1487"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bf3d37f1fd6a7e2cb5fd1487",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 8,
     "title": "Madre Tierra (Oye)",
     "artist": "Chayanne",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27368f60427aa7281eef015b725"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27368f60427aa7281eef015b725",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 9,
     "title": "Viva la vida",
     "artist": "Coldplay",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273e21cc1db05580b6f2d2a3b6e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e21cc1db05580b6f2d2a3b6e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 10,
     "title": "Pasado Pisado",
     "artist": "Comando Tiburon",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2731cad332d57e1b4ed5b394069"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731cad332d57e1b4ed5b394069",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 11,
     "title": "La chica yeyé",
     "artist": "Conchita Velasco",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27357061147ce5500ac386dc70a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27357061147ce5500ac386dc70a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 12,
     "title": "Nada fue un error",
     "artist": "Coti, Andrés Calamaro",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273f68e7098acffc8eae48ee6c3"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f68e7098acffc8eae48ee6c3",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 13,
     "title": "Gasolina",
     "artist": "Daddy Yankee",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27311b9999b620ef9bc0e957623"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27311b9999b620ef9bc0e957623",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 14,
     "title": "Limbo",
     "artist": "Daddy Yankee",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27329866617908a958f41917d76"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27329866617908a958f41917d76",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 15,
     "title": "Ella Me Levantó",
     "artist": "Daddy Yankee",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2735bfc5e218df1fd72e8393680"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2735bfc5e218df1fd72e8393680",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 16,
     "title": "Ave María",
     "artist": "David Bisbal",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27349a2562013810352fc8feb6e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27349a2562013810352fc8feb6e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 17,
     "title": "Que la detengan",
     "artist": "David Civera",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273a145bbdccc1088cbc8d63050"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a145bbdccc1088cbc8d63050",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 18,
     "title": "Titanium",
     "artist": "David Guetta",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273e6060caf9bf5b82c25240329"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e6060caf9bf5b82c25240329",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 19,
     "title": "This is me",
     "artist": "Demi Lovato, Joe Jonas",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27376355e844d43f49dcbb1c542"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27376355e844d43f49dcbb1c542",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 20,
     "title": "Física o química",
     "artist": "Despistaos",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27304f762d58f314cf70072c4c2"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27304f762d58f314cf70072c4c2",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 21,
     "title": "Sweet Caroline",
     "artist": "DJ Otzi",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273a1aa91548c372ca8c78f966b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a1aa91548c372ca8c78f966b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 22,
     "title": "Danza Kuduro",
     "artist": "Don Omar",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2734640a26eb27649006be29a94"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734640a26eb27649006be29a94",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 23,
     "title": "September",
     "artist": "Earth, Wind & Fire",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2732e7558daae7a80e1f5819aa1"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732e7558daae7a80e1f5819aa1",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 24,
     "title": "Zapatillas",
     "artist": "El Canto del Loco",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 25,
     "title": "Besos",
     "artist": "El Canto del Loco",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 26,
     "title": "Jenifer",
     "artist": "Els Catarres",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273f45d3d288294e7a6c84f761f"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f45d3d288294e7a6c84f761f",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 27,
     "title": "Bon dia",
     "artist": "Els pets",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2736d8602480131a1e966e2f592"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736d8602480131a1e966e2f592",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 28,
     "title": "Como camaron",
     "artist": "Estopa",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2731ed1c8aff132830890f91faa"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731ed1c8aff132830890f91faa",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 29,
     "title": "A quién le Importa",
     "artist": "Fangoria",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27372e258dc6313a5a6d751bf9a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27372e258dc6313a5a6d751bf9a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 30,
     "title": "La marina sta morena",
     "artist": "Figaflawas",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27329966e67fd40945323242804"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27329966e67fd40945323242804",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 31,
     "title": "Mussegu",
     "artist": "Figaflawas",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273c03b2edfdbee089e25b3c511"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c03b2edfdbee089e25b3c511",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 32,
     "title": "Freed From Desire",
     "artist": "Gala, Molella, Phil Jay",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27382d43c836792c8b41dc0ad8c"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27382d43c836792c8b41dc0ad8c",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 33,
     "title": "La gozadera",
     "artist": "Gente De Zona, Marc Anthony",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2731e3b9d4d53e0ac334cd9eec4"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731e3b9d4d53e0ac334cd9eec4",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 34,
     "title": "Volare (Nel Blu di Pinto di Blu)",
     "artist": "Gipsy Kings",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2739c90ed4b52bdb183c60669ad"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2739c90ed4b52bdb183c60669ad",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 35,
     "title": "Greased Lightnin'",
     "artist": "Grease",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2732de05b3ce546cf563ed2628a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732de05b3ce546cf563ed2628a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 36,
     "title": "El tiburón",
     "artist": "Henry Mendez",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273798379397a70e5588e5e934b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273798379397a70e5588e5e934b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 37,
     "title": "Breaking Free",
     "artist": "High School Musical",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bb00d0513a2a9ffd19eff93b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bb00d0513a2a9ffd19eff93b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 38,
     "title": "All night",
     "artist": "Icona Pop",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27369d05d032251b59ae738096a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27369d05d032251b59ae738096a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 39,
     "title": "Quan somrius",
     "artist": "Josep Thió",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27344c04c0c9abccea4a7547f9e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27344c04c0c9abccea4a7547f9e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 40,
     "title": "Bailando por ahi",
     "artist": "Juan Magan",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2734fd9adda79bc5839feca9720"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734fd9adda79bc5839feca9720",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 41,
     "title": "Ella no sigue modas",
     "artist": "Juan Magan",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273113894fe7e9bfc36a3169810"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273113894fe7e9bfc36a3169810",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 42,
     "title": "Baby",
     "artist": "Justin Bieber",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273629dc9e2e3bc20bbd7d92e4a"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273629dc9e2e3bc20bbd7d92e4a",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 43,
     "title": "Si antes te hubiera conocido",
     "artist": "Karol G",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273491678beaffcefac517a699e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273491678beaffcefac517a699e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 44,
     "title": "Tik Tok",
     "artist": "Kesha",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273dbc076562514f704dacdb5f4"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273dbc076562514f704dacdb5f4",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 45,
     "title": "El Mambo",
     "artist": "Kiko Rivera",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2739550e7d371ec97215fee49f3"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2739550e7d371ec97215fee49f3",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 46,
     "title": "Rosas",
     "artist": "La Oreja de Van Gogh",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 47,
     "title": "Puedes contar conmigo",
     "artist": "La Oreja de Van Gogh",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 48,
     "title": "Mari Carmen",
     "artist": "La Pegatina",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27353a2d29ceb2403da1eddf109"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27353a2d29ceb2403da1eddf109",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 49,
     "title": "La vaca lola",
     "artist": "La vaca lola - Remix",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2738317788e7ea129879420a0cb"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2738317788e7ea129879420a0cb",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 50,
     "title": "Aserejé",
     "artist": "Las ketchup",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2737cbbd0328713a05ea51d3eaf"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737cbbd0328713a05ea51d3eaf",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 51,
     "title": "Llença't",
     "artist": "Lax'n'Busto",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27305fda9ec255cb06c5342fb6d"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27305fda9ec255cb06c5342fb6d",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 52,
     "title": "T'estimo molt",
     "artist": "Lax'n'Busto",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27388f50f79184550f7346a1c6d"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27388f50f79184550f7346a1c6d",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 53,
     "title": "Sarandonga",
     "artist": "Lolita",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2732646f11174c76584822366da"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732646f11174c76584822366da",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 54,
     "title": "Hay Lupita",
     "artist": "Lomiiel",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bdd9200ece04b83fe196978e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bdd9200ece04b83fe196978e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 55,
     "title": "La Bamba",
     "artist": "Los Lobos",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273c208d60c83e8611195875e13"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c208d60c83e8611195875e13",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 56,
     "title": "Mambo No.5",
     "artist": "Lou Bega",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273cf505191afa6a1978418fdf8"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273cf505191afa6a1978418fdf8",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 57,
     "title": "Antes muerta que sencilla",
     "artist": "Maria Isabel",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2731ef8a35e96b7c72feea5f597"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731ef8a35e96b7c72feea5f597",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 58,
     "title": "All I Want for Christmas Is You",
     "artist": "Mariah Carey",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273c0862332847213b151ffab31"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c0862332847213b151ffab31",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 59,
     "title": "El Merengue",
     "artist": "Marshmello, Manuel Turizo",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bef51a8d2e9c2261a84cb680"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bef51a8d2e9c2261a84cb680",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 60,
     "title": "Sarà Perché Ti Amo",
     "artist": "Matt Joe",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273e46c669e434e80209396680b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e46c669e434e80209396680b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 61,
     "title": "Caminando por la Vida",
     "artist": "Melendi",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273fdf0ca257453adac7d1167b2"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273fdf0ca257453adac7d1167b2",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 62,
     "title": "El baile del gorila",
     "artist": "Melody",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273948183118003f702ff8a7608"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273948183118003f702ff8a7608",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 63,
     "title": "Ai Se Eu Te Pego",
     "artist": "Michel Telo",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273cbd4edcc2a7def9bb6016094"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273cbd4edcc2a7def9bb6016094",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 64,
     "title": "Como Te Atreves",
     "artist": "Morat",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2730c929d54495f38b910f48643"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730c929d54495f38b910f48643",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 65,
     "title": "Tenia tanto que darte",
     "artist": "Nena Daconte",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2734d610f100fc60fbe4f84420e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734d610f100fc60fbe4f84420e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 66,
     "title": "Un beso y una flor",
     "artist": "Nino Bravo",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2733df0bdac09b5ab00347ab7b2"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2733df0bdac09b5ab00347ab7b2",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 67,
     "title": "Dragostea din tei",
     "artist": "O-Zone",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2736ed1042195c7228f6bd3548e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736ed1042195c7228f6bd3548e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 68,
     "title": "Elefants",
     "artist": "Oques Grasses",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273471b1371438f4e9183aabbc8"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273471b1371438f4e9183aabbc8",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 69,
     "title": "Ni una sola palabra",
     "artist": "Paulina Rubio",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273ce653efa36e0514c3b3d8969"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273ce653efa36e0514c3b3d8969",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 70,
     "title": "Princesas",
     "artist": "Pereza",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2730bf6f5fb8b6b5017823d76b4"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730bf6f5fb8b6b5017823d76b4",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 71,
     "title": "Flying Free",
     "artist": "Pont Aeri",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 72,
     "title": "Columbia",
     "artist": "Quevedo",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273a935d458be0651a13d87d612"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a935d458be0651a13d87d612",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 73,
     "title": "We found love",
     "artist": "Rihanna",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273bef074de9ca825bddaeb9f46"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bef074de9ca825bddaeb9f46",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 74,
     "title": "Despechá",
     "artist": "Rosalía",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273938660520f09a1bae2ed4699"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273938660520f09a1bae2ed4699",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 75,
     "title": "Boig per tu",
     "artist": "Sau",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273a8a98db05687330a248de205"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a8a98db05687330a248de205",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 76,
     "title": "Waka Waka",
     "artist": "Shakira",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2734214ddc9e33e76de6a8ee888"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734214ddc9e33e76de6a8ee888",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 77,
     "title": "Yo quiero bailar",
     "artist": "Sonia y Selena",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2736e159f465d118e870580950e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736e159f465d118e870580950e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 78,
     "title": "L'Empordà",
     "artist": "Sopa de Cabra",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2730d9e5066c041517333356cd0"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730d9e5066c041517333356cd0",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 79,
     "title": "Wannabe",
     "artist": "Spice Girls",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27363facc42e4a35eb3aa182b59"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27363facc42e4a35eb3aa182b59",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 80,
     "title": "Shin Chan",
     "artist": "SX3",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27335910015bf82d2d06406bf5b"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27335910015bf82d2d06406bf5b",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 81,
     "title": "Love Story",
     "artist": "Taylor Swift",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27360cb9332e8c8c7d8e50854b3"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27360cb9332e8c8c7d8e50854b3",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 82,
     "title": "Applejack",
     "artist": "The Triangles",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27391d9ce0768a9ad6e7c414df0"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27391d9ce0768a9ad6e7c414df0",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 83,
     "title": "De l'1 al què",
     "artist": "The Tyets",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273f517474616b30cda761e1e22"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f517474616b30cda761e1e22",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 84,
     "title": "Coti x Coti",
     "artist": "The Tyets",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273f517474616b30cda761e1e22"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f517474616b30cda761e1e22",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 85,
     "title": "YMCA",
     "artist": "Village People",
-    "cover": "https://i.scdn.co/image/ab67616d0000b2732f38aff220050371b43eb57e"
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732f38aff220050371b43eb57e",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 86,
     "title": "Shut up and dance",
     "artist": "Walk the moon",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273fc39eb9eb3f3824a58f338dc"
+    "cover": "https://i.scdn.co/image/ab67616d0000b273fc39eb9eb3f3824a58f338dc",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   },
   {
     "id": 87,

@@ -149,6 +149,10 @@ export const gameRouter = router({
     return gameDb.data.currentRound;
   }),
 
+  getStartedAt: publicProcedure.query(async () => {
+    return gameDb.data.startedAt;
+  }),
+
   updateRoundName: publicProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input }) => {
