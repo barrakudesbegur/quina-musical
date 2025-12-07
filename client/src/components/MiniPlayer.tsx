@@ -8,15 +8,16 @@ import {
   cn,
 } from '@heroui/react';
 import {
-  IconSquareRotated,
+  IconCarambolaFilled,
+  IconFlameFilled,
   IconPlayerPauseFilled,
   IconPlayerPlayFilled,
   IconPlayerSkipBack,
   IconPlayerSkipForward,
-  IconFlameFilled,
-  IconVolume3,
-  IconCarambolaFilled,
+  IconSquareRotated,
   IconVolume,
+  IconVolume3,
+  TablerIcon,
 } from '@tabler/icons-react';
 import { clamp } from 'lodash-es';
 import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
@@ -44,6 +45,13 @@ export const MiniPlayer: FC<
     onPrevious?: () => void;
     onSeek?: (nextTime: number) => void;
     playerPreloadProgress: number;
+    timestampOptions: ReadonlyArray<{
+      value: string;
+      label: string;
+      icon: TablerIcon;
+    }>;
+    selectedTimestampType: string;
+    onTimestampTypeChange: (value: string) => void;
   }>
 > = ({
   song,
@@ -58,6 +66,9 @@ export const MiniPlayer: FC<
   onPrevious,
   onSeek,
   playerPreloadProgress,
+  timestampOptions,
+  selectedTimestampType,
+  onTimestampTypeChange,
 }) => {
   const formattedTimes = useMemo(() => {
     const formatTime = (value: number | null) => {
@@ -90,6 +101,21 @@ export const MiniPlayer: FC<
       }))
     );
   }, [song]);
+
+  const currentTimestampOption = useMemo(
+    () =>
+      timestampOptions.find((opt) => opt.value === selectedTimestampType) ??
+      timestampOptions[0],
+    [selectedTimestampType, timestampOptions]
+  );
+
+  const handleCycleTimestamp = () => {
+    const currentIndex = timestampOptions.findIndex(
+      (opt) => opt.value === selectedTimestampType
+    );
+    const next = timestampOptions[(currentIndex + 1) % timestampOptions.length];
+    onTimestampTypeChange(next.value);
+  };
 
   return (
     <Card
@@ -244,6 +270,19 @@ export const MiniPlayer: FC<
                 onPress={onPrevious}
               >
                 <IconPlayerSkipBack className="size-6" />
+              </Button>
+              <Button
+                isIconOnly
+                radius="full"
+                variant="light"
+                aria-label={
+                  currentTimestampOption
+                    ? `Canviar punt d'inici (${currentTimestampOption.label})`
+                    : "Canviar punt d'inici"
+                }
+                onPress={handleCycleTimestamp}
+              >
+                <currentTimestampOption.icon className="size-6" />
               </Button>
               <Button
                 isIconOnly

@@ -4,7 +4,7 @@ import {
   IconFlameFilled,
   IconPlayerPlay,
   IconSquareRotated,
-  IconTriangleSquareCircleFilled,
+  IconTriangleSquareCircle,
   IconVolume,
   IconVolume2,
   IconVolume3,
@@ -27,7 +27,7 @@ const songTimestampOptions = [
   { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
   { value: 'main', label: 'Principals', icon: IconFlameFilled },
   { value: 'secondary', label: 'Secundaris', icon: IconSquareRotated },
-  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircleFilled },
+  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircle },
 ] as const satisfies readonly {
   value: SongTimestampCategory;
   label: string;
@@ -398,6 +398,11 @@ export const AdminPage: FC = () => {
         onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
         onSeek={seek}
         playerPreloadProgress={playerPreloadProgress}
+        timestampOptions={songTimestampOptions}
+        selectedTimestampType={timestampType}
+        onTimestampTypeChange={(value) =>
+          setTimestampType(value as SongTimestampCategory)
+        }
       />
 
       {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
