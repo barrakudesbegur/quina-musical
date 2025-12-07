@@ -7,6 +7,8 @@ import { trpc } from '../utils/trpc';
 export const PlaybackSection: FC = () => {
   const utils = trpc.useUtils();
 
+  const gameQuery = trpc.game.getCurrentRound.useQuery();
+
   const playSongMutation = trpc.game.playSong.useMutation({
     onSettled: () => {
       utils.game.invalidate();
@@ -35,10 +37,11 @@ export const PlaybackSection: FC = () => {
       <div className="grid grid-cols-2 gap-2 mt-4">
         <Button
           isIconOnly
-          aria-label="Següent"
+          aria-label="Anterior"
           className="w-full aspect-square h-auto max-w-3xs ml-auto"
           onPress={handlePlayPrevious}
           isLoading={undoLastPlayedMutation.isPending}
+          disabled={!!gameQuery.data && gameQuery.data.playedSongs.length === 0}
         >
           <IconPlayerSkipBack className="size-16 stroke-1" />
         </Button>
