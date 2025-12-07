@@ -1,13 +1,22 @@
-import { Button, Switch } from '@heroui/react';
-import { IconPlayerPlay } from '@tabler/icons-react';
-import { FC, useMemo, useState } from 'react';
+import { Button, Divider, Slider, Switch } from '@heroui/react';
+import {
+  IconLoader2,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconVolume,
+  IconVolume2,
+  IconVolume3,
+} from '@tabler/icons-react';
+import { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSessionStorage } from 'usehooks-ts';
 import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
 import { PlaybackSection } from '../components/PlaybackSection';
 import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
 import { RoundNameForm } from '../components/RoundNameForm';
+import { useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
@@ -63,6 +72,79 @@ export const AdminPage: FC = () => {
   }, [roundQuery.data]);
 
   const isManualMode = roundQuery.data?.playbackMode === 'manual';
+
+  const {
+    start: startSongPlayer,
+    playById,
+    pause,
+    isPlaying,
+    isLoading: isPlayerLoading,
+    preloadStatuses: playerSongs,
+    playSilence,
+    setVolume,
+  } = useSongPlayer();
+
+  useEffect(() => {
+    void startSongPlayer();
+  });
+
+  const lastPlayedKeyRef = useRef<number | null>(null);
+  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
+    'admin-low-volume-mode',
+    false
+  );
+  const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage<number>(
+    'admin-low-volume-setting',
+    0.2
+  );
+
+  useEffect(() => {
+    setVolume(isLowVolumeMode ? lowVolumeSetting : 1);
+  }, [isLowVolumeMode, lowVolumeSetting, setVolume]);
+
+  const lastPlayedSongId = useMemo(
+    () =>
+      roundQuery.data?.playedSongs[roundQuery.data.playedSongs.length - 1]
+        ?.id ?? null,
+    [roundQuery.data?.playedSongs]
+  );
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    if (lastPlayedKeyRef.current === lastPlayedSongId) return;
+    lastPlayedKeyRef.current = lastPlayedSongId;
+
+    if (lastPlayedSongId) {
+      void playById(lastPlayedSongId);
+    } else {
+      playSilence();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastPlayedSongId, playById]);
+
+  const handleTogglePlayback = async () => {
+    if (isPlaying) {
+      pause();
+      return;
+    }
+
+    try {
+      if (lastPlayedSongId) {
+        await playById(lastPlayedSongId);
+      } else {
+        playSilence();
+      }
+    } catch (err) {
+      console.error('Failed to toggle playback', err);
+    }
+  };
+
+  const playerPreloadProgress = useMemo(() => {
+    return (
+      playerSongs.filter((song) => song.preloaded).length / playerSongs.length
+    );
+  }, [playerSongs]);
 
   const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound });
@@ -134,7 +216,10 @@ export const AdminPage: FC = () => {
         <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
           Gestió de la quina
         </h2>
+
         <RoundNameForm />
+        <Divider />
+
         <Button
           color="primary"
           onPress={() => setIsCheckCardDialogOpen(true)}
@@ -162,6 +247,74 @@ export const AdminPage: FC = () => {
           onConfirm={handleFinishRound}
           loading={finishRoundMutation.isPending}
         />
+
+        <Divider />
+
+        <div className="relative rounded-xl overflow-hidden">
+          <Button
+            onPress={handleTogglePlayback}
+            color={isPlaying ? 'warning' : 'success'}
+            className="w-full "
+            variant="flat"
+            isLoading={isPlayerLoading}
+            startContent={
+              playerPreloadProgress < 1 ? (
+                <IconLoader2 className="animate-spin" size={20} />
+              ) : isPlaying ? (
+                <IconPlayerPause size={20} />
+              ) : (
+                <IconPlayerPlay size={20} />
+              )
+            }
+          >
+            {isPlaying ? 'Desactivar so' : 'Activar so'}
+          </Button>
+
+          {playerPreloadProgress < 1 && (
+            <div
+              style={
+                {
+                  '--progress': playerPreloadProgress,
+                } as CSSProperties
+              }
+              className="absolute inset-0 pointer-events-none  scale-x-(--progress) origin-left   bg-black/10 mix-blend-multiply"
+            />
+          )}
+        </div>
+
+        <Slider
+          label="Mode volum baix"
+          minValue={0}
+          maxValue={1}
+          step={0.001}
+          value={lowVolumeSetting}
+          formatOptions={{ style: 'percent' }}
+          onChange={(value) => {
+            if (typeof value === 'number') {
+              setLowVolumeSetting(value);
+            }
+          }}
+          showSteps={false}
+          startContent={
+            <div className="inline-flex items-center gap-2">
+              <Switch
+                isSelected={isLowVolumeMode}
+                onValueChange={(isLow) => {
+                  setIsLowVolumeMode(isLow);
+                }}
+                color="primary"
+                endContent={<IconVolume size={20} />}
+                startContent={<IconVolume3 size={20} />}
+                aria-label="Baixar volum"
+              />
+              <IconVolume2 size={20} className="max-xs:hidden" />
+            </div>
+          }
+          endContent={<IconVolume size={20} className="max-xs:hidden" />}
+        />
+
+        <Divider />
+
         <Switch
           isSelected={isManualMode}
           onValueChange={handlePlaybackModeChange}

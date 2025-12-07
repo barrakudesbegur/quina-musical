@@ -25,3 +25,6 @@ dist-ssr
 
 *.local
 .env
+
+public/songs/*
+!public/songs/.gitkeep
