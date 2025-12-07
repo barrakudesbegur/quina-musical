@@ -8,6 +8,7 @@ import {
   IconFlameFilled,
   IconVolume3,
   IconCarambolaFilled,
+  IconVolume,
 } from '@tabler/icons-react';
 import { clamp } from 'lodash-es';
 import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
@@ -29,6 +30,8 @@ export const MiniPlayer: FC<
     currentTime: number;
     duration: number | null;
     onTogglePlay: () => void;
+    onToggleLowVolume: () => void;
+    isLowVolumeMode: boolean;
     onNext?: () => void;
     onPrevious?: () => void;
     onSeek?: (nextTime: number) => void;
@@ -40,6 +43,8 @@ export const MiniPlayer: FC<
   currentTime,
   duration,
   onTogglePlay,
+  onToggleLowVolume,
+  isLowVolumeMode,
   onNext,
   onPrevious,
   onSeek,
@@ -102,7 +107,7 @@ export const MiniPlayer: FC<
             </Card>
           )}
           <div className="flex flex-col grow">
-            <div className="flex justify-between items-start  ">
+            <div className="flex justify-between items-start">
               <div className="flex flex-col gap-0 min-w-0">
                 <h1 className="text-xl font-bold tracking-wide truncate">
                   {song ? song.title : 'Silenci'}
@@ -111,6 +116,22 @@ export const MiniPlayer: FC<
                   {song?.artist ?? '-'}
                 </h3>
               </div>
+              <Button
+                isIconOnly
+                radius="full"
+                variant="light"
+                aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
+                onPress={onTogglePlay}
+                isLoading={isLoading}
+              >
+                <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
+                  {isPlaying ? (
+                    <IconPlayerPauseFilled className="size-6" />
+                  ) : (
+                    <IconPlayerPlayFilled className="size-6" />
+                  )}
+                </div>
+              </Button>
             </div>
 
             <div className="mt-1 -mb-3">
@@ -204,21 +225,18 @@ export const MiniPlayer: FC<
               </Button>
               <Button
                 isIconOnly
-                className="w-auto h-auto data-hover:bg-foreground/10!"
                 radius="full"
                 variant="light"
-                aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
-                onPress={onTogglePlay}
-                isLoading={isLoading}
+                aria-label={isLowVolumeMode ? 'Pujar volum' : 'Baixar volum'}
+                onPress={onToggleLowVolume}
               >
-                <div className="flex items-center justify-center bg-foreground rounded-full p-2">
-                  {isPlaying ? (
-                    <IconPlayerPauseFilled className="size-6 text-background" />
-                  ) : (
-                    <IconPlayerPlayFilled className="size-6 text-background" />
-                  )}
-                </div>
+                {isLowVolumeMode ? (
+                  <IconVolume3 className="size-6" />
+                ) : (
+                  <IconVolume className="size-6" />
+                )}
               </Button>
+
               <Button
                 isIconOnly
                 className="data-hover:bg-foreground/10!"

@@ -426,6 +426,8 @@ export const AdminPage: FC = () => {
         currentTime={currentTime}
         duration={duration}
         onTogglePlay={handleTogglePlayback}
+        onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
+        isLowVolumeMode={isLowVolumeMode}
         onNext={handlePlayNextSong}
         onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
         onSeek={seek}
