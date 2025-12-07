@@ -7,8 +7,10 @@ import { useSessionStorage } from 'usehooks-ts';
 
 const sortStorageKey = 'playback-manual-sort';
 
-export const SongsSection: FC = () => {
-  const utils = trpc.useUtils();
+export const SongsSection: FC<{
+  onPlaySong: (songId: number) => void;
+  onUndoLastPlayed: () => void;
+}> = ({ onPlaySong, onUndoLastPlayed }) => {
   const songsQuery = trpc.game.getAllSongs.useQuery();
 
   const sortOptions = [
@@ -43,82 +45,11 @@ export const SongsSection: FC = () => {
     return sortBy(songsWithLastPlayed, [sortKey, 'id']);
   }, [songsWithLastPlayed, sortKey]);
 
-  const playSongMutation = trpc.game.playSong.useMutation({
-    onMutate: async ({ songId }) => {
-      await utils.game.getAllSongs.cancel();
-
-      const previousSongs = utils.game.getAllSongs.getData();
-
-      // Calculate next position
-      const currentSongs = previousSongs || [];
-      const nextPosition =
-        Math.max(0, ...currentSongs.map((s) => s.playedPosition || 0)) + 1;
-
-      utils.game.getAllSongs.setData(undefined, (old) => {
-        if (!old) return previousSongs;
-        return old.map((song) => ({
-          ...song,
-          isPlayed: song.isPlayed || song.id === songId,
-          playedPosition:
-            song.id === songId ? nextPosition : song.playedPosition,
-        }));
-      });
-
-      return { previousSongs };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousSongs) {
-        utils.game.getAllSongs.setData(undefined, context.previousSongs);
-      }
-    },
-    onSettled: () => {
-      utils.game.getAllSongs.invalidate();
-    },
-  });
-
-  const undoLastPlayedMutation = trpc.game.undoLastPlayed.useMutation({
-    onMutate: async () => {
-      await utils.game.getAllSongs.cancel();
-
-      const previousSongs = utils.game.getAllSongs.getData();
-      if (!previousSongs) return { previousSongs };
-
-      const maxPos = Math.max(
-        0,
-        ...previousSongs.map((s) => s.playedPosition || 0)
-      );
-      const lastPlayedSong = previousSongs.find(
-        (s) => s.playedPosition === maxPos
-      );
-      if (!lastPlayedSong) return { previousSongs };
-
-      utils.game.getAllSongs.setData(undefined, (old) => {
-        if (!old) return previousSongs;
-        return old.map((song) => ({
-          ...song,
-          isPlayed: song.isPlayed && song.playedPosition !== maxPos,
-          playedPosition:
-            song.playedPosition === maxPos ? undefined : song.playedPosition,
-        }));
-      });
-
-      return { previousSongs };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousSongs) {
-        utils.game.getAllSongs.setData(undefined, context.previousSongs);
-      }
-    },
-    onSettled: () => {
-      utils.game.getAllSongs.invalidate();
-    },
-  });
-
   const handleCardPress = (song: (typeof songsWithLastPlayed)[number]) => {
     if (song.isLastPlayed) {
-      undoLastPlayedMutation.mutate();
+      onUndoLastPlayed();
     } else if (!song.isPlayed) {
-      playSongMutation.mutate({ songId: song.id });
+      onPlaySong(song.id);
     }
   };
 

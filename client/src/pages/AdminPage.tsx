@@ -303,7 +303,10 @@ export const AdminPage: FC = () => {
 
       <GameInsightsSection />
 
-      <SongsSection />
+      <SongsSection
+        onPlaySong={(songId) => playSongMutation.mutate({ songId })}
+        onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
+      />
 
       <Button
         onPress={handleLogout}
