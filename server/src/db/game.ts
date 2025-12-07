@@ -18,7 +18,6 @@ export interface Round {
   playedSongs: PlayedSong[];
   startedAt: string | null;
   finishedAt: string | null;
-  playbackMode: 'manual' | 'auto';
 }
 
 export interface GameData {

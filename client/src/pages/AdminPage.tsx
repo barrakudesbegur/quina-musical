@@ -1,15 +1,5 @@
-import { Button, Divider, Slider, Switch, Tab, Tabs } from '@heroui/react';
-import {
-  IconCarambolaFilled,
-  IconFlameFilled,
-  IconPlayerPlay,
-  IconSquareRotated,
-  IconTriangleSquareCircle,
-  IconVolume,
-  IconVolume2,
-  IconVolume3,
-  TablerIcon,
-} from '@tabler/icons-react';
+import { Button, Divider, Slider } from '@heroui/react';
+import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
@@ -17,22 +7,10 @@ import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
 import { MiniPlayer } from '../components/MiniPlayer';
-import { PlaybackSection } from '../components/PlaybackSection';
-import { PlaybackSectionManual } from '../components/PlaybackSectionManual';
 import { RoundNameForm } from '../components/RoundNameForm';
+import { SongsSection } from '../components/SongsSection';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
-
-const songTimestampOptions = [
-  { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
-  { value: 'main', label: 'Principals', icon: IconFlameFilled },
-  { value: 'secondary', label: 'Secundaris', icon: IconSquareRotated },
-  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircle },
-] as const satisfies readonly {
-  value: SongTimestampCategory;
-  label: string;
-  icon: TablerIcon;
-}[];
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -44,32 +22,6 @@ export const AdminPage: FC = () => {
   });
   const statusQuery = trpc.game.getStatus.useSubscription();
   const navigate = useNavigate();
-
-  const updatePlaybackModeMutation = trpc.game.updatePlaybackMode.useMutation({
-    onMutate: async ({ playbackMode }) => {
-      await utils.game.getCurrentRound.cancel();
-
-      const previousRound = utils.game.getCurrentRound.getData();
-
-      utils.game.getCurrentRound.setData(undefined, (old) => {
-        if (!old) return previousRound;
-        return {
-          ...old,
-          playbackMode,
-        };
-      });
-
-      return { previousRound };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousRound) {
-        utils.game.getCurrentRound.setData(undefined, context.previousRound);
-      }
-    },
-    onSettled: () => {
-      utils.game.getCurrentRound.invalidate();
-    },
-  });
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
     onSettled: () => {
@@ -100,8 +52,6 @@ export const AdminPage: FC = () => {
     if (!roundQuery.data) return '1';
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
-
-  const isManualMode = roundQuery.data?.playbackMode === 'manual';
 
   const {
     start: startSongPlayer,
@@ -211,12 +161,6 @@ export const AdminPage: FC = () => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound });
   };
 
-  const handlePlaybackModeChange = (value: boolean) => {
-    updatePlaybackModeMutation.mutate({
-      playbackMode: value ? 'manual' : 'auto',
-    });
-  };
-
   const handlePlayNextSong = () => {
     playSongMutation.mutate({ songId: undefined });
   };
@@ -320,29 +264,6 @@ export const AdminPage: FC = () => {
 
         <Divider />
 
-        <div className="text-sm mb-1">Punt d'inici de la cançó</div>
-        <Tabs
-          aria-label="Punt d'inici"
-          selectedKey={timestampType}
-          onSelectionChange={(key) =>
-            setTimestampType(key as SongTimestampCategory)
-          }
-          className="mb-2"
-          fullWidth
-        >
-          {songTimestampOptions.map(({ value, label, icon: Icon }) => (
-            <Tab
-              key={value}
-              title={
-                <div className="flex items-center space-x-2">
-                  <Icon className="size-4" stroke={3} />
-                  <span>{label}</span>
-                </div>
-              }
-            />
-          ))}
-        </Tabs>
-
         <Slider
           label="Mode volum baix"
           minValue={0}
@@ -356,33 +277,9 @@ export const AdminPage: FC = () => {
             }
           }}
           showSteps={false}
-          startContent={
-            <div className="inline-flex items-center gap-2">
-              <Switch
-                isSelected={isLowVolumeMode}
-                onValueChange={(isLow) => {
-                  setIsLowVolumeMode(isLow);
-                }}
-                color="primary"
-                endContent={<IconVolume size={20} />}
-                startContent={<IconVolume3 size={20} />}
-                aria-label="Baixar volum"
-              />
-              <IconVolume2 size={20} className="max-xs:hidden" />
-            </div>
-          }
+          startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
-
-        <Divider />
-
-        <Switch
-          isSelected={isManualMode}
-          onValueChange={handlePlaybackModeChange}
-          color="primary"
-        >
-          Mode manual
-        </Switch>
       </section>
 
       <MiniPlayer
@@ -398,16 +295,15 @@ export const AdminPage: FC = () => {
         onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
         onSeek={seek}
         playerPreloadProgress={playerPreloadProgress}
-        timestampOptions={songTimestampOptions}
         selectedTimestampType={timestampType}
         onTimestampTypeChange={(value) =>
           setTimestampType(value as SongTimestampCategory)
         }
       />
 
-      {isManualMode ? <PlaybackSectionManual /> : <PlaybackSection />}
-
       <GameInsightsSection />
+
+      <SongsSection />
 
       <Button
         onPress={handleLogout}

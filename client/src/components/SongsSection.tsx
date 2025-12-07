@@ -7,7 +7,7 @@ import { useSessionStorage } from 'usehooks-ts';
 
 const sortStorageKey = 'playback-manual-sort';
 
-export const PlaybackSectionManual: FC = () => {
+export const SongsSection: FC = () => {
   const utils = trpc.useUtils();
   const songsQuery = trpc.game.getAllSongs.useQuery();
 

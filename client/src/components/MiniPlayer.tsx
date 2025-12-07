@@ -15,12 +15,25 @@ import {
   IconPlayerSkipBack,
   IconPlayerSkipForward,
   IconSquareRotated,
+  IconTriangleSquareCircle,
   IconVolume,
   IconVolume3,
   TablerIcon,
 } from '@tabler/icons-react';
 import { clamp } from 'lodash-es';
 import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
+import { SongTimestampCategory } from '../hooks/useSongPlayer';
+
+const songTimestampOptions = [
+  { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
+  { value: 'main', label: 'Principals', icon: IconFlameFilled },
+  { value: 'secondary', label: 'Secundaris', icon: IconSquareRotated },
+  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircle },
+] as const satisfies readonly {
+  value: SongTimestampCategory;
+  label: string;
+  icon: TablerIcon;
+}[];
 
 export const MiniPlayer: FC<
   PropsWithChildren<{
@@ -45,11 +58,6 @@ export const MiniPlayer: FC<
     onPrevious?: () => void;
     onSeek?: (nextTime: number) => void;
     playerPreloadProgress: number;
-    timestampOptions: ReadonlyArray<{
-      value: string;
-      label: string;
-      icon: TablerIcon;
-    }>;
     selectedTimestampType: string;
     onTimestampTypeChange: (value: string) => void;
   }>
@@ -66,7 +74,6 @@ export const MiniPlayer: FC<
   onPrevious,
   onSeek,
   playerPreloadProgress,
-  timestampOptions,
   selectedTimestampType,
   onTimestampTypeChange,
 }) => {
@@ -104,16 +111,17 @@ export const MiniPlayer: FC<
 
   const currentTimestampOption = useMemo(
     () =>
-      timestampOptions.find((opt) => opt.value === selectedTimestampType) ??
-      timestampOptions[0],
-    [selectedTimestampType, timestampOptions]
+      songTimestampOptions.find((opt) => opt.value === selectedTimestampType) ??
+      songTimestampOptions[0],
+    [selectedTimestampType]
   );
 
   const handleCycleTimestamp = () => {
-    const currentIndex = timestampOptions.findIndex(
+    const currentIndex = songTimestampOptions.findIndex(
       (opt) => opt.value === selectedTimestampType
     );
-    const next = timestampOptions[(currentIndex + 1) % timestampOptions.length];
+    const next =
+      songTimestampOptions[(currentIndex + 1) % songTimestampOptions.length];
     onTimestampTypeChange(next.value);
   };
 

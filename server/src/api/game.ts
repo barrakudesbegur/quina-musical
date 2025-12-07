@@ -162,15 +162,6 @@ export const gameRouter = router({
       emitUpdate();
     }),
 
-  updatePlaybackMode: publicProcedure
-    .input(z.object({ playbackMode: z.enum(['manual', 'auto']) }))
-    .mutation(async ({ input }) => {
-      if (!gameDb.data.currentRound) return;
-      gameDb.data.currentRound.playbackMode = input.playbackMode;
-      await gameDb.write();
-      emitUpdate();
-    }),
-
   finishRound: publicProcedure
     .input(
       z.object({
@@ -201,7 +192,6 @@ export const gameRouter = router({
           finishedAt: null,
           shuffledSongs: shuffleSongs(now),
           playedSongs: [],
-          playbackMode: 'auto',
         };
       }
 
@@ -226,7 +216,6 @@ export const gameRouter = router({
       finishedAt: null,
       shuffledSongs: shuffleSongs(now),
       playedSongs: [],
-      playbackMode: 'auto',
     };
 
     await gameDb.write();
@@ -256,7 +245,6 @@ export const gameRouter = router({
       finishedAt: null,
       shuffledSongs: shuffleSongs(now),
       playedSongs: [],
-      playbackMode: 'auto',
     };
 
     await gameDb.write();
