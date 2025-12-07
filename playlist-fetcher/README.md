@@ -11,5 +11,5 @@ pip install -r requirements.txt
 chmod +x main.sh
 
 # Run the script
-./main.sh <playlist_id>
+./main.sh <playlist_id|playlist_url>
 ```
