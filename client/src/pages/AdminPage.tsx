@@ -127,7 +127,7 @@ export const AdminPage: FC = () => {
       playSilence();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastPlayedSongId, loadSong, timestampType]);
+  }, [lastPlayedSongId, loadSong, playSilence]);
 
   const handleTogglePlayback = async () => {
     if (isPlaying) {

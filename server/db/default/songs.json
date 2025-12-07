@@ -605,6 +605,7 @@
     "id": 87,
     "title": "Tobogan",
     "artist": "Zoo",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27392a75006a0964b95151363e7"
+    "cover": "https://i.scdn.co/image/ab67616d0000b27392a75006a0964b95151363e7",
+    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
   }
 ]
