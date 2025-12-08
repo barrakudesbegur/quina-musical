@@ -60,19 +60,6 @@ export const gameRouter = router({
   getAllSongs: publicProcedure.query(async () => {
     if (!gameDb.data.currentRound) return [];
 
-    const shuffledSongsWithoutPlayed = gameDb.data.currentRound.shuffledSongs
-      .toSorted((a, b) => a.position - b.position)
-      .filter(
-        (song) =>
-          !gameDb.data.currentRound ||
-          !gameDb.data.currentRound.playedSongs.some((p) => p.id === song.id)
-      )
-      .map((song, index) => ({
-        ...song,
-        expectedPlayedPosition:
-          index + 1 + (gameDb.data.currentRound?.playedSongs.length ?? 0),
-      }));
-
     return songs
       .slice()
       .sort((a, b) => a.id - b.id)
@@ -80,14 +67,21 @@ export const gameRouter = router({
         const played = gameDb.data.currentRound?.playedSongs.find(
           (p) => p.id === song.id
         );
+        const songInQueue = gameDb.data.currentRound?.songsQueue?.find(
+          (p) => p.id === song.id
+        );
+        if (!played && !songInQueue) {
+          console.error(`Song ${song.id} is not played not in queue.`);
+        }
         return {
           ...song,
           isPlayed: !!played,
-          playedPosition: played?.position,
-          expectedPlayedPosition:
-            played?.position ??
-            shuffledSongsWithoutPlayed.find((p) => p.id === song.id)
-              ?.expectedPlayedPosition,
+          isLastPlayed:
+            !!played &&
+            gameDb.data.currentRound &&
+            song.id === gameDb.data.currentRound.playedSongs.at(-1)?.id,
+          position: played?.position ?? songInQueue?.overallPosition ?? 999999,
+          positionInQueue: songInQueue?.position,
         };
       });
   }),
@@ -110,28 +104,46 @@ export const gameRouter = router({
     .mutation(async ({ input }) => {
       if (!gameDb.data.currentRound) return;
 
-      const songId =
-        input.songId ??
-        gameDb.data.currentRound.shuffledSongs
-          .toSorted((a, b) => a.position - b.position)
-          .find(
-            (song) =>
-              !gameDb.data.currentRound?.playedSongs.some(
-                (p) => p.id === song.id
-              )
-          )?.id;
+      const songId = input.songId ?? gameDb.data.currentRound.songsQueue[0]?.id;
       if (!songId) return;
+
+      const songInfo = songs.find((s) => s.id === songId);
+      if (!songInfo) {
+        throw new Error(
+          `Song ${songId} cannot play because it is not a valid song id.`
+        );
+      }
 
       const alreadyPlayed = gameDb.data.currentRound.playedSongs.some(
         (p) => p.id === songId
       );
-      if (alreadyPlayed) return;
-
-      gameDb.data.currentRound.playedSongs.push({
+      if (alreadyPlayed) {
+        throw new Error(
+          `Song ${songId} cannot play because it has already been played.`
+        );
+      }
+      const newPlayedSong = {
         id: songId,
         position: gameDb.data.currentRound.playedSongs.length + 1,
         playedAt: new Date().toISOString(),
-      });
+      } satisfies (typeof gameDb.data.currentRound.playedSongs)[number];
+
+      gameDb.data.currentRound.playedSongs.push(newPlayedSong);
+
+      const indexInQueue = gameDb.data.currentRound.songsQueue.findIndex(
+        (s) => s.id === songId
+      );
+      if (indexInQueue !== -1) {
+        gameDb.data.currentRound.songsQueue =
+          gameDb.data.currentRound.songsQueue
+            .toSpliced(indexInQueue, 1)
+            .map((song, index) => ({
+              ...song,
+              position: index + 1,
+              overallPosition: newPlayedSong.position + index + 1,
+            }));
+      }
+
       await gameDb.write();
       emitUpdate();
     }),
@@ -139,7 +151,21 @@ export const gameRouter = router({
   undoLastPlayed: publicProcedure.mutation(async () => {
     if (!gameDb.data.currentRound) return;
     if (gameDb.data.currentRound.playedSongs.length > 0) {
-      gameDb.data.currentRound.playedSongs.pop();
+      const lastPlayedSong = gameDb.data.currentRound.playedSongs.pop();
+      if (!lastPlayedSong) return;
+
+      gameDb.data.currentRound.songsQueue.unshift({
+        id: lastPlayedSong.id,
+        position: 1,
+        overallPosition: lastPlayedSong.position,
+      });
+      gameDb.data.currentRound.songsQueue =
+        gameDb.data.currentRound.songsQueue.map((song, index) => ({
+          ...song,
+          position: index + 1,
+          overallPosition: lastPlayedSong.position + index,
+        }));
+
       await gameDb.write();
       emitUpdate();
     }
@@ -185,12 +211,18 @@ export const gameRouter = router({
       } else {
         const position = gameDb.data.currentRound.position + 1;
 
+        const shuffledSongs = shuffleSongs(now);
+
         gameDb.data.currentRound = {
           name: input.nextRoundName,
           position,
           startedAt: now,
           finishedAt: null,
-          shuffledSongs: shuffleSongs(now),
+          shuffledSongs,
+          songsQueue: shuffledSongs.map((song) => ({
+            ...song,
+            overallPosition: song.position,
+          })),
           playedSongs: [],
         };
       }
@@ -207,6 +239,8 @@ export const gameRouter = router({
     const now = new Date().toISOString();
     const position = gameDb.data.pastRounds.length + 1;
 
+    const shuffledSongs = shuffleSongs(now);
+
     gameDb.data.finishedAt = null;
 
     gameDb.data.currentRound = {
@@ -214,7 +248,11 @@ export const gameRouter = router({
       position,
       startedAt: now,
       finishedAt: null,
-      shuffledSongs: shuffleSongs(now),
+      shuffledSongs,
+      songsQueue: shuffledSongs.map((song) => ({
+        ...song,
+        overallPosition: song.position,
+      })),
       playedSongs: [],
     };
 
@@ -237,13 +275,19 @@ export const gameRouter = router({
 
     const position = gameDb.data.pastRounds.length + 1;
 
+    const shuffledSongs = shuffleSongs(now);
+
     gameDb.data.finishedAt = null;
     gameDb.data.currentRound = {
       name: `${position}`,
       position,
       startedAt: now,
       finishedAt: null,
-      shuffledSongs: shuffleSongs(now),
+      shuffledSongs,
+      songsQueue: shuffledSongs.map((song) => ({
+        ...song,
+        overallPosition: song.position,
+      })),
       playedSongs: [],
     };
 

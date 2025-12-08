@@ -14,38 +14,27 @@ export const SongsSection: FC<{
   const songsQuery = trpc.game.getAllSongs.useQuery();
 
   const sortOptions = [
-    { key: 'expectedPlayedPosition', label: 'Reproducció' },
+    { key: 'position', label: 'Reproducció' },
     { key: 'title', label: 'Títol' },
     { key: 'id', label: 'Playlist' },
   ] as const satisfies readonly {
-    key: keyof (typeof songsWithLastPlayed)[number];
+    key: keyof NonNullable<typeof songsQuery.data>[number];
     label: string;
   }[];
+
   type SortKey = (typeof sortOptions)[number]['key'];
   const [sortKey, setSortKey] = useSessionStorage<SortKey>(
     sortStorageKey,
     sortOptions[0].key
   );
 
-  const maxPosition = useMemo(() => {
-    if (!songsQuery.data) return 0;
-    return Math.max(0, ...songsQuery.data.map((s) => s.playedPosition || 0));
-  }, [songsQuery.data]);
-
-  const songsWithLastPlayed = useMemo(() => {
-    return (
-      songsQuery.data?.map((song) => ({
-        ...song,
-        isLastPlayed: song.playedPosition === maxPosition,
-      })) ?? []
-    );
-  }, [songsQuery.data, maxPosition]);
-
   const sortedSongs = useMemo(() => {
-    return sortBy(songsWithLastPlayed, [sortKey, 'id']);
-  }, [songsWithLastPlayed, sortKey]);
+    return sortBy(songsQuery.data, [sortKey, 'id']);
+  }, [songsQuery.data, sortKey]);
 
-  const handleCardPress = (song: (typeof songsWithLastPlayed)[number]) => {
+  const handleCardPress = (
+    song: NonNullable<typeof songsQuery.data>[number]
+  ) => {
     if (song.isLastPlayed) {
       onUndoLastPlayed();
     } else if (!song.isPlayed) {
@@ -120,7 +109,7 @@ export const SongsSection: FC<{
                     className="font-brand tracking-widest uppercase text-2xl font-light"
                     startContent={<IconCircleCheckFilled size={24} />}
                   >
-                    {song.playedPosition}
+                    {song.position}
                   </Chip>
                 ) : (
                   <Chip
@@ -128,7 +117,7 @@ export const SongsSection: FC<{
                     variant="flat"
                     className="font-brand tracking-widest uppercase text-2xl font-light opacity-20 hover:opacity-50 focus:opacity-50 transition-opacity"
                   >
-                    {song.expectedPlayedPosition}
+                    {song.position}
                   </Chip>
                 )}
               </div>

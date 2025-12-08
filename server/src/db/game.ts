@@ -15,6 +15,7 @@ export interface Round {
   name: string;
   position: number;
   shuffledSongs: { id: SongId; position: number }[];
+  songsQueue: { id: SongId; position: number; overallPosition: number }[];
   playedSongs: PlayedSong[];
   startedAt: string | null;
   finishedAt: string | null;
