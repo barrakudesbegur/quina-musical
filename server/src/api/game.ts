@@ -81,7 +81,7 @@ export const gameRouter = router({
             gameDb.data.currentRound &&
             song.id === gameDb.data.currentRound.playedSongs.at(-1)?.id,
           position: played?.position ?? songInQueue?.overallPosition ?? 999999,
-          positionInQueue: songInQueue?.position,
+          positionInQueue: songInQueue?.position ?? null,
         };
       });
   }),
