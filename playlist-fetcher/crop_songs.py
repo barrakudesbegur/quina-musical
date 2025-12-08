@@ -36,7 +36,7 @@ def main() -> None:
 
         src = None
         for prefix in (str(song_id), str(song_id).zfill(2), str(song_id).zfill(3)):
-            match = sorted(input_dir.glob(f"{prefix}*"))
+            match = sorted(input_dir.glob(f"{prefix} *"))
             if match:
                 src = match[0]
                 break
@@ -58,3 +58,8 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+# # TODO
+# - If timestamp not found, just copy the original
+# - Keep file metadata (album cover, etc)
+# - Quality decreases a lot! keep original quality
+# - It's better if you initially copy all the files and then proces them one by one, finding them in them in the json.
