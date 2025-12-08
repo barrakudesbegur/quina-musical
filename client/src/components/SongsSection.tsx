@@ -1,9 +1,10 @@
-import { Card, CardBody, Chip, Tab, Tabs, cn } from '@heroui/react';
-import { IconArrowBackUp, IconCircleCheckFilled } from '@tabler/icons-react';
-import { FC, useMemo } from 'react';
+import { Tab, Tabs } from '@heroui/react';
+import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { sortBy } from 'lodash-es';
-import { trpc } from '../utils/trpc';
+import { ComponentProps, FC, useCallback, useMemo } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
+import { trpc } from '../utils/trpc';
+import { SongCard } from './SongCard';
 
 const sortStorageKey = 'playback-manual-sort';
 
@@ -11,7 +12,51 @@ export const SongsSection: FC<{
   onPlaySong: (songId: number) => void;
   onUndoLastPlayed: () => void;
 }> = ({ onPlaySong, onUndoLastPlayed }) => {
+  const utils = trpc.useUtils();
   const songsQuery = trpc.game.getAllSongs.useQuery();
+
+  const setQueueOrderMutation = trpc.game.setQueueOrder.useMutation({
+    onMutate: async ({ songIds }) => {
+      await utils.game.getAllSongs.cancel();
+
+      const previousSongs = utils.game.getAllSongs.getData();
+
+      utils.game.getAllSongs.setData(undefined, (old) => {
+        if (!old) return previousSongs;
+
+        const totalPlayed = old.filter((song) => song.isPlayed).length;
+
+        const queueSongsPositions = songIds.map((id, index) => ({
+          id,
+          position: totalPlayed + index + 1,
+          positionInQueue: index + 1,
+        }));
+
+        return old.map((song) => {
+          const songPositions = queueSongsPositions.find(
+            (s) => s.id === song.id
+          );
+          if (!songPositions) return song;
+
+          return {
+            ...song,
+            position: songPositions.position,
+            positionInQueue: songPositions.positionInQueue,
+          };
+        });
+      });
+
+      return { previousSongs };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousSongs) {
+        utils.game.getAllSongs.setData(undefined, context.previousSongs);
+      }
+    },
+    onSettled: () => {
+      void utils.game.invalidate();
+    },
+  });
 
   const sortOptions = [
     { key: 'position', label: 'Reproducció' },
@@ -28,19 +73,30 @@ export const SongsSection: FC<{
     sortOptions[0].key
   );
 
-  const sortedSongs = useMemo(() => {
-    return sortBy(songsQuery.data, [sortKey, 'id']);
-  }, [songsQuery.data, sortKey]);
+  const sortedSongs = useMemo(
+    () => sortBy(songsQuery.data ?? [], [sortKey, 'id']),
+    [songsQuery, sortKey]
+  );
 
-  const handleCardPress = (
-    song: NonNullable<typeof songsQuery.data>[number]
-  ) => {
-    if (song.isLastPlayed) {
-      onUndoLastPlayed();
-    } else if (!song.isPlayed) {
-      onPlaySong(song.id);
-    }
-  };
+  const songsInQueue = useMemo(
+    () =>
+      sortBy(songsQuery.data?.filter((song) => !song.isPlayed) ?? [], [
+        'position',
+        'id',
+      ]),
+    [songsQuery]
+  );
+
+  const handleCardPress = useCallback(
+    (song: { id: number; isPlayed: boolean; isLastPlayed: boolean | null }) => {
+      if (song.isLastPlayed) {
+        onUndoLastPlayed();
+      } else if (!song.isPlayed) {
+        onPlaySong(song.id);
+      }
+    },
+    [onUndoLastPlayed, onPlaySong]
+  );
 
   return (
     <section>
@@ -59,72 +115,68 @@ export const SongsSection: FC<{
         ))}
       </Tabs>
       <div className="space-y-2 -mx-2">
-        {sortedSongs.map((song) => (
-          <Card
-            key={song.id}
-            isPressable
-            isDisabled={song.isPlayed && !song.isLastPlayed}
-            onPress={() => handleCardPress(song)}
-            className={cn('relative', {
-              'opacity-50': song.isPlayed && !song.isLastPlayed,
-              'border-success': song.isLastPlayed,
-            })}
-            classNames={{
-              base: 'w-full',
-            }}
-            radius="sm"
-          >
-            <CardBody className="gap-3 justify-between flex-row min-h-0 items-center">
-              <img
-                src={song.cover}
-                alt={song.title}
-                className="size-16 -m-3 mr-0 object-cover rounded-l-lg "
-              />
-              <div className="flex flex-col grow">
-                <p className="text-lg leading-tight">
-                  <span className="text-default-400  ">{song.id}.</span>{' '}
-                  {song.title}
-                </p>
-                <p className="text-xs text-default-500 leading-tight">
-                  {song.artist}
-                </p>
-              </div>
-              <div className="flex gap-1">
-                {song.isLastPlayed && (
-                  <Chip
-                    color="warning"
-                    variant="flat"
-                    className="font-brand tracking-widest text-lg uppercase"
-                    classNames={{
-                      base: 'p-0',
-                    }}
-                  >
-                    <IconArrowBackUp size={20} />
-                  </Chip>
-                )}
-                {song.isPlayed ? (
-                  <Chip
-                    color="success"
-                    variant="flat"
-                    className="font-brand tracking-widest uppercase text-2xl font-light"
-                    startContent={<IconCircleCheckFilled size={24} />}
-                  >
-                    {song.position}
-                  </Chip>
-                ) : (
-                  <Chip
-                    color="default"
-                    variant="flat"
-                    className="font-brand tracking-widest uppercase text-2xl font-light opacity-20 hover:opacity-50 focus:opacity-50 transition-opacity"
-                  >
-                    {song.position}
-                  </Chip>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        ))}
+        {sortKey === 'position' ? (
+          <>
+            {sortedSongs
+              .filter((song) => song.isPlayed)
+              .map((song) => (
+                <SongCard
+                  key={song.id}
+                  song={song}
+                  onPress={() => handleCardPress(song)}
+                  disablePress={setQueueOrderMutation.isPending}
+                />
+              ))}
+            {!!songsInQueue.length && (
+              <Reorder.Group
+                axis="y"
+                values={songsInQueue.map((song) => song.id)}
+                onReorder={(newOrder) =>
+                  setQueueOrderMutation.mutate({ songIds: newOrder })
+                }
+                className="space-y-2 list-none"
+              >
+                {songsInQueue.map((song) => (
+                  <ReorderSongCard
+                    key={song.id}
+                    song={song}
+                    onPress={() => handleCardPress(song)}
+                    disablePress={setQueueOrderMutation.isPending}
+                  />
+                ))}
+              </Reorder.Group>
+            )}
+          </>
+        ) : (
+          sortedSongs.map((song) => (
+            <SongCard
+              key={song.id}
+              song={song}
+              onPress={() => handleCardPress(song)}
+            />
+          ))
+        )}
       </div>
     </section>
+  );
+};
+
+export const ReorderSongCard = ({
+  ...cardProps
+}: Omit<ComponentProps<typeof SongCard>, 'dragControls'>) => {
+  const y = useMotionValue(0);
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={cardProps.song.id}
+      id={cardProps.song.id.toString()}
+      style={{ y }}
+      dragListener={false}
+      dragControls={dragControls}
+      className="relative"
+    >
+      <SongCard {...cardProps} dragControls={dragControls} />
+    </Reorder.Item>
   );
 };
