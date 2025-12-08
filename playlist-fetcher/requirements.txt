@@ -1,4 +1,6 @@
 spotapi
 pymongo
 spotdl
+pydub
+ffmpeg-python
 
