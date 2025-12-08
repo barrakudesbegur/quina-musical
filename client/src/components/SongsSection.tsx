@@ -1,4 +1,5 @@
 import { Tab, Tabs } from '@heroui/react';
+import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { sortBy } from 'lodash-es';
 import { ComponentProps, FC, useCallback, useMemo } from 'react';
@@ -73,18 +74,49 @@ export const SongsSection: FC<{
     sortOptions[0].key
   );
 
-  const sortedSongs = useMemo(
-    () => sortBy(songsQuery.data ?? [], [sortKey, 'id']),
-    [songsQuery, sortKey]
-  );
+  const durationMap = useMemo(() => {
+    const playedSongsChronological =
+      songsQuery.data
+        ?.filter((song) => song.isPlayed && song.playedAt)
+        .map((song) => ({
+          id: song.id,
+          playedAt: parseISO(song.playedAt!),
+        }))
+        .filter((song) => isValid(song.playedAt))
+        .sort((a, b) => a.playedAt.getTime() - b.playedAt.getTime()) ?? [];
+
+    const durationMap = new Map<number, number>();
+    for (let i = 0; i < playedSongsChronological.length - 1; i++) {
+      const current = playedSongsChronological[i];
+      const next = playedSongsChronological[i + 1];
+      const ms = differenceInMilliseconds(next.playedAt, current.playedAt);
+      if (ms > 0) {
+        durationMap.set(current.id, ms);
+      }
+    }
+    return durationMap;
+  }, [songsQuery.data]);
+
+  const songsWithPlayedDurationMs = useMemo(() => {
+    if (!songsQuery.data) return [];
+
+    return songsQuery.data.map((song) => ({
+      ...song,
+      playedDurationMs: durationMap.get(song.id) ?? null,
+    }));
+  }, [durationMap, songsQuery.data]);
+
+  const sortedSongs = useMemo(() => {
+    return sortBy(songsWithPlayedDurationMs, [sortKey, 'id']);
+  }, [songsWithPlayedDurationMs, sortKey]);
 
   const songsInQueue = useMemo(
     () =>
-      sortBy(songsQuery.data?.filter((song) => !song.isPlayed) ?? [], [
+      sortBy(songsWithPlayedDurationMs.filter((song) => !song.isPlayed) ?? [], [
         'position',
         'id',
       ]),
-    [songsQuery]
+    [songsWithPlayedDurationMs]
   );
 
   const handleCardPress = useCallback(

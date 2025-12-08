@@ -23,6 +23,8 @@ import {
 import { clamp } from 'lodash-es';
 import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
 import { SongTimestampCategory } from '../hooks/useSongPlayer';
+import { formatCompactDuration } from '../utils/time';
+import { differenceInMilliseconds, parseISO } from 'date-fns';
 
 const songTimestampOptions = [
   { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
@@ -42,11 +44,13 @@ export const MiniPlayer: FC<
       title: string;
       artist: string;
       cover?: string;
+      playedAt: string | null;
       timestamps?: {
         main?: number[];
         secondary?: number[];
       };
     } | null;
+    now: number;
     isPlaying: boolean;
     isLoading?: boolean;
     currentTime: number;
@@ -63,6 +67,7 @@ export const MiniPlayer: FC<
   }>
 > = ({
   song,
+  now,
   isPlaying,
   isLoading = false,
   currentTime,
@@ -116,6 +121,16 @@ export const MiniPlayer: FC<
     [selectedTimestampType]
   );
 
+  const elapsedLabel = useMemo(
+    () =>
+      song?.playedAt
+        ? formatCompactDuration(
+            differenceInMilliseconds(now, parseISO(song.playedAt))
+          )
+        : null,
+    [now, song]
+  );
+
   const handleCycleTimestamp = () => {
     const currentIndex = songTimestampOptions.findIndex(
       (opt) => opt.value === selectedTimestampType
@@ -161,31 +176,40 @@ export const MiniPlayer: FC<
                 </h3>
               </div>
 
-              <div className="relative flex items-center justify-center">
-                <Button
-                  isIconOnly
-                  radius="full"
-                  variant="light"
-                  aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
-                  onPress={onTogglePlay}
-                  isLoading={isLoading}
-                >
-                  <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
-                    {isPlaying ? (
-                      <IconPlayerPauseFilled className="size-6" />
-                    ) : (
-                      <IconPlayerPlayFilled className="size-6" />
-                    )}
+              <div className="flex flex-col items-center justify-start gap-0.5">
+                <div className="relative flex items-center justify-center">
+                  <Button
+                    isIconOnly
+                    radius="full"
+                    variant="light"
+                    aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
+                    onPress={onTogglePlay}
+                    isLoading={isLoading}
+                  >
+                    <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
+                      {isPlaying ? (
+                        <IconPlayerPauseFilled className="size-6" />
+                      ) : (
+                        <IconPlayerPlayFilled className="size-6" />
+                      )}
+                    </div>
+                  </Button>
+                  {playerPreloadProgress < 1 && (
+                    <CircularProgress
+                      aria-label="Carregant cançons"
+                      size="lg"
+                      value={playerPreloadProgress * 100}
+                      disableAnimation
+                      className="absolute inset-0 pointer-events-none"
+                    />
+                  )}
+                </div>
+                {elapsedLabel && (
+                  <div className="overflow-visible relative">
+                    <p className="text-xs absolute top-0 whitespace-nowrap left-1/2 -translate-x-1/2 text-default-400 font-bold">
+                      {elapsedLabel}
+                    </p>
                   </div>
-                </Button>
-                {playerPreloadProgress < 1 && (
-                  <CircularProgress
-                    aria-label="Carregant cançons"
-                    size="lg"
-                    value={playerPreloadProgress * 100}
-                    disableAnimation
-                    className="absolute inset-0 pointer-events-none"
-                  />
                 )}
               </div>
             </div>

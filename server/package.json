@@ -12,6 +12,7 @@
   "dependencies": {
     "@trpc/server": "11.7.2",
     "cors": "2.8.5",
+    "date-fns": "4.1.0",
     "lowdb": "7.0.1",
     "seedrandom": "3.0.5",
     "superjson": "2.2.6",

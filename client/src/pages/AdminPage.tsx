@@ -1,5 +1,6 @@
 import { Button, Divider, Slider } from '@heroui/react';
 import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
+import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
@@ -9,7 +10,9 @@ import { GameInsightsSection } from '../components/GameInsightsSection';
 import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
+import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
+import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 
 export const AdminPage: FC = () => {
@@ -70,6 +73,8 @@ export const AdminPage: FC = () => {
     canResume,
   } = useSongPlayer();
 
+  const now = useSecondsStopwatch();
+
   useEffect(() => {
     void startSongPlayer();
   });
@@ -96,6 +101,15 @@ export const AdminPage: FC = () => {
         ?.id ?? null,
     [roundQuery.data?.playedSongs]
   );
+
+  const roundElapsedMs = useMemo(() => {
+    const roundStartedAt = roundQuery.data?.startedAt ?? null;
+
+    if (!roundStartedAt) return null;
+    const startDate = parseISO(roundStartedAt);
+    if (!isValid(startDate)) return null;
+    return Math.max(0, differenceInMilliseconds(new Date(now), startDate));
+  }, [now, roundQuery.data?.startedAt]);
 
   const currentSong = useMemo(
     () => songsQuery.data?.find((song) => song.id === lastPlayedSongId) ?? null,
@@ -231,7 +245,17 @@ export const AdminPage: FC = () => {
           Gestió de la quina
         </h2>
 
-        <RoundNameForm />
+        <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
+          <RoundNameForm />
+          {roundElapsedMs !== null && (
+            <div className="   ">
+              <div className="text-sm text-foreground">Duració</div>
+              <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
+                <span>{formatElapsedClock(roundElapsedMs)}</span>
+              </div>
+            </div>
+          )}
+        </div>
         <Divider />
 
         <Button
@@ -284,6 +308,7 @@ export const AdminPage: FC = () => {
 
       <MiniPlayer
         song={currentSong}
+        now={now}
         isPlaying={isPlaying}
         isLoading={playerControlLoading}
         currentTime={currentTime}

@@ -26,37 +26,6 @@ export const gameRouter = router({
     }
   }),
 
-  getState: publicProcedure.query(async () => {
-    if (!gameDb.data.currentRound) {
-      return {
-        round: null,
-        playedSongs: [],
-      };
-    }
-
-    const playedSongs = gameDb.chain
-      .get('currentRound.playedSongs')
-      .map((played) => {
-        const song = songs.find((s) => s.id === played.id);
-        if (!song) return null;
-        return {
-          ...song,
-          position: played.position,
-        };
-      })
-      .filter((song) => song !== null)
-      .orderBy(['position'], ['desc'])
-      .value();
-
-    return {
-      round: {
-        name: gameDb.data.currentRound.name,
-        position: gameDb.data.currentRound.position,
-      },
-      playedSongs,
-    };
-  }),
-
   getAllSongs: publicProcedure.query(async () => {
     if (!gameDb.data.currentRound) return [];
 
@@ -75,6 +44,7 @@ export const gameRouter = router({
         }
         return {
           ...song,
+          playedAt: played?.playedAt ?? null,
           isPlayed: !!played,
           isLastPlayed:
             !!played &&

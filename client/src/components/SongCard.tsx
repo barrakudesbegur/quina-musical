@@ -6,6 +6,7 @@ import {
 } from '@tabler/icons-react';
 import { DragControls } from 'framer-motion';
 import { FC } from 'react';
+import { formatCompactDuration } from '../utils/time';
 
 type Song = {
   id: number;
@@ -16,6 +17,7 @@ type Song = {
   artist: string;
   position: number;
   positionInQueue: number | null;
+  playedDurationMs: number | null;
 };
 
 export const SongCard: FC<{
@@ -55,6 +57,11 @@ export const SongCard: FC<{
           </p>
         </div>
         <div className="flex items-center gap-2 mr-4">
+          {song.isPlayed && !song.isLastPlayed && (
+            <div className="font-brand max-xs:hidden text-right tracking-wide text-sm text-default-600">
+              {formatCompactDuration(song.playedDurationMs)}
+            </div>
+          )}
           {song.isLastPlayed && (
             <Chip
               color="warning"
