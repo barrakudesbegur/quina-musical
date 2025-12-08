@@ -171,6 +171,43 @@ export const gameRouter = router({
     }
   }),
 
+  changePositionInQueue: publicProcedure
+    .input(z.object({ songId: z.number().min(1), position: z.number().min(1) }))
+    .mutation(async ({ input }) => {
+      if (!gameDb.data.currentRound) return;
+
+      const indexInQueue = gameDb.data.currentRound.songsQueue.findIndex(
+        (s) => s.id === input.songId
+      );
+      if (indexInQueue === -1) {
+        throw new Error(`Song ${input.songId} is not in queue`);
+      }
+      const song = gameDb.data.currentRound.songsQueue.splice(
+        indexInQueue,
+        1
+      )[0];
+      if (!song) {
+        throw new Error(`Song ${input.songId} is not in queue`);
+      }
+
+      gameDb.data.currentRound.songsQueue.splice(input.position - 1, 0, {
+        id: song.id,
+        position: input.position,
+        overallPosition:
+          (gameDb.data.currentRound?.playedSongs.length ?? 0) + input.position,
+      });
+      gameDb.data.currentRound.songsQueue =
+        gameDb.data.currentRound.songsQueue.map((song, index) => ({
+          ...song,
+          position: index + 1,
+          overallPosition:
+            (gameDb.data.currentRound?.playedSongs.length ?? 0) + index + 1,
+        }));
+
+      await gameDb.write();
+      emitUpdate();
+    }),
+
   getCurrentRound: publicProcedure.query(async () => {
     return gameDb.data.currentRound;
   }),
