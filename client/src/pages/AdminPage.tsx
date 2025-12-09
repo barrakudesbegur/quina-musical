@@ -239,99 +239,108 @@ export const AdminPage: FC = () => {
   }
 
   return (
-    <main className="max-w-xl mx-auto p-4 pb-32 space-y-12">
-      <section className="space-y-4">
-        <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
-          Gestió de la quina
-        </h2>
+    <main className="max-w-[1800px] mx-auto p-4 pb-32 space-y-12">
+      <div className="grid gap-8 max-w-xl lg:max-w-none mx-auto lg:grid-cols-3">
+        <div className="space-y-4">
+          <section className="space-y-4">
+            <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
+              Gestió de la quina
+            </h2>
 
-        <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
-          <RoundNameForm />
-          {roundElapsedMs !== null && (
-            <div className="   ">
-              <div className="text-sm text-foreground">Duració</div>
-              <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
-                <span>{formatElapsedClock(roundElapsedMs)}</span>
-              </div>
+            <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
+              <RoundNameForm />
+              {roundElapsedMs !== null && (
+                <div className="   ">
+                  <div className="text-sm text-foreground">Duració</div>
+                  <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
+                    <span>{formatElapsedClock(roundElapsedMs)}</span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+            <Divider />
+
+            <Button
+              color="primary"
+              onPress={() => setIsCheckCardDialogOpen(true)}
+              className="w-full block"
+            >
+              Comprovar cartó
+            </Button>
+            <CheckCardDialog
+              isOpen={isCheckCardDialogOpen}
+              onClose={() => setIsCheckCardDialogOpen(false)}
+              onFinishRound={openFinishRoundDialog}
+            />
+            <Button
+              color="danger"
+              variant="bordered"
+              onPress={() => setIsFinishRoundDialogOpen(true)}
+              className="w-full block"
+            >
+              Finalitzar quina
+            </Button>
+            <FinishRoundDialog
+              isOpen={isFinishRoundDialogOpen}
+              defaultValue={defaultNextRoundName}
+              onClose={() => setIsFinishRoundDialogOpen(false)}
+              onConfirm={handleFinishRound}
+              loading={finishRoundMutation.isPending}
+            />
+
+            <Divider />
+
+            <Slider
+              label="Mode volum baix"
+              minValue={0}
+              maxValue={1}
+              step={0.001}
+              value={lowVolumeSetting}
+              formatOptions={{ style: 'percent' }}
+              onChange={(value) => {
+                if (typeof value === 'number') {
+                  setLowVolumeSetting(value);
+                }
+              }}
+              showSteps={false}
+              startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+              endContent={<IconVolume size={20} className="max-xs:hidden" />}
+            />
+          </section>
+
+          <GameInsightsSection />
         </div>
-        <Divider />
-
-        <Button
-          color="primary"
-          onPress={() => setIsCheckCardDialogOpen(true)}
-          className="w-full block"
-        >
-          Comprovar cartó
-        </Button>
-        <CheckCardDialog
-          isOpen={isCheckCardDialogOpen}
-          onClose={() => setIsCheckCardDialogOpen(false)}
-          onFinishRound={openFinishRoundDialog}
-        />
-        <Button
-          color="danger"
-          variant="bordered"
-          onPress={() => setIsFinishRoundDialogOpen(true)}
-          className="w-full block"
-        >
-          Finalitzar quina
-        </Button>
-        <FinishRoundDialog
-          isOpen={isFinishRoundDialogOpen}
-          defaultValue={defaultNextRoundName}
-          onClose={() => setIsFinishRoundDialogOpen(false)}
-          onConfirm={handleFinishRound}
-          loading={finishRoundMutation.isPending}
-        />
-
-        <Divider />
-
-        <Slider
-          label="Mode volum baix"
-          minValue={0}
-          maxValue={1}
-          step={0.001}
-          value={lowVolumeSetting}
-          formatOptions={{ style: 'percent' }}
-          onChange={(value) => {
-            if (typeof value === 'number') {
-              setLowVolumeSetting(value);
+        <div className="space-y-4">
+          <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
+            Só
+          </h2>
+          <MiniPlayer
+            song={currentSong}
+            now={now}
+            isPlaying={isPlaying}
+            isLoading={playerControlLoading}
+            currentTime={currentTime}
+            duration={duration}
+            onTogglePlay={handleTogglePlayback}
+            onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
+            isLowVolumeMode={isLowVolumeMode}
+            onNext={handlePlayNextSong}
+            onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
+            onSeek={seek}
+            playerPreloadProgress={playerPreloadProgress}
+            selectedTimestampType={timestampType}
+            onTimestampTypeChange={(value) =>
+              setTimestampType(value as SongTimestampCategory)
             }
-          }}
-          showSteps={false}
-          startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
-          endContent={<IconVolume size={20} className="max-xs:hidden" />}
-        />
-      </section>
-
-      <MiniPlayer
-        song={currentSong}
-        now={now}
-        isPlaying={isPlaying}
-        isLoading={playerControlLoading}
-        currentTime={currentTime}
-        duration={duration}
-        onTogglePlay={handleTogglePlayback}
-        onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
-        isLowVolumeMode={isLowVolumeMode}
-        onNext={handlePlayNextSong}
-        onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
-        onSeek={seek}
-        playerPreloadProgress={playerPreloadProgress}
-        selectedTimestampType={timestampType}
-        onTimestampTypeChange={(value) =>
-          setTimestampType(value as SongTimestampCategory)
-        }
-      />
-
-      <GameInsightsSection />
-
-      <SongsSection
-        onPlaySong={(songId) => playSongMutation.mutate({ songId })}
-        onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
-      />
+          />
+        </div>
+        <div className="space-y-4">
+          <SongsSection
+            onPlaySong={(songId) => playSongMutation.mutate({ songId })}
+            onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
+          />
+        </div>
+      </div>
 
       <Button
         onPress={handleLogout}
