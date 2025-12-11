@@ -95,9 +95,10 @@ const renderIcon = (icon: IconSource, iconClassName?: string) => {
 export const IconButtonGrid: FC<
   PropsWithChildren<{
     className?: string;
+    fxVolume?: number;
   }>
-> = ({ className }) => {
-  const { playFx } = useSoundEffects(actions);
+> = ({ className, fxVolume = 1 }) => {
+  const { playFx } = useSoundEffects(actions, { volume: fxVolume });
 
   return (
     <div

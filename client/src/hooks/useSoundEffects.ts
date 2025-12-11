@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 export const useSoundEffects = <T extends string>(
-  effects: { id: T; src: string }[]
+  effects: { id: T; src: string }[],
+  options?: { volume?: number }
 ) => {
   const cacheRef = useRef<Map<T, HTMLAudioElement>>(new Map());
+  const volume = Math.min(1, Math.max(0, options?.volume ?? 1));
 
   const cacheAudio = useCallback(
     (id: T) => {
@@ -26,7 +28,7 @@ export const useSoundEffects = <T extends string>(
 
     const cache = cacheRef.current;
     return () => {
-      Object.values(cache).forEach((audio) => {
+      cache.forEach((audio) => {
         audio.pause();
         audio.currentTime = 0;
       });
@@ -43,6 +45,7 @@ export const useSoundEffects = <T extends string>(
   const playFx = useCallback(
     async (id: T) => {
       const audio = getAudioInstance(id);
+      audio.volume = volume;
       audio.currentTime = 0;
       try {
         await audio.play();
@@ -50,7 +53,7 @@ export const useSoundEffects = <T extends string>(
         console.error(err);
       }
     },
-    [getAudioInstance]
+    [getAudioInstance, volume]
   );
 
   return {

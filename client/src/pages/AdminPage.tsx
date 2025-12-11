@@ -89,12 +89,20 @@ export const AdminPage: FC = () => {
     'admin-low-volume-setting',
     0.2
   );
+  const [songVolume, setSongVolume] = useSessionStorage<number>(
+    'admin-song-volume',
+    1
+  );
+  const [fxVolume, setFxVolume] = useSessionStorage<number>(
+    'admin-fx-volume',
+    1
+  );
   const [timestampType, setTimestampType] =
     useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
 
   useEffect(() => {
-    setVolume(isLowVolumeMode ? lowVolumeSetting : 1);
-  }, [isLowVolumeMode, lowVolumeSetting, setVolume]);
+    setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
+  }, [isLowVolumeMode, lowVolumeSetting, setVolume, songVolume]);
 
   const lastPlayedSongId = useMemo(
     () =>
@@ -288,25 +296,6 @@ export const AdminPage: FC = () => {
               onConfirm={handleFinishRound}
               loading={finishRoundMutation.isPending}
             />
-
-            <Divider />
-
-            <Slider
-              label="Mode volum baix"
-              minValue={0}
-              maxValue={1}
-              step={0.001}
-              value={lowVolumeSetting}
-              formatOptions={{ style: 'percent' }}
-              onChange={(value) => {
-                if (typeof value === 'number') {
-                  setLowVolumeSetting(value);
-                }
-              }}
-              showSteps={false}
-              startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
-              endContent={<IconVolume size={20} className="max-xs:hidden" />}
-            />
           </section>
 
           <GameInsightsSection />
@@ -334,7 +323,59 @@ export const AdminPage: FC = () => {
               setTimestampType(value as SongTimestampCategory)
             }
           />
-          <IconButtonGrid />
+          <IconButtonGrid fxVolume={fxVolume} />
+
+          <Divider />
+
+          <Slider
+            label="Cançons: Volum baix"
+            minValue={0}
+            maxValue={1}
+            step={0.001}
+            value={lowVolumeSetting}
+            formatOptions={{ style: 'percent' }}
+            onChange={(value) => {
+              if (typeof value === 'number') {
+                setLowVolumeSetting(value);
+              }
+            }}
+            showSteps={false}
+            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+            endContent={<IconVolume size={20} className="max-xs:hidden" />}
+          />
+
+          <Slider
+            label="Cançons: Volum normal"
+            minValue={0}
+            maxValue={1}
+            step={0.001}
+            value={songVolume}
+            formatOptions={{ style: 'percent' }}
+            onChange={(value) => {
+              if (typeof value === 'number') {
+                setSongVolume(value);
+              }
+            }}
+            showSteps={false}
+            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+            endContent={<IconVolume size={20} className="max-xs:hidden" />}
+          />
+          <Slider
+            label="Efectes"
+            minValue={0}
+            maxValue={1}
+            step={0.001}
+            value={fxVolume}
+            formatOptions={{ style: 'percent' }}
+            onChange={(value) => {
+              if (typeof value === 'number') {
+                setFxVolume(value);
+              }
+            }}
+            showSteps={false}
+            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+            endContent={<IconVolume size={20} className="max-xs:hidden" />}
+          />
         </div>
         <div className="space-y-4">
           <SongsSection
