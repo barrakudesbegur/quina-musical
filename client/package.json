@@ -17,6 +17,7 @@
     "@heroui/react": "2.8.5",
     "@heroui/system": "2.4.23",
     "@heroui/theme": "2.4.23",
+    "@iconify/react": "5.2.1",
     "@mui/material": "7.3.6",
     "@mui/x-charts": "8.21.0",
     "@tabler/icons-react": "3.35.0",

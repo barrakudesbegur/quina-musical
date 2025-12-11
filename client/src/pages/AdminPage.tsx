@@ -14,6 +14,7 @@ import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
+import { IconButtonGrid } from '../components/IconButtonGrid';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -333,6 +334,7 @@ export const AdminPage: FC = () => {
               setTimestampType(value as SongTimestampCategory)
             }
           />
+          <IconButtonGrid />
         </div>
         <div className="space-y-4">
           <SongsSection
