@@ -1,6 +1,12 @@
 import { Tab, Tabs } from '@heroui/react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
-import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  Reorder,
+  useDragControls,
+  useMotionValue,
+} from 'framer-motion';
 import { sortBy } from 'lodash-es';
 import { ComponentProps, FC, useCallback, useMemo } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
@@ -184,18 +190,20 @@ export const SongsSection: FC<{
       <div className="space-y-2 -m-4 flex-1 overflow-y-auto p-4">
         {sortKey === 'position' ? (
           <>
-            {(filterKey === 'played'
-              ? sortedSongs.filter((song) => song.isPlayed).reverse()
-              : sortedSongs.filter((song) => song.isPlayed)
-            ).map((song) => (
-              <SongCard
-                key={song.id}
-                song={song}
-                onPress={() => handleCardPress(song)}
-                disablePress={setQueueOrderMutation.isPending}
-                dimPlayed={filterKey === 'all'}
-              />
-            ))}
+            <AnimatePresence initial={false} mode="popLayout">
+              {(filterKey === 'played'
+                ? sortedSongs.filter((song) => song.isPlayed).reverse()
+                : sortedSongs.filter((song) => song.isPlayed)
+              ).map((song) => (
+                <AnimatedSongCard
+                  key={song.id}
+                  song={song}
+                  onPress={() => handleCardPress(song)}
+                  disablePress={setQueueOrderMutation.isPending}
+                  dimPlayed={filterKey === 'all'}
+                />
+              ))}
+            </AnimatePresence>
             {!!songsInQueue.length && (
               <Reorder.Group
                 axis="y"
@@ -229,6 +237,27 @@ export const SongsSection: FC<{
         )}
       </div>
     </section>
+  );
+};
+
+export const AnimatedSongCard = ({
+  ...cardProps
+}: ComponentProps<typeof SongCard>) => {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{
+        layout: { type: 'spring', stiffness: 500, damping: 30 },
+        opacity: { duration: 0.2 },
+        y: { type: 'spring', stiffness: 500, damping: 30 },
+      }}
+      style={{ willChange: 'transform, opacity' }}
+    >
+      <SongCard {...cardProps} />
+    </motion.div>
   );
 };
 
