@@ -184,17 +184,18 @@ export const SongsSection: FC<{
       <div className="space-y-2 -m-4 flex-1 overflow-y-auto p-4">
         {sortKey === 'position' ? (
           <>
-            {sortedSongs
-              .filter((song) => song.isPlayed)
-              .map((song) => (
-                <SongCard
-                  key={song.id}
-                  song={song}
-                  onPress={() => handleCardPress(song)}
-                  disablePress={setQueueOrderMutation.isPending}
-                  dimPlayed={filterKey === 'all'}
-                />
-              ))}
+            {(filterKey === 'played'
+              ? sortedSongs.filter((song) => song.isPlayed).reverse()
+              : sortedSongs.filter((song) => song.isPlayed)
+            ).map((song) => (
+              <SongCard
+                key={song.id}
+                song={song}
+                onPress={() => handleCardPress(song)}
+                disablePress={setQueueOrderMutation.isPending}
+                dimPlayed={filterKey === 'all'}
+              />
+            ))}
             {!!songsInQueue.length && (
               <Reorder.Group
                 axis="y"
