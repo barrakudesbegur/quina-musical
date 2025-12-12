@@ -252,14 +252,12 @@ export const AdminPage: FC = () => {
 
           <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
             <RoundNameForm />
-            {roundElapsedMs !== null && (
-              <div className="   ">
-                <div className="text-sm text-foreground">Duració</div>
-                <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
-                  <span>{formatElapsedClock(roundElapsedMs)}</span>
-                </div>
+            <div>
+              <div className="text-sm text-foreground">Duració</div>
+              <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
+                <span>{formatElapsedClock(roundElapsedMs)}</span>
               </div>
-            )}
+            </div>
           </div>
           <Divider />
 

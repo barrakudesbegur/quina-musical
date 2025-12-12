@@ -100,10 +100,17 @@ export const gameRouter = router({
           `Song ${songId} cannot play because it has already been played.`
         );
       }
+
+      const now = new Date().toISOString();
+
+      if (gameDb.data.currentRound.playedSongs.length === 0) {
+        gameDb.data.currentRound.startedAt = now;
+      }
+
       const newPlayedSong = {
         id: songId,
         position: gameDb.data.currentRound.playedSongs.length + 1,
-        playedAt: new Date().toISOString(),
+        playedAt: now,
       } satisfies (typeof gameDb.data.currentRound.playedSongs)[number];
 
       gameDb.data.currentRound.playedSongs.push(newPlayedSong);
@@ -131,6 +138,10 @@ export const gameRouter = router({
     if (gameDb.data.currentRound.playedSongs.length > 0) {
       const lastPlayedSong = gameDb.data.currentRound.playedSongs.pop();
       if (!lastPlayedSong) return;
+
+      if (gameDb.data.currentRound.playedSongs.length === 0) {
+        gameDb.data.currentRound.startedAt = null;
+      }
 
       gameDb.data.currentRound.songsQueue.unshift({
         id: lastPlayedSong.id,
@@ -221,7 +232,7 @@ export const gameRouter = router({
         gameDb.data.currentRound = {
           name: input.nextRoundName,
           position,
-          startedAt: now,
+          startedAt: null,
           finishedAt: null,
           shuffledSongs,
           songsQueue: shuffledSongs.map((song) => ({
@@ -251,7 +262,7 @@ export const gameRouter = router({
     gameDb.data.currentRound = {
       name: `${position}`,
       position,
-      startedAt: now,
+      startedAt: null,
       finishedAt: null,
       shuffledSongs,
       songsQueue: shuffledSongs.map((song) => ({
@@ -286,7 +297,7 @@ export const gameRouter = router({
     gameDb.data.currentRound = {
       name: `${position}`,
       position,
-      startedAt: now,
+      startedAt: null,
       finishedAt: null,
       shuffledSongs,
       songsQueue: shuffledSongs.map((song) => ({
@@ -320,9 +331,9 @@ export const gameRouter = router({
                 .filter((song) => song !== null)
                 .orderBy(['position'], ['desc'])
                 .value(),
-              }),
-              displayedImageId: gameDb.data.displayedImageId,
-      }
+            }),
+        displayedImageId: gameDb.data.displayedImageId,
+      };
     };
 
     // Emit initial state
