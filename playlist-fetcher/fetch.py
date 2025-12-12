@@ -4,6 +4,8 @@ import json
 import sys
 import os
 import csv
+import traceback
+import html
 from pathlib import Path
 from spotapi import Public
 from spotapi.playlist import PublicPlaylist
@@ -16,7 +18,8 @@ def main():
     
     playlist_id = sys.argv[1]
     playlist_url = f"https://open.spotify.com/playlist/{playlist_id}"
-    output_file = 'output/playlist.json'
+    raw_output_file = 'output/playlist-raw.json'
+    summary_file = 'output/playlist.json'
     csv_file = 'output/songs.csv'
     json_file = 'output/songs.json'
     songs_dir = 'output/songs'
@@ -27,10 +30,15 @@ def main():
     
     print("Fetching playlist data...")
     try:
-        # Fetch and save playlist metadata
+        # Fetch and save raw playlist metadata
         playlist_data = fetch_playlist(playlist_id)
-        save_json(playlist_data, output_file)
-        print(f"✓ Saved {output_file}")
+        save_json(playlist_data, raw_output_file)
+        print(f"✓ Saved {raw_output_file}")
+        
+        # Save playlist summary
+        playlist_summary = create_playlist_summary(playlist_data)
+        save_json(playlist_summary, summary_file)
+        print(f"✓ Saved {summary_file}")
         
         # Save CSV with track list
         tracks_data = save_csv(playlist_data, csv_file)
@@ -51,6 +59,8 @@ def main():
 
     except Exception as e:
         print(f"✗ Error: {e}", file=sys.stderr)
+        print("\nFull traceback:", file=sys.stderr)
+        traceback.print_exc()
         sys.exit(1)
 
 def fetch_playlist(playlist_id: str) -> dict:
@@ -78,6 +88,29 @@ def get_largest_cover_url(sources: list) -> str:
         )
     )
     return best.get('url', '')
+
+def create_playlist_summary(playlist_data: dict) -> dict:
+    """Create a summary of the playlist with key information."""
+    title = playlist_data.get('name', 'Unknown Playlist')
+    description = html.unescape(playlist_data.get('description', ''))
+    
+    cover_sources = playlist_data.get('images', {}).get('items', [])
+    if not cover_sources:
+        cover_sources = playlist_data.get('images', {}).get('sources', [])
+    else:
+        cover_sources = cover_sources[0].get('sources', []) if cover_sources else []
+    cover_url = get_largest_cover_url(cover_sources)
+    
+    content = playlist_data.get('content', {})
+    total_tracks = content.get('totalCount', len(content.get('items', [])))
+    
+    return {
+        'title': title,
+        'artist': 'Barrakudes',
+        'cover': cover_url,
+        'description': description,
+        'totalTracks': total_tracks
+    }
 
 def save_json(data, filename: str) -> None:
     with open(filename, 'w', encoding='utf-8') as f:
