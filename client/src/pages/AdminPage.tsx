@@ -57,7 +57,7 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const lastPlayedKeyRef = useRef<number | null>(null);
+  const lastPlayedKeyRef = useRef<number | 'silence' | null>(null);
   const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
     'admin-low-volume-mode',
     false
@@ -125,8 +125,10 @@ export const AdminPage: FC = () => {
 
   const lastPlayedSongId = useMemo(
     () =>
-      roundQuery.data?.playedSongs[roundQuery.data.playedSongs.length - 1]
-        ?.id ?? null,
+      roundQuery.data?.playedSongs.length === 0
+        ? 'silence'
+        : (roundQuery.data?.playedSongs[roundQuery.data.playedSongs.length - 1]
+            ?.id ?? null),
     [roundQuery.data?.playedSongs]
   );
 
@@ -161,21 +163,16 @@ export const AdminPage: FC = () => {
   ]);
 
   useEffect(() => {
-    if (!isPlaying) {
-      if (lastPlayedSongId) {
-        loadSong(lastPlayedSongId, timestampType, { autoplay: false });
-      }
-      return;
-    }
-
-    if (lastPlayedKeyRef.current === lastPlayedSongId) return;
-    lastPlayedKeyRef.current = lastPlayedSongId;
-
     if (lastPlayedSongId) {
-      void loadSong(lastPlayedSongId, timestampType, { autoplay: true });
-    } else {
-      playSilence();
+      if (lastPlayedSongId === 'silence') {
+        playSilence();
+      } else {
+        loadSong(lastPlayedSongId, timestampType, { autoplay: isPlaying });
+      }
     }
+
+    if (lastPlayedKeyRef.current === lastPlayedSongId || !isPlaying) return;
+    lastPlayedKeyRef.current = lastPlayedSongId;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastPlayedSongId, loadSong, playSilence]);
 

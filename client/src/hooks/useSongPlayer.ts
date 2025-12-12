@@ -17,6 +17,11 @@ type PlayerHandlers = {
   onToggleLowVolume?: () => void;
 };
 
+const defaultPlaylist = {
+  title: 'Quina Musical',
+  artist: 'Barrakudes',
+} as const;
+
 export const useSongPlayer = (options?: PlayerHandlers) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -32,8 +37,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(1);
-  const [failedSongIds, setFailedSongIds] = useState<SongId[]>([]);
-  const [currentSongId, setCurrentSongId] = useState<SongId | null>(null);
+  const [isSilence, setIsSilence] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
   const [isPreloadingSongs, setIsPreloadingSongs] = useState(false);
   const [preloadedSongIds, setPreloadedSongIds] = useState<Set<SongId>>(
@@ -41,12 +45,13 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   );
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState<number | null>(null);
-  const [canResume, setCanResume] = useState(false);
   const volumeRef = useRef(1);
   const volumeAutomationRef = useRef<VolumeAutomation | null>(null);
   const pausedTimeRef = useRef<number | null>(null);
 
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined);
+  const playlistQuery = trpc.song.getPlaylist.useQuery();
+
   const startedAtQuery = trpc.game.getStartedAt.useQuery();
 
   const songIdsToPreload = useMemo(() => {
@@ -196,7 +201,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       attachAudioListeners(audioEl);
       setCurrentTime(audioEl.currentTime);
       setDuration(Number.isFinite(audioEl.duration) ? audioEl.duration : null);
-      setCanResume(false);
     }
 
     const ctx = audioContextRef.current!;
@@ -216,7 +220,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
 
     setIsLoading(true);
     setLastError(null);
-    setFailedSongIds([]);
 
     const promise = (async () => {
       await ensureAudioContext();
@@ -284,6 +287,8 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         throw error;
       }
 
+      setIsSilence(false);
+
       audioEl.loop = true;
       const src = getSongSrc(songId);
       if (audioEl.src !== src) {
@@ -317,48 +322,50 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         });
       }
 
-      setCurrentSongId(songId);
-
       const song = songsQuery.data?.find((s) => s.id === songId);
-      if ('mediaSession' in navigator && song) {
+      if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-          title: song.title,
-          artist: song.artist,
-          artwork: song.cover
-            ? [
-                {
-                  src: song.cover,
-                  sizes: '512x512',
-                  type: 'image/jpeg',
-                },
-              ]
-            : [],
+          title:
+            song?.title || playlistQuery.data?.title || defaultPlaylist.title,
+          artist:
+            song?.artist ||
+            playlistQuery.data?.artist ||
+            defaultPlaylist.artist,
+          artwork: song?.cover
+            ? [{ src: song.cover }]
+            : playlistQuery.data?.cover
+              ? [{ src: playlistQuery.data.cover }]
+              : [],
         });
       }
 
       if (!options?.autoplay) {
         setIsPlaying(false);
-        setCanResume(true);
         if (ctx.state === 'suspended') {
           await ctx.resume();
         }
         return;
       }
 
-      setDuration(null);
+      setDuration(Number.isFinite(audioEl.duration) ? audioEl.duration : null);
       pausedTimeRef.current = null;
-      setCanResume(false);
 
       try {
         await audioEl.play();
         void preloadSong(songId);
         setIsPlaying(true);
-        setCanResume(true);
         if (ctx.state === 'suspended') {
           await ctx.resume();
         }
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = 'playing';
+          navigator.mediaSession.setPositionState({
+            duration: Number.isFinite(audioEl.duration)
+              ? audioEl.duration
+              : Infinity,
+            playbackRate: 1,
+            position: audioEl.currentTime,
+          });
         }
       } catch (err) {
         const error =
@@ -366,24 +373,28 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
             ? err
             : new Error('Playback was prevented by the browser.');
         setLastError(error);
-        setFailedSongIds((prev) =>
-          prev.includes(songId) ? prev : [...prev, songId]
-        );
         setIsPlaying(false);
-        setCanResume(false);
         if ('mediaSession' in navigator) {
           navigator.mediaSession.playbackState = 'paused';
+          navigator.mediaSession.setPositionState({
+            duration: Number.isFinite(audioEl.duration)
+              ? audioEl.duration
+              : Infinity,
+            playbackRate: 1,
+            position: audioEl.currentTime,
+          });
         }
         throw error;
       }
     },
     [
+      start,
       ensureAudioContext,
       getSongSrc,
       pickStartTimeMs,
-      preloadSong,
-      start,
       songsQuery.data,
+      playlistQuery.data,
+      preloadSong,
     ]
   );
 
@@ -392,29 +403,46 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       audioElRef.current.pause();
       audioElRef.current.currentTime = 0;
     }
+    setIsSilence(true);
     setIsPlaying(true);
     setCurrentTime(0);
     setDuration(null);
     pausedTimeRef.current = null;
-    setCanResume(false);
     if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: playlistQuery.data?.title || defaultPlaylist.title,
+        artist: playlistQuery.data?.artist || defaultPlaylist.artist,
+        artwork: playlistQuery.data?.cover
+          ? [{ src: playlistQuery.data.cover }]
+          : [],
+      });
       navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.setPositionState({
+        duration: Infinity,
+        playbackRate: 0.0000001,
+        position: 0,
+      });
     }
-  }, []);
+  }, [playlistQuery.data]);
 
   const pause = useCallback(() => {
     if (audioElRef.current) {
       audioElRef.current.pause();
       pausedTimeRef.current = audioElRef.current.currentTime;
       setCurrentTime(audioElRef.current.currentTime);
-      setCanResume(!!audioElRef.current.src);
     } else {
       setCurrentTime(0);
-      setCanResume(false);
     }
     setIsPlaying(false);
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = 'paused';
+      navigator.mediaSession.setPositionState({
+        duration: Number.isFinite(audioElRef.current?.duration)
+          ? audioElRef.current?.duration
+          : Infinity,
+        playbackRate: 1,
+        position: audioElRef.current?.currentTime ?? 0,
+      });
     }
   }, []);
 
@@ -431,6 +459,15 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       audioEl.currentTime = clampedTime;
       setCurrentTime(clampedTime);
       pausedTimeRef.current = clampedTime;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setPositionState({
+          duration: Number.isFinite(audioEl.duration)
+            ? audioEl.duration
+            : Infinity,
+          playbackRate: 1,
+          position: clampedTime,
+        });
+      }
       if (audioContextRef.current?.state === 'suspended') {
         await audioContextRef.current.resume();
       }
@@ -445,6 +482,19 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     if (!audioEl || !audioEl.src) return;
 
     const ctx = await ensureAudioContext();
+
+    if (isSilence) {
+      setIsPlaying(true);
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+        navigator.mediaSession.setPositionState({
+          duration: Infinity,
+          playbackRate: 0.0000001,
+          position: 0,
+        });
+      }
+      return;
+    }
 
     if (pausedTimeRef.current !== null) {
       const maxTime = Number.isFinite(audioEl.duration)
@@ -464,9 +514,15 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         await ctx.resume();
       }
       setIsPlaying(true);
-      setCanResume(true);
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
+        navigator.mediaSession.setPositionState({
+          duration: Number.isFinite(audioEl.duration)
+            ? audioEl.duration
+            : Infinity,
+          playbackRate: 1,
+          position: audioEl.currentTime,
+        });
       }
     } catch (err) {
       const error =
@@ -475,13 +531,19 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
           : new Error('Playback was prevented by the browser.');
       setLastError(error);
       setIsPlaying(false);
-      setCanResume(false);
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
+        navigator.mediaSession.setPositionState({
+          duration: Number.isFinite(audioEl.duration)
+            ? audioEl.duration
+            : Infinity,
+          playbackRate: 1,
+          position: audioEl.currentTime,
+        });
       }
       throw error;
     }
-  }, [ensureAudioContext, start]);
+  }, [ensureAudioContext, isSilence, start]);
 
   const togglePlayState = useCallback(async () => {
     if (isPlaying) {
@@ -554,6 +616,36 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   );
 
   useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (
+      !navigator.mediaSession.metadata ||
+      Object.entries(defaultPlaylist).every(
+        ([key, value]) =>
+          !navigator.mediaSession.metadata ||
+          value ===
+            navigator.mediaSession.metadata[key as keyof typeof defaultPlaylist]
+      )
+    ) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: playlistQuery.data?.title || defaultPlaylist.title,
+        artist: playlistQuery.data?.artist || defaultPlaylist.artist,
+        artwork: playlistQuery.data?.cover
+          ? [{ src: playlistQuery.data.cover }]
+          : [],
+      });
+      if (!navigator.mediaSession.metadata) {
+        navigator.mediaSession.playbackState = 'paused';
+        navigator.mediaSession.setPositionState({
+          duration: Infinity,
+          playbackRate: 0.0000001,
+          position: 0,
+        });
+      }
+    }
+  }, [playlistQuery.data]);
+
+  useEffect(() => {
     if (!options) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -597,7 +689,17 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         options.onNext || null
       );
       navigator.mediaSession.setActionHandler(
+        // @ts-expect-error - 'nextslide' is actually a valid MediaSessionAction
+        'nextslide',
+        options.onNext || null
+      );
+      navigator.mediaSession.setActionHandler(
         'previoustrack',
+        options.onPrevious || null
+      );
+      navigator.mediaSession.setActionHandler(
+        // @ts-expect-error - 'previousslide' is actually a valid MediaSessionAction
+        'previousslide',
         options.onPrevious || null
       );
       navigator.mediaSession.setActionHandler('play', togglePlayState);
@@ -631,7 +733,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       }
 
       setIsPlaying(false);
-      setCanResume(false);
 
       if (mediaSourceRef.current) {
         mediaSourceRef.current.disconnect();
@@ -679,9 +780,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     currentTime,
     duration,
     preloadStatuses,
-    currentSongId,
-    canResume,
-    failedSongIds,
     lastError,
   };
 };
