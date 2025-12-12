@@ -190,20 +190,34 @@ export const SongsSection: FC<{
       <div className="space-y-2 -m-4 flex-1 overflow-y-auto p-4">
         {sortKey === 'position' ? (
           <>
-            <AnimatePresence initial={false} mode="popLayout">
-              {(filterKey === 'played'
-                ? sortedSongs.filter((song) => song.isPlayed).reverse()
-                : sortedSongs.filter((song) => song.isPlayed)
-              ).map((song) => (
-                <AnimatedSongCard
-                  key={song.id}
-                  song={song}
-                  onPress={() => handleCardPress(song)}
-                  disablePress={setQueueOrderMutation.isPending}
-                  dimPlayed={filterKey === 'all'}
-                />
-              ))}
-            </AnimatePresence>
+            {filterKey === 'all' ? (
+              sortedSongs
+                .filter((song) => song.isPlayed)
+                .map((song) => (
+                  <SongCard
+                    key={song.id}
+                    song={song}
+                    onPress={() => handleCardPress(song)}
+                    disablePress={setQueueOrderMutation.isPending}
+                    dimPlayed={true}
+                  />
+                ))
+            ) : (
+              <AnimatePresence initial={false} mode="popLayout">
+                {(filterKey === 'played'
+                  ? sortedSongs.filter((song) => song.isPlayed).reverse()
+                  : sortedSongs.filter((song) => song.isPlayed)
+                ).map((song) => (
+                  <AnimatedSongCard
+                    key={song.id}
+                    song={song}
+                    onPress={() => handleCardPress(song)}
+                    disablePress={setQueueOrderMutation.isPending}
+                    dimPlayed={false}
+                  />
+                ))}
+              </AnimatePresence>
+            )}
             {!!songsInQueue.length && (
               <Reorder.Group
                 axis="y"
