@@ -1,18 +1,34 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { usePreloadResources } from './usePreloadResources';
 
 export const useSoundEffects = <T extends string>(
-  effects: { id: T; src: string }[],
+  effects: { id: T; url: string }[],
   options?: { volume?: number }
 ) => {
   const cacheRef = useRef<Map<T, HTMLAudioElement>>(new Map());
   const volume = Math.min(1, Math.max(0, options?.volume ?? 1));
+
+  const {
+    isPreloading: isPreloadingEffects,
+    preloadStatuses,
+    getPreloadedUrl,
+  } = usePreloadResources<T>(effects);
+
+  const getSrc = useCallback(
+    (id: T) => {
+      const preloaded = getPreloadedUrl(id);
+      if (preloaded) return preloaded;
+      return effects.find((fx) => fx.id === id)?.url;
+    },
+    [effects, getPreloadedUrl]
+  );
 
   const cacheAudio = useCallback(
     (id: T) => {
       const match = cacheRef.current.get(id);
       if (match) return match;
 
-      const src = effects.find((fx) => fx.id === id)?.src;
+      const src = getSrc(id);
       if (!src) throw new Error(`Sound effect ${id} not found`);
       const audio = new Audio(src);
       audio.preload = 'auto';
@@ -20,7 +36,7 @@ export const useSoundEffects = <T extends string>(
       cacheRef.current.set(id, audio);
       return audio;
     },
-    [effects]
+    [getSrc]
   );
 
   useEffect(() => {
@@ -58,5 +74,7 @@ export const useSoundEffects = <T extends string>(
 
   return {
     playFx,
+    isPreloadingEffects,
+    preloadStatuses,
   };
 };

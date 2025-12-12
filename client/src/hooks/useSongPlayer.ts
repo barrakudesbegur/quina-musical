@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trpc } from '../utils/trpc';
+import { usePreloadResources } from './usePreloadResources';
 
 type SongId = number;
 type VolumeAutomation = {
@@ -28,10 +29,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const startPromiseRef = useRef<Promise<void> | null>(null);
-  const preloadPromiseRef = useRef<Promise<void> | null>(null);
-  const preloadAbortControllerRef = useRef<AbortController | null>(null);
-  const preloadedUrlsRef = useRef<Map<SongId, string>>(new Map());
-  const preloadingIdsRef = useRef<Set<SongId>>(new Set());
   const startedRef = useRef(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -39,10 +36,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   const [volume, setVolumeState] = useState(1);
   const [isSilence, setIsSilence] = useState(false);
   const [lastError, setLastError] = useState<Error | null>(null);
-  const [isPreloadingSongs, setIsPreloadingSongs] = useState(false);
-  const [preloadedSongIds, setPreloadedSongIds] = useState<Set<SongId>>(
-    new Set()
-  );
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState<number | null>(null);
   const volumeRef = useRef(1);
@@ -51,18 +44,37 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
 
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined);
   const playlistQuery = trpc.song.getPlaylist.useQuery();
-
   const startedAtQuery = trpc.game.getStartedAt.useQuery();
 
-  const songIdsToPreload = useMemo(() => {
-    return songsQuery.data?.map((song) => song.id) ?? [];
-  }, [songsQuery.data]);
+  const songResources = useMemo(() => {
+    const cacheBuster = startedAtQuery.data
+      ? `?v=${new Date(startedAtQuery.data).getTime()}`
+      : '';
+    return (
+      songsQuery.data?.map((song) => ({
+        id: song.id,
+        url: `/songs/${song.id}.mp3${cacheBuster}`,
+      })) ?? []
+    );
+  }, [songsQuery.data, startedAtQuery.data]);
+
+  const {
+    isPreloading: isPreloadingSongs,
+    preloadStatuses: songPreloadStatuses,
+    preloadAll: preloadAllSongs,
+    getPreloadedUrl,
+  } = usePreloadResources(songResources, { autoStart: false });
 
   const getSongSrc = useCallback(
-    (songId: SongId) =>
-      preloadedUrlsRef.current.get(songId) ??
-      `/songs/${songId}.mp3${startedAtQuery.data ? `?v=${new Date(startedAtQuery.data).getTime()}` : ''}`,
-    [startedAtQuery.data]
+    (songId: SongId) => {
+      const preloaded = getPreloadedUrl(songId);
+      if (preloaded) return preloaded;
+      const cacheBuster = startedAtQuery.data
+        ? `?v=${new Date(startedAtQuery.data).getTime()}`
+        : '';
+      return `/songs/${songId}.mp3${cacheBuster}`;
+    },
+    [getPreloadedUrl, startedAtQuery.data]
   );
 
   const audioListenersCleanupRef = useRef<(() => void) | null>(null);
@@ -95,89 +107,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       audioEl.removeEventListener('emptied', handleEmptied);
     };
   }, []);
-
-  const preloadSong = useCallback(
-    async (songId: SongId, signal?: AbortSignal) => {
-      if (preloadedUrlsRef.current.has(songId)) return;
-      if (preloadingIdsRef.current.has(songId)) return;
-      preloadingIdsRef.current.add(songId);
-
-      try {
-        const response = await fetch(
-          `/songs/${songId}.mp3?v=${startedAtQuery.data}`,
-          {
-            cache: 'force-cache',
-            signal,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to preload song ${songId}.`);
-        }
-
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        preloadedUrlsRef.current.set(songId, objectUrl);
-        setPreloadedSongIds((prev) => {
-          const next = new Set(prev);
-          next.add(songId);
-          return next;
-        });
-      } catch (err) {
-        const isAbort =
-          err instanceof DOMException && err.name === 'AbortError';
-        if (!isAbort) {
-          console.error('Failed to preload song', songId, err);
-        }
-      } finally {
-        preloadingIdsRef.current.delete(songId);
-      }
-    },
-    [startedAtQuery.data]
-  );
-
-  const preloadAllSongs = useCallback(() => {
-    if (!songIdsToPreload.length) return;
-    if (preloadPromiseRef.current) return;
-
-    const controller = new AbortController();
-    preloadAbortControllerRef.current?.abort();
-    preloadAbortControllerRef.current = controller;
-
-    const idsToPreload = songIdsToPreload.filter(
-      (id) => !preloadedUrlsRef.current.has(id)
-    );
-    if (!idsToPreload.length) {
-      preloadAbortControllerRef.current = null;
-      setIsPreloadingSongs(false);
-      return;
-    }
-
-    const uniqueQueue = [...new Set(idsToPreload)];
-    const concurrency = 4;
-
-    const promise = (async () => {
-      setIsPreloadingSongs(true);
-
-      const workers = Array.from({ length: concurrency }, async () => {
-        while (uniqueQueue.length) {
-          const nextSongId = uniqueQueue.shift();
-          if (nextSongId === undefined) break;
-          await preloadSong(nextSongId, controller.signal);
-        }
-      });
-
-      await Promise.allSettled(workers);
-    })();
-
-    preloadPromiseRef.current = promise.finally(() => {
-      if (preloadAbortControllerRef.current === controller) {
-        preloadAbortControllerRef.current = null;
-      }
-      preloadPromiseRef.current = null;
-      setIsPreloadingSongs(false);
-    });
-  }, [preloadSong, songIdsToPreload]);
 
   const ensureAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
@@ -352,7 +281,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
 
       try {
         await audioEl.play();
-        void preloadSong(songId);
         setIsPlaying(true);
         if (ctx.state === 'suspended') {
           await ctx.resume();
@@ -394,7 +322,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       pickStartTimeMs,
       songsQuery.data,
       playlistQuery.data,
-      preloadSong,
     ]
   );
 
@@ -719,9 +646,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   }, [options, togglePlayState]);
 
   useEffect(() => {
-    const preloadingIds = preloadingIdsRef.current;
-    const preloadedUrls = preloadedUrlsRef.current;
-
     return () => {
       audioListenersCleanupRef.current?.();
       audioListenersCleanupRef.current = null;
@@ -744,25 +668,11 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         audioContextRef.current = null;
       }
       gainNodeRef.current = null;
-      preloadAbortControllerRef.current?.abort();
-      preloadingIds.clear();
-      preloadedUrls.forEach((url) => URL.revokeObjectURL(url));
-      preloadedUrls.clear();
-      setPreloadedSongIds(new Set());
       volumeAutomationRef.current = null;
       setCurrentTime(0);
       setDuration(null);
     };
   }, []);
-
-  const preloadStatuses = useMemo(
-    () =>
-      songIdsToPreload.map((id) => ({
-        id,
-        preloaded: preloadedSongIds.has(id),
-      })),
-    [preloadedSongIds, songIdsToPreload]
-  );
 
   return {
     start,
@@ -779,7 +689,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     isPlaying,
     currentTime,
     duration,
-    preloadStatuses,
+    preloadStatuses: songPreloadStatuses,
     lastError,
   };
 };

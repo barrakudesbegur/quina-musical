@@ -11,7 +11,7 @@ type IconGridAction = {
   label: string;
   icon: IconSource;
   iconClassName?: string;
-  src: string;
+  url: string;
 } & Omit<ButtonProps, 'isIconOnly' | 'children'>;
 
 const actions: IconGridAction[] = [
@@ -19,67 +19,67 @@ const actions: IconGridAction[] = [
     id: 'anime-wow',
     label: 'Anime wow',
     icon: 'noto:smiling-cat-with-heart-eyes',
-    src: '/fx/anime-wow.mp3',
+    url: '/fx/anime-wow.mp3',
   },
   {
     id: 'correct',
     label: 'Correct',
     icon: 'noto:check-mark-button',
-    src: '/fx/correct.mp3',
+    url: '/fx/correct.mp3',
   },
   {
     id: 'tada',
     label: 'Tada',
     icon: 'noto:party-popper',
-    src: '/fx/tada.mp3',
+    url: '/fx/tada.mp3',
   },
   {
     id: 'heaven',
     label: 'Heaven',
     icon: 'noto:wing',
-    src: '/fx/heaven.mp3',
+    url: '/fx/heaven.mp3',
   },
   {
     id: 'among-us',
     label: 'Among Us',
     icon: 'noto:alien-monster',
-    src: '/fx/among-us.mp3',
+    url: '/fx/among-us.mp3',
   },
   {
     id: 'spongebob-boowomp',
     label: 'Spongebob Boowomp',
     icon: 'noto:balloon',
-    src: '/fx/spongebob-boowomp.mp3',
+    url: '/fx/spongebob-boowomp.mp3',
   },
   {
     id: 'boom',
     label: 'Boom',
     icon: 'twemoji:collision',
-    src: '/fx/boom.mp3',
+    url: '/fx/boom.mp3',
   },
   {
     id: 'horn',
     label: 'Horn',
     icon: 'noto:police-car-light',
-    src: '/fx/horn.mp3',
+    url: '/fx/horn.mp3',
   },
   {
     id: 'buzzer',
     label: 'Buzzer',
     icon: 'noto:cross-mark',
-    src: '/fx/buzzer.mp3',
+    url: '/fx/buzzer.mp3',
   },
   {
     id: 'sad-trombone',
     label: 'Sad Trombone',
     icon: 'noto:trumpet',
-    src: '/fx/sad-trombone.mp3',
+    url: '/fx/sad-trombone.mp3',
   },
   {
     id: 'spongebob-fail',
     label: 'Spongebob Fail',
     icon: 'noto:crying-face',
-    src: '/fx/spongebob-fail.mp3',
+    url: '/fx/spongebob-fail.mp3',
   },
 ];
 
