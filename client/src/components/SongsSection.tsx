@@ -131,7 +131,7 @@ export const SongsSection: FC<{
   );
 
   return (
-    <section>
+    <section className="flex flex-1 min-h-0 flex-col">
       <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
         Cançons
       </h2>
@@ -139,14 +139,14 @@ export const SongsSection: FC<{
         aria-label="Ordenar cançons"
         selectedKey={sortKey}
         onSelectionChange={(key) => setSortKey(key as SortKey)}
-        className="mb-2"
+        className="mb-4 shrink-0"
         fullWidth
       >
         {sortOptions.map(({ key, label }) => (
           <Tab key={key} title={label} />
         ))}
       </Tabs>
-      <div className="space-y-2 -mx-2">
+      <div className="space-y-2 -m-4 flex-1 overflow-y-auto p-4">
         {sortKey === 'position' ? (
           <>
             {sortedSongs

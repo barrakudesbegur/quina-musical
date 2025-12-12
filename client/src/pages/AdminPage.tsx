@@ -211,8 +211,8 @@ export const AdminPage: FC = () => {
 
   if (!roundQuery.data) {
     return (
-      <main className="container mx-auto p-4 pb-32 space-y-12">
-        <div className="flex flex-col items-center justify-center min-h-[50dvh] gap-4">
+      <main className="container mx-auto min-h-dvh p-4 flex flex-col items-center justify-center gap-8">
+        <div className="flex flex-col items-center justify-center gap-4">
           <h1 className="text-4xl font-brand uppercase text-center tracking-widest">
             {statusQuery.data?.status === 'finished'
               ? 'Quina finalitzada'
@@ -248,151 +248,148 @@ export const AdminPage: FC = () => {
   }
 
   return (
-    <main className="max-w-[1800px] mx-auto p-4 pb-32 space-y-12">
-      <div className="grid gap-8 max-w-xl lg:max-w-none mx-auto lg:grid-cols-3">
-        <div className="space-y-4">
-          <section className="space-y-4">
-            <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
-              Gestió de la quina
-            </h2>
-
-            <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
-              <RoundNameForm />
-              {roundElapsedMs !== null && (
-                <div className="   ">
-                  <div className="text-sm text-foreground">Duració</div>
-                  <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
-                    <span>{formatElapsedClock(roundElapsedMs)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <Divider />
-
-            <Button
-              color="primary"
-              onPress={() => setIsCheckCardDialogOpen(true)}
-              className="w-full block"
-            >
-              Comprovar cartó
-            </Button>
-            <CheckCardDialog
-              isOpen={isCheckCardDialogOpen}
-              onClose={() => setIsCheckCardDialogOpen(false)}
-              onFinishRound={openFinishRoundDialog}
-            />
-            <Button
-              color="danger"
-              variant="bordered"
-              onPress={() => setIsFinishRoundDialogOpen(true)}
-              className="w-full block"
-            >
-              Finalitzar quina
-            </Button>
-            <FinishRoundDialog
-              isOpen={isFinishRoundDialogOpen}
-              defaultValue={defaultNextRoundName}
-              onClose={() => setIsFinishRoundDialogOpen(false)}
-              onConfirm={handleFinishRound}
-              loading={finishRoundMutation.isPending}
-            />
-          </section>
-
-          <GameInsightsSection />
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-brand uppercase text-center mb-8 tracking-wider">
-            Só
+    <main className="max-w-xl mx-auto lg:h-dvh overflow-hidden grid lg:auto-rows-fr *:p-4 lg:*:py-4 lg:*:px-3 lg:*:first:pl-4 lg:*:last:pr-4  lg:max-w-none   lg:grid-cols-3">
+      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto">
+        <section className="space-y-4">
+          <h2 className="text-3xl font-brand uppercase text-center   tracking-wider">
+            Gestió de la quina
           </h2>
-          <MiniPlayer
-            song={currentSong}
-            now={now}
-            isPlaying={isPlaying}
-            isLoading={playerControlLoading}
-            currentTime={currentTime}
-            duration={duration}
-            onTogglePlay={handleTogglePlayback}
-            onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
-            isLowVolumeMode={isLowVolumeMode}
-            onNext={handlePlayNextSong}
-            onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
-            onSeek={seek}
-            playerPreloadProgress={playerPreloadProgress}
-            selectedTimestampType={timestampType}
-            onTimestampTypeChange={(value) =>
-              setTimestampType(value as SongTimestampCategory)
-            }
-          />
-          <IconButtonGrid fxVolume={fxVolume} />
 
+          <div className="grid 2xs:grid-cols-[2fr_1fr] gap-4">
+            <RoundNameForm />
+            {roundElapsedMs !== null && (
+              <div className="   ">
+                <div className="text-sm text-foreground">Duració</div>
+                <div className=" text-xl text-foreground font-medium min-h-10   inline-flex items-center  ">
+                  <span>{formatElapsedClock(roundElapsedMs)}</span>
+                </div>
+              </div>
+            )}
+          </div>
           <Divider />
 
-          <Slider
-            label="Cançons: Volum baix"
-            minValue={0}
-            maxValue={1}
-            step={0.001}
-            value={lowVolumeSetting}
-            formatOptions={{ style: 'percent' }}
-            onChange={(value) => {
-              if (typeof value === 'number') {
-                setLowVolumeSetting(value);
-              }
-            }}
-            showSteps={false}
-            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
-            endContent={<IconVolume size={20} className="max-xs:hidden" />}
+          <Button
+            color="primary"
+            onPress={() => setIsCheckCardDialogOpen(true)}
+            className="w-full block"
+          >
+            Comprovar cartó
+          </Button>
+          <CheckCardDialog
+            isOpen={isCheckCardDialogOpen}
+            onClose={() => setIsCheckCardDialogOpen(false)}
+            onFinishRound={openFinishRoundDialog}
           />
+          <Button
+            color="danger"
+            variant="bordered"
+            onPress={() => setIsFinishRoundDialogOpen(true)}
+            className="w-full block"
+          >
+            Finalitzar quina
+          </Button>
+          <FinishRoundDialog
+            isOpen={isFinishRoundDialogOpen}
+            defaultValue={defaultNextRoundName}
+            onClose={() => setIsFinishRoundDialogOpen(false)}
+            onConfirm={handleFinishRound}
+            loading={finishRoundMutation.isPending}
+          />
+          <Button
+            onPress={handleLogout}
+            variant="faded"
+            className="w-full block"
+            color="primary"
+          >
+            Logout
+          </Button>
+        </section>
 
-          <Slider
-            label="Cançons: Volum normal"
-            minValue={0}
-            maxValue={1}
-            step={0.001}
-            value={songVolume}
-            formatOptions={{ style: 'percent' }}
-            onChange={(value) => {
-              if (typeof value === 'number') {
-                setSongVolume(value);
-              }
-            }}
-            showSteps={false}
-            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
-            endContent={<IconVolume size={20} className="max-xs:hidden" />}
-          />
-          <Slider
-            label="Efectes"
-            minValue={0}
-            maxValue={1}
-            step={0.001}
-            value={fxVolume}
-            formatOptions={{ style: 'percent' }}
-            onChange={(value) => {
-              if (typeof value === 'number') {
-                setFxVolume(value);
-              }
-            }}
-            showSteps={false}
-            startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
-            endContent={<IconVolume size={20} className="max-xs:hidden" />}
-          />
-        </div>
-        <div className="space-y-4">
-          <SongsSection
-            onPlaySong={(songId) => playSongMutation.mutate({ songId })}
-            onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
-          />
-        </div>
+        <GameInsightsSection />
       </div>
+      <div className="flex flex-col gap-4 min-h-0 lg:overflow-y-auto">
+        <h2 className="text-3xl font-brand uppercase text-center  tracking-wider">
+          Só
+        </h2>
+        <MiniPlayer
+          song={currentSong}
+          now={now}
+          isPlaying={isPlaying}
+          isLoading={playerControlLoading}
+          currentTime={currentTime}
+          duration={duration}
+          onTogglePlay={handleTogglePlayback}
+          onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
+          isLowVolumeMode={isLowVolumeMode}
+          onNext={handlePlayNextSong}
+          onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
+          onSeek={seek}
+          playerPreloadProgress={playerPreloadProgress}
+          selectedTimestampType={timestampType}
+          onTimestampTypeChange={(value) =>
+            setTimestampType(value as SongTimestampCategory)
+          }
+        />
+        <IconButtonGrid fxVolume={fxVolume} />
 
-      <Button
-        onPress={handleLogout}
-        variant="faded"
-        className="mx-auto block"
-        color="primary"
-      >
-        Logout
-      </Button>
+        <Divider />
+
+        <Slider
+          label="Cançons: Volum baix"
+          minValue={0}
+          maxValue={1}
+          step={0.001}
+          value={lowVolumeSetting}
+          formatOptions={{ style: 'percent' }}
+          onChange={(value) => {
+            if (typeof value === 'number') {
+              setLowVolumeSetting(value);
+            }
+          }}
+          showSteps={false}
+          startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+          endContent={<IconVolume size={20} className="max-xs:hidden" />}
+        />
+
+        <Slider
+          label="Cançons: Volum normal"
+          minValue={0}
+          maxValue={1}
+          step={0.001}
+          value={songVolume}
+          formatOptions={{ style: 'percent' }}
+          onChange={(value) => {
+            if (typeof value === 'number') {
+              setSongVolume(value);
+            }
+          }}
+          showSteps={false}
+          startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+          endContent={<IconVolume size={20} className="max-xs:hidden" />}
+        />
+        <Slider
+          label="Efectes"
+          minValue={0}
+          maxValue={1}
+          step={0.001}
+          value={fxVolume}
+          formatOptions={{ style: 'percent' }}
+          onChange={(value) => {
+            if (typeof value === 'number') {
+              setFxVolume(value);
+            }
+          }}
+          showSteps={false}
+          startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
+          endContent={<IconVolume size={20} className="max-xs:hidden" />}
+        />
+      </div>
+      <div className="flex flex-col min-h-0">
+        <SongsSection
+          onPlaySong={(songId) => playSongMutation.mutate({ songId })}
+          onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
+        />
+      </div>
     </main>
   );
 };

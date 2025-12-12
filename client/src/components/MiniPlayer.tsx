@@ -146,7 +146,7 @@ export const MiniPlayer: FC<
       shadow="sm"
       className="border-none bg-background/60 dark:bg-default-100/50 max-w-[610px]"
     >
-      <CardBody>
+      <CardBody className="overflow-hidden">
         <div className="flex flex-row gap-4 items-center justify-center">
           {song ? (
             <Image
