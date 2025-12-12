@@ -165,9 +165,9 @@ export const MiniPlayer: FC<
               </CardBody>
             </Card>
           )}
-          <div className="flex flex-col grow">
+          <div className="flex flex-col grow min-w-32">
             <div className="flex justify-between items-start gap-2">
-              <div className="flex flex-col gap-0 min-w-0 mr-auto">
+              <div className="flex flex-col gap-0   mr-auto min-w-16">
                 <h1 className="text-xl font-bold tracking-wide truncate">
                   {song ? song.title : 'Silenci'}
                 </h1>

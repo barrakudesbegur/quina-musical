@@ -26,14 +26,23 @@ export const SongCard: FC<{
   disablePress?: boolean;
   className?: string;
   dragControls?: DragControls;
-}> = ({ song, onPress, disablePress, className, dragControls }) => {
+  dimPlayed?: boolean;
+}> = ({
+  song,
+  onPress,
+  disablePress,
+  className,
+  dragControls,
+  dimPlayed = true,
+}) => {
   return (
     <Card
       isPressable={!!onPress && !disablePress}
       isDisabled={song.isPlayed && !song.isLastPlayed}
       onPress={disablePress ? undefined : onPress}
       className={cn('relative', className, {
-        'opacity-50': song.isPlayed && !song.isLastPlayed,
+        'opacity-50': dimPlayed && song.isPlayed && !song.isLastPlayed,
+        'opacity-100!': !dimPlayed,
         'border-success': song.isLastPlayed,
       })}
       classNames={{
@@ -48,11 +57,11 @@ export const SongCard: FC<{
           alt={song.title}
           className="size-16   object-cover rounded-l-lg "
         />
-        <div className="flex flex-col justify-center grow py-2">
-          <p className="text-lg leading-tight">
-            <span className="text-default-400  ">{song.id}.</span> {song.title}
+        <div className="flex flex-col justify-center grow py-2 min-w-16">
+          <p className="text-lg leading-tight truncate">
+            <span className="text-default-400">{song.id}.</span> {song.title}
           </p>
-          <p className="text-xs text-default-500 leading-tight">
+          <p className="text-xs text-default-500 leading-tight truncate">
             {song.artist}
           </p>
         </div>

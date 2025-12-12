@@ -8,6 +8,15 @@ import { trpc } from '../utils/trpc';
 import { SongCard } from './SongCard';
 
 const sortStorageKey = 'playback-manual-sort';
+const filterStorageKey = 'playback-filter';
+
+const filterOptions = [
+  { key: 'all', label: 'Totes' },
+  { key: 'not-played', label: 'No reproduïdes' },
+  { key: 'played', label: 'Reproduïdes' },
+] as const;
+
+type FilterKey = (typeof filterOptions)[number]['key'];
 
 export const SongsSection: FC<{
   onPlaySong: (songId: number) => void;
@@ -59,6 +68,11 @@ export const SongsSection: FC<{
     },
   });
 
+  const [filterKey, setFilterKey] = useSessionStorage<FilterKey>(
+    filterStorageKey,
+    'not-played'
+  );
+
   const sortOptions = [
     { key: 'position', label: 'Reproducció' },
     { key: 'title', label: 'Títol' },
@@ -106,17 +120,27 @@ export const SongsSection: FC<{
     }));
   }, [durationMap, songsQuery.data]);
 
+  const filteredSongs = useMemo(() => {
+    if (filterKey === 'played') {
+      return songsWithPlayedDurationMs.filter((song) => song.isPlayed);
+    }
+    if (filterKey === 'not-played') {
+      return songsWithPlayedDurationMs.filter((song) => !song.isPlayed);
+    }
+    return songsWithPlayedDurationMs;
+  }, [songsWithPlayedDurationMs, filterKey]);
+
   const sortedSongs = useMemo(() => {
-    return sortBy(songsWithPlayedDurationMs, [sortKey, 'id']);
-  }, [songsWithPlayedDurationMs, sortKey]);
+    return sortBy(filteredSongs, [sortKey, 'id']);
+  }, [filteredSongs, sortKey]);
 
   const songsInQueue = useMemo(
     () =>
-      sortBy(songsWithPlayedDurationMs.filter((song) => !song.isPlayed) ?? [], [
+      sortBy(filteredSongs.filter((song) => !song.isPlayed) ?? [], [
         'position',
         'id',
       ]),
-    [songsWithPlayedDurationMs]
+    [filteredSongs]
   );
 
   const handleCardPress = useCallback(
@@ -135,6 +159,17 @@ export const SongsSection: FC<{
       <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
         Cançons
       </h2>
+      <Tabs
+        aria-label="Filtrar cançons"
+        selectedKey={filterKey}
+        onSelectionChange={(key) => setFilterKey(key as FilterKey)}
+        className="mb-2 shrink-0"
+        fullWidth
+      >
+        {filterOptions.map(({ key, label }) => (
+          <Tab key={key} title={label} />
+        ))}
+      </Tabs>
       <Tabs
         aria-label="Ordenar cançons"
         selectedKey={sortKey}
@@ -157,6 +192,7 @@ export const SongsSection: FC<{
                   song={song}
                   onPress={() => handleCardPress(song)}
                   disablePress={setQueueOrderMutation.isPending}
+                  dimPlayed={filterKey === 'all'}
                 />
               ))}
             {!!songsInQueue.length && (
@@ -174,6 +210,7 @@ export const SongsSection: FC<{
                     song={song}
                     onPress={() => handleCardPress(song)}
                     disablePress={setQueueOrderMutation.isPending}
+                    dimPlayed={filterKey === 'all'}
                   />
                 ))}
               </Reorder.Group>
@@ -185,6 +222,7 @@ export const SongsSection: FC<{
               key={song.id}
               song={song}
               onPress={() => handleCardPress(song)}
+              dimPlayed={filterKey === 'all'}
             />
           ))
         )}
@@ -195,7 +233,7 @@ export const SongsSection: FC<{
 
 export const ReorderSongCard = ({
   ...cardProps
-}: Omit<ComponentProps<typeof SongCard>, 'dragControls'>) => {
+}: ComponentProps<typeof SongCard>) => {
   const y = useMotionValue(0);
   const dragControls = useDragControls();
 
