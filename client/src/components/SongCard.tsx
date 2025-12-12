@@ -1,4 +1,4 @@
-import { Card, CardBody, Chip, cn } from '@heroui/react';
+import { Card, CardBody, Chip, cn, Image } from '@heroui/react';
 import {
   IconArrowBackUp,
   IconCircleCheckFilled,
@@ -52,10 +52,11 @@ export const SongCard: FC<{
       radius="sm"
     >
       <CardBody className="gap-3 justify-between flex-row min-h-0 items-stretch">
-        <img
+        <Image
           src={song.cover}
           alt={song.title}
-          className="size-16   object-cover rounded-l-lg "
+          radius="none"
+          className="size-16 max-w-none object-cover"
         />
         <div className="flex flex-col justify-center grow py-2 min-w-16">
           <p className="text-lg leading-tight truncate">
