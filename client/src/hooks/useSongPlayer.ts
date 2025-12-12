@@ -11,7 +11,13 @@ type VolumeAutomation = {
 
 export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
 
-export const useSongPlayer = () => {
+type PlayerHandlers = {
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onToggleLowVolume?: () => void;
+};
+
+export const useSongPlayer = (options?: PlayerHandlers) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -313,6 +319,23 @@ export const useSongPlayer = () => {
 
       setCurrentSongId(songId);
 
+      const song = songsQuery.data?.find((s) => s.id === songId);
+      if ('mediaSession' in navigator && song) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: song.title,
+          artist: song.artist,
+          artwork: song.cover
+            ? [
+                {
+                  src: song.cover,
+                  sizes: '512x512',
+                  type: 'image/jpeg',
+                },
+              ]
+            : [],
+        });
+      }
+
       if (!options?.autoplay) {
         setIsPlaying(false);
         setCanResume(true);
@@ -334,6 +357,9 @@ export const useSongPlayer = () => {
         if (ctx.state === 'suspended') {
           await ctx.resume();
         }
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
       } catch (err) {
         const error =
           err instanceof Error
@@ -345,10 +371,20 @@ export const useSongPlayer = () => {
         );
         setIsPlaying(false);
         setCanResume(false);
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'paused';
+        }
         throw error;
       }
     },
-    [ensureAudioContext, getSongSrc, pickStartTimeMs, preloadSong, start]
+    [
+      ensureAudioContext,
+      getSongSrc,
+      pickStartTimeMs,
+      preloadSong,
+      start,
+      songsQuery.data,
+    ]
   );
 
   const playSilence = useCallback(() => {
@@ -361,6 +397,9 @@ export const useSongPlayer = () => {
     setDuration(null);
     pausedTimeRef.current = null;
     setCanResume(false);
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing';
+    }
   }, []);
 
   const pause = useCallback(() => {
@@ -374,6 +413,9 @@ export const useSongPlayer = () => {
       setCanResume(false);
     }
     setIsPlaying(false);
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+    }
   }, []);
 
   const seek = useCallback(async (nextTime: number) => {
@@ -388,6 +430,7 @@ export const useSongPlayer = () => {
     try {
       audioEl.currentTime = clampedTime;
       setCurrentTime(clampedTime);
+      pausedTimeRef.current = clampedTime;
       if (audioContextRef.current?.state === 'suspended') {
         await audioContextRef.current.resume();
       }
@@ -422,6 +465,9 @@ export const useSongPlayer = () => {
       }
       setIsPlaying(true);
       setCanResume(true);
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
     } catch (err) {
       const error =
         err instanceof Error
@@ -430,9 +476,20 @@ export const useSongPlayer = () => {
       setLastError(error);
       setIsPlaying(false);
       setCanResume(false);
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+      }
       throw error;
     }
   }, [ensureAudioContext, start]);
+
+  const togglePlayState = useCallback(async () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      await resume();
+    }
+  }, [isPlaying, pause, resume]);
 
   const getCurrentGainValue = useCallback((gainNode: GainNode, now: number) => {
     const automation = volumeAutomationRef.current;
@@ -497,6 +554,69 @@ export const useSongPlayer = () => {
   );
 
   useEffect(() => {
+    if (!options) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const isInputElement =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable;
+
+      if (isInputElement) {
+        return;
+      }
+
+      switch (event.key) {
+        case ' ':
+          if (options.onToggleLowVolume) {
+            event.preventDefault();
+            options.onToggleLowVolume();
+          }
+          break;
+        case 'ArrowRight':
+          if (options.onNext) {
+            event.preventDefault();
+            options.onNext();
+          }
+          break;
+        case 'ArrowLeft':
+          if (options.onPrevious) {
+            event.preventDefault();
+            options.onPrevious();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler(
+        'nexttrack',
+        options.onNext || null
+      );
+      navigator.mediaSession.setActionHandler(
+        'previoustrack',
+        options.onPrevious || null
+      );
+      navigator.mediaSession.setActionHandler('play', togglePlayState);
+      navigator.mediaSession.setActionHandler('pause', togglePlayState);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+      }
+    };
+  }, [options, togglePlayState]);
+
+  useEffect(() => {
     const preloadingIds = preloadingIdsRef.current;
     const preloadedUrls = preloadedUrlsRef.current;
 
@@ -549,6 +669,7 @@ export const useSongPlayer = () => {
     playSilence,
     pause,
     resume,
+    togglePlayState,
     seek,
     setVolume,
     volume,

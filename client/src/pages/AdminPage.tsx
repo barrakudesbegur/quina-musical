@@ -1,7 +1,7 @@
 import { Button, Divider, Slider } from '@heroui/react';
 import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
 import { CheckCardDialog } from '../components/CheckCardDialog';
@@ -57,29 +57,6 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const {
-    start: startSongPlayer,
-    loadSong,
-    pause,
-    resume,
-    isPlaying,
-    isLoading: isPlayerLoading,
-    preloadStatuses: playerSongs,
-    playSilence,
-    setVolume,
-    seek,
-    currentTime,
-    duration,
-    currentSongId,
-    canResume,
-  } = useSongPlayer();
-
-  const now = useSecondsStopwatch();
-
-  useEffect(() => {
-    void startSongPlayer();
-  });
-
   const lastPlayedKeyRef = useRef<number | null>(null);
   const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
     'admin-low-volume-mode',
@@ -99,6 +76,48 @@ export const AdminPage: FC = () => {
   );
   const [timestampType, setTimestampType] =
     useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
+
+  const handlePlayNextSong = useCallback(() => {
+    playSongMutation.mutate({ songId: undefined });
+  }, [playSongMutation]);
+
+  const canPlayPrevious = useMemo(
+    () => (roundQuery.data?.playedSongs.length ?? 0) > 0,
+    [roundQuery.data?.playedSongs]
+  );
+
+  const handlePlayPreviousSong = useCallback(() => {
+    if (!canPlayPrevious) return;
+    undoLastPlayedMutation.mutate();
+  }, [canPlayPrevious, undoLastPlayedMutation]);
+
+  const handleToggleLowVolume = useCallback(() => {
+    setIsLowVolumeMode((prev) => !prev);
+  }, [setIsLowVolumeMode]);
+
+  const {
+    start: startSongPlayer,
+    loadSong,
+    togglePlayState,
+    isPlaying,
+    isLoading: isPlayerLoading,
+    preloadStatuses: playerSongs,
+    playSilence,
+    setVolume,
+    seek,
+    currentTime,
+    duration,
+  } = useSongPlayer({
+    onNext: handlePlayNextSong,
+    onPrevious: handlePlayPreviousSong,
+    onToggleLowVolume: handleToggleLowVolume,
+  });
+
+  const now = useSecondsStopwatch();
+
+  useEffect(() => {
+    void startSongPlayer();
+  });
 
   useEffect(() => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
@@ -125,13 +144,21 @@ export const AdminPage: FC = () => {
     [lastPlayedSongId, songsQuery.data]
   );
 
-  const canPlayPrevious = (roundQuery.data?.playedSongs.length ?? 0) > 0;
-  const playerControlLoading =
-    isPlayerLoading ||
-    playSongMutation.isPending ||
-    undoLastPlayedMutation.isPending ||
-    songsQuery.isFetching ||
-    songsQuery.isLoading;
+  const playerControlLoading = useMemo(() => {
+    return (
+      isPlayerLoading ||
+      playSongMutation.isPending ||
+      undoLastPlayedMutation.isPending ||
+      songsQuery.isFetching ||
+      songsQuery.isLoading
+    );
+  }, [
+    isPlayerLoading,
+    playSongMutation.isPending,
+    songsQuery.isFetching,
+    songsQuery.isLoading,
+    undoLastPlayedMutation.isPending,
+  ]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -152,27 +179,6 @@ export const AdminPage: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastPlayedSongId, loadSong, playSilence]);
 
-  const handleTogglePlayback = async () => {
-    if (isPlaying) {
-      pause();
-      return;
-    }
-
-    try {
-      if (lastPlayedSongId) {
-        if (canResume && currentSongId && currentSongId === lastPlayedSongId) {
-          await resume();
-        } else {
-          await loadSong(lastPlayedSongId, timestampType, { autoplay: true });
-        }
-      } else {
-        playSilence();
-      }
-    } catch (err) {
-      console.error('Failed to toggle playback', err);
-    }
-  };
-
   const playerPreloadProgress = useMemo(() => {
     if (!playerSongs.length) return 0;
     return (
@@ -182,15 +188,6 @@ export const AdminPage: FC = () => {
 
   const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
     finishRoundMutation.mutate({ nextRoundName, isLastRound });
-  };
-
-  const handlePlayNextSong = () => {
-    playSongMutation.mutate({ songId: undefined });
-  };
-
-  const handlePlayPreviousSong = () => {
-    if (!canPlayPrevious) return;
-    undoLastPlayedMutation.mutate();
   };
 
   const startGameMutation = trpc.game.startGame.useMutation({
@@ -318,11 +315,11 @@ export const AdminPage: FC = () => {
           isLoading={playerControlLoading}
           currentTime={currentTime}
           duration={duration}
-          onTogglePlay={handleTogglePlayback}
-          onToggleLowVolume={() => setIsLowVolumeMode(!isLowVolumeMode)}
+          onTogglePlay={togglePlayState}
+          onToggleLowVolume={handleToggleLowVolume}
           isLowVolumeMode={isLowVolumeMode}
           onNext={handlePlayNextSong}
-          onPrevious={canPlayPrevious ? handlePlayPreviousSong : undefined}
+          onPrevious={handlePlayPreviousSong}
           onSeek={seek}
           playerPreloadProgress={playerPreloadProgress}
           selectedTimestampType={timestampType}

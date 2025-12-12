@@ -14,6 +14,7 @@ Features:
 - ⚡️ Real-time updates.
 - 💰 Free deployment.
 - 🎯 Admin to pick the next song, undo, manage rounds, etc.
+- ⌨️ Media Session API and keyboard shortcuts (Media keys, Arrow keys, Space).
 - ⏱️ Admin stopwatch and per-song playback durations derived from play times.
 - 🔍 Admin card checker with played/missing songs and winner indicator.
 - 📊 Admin insights with a cards-per-song progress chart.
