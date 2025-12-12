@@ -122,7 +122,7 @@ export const AdminPage: FC = () => {
 
   useEffect(() => {
     void startSongPlayer();
-  });
+  }, [startSongPlayer]);
 
   useEffect(() => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
