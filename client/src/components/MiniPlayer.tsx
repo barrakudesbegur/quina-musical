@@ -60,6 +60,7 @@ export const MiniPlayer: FC<
     isLowVolumeMode: boolean;
     onNext?: () => void;
     onPrevious?: () => void;
+    canPlayPrevious?: boolean;
     onSeek?: (nextTime: number) => void;
     playerPreloadProgress: number;
     selectedTimestampType: string;
@@ -77,6 +78,7 @@ export const MiniPlayer: FC<
   isLowVolumeMode,
   onNext,
   onPrevious,
+  canPlayPrevious,
   onSeek,
   playerPreloadProgress,
   selectedTimestampType,
@@ -184,7 +186,6 @@ export const MiniPlayer: FC<
                     variant="light"
                     aria-label={isPlaying ? 'Pausa' : 'Reproduir'}
                     onPress={onTogglePlay}
-                    isLoading={isLoading}
                   >
                     <div className="flex items-center justify-center text-background bg-foreground rounded-full p-2">
                       {isPlaying ? (
@@ -194,13 +195,16 @@ export const MiniPlayer: FC<
                       )}
                     </div>
                   </Button>
-                  {playerPreloadProgress < 1 && (
+                  {(playerPreloadProgress < 1 || isLoading) && (
                     <CircularProgress
                       aria-label="Carregant cançons"
                       size="lg"
-                      value={playerPreloadProgress * 100}
+                      value={
+                        isLoading ? undefined : playerPreloadProgress * 100
+                      }
                       disableAnimation
                       className="absolute inset-0 pointer-events-none"
+                      isIndeterminate={isLoading}
                     />
                   )}
                 </div>
@@ -248,7 +252,7 @@ export const MiniPlayer: FC<
                               'p-0.5': type === 'secondary',
                             }
                           )}
-                          isDisabled={!onSeek || isLoading || !song}
+                          isDisabled={!onSeek || !song}
                           onPress={() => {
                             onSeek?.(value);
                           }}
@@ -280,7 +284,7 @@ export const MiniPlayer: FC<
                     onSeek(value);
                   }
                 }}
-                isDisabled={!song || isLoading}
+                isDisabled={!song}
                 size="sm"
               />
               <div className="flex justify-between text-small text-foreground/60">
@@ -298,7 +302,7 @@ export const MiniPlayer: FC<
                 radius="full"
                 variant="light"
                 aria-label="Anterior"
-                isDisabled={!onPrevious || isLoading}
+                isDisabled={!onPrevious || !canPlayPrevious}
                 onPress={onPrevious}
               >
                 <IconPlayerSkipBack className="size-6" />
@@ -336,7 +340,7 @@ export const MiniPlayer: FC<
                 radius="full"
                 variant="light"
                 aria-label="Següent"
-                isDisabled={!onNext || isLoading}
+                isDisabled={!onNext}
                 onPress={onNext}
               >
                 <IconPlayerSkipForward className="size-6" />

@@ -42,12 +42,75 @@ export const AdminPage: FC = () => {
   });
 
   const playSongMutation = trpc.game.playSong.useMutation({
+    onMutate: async (input) => {
+      await utils.game.getAllSongs.cancel();
+
+      const previousSongs = utils.game.getAllSongs.getData();
+      const songId =
+        input.songId ?? previousSongs?.find((s) => s.positionInQueue === 1)?.id;
+
+      utils.game.getAllSongs.setData(undefined, (old) => {
+        if (!old) return old;
+        return old.map((song) => ({
+          ...song,
+          isLastPlayed: song.id === songId,
+          isPlayed: song.id === songId ? true : song.isPlayed,
+          playedAt:
+            song.id === songId ? new Date().toISOString() : song.playedAt,
+          positionInQueue:
+            song.id === songId
+              ? null
+              : song.positionInQueue
+                ? song.positionInQueue - 1
+                : null,
+        }));
+      });
+
+      return { previousSongs };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousSongs) {
+        utils.game.getAllSongs.setData(undefined, context.previousSongs);
+      }
+    },
     onSettled: () => {
       utils.game.invalidate();
     },
   });
 
   const undoLastPlayedMutation = trpc.game.undoLastPlayed.useMutation({
+    onMutate: async () => {
+      await utils.game.getAllSongs.cancel();
+
+      const previousSongs = utils.game.getAllSongs.getData();
+      const currentLastPlayed = previousSongs?.find((s) => s.isLastPlayed);
+      const newLastPlayed = previousSongs
+        ?.filter((s) => s.isPlayed && !s.isLastPlayed)
+        .sort((a, b) => (b.playedAt ?? '').localeCompare(a.playedAt ?? ''))[0];
+
+      utils.game.getAllSongs.setData(undefined, (old) => {
+        if (!old) return old;
+        return old.map((song) => ({
+          ...song,
+          isLastPlayed: song.id === newLastPlayed?.id,
+          isPlayed: song.id === currentLastPlayed?.id ? false : song.isPlayed,
+          playedAt: song.id === currentLastPlayed?.id ? null : song.playedAt,
+          positionInQueue:
+            song.id === currentLastPlayed?.id
+              ? 1
+              : song.positionInQueue
+                ? song.positionInQueue + 1
+                : null,
+        }));
+      });
+
+      return { previousSongs };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousSongs) {
+        utils.game.getAllSongs.setData(undefined, context.previousSongs);
+      }
+    },
     onSettled: () => {
       utils.game.invalidate();
     },
@@ -60,7 +123,6 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const lastPlayedKeyRef = useRef<number | 'silence' | null>(null);
   const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
     'admin-low-volume-mode',
     false
@@ -86,10 +148,9 @@ export const AdminPage: FC = () => {
     playSongMutation.mutate({ songId: undefined });
   }, [playSongMutation]);
 
-  const canPlayPrevious = useMemo(
-    () => (roundQuery.data?.playedSongs.length ?? 0) > 0,
-    [roundQuery.data?.playedSongs]
-  );
+  const canPlayPrevious = useMemo(() => {
+    return (songsQuery.data?.filter((s) => s.isPlayed).length ?? 0) > 0;
+  }, [songsQuery.data]);
 
   const handlePlayPreviousSong = useCallback(() => {
     if (!canPlayPrevious) return;
@@ -128,14 +189,13 @@ export const AdminPage: FC = () => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
   }, [isLowVolumeMode, lowVolumeSetting, setVolume, songVolume]);
 
-  const lastPlayedSongId = useMemo(
-    () =>
-      roundQuery.data?.playedSongs.length === 0
-        ? 'silence'
-        : (roundQuery.data?.playedSongs[roundQuery.data.playedSongs.length - 1]
-            ?.id ?? null),
-    [roundQuery.data?.playedSongs]
-  );
+  const displayedSongId = useMemo(() => {
+    const lastPlayed = songsQuery.data?.find((s) => s.isLastPlayed);
+    if (lastPlayed) return lastPlayed.id;
+    const hasAnyPlayed = songsQuery.data?.some((s) => s.isPlayed);
+    if (hasAnyPlayed === false) return 'silence' as const;
+    return null;
+  }, [songsQuery.data]);
 
   const roundElapsedMs = useMemo(() => {
     const roundStartedAt = roundQuery.data?.startedAt ?? null;
@@ -147,8 +207,8 @@ export const AdminPage: FC = () => {
   }, [now, roundQuery.data?.startedAt]);
 
   const currentSong = useMemo(
-    () => songsQuery.data?.find((song) => song.id === lastPlayedSongId) ?? null,
-    [lastPlayedSongId, songsQuery.data]
+    () => songsQuery.data?.find((song) => song.id === displayedSongId) ?? null,
+    [displayedSongId, songsQuery.data]
   );
 
   const playerControlLoading = useMemo(() => {
@@ -167,19 +227,19 @@ export const AdminPage: FC = () => {
     undoLastPlayedMutation.isPending,
   ]);
 
+  const lastPlayedRef = useRef<number | 'silence' | null>(null);
   useEffect(() => {
-    if (!lastPlayedSongId) return;
+    if (displayedSongId === null) return;
+    if (lastPlayedRef.current === displayedSongId) return;
 
-    if (lastPlayedKeyRef.current === lastPlayedSongId) return;
+    lastPlayedRef.current = displayedSongId;
 
-    lastPlayedKeyRef.current = lastPlayedSongId;
-
-    if (lastPlayedSongId === 'silence') {
+    if (displayedSongId === 'silence') {
       playSilence();
     } else {
-      loadSong(lastPlayedSongId, timestampType, { autoplay: isPlaying });
+      loadSong(displayedSongId, timestampType, { autoplay: isPlaying });
     }
-  }, [lastPlayedSongId, loadSong, playSilence, timestampType, isPlaying]);
+  }, [displayedSongId, loadSong, playSilence, timestampType, isPlaying]);
 
   const playerPreloadProgress = useMemo(() => {
     if (!playerSongs.length) return 0;
@@ -189,14 +249,13 @@ export const AdminPage: FC = () => {
   }, [playerSongs]);
 
   useEffect(() => {
-    if (hideImageOnFirstSong && roundQuery.data?.playedSongs.length === 1) {
+    if (
+      hideImageOnFirstSong &&
+      songsQuery.data?.filter((s) => s.isPlayed).length === 1
+    ) {
       showImageMutation.mutate({ imageId: null });
     }
-  }, [
-    hideImageOnFirstSong,
-    roundQuery.data?.playedSongs.length,
-    showImageMutation,
-  ]);
+  }, [hideImageOnFirstSong, songsQuery.data, showImageMutation]);
 
   const startGameMutation = trpc.game.startGame.useMutation({
     onSettled: () => {
@@ -326,6 +385,7 @@ export const AdminPage: FC = () => {
           isLowVolumeMode={isLowVolumeMode}
           onNext={handlePlayNextSong}
           onPrevious={handlePlayPreviousSong}
+          canPlayPrevious={canPlayPrevious}
           onSeek={seek}
           playerPreloadProgress={playerPreloadProgress}
           selectedTimestampType={timestampType}
@@ -405,7 +465,7 @@ export const AdminPage: FC = () => {
       <div className="flex flex-col min-h-0 min-w-0">
         <SongsSection
           onPlaySong={(songId) => playSongMutation.mutate({ songId })}
-          onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}
+          onUndoLastPlayed={handlePlayPreviousSong}
         />
       </div>
     </main>
