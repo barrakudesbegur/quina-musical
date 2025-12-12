@@ -246,7 +246,7 @@ export const AdminPage: FC = () => {
 
   return (
     <main className="max-w-xl mx-auto lg:h-dvh overflow-hidden grid lg:auto-rows-fr *:p-4 lg:*:py-4 lg:*:px-3 lg:*:first:pl-4 lg:*:last:pr-4  lg:max-w-none   lg:grid-cols-3">
-      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto">
+      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto min-w-0">
         <section className="space-y-4">
           <h2 className="text-3xl font-brand uppercase text-center   tracking-wider">
             Gestió de la quina
@@ -304,7 +304,7 @@ export const AdminPage: FC = () => {
 
         <GameInsightsSection />
       </div>
-      <div className="flex flex-col gap-4 min-h-0 lg:overflow-y-auto">
+      <div className="flex flex-col gap-4 min-h-0 lg:overflow-y-auto min-w-0">
         <h2 className="text-3xl font-brand uppercase text-center  tracking-wider">
           Só
         </h2>
@@ -381,7 +381,7 @@ export const AdminPage: FC = () => {
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
       </div>
-      <div className="flex flex-col min-h-0">
+      <div className="flex flex-col min-h-0 min-w-0">
         <SongsSection
           onPlaySong={(songId) => playSongMutation.mutate({ songId })}
           onUndoLastPlayed={() => undoLastPlayedMutation.mutate()}

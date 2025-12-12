@@ -151,13 +151,13 @@ export const MiniPlayer: FC<
           {song ? (
             <Image
               alt={song?.title ?? 'Sense cançó'}
-              className="object-cover max-2xs:hidden w-full max-w-32 xs:max-w-40 min-w-16 rounded-xl aspect-square"
+              className="object-cover max-w-none shrink-0 max-2xs:hidden w-35 rounded-sm aspect-square"
               shadow="md"
               src={song?.cover}
             />
           ) : (
             <Card
-              className="  max-2xs:hidden w-full max-w-32 xs:max-w-40 min-w-16 rounded-xl aspect-square"
+              className="max-2xs:hidden w-full max-w-32 xs:max-w-40 min-w-16 rounded-xl aspect-square"
               shadow="md"
             >
               <CardBody className="flex items-center justify-center ">
