@@ -27,6 +27,7 @@ export interface GameData {
   currentRound: Round | null;
   pastRounds: Round[];
   cardsPlaying: CardId[];
+  displayedImageId: string | null;
 }
 
 class LowWithLodash<T> extends Low<T> {
@@ -39,6 +40,7 @@ const defaultData: GameData = {
   currentRound: null,
   pastRounds: [],
   cardsPlaying: [],
+  displayedImageId: null,
 };
 
 const adapter = new JSONFile<GameData>(

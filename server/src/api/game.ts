@@ -69,6 +69,14 @@ export const gameRouter = router({
       await gameDb.write();
     }),
 
+  showImage: publicProcedure
+    .input(z.object({ imageId: z.string().nullable() }))
+    .mutation(async ({ input }) => {
+      gameDb.data.displayedImageId = input.imageId;
+      await gameDb.write();
+      emitUpdate();
+    }),
+
   playSong: publicProcedure
     .input(z.object({ songId: z.number().min(1).optional() }))
     .mutation(async ({ input }) => {
@@ -294,24 +302,27 @@ export const gameRouter = router({
 
   onStateChange: publicProcedure.subscription(async function* ({ signal }) {
     const getState = () => {
-      return !gameDb.data.currentRound
-        ? { round: null, playedSongs: [] }
-        : {
-            round: {
-              name: gameDb.data.currentRound.name,
-              position: gameDb.data.currentRound.position,
-            },
-            playedSongs: gameDb.chain
-              .get('currentRound.playedSongs')
-              .map((played) => {
-                const song = songs.find((s) => s.id === played.id);
-                if (!song) return null;
-                return { ...song, position: played.position };
-              })
-              .filter((song) => song !== null)
-              .orderBy(['position'], ['desc'])
-              .value(),
-          };
+      return {
+        ...(!gameDb.data.currentRound
+          ? { round: null, playedSongs: [] }
+          : {
+              round: {
+                name: gameDb.data.currentRound.name,
+                position: gameDb.data.currentRound.position,
+              },
+              playedSongs: gameDb.chain
+                .get('currentRound.playedSongs')
+                .map((played) => {
+                  const song = songs.find((s) => s.id === played.id);
+                  if (!song) return null;
+                  return { ...song, position: played.position };
+                })
+                .filter((song) => song !== null)
+                .orderBy(['position'], ['desc'])
+                .value(),
+              }),
+              displayedImageId: gameDb.data.displayedImageId,
+      }
     };
 
     // Emit initial state

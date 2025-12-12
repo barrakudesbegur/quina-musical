@@ -1,10 +1,11 @@
 import autoAnimate from '@formkit/auto-animate';
 import { cn } from '@heroui/react';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import decorationLeft from '../assets/decoration-left.svg';
 import decorationRight from '../assets/decoration-right.svg';
 import { MorphingText } from '../components/MorphingText';
+import { GALLERY_IMAGES } from '../config/images';
 import { trpc } from '../utils/trpc';
 
 export const HomePage: FC = () => {
@@ -37,8 +38,16 @@ export const HomePage: FC = () => {
   });
   const currentSong = gameState.data?.playedSongs[0] ?? null;
 
+  const displayedImage = useMemo(() => {
+    return (
+      GALLERY_IMAGES.find(
+        (img) => img.id === gameState.data?.displayedImageId
+      ) ?? null
+    );
+  }, [gameState.data?.displayedImageId]);
+
   return (
-    <main className="bg-[#8B1538] font-brand font-light tracking-wider text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
+    <main className="bg-[#8B1538] max-md:pb-[calc(100dvh/3)] font-brand font-light tracking-wider text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
       <div className="sticky top-0 inset-x-0 z-30 overflow-hidden">
         <img
           src={decorationLeft}
@@ -89,9 +98,26 @@ export const HomePage: FC = () => {
             backgroundRepeat: 'repeat-x',
           }}
         />
+        <div
+          style={{
+            height: '12px',
+            width: '100%',
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23000'/%3E%3C/svg%3E\")",
+            backgroundSize: '64px 12px',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'repeat-x',
+
+            marginTop: '-10px',
+            zIndex: -1,
+            position: 'relative',
+            boxShadow: '0px -12px 0 black',
+            opacity: 0.3,
+          }}
+        />
       </div>
 
-      <div className="md:h-full box-border w-full md:min-h-0 pb-[calc(100dvh/3)] py-12 md:py-0 text-center">
+      <div className="md:h-full box-border w-full md:min-h-0 py-12 md:py-0 text-center">
         <h2 className="text-4xl block md:hidden uppercase font-normal underline underline-offset-4 decoration-white/30 tracking-wider leading-none mb-4">
           Historial
         </h2>
@@ -146,6 +172,28 @@ export const HomePage: FC = () => {
           )}
         </div>
       </div>
+
+      <ul className="md:hidden *:border-b-2 *:border-b-gray-200 *:last:border-b-0">
+        {GALLERY_IMAGES.filter((image) => image.discoverable).map((image) => (
+          <li key={image.id}>
+            <img
+              src={image.filename}
+              alt={image.label}
+              className={cn({
+                'border-8 border-blue-500': displayedImage?.id === image.id,
+              })}
+            />
+          </li>
+        ))}
+      </ul>
+
+      {displayedImage && (
+        <img
+          src={displayedImage.filename}
+          alt={displayedImage.label}
+          className="max-md:hidden fixed inset-0 z-50 size-full object-contain bg-black transition-opacity duration-300"
+        />
+      )}
     </main>
   );
 };

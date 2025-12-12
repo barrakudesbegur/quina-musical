@@ -7,6 +7,7 @@ import { useSessionStorage } from 'usehooks-ts';
 import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
+import { ImagePicker } from '../components/ImagePicker';
 import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
@@ -377,6 +378,8 @@ export const AdminPage: FC = () => {
           startContent={<IconVolume2 size={20} className="max-xs:hidden" />}
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
+
+        <ImagePicker />
       </div>
       <div className="flex flex-col min-h-0 min-w-0">
         <SongsSection
