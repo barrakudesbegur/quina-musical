@@ -110,7 +110,7 @@ export const SongCard: FC<{
               event.stopPropagation();
               dragControls.start(event);
             }}
-            className="w-12 flex items-center justify-center cursor-grab -ml-7 text-default-400 hover:text-default-900 active:text-default-900 transition-colors"
+            className="w-12 flex shrink-0 items-center justify-center cursor-grab -ml-7 text-default-400 hover:text-default-900 active:text-default-900 transition-colors"
           >
             <IconGripVertical size={22} />
           </div>
