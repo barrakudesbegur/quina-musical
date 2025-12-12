@@ -1,4 +1,4 @@
-import { Button, Divider, Slider } from '@heroui/react';
+import { Button, Checkbox, Divider, Slider } from '@heroui/react';
 import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -53,6 +53,8 @@ export const AdminPage: FC = () => {
     },
   });
 
+  const showImageMutation = trpc.game.showImage.useMutation();
+
   const defaultNextRoundName = useMemo(() => {
     if (!roundQuery.data) return '1';
     return String(roundQuery.data.position + 1);
@@ -77,6 +79,8 @@ export const AdminPage: FC = () => {
   );
   const [timestampType, setTimestampType] =
     useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
+  const [hideImageOnFirstSong, setHideImageOnFirstSong] =
+    useSessionStorage<boolean>('admin-hide-image-on-first-song', false);
 
   const handlePlayNextSong = useCallback(() => {
     playSongMutation.mutate({ songId: undefined });
@@ -184,9 +188,15 @@ export const AdminPage: FC = () => {
     );
   }, [playerSongs]);
 
-  const handleFinishRound = (nextRoundName: string, isLastRound: boolean) => {
-    finishRoundMutation.mutate({ nextRoundName, isLastRound });
-  };
+  useEffect(() => {
+    if (hideImageOnFirstSong && roundQuery.data?.playedSongs.length === 1) {
+      showImageMutation.mutate({ imageId: null });
+    }
+  }, [
+    hideImageOnFirstSong,
+    roundQuery.data?.playedSongs.length,
+    showImageMutation,
+  ]);
 
   const startGameMutation = trpc.game.startGame.useMutation({
     onSettled: () => {
@@ -285,7 +295,7 @@ export const AdminPage: FC = () => {
             isOpen={isFinishRoundDialogOpen}
             defaultValue={defaultNextRoundName}
             onClose={() => setIsFinishRoundDialogOpen(false)}
-            onConfirm={handleFinishRound}
+            onConfirm={(data) => finishRoundMutation.mutate(data)}
             loading={finishRoundMutation.isPending}
           />
           <Button
@@ -377,6 +387,19 @@ export const AdminPage: FC = () => {
           endContent={<IconVolume size={20} className="max-xs:hidden" />}
         />
 
+        <h2 className="text-3xl mt-8 font-brand uppercase text-center  tracking-wider">
+          Imatges
+        </h2>
+
+        <div className="flex items-center flex-col gap-2">
+          <Checkbox
+            isSelected={hideImageOnFirstSong}
+            onValueChange={setHideImageOnFirstSong}
+            size="sm"
+          >
+            Amagar imatge quan soni la primera cançó
+          </Checkbox>
+        </div>
         <ImagePicker />
       </div>
       <div className="flex flex-col min-h-0 min-w-0">

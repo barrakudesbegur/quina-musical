@@ -19,6 +19,7 @@ export interface Round {
   playedSongs: PlayedSong[];
   startedAt: string | null;
   finishedAt: string | null;
+  imageId: string | null;
 }
 
 export interface GameData {

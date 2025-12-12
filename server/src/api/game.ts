@@ -77,6 +77,15 @@ export const gameRouter = router({
       emitUpdate();
     }),
 
+  setRoundImage: publicProcedure
+    .input(z.object({ imageId: z.string().nullable() }))
+    .mutation(async ({ input }) => {
+      if (!gameDb.data.currentRound) return;
+      gameDb.data.currentRound.imageId = input.imageId;
+      await gameDb.write();
+      emitUpdate();
+    }),
+
   playSong: publicProcedure
     .input(z.object({ songId: z.number().min(1).optional() }))
     .mutation(async ({ input }) => {
@@ -207,8 +216,9 @@ export const gameRouter = router({
   finishRound: publicProcedure
     .input(
       z.object({
-        nextRoundName: z.string(),
+        name: z.string(),
         isLastRound: z.boolean(),
+        imageId: z.string().nullable(),
       })
     )
     .mutation(async ({ input }) => {
@@ -230,7 +240,7 @@ export const gameRouter = router({
         const shuffledSongs = shuffleSongs(now);
 
         gameDb.data.currentRound = {
-          name: input.nextRoundName,
+          name: input.name,
           position,
           startedAt: null,
           finishedAt: null,
@@ -240,7 +250,12 @@ export const gameRouter = router({
             overallPosition: song.position,
           })),
           playedSongs: [],
+          imageId: input.imageId,
         };
+
+        if (input.imageId) {
+          gameDb.data.displayedImageId = input.imageId;
+        }
       }
 
       await gameDb.write();
@@ -270,6 +285,7 @@ export const gameRouter = router({
         overallPosition: song.position,
       })),
       playedSongs: [],
+      imageId: null,
     };
 
     await gameDb.write();
@@ -305,6 +321,7 @@ export const gameRouter = router({
         overallPosition: song.position,
       })),
       playedSongs: [],
+      imageId: null,
     };
 
     await gameDb.write();
@@ -315,7 +332,7 @@ export const gameRouter = router({
     const getState = () => {
       return {
         ...(!gameDb.data.currentRound
-          ? { round: null, playedSongs: [] }
+          ? { round: null, playedSongs: [], roundImageId: null }
           : {
               round: {
                 name: gameDb.data.currentRound.name,
@@ -331,6 +348,7 @@ export const gameRouter = router({
                 .filter((song) => song !== null)
                 .orderBy(['position'], ['desc'])
                 .value(),
+              roundImageId: gameDb.data.currentRound.imageId,
             }),
         displayedImageId: gameDb.data.displayedImageId,
       };

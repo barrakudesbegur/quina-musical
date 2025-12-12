@@ -1,4 +1,5 @@
-import { RadioGroup, Radio, cn } from '@heroui/react';
+import { RadioGroup, Radio, cn, Button, ButtonProps } from '@heroui/react';
+import { IconStar, IconStarFilled } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 import { GALLERY_IMAGES } from '../config/images';
 import { trpc } from '../utils/trpc';
@@ -6,8 +7,10 @@ import { trpc } from '../utils/trpc';
 export const ImagePicker: FC<{ className?: string }> = ({ className }) => {
   const gameState = trpc.game.onStateChange.useSubscription();
   const showImageMutation = trpc.game.showImage.useMutation();
+  const setRoundImageMutation = trpc.game.setRoundImage.useMutation();
 
   const currentImageId = gameState.data?.displayedImageId ?? null;
+  const currentRoundImageId = gameState.data?.roundImageId ?? null;
 
   const handleValueChange = useCallback(
     (value: string) => {
@@ -17,37 +20,91 @@ export const ImagePicker: FC<{ className?: string }> = ({ className }) => {
     [showImageMutation]
   );
 
+  const handleStarClick = useCallback(
+    (imageId: string | null) => {
+      if (currentRoundImageId === null && imageId === null) {
+        return;
+      }
+
+      if (currentRoundImageId === imageId) {
+        setRoundImageMutation.mutate({ imageId: null });
+      } else {
+        setRoundImageMutation.mutate({ imageId });
+      }
+    },
+    [currentRoundImageId, setRoundImageMutation]
+  );
+
   return (
-    <div className={cn('mt-8 @container', className)}>
-      <h2 className="text-3xl mb-4 font-brand uppercase text-center  tracking-wider">
-        Imatges
-      </h2>
+    <div className={cn('@container', className)}>
       <RadioGroup
         value={currentImageId ?? 'none'}
         onValueChange={handleValueChange}
         isDisabled={showImageMutation.isPending}
         classNames={{ wrapper: 'grid grid-cols-2 @sm:grid-cols-3 gap-2' }}
       >
-        <Radio
-          value="none"
-          color="default"
-          classNames={{ label: 'font-bold leading-none' }}
-        >
-          Cap imatge
-        </Radio>
-        {GALLERY_IMAGES.map((image) => (
+        <div className="flex items-center ">
+          <StarButton
+            isSelected={currentRoundImageId === null}
+            disabled={
+              setRoundImageMutation.isPending || currentRoundImageId === null
+            }
+            onPress={() => handleStarClick(null)}
+          />
           <Radio
-            key={image.id}
-            value={image.id}
-            color="danger"
+            value="none"
+            color="default"
             classNames={{
-              label: 'leading-none group-data-[selected=true]:text-danger-500',
+              label: 'font-bold leading-none flex items-center gap-2',
+              labelWrapper: 'flex-1',
             }}
           >
-            {image.label}
+            Cap imatge
           </Radio>
+        </div>
+        {GALLERY_IMAGES.map((image) => (
+          <div className="flex items-center" key={image.id}>
+            <StarButton
+              isSelected={currentRoundImageId === image.id}
+              disabled={setRoundImageMutation.isPending}
+              onPress={() => handleStarClick(image.id)}
+            />
+            <Radio
+              value={image.id}
+              color="danger"
+              classNames={{
+                label:
+                  'leading-none group-data-[selected=true]:text-danger-500 flex items-center gap-2',
+                labelWrapper: 'flex-1',
+              }}
+            >
+              {image.label}
+            </Radio>
+          </div>
         ))}
       </RadioGroup>
     </div>
+  );
+};
+
+const StarButton: FC<
+  {
+    isSelected: boolean;
+  } & ButtonProps
+> = ({ isSelected, disabled, onPress }) => {
+  return (
+    <Button
+      onPress={onPress}
+      disabled={disabled}
+      isIconOnly
+      size="sm"
+      variant="light"
+    >
+      {isSelected ? (
+        <IconStarFilled size={20} className="text-primary-500" />
+      ) : (
+        <IconStar size={20} className="text-default-400" />
+      )}
+    </Button>
   );
 };
