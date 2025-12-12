@@ -168,18 +168,18 @@ export const AdminPage: FC = () => {
   ]);
 
   useEffect(() => {
-    if (lastPlayedSongId) {
-      if (lastPlayedSongId === 'silence') {
-        playSilence();
-      } else {
-        loadSong(lastPlayedSongId, timestampType, { autoplay: isPlaying });
-      }
-    }
+    if (!lastPlayedSongId) return;
 
-    if (lastPlayedKeyRef.current === lastPlayedSongId || !isPlaying) return;
+    if (lastPlayedKeyRef.current === lastPlayedSongId) return;
+
     lastPlayedKeyRef.current = lastPlayedSongId;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastPlayedSongId, loadSong, playSilence]);
+
+    if (lastPlayedSongId === 'silence') {
+      playSilence();
+    } else {
+      loadSong(lastPlayedSongId, timestampType, { autoplay: isPlaying });
+    }
+  }, [lastPlayedSongId, loadSong, playSilence, timestampType, isPlaying]);
 
   const playerPreloadProgress = useMemo(() => {
     if (!playerSongs.length) return 0;
