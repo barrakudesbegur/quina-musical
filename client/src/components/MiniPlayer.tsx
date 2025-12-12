@@ -22,7 +22,7 @@ import {
 } from '@tabler/icons-react';
 import { clamp } from 'lodash-es';
 import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
-import { SongTimestampCategory } from '../hooks/useSongPlayer';
+import { SongTimestampCategory } from '../audio';
 import { formatCompactDuration } from '../utils/time';
 import { differenceInMilliseconds, parseISO } from 'date-fns';
 

@@ -1,8 +1,8 @@
 import { Button, ButtonProps, cn } from '@heroui/react';
 import { Icon as IconifyIcon } from '@iconify/react';
 import { TablerIcon } from '@tabler/icons-react';
-import { FC, PropsWithChildren } from 'react';
-import { useSoundEffects } from '../hooks/useSoundEffects';
+import { FC, PropsWithChildren, useEffect } from 'react';
+import { useAudioContext, useSoundEffects } from '../audio';
 
 type IconSource = TablerIcon | string;
 
@@ -98,7 +98,12 @@ export const IconButtonGrid: FC<
     fxVolume?: number;
   }>
 > = ({ className, fxVolume = 1 }) => {
-  const { playFx } = useSoundEffects(actions, { volume: fxVolume });
+  const { setVolume } = useAudioContext();
+  const { playFx } = useSoundEffects(actions);
+
+  useEffect(() => {
+    setVolume('effects', fxVolume);
+  }, [fxVolume, setVolume]);
 
   return (
     <div

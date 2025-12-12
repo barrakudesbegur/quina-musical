@@ -4,18 +4,22 @@ import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
+import {
+  SongTimestampCategory,
+  useAudioContext,
+  useAudioPlayer,
+} from '../audio';
 import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
 import { GameInsightsSection } from '../components/GameInsightsSection';
+import { IconButtonGrid } from '../components/IconButtonGrid';
 import { ImagePicker } from '../components/ImagePicker';
 import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
 import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
-import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
-import { IconButtonGrid } from '../components/IconButtonGrid';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -26,6 +30,8 @@ export const AdminPage: FC = () => {
     enabled: !!roundQuery.data,
   });
   const statusQuery = trpc.game.getStatus.useSubscription();
+  const playlistQuery = trpc.song.getPlaylist.useQuery();
+  const startedAtQuery = trpc.game.getStartedAt.useQuery();
   const navigate = useNavigate();
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
@@ -162,32 +168,75 @@ export const AdminPage: FC = () => {
   }, [setIsLowVolumeMode]);
 
   const {
-    start: startSongPlayer,
-    loadSong,
-    togglePlayState,
-    isPlaying,
+    songPlayer,
+    init,
+    isInitialized,
     isLoading: isPlayerLoading,
-    preloadStatuses: playerSongs,
-    playSilence,
-    setVolume,
-    seek,
-    currentTime,
-    duration,
-  } = useSongPlayer({
+    state,
+    preloadProgress,
+  } = useAudioPlayer({
     onNext: handlePlayNextSong,
     onPrevious: handlePlayPreviousSong,
     onToggleLowVolume: handleToggleLowVolume,
   });
 
+  const { setVolume } = useAudioContext();
+
   const now = useSecondsStopwatch();
 
-  useEffect(() => {
-    void startSongPlayer();
-  }, [startSongPlayer]);
+  const songResources = useMemo(() => {
+    const cacheBuster = startedAtQuery.data
+      ? `?v=${new Date(startedAtQuery.data).getTime()}`
+      : '';
+    return (
+      songsQuery.data?.map((song) => ({
+        id: song.id,
+        url: `/songs/${song.id}.mp3${cacheBuster}`,
+      })) ?? []
+    );
+  }, [songsQuery.data, startedAtQuery.data]);
+
+  const songs = useMemo(() => {
+    return (
+      songsQuery.data?.map((song) => ({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        cover: song.cover,
+        timestamps: song.timestamps,
+      })) ?? []
+    );
+  }, [songsQuery.data]);
 
   useEffect(() => {
-    setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
+    if (songs.length > 0) {
+      songPlayer.setSongs(songs);
+    }
+  }, [songPlayer, songs]);
+
+  useEffect(() => {
+    if (songResources.length > 0) {
+      songPlayer.setSongResources(songResources);
+    }
+  }, [songPlayer, songResources]);
+
+  // Preload songs after resources are set
+  useEffect(() => {
+    if (songResources.length === 0) return;
+    const startPlayer = async () => {
+      await init();
+      songPlayer.preloadAll();
+    };
+    startPlayer();
+  }, [init, songPlayer, songResources]);
+
+  useEffect(() => {
+    setVolume('song', isLowVolumeMode ? lowVolumeSetting : songVolume);
   }, [isLowVolumeMode, lowVolumeSetting, setVolume, songVolume]);
+
+  useEffect(() => {
+    setVolume('effects', fxVolume);
+  }, [fxVolume, setVolume]);
 
   const displayedSongId = useMemo(() => {
     const lastPlayed = songsQuery.data?.find((s) => s.isLastPlayed);
@@ -227,26 +276,55 @@ export const AdminPage: FC = () => {
     undoLastPlayedMutation.isPending,
   ]);
 
+  const updateMediaSessionMetadata = useCallback(
+    (song: typeof currentSong) => {
+      if (!('mediaSession' in navigator)) return;
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song?.title ?? playlistQuery.data?.title ?? 'Quina Musical',
+        artist: song?.artist ?? playlistQuery.data?.artist ?? 'Barrakudes',
+        artwork: song?.cover
+          ? [{ src: song.cover }]
+          : playlistQuery.data?.cover
+            ? [{ src: playlistQuery.data.cover }]
+            : [],
+      });
+    },
+    [playlistQuery.data]
+  );
+
   const lastPlayedRef = useRef<number | 'silence' | null>(null);
   useEffect(() => {
+    if (!isInitialized) return;
     if (displayedSongId === null) return;
     if (lastPlayedRef.current === displayedSongId) return;
 
     lastPlayedRef.current = displayedSongId;
 
     if (displayedSongId === 'silence') {
-      playSilence();
+      songPlayer.playSilence();
+      updateMediaSessionMetadata(null);
     } else {
-      loadSong(displayedSongId, timestampType, { autoplay: isPlaying });
+      songPlayer.load(displayedSongId, timestampType, {
+        autoplay: state.isPlaying,
+      });
+      const song = songsQuery.data?.find((s) => s.id === displayedSongId);
+      updateMediaSessionMetadata(song ?? null);
     }
-  }, [displayedSongId, loadSong, playSilence, timestampType, isPlaying]);
+  }, [
+    isInitialized,
+    displayedSongId,
+    songPlayer,
+    timestampType,
+    state.isPlaying,
+    songsQuery.data,
+    updateMediaSessionMetadata,
+  ]);
 
   const playerPreloadProgress = useMemo(() => {
-    if (!playerSongs.length) return 0;
-    return (
-      playerSongs.filter((song) => song.preloaded).length / playerSongs.length
-    );
-  }, [playerSongs]);
+    if (!preloadProgress.total) return 0;
+    return preloadProgress.loaded / preloadProgress.total;
+  }, [preloadProgress]);
 
   useEffect(() => {
     if (
@@ -272,6 +350,17 @@ export const AdminPage: FC = () => {
     setIsFinishRoundDialogOpen(true);
     setIsCheckCardDialogOpen(false);
   };
+
+  const handleTogglePlay = useCallback(() => {
+    songPlayer.togglePlayState();
+  }, [songPlayer]);
+
+  const handleSeek = useCallback(
+    (time: number) => {
+      songPlayer.seek(time);
+    },
+    [songPlayer]
+  );
 
   if (!roundQuery.data) {
     return (
@@ -376,17 +465,17 @@ export const AdminPage: FC = () => {
         <MiniPlayer
           song={currentSong}
           now={now}
-          isPlaying={isPlaying}
+          isPlaying={state.isPlaying}
           isLoading={playerControlLoading}
-          currentTime={currentTime}
-          duration={duration}
-          onTogglePlay={togglePlayState}
+          currentTime={state.currentTime}
+          duration={state.duration}
+          onTogglePlay={handleTogglePlay}
           onToggleLowVolume={handleToggleLowVolume}
           isLowVolumeMode={isLowVolumeMode}
           onNext={handlePlayNextSong}
           onPrevious={handlePlayPreviousSong}
           canPlayPrevious={canPlayPrevious}
-          onSeek={seek}
+          onSeek={handleSeek}
           playerPreloadProgress={playerPreloadProgress}
           selectedTimestampType={timestampType}
           onTimestampTypeChange={(value) =>
