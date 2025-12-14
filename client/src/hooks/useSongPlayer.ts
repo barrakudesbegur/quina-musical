@@ -200,7 +200,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     [songsQuery.data]
   );
 
-  const loadSong = useCallback(
+  const setSong = useCallback(
     async (
       songId: SongId,
       timestampSelection?: SongTimestampCategory | number,
@@ -676,7 +676,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
 
   return {
     start,
-    loadSong,
+    setSong,
     playSilence,
     pause,
     resume,
