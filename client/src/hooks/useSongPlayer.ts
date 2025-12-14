@@ -137,7 +137,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     return ctx;
   }, [attachAudioListeners]);
 
-  const start = useCallback(async () => {
+  const initialize = useCallback(async () => {
     if (startedRef.current && !startPromiseRef.current) {
       preloadAllSongs();
       return;
@@ -206,7 +206,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       timestampSelection?: SongTimestampCategory | number,
       options?: { autoplay?: boolean }
     ) => {
-      await start();
+      await initialize();
 
       const ctx = await ensureAudioContext();
       const audioEl = audioElRef.current;
@@ -316,7 +316,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       }
     },
     [
-      start,
+      initialize,
       ensureAudioContext,
       getSongSrc,
       pickStartTimeMs,
@@ -404,7 +404,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   }, []);
 
   const resume = useCallback(async () => {
-    await start();
+    await initialize();
     const audioEl = audioElRef.current;
     if (!audioEl || !audioEl.src) return;
 
@@ -470,7 +470,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       }
       throw error;
     }
-  }, [ensureAudioContext, isSilence, start]);
+  }, [ensureAudioContext, isSilence, initialize]);
 
   const togglePlayState = useCallback(async () => {
     if (isPlaying) {
@@ -675,7 +675,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   }, []);
 
   return {
-    start,
+    initialize,
     setSong,
     playSilence,
     pause,

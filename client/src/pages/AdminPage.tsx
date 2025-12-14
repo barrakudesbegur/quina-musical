@@ -162,7 +162,7 @@ export const AdminPage: FC = () => {
   }, [setIsLowVolumeMode]);
 
   const {
-    start: startSongPlayer,
+    initialize: initializeSongPlayer,
     setSong,
     togglePlayState,
     isPlaying,
@@ -182,8 +182,8 @@ export const AdminPage: FC = () => {
   const now = useSecondsStopwatch();
 
   useEffect(() => {
-    void startSongPlayer();
-  }, [startSongPlayer]);
+    void initializeSongPlayer();
+  }, [initializeSongPlayer]);
 
   useEffect(() => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
