@@ -163,11 +163,11 @@ export const AdminPage: FC = () => {
 
   const {
     initialize: initializeSongPlayer,
-    setSong,
-    togglePlayState,
+    setSongId,
+    toggleIsPlaying,
     isPlaying,
     isLoading: isPlayerLoading,
-    preloadStatuses: playerSongs,
+    preloadStatus: playerSongs,
     setVolume,
     seek,
     currentTime,
@@ -234,11 +234,11 @@ export const AdminPage: FC = () => {
     lastPlayedRef.current = displayedSongId;
 
     if (displayedSongId === 'silence') {
-      setSong(null);
+      setSongId(null);
     } else {
-      setSong(displayedSongId, timestampType, { autoplay: isPlaying });
+      setSongId(displayedSongId, timestampType, { autoplay: isPlaying });
     }
-  }, [displayedSongId, setSong, timestampType, isPlaying]);
+  }, [displayedSongId, setSongId, timestampType, isPlaying]);
 
   const playerPreloadProgress = useMemo(() => {
     if (!playerSongs.length) return 0;
@@ -379,7 +379,7 @@ export const AdminPage: FC = () => {
           isLoading={playerControlLoading}
           currentTime={currentTime}
           duration={duration}
-          onTogglePlay={togglePlayState}
+          onTogglePlay={toggleIsPlaying}
           onToggleLowVolume={handleToggleLowVolume}
           isLowVolumeMode={isLowVolumeMode}
           onNext={handlePlayNextSong}

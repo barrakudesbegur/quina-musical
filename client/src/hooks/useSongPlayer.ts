@@ -59,7 +59,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   }, [songsQuery.data, startedAtQuery.data]);
 
   const {
-    isPreloading: isPreloadingSongs,
+    isPreloading: isPreloading,
     preloadStatuses: songPreloadStatuses,
     preloadAll: preloadAllSongs,
     getPreloadedUrl,
@@ -227,7 +227,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     }
   }, [playlistQuery.data]);
 
-  const setSong = useCallback(
+  const setSongId = useCallback(
     async (
       songId: SongId | null,
       timestampSelection?: SongTimestampCategory | number,
@@ -409,7 +409,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     }
   }, []);
 
-  const resume = useCallback(async () => {
+  const play = useCallback(async () => {
     await initialize();
     const audioEl = audioElRef.current;
     if (!audioEl || !audioEl.src) return;
@@ -478,13 +478,24 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     }
   }, [ensureAudioContext, isSilence, initialize]);
 
-  const togglePlayState = useCallback(async () => {
+  const toggleIsPlaying = useCallback(async () => {
     if (isPlaying) {
       pause();
     } else {
-      await resume();
+      await play();
     }
-  }, [isPlaying, pause, resume]);
+  }, [isPlaying, pause, play]);
+
+  const setPlayingState = useCallback(
+    async (newValue: boolean) => {
+      if (newValue) {
+        pause();
+      } else {
+        await play();
+      }
+    },
+    [pause, play]
+  );
 
   const getCurrentGainValue = useCallback((gainNode: GainNode, now: number) => {
     const automation = volumeAutomationRef.current;
@@ -635,8 +646,8 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         'previousslide',
         options.onPrevious || null
       );
-      navigator.mediaSession.setActionHandler('play', togglePlayState);
-      navigator.mediaSession.setActionHandler('pause', togglePlayState);
+      navigator.mediaSession.setActionHandler('play', toggleIsPlaying);
+      navigator.mediaSession.setActionHandler('pause', toggleIsPlaying);
     }
 
     return () => {
@@ -649,7 +660,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
         navigator.mediaSession.setActionHandler('pause', null);
       }
     };
-  }, [options, togglePlayState]);
+  }, [options, toggleIsPlaying]);
 
   useEffect(() => {
     return () => {
@@ -682,19 +693,18 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
 
   return {
     initialize,
-    setSong,
-    pause,
-    resume,
-    togglePlayState,
+    setSongId,
+    setIsPlaying: setPlayingState,
+    toggleIsPlaying,
     seek,
     setVolume,
     volume,
     isLoading,
-    isPreloadingSongs,
+    isPreloading,
     isPlaying,
     currentTime,
     duration,
-    preloadStatuses: songPreloadStatuses,
+    preloadStatus: songPreloadStatuses,
     lastError,
   };
 };
