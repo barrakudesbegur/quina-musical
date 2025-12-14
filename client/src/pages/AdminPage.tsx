@@ -168,7 +168,6 @@ export const AdminPage: FC = () => {
     isPlaying,
     isLoading: isPlayerLoading,
     preloadStatuses: playerSongs,
-    playSilence,
     setVolume,
     seek,
     currentTime,
@@ -235,11 +234,11 @@ export const AdminPage: FC = () => {
     lastPlayedRef.current = displayedSongId;
 
     if (displayedSongId === 'silence') {
-      playSilence();
+      setSong(null);
     } else {
       setSong(displayedSongId, timestampType, { autoplay: isPlaying });
     }
-  }, [displayedSongId, setSong, playSilence, timestampType, isPlaying]);
+  }, [displayedSongId, setSong, timestampType, isPlaying]);
 
   const playerPreloadProgress = useMemo(() => {
     if (!playerSongs.length) return 0;

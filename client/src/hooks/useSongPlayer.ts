@@ -200,12 +200,44 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     [songsQuery.data]
   );
 
+  const playSilence = useCallback(() => {
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current.currentTime = 0;
+    }
+    setIsSilence(true);
+    setIsPlaying(true);
+    setCurrentTime(0);
+    setDuration(null);
+    pausedTimeRef.current = null;
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: playlistQuery.data?.title || defaultPlaylist.title,
+        artist: playlistQuery.data?.artist || defaultPlaylist.artist,
+        artwork: playlistQuery.data?.cover
+          ? [{ src: playlistQuery.data.cover }]
+          : [],
+      });
+      navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.setPositionState({
+        duration: Infinity,
+        playbackRate: 0.0000001,
+        position: 0,
+      });
+    }
+  }, [playlistQuery.data]);
+
   const setSong = useCallback(
     async (
-      songId: SongId,
+      songId: SongId | null,
       timestampSelection?: SongTimestampCategory | number,
       options?: { autoplay?: boolean }
     ) => {
+      if (!songId) {
+        playSilence();
+        return;
+      }
+
       await initialize();
 
       const ctx = await ensureAudioContext();
@@ -321,36 +353,10 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
       getSongSrc,
       pickStartTimeMs,
       songsQuery.data,
+      playSilence,
       playlistQuery.data,
     ]
   );
-
-  const playSilence = useCallback(() => {
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current.currentTime = 0;
-    }
-    setIsSilence(true);
-    setIsPlaying(true);
-    setCurrentTime(0);
-    setDuration(null);
-    pausedTimeRef.current = null;
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: playlistQuery.data?.title || defaultPlaylist.title,
-        artist: playlistQuery.data?.artist || defaultPlaylist.artist,
-        artwork: playlistQuery.data?.cover
-          ? [{ src: playlistQuery.data.cover }]
-          : [],
-      });
-      navigator.mediaSession.playbackState = 'playing';
-      navigator.mediaSession.setPositionState({
-        duration: Infinity,
-        playbackRate: 0.0000001,
-        position: 0,
-      });
-    }
-  }, [playlistQuery.data]);
 
   const pause = useCallback(() => {
     if (audioElRef.current) {
@@ -677,7 +683,6 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
   return {
     initialize,
     setSong,
-    playSilence,
     pause,
     resume,
     togglePlayState,
