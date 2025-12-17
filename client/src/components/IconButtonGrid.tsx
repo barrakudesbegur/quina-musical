@@ -1,18 +1,10 @@
-import { Button, ButtonProps, cn } from '@heroui/react';
+import { Button, cn } from '@heroui/react';
 import { Icon as IconifyIcon } from '@iconify/react';
 import { TablerIcon } from '@tabler/icons-react';
 import { FC, PropsWithChildren } from 'react';
-import { fxOptions } from '../hooks/useSongPlayer';
+import { fxList } from '../config/fx';
 
 type IconSource = TablerIcon | string;
-
-export type IconGridAction = {
-  id: string;
-  label: string;
-  icon: IconSource;
-  iconClassName?: string;
-  url: string;
-} & Omit<ButtonProps, 'isIconOnly' | 'children'>;
 
 const renderIcon = (icon: IconSource, iconClassName?: string) => {
   if (typeof icon === 'string') {
@@ -36,7 +28,7 @@ export const IconButtonGrid: FC<
         className
       )}
     >
-      {fxOptions.map(
+      {fxList.map(
         ({
           id,
           icon: Icon,
