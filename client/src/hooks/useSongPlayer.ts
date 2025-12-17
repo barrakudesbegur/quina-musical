@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { trpc } from '../utils/trpc';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import { useSessionStorage } from 'usehooks-ts';
 import { IconGridAction } from '../components/IconButtonGrid';
+import { useAudioContext } from './useAudioContext';
+import { useMediaSession } from './useMediaSession';
+import { useSongPlayerLoading } from './useSongPlayerLoading';
 
 export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
 
 type PlayerHandlers = {
   onNext?: () => void;
   onPrevious?: () => void;
-  onToggleLowVolume?: () => void;
 };
 
 export const fxOptions: IconGridAction[] = [
@@ -79,28 +81,6 @@ export const fxOptions: IconGridAction[] = [
   },
 ];
 
-type ResourcesShape = {
-  song: { id: number };
-  fx: { id: (typeof fxOptions)[number]['id'] };
-};
-
-type BufferCache<T extends Record<string, { id: string | number }>> = {
-  [K in keyof T]: {
-    [key in T[K]['id']]: AudioBuffer;
-  };
-};
-
-type PreloadStatus<T extends Record<string, { id: string | number }>> = {
-  [K in keyof T]: { id: T[K]['id']; preloaded: boolean }[];
-};
-
-async function loadAudioBuffer(audioContext: AudioContext, filepath: string) {
-  const response = await fetch(filepath);
-  const arrayBuffer = await response.arrayBuffer();
-  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-  return audioBuffer;
-}
-
 export const useSongPlayer = (options?: PlayerHandlers) => {
   const { getAudioContext } = useAudioContext();
 
@@ -131,9 +111,9 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     setIsPlaying(false);
   };
 
-  const togglePlay = async () => {
+  const togglePlay = useCallback(async () => {
     setIsPlaying((prev) => !prev);
-  };
+  }, []);
 
   const seek = async (nextTime: number) => {
     // TODO: implement seek functionality
@@ -143,7 +123,7 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     setVolumeState(newVolume);
   };
 
-  const playFx = async (fxId: ResourcesShape['fx']['id']) => {
+  const playFx = async (fxId: Parameters<typeof getAudioBuffer<'fx'>>[1]) => {
     const buffer = await getAudioBuffer('fx', fxId);
     if (!buffer) throw new Error(`Sound effect ${fxId} not found`);
 
@@ -154,6 +134,28 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     source.connect(audioContext.destination);
     source.start();
   };
+
+  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
+    'admin-low-volume-mode',
+    false
+  );
+  const toggleLowVolume = useCallback(() => {
+    setIsLowVolumeMode((prev) => !prev);
+  }, [setIsLowVolumeMode]);
+
+  useMediaSession({
+    songId,
+    playbackState: {
+      isPlaying,
+      currentTime,
+      duration,
+    },
+    onNext: options?.onNext,
+    onPrevious: options?.onPrevious,
+    onPlay: play,
+    onPause: pause,
+    onToggleLowVolume: toggleLowVolume,
+  });
 
   return {
     setSong,
@@ -169,127 +171,8 @@ export const useSongPlayer = (options?: PlayerHandlers) => {
     duration,
     isSongReady,
     preloadStatus,
-  };
-};
-
-const useAudioContext = () => {
-  const audioContextRef = useRef<AudioContext>(null);
-
-  const getAudioContext = () => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-    }
-
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
-
-    return audioContextRef.current;
-  };
-
-  return {
-    getAudioContext,
-  };
-};
-
-const useSongPlayerLoading = (
-  songId: number | null,
-  getAudioContext: () => AudioContext
-) => {
-  const [bufferCache, setBufferCache] = useState<BufferCache<ResourcesShape>>({
-    song: {},
-    fx: {},
-  });
-
-  const songsQuery = trpc.game.getAllSongs.useQuery(undefined);
-  // const playlistQuery = trpc.song.getPlaylist.useQuery();
-  const startedAtQuery = trpc.game.getStartedAt.useQuery();
-
-  const loadBuffer = useCallback(
-    async <T extends keyof ResourcesShape>(
-      type: T,
-      id: ResourcesShape[T]['id']
-    ) => {
-      const cacheBuster = startedAtQuery.data
-        ? `?v=${new Date(startedAtQuery.data).getTime()}`
-        : '';
-
-      try {
-        const buffer = await loadAudioBuffer(
-          getAudioContext(),
-          `/audios/${type}/${id}.mp3${cacheBuster}`
-        );
-        setBufferCache((prev) => ({
-          ...prev,
-          [type]: {
-            ...prev[type],
-            [id]: buffer,
-          },
-        }));
-        return buffer;
-      } catch (error) {
-        console.error(`Failed to load ${type} ${id}`, error);
-      }
-    },
-    [getAudioContext, startedAtQuery.data]
-  );
-
-  useEffect(() => {
-    songsQuery.data?.forEach(async (song) => {
-      if (bufferCache.song[song.id]) return;
-
-      await loadBuffer('song', song.id);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [songsQuery.data]);
-
-  useEffect(() => {
-    fxOptions.forEach(async (fx) => {
-      if (bufferCache.fx[fx.id]) return;
-
-      await loadBuffer('fx', fx.id);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const preloadStatus = useMemo<PreloadStatus<ResourcesShape>>(() => {
-    const bufferedSongs = Object.keys(bufferCache.song);
-    const bufferedFx = Object.keys(bufferCache.fx);
-    return {
-      song:
-        songsQuery.data?.map((song) => ({
-          id: song.id,
-          preloaded: bufferedSongs.includes(song.id.toString()),
-        })) ?? [],
-      fx:
-        fxOptions.map((fx) => ({
-          id: fx.id,
-          preloaded: bufferedFx.includes(fx.id),
-        })) ?? [],
-    };
-  }, [bufferCache, songsQuery]);
-
-  const isSongReady = useMemo(() => {
-    return (
-      songId !== null &&
-      preloadStatus.song.some((song) => song.id === songId && song.preloaded)
-    );
-  }, [songId, preloadStatus.song]);
-
-  const getAudioBuffer = async <T extends keyof ResourcesShape>(
-    type: T,
-    id: ResourcesShape[T]['id']
-  ) => {
-    const buffer = bufferCache[type][id];
-    if (!buffer) return await loadBuffer(type, id);
-
-    return buffer;
-  };
-
-  return {
-    isSongReady,
-    preloadStatus,
-    getAudioBuffer,
+    isLowVolumeMode,
+    setIsLowVolumeMode,
   };
 };
 
@@ -328,4 +211,6 @@ type useSongPlayer = (options?: {
       preloaded: boolean;
     }[];
   };
+  isLowVolumeMode: boolean;
+  setIsLowVolumeMode: Dispatch<SetStateAction<boolean>>;
 };
