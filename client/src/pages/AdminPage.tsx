@@ -12,10 +12,14 @@ import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
 import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
-import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
+import {
+  SongTimestampCategory,
+  useSongPlayerOld,
+} from '../hooks/useSongPlayerOld';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 import { IconButtonGrid } from '../components/IconButtonGrid';
+import { useSongPlayer } from '../hooks/useSongPlayer';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -172,11 +176,13 @@ export const AdminPage: FC = () => {
     seek,
     currentTime,
     duration,
-  } = useSongPlayer({
+  } = useSongPlayerOld({
     onNext: handlePlayNextSong,
     onPrevious: handlePlayPreviousSong,
     onToggleLowVolume: handleToggleLowVolume,
   });
+
+  const { playFx } = useSongPlayer();
 
   const now = useSecondsStopwatch();
 
@@ -392,7 +398,7 @@ export const AdminPage: FC = () => {
             setTimestampType(value as SongTimestampCategory)
           }
         />
-        <IconButtonGrid fxVolume={fxVolume} />
+        <IconButtonGrid playFx={playFx} />
 
         <Divider />
 
