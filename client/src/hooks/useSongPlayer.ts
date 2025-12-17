@@ -73,11 +73,9 @@ export const useSongPlayer = (options?: {
 
   useMediaSession({
     songId,
-    playbackState: {
-      isPlaying,
-      currentTime,
-      duration,
-    },
+    isPlaying,
+    currentTime,
+    duration,
     onNext: options?.onNext,
     onPrevious: options?.onPrevious,
     onPlay: play,

@@ -3,11 +3,10 @@ import { trpc } from '../utils/trpc';
 
 type MediaSessionConfig = {
   songId: number | null;
-  playbackState: {
-    isPlaying: boolean;
-    currentTime: number;
-    duration: number | null;
-  };
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number | null;
+
   onNext?: () => void;
   onPrevious?: () => void;
   onPlay?: () => void;
@@ -17,7 +16,9 @@ type MediaSessionConfig = {
 
 export const useMediaSession = ({
   songId,
-  playbackState,
+  isPlaying,
+  currentTime,
+  duration,
   onNext,
   onPrevious,
   onPlay,
@@ -54,16 +55,18 @@ export const useMediaSession = ({
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    navigator.mediaSession.playbackState = playbackState.isPlaying
-      ? 'playing'
-      : 'paused';
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
 
     navigator.mediaSession.setPositionState(
-      playbackState.duration
+      duration
         ? {
-            duration: playbackState.duration,
+            duration: duration,
             playbackRate: 1,
-            position: playbackState.currentTime,
+            position: currentTime,
           }
         : {
             duration: Infinity,
@@ -71,7 +74,7 @@ export const useMediaSession = ({
             position: 0,
           }
     );
-  }, [playbackState]);
+  }, [currentTime, duration]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
