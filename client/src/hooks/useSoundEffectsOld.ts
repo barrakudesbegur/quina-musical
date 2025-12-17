@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { usePreloadResources } from './usePreloadResources';
+import { usePreloadResourcesOld } from './usePreloadResourcesOld';
 
-export const useSoundEffects = <T extends string>(
+// TODO: Remove this file when useSongPlayer is implemented
+
+export const useSoundEffectsOld = <T extends string>(
   effects: { id: T; url: string }[],
   options?: { volume?: number }
 ) => {
@@ -12,7 +14,7 @@ export const useSoundEffects = <T extends string>(
     isPreloading: isPreloadingEffects,
     preloadStatuses,
     getPreloadedUrl,
-  } = usePreloadResources<T>(effects);
+  } = usePreloadResourcesOld<T>(effects);
 
   const getSrc = useCallback(
     (id: T) => {

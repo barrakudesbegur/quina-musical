@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+// TODO: Remove this file when useSongPlayer is implemented
+
 type ResourceItem<T> = {
   id: T;
   url: string;
@@ -10,7 +12,7 @@ type PreloadOptions = {
   autoStart?: boolean;
 };
 
-export const usePreloadResources = <T extends string | number>(
+export const usePreloadResourcesOld = <T extends string | number>(
   resources: ResourceItem<T>[],
   options?: PreloadOptions
 ) => {

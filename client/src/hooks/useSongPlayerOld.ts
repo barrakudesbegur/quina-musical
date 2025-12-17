@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trpc } from '../utils/trpc';
-import { usePreloadResources } from './usePreloadResources';
+import { usePreloadResourcesOld } from './usePreloadResourcesOld';
+
+// TODO: Remove this file when useSongPlayer is implemented
 
 type SongId = number;
 type VolumeAutomation = {
@@ -63,7 +65,7 @@ export const useSongPlayerOld = (options?: PlayerHandlers) => {
     preloadStatuses: songPreloadStatuses,
     preloadAll: preloadAllSongs,
     getPreloadedUrl,
-  } = usePreloadResources(songResources, { autoStart: false });
+  } = usePreloadResourcesOld(songResources, { autoStart: false });
 
   const getSongSrc = useCallback(
     (songId: SongId) => {
