@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { trpc } from '../utils/trpc';
-import { fxOptions } from './useSongPlayer';
+import { fxList } from '../config/fx';
 
 type BufferCache<T extends Record<string, { id: string | number }>> = {
   [K in keyof T]: {
@@ -14,7 +14,7 @@ type PreloadStatus<T extends Record<string, { id: string | number }>> = {
 
 type ResourcesShape = {
   song: { id: number };
-  fx: { id: (typeof fxOptions)[number]['id'] };
+  fx: { id: (typeof fxList)[number]['id'] };
 };
 
 async function loadAudioBuffer(audioContext: AudioContext, filepath: string) {
@@ -75,7 +75,7 @@ export const useSongPlayerLoading = (
   }, [songsQuery.data]);
 
   useEffect(() => {
-    fxOptions.forEach(async (fx) => {
+    fxList.forEach(async (fx) => {
       if (bufferCache.fx[fx.id]) return;
 
       await loadBuffer('fx', fx.id);
@@ -93,7 +93,7 @@ export const useSongPlayerLoading = (
           preloaded: bufferedSongs.includes(song.id.toString()),
         })) ?? [],
       fx:
-        fxOptions.map((fx) => ({
+        fxList.map((fx) => ({
           id: fx.id,
           preloaded: bufferedFx.includes(fx.id),
         })) ?? [],
