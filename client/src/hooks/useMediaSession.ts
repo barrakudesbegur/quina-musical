@@ -29,8 +29,6 @@ export const useMediaSession = ({
   const playlistQuery = trpc.song.getPlaylist.useQuery();
 
   const sessionData = useMemo(() => {
-    if (!songId) return null;
-
     const songInfo = songsQuery.data?.find((s) => s.id === songId);
 
     return {
