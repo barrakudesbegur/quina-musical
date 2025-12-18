@@ -123,10 +123,6 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
-    'admin-low-volume-mode',
-    false
-  );
   const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage<number>(
     'admin-low-volume-setting',
     0.2
@@ -157,10 +153,6 @@ export const AdminPage: FC = () => {
     undoLastPlayedMutation.mutate();
   }, [canPlayPrevious, undoLastPlayedMutation]);
 
-  const handleToggleLowVolume = useCallback(() => {
-    setIsLowVolumeMode((prev) => !prev);
-  }, [setIsLowVolumeMode]);
-
   const {
     setSong,
     togglePlay,
@@ -172,10 +164,16 @@ export const AdminPage: FC = () => {
     currentTime,
     duration,
     playFx,
+    isLowVolumeMode,
+    setIsLowVolumeMode,
   } = useSongPlayer({
     onNext: handlePlayNextSong,
     onPrevious: handlePlayPreviousSong,
   });
+
+  const handleToggleLowVolume = useCallback(() => {
+    setIsLowVolumeMode((prev) => !prev);
+  }, [setIsLowVolumeMode]);
 
   const now = useSecondsStopwatch();
 
