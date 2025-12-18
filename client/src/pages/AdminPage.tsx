@@ -12,14 +12,10 @@ import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
 import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
-import {
-  SongTimestampCategory,
-  useSongPlayerOld,
-} from '../hooks/useSongPlayerOld';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 import { IconButtonGrid } from '../components/IconButtonGrid';
-import { useSongPlayer } from '../hooks/useSongPlayer';
+import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
@@ -166,29 +162,22 @@ export const AdminPage: FC = () => {
   }, [setIsLowVolumeMode]);
 
   const {
-    initialize: initializeSongPlayer,
-    setSongId,
-    toggleIsPlaying,
+    setSong,
+    togglePlay,
     isPlaying,
-    isLoading: isPlayerLoading,
-    preloadStatus: playerSongs,
+    isSongReady,
+    preloadStatus,
     setVolume,
     seek,
     currentTime,
     duration,
-  } = useSongPlayerOld({
+    playFx,
+  } = useSongPlayer({
     onNext: handlePlayNextSong,
     onPrevious: handlePlayPreviousSong,
-    onToggleLowVolume: handleToggleLowVolume,
   });
 
-  const { playFx } = useSongPlayer();
-
   const now = useSecondsStopwatch();
-
-  useEffect(() => {
-    void initializeSongPlayer();
-  }, [initializeSongPlayer]);
 
   useEffect(() => {
     setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
@@ -218,14 +207,14 @@ export const AdminPage: FC = () => {
 
   const playerControlLoading = useMemo(() => {
     return (
-      isPlayerLoading ||
+      !isSongReady ||
       playSongMutation.isPending ||
       undoLastPlayedMutation.isPending ||
       songsQuery.isFetching ||
       songsQuery.isLoading
     );
   }, [
-    isPlayerLoading,
+    isSongReady,
     playSongMutation.isPending,
     songsQuery.isFetching,
     songsQuery.isLoading,
@@ -240,18 +229,17 @@ export const AdminPage: FC = () => {
     lastPlayedRef.current = displayedSongId;
 
     if (displayedSongId === 'silence') {
-      setSongId(null);
+      setSong(null);
     } else {
-      setSongId(displayedSongId, timestampType, { autoplay: isPlaying });
+      setSong(displayedSongId, timestampType);
     }
-  }, [displayedSongId, setSongId, timestampType, isPlaying]);
+  }, [displayedSongId, setSong, timestampType, isPlaying]);
 
   const playerPreloadProgress = useMemo(() => {
-    if (!playerSongs.length) return 0;
-    return (
-      playerSongs.filter((song) => song.preloaded).length / playerSongs.length
-    );
-  }, [playerSongs]);
+    const allResources = Object.values(preloadStatus).flat();
+    if (!allResources.length) return 0;
+    return allResources.filter((r) => r.preloaded).length / allResources.length;
+  }, [preloadStatus]);
 
   useEffect(() => {
     if (
@@ -385,7 +373,7 @@ export const AdminPage: FC = () => {
           isLoading={playerControlLoading}
           currentTime={currentTime}
           duration={duration}
-          onTogglePlay={toggleIsPlaying}
+          onTogglePlay={togglePlay}
           onToggleLowVolume={handleToggleLowVolume}
           isLowVolumeMode={isLowVolumeMode}
           onNext={handlePlayNextSong}
