@@ -144,7 +144,7 @@ export const GameInsightsSection: FC<
           {data.winners.map((card) => (
             <li
               className={cn(
-                'min-w-[3ch] text-center font-mono p-1 leading-none bg-gray-200/80 rounded-md',
+                'min-w-[3ch] text-center font-mono py-1 leading-none bg-gray-200/80 rounded-md',
                 !card.isPlaying && 'opacity-50 hover:opacity-100'
               )}
             >
