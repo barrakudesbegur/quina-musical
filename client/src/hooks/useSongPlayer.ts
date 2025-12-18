@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
+import { clampLoop } from '../utils/numbers';
+import { trpc } from '../utils/trpc';
 import { useAudioContext } from './useAudioContext';
 import { useMediaSession } from './useMediaSession';
 import { useSongPlayerLoading } from './useSongPlayerLoading';
-import { trpc } from '../utils/trpc';
-import { clampLoop } from '../utils/numbers';
 
 export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
 
@@ -12,14 +12,31 @@ export const useSongPlayer = (options?: {
   onNext?: () => void;
   onPrevious?: () => void;
 }) => {
-  const { getAudioContext } = useAudioContext();
+  const { getAudioContext, getGainNodeSongs, getGainNodeFx } =
+    useAudioContext();
 
   const songsQuery = trpc.game.getAllSongs.useQuery();
 
   const [songId, setSongId] = useState<number | null>(null);
-  const [volume, setVolumeState] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [duration, setDuration] = useState<number | null>(null);
+
+  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
+    'admin-low-volume-mode',
+    false
+  );
+  const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage<number>(
+    'admin-low-volume-setting',
+    0.2
+  );
+  const [songVolume, setSongVolume] = useSessionStorage<number>(
+    'admin-song-volume',
+    1
+  );
+  const [fxVolume, setFxVolume] = useSessionStorage<number>(
+    'admin-fx-volume',
+    1
+  );
 
   const sourceSongPlaying = useRef<AudioBufferSourceNode>(null);
   const songStartedTime = useRef<number | null>(null);
@@ -101,8 +118,11 @@ export const useSongPlayer = (options?: {
 
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
-        source.connect(audioCtx.destination);
         source.loop = true;
+
+        const gainNodeSongs = getGainNodeSongs();
+
+        source.connect(gainNodeSongs).connect(audioCtx.destination);
         source.start(0, offset);
 
         sourceSongPlaying.current = source;
@@ -110,7 +130,13 @@ export const useSongPlayer = (options?: {
         songEndedTime.current = null;
       }
     },
-    [getAudioBuffer, getAudioContext, isPlaying, pickStartTimeMs]
+    [
+      getAudioBuffer,
+      getAudioContext,
+      getGainNodeSongs,
+      isPlaying,
+      pickStartTimeMs,
+    ]
   );
 
   const play = useCallback(
@@ -136,29 +162,46 @@ export const useSongPlayer = (options?: {
     else play();
   }, [isPlaying, pause, play]);
 
-  const setVolume = (newVolume: number) => {
-    setVolumeState(newVolume);
-  };
-
   const playFx = async (fxId: Parameters<typeof getAudioBuffer<'fx'>>[1]) => {
     const buffer = await getAudioBuffer('fx', fxId);
     if (!buffer) throw new Error(`Sound effect ${fxId} not found`);
 
     const audioContext = getAudioContext();
 
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    source.start();
+    const fxSource = audioContext.createBufferSource();
+    fxSource.buffer = buffer;
+
+    const gainNodeFx = getGainNodeFx();
+
+    fxSource.connect(gainNodeFx).connect(audioContext.destination);
+    fxSource.start();
   };
 
-  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
-    'admin-low-volume-mode',
-    false
-  );
   const toggleLowVolume = useCallback(() => {
     setIsLowVolumeMode((prev) => !prev);
   }, [setIsLowVolumeMode]);
+
+  useEffect(() => {
+    const audioCtx = getAudioContext();
+    const gainNodeSongs = getGainNodeSongs();
+    const now = audioCtx.currentTime;
+    const duration = 0.5;
+
+    gainNodeSongs.gain.linearRampToValueAtTime(
+      isLowVolumeMode ? lowVolumeSetting : songVolume,
+      now + duration
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLowVolumeMode, lowVolumeSetting, songVolume]);
+
+  useEffect(() => {
+    const audioCtx = getAudioContext();
+    const gainNodeFx = getGainNodeFx();
+    const now = audioCtx.currentTime;
+
+    gainNodeFx.gain.setValueAtTime(fxVolume, now);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fxVolume]);
 
   useMediaSession({
     songId,
@@ -177,9 +220,7 @@ export const useSongPlayer = (options?: {
     play,
     pause,
     togglePlay,
-    setVolume,
     playFx,
-    volume,
     isPlaying,
     getCurrentTime,
     duration,
@@ -187,5 +228,11 @@ export const useSongPlayer = (options?: {
     preloadStatus,
     isLowVolumeMode,
     setIsLowVolumeMode,
+    setLowVolumeSetting,
+    lowVolumeSetting,
+    setSongVolume,
+    songVolume,
+    setFxVolume,
+    fxVolume,
   };
 };

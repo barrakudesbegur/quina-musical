@@ -123,18 +123,6 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage<number>(
-    'admin-low-volume-setting',
-    0.2
-  );
-  const [songVolume, setSongVolume] = useSessionStorage<number>(
-    'admin-song-volume',
-    1
-  );
-  const [fxVolume, setFxVolume] = useSessionStorage<number>(
-    'admin-fx-volume',
-    1
-  );
   const [timestampType, setTimestampType] =
     useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
   const [hideImageOnFirstSong, setHideImageOnFirstSong] =
@@ -159,13 +147,18 @@ export const AdminPage: FC = () => {
     isPlaying,
     isSongReady,
     preloadStatus,
-    setVolume,
     play,
     getCurrentTime,
     duration,
     playFx,
     isLowVolumeMode,
     setIsLowVolumeMode,
+    setLowVolumeSetting,
+    lowVolumeSetting,
+    setSongVolume,
+    songVolume,
+    setFxVolume,
+    fxVolume,
   } = useSongPlayer({
     onNext: handlePlayNextSong,
     onPrevious: handlePlayPreviousSong,
@@ -176,10 +169,6 @@ export const AdminPage: FC = () => {
   }, [setIsLowVolumeMode]);
 
   const now = useSecondsStopwatch();
-
-  useEffect(() => {
-    setVolume(isLowVolumeMode ? lowVolumeSetting : songVolume);
-  }, [isLowVolumeMode, lowVolumeSetting, setVolume, songVolume]);
 
   const displayedSongId = useMemo(() => {
     const lastPlayed = songsQuery.data?.find((s) => s.isLastPlayed);
