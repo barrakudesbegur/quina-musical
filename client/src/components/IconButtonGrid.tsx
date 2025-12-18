@@ -24,7 +24,7 @@ export const IconButtonGrid: FC<
   return (
     <div
       className={cn(
-        'grid  grid-cols-[repeat(auto-fill,minmax(--spacing(16),1fr))] gap-3',
+        'grid grid-cols-[repeat(auto-fill,minmax(--spacing(16),1fr))] gap-3',
         className
       )}
     >

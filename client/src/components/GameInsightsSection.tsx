@@ -1,8 +1,10 @@
-import { BarChart } from '@mui/x-charts/BarChart';
 import { cn } from '@heroui/react';
+import { BarChart } from '@mui/x-charts/BarChart';
+import { orderBy } from 'lodash-es';
 import { FC, PropsWithChildren, useMemo } from 'react';
 import { trpc } from '../utils/trpc';
 import { CardsForm } from './CardsForm';
+import { IconCrown } from '@tabler/icons-react';
 
 type ChartPoint = {
   playedCount: number;
@@ -16,31 +18,23 @@ export const GameInsightsSection: FC<
   const songsQuery = trpc.game.getAllSongs.useQuery();
   const cardsPlayingQuery = trpc.game.getCardsPlaying.useQuery();
 
-  const chartData = useMemo<ChartPoint[]>(() => {
-    if (!cardsQuery.data || !songsQuery.data || !cardsPlayingQuery.data) {
-      return [];
-    }
-
-    if (!cardsPlayingQuery.data.length) {
-      return [];
-    }
-
+  const data = useMemo<{
+    chart: ChartPoint[];
+    winners: { id: number; isPlaying: boolean }[];
+  }>(() => {
     const cardsPlayingSet = new Set(cardsPlayingQuery.data);
     const playedSongIds = new Set(
-      songsQuery.data.filter((song) => song.isPlayed).map((song) => song.id)
+      songsQuery.data?.filter((song) => song.isPlayed).map((song) => song.id)
     );
 
-    const cardsInPlay = cardsQuery.data.filter((card) =>
-      cardsPlayingSet.has(Number(card.id))
+    const cardsInPlay =
+      cardsQuery.data?.filter((card) => cardsPlayingSet.has(Number(card.id))) ??
+      [];
+
+    const songsPerCard = cardsInPlay[0]?.lines.reduce(
+      (total, line) => total + line.length,
+      0
     );
-
-    if (!cardsInPlay.length) {
-      return [];
-    }
-
-    const songsPerCard =
-      cardsInPlay[0]?.lines.reduce((total, line) => total + line.length, 0) ??
-      0;
 
     const distribution = cardsInPlay.reduce<Record<number, number>>(
       (acc, card) => {
@@ -60,10 +54,33 @@ export const GameInsightsSection: FC<
       0
     );
 
-    return Array.from({ length: maxPlayed + 1 }, (_, playedCount) => ({
-      playedCount,
-      cardCount: distribution[playedCount] ?? 0,
-    }));
+    const chartData = Array.from(
+      { length: maxPlayed + 1 },
+      (_, playedCount) => ({
+        playedCount,
+        cardCount: distribution[playedCount] ?? 0,
+      })
+    );
+
+    // ------------------------
+
+    const winners = orderBy(
+      cardsQuery.data
+        ?.filter((card) => {
+          const playedCount = card.lines
+            .flat()
+            .filter((song) => playedSongIds.has(song.id)).length;
+          return playedCount === songsPerCard;
+        })
+        .map((card) => ({
+          ...card,
+          isPlaying: cardsPlayingSet.has(Number(card.id)),
+        })),
+      ['isPlaying', 'id'],
+      ['desc', 'asc']
+    );
+
+    return { chart: chartData, winners };
   }, [cardsPlayingQuery.data, cardsQuery.data, songsQuery.data]);
 
   const isLoading =
@@ -85,7 +102,7 @@ export const GameInsightsSection: FC<
           <p className="text-center text-danger">
             No s'han pogut carregar les dades.
           </p>
-        ) : !chartData.length ? (
+        ) : !data.chart.length ? (
           <p className="text-center text-default-500">
             {cardsPlayingQuery.data?.length
               ? 'Encara no hi ha cap cançó reproduida.'
@@ -94,7 +111,7 @@ export const GameInsightsSection: FC<
         ) : (
           <div className="w-full overflow-x-auto">
             <BarChart
-              dataset={chartData}
+              dataset={data.chart}
               height={320}
               xAxis={[
                 {
@@ -121,6 +138,26 @@ export const GameInsightsSection: FC<
           </div>
         )}
       </div>
+
+      {data.winners.length ? (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(calc(3ch+--spacing(2)),1fr))] gap-2">
+          {data.winners.map((card) => (
+            <li
+              className={cn(
+                'min-w-[3ch] text-center font-mono p-1 leading-none bg-gray-200/80 rounded-md',
+                !card.isPlaying && 'opacity-50 hover:opacity-100'
+              )}
+            >
+              {card.id}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-center italic text-sm text-gray-600 border border-gray-200 rounded-xl">
+          <IconCrown className="size-16 stroke-[0.75] block mx-auto -my-2 text-gray-400" />
+          <p className="mb-2">Els guanyadors sortiran aquí</p>
+        </div>
+      )}
     </section>
   );
 };
