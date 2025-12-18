@@ -66,11 +66,30 @@ export const useSongPlayerLoading = (
   );
 
   useEffect(() => {
-    songsQuery.data?.forEach(async (song) => {
+    const sortedByPriority =
+      songsQuery.data?.toSorted((a, b) => {
+        if (a.positionInQueue === null && b.positionInQueue === null) {
+          return b.position - a.position;
+        }
+        if (a.positionInQueue === null) return 1;
+        if (b.positionInQueue === null) return -1;
+
+        return a.positionInQueue - b.positionInQueue;
+      }) ?? [];
+
+    const loadSong = async (song: (typeof sortedByPriority)[number]) => {
       if (bufferCache.song[song.id]) return;
 
       await loadBuffer('song', song.id);
-    });
+    };
+
+    void (async () => {
+      const [first, second, ...rest] = sortedByPriority;
+      if (first) await loadSong(first);
+      if (second) await loadSong(first);
+      if (rest) await Promise.all(rest.map(loadSong));
+    })();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [songsQuery.data]);
 

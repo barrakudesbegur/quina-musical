@@ -1,8 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
 import { useAudioContext } from './useAudioContext';
 import { useMediaSession } from './useMediaSession';
 import { useSongPlayerLoading } from './useSongPlayerLoading';
+import { trpc } from '../utils/trpc';
+import { clampLoop } from '../utils/numbers';
 
 export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
 
@@ -12,40 +14,127 @@ export const useSongPlayer = (options?: {
 }) => {
   const { getAudioContext } = useAudioContext();
 
+  const songsQuery = trpc.game.getAllSongs.useQuery();
+
   const [songId, setSongId] = useState<number | null>(null);
   const [volume, setVolumeState] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number | null>(null);
+
+  const sourceSongPlaying = useRef<AudioBufferSourceNode>(null);
+  const songStartedTime = useRef<number | null>(null);
+  const songEndedTime = useRef<number | null>(null);
+  const [songPlayedOffset, setSongPlayedOffset] = useState<number>(0);
 
   const { isSongReady, preloadStatus, getAudioBuffer } = useSongPlayerLoading(
     songId,
     getAudioContext
   );
 
-  const setSong = async (
-    songId: number | null,
-    timestampSelection?: number | SongTimestampCategory
-  ) => {
-    setSongId(songId);
-    // TODO: implement timestampSelection functionality
-  };
+  const getCurrentTime = useCallback(() => {
+    if (!songId) return 0;
+    if (!songStartedTime.current) return songPlayedOffset;
 
-  const play = async () => {
-    setIsPlaying(true);
-  };
+    const audioCtx = getAudioContext();
 
-  const pause = async () => {
+    const totalTime =
+      songPlayedOffset +
+      (songEndedTime.current ?? audioCtx.currentTime) -
+      songStartedTime.current;
+
+    return clampLoop(totalTime, duration);
+  }, [duration, getAudioContext, songId, songPlayedOffset]);
+
+  const pickStartTimeMs = useCallback(
+    (songId: number, category: SongTimestampCategory | number = 'constant') => {
+      if (typeof category === 'number') {
+        return Math.max(0, category);
+      }
+
+      const song = songsQuery.data?.find((s) => s.id === songId);
+      const timestamps = song?.timestamps;
+      if (!timestamps) return 0;
+
+      const list =
+        (category === 'any'
+          ? Object.values(timestamps).flat()
+          : category === 'constant'
+            ? timestamps.main.slice(0, 1)
+            : timestamps[category]
+        )
+          ?.filter((t) => Number.isFinite(t))
+          .map((t) => Math.max(0, t)) ?? [];
+      if (!list.length) return 0;
+
+      const index = Math.floor(Math.random() * list.length);
+      return list[index];
+    },
+    [songsQuery.data]
+  );
+
+  const setSong = useCallback(
+    async (
+      songId: number | null,
+      timestampSelection?: number | SongTimestampCategory,
+      shouldPlay?: boolean
+    ) => {
+      setSongId(songId);
+
+      sourceSongPlaying.current?.stop();
+      sourceSongPlaying.current = null;
+
+      if (!songId) {
+        setSongPlayedOffset(0);
+        setDuration(null);
+        return;
+      }
+
+      const buffer = await getAudioBuffer('song', songId);
+      if (!buffer) throw new Error(`Sound for song ${songId} not found`);
+      setDuration(buffer.duration);
+
+      const offset = pickStartTimeMs(songId, timestampSelection);
+      setSongPlayedOffset(offset);
+
+      if (shouldPlay ?? isPlaying) {
+        const audioCtx = getAudioContext();
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.loop = true;
+        source.start(0, offset);
+
+        sourceSongPlaying.current = source;
+        songStartedTime.current = audioCtx.currentTime;
+        songEndedTime.current = null;
+      }
+    },
+    [getAudioBuffer, getAudioContext, isPlaying, pickStartTimeMs]
+  );
+
+  const play = useCallback(
+    async (timestampSelection?: number | SongTimestampCategory) => {
+      setIsPlaying(true);
+      setSong(songId, timestampSelection ?? getCurrentTime(), true);
+    },
+    [getCurrentTime, setSong, songId]
+  );
+
+  const pause = useCallback(async () => {
     setIsPlaying(false);
-  };
 
-  const togglePlay = useCallback(async () => {
-    setIsPlaying((prev) => !prev);
-  }, []);
+    const audioCtx = getAudioContext();
 
-  const seek = async (nextTime: number) => {
-    // TODO: implement seek functionality
-  };
+    sourceSongPlaying.current?.stop();
+    songEndedTime.current = audioCtx.currentTime;
+    sourceSongPlaying.current = null;
+  }, [getAudioContext]);
+
+  const togglePlay = useCallback(() => {
+    if (isPlaying) pause();
+    else play();
+  }, [isPlaying, pause, play]);
 
   const setVolume = (newVolume: number) => {
     setVolumeState(newVolume);
@@ -74,7 +163,7 @@ export const useSongPlayer = (options?: {
   useMediaSession({
     songId,
     isPlaying,
-    currentTime,
+    songPlayedOffset,
     duration,
     onNext: options?.onNext,
     onPrevious: options?.onPrevious,
@@ -88,12 +177,11 @@ export const useSongPlayer = (options?: {
     play,
     pause,
     togglePlay,
-    seek,
     setVolume,
     playFx,
     volume,
     isPlaying,
-    currentTime,
+    getCurrentTime,
     duration,
     isSongReady,
     preloadStatus,

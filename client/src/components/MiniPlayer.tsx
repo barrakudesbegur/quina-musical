@@ -21,10 +21,18 @@ import {
   TablerIcon,
 } from '@tabler/icons-react';
 import { clamp } from 'lodash-es';
-import { CSSProperties, FC, PropsWithChildren, useMemo } from 'react';
+import {
+  CSSProperties,
+  FC,
+  PropsWithChildren,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { SongTimestampCategory } from '../hooks/useSongPlayer';
 import { formatCompactDuration } from '../utils/time';
 import { differenceInMilliseconds, parseISO } from 'date-fns';
+import { useInterval } from 'usehooks-ts';
 
 const songTimestampOptions = [
   { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
@@ -36,6 +44,14 @@ const songTimestampOptions = [
   label: string;
   icon: TablerIcon;
 }[];
+
+const formatTime = (value: number | null) => {
+  if (value === null || !Number.isFinite(value)) return '0:00';
+  const totalSeconds = Math.max(0, Math.floor(value));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
 
 export const MiniPlayer: FC<
   PropsWithChildren<{
@@ -53,7 +69,7 @@ export const MiniPlayer: FC<
     now: number;
     isPlaying: boolean;
     isLoading?: boolean;
-    currentTime: number;
+    getCurrentTime: () => number;
     duration: number | null;
     onTogglePlay: () => void;
     onToggleLowVolume: () => void;
@@ -71,7 +87,7 @@ export const MiniPlayer: FC<
   now,
   isPlaying,
   isLoading = false,
-  currentTime,
+  getCurrentTime,
   duration,
   onTogglePlay,
   onToggleLowVolume,
@@ -84,26 +100,19 @@ export const MiniPlayer: FC<
   selectedTimestampType,
   onTimestampTypeChange,
 }) => {
-  const formattedTimes = useMemo(() => {
-    const formatTime = (value: number | null) => {
-      if (value === null || !Number.isFinite(value)) return '0:00';
-      const totalSeconds = Math.max(0, Math.floor(value));
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    };
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const updateCurrentTime = useCallback(() => {
+    setCurrentTime(getCurrentTime());
+  }, [getCurrentTime]);
+  useInterval(updateCurrentTime, 300);
 
-    return {
-      current: formatTime(song ? currentTime : 0),
-      duration: formatTime(duration),
-    };
-  }, [currentTime, duration, song]);
+  const formattedCurrent = useMemo(() => {
+    return formatTime(currentTime);
+  }, [currentTime]);
 
-  const sliderMax = useMemo(() => {
-    if (duration && duration > 0) return duration;
-    if (song && currentTime > 0) return Math.max(currentTime, 1);
-    return 1;
-  }, [currentTime, duration, song]);
+  const formattedDuration = useMemo(() => {
+    return formatTime(duration);
+  }, [duration]);
 
   const markers = useMemo(() => {
     if (!song?.timestamps) return [];
@@ -156,6 +165,9 @@ export const MiniPlayer: FC<
               className="object-cover max-w-none shrink-0 max-2xs:hidden w-35 rounded-sm aspect-square"
               shadow="md"
               src={song?.cover}
+              classNames={{
+                wrapper: 'shrink-0',
+              }}
             />
           ) : (
             <Card
@@ -239,7 +251,9 @@ export const MiniPlayer: FC<
                         )}
                         style={
                           {
-                            '--progress': `${clamp((value / sliderMax) * 100, 0, 100)}%`,
+                            '--progress': duration
+                              ? `${clamp((value / duration) * 100, 0, 100)}%`
+                              : undefined,
                           } as CSSProperties
                         }
                       >
@@ -275,7 +289,7 @@ export const MiniPlayer: FC<
                 }}
                 color="foreground"
                 minValue={0}
-                maxValue={sliderMax}
+                maxValue={duration ?? undefined}
                 step={0.05}
                 value={song ? currentTime : 0}
                 onChange={(value) => {
@@ -288,10 +302,8 @@ export const MiniPlayer: FC<
                 size="sm"
               />
               <div className="flex justify-between text-small text-foreground/60">
-                <span>{formattedTimes.current}</span>
-                <span className="text-foreground/50">
-                  {formattedTimes.duration}
-                </span>
+                <span>{formattedCurrent}</span>
+                <span className="text-foreground/50">{formattedDuration}</span>
               </div>
             </div>
 
