@@ -21,6 +21,7 @@ Features:
 - 🔀 Optional manual song picking.
 - 📄 Saves history in a `json` file.
 - 🦖 System down screen.
+- 🎮 WiiMote support.
 
 <https://github.com/user-attachments/assets/eacd44d1-6aec-4d63-bb7c-5e443f72a0bb>
 

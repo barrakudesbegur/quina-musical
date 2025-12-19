@@ -1,19 +1,7 @@
 import { Button, cn } from '@heroui/react';
 import { Icon as IconifyIcon } from '@iconify/react';
-import { TablerIcon } from '@tabler/icons-react';
 import { FC, PropsWithChildren } from 'react';
 import { fxList } from '../config/fx';
-
-type IconSource = TablerIcon | string;
-
-const renderIcon = (icon: IconSource, iconClassName?: string) => {
-  if (typeof icon === 'string') {
-    return <IconifyIcon icon={icon} className={cn('size-6', iconClassName)} />;
-  }
-
-  const IconComponent = icon;
-  return <IconComponent className={cn('size-6', iconClassName)} />;
-};
 
 export const IconButtonGrid: FC<
   PropsWithChildren<{
@@ -31,7 +19,7 @@ export const IconButtonGrid: FC<
       {fxList.map(
         ({
           id,
-          icon: Icon,
+          icon,
           label,
           color = 'default',
           variant = 'flat',
@@ -54,7 +42,7 @@ export const IconButtonGrid: FC<
             }}
             {...buttonProps}
           >
-            {renderIcon(Icon, iconClassName)}
+            <IconifyIcon icon={icon} className={cn('size-6', iconClassName)} />
           </Button>
         )
       )}

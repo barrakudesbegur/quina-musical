@@ -1,4 +1,13 @@
-import { Button, Checkbox, Divider, Slider } from '@heroui/react';
+import {
+  Button,
+  Checkbox,
+  Divider,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  Slider,
+} from '@heroui/react';
 import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,17 +25,25 @@ import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 import { IconButtonGrid } from '../components/IconButtonGrid';
 import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
+import { WiiMoteSection } from '../WiiMoteSection';
+import { useWiiMote } from '../hooks/useWiiMote';
+import { WMButtonEvent } from '../utils/WiimoteLib/WiiMote/ObjectStates';
+import { WMButtons } from '../utils/WiimoteLib/WiiMote/Types';
 
 export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
   const [isCheckCardDialogOpen, setIsCheckCardDialogOpen] = useState(false);
+  const [isWiiMoteDialogOpen, setIsWiiMoteDialogOpen] = useState(false);
   const utils = trpc.useUtils();
+  const gameState = trpc.game.onStateChange.useSubscription();
   const roundQuery = trpc.game.getCurrentRound.useQuery();
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined, {
     enabled: !!roundQuery.data,
   });
   const statusQuery = trpc.game.getStatus.useSubscription();
   const navigate = useNavigate();
+
+  const { wiiMote, dpadFxMapping } = useWiiMote();
 
   const finishRoundMutation = trpc.game.finishRound.useMutation({
     onSettled: () => {
@@ -252,6 +269,85 @@ export const AdminPage: FC = () => {
     setIsFinishRoundDialogOpen(true);
     setIsCheckCardDialogOpen(false);
   };
+  useEffect(() => {
+    const handlePressA = (e: WMButtonEvent) => {
+      if (e.isPressed) handlePlayNextSong();
+    };
+    const handlePressOneOrTwo = (e: WMButtonEvent) => {
+      if (e.isPressed) handlePlayPreviousSong();
+    };
+    const handlePressHome = (e: WMButtonEvent) => {
+      if (e.isPressed) togglePlay();
+    };
+    const handlePressPlus = (e: WMButtonEvent) => {
+      if (e.isPressed) {
+        const currentImageId = gameState.data?.displayedImageId ?? null;
+        const currentRoundImageId = gameState.data?.roundImageId ?? null;
+
+        if (currentImageId === currentRoundImageId) {
+          showImageMutation.mutate({ imageId: null });
+        } else {
+          showImageMutation.mutate({ imageId: currentRoundImageId });
+        }
+      }
+    };
+    const handlePressMinus = (e: WMButtonEvent) => {
+      if (e.isPressed) handleToggleLowVolume();
+    };
+    const handlePressB = (e: WMButtonEvent) => {
+      if (e.isPressed) playFx('horn');
+    };
+    const handlePressDpadUp = (e: WMButtonEvent) => {
+      if (e.isPressed && dpadFxMapping.up) playFx(dpadFxMapping.up);
+    };
+    const handlePressDpadDown = (e: WMButtonEvent) => {
+      if (e.isPressed && dpadFxMapping.down) playFx(dpadFxMapping.down);
+    };
+    const handlePressDpadLeft = (e: WMButtonEvent) => {
+      if (e.isPressed && dpadFxMapping.left) playFx(dpadFxMapping.left);
+    };
+    const handlePressDpadRight = (e: WMButtonEvent) => {
+      if (e.isPressed && dpadFxMapping.right) playFx(dpadFxMapping.right);
+    };
+
+    wiiMote?.addButtonListener(WMButtons.A, handlePressA);
+    wiiMote?.addButtonListener(WMButtons.ONE, handlePressOneOrTwo);
+    wiiMote?.addButtonListener(WMButtons.TWO, handlePressOneOrTwo);
+    wiiMote?.addButtonListener(WMButtons.HOME, handlePressHome);
+    wiiMote?.addButtonListener(WMButtons.PLUS, handlePressPlus);
+    wiiMote?.addButtonListener(WMButtons.MINUS, handlePressMinus);
+    wiiMote?.addButtonListener(WMButtons.B, handlePressB);
+    wiiMote?.addButtonListener(WMButtons.DPAD_UP, handlePressDpadUp);
+    wiiMote?.addButtonListener(WMButtons.DPAD_DOWN, handlePressDpadDown);
+    wiiMote?.addButtonListener(WMButtons.DPAD_LEFT, handlePressDpadLeft);
+    wiiMote?.addButtonListener(WMButtons.DPAD_RIGHT, handlePressDpadRight);
+    return () => {
+      wiiMote?.removeButtonListener(handlePressA);
+      wiiMote?.removeButtonListener(handlePressOneOrTwo);
+      wiiMote?.removeButtonListener(handlePressHome);
+      wiiMote?.removeButtonListener(handlePressPlus);
+      wiiMote?.removeButtonListener(handlePressMinus);
+      wiiMote?.removeButtonListener(handlePressB);
+      wiiMote?.removeButtonListener(handlePressDpadUp);
+      wiiMote?.removeButtonListener(handlePressDpadDown);
+      wiiMote?.removeButtonListener(handlePressDpadLeft);
+      wiiMote?.removeButtonListener(handlePressDpadRight);
+    };
+  }, [
+    dpadFxMapping.down,
+    dpadFxMapping.left,
+    dpadFxMapping.right,
+    dpadFxMapping.up,
+    gameState.data?.displayedImageId,
+    gameState.data?.roundImageId,
+    handlePlayNextSong,
+    handlePlayPreviousSong,
+    handleToggleLowVolume,
+    playFx,
+    showImageMutation,
+    togglePlay,
+    wiiMote,
+  ]);
 
   if (!roundQuery.data) {
     return (
@@ -323,6 +419,14 @@ export const AdminPage: FC = () => {
             onFinishRound={openFinishRoundDialog}
           />
           <Button
+            color="secondary"
+            variant="bordered"
+            onPress={() => setIsWiiMoteDialogOpen(true)}
+            className="w-full block"
+          >
+            Mando Wii ({wiiMote ? 'Connectat' : 'Desconnectat'})
+          </Button>
+          <Button
             color="danger"
             variant="bordered"
             onPress={() => setIsFinishRoundDialogOpen(true)}
@@ -337,6 +441,19 @@ export const AdminPage: FC = () => {
             onConfirm={(data) => finishRoundMutation.mutate(data)}
             loading={finishRoundMutation.isPending}
           />
+          <Modal
+            isOpen={isWiiMoteDialogOpen}
+            onClose={() => setIsWiiMoteDialogOpen(false)}
+            size="2xl"
+            scrollBehavior="inside"
+          >
+            <ModalContent>
+              <ModalHeader>Wii Remote</ModalHeader>
+              <ModalBody>
+                <WiiMoteSection />
+              </ModalBody>
+            </ModalContent>
+          </Modal>
           <Button
             onPress={handleLogout}
             variant="faded"

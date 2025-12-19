@@ -1,12 +1,9 @@
 import { ButtonProps } from '@heroui/react';
-import { TablerIcon } from '@tabler/icons-react';
-
-type IconSource = TablerIcon | string;
 
 export type IconGridAction = {
   id: string;
   label: string;
-  icon: IconSource;
+  icon: string;
   iconClassName?: string;
   url: string;
 } & Omit<ButtonProps, 'isIconOnly' | 'children'>;

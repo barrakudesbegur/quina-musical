@@ -7,6 +7,7 @@ import {
 } from '@trpc/client';
 import { FC, PropsWithChildren, useState } from 'react';
 import superjson from 'superjson';
+import { WiiMoteProvider } from '../contexts/WiiMoteContext';
 import { trpc } from '../utils/trpc';
 
 if (!import.meta.env.VITE_API_URL) {
@@ -47,7 +48,9 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <HeroUIProvider>{children}</HeroUIProvider>
+        <HeroUIProvider>
+          <WiiMoteProvider>{children}</WiiMoteProvider>
+        </HeroUIProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );
