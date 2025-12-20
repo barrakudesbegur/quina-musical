@@ -30,23 +30,40 @@ export class WiiMoteConnectionHelper {
     if (server) this.bluetoothServer = server;
   }
 
-  async connectViaHID() {
+  async connectViaHID(deviceId?: number) {
     if (!navigator.hid) {
       throw new Error(`API is not available: navigator.hid`);
     }
 
-    const device: HIDDevice[] = await navigator.hid.requestDevice({
-      filters: [{ vendorId: 0x057e }],
-    });
+    const device =
+      deviceId !== undefined
+        ? (await navigator.hid.getDevices()).find(
+            (d) => d.vendorId === 0x057e && d.productId === deviceId
+          )
+        : (
+            await navigator.hid.requestDevice({
+              filters: [{ vendorId: 0x057e }],
+            })
+          )[0];
 
-    if (device && device[0]) {
-      this.hidDevice = device[0];
-      this.hidDevice.open();
+    if (!device) {
+      console.log(
+        `No Wii mote found${deviceId !== undefined ? ` with ID ${deviceId}` : ''}.`
+      );
+      return null;
     }
+
+    this.hidDevice = device;
+
+    if (!this.hidDevice.opened) {
+      await this.hidDevice.open();
+    }
+
     window.device = this.hidDevice;
 
-    if (this.hidDevice) return new WiiMote(this.hidDevice);
-    return null;
+    const wiimote = new WiiMote(this.hidDevice);
+    wiimote.updateLed({ one: true, two: false, three: false, four: false });
+    return wiimote;
   }
 }
 

@@ -9,5 +9,6 @@
 - [ ] Asegurarse de que el playback va be amb l'internet lent!!!
 - [ ] Ajustar volum individual dels fx. Crec que algunes cancons sonen molt mes fluix i estaria be pujarla
 - [ ] Fer FX sirena
-- [ ] Mando Wii
+- [ ] Mando Wii - HOME no funciona
 - [ ] Crossfade entre cancons
+- [ ] Animacio quina guanyada (confeti)
