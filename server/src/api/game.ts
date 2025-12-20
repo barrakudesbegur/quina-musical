@@ -219,6 +219,7 @@ export const gameRouter = router({
         name: z.string(),
         isLastRound: z.boolean(),
         imageId: z.string().nullable(),
+        winnerCardIds: z.array(z.int().nonnegative()),
       })
     )
     .mutation(async ({ input }) => {
@@ -229,6 +230,7 @@ export const gameRouter = router({
       gameDb.data.pastRounds.push({
         ...gameDb.data.currentRound,
         finishedAt: now,
+        winnerCardIds: input.winnerCardIds,
       });
 
       if (input.isLastRound) {
@@ -251,6 +253,7 @@ export const gameRouter = router({
           })),
           playedSongs: [],
           imageId: input.imageId,
+          winnerCardIds: [],
         };
 
         if (input.imageId) {
@@ -286,6 +289,7 @@ export const gameRouter = router({
       })),
       playedSongs: [],
       imageId: null,
+      winnerCardIds: [],
     };
 
     await gameDb.write();
@@ -322,6 +326,7 @@ export const gameRouter = router({
       })),
       playedSongs: [],
       imageId: null,
+      winnerCardIds: [],
     };
 
     await gameDb.write();

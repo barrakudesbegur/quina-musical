@@ -20,6 +20,7 @@ export interface Round {
   startedAt: string | null;
   finishedAt: string | null;
   imageId: string | null;
+  winnerCardIds: CardId[];
 }
 
 export interface GameData {

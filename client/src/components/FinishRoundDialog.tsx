@@ -12,7 +12,7 @@ import {
 } from '@heroui/react';
 import { IconChevronsRight, IconX } from '@tabler/icons-react';
 import { escapeRegExp } from 'lodash-es';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import { GALLERY_IMAGES } from '../config/images';
 
 function findImageMatch(name: string) {
@@ -34,6 +34,7 @@ export const FinishRoundDialog: FC<{
     name: string;
     isLastRound: boolean;
     imageId: string | null;
+    winnerCardIds: number[];
   }) => void;
   loading: boolean;
 }> = ({ isOpen, defaultValue, onClose, onConfirm, loading }) => {
@@ -42,10 +43,18 @@ export const FinishRoundDialog: FC<{
   const [imageId, setImageId] = useState<string | null>(
     findImageMatch(defaultValue)?.id ?? null
   );
+  const [winnerCardIdsText, setWinnerCardIdsText] = useState('');
+  const winnerCardIds = useMemo(() => {
+    return winnerCardIdsText
+      .split(',')
+      .map((id) => parseInt(id.trim(), 10))
+      .filter((id) => Number.isFinite(id) && id > 0);
+  }, [winnerCardIdsText]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onConfirm({ name, isLastRound, imageId });
+
+    onConfirm({ name, isLastRound, imageId, winnerCardIds });
   };
 
   const handleNameChange = useCallback((newName: string) => {
@@ -56,6 +65,8 @@ export const FinishRoundDialog: FC<{
       setImageId(match?.id ?? null);
     }
   }, []);
+
+  const isWinnerCardIdsValid = winnerCardIdsText.trim().length > 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -68,6 +79,15 @@ export const FinishRoundDialog: FC<{
             <ModalBody className="gap-4">
               <Input
                 autoFocus
+                value={winnerCardIdsText}
+                onValueChange={setWinnerCardIdsText}
+                label="Cartons guanyadors"
+                variant="bordered"
+                description="Separar amb comes. Ex: 1, 42, 103"
+                isRequired
+              />
+
+              <Input
                 value={name}
                 onValueChange={handleNameChange}
                 label="Nom de la següent quina"
@@ -107,6 +127,7 @@ export const FinishRoundDialog: FC<{
                   type="submit"
                   startContent={<IconX size={20} />}
                   isLoading={loading}
+                  isDisabled={!isWinnerCardIdsValid}
                 >
                   Acabar totes les quines
                 </Button>
@@ -116,6 +137,7 @@ export const FinishRoundDialog: FC<{
                   type="submit"
                   startContent={<IconChevronsRight size={20} />}
                   isLoading={loading}
+                  isDisabled={!winnerCardIds}
                 >
                   Següent quina
                 </Button>
