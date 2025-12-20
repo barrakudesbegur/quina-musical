@@ -269,12 +269,19 @@ export const AdminPage: FC = () => {
     setIsFinishRoundDialogOpen(true);
     setIsCheckCardDialogOpen(false);
   };
+
   useEffect(() => {
     const handlePressA = (e: WMButtonEvent) => {
-      if (e.isPressed) handlePlayNextSong();
+      if (e.isPressed) {
+        handlePlayNextSong();
+        wiiMote?.setRumble(true, 100);
+      }
     };
     const handlePressOneOrTwo = (e: WMButtonEvent) => {
-      if (e.isPressed) handlePlayPreviousSong();
+      if (e.isPressed) {
+        handlePlayPreviousSong();
+        wiiMote?.setRumble(true, 100);
+      }
     };
     const handlePressHome = (e: WMButtonEvent) => {
       if (e.isPressed) togglePlay();

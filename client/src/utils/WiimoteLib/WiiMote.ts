@@ -51,7 +51,7 @@ export default class WiiMote {
       this.listenForUpdates(e);
   }
 
-  setRumble(isRumbling: boolean) {
+  setRumble(isRumbling: boolean, durationMs?: number) {
     const state = isRumbling ? Rumble.ON : Rumble.OFF;
     this.device.sendReport(
       WiiMoteActions.LED,
@@ -59,6 +59,12 @@ export default class WiiMote {
     );
     this.status.isRumbling = isRumbling;
     this.rawStatus.rumble = state;
+
+    if (isRumbling && durationMs !== undefined) {
+      setTimeout(() => {
+        this.setRumble(false);
+      }, durationMs);
+    }
   }
 
   updateLed(status: WiiMoteLedStatus, merge = true) {

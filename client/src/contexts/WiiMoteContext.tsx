@@ -50,6 +50,7 @@ export const WiiMoteProvider: FC<PropsWithChildren> = ({ children }) => {
     const handleBeforeUnload = async () => {
       if (wiiMote?.device.opened) {
         try {
+          wiiMote.setRumble(false);
           await wiiMote.device.close();
         } catch (err) {
           console.error('Failed to close Wii Remote:', err);
@@ -89,6 +90,7 @@ export const WiiMoteProvider: FC<PropsWithChildren> = ({ children }) => {
   const disconnect = () => {
     if (wiiMote?.device.opened) {
       try {
+        wiiMote.setRumble(false);
         void wiiMote.device.close();
       } catch (err) {
         console.error('Failed to close Wii Remote:', err);
