@@ -37,6 +37,7 @@ export const SongCard: FC<{
 }) => {
   return (
     <Card
+      data-song-card
       isPressable={!!onPress && !disablePress}
       isDisabled={song.isPlayed && !song.isLastPlayed}
       onPress={disablePress ? undefined : onPress}

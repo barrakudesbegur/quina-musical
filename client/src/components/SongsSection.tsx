@@ -8,7 +8,14 @@ import {
   useMotionValue,
 } from 'framer-motion';
 import { sortBy } from 'lodash-es';
-import { ComponentProps, FC, useCallback, useMemo } from 'react';
+import {
+  ComponentProps,
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { useSessionStorage } from 'usehooks-ts';
 import { trpc } from '../utils/trpc';
 import { SongCard } from './SongCard';
@@ -160,6 +167,36 @@ export const SongsSection: FC<{
     [onUndoLastPlayed, onPlaySong]
   );
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const previousPlayedCountRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!songsQuery.data) return;
+
+    const playedCount = songsQuery.data.filter((song) => song.isPlayed).length;
+    const isInAutoScrollMode = filterKey === 'all' && sortKey === 'position';
+
+    if (
+      isInAutoScrollMode &&
+      playedCount > previousPlayedCountRef.current &&
+      scrollContainerRef.current
+    ) {
+      const firstCard = scrollContainerRef.current.querySelector(
+        '[data-song-card]'
+      ) as HTMLElement;
+      if (firstCard) {
+        const cardHeight = firstCard.offsetHeight;
+        const gap = 8;
+        scrollContainerRef.current.scrollBy({
+          top: cardHeight + gap,
+          behavior: 'smooth',
+        });
+      }
+    }
+
+    previousPlayedCountRef.current = playedCount;
+  }, [songsQuery.data, filterKey, sortKey]);
+
   return (
     <section className="flex flex-1 min-h-0 flex-col">
       <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
@@ -187,7 +224,10 @@ export const SongsSection: FC<{
           <Tab key={key} title={label} />
         ))}
       </Tabs>
-      <div className="space-y-2 -m-4 flex-1 overflow-y-auto p-4">
+      <div
+        className="space-y-2 -m-4 flex-1 overflow-y-auto p-4"
+        ref={scrollContainerRef}
+      >
         {sortKey === 'position' ? (
           <>
             {filterKey === 'all' ? (
