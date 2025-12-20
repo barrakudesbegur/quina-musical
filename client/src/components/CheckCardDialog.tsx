@@ -19,7 +19,7 @@ import { trpc } from '../utils/trpc';
 export const CheckCardDialog: FC<{
   isOpen: boolean;
   onClose: () => void;
-  onFinishRound: () => void;
+  onFinishRound: (cardId: string) => void;
 }> = ({ isOpen, onClose, onFinishRound }) => {
   const [cardId, setCardId] = useState('');
   const cardsQuery = trpc.card.getAll.useQuery(undefined, { enabled: isOpen });
@@ -59,7 +59,7 @@ export const CheckCardDialog: FC<{
     cardId.trim().length > 0 && cardsQuery.isSuccess && !selectedCard;
 
   const handleFinishRound = () => {
-    onFinishRound();
+    onFinishRound(cardId.trim());
     handleClose();
   };
 

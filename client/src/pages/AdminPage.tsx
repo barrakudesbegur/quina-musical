@@ -34,6 +34,9 @@ export const AdminPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
   const [isCheckCardDialogOpen, setIsCheckCardDialogOpen] = useState(false);
   const [isWiiMoteDialogOpen, setIsWiiMoteDialogOpen] = useState(false);
+  const [prefilledWinnerCardId, setPrefilledWinnerCardId] = useState<
+    string | undefined
+  >(undefined);
   const utils = trpc.useUtils();
   const gameState = trpc.game.onStateChange.useSubscription();
   const roundQuery = trpc.game.getCurrentRound.useQuery();
@@ -265,7 +268,8 @@ export const AdminPage: FC = () => {
     navigate('/login');
   };
 
-  const openFinishRoundDialog = () => {
+  const openFinishRoundDialog = (prefilledCardId?: string) => {
+    setPrefilledWinnerCardId(prefilledCardId);
     setIsFinishRoundDialogOpen(true);
     setIsCheckCardDialogOpen(false);
   };
@@ -445,7 +449,11 @@ export const AdminPage: FC = () => {
             <FinishRoundDialog
               isOpen={isFinishRoundDialogOpen}
               defaultValue={defaultNextRoundName}
-              onClose={() => setIsFinishRoundDialogOpen(false)}
+              defaultWinnerCardIds={prefilledWinnerCardId}
+              onClose={() => {
+                setIsFinishRoundDialogOpen(false);
+                setPrefilledWinnerCardId(undefined);
+              }}
               onConfirm={(data) => finishRoundMutation.mutate(data)}
               loading={finishRoundMutation.isPending}
             />

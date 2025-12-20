@@ -12,7 +12,7 @@ import {
 } from '@heroui/react';
 import { IconChevronsRight, IconX } from '@tabler/icons-react';
 import { escapeRegExp } from 'lodash-es';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { GALLERY_IMAGES } from '../config/images';
 
 function findImageMatch(name: string) {
@@ -29,6 +29,7 @@ function findImageMatch(name: string) {
 export const FinishRoundDialog: FC<{
   isOpen: boolean;
   defaultValue: string;
+  defaultWinnerCardIds?: string;
   onClose: () => void;
   onConfirm: (data: {
     name: string;
@@ -37,13 +38,26 @@ export const FinishRoundDialog: FC<{
     winnerCardIds: number[];
   }) => void;
   loading: boolean;
-}> = ({ isOpen, defaultValue, onClose, onConfirm, loading }) => {
+}> = ({
+  isOpen,
+  defaultValue,
+  defaultWinnerCardIds = '',
+  onClose,
+  onConfirm,
+  loading,
+}) => {
   const [name, setName] = useState(defaultValue);
   const [isLastRound, setIsLastRound] = useState(false);
   const [imageId, setImageId] = useState<string | null>(
     findImageMatch(defaultValue)?.id ?? null
   );
-  const [winnerCardIdsText, setWinnerCardIdsText] = useState('');
+  const [winnerCardIdsText, setWinnerCardIdsText] =
+    useState(defaultWinnerCardIds);
+
+  useEffect(() => {
+    setWinnerCardIdsText(defaultWinnerCardIds);
+  }, [defaultWinnerCardIds]);
+
   const winnerCardIds = useMemo(() => {
     return winnerCardIdsText
       .split(',')
