@@ -128,6 +128,9 @@ export const useSongPlayer = (options?: {
         sourceSongPlaying.current = source;
         songStartedTime.current = audioCtx.currentTime;
         songEndedTime.current = null;
+      } else {
+        songStartedTime.current = null;
+        songEndedTime.current = null;
       }
     },
     [
