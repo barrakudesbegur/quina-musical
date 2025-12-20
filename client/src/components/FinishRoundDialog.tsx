@@ -1,5 +1,4 @@
 import {
-  Alert,
   Button,
   Checkbox,
   Input,
@@ -11,14 +10,10 @@ import {
   Select,
   SelectItem,
 } from '@heroui/react';
-import {
-  IconChevronsRight,
-  IconDeviceFloppy,
-  IconX,
-} from '@tabler/icons-react';
+import { IconChevronsRight, IconX } from '@tabler/icons-react';
+import { escapeRegExp } from 'lodash-es';
 import { FC, useCallback, useState } from 'react';
 import { GALLERY_IMAGES } from '../config/images';
-import { escapeRegExp } from 'lodash-es';
 
 function findImageMatch(name: string) {
   const hasNameStrictRegex = new RegExp(`\\b${escapeRegExp(name)}\\b`);
@@ -101,18 +96,6 @@ export const FinishRoundDialog: FC<{
               <Checkbox isSelected={isLastRound} onValueChange={setIsLastRound}>
                 No hi ha més quines
               </Checkbox>
-
-              <Alert
-                variant="flat"
-                color="success"
-                className="text-sm text-default-500"
-                classNames={{
-                  alertIcon: 'fill-none',
-                }}
-                title="La quina anterior es guardarà."
-                description=""
-                icon={<IconDeviceFloppy size={20} fill="none" />}
-              />
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={onClose}>
