@@ -12,3 +12,4 @@
 - [ ] Mando Wii - HOME no funciona
 - [ ] Crossfade entre cancons
 - [ ] Animacio quina guanyada (confeti)
+- [ ] Bug: quan esta pausat, i intenres canviar el current time amb la barra de temps, no va be
