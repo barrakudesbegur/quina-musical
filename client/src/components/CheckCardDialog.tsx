@@ -153,7 +153,7 @@ export const CheckCardDialog: FC<{
                             color={playedSong?.isPlayed ? undefined : 'danger'}
                             endContent={
                               <span className="text-sm text-default-400">
-                                {playedSong?.playedPosition}
+                                {playedSong?.position}
                               </span>
                             }
                           >
