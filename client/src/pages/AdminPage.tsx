@@ -406,62 +406,64 @@ export const AdminPage: FC = () => {
           </div>
           <Divider />
 
-          <Button
-            color="primary"
-            onPress={() => setIsCheckCardDialogOpen(true)}
-            className="w-full block"
-          >
-            Comprovar cartó
-          </Button>
-          <CheckCardDialog
-            isOpen={isCheckCardDialogOpen}
-            onClose={() => setIsCheckCardDialogOpen(false)}
-            onFinishRound={openFinishRoundDialog}
-          />
-          <Button
-            color="secondary"
-            variant="bordered"
-            onPress={() => setIsWiiMoteDialogOpen(true)}
-            className="w-full block"
-          >
-            Mando Wii ({wiiMote ? 'Connectat' : 'Desconnectat'})
-          </Button>
-          <Button
-            color="danger"
-            variant="bordered"
-            onPress={() => setIsFinishRoundDialogOpen(true)}
-            className="w-full block"
-          >
-            Finalitzar quina
-          </Button>
-          <FinishRoundDialog
-            isOpen={isFinishRoundDialogOpen}
-            defaultValue={defaultNextRoundName}
-            onClose={() => setIsFinishRoundDialogOpen(false)}
-            onConfirm={(data) => finishRoundMutation.mutate(data)}
-            loading={finishRoundMutation.isPending}
-          />
-          <Modal
-            isOpen={isWiiMoteDialogOpen}
-            onClose={() => setIsWiiMoteDialogOpen(false)}
-            size="2xl"
-            scrollBehavior="inside"
-          >
-            <ModalContent>
-              <ModalHeader>Wii Remote</ModalHeader>
-              <ModalBody>
-                <WiiMoteSection />
-              </ModalBody>
-            </ModalContent>
-          </Modal>
-          <Button
-            onPress={handleLogout}
-            variant="faded"
-            className="w-full block"
-            color="primary"
-          >
-            Logout
-          </Button>
+          <div className="grid xs:grid-cols-2 gap-4">
+            <Button
+              color="primary"
+              onPress={() => setIsCheckCardDialogOpen(true)}
+              className="w-full block"
+            >
+              Comprovar cartó
+            </Button>
+            <CheckCardDialog
+              isOpen={isCheckCardDialogOpen}
+              onClose={() => setIsCheckCardDialogOpen(false)}
+              onFinishRound={openFinishRoundDialog}
+            />
+            <Button
+              color="secondary"
+              variant="bordered"
+              onPress={() => setIsWiiMoteDialogOpen(true)}
+              className="w-full block"
+            >
+              Mando Wii ({wiiMote ? 'Connectat' : 'Desconnectat'})
+            </Button>
+            <Button
+              color="danger"
+              variant="bordered"
+              onPress={() => setIsFinishRoundDialogOpen(true)}
+              className="w-full block"
+            >
+              Finalitzar quina
+            </Button>
+            <FinishRoundDialog
+              isOpen={isFinishRoundDialogOpen}
+              defaultValue={defaultNextRoundName}
+              onClose={() => setIsFinishRoundDialogOpen(false)}
+              onConfirm={(data) => finishRoundMutation.mutate(data)}
+              loading={finishRoundMutation.isPending}
+            />
+            <Modal
+              isOpen={isWiiMoteDialogOpen}
+              onClose={() => setIsWiiMoteDialogOpen(false)}
+              size="2xl"
+              scrollBehavior="inside"
+            >
+              <ModalContent>
+                <ModalHeader>Wii Remote</ModalHeader>
+                <ModalBody>
+                  <WiiMoteSection />
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+            <Button
+              onPress={handleLogout}
+              variant="faded"
+              className="w-full block"
+              color="primary"
+            >
+              Logout
+            </Button>
+          </div>
         </section>
 
         <GameInsightsSection />
