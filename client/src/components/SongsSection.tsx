@@ -2,15 +2,9 @@ import { Tab, Tabs } from '@heroui/react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { sortBy } from 'lodash-es';
-import {
-  ComponentProps,
-  FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { ComponentProps, FC, useCallback, useMemo } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 import { trpc } from '../utils/trpc';
 import { SongCard } from './SongCard';
 
@@ -136,62 +130,8 @@ export const SongsSection: FC<{
     [onUndoLastPlayed, onPlaySong]
   );
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const previousPlayedCountRef = useRef<number>(0);
-  const hasScrolledToQueueRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (!songsQuery.data || hasScrolledToQueueRef.current) return;
-
-    const playedCount = songsQuery.data.filter((song) => song.isPlayed).length;
-    const isInAutoScrollMode = sortKey === 'position';
-
-    if (isInAutoScrollMode && playedCount > 0 && scrollContainerRef.current) {
-      const firstCard = scrollContainerRef.current.querySelector(
-        '[data-song-card]'
-      ) as HTMLElement;
-      if (firstCard) {
-        const cardHeight = firstCard.offsetHeight;
-        const gap = 8;
-        scrollContainerRef.current.scrollTo({
-          top: (playedCount - 2) * (cardHeight + gap),
-          behavior: 'instant',
-        });
-        hasScrolledToQueueRef.current = true;
-      }
-    }
-  }, [songsQuery.data, sortKey]);
-
-  useEffect(() => {
-    if (!songsQuery.data) return;
-
-    const playedCount = songsQuery.data.filter((song) => song.isPlayed).length;
-    const isInAutoScrollMode = sortKey === 'position';
-
-    if (
-      isInAutoScrollMode &&
-      playedCount !== previousPlayedCountRef.current &&
-      scrollContainerRef.current
-    ) {
-      const firstCard = scrollContainerRef.current.querySelector(
-        '[data-song-card]'
-      ) as HTMLElement;
-      if (firstCard) {
-        const cardHeight = firstCard.offsetHeight;
-        const gap = 8;
-        const scrollAmount =
-          (playedCount > previousPlayedCountRef.current ? 1 : -1) *
-          (cardHeight + gap);
-
-        scrollContainerRef.current.scrollBy({
-          top: scrollAmount,
-          behavior: 'smooth',
-        });
-      }
-    }
-
-    previousPlayedCountRef.current = playedCount;
-  }, [songsQuery.data, sortKey]);
+  const autoScrollEnabled = useMemo(() => sortKey === 'position', [sortKey]);
+  const scrollContainerRef = useAutoScroll(autoScrollEnabled);
 
   return (
     <section className="flex flex-1 min-h-0 flex-col">
