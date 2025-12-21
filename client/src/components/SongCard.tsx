@@ -26,15 +26,7 @@ export const SongCard: FC<{
   disablePress?: boolean;
   className?: string;
   dragControls?: DragControls;
-  dimPlayed?: boolean;
-}> = ({
-  song,
-  onPress,
-  disablePress,
-  className,
-  dragControls,
-  dimPlayed = true,
-}) => {
+}> = ({ song, onPress, disablePress, className, dragControls }) => {
   return (
     <Card
       data-song-card
@@ -42,8 +34,7 @@ export const SongCard: FC<{
       isDisabled={song.isPlayed && !song.isLastPlayed}
       onPress={disablePress ? undefined : onPress}
       className={cn('relative', className, {
-        'opacity-50': dimPlayed && song.isPlayed && !song.isLastPlayed,
-        'opacity-100!': !dimPlayed,
+        'opacity-50': song.isPlayed && !song.isLastPlayed,
         'border-success': song.isLastPlayed,
       })}
       classNames={{

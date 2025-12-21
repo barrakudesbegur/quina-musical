@@ -1,12 +1,6 @@
 import { Tab, Tabs } from '@heroui/react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
-import {
-  AnimatePresence,
-  motion,
-  Reorder,
-  useDragControls,
-  useMotionValue,
-} from 'framer-motion';
+import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { sortBy } from 'lodash-es';
 import {
   ComponentProps,
@@ -21,15 +15,6 @@ import { trpc } from '../utils/trpc';
 import { SongCard } from './SongCard';
 
 const sortStorageKey = 'playback-manual-sort';
-const filterStorageKey = 'playback-filter';
-
-const filterOptions = [
-  { key: 'all', label: 'Totes' },
-  { key: 'not-played', label: 'No reproduïdes' },
-  { key: 'played', label: 'Reproduïdes' },
-] as const;
-
-type FilterKey = (typeof filterOptions)[number]['key'];
 
 export const SongsSection: FC<{
   onPlaySong: (songId: number) => void;
@@ -81,11 +66,6 @@ export const SongsSection: FC<{
     },
   });
 
-  const [filterKey, setFilterKey] = useSessionStorage<FilterKey>(
-    filterStorageKey,
-    'not-played'
-  );
-
   const sortOptions = [
     { key: 'position', label: 'Reproducció' },
     { key: 'title', label: 'Títol' },
@@ -133,27 +113,17 @@ export const SongsSection: FC<{
     }));
   }, [durationMap, songsQuery.data]);
 
-  const filteredSongs = useMemo(() => {
-    if (filterKey === 'played') {
-      return songsWithPlayedDurationMs.filter((song) => song.isPlayed);
-    }
-    if (filterKey === 'not-played') {
-      return songsWithPlayedDurationMs.filter((song) => !song.isPlayed);
-    }
-    return songsWithPlayedDurationMs;
-  }, [songsWithPlayedDurationMs, filterKey]);
-
   const sortedSongs = useMemo(() => {
-    return sortBy(filteredSongs, [sortKey, 'id']);
-  }, [filteredSongs, sortKey]);
+    return sortBy(songsWithPlayedDurationMs, [sortKey, 'id']);
+  }, [songsWithPlayedDurationMs, sortKey]);
 
   const songsInQueue = useMemo(
     () =>
-      sortBy(filteredSongs.filter((song) => !song.isPlayed) ?? [], [
+      sortBy(songsWithPlayedDurationMs.filter((song) => !song.isPlayed) ?? [], [
         'position',
         'id',
       ]),
-    [filteredSongs]
+    [songsWithPlayedDurationMs]
   );
 
   const handleCardPress = useCallback(
@@ -174,7 +144,7 @@ export const SongsSection: FC<{
     if (!songsQuery.data) return;
 
     const playedCount = songsQuery.data.filter((song) => song.isPlayed).length;
-    const isInAutoScrollMode = filterKey === 'all' && sortKey === 'position';
+    const isInAutoScrollMode = sortKey === 'position';
 
     if (
       isInAutoScrollMode &&
@@ -195,24 +165,13 @@ export const SongsSection: FC<{
     }
 
     previousPlayedCountRef.current = playedCount;
-  }, [songsQuery.data, filterKey, sortKey]);
+  }, [songsQuery.data, sortKey]);
 
   return (
     <section className="flex flex-1 min-h-0 flex-col">
       <h2 className="text-3xl font-brand uppercase text-center mb-2 tracking-wider">
         Cançons
       </h2>
-      <Tabs
-        aria-label="Filtrar cançons"
-        selectedKey={filterKey}
-        onSelectionChange={(key) => setFilterKey(key as FilterKey)}
-        className="mb-2 shrink-0"
-        fullWidth
-      >
-        {filterOptions.map(({ key, label }) => (
-          <Tab key={key} title={label} />
-        ))}
-      </Tabs>
       <Tabs
         aria-label="Ordenar cançons"
         selectedKey={sortKey}
@@ -230,34 +189,16 @@ export const SongsSection: FC<{
       >
         {sortKey === 'position' ? (
           <>
-            {filterKey === 'all' ? (
-              sortedSongs
-                .filter((song) => song.isPlayed)
-                .map((song) => (
-                  <SongCard
-                    key={song.id}
-                    song={song}
-                    onPress={() => handleCardPress(song)}
-                    disablePress={setQueueOrderMutation.isPending}
-                    dimPlayed={true}
-                  />
-                ))
-            ) : (
-              <AnimatePresence initial={false} mode="popLayout">
-                {(filterKey === 'played'
-                  ? sortedSongs.filter((song) => song.isPlayed).reverse()
-                  : sortedSongs.filter((song) => song.isPlayed)
-                ).map((song) => (
-                  <AnimatedSongCard
-                    key={song.id}
-                    song={song}
-                    onPress={() => handleCardPress(song)}
-                    disablePress={setQueueOrderMutation.isPending}
-                    dimPlayed={false}
-                  />
-                ))}
-              </AnimatePresence>
-            )}
+            {sortedSongs
+              .filter((song) => song.isPlayed)
+              .map((song) => (
+                <SongCard
+                  key={song.id}
+                  song={song}
+                  onPress={() => handleCardPress(song)}
+                  disablePress={setQueueOrderMutation.isPending}
+                />
+              ))}
             {!!songsInQueue.length && (
               <Reorder.Group
                 axis="y"
@@ -273,7 +214,6 @@ export const SongsSection: FC<{
                     song={song}
                     onPress={() => handleCardPress(song)}
                     disablePress={setQueueOrderMutation.isPending}
-                    dimPlayed={filterKey === 'all'}
                   />
                 ))}
               </Reorder.Group>
@@ -285,33 +225,11 @@ export const SongsSection: FC<{
               key={song.id}
               song={song}
               onPress={() => handleCardPress(song)}
-              dimPlayed={filterKey === 'all'}
             />
           ))
         )}
       </div>
     </section>
-  );
-};
-
-export const AnimatedSongCard = ({
-  ...cardProps
-}: ComponentProps<typeof SongCard>) => {
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{
-        layout: { type: 'spring', stiffness: 500, damping: 30 },
-        opacity: { duration: 0.2 },
-        y: { type: 'spring', stiffness: 500, damping: 30 },
-      }}
-      style={{ willChange: 'transform, opacity' }}
-    >
-      <SongCard {...cardProps} />
-    </motion.div>
   );
 };
 
