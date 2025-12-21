@@ -147,7 +147,7 @@ export const SongsSection: FC<{
 
     if (
       isInAutoScrollMode &&
-      playedCount > previousPlayedCountRef.current &&
+      playedCount !== previousPlayedCountRef.current &&
       scrollContainerRef.current
     ) {
       const firstCard = scrollContainerRef.current.querySelector(
@@ -156,8 +156,12 @@ export const SongsSection: FC<{
       if (firstCard) {
         const cardHeight = firstCard.offsetHeight;
         const gap = 8;
+        const scrollAmount =
+          (playedCount > previousPlayedCountRef.current ? 1 : -1) *
+          (cardHeight + gap);
+
         scrollContainerRef.current.scrollBy({
-          top: cardHeight + gap,
+          top: scrollAmount,
           behavior: 'smooth',
         });
       }
