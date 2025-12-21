@@ -167,7 +167,7 @@ export const AdminPage: FC = () => {
     isPlaying,
     isSongReady,
     preloadStatus,
-    play,
+    seek,
     getCurrentTime,
     duration,
     playFx,
@@ -500,7 +500,7 @@ export const AdminPage: FC = () => {
           onNext={handlePlayNextSong}
           onPrevious={handlePlayPreviousSong}
           canPlayPrevious={canPlayPrevious}
-          onSeek={play}
+          onSeek={seek}
           playerPreloadProgress={playerPreloadProgress}
           selectedTimestampType={timestampType}
           onTimestampTypeChange={(value) =>

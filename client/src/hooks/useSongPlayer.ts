@@ -165,6 +165,13 @@ export const useSongPlayer = (options?: {
     else play();
   }, [isPlaying, pause, play]);
 
+  const seek = useCallback(
+    async (time: number | SongTimestampCategory) => {
+      setSong(songId, time);
+    },
+    [setSong, songId]
+  );
+
   const playFx = async (fxId: Parameters<typeof getAudioBuffer<'fx'>>[1]) => {
     const buffer = await getAudioBuffer('fx', fxId);
     if (!buffer) throw new Error(`Sound effect ${fxId} not found`);
@@ -223,6 +230,7 @@ export const useSongPlayer = (options?: {
     play,
     pause,
     togglePlay,
+    seek,
     playFx,
     isPlaying,
     getCurrentTime,
