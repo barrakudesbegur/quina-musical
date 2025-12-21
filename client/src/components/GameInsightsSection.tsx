@@ -1,7 +1,8 @@
-import { cn } from '@heroui/react';
+import { cn, Tab, Tabs } from '@heroui/react';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { orderBy } from 'lodash-es';
+import { orderBy, sum } from 'lodash-es';
 import { FC, PropsWithChildren, useMemo } from 'react';
+import { useSessionStorage } from 'usehooks-ts';
 import { trpc } from '../utils/trpc';
 import { CardsForm } from './CardsForm';
 import { IconCrown } from '@tabler/icons-react';
@@ -11,12 +12,57 @@ type ChartPoint = {
   cardCount: number;
 };
 
+const modeOptions = [
+  { key: 'quina', label: 'Quina' },
+  { key: 'linea', label: 'Línia' },
+] as const satisfies readonly {
+  key: string;
+  label: string;
+}[];
+
+type ModeKey = (typeof modeOptions)[number]['key'];
+
+type Card = {
+  id: number;
+  lines: { id: number }[][];
+};
+
+const getCardScore = (
+  card: Card,
+  playedSongIds: Set<number>,
+  mode: ModeKey
+) => {
+  if (mode === 'quina') {
+    return card.lines.flat().filter((song) => playedSongIds.has(song.id))
+      .length;
+  } else {
+    return Math.max(
+      ...card.lines.map(
+        (line) => line.filter((song) => playedSongIds.has(song.id)).length
+      )
+    );
+  }
+};
+
+const getMaxScore = (card: Card, mode: ModeKey) => {
+  if (mode === 'quina') {
+    return sum(card.lines.map((line) => line.length));
+  } else {
+    return card.lines.length;
+  }
+};
+
 export const GameInsightsSection: FC<
   PropsWithChildren<{ className?: string }>
 > = ({ className }) => {
   const cardsQuery = trpc.card.getAll.useQuery();
   const songsQuery = trpc.game.getAllSongs.useQuery();
   const cardsPlayingQuery = trpc.game.getCardsPlaying.useQuery();
+
+  const [modeKey, setModeKey] = useSessionStorage<ModeKey>(
+    'game-insights-mode',
+    'quina'
+  );
 
   const data = useMemo<{
     chart: ChartPoint[];
@@ -31,47 +77,40 @@ export const GameInsightsSection: FC<
       cardsQuery.data?.filter((card) => cardsPlayingSet.has(Number(card.id))) ??
       [];
 
-    const songsPerCard = cardsInPlay[0]?.lines.reduce(
-      (total, line) => total + line.length,
-      0
-    );
+    const maxPossibleScore = cardsInPlay[0]
+      ? getMaxScore(cardsInPlay[0], modeKey)
+      : 0;
 
     const distribution = cardsInPlay.reduce<Record<number, number>>(
       (acc, card) => {
-        const playedCount = card.lines
-          .flat()
-          .filter((song) => playedSongIds.has(song.id)).length;
-
-        acc[playedCount] = (acc[playedCount] ?? 0) + 1;
+        const score = getCardScore(card, playedSongIds, modeKey);
+        acc[score] ??= 0;
+        acc[score] += 1;
         return acc;
       },
       {}
     );
 
-    const maxPlayed = Math.max(
-      songsPerCard,
+    const maxScore = Math.max(
+      maxPossibleScore,
       ...Object.keys(distribution).map((key) => Number.parseInt(key, 10)),
       0
     );
 
     const chartData = Array.from(
-      { length: maxPlayed + 1 },
+      { length: maxScore + 1 },
       (_, playedCount) => ({
         playedCount,
         cardCount: distribution[playedCount] ?? 0,
       })
     );
 
-    // ------------------------
-
     const winners = orderBy(
       cardsQuery.data
-        ?.filter((card) => {
-          const playedCount = card.lines
-            .flat()
-            .filter((song) => playedSongIds.has(song.id)).length;
-          return playedCount === songsPerCard;
-        })
+        ?.filter(
+          (card) =>
+            getCardScore(card, playedSongIds, modeKey) >= maxPossibleScore
+        )
         .map((card) => ({
           ...card,
           isPlaying: cardsPlayingSet.has(Number(card.id)),
@@ -81,7 +120,7 @@ export const GameInsightsSection: FC<
     );
 
     return { chart: chartData, winners };
-  }, [cardsPlayingQuery.data, cardsQuery.data, songsQuery.data]);
+  }, [cardsPlayingQuery.data, cardsQuery, songsQuery.data, modeKey]);
 
   const isLoading =
     cardsQuery.isLoading || songsQuery.isLoading || cardsPlayingQuery.isLoading;
@@ -94,6 +133,17 @@ export const GameInsightsSection: FC<
         Dades
       </h2>
       <CardsForm className="mt-4" />
+      <Tabs
+        aria-label="Mode de visualització"
+        selectedKey={modeKey}
+        onSelectionChange={(key) => setModeKey(key as ModeKey)}
+        className="shrink-0"
+        fullWidth
+      >
+        {modeOptions.map(({ key, label }) => (
+          <Tab key={key} title={label} />
+        ))}
+      </Tabs>
 
       <div className="mt-10">
         {isLoading ? (
