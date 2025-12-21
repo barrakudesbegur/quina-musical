@@ -48,7 +48,7 @@ const getMaxScore = (card: Card, mode: ModeKey) => {
   if (mode === 'quina') {
     return sum(card.lines.map((line) => line.length));
   } else {
-    return card.lines.length;
+    return Math.max(...card.lines.map((line) => line.length));
   }
 };
 
