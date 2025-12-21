@@ -11,6 +11,7 @@ type MediaSessionConfig = {
   onPrevious?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
+  onSeek?: (time: number) => void;
   onToggleLowVolume?: () => void;
 };
 
@@ -23,6 +24,7 @@ export const useMediaSession = ({
   onPrevious,
   onPlay,
   onPause,
+  onSeek,
   onToggleLowVolume,
 }: MediaSessionConfig) => {
   const songsQuery = trpc.game.getAllSongs.useQuery();
@@ -134,6 +136,16 @@ export const useMediaSession = ({
     );
     navigator.mediaSession.setActionHandler('play', onPlay || null);
     navigator.mediaSession.setActionHandler('pause', onPause || null);
+    navigator.mediaSession.setActionHandler(
+      'seekto',
+      onSeek
+        ? (details) => {
+            if (details.seekTime !== undefined) {
+              onSeek(details.seekTime);
+            }
+          }
+        : null
+    );
 
     return () => {
       if ('mediaSession' in navigator) {
@@ -145,7 +157,8 @@ export const useMediaSession = ({
         navigator.mediaSession.setActionHandler('previousslide', null);
         navigator.mediaSession.setActionHandler('play', null);
         navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
       }
     };
-  }, [onNext, onPrevious, onPlay, onPause]);
+  }, [onNext, onPrevious, onPlay, onPause, onSeek]);
 };

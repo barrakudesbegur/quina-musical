@@ -222,6 +222,7 @@ export const useSongPlayer = (options?: {
     onPrevious: options?.onPrevious,
     onPlay: play,
     onPause: pause,
+    onSeek: seek,
     onToggleLowVolume: toggleLowVolume,
   });
 
