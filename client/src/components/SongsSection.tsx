@@ -68,8 +68,7 @@ export const SongsSection: FC<{
 
   const sortOptions = [
     { key: 'position', label: 'Reproducció' },
-    { key: 'title', label: 'Títol' },
-    { key: 'id', label: 'Playlist' },
+    { key: 'id', label: 'Títol' },
   ] as const satisfies readonly {
     key: keyof NonNullable<typeof songsQuery.data>[number];
     label: string;
