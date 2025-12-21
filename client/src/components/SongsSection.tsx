@@ -138,6 +138,29 @@ export const SongsSection: FC<{
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const previousPlayedCountRef = useRef<number>(0);
+  const hasScrolledToQueueRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (!songsQuery.data || hasScrolledToQueueRef.current) return;
+
+    const playedCount = songsQuery.data.filter((song) => song.isPlayed).length;
+    const isInAutoScrollMode = sortKey === 'position';
+
+    if (isInAutoScrollMode && playedCount > 0 && scrollContainerRef.current) {
+      const firstCard = scrollContainerRef.current.querySelector(
+        '[data-song-card]'
+      ) as HTMLElement;
+      if (firstCard) {
+        const cardHeight = firstCard.offsetHeight;
+        const gap = 8;
+        scrollContainerRef.current.scrollTo({
+          top: (playedCount - 2) * (cardHeight + gap),
+          behavior: 'instant',
+        });
+        hasScrolledToQueueRef.current = true;
+      }
+    }
+  }, [songsQuery.data, sortKey]);
 
   useEffect(() => {
     if (!songsQuery.data) return;
