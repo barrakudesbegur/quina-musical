@@ -103,11 +103,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   headerLogoIcon: {
-    height: 23,
-    width: 17,
+    height: 683 * 0.055,
+    width: 512 * 0.055,
   },
   headerLogoTextWrapper: {
     display: 'flex',
@@ -115,15 +115,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
     lineHeight: 0.7,
-    gap: 4,
+    gap: 9,
   },
   headerLogoTopText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'light',
     letterSpacing: 1.08,
   },
   headerLogoBottomText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'light',
     letterSpacing: 1.08,
     color: '#4d4d4d',
