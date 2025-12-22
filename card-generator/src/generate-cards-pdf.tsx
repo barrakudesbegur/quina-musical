@@ -1,6 +1,7 @@
 import {
   Document,
   Font,
+  Image,
   Page,
   Path,
   render,
@@ -14,6 +15,9 @@ import { chunk } from 'lodash';
 import { join } from 'path';
 import React from 'react';
 import { Card } from './generate-cards-json';
+import { generateQRCodeDataUri } from './utils/qr';
+
+type CardWithQR = Card & { qrCodeDataUri: string };
 
 ////////////////////////////////////////////////////////////////////////////////
 // 1) Register Fonts
@@ -85,7 +89,13 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    gap: 10,
+  },
+  qrCode: {
+    marginTop: 10,
+    width: 45,
+    height: 45,
   },
 
   headerLogoWrapper: {
@@ -126,8 +136,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: -21,
   },
-  cardNumber: {
+  cardNumberWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  cardNumberText: {
     fontSize: 14,
+    fontWeight: 'light',
+    textAlign: 'right',
+    lineHeight: 1,
+  },
+  cardNumberNumber: {
+    fontSize: 24,
     fontWeight: 'light',
     textAlign: 'right',
     lineHeight: 1,
@@ -191,7 +213,7 @@ const styles = StyleSheet.create({
 ////////////////////////////////////////////////////////////////////////////////
 
 const CardComponent: React.FC<{
-  card: Card;
+  card: CardWithQR;
   style?: Style;
 }> = ({ card, style }) => {
   return (
@@ -213,10 +235,14 @@ const CardComponent: React.FC<{
           </View>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.cardTitle}>QUINA QUINA!</Text>
+          <Text style={styles.cardTitle}>QUINA 2025</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.cardNumber}>CARTRÓ {card.id}</Text>
+          <View style={styles.cardNumberWrapper}>
+            <Text style={styles.cardNumberText}>CARTRÓ</Text>
+            <Text style={styles.cardNumberNumber}>{card.id}</Text>
+          </View>
+          <Image src={card.qrCodeDataUri} style={styles.qrCode} />
         </View>
       </View>
 
@@ -254,7 +280,7 @@ const pageColumns = 1;
 const pageOrientation: Orientation = 'portrait';
 
 const AllCardsDocument: React.FC<{
-  cards: Card[];
+  cards: CardWithQR[];
 }> = ({ cards }) => {
   const chunkedCards = chunk(cards, pageRows * pageColumns);
 
@@ -272,11 +298,12 @@ const AllCardsDocument: React.FC<{
           >
             {cols.map((col, colIndex) => (
               <View
+                key={col.map((c) => c.id).join('-')}
                 style={[
                   styles.pageColumns,
                   {
                     borderBottom:
-                      colIndex === pageColumns - 1
+                      colIndex === pageRows - 1
                         ? undefined
                         : '1px dashed #f0f0f0',
                   },
@@ -310,5 +337,12 @@ const AllCardsDocument: React.FC<{
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function generateCardsPDF(data: Card[], outputPath: string) {
-  await render(<AllCardsDocument cards={data} />, outputPath);
+  const cardsWithQR = await Promise.all(
+    data.map(async (card) => ({
+      ...card,
+      qrCodeDataUri: await generateQRCodeDataUri(card.id),
+    }))
+  );
+
+  await render(<AllCardsDocument cards={cardsWithQR} />, outputPath);
 }
