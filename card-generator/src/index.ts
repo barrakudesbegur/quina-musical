@@ -3,7 +3,7 @@ import { generateCardsPDF } from './generate-cards-pdf';
 import songs from './songs.json';
 import { saveJsonToFile } from './utils/files';
 
-const SEED = 'barrakudes-2024-cigronet';
+const SEED = 'barrakudes-cigronet';
 
 const cards = generateCardsJson(300, songs, SEED);
 saveJsonToFile(cards, './dist/cards.json');

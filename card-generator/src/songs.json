@@ -1,437 +1,541 @@
 [
   {
     "id": 1,
-    "title": "Mamma mia",
-    "artist": "ABBA"
+    "title": "All I Want for Christmas Is You",
+    "artist": "Mariah Carey",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c0862332847213b151ffab31",
+    "spotifyId": "0bYg9bo50gSsH3LtXe2SQn"
   },
   {
     "id": 2,
-    "title": "Ni tu ni nadie",
-    "artist": "Alaska Y Dinarama"
+    "title": "All Night",
+    "artist": "Icona Pop",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27369d05d032251b59ae738096a",
+    "spotifyId": "15iosIuxC3C53BgsM5Uggs"
   },
   {
     "id": 3,
-    "title": "Fiebre",
-    "artist": "Bad Gyal"
+    "title": "Ave María",
+    "artist": "David Bisbal",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27349a2562013810352fc8feb6e",
+    "spotifyId": "5U4pDBaeq2Jl2dKuWWUSsh"
   },
   {
     "id": 4,
-    "title": "Single Ladies",
-    "artist": "Beyoncé"
+    "title": "Baby",
+    "artist": "Justin Bieber, Ludacris",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273629dc9e2e3bc20bbd7d92e4a",
+    "spotifyId": "6epn3r7S14KUqlReYr77hA"
   },
   {
     "id": 5,
-    "title": "Las Divinas",
-    "artist": "Brenda Asnicar"
+    "title": "Barbie Girl",
+    "artist": "Aqua",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f5768db89dd8ac30fd0e414f",
+    "spotifyId": "5ZrDlcxIDZyjOzHdYW1ydr"
   },
   {
     "id": 6,
-    "title": "Yo Te Esperaré",
-    "artist": "Cali y El Dandee"
+    "title": "Besos",
+    "artist": "El Canto Del Loco",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",
+    "spotifyId": "7MKO7rUZzjw8p87zdZDgqa"
   },
   {
     "id": 7,
-    "title": "Atrévete-Te-Te",
-    "artist": "Calle 13"
+    "title": "Boig Per Tu",
+    "artist": "Sau",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a8a98db05687330a248de205",
+    "spotifyId": "532JxAFc5M6g3fbLJeI3D2"
   },
   {
     "id": 8,
-    "title": "Madre Tierra (Oye)",
-    "artist": "Chayanne"
+    "title": "Bon dia",
+    "artist": "Els Pets",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736d8602480131a1e966e2f592",
+    "spotifyId": "7v5ULjF1WVgd26HFPT2IAz"
   },
   {
     "id": 9,
-    "title": "Viva la vida",
-    "artist": "Coldplay"
+    "title": "Boom, Boom, Boom, Boom!!",
+    "artist": "Vengaboys",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27354be522e5e1814efa54a31b3",
+    "spotifyId": "65OXGbKBQ8gUyJvUd0jNpf"
   },
   {
     "id": 10,
-    "title": "Pasado Pisado",
-    "artist": "Comando Tiburon"
+    "title": "Boys Will Be Boys",
+    "artist": "Paulina Rubio",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730cc6151bbb96c2dd16af437d",
+    "spotifyId": "2qlMpOIPLWbfSXcVuuMHrl"
   },
   {
     "id": 11,
-    "title": "La chica yeyé",
-    "artist": "Conchita Velasco"
+    "title": "Breaking Free",
+    "artist": "Troy, Gabriella, Disney",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273efc23dff51f494c345fd8eb4",
+    "spotifyId": "3AWSwChgStOColFkXbwRnP"
   },
   {
     "id": 12,
-    "title": "Nada fue un error",
-    "artist": "Coti, Andrés Calamaro"
+    "title": "capaz (merengueton)",
+    "artist": "Alleh, Yorghaki",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27353596a050e8369c51da11029",
+    "spotifyId": "2dd3G3ZqEcG2cNS1tp3oEk"
   },
   {
     "id": 13,
-    "title": "Gasolina",
-    "artist": "Daddy Yankee"
+    "title": "Carolina",
+    "artist": "M-Clan",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27341d925538112441a70fa3383",
+    "spotifyId": "0yUsNnKCxe7r68qzEjbOaB"
   },
   {
     "id": 14,
-    "title": "Limbo",
-    "artist": "Daddy Yankee"
+    "title": "Como Camarón",
+    "artist": "Estopa",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731ed1c8aff132830890f91faa",
+    "spotifyId": "1VB4sadHjFcFklHcZuoROi"
   },
   {
     "id": 15,
-    "title": "Ella Me Levantó",
-    "artist": "Daddy Yankee"
+    "title": "Cuídate",
+    "artist": "La Oreja de Van Gogh",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273fb01108d92974ffab07a05fb",
+    "spotifyId": "7gqIqyeCaV2xNtfZWxEphD"
   },
   {
     "id": 16,
-    "title": "Ave María",
-    "artist": "David Bisbal"
+    "title": "Dancing in the Moonlight",
+    "artist": "Toploader",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e16a6534cd5a968a5b725d03",
+    "spotifyId": "3Fzlg5r1IjhLk2qRw667od"
   },
   {
     "id": 17,
-    "title": "Que la detengan",
-    "artist": "David Civera"
+    "title": "Dancing Queen",
+    "artist": "ABBA",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2739aa209383c254c9e23e7f909",
+    "spotifyId": "01iyCAUm8EvOFqVWYJ3dVX"
   },
   {
     "id": 18,
-    "title": "Titanium",
-    "artist": "David Guetta"
+    "title": "Danza Kuduro",
+    "artist": "Don Omar, Lucenzo",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27352e8072be373bae435b7a7b2",
+    "spotifyId": "5XSZ8onipRr35H0wpWWsW3"
   },
   {
     "id": 19,
-    "title": "This is me",
-    "artist": "Demi Lovato, Joe Jonas"
+    "title": "Devuélveme a mi chica",
+    "artist": "Hombres G",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734bebefadddafd8c9e20a8c35",
+    "spotifyId": "1Wrzhfa5bNlqvsnCztz190"
   },
   {
     "id": 20,
-    "title": "Física o química",
-    "artist": "Despistaos"
+    "title": "Elefants",
+    "artist": "Oques Grasses",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273161b0cbf4e043a8c88ec6488",
+    "spotifyId": "7ffa3hboccVAKl1eCvIcyf"
   },
   {
     "id": 21,
-    "title": "Sweet Caroline",
-    "artist": "DJ Otzi"
+    "title": "El Tiburón",
+    "artist": "Henry Mendez",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273d5e46247ec2cf3424c4f6814",
+    "spotifyId": "3EpfOGCu8evgwyBHWOgaz6"
   },
   {
     "id": 22,
-    "title": "Danza Kuduro",
-    "artist": "Don Omar"
+    "title": "Everytime We Touch",
+    "artist": "Cascada",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e1f0e6c160b3cca53ba76aad",
+    "spotifyId": "5YnKmPZytgkywuHktntXDV"
   },
   {
     "id": 23,
-    "title": "September",
-    "artist": "Earth, Wind & Fire"
+    "title": "Fiebre",
+    "artist": "Bad Gyal",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273bdb8d291b4b7a5feca2db8a7",
+    "spotifyId": "3e4EFbKbdLvnW42xGB6tIx"
   },
   {
     "id": 24,
-    "title": "Zapatillas",
-    "artist": "El Canto del Loco"
+    "title": "Flying Free",
+    "artist": "Pont Aeri, Marian Dacal",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464",
+    "spotifyId": "1cpIInDCM09St4ajfPvPPZ"
   },
   {
     "id": 25,
-    "title": "Besos",
-    "artist": "El Canto del Loco"
+    "title": "Gasolina",
+    "artist": "Daddy Yankee",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736bdcdf82ecce36bff808a40c",
+    "spotifyId": "228BxWXUYQPJrJYHDLOHkj"
   },
   {
     "id": 26,
-    "title": "Jenifer",
-    "artist": "Els Catarres"
+    "title": "Gat Rumberu",
+    "artist": "La Pegatina",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2735d752f0833dad4aa47a4a1d0",
+    "spotifyId": "5Lf6RG1wOomzOZLYZuB3XK"
   },
   {
     "id": 27,
-    "title": "Bon dia",
-    "artist": "Els pets"
+    "title": "Give Me Everything",
+    "artist": "Pitbull, AFROJACK, Ne-Yo, Nayer",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731dc7483a9fcfce54822a2f19",
+    "spotifyId": "4QNpBfC0zvjKqPJcyqBy9W"
   },
   {
     "id": 28,
-    "title": "Como camaron",
-    "artist": "Estopa"
+    "title": "Golden",
+    "artist": "KPop Demon Hunters",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273333392a83a4514ae635ed982",
+    "spotifyId": "5Cp75TUMrHF6c8xbhdligS"
   },
   {
     "id": 29,
-    "title": "A quién le Importa",
-    "artist": "Fangoria"
+    "title": "Greased Lightnin'",
+    "artist": "John Travolta, Jeff Conaway",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273b68df485f3304211904548a8",
+    "spotifyId": "1XNE0QfNjdroSdosMIk8F6"
   },
   {
     "id": 30,
-    "title": "La marina sta morena",
-    "artist": "Figaflawas"
+    "title": "Hay Quel Venir al Sur",
+    "artist": "Raffaella Carrà",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273d0a0b75787a84861363ab426",
+    "spotifyId": "3vb3xZADNMONqL7aRQLVPJ"
   },
   {
     "id": 31,
-    "title": "Mussegu",
-    "artist": "Figaflawas"
+    "title": "Just Dance",
+    "artist": "Lady Gaga, Colby O'Donis",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e691217483df8798445c82e2",
+    "spotifyId": "1dzQoRqT5ucxXVaAhTcT0J"
   },
   {
     "id": 32,
-    "title": "Freed From Desire",
-    "artist": "Gala, Molella, Phil Jay"
+    "title": "La Bomba",
+    "artist": "King Africa",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730f97b0b1a39cef7216c669dc",
+    "spotifyId": "5UmGJS0jd1r52OjnNvVHvU"
   },
   {
     "id": 33,
-    "title": "La gozadera",
-    "artist": "Gente De Zona, Marc Anthony"
+    "title": "La flaca",
+    "artist": "Jarabe De Palo",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27347a83522c634e84f937a897e",
+    "spotifyId": "2LsbizbOeNa4x6qsi2jAMb"
   },
   {
     "id": 34,
-    "title": "Volare (Nel Blu di Pinto di Blu)",
-    "artist": "Gipsy Kings"
+    "title": "La Morocha",
+    "artist": "Luck Ra, BM",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273be85610edbbec105cad56682",
+    "spotifyId": "7aPsseax6rNFyipHn9A5CR"
   },
   {
     "id": 35,
-    "title": "Greased Lightnin'",
-    "artist": "Grease"
+    "title": "L'Amour Toujours",
+    "artist": "Gigi D'Agostino",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27395c70cc04573417548b47199",
+    "spotifyId": "52LJ3hyknOijCrE5gCD0rE"
   },
   {
     "id": 36,
-    "title": "El tiburón",
-    "artist": "Henry Mendez"
+    "title": "La Playa",
+    "artist": "La Oreja de Van Gogh",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273fb01108d92974ffab07a05fb",
+    "spotifyId": "2DNyZP4Py6f4zMASLBnIu6"
   },
   {
     "id": 37,
-    "title": "Breaking Free",
-    "artist": "High School Musical"
+    "title": "La Plena",
+    "artist": "W Sound, Beéle, Ovy On The Drums",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273d629a6041cde59d7ba67143c",
+    "spotifyId": "6xOEgzkMSZJKz6qtCJsQL5"
   },
   {
     "id": 38,
-    "title": "All night",
-    "artist": "Icona Pop"
+    "title": "Las de la Intuición",
+    "artist": "Shakira",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273afccde0243b5c750c07f6825",
+    "spotifyId": "7DnMd3BxVOedyOyR7K3F8L"
   },
   {
     "id": 39,
-    "title": "Quan somrius",
-    "artist": "Josep Thió"
+    "title": "La Vaca Lola - Remix",
+    "artist": "Toy Cantando",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2738317788e7ea129879420a0cb",
+    "spotifyId": "3LDjO9d6oIummvUDbPjZ6C"
   },
   {
     "id": 40,
-    "title": "Bailando por ahi",
-    "artist": "Juan Magan"
+    "title": "L'Empordà",
+    "artist": "Sopa De Cabra",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2730d9e5066c041517333356cd0",
+    "spotifyId": "1vzugDTXDgZCF0QQrzB5hX"
   },
   {
     "id": 41,
-    "title": "Ella no sigue modas",
-    "artist": "Juan Magan"
+    "title": "Limbo",
+    "artist": "Daddy Yankee",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27329866617908a958f41917d76",
+    "spotifyId": "3pDhN3qB33AOPhQEkUCaWt"
   },
   {
     "id": 42,
-    "title": "Baby",
-    "artist": "Justin Bieber"
+    "title": "Llença't",
+    "artist": "Lax'n'Busto",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27305fda9ec255cb06c5342fb6d",
+    "spotifyId": "4ggCyLHi9itGzHsUgYhnN4"
   },
   {
     "id": 43,
-    "title": "Si antes te hubiera conocido",
-    "artist": "Karol G"
+    "title": "Love Story",
+    "artist": "Taylor Swift",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273877ea8fa223c26f19aaef92d",
+    "spotifyId": "3CeCwYWvdfXbZLXFhBrbnf"
   },
   {
     "id": 44,
-    "title": "Tik Tok",
-    "artist": "Kesha"
+    "title": "Mamma Mia",
+    "artist": "ABBA",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27392d0747a634fcc351c6ac3c2",
+    "spotifyId": "2TxCwUlqaOH3TIyJqGgR91"
   },
   {
     "id": 45,
-    "title": "El Mambo",
-    "artist": "Kiko Rivera"
+    "title": "Me Colé en una Fiesta",
+    "artist": "Mecano",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2739b70f5f5361672fe4fbce3ff",
+    "spotifyId": "2txCuTGPLSkrpdFYAO6cZP"
   },
   {
     "id": 46,
-    "title": "Rosas",
-    "artist": "La Oreja de Van Gogh"
+    "title": "Mi gran noche",
+    "artist": "Raphael",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2739f4d22d79b6ad54bcfdee79a",
+    "spotifyId": "6Tnnk7MAnZiDx67DJN2hnx"
   },
   {
     "id": 47,
-    "title": "Puedes contar conmigo",
-    "artist": "La Oreja de Van Gogh"
+    "title": "MR. MOONDIAL",
+    "artist": "Quevedo, Pitbull",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734b690afba75a356fcdad526e",
+    "spotifyId": "67LKV40NfSSGIJnm0xz6fi"
   },
   {
     "id": 48,
-    "title": "Mari Carmen",
-    "artist": "La Pegatina"
+    "title": "Nada Fue Un Error",
+    "artist": "Coti, Andrés Calamaro",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f68e7098acffc8eae48ee6c3",
+    "spotifyId": "1Ev18ptTlc3CBQMmKsIfjY"
   },
   {
     "id": 49,
-    "title": "La vaca lola",
-    "artist": "La vaca lola - Remix"
+    "title": "Ni tú ni nadie",
+    "artist": "Alaska Y Dinarama",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737b7974ddc07f66321035ccf9",
+    "spotifyId": "7LpS82vPDLgZAHWRtWBBRj"
   },
   {
     "id": 50,
-    "title": "Aserejé",
-    "artist": "Las ketchup"
+    "title": "Ni Una Sola Palabra",
+    "artist": "Paulina Rubio",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273ce653efa36e0514c3b3d8969",
+    "spotifyId": "5xXYuYk2CzHfk3kLKYmRRb"
   },
   {
     "id": 51,
-    "title": "Llença't",
-    "artist": "Lax'n'Busto"
+    "title": "No Puedo Vivir Sin Ti",
+    "artist": "Los Ronaldos",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273839dfb77062782ae749c6efc",
+    "spotifyId": "2LUP49H9wb6nw2Y5oQzUpZ"
   },
   {
     "id": 52,
-    "title": "T'estimo molt",
-    "artist": "Lax'n'Busto"
+    "title": "No Rompas Mi Corazón",
+    "artist": "Trip Band",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273f2f01d3967e712532a469f76",
+    "spotifyId": "7fB2UgHKhpHDpTTLFgUYEO"
   },
   {
     "id": 53,
-    "title": "Sarandonga",
-    "artist": "Lolita"
+    "title": "On The Floor",
+    "artist": "Jennifer Lopez, Pitbull",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273d7b2aa3834b82b1cbe899a48",
+    "spotifyId": "3C0nOe05EIt1390bVABLyN"
   },
   {
     "id": 54,
-    "title": "Hay Lupita",
-    "artist": "Lomiiel"
+    "title": "Puedes Contar Conmigo",
+    "artist": "La Oreja de Van Gogh",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f",
+    "spotifyId": "1hbWtHgRDG25DkmxE4I28V"
   },
   {
     "id": 55,
-    "title": "La Bamba",
-    "artist": "Los Lobos"
+    "title": "Purpurina",
+    "artist": "Alberto Gambino",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273257858e1397f3174a1603bd7",
+    "spotifyId": "5HFvuMLMgS75OaY3UKzqqs"
   },
   {
     "id": 56,
-    "title": "Mambo No.5",
-    "artist": "Lou Bega"
+    "title": "Que la Detengan",
+    "artist": "David Civera",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27378228d19667b8297a3164397",
+    "spotifyId": "0YxU7V3kuCGwzuWCLiOXgF"
   },
   {
     "id": 57,
-    "title": "Antes muerta que sencilla",
-    "artist": "Maria Isabel"
+    "title": "Samba de Janeiro",
+    "artist": "Bellini",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27315cfd8f433616f3a7677fb93",
+    "spotifyId": "5aIfLbdgkbH7NbQryd1poB"
   },
   {
     "id": 58,
-    "title": "All I Want for Christmas Is You",
-    "artist": "Mariah Carey"
+    "title": "Sense Tu",
+    "artist": "Teràpia de Shock",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273b57e0f9d41a34b8ee9e04e2d",
+    "spotifyId": "2WWBXo8SVGSi3Z4oB7yQDi"
   },
   {
     "id": 59,
-    "title": "El Merengue",
-    "artist": "Marshmello, Manuel Turizo"
+    "title": "Shin Chan Dance",
+    "artist": "SX3",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27335910015bf82d2d06406bf5b",
+    "spotifyId": "0sHE7HXMSX8SlLyJwIgm4p"
   },
   {
     "id": 60,
-    "title": "Sarà Perché Ti Amo",
-    "artist": "Matt Joe"
+    "title": "SUPERESTRELLA",
+    "artist": "Aitana",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e9c382b5b9b3221428da47c2",
+    "spotifyId": "6hpuesKPNa3WhV48O7Fa47"
   },
   {
     "id": 61,
-    "title": "Caminando por la Vida",
-    "artist": "Melendi"
+    "title": "The Best of Both Worlds",
+    "artist": "Hannah Montana",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27391617a5764e53b78d47c9be1",
+    "spotifyId": "3T6DY7gUqGCcHG6HON54Ex"
   },
   {
     "id": 62,
-    "title": "El baile del gorila",
-    "artist": "Melody"
+    "title": "Aserejé",
+    "artist": "Las Ketchup",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737cbbd0328713a05ea51d3eaf",
+    "spotifyId": "6NG2IIXZfC5Notpz0GIODU"
   },
   {
     "id": 63,
-    "title": "Ai Se Eu Te Pego",
-    "artist": "Michel Telo"
+    "title": "Tacata",
+    "artist": "Tacabro",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273c7080c178a5faf25e3a9a734",
+    "spotifyId": "6EhPXpRYkwGwg8lx3XiGTI"
   },
   {
     "id": 64,
-    "title": "Como Te Atreves",
-    "artist": "Morat"
+    "title": "Tenía Tanto Que Darte",
+    "artist": "Nena Daconte",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2734d610f100fc60fbe4f84420e",
+    "spotifyId": "3Th2of8xIYyImVLXUbzaTp"
   },
   {
     "id": 65,
-    "title": "Tenia tanto que darte",
-    "artist": "Nena Daconte"
+    "title": "T'Estimo Molt",
+    "artist": "Lax'n'Busto",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27388f50f79184550f7346a1c6d",
+    "spotifyId": "3FY3W22KrDkkxintD2gpqk"
   },
   {
     "id": 66,
-    "title": "Un beso y una flor",
-    "artist": "Nino Bravo"
+    "title": "This Is Me",
+    "artist": "Demi Lovato, Joe Jonas",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a09542967ef1a606bfe927ac",
+    "spotifyId": "2JQRlt3HpTCpRvcfDsbwic"
   },
   {
     "id": 67,
-    "title": "Dragostea din tei",
-    "artist": "O-Zone"
+    "title": "Timber",
+    "artist": "Pitbull, Kesha",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732ffc2c580b6595a3e675a730",
+    "spotifyId": "3cHyrEgdyYRjgJKSOiOtcS"
   },
   {
     "id": 68,
-    "title": "Elefants",
-    "artist": "Oques Grasses"
+    "title": "Titanium",
+    "artist": "David Guetta, Sia",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e6060caf9bf5b82c25240329",
+    "spotifyId": "0TDLuuLlV54CkRRUOahJb4"
   },
   {
     "id": 69,
-    "title": "Ni una sola palabra",
-    "artist": "Paulina Rubio"
+    "title": "Tots Som Súpers",
+    "artist": "SX3",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732c3cdcc73e7e98e8cb7dcb66",
+    "spotifyId": "0b8u6Y5QSq5wQzxjZ36Jo1"
   },
   {
     "id": 70,
-    "title": "Princesas",
-    "artist": "Pereza"
+    "title": "Una Vaina Loca",
+    "artist": "Fuego",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273a8f52f5813c2d225a89bbbab",
+    "spotifyId": "00hdjyXt6MohKnCyDmhxOL"
   },
   {
     "id": 71,
-    "title": "Flying Free",
-    "artist": "Pont Aeri"
+    "title": "Un Beso Y Una Flor",
+    "artist": "Nino Bravo",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2733df0bdac09b5ab00347ab7b2",
+    "spotifyId": "5IU4JO2cpa0wPK8oQWFfCr"
   },
   {
     "id": 72,
-    "title": "Columbia",
-    "artist": "Quevedo"
+    "title": "Viva La Vida",
+    "artist": "Coldplay",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e21cc1db05580b6f2d2a3b6e",
+    "spotifyId": "1mea3bSkSGXuIRvnydlB5b"
   },
   {
     "id": 73,
-    "title": "We found love",
-    "artist": "Rihanna"
+    "title": "Vivir Así Es Morir de Amor",
+    "artist": "Camilo Sesto",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273e8d0af56f0df1af30bf66fa1",
+    "spotifyId": "3yzHIAzk3zVE1WgspS8W21"
   },
   {
     "id": 74,
-    "title": "Despechá",
-    "artist": "Rosalía"
+    "title": "Waka Waka",
+    "artist": "Shakira, Freshlyground",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273815abe02dc1a5aa63be0ee89",
+    "spotifyId": "0W8nDs4H2cqxxAgszNMYO3"
   },
   {
     "id": 75,
-    "title": "Boig per tu",
-    "artist": "Sau"
+    "title": "YMCA",
+    "artist": "Village People",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2732f38aff220050371b43eb57e",
+    "spotifyId": "3ypMsqUwfNFMiooMLVHfkp"
   },
   {
     "id": 76,
-    "title": "Waka Waka",
-    "artist": "Shakira"
+    "title": "Yo Quiero Bailar",
+    "artist": "Sonia Y Selena",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2736e159f465d118e870580950e",
+    "spotifyId": "4rFCPjKfgbEeNvs1Ku4nbd"
   },
   {
     "id": 77,
-    "title": "Yo quiero bailar",
-    "artist": "Sonia y Selena"
-  },
-  {
-    "id": 78,
-    "title": "L'Empordà",
-    "artist": "Sopa de Cabra"
-  },
-  {
-    "id": 79,
-    "title": "Wannabe",
-    "artist": "Spice Girls"
-  },
-  {
-    "id": 80,
-    "title": "Shin Chan",
-    "artist": "SX3"
-  },
-  {
-    "id": 81,
-    "title": "Love Story",
-    "artist": "Taylor Swift"
-  },
-  {
-    "id": 82,
-    "title": "Applejack",
-    "artist": "The Triangles"
-  },
-  {
-    "id": 83,
-    "title": "De l'1 al què",
-    "artist": "The Tyets"
-  },
-  {
-    "id": 84,
-    "title": "Coti x Coti",
-    "artist": "The Tyets"
-  },
-  {
-    "id": 85,
-    "title": "YMCA",
-    "artist": "Village People"
-  },
-  {
-    "id": 86,
-    "title": "Shut up and dance",
-    "artist": "Walk the moon"
-  },
-  {
-    "id": 87,
-    "title": "Tobogan",
-    "artist": "Zoo"
+    "title": "Yo Te Esperaré",
+    "artist": "Cali Y El Dandee",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2737b5ce333949f95a6ec6e0e11",
+    "spotifyId": "0mGvaKpwLYoybnIoboC3uS"
   }
 ]
