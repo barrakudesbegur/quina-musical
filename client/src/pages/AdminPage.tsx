@@ -481,7 +481,7 @@ export const AdminPage: FC = () => {
           </div>
         </section>
 
-        <GameInsightsSection />
+        <GameInsightsSection now={now} />
       </div>
       <div className="flex flex-col gap-4 min-h-0 lg:overflow-y-auto min-w-0">
         <h2 className="text-3xl font-brand uppercase text-center  tracking-wider">

@@ -1,11 +1,12 @@
 import { cn, Tab, Tabs } from '@heroui/react';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { orderBy, sum } from 'lodash-es';
+import { orderBy, sortBy, sum } from 'lodash-es';
 import { FC, PropsWithChildren, useMemo } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
 import { trpc } from '../utils/trpc';
 import { CardsForm } from './CardsForm';
 import { IconCrown } from '@tabler/icons-react';
+import { format } from 'date-fns';
 
 type ChartPoint = {
   playedCount: number;
@@ -52,9 +53,11 @@ const getMaxScore = (card: Card, mode: ModeKey) => {
   }
 };
 
+const DEFAULT_SONG_PLAY_DURATION_MS = 15_000;
+
 export const GameInsightsSection: FC<
-  PropsWithChildren<{ className?: string }>
-> = ({ className }) => {
+  PropsWithChildren<{ className?: string; now: number }>
+> = ({ className, now }) => {
   const cardsQuery = trpc.card.getAll.useQuery();
   const songsQuery = trpc.game.getAllSongs.useQuery();
   const cardsPlayingQuery = trpc.game.getCardsPlaying.useQuery();
@@ -64,23 +67,32 @@ export const GameInsightsSection: FC<
     'quina'
   );
 
-  const data = useMemo<{
-    chart: ChartPoint[];
-    winners: { id: number; isPlaying: boolean }[];
-  }>(() => {
-    const cardsPlayingSet = new Set(cardsPlayingQuery.data);
-    const playedSongIds = new Set(
-      songsQuery.data?.filter((song) => song.isPlayed).map((song) => song.id)
-    );
+  const cardsPlayingSet = useMemo(
+    () => new Set(cardsPlayingQuery.data),
+    [cardsPlayingQuery.data]
+  );
 
-    const cardsInPlay =
+  const playedSongIds = useMemo(
+    () =>
+      new Set(
+        songsQuery.data?.filter((song) => song.isPlayed).map((song) => song.id)
+      ),
+    [songsQuery.data]
+  );
+
+  const cardsInPlay = useMemo(
+    () =>
       cardsQuery.data?.filter((card) => cardsPlayingSet.has(Number(card.id))) ??
-      [];
+      [],
+    [cardsQuery.data, cardsPlayingSet]
+  );
 
-    const maxPossibleScore = cardsInPlay[0]
-      ? getMaxScore(cardsInPlay[0], modeKey)
-      : 0;
+  const maxPossibleScore = useMemo(
+    () => (cardsInPlay[0] ? getMaxScore(cardsInPlay[0], modeKey) : 0),
+    [cardsInPlay, modeKey]
+  );
 
+  const chartData = useMemo<ChartPoint[]>(() => {
     const distribution = cardsInPlay.reduce<Record<number, number>>(
       (acc, card) => {
         const score = getCardScore(card, playedSongIds, modeKey);
@@ -97,30 +109,96 @@ export const GameInsightsSection: FC<
       0
     );
 
-    const chartData = Array.from(
-      { length: maxScore + 1 },
-      (_, playedCount) => ({
-        playedCount,
-        cardCount: distribution[playedCount] ?? 0,
-      })
+    return Array.from({ length: maxScore + 1 }, (_, playedCount) => ({
+      playedCount,
+      cardCount: distribution[playedCount] ?? 0,
+    }));
+  }, [cardsInPlay, playedSongIds, modeKey, maxPossibleScore]);
+
+  const winners = useMemo(
+    () =>
+      orderBy(
+        cardsQuery.data
+          ?.filter(
+            (card) =>
+              getCardScore(card, playedSongIds, modeKey) >= maxPossibleScore
+          )
+          .map((card) => ({
+            ...card,
+            isPlaying: cardsPlayingSet.has(Number(card.id)),
+          })),
+        ['isPlaying', 'id'],
+        ['desc', 'asc']
+      ),
+    [cardsQuery.data, playedSongIds, modeKey, maxPossibleScore, cardsPlayingSet]
+  );
+
+  const songsInQueueUntilFinish = useMemo(() => {
+    if (cardsInPlay.length === 0 || !songsQuery.data) return null;
+
+    const songsInQueue = sortBy(
+      songsQuery.data.filter(
+        (song) => !song.isPlayed && song.positionInQueue !== null
+      ),
+      'positionInQueue'
     );
 
-    const winners = orderBy(
-      cardsQuery.data
-        ?.filter(
-          (card) =>
-            getCardScore(card, playedSongIds, modeKey) >= maxPossibleScore
-        )
-        .map((card) => ({
-          ...card,
-          isPlaying: cardsPlayingSet.has(Number(card.id)),
-        })),
-      ['isPlaying', 'id'],
-      ['desc', 'asc']
-    );
+    const songsNeeded = Array.from(
+      { length: songsInQueue.length + 1 },
+      (_, count) => count
+    ).find((count) => {
+      const simulatedPlayedIds = new Set([
+        ...playedSongIds,
+        ...songsInQueue.slice(0, count).map((song) => song.id),
+      ]);
 
-    return { chart: chartData, winners };
-  }, [cardsPlayingQuery.data, cardsQuery, songsQuery.data, modeKey]);
+      return cardsInPlay.some(
+        (card) =>
+          getCardScore(card, simulatedPlayedIds, modeKey) >= maxPossibleScore
+      );
+    });
+
+    return songsNeeded ?? null;
+  }, [cardsInPlay, songsQuery.data, playedSongIds, modeKey, maxPossibleScore]);
+
+  const avgTimeBetweenSongs = useMemo(() => {
+    if (songsInQueueUntilFinish === null || !songsQuery.data)
+      return DEFAULT_SONG_PLAY_DURATION_MS;
+
+    const playedSongs = songsQuery.data
+      .filter((song) => song.isPlayed && song.playedAt)
+      .sort(
+        (a, b) =>
+          new Date(a.playedAt!).getTime() - new Date(b.playedAt!).getTime()
+      );
+
+    if (playedSongs.length === 0) return DEFAULT_SONG_PLAY_DURATION_MS;
+
+    const last5Songs = playedSongs.slice(-5);
+
+    const timeDifferences = last5Songs
+      .slice(1)
+      .map(
+        (song, i) =>
+          new Date(song.playedAt!).getTime() -
+          new Date(last5Songs[i].playedAt!).getTime()
+      );
+
+    const currentSongDuration =
+      now - new Date(last5Songs[last5Songs.length - 1].playedAt!).getTime();
+
+    const durations = [...timeDifferences, currentSongDuration];
+
+    return sum(durations) / durations.length;
+  }, [songsInQueueUntilFinish, songsQuery.data, now]);
+
+  const estimatedFinishTime = useMemo(() => {
+    return new Date(now + avgTimeBetweenSongs * (songsInQueueUntilFinish ?? 0));
+  }, [songsInQueueUntilFinish, avgTimeBetweenSongs, now]);
+
+  const estimatedFinishTimeFormatted = useMemo(() => {
+    return format(estimatedFinishTime, 'K:mm aaa');
+  }, [estimatedFinishTime]);
 
   const isLoading =
     cardsQuery.isLoading || songsQuery.isLoading || cardsPlayingQuery.isLoading;
@@ -145,6 +223,14 @@ export const GameInsightsSection: FC<
         ))}
       </Tabs>
 
+      <p className="text-center">
+        <span className="font-medium">Fi:</span>{' '}
+        <span>{estimatedFinishTimeFormatted}</span>{' '}
+        {songsInQueueUntilFinish !== null && (
+          <span>({songsInQueueUntilFinish} cançons)</span>
+        )}
+      </p>
+
       <div className="mt-10">
         {isLoading ? (
           <p className="text-center text-default-500">Carregant grafic...</p>
@@ -152,7 +238,7 @@ export const GameInsightsSection: FC<
           <p className="text-center text-danger">
             No s'han pogut carregar les dades.
           </p>
-        ) : !data.chart.length ? (
+        ) : !chartData.length ? (
           <p className="text-center text-default-500">
             {cardsPlayingQuery.data?.length
               ? 'Encara no hi ha cap cançó reproduida.'
@@ -161,7 +247,7 @@ export const GameInsightsSection: FC<
         ) : (
           <div className="w-full overflow-x-auto">
             <BarChart
-              dataset={data.chart}
+              dataset={chartData}
               height={320}
               xAxis={[
                 {
@@ -189,9 +275,9 @@ export const GameInsightsSection: FC<
         )}
       </div>
 
-      {data.winners.length ? (
+      {winners.length ? (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(calc(3ch+--spacing(2)),1fr))] gap-2">
-          {data.winners.map((card) => (
+          {winners.map((card) => (
             <li
               className={cn(
                 'min-w-[3ch] text-center font-mono py-1 leading-none bg-gray-200/80 rounded-md',
