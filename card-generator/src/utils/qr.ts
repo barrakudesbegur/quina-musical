@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import nodeCanvas from 'canvas';
 import { urlWithParams } from './urls';
 
-const BASE_URL = 'https://quina.barrakidesbegur.org';
+const BASE_URL = 'https://quina.barrakudesbegur.org';
 const PARAM_CARD_ID = 'c';
 
 export async function generateQRCodeDataUri(
