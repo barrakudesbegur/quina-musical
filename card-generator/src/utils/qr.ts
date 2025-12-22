@@ -31,7 +31,7 @@ export async function generateQRCodeDataUri(
       margin: 0,
     },
     dotsOptions: {
-      type: 'rounded',
+      type: 'square',
       color: '#000000',
       roundSize: true,
     },
@@ -39,7 +39,7 @@ export async function generateQRCodeDataUri(
       color: '#ffffff',
     },
     cornersSquareOptions: {
-      type: 'extra-rounded',
+      type: 'rounded',
       color: '#000000',
     },
     cornersDotOptions: {
