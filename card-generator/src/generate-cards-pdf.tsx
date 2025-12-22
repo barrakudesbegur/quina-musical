@@ -292,12 +292,36 @@ const pageRows = 3;
 const pageColumns = 1;
 const pageOrientation: Orientation = 'portrait';
 
+const distributeCardsAcrossPages = (
+  cards: CardWithQR[],
+  cardsPerPage: number
+): CardWithQR[][] => {
+  const result: CardWithQR[][] = [];
+  const numPages = Math.ceil(cards.length / cardsPerPage);
+
+  for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
+    const page: CardWithQR[] = [];
+    for (let cardIndex = 0; cardIndex < cardsPerPage; cardIndex++) {
+      const actualIndex = cardIndex * numPages + pageIndex;
+      if (actualIndex < cards.length) {
+        page.push(cards[actualIndex]);
+      }
+    }
+    result.push(page);
+  }
+
+  return result;
+};
+
 const AllCardsDocument: React.FC<{
   cards: CardWithQR[];
   title: string;
   version: string;
 }> = ({ cards, version, title }) => {
-  const chunkedCards = chunk(cards, pageRows * pageColumns);
+  const chunkedCards = distributeCardsAcrossPages(
+    cards,
+    pageRows * pageColumns
+  );
 
   return (
     <Document>
