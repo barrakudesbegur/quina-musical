@@ -235,7 +235,7 @@ const CardComponent: React.FC<{
           </View>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.cardTitle}>QUINA 2025</Text>
+          <Text style={styles.cardTitle}>QUINA QUINA!</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.cardNumberWrapper}>
