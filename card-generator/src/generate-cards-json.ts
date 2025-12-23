@@ -1,4 +1,4 @@
-import { sortBy } from 'lodash';
+import { pick, sortBy } from 'lodash';
 import { shuffleArrayWithSeed } from './utils/arrays';
 
 const LINES = 3;
@@ -10,14 +10,21 @@ type Song = {
   id: number;
   title: string;
   artist: string;
+  cover: string;
+  spotifyId: string;
 };
 
 export type Card = {
   id: string;
-  lines: Song[][];
+  type: string;
+  lines: {
+    id: number;
+    title: string;
+    artist: string;
+  }[][];
 };
 
-function makeCard(id: string, allSongs: Song[], seed: string) {
+function makeCard(id: string, type: string, allSongs: Song[], seed: string) {
   const songsPerCard = LINES * COLUMNS;
   if (allSongs.length < songsPerCard) {
     throw new Error(
@@ -29,10 +36,16 @@ function makeCard(id: string, allSongs: Song[], seed: string) {
 
   const card: Card = {
     id: id,
+    type: type,
     lines: Array.from({ length: LINES }, (_, i) => {
       const start = i * COLUMNS;
       const end = start + COLUMNS;
-      return sortBy(shuffledSongs.slice(start, end), 'title');
+      return sortBy(
+        shuffledSongs
+          .slice(start, end)
+          .map((song) => pick(song, ['id', 'title', 'artist'])),
+        'title'
+      );
     }),
   };
 
@@ -48,8 +61,14 @@ function cardToUniqueKey(card: Card) {
   );
 }
 
-export function generateCardsJson(amount: number, songs: Song[], seed: string) {
-  const ids = Array.from({ length: amount }, (_, i) => String(i + 1));
+export function generateCardsJson(
+  type: string,
+  startId: number,
+  amount: number,
+  songs: Song[],
+  seed: string
+) {
+  const ids = Array.from({ length: amount }, (_, i) => String(startId + i));
 
   const bingosSoFar = new Set<string>();
   const linesSoFar = new Set<string>();
@@ -72,20 +91,20 @@ export function generateCardsJson(amount: number, songs: Song[], seed: string) {
     let card: Card | null = null;
 
     for (let i = 0; i < ATEMPTS_BINGO; i++) {
-      card = makeCard(id, songs, `${seed}-${id}`);
+      card = makeCard(id, type, songs, `${seed}-${id}-bingo-${i}`);
       if (bingosSoFar.has(cardToUniqueKey(card))) continue;
       saveToSoFar(card);
       return card;
     }
 
     for (let i = 0; i < ATEMPTS_LINE; i++) {
-      card = makeCard(id, songs, `${seed}-${id}`);
+      card = makeCard(id, type, songs, `${seed}-${id}-line-${i}`);
       if (linesSoFar.has(cardToUniqueKey(card))) continue;
       saveToSoFar(card);
       return card;
     }
 
-    card ??= makeCard(id, songs, `${seed}-${id}`);
+    card ??= makeCard(id, type, songs, `${seed}-${id}-final`);
     duplicateCards.push(card);
     return card;
   });
