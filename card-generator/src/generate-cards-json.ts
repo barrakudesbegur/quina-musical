@@ -15,7 +15,7 @@ type Song = {
 };
 
 export type Card = {
-  id: string;
+  id: number;
   type: string;
   lines: {
     id: number;
@@ -24,7 +24,7 @@ export type Card = {
   }[][];
 };
 
-function makeCard(id: string, type: string, allSongs: Song[], seed: string) {
+function makeCard(id: number, type: string, allSongs: Song[], seed: string) {
   const songsPerCard = LINES * COLUMNS;
   if (allSongs.length < songsPerCard) {
     throw new Error(
@@ -68,7 +68,7 @@ export function generateCardsJson(
   songs: Song[],
   seed: string
 ) {
-  const ids = Array.from({ length: amount }, (_, i) => String(startId + i));
+  const ids = Array.from({ length: amount }, (_, i) => startId + i);
 
   const bingosSoFar = new Set<string>();
   const linesSoFar = new Set<string>();

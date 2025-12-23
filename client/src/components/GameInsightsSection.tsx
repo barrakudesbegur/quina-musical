@@ -25,6 +25,7 @@ type ModeKey = (typeof modeOptions)[number]['key'];
 
 type Card = {
   id: number;
+  type: string;
   lines: { id: number }[][];
 };
 
@@ -80,12 +81,13 @@ export const GameInsightsSection: FC<
     [songsQuery.data]
   );
 
-  const cardsInPlay = useMemo(
-    () =>
-      cardsQuery.data?.filter((card) => cardsPlayingSet.has(Number(card.id))) ??
-      [],
-    [cardsQuery.data, cardsPlayingSet]
-  );
+  const cardsInPlay = useMemo(() => {
+    if (cardsPlayingSet.size === 0) return cardsQuery.data ?? [];
+    
+    return (
+      cardsQuery.data?.filter((card) => cardsPlayingSet.has(card.id)) ?? []
+    );
+  }, [cardsQuery.data, cardsPlayingSet]);
 
   const maxPossibleScore = useMemo(
     () => (cardsInPlay[0] ? getMaxScore(cardsInPlay[0], modeKey) : 0),
@@ -125,7 +127,7 @@ export const GameInsightsSection: FC<
           )
           .map((card) => ({
             ...card,
-            isPlaying: cardsPlayingSet.has(Number(card.id)),
+            isPlaying: cardsPlayingSet.has(card.id),
           })),
         ['isPlaying', 'id'],
         ['desc', 'asc']
