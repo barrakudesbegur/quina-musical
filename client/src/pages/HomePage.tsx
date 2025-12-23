@@ -1,18 +1,108 @@
 import autoAnimate from '@formkit/auto-animate';
-import { cn } from '@heroui/react';
+import { Alert, Chip, cn, Input } from '@heroui/react';
+import {
+  IconCircleFilled,
+  IconClubsFilled,
+  IconGiftFilled,
+  IconLaurelWreathFilled,
+  IconMoonFilled,
+  IconSquareFilled,
+  IconStarFilled,
+  IconTriangleFilled,
+} from '@tabler/icons-react';
+import { maxBy, uniq } from 'lodash-es';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { useSearchParams } from 'react-router-dom';
 import decorationLeft from '../assets/decoration-left.svg';
 import decorationRight from '../assets/decoration-right.svg';
 import { MorphingText } from '../components/MorphingText';
 import { GALLERY_IMAGES } from '../config/images';
 import { trpc } from '../utils/trpc';
 
+const CARD_ID_QUERY_PARAM = 'c';
+
+const CARD_ICON_CONFIGS = [
+  { icon: IconStarFilled, color: '#FFD93D' },
+  { icon: IconLaurelWreathFilled, color: '#6BCB77' },
+  { icon: IconMoonFilled, color: '#00d3f2' },
+  { icon: IconTriangleFilled, color: '#C77DFF' },
+  { icon: IconGiftFilled, color: '#FF922B' },
+  { icon: IconClubsFilled, color: '#2a2524' },
+  { icon: IconCircleFilled, color: '#ffffff' },
+  { icon: IconSquareFilled, color: '#4D96FF' },
+];
+
+function cardHasSongExcludingLast(
+  card: { lines: number[][] },
+  song: { id: number } | undefined | null,
+  playedSongs: { id: number; position: number }[] | undefined | null
+) {
+  if (!song) return false;
+  const songIds = card.lines.flat();
+
+  if (playedSongs?.length) {
+    const songsInCard = songIds.filter((songId) =>
+      playedSongs.some((s) => s.id === songId)
+    );
+    const isWinner = songsInCard.length >= songIds.length;
+
+    if (isWinner) {
+      const playedSongOfCard = songIds
+        .map((songId) => playedSongs.find((s) => s.id === songId))
+        .filter((s) => s !== undefined);
+      const lastPlayedSongOfCard = maxBy(playedSongOfCard, 'position');
+      if (lastPlayedSongOfCard?.id === song.id) {
+        return false;
+      }
+    }
+  }
+
+  return songIds.some((songId) => songId === song.id);
+}
+
 export const HomePage: FC = () => {
   const parent = useRef<HTMLOListElement>(null);
   useEffect(() => {
     if (parent.current) autoAnimate(parent.current);
   }, [parent]);
+
+  const allCardsQuery = trpc.card.getAll.useQuery(undefined, { enabled: true });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [cardInputValue, setCardInputValue] = useState(() => {
+    return searchParams.getAll(CARD_ID_QUERY_PARAM).join(',');
+  });
+
+  const watchingCardIds = useMemo(() => {
+    return uniq(
+      cardInputValue
+        .split(/\D+/)
+        .filter(Boolean)
+        .map((v) => Number.parseInt(v, 10))
+        .filter((n) => Number.isFinite(n) && n >= 0)
+    );
+  }, [cardInputValue]);
+
+  const watchingCards = useMemo(() => {
+    return watchingCardIds
+      .map((id, index) => {
+        const card = allCardsQuery.data?.find((c) => c.id === id);
+        if (!card) return undefined;
+
+        return {
+          ...card,
+          ...CARD_ICON_CONFIGS[index % CARD_ICON_CONFIGS.length],
+          watchPosition: index,
+        };
+      })
+      .filter((c) => c !== undefined);
+  }, [watchingCardIds, allCardsQuery.data]);
+
+  useEffect(() => {
+    setSearchParams({
+      [CARD_ID_QUERY_PARAM]: watchingCardIds.map((c) => c.toString()),
+    });
+  }, [watchingCardIds, setSearchParams]);
 
   type Song = NonNullable<(typeof gameState)['data']>['playedSongs'][number];
 
@@ -31,6 +121,14 @@ export const HomePage: FC = () => {
         current: data.playedSongs[0] ?? null,
         prev: prevValues.current,
       }));
+
+      if (
+        watchingCards.some((card) =>
+          cardHasSongExcludingLast(card, data.playedSongs[0], data.playedSongs)
+        )
+      ) {
+        navigator.vibrate?.(500);
+      }
     },
     onError(err) {
       console.error('Subscription error:', err);
@@ -46,6 +144,12 @@ export const HomePage: FC = () => {
     );
   }, [gameState.data?.displayedImageId]);
 
+  const cardsWithCurrentSong = useMemo(() => {
+    return watchingCards.filter((card) =>
+      cardHasSongExcludingLast(card, currentSong, gameState.data?.playedSongs)
+    );
+  }, [watchingCards, currentSong, gameState.data?.playedSongs]);
+
   return (
     <main className="bg-[#8B1538] max-md:pb-[calc(100dvh/3)] font-brand font-light tracking-wider text-white md:overflow-hidden min-h-dvh md:h-dvh w-full grid grid-rows-[auto_1fr_auto]">
       <div className="sticky top-0 inset-x-0 z-30 overflow-hidden">
@@ -60,7 +164,12 @@ export const HomePage: FC = () => {
           className="absolute right-0 top-0 h-[calc(clamp(3rem,9dvw,15dvh)*1.7)] pointer-events-none hidden md:block"
         />
 
-        <div className="bg-white py-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden">
+        <div
+          className={cn(
+            'bg-white py-4 text-stone-900 flex flex-col items-center justify-center text-center overflow-hidden',
+            cardsWithCurrentSong.length > 0 && 'bg-[#fef200]'
+          )}
+        >
           <MorphingText
             texts={[prevSong?.title ?? '', currentSong?.title ?? '']}
             classNames={{
@@ -92,7 +201,9 @@ export const HomePage: FC = () => {
             height: '12px',
             width: '100%',
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23fff'/%3E%3C/svg%3E\")",
+              cardsWithCurrentSong.length > 0
+                ? "url(\"data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23fef200'/%3E%3C/svg%3E\")"
+                : "url(\"data:image/svg+xml,%3Csvg width='64' height='12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M64 0c-8.806 7.967-20.196 12-32 12C20.196 12 8.806 7.967 0 0h64Z' fill='%23fff'/%3E%3C/svg%3E\")",
             backgroundSize: '64px 12px',
             backgroundPosition: 'center top',
             backgroundRepeat: 'repeat-x',
@@ -121,20 +232,96 @@ export const HomePage: FC = () => {
         <h2 className="text-4xl block md:hidden uppercase font-normal underline underline-offset-4 decoration-white/30 tracking-wider leading-none mb-4">
           Historial
         </h2>
-        <ol
-          ref={parent}
-          className="flex flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2"
-        >
-          {gameState.data?.playedSongs.map((song) => (
-            <li
-              className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance"
-              key={`${song.id}-${song.position}`}
-            >
-              <span className="text-white/40 font-thin">{song.position}.</span>{' '}
-              {song.title}
-            </li>
-          ))}
-        </ol>
+        {gameState.data?.playedSongs.length ? (
+          <ol
+            ref={parent}
+            className="flex min-h-48 flex-col items-center content-start justify-items-start justify-start md:flex-wrap md:h-full w-full overflow-auto md:overflow-hidden p-2"
+          >
+            {gameState.data.playedSongs.map((song) => {
+              const cardsWithSong = watchingCards.filter((card) =>
+                cardHasSongExcludingLast(
+                  card,
+                  song,
+                  gameState.data?.playedSongs
+                )
+              );
+
+              return (
+                <li
+                  className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance flex items-center justify-center gap-2"
+                  key={`${song.id}-${song.position}`}
+                >
+                  {cardsWithSong
+                    .filter((card) => card.watchPosition % 2 === 1)
+                    .map((card) => (
+                      <card.icon
+                        key={card.id}
+                        size={20}
+                        style={{ color: card.color }}
+                        className="shrink-0"
+                      />
+                    ))}
+                  <span
+                    className={cn(
+                      cardsWithSong.length > 0 && 'text-yellow-200'
+                    )}
+                  >
+                    {song.title}
+                  </span>
+                  {cardsWithSong
+                    .filter((card) => card.watchPosition % 2 === 0)
+                    .map((card) => (
+                      <card.icon
+                        key={card.id}
+                        size={20}
+                        style={{ color: card.color }}
+                        className="shrink-0"
+                      />
+                    ))}
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <div className="min-h-48"></div>
+        )}
+
+        <div className="md:hidden px-4 mt-6">
+          <Input
+            label="Nº de cartrons (separats per comes)"
+            placeholder="Ex: 101, 205, 300"
+            value={cardInputValue}
+            onValueChange={setCardInputValue}
+            size="sm"
+          />
+          {watchingCardIds.length > 0 && (
+            <>
+              <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                {watchingCards.map((card) => {
+                  return (
+                    <Chip
+                      key={card.id}
+                      variant="bordered"
+                      startContent={
+                        <card.icon size={14} style={{ color: card.color }} />
+                      }
+                      className="text-white"
+                    >
+                      Cartró {card.id}
+                    </Chip>
+                  );
+                })}
+              </div>
+              <Alert
+                color="warning"
+                variant="flat"
+                title="L'última cançó no es marcarà"
+                description="Si vols guanyar la quina, has de estar atent/a."
+                className="mt-2"
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] hidden md:grid grid-cols-[repeat(3,1fr)] items-center justify-center content-end overflow-visible">

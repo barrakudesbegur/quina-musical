@@ -50,8 +50,10 @@ export const CheckCardDialog: FC<{
     if (!selectedCard || !playedSongIds) return null;
     return selectedCard.lines
       .flat()
-      .filter((song) => !playedSongIds.has(song.id));
-  }, [playedSongIds, selectedCard]);
+      .filter((songId) => !playedSongIds.has(songId))
+      .map((songId) => songsQuery.data?.find((song) => song.id === songId))
+      .filter((song) => song !== undefined);
+  }, [playedSongIds, selectedCard, songsQuery.data]);
 
   const isWinner = Boolean(selectedCard) && missingSongs?.length === 0;
   const isLoading = cardsQuery.isLoading || songsQuery.isLoading;
@@ -130,13 +132,13 @@ export const CheckCardDialog: FC<{
                       aria-label={`Línia ${lineIndex + 1}`}
                       showDivider={lineIndex !== selectedCard.lines.length - 1}
                     >
-                      {line.map((song) => {
+                      {line.map((songId) => {
                         const playedSong = songsQuery.data?.find(
-                          (s) => s.id === song.id
+                          (s) => s.id === songId
                         );
                         return (
                           <ListboxItem
-                            key={song.id}
+                            key={songId}
                             startContent={
                               playedSong?.isPlayed ? (
                                 <IconCheck className="text-success" size={18} />
@@ -157,7 +159,7 @@ export const CheckCardDialog: FC<{
                               </span>
                             }
                           >
-                            {song.title}
+                            {playedSong?.title ?? `Cançó ${songId}`}
                           </ListboxItem>
                         );
                       })}

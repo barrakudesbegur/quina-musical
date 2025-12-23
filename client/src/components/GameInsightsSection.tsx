@@ -26,7 +26,7 @@ type ModeKey = (typeof modeOptions)[number]['key'];
 type Card = {
   id: number;
   type: string;
-  lines: { id: number }[][];
+  lines: number[][];
 };
 
 const getCardScore = (
@@ -35,12 +35,12 @@ const getCardScore = (
   mode: ModeKey
 ) => {
   if (mode === 'quina') {
-    return card.lines.flat().filter((song) => playedSongIds.has(song.id))
+    return card.lines.flat().filter((songId) => playedSongIds.has(songId))
       .length;
   } else {
     return Math.max(
       ...card.lines.map(
-        (line) => line.filter((song) => playedSongIds.has(song.id)).length
+        (line) => line.filter((songId) => playedSongIds.has(songId)).length
       )
     );
   }
@@ -83,7 +83,7 @@ export const GameInsightsSection: FC<
 
   const cardsInPlay = useMemo(() => {
     if (cardsPlayingSet.size === 0) return cardsQuery.data ?? [];
-    
+
     return (
       cardsQuery.data?.filter((card) => cardsPlayingSet.has(card.id)) ?? []
     );
