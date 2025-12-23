@@ -41,8 +41,7 @@ const {
     {
       id: 'not-started',
       label: 'Encara no hem començat',
-      description:
-        "Espera't una estona. Aprofita per comprar el cartró i prepara't.",
+      description: 'Aprofita per comprar un cartró i preparar-te.',
       icon: IconPlayerPause,
     },
     {
