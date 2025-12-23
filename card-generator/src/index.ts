@@ -9,11 +9,11 @@ const SEED = 'barrakudes-cigronet';
 const cardAmounts = [
   {
     type: 'normal',
-    amount: 400,
+    amount: 399, // Must be multiple of 3
   },
   {
     type: 'especial',
-    amount: 300,
+    amount: 300, // Must be multiple of 3
   },
 ] as const satisfies { type: string; amount: number }[];
 
