@@ -38,6 +38,7 @@ type StartPoint = {
 
 const TRANSPORT_FADE_IN_SECONDS = 0.6;
 const TRANSPORT_FADE_OUT_SECONDS = 1.2;
+const VOLUME_MODE_RAMP_SECONDS = 0.5;
 
 const loadAudioBuffer = async (
   audioContext: AudioContext,
@@ -544,7 +545,7 @@ export const useSongPlayer = (options?: {
     const audioCtx = getAudioContext();
     const gainNodeSongs = getGainNodeSongs();
     const now = audioCtx.currentTime;
-    const duration = 0.5;
+    const duration = VOLUME_MODE_RAMP_SECONDS;
 
     // Only react to volume setting changes while actively playing.
     // Important: do NOT cancel scheduled automation on pause, otherwise it cuts
