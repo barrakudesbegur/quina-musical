@@ -248,7 +248,7 @@ export const HomePage: FC = () => {
 
               return (
                 <li
-                  className="text-2xl md:text-3xl uppercase tracking-wide leading-none md:w-1/3 p-2 text-balance flex items-center justify-center gap-2"
+                  className="text-2xl md:text-3xl uppercase space-x-1 tracking-wide leading-none md:w-1/3 p-2 text-balance "
                   key={`${song.id}-${song.position}`}
                 >
                   {cardsWithSong
@@ -258,7 +258,7 @@ export const HomePage: FC = () => {
                         key={card.id}
                         size={20}
                         style={{ color: card.color }}
-                        className="shrink-0"
+                        className="shrink-0 inline-block align-[-0.05em]"
                       />
                     ))}
                   <span
@@ -275,7 +275,7 @@ export const HomePage: FC = () => {
                         key={card.id}
                         size={20}
                         style={{ color: card.color }}
-                        className="shrink-0"
+                        className="shrink-0 inline-block align-[-0.05em]"
                       />
                     ))}
                 </li>
