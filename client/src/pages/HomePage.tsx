@@ -258,7 +258,7 @@ export const HomePage: FC = () => {
                         key={card.id}
                         size={20}
                         style={{ color: card.color }}
-                        className="shrink-0 inline-block align-[-0.05em]"
+                        className="shrink-0 inline-block align-[-0.05em] size-[0.85em]"
                       />
                     ))}
                   <span
@@ -275,7 +275,7 @@ export const HomePage: FC = () => {
                         key={card.id}
                         size={20}
                         style={{ color: card.color }}
-                        className="shrink-0 inline-block align-[-0.05em]"
+                        className="shrink-0 inline-block align-[-0.05em] size-[0.85em]"
                       />
                     ))}
                 </li>
