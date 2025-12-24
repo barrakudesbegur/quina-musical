@@ -24,7 +24,7 @@ import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 import { IconButtonGrid } from '../components/IconButtonGrid';
-import { SongTimestampCategory, useSongPlayer } from '../hooks/useSongPlayer';
+import { type SongTimestamp, useSongPlayer } from '../hooks/useSongPlayer';
 import { WiiMoteSection } from '../WiiMoteSection';
 import { useWiiMote } from '../hooks/useWiiMote';
 import { WMButtonEvent } from '../utils/WiimoteLib/WiiMote/ObjectStates';
@@ -145,8 +145,9 @@ export const AdminPage: FC = () => {
     return String(roundQuery.data.position + 1);
   }, [roundQuery.data]);
 
-  const [timestampType, setTimestampType] =
-    useSessionStorage<SongTimestampCategory>('admin-timestamp-type', 'main');
+  const [timestampTypes, setTimestampTypes] = useSessionStorage<
+    SongTimestamp['tag'][]
+  >('admin-timestamp-type', ['main', 'best']);
   const [hideImageOnFirstSong, setHideImageOnFirstSong] =
     useSessionStorage<boolean>('admin-hide-image-on-first-song', false);
 
@@ -239,9 +240,9 @@ export const AdminPage: FC = () => {
     if (displayedSongId === 'silence') {
       setSong(null);
     } else {
-      setSong(displayedSongId, timestampType);
+      setSong(displayedSongId, timestampTypes);
     }
-  }, [displayedSongId, setSong, timestampType]);
+  }, [displayedSongId, setSong, timestampTypes]);
 
   useEffect(() => {
     if (
@@ -497,10 +498,10 @@ export const AdminPage: FC = () => {
           canPlayPrevious={canPlayPrevious}
           onSeek={seek}
           isSongReady={isSongReady}
-          selectedTimestampType={timestampType}
-          onTimestampTypeChange={(value) =>
-            setTimestampType(value as SongTimestampCategory)
-          }
+          selectedTimestampTypes={timestampTypes}
+          onTimestampTypesChange={(values) => {
+            setTimestampTypes(values);
+          }}
         />
         <IconButtonGrid playFx={playFx} />
 

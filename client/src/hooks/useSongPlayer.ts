@@ -20,7 +20,10 @@ export type PlayEffect =
       fadeInSeconds: number;
     };
 
-export type SongTimestampCategory = SongTimestamp['tag'] | 'any';
+export type SongTimestampSelection =
+  | number
+  | SongTimestamp
+  | SongTimestamp['tag'][];
 
 type SongSlot = {
   el: HTMLAudioElement;
@@ -164,20 +167,17 @@ export const useSongPlayer = (options?: {
     [startedAtQuery.data]
   );
   const pickStart = useCallback(
-    (
-      songId: number,
-      target: number | SongTimestampCategory | SongTimestamp = 'best'
-    ): StartPoint => {
+    (songId: number, target: SongTimestampSelection = ['best']): StartPoint => {
       if (typeof target === 'number') {
         return { time: target, playEffect: { type: 'none' } };
       }
-      if (typeof target === 'object') {
+      if (typeof target === 'object' && !Array.isArray(target)) {
         return { time: target.time, playEffect: target.playEffect };
       }
 
       const candidates = songsQuery.data
         ?.find((s) => s.id === songId)
-        ?.timestamps?.filter((t) => target === 'any' || t.tag === target);
+        ?.timestamps?.filter((t) => target.includes(t.tag));
 
       if (!candidates?.length) return { time: 0, playEffect: { type: 'none' } };
 
@@ -327,7 +327,7 @@ export const useSongPlayer = (options?: {
   const setSong = useCallback(
     async (
       nextSongId: number | null,
-      timestampSelection?: number | SongTimestampCategory | SongTimestamp,
+      timestampSelection?: SongTimestampSelection,
       shouldPlay?: boolean
     ) => {
       const requestId = ++setSongRequestIdRef.current;
@@ -358,7 +358,7 @@ export const useSongPlayer = (options?: {
         return;
       }
 
-      const start = pickStart(nextSongId, timestampSelection ?? 'best');
+      const start = pickStart(nextSongId, timestampSelection);
       const wantsPlay = shouldPlay ?? isPlaying;
 
       // If switching songs while playing: crossfade.
@@ -417,7 +417,7 @@ export const useSongPlayer = (options?: {
   );
 
   const play = useCallback(
-    async (timestampSelection?: number | SongTimestampCategory) => {
+    async (timestampSelection?: SongTimestampSelection) => {
       if (!songId) return;
       const active = getActiveSlot();
       if (!active.el.src) {

@@ -4,6 +4,11 @@ import {
   CardBody,
   CircularProgress,
   Image,
+  Listbox,
+  ListboxItem,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Slider,
   cn,
 } from '@heroui/react';
@@ -16,11 +21,11 @@ import {
   IconPlayerSkipForward,
   IconQuestionMark,
   IconSquareRotated,
-  IconTriangleSquareCircle,
   IconVolume,
   IconVolume3,
   TablerIcon,
 } from '@tabler/icons-react';
+import { differenceInMilliseconds, parseISO } from 'date-fns';
 import { clamp } from 'lodash-es';
 import {
   CSSProperties,
@@ -30,20 +35,16 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type {
-  SongTimestamp,
-  SongTimestampCategory,
-} from '../hooks/useSongPlayer';
-import { formatCompactDuration } from '../utils/time';
-import { differenceInMilliseconds, parseISO } from 'date-fns';
 import { useInterval } from 'usehooks-ts';
+import type { SongTimestamp } from '../hooks/useSongPlayer';
+import { formatCompactDuration } from '../utils/time';
 
 const songTimestampOptions = [
   {
     value: 'best',
     label: 'Millor',
     icon: IconCarambolaFilled,
-    className: 'text-red-500',
+    className: 'text-yellow-500',
   },
   {
     value: 'main',
@@ -57,14 +58,8 @@ const songTimestampOptions = [
     icon: IconSquareRotated,
     className: 'text-blue-500',
   },
-  {
-    value: 'any',
-    label: 'Tots',
-    icon: IconTriangleSquareCircle,
-    className: null,
-  },
 ] as const satisfies readonly {
-  value: SongTimestampCategory;
+  value: SongTimestamp['tag'];
   label: string;
   icon: TablerIcon;
   className: string | null;
@@ -101,8 +96,8 @@ export const MiniPlayer: FC<
     canPlayPrevious?: boolean;
     onSeek?: (nextTime: number) => void;
     isSongReady: boolean;
-    selectedTimestampType: string;
-    onTimestampTypeChange: (value: string) => void;
+    selectedTimestampTypes: SongTimestamp['tag'][];
+    onTimestampTypesChange: (values: SongTimestamp['tag'][]) => void;
   }>
 > = ({
   song,
@@ -119,8 +114,8 @@ export const MiniPlayer: FC<
   canPlayPrevious,
   onSeek,
   isSongReady,
-  selectedTimestampType,
-  onTimestampTypeChange,
+  selectedTimestampTypes,
+  onTimestampTypesChange,
 }) => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const updateCurrentTime = useCallback(() => {
@@ -136,13 +131,6 @@ export const MiniPlayer: FC<
     return formatTime(duration);
   }, [duration]);
 
-  const currentTimestampOption = useMemo(
-    () =>
-      songTimestampOptions.find((opt) => opt.value === selectedTimestampType) ??
-      songTimestampOptions[0],
-    [selectedTimestampType]
-  );
-
   const elapsedLabel = useMemo(
     () =>
       song?.playedAt
@@ -152,15 +140,6 @@ export const MiniPlayer: FC<
         : null,
     [now, song]
   );
-
-  const handleCycleTimestamp = () => {
-    const currentIndex = songTimestampOptions.findIndex(
-      (opt) => opt.value === selectedTimestampType
-    );
-    const next =
-      songTimestampOptions[(currentIndex + 1) % songTimestampOptions.length];
-    onTimestampTypeChange(next.value);
-  };
 
   return (
     <Card
@@ -324,19 +303,66 @@ export const MiniPlayer: FC<
               >
                 <IconPlayerSkipBack className="size-6" />
               </Button>
-              <Button
-                isIconOnly
-                radius="full"
-                variant="light"
-                aria-label={
-                  currentTimestampOption
-                    ? `Canviar punt d'inici (${currentTimestampOption.label})`
-                    : "Canviar punt d'inici"
-                }
-                onPress={handleCycleTimestamp}
-              >
-                <currentTimestampOption.icon className="size-6" />
-              </Button>
+              <Popover placement="top">
+                <PopoverTrigger>
+                  <Button
+                    isIconOnly
+                    radius="full"
+                    variant="light"
+                    aria-label="Punts d'inici"
+                  >
+                    <div className="grid grid-cols-2 grid-rows-2 gap-0.5 size-6 place-items-center">
+                      {songTimestampOptions.map((opt) => {
+                        const isSelected = selectedTimestampTypes.includes(
+                          opt.value
+                        );
+                        return (
+                          <opt.icon
+                            key={opt.value}
+                            stroke={3}
+                            className={cn(
+                              'size-3',
+                              opt.className,
+                              !isSelected && 'opacity-25'
+                            )}
+                          />
+                        );
+                      })}
+                    </div>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-1">
+                  <Listbox
+                    aria-label="Punts d'inici"
+                    variant="flat"
+                    selectionMode="multiple"
+                    selectedKeys={new Set(selectedTimestampTypes)}
+                    onSelectionChange={(keys) => {
+                      onTimestampTypesChange(
+                        keys === 'all' || keys.size === 0
+                          ? songTimestampOptions.map((o) => o.value)
+                          : Array.from(keys).map(
+                              (k) => String(k) as SongTimestamp['tag']
+                            )
+                      );
+                    }}
+                  >
+                    {songTimestampOptions.map((opt) => (
+                      <ListboxItem
+                        key={opt.value}
+                        startContent={
+                          <opt.icon
+                            className={cn('size-4', opt.className)}
+                            stroke={3}
+                          />
+                        }
+                      >
+                        {opt.label}
+                      </ListboxItem>
+                    ))}
+                  </Listbox>
+                </PopoverContent>
+              </Popover>
               <Button
                 isIconOnly
                 radius="full"
