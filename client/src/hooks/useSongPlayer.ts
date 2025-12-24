@@ -36,6 +36,9 @@ type StartPoint = {
   playEffect: PlayEffect;
 };
 
+const TRANSPORT_FADE_IN_SECONDS = 0.6;
+const TRANSPORT_FADE_OUT_SECONDS = 1.2;
+
 const loadAudioBuffer = async (
   audioContext: AudioContext,
   filepath: string
@@ -74,6 +77,10 @@ export const useSongPlayer = (options?: {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [isSongReady, setIsSongReady] = useState<boolean>(true);
+  const isPlayingRef = useRef<boolean>(false);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage(
     'admin-low-volume-mode',
@@ -93,6 +100,7 @@ export const useSongPlayer = (options?: {
   const setSongRequestIdRef = useRef<number>(0);
   const stopOldSlotTimeoutRef = useRef<number | null>(null);
   const delayedStartTimeoutRef = useRef<number | null>(null);
+  const pauseAfterFadeTimeoutRef = useRef<number | null>(null);
 
   const [mediaSessionPosition, setMediaSessionPosition] = useState<number>(0);
 
@@ -139,7 +147,30 @@ export const useSongPlayer = (options?: {
       window.clearTimeout(delayedStartTimeoutRef.current);
       delayedStartTimeoutRef.current = null;
     }
+    if (pauseAfterFadeTimeoutRef.current) {
+      window.clearTimeout(pauseAfterFadeTimeoutRef.current);
+      pauseAfterFadeTimeoutRef.current = null;
+    }
   }, []);
+
+  const getTargetSongGain = useCallback(() => {
+    return isLowVolumeMode ? lowVolumeSetting : songVolume;
+  }, [isLowVolumeMode, lowVolumeSetting, songVolume]);
+
+  const rampSongMasterGain = useCallback(
+    (to: number, seconds: number) => {
+      const audioCtx = getAudioContext();
+      const gainNodeSongs = getGainNodeSongs();
+      const now = audioCtx.currentTime;
+      const next = Math.max(0, to);
+      const duration = Math.max(0, seconds);
+
+      gainNodeSongs.gain.cancelScheduledValues(now);
+      gainNodeSongs.gain.setValueAtTime(gainNodeSongs.gain.value, now);
+      gainNodeSongs.gain.linearRampToValueAtTime(next, now + duration);
+    },
+    [getAudioContext, getGainNodeSongs]
+  );
 
   const scheduleStopSlot = useCallback(
     (slot: SongSlot, afterSeconds: number) => {
@@ -430,6 +461,8 @@ export const useSongPlayer = (options?: {
         active.el.currentTime = clampSeek(start.time, duration);
       }
 
+      cancelTransitions();
+      rampSongMasterGain(getTargetSongGain(), TRANSPORT_FADE_IN_SECONDS);
       try {
         await active.el.play();
         setIsPlaying(true);
@@ -437,15 +470,33 @@ export const useSongPlayer = (options?: {
         setIsPlaying(false);
       }
     },
-    [duration, getActiveSlot, pickStart, setSong, songId]
+    [
+      cancelTransitions,
+      duration,
+      getActiveSlot,
+      getTargetSongGain,
+      pickStart,
+      rampSongMasterGain,
+      setSong,
+      songId,
+    ]
   );
 
   const pause = useCallback(async () => {
+    cancelTransitions();
     setIsPlaying(false);
+
+    rampSongMasterGain(0, TRANSPORT_FADE_OUT_SECONDS);
+
     const slots = ensureSlots();
-    slots[0].el.pause();
-    slots[1].el.pause();
-  }, [ensureSlots]);
+    pauseAfterFadeTimeoutRef.current = window.setTimeout(
+      () => {
+        slots[0].el.pause();
+        slots[1].el.pause();
+      },
+      Math.ceil(TRANSPORT_FADE_OUT_SECONDS * 1000)
+    );
+  }, [cancelTransitions, ensureSlots, rampSongMasterGain]);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) pause();
@@ -495,12 +546,15 @@ export const useSongPlayer = (options?: {
     const now = audioCtx.currentTime;
     const duration = 0.5;
 
+    // Only react to volume setting changes while actively playing.
+    // Important: do NOT cancel scheduled automation on pause, otherwise it cuts
+    // off the fade-out abruptly.
+    if (!isPlayingRef.current) return;
+
+    const target = isLowVolumeMode ? lowVolumeSetting : songVolume;
     gainNodeSongs.gain.cancelScheduledValues(now);
     gainNodeSongs.gain.setValueAtTime(gainNodeSongs.gain.value, now);
-    gainNodeSongs.gain.linearRampToValueAtTime(
-      isLowVolumeMode ? lowVolumeSetting : songVolume,
-      now + duration
-    );
+    gainNodeSongs.gain.linearRampToValueAtTime(target, now + duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLowVolumeMode, lowVolumeSetting, songVolume]);
 
