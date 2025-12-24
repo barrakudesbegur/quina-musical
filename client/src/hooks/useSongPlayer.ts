@@ -495,6 +495,8 @@ export const useSongPlayer = (options?: {
     const now = audioCtx.currentTime;
     const duration = 0.5;
 
+    gainNodeSongs.gain.cancelScheduledValues(now);
+    gainNodeSongs.gain.setValueAtTime(gainNodeSongs.gain.value, now);
     gainNodeSongs.gain.linearRampToValueAtTime(
       isLowVolumeMode ? lowVolumeSetting : songVolume,
       now + duration
