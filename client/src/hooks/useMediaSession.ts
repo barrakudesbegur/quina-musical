@@ -119,23 +119,32 @@ export const useMediaSession = ({
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    navigator.mediaSession.setActionHandler('nexttrack', onNext || null);
+    navigator.mediaSession.setActionHandler(
+      'nexttrack',
+      onNext ? () => onNext() : null
+    );
     navigator.mediaSession.setActionHandler(
       // @ts-expect-error - 'nextslide' is actually a valid MediaSessionAction
       'nextslide',
-      onNext || null
+      onNext ? () => onNext() : null
     );
     navigator.mediaSession.setActionHandler(
       'previoustrack',
-      onPrevious || null
+      onPrevious ? () => onPrevious() : null
     );
     navigator.mediaSession.setActionHandler(
       // @ts-expect-error - 'previousslide' is actually a valid MediaSessionAction
       'previousslide',
-      onPrevious || null
+      onPrevious ? () => onPrevious() : null
     );
-    navigator.mediaSession.setActionHandler('play', onPlay || null);
-    navigator.mediaSession.setActionHandler('pause', onPause || null);
+    navigator.mediaSession.setActionHandler(
+      'play',
+      onPlay ? () => onPlay() : null
+    );
+    navigator.mediaSession.setActionHandler(
+      'pause',
+      onPause ? () => onPause() : null
+    );
     navigator.mediaSession.setActionHandler(
       'seekto',
       onSeek
