@@ -51,40 +51,32 @@
         "time": 60,
         "tag": "best",
         "playEffect": {
-          "type": "fade-out-in",
-          "fadeOutSeconds": 2,
-          "silenceSeconds": 0.2,
-          "fadeInSeconds": 0.5
+          "type": "crossfade",
+          "durationSeconds": 1
         }
       },
       {
         "time": 90,
         "tag": "main",
         "playEffect": {
-          "type": "fade-out-in",
-          "fadeOutSeconds": 2,
-          "silenceSeconds": 0.2,
-          "fadeInSeconds": 0.5
+          "type": "crossfade",
+          "durationSeconds": 1
         }
       },
       {
         "time": 0,
         "tag": "secondary",
         "playEffect": {
-          "type": "fade-out-in",
-          "fadeOutSeconds": 2,
-          "silenceSeconds": 0.2,
-          "fadeInSeconds": 0.5
+          "type": "crossfade",
+          "durationSeconds": 1
         }
       },
       {
         "time": 150,
         "tag": "secondary",
         "playEffect": {
-          "type": "fade-out-in",
-          "fadeOutSeconds": 2,
-          "silenceSeconds": 0.2,
-          "fadeInSeconds": 0.5
+          "type": "crossfade",
+          "durationSeconds": 1
         }
       }
     ]
