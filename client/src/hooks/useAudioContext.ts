@@ -21,6 +21,7 @@ export const useAudioContext = () => {
     if (!gainNodeSongs.current) {
       const audioCtx = getAudioContext();
       gainNodeSongs.current = new GainNode(audioCtx);
+      gainNodeSongs.current.connect(audioCtx.destination);
     }
 
     return gainNodeSongs.current;
@@ -31,6 +32,7 @@ export const useAudioContext = () => {
     if (!gainNodeFx.current) {
       const audioCtx = getAudioContext();
       gainNodeFx.current = new GainNode(audioCtx);
+      gainNodeFx.current.connect(audioCtx.destination);
     }
 
     return gainNodeFx.current;

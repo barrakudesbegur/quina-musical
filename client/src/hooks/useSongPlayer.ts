@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
-import { clampLoop } from '../utils/numbers';
 import { trpc } from '../utils/trpc';
 import { useAudioContext } from './useAudioContext';
 import { useMediaSession } from './useMediaSession';
-import { useSongPlayerLoading } from './useSongPlayerLoading';
 
 export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
+
+const loadAudioBuffer = async (
+  audioContext: AudioContext,
+  filepath: string
+) => {
+  const response = await fetch(filepath);
+  const arrayBuffer = await response.arrayBuffer();
+  return await audioContext.decodeAudioData(arrayBuffer);
+};
 
 export const useSongPlayer = (options?: {
   onNext?: () => void;
@@ -16,53 +23,37 @@ export const useSongPlayer = (options?: {
     useAudioContext();
 
   const songsQuery = trpc.game.getAllSongs.useQuery();
+  const startedAtQuery = trpc.game.getStartedAt.useQuery();
 
   const [songId, setSongId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [duration, setDuration] = useState<number | null>(null);
+  const [isSongReady, setIsSongReady] = useState<boolean>(true);
 
-  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage<boolean>(
+  const [isLowVolumeMode, setIsLowVolumeMode] = useSessionStorage(
     'admin-low-volume-mode',
     false
   );
-  const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage<number>(
+  const [lowVolumeSetting, setLowVolumeSetting] = useSessionStorage(
     'admin-low-volume-setting',
     0.2
   );
-  const [songVolume, setSongVolume] = useSessionStorage<number>(
-    'admin-song-volume',
-    1
-  );
-  const [fxVolume, setFxVolume] = useSessionStorage<number>(
-    'admin-fx-volume',
-    1
-  );
+  const [songVolume, setSongVolume] = useSessionStorage('admin-song-volume', 1);
+  const [fxVolume, setFxVolume] = useSessionStorage('admin-fx-volume', 1);
 
-  const sourceSongPlaying = useRef<AudioBufferSourceNode>(null);
-  const songStartedTime = useRef<number | null>(null);
-  const songEndedTime = useRef<number | null>(null);
-  const [songPlayedOffset, setSongPlayedOffset] = useState<number>(0);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const songSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const setSongRequestIdRef = useRef<number>(0);
 
-  const { isSongReady, preloadStatus, getAudioBuffer } = useSongPlayerLoading(
-    songId,
-    getAudioContext
-  );
+  const fxBufferCacheRef = useRef<Record<string, AudioBuffer>>({});
+
+  const [mediaSessionPosition, setMediaSessionPosition] = useState<number>(0);
 
   const getCurrentTime = useCallback(() => {
-    if (!songId) return 0;
-    if (!songStartedTime.current) return songPlayedOffset;
+    return audioElRef.current?.currentTime ?? 0;
+  }, []);
 
-    const audioCtx = getAudioContext();
-
-    const totalTime =
-      songPlayedOffset +
-      (songEndedTime.current ?? audioCtx.currentTime) -
-      songStartedTime.current;
-
-    return clampLoop(totalTime, duration);
-  }, [duration, getAudioContext, songId, songPlayedOffset]);
-
-  const pickStartTimeMs = useCallback(
+  const pickStartTimeSeconds = useCallback(
     (songId: number, category: SongTimestampCategory | number = 'constant') => {
       if (typeof category === 'number') {
         return Math.max(0, category);
@@ -89,76 +80,142 @@ export const useSongPlayer = (options?: {
     [songsQuery.data]
   );
 
+  const getSongUrl = useCallback(
+    (id: number) => {
+      const cacheBuster = startedAtQuery.data
+        ? `?v=${new Date(startedAtQuery.data).getTime()}`
+        : '';
+      return `/audios/song/${id}.mp3${cacheBuster}`;
+    },
+    [startedAtQuery.data]
+  );
+
+  const ensureSongElement = useCallback(() => {
+    if (!audioElRef.current) {
+      const el = new Audio();
+      el.preload = 'auto';
+      el.loop = true;
+      el.crossOrigin = 'anonymous';
+      audioElRef.current = el;
+    }
+    return audioElRef.current;
+  }, []);
+
+  const ensureSongGraph = useCallback(() => {
+    const audioCtx = getAudioContext();
+    const el = ensureSongElement();
+    if (!songSourceRef.current) {
+      songSourceRef.current = audioCtx.createMediaElementSource(el);
+      songSourceRef.current.connect(getGainNodeSongs());
+    }
+  }, [ensureSongElement, getAudioContext, getGainNodeSongs]);
+
   const setSong = useCallback(
     async (
-      songId: number | null,
+      nextSongId: number | null,
       timestampSelection?: number | SongTimestampCategory,
       shouldPlay?: boolean
     ) => {
-      setSongId(songId);
+      const requestId = ++setSongRequestIdRef.current;
+      setSongId(nextSongId);
 
-      sourceSongPlaying.current?.stop();
-      sourceSongPlaying.current = null;
+      const el = ensureSongElement();
+      el.pause();
 
-      if (!songId) {
-        setSongPlayedOffset(0);
+      if (!nextSongId) {
+        setIsPlaying(false);
+        setIsSongReady(true);
         setDuration(null);
+        el.removeAttribute('src');
+        el.load();
         return;
       }
 
-      const buffer = await getAudioBuffer('song', songId);
-      if (!buffer) throw new Error(`Sound for song ${songId} not found`);
-      setDuration(buffer.duration);
+      const url = getSongUrl(nextSongId);
+      setIsSongReady(false);
+      el.src = url;
+      el.load();
 
-      const offset = pickStartTimeMs(songId, timestampSelection);
-      setSongPlayedOffset(offset);
+      await new Promise<void>((resolve, reject) => {
+        const onLoaded = () => resolve();
+        const onError = () =>
+          reject(new Error(`Failed to load song ${nextSongId}`));
+        el.addEventListener('loadedmetadata', onLoaded, { once: true });
+        el.addEventListener('error', onError, { once: true });
+      });
+
+      if (setSongRequestIdRef.current !== requestId) return;
+
+      const nextDuration = Number.isFinite(el.duration) ? el.duration : null;
+      setDuration(nextDuration);
+
+      const offset = pickStartTimeSeconds(nextSongId, timestampSelection);
+      if (Number.isFinite(offset)) {
+        el.currentTime =
+          nextDuration && nextDuration > 0
+            ? Math.min(Math.max(0, offset), Math.max(0, nextDuration - 0.01))
+            : Math.max(0, offset);
+      }
+
+      const markReady = () => setIsSongReady(true);
+      el.addEventListener('canplay', markReady, { once: true });
+      if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        setIsSongReady(true);
+      }
 
       if (shouldPlay ?? isPlaying) {
-        const audioCtx = getAudioContext();
-
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-
-        const gainNodeSongs = getGainNodeSongs();
-
-        source.connect(gainNodeSongs).connect(audioCtx.destination);
-        source.start(0, offset);
-
-        sourceSongPlaying.current = source;
-        songStartedTime.current = audioCtx.currentTime;
-        songEndedTime.current = null;
-      } else {
-        songStartedTime.current = null;
-        songEndedTime.current = null;
+        try {
+          ensureSongGraph();
+          await el.play();
+          setIsPlaying(true);
+        } catch {
+          setIsPlaying(false);
+        }
       }
     },
     [
-      getAudioBuffer,
-      getAudioContext,
-      getGainNodeSongs,
+      ensureSongElement,
+      ensureSongGraph,
+      getSongUrl,
       isPlaying,
-      pickStartTimeMs,
+      pickStartTimeSeconds,
     ]
   );
 
   const play = useCallback(
     async (timestampSelection?: number | SongTimestampCategory) => {
-      setIsPlaying(true);
-      setSong(songId, timestampSelection ?? getCurrentTime(), true);
+      if (!songId) return;
+
+      const el = ensureSongElement();
+
+      if (!el.src) {
+        await setSong(songId, timestampSelection ?? 0, true);
+        return;
+      }
+
+      if (timestampSelection !== undefined) {
+        if (typeof timestampSelection === 'number') {
+          el.currentTime = Math.max(0, timestampSelection);
+        } else {
+          el.currentTime = pickStartTimeSeconds(songId, timestampSelection);
+        }
+      }
+
+      try {
+        ensureSongGraph();
+        await el.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
     },
-    [getCurrentTime, setSong, songId]
+    [ensureSongElement, ensureSongGraph, pickStartTimeSeconds, setSong, songId]
   );
 
   const pause = useCallback(async () => {
     setIsPlaying(false);
-
-    const audioCtx = getAudioContext();
-
-    sourceSongPlaying.current?.stop();
-    songEndedTime.current = audioCtx.currentTime;
-    sourceSongPlaying.current = null;
-  }, [getAudioContext]);
+    audioElRef.current?.pause();
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) pause();
@@ -167,25 +224,41 @@ export const useSongPlayer = (options?: {
 
   const seek = useCallback(
     async (time: number | SongTimestampCategory) => {
-      setSong(songId, time);
+      if (!songId) return;
+
+      const el = ensureSongElement();
+      if (typeof time === 'number') {
+        el.currentTime = Math.max(0, time);
+      } else {
+        el.currentTime = pickStartTimeSeconds(songId, time);
+      }
     },
-    [setSong, songId]
+    [ensureSongElement, pickStartTimeSeconds, songId]
   );
 
-  const playFx = async (fxId: Parameters<typeof getAudioBuffer<'fx'>>[1]) => {
-    const buffer = await getAudioBuffer('fx', fxId);
-    if (!buffer) throw new Error(`Sound effect ${fxId} not found`);
+  const playFx = useCallback(
+    async (fxId: string) => {
+      const cached = fxBufferCacheRef.current[fxId];
+      const buffer =
+        cached ??
+        (await (async () => {
+          const audioContext = getAudioContext();
+          const next = await loadAudioBuffer(
+            audioContext,
+            `/audios/fx/${fxId}.mp3`
+          );
+          fxBufferCacheRef.current[fxId] = next;
+          return next;
+        })());
 
-    const audioContext = getAudioContext();
-
-    const fxSource = audioContext.createBufferSource();
-    fxSource.buffer = buffer;
-
-    const gainNodeFx = getGainNodeFx();
-
-    fxSource.connect(gainNodeFx).connect(audioContext.destination);
-    fxSource.start();
-  };
+      const audioContext = getAudioContext();
+      const fxSource = audioContext.createBufferSource();
+      fxSource.buffer = buffer;
+      fxSource.connect(getGainNodeFx());
+      fxSource.start();
+    },
+    [getAudioContext, getGainNodeFx]
+  );
 
   const toggleLowVolume = useCallback(() => {
     setIsLowVolumeMode((prev) => !prev);
@@ -213,10 +286,17 @@ export const useSongPlayer = (options?: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fxVolume]);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setMediaSessionPosition(audioElRef.current?.currentTime ?? 0);
+    }, 600);
+    return () => window.clearInterval(interval);
+  }, []);
+
   useMediaSession({
     songId,
     isPlaying,
-    songPlayedOffset,
+    position: mediaSessionPosition,
     duration,
     onNext: options?.onNext,
     onPrevious: options?.onPrevious,
@@ -237,7 +317,6 @@ export const useSongPlayer = (options?: {
     getCurrentTime,
     duration,
     isSongReady,
-    preloadStatus,
     isLowVolumeMode,
     setIsLowVolumeMode,
     setLowVolumeSetting,

@@ -4,7 +4,7 @@ import { trpc } from '../utils/trpc';
 type MediaSessionConfig = {
   songId: number | null;
   isPlaying: boolean;
-  songPlayedOffset: number;
+  position: number;
   duration: number | null;
 
   onNext?: () => void;
@@ -18,7 +18,7 @@ type MediaSessionConfig = {
 export const useMediaSession = ({
   songId,
   isPlaying,
-  songPlayedOffset,
+  position,
   duration,
   onNext,
   onPrevious,
@@ -66,7 +66,7 @@ export const useMediaSession = ({
         ? {
             duration: duration,
             playbackRate: 1,
-            position: songPlayedOffset,
+            position,
           }
         : {
             duration: Infinity,
@@ -74,7 +74,7 @@ export const useMediaSession = ({
             position: 0,
           }
     );
-  }, [songPlayedOffset, duration]);
+  }, [duration, position]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

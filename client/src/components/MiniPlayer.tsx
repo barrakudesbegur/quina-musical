@@ -78,7 +78,7 @@ export const MiniPlayer: FC<
     onPrevious?: () => void;
     canPlayPrevious?: boolean;
     onSeek?: (nextTime: number) => void;
-    playerPreloadProgress: number;
+    isSongReady: boolean;
     selectedTimestampType: string;
     onTimestampTypeChange: (value: string) => void;
   }>
@@ -96,7 +96,7 @@ export const MiniPlayer: FC<
   onPrevious,
   canPlayPrevious,
   onSeek,
-  playerPreloadProgress,
+  isSongReady,
   selectedTimestampType,
   onTimestampTypeChange,
 }) => {
@@ -207,16 +207,13 @@ export const MiniPlayer: FC<
                       )}
                     </div>
                   </Button>
-                  {(playerPreloadProgress < 1 || isLoading) && (
+                  {(!isSongReady || isLoading) && (
                     <CircularProgress
                       aria-label="Carregant cançons"
                       size="lg"
-                      value={
-                        isLoading ? undefined : playerPreloadProgress * 100
-                      }
                       disableAnimation
                       className="absolute inset-0 pointer-events-none"
-                      isIndeterminate={isLoading}
+                      isIndeterminate
                     />
                   )}
                 </div>

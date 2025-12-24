@@ -166,7 +166,6 @@ export const AdminPage: FC = () => {
     togglePlay,
     isPlaying,
     isSongReady,
-    preloadStatus,
     seek,
     getCurrentTime,
     duration,
@@ -240,13 +239,7 @@ export const AdminPage: FC = () => {
     } else {
       setSong(displayedSongId, timestampType);
     }
-  }, [displayedSongId, setSong, timestampType, isPlaying]);
-
-  const playerPreloadProgress = useMemo(() => {
-    const allResources = Object.values(preloadStatus).flat();
-    if (!allResources.length) return 0;
-    return allResources.filter((r) => r.preloaded).length / allResources.length;
-  }, [preloadStatus]);
+  }, [displayedSongId, setSong, timestampType]);
 
   useEffect(() => {
     if (
@@ -501,7 +494,7 @@ export const AdminPage: FC = () => {
           onPrevious={handlePlayPreviousSong}
           canPlayPrevious={canPlayPrevious}
           onSeek={seek}
-          playerPreloadProgress={playerPreloadProgress}
+          isSongReady={isSongReady}
           selectedTimestampType={timestampType}
           onTimestampTypeChange={(value) =>
             setTimestampType(value as SongTimestampCategory)
