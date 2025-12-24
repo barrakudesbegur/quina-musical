@@ -30,7 +30,7 @@ import { useWiiMote } from '../hooks/useWiiMote';
 import { WMButtonEvent } from '../utils/WiimoteLib/WiiMote/ObjectStates';
 import { WMButtons } from '../utils/WiimoteLib/WiiMote/Types';
 
-export const AdminPage: FC = () => {
+export const PresenterPage: FC = () => {
   const [isFinishRoundDialogOpen, setIsFinishRoundDialogOpen] = useState(false);
   const [isCheckCardDialogOpen, setIsCheckCardDialogOpen] = useState(false);
   const [isWiiMoteDialogOpen, setIsWiiMoteDialogOpen] = useState(false);
