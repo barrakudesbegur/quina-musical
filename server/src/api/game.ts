@@ -26,6 +26,16 @@ export const gameRouter = router({
     }
   }),
 
+  getStatusNow: publicProcedure.query(async () => {
+    return {
+      status: gameDb.chain.get('finishedAt').value()
+        ? ('finished' as const)
+        : !gameDb.chain.get('currentRound').value()
+          ? ('not-started' as const)
+          : ('ongoing' as const),
+    };
+  }),
+
   getAllSongs: publicProcedure.query(async () => {
     if (!gameDb.data.currentRound) return [];
 

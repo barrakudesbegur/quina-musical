@@ -43,7 +43,9 @@ export const AdminPage: FC = () => {
   const songsQuery = trpc.game.getAllSongs.useQuery(undefined, {
     enabled: !!roundQuery.data,
   });
-  const statusQuery = trpc.game.getStatus.useSubscription();
+  const statusQuery = trpc.game.getStatusNow.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+  });
   const navigate = useNavigate();
 
   const { wiiMote, dpadFxMapping } = useWiiMote();
@@ -567,7 +569,10 @@ export const AdminPage: FC = () => {
             Amagar imatge quan soni la primera cançó
           </Checkbox>
         </div>
-        <ImagePicker />
+        <ImagePicker
+          displayedImageId={gameState.data?.displayedImageId ?? null}
+          roundImageId={gameState.data?.roundImageId ?? null}
+        />
       </div>
       <div className="flex flex-col min-h-0 min-w-0">
         <SongsSection

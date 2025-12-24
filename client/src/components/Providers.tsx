@@ -1,8 +1,8 @@
 import { HeroUIProvider } from '@heroui/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  httpBatchLink,
   splitLink,
-  unstable_httpBatchStreamLink,
   unstable_httpSubscriptionLink,
 } from '@trpc/client';
 import { FC, PropsWithChildren, useState } from 'react';
@@ -30,7 +30,7 @@ export const Providers: FC<PropsWithChildren> = ({ children }) => {
               };
             },
           }),
-          false: unstable_httpBatchStreamLink({
+          false: httpBatchLink({
             url: import.meta.env.VITE_API_URL,
             transformer: superjson,
             fetch(url, options) {

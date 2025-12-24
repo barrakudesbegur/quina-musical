@@ -4,13 +4,13 @@ import { FC, useCallback } from 'react';
 import { GALLERY_IMAGES } from '../config/images';
 import { trpc } from '../utils/trpc';
 
-export const ImagePicker: FC<{ className?: string }> = ({ className }) => {
-  const gameState = trpc.game.onStateChange.useSubscription();
+export const ImagePicker: FC<{
+  className?: string;
+  displayedImageId: string | null;
+  roundImageId: string | null;
+}> = ({ className, displayedImageId, roundImageId }) => {
   const showImageMutation = trpc.game.showImage.useMutation();
   const setRoundImageMutation = trpc.game.setRoundImage.useMutation();
-
-  const currentImageId = gameState.data?.displayedImageId ?? null;
-  const currentRoundImageId = gameState.data?.roundImageId ?? null;
 
   const handleValueChange = useCallback(
     (value: string) => {
@@ -22,33 +22,31 @@ export const ImagePicker: FC<{ className?: string }> = ({ className }) => {
 
   const handleStarClick = useCallback(
     (imageId: string | null) => {
-      if (currentRoundImageId === null && imageId === null) {
+      if (roundImageId === null && imageId === null) {
         return;
       }
 
-      if (currentRoundImageId === imageId) {
+      if (roundImageId === imageId) {
         setRoundImageMutation.mutate({ imageId: null });
       } else {
         setRoundImageMutation.mutate({ imageId });
       }
     },
-    [currentRoundImageId, setRoundImageMutation]
+    [roundImageId, setRoundImageMutation]
   );
 
   return (
     <div className={cn('@container', className)}>
       <RadioGroup
-        value={currentImageId ?? 'none'}
+        value={displayedImageId ?? 'none'}
         onValueChange={handleValueChange}
         isDisabled={showImageMutation.isPending}
         classNames={{ wrapper: 'grid grid-cols-2 @sm:grid-cols-3 gap-2' }}
       >
         <div className="flex items-center ">
           <StarButton
-            isSelected={currentRoundImageId === null}
-            disabled={
-              setRoundImageMutation.isPending || currentRoundImageId === null
-            }
+            isSelected={roundImageId === null}
+            disabled={setRoundImageMutation.isPending || roundImageId === null}
             onPress={() => handleStarClick(null)}
           />
           <Radio
@@ -65,7 +63,7 @@ export const ImagePicker: FC<{ className?: string }> = ({ className }) => {
         {GALLERY_IMAGES.map((image) => (
           <div className="flex items-center" key={image.id}>
             <StarButton
-              isSelected={currentRoundImageId === image.id}
+              isSelected={roundImageId === image.id}
               disabled={setRoundImageMutation.isPending}
               onPress={() => handleStarClick(image.id)}
             />
