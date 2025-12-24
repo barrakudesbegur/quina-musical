@@ -103,6 +103,12 @@ npm run start:server # Server
 
 ```
 
+You can rename all songs name to just numbers with:
+
+```sh
+for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).mp3"; done
+```
+
 ## Roadmap
 
 Improvement for the next version
