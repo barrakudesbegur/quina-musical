@@ -54,6 +54,7 @@ export const gameRouter = router({
         }
         return {
           ...song,
+          timestamps: song.timestamps as SongTimestamp[],
           playedAt: played?.playedAt ?? null,
           isPlayed: !!played,
           isLastPlayed:
@@ -390,3 +391,19 @@ function shuffleSongs(seed: string) {
     position: index + 1,
   })) satisfies Round['shuffledSongs'];
 }
+
+type PlayEffect =
+  | { type: 'none' }
+  | { type: 'crossfade'; durationSeconds: number }
+  | {
+      type: 'fade-out-in';
+      fadeOutSeconds: number;
+      silenceSeconds: number;
+      fadeInSeconds: number;
+    };
+
+type SongTimestamp = {
+  time: number;
+  tag: 'best' | 'main' | 'secondary';
+  playEffect: PlayEffect;
+};

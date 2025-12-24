@@ -5,7 +5,40 @@
     "artist": "Mariah Carey",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c0862332847213b151ffab31",
     "spotifyId": "0bYg9bo50gSsH3LtXe2SQn",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 2,
@@ -13,7 +46,48 @@
     "artist": "Icona Pop",
     "cover": "https://i.scdn.co/image/ab67616d0000b27369d05d032251b59ae738096a",
     "spotifyId": "15iosIuxC3C53BgsM5Uggs",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "fade-out-in",
+          "fadeOutSeconds": 2,
+          "silenceSeconds": 0.2,
+          "fadeInSeconds": 0.5
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "fade-out-in",
+          "fadeOutSeconds": 2,
+          "silenceSeconds": 0.2,
+          "fadeInSeconds": 0.5
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "fade-out-in",
+          "fadeOutSeconds": 2,
+          "silenceSeconds": 0.2,
+          "fadeInSeconds": 0.5
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "fade-out-in",
+          "fadeOutSeconds": 2,
+          "silenceSeconds": 0.2,
+          "fadeInSeconds": 0.5
+        }
+      }
+    ]
   },
   {
     "id": 3,
@@ -21,7 +95,40 @@
     "artist": "David Bisbal",
     "cover": "https://i.scdn.co/image/ab67616d0000b27349a2562013810352fc8feb6e",
     "spotifyId": "5U4pDBaeq2Jl2dKuWWUSsh",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 4,
@@ -29,7 +136,40 @@
     "artist": "Justin Bieber, Ludacris",
     "cover": "https://i.scdn.co/image/ab67616d0000b273629dc9e2e3bc20bbd7d92e4a",
     "spotifyId": "6epn3r7S14KUqlReYr77hA",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 5,
@@ -37,7 +177,40 @@
     "artist": "Aqua",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f5768db89dd8ac30fd0e414f",
     "spotifyId": "5ZrDlcxIDZyjOzHdYW1ydr",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 6,
@@ -45,7 +218,40 @@
     "artist": "El Canto Del Loco",
     "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",
     "spotifyId": "7MKO7rUZzjw8p87zdZDgqa",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 7,
@@ -53,7 +259,40 @@
     "artist": "Sau",
     "cover": "https://i.scdn.co/image/ab67616d0000b273a8a98db05687330a248de205",
     "spotifyId": "532JxAFc5M6g3fbLJeI3D2",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 8,
@@ -61,7 +300,40 @@
     "artist": "Els Pets",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736d8602480131a1e966e2f592",
     "spotifyId": "7v5ULjF1WVgd26HFPT2IAz",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 9,
@@ -69,7 +341,40 @@
     "artist": "Vengaboys",
     "cover": "https://i.scdn.co/image/ab67616d0000b27354be522e5e1814efa54a31b3",
     "spotifyId": "65OXGbKBQ8gUyJvUd0jNpf",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 10,
@@ -77,7 +382,40 @@
     "artist": "Paulina Rubio",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730cc6151bbb96c2dd16af437d",
     "spotifyId": "2qlMpOIPLWbfSXcVuuMHrl",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 11,
@@ -85,7 +423,40 @@
     "artist": "Troy, Gabriella, Disney",
     "cover": "https://i.scdn.co/image/ab67616d0000b273efc23dff51f494c345fd8eb4",
     "spotifyId": "3AWSwChgStOColFkXbwRnP",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 12,
@@ -93,7 +464,40 @@
     "artist": "Alleh, Yorghaki",
     "cover": "https://i.scdn.co/image/ab67616d0000b27353596a050e8369c51da11029",
     "spotifyId": "2dd3G3ZqEcG2cNS1tp3oEk",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 13,
@@ -101,7 +505,40 @@
     "artist": "M-Clan",
     "cover": "https://i.scdn.co/image/ab67616d0000b27341d925538112441a70fa3383",
     "spotifyId": "0yUsNnKCxe7r68qzEjbOaB",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 14,
@@ -109,7 +546,40 @@
     "artist": "Estopa",
     "cover": "https://i.scdn.co/image/ab67616d0000b2731ed1c8aff132830890f91faa",
     "spotifyId": "1VB4sadHjFcFklHcZuoROi",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 15,
@@ -117,7 +587,40 @@
     "artist": "La Oreja de Van Gogh",
     "cover": "https://i.scdn.co/image/ab67616d0000b273fb01108d92974ffab07a05fb",
     "spotifyId": "7gqIqyeCaV2xNtfZWxEphD",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 16,
@@ -125,7 +628,40 @@
     "artist": "Toploader",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e16a6534cd5a968a5b725d03",
     "spotifyId": "3Fzlg5r1IjhLk2qRw667od",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 17,
@@ -133,7 +669,40 @@
     "artist": "ABBA",
     "cover": "https://i.scdn.co/image/ab67616d0000b2739aa209383c254c9e23e7f909",
     "spotifyId": "01iyCAUm8EvOFqVWYJ3dVX",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 18,
@@ -141,7 +710,40 @@
     "artist": "Don Omar, Lucenzo",
     "cover": "https://i.scdn.co/image/ab67616d0000b27352e8072be373bae435b7a7b2",
     "spotifyId": "5XSZ8onipRr35H0wpWWsW3",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 19,
@@ -149,7 +751,40 @@
     "artist": "Hombres G",
     "cover": "https://i.scdn.co/image/ab67616d0000b2734bebefadddafd8c9e20a8c35",
     "spotifyId": "1Wrzhfa5bNlqvsnCztz190",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 20,
@@ -157,7 +792,40 @@
     "artist": "Oques Grasses",
     "cover": "https://i.scdn.co/image/ab67616d0000b273161b0cbf4e043a8c88ec6488",
     "spotifyId": "7ffa3hboccVAKl1eCvIcyf",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 21,
@@ -165,7 +833,40 @@
     "artist": "Henry Mendez",
     "cover": "https://i.scdn.co/image/ab67616d0000b273d5e46247ec2cf3424c4f6814",
     "spotifyId": "3EpfOGCu8evgwyBHWOgaz6",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 22,
@@ -173,7 +874,40 @@
     "artist": "Cascada",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e1f0e6c160b3cca53ba76aad",
     "spotifyId": "5YnKmPZytgkywuHktntXDV",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 23,
@@ -181,7 +915,40 @@
     "artist": "Bad Gyal",
     "cover": "https://i.scdn.co/image/ab67616d0000b273bdb8d291b4b7a5feca2db8a7",
     "spotifyId": "3e4EFbKbdLvnW42xGB6tIx",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 24,
@@ -189,7 +956,40 @@
     "artist": "Pont Aeri, Marian Dacal",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464",
     "spotifyId": "1cpIInDCM09St4ajfPvPPZ",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 25,
@@ -197,7 +997,40 @@
     "artist": "Daddy Yankee",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736bdcdf82ecce36bff808a40c",
     "spotifyId": "228BxWXUYQPJrJYHDLOHkj",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 26,
@@ -205,7 +1038,40 @@
     "artist": "La Pegatina",
     "cover": "https://i.scdn.co/image/ab67616d0000b2735d752f0833dad4aa47a4a1d0",
     "spotifyId": "5Lf6RG1wOomzOZLYZuB3XK",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 27,
@@ -213,7 +1079,40 @@
     "artist": "Pitbull, AFROJACK, Ne-Yo, Nayer",
     "cover": "https://i.scdn.co/image/ab67616d0000b2731dc7483a9fcfce54822a2f19",
     "spotifyId": "4QNpBfC0zvjKqPJcyqBy9W",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 28,
@@ -221,7 +1120,40 @@
     "artist": "KPop Demon Hunters",
     "cover": "https://i.scdn.co/image/ab67616d0000b273333392a83a4514ae635ed982",
     "spotifyId": "5Cp75TUMrHF6c8xbhdligS",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 29,
@@ -229,7 +1161,40 @@
     "artist": "John Travolta, Jeff Conaway",
     "cover": "https://i.scdn.co/image/ab67616d0000b273b68df485f3304211904548a8",
     "spotifyId": "1XNE0QfNjdroSdosMIk8F6",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 30,
@@ -237,7 +1202,40 @@
     "artist": "Raffaella Carrà",
     "cover": "https://i.scdn.co/image/ab67616d0000b273d0a0b75787a84861363ab426",
     "spotifyId": "3vb3xZADNMONqL7aRQLVPJ",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 31,
@@ -245,7 +1243,40 @@
     "artist": "Lady Gaga, Colby O'Donis",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e691217483df8798445c82e2",
     "spotifyId": "1dzQoRqT5ucxXVaAhTcT0J",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 32,
@@ -253,7 +1284,40 @@
     "artist": "King Africa",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730f97b0b1a39cef7216c669dc",
     "spotifyId": "5UmGJS0jd1r52OjnNvVHvU",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 33,
@@ -261,7 +1325,40 @@
     "artist": "Jarabe De Palo",
     "cover": "https://i.scdn.co/image/ab67616d0000b27347a83522c634e84f937a897e",
     "spotifyId": "2LsbizbOeNa4x6qsi2jAMb",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 34,
@@ -269,7 +1366,40 @@
     "artist": "Luck Ra, BM",
     "cover": "https://i.scdn.co/image/ab67616d0000b273be85610edbbec105cad56682",
     "spotifyId": "7aPsseax6rNFyipHn9A5CR",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 35,
@@ -277,7 +1407,40 @@
     "artist": "Gigi D'Agostino",
     "cover": "https://i.scdn.co/image/ab67616d0000b27395c70cc04573417548b47199",
     "spotifyId": "52LJ3hyknOijCrE5gCD0rE",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 36,
@@ -285,7 +1448,40 @@
     "artist": "La Oreja de Van Gogh",
     "cover": "https://i.scdn.co/image/ab67616d0000b273fb01108d92974ffab07a05fb",
     "spotifyId": "2DNyZP4Py6f4zMASLBnIu6",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 37,
@@ -293,7 +1489,40 @@
     "artist": "W Sound, Beéle, Ovy On The Drums",
     "cover": "https://i.scdn.co/image/ab67616d0000b273d629a6041cde59d7ba67143c",
     "spotifyId": "6xOEgzkMSZJKz6qtCJsQL5",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 38,
@@ -301,7 +1530,40 @@
     "artist": "Shakira",
     "cover": "https://i.scdn.co/image/ab67616d0000b273afccde0243b5c750c07f6825",
     "spotifyId": "7DnMd3BxVOedyOyR7K3F8L",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 39,
@@ -309,7 +1571,40 @@
     "artist": "Toy Cantando",
     "cover": "https://i.scdn.co/image/ab67616d0000b2738317788e7ea129879420a0cb",
     "spotifyId": "3LDjO9d6oIummvUDbPjZ6C",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 40,
@@ -317,7 +1612,40 @@
     "artist": "Sopa De Cabra",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730d9e5066c041517333356cd0",
     "spotifyId": "1vzugDTXDgZCF0QQrzB5hX",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 41,
@@ -325,7 +1653,40 @@
     "artist": "Daddy Yankee",
     "cover": "https://i.scdn.co/image/ab67616d0000b27329866617908a958f41917d76",
     "spotifyId": "3pDhN3qB33AOPhQEkUCaWt",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 42,
@@ -333,7 +1694,40 @@
     "artist": "Lax'n'Busto",
     "cover": "https://i.scdn.co/image/ab67616d0000b27305fda9ec255cb06c5342fb6d",
     "spotifyId": "4ggCyLHi9itGzHsUgYhnN4",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 43,
@@ -341,7 +1735,40 @@
     "artist": "Taylor Swift",
     "cover": "https://i.scdn.co/image/ab67616d0000b273877ea8fa223c26f19aaef92d",
     "spotifyId": "3CeCwYWvdfXbZLXFhBrbnf",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 44,
@@ -349,7 +1776,40 @@
     "artist": "ABBA",
     "cover": "https://i.scdn.co/image/ab67616d0000b27392d0747a634fcc351c6ac3c2",
     "spotifyId": "2TxCwUlqaOH3TIyJqGgR91",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 45,
@@ -357,7 +1817,40 @@
     "artist": "Mecano",
     "cover": "https://i.scdn.co/image/ab67616d0000b2739b70f5f5361672fe4fbce3ff",
     "spotifyId": "2txCuTGPLSkrpdFYAO6cZP",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 46,
@@ -365,7 +1858,40 @@
     "artist": "Raphael",
     "cover": "https://i.scdn.co/image/ab67616d0000b2739f4d22d79b6ad54bcfdee79a",
     "spotifyId": "6Tnnk7MAnZiDx67DJN2hnx",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 47,
@@ -373,7 +1899,40 @@
     "artist": "Quevedo, Pitbull",
     "cover": "https://i.scdn.co/image/ab67616d0000b2734b690afba75a356fcdad526e",
     "spotifyId": "67LKV40NfSSGIJnm0xz6fi",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 48,
@@ -381,7 +1940,40 @@
     "artist": "Coti, Andrés Calamaro",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f68e7098acffc8eae48ee6c3",
     "spotifyId": "1Ev18ptTlc3CBQMmKsIfjY",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 49,
@@ -389,7 +1981,40 @@
     "artist": "Alaska Y Dinarama",
     "cover": "https://i.scdn.co/image/ab67616d0000b2737b7974ddc07f66321035ccf9",
     "spotifyId": "7LpS82vPDLgZAHWRtWBBRj",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 50,
@@ -397,7 +2022,40 @@
     "artist": "Paulina Rubio",
     "cover": "https://i.scdn.co/image/ab67616d0000b273ce653efa36e0514c3b3d8969",
     "spotifyId": "5xXYuYk2CzHfk3kLKYmRRb",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 51,
@@ -405,7 +2063,40 @@
     "artist": "Los Ronaldos",
     "cover": "https://i.scdn.co/image/ab67616d0000b273839dfb77062782ae749c6efc",
     "spotifyId": "2LUP49H9wb6nw2Y5oQzUpZ",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 52,
@@ -413,7 +2104,40 @@
     "artist": "Trip Band",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f2f01d3967e712532a469f76",
     "spotifyId": "7fB2UgHKhpHDpTTLFgUYEO",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 53,
@@ -421,7 +2145,40 @@
     "artist": "Jennifer Lopez, Pitbull",
     "cover": "https://i.scdn.co/image/ab67616d0000b273d7b2aa3834b82b1cbe899a48",
     "spotifyId": "3C0nOe05EIt1390bVABLyN",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 54,
@@ -429,7 +2186,40 @@
     "artist": "La Oreja de Van Gogh",
     "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f",
     "spotifyId": "1hbWtHgRDG25DkmxE4I28V",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 55,
@@ -437,7 +2227,40 @@
     "artist": "Alberto Gambino",
     "cover": "https://i.scdn.co/image/ab67616d0000b273257858e1397f3174a1603bd7",
     "spotifyId": "5HFvuMLMgS75OaY3UKzqqs",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 56,
@@ -445,7 +2268,40 @@
     "artist": "David Civera",
     "cover": "https://i.scdn.co/image/ab67616d0000b27378228d19667b8297a3164397",
     "spotifyId": "0YxU7V3kuCGwzuWCLiOXgF",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 57,
@@ -453,7 +2309,40 @@
     "artist": "Bellini",
     "cover": "https://i.scdn.co/image/ab67616d0000b27315cfd8f433616f3a7677fb93",
     "spotifyId": "5aIfLbdgkbH7NbQryd1poB",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 58,
@@ -461,7 +2350,40 @@
     "artist": "Teràpia de Shock",
     "cover": "https://i.scdn.co/image/ab67616d0000b273b57e0f9d41a34b8ee9e04e2d",
     "spotifyId": "2WWBXo8SVGSi3Z4oB7yQDi",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 59,
@@ -469,7 +2391,40 @@
     "artist": "SX3",
     "cover": "https://i.scdn.co/image/ab67616d0000b27335910015bf82d2d06406bf5b",
     "spotifyId": "0sHE7HXMSX8SlLyJwIgm4p",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 60,
@@ -477,7 +2432,40 @@
     "artist": "Aitana",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e9c382b5b9b3221428da47c2",
     "spotifyId": "6hpuesKPNa3WhV48O7Fa47",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 61,
@@ -485,7 +2473,40 @@
     "artist": "Hannah Montana",
     "cover": "https://i.scdn.co/image/ab67616d0000b27391617a5764e53b78d47c9be1",
     "spotifyId": "3T6DY7gUqGCcHG6HON54Ex",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 62,
@@ -493,7 +2514,40 @@
     "artist": "Las Ketchup",
     "cover": "https://i.scdn.co/image/ab67616d0000b2737cbbd0328713a05ea51d3eaf",
     "spotifyId": "6NG2IIXZfC5Notpz0GIODU",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 63,
@@ -501,7 +2555,40 @@
     "artist": "Tacabro",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c7080c178a5faf25e3a9a734",
     "spotifyId": "6EhPXpRYkwGwg8lx3XiGTI",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 64,
@@ -509,7 +2596,40 @@
     "artist": "Nena Daconte",
     "cover": "https://i.scdn.co/image/ab67616d0000b2734d610f100fc60fbe4f84420e",
     "spotifyId": "3Th2of8xIYyImVLXUbzaTp",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 65,
@@ -517,7 +2637,40 @@
     "artist": "Lax'n'Busto",
     "cover": "https://i.scdn.co/image/ab67616d0000b27388f50f79184550f7346a1c6d",
     "spotifyId": "3FY3W22KrDkkxintD2gpqk",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 66,
@@ -525,7 +2678,40 @@
     "artist": "Demi Lovato, Joe Jonas",
     "cover": "https://i.scdn.co/image/ab67616d0000b273a09542967ef1a606bfe927ac",
     "spotifyId": "2JQRlt3HpTCpRvcfDsbwic",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 67,
@@ -533,7 +2719,40 @@
     "artist": "Pitbull, Kesha",
     "cover": "https://i.scdn.co/image/ab67616d0000b2732ffc2c580b6595a3e675a730",
     "spotifyId": "3cHyrEgdyYRjgJKSOiOtcS",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 68,
@@ -541,7 +2760,40 @@
     "artist": "David Guetta, Sia",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e6060caf9bf5b82c25240329",
     "spotifyId": "0TDLuuLlV54CkRRUOahJb4",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 69,
@@ -549,7 +2801,40 @@
     "artist": "SX3",
     "cover": "https://i.scdn.co/image/ab67616d0000b2732c3cdcc73e7e98e8cb7dcb66",
     "spotifyId": "0b8u6Y5QSq5wQzxjZ36Jo1",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 70,
@@ -557,7 +2842,40 @@
     "artist": "Fuego",
     "cover": "https://i.scdn.co/image/ab67616d0000b273a8f52f5813c2d225a89bbbab",
     "spotifyId": "00hdjyXt6MohKnCyDmhxOL",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 71,
@@ -565,7 +2883,40 @@
     "artist": "Nino Bravo",
     "cover": "https://i.scdn.co/image/ab67616d0000b2733df0bdac09b5ab00347ab7b2",
     "spotifyId": "5IU4JO2cpa0wPK8oQWFfCr",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 72,
@@ -573,7 +2924,40 @@
     "artist": "Coldplay",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e21cc1db05580b6f2d2a3b6e",
     "spotifyId": "1mea3bSkSGXuIRvnydlB5b",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 73,
@@ -581,7 +2965,40 @@
     "artist": "Camilo Sesto",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e8d0af56f0df1af30bf66fa1",
     "spotifyId": "3yzHIAzk3zVE1WgspS8W21",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 74,
@@ -589,7 +3006,40 @@
     "artist": "Shakira, Freshlyground",
     "cover": "https://i.scdn.co/image/ab67616d0000b273815abe02dc1a5aa63be0ee89",
     "spotifyId": "0W8nDs4H2cqxxAgszNMYO3",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 75,
@@ -597,7 +3047,40 @@
     "artist": "Village People",
     "cover": "https://i.scdn.co/image/ab67616d0000b2732f38aff220050371b43eb57e",
     "spotifyId": "3ypMsqUwfNFMiooMLVHfkp",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 76,
@@ -605,7 +3088,40 @@
     "artist": "Sonia Y Selena",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736e159f465d118e870580950e",
     "spotifyId": "4rFCPjKfgbEeNvs1Ku4nbd",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   },
   {
     "id": 77,
@@ -613,6 +3129,39 @@
     "artist": "Cali Y El Dandee",
     "cover": "https://i.scdn.co/image/ab67616d0000b2737b5ce333949f95a6ec6e0e11",
     "spotifyId": "0mGvaKpwLYoybnIoboC3uS",
-    "timestamps": { "main": [60, 90], "secondary": [0, 150] }
+    "timestamps": [
+      {
+        "time": 60,
+        "tag": "best",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 90,
+        "tag": "main",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 0,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      },
+      {
+        "time": 150,
+        "tag": "secondary",
+        "playEffect": {
+          "type": "crossfade",
+          "durationSeconds": 1
+        }
+      }
+    ]
   }
 ]

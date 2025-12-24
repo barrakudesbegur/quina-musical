@@ -14,6 +14,7 @@ import {
   IconPlayerPlayFilled,
   IconPlayerSkipBack,
   IconPlayerSkipForward,
+  IconQuestionMark,
   IconSquareRotated,
   IconTriangleSquareCircle,
   IconVolume,
@@ -29,20 +30,44 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { SongTimestampCategory } from '../hooks/useSongPlayer';
+import type {
+  SongTimestamp,
+  SongTimestampCategory,
+} from '../hooks/useSongPlayer';
 import { formatCompactDuration } from '../utils/time';
 import { differenceInMilliseconds, parseISO } from 'date-fns';
 import { useInterval } from 'usehooks-ts';
 
 const songTimestampOptions = [
-  { value: 'constant', label: 'Millor', icon: IconCarambolaFilled },
-  { value: 'main', label: 'Principals', icon: IconFlameFilled },
-  { value: 'secondary', label: 'Secundaris', icon: IconSquareRotated },
-  { value: 'any', label: 'Tots', icon: IconTriangleSquareCircle },
+  {
+    value: 'best',
+    label: 'Millor',
+    icon: IconCarambolaFilled,
+    className: 'text-red-500',
+  },
+  {
+    value: 'main',
+    label: 'Principals',
+    icon: IconFlameFilled,
+    className: 'text-red-500',
+  },
+  {
+    value: 'secondary',
+    label: 'Secundaris',
+    icon: IconSquareRotated,
+    className: 'text-blue-500',
+  },
+  {
+    value: 'any',
+    label: 'Tots',
+    icon: IconTriangleSquareCircle,
+    className: null,
+  },
 ] as const satisfies readonly {
   value: SongTimestampCategory;
   label: string;
   icon: TablerIcon;
+  className: string | null;
 }[];
 
 const formatTime = (value: number | null) => {
@@ -61,10 +86,7 @@ export const MiniPlayer: FC<
       artist: string;
       cover?: string;
       playedAt: string | null;
-      timestamps?: {
-        main?: number[];
-        secondary?: number[];
-      };
+      timestamps?: SongTimestamp[];
     } | null;
     now: number;
     isPlaying: boolean;
@@ -113,17 +135,6 @@ export const MiniPlayer: FC<
   const formattedDuration = useMemo(() => {
     return formatTime(duration);
   }, [duration]);
-
-  const markers = useMemo(() => {
-    if (!song?.timestamps) return [];
-    return Object.entries(song.timestamps).flatMap(([type, values]) =>
-      values.map((value) => ({
-        value,
-        type,
-        isBest: type === 'main' ? values.indexOf(value) === 0 : false,
-      }))
-    );
-  }, [song]);
 
   const currentTimestampOption = useMemo(
     () =>
@@ -230,26 +241,23 @@ export const MiniPlayer: FC<
             <div className="mt-1 -mb-3">
               <div className="relative mx-2.5 h-4 overflow-visible ">
                 {!!duration &&
-                  markers.map(({ value, type, isBest }) => {
-                    const Icon = isBest
-                      ? IconCarambolaFilled
-                      : type === 'main'
-                        ? IconFlameFilled
-                        : IconSquareRotated;
+                  song?.timestamps?.map(({ time, tag }) => {
+                    const option = songTimestampOptions.find(
+                      (opt) => opt.value === tag
+                    );
+
+                    const Icon = option?.icon ?? IconQuestionMark;
                     return (
                       <div
-                        key={`${type}-${value}`}
+                        key={`${tag}-${time}`}
                         className={cn(
                           'absolute -translate-x-1/2 flex flex-col items-center gap-0.5 left-(--progress)',
-                          {
-                            'text-red-500': type === 'main',
-                            'text-blue-500': type === 'secondary',
-                          }
+                          option?.className
                         )}
                         style={
                           {
                             '--progress': duration
-                              ? `${clamp((value / duration) * 100, 0, 100)}%`
+                              ? `${clamp((time / duration) * 100, 0, 100)}%`
                               : undefined,
                           } as CSSProperties
                         }
@@ -260,12 +268,12 @@ export const MiniPlayer: FC<
                           className={cn(
                             'size-6 p-1 -m-1 min-w-auto text-current',
                             {
-                              'p-0.5': type === 'secondary',
+                              'p-0.5': tag === 'secondary',
                             }
                           )}
                           isDisabled={!onSeek || !song}
                           onPress={() => {
-                            onSeek?.(value);
+                            onSeek?.(time);
                           }}
                         >
                           <Icon className="size-4" stroke={3} />
@@ -292,7 +300,7 @@ export const MiniPlayer: FC<
                 onChange={(value) => {
                   if (!onSeek || !song) return;
                   if (typeof value === 'number') {
-                    onSeek(value);
+                    onSeek(value satisfies number);
                   }
                 }}
                 isDisabled={!song}

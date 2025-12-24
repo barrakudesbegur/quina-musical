@@ -1,10 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSessionStorage } from 'usehooks-ts';
 import { trpc } from '../utils/trpc';
 import { useAudioContext } from './useAudioContext';
 import { useMediaSession } from './useMediaSession';
 
-export type SongTimestampCategory = 'main' | 'secondary' | 'any' | 'constant';
+export type SongTimestamp = {
+  time: number;
+  tag: 'best' | 'main' | 'secondary';
+  playEffect: PlayEffect;
+};
+
+export type PlayEffect =
+  | { type: 'none' }
+  | { type: 'crossfade'; durationSeconds: number }
+  | {
+      type: 'fade-out-in';
+      fadeOutSeconds: number;
+      silenceSeconds: number;
+      fadeInSeconds: number;
+    };
+
+export type SongTimestampCategory = SongTimestamp['tag'] | 'any';
+
+type SongSlot = {
+  el: HTMLAudioElement;
+  source: MediaElementAudioSourceNode;
+  gain: GainNode;
+};
+
+type StartPoint = {
+  time: number;
+  playEffect: PlayEffect;
+};
 
 const loadAudioBuffer = async (
   audioContext: AudioContext,
@@ -13,6 +40,21 @@ const loadAudioBuffer = async (
   const response = await fetch(filepath);
   const arrayBuffer = await response.arrayBuffer();
   return await audioContext.decodeAudioData(arrayBuffer);
+};
+
+const waitForEvent = async (el: HTMLMediaElement, event: string) => {
+  await new Promise<void>((resolve, reject) => {
+    const onOk = () => resolve();
+    const onError = () => reject(new Error(`Media error waiting for ${event}`));
+    el.addEventListener(event, onOk, { once: true });
+    el.addEventListener('error', onError, { once: true });
+  });
+};
+
+const clampSeek = (time: number, duration: number | null) => {
+  const t = Math.max(0, Number.isFinite(time) ? time : 0);
+  if (!duration || !Number.isFinite(duration) || duration <= 0) return t;
+  return Math.min(t, Math.max(0, duration - 0.01));
 };
 
 export const useSongPlayer = (options?: {
@@ -41,43 +83,75 @@ export const useSongPlayer = (options?: {
   const [songVolume, setSongVolume] = useSessionStorage('admin-song-volume', 1);
   const [fxVolume, setFxVolume] = useSessionStorage('admin-fx-volume', 1);
 
-  const audioElRef = useRef<HTMLAudioElement | null>(null);
-  const songSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const setSongRequestIdRef = useRef<number>(0);
-
   const fxBufferCacheRef = useRef<Record<string, AudioBuffer>>({});
+
+  const slotsRef = useRef<[SongSlot, SongSlot] | null>(null);
+  const activeIndexRef = useRef<0 | 1>(0);
+  const setSongRequestIdRef = useRef<number>(0);
+  const stopOldSlotTimeoutRef = useRef<number | null>(null);
+  const delayedStartTimeoutRef = useRef<number | null>(null);
 
   const [mediaSessionPosition, setMediaSessionPosition] = useState<number>(0);
 
-  const getCurrentTime = useCallback(() => {
-    return audioElRef.current?.currentTime ?? 0;
+  const ensureSlots = useCallback(() => {
+    if (slotsRef.current) return slotsRef.current;
+
+    const audioCtx = getAudioContext();
+    const master = getGainNodeSongs();
+
+    const makeSlot = () => {
+      const el = new Audio();
+      el.preload = 'auto';
+      el.loop = true;
+      el.crossOrigin = 'anonymous';
+
+      const source = audioCtx.createMediaElementSource(el);
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      source.connect(gain).connect(master);
+      return { el, source, gain } satisfies SongSlot;
+    };
+
+    const slots: [SongSlot, SongSlot] = [makeSlot(), makeSlot()];
+    slotsRef.current = slots;
+    return slots;
+  }, [getAudioContext, getGainNodeSongs]);
+
+  const getActiveSlot = useCallback(() => {
+    return ensureSlots()[activeIndexRef.current];
+  }, [ensureSlots]);
+
+  const stopSlot = useCallback((slot: SongSlot) => {
+    slot.el.pause();
+    slot.el.removeAttribute('src');
+    slot.el.load();
   }, []);
 
-  const pickStartTimeSeconds = useCallback(
-    (songId: number, category: SongTimestampCategory | number = 'constant') => {
-      if (typeof category === 'number') {
-        return Math.max(0, category);
+  const cancelTransitions = useCallback(() => {
+    if (stopOldSlotTimeoutRef.current) {
+      window.clearTimeout(stopOldSlotTimeoutRef.current);
+      stopOldSlotTimeoutRef.current = null;
+    }
+    if (delayedStartTimeoutRef.current) {
+      window.clearTimeout(delayedStartTimeoutRef.current);
+      delayedStartTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleStopSlot = useCallback(
+    (slot: SongSlot, afterSeconds: number) => {
+      if (stopOldSlotTimeoutRef.current) {
+        window.clearTimeout(stopOldSlotTimeoutRef.current);
+        stopOldSlotTimeoutRef.current = null;
       }
-
-      const song = songsQuery.data?.find((s) => s.id === songId);
-      const timestamps = song?.timestamps;
-      if (!timestamps) return 0;
-
-      const list =
-        (category === 'any'
-          ? Object.values(timestamps).flat()
-          : category === 'constant'
-            ? timestamps.main.slice(0, 1)
-            : timestamps[category]
-        )
-          ?.filter((t) => Number.isFinite(t))
-          .map((t) => Math.max(0, t)) ?? [];
-      if (!list.length) return 0;
-
-      const index = Math.floor(Math.random() * list.length);
-      return list[index];
+      stopOldSlotTimeoutRef.current = window.setTimeout(
+        () => {
+          stopSlot(slot);
+        },
+        Math.max(0, Math.ceil(afterSeconds * 1000) + 50)
+      );
     },
-    [songsQuery.data]
+    [stopSlot]
   );
 
   const getSongUrl = useCallback(
@@ -89,133 +163,289 @@ export const useSongPlayer = (options?: {
     },
     [startedAtQuery.data]
   );
-
-  const ensureSongElement = useCallback(() => {
-    if (!audioElRef.current) {
-      const el = new Audio();
-      el.preload = 'auto';
-      el.loop = true;
-      el.crossOrigin = 'anonymous';
-      audioElRef.current = el;
-    }
-    return audioElRef.current;
-  }, []);
-
-  const ensureSongGraph = useCallback(() => {
-    const audioCtx = getAudioContext();
-    const el = ensureSongElement();
-    if (!songSourceRef.current) {
-      songSourceRef.current = audioCtx.createMediaElementSource(el);
-      songSourceRef.current.connect(getGainNodeSongs());
-    }
-  }, [ensureSongElement, getAudioContext, getGainNodeSongs]);
-
-  const setSong = useCallback(
-    async (
-      nextSongId: number | null,
-      timestampSelection?: number | SongTimestampCategory,
-      shouldPlay?: boolean
-    ) => {
-      const requestId = ++setSongRequestIdRef.current;
-      setSongId(nextSongId);
-
-      const el = ensureSongElement();
-      el.pause();
-
-      if (!nextSongId) {
-        setIsPlaying(false);
-        setIsSongReady(true);
-        setDuration(null);
-        el.removeAttribute('src');
-        el.load();
-        return;
+  const pickStart = useCallback(
+    (
+      songId: number,
+      target: number | SongTimestampCategory | SongTimestamp = 'best'
+    ): StartPoint => {
+      if (typeof target === 'number') {
+        return { time: target, playEffect: { type: 'none' } };
+      }
+      if (typeof target === 'object') {
+        return { time: target.time, playEffect: target.playEffect };
       }
 
-      const url = getSongUrl(nextSongId);
+      const candidates = songsQuery.data
+        ?.find((s) => s.id === songId)
+        ?.timestamps?.filter((t) => target === 'any' || t.tag === target);
+
+      if (!candidates?.length) return { time: 0, playEffect: { type: 'none' } };
+
+      const index = Math.floor(Math.random() * candidates.length);
+      const picked = candidates[index];
+      return { time: picked.time, playEffect: picked.playEffect };
+    },
+    [songsQuery.data]
+  );
+
+  const getCurrentTime = useCallback(() => {
+    return getActiveSlot().el.currentTime ?? 0;
+  }, [getActiveSlot]);
+
+  const transitionToSong = useCallback(
+    async (nextSongId: number, start: StartPoint) => {
+      const audioCtx = getAudioContext();
+      const slots = ensureSlots();
+
+      const fromIndex = activeIndexRef.current;
+      const toIndex = fromIndex === 0 ? 1 : 0;
+      const from = slots[fromIndex];
+      const to = slots[toIndex];
+
+      cancelTransitions();
+
       setIsSongReady(false);
-      el.src = url;
-      el.load();
+      to.el.src = getSongUrl(nextSongId);
+      to.el.load();
+      await waitForEvent(to.el, 'loadedmetadata');
+      const nextDuration = Number.isFinite(to.el.duration)
+        ? to.el.duration
+        : null;
 
-      await new Promise<void>((resolve, reject) => {
-        const onLoaded = () => resolve();
-        const onError = () =>
-          reject(new Error(`Failed to load song ${nextSongId}`));
-        el.addEventListener('loadedmetadata', onLoaded, { once: true });
-        el.addEventListener('error', onError, { once: true });
-      });
+      const effect = start.playEffect;
 
-      if (setSongRequestIdRef.current !== requestId) return;
+      switch (effect.type) {
+        case 'none': {
+          to.el.currentTime = clampSeek(start.time, nextDuration);
+          await waitForEvent(to.el, 'canplay');
+          setIsSongReady(true);
 
-      const nextDuration = Number.isFinite(el.duration) ? el.duration : null;
-      setDuration(nextDuration);
+          const now = audioCtx.currentTime;
+          to.gain.gain.cancelScheduledValues(now);
+          from.gain.gain.cancelScheduledValues(now);
+          to.gain.gain.setValueAtTime(1, now);
+          from.gain.gain.setValueAtTime(0, now);
 
-      const offset = pickStartTimeSeconds(nextSongId, timestampSelection);
-      if (Number.isFinite(offset)) {
-        el.currentTime =
-          nextDuration && nextDuration > 0
-            ? Math.min(Math.max(0, offset), Math.max(0, nextDuration - 0.01))
-            : Math.max(0, offset);
-      }
+          try {
+            await to.el.play();
+          } catch {
+            setIsPlaying(false);
+            return;
+          }
 
-      const markReady = () => setIsSongReady(true);
-      el.addEventListener('canplay', markReady, { once: true });
-      if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-        setIsSongReady(true);
-      }
-
-      if (shouldPlay ?? isPlaying) {
-        try {
-          ensureSongGraph();
-          await el.play();
+          stopSlot(from);
+          activeIndexRef.current = toIndex;
+          setSongId(nextSongId);
+          setDuration(nextDuration);
           setIsPlaying(true);
-        } catch {
-          setIsPlaying(false);
+          return;
+        }
+        case 'crossfade': {
+          const fadeSeconds = Math.max(0, effect.durationSeconds);
+          const startAt = clampSeek(start.time - fadeSeconds, nextDuration);
+          to.el.currentTime = startAt;
+
+          await waitForEvent(to.el, 'canplay');
+          setIsSongReady(true);
+
+          const now = audioCtx.currentTime;
+          to.gain.gain.cancelScheduledValues(now);
+          from.gain.gain.cancelScheduledValues(now);
+          to.gain.gain.setValueAtTime(0, now);
+          from.gain.gain.setValueAtTime(from.gain.gain.value, now);
+          to.gain.gain.linearRampToValueAtTime(1, now + fadeSeconds);
+          from.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
+
+          try {
+            await to.el.play();
+          } catch {
+            setIsPlaying(false);
+            return;
+          }
+
+          scheduleStopSlot(from, fadeSeconds);
+          activeIndexRef.current = toIndex;
+          setSongId(nextSongId);
+          setDuration(nextDuration);
+          setIsPlaying(true);
+          return;
+        }
+        case 'fade-out-in': {
+          const fadeOutSeconds = Math.max(0, effect.fadeOutSeconds);
+          const silenceSeconds = Math.max(0, effect.silenceSeconds);
+          const fadeInSeconds = Math.max(0, effect.fadeInSeconds);
+
+          const startAt = clampSeek(start.time - fadeInSeconds, nextDuration);
+          to.el.currentTime = startAt;
+
+          await waitForEvent(to.el, 'canplay');
+          setIsSongReady(true);
+
+          const now = audioCtx.currentTime;
+          from.gain.gain.cancelScheduledValues(now);
+          from.gain.gain.setValueAtTime(from.gain.gain.value, now);
+          from.gain.gain.linearRampToValueAtTime(0, now + fadeOutSeconds);
+
+          to.gain.gain.cancelScheduledValues(now);
+          to.gain.gain.setValueAtTime(0, now);
+
+          scheduleStopSlot(from, fadeOutSeconds);
+
+          delayedStartTimeoutRef.current = window.setTimeout(
+            () => {
+              const t0 = audioCtx.currentTime;
+              to.gain.gain.cancelScheduledValues(t0);
+              to.gain.gain.setValueAtTime(0, t0);
+              to.gain.gain.linearRampToValueAtTime(1, t0 + fadeInSeconds);
+
+              void to.el.play().then(
+                () => {
+                  activeIndexRef.current = toIndex;
+                  setSongId(nextSongId);
+                  setDuration(nextDuration);
+                  setIsPlaying(true);
+                },
+                () => setIsPlaying(false)
+              );
+            },
+            Math.ceil((fadeOutSeconds + silenceSeconds) * 1000)
+          );
+          return;
         }
       }
     },
     [
-      ensureSongElement,
-      ensureSongGraph,
+      cancelTransitions,
+      ensureSlots,
+      getAudioContext,
+      getSongUrl,
+      scheduleStopSlot,
+      stopSlot,
+    ]
+  );
+
+  const setSong = useCallback(
+    async (
+      nextSongId: number | null,
+      timestampSelection?: number | SongTimestampCategory | SongTimestamp,
+      shouldPlay?: boolean
+    ) => {
+      const requestId = ++setSongRequestIdRef.current;
+
+      const slots = ensureSlots();
+
+      if (!nextSongId) {
+        if (stopOldSlotTimeoutRef.current) {
+          window.clearTimeout(stopOldSlotTimeoutRef.current);
+          stopOldSlotTimeoutRef.current = null;
+        }
+        if (delayedStartTimeoutRef.current) {
+          window.clearTimeout(delayedStartTimeoutRef.current);
+          delayedStartTimeoutRef.current = null;
+        }
+        stopSlot(slots[0]);
+        stopSlot(slots[1]);
+        const audioCtx = getAudioContext();
+        const now = audioCtx.currentTime;
+        slots[0].gain.gain.cancelScheduledValues(now);
+        slots[1].gain.gain.cancelScheduledValues(now);
+        slots[0].gain.gain.setValueAtTime(0, now);
+        slots[1].gain.gain.setValueAtTime(0, now);
+        setSongId(null);
+        setDuration(null);
+        setIsPlaying(false);
+        setIsSongReady(true);
+        return;
+      }
+
+      const start = pickStart(nextSongId, timestampSelection ?? 'best');
+      const wantsPlay = shouldPlay ?? isPlaying;
+
+      // If switching songs while playing: crossfade.
+      if (wantsPlay && songId && songId !== nextSongId) {
+        await transitionToSong(nextSongId, start);
+        return;
+      }
+
+      const active = slots[activeIndexRef.current];
+      active.el.pause();
+      active.el.src = getSongUrl(nextSongId);
+      active.el.load();
+      setIsSongReady(false);
+      await waitForEvent(active.el, 'loadedmetadata');
+      if (setSongRequestIdRef.current !== requestId) return;
+
+      const nextDuration = Number.isFinite(active.el.duration)
+        ? active.el.duration
+        : null;
+      setDuration(nextDuration);
+
+      const nextTime = clampSeek(start.time, nextDuration);
+      active.el.currentTime = nextTime;
+
+      // Ensure this slot is audible when not crossfading
+      const audioCtx = getAudioContext();
+      const now = audioCtx.currentTime;
+      active.gain.gain.cancelScheduledValues(now);
+      active.gain.gain.setValueAtTime(1, now);
+
+      await waitForEvent(active.el, 'canplay');
+      setIsSongReady(true);
+      setSongId(nextSongId);
+
+      if (wantsPlay) {
+        try {
+          await active.el.play();
+          setIsPlaying(true);
+        } catch {
+          setIsPlaying(false);
+        }
+      } else {
+        setIsPlaying(false);
+      }
+    },
+    [
+      transitionToSong,
+      ensureSlots,
+      getAudioContext,
       getSongUrl,
       isPlaying,
-      pickStartTimeSeconds,
+      pickStart,
+      songId,
+      stopSlot,
     ]
   );
 
   const play = useCallback(
     async (timestampSelection?: number | SongTimestampCategory) => {
       if (!songId) return;
-
-      const el = ensureSongElement();
-
-      if (!el.src) {
+      const active = getActiveSlot();
+      if (!active.el.src) {
         await setSong(songId, timestampSelection ?? 0, true);
         return;
       }
 
       if (timestampSelection !== undefined) {
-        if (typeof timestampSelection === 'number') {
-          el.currentTime = Math.max(0, timestampSelection);
-        } else {
-          el.currentTime = pickStartTimeSeconds(songId, timestampSelection);
-        }
+        const start = pickStart(songId, timestampSelection);
+        active.el.currentTime = clampSeek(start.time, duration);
       }
 
       try {
-        ensureSongGraph();
-        await el.play();
+        await active.el.play();
         setIsPlaying(true);
       } catch {
         setIsPlaying(false);
       }
     },
-    [ensureSongElement, ensureSongGraph, pickStartTimeSeconds, setSong, songId]
+    [duration, getActiveSlot, pickStart, setSong, songId]
   );
 
   const pause = useCallback(async () => {
     setIsPlaying(false);
-    audioElRef.current?.pause();
-  }, []);
+    const slots = ensureSlots();
+    slots[0].el.pause();
+    slots[1].el.pause();
+  }, [ensureSlots]);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) pause();
@@ -223,17 +453,12 @@ export const useSongPlayer = (options?: {
   }, [isPlaying, pause, play]);
 
   const seek = useCallback(
-    async (time: number | SongTimestampCategory) => {
+    async (time: number) => {
       if (!songId) return;
-
-      const el = ensureSongElement();
-      if (typeof time === 'number') {
-        el.currentTime = Math.max(0, time);
-      } else {
-        el.currentTime = pickStartTimeSeconds(songId, time);
-      }
+      const active = getActiveSlot();
+      active.el.currentTime = clampSeek(time, duration);
     },
-    [ensureSongElement, pickStartTimeSeconds, songId]
+    [duration, getActiveSlot, songId]
   );
 
   const playFx = useCallback(
@@ -288,10 +513,16 @@ export const useSongPlayer = (options?: {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setMediaSessionPosition(audioElRef.current?.currentTime ?? 0);
+      setMediaSessionPosition(getActiveSlot().el.currentTime ?? 0);
     }, 600);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [getActiveSlot]);
+
+  useEffect(() => {
+    return () => cancelTransitions();
+  }, [cancelTransitions]);
+
+  const playerControlLoading = useMemo(() => !isSongReady, [isSongReady]);
 
   useMediaSession({
     songId,
@@ -317,6 +548,7 @@ export const useSongPlayer = (options?: {
     getCurrentTime,
     duration,
     isSongReady,
+    playerControlLoading,
     isLowVolumeMode,
     setIsLowVolumeMode,
     setLowVolumeSetting,
