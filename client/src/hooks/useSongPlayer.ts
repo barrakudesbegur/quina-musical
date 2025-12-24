@@ -4,6 +4,8 @@ import { trpc } from '../utils/trpc';
 import { useAudioContext } from './useAudioContext';
 import { useMediaSession } from './useMediaSession';
 
+const SONGS_BUCKET_URL = 'https://f000.backblazeb2.com/file/quina-songs/';
+
 export type SongTimestamp = {
   time: number;
   tag: 'best' | 'main' | 'secondary';
@@ -194,7 +196,7 @@ export const useSongPlayer = (options?: {
       const cacheBuster = startedAtQuery.data
         ? `?v=${new Date(startedAtQuery.data).getTime()}`
         : '';
-      return `/audios/song/${id}.mp3${cacheBuster}`;
+      return `${SONGS_BUCKET_URL}${id}.mp3${cacheBuster}`;
     },
     [startedAtQuery.data]
   );
