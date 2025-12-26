@@ -704,5 +704,6 @@ export const useSongPlayer = (options?: {
     songVolume,
     setFxVolume,
     fxVolume,
+    getSongUrl,
   };
 };

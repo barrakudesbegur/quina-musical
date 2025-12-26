@@ -18,8 +18,8 @@ import {
 import {
   IconCarambolaFilled,
   IconCheck,
-  IconFlaskFilled,
   IconFlameFilled,
+  IconFlaskFilled,
   IconLoader2,
   IconPlayerPauseFilled,
   IconPlayerPlayFilled,
@@ -102,7 +102,7 @@ export const SongsTab: FC = () => {
   const songsQuery = trpc.song.getAll.useQuery();
   const updateSongMutation = trpc.game.updateSong.useMutation();
 
-  const { setSong, togglePlay, isPlaying, seek, getCurrentTime } =
+  const { setSong, togglePlay, isPlaying, seek, getCurrentTime, getSongUrl } =
     useSongPlayer();
 
   const setSongRef = useRef(setSong);
@@ -158,7 +158,7 @@ export const SongsTab: FC = () => {
     const song = songsNeedingDuration[0];
     const audio = new Audio();
     audio.preload = 'metadata';
-    audio.src = `/audios/song/${song.id}.mp3`;
+    audio.src = getSongUrl(song.id);
 
     audio.addEventListener('loadedmetadata', () => {
       const dur = audio.duration;
@@ -172,7 +172,7 @@ export const SongsTab: FC = () => {
       console.warn(`Failed to load duration for song ${song.id}`);
       setDurations((prev) => ({ ...prev, [song.id]: 0 }));
     });
-  }, [songsQuery.data, durations, updateSongMutation]);
+  }, [songsQuery.data, durations, updateSongMutation, getSongUrl]);
 
   const getTimestamps = useCallback(
     (songId: number): SongTimestamp[] => {
