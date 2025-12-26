@@ -21,10 +21,6 @@ export default defineConfig({
 
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.destination !== 'audio',
-            handler: 'NetworkOnly',
-          },
-          {
             urlPattern: ({ request }) => request.destination === 'audio',
             handler: 'CacheFirst',
             options: {
