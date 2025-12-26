@@ -27,7 +27,11 @@ COPY .nvmrc .
 COPY .npmrc .
 
 ENV CLIENT_URL=$CLIENT_URL
+
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 CMD curl -fsS http://localhost:3000/health.check | grep -q '"result":{"data":{"json":{"ok":true' || exit 1
+ 
 CMD ["node", "dist/src/index.js"]
 
 

@@ -1,0 +1,21 @@
+networks:
+  caddy:
+    external: true
+
+services:
+  quina-server:
+    build:
+      context: server
+    image: quina-server:latest
+    container_name: quina-server
+    environment:
+      CLIENT_URL: https://quina.barrakudesbegur.org
+      NODE_ENV: production
+    networks:
+      caddy:
+      default:
+    labels:
+      caddy: quina-api.barrakudesbegur.org
+      caddy.reverse_proxy: "{{ upstreams 3000 }}"
+    ports:
+      - 3001:3000
