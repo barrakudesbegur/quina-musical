@@ -13,15 +13,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        globPatterns: ['index.html'],
-        // Configure navigation fallback to index.html for SPA routing
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [
-          // Don't intercept API calls
-          /^\/api\//,
-          // Don't intercept requests with file extensions (static assets)
-          /\/[^/?]+\.[^/]+$/,
-        ],
+        globPatterns: [],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\.mp3/,
