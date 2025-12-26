@@ -4,33 +4,45 @@ import {
   CardBody,
   Chip,
   cn,
-  Divider,
   Image,
   Input,
   Listbox,
   ListboxItem,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Popover,
   PopoverContent,
   PopoverTrigger,
   Select,
   SelectItem,
   Slider,
+  Tab,
+  Tabs,
+  useDisclosure,
 } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import {
   IconCarambolaFilled,
   IconCheck,
+  IconDatabase,
+  IconDownload,
   IconFlaskFilled,
   IconFlameFilled,
   IconLoader2,
+  IconMusic,
   IconPlayerPauseFilled,
   IconPlayerPlayFilled,
   IconPlayerSkipForward,
   IconPlus,
   IconQuestionMark,
+  IconSparkles,
   IconSquareRotated,
   IconTrash,
   IconTriangleFilled,
+  IconUpload,
   IconVolume,
   TablerIcon,
 } from '@tabler/icons-react';
@@ -112,6 +124,11 @@ export const ConfigurationPage: FC = () => {
   const fxOptionsQuery = trpc.game.getFxOptions.useQuery();
   const updateSongMutation = trpc.game.updateSong.useMutation();
   const updateFxOptionsMutation = trpc.game.updateFxOptions.useMutation();
+  const importDbMutation = trpc.game.importDb.useMutation();
+  const clearDbMutation = trpc.game.clearDb.useMutation();
+  const trpcUtils = trpc.useUtils();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const clearDbModal = useDisclosure();
 
   // Use the shared player hook - same as PresenterPage
   const { setSong, togglePlay, isPlaying, seek, getCurrentTime } =
@@ -146,6 +163,62 @@ export const ConfigurationPage: FC = () => {
     sessionStorage.removeItem('adminAuth');
     navigate('/login');
   }, [navigate]);
+
+  const handleExport = useCallback(async () => {
+    const data = await trpcUtils.game.exportDb.fetch();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quina-db-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [trpcUtils.game.exportDb]);
+
+  const handleImport = useCallback(
+    async (file: File) => {
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (
+          !window.confirm(
+            'Això sobreescriurà TOTES les dades. Estàs segur que vols continuar?'
+          )
+        ) {
+          return;
+        }
+
+        await importDbMutation.mutateAsync({ data });
+        await trpcUtils.invalidate();
+        window.alert('Importació completada!');
+      } catch (err) {
+        console.error('Import failed:', err);
+        window.alert(
+          `Error d'importació: ${err instanceof Error ? err.message : 'Unknown error'}`
+        );
+      }
+    },
+    [importDbMutation, trpcUtils]
+  );
+
+  const handleClearDb = useCallback(async () => {
+    try {
+      await clearDbMutation.mutateAsync();
+      await trpcUtils.invalidate();
+      clearDbModal.onClose();
+      window.alert('Base de dades esborrada!');
+    } catch (err) {
+      console.error('Clear failed:', err);
+      window.alert(
+        `Error: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
+    }
+  }, [clearDbMutation, clearDbModal, trpcUtils]);
 
   const sortedSongs = useMemo(() => {
     return (songsQuery.data ?? []).slice().sort((a, b) => a.id - b.id);
@@ -456,14 +529,9 @@ export const ConfigurationPage: FC = () => {
   return (
     <main className="h-dvh flex flex-col bg-background">
       <header className="shrink-0 flex items-center justify-between gap-4 px-6 py-4 border-b border-divider">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-brand uppercase tracking-widest">
-            Song Timestamps
-          </h1>
-          <Chip variant="flat" size="sm">
-            {sortedSongs.length} songs
-          </Chip>
-        </div>
+        <h1 className="text-2xl font-brand uppercase tracking-widest">
+          Configuració
+        </h1>
         <div className="flex items-center gap-2">
           <Button
             as={Link}
@@ -485,67 +553,212 @@ export const ConfigurationPage: FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col divide-y divide-divider">
-          {sortedSongs.map((song) => {
-            const isActive = activeSongId === song.id;
-            const timestamps = getTimestamps(song.id);
-            const saveStatus = saveStatuses[song.id] ?? 'saved';
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <Tabs
+          aria-label="Configuration sections"
+          classNames={{
+            base: 'px-6 pt-4',
+            tabList: 'gap-4',
+            panel: 'flex-1 overflow-y-auto p-0',
+          }}
+        >
+          <Tab
+            key="songs"
+            title={
+              <div className="flex items-center gap-2">
+                <IconMusic className="size-4" />
+                <span>Cançons</span>
+                <Chip size="sm" variant="flat">
+                  {sortedSongs.length}
+                </Chip>
+              </div>
+            }
+          >
+            <div className="flex flex-col divide-y divide-divider">
+              {sortedSongs.map((song) => {
+                const isActive = activeSongId === song.id;
+                const timestamps = getTimestamps(song.id);
+                const saveStatus = saveStatuses[song.id] ?? 'saved';
 
-            return (
-              <SongRow
-                key={song.id}
-                song={song}
-                timestamps={timestamps}
-                volume={getVolume(song.id)}
-                isActive={isActive}
-                isPlaying={isActive && isPlaying}
-                currentTime={isActive ? currentTime : 0}
-                duration={getDuration(song.id)}
-                selectedTimestampIndex={
-                  isActive ? selectedTimestampIndex : null
-                }
-                saveStatus={saveStatus}
-                onTogglePlay={() => togglePlaySong(song.id)}
-                onSeek={(time, keepSelection = false) => {
-                  if (!isActive) {
-                    // Load song but don't reset selection if keepSelection is true
-                    playSong(song.id, time, !keepSelection);
-                  } else {
-                    seekTo(time);
-                  }
-                }}
-                onSelectTimestamp={(index) => {
-                  setSelectedTimestampIndex(index);
-                }}
-                onAddTimestamp={(tag) => {
-                  if (!isActive) {
-                    playSong(song.id);
-                  }
-                  addTimestamp(song.id, tag);
-                }}
-                onUpdateTimestamp={(index, updates) =>
-                  updateTimestamp(song.id, index, updates)
-                }
-                onDeleteTimestamp={(index) => deleteTimestamp(song.id, index)}
-                onVolumeChange={(vol) => updateVolume(song.id, vol)}
-                onPreviewTransition={(ts) => previewTransition(song.id, ts)}
+                return (
+                  <SongRow
+                    key={song.id}
+                    song={song}
+                    timestamps={timestamps}
+                    volume={getVolume(song.id)}
+                    isActive={isActive}
+                    isPlaying={isActive && isPlaying}
+                    currentTime={isActive ? currentTime : 0}
+                    duration={getDuration(song.id)}
+                    selectedTimestampIndex={
+                      isActive ? selectedTimestampIndex : null
+                    }
+                    saveStatus={saveStatus}
+                    onTogglePlay={() => togglePlaySong(song.id)}
+                    onSeek={(time, keepSelection = false) => {
+                      if (!isActive) {
+                        playSong(song.id, time, !keepSelection);
+                      } else {
+                        seekTo(time);
+                      }
+                    }}
+                    onSelectTimestamp={(index) => {
+                      setSelectedTimestampIndex(index);
+                    }}
+                    onAddTimestamp={(tag) => {
+                      if (!isActive) {
+                        playSong(song.id);
+                      }
+                      addTimestamp(song.id, tag);
+                    }}
+                    onUpdateTimestamp={(index, updates) =>
+                      updateTimestamp(song.id, index, updates)
+                    }
+                    onDeleteTimestamp={(index) =>
+                      deleteTimestamp(song.id, index)
+                    }
+                    onVolumeChange={(vol) => updateVolume(song.id, vol)}
+                    onPreviewTransition={(ts) => previewTransition(song.id, ts)}
+                  />
+                );
+              })}
+            </div>
+          </Tab>
+
+          <Tab
+            key="fx"
+            title={
+              <div className="flex items-center gap-2">
+                <IconSparkles className="size-4" />
+                <span>Efectes</span>
+                <Chip size="sm" variant="flat">
+                  {fxList.length}
+                </Chip>
+              </div>
+            }
+          >
+            <div className="p-6">
+              <FxSettingsSection
+                fxOptions={fxList.reduce(
+                  (acc, fx) => ({ ...acc, [fx.id]: getFxOptions(fx.id) }),
+                  {} as Record<string, FxOptions>
+                )}
+                saveStatus={fxSaveStatus}
+                onOptionChange={updateFxOption}
               />
-            );
-          })}
-        </div>
+            </div>
+          </Tab>
 
-        <Divider className="my-6" />
+          <Tab
+            key="database"
+            title={
+              <div className="flex items-center gap-2">
+                <IconDatabase className="size-4" />
+                <span>Base de dades</span>
+              </div>
+            }
+          >
+            <div className="p-6">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleImport(file);
+                    e.target.value = '';
+                  }
+                }}
+              />
 
-        <FxSettingsSection
-          fxOptions={fxList.reduce(
-            (acc, fx) => ({ ...acc, [fx.id]: getFxOptions(fx.id) }),
-            {} as Record<string, FxOptions>
-          )}
-          saveStatus={fxSaveStatus}
-          onOptionChange={updateFxOption}
-        />
+              <Card className="max-w-xl">
+                <CardBody className="gap-4">
+                  <h2 className="text-lg font-semibold">
+                    Gestió de la base de dades
+                  </h2>
+                  <p className="text-default-500 text-sm">
+                    Exporta, importa o esborra totes les dades del joc.
+                  </p>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      onPress={handleExport}
+                      variant="flat"
+                      color="primary"
+                      startContent={<IconDownload className="size-4" />}
+                    >
+                      Exportar DB
+                    </Button>
+                    <Button
+                      onPress={() => fileInputRef.current?.click()}
+                      variant="flat"
+                      color="secondary"
+                      isLoading={importDbMutation.isPending}
+                      startContent={
+                        !importDbMutation.isPending && (
+                          <IconUpload className="size-4" />
+                        )
+                      }
+                    >
+                      Importar DB
+                    </Button>
+                    <Button
+                      onPress={clearDbModal.onOpen}
+                      variant="flat"
+                      color="danger"
+                      startContent={<IconTrash className="size-4" />}
+                    >
+                      Esborrar DB
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+          </Tab>
+        </Tabs>
       </div>
+
+      <Modal
+        isOpen={clearDbModal.isOpen}
+        onOpenChange={clearDbModal.onOpenChange}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Confirmar esborrament</ModalHeader>
+              <ModalBody>
+                <p>
+                  Estàs segur que vols esborrar <strong>TOTES</strong> les
+                  dades? Això inclou:
+                </p>
+                <ul className="list-disc list-inside text-default-500 mt-2">
+                  <li>Timestamps de cançons</li>
+                  <li>Volums personalitzats</li>
+                  <li>Configuració d&apos;efectes</li>
+                  <li>Rondes i estat del joc</li>
+                </ul>
+                <p className="text-danger mt-2 font-medium">
+                  Aquesta acció no es pot desfer!
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  Cancel·lar
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={handleClearDb}
+                  isLoading={clearDbMutation.isPending}
+                >
+                  Esborrar tot
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </main>
   );
 };
@@ -1037,17 +1250,9 @@ const FxSettingsSection: FC<{
   onOptionChange: (fxId: string, key: keyof FxOptions, value: number) => void;
 }> = ({ fxOptions, saveStatus, onOptionChange }) => {
   return (
-    <section className="px-6 pb-6">
+    <section>
       <div className="flex items-center gap-4 mb-4">
-        <h2 className="text-xl font-brand uppercase tracking-widest">
-          FX Settings
-        </h2>
-        <Chip variant="flat" size="sm">
-          {fxList.length} FX
-        </Chip>
-        <div className="ml-auto">
-          <SaveStatusIndicator status={saveStatus} />
-        </div>
+        <SaveStatusIndicator status={saveStatus} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         {fxList.map((fx) => {

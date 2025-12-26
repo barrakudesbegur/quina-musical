@@ -1,7 +1,13 @@
 import { EventEmitter, on } from 'events';
 import { z } from 'zod';
 import cards from '../../db/default/cards.json' with { type: 'json' };
-import { gameDb, Round, SongTimestamp } from '../db/game.js';
+import {
+  gameDb,
+  GameDataSchema,
+  makeDefaultData,
+  Round,
+  SongTimestampSchema,
+} from '../db/game.js';
 import { publicProcedure, router } from '../trpc.js';
 import { shuffleArrayWithSeed } from '../utils/arrays.js';
 
@@ -436,6 +442,24 @@ export const gameRouter = router({
 
   getFxOptions: publicProcedure.query(async () => {
     return gameDb.data.fxOptions;
+  }),
+
+  exportDb: publicProcedure.query(async () => {
+    return gameDb.data;
+  }),
+
+  importDb: publicProcedure
+    .input(z.object({ data: GameDataSchema }))
+    .mutation(async ({ input }) => {
+      gameDb.data = input.data;
+      await gameDb.write();
+      emitUpdate();
+    }),
+
+  clearDb: publicProcedure.mutation(async () => {
+    gameDb.data = makeDefaultData();
+    await gameDb.write();
+    emitUpdate();
   }),
 });
 
