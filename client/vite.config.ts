@@ -14,13 +14,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: [],
+        navigateFallback: undefined,
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
 
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\.mp3/,
+            urlPattern: ({ request }) => request.destination === 'audio',
             handler: 'CacheFirst',
             options: {
               cacheName: 'songs-cache',
