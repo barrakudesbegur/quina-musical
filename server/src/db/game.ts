@@ -1,9 +1,36 @@
 import lodash from 'lodash';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
+import songsJson from '../../db/default/songs.json' with { type: 'json' };
 
 type SongId = number;
 type CardId = number;
+
+export type PlayEffect =
+  | { type: 'none' }
+  | { type: 'crossfade'; durationSeconds: number }
+  | {
+      type: 'fade-out-in';
+      fadeOutSeconds: number;
+      silenceSeconds: number;
+      fadeInSeconds: number;
+    };
+
+export type SongTimestamp = {
+  time: number;
+  tag: 'best' | 'main' | 'secondary';
+  playEffect: PlayEffect;
+};
+
+export interface Song {
+  id: number;
+  title: string;
+  artist: string;
+  cover: string;
+  spotifyId: string;
+  timestamps: SongTimestamp[];
+  volume?: number;
+}
 
 export interface PlayedSong {
   id: SongId;
@@ -30,20 +57,25 @@ export interface GameData {
   pastRounds: Round[];
   cardsPlaying: CardId[];
   displayedImageId: string | null;
+  songs: Song[];
 }
 
 class LowWithLodash<T> extends Low<T> {
   chain: lodash.ExpChain<this['data']> = lodash.chain(this).get('data');
 }
 
-const defaultData: GameData = {
+const makeDefaultData = (): GameData => ({
   startedAt: null,
   finishedAt: null,
   currentRound: null,
   pastRounds: [],
   cardsPlaying: [],
   displayedImageId: null,
-};
+  songs: songsJson.map((song) => ({
+    ...song,
+    timestamps: [],
+  })),
+});
 
 const adapter = new JSONFile<GameData>(
   process.env.NODE_ENV === 'production'
@@ -51,6 +83,6 @@ const adapter = new JSONFile<GameData>(
     : './db/local/game-dev.json'
 );
 
-export const gameDb = new LowWithLodash(adapter, defaultData);
+export const gameDb = new LowWithLodash(adapter, makeDefaultData());
 await gameDb.read();
 await gameDb.write();

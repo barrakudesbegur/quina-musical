@@ -1,8 +1,7 @@
 import { EventEmitter, on } from 'events';
 import { z } from 'zod';
-import songs from '../../db/default/songs.json' with { type: 'json' };
 import cards from '../../db/default/cards.json' with { type: 'json' };
-import { gameDb, Round } from '../db/game.js';
+import { gameDb, Round, SongTimestamp } from '../db/game.js';
 import { publicProcedure, router } from '../trpc.js';
 import { shuffleArrayWithSeed } from '../utils/arrays.js';
 
@@ -39,7 +38,7 @@ export const gameRouter = router({
   getAllSongs: publicProcedure.query(async () => {
     if (!gameDb.data.currentRound) return [];
 
-    return songs
+    return gameDb.data.songs
       .slice()
       .sort((a, b) => a.id - b.id)
       .map((song) => {
@@ -54,7 +53,7 @@ export const gameRouter = router({
         }
         return {
           ...song,
-          timestamps: song.timestamps as SongTimestamp[],
+          timestamps: song.timestamps,
           playedAt: played?.playedAt ?? null,
           isPlayed: !!played,
           isLastPlayed:
@@ -105,7 +104,7 @@ export const gameRouter = router({
       const songId = input.songId ?? gameDb.data.currentRound.songsQueue[0]?.id;
       if (!songId) return;
 
-      const songInfo = songs.find((s) => s.id === songId);
+      const songInfo = gameDb.data.songs.find((s) => s.id === songId);
       if (!songInfo) {
         throw new Error(
           `Song ${songId} cannot play because it is not a valid song id.`
@@ -357,7 +356,9 @@ export const gameRouter = router({
               playedSongs: gameDb.chain
                 .get('currentRound.playedSongs')
                 .map((played) => {
-                  const song = songs.find((s) => s.id === played.id);
+                  const song = gameDb.data.songs.find(
+                    (s) => s.id === played.id
+                  );
                   if (!song) return null;
                   return { ...song, position: played.position };
                 })
@@ -378,32 +379,49 @@ export const gameRouter = router({
       yield getState();
     }
   }),
+
+  updateSongTimestamps: publicProcedure
+    .input(
+      z.object({
+        songId: z.number().int().positive(),
+        timestamps: z.array(
+          z.object({
+            time: z.number().nonnegative(),
+            tag: z.enum(['best', 'main', 'secondary']),
+            playEffect: z.discriminatedUnion('type', [
+              z.object({ type: z.literal('none') }),
+              z.object({
+                type: z.literal('crossfade'),
+                durationSeconds: z.number().nonnegative(),
+              }),
+              z.object({
+                type: z.literal('fade-out-in'),
+                fadeOutSeconds: z.number().nonnegative(),
+                silenceSeconds: z.number().nonnegative(),
+                fadeInSeconds: z.number().nonnegative(),
+              }),
+            ]),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const song = gameDb.chain.get('songs').find({ id: input.songId }).value();
+      if (!song) throw new Error(`Song ${input.songId} not found`);
+
+      song.timestamps = input.timestamps;
+      await gameDb.write();
+    }),
 });
 
 const emitUpdate = () => gameEventEmitter.emit('update');
 
 function shuffleSongs(seed: string) {
   return shuffleArrayWithSeed(
-    songs.map((song) => song.id),
+    gameDb.data.songs.map((song) => song.id),
     seed
   ).map((id, index) => ({
     id,
     position: index + 1,
   })) satisfies Round['shuffledSongs'];
 }
-
-type PlayEffect =
-  | { type: 'none' }
-  | { type: 'crossfade'; durationSeconds: number }
-  | {
-      type: 'fade-out-in';
-      fadeOutSeconds: number;
-      silenceSeconds: number;
-      fadeInSeconds: number;
-    };
-
-type SongTimestamp = {
-  time: number;
-  tag: 'best' | 'main' | 'secondary';
-  playEffect: PlayEffect;
-};

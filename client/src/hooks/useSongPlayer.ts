@@ -42,6 +42,9 @@ const TRANSPORT_FADE_IN_SECONDS = 0.6;
 const TRANSPORT_FADE_OUT_SECONDS = 1.2;
 const VOLUME_MODE_RAMP_SECONDS = 0.5;
 
+const PRELOAD_BATCH_1_COUNT = 1;
+const PRELOAD_BATCH_2_COUNT = 3;
+
 const loadAudioBuffer = async (
   audioContext: AudioContext,
   filepath: string
@@ -106,6 +109,8 @@ export const useSongPlayer = (options?: {
   const pauseAfterFadeTimeoutRef = useRef<number | null>(null);
 
   const [mediaSessionPosition, setMediaSessionPosition] = useState<number>(0);
+
+  const preloadedSongsRef = useRef<Set<number>>(new Set());
 
   const ensureSlots = useCallback(() => {
     if (slotsRef.current) return slotsRef.current;
@@ -580,6 +585,53 @@ export const useSongPlayer = (options?: {
   useEffect(() => {
     return () => cancelTransitions();
   }, [cancelTransitions]);
+
+  const preloadSongs = useCallback(
+    async (songIds: number[]) => {
+      await Promise.all(
+        songIds.map(async (songId) => {
+          if (preloadedSongsRef.current.has(songId)) return;
+          preloadedSongsRef.current.add(songId);
+
+          try {
+            await fetch(getSongUrl(songId), { mode: 'cors' });
+          } catch {
+            preloadedSongsRef.current.delete(songId);
+          }
+        })
+      );
+    },
+    [getSongUrl]
+  );
+
+  useEffect(() => {
+    if (!songsQuery.data) return;
+
+    void (async () => {
+      const unplayedSongIds = songsQuery.data
+        .filter(
+          (s) =>
+            !s.isPlayed && s.positionInQueue !== null && s.positionInQueue > 0
+        )
+        .sort((a, b) => (a.positionInQueue ?? 0) - (b.positionInQueue ?? 0))
+        .map((s) => s.id);
+
+      if (unplayedSongIds.length === 0) return;
+
+      await preloadSongs(unplayedSongIds.slice(0, PRELOAD_BATCH_1_COUNT));
+
+      await preloadSongs(
+        unplayedSongIds.slice(
+          PRELOAD_BATCH_1_COUNT,
+          PRELOAD_BATCH_1_COUNT + PRELOAD_BATCH_2_COUNT
+        )
+      );
+
+      await preloadSongs(
+        unplayedSongIds.slice(PRELOAD_BATCH_1_COUNT + PRELOAD_BATCH_2_COUNT)
+      );
+    })();
+  }, [preloadSongs, songsQuery.data]);
 
   const playerControlLoading = useMemo(() => !isSongReady, [isSongReady]);
 
