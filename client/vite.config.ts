@@ -13,8 +13,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        // Don't precache anything - we only want runtime caching for songs
-        globPatterns: [],
+        globPatterns: ['index.html'],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\.mp3/,
