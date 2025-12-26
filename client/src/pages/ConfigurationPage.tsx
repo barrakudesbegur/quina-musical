@@ -20,6 +20,7 @@ import { Icon } from '@iconify/react';
 import {
   IconCarambolaFilled,
   IconCheck,
+  IconFlaskFilled,
   IconFlameFilled,
   IconLoader2,
   IconPlayerPauseFilled,
@@ -47,6 +48,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDebounceCallback, useInterval } from 'usehooks-ts';
 import { fxList } from '../config/fx';
 import type { PlayEffect, SongTimestamp } from '../hooks/useSongPlayer';
+import { useSongPlayer } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
 
 type Song = {
@@ -57,6 +59,7 @@ type Song = {
   spotifyId: string;
   timestamps: SongTimestamp[];
   volume?: number;
+  duration?: number;
 };
 
 const TIMESTAMP_OPTIONS = [
@@ -110,7 +113,20 @@ export const ConfigurationPage: FC = () => {
   const updateSongMutation = trpc.game.updateSong.useMutation();
   const updateFxOptionsMutation = trpc.game.updateFxOptions.useMutation();
 
+  // Use the shared player hook - same as PresenterPage
+  const { setSong, togglePlay, isPlaying, seek, getCurrentTime } =
+    useSongPlayer();
+
+  // Keep a ref to the latest setSong to avoid stale closures in async functions
+  const setSongRef = useRef(setSong);
+  useEffect(() => {
+    setSongRef.current = setSong;
+  }, [setSong]);
+
   const [activeSongId, setActiveSongId] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [durations, setDurations] = useState<Record<number, number>>({});
+
   const [selectedTimestampIndex, setSelectedTimestampIndex] = useState<
     number | null
   >(null);
@@ -126,11 +142,6 @@ export const ConfigurationPage: FC = () => {
   );
   const [fxSaveStatus, setFxSaveStatus] = useState<SaveStatus>('saved');
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [durations, setDurations] = useState<Record<number, number>>({});
-
   const handleLogout = useCallback(() => {
     sessionStorage.removeItem('adminAuth');
     navigate('/login');
@@ -140,47 +151,57 @@ export const ConfigurationPage: FC = () => {
     return (songsQuery.data ?? []).slice().sort((a, b) => a.id - b.id);
   }, [songsQuery.data]);
 
-  // Preload all song durations when songs are loaded
+  // Track current time from the player
+  useInterval(() => {
+    if (isPlaying) {
+      setCurrentTime(getCurrentTime());
+    }
+  }, 100);
+
+  // Get duration for a song - prefer cached from DB, then local state
+  const getDuration = useCallback(
+    (songId: number): number | null => {
+      // First check local state (might have just been loaded)
+      if (durations[songId]) return durations[songId];
+      // Then check API data (cached in DB)
+      const song = songsQuery.data?.find((s) => s.id === songId);
+      return song?.duration ?? null;
+    },
+    [durations, songsQuery.data]
+  );
+
+  // Load durations for songs that don't have them cached - ONE AT A TIME to avoid freezing
   useEffect(() => {
     if (!songsQuery.data) return;
 
-    const loadDurations = async () => {
-      const newDurations: Record<number, number> = {};
+    // Find songs without cached duration
+    const songsNeedingDuration = songsQuery.data.filter(
+      (song) => !song.duration && !durations[song.id]
+    );
 
-      await Promise.all(
-        songsQuery.data.map(
-          (song) =>
-            new Promise<void>((resolve) => {
-              // Skip if already loaded
-              if (durations[song.id]) {
-                resolve();
-                return;
-              }
+    if (songsNeedingDuration.length === 0) return;
 
-              const audio = new Audio();
-              audio.preload = 'metadata';
-              audio.src = `/audios/song/${song.id}.mp3`;
+    // Load ONE song at a time to avoid freezing
+    const song = songsNeedingDuration[0];
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.src = `/audios/song/${song.id}.mp3`;
 
-              audio.addEventListener('loadedmetadata', () => {
-                newDurations[song.id] = audio.duration;
-                resolve();
-              });
-
-              audio.addEventListener('error', () => {
-                console.warn(`Failed to load duration for song ${song.id}`);
-                resolve();
-              });
-            })
-        )
-      );
-
-      if (Object.keys(newDurations).length > 0) {
-        setDurations((prev) => ({ ...prev, ...newDurations }));
+    audio.addEventListener('loadedmetadata', () => {
+      const dur = audio.duration;
+      if (dur && Number.isFinite(dur)) {
+        setDurations((prev) => ({ ...prev, [song.id]: dur }));
+        // Save to server so it's cached for next time
+        updateSongMutation.mutate({ songId: song.id, duration: dur });
       }
-    };
+    });
 
-    loadDurations();
-  }, [songsQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
+    audio.addEventListener('error', () => {
+      console.warn(`Failed to load duration for song ${song.id}`);
+      // Mark as loaded with 0 to avoid retrying
+      setDurations((prev) => ({ ...prev, [song.id]: 0 }));
+    });
+  }, [songsQuery.data, durations, updateSongMutation]);
 
   const getTimestamps = useCallback(
     (songId: number): SongTimestamp[] => {
@@ -278,79 +299,39 @@ export const ConfigurationPage: FC = () => {
     [debouncedSaveFxOptions]
   );
 
+  // Playback using useSongPlayer
   const playSong = useCallback(
-    async (songId: number, seekTo?: number) => {
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-        audioRef.current.addEventListener('ended', () => {
-          setIsPlaying(false);
-        });
-      }
-
-      if (activeSongId !== songId) {
-        audioRef.current.src = `/audios/song/${songId}.mp3`;
-        audioRef.current.load();
-        setActiveSongId(songId);
+    async (songId: number, seekTo?: number, resetSelection = true) => {
+      if (activeSongId !== songId && resetSelection) {
         setSelectedTimestampIndex(null);
-
-        // Update duration when metadata loads (in case preload missed it)
-        audioRef.current.addEventListener(
-          'loadedmetadata',
-          () => {
-            const dur = audioRef.current?.duration;
-            if (dur && dur > 0) {
-              setDurations((prev) => ({ ...prev, [songId]: dur }));
-            }
-          },
-          { once: true }
-        );
       }
-
+      setActiveSongId(songId);
+      await setSong(songId, seekTo ?? 0, true);
       if (seekTo !== undefined) {
-        audioRef.current.currentTime = seekTo;
-      }
-
-      try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      } catch (err) {
-        console.error('Playback error:', err);
+        setCurrentTime(seekTo);
       }
     },
-    [activeSongId]
+    [activeSongId, setSong]
   );
-
-  const pauseSong = useCallback(() => {
-    audioRef.current?.pause();
-    setIsPlaying(false);
-  }, []);
 
   const togglePlaySong = useCallback(
     (songId: number) => {
-      if (activeSongId === songId && isPlaying) {
-        pauseSong();
+      if (activeSongId === songId) {
+        togglePlay();
       } else {
         playSong(songId);
       }
     },
-    [activeSongId, isPlaying, pauseSong, playSong]
+    [activeSongId, playSong, togglePlay]
   );
 
-  const seekTo = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = clamp(
-        time,
-        0,
-        audioRef.current.duration || 0
-      );
-    }
-  }, []);
-
-  useInterval(() => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  }, 100);
+  const seekTo = useCallback(
+    (time: number) => {
+      seek(time);
+      setCurrentTime(time);
+    },
+    [seek]
+  );
 
   const addTimestamp = useCallback(
     (songId: number, tag: SongTimestamp['tag']) => {
@@ -389,42 +370,58 @@ export const ConfigurationPage: FC = () => {
     [getTimestamps, updateTimestamps]
   );
 
+  // Preview transition using the player's built-in transition effects
+  const previewTransition = useCallback(
+    async (targetSongId: number, timestamp: SongTimestamp) => {
+      const otherSongs = sortedSongs.filter((s) => s.id !== targetSongId);
+      if (otherSongs.length === 0) return;
+
+      // Pick a random other song
+      const randomSong =
+        otherSongs[Math.floor(Math.random() * otherSongs.length)];
+
+      // Random start position (before last 20 seconds)
+      const randomDuration = getDuration(randomSong.id) ?? 180;
+      const maxStart = Math.max(0, randomDuration - 20);
+      const randomStartTime = Math.random() * maxStart;
+
+      // Play the random song first
+      setActiveSongId(randomSong.id);
+      await setSong(randomSong.id, randomStartTime, true);
+
+      // Wait 2-4 seconds
+      const waitTime = 2000 + Math.random() * 2000;
+      await new Promise((r) => setTimeout(r, waitTime));
+
+      // Now transition to the target song using the timestamp's playEffect
+      // Use setSongRef.current to get the LATEST setSong with updated songId closure
+      // This is required because setSong's closure captures songId state
+      setActiveSongId(targetSongId);
+      await setSongRef.current(targetSongId, timestamp, true);
+    },
+    [getDuration, setSong, sortedSongs]
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
-      if (e.target instanceof HTMLInputElement) {
-        return;
-      }
+      if (e.target instanceof HTMLInputElement) return;
 
-      // Space key: toggle play/pause
       if (e.key === ' ') {
         e.preventDefault();
         if (activeSongId) {
-          // If a timestamp is selected, seek to it first
-          if (selectedTimestampIndex !== null) {
-            const current = getTimestamps(activeSongId);
-            const ts = current[selectedTimestampIndex];
-            if (ts && !isPlaying) {
-              seekTo(ts.time);
-            }
+          if (selectedTimestampIndex !== null && !isPlaying) {
+            const ts = getTimestamps(activeSongId)[selectedTimestampIndex];
+            if (ts) seekTo(ts.time);
           }
-          if (isPlaying) {
-            pauseSong();
-          } else {
-            playSong(activeSongId);
-          }
+          togglePlay();
         }
         return;
       }
 
-      // Arrow keys: move selected timestamp
-      if (!activeSongId || selectedTimestampIndex === null) {
-        return;
-      }
+      if (!activeSongId || selectedTimestampIndex === null) return;
 
       const step = e.shiftKey ? 0.5 : 0.05;
-      const current = getTimestamps(activeSongId);
-      const ts = current[selectedTimestampIndex];
+      const ts = getTimestamps(activeSongId)[selectedTimestampIndex];
       if (!ts) return;
 
       if (e.key === 'ArrowLeft') {
@@ -452,8 +449,7 @@ export const ConfigurationPage: FC = () => {
     getTimestamps,
     updateTimestamp,
     isPlaying,
-    playSong,
-    pauseSong,
+    togglePlay,
     seekTo,
   ]);
 
@@ -505,20 +501,21 @@ export const ConfigurationPage: FC = () => {
                 isActive={isActive}
                 isPlaying={isActive && isPlaying}
                 currentTime={isActive ? currentTime : 0}
-                duration={durations[song.id] ?? null}
+                duration={getDuration(song.id)}
                 selectedTimestampIndex={
                   isActive ? selectedTimestampIndex : null
                 }
                 saveStatus={saveStatus}
                 onTogglePlay={() => togglePlaySong(song.id)}
-                onSeek={(time) => {
-                  if (!isActive) playSong(song.id, time);
-                  else seekTo(time);
+                onSeek={(time, keepSelection = false) => {
+                  if (!isActive) {
+                    // Load song but don't reset selection if keepSelection is true
+                    playSong(song.id, time, !keepSelection);
+                  } else {
+                    seekTo(time);
+                  }
                 }}
                 onSelectTimestamp={(index) => {
-                  if (!isActive) {
-                    playSong(song.id);
-                  }
                   setSelectedTimestampIndex(index);
                 }}
                 onAddTimestamp={(tag) => {
@@ -532,6 +529,7 @@ export const ConfigurationPage: FC = () => {
                 }
                 onDeleteTimestamp={(index) => deleteTimestamp(song.id, index)}
                 onVolumeChange={(vol) => updateVolume(song.id, vol)}
+                onPreviewTransition={(ts) => previewTransition(song.id, ts)}
               />
             );
           })}
@@ -563,12 +561,13 @@ const SongRow: FC<{
   selectedTimestampIndex: number | null;
   saveStatus: SaveStatus;
   onTogglePlay: () => void;
-  onSeek: (time: number) => void;
+  onSeek: (time: number, keepSelection?: boolean) => void;
   onSelectTimestamp: (index: number) => void;
   onAddTimestamp: (tag: SongTimestamp['tag']) => void;
   onUpdateTimestamp: (index: number, updates: Partial<SongTimestamp>) => void;
   onDeleteTimestamp: (index: number) => void;
   onVolumeChange: (volume: number) => void;
+  onPreviewTransition: (timestamp: SongTimestamp) => void;
 }> = ({
   song,
   timestamps,
@@ -586,6 +585,7 @@ const SongRow: FC<{
   onUpdateTimestamp,
   onDeleteTimestamp,
   onVolumeChange,
+  onPreviewTransition,
 }) => {
   const selectedTimestamp =
     selectedTimestampIndex !== null ? timestamps[selectedTimestampIndex] : null;
@@ -628,6 +628,19 @@ const SongRow: FC<{
               ) : (
                 <IconPlayerPlayFilled className="size-4" />
               )}
+            </Button>
+
+            <Button
+              isIconOnly
+              size="sm"
+              variant="flat"
+              isDisabled={!selectedTimestamp}
+              onPress={() =>
+                selectedTimestamp && onPreviewTransition(selectedTimestamp)
+              }
+              aria-label="Previsualitzar transició"
+            >
+              <IconFlaskFilled className="size-4" />
             </Button>
 
             <Popover placement="bottom">
@@ -699,7 +712,7 @@ const SongRow: FC<{
                       )}
                       onPress={() => {
                         onSelectTimestamp(index);
-                        onSeek(time);
+                        onSeek(time, true); // keepSelection = true
                         (document.activeElement as HTMLElement)?.blur();
                       }}
                     >

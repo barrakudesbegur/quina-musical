@@ -406,6 +406,7 @@ export const gameRouter = router({
           )
           .optional(),
         volume: z.number().min(0).max(2).optional(),
+        duration: z.number().positive().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -414,6 +415,7 @@ export const gameRouter = router({
 
       if (input.timestamps !== undefined) song.timestamps = input.timestamps;
       if (input.volume !== undefined) song.volume = input.volume;
+      if (input.duration !== undefined) song.duration = input.duration;
       await gameDb.write();
     }),
 

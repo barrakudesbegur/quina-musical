@@ -30,6 +30,7 @@ export interface Song {
   spotifyId: string;
   timestamps: SongTimestamp[];
   volume?: number;
+  duration?: number;
 }
 
 export interface PlayedSong {
