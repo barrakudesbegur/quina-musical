@@ -11,7 +11,7 @@ import {
 import { IconPlayerPlay, IconVolume, IconVolume2 } from '@tabler/icons-react';
 import { differenceInMilliseconds, isValid, parseISO } from 'date-fns';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useSessionStorage } from 'usehooks-ts';
 import { CheckCardDialog } from '../components/CheckCardDialog';
 import { FinishRoundDialog } from '../components/FinishRoundDialog';
@@ -46,7 +46,6 @@ export const PresenterPage: FC = () => {
   const statusQuery = trpc.game.getStatusNow.useQuery(undefined, {
     refetchOnWindowFocus: true,
   });
-  const navigate = useNavigate();
 
   const { wiiMote, dpadFxMapping } = useWiiMote();
 
@@ -259,11 +258,6 @@ export const PresenterPage: FC = () => {
     },
   });
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('adminAuth');
-    navigate('/login');
-  };
-
   const openFinishRoundDialog = (prefilledCardId?: string) => {
     setPrefilledWinnerCardId(prefilledCardId);
     setIsFinishRoundDialogOpen(true);
@@ -382,13 +376,8 @@ export const PresenterPage: FC = () => {
             {statusQuery.data?.status === 'finished' ? 'Reprendre' : 'Començar'}
           </Button>
         </div>
-        <Button
-          onPress={handleLogout}
-          variant="faded"
-          className="mx-auto block"
-          color="primary"
-        >
-          Logout
+        <Button as={Link} to="/admin" variant="faded" color="primary">
+          Admin
         </Button>
       </main>
     );
@@ -430,7 +419,6 @@ export const PresenterPage: FC = () => {
               color="secondary"
               variant="bordered"
               onPress={() => setIsWiiMoteDialogOpen(true)}
-              className="w-full block"
             >
               Mando Wii ({wiiMote ? 'Connectat' : 'Desconnectat'})
             </Button>
@@ -438,7 +426,6 @@ export const PresenterPage: FC = () => {
               color="danger"
               variant="bordered"
               onPress={() => setIsFinishRoundDialogOpen(true)}
-              className="w-full block"
             >
               Finalitzar quina
             </Button>
@@ -466,13 +453,9 @@ export const PresenterPage: FC = () => {
                 </ModalBody>
               </ModalContent>
             </Modal>
-            <Button
-              onPress={handleLogout}
-              variant="faded"
-              className="w-full block"
-              color="primary"
-            >
-              Logout
+
+            <Button as={Link} to="/admin" color="warning" variant="bordered">
+              Admin
             </Button>
           </div>
         </section>
