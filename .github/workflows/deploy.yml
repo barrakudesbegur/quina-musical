@@ -40,7 +40,7 @@ jobs:
           node -e "
           const fs = require('fs');
 
-          const redirectScript = `
+          const redirectScript = \`
           <script>
             (function () {
               var path = location.pathname + location.search + location.hash;
@@ -48,7 +48,7 @@ jobs:
               location.replace('/');
             })();
           </script>
-          `;
+          \`;
 
           let html = fs.readFileSync('client/dist/404.html', 'utf8');
           html = html.replace('</head>', redirectScript + '</head>');
