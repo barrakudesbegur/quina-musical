@@ -21,7 +21,10 @@ export default defineConfig({
 
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.destination === 'audio',
+            urlPattern: ({ request, url }) => {
+              console.log(request.destination, url.pathname, request, url);
+              return request.destination === 'audio';
+            },
             handler: 'CacheFirst',
             options: {
               cacheName: 'songs-cache',
