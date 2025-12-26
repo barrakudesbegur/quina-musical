@@ -39,7 +39,7 @@ export const App: FC = () => {
           >
             <Route index element={<AdminPage />} />
             <Route path="presenter" element={<PresenterPage />} />
-            <Route path="config" element={<ConfigurationPage />} />
+            <Route path="config/*" element={<ConfigurationPage />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
         </Route>
