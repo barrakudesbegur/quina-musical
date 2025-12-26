@@ -1,7 +1,0 @@
-tunnel: quina-api
-credentials-file: ./cloudflared/credentials.json
-
-ingress:
-  - hostname: quina-api.barrakudesbegur.org
-    service: http://localhost:3000
-  - service: http_status:404

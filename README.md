@@ -30,51 +30,30 @@ Features:
 
 ### Frontend
 
-Use any service you want, it's a regular React client app, that generates static files.
+Deployed on **GitHub Pages**.
 
-I use [Netlify](https://app.netlify.com/sites/quina-musical-barrakudes/deploys), which is free and easy to setup.
+Build the client and deploy the generated static files:
+
+```zsh
+npm run build:client
+# Deploy the client/dist folder to GitHub Pages
+```
 
 ### Backend
 
-#### Cloudflare Tunnel (cloudflared)
-
-This api is meant to be ran (for free) on your laptop during the event and point the evironment variable `VITE_API_URL` of the client to your local instance. \
-I configured a subdomain <https://quina-api.barrakudesbegur.org>, but using the ip is fine too.
-
-```zsh
-cd server
-
-# Install Cloudflare Tunnel Client (cloudflared)
-# This is for macOS, it may be different for your OS
-brew install cloudflared
-
-# Follow the login steps
-cloudflared tunnel login
-
-# Create a Cloudflare Tunnel
-cloudflared tunnel create --credentials-file ./cloudflared/credentials.json quina-api
-
-# Add the DNS records to configure a subdomain
-cloudflared tunnel route dns quina-api quina-api.barrakudesbegur.org
-```
-
-To run it, use this command:
-
-```zsh
-cd server
-npm run build
-npm run production
-```
-
-#### Self hosting
-
-You can also host this api anywhere you want.
+Hosted on a **VPS** (own server).
 
 ```zsh
 cd server
 npm run build
 npm run start
 ```
+
+Point the `VITE_API_URL` environment variable in the client to your VPS URL.
+
+### Songs
+
+Audio files are stored in an **S3 bucket**.
 
 ## Develop
 
