@@ -333,7 +333,7 @@ export const useSongPlayer = (options?: {
         }
         case 'fade-out-in': {
           const fadeOutSeconds = Math.max(0, effect.fadeOutSeconds);
-          const fadeInOffset = Math.max(0, effect.fadeInOffset);
+          const fadeInOffset = effect.fadeInOffset;
           const fadeInSeconds = Math.max(0, effect.fadeInSeconds);
 
           const startAt = clampSeek(start.time - fadeInSeconds, nextDuration);
@@ -350,7 +350,13 @@ export const useSongPlayer = (options?: {
           to.gain.gain.cancelScheduledValues(now);
           to.gain.gain.setValueAtTime(0, now);
 
-          scheduleStopSlot(from, Math.max(fadeOutSeconds, fadeInOffset));
+          scheduleStopSlot(
+            from,
+            Math.max(
+              fadeOutSeconds,
+              fadeOutSeconds + fadeInOffset + fadeInSeconds
+            )
+          );
 
           delayedStartTimeoutRef.current = window.setTimeout(
             () => {
@@ -372,7 +378,7 @@ export const useSongPlayer = (options?: {
                 () => setIsPlaying(false)
               );
             },
-            Math.ceil(fadeInOffset * 1000)
+            Math.ceil(Math.max(0, fadeOutSeconds + fadeInOffset) * 1000)
           );
           return;
         }

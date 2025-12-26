@@ -398,7 +398,7 @@ export const gameRouter = router({
                 z.object({
                   type: z.literal('fade-out-in'),
                   fadeOutSeconds: z.number().nonnegative(),
-                  fadeInOffset: z.number().nonnegative(),
+                  fadeInOffset: z.number(),
                   fadeInSeconds: z.number().nonnegative(),
                 }),
               ]),

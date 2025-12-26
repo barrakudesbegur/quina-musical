@@ -13,7 +13,7 @@ export const PlayEffectSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('fade-out-in'),
     fadeOutSeconds: z.number().nonnegative(),
-    fadeInOffset: z.number().nonnegative(),
+    fadeInOffset: z.number(),
     fadeInSeconds: z.number().nonnegative(),
   }),
 ]);

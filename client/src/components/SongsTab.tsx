@@ -831,7 +831,6 @@ const TimestampEditor: FC<{
             label="Fade in offset (s)"
             size="sm"
             step={0.1}
-            min={0}
             value={timestamp.playEffect.fadeInOffset.toFixed(1)}
             onValueChange={(val) => {
               const num = parseFloat(val);
