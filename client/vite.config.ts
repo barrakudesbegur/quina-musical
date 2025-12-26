@@ -21,10 +21,7 @@ export default defineConfig({
 
         runtimeCaching: [
           {
-            urlPattern: ({ request, url }) => {
-              console.log(request.destination, url.pathname, request, url);
-              return request.destination === 'audio';
-            },
+            urlPattern: ({ url }) => url.pathname.endsWith('.mp3'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'songs-cache',
