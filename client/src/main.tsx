@@ -13,6 +13,13 @@ import '@fontsource/londrina-solid/300.css';
 import '@fontsource/londrina-solid/400.css';
 import '@fontsource/londrina-solid/900.css';
 
+// Handle SPA redirect from GitHub Pages
+const redirect = sessionStorage.getItem('spa-redirect');
+if (redirect) {
+  sessionStorage.removeItem('spa-redirect');
+  window.history.replaceState(null, '', redirect);
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Providers>

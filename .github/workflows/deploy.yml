@@ -36,18 +36,23 @@ jobs:
 
       - name: SPA fallback (404.html)
         run: |
-          # Copy index.html to 404.html for GitHub Pages SPA routing
-          # When GitHub Pages serves 404.html, the pathname is preserved
-          # This allows React Router to handle client-side routing
           cp client/dist/index.html client/dist/404.html
-          # Add script to ensure path is preserved (standard GitHub Pages SPA solution)
           node -e "
           const fs = require('fs');
-          const html = fs.readFileSync('client/dist/404.html', 'utf8');
-          // Standard SPA routing script - preserves pathname when 404.html is served
-          const spaScript = '<script>var pathSegmentsToKeep = 0;var l = window.location;l.replace(l.protocol + \"//\" + l.hostname + (l.port ? \":\" + l.port : \"\") + l.pathname.split(\"/\").slice(0, 1 + pathSegmentsToKeep).join(\"/\") + \"/?/\" + l.pathname.slice(1).split(\"/\").slice(pathSegmentsToKeep).join(\"/\").replace(/&/g, \"~\") + (l.search ? \"&\" + l.search.slice(1).replace(/&/g, \"~\") : \"\") + l.hash);</script>';
-          const updated = html.replace('</head>', spaScript + '</head>');
-          fs.writeFileSync('client/dist/404.html', updated);
+
+          const redirectScript = `
+          <script>
+            (function () {
+              var path = location.pathname + location.search + location.hash;
+              sessionStorage.setItem('spa-redirect', path);
+              location.replace('/');
+            })();
+          </script>
+          `;
+
+          let html = fs.readFileSync('client/dist/404.html', 'utf8');
+          html = html.replace('</head>', redirectScript + '</head>');
+          fs.writeFileSync('client/dist/404.html', html);
           "
 
       - name: Upload artifact
