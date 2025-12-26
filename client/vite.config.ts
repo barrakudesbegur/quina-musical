@@ -21,11 +21,8 @@ export default defineConfig({
 
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.destination !== 'audio',
-            handler: 'NetworkOnly',
-          },
-          {
-            urlPattern: ({ request }) => request.destination === 'audio',
+            urlPattern: ({ request, url }) =>
+              request.destination === 'audio' && url.pathname.endsWith('.mp3'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'songs-cache',
