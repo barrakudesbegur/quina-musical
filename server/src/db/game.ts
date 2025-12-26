@@ -12,7 +12,7 @@ export type PlayEffect =
   | {
       type: 'fade-out-in';
       fadeOutSeconds: number;
-      silenceSeconds: number;
+      fadeInOffset: number;
       fadeInSeconds: number;
     };
 

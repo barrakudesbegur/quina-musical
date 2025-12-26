@@ -18,7 +18,7 @@ export type PlayEffect =
   | {
       type: 'fade-out-in';
       fadeOutSeconds: number;
-      silenceSeconds: number;
+      fadeInOffset: number;
       fadeInSeconds: number;
     };
 
@@ -333,7 +333,7 @@ export const useSongPlayer = (options?: {
         }
         case 'fade-out-in': {
           const fadeOutSeconds = Math.max(0, effect.fadeOutSeconds);
-          const silenceSeconds = Math.max(0, effect.silenceSeconds);
+          const fadeInOffset = Math.max(0, effect.fadeInOffset);
           const fadeInSeconds = Math.max(0, effect.fadeInSeconds);
 
           const startAt = clampSeek(start.time - fadeInSeconds, nextDuration);
@@ -350,7 +350,7 @@ export const useSongPlayer = (options?: {
           to.gain.gain.cancelScheduledValues(now);
           to.gain.gain.setValueAtTime(0, now);
 
-          scheduleStopSlot(from, fadeOutSeconds);
+          scheduleStopSlot(from, Math.max(fadeOutSeconds, fadeInOffset));
 
           delayedStartTimeoutRef.current = window.setTimeout(
             () => {
@@ -372,7 +372,7 @@ export const useSongPlayer = (options?: {
                 () => setIsPlaying(false)
               );
             },
-            Math.ceil((fadeOutSeconds + silenceSeconds) * 1000)
+            Math.ceil(fadeInOffset * 1000)
           );
           return;
         }

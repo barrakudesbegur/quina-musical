@@ -898,7 +898,7 @@ const TimestampEditor: FC<{
             newEffect = {
               type: 'fade-out-in',
               fadeOutSeconds: 1,
-              silenceSeconds: 0.2,
+              fadeInOffset: 0.8,
               fadeInSeconds: 0.5,
             };
           }
@@ -952,11 +952,11 @@ const TimestampEditor: FC<{
           />
           <Input
             type="number"
-            label="Silenci (s)"
+            label="Fade in offset (s)"
             size="sm"
             step={0.1}
             min={0}
-            value={timestamp.playEffect.silenceSeconds.toFixed(1)}
+            value={timestamp.playEffect.fadeInOffset.toFixed(1)}
             onValueChange={(val) => {
               const num = parseFloat(val);
               if (
@@ -964,7 +964,7 @@ const TimestampEditor: FC<{
                 timestamp.playEffect.type === 'fade-out-in'
               ) {
                 onUpdate({
-                  playEffect: { ...timestamp.playEffect, silenceSeconds: num },
+                  playEffect: { ...timestamp.playEffect, fadeInOffset: num },
                 });
               }
             }}
