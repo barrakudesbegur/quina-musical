@@ -425,7 +425,6 @@ export const gameRouter = router({
         fxId: z.string(),
         options: z.object({
           volume: z.number().min(0).max(2).optional(),
-          startTime: z.number().nonnegative().optional(),
         }),
       })
     )

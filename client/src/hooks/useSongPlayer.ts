@@ -115,7 +115,6 @@ export const useSongPlayer = (options?: {
       const opts = fxOptionsQuery.data?.[fxId];
       return {
         volume: opts?.volume ?? 1,
-        startTime: opts?.startTime ?? 0,
       };
     },
     [fxOptionsQuery.data]
@@ -576,7 +575,7 @@ export const useSongPlayer = (options?: {
       const fxGain = audioContext.createGain();
       fxGain.gain.setValueAtTime(opts.volume, audioContext.currentTime);
       fxSource.connect(fxGain).connect(getGainNodeFx());
-      fxSource.start(0, opts.startTime);
+      fxSource.start(0);
     },
     [getAudioContext, getGainNodeFx, getFxOptions]
   );

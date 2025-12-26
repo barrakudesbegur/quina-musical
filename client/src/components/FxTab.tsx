@@ -1,9 +1,8 @@
-import { Card, CardBody, Chip, Input, Slider } from '@heroui/react';
+import { Card, CardBody, Chip, Slider } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import {
   IconCheck,
   IconLoader2,
-  IconPlayerSkipForward,
   IconVolume,
 } from '@tabler/icons-react';
 import { FC, useCallback, useState } from 'react';
@@ -12,7 +11,7 @@ import { fxList } from '../config/fx';
 import { trpc } from '../utils/trpc';
 
 type SaveStatus = 'saved' | 'saving' | 'unsaved';
-type FxOptions = { volume?: number; startTime?: number };
+type FxOptions = { volume?: number };
 
 export const FxTab: FC = () => {
   const fxOptionsQuery = trpc.game.getFxOptions.useQuery();
@@ -29,7 +28,6 @@ export const FxTab: FC = () => {
       const saved = fxOptionsQuery.data?.[fxId];
       return {
         volume: draft?.volume ?? saved?.volume ?? 1,
-        startTime: draft?.startTime ?? saved?.startTime ?? 0,
       };
     },
     [fxOptionsDrafts, fxOptionsQuery.data]
@@ -71,7 +69,6 @@ export const FxTab: FC = () => {
         {fxList.map((fx) => {
           const opts = getFxOptions(fx.id);
           const volume = opts.volume ?? 1;
-          const startTime = opts.startTime ?? 0;
           return (
             <Card key={fx.id}>
               <CardBody className="p-3">
@@ -81,7 +78,7 @@ export const FxTab: FC = () => {
                     {fx.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2">
                   <IconVolume className="size-4 text-default-400 shrink-0" />
                   <Slider
                     aria-label={`Volum ${fx.label}`}
@@ -101,30 +98,6 @@ export const FxTab: FC = () => {
                   <span className="text-xs text-default-400 w-10 text-right">
                     {Math.round(volume * 100)}%
                   </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <IconPlayerSkipForward className="size-4 text-default-400 shrink-0" />
-                  <Input
-                    aria-label={`Inici ${fx.label}`}
-                    type="number"
-                    size="sm"
-                    min={0}
-                    step={0.1}
-                    value={String(startTime)}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val) && val >= 0) {
-                        updateFxOption(fx.id, 'startTime', val);
-                      }
-                    }}
-                    endContent={
-                      <span className="text-xs text-default-400">s</span>
-                    }
-                    classNames={{
-                      input: 'text-center',
-                      inputWrapper: 'h-8',
-                    }}
-                  />
                 </div>
               </CardBody>
             </Card>

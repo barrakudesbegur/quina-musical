@@ -66,7 +66,6 @@ export const RoundSchema = z.object({
 
 export const FxOptionsSchema = z.object({
   volume: z.number().min(0).max(2).optional(),
-  startTime: z.number().nonnegative().optional(),
 });
 
 export const GameDataSchema = z.object({
