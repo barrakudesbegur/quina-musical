@@ -29,6 +29,7 @@ import {
   IconQuestionMark,
   IconSquareRotated,
   IconTrash,
+  IconTriangleFilled,
   IconVolume,
   TablerIcon,
 } from '@tabler/icons-react';
@@ -602,7 +603,7 @@ const SongRow: FC<{
         className="w-20 h-20 object-cover rounded-lg shrink-0"
       />
 
-      <div className="flex flex-col gap-2 min-w-0">
+      <div className="flex flex-col  min-w-0">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -662,7 +663,7 @@ const SongRow: FC<{
           </div>
         </div>
 
-        <div className="mt-1 -mb-3">
+        <div className="-mb-3">
           <div className="relative mx-2.5 h-4 overflow-visible">
             {!!duration &&
               timestamps.map(({ time, tag }, index) => {
@@ -690,21 +691,31 @@ const SongRow: FC<{
                     <Button
                       isIconOnly
                       variant="light"
+                      tabIndex={-1}
                       className={cn(
                         'size-6 p-1 -m-1 min-w-auto text-current transition-transform',
                         isSelected && 'scale-125',
                         tag === 'secondary' && 'p-0.5'
                       )}
-                      onPress={() => onSelectTimestamp(index)}
+                      onPress={() => {
+                        onSelectTimestamp(index);
+                        onSeek(time);
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
                     >
                       <Icon className="size-4" stroke={3} />
                     </Button>
-                    <div
-                      className={cn(
-                        'w-[2px] pointer-events-none rounded-full h-4 bg-current',
-                        isSelected && 'h-5'
+                    <div className="flex flex-col items-center pointer-events-none">
+                      <div
+                        className={cn(
+                          'w-[2px] rounded-full h-4 bg-current',
+                          isSelected && 'h-5'
+                        )}
+                      />
+                      {isSelected && (
+                        <IconTriangleFilled className="size-3 text-current -mt-px" />
                       )}
-                    />
+                    </div>
                   </div>
                 );
               })}
