@@ -12,6 +12,7 @@ const server = createHTTPServer({
     allowedHeaders: [
       'Content-Type',
       'Authorization',
+      'cache-control',
       'trpc-batch',
       'trpc-accept',
       'trpc-content-type',
