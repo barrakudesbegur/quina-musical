@@ -380,38 +380,61 @@ export const gameRouter = router({
     }
   }),
 
-  updateSongTimestamps: publicProcedure
+  updateSong: publicProcedure
     .input(
       z.object({
         songId: z.number().int().positive(),
-        timestamps: z.array(
-          z.object({
-            time: z.number().nonnegative(),
-            tag: z.enum(['best', 'main', 'secondary']),
-            playEffect: z.discriminatedUnion('type', [
-              z.object({ type: z.literal('none') }),
-              z.object({
-                type: z.literal('crossfade'),
-                durationSeconds: z.number().nonnegative(),
-              }),
-              z.object({
-                type: z.literal('fade-out-in'),
-                fadeOutSeconds: z.number().nonnegative(),
-                silenceSeconds: z.number().nonnegative(),
-                fadeInSeconds: z.number().nonnegative(),
-              }),
-            ]),
-          })
-        ),
+        timestamps: z
+          .array(
+            z.object({
+              time: z.number().nonnegative(),
+              tag: z.enum(['best', 'main', 'secondary']),
+              playEffect: z.discriminatedUnion('type', [
+                z.object({ type: z.literal('none') }),
+                z.object({
+                  type: z.literal('crossfade'),
+                  durationSeconds: z.number().nonnegative(),
+                }),
+                z.object({
+                  type: z.literal('fade-out-in'),
+                  fadeOutSeconds: z.number().nonnegative(),
+                  silenceSeconds: z.number().nonnegative(),
+                  fadeInSeconds: z.number().nonnegative(),
+                }),
+              ]),
+            })
+          )
+          .optional(),
+        volume: z.number().min(0).max(2).optional(),
       })
     )
     .mutation(async ({ input }) => {
       const song = gameDb.chain.get('songs').find({ id: input.songId }).value();
       if (!song) throw new Error(`Song ${input.songId} not found`);
 
-      song.timestamps = input.timestamps;
+      if (input.timestamps !== undefined) song.timestamps = input.timestamps;
+      if (input.volume !== undefined) song.volume = input.volume;
       await gameDb.write();
     }),
+
+  updateFxOptions: publicProcedure
+    .input(
+      z.object({
+        fxId: z.string(),
+        options: z.object({
+          volume: z.number().min(0).max(2).optional(),
+          startTime: z.number().nonnegative().optional(),
+        }),
+      })
+    )
+    .mutation(async ({ input }) => {
+      gameDb.data.fxOptions[input.fxId] = input.options;
+      await gameDb.write();
+    }),
+
+  getFxOptions: publicProcedure.query(async () => {
+    return gameDb.data.fxOptions;
+  }),
 });
 
 const emitUpdate = () => gameEventEmitter.emit('update');

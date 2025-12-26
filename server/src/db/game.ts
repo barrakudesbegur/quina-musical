@@ -50,6 +50,11 @@ export interface Round {
   winnerCardIds: CardId[];
 }
 
+export interface FxOptions {
+  volume?: number;
+  startTime?: number;
+}
+
 export interface GameData {
   startedAt: string | null;
   finishedAt: string | null;
@@ -58,6 +63,7 @@ export interface GameData {
   cardsPlaying: CardId[];
   displayedImageId: string | null;
   songs: Song[];
+  fxOptions: Record<string, FxOptions>;
 }
 
 class LowWithLodash<T> extends Low<T> {
@@ -75,6 +81,7 @@ const makeDefaultData = (): GameData => ({
     ...song,
     timestamps: [],
   })),
+  fxOptions: {},
 });
 
 const adapter = new JSONFile<GameData>(

@@ -4,6 +4,7 @@ import {
   CardBody,
   Chip,
   cn,
+  Divider,
   Image,
   Input,
   Listbox,
@@ -15,6 +16,7 @@ import {
   SelectItem,
   Slider,
 } from '@heroui/react';
+import { Icon } from '@iconify/react';
 import {
   IconCarambolaFilled,
   IconCheck,
@@ -22,6 +24,7 @@ import {
   IconLoader2,
   IconPlayerPauseFilled,
   IconPlayerPlayFilled,
+  IconPlayerSkipForward,
   IconPlus,
   IconSquareRotated,
   IconTrash,
@@ -40,6 +43,7 @@ import {
 } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDebounceCallback, useInterval } from 'usehooks-ts';
+import { fxList } from '../config/fx';
 import type { PlayEffect, SongTimestamp } from '../hooks/useSongPlayer';
 import { trpc } from '../utils/trpc';
 
@@ -95,10 +99,14 @@ const formatTime = (value: number | null) => {
 
 type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
+type FxOptions = { volume?: number; startTime?: number };
+
 export const ConfigurationPage: FC = () => {
   const navigate = useNavigate();
   const songsQuery = trpc.song.getAll.useQuery();
-  const updateTimestampsMutation = trpc.game.updateSongTimestamps.useMutation();
+  const fxOptionsQuery = trpc.game.getFxOptions.useQuery();
+  const updateSongMutation = trpc.game.updateSong.useMutation();
+  const updateFxOptionsMutation = trpc.game.updateFxOptions.useMutation();
 
   const [activeSongId, setActiveSongId] = useState<number | null>(null);
   const [selectedTimestampIndex, setSelectedTimestampIndex] = useState<
@@ -107,9 +115,14 @@ export const ConfigurationPage: FC = () => {
   const [timestampDrafts, setTimestampDrafts] = useState<
     Record<number, SongTimestamp[]>
   >({});
+  const [volumeDrafts, setVolumeDrafts] = useState<Record<number, number>>({});
+  const [fxOptionsDrafts, setFxOptionsDrafts] = useState<
+    Record<string, FxOptions>
+  >({});
   const [saveStatuses, setSaveStatuses] = useState<Record<number, SaveStatus>>(
     {}
   );
+  const [fxSaveStatus, setFxSaveStatus] = useState<SaveStatus>('saved');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -136,15 +149,55 @@ export const ConfigurationPage: FC = () => {
     [timestampDrafts, songsQuery.data]
   );
 
-  const debouncedSave = useDebounceCallback(
-    async (songId: number, timestamps: SongTimestamp[]) => {
+  const getVolume = useCallback(
+    (songId: number): number => {
+      if (songId in volumeDrafts) {
+        return volumeDrafts[songId];
+      }
+      const song = songsQuery.data?.find((s) => s.id === songId);
+      return song?.volume ?? 1;
+    },
+    [volumeDrafts, songsQuery.data]
+  );
+
+  const getFxOptions = useCallback(
+    (fxId: string): FxOptions => {
+      const draft = fxOptionsDrafts[fxId];
+      const saved = fxOptionsQuery.data?.[fxId];
+      return {
+        volume: draft?.volume ?? saved?.volume ?? 1,
+        startTime: draft?.startTime ?? saved?.startTime ?? 0,
+      };
+    },
+    [fxOptionsDrafts, fxOptionsQuery.data]
+  );
+
+  const debouncedSaveSong = useDebounceCallback(
+    async (
+      songId: number,
+      updates: { timestamps?: SongTimestamp[]; volume?: number }
+    ) => {
       setSaveStatuses((prev) => ({ ...prev, [songId]: 'saving' }));
       try {
-        await updateTimestampsMutation.mutateAsync({ songId, timestamps });
+        await updateSongMutation.mutateAsync({ songId, ...updates });
         setSaveStatuses((prev) => ({ ...prev, [songId]: 'saved' }));
       } catch (err) {
-        console.error('Failed to save timestamps:', err);
+        console.error('Failed to save song:', err);
         setSaveStatuses((prev) => ({ ...prev, [songId]: 'unsaved' }));
+      }
+    },
+    600
+  );
+
+  const debouncedSaveFxOptions = useDebounceCallback(
+    async (fxId: string, options: FxOptions) => {
+      setFxSaveStatus('saving');
+      try {
+        await updateFxOptionsMutation.mutateAsync({ fxId, options });
+        setFxSaveStatus('saved');
+      } catch (err) {
+        console.error('Failed to save FX options:', err);
+        setFxSaveStatus('unsaved');
       }
     },
     600
@@ -154,9 +207,31 @@ export const ConfigurationPage: FC = () => {
     (songId: number, newTimestamps: SongTimestamp[]) => {
       setTimestampDrafts((prev) => ({ ...prev, [songId]: newTimestamps }));
       setSaveStatuses((prev) => ({ ...prev, [songId]: 'unsaved' }));
-      debouncedSave(songId, newTimestamps);
+      debouncedSaveSong(songId, { timestamps: newTimestamps });
     },
-    [debouncedSave]
+    [debouncedSaveSong]
+  );
+
+  const updateVolume = useCallback(
+    (songId: number, volume: number) => {
+      setVolumeDrafts((prev) => ({ ...prev, [songId]: volume }));
+      setSaveStatuses((prev) => ({ ...prev, [songId]: 'unsaved' }));
+      debouncedSaveSong(songId, { volume });
+    },
+    [debouncedSaveSong]
+  );
+
+  const updateFxOption = useCallback(
+    (fxId: string, key: keyof FxOptions, value: number) => {
+      setFxOptionsDrafts((prev) => {
+        const current = prev[fxId] ?? {};
+        const next = { ...current, [key]: value };
+        setFxSaveStatus('unsaved');
+        debouncedSaveFxOptions(fxId, next);
+        return { ...prev, [fxId]: next };
+      });
+    },
+    [debouncedSaveFxOptions]
   );
 
   const playSong = useCallback(
@@ -337,6 +412,7 @@ export const ConfigurationPage: FC = () => {
                 key={song.id}
                 song={song}
                 timestamps={timestamps}
+                volume={getVolume(song.id)}
                 isActive={isActive}
                 isPlaying={isActive && isPlaying}
                 currentTime={isActive ? currentTime : 0}
@@ -366,10 +442,22 @@ export const ConfigurationPage: FC = () => {
                   updateTimestamp(song.id, index, updates)
                 }
                 onDeleteTimestamp={(index) => deleteTimestamp(song.id, index)}
+                onVolumeChange={(vol) => updateVolume(song.id, vol)}
               />
             );
           })}
         </div>
+
+        <Divider className="my-6" />
+
+        <FxSettingsSection
+          fxOptions={fxList.reduce(
+            (acc, fx) => ({ ...acc, [fx.id]: getFxOptions(fx.id) }),
+            {} as Record<string, FxOptions>
+          )}
+          saveStatus={fxSaveStatus}
+          onOptionChange={updateFxOption}
+        />
       </div>
     </main>
   );
@@ -378,6 +466,7 @@ export const ConfigurationPage: FC = () => {
 const SongRow: FC<{
   song: Song;
   timestamps: SongTimestamp[];
+  volume: number;
   isActive: boolean;
   isPlaying: boolean;
   currentTime: number;
@@ -390,9 +479,11 @@ const SongRow: FC<{
   onAddTimestamp: (tag: SongTimestamp['tag']) => void;
   onUpdateTimestamp: (index: number, updates: Partial<SongTimestamp>) => void;
   onDeleteTimestamp: (index: number) => void;
+  onVolumeChange: (volume: number) => void;
 }> = ({
   song,
   timestamps,
+  volume,
   isActive,
   isPlaying,
   currentTime,
@@ -405,6 +496,7 @@ const SongRow: FC<{
   onAddTimestamp,
   onUpdateTimestamp,
   onDeleteTimestamp,
+  onVolumeChange,
 }) => {
   const selectedTimestamp =
     selectedTimestampIndex !== null ? timestamps[selectedTimestampIndex] : null;
@@ -569,7 +661,7 @@ const SongRow: FC<{
           </CardBody>
         </Card>
 
-        <VolumeControlPlaceholder songVolume={song.volume} />
+        <SongVolumeControl volume={volume} onChange={onVolumeChange} />
       </div>
     </div>
   );
@@ -794,29 +886,121 @@ const TimestampEditor: FC<{
   );
 };
 
-const VolumeControlPlaceholder: FC<{ songVolume?: number }> = ({
-  songVolume,
-}) => {
+const SongVolumeControl: FC<{
+  volume: number;
+  onChange: (volume: number) => void;
+}> = ({ volume, onChange }) => {
   return (
-    <Card className="opacity-50">
+    <Card>
       <CardBody className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <IconVolume className="size-4 text-default-400" />
-          <span className="text-sm text-default-400">Volum (pròximament)</span>
+          <IconVolume className="size-4 text-default-500" />
+          <span className="text-sm font-medium">Volum</span>
+          <span className="text-xs text-default-400 ml-auto">
+            {Math.round(volume * 100)}%
+          </span>
         </div>
         <Slider
           aria-label="Volum de la cançó"
           size="sm"
           minValue={0}
-          maxValue={1}
+          maxValue={2}
           step={0.01}
-          value={songVolume ?? 1}
-          isDisabled
+          value={volume}
+          onChange={(val) => {
+            if (typeof val === 'number') onChange(val);
+          }}
           classNames={{
-            base: 'opacity-50',
+            filler: volume > 1 ? 'bg-warning' : undefined,
           }}
         />
       </CardBody>
     </Card>
+  );
+};
+
+const FxSettingsSection: FC<{
+  fxOptions: Record<string, FxOptions>;
+  saveStatus: SaveStatus;
+  onOptionChange: (fxId: string, key: keyof FxOptions, value: number) => void;
+}> = ({ fxOptions, saveStatus, onOptionChange }) => {
+  return (
+    <section className="px-6 pb-6">
+      <div className="flex items-center gap-4 mb-4">
+        <h2 className="text-xl font-brand uppercase tracking-widest">
+          FX Settings
+        </h2>
+        <Chip variant="flat" size="sm">
+          {fxList.length} FX
+        </Chip>
+        <div className="ml-auto">
+          <SaveStatusIndicator status={saveStatus} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        {fxList.map((fx) => {
+          const opts = fxOptions[fx.id] ?? {};
+          const volume = opts.volume ?? 1;
+          const startTime = opts.startTime ?? 0;
+          return (
+            <Card key={fx.id}>
+              <CardBody className="p-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon icon={fx.icon} className="size-5" />
+                  <span className="text-sm font-medium truncate">
+                    {fx.label}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <IconVolume className="size-4 text-default-400 shrink-0" />
+                  <Slider
+                    aria-label={`Volum ${fx.label}`}
+                    size="sm"
+                    minValue={0}
+                    maxValue={2}
+                    step={0.01}
+                    value={volume}
+                    onChange={(val) => {
+                      if (typeof val === 'number')
+                        onOptionChange(fx.id, 'volume', val);
+                    }}
+                    classNames={{
+                      filler: volume > 1 ? 'bg-warning' : undefined,
+                    }}
+                  />
+                  <span className="text-xs text-default-400 w-10 text-right">
+                    {Math.round(volume * 100)}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <IconPlayerSkipForward className="size-4 text-default-400 shrink-0" />
+                  <Input
+                    aria-label={`Inici ${fx.label}`}
+                    type="number"
+                    size="sm"
+                    min={0}
+                    step={0.1}
+                    value={String(startTime)}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0) {
+                        onOptionChange(fx.id, 'startTime', val);
+                      }
+                    }}
+                    endContent={
+                      <span className="text-xs text-default-400">s</span>
+                    }
+                    classNames={{
+                      input: 'text-center',
+                      inputWrapper: 'h-8',
+                    }}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+          );
+        })}
+      </div>
+    </section>
   );
 };

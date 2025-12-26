@@ -78,6 +78,7 @@ export const useSongPlayer = (options?: {
 
   const songsQuery = trpc.game.getAllSongs.useQuery();
   const startedAtQuery = trpc.game.getStartedAt.useQuery();
+  const fxOptionsQuery = trpc.game.getFxOptions.useQuery();
 
   const [songId, setSongId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -100,6 +101,25 @@ export const useSongPlayer = (options?: {
   const [fxVolume, setFxVolume] = useSessionStorage('admin-fx-volume', 1);
 
   const fxBufferCacheRef = useRef<Record<string, AudioBuffer>>({});
+
+  const getPerSongVolume = useCallback(
+    (id: number) => {
+      const song = songsQuery.data?.find((s) => s.id === id);
+      return song?.volume ?? 1;
+    },
+    [songsQuery.data]
+  );
+
+  const getFxOptions = useCallback(
+    (fxId: string) => {
+      const opts = fxOptionsQuery.data?.[fxId];
+      return {
+        volume: opts?.volume ?? 1,
+        startTime: opts?.startTime ?? 0,
+      };
+    },
+    [fxOptionsQuery.data]
+  );
 
   const slotsRef = useRef<[SongSlot, SongSlot] | null>(null);
   const activeIndexRef = useRef<0 | 1>(0);
@@ -243,6 +263,8 @@ export const useSongPlayer = (options?: {
 
       cancelTransitions();
 
+      const perSongVol = getPerSongVolume(nextSongId);
+
       setIsSongReady(false);
       to.el.src = getSongUrl(nextSongId);
       to.el.load();
@@ -262,7 +284,7 @@ export const useSongPlayer = (options?: {
           const now = audioCtx.currentTime;
           to.gain.gain.cancelScheduledValues(now);
           from.gain.gain.cancelScheduledValues(now);
-          to.gain.gain.setValueAtTime(1, now);
+          to.gain.gain.setValueAtTime(perSongVol, now);
           from.gain.gain.setValueAtTime(0, now);
 
           try {
@@ -292,7 +314,7 @@ export const useSongPlayer = (options?: {
           from.gain.gain.cancelScheduledValues(now);
           to.gain.gain.setValueAtTime(0, now);
           from.gain.gain.setValueAtTime(from.gain.gain.value, now);
-          to.gain.gain.linearRampToValueAtTime(1, now + fadeSeconds);
+          to.gain.gain.linearRampToValueAtTime(perSongVol, now + fadeSeconds);
           from.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
 
           try {
@@ -335,7 +357,10 @@ export const useSongPlayer = (options?: {
               const t0 = audioCtx.currentTime;
               to.gain.gain.cancelScheduledValues(t0);
               to.gain.gain.setValueAtTime(0, t0);
-              to.gain.gain.linearRampToValueAtTime(1, t0 + fadeInSeconds);
+              to.gain.gain.linearRampToValueAtTime(
+                perSongVol,
+                t0 + fadeInSeconds
+              );
 
               void to.el.play().then(
                 () => {
@@ -357,6 +382,7 @@ export const useSongPlayer = (options?: {
       cancelTransitions,
       ensureSlots,
       getAudioContext,
+      getPerSongVolume,
       getSongUrl,
       scheduleStopSlot,
       stopSlot,
@@ -422,11 +448,11 @@ export const useSongPlayer = (options?: {
       const nextTime = clampSeek(start.time, nextDuration);
       active.el.currentTime = nextTime;
 
-      // Ensure this slot is audible when not crossfading
+      const perSongVol = getPerSongVolume(nextSongId);
       const audioCtx = getAudioContext();
       const now = audioCtx.currentTime;
       active.gain.gain.cancelScheduledValues(now);
-      active.gain.gain.setValueAtTime(1, now);
+      active.gain.gain.setValueAtTime(perSongVol, now);
 
       await waitForEvent(active.el, 'canplay');
       setIsSongReady(true);
@@ -447,6 +473,7 @@ export const useSongPlayer = (options?: {
       transitionToSong,
       ensureSlots,
       getAudioContext,
+      getPerSongVolume,
       getSongUrl,
       isPlaying,
       pickStart,
@@ -538,10 +565,14 @@ export const useSongPlayer = (options?: {
       const audioContext = getAudioContext();
       const fxSource = audioContext.createBufferSource();
       fxSource.buffer = buffer;
-      fxSource.connect(getGainNodeFx());
-      fxSource.start();
+
+      const opts = getFxOptions(fxId);
+      const fxGain = audioContext.createGain();
+      fxGain.gain.setValueAtTime(opts.volume, audioContext.currentTime);
+      fxSource.connect(fxGain).connect(getGainNodeFx());
+      fxSource.start(0, opts.startTime);
     },
-    [getAudioContext, getGainNodeFx]
+    [getAudioContext, getGainNodeFx, getFxOptions]
   );
 
   const toggleLowVolume = useCallback(() => {
