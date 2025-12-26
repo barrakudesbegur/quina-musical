@@ -14,6 +14,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: [],
+        cleanupOutdatedCaches: true,
+
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\.mp3/,
