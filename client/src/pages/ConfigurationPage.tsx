@@ -26,6 +26,7 @@ import {
   IconPlayerPlayFilled,
   IconPlayerSkipForward,
   IconPlus,
+  IconQuestionMark,
   IconSquareRotated,
   IconTrash,
   IconVolume,
@@ -127,7 +128,7 @@ export const ConfigurationPage: FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState<number | null>(null);
+  const [durations, setDurations] = useState<Record<number, number>>({});
 
   const handleLogout = useCallback(() => {
     sessionStorage.removeItem('adminAuth');
@@ -137,6 +138,48 @@ export const ConfigurationPage: FC = () => {
   const sortedSongs = useMemo(() => {
     return (songsQuery.data ?? []).slice().sort((a, b) => a.id - b.id);
   }, [songsQuery.data]);
+
+  // Preload all song durations when songs are loaded
+  useEffect(() => {
+    if (!songsQuery.data) return;
+
+    const loadDurations = async () => {
+      const newDurations: Record<number, number> = {};
+
+      await Promise.all(
+        songsQuery.data.map(
+          (song) =>
+            new Promise<void>((resolve) => {
+              // Skip if already loaded
+              if (durations[song.id]) {
+                resolve();
+                return;
+              }
+
+              const audio = new Audio();
+              audio.preload = 'metadata';
+              audio.src = `/audios/song/${song.id}.mp3`;
+
+              audio.addEventListener('loadedmetadata', () => {
+                newDurations[song.id] = audio.duration;
+                resolve();
+              });
+
+              audio.addEventListener('error', () => {
+                console.warn(`Failed to load duration for song ${song.id}`);
+                resolve();
+              });
+            })
+        )
+      );
+
+      if (Object.keys(newDurations).length > 0) {
+        setDurations((prev) => ({ ...prev, ...newDurations }));
+      }
+    };
+
+    loadDurations();
+  }, [songsQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getTimestamps = useCallback(
     (songId: number): SongTimestamp[] => {
@@ -238,9 +281,6 @@ export const ConfigurationPage: FC = () => {
     async (songId: number, seekTo?: number) => {
       if (!audioRef.current) {
         audioRef.current = new Audio();
-        audioRef.current.addEventListener('loadedmetadata', () => {
-          setDuration(audioRef.current?.duration ?? null);
-        });
         audioRef.current.addEventListener('ended', () => {
           setIsPlaying(false);
         });
@@ -251,6 +291,18 @@ export const ConfigurationPage: FC = () => {
         audioRef.current.load();
         setActiveSongId(songId);
         setSelectedTimestampIndex(null);
+
+        // Update duration when metadata loads (in case preload missed it)
+        audioRef.current.addEventListener(
+          'loadedmetadata',
+          () => {
+            const dur = audioRef.current?.duration;
+            if (dur && dur > 0) {
+              setDurations((prev) => ({ ...prev, [songId]: dur }));
+            }
+          },
+          { once: true }
+        );
       }
 
       if (seekTo !== undefined) {
@@ -338,11 +390,34 @@ export const ConfigurationPage: FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        !activeSongId ||
-        selectedTimestampIndex === null ||
-        e.target instanceof HTMLInputElement
-      ) {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement) {
+        return;
+      }
+
+      // Space key: toggle play/pause
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (activeSongId) {
+          // If a timestamp is selected, seek to it first
+          if (selectedTimestampIndex !== null) {
+            const current = getTimestamps(activeSongId);
+            const ts = current[selectedTimestampIndex];
+            if (ts && !isPlaying) {
+              seekTo(ts.time);
+            }
+          }
+          if (isPlaying) {
+            pauseSong();
+          } else {
+            playSong(activeSongId);
+          }
+        }
+        return;
+      }
+
+      // Arrow keys: move selected timestamp
+      if (!activeSongId || selectedTimestampIndex === null) {
         return;
       }
 
@@ -353,20 +428,33 @@ export const ConfigurationPage: FC = () => {
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
+        const newTime = Math.max(0, ts.time - step);
         updateTimestamp(activeSongId, selectedTimestampIndex, {
-          time: Math.max(0, ts.time - step),
+          time: newTime,
         });
+        seekTo(newTime);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
+        const newTime = ts.time + step;
         updateTimestamp(activeSongId, selectedTimestampIndex, {
-          time: ts.time + step,
+          time: newTime,
         });
+        seekTo(newTime);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeSongId, selectedTimestampIndex, getTimestamps, updateTimestamp]);
+  }, [
+    activeSongId,
+    selectedTimestampIndex,
+    getTimestamps,
+    updateTimestamp,
+    isPlaying,
+    playSong,
+    pauseSong,
+    seekTo,
+  ]);
 
   return (
     <main className="h-dvh flex flex-col bg-background">
@@ -416,7 +504,7 @@ export const ConfigurationPage: FC = () => {
                 isActive={isActive}
                 isPlaying={isActive && isPlaying}
                 currentTime={isActive ? currentTime : 0}
-                duration={isActive ? duration : null}
+                duration={durations[song.id] ?? null}
                 selectedTimestampIndex={
                   isActive ? selectedTimestampIndex : null
                 }
@@ -574,69 +662,69 @@ const SongRow: FC<{
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-default-400 w-10 text-right">
-            {formatTime(currentTime)}
-          </span>
-
-          <div className="flex-1 relative h-8">
-            <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 bg-default-200 rounded-full" />
-
-            {duration && currentTime > 0 && (
-              <div
-                className="absolute top-1/2 h-1 -translate-y-1/2 bg-primary rounded-full"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
-            )}
-
-            {duration &&
-              timestamps.map((ts, index) => {
-                const opt = TIMESTAMP_OPTIONS.find((o) => o.value === ts.tag);
-                const Icon = opt?.icon ?? IconSquareRotated;
+        <div className="mt-1 -mb-3">
+          <div className="relative mx-2.5 h-4 overflow-visible">
+            {!!duration &&
+              timestamps.map(({ time, tag }, index) => {
+                const option = TIMESTAMP_OPTIONS.find(
+                  (opt) => opt.value === tag
+                );
+                const Icon = option?.icon ?? IconQuestionMark;
                 const isSelected = selectedTimestampIndex === index;
 
                 return (
-                  <button
-                    key={index}
-                    type="button"
+                  <div
+                    key={`${tag}-${time}-${index}`}
                     className={cn(
-                      'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center z-10 transition-transform',
-                      isSelected && 'scale-125',
-                      opt?.className
+                      'absolute -translate-x-1/2 flex flex-col items-center gap-0.5 left-(--progress) z-10',
+                      option?.className
                     )}
                     style={
                       {
-                        left: `${clamp((ts.time / duration) * 100, 0, 100)}%`,
+                        '--progress': duration
+                          ? `${clamp((time / duration) * 100, 0, 100)}%`
+                          : undefined,
                       } as CSSProperties
                     }
-                    onClick={() => onSelectTimestamp(index)}
                   >
-                    <Icon className="size-4" stroke={2.5} />
-                  </button>
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      className={cn(
+                        'size-6 p-1 -m-1 min-w-auto text-current transition-transform',
+                        isSelected && 'scale-125',
+                        tag === 'secondary' && 'p-0.5'
+                      )}
+                      onPress={() => onSelectTimestamp(index)}
+                    >
+                      <Icon className="size-4" stroke={3} />
+                    </Button>
+                    <div
+                      className={cn(
+                        'w-[2px] pointer-events-none rounded-full h-4 bg-current',
+                        isSelected && 'h-5'
+                      )}
+                    />
+                  </div>
                 );
               })}
-
-            <Slider
-              aria-label="Seek"
-              classNames={{
-                base: 'absolute inset-0',
-                track: 'bg-transparent',
-                filler: 'bg-transparent',
-                thumb: 'opacity-0 hover:opacity-100',
-              }}
-              minValue={0}
-              maxValue={duration ?? 100}
-              step={0.1}
-              value={currentTime}
-              onChange={(value) => {
-                if (typeof value === 'number') onSeek(value);
-              }}
-            />
           </div>
-
-          <span className="text-xs text-default-400 w-10">
-            {formatTime(duration)}
-          </span>
+          <Slider
+            aria-label="Progress de reproducció"
+            color="foreground"
+            minValue={0}
+            maxValue={duration ?? 100}
+            step={0.05}
+            value={currentTime}
+            onChange={(value) => {
+              if (typeof value === 'number') onSeek(value);
+            }}
+            isDisabled={!duration}
+          />
+          <div className="flex justify-between text-small text-foreground/60">
+            <span>{formatTime(currentTime)}</span>
+            <span className="text-foreground/50">{formatTime(duration)}</span>
+          </div>
         </div>
       </div>
 
