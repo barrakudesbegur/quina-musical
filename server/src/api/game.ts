@@ -1,13 +1,7 @@
 import { EventEmitter, on } from 'events';
 import { z } from 'zod';
 import cards from '../../db/default/cards.json' with { type: 'json' };
-import {
-  gameDb,
-  GameDataSchema,
-  makeDefaultData,
-  Round,
-  SongTimestampSchema,
-} from '../db/game.js';
+import { gameDb, GameDataSchema, makeDefaultData, Round } from '../db/game.js';
 import { publicProcedure, router } from '../trpc.js';
 import { shuffleArrayWithSeed } from '../utils/arrays.js';
 
