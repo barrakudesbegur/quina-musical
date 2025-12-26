@@ -15,6 +15,8 @@ export default defineConfig({
       workbox: {
         globPatterns: [],
         cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
 
         runtimeCaching: [
           {
