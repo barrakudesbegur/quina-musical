@@ -43,6 +43,7 @@ import {
 import { useDebounceCallback, useInterval } from 'usehooks-ts';
 import type { PlayEffect, SongTimestamp } from '../hooks/useSongPlayer';
 import { useSongPlayer } from '../hooks/useSongPlayer';
+import { useWaveform } from '../hooks/useWaveform';
 import { trpc } from '../utils/trpc';
 
 type Song = {
@@ -419,6 +420,7 @@ export const SongsTab: FC = () => {
             onDeleteTimestamp={(index) => deleteTimestamp(song.id, index)}
             onVolumeChange={(vol) => updateVolume(song.id, vol)}
             onPreviewTransition={(ts) => previewTransition(song.id, ts)}
+            getSongUrl={getSongUrl}
           />
         );
       })}
@@ -444,6 +446,7 @@ const SongRow: FC<{
   onDeleteTimestamp: (index: number) => void;
   onVolumeChange: (volume: number) => void;
   onPreviewTransition: (timestamp: SongTimestamp) => void;
+  getSongUrl: (songId: number) => string;
 }> = ({
   song,
   timestamps,
@@ -462,6 +465,7 @@ const SongRow: FC<{
   onDeleteTimestamp,
   onVolumeChange,
   onPreviewTransition,
+  getSongUrl,
 }) => {
   const selectedTimestamp =
     selectedTimestampIndex !== null ? timestamps[selectedTimestampIndex] : null;
@@ -625,6 +629,21 @@ const SongRow: FC<{
             <span>{formatTime(currentTime)}</span>
             <span className="text-foreground/50">{formatTime(duration)}</span>
           </div>
+          {duration && (
+            <Waveform
+              audioUrl={getSongUrl(song.id)}
+              duration={duration}
+              currentTime={isActive ? currentTime : 0}
+              timestamps={timestamps}
+              selectedTimestampIndex={isActive ? selectedTimestampIndex : null}
+              onSeek={(time) => onSeek(time)}
+              onSelectTimestamp={(index) => {
+                onSelectTimestamp(index);
+                const ts = timestamps[index];
+                if (ts) onSeek(ts.time, true);
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -869,6 +888,166 @@ const TimestampEditor: FC<{
       <p className="text-xs text-default-400">
         ← → per ajustar temps (Shift: ±0.5s)
       </p>
+    </div>
+  );
+};
+
+const Waveform: FC<{
+  audioUrl: string;
+  duration: number;
+  currentTime: number;
+  timestamps: SongTimestamp[];
+  selectedTimestampIndex: number | null;
+  onSeek: (time: number) => void;
+  onSelectTimestamp: (index: number) => void;
+}> = ({
+  audioUrl,
+  duration,
+  currentTime,
+  timestamps,
+  selectedTimestampIndex,
+  onSeek,
+  onSelectTimestamp,
+}) => {
+  const { waveformData, isLoading } = useWaveform(audioUrl);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!containerRef.current || !duration) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = clamp(x / rect.width, 0, 1);
+      const time = percentage * duration;
+      onSeek(time);
+    },
+    [duration, onSeek]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="h-16 flex items-center justify-center">
+        <IconLoader2 className="size-4 animate-spin text-default-400" />
+      </div>
+    );
+  }
+
+  if (!waveformData || waveformData.length === 0) {
+    return null;
+  }
+
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative h-16 mt-2 cursor-pointer group"
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const rect = containerRef.current?.getBoundingClientRect();
+          if (rect) {
+            const x = rect.left + rect.width / 2;
+            handleClick({
+              clientX: x,
+            } as React.MouseEvent<HTMLDivElement>);
+          }
+        }
+      }}
+    >
+      <div className="absolute inset-0 flex items-center gap-px">
+        {waveformData.map((amplitude, index) => {
+          const barWidth = 100 / waveformData.length;
+          const barHeight = Math.max(2, amplitude * 100);
+          const timestampAtPosition = timestamps.find(
+            (ts) =>
+              Math.abs((ts.time / duration) * 100 - index * barWidth) <
+              barWidth / 2
+          );
+          const timestampIndex =
+            timestampAtPosition !== undefined
+              ? timestamps.findIndex((ts) => ts === timestampAtPosition)
+              : null;
+          const isSelected =
+            timestampIndex !== null &&
+            timestampIndex === selectedTimestampIndex;
+          const option = timestampAtPosition
+            ? TIMESTAMP_OPTIONS.find(
+                (opt) => opt.value === timestampAtPosition.tag
+              )
+            : null;
+
+          const isPast = index * barWidth < progressPercentage;
+          const isAtTimestamp = timestampAtPosition !== undefined;
+
+          return (
+            <div
+              key={index}
+              className={cn(
+                'flex-1 bg-default-300 transition-all duration-75',
+                isPast && 'bg-primary',
+                isAtTimestamp && option && cn('bg-current', option.className),
+                isSelected && 'ring-2 ring-offset-1 ring-current'
+              )}
+              style={{
+                height: `${barHeight}%`,
+                minHeight: '2px',
+              }}
+            />
+          );
+        })}
+      </div>
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-foreground pointer-events-none z-10"
+        style={{ left: `${progressPercentage}%` }}
+      />
+      {timestamps.map(({ time, tag }, index) => {
+        const option = TIMESTAMP_OPTIONS.find((opt) => opt.value === tag);
+        const Icon = option?.icon ?? IconQuestionMark;
+        const isSelected = selectedTimestampIndex === index;
+        const position = duration > 0 ? (time / duration) * 100 : 0;
+
+        return (
+          <div
+            key={`${tag}-${time}-${index}`}
+            className={cn(
+              'absolute -translate-x-1/2 top-0 bottom-0 flex flex-col items-center justify-center z-20',
+              option?.className
+            )}
+            style={{ left: `${position}%` }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                className={cn(
+                  'size-5 p-0.5 min-w-auto text-current transition-transform',
+                  isSelected && 'scale-125',
+                  tag === 'secondary' && 'p-0'
+                )}
+                onPress={() => {
+                  onSelectTimestamp(index);
+                }}
+              >
+                <Icon className="size-3" stroke={2.5} />
+              </Button>
+            </div>
+            <div
+              className={cn(
+                'w-[1.5px] rounded-full bg-current',
+                isSelected ? 'h-4' : 'h-2'
+              )}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };
