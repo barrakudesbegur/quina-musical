@@ -100,9 +100,28 @@ export const makeDefaultData = (): GameData => ({
   displayedImageId: null,
   songs: songsJson.map((song) => ({
     ...song,
-    timestamps: [],
+    timestamps: (song.timestamps as SongTimestamp[]) ?? [],
   })),
-  fxOptions: {},
+  fxOptions: {
+    'anime-wow': {
+      volume: 2,
+    },
+    tada: {
+      volume: 0.84,
+    },
+    correct: {
+      volume: 1.15,
+    },
+    'among-us': {
+      volume: 1.21,
+    },
+    'spongebob-boowomp': {
+      volume: 1.38,
+    },
+    boom: {
+      volume: 1.6,
+    },
+  },
 });
 
 const adapter = new JSONFile<GameData>(
