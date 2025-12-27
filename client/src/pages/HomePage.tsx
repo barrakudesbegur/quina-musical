@@ -329,9 +329,11 @@ export const HomePage: FC = () => {
 
       <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] hidden md:grid grid-cols-[repeat(3,1fr)] items-center justify-center content-end overflow-visible">
         <div className="h-[calc(clamp(5rem,20dvw,30dvh)*0.2)] w-full flex items-center self-end justify-center col-span-2 z-10 min-w-0">
+          {/* 
           <p className="text-[calc(clamp(10rem,20dvw,30dvh)*0.25)] -mt-4 uppercase tracking-widest text-[#FFD7A3] leading-none -mr-[calc(100dvw/3/6)]">
             quina.barrakudesbegur.org
           </p>
+           */}
         </div>
 
         <div className="h-full w-full relative col-span-1 bg-[#8B1538] pt-2 flex justify-between">
