@@ -61,19 +61,23 @@ export const useMediaSession = ({
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    navigator.mediaSession.setPositionState(
-      duration
-        ? {
-            duration: duration,
-            playbackRate: 1,
-            position,
-          }
-        : {
-            duration: Infinity,
-            playbackRate: 0.0000001,
-            position: 0,
-          }
-    );
+    try {
+      navigator.mediaSession.setPositionState(
+        duration
+          ? {
+              duration: duration,
+              playbackRate: 1,
+              position: Math.max(0, Math.min(position, duration)),
+            }
+          : {
+              duration: Infinity,
+              playbackRate: 0.0000001,
+              position: 0,
+            }
+      );
+    } catch (error) {
+      console.warn('Failed to set MediaSession position state:', error);
+    }
   }, [duration, position]);
 
   useEffect(() => {
