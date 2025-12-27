@@ -18,6 +18,7 @@ import decorationLeft from '../assets/decoration-left.svg';
 import decorationRight from '../assets/decoration-right.svg';
 import { MorphingText } from '../components/MorphingText';
 import { GALLERY_IMAGES } from '../config/images';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { trpc } from '../utils/trpc';
 
 const CARD_ID_QUERY_PARAM = 'c';
@@ -66,6 +67,8 @@ export const HomePage: FC = () => {
   useEffect(() => {
     if (parent.current) autoAnimate(parent.current);
   }, [parent]);
+
+  useWakeLock();
 
   const allCardsQuery = trpc.card.getAll.useQuery(undefined, { enabled: true });
   const [searchParams, setSearchParams] = useSearchParams();

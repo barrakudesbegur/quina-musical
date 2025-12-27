@@ -21,6 +21,7 @@ import { MiniPlayer } from '../components/MiniPlayer';
 import { RoundNameForm } from '../components/RoundNameForm';
 import { SongsSection } from '../components/SongsSection';
 import { useSecondsStopwatch } from '../hooks/useSecondsStopwatch';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { formatElapsedClock } from '../utils/time';
 import { trpc } from '../utils/trpc';
 import { IconButtonGrid } from '../components/IconButtonGrid';
@@ -190,6 +191,7 @@ export const PresenterPage: FC = () => {
   }, [setIsLowVolumeMode]);
 
   const now = useSecondsStopwatch();
+  useWakeLock();
 
   const displayedSongId = useMemo(() => {
     const lastPlayed = songsQuery.data?.find((s) => s.isLastPlayed);
