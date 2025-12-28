@@ -32,6 +32,7 @@
 - Tenir preparada la musica de ascensor entre quines. per exemple:  <https://www.youtube.com/watch?v=lx0aJYhMdc4>
 - Trackejar els cartrons en us en funcio de la gent conectada i el seu Watching card.
 - Normalitzar millor els volums, podria ser automatic. i tb els dels FX.
+- No cal fer el paripe de llegir els noms de les cançons
 
 ## Note on my phone (TODO: clean this up)
 
