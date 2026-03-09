@@ -1,7 +1,5 @@
 # Live app for musical bingo
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/f82f2426-9320-448b-81cb-fbae7bbc44e1/deploy-status)](https://app.netlify.com/sites/quina-musical-barrakudes/deploys)
-
 App to use during the musical bingo.
 
 Use it here: <https://quina.barrakudesbegur.org>
@@ -128,3 +126,7 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [Cartrons] Make a test suit for the generation to ensure no mistakes, as this is very important.
 - [Cartrons] Fer que les ids tinguin una llatra devant si son especials aixi no son a partir del 400 i pico
 - [General] Fer rondes especials, per exemple una de remixes.
+- [General] Generar cançons amb Suno i/o fer efectes.
+- [General] Durant la quina, la gent que ha pagat cartro pot anar posant i votant cancons i es fa una quina especial. Com que els cartrons no serveixe, es faria amb la app nomes, i el premi seria una tonteria, per no obligar a fer servir el mobil.
+- [General] Per fer publicitat, permetre que 5 cançons siguin escollides popularment al instagram.
+
