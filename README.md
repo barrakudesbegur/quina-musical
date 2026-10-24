@@ -130,4 +130,5 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [General] Generar cançons amb Suno i/o fer efectes.
 - [General] Durant la quina, la gent que ha pagat cartro pot anar posant i votant cancons i es fa una quina especial. Com que els cartrons no serveixe, es faria amb la app nomes, i el premi seria una tonteria, per no obligar a fer servir el mobil.
 - [General] Per fer publicitat, permetre que 5 cançons siguin escollides popularment al instagram.
+- [General] Explorar fer fragments de apps natives
 
