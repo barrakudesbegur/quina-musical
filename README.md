@@ -104,6 +104,7 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [Mobile] (BUG) L'animació de moure noms de cançons a l'historial no funciona.
 - [Mobile] Millorar la discoverabilitat per posar diversos identificadors de cartró al mateix mòbil. Potser posar un popup diguent que introdueixis els números de cartrons al obrir
 - [Mobil] Com que fer una imatge amb els premis es dificil, fer-ho amb text. Utilitzar un csv i fer un excel al drive, aixi ells ho poden emplenar i imprimir, i jo utilitzar. Aixo esta relacionat amb les rondes preconfigurades.
+- [Mobil] Fer efectes visuals quan passen coses com, nomes 1 per quina o el presentador fa so, entre altres idees.
 - [Descarregador] Posar les IDs en ordre alfabètic, o avisar si la playlist no està ordenada alfabèticament.
 - [Cartrons] No cal que siguin de cartolina.
 - [Cartrons] Indicar quins son especials i normals, no nomes amb el color.
