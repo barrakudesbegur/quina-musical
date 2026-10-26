@@ -89,6 +89,13 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 
 ### To do for next version
 
+- [General] Treure reordenar cançons. Un cop es barregen, no es pot alterar l'ordre.
+- [Tablet] Intentar que el mando de la wii es conecti a la tablet.
+- [General] Per comprovar cartró, ens diuen el número i surt al projector i fan la comprovació. El presentador va apretant la A i va marcant-se per ordre si la canço ha sonat o no. Si s'equivoca i es correcte fa una animació.
+- [Presentador] El mando vibra per indicar quantes cançons falten. Així el presentador té una idea de quant 
+
+#### From last year
+
 - [Tablet] Tablet al terra/ma/tripodeLlibres pels presentadors: n cancons, hora fi, nom canco. quan guanya, cartro guanyador
 - [Tablet] Que els presentadors puguin canviar de quina facilment. i posar guanyadors linea/quina.
 - [Admin] Afegir un botó per netejar la caché de cançons (service worker); no fer-ho automàticament amb startedAt.
@@ -116,7 +123,7 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [Projector] Potser no cal mostrar tantes cancons, nomes amb les 3 ultimes ja esta be
 - [Presentador] Poder posar filtres amb IA a les veus del microfon (voicemod).
 - [Presentador] Tenir preparada la musica de ascensor entre quines. per exemple:  <https://www.youtube.com/watch?v=lx0aJYhMdc4>
-- [Presentador] Song shuffling: Pseudo-random. This ensures that the shuffling is actually random while making people happy. Modify the algorithm so it counts how many times a song has been played, and the max played song vs the min played song difference is always 1 or 2. Consider that songs that come after the round has finished shouldn't count. So the shuffling can't be known in advance. Well, think this more and ensure that it is fair and everyone has the same chances of winning. Inclus podem escollir el cartro guanyador i decidir les cancons que sonaran artificialment, per fer la quina mes llarga o mes lenta.
+- [Presentador] Song shuffling: Pseudo-random. This ensures that the shuffling is actually random while making people happy. Modify the algorithm so it counts how many times a song has been played, and the max played song vs the min played song difference is always 1 or 2. Consider that songs that come after the round has finished shouldn't count. So the shuffling can't be known in advance. Well, think this more and ensure that it is fair and everyone has the same chances of winning. Inclus podem selecionar aleatoriament el cartro guanyador i decidir les cancons que sonaran artificialment, per fer la quina mes llarga o mes lenta.
 - [Cartrons] Ferlos a doble cara i tenir multiples playlists?
 - [Projector] un termometre que mostri el nº de cancons que queden i/o nº de cartrons amb casitotes
 - [General] pensar alguna forma de que quedi demostrat que no hi ha tongo
@@ -131,4 +138,3 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [General] Durant la quina, la gent que ha pagat cartro pot anar posant i votant cancons i es fa una quina especial. Com que els cartrons no serveixe, es faria amb la app nomes, i el premi seria una tonteria, per no obligar a fer servir el mobil.
 - [General] Per fer publicitat, permetre que 5 cançons siguin escollides popularment al instagram.
 - [General] Explorar fer fragments de apps natives (App Clips & Instant Apps)
-
