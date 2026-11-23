@@ -1,0 +1,148 @@
+# Quina musical
+
+A live music bingo show. Players mark songs on printed cards as they recognize them, while presenters on stage run the game and a projector shows a drum of album covers that reveals each song.
+
+## Language
+
+### The game
+
+**Game**:
+The whole set of rounds played on the night of the event.
+_Avoid_: Night, session, event
+
+**Round**:
+One game of bingo, from its first song until a Bingo is confirmed. Labelled "quina" in the app.
+_Avoid_: Game, match
+
+**Special round**:
+A round played with special cards instead of the normal ones.
+_Avoid_: Quina especial (outside the UI)
+
+**Card**:
+A printed sheet of 12 songs in 3 lines of 4. A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
+_Avoid_: Cartó (outside the UI), ticket
+
+**Special card**:
+A card that is only valid in the special round.
+
+**Cards in play**:
+The cards sold for the game, entered once. Each round only counts the ones valid for it: normal cards in regular rounds, special cards in the special round.
+_Avoid_: Sold cards, active cards
+
+**Line**:
+A completed row of 4 songs on a card.
+_Avoid_: Línia (outside the UI)
+
+**Bingo**:
+A completed card: all 12 of its songs have landed. It ends the round.
+_Avoid_: Quina (for the win), full house
+
+**Interval**:
+The time between two rounds, with music playing and the next round's prizes on screen.
+_Avoid_: Break, descans, pause
+
+**Claim**:
+A player shouting Line or Bingo for a card, which then has to be checked.
+_Avoid_: Call, cant
+
+**Check**:
+The public verification of a claimed card: its songs are shown and replayed one by one, each marked as landed or not.
+_Avoid_: Validation, verification
+
+**Winner**:
+A player whose claimed card passed the check. Their name is noted, and they collect the prize later by showing the card to the organizers.
+
+**Celebration**:
+The moment after a successful check, with a big impact, a victory lap of the drum and celebratory music.
+_Avoid_: Ceremony, prize giving
+
+**Prize**:
+Something given for the Line or the Bingo of a round, provided by a sponsor.
+_Avoid_: Premi (outside the UI), reward
+
+**Sponsor**:
+Whoever provides a prize: Barrakudes itself or an outside business.
+
+### The music
+
+**Pool**:
+The full set of songs the cards are printed from. Every round's queue is a shuffle of the whole pool.
+_Avoid_: Song list, catalogue
+
+**Queue**:
+The order in which a round's songs will play. Decided once at the shuffle and never changed afterwards.
+_Avoid_: Playlist
+
+**Winning song**:
+The song whose landing completed the card that won a Line or a Bingo.
+
+**Shuffle**:
+The public moment at the start of a round where the queue is decided, shown on the projector as the songs moving from a grid into the drum.
+
+**Hook**:
+A moment in a song where its most recognizable part starts on a downbeat, such as a chorus. Songs only ever land on a hook.
+_Avoid_: Timestamp, start point, punt d'inici, cue
+
+**Transition**:
+Everything that happens from the moment the next song is requested until it lands: overlapping layers of the outgoing and incoming songs, extra sounds and effects.
+_Avoid_: Crossfade, mix
+
+**Tease**:
+Any part of the incoming song heard before its landing. A tease never counts for the cards.
+_Avoid_: Preview, hint, pre-roll
+
+**Decoy**:
+A tease of a song that is not the next one, used to bluff. It never counts and always resolves clearly into the song that actually lands.
+_Avoid_: Bluff, fake song
+
+**Signature**:
+A short, iconic, isolated piece of a song, such as its opening riff or a famous shout, that can be layered into transitions.
+_Avoid_: Sample, riff
+
+**Suspense**:
+A transition the presenters hold open on purpose, keeping its build-up going while they work the crowd, until they release it and the song lands.
+_Avoid_: Stall, freeze
+
+### The drum
+
+**Spin**:
+The movement of the drum during a transition.
+_Avoid_: Draw, roll
+
+**Landing**:
+The instant the drum stops on a song and that song's hook hits, at the same moment. A song counts for the cards from its landing.
+_Avoid_: Drop, reveal
+
+**Heat**:
+How "hot" the round looks on screen. It follows the phase with some randomness, so it never reveals how many songs are left.
+_Avoid_: Temperature, progress
+
+### Running the show
+
+**Pace**:
+The target time from one landing to the next, set by the presenters and gently adjusted by the system to keep to the schedule.
+_Avoid_: Speed, tempo, song duration
+
+**Schedule**:
+The planned timetable of the game: when it starts, how long each round and interval should last.
+_Avoid_: Timetable, plan
+
+**Drift**:
+How far ahead of or behind the schedule the game is running.
+_Avoid_: Delay, lag
+
+**Back**:
+Undoing the last landing: that song stops counting and becomes the next song again, as if it had never played. The queue's order is untouched.
+_Avoid_: Previous, undo, replay, anterior (outside the UI)
+
+**Hold**:
+A state in which no new song can land and the music keeps playing under the presenters' voices, used for claims and whenever the presenters want to talk. The music never stops unless silence is intended.
+_Avoid_: Pause, low volume
+
+**Hold music**:
+Looping background tracks, such as a video-game waiting tune, that take over during a long hold.
+_Avoid_: Background music, bed
+
+**Phase**:
+How likely a win is within the next few songs (early, mid, late, final), which decides how big the transitions are. It climbs towards a Line, resets once a Line is confirmed, and climbs again towards the Bingo. Late can start early or end without a win, so it never gives the ending away.
+_Avoid_: Stage, level
