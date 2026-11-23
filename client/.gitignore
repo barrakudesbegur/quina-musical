@@ -30,3 +30,7 @@ public/audios/song/*
 !public/audios/song/.gitkeep
 
 dev-dist/
+public/audios/interval/*
+public/audios/hold/*
+public/audios/celebration/*
+public/audios/stingers/*
