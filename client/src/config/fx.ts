@@ -75,4 +75,34 @@ export const fxList: IconGridAction[] = [
     icon: 'noto:crying-face',
     url: '/fx/spongebob-fail.mp3',
   },
+  {
+    id: 'orchestra-hit',
+    label: 'Orchestra Hit',
+    icon: 'noto:violin',
+    url: '/fx/orchestra-hit.mp3',
+  },
+  {
+    id: 'metal-gear-alert',
+    label: 'Metal Gear Alert',
+    icon: 'noto:red-exclamation-mark',
+    url: '/fx/metal-gear-alert.mp3',
+  },
+  {
+    id: 'fear-melody',
+    label: 'Fear Melody',
+    icon: 'noto:ghost',
+    url: '/fx/fear-melody.mp3',
+  },
+  {
+    id: 'bum-bum-buaaa',
+    label: 'Bum Bum Buaaa',
+    icon: 'noto:face-screaming-in-fear',
+    url: '/fx/bum-bum-buaaa.mp3',
+  },
+  {
+    id: 'duck-quack',
+    label: 'Duck Quack',
+    icon: 'noto:duck',
+    url: '/fx/duck-quack.mp3',
+  },
 ];
