@@ -39,6 +39,9 @@ export interface HoldInfo {
   holdMusic: boolean;
   /** When Hold music will take over, or null. */
   holdMusicAtMs: number | null;
+  /** PRIVATE (console and admin only): false in Aguanta (Stay, the song at full volume), true in Parlem (ducked).
+   * Absent from an older engine: ducked. */
+  ducked?: boolean;
 }
 
 export interface CurrentSong extends SongRef {
@@ -107,8 +110,27 @@ export interface PossibleWinners {
   bingo: PossibleWinner[];
 }
 
+/**
+ * PRIVATE (the console's Futur tab, hidden until revealed): what the round's valid cards in play (sold or not)
+ * and the known Queue say about the wins to come. Never in the public feed, on the stage or on phones.
+ */
+export interface FutureInfo {
+  /** The Queue index whose landing first completes a Line (a Bingo) on a valid card, from the next song on;
+   * null when none ever does. The console shows `at − queue.position` songs. */
+  lineAt: number | null;
+  bingoAt: number | null;
+  /** Valid cards by songs still missing to their first Line: index = songs missing (0 = has one), value = cards. */
+  toLine: number[];
+  /** The same for the Bingo (index = songs missing to a full card, 0–12). */
+  toBingo: number[];
+  /** Valid cards by their counted (landed) songs: index = songs marked (0–12), value = cards. */
+  markCounts: number[];
+}
+
 export interface PaceInfo {
   sec: number;
+  /** The Pace this round starts with (PACE_DEFAULT_SEC), which the console recommends. */
+  defaultSec?: number;
   locked: boolean;
   /** The Drift catch-up factor (1 = none). */
   nudge: number;
@@ -302,6 +324,8 @@ export interface ShowState {
   heat: number | null;
   cards: CardsInfo;
   possibleWinners: PossibleWinners;
+  /** PRIVATE: the console's Futur tab; absent without cards in play or from an older engine. */
+  future?: FutureInfo | null;
   pace: PaceInfo;
   schedule: ScheduleInfo;
   /** When auto-advance will press Next, or null. */

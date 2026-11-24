@@ -42,6 +42,7 @@ import type {
   HoldReason,
   PhaseName,
   PossibleWinners,
+  FutureInfo,
   RejectReason,
   RoundInfo,
   RoundKind,
@@ -53,7 +54,7 @@ import type {
   SoundName,
 } from '@quina/protocol';
 import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, type DecoyConfig } from '../config.ts';
-import { validCards, possibleWinners, parseCardRanges } from '../game/cards.ts';
+import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
@@ -144,6 +145,9 @@ export interface PendingNext {
 export interface HoldState {
   since: number;
   reason: HoldReason;
+  /** Parlem: the song ducked under the presenters' voices (Hold music may take over). False is Aguanta (Stay):
+   * the song at full volume, nothing landing or advancing. */
+  ducked: boolean;
 }
 
 // ---- effects: what the runtime must do. Audio-clock times in seconds. -------------------------------------
@@ -594,7 +598,9 @@ export class Show {
       case 'hold': {
         const on = c.on;
         const holding = this.status === 'hold';
-        if (on === true || (on === undefined && !holding)) this.holdOn(reqId);
+        // While holding, `duck` switches between Parlem and Aguanta in place.
+        if (holding && on !== false && c.duck !== undefined) this.holdMode(c.duck);
+        else if (on === true || (on === undefined && !holding)) this.holdOn(reqId, c.duck ?? true);
         else this.release(reqId);
         break;
       }
@@ -1385,13 +1391,30 @@ export class Show {
   }
 
   // -------------------------------------------------------------------------------------- Hold
-  holdOn(reqId: string | null) {
+  /** `duck` false: Aguanta (Stay), the song at full volume. */
+  holdOn(reqId: string | null, duck = true) {
     if (this.status === 'hold') return;
-    if (this.transition) return this.cancel(this.transition, 'hold');
-    if (this.suspense) return this.cancelSuspense(this.suspense, 'hold');
-    if (this.pending) this.pending = null;
     void reqId;
-    this.enterHold('hold', { music: !this.current });
+    if (this.transition) this.cancel(this.transition, 'hold');
+    else if (this.suspense) this.cancelSuspense(this.suspense, 'hold');
+    else {
+      if (this.pending) this.pending = null;
+      this.enterHold('hold', { music: !this.current, duck });
+      return;
+    }
+    if (!duck) this.holdMode(false);
+  }
+
+  /**
+   * Switch a Hold between Parlem (ducked; Hold music may take over after its delay) and Aguanta (the song at full
+   * volume, no Hold music). On Hold music there is no song to bring back, so it stays as it is.
+   */
+  holdMode(duck: boolean) {
+    const hold = this.hold;
+    if (!hold || hold.ducked === duck || !this.current || this.holdMusic) return;
+    hold.ducked = duck;
+    this.out.push({ type: 'duck', db: duck ? HOLD.duckDb : 0, seconds: duck ? HOLD.duckSec : HOLD.releaseSec });
+    this.timers.holdMusicAt = duck && this.game.holdMusicOn !== false ? Math.max(this.env.now() + 1, hold.since + this.game.holdMusicAfterSec) : null;
   }
 
   release(reqId: string | null) {
@@ -1415,15 +1438,19 @@ export class Show {
     return this.phrasePress(press + LOOKAHEAD_SEC + dTarget, slot, now + PACE.minAfterHoldSec) ?? press;
   }
 
-  enterHold(reason: HoldReason, { music, musicDelaySec = 0 }: { music: boolean; musicDelaySec?: number }) {
+  enterHold(reason: HoldReason, { music, musicDelaySec = 0, duck = true }: { music: boolean; musicDelaySec?: number; duck?: boolean }) {
     const now = this.env.now();
     this.status = 'hold';
-    this.hold = { since: now, reason };
+    this.hold = { since: now, reason, ducked: true };
     this.timers.autoAt = null;
     if (music || !this.current) {
       this.timers.holdMusicAt = null;
       if (this.current) this.toHoldMusic();
       else this.startHoldMusic(now + musicDelaySec);
+    } else if (!duck) {
+      // Aguanta: the song keeps playing at full volume; no Hold music takes over.
+      this.hold.ducked = false;
+      this.timers.holdMusicAt = null;
     } else {
       this.out.push({ type: 'duck', db: HOLD.duckDb, seconds: HOLD.duckSec });
       // With Hold music off the ducked song stays (it still hands over if it runs out).
@@ -1679,7 +1706,7 @@ export class Show {
   /** A Hold for the show flow (Check, Celebration, Interval): no song lands; the scene's music is set apart. */
   flowHold(reason: HoldReason) {
     this.status = 'hold';
-    this.hold = { since: this.hold?.since ?? this.env.now(), reason };
+    this.hold = { since: this.hold?.since ?? this.env.now(), reason, ducked: this.hold?.ducked ?? true };
     this.timers = { autoAt: null, holdMusicAt: this.timers.holdMusicAt };
   }
 
@@ -1864,7 +1891,7 @@ export class Show {
     this.celebrationChoice = null; // it was for a Celebration that didn't come
     this.setScene('play');
     this.status = 'hold';
-    this.hold = { since: this.env.now(), reason: 'checkFailed' };
+    this.hold = { since: this.env.now(), reason: 'checkFailed', ducked: true };
     this.timers.autoAt = null;
     this.switchToHoldMusic('error');
   }
@@ -2115,6 +2142,25 @@ export class Show {
     return { line: strip(possibleWinners(valid, landed, 'line')), bingo: strip(possibleWinners(valid, landed, 'bingo')) };
   }
 
+  /**
+   * PRIVATE, for the console's Futur tab: where the known Queue first completes a Line and a Bingo on a valid card
+   * from the next song on, and the valid cards by songs still missing and by songs marked. Null without cards.
+   */
+  future(): FutureInfo | null {
+    const valid = this.phaseModel.valid;
+    if (!valid.length) return null;
+    const landed = this.landings.filter((l) => !l.undone).map((l) => l.songId);
+    const counts = cardCounts(valid, landed);
+    const from = this.position + 1;
+    return {
+      lineAt: firstWinAt(valid, this.queue, 'line', from)?.index ?? null,
+      bingoAt: firstWinAt(valid, this.queue, 'bingo', from)?.index ?? null,
+      toLine: counts.toLine,
+      toBingo: counts.toBingo,
+      markCounts: counts.marked,
+    };
+  }
+
   spin() {
     return spinWindow({ pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge });
   }
@@ -2174,7 +2220,7 @@ export class Show {
       atMs: this.env.nowMs(),
       status: this.status,
       pending: this.pending ? 'next' : null,
-      hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, holdMusicAtMs: toMs(this.timers.holdMusicAt) } : null,
+      hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, holdMusicAtMs: toMs(this.timers.holdMusicAt), ducked: this.hold.ducked } : null,
       holdMusic: this.holdMusic,
       current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
       next: this.songInfo(this.queue[this.position + 1]),
@@ -2191,7 +2237,8 @@ export class Show {
         climbingTo: this.phaseModel.kind,
       },
       possibleWinners: this.possibleWinners(),
-      pace: { sec: this.game.pace, locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
+      future: this.future(),
+      pace: { sec: this.game.pace, defaultSec: defaultPace(this.round.number), locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
       schedule: { ...schedule, roundDriftSec: Math.round(schedule.roundDriftSec), gameDriftSec: schedule.gameDriftSec == null ? null : Math.round(schedule.gameDriftSec) },
       autoAtMs: toMs(this.timers.autoAt),
       transition: this.transition

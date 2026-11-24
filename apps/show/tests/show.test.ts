@@ -499,3 +499,52 @@ test('Panic or a new round during a Spin or a Suspense tells the remotes it was 
     }
   }
 });
+
+test('Aguanta (hold without ducking): the song stays at full volume, nothing advances, no Hold music; it switches with Parlem in place', () => {
+  const h = setup({ seed: 6 });
+  startAndLand(h);
+  assert.ok(autoAt(h.show));
+  const stay = h.send('hold', { on: true, duck: false });
+  assert.equal(h.show.status, 'hold');
+  assert.equal(find(stay, 'duck'), undefined, 'not ducked');
+  assert.equal(h.show.snapshot().hold?.ducked, false);
+  assert.equal(h.show.timers.autoAt, null, 'auto-advance waits');
+  assert.equal(h.show.timers.holdMusicAt, null, 'no timed switch to Hold music');
+  // Parlem in place: ducked, and Hold music may take over after its delay.
+  const talk = h.send('hold', { duck: true });
+  assert.equal(get(talk, 'duck').db, HOLD.duckDb);
+  assert.equal(h.show.snapshot().hold?.ducked, true);
+  assert.ok(h.show.timers.holdMusicAt != null);
+  // Back to Aguanta: full volume again, the timer gone.
+  assert.equal(get(h.send('hold', { duck: false }), 'duck').db, 0);
+  assert.equal(h.show.timers.holdMusicAt, null);
+  assert.equal(h.show.status, 'hold', 'switching never releases');
+  // Releasing moves on as after any Hold.
+  h.send('hold', { on: false });
+  assert.equal(h.show.status, 'playing');
+  assert.ok(autoAt(h.show) > h.clock.t);
+});
+
+test('Futur (private): where the known Queue first completes a Line and a Bingo, and the cards by songs missing and marked', () => {
+  const h = setup({ seed: 21, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
+  h.send('unlock');
+  const sum = (list: number[]) => list.reduce((a, b) => a + b, 0);
+  const before = h.show.snapshot().future;
+  assert.ok(before);
+  const valid = h.show.snapshot().cards.validCount;
+  assert.equal(sum(before.toLine), valid);
+  assert.equal(sum(before.toBingo), valid);
+  assert.deepEqual(before.markCounts, [valid], 'nothing marked yet');
+  assert.ok(before.lineAt != null && before.bingoAt != null && before.lineAt < before.bingoAt);
+  for (let k = 0; k < 3; k++) {
+    h.send('next');
+    h.until(() => h.show.position === k && h.show.status === 'playing');
+  }
+  const after = h.show.snapshot().future;
+  assert.ok(after);
+  assert.equal(sum(after.markCounts), valid);
+  assert.ok(after.markCounts.length > 1, 'some cards have marks');
+  assert.ok(after.lineAt == null || after.lineAt > h.show.position, 'from the next song on');
+  assert.equal(h.show.snapshot().future === null, false);
+  assert.equal(setup().show.snapshot().future, null, 'none without cards in play');
+});

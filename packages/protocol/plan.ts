@@ -16,7 +16,7 @@ export interface Sponsor {
   /** Stable id, referenced by prizes (for example "forn-can-pep"). */
   id: string;
   name: string;
-  /** Path of the cleaned-up logo asset (WebP), or null until it is uploaded. */
+  /** Path of the cleaned-up logo asset (`/media/<key>.png` or `.jpg`, with a `.jxl` beside it; never WebP), or null until it is uploaded. */
   logo: string | null;
 }
 

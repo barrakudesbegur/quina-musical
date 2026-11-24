@@ -15,7 +15,10 @@ import {
   roundGameEnd,
   type PublicChange,
   type PublicState,
+  type ShowState,
 } from '@quina/protocol';
+import { projectEvent } from '../../cloud/src/domain/projection.ts';
+import { setup, allCards } from './support/harness.ts';
 
 function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object') {
@@ -105,4 +108,23 @@ test('the Game end is rounded to 5 minutes', () => {
   assert.equal(roundGameEnd(3 * step + 0.49 * step), 3 * step);
   assert.equal(roundGameEnd(3 * step + 0.51 * step), 4 * step);
   assert.equal(roundGameEnd(null), null);
+});
+
+test('the console\'s private data never reaches the public feed: the Futur tab, Aguanta, the possible winners', () => {
+  const h = setup({ seed: 12, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
+  h.send('unlock');
+  for (let k = 0; k < 4; k++) {
+    h.send('next');
+    h.until(() => h.show.position === k && h.show.status === 'playing');
+  }
+  h.send('hold', { on: true, duck: false });
+  const state: ShowState = { v: PROTOCOL_VERSION, ...h.show.snapshot() };
+  // The private fields are there for the console…
+  assert.ok(state.future && state.future.markCounts.length > 0 && state.hold?.ducked === false && state.possibleWinners);
+  // …and the cloud's projection of the same snapshot carries none of them.
+  const changes = projectEvent(emptyPublicState('26'), state, { toCloudMs: (ms) => ms });
+  const json = JSON.stringify(changes);
+  for (const key of ['future', 'lineAt', 'bingoAt', 'toLine', 'toBingo', 'markCounts', 'ducked', 'possibleWinners', 'cardId']) {
+    assert.ok(!json.includes(`"${key}"`), `${key} in the public feed: ${json}`);
+  }
 });

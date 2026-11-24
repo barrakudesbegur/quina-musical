@@ -32,8 +32,13 @@ export const COMMANDS = Object.freeze({
   next: {},
   /** Undo the last landing, or cancel the running Spin. Always ends in Hold. */
   back: {},
-  /** Enter (`on: true`), leave (`on: false`) or toggle (no `on`) the Hold. */
-  hold: { on: { type: 'boolean', optional: true } },
+  /**
+   * Enter (`on: true`), leave (`on: false`) or toggle (no `on`) the Hold. `duck` (default true) is Parlem: the
+   * song ducks under the presenters' voices, and Hold music may take over. `duck: false` is Aguanta (Stay): the
+   * song keeps playing at full volume, nothing lands and nothing advances, and near its end it loops its last
+   * phrase. Sent while holding, `duck` switches between the two in place; `on: false` or `next` releases.
+   */
+  hold: { on: { type: 'boolean', optional: true }, duck: { type: 'boolean', optional: true } },
   /** Switch to Hold music now (enters Hold if needed). */
   holdMusic: {},
   /**

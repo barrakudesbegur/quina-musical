@@ -15,6 +15,7 @@
 //   completionIndex(card, queuePos, kind)       → queue index at which the card first gets a Line/Bingo (Infinity if never)
 //   completions(cards, queue, kind, from = 0)   → [{ cardId, index, lines }] sorted by index, then card id
 //   firstWinAt(cards, queue, kind, from = 0)    → { index, songId, cardIds } or null
+//   cardCounts(cards, landed)                   → { toLine, toBingo, marked }: histograms of the cards by songs
 //
 // `landed` is the songs that have landed: a Set or an array (in landing order, which lets
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
@@ -210,4 +211,34 @@ export function firstWinAt(cards: ReadonlyArray<Card>, queue: ReadonlyArray<numb
   if (!all.length) return null;
   const index = all[0].index;
   return { index, songId: queue[index], cardIds: all.filter((c) => c.index === index).map((c) => c.cardId) };
+}
+
+/** Histograms of the cards (index = songs, value = cards); see cardCounts. */
+export interface CardCounts {
+  /** By songs still missing to their first Line (0 = it has one). */
+  toLine: number[];
+  /** By songs still missing to the Bingo (0 = full card). */
+  toBingo: number[];
+  /** By songs already marked. */
+  marked: number[];
+}
+
+/** How far the cards are from a Line and a Bingo, and how many songs each has marked, as histograms. */
+export function cardCounts(cards: ReadonlyArray<Card>, landed: LandedSongs): CardCounts {
+  const set = asSet(landed);
+  const toLine: number[] = [];
+  const toBingo: number[] = [];
+  const marked: number[] = [];
+  const add = (list: number[], k: number) => {
+    while (list.length <= k) list.push(0);
+    list[k]++;
+  };
+  for (const card of cards) {
+    const status = cardStatus(card, set);
+    const songs = cardSongIds(card).flat().length;
+    add(toLine, Math.min(...status.missingByLine.map((m) => m.length)));
+    add(toBingo, status.missing.length);
+    add(marked, songs - status.missing.length);
+  }
+  return { toLine, toBingo, marked };
 }

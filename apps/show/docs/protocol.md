@@ -42,7 +42,7 @@ The package `@quina/protocol` (`packages/protocol/`) is the source of truth, and
 | `unlock` | | The show page's first click (browsers need a gesture to start audio) |
 | `next` | | Start the next song's transition. Rejected as `busy` while one is running, so a double press does nothing. In a Hold it releases the Hold first. During a Suspense it releases the Suspense |
 | `back` | | Undo the last landing: the song stops counting and becomes next again, the drum turns back one card, Hold and Hold music start. During a Spin it cancels that Spin instead. Repeatable |
-| `hold` | `on?: boolean` | Enter (`true`), leave (`false`) or toggle the Hold. During a Spin, entering cancels it. Leaving with only Hold music playing moves on to the next song |
+| `hold` | `on?: boolean`, `duck?: boolean` | Enter (`true`), leave (`false`) or toggle the Hold. During a Spin, entering cancels it. Leaving with only Hold music playing moves on to the next song. `duck` (default true) is Parlem: the song ducks and Hold music may take over after `holdMusicAfterSec`. `duck: false` is Aguanta (Stay): the song keeps playing at full volume, nothing lands or advances, no Hold music takes over. Sent while holding, `duck` switches between the two in place (it never releases) |
 | `holdMusic` | | Switch to Hold music now (enters the Hold if needed) |
 | `suspense` | `on?: boolean` | Suspense: start the next song's transition and hold it open (`true`, or no `on` when none is open). The build loops and grows, and the drum crawls. Releasing it (`false`, no `on`, or `next`) lands the song on the next free bar line; after 30 s it releases by itself. `back` or `hold` cancel it like a Spin. It is never started automatically. `false` without an open Suspense is rejected as `noSuspense` |
 | `setPace` | `pace?: number`, `delta?: number`, `locked?: boolean` | Set the Pace in seconds (clamped to `PACE_LIMITS_SEC`, 8–60), nudge it, and/or lock it against Drift catch-up |
@@ -128,7 +128,7 @@ The scene is where the show is in the Game; `status` stays the audio state under
 ```text
 status        'locked' | 'idle' | 'playing' | 'transition' | 'hold'
 pending       'next' while the next song is still decoding
-hold          { sinceMs, reason: 'hold'|'back'|'cancel'|'end'|'music', holdMusic, holdMusicAtMs } | null
+hold          { sinceMs, reason: 'hold'|'back'|'cancel'|'end'|'music', holdMusic, holdMusicAtMs, ducked } | null   ducked PRIVATE: false in Aguanta
 holdMusic     boolean
 current       { songId, title, artist, hookId, posSec, endsAtMs } | null
 next          { songId, title, artist } | null
@@ -140,7 +140,8 @@ phase         'early' | 'mid' | 'late' | 'final'   (the coming transition's)
 heat          0..1 placeholder, or null without cards in play
 cards         { inPlay, inPlayCount, validCount, phaseSource: 'cards'|'placeholder'|'override', climbingTo: 'line'|'bingo' }
 possibleWinners { line: [{ cardId, lines, completedBy }], bingo: [...] }   PRIVATE: tablet only, never the projector
-pace          { sec, locked, nudge, slotSec, spinSec }
+future        { lineAt, bingoAt, toLine: [cards by songs missing], toBingo, markCounts: [cards by songs marked] } | null   PRIVATE: the console's Futur tab
+pace          { sec, defaultSec, locked, nudge, slotSec, spinSec }   defaultSec: the round's starting Pace (PACE_DEFAULT_SEC), which the console recommends; HEAT_BANDS gives each Phase's Heat band
 schedule      { roundEndMs, gameEndMs, roundDriftSec, gameDriftSec }   Drift > 0 = running late
 autoAtMs      when auto-advance will press Next, or null
 transition    { id, recipe, phase, to, landAtMs } | null
@@ -247,7 +248,7 @@ Players' phones get the Game from the cloud, never from the relay. The cloud bui
   - `link` (the laptop's connection: show "Connexió perduda" after `PUBLIC_FEED.offlineNoticeAfterMs` offline).
   - `plan` (`GamePlan`, logos as asset paths).
   - `notice` (Admin's banner) and `soundsDefault`.
-- **Never in it.** The Queue, `next`, `transition.to`/`drum.targetId` before the landing, `possibleWinners`, `phase`, the real `heat`, `schedule.roundEndMs`, a Check's steps before its verdict, claims' `completeSince` and `warnings`, winners' names and notes, the journal.
+- **Never in it.** The Queue, `next`, `transition.to`/`drum.targetId` before the landing, `possibleWinners`, `future`, `hold.ducked`, `phase`, the real `heat`, `schedule.roundEndMs`, a Check's steps before its verdict, claims' `completeSince` and `warnings`, winners' names and notes, the journal.
 
 ## Analysis files
 

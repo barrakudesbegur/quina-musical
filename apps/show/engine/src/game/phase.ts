@@ -35,7 +35,7 @@
 
 import { cardSongIds, completions, queuePositions } from './cards.ts';
 import { seededRandom } from '../rng.ts';
-import type { PhaseName } from '@quina/protocol';
+import { HEAT_BANDS, type PhaseName } from '@quina/protocol';
 import type { Card, WinKind } from './cards.ts';
 
 export type { WinKind } from './cards.ts';
@@ -123,12 +123,8 @@ export const PHASE_MODEL_DEFAULTS: Readonly<PhaseModelConfig> = Object.freeze({
   falseAlarmSongWeights: Object.freeze([0.6, 0.4]),
   falseAlarmGapSongs: 2,
   unclaimedGraceSongs: 1,
-  heatBands: Object.freeze({
-    early: pair(0.05, 0.3),
-    mid: pair(0.3, 0.55),
-    late: pair(0.55, 0.8),
-    final: pair(0.8, 1),
-  }),
+  // Shared with the console (it draws the Phase zones on its Heat bar from them).
+  heatBands: HEAT_BANDS,
   heatChanceWeight: 0.5,
   heatJitter: 0.06,
   heatSmoothing: 0.6,

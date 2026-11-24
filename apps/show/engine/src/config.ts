@@ -2,7 +2,7 @@
 // here instead of keeping their own constants; tests may pass overrides where a function takes `config`.
 // (Recipe-internal shapes, such as riser frequencies, still live next to each recipe in plan/recipes.ts.)
 // The numbers the remotes share (Pace limits and presets, sound names) come from @quina/protocol.
-import { PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
+import { PACE_DEFAULT_SEC, PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
 import type { PhaseName, SoundName, StingerName } from '@quina/protocol';
 
 export type { PhaseName } from '@quina/protocol';
@@ -150,9 +150,10 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
 export const PHASE_PLACEHOLDER = Object.freeze({ midAt: 8, lateAt: 3, finalAt: 1 });
 
 export const PACE = Object.freeze({
-  /** Last year's medians: about 22 s in the first round and about 14 s after (fastest about 11 s). */
-  firstRoundSec: 22,
-  laterRoundsSec: 14,
+  /** Last year's medians: about 22 s in the first round and about 14 s after (fastest about 11 s); shared
+   * with the console, which recommends them. */
+  firstRoundSec: PACE_DEFAULT_SEC.firstRound,
+  laterRoundsSec: PACE_DEFAULT_SEC.laterRounds,
   presets: PACE_PRESETS_SEC,
   limits: PACE_LIMITS_SEC,
   fineStepSec: PACE_FINE_STEP_SEC,
