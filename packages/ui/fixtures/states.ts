@@ -1,8 +1,9 @@
 // Typed sample snapshots for every scene, for demo mode (`?demo=<name>`), design review and tests.
 // The story is "Quina 3": 24 songs in, Boig per tu just landed, card 57 and card 123 are 1 song from a Line.
+// The Desgraciat fixtures play Quina 5, the Quina Desgraciada (see DESGRACIAT_LANDED).
 // Song ids and titles are last year's pool (test material only).
-import { PROTOCOL_VERSION, type IncomingEvent, type LandingInfo, type ShowState } from '@quina/protocol';
-import type { FlowFields, FlowState } from '../flow.ts';
+import { PROTOCOL_VERSION, STANDING_LIST_MAX, type IncomingEvent, type LandingInfo, type ShowState } from '@quina/protocol';
+import type { CheckStep, FlowFields, FlowState } from '../flow.ts';
 
 /** A snapshot with every show-flow field present (what the merged engine will send). */
 export type FullState = ShowState & FlowFields;
@@ -32,6 +33,22 @@ export const FIXTURE_SONGS: Record<number, [string, string]> = {
   69: ['Tots Som Súpers', 'SX3'],
   74: ['Waka Waka', 'Shakira, Freshlyground'],
   75: ['YMCA', 'Village People'],
+  // The Desgraciat fixtures' landings (DESGRACIAT_LANDED).
+  10: ['Boys Will Be Boys', 'Paulina Rubio'],
+  19: ['Devuélveme a mi chica', 'Hombres G'],
+  27: ['Give Me Everything', 'Pitbull, AFROJACK, Ne-Yo, Nayer'],
+  30: ['Hay Quel Venir al Sur', 'Raffaella Carrà'],
+  38: ['Las de la Intuición', 'Shakira'],
+  40: ["L'Empordà", 'Sopa De Cabra'],
+  43: ['Love Story', 'Taylor Swift'],
+  50: ['Ni Una Sola Palabra', 'Paulina Rubio'],
+  52: ['No Rompas Mi Corazón', 'Trip Band'],
+  55: ['Purpurina', 'Alberto Gambino'],
+  56: ['Que la Detengan', 'David Civera'],
+  57: ['Samba de Janeiro', 'Bellini'],
+  59: ['Shin Chan Dance', 'SX3'],
+  65: ["T'Estimo Molt", "Lax'n'Busto"],
+  72: ['Viva La Vida', 'Coldplay'],
 };
 
 const song = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ?? `Cançó ${songId}`, artist: FIXTURE_SONGS[songId]?.[1] ?? '' });
@@ -39,9 +56,9 @@ const song = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ??
 /** The round's landings so far, oldest first (the last is the current song). */
 export const FIXTURE_LANDED = [25, 2, 17, 41, 15, 31, 3, 68, 5, 75, 60, 62, 1, 16, 45, 35, 7];
 
-function landings(now: number): LandingInfo[] {
-  const ids = FIXTURE_LANDED;
-  return ids.slice(-10).map((id, i, arr) => ({ ...song(id), position: ids.length - arr.length + i, atMs: now - (arr.length - 1 - i) * 14000, undone: false }));
+/** The last 10 of `ids` as the state's landings, the newest landed at `lastAtMs`, 14 s apart. */
+function landings(now: number, ids: readonly number[] = FIXTURE_LANDED, lastAtMs = now): LandingInfo[] {
+  return ids.slice(-10).map((id, i, arr) => ({ ...song(id), position: ids.length - arr.length + i, atMs: lastAtMs - (arr.length - 1 - i) * 14000, undone: false }));
 }
 
 /** Rounds 1 to `n` introduced, so their prizes are revealed. */
@@ -115,6 +132,185 @@ export interface DemoScript {
 
 const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s, ...patch });
 
+
+// ---- the Desgraciat round (Quina 5 in SAMPLE_PLAN) ----------------------------------------------------
+// Worked out from apps/cards/dist/cards.json, so every screen agrees: the normal cards 1–210 are the round's valid
+// cards in play (`baseState`'s "1-210, 400-440"), and these landings leave card #57 the last one standing.
+
+/** The Desgraciat round's landings, oldest first: the 22nd leaves only #57 standing. */
+export const DESGRACIAT_LANDED = [59, 10, 30, 11, 45, 56, 41, 19, 52, 55, 72, 68, 17, 35, 40, 57, 50, 65, 38, 27, 43, 1];
+/** Cards standing after each landing of DESGRACIAT_LANDED (index i: after i + 1 landings). */
+export const DESGRACIAT_COUNTS = [176, 143, 122, 98, 76, 62, 49, 44, 37, 30, 26, 23, 22, 21, 16, 15, 14, 11, 9, 8, 5, 1];
+/** The standing cards after 11 landings (26) and after 12 (23: «Titanium» knocked out #90, #194 and #210). */
+export const DESGRACIAT_STANDING_26 = [22, 34, 51, 55, 56, 57, 66, 67, 68, 72, 81, 86, 87, 90, 99, 105, 106, 119, 140, 151, 173, 184, 185, 191, 194, 210];
+export const DESGRACIAT_STANDING_23 = DESGRACIAT_STANDING_26.filter((id) => ![90, 194, 210].includes(id));
+/** #57, the last card standing: its 12 songs in card order (none of them lands in the round). */
+export const DESGRACIAT_LAST_CARD = { cardId: 57, songs: [5, 14, 64, 75, 15, 18, 60, 69, 2, 62, 16, 20] };
+/** #23, claimed after 12 landings: its songs in card order up to «Limbo» (row 2, 3rd song), which has landed. */
+export const DESGRACIAT_FALLEN_CARD = { cardId: 23, songs: [27, 47, 73, 75, 7, 17, 41], sankBy: 41 };
+
+/** The engine's standing Check timing (engine config FLOW.check): lead, a ✓ knock, a landed snippet, gap, tail. */
+const STANDING_CHECK = { leadMs: 1500, stillMs: 550, snippetMs: 2500, gapMs: 350, tailMs: 400 };
+
+/** A standing Check's steps from `startAtMs`: a knock per song that hasn't landed, the snippet for the one that has. */
+function standingSteps(songs: readonly number[], landed: ReadonlySet<number>, startAtMs: number): { steps: CheckStep[]; endAtMs: number } {
+  let at = startAtMs + STANDING_CHECK.leadMs;
+  const steps = songs.map((songId) => {
+    const durationMs = landed.has(songId) ? STANDING_CHECK.snippetMs : STANDING_CHECK.stillMs;
+    const step = { songId, landed: landed.has(songId), atMs: at, durationMs };
+    at += durationMs + STANDING_CHECK.gapMs;
+    return step;
+  });
+  return { steps, endAtMs: at - STANDING_CHECK.gapMs + STANDING_CHECK.tailMs };
+}
+
+/** A Check's whole length for these songs (from its start to its result). */
+const standingCheckMs = (songs: readonly number[], landed: ReadonlySet<number>): number => standingSteps(songs, landed, 0).endAtMs;
+
+/**
+ * Quina 5, the Desgraciat round, after `landed` songs of DESGRACIAT_LANDED (the newest at `lastAtMs`): the private
+ * `standing` (its card list only from 60 down) and the Futur's `lastStandingAt` and `standingCurve`.
+ */
+export function desgraciatState(now: number, landed: number, lastAtMs = now): FullState {
+  const s = baseState(now);
+  const ids = DESGRACIAT_LANDED.slice(0, landed);
+  const count = DESGRACIAT_COUNTS[landed - 1] ?? 210;
+  const cardIds = count === 26 ? DESGRACIAT_STANDING_26 : count === 23 ? DESGRACIAT_STANDING_23 : count === 1 ? [DESGRACIAT_LAST_CARD.cardId] : null;
+  const last = ids[ids.length - 1];
+  const lastStandingAt = DESGRACIAT_LANDED.length - 1;
+  return withFlow(s, {
+    current: last ? { ...song(last), hookId: 'h1', posSec: Math.max(0, (now - lastAtMs) / 1000), endsAtMs: lastAtMs + 60000 } : null,
+    next: count > 1 ? song(DESGRACIAT_LANDED[landed] ?? 74) : song(74),
+    queue: { position: landed - 1, length: 77 },
+    round: { number: 5, kind: 'desgraciat', cardType: 'normal', startedAtMs: now - landed * 14000 - 30000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
+    phase: count > 100 ? 'early' : count > 30 ? 'mid' : count > 5 ? 'late' : 'final',
+    heat: count > 100 ? 0.3 : count > 30 ? 0.52 : count > 5 ? 0.74 : 0.92,
+    cards: { ...s.cards, climbingTo: 'standing' },
+    possibleWinners: { line: [], bingo: [] },
+    future: {
+      lineAt: null,
+      bingoAt: null,
+      toLine: [],
+      toBingo: [],
+      markCounts: [],
+      lastStandingAt: count > 1 ? lastStandingAt : null,
+      standingCurve: count > 1 ? DESGRACIAT_COUNTS.slice(landed) : [],
+    },
+    standing: { count, cardIds: count <= STANDING_LIST_MAX ? cardIds : null },
+    // Auto-advance never takes out the last card.
+    autoAtMs: count > 1 ? now + 9000 : null,
+    landings: landings(now, ids, lastAtMs),
+    prizes: revealedUpTo(5),
+    winners: [
+      ...s.winners,
+      { round: 3, kind: 'line', cardId: 123, claimId: 'cl-7', winningSongId: 69, position: 16, atMs: now - 40 * 60000, name: null, notes: null },
+      { round: 3, kind: 'bingo', cardId: 57, claimId: 'cl-9', winningSongId: 7, position: 44, atMs: now - 30 * 60000, name: 'Pere', notes: null },
+      { round: 4, kind: 'line', cardId: 31, claimId: 'cl-10', winningSongId: 60, position: 15, atMs: now - 20 * 60000, name: null, notes: null },
+      { round: 4, kind: 'bingo', cardId: 204, claimId: 'cl-11', winningSongId: 2, position: 47, atMs: now - 10 * 60000, name: null, notes: null },
+    ],
+  });
+}
+
+/** A standing Check's state: claimed in the Desgraciat round after `landed` songs, started at `startAtMs`. */
+function standingCheckState(now: number, landed: number, claim: { claimId: string; cardId: number; songs: readonly number[] }, startAtMs: number): FullState {
+  const s = desgraciatState(now, landed, now - 30000);
+  const landedSet = new Set(DESGRACIAT_LANDED.slice(0, landed));
+  const { steps, endAtMs } = standingSteps(claim.songs, landedSet, startAtMs);
+  const outcome = steps.some((st) => st.landed) ? 'fallen' : 'complete';
+  const over = now >= endAtMs;
+  return withFlow(s, {
+    scene: 'check',
+    status: 'hold',
+    autoAtMs: null,
+    hold: { sinceMs: startAtMs - 3000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
+    claims: [
+      {
+        claimId: claim.claimId,
+        round: 5,
+        cardId: claim.cardId,
+        kind: 'standing',
+        atMs: startAtMs - 3000,
+        position: s.queue.position,
+        status: over ? 'checked' : 'checking',
+        outcome,
+        completeSince: outcome === 'complete' ? s.queue.position : null,
+        warnings: [],
+      },
+    ],
+    check: { claimId: claim.claimId, cardId: claim.cardId, kind: 'standing', outcome, row: null, otherRows: [], cardType: 'normal', steps, startAtMs, endAtMs },
+  });
+}
+
+const FALLEN_CLAIM = { claimId: 'cl-12', ...DESGRACIAT_FALLEN_CARD };
+const LAST_CLAIM = { claimId: 'cl-13', ...DESGRACIAT_LAST_CARD };
+
+/** The Desgraciat round's demos (`?demo=<name>`). */
+const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
+  /** The intro of Quina 5, the Quina Desgraciada: its name, its one prize, and the hands-up nino. */
+  desgraciatIntro: (now) => {
+    const s = baseState(now);
+    return {
+      state: withFlow(s, {
+        scene: 'roundStart',
+        status: 'idle',
+        current: null,
+        next: null,
+        queue: { position: -1, length: 77 },
+        landings: [],
+        autoAtMs: null,
+        round: { ...s.round, number: 5, kind: 'desgraciat' },
+        cards: { ...s.cards, climbingTo: 'standing' },
+        intro: { round: 5, kind: 'desgraciat', cardType: 'normal', sinceMs: now - 20000 },
+        prizes: revealedUpTo(5),
+      }),
+    };
+  },
+  /** In play, 2 songs in: 143 cards standing (the count only, above 60). */
+  desgraciat: (now) => ({ state: desgraciatState(now, 2) }),
+  /** 26 standing; 1.5 s in, «Titanium» lands and knocks out #90, #194 and #210, leaving 23. */
+  desgraciatFew: (now) => {
+    const landsAt = now + 1500;
+    return { state: desgraciatState(now, 11, now - 12500), events: [{ afterMs: 1500, event: { ...desgraciatState(now, 12, landsAt), seq: 2, atMs: landsAt } }] };
+  },
+  /** One card standing: #57. Auto-advance has stopped; checking #57 is the default action. */
+  desgraciatLast: (now) => ({ state: desgraciatState(now, 22) }),
+  /** #23 claims to be standing after 12 songs; the Check runs live and stops on «Limbo», which has landed. */
+  checkStanding: (now) => ({ state: standingCheckState(now, 12, FALLEN_CLAIM, now + 600) }),
+  /** The same Check, over: #23 fell with «Limbo». */
+  checkFallen: (now) => ({ state: standingCheckState(now, 12, FALLEN_CLAIM, now - 600 - standingCheckMs(FALLEN_CLAIM.songs, new Set(DESGRACIAT_LANDED.slice(0, 12)))) }),
+  /** #57, the last one standing: all 12 songs checked, none landed. */
+  checkStandingValid: (now) => ({ state: standingCheckState(now, 22, LAST_CLAIM, now - 600 - standingCheckMs(LAST_CLAIM.songs, new Set())) }),
+  /** DEMPEUS! #57 wins Quina 5. */
+  celebrationStanding: (now) => {
+    const s = desgraciatState(now, 22, now - 60000);
+    return {
+      state: withFlow(s, {
+        scene: 'celebration',
+        status: 'playing',
+        autoAtMs: null,
+        celebration: { kind: 'standing', round: 5, cardIds: [57], winningSongId: 1, sinceMs: now - 1500, music: 'victory' },
+        winners: [...s.winners, { round: 5, kind: 'standing', cardId: 57, claimId: LAST_CLAIM.claimId, winningSongId: 1, position: s.queue.position, atMs: now - 1500, name: null, notes: null }],
+      }),
+    };
+  },
+  /** The Interval before Quina 5: the next round is the Quina Desgraciada. */
+  intervalDesgraciat: (now) => {
+    const s = baseState(now);
+    return {
+      state: withFlow(s, {
+        scene: 'interval',
+        status: 'playing',
+        autoAtMs: null,
+        current: null,
+        next: null,
+        round: { ...s.round, number: 4 },
+        interval: { sinceMs: now - 40000, nextRound: 5, guideEndMs: now + 140000 },
+        intervalMusic: { track: { title: 'Last Christmas', artist: 'Wham!', index: 5, count: 24, sinceMs: now - 25000 } },
+        prizes: revealedUpTo(4),
+      }),
+    };
+  },
+};
 
 /** Every demo fixture by name. */
 export const FIXTURES: Record<string, (now: number) => DemoScript> = {
@@ -300,6 +496,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const s = baseState(now);
     return { state: withFlow(s, { status: 'transition', autoAtMs: null, suspense: { id: 'tr-25', sinceMs: now - 8000, autoReleaseAtMs: now + 22000 } }) };
   },
+  ...DESGRACIAT_FIXTURES,
 };
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES);

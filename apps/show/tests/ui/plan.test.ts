@@ -35,7 +35,17 @@ test('the sample plan is a valid version 3 plan with bundles', () => {
   const r = checkGamePlan(SAMPLE_PLAN);
   assert.equal(r.ok, true, r.ok ? '' : r.errors.join('\n'));
   assert.equal(SAMPLE_PLAN.v, 3);
-  assert.ok(SAMPLE_PLAN.rounds.every((round) => round.line.length >= 3 && round.bingo.length >= 4), 'a headline prize and a few smaller ones');
+  const regular = SAMPLE_PLAN.rounds.filter((round) => round.kind !== 'desgraciat');
+  assert.ok(regular.every((round) => round.line.length >= 3 && round.bingo.length >= 4), 'a headline prize and a few smaller ones');
+  assert.deepEqual(
+    SAMPLE_PLAN.rounds.filter((round) => round.kind !== 'normal').map((round) => [round.number, round.kind]),
+    [
+      [5, 'desgraciat'],
+      [7, 'special'],
+    ],
+  );
+  const desgraciat = SAMPLE_PLAN.rounds[4];
+  assert.ok(desgraciat.line.length === 0 && desgraciat.bingo.length >= 4, "the Desgraciat round: no Line, the last card standing's bundle");
   assert.equal(SAMPLE_PLAN.rounds[7].bingo.filter((p) => p.headline).length, 2, 'the last Quina has two headline prizes');
 });
 
