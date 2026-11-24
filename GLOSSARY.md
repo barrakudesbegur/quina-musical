@@ -148,6 +148,10 @@ _Avoid_: Timetable, plan
 How far ahead of or behind the schedule the game is running.
 _Avoid_: Delay, lag
 
+**Resume code**:
+A short private code for a round's shuffle, noted by the organizers at each Shuffle, that lets a restarted laptop rebuild that round's queue exactly. Labelled "codi de recuperació" on screen.
+_Avoid_: Seed, recovery key
+
 **Back**:
 Undoing the last landing: that song stops counting and becomes the next song again, as if it had never played. The queue's order is untouched.
 _Avoid_: Previous, undo, replay, anterior (outside the UI)
