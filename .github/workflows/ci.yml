@@ -1,0 +1,99 @@
+# Every test suite on each push to main and each pull request. No deploy, no secrets.
+# The generated data (data/out, data/cache) and the songs are not in the repo: the suites that need them skip
+# themselves; the rest runs on what is committed (the pool manifests, the cards, synthetic songs in pytest).
+# Last year's site has its own workflow (deploy.yml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apps:
+    name: Show, screens and cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install (npm workspaces)
+        run: npm ci
+
+      - name: "Show: typecheck and svelte-check"
+        working-directory: apps/show
+        run: npm run typecheck
+
+      - name: "Show: engine tests"
+        working-directory: apps/show
+        run: node --test "tests/*.test.ts"
+
+      - name: "Screens: typecheck, svelte-check and UI tests"
+        working-directory: apps/show
+        run: npm run test:ui
+
+      - name: "Build every page (Vite)"
+        working-directory: apps/show
+        run: npm run build
+
+      - name: "Cloud: typecheck, node tests and the Worker in workerd"
+        working-directory: apps/cloud
+        run: |
+          cp .dev.vars.example .dev.vars
+          npm test
+
+      - name: "Relay lockdown audit (on the build)"
+        working-directory: apps/cloud
+        run: npm run relay-audit
+
+  pipeline:
+    name: Prep pipeline (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # The pipeline tests start the relay too.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install (npm workspaces)
+        run: npm ci
+
+      - name: ffmpeg (the synthetic songs)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: tools/prep/requirements*.txt
+
+      - name: Python venv (CPU-only torch)
+        run: |
+          uv venv --python 3.13 tools/prep/.venv
+          uv pip install --python tools/prep/.venv/bin/python --torch-backend cpu -r tools/prep/requirements-test.txt
+
+      # Beat This!'s checkpoint, downloaded on first use.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/torch/hub/checkpoints
+          key: beat-this-final0-v1
+
+      - name: "Pipeline tests"
+        run: npm run test:pipeline -w @quina/show
