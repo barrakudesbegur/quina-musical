@@ -10,6 +10,7 @@ import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
 import { CloudPlanStore, uploadMedia, type FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
 import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
+import { relayTokenForPage } from '../../../packages/ui/client/pairing.ts';
 import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
 import { MANAGE_CONFIG } from '../config.ts';
 
@@ -105,17 +106,21 @@ export class MemoryLogoStore implements LogoStore {
 /**
  * Where saves end up:
  * - `cloud`: the cloud's /api/plan, when Admin is served from the cloud hostname;
- * - `local`: this browser's storage;
+ * - `relay`: the show laptop's relay (/api/plan, plan B with or without the cloud), when Admin is served by
+ *   the laptop or a device paired with it. The relay pushes every save to every screen at once and, when the
+ *   cloud is back, the newest save wins there. Logos not uploaded yet stay in this browser until the cloud
+ *   takes them (the relay has no media upload);
+ * - `local`: this browser's storage (a laptop page whose relay is too old for /api/plan);
  * - `demo`: nowhere beyond the page;
  * - `unavailable`: nowhere, because the browser refuses storage, and the page must say so.
  */
-export type StoreKind = 'cloud' | 'local' | 'demo' | 'unavailable';
+export type StoreKind = 'cloud' | 'relay' | 'local' | 'demo' | 'unavailable';
 
 export class AdminPlanStore {
   readonly plans: PlanStore;
   readonly logos: LogoStore;
   readonly kind: StoreKind;
-  /** Set for `cloud`: saves go through it, and logos are uploaded as media first. */
+  /** Set for `cloud` and `relay`: saves go through it. Cloud: logos are uploaded as media first. */
   readonly cloud: CloudPlanStore | null;
   private readonly fetchImpl: FetchLike | null;
 
@@ -128,8 +133,8 @@ export class AdminPlanStore {
   }
 
   /**
-   * Served from the cloud: the cloud's plan. Served by the show laptop (or localhost): this browser's
-   * stored plan. In demo mode: an in-memory copy.
+   * Served from the cloud: the cloud's plan. Served by the show laptop or a device paired with it: the relay's
+   * plan (plan B), with this browser's storage only for logos not uploaded yet. In demo mode: an in-memory copy.
    */
   static forPage(demo: boolean): AdminPlanStore {
     if (!demo && typeof location !== 'undefined' && !isLocalHost(location.hostname)) {
@@ -137,6 +142,15 @@ export class AdminPlanStore {
       const store = new CloudPlanStore(fetchImpl);
       void store.refresh();
       return new AdminPlanStore(store, new MemoryLogoStore(), 'cloud', { store, fetchImpl });
+    }
+    if (!demo && typeof location !== 'undefined' && typeof fetch !== 'undefined') {
+      // A paired device proves it with the relay token; the laptop itself needs none.
+      const token = relayTokenForPage();
+      const fetchImpl: FetchLike = (input, init) =>
+        fetch(input, { ...init, cache: 'no-store', credentials: 'same-origin', headers: { ...init?.headers, ...(token ? { authorization: `Bearer ${token}` } : {}) } });
+      const store = new CloudPlanStore(fetchImpl);
+      void store.refresh();
+      return new AdminPlanStore(store, storageWritable() ? new LocalLogoStore() : new MemoryLogoStore(), 'relay', { store, fetchImpl });
     }
     const local = new AdminPlanStore(new LocalPlanStore(), new LocalLogoStore(), storageWritable() ? 'local' : 'unavailable');
     if (!demo && local.kind === 'local') return local;
@@ -175,9 +189,26 @@ export class AdminPlanStore {
     }
   }
 
-  /** Store a valid plan. Local: logos go first (they are the big part, so a full storage shows up there). Cloud: asynchronous. */
+  /** Relay: logos not uploaded yet stay in this browser; the rest of the plan goes to the relay. Never throws. */
+  private async saveToRelay(plan: GamePlan): Promise<SaveResult> {
+    const relay = this.cloud;
+    if (!relay) return { ok: false, reason: 'error', detail: 'no relay' };
+    const { plan: stored, logos } = planForStorage(plan);
+    try {
+      this.logos.save(logos);
+    } catch (e) {
+      return failure(e);
+    }
+    const put = await relay.put(stored);
+    if (!put.ok) return { ok: false, reason: 'error', detail: put.errors.slice(0, 3).join(' · ') };
+    return { ok: true };
+  }
+
+  /** Store a valid plan. Local: logos go first (they are the big part, so a full storage shows up there).
+   * Cloud and relay: asynchronous. */
   save(plan: GamePlan): SaveResult | Promise<SaveResult> {
     if (this.kind === 'cloud') return this.saveToCloud(plan);
+    if (this.kind === 'relay') return this.saveToRelay(plan);
     const { plan: stored, logos } = planForStorage(plan);
     let logoFailure: SaveResult | null = null;
     try {

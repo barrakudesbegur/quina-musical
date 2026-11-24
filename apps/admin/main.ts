@@ -7,6 +7,7 @@ import './manage.css';
 import './print.css';
 import { mount } from 'svelte';
 import { createShow } from '../../packages/ui/client/show.svelte.ts';
+import { followPlanPushes } from '../../packages/ui/data/plan-store.ts';
 import { SAMPLE_PLAN } from '../../packages/ui/fixtures/plan.ts';
 import { AdminPlanStore } from './data/admin-plan-store.ts';
 import { PlanSession } from './state/plan-session.svelte.ts';
@@ -15,6 +16,9 @@ import App from './App.svelte';
 
 const show = createShow('admin');
 const store = AdminPlanStore.forPage(show.demo !== null);
+// Another Admin's save (another device, the cloud) arrives as the relay's plan push; the session sees it as a
+// change from elsewhere, like another tab's.
+if (store.cloud) followPlanPushes(show.client, store.cloud);
 // Demo pages fall back to the sample plan; a real page with nothing stored starts from a blank plan.
 const session = new PlanSession(store, show.demo !== null ? SAMPLE_PLAN : null);
 session.start();

@@ -24,7 +24,7 @@
     const s = session.status;
     switch (s.kind) {
       case 'saved':
-        return { text: s.atMs ? S.save.saved(formatClock(s.atMs)) : S.save.loaded, status: 'ok' };
+        return { text: s.atMs ? S.save.saved(formatClock(s.atMs)) : S.save.loaded(session.store.kind), status: 'ok' };
       case 'pending':
         return { text: S.save.pending, status: 'calm' };
       case 'invalid':

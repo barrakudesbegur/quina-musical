@@ -30,8 +30,9 @@ export const S = {
 
   save: {
     saved: (time: string) => `Desat a les ${time}`,
-    /** A plan loaded from storage, not changed since. */
-    loaded: 'Desat en aquest navegador',
+    /** A plan loaded from where it's kept, not changed since. */
+    loaded: (where: 'cloud' | 'relay' | 'local' | 'demo' | 'unavailable') =>
+      where === 'cloud' ? 'Desat al núvol' : where === 'relay' ? 'Desat al portàtil del show' : 'Desat en aquest navegador',
     pending: 'Canvis per desar…',
     invalid: (n: number) => `${plural(n, 'error', 'errors')}: no es desa fins que es corregeixin`,
     quota: "No s'ha pogut desar: l'emmagatzematge del navegador és ple (segurament pels logos). Treu o redueix algun logo, i exporta el JSON com a còpia.",
