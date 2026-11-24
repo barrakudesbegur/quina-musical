@@ -49,7 +49,7 @@ _Avoid_: Full house, full card, quina (outside the UI)
 Two or more cards completing the same Line or Bingo on the same landing. The shuffle avoids ties among the cards in play.
 
 **Interval**:
-The time between two rounds, with music playing and the next round's prizes on screen.
+The time between two rounds, with music playing. The next round's prizes stay hidden until its intro.
 _Avoid_: Break, descans, pause
 
 **Claim**:
