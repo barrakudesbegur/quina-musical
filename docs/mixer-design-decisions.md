@@ -2,6 +2,8 @@
 
 These were agreed with the user in a design interview. They override the build brief in `experiments/mixer-poc/reports/Bingo DJ mixer research.md` wherever the two conflict. The terms follow [GLOSSARY.md](../GLOSSARY.md), and the lasting decisions are in [docs/adr](./adr).
 
+> **Updated 2026-11-24.** [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) covers the screens, the player app and hosting, and overrides this document where they differ. In particular: there is one shared tablet, no router at the venue, hosting follows ADR 0003, and the "later" items below are now in the UI/UX session's scope.
+
 ## The goal is a great night, not only great mixing
 
 - The music must serve the two presenters, who have different styles, improvise and interact with the crowd.
@@ -94,12 +96,13 @@ The engine must support these now; the full flow is built later.
 
 ## Devices (ADR 0002)
 
-- **Default:** the projector laptop plays both the audio and the drum, sharing one clock. A long cable runs through a USB audio interface or DI box to the mixer on stage. Bring your own Wi-Fi router.
+- **Default:** the projector laptop plays both the audio and the drum, sharing one clock. A long cable runs through a USB audio interface or DI box to the mixer on stage. The laptop sits in the first row or at the side of the stage.
 - **Split mode:** the system must also support the audio playing on a separate device near the mixer, with the drum kept in sync through landing times announced in advance.
+- **Network and hosting:** no router (the venue has none). See ADR 0003 and show-ui-and-platform-decisions.md.
 - **Controls:**
-  - Tablets (model still to be decided) and the admin phone control everything over Wi-Fi.
-  - The tablet can do everything the Wii remote can.
-  - The Wii remote is optional. It connects through WebHID, which needs desktop Chrome. A laptop by the stage can bridge it if the range is short.
+  - One shared tablet (model still to be decided) and the admin phone run the console.
+  - The console can do everything the Wii remote can.
+  - The Wii remote is optional and pairs to the laptop through WebHID, which needs desktop Chrome.
 
 ## Interval
 
