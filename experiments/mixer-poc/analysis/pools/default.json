@@ -1,0 +1,12 @@
+{
+  "name": "default",
+  "description": "Last year's 77 songs (the old player's songs.json). Test material; its outputs stay where they always were.",
+  "songsJson": "../../server/db/default/songs.json",
+  "audioDir": "../../client/public/audios/song",
+  "coversDir": "../../client/public/images/covers",
+  "cardsJson": "../../card-generator/dist/cards.json",
+  "spotifyFeatures": "data/spotify_features.json",
+  "dataDir": "data",
+  "cacheDir": "cache",
+  "overridesDir": "analysis/overrides"
+}

@@ -1,0 +1,13 @@
+reference/
+cache/
+node_modules/
+analysis/.venv/
+__pycache__/
+.DS_Store
+
+# Not ours to publish (the repo is public); cache/ already covers every pool's cache/pools/<name>/ (audio, covers)
+data/spotify_features.json
+data/pools/*/spotify_features.json
+analysis/.venv-stems/
+analysis/.venv-stretch/
+dist/

@@ -1,0 +1,12 @@
+# Layering prep (analysis/stretch.py, analysis/keys.py, analysis/steps/stretch_bench.py).
+# Installs into the same venv as requirements.txt: none of these move its pins.
+#   uv pip install --python analysis/.venv/bin/python -r analysis/requirements-layering.txt
+# System library (not pip): Homebrew rubberband 4.0.0, loaded through ctypes from
+#   /opt/homebrew/opt/rubberband/lib/librubberband.dylib (override with RUBBERBAND_LIB)
+#   brew install rubberband    # GPL-2.0-or-later; offline preparation only
+-r requirements.txt
+essentia==2.1b6.dev1389   # KeyExtractor (AGPL-3.0); cp313 macOS arm64 wheel works with numpy 2.5.5
+pyyaml==6.0.4             # essentia dependency
+six==1.17.0               # essentia dependency
+pylibrb==0.1.2            # bundled Rubber Band (GPL-2.0); constant-ratio fallback only: its key-frame binding is broken
+audiotsm==0.1.2           # WSOLA, only for the engine benchmark

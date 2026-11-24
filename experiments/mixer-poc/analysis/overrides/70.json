@@ -1,0 +1,6 @@
+{
+  "note": "The MP3 (187 s) is the right recording (Spotify's track is 188 s); songs.json's 281 s duration and its 204 s best tag came from last year's longer recording. PROPOSED hook, audition by ear: the first chorus at bar 12 (24.9 s), where the bar energy steps up from -21 to -17 dB after a one-bar dip.",
+  "hookTimes": { "70-best-0": 24.88 },
+  "hookDownbeats": { "70-best-0": 24.88 },
+  "auditionPending": true
+}

@@ -1,0 +1,40 @@
+# Stem separation venv (analysis/stems.py), separate from analysis/.venv:
+#   uv venv --python /opt/homebrew/bin/python3.13 analysis/.venv-stems
+#   uv pip install --python analysis/.venv-stems/bin/python -r analysis/requirements-stems.txt
+# torch / torchaudio / numpy / soundfile / soxr match analysis/requirements.txt.
+# Weights (htdemucs, ~80 MB) download on first run to ~/.cache/huggingface.
+demucs==4.1.0
+torch==2.15.0
+torchaudio==2.11.1
+numpy==2.5.5
+soundfile==0.14.0
+soxr==1.1.0
+# resolved dependencies
+anyio==4.16.0
+cffi==2.1.1
+click==8.5.1
+einops==0.8.2
+filelock==4.3.1
+fsspec==2026.9.0
+h11==0.16.0
+hf-xet==1.8.0
+httpcore2==2.16.2
+httpx2==2.16.2
+huggingface-hub==2.4.0
+idna==3.20
+jinja2==3.1.6
+julius==0.2.8
+lameenc==1.9.0
+markupsafe==3.0.4
+mpmath==1.3.0
+networkx==3.7
+packaging==26.4
+pycparser==3.12
+pyyaml==6.0.4
+safetensors==0.8.0
+setuptools==84.2.1
+sphn==0.2.1
+sympy==1.14.0
+tqdm==4.70.1
+truststore==0.10.5
+typing-extensions==4.16.0

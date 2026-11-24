@@ -1,0 +1,8 @@
+# Pipeline tests (npm run test:pipeline). Installs into the same venv as requirements.txt:
+#   uv pip install --python analysis/.venv/bin/python -r analysis/requirements-test.txt
+-r requirements.txt
+pytest==9.2.0
+# resolved dependencies
+iniconfig==2.3.1
+pluggy==1.7.0
+pygments==2.21.0
