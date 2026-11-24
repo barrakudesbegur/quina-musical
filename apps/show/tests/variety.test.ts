@@ -54,17 +54,17 @@ test('whole nights: the sameness table stays under its thresholds', () => {
   under(final.topRecipe.share, 0.29, 'top recipe in final'); // 29% → 26%
   // Early is narrower since the user's first listen: the light, clean moves (a cut, a short echo, a filter, drum or
   // stem swap), the builds and theatrical moves rare until mid.
-  over(early.effectiveRecipes, 7.5, 'effective recipes early'); // 9.9 → 11.2, light early 8.6
+  over(early.effectiveRecipes, 9, 'effective recipes early'); // 9.9 → 11.2, light early 8.9, with D20 9.8
   // Families: never three running, rarely back within three.
   under(all.maxFamilyRun, 2, 'longest run of one family'); // 3 → 2
   // Early's palette is narrower since the user's first listen (light, clean moves), and a sudden vocal entry favours
   // a cut on the one: families come back a little sooner there (early 24%).
-  under(all.familyWithin3, 0.21, 'family again within 3'); // 24% → 14%, light early and vocals 20%
+  under(all.familyWithin3, 0.19, 'family again within 3'); // 24% → 14%, light early and vocals 20%, with D20 17%
   // How A leaves, the landing, its impact and the riser rarely repeat the previous transition (an impact without
   // samples, or no riser, never counts as a repeat).
   under(all.exitRepeat, 0.045, 'exit = previous'); // 6% → 3%
   under(all.exitWithin3, 0.19, 'exit within 3'); // 21% → 15%
-  under(all.landingRepeat, 0.23, 'landing = previous'); // 32% → 17%
+  under(all.landingRepeat, 0.16, 'landing = previous'); // 32% → 17%, light early (dry) 20%, with the open landing 12%
   under(all.impactRepeat, 0.17, 'impact = previous'); // 26% → 10%
   under(all.riserRepeat, 0.32, 'riser = previous'); // 37% → 26%
   // R7's bridge pattern, and builds from silence (no longer always R7).
@@ -72,11 +72,11 @@ test('whole nights: the sameness table stays under its thresholds', () => {
   under(all.topOpener.share, 0.85, 'builds from silence: top recipe'); // 99% → 64%
   // Lengths: the build or A's move, the bridge, the gap.
   // Early moves are quick since the user's first listen (most last A's last bar), so lengths repeat more there.
-  under(all.buildRepeat, 0.47, 'build length = previous'); // 48% → 38%, light early 45%
-  under(early.buildRepeat, 0.6, 'build length = previous, early'); // 61% → 44%, light early 56%
+  under(all.buildRepeat, 0.41, 'build length = previous'); // 48% → 38%, light early 46%, R1's lengths 36%
+  under(early.buildRepeat, 0.48, 'build length = previous, early'); // 61% → 44%, light early 57%, R1's lengths 42%
   under(mid.topBridgeLength.share, 0.71, 'one bridge length in mid'); // 77% → 64%
   under(late.topBridgeLength.share, 0.63, 'one bridge length in late'); // 73% → 52%
-  under(all.gapRepeat, 0.36, 'gap = previous'); // 52% → 25%
+  under(all.gapRepeat, 0.25, 'gap = previous'); // 52% → 25%, light early 27%, a quarter-beat breath 20%
   for (const [name, s] of [['mid', mid], ['late', late], ['final', final]] as const) {
     under(s.gapRepeat, 0.4, `gap = previous in ${name}`); // 64% / 60% / 45% → 23% / 19% / 27%
     over(s.gaps, 3, `distinct gaps in ${name}`); // 3 / 2 / 2 → 3 / 4 / 3

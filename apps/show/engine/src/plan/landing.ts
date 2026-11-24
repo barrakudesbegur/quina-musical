@@ -5,7 +5,9 @@
 //  - dry: no swell, a smaller impact and no samples (the "alien swell" release, cleanest in early Phases);
 //  - preverb (D12, P3): B's own first beat (its chord, or its first word) reversed through a reverb, inhaled
 //    into the pickup;
-//  - tape (D14, P5): B powers up in the gap, from a growl to full speed exactly at its pickup.
+//  - tape (D14, P5): B powers up in the gap, from a growl to full speed exactly at its pickup;
+//  - open: B comes in through a closed low-pass that opens onto its downbeat (the DJ's filter opening into the
+//    drop), light and clean, never after a low-passed Tease.
 // The impact is drawn apart from the style: none (many landings, most of them early), the sub drop alone, or
 // the sub with the Phase's samples. The orchestra hit only comes late, never within its cooldown. The samples
 // and their timing vary too. The style and the samples both remember the last landings (plan/variety.ts), so
@@ -19,7 +21,7 @@ import type { HookGrid } from './timeline.ts';
 import { freshWeights, recency } from './variety.ts';
 import type { Recent } from './variety.ts';
 
-export const LANDING_STYLES = ['cymbal', 'dry', 'preverb', 'tape'] as const;
+export const LANDING_STYLES = ['cymbal', 'dry', 'preverb', 'tape', 'open'] as const;
 export type LandingStyle = (typeof LANDING_STYLES)[number];
 /** What hits on the landing: nothing, the sub drop alone, or the sub drop with samples. */
 export const IMPACT_KINDS = ['none', 'sub', 'samples'] as const;
@@ -53,15 +55,16 @@ const ORCHESTRA = 'orchestra-hit';
  * wins when it is possible. `recent` is what the last landings were (their styles and impacts): those are
  * turned down. `sinceOrchestra`: transitions since the last orchestra hit this round (Infinity for none).
  */
-export function chooseLanding({ phase, rng, preverb, tape = false, tapeBoost = 1, force = null, forceImpact = null, recent = null, sinceOrchestra = Infinity }: {
-  phase: PhaseEffects; rng: () => number; preverb: boolean; tape?: boolean; tapeBoost?: number; force?: LandingStyle | null;
+export function chooseLanding({ phase, rng, preverb, tape = false, tapeBoost = 1, open = true, force = null, forceImpact = null, recent = null, sinceOrchestra = Infinity }: {
+  phase: PhaseEffects; rng: () => number; preverb: boolean; tape?: boolean; tapeBoost?: number; open?: boolean; force?: LandingStyle | null;
   forceImpact?: ImpactKind | null; recent?: { styles: Recent<string>; impacts: Recent<string> } | null; sinceOrchestra?: number;
 }): Landing {
   const weights = { ...MOVES.landing.weights[phase.name] };
   if (!preverb) weights.preverb = 0;
   weights.tape = tape ? weights.tape * tapeBoost : 0;
+  if (!open) weights.open = 0;
   const drawn = weightedPick(freshWeights<LandingStyle>(weights, recent?.styles ?? [], VARIETY.landing), rng) ?? 'cymbal';
-  const possible = (style: LandingStyle) => (style === 'preverb' ? preverb : style === 'tape' ? tape : true);
+  const possible = (style: LandingStyle) => (style === 'preverb' ? preverb : style === 'tape' ? tape : style === 'open' ? open : true);
   const style = force && possible(force) ? force : drawn;
   // The hit: often none (early most of all). A dry landing never carries samples.
   let impact: ImpactKind = forceImpact ?? weightedPick(MOVES.landing.impactKinds[phase.name], rng) ?? 'sub';

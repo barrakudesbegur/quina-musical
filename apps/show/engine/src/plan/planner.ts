@@ -647,6 +647,8 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   const lastOrchestra = history.findLastIndex((h) => h.impact?.includes('orchestra-hit'));
   const landing = chooseLanding({
     phase, rng, preverb: preverbFits, tape: tapeRoom >= MOVES.tape.minSec, tapeBoost, force: force?.landing ?? null,
+    // The open landing filters B itself: never under a Blend (B's stretched layer is already in).
+    open: recipe.shape !== 'S3',
     forceImpact: force?.impact ?? null, recent: { styles: memory.landings, impacts: memory.impacts },
     sinceOrchestra: lastOrchestra < 0 ? Infinity : history.length - lastOrchestra,
   });

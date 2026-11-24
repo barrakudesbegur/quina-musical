@@ -252,7 +252,8 @@ export function landB({ T, pickupAt, gapStart, bStart, teaseFrom, tease, teaseSt
     events.push(ramp('B.gain', bStart, bStart + gB.bar / 2, SILENT, 0.3, 'lin'));
     events.push(ramp('B.lpf', bStart + gB.bar / 2, gapStart, 380, 1400, 'exp'));
     events.push(ramp('B.gain', gapStart - 0.01, gapStart, 0.3, SILENT, 'lin'));
-    events.push(set('B.lpf', pickupAt - 0.002, OPEN_LPF));
+    // With the open landing the Tease's filter doesn't snap open: it opens onto the downbeat (below).
+    events.push(set('B.lpf', pickupAt - 0.002, landing?.style === 'open' ? MOVES.landing.openFromHz : OPEN_LPF));
     events.push(ramp('B.gain', pickupAt - 0.003, pickupAt, SILENT, 1, 'lin'));
   }
   if (landing?.style === 'tape') {
@@ -268,6 +269,14 @@ export function landB({ T, pickupAt, gapStart, bStart, teaseFrom, tease, teaseSt
     events.push(ramp('B.gain', pickupAt - 0.003, pickupAt, SILENT, 1, 'lin'));
   } else if (!tease) {
     events.push(ramp('B.gain', bStart, pickupAt, SILENT, 1, 'lin'));
+  }
+  if (landing?.style === 'open') {
+    // The filter opening into the drop: B comes in closed (after a low-passed Tease, it stays closed past the
+    // gap) and opens onto its downbeat.
+    const cfg = MOVES.landing;
+    const opensAt = T + cfg.openBeats * gB.beat;
+    if (!(tease && !stemTease)) events.push(set('B.lpf', bStart, cfg.openFromHz));
+    events.push(ramp('B.lpf', Math.min(pickupAt, T - 0.05), opensAt, cfg.openFromHz, OPEN_LPF, 'exp'));
   }
   events.push(...impactLayer({ T, phase, landing, boost }));
   return events;
@@ -467,16 +476,21 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     gapHost: true,
     aLeadSec: (tl, i) => tl.barAt(i),
     build(x) {
-      const { A, i, T, gapStart, gB, rng, landing } = riding(x);
+      const { A, i, T, gapStart, gB, rng, landing, minStart, phase } = riding(x);
       const barA = A.tl.barAt(i);
       const beatA = A.tl.beatAt(i);
-      let kind = forced(x, R1_KINDS) ?? weightedPick(MOVES.variants.R1, rng) ?? 'hpf';
+      let kind = forced(x, R1_KINDS) ?? weightedPick(MOVES.variants.R1.kinds, rng) ?? 'hpf';
+      // How long the filter sweeps: half a bar to two, by Phase, as far as there is room after the duck, away
+      // from the last moves' lengths.
+      const room = MOVES.variants.R1.bars[phase.name].filter((b) => gapStart - b * barA >= minStart);
+      const bars = kind === 'stab' || !room.length ? 1 : drawBars(x, room);
+      const sweep = bars * barA;
       const events: PlanEvent[] = [];
       const hold = 0.25 * beatA;
       const stabAt = aGrid(A, i, T, gapStart - hold - 0.04).end;
       if (kind === 'stab' && stabAt - 0.06 < gapStart - barA) kind = 'hpf';
-      if (kind === 'lpf') events.push(ramp('A.lpf', gapStart - barA, gapStart, OPEN_LPF, 250, 'exp'));
-      else events.push(ramp('A.hpf', gapStart - barA, gapStart, 20, 600, 'exp'));
+      if (kind === 'lpf') events.push(ramp('A.lpf', gapStart - sweep, gapStart, OPEN_LPF, 250, 'exp'));
+      else events.push(ramp('A.hpf', gapStart - sweep, gapStart, 20, 600, 'exp'));
       if (kind === 'stab') {
         // A breath of silence, one hit on A's last beat, silence into the gap.
         events.push(
@@ -488,11 +502,11 @@ export const RECIPES: Record<RecipeId, Recipe> = {
         );
       } else events.push(ramp('A.gain', gapStart - 0.01, gapStart, A.level, SILENT, 'lin'));
       events.push(
-        synth('riser', { t0: gapStart - barA, t1: gapStart, fromHz: 900, toHz: 9000, fromDb: -36, toDb: -10, tone: riserTone(x) }),
-        ...swellLayer(landing, gapStart - Math.min(barA, 2 * gB.beat), gapStart, -10),
+        synth('riser', { t0: gapStart - sweep, t1: gapStart, fromHz: 900, toHz: 9000, fromDb: -36, toDb: -10, tone: riserTone(x) }),
+        ...swellLayer(landing, gapStart - Math.min(sweep, 2 * gB.beat), gapStart, -10),
         ...landB(x),
       );
-      return { events, aStopAt: gapStart + 0.05, variant: { kind } };
+      return { events, aStopAt: gapStart + 0.05, variant: { kind, bars } };
     },
   },
 
@@ -821,6 +835,40 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       const spiral = spiralMove({ A, i, end, bars, phase: phase.name, rng, restoreAt: pickupAt + 0.3 });
       const events = [...spiral.events, ...swellLayer(landing, end - 2 * beatA, end, -11), ...landB(x)];
       return { events, aStopAt: end + 0.05, variant: { kind: 'up', bars } };
+    },
+  },
+
+  // D20 · Count-in: over A's last bar (two, later on) its low-pass closes, the room hears it muffle, while hand
+  // claps (or stomps) count the beats in, louder each one, then a clean cut on the one. Light: no riser, no swell
+  // of its own; the clapping is something the room can join.
+  D20: {
+    id: 'D20',
+    name: 'Count-in',
+    shape: 'S1',
+    implemented: true,
+    family: 'count',
+    ghostHost: true,
+    gapHost: true,
+    aLeadSec: (tl, i) => tl.barAt(i),
+    build(x) {
+      const { A, i, T, gapStart, phase, rng, minStart } = riding(x);
+      const cfg = MOVES.count;
+      const { barA, beatA, end } = aGrid(A, i, T, gapStart);
+      const bars = fitBars(drawBars(x, cfg.bars[phase.name]), end, barA, minStart);
+      const start = end - bars * barA;
+      const bpb = Math.max(1, Math.round(barA / beatA));
+      const stomp = x.force?.variant === 'stomp' || (x.force?.variant !== 'claps' && rng() < cfg.stomp);
+      // On 2 and 4 of the first bar of a long count, then on every beat of the last one, louder for its last two.
+      const early = bars > 1 ? Array.from({ length: (bars - 1) * bpb }, (_, k) => start + k * beatA).filter((_, k) => k % 2 === 1) : [];
+      const last = Array.from({ length: bpb }, (_, k) => end - (bpb - k) * beatA);
+      const events: PlanEvent[] = [
+        ramp('A.lpf', start, end, OPEN_LPF, cfg.lpfHz, 'exp'),
+        ramp('A.gain', end - 0.01, end, A.level, SILENT, 'lin'),
+        synth('claps', { times: [...early, ...last.slice(0, -2)], level: cfg.level, stomp }),
+        synth('claps', { times: last.slice(-2), level: Math.min(1, cfg.level * 1.4), stomp }),
+        ...landB(x),
+      ];
+      return { events, aStopAt: end + 0.05, variant: { kind: stomp ? 'stomp' : 'claps', bars } };
     },
   },
 

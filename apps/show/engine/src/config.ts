@@ -72,13 +72,13 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     // share the draw. Early is light and clean: the Blend and the drum swap when they fit, else a cut on the one
     // (R1, often a filter swap), a short echo (R2) or a quick strip-down (D8); builds, gates and spirals are
     // rare, and the theatrical moves wait for mid.
-    weights: { R8: 1, D10: 0.8, R1: 0.8, R2: 0.7, D8: 0.5, D1: 0.2, R6: 0.15, D3: 0.12, R7: 0.12, R4: 0.05, R5: 0.04 },
+    weights: { R8: 1, D10: 0.8, R1: 0.8, R2: 0.7, D8: 0.5, D20: 0.35, D1: 0.2, R6: 0.15, D3: 0.12, R7: 0.12, R4: 0.05, R5: 0.04 },
     bridgeBars: [1, 2],
     tease: 0,
     stemTease: 0.5,
     signature: 0.4,
     signatureDb: -5,
-    gapBeats: [0, 0, 0.5],
+    gapBeats: [0, 0, 0.25, 0.5],
     snarePitch: 3,
     duckDb: -2,
     impactSamples: [['boom', -12]],
@@ -91,8 +91,8 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     // D16 is rare (about 7.5% of pairs qualify), so it is drawn often when it does.
     // Mid keeps the clean moves common and brings in the builds, gates, spirals and chops.
     weights: {
-      R8: 0.8, D16: 1, D10: 0.6, R7: 0.4, R2: 0.35, D8: 0.35, R1: 0.3, D1: 0.2, D3: 0.2, D11: 0.15, D2: 0.1, D19: 0.1, D15: 0.12,
-      D7: 0.1, R4: 0.1, R5: 0.1, R6: 0.05,
+      R8: 0.8, D16: 1, D10: 0.6, R7: 0.4, R2: 0.35, D8: 0.35, R1: 0.3, D20: 0.25, D1: 0.2, D3: 0.2, D11: 0.15, D2: 0.1, D19: 0.1,
+      D15: 0.12, D7: 0.1, R4: 0.1, R5: 0.1, R6: 0.05,
     },
     bridgeBars: [2, 3],
     tease: 0.5,
@@ -365,6 +365,13 @@ export const MOVES = Object.freeze({
     finalBusHpfHz: 300,
   }),
   /** D3 Spiral echo-out: A's last beat caught in an echo whose delay shrinks, so the repeats climb. */
+  /** D20 Count-in: its length in A's bars, A's low-pass at the end, the claps' level and the chance of stomps. */
+  count: Object.freeze({
+    bars: { early: [1], mid: [1, 1, 2], late: [1, 2], final: [2] } as ByPhase<readonly number[]>,
+    lpfHz: 450,
+    level: 0.45,
+    stomp: 0.35,
+  }),
   spiral: Object.freeze({
     /** Its length in A's bars (one is drawn, away from the last builds' lengths). */
     bars: { early: [1, 1, 2], mid: [1, 2], late: [2, 2, 1], final: [2] } as ByPhase<readonly number[]>,
@@ -477,11 +484,14 @@ export const MOVES = Object.freeze({
   landing: Object.freeze({
     // Early lands dry most of the time (no reverse cymbal), the cymbal grows with the Phase.
     weights: {
-      early: { cymbal: 0.1, dry: 0.6, preverb: 0.4, tape: 0 },
-      mid: { cymbal: 0.3, dry: 0.35, preverb: 0.5, tape: 0.15 },
-      late: { cymbal: 0.5, dry: 0.1, preverb: 0.5, tape: 0.25 },
-      final: { cymbal: 0.5, dry: 0, preverb: 0.5, tape: 0.25 },
-    } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb' | 'tape', number>>>,
+      early: { cymbal: 0.1, dry: 0.45, preverb: 0.4, tape: 0, open: 0.3 },
+      mid: { cymbal: 0.3, dry: 0.3, preverb: 0.5, tape: 0.15, open: 0.25 },
+      late: { cymbal: 0.5, dry: 0.1, preverb: 0.5, tape: 0.25, open: 0.15 },
+      final: { cymbal: 0.5, dry: 0, preverb: 0.5, tape: 0.25, open: 0.1 },
+    } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb' | 'tape' | 'open', number>>>,
+    /** The open landing: B's low-pass starts here and opens over its pickup and this much of its first beat. */
+    openFromHz: 500,
+    openBeats: 0.25,
     /** What hits on the landing: nothing (many landings, most early), the sub drop alone, or with samples. */
     impactKinds: {
       early: { none: 0.65, sub: 0.25, samples: 0.1 },
@@ -632,7 +642,11 @@ export const MOVES = Object.freeze({
   }),
   /** Variants of the older recipes (docs/dj-techniques.md › weakest recipes). */
   variants: Object.freeze({
-    R1: { hpf: 0.5, lpf: 0.3, stab: 0.2 },
+    R1: {
+      kinds: { hpf: 0.5, lpf: 0.3, stab: 0.2 },
+      /** The filter's sweep, in A's bars: quick early, longer later. */
+      bars: { early: [0.5, 1], mid: [0.5, 1, 2], late: [1, 2], final: [1, 2] } as ByPhase<readonly number[]>,
+    },
     R2: { delayBeats: [0.5, 0.5, 0.75, 1] as const, freeze: 0.2, vocalThrow: 0.35, freezeFeedback: 0.92 },
     R4: { lastBeat: 0.35, triplet: 0.3, pitchUp: { early: 0, mid: 0.3, late: 0.4, final: 0.4 } as ByPhase<number>, pitchTo: 1.12 },
     R5: { brakeSec: [0.6, 0.8, 1.0] as const, spinRate: [2.5, 3, 3.5] as const, spinSec: [0.8, 1.0, 1.2] as const },

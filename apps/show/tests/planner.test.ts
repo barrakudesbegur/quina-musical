@@ -170,8 +170,8 @@ test('a Tease uses B\'s own stems when they cover the hook: drums first, bass in
     assert.ok(st.until <= plan.T - plan.hook.pickupSec + 1e-9, 'stems stop before the pickup');
     assert.ok(st.parts.drums && st.parts.drums.t0 >= st.at - 1e-9);
     if (st.parts.bass) assert.ok(st.parts.bass.t0 > st.parts.drums.t0, 'bass comes in after the drums');
-    // (A tape start opens B's own low-pass from where B starts, in the gap: that is not a Tease.)
-    assert.ok(!plan.events.some((e) => targetOf(e) === 'B.lpf' && (plan.landing !== 'tape' || eventStart(e) < plan.b.startCtx - 1e-9)), 'no low-pass Tease on top');
+    // (A tape start, or the open landing, filters B's own entry from where B starts: that is not a Tease.)
+    assert.ok(!plan.events.some((e) => targetOf(e) === 'B.lpf' && ((plan.landing !== 'tape' && plan.landing !== 'open') || eventStart(e) < plan.b.startCtx - 1e-9)), 'no low-pass Tease on top');
     const bGain = plan.events.filter((e) => targetOf(e) === 'B.gain');
     assert.ok(bGain.some((e) => e.kind === 'ramp' && Math.abs(e.t1 - (plan.T - plan.hook.pickupSec)) < 1e-9 && e.to === 1), 'full mix opens on the pickup');
   }

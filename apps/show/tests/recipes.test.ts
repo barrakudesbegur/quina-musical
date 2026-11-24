@@ -121,7 +121,7 @@ const checkLanding = ({ plan, A }: Scenario): void => landingInvariants(plan, A)
 test('every new technique keeps the landing invariants over random pairs, phases and paces', () => {
   const rng = seededRandom(2026);
   const seen: Record<string, number> = {};
-  const forcedTo: RecipeId[] = ['D1', 'D2', 'D3', 'D6', 'D7', 'D8', 'D10', 'D11', 'D15', 'D16', 'D19', 'R1', 'R2', 'R4', 'R5', 'R7', 'R10'];
+  const forcedTo: RecipeId[] = ['D1', 'D2', 'D3', 'D6', 'D7', 'D8', 'D10', 'D11', 'D15', 'D16', 'D19', 'D20', 'R1', 'R2', 'R4', 'R5', 'R7', 'R10'];
   for (let n = 0; n < 4080; n++) {
     const recipe = forcedTo[n % forcedTo.length];
     const s = scenario(n, rng, { recipe, withBuild: n % 3 === 0, withRiff: n % 4 === 1, keys: n % 5 < 2, phase: PHASE_LIST[Math.floor(n / forcedTo.length) % 4] });
@@ -747,4 +747,29 @@ test('D9\'s voice and D12 from B\'s voice: with agreeing keys the ghost may turn
     if (pre?.source === 'vocals') vocalSwells++;
   }
   assert.ok(voices > 50 && vocalSwells > 100, `${voices} voices, ${vocalSwells} vocal swells`);
+});
+
+test('D20 count-in: A muffles over its last bar or two while claps (or stomps) count the beats in, louder at the end; a clean cut on the one', () => {
+  const rng = seededRandom(2020);
+  const kinds = new Set<string>();
+  let count = 0;
+  for (let n = 0; n < 300; n++) {
+    const { plan } = scenario(n, rng, { recipe: 'D20', phase: [PHASES.early, PHASES.mid, PHASES.late][n % 3] });
+    if (plan.recipe !== 'D20') continue;
+    count++;
+    kinds.add(String(plan.variant?.kind));
+    const gapStart = plan.T - plan.hook.pickupSec - plan.gapBeats * plan.hook.beat;
+    const lpf = plan.events.find((e) => e.kind === 'ramp' && e.target === 'A.lpf');
+    assert.ok(lpf && lpf.kind === 'ramp' && lpf.to === MOVES.count.lpfHz && lpf.t1 <= gapStart + 1e-9, 'A muffles up to the gap');
+    const claps = synthsOf(plan, 'claps');
+    assert.equal(claps.length, 2);
+    const times = claps.flatMap((c) => ('times' in c.params ? c.params.times : []));
+    assert.ok(times.every((t) => t >= lpf.t0 - 1e-9 && t < gapStart + 1e-9), 'the claps count over the muffling, before the gap');
+    const [soft, loud] = claps.map((c) => ('level' in c.params ? c.params.level : 0));
+    assert.ok(loud > soft, 'louder at the end');
+    if (plan.phase === 'early') assert.equal(plan.variant?.bars, 1, 'quick early');
+    assert.ok(!plan.events.some((e) => e.kind === 'synth' && e.name === 'riser'), 'no riser of its own');
+  }
+  assert.ok(count > 200, `${count} count-ins`);
+  assert.deepEqual([...kinds].sort(), ['claps', 'stomp']);
 });

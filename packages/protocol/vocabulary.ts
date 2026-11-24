@@ -56,18 +56,18 @@ export type PhaseSource = 'cards' | 'placeholder' | 'override';
  */
 export type RecipeId =
   | 'R1' | 'R2' | 'R4' | 'R5' | 'R6' | 'R7' | 'R8' | 'R10' | 'D1' | 'D2' | 'D3' | 'D6' | 'D7' | 'D8' | 'D10' | 'D11' | 'D15' | 'D16'
-  | 'D19' | 'FADE' | 'SUSPENSE';
+  | 'D19' | 'D20' | 'FADE' | 'SUSPENSE';
 /** Rotation never plays one family three times in a row. */
 export type RecipeFamily =
   | 'cut' | 'echo' | 'roll' | 'stop' | 'wash' | 'build' | 'blend' | 'powerdown' | 'gate' | 'hits' | 'spiral' | 'strip' | 'swap' | 'chop'
-  | 'fake' | 'pitch' | 'scratch';
+  | 'fake' | 'pitch' | 'scratch' | 'count';
 /** How the outgoing song leaves. */
 export type ExitName = 'echo' | 'roll' | 'brake' | 'spinback' | 'wash' | 'gate' | 'spiral';
 /** Timeline shape: S1 rides A and lands on one of its downbeats, S2 exits A then bridges on B's grid,
  * S3 is the layered Blend, S0 the fallback when A has no usable downbeat. */
 export type RecipeShape = 'S0' | 'S1' | 'S2' | 'S3';
 export const RECIPE_IDS = [
-  'R1', 'R2', 'R4', 'R5', 'R6', 'R7', 'R8', 'R10', 'D1', 'D2', 'D3', 'D6', 'D7', 'D8', 'D10', 'D11', 'D15', 'D16', 'D19', 'FADE', 'SUSPENSE',
+  'R1', 'R2', 'R4', 'R5', 'R6', 'R7', 'R8', 'R10', 'D1', 'D2', 'D3', 'D6', 'D7', 'D8', 'D10', 'D11', 'D15', 'D16', 'D19', 'D20', 'FADE', 'SUSPENSE',
 ] as const satisfies readonly RecipeId[];
 
 /** Pace: seconds from one Landing to the next. */
