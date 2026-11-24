@@ -11,7 +11,7 @@ import { PROTOCOL_VERSION } from '@quina/protocol';
 import { CloudLink } from '../laptop/link.ts';
 import type { EditionExport, RoomStats } from '../src/api.ts';
 import { LINK } from '../src/config.ts';
-import { followFeed, reconnectDelayMs, type PublicChange, type PublicView } from '../src/feed/public.ts';
+import { followFeed, reconnectDelayMs, type PublicChange, type PublicView } from '@quina/protocol';
 import { JournalBuilder } from '../test/support/journal-builder.ts';
 import { startDevServer, type DevServer } from './dev-server.ts';
 import { fakeRelay, type FakeRelay } from './fake-relay.ts';

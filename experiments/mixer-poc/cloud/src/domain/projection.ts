@@ -6,7 +6,7 @@
 // steps before its verdict, a claim's details, or winners' names.
 // Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
 import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
-import { roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '../feed/public.ts';
+import { roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
 
 export interface ProjectionContext {
   /** A laptop-clock epoch ms on the cloud's clock. */

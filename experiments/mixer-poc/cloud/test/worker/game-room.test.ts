@@ -3,7 +3,7 @@
 import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
 import { PROTOCOL_VERSION, replayJournal, type JournalEntry } from '@quina/protocol';
-import { followFeed, type PublicView } from '../../src/feed/public.ts';
+import { followFeed, type PublicView } from '@quina/protocol';
 import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
 import { CLOSE } from '../../src/link-protocol.ts';
 import type { EditionExport, RoomStats } from '../../src/api.ts';
@@ -386,6 +386,57 @@ describe('the Game plan and its media (Admin)', () => {
     expect((await SELF.fetch('https://quina.example/api/media', { method: 'POST', body: 'x' })).status).toBe(403);
     expect((await SELF.fetch(`${BASE}/api/media`)).status).toBe(405);
     expect((await SELF.fetch(`${BASE}/api/plan`, { method: 'DELETE' })).status).toBe(405);
+  });
+});
+
+describe("a new laptop, and Admin's manual resume", () => {
+  /** Three full rounds: more than one 200-entry chunk. */
+  function longGame(gameId: string) {
+    const b = new JournalBuilder(gameId);
+    for (let r = 0; r < 3; r++) b.startRound().land(77);
+    return b;
+  }
+
+  it("the welcome names the cloud's current Game, and a fetch sends it back in chunks", async () => {
+    const game = longGame('g-long');
+    const { client } = await laptop('g-long');
+    for (let i = 0; i < game.entries.length; i += 200) await upload(client, 'g-long', game.entries.slice(i, i + 200));
+    const fresh = await laptop(null);
+    expect(fresh.welcome).toMatchObject({ gameId: null, ackSeq: 0, current: { gameId: 'g-long', seq: game.entries.length } });
+
+    fresh.client.send({ v, type: 'link.fetch', gameId: 'g-long', fromSeq: 1, sentAtMs: now() });
+    const chunks: Extract<CloudMessage, { type: 'cloud.journal' }>[] = [];
+    while (!chunks.at(-1)?.done) chunks.push((await fresh.client.next()) as Extract<CloudMessage, { type: 'cloud.journal' }>);
+    expect(chunks.length).toBe(2);
+    expect(chunks.flatMap((c) => c.entries)).toEqual(game.entries);
+
+    fresh.client.send({ v, type: 'link.fetch', gameId: 'g-nothing', fromSeq: 1, sentAtMs: now() });
+    expect(await fresh.client.next()).toMatchObject({ type: 'cloud.journal', gameId: 'g-nothing', entries: [], done: true });
+  });
+
+  it('Admin lists the Games and resumes one: it becomes current, and its journal goes to the laptop', async () => {
+    const a = JournalBuilder.sampleGame('g-rehearsal');
+    const b = new JournalBuilder('g-night').startRound().land(4);
+    const { client } = await laptop('g-rehearsal');
+    await upload(client, 'g-rehearsal', a.entries);
+    await upload(client, 'g-night', b.entries);
+    const { games } = await getJson<{ games: { gameId: string; seq: number; rounds: number; current: boolean }[] }>('/api/games');
+    expect(games.find((g) => g.gameId === 'g-night')).toMatchObject({ seq: b.entries.length, rounds: 1, current: true });
+    expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false });
+
+    const p = await phone();
+    const missing = await SELF.fetch(`${BASE}/api/resume`, { method: 'POST', body: JSON.stringify({ gameId: 'g-nope' }) });
+    expect(missing.status).toBe(404);
+    expect((await SELF.fetch(`${BASE}/api/resume`, { method: 'POST', body: '{}' })).status).toBe(400);
+
+    await client.drain();
+    const resumed = await SELF.fetch(`${BASE}/api/resume`, { method: 'POST', body: JSON.stringify({ gameId: 'g-rehearsal' }) });
+    expect(await resumed.json()).toEqual({ ok: true, gameId: 'g-rehearsal', seq: a.entries.length, laptopOnline: true });
+    const told = await client.drain();
+    expect(told[0]).toMatchObject({ type: 'cloud.resume', gameId: 'g-rehearsal', seq: a.entries.length, by: 'dev' });
+    expect(told.filter((m) => (m as { type: string }).type === 'cloud.journal').flatMap((m) => (m as { entries: unknown[] }).entries)).toEqual(a.entries);
+    expect((await p.view()).state.gameId).toBe('g-rehearsal');
+    expect((await SELF.fetch('https://quina.example/api/resume', { method: 'POST', body: '{"gameId":"g-night"}' })).status).toBe(403);
   });
 });
 

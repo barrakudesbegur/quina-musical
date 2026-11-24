@@ -29,7 +29,12 @@ export async function fakeRelay() {
     journal(entries: readonly JournalEntry[]) {
       for (const entry of entries) this.emit({ v, type: 'journal.entry', entry });
     },
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    /** Close, ending open connections first (ws waits for them otherwise). */
+    close: () =>
+      new Promise<void>((resolve) => {
+        for (const socket of clients) socket.terminate();
+        server.close(() => resolve());
+      }),
   };
 }
 

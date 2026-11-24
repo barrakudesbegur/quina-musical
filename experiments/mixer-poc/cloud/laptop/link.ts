@@ -6,14 +6,16 @@
 //
 // To the cloud it authenticates with an Access service token (headers, which a browser WebSocket can't set).
 // Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume. It also keeps the
-// edition's Game plan from Admin in `<dataDir>/plan.json`, so the laptop has it with no internet.
+// edition's Game plan from Admin in `<dataDir>/plan.json`, so the laptop has it with no internet. A new laptop
+// (or a copy behind the cloud's) fetches the cloud's current Game into its copy, and Admin's manual resume
+// writes `<dataDir>/resume.json` next to the Game's journal: the show page resumes from those files.
 import fs from 'node:fs';
 import path from 'node:path';
 import WebSocket from 'ws';
 import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/protocol';
 import { LINK } from '../src/config.ts';
 import { shouldForward } from '../src/domain/consoles.ts';
-import { reconnectDelayMs } from '../src/feed/public.ts';
+import { reconnectDelayMs } from '@quina/protocol';
 import { CLOSE, isCloudMessage, type CloudMessage, type ForwardableEvent, type LinkEvent, type LinkMessage } from '../src/link-protocol.ts';
 import { JournalCopy } from './journal-copy.ts';
 import { Uploader, type UploaderState } from './uploader.ts';
@@ -50,6 +52,8 @@ export interface LinkStatus {
   commands: number;
   /** The Game plan's title and when the cloud last sent it, or null before it did. */
   plan: { title: string; receivedAtMs: number } | null;
+  /** The last manual resume Admin asked for. */
+  resume: { gameId: string; seq: number } | null;
   pending: number;
   uploader: UploaderState;
 }
@@ -68,6 +72,9 @@ export class CloudLink {
   private consoles = 0;
   private commands = 0;
   private plan: LinkStatus['plan'] = null;
+  private resume: LinkStatus['resume'] = null;
+  /** A fetch from the cloud in progress (not asked again until it is done). */
+  private fetching: string | null = null;
   private lastStateSentAtMs = 0;
   private stateTimer: NodeJS.Timeout | null = null;
   private retryTimer: NodeJS.Timeout | null = null;
@@ -116,6 +123,7 @@ export class CloudLink {
       consoles: this.consoles,
       commands: this.commands,
       plan: this.plan,
+      resume: this.resume,
       pending: this.uploader.pending(),
       uploader: this.uploader.state,
     };
@@ -217,6 +225,7 @@ export class CloudLink {
     ws.on('close', (code, reason) => {
       if (this.cloud === ws) this.cloud = null;
       this.uploader.disconnected();
+      this.fetching = null; // a fetch cut off is asked again after the next welcome
       if (code === CLOSE.replaced) {
         this.cloudState = 'replaced';
         this.log('cloud: another laptop took over; this link stops uploading (restart it to take over again)');
@@ -241,6 +250,7 @@ export class CloudLink {
       case 'cloud.welcome':
         this.log(`cloud: edition ${message.edition}, Game ${message.gameId ?? '(none)'} at entry ${message.ackSeq}`);
         this.sendUpload(this.uploader.welcome(message.gameId, message.ackSeq, now));
+        this.fetchIfBehind(message.gameId, message.current);
         if (this.latestState) this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.event', event: this.latestState, sentAtMs: now } as LinkEvent);
         return;
       case 'cloud.ack':
@@ -264,6 +274,19 @@ export class CloudLink {
         return;
       case 'cloud.plan':
         return this.keepPlan(message.plan, now);
+      case 'cloud.journal':
+        this.addEntries(message.entries);
+        if (message.done) {
+          if (this.fetching === message.gameId) this.fetching = null;
+          this.log(`cloud: Game ${message.gameId} copied from the cloud up to entry ${this.journal.contiguous(message.gameId)}`);
+        }
+        return;
+      case 'cloud.resume':
+        this.resume = { gameId: message.gameId, seq: message.seq };
+        this.fetching = message.gameId; // its journal follows
+        this.writeFile('resume.json', { gameId: message.gameId, seq: message.seq, by: message.by, atMs: message.nowMs });
+        this.log(`cloud: MANUAL RESUME of Game ${message.gameId} at entry ${message.seq} (asked by ${message.by})`);
+        return;
       case 'cloud.consoles': {
         const before = this.consoles;
         this.consoles = message.count;
@@ -274,18 +297,39 @@ export class CloudLink {
     }
   }
 
-  /** Keep the plan on disk (written whole, then renamed, so a reader never sees half a file). */
+  /** Keep the plan on disk, for the laptop's screens with no internet. */
   private keepPlan(plan: unknown, now: number): void {
-    const file = path.join(this.options.dataDir, 'plan.json');
+    if (!this.writeFile('plan.json', plan)) return;
+    const title = plan && typeof plan === 'object' && 'title' in plan ? String(plan.title) : '(none)';
+    if (this.plan?.title !== title) this.log(`cloud: Game plan "${title}" kept in ${path.join(this.options.dataDir, 'plan.json')}`);
+    this.plan = { title, receivedAtMs: now };
+  }
+
+  /** Write a JSON file in the data folder whole, then rename it, so a reader never sees half a file. */
+  private writeFile(name: string, value: unknown): boolean {
+    const file = path.join(this.options.dataDir, name);
     try {
-      fs.writeFileSync(`${file}.tmp`, `${JSON.stringify(plan, null, 2)}\n`, { flush: true });
+      fs.writeFileSync(`${file}.tmp`, `${JSON.stringify(value, null, 2)}\n`, { flush: true });
       fs.renameSync(`${file}.tmp`, file);
-      const title = plan && typeof plan === 'object' && 'title' in plan ? String(plan.title) : '(none)';
-      if (this.plan?.title !== title) this.log(`cloud: Game plan "${title}" kept in ${file}`);
-      this.plan = { title, receivedAtMs: now };
+      return true;
     } catch (error) {
-      this.log(`cloud: could not keep the Game plan: ${String(error)}`);
+      this.log(`could not write ${file}: ${String(error)}`);
+      return false;
     }
+  }
+
+  /**
+   * After a welcome: if the cloud's current Game is ahead of this copy (a new laptop, or entries another laptop
+   * wrote), fetch the rest. Only for the Game this link is on, or when it has none yet, never over another Game.
+   */
+  private fetchIfBehind(helloGameId: string | null, current: { gameId: string; seq: number } | null): void {
+    if (!current || this.fetching === current.gameId) return;
+    if (helloGameId !== null && helloGameId !== current.gameId) return;
+    const have = this.journal.contiguous(current.gameId);
+    if (current.seq <= have) return;
+    this.fetching = current.gameId;
+    this.log(`cloud: the cloud has Game ${current.gameId} up to entry ${current.seq}, this laptop up to ${have}: fetching`);
+    this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.fetch', gameId: current.gameId, fromSeq: have + 1, sentAtMs: this.options.now() });
   }
 
   private sendHello(): void {

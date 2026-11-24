@@ -7,6 +7,7 @@
 //                  link.event    one live show event (domain/consoles.ts says which: what phones need, plus
 //                                everything but the journal while a console listens in the cloud)
 //                  link.ping     a keepalive when nothing else was sent for a while (laptop only; phones never)
+//                  link.fetch    send me a Game's entries from fromSeq (a new laptop, or a copy behind the cloud's)
 //   cloud → link   cloud.welcome the cloud's edition, and the last entry it has for the hello's Game
 //                  cloud.ack     the last entry it has after an upload (send from ackSeq + 1)
 //                  cloud.need    entries are missing: send again from fromSeq
@@ -15,9 +16,11 @@
 //                  cloud.command a console's command (checked), for the show: the link hands it to the relay
 //                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0)
 //                  cloud.plan    the Game plan from Admin, on hello and on every change (the laptop keeps a copy)
+//                  cloud.journal entries the link asked for, or Admin's resume pushed, in chunks (`done` on the last)
+//                  cloud.resume  Admin's manual resume: the show page should resume this Game (then cloud.journal)
 // Close codes: 4001 another laptop connected (this one stops reconnecting), 4002 silent for too long,
 // 4400 a malformed hello.
-import { PROTOCOL_VERSION, isEvent, type Command, type GamePlan, type IncomingEvent, type ProtocolVersion } from '@quina/protocol';
+import { PROTOCOL_VERSION, isEvent, type Command, type GamePlan, type IncomingEvent, type JournalEntry, type ProtocolVersion } from '@quina/protocol';
 import { NEVER_FORWARDED } from './domain/consoles.ts';
 
 export interface LinkHello {
@@ -57,7 +60,15 @@ export interface LinkPing {
   sentAtMs: number;
 }
 
-export type LinkMessage = LinkHello | LinkJournal | LinkEvent | LinkPing;
+export interface LinkFetch {
+  v: ProtocolVersion;
+  type: 'link.fetch';
+  gameId: string;
+  fromSeq: number;
+  sentAtMs: number;
+}
+
+export type LinkMessage = LinkHello | LinkJournal | LinkEvent | LinkPing | LinkFetch;
 
 export interface CloudWelcome {
   v: ProtocolVersion;
@@ -67,6 +78,8 @@ export interface CloudWelcome {
   gameId: string | null;
   /** The last entry the cloud has for that Game: upload from ackSeq + 1. */
   ackSeq: number;
+  /** The cloud's current Game before this hello, and its last entry (a new laptop may fetch it). */
+  current: { gameId: string; seq: number } | null;
   nowMs: number;
 }
 
@@ -127,7 +140,30 @@ export interface CloudPlan {
   nowMs: number;
 }
 
-export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused | CloudCommand | CloudConsoles | CloudPlan;
+/** Journal entries for the link's copy, in `seq` order. */
+export interface CloudJournal {
+  v: ProtocolVersion;
+  type: 'cloud.journal';
+  gameId: string;
+  entries: JournalEntry[];
+  /** The last chunk of this answer. */
+  done: boolean;
+  nowMs: number;
+}
+
+/** Admin's manual resume: the show page should resume `gameId` (its journal follows as cloud.journal). */
+export interface CloudResume {
+  v: ProtocolVersion;
+  type: 'cloud.resume';
+  gameId: string;
+  /** The last entry of that Game. */
+  seq: number;
+  /** Who asked (an Access identity label). */
+  by: string;
+  nowMs: number;
+}
+
+export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused | CloudCommand | CloudConsoles | CloudPlan | CloudJournal | CloudResume;
 
 export const CLOSE = Object.freeze({
   /** Another laptop connected and took over: don't reconnect. */
@@ -165,6 +201,10 @@ export function checkLinkMessage(value: unknown): LinkCheck {
     }
     case 'link.ping':
       return { ok: true, message: value as unknown as LinkPing };
+    case 'link.fetch':
+      if (!isGameId(value.gameId)) return { ok: false, error: 'gameId must be a short string' };
+      if (!Number.isInteger(value.fromSeq) || (value.fromSeq as number) < 1) return { ok: false, error: 'fromSeq must be an integer ≥ 1' };
+      return { ok: true, message: value as unknown as LinkFetch };
     default:
       return { ok: false, error: `unknown message type ${String(value.type)}` };
   }
@@ -212,5 +252,5 @@ export function linkMessage<M extends LinkMessage>(body: Omit<M, 'v' | 'sentAtMs
 /** Accept a message from the cloud on the laptop. It trusts the cloud for the fields. */
 export function isCloudMessage(value: unknown): value is CloudMessage {
   if (!isRecord(value) || value.v !== PROTOCOL_VERSION || typeof value.type !== 'string') return false;
-  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused', 'cloud.command', 'cloud.consoles', 'cloud.plan'].includes(value.type);
+  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused', 'cloud.command', 'cloud.consoles', 'cloud.plan', 'cloud.journal', 'cloud.resume'].includes(value.type);
 }

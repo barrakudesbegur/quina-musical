@@ -24,7 +24,7 @@ import {
   type RelayClients,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
-import type { EditionExport, MediaSave, PlanSave, RoomStats } from './api.ts';
+import type { EditionExport, GameSummary, MediaSave, PlanSave, ResumeResult, RoomStats } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
@@ -39,8 +39,8 @@ import {
   type PublicDelta,
   type PublicSnapshot,
   type PublicState,
-} from './feed/public.ts';
-import { CLOSE, checkLinkMessage, type CloudMessage, type LinkEvent, type LinkHello, type LinkJournal } from './link-protocol.ts';
+} from '@quina/protocol';
+import { CLOSE, checkLinkMessage, type CloudMessage, type LinkEvent, type LinkFetch, type LinkHello, type LinkJournal } from './link-protocol.ts';
 
 /** The header the Worker sets to tell the GameRoom who connected (after Access); never taken from a client. */
 export const IDENTITY_HEADER = 'x-quina-identity';
@@ -180,6 +180,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
         return this.onJournal(ws, link, ctx);
       case 'link.event':
         return this.onEvent(ws, link, ctx);
+      case 'link.fetch':
+        return this.onFetch(ws, link);
       case 'link.ping':
         return;
     }
@@ -215,9 +217,10 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   // ---- the laptop's messages ---------------------------------------------------------------------------
   private onHello(ws: WebSocket, hello: LinkHello): void {
+    const current = this.room.game && this.room.game.seq > 0 ? { gameId: this.room.game.gameId, seq: this.room.game.seq } : null;
     if (hello.gameId !== null && hello.gameId !== this.room.game?.gameId) this.switchGame(hello.gameId);
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
-    this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq });
+    this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq, current });
     this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
     this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan });
   }
@@ -264,6 +267,19 @@ export class GameRoom extends DurableObject<RoomEnv> {
         return this.reply(ws, { type: 'cloud.conflict', gameId, seq: stop.seq, detail: stop.detail });
       case 'invalid':
         return this.refuse(ws, stop.detail, stop.seq);
+    }
+  }
+
+  /** The link's copy is behind: send it a Game's entries from `fromSeq`, in chunks. */
+  private onFetch(ws: WebSocket, fetch: LinkFetch): void {
+    this.sendJournal(ws, fetch.gameId, fetch.fromSeq);
+  }
+
+  private sendJournal(ws: WebSocket, gameId: string, fromSeq: number): void {
+    const entries = this.entriesOf(gameId).filter((e) => e.seq >= fromSeq);
+    const size = CLOUD.maxEntriesPerUpload;
+    for (let i = 0; i === 0 || i < entries.length; i += size) {
+      this.reply(ws, { type: 'cloud.journal', gameId, entries: entries.slice(i, i + size), done: i + size >= entries.length });
     }
   }
 
@@ -429,6 +445,40 @@ export class GameRoom extends DurableObject<RoomEnv> {
   getMedia(id: string): { bytes: ArrayBuffer; contentType: string } | null {
     const row = this.rows('SELECT content_type, bytes FROM media WHERE id = ?', id)[0];
     return row ? { bytes: row.bytes as ArrayBuffer, contentType: String(row.content_type) } : null;
+  }
+
+  // ---- Games and Admin's manual resume ---------------------------------------------------------------------
+  /** Every Game of the edition, newest first (Admin's resume picker). */
+  listGames(): GameSummary[] {
+    const rows = this.rows(
+      `SELECT game_id, MAX(seq) AS seq, MIN(at_ms) AS first_at, MAX(at_ms) AS last_at,
+              SUM(CASE WHEN kind = 'round.started' THEN 1 ELSE 0 END) AS rounds
+       FROM journal GROUP BY game_id ORDER BY last_at DESC`,
+    );
+    return rows.map((r) => ({
+      gameId: String(r.game_id),
+      seq: Number(r.seq),
+      firstAtMs: Number(r.first_at),
+      lastAtMs: Number(r.last_at),
+      rounds: Number(r.rounds),
+      current: String(r.game_id) === this.room.game?.gameId,
+    }));
+  }
+
+  /**
+   * Admin's manual resume: make `gameId` the current Game and hand its whole journal to the laptop, which keeps
+   * it for the show page to resume from. History is never rewritten; to go back in a Game, the show uses Back.
+   */
+  resumeGame(gameId: string, by: string): ResumeResult {
+    const seq = Number(this.rows('SELECT MAX(seq) AS seq FROM journal WHERE game_id = ?', gameId)[0]?.seq ?? 0);
+    if (!seq) return { ok: false, error: `no Game ${gameId} in edition ${this.env.EDITION}` };
+    if (this.room.game?.gameId !== gameId) this.switchGame(gameId);
+    const show = this.sockets('show')[0];
+    if (show) {
+      this.reply(show, { type: 'cloud.resume', gameId, seq, by });
+      this.sendJournal(show, gameId, 1);
+    }
+    return { ok: true, gameId, seq, laptopOnline: Boolean(show) };
   }
 
   getStats(): RoomStats {

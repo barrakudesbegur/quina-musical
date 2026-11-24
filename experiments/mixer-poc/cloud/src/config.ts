@@ -1,5 +1,5 @@
 // Every tunable of the cloud and the laptop's cloud link. The phones' own tunables (reconnect, offline notice,
-// card cap) live in the public feed contract (src/feed/public.ts), because the player app shares them.
+// card cap) live in the public feed contract (protocol/public.ts `PUBLIC_FEED`), because the player app shares them.
 
 export const CLOUD = Object.freeze({
   /** The most entries one `link.journal` upload may carry. The link sends bigger backlogs in several. */

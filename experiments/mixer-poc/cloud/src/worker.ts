@@ -47,6 +47,20 @@ export default {
         const saved = await room.putMedia(body, (request.headers.get('content-type') ?? '').split(';')[0]?.trim() ?? '');
         return json(saved, {}, saved.ok ? 201 : saved.status);
       }
+      case 'games':
+        return json({ games: await room.listGames() });
+      case 'resume': {
+        const body = await readBody(request, 4096);
+        let gameId: unknown = null;
+        try {
+          gameId = body ? (JSON.parse(new TextDecoder().decode(body)) as { gameId?: unknown }).gameId : null;
+        } catch {
+          // answered below
+        }
+        if (typeof gameId !== 'string' || !gameId || gameId.length > 100) return json({ ok: false, error: 'send { "gameId": "…" }' }, {}, 400);
+        const resumed = await room.resumeGame(gameId, identity);
+        return json(resumed, {}, resumed.ok ? 200 : 404);
+      }
       case 'export':
         return json(await room.exportEdition(), { 'content-disposition': `attachment; filename="quina-${env.EDITION}-export.json"` });
       case 'stats':

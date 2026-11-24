@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type ShowEvent, type ShowState } from '@quina/protocol';
 import { projectEntry, projectEvent, type ProjectionContext } from '../../src/domain/projection.ts';
-import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicState } from '../../src/feed/public.ts';
+import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicState } from '@quina/protocol';
 import { JournalBuilder } from '../support/journal-builder.ts';
 
 const OFFSET = 250;

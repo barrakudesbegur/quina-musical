@@ -10,7 +10,7 @@ import { PROTOCOL_VERSION, replayJournal } from '@quina/protocol';
 import { CloudLink } from '../../laptop/link.ts';
 import { fakeRelay } from '../../loadtest/fake-relay.ts';
 import { freePort, startDevServer, type DevServer } from '../../loadtest/dev-server.ts';
-import { followFeed, type PublicView } from '../../src/feed/public.ts';
+import { followFeed, type PublicView } from '@quina/protocol';
 import type { EditionExport } from '../../src/api.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
 import { PLAN } from '../support/plan.ts';
@@ -172,6 +172,43 @@ test("the laptop keeps Admin's Game plan on disk, so it has it with no internet"
     assert.equal(link.status().plan?.title, PLAN.title);
   } finally {
     link.stop();
+    await relay.close();
+    await server.stop();
+  }
+});
+
+test("a new laptop copies the cloud's Game; Admin's manual resume leaves resume.json for the show page", async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const old = makeLink(relay.url, server.ws);
+  const game = JournalBuilder.sampleGame('g-takeover', Date.now() - 3_600_000);
+  let fresh: CloudLink | null = null;
+  try {
+    old.start();
+    await until('the old laptop online', () => old.status().cloud === 'online');
+    relay.journal(game.entries);
+    await until('the cloud to have the Game', () => old.status().ackSeq === game.entries.length);
+    old.stop();
+
+    const otherRelay = await fakeRelay(); // the new laptop's show page has nothing yet
+    fresh = makeLink(otherRelay.url, server.ws);
+    fresh.start();
+    await until('the new laptop to copy the Game', () => fresh?.journal.contiguous('g-takeover') === game.entries.length);
+    assert.equal(fresh.journal.currentGameId, 'g-takeover');
+    assert.deepEqual(fresh.journal.slice('g-takeover', 1, game.entries.length), game.entries);
+
+    const answer = await fetch(`${server.http}/api/resume`, { method: 'POST', body: JSON.stringify({ gameId: 'g-takeover' }) });
+    assert.equal(answer.status, 200);
+    const file = path.join(fresh.journal.dir, 'resume.json');
+    await until('resume.json', () => fs.existsSync(file));
+    assert.deepEqual(
+      (({ gameId, seq, by }) => ({ gameId, seq, by }))(JSON.parse(fs.readFileSync(file, 'utf8'))),
+      { gameId: 'g-takeover', seq: game.entries.length, by: 'dev' },
+    );
+    await otherRelay.close();
+  } finally {
+    old.stop();
+    fresh?.stop();
     await relay.close();
     await server.stop();
   }

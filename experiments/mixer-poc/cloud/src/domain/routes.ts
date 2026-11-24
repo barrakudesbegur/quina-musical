@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'games' | 'resume' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -31,6 +31,10 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   /** Admin uploads a logo or prize picture (the body is the image); answers its /media/ path. */
   '/api/media': { name: 'upload', websocket: false, access: PEOPLE, methods: ['POST'] },
   /** The whole edition as JSON: every Game's journal and record (admins). */
+  /** The edition's Games (rehearsals, the night), newest first: Admin's resume picker. */
+  '/api/games': { name: 'games', websocket: false, access: PEOPLE, methods: GET },
+  /** Admin's manual resume: `{ gameId }` becomes current and its journal goes to the laptop. */
+  '/api/resume': { name: 'resume', websocket: false, access: PEOPLE, methods: ['POST'] },
   '/api/export': { name: 'export', websocket: false, access: PEOPLE, methods: GET },
   /** Connections, messages and SQLite rows since the GameRoom last woke (admins, the load test). */
   '/api/stats': { name: 'stats', websocket: false, access: PEOPLE, methods: GET },
