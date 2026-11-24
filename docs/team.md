@@ -9,7 +9,7 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 | `Orchestrator` | **Orchestrator** | Requirements, decisions and their docs (`GLOSSARY.md`, `docs/`), the big picture, coordination between sessions, the user's questions |
 | `Sound engine` | **Sound engine** | The audio engine and DJ transitions, effects, Signatures, Suspense, Decoys, the song preparation pipeline, the shared protocol `@quina/protocol` and the Game journal |
 | `Frontend` | **UI/UX and animation** | Every screen: projector scenes, console, Admin, player app, cheat sheet |
-| Platform (session to be confirmed; was `quina-musical-b2`) | **Platform** | The cloud backend (Worker, Durable Object with SQLite, Cloudflare Access, R2 media sync, the public feed for phones), the laptop's sync and offline Plan B, load tests |
+| `Backend` | **Platform** | The cloud backend (Worker, Durable Object with SQLite, Cloudflare Access, R2 media sync, the public feed for phones), the laptop's sync and offline Plan B, load tests |
 
 ## Contracts between roles
 
