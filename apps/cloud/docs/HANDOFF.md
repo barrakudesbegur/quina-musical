@@ -10,6 +10,19 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 - The load test's numbers: [`../reports/`](../reports/).
 - The decisions: `GLOSSARY.md`, `docs/adr/` (0003: the cloud owns the Game, the laptop owns playback), `docs/show-ui-and-platform-decisions.md`. The team roles: `docs/team.md`. Questions for the user: `docs/open-questions.md`.
 
+## Milestones
+
+The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**. The whole plan is in [`docs/timeline.md`](../../../docs/timeline.md). Tell the orchestrator early if one of these slips.
+
+| By | Platform's milestone | Depends on |
+|---|---|---|
+| Fri 27 Nov | The cloud side of card type per round (queue item 1) | Sound engine's step A on main |
+| Mon 30 Nov | The cloud side of the Desgraciat round (queue item 2) | Sound engine's proposal and its types |
+| Thu 10 Dec | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared (2 Dec), hooks and stems done (10 Dec) |
+| Fri 11 Dec | `quina.barrakudesbegur.org` points at the Worker, checked with a printed card (deploy-plan step 7) | **the user's explicit OK**; the cards printed |
+| Sun 13, Sat 19 Dec | Rehearsals (default dates): watch the daily quota (`/api/stats`, the preflight) | |
+| Mon 21 Dec | Code freeze: only fixes for what a rehearsal finds | |
+
 ## Done so far
 
 All of this is on `main`, green when committed.
@@ -49,6 +62,7 @@ All of this is on `main`, green when committed.
    - `test/support/plan.ts`: drop `cardTypes` and set each round's `cardType`;
    - **the stored plan:** the GameRoom loads `room.plan` from its snapshot row without running `checkGamePlan` (game-room.ts, the snapshot load). Make it run `checkGamePlan` on load, so a v2 plan migrates to v3 in step C. quina-dev holds a v2 plan with `cardTypes` today. The relay's plan files already go through `checkGamePlan` (relay/plan.ts);
    - Admin's resume point: `resumeToken()` in game-room.ts adds `cardType` from `RecordedRound.cardType` (the valid cards, and so the Queue, depend on it);
+   - media sync: the `cards` root syncs only `cards.json` today (`laptop/pool-roots.ts`). Add `card-types.json`, so a takeover laptop's relay serves it too;
    - preflight: every card's type and every round's `cardType` must be in `card-types.json`, and each round's type must have cards in play. This replaces the fixed normal/especial check from `82c1ff1`.
 
    Sound engine tells Platform when step C lands. Redeploy quina-dev then, so the migration runs on the live plan.
@@ -70,7 +84,7 @@ All of this is on `main`, green when committed.
 
 - **Prepared data.** The e2e and the media sync need the default pool prepared on this machine (`data/out`, `data/cache`); without it the e2e skips. CI has no prepared pool, so CI doesn't run the e2e.
 - **Free plan.** A pessimistic night is about half the daily request quota; rehearsals the same UTC day share it (deploy-plan step 5).
-- **R2 is 10 GB free;** last year's pool takes 6.6 GB, so it goes before this year's is pushed (step 6).
+- **R2 is 10 GB free;** last year's pool takes 6.6 GB, so it goes before this year's is pushed (step 6). **This year's pool may not fit.** Each song is about 92 MB in the bucket (the decoded `mix.flac` about 45 MB, plus `stems/` about 47 MB). With the shared Hold and Interval music, that's room for about **100 songs**. If the playlist is bigger, the options are: R2 storage beyond 10 GB (a few cents a month, but it needs the user's OK because the rule is free plan only); leaving the stems out of the bucket and rendering them on the spare laptop; or copying the overflow laptop to laptop on a USB disk. Measure it once the pool is prepared (2 Dec): `npm run media -- prune` shows the bucket against 10 GB.
 - **The shared tree.** Other sessions' uncommitted edits sit in the same checkout: commit by path, and test the committed state in a detached worktree of HEAD (node_modules symlinked, `QUINA_OUT_DIR` pointing at the real `data/out`). Never `rm` inside a copy whose node_modules is a symlink.
 - **Don't commit** `legacy/2025/last-year-data/` (last year's app database export: personal data) or anything from `legacy/2025` that isn't Platform's.
 - **macOS has no `timeout`:** use `perl -e 'alarm N; exec @ARGV' …`.
