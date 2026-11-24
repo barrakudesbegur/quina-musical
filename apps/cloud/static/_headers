@@ -3,3 +3,10 @@
 /sw.js
   Cache-Control: no-cache
   Content-Type: text/javascript; charset=utf-8
+
+# JPEG XL covers (and their JPEG fallback): say the type explicitly, and let phones keep them a day.
+/covers/*.jxl
+  Content-Type: image/jxl
+  Cache-Control: public, max-age=86400
+/covers/*.jpg
+  Cache-Control: public, max-age=86400

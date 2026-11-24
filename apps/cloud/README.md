@@ -21,7 +21,7 @@ npm install                          # at the repo root (npm workspaces)
 cd apps/cloud
 cp .dev.vars.example .dev.vars      # the dev Access bypass (localhost only)
 npm run dev                          # wrangler dev on http://localhost:8787 (static files: static/ only)
-npm run assets                       # dist/: static/ + the UI build + cards.json + covers as WebP (needs cwebp)
+npm run assets                       # dist/: static/ + the UI build + cards.json + covers as JXL + JPEG (sips, cjxl)
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
 npm run media -- push                # the pool's prepared media → the cloud's private R2 (pull on a takeover laptop)
 npm run preflight                    # before every rehearsal and show: a pass/warn/fail table (exits 1 on any FAIL)
@@ -51,7 +51,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/ping` | signed in (the laptop's token, or organizers) | The cloud's clock, edition and current Game: the preflight's sign-in and clock check |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
-| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json`, `covers/<id>.webp`, and `sw.js`, which removes last year's service worker. Served without running the Worker |
+| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json`, `covers/<id>.jxl` with `covers/<id>.jpg` as the fallback (and `.webp` until the player switches), and `sw.js`, which removes last year's service worker. Served without running the Worker |
 
 ## How it works
 

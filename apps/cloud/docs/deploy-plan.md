@@ -10,7 +10,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 |---|---|---|
 | Worker | `quina-cloud` | `src/worker.ts`; about 87 KiB (23 KiB gzipped) |
 | Durable Object class | `GameRoom` (SQLite) | migration `v1` (`new_sqlite_classes`); one object per edition, named `edition:26`, placed in western Europe |
-| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` and `assets/`; plus `cards/cards.json` and the covers as 320 px WebP (about 15 KB each). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
+| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` and `assets/`; plus `cards/cards.json` and the covers as 256 px JPEG XL (about 15 KB each) with a JPEG fallback (about 27 KB). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
 | Variable | `EDITION = "26"` | in wrangler.jsonc |
 | Secrets | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `CF_ACCESS_EMAILS` (or `CF_ACCESS_EMAIL_DOMAIN`), `CF_ACCESS_SERVICE_TOKENS` | `wrangler secret put`; until they exist, every admin route and the laptop route answer 403 (fail-closed), and only `/feed` and `/api/health` work |
 
@@ -25,6 +25,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 | 2026-11-24 | **Deployed the Worker `quina-cloud`** (version `27b8ce0a`), after the user allowed `npx wrangler deploy`: the GameRoom Durable Object class (SQLite, migration `v1`) and 121 static files (the player at the root, console, Admin, `cards.json` and the covers as WebP, all from last year's test pool). No secrets yet, so every admin and laptop route answers 403 and only the phone feed and `/api/health` work. Checked on the edge: a phone gets its snapshot in about 0.7 s. | https://quina-cloud.barrakudes.workers.dev (workers.dev only: no DNS record, no zone change) | `npx wrangler rollback` (the previous version), or `npx wrangler delete quina-cloud`, which also deletes the GameRoom's data (export first) |
 
 | 2026-11-24 | Redeployed (version `61d29019`) with the UI build of c3770c8: the player never takes the relay in production, masked resume codes, relay pairing, Admin's plan B. Checked live: every page's assets load, the locked routes still answer 403, a phone gets its snapshot. | the same Worker | `npx wrangler rollback` |
+| 2026-11-24 | Redeployed (version `ca93f44c`): the Worker with the `relay.plan` push and `link.plan` (12c9f40), the UI build of 60f9d12 (the repo reorganisation), and the covers as JPEG XL with a JPEG fallback (`/covers/<id>.jxl` and `.jpg`, 256 px, `image/jxl` set in `_headers`). The old `.webp` covers stay until the player that uses `<picture>` is deployed. Checked live: the three cover types, `/api/health`, `/sw.js`, the cards and the player answer. | the same Worker | `npx wrangler rollback` |
 
 The first `wrangler deploy` was stopped by Claude Code's permission check (auto mode); the user then allowed `npx wrangler deploy` in this project (`.claude/settings.local.json`, personal and gitignored).
 
@@ -40,7 +41,7 @@ npm test            # green before any deploy
 npm run deploy      # = npm run assets (dist/) + wrangler deploy
 ```
 
-`npm run assets` needs `cwebp` for the covers (`brew install webp`). It warns about every missing piece: without the UI build, phones get the placeholder page.
+`npm run assets` needs `sips` (macOS) and `cjxl` (`brew install jpeg-xl`) for the covers, and `cwebp` (`brew install webp`) while the old player's WebP covers are still made. It warns about every missing piece: without the UI build, phones get the placeholder page.
 
 - It creates the Worker `quina-cloud` at `https://quina-cloud.<account subdomain>.workers.dev` (every account has a workers.dev subdomain).
 - To let a Claude session deploy next time, allow it in Claude Code (`/permissions`, for example `Bash(npx wrangler deploy:*)`), or just run the command yourself.

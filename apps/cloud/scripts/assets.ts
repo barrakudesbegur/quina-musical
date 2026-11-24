@@ -5,7 +5,9 @@
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
 //     /26/123), console/, admin/, assets/; never stage/ (the projector runs on the laptop);
 //   - the pool's printed cards: cards/cards.json;
-//   - the pool's covers as small WebP: covers/<songId>.webp (cwebp, 320 px wide, cached in .assets-cache/).
+//   - the pool's covers, small, as JPEG XL with a JPEG fallback (the user's choice: JXL, never WebP):
+//     covers/<songId>.jxl and covers/<songId>.jpg, both at most 256 px a side (sips, then cjxl; cached in
+//     .assets-cache/). Pages use <picture><source type="image/jxl" srcset=".jxl"><img src=".jpg"></picture>.
 // dist/ and .assets-cache/ are gitignored: the built UI and the album covers never go into the public repo.
 // Static files are free and never run the Worker.
 import { execFileSync } from 'node:child_process';
@@ -16,7 +18,13 @@ import { loadPool } from '../../show/relay/pool.ts';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'dist');
 const CACHE = path.join(ROOT, '.assets-cache', 'covers');
-const COVER = Object.freeze({ widthPx: 320, quality: 72 });
+/** Covers: the longest side in px, the JPEG fallback's quality, and the JXL distance (1 = visually lossless). */
+const COVER = Object.freeze({ sizePx: 256, jpegQuality: 80, jxlDistance: 1.5, jxlEffort: 7 });
+/**
+ * The deployed player still asks for covers/<id>.webp: keep making them until the player that uses <picture>
+ * (.jxl + .jpg) is deployed, then set this to false (and drop cwebp).
+ */
+const TRANSITION_WEBP = true;
 
 const args = process.argv.slice(2);
 const flag = (name: string): string | undefined => {
@@ -66,28 +74,41 @@ if (!quick) {
   const covers = fs.existsSync(pool.coversDir) ? fs.readdirSync(pool.coversDir).filter((f) => /^\d+\.(jpe?g|png|webp)$/i.test(f)) : [];
   if (covers.length === 0) warnings.push(`pool ${pool.name} has no covers in ${pool.coversDir}`);
   else {
-    try {
-      execFileSync('cwebp', ['-version'], { stdio: 'ignore' });
-    } catch {
-      throw new Error('covers need cwebp (brew install webp), or run with --quick');
+    for (const tool of ['sips', 'cjxl', ...(TRANSITION_WEBP ? ['cwebp'] : [])]) {
+      try {
+        execFileSync(tool, tool === 'sips' ? ['--help'] : tool === 'cwebp' ? ['-version'] : ['--version'], { stdio: 'ignore' });
+      } catch {
+        throw new Error(`covers need ${tool} (${tool === 'cjxl' ? 'brew install jpeg-xl' : tool === 'cwebp' ? 'brew install webp' : 'macOS'}), or run with --quick`);
+      }
     }
     fs.mkdirSync(CACHE, { recursive: true });
     fs.mkdirSync(path.join(OUT, 'covers'), { recursive: true });
     let encoded = 0;
+    const settings = `${COVER.sizePx}px-q${COVER.jpegQuality}-d${COVER.jxlDistance}e${COVER.jxlEffort}`;
     for (const file of covers) {
       const source = path.join(pool.coversDir, file);
       const id = file.split('.')[0] as string;
       const stat = fs.statSync(source);
-      // The cache key is the source's size and time, so a changed cover is encoded again.
-      const cached = path.join(CACHE, `${pool.name}-${id}-${stat.size}-${Math.floor(stat.mtimeMs)}-${COVER.widthPx}q${COVER.quality}.webp`);
-      if (!fs.existsSync(cached)) {
-        execFileSync('cwebp', ['-quiet', '-q', String(COVER.quality), '-resize', String(COVER.widthPx), '0', source, '-o', `${cached}.tmp`]);
-        fs.renameSync(`${cached}.tmp`, cached);
+      // The cache key is the source's size and time and the settings, so a changed cover is encoded again.
+      const key = path.join(CACHE, `${pool.name}-${id}-${stat.size}-${Math.floor(stat.mtimeMs)}-${settings}`);
+      if (!fs.existsSync(`${key}.jxl`) || !fs.existsSync(`${key}.jpg`) || (TRANSITION_WEBP && !fs.existsSync(`${key}.webp`))) {
+        const size = String(COVER.sizePx);
+        // One resize to a lossless PNG, then each format from it (the JXL never re-encodes a JPEG).
+        execFileSync('sips', ['-Z', size, '-s', 'format', 'png', source, '--out', `${key}.tmp.png`], { stdio: 'ignore' });
+        execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', String(COVER.jpegQuality), `${key}.tmp.png`, '--out', `${key}.tmp.jpg`], { stdio: 'ignore' });
+        execFileSync('cjxl', [`${key}.tmp.png`, `${key}.tmp.jxl`, '-d', String(COVER.jxlDistance), '-e', String(COVER.jxlEffort), '--quiet'], { stdio: 'ignore' });
+        fs.renameSync(`${key}.tmp.jpg`, `${key}.jpg`);
+        fs.renameSync(`${key}.tmp.jxl`, `${key}.jxl`);
+        if (TRANSITION_WEBP) execFileSync('cwebp', ['-quiet', '-q', '72', `${key}.tmp.png`, '-o', `${key}.webp`], { stdio: 'ignore' });
+        fs.rmSync(`${key}.tmp.png`, { force: true });
         encoded += 1;
       }
-      fs.copyFileSync(cached, path.join(OUT, 'covers', `${id}.webp`));
+      fs.copyFileSync(`${key}.jxl`, path.join(OUT, 'covers', `${id}.jxl`));
+      fs.copyFileSync(`${key}.jpg`, path.join(OUT, 'covers', `${id}.jpg`));
+      if (TRANSITION_WEBP) fs.copyFileSync(`${key}.webp`, path.join(OUT, 'covers', `${id}.webp`));
     }
-    lines.push(`${covers.length} covers (pool ${pool.name}, ${encoded} encoded now) → dist/covers/, ${kb(sizeOf(path.join(OUT, 'covers')))} (from ${kb(sizeOf(pool.coversDir))})`);
+    const ofType = (ext: string) => fs.readdirSync(path.join(OUT, 'covers')).filter((f) => f.endsWith(ext)).reduce((sum, f) => sum + fs.statSync(path.join(OUT, 'covers', f)).size, 0);
+    lines.push(`${covers.length} covers (pool ${pool.name}, ${encoded} encoded now) → dist/covers/<id>.jxl (${kb(ofType('.jxl'))}) and .jpg (${kb(ofType('.jpg'))}), from ${kb(sizeOf(pool.coversDir))}`);
   }
 }
 
