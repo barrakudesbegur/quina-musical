@@ -79,7 +79,6 @@ export const ROWS = 3;
 export const COLUMNS = 4;
 /** @deprecated The protocol's DEFAULT_CARD_TYPE (a round's card type is now its own: `RoundInfo.cardType`). */
 export const ROUND_TYPES: Readonly<Record<RoundType, string>> = DEFAULT_CARD_TYPE;
-const MAX_RANGE_IDS = 100000;
 
 const songIdOf = (song: CardSongRef): number => (typeof song === 'object' && song !== null ? song.id : song);
 
@@ -90,30 +89,8 @@ export function cardSongIds(card: Card): number[][] {
 
 // ------------------------------------------------------------------------------------------ ranges
 
-/**
- * "1-180, 200–215, 400 - 460" → [1, …, 180, 200, …, 215, 400, …, 460]. Separators: commas, semicolons and
- * whitespace. Dashes: - ‐ ‑ ‒ – — −. A reversed range (20-10) reads as 10-20.
- * @returns Sorted unique card ids.
- * @throws On a token that isn't a number or a range, or a range of more than 100,000 ids.
- */
-export function parseCardRanges(text: string | null | undefined): number[] {
-  if (text == null) return [];
-  const normalised = String(text)
-    .replace(/[‐‑‒–—−]/g, '-')
-    .replace(/\s*-\s*/g, '-');
-  const ids = new Set<number>();
-  for (const token of normalised.split(/[\s,;]+/)) {
-    if (!token) continue;
-    const match = /^(\d+)(?:-(\d+))?$/.exec(token);
-    if (!match) throw new Error(`Unrecognised card range: "${token}"`);
-    let a = Number(match[1]);
-    let b = match[2] == null ? a : Number(match[2]);
-    if (a > b) [a, b] = [b, a];
-    if (b - a + 1 + ids.size > MAX_RANGE_IDS) throw new Error(`Card range too large: "${token}"`);
-    for (let id = a; id <= b; id++) ids.add(id);
-  }
-  return [...ids].sort((x, y) => x - y);
-}
+// parseCardRanges is the protocol's (screens parse the same ranges); re-exported for the engine's callers.
+export { parseCardRanges } from '@quina/protocol';
 
 /**
  * The cards in play that count in a round: those of the round's card type (`RoundInfo.cardType`: by default

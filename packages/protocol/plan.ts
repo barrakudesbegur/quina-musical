@@ -15,8 +15,12 @@
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
 import { defaultCardType, isCardTypeId, isRoundKind, type RoundKind } from './vocabulary.ts';
 
-/** Version 2: prize bundles, card types and the prize reveal. checkGamePlan still reads version 1 plans. */
-export const PLAN_VERSION = 2;
+/**
+ * Version 3: each round names the printed card type it plays (`RoundPlan.cardType`); the card types' names, colours
+ * and prices are apps/cards' card-types.json. checkGamePlan still reads version 2 (its `cardTypes` list only says
+ * which round kinds took each type) and version 1 (one prize per Line or Quina).
+ */
+export const PLAN_VERSION = 3;
 
 export interface Sponsor {
   /** Stable id, referenced by prizes (for example "forn-can-pep"). */
@@ -45,31 +49,13 @@ export interface RoundPlan {
   number: number;
   kind: RoundKind;
   /**
-   * The printed card type this round plays (a card-types.json id): only cards of this type count in it.
-   * checkGamePlan always fills it (defaultCardType(kind) when the plan doesn't say); optional in the type only until
-   * every screen sets it (then it becomes required, with plan version 3). Read it with roundCardType().
+   * The printed card type this round plays (a card-types.json id): only cards of this type count in it. A plan
+   * file may leave it out: checkGamePlan fills in defaultCardType(kind).
    */
-  cardType?: string;
+  cardType: string;
   line: PrizeBundle;
   /** The full-card prizes ("premis de quina"); in the Desgraciat round, the last card standing's (its `line` is empty). */
   bingo: PrizeBundle;
-}
-
-/**
- * @deprecated The card types now come from apps/cards' card-types.json, and each round names its own
- * (`RoundPlan.cardType`). Kept until every screen reads them there; plan version 3 drops it.
- * The printed card types (cards.json `type`): how screens show them before the night, and where they play.
- */
-export interface CardType {
-  type: 'normal' | 'especial';
-  /** "Cartró normal". */
-  name: string;
-  /** Its pastel colour, "#rrggbb". */
-  color: string;
-  /** Its price in cents, or null when not set. */
-  priceCents: number | null;
-  /** The round kinds that accept it (the engine's rule: normal cards in normal rounds, especial in the special one). */
-  rounds: RoundKind[];
 }
 
 /** When phones see each round's prizes: round by round as announced (round 1 from the start), or all kept secret
@@ -99,21 +85,13 @@ export interface GamePlan {
   prizeReveal: PrizeReveal;
   rounds: RoundPlan[];
   sponsors: Sponsor[];
-  /** @deprecated See CardType: read card-types.json and `RoundPlan.cardType` instead. */
-  cardTypes: CardType[];
   schedule: SchedulePlan;
   cheatSheet: CheatSheet;
 }
 
 export type PlanCheck = { ok: true; plan: GamePlan } | { ok: false; errors: string[] };
 
-const LIMITS = { rounds: 20, sponsors: 200, text: 200, detail: 1000, id: 64, rules: 30, bundle: 40, priceCents: 100_000 } as const;
-const COLOR_RE = /^#[0-9a-f]{6}$/i;
-/** The card types every plan starts with (and a version 1 plan gets). */
-export const DEFAULT_CARD_TYPES: readonly CardType[] = Object.freeze([
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', priceCents: null, rounds: ['normal'] },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', priceCents: null, rounds: ['special'] },
-]);
+const LIMITS = { rounds: 20, sponsors: 200, text: 200, detail: 1000, id: 64, rules: 30, bundle: 40 } as const;
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const EDITION_RE = /^[0-9]{2}$/;
 
@@ -165,11 +143,15 @@ export function checkGamePlan(json: unknown): PlanCheck {
   };
 
   if (!isRec(json)) return { ok: false, errors: ['plan: must be a JSON object'] };
-  // Version 1 (one prize per Line or Quina, no card types, no reveal setting) is read as version 2: each prize
-  // becomes a bundle of one headline prize.
+  // Version 1 (one prize per Line or Quina, no card types, no reveal setting) is read as the current one: each prize
+  // becomes a bundle of one headline prize. Version 2 had a `cardTypes` list: it only tells which type each round
+  // kind took, and is dropped.
   const v1 = json.v === 1;
-  keys(json, 'plan', v1 ? ['v', 'edition', 'title', 'rounds', 'sponsors', 'schedule', 'cheatSheet'] : ['v', 'edition', 'title', 'prizeReveal', 'rounds', 'sponsors', 'cardTypes', 'schedule', 'cheatSheet']);
-  if (json.v !== PLAN_VERSION && !v1) err('plan.v', `must be ${PLAN_VERSION}`);
+  const v2 = json.v === 2;
+  keys(json, 'plan', v1
+    ? ['v', 'edition', 'title', 'rounds', 'sponsors', 'schedule', 'cheatSheet']
+    : ['v', 'edition', 'title', 'prizeReveal', 'rounds', 'sponsors', ...(v2 ? ['cardTypes'] : []), 'schedule', 'cheatSheet']);
+  if (json.v !== PLAN_VERSION && !v1 && !v2) err('plan.v', `must be ${PLAN_VERSION}`);
   const prizeReveal: PrizeReveal = v1 ? 'perRound' : json.prizeReveal === 'allSecret' ? 'allSecret' : 'perRound';
   if (!v1 && json.prizeReveal !== 'perRound' && json.prizeReveal !== 'allSecret') err('plan.prizeReveal', 'must be "perRound" or "allSecret"');
   const edition = str(json, 'edition', 'plan', { max: 2 });
@@ -233,8 +215,8 @@ export function checkGamePlan(json: unknown): PlanCheck {
     rounds.push({
       number: number ?? i + 1,
       kind: isRoundKind(kind) ? kind : 'normal',
-      // Filled below when the plan doesn't name one (from its old card types, else the kind's default).
-      ...(isCardTypeId(r.cardType) ? { cardType: r.cardType } : {}),
+      // Filled below when the plan doesn't name one (from a version 2 plan's card types, else the kind's default).
+      cardType: isCardTypeId(r.cardType) ? r.cardType : '',
       line: bundle(r, 'line', path),
       bingo: bundle(r, 'bingo', path),
     });
@@ -246,30 +228,14 @@ export function checkGamePlan(json: unknown): PlanCheck {
     if (r.kind === 'desgraciat' && r.line.length) err(`plan.rounds[${i}].line`, 'a Desgraciat round has no Line: put its prizes in "bingo" (the last card standing)');
   });
 
-  const cardTypes: CardType[] = v1 ? DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })) : [];
-  if (!v1) {
-    list(json, 'cardTypes', 'plan', 10).forEach((c, i) => {
-      const path = `plan.cardTypes[${i}]`;
-      if (!isRec(c)) return err(path, 'must be an object');
-      keys(c, path, ['type', 'name', 'color', 'priceCents', 'rounds']);
-      if (c.type !== 'normal' && c.type !== 'especial') err(`${path}.type`, 'must be "normal" or "especial" (as on the printed cards)');
-      if (cardTypes.some((o) => o.type === c.type)) err(`${path}.type`, `repeats "${String(c.type)}"`);
-      const color = str(c, 'color', path, { max: 7 });
-      if (color !== null && !COLOR_RE.test(color)) err(`${path}.color`, 'must be a colour like "#cfe8ff"');
-      const kinds = Array.isArray(c.rounds) ? c.rounds : [];
-      if (!Array.isArray(c.rounds) || !kinds.length || kinds.some((k) => k !== 'normal' && k !== 'special')) err(`${path}.rounds`, 'must list "normal" and/or "special"');
-      cardTypes.push({
-        type: c.type === 'especial' ? 'especial' : 'normal',
-        name: str(c, 'name', path) ?? '',
-        color: color ?? '',
-        priceCents: num(c, 'priceCents', path, 0, LIMITS.priceCents, { nullable: true, integer: true }),
-        rounds: kinds.filter((k): k is RoundKind => k === 'normal' || k === 'special'),
-      });
-    });
-  }
-
-  // A round without its own card type plays the first old card type that listed its kind, else the kind's default.
-  for (const r of rounds) r.cardType ??= cardTypes.find((c) => c.rounds.includes(r.kind))?.type ?? defaultCardType(r.kind);
+  // A round that doesn't name its card type plays the first type a version 2 plan's `cardTypes` gave its kind, else
+  // its kind's default.
+  const oldTypes = v2 && Array.isArray(json.cardTypes) ? json.cardTypes.filter(isRec) : [];
+  const oldTypeFor = (kind: RoundKind): string | undefined => {
+    const t = oldTypes.find((c) => Array.isArray(c.rounds) && c.rounds.includes(kind) && isCardTypeId(c.type));
+    return typeof t?.type === 'string' ? t.type : undefined;
+  };
+  for (const r of rounds) r.cardType ||= oldTypeFor(r.kind) ?? defaultCardType(r.kind);
 
   let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 };
   const sch = json.schedule;
@@ -300,7 +266,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
   }
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', prizeReveal, rounds, sponsors, cardTypes, schedule, cheatSheet } };
+  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', prizeReveal, rounds, sponsors, schedule, cheatSheet } };
 }
 
 /** A bundle's headline prizes (the first ones), or its first prize when none is marked. */
@@ -330,9 +296,8 @@ export function revealedRounds(plan: Pick<GamePlan, 'prizeReveal'>, revealed: re
 export interface PublicRoundPlan {
   number: number;
   kind: RoundKind;
-  /** The card type it plays (printed on the cards, so never secret). Optional in the type only: publicPlan always
-   * sets it, and an older cloud's snapshot lacks it (then it is defaultCardType(kind)). */
-  cardType?: string;
+  /** The card type it plays (printed on the cards, so never secret). */
+  cardType: string;
   revealed: boolean;
   line?: PrizeBundle;
   bingo?: PrizeBundle;
@@ -346,7 +311,6 @@ export interface PublicPlan {
   prizeReveal: PrizeReveal;
   rounds: PublicRoundPlan[];
   sponsors: Sponsor[];
-  cardTypes: CardType[];
   schedule: SchedulePlan;
 }
 
@@ -358,7 +322,7 @@ export function publicPlan(plan: GamePlan, revealed: readonly number[]): PublicP
     rounds: plan.rounds.map((r) => (open.has(r.number)
       ? { number: r.number, kind: r.kind, cardType: roundCardType(r), revealed: true, line: r.line, bingo: r.bingo }
       : { number: r.number, kind: r.kind, cardType: roundCardType(r), revealed: false })),
-    sponsors: plan.sponsors, cardTypes: plan.cardTypes, schedule: plan.schedule,
+    sponsors: plan.sponsors, schedule: plan.schedule,
   };
 }
 
@@ -368,9 +332,9 @@ export function sponsorOf(plan: GamePlan, prize: Prize | null): Sponsor | null {
   return plan.sponsors.find((s) => s.id === prize.sponsorId) ?? null;
 }
 
-/** The card type a planned round plays: its own, else its kind's default (a plan from before card types per round). */
-export function roundCardType(round: Pick<RoundPlan, 'kind' | 'cardType'>): string {
-  return round.cardType ?? defaultCardType(round.kind);
+/** The card type a planned round plays: its own, else its kind's default (a round from before card types per round). */
+export function roundCardType(round: { kind: RoundKind; cardType?: string }): string {
+  return round.cardType || defaultCardType(round.kind);
 }
 
 /** The plan of round `number`, if planned. */

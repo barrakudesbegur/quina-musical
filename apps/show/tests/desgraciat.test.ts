@@ -139,7 +139,7 @@ dataTest('with the printed cards, the winning song comes in final nearly always,
 test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays normal cards unless it says otherwise', () => {
   const prize = { title: 'Pernil', detail: null, sponsorId: null, image: null, headline: true };
   const plan = (rounds: unknown[]) => ({
-    v: 2, edition: '26', title: 'Quina Quina 3', prizeReveal: 'perRound', sponsors: [], cardTypes: [], rounds,
+    v: 3, edition: '26', title: 'Quina Quina 3', prizeReveal: 'perRound', sponsors: [], rounds,
     schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 }, cheatSheet: { claimRules: [], specialRoundRules: [] },
   });
   const ok = checkGamePlan(plan([{ number: 1, kind: 'normal', line: [], bingo: [] }, { number: 2, kind: 'desgraciat', line: [], bingo: [prize] }]));
