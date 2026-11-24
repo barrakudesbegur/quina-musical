@@ -16,11 +16,13 @@
   },
   "dependencies": {
     "@quina/protocol": "file:protocol",
+    "qrcode": "1.5.4",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
     "@types/node": "26.6.6",
+    "@types/qrcode": "1.5.5",
     "@types/ws": "8.18.2",
     "svelte": "5.57.3",
     "svelte-check": "4.7.8",
