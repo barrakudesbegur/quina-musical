@@ -1,6 +1,6 @@
 // The Game journal: every fact the show writes replays to the show's own record, a restarted show resumes
 // the Game from it, and a broken journal is refused instead of resuming from a wrong state.
-import test from 'node:test';
+import { HAS_DATA, NO_CARD, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { replayJournal, extendJournal, emptyRecord, checkCommand, isEvent, JournalError, type Command, type JournalEntry } from '@quina/protocol';
 import { makeCommand } from '@quina/protocol';
@@ -187,7 +187,7 @@ test('extendJournal continues a replayed record at any point, and never changes 
 // ---- the show flow in the journal ----------------------------------------------------------------------
 const catalog = new Set(songs.map((s) => s.id));
 const card = (() => {
-  const found = allCards.find((c) => c.type === 'normal' && c.id <= 150 && cardSongIds(c).flat().every((id) => catalog.has(id)));
+  const found = allCards.find((c) => c.type === 'normal' && c.id <= 150 && cardSongIds(c).flat().every((id) => catalog.has(id))) ?? (HAS_DATA ? undefined : NO_CARD);
   assert.ok(found, 'a card with every song playable');
   return found;
 })();

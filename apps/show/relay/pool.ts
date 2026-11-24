@@ -16,8 +16,9 @@ export const DATA = path.join(REPO, 'data');
 export const POOLS_DIR = path.join(DATA, 'pools');
 /** Audio and covers: songs, effects (tracked), stingers, Hold music, celebration, Interval, covers. */
 export const MEDIA = path.join(DATA, 'media');
-/** What the preparation writes: analysis, stems and keys metadata, Signatures, Hold and Interval indexes, reports. */
-export const OUT = path.join(DATA, 'out');
+/** What the preparation writes: analysis, stems and keys metadata, Signatures, Hold and Interval indexes, reports.
+ * QUINA_OUT_DIR points it elsewhere (the tests' "no prepared data" run). */
+export const OUT = process.env.QUINA_OUT_DIR ? path.resolve(process.env.QUINA_OUT_DIR) : path.join(DATA, 'out');
 /** Decoded audio, stems, Signatures, Blend renders, Hold and Interval audio, the relay token. */
 export const CACHE = path.join(DATA, 'cache');
 /**

@@ -1,7 +1,7 @@
 // The show flow (docs/protocol.md › Scenes): the scene rules, Claims and their Checks, the Celebration, the
 // Interval, the technical pause, and how they ride on the show state machine. Fake clock, real analysis data,
 // real cards.
-import test from 'node:test';
+import { HAS_DATA, NO_CARD, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { COMMAND_NAMES, replayJournal, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
@@ -23,7 +23,7 @@ const sfxNames = (effects: readonly Effect[]) => all(effects, 'sfx').map((e) => 
 /** A normal card whose 12 songs are all playable, and a Queue that completes its top row first, then the rest. */
 const catalog = new Set(songs.map((s) => s.id));
 const playable = (c: Card) => cardSongIds(c).flat().every((id) => catalog.has(id));
-const card = allCards.find((c) => c.type === 'normal' && c.id <= 200 && playable(c));
+const card = allCards.find((c) => c.type === 'normal' && c.id <= 200 && playable(c)) ?? (HAS_DATA ? undefined : NO_CARD);
 assert.ok(card, 'a card with every song playable');
 const rows = cardSongIds(card);
 const onCard = new Set(rows.flat());
@@ -31,9 +31,9 @@ const fillers = songs.map((s) => s.id).filter((id) => !onCard.has(id));
 /** Line after 4 landings (index 3), Bingo after 14 (index 13). */
 const QUEUE = [...rows[0], fillers[0], fillers[1], ...rows[1], ...rows[2], ...fillers.slice(2)];
 /** Another normal card, with nothing complete after the first few songs of QUEUE. */
-const loser = allCards.find((c) => c.type === 'normal' && c.id !== card.id && c.id <= 200 && cardSongIds(c).every((row) => row.some((id) => !QUEUE.slice(0, 14).includes(id))));
+const loser = allCards.find((c) => c.type === 'normal' && c.id !== card.id && c.id <= 200 && cardSongIds(c).every((row) => row.some((id) => !QUEUE.slice(0, 14).includes(id)))) ?? (HAS_DATA ? undefined : NO_CARD);
 assert.ok(loser);
-const specialCard = allCards.find((c) => c.type === 'especial');
+const specialCard = allCards.find((c) => c.type === 'especial') ?? (HAS_DATA ? undefined : { ...NO_CARD, type: 'especial' });
 assert.ok(specialCard);
 
 function flow(seed = 3) {

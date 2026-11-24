@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { HAS_DATA, dataTest } from './support/data.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,8 +24,8 @@ interface PrintedCard extends Card {
   lines: CardSong[][];
 }
 
-const CARDS: PrintedCard[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
-const INDEX: IndexSong[] = JSON.parse(fs.readFileSync(path.join(OUT, 'analysis/index.json'), 'utf8')).songs;
+const CARDS: PrintedCard[] = HAS_DATA ? JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) : [];
+const INDEX: IndexSong[] = HAS_DATA ? JSON.parse(fs.readFileSync(path.join(OUT, 'analysis/index.json'), 'utf8')).songs : [];
 const NORMAL = CARDS.filter((c) => c.type === 'normal');
 const POOL = Array.from({ length: 77 }, (_, i) => i + 1);
 const ROUNDS = Number(process.env.CARD_SIM_ROUNDS || 1500);
@@ -68,7 +69,7 @@ test('parseCardRanges rejects junk and absurd ranges', () => {
 
 // -------------------------------------------------------------------------------------- validity
 
-test('validCards: normal cards in regular rounds, special cards only in the special round', () => {
+dataTest('validCards: normal cards in regular rounds, special cards only in the special round', () => {
   const inPlay = parseCardRanges('1-180, 200-215, 400-460');
   const regular = validCards(CARDS, inPlay, 'normal');
   assert.equal(regular.length, 196);
@@ -83,7 +84,7 @@ test('validCards: normal cards in regular rounds, special cards only in the spec
   assert.throws(() => validCards(CARDS, inPlay, unchecked), /Unknown round type/);
 });
 
-test('cards.json: 399 normal cards (1–399), 300 special (400–699), each 3 lines of 4 distinct songs', () => {
+dataTest('cards.json: 399 normal cards (1–399), 300 special (400–699), each 3 lines of 4 distinct songs', () => {
   assert.equal(NORMAL.length, 399);
   assert.ok(NORMAL.every((c) => c.id >= 1 && c.id <= 399));
   const special = CARDS.filter((c) => c.type === 'especial');
@@ -97,7 +98,7 @@ test('cards.json: 399 normal cards (1–399), 300 special (400–699), each 3 li
   }
 });
 
-test('card song ids are the mixer song ids (same id → same title and artist)', (t) => {
+dataTest('card song ids are the mixer song ids (same id → same title and artist)', (t) => {
   const mixer = new Map(INDEX.map((s) => [s.id, s] as const));
   const onCards = new Map<number, CardSong>();
   for (const c of CARDS) for (const line of c.lines) for (const s of line) onCards.set(s.id, s);
@@ -139,7 +140,7 @@ test('cardStatus finds Lines, the Bingo and what is missing', () => {
   assert.deepEqual(s.missing, []);
 });
 
-test('cardStatus reads cards.json cards (song objects)', () => {
+dataTest('cardStatus reads cards.json cards (song objects)', () => {
   const real = CARDS[0];
   const ids = cardSongIds(real);
   const s = cardStatus(real, ids[1]);
@@ -197,7 +198,7 @@ test('firstWinAt reports every card that the same landing completes', () => {
   assert.deepEqual(firstWinAt([twin, A], queue, 'line'), { index: 3, songId: 4, cardIds: [1, 9] });
 });
 
-test('firstWinAt agrees with possibleWinners replayed song by song', () => {
+dataTest('firstWinAt agrees with possibleWinners replayed song by song', () => {
   const random = seededRandom(5);
   for (let round = 0; round < 40; round++) {
     const cards = secureShuffle(NORMAL, random).slice(0, 60);
@@ -241,7 +242,7 @@ const syntheticCards = (n: number, random: () => number) =>
     return card(i + 1, [songs.slice(0, 4), songs.slice(4, 8), songs.slice(8, 12)]);
   });
 
-test(`simulation: 77 songs, 200 random normal cards from cards.json, ${ROUNDS} queues`, () => {
+dataTest(`simulation: 77 songs, 200 random normal cards from cards.json, ${ROUNDS} queues`, () => {
   const random = seededRandom(2026);
   const { line, bingo } = simulate({ cardsFor: (r) => secureShuffle(NORMAL, r).slice(0, 200), pool: POOL, rounds: ROUNDS, random });
   console.log(`  first Line (song number): ${describe(line)}, songs 11–21: ${(share(line, 11, 21) * 100).toFixed(0)}%`);
@@ -253,7 +254,7 @@ test(`simulation: 77 songs, 200 random normal cards from cards.json, ${ROUNDS} q
   assert.ok(share(bingo, 45, 55) >= 0.65);
 });
 
-test('simulation: synthetic random cards and the special deck give the same picture', () => {
+dataTest('simulation: synthetic random cards and the special deck give the same picture', () => {
   const random = seededRandom(77);
   const rounds = Math.ceil(ROUNDS / 2);
   const synth = simulate({ cardsFor: (r) => syntheticCards(200, r), pool: POOL, rounds, random });
@@ -266,7 +267,7 @@ test('simulation: synthetic random cards and the special deck give the same pict
   }
 });
 
-test('simulation: more cards in play → earlier wins', () => {
+dataTest('simulation: more cards in play → earlier wins', () => {
   const random = seededRandom(9);
   const rounds = Math.ceil(ROUNDS / 3);
   const medians = [50, 120, 200, 300].map((n) => {

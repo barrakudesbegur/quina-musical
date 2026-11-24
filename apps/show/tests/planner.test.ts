@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { HAS_DATA, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +17,7 @@ import { OUT } from '../relay/pool.ts';
 
 const DIR = path.join(OUT, 'analysis');
 const readJson = (file: string): unknown => JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'));
-const index = (readJson('index.json') as { songs: IndexSong[] }).songs.filter((s) => !s.excluded);
+const index = HAS_DATA ? (readJson('index.json') as { songs: IndexSong[] }).songs.filter((s) => !s.excluded) : [];
 const analyses = new Map(index.map((s) => [s.id, readJson(`${s.id}.json`) as Analysis] as const));
 const PAIRS = Number(process.env.PLANNER_PAIRS || 3000);
 

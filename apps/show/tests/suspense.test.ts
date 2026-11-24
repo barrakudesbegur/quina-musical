@@ -1,7 +1,7 @@
 // Suspense: the presenters hold a transition open. The loop on B's grid is bar-exact and builds; a release
 // lands B's hook on the first free bar line; the show schedules the bars ahead, releases by itself after
 // SUSPENSE.autoReleaseSec, and Back or Hold cancel it like a Spin. The drum coasts and brakes onto the card.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { barSpan, openSuspense, suspenseBar, suspenseIntensity, suspenseTease, releaseSuspense, type SuspenseOpen } from '../engine/src/plan/suspense.ts';
 import { eventStart, type Plan } from '../engine/src/plan/planner.ts';

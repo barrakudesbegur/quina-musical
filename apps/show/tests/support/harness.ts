@@ -12,6 +12,7 @@ import type { Analysis } from '../../engine/src/analysis.ts';
 import type { Card } from '../../engine/src/game/cards.ts';
 import type { DecoyConfig } from '../../engine/src/config.ts';
 import { OUT, REPO } from '../../relay/pool.ts';
+import { HAS_DATA } from './data.ts';
 
 /** The analysis files hold more than the engine reads; the tests also pick song pairs by tempo stability. */
 export type SongAnalysis = Analysis & { tempo: { isStable: boolean } };
@@ -20,10 +21,11 @@ type IndexEntry = { id: number; title: string; artist: string; excluded: boolean
 const DIR = path.join(OUT, 'analysis');
 /** Test data from disk, typed by the contract of whatever wrote it (tools/prep/analyze.py, the card generator). */
 const readJson = <T>(file: string): T => JSON.parse(fs.readFileSync(file, 'utf8'));
-const index = readJson<{ songs: IndexEntry[] }>(path.join(DIR, 'index.json')).songs.filter((s) => !s.excluded);
+// Without the prepared data (a fresh clone, CI) everything is empty and the tests that need it skip (support/data.ts).
+const index = HAS_DATA ? readJson<{ songs: IndexEntry[] }>(path.join(DIR, 'index.json')).songs.filter((s) => !s.excluded) : [];
 export const analyses = new Map(index.map((s) => [s.id, readJson<SongAnalysis>(path.join(DIR, `${s.id}.json`))]));
 export const songs = index.map((s) => ({ id: s.id, title: s.title, artist: s.artist }));
-export const allCards = readJson<Card[]>(path.join(REPO, 'apps/cards/dist/cards.json'));
+export const allCards = HAS_DATA ? readJson<Card[]>(path.join(REPO, 'apps/cards/dist/cards.json')) : [];
 
 export interface SetupOptions {
   seed?: number;

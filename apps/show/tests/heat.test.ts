@@ -1,6 +1,6 @@
 // The phones' public Heat (`heat.sample`): sent a random 4–15 s after a landing, never at it, from the round's
 // seeded randomness, and only with cards in play.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import type { EventOf } from '@quina/protocol';
 import { FLOW } from '../engine/src/config.ts';

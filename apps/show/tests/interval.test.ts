@@ -1,7 +1,7 @@
 // The Interval playlist: the Game's order, the handover plan (echo-out on a downbeat, the next track rising or
 // opening up into it), the track contract, and how the show state machine drives it (intervalSkip, the volume,
 // the track in the state, the scene rules) plus the "Hold music off" setting.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';

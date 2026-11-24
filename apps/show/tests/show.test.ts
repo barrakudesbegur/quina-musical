@@ -1,5 +1,5 @@
 // The show state machine, driven with a fake clock and seeded randomness over the real analysis data.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { Show } from '../engine/src/show/show.ts';
 import { planTransition, type PlanRequest, type SignatureSource } from '../engine/src/plan/planner.ts';

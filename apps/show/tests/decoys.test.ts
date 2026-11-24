@@ -1,6 +1,6 @@
 // Decoys (experiment, off by default): a song that already landed teases in the first bars of an S2 bridge
 // and is cut off by a tape stop before anything of the song that lands; with the flag off nothing changes.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { decoyLayer, firstSoundOfB } from '../engine/src/plan/decoys.ts';
 import { planTransition } from '../engine/src/plan/planner.ts';

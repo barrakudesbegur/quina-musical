@@ -1,6 +1,6 @@
 // The tie-free Shuffle (game/shuffle.ts) on the real cards (apps/cards/dist/cards.json), and how the show
 // uses it: deterministic from its seed, never a Tie on the first Line or Bingo among the valid cards in play.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { tieFreeShuffle, seededQueue, hasTie } from '../engine/src/game/shuffle.ts';
 import { firstWinAt, parseCardRanges, validCards } from '../engine/src/game/cards.ts';

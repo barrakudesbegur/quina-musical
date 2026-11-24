@@ -19,6 +19,7 @@ import {
 } from '@quina/protocol';
 import { projectEvent } from '../../cloud/src/domain/projection.ts';
 import { setup, allCards } from './support/harness.ts';
+import { dataTest } from './support/data.ts';
 
 function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object') {
@@ -110,7 +111,7 @@ test('the Game end is rounded to 5 minutes', () => {
   assert.equal(roundGameEnd(null), null);
 });
 
-test('the console\'s private data never reaches the public feed: the Futur tab, Aguanta, the possible winners', () => {
+dataTest('the console\'s private data never reaches the public feed: the Futur tab, Aguanta, the possible winners', () => {
   const h = setup({ seed: 12, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
   h.send('unlock');
   for (let k = 0; k < 4; k++) {

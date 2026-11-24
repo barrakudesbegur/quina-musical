@@ -2,7 +2,7 @@
 // one over random real pairs, press times, Phases and Paces. Every plan must keep the landing invariants:
 // B's hook downbeat at T exactly (with a tape start too), nothing before the Spin starts, A silent after its
 // exit, an audible produced effect, stem lanes inside their stems; plus each technique's own shape.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { planTransition, chooseRecipe } from '../engine/src/plan/planner.ts';
 import { PHASES } from '../engine/src/plan/phases.ts';

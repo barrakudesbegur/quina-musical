@@ -1,6 +1,6 @@
 // Plan B: resuming a round by hand (`resumeAt`) on a show page with no journal. The seeded Shuffle rebuilds the
 // exact Queue from the state's `resume` token; anything that doesn't match is refused, never resumed wrongly.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { extendJournal, emptyRecord, formatResumeToken, makeCommand, parseResumeToken, parseSeedCode, replayJournal, seedCode } from '@quina/protocol';
 import type { CommandFields, JournalEntry, ResumeToken } from '@quina/protocol';

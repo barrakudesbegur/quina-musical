@@ -1,6 +1,6 @@
 // A show page booting with the cloud link's copy (relay /cloud/): which Game it resumes, and that a cloud
 // journal becomes its own, so it numbers on. Admin's manual resume wins when newer than the local journal.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { replayJournal, type JournalEntry } from '@quina/protocol';
 import { LocalJournal, chooseResume, parseJournalLines, type CloudCopy, type KeyValueStorage } from '../engine/src/journal-store.ts';

@@ -5,7 +5,7 @@
 //
 // The thresholds sit between the engine before the rotation memory (first column of each comment) and after it
 // (second), from `node tests/support/variety.ts 4 1`: falling back to the old behaviour fails them.
-import test from 'node:test';
+import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { familyGroup } from '../engine/src/plan/recipes.ts';
 import { MOVES } from '../engine/src/config.ts';
