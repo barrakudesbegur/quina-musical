@@ -16,6 +16,7 @@
   import CardsInPlay from './components/CardsInPlay.svelte';
   import RoundsEditor from './components/RoundsEditor.svelte';
   import SponsorsEditor from './components/SponsorsEditor.svelte';
+  import SponsorImport from './components/SponsorImport.svelte';
   import ScheduleEditor from './components/ScheduleEditor.svelte';
   import RulesEditor from './components/RulesEditor.svelte';
   import JsonImport from './components/JsonImport.svelte';
@@ -81,6 +82,7 @@
       <CardsInPlay {show} {commands} {cardTypes} {catalogFailed} />
       <RoundsEditor {session} {show} {commands} />
       <SponsorsEditor {session} />
+      <SponsorImport {session} />
       <ScheduleEditor {session} />
       <RulesEditor {session} />
     {:else if route === 'json'}

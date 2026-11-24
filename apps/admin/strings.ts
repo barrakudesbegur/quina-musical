@@ -102,6 +102,8 @@ export const S = {
   },
 
   prize: {
+    offer: (text: string) => `Segons el full, regala: «${text}»`,
+    useOffer: 'Usar-ho com a títol',
     has: (label: string) => `Hi ha ${label.toLowerCase()}`,
     title: 'Premi',
     detail: 'Detall (opcional)',
@@ -126,6 +128,25 @@ export const S = {
     editLogo: 'Afegir o netejar el logo',
     removeLogo: 'Treure el logo',
     logoAlt: (name: string) => `Logo de ${name}`,
+  },
+
+  sponsorImport: {
+    title: 'Importar patrocinadors del full',
+    help: "Exporta el full de col·laboradors com a CSV i puja'l aquí. Només es llegeixen el nom, la categoria, si participa, què regala i si hi ha logo; la resta del full (qui ho té, entregues, tasques) no es llegeix mai. Els que participen surten marcats.",
+    file: 'Fitxer CSV',
+    noHeader: "No trobo la fila de capçalera (COMERÇ, PARTICIPA…). És el CSV del full de col·laboradors?",
+    add: 'Afegir',
+    name: 'Comerç',
+    offer: 'Què regala',
+    logo: 'Logo',
+    hasLogo: 'Sí',
+    known: 'ja hi és',
+    waiting: 'esperant',
+    unknown: 'sense resposta',
+    pick: (name: string) => `Afegir ${name}`,
+    addCount: (n: number) => (n === 1 ? 'Afegir 1 patrocinador' : `Afegir ${n} patrocinadors`),
+    added: (n: number) => (n === 1 ? "S'ha afegit 1 patrocinador. Recorda desar." : `S'han afegit ${n} patrocinadors. Recorda desar.`),
+    cancel: 'Cancel·lar',
   },
 
   logo: {

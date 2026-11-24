@@ -4,6 +4,7 @@
   import type { WinKind } from '../../../packages/ui/flow.ts';
   import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { blankPrize } from '../logic/plan-edit.ts';
+  import { offers } from '../state/offers.svelte.ts';
   import { S } from '../strings.ts';
 
   let {
@@ -15,6 +16,8 @@
   }: { prize: Prize | null; kind: WinKind; sponsors: readonly Sponsor[]; idPrefix: string; errors?: readonly string[] } = $props();
 
   const label = $derived(CA.prize[kind]);
+  /** What the chosen sponsor gives, from the imported sheet (Admin-only memory), when it isn't the title yet. */
+  const offer = $derived(prize ? offers.get(prize.sponsorId) : null);
 </script>
 
 <fieldset class="prize" data-kind={kind}>
@@ -39,6 +42,12 @@
         </select>
       </label>
     </div>
+    {#if offer && prize.title.trim() !== offer}
+      <p class="prize__offer">
+        <span>{S.prize.offer(offer)}</span>
+        <button type="button" onclick={() => prize && (prize.title = offer)}>{S.prize.useOffer}</button>
+      </p>
+    {/if}
     <label class="field">
       <span class="field__label">{S.prize.detail}</span>
       <input type="text" value={prize.detail ?? ''} oninput={(e) => prize && (prize.detail = e.currentTarget.value || null)} maxlength="1000" />
@@ -57,5 +66,14 @@
   .prize {
     display: grid;
     gap: var(--space-3);
+  }
+  .prize__offer {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
   }
 </style>
