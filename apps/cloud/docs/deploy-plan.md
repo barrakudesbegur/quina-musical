@@ -129,6 +129,36 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 - If it happens anyway: phones and remote consoles stop getting updates, and the show itself goes on, because the laptop never needs the cloud (ADR 0003). Upgrade on the spot: Dashboard → Workers & Pages → Plans → **Workers Paid** (5 USD a month minimum, usage-based beyond what's included). It takes effect at once.
 - Watch it live: Workers & Pages → quina-cloud → Metrics, plus Durable Objects → GameRoom, and `/api/stats` (admins).
 
+### 6. This year's pool, once the playlist is final
+
+The R2 free tier is 10 GB and last year's test pool takes 6.6 GB, so the old pool goes before the new one is pushed. Laptops keep their own copies; only the bucket's copy goes.
+
+1. On the main laptop, prepare the new pool (apps/show README › Pools): fetch the playlist (`tools/prep/playlist-fetcher`), write `data/pools/2026.json`, tag the hooks, `npm run prep -- --pool 2026` in `apps/show`, and set `cardsJson` once the cards are generated.
+2. In `apps/cloud`, see what's in the bucket: `npm run media -- prune` (every pool, its files and size, against the 10 GB).
+3. Free the room: `npm run media -- prune --pool default` is a dry run (what it would free); `npm run media -- prune --pool default --yes` deletes the pool's files and manifest from the bucket.
+4. Push the new pool: `npm run media -- push --pool 2026` (progress every few seconds; about an hour for 6–7 GB at home upload speeds). Do it at least the day before the show.
+5. Use it everywhere: the relay `npm start -- --pool 2026 --lan`, the preflight `npm run preflight -- --pool 2026`, and each spare laptop `npm run setup:laptop -- --pool 2026` (it pulls the new pool; its finished steps are skipped).
+
+Undo: push the old pool again from a laptop that still has it (`npm run media -- push --pool default`).
+
+### 7. Point quina.barrakudesbegur.org at the Worker: NEEDS THE USER'S EXPLICIT OK
+
+This year's printed cards have QR codes to `https://quina.barrakudesbegur.org/26/<card>`. Today that name is last year's app on GitHub Pages: a DNS-only `CNAME quina → barrakudesbegur.github.io`, with the repository's Pages custom domain set to `quina.barrakudesbegur.org` (checked 2026-11-24). Phones that scan a card must reach this year's player, so **this must be live before the cards are handed out**, at least a day before the event and after a rehearsal on quina-dev, never on the night itself.
+
+Steps, in this order (about 15 minutes, a few minutes of downtime for the old app):
+1. **Access first**, so the organizers' pages are protected on the new name from the first minute: in Zero Trust → Access → Applications, add to `quina-cloud organizers` the destinations `quina.barrakudesbegur.org/api`, `/ws/console`, `/console` and `/admin`; to `quina-cloud laptop` add `quina.barrakudesbegur.org/ws/show`; to `quina-cloud health (public)` add `quina.barrakudesbegur.org/api/health`. The apps' AUD tags don't change, so the Worker's secrets stay as they are. (Dashboard, or a short-lived API token from the user.)
+2. **GitHub Pages:** in the repository's Settings → Pages, remove the custom domain. Last year's app stays at `https://barrakudesbegur.github.io/quina-musical/`. Its deploy workflow can stay; it only runs when `legacy/2025` changes.
+3. **DNS:** delete the record `quina` (`CNAME → barrakudesbegur.github.io`) in the zone `barrakudesbegur.org`. Cloudflare refuses a Custom Domain over an existing record, and nothing else in the zone is touched (`quina-api`, `fitxes`, `quina-dev` stay).
+4. **The Worker:** add `{ "pattern": "quina.barrakudesbegur.org", "custom_domain": true }` to `routes` in `wrangler.jsonc`, then `npx wrangler triggers deploy`. Cloudflare creates the record and its certificate (a minute or two).
+5. **Check:**
+   - `https://quina.barrakudesbegur.org/26/123` opens the player with card 123;
+   - a phone that had last year's app gets it cleaned by the service-worker kill switch (`/sw.js`);
+   - `/api/health` answers, `/admin/` asks for the Google login;
+   - the preflight with `QUINA_CLOUD_URL=wss://quina.barrakudesbegur.org/ws/show` passes (the link can stay on quina-dev; both names serve the same Worker).
+6. Log it here, with the time.
+
+Undo (a few minutes): remove the `quina.barrakudesbegur.org` route and run `npx wrangler triggers deploy` (Cloudflare removes its record); recreate `CNAME quina → barrakudesbegur.github.io` (DNS only); set the Pages custom domain back to `quina.barrakudesbegur.org`. The Access destinations for the name can stay.
+
 ## Privacy on the night
 
 - **The laptop's hotspot must have a password.** Anyone on it can read, through the relay, the journal and so the Queue (`/cloud/`, and the relay's `journal.entry` events).

@@ -143,8 +143,37 @@ async function media(request: Request, env: Env, ctx: ExecutionContext, id: stri
 async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response> {
   const bucket = env.MEDIA;
   if (!bucket) return text(503, 'media sync is not configured: create the R2 bucket (docs/deploy-plan.md, step 4)');
+  // GET /api/sync: every pool in the bucket, from its manifest (for `media prune`: the free tier is 10 GB).
+  if (url.pathname === '/api/sync') {
+    if (request.method !== 'GET') return text(405, 'only GET');
+    const listed = await bucket.list({ prefix: 'pools/', delimiter: '/' });
+    const pools = [];
+    for (const prefix of listed.delimitedPrefixes) {
+      const name = prefix.slice('pools/'.length, -1);
+      const object = await bucket.get(manifestKey(name));
+      const manifest = object ? (checkManifest(await object.json(), name) ?? null) : null;
+      const files = manifest ? Object.values(manifest.files) : [];
+      pools.push({ name, files: files.length, bytes: files.reduce((sum, f) => sum + f.size, 0), updatedAtMs: manifest?.updatedAtMs ?? 0 });
+    }
+    return json({ pools, totalBytes: pools.reduce((sum, p) => sum + p.bytes, 0), freeTierBytes: 10e9 });
+  }
   const target = syncTarget(url.pathname) as { pool: string; resource: 'manifest' | 'file' };
   if (target.resource === 'manifest') {
+    // DELETE: the whole pool goes (every file, then its manifest); x-confirm-pool must name it, against slips.
+    if (request.method === 'DELETE') {
+      if (request.headers.get('x-confirm-pool') !== target.pool) return text(400, `send x-confirm-pool: ${target.pool} to delete that pool`);
+      let deleted = 0;
+      let cursor: string | undefined;
+      do {
+        const page = await bucket.list({ prefix: `pools/${target.pool}/files/`, cursor, limit: 1000 });
+        const keys = page.objects.map((o) => o.key);
+        if (keys.length) await bucket.delete(keys);
+        deleted += keys.length;
+        cursor = page.truncated ? page.cursor : undefined;
+      } while (cursor);
+      await bucket.delete(manifestKey(target.pool));
+      return json({ ok: true, deleted });
+    }
     if (request.method === 'GET') {
       const object = await bucket.get(manifestKey(target.pool));
       return object ? new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }) : json({ v: 1, pool: target.pool, files: {}, updatedAtMs: 0 });
@@ -163,6 +192,7 @@ async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response
   const path = url.searchParams.get('path');
   if (!isSyncPath(path)) return text(400, 'path must be <root>/<file>, a known root and plain names');
   const key = fileKey(target.pool, path);
+  if (request.method === 'DELETE') return text(405, 'delete a whole pool: DELETE /api/sync/<pool>/manifest');
   if (request.method === 'GET') {
     const object = await bucket.get(key);
     if (!object) return text(404, 'not found');

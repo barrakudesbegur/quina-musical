@@ -66,12 +66,12 @@ export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websock
 const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
 
 /** The pool's media in R2 (C3): `/api/sync/<pool>/manifest` and `/api/sync/<pool>/file?path=…`. The laptops only. */
-export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT'] });
+export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT', 'DELETE'] });
 const SYNC_PATH = /^\/api\/sync\/([a-z0-9_-]{1,40})\/(manifest|file)$/;
 
 export function findRoute(pathname: string): Route | null {
   if (Object.hasOwn(ROUTES, pathname)) return ROUTES[pathname] ?? null;
-  if (SYNC_PATH.test(pathname)) return SYNC_ROUTE;
+  if (SYNC_PATH.test(pathname) || pathname === '/api/sync') return SYNC_ROUTE;
   if (MEDIA_JXL_PATH.test(pathname)) return MEDIA_JXL_ROUTE;
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
 }

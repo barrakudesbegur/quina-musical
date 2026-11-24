@@ -24,6 +24,7 @@ npm run dev                          # wrangler dev on http://localhost:8787 (st
 npm run assets                       # dist/: static/ + the UI build + cards.json + covers as JXL + JPEG (sips, cjxl)
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
 npm run media -- push                # the pool's prepared media → the cloud's private R2 (pull on a takeover laptop)
+npm run media -- prune               # the bucket's pools and sizes (10 GB free); --pool NAME [--yes] deletes one
 npm run preflight                    # before every rehearsal and show: a pass/warn/fail table (exits 1 on any FAIL)
 npm test                             # typecheck, Node tests, workerd tests (about 10 s)
 npm run loadtest -- --report reports/loadtest-$(date +%F).md   # 400 phones (about 1 min)
