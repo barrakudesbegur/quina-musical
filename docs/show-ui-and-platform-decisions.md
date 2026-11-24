@@ -28,6 +28,15 @@ These override the sections below where they differ.
   A menu, shown as its own screen, holds how to play, the player's cards, sounds, last year's card and "Esborrar dades". The history includes the song playing now.
 - **Ten card icons:** each followed card gets its own colour and shape, always corn first (yellow), then cyan, red, green, pink (heart), orange, purple (grapes), white, black (top hat) and brown (the Tió).
 - **Times show in the am/pm format,** at the user's request (one setting, easy to change back).
+- **Names on screen:** the schedule screen is "Horari" (not "Programa"). The special round is "Quina Especial", without a number; numbering appears only as "Quina X de Y". Card numbers are written "#123".
+- **The event's name is set per edition in Admin** (this year "Quina Quina 3").
+- **Prizes come in bundles:** each Line and Quina has many prizes, usually with one or two headline ones. Screens show the bundle with the headline prizes first, never a single prize.
+- **Prize secrecy:** prizes are revealed round by round as the presenters announce them. Phones show the revealed rounds' bundles; future rounds stay locked, game-style. Before the night, only round 1's bundle is visible. An "everything secret" option exists for organizers. The cloud enforces it, so locked prizes never reach the public feed.
+- **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (set in Admin), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
+- **Winning card numbers are not shown** on the projector or phones ("people don't care who won unless it's them"). There's also no QR on the projector during the Interval.
+- **A Check also fails for a card of the wrong type for the round.** It's shown as its own reason.
+- **Horari off schedule:** real times for what has happened, and "~" predictions for what's next.
+- **Proposed, pending the user's confirmation:** the player app's 3 tabs (above) become a single "now" screen, with two corner buttons opening stackable drawers (Premis, Horari), plus drawers for add-card, the menu and last year's card.
 - **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 - **Resolved from the open questions:**
   - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.

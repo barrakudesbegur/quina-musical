@@ -7,7 +7,7 @@ A live music bingo show. Players mark songs on printed cards as they recognize t
 ### The game
 
 **Game**:
-The whole set of rounds played on the night of the event. On screen it is just the event's name, "Quina Musical".
+The whole set of rounds played on the night of the event. On screen it carries the edition's name, which is set in Admin (this year "Quina Quina 3").
 _Avoid_: Night, session, event, partida
 
 **Edition**:
@@ -19,11 +19,11 @@ One game of bingo, from its first song until a Bingo is confirmed. Labelled "Qui
 _Avoid_: Game, match, ronda
 
 **Special round**:
-A round played with special cards instead of the normal ones.
+A round played with special cards instead of the normal ones. Shown as "Quina Especial", never with a number.
 _Avoid_: Quina especial (outside the UI)
 
 **Card**:
-A printed sheet of 12 songs in 3 lines of 4. A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
+A printed sheet of 12 songs in 3 lines of 4, identified by its number (shown as "#123"). A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
 _Avoid_: Cartró (outside the UI), ticket
 
 **Special card**:
@@ -64,7 +64,7 @@ The moment after a successful check, with a big impact, a victory lap of the dru
 _Avoid_: Ceremony, prize giving
 
 **Prize**:
-Something given for the Line or the Bingo of a round, provided by a sponsor.
+One item in the bundle given for a round's Line or Bingo, provided by a sponsor. A bundle usually holds one or two headline prizes and several smaller ones.
 _Avoid_: Premi (outside the UI), reward
 
 **Sponsor**:
