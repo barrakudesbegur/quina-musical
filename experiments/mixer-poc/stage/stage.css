@@ -1,0 +1,1421 @@
+/*
+ * The projector stage's basic theme. Deliberately plain: structure, legibility from far away, and a simple
+ * CSS version of every ANIMATIONS.md hook. The final game look drops in later as a theme that overrides the
+ * tokens and restyles the same hooks (`data-scene`, `data-anim`, `data-state`, BEM classes).
+ *
+ * Everything is scoped under `.stage-root`, because in the show page this sheet sits next to the drum's
+ * (engine/css/drum.css): no bare element selectors, and no block names the drum page uses (`.stage`,
+ * `.card`, `.cover`, `.result`…). Look values come from ui/tokens.css; the stage's own component tokens
+ * below derive from them, and a theme may override them (proposed for tokens.css).
+ *
+ * Layers inside the root: backdrop (all but the drum's band) · the band · the band's cover · the scaled
+ * 1440×1080 box with the scenes · the link dot. JS sets --box-x/-y/-scale and --band-top/-h (screen px).
+ */
+
+@property --heat-warm {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --heat-hot {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --heat-glow {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.stage-root {
+  /* ---- stage component tokens (basic theme) ---- */
+  --stage-z: 4; /* above the show page's drum, below its HUD (5), flash (6) and start overlay (10) */
+  --stage-pad: var(--space-6);
+  --stage-gap: var(--space-5);
+  --stage-panel: var(--color-surface);
+  --stage-radius: var(--radius-lg);
+  --stage-tile-radius: var(--radius-md);
+  --stage-dim-opacity: 0.28;
+  --stage-spin-opacity: 0.3;
+  --stage-light: 1.375rem;
+  --stage-light-cool: color-mix(in oklab, var(--color-calm) 55%, var(--color-paper));
+  --stage-ring: 0.375rem;
+  --stage-qr: 18.75rem;
+  --stage-logo: 6rem;
+  --stage-tile-cover: 11.25rem;
+  --stage-confetti: 1.125rem;
+  --stage-float: 6px;
+  --stage-rise: 24px;
+  --stage-title-drop: 40px;
+  --stage-slam-from: 1.35;
+  --stage-deal-perspective: 50rem;
+  --stage-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --stage-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  /* Motion lengths that tokens.css doesn't have yet (ANIMATIONS.md numbers) */
+  --stage-dur-title-out: 400ms;
+  --stage-dur-tile-slide: var(--dur-base);
+  --stage-artist-delay: 120ms;
+  --stage-dur-vignette: 3s;
+  --stage-dur-heat: 250ms; /* smooths the 4 Hz repaint; the 20 s ease itself is computed */
+  --stage-dur-jiggle: 180ms;
+  --stage-dur-ribbon: 400ms;
+  --stage-dur-deal: 600ms;
+  --stage-deal-stagger: 60ms;
+  --stage-dur-ring: 1200ms;
+  --stage-dur-stamp: 300ms;
+  --stage-dur-shake: 300ms;
+  --stage-dur-result: 400ms;
+  --stage-dur-flash: 120ms;
+  --stage-dur-slam: 600ms;
+  --stage-delay-plate: 300ms;
+  --stage-delay-prize: 600ms;
+  --stage-dur-rays: 20s;
+  --stage-dur-confetti: 2400ms;
+  --stage-dur-rotate: 400ms;
+  --stage-dur-idle: 8s;
+  --stage-dur-pause: 300ms;
+  --stage-dur-link: 200ms;
+  /* Reduced-motion fades (they stay when motion is reduced) */
+  --stage-dur-reduced-fade: 2s;
+
+  /* ---- layout set by JS ---- */
+  --box-scale: 1;
+  --box-x: 0px;
+  --box-y: 0px;
+  --band-top: 0px;
+  --band-h: 0px;
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--stage-z);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-body);
+  line-height: 1.15;
+  text-align: center;
+  text-shadow: none;
+  letter-spacing: normal;
+}
+
+.stage-root *,
+.stage-root *::before,
+.stage-root *::after {
+  box-sizing: border-box;
+}
+
+.stage-root :where(h1, h2, h3, p, ul, ol, li, figure, figcaption) {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  list-style: none;
+}
+
+.stage-root img {
+  display: block;
+  max-width: 100%;
+}
+
+.stage-root [hidden] {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------------------- layers */
+.stage__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg);
+  /* Everything except the drum's band; the band has its own cover below. */
+  mask-image: linear-gradient(
+    to bottom,
+    #000 var(--band-top),
+    transparent var(--band-top),
+    transparent calc(var(--band-top) + var(--band-h)),
+    #000 calc(var(--band-top) + var(--band-h))
+  );
+}
+
+.stage__drum-slot,
+.stage__drum-cover {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--band-top);
+  height: var(--band-h);
+}
+
+.stage__drum-slot {
+  display: grid;
+  place-items: center;
+}
+
+/* Standalone: a labelled stand-in for the drum. No frame: the real drum is edge to edge. */
+.stage-root[data-mode='standalone'] .stage__drum-slot {
+  background: radial-gradient(ellipse 60% 70% at center, var(--color-surface), var(--color-bg));
+}
+
+.stage__drum-label {
+  font-size: calc(var(--stage-text-sm) * var(--box-scale));
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.stage-root[data-mode='overlay'] .stage__drum-label {
+  display: none;
+}
+
+/* `suspense`: a vignette slowly darkens the band's edges. */
+.stage__drum-slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(ellipse 70% 75% at center, transparent 55%, var(--color-bg-deep));
+  transition: opacity var(--stage-dur-vignette) var(--stage-ease-in-out);
+}
+
+.stage__drum-slot[data-anim='suspense']::after {
+  opacity: 0.9;
+}
+
+.stage__drum-cover {
+  background: var(--color-bg);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.stage-root[data-drum='hidden'] .stage__drum-cover {
+  opacity: 1;
+}
+
+.stage__box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--box-w, 1440px);
+  height: var(--box-h, 1080px);
+  transform-origin: 0 0;
+  transform: translate(var(--box-x), var(--box-y)) scale(var(--box-scale));
+}
+
+/* `link-lost`: a small dot in the corner, red after 3 s without the relay. The scene stays. */
+.stage__link {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.stage__link::before {
+  content: '';
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  transition: background var(--stage-dur-link) linear;
+}
+
+.stage__link.is-entering::before {
+  background: var(--color-text-muted);
+  transition: none;
+}
+
+/* `pause`: "Tornem de seguida" over everything. */
+.stage__pause {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--color-bg);
+  transition: opacity var(--stage-dur-pause) var(--ease-out);
+}
+
+.stage__pause.is-entering,
+.stage__pause.is-leaving {
+  opacity: 0;
+}
+
+.stage__pause.is-entering {
+  transition: none;
+}
+
+.stage__pause-text {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-xl);
+  line-height: 1.05;
+  color: var(--color-accent);
+}
+
+/* ---------------------------------------------------------------------------------------- scenes */
+.scene {
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+
+.scene.is-leaving {
+  opacity: 0;
+}
+
+/* `scene-enter`: rises 24 px and fades in. */
+.scene[data-anim='scene-enter'].is-entering {
+  opacity: 0;
+  transform: translateY(var(--stage-rise));
+  transition: none;
+}
+
+/* `idle`: titles before, between and after the rounds float gently. */
+.stage-root [data-anim='idle'] {
+  animation: stage-float var(--stage-dur-idle) var(--stage-ease-in-out) infinite alternate;
+}
+
+.cover-art {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-deep);
+}
+
+.cover-art__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-art:is([data-state='missing'], [data-state='empty']) .cover-art__img {
+  display: none;
+}
+
+.round-title__special {
+  display: inline-block;
+  margin-inline-start: var(--space-4);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-calm);
+  color: var(--color-text-on-paper);
+  font-size: var(--stage-text-sm);
+  vertical-align: middle;
+}
+
+.prize {
+  display: grid;
+  gap: var(--space-2);
+  align-content: center;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--stage-radius);
+  background: var(--stage-panel);
+}
+
+.prize__kind,
+.prize__detail {
+  font-size: var(--stage-text-sm);
+  color: var(--color-text-muted);
+}
+
+.prize__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-md);
+  line-height: 1.05;
+}
+
+.prize__sponsor {
+  font-size: var(--stage-text-sm);
+  color: var(--color-accent);
+}
+
+.sponsors {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sponsors__title {
+  font-size: var(--stage-text-sm);
+  color: var(--color-text-muted);
+}
+
+.sponsors__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4) var(--space-7);
+}
+
+.sponsors__name {
+  font-size: var(--stage-text-md);
+  font-weight: var(--font-weight-strong);
+}
+
+.sponsors__logo {
+  height: var(--stage-logo);
+  width: auto;
+}
+
+.countdown {
+  justify-self: center;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--stage-panel);
+  font-size: var(--stage-text-md);
+  transition: transform var(--stage-dur-rotate) var(--ease-out);
+}
+
+/* `interval-rotate` on the countdown: a small tick each minute. */
+.countdown[data-anim='interval-rotate'].is-entering {
+  transform: scale(1.08);
+  transition: none;
+}
+
+.qr {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.qr__caption,
+.qr__url {
+  font-size: var(--stage-text-sm);
+}
+
+.qr__url {
+  font-weight: var(--font-weight-strong);
+  color: var(--color-accent);
+}
+
+.qr__frame {
+  width: var(--stage-qr);
+  aspect-ratio: 1;
+}
+
+.qr__code {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+}
+
+.qr__paper {
+  fill: var(--color-paper);
+}
+
+.qr__ink {
+  fill: var(--color-text-on-paper);
+}
+
+/* ------------------------------------------------------------------------------------------ before */
+.scene--before {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--stage-gap);
+  padding: var(--stage-pad);
+}
+
+.before__head {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.before__title,
+.after__title,
+.interval__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-xl);
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.before__main {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-7);
+  text-align: start;
+}
+
+.how-to {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.how-to__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-md);
+  color: var(--color-accent);
+}
+
+.how-to__steps {
+  display: grid;
+  gap: var(--space-5);
+  counter-reset: how-to;
+}
+
+.how-to__step {
+  counter-increment: how-to;
+  font-size: var(--stage-text-md);
+  line-height: 1.15;
+}
+
+.how-to__step::before {
+  content: counter(how-to) '. ';
+  color: var(--color-accent);
+  font-weight: var(--font-weight-strong);
+}
+
+/* -------------------------------------------------------------------------------------- roundStart */
+.scene--roundStart {
+  display: grid;
+  grid-template-rows: var(--band-h-ref) 1fr;
+}
+
+.round-start__intro {
+  grid-row: 2;
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--stage-pad) var(--stage-pad);
+}
+
+.round-start__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-xl);
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.round-start__rule {
+  font-size: var(--stage-text-sm);
+  color: var(--color-text-muted);
+}
+
+.round-start__prizes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--stage-gap);
+}
+
+/* `shuffle`: ① the grid appears, ② jiggles, ③ covers fly into the drum one by one, ④ the drum settles. */
+.shuffle {
+  position: absolute;
+  inset: 0;
+  transition: opacity var(--stage-dur-reduced-fade) var(--ease-out);
+}
+
+.shuffle__tile {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  transition: transform var(--fly-ms, 0ms) linear var(--fly-delay, 0ms);
+}
+
+.shuffle__lift,
+.shuffle__spin {
+  width: 100%;
+  height: 100%;
+}
+
+.shuffle__lift {
+  transition: transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+}
+
+.shuffle__spin {
+  transition:
+    transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms),
+    opacity var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+}
+
+.shuffle .cover-art {
+  width: 100%;
+  height: 100%;
+}
+
+.shuffle[data-phase='appear'] .shuffle__spin {
+  transition:
+    transform var(--appear-ms) var(--ease-bounce) calc(var(--seed) * var(--appear-ms) * 0.4),
+    opacity var(--appear-ms) var(--ease-out) calc(var(--seed) * var(--appear-ms) * 0.4);
+}
+
+.shuffle[data-anim='shuffle'].is-entering .shuffle__spin {
+  transform: scale(0.6);
+  opacity: 0;
+  transition: none;
+}
+
+.shuffle[data-phase='jiggle'] .shuffle__spin {
+  animation: stage-jiggle var(--stage-dur-jiggle) var(--stage-ease-in-out) infinite alternate;
+  animation-delay: calc(var(--seed) * var(--stage-dur-jiggle) * -2);
+}
+
+.shuffle__tile.is-flying {
+  transform: translateX(var(--dx));
+}
+
+.shuffle__tile.is-flying .shuffle__lift {
+  transform: translateY(var(--dy));
+}
+
+.shuffle__tile.is-flying .shuffle__spin {
+  transform: rotate(var(--turn)) scale(0.2);
+  opacity: 0;
+}
+
+/* The caption is the reduced-motion fallback's words. */
+.shuffle__caption {
+  display: none;
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--stage-pad);
+  font-size: var(--stage-text-md);
+  color: var(--color-accent);
+}
+
+/* -------------------------------------------------------------------------------------------- play */
+.scene--play {
+  display: grid;
+  grid-template-rows: var(--band-h-ref) auto 1fr;
+}
+
+.garland {
+  position: absolute;
+  top: var(--space-3);
+  inset-inline: var(--stage-pad);
+  display: flex;
+  justify-content: space-between;
+  --heat-warm: 0;
+  --heat-hot: 0;
+  --heat-glow: 0;
+  --twinkle-ms: 3200ms;
+  --chase: 0;
+  transition:
+    --heat-warm var(--stage-dur-heat) linear,
+    --heat-hot var(--stage-dur-heat) linear,
+    --heat-glow var(--stage-dur-heat) linear;
+}
+
+/* `heat`: all lights always on; colour, glow and twinkle follow the Heat. Never a bar that fills. */
+.garland__light {
+  --light-warm: var(--color-accent);
+  --light-hot: var(--color-danger);
+  --light-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--stage-light-cool), var(--light-warm) calc(var(--heat-warm) * 100%)),
+    var(--light-hot) calc(var(--heat-hot) * 100%)
+  );
+  width: var(--stage-light);
+  height: var(--stage-light);
+  border-radius: var(--radius-pill);
+  background: var(--light-color);
+  box-shadow: 0 0 calc(var(--stage-light) * (0.4 + var(--heat-glow))) calc(var(--stage-light) * 0.2 * var(--heat-glow)) var(--light-color);
+  filter: brightness(calc(0.85 + var(--heat-glow) * 0.4));
+  animation: stage-twinkle var(--twinkle-ms) var(--stage-ease-in-out) infinite alternate;
+  animation-delay: calc(var(--twinkle-ms) * -1 * (var(--light-seed) * (1 - var(--chase)) + var(--light-i) * var(--chase)));
+}
+
+.garland__light:nth-child(even) {
+  --light-warm: var(--color-primary);
+}
+
+.garland__light:nth-child(3n) {
+  --light-hot: var(--color-primary);
+}
+
+.garland__light:nth-child(5n) {
+  --light-hot: var(--color-accent);
+}
+
+.play__round {
+  position: absolute;
+  top: calc(var(--space-5) + var(--stage-light));
+  left: var(--stage-pad);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-sm);
+  color: var(--color-accent);
+  text-align: start;
+}
+
+.play__round .round-title__special {
+  font-size: var(--text-2xl);
+}
+
+.play__band {
+  grid-row: 2;
+  position: relative;
+  min-height: calc(var(--stage-text-lg) + var(--stage-text-sm) + var(--space-5));
+  padding: var(--space-3) var(--stage-pad) 0;
+}
+
+.play__title,
+.play__artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.play__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-lg);
+  line-height: 1;
+}
+
+.play__artist {
+  margin-top: var(--space-2);
+  font-size: var(--stage-text-sm);
+  color: var(--color-text-muted);
+}
+
+/* `spin`: the title slides down 40 px and fades to 30 % while the drum spins. */
+.play__now {
+  transition:
+    opacity var(--stage-dur-title-out) var(--stage-ease-in),
+    transform var(--stage-dur-title-out) var(--stage-ease-in);
+}
+
+.play__now[data-anim='spin'] {
+  opacity: var(--stage-spin-opacity);
+  transform: translateY(var(--stage-title-drop));
+}
+
+/* `landing`: the title slams in (1.35 → 1, bounce); the artist follows 120 ms later. */
+.play__now[data-anim='landing'] {
+  transition:
+    transform var(--dur-landing) var(--ease-bounce),
+    opacity var(--dur-fast) linear;
+}
+
+.play__now[data-anim='landing'] .play__artist {
+  transition:
+    opacity var(--dur-base) var(--ease-out) var(--stage-artist-delay),
+    transform var(--dur-base) var(--ease-out) var(--stage-artist-delay);
+}
+
+.play__now[data-anim='landing'].is-entering {
+  transform: scale(var(--stage-slam-from));
+  opacity: 0;
+  transition: none;
+}
+
+.play__now[data-anim='landing'].is-entering .play__artist {
+  opacity: 0;
+  transform: translateY(var(--space-4));
+  transition: none;
+}
+
+/* `suspense`: a big "?" breathes in the title's place, faster towards the auto-release. */
+.play__suspense {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-xl);
+  line-height: 1;
+  color: var(--color-accent);
+  animation: stage-breathe var(--breath-ms, 1600ms) var(--stage-ease-in-out) infinite alternate;
+}
+
+.scene--play[data-motion='suspense'] .play__now {
+  opacity: 0;
+}
+
+.play__recent {
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--stage-gap);
+  padding: var(--space-4) var(--stage-pad) var(--stage-pad);
+}
+
+.song-tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--stage-radius);
+  background: var(--stage-panel);
+  text-align: start;
+}
+
+.song-tile:first-child {
+  box-shadow: 0 0 0 var(--line-width) var(--color-accent);
+}
+
+.song-tile__cover {
+  width: var(--stage-tile-cover);
+}
+
+.song-tile__cover[data-state='missing'] {
+  display: none;
+}
+
+.song-tile__text {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.song-tile__title,
+.song-tile__artist {
+  font-size: var(--stage-text-sm);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.song-tile__title {
+  font-weight: var(--font-weight-strong);
+}
+
+.song-tile__artist {
+  color: var(--color-text-muted);
+  -webkit-line-clamp: 1;
+}
+
+/* `landing` in the row: the tiles shift one place right and the new one slides in from the left. */
+.play__recent[data-anim='landing'] .song-tile {
+  transition:
+    transform var(--stage-dur-tile-slide) var(--ease-out),
+    opacity var(--stage-dur-tile-slide) var(--ease-out);
+}
+
+.play__recent[data-anim='landing'].is-entering .song-tile {
+  transform: translateX(calc(-100% - var(--stage-gap)));
+  transition: none;
+}
+
+.play__recent[data-anim='landing'].is-entering .song-tile:first-child {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------------------------------- check */
+.scene--check {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.check {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.check__ribbon {
+  justify-self: center;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--stage-panel);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-md);
+  line-height: 1.1;
+  color: var(--color-accent);
+}
+
+/* `check-enter`: the ribbon drops in; the card deals in, tile by tile. */
+.check[data-anim='check-enter'] .check__ribbon {
+  transition: transform var(--stage-dur-ribbon) var(--ease-bounce);
+}
+
+.check[data-anim='check-enter'].is-entering .check__ribbon {
+  transform: translateY(-150%);
+  transition: none;
+}
+
+.check[data-anim='check-enter'] .card-grid__cell {
+  transition:
+    transform var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger)),
+    opacity var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger));
+}
+
+.check[data-anim='check-enter'].is-entering .card-grid__cell {
+  transform: perspective(var(--stage-deal-perspective)) rotateY(90deg);
+  opacity: 0;
+  transition: none;
+}
+
+.card-grid {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.card-grid__row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-height: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.card-grid__row.is-dimmed {
+  opacity: var(--stage-dim-opacity);
+}
+
+.card-grid__cell {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  min-height: 0;
+  padding: var(--space-2);
+  border-radius: var(--stage-tile-radius);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+}
+
+.card-grid__cover {
+  height: 100%;
+  min-height: 0;
+  justify-self: center;
+}
+
+.card-grid__title {
+  font-size: var(--stage-text-sm);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-grid__mark {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: calc(var(--stage-text-lg) * 1.25);
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-lg);
+  line-height: 1;
+}
+
+.card-grid__mark:empty {
+  display: none;
+}
+
+/* `check-step`: a ring while the snippet plays, then the mark stamps on. */
+.card-grid__cell[data-state='playing']::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--stage-ring) * -1);
+  border: var(--stage-ring) solid var(--color-primary);
+  border-radius: var(--stage-tile-radius);
+  animation: stage-ring var(--stage-dur-ring) var(--stage-ease-in-out) infinite;
+}
+
+.card-grid__cell[data-state='landed'] .card-grid__mark {
+  background: var(--color-ok);
+}
+
+.card-grid__cell[data-state='missed'] .card-grid__mark {
+  background: var(--color-danger);
+}
+
+.card-grid__cell[data-state='missed'] .cover-art {
+  filter: grayscale(1);
+}
+
+.card-grid__cell[data-anim='check-step'] .card-grid__mark {
+  transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+}
+
+.card-grid__cell[data-anim='check-step'].is-entering .card-grid__mark {
+  transform: scale(2) rotate(-12deg);
+  transition: none;
+}
+
+.card-grid__cell[data-anim='check-step'][data-state='landed'] {
+  animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+}
+
+.card-grid__cell[data-anim='check-step'][data-state='missed'] {
+  animation: stage-shake var(--stage-dur-shake) linear;
+}
+
+/* `check-result`: the banner slides up under the card. */
+.check-result {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  transform: translateX(-50%);
+  padding: var(--space-3) var(--space-7);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-lg);
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 var(--space-2) 0 var(--color-line);
+  transition:
+    transform var(--stage-dur-result) var(--ease-out),
+    opacity var(--stage-dur-result) var(--ease-out);
+}
+
+.check-result[data-result='complete'] {
+  background: var(--color-accent);
+  color: var(--color-text-on-paper);
+}
+
+.check[data-verdict='notValid'] .check-result {
+  bottom: 45%;
+}
+
+.check-result[data-anim='check-result'].is-entering {
+  transform: translate(-50%, 100%);
+  opacity: 0;
+  transition: none;
+}
+
+/* ------------------------------------------------------------------------------------- celebration */
+.celebration {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: var(--band-h-ref) auto auto;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-4);
+}
+
+.celebration__flash {
+  position: absolute;
+  inset: 0;
+  background: var(--color-paper);
+  opacity: 0;
+}
+
+.celebration[data-kind='bingo'] .celebration__flash {
+  background: var(--color-accent);
+}
+
+.celebration__rays {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--band-h-ref) / 2);
+  width: 110rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(color-mix(in oklab, var(--color-accent) 22%, transparent) 0 10deg, transparent 10deg 20deg);
+  mask-image: radial-gradient(circle, #000 20%, transparent 65%);
+  transform: translate(-50%, -50%);
+  animation: stage-rays var(--stage-dur-rays) linear infinite;
+}
+
+.shout {
+  grid-row: 1;
+  align-self: center;
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-hero);
+  line-height: 0.9;
+  color: var(--color-accent);
+  text-shadow: 0 var(--space-3) 0 var(--color-line);
+}
+
+.celebration__plate {
+  grid-row: 2;
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-xl);
+  line-height: 1;
+}
+
+.celebration__prize {
+  grid-row: 3;
+  position: relative;
+  min-width: 50%;
+}
+
+/* `celebrate`: flash, the shout slams in (scale 3, −5°), the card plate drops in, then the prize rises. */
+.celebration[data-anim='celebrate'] .celebration__flash {
+  animation: stage-flash var(--stage-dur-flash) var(--ease-out);
+}
+
+.celebration[data-anim='celebrate'] .shout {
+  transition:
+    transform var(--stage-dur-slam) var(--ease-bounce),
+    opacity var(--dur-fast) linear;
+}
+
+.celebration[data-anim='celebrate'] .celebration__plate {
+  transition:
+    transform var(--dur-base) var(--ease-out) var(--stage-delay-plate),
+    opacity var(--dur-base) var(--ease-out) var(--stage-delay-plate);
+}
+
+.celebration[data-anim='celebrate'] .celebration__prize {
+  transition:
+    transform var(--dur-slow) var(--ease-out) var(--stage-delay-prize),
+    opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
+}
+
+.celebration[data-anim='celebrate'].is-entering .shout {
+  transform: scale(3) rotate(-5deg);
+  opacity: 0;
+  transition: none;
+}
+
+.celebration[data-anim='celebrate'].is-entering .celebration__plate {
+  transform: translateY(calc(var(--stage-title-drop) * -1));
+  opacity: 0;
+  transition: none;
+}
+
+.celebration[data-anim='celebrate'].is-entering .celebration__prize {
+  transform: translateY(var(--stage-title-drop));
+  opacity: 0;
+  transition: none;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.confetti__piece {
+  --piece-color: var(--color-accent);
+  position: absolute;
+  top: -5%;
+  left: calc(var(--x) * 100%);
+  width: calc(var(--stage-confetti) * (0.6 + var(--size) * 0.8));
+  height: calc(var(--stage-confetti) * 0.45);
+  background: var(--piece-color);
+  opacity: 0;
+}
+
+.confetti__piece[data-tone='1'] {
+  --piece-color: var(--color-primary);
+}
+.confetti__piece[data-tone='2'] {
+  --piece-color: var(--color-ok);
+}
+.confetti__piece[data-tone='3'] {
+  --piece-color: var(--color-calm);
+}
+.confetti__piece[data-tone='4'] {
+  --piece-color: var(--color-danger);
+}
+
+.celebration[data-anim='celebrate'] .confetti__piece {
+  animation: stage-confetti-fall var(--stage-dur-confetti) var(--stage-ease-in) both;
+  animation-delay: calc(var(--delay) * var(--stage-dur-confetti) * 0.4);
+}
+
+/* A Bingo's second burst starts as the first has fallen (≤ 150 animated pieces at once). */
+.celebration[data-anim='celebrate'] .confetti__piece[data-burst='1'] {
+  animation-delay: calc(var(--stage-dur-confetti) + var(--delay) * var(--stage-dur-confetti) * 0.4);
+}
+
+/* -------------------------------------------------------------------------------------- interval */
+.scene--interval {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--stage-gap);
+  padding: var(--stage-pad);
+}
+
+.interval__head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.interval__of {
+  font-size: var(--stage-text-md);
+}
+
+.interval__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-7);
+}
+
+.interval__rotator {
+  transition: opacity var(--stage-dur-rotate) var(--stage-ease-in-out);
+}
+
+/* `interval-rotate`: the prize card crossfades in. */
+.interval__rotator[data-anim='interval-rotate'].is-entering {
+  opacity: 0;
+  transition: none;
+}
+
+.interval__prize .prize__title {
+  font-size: var(--stage-text-lg);
+}
+
+.interval__prize .prize__kind,
+.interval__prize .prize__sponsor {
+  font-size: var(--stage-text-md);
+}
+
+.interval__foot {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.interval__winners {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.interval__winners-title {
+  font-size: var(--stage-text-sm);
+  color: var(--color-text-muted);
+}
+
+.interval__winners-list {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-7);
+}
+
+.interval__winner,
+.interval__thanks {
+  font-size: var(--stage-text-md);
+  font-weight: var(--font-weight-strong);
+}
+
+.interval__thanks {
+  color: var(--color-accent);
+}
+
+/* ------------------------------------------------------------------------------------------- after */
+.scene--after {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--stage-gap);
+  padding: var(--stage-pad);
+}
+
+.credits {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.credits__roll {
+  display: grid;
+  gap: var(--space-7);
+}
+
+/* `credits`: the roll scrolls slowly upward when it doesn't fit. */
+.credits[data-anim='credits'] .credits__roll {
+  animation: stage-credits var(--credits-ms) linear infinite;
+}
+
+.after__winners {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.after__winners-title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-text-md);
+  color: var(--color-accent);
+}
+
+.after__winners-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.after__winner {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  font-size: var(--stage-text-md);
+}
+
+.after__round {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-strong);
+}
+
+/* ----------------------------------------------------------------------------------------- motion */
+@keyframes stage-float {
+  from {
+    transform: translateY(var(--stage-float));
+  }
+  to {
+    transform: translateY(calc(var(--stage-float) * -1));
+  }
+}
+
+@keyframes stage-twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+@keyframes stage-breathe {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes stage-jiggle {
+  from {
+    transform: rotate(-6deg) translateY(-2%);
+  }
+  to {
+    transform: rotate(6deg) translateY(2%);
+  }
+}
+
+@keyframes stage-ring {
+  50% {
+    opacity: 0.35;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes stage-bounce {
+  40% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes stage-shake {
+  17%,
+  50%,
+  83% {
+    transform: translateX(-6px);
+  }
+  33%,
+  67% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes stage-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes stage-rays {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+@keyframes stage-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0turn);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(calc(var(--drift) * 10rem), calc(var(--box-h, 1080px) * 1.1), 0) rotate(calc(var(--turn) * 3turn));
+  }
+}
+
+@keyframes stage-credits {
+  from {
+    transform: translateY(var(--credits-from));
+  }
+  to {
+    transform: translateY(var(--credits-to));
+  }
+}
+
+/* Reduced motion: every hook keeps its information with a still fallback (ANIMATIONS.md). The tokens in
+   ui/tokens.css drop to 0 ms; the stage's own drop here, and loops, slides and confetti stop. */
+@media (prefers-reduced-motion: reduce) {
+  .stage-root {
+    --stage-dur-title-out: 0ms;
+    --stage-dur-tile-slide: 0ms;
+    --stage-artist-delay: 0ms;
+    --stage-dur-vignette: 0ms;
+    --stage-dur-heat: var(--stage-dur-reduced-fade);
+    --stage-dur-ribbon: 0ms;
+    --stage-dur-deal: 0ms;
+    --stage-deal-stagger: 0ms;
+    --stage-dur-stamp: 0ms;
+    --stage-dur-result: 0ms;
+    --stage-dur-slam: 0ms;
+    --stage-delay-plate: 0ms;
+    --stage-delay-prize: 0ms;
+    --stage-dur-rotate: 0ms;
+    --stage-dur-pause: 0ms;
+  }
+
+  .stage-root [data-anim='idle'],
+  .garland__light,
+  .play__suspense,
+  .shuffle[data-phase='jiggle'] .shuffle__spin,
+  .card-grid__cell[data-state='playing']::after,
+  .card-grid__cell[data-anim='check-step'],
+  .celebration__rays,
+  .celebration[data-anim='celebrate'] .celebration__flash,
+  .credits[data-anim='credits'] .credits__roll {
+    animation: none;
+  }
+
+  .scene[data-anim='scene-enter'].is-entering,
+  .play__now[data-anim='spin'],
+  .play__now[data-anim='landing'].is-entering,
+  .play__recent[data-anim='landing'].is-entering .song-tile,
+  .shuffle__tile.is-flying,
+  .shuffle__tile.is-flying .shuffle__lift,
+  .shuffle__tile.is-flying .shuffle__spin,
+  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__plate, .celebration__prize) {
+    transform: none;
+  }
+
+  /* The Shuffle: the grid fades out as the covers would fly, with a caption; the drum fades in. */
+  .shuffle[data-phase='fly'] {
+    opacity: 0;
+  }
+
+  .shuffle__caption {
+    display: block;
+  }
+
+  .confetti {
+    display: none;
+  }
+}

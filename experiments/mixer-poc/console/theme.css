@@ -1,0 +1,85 @@
+/*
+ * The console's themes: light (the default; probably easier to use on the night) and dark (ui/tokens.css as it
+ * is). The root element `.console` carries data-theme="light|dark" and overrides only role tokens, so the
+ * components (console.css) never change between themes. :root:has(…) gives the page behind the console
+ * (the overscroll area) the same background.
+ *
+ * Contrast (WCAG 2.1), checked for both themes:
+ * - text on bg / surface: light 15.8 / 18.0, dark 14.6 / 11.8; muted text: light 7.0 / 8.0, dark 8.8 / 7.1;
+ * - button labels: ink on orange 7.3, ink on gold 11.4, ink on ice 9.6; light: white on red 5.6, white on
+ *   green 6.1; dark: ink on red 5.9, ink on green 5.7;
+ * - focus ring on bg: light (night) 13.6, dark (gold) 9.9.
+ *
+ * Console-local tokens (not in ui/tokens.css yet) are the animation lengths from ui/ANIMATIONS.md › Console
+ * and the "on" colours for text on a role colour.
+ */
+
+.console {
+  /* Text on a role colour (proposed for ui/tokens.css) */
+  --line-width-thin: 2px; /* chips, cards, inner borders (the 3px --line-width is for panels and buttons) */
+  --color-on-primary: var(--color-ink);
+  --color-on-accent: var(--color-ink);
+  --color-on-calm: var(--color-ink);
+  --color-on-ok: var(--color-ink);
+  --color-on-danger: var(--color-ink);
+  --color-warning: var(--color-gold);
+  --color-on-warning: var(--color-ink);
+
+  /* ANIMATIONS.md › Console: press 80 ms, long-press drain 200 ms, hold-hint 150 ms in / 300 ms out,
+     suspense-hold pulse 1.2 s → 0.5 s, check-step 150 ms, reveal 200 ms, toast-in 200 ms, conn-change
+     200 ms. The ring steps with the store's clock (4 ticks a second). */
+  --dur-press: 80ms;
+  --dur-drain: 200ms;
+  --dur-hint-in: 150ms;
+  --dur-hint-out: 300ms;
+  --dur-pulse-slow: 1.2s;
+  --dur-pulse-fast: 0.5s;
+  --dur-step-mark: 150ms;
+  --dur-reveal: 200ms;
+  --dur-toast: 200ms;
+  --dur-conn: 200ms;
+  --dur-ring-step: 250ms;
+}
+
+/* Dark: ui/tokens.css as it is, with a lighter red so ink text on it stays above 4.5:1. */
+.console[data-theme='dark'],
+:root:has(.console[data-theme='dark']) {
+  color-scheme: dark;
+  --color-danger: #ff5a60;
+}
+
+/* Light */
+.console[data-theme='light'],
+:root:has(.console[data-theme='light']) {
+  color-scheme: light;
+  --color-bg: #f4efe6;
+  --color-bg-deep: #e7e0d3;
+  --color-surface: #ffffff;
+  --color-paper: #ffffff;
+  --color-text: var(--color-ink);
+  --color-text-muted: #4a4f6e;
+  --color-text-on-paper: var(--color-ink);
+  --color-line: #2b2f4a;
+  --color-primary: var(--color-orange);
+  --color-danger: #c8232b;
+  --color-ok: var(--color-green-edge);
+  --color-accent: var(--color-gold);
+  --color-calm: var(--color-ice);
+  --color-focus: var(--color-night);
+  --color-on-danger: #ffffff;
+  --color-on-ok: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console {
+    --dur-press: 0ms;
+    --dur-drain: 0ms;
+    --dur-hint-in: 0ms;
+    --dur-hint-out: 0ms;
+    --dur-step-mark: 0ms;
+    --dur-reveal: 0ms;
+    --dur-toast: 0ms;
+    --dur-conn: 0ms;
+    --dur-ring-step: 0ms;
+  }
+}

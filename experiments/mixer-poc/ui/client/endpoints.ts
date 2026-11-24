@@ -23,9 +23,12 @@ export function controlSocketUrl(pageUrl: string | URL): string {
   return `${scheme}://${url.host}${path}`;
 }
 
-/** A device label made safe for ids: "Mòbil admin" → "Mobil-admin" (letters, digits and dashes, at most 24). */
+/**
+ * A device label made safe for ids: "Mòbil admin" → "Mobil_admin" (letters, digits and underscores, at
+ * most 24). No dashes, because ids join their parts with dashes ("Mobil_admin-r…"), so the label reads back whole.
+ */
 export function labelForId(label: string): string {
   const ascii = label.normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const cleaned = ascii.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24);
+  const cleaned = ascii.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24);
   return cleaned || 'device';
 }

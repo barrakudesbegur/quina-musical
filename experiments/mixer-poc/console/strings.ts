@@ -1,0 +1,433 @@
+// Every word the console shows, in Catalan. Shared terms come from ui/i18n/ca.ts so every screen says them
+// the same way; this file holds the console's own copy. Components never inline text: they read it here.
+// Maps keyed by protocol vocabulary are Partial with a fallback, so a new reason or command from the engine
+// shows something sensible instead of breaking the build; tests/ui/console/strings.test.ts checks that
+// every known value has its own text.
+import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName } from '@quina/protocol';
+import { CA } from '../ui/i18n/ca.ts';
+import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKind } from '../ui/flow.ts';
+import type { LinkName, LinkState } from './logic/status.ts';
+import type { ConsoleCommand, Theme } from './config.ts';
+
+export { CA };
+
+const seconds = (s: number) => `${s} s`;
+const kindLabel: Record<WinKind, string> = { line: CA.line, bingo: CA.bingo };
+
+export const S = {
+  pageTitle: 'Consola · Quina Musical',
+
+  header: {
+    label: 'Estat del show',
+    phase: 'Fase',
+    heat: 'Calor',
+    clock: 'Hora',
+    roundEnd: 'Fi de la quina',
+    drift: 'Horari',
+    device: 'Dispositiu',
+    noLabel: 'Sense nom',
+    menu: 'Menú',
+    demo: (name: string) => `Demo: ${name}`,
+    noRound: CA.gameTitle,
+    round: (n: number, special: boolean) => (special ? `${CA.round(n)} · especial` : CA.round(n)),
+    phaseFixed: 'fixada',
+    stale: 'Dades antigues',
+  },
+
+  phase: { early: 'inici', mid: 'mig', late: 'avançada', final: 'final' } satisfies Record<PhaseName, string>,
+  climbing: { line: 'cap a la línia', bingo: 'cap a la quina' } satisfies Record<WinKind, string>,
+
+  links: {
+    title: 'Connexions',
+    names: { relay: 'Portàtil', show: 'Show', cloud: 'Núvol', feed: 'Mòbils', wii: 'Wii' } satisfies Record<LinkName, string>,
+    states: { up: 'connectat', down: 'desconnectat', unknown: 'encara no disponible' } satisfies Record<LinkState, string>,
+    unknownShort: '—',
+  },
+
+  alerts: {
+    disconnected: 'Sense connexió amb el portàtil. Reconnectant…',
+    showOffline: 'La pàgina del show no està oberta al portàtil: les ordres no arriben.',
+    waiting: "Esperant l'estat del show…",
+    locked: 'La pàgina del show espera un clic a «Start show» al portàtil.',
+  },
+
+  status: { locked: 'Bloquejat', idle: 'Preparat', playing: 'Sonant', transition: 'Girant', hold: 'En espera' } satisfies Record<ShowStatus, string>,
+
+  cluster: {
+    label: 'Controls principals',
+    next: 'Següent',
+    hold: 'Espera',
+    resume: 'Reprèn',
+    suspense: 'Suspens',
+    suspenseIdle: 'Mantén i deixa anar',
+    suspenseOpen: 'Deixa anar per aterrar',
+    suspenseAutoRelease: "s'allibera sol en",
+    back: 'Enrere',
+    backHint: "Mantén premut per desfer l'última cançó",
+    claim: 'Comprovar cartró',
+  },
+
+  longPress: { hint: 'Mantén premut per confirmar', percent: (p: number) => `${p} %` },
+
+  nowPlaying: {
+    title: CA.nowPlaying,
+    position: (n: number, total: number) => `Cançó ${n} de ${total}`,
+    nothing: 'No sona cap cançó',
+    holdMusic: "Música d'espera",
+    autoIn: 'Següent automàtic',
+    autoOff: 'Avanç automàtic aturat',
+    autoOffFinal: 'Fase final: sense avanç automàtic',
+    autoHeld: 'En espera: sense avanç automàtic',
+    spinning: 'Girant…',
+    idle: 'Esperant «Següent»',
+    seconds,
+    recent: CA.previous,
+    lastSpinBy: (device: string | null) => (device ? `Últim gir: ${device}` : 'Últim gir: automàtic'),
+    undone: 'desfeta',
+  },
+
+  nextSong: {
+    title: 'Següent cançó',
+    private: 'Privat',
+    none: 'Final de la cua',
+    landsIn: 'Aterra en',
+    suspenseOpen: 'Suspens obert',
+    decoding: 'Carregant la cançó…',
+    seconds,
+  },
+
+  pace: {
+    title: 'Ritme',
+    value: (s: number) => `${s} s`,
+    presets: 'Ritmes predefinits',
+    minus: (step: number) => `−${step} s`,
+    plus: (step: number) => `+${step} s`,
+    minusLabel: (step: number) => `Ritme ${step} s més ràpid`,
+    plusLabel: (step: number) => `Ritme ${step} s més lent`,
+    lock: 'Bloqueja el ritme',
+    lockNote: "Sense correccions per recuperar l'horari",
+    auto: 'Avanç automàtic',
+    autoFinal: 'Avanç automàtic a la fase final',
+    detail: (spin: number, slot: number) => `gir ${spin} s · d'aterratge a aterratge ${slot} s`,
+    nudge: (x: number) => `correcció d'horari ×${x}`,
+  },
+
+  winners: {
+    title: 'Possibles guanyadors',
+    private: 'Privat',
+    show: 'Mostra',
+    hide: 'Amaga',
+    hiddenNote: 'Amagats: així també us quedeu amb la intriga.',
+    kind: kindLabel,
+    none: 'Cap',
+    rows: (rows: readonly number[]) => (rows.length === 1 ? `fila ${rows[0]}` : `files ${rows.join(', ')}`),
+    completedBy: (title: string) => `amb «${title}»`,
+    notSold: 'No registrat com a venut',
+    noCardsInPlay: "No hi ha cartrons en joc registrats: no es pot avisar dels que no s'han venut.",
+    inPlayError: 'Els cartrons en joc no es poden llegir.',
+  },
+
+  hold: {
+    title: 'En espera',
+    reasons: {
+      hold: 'Els presentadors parlen',
+      back: "S'ha desfet l'última cançó",
+      cancel: "S'ha cancel·lat el gir",
+      end: "S'ha acabat la cua de cançons",
+      music: "Música d'espera",
+      claim: 'Comprovant un cartró',
+      checkFailed: "Comprovació fallida: música d'error fins a «Reprèn»",
+    } satisfies Partial<Record<HoldReason, string>> as Partial<Record<HoldReason, string>>,
+    reasonFallback: 'En espera',
+    since: (clock: string) => `des de fa ${clock}`,
+    holdMusicIn: (s: number) => `Música d'espera en ${s} s`,
+    holdMusic: "Música d'espera",
+    holdMusicOn: "Sona la música d'espera. «Reprèn» torna a les cançons.",
+    resume: 'Reprèn',
+  },
+
+  pause: {
+    title: 'Pausa tècnica',
+    since: (clock: string) => `des de fa ${clock}`,
+    note: 'El projector i els mòbils mostren «Tornem de seguida». Sona la música d\'espera.',
+    end: 'Acaba la pausa',
+    start: 'Pausa tècnica',
+  },
+
+  check: {
+    title: (cardId: number) => CA.checking(cardId),
+    none: 'Cap comprovació en marxa',
+    claims: 'Cartrons cantats',
+    kind: kindLabel,
+    status: { queued: 'En cua', checking: 'Comprovant', checked: 'Falta decidir', valid: 'Vàlid', invalid: 'No vàlid' } satisfies Record<ClaimStatus, string>,
+    outcome: {
+      complete: 'Complet',
+      incomplete: 'Incomplet',
+      unknownCard: 'Aquest número de cartró no existeix',
+      wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
+    } satisfies Record<CheckOutcome, string>,
+    resultValid: CA.checkValid,
+    resultInvalid: CA.checkInvalid,
+    completeSince: (n: number) => `complet des de la cançó ${n}`,
+    notSold: 'No registrat com a venut',
+    checkNow: 'Comprova',
+    recheck: 'Torna a comprovar',
+    addClaim: 'Afegeix un altre cartró',
+    waiting: 'Comença en un moment…',
+    progress: (done: number, total: number) => `${done} de ${total} cançons`,
+    row: (row: number) => `Fila ${row + 1}`,
+    allSongs: 'Les 12 cançons',
+    otherRows: (rows: readonly number[]) =>
+      rows.length > 1 ? `També té completes les files ${rows.map((r) => r + 1).join(', ')}` : `També té completa la fila ${rows.map((r) => r + 1).join(', ')}`,
+    landed: CA.landed,
+    notLanded: CA.notLanded,
+    pending: 'Pendent',
+    playing: 'Sonant',
+    result: 'Resultat',
+    confirm: 'Confirma: té premi',
+    reject: 'Rebutja: no té premi',
+    againstResult: 'Va contra el resultat: mantén premut',
+    decideAfterResult: 'Podreu decidir quan surti el resultat.',
+  },
+
+  celebration: {
+    title: CA.shout,
+    cards: (ids: readonly number[]) => (ids.length === 1 ? CA.card(ids[0]) : `Cartrons ${ids.join(', ')}`),
+    winningSong: (title: string) => `Cançó guanyadora: ${title}`,
+    music: 'Música de la celebració',
+    choices: { winningSong: 'Cançó guanyadora', victory: 'Música de victòria', holdMusic: "Música d'espera" } satisfies Record<CelebrationMusic, string>,
+    suggested: 'suggerida',
+    musicInCelebration: 'Es pot canviar quan comenci la celebració.',
+    continueLine: 'Prem «Següent» per continuar la quina.',
+    toInterval: 'Passa a la mitja part',
+    toIntervalNote: "També hi passa sola al cap d'una estona.",
+    lastRound: "Era l'última quina: acabeu la nit des del menú.",
+    winnersTitle: 'Guanyadors',
+  },
+
+  winnerForm: {
+    name: 'Nom (opcional)',
+    notes: 'Notes',
+    save: 'Desa',
+    saved: 'Desat',
+    privacy: 'Privat: només a la consola i a les dades del núvol.',
+    edit: 'Edita',
+    close: 'Tanca',
+  },
+
+  winnersList: {
+    title: CA.winners,
+    empty: 'Encara no hi ha guanyadors.',
+    item: (kind: WinKind, cardId: number) => `${kindLabel[kind]} · ${CA.card(cardId)}`,
+    noName: 'Sense nom',
+  },
+
+  interval: {
+    title: CA.scene.interval,
+    next: (n: number, total: number) => CA.roundOf(n, total),
+    guide: 'Compte enrere orientatiu',
+    over: (clock: string) => `+${clock}`,
+    music: 'Música de la mitja part',
+    skip: 'Salta la cançó',
+    volume: 'Volum',
+    musicNote: "Encara no es pot controlar des de la consola: falta l'ordre al protocol.",
+    start: 'Comença la quina',
+    startNote: 'Primer anuncieu els premis.',
+  },
+
+  roundStart: {
+    announce: 'Premis per anunciar',
+    shuffle: 'Barreja',
+    shuffling: (s: number) => `Barrejant… ${s} s`,
+    shuffled: 'Barrejat. Prem «Següent» per a la primera cançó.',
+    shuffleNote: 'Quan hàgiu anunciat els premis.',
+  },
+
+  before: {
+    title: CA.scene.before,
+    startAt: (clock: string) => `Inici previst: ${clock}`,
+    howToStart: 'Per començar la nit: Menú → Començar la nit.',
+  },
+
+  after: { title: 'Final de la nit', note: CA.thanks },
+
+  prizes: {
+    line: CA.prize.line,
+    bingo: CA.prize.bingo,
+    sponsoredBy: CA.sponsoredBy,
+    none: 'Sense premi',
+    special: CA.specialRound,
+    noPlan: "Encara no hi ha pla de la nit: deseu-lo des de l'Admin.",
+    noRound: (n: number) => `El pla no té la ${CA.round(n)}.`,
+  },
+
+  tabs: { label: 'Ajudes', cheatSheet: 'Xuleta', sounds: 'Sons', winners: CA.winners },
+
+  cheatSheet: {
+    prizes: (n: number) => `Premis de la ${CA.round(n)}`,
+    specialRules: CA.specialRound,
+    claimRules: 'Normes per cantar',
+    keys: 'Tecles del portàtil (pla B)',
+    checklist: 'Preparació',
+  },
+
+  /** The laptop's Plan B keys, from the mixer README's "Show keys". */
+  showKeys: [
+    { keys: '→ / Retorn', action: 'Següent (també allibera el suspens)' },
+    { keys: '←', action: 'Enrere' },
+    { keys: 'Espai', action: 'Espera / Reprèn' },
+    { keys: 'S', action: 'Suspens' },
+    { keys: 'M', action: "Música d'espera" },
+    { keys: 'Esc', action: 'Pànic' },
+    { keys: '+ / −', action: 'Ritme ±1 s' },
+    { keys: 'L', action: 'Bloqueja el ritme' },
+    { keys: 'A', action: 'Avanç automàtic' },
+    { keys: '0–4', action: 'Fase: automàtica, inici, mig, avançada, final' },
+    { keys: 'D', action: 'Informació de depuració' },
+    { keys: 'H', action: 'Amaga els controls (projector)' },
+    { keys: '[ / ]', action: 'Desfasament de pantalla ±5 ms' },
+  ] as const,
+
+  checklist: [
+    { id: 'hotspot', text: "Apagada automàtica del punt d'accés desactivada" },
+    { id: 'charger', text: "Mòbil del punt d'accés al carregador" },
+    { id: 'autolock', text: 'Bloqueig automàtic de la tauleta: mai' },
+    { id: 'reach', text: "Portàtil i tauleta provats al punt d'accés de debò" },
+  ] as const,
+
+  sounds: {
+    stingers: 'Fanfares',
+    effects: 'Efectes',
+    names: {
+      'mkwii-final-lap': 'Última volta',
+      'mkwii-mission-clear': 'Missió complerta',
+      'mkwii-mission-failure': 'Missió fallida',
+      'mkwii-low-place-fanfare': 'Fanfara de cua',
+      'among-us': 'Among Us',
+      'anime-wow': 'Anime wow',
+      boom: 'Bum',
+      'bum-bum-buaaa': 'Bum bum buaaa',
+      buzzer: 'Brunzidor',
+      correct: 'Correcte',
+      'duck-quack': 'Ànec',
+      'fear-melody': 'Por',
+      heaven: 'Cel',
+      horn: 'Botzina',
+      'metal-gear-alert': 'Alerta',
+      'orchestra-hit': "Cop d'orquestra",
+      'sad-trombone': 'Trombó trist',
+      'spongebob-boowomp': 'Boowomp',
+      'spongebob-fail': 'Fracàs',
+      tada: 'Tatxan!',
+    } satisfies Partial<Record<SoundName, string>> as Partial<Record<SoundName, string>>,
+  },
+
+  numpad: {
+    title: 'Comprovar cartró',
+    display: 'Número de cartró',
+    empty: '—',
+    back: 'Esborra',
+    clear: 'Esborra-ho tot',
+    clearKey: 'C',
+    kind: 'Què canta?',
+    kinds: kindLabel,
+    submit: (n: number | null) => (n === null ? 'Comprova el cartró' : `Comprova el cartró ${n}`),
+    notSold: 'No registrat com a venut (només és un avís)',
+    close: 'Tanca',
+  },
+
+  menu: {
+    title: 'Menú',
+    close: 'Tanca',
+    device: 'Aquest dispositiu',
+    labelField: 'Nom del dispositiu',
+    labelSave: 'Desa',
+    labelNote: 'Les ordres porten el nom nou quan es torna a carregar la pàgina.',
+    theme: 'Tema',
+    themes: { light: 'Clar', dark: 'Fosc' } satisfies Record<Theme, string>,
+    night: 'La nit',
+    start: 'Començar la nit',
+    startNote: 'Presenta la Quina 1 al projector.',
+    end: 'Acabar la nit',
+    endNote: 'Mantén premut',
+    schedule: 'Horari',
+    roundsTotal: 'Quines en total',
+    roundsMinus: 'Una quina menys',
+    roundsPlus: 'Una quina més',
+    gameEnd: (clock: string, drift: string) => `Final previst de la nit: ${clock} (${drift})`,
+    pause: 'Pausa tècnica',
+    phase: 'Fase',
+    phaseAuto: 'Automàtica',
+    tools: 'Eines',
+    confirmLine: 'Confirma la línia sense comprovació',
+    confirmLineNote: 'Només si no s\'ha pogut fer la comprovació.',
+    panic: 'Pànic',
+    panicNote: 'Mantén premut: silencia-ho tot al moment.',
+    wii: 'Comandament Wii',
+    wiiNote: "S'aparella al portàtil, no aquí. És opcional: la consola fa tot el que fa el comandament.",
+    lan: 'Obre la consola en un altre mòbil',
+    lanNote: "Escanegeu-lo amb un mòbil connectat al mateix punt d'accés.",
+    lanLocalhost: "Obriu aquesta consola amb l'adreça IP del portàtil perquè el codi serveixi en un altre dispositiu.",
+    lanLabel: 'Mòbil admin',
+  },
+
+  toast: {
+    region: 'Avisos',
+    close: 'Tanca',
+    notSent: (cmd: string) => `${cmd}: no s'ha enviat, no hi ha connexió`,
+    rejected: (cmd: string, reason: string) => `${cmd}: ${reason}`,
+  },
+
+  reasons: {
+    invalid: 'ordre no vàlida',
+    locked: 'la pàgina del show encara espera el primer clic',
+    busy: 'ja hi ha un gir en marxa',
+    endOfQueue: "s'ha acabat la cua de cançons",
+    nothingToUndo: 'no hi ha res per desfer',
+    notHolding: 'no està en espera',
+    notReady: 'encara no està a punt',
+    decodeFailed: "no s'ha pogut carregar la cançó",
+    planFailed: "no s'ha pogut preparar la transició",
+    unknownSfx: 'so desconegut',
+    unknownCommand: 'el motor encara no coneix aquesta ordre',
+    noSuspense: 'no hi ha cap suspens obert',
+    wrongScene: 'ara no es pot fer',
+    unknownClaim: 'aquest cartró cantat no existeix',
+  } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,
+  reasonFallback: "l'ordre no s'ha acceptat",
+
+  commands: {
+    next: 'Següent',
+    back: 'Enrere',
+    hold: 'Espera',
+    holdMusic: "Música d'espera",
+    suspense: 'Suspens',
+    setPace: 'Ritme',
+    setGame: 'Configuració',
+    confirmLine: 'Confirmar línia',
+    newRound: 'Barrejar',
+    panic: 'Pànic',
+    sfx: 'So',
+    roundIntro: 'Començar quina',
+    claim: 'Comprovar cartró',
+    checkStart: 'Comprovar',
+    decide: 'Decisió',
+    winnerInfo: 'Dades del guanyador',
+    celebrationMusic: 'Música de la celebració',
+    interval: 'Mitja part',
+    endGame: 'Acabar la nit',
+    pause: 'Pausa tècnica',
+  } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
+  commandFallback: 'Ordre',
+
+  icons: { cover: 'Portada' },
+};
+
+/** The text for a hold reason. */
+export const holdReasonText = (reason: HoldReason | string): string => S.hold.reasons[reason as HoldReason] ?? S.hold.reasonFallback;
+/** The label of a command, for toasts. */
+export const commandText = (cmd: string | null): string => (cmd ? S.commands[cmd as AnyCommandName] : undefined) ?? S.commandFallback;
+/** The Catalan reason of a rejection. */
+export const reasonText = (reason: RejectReason | string): string => S.reasons[reason as RejectReason] ?? S.reasonFallback;
+/** A sound's button label. */
+export const soundText = (name: SoundName): string => S.sounds.names[name] ?? name.replace(/^mkwii-/, '').replaceAll('-', ' ');

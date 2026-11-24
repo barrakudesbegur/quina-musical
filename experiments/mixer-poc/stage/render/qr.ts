@@ -1,0 +1,56 @@
+// The player app's QR with its short link underneath (before the Game and in the Interval only, never in
+// play). The code is drawn as one SVG path built from the `qrcode` package's module matrix; no markup is
+// parsed. If the code can't be made, the short link alone stays as the fallback.
+import QRCode from 'qrcode';
+import { qrPathData } from '../model/qr.ts';
+import type { LinkView } from '../view.ts';
+import { STAGE_TEXT } from '../strings.ts';
+import { h, setHidden, setText } from './dom.ts';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function qrSvg(href: string): SVGSVGElement | null {
+  try {
+    const { modules } = QRCode.create(href, { errorCorrectionLevel: 'M' });
+    const { viewBox, d } = qrPathData({ size: modules.size, isDark: (r, c) => modules.get(r, c) === 1 }, 2);
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'qr__code');
+    svg.setAttribute('viewBox', `0 0 ${viewBox} ${viewBox}`);
+    svg.setAttribute('shape-rendering', 'crispEdges');
+    svg.setAttribute('aria-hidden', 'true');
+    const bg = document.createElementNS(SVG_NS, 'rect');
+    bg.setAttribute('class', 'qr__paper');
+    bg.setAttribute('width', String(viewBox));
+    bg.setAttribute('height', String(viewBox));
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('class', 'qr__ink');
+    path.setAttribute('d', d);
+    svg.append(bg, path);
+    return svg;
+  } catch (error) {
+    console.warn('[stage] QR not drawn; the short link stays', error);
+    return null;
+  }
+}
+
+export class QrBlock {
+  readonly root: HTMLElement;
+  private readonly code: HTMLElement;
+  private readonly label: HTMLElement;
+  private href = '';
+
+  constructor() {
+    this.code = h('div', 'qr__frame');
+    this.label = h('p', 'qr__url');
+    this.root = h('figure', 'qr', h('figcaption', 'qr__caption', STAGE_TEXT.scanYourCard), this.code, this.label);
+  }
+
+  set(link: LinkView): void {
+    setText(this.label, link.label);
+    if (link.href === this.href) return;
+    this.href = link.href;
+    const svg = qrSvg(link.href);
+    this.code.replaceChildren(...(svg ? [svg] : []));
+    setHidden(this.code, svg === null);
+  }
+}

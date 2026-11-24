@@ -14,7 +14,7 @@ test('LAN pages use the relay; cloud pages the console socket, over wss', () => 
 });
 
 test('labels become safe id prefixes', () => {
-  assert.equal(labelForId('Mòbil admin'), 'Mobil-admin');
+  assert.equal(labelForId('Mòbil admin'), 'Mobil_admin');
   assert.equal(labelForId('Tauleta'), 'Tauleta');
   assert.equal(labelForId('  ¡!  '), 'device');
 });
