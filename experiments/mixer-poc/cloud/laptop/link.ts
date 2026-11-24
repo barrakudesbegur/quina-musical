@@ -81,6 +81,7 @@ export class CloudLink {
   private relayTimer: NodeJS.Timeout | null = null;
   private tickTimer: NodeJS.Timeout | null = null;
   private lastJournalRequestMs = 0;
+  private lastStatusWriteMs = 0;
   private showConnected = false;
   private running = false;
 
@@ -367,10 +368,15 @@ export class CloudLink {
     this.lastSentAtMs = this.options.now();
   }
 
-  /** Every second: resend an unanswered upload, and keep the connection known to be alive. */
+  /** Every second: resend an unanswered upload, keep the connection known to be alive, and (every 5 s) write
+   * `<dataDir>/status.json` for the preflight, which must not connect as a second laptop to find out. */
   private tick(): void {
     this.pump();
     const now = this.options.now();
+    if (now - this.lastStatusWriteMs >= 5000) {
+      this.lastStatusWriteMs = now;
+      this.writeFile('status.json', { ...this.status(), updatedAtMs: now });
+    }
     if (this.cloud?.readyState === WebSocket.OPEN && now - this.lastSentAtMs >= LINK.keepaliveMs) {
       this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.ping', sentAtMs: now });
     }

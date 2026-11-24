@@ -24,6 +24,7 @@ npm run dev                          # wrangler dev on http://localhost:8787 (st
 npm run assets                       # dist/: static/ + the UI build + cards.json + covers as WebP (needs cwebp)
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
 npm run media -- push                # the pool's prepared media → the cloud's private R2 (pull on a takeover laptop)
+npm run preflight                    # before every rehearsal and show: a pass/warn/fail table (exits 1 on any FAIL)
 npm test                             # typecheck, Node tests, workerd tests (about 10 s)
 npm run loadtest -- --report reports/loadtest-$(date +%F).md   # 400 phones (about 1 min)
 ```
@@ -48,6 +49,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET`, `PUT /api/sync/<pool>/manifest`, `/api/sync/<pool>/file?path=` | the laptop's service token | The pool's media in the private R2 bucket (C3): the manifest (sizes and SHA-256 by sync path), and each file, which R2 stores only if its SHA-256 matches. 503 until the bucket exists |
 | `GET /api/export` | admins (Access) | Every Game of the edition: journal entries, each Game replayed with the protocol's reducer, and the public state |
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
+| `GET /api/ping` | signed in (the laptop's token, or organizers) | The cloud's clock, edition and current Game: the preflight's sign-in and clock check |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
 | anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json`, `covers/<id>.webp`, and `sw.js`, which removes last year's service worker. Served without running the Worker |
 
@@ -63,6 +65,12 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
   - What: the pool's prepared playback files (decoded songs, stems, Signatures, analysis, overrides, covers, Hold music, effects, cards), never the Blend renders or the Spotify features. Last year's pool is 1,085 files, 6 GB.
   - How: the laptop pushes them to the private R2 bucket through the Worker, with its service token; a takeover laptop pulls them. Only changed files move, by SHA-256, with hashes cached by size and mtime (7.5 s for 6 GB). A pull writes `<file>.part`, checks its size and hash, then renames it, and never deletes anything.
   - When: once, the day before the show. Each file is one request.
+- **Preflight** (`npm run preflight`, [`laptop/preflight/`](laptop/preflight)), run before every rehearsal and show. FAIL means it would hurt the show; WARN is worth a look; the exit code is 1 on any FAIL.
+  - Pool: songs analysed with their audio; every song on a card playable; fanfares, effects and Hold music present; every media file re-hashed against the cloud's manifest (or the last push or pull).
+  - Laptop: the audio output (Bluetooth and AirPlay fail), system and display sleep, power, disk, Chrome's autoplay flag.
+  - Network: the relay and its pool; the show page connected; the console's LAN address answering.
+  - Cloud: reachable; the laptop token signs in, with round trip and clock offset; the link's status file fresh and in sync; the Game and edition; the Game plan.
+  It never connects as a second laptop: the link writes `laptop-data/status.json` every 5 s for it.
 - **The Game plan** is all public (rounds, prizes, sponsors, schedule), so it lives in the public state. Saving it sends one change to every phone and a `cloud.plan` to the laptop, which also gets it on every hello. Logos are files under `/media/`, never data URLs in the plan, so a phone's snapshot stays small.
 - **A silent laptop** (nothing for 50 s) is marked offline by an alarm. Phones show "Connexió perduda" after 20 s of `link.online === false`.
 - **Clocks.** Every link message carries the laptop's clock; the GameRoom keeps the smallest (receive − send) as the offset. The feed's times are on the cloud's clock, and every message carries `nowMs` for the phones.
@@ -80,7 +88,7 @@ Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLI
 | `src/domain/` | Pure logic: journal check and ingest, the public projection, consoles (forwarding, client list), routes, clock |
 | `src/link-protocol.ts` | Laptop ↔ cloud messages |
 | `src/api.ts` | The HTTP API's response types |
-| `laptop/` | The laptop link: `main.ts` (CLI), `link.ts`, `uploader.ts` (pure), `journal-copy.ts` (disk); the media sync: `media.ts` (CLI), `media-sync.ts`, `pool-roots.ts` |
+| `laptop/` | The laptop link: `main.ts` (CLI), `link.ts`, `uploader.ts` (pure), `journal-copy.ts` (disk); the media sync: `media.ts` (CLI), `media-sync.ts`, `pool-roots.ts`; the preflight: `preflight.ts` (CLI), `preflight/checks.ts` (pure), `preflight/gather.ts` |
 | `loadtest/` | `run.ts`, the night `model.ts`, `dev-server.ts`, `fake-relay.ts` |
 | `scripts/assets.ts` | Builds `dist/`, the static files (gitignored: the built UI and album covers never enter the repo) |
 | `static/` | The committed static files: `sw.js`, `_headers`, a placeholder page |

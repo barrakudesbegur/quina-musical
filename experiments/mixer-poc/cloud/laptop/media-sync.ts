@@ -113,6 +113,13 @@ async function inParallel<T>(items: readonly T[], limit: number, work: (item: T)
   );
 }
 
+/** The manifest this laptop last pushed or pulled: what the preflight checks the files against offline. */
+export const referenceFile = (dataDir: string, pool: string): string => path.join(dataDir, `media-manifest-${pool}.json`);
+
+function writeReference(o: SyncOptions, manifest: MediaManifest): void {
+  fs.writeFileSync(referenceFile(o.dataDir, o.pool), JSON.stringify(manifest));
+}
+
 /** Upload what changed, then the manifest (last, so a pull never sees files that aren't there yet). */
 export async function push(o: SyncOptions): Promise<SyncReport> {
   const log = o.log ?? console.log;
@@ -136,6 +143,7 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
   const manifest: MediaManifest = { v: 1, pool: o.pool, files: manifestFiles(local), updatedAtMs: Date.now() };
   const saved = await fetch(`${o.cloud}/api/sync/${o.pool}/manifest`, { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) });
   if (!saved.ok) throw new Error(`the manifest: HTTP ${saved.status} ${await saved.text()}`);
+  writeReference(o, manifest);
   for (const line of skipped) log(`  skipped ${line}`);
   log(`media push: ${todo.length} uploaded (${(bytes / 1e6).toFixed(1)} MB)`);
   return { files: local.size, moved: todo.length, bytes, skipped };
@@ -182,6 +190,7 @@ export async function pull(o: SyncOptions): Promise<SyncReport> {
     bytes += size;
   });
   await scan(o.roots, o.dataDir); // refresh the index with the new files
+  if (skipped.length === 0) writeReference(o, remote);
   for (const line of skipped) log(`  skipped ${line}`);
   log(`media pull: ${todo.length - skipped.length} downloaded (${(bytes / 1e6).toFixed(1)} MB)`);
   return { files: Object.keys(remote.files).length, moved: todo.length - skipped.length, bytes, skipped };

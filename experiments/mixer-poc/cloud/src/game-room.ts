@@ -511,6 +511,12 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return { ok: true };
   }
 
+  /** The cloud's clock, edition and current Game (the laptop's preflight). */
+  ping(): { nowMs: number; edition: string; current: { gameId: string; seq: number } | null } {
+    const game = this.room.game;
+    return { nowMs: Date.now(), edition: this.env.EDITION, current: game && game.seq > 0 ? { gameId: game.gameId, seq: game.seq } : null };
+  }
+
   getStats(): RoomStats {
     return { ...this.stats, phonesConnected: this.sockets('phone').length, consolesConnected: this.consoles().length };
   }

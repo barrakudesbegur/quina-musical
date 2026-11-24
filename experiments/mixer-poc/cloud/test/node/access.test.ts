@@ -88,6 +88,7 @@ test('routes: phones and health are public, the laptop needs its service token, 
   assert.deepEqual(findRoute('/ws/show')?.access, SERVICES);
   assert.deepEqual(findRoute('/api/export')?.access, PEOPLE);
   assert.deepEqual(findRoute('/api/stats')?.access, PEOPLE);
+  assert.deepEqual(findRoute('/api/ping')?.access, { people: true, services: true }, 'the preflight signs in with the laptop token');
   assert.equal(findRoute('/'), null);
   assert.equal(findRoute('/toString'), null, 'no prototype keys');
   assert.equal(findRoute('/feed/'), null);

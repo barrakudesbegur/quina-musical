@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'ping' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -17,6 +17,7 @@ export interface Route {
 const GET = ['GET'] as const;
 
 const PEOPLE: AccessRule = { people: true, services: false };
+const ANYONE_SIGNED_IN: AccessRule = { people: true, services: true };
 const SERVICES: AccessRule = { people: false, services: true };
 
 export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
@@ -44,6 +45,8 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/api/export': { name: 'export', websocket: false, access: PEOPLE, methods: GET },
   /** Connections, messages and SQLite rows since the GameRoom last woke (admins, the load test). */
   '/api/stats': { name: 'stats', websocket: false, access: PEOPLE, methods: GET },
+  /** Signed in (the laptop's preflight, organizers): the cloud's clock, edition and current Game. */
+  '/api/ping': { name: 'ping', websocket: false, access: ANYONE_SIGNED_IN, methods: GET },
   /** Liveness, without waking the GameRoom. */
   '/api/health': { name: 'health', websocket: false, access: null, methods: GET },
 });

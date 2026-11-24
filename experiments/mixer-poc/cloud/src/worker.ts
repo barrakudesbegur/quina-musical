@@ -68,6 +68,8 @@ export default {
         const resumed = await room.resumeGame(gameId, identity);
         return json(resumed, {}, resumed.ok ? 200 : 404);
       }
+      case 'ping':
+        return json(await room.ping());
       case 'phones':
         return json(await room.phonesNow());
       case 'notice':
