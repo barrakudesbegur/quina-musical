@@ -2,7 +2,8 @@
 // Access):
 //   GET  /api/plan   → { plan: GamePlan | null }
 //   PUT  /api/plan   (the whole GamePlan) → 200 { ok: true, plan } | 400 { ok: false, errors: string[] }
-//   POST /api/media  (an image body, webp/png/jpeg, ≤ 300 KB) → 201 { ok: true, path: '/media/<hash>.webp' }
+//   POST /api/media  (a PNG or JPEG body, ≤ 300 KB; WebP is refused) → 201 { ok: true, path: '/media/<key>.png|.jpg', key }
+//   PUT  /api/media/<key>.jxl  (its JPEG XL, ≤ 300 KB) → 201 { ok: true, path: '/media/<key>.jxl', key }
 // CloudPlanStore keeps the PlanStore interface the screens already use (a synchronous `load()` from a
 // cache), and adds `refresh()` and `put()`, which talk to the cloud and report failures as values, never throwing.
 import { checkGamePlan, type GamePlan } from '../plan.ts';
@@ -15,7 +16,7 @@ export type FetchLike = (input: string, init?: { method?: string; headers?: Reco
 }>;
 
 export type PutResult = { ok: true; plan: GamePlan } | { ok: false; status: number; errors: string[] };
-export type MediaResult = { ok: true; path: string } | { ok: false; status: number; reason: 'type' | 'size' | 'full' | 'network' | 'error' };
+export type MediaResult = { ok: true; path: string; key: string } | { ok: false; status: number; reason: 'type' | 'size' | 'full' | 'network' | 'error' };
 
 const isRec = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
@@ -102,14 +103,33 @@ export class CloudPlanStore implements PlanStore {
   }
 }
 
-/** Upload an image (a cleaned logo, a prize picture) and get its public, immutable path. */
+/** The media key in a `/media/<key>.<ext>` path, or null. */
+export const mediaKey = (path: string): string | null => /^\/media\/([^/?#.]+)\.[a-z0-9]+$/i.exec(path)?.[1] ?? null;
+
+const mediaFailure = (status: number): MediaResult => ({ ok: false, status, reason: status === 415 ? 'type' : status === 413 ? 'size' : status === 507 ? 'full' : 'error' });
+
+/** Upload an image's fallback (PNG for logos and pictures, JPEG for photos) and get its public, immutable path. */
 export async function uploadMedia(fetchImpl: FetchLike, image: Blob, base = ''): Promise<MediaResult> {
   try {
     const res = await fetchImpl(`${base}/api/media`, { method: 'POST', headers: { 'content-type': image.type || 'application/octet-stream' }, body: image });
     const body: unknown = await res.json().catch(() => null);
-    if (res.ok && isRec(body) && typeof body.path === 'string') return { ok: true, path: body.path };
-    const reason = res.status === 415 ? 'type' : res.status === 413 ? 'size' : res.status === 507 ? 'full' : 'error';
-    return { ok: false, status: res.status, reason };
+    if (res.ok && isRec(body) && typeof body.path === 'string') {
+      const key = typeof body.key === 'string' ? body.key : mediaKey(body.path);
+      if (key) return { ok: true, path: body.path, key };
+    }
+    return mediaFailure(res.status);
+  } catch {
+    return { ok: false, status: 0, reason: 'network' };
+  }
+}
+
+/** Attach the JPEG XL of an uploaded image (`/media/<key>.jxl`). Without it the cloud serves the fallback there. */
+export async function uploadMediaJxl(fetchImpl: FetchLike, key: string, jxl: Blob, base = ''): Promise<MediaResult> {
+  try {
+    const res = await fetchImpl(`${base}/api/media/${encodeURIComponent(key)}.jxl`, { method: 'PUT', headers: { 'content-type': 'image/jxl' }, body: jxl });
+    const body: unknown = await res.json().catch(() => null);
+    if (res.ok && isRec(body) && typeof body.path === 'string') return { ok: true, path: body.path, key };
+    return mediaFailure(res.status);
   } catch {
     return { ok: false, status: 0, reason: 'network' };
   }

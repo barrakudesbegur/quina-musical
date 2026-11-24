@@ -1,11 +1,12 @@
 // The logo clean-up's browser side: decode an uploaded image into pixels, and turn cleaned pixels into a
-// resized WebP (or PNG where the browser can't encode WebP) data URL. The pixel work itself is pure, in
+// resized PNG data URL (its JPEG XL is made when it's uploaded). The pixel work itself is pure, in
 // logic/logo-pixels.ts.
 import { makePixels, type Pixels } from '../logic/logo-pixels.ts';
 import { base64Bytes } from '../logic/plan-check.ts';
 import { LOGO_CONFIG } from '../config.ts';
 
-export type LogoFormat = 'image/webp' | 'image/png';
+/** Logos are PNG: the fallback next to their JPEG XL (never WebP, the user's rule). */
+export type LogoFormat = 'image/png';
 
 export interface EncodedLogo {
   dataUrl: string;
@@ -77,14 +78,12 @@ const toDataUrl = (blob: Blob) =>
     reader.readAsDataURL(blob);
   });
 
-/** Cleaned pixels → a WebP data URL at `size` (PNG when the browser can't encode WebP, as older Safari). */
+/** Cleaned pixels → a PNG data URL at `size` (its JPEG XL is made when it's uploaded). */
 export async function encodeLogo(p: Pixels, size: { width: number; height: number }): Promise<EncodedLogo> {
   const out = resized(toCanvas(p), size.width, size.height);
-  let blob = await toBlob(out, 'image/webp', LOGO_CONFIG.webpQuality);
-  // A browser that can't encode WebP hands back a PNG (or nothing) instead.
-  if (!blob || blob.type !== 'image/webp') blob = await toBlob(out, 'image/png');
+  const blob = await toBlob(out, 'image/png');
   if (!blob) throw new Error('canvas could not encode the logo');
   const dataUrl = await toDataUrl(blob);
-  const format: LogoFormat = blob.type === 'image/webp' ? 'image/webp' : 'image/png';
+  const format: LogoFormat = 'image/png';
   return { dataUrl, format, bytes: base64Bytes(dataUrl.slice(dataUrl.indexOf(',') + 1)), width: out.width, height: out.height };
 }

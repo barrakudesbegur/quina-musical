@@ -41,8 +41,6 @@ export const LOGO_CONFIG = Object.freeze({
   maxHeight: 256,
   /** Huge uploads are scaled down to this longest side before the pixel work. */
   maxSourceSide: 2048,
-  /** WebP quality for canvas.toBlob. */
-  webpQuality: 0.9,
   /** A cleaned logo bigger than this (decoded bytes) is rejected: it would fill the browser's storage. */
   maxBytes: 200 * 1024,
 });

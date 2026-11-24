@@ -6,7 +6,7 @@ import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { base64Bytes, checkPlanDraft, checkPlanText, errorsAt, inlineLogoError, planForStorage, planFromStorage } from '../../../../admin/logic/plan-check.ts';
 
-const LOGO = `data:image/webp;base64,${Buffer.alloc(2000, 7).toString('base64')}`; // longer than the shared 500-character limit
+const LOGO = `data:image/png;base64,${Buffer.alloc(2000, 7).toString('base64')}`; // longer than the shared 500-character limit
 const withLogo = (logo: string) => ({ ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 1 ? { ...s, logo } : s)) });
 
 test('base64Bytes is the decoded size', () => {
@@ -22,9 +22,10 @@ test('a plan with an inline logo passes, and keeps the logo', () => {
   if (r.ok) assert.equal(r.plan.sponsors[1].logo, LOGO);
 });
 
-test('inline logos must be base64 WebP or PNG within the size limit', () => {
+test('inline logos must be base64 PNG within the size limit (never WebP)', () => {
   assert.equal(inlineLogoError(LOGO), null);
-  assert.match(inlineLogoError('data:image/jpeg;base64,AAAA') ?? '', /WebP or PNG/);
+  assert.match(inlineLogoError('data:image/jpeg;base64,AAAA') ?? '', /PNG/);
+  assert.match(inlineLogoError('data:image/webp;base64,AAAA') ?? '', /WebP is no longer used/);
   assert.match(inlineLogoError(LOGO, 4) ?? '', /more than/);
   const r = checkPlanDraft(withLogo('data:text/html,<script>'));
   assert.equal(r.ok, false);
@@ -73,6 +74,6 @@ test('inline logos are stored aside, so the stored plan passes the shared valida
 });
 
 test('a stored logo never overrides a logo the plan already has', () => {
-  const plan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: '/logos/x.webp' })) };
+  const plan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: '/logos/x.png' })) };
   assert.deepEqual(planFromStorage(plan, { [plan.sponsors[0].id]: LOGO }), plan);
 });

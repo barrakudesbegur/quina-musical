@@ -8,7 +8,7 @@
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
 import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
-import { CloudPlanStore, uploadMedia, type FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
+import { CloudPlanStore, uploadMedia, uploadMediaJxl, type FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
 import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
 import { relayTokenForPage } from '../../../packages/ui/client/pairing.ts';
 import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
@@ -124,12 +124,22 @@ export class AdminPlanStore {
   readonly cloud: CloudPlanStore | null;
   private readonly fetchImpl: FetchLike | null;
 
-  constructor(plans: PlanStore, logos: LogoStore, kind: StoreKind, cloud: { store: CloudPlanStore; fetchImpl: FetchLike } | null = null) {
+  /** Makes the JPEG XL of an uploaded logo (the lazy WASM encoder; tests pass their own). */
+  private readonly toJxl: (image: Blob) => Promise<Blob | null>;
+
+  constructor(
+    plans: PlanStore,
+    logos: LogoStore,
+    kind: StoreKind,
+    cloud: { store: CloudPlanStore; fetchImpl: FetchLike } | null = null,
+    toJxl: (image: Blob) => Promise<Blob | null> = async (image) => (await import('./jxl-encoder.ts')).encodeJxl(image),
+  ) {
     this.plans = plans;
     this.logos = logos;
     this.kind = kind;
     this.cloud = cloud?.store ?? null;
     this.fetchImpl = cloud?.fetchImpl ?? null;
+    this.toJxl = toJxl;
   }
 
   /**
@@ -158,7 +168,7 @@ export class AdminPlanStore {
     return new AdminPlanStore(new MemoryPlanStore(local.load()), new MemoryLogoStore(), demo ? 'demo' : 'unavailable');
   }
 
-  /** Cloud: upload inline (data URL) logos as media, then save the whole plan. Never throws. */
+  /** Cloud: upload inline (data URL) logos as media (PNG, then its JPEG XL), then save the whole plan. Never throws. */
   private async saveToCloud(plan: GamePlan): Promise<SaveResult> {
     const cloud = this.cloud;
     const fetchImpl = this.fetchImpl;
@@ -169,8 +179,12 @@ export class AdminPlanStore {
         sponsors.push(s);
         continue;
       }
-      const up = await uploadMedia(fetchImpl, dataUrlToBlob(s.logo));
+      const png = dataUrlToBlob(s.logo);
+      const up = await uploadMedia(fetchImpl, png);
       if (!up.ok) return { ok: false, reason: 'error', detail: `logo ${s.id}: ${up.reason}` };
+      // Its JPEG XL: a bonus. If the encoder or the upload fails, the cloud serves the PNG at the .jxl path.
+      const jxl = await this.toJxl(png).catch(() => null);
+      if (jxl) await uploadMediaJxl(fetchImpl, up.key, jxl);
       sponsors.push({ ...s, logo: up.path });
     }
     const toSave = { ...plan, sponsors };

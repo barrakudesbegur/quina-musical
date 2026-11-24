@@ -7,7 +7,7 @@ import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import type { GamePlan } from '../../../../../packages/ui/plan.ts';
 
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
-const LOGO = 'data:image/webp;base64,UklGRg==';
+const LOGO = 'data:image/png;base64,iVBORw==';
 
 function cloudStore(fetchImpl: FetchLike) {
   const store = new CloudPlanStore(fetchImpl);
@@ -16,7 +16,7 @@ function cloudStore(fetchImpl: FetchLike) {
 
 test('a data URL becomes a Blob of its type', async () => {
   const blob = dataUrlToBlob(LOGO);
-  assert.equal(blob.type, 'image/webp');
+  assert.equal(blob.type, 'image/png');
   assert.equal(blob.size, 4);
 });
 
@@ -25,7 +25,8 @@ test('inline logos are uploaded, then the plan is saved with their media paths',
   let putBody: GamePlan | null = null;
   const fetchImpl: FetchLike = async (url, init) => {
     calls.push(`${init?.method ?? 'GET'} ${url}`);
-    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/abc.webp' });
+    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/abc.png', key: 'abc' });
+    if (url.endsWith('/api/media/abc.jxl')) return reply(201, { ok: true, path: '/media/abc.jxl', key: 'abc' });
     putBody = JSON.parse(String(init?.body)) as GamePlan;
     return reply(200, { ok: true, plan: putBody });
   };
@@ -33,8 +34,8 @@ test('inline logos are uploaded, then the plan is saved with their media paths',
   const result = await cloudStore(fetchImpl).save(plan);
   assert.deepEqual(calls, ['POST /api/media', 'PUT /api/plan']);
   assert.equal(result.ok, true);
-  assert.equal(putBody!.sponsors[0].logo, '/media/abc.webp');
-  if (result.ok) assert.equal(result.saved?.sponsors[0].logo, '/media/abc.webp');
+  assert.equal(putBody!.sponsors[0].logo, '/media/abc.png');
+  if (result.ok) assert.equal(result.saved?.sponsors[0].logo, '/media/abc.png');
 });
 
 test('a refused upload or plan is reported, never thrown', async () => {
@@ -74,4 +75,28 @@ test('relay: a refused save (not paired, invalid) is reported, never thrown', as
   const result = await notPaired.save(SAMPLE_PLAN);
   assert.equal(result.ok, false);
   if (!result.ok) assert.match(result.detail, /not paired/);
+});
+
+test("each uploaded logo gets its JPEG XL; when the encoder can't, the save still goes through", async () => {
+  const calls: string[] = [];
+  const fetchImpl: FetchLike = async (url, init) => {
+    calls.push(`${init?.method ?? 'GET'} ${url}`);
+    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/abc.png', key: 'abc' });
+    if (url.endsWith('.jxl')) return reply(201, { ok: true, path: '/media/abc.jxl', key: 'abc' });
+    return reply(200, { ok: true, plan: JSON.parse(String(init?.body)) });
+  };
+  const plan: GamePlan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 0 ? { ...s, logo: LOGO } : s)) };
+  const store = (toJxl: (b: Blob) => Promise<Blob | null>) => {
+    const cloud = new CloudPlanStore(fetchImpl);
+    return new AdminPlanStore(cloud, new MemoryLogoStore(), 'cloud', { store: cloud, fetchImpl }, toJxl);
+  };
+  const withJxl = await store(async () => new Blob([new Uint8Array([0xff, 0x0a])], { type: 'image/jxl' })).save(plan);
+  assert.equal(withJxl.ok, true);
+  assert.deepEqual(calls, ['POST /api/media', 'PUT /api/media/abc.jxl', 'PUT /api/plan']);
+  calls.length = 0;
+  const failing = await store(async () => {
+    throw new Error('no wasm');
+  }).save(plan);
+  assert.equal(failing.ok, true, 'the PNG alone is fine: the cloud serves it at the .jxl path');
+  assert.deepEqual(calls, ['POST /api/media', 'PUT /api/plan']);
 });

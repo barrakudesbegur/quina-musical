@@ -1,12 +1,12 @@
 // Admin's view of plan validation. It is ui/plan.ts's checkGamePlan plus one thing the shared validator
-// doesn't accept yet: a sponsor logo kept inline as a data URL (the cleaned WebP or PNG), until the Platform
+// doesn't accept yet: a sponsor logo kept inline as a data URL (the cleaned PNG), until the Platform
 // session stores logos in R2. checkGamePlan limits `logo` to a 500-character path, so the data URLs are
 // checked here (format and size) and set aside while the rest goes through checkGamePlan unchanged.
 // Every function returns every problem with its JSON path and never throws.
 import { checkGamePlan, type GamePlan, type PlanCheck } from '../../../packages/ui/plan.ts';
 import { LOGO_CONFIG } from '../config.ts';
 
-const DATA_URL_RE = /^data:image\/(webp|png);base64,([A-Za-z0-9+/]+={0,2})$/;
+const DATA_URL_RE = /^data:image\/(png);base64,([A-Za-z0-9+/]+={0,2})$/;
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -20,10 +20,10 @@ export function base64Bytes(b64: string): number {
   return Math.floor((b64.length * 3) / 4) - padding;
 }
 
-/** Problems with an inline logo, or null when it is a base64 WebP or PNG within the size limit. */
+/** Problems with an inline logo, or null when it is a base64 PNG within the size limit. */
 export function inlineLogoError(url: string, maxBytes: number = LOGO_CONFIG.maxBytes): string | null {
   const match = DATA_URL_RE.exec(url);
-  if (!match) return 'an inline logo must be a base64 data URL of a WebP or PNG image';
+  if (!match) return 'an inline logo must be a base64 data URL of a PNG image (clean it again: WebP is no longer used)';
   const bytes = base64Bytes(match[2]);
   if (bytes > maxBytes) return `inline logo is ${Math.round(bytes / 1024)} KB, more than ${Math.round(maxBytes / 1024)} KB`;
   return null;

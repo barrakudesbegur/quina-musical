@@ -1,5 +1,5 @@
 <!-- The logo clean-up step: upload the sponsor's JPEG or PNG, remove its background, trim it, fit it inside
-     512×256 and keep it as WebP (PNG where WebP can't be encoded). The pixel work is logic/logo-pixels.ts;
+     512×256 and keep it as PNG (its JPEG XL is made when it's uploaded). The pixel work is logic/logo-pixels.ts;
      decoding and encoding are data/logo-canvas.ts. -->
 <script lang="ts">
   import { cleanLogo, toHex, type CleanResult, type Pixels, type RemoveMode } from '../logic/logo-pixels.ts';
@@ -141,8 +141,7 @@
   {/if}
 
   {#if encoded}
-    <p class="panel__help">{S.logo.size(encoded.width, encoded.height, kb(encoded.bytes), encoded.format === 'image/webp' ? 'WebP' : 'PNG')}</p>
-    {#if encoded.format !== 'image/webp'}<p class="panel__help">{S.logo.pngFallback}</p>{/if}
+    <p class="panel__help">{S.logo.size(encoded.width, encoded.height, kb(encoded.bytes), 'PNG')}</p>
     {#if tooBig}<p class="notice notice--error">{S.logo.tooBig(kb(encoded.bytes), kb(LOGO_CONFIG.maxBytes))}</p>{/if}
   {/if}
 

@@ -47,7 +47,7 @@ test('a prize whose sponsor changes counts as changed', () => {
 
 test('sponsors added, removed and changed (name or logo)', () => {
   const next = clone(SAMPLE_PLAN);
-  next.sponsors = next.sponsors.filter((s) => s.id !== 'patrocinador-2').map((s) => (s.id === 'barrakudes' ? { ...s, logo: 'data:image/webp;base64,AAAA' } : s));
+  next.sponsors = next.sponsors.filter((s) => s.id !== 'patrocinador-2').map((s) => (s.id === 'barrakudes' ? { ...s, logo: 'data:image/png;base64,AAAA' } : s));
   next.sponsors.push({ id: 'forn', name: 'Forn', logo: null });
   for (const r of next.rounds) if (r.line?.sponsorId === 'patrocinador-2') r.line.sponsorId = null;
   const d = diffPlans(SAMPLE_PLAN, next);

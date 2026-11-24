@@ -169,7 +169,6 @@ export const S = {
     onShow: 'Sobre el fons del show',
     size: (w: number, h: number, kb: number, format: string) => `${w}×${h} px · ${kb} KB · ${format}`,
     tooBig: (kb: number, max: number) => `Fa ${kb} KB, més de ${max} KB: no es pot desar. Retalla-la o simplifica-la abans.`,
-    pngFallback: 'Aquest navegador no sap fer WebP: es guarda en PNG.',
     use: 'Fer servir aquest logo',
     close: 'Tancar',
     working: 'Processant…',
