@@ -13,16 +13,17 @@ const allCards = [normal, other, special];
 
 /** A Check on `queue` after its first `landed` songs have landed. */
 function check(cardId: number, queue: number[], landed: number, over: Partial<CheckInput> = {}) {
-  return computeCheck({ allCards, cardId, kind: 'line', roundKind: 'normal', cardsInPlay: new Set([1, 2, 400]), queue, position: landed - 1, ...over });
+  return computeCheck({ allCards, cardId, kind: 'line', cardType: 'normal', cardsInPlay: new Set([1, 2, 400]), queue, position: landed - 1, ...over });
 }
 
-test('a number outside the generated cards, or of the wrong type for the round, has no steps', () => {
+test('a number outside the generated cards, or of another type than the round\'s, has no steps', () => {
   assert.deepEqual(check(9999, [1, 2, 3, 4], 4), { outcome: 'unknownCard', row: null, otherRows: [], steps: [], completeSince: null, warnings: [] });
   const wrong = check(400, [1, 2, 3, 4], 4);
   assert.equal(wrong.outcome, 'wrongType');
   assert.deepEqual(wrong.steps, []);
-  assert.equal(check(1, [1, 2, 3, 4], 4, { roundKind: 'special' }).outcome, 'wrongType', 'a normal card in the special round');
-  assert.equal(check(400, [1, 2, 3, 4], 4, { roundKind: 'special' }).outcome, 'complete');
+  assert.equal(check(1, [1, 2, 3, 4], 4, { cardType: 'especial' }).outcome, 'wrongType', 'a normal card in a round of especial cards');
+  assert.equal(check(400, [1, 2, 3, 4], 4, { cardType: 'especial' }).outcome, 'complete');
+  assert.equal(check(1, [1, 2, 3, 4], 4, { cardType: 'desgraciat' }).outcome, 'wrongType', 'any type the round does not play');
 });
 
 test('a card not among the cards in play is only a warning: its Check still runs', () => {

@@ -50,6 +50,9 @@ export interface PublicLanding {
 export interface PublicRound {
   number: number;
   kind: RoundKind;
+  /** The printed card type it plays: a card counts in it when `card.type === cardType`. Absent from an older cloud:
+   * defaultCardType(kind). */
+  cardType?: string;
   startedAtMs: number;
   lineConfirmed: boolean;
   /** The round is over (every landed song is already marked on the phones as it lands). */
@@ -114,8 +117,9 @@ export interface PublicState {
    * never the phone's cards. null before the laptop's first Game. */
   gameId: string | null;
   scene: PublicScene;
-  /** In `roundStart`, before its Shuffle: the round being introduced (its prizes are announced). */
-  intro: { round: number; kind: RoundKind } | null;
+  /** In `roundStart`, before its Shuffle: the round being introduced (its prizes are announced), and its card type
+   * (absent from an older cloud: defaultCardType(kind)). */
+  intro: { round: number; kind: RoundKind; cardType?: string } | null;
   /** The Shuffle while it runs. */
   shuffle: PublicShuffle | null;
   /** The presenters' technical pause ("Tornem de seguida"), over the scene. */
@@ -152,7 +156,7 @@ export type PublicChange =
   | { kind: 'spin'; spin: PublicSpin | null }
   | { kind: 'heat'; heat: PublicHeat | null }
   | { kind: 'scene'; scene: PublicScene }
-  | { kind: 'intro'; intro: { round: number; kind: RoundKind } | null }
+  | { kind: 'intro'; intro: { round: number; kind: RoundKind; cardType?: string } | null }
   | { kind: 'shuffle'; shuffle: PublicShuffle | null }
   | { kind: 'check'; check: PublicCheck | null }
   | { kind: 'winner'; winner: PublicWinner }

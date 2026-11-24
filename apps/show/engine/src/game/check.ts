@@ -7,20 +7,21 @@
 //   timeCheck(steps, startAt, timing) → the steps with their start times and lengths, and when the result shows
 //
 // Rules (docs/show-ui-and-platform-decisions.md › Check):
-//   - unknownCard: a number outside the generated cards; wrongType: a special card in a regular round or the
-//     other way round. Neither has steps: the result shows at once.
+//   - unknownCard: a number outside the generated cards; wrongType: a card of another type than the round's
+//     (an especial card in a normal round, say). Neither has steps: the result shows at once.
 //   - notSold (a warning only): the card is not among the cards in play. Its Check still runs.
 //   - A Line plays its completed row (the first to complete, top on a tie), else the row with most landed
 //     songs (top on a tie); the other completed rows are listed. A Bingo plays all 12 songs, row by row.
-import type { CheckOutcome, ClaimWarning, RoundKind, WinKind } from '@quina/protocol';
-import { ROUND_TYPES, cardSongIds, completionIndex, queuePositions, type Card } from './cards.ts';
+import type { CheckOutcome, ClaimWarning, WinKind } from '@quina/protocol';
+import { cardSongIds, completionIndex, queuePositions, type Card } from './cards.ts';
 
 export interface CheckInput {
   /** Every generated card (cards.json), not only the cards in play. */
   allCards: readonly Card[];
   cardId: number;
   kind: WinKind;
-  roundKind: RoundKind;
+  /** The round's card type (`RoundInfo.cardType`): a card of another type fails as `wrongType`. */
+  cardType: string;
   /** The cards in play (ids). */
   cardsInPlay: ReadonlySet<number>;
   /** The round's Queue and the Queue index of the last counted landing: queue[0..position] have landed. */
@@ -62,12 +63,12 @@ export interface TimedCheck {
   endAt: number;
 }
 
-export function computeCheck({ allCards, cardId, kind, roundKind, cardsInPlay, queue, position }: CheckInput): CheckResult {
+export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, queue, position }: CheckInput): CheckResult {
   const card = allCards.find((c) => c.id === cardId);
   const none = { row: null, otherRows: [], steps: [], completeSince: null };
   if (!card) return { outcome: 'unknownCard', ...none, warnings: [] };
   const warnings: ClaimWarning[] = cardsInPlay.has(cardId) ? [] : ['notSold'];
-  if (card.type !== ROUND_TYPES[roundKind]) return { outcome: 'wrongType', ...none, warnings };
+  if (card.type !== cardType) return { outcome: 'wrongType', ...none, warnings };
 
   // Only the counted landings: a song later in the Queue has not landed yet.
   const landedAt = queuePositions(queue.slice(0, Math.max(0, position + 1)));

@@ -54,6 +54,9 @@ export interface CurrentSong extends SongRef {
 export interface RoundInfo {
   number: number;
   kind: RoundKind;
+  /** The printed card type it plays: only cards of this type count (and any other fails its Check as `wrongType`).
+   * Optional in the type only (added later in v1): the engine always sends it. */
+  cardType?: string;
   startedAtMs: number;
   targetEndMs: number;
   lineConfirmed: boolean;
@@ -90,7 +93,7 @@ export interface CardsInfo {
   /** The cards in play as entered, for example "1-180, 200-215". */
   inPlay: string;
   inPlayCount: number;
-  /** Cards in play that count this round (special round: special cards only). */
+  /** Cards in play that count this round: those of the round's card type. */
   validCount: number;
   phaseSource: PhaseSource;
   climbingTo: ClimbTarget;
@@ -220,7 +223,7 @@ export interface CheckInfo {
   /** Line: the other completed rows, which the console mentions. */
   otherRows: number[];
   /** The card's printed type ('normal', 'especial'), shown as the Check's first step; null for `unknownCard`.
-   * `wrongType`: it doesn't play in this round. */
+   * `wrongType`: it isn't the round's card type (`RoundInfo.cardType`). */
   cardType?: string | null;
   /** Empty for `unknownCard` and `wrongType`. */
   steps: CheckStep[];
@@ -299,6 +302,8 @@ export interface ShuffleInfo {
 export interface IntroInfo {
   round: number;
   kind: RoundKind;
+  /** The card type it will play. Optional in the type only: the engine always sends it. */
+  cardType?: string;
   sinceMs: number;
 }
 
@@ -378,6 +383,9 @@ export interface ShowState {
 export interface ResumeToken {
   round: number;
   kind: RoundKind;
+  /** The round's card type (the Queue depends on it). Optional in the type only: the engine always sends it; a token
+   * without one plays defaultCardType(kind). */
+  cardType?: string;
   shuffleSeed: number;
   shuffleAttempts: number;
   /** Queue index of the last counted song (−1 before the first). */

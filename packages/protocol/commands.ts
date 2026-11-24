@@ -8,6 +8,7 @@ import {
   SOUND_NAMES,
   WIN_KINDS,
   CELEBRATION_MUSIC,
+  CARD_TYPE_ID_RE,
   isPhaseName,
   type PhaseName,
   type ProtocolVersion,
@@ -23,6 +24,8 @@ export interface FieldSpec {
   readonly max?: number;
   readonly maxLength?: number;
   readonly oneOf?: readonly string[];
+  /** A string must match it. */
+  readonly pattern?: RegExp;
 }
 
 export const COMMANDS = Object.freeze({
@@ -80,6 +83,9 @@ export const COMMANDS = Object.freeze({
   newRound: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
     kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
+    /** The printed card type the round plays (the plan round's `cardType`). Default: the introduced round's, else
+     * defaultCardType(kind). */
+    cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
   },
   /** Silence everything at once. Position is kept and the state becomes `idle`. */
   panic: {},
@@ -106,6 +112,8 @@ export const COMMANDS = Object.freeze({
     lineConfirmedFrom: { type: 'integer', optional: true, nullable: true, min: 0, max: 999 },
     lastSongId: { type: 'integer', optional: true, nullable: true, min: 1 },
     shuffleAttempts: { type: 'integer', optional: true, nullable: true, min: 0 },
+    /** The round's card type (the token's; default defaultCardType(kind)): the Queue depends on it. */
+    cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
   },
 
   // ---- the show flow (docs/protocol.md › Scenes) ----
@@ -114,6 +122,8 @@ export const COMMANDS = Object.freeze({
   roundIntro: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
     kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
+    /** The printed card type the round plays (the plan round's `cardType`; default defaultCardType(kind)). */
+    cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
   },
   /**
    * The presenters reveal a round's prizes (GamePlan.prizeReveal): phones may show its bundles from now on. With
@@ -232,6 +242,7 @@ function fieldError(key: string, field: FieldSpec, value: unknown): string | nul
     case 'string':
       if (typeof value !== 'string' || (!value && !field.allowEmpty)) return `${key} must be a non-empty string`;
       if (field.maxLength != null && value.length > field.maxLength) return `${key} is too long`;
+      if (field.pattern && !field.pattern.test(value)) return `${key} has the wrong format`;
       return field.oneOf && !field.oneOf.includes(value) ? `${key} must be one of ${field.oneOf.join(', ')}` : null;
     case 'phase':
       return isPhaseName(value) ? null : `${key} must be a phase name`;

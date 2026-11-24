@@ -41,8 +41,9 @@ test('seed codes and resume tokens survive paper: 7 characters, forgiving O/0 an
   assert.equal(parseSeedCode('000000L'), 1);
   assert.equal(parseSeedCode('ABC'), null);
   for (const point of [
-    { round: 3, kind: 'normal' as const, shuffleSeed: 0xc0ffee, shuffleAttempts: 0, position: 17, lastSongId: 41, lineConfirmedFrom: 12 },
-    { round: 1, kind: 'special' as const, shuffleSeed: 7, shuffleAttempts: 4, position: -1, lastSongId: null, lineConfirmedFrom: null },
+    { round: 3, kind: 'normal' as const, cardType: 'normal', shuffleSeed: 0xc0ffee, shuffleAttempts: 0, position: 17, lastSongId: 41, lineConfirmedFrom: 12 },
+    { round: 1, kind: 'special' as const, cardType: 'especial', shuffleSeed: 7, shuffleAttempts: 4, position: -1, lastSongId: null, lineConfirmedFrom: null },
+    { round: 2, kind: 'normal' as const, cardType: 'especial', shuffleSeed: 99, shuffleAttempts: 1, position: 4, lastSongId: 8, lineConfirmedFrom: null },
   ]) {
     const text = formatResumeToken(point);
     assert.deepEqual(parseResumeToken(text), point, text);
@@ -50,6 +51,15 @@ test('seed codes and resume tokens survive paper: 7 characters, forgiving O/0 an
   }
   assert.equal(parseResumeToken('Q3N-NOTASEED-17'), null);
   assert.equal(parseResumeToken('hello'), null);
+});
+
+test('a resume token names the card type only when it is not the round kind\'s default', () => {
+  const point = { round: 2, kind: 'normal' as const, shuffleSeed: 99, shuffleAttempts: 0, position: 4, lastSongId: null, lineConfirmedFrom: null };
+  assert.equal(formatResumeToken({ ...point, cardType: 'normal' }), formatResumeToken(point), 'the default adds nothing');
+  assert.match(formatResumeToken({ ...point, cardType: 'especial' }), /-TESPECIAL$/);
+  assert.equal(parseResumeToken(formatResumeToken(point))?.cardType, 'normal', 'a token without one plays the default');
+  assert.equal(parseResumeToken('Q2E-0000033-4')?.cardType, 'especial');
+  assert.equal(parseResumeToken('Q2N-0000033-4-T'), null, 'an empty type');
 });
 
 test('a fresh show page resumes the round exactly from the token: same Queue, position, Line; then plays on', () => {

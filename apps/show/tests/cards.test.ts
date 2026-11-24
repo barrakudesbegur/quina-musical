@@ -15,7 +15,7 @@ import {
   queuePositions,
 } from '../engine/src/game/cards.ts';
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
-import type { Card, CardSong, FirstWin, RoundType } from '../engine/src/game/cards.ts';
+import type { Card, CardSong, FirstWin } from '../engine/src/game/cards.ts';
 import type { IndexSong } from '../engine/src/analysis.ts';
 import { OUT, REPO } from '../relay/pool.ts';
 
@@ -69,19 +69,19 @@ test('parseCardRanges rejects junk and absurd ranges', () => {
 
 // -------------------------------------------------------------------------------------- validity
 
-dataTest('validCards: normal cards in regular rounds, special cards only in the special round', () => {
+dataTest('validCards: the cards in play of the round\'s card type', () => {
   const inPlay = parseCardRanges('1-180, 200-215, 400-460');
   const regular = validCards(CARDS, inPlay, 'normal');
   assert.equal(regular.length, 196);
   assert.ok(regular.every((c) => c.type === 'normal' && c.id < 400));
   assert.deepEqual(regular.map((c) => c.id), inPlay.filter((id) => id < 400));
-  const special = validCards(CARDS, new Set(inPlay), 'special');
+  const special = validCards(CARDS, new Set(inPlay), 'especial');
   assert.equal(special.length, 61);
   assert.ok(special.every((c) => c.type === 'especial' && c.id >= 400 && c.id <= 460));
   assert.deepEqual(validCards(CARDS, [], 'normal'), []);
-  assert.deepEqual(validCards(CARDS, [5000], 'special'), []);
-  const unchecked = 'bonus' as string as RoundType; // what an unchecked caller could pass
-  assert.throws(() => validCards(CARDS, inPlay, unchecked), /Unknown round type/);
+  assert.deepEqual(validCards(CARDS, [5000], 'especial'), []);
+  assert.deepEqual(validCards(CARDS, inPlay, 'desgraciat'), [], 'a type no card has');
+  assert.throws(() => validCards(CARDS, inPlay, 'Not a type'), /Not a card type/);
 });
 
 dataTest('cards.json: 399 normal cards (1–399), 300 special (400–699), each 3 lines of 4 distinct songs', () => {

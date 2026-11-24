@@ -19,6 +19,17 @@ export type ShowStatus = 'locked' | 'idle' | 'playing' | 'transition' | 'hold';
 export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed';
 /** A normal round, or the special round (special cards only). */
 export type RoundKind = 'normal' | 'special';
+
+/**
+ * A printed card type's id, as in apps/cards' card-types.json and each card's `type` in cards.json ('normal',
+ * 'especial'). Lowercase letters and digits only (no dashes), so a resume token can carry it.
+ */
+export const CARD_TYPE_ID_RE = /^[a-z][a-z0-9]{0,23}$/;
+export const isCardTypeId = (value: unknown): value is string => typeof value === 'string' && CARD_TYPE_ID_RE.test(value);
+/** The card type a round plays when nothing says otherwise: normal cards in normal rounds, especial in the special one. */
+export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial' });
+/** The card type a round of this kind plays unless the plan picks another (an older journal or plan has none). */
+export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[kind] ?? DEFAULT_CARD_TYPE.normal;
 /** What the round's Phase is climbing towards. */
 export type ClimbTarget = 'line' | 'bingo';
 /** What a Claim is for, and what a Winner won: a Line or the Bingo. */

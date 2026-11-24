@@ -7,7 +7,8 @@
 //   S<song id>     that song, so the console can show it and the engine can check it (optional)
 //   L<index>       where the Bingo climb started, if a Line was confirmed (optional)
 //   A<attempts>    the Shuffle's draw number, when it is not 0 (optional)
-import type { RoundKind } from './vocabulary.ts';
+//   T<card type>   the round's card type, when it is not its kind's default (optional; read in lowercase)
+import { defaultCardType, isCardTypeId, type RoundKind } from './vocabulary.ts';
 import type { ResumeToken } from './events.ts';
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -39,6 +40,7 @@ export function formatResumeToken(t: ResumePoint): string {
   if (t.lastSongId != null) parts.push(`S${t.lastSongId}`);
   if (t.lineConfirmedFrom != null) parts.push(`L${t.lineConfirmedFrom}`);
   if (t.shuffleAttempts) parts.push(`A${t.shuffleAttempts}`);
+  if (t.cardType && t.cardType !== defaultCardType(t.kind)) parts.push(`T${t.cardType.toUpperCase()}`);
   return parts.join('-');
 }
 
@@ -58,11 +60,18 @@ export function parseResumeToken(text: string): ResumePoint | null {
     rest = rest.slice(1);
   }
   if (!head || shuffleSeed == null || position == null) return null;
+  const kind: RoundKind = head[2] === 'E' ? 'special' : 'normal';
   const point: ResumePoint = {
-    round: Number(head[1]), kind: (head[2] === 'E' ? 'special' : 'normal') satisfies RoundKind,
+    round: Number(head[1]), kind, cardType: defaultCardType(kind),
     shuffleSeed, shuffleAttempts: 0, position, lastSongId: null, lineConfirmedFrom: null,
   };
   for (const part of rest) {
+    const type = /^T([A-Z][A-Z0-9]*)$/.exec(part)?.[1]?.toLowerCase();
+    if (type !== undefined) {
+      if (!isCardTypeId(type)) return null;
+      point.cardType = type;
+      continue;
+    }
     const m = /^([SLA])(\d{1,4})$/.exec(part);
     if (!m) return null;
     const value = Number(m[2]);

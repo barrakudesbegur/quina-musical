@@ -2,7 +2,7 @@
 // problem with its path, never throws; and the public plan phones see (locked rounds keep only their skeleton).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan, headlinePrizes, publicPlan, revealedRounds, roundPlan, sponsorOf, PLAN_VERSION } from '../../../packages/protocol/plan.ts';
+import { checkGamePlan, headlinePrizes, publicPlan, revealedRounds, roundCardType, roundPlan, sponsorOf, PLAN_VERSION } from '../../../packages/protocol/plan.ts';
 
 const prize = (title: string, headline: boolean, sponsorId: string | null = null) => ({ title, detail: null, sponsorId, image: null, headline });
 
@@ -97,7 +97,7 @@ test('phones see a locked round\'s skeleton only, never its prizes nor how many;
   const revealed = revealedRounds(r.plan, []);
   assert.deepEqual(revealed, [1], 'per round: round 1 from the start');
   const pub = publicPlan(r.plan, revealed);
-  assert.deepEqual(pub.rounds[1], { number: 2, kind: 'special', revealed: false });
+  assert.deepEqual(pub.rounds[1], { number: 2, kind: 'special', cardType: 'especial', revealed: false }, 'its card type is printed: never secret');
   assert.equal(pub.rounds[0].revealed, true);
   assert.equal(pub.rounds[0].bingo?.length, 3);
   assert.ok(!('cheatSheet' in pub));
@@ -109,4 +109,39 @@ test('phones see a locked round\'s skeleton only, never its prizes nor how many;
   const secret = { prizeReveal: 'allSecret' as const };
   assert.deepEqual(revealedRounds(secret, [{ round: 2, by: 'intro' }]), []);
   assert.deepEqual(revealedRounds(secret, [{ round: 2, by: 'presenters' }, { round: 1, by: 'intro' }]), [2]);
+});
+
+test('every round plays a card type: its own, else what the old card types said, else its kind\'s default', () => {
+  const p = good();
+  const r = checkGamePlan(p);
+  assert.ok(r.ok);
+  assert.deepEqual(r.plan.rounds.map((x) => x.cardType), ['normal', 'especial'], 'from a v2 plan\'s card types');
+  // A v2 plan where the normal card also played the special round.
+  const both = good();
+  both.cardTypes[0].rounds = ['normal', 'special'];
+  const b = checkGamePlan(both);
+  assert.ok(b.ok);
+  assert.deepEqual(b.plan.rounds.map((x) => x.cardType), ['normal', 'normal'], 'the first card type that listed the kind');
+  // No card types at all: the kind's default.
+  const bare = checkGamePlan({ ...good(), cardTypes: [] });
+  assert.ok(bare.ok);
+  assert.deepEqual(bare.plan.rounds.map((x) => x.cardType), ['normal', 'especial']);
+  assert.equal(roundCardType({ kind: 'special' }), 'especial', 'a round from before card types per round');
+  // Its own wins, and any card-types.json id is fine as far as the plan can tell.
+  const own = good();
+  (own.rounds[0] as Record<string, unknown>).cardType = 'groc2';
+  (own.rounds[1] as Record<string, unknown>).cardType = 'normal';
+  const o = checkGamePlan(own);
+  assert.ok(o.ok);
+  assert.deepEqual(o.plan.rounds.map((x) => x.cardType), ['groc2', 'normal']);
+});
+
+test('a round\'s card type must look like a card-types.json id', () => {
+  for (const bad of ['Especial', 'cartró', 'es-pecial', '', 7, null]) {
+    const p = good();
+    (p.rounds[0] as Record<string, unknown>).cardType = bad;
+    const r = checkGamePlan(p);
+    assert.equal(r.ok, false, String(bad));
+    if (!r.ok) assert.match(r.errors.join('\n'), /plan\.rounds\[0\]\.cardType/);
+  }
 });

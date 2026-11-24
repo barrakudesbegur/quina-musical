@@ -6,7 +6,7 @@
 // `extendJournal` share the one reducer every side uses, so they all agree on the result.
 // Live playback (decks, effects, the Spin in flight, a Check's snippets) is deliberately not in here: it
 // restarts fresh. PRIVATE as a whole: it holds the Queues and the Winners' names.
-import type { ClimbTarget, RoundKind, ShowScene, WinKind } from './vocabulary.ts';
+import { defaultCardType, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
 import type { GameSettings, WinnerInfo } from './events.ts';
 
 /** The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). */
@@ -26,6 +26,8 @@ export interface RoundStartedEntry extends EntryBase {
   kind: 'round.started';
   round: number;
   roundKind: RoundKind;
+  /** The printed card type the round plays; absent in an older journal: defaultCardType(roundKind). */
+  cardType?: string;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -47,6 +49,8 @@ export interface RoundResumedEntry extends EntryBase {
   kind: 'round.resumed';
   round: number;
   roundKind: RoundKind;
+  /** As in `round.started`. */
+  cardType?: string;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -101,6 +105,8 @@ export interface SceneChangedEntry extends EntryBase {
   scene: ShowScene;
   round: number;
   roundKind: RoundKind;
+  /** The round's card type (in `roundStart`, the introduced round's); absent in an older journal. */
+  cardType?: string;
 }
 
 /** A Claim was made. (`winKind`, because `kind` names the entry.) */
@@ -172,6 +178,9 @@ export interface RecordedLanding {
 export interface RecordedRound {
   number: number;
   kind: RoundKind;
+  /** The printed card type it plays. Optional in the type only: the reducer always fills it (defaultCardType(kind)
+   * for an older journal), but a record kept from before it may lack it. */
+  cardType?: string;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -209,8 +218,8 @@ export interface GameRecord {
   /** The scene, and since when (0: the Game has not left `before`). */
   scene: ShowScene;
   sceneSinceMs: number;
-  /** In `roundStart` before its Shuffle, the round being introduced. */
-  intro: { round: number; kind: RoundKind } | null;
+  /** In `roundStart` before its Shuffle, the round being introduced (`cardType` as for RecordedRound). */
+  intro: { round: number; kind: RoundKind; cardType?: string } | null;
   /** The round in progress's Claims, oldest first. */
   claims: RecordedClaim[];
   /** Claims made in the whole Game: claim ids go on from it. */
@@ -266,6 +275,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       record.round = {
         number: entry.round,
         kind: entry.roundKind,
+        cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         queue: [...entry.queue],
         phaseSeed: entry.phaseSeed,
         startedAtMs: entry.startedAtMs,
@@ -286,6 +296,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       record.round = {
         number: entry.round,
         kind: entry.roundKind,
+        cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         queue: [...entry.queue],
         phaseSeed: entry.phaseSeed,
         startedAtMs: entry.startedAtMs,
@@ -337,7 +348,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       record.scene = entry.scene;
       record.sceneSinceMs = entry.atMs;
       // Entering `roundStart` introduces a round; its `round.started` (the Shuffle), or leaving, ends the intro.
-      record.intro = entry.scene === 'roundStart' ? { round: entry.round, kind: entry.roundKind } : null;
+      record.intro = entry.scene === 'roundStart' ? { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind) } : null;
       return;
     case 'claim.opened': {
       currentRound(record, entry);

@@ -8,7 +8,7 @@
 //
 // API
 //   parseCardRanges(text)                       → sorted unique card ids, e.g. "1-180, 200–215 400" (throws on junk)
-//   validCards(allCards, inPlayIds, roundType)  → the cards in play valid for a 'normal' or 'special' round, by id
+//   validCards(allCards, inPlayIds, cardType)  → the cards in play of the round's card type, by id
 //   cardSongIds(card)                           → [[id × 4] × 3]
 //   cardStatus(card, landed)                    → { lines: [b, b, b], lineCount, bingo, missing, missingByLine }
 //   possibleWinners(cards, landed, kind)        → [{ cardId, lines, completedBy, card }] by card id
@@ -21,7 +21,7 @@
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
 // 'bingo'. Everything derived from cards in play is "possible": the ranges include unsold cards.
 
-import type { RoundKind, WinKind } from '@quina/protocol';
+import { DEFAULT_CARD_TYPE, isCardTypeId, type RoundKind, type WinKind } from '@quina/protocol';
 
 export type { WinKind } from '@quina/protocol';
 
@@ -70,7 +70,8 @@ export interface FirstWin {
 
 export const ROWS = 3;
 export const COLUMNS = 4;
-export const ROUND_TYPES: Readonly<Record<RoundType, string>> = Object.freeze({ normal: 'normal', special: 'especial' });
+/** @deprecated The protocol's DEFAULT_CARD_TYPE (a round's card type is now its own: `RoundInfo.cardType`). */
+export const ROUND_TYPES: Readonly<Record<RoundType, string>> = DEFAULT_CARD_TYPE;
 const MAX_RANGE_IDS = 100000;
 
 const songIdOf = (song: CardSongRef): number => (typeof song === 'object' && song !== null ? song.id : song);
@@ -108,17 +109,18 @@ export function parseCardRanges(text: string | null | undefined): number[] {
 }
 
 /**
- * The cards in play that count in a round: normal cards in regular rounds, special ('especial') cards
- * only in the special round.
+ * The cards in play that count in a round: those of the round's card type (`RoundInfo.cardType`: by default
+ * 'normal' in regular rounds and 'especial' in the special round).
  * @param allCards  Every printed card, e.g. cards.json.
  * @param inPlayIds  Cards in play for the whole game, e.g. from parseCardRanges.
+ * @param cardType  A card type id (cards.json `type`).
  * @returns Sorted by card id.
+ * @throws On something that isn't a card type id.
  */
-export function validCards<C extends Card>(allCards: ReadonlyArray<C>, inPlayIds: Iterable<number>, roundType: RoundType = 'normal'): C[] {
-  const wantedType = ROUND_TYPES[roundType];
-  if (!wantedType) throw new Error(`Unknown round type: ${roundType}`);
+export function validCards<C extends Card>(allCards: ReadonlyArray<C>, inPlayIds: Iterable<number>, cardType: string = DEFAULT_CARD_TYPE.normal): C[] {
+  if (!isCardTypeId(cardType)) throw new Error(`Not a card type: ${cardType}`);
   const inPlay = inPlayIds instanceof Set ? inPlayIds : new Set(inPlayIds);
-  return allCards.filter((card) => card.type === wantedType && inPlay.has(card.id)).sort((a, b) => a.id - b.id);
+  return allCards.filter((card) => card.type === cardType && inPlay.has(card.id)).sort((a, b) => a.id - b.id);
 }
 
 // ---------------------------------------------------------------------------------- lines and bingo

@@ -11,7 +11,7 @@ import type { Effect } from '../engine/src/show/show.ts';
 import { setup, songs, allCards } from './support/harness.ts';
 
 const pool = songs.map((s) => s.id);
-const valid = (ranges: string, kind: 'normal' | 'special' = 'normal') => validCards(allCards, parseCardRanges(ranges), kind);
+const valid = (ranges: string, cardType = 'normal') => validCards(allCards, parseCardRanges(ranges), cardType);
 const roundsStarted = (effects: readonly Effect[]) =>
   effects.flatMap((e) => (e.type === 'journal' && e.entry.kind === 'round.started' ? [e.entry] : []));
 const seeds = (n: number, from = 1) => Array.from({ length: n }, (_, i) => mixSeed(0xc0ffee, from + i));
@@ -31,7 +31,7 @@ test('the same seed always gives the same Queue; draws of one seed differ', () =
 
 test('with cards in play, neither the first Line nor the first Bingo is a Tie (normal and special rounds)', () => {
   let reshuffled = 0;
-  for (const [ranges, kind] of [['1-200', 'normal'], ['1-60', 'normal'], ['1-150, 400-450', 'special']] as const) {
+  for (const [ranges, kind] of [['1-200', 'normal'], ['1-60', 'normal'], ['1-150, 400-450', 'especial']] as const) {
     const cards = valid(ranges, kind);
     assert.ok(cards.length > 10, `${ranges} ${kind}: ${cards.length} valid cards`);
     for (const seed of seeds(20)) {
