@@ -76,7 +76,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound', 'intervalSkip']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound', 'intervalSkip']],
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
-    ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide']],
+    ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide', 'celebrationMusic']],
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip']],
@@ -500,4 +500,28 @@ test("the Celebration's Winning-song loop: whole bars from the hook it landed on
     }
     assert.equal(hookLoop(analysis, 'no-such-hook', { bars: 4, minBars: 2 })?.hookId ?? best.id, best.id, 'an unknown hook falls back to the best one');
   }
+});
+
+test('the Celebration music can be picked during the Check; the pick is in the state, used once, and dropped by a failed Check', () => {
+  const h = flow();
+  landSongs(h, 4);
+  h.send('claim', { cardId: card.id });
+  assert.equal(h.show.scene, 'check');
+  assert.deepEqual(rejected(h.send('celebrationMusic', { choice: 'victory' })), []);
+  assert.equal(h.show.snapshot().celebrationChoice, 'victory');
+  finishCheck(h);
+  const decided = h.send('decide', { claimId: 'cl-1', valid: true });
+  const [celebration] = emitted(decided, 'celebration.started');
+  assert.equal(celebration.celebration.music, 'victory', 'the pick, not the Line default (the winning song)');
+  assert.equal(find(decided, 'celebrationMusic')?.choice, 'victory');
+  assert.equal(h.show.snapshot().celebrationChoice, null, 'used once');
+
+  // A pick during a Check that fails is dropped.
+  const g = flow(5);
+  landSongs(g, 2);
+  g.send('claim', { cardId: card.id });
+  g.send('celebrationMusic', { choice: 'holdMusic' });
+  finishCheck(g);
+  g.send('decide', { claimId: 'cl-1', valid: false });
+  assert.equal(g.show.snapshot().celebrationChoice, null);
 });

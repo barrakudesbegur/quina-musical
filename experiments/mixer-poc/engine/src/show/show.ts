@@ -470,6 +470,8 @@ export class Show {
   transitionCount = 0;
   /** Climbs ('line', 'bingo') whose "final lap" stinger already played this round. */
   readonly stingerClimbs = new Set<ClimbTarget>();
+  /** The Celebration music picked during a Check, for the Celebration that may follow (null: the default). */
+  celebrationChoice: CelebrationMusic | null = null;
   /** A Suspense held open (status 'transition', no `transition` until it is released). */
   suspense: SuspenseState | null = null;
   /** The next song's hook, chosen early so its Blend render can be prepared. */
@@ -648,7 +650,9 @@ export class Show {
         this.winnerInfo(reqId, c);
         break;
       case 'celebrationMusic':
+        // In a Check it is kept for the Celebration that may follow.
         if (this.celebration) this.celebrationMusic(c.choice);
+        else this.celebrationChoice = c.choice;
         break;
       case 'interval':
         this.startInterval();
@@ -778,6 +782,7 @@ export class Show {
     this.landings = [];
     // The round's Claims, Check, Celebration and Interval end with it; the Winners stay with the Game.
     this.claims = [];
+    this.celebrationChoice = null;
     this.check = null;
     this.batch = null;
     this.autoCheck = false;
@@ -845,6 +850,7 @@ export class Show {
     const nowMs = this.env.nowMs();
     this.landings = this.queue.slice(0, c.position + 1).map((songId, position) => ({ songId, position, atMs: nowMs, undone: false, T: now }));
     this.claims = [];
+    this.celebrationChoice = null;
     this.check = null;
     this.batch = null;
     this.autoCheck = false;
@@ -1824,6 +1830,7 @@ export class Show {
 
   /** Every Claim of the Check was invalid: back to the round, in a Hold with the error Hold music until Resume. */
   checkFailed() {
+    this.celebrationChoice = null; // it was for a Celebration that didn't come
     this.setScene('play');
     this.status = 'hold';
     this.hold = { since: this.env.now(), reason: 'checkFailed' };
@@ -1840,7 +1847,8 @@ export class Show {
   celebrate(kind: WinKind, previous: CelebrationInfo | null) {
     if (kind === 'line' && !this.round.lineConfirmed) this.confirmLine();
     const same = previous?.kind === kind;
-    const music: CelebrationMusic = previous && same ? previous.music : kind === 'line' ? 'winningSong' : 'victory';
+    const music: CelebrationMusic = previous && same ? previous.music : this.celebrationChoice ?? (kind === 'line' ? 'winningSong' : 'victory');
+    this.celebrationChoice = null;
     const celebration = this.celebrationOf(kind, this.env.nowMs(), music);
     if (!same) this.winningHook = this.hookOf(celebration.winningSongId);
     this.celebration = celebration;
@@ -2174,6 +2182,7 @@ export class Show {
       winners: this.winners.map((w) => ({ ...w })),
       resume: this.resumeToken(),
       intervalMusic: this.bed === 'interval' ? { track: this.intervalNow ? { ...this.intervalNow } : null } : null,
+      celebrationChoice: this.celebrationChoice,
     };
   }
 

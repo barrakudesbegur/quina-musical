@@ -52,7 +52,7 @@ The package `@quina/protocol` (`protocol/`) is the source of truth, and this pag
 | `checkStart` | `claimId` | (Re)start an undecided Claim's Check from the counted landings now (a re-check, or another order). A running Check it replaces goes back to the queue |
 | `decide` | `claimId`, `valid: boolean` | The presenters' verdict (both are journaled). Invalid: the Failure fanfare. The next queued Claim's Check starts by itself. Once every Claim is decided: any valid one → `celebration` (a Line confirms the Line; a Bingo ends the round); none → back to `play` in a Hold (reason `checkFailed`) with the error Hold music until Resume (`next` or `hold {on: false}`), or back to the Celebration a late Claim interrupted |
 | `winnerInfo` | `claimId`, `name?: string ≤ 80`, `notes?: string ≤ 500` | Set or edit a Winner's name and notes, at any time (an empty string clears one). PRIVATE |
-| `celebrationMusic` | `choice: 'winningSong'\|'victory'\|'holdMusic'` | Change the Celebration's music. Never blocks anything |
+| `celebrationMusic` | `choice: 'winningSong'\|'victory'\|'holdMusic'` | Change the Celebration's music. During a Check it picks the music the Celebration will start with (`state.celebrationChoice`); a failed Check drops the pick. Never blocks anything |
 | `interval` | | After a Bingo's Celebration: the Interval. It also comes by itself after `FLOW.celebration.toIntervalSec` (60 s) |
 | `intervalSkip` | | The Interval playlist moves on to its next track, with its usual transition, on the playing track's next downbeat (at least 0.6 s ahead). Only while the Interval music plays (the state's `intervalMusic`); a skip while a track is still coming in, or before the first one has, does nothing. The state shows the new track once it has taken over |
 | `endGame` | | The end of the Game (scene `after`), from anywhere; closing music until Panic. Within 0.15 s of a landing: `busy` |
@@ -154,6 +154,7 @@ claims        this round's, oldest first: [{ claimId, round, cardId, kind, atMs,
 check         { claimId, cardId, kind, outcome, row, otherRows, steps: [{ songId, landed, atMs, durationMs }], startAtMs, endAtMs } | null
                 the Check on screen, running or showing its result until it is decided
 celebration   { kind, round, cardIds, winningSongId, sinceMs, music: 'winningSong'|'victory'|'holdMusic' } | null
+celebrationChoice  the music picked during a Check for the coming Celebration, or null (the default)
 interval      { sinceMs, nextRound, guideEndMs } | null
 intervalMusic { track: { title, artist, index, count, sinceMs } | null } | null
                 while the Interval playlist plays (interval, roundStart, after, and play until the first Spin); track is null

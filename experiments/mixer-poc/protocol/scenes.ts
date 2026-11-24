@@ -60,7 +60,8 @@ const RULES = {
   claim: ['play', 'check', 'celebration'],
   checkStart: ['check'],
   decide: ['check'],
-  celebrationMusic: ['celebration'],
+  // In a Check it picks the music the Celebration will start with (`state.celebrationChoice`).
+  celebrationMusic: ['celebration', 'check'],
   interval: celebratingBingo,
   // Whenever the Interval playlist plays: the Interval, a round's intro and Shuffle (until the first Spin), `after`.
   intervalSkip: (c) => c.intervalMusic ?? INTERVAL_MUSIC.includes(c.scene),

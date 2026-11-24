@@ -337,6 +337,11 @@ export interface ShowState {
   /** The Interval playlist while it plays, else null (`intervalSkip` is allowed then). Optional in the type only
    * (added later in v1); the engine always sends it. */
   intervalMusic?: IntervalMusicInfo | null;
+  /**
+   * The music picked during a Check for the Celebration that may follow (`celebrationMusic` in a Check), or
+   * null for the default (Line: the winning song; Bingo: the victory track). Optional in the type only.
+   */
+  celebrationChoice?: CelebrationMusic | null;
 }
 
 /** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */
