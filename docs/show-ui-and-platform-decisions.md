@@ -19,6 +19,7 @@ These override the sections below where they differ.
 - **The presenters' actions:** Següent; Parlem (Hold: no landing, music ducked); **Aguanta** (Stay: no landing, full volume); Suspens; Enrere (long press); Comprovar cartró; Efectes; Ritme. The Wii remote mapping is still to be decided.
 - **The near-win cue on phones is subtle:** the missing song is gently highlighted on that card's grid. There is no banner, and no win is ever announced.
 - **Hooks for this year's songs are detected automatically** (the chorus start, an energy jump, the vocals coming in, snapped to phrases), and the user approves, rejects or nudges each one on the audition page.
+- **The console's crystal ball ("Futur" tab).** It replaces the possible-winners tab and is hidden until a presenter taps "Mirar el futur". It shows a chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners. It is private: it never reaches phones or the projector.
 - **The repo is being reorganised:** `apps/`, `packages/`, `tools/` and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 
 ## Who builds what
