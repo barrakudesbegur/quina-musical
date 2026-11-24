@@ -433,6 +433,10 @@ export const S = {
     connectNote: "Aparelleu-lo abans amb el Bluetooth del portàtil; després, «Connectar» i trieu-lo a la llista.",
     unsupportedNote: 'Aquest navegador no pot connectar el comandament. Es connecta a la consola oberta amb Chrome al portàtil, on està aparellat.',
     demo: 'Comandament de prova (només en desenvolupament)',
+    /** The remote is connected to another console (the laptop's): this one shows it, it can't connect it. */
+    elsewhere: "Connectat a la consola del portàtil.",
+    battery: (level: number) => `Bateria ${Math.round(level * 100)} %`,
+    batteryLow: 'Queda poca bateria: canvieu les piles a la mitja part.',
   },
 
   menu: {

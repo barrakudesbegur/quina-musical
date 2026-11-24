@@ -69,6 +69,9 @@ export const WII = Object.freeze({
   rumble: { tap: [70], suspense: [90, 70, 90, 70, 260], pause: [250, 120, 250], back: [600], autoOn: [80, 80, 80], autoOff: [420] },
   /** How often held buttons are checked (Enrere's long press). */
   tickMs: 50,
+  /** How often the battery is asked for, and under which level the dialog warns. */
+  batteryEveryMs: 60_000,
+  batteryLow: 0.2,
   /** LED 1 lit: this remote is connected. */
   leds: 0x10,
 } as const satisfies { dpad: Record<'up' | 'right' | 'down' | 'left', SoundName> } & Record<string, unknown>);

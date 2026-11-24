@@ -95,3 +95,28 @@ test('− or + held is Pausa (once, its own rumble, nothing on release); a tap i
   m.press('plus', 5000, { ...idle, paused: true });
   assert.deepEqual(cmds(m.release('plus', { ...idle, paused: true })), [{ cmd: 'pause', args: { on: false } }]);
 });
+
+test("other consoles' remotes: any connected host counts; a lost one is remembered until one connects", async () => {
+  const { RemoteHosts, readRemoteStatus, remoteStatusMessage } = await import('../../../../../packages/ui/client/remote-status.ts');
+  const hosts = new RemoteHosts();
+  assert.deepEqual(hosts.summary(), { connected: false, lost: false, battery: null });
+  const msg = { ...remoteStatusMessage({ connected: true, battery: 0.8, sinceMs: 1 }), clientId: 'laptop' };
+  const read = readRemoteStatus(msg);
+  assert.ok(read);
+  assert.equal(hosts.apply(read.clientId, read), true);
+  assert.equal(hosts.apply(read.clientId, read), false, 'the same report again: nothing changes');
+  assert.deepEqual(hosts.summary(), { connected: true, lost: false, battery: 0.8 });
+  hosts.apply('laptop', { connected: false, battery: null, sinceMs: 2 });
+  assert.deepEqual(hosts.summary(), { connected: false, lost: true, battery: null }, 'a remote went away: red');
+  hosts.apply('laptop-2', { connected: true, battery: null, sinceMs: 3 });
+  assert.deepEqual(hosts.summary(), { connected: true, lost: false, battery: null });
+  assert.equal(readRemoteStatus({ ...msg, battery: 7 })?.battery, null, 'junk battery reads as unknown');
+  assert.equal(readRemoteStatus({ ...msg, type: 'remote.other' }), null);
+});
+
+test('the status report: the battery byte as 0..1', async () => {
+  const { parseStatus } = await import('../../../../console/wii/report.ts');
+  assert.deepEqual(parseStatus(new Uint8Array([0, 0, 0x10, 0, 0, 0x64])), { battery: 0.5 });
+  assert.deepEqual(parseStatus(new Uint8Array([0, 0, 0, 0, 0, 0xff])), { battery: 1 });
+  assert.equal(parseStatus(new Uint8Array([0, 0])), null);
+});

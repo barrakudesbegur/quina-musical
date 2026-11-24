@@ -25,7 +25,7 @@
   const flow = $derived(model.show.flow);
   const round = $derived(roundOnScreen(snap, flow));
   const clock = $derived(clockParts(model.show.now));
-  const chips = $derived(headerChips(linksOf(model.show.connected, model.show.showOnline, wii.status)));
+  const chips = $derived(headerChips(linksOf(model.show.connected, model.show.showOnline, wii.linkStatus)));
 </script>
 
 <header class="header" data-scene={flow.scene} data-stale={!model.online || undefined}>

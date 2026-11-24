@@ -3917,6 +3917,29 @@ kbd {
   color: #ffffff;
 }
 
+.wii-status[data-state='lost'] {
+  background: var(--color-red);
+  color: #ffffff;
+}
+
+.wii-battery {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-chip);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.wii-battery[data-low] {
+  background: var(--color-orange);
+  color: var(--color-ink);
+}
+
 .menu-wii__row {
   display: flex;
   flex-wrap: wrap;

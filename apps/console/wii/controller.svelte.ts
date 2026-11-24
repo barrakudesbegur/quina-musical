@@ -3,8 +3,11 @@
 // The remote pairs with the laptop, so this runs where the console is open on the laptop. A is resolved here,
 // at the moment of the press, to the console's default action (logic/default-action.ts), the same one the
 // console draws as primary; when there is none, or it's disabled, A sends nothing and doesn't rumble.
+// The console that hosts the remote publishes its status (remote.status) through the relay; every console,
+// the tablet included, shows the badges and the chip when any console has a remote connected.
 // Development only: `?wii=demo` fakes a connected remote, so the badges and the dialog can be reviewed.
 import type { ShowState } from '@quina/protocol';
+import { readRemoteStatus, remoteStatusMessage, RemoteHosts, type RemoteSummary } from '../../../packages/ui/client/remote-status.ts';
 import { WII } from '../config.ts';
 import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
@@ -32,8 +35,24 @@ export class WiiController {
   status = $state<WiiStatus>(this.demo ? 'connected' : wiiSupported() ? 'disconnected' : 'unsupported');
   /** Set when a remote connects: the Comandament dialog opens by itself (and clears it). */
   justConnected = $state(false);
-  /** The console shows each control's Wii button while a remote is connected. */
-  readonly badges = $derived(this.status === 'connected');
+  /** The remote's battery (0..1) on this console, when it hosts the remote and the remote has said. */
+  battery = $state<number | null>(null);
+  /** What the other consoles' remotes report (through the relay). */
+  hosts = $state.raw<RemoteSummary>({ connected: false, lost: false, battery: null });
+  /** A remote is connected on this console or on another one. */
+  readonly anyConnected = $derived(this.status === 'connected' || this.hosts.connected);
+  /** The console shows each control's Wii button while a remote is connected anywhere. */
+  readonly badges = $derived(this.anyConnected);
+  /** For the chip and the links list: this console's remote, else another console's. */
+  readonly linkStatus = $derived<WiiStatus>(
+    this.status === 'connected' || this.hosts.connected ? 'connected' : this.status === 'lost' || this.hosts.lost ? 'lost' : this.status,
+  );
+  /** The battery of whichever remote is connected. */
+  readonly batteryLevel = $derived(this.status === 'connected' ? this.battery : this.hosts.battery);
+  private readonly remoteHosts = new RemoteHosts();
+  private hosting = false;
+  private statusSinceMs = 0;
+  private batteryTimer: ReturnType<typeof setInterval> | null = null;
   private readonly model: ConsoleModel;
   private readonly mapper = new WiiMapper(WII);
   private remote: WiiRemote | null = null;
@@ -46,13 +65,42 @@ export class WiiController {
 
   /** Reconnect a remote this browser already knows, and follow connects and disconnects. */
   start(): () => void {
-    if (this.status === 'unsupported' || this.demo) return () => {};
+    const stopListening = this.listen();
+    if (this.status === 'unsupported' || this.demo) return stopListening;
     void knownWiiRemote().then((remote) => remote && this.attach(remote));
     onWiiConnection((connected) => {
       if (connected && !this.remote) void knownWiiRemote().then((remote) => remote && this.attach(remote));
       if (!connected) this.detach();
     });
-    return () => void this.disconnect();
+    return () => {
+      stopListening();
+      void this.disconnect();
+    };
+  }
+
+  /** Every console: other consoles' remote reports; the host also republishes whenever it (re)connects. */
+  private listen(): () => void {
+    const client = this.model.show.client;
+    const offMessages = client.bus.on((message, { local }) => {
+      if (local) return;
+      const report = readRemoteStatus(message);
+      if (report && this.remoteHosts.apply(report.clientId, report)) this.hosts = this.remoteHosts.summary();
+    });
+    let online = client.connected;
+    const offChange = client.onChange(() => {
+      if (client.connected && !online) this.publish();
+      online = client.connected;
+    });
+    return () => {
+      offMessages();
+      offChange();
+    };
+  }
+
+  /** Tell the other consoles (through the relay) how this console's remote is. Only a host publishes. */
+  private publish(): void {
+    if (!this.hosting) return;
+    this.model.show.client.bus.sendRemote(remoteStatusMessage({ connected: this.status === 'connected', battery: this.status === 'connected' ? this.battery : null, sinceMs: this.statusSinceMs }));
   }
 
   /** The presenter's click: ask Chrome for the remote. */
@@ -71,7 +119,14 @@ export class WiiController {
     if (this.remote) return;
     this.status = 'connecting';
     try {
-      await remote.start((report) => this.onReport(report));
+      await remote.start(
+        (report) => this.onReport(report),
+        (level) => {
+          if (level === this.battery) return;
+          this.battery = level;
+          this.publish();
+        },
+      );
     } catch {
       this.status = 'disconnected';
       return;
@@ -79,17 +134,27 @@ export class WiiController {
     this.remote = remote;
     this.status = 'connected';
     this.justConnected = true;
+    this.hosting = true;
+    this.statusSinceMs = this.model.show.client.now();
+    this.publish();
     remote.rumble(WII.rumble.tap);
+    remote.requestStatus();
     this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now())), WII.tickMs);
+    this.batteryTimer = setInterval(() => remote.requestStatus(), WII.batteryEveryMs);
   }
 
   private detach(): void {
     if (this.ticker) clearInterval(this.ticker);
+    if (this.batteryTimer) clearInterval(this.batteryTimer);
     this.ticker = null;
+    this.batteryTimer = null;
+    this.battery = null;
     this.remote = null;
     this.pressed = new Set();
     this.mapper.reset();
     if (this.status !== 'unsupported') this.status = this.status === 'connected' ? 'lost' : 'disconnected';
+    this.statusSinceMs = this.model.show.client.now();
+    this.publish();
   }
 
   private onReport(report: WiiReport): void {

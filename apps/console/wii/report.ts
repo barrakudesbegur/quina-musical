@@ -59,3 +59,14 @@ export function buttonChanges(before: ReadonlySet<WiiButton>, after: ReadonlySet
 }
 
 export const magnitude = (a: Accel): number => Math.hypot(a.x, a.y, a.z);
+
+/** The status report: buttons, flags and the battery level. */
+export const STATUS_REPORT = 0x20;
+/** The battery byte's full level (a fresh pair of AA batteries reads about 0xC8). */
+const BATTERY_FULL = 0xc8;
+
+/** A status report's battery level, 0..1, or null when it's too short. */
+export function parseStatus(bytes: Uint8Array): { battery: number } | null {
+  if (bytes.length < 6) return null;
+  return { battery: Math.min(1, bytes[5] / BATTERY_FULL) };
+}

@@ -38,7 +38,7 @@
   let planBOpen = $state(false);
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
-  const links = $derived(linksOf(model.show.connected, model.show.showOnline, wii.status));
+  const links = $derived(linksOf(model.show.connected, model.show.showOnline, wii.linkStatus));
   const THEMES: readonly Theme[] = ['light', 'dark'];
   const subtitle = $derived(S.menu.subtitle(model.label, snap ? snap.round.number : null, snap?.game.roundsTotal ?? 0));
   const startable = $derived(flow.scene === 'before' && model.can('roundIntro'));

@@ -6,6 +6,7 @@
   Admin's printed cheat sheet (packages/ui/wii). It opens with the hook wii-dialog.
 -->
 <script lang="ts">
+  import { WII } from '../config.ts';
   import { untrack } from 'svelte';
   import WiiGuide from '../../../packages/ui/wii/WiiGuide.svelte';
   import { getWii } from '../context.ts';
@@ -39,16 +40,18 @@
 <dialog bind:this={dialog} class="dialog wii-dialog" data-anim="wii-dialog" aria-labelledby="{uid}-title" onclose={() => (open = false)}>
   <header class="dialog__head wii-dialog__head">
     <h2 class="wii-dialog__title" id="{uid}-title"><Icon name="remote" />{S.wii.title}</h2>
-    <span class="wii-status" data-state={wii.status} role="status">{S.wii.status[wii.status]}</span>
+    <span class="wii-status" data-state={wii.linkStatus} role="status">{S.wii.status[wii.linkStatus]}</span>
+    {#if wii.batteryLevel !== null}<span class="wii-battery" data-low={wii.batteryLevel < WII.batteryLow || undefined}>{S.wii.battery(wii.batteryLevel)}</span>{/if}
     <span class="wii-dialog__spacer"></span>
-    {#if wii.status === 'disconnected' || wii.status === 'lost'}
+    {#if (wii.status === 'disconnected' || wii.status === 'lost') && !wii.anyConnected}
       <button type="button" class="mini tone-primary" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
     {/if}
     <button type="button" class="mini dialog__close" data-anim="press" onclick={() => (open = false)}><Icon name="close" /><span>{S.wii.close}</span></button>
   </header>
 
   {#if wii.demo}<p class="note">{S.wii.demo}</p>{/if}
-  {#if wii.status === 'unsupported'}<p class="note">{S.wii.unsupportedNote}</p>{:else if wii.status !== 'connected'}<p class="note">{S.wii.connectNote}</p>{/if}
+  {#if wii.status !== 'connected' && wii.anyConnected}<p class="note">{S.wii.elsewhere}</p>{:else if wii.status === 'unsupported'}<p class="note">{S.wii.unsupportedNote}</p>{:else if wii.status !== 'connected'}<p class="note">{S.wii.connectNote}</p>{/if}
+  {#if wii.batteryLevel !== null && wii.batteryLevel < WII.batteryLow}<p class="note note--warning" role="alert">{S.wii.batteryLow}</p>{/if}
 
   <div class="wii-dialog__guide">
     <WiiGuide {items} footer={CA.wii.footer} sideLabel={CA.wii.side} />

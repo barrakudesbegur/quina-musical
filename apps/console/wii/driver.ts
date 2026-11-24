@@ -1,7 +1,7 @@
 // The Wii Remote over WebHID (desktop Chrome): find or ask for the remote, open it, ask for buttons plus the
 // accelerometer, and rumble. Browser-only glue; the parsing and the mapping are pure (report.ts, mapping.ts).
 import { WII } from '../config.ts';
-import { parseReport, REPORT, type WiiReport } from './report.ts';
+import { parseReport, parseStatus, REPORT, STATUS_REPORT, type WiiReport } from './report.ts';
 
 /** The bits of WebHID this uses (TypeScript's DOM types don't include WebHID). */
 interface HidDevice {
@@ -23,7 +23,7 @@ const hid = (): Hid | null => (typeof navigator !== 'undefined' && 'hid' in navi
 /** Whether this browser can talk to a remote at all. */
 export const wiiSupported = (): boolean => hid() !== null;
 
-const OUT = { leds: 0x11, reportMode: 0x12 } as const;
+const OUT = { leds: 0x11, reportMode: 0x12, status: 0x15 } as const;
 /** Report mode byte 0: 0x04 = send reports continuously (the accelerometer needs it). */
 const CONTINUOUS = 0x04;
 
@@ -37,15 +37,28 @@ export class WiiRemote {
   }
 
   /** Open it, light LED 1 and switch to buttons + accelerometer. */
-  async start(onReport: (report: WiiReport) => void): Promise<void> {
+  async start(onReport: (report: WiiReport) => void, onBattery: (level: number) => void = () => {}): Promise<void> {
     if (!this.device.opened) await this.device.open();
     this.listener = (e) => {
-      const report = parseReport(e.reportId, new Uint8Array(e.data.buffer, e.data.byteOffset, e.data.byteLength), WII.accel);
+      const bytes = new Uint8Array(e.data.buffer, e.data.byteOffset, e.data.byteLength);
+      if (e.reportId === STATUS_REPORT) {
+        const status = parseStatus(bytes);
+        if (status) onBattery(status.battery);
+        // After a status report the remote stops its data reports until the mode is set again.
+        void this.send(OUT.reportMode, [CONTINUOUS, REPORT.buttonsAccel]);
+        return;
+      }
+      const report = parseReport(e.reportId, bytes, WII.accel);
       if (report) onReport(report);
     };
     this.device.addEventListener('inputreport', this.listener);
     await this.send(OUT.leds, [WII.leds]);
     await this.send(OUT.reportMode, [CONTINUOUS, REPORT.buttonsAccel]);
+  }
+
+  /** Ask for a status report (the battery comes back through `onBattery`). */
+  requestStatus(): void {
+    void this.send(OUT.status, [0x00]);
   }
 
   /** Play a pattern: on/off durations in ms, starting with on. A new pattern cuts the previous one. */
