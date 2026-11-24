@@ -20,6 +20,8 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 ## Working rules
 
 - **Decisions:** read [`GLOSSARY.md`](../GLOSSARY.md), [`docs/adr/`](adr), [`mixer-design-decisions.md`](mixer-design-decisions.md) and [`show-ui-and-platform-decisions.md`](show-ui-and-platform-decisions.md). Use the glossary's terms in code and docs.
+- **Dates:** the night is 27 December 2026, and the final playlist arrives on 1 December. Plan your queue against [`timeline.md`](timeline.md); tell the orchestrator early if a milestone slips.
+- **Handoffs:** sessions get cleared, so each role keeps a handoff to resume from, current at every milestone: Sound engine `apps/show/docs/HANDOFF.md`, Frontend `packages/ui/HANDOFF.md`, Backend `apps/cloud/docs/HANDOFF.md`. Use the same shape: done (with commits), in progress, next queue, waiting on the user, how to run and test.
 - **Quality:** proofs of concept are a foundation, not a hackathon. TypeScript strict, pure logic separate from I/O, versioned contracts, tests, one config place for tunables.
 - **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, note it in [`open-questions.md`](open-questions.md), and keep going.
 - **Subagent effort** (user rule, 2026-11-24): default **high**, **medium** for repetitive or mechanical work, **xhigh** only for a very important task. Don't stop agents already running.
