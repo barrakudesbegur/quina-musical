@@ -64,7 +64,7 @@ export const S = {
   removeYes: 'Sí, treure’l',
   cell: (title: string, marked: boolean) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}`,
   markLabel: (mark: string) =>
-    (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', moon: 'Lluna', tree: 'Arbre de Nadal', snowflake: 'Floc de neu', clubs: 'Trèvol', bauble: 'Bola de Nadal', crown: 'Corona de rei' }) as Record<string, string>)[mark] ?? mark,
+    (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', bauble: 'Bola de Nadal', tree: 'Arbre de Nadal', heart: 'Cor', crown: 'Corona de rei', grapes: "Raïm de Cap d'Any", snowflake: 'Floc de neu', topHat: 'Barret de copa', poop: 'Caca del Tió' }) as Record<string, string>)[mark] ?? mark,
 
   // Ara
   nowPlaying: CA.nowPlaying,

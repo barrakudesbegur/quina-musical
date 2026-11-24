@@ -99,19 +99,22 @@
   --sky-stars-position: 22px 34px, 61px 12px;
 
   /* A followed card's identity: colour N goes with mark icon N (apps/player/logic/marks-identity.ts). Order
-     matters: new cards take the next free one, and the first is corn gold. Eight colours that can't be
-     confused (the user's rule): the three primaries, the three secondaries, white and black. */
+     matters: new cards take the next free one, and the first is corn gold. Ten colours that can't be confused
+     (the user's list): red, cyan, yellow, green, orange, purple, white, black, brown and pink. */
   --card-color-1: #ffc531; /* corn, yellow */
   --card-color-2: #22d3ee; /* shooting star, cyan */
-  --card-color-3: #9d4edd; /* moon, purple */
+  --card-color-3: #e8363d; /* Christmas bauble, red */
   --card-color-4: #23a55a; /* Christmas tree, green */
-  --card-color-5: #fff6e5; /* snowflake, white */
-  --card-color-6: #17132b; /* clubs, black */
-  --card-color-7: #e8363d; /* Christmas bauble, red */
-  --card-color-8: #ff8200; /* the Three Kings' crown, orange */
+  --card-color-5: #ff4fa3; /* heart, pink */
+  --card-color-6: #ff8200; /* the Three Kings' crown, orange */
+  --card-color-7: #9d4edd; /* New Year's grapes, purple */
+  --card-color-8: #fff6e5; /* snowflake, white */
+  --card-color-9: #17132b; /* top hat, black */
+  --card-color-10: #8b5a2b; /* the Tió's poop, brown */
   /* A mark's outline: ink, except the black one, outlined in paper so it shows on the night background. */
-  --card-line-6: var(--color-paper);
+  --card-line-9: var(--color-paper);
   --color-wood: #7a4a1e; /* the Christmas tree's trunk */
+  --color-wood-light: #c9965f; /* the Tió's poop, its dents */
 
   /* Type */
   --font-display: 'Londrina Solid', system-ui, sans-serif;

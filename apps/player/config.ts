@@ -11,7 +11,7 @@ export const PLAYER_CONFIG = Object.freeze({
   cardIdMin: 1,
   cardIdMax: PUBLIC_FEED.maxCardNumber,
   /** How many card identities exist (--card-color-N plus mark icon N); new cards take the next free one. */
-  cardColors: 8,
+  cardColors: 10,
   /** A card's optional name ("Àvia"). */
   maxNameLength: 20,
 

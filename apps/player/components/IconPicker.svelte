@@ -1,17 +1,16 @@
 <script lang="ts">
-  // "Icona": the eight card icons, each in its own colour (CardMark). Icons another of the player's cards
+  // "Icona": the ten card icons, each in its own colour (CardMark). Icons another of the player's cards
   // already uses are dimmed and show whose they are, while a free one is left. A radio group, so it works with
   // a screen reader and the keyboard; every option is a full touch target.
   import { PLAYER_CONFIG } from '../config.ts';
-  import { markName } from '../logic/marks-identity.ts';
+  import { identityOf, markName, PICKER_ORDER } from '../logic/marks-identity.ts';
   import { identityFree, type SavedCard } from '../logic/storage.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
 
   let { others, selected, onselect }: { others: readonly SavedCard[]; selected: number; onselect: (identity: number) => void } = $props();
   const options = $derived(
-    Array.from({ length: PLAYER_CONFIG.cardColors }, (_, i) => {
-      const identity = i + 1;
+    PICKER_ORDER.map(identityOf).filter((identity) => identity <= PLAYER_CONFIG.cardColors).map((identity) => {
       const owner = others.find((c) => c.color === identity);
       const free = identityFree(others, identity);
       return { identity, label: S.markLabel(markName(identity)), free, owner: !free && owner ? (owner.name ?? S.cardNumber(owner.id)) : null };
