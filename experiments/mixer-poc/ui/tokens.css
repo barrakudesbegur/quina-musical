@@ -40,13 +40,16 @@
   --color-focus: var(--color-gold);
   --color-marked: var(--color-gold); /* the corn kernel */
 
-  /* Card colours a player can pick (order matters: new cards take the next one) */
-  --card-color-1: #ff8200;
-  --card-color-2: #23a55a;
-  --card-color-3: #5cc8ff;
-  --card-color-4: #e8363d;
-  --card-color-5: #ffc531;
-  --card-color-6: #b57bff;
+  /* A followed card's identity: colour N goes with mark icon N (player/logic/marks-identity.ts). Order
+     matters: new cards take the next free one, and the first is corn gold. */
+  --card-color-1: #ffc531; /* corn */
+  --card-color-2: #23a55a; /* star */
+  --card-color-3: #5cc8ff; /* moon */
+  --card-color-4: #e8363d; /* triangle */
+  --card-color-5: #ff8200; /* gift */
+  --card-color-6: #b57bff; /* clubs */
+  --card-color-7: #ff7ab6; /* circle */
+  --card-color-8: #3d6bff; /* square */
 
   /* Type */
   --font-display: 'Londrina Solid', system-ui, sans-serif;

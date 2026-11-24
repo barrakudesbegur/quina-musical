@@ -38,7 +38,7 @@
     </div>
   </header>
   {#if view.card}
-    <CardGrid card={view.card} marks={view.marks} {catalog} {fresh} {stagger} />
+    <CardGrid card={view.card} identity={view.saved.color} marks={view.marks} {catalog} {fresh} {stagger} />
   {:else if catalog}
     <p class="player-card__missing">{S.unknownCard}</p>
   {:else}

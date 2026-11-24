@@ -1,5 +1,6 @@
 // The player's own data: cards with colours and names, the edition wipe, the gameId reset, sounds.
 import { test } from 'node:test';
+import { markName } from '../../../player/logic/marks-identity.ts';
 import assert from 'node:assert/strict';
 import {
   MemoryStorage,
@@ -47,13 +48,15 @@ test('a removed card frees its colour for the next one', () => {
   );
 });
 
-test('once all six colours are used, they cycle', () => {
-  const data = add(emptyData('26'), 1, 2, 3, 4, 5, 6, 7, 8);
+test('once all eight identities are used, they cycle; the first card is always corn', () => {
+  const data = add(emptyData('26'), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
   assert.deepEqual(
     data.cards.map((c) => c.color),
-    [1, 2, 3, 4, 5, 6, 1, 2],
+    [1, 2, 3, 4, 5, 6, 7, 8, 1, 2],
   );
   assert.equal(nextColor([]), 1);
+  assert.equal(markName(data.cards[0].color), 'corn');
+  assert.deepEqual(data.cards.slice(0, 8).map((c) => markName(c.color)), ['corn', 'star', 'moon', 'triangle', 'gift', 'clubs', 'circle', 'square']);
 });
 
 test('a card is added once, valid numbers only, up to 30', () => {

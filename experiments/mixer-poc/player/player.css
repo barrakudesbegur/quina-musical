@@ -284,11 +284,8 @@ h3 {
 /* ---- swatch, cover, card backs ------------------------------------------------------------------------- */
 .swatch {
   display: inline-block;
-  width: 1.25em;
-  height: 1.25em;
-  border-radius: var(--radius-sm);
-  background: var(--card-color);
-  border: var(--line-width) solid var(--color-line);
+  width: 1.5em;
+  height: 1.5em;
   vertical-align: middle;
 }
 
@@ -659,14 +656,12 @@ h3 {
 
 .card-grid__kernel {
   position: absolute;
-  top: 18%;
-  left: 29%;
+  top: 14%;
+  left: 27%;
   width: var(--kernel-size);
-  aspect-ratio: 0.8;
-  border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
-  background: var(--color-marked);
-  border: var(--line-width) solid var(--color-line);
+  aspect-ratio: 1;
   transform: rotate(var(--tilt, 0deg));
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.45));
 }
 
 .cards__resting-item {

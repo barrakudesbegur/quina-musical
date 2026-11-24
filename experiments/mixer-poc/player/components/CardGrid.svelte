@@ -1,19 +1,21 @@
 <script lang="ts">
-  // A card as printed: 3 lines of 4 songs, with a corn kernel on each marked song. A completed Line shows only
+  // A card as printed: 3 lines of 4 songs, with the card's own mark on each marked song (corn for the first card). A completed Line shows only
   // plain marks (no glow, no row highlight). Marks come from cardMarks (the grace rule included).
   import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
   import type { CardMarks, PlayerCard } from '../../ui/rules/marks.ts';
   import { kernelTilt } from '../logic/view.ts';
   import { S } from '../strings.ts';
+  import CardMark from './CardMark.svelte';
   import Cover from './Cover.svelte';
 
   let {
     card,
+    identity,
     marks,
     catalog,
     fresh,
     stagger = 0,
-  }: { card: PlayerCard; marks: CardMarks | null; catalog: Catalog | null; fresh: ReadonlySet<string>; stagger?: number } = $props();
+  }: { card: PlayerCard; identity: number; marks: CardMarks | null; catalog: Catalog | null; fresh: ReadonlySet<string>; stagger?: number } = $props();
 </script>
 
 <ul class="card-grid" aria-label={S.card(card.id)}>
@@ -31,7 +33,7 @@
             style:--tilt="{kernelTilt(card.id, songId)}deg"
             style:--stagger="{stagger}ms"
             aria-hidden="true"
-          ></span>
+          ><CardMark {identity} decorative /></span>
         {/if}
       </li>
     {/each}

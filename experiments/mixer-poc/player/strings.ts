@@ -59,7 +59,8 @@ export const S = {
   removeText: 'Deixaràs de veure’l en aquest mòbil. El pots tornar a afegir quan vulguis.',
   removeYes: 'Sí, treure’l',
   cell: (title: string, marked: boolean) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}`,
-  colourLabel: (n: number) => `Color ${n}`,
+  markLabel: (mark: string) =>
+    (({ corn: 'Gra de blat de moro', star: 'Estrella', moon: 'Lluna', triangle: 'Triangle', gift: 'Regal', clubs: 'Trèvol', circle: 'Rodona', square: 'Quadrat' }) as Record<string, string>)[mark] ?? mark,
 
   // The "1 song away" banner
   bannerTitle: 'Estigues atent!',

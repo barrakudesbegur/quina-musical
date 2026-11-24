@@ -10,8 +10,8 @@ export const PLAYER_CONFIG = Object.freeze({
   /** Card ids a number pad or a link may name. */
   cardIdMin: 1,
   cardIdMax: PUBLIC_FEED.maxCardNumber,
-  /** How many --card-color-N tokens exist (ui/tokens.css); new cards take the next free one. */
-  cardColors: 6,
+  /** How many card identities exist (--card-color-N plus mark icon N); new cards take the next free one. */
+  cardColors: 8,
   /** A card's optional name ("Àvia"). */
   maxNameLength: 20,
 
