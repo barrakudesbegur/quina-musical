@@ -449,7 +449,7 @@ test('the next hook is chosen early; a Blend render is requested for tempo-match
 
 test('approved Signatures reach the planner for both songs, and a planned one is in the transition', () => {
   const requests: PlanRequest[] = [];
-  const fake = (id: number): SignatureSource[] => [{ id: `${id}-call-0`, kind: 'call', durationSec: 2, anchorSec: 0.2, beats: 4, bpm: 120, gainDb: -3 }];
+  const fake = (id: number): SignatureSource[] => [{ id: `${id}-riff-0`, kind: 'riff', durationSec: 4.03, anchorSec: 0, beats: 8, bpm: 120, gainDb: -3 }];
   const h = setup({
     seed: 3,
     settings: { autoAdvance: false },

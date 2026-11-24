@@ -721,10 +721,10 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     }
   }
 
-  // B's call is cut where B itself starts with a tape start (it powers up in the gap).
+  // B's Signature is cut where B itself starts with a tape start (it powers up in the gap).
   const signature = signatureLayer({
-    shape: recipe.id === 'FADE' ? 'S0' : recipe.shape, tl, A, B, aRate: A?.deck.rate ?? 1, gB, spinStart, e, n,
-    pickupAt: powerUp ? bStart : pickupAt, exit, phase, rng, skipB: usesBSignature,
+    shape: recipe.id === 'FADE' ? 'S0' : recipe.shape, tl, A, B, gB, spinStart, e, T,
+    pickupAt: powerUp ? bStart : pickupAt, keysMatch, teased: teaseBars > 0, phase, rng, skipB: usesBSignature,
   });
   if (signature) events.push(signature);
   events.sort((x, y) => eventStart(x) - eventStart(y));
@@ -803,14 +803,12 @@ function laneWindow(A: OutgoingSong | null, tl: Timeline | null): LaneWindow | n
 
 /**
  * D11's grain: B must sing at its hook (its vocal stem is decoded there, and its vocals bar is loud enough when
- * known); the grain is B's approved call when there is one, else the vocal stem from its pickup.
+ * known); the grain is the vocal stem from its pickup (Signatures are instrumental since the user's first listen).
  */
 function chopSource(B: IncomingSong, hook: Hook, pickup: number, parts: readonly StemName[] | null): ChopSource | null {
   if (!parts?.includes('vocals')) return null;
   const vocalsDb = B.stemBars?.vocals?.[hook.downbeatIndex];
   if (vocalsDb != null && vocalsDb < MOVES.chop.minVocalsDb) return null;
-  const call = B.signatures?.find((s) => s.kind === 'call');
-  if (call) return { from: 'signature', id: call.id, offset: 0, gainDb: call.gainDb };
   return { from: 'stem', offset: hook.downbeatSec - pickup };
 }
 
@@ -858,66 +856,65 @@ export interface SignatureArgs {
   tl: Timeline | null;
   A: OutgoingSong | null;
   B: IncomingSong;
-  /** A's playback rate (its clock runs `rate` song-seconds per second). */
-  aRate: number;
   gB: { bar: number; beat: number };
   spinStart: number;
   /** S2: A's exit downbeat, where the bridge on B's grid starts; opener: the build's start. */
   e: number;
-  /** S2 bridge length in B's bars. */
-  n: number;
+  /** The landing: B's hook downbeat. */
+  T: number;
+  /** Where B itself is first heard (its pickup, or its tape start): the Signature is faded out there. */
   pickupAt: number;
-  exit: ExitName | null;
+  /** A's and B's keys agree (a Signature over A needs it). */
+  keysMatch: boolean;
+  /** B is teased itself before it lands: its own build would double it. */
+  teased: boolean;
   phase: PhaseEffects;
   rng: () => number;
-  /** The recipe already plays B's call (D11's chops): only A's Signature may be layered. */
+  /** The recipe already plays one of B's Signatures (D5's riff bed). */
   skipB?: boolean;
 }
 
 /**
- * At most one approved Signature per transition, on the beat:
- * - B's call before it lands (chance `phase.signature`): on B's own grid over an S2 bridge or an opener
- *   build, at its own tempo; over A's grid (S1, S3) only when it needs at most a slight resample
- *   (SIGNATURES.maxRateShift) or is a short one-shot shout. It plays its anchor on a downbeat, starts after
- *   the spin-start duck, and is faded out at B's pickup (at least SIGNATURES.minFit of it must play).
- * - Otherwise A's own Signature thrown into the echo as A leaves on an echo or wash exit (S2).
- * Draws from `rng` only when a song has Signatures, so plans without any are unchanged.
+ * At most one approved Signature of B per transition (chance `phase.signature`): its intro riff, the build into
+ * its chorus or its chorus's instrumental line, teased just before it lands (GLOSSARY: Signature; never a vocal
+ * line, never after the landing). It ends on the landing, so its last bar runs into B's hook downbeat (a build is
+ * B's own way into its chorus), and is faded out where B itself is first heard.
+ * - On B's own grid over an S2 bridge or an opener build (resampled to B's tempo at its hook by at most
+ *   SIGNATURES.maxRateShift), from the bridge's start at the earliest.
+ * - Over A (S1, S3) only when it matches A's tempo within SIGNATURES.maxRateShift and the keys agree.
+ * Never before the spin-start duck; when its head does not fit, it comes in later, as long as SIGNATURES.minFit
+ * of it plays. A build is skipped when B is teased itself (the same bars twice). Draws from `rng` only when B has
+ * Signatures, so plans without any are unchanged.
  */
-export function signatureLayer({ shape, tl, A, B, aRate, gB, spinStart, e, n, pickupAt, exit, phase, rng, skipB = false }: SignatureArgs): SignatureEvent | null {
-  const bSigs = skipB ? [] : B.signatures ?? [];
-  const aSigs = A?.signatures ?? [];
-  if (shape === 'S0' || (!bSigs.length && !aSigs.length)) return null;
+export function signatureLayer({ shape, tl, A, B, gB, spinStart, e, T, pickupAt, keysMatch, teased, phase, rng, skipB = false }: SignatureArgs): SignatureEvent | null {
+  const sigs = skipB ? [] : B.signatures ?? [];
+  if (shape === 'S0' || !sigs.length || !(rng() < phase.signature)) return null;
   const minStart = spinStart + AFTER_DUCK;
-  const event = (deck: 'A' | 'B', s: SignatureSource, at: number, rate: number, until: number, echo: number): SignatureEvent =>
-    ({ kind: 'signature', deck, id: s.id, at, anchorSec: s.anchorSec, rate, gainDb: s.gainDb + phase.signatureDb, until, echo });
-
-  if (bSigs.length && rng() < phase.signature) {
-    for (const s of shuffled(bSigs, rng)) {
-      // Downbeats the anchor may sit on, latest first, with the resample rate on that grid.
-      let slots: number[];
-      let rate = 1;
-      if (shape === 'S2' || !tl) {
-        slots = Array.from({ length: Math.max(1, n) }, (_, k) => e + k * gB.bar);
-      } else {
-        const aBpm = (A?.analysis.tempo.bpm ?? s.bpm) * aRate;
-        const shift = aBpm / s.bpm;
-        if (Math.abs(shift - 1) <= SIGNATURES.maxRateShift) rate = shift;
-        else if (s.beats > SIGNATURES.shoutMaxBeats) continue;
-        slots = tl.downbeatsBetween(minStart, pickupAt).map((d) => d.ctxTime);
-      }
-      for (const at of slots.sort((x, y) => y - x)) {
-        const start = at - s.anchorSec / rate;
-        const length = s.durationSec / rate;
-        if (start < minStart) continue;
-        if (Math.min(start + length, pickupAt) - start < SIGNATURES.minFit * length) continue;
-        return event('B', s, at, rate, Math.min(start + length, pickupAt), 0);
-      }
+  for (const s of shuffled(sigs, rng)) {
+    if (s.bpm <= 0 || (teased && s.kind === 'build')) continue;
+    const own = (s.beats * 60) / s.bpm; // its length at its own tempo
+    // Its first downbeat: its last bar ends on the landing (over A, on A's own downbeat that many bars back).
+    let at: number;
+    const onB = shape === 'S2' || !tl || !A;
+    if (onB) at = T - (own * gB.beat * s.bpm) / 60;
+    else {
+      if (!keysMatch) continue;
+      const land = tl.downbeatsBetween(T - 1e-6, T + 1e-6)[0];
+      const first = land ? A.analysis.downbeats[land.index - Math.round(s.beats / tl.bpb)] : undefined;
+      if (first == null) continue;
+      at = tl.ctxAt(first);
     }
-  }
-  if (shape === 'S2' && tl && aSigs.length && (exit === 'echo' || exit === 'wash') && rng() < phase.signature * SIGNATURES.aEchoShare) {
-    const s = pick(aSigs, rng);
-    const start = e - s.anchorSec / aRate;
-    if (start >= minStart) return event('A', s, e, aRate, start + s.durationSec / aRate, SIGNATURES.echoSend);
+    const length = T - at;
+    const rate = own / length;
+    if (!(length > 0) || Math.abs(rate - 1) > SIGNATURES.maxRateShift) continue;
+    const startAt = at - s.anchorSec / rate;
+    const from = Math.max(startAt, onB ? Math.max(minStart, e) : minStart);
+    const until = Math.min(startAt + s.durationSec / rate, pickupAt);
+    if (until - from < SIGNATURES.minFit * length) continue;
+    return {
+      kind: 'signature', deck: 'B', id: s.id, at, anchorSec: s.anchorSec, rate, gainDb: s.gainDb + phase.signatureDb, until, echo: 0,
+      ...(from > startAt + 1e-9 ? { from } : {}),
+    };
   }
   return null;
 }

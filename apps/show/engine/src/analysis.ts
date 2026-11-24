@@ -129,18 +129,20 @@ export function stemWindowFor(meta: StemsMeta, fromSec: number, toSec: number): 
 }
 
 // ---- Signatures (data/signatures/<id>.json, written by tools/prep/signatures.py) ---------------------------
-export type SignatureKind = 'call' | 'riff' | 'shout';
+/** The intro riff, the build into a chorus, or the chorus's instrumental line: never a vocal line. */
+export type SignatureKind = 'riff' | 'build' | 'motif';
 
 /**
- * One Signature candidate: a short, iconic, isolated piece of the song, cut to its own file
- * (`/signatures/<songId>/<id>.flac`). `anchorSec` is where its first downbeat (or its attack, for a shout)
- * falls inside that file: the engine lines that moment up with a beat. Only `approved: true` ones play.
+ * One Signature candidate: a short, recognizable instrumental piece of the song, cut to its own file
+ * (`/signatures/<songId>/<id>.flac`). `anchorSec` is where its first downbeat falls inside that file: the
+ * engine lines that moment up with a beat. Only `approved: true` ones play: per song the best-scoring one
+ * (`pick: 'auto'`) unless it was vetoed, or the ones picked by hand (`pick: 'manual'`).
  */
 export interface SignatureMeta {
   id: string;
   kind: SignatureKind;
-  /** Which part it was cut from. */
-  stem: 'vocals' | 'other' | 'drums' | 'bass' | 'mix';
+  /** Which part it was cut from ('instrumental': the mix without the vocals). */
+  stem: 'instrumental' | 'other' | 'drums' | 'bass' | 'mix';
   /** Where it was cut from the song (for the audition page). */
   startSec: number;
   endSec: number;
@@ -152,8 +154,12 @@ export interface SignatureMeta {
   /** Brings it to the loudness target. */
   gainDb: number;
   score: number;
-  /** null until someone decides on the audition page. */
+  /** Whether it plays (tools/prep/signatures.py applies the audition page's decisions). */
   approved: boolean | null;
+  /** Why it plays: picked by hand, or the automatic pick; null when it does not. */
+  pick?: 'manual' | 'auto' | null;
+  /** Vetoed on the audition page. */
+  vetoed?: boolean;
 }
 
 export interface SignaturesMeta {
@@ -161,10 +167,12 @@ export interface SignaturesMeta {
   songId: number;
   sampleRate: number;
   signatures: SignatureMeta[];
+  /** The song's Signatures are turned off on the audition page: none plays. */
+  off?: boolean;
 }
 
-const SIGNATURE_KINDS: readonly string[] = ['call', 'riff', 'shout'];
-const SIGNATURE_STEMS: readonly string[] = ['vocals', 'other', 'drums', 'bass', 'mix'];
+const SIGNATURE_KINDS: readonly string[] = ['riff', 'build', 'motif'];
+const SIGNATURE_STEMS: readonly string[] = ['instrumental', 'other', 'drums', 'bass', 'mix'];
 const finite = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 
 function isSignatureMeta(s: unknown): s is SignatureMeta {
@@ -182,5 +190,5 @@ export function checkSignaturesMeta(m: unknown): SignaturesMeta | null {
   if (!m || typeof m !== 'object') return null;
   const r = m as Record<string, unknown>;
   if (r.schemaVersion !== 1 || !Number.isInteger(r.songId) || !finite(r.sampleRate) || !Array.isArray(r.signatures)) return null;
-  return { schemaVersion: 1, songId: r.songId as number, sampleRate: r.sampleRate, signatures: r.signatures.filter(isSignatureMeta) };
+  return { schemaVersion: 1, songId: r.songId as number, sampleRate: r.sampleRate, signatures: r.signatures.filter(isSignatureMeta), off: r.off === true };
 }

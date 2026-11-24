@@ -141,7 +141,7 @@ export function releaseSuspense({ open, releaseAt, firstFreeBar, B, rng, id = nu
   const recipe = RECIPES.SUSPENSE;
   const built = recipe.build({ A: null, i: null, e: finalBar, T, pickupAt, gapStart, bStart, tease: false, teaseStems: null, gB, phase, rng, exit: null, blend: null });
   const events = [...built.events];
-  const signature = signatureLayer({ shape: 'S2', tl: null, A: null, B, aRate: 1, gB, spinStart: releaseAt, e: finalBar, n: 1, pickupAt, exit: null, phase, rng });
+  const signature = signatureLayer({ shape: 'S2', tl: null, A: null, B, gB, spinStart: releaseAt, e: finalBar, T, pickupAt, keysMatch: false, teased: false, phase, rng });
   if (signature) events.push(signature);
   return {
     id,

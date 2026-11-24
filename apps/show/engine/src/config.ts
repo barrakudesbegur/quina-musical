@@ -285,15 +285,11 @@ export const DECOYS: DecoyConfig = Object.freeze({
 
 /** Signatures: short, iconic, approved pieces of a song (tools/prep/signatures.py, approved on the audition page). */
 export const SIGNATURES = Object.freeze({
-  /** Over A's grid (S1, S3) B's Signature is resampled to A's tempo only within this (a slight pitch shift). */
+  /** A Signature is resampled to the grid it plays on (A's over S1 and S3, B's hook over S2) only within this
+   * (a slight pitch shift); further off, it does not play. */
   maxRateShift: 0.04,
-  /** Shorter than this many beats, a Signature is a one-shot: it needs no tempo match. */
-  shoutMaxBeats: 1.5,
-  /** At least this share of a Signature must play before B's pickup (the rest is faded out). */
-  minFit: 0.75,
-  /** A's Signature thrown into the echo as it exits: the send level, and its share of the phase's chance. */
-  echoSend: 0.55,
-  aEchoShare: 0.5,
+  /** At least this share of a Signature must play (its head may be cut where it cannot start yet). */
+  minFit: 0.5,
   fadeSec: 0.012,
 });
 

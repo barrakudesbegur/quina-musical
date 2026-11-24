@@ -9,6 +9,7 @@ import { deckTimeline } from '../engine/src/plan/timeline.ts';
 import { usableHooks } from '../engine/src/plan/hooks.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import type { Analysis, Hook, IndexSong } from '../engine/src/analysis.ts';
+import type { KeyInfo } from '../engine/src/plan/keys.ts';
 import type { BlendSource, Plan, PlanError, PlanSummary, SignatureSource } from '../engine/src/plan/planner.ts';
 import { PLANNER, SIGNATURES } from '../engine/src/config.ts';
 import type { PlanEvent } from '../engine/src/plan/recipes.ts';
@@ -244,22 +245,22 @@ test('R8 is never chosen without a render for this hook and this outgoing song',
   }
 });
 
-/** Made-up approved Signatures for a song: a one-bar call, a two-bar riff and a short shout. */
+/** Made-up approved Signatures for a song: its intro riff, a build into its chorus and its chorus motif, two bars each. */
 function signaturesFor(id: number, analysis: Analysis): SignatureSource[] {
   const bpm = analysis.tempo.bpm;
-  const beat = 60 / bpm;
-  const bpb = analysis.tempo.beatsPerBar;
-  return [
-    { id: `${id}-call-0`, kind: 'call', durationSec: (bpb + 0.5) * beat, anchorSec: 0.5 * beat, beats: bpb, bpm, gainDb: -2 },
-    { id: `${id}-riff-0`, kind: 'riff', durationSec: 2 * bpb * beat, anchorSec: 0, beats: 2 * bpb, bpm, gainDb: -4 },
-    { id: `${id}-shout-0`, kind: 'shout', durationSec: 0.6, anchorSec: 0.03, beats: 0.6 / beat, bpm, gainDb: 0 },
-  ];
+  const beats = 2 * analysis.tempo.beatsPerBar;
+  const durationSec = (beats * 60) / bpm + 0.03;
+  return (['riff', 'build', 'motif'] as const).map((kind, k) => ({ id: `${id}-${kind}-0`, kind, durationSec, anchorSec: 0, beats, bpm, gainDb: -2 - k }));
 }
 
-test('Signatures: on the beat, after the duck, faded at B\'s pickup, resampled only slightly; plans without any are unchanged', () => {
+/** The same confident key for every hook of a song: A's and B's then agree. */
+const sameKeys = (analysis: Analysis): Record<string, KeyInfo> =>
+  Object.fromEntries(analysis.hooks.map((h) => [h.id, { key: 'C', mode: 'major', camelot: '8B', confidence: 0.9 }] as const));
+
+test('Signatures: B\'s only, teased just before it lands, ending on the landing; over A only with agreeing keys and tempos; plans without any are unchanged', () => {
   const rng = seededRandom(7);
   const ids = [...analyses.keys()];
-  const seen = { B: 0, A: 0, rate: 0, shape: new Set<string>() };
+  const seen = { B: 0, rate: 0, cut: 0, shape: new Set<string>(), kinds: new Set<string>() };
   const AFTER_DUCK = PLANNER.afterDuckSec;
   for (let n = 0; n < 1500; n++) {
     const aId = ids[Math.floor(rng() * ids.length)];
@@ -273,10 +274,11 @@ test('Signatures: on the beat, after the duck, faded at B\'s pickup, resampled o
     const deck = { startCtx: 100, offset: aHook.downbeatSec, rate: 1 };
     const now = 100 + 2 + rng() * 28;
     const seed = Math.floor(rng() * 2 ** 32);
+    const keys = n % 2 === 0;
     const request = (withSignatures: boolean) => ({
       now, phase, spin, rng: seededRandom(seed), history: [],
-      A: { songId: aId, analysis: A, deck, landedDownbeatIndex: aHook.downbeatIndex, signatures: withSignatures ? signaturesFor(aId, A) : null },
-      B: { songId: bId, analysis: B, signatures: withSignatures ? signaturesFor(bId, B) : [] },
+      A: { songId: aId, analysis: A, deck, landedDownbeatIndex: aHook.downbeatIndex, signatures: withSignatures ? signaturesFor(aId, A) : null, keys: keys ? sameKeys(A) : null },
+      B: { songId: bId, analysis: B, signatures: withSignatures ? signaturesFor(bId, B) : [], keys: keys ? sameKeys(B) : null },
     });
     const plain = planned(planTransition(request(false)));
     const plan = planned(planTransition(request(true)));
@@ -292,39 +294,32 @@ test('Signatures: on the beat, after the duck, faded at B\'s pickup, resampled o
     assert.ok(sigEvents.length <= 1, 'at most one Signature per transition');
     const e = sigEvents[0];
     if (!e || !signature) continue;
+    seen.B++;
     seen.shape.add(plan.shape);
-    const length = (signaturesFor(e.deck === 'B' ? bId : aId, e.deck === 'B' ? B : A).find((s) => s.id === e.id)?.durationSec ?? 0) / e.rate;
+    assert.equal(e.deck, 'B', 'only the song that lands is teased');
+    const s = signaturesFor(bId, B).find((x) => x.id === e.id);
+    assert.ok(s);
+    seen.kinds.add(s.kind);
+    if (s.kind === 'build') assert.equal(plan.teaseBars, 0, 'a build never doubles B\'s own Tease');
+    const bars = (s.beats * 60) / s.bpm / e.rate;
     const start = e.at - e.anchorSec / e.rate;
-    assert.ok(start >= plan.spinStart + AFTER_DUCK - 1e-9, 'starts after the spin-start duck');
-    assert.ok(e.until > start && e.until <= start + length + 1e-9, 'ends within its own length');
-    const tl = deckTimeline(A, deck);
-    const onA = (t: number) => A.downbeats.some((d) => Math.abs(tl.ctxAt(d) - t) < 1e-6);
-    if (e.deck === 'B') {
-      seen.B++;
-      const pickupAt = plan.T - plan.hook.pickupSec;
-      assert.ok(e.until <= pickupAt + 1e-9, 'B\'s call is faded by its pickup');
-      assert.ok(e.until - start >= SIGNATURES.minFit * length - 1e-9, 'most of it plays');
-      assert.equal(e.echo, 0);
-      if (plan.shape === 'S2') {
-        const k = (e.at - plan.exitAt) / plan.hook.bar;
-        assert.ok(Math.abs(k - Math.round(k)) < 1e-6, 'S2: on a bar of B\'s bridge');
-        assert.equal(e.rate, 1);
-      } else {
-        assert.ok(onA(e.at), `${plan.shape}: on one of A's downbeats`);
-        assert.ok(Math.abs(e.rate - 1) <= SIGNATURES.maxRateShift + 1e-9, 'resampled by at most a few percent');
-        if (e.rate !== 1) seen.rate++;
-        const s = signaturesFor(bId, B).find((x) => x.id === e.id);
-        const aBpm = A.tempo.bpm;
-        if (s && Math.abs(aBpm / s.bpm - 1) > SIGNATURES.maxRateShift) assert.ok(s.beats <= SIGNATURES.shoutMaxBeats, 'only a shout needs no tempo match');
-      }
-    } else {
-      seen.A++;
-      assert.equal(plan.shape, 'S2');
-      assert.ok(plan.exit === 'echo' || plan.exit === 'wash', 'A\'s Signature only echoes out on an echo or wash exit');
-      assert.ok(Math.abs(e.at - plan.exitAt) < 1e-9 && onA(e.at), 'on A\'s exit downbeat');
-      assert.ok(e.echo > 0);
+    const heard = Math.max(start, e.from ?? start);
+    if (heard > start + 1e-9) seen.cut++;
+    assert.ok(Math.abs(e.at + bars - plan.T) < 1e-6, 'its last bar ends on the landing');
+    assert.ok(heard >= plan.spinStart + AFTER_DUCK - 1e-9, 'heard after the spin-start duck');
+    assert.ok(e.until <= plan.T - plan.hook.pickupSec + 1e-9, 'faded by B\'s pickup: never after the landing');
+    assert.ok(e.until - heard >= SIGNATURES.minFit * bars - 1e-9, 'enough of it plays');
+    assert.ok(Math.abs(e.rate - 1) <= SIGNATURES.maxRateShift + 1e-9, 'resampled by at most a few percent');
+    if (e.rate !== 1) seen.rate++;
+    assert.equal(e.echo, 0);
+    if (plan.shape === 'S2') assert.ok(heard >= plan.exitAt - 1e-9, 'S2: on B\'s bridge, after A has gone');
+    else {
+      assert.ok(keys, `${plan.shape}: over A only when the keys agree`);
+      const tl = deckTimeline(A, deck);
+      assert.ok(A.downbeats.some((d) => Math.abs(tl.ctxAt(d) - e.at) < 1e-6), `${plan.shape}: on one of A's downbeats`);
     }
   }
-  assert.ok(seen.B > 100 && seen.A > 5 && seen.rate > 0, `enough of each case: ${JSON.stringify({ ...seen, shape: [...seen.shape] })}`);
+  assert.ok(seen.B > 100 && seen.rate > 0 && seen.cut > 0, `enough of each case: ${JSON.stringify({ ...seen, shape: [...seen.shape], kinds: [...seen.kinds] })}`);
   assert.ok(seen.shape.has('S1') && seen.shape.has('S2'));
+  assert.deepEqual([...seen.kinds].sort(), ['build', 'motif', 'riff']);
 });

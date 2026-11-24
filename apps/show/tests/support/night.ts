@@ -9,7 +9,7 @@
 //  - B's pre-verbs for its valid best/main hooks, and from its voice where its stems hold vocals;
 //  - B's Blend render for every tempo-matchable pair (±8%), its bass and voice allowed like BlendStore does
 //    (±4% and compatible keys, or the global keys);
-//  - approved Signatures for the songs that have candidates (data/signatures): the best one of each kind.
+//  - the Signatures that play (data/signatures): each song's automatic pick, unless it is vetoed or off.
 // So every recipe can appear except what needs a presenter (Suspense, an override) or a render the relay would
 // refuse. Hold music and the Interval playlist are picked by the runtime (audio/holdmusic.ts, interval/plan.ts):
 // the night logs what the Show asks for, and holdMusicPicks / intervalPicks model the runtime's choices.
@@ -76,18 +76,14 @@ function keysOf(songId: number): { hooks: Record<string, KeyInfo> | null; global
   return { hooks, global };
 }
 
-/** The best candidate of each kind, as if the user had approved it on the audition page. */
+/** The Signatures that play, as the runtime loads them: the automatic pick (or the audition page's), none when off. */
 function approvedSignatures(songId: number): SignatureSource[] {
   const file = path.join(DATA, 'signatures', `${songId}.json`);
   if (!fs.existsSync(file)) return [];
   const meta = checkSignaturesMeta(readJson(file));
-  if (!meta) return [];
-  const best = new Map<string, (typeof meta.signatures)[number]>();
-  for (const s of meta.signatures) {
-    const known = best.get(s.kind);
-    if (!known || s.score > known.score) best.set(s.kind, s);
-  }
-  return [...best.values()].map((s) => ({ id: s.id, kind: s.kind, durationSec: s.durationSec, anchorSec: s.anchorSec, beats: s.beats, bpm: s.bpm, gainDb: s.gainDb }));
+  if (!meta || meta.off) return [];
+  return meta.signatures.filter((s) => s.approved === true)
+    .map((s) => ({ id: s.id, kind: s.kind, durationSec: s.durationSec, anchorSec: s.anchorSec, beats: s.beats, bpm: s.bpm, gainDb: s.gainDb }));
 }
 
 function songInputs(songId: number, analysis: Analysis): SongInputs {

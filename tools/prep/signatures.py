@@ -1,13 +1,15 @@
-"""Signature candidates (GLOSSARY: Signature) for the mixer POC: short, iconic, isolated pieces of a song
-that transitions layer. The candidates come from tools/prep/steps/signatures.py; this script cuts their
-audio from the stems (tools/prep/stems.py) and writes, per song:
+"""Signature candidates (GLOSSARY: Signature): short, recognizable instrumental pieces of a song (its intro
+riff, the build into its chorus, the chorus's instrumental line), teased just before it lands. The candidates
+come from tools/prep/steps/signatures.py; this script cuts their audio from the stems (tools/prep/stems.py),
+always without the vocals, and writes, per song:
 
     <dataDir>/signatures/<id>.json   schema 1: { songId, sampleRate, signatures: [...] } (engine/src/analysis.ts)
     <cacheDir>/<id>/signatures/<sigId>.flac   48 kHz 16-bit stereo, short fades, at the stems' real level
 
-Approvals come from the audition page, through <overridesDir>/<id>.json `signatures: { <sigId>: bool }`;
---derive-only re-applies them without touching the audio (the relay runs it after a Save). Only
-approved Signatures play in the show.
+Per song the best candidate at or above AUTO_MIN_SCORE plays automatically. The audition page vetoes or picks
+one through <overridesDir>/<id>.json `signatures: { <sigId>: bool }`, or turns the song's Signatures off
+(`signaturesOff: true`); --derive-only re-applies those without touching the audio (the relay runs it after a
+Save). Only approved Signatures play in the show.
 
 Run: tools/prep/.venv/bin/python tools/prep/signatures.py [--pool NAME|PATH] [--song N ...] [--derive-only] [--force]
 (the directories are the pool's: tools/prep/pool.py; the default pool's are data/out/, data/cache/, data/pools/default/overrides/)
@@ -88,8 +90,9 @@ class SongAudio:
             return self.mix(start, end)
         if name in STEM_NAMES:
             return self.stem(name, start, end)
-        if name == "other":
-            parts = [self.stem(n, start, end) for n in STEM_NAMES]
+        if name in ("other", "instrumental"):
+            # "other": what is left without the drums, bass and vocals; "instrumental": the mix without the vocals.
+            parts = [self.stem(n, start, end) for n in (STEM_NAMES if name == "other" else ("vocals",))]
             if any(p is None for p in parts):
                 return None
             mix = self.mix(start, end)
@@ -109,19 +112,6 @@ def faded(audio: np.ndarray) -> np.ndarray:
     return np.clip(out, -1, 1)
 
 
-def shouts(audio: SongAudio, analysis: dict) -> list[sg.Candidate]:
-    """Vocal bursts, searched in every stored window of the vocal stem."""
-    found: list[sg.Candidate] = []
-    for w in audio.meta["windows"]:
-        vocals = audio.stem("vocals", w["startSec"], w["endSec"])
-        if vocals is None:
-            continue
-        env = sg.envelope_db(vocals.mean(axis=1), SR)
-        found.extend(sg.shout_candidates(env, sg.FRAME_SEC, analysis, offset_sec=w["startSec"]))
-    best = sorted(found, key=lambda c: -c.score)[: sg.MAX_SHOUTS]
-    return sorted(best, key=lambda c: c.start_sec)
-
-
 def candidates_for(paths: Paths, song_id: int) -> tuple[list[dict], list[str]]:
     """Cut every candidate's audio; returns the entries and warnings."""
     analysis = load_json(paths.data / "analysis" / f"{song_id}.json")
@@ -130,7 +120,7 @@ def candidates_for(paths: Paths, song_id: int) -> tuple[list[dict], list[str]]:
         return [], ["no analysis or stems"]
     audio = SongAudio(paths, song_id, stems_meta)
     bpm = analysis["tempo"]["bpm"]
-    found = sg.call_candidates(analysis, stems_meta["bars"]) + sg.riff_candidates(analysis, stems_meta["bars"]) + shouts(audio, analysis)
+    found = sg.candidates(analysis, stems_meta["bars"])
     out_dir = paths.cache / str(song_id) / "signatures"
     out_dir.mkdir(parents=True, exist_ok=True)
     entries: list[dict] = []

@@ -45,8 +45,10 @@ interface Override {
   disableHooks?: string[] | null;
   hookDownbeats?: Record<string, number> | null;
   hookPickupBeats?: Record<string, number> | null;
-  /** Signature id → approved (true) or rejected (false); tools/prep/signatures.py applies them. */
+  /** Signature id → picked (true) or vetoed (false); tools/prep/signatures.py applies them. */
   signatures?: Record<string, boolean> | null;
+  /** No Signature plays for this song. */
+  signaturesOff?: boolean | null;
   [field: string]: unknown;
 }
 
@@ -83,7 +85,8 @@ const isOverride = (x: unknown): x is Override =>
   optional(x.disableHooks, (v) => isArray(v) && v.every((id) => typeof id === 'string')) &&
   optional(x.hookDownbeats, isNumberMap) &&
   optional(x.hookPickupBeats, isNumberMap) &&
-  optional(x.signatures, (v) => isRecord(v) && Object.values(v).every((d) => typeof d === 'boolean'));
+  optional(x.signatures, (v) => isRecord(v) && Object.values(v).every((d) => typeof d === 'boolean')) &&
+  optional(x.signaturesOff, (v) => typeof v === 'boolean');
 
 function checkOverride(x: unknown): Override {
   if (!isOverride(x)) throw new Error('override: unexpected fields');
@@ -480,19 +483,29 @@ function renderHooks() {
 }
 
 // ---------- Signatures ----------
-/** The decision on the page: this page's unsaved choice, else the one in the derived file. */
-function decisionOf(s: SignatureMeta): boolean | null {
-  return override.signatures?.[s.id] ?? s.approved;
+/**
+ * What happens to a Signature, as the page stands (this page's unsaved choices first): the song's Signatures
+ * are off, it is picked or vetoed by hand, it is the automatic pick (from the last Save), or nothing.
+ */
+function statusOf(s: SignatureMeta): 'off' | 'picked' | 'vetoed' | 'auto' | null {
+  if (override.signaturesOff) return 'off';
+  const decision = override.signatures?.[s.id];
+  if (decision === true) return 'picked';
+  if (decision === false) return 'vetoed';
+  return s.pick === 'auto' && s.approved ? 'auto' : null;
 }
+
+const STATUS_TEXT = { off: 'off', picked: 'plays (picked)', vetoed: 'vetoed', auto: 'plays (automatic)' } as const;
 
 function renderSignatures() {
   $('signatures-empty').hidden = signatures.length > 0;
+  $('signatures-off', HTMLInputElement).checked = Boolean(override.signaturesOff);
   $('signatures').replaceChildren(
     ...signatures.map((s) => {
       const tr = document.createElement('tr');
-      const decision = decisionOf(s);
-      tr.classList.toggle('is-selected', decision === true);
-      tr.classList.toggle('is-invalid', decision === false);
+      const status = statusOf(s);
+      tr.classList.toggle('is-selected', status === 'picked' || status === 'auto');
+      tr.classList.toggle('is-invalid', status === 'vetoed' || status === 'off');
       const cells = [
         s.id,
         s.kind,
@@ -500,12 +513,12 @@ function renderSignatures() {
         `${s.startSec.toFixed(2)}–${s.endSec.toFixed(2)}`,
         s.beats.toFixed(1),
         s.score.toFixed(2),
-        decision === true ? 'approved' : decision === false ? 'rejected' : '—',
+        status ? STATUS_TEXT[status] : '—',
         `<button class="small" data-sig="play" data-id="${s.id}">Play</button>
          <button class="small" data-sig="context" data-id="${s.id}" title="Play the song from 2 s before it">In song</button>
-         <button class="small" data-sig="approve" data-id="${s.id}">Approve</button>
-         <button class="small" data-sig="reject" data-id="${s.id}">Reject</button>
-         <button class="small" data-sig="undecided" data-id="${s.id}">Undecide</button>`,
+         <button class="small" data-sig="approve" data-id="${s.id}" title="This one plays (instead of the automatic pick)">Pick</button>
+         <button class="small" data-sig="reject" data-id="${s.id}" title="Never this one">Veto</button>
+         <button class="small" data-sig="undecided" data-id="${s.id}" title="Back to the automatic pick">Undo</button>`,
       ];
       tr.innerHTML = cells.map((c) => `<td>${c}</td>`).join('');
       return tr;
@@ -676,6 +689,12 @@ $('override-note').addEventListener('change', (e) => {
   renderOverride();
 });
 $('save-override').addEventListener('click', saveOverride);
+$('signatures-off').addEventListener('change', (e) => {
+  override.signaturesOff = targetOf(e, HTMLInputElement).checked || null;
+  renderSignatures();
+  renderOverride();
+});
+
 $('signatures').addEventListener('click', (e) => {
   const target = e.target instanceof Element ? e.target.closest('[data-sig]') : null;
   if (!(target instanceof HTMLElement)) return;

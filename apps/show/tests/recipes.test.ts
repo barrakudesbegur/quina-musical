@@ -47,10 +47,10 @@ function blendSourceFor(A: Analysis, hook: Hook, bass: boolean, vocals = bass): 
   return { aSongId: A.songId, hookId: hook.id, toBpm: A.tempo.bpm, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barSec, barSec, bass, vocals };
 }
 
-/** A one-bar call, for D11's grain. */
-function callOf(B: Analysis): SignatureSource {
-  const beat = 60 / B.tempo.bpm;
-  return { id: `${B.songId}-call-0`, kind: 'call', durationSec: 4.5 * beat, anchorSec: 0.5 * beat, beats: 4, bpm: B.tempo.bpm, gainDb: -2 };
+/** A two-bar build into B's chorus (instrumental, cut from a downbeat like tools/prep/steps/signatures.py). */
+function buildOf(B: Analysis): SignatureSource {
+  const bar = (60 / B.tempo.bpm) * (B.tempo.beatsPerBar || 4);
+  return { id: `${B.songId}-build-0`, kind: 'build', durationSec: 2 * bar + 0.03, anchorSec: 0, beats: 2 * (B.tempo.beatsPerBar || 4), bpm: B.tempo.bpm, gainDb: -2 };
 }
 
 /** A two-bar intro riff, for D5's bed (cut from its first downbeat, like tools/prep/steps/signatures.py). */
@@ -75,8 +75,8 @@ interface Scenario {
  * One random pair with everything a technique may use: A's stem lanes from its landed hook to 48 s after it,
  * B's drums, bass and vocals around every hook, B's render at A's tempo, B's call, pre-verbs for every hook.
  */
-function scenario(n: number, rng: () => number, { recipe = null, force = null, phase: forcedPhase = null, rate = 1, withCall = false, withRiff = false, keys = false, aBars = null, history = [] }: {
-  recipe?: RecipeId | null; force?: PlanForce | null; phase?: PhaseEffects | null; rate?: number; withCall?: boolean; withRiff?: boolean;
+function scenario(n: number, rng: () => number, { recipe = null, force = null, phase: forcedPhase = null, rate = 1, withBuild = false, withRiff = false, keys = false, aBars = null, history = [] }: {
+  recipe?: RecipeId | null; force?: PlanForce | null; phase?: PhaseEffects | null; rate?: number; withBuild?: boolean; withRiff?: boolean;
   keys?: boolean; aBars?: StemBars | null; history?: PlanSummary[];
 } = {}): Scenario {
   const aId = ids[Math.floor(rng() * ids.length)];
@@ -99,7 +99,7 @@ function scenario(n: number, rng: () => number, { recipe = null, force = null, p
     stems: Object.fromEntries(B0.hooks.map((h) => [h.id, { parts: ['drums', 'bass', 'vocals'] }] as const)),
     // B's bass and voice may layer in half and two thirds of the pairs, independently of the Phase cycles below.
     blend: A0.tempo.isStable ? blendSourceFor(A0, bHook, n % 2 === 0, n % 3 !== 1) : null,
-    signatures: [...(withCall ? [callOf(B0)] : []), ...(withRiff ? [riffOf(B0)] : [])],
+    signatures: [...(withBuild ? [buildOf(B0)] : []), ...(withRiff ? [riffOf(B0)] : [])],
     preverbs: B0.hooks.map((h) => h.id),
     vocalPreverbs: B0.hooks.map((h) => h.id),
     keys: keys ? sameKeys(B0) : null,
@@ -124,7 +124,7 @@ test('every new technique keeps the landing invariants over random pairs, phases
   const forcedTo: RecipeId[] = ['D1', 'D2', 'D3', 'D6', 'D7', 'D8', 'D10', 'D11', 'D15', 'D16', 'D19', 'R1', 'R2', 'R4', 'R5', 'R7', 'R10'];
   for (let n = 0; n < 4080; n++) {
     const recipe = forcedTo[n % forcedTo.length];
-    const s = scenario(n, rng, { recipe, withCall: n % 3 === 0, withRiff: n % 4 === 1, keys: n % 5 < 2, phase: PHASE_LIST[Math.floor(n / forcedTo.length) % 4] });
+    const s = scenario(n, rng, { recipe, withBuild: n % 3 === 0, withRiff: n % 4 === 1, keys: n % 5 < 2, phase: PHASE_LIST[Math.floor(n / forcedTo.length) % 4] });
     checkLanding(s);
     const key = `${s.plan.recipe}:${s.plan.phase}`;
     seen[key] = (seen[key] ?? 0) + 1;
@@ -313,7 +313,7 @@ test('D11 vocal-chop build: B\'s syllable chopped on B\'s grid in the last bars,
   const rng = seededRandom(18);
   const sources = new Set<string>();
   for (let n = 0; n < 400; n++) {
-    const { plan } = scenario(n, rng, { recipe: 'D11', withCall: n % 2 === 0 });
+    const { plan } = scenario(n, rng, { recipe: 'D11', withBuild: n % 2 === 0 });
     if (plan.recipe !== 'D11') continue;
     const chops = plan.events.find((e) => e.kind === 'slices' && e.deck === 'B');
     if (!chops || chops.kind !== 'slices') continue;
@@ -328,10 +328,9 @@ test('D11 vocal-chop build: B\'s syllable chopped on B\'s grid in the last bars,
     const rates = chops.slices.map((s) => s.rate ?? 1);
     assert.ok(Math.max(...rates) <= 2 * MOVES.chop.rateTo[plan.phase] + 1e-9 && Math.min(...rates) >= 1 - 1e-9);
     if (plan.hook.pickupSec <= plan.hook.beat) assert.ok(plan.gapBeats >= MOVES.chop.minGapBeats[plan.phase]);
-    // One B Signature at most: the call is the chop, nothing else of B.
-    if (chops.source?.from === 'signature') assert.ok(!plan.events.some((e) => e.kind === 'signature' && e.deck === 'B'));
   }
-  assert.deepEqual([...sources].sort(), ['signature', 'stem']);
+  // Signatures are instrumental: the syllable always comes from B's vocal stem.
+  assert.deepEqual([...sources].sort(), ['stem']);
 });
 
 test('landing layers rotate: cymbal, dry (no swell, no samples) and the pre-verb, which ends a breath before the pickup', () => {
@@ -419,7 +418,7 @@ test('the rotation over a long show: every technique plays, no family three time
   const counts: Record<string, number> = {};
   for (let n = 0; n < 1600; n++) {
     const phase = PHASE_LIST[Math.floor(n / 25) % 4];
-    const s = scenario(n, rng, { phase, history, withCall: n % 2 === 0 });
+    const s = scenario(n, rng, { phase, history, withBuild: n % 2 === 0 });
     checkLanding(s);
     const { plan } = s;
     counts[plan.recipe] = (counts[plan.recipe] ?? 0) + 1;
@@ -445,7 +444,7 @@ test('the layers and landings of a long show: the riff bed, gap chops and scratc
   const seen: Record<string, number> = {};
   for (let n = 0; n < 1600; n++) {
     const phase = PHASE_LIST[Math.floor(n / 25) % 4];
-    const s = scenario(n, rng, { phase, history, withCall: n % 2 === 0, withRiff: n % 3 === 0, keys: n % 2 === 1 });
+    const s = scenario(n, rng, { phase, history, withBuild: n % 2 === 0, withRiff: n % 3 === 0, keys: n % 2 === 1 });
     checkLanding(s);
     const { plan } = s;
     for (const l of plan.layers) seen[l] = (seen[l] ?? 0) + 1;
@@ -606,7 +605,7 @@ test('D19 scratch-in: strokes on B\'s eighths before the pickup, the release for
   const styles = new Set<string>();
   let count = 0;
   for (let n = 0; n < 400; n++) {
-    const { plan } = scenario(n, rng, { recipe: 'D19', withCall: n % 2 === 0, phase: [PHASES.mid, PHASES.late, PHASES.final][n % 3] });
+    const { plan } = scenario(n, rng, { recipe: 'D19', withBuild: n % 2 === 0, phase: [PHASES.mid, PHASES.late, PHASES.final][n % 3] });
     if (plan.recipe !== 'D19') continue;
     const sc: ScratchEvent | undefined = ofKind(plan, 'scratch')[0];
     if (!sc) continue;
@@ -614,7 +613,7 @@ test('D19 scratch-in: strokes on B\'s eighths before the pickup, the release for
     styles.add(String(plan.variant?.kind));
     checkScratch(plan, sc);
     assert.ok(sc.at >= plan.exitAt - 1e-9, 'on the bridge');
-    if (sc.source.from === 'signature') assert.ok(!plan.events.some((e) => e.kind === 'signature' && e.deck === 'B'), 'one B Signature at most');
+    assert.equal(sc.source.from, 'stem', 'B\'s syllable from its vocal stem, never a Signature');
     if (plan.hook.pickupSec <= plan.hook.beat) assert.ok(plan.gapBeats >= MOVES.scratch.minGapBeats[plan.phase] - 1e-9);
   }
   assert.ok(count > 150, `${count} scratches`);
@@ -642,7 +641,7 @@ test('D5 riff bed: B\'s riff loops on B\'s bar lines under R7\'s bridge, its phr
   const variants = new Set<string>();
   let count = 0;
   for (let n = 0; n < 400; n++) {
-    const { plan } = scenario(n, rng, { recipe: 'R7', withRiff: true, withCall: n % 2 === 0, force: { riff: true }, phase: [PHASES.mid, PHASES.late, PHASES.final][n % 3] });
+    const { plan } = scenario(n, rng, { recipe: 'R7', withRiff: true, withBuild: n % 2 === 0, force: { riff: true }, phase: [PHASES.mid, PHASES.late, PHASES.final][n % 3] });
     if (!plan.layers.includes('riff')) continue;
     count++;
     variants.add(String(plan.variant?.riff));
@@ -701,7 +700,7 @@ test('a gap layer: a one-beat chop or scratch of B\'s first syllable fills an S1
   for (let n = 0; n < 400; n++) {
     const recipe = (['R1', 'R4', 'D1', 'D3', 'D7', 'D2'] as const)[n % 6];
     const gapLayer = n % 2 ? 'chop' : 'scratch';
-    const { plan } = scenario(n, rng, { recipe, withCall: n % 3 === 0, force: { gapLayer, landing: 'cymbal' }, phase: [PHASES.late, PHASES.final][n % 2] });
+    const { plan } = scenario(n, rng, { recipe, withBuild: n % 3 === 0, force: { gapLayer, landing: 'cymbal' }, phase: [PHASES.late, PHASES.final][n % 2] });
     const chop = ofKind(plan, 'slices').find((e) => e.deck === 'B');
     const sc = ofKind(plan, 'scratch')[0];
     const layered = plan.layers.includes('gapChop') || plan.layers.includes('gapScratch');

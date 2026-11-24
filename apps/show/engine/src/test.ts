@@ -30,14 +30,14 @@ const SONG_SEC = 120;
 
 /**
  * What a case gives the planner and the decks besides A and B: A's stem lanes, B's render (and its stretched
- * voice), B's vocals, B's call and riff, B's pre-verb (and its vocal one), agreeing keys.
+ * voice), B's vocals, B's build and riff Signatures, B's pre-verb (and its vocal one), agreeing keys.
  */
 interface Kit {
   lanes?: boolean;
   blend?: boolean;
   blendVocals?: boolean;
   vocals?: boolean;
-  call?: boolean;
+  build?: boolean;
   riff?: boolean;
   preverb?: boolean;
   vocalPreverb?: boolean;
@@ -201,13 +201,13 @@ async function runCase(c: RenderCase, mode: Mode): Promise<RenderResult> {
   const blend: BlendSource | null = kit.blend
     ? { aSongId: 1, hookId: hook.id, toBpm: c.bpmA, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barA, barSec: barA, bass: true, vocals: Boolean(kit.blendVocals) }
     : null;
-  const callLength = (4.5 * 60) / c.bpmB;
+  const buildLength = (8 * 60) / c.bpmB + 0.03;
   const riffLength = (8 * 60) / c.bpmB + 0.05;
   const bSong: IncomingSong = {
     songId: 2, analysis: B, blend, keys,
     stems: kit.vocals ? { [hook.id]: { parts: ['drums', 'bass', 'vocals'] } } : null,
     signatures: [
-      ...(kit.call ? [{ id: '2-call-0', kind: 'call', durationSec: callLength, anchorSec: (0.5 * 60) / c.bpmB, beats: 4, bpm: c.bpmB, gainDb: -2 } as const] : []),
+      ...(kit.build ? [{ id: '2-build-0', kind: 'build', durationSec: buildLength, anchorSec: 0, beats: 8, bpm: c.bpmB, gainDb: -2 } as const] : []),
       ...(kit.riff ? [{ id: '2-riff-0', kind: 'riff', durationSec: riffLength, anchorSec: 0, beats: 8, bpm: c.bpmB, gainDb: -3 } as const] : []),
     ],
     preverbs: kit.preverb ? [hook.id] : null,
@@ -224,9 +224,9 @@ async function runCase(c: RenderCase, mode: Mode): Promise<RenderResult> {
     const render = (n: number) => buffer(ctx, blend.hookSec + 2 * barA, (d) => (mode === 'landing' ? d.fill(0.01) : noise(n * (mode === 'silence' ? 0 : 1))(d)));
     deckB.blend = { buffers: { drums: render(0.2), bass: render(0.15), vocals: render(0.12) }, scale: 1 };
   }
-  // B's Signatures: a sine call and a riff of two bars of chords (silent in silence mode).
+  // B's Signatures: a sine build and a riff of two bars of chords (silent in silence mode).
   const tone = (seconds: number, hz: number) => buffer(ctx, seconds, (d) => d.forEach((_, i) => (d[i] = mode === 'silence' ? 0 : 0.3 * Math.sin((2 * Math.PI * hz * i) / SR) * Math.min(1, i / 480))));
-  deckB.signatures = new Map([...(kit.call ? [['2-call-0', tone(callLength, 330)] as const] : []), ...(kit.riff ? [['2-riff-0', tone(riffLength, 220)] as const] : [])]);
+  deckB.signatures = new Map([...(kit.build ? [['2-build-0', tone(buildLength, 330)] as const] : []), ...(kit.riff ? [['2-riff-0', tone(riffLength, 220)] as const] : [])]);
   if (kit.preverb || kit.vocalPreverb) {
     // Rendered from B without its click, so the swell cannot be mistaken for the hook.
     const source = mode === 'landing' ? buffer(ctx, SONG_SEC, (d) => d.fill(0.01)) : bufB;
@@ -318,7 +318,7 @@ function renderSet(): RenderCase[] {
   };
   // The first recipes, as before (every tempo pair).
   for (const [recipe, phase] of [['R1', 'early'], ['R2', 'early'], ['R4', 'mid'], ['R5', 'early'], ['R6', 'early'], ['R7', 'late'], ['R10', 'final']] as const) add(recipe, recipe, phase, {}, true);
-  // D1, D2, D3 in every Phase; D8 and D10 with A's stem lanes, D10 with B's render too; D11 with B's vocals or call.
+  // D1, D2, D3 in every Phase; D8 and D10 with A's stem lanes, D10 with B's render too; D11 with B's vocals.
   for (const phase of ['early', 'mid', 'late', 'final'] as const) {
     add(`D1 ${phase}`, 'D1', phase, {}, phase === 'mid');
     add(`D2 ${phase}`, 'D2', phase, {}, phase === 'late');
@@ -332,7 +332,7 @@ function renderSet(): RenderCase[] {
   add('D10 juggle', 'D10', 'late', { kit: { lanes: true, blend: true }, force: { variant: 'juggle' } }, false, near);
   add('D10 throw', 'D10', 'mid', { kit: { lanes: true, blend: true }, force: { variant: 'throw' } }, false, near);
   add('D11 stem', 'D11', 'mid', { kit: { vocals: true } }, true);
-  add('D11 call', 'D11', 'late', { kit: { vocals: true, call: true } });
+  add('D11 with a build', 'D11', 'late', { kit: { vocals: true, build: true } });
   // Variants of the older recipes, R7's bridges and new exits, the landings and the Ghost.
   for (const variant of ['lpf', 'stab'] as const) add(`R1 ${variant}`, 'R1', 'early', { force: { variant } });
   add('R2 freeze', 'R2', 'mid', { force: { variant: 'freeze' } });
@@ -359,14 +359,14 @@ function renderSet(): RenderCase[] {
   for (const phase of ['mid', 'late', 'final'] as const) add(`D15 ${phase}`, 'D15', phase, { kit: { lanes: true } }, phase === 'late');
   for (const phase of ['mid', 'late', 'final'] as const) add(`D16 ${phase}`, 'D16', phase, { kit: { lanes: true, blend: true, blendVocals: true, vocals: true } }, phase === 'mid', near);
   for (const phase of ['mid', 'late', 'final'] as const) add(`D19 ${phase}`, 'D19', phase, { kit: { vocals: true } }, phase === 'late');
-  for (const variant of ['baby', 'chirp', 'forward'] as const) add(`D19 ${variant}`, 'D19', 'late', { kit: { vocals: true, call: true }, force: { variant } });
+  for (const variant of ['baby', 'chirp', 'forward'] as const) add(`D19 ${variant}`, 'D19', 'late', { kit: { vocals: true, build: true }, force: { variant } });
   // Late always Teases: the riff bed plays over B's stem Tease (never under a low-passed B).
   for (const variant of ['dry', 'throw', 'gate'] as const) add(`D5 riff ${variant}`, 'R7', 'late', { kit: { riff: true, vocals: true }, force: { riff: true, variant } }, variant === 'dry');
   add('D14 tape after R5', 'R5', 'late', { force: { landing: 'tape' } }, true);
   add('D14 tape after R10 (stem Tease)', 'R10', 'final', { kit: { vocals: true }, force: { landing: 'tape' } });
   add('D14 tape after D2', 'D2', 'final', { force: { landing: 'tape' } });
   add('gap chop (D11 in S1)', 'R1', 'late', { kit: { vocals: true }, force: { gapLayer: 'chop', landing: 'cymbal' } }, true);
-  add('gap scratch (D19 in S1)', 'D3', 'final', { kit: { vocals: true, call: true }, force: { gapLayer: 'scratch', landing: 'cymbal' } });
+  add('gap scratch (D19 in S1)', 'D3', 'final', { kit: { vocals: true, build: true }, force: { gapLayer: 'scratch', landing: 'cymbal' } });
   add('D9 ghost on a bridge', 'R7', 'late', { kit: { vocals: true }, force: { ghost: true, exit: 'echo' } });
   add('D9 ghost becomes a voice', 'R2', 'late', { kit: { vocals: true, keys: true }, force: { ghost: true, ghostVoice: true } });
   add('D12 from B\'s vocals', 'R7', 'late', { kit: { preverb: true, vocalPreverb: true, vocals: true }, force: { landing: 'preverb', preverbSource: 'vocals' } }, true);

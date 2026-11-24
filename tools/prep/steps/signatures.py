@@ -1,14 +1,16 @@
-"""Signature candidates: short, iconic, isolated pieces of a song that a transition can layer (GLOSSARY:
-Signature). Pure functions over the analysis (beats, downbeats, hooks) and the stems' bar levels, plus a
-vocal envelope for shouts; tools/prep/signatures.py cuts the audio and writes the files.
+"""Signature candidates: short, recognizable INSTRUMENTAL pieces of a song, teased just before it lands
+(GLOSSARY: Signature). Never a vocal line: the user's first listen rejected lyric lines. Pure functions over
+the analysis (beats, downbeats, hooks) and the stems' bar levels; tools/prep/signatures.py cuts the audio
+(the instrumental parts without the vocals, so no lyric ever leaks in) and writes the files.
 
-Three kinds, all placed on the song's own grid so the engine can line their anchor up with a beat:
-- call: the vocal line that opens a hook (from its pickup to the end of its first bar). Hooks are the
-  recognisable part of a song by definition, so the first line of one is the most iconic vocal there is.
-- riff: two bars of an instrumental intro (the "other" stem, or the mix when the drums carry it) while
-  the vocals are silent.
-- shout: a short vocal burst (at most about a beat and a half) between silences, like "Hey!".
-Candidates are only proposals: the user approves them on the audition page, and only approved ones play.
+Three kinds, each starting on one of the song's downbeats and lasting whole bars, so the engine can end
+them on the landing:
+- riff: two bars of the instrumental intro (before the first sung bar), the steadier and louder the better.
+- build: the two bars leading into a chorus (a valid best/main hook), the build that makes it recognizable;
+  played into the landing it is the song's own way into its chorus.
+- motif: the chorus's instrumental line (the "other" stem over the hook's first two bars), when it carries.
+Candidates are proposals: per song the best one above a score plays automatically (tools/prep/signatures.py
+AUTO_MIN_SCORE), and the user can veto any, pick another, or turn the song's Signatures off.
 """
 from __future__ import annotations
 
@@ -20,38 +22,27 @@ import numpy as np
 VOCAL_ON_DB = -26.0
 VOCAL_OFF_DB = -38.0
 OTHER_ON_DB = -28.0
-# A call's vocals must stand out this much against the louder of the other stems in that bar.
-CALL_MIN_LEAD_DB = -8.0
-# Shouts, on a 10 ms vocal envelope, relative to the song's typical singing level (the median of its
-# audible frames): separated vocals always carry some bleed, so fixed dBFS thresholds find almost none.
-FRAME_SEC = 0.01
-AUDIBLE_DB = -60.0
-SHOUT_SILENT_BELOW = 15.0
-SHOUT_ATTACK_BELOW = 8.0
-SHOUT_PEAK_BELOW = 1.0
-SHOUT_MAX_BEATS = 1.5
-SHOUT_SILENT_BEFORE_BEATS = 0.75
-SHOUT_PRE_ROLL_SEC = 0.03
-SHOUT_TAIL_SEC = 0.12
-# Search the intro for a riff within its first bars.
+# Every kind lasts two bars.
+SIGNATURE_BARS = 2
+# A riff is searched in the intro's first bars, before the first sung bar.
 RIFF_SEARCH_BARS = 16
-RIFF_BARS = 2
 # How many of each kind to propose per song.
-MAX_CALLS = 2
-MAX_SHOUTS = 2
-SHOUT_MIN_SPACING_BARS = 8
+MAX_BUILDS = 2
+MAX_MOTIFS = 1
+# Frames for the loudness helpers below.
+FRAME_SEC = 0.01
 
 
 @dataclass(frozen=True)
 class Candidate:
-    kind: str  # 'call' | 'riff' | 'shout'
-    stem: str  # 'vocals' | 'other' | 'mix'
-    start_sec: float  # where the slice starts in the song
+    kind: str  # 'riff' | 'build' | 'motif'
+    stem: str  # 'instrumental' (the mix without the vocals) | 'other'
+    start_sec: float  # where the slice starts in the song (a downbeat)
     end_sec: float
-    anchor_sec: float  # where its first downbeat (or a shout's attack) is, from start_sec
+    anchor_sec: float  # where its first downbeat is, from start_sec (0: every kind starts on one)
     beats: float
     score: float
-    source: str  # what it came from, for the report (a hook id, "intro", "vocal burst")
+    source: str  # what it came from, for the report (a hook id, "intro")
 
 
 def _bar(bars: dict[str, list[float]], stem: str, k: int) -> float:
@@ -59,96 +50,97 @@ def _bar(bars: dict[str, list[float]], stem: str, k: int) -> float:
     return values[k] if 0 <= k < len(values) else -120.0
 
 
-def call_candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
-    """The vocal line opening each valid best/main hook whose first bar is clearly sung."""
-    downbeats: list[float] = analysis["downbeats"]
-    beat = 60.0 / analysis["tempo"]["bpm"]
-    bpb = analysis["tempo"]["beatsPerBar"]
+def _mean(bars: dict[str, list[float]], stem: str, span: range) -> float:
+    return float(np.mean([_bar(bars, stem, j) for j in span]))
+
+
+def _hooks(analysis: dict) -> list[dict]:
+    """The valid best and main hooks, best first, then in song order."""
     order = {"best": 0, "main": 1}
-    hooks = sorted(
+    return sorted(
         (h for h in analysis["hooks"] if h.get("valid") and h.get("tag") in order),
         key=lambda h: (order[h["tag"]], h["downbeatSec"]),
     )
+
+
+def first_sung_bar(bars: dict[str, list[float]]) -> int:
+    """The first bar whose vocals are clearly audible (the end of the intro); the bar count when none is."""
+    vocals = bars.get("vocals") or []
+    return next((k for k, db in enumerate(vocals) if db >= VOCAL_ON_DB), len(vocals))
+
+
+def riff_candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
+    """The best two bars of the instrumental intro: the instruments carry, nothing is sung, and the same
+    level goes on for two more bars (a riff that repeats, not a fade-in or a lone hit)."""
+    downbeats: list[float] = analysis["downbeats"]
+    bpb = analysis["tempo"]["beatsPerBar"]
+    last = min(RIFF_SEARCH_BARS, first_sung_bar(bars), len(downbeats) - 1) - SIGNATURE_BARS
+    best: Candidate | None = None
+    for k in range(0, last + 1):
+        span = range(k, k + SIGNATURE_BARS)
+        if not all(_bar(bars, "other", j) >= OTHER_ON_DB and _bar(bars, "vocals", j) <= VOCAL_OFF_DB for j in span):
+            continue
+        other = _mean(bars, "other", span)
+        drums = _mean(bars, "drums", span)
+        after = range(k + SIGNATURE_BARS, k + 2 * SIGNATURE_BARS)
+        steady = 1.0 - _norm(abs(_mean(bars, "other", after) - other), 1.5, 6.0)
+        score = round(0.4 * _norm(other, -30, -14) + 0.25 * steady + 0.2 * _norm(other - drums, -6, 6) + 0.15 * (1 - k / RIFF_SEARCH_BARS), 3)
+        if best is None or score > best.score:
+            best = Candidate("riff", "instrumental", downbeats[k], downbeats[k + SIGNATURE_BARS], 0.0, SIGNATURE_BARS * bpb, score, "intro")
+    return [best] if best else []
+
+
+def build_candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
+    """The two bars into each chorus (a valid best/main hook) while the instruments play: the stronger the
+    chorus hits after them, and the less is sung over them, the more they sound like its build."""
+    downbeats: list[float] = analysis["downbeats"]
+    bpb = analysis["tempo"]["beatsPerBar"]
     out: list[Candidate] = []
-    used_bars: set[int] = set()
-    for h in hooks:
+    used: set[int] = set()
+    for h in _hooks(analysis):
         k = h["downbeatIndex"]
-        if k in used_bars or k + 1 >= len(downbeats):
+        if k < SIGNATURE_BARS or k in used or k >= len(downbeats):
             continue
-        vocal = _bar(bars, "vocals", k)
-        lead = vocal - max(_bar(bars, "other", k), _bar(bars, "drums", k))
-        if vocal < VOCAL_ON_DB or lead < CALL_MIN_LEAD_DB:
+        span = range(k - SIGNATURE_BARS, k)
+        if not all(max(_bar(bars, "other", j), _bar(bars, "drums", j)) >= OTHER_ON_DB for j in span):
             continue
-        pickup = min(h.get("pickupSec") or 0.0, h["downbeatSec"])
-        start = h["downbeatSec"] - pickup
-        end = downbeats[k + 1]
-        used_bars.add(k)
-        # Louder and more isolated is more recognisable; a hook tagged "best" gets a small bonus.
-        score = round(0.6 * _norm(vocal, -30, -12) + 0.4 * _norm(lead, -8, 8) + (0.1 if h["tag"] == "best" else 0), 3)
-        out.append(Candidate("call", "vocals", start, end, pickup, bpb + pickup / beat, score, h["id"]))
-        if len(out) >= MAX_CALLS:
+        band = lambda j: max(_bar(bars, "other", j), _bar(bars, "drums", j), _bar(bars, "bass", j))  # noqa: E731
+        rise = band(k) - float(np.mean([band(j) for j in span]))
+        sung = _mean(bars, "vocals", span)
+        # Most pre-choruses are sung (their vocals are cut out of the file): an instrumental build is the real one.
+        quiet = 1.0 - _norm(sung, VOCAL_OFF_DB, -20.0)
+        score = round(0.35 * _norm(_mean(bars, "other", span), -30, -16) + 0.25 * _norm(rise, -2, 4) + 0.4 * quiet, 3)
+        used.add(k)
+        out.append(Candidate("build", "instrumental", downbeats[k - SIGNATURE_BARS], downbeats[k], 0.0, SIGNATURE_BARS * bpb, score, h["id"]))
+        if len(out) >= MAX_BUILDS:
             break
     return out
 
 
-def riff_candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
-    """Two bars of the intro where the instruments play and the vocals are silent."""
+def motif_candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
+    """The chorus's instrumental line: the "other" stem (no drums, bass or vocals) over a hook's first two
+    bars, when it is loud and holds its own against the singer."""
     downbeats: list[float] = analysis["downbeats"]
     bpb = analysis["tempo"]["beatsPerBar"]
-    for k in range(min(RIFF_SEARCH_BARS, len(downbeats) - RIFF_BARS)):
-        span = range(k, k + RIFF_BARS)
-        if all(_bar(bars, "other", j) >= OTHER_ON_DB and _bar(bars, "vocals", j) <= VOCAL_OFF_DB for j in span):
-            other = float(np.mean([_bar(bars, "other", j) for j in span]))
-            drums = float(np.mean([_bar(bars, "drums", j) for j in span]))
-            stem = "other" if other >= drums - 3 else "mix"
-            score = round(0.7 * _norm(other, -30, -12) + 0.3 * _norm(other - drums, -6, 6), 3)
-            return [Candidate("riff", stem, downbeats[k], downbeats[k + RIFF_BARS], 0.0, RIFF_BARS * bpb, score, "intro")]
-    return []
-
-
-def shout_candidates(vocal_db: np.ndarray, frame_sec: float, analysis: dict, offset_sec: float = 0.0) -> list[Candidate]:
-    """Short vocal bursts between silences, from a vocal envelope in dBFS (one value per frame).
-
-    `offset_sec` is the song time of the envelope's first frame (stems are stored in windows).
-    """
-    audible = vocal_db[vocal_db > AUDIBLE_DB]
-    if audible.size == 0:
-        return []
-    typical = float(np.median(audible))
-    silent_db = typical - SHOUT_SILENT_BELOW
-    attack_db = typical - SHOUT_ATTACK_BELOW
-    peak_db = typical - SHOUT_PEAK_BELOW
-    beat = 60.0 / analysis["tempo"]["bpm"]
-    bar = beat * analysis["tempo"]["beatsPerBar"]
-    silent_frames = max(1, int(round(SHOUT_SILENT_BEFORE_BEATS * beat / frame_sec)))
-    max_frames = int(round(SHOUT_MAX_BEATS * beat / frame_sec))
-    found: list[Candidate] = []
-    i = silent_frames
-    n = len(vocal_db)
-    while i < n - 1:
-        if vocal_db[i] < attack_db or vocal_db[i - silent_frames:i].max() > silent_db:
-            i += 1
+    out: list[Candidate] = []
+    for h in _hooks(analysis):
+        k = h["downbeatIndex"]
+        if k + SIGNATURE_BARS >= len(downbeats):
             continue
-        # The burst: from the attack until the vocals fall silent again.
-        end = i
-        while end < n and vocal_db[end] > silent_db and end - i <= max_frames:
-            end += 1
-        if end - i <= max_frames and end < n and vocal_db[i:end].max() >= peak_db:
-            attack = offset_sec + i * frame_sec
-            length = (end - i) * frame_sec
-            peak = float(vocal_db[i:end].max())
-            score = round(0.6 * _norm(peak - typical, -1, 6) + 0.4 * _norm(peak - float(vocal_db[i - silent_frames:i].max()), 10, 40), 3)
-            start = attack - SHOUT_PRE_ROLL_SEC
-            found.append(Candidate("shout", "vocals", start, attack + length + SHOUT_TAIL_SEC, SHOUT_PRE_ROLL_SEC, length / beat, score, "vocal burst"))
-        i = max(end, i + 1)
-    # The strongest ones, far enough apart to be different moments.
-    chosen: list[Candidate] = []
-    for c in sorted(found, key=lambda c: -c.score):
-        if all(abs(c.start_sec - o.start_sec) >= SHOUT_MIN_SPACING_BARS * bar for o in chosen):
-            chosen.append(c)
-        if len(chosen) >= MAX_SHOUTS:
+        span = range(k, k + SIGNATURE_BARS)
+        if not all(_bar(bars, "other", j) >= OTHER_ON_DB for j in span):
+            continue
+        other = _mean(bars, "other", span)
+        score = round(0.6 * _norm(other, -28, -12) + 0.4 * _norm(other - _mean(bars, "vocals", span), -8, 4), 3)
+        out.append(Candidate("motif", "other", downbeats[k], downbeats[k + SIGNATURE_BARS], 0.0, SIGNATURE_BARS * bpb, score, h["id"]))
+        if len(out) >= MAX_MOTIFS:
             break
-    return sorted(chosen, key=lambda c: c.start_sec)
+    return out
+
+
+def candidates(analysis: dict, bars: dict[str, list[float]]) -> list[Candidate]:
+    """Every kind's candidates for one song."""
+    return riff_candidates(analysis, bars) + build_candidates(analysis, bars) + motif_candidates(analysis, bars)
 
 
 def envelope_db(mono: np.ndarray, sr: int, frame_sec: float = FRAME_SEC) -> np.ndarray:
