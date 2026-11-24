@@ -585,3 +585,41 @@ test('Aguanta near the song\'s end: its last full phrase repeats on its downbeat
   h.advance(30);
   assert.equal(h.log.filter((e) => e.type === 'cue').length, count);
 });
+
+test('the drum only ever shows songs still to play (and the last landing under the pointer): Next, Back, Hold, Aguanta and Suspense', () => {
+  const cmds: (() => Command)[] = [
+    () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('back'), () => makeCommand('hold'),
+    () => makeCommand('hold', { on: true, duck: false }), () => makeCommand('hold', { on: false }), () => makeCommand('holdMusic'),
+    () => makeCommand('suspense'), () => makeCommand('suspense', { on: false }),
+  ];
+  for (let seed = 1; seed <= 8; seed++) {
+    const rnd = seededRandom(2000 + seed);
+    const h = setup({ seed, settings: { autoAdvance: false } });
+    h.send('unlock');
+    // The runtime's drum, as its effects build it (main.ts: drumReset, a Spin's removeId, Back's and a cancel's insertId).
+    const drum = new Set<number>();
+    let seen = 0;
+    const replay = () => {
+      for (const e of h.log.slice(seen)) {
+        if (e.type === 'drumReset') {
+          drum.clear();
+          for (const id of e.ids) drum.add(id);
+        } else if ((e.type === 'startTransition' || e.type === 'startSuspense') && e.drum.removeId != null) drum.delete(e.drum.removeId);
+        else if (e.type === 'cancelTransition' && e.drum.insertId != null) drum.add(e.drum.insertId);
+        else if (e.type === 'drumBack' && e.insertId != null) drum.add(e.insertId);
+      }
+      seen = h.log.length;
+    };
+    for (let step = 0; step < 200; step++) {
+      h.dispatch(cmds[Math.floor(rnd() * cmds.length)]());
+      h.advance(rnd() * 8);
+      replay();
+      const s = h.show;
+      const pending = s.queue.slice(s.position + 1);
+      const where = `seed ${seed} step ${step} (${s.status}, position ${s.position})`;
+      for (const id of pending) assert.ok(drum.has(id), `${where}: pending song ${id} missing from the drum`);
+      const allowed = new Set([...pending, ...(s.position >= 0 ? [s.queue[s.position]] : [])]);
+      for (const id of drum) assert.ok(allowed.has(id), `${where}: song ${id} on the drum has already played`);
+    }
+  }
+});
