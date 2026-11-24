@@ -1,0 +1,112 @@
+/*
+ * Design tokens for every screen: the one place where look values live. Components read only these
+ * variables, so a theme (the final game look) overrides the tokens and adds decoration without touching
+ * markup or logic. The values below are the basic theme, taken from the "Quina Musical look" mockups'
+ * palette so the move to the full look is small.
+ */
+:root {
+  /* Palette (names from the mockups) */
+  --color-night: #18204a;
+  --color-night-deep: #0f1433;
+  --color-panel: #232e66;
+  --color-snow: #fff6e5;
+  --color-ink: #17132b;
+  --color-orange: #ff8200;
+  --color-orange-edge: #c45a00;
+  --color-red: #e8363d;
+  --color-red-edge: #a31d27;
+  --color-green: #23a55a;
+  --color-green-edge: #157140;
+  --color-gold: #ffc531;
+  --color-gold-edge: #c98a00;
+  --color-ice: #5cc8ff;
+  --color-ice-edge: #2d8fc4;
+  --color-muted: #afc0ff;
+
+  /* Roles: components use these, never the palette directly */
+  --color-bg: var(--color-night);
+  --color-bg-deep: var(--color-night-deep);
+  --color-surface: var(--color-panel);
+  --color-paper: var(--color-snow);
+  --color-text: var(--color-snow);
+  --color-text-muted: var(--color-muted);
+  --color-text-on-paper: var(--color-ink);
+  --color-line: var(--color-ink);
+  --color-primary: var(--color-orange); /* Next, main actions */
+  --color-danger: var(--color-red); /* Back, invalid, errors */
+  --color-ok: var(--color-green); /* landed, valid, Claim */
+  --color-accent: var(--color-gold); /* titles, prizes, banners */
+  --color-calm: var(--color-ice); /* Hold, waiting */
+  --color-focus: var(--color-gold);
+  --color-marked: var(--color-gold); /* the corn kernel */
+
+  /* Card colours a player can pick (order matters: new cards take the next one) */
+  --card-color-1: #ff8200;
+  --card-color-2: #23a55a;
+  --card-color-3: #5cc8ff;
+  --card-color-4: #e8363d;
+  --card-color-5: #ffc531;
+  --card-color-6: #b57bff;
+
+  /* Type */
+  --font-display: 'Londrina Solid', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-weight-body: 700;
+  --font-weight-strong: 900;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.875rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: 3.5rem;
+  /* Projector sizes, in units of the stage's 1440 px reference width (see stage/) */
+  --stage-text-sm: 1.875rem;
+  --stage-text-md: 3rem;
+  --stage-text-lg: 5rem;
+  --stage-text-xl: 7.5rem;
+  --stage-text-hero: 17rem;
+
+  /* Space, radius, lines */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+  --line-width: 3px;
+  --tap-min: 48px; /* minimum touch target */
+  --tap-big: 72px; /* the console's big buttons, the player's main actions */
+
+  /* Motion: every animation's length is a token, so a theme can retune it */
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 480ms;
+  --dur-landing: 700ms;
+  --dur-check-step: 400ms;
+  --dur-celebrate: 1200ms;
+  --dur-hold-confirm: 900ms; /* long press to confirm a risky action */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Layers */
+  --z-overlay: 50;
+  --z-banner: 40;
+  --z-toast: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-landing: 0ms;
+    --dur-check-step: 0ms;
+    --dur-celebrate: 0ms;
+  }
+}

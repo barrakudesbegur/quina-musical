@@ -1,0 +1,140 @@
+/*
+ * Basic theme: a minimal, readable base on top of tokens.css. Deliberately plain; the game look comes later
+ * as a theme that overrides tokens and adds decoration on the same class hooks.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-body);
+  font-size: var(--text-md);
+  line-height: 1.35;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--font-weight-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-text-on-paper);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+}
+
+/* Role colours for buttons and badges: components add one of these */
+.tone-primary {
+  background: var(--color-primary);
+}
+.tone-danger {
+  background: var(--color-danger);
+}
+.tone-ok {
+  background: var(--color-ok);
+}
+.tone-accent {
+  background: var(--color-accent);
+  color: var(--color-text-on-paper);
+}
+.tone-calm {
+  background: var(--color-calm);
+  color: var(--color-text-on-paper);
+}
+
+.surface {
+  background: var(--color-surface);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.paper {
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

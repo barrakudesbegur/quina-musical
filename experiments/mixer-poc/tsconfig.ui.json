@@ -1,0 +1,7 @@
+{
+  // The UI session's code: the shared foundation (ui/) and the four apps. It extends the browser config, so the
+  // rules are the same (strict, erasable TypeScript only). Run: npx tsc -p tsconfig.ui.json and
+  // npx svelte-check --tsconfig ./tsconfig.ui.json --threshold error
+  "extends": "./tsconfig.json",
+  "include": ["ui", "console", "stage", "player", "manage", "protocol", "engine/src/net"]
+}
