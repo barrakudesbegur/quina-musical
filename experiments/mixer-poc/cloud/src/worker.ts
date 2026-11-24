@@ -2,12 +2,18 @@
 // edition's GameRoom. Static files never get here (wrangler.jsonc `run_worker_first`).
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
-import { findRoute, mediaId } from './domain/routes.ts';
+import { findRoute, mediaId, syncTarget } from './domain/routes.ts';
+import { checkManifest, fileKey, isSha256, isSyncPath, manifestKey, MAX_SYNC_FILE_BYTES } from './domain/media-sync.ts';
 import { GameRoom, IDENTITY_HEADER } from './game-room.ts';
 
 export { GameRoom };
 
-type WorkerEnv = Env & AccessEnv;
+/** The R2 bucket for the pool's media: optional, absent until the user creates it (wrangler.jsonc). */
+interface MediaEnv {
+  MEDIA?: R2Bucket;
+}
+
+type WorkerEnv = Env & AccessEnv & MediaEnv;
 
 export default {
   async fetch(request, env, ctx): Promise<Response> {
@@ -26,6 +32,7 @@ export default {
 
     if (route.name === 'health') return json({ ok: true, edition: env.EDITION });
     if (route.name === 'media') return media(request, env, ctx, mediaId(url.pathname) as string);
+    if (route.name === 'sync') return sync(request, env, url);
     const room = roomOf(env);
     switch (route.name) {
       case 'plan': {
@@ -112,6 +119,51 @@ async function media(request: Request, env: Env, ctx: ExecutionContext, id: stri
   });
   ctx.waitUntil(cache.put(request, response.clone()));
   return response;
+}
+
+/**
+ * The pool's media in R2, for the laptops (Access service token). The manifest says what the pool's files are;
+ * a file is stored under its sync path, and R2 itself checks the SHA-256 the laptop sends with it.
+ */
+async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response> {
+  const bucket = env.MEDIA;
+  if (!bucket) return text(503, 'media sync is not configured: create the R2 bucket (docs/deploy-plan.md, step 4)');
+  const target = syncTarget(url.pathname) as { pool: string; resource: 'manifest' | 'file' };
+  if (target.resource === 'manifest') {
+    if (request.method === 'GET') {
+      const object = await bucket.get(manifestKey(target.pool));
+      return object ? new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }) : json({ v: 1, pool: target.pool, files: {}, updatedAtMs: 0 });
+    }
+    const body = await readBody(request, 4 << 20);
+    let manifest = null;
+    try {
+      manifest = body ? checkManifest(JSON.parse(new TextDecoder().decode(body)), target.pool) : null;
+    } catch {
+      // answered below
+    }
+    if (!manifest) return text(400, 'not a manifest for this pool');
+    await bucket.put(manifestKey(target.pool), JSON.stringify(manifest), { httpMetadata: { contentType: 'application/json' } });
+    return json({ ok: true, files: Object.keys(manifest.files).length });
+  }
+  const path = url.searchParams.get('path');
+  if (!isSyncPath(path)) return text(400, 'path must be <root>/<file>, a known root and plain names');
+  const key = fileKey(target.pool, path);
+  if (request.method === 'GET') {
+    const object = await bucket.get(key);
+    if (!object) return text(404, 'not found');
+    return new Response(object.body, { headers: { 'content-length': String(object.size), 'x-sha256': object.customMetadata?.sha256 ?? '', 'cache-control': 'no-store' } });
+  }
+  const sha256 = request.headers.get('x-sha256');
+  const size = Number(request.headers.get('content-length'));
+  if (!isSha256(sha256)) return text(400, 'x-sha256 must be the hex SHA-256 of the file');
+  if (!Number.isInteger(size) || size < 0 || size > MAX_SYNC_FILE_BYTES) return text(413, `a content-length up to ${MAX_SYNC_FILE_BYTES} bytes`);
+  if (!request.body) return text(400, 'no body');
+  try {
+    await bucket.put(key, request.body, { sha256, customMetadata: { sha256 } });
+  } catch (error) {
+    return text(400, `refused: ${error instanceof Error ? error.message : String(error)} (the content doesn't match x-sha256?)`);
+  }
+  return json({ ok: true });
 }
 
 /** The request body, or null when it is bigger than `limit` bytes. */

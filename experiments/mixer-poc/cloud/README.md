@@ -23,6 +23,7 @@ cp .dev.vars.example .dev.vars      # the dev Access bypass (localhost only)
 npm run dev                          # wrangler dev on http://localhost:8787 (static files: static/ only)
 npm run assets                       # dist/: static/ + the UI build + cards.json + covers as WebP (needs cwebp)
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
+npm run media -- push                # the pool's prepared media → the cloud's private R2 (pull on a takeover laptop)
 npm test                             # typecheck, Node tests, workerd tests (about 10 s)
 npm run loadtest -- --report reports/loadtest-$(date +%F).md   # 400 phones (about 1 min)
 ```
@@ -44,6 +45,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /api/phones` | admins (Access) | Phones following the feed now, and which card numbers (anonymous): "cards opened on phones" |
 | `PUT /api/notice` `{ notice }` | admins (Access) | The banner on every phone (at most 200 characters; null clears it) |
 | `PUT /api/sounds` `{ soundsDefault }` | admins (Access) | The player app's default for interface sounds; a player's own choice wins |
+| `GET`, `PUT /api/sync/<pool>/manifest`, `/api/sync/<pool>/file?path=` | the laptop's service token | The pool's media in the private R2 bucket (C3): the manifest (sizes and SHA-256 by sync path), and each file, which R2 stores only if its SHA-256 matches. 503 until the bucket exists |
 | `GET /api/export` | admins (Access) | Every Game of the edition: journal entries, each Game replayed with the protocol's reducer, and the public state |
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
@@ -57,6 +59,10 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 - **The laptop link** ([`laptop/`](laptop)) is a Node process next to the relay, not the show page. It can send the Access service token headers, keep the journal on disk, and later download R2 media, and a cloud problem can't touch playback. It uploads one batch at a time (up to 200 entries), resends unanswered ones, reconnects with full jitter (1 s doubling to 30 s), and sends a keepalive every 20 s when idle. A newer laptop replaces it (close 4001) and it doesn't fight back.
 - **Consoles through the cloud** ([`src/domain/consoles.ts`](src/domain/consoles.ts)). The cloud checks a console's command with `checkCommand` and hands it to the link, which gives it to the relay; the show checks it again. While at least one console listens through the cloud, the link forwards every event except the journal and engine health (`state` at most 4 a second); otherwise only what phones need, to save requests. The relay's client list lives in the laptop socket's attachment, so it survives hibernation. A console that has just connected sends `getState`.
 - **Taking over and resuming.** The welcome names the cloud's current Game. A link whose copy is behind (a new laptop, or entries another laptop wrote) fetches the rest (`link.fetch` → `cloud.journal` chunks) into its disk copy, never over another Game. Admin's `POST /api/resume` pushes a whole Game the same way, plus `resume.json`. The relay serves the link's folder read-only at `/cloud/` (patch 0003), so the show page's boot check and the LAN screens can read the journal copy, `resume.json` and `plan.json`. Offline, the engine's `resumeAt` rebuilds a round from its Shuffle seed (journalled as `round.resumed`, which the projection shows as the round whole).
+- **Media sync** (`npm run media -- push|pull`, [`laptop/media-sync.ts`](laptop/media-sync.ts)).
+  - What: the pool's prepared playback files (decoded songs, stems, Signatures, analysis, overrides, covers, Hold music, effects, cards), never the Blend renders or the Spotify features. Last year's pool is 1,085 files, 6 GB.
+  - How: the laptop pushes them to the private R2 bucket through the Worker, with its service token; a takeover laptop pulls them. Only changed files move, by SHA-256, with hashes cached by size and mtime (7.5 s for 6 GB). A pull writes `<file>.part`, checks its size and hash, then renames it, and never deletes anything.
+  - When: once, the day before the show. Each file is one request.
 - **The Game plan** is all public (rounds, prizes, sponsors, schedule), so it lives in the public state. Saving it sends one change to every phone and a `cloud.plan` to the laptop, which also gets it on every hello. Logos are files under `/media/`, never data URLs in the plan, so a phone's snapshot stays small.
 - **A silent laptop** (nothing for 50 s) is marked offline by an alarm. Phones show "Connexió perduda" after 20 s of `link.online === false`.
 - **Clocks.** Every link message carries the laptop's clock; the GameRoom keeps the smallest (receive − send) as the offset. The feed's times are on the cloud's clock, and every message carries `nowMs` for the phones.
@@ -74,7 +80,7 @@ Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLI
 | `src/domain/` | Pure logic: journal check and ingest, the public projection, consoles (forwarding, client list), routes, clock |
 | `src/link-protocol.ts` | Laptop ↔ cloud messages |
 | `src/api.ts` | The HTTP API's response types |
-| `laptop/` | The laptop link: `main.ts` (CLI), `link.ts`, `uploader.ts` (pure), `journal-copy.ts` (disk) |
+| `laptop/` | The laptop link: `main.ts` (CLI), `link.ts`, `uploader.ts` (pure), `journal-copy.ts` (disk); the media sync: `media.ts` (CLI), `media-sync.ts`, `pool-roots.ts` |
 | `loadtest/` | `run.ts`, the night `model.ts`, `dev-server.ts`, `fake-relay.ts` |
 | `scripts/assets.ts` | Builds `dist/`, the static files (gitignored: the built UI and album covers never enter the repo) |
 | `static/` | The committed static files: `sw.js`, `_headers`, a placeholder page |

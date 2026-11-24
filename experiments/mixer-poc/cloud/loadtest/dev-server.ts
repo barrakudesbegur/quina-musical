@@ -26,15 +26,27 @@ export async function freePort(): Promise<number> {
   });
 }
 
-/** Start `wrangler dev`; resolves once /api/health answers. `port` lets a test start it on a port chosen earlier. */
-export async function startDevServer({ port, persistTo }: { port?: number; persistTo?: string } = {}): Promise<DevServer> {
+/**
+ * Start `wrangler dev`; resolves once /api/health answers. `port` lets a test start it on a port chosen earlier.
+ * `media` turns on a local R2 bucket for the media sync (wrangler.jsonc keeps it off until the real bucket exists).
+ */
+export async function startDevServer({ port, persistTo, media = false }: { port?: number; persistTo?: string; media?: boolean } = {}): Promise<DevServer> {
   const chosen = port ?? (await freePort());
   const inspector = await freePort(); // its own debugger port, so several dev servers can run at once (parallel tests)
   const state = persistTo ?? fs.mkdtempSync(path.join(os.tmpdir(), 'quina-cloud-'));
   const wrangler = path.join(ROOT, 'node_modules', '.bin', 'wrangler');
+  const config: string[] = [];
+  if (media) {
+    // A copy of wrangler.jsonc beside it (its paths stay right), with the R2 binding switched on.
+    const file = path.join(ROOT, 'wrangler.media-test.jsonc');
+    const text = fs.readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8').replace('// "r2_buckets"', '"r2_buckets"');
+    if (!text.includes('\n  "r2_buckets"')) throw new Error('wrangler.jsonc has no commented r2_buckets line to switch on');
+    fs.writeFileSync(file, text);
+    config.push('--config', file);
+  }
   const child: ChildProcess = spawn(
     wrangler,
-    ['dev', '--port', String(chosen), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'ACCESS_DEV:true', '--log-level', 'warn', '--show-interactive-dev-session=false'],
+    ['dev', ...config, '--port', String(chosen), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'ACCESS_DEV:true', '--log-level', 'warn', '--show-interactive-dev-session=false'],
     { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' } },
   );
   let output = '';

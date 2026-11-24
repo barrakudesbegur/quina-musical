@@ -103,11 +103,14 @@ npx wrangler secret put CF_ACCESS_SERVICE_TOKENS   # the service token's Client 
 
 Undo: delete the two Access applications and the service token, and `npx wrangler secret delete <NAME>`.
 
-### 4. R2 for media (milestone C3, not needed yet)
+### 4. R2 for the pool's media (milestone C3, for a takeover laptop)
 
 - One private bucket: `npx wrangler r2 bucket create quina-media --location weur`.
-- No public `r2.dev` access and no custom domain on the bucket. The laptop link downloads through the Worker, with the service token.
-- If the dashboard asks to enable R2 or to add a payment method first, that's the user's call. Copyrighted audio goes to the private bucket only, never to git.
+- Switch the binding on in wrangler.jsonc: uncomment `"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "quina-media" }]`, then `npm run deploy`. Without it, `/api/sync` answers 503 and nothing else changes. With it and no bucket, a deploy fails.
+- No public `r2.dev` access and no custom domain on the bucket. Files only go in and out through the Worker, with the laptop's service token.
+- If the dashboard asks to enable R2, or to add a payment method first, that's the user's call. Copyrighted audio goes to the private bucket only, never to git.
+- Then, the day before the show, on the show laptop: `npm run media -- push`. On a takeover laptop: `npm run media -- pull` (it needs the same pool manifest in `analysis/pools/`).
+- Size: last year's pool is 6 GB in 1,085 files (1,086 requests to push; R2's free tier is 10 GB). Two pools don't fit, so delete last year's test pool from the bucket (`pools/default/`) before pushing this year's.
 - Undo: `npx wrangler r2 bucket delete quina-media` (empty it first).
 
 ### 5. If a free limit is hit on the night

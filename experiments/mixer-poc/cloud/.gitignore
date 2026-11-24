@@ -11,6 +11,8 @@ laptop-data/
 worker-configuration.d.ts
 # Patches sent to other sessions for review; they live in the protocol once merged.
 proposals/
+# A test copy of wrangler.jsonc with the R2 binding on (loadtest/dev-server.ts).
+wrangler.media-test.jsonc
 # Built by `npm run assets`: the UI build and the album covers never go into the public repo.
 dist/
 .assets-cache/

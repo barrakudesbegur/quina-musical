@@ -12,7 +12,8 @@
     "typecheck": "wrangler types > /dev/null && tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "node scripts/assets.ts --quick && npm run typecheck && node --test \"test/node/**/*.test.ts\" && vitest run",
     "link": "node laptop/main.ts",
-    "loadtest": "node scripts/assets.ts --quick && node loadtest/run.ts"
+    "loadtest": "node scripts/assets.ts --quick && node loadtest/run.ts",
+    "media": "node laptop/media.ts"
   },
   "dependencies": {
     "@quina/protocol": "file:../protocol",

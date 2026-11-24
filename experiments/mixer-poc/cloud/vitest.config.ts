@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       wrangler: { configPath: './wrangler.jsonc' },
-      miniflare: { bindings: { ACCESS_DEV: 'true' } },
+      // A local R2 bucket for the media sync (deployed, it's off until the user creates the bucket).
+      miniflare: { bindings: { ACCESS_DEV: 'true' }, r2Buckets: ['MEDIA'] },
     }),
   ],
   test: {

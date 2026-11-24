@@ -447,6 +447,42 @@ describe("a new laptop, and Admin's manual resume", () => {
   });
 });
 
+describe('the media sync (R2)', () => {
+  const sha = async (bytes: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const put = (path: string, bytes: Uint8Array, sha256: string, url = BASE) =>
+    SELF.fetch(`${url}/api/sync/default/file?path=${encodeURIComponent(path)}`, { method: 'PUT', headers: { 'x-sha256': sha256, 'content-length': String(bytes.length) }, body: bytes });
+
+  it('stores a file only when its SHA-256 matches, and gives it back', async () => {
+    const bytes = new TextEncoder().encode('fLaC pretend audio');
+    const digest = await sha(bytes);
+    expect((await put('cache/12/mix.flac', bytes, digest)).status).toBe(200);
+    const back = await SELF.fetch(`${BASE}/api/sync/default/file?path=cache/12/mix.flac`);
+    expect(back.status).toBe(200);
+    expect(back.headers.get('x-sha256')).toBe(digest);
+    expect(new Uint8Array(await back.arrayBuffer())).toEqual(bytes);
+    expect((await put('cache/12/mix.flac', bytes, '0'.repeat(64))).status).toBe(400);
+    expect((await SELF.fetch(`${BASE}/api/sync/default/file?path=cache/13/mix.flac`)).status).toBe(404);
+  });
+
+  it('refuses odd paths, odd pools and anyone but the laptop', async () => {
+    const bytes = new Uint8Array([1]);
+    const digest = await sha(bytes);
+    for (const path of ['cache/../secrets', 'nowhere/x', 'cache/.hidden', 'cache', '../x']) expect((await put(path, bytes, digest)).status).toBe(400);
+    expect((await SELF.fetch(`${BASE}/api/sync/Bad%20Pool/manifest`)).status).toBe(404);
+    expect((await SELF.fetch('https://quina.example/api/sync/default/manifest')).status).toBe(403);
+  });
+
+  it('keeps one manifest per pool, checked', async () => {
+    expect(await getJson('/api/sync/2026/manifest')).toEqual({ v: 1, pool: '2026', files: {}, updatedAtMs: 0 });
+    const manifest = { v: 1, pool: '2026', files: { 'covers/1.jpg': { size: 3, sha256: 'a'.repeat(64) } }, updatedAtMs: 5 };
+    const save = (body: unknown) => SELF.fetch(`${BASE}/api/sync/2026/manifest`, { method: 'PUT', body: JSON.stringify(body) });
+    expect((await save(manifest)).status).toBe(200);
+    expect(await getJson('/api/sync/2026/manifest')).toEqual(manifest);
+    expect((await save({ ...manifest, pool: 'default' })).status).toBe(400);
+    expect((await save({ ...manifest, files: { '../x': { size: 1, sha256: 'a'.repeat(64) } } })).status).toBe(400);
+  });
+});
+
 describe("Admin and the phones", () => {
   it('Admin sees which cards are open on phones (anonymous), and sends a banner and the sound default', async () => {
     await evictDurableObject(roomOf(env), { webSockets: 'close' });

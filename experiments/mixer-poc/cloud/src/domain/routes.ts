@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -52,9 +52,20 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
 export const MEDIA_ROUTE: Route = Object.freeze({ name: 'media', websocket: false, access: null, methods: GET });
 const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg)$/;
 
+/** The pool's media in R2 (C3): `/api/sync/<pool>/manifest` and `/api/sync/<pool>/file?path=…`. The laptops only. */
+export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT'] });
+const SYNC_PATH = /^\/api\/sync\/([a-z0-9_-]{1,40})\/(manifest|file)$/;
+
 export function findRoute(pathname: string): Route | null {
   if (Object.hasOwn(ROUTES, pathname)) return ROUTES[pathname] ?? null;
+  if (SYNC_PATH.test(pathname)) return SYNC_ROUTE;
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
+}
+
+/** The pool and the resource of a sync path, or null. */
+export function syncTarget(pathname: string): { pool: string; resource: 'manifest' | 'file' } | null {
+  const match = SYNC_PATH.exec(pathname);
+  return match ? { pool: match[1] as string, resource: match[2] as 'manifest' | 'file' } : null;
 }
 
 /** The media id in a /media/ path, or null. */
