@@ -1,0 +1,22 @@
+{
+  "name": "@quina/e2e",
+  "private": true,
+  "description": "One whole show, headless: the relay, the show page, the console, the stage and the player, driven through the protocol (Playwright).",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@quina/protocol": "*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "@types/node": "26.6.6",
+    "@types/ws": "8.18.2"
+  },
+  "engines": {
+    "node": ">=23.6"
+  }
+}

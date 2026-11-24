@@ -16,6 +16,7 @@ This year's app (2026) and last year's (2025) live side by side:
 | `apps/cards/` | The printed bingo cards (`cards.json`, the PDF) |
 | `packages/protocol/`, `packages/rules/`, `packages/ui/` | `@quina/protocol`, `@quina/rules` and `@quina/ui`, shared by the apps |
 | `tools/prep/` | The Python pipeline that prepares a song pool (analysis, stems, Hold music…), and the playlist fetcher |
+| `tools/e2e/` | One whole show, headless (Playwright): the relay, the show page, the console, the stage and a player, driven through the protocol (`npm run test:e2e`; needs the prepared pool, so it is not in CI) |
 | `tools/logos/` | The sponsors' logo cleanup: transparent background, trimmed, PNG + JPEG XL, with a contact sheet (`clean.py`) |
 | `data/` | Pool manifests (`data/pools/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
 | `docs/`, `brand/` | Decisions, research and the runbook; the brand assets |
