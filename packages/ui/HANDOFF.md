@@ -73,9 +73,10 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 - Player: validity uses `PublicRound.cardType`, and a round that plays a non-default type shows a one-line rule.
 - apps/cards: checks the type ids and every card's type before writing.
 
-The only reader of the deprecated `plan.cardTypes` left is `knownCardTypes`' fallback (plus `DEFAULT_CARD_TYPES` in Admin's `blankPlan` and `SAMPLE_PLAN`), which Sound engine's step C deletes.
-
-**Raised with Sound engine:** `parseCardRanges` still lives in the engine. Admin's `cards-preview.ts` and the console's `possible-winners.ts` import it from there; it should move to `@quina/protocol`.
+**Step C is in too** (`b717bc6`, `360523f`, on Sound engine's `bd29f4d`):
+- plan version 3, with no card types copy in the plan;
+- `knownCardTypes(printed)` takes card-types.json only, else every type is named "Cartró <id>";
+- `parseCardRanges` now comes from `@quina/protocol`, so the screens no longer import from the engine.
 
 ### 2. The Desgraciat round (approved; the rules are in the decisions doc › Changes and in the GLOSSARY)
 
@@ -110,7 +111,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. The Desgraciat screens, after Sound engine's step C (the compile keys are in: `b47a633`). Due Fri 4 Dec. Known gaps the keys commit left:
+1. The Desgraciat screens. Sound engine's step C is live (`2e359dd`): the commands take kind 'desgraciat' and claim kind 'standing'. My compile keys are `b47a633`. Due Fri 4 Dec. Known gaps the keys commit left:
    - the console's default action after a 'standing' Celebration doesn't go to the Interval;
    - the player's `celebrationOf` ignores 'standing';
    - Admin's kind select has no 'desgraciat' option;
@@ -127,9 +128,8 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    - **Add-card by number asks before leaving** when a number was typed (not built).
    - **Round icons:** the Especial's star exists. The Desgraciat's sad face comes with its screens.
    - "Quina Especial" (capital E) and the console's "Comprovar cartró" go in with the Desgraciat compile commit.
-5. Ack Sound engine when they move the `remote.status` type from `packages/ui/client/remote-status.ts` into `@quina/protocol`, then repoint the imports. Already acked in advance.
-6. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
-7. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+5. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+6. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
@@ -171,7 +171,7 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
   - covers: `/covers/<id>.jxl` + `.jpg`;
   - logos: `/media/<key>.png|.jpg` + `.jxl`;
   - Admin encodes JXL lazily with @jsquash/jxl. Never WebP.
-- **Wii status:** `remote.status` goes between paired consoles only (the relay, `35573a0`), never to the show page, the cloud link or phones.
+- **Wii status:** `remote.status` goes between paired consoles only (the relay, `35573a0`), never to the show page, the cloud link or phones. The message type lives in `@quina/protocol` (events.ts); `packages/ui/client/remote-status.ts` re-exports it and keeps `RemoteHosts` (`71e618e`).
 
 ## How to run, test and demo
 
