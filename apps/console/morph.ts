@@ -42,6 +42,8 @@ export function capture(songId: number): Captured | null {
       const box = boxOf(now);
       ghost = now.cloneNode(true) as HTMLElement;
       ghost.removeAttribute('id');
+      // The ghost is decoration: no test hooks on it (the real panel keeps them).
+      for (const el of [ghost, ...ghost.querySelectorAll('[data-testid]')]) el.removeAttribute('data-testid');
       ghost.setAttribute('aria-hidden', 'true');
       Object.assign(ghost.style, {
         position: 'fixed',

@@ -36,6 +36,8 @@
   data-motion={app.reducedMotion ? 'reduced' : 'full'}
   data-hidden={app.hidden ? 'true' : 'false'}
 >
+  <!-- Test hook: the latest landing, whatever the tab. -->
+  <span hidden data-testid="now" data-song-id={app.latest?.songId ?? ''}></span>
   <Heat value={app.heat} />
   <AppHeader {app} />
   <div class="player__alerts">
