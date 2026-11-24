@@ -122,6 +122,8 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
 
     override_path = pool.override_path(song_id)
     override = json.loads(override_path.read_text()) if override_path.exists() else {}
+    # Approved automatic hooks (tools/prep/hooks_auto.py, the audition page) count like hand tags.
+    song = hooks_step.with_auto_hooks(song, override)
 
     beats = np.asarray(raw["beatsRaw"], dtype=float)
     downbeats_raw = np.asarray(raw["downbeatsRaw"], dtype=float)

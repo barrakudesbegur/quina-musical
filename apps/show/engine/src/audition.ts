@@ -49,8 +49,30 @@ interface Override {
   signatures?: Record<string, boolean> | null;
   /** No Signature plays for this song. */
   signaturesOff?: boolean | null;
+  /** Approved automatic hooks (tools/prep/hooks_auto.py): candidate id → its tag and where it lands (analyze.py adds them). */
+  autoHooks?: Record<string, AutoHookDecision> | null;
+  /** Automatic candidates turned down (kept so the page shows them as rejected). */
+  autoHooksRejected?: string[] | null;
+  /** Hand tags whose suggested one-bar shift was turned down. */
+  hookShiftDeclined?: string[] | null;
   [field: string]: unknown;
 }
+
+interface AutoHookDecision {
+  tag: string;
+  downbeatSec: number;
+}
+
+/** data/hooks/<id>.json (tools/prep/hooks_auto.py). */
+interface AutoHooksMeta {
+  candidates: { id: string; bar: number; downbeatSec: number; score: number; evidence: { chorus: number; jump: number; vocal: number }; suggestedTag: string }[];
+  refine: { hookId: string; bar: number; suggestShiftBars: number }[];
+}
+
+const isAutoHooksMeta = (x: unknown): x is AutoHooksMeta =>
+  isRecord(x) && isArray(x.candidates) && isArray(x.refine) &&
+  x.candidates.every((c) => isRecord(c) && typeof c.id === 'string' && Number.isInteger(c.bar) && typeof c.downbeatSec === 'number' && typeof c.score === 'number' && isRecord(c.evidence)) &&
+  x.refine.every((r) => isRecord(r) && typeof r.hookId === 'string' && Number.isInteger(r.bar) && Number.isInteger(r.suggestShiftBars));
 
 /** POST /api/override/<id> (relay/server.ts): the re-derived analysis, or why it failed. */
 interface SaveReply {
@@ -86,7 +108,10 @@ const isOverride = (x: unknown): x is Override =>
   optional(x.hookDownbeats, isNumberMap) &&
   optional(x.hookPickupBeats, isNumberMap) &&
   optional(x.signatures, (v) => isRecord(v) && Object.values(v).every((d) => typeof d === 'boolean')) &&
-  optional(x.signaturesOff, (v) => typeof v === 'boolean');
+  optional(x.signaturesOff, (v) => typeof v === 'boolean') &&
+  optional(x.autoHooks, (v) => isRecord(v) && Object.values(v).every((d) => isRecord(d) && typeof d.tag === 'string' && typeof d.downbeatSec === 'number')) &&
+  optional(x.autoHooksRejected, (v) => isArray(v) && v.every((id) => typeof id === 'string')) &&
+  optional(x.hookShiftDeclined, (v) => isArray(v) && v.every((id) => typeof id === 'string'));
 
 function checkOverride(x: unknown): Override {
   if (!isOverride(x)) throw new Error('override: unexpected fields');
@@ -132,6 +157,7 @@ let nextBeat = 0;
 let extraClicks: { time: number; accent: boolean }[] = [];
 let downbeatSet = new Set<number>();
 let signatures: SignatureMeta[] = [];
+let autoHooks: AutoHooksMeta | null = null;
 let signatureVoice: AudioBufferSourceNode | null = null;
 const signatureBuffers = new Map<string, Promise<AudioBuffer>>();
 
@@ -184,6 +210,8 @@ async function loadSong(id: number) {
   override = checkOverride(await fetchJson(`/api/override/${id}`).catch(() => ({})));
   savedOverrideText = JSON.stringify(override);
   signatures = checkSignaturesMeta(await fetchJson(`/data/signatures/${id}.json`).catch(() => null))?.signatures ?? [];
+  const hooksFile: unknown = await fetchJson(`/data/hooks/${id}.json`).catch(() => null);
+  autoHooks = isAutoHooksMeta(hooksFile) ? hooksFile : null;
   signatureBuffers.clear();
   peaks = computePeaks(entry.buffer);
   const best = entry.analysis.hooks.findIndex((h) => h.tag === 'best');
@@ -212,6 +240,7 @@ function refreshAnalysisViews() {
     }),
   );
   renderHooks();
+  renderAutoHooks();
   renderSignatures();
   renderOverride();
 }
@@ -468,6 +497,7 @@ function renderHooks() {
         h.pickupBeats ? `${h.pickupBeats} beat (${h.pickupSec.toFixed(2)} s)` : '—',
         h.gainToTargetDb ?? '—',
         (h.issues || []).join(', '),
+        suggestionCell(h.id, i),
         `<button class="small" data-act="pre" data-i="${i}">−4 bars</button>
          <button class="small" data-act="land" data-i="${i}">Land</button>
          <button class="small" data-act="prev-bar" data-i="${i}" title="Land one bar earlier">◀ bar</button>
@@ -480,6 +510,92 @@ function renderHooks() {
       return tr;
     }),
   );
+}
+
+/**
+ * The refine step's suggestion for a hand-tagged hook (tools/prep/hooks_auto.py): land a bar earlier or later, on
+ * the phrase grid. Yes moves it (the tag itself is kept); No remembers the answer.
+ */
+function suggestionCell(hookId: string, i: number): string {
+  const r = autoHooks?.refine.find((x) => x.hookId === hookId);
+  if (!r?.suggestShiftBars) return '—';
+  if (override.hookDownbeats?.[hookId] != null) return 'moved by hand';
+  if (override.hookShiftDeclined?.includes(hookId)) return 'kept';
+  const where = r.suggestShiftBars < 0 ? 'a bar earlier' : 'a bar later';
+  return `${where}? <button class="small" data-act="shift-yes" data-i="${i}">Yes</button> <button class="small" data-act="shift-no" data-i="${i}">No</button>`;
+}
+
+// ---------- Automatic hooks ----------
+/** A candidate's decision as the page stands: approved (its tag), rejected, or undecided. */
+function autoStatus(id: string): string | null {
+  const approved = override.autoHooks?.[id];
+  if (approved) return approved.tag;
+  return override.autoHooksRejected?.includes(id) ? 'rejected' : null;
+}
+
+function renderAutoHooks() {
+  const list = autoHooks?.candidates ?? [];
+  $('auto-hooks-empty').hidden = list.length > 0;
+  $('auto-hooks').replaceChildren(
+    ...list.map((c) => {
+      const tr = document.createElement('tr');
+      const status = autoStatus(c.id);
+      const approved = override.autoHooks?.[c.id];
+      tr.classList.toggle('is-selected', approved != null);
+      tr.classList.toggle('is-invalid', status === 'rejected');
+      const at = approved?.downbeatSec ?? c.downbeatSec;
+      const bar = analysis().downbeats.findIndex((x) => Math.abs(x - at) < 1e-3);
+      const cells = [
+        c.id,
+        String(bar >= 0 ? bar : c.bar),
+        at.toFixed(3),
+        c.score.toFixed(2),
+        `${c.evidence.chorus.toFixed(2)} · ${c.evidence.jump.toFixed(2)} · ${c.evidence.vocal.toFixed(0)}`,
+        status ?? `— (suggested ${c.suggestedTag})`,
+        `<button class="small" data-auto="play" data-id="${c.id}" title="Play from 4 bars before it">−4 bars</button>
+         <button class="small" data-auto="best" data-id="${c.id}">Best</button>
+         <button class="small" data-auto="main" data-id="${c.id}">Main</button>
+         <button class="small" data-auto="reject" data-id="${c.id}">Reject</button>
+         <button class="small" data-auto="undo" data-id="${c.id}">Undo</button>
+         <button class="small" data-auto="earlier" data-id="${c.id}" ${approved ? '' : 'disabled'} title="Land one bar earlier">◀ bar</button>
+         <button class="small" data-auto="later" data-id="${c.id}" ${approved ? '' : 'disabled'} title="Land one bar later">bar ▶</button>`,
+      ];
+      tr.innerHTML = cells.map((x) => `<td>${x}</td>`).join('');
+      return tr;
+    }),
+  );
+}
+
+function autoHookAction(act: string | undefined, id: string | undefined) {
+  const c = autoHooks?.candidates.find((x) => x.id === id);
+  if (!c) return;
+  const a = analysis();
+  const approved = { ...(override.autoHooks ?? {}) };
+  const rejected = new Set(override.autoHooksRejected ?? []);
+  if (act === 'play') {
+    const at = approved[c.id]?.downbeatSec ?? c.downbeatSec;
+    const d = a.downbeats.findIndex((x) => x >= at - 1e-3);
+    play(Math.max(0, a.downbeats[Math.max(0, d - 4)] ?? at - 8));
+    return;
+  }
+  if (act === 'best' || act === 'main') {
+    approved[c.id] = { tag: act, downbeatSec: approved[c.id]?.downbeatSec ?? c.downbeatSec };
+    rejected.delete(c.id);
+  } else if (act === 'reject') {
+    delete approved[c.id];
+    rejected.add(c.id);
+  } else if (act === 'undo') {
+    delete approved[c.id];
+    rejected.delete(c.id);
+  } else if ((act === 'earlier' || act === 'later') && approved[c.id]) {
+    const at = approved[c.id].downbeatSec;
+    const d = a.downbeats.findIndex((x) => Math.abs(x - at) < 1e-3) + (act === 'earlier' ? -1 : 1);
+    if (d >= 0 && d < a.downbeats.length) approved[c.id] = { ...approved[c.id], downbeatSec: a.downbeats[d] };
+  }
+  override.autoHooks = Object.keys(approved).length ? approved : null;
+  override.autoHooksRejected = rejected.size ? [...rejected] : null;
+  renderAutoHooks();
+  renderOverride();
 }
 
 // ---------- Signatures ----------
@@ -606,6 +722,15 @@ function hookAction(act: string | undefined, i: number) {
     const value = Math.max(0, (h.pickupBeats || 0) + (act === 'pickup+' ? 0.5 : -0.5));
     setMap('hookPickupBeats', h.id, value);
     if (!override.hookDownbeats?.[h.id]) setMap('hookDownbeats', h.id, h.downbeatSec);
+  } else if (act === 'shift-yes') {
+    const shift = autoHooks?.refine.find((x) => x.hookId === h.id)?.suggestShiftBars ?? 0;
+    const d = h.downbeatIndex + shift;
+    if (shift && d >= 0 && d < a.downbeats.length) {
+      setMap('hookDownbeats', h.id, a.downbeats[d]);
+      setMap('hookPickupBeats', h.id, 0);
+    }
+  } else if (act === 'shift-no') {
+    override.hookShiftDeclined = [...new Set([...(override.hookShiftDeclined ?? []), h.id])];
   } else if (act === 'toggle') {
     const list = new Set(override.disableHooks || []);
     if (list.has(h.id)) list.delete(h.id);
@@ -693,6 +818,11 @@ $('signatures-off').addEventListener('change', (e) => {
   override.signaturesOff = targetOf(e, HTMLInputElement).checked || null;
   renderSignatures();
   renderOverride();
+});
+
+$('auto-hooks').addEventListener('click', (e) => {
+  const target = e.target instanceof Element ? e.target.closest('[data-auto]') : null;
+  if (target instanceof HTMLElement) autoHookAction(target.dataset.auto, target.dataset.id);
 });
 
 $('signatures').addEventListener('click', (e) => {

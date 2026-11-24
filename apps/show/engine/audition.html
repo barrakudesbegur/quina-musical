@@ -44,11 +44,24 @@
         <table class="hooks">
           <thead>
             <tr>
-              <th></th><th>Hook</th><th>Tag s</th><th>Lands s</th><th>Tag in bar</th><th>Pickup</th><th>Gain dB</th><th>Issues</th><th>Fix</th>
+              <th></th><th>Hook</th><th>Tag s</th><th>Lands s</th><th>Tag in bar</th><th>Pickup</th><th>Gain dB</th><th>Issues</th><th>Suggested</th><th>Fix</th>
             </tr>
           </thead>
           <tbody id="hooks"></tbody>
         </table>
+      </section>
+
+      <section>
+        <h3>Automatic hooks <span class="muted small">(where a chorus seems to land: the structure, an energy jump, the singer coming back; proposals only: approve, nudge or reject each, then Save)</span></h3>
+        <table class="hooks">
+          <thead>
+            <tr>
+              <th>Candidate</th><th>Bar</th><th>Lands s</th><th>Score</th><th>Chorus · jump · voice</th><th>Decision</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="auto-hooks"></tbody>
+        </table>
+        <p id="auto-hooks-empty" class="muted small" hidden>No automatic candidates for this song yet (tools/prep/hooks_auto.py).</p>
       </section>
 
       <section>

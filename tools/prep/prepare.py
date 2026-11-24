@@ -12,9 +12,10 @@ Steps (default: all, always run in this order):
     keys        keys.py        musical keys → <dataDir>/keys/
     stems       stems.py       Demucs stems (in tools/prep/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
     signatures  signatures.py  Signature candidates from the stems → <dataDir>/signatures/
+    hooks       hooks_auto.py  automatic hook candidates and hand-tag refinements → <dataDir>/hooks/ (approved on the audition page)
     interval    interval.py    the Interval playlist, global (no pool owns it) → cache/interval/, data/interval/
 
---song limits covers, decode, analyze, snippets, stems and signatures to those songs; validate and keys always
+--song limits covers, decode, analyze, snippets, stems, signatures and hooks to those songs; validate and keys always
 cover the whole pool (their cached work is skipped); interval is the same for every pool. Each step is its own process, given the
 pool's manifest path. The first failing step stops the run (--keep-going runs the rest anyway);
 the exit status is 0 when every step succeeded, 3 when the stems disk guard stopped the run, else 1.
@@ -61,6 +62,7 @@ STEPS = (
          "uv venv --python /opt/homebrew/bin/python3.13 tools/prep/.venv-stems && "
          "uv pip install --python tools/prep/.venv-stems/bin/python -r tools/prep/requirements-stems.txt"),
     Step("signatures", "signatures.py", VENV_PY, True),
+    Step("hooks", "hooks_auto.py", VENV_PY, True),
     Step("interval", "interval.py", VENV_PY, False, pooled=False),
 )
 STEP_NAMES = tuple(s.name for s in STEPS)
@@ -131,6 +133,14 @@ def _sum_signatures(pool: pools.Pool, ids: list[int]) -> str:
             f"{sum(s.get('approved', 0) for s in songs)} approved")
 
 
+def _sum_hooks(pool: pools.Pool, ids: list[int]) -> str:
+    docs = [d for i in ids if (d := _load(pool.data_dir / "hooks" / f"{i}.json"))]
+    if not docs:
+        return "no hook candidates"
+    return (f"{len(docs)} songs, {sum(len(d.get('candidates', [])) for d in docs)} candidates, "
+            f"{sum(1 for d in docs for r in d.get('refine', []) if r.get('suggestShiftBars'))} hand tags with a suggested shift")
+
+
 def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
     index = _load(pools.OUT / "interval" / "index.json")
     if not index:
@@ -142,7 +152,7 @@ def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
 
 SUMMARIES: dict[str, Callable[[pools.Pool, list[int]], str]] = {
     "covers": _sum_covers, "decode": _sum_decode, "analyze": _sum_analyze, "snippets": _sum_snippets, "validate": _sum_validate,
-    "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures, "interval": _sum_interval,
+    "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures, "hooks": _sum_hooks, "interval": _sum_interval,
 }
 
 

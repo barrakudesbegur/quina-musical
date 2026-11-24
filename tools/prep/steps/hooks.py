@@ -40,6 +40,18 @@ def _bar_local(downbeats: np.ndarray, d: int, fallback: float) -> float:
     return fallback
 
 
+def with_auto_hooks(song: dict, override: dict) -> dict:
+    """The song with its approved automatic hooks (the override's `autoHooks`: candidate id → { tag, downbeatSec },
+    from tools/prep/hooks_auto.py through the audition page) added after its hand tags, in time order, so the hand
+    tags keep their ids."""
+    approved = override.get("autoHooks") or {}
+    stamps = sorted(
+        ({"tag": v.get("tag", "main"), "time": float(v["downbeatSec"]), "auto": cand} for cand, v in approved.items() if "downbeatSec" in v),
+        key=lambda stamp: stamp["time"],
+    )
+    return {**song, "timestamps": [*song.get("timestamps", []), *stamps]} if stamps else song
+
+
 def snap_hooks(song: dict, beats: np.ndarray, downbeats: np.ndarray, db_idx: np.ndarray,
                duration: float, override: dict, bar_median: float, bpb: int) -> list[dict]:
     nudges = override.get("hookNudgesSec", {}) or {}
@@ -101,6 +113,7 @@ def snap_hooks(song: dict, beats: np.ndarray, downbeats: np.ndarray, db_idx: np.
         hooks.append({
             "id": hook_id,
             "tag": tag,
+            **({"auto": stamp["auto"]} if stamp.get("auto") else {}),
             "tagTimeSec": round(tag_time, 4),
             "downbeatSec": round(downbeat, 4),
             "downbeatIndex": d,
