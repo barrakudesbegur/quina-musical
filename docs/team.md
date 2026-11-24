@@ -22,6 +22,7 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Decisions:** read [`GLOSSARY.md`](../GLOSSARY.md), [`docs/adr/`](adr), [`mixer-design-decisions.md`](mixer-design-decisions.md) and [`show-ui-and-platform-decisions.md`](show-ui-and-platform-decisions.md). Use the glossary's terms in code and docs.
 - **Quality:** proofs of concept are a foundation, not a hackathon. TypeScript strict, pure logic separate from I/O, versioned contracts, tests, one config place for tunables.
 - **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, note it in [`open-questions.md`](open-questions.md), and keep going.
+- **Subagent effort** (user rule, 2026-11-24): default **high**, **medium** for repetitive or mechanical work, **xhigh** only for a very important task. Don't stop agents already running.
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
 - **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout. Never push without the user's approval.
 - **Never commit:** copyrighted audio, `data/cache/`, `apps/show/reference/`, `spotify_features.json`, secrets, or personal data (the repo is public).
