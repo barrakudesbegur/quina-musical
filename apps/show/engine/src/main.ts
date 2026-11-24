@@ -270,8 +270,6 @@ async function boot() {
     fixedQueue,
     settings,
     restore,
-    // The Decoys experiment (docs/decoys.md): off unless config.ts says so or the page has ?decoys=1.
-    decoys: params.get('decoys') === '1' ? { enabled: true } : {},
   });
   show = created;
   run(created.flush());
@@ -480,7 +478,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   renderHud();
 }
 
-// A Decoy (experiment): an already-landed song, low-passed, cut off by a tape stop. It plays through the fx
+// A Decoy (a Suspense tease of a song the drum hovers over): low-passed, cut off by a tape stop. It plays through the fx
 // bus, so a cancelled Spin (graph.resetTransient) silences it too.
 function playDecoy({ songId, at, offset, cutAt, cutSec, gainDb, lpfHz }: DecoyEvent): void {
   const buffer = loader.get(songId)?.buffer;

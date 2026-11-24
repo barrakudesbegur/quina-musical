@@ -2,7 +2,7 @@
 
 What real DJs and producers do at a transition, turned into recipes the planner can draw. Written 2026-11-24 from DJ and production guides (sources at the end, all opened). It follows [GLOSSARY.md](../../../GLOSSARY.md) and [mixer-design-decisions.md](../../../docs/mixer-design-decisions.md). Fundamentals (phrasing, gaps, roll timings, harmonic mixing) are in `research_notes/Bingo DJ mixer research/dj_technique.md` and are not repeated here.
 
-This catalog adds 19 techniques (D1–D19) to the ones built so far: R1 slam cut, R2 echo-out, R4 loop roll, R5 brake/spinback, R6 reverb wash, R7 build & land, R8 Blend, R10 power-down, Suspense and FADE. Decoys are being built separately (`DecoyEvent`), so none of the entries below uses another song.
+This catalog adds 19 techniques (D1–D19) to the ones built so far: R1 slam cut, R2 echo-out, R4 loop roll, R5 brake/spinback, R6 reverb wash, R7 build & land, R8 Blend, R10 power-down, Suspense and FADE. The only other song that may sound is a Suspense's Decoy tease (`DecoyEvent`), so none of the entries below uses another song.
 
 ## How to read an entry
 

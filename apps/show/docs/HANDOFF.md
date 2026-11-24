@@ -2,7 +2,7 @@
 
 The single place to resume the sound engine's work from. It was first written when the user paused the work (2026-11-24) and is kept current at each milestone.
 
-**What this covers:** the show engine and its transitions, Signatures, Suspense and Decoys, the song preparation pipeline (tools/prep), `@quina/protocol` and the Game journal. The journal is shared with the platform session.
+**What this covers:** the show engine and its transitions, Signatures, Suspense and its Decoy teases, the song preparation pipeline (tools/prep), `@quina/protocol` and the Game journal. The journal is shared with the platform session.
 
 **Where else to look:**
 - The decisions are in `GLOSSARY.md`, `docs/how-the-quina-works.md` (the current-state read of a whole night), `docs/mixer-design-decisions.md`, `docs/show-ui-and-platform-decisions.md` (its "Changes" section) and `docs/adr/`. They override older research.
@@ -33,6 +33,7 @@ All of this is on `main`, green when committed.
 | **The variety review.** D20 Count-in (a new family), the open landing, R1's sweep lengths, and early quarter-beat gaps. Before → after is in the next section | `6871c26` |
 | **Card type per round**, step A: each round plays the printed type it is given (`RoundPlan.cardType`, a card-types.json id; `roundIntro`/`newRound`/`resumeAt { cardType? }`). It drives the valid cards, the Shuffle's Tie check, the Phase and the Check's `wrongType`; journaled in `round.started`/`round.resumed`/`scene.changed`; resume tokens add `-T<ID>` when it isn't the kind's default. Frontend's and Backend's step B followed (card-types.json on every screen, the cloud's projection and preflight) | `b71d843`, B: `5579442`, `f3e8ade` |
 | **The Desgraciat round** (played in reverse: the last card standing wins). A: `RoundKind 'desgraciat'`, `WinKind 'standing'`, `CheckOutcome 'fallen'`, the console's private `standing` and Futur's `lastStandingAt`/`standingCurve`; the pure parts (`fallIndex`, `standingCourse`, the Shuffle's `lastStanding` rule, the standing Check, the count-based `standingPlan`). C: the engine plays it (commands, standing claims, auto-advance stops at one card, a 0.55 s knock per song not heard yet, the Celebration and Interval like a Bingo). Covered by `desgraciat.test.ts`, `desgraciat-flow.test.ts` (with a fuzz), and a Desgraciat round 7 in every simulated night | A `caa5662`, C `2e359dd`; cloud B `cb35dd1` |
+| **The old Decoys experiment retired** (the orchestrator's decision): `DECOYS.enabled`/`chance`, `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1` and the planner's `allowTease` are gone. A Decoy is now only what Suspense teases (`DecoyEvent`, the slimmed `DECOYS` timing) | "The old Decoys experiment is retired" |
 
 Earlier work, before the move, is summarised in the README and `docs/dj-techniques.md` › Built: the planner, every recipe up to D19, the show state machine, the journal, resumeAt, the Interval and the relay security.
 
@@ -73,7 +74,6 @@ Since `2e359dd` every simulated night plays a Desgraciat round (round 7), so the
    - Make it a pool (`data/pools/<name>.json`) and run `npm run prep -- --pool <name>` by **Wed 2 Dec**. Flag unusable songs the same day, so the user can swap them before the cards print (Thu 3 Dec).
    - The `hooks` and `signatures` steps propose candidates. The user approves hooks and vets Signatures on the audition page by **Thu 10 Dec**; stems and the variety and phrase measures rerun on that pool by then.
    - **Done when:** every playable song has an approved best hook and reviewed Signatures, and `npm test` is green on the new pool.
-4. **Retire the old Decoys experiment** (`DECOYS.enabled`, off by default; `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1`). The orchestrator decided it (2026-11-25): Suspense's teases are the user's version of Decoys, and the term stays in the glossary for them.
 
 ## Waiting on the user
 
@@ -117,7 +117,6 @@ From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
   - `stage=0`: no projector stage over the page;
   - `debug=1`: the plan line, D toggles;
   - `queue=3,17,45`: a fixed Queue;
-  - `decoys=1`: the old Decoys experiment.
 
   Keys:
   - → / Enter: Next (it also releases a Suspense);

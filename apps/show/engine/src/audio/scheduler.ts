@@ -14,7 +14,7 @@ const EPS = 0.0001;
 export interface PlanOutputs {
   graph: AudioGraph;
   decks: Partial<Record<DeckName, Deck | null>>;
-  /** Plays a Decoy (main.ts), when the experiment is on. */
+  /** Plays a Decoy, a Suspense tease (main.ts). */
   decoy?: (event: DecoyEvent) => void;
 }
 

@@ -274,34 +274,15 @@ export const SUSPENSE = Object.freeze({
 });
 
 /**
- * Decoys (experiment, OFF by default; docs/decoys.md): a transition may tease a song that is not next, then
- * cut it off with a tape stop and land the real one. Only songs that already landed this round are used, so
- * a Decoy can never count. With `enabled: false` nothing else changes.
+ * A Decoy (GLOSSARY): during a Suspense, a tease of one of the pending songs the drum hovers over, cut off by a tape
+ * stop (plan/suspense.ts suspenseTease; its level and low-pass are SUSPENSE.teaseGainDb and teaseLpfHz). The old
+ * transition-level Decoys experiment was retired on 2026-11-25: Suspense's teases are the user's version of it.
  */
-export interface DecoyConfig {
-  readonly enabled: boolean;
-  /** Chance per transition, by Phase (only S2 transitions with A playing and a long enough bridge). */
-  readonly chance: Readonly<Record<PhaseName, number>>;
-  /** At least this many bridge bars: the Decoy plays in the first ones, the real build keeps the last. */
-  readonly minBridgeBars: number;
-  /** The Decoy plays at least `minSec` and at most `maxSec` before its tape stop. */
-  readonly minSec: number;
-  readonly maxSec: number;
-  /** Its level (after its loudness trim) and a low-pass, so it sounds like the wrong record. */
-  readonly gainDb: number;
-  readonly lpfHz: number;
-  /** The tape stop that cuts it off, and the sound on the cut. */
-  readonly cutSec: number;
-  readonly cutSfx: string;
-}
-export const DECOYS: DecoyConfig = Object.freeze({
-  enabled: false,
-  chance: Object.freeze({ early: 0, mid: 0.12, late: 0.18, final: 0 }),
-  minBridgeBars: 2,
+export const DECOYS = Object.freeze({
+  /** A tease plays at least `minSec` and at most `maxSec` before its tape stop. */
   minSec: 0.7,
   maxSec: 2.4,
-  gainDb: -4,
-  lpfHz: 3200,
+  /** The tape stop that cuts it off, and the sound on the cut. */
   cutSec: 0.45,
   cutSfx: 'thunk',
 });

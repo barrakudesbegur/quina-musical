@@ -248,8 +248,8 @@ export interface ScratchEvent {
 }
 
 /**
- * A Decoy (plan/decoys.ts, an experiment that is off by default): another, already-landed song plays from
- * `offset` at `at`, low-passed, until a tape stop at `cutAt` over `cutSec` cuts it off.
+ * A Decoy (GLOSSARY): during a Suspense, a song the drum hovers over plays from `offset` at `at`, low-passed, until a
+ * tape stop at `cutAt` over `cutSec` cuts it off (plan/suspense.ts suspenseTease). It never counts.
  */
 export interface DecoyEvent {
   kind: 'decoy';

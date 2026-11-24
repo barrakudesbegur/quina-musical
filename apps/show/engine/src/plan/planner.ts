@@ -304,8 +304,6 @@ export interface PlanRequest {
   kind?: string;
   /** Copied to the plan. */
   id?: string | null;
-  /** false: no Tease of B this time (a Decoy takes its place). The random draws stay the same. */
-  allowTease?: boolean;
 }
 
 // Loudness: hook LUFS → target. songs.json `volume` was the old player's manual loudness fix; stacking it
@@ -430,7 +428,7 @@ function dress(events: readonly PlanEvent[], recipe: Recipe, phase: PhaseEffects
   });
 }
 
-export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null, force = null, allowTease = true }: PlanRequest): Plan | PlanError {
+export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null, force = null }: PlanRequest): Plan | PlanError {
   const spinStart = now + LOOKAHEAD_SEC;
   const minStart = spinStart + AFTER_DUCK;
   const win = spin ?? spinWindow({ pace: 14, phase: phase.name });
@@ -469,7 +467,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   const drawnGap = pickup > gB.beat ? 0 : freshNumber(vocal === 'entry' ? VOCALS.entryGapBeats : phase.gapBeats, memory.gaps, VARIETY.gap, rng);
   const gapBeatsFor = (r: Recipe) => (pickup > gB.beat ? 0 : Math.max(drawnGap, r.minGapBeats?.(phase.name) ?? 0));
   // A Tease from B's own stems when they cover this hook; otherwise a low-passed one, less often.
-  const teaseChance = !allowTease ? 0 : teaseStems?.includes('drums') ? phase.stemTease ?? phase.tease ?? 0 : phase.tease ?? 0;
+  const teaseChance = teaseStems?.includes('drums') ? phase.stemTease ?? phase.tease ?? 0 : phase.tease ?? 0;
   const leadFor = (teaseBars: number) => clamp(Math.max(pickup, teaseBars * gB.bar), 0, hook.downbeatSec);
   /** A's stem lanes cover [t0, t1]. */
   const lanesCover = (t0: number, t1: number) => Boolean(caps.aLanes && caps.aLanes.from <= t0 + 1e-9 && caps.aLanes.to >= t1 - 1e-9);

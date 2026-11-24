@@ -10,7 +10,6 @@ import type { Effect, Env } from '../../engine/src/show/show.ts';
 import { seededRandom } from '../../engine/src/rng.ts';
 import type { Analysis } from '../../engine/src/analysis.ts';
 import type { Card } from '../../engine/src/game/cards.ts';
-import type { DecoyConfig } from '../../engine/src/config.ts';
 import { OUT, REPO } from '../../relay/pool.ts';
 import { HAS_DATA } from './data.ts';
 
@@ -43,11 +42,9 @@ export interface SetupOptions {
   epochMs?: number;
   /** Extra runtime hooks (Signatures, Blend renders, a stub planner). */
   env?: Partial<Env>;
-  /** The Decoys experiment's settings. */
-  decoys?: Partial<DecoyConfig>;
 }
 
-export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardsInPlay = '', fixedQueue = null, restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {}, decoys = {} }: SetupOptions = {}) {
+export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardsInPlay = '', fixedQueue = null, restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {} }: SetupOptions = {}) {
   const clock = { t: startSec };
   const env: Env = {
     now: () => clock.t,
@@ -58,7 +55,7 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     random: seededRandom(seed),
     ...extra,
   };
-  const show = new Show({ env, songs, settings, cards, cardsInPlay, fixedQueue, restore, decoys });
+  const show = new Show({ env, songs, settings, cards, cardsInPlay, fixedQueue, restore });
   const log: Effect[] = [...show.flush()];
   // Any message, as a remote might send it.
   const dispatch = (message: unknown) => {

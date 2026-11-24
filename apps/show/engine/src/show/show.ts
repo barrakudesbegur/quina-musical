@@ -54,7 +54,7 @@ import type {
   SoundName,
   StandingInfo,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, LOOP, type DecoyConfig } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, LOOP } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
@@ -63,7 +63,6 @@ import { phasePlan, standingPlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
 import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
-import { withDecoy } from '../plan/decoys.ts';
 import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
@@ -456,8 +455,6 @@ export interface ShowOptions {
    * song only with Next.
    */
   restore?: GameRecord | null;
-  /** The Decoys experiment's settings (config.ts DECOYS; `enabled: false` by default). */
-  decoys?: Partial<DecoyConfig>;
 }
 
 /** An event as the machine builds it, before `makeEvent` stamps the version. */
@@ -528,7 +525,6 @@ export class Show {
   /** The next song's hook, chosen early so its Blend render can be prepared. */
   nextHook: { songId: number; hook: Hook } | null = null;
   blendRequested = '';
-  readonly decoys: DecoyConfig;
   /** The Game this show belongs to, and the last journal entry's number. */
   gameId: string;
   journalSeq = 0;
@@ -568,9 +564,8 @@ export class Show {
   holdMusicMood: HoldMood = 'hold';
   out: Effect[] = [];
 
-  constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null, decoys = {} }: ShowOptions) {
+  constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null }: ShowOptions) {
     this.env = env;
-    this.decoys = { ...DECOYS, ...decoys };
     this.allCards = cards;
     this.gameId = restore?.gameId || gameId || newGameId(env);
     this.catalog = new Map(songs.map((s) => [s.id, s]));
@@ -1156,9 +1151,6 @@ export class Show {
     this.blendRequested = '';
     const planner = this.env.plan ?? planTransition;
     const id = `tr-${++this.transitionCount}`;
-    // Decoys (experiment): rolled before planning, so a Decoy takes the place of B's Tease. Its own random
-    // stream; with Decoys off nothing here runs.
-    const wantDecoy = this.decoys.enabled && this.decoyCandidate() != null && seededRandom(seed ^ 0x2545f491)() < (this.decoys.chance[phase.name] ?? 0);
     const planned = planner({
       now,
       A,
@@ -1172,12 +1164,10 @@ export class Show {
       recipeOverride: RECIPE_IDS.find((r) => r === this.game.nextRecipe) ?? null,
       kind: 'next',
       id,
-      ...(wantDecoy ? { allowTease: false } : {}),
     });
     if ('error' in planned) return this.reject(reqId, 'next', 'planFailed', planned.error);
     this.startPlaying();
-    let plan: ShowPlan = { ...planned, seed, reqId, targetPos };
-    if (wantDecoy) plan = this.addDecoy(plan);
+    const plan: ShowPlan = { ...planned, seed, reqId, targetPos };
     this.game.nextRecipe = null;
     this.transition = {
       id,
@@ -1230,24 +1220,6 @@ export class Show {
       bpm: plan.b.bpm ?? null,
       drum: { removeId, targetId: songId, minLaps: 1 },
     });
-  }
-
-  // Decoys (experiment, off by default): the most recent song that already landed, is not A, and is still
-  // decoded may tease in A's place before the real build (plan/decoys.ts). Its own random stream, so the
-  // rest of the show is the same with or without it.
-  addDecoy(plan: ShowPlan): ShowPlan {
-    const a = plan.a?.songId;
-    for (const l of [...this.landings].reverse()) {
-      if (l.undone || l.songId === a || l.songId === plan.b.songId || !this.env.isDecoded(l.songId)) continue;
-      const analysis = this.env.analysis(l.songId);
-      const landedOn = [...this.history].reverse().find((h) => h.songId === l.songId)?.hookId;
-      const hook = analysis?.hooks.find((h) => h.id === landedOn) ?? analysis?.hooks.find((h) => h.valid);
-      if (!analysis || !hook) continue;
-      // The dice were rolled before planning (beginTransition), so it is placed whenever it fits.
-      const always = { early: 1, mid: 1, late: 1, final: 1 };
-      return withDecoy(plan, { source: { songId: l.songId, analysis, hook }, phase: plan.phase, rng: () => 0, config: { ...this.decoys, chance: always } });
-    }
-    return plan;
   }
 
   // ---------------------------------------------------------------------------------- Suspense
@@ -2378,17 +2350,7 @@ export class Show {
     const ids = [this.queue[this.position], this.queue[this.position + 1], this.queue[this.position + 2]].filter((id) => id != null);
     // An open Suspense teases the songs it hovers over: their audio stays decoded too.
     for (const id of this.suspense?.hover ?? []) if (!ids.includes(id)) ids.push(id);
-    // With Decoys on, the song a Decoy would tease stays decoded too (the runtime drops whatever isn't listed).
-    const decoy = this.decoys.enabled ? this.decoyCandidate() : null;
-    if (decoy != null && !ids.includes(decoy)) ids.push(decoy);
     this.out.push({ type: 'prefetch', ids });
-  }
-
-  /** The song a Decoy would tease: the newest counted landing that isn't the current song. */
-  decoyCandidate(): number | null {
-    const current = this.position >= 0 ? this.queue[this.position] : null;
-    for (const l of [...this.landings].reverse()) if (!l.undone && l.songId !== current) return l.songId;
-    return null;
   }
 
   /** A song as the remotes see it; an id missing from the catalog still gets a placeholder. */
