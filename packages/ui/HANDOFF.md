@@ -81,36 +81,54 @@ The stage's "Cartró normal ✓" first step is already built (`cc58d92`, `check-
 
 ### 2. The Desgraciat round (approved; the rules are in the decisions doc › Changes and in the GLOSSARY)
 
-The order is: ANIMATIONS.md entries, then canvas boards for the user, then code against Sound engine's item 2 protocol.
-- **UI-facing shapes I proposed to Sound engine (2026-11-25), not yet agreed:**
-  - `RoundKind 'desgraciat'`, at most one per plan. Its `line` bundle is empty, and its `bingo` bundle is the last-standing prize.
-  - Private `ShowState.standing { count, cardIds (≤ 60, else null), notInPlay? }`.
-  - `FutureInfo.lastStandingAt`, and optionally a `standingCurve`.
-  - Claim kind `'standing'` by default in that round.
-  - The Check goes over the 12 songs in card order and stops at the first landed one (outcome `'fallen'`).
-  - `WinKind 'standing'`, whose Celebration title is "DEMPEUS!".
-  - Phones need nothing new on the feed.
-- **Screens:**
-  - console: the private standing list;
-  - stage: the round's name, the "no ha sonat ✓" steps, the `fallen` result, "DEMPEUS!";
-  - phones: Dempeus/Assegut per card and the card-fall moment;
+The order is: ANIMATIONS.md entries, then canvas boards for the user, then code against Sound engine's protocol.
+- **Done (2026-11-25):**
+  - the ANIMATIONS.md section "The Desgraciat round" (`4f350ab`, `3690a53`);
+  - the canvas boards, version 50, under the title "Quina Desgraciada · proposta per revisar":
+    - `Mobil-Desgraciat` and `Mobil-Desgraciat-Teva`;
+    - `Mobil-Desgraciat-Cau` (the card falling: 3 frames plus a live loop);
+    - `Projector-Desgraciat-Comprovacio`, `-Caigut` and `-Dempeus`;
+    - `Consola-Dempeus` (the tab at 143, 23 and 1 standing).
+
+    The generator is `temp/design-canvas/look/gen/desgraciat_boards.py`.
+- **The protocol, agreed with Sound engine on 2026-11-25:**
+  - `RoundKind 'desgraciat'`, at most one per plan, with an empty `line` bundle; its `bingo` bundle is the last-standing prize. Resume token head `D`.
+  - `WinKind 'standing'`, and `climbingTo: 'standing'` all round. A valid claim ends the round like a Bingo.
+  - `CheckOutcome 'fallen'`.
+  - Private `ShowState.standing { count, cardIds | null }`; `cardIds` is null above 60. There is no not-in-play flag: inside the in-play ranges, the engine can't tell sold cards from unsold ones.
+  - `FutureInfo.lastStandingAt` and `standingCurve`. In this round `lineAt`, `bingoAt`, `toLine` and `toBingo` are empty, and `possibleWinners` is `{line: [], bingo: []}`.
+  - Claims default to `'standing'` in that round; `'line'` and `'bingo'` are rejected there.
+  - The Check goes over the 12 songs in card order. Each ✓ step is a ~0.6 s tick. It stops at the first landed song, which plays its snippet (~2.5 s) and gives `'fallen'`.
+  - Auto-advance stops once one card stands.
+  - Phones get nothing new on the feed.
+- **Landing order:** Sound engine commits its step A to local main and tells me the commit. I add the new keys on top so everything compiles: the `Record<WinKind | CheckOutcome>` maps in `apps/console/strings.ts`, `shout`/`prize` in `packages/ui/i18n/ca.ts`, the stage's `{line, bingo}` maps in `render/celebration.ts` and `render/parts.ts`, the console's `future.ts`, and the `RoundKind` widenings. Then they push both together. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
+- **Screens to build:**
+  - console: the Dempeus tab;
+  - stage: the round's name, the "no ha sonat ✓" steps, `check-fallen`, "DEMPEUS!";
+  - phones: `stand-up`, `card-fall`, the fall "bloop";
   - Admin: the round kind, one per night, no Line bundle.
-- **Canvas boards that already exist:** `Mobil-Desgraciat` (the phone's Dempeus/Assegut) and `Mobil-Desgraciat-Teva` (your card is the last standing).
 
 ## The next queue, in priority order
 
-1. Card type per round, step B (above), as soon as Sound engine's step A is on `main`.
-2. The Desgraciat: specs and boards now, code once item 2 is agreed.
-3. Ack Sound engine when they move the `remote.status` type from `packages/ui/client/remote-status.ts` into `@quina/protocol`, then repoint the imports.
-4. When the user decides: the player drawers layout, the theme pass, and the four design choices below.
-5. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
-6. This year's printed cards, once the playlist is final (`apps/cards`: title and colour in `src/config.ts`, QR at `/26/<id>`). Don't generate them before that.
+The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
+
+1. Card type per round, step B (above). Due Fri 27 Nov.
+2. The Desgraciat: the compile keys on Sound engine's step A, then the screens after their step C. Due Fri 4 Dec.
+3. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
+   Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
+4. Ack Sound engine when they move the `remote.status` type from `packages/ui/client/remote-status.ts` into `@quina/protocol`, then repoint the imports. Already acked in advance.
+5. When the user decides: the player drawers layout, the theme pass, and the four design choices below.
+6. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
 - **The player drawers layout** (the canvas boards from v40): a home screen, two corner buttons (Premis on the left, Horari on the right) and stacked drawers.
   - **Status:** proposed, not confirmed. The code keeps the current tabs until the user confirms.
   - **Why it matters:** the user wants it to feel like a base that's always running, with native-quality drawer gestures.
+- **The Desgraciat boards** (canvas v50, under "Quina Desgraciada · proposta per revisar"), and the three open points at the end of ANIMATIONS.md:
+  - a public standing count on the projector (default: no);
+  - the sitting nino on a fallen card;
+  - "DEMPEUS!" as the Celebration title.
 - **The theme pass:** the approved look applied to the basic stage, console and Admin screens. The player already has it (`cd9fa6d`).
 - **Four design choices left open by the previous session (2026-11-24):**
   1. The prizes corner icon: board "Component · icona de premis", options A–E (A is in use).
