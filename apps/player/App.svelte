@@ -1,21 +1,21 @@
 <script lang="ts">
-  // The player app's shell: header and status strips on every tab, the tab content,
-  // the tab bar, and the overlays and sheets. All state lives in PlayerApp; this only lays it out.
+  // The player app's shell: the connection strip, header and status strips on every tab, the section (Ara, Premis
+  // or Horari), the tab bar, the Celebration and the sheets. All state lives in PlayerApp; this only lays it out.
+  // The sections are self-contained views, so drawers could replace the tab bar by swapping this container only.
   import type { PlayerApp } from './model.svelte.ts';
   import AppHeader from './components/AppHeader.svelte';
-  import CardsTab from './components/CardsTab.svelte';
+  import AraHome from './components/AraHome.svelte';
   import Celebration from './components/Celebration.svelte';
   import ConfirmSheet from './components/ConfirmSheet.svelte';
+  import ConnectionStrip from './components/ConnectionStrip.svelte';
   import Heat from './components/Heat.svelte';
-  import HelpSheet from './components/HelpSheet.svelte';
-  import HistoryTab from './components/HistoryTab.svelte';
   import LegacyNotice from './components/LegacyNotice.svelte';
-  import NowTab from './components/NowTab.svelte';
+  import MenuView from './components/MenuView.svelte';
   import NumberPad from './components/NumberPad.svelte';
-  import PrizesTab from './components/PrizesTab.svelte';
+  import PrizesView from './components/PrizesView.svelte';
   import RenameSheet from './components/RenameSheet.svelte';
-  import SceneOverlay from './components/SceneOverlay.svelte';
-  import ScheduleTab from './components/ScheduleTab.svelte';
+  import ScheduleView from './components/ScheduleView.svelte';
+  import Sheet from './components/Sheet.svelte';
   import StatusStrip from './components/StatusStrip.svelte';
   import TabBar from './components/TabBar.svelte';
   import Toast from './components/Toast.svelte';
@@ -38,7 +38,7 @@
 >
   <!-- Test hook: the latest landing, whatever the tab. -->
   <span hidden data-testid="now" data-song-id={app.latest?.songId ?? ''}></span>
-  <Heat value={app.heat} />
+  <Heat value={app.heat} off={app.offline} />
   <AppHeader {app} />
   <div class="player__alerts">
     <StatusStrip {app} />
@@ -58,15 +58,11 @@
     {#key app.tab}
       <div class="player__tab" data-anim="tab-switch">
         {#if app.tab === 'ara'}
-          <NowTab {app} />
-        {:else if app.tab === 'cartrons'}
-          <CardsTab {app} />
-        {:else if app.tab === 'historial'}
-          <HistoryTab {app} />
+          <AraHome {app} />
         {:else if app.tab === 'premis'}
-          <PrizesTab {app} />
+          <PrizesView {app} />
         {:else}
-          <ScheduleTab {app} />
+          <ScheduleView {app} />
         {/if}
       </div>
     {/key}
@@ -74,19 +70,29 @@
 
   <TabBar active={app.tab} onselect={(tab) => app.selectTab(tab)} />
 
-  {#if app.overlayOpen && app.overlay}
-    <SceneOverlay kind={app.overlay} ondismiss={() => app.dismissOverlay()} />
-  {/if}
   {#if app.celebrationOpen && app.celebration}
     {#key app.celebration.key}
-      <Celebration celebration={app.celebration} round={celebrationRound} mine={app.views} reduced={app.reducedMotion} onclose={() => app.dismissCelebration()} />
+      <Celebration
+        celebration={app.celebration}
+        round={celebrationRound}
+        views={app.views}
+        catalog={app.catalog}
+        reduced={app.reducedMotion}
+        onclose={() => app.dismissCelebration()}
+      />
     {/key}
   {/if}
 
+  <!-- Offline, the screen greys under the strip: a veil's opacity (never a filter on phones), and it takes no taps. -->
+  <div class="offline-veil" data-anim="offline" aria-hidden="true"></div>
+  <ConnectionStrip banner={app.banner.banner} />
+
   {#if dialog?.kind === 'pad'}
     <NumberPad cards={app.data.cards} onadd={(id, identity) => app.addCard(id, true, identity)} onclose={() => app.closeDialog()} onkey={() => app.blip('tap')} />
-  {:else if dialog?.kind === 'help'}
-    <HelpSheet {app} />
+  {:else if dialog?.kind === 'menu'}
+    <Sheet name="menu" title={S.menu} onclose={() => app.closeDialog()}>
+      <MenuView {app} />
+    </Sheet>
   {:else if dialog?.kind === 'rename'}
     {@const card = named(dialog.cardId)}
     {#if card}

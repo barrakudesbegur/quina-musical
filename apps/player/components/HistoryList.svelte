@@ -1,6 +1,7 @@
 <script lang="ts">
   // Historial: the current round's songs only (the user's decision), with their covers, newest first, in one
-  // list the player just scrolls. A song on one of the player's cards shows that card's icon (never its number).
+  // list the player just scrolls. The song playing now is the first, highlighted. A song on one of the player's
+  // cards shows that card's icon (never its number).
   import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { historyOf, markedIdentities } from '../logic/view.ts';
@@ -8,6 +9,7 @@
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
   import Cover from './Cover.svelte';
+  import Icon from './Icon.svelte';
 
   let { app }: { app: PlayerApp } = $props();
   const history = $derived(historyOf(app.state));
@@ -23,8 +25,12 @@
     <ol class="song-list" reversed>
       {#each history.landings as l, i (l.position)}
         {@const identities = marks.get(l.songId) ?? []}
-        <li class="song-list__item" data-anim={i === 0 ? 'landing' : undefined}>
-          <Cover songId={l.songId} size="sm" />
+        {@const now = l.position === history.nowPosition}
+        <li class="song-list__item" class:is-now={now} data-anim={i === 0 ? 'landing' : undefined}>
+          <span class="song-list__cover">
+            <Cover songId={l.songId} size="sm" />
+            {#if now}<span class="song-list__now" role="img" aria-label={S.nowPlaying}><Icon name="now" /></span>{/if}
+          </span>
           <span class="song-list__text">
             <span class="song-list__title">{songTitle(app.catalog, l.songId)}</span>
             {#if app.catalog?.songs.get(l.songId)?.artist}<span class="song-list__artist">{app.catalog.songs.get(l.songId)?.artist}</span>{/if}

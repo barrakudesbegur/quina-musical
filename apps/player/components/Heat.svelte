@@ -2,13 +2,13 @@
   // The Heat as a garland of lights across the top of every screen. Every light is always on: only their colour,
   // glow and twinkle follow the value (eased on its own clock, so it never moves at a landing). It never fills
   // like a bar. The glows twinkle in 3 groups, so the whole garland is 3 animated elements. With no Heat yet it
-  // is calm decoration, hidden from screen readers.
+  // is calm decoration, hidden from screen readers. `off`: the phone is offline, so the lights go out.
   import { PLAYER_CONFIG } from '../config.ts';
   import { garlandLayout } from '../logic/garland.ts';
   import { heatLevel } from '../logic/view.ts';
   import { S } from '../strings.ts';
 
-  let { value }: { value: number | null } = $props();
+  let { value, off = false }: { value: number | null; off?: boolean } = $props();
   const shape = PLAYER_CONFIG.garland;
   const layout = garlandLayout(shape);
   const GROUPS = [0, 1, 2] as const;
@@ -21,7 +21,7 @@
   data-testid="heat"
   data-heat={value === null ? '' : value.toFixed(3)}
   data-level={level}
-  data-state={value === null ? 'idle' : 'live'}
+  data-state={off ? 'off' : value === null ? 'idle' : 'live'}
   style:--heat={shown.toFixed(3)}
   role={value === null ? undefined : 'img'}
   aria-label={value === null ? undefined : `${S.heatTitle}: ${S.heatLevel[level]}`}

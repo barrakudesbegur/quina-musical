@@ -1,11 +1,12 @@
-// The pure rules behind the screens: the offline and pause notices, the reconnect pill, the reel synced to the
-// Spin, the feedback cues (one at a time), the near-win highlight, and the derived views.
+// The pure rules behind the screens: the connection strip (offline, reconnecting, connected) and the pause, the reel
+// synced to the Spin, the feedback cues (one at a time), the near-win highlight, the add-card leave rule, and the
+// derived views (no winning card numbers anywhere).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
 import { feedbackFor, type FeedbackSnapshot } from '../../../../player/logic/feedback.ts';
 import { reelOffset, reelState } from '../../../../player/logic/reel.ts';
-import { overlayFor, reconnectPill } from '../../../../player/logic/status.ts';
+import { NO_BANNER, connectionProblem, nextBanner, pauseOn, type BannerState, type StatusInput } from '../../../../player/logic/status.ts';
 import { addCard, emptyData } from '../../../../player/logic/storage.ts';
 import {
   cardViews,
@@ -14,6 +15,7 @@ import {
   heatLevel,
   historyOf,
   kernelTilt,
+  leaveNeedsConfirm,
   markKeys,
   markedIdentities,
   padValue,
@@ -38,35 +40,74 @@ const playing = (patch: Partial<PublicState> = {}): PublicState => ({
 });
 const online = { online: true, sinceMs: 0, lastOutageMs: 0 };
 
-// ---- notices ----------------------------------------------------------------------------------------------
+// ---- connection strip and pause ---------------------------------------------------------------------------
+const at = (patch: Partial<StatusInput> = {}): StatusInput => ({ state: playing(), connection: online, localNowMs: T, cloudNowMs: T, ...patch });
+
 test('offline after 20 s without the laptop link, or without the feed, while the show is on', () => {
   const linkDown = playing({ link: { online: false, sinceMs: T } });
-  assert.equal(overlayFor({ state: linkDown, connection: online, localNowMs: T, cloudNowMs: T + 19_000 }), null);
-  assert.equal(overlayFor({ state: linkDown, connection: online, localNowMs: T, cloudNowMs: T + 20_000 }), 'offline');
+  assert.equal(connectionProblem(at({ state: linkDown, cloudNowMs: T + 19_000 })), null, 'the phone is fine: nothing yet');
+  assert.equal(connectionProblem(at({ state: linkDown, cloudNowMs: T + 20_000 })), 'offline');
   const feedDown = { online: false, sinceMs: T, lastOutageMs: 0 };
-  assert.equal(overlayFor({ state: playing(), connection: feedDown, localNowMs: T + 19_999, cloudNowMs: 0 }), null);
-  assert.equal(overlayFor({ state: playing(), connection: feedDown, localNowMs: T + 20_000, cloudNowMs: 0 }), 'offline');
+  assert.equal(connectionProblem(at({ connection: feedDown, localNowMs: T + 19_999 })), 'reconnecting', 'the short-drop strip first');
+  assert.equal(connectionProblem(at({ connection: feedDown, localNowMs: T + 20_000 })), 'offline', 'then offline, one strip only');
 });
 
-test('no offline notice before or after the Game, when a switched-off laptop is normal', () => {
+test('a short drop of the phone\'s feed: nothing for 3 s, then "Reconnectant…", before the Game too', () => {
+  const feedDown = { online: false, sinceMs: T, lastOutageMs: 0 };
+  assert.equal(connectionProblem(at({ connection: feedDown, localNowMs: T + 2999 })), null);
+  assert.equal(connectionProblem(at({ connection: feedDown, localNowMs: T + 3000 })), 'reconnecting');
+  const before = { ...playing(), scene: 'before' as const };
+  assert.equal(connectionProblem(at({ state: before, connection: feedDown, localNowMs: T + 60_000 })), 'reconnecting', 'never offline before the Game');
+});
+
+test('no offline strip before or after the Game, when a switched-off laptop is normal', () => {
   const before = { ...playing({ link: { online: false, sinceMs: 0 } }), scene: 'before' as const };
-  assert.equal(overlayFor({ state: before, connection: online, localNowMs: T, cloudNowMs: T }), null);
-  assert.equal(overlayFor({ state: { ...before, scene: 'after' }, connection: online, localNowMs: T, cloudNowMs: T }), null);
-  assert.equal(overlayFor({ state: null, connection: { online: false, sinceMs: 0, lastOutageMs: 0 }, localNowMs: T, cloudNowMs: T }), null);
+  assert.equal(connectionProblem(at({ state: before })), null);
+  assert.equal(connectionProblem(at({ state: { ...before, scene: 'after' } })), null);
+  assert.equal(connectionProblem(at({ state: null, connection: { online: false, sinceMs: T, lastOutageMs: 0 }, localNowMs: T + 1000 })), null);
 });
 
-test('the technical pause shows "Tornem de seguida"; offline wins over it', () => {
-  assert.equal(overlayFor({ state: playing({ pause: { sinceMs: T } }), connection: online, localNowMs: T, cloudNowMs: T }), 'pause');
+test('the strip: offline, then green "Connectat" for 1 s once back, then gone; a blip shows nothing', () => {
+  const linkDown = playing({ link: { online: false, sinceMs: T } });
+  let b: BannerState = NO_BANNER;
+  b = nextBanner(b, at({ state: linkDown, cloudNowMs: T + 25_000, localNowMs: T + 25_000 }));
+  assert.deepEqual(b, { banner: 'offline', sinceMs: T + 25_000 });
+  const same = nextBanner(b, at({ state: linkDown, cloudNowMs: T + 26_000, localNowMs: T + 26_000 }));
+  assert.equal(same, b, 'unchanged: the same object, so the screen doesn\'t redraw');
+  b = nextBanner(b, at({ state: playing({ link: { online: true, sinceMs: T + 30_000 } }), localNowMs: T + 30_000 }));
+  assert.deepEqual(b, { banner: 'connected', sinceMs: T + 30_000 });
+  assert.equal(nextBanner(b, at({ localNowMs: T + 30_999 })).banner, 'connected');
+  b = nextBanner(b, at({ localNowMs: T + 31_000 }));
+  assert.equal(b.banner, null);
+  // A blip under 3 s never showed a strip, so nothing says "Connectat" either.
+  const blip = nextBanner(NO_BANNER, at({ connection: { online: false, sinceMs: T, lastOutageMs: 0 }, localNowMs: T + 1000 }));
+  assert.equal(blip, NO_BANNER);
+  assert.equal(nextBanner(blip, at({ localNowMs: T + 1500 })), NO_BANNER);
+});
+
+test('one strip at a time: "Reconnectant…" turns into offline, never two banners', () => {
+  const feedDown = { online: false, sinceMs: T, lastOutageMs: 0 };
+  let b = nextBanner(NO_BANNER, at({ connection: feedDown, localNowMs: T + 5000 }));
+  assert.equal(b.banner, 'reconnecting');
+  b = nextBanner(b, at({ connection: feedDown, localNowMs: T + 21_000 }));
+  assert.equal(b.banner, 'offline');
+  b = nextBanner(b, at({ connection: { online: true, sinceMs: T + 22_000, lastOutageMs: 22_000 }, localNowMs: T + 22_000 }));
+  assert.equal(b.banner, 'connected');
+});
+
+test('the technical pause is on with the presenters\' Pausa; the offline strip can show over it', () => {
+  assert.equal(pauseOn(playing({ pause: { sinceMs: T } })), true);
+  assert.equal(pauseOn(playing()), false);
+  assert.equal(pauseOn(null), false);
   const both = playing({ pause: { sinceMs: T }, link: { online: false, sinceMs: 0 } });
-  assert.equal(overlayFor({ state: both, connection: online, localNowMs: T, cloudNowMs: T }), 'offline');
+  assert.equal(connectionProblem(at({ state: both })), 'offline');
 });
 
-test('the reconnect pill: after 3 s down, then "Connectat" for 1 s after an outage of 3 s or more', () => {
-  assert.equal(reconnectPill({ online: false, sinceMs: T, lastOutageMs: 0 }, T + 2999), null);
-  assert.equal(reconnectPill({ online: false, sinceMs: T, lastOutageMs: 0 }, T + 3000), 'reconnecting');
-  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 5000 }, T + 500), 'connected');
-  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 5000 }, T + 1000), null);
-  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 800 }, T + 100), null, 'a blip shows nothing');
+test('adding a card by number asks before leaving only when a number has been typed', () => {
+  assert.equal(leaveNeedsConfirm(''), false);
+  assert.equal(leaveNeedsConfirm('1'), true);
+  assert.equal(leaveNeedsConfirm(padValue('12', 'back')), true);
+  assert.equal(leaveNeedsConfirm(padValue('1', 'back')), false, 'typed and deleted again: nothing to lose');
 });
 
 // ---- reel -------------------------------------------------------------------------------------------------
@@ -179,7 +220,10 @@ test('prizes, progress and the planned times come from the plan and the winners'
   const rounds = prizeRounds(PUBLIC, state);
   assert.equal(rounds.length, SAMPLE_PLAN.rounds.length);
   assert.equal(rounds[2].state, 'current');
-  assert.deepEqual(rounds[2].lines[0].winners, [123, 57]);
+  assert.equal(rounds[2].lines[0].won, true);
+  assert.deepEqual(rounds[2].lines[0].ownCardIds, [], 'nobody else\'s card is named');
+  assert.equal(rounds[2].lines[1].won, false);
+  assert.deepEqual(prizeRounds(PUBLIC, state, [57, 9])[2].lines[0].ownCardIds, [57], 'only the phone\'s own cards');
   assert.deepEqual(rounds[2].lines[0].headline, [{ title: '[Premi de línia 3]', detail: null, sponsor: '[Patrocinador 1]' }]);
   assert.equal(rounds[2].lines[0].others.length, 4, 'the rest of the bundle, after the headline prize');
   assert.equal(rounds[6].kind, 'special');
@@ -199,7 +243,7 @@ test('rounds not revealed yet show locked, with no prize, but keep their winners
   assert.deepEqual(rounds[3].lines.map((l) => [l.headline, l.others]), [[[], []], [[], []]], 'nothing of a locked round, not even how many');
   const secret = prizeRounds({ ...publicPlan(SAMPLE_PLAN, [2]), prizeReveal: 'allSecret' }, playing({ winners: [{ round: 1, kind: 'bingo', cardIds: [9] }] }));
   assert.deepEqual(secret.map((r) => r.lockedUntil).slice(0, 3), ['presenters', null, 'presenters'], 'all secret: until the presenters reveal them');
-  assert.deepEqual(secret[0].lines[1].winners, [9], 'a locked round still lists its winning cards');
+  assert.equal(secret[0].lines[1].won, true, 'a locked round still says it was won');
 });
 
 test('the feed\'s plan is checked as a public plan: locked rounds stay locked, junk reads as no plan', () => {
@@ -229,7 +273,8 @@ test("the feed's plan keeps each round's card type; an older cloud's rounds get 
 
 test('the Celebration shows the latest prize of the round; Historial is the current round, newest first', () => {
   const state = playing({ scene: 'celebration', winners: [{ round: 3, kind: 'line', cardIds: [57] }] });
-  assert.deepEqual(celebrationOf(state), { key: 'celebration:3:line', kind: 'line', round: 3, cardIds: [57] });
+  assert.deepEqual(celebrationOf(state, [123]), { key: 'celebration:3:line', kind: 'line', round: 3, ownCardIds: [] }, "someone else's win");
+  assert.deepEqual(celebrationOf(state, [123, 57]), { key: 'celebration:3:line', kind: 'line', round: 3, ownCardIds: [57] }, 'the phone\'s own card');
   assert.equal(celebrationOf(playing()), null);
   const withHistory = playing({
     rounds: [
@@ -239,7 +284,30 @@ test('the Celebration shows the latest prize of the round; Historial is the curr
   });
   const history = historyOf(withHistory);
   assert.deepEqual([history?.round, history?.landings.map((l) => l.songId)], [3, [6, 5]], 'earlier rounds are not shown');
+  assert.equal(history?.nowPosition, 1, 'the song playing now is in it, first');
   assert.equal(historyOf(playing({ rounds: [] })), null);
+  const ended = playing({ rounds: [{ number: 3, kind: 'normal', startedAtMs: 0, lineConfirmed: true, ended: true, landings: [{ position: 0, songId: 5, atMs: 0 }] }] });
+  assert.equal(historyOf(ended)?.nowPosition, null, 'once the round ends, nothing is playing now');
+});
+
+test('no winning card numbers on phones: the Celebration and the prize lists name only the phone\'s own cards', () => {
+  const winners = [
+    { round: 3, kind: 'line' as const, cardIds: [301, 57] },
+    { round: 3, kind: 'bingo' as const, cardIds: [4242] },
+  ];
+  const state = playing({ scene: 'celebration', winners });
+  const others = celebrationOf(state, [123]);
+  assert.ok(others);
+  assert.deepEqual(Object.keys(others).sort(), ['key', 'kind', 'ownCardIds', 'round'], 'no list of winning cards in the view');
+  assert.deepEqual(others.ownCardIds, []);
+  for (const id of [301, 57, 4242]) assert.ok(!JSON.stringify(others).includes(String(id)), `card ${id} is nowhere in the view`);
+  const mine = celebrationOf(playing({ scene: 'celebration', winners: [winners[0]] }), [57, 123]);
+  assert.deepEqual(mine?.ownCardIds, [57]);
+  assert.ok(!JSON.stringify(mine).includes('301'), 'the other winner stays unnamed');
+  const lines = prizeRounds(PUBLIC, state, [123]).flatMap((r) => r.lines);
+  assert.ok(lines.every((l) => !('winners' in l)), 'no winners list in the prize lines');
+  assert.ok(!JSON.stringify(lines).match(/\b(301|4242)\b/), 'no winning number in Premis');
+  assert.deepEqual(lines.filter((l) => l.won).length, 2);
 });
 
 test('small helpers: Heat levels, kernel tilt, the number pad', () => {

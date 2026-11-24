@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Thin strips under the banner, on every tab: Admin's notice, the Check in progress and its result, and the
-  // reconnect pill.
+  // Thin strips under the header, on every tab: Admin's notice, and the Check in progress and its result. (The
+  // connection strip is ConnectionStrip, at the very top.)
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
 
@@ -24,8 +24,4 @@
       <p class="check-strip__result">{check.result === 'valid' ? S.checkValid : S.checkInvalid}</p>
     {/if}
   </section>
-{/if}
-
-{#if app.pill}
-  <p class="pill" data-anim="reconnect" data-state={app.pill} role="status">{app.pill === 'reconnecting' ? S.reconnecting : S.connected}</p>
 {/if}

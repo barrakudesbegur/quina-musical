@@ -1,9 +1,11 @@
 // The player's own data, kept only on the phone (localStorage), tagged with the edition: the cards they
-// follow (each with its colour and optional name), their sound choice, and the round view of the current Game.
+// follow (each with its colour and optional name), their sound choice, Ara's Historial | Cartrons choice, and the
+// round view of the current Game.
 // - Data of another edition is wiped automatically (on load, and when the feed reports a new edition).
 // - A new gameId (a rehearsal, then the real night) resets only the round view, never the cards.
 // The transforms are pure; PlayerStorage is the thin I/O wrapper around a Storage.
 import { PLAYER_CONFIG } from '../config.ts';
+import { isAraView, type AraView } from './tabs.ts';
 
 export const DATA_VERSION = 1;
 
@@ -22,13 +24,18 @@ export interface PlayerData {
   cards: SavedCard[];
   /** The player's own choice for interface sounds; null until they toggle (Admin's default applies). */
   sounds: boolean | null;
+  /**
+   * Ara's Historial | Cartrons switch, as the player last left it on this device; null until they tap it.
+   * Added within version 1: older data simply has no choice yet (an additive field needs no new version).
+   */
+  araView: AraView | null;
   /** The Game the round view belongs to. */
   gameId: string | null;
   /** Round view: one-off screens already closed in this Game (for example 'celebration:3:line'). */
   dismissed: string[];
 }
 
-export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, gameId: null, dismissed: [] });
+export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, araView: null, gameId: null, dismissed: [] });
 
 export type LoadOutcome = 'fresh' | 'kept' | 'otherEdition' | 'corrupt';
 
@@ -67,6 +74,7 @@ export function readData(raw: string | null, edition: string): { data: PlayerDat
       edition,
       cards,
       sounds: typeof json.sounds === 'boolean' ? json.sounds : null,
+      araView: isAraView(json.araView) ? json.araView : null,
       gameId: typeof json.gameId === 'string' ? json.gameId : null,
       dismissed: Array.isArray(json.dismissed) ? json.dismissed.filter((k): k is string => typeof k === 'string').slice(-50) : [],
     },
@@ -118,6 +126,8 @@ export const renameCard = (data: PlayerData, id: number, name: string): PlayerDa
 });
 
 export const setSounds = (data: PlayerData, on: boolean): PlayerData => ({ ...data, sounds: on });
+
+export const setAraView = (data: PlayerData, view: AraView): PlayerData => (data.araView === view ? data : { ...data, araView: view });
 
 /** Interface sounds: the player's choice wins over Admin's default. */
 export const soundsOn = (data: PlayerData, adminDefault: boolean): boolean => data.sounds ?? adminDefault;

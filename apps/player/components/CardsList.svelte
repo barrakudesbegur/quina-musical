@@ -1,5 +1,7 @@
 <script lang="ts">
-  // Cartrons: the player's cards that count in this round as grids; the others listed so they can be managed.
+  // Cartrons: the player's cards that count in this round as grids, the others listed by name, and "Afegir
+  // cartró". The cards simply scroll (the stacking scroll waits for the user). Naming and removing them is in the
+  // menu.
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
   import { roundRule } from '../logic/view.ts';
@@ -30,8 +32,6 @@
             catalogFailed={app.catalogFailed}
             fresh={app.freshMarks}
             stagger={i * PLAYER_CONFIG.markStaggerMs}
-            onrename={() => app.open({ kind: 'rename', cardId: view.saved.id })}
-            onremove={() => app.open({ kind: 'remove', cardId: view.saved.id })}
           />
         </li>
       {/each}
@@ -43,9 +43,7 @@
           {#each app.restingViews as view (view.saved.id)}
             <li class="cards__resting-item" style:--card-color="var(--card-color-{view.saved.color})">
               <Swatch color={view.saved.color} />
-              <span class="cards__resting-label">{view.saved.name ? `${view.saved.name} · ` : ''}{S.card(view.saved.id)}</span>
-              <button type="button" onclick={() => app.open({ kind: 'rename', cardId: view.saved.id })}>{S.rename}</button>
-              <button type="button" onclick={() => app.open({ kind: 'remove', cardId: view.saved.id })}>{S.remove}</button>
+              <span class="cards__resting-label">{view.saved.name ? `${view.saved.name} · ` : ''}{S.cardNumber(view.saved.id)}</span>
             </li>
           {/each}
         </ul>

@@ -2,8 +2,9 @@
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
 // COPY RULE: the phone never says "you won" and never announces a Line or a Quina: players claim them.
 import { CA } from '../../packages/ui/i18n/ca.ts';
+import type { PublicWinKind } from './feed/public.ts';
 import type { HeatLevel } from './logic/view.ts';
-import type { TabId } from './logic/tabs.ts';
+import type { AraView, TabId } from './logic/tabs.ts';
 
 const card = CA.card;
 
@@ -13,15 +14,16 @@ export const S = {
   roundOf: CA.roundOf,
   specialRound: CA.specialRound,
   card,
-  /** A card's number in small print under its name: "nº 123". */
-  cardNumber: (id: number) => `nº ${id}`,
+  /** A card's number next to its name: "#123" (the user's decision on names on screen). */
+  cardNumber: (id: number) => `#${id}`,
 
-  tabs: { ara: 'Ara', cartrons: 'Cartrons', historial: 'Historial', premis: 'Premis', programa: 'Programa' } satisfies Record<TabId, string>,
+  tabs: { ara: 'Ara', premis: 'Premis', horari: 'Horari' } satisfies Record<TabId, string>,
   tabBar: 'Seccions',
+  /** Ara's switch under the drum. */
+  araViews: { historial: 'Historial', cartrons: 'Cartrons' } satisfies Record<AraView, string>,
+  araSwitch: 'Què vols veure sota el tambor',
 
-  help: 'Ajuda',
-  soundOn: 'So activat',
-  soundOff: 'So apagat',
+  menu: 'Menú',
 
   // Adding cards
   addCard: 'Afegir cartró',
@@ -44,6 +46,11 @@ export const S = {
   noCards: 'Encara no tens cap cartró.',
   noCardsHint: 'Escaneja el codi QR del teu cartró amb la càmera del mòbil, o escriu-ne el número.',
   notPlaying: 'No juguen en aquesta quina',
+  /** The leave-confirmation of "Afegir cartró", when a number has been typed. */
+  leaveTitle: 'Vols sortir sense afegir el cartró?',
+  leaveText: 'El número que has escrit no es desarà.',
+  leaveYes: 'Sortir',
+  leaveNo: 'Continuar',
   specialRule: 'A la quina especial només compten els cartrons especials.',
   normalRule: 'Els cartrons especials només juguen a la quina especial.',
   /** A round that plays another printed type than its kind's usual one (card-types.json's name). */
@@ -51,7 +58,6 @@ export const S = {
   unknownCard: 'No trobem aquest cartró.',
   loadingCards: 'Carregant els cartrons…',
   catalogError: 'No s’han pogut carregar els cartrons. Ho tornem a provar…',
-  rename: 'Nom i icona',
   renameTitle: (id: number) => `Nom i icona del ${card(id).toLowerCase()}`,
   iconLabel: 'Icona',
   iconHint: 'Cada cartró en té una de diferent',
@@ -60,7 +66,6 @@ export const S = {
   namePlaceholder: 'Per exemple: Àvia',
   save: 'Desar',
   cancel: 'Cancel·lar',
-  remove: 'Treure',
   removeTitle: (id: number) => `Treure el ${card(id).toLowerCase()}?`,
   removeText: 'Deixaràs de veure’l en aquest mòbil. El pots tornar a afegir quan vulguis.',
   removeYes: 'Sí, treure’l',
@@ -70,7 +75,6 @@ export const S = {
 
   // Ara
   nowPlaying: CA.nowPlaying,
-  previous: CA.previous,
   reelSpinning: 'Sona la ruleta…',
   reelWaiting: 'Quina sonarà?',
   noSongYet: 'Encara no ha sonat cap cançó.',
@@ -79,15 +83,7 @@ export const S = {
 
   // Before the Game
   welcome: 'Benvinguts a la Quina Musical!',
-  howToPlayTitle: 'Com es juga',
-  howToPlay: [
-    'Quan soni una cançó del teu cartró, marca-la amb un gra de blat de moro.',
-    'Amb una fila sencera, crida «Línia!». Amb tot el cartró ple, crida «Quina!».',
-    'Els presentadors comproven el cartró davant de tothom.',
-  ],
   startsAround: (time: string) => `Comencem cap a les ${time}`,
-  seePrizes: 'Veure els premis',
-  seeSchedule: 'Veure el programa',
 
   // Round start
   shuffling: 'Barrejant les cançons…',
@@ -98,7 +94,7 @@ export const S = {
   nextRound: CA.nextRound,
   startsIn: (mmss: string) => `Comença d’aquí a uns ${mmss}`,
   startsSoon: 'Comença ben aviat',
-  lastWinners: 'Guanyadors de la quina anterior',
+  lastWinners: 'Premis de la quina anterior',
 
   // After the Game
   thanks: CA.thanks,
@@ -111,13 +107,12 @@ export const S = {
   checkValid: CA.checkValid,
   checkInvalid: CA.checkInvalid,
   shout: CA.shout,
-  winningCards: 'Cartrons guanyadors',
+  /** The Celebration when the confirmed winner is one of the phone's own cards (never anyone else's number). */
+  yourWin: { line: 'La teva línia!', bingo: 'La teva quina!', standing: 'Dempeus fins al final!' } satisfies Record<PublicWinKind, string>,
 
   // Pause, offline, reconnecting
   pause: CA.pause,
-  offline: CA.offline,
-  overlayHint: 'Els teus cartrons continuen aquí.',
-  seeCards: 'Veure els meus cartrons',
+  offline: 'Sense connexió · reconnectant…',
   reconnecting: 'Reconnectant…',
   connected: 'Connectat',
   noticeLabel: 'Avís',
@@ -131,11 +126,14 @@ export const S = {
   /** A round whose prizes aren't revealed yet (PrizeRound.lockedUntil). */
   prizesLocked: { intro: 'Es revelen quan comenci la quina', presenters: 'Secrets: es revelaran durant la nit' },
   noPlan: 'Els premis encara no s’han anunciat.',
-  winners: CA.winners,
+  /** A prize already won, by someone (phones never say which card). */
+  hasWinner: 'Ja té guanyador',
+  /** A prize won by one of the phone's own cards (shown with that card's icon). */
+  wonByYou: 'Guanyat amb el teu cartró',
   roundState: { done: 'Feta', current: 'Ara', next: 'La següent', later: '' },
 
-  // Programa
-  scheduleTitle: 'Programa',
+  // Horari (first called "Programa")
+  scheduleTitle: 'Horari',
   notStarted: 'Encara no hem començat.',
   endsAround: (time: string) => `Acabarem cap a les ${time}`,
   around: (time: string) => `cap a les ${time}`,
@@ -154,13 +152,16 @@ export const S = {
   legacyText: 'Els cartrons d’enguany porten un codi QR nou. Escaneja’l, o escriu el número del teu cartró.',
   ok: 'D’acord',
 
-  // Help
-  helpTitle: 'Ajuda',
-  soundsLabel: 'Sons de la pantalla',
+  // The menu
+  myCards: 'Els meus cartrons',
+  editLabel: (who: string) => `Nom i icona: ${who}`,
+  removeLabel: (who: string) => `Treure: ${who}`,
+  soundsLabel: 'Sons',
   on: 'Sí',
   off: 'No',
+  legacyMenuTitle: 'Cartrons de l’any passat',
+  legacyMenuText: 'Els cartrons de l’any passat ja no juguen. Els d’enguany porten un codi QR nou: escaneja’l, o afegeix-lo pel número.',
   privacy: 'Els teus cartrons només es guarden en aquest mòbil. No cal cap compte.',
-  install: 'Si vols, pots afegir la Quina Musical a la pantalla d’inici des del menú del navegador.',
   wipeData: 'Esborrar dades',
   wipeTitle: 'Esborrar totes les dades?',
   wipeText: 'Es trauran tots els teus cartrons i noms d’aquest mòbil.',

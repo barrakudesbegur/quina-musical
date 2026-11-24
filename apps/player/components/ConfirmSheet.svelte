@@ -1,15 +1,25 @@
 <script lang="ts">
-  // A confirmation for something that can't be undone with one tap (removing a card, wiping the data).
+  // A confirmation for something that can't be undone with one tap (removing a card, wiping the data, leaving
+  // "Afegir cartró" with a number typed). `danger` paints the yes in red; `no` names the way back.
   import { S } from '../strings.ts';
   import Sheet from './Sheet.svelte';
 
-  let { name, title, text, yes, onyes, onclose }: { name: string; title: string; text: string; yes: string; onyes: () => void; onclose: () => void } = $props();
+  let {
+    name,
+    title,
+    text,
+    yes,
+    no = S.cancel,
+    danger = true,
+    onyes,
+    onclose,
+  }: { name: string; title: string; text?: string; yes: string; no?: string; danger?: boolean; onyes: () => void; onclose: () => void } = $props();
 </script>
 
 <Sheet {name} {title} {onclose}>
-  <p class="confirm__text">{text}</p>
+  {#if text}<p class="confirm__text">{text}</p>{/if}
   <div class="confirm__actions">
-    <button type="button" class="big-button tone-danger confirm__yes" onclick={onyes}>{yes}</button>
-    <button type="button" class="big-button confirm__no" onclick={onclose}>{S.cancel}</button>
+    <button type="button" class="big-button confirm__yes" class:tone-danger={danger} onclick={onyes}>{yes}</button>
+    <button type="button" class="big-button confirm__no" class:tone-primary={!danger} onclick={onclose}>{no}</button>
   </div>
 </Sheet>

@@ -12,7 +12,7 @@ import type { PublicHeat, PublicState } from './feed/public.ts';
 import { nearKeys } from './logic/near-win.ts';
 import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
 import type { DialogId, Route } from './logic/router.ts';
-import { overlayFor, reconnectPill } from './logic/status.ts';
+import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
 import {
   addCard,
   dismiss,
@@ -21,17 +21,19 @@ import {
   noteGame,
   removeCard,
   renameCard,
+  setAraView,
   setIdentity,
   setSounds,
   soundsOn,
   type PlayerData,
   type PlayerStorage,
 } from './logic/storage.ts';
-import type { TabId } from './logic/tabs.ts';
+import { araViewFor, type AraView, type TabId } from './logic/tabs.ts';
 import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf } from './logic/view.ts';
 import { S } from './strings.ts';
 
-export type Dialog = { kind: DialogId } | { kind: 'remove'; cardId: number } | { kind: 'rename'; cardId: number } | { kind: 'wipe' };
+/** The sheet open over the app. A sheet opened from the menu goes back to the menu when it closes. */
+export type Dialog = ({ kind: DialogId | 'wipe' } | { kind: 'remove' | 'rename'; cardId: number }) & { from?: 'menu' };
 
 export interface PlayerAppOptions {
   feed: PlayerFeed;
@@ -57,6 +59,8 @@ export class PlayerApp {
 
   // ---- UI state -----------------------------------------------------------------------------------------
   tab = $state<TabId>('ara');
+  /** Ara's view for this visit only (after adding a card, its cards), over the player's saved choice. */
+  araSession = $state<AraView | null>(null);
   dialog = $state.raw<Dialog | null>(null);
   /** Last year's link (or another edition's) that opened the app, until dismissed. */
   legacy = $state.raw<Extract<Route, { kind: 'legacy' | 'otherEdition' }> | null>(null);
@@ -65,8 +69,8 @@ export class PlayerApp {
   hidden = $state(false);
   /** Kernels that just dropped in ("cardId:songId"): the mark-in animation. */
   freshMarks = $state.raw<ReadonlySet<string>>(new Set());
-  /** The overlay the player closed to reach their cards (until the next one). */
-  dismissedOverlay = $state<string | null>(null);
+  /** The connection strip (offline, reconnecting, connected), stepped on every feed update and clock tick. */
+  banner = $state.raw<BannerState>(NO_BANNER);
 
   // ---- derived ------------------------------------------------------------------------------------------
   plan = $derived(planOf(this.state));
@@ -81,18 +85,17 @@ export class PlayerApp {
   restingViews = $derived(this.views.filter((v) => !v.valid));
   /** The near-win highlights on the playing cards ("cardId:songId"). */
   near = $derived(nearKeys(this.playingViews.map((v) => ({ cardId: v.saved.id, near: v.near }))));
-  celebration = $derived(celebrationOf(this.state));
+  araView = $derived(araViewFor({ session: this.araSession, saved: this.data.araView, cardCount: this.data.cards.length }));
+  celebration = $derived(celebrationOf(this.state, this.data.cards.map((c) => c.id)));
   celebrationOpen = $derived(this.celebration !== null && !this.data.dismissed.includes(this.celebration.key));
-  overlay = $derived(overlayFor({ state: this.state, connection: this.connection, localNowMs: this.localNow, cloudNowMs: this.cloudNow }));
-  overlayKey = $derived(
-    this.overlay === 'pause' ? `pause:${this.state?.pause?.sinceMs}` : this.overlay === 'offline' ? `offline:${this.connection.sinceMs}:${this.state?.link.sinceMs}` : null,
-  );
-  overlayOpen = $derived(this.overlay !== null && this.overlayKey !== this.dismissedOverlay);
-  pill = $derived(reconnectPill(this.connection, this.localNow));
+  /** Offline: the normal screen stays usable, greyed under the strip. */
+  offline = $derived(this.banner.banner === 'offline');
+  /** The presenters' technical pause: the meditating nino in the drum's place. */
+  paused = $derived(pauseOn(this.state));
   soundsOn = $derived(soundsOn(this.data, this.state?.soundsDefault ?? true));
   heat = $derived(this.heatSamples.length ? heatAt(this.heatSamples, this.cloudNow, this.heatSamples[0].value) : null);
   /** Root data-state: what the whole screen is in. */
-  screenState = $derived(this.overlayOpen ? (this.overlay ?? 'live') : this.state ? 'live' : 'connecting');
+  screenState = $derived(this.offline ? 'offline' : this.paused ? 'pause' : this.state ? 'live' : 'connecting');
 
   // ---- wiring -------------------------------------------------------------------------------------------
   private readonly feed: PlayerFeed;
@@ -121,6 +124,7 @@ export class PlayerApp {
       if (this.hidden) return;
       this.localNow = Date.now();
       this.cloudNow = this.feed.now();
+      this.stepBanner();
     }, PLAYER_CONFIG.tickMs);
     this.stops.push(() => clearInterval(tick));
     void this.fetchCatalog(0);
@@ -133,6 +137,7 @@ export class PlayerApp {
         if (!this.hidden) {
           this.localNow = Date.now();
           this.cloudNow = this.feed.now();
+          this.stepBanner();
         }
       };
       const onFirstTap = () => this.sounds.unlock();
@@ -156,8 +161,8 @@ export class PlayerApp {
   openRoute(route: Route): void {
     if (route.kind === 'card') {
       const error = this.addCard(route.cardId, false);
-      if (!error || error === S.addError.duplicate(route.cardId)) this.tab = 'cartrons';
-      if (error && error !== S.addError.duplicate(route.cardId)) this.showToast(error);
+      if (error === S.addError.duplicate(route.cardId)) this.showCards();
+      else if (error) this.showToast(error);
     } else if (route.kind === 'legacy' || route.kind === 'otherEdition') {
       this.legacy = route;
     }
@@ -169,13 +174,22 @@ export class PlayerApp {
     this.tab = tab;
   }
 
+  /** Ara's Historial | Cartrons switch: remembered on this device. */
+  selectAraView(view: AraView): void {
+    if (view !== this.araView) this.blip('tap');
+    this.araSession = null;
+    this.saveData(setAraView(this.data, view), false);
+  }
+
   open(dialog: Dialog): void {
     this.blip('tap');
     this.dialog = dialog;
   }
 
+  /** Close the open sheet; a card's sheet opened from the menu goes back to the menu. */
   closeDialog(): void {
-    this.dialog = null;
+    const d = this.dialog;
+    this.dialog = d?.from === 'menu' ? { kind: 'menu' } : null;
   }
 
   /**
@@ -188,18 +202,21 @@ export class PlayerApp {
     if (!result.ok) return result.reason === 'duplicate' ? S.addError.duplicate(id) : result.reason === 'full' ? S.addError.full(PLAYER_CONFIG.maxCards) : S.addError.invalid;
     this.saveData(result.data);
     this.showToast(S.added(id));
+    // Added: straight to the cards, never back to the menu it may have come from.
+    this.dialog = null;
+    this.showCards();
     return null;
   }
 
   removeCard(id: number): void {
     this.saveData(removeCard(this.data, id));
-    this.dialog = null;
+    this.closeDialog();
   }
 
   /** The card's sheet: its name and its icon. */
   editCard(id: number, name: string, identity: number): void {
     this.saveData(setIdentity(renameCard(this.data, id, name), id, identity));
-    this.dialog = null;
+    this.closeDialog();
   }
 
   toggleSounds(): void {
@@ -219,16 +236,12 @@ export class PlayerApp {
     this.resetFeedback();
     this.dialog = null;
     this.tab = 'ara';
+    this.araSession = null;
     this.showToast(S.wiped);
   }
 
   dismissCelebration(): void {
     if (this.celebration) this.saveData(dismiss(this.data, this.celebration.key), false);
-  }
-
-  dismissOverlay(): void {
-    this.dismissedOverlay = this.overlayKey;
-    this.tab = 'cartrons';
   }
 
   dismissLegacy(): void {
@@ -245,6 +258,18 @@ export class PlayerApp {
   }
 
   // ---- internals ----------------------------------------------------------------------------------------
+  /** A card was just added (or its link opened): Ara with the cards, for this visit only. */
+  private showCards(): void {
+    this.tab = 'ara';
+    this.araSession = 'cartrons';
+  }
+
+  /** The connection strip follows the feed and the clocks (assigned only when it changes). */
+  private stepBanner(): void {
+    const next = nextBanner(this.banner, { state: this.state, connection: this.connection, localNowMs: this.localNow, cloudNowMs: this.cloudNow });
+    if (next !== this.banner) this.banner = next;
+  }
+
   private onFeed({ state, connection }: FeedUpdate): void {
     this.connection = connection;
     this.localNow = Date.now();
@@ -254,6 +279,7 @@ export class PlayerApp {
       if (state) this.noteState(state);
       this.react();
     }
+    this.stepBanner();
   }
 
   /** Edition, Game and Heat bookkeeping for a new public state. */

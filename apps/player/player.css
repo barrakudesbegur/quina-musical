@@ -25,6 +25,11 @@
   --dur-twinkle-hot: 1.6s;
   --dur-twinkle-fire: 1s;
   --dur-shuffle-jiggle: 400ms;
+  --dur-pause-breath: 4s; /* the meditating nino breathes, scale 1 → 1.04 */
+  --dur-offline-grey: 400ms; /* the screen greys, and the colour comes back */
+  --dur-celebrate-title: 400ms; /* "Línia!" slams in */
+  --dur-celebrate-prize: 300ms; /* the prize (and the player's own card) rise… */
+  --delay-celebrate-prize: 200ms; /* …this long after the title */
 
   /* layout */
   --player-gutter: var(--space-3);
@@ -34,6 +39,8 @@
   --reel-size: min(42vw, 10rem);
   --player-reel-flank: 0.74; /* the drum's side cards, relative to the centre one */
   --player-cover-row: 3.5rem;
+  --player-drum-strip: 3.75rem; /* the drum's window when it shrinks to a strip (Ara with the cards) */
+  --player-strip-height: 2.875rem; /* the connection strip across the top */
   --player-key-height: 3.75rem;
   --player-sticker-sm: 5.5rem;
   --player-sticker-md: 7.5rem;
@@ -76,6 +83,11 @@
   --player-sticker-bingo: url('../../packages/ui/assets/ninos/nino-mans-adalt.svg');
   --player-sticker-legacy: url('../../packages/ui/assets/ninos/nino-confeti.svg');
 
+  /* offline: a slate strip, and a veil that greys the screen under it (its opacity, never a filter) */
+  --player-offline-strip: color-mix(in srgb, var(--color-slate) 50%, var(--color-muted));
+  --player-offline-veil: var(--color-bg-deep);
+  --player-offline-veil-opacity: 0.5;
+
   /* the Check ribbon, by result (a failed Check is slate, never red: it isn't an error) */
   --player-ribbon: var(--color-primary);
   --player-ribbon-edge: var(--color-primary-edge);
@@ -89,6 +101,10 @@
     --dur-near-win: 0ms;
     --dur-overlay: 0ms;
     --dur-reconnect: 0ms;
+    --dur-offline-grey: 0ms;
+    --dur-celebrate-title: 0ms;
+    --dur-celebrate-prize: 0ms;
+    --delay-celebrate-prize: 0ms;
   }
 }
 
@@ -121,10 +137,10 @@
 .check-strip__text,
 .check-strip__result,
 .sheet__title,
-.how-to-play__title,
 .now__summary-title,
-.big-button,
-.celebration__numbers {
+.pause-notice__title,
+.menu__card-name,
+.big-button {
   font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
   letter-spacing: var(--title-tracking);
@@ -139,12 +155,12 @@
 .check-strip__text,
 .check-strip__result,
 .sheet__title,
-.how-to-play__title,
 .now__summary-title,
 .now__when,
 .schedule__end,
 .big-button,
-.celebration__numbers {
+.pause-notice__title,
+.menu__card-name {
   -webkit-text-stroke-width: var(--title-stroke-sm);
   letter-spacing: var(--title-tracking-sm);
   text-shadow: var(--title-drop-sm);
@@ -166,7 +182,7 @@
 
 /* A sticker: a ninos figure on a pseudo-element, decoration only. */
 .now[data-scene]::before,
-.scene-overlay__nino,
+.pause-notice__nino,
 .legacy-notice::before,
 .check-strip[data-state='valid']::before {
   background: center / contain no-repeat;
@@ -295,6 +311,16 @@
 /* While a card is checked, the garland steps back. */
 .player[data-scene='check'] .heat {
   opacity: 0.45;
+}
+
+/* Offline: the lights go out. No glow and no twinkle, the bulbs dark: nothing on the string moves. */
+.heat[data-state='off'] .heat__glow {
+  opacity: 0;
+  animation: none;
+}
+
+.heat[data-state='off'] .heat__light {
+  --bulb: var(--color-surface-sunk);
 }
 
 /* ---- header -------------------------------------------------------------------------------------------- */
@@ -454,10 +480,8 @@
 }
 
 /* Small actions: paper chips with ink words. */
-.player-card__actions button,
-.cards__resting-item button,
 .sheet__close,
-.help__toggle {
+.menu__toggle {
   min-height: var(--tap-min);
   padding: 0 var(--space-3) 0.1875rem;
   font-size: var(--text-sm);
@@ -469,11 +493,6 @@
     var(--shadow-piece-sm);
 }
 
-.player-card__remove,
-.cards__resting-item button + button {
-  color: var(--color-red-edge);
-  border-color: var(--color-red-edge);
-}
 
 /* ---- tab bar: list-driven, so adding or removing a tab is only its list ------------------------------- */
 .tab-bar {
@@ -657,23 +676,6 @@
   color: var(--color-text-on-fail);
 }
 
-.pill {
-  justify-self: center;
-  margin: var(--space-2) 0 0;
-  padding: var(--space-1) var(--space-4) 0.375rem;
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-strong);
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-piece-sm);
-}
-
-.pill[data-state='connected'] {
-  background: var(--color-ok);
-}
-
 /* ---- main ---------------------------------------------------------------------------------------------- */
 .player__main {
   flex: 1;
@@ -690,12 +692,12 @@
 
 /* Panels (night blue, inked) and paper pieces. */
 .add-prompt,
-.how-to-play,
 .shuffle,
 .schedule__progress,
 .now__summary,
 .cards__resting-item,
-.help__settings,
+.menu__row,
+.menu__card,
 .legacy-notice {
   background: var(--color-surface);
   color: var(--color-text);
@@ -777,11 +779,6 @@
 /* ---- Ara ----------------------------------------------------------------------------------------------- */
 .now {
   position: relative;
-}
-
-.now__links {
-  display: grid;
-  gap: var(--space-3);
 }
 
 .now__heading {
@@ -994,7 +991,7 @@
   filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.35));
 }
 
-/* Before the Game: the welcome, the start time on a gold plate, how to play. */
+/* Before the Game: the welcome and the start time on a gold plate (no how-to-play: the presenters explain). */
 .now[data-scene='before']::before {
   content: '';
   position: absolute;
@@ -1038,56 +1035,6 @@
 
 .add-prompt__hint {
   color: var(--color-text-soft);
-}
-
-.how-to-play {
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  text-align: left;
-}
-
-.how-to-play__title {
-  font-size: 1.625rem;
-  letter-spacing: var(--title-tracking-sm);
-  text-transform: none;
-  color: var(--color-text);
-}
-
-.how-to-play__steps {
-  counter-reset: step;
-  list-style: none;
-  display: grid;
-  gap: var(--space-2);
-  margin: var(--space-3) 0 0;
-  padding: 0;
-}
-
-.how-to-play__step {
-  counter-increment: step;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-md);
-  line-height: 1.25;
-}
-
-/* The step's number in an orange counter. */
-.how-to-play__step::before {
-  content: counter(step);
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding-bottom: 0.125rem;
-  font-family: var(--font-display);
-  font-size: 1.375rem;
-  color: var(--color-text);
-  -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
-  paint-order: stroke fill;
-  background: var(--color-primary);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: 50%;
-  box-shadow: 0 3px 0 var(--color-shadow);
 }
 
 /* A round starts: "Quina 4", big and tilted, with a nino waving. */
@@ -1153,7 +1100,7 @@
   text-shadow: var(--title-drop-sm);
 }
 
-/* The Interval: "Mitja part", the countdown, the next round's prizes and the last winners. */
+/* The Interval: "Mitja part", the countdown, the next round's prizes and the last round's (won or not, never by whom). */
 .now[data-scene='interval']::before {
   content: '';
   position: absolute;
@@ -1181,7 +1128,7 @@
   font-weight: var(--font-weight-strong);
 }
 
-/* After the Game: thanks, and every round's winners. */
+/* After the Game: thanks, and every round's prizes that were won. */
 .now[data-scene='after']::before {
   content: '';
   position: absolute;
@@ -1314,56 +1261,6 @@
   height: 1.5em;
 }
 
-.prize-lines__winners {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-2);
-  margin-top: var(--space-1);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-strong);
-}
-
-/* Winning card numbers as chips; the player's own shows its card's icon (never "you won"). */
-.winner-numbers {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.winner-numbers__sep {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.winner-numbers__card {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  min-height: 1.75rem;
-  padding: 0 0.5625rem;
-  font-weight: var(--font-weight-strong);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
-}
-
-.winner-numbers__card.is-own {
-  background: var(--color-highlight);
-}
-
-.winner-numbers__mark {
-  display: inline-block;
-  width: 1.15em;
-  height: 1.15em;
-}
-
 /* Premis: every round as a tile, two by two. */
 .prizes__list,
 .schedule__rounds,
@@ -1491,21 +1388,12 @@
   font-size: var(--text-xs);
 }
 
-.prize-round .prize-lines__winners,
-.now__summary .prize-lines__winners {
-  font-size: var(--text-xs);
-  color: var(--prize-soft);
-}
-
-.prize-round .winner-numbers__card,
-.now__summary .winner-numbers__card {
-  min-height: 1.375rem;
-  padding: 0 0.375rem;
-  border-width: 2px;
+.prize-round .prize-lines__won,
+.now__summary .prize-lines__won {
   font-size: var(--text-xs);
 }
 
-/* ---- Programa ------------------------------------------------------------------------------------------ */
+/* ---- Horari -------------------------------------------------------------------------------------------- */
 .schedule__progress {
   padding: var(--space-3) var(--space-4) var(--space-4);
   font-size: 2rem;
@@ -1693,7 +1581,7 @@
   overflow-wrap: anywhere;
 }
 
-/* "nº 123" on a paper tag: readable on every card colour, and not as small as a caption. */
+/* "#123" on a paper tag: readable on every card colour, and not as small as a caption. */
 .player-card__number {
   padding: 0 0.5rem 0.0625rem;
   font-size: var(--text-md);
@@ -1703,14 +1591,6 @@
   background: var(--color-paper);
   border: 2px solid var(--color-line);
   border-radius: var(--radius-pill);
-}
-
-/* "Nom i icona" and "Treure": on the header's own row when the name leaves no room. */
-.player-card__actions {
-  flex: 1 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 .player-card__missing,
@@ -2141,27 +2021,381 @@
   font-size: var(--text-lg);
 }
 
-/* Help: how to play, the sound switch, privacy, and "Esborrar dades" outlined in red. */
-.help__settings {
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+/* ---- Ara: the drum (or the pause) on top, the Historial | Cartrons switch, the view ------------------------- */
+.ara {
+  display: grid;
+  gap: var(--space-4);
 }
 
-.help__row {
+/* The views' own headings repeat the switch's words: kept for screen readers only. */
+.ara .history__heading,
+.ara .cards__heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ara .history > :first-child + *,
+.ara .cards > :first-child + * {
+  margin-top: 0;
+}
+
+/* The switch: a dark track with the chosen side on a gold plate, as the tab bar's chosen tab. */
+.view-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-bg-deep);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.player .view-switch__option {
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-soft);
+  background: transparent;
+  border: var(--line-width) solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.player .view-switch__option[aria-selected='true'] {
+  color: var(--color-text-on-paper);
+  background: var(--color-accent);
+  border-color: var(--color-line);
+  box-shadow: inset 0 -4px 0 var(--color-accent-edge);
+}
+
+.view-switch__option .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* The drum shrunk to a strip (Ara with the cards): the window on the left between two small card backs, the
+   song's title and artist beside it, on a panel. */
+.reel[data-size='strip'] {
+  --reel-size: var(--player-drum-strip);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: calc(var(--reel-size) + var(--space-4));
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  background: var(--color-surface);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shine-panel),
+    var(--shadow-piece);
+}
+
+.reel[data-size='strip']::before,
+.reel[data-size='strip']::after {
+  top: calc(50% - var(--reel-size) * var(--player-reel-flank) / 2);
+  right: auto;
+  box-shadow:
+    inset 0 0 0 3px var(--color-paper),
+    inset 0 0 0 999px rgb(10 14 38 / 0.3);
+}
+
+.reel[data-size='strip']::before {
+  left: var(--space-3);
+}
+
+.reel[data-size='strip']::after {
+  left: calc(var(--space-3) + var(--reel-size) * 1.28);
+}
+
+.reel[data-size='strip'] > .reel__window,
+.reel[data-size='strip'] .reel__landed .cover {
+  flex: none;
+  margin-inline: calc(var(--reel-size) * 0.42);
+  outline-width: var(--line-width);
+  outline-offset: 0.25rem;
+  box-shadow: 0 0 0.875rem 0.25rem rgb(255 197 49 / 0.45);
+}
+
+.reel[data-size='strip'] > .reel__landed {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-.help__label {
+.reel[data-size='strip'] .reel__caption {
+  min-width: 0;
+  gap: 0;
+}
+
+.reel[data-size='strip'] .reel__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.reel[data-size='strip'] .reel__title {
+  font-size: 1.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+}
+
+.reel[data-size='strip'] .reel__artist {
+  font-size: var(--text-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reel[data-size='strip'] > .reel__waiting,
+.reel[data-size='strip'] > .reel__still {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-md);
+}
+
+.reel[data-size='strip'] > .reel__still {
+  width: auto;
+  aspect-ratio: auto;
+  padding: 0;
+  display: block;
+  background: none;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+/* The technical pause, in the drum's place: the meditating nino over "Tornem de seguida" (board "App · pausa
+   tècnica"). Beside the cards it is a strip, like the drum. */
+.pause-notice {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
+  text-align: center;
+}
+
+.pause-notice__nino {
+  width: var(--player-sticker-lg);
+  height: var(--player-sticker-lg);
+  background-image: var(--player-sticker-pause);
+}
+
+.pause-notice__title {
+  font-size: 2.25rem;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.pause-notice[data-size='strip'] {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+  background: var(--color-surface);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shine-panel),
+    var(--shadow-piece);
+}
+
+.pause-notice[data-size='strip'] .pause-notice__nino {
+  width: var(--player-sticker-sm);
+  height: var(--player-sticker-sm);
+}
+
+.pause-notice[data-size='strip'] .pause-notice__title {
+  font-size: 1.75rem;
+}
+
+/* Historial: the song playing now comes first, on a gold-ringed strip with a note badge on its cover. */
+.song-list__cover {
+  position: relative;
+  display: block;
+}
+
+.song-list__item.is-now {
+  background: var(--color-highlight);
+  box-shadow:
+    0 0 0 var(--line-width) var(--color-accent),
+    var(--shadow-piece-sm);
+}
+
+.song-list__now {
+  position: absolute;
+  right: -0.4375rem;
+  bottom: -0.4375rem;
+  width: 1.625rem;
+  height: 1.625rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-line);
+  color: var(--color-accent);
+}
+
+.song-list__now .icon {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 3;
+}
+
+/* ---- offline: the strip across the top, and the veil that greys the screen under it ------------------------ */
+.connection-strip {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-toast);
+  min-height: calc(var(--player-strip-height) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) var(--player-gutter) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-on-paper);
+  background: var(--player-offline-strip);
+  border-bottom: var(--line-width-bold) solid var(--color-line);
+  pointer-events: none;
+  transform: translateY(calc(-100% - var(--space-2)));
+}
+
+.connection-strip[data-shown='true'] {
+  transform: none;
+}
+
+.connection-strip[data-state='connected'] {
+  color: var(--color-text);
+  background: var(--color-ok);
+}
+
+.connection-strip .icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex: none;
+}
+
+/* Over everything but the strip and the sheets; it never takes a tap, so the cards, Historial, the tabs and the
+   menu keep working under it. */
+.offline-veil {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--player-offline-veil);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.player[data-state='offline'] .offline-veil {
+  opacity: var(--player-offline-veil-opacity);
+  visibility: visible;
+}
+
+/* ---- the menu: the player's cards, sounds, last year's cards, "Esborrar dades" ---------------------------- */
+.menu {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.menu__cards,
+.menu__legacy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.menu__card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.menu__card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
+  border-width: var(--line-width);
+}
+
+.menu__card .swatch {
+  width: 2.125rem;
+  height: 2.125rem;
+}
+
+.menu__card-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.menu__card-number {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text-soft);
+}
+
+.player .menu__card .icon-button,
+.sheet .menu__card .icon-button {
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.menu__card-remove {
+  color: var(--color-danger-on-night);
+}
+
+.menu__add.big-button {
+  justify-self: center;
+  width: auto;
+}
+
+.menu__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+}
+
+.menu__label {
   flex: 1;
   font-weight: var(--font-weight-strong);
 }
 
-.help__toggle {
+.menu__toggle {
   min-width: 4.5rem;
 }
 
-.help__toggle[aria-pressed='true'] {
+.menu__toggle[aria-checked='true'] {
   background: var(--color-ok);
   color: var(--color-text);
   box-shadow:
@@ -2169,13 +2403,17 @@
     var(--shadow-piece-sm);
 }
 
-.help__privacy,
-.help__install {
+.menu__heading {
+  margin: 0;
+}
+
+.menu__note,
+.menu__empty {
   color: var(--color-text-soft);
 }
 
-.player .help__wipe,
-.sheet .help__wipe {
+.player .menu__wipe,
+.sheet .menu__wipe {
   min-height: 3.25rem;
   font-family: var(--font-body);
   font-size: 1.1875rem;
@@ -2188,8 +2426,34 @@
   box-shadow: none;
 }
 
+/* ---- prizes: won, by someone, or by one of the player's cards (its icon, never a number) ------------------ */
+.prize-lines__won {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  justify-self: start;
+  margin-top: var(--space-1);
+  padding: 0 0.625rem 0.0625rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-on-paper);
+  background: var(--color-paper);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-pill);
+}
+
+.prize-lines__won[data-state='own'] {
+  background: var(--color-highlight);
+}
+
+.prize-lines__mark {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+}
+
 /* ---- overlays ------------------------------------------------------------------------------------------ */
-.scene-overlay,
 .celebration {
   position: fixed;
   inset: 0 0 calc(var(--player-tab-bar-height) + env(safe-area-inset-bottom, 0px));
@@ -2205,7 +2469,6 @@
   text-align: center;
 }
 
-.scene-overlay__panel,
 .celebration__panel {
   position: relative;
   z-index: 1;
@@ -2216,33 +2479,8 @@
   max-width: 28rem;
 }
 
-/* The pause and the offline notice: the meditating nino, calm ice-blue words. */
-.scene-overlay__nino {
-  width: var(--player-sticker-lg);
-  height: var(--player-sticker-lg);
-  background-image: var(--player-sticker-pause);
-}
-
-.scene-overlay__title {
-  font-size: 3rem;
-  line-height: 1;
-  color: var(--color-calm);
-}
-
-.scene-overlay[data-state='offline'] .scene-overlay__title {
-  font-size: 2.25rem;
-}
-
-.scene-overlay__hint {
-  max-width: 20rem;
-  color: var(--color-text-soft);
-}
-
-.scene-overlay__button.big-button {
-  background: var(--color-calm);
-}
-
-/* The Celebration: gold rays, "LÍNIA!" tilted, the winning numbers on plates, the prize, and two ninos. */
+/* The Celebration: gold rays, "LÍNIA!" tilted, the prize, and two ninos; never a winning card number. The
+   player's own card glows in its own colour under "La teva línia!". */
 .celebration::before {
   content: '';
   position: absolute;
@@ -2283,51 +2521,7 @@
   color: var(--color-accent);
   -webkit-text-stroke-width: 11px;
   text-shadow: 0 8px 0 var(--color-line);
-  transform: rotate(-5deg);
-}
-
-.player .celebration__label {
-  margin-top: var(--space-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-strong);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.celebration__numbers {
-  font-size: 1.875rem;
-  line-height: 1;
-  color: var(--color-text);
-}
-
-.celebration__numbers .winner-numbers {
-  justify-content: center;
-  gap: var(--space-3);
-}
-
-/* Each winning number on a plate, tilted one way and the other. */
-.celebration__numbers .winner-numbers__card {
-  min-height: 0;
-  padding: var(--space-1) var(--space-4) 0.625rem;
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    inset 0 -7px 0 var(--color-line),
-    inset 0 4px 0 rgb(255 255 255 / 0.3),
-    var(--shadow-piece-sm);
-  rotate: -3deg;
-}
-
-.celebration__numbers .winner-numbers__card:nth-child(4n + 3) {
-  rotate: 2deg;
-}
-
-.celebration__numbers .winner-numbers__mark {
-  width: 1.75rem;
-  height: 1.75rem;
+  transform: rotate(-3deg);
 }
 
 .celebration__prize {
@@ -2363,6 +2557,32 @@
 
 .celebration__close.big-button {
   max-width: 14rem;
+}
+
+/* Your own line: a smaller shout over two lines, and the card, ringed and glowing in its own colour. */
+.celebration[data-state='own'] {
+  overflow-y: auto;
+}
+
+.celebration[data-state='own'] .celebration__shout {
+  font-size: 3.75rem;
+  -webkit-text-stroke-width: 8px;
+}
+
+/* The card is the picture here: no ninos jumping around it. */
+.celebration[data-state='own']::after {
+  content: none;
+}
+
+.celebration__card {
+  width: min(100%, 20rem);
+}
+
+.player-card.is-glowing {
+  box-shadow:
+    0 0 0 var(--line-width-bold) var(--card-color),
+    0 0 1.75rem 0.5rem color-mix(in srgb, var(--card-color) 70%, transparent),
+    var(--shadow-piece);
 }
 
 .confetti {
@@ -2436,10 +2656,18 @@
   }
 }
 
+/* "Línia!" slams in: scale 1.6 → 1 at −3°, ending at its resting tilt (ANIMATIONS.md `celebrate`). */
 @keyframes player-shout {
   from {
     opacity: 0;
-    transform: rotate(-5deg) scale(0.4);
+    transform: rotate(-3deg) scale(1.6);
+  }
+}
+
+/* The meditating nino breathes. */
+@keyframes player-breathe {
+  50% {
+    transform: scale(1.04);
   }
 }
 
@@ -2516,24 +2744,41 @@
 }
 
 .celebration[data-anim='celebrate'] .celebration__shout {
-  animation: player-shout var(--dur-celebrate) var(--ease-bounce) both;
+  animation: player-shout var(--dur-celebrate-title) var(--ease-bounce) both;
 }
 
-.winner-numbers__card[data-anim='celebrate'] {
-  animation: player-pop var(--dur-base) var(--ease-bounce) var(--stagger, 0ms) both;
+.celebration[data-anim='celebrate'] .celebration__card,
+.celebration[data-anim='celebrate'] .celebration__prize {
+  animation: player-rise-in var(--dur-celebrate-prize) var(--ease-out) var(--delay-celebrate-prize) both;
 }
 
 [data-anim='countdown'][data-state='final'] {
   animation: player-tick var(--dur-countdown) var(--ease-out) both;
 }
 
-.pill[data-anim='reconnect'] {
-  animation: player-drop-in var(--dur-reconnect) var(--ease-out) both;
+/* The pause swaps in for the drum (and the drum back) with a 300 ms crossfade; the nino breathes. */
+.ara__top[data-anim='pause'] {
+  animation: player-fade-in var(--dur-overlay) var(--ease-out) both;
 }
 
-.scene-overlay[data-anim='offline'],
-.scene-overlay[data-anim='pause'] {
-  animation: player-fade-in var(--dur-overlay) var(--ease-out) both;
+.pause-notice__nino {
+  animation: player-breathe var(--dur-pause-breath) ease-in-out infinite;
+}
+
+/* The connection strip slides down and away (200 ms); the screen greys under it and back (400 ms). Both stay in
+   the page, so they can leave as smoothly as they came. */
+.connection-strip {
+  transition: transform var(--dur-reconnect) var(--ease-out);
+}
+
+.offline-veil {
+  transition:
+    opacity var(--dur-offline-grey) var(--ease-out),
+    visibility 0s linear var(--dur-offline-grey);
+}
+
+.player[data-state='offline'] .offline-veil {
+  transition: opacity var(--dur-offline-grey) var(--ease-out);
 }
 
 /* The garland: three groups of glows twinkle, offset by a third, so it reads as a chase when hot. */

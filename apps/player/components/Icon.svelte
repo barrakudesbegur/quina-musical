@@ -1,7 +1,7 @@
 <script lang="ts" module>
   // Small line icons (inline SVG, currentColor), so the theme recolours them and nothing is downloaded. The
   // stroke width is the theme's (--icon-stroke): the active tab draws them a little bolder.
-  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'help' | 'plus' | 'star' | 'lock';
+  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'lock' | 'edit' | 'trash' | 'offline';
 </script>
 
 <script lang="ts">
@@ -34,8 +34,14 @@
     <path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
   {:else if name === 'mute'}
     <path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
-  {:else if name === 'help'}
-    <circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7" /><path d="M12 17h.01" />
+  {:else if name === 'menu'}
+    <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+  {:else if name === 'edit'}
+    <path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13.5 6.5l4 4" />
+  {:else if name === 'trash'}
+    <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5" />
+  {:else if name === 'offline'}
+    <path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M3 3l18 18" /><circle cx="12" cy="19" r="1.2" fill="currentColor" />
   {:else if name === 'plus'}
     <path d="M12 5v14M5 12h14" />
   {:else if name === 'star'}

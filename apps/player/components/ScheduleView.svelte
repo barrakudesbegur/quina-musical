@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Programa: progress ("Quina 4 de 12"), the countdown to the next round, the expected end, every round's
-  // rough start time.
+  // Horari (first called "Programa"): progress ("Quina 4 de 12"), the countdown to the next round, the expected end, every round's
+  // rough start time. Self-contained, so it can sit in a tab or a drawer.
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { plannedStarts, prizeRounds, progress } from '../logic/view.ts';

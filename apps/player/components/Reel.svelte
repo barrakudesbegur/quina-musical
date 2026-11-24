@@ -1,6 +1,7 @@
 <script lang="ts">
   // The Ara reel, synced to the projector's Spin on the cloud's clock. Generic card backs only: the song shows
-  // once its landing is public, never before. Reduced motion: a still "Sona la ruleta…".
+  // once its landing is public, never before. Reduced motion: a still "Sona la ruleta…". `compact` draws it as
+  // a strip (Ara with the cards); `stopped` holds it still while the phone is offline (the drum stops).
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
   import { reelState } from '../logic/reel.ts';
@@ -14,6 +15,8 @@
     nowMs,
     clockOffsetMs,
     reduced,
+    compact = false,
+    stopped = false,
     ontick,
   }: {
     spin: PublicSpin | null;
@@ -24,19 +27,23 @@
     /** cloud − local, for the animation frames' own clock. */
     clockOffsetMs: number;
     reduced: boolean;
+    compact?: boolean;
+    stopped?: boolean;
     ontick?: () => void;
   } = $props();
 
   const STRIP = 5;
   let frameNow = $state(0);
-  const reel = $derived(reelState(spin, latest, reduced ? nowMs : Math.max(frameNow, nowMs)));
+  const moving = $derived(reelState(spin, latest, reduced ? nowMs : Math.max(frameNow, nowMs)));
+  // Offline, a spin in progress freezes on a plain card back: nothing moves until the link is back.
+  const reel = $derived(stopped && (moving.phase === 'spinning' || moving.phase === 'coasting') ? { phase: 'stopped' as const, offset: 0 } : moving);
   const base = $derived(Math.floor(reel.offset));
   const shift = $derived(-(reel.offset - base) * (100 / STRIP));
   const song = $derived(latest ? catalog?.songs.get(latest.songId) : undefined);
 
   // While the reel moves, draw it every frame (transform only). Ticks as card backs pass, at most 10 per second.
   $effect(() => {
-    if (reduced || !spin) return;
+    if (reduced || stopped || !spin) return;
     let raf = 0;
     let lastCard = -1;
     let lastTickAt = 0;
@@ -56,7 +63,7 @@
   });
 </script>
 
-<div class="reel" data-state={reel.phase}>
+<div class="reel" data-state={reel.phase} data-size={compact ? 'strip' : 'full'}>
   {#if reel.phase === 'landed' && latest}
     {#key latest.position}
       <figure class="reel__landed" data-anim="landing">

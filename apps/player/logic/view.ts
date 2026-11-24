@@ -135,15 +135,21 @@ export function kernelTilt(cardId: number, songId: number): number {
 export interface HistoryRound {
   round: number;
   kind: RoundKind;
-  /** Newest first. */
+  /** Newest first: the song playing now, if any, is the first. */
   landings: PublicLanding[];
+  /** The landing playing now (the latest, while its round is on), or null once the round has ended. */
+  nowPosition: number | null;
 }
 
-/** Historial: the current round's songs only (the last round played, until the next one starts), newest first. */
+/**
+ * Historial: the current round's songs only (the last round played, until the next one starts), newest first,
+ * the song playing now included (the user's decision).
+ */
 export function historyOf(state: PublicState | null): HistoryRound | null {
   const r = currentRound(state);
   if (!r) return null;
-  return { round: r.number, kind: r.kind, landings: [...r.landings].sort((a, b) => b.position - a.position) };
+  const landings = [...r.landings].sort((a, b) => b.position - a.position);
+  return { round: r.number, kind: r.kind, landings, nowPosition: !r.ended && landings.length ? landings[0].position : null };
 }
 
 /** One prize as the phone shows it. */
@@ -160,7 +166,10 @@ export interface PrizeLine {
   headline: PrizeItem[];
   /** The rest of the bundle, smaller. */
   others: PrizeItem[];
-  winners: number[];
+  /** Someone has won it ("Ja té guanyador"). Never which card: phones show no winning card numbers. */
+  won: boolean;
+  /** The phone's own cards among its confirmed winners (the only winners a phone ever names). */
+  ownCardIds: number[];
 }
 
 export interface PrizeRound {
@@ -175,8 +184,11 @@ export interface PrizeRound {
   lines: PrizeLine[];
 }
 
-/** Premis: every planned round with its Line and Quina bundles (locked until revealed) and the winning card numbers. */
-export function prizeRounds(plan: PublicPlan | null, state: PublicState | null): PrizeRound[] {
+/**
+ * Premis: every planned round with its Line and Quina bundles (locked until revealed), and whether each was won.
+ * `ownIds` are the phone's cards: a prize won by one of them says so; nobody else's card is ever named.
+ */
+export function prizeRounds(plan: PublicPlan | null, state: PublicState | null, ownIds: readonly number[] = []): PrizeRound[] {
   const winners = state?.winners ?? [];
   const current = currentRound(state);
   const focus = focusRoundNumber(state);
@@ -197,12 +209,8 @@ export function prizeRounds(plan: PublicPlan | null, state: PublicState | null):
       const item = (p: Prize): PrizeItem => ({ title: p.title, detail: p.detail, sponsor: plan?.sponsors.find((s) => s.id === p.sponsorId)?.name ?? null });
       const line = (kind: PublicWinKind): PrizeLine => {
         const { headline, others } = splitBundle((kind === 'line' ? planned?.line : planned?.bingo) ?? []);
-        return {
-          kind,
-          headline: headline.map(item),
-          others: others.map(item),
-          winners: winners.filter((w) => w.round === number && w.kind === kind).flatMap((w) => w.cardIds),
-        };
+        const cardIds = winners.filter((w) => w.round === number && w.kind === kind).flatMap((w) => w.cardIds);
+        return { kind, headline: headline.map(item), others: others.map(item), won: cardIds.length > 0, ownCardIds: cardIds.filter((id) => ownIds.includes(id)) };
       };
       const lockedUntil = planned && !planned.revealed ? (plan?.prizeReveal === 'allSecret' ? 'presenters' : 'intro') : null;
       return { number, kind: planned?.kind ?? played?.kind ?? 'normal', state: roundState, lockedUntil, lines: [line('line'), line('bingo')] };
@@ -226,21 +234,26 @@ export function plannedStarts(plan: ScheduleOf | null): Map<number, number> | nu
   return new Map(plan.rounds.map((r, i) => [r.number, plan.schedule.startAtMs! + i * step] as const));
 }
 
+/**
+ * What the Celebration shows. No winning card numbers, ever (the user's decision: people only care when it's
+ * them): only the phone's own cards among the confirmed winners, which turn it into "La teva línia!".
+ */
 export interface CelebrationView {
   key: string;
   kind: PublicWinKind;
   round: number;
-  cardIds: number[];
+  /** The phone's own cards among the winners; empty when someone else won. */
+  ownCardIds: number[];
 }
 
-/** The Celebration on screen: the latest prize won in the current round. */
-export function celebrationOf(state: PublicState | null): CelebrationView | null {
+/** The Celebration on screen: the latest prize won in the current round. `ownIds` are the phone's cards. */
+export function celebrationOf(state: PublicState | null, ownIds: readonly number[] = []): CelebrationView | null {
   if (state?.scene !== 'celebration') return null;
   const round = currentRound(state)?.number;
   const won = state.winners.filter((w) => w.round === round);
   const latest = won.find((w) => w.kind === 'bingo') ?? won.find((w) => w.kind === 'line');
   if (!latest || round === undefined) return null;
-  return { key: `celebration:${round}:${latest.kind}`, kind: latest.kind, round, cardIds: latest.cardIds };
+  return { key: `celebration:${round}:${latest.kind}`, kind: latest.kind, round, ownCardIds: latest.cardIds.filter((id) => ownIds.includes(id)) };
 }
 
 export type HeatLevel = 'cold' | 'warm' | 'hot' | 'fire';
@@ -252,6 +265,9 @@ export function heatLevel(value: number): HeatLevel {
   if (value < 0.75) return 'hot';
   return 'fire';
 }
+
+/** Leaving "Afegir cartró" (close or back) asks first when a number has been typed; with nothing typed it just closes. */
+export const leaveNeedsConfirm = (typed: string): boolean => typed.length > 0;
 
 /** A number typed on the pad: digits only, at most 4. */
 export function padValue(current: string, key: string): string {

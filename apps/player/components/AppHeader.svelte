@@ -1,5 +1,6 @@
 <script lang="ts">
-  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3"), the sound switch and Help.
+  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3"), and the menu (☰): the
+  // player's cards, sounds, last year's cards and "Esborrar dades" live there.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -19,18 +20,7 @@
       {#if special}<span class="app-header__badge">{S.specialRound}</span>{/if}
     {/if}
   </h1>
-  <div class="app-header__actions">
-    <button
-      type="button"
-      class="icon-button app-header__sound"
-      aria-pressed={app.soundsOn}
-      aria-label={app.soundsOn ? S.soundOn : S.soundOff}
-      onclick={() => app.toggleSounds()}
-    >
-      <Icon name={app.soundsOn ? 'sound' : 'mute'} />
-    </button>
-    <button type="button" class="icon-button app-header__help" aria-label={S.help} onclick={() => app.open({ kind: 'help' })}>
-      <Icon name="help" />
-    </button>
-  </div>
+  <button type="button" class="icon-button app-header__menu" aria-label={S.menu} aria-haspopup="dialog" onclick={() => app.open({ kind: 'menu' })}>
+    <Icon name="menu" />
+  </button>
 </header>

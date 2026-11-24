@@ -1,7 +1,8 @@
 <script lang="ts">
   // A light confetti burst on one canvas (one animated element, within the phone budget): 40 pieces in the
-  // card colours, falling for --dur-confetti. Not rendered with reduced motion.
-  let { pieces = 40 }: { pieces?: number } = $props();
+  // card colours, falling for --dur-confetti. Not rendered with reduced motion. `tones` narrows it to some card
+  // colours (the player's own winning card: its own colour, with gold and paper so it still reads as confetti).
+  let { pieces = 40, tones }: { pieces?: number; tones?: readonly number[] } = $props();
   let canvas: HTMLCanvasElement | undefined = $state();
 
   const ms = (text: string): number => {
@@ -21,8 +22,9 @@
     el.height = Math.round(h * dpr);
     ctx.scale(dpr, dpr);
     const style = getComputedStyle(el);
-    // Every card colour but black (6), which would vanish against the night sky.
-    const colors = [1, 2, 3, 4, 5, 6, 7, 8, 10].map((n) => style.getPropertyValue(`--card-color-${n}`).trim()).filter(Boolean);
+    // Every card colour but black (9), which would vanish against the night sky.
+    const names = tones?.length ? [...tones.filter((n) => n !== 9).map((n) => `--card-color-${n}`), '--color-accent', '--color-paper'] : [1, 2, 3, 4, 5, 6, 7, 8, 10].map((n) => `--card-color-${n}`);
+    const colors = names.map((name) => style.getPropertyValue(name).trim()).filter(Boolean);
     const duration = ms(style.getPropertyValue('--dur-confetti')) || 1800;
     const gravity = h * 1.6;
     const bits = Array.from({ length: pieces }, () => ({

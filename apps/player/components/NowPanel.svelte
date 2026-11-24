@@ -1,24 +1,22 @@
 <script lang="ts">
-  // Ara: what is happening now, by scene. In play: the reel and the current song, and the two before it. (The Heat
-  // garland hangs across the top of every screen: App.svelte.)
-  import { songTitle } from '../../../packages/ui/data/catalog.ts';
+  // The top of Ara, in the drum's place: what is happening now, by scene. In play: the drum with the song playing
+  // now (Historial, right under it, lists the rest). `compact` shrinks the drum to a strip, so the player's cards
+  // get the room; `stopped` freezes it while the phone is offline. (The Heat garland hangs across the top of every
+  // screen: App.svelte.)
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { plannedStarts, prizeRounds, roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
-  import Cover from './Cover.svelte';
-  import HowToPlay from './HowToPlay.svelte';
   import PrizeLines from './PrizeLines.svelte';
   import Reel from './Reel.svelte';
   import Shuffle from './Shuffle.svelte';
 
-  let { app }: { app: PlayerApp } = $props();
-  const prizes = $derived(prizeRounds(app.plan, app.state));
+  let { app, compact = false, stopped = false }: { app: PlayerApp; compact?: boolean; stopped?: boolean } = $props();
+  const prizes = $derived(prizeRounds(app.plan, app.state, app.data.cards.map((c) => c.id)));
   const focusPrizes = $derived(prizes.find((r) => r.number === app.focusRound) ?? null);
   const justPlayed = $derived(prizes.find((r) => r.number === app.round?.number) ?? null);
-  const previous = $derived(app.round ? [...app.round.landings].sort((a, b) => b.position - a.position).slice(1, 3) : []);
   const startAtMs = $derived(app.plan ? (plannedStarts(app.plan)?.get(app.plan.rounds[0]?.number ?? 1) ?? null) : null);
   const shuffle = $derived(app.state?.shuffle ?? null);
   const shuffling = $derived(shuffle !== null && app.cloudNow < shuffle.endAtMs);
@@ -28,7 +26,7 @@
   const HOUR = 60 * 60_000;
 </script>
 
-<section class="now" data-scene={app.scene}>
+<section class="now" data-scene={app.scene} data-size={compact ? 'strip' : 'full'}>
   {#if app.scene === 'before'}
     <h2 class="now__heading">{S.welcome}</h2>
     {#if !app.data.cards.length}
@@ -43,11 +41,6 @@
         {/if}
       </p>
     {/if}
-    <HowToPlay />
-    <div class="now__links">
-      <button type="button" class="big-button" onclick={() => app.selectTab('premis')}>{S.seePrizes}</button>
-      <button type="button" class="big-button" onclick={() => app.selectTab('programa')}>{S.seeSchedule}</button>
-    </div>
   {:else if app.scene === 'roundStart'}
     {#if app.focusRound !== null}<h2 class="now__heading">{S.round(app.focusRound)}</h2>{/if}
     {#if rule?.kind === 'special'}<p class="now__rule">{S.specialRule}</p>{:else if rule?.kind === 'type'}<p class="now__rule">{S.typeRule(rule.name)}</p>{/if}
@@ -66,18 +59,18 @@
       <h3 class="now__subheading">{S.prizesOf(focusPrizes.number)}</h3>
       <PrizeLines round={focusPrizes} />
     {/if}
-    {#if justPlayed && justPlayed.lines.some((l) => l.winners.length)}
+    {#if justPlayed && justPlayed.lines.some((l) => l.won)}
       <h3 class="now__subheading">{S.lastWinners}</h3>
-      <PrizeLines round={justPlayed} mine={app.views} />
+      <PrizeLines round={justPlayed} mine={app.data.cards} />
     {/if}
   {:else if app.scene === 'after'}
     <h2 class="now__heading">{S.thanks}</h2>
     <h3 class="now__subheading">{S.summary}</h3>
     <ul class="now__summary">
-      {#each prizes.filter((r) => r.lines.some((l) => l.winners.length)) as round (round.number)}
+      {#each prizes.filter((r) => r.lines.some((l) => l.won)) as round (round.number)}
         <li class="now__summary-round">
           <h4 class="now__summary-title">{S.round(round.number)}</h4>
-          <PrizeLines {round} mine={app.views} />
+          <PrizeLines {round} mine={app.data.cards} />
         </li>
       {/each}
     </ul>
@@ -90,20 +83,9 @@
       nowMs={app.cloudNow}
       clockOffsetMs={app.cloudNow - app.localNow}
       reduced={app.reducedMotion}
+      {compact}
+      {stopped}
       ontick={() => app.blip('tick')}
     />
-    {#if previous.length}
-      <section class="now__previous">
-        <h3 class="now__subheading">{S.previous}</h3>
-        <ol class="song-list">
-          {#each previous as l (l.position)}
-            <li class="song-list__item">
-              <Cover songId={l.songId} size="sm" />
-              <span class="song-list__title">{songTitle(app.catalog, l.songId)}</span>
-            </li>
-          {/each}
-        </ol>
-      </section>
-    {/if}
   {/if}
 </section>

@@ -1,10 +1,11 @@
 <script lang="ts">
   // "Afegir cartró": the card's icon (the first free one preselected) and a big number pad (keys ≥ 72 px),
-  // usable with one thumb.
+  // usable with one thumb. Leaving with a number typed asks first ("Vols sortir sense afegir el cartró?").
   import { nextColor, type SavedCard } from '../logic/storage.ts';
-  import { padValue } from '../logic/view.ts';
+  import { leaveNeedsConfirm, padValue } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
+  import ConfirmSheet from './ConfirmSheet.svelte';
   import IconPicker from './IconPicker.svelte';
   import Sheet from './Sheet.svelte';
 
@@ -19,6 +20,14 @@
   let identity = $state(nextColor(cards));
   let value = $state('');
   let error = $state<string | null>(null);
+  let leaving = $state(false);
+
+  /** The sheet may close at once with nothing typed; otherwise the player confirms first. */
+  function canClose(): boolean {
+    if (!leaveNeedsConfirm(value)) return true;
+    leaving = true;
+    return false;
+  }
   const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'] as const;
 
   function press(key: (typeof KEYS)[number]) {
@@ -34,7 +43,7 @@
   }
 </script>
 
-<Sheet name="pad" title={S.padTitle} {onclose}>
+<Sheet name="pad" title={S.padTitle} {onclose} {canClose}>
   <p class="number-pad__hint">{S.padHint}</p>
   <div class="number-pad__entry" style:--card-color="var(--card-color-{identity})">
     <span class="number-pad__mark" aria-hidden="true"><CardMark {identity} decorative /></span>
@@ -54,3 +63,6 @@
     {/each}
   </div>
 </Sheet>
+{#if leaving}
+  <ConfirmSheet name="leave-pad" title={S.leaveTitle} text={S.leaveText} yes={S.leaveYes} no={S.leaveNo} danger={false} onyes={onclose} onclose={() => (leaving = false)} />
+{/if}
