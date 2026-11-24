@@ -127,3 +127,15 @@ test('the view: what the console can’t know shows as a gap, never a guess', ()
   assert.equal(partial.validCount, null);
   assert.deepEqual(partial.bingo, { state: 'unknown', atLeast: null });
 });
+
+test("the view: the engine's future gives exact songs ahead and the whole round's chart, even opened late", () => {
+  const engine = { lineAt: 23, bingoAt: null, toLine: [0, 2, 1], toBingo: [], markCounts: [0, 1, 0, 2] };
+  const v = futureView(input({ engine, position: 20, printed: null, counted: { ids: [], complete: false } }));
+  assert.equal(v.gap, null, 'no gap: the engine counted every song');
+  assert.equal(v.validCount, 3);
+  assert.deepEqual(v.bars?.map((b) => [b.marked, b.cards]), [[3, 2], [2, 0], [1, 1]]);
+  assert.deepEqual(v.line, { state: 'in', songs: 3 });
+  assert.deepEqual(v.bingo, { state: 'never' });
+  assert.deepEqual(futureView(input({ engine, position: 22 })).line, { state: 'in', songs: 1 }, 'the next song');
+  assert.deepEqual(futureView(input({ engine, lineConfirmed: true })).line, { state: 'done' });
+});

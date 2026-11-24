@@ -84,13 +84,11 @@ test('the active hold mode: none, Parlem (ducked, or an engine without `ducked`)
   assert.equal(activeHoldMode(holding({ ducked: false })), 'stay');
 });
 
-test('Parlem enters and releases the Hold; Aguanta waits for the protocol’s `duck`', () => {
-  assert.deepEqual(holdPress('talk', null), { on: true });
+test('Parlem and Aguanta: each enters its mode, the active one releases, the other switches in place', () => {
+  assert.deepEqual(holdPress('talk', null), { on: true, duck: true });
+  assert.deepEqual(holdPress('stay', null), { on: true, duck: false });
   assert.deepEqual(holdPress('talk', 'talk'), { on: false }, 'pressing the active one releases');
   assert.deepEqual(holdPress('stay', 'stay'), { on: false });
-  // PROTOCOL PENDING (logic/hold-modes.ts withDuck): until `hold { duck }` exists Aguanta can't be sent.
-  // When it lands, these become { on: true, duck: false } and { on: true, duck: true }.
-  assert.equal(holdPress('stay', null), null);
-  assert.equal(holdPress('stay', 'talk'), null);
-  assert.deepEqual(holdPress('talk', 'stay'), { on: true });
+  assert.deepEqual(holdPress('stay', 'talk'), { on: true, duck: false }, 'Parlem → Aguanta without releasing');
+  assert.deepEqual(holdPress('talk', 'stay'), { on: true, duck: true });
 });

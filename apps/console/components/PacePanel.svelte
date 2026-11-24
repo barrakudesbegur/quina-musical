@@ -17,7 +17,8 @@
   const snap = $derived(model.show.state);
   const paceOk = $derived(model.can('setPace'));
   const gameOk = $derived(model.can('setGame'));
-  const recommended = $derived(snap ? recommendedPreset(snap.round.number, PACE_PRESETS_SEC, defaultPaceFor) : null);
+  // The snapshot's default Pace when the engine reports it, else the shared rule.
+  const recommended = $derived(snap ? recommendedPreset(snap.round.number, PACE_PRESETS_SEC, (round) => snap.pace.defaultSec ?? defaultPaceFor(round)) : null);
   const notice = $derived(snap ? recoveryNotice(snap.pace) : null);
 </script>
 

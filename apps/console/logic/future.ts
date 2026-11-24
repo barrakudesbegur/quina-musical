@@ -9,7 +9,7 @@
 // The snapshot carries only the round's last 10 landings, so the console gathers the counted songs from the
 // snapshots it sees (`recordLandings`): a console opened mid-round knows them all only after a short round.
 // Pure.
-import type { PossibleWinners, RoundInfo, RoundKind, ShowState } from '@quina/protocol';
+import type { FutureInfo, PossibleWinners, RoundInfo, RoundKind, ShowState } from '@quina/protocol';
 import { cardMarks, cardsForRound, type PlayerCard } from '../../../packages/rules/marks.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import { possibleWinnersView, type CardsInPlay, type PossibleWinnersView } from './possible-winners.ts';
@@ -114,12 +114,24 @@ export function fewestMissing(cards: readonly PlayerCard[], landed: readonly num
  * How far the first possible Line or Quina is: a card already has it (`now`), the Line was confirmed this
  * round (`done`), or not known exactly (`unknown`, with a lower bound when the console can count one).
  */
-export type SongsAhead = { state: 'now' } | { state: 'done' } | { state: 'unknown'; atLeast: number | null };
+export type SongsAhead =
+  | { state: 'now' }
+  | { state: 'done' }
+  /** The engine knows the Queue: the first one comes in `songs` songs (1 = the next song). */
+  | { state: 'in'; songs: number }
+  /** The engine knows no card completes with the rest of this round's Queue. */
+  | { state: 'never' }
+  | { state: 'unknown'; atLeast: number | null };
 
 /** Why the chart can't be drawn: no printed cards (cards.json), no cards in play, or not every counted song seen. */
 export type ChartGap = 'cards' | 'inPlay' | 'landings';
 
 export interface FutureInput {
+  /** The engine's private future (ShowState.future): exact, from the Queue. Absent from an older engine, null
+   * without cards in play; the console then counts what it can itself. */
+  engine?: FutureInfo | null;
+  /** The Queue index of the last counted landing (`queue.position`). */
+  position?: number;
   /** The printed cards, or null until cards.json loads. */
   printed: ReadonlyMap<number, PlayerCard> | null;
   inPlay: CardsInPlay;
@@ -140,14 +152,27 @@ export interface FutureView {
   winners: PossibleWinnersView;
 }
 
-export function futureView({ printed, inPlay, roundKind, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
+export function futureView({ engine, position = -1, printed, inPlay, roundKind, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
+  const settled = (kind: WinKind): SongsAhead | null =>
+    kind === 'line' && lineConfirmed ? { state: 'done' } : possibleWinners[kind].length > 0 ? { state: 'now' } : null;
+  if (engine) {
+    // The engine's numbers: the whole round's marks and the exact songs ahead, even on a console opened late.
+    const at = (kind: WinKind): SongsAhead => {
+      const index = kind === 'line' ? engine.lineAt : engine.bingoAt;
+      return settled(kind) ?? (index === null ? { state: 'never' } : { state: 'in', songs: Math.max(1, index - position) });
+    };
+    return {
+      bars: markBars(engine.markCounts),
+      gap: null,
+      validCount: engine.markCounts.reduce((a, b) => a + b, 0),
+      line: at('line'),
+      bingo: at('bingo'),
+      winners: possibleWinnersView(possibleWinners, inPlay),
+    };
+  }
   const gap: ChartGap | null = !printed || printed.size === 0 ? 'cards' : !inPlay.ids ? 'inPlay' : !counted.complete ? 'landings' : null;
   const cards = gap === null && printed && inPlay.ids ? validCards(printed, inPlay.ids, roundKind) : null;
-  const ahead = (kind: WinKind): SongsAhead => {
-    if (kind === 'line' && lineConfirmed) return { state: 'done' };
-    if (possibleWinners[kind].length > 0) return { state: 'now' };
-    return { state: 'unknown', atLeast: cards ? fewestMissing(cards, counted.ids, kind) : null };
-  };
+  const ahead = (kind: WinKind): SongsAhead => settled(kind) ?? { state: 'unknown', atLeast: cards ? fewestMissing(cards, counted.ids, kind) : null };
   return {
     bars: cards ? markBars(markHistogram(cards, counted.ids)) : null,
     gap,

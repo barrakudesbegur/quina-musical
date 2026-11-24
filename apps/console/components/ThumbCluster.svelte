@@ -6,7 +6,7 @@
     [ Següent (full width, the biggest)      ]
   Següent sits at the bottom under the thumbs; Enrere, the risky one, is furthest away. Parlem and Aguanta
   are one pair (logic/hold-modes.ts): the active one shows pressed, pressing it again releases, pressing the
-  other switches. Aguanta waits for the protocol (`hold { duck }`) and is disabled until then.
+  other switches (`hold { on, duck }`).
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
@@ -24,13 +24,7 @@
   const modes = $derived(
     (['talk', 'stay'] as const).map((mode) => {
       const fields = holdPress(mode, active);
-      return {
-        mode,
-        fields,
-        pressed: active === mode,
-        enabled: c.hold.enabled && fields !== null,
-        pending: mode === 'stay' && fields === null,
-      };
+      return { mode, fields, pressed: active === mode, enabled: c.hold.enabled };
     }),
   );
   const TEXT: Record<HoldMode, { label: string; note: string; icon: 'hold' | 'stay' }> = {
@@ -53,13 +47,12 @@
         data-anim="press"
         aria-pressed={m.pressed}
         disabled={!m.enabled}
-        title={m.pending ? S.cluster.stayPending : undefined}
-        onclick={() => m.fields && model.act('hold', m.fields)}
+        onclick={() => model.act('hold', m.fields)}
       >
         <Icon name={TEXT[m.mode].icon} outline />
         <span class="big-button__text">
           <span class="big-button__label">{TEXT[m.mode].label}</span>
-          <span class="big-button__note">{m.pressed ? S.cluster.activeNote : m.pending ? S.cluster.stayPendingShort : TEXT[m.mode].note}</span>
+          <span class="big-button__note">{m.pressed ? S.cluster.activeNote : TEXT[m.mode].note}</span>
         </span>
       </button>
     </div>

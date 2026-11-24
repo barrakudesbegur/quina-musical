@@ -391,9 +391,19 @@
   display: contents;
 }
 
+/* Every logo sits on a light rounded plate: many sponsors' logos are dark text on a transparent background,
+   which would vanish on the night sky (b2's logo clean-up showed a dozen). The coloured ones look right on it too. */
 .sponsors__logo {
+  box-sizing: content-box;
   height: var(--stage-logo);
   width: auto;
+  max-width: calc(var(--stage-logo) * 3);
+  object-fit: contain;
+  padding: calc(var(--stage-logo) * 0.14) calc(var(--stage-logo) * 0.22);
+  background: var(--color-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 0 var(--color-shadow);
 }
 
 .countdown {

@@ -18,6 +18,8 @@
   const view = $derived(
     snap
       ? futureView({
+          engine: snap.future,
+          position: snap.queue.position,
           printed: model.catalog?.cards ?? null,
           inPlay: model.inPlay,
           roundKind: snap.round.kind,
@@ -30,7 +32,8 @@
   const widest = $derived(view?.bars ? Math.max(1, ...view.bars.map((b) => b.cards)) : 1);
   const candidates = $derived(view ? [...view.winners.line, ...view.winners.bingo] : []);
   const title = (songId: number | null) => songTitleOf(songId, snap, model.catalog) ?? (songId === null ? '' : String(songId));
-  const aheadText = (a: SongsAhead) => (a.state === 'now' ? S.future.now : a.state === 'done' ? S.future.done : S.future.unknown);
+  const aheadText = (a: SongsAhead) =>
+    a.state === 'now' ? S.future.now : a.state === 'done' ? S.future.done : a.state === 'in' ? S.future.inSongs(a.songs) : a.state === 'never' ? S.future.never : S.future.unknown;
 </script>
 
 {#if view}

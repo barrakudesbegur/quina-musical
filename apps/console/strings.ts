@@ -71,8 +71,6 @@ export const S = {
     stayNote: 'la cançó segueix; no gira',
     /** A pressed Parlem or Aguanta: pressing it again releases the Hold. */
     activeNote: 'prem per reprendre',
-    stayPending: 'Aviat: el motor encara no sap aguantar la cançó sense baixar-la.',
-    stayPendingShort: 'encara no disponible',
     suspense: 'Suspens',
     suspenseIdle: 'mantén per crear tensió',
     suspenseOpen: 'deixa anar per aterrar',
@@ -147,6 +145,8 @@ export const S = {
     now: 'Ja hi és',
     done: 'Confirmada',
     atLeast: (n: number) => `com a mínim d'aquí a ${n}`,
+    inSongs: (n: number) => (n === 1 ? 'La següent cançó' : `D'aquí a ${n} cançons`),
+    never: 'Cap en aquesta quina',
     exactPending: "El número exacte necessita l'ordre de la cua, i el motor encara no l'envia a la consola.",
     winners: 'Possibles guanyadors',
     none: 'Encara cap',
