@@ -1686,6 +1686,12 @@
   color: #ffffff;
 }
 
+/* The Quina Desgraciada's one ticket: the last card standing's prize. */
+.ticket[data-prize='standing'] .ticket__ribbon {
+  background: var(--color-green);
+  color: #ffffff;
+}
+
 .ticket__title {
   overflow: hidden;
   font-family: var(--font-display);
@@ -2611,11 +2617,11 @@
   box-shadow: 0 0 0 4px var(--color-primary);
 }
 
-.check-steps__item[data-landed='false'] {
+.check-steps__item[data-mark='bad'] {
   box-shadow: 0 0 0 4px var(--color-red);
 }
 
-.check-steps__item[data-landed='false'] .cover {
+.check-steps__item[data-mark='bad'] .cover {
   filter: grayscale(1);
 }
 
@@ -2643,11 +2649,11 @@
   animation: fade-in var(--dur-step-mark) var(--ease-out);
 }
 
-.check-steps__item[data-landed='true'] .check-steps__mark {
+.check-steps__item[data-mark='ok'] .check-steps__mark {
   color: var(--color-ok);
 }
 
-.check-steps__item[data-landed='false'] .check-steps__mark {
+.check-steps__item[data-mark='bad'] .check-steps__mark {
   color: var(--color-danger);
 }
 
@@ -3616,6 +3622,262 @@ kbd {
   }
 }
 
+/* ---- the Dempeus tab (the Desgraciat round; Consola-Dempeus board) -------------------------------------- */
+.standing {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.standing__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+}
+
+.standing__count {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+}
+
+/* standing-count: the old number and the new one share one cell while they slide (Svelte's fly). */
+.standing__number {
+  display: inline-grid;
+  font-family: var(--font-display);
+  font-size: 4.5rem;
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.standing__digits {
+  grid-area: 1 / 1;
+}
+
+.standing__number[data-gold] {
+  color: var(--color-standing-gold);
+}
+
+.standing__word {
+  font-size: var(--text-lg);
+  font-weight: 900;
+}
+
+.standing__of {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+/* "−3 amb «Titanium»": the landing that knocked cards out. */
+.standing__drop {
+  margin: 0 0 0 auto;
+  padding: 2px 10px;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--ring-chip-error);
+  color: var(--color-red-edge);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+/* Above 60: the standing (green) and seated share. */
+.standing__bar {
+  height: 22px;
+  overflow: hidden;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 11px;
+  background: var(--color-track);
+}
+
+.standing__bar-fill {
+  display: block;
+  box-sizing: border-box;
+  width: calc(var(--share, 0) * 100%);
+  height: 100%;
+  border-right: var(--line-width) solid var(--color-line);
+  background: var(--color-green);
+}
+
+.standing__seated {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.standing__later {
+  margin-top: auto;
+}
+
+/* From 60 down: the standing cards as chips, sorted. */
+.standing__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.standing__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 9px;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 10px;
+  background: var(--ring-chip-ok);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* standing-fall: a card that just fell turns red with a ✗ (at once), held 600 ms, then leaves (script). */
+.standing__chip[data-fallen] {
+  background: var(--color-red);
+  color: #ffffff;
+  -webkit-text-stroke: 3px var(--color-ink);
+  paint-order: stroke fill;
+}
+
+.standing__chip[data-fallen] .icon {
+  width: 14px;
+  height: 14px;
+  -webkit-text-stroke: 0;
+}
+
+/* standing-last: one card left, its big gold-ringed number, and "Comprovar #57" beside it. */
+.standing__last {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px;
+}
+
+.standing__last-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 6px;
+  padding: 10px 22px 12px;
+  border: 4px solid var(--color-line);
+  border-radius: 20px;
+  background: var(--color-snow);
+  color: var(--color-ink);
+  box-shadow:
+    0 0 0 6px var(--color-gold),
+    0 0 22px 6px color-mix(in srgb, var(--color-gold) 60%, transparent),
+    0 5px 0 4px var(--color-line);
+  animation: standing-grow var(--dur-standing-last) var(--ease-bounce) both;
+}
+
+.standing__last-label {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold-edge);
+}
+
+.standing__last-number {
+  font-family: var(--font-display);
+  font-size: 5.5rem;
+  line-height: 1;
+}
+
+.standing__last-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 14rem;
+}
+
+.standing__claim {
+  animation: standing-slide-up var(--dur-standing-button) var(--ease-out) both;
+}
+
+@keyframes standing-grow {
+  from {
+    transform: scale(0.4);
+  }
+}
+
+@keyframes standing-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* The Futur in the Desgraciat round: the count after each of the next songs, one bar per song. */
+.future__body--standing {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.standing-curve {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 7rem;
+  margin: 0;
+  padding: 0 0 0 0;
+  border-bottom: var(--line-width-thin) solid var(--color-line);
+  list-style: none;
+}
+
+.standing-curve__bar {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  min-width: 0;
+  height: 100%;
+}
+
+.standing-curve__fill {
+  display: block;
+  width: 100%;
+  height: max(3px, calc(var(--share, 0) * 100%));
+  border-radius: 4px 4px 0 0;
+  background: var(--color-green);
+  transform-origin: bottom;
+  animation: curve-grow var(--dur-reveal-bars) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--dur-reveal-stagger));
+}
+
+.standing-curve__bar:hover .standing-curve__fill {
+  background: var(--color-green-edge);
+}
+
+@keyframes curve-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+.standing-curve__axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
 /* ---- reduced motion: the still fallbacks from ANIMATIONS.md ---------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   [data-anim~='press']:active:not(:disabled) {
@@ -3652,6 +3914,9 @@ kbd {
   .toast,
   .future__body,
   .mark-bars__fill,
+  .standing-curve__fill,
+  .standing__last-card,
+  .standing__claim,
   .tabs__content,
   .check-steps__item[data-landed] .check-steps__mark {
     animation: none;

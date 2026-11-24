@@ -3,12 +3,15 @@
   presenter taps "Mirar el futur", so the presenters stay curious too; it hides again for a new round. Revealed
   (hook reveal: it unblurs and fades in, the bars grow with a stagger): how many cards have each number of
   marked songs, the songs left until the first possible Line and Quina, and the possible winners. What the
-  console can't know shows "—" (logic/future.ts says why).
+  console can't know shows "—" (logic/future.ts says why). In the Desgraciat round: the songs left until one card
+  stands (`lastStandingAt`) and a small chart of the standing count after each of the next songs (`standingCurve`);
+  no possible winners (the Dempeus tab says who is left).
 -->
 <script lang="ts">
   import { roundCardType } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { futureView, type SongsAhead } from '../logic/future.ts';
+  import { standingFuture } from '../logic/standing.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -30,11 +33,14 @@
         })
       : null,
   );
+  const desgraciat = $derived(snap?.round.kind === 'desgraciat');
+  const standing = $derived(snap && desgraciat ? standingFuture(snap.future, snap.queue.position, snap.standing) : null);
+  const tallest = $derived(standing ? Math.max(1, ...standing.curve.map((c) => c.standing)) : 1);
   const widest = $derived(view?.bars ? Math.max(1, ...view.bars.map((b) => b.cards)) : 1);
   const candidates = $derived(view ? [...view.winners.line, ...view.winners.bingo] : []);
   const title = (songId: number | null) => songTitleOf(songId, snap, model.catalog) ?? (songId === null ? '' : String(songId));
   const aheadText = (a: SongsAhead) =>
-    a.state === 'now' ? S.future.now : a.state === 'done' ? S.future.done : a.state === 'in' ? S.future.inSongs(a.songs) : a.state === 'never' ? S.future.never : S.future.unknown;
+    a.state === 'now' ? (desgraciat ? S.future.lastNow : S.future.now) : a.state === 'done' ? S.future.done : a.state === 'in' ? S.future.inSongs(a.songs) : a.state === 'never' ? S.future.never : S.future.unknown;
 </script>
 
 {#if view}
@@ -45,6 +51,29 @@
         <button type="button" class="mini future__show" data-anim="press" aria-controls="{uid}-body" onclick={() => model.revealFuture(true)}>
           <Icon name="eye" /><span>{S.future.show}</span>
         </button>
+      </div>
+    {:else if standing}
+      <div class="future__body future__body--standing" id="{uid}-body" data-anim="reveal" data-testid="future-standing">
+        <div class="future__ahead">
+          <p class="future__box" data-state={standing.ahead.state}>
+            <span class="future__box-label">{S.future.untilLast}</span>
+            <span class="future__box-value">{aheadText(standing.ahead)}</span>
+          </p>
+        </div>
+        {#if standing.curve.length}
+          <section class="future__chart" aria-labelledby="{uid}-curve">
+            <h3 class="panel__label" id="{uid}-curve">{S.future.curve}</h3>
+            <ol class="standing-curve" style:--n={standing.curve.length}>
+              {#each standing.curve as point, i (point.song)}
+                <li class="standing-curve__bar" style:--i={i} style:--share={point.standing / tallest} title={S.future.curveBar(point.song, point.standing)} aria-label={S.future.curveBar(point.song, point.standing)}>
+                  <span class="standing-curve__fill" aria-hidden="true"></span>
+                </li>
+              {/each}
+            </ol>
+            <p class="standing-curve__axis" aria-hidden="true"><span>{S.future.curveFirst}</span><span>{S.future.curveLast(standing.curve.length)}</span></p>
+          </section>
+        {/if}
+        <p class="note">{S.future.noWinnersHere}</p>
       </div>
     {:else}
       <div class="future__body" id="{uid}-body" data-anim="reveal">

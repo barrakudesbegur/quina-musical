@@ -26,7 +26,7 @@
       {#if claim.notSold}<p class="claims__warning"><Icon name="alert" />{S.check.notSold}</p>{/if}
       {#if !(claim.current && hideCurrent)}
         {#if claim.outcome}<p class="claims__meta">{S.check.outcome[claim.outcome]}</p>{/if}
-        {#if claim.completeSinceSong !== null}<p class="claims__meta">{S.check.completeSince(claim.completeSinceSong)}</p>{/if}
+        {#if claim.completeSinceSong !== null}<p class="claims__meta">{S.check.completeSince(claim.completeSinceSong, claim.kind)}</p>{/if}
       {/if}
       {#if claim.canCheck && !claim.current}
         <button type="button" class="mini claims__check" data-anim="press" disabled={!model.can('checkStart')} onclick={() => model.act('checkStart', { claimId: claim.claimId })}>

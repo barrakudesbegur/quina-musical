@@ -1,7 +1,8 @@
 <!--
   A round's Line and Quina prize bundles with their sponsors, from the Game plan (which may be missing), as
   two prize tickets (the Consola-Pestanyes board): a ribbon names the prize ("LÍNIA", "QUINA"); the headline
-  prizes come first, big, with their sponsor; a perforation; then the rest of the bundle, one line each.
+  prizes come first, big, with their sponsor; a perforation; then the rest of the bundle, one line each. The Quina
+  Desgraciada has one ticket, "DEMPEUS" (the last card standing's prize), and no Line.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
@@ -21,8 +22,9 @@
   <p class="note note--warning" data-state="no-round">{S.prizes.noRound(result.number)}</p>
 {:else}
   {#if result.prizes.kind === 'special'}<p class="badge badge--special">{S.prizes.special}</p>{/if}
+  {#if result.prizes.kind === 'desgraciat'}<p class="badge badge--special">{S.prizes.desgraciat}</p>{/if}
   <div class="prize-list" data-kind={result.prizes.kind}>
-    {#each [{ kind: 'line', bundle: result.prizes.line }, { kind: 'bingo', bundle: result.prizes.bingo }] as const as { kind, bundle } (kind)}
+    {#each result.prizes.bundles as { kind, prizes: bundle } (kind)}
       {@const lead = bundle.filter((p) => p.headline)}
       {@const rest = bundle.filter((p) => !p.headline)}
       <article class="ticket" data-prize={kind} aria-label={S.prizes[kind]}>

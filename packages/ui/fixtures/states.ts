@@ -182,7 +182,7 @@ export function desgraciatState(now: number, landed: number, lastAtMs = now): Fu
     current: last ? { ...song(last), hookId: 'h1', posSec: Math.max(0, (now - lastAtMs) / 1000), endsAtMs: lastAtMs + 60000 } : null,
     next: count > 1 ? song(DESGRACIAT_LANDED[landed] ?? 74) : song(74),
     queue: { position: landed - 1, length: 77 },
-    round: { number: 5, kind: 'desgraciat', cardType: 'normal', startedAtMs: now - landed * 14000 - 30000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
+    round: { number: 5, kind: 'desgraciat', cardType: 'normal', startedAtMs: now - 6 * 60000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
     phase: count > 100 ? 'early' : count > 30 ? 'mid' : count > 5 ? 'late' : 'final',
     heat: count > 100 ? 0.3 : count > 30 ? 0.52 : count > 5 ? 0.74 : 0.92,
     cards: { ...s.cards, climbingTo: 'standing' },

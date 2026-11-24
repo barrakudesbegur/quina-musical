@@ -1,6 +1,7 @@
 <!--
   The Claim number pad: a big pad to type the claimed card's number, what is claimed (Line or Quina,
-  defaulting to what the Phase climbs towards), and a warning when the card isn't registered as sold.
+  defaulting to what the Phase climbs towards; no choice in the Desgraciat round, where the only win is the last
+  card standing), and a warning when the card isn't registered as sold.
   Physical keys work too: digits, Backspace, Delete, Enter, Escape.
 -->
 <script lang="ts">
@@ -9,7 +10,7 @@
   import { getConsole } from '../context.ts';
   import { PAD_DIGITS, padKeyFromKeyboard, padPress, padValue, type PadKey } from '../logic/numpad.ts';
   import { isNotSold } from '../logic/possible-winners.ts';
-  import { defaultClaimKind } from '../logic/show-data.ts';
+  import { claimKindsOf, defaultClaimKind } from '../logic/show-data.ts';
   import type { ClaimKind } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -21,11 +22,11 @@
   const limits = { maxDigits: CONSOLE.cardDigits, max: CONSOLE.cardMax };
   let dialog: HTMLDialogElement | undefined = $state();
   let digits = $state('');
-  /** What `claim` takes for now: 'standing' opens with the Desgraciat round. */
+  /** What is claimed: Line or Quina, or 'standing' in the Desgraciat round. */
   let kind = $state<ClaimKind>('line');
   const value = $derived(padValue(digits, limits));
   const notSold = $derived(value !== null && isNotSold(value, model.inPlay));
-  const KINDS: readonly ClaimKind[] = ['line', 'bingo'];
+  const kinds = $derived(claimKindsOf(model.show.state));
 
   $effect(() => {
     if (!dialog) return;
@@ -51,7 +52,8 @@
   function submit(e: SubmitEvent): void {
     e.preventDefault();
     if (value === null || !model.can('claim')) return;
-    model.act('claim', { cardId: value, kind });
+    // A kind the round can't be won by (the round changed while the pad was open) gives way to its default.
+    model.act('claim', { cardId: value, kind: kinds.includes(kind) ? kind : defaultClaimKind(model.show.state) });
     open = false;
   }
 </script>
@@ -68,11 +70,13 @@
     </output>
     <p class="numpad__warning" role="status">{#if notSold}<span class="badge badge--warning">{S.numpad.notSold}</span>{/if}</p>
 
-    <div class="choice-group numpad__kind" role="group" aria-label={S.numpad.kind}>
-      {#each KINDS as k (k)}
-        <button type="button" class="choice" data-anim="press" aria-pressed={kind === k} onclick={() => (kind = k)}>{S.numpad.kinds[k]}</button>
-      {/each}
-    </div>
+    {#if kinds.length > 1}
+      <div class="choice-group numpad__kind" role="group" aria-label={S.numpad.kind}>
+        {#each kinds as k (k)}
+          <button type="button" class="choice" data-anim="press" aria-pressed={kind === k} onclick={() => (kind = k)}>{S.numpad.kinds[k]}</button>
+        {/each}
+      </div>
+    {/if}
 
     <div class="numpad__keys">
       {#each PAD_DIGITS.slice(0, 9) as d (d)}

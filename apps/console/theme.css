@@ -75,6 +75,8 @@
   --dur-default-ring: 200ms;
   --dur-wii-badge: 240ms;
   --dur-wii-dialog: 200ms;
+  --dur-standing-last: 300ms; /* standing-last: the last card grows (--ease-bounce) */
+  --dur-standing-button: 200ms; /* standing-last: "Comprovar #57" slides up */
   /* The default action's ring: A's orange (the dark theme's), its darker edge on the light background */
   --default-ring: var(--color-orange);
 
@@ -100,6 +102,7 @@
   --color-text: var(--color-snow);
   --color-text-muted: var(--color-muted);
   --color-title: var(--color-gold);
+  --color-standing-gold: var(--color-gold); /* the Dempeus count from 3 down */
   --color-danger: #ff5a60;
   /* The menu's danger zone (Consola-Menu, dark) */
   --color-danger-zone: #3a1e3f;
@@ -122,6 +125,7 @@
   --color-text-muted: #5a5480;
   --color-text-on-paper: var(--color-ink);
   --color-title: var(--color-orange-edge);
+  --color-standing-gold: var(--color-gold-edge);
   --color-line: var(--color-ink);
   --color-primary: var(--color-orange);
   --color-danger: #c8232b;

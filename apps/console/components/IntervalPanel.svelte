@@ -7,6 +7,7 @@
   import { getConsole } from '../context.ts';
   import { guideCountdown } from '../logic/countdown.ts';
   import { roundIntroArgs } from '../logic/show-data.ts';
+  import { roundPlan } from '../../../packages/ui/plan.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
@@ -28,7 +29,7 @@
 {#if interval}
   <section class="panel interval-panel" aria-labelledby="{uid}-title">
     <h2 class="panel__title" id="{uid}-title">{S.interval.title}</h2>
-    <p class="interval-panel__next">{S.interval.next(interval.nextRound, total)}</p>
+    <p class="interval-panel__next">{S.interval.next(interval.nextRound, total, roundPlan(model.plan, interval.nextRound)?.kind === 'desgraciat')}</p>
 
     {#if guide}
       <p class="interval-panel__guide" data-state={guide.done ? 'over' : 'running'}>

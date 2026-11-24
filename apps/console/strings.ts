@@ -9,6 +9,7 @@ import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKi
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
 import type { ChartGap } from './logic/future.ts';
+import { STANDING_LIST_MAX } from '@quina/protocol';
 import type { ConsoleCommand, Theme } from './config.ts';
 import type { WiiStatus } from './wii/controller.svelte.ts';
 
@@ -38,7 +39,7 @@ export const S = {
     menu: 'Menú: més opcions',
     demo: (name: string) => `Demo: ${name}`,
     noRound: CA.gameTitle,
-    round: (n: number, special: boolean) => (special ? `${CA.round(n)} · especial` : CA.round(n)),
+    round: (n: number, special: boolean, desgraciat = false) => (desgraciat ? CA.desgraciatRound : special ? `${CA.round(n)} · especial` : CA.round(n)),
     stale: 'Dades antigues',
   },
 
@@ -192,6 +193,34 @@ export const S = {
     notSoldLong: 'No registrat com a venut',
     noCardsInPlay: "No hi ha cartrons en joc registrats: no es pot avisar dels que no s'han venut.",
     inPlayError: 'Els cartrons en joc no es poden llegir.',
+    /** The Desgraciat round: the songs until one card stands, and the count's curve. */
+    untilLast: "Fins a l'últim dempeus",
+    lastNow: 'Ja només en queda un',
+    curve: 'Cartrons dempeus després de cada cançó',
+    curveBar: (song: number, standing: number) => `${song === 1 ? 'Després de la següent cançó' : `D'aquí a ${song} cançons`}: ${standing} dempeus`,
+    curveFirst: 'la següent',
+    curveLast: (song: number) => `d'aquí a ${song}`,
+    noWinnersHere: 'En aquesta quina no hi ha possibles guanyadors: la pestanya Dempeus diu qui queda.',
+  },
+
+  /** The Desgraciat round's Dempeus tab: who is still standing (PRIVATE, like the Futur). */
+  standing: {
+    word: 'dempeus',
+    of: (total: number) => `de ${total} cartrons`,
+    countLabel: (n: number, total: number | null) => (total === null ? `${n} dempeus` : `${n} dempeus de ${total} cartrons`),
+    seated: (n: number) => (n === 1 ? '1 assegut' : `${n} asseguts`),
+    bar: (n: number, total: number) => `${n} dempeus i ${total - n} asseguts`,
+    listLater: `Quan en quedin ${STANDING_LIST_MAX} o menys, hi veuràs els números.`,
+    list: 'Cartrons dempeus',
+    chip: (id: number) => `#${id}`,
+    fallen: (id: number) => `#${id} ha caigut`,
+    /** The landing that knocked cards out: "−3 amb «Titanium»". */
+    drop: (n: number, title: string | null) => (title ? `−${n} amb «${title}»` : `−${n}`),
+    last: "L'últim dempeus",
+    claimLast: (id: number) => `Comprovar #${id}`,
+    lastNote: (id: number) => `Pregunteu qui té el #${id}. Si ningú el té, decidiu vosaltres.`,
+    none: 'No en queda cap dempeus: decidiu vosaltres com acaba la quina.',
+    noCards: "No hi ha cartrons en joc registrats: no es pot comptar qui queda dempeus.",
   },
 
   hold: {
@@ -233,7 +262,10 @@ export const S = {
     rowShort: (row: number) => `fila ${row + 1}`,
     allSongsShort: 'les 12 cançons',
     resultMissing: (titles: readonly string[], kind: WinKind) => `Resultat: falta ${listing(titles)}. Aquest cartró no té ${kindWord[kind]}.`,
-    resultComplete: (kind: WinKind) => `Resultat: han sonat totes. Aquest cartró té ${kindWord[kind]}!`,
+    resultComplete: (kind: WinKind) =>
+      kind === 'standing' ? "Resultat: no n'ha sonat cap. Aquest cartró és l'últim dempeus!" : `Resultat: han sonat totes. Aquest cartró té ${kindWord[kind]}!`,
+    /** A standing claim for a card that fell (the Desgraciat round), naming the song that sank it. */
+    resultFallen: (title: string | null) => (title ? `Resultat: «${title}» ja ha sonat. Aquest cartró ha caigut.` : "Resultat: una de les seves cançons ja ha sonat. Aquest cartró ha caigut."),
     decide: 'Decisió',
     confirmNote: 'el presentador sempre decideix',
     rejectNote: 'sona la fanfàrria de fallada',
@@ -246,7 +278,7 @@ export const S = {
       unknownCard: 'Aquest número de cartró no existeix',
       wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
     } satisfies Record<CheckOutcome, string>,
-    completeSince: (n: number) => `complet des de la cançó ${n}`,
+    completeSince: (n: number, kind: WinKind = 'line') => (kind === 'standing' ? `l'únic dempeus des de la cançó ${n}` : `complet des de la cançó ${n}`),
     notSold: 'No registrat com a venut',
     checkNow: 'Comprova',
     recheck: 'Tornar a comprovar',
@@ -299,7 +331,7 @@ export const S = {
 
   interval: {
     title: CA.scene.interval,
-    next: (n: number, total: number) => CA.roundOf(n, total),
+    next: (n: number, total: number, desgraciat = false) => (desgraciat ? CA.desgraciatRound : CA.roundOf(n, total)),
     guide: 'Compte enrere orientatiu',
     over: (clock: string) => `+${clock}`,
     start: 'Comença la quina',
@@ -336,6 +368,8 @@ export const S = {
   prizes: {
     line: CA.prize.line,
     bingo: CA.prize.bingo,
+    standing: CA.prize.standing,
+    desgraciat: CA.desgraciatRound,
     sponsoredBy: CA.sponsoredBy,
     /** The ticket's ribbon ("LÍNIA", "QUINA"; drawn in capitals). */
     ribbon: kindLabel,
@@ -348,10 +382,10 @@ export const S = {
     revealed: 'Revelats: els mòbils ja els veuen',
   },
 
-  tabs: { label: 'Ajudes', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
+  tabs: { label: 'Ajudes', standing: 'Dempeus', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
 
   cheatSheet: {
-    prizes: (n: number) => `Premis de la ${CA.round(n)}`,
+    prizes: (n: number, desgraciat = false) => `Premis de la ${desgraciat ? CA.desgraciatRound : CA.round(n)}`,
     specialRules: CA.specialRound,
     claimRules: 'Normes per cantar',
     keys: 'Tecles del portàtil (pla B)',

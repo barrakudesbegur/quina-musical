@@ -1,9 +1,9 @@
 // Small lookups the panels share: a song's title, a round's prize bundles from the Game plan and whether phones
 // may see them yet, the Winners of a Celebration, and the Winners grouped by round. Pure.
-import type { CommandFields, RoundKind, ShowState } from '@quina/protocol';
+import { winKindsOf, type CommandFields, type RoundKind, type ShowState } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
-import { revealedRounds, roundIntroFields, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { prizeBundleOf, revealedRounds, roundIntroFields, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 
 /** A song's title: from the snapshot (current, next, recent landings), then the printed cards, else null. */
 export function songTitleOf(songId: number | null | undefined, state: ShowState | null, catalog: Catalog | null): string | null {
@@ -29,6 +29,9 @@ export interface RoundPrizes {
   /** The bundles, headline prizes first; empty when none is set. */
   line: PrizeView[];
   bingo: PrizeView[];
+  /** One bundle per win the round can have (winKindsOf): Line and Quina, or the Desgraciat round's last card
+   * standing (its `bingo` bundle). */
+  bundles: { kind: WinKind; prizes: PrizeView[] }[];
 }
 
 /** What `roundPrizes` found: the plan is missing, the round isn't in it, or its prizes. */
@@ -46,7 +49,16 @@ export function roundPrizes(plan: GamePlan | null, number: number): RoundPrizesR
   if (!plan) return { status: 'noPlan' };
   const round = roundPlan(plan, number);
   if (!round) return { status: 'noRound', number };
-  return { status: 'ok', prizes: { number, kind: round.kind, line: bundleView(plan, round.line), bingo: bundleView(plan, round.bingo) } };
+  return {
+    status: 'ok',
+    prizes: {
+      number,
+      kind: round.kind,
+      line: bundleView(plan, round.line),
+      bingo: bundleView(plan, round.bingo),
+      bundles: winKindsOf(round.kind).map((kind) => ({ kind, prizes: bundleView(plan, prizeBundleOf(round, kind)) })),
+    },
+  };
 }
 
 /** The `roundIntro` that introduces round `number`, kind and card type from the plan (ui/plan.ts roundIntroFields). */
@@ -83,14 +95,20 @@ export function winnersByRound(winners: readonly WinnerInfo[]): WinnersByRound[]
     .map(([round, list]) => ({ round, winners: list.sort((a, b) => kindOrder(a.kind) - kindOrder(b.kind) || a.atMs - b.atMs) }));
 }
 
-/** The kind of the next Claim when the presenters don't pick one: what the Phase is climbing towards. */
-/** A Claim's kind as `claim` takes it ('standing' opens there with the Desgraciat round). */
+/** A Claim's kind as `claim` takes it ('standing' in the Desgraciat round). */
 export type ClaimKind = NonNullable<CommandFields['claim']['kind']>;
 
+/** The kind of the next Claim when the presenters don't pick one: what the Phase is climbing towards; in the
+ * Desgraciat round always the last card standing (its only win). */
 export function defaultClaimKind(state: ShowState | null): ClaimKind {
   if (!state) return 'line';
+  if (state.round.kind === 'desgraciat' || state.cards.climbingTo === 'standing') return 'standing';
   return state.cards.climbingTo === 'bingo' || state.round.lineConfirmed ? 'bingo' : 'line';
 }
+
+/** The kinds the claim pad offers this round (winKindsOf): Line and Quina, or only the last card standing, which
+ * needs no choice. */
+export const claimKindsOf = (state: ShowState | null): readonly ClaimKind[] => winKindsOf(state?.round.kind ?? 'normal');
 
 /** Tabs: the index after an arrow, Home or End key (wrapping), or null for any other key. */
 export function tabIndexForKey(current: number, key: string, count: number): number | null {

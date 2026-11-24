@@ -89,6 +89,8 @@ export function heatPercent(heat: number | null | undefined): number | null {
 export interface RoundOnScreen {
   number: number;
   special: boolean;
+  /** The Desgraciat round: named "Quina Desgraciada". */
+  desgraciat: boolean;
 }
 
 /**
@@ -99,10 +101,11 @@ export interface RoundOnScreen {
 export function roundOnScreen(state: ShowState | null, flow: FlowFields): RoundOnScreen | null {
   if (!state) return null;
   const intro = flow.intro;
-  if (flow.scene === 'roundStart' && intro) return { number: intro.round, special: intro.kind === 'special' };
-  if (flow.scene === 'roundStart' && flow.shuffle) return { number: flow.shuffle.round, special: state.round.kind === 'special' };
+  if (flow.scene === 'roundStart' && intro) return { number: intro.round, special: intro.kind === 'special', desgraciat: intro.kind === 'desgraciat' };
+  const of = (number: number) => ({ number, special: state.round.kind === 'special', desgraciat: state.round.kind === 'desgraciat' });
+  if (flow.scene === 'roundStart' && flow.shuffle) return of(flow.shuffle.round);
   if (flow.scene === 'before' || state.round.number < 1) return null;
-  return { number: state.round.number, special: state.round.kind === 'special' };
+  return of(state.round.number);
 }
 
 /** This machine (the laptop itself), where the relay needs no token. */

@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
-  import { checkProgress, missingSongs, suggestedVerdict } from '../logic/check.ts';
+  import { checkProgress, missingSongs, sinkingSong, stepMark, suggestedVerdict } from '../logic/check.ts';
   import { summarizeClaims } from '../logic/claims.ts';
   import { defaultClaimKind, songTitleOf } from '../logic/show-data.ts';
   import { CA, S } from '../strings.ts';
@@ -41,6 +41,10 @@
     if (!check) return '';
     if (check.outcome === 'complete') return S.check.resultComplete(check.kind);
     if (check.outcome === 'incomplete') return S.check.resultMissing(missingSongs(check).map(title), check.kind);
+    if (check.outcome === 'fallen') {
+      const sank = sinkingSong(check);
+      return S.check.resultFallen(sank === null ? null : title(sank));
+    }
     return S.check.outcome[check.outcome];
   });
   const VERDICTS = [
@@ -79,12 +83,13 @@
       {#if progress.total}
         <ol class="check-steps" aria-label={S.check.progress(progress.doneCount, progress.total)}>
           {#each progress.steps as step (step.index)}
-            <li class="check-steps__item" data-state={step.state} data-landed={step.landed === null ? undefined : String(step.landed)} data-anim="check-step" aria-current={step.state === 'playing' ? 'step' : undefined}>
+            {@const mark = stepMark(check.kind, step.landed)}
+            <li class="check-steps__item" data-state={step.state} data-landed={step.landed === null ? undefined : String(step.landed)} data-mark={mark ?? undefined} data-anim="check-step" aria-current={step.state === 'playing' ? 'step' : undefined}>
               <Cover songId={step.songId} size="sm" />
               <span class="check-steps__song">{title(step.songId)}</span>
               <span class="check-steps__mark">
-                {#if step.landed === true}<Icon name="check" /><span>{S.check.landed}</span>
-                {:else if step.landed === false}<Icon name="cross" /><span>{S.check.notLanded}</span>
+                <!-- The icon says whether it's good for the claim (a standing claim: not sounded); the words, what happened. -->
+                {#if step.landed !== null}<Icon name={mark === 'ok' ? 'check' : 'cross'} /><span>{step.landed ? S.check.landed : S.check.notLanded}</span>
                 {:else if step.state === 'playing'}<Icon name="music" /><span>{S.check.playing}</span>
                 {:else}<span>{S.check.pending}</span>{/if}
               </span>
@@ -99,7 +104,7 @@
         <div class="check-result" data-testid="check-result" data-outcome={check.outcome} role="status">
           <p class="check-result__title">{result}</p>
           {#if check.otherRows.length}<p>{S.check.otherRows(check.otherRows)}</p>{/if}
-          {#if current?.completeSinceSong}<p>{S.check.completeSince(current.completeSinceSong)}</p>{/if}
+          {#if current?.completeSinceSong}<p>{S.check.completeSince(current.completeSinceSong, current.kind)}</p>{/if}
           {#if current?.notSold}<p class="check-result__warning"><Icon name="alert" />{S.check.notSold}</p>{/if}
         </div>
       {/if}

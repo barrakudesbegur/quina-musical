@@ -36,6 +36,13 @@ export const CONSOLE = Object.freeze({
   recentLandings: 3,
   /** The auto-advance ring's last seconds, drawn in red (logic/now-ring.ts; ANIMATIONS.md › ring-last). */
   ringLastSec: 3,
+  /**
+   * The Desgraciat round's Dempeus tab, the motion Svelte runs in script (ANIMATIONS.md › standing-count,
+   * standing-fall): the count's slide, how long a fallen chip stays red, its exit, the others' close-up (FLIP), the
+   * stagger between fallen chips, and how many fallen chips animate at most (the rest vanish at once). Reduced
+   * motion: no hold, no motion.
+   */
+  standing: Object.freeze({ countMs: 200, countShiftPx: 12, holdMs: 600, outMs: 250, outScale: 0.6, flipMs: 250, staggerMs: 30, maxAnimated: 20 }),
 });
 
 export type Theme = 'light' | 'dark';

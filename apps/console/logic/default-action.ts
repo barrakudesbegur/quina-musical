@@ -6,7 +6,9 @@
 //     complete card, reject the rest: suggestedVerdict), until it's decided;
 //   - play: Següent;
 //   - round start: Barreja once the round is introduced, nothing while the Shuffle runs, then Següent;
-//   - a Line's Celebration: Següent (back to the round); a Bingo's: the Interval;
+//   - the Desgraciat round with one card left standing: "Comprovar #57" (`claim` for the last card standing,
+//     ANIMATIONS.md › standing-last); the engine's auto-advance stops there;
+//   - a Line's Celebration: Següent (back to the round); a Bingo's or the last card standing's: the Interval;
 //   - the Interval: start the next round;
 //   - before the night and after it: nothing. Starting the night stays in the menu, on purpose: an A pressed
 //     while testing the remote mustn't start the show.
@@ -17,9 +19,10 @@ import { checkProgress, suggestedVerdict } from './check.ts';
 import { summarizeClaims } from './claims.ts';
 import { shuffleCountdown } from './countdown.ts';
 import { roundIntroArgs } from './show-data.ts';
+import { standingSummary } from './standing.ts';
 
 /** The console control that does it (each carries `data-default` when it's the one). */
-export type DefaultControl = 'next' | 'confirm' | 'reject' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause';
+export type DefaultControl = 'next' | 'confirm' | 'reject' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause' | 'claimLast';
 
 export type DefaultCommand =
   | { cmd: 'next' }
@@ -27,7 +30,8 @@ export type DefaultCommand =
   | { cmd: 'newRound' }
   | { cmd: 'interval' }
   | { cmd: 'roundIntro'; args: CommandFields['roundIntro'] }
-  | { cmd: 'pause'; args: CommandFields['pause'] };
+  | { cmd: 'pause'; args: CommandFields['pause'] }
+  | { cmd: 'claim'; args: CommandFields['claim'] };
 
 export interface DefaultAction {
   control: DefaultControl;
@@ -63,15 +67,18 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
       const valid = suggestedVerdict(check.outcome);
       return { control: valid ? 'confirm' : 'reject', command: { cmd: 'decide', args: { claimId: check.claimId, valid } }, enabled: can('decide') };
     }
-    case 'play':
+    case 'play': {
+      const last = lastStanding(state);
+      if (last !== null) return { control: 'claimLast', command: { cmd: 'claim', args: { cardId: last, kind: 'standing' } }, enabled: can('claim') };
       return next(input);
+    }
     case 'roundStart':
       if (flow.intro !== null) return { control: 'shuffle', command: { cmd: 'newRound' }, enabled: can('newRound') };
       if (shuffleCountdown(flow.shuffle, nowMs)) return null;
       return next(input);
     case 'celebration':
       if (flow.celebration?.kind === 'line') return next(input);
-      if (flow.celebration?.kind === 'bingo') return { control: 'interval', command: { cmd: 'interval' }, enabled: can('interval') };
+      if (flow.celebration?.kind === 'bingo' || flow.celebration?.kind === 'standing') return { control: 'interval', command: { cmd: 'interval' }, enabled: can('interval') };
       return null;
     case 'interval':
       if (!flow.interval) return null;
@@ -80,6 +87,12 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
     case 'after':
       return null;
   }
+}
+
+/** The Desgraciat round's last card standing, when exactly one is left (its number, from the private `standing`). */
+function lastStanding(state: ShowState): number | null {
+  if (state.round.kind !== 'desgraciat') return null;
+  return standingSummary(state.standing, state.cards.validCount)?.last ?? null;
 }
 
 /** How a command leaves the console (ConsoleModel.act). */
@@ -102,5 +115,7 @@ export function sendDefault(act: Act, action: DefaultAction | null): string | nu
       return act('roundIntro', c.args);
     case 'pause':
       return act('pause', c.args);
+    case 'claim':
+      return act('claim', c.args);
   }
 }

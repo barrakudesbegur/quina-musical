@@ -22,7 +22,7 @@
 
 <div class="prizes-tab">
   <section class="prizes-tab__section">
-    <h3 class="panel__label">{S.cheatSheet.prizes(round)}</h3>
+    <h3 class="panel__label">{S.cheatSheet.prizes(round, planned.status === 'ok' && planned.prizes.kind === 'desgraciat')}</h3>
     {#if reveal === 'secret'}
       <div class="prizes-tab__reveal" data-state="secret">
         <p class="badge badge--warning"><Icon name="lock" /> {S.prizes.secret}</p>

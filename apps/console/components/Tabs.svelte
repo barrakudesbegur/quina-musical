@@ -61,6 +61,7 @@
         class="tabs__tab"
         id="{uid}-tab-{tab.id}"
         data-anim="tab-switch"
+        data-testid="tab-{tab.id}"
         aria-selected={selected === tab.id}
         aria-controls="{uid}-panel-{tab.id}"
         tabindex={selected === tab.id ? 0 : -1}

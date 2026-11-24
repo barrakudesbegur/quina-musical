@@ -9,6 +9,7 @@ import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabe
 import { defaultClaimKind, prizeRevealOf, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { PROTOCOL_VERSION } from '@quina/protocol';
+import { S } from '../../../../console/strings.ts';
 
 const NOW = 1_800_000_000_000;
 
@@ -48,9 +49,17 @@ test('round on screen: none before the night, the introduced one at round start'
   const before = FIXTURES.before(NOW).state;
   assert.equal(roundOnScreen(before, flowOf(before)), null);
   const play = FIXTURES.play(NOW).state;
-  assert.deepEqual(roundOnScreen(play, flowOf(play)), { number: 3, special: false });
+  assert.deepEqual(roundOnScreen(play, flowOf(play)), { number: 3, special: false, desgraciat: false });
   const start = { ...FIXTURES.roundStart(NOW).state, intro: { round: 7, kind: 'special' as const, sinceMs: NOW } };
-  assert.deepEqual(roundOnScreen(start, flowOf(start)), { number: 7, special: true });
+  assert.deepEqual(roundOnScreen(start, flowOf(start)), { number: 7, special: true, desgraciat: false });
+  // The Desgraciat round, at its intro and in play: the header reads "Quina Desgraciada".
+  const intro = FIXTURES.desgraciatIntro(NOW).state;
+  assert.deepEqual(roundOnScreen(intro, flowOf(intro)), { number: 5, special: false, desgraciat: true });
+  const desgraciat = FIXTURES.desgraciat(NOW).state;
+  const round = roundOnScreen(desgraciat, flowOf(desgraciat));
+  assert.ok(round);
+  assert.equal(S.header.round(round.number, round.special, round.desgraciat), 'Quina Desgraciada');
+  assert.equal(S.header.round(3, false), 'Quina 3');
   assert.equal(roundOnScreen(null, flowOf(null)), null);
 });
 

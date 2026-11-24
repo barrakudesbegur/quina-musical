@@ -30,7 +30,7 @@
 
 <header class="header" data-scene={flow.scene} data-stale={!model.online || undefined}>
   <div class="header__panel header__panel--round">
-    <p class="header__round">{round ? S.header.round(round.number, round.special) : S.header.noRound}</p>
+    <p class="header__round">{round ? S.header.round(round.number, round.special, round.desgraciat) : S.header.noRound}</p>
     {#if snap}
       <HeatMeter percent={heatPercent(snap.heat)} phase={snap.phase} zones={ZONES} fixed={snap.game.phaseOverride !== null} climbing={snap.cards.climbingTo} />
     {/if}

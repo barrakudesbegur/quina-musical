@@ -1,7 +1,6 @@
 // The Game plan now lives in @quina/protocol (protocol/plan.ts). This file re-exports it so the screens
 // keep one import path, and adds the screens' own small helpers for prize bundles.
 import {
-  COMMANDS,
   headlinePrizes,
   roundCardType,
   roundPlan,
@@ -9,7 +8,6 @@ import {
   type GamePlan,
   type Prize,
   type PrizeBundle,
-  type RoundKind,
   type RoundPlan,
   type WinKind,
 } from '@quina/protocol';
@@ -31,22 +29,14 @@ export type {
 } from '@quina/protocol';
 
 /**
- * The `roundIntro` that introduces round `number` (the console's and Admin's): with its kind and printed card type
- * from the plan when the plan has that round (a plan from before card types per round plays its kind's default). The
- * engine keeps the type for the round's `newRound`.
+ * The `roundIntro` that introduces round `number` (the console's and Admin's): with its kind (the Desgraciat round's
+ * too) and printed card type from the plan when the plan has that round (a plan from before card types per round
+ * plays its kind's default). The engine keeps both for the round's `newRound`.
  */
 export function roundIntroFields(plan: GamePlan | null, number: number): CommandFields['roundIntro'] {
   const planned = roundPlan(plan, number);
   if (!planned) return { number };
-  const kind = introKind(planned.kind);
-  return { number, ...(kind ? { kind } : {}), cardType: roundCardType(planned) };
-}
-
-/** A round kind as `roundIntro` takes it. The protocol doesn't accept 'desgraciat' there yet: such a kind is left out
- * rather than sent and refused (the engine then plays the round as it knows it). */
-function introKind(kind: RoundKind): CommandFields['roundIntro']['kind'] {
-  const accepted: readonly string[] = COMMANDS.roundIntro.kind.oneOf;
-  return accepted.includes(kind) ? (kind as CommandFields['roundIntro']['kind']) : undefined;
+  return { number, kind: planned.kind, cardType: roundCardType(planned) };
 }
 
 /** A round's prize bundle for a win: the Line's, else the Quina's (the Desgraciat round's last card standing wins its

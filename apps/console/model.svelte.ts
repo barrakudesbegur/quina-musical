@@ -2,7 +2,7 @@
 // printed cards, this device's label, theme and checklist, its helpers' tab and Futur reveal, the round's
 // counted songs gathered from the snapshots (for the Futur tab), and the toasts. It derives what the
 // components need from the pure logic in logic/, and `act` is the one way commands leave the console.
-import type { CommandRejected, ResumePoint } from '@quina/protocol';
+import type { CommandRejected, ResumePoint, ShowState } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
@@ -19,6 +19,7 @@ import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundKey, type Landing
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { defaultAction } from './logic/default-action.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
+import { EMPTY_TAB_MEMORY, fallenBetween, helperTabAfter, type HelperTab, type TabMemory } from './logic/standing.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
 import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, pushToast, type Toast, type ToastTone } from './logic/toasts.ts';
@@ -33,8 +34,22 @@ function startingLabel(): string | null {
   return choice.label;
 }
 
-/** The helpers' tabs (HelperTabs.svelte). */
-export type HelperTab = 'future' | 'prizes' | 'effects';
+/** The helpers' tabs (HelperTabs.svelte; logic/standing.ts: Dempeus first in the Desgraciat round). */
+export type { HelperTab } from './logic/standing.ts';
+
+/** The last landing that knocked cards out of the Desgraciat round (`standing-fall`), for the Dempeus tab. */
+export interface StandingFall {
+  /** Bumps with every fall, so the tab replays it. */
+  seq: number;
+  /** The cards that fell, in card order. */
+  cardIds: number[];
+  /** The song that sank them (the snapshot's current song), or null. */
+  songId: number | null;
+  /** The count left after it: the tab's "−3 amb «…»" shows while the count still is this. */
+  countAfter: number;
+  /** When this device saw it (Date.now()). */
+  atMs: number;
+}
 
 export class ConsoleModel {
   /** When this page started (the pairing check waits a moment after it). */
@@ -58,6 +73,13 @@ export class ConsoleModel {
   futureRevealedFor = $state<string | null>(null);
   /** The helpers' tab on this device. */
   helperTab = $state<HelperTab>('future');
+  /** The Desgraciat round's last fall seen on this device (null: none yet this round). */
+  standingFall = $state.raw<StandingFall | null>(null);
+  /** What the tab picker last saw (logic/standing.ts helperTabAfter). Not reactive. */
+  private tabMemory: TabMemory = EMPTY_TAB_MEMORY;
+  /** The standing cards in the previous snapshot, and its round, for `standing-fall`. Not reactive. */
+  private standingSeen: { key: string; ids: readonly number[] | null } = { key: '', ids: null };
+  private fallSeq = 0;
 
   /** Commands can reach the engine (relay connected, show page on it). */
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
@@ -115,7 +137,10 @@ export class ConsoleModel {
     // Who started each Spin: the reqId starts with the sender's device label (null: auto-advance).
     this.show.client.on((event) => {
       if (event.type === 'transition.scheduled' || event.type === 'suspense.started') this.lastSpin = lastSpinOf(event);
-      if (event.type === 'state') this.landingLog = recordLandings(this.landingLog, event);
+      if (event.type === 'state') {
+        this.landingLog = recordLandings(this.landingLog, event);
+        this.followStanding(event);
+      }
       // next-to-now: at the landing the panels still show the old songs; once Ara sona shows it, fly it in.
       if (event.type === 'transition.landed' && shouldMorph(event.songId, this.show.state?.next?.songId, prefersReducedMotion())) {
         this.morph = capture(event.songId);
@@ -137,6 +162,25 @@ export class ConsoleModel {
 
     this.theme = resolveTheme(readStored(CONSOLE.storage.theme), DEFAULT_THEME);
     this.checklist = parseChecklist(readStored(CONSOLE.storage.checklist), S.checklist.map((c) => c.id));
+  }
+
+  /**
+   * The Desgraciat round on this device: Dempeus is selected as the round starts and when one card is left
+   * (helperTabAfter), and the cards that fell since the last snapshot become `standingFall`.
+   */
+  private followStanding(state: ShowState): void {
+    const picked = helperTabAfter(this.helperTab, this.tabMemory, state);
+    this.tabMemory = picked.memory;
+    if (picked.tab !== this.helperTab) this.helperTab = picked.tab;
+    const key = roundKey(state.round);
+    const ids = state.standing?.cardIds ?? null;
+    const sameRound = this.standingSeen.key === key;
+    const fallen = fallenBetween(this.standingSeen.ids, ids, sameRound);
+    if (!sameRound) this.standingFall = null;
+    if (fallen.length && state.standing) {
+      this.standingFall = { seq: ++this.fallSeq, cardIds: fallen, songId: state.current?.songId ?? null, countAfter: state.standing.count, atMs: Date.now() };
+    }
+    this.standingSeen = { key, ids };
   }
 
   /** Send a command. When it can't leave this device, a toast says so. Returns its reqId, or null. */

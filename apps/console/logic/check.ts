@@ -2,7 +2,7 @@
 // (`steps[i].atMs`, `durationMs`), so which step is playing is just the clock against those times
 // (ANIMATIONS.md › check-step: the playing row is highlighted, its ✓/✗ shows at the step's end). The result
 // shows once now ≥ `endAtMs`, never before, so the console stays in step with the projector. Pure.
-import type { CheckInfo, CheckOutcome } from '../../../packages/ui/flow.ts';
+import type { CheckInfo, CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 
 export type StepState = 'pending' | 'playing' | 'done';
 
@@ -56,6 +56,22 @@ export function checkProgress(check: CheckInfo, nowMs: number): CheckProgress {
 /** The songs of a Check that had not landed (the ones its result names), in step order. */
 export function missingSongs(check: Pick<CheckInfo, 'steps'>): number[] {
   return check.steps.filter((s) => !s.landed).map((s) => s.songId);
+}
+
+/**
+ * A done step's mark, which always means "good for the claim": for a Line or a Bingo a landed song is ✓ (`ok`); in a
+ * standing Check (the Desgraciat round) a song that has NOT landed is, and the landed one is the ✗ that sank the card.
+ * Null before the step is done.
+ */
+export function stepMark(kind: WinKind, landed: boolean | null): 'ok' | 'bad' | null {
+  if (landed === null) return null;
+  return landed !== (kind === 'standing') ? 'ok' : 'bad';
+}
+
+/** The song that sank a fallen card (a standing Check's landed step), or null. */
+export function sinkingSong(check: Pick<CheckInfo, 'kind' | 'steps'>): number | null {
+  if (check.kind !== 'standing') return null;
+  return check.steps.find((s) => s.landed)?.songId ?? null;
 }
 
 /** The verdict the engine's finding points to. A presenter still always decides. */
