@@ -21,7 +21,9 @@ export const PLAYER_CONFIG = Object.freeze({
   catalogUrl: '/cards/cards.json',
   catalogRetryMs: [2000, 5000, 15000, 30000] as readonly number[],
   coverBase: '/covers/',
-  coverExt: 'jpg',
+  /** Production serves small WebP covers (the deploy step converts them); the laptop's dev relay has the JPEGs. */
+  coverExt: 'webp',
+  coverExtDev: 'jpg',
 
   /** Feed: the offline notice, the reconnection pill. Backoff and resume jitter come from PUBLIC_FEED. */
   offlineNoticeAfterMs: PUBLIC_FEED.offlineNoticeAfterMs,
