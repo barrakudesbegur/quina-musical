@@ -65,6 +65,10 @@ These override the sections below where they differ.
   | Claim | Console only |
 
   Every action gets a short rumble. An accidental A is safe: Parlem or Aguanta cancel a running transition. The console has a "Comandament" button that opens a drawing of the remote with each action; it opens by itself when a remote connects and is also printed on the cheat sheet.
+- **The Wii remote follows the screen's default action.**
+  - **A always means "go ahead with the default action"** in the current context. During a Check, that's approve when the Check passed and reject when it failed. Elsewhere it's whatever the console's primary button is (for example Següent during play).
+  - The Wii never needs separate approve or reject buttons. The console stays available to override.
+  - **Console badges:** every console button that a Wii button would trigger shows a small badge with that Wii button (A, B, −/+, 1/2, HOME). Hold actions are marked as holds (for example a ring that fills), so the tablet always shows what each remote button will do.
 - **Pause (Pausa), a second level of Parlem:** for a very long break mid-round, so the current song doesn't loop for ages.
   - No song lands, the interval music plays, and the projector and player app show a pause screen.
   - On the console, holding Parlem enters Pausa; on the Wii, holding − or +.
