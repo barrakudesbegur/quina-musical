@@ -52,7 +52,7 @@ export interface PublicRound {
   kind: RoundKind;
   startedAtMs: number;
   lineConfirmed: boolean;
-  /** The round is over: phones reveal every mark, including the held-back last song. */
+  /** The round is over (every landed song is already marked on the phones as it lands). */
   ended: boolean;
   /** Counted landings only; Back removes one. */
   landings: PublicLanding[];
