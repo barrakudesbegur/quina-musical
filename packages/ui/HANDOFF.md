@@ -62,7 +62,7 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 
 ### 1. Card type per round: step B done (2026-11-25)
 
-`b443da5` (473 UI tests, up from 447). Each round names its printed card type, and the screens read names, colours and prices from `card-types.json`:
+`5579442` (473 UI tests, up from 447). Each round names its printed card type, and the screens read names, colours and prices from `card-types.json`:
 - packages/ui:
   - `data/card-types.ts`: `cardTypeLabel`, `knownCardTypes`, `roundsByCardType`;
   - `data/catalog.ts` loads `card-types.json` next to `cards.json`;
@@ -99,7 +99,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
   - The Check goes over the 12 songs in card order. Each ✓ step is a ~0.6 s tick. It stops at the first landed song, which plays its snippet (~2.5 s) and gives `'fallen'`.
   - Auto-advance stops once one card stands.
   - Phones get nothing new on the feed.
-- **Landing:** Sound engine's step A (`7016cea`) and my compile keys (`23a459c`) are in. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
+- **Landing:** Sound engine's step A (`caa5662`) and my compile keys (`b47a633`) are in. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
 - **Screens to build:**
   - console: the Dempeus tab;
   - stage: the round's name, the "no ha sonat ✓" steps, `check-fallen`, "DEMPEUS!";
@@ -110,7 +110,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. The Desgraciat screens, after Sound engine's step C (the compile keys are in: `23a459c`). Due Fri 4 Dec. Known gaps the keys commit left:
+1. The Desgraciat screens, after Sound engine's step C (the compile keys are in: `b47a633`). Due Fri 4 Dec. Known gaps the keys commit left:
    - the console's default action after a 'standing' Celebration doesn't go to the Interval;
    - the player's `celebrationOf` ignores 'standing';
    - Admin's kind select has no 'desgraciat' option;
@@ -119,11 +119,11 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
 2. The audit fixes (item 4 below).
 3. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
    Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
-4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`23b9fd5`); the code isn't:
+4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`974f95f`); the code isn't:
    - **Phones never show winning card numbers.** Remove `WinnerNumbers` from `Celebration.svelte`, `PrizeLines.svelte` and `NowTab.svelte`. Someone else's win shows "Línia!"/"Quina!" and the prize; the player's own confirmed card shows "La teva línia!" (ANIMATIONS.md `celebrate`, boards "App · celebració").
    - **Offline keeps the normal screen:** a slate strip at the top and the screen greyed, with everything still usable, instead of `SceneOverlay`'s full-screen notice (board "App · sense connexió"). **Pausa** shows the meditating nino in the drum's place, with Historial and the cards untouched (board "App · pausa tècnica").
    - **The decided 3 tabs:** Ara (the drum plus a Historial | Cartrons switch, remembered per device; Cartrons by default for players following cards), Premis and Horari, plus the menu sheet. The code still has 5 tabs and says "Programa": rename it "Horari". Build the home so tabs and drawers are only a container swap, because the drawers layout may replace the tabs.
-   - **Console Efectes pads with icons** (decided by the user on the canvas, 24 Nov: "use icons, no words"; keep the word design on the canvas). Board "Consola · Efectes amb icones"; code `apps/console/components/SoundPad.svelte`.
+   - ~~Console Efectes pads with icons~~: done (`66faf9d`). `apps/console/sound-icons.ts` holds the board's 20 icons as data, with each tone mapped to a token in console.css. The pads are paper in both themes, and each name is the pad's tooltip and accessible name.
    - **Add-card by number asks before leaving** when a number was typed (not built).
    - **Round icons:** the Especial's star exists. The Desgraciat's sad face comes with its screens.
    - "Quina Especial" (capital E) and the console's "Comprovar cartró" go in with the Desgraciat compile commit.
