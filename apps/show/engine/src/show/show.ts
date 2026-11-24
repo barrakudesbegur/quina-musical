@@ -1296,7 +1296,8 @@ export class Show {
       const tease = this.teaseFor(s, s.nextBar);
       if (tease) {
         events.push(...tease.events);
-        this.out.push({ type: 'suspenseHover', cardId: tease.songId, at: tease.at, until: tease.until });
+        // The drum sways on that card until the next tease takes it elsewhere (a pass later).
+        this.out.push({ type: 'suspenseHover', cardId: tease.songId, at: tease.at, until: tease.at + (open.loop?.passSec ?? 0) + 1 });
       }
       this.out.push({ type: 'suspenseBar', bar: s.nextBar, events });
       s.nextBar++;
