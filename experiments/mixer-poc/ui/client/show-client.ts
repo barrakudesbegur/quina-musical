@@ -15,15 +15,20 @@ import {
 } from '@quina/protocol';
 import { flowOf, type AnyCommandArgs, type AnyCommandName, type FlowFields } from '../flow.ts';
 import { ClockOffset } from '../rules/time.ts';
+import { controlSocketUrl, labelForId } from './endpoints.ts';
 
 export type ClientListener = (event: IncomingEvent) => void;
 
 export interface ShowClientOptions {
   role: Role;
-  /** Defaults to the relay's WebSocket on this page's host. */
+  /** Defaults to the page origin's control socket: the relay on the LAN, the cloud's console socket otherwise. */
   transport?: Transport;
   clientId?: string;
+  /** The device label ("Tauleta", "Mòbil admin"). It starts the clientId and every reqId, so screens can say who did what. */
+  label?: string;
 }
+
+const randomSuffix = () => Math.random().toString(36).slice(2, 6);
 
 /** Wraps a transport to report connection changes (the Bus itself does not). */
 class ObservedTransport implements Transport {
@@ -70,9 +75,15 @@ export class ShowClient {
   private readonly changeListeners = new Set<() => void>();
   private started = false;
 
-  constructor({ role, transport, clientId }: ShowClientOptions) {
-    this.bus = new Bus<unknown>({ role, clientId });
-    this.transport = new ObservedTransport(transport ?? new WebSocketTransport(), () => this.changed());
+  /** Starts every reqId this client sends (the device label, or 'r'). */
+  readonly reqPrefix: string;
+
+  constructor({ role, transport, clientId, label }: ShowClientOptions) {
+    const tag = label ? labelForId(label) : null;
+    this.reqPrefix = tag ?? 'r';
+    this.bus = new Bus<unknown>({ role, clientId: clientId ?? (tag ? `${tag}-${randomSuffix()}` : undefined) });
+    const fallback = typeof location === 'undefined' ? new WebSocketTransport() : new WebSocketTransport(controlSocketUrl(location.href));
+    this.transport = new ObservedTransport(transport ?? fallback, () => this.changed());
   }
 
   /** Connect and ask for a fresh snapshot on every (re)connection. Safe to call twice. */
@@ -117,7 +128,7 @@ export class ShowClient {
 
   /** Send a command (merged or proposed). Returns its reqId, or null when not connected. */
   send<C extends AnyCommandName>(cmd: C, ...args: AnyCommandArgs<C>): string | null {
-    const reqId = newReqId();
+    const reqId = newReqId(this.reqPrefix);
     const fields = (args[0] ?? {}) as Record<string, unknown>;
     const message = { ...fields, v: PROTOCOL_VERSION, type: 'cmd', cmd, reqId };
     return this.bus.sendRemote(message) ? reqId : null;

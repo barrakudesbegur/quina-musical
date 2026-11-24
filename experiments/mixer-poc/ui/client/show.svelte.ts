@@ -39,10 +39,13 @@ export class ShowStore {
   }
 }
 
-/** The page's ShowStore: the demo transport with `?demo=<fixture>`, else the relay. */
-export function createShow(role: Role): ShowStore {
+/**
+ * The page's ShowStore: the demo transport with `?demo=<fixture>`, else the page origin's control socket
+ * (the relay on the LAN, the cloud's console socket otherwise). `label` names this device in ids.
+ */
+export function createShow(role: Role, { label }: { label?: string } = {}): ShowStore {
   const demo = demoNameFromLocation();
-  const client = new ShowClient({ role, transport: demo ? new DemoTransport(demo) : undefined });
+  const client = new ShowClient({ role, label, transport: demo ? new DemoTransport(demo) : undefined });
   const store = new ShowStore(client, demo);
   client.start();
   return store;
