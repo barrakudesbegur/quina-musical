@@ -44,6 +44,11 @@ export function autoAdvanceStatus(state: ShowState): AutoAdvance {
   return 'waiting';
 }
 
+/** Auto-advance applies now (the green badge on the ring): it is on, and on in the final phase too if that's the Phase. */
+export function autoModeOn(state: Pick<ShowState, 'game' | 'phase'>): boolean {
+  return state.game.autoAdvance && (state.phase !== 'final' || state.game.autoAdvanceFinal);
+}
+
 /**
  * The ring to the next auto-advance: it starts full at the last landing and empties at `autoAtMs`. When the
  * landing is unknown (or after `autoAtMs`), the span is the Pace's slot.

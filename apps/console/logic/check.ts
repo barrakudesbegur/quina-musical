@@ -53,6 +53,11 @@ export function checkProgress(check: CheckInfo, nowMs: number): CheckProgress {
   return { steps, playingIndex, doneCount, landedCount, total: steps.length, stage };
 }
 
+/** The songs of a Check that had not landed (the ones its result names), in step order. */
+export function missingSongs(check: Pick<CheckInfo, 'steps'>): number[] {
+  return check.steps.filter((s) => !s.landed).map((s) => s.songId);
+}
+
 /** The verdict the engine's finding points to. A presenter still always decides. */
 export function suggestedVerdict(outcome: CheckOutcome): boolean {
   return outcome === 'complete';

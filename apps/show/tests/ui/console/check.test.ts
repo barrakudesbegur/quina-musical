@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
-import { checkProgress, stepState, suggestedVerdict } from '../../../../console/logic/check.ts';
+import { checkProgress, missingSongs, stepState, suggestedVerdict } from '../../../../console/logic/check.ts';
+import { S } from '../../../../console/strings.ts';
 import type { CheckInfo } from '../../../../../packages/ui/flow.ts';
 
 const NOW = 1_800_000_000_000;
@@ -69,4 +70,10 @@ test('only a complete card points to a valid verdict', () => {
   assert.equal(suggestedVerdict('incomplete'), false);
   assert.equal(suggestedVerdict('unknownCard'), false);
   assert.equal(suggestedVerdict('wrongType'), false);
+});
+
+test('the result names the songs that had not landed', () => {
+  assert.deepEqual(missingSongs(check()), [20]);
+  assert.equal(S.check.resultMissing(['Elefants'], 'line'), 'Resultat: falta Elefants. Aquest cartró no té línia.');
+  assert.equal(S.check.resultMissing(['A', 'B', 'C'], 'bingo'), 'Resultat: falta A, B i C. Aquest cartró no té quina.');
 });

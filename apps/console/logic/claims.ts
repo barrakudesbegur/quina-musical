@@ -11,6 +11,8 @@ export interface ClaimView {
   current: boolean;
   /** "complete since song N": the 1-based song number, or null. */
   completeSinceSong: number | null;
+  /** "claimed at song N": the 1-based number of the last counted song when it was claimed (0 before any). */
+  claimedAtSong: number;
   notSold: boolean;
   /** The presenters have decided it (valid or invalid). */
   decided: boolean;
@@ -41,6 +43,7 @@ export function claimView(claim: ClaimInfo, check: CheckInfo | null): ClaimView 
     outcome: claim.outcome,
     current: check?.claimId === claim.claimId,
     completeSinceSong: claim.completeSince === null ? null : claim.completeSince + 1,
+    claimedAtSong: claim.position + 1,
     notSold: claim.warnings.includes('notSold'),
     decided,
     canCheck: !decided,

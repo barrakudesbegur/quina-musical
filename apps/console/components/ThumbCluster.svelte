@@ -1,12 +1,16 @@
 <!--
-  The big buttons, in one bottom-right cluster that keeps the same arrangement in landscape and portrait:
-    [ Back (long press, full width)  ]
-    [ Suspense        ][ Claim       ]
-    [ Hold / Resume   ][ Next        ]
-  Next sits in the corner under the right thumb; Back, the risky one, is furthest away.
+  The presenters' actions, in one cluster that keeps its arrangement in landscape and portrait:
+    [ Enrere (long press, full width)        ]
+    [ Parlem (Hold)    ][ Aguanta (Stay)     ]
+    [ Comprovar cartró ][ Suspens            ]
+    [ Següent (full width, the biggest)      ]
+  Següent sits at the bottom under the thumbs; Enrere, the risky one, is furthest away. Parlem and Aguanta
+  are one pair (logic/hold-modes.ts): the active one shows pressed, pressing it again releases, pressing the
+  other switches. Aguanta waits for the protocol (`hold { duck }`) and is disabled until then.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
+  import { activeHoldMode, holdPress, type HoldMode } from '../logic/hold-modes.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import LongPressButton from './LongPressButton.svelte';
@@ -16,42 +20,66 @@
 
   const model = getConsole();
   const c = $derived(model.controls);
+  const active = $derived(activeHoldMode(model.show.state));
+  const modes = $derived(
+    (['talk', 'stay'] as const).map((mode) => {
+      const fields = holdPress(mode, active);
+      return {
+        mode,
+        fields,
+        pressed: active === mode,
+        enabled: c.hold.enabled && fields !== null,
+        pending: mode === 'stay' && fields === null,
+      };
+    }),
+  );
+  const TEXT: Record<HoldMode, { label: string; note: string; icon: 'hold' | 'stay' }> = {
+    talk: { label: S.cluster.talk, note: S.cluster.talkNote, icon: 'hold' },
+    stay: { label: S.cluster.stay, note: S.cluster.stayNote, icon: 'stay' },
+  };
 </script>
 
 <section class="thumb-cluster" aria-label={S.cluster.label} data-live={c.live}>
   <div class="thumb-cluster__slot thumb-cluster__slot--back">
-    <LongPressButton big label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!c.back.enabled} onconfirm={() => model.act('back')} />
+    <LongPressButton big action="back" label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!c.back.enabled} onconfirm={() => model.act('back')} />
+  </div>
+
+  {#each modes as m (m.mode)}
+    <div class="thumb-cluster__slot thumb-cluster__slot--{m.mode}">
+      <button
+        type="button"
+        class="big-button"
+        data-action={m.mode}
+        data-anim="press"
+        aria-pressed={m.pressed}
+        disabled={!m.enabled}
+        title={m.pending ? S.cluster.stayPending : undefined}
+        onclick={() => m.fields && model.act('hold', m.fields)}
+      >
+        <Icon name={TEXT[m.mode].icon} outline />
+        <span class="big-button__text">
+          <span class="big-button__label">{TEXT[m.mode].label}</span>
+          <span class="big-button__note">{m.pressed ? S.cluster.activeNote : m.pending ? S.cluster.stayPendingShort : TEXT[m.mode].note}</span>
+        </span>
+      </button>
+    </div>
+  {/each}
+
+  <div class="thumb-cluster__slot thumb-cluster__slot--claim">
+    <button type="button" class="big-button" data-action="claim" data-anim="press" disabled={!c.claim.enabled} onclick={onclaim}>
+      <Icon name="claim" outline />
+      <span class="big-button__text"><span class="big-button__label">{S.cluster.claim}</span></span>
+    </button>
   </div>
 
   <div class="thumb-cluster__slot thumb-cluster__slot--suspense">
     <SuspenseButton />
   </div>
 
-  <div class="thumb-cluster__slot thumb-cluster__slot--claim">
-    <button type="button" class="big-button tone-ok" data-anim="press" disabled={!c.claim.enabled} onclick={onclaim}>
-      <span class="big-button__content"><Icon name="claim" /><span class="big-button__label">{S.cluster.claim}</span></span>
-    </button>
-  </div>
-
-  <div class="thumb-cluster__slot thumb-cluster__slot--hold">
-    <button
-      type="button"
-      class="big-button {c.hold.holding ? 'tone-primary' : 'tone-calm'}"
-      data-anim="press"
-      data-state={c.hold.holding ? 'holding' : 'idle'}
-      disabled={!c.hold.enabled}
-      onclick={() => model.act('hold', { on: !c.hold.holding })}
-    >
-      <span class="big-button__content">
-        <Icon name={c.hold.holding ? 'play' : 'hold'} />
-        <span class="big-button__label">{c.hold.holding ? S.cluster.resume : S.cluster.hold}</span>
-      </span>
-    </button>
-  </div>
-
   <div class="thumb-cluster__slot thumb-cluster__slot--next">
-    <button type="button" class="big-button big-button--main tone-primary" data-anim="press" disabled={!c.next.enabled} onclick={() => model.act('next')}>
-      <span class="big-button__content"><Icon name="next" /><span class="big-button__label">{S.cluster.next}</span></span>
+    <button type="button" class="big-button" data-action="next" data-anim="press" disabled={!c.next.enabled} onclick={() => model.act('next')}>
+      <Icon name="next" outline />
+      <span class="big-button__text"><span class="big-button__label">{S.cluster.next}</span></span>
     </button>
   </div>
 </section>

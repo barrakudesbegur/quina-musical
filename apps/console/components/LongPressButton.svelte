@@ -19,11 +19,13 @@
     icon?: IconName | null;
     tone?: 'danger' | 'primary' | 'ok' | 'calm' | 'accent';
     big?: boolean;
+    /** One of the big action buttons (console.css › big-button[data-action]): its colour and sticker icon. */
+    action?: string | null;
     disabled?: boolean;
     onconfirm: () => void;
   }
 
-  let { label, note = null, icon = null, tone = 'danger', big = false, disabled = false, onconfirm }: Props = $props();
+  let { label, note = null, icon = null, tone = 'danger', big = false, action = null, disabled = false, onconfirm }: Props = $props();
 
   const uid = $props.id();
   let button: HTMLButtonElement | undefined = $state();
@@ -92,8 +94,9 @@
   <button
     bind:this={button}
     type="button"
-    class="long-press tone-{tone}"
+    class="long-press {action ? '' : `tone-${tone}`}"
     class:big-button={big}
+    data-action={action}
     data-anim="press long-press-confirm"
     data-state={press.phase}
     style:--progress={progress}
@@ -109,7 +112,7 @@
   >
     <span class="long-press__fill" aria-hidden="true"></span>
     <span class="long-press__content">
-      {#if icon}<Icon name={icon} />{/if}
+      {#if icon}<Icon name={icon} outline={action !== null} />{/if}
       <span class="long-press__text">
         <span class="long-press__label">{label}</span>
         {#if note}<span class="long-press__note">{note}</span>{/if}

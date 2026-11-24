@@ -11,7 +11,7 @@ export const CONSOLE = Object.freeze({
     /** The latest resume code (plan B), kept so a replacement laptop can be resumed from this device. */
     resume: 'quina.console.resume.v1',
   },
-  /** The device label: what the header shows ("Tauleta", "Mòbil admin"). */
+  /** The device label ("Tauleta", "Mòbil admin"), set in the menu: it names who pressed what. */
   labelMaxLength: 24,
   /** How long a silent relay connection waits before the console says the device isn't paired. */
   pairingGraceMs: 3000,

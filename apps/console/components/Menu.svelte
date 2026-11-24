@@ -1,7 +1,8 @@
 <!--
   The rarely used things, tucked away in a drawer: this device (label, theme), start and end the night,
-  the Schedule, the technical pause, a Phase override, a Line confirmed without a Check, plan B resume, Panic, the
-  connections, Wii pairing, and a QR to open the console on another phone.
+  the Schedule, the technical pause, auto-advance in the final phase, a Phase override, a Line confirmed
+  without a Check, the Game's Winners, plan B resume, Panic, the connections, Wii pairing, a QR to open the
+  console on another phone, and the Plan B cheat sheet (the laptop's keys and the setup checklist).
 -->
 <script lang="ts">
   import { PHASE_NAMES, type PhaseName } from '@quina/protocol';
@@ -15,7 +16,9 @@
   import LanQr from './LanQr.svelte';
   import LongPressButton from './LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
+  import SetupChecklist from './SetupChecklist.svelte';
   import Switch from './Switch.svelte';
+  import WinnersList from './WinnersList.svelte';
 
   let { open = $bindable(false) }: { open: boolean } = $props();
 
@@ -112,6 +115,11 @@
       <Switch label={S.menu.pause} on={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
     </section>
 
+    <section class="drawer__section" aria-labelledby="{uid}-pace">
+      <h3 class="panel__subtitle" id="{uid}-pace">{S.menu.pace}</h3>
+      <Switch label={S.pace.autoFinal} on={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
+    </section>
+
     <section class="drawer__section" aria-labelledby="{uid}-phase">
       <h3 class="panel__subtitle" id="{uid}-phase">{S.menu.phase}</h3>
       <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
@@ -127,6 +135,11 @@
       <LongPressButton label={S.menu.confirmLine} note={S.menu.confirmLineNote} icon="check" tone="accent" disabled={snap.round.lineConfirmed || !model.can('confirmLine')} onconfirm={() => model.act('confirmLine')} />
     </section>
   {/if}
+
+  <section class="drawer__section" aria-labelledby="{uid}-winners">
+    <h3 class="panel__subtitle" id="{uid}-winners">{S.menu.winners}</h3>
+    {#if open}<WinnersList />{/if}
+  </section>
 
   {#if open}<ResumePanel />{/if}
 
@@ -149,5 +162,16 @@
   <section class="drawer__section" aria-labelledby="{uid}-lan">
     <h3 class="panel__subtitle" id="{uid}-lan">{S.menu.lan}</h3>
     {#if open}<LanQr />{/if}
+  </section>
+
+  <section class="drawer__section" aria-labelledby="{uid}-plan-b">
+    <h3 class="panel__subtitle" id="{uid}-plan-b">{S.menu.planB}</h3>
+    <h4 class="panel__subtitle">{S.cheatSheet.keys}</h4>
+    <dl class="key-list">
+      {#each S.showKeys as k (k.keys)}
+        <div class="key-list__item"><dt><kbd>{k.keys}</kbd></dt><dd>{k.action}</dd></div>
+      {/each}
+    </dl>
+    <SetupChecklist />
   </section>
 </dialog>

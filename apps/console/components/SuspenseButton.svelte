@@ -69,7 +69,8 @@
 
 <button
   type="button"
-  class="big-button suspense-button tone-accent"
+  class="big-button suspense-button"
+  data-action="suspense"
   data-anim="press suspense-hold"
   data-state={open ? 'open' : pressed ? 'pressing' : 'idle'}
   style:--suspense-progress={built}
@@ -84,18 +85,16 @@
   oncontextmenu={(e) => e.preventDefault()}
 >
   <span class="suspense-button__fill" aria-hidden="true"></span>
-  <span class="big-button__content">
-    <Icon name="suspense" />
-    <span class="big-button__text">
-      <span class="big-button__label">{S.cluster.suspense}</span>
-      <span class="big-button__note">
-        {#if open && countdown}
-          {pressed ? S.cluster.suspenseOpen : S.cluster.suspenseAutoRelease}
-        {:else}
-          {S.cluster.suspenseIdle}
-        {/if}
-      </span>
+  <Icon name="suspense" outline />
+  <span class="big-button__text">
+    <span class="big-button__label">{S.cluster.suspense}</span>
+    <span class="big-button__note">
+      {#if open && countdown}
+        {pressed ? S.cluster.suspenseOpen : S.cluster.suspenseAutoRelease}
+      {:else}
+        {S.cluster.suspenseIdle}
+      {/if}
     </span>
-    {#if open && countdown}<span class="suspense-button__count" role="timer">{countdown.secondsLeft}</span>{/if}
   </span>
+  {#if open && countdown}<span class="suspense-button__count" role="timer">{countdown.secondsLeft}</span>{/if}
 </button>

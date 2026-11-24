@@ -5,6 +5,7 @@ import { baseState } from '../../../../../packages/ui/fixtures/states.ts';
 import {
   autoAdvanceCountdown,
   autoAdvanceStatus,
+  autoModeOn,
   countdownBetween,
   elapsedSec,
   guideCountdown,
@@ -115,4 +116,12 @@ test('the Interval guide may run over, and says by how much', () => {
 test('elapsedSec never goes negative', () => {
   assert.equal(elapsedSec(NOW - 12_900, NOW), 12);
   assert.equal(elapsedSec(NOW + 5_000, NOW), 0);
+});
+
+test('the auto badge: auto-advance on, and on in the final phase only if that is allowed', () => {
+  const s = baseState(1_800_000_000_000);
+  assert.equal(autoModeOn(s), true);
+  assert.equal(autoModeOn({ ...s, game: { ...s.game, autoAdvance: false } }), false);
+  assert.equal(autoModeOn({ ...s, phase: 'final' }), false, 'the fixture keeps it off in the final phase');
+  assert.equal(autoModeOn({ ...s, phase: 'final', game: { ...s.game, autoAdvanceFinal: true } }), true);
 });

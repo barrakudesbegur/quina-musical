@@ -6,40 +6,48 @@
 import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
-import type { LinkName, LinkState } from './logic/status.ts';
+import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
+import type { RecoveryNotice } from './logic/pace-panel.ts';
+import type { ChartGap } from './logic/future.ts';
 import type { ConsoleCommand, Theme } from './config.ts';
 
 export { CA };
 
 const seconds = (s: number) => `${s} s`;
 const kindLabel: Record<WinKind, string> = { line: CA.line, bingo: CA.bingo };
+/** "línia" or "quina", inside a sentence. */
+const kindWord: Record<WinKind, string> = { line: 'línia', bingo: 'quina' };
+/** "A, B i C". */
+const listing = (items: readonly string[]) => (items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} i ${items[items.length - 1]}`);
 
 export const S = {
   pageTitle: 'Consola · Quina Musical',
 
   header: {
     label: 'Estat del show',
-    phase: 'Fase',
-    heat: 'Calor',
+    heat: 'Escalfor de la quina',
+    /** The Heat meter's spoken value. */
+    heatText: (percent: number | null, phase: string, climbing: string, fixed: boolean) =>
+      `${percent === null ? 'sense dades' : `${percent} %`}, fase ${phase.toLowerCase()}${fixed ? ' (fixada des del menú)' : ''}, ${climbing}`,
+    phaseFixed: 'Fase fixada des del menú',
     clock: 'Hora',
-    roundEnd: 'Fi de la quina',
+    roundEnd: 'Final previst de la quina',
+    gameEnd: 'Final previst de la nit',
     drift: 'Horari',
-    device: 'Dispositiu',
-    noLabel: 'Sense nom',
-    menu: 'Menú',
+    menu: 'Menú: més opcions',
     demo: (name: string) => `Demo: ${name}`,
     noRound: CA.gameTitle,
     round: (n: number, special: boolean) => (special ? `${CA.round(n)} · especial` : CA.round(n)),
-    phaseFixed: 'fixada',
     stale: 'Dades antigues',
   },
 
-  phase: { early: 'inici', mid: 'mig', late: 'avançada', final: 'final' } satisfies Record<PhaseName, string>,
+  phase: { early: 'Inici', mid: 'Mig', late: 'Tardana', final: 'Final' } satisfies Record<PhaseName, string>,
   climbing: { line: 'cap a la línia', bingo: 'cap a la quina' } satisfies Record<WinKind, string>,
 
   links: {
     title: 'Connexions',
     names: { relay: 'Portàtil', show: 'Show', cloud: 'Núvol', feed: 'Mòbils', wii: 'Wii' } satisfies Record<LinkName, string>,
+    chips: { cloud: 'Núvol', lan: 'LAN', feed: 'Mòbils', wii: 'Wii' } satisfies Record<HeaderChip, string>,
     states: { up: 'connectat', down: 'desconnectat', unknown: 'encara no disponible' } satisfies Record<LinkState, string>,
     unknownShort: '—',
   },
@@ -57,11 +65,17 @@ export const S = {
   cluster: {
     label: 'Controls principals',
     next: 'Següent',
-    hold: 'Espera',
-    resume: 'Reprèn',
+    talk: 'Parlem',
+    talkNote: 'la música baixa i no gira',
+    stay: 'Aguanta',
+    stayNote: 'la cançó segueix; no gira',
+    /** A pressed Parlem or Aguanta: pressing it again releases the Hold. */
+    activeNote: 'prem per reprendre',
+    stayPending: 'Aviat: el motor encara no sap aguantar la cançó sense baixar-la.',
+    stayPendingShort: 'encara no disponible',
     suspense: 'Suspens',
-    suspenseIdle: 'Mantén i deixa anar',
-    suspenseOpen: 'Deixa anar per aterrar',
+    suspenseIdle: 'mantén per crear tensió',
+    suspenseOpen: 'deixa anar per aterrar',
     suspenseAutoRelease: "s'allibera sol en",
     back: 'Enrere',
     backHint: "Mantén premut per desfer l'última cançó",
@@ -72,7 +86,6 @@ export const S = {
 
   nowPlaying: {
     title: CA.nowPlaying,
-    position: (n: number, total: number) => `Cançó ${n} de ${total}`,
     nothing: 'No sona cap cançó',
     holdMusic: "Música d'espera",
     autoIn: 'Següent automàtic',
@@ -81,17 +94,17 @@ export const S = {
     autoHeld: 'En espera: sense avanç automàtic',
     spinning: 'Girant…',
     idle: 'Esperant «Següent»',
+    autoBadge: 'Avança sol',
     seconds,
-    recent: CA.previous,
     lastSpinBy: (device: string | null) => (device ? `Últim gir: ${device}` : 'Últim gir: automàtic'),
-    undone: 'desfeta',
   },
 
   nextSong: {
-    title: 'Següent cançó',
-    private: 'Privat',
+    title: 'Següent',
+    private: 'Privat: només a la consola',
     none: 'Final de la cua',
-    landsIn: 'Aterra en',
+    landsIn: (s: number) => `Aterra en ${s} s`,
+    toLand: 'per aterrar',
     suspenseOpen: 'Suspens obert',
     decoding: 'Carregant la cançó…',
     seconds,
@@ -101,29 +114,47 @@ export const S = {
     title: 'Ritme',
     value: (s: number) => `${s} s`,
     presets: 'Ritmes predefinits',
-    minus: (step: number) => `−${step} s`,
-    plus: (step: number) => `+${step} s`,
     minusLabel: (step: number) => `Ritme ${step} s més ràpid`,
     plusLabel: (step: number) => `Ritme ${step} s més lent`,
-    lock: 'Bloqueja el ritme',
-    lockNote: "Sense correccions per recuperar l'horari",
-    auto: 'Avanç automàtic',
+    lock: 'Bloquejar',
+    lockNote: "Bloqueja el ritme: sense correccions per recuperar l'horari",
+    auto: 'Auto',
+    autoNote: 'Avanç automàtic',
     autoFinal: 'Avanç automàtic a la fase final',
-    detail: (spin: number, slot: number) => `gir ${spin} s · d'aterratge a aterratge ${slot} s`,
-    nudge: (x: number) => `correcció d'horari ×${x}`,
+    recommended: 'recomanat',
+    recovery: ({ direction, seconds: s }: RecoveryNotice) =>
+      direction === 'faster'
+        ? `Recuperant l'horari: cada cançó dura ${s > 0 ? `${s} s` : 'una mica'} menys.`
+        : `Anem avançats: cada cançó dura ${s > 0 ? `${s} s` : 'una mica'} més.`,
   },
 
-  winners: {
-    title: 'Possibles guanyadors',
-    private: 'Privat',
-    show: 'Mostra',
-    hide: 'Amaga',
-    hiddenNote: 'Amagats: així també us quedeu amb la intriga.',
+  future: {
+    hiddenNote: 'Què passarà a les properes cançons. Amagat perquè també us agafi per sorpresa.',
+    show: 'Mirar el futur',
+    hide: 'Amagar',
+    chart: 'Cartrons segons les cançons marcades',
+    bar: (marked: number) => (marked === 1 ? '1 marcada' : `${marked} marcades`),
+    barLabel: (marked: number, cards: number) => `${cards} ${cards === 1 ? 'cartró' : 'cartrons'} amb ${marked} ${marked === 1 ? 'cançó marcada' : 'cançons marcades'}`,
+    validCount: (n: number) => `${n} cartrons en joc en aquesta quina`,
+    gaps: {
+      cards: 'Falten els cartrons impresos (cards.json).',
+      inPlay: 'No hi ha cartrons en joc registrats.',
+      landings: "Aquesta consola no ha vist totes les cançons d'aquesta quina.",
+    } satisfies Record<ChartGap, string>,
+    unknown: '—',
+    firstLine: 'Primera línia',
+    bingo: 'Quina',
+    now: 'Ja hi és',
+    done: 'Confirmada',
+    atLeast: (n: number) => `com a mínim d'aquí a ${n}`,
+    exactPending: "El número exacte necessita l'ordre de la cua, i el motor encara no l'envia a la consola.",
+    winners: 'Possibles guanyadors',
+    none: 'Encara cap',
     kind: kindLabel,
-    none: 'Cap',
     rows: (rows: readonly number[]) => (rows.length === 1 ? `fila ${rows[0]}` : `files ${rows.join(', ')}`),
     completedBy: (title: string) => `amb «${title}»`,
-    notSold: 'No registrat com a venut',
+    notSold: 'No venut',
+    notSoldLong: 'No registrat com a venut',
     noCardsInPlay: "No hi ha cartrons en joc registrats: no es pot avisar dels que no s'han venut.",
     inPlayError: 'Els cartrons en joc no es poden llegir.',
   },
@@ -161,34 +192,39 @@ export const S = {
     title: (cardId: number) => CA.checking(cardId),
     none: 'Cap comprovació en marxa',
     claims: 'Cartrons cantats',
+    claimsOf: (kind: WinKind) => `Cartrons cantats · ${kindWord[kind]}`,
+    claimedAt: (song: number) => `cantat a la cançó ${song}`,
+    steps: (cardId: number, what: string) => `${CA.card(cardId)} · ${what} · cançó a cançó`,
+    rowShort: (row: number) => `fila ${row + 1}`,
+    allSongsShort: 'les 12 cançons',
+    resultMissing: (titles: readonly string[], kind: WinKind) => `Resultat: falta ${listing(titles)}. Aquest cartró no té ${kindWord[kind]}.`,
+    resultComplete: (kind: WinKind) => `Resultat: han sonat totes. Aquest cartró té ${kindWord[kind]}!`,
+    decide: 'Decisió',
+    confirmNote: 'el presentador sempre decideix',
+    rejectNote: 'sona la fanfàrria de fallada',
     kind: kindLabel,
-    status: { queued: 'En cua', checking: 'Comprovant', checked: 'Falta decidir', valid: 'Vàlid', invalid: 'No vàlid' } satisfies Record<ClaimStatus, string>,
+    status: { queued: 'A la cua', checking: 'Comprovant…', checked: 'Falta decidir', valid: 'Vàlid', invalid: 'No vàlid' } satisfies Record<ClaimStatus, string>,
     outcome: {
       complete: 'Complet',
       incomplete: 'Incomplet',
       unknownCard: 'Aquest número de cartró no existeix',
       wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
     } satisfies Record<CheckOutcome, string>,
-    resultValid: CA.checkValid,
-    resultInvalid: CA.checkInvalid,
     completeSince: (n: number) => `complet des de la cançó ${n}`,
     notSold: 'No registrat com a venut',
     checkNow: 'Comprova',
-    recheck: 'Torna a comprovar',
-    addClaim: 'Afegeix un altre cartró',
+    recheck: 'Tornar a comprovar',
+    addClaim: 'Un altre cartró',
     waiting: 'Comença en un moment…',
     progress: (done: number, total: number) => `${done} de ${total} cançons`,
-    row: (row: number) => `Fila ${row + 1}`,
-    allSongs: 'Les 12 cançons',
     otherRows: (rows: readonly number[]) =>
       rows.length > 1 ? `També té completes les files ${rows.map((r) => r + 1).join(', ')}` : `També té completa la fila ${rows.map((r) => r + 1).join(', ')}`,
     landed: CA.landed,
     notLanded: CA.notLanded,
     pending: 'Pendent',
     playing: 'Sonant',
-    result: 'Resultat',
-    confirm: 'Confirma: té premi',
-    reject: 'Rebutja: no té premi',
+    confirm: 'Confirmar',
+    reject: 'Rebutjar',
     againstResult: 'Va contra el resultat: mantén premut',
     decideAfterResult: 'Podreu decidir quan surti el resultat.',
   },
@@ -197,8 +233,8 @@ export const S = {
     title: CA.shout,
     cards: (ids: readonly number[]) => (ids.length === 1 ? CA.card(ids[0]) : `Cartrons ${ids.join(', ')}`),
     winningSong: (title: string) => `Cançó guanyadora: ${title}`,
-    music: 'Música de la celebració',
-    choices: { winningSong: 'Cançó guanyadora', victory: 'Música de victòria', holdMusic: "Música d'espera" } satisfies Record<CelebrationMusic, string>,
+    music: 'Música de celebració',
+    choices: { winningSong: 'Cançó guanyadora', victory: 'Victòria', holdMusic: 'Música de fons' } satisfies Record<CelebrationMusic, string>,
     suggested: 'suggerida',
     musicForLater: 'Si el cartró és bo, la celebració començarà amb aquesta música.',
     continueLine: 'Prem «Següent» per continuar la quina.',
@@ -271,7 +307,7 @@ export const S = {
     noRound: (n: number) => `El pla no té la ${CA.round(n)}.`,
   },
 
-  tabs: { label: 'Ajudes', cheatSheet: 'Xuleta', sounds: 'Sons', winners: CA.winners },
+  tabs: { label: 'Ajudes', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
 
   cheatSheet: {
     prizes: (n: number) => `Premis de la ${CA.round(n)}`,
@@ -285,14 +321,14 @@ export const S = {
   showKeys: [
     { keys: '→ / Retorn', action: 'Següent (també allibera el suspens)' },
     { keys: '←', action: 'Enrere' },
-    { keys: 'Espai', action: 'Espera / Reprèn' },
+    { keys: 'Espai', action: 'Parlem / Reprèn' },
     { keys: 'S', action: 'Suspens' },
     { keys: 'M', action: "Música d'espera" },
     { keys: 'Esc', action: 'Pànic' },
     { keys: '+ / −', action: 'Ritme ±1 s' },
     { keys: 'L', action: 'Bloqueja el ritme' },
     { keys: 'A', action: 'Avanç automàtic' },
-    { keys: '0–4', action: 'Fase: automàtica, inici, mig, avançada, final' },
+    { keys: '0–4', action: 'Fase: automàtica, inici, mig, tardana, final' },
     { keys: 'D', action: 'Informació de depuració' },
     { keys: 'H', action: 'Amaga els controls (projector)' },
     { keys: '[ / ]', action: 'Desfasament de pantalla ±5 ms' },
@@ -353,7 +389,7 @@ export const S = {
     device: 'Aquest dispositiu',
     labelField: 'Nom del dispositiu',
     labelSave: 'Desa',
-    labelNote: 'Les ordres porten el nom nou quan es torna a carregar la pàgina.',
+    labelNote: 'Les ordres porten el nom nou quan es torna a carregar la pàgina. El nom diu qui ha premut cada botó.',
     theme: 'Tema',
     themes: { light: 'Clar', dark: 'Fosc' } satisfies Record<Theme, string>,
     night: 'La nit',
@@ -367,8 +403,11 @@ export const S = {
     roundsPlus: 'Una quina més',
     gameEnd: (clock: string, drift: string) => `Final previst de la nit: ${clock} (${drift})`,
     pause: 'Pausa tècnica',
+    pace: 'Ritme',
     phase: 'Fase',
     phaseAuto: 'Automàtica',
+    winners: CA.winners,
+    planB: 'Xuleta del pla B',
     tools: 'Eines',
     confirmLine: 'Confirma la línia sense comprovació',
     confirmLineNote: 'Només si no s\'ha pogut fer la comprovació.',
@@ -432,7 +471,7 @@ export const S = {
   commands: {
     next: 'Següent',
     back: 'Enrere',
-    hold: 'Espera',
+    hold: 'Parlem',
     holdMusic: "Música d'espera",
     suspense: 'Suspens',
     setPace: 'Ritme',

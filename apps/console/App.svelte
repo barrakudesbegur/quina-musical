@@ -1,8 +1,10 @@
 <!--
-  The console: the presenters' control page. Layout (console.css):
-  - landscape: the header across the top; the scene on the left; the helpers (tabs) and the thumb cluster
-    on the right, the cluster in the bottom-right corner;
-  - portrait: the header, then one scrolling column (scene, helpers), and the cluster fixed at the bottom.
+  The console: the presenters' control page (the Consola-Joc and Consola-Comprovacio boards). Layout
+  (console.css):
+  - landscape: the header's three panels across the top; the scene's panels in a column on the left, the
+    helpers' tabs filling the rest of it; the action cluster on the right. In a Check, the Check board takes
+    the whole body;
+  - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
   and data-status hooks for themes.
 -->
@@ -16,6 +18,7 @@
   import CelebrationPanel from './components/CelebrationPanel.svelte';
   import CheckPanel from './components/CheckPanel.svelte';
   import Header from './components/Header.svelte';
+  import HelperTabs from './components/HelperTabs.svelte';
   import HoldPanel from './components/HoldPanel.svelte';
   import IntervalPanel from './components/IntervalPanel.svelte';
   import IntervalMusic from './components/IntervalMusic.svelte';
@@ -25,15 +28,14 @@
   import NumberPad from './components/NumberPad.svelte';
   import PacePanel from './components/PacePanel.svelte';
   import PausePanel from './components/PausePanel.svelte';
-  import PossibleWinners from './components/PossibleWinners.svelte';
   import RoundStartPanel from './components/RoundStartPanel.svelte';
-  import SideTabs from './components/SideTabs.svelte';
   import ThumbCluster from './components/ThumbCluster.svelte';
   import Toasts from './components/Toasts.svelte';
 
   const model = setConsole(new ConsoleModel());
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
+  const board = $derived(snap !== null && flow.scene === 'check' ? 'check' : 'play');
   let padOpen = $state(false);
   let menuOpen = $state(false);
 
@@ -48,6 +50,7 @@
   class="console"
   data-theme={model.theme}
   data-scene={flow.scene}
+  data-board={board}
   data-status={snap?.status ?? 'none'}
   data-online={model.online}
   data-paused={flow.pause !== null || undefined}
@@ -60,7 +63,12 @@
     {/if}
   </div>
 
-  <div class="console__body">
+  {#if board === 'check'}
+    <main class="console__board">
+      <PausePanel />
+      <CheckPanel onclaim={() => (padOpen = true)} />
+    </main>
+  {:else}
     <main class="console__main" data-scene={flow.scene}>
       <PausePanel />
       {#if !snap}
@@ -75,14 +83,9 @@
         <NextSong />
       {:else if flow.scene === 'play'}
         {#if snap.status === 'hold'}<HoldPanel />{/if}
-        <div class="console__pair">
-          <NowPlaying />
-          <NextSong />
-        </div>
-        {#key snap.round.number}<PossibleWinners />{/key}
+        <NowPlaying />
+        <NextSong />
         <PacePanel />
-      {:else if flow.scene === 'check'}
-        <CheckPanel onclaim={() => (padOpen = true)} />
       {:else if flow.scene === 'celebration'}
         <CelebrationPanel />
         <NowPlaying />
@@ -93,14 +96,12 @@
         <AfterPanel />
       {/if}
       {#if snap?.intervalMusic}<IntervalMusic />{/if}
+      {#if snap}<HelperTabs />{/if}
     </main>
 
-    <aside class="console__side">
-      <SideTabs />
-    </aside>
-  </div>
+    <ThumbCluster onclaim={() => (padOpen = true)} />
+  {/if}
 
-  <ThumbCluster onclaim={() => (padOpen = true)} />
   <NumberPad bind:open={padOpen} />
   <Menu bind:open={menuOpen} />
   <Toasts />

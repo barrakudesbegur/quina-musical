@@ -1,22 +1,24 @@
 /*
- * The console's themes: light (the default; probably easier to use on the night) and dark (ui/tokens.css as it
- * is). The root element `.console` carries data-theme="light|dark" and overrides only role tokens, so the
- * components (console.css) never change between themes. :root:has(…) gives the page behind the console
- * (the overscroll area) the same background.
+ * The console's themes, from the approved boards (Consola-Joc, Consola-Joc-Fosc): light (the default; probably
+ * easier to use on the night) and dark. The root element `.console` carries data-theme="light|dark" and
+ * overrides only role tokens, so the components (console.css) never change between themes. :root:has(…)
+ * gives the page behind the console (the overscroll area) the same background. Lines stay ink in both
+ * themes: it is the game look's sticker outline.
  *
  * Contrast (WCAG 2.1), checked for both themes:
- * - text on bg / surface: light 15.8 / 18.0, dark 14.6 / 11.8; muted text: light 7.0 / 8.0, dark 8.8 / 7.1;
- * - button labels: ink on orange 7.3, ink on gold 11.4, ink on ice 9.6; light: white on red 5.6, white on
- *   green 6.1; dark: ink on red 5.9, ink on green 5.7;
+ * - text on bg / surface: light 15.6 / 18.0, dark 14.6 / 11.8; muted text: light 6.0 / 7.0, dark 8.8 / 7.1;
+ * - small ink notes on the action buttons: red (#ff5a60) 5.9, ice 9.6, lilac 6.2, gold 11.4, orange 7.3,
+ *   green 5.7; the big labels are white with a thick ink outline, so they read on every colour;
+ * - the recovery notice: ink on #ffe3c2 14.6;
  * - focus ring on bg: light (night) 13.6, dark (gold) 9.9.
  *
- * Console-local tokens (not in ui/tokens.css yet) are the animation lengths from ui/ANIMATIONS.md › Console
- * and the "on" colours for text on a role colour.
+ * Console-local tokens (not shared in ui/tokens.css) are the animation lengths from ui/ANIMATIONS.md ›
+ * Console, the "on" colours for text on a role colour, the board's surfaces, and one colour per action button.
  */
 
 .console {
-  /* Text on a role colour (proposed for ui/tokens.css) */
-  --line-width-thin: 2px; /* chips, cards, inner borders (the 3px --line-width is for panels and buttons) */
+  --line-width-thin: 2px; /* inner details (the 3px --line-width is for chips and small buttons) */
+  --shadow-drop: 0 4px 0 var(--color-ink); /* the sticker's hard shadow under panels and buttons */
   --color-on-primary: var(--color-ink);
   --color-on-accent: var(--color-ink);
   --color-on-calm: var(--color-ink);
@@ -24,10 +26,29 @@
   --color-on-danger: var(--color-ink);
   --color-warning: var(--color-gold);
   --color-on-warning: var(--color-ink);
+  /* The recovery notice (orange), the same in both themes */
+  --color-notice: #ffe3c2;
+  --color-notice-line: var(--color-orange-edge);
+  --color-on-notice: var(--color-ink);
+
+  /* One colour per action (Consola-Joc): Back, Parlem, Aguanta, Claim, Suspense, Next; Check: reject, confirm */
+  --action-back: #ff5a60;
+  --action-talk: var(--color-calm);
+  --action-stay: var(--color-stay);
+  --action-claim: var(--color-green);
+  --action-suspense: var(--color-gold);
+  --action-next: var(--color-orange);
+  --action-reject: #ff5a60;
+  --action-confirm: var(--color-green);
+  --action-label: #ffffff; /* big labels: white with an ink outline */
+  --action-note: var(--color-ink);
+
+  /* The Heat bar: cold to hot */
+  --heat-gradient: linear-gradient(90deg, var(--color-ice), var(--color-gold) 45%, var(--color-orange) 70%, var(--color-red));
 
   /* ANIMATIONS.md › Console: press 80 ms, long-press drain 200 ms, hold-hint 150 ms in / 300 ms out,
-     suspense-hold pulse 1.2 s → 0.5 s, check-step 150 ms, reveal 200 ms, toast-in 200 ms, conn-change
-     200 ms. The ring steps with the store's clock (4 ticks a second). */
+     suspense-hold pulse 1.2 s → 0.5 s, check-step 150 ms, reveal 200 ms (bars 300 ms, 40 ms stagger),
+     tab-switch 120 ms, toast-in 200 ms, conn-change 200 ms. The ring steps with the store's clock. */
   --dur-press: 80ms;
   --dur-drain: 200ms;
   --dur-hint-in: 150ms;
@@ -36,30 +57,47 @@
   --dur-pulse-fast: 0.5s;
   --dur-step-mark: 150ms;
   --dur-reveal: 200ms;
+  --dur-reveal-bars: 300ms;
+  --dur-reveal-stagger: 40ms;
+  --dur-tab-switch: 120ms;
   --dur-toast: 200ms;
   --dur-conn: 200ms;
   --dur-ring-step: 250ms;
 }
 
-/* Dark: ui/tokens.css as it is, with a lighter red so ink text on it stays above 4.5:1. */
+/* Dark (Consola-Joc-Fosc): ui/tokens.css's night palette, with the board's surfaces. */
 .console[data-theme='dark'],
 :root:has(.console[data-theme='dark']) {
   color-scheme: dark;
+  --color-bg: var(--color-night);
+  --color-surface: var(--color-panel);
+  --color-surface-private: #1b2456;
+  --color-chip: var(--color-night);
+  --color-track: var(--color-night-deep);
+  --color-tab-idle: #1b2456;
+  --color-text: var(--color-snow);
+  --color-text-muted: var(--color-muted);
+  --color-title: var(--color-gold);
   --color-danger: #ff5a60;
 }
 
-/* Light */
+/* Light (Consola-Joc) */
 .console[data-theme='light'],
 :root:has(.console[data-theme='light']) {
   color-scheme: light;
-  --color-bg: #f4efe6;
+  --color-bg: #f3eee2;
   --color-bg-deep: #e7e0d3;
   --color-surface: #ffffff;
+  --color-surface-private: #fff6e5;
+  --color-chip: #f3eee2;
+  --color-track: #e4ddcc;
+  --color-tab-idle: #e8e1d2;
   --color-paper: #ffffff;
   --color-text: var(--color-ink);
-  --color-text-muted: #4a4f6e;
+  --color-text-muted: #5a5480;
   --color-text-on-paper: var(--color-ink);
-  --color-line: #2b2f4a;
+  --color-title: var(--color-orange-edge);
+  --color-line: var(--color-ink);
   --color-primary: var(--color-orange);
   --color-danger: #c8232b;
   --color-ok: var(--color-green-edge);
@@ -78,6 +116,9 @@
     --dur-hint-out: 0ms;
     --dur-step-mark: 0ms;
     --dur-reveal: 0ms;
+    --dur-reveal-bars: 0ms;
+    --dur-reveal-stagger: 0ms;
+    --dur-tab-switch: 0ms;
     --dur-toast: 0ms;
     --dur-conn: 0ms;
     --dur-ring-step: 0ms;

@@ -1,6 +1,7 @@
-// What the always-visible header shows: the connections, the console-wide alert, the round on screen and the
-// Heat. Pure: everything comes in as arguments.
+// What the always-visible header shows: the connections, the console-wide alert, the round on screen, the
+// Heat and the Drift. Pure: everything comes in as arguments.
 import type { ShowState, ShowStatus } from '@quina/protocol';
+import { formatDrift } from '../../../packages/rules/time.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
 
 export const LINK_NAMES = ['relay', 'show', 'cloud', 'feed', 'wii'] as const;
@@ -19,6 +20,28 @@ export function linksOf(connected: boolean, showOnline: boolean): Links {
     feed: 'unknown',
     wii: 'unknown',
   };
+}
+
+/** The header's chips (the menu lists every link): the cloud, the LAN link to the laptop, the phones, the Wii. */
+export const HEADER_CHIPS = ['cloud', 'lan', 'feed', 'wii'] as const;
+export type HeaderChip = (typeof HEADER_CHIPS)[number];
+
+/**
+ * The header's chips from the links. LAN is the way to the show laptop: up only when both its relay and the
+ * show page on it answer (commands get through), down otherwise.
+ */
+export function headerChips(links: Links): Record<HeaderChip, LinkState> {
+  const lan: LinkState = links.relay === 'up' && links.show === 'up' ? 'up' : links.relay === 'unknown' ? 'unknown' : 'down';
+  return { cloud: links.cloud, lan, feed: links.feed, wii: links.wii };
+}
+
+/** How the Drift chip looks: on time, running late, or ahead. */
+export type DriftTone = 'onTime' | 'late' | 'early';
+
+/** "On time" is whatever the shared `formatDrift` calls on time, so the chip's colour and its words agree. */
+export function driftTone(sec: number | null | undefined): DriftTone {
+  if (sec === null || sec === undefined || !Number.isFinite(sec) || formatDrift(sec) === formatDrift(0)) return 'onTime';
+  return sec > 0 ? 'late' : 'early';
 }
 
 /** The one alert the console shows above everything, most serious first. */

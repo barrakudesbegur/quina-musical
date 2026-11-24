@@ -57,3 +57,8 @@ test('decided claims are counted and can no longer be checked', () => {
   assert.equal(summarizeClaims([claim({ status: 'valid' })], null).allDecided, true);
   assert.equal(summarizeClaims([], null).allDecided, false);
 });
+
+test('"claimed at song N": the 1-based number of the last counted song', () => {
+  const [view] = summarizeClaims([claim({ position: 23 })], null).items;
+  assert.equal(view.claimedAtSong, 24);
+});
