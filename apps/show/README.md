@@ -1,6 +1,6 @@
-# Mixer POC: land every hook as the drum stops
+# The show: land every hook as the drum stops
 
-A proof of concept of the bingo "DJ" built from `reports/Bingo DJ mixer research.md` and, where they differ, the design decisions in [`docs/mixer-design-decisions.md`](../../docs/mixer-design-decisions.md), [`GLOSSARY.md`](../../GLOSSARY.md) and [`docs/adr/`](../../docs/adr/). Built so far:
+This year's show app: the sound engine, the show page and the relay. It started as the mixer proof of concept, built from [`docs/research/reports/Bingo DJ mixer research.md`](../../docs/research/reports/Bingo%20DJ%20mixer%20research.md) and, where they differ, the design decisions in [`docs/mixer-design-decisions.md`](../../docs/mixer-design-decisions.md), [`GLOSSARY.md`](../../GLOSSARY.md) and [`docs/adr/`](../../docs/adr/). Built so far:
 - the analysis (M0);
 - the show engine with the full effects layer (M1 + M2);
 - the show state machine: Pace and auto-advance, Hold and Hold music, Back as undo, and the Phase from the cards in play;
