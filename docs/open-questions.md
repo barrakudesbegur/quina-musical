@@ -113,3 +113,20 @@ The brief didn't settle these. Each is a single setting or a small change.
 ## The printed cards are public (quina-musical-b2, 2026-11-24)
 The player app needs each card's songs, so `cards.json` (every card's songs) is public: the cloud serves it as a static file, and the laptop's relay serves it on the hotspot. With every card and the public landings, someone determined could work out live which card numbers are close to a Line or a Bingo, the information the console keeps private as "possible winners". Card numbers are anonymous and the next song stays secret, so the impact is low. The alternative is a per-card secret in the QR (for example `/26/123-k7f2`), with the cloud serving only that card. It would make "Afegir cartró" by number much harder, and that fails the grandmother test.
 **Default taken:** keep `cards.json` public (the orchestrator agrees). To change: generate the cards with a secret per card before printing, and serve cards one by one.
+
+## Checks only you can do on real devices (quina-musical-1e, 2026-11-24)
+The player app is live for testing at https://quina-cloud.barrakudes.workers.dev/26/123. I checked it in desktop Chrome:
+- the card link adds card 123;
+- the "before the Game" welcome, help and "Esborrar dades" screens show;
+- last year's `?c=57` link shows "Aquest cartró és de l'any passat";
+- every asset loads.
+I can't use real phones or the venue's projector, so these are yours:
+1. **An iPhone with Safari, and an Android phone with Chrome.**
+   - Scan a test QR for `/26/123` and add a second card with the number pad.
+   - Lock and unlock the phone: it should reconnect, and while the screen is on it shouldn't lock by itself (Wake Lock).
+   - Sounds should play after the first tap.
+2. **An older phone:** is scrolling smooth with 3–4 cards, and does it stay usable at the end of a round?
+3. **Last year's offline cache:** this can only be checked once quina.barrakudesbegur.org points to the new cloud. Open the old site on a phone that used it last year, then the new one, and check it shows the new app straight away.
+4. **The projector:** open `/show/` on the laptop with the real projector at 4:3, then at 16:9. Check the drum band, the last-3 row and the Check card are readable from the back of the tent.
+5. **The console on the actual tablet**, over the phone hotspot: open the relay's printed link (it carries `?t=`), then scan the console's own QR with a phone to pair it as "Mòbil admin".
+**Default taken:** none of these block the build. Results go into the rehearsal checklist.
