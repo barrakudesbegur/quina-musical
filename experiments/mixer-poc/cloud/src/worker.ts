@@ -65,7 +65,9 @@ export default {
           // answered below
         }
         if (typeof gameId !== 'string' || !gameId || gameId.length > 100) return json({ ok: false, error: 'send { "gameId": "…" }' }, {}, 400);
-        const resumed = await room.resumeGame(gameId, identity);
+        // Who asked goes to the cloud's log only: the laptop gets a role, never an email (it lands in a file).
+        console.log(`manual resume of ${gameId} by ${identity}`);
+        const resumed = await room.resumeGame(gameId, identity.startsWith('person:') ? 'an organizer' : identity === 'dev' ? 'dev' : 'the laptop');
         return json(resumed, {}, resumed.ok ? 200 : 404);
       }
       case 'ping':

@@ -138,7 +138,7 @@ export class CloudLink {
     ws.on('open', () => {
       this.log('relay: connected');
       ws.send(JSON.stringify({ v: PROTOCOL_VERSION, type: 'hello', role: 'cloud', clientId: this.options.clientId }));
-      this.requestJournal(1);
+      this.requestJournal(this.nextWanted());
     });
     ws.on('message', (data) => this.onRelayMessage(String(data)));
     ws.on('close', () => {
@@ -165,7 +165,7 @@ export class CloudLink {
       case 'relay.clients': {
         // The show page (re)connected: it may have journalled while this link wasn't listening.
         const show = message.clients.some((c) => c.role === 'show');
-        if (show && !this.showConnected) this.requestJournal(1);
+        if (show && !this.showConnected) this.requestJournal(this.nextWanted());
         this.showConnected = show;
         break;
       }
@@ -188,6 +188,16 @@ export class CloudLink {
     const missing = gameId ? this.journal.firstMissing(gameId) : null;
     if (missing !== null) this.requestJournal(missing);
     this.pump();
+  }
+
+  /**
+   * The first entry this copy lacks of its current Game. The answer travels to every relay client, so ask only
+   * for what is missing; a show page on another Game answers from there, and the hole that leaves is asked for
+   * again from 1.
+   */
+  private nextWanted(): number {
+    const gameId = this.journal.currentGameId;
+    return gameId ? this.journal.contiguous(gameId) + 1 : 1;
   }
 
   /** Ask the show for its journal from `fromSeq` (at most every 5 s). */

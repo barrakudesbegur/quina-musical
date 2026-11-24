@@ -158,7 +158,7 @@ export interface CloudResume {
   gameId: string;
   /** The last entry of that Game. */
   seq: number;
-  /** Who asked (an Access identity label). */
+  /** Who asked, as a role ('an organizer'), never an email: it is written to a file on the laptop. */
   by: string;
   nowMs: number;
 }
@@ -225,6 +225,7 @@ function forwardedEventError(event: unknown): string | null {
       if (pause !== null && !(isRecord(pause) && isTime(pause.sinceMs))) return 'state.pause must be null or {sinceMs}';
       if (interval !== null && !(isRecord(interval) && isCount(interval.nextRound) && isTime(interval.guideEndMs))) return 'state.interval must be null or {nextRound, guideEndMs}';
       if (!isRecord(schedule) || !isTime(schedule.gameEndMs)) return 'state.schedule.gameEndMs must be a number';
+      if (!(event.transition === null || isRecord(event.transition)) || !(event.suspense === null || isRecord(event.suspense))) return 'state.transition and state.suspense must be null or objects';
       return null;
     }
     case 'transition.scheduled':

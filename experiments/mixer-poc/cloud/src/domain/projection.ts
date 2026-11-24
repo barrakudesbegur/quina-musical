@@ -143,9 +143,13 @@ export function projectEvent(state: PublicState, event: ShowEvent, ctx: Projecti
   }
 }
 
-/** From the engine's full state, only the pause, the Interval and the Game's end, rounded. */
+/**
+ * From the engine's full state, only the pause, the Interval and the Game's end, rounded; and the Spin stops
+ * when the engine has nothing in flight (Panic and a new round end a Spin without `transition.cancelled`).
+ */
 function projectState(state: PublicState, show: ShowState, ctx: ProjectionContext): PublicChange[] {
   const changes: PublicChange[] = [];
+  if (state.spin && show.transition === null && show.suspense === null) changes.push({ kind: 'spin', spin: null });
   const pause = show.pause ? { sinceMs: ctx.toCloudMs(show.pause.sinceMs) } : null;
   if (pause?.sinceMs !== state.pause?.sinceMs) changes.push({ kind: 'pause', pause });
   const interval = show.interval ? { nextRound: show.interval.nextRound, guideEndMs: ctx.toCloudMs(show.interval.guideEndMs) } : null;

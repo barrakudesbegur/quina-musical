@@ -190,6 +190,15 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
   assert.deepEqual(forbiddenKeys(made), []);
 });
 
+test("a state with nothing in flight stops the phones' Spin (Panic, a new round)", () => {
+  const spinning = applyPublic(emptyPublicState('26'), [{ kind: 'spin', spin: { startAtMs: 1, landAtMs: 9 } }]);
+  const show = (transition: unknown, suspense: unknown) =>
+    ({ v: PROTOCOL_VERSION, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 0 }, transition, suspense }) as unknown as ShowState;
+  assert.ok(projectEvent(spinning, show(null, null), ctx).some((c) => c.kind === 'spin' && c.spin === null));
+  assert.equal(projectEvent(spinning, show({ id: 't' }, null), ctx).some((c) => c.kind === 'spin'), false, 'a Spin in flight keeps turning');
+  assert.equal(projectEvent(spinning, show(null, { id: 's' }), ctx).some((c) => c.kind === 'spin'), false, 'a Suspense keeps turning');
+});
+
 test('the shuffle goes public with its timing only', () => {
   const state = emptyPublicState('26');
   const shuffle = { v: PROTOCOL_VERSION, type: 'shuffle.scheduled', round: 2, kind: 'normal', startAtMs: 100, endAtMs: 6100, songCount: 77 } as unknown as ShowEvent;

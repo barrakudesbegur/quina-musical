@@ -111,7 +111,8 @@ class Phone {
 }
 
 // ---- the scripted show -----------------------------------------------------------------------------------
-function state(interval: { nextRound: number } | null): unknown {
+/** A state as the engine sends it; `spinning` while a transition is in flight (the cloud stops the Spin without one). */
+function state(interval: { nextRound: number } | null, spinning = false): unknown {
   const now = Date.now();
   return {
     v,
@@ -121,6 +122,8 @@ function state(interval: { nextRound: number } | null): unknown {
     pause: null,
     interval: interval ? { sinceMs: now, nextRound: interval.nextRound, guideEndMs: now + 600_000 } : null,
     schedule: { roundEndMs: now + 1_000_000, gameEndMs: now + 3 * 3_600_000, roundDriftSec: 0, gameDriftSec: 0 },
+    transition: spinning ? { id: 'spin', recipe: 'R1', phase: 'early', to: 0, landAtMs: now + 1000 } : null,
+    suspense: null,
   };
 }
 
@@ -143,7 +146,7 @@ async function playShow(relay: FakeRelay, storm: () => Promise<void>): Promise<J
       relay.emit({ v, type: 'transition.scheduled', id: `t${round}-${song}`, to: 0, drum: { removeId: null, targetId: 0, minLaps: 1 }, spinStartAtMs: start, landAtMs: start + SONG_MS * 0.8 });
       // The engine sends a state after every change: several per song, which the link coalesces (at most 4 a second).
       for (let i = 0; i < 4; i++) {
-        relay.emit(state(null));
+        relay.emit(state(null, true));
         await sleep(SONG_MS * 0.2);
       }
       if (song % 10 === 0) relay.emit({ v, type: 'engine.health', atMs: Date.now(), outputLatencyMs: 10, baseLatencyMs: 5, contextState: 'running', decodedMB: 100, jsHeapMB: 50, longTasks: 0, holdMusic: null });
