@@ -117,10 +117,13 @@ b2 built prize secrecy on top (`6fbbc32`). 1e moved the UI to plan v2 (`07ed72f`
 ## Waiting on the user
 
 - **The Wii remote mapping** (Q34, being iterated): proposed A Següent, B-hold Suspens, 1 Parlem, 2 Aguanta, − (hold) Enrere, + Claim, D-pad effects. Nothing is built.
-- **Q26, any laptop:** likely option A+ (installed, with media from R2). Don't build a browser time-stretcher until it's decided.
 - **This year's playlist:** hooks to approve and Signature vetoes (see the queue).
 - **Listening feedback** not yet given on the new sound (queue item 3), including the ~9 s Suspense release.
 - **More Hold music and victory tracks** (the media pools are tiny).
+
+## Decided since the pause
+
+- **Q26 = A+:** the show laptop stays installed (the relay, plus Python Rubber Band for the Blend renders) and pulls its media from R2. No WASM or browser time-stretcher; "nothing installed" is deferred until after the event.
 
 ## Known issues and risks
 
