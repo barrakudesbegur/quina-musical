@@ -125,7 +125,12 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.ok(checkJournalEntry({ ...started, cardType: 'especial' }).ok, 'a round naming its card type');
   const intro = entries.find((e) => e.kind === 'scene.changed') as JournalEntry;
   assert.ok(checkJournalEntry({ ...intro, cardType: 'groc' }).ok, 'an intro naming its card type');
+  assert.ok(checkJournalEntry({ ...started, roundKind: 'desgraciat' }).ok, 'the Desgraciat round');
+  const opened = entries.find((e) => e.kind === 'claim.opened') as JournalEntry;
+  assert.ok(checkJournalEntry({ ...opened, winKind: 'standing' }).ok, 'a claim for the last card standing');
   const bad: [string, unknown][] = [
+    ['win kind', { ...opened, winKind: 'quina' }],
+    ['verdict fallen (a live Check outcome, never journalled)', { ...entries.find((e) => e.kind === 'claim.decided'), verdict: 'fallen' }],
     ['card type with a dash (the resume code splits on it)', { ...started, cardType: 'cartro-groc' }],
     ['card type in capitals', { ...intro, cardType: 'Especial' }],
     ['card type as a number', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, cardType: 2 }],

@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { isCardTypeId, isPhaseName, isShowScene, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { isCardTypeId, isPhaseName, isShowScene, ROUND_KINDS, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -48,10 +48,13 @@ const settings: FieldCheck = (value) => {
 
 const round = integer(1, 99);
 const position = integer(0, 4999);
-const roundKind = oneOf('normal', 'special');
+// The protocol's own lists (normal, special, desgraciat; line, bingo, standing). A value outside them is refused,
+// and a refused entry stops the link's uploads: so a new kind reaches the cloud (deployed) before any engine
+// journals it.
+const roundKind = oneOf(...ROUND_KINDS);
 /** A card-types.json id. Older journals lack it: the round plays its kind's default type. */
 const cardType = optional((value) => (isCardTypeId(value) ? null : 'a card type id (a-z, 0-9, at most 24)'));
-const winKind = oneOf('line', 'bingo');
+const winKind = oneOf(...WIN_KINDS);
 const claimId = text(40);
 
 /** The fields of each kind, besides the base (`gameId`, `seq`, `atMs`, `kind`). */

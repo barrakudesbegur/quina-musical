@@ -24,7 +24,7 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
 }
 
 /** Keys that must never appear anywhere in what phones get. */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings']);
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'outcome', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -105,6 +105,21 @@ test('the round being introduced is public before its Shuffle, and goes once it 
   assert.equal(state.intro, null);
   assert.equal(state.scene, 'play');
   assert.equal(state.rounds[0]?.cardType, 'especial');
+});
+
+test('the Desgraciat round: public as its kind; the last card standing wins it and ends it, with no Line', () => {
+  const b = new JournalBuilder('g-desgraciat');
+  b.startRound('desgraciat').land(30);
+  let { state } = project(b.entries);
+  assert.equal(state.rounds[0]?.kind, 'desgraciat');
+  assert.equal(state.rounds[0]?.cardType, 'normal', "its kind's default card type");
+  assert.equal(state.rounds[0]?.landings.length, 30, 'phones work out Dempeus or Assegut from the landings');
+  const claimId = b.claim(34, 'standing');
+  b.scene('check').decide(claimId, 'valid').scene('celebration');
+  ({ state } = project(b.entries));
+  assert.deepEqual(state.winners.at(-1), { round: 1, kind: 'standing', cardIds: [34] });
+  assert.equal(state.rounds[0]?.ended, true);
+  assert.equal(state.rounds[0]?.lineConfirmed, false);
 });
 
 test("a round's card type is public from its intro: the one it names, else its kind's default", () => {
@@ -189,6 +204,9 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
     type: 'state',
     next: { songId: 7, title: 'Secret', artist: 'X' },
     possibleWinners: { line: [{ cardId: 12, lines: [0], completedBy: 7 }], bingo: [] },
+    // The Desgraciat round's standing cards and the Futur's curve are the console's.
+    standing: { count: 2, cardIds: [12, 34] },
+    future: { lastStandingAt: 40, standingCurve: [10, 5, 2, 1] },
     phase: 'final',
     heat: 0.93,
     pause: { sinceMs: 5000 },

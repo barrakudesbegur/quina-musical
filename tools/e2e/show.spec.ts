@@ -189,10 +189,11 @@ test('one whole show, every screen following', async ({ browser }) => {
   soft(errors).toEqual([]);
 
   // What the phones got, all show long: a gap-free feed with nothing private in it. Not the Queue or the next
-  // song, not possible winners or the Futur, no seeds or resume codes, no cheat sheet, no Wii status.
+  // song, not possible winners or the Futur (nor the Desgraciat round's standing cards and curve), no Check
+  // outcome before the verdict, no seeds or resume codes, no cheat sheet, no Wii status.
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"outcome"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
 });

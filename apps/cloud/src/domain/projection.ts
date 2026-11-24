@@ -105,7 +105,8 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
         changes.push({ kind: 'winner', winner: { round: entry.round, kind: claim.kind, cardIds: [claim.cardId] } });
         const round = state.rounds.find((r) => r.number === entry.round);
         if (claim.kind === 'line' && round && !round.lineConfirmed) changes.push({ kind: 'line', round: entry.round });
-        if (claim.kind === 'bingo' && round && !round.ended) changes.push({ kind: 'roundEnded', round: entry.round });
+        // The Bingo, or the last card standing (the Desgraciat round), ends the round; neither confirms a Line.
+        if ((claim.kind === 'bingo' || claim.kind === 'standing') && round && !round.ended) changes.push({ kind: 'roundEnded', round: entry.round });
       }
       return changes;
     }

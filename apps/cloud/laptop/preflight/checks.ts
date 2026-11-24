@@ -44,7 +44,7 @@ export function printedByType(cards: unknown): Map<string, number> | null {
  */
 export function cardsCheck(cards: unknown, types: readonly string[] | null, poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
   if (!Array.isArray(cards) || cards.length === 0) return check('Pool', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
-  const known = types ?? Object.values(DEFAULT_CARD_TYPE);
+  const known = types ?? [...new Set(Object.values(DEFAULT_CARD_TYPE))];
   const problems: string[] = [];
   const seen = new Set<number>();
   const unplayable = new Set<number>();
