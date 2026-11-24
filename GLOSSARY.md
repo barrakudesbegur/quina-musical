@@ -144,7 +144,7 @@ The app players open on their phones from the QR code on their card, following t
 _Avoid_: Mobile view, PWA (in conversation)
 
 **Pace**:
-The target time from one landing to the next, set by the presenters and gently adjusted by the system to keep to the schedule.
+The target average time from one landing to the next, set by the presenters and gently adjusted by the system to keep to the schedule. Each gap snaps to the playing song's phrases, so the pace holds on average, not for every song.
 _Avoid_: Speed, tempo, song duration
 
 **Schedule**:
