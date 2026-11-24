@@ -87,3 +87,11 @@ The laptop starts a new Game id for every rehearsal and for `?fresh=1`. If phone
 ## Same-day rehearsals share the free quota (quina-musical-b2, 2026-11-24)
 The free plan's daily limits reset at 00:00 UTC (01:00 in Catalonia in winter). The 400-phone load test projects a typical show night at about 21% of the request limit and a pessimistic one at about 50% (`experiments/mixer-poc/cloud/reports/`). A big same-day rehearsal with many phones would eat into that.
 **Default taken:** the projection includes a small same-day rehearsal (20 phones, 2 h). Keep a big rehearsal on another day, or upgrade to Workers Paid (5 USD a month) for the week.
+
+## Plan B: resuming by hand (quina-musical-1e, 2026-11-24)
+ADR 0003 says that a laptop restarted while offline is resumed by hand from Admin, by round and song. Nothing in the protocol does that yet, for example a `resumeAt {round, position}` command, or the Platform session's restore path. It's for the sound engine and Platform sessions to define.
+**Default taken:** Admin shows the form (round number and song position), disabled, with a note saying what it's waiting for.
+
+## The spelling "cartró" (quina-musical-1e, 2026-11-24)
+The printed cards say CARTRÓ, the brief says "Afegir cartró", and the standard Catalan is "cartró" (plural "cartrons"). The glossary's Card entry says "Cartó".
+**Default taken:** every screen now says "cartró". The glossary's spelling is the orchestrator's to fix.
