@@ -27,10 +27,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { PROTOCOL_VERSION, ROLES, publicPlan, revealedRounds, type RelayClients, type RelayPlan, type Role, type ShowState } from '@quina/protocol';
+import {
+  PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readRemoteStatus, remoteStatusMessage, revealedRounds,
+  type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
+} from '@quina/protocol';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
-// The Wii Remote's status between consoles (Frontend's type; it moves to @quina/protocol when Sound engine resumes).
-import { readRemoteStatus, remoteStatusMessage, REMOTE_STATUS_TYPE, type RemoteStatusMessage } from '../../../packages/ui/client/remote-status.ts';
 import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
 
 const DIST = path.join(SHOW, 'dist');

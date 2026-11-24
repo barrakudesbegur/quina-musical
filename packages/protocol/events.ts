@@ -686,6 +686,41 @@ export interface RelayPlan {
   savedAtMs: number | null;
 }
 
+/**
+ * The Wii Remote's status between consoles (Frontend's, 35573a0): the console the remote pairs with publishes it
+ * through the relay, and every paired console shows the remote's badges and chip from it. PRIVATE: the relay
+ * forwards it from the host console to the other paired consoles only (tablet and admin roles), never to the show
+ * page, the drum, the cloud link or phones; it replays the last one per host on every console hello, and reports a
+ * host as `{ connected: false, battery: null }` when its socket closes.
+ */
+export const REMOTE_STATUS_TYPE = 'remote.status';
+
+export interface RemoteStatus {
+  connected: boolean;
+  /** 0..1, or null until the remote has said. */
+  battery: number | null;
+  /** When `connected` last changed (show clock, epoch ms). */
+  sinceMs: number;
+}
+
+export interface RemoteStatusMessage extends RemoteStatus {
+  v: ProtocolVersion;
+  type: typeof REMOTE_STATUS_TYPE;
+  /** Added by the relay: which console hosts the remote. */
+  clientId?: string;
+}
+
+export const remoteStatusMessage = (s: RemoteStatus): RemoteStatusMessage => ({ v: PROTOCOL_VERSION, type: REMOTE_STATUS_TYPE, ...s });
+
+/** A `remote.status` message (untrusted), or null. A battery outside 0..1 reads as unknown. */
+export function readRemoteStatus(message: unknown): (RemoteStatus & { clientId: string }) | null {
+  if (!message || typeof message !== 'object') return null;
+  const m = message as Record<string, unknown>;
+  if (m.v !== PROTOCOL_VERSION || m.type !== REMOTE_STATUS_TYPE || typeof m.connected !== 'boolean' || typeof m.sinceMs !== 'number') return null;
+  const battery = typeof m.battery === 'number' && m.battery >= 0 && m.battery <= 1 ? m.battery : null;
+  return { connected: m.connected, battery, sinceMs: m.sinceMs, clientId: typeof m.clientId === 'string' ? m.clientId : '' };
+}
+
 /** What a remote receives: the engine's events plus the relay's client list and the Game plan. */
 export type IncomingEvent = ShowEvent | RelayClients | RelayPlan;
 
