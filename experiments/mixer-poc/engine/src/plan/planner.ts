@@ -556,6 +556,8 @@ export function eventStart(x: PlanEvent): number {
       return x.at;
     case 'signature':
       return x.at - x.anchorSec / x.rate;
+    case 'decoy':
+      return x.at;
     case 'ramp':
       return x.t0;
     case 'synth': {

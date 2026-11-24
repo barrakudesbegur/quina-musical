@@ -16,6 +16,7 @@ import { DrumView, type DrumCard } from './wheel/drum.ts';
 import { Bus } from './net/bus.ts';
 import { LocalJournal, type KeyValueStorage } from './journal-store.ts';
 import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
+import type { DecoyEvent } from './plan/recipes.ts';
 import {
   makeCommand,
   makeEvent,
@@ -209,6 +210,8 @@ async function boot() {
     fixedQueue,
     settings,
     restore,
+    // The Decoys experiment (docs/decoys.md): off unless config.ts says so or the page has ?decoys=1.
+    decoys: params.get('decoys') === '1' ? { enabled: true } : {},
   });
   show = created;
   run(created.flush());
@@ -329,7 +332,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   // A released Suspense: A is already finishing (or has finished) the exit it started when the Suspense opened.
   const outgoing = wheel.brake ? rt.outgoing : plan.a ? rt.current : null;
   if (!plan.a && !wheel.brake && rt.current) rt.current.fadeOut(0.8); // ran out: whatever is left goes under the build
-  applyPlan(plan, { graph, decks: { A: outgoing, B: deck } });
+  applyPlan(plan, { graph, decks: { A: outgoing, B: deck }, decoy: playDecoy });
   if (outgoing && plan.a) outgoing.stop(plan.a.stopAt);
   if (fromHoldMusic) holdMusic.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
   rt.incoming = deck;
@@ -360,6 +363,31 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   drum.startSpin({ solution, startCtx: plan.spinStart, landAt: plan.T, targetId: wheel.targetId });
   showStatusLine('♪');
   renderHud();
+}
+
+// A Decoy (experiment): an already-landed song, low-passed, cut off by a tape stop. It plays through the fx
+// bus, so a cancelled Spin (graph.resetTransient) silences it too.
+function playDecoy({ songId, at, offset, cutAt, cutSec, gainDb, lpfHz }: DecoyEvent): void {
+  const buffer = loader.get(songId)?.buffer;
+  const now = ctx.currentTime;
+  if (!buffer || cutAt <= now) return;
+  const start = Math.max(at, now + 0.01);
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  const lpf = ctx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = lpfHz;
+  const gain = ctx.createGain();
+  const level = 10 ** (gainDb / 20);
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(level, start + 0.03);
+  gain.gain.setValueAtTime(level, cutAt);
+  gain.gain.linearRampToValueAtTime(0, cutAt + cutSec);
+  source.playbackRate.setValueAtTime(1, cutAt);
+  source.playbackRate.linearRampToValueAtTime(0.12, cutAt + cutSec);
+  source.connect(lpf).connect(gain).connect(graph.fxBus);
+  source.start(start, offset + (start - at));
+  source.stop(cutAt + cutSec + 0.05);
 }
 
 // Suspense opens: A ducks and exits on its downbeat, the loop's bars follow (suspenseBar effects), the drum coasts.

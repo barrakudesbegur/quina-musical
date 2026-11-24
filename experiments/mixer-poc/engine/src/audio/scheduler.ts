@@ -6,7 +6,7 @@ import { isDeckParam } from './deck.ts';
 import type { Deck, DeckName } from './deck.ts';
 import { isGraphParam } from './graph.ts';
 import type { AudioGraph } from './graph.ts';
-import type { ParamTarget, PlanEvent, SynthEventOf, SynthName } from '../plan/recipes.ts';
+import type { DecoyEvent, ParamTarget, PlanEvent, SynthEventOf, SynthName } from '../plan/recipes.ts';
 
 const EPS = 0.0001;
 
@@ -14,6 +14,8 @@ const EPS = 0.0001;
 export interface PlanOutputs {
   graph: AudioGraph;
   decks: Partial<Record<DeckName, Deck | null>>;
+  /** Plays a Decoy (main.ts), when the experiment is on. */
+  decoy?: (event: DecoyEvent) => void;
 }
 
 /** What applyPlan() did, by kind; `skipped` counts set and ramp events whose parameter does not exist. */
@@ -36,7 +38,8 @@ function playSynth<N extends SynthName>(ctx: BaseAudioContext, destination: Audi
   if (fn) fn(ctx, destination, event.params);
 }
 
-export function applyPlan(plan: { events: readonly PlanEvent[] }, { graph, decks }: PlanOutputs): AppliedCounts {
+export function applyPlan(plan: { events: readonly PlanEvent[] }, outputs: PlanOutputs): AppliedCounts {
+  const { graph, decks } = outputs;
   const { ctx } = graph;
   const applied: AppliedCounts = { params: 0, sfx: 0, synth: 0, skipped: 0 };
   for (const event of plan.events) {
@@ -63,6 +66,9 @@ export function applyPlan(plan: { events: readonly PlanEvent[] }, { graph, decks
         continue;
       case 'signature':
         decks[event.deck]?.playSignature(event);
+        continue;
+      case 'decoy':
+        outputs.decoy?.(event);
         continue;
       case 'set':
       case 'ramp': {

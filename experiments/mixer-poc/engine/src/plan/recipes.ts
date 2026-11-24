@@ -147,7 +147,22 @@ export interface SignatureEvent {
   echo: number;
 }
 
-export type PlanEvent = SetEvent | RampEvent | SfxEvent | SynthEvent | SlicesEvent | SpinbackEvent | StemsEvent | BlendEvent | SignatureEvent;
+/**
+ * A Decoy (plan/decoys.ts, an experiment that is off by default): another, already-landed song plays from
+ * `offset` at `at`, low-passed, until a tape stop at `cutAt` over `cutSec` cuts it off.
+ */
+export interface DecoyEvent {
+  kind: 'decoy';
+  songId: number;
+  at: number;
+  offset: number;
+  cutAt: number;
+  cutSec: number;
+  gainDb: number;
+  lpfHz: number;
+}
+
+export type PlanEvent = SetEvent | RampEvent | SfxEvent | SynthEvent | SlicesEvent | SpinbackEvent | StemsEvent | BlendEvent | SignatureEvent | DecoyEvent;
 export type PlanEventKind = PlanEvent['kind'];
 
 export const SILENT = 0.0001;

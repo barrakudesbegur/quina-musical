@@ -34,12 +34,13 @@ import type {
   SongRef,
   SoundName,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, type DecoyConfig } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges } from '../game/cards.ts';
 import { phasePlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition } from '../plan/planner.ts';
 import { openSuspense, releaseSuspense, suspenseBar, type SuspenseOpen } from '../plan/suspense.ts';
+import { withDecoy } from '../plan/decoys.ts';
 import { pickHook } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
@@ -310,6 +311,8 @@ export interface ShowOptions {
    * the confirmed Line, cards in play and settings. Live playback starts fresh: nothing plays until Next.
    */
   restore?: GameRecord | null;
+  /** The Decoys experiment's settings (config.ts DECOYS; `enabled: false` by default). */
+  decoys?: Partial<DecoyConfig>;
 }
 
 /** An event as the machine builds it, before `makeEvent` stamps the version. */
@@ -367,13 +370,15 @@ export class Show {
   /** The next song's hook, chosen early so its Blend render can be prepared. */
   nextHook: { songId: number; hook: Hook } | null = null;
   blendRequested = '';
+  readonly decoys: DecoyConfig;
   /** The Game this show belongs to, and the last journal entry's number. */
   gameId: string;
   journalSeq = 0;
   out: Effect[] = [];
 
-  constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null }: ShowOptions) {
+  constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null, decoys = {} }: ShowOptions) {
     this.env = env;
+    this.decoys = { ...DECOYS, ...decoys };
     this.allCards = cards;
     this.gameId = restore?.gameId || gameId || newGameId(env);
     this.catalog = new Map(songs.map((s) => [s.id, s]));
@@ -717,7 +722,8 @@ export class Show {
       id,
     });
     if ('error' in planned) return this.reject(reqId, 'next', 'planFailed', planned.error);
-    const plan: ShowPlan = { ...planned, seed, reqId, targetPos };
+    let plan: ShowPlan = { ...planned, seed, reqId, targetPos };
+    if (this.decoys.enabled) plan = this.addDecoy(plan);
     this.game.nextRecipe = null;
     this.transition = {
       id,
@@ -768,6 +774,22 @@ export class Show {
       bpm: plan.b.bpm ?? null,
       drum: { removeId, targetId: songId, minLaps: 1 },
     });
+  }
+
+  // Decoys (experiment, off by default): the most recent song that already landed, is not A, and is still
+  // decoded may tease in A's place before the real build (plan/decoys.ts). Its own random stream, so the
+  // rest of the show is the same with or without it.
+  addDecoy(plan: ShowPlan): ShowPlan {
+    const a = plan.a?.songId;
+    for (const l of [...this.landings].reverse()) {
+      if (l.undone || l.songId === a || l.songId === plan.b.songId || !this.env.isDecoded(l.songId)) continue;
+      const analysis = this.env.analysis(l.songId);
+      const landedOn = [...this.history].reverse().find((h) => h.songId === l.songId)?.hookId;
+      const hook = analysis?.hooks.find((h) => h.id === landedOn) ?? analysis?.hooks.find((h) => h.valid);
+      if (!analysis || !hook) continue;
+      return withDecoy(plan, { source: { songId: l.songId, analysis, hook }, phase: plan.phase, rng: seededRandom(plan.seed ^ 0x2545f491), config: this.decoys });
+    }
+    return plan;
   }
 
   // ---------------------------------------------------------------------------------- Suspense
