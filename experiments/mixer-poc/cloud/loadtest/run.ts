@@ -2,7 +2,9 @@
 // into the Worker under `wrangler dev`. Midway, every phone drops at once and reconnects with the app's jittered
 // backoff (a 5G blip). It measures what the GameRoom did, checks every phone ends with the cloud's exact public
 // state, and projects a show night against the Workers Free plan's daily limits.
-//   npm run loadtest -- [--phones 400] [--rounds 3] [--songs 30] [--song-ms 500] [--report reports/loadtest.md]
+//   npm run loadtest -- [--phones 400] [--consoles 2] [--rounds 3] [--songs 30] [--song-ms 500] [--report reports/loadtest.md]
+// Consoles connect through the cloud (/ws/console) as the tablet does away from the laptop's hotspot, so the
+// laptop forwards its full event stream (coalesced `state`), as on the night.
 // Local workerd is not Cloudflare's edge: the latencies are this machine's; the counts are what gets billed.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -26,6 +28,7 @@ const PHONES = option('--phones', 400);
 const ROUNDS = option('--rounds', 3);
 const SONGS = option('--songs', 30);
 const SONG_MS = option('--song-ms', 500);
+const CONSOLES = option('--consoles', 2);
 const reportIndex = args.indexOf('--report');
 const REPORT = reportIndex >= 0 ? path.resolve(args[reportIndex + 1] as string) : null;
 const v = PROTOCOL_VERSION;
@@ -138,11 +141,15 @@ async function playShow(relay: FakeRelay, storm: () => Promise<void>): Promise<J
     for (let song = 0; song < SONGS; song++) {
       const start = Date.now();
       relay.emit({ v, type: 'transition.scheduled', id: `t${round}-${song}`, to: 0, drum: { removeId: null, targetId: 0, minLaps: 1 }, spinStartAtMs: start, landAtMs: start + SONG_MS * 0.8 });
-      await sleep(SONG_MS * 0.8);
+      // The engine sends a state after every change: several per song, which the link coalesces (at most 4 a second).
+      for (let i = 0; i < 4; i++) {
+        relay.emit(state(null));
+        await sleep(SONG_MS * 0.2);
+      }
+      if (song % 10 === 0) relay.emit({ v, type: 'engine.health', atMs: Date.now(), outputLatencyMs: 10, baseLatencyMs: 5, contextState: 'running', decodedMB: 100, jsHeapMB: 50, longTasks: 0, holdMusic: null });
       b.land(1);
       sent();
       relay.emit({ v, type: 'transition.landed', id: `t${round}-${song}`, songId: 0, position: song, atMs: Date.now() });
-      relay.emit(state(null));
       if (round === 2 && song === Math.floor(SONGS / 2)) await storm();
       if (song === Math.floor((SONGS * 2) / 3)) {
         const claim = b.claim(17 + round, 'line');
@@ -152,7 +159,6 @@ async function playShow(relay: FakeRelay, storm: () => Promise<void>): Promise<J
         b.decide(claim, 'valid').confirmLine().scene('celebration').scene('play');
         sent();
       }
-      await sleep(SONG_MS * 0.2);
     }
     const bingo = b.claim(100 + round, 'bingo');
     b.scene('check').decide(bingo, 'valid').scene('celebration').scene('interval', round + 1);
@@ -164,6 +170,8 @@ async function playShow(relay: FakeRelay, storm: () => Promise<void>): Promise<J
 }
 
 // ---- run ---------------------------------------------------------------------------------------------------
+const kb = (bytes: number) => `${(bytes / 1024).toFixed(0)} KB`;
+
 function percentile(values: number[], p: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -192,11 +200,24 @@ async function main(): Promise<void> {
     log: () => {},
   });
   const phones = Array.from({ length: PHONES }, (_, i) => new Phone(`${server.ws}/feed?cards=${(i % 400) + 1},${((i * 7) % 400) + 1}`));
+  const consoles = Array.from({ length: CONSOLES }, (_, i) => ({ id: `Tauleta-${i + 1}`, ws: null as WebSocket | null, messages: 0, bytes: 0, types: new Set<string>() }));
   let stormReconnectMs = 0;
   let stormSpreadMs = 0;
   try {
     link.start();
     await waitFor('the link', () => link.status().cloud === 'online');
+    for (const c of consoles) {
+      const ws = new WebSocket(`${server.ws}/ws/console`);
+      c.ws = ws;
+      ws.addEventListener('open', () => ws.send(JSON.stringify({ v, type: 'hello', role: 'tablet', clientId: c.id })));
+      ws.addEventListener('message', (event) => {
+        const text = String(event.data);
+        c.messages += 1;
+        c.bytes += text.length;
+        c.types.add((JSON.parse(text) as { type: string }).type);
+      });
+    }
+    if (CONSOLES > 0) await waitFor('the consoles', () => link.status().consoles === CONSOLES);
     const connectStart = Date.now();
     for (const [i, phone] of phones.entries()) {
       phone.connect();
@@ -266,7 +287,8 @@ async function main(): Promise<void> {
       `| Journal entries in the cloud | ${journal} of ${show.entries.length} (${stats.uploads} uploads, ${stats.duplicates} duplicates, ${stats.conflicts} conflicts, ${stats.refused} refused) |`,
       `| Messages from the laptop | ${linkMessages} (${measured.linkMessagesPerSong.toFixed(1)} per song) |`,
       `| Messages from phones | ${stats.phoneMessagesIn} |`,
-      `| Messages to phones | ${stats.messagesOut} (${stats.broadcasts} broadcasts) |`,
+      `| Messages to phones and consoles | ${stats.messagesOut} (${stats.broadcasts} broadcasts to phones) |`,
+      `| Consoles through the cloud | ${CONSOLES}: ${consoles.map((c) => c.messages).join(', ')} messages each (${consoles.map((c) => kb(c.bytes)).join(', ')}), of types ${[...(consoles[0]?.types ?? [])].sort().join(', ') || 'none'} |`,
       `| SQLite rows written / read | ${stats.rowsWritten} / ${stats.rowsRead} (${measured.rowsWrittenPerSong.toFixed(2)} written per song) |`,
       `| Data per phone | ${(totals.bytes / PHONES / 1024).toFixed(1)} KB for ${songs} songs; the full public state is ${(measured.snapshotBytes / 1024).toFixed(1)} KB |`,
       '',
@@ -297,6 +319,7 @@ async function main(): Promise<void> {
     }
   } finally {
     for (const phone of phones) phone.stop();
+    for (const c of consoles) c.ws?.close();
     link.stop();
     await relay.close();
     await server.stop();

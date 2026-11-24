@@ -32,6 +32,8 @@ export const NIGHT = Object.freeze({
   rehearsalPhones: 20,
   rehearsalHours: 2,
   rehearsalSongs: 90,
+  /** Extra `state` messages per song while a console listens through the cloud, at the show's real pace. */
+  consoleStatesPerSong: 10,
   /** GameRoom active time per event (a message, a connection, an alarm): typical and pessimistic. */
   activeMsPerEvent: 10,
   worstActiveMsPerEvent: 100,
@@ -60,8 +62,10 @@ export function projectNight(m: Measured, n: typeof NIGHT): { rows: Row[]; notes
   const hours = n.hours + n.rehearsalHours;
   const songs = n.rounds * n.songsPerRound + n.rehearsalSongs;
   const connects = (rate: number) => n.phones * (1 + rate * n.hours) + n.rehearsalPhones * (1 + rate * n.rehearsalHours) + n.laptopReconnects;
-  // The laptop: what it sends per song, plus a keepalive when it has said nothing for a while (an upper bound).
-  const linkMessages = songs * m.linkMessagesPerSong + (hours * 3_600_000) / LINK.keepaliveMs;
+  // The laptop: what it sends per song, plus a keepalive when it has said nothing for a while (an upper bound),
+  // plus, while a console listens through the cloud, more `state` than a fast load test shows: at the show's pace
+  // (about 15 s a song) assume up to `consoleStatesPerSong` more, coalesced by the link.
+  const linkMessages = songs * (m.linkMessagesPerSong + n.consoleStatesPerSong) + (hours * 3_600_000) / LINK.keepaliveMs;
   // The silence alarm runs about once per CLOUD.showSilenceMs while the laptop is connected.
   const alarms = (hours * 3_600_000) / CLOUD.showSilenceMs;
   const doRequests = (rate: number) => connects(rate) + Math.ceil(linkMessages / 20) + alarms + n.adminRequests;
@@ -87,7 +91,7 @@ export function projectNight(m: Measured, n: typeof NIGHT): { rows: Row[]; notes
   const headroom = (FREE_PLAN.doRequests - fixed - n.phones - n.rehearsalPhones - n.laptopReconnects) / perRate;
   const notes = [
     `Phone connections dominate: ${Math.round(connects(typical)).toLocaleString('en')} on a typical night. The requests limit is reached only if every phone reconnects about ${Math.floor(headroom)} times an hour (once every ${(60 / headroom).toFixed(1)} min) for the whole night.`,
-    `The laptop sends ${m.linkMessagesPerSong.toFixed(1)} messages per song (journal uploads, Spin events, at most 4 states a second), so ${Math.round(linkMessages).toLocaleString('en')} messages, billed as ${Math.ceil(linkMessages / 20).toLocaleString('en')} requests. Phones send nothing.`,
+    `The laptop sent ${m.linkMessagesPerSong.toFixed(1)} messages per song in the test (journal uploads, Spin events, coalesced states for the consoles); counting ${n.consoleStatesPerSong} more states per song at the show's pace, and keepalives, that is ${Math.round(linkMessages).toLocaleString('en')} messages, billed as ${Math.ceil(linkMessages / 20).toLocaleString('en')} requests. Phones send nothing.`,
     (() => {
       // The snapshot grows with the Game: scale the measured one to the night's last round; on average a
       // reconnection happens halfway through.
