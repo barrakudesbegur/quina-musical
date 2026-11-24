@@ -80,7 +80,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 - **Access** ([`src/access.ts`](src/access.ts), adapted from coin-reader's `requireAccess`) is checked once in the Worker, before the GameRoom. It accepts multiple AUDs and fails closed. People pass on admin routes when their email is on `CF_ACCESS_EMAILS` or under `CF_ACCESS_EMAIL_DOMAIN`. The laptop's service token passes on `/ws/show` when its client ID is in `CF_ACCESS_SERVICE_TOKENS`. `ACCESS_DEV=true` only works on localhost.
 - **Free plan.** Phones send nothing; there are no heartbeats except the laptop's, one snapshot row, and static files that never run the Worker. The [load test](reports/) puts a pessimistic show night at about half the daily request quota.
 
-Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLIC_FEED` in `packages/protocol/public.ts`. Deployment, secrets and dashboard steps: [docs/deploy-plan.md](docs/deploy-plan.md).
+Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLIC_FEED` in `packages/protocol/public.ts`. Deployment, secrets and dashboard steps: [docs/deploy-plan.md](docs/deploy-plan.md). Where Platform's work stands and what comes next: [docs/HANDOFF.md](docs/HANDOFF.md).
 
 ## Layout
 
