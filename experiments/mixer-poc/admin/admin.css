@@ -1,0 +1,249 @@
+:root {
+  color-scheme: dark;
+  --bg: #0e0a16;
+  --surface: #1a1325;
+  --ink: #f5efe4;
+  --muted: #b9b0c8;
+  --gold: #f2b84b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.45 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+
+  h1 {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+}
+
+.conn {
+  font-size: 0.85rem;
+  color: #ffb4a8;
+
+  &[data-ok='true'] {
+    color: #6fdc8c;
+  }
+}
+
+main {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1rem;
+  max-width: 40rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  margin-inline: auto;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.now h2 {
+  margin: 0.2rem 0;
+  font-size: 1.6rem;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.countdown {
+  margin: 0.3rem 0 0;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  min-height: 1.4em;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.8rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+.transport {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  gap: 0.6rem;
+
+  button {
+    padding: 1.2rem 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  &.secondary {
+    grid-template-columns: 1fr 1fr;
+
+    button {
+      padding: 0.7rem 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+  }
+}
+
+.primary {
+  background: linear-gradient(180deg, #ffd980, var(--gold));
+  color: #2a1a00;
+  border: 0;
+}
+
+button[data-active='true'] {
+  border-color: var(--gold);
+  background: rgb(242 184 75 / 0.2);
+}
+
+body[data-status='hold'] .now {
+  outline: 2px solid var(--gold);
+  outline-offset: 0.4rem;
+  border-radius: 0.4rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  background: var(--surface);
+
+  > label:not(.check) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  input[type='number'] {
+    width: 5rem;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  input {
+    width: 1.2rem;
+    height: 1.2rem;
+    padding: 0;
+    accent-color: var(--gold);
+  }
+}
+
+.pace {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  output {
+    min-width: 4.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .check {
+    margin-left: auto;
+  }
+}
+
+.presets,
+.sfx {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  button {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9rem;
+  }
+}
+
+.phase[data-phase='late'],
+.phase[data-phase='final'] {
+  color: var(--gold);
+}
+
+.schedule,
+.winners-list {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.winners[data-hot='true'] {
+  outline: 2px solid var(--gold);
+}
+
+.cards-form {
+  display: flex;
+  gap: 0.5rem;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.danger-zone {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.danger {
+  color: #ffb4a8;
+  border-color: rgb(255 120 120 / 0.5);
+}
+
+.history {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+
+  li.undone {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+}
+
+.sfx .stinger {
+  border-color: rgb(242 184 75 / 0.5);
+}

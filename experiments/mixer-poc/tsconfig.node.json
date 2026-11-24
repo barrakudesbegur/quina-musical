@@ -1,0 +1,8 @@
+{
+  // Node code: the relay, the tests and the Vite config. Node 26 strips the types and runs these files as they are.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["relay", "tests", "vite.config.ts"]
+}

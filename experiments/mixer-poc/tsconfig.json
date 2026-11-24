@@ -1,0 +1,23 @@
+{
+  // Browser code: the show engine, the protocol package, the remotes (admin/, later console/ and stage/).
+  // Strict, and limited to erasable TypeScript so Node runs the same files directly (tests, relay).
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["vite/client"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["engine/src", "protocol", "admin", "console", "stage"]
+}

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Quina musical · remote</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Quina musical</h1>
+      <span id="conn" class="conn">connecting…</span>
+    </header>
+    <main>
+      <section class="now" aria-live="polite">
+        <p class="label"><span id="status">—</span> · <span id="phase" class="phase">—</span> · <span id="position"></span></p>
+        <h2 id="now-title">—</h2>
+        <p id="now-meta" class="muted"></p>
+        <p id="countdown" class="countdown"></p>
+        <p id="next-title" class="muted small"></p>
+      </section>
+
+      <section class="transport">
+        <button type="button" data-cmd="back" title="Undo the last landing, or cancel the running Spin">◀ Back</button>
+        <button type="button" id="hold" title="Hold: no new song lands; the music goes under your voice">❚❚ Hold</button>
+        <button type="button" data-cmd="next" class="primary">Next ▶</button>
+      </section>
+      <section class="transport secondary">
+        <button type="button" data-cmd="holdMusic">♫ Hold music now</button>
+        <button type="button" id="suspense" title="Hold the next transition open; Next (or this again) releases it">Suspense</button>
+        <button type="button" data-cmd="confirmLine" title="A claimed Line passed its Check">✓ Line confirmed</button>
+      </section>
+
+      <section class="card winners" id="winners-card">
+        <p class="label">Possible winners <span class="muted">(private: unsold cards count too)</span></p>
+        <p id="winners-line" class="winners-list"></p>
+        <p id="winners-bingo" class="winners-list"></p>
+      </section>
+
+      <section class="card">
+        <p class="label">Pace <span id="pace-info" class="muted"></span></p>
+        <div class="pace">
+          <button type="button" id="pace-down" aria-label="Pace −1 s">−1</button>
+          <output id="pace-value">—</output>
+          <button type="button" id="pace-up" aria-label="Pace +1 s">+1</button>
+          <label class="check"><input type="checkbox" id="pace-lock" /> Lock</label>
+        </div>
+        <div class="presets" id="presets"></div>
+        <label class="check"><input type="checkbox" id="auto" /> Auto-advance</label>
+        <label class="check"><input type="checkbox" id="auto-final" /> Keep auto-advance in the final phase</label>
+        <label class="check"><input type="checkbox" id="final-lap" /> “Final lap” fanfare (once per climb, as the Phase turns late)</label>
+      </section>
+
+      <section class="card">
+        <p class="label">Schedule</p>
+        <p id="schedule" class="schedule">—</p>
+      </section>
+
+      <section class="card">
+        <p class="label">Sound effects</p>
+        <div class="sfx" id="sfx"></div>
+      </section>
+
+      <section class="card">
+        <p class="label">Cards in play <span id="cards-info" class="muted"></span></p>
+        <form id="cards-form" class="cards-form">
+          <input type="text" id="cards-in-play" placeholder="1-180, 200-215, 400-460" autocomplete="off" inputmode="text" />
+          <button type="submit">Save</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <p class="label">Phase <span id="phase-source" class="muted"></span></p>
+        <label>Override
+          <select id="phase-override">
+            <option value="">auto</option>
+            <option value="early">early</option>
+            <option value="mid">mid</option>
+            <option value="late">late</option>
+            <option value="final">final</option>
+          </select>
+        </label>
+        <label>Songs until a winner (placeholder) <input type="number" id="suw" min="0" max="77" /></label>
+        <label>Next transition
+          <select id="recipe">
+            <option value="">auto</option>
+            <option value="R7">R7 build &amp; land (riser + snare roll)</option>
+            <option value="R4">R4 loop roll</option>
+            <option value="R5">R5 brake / spinback</option>
+            <option value="R6">R6 reverb wash</option>
+            <option value="R2">R2 echo-out + riser</option>
+            <option value="R1">R1 slam cut</option>
+            <option value="R10">R10 power-down</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="card">
+        <p class="label">Landings</p>
+        <ol id="landings" class="history"></ol>
+        <p id="message" class="muted"></p>
+      </section>
+
+      <section class="danger-zone">
+        <button type="button" id="new-round">New round</button>
+        <button type="button" id="panic" class="danger">Panic</button>
+      </section>
+    </main>
+    <script type="module" src="admin.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "@quina/protocol",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Show protocol v1: the commands remotes send and the events the show engine emits. Shared by the engine, the relay and every UI.",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

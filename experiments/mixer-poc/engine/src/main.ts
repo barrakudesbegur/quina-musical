@@ -1,0 +1,709 @@
+// Show runtime: wires the pure show state machine (show/show.ts) to Web Audio, the drum, the page and
+// the relay. The machine decides; this file carries out its effects. Commands from the page, the keyboard
+// and the remotes all go through the same protocol (@quina/protocol).
+import { AudioClock } from './clock.ts';
+import { SongLoader, fetchJson, isRecord } from './audio/loader.ts';
+import { AudioGraph } from './audio/graph.ts';
+import { Deck } from './audio/deck.ts';
+import { applyPlan } from './audio/scheduler.ts';
+import { HoldMusic } from './audio/holdmusic.ts';
+import { StemStore } from './audio/stems.ts';
+import { SignatureStore } from './audio/signatures.ts';
+import { BlendStore } from './audio/blend.ts';
+import { SYNTHS } from './audio/synth/fx.ts';
+import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
+import { DrumView, type DrumCard } from './wheel/drum.ts';
+import { Bus } from './net/bus.ts';
+import { LocalJournal, type KeyValueStorage } from './journal-store.ts';
+import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
+import {
+  makeCommand,
+  makeEvent,
+  isPhaseName,
+  type CommandArgs,
+  type CommandName,
+  type ShowEvent,
+  type ShowState,
+  type SoundName,
+} from '@quina/protocol';
+import { playableSongs } from './analysis.ts';
+import { ENGINE, HOLD, PACE, SUSPENSE, isStingerName } from './config.ts';
+import { secureShuffle, secureRandom } from './rng.ts';
+import { el as $, targetOf } from './dom.ts';
+import type { Card } from './game/cards.ts';
+
+/** A command's fields, which may be left out when it has none that are required. */
+
+/** Something to run once the audio clock passes `at`. */
+interface Task {
+  at: number;
+  fn: () => void;
+}
+
+/** The audio objects for what the machine calls current / incoming / outgoing, and what the page shows. */
+interface Runtime {
+  current: Deck | null;
+  incoming: Deck | null;
+  outgoing: Deck | null;
+  tasks: Task[];
+  lastState: ShowState | null;
+  catalog: Map<number, DrumCard>;
+}
+
+/** How the drum's Spin for a plan was solved (debug HUD). */
+interface SpinStats {
+  method: SolutionMethod;
+  scale: number;
+  laps: number;
+  solveMs: number;
+  cards: number;
+}
+
+/** Chrome's non-standard `performance.memory`. */
+interface MemoryInfo {
+  usedJSHeapSize: number;
+}
+
+/** Exposed as `window.mixer` for tests and debugging. */
+interface MixerDebug {
+  readonly show: Show | null;
+  rt: Runtime;
+  ctx: AudioContext;
+  clock: AudioClock;
+  graph: AudioGraph;
+  loader: SongLoader;
+  drum: DrumView;
+  holdMusic: HoldMusic;
+  send: typeof send;
+  bus: Bus<ShowEvent>;
+}
+
+declare global {
+  interface Window {
+    mixer?: MixerDebug;
+  }
+}
+
+const hasMemoryInfo = (p: Performance): p is Performance & { memory: MemoryInfo } =>
+  'memory' in p && isRecord(p.memory) && typeof p.memory.usedJSHeapSize === 'number';
+const errorText = (error: unknown) => (error instanceof Error ? error.message || String(error) : String(error));
+const isArray = (x: unknown): x is readonly unknown[] => Array.isArray(x);
+const isCardSongRef = (x: unknown) => Number.isInteger(x) || (isRecord(x) && Number.isInteger(x.id));
+const isCard = (x: unknown): x is Card =>
+  isRecord(x) && Number.isInteger(x.id) && typeof x.type === 'string' && isArray(x.lines) && x.lines.every((line) => isArray(line) && line.every(isCardSongRef));
+
+/** card-generator's cards.json, checked: card ids, types and song ids (titles are trusted). */
+function checkCards(json: unknown): readonly Card[] {
+  if (!isArray(json) || !json.every(isCard)) throw new Error('cards.json: not a list of cards');
+  return json;
+}
+
+// Browser storage is per song pool (the relay's --pool): ids restart at 1 in every pool. The default pool
+// keeps the original key names, so what is already stored stays.
+let storagePrefix = 'mixer';
+const cardsKey = () => `${storagePrefix}.cardsInPlay`;
+const readStored = (key: string) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+const store = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+};
+// The Game journal: kept in this browser's storage so a reload resumes the Game. A test show with a fixed
+// Queue (`?queue=`) or `?journal=0` keeps it in memory only; `?fresh=1` starts a new Game (the old journal stays).
+const browserStorage = (): KeyValueStorage | null => {
+  try {
+    return localStorage;
+  } catch {
+    return null;
+  }
+};
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const params = new URLSearchParams(location.search);
+const persistJournal = !params.has('queue') && params.get('journal') !== '0';
+let journal = new LocalJournal(null); // replaced in boot(), once the pool is known
+
+const ctx = new AudioContext({ sampleRate: 48000, latencyHint: 'interactive' });
+const clock = new AudioClock(ctx);
+const graph = new AudioGraph(ctx);
+const loader = new SongLoader(ctx);
+const holdMusic = new HoldMusic(graph);
+const stems = new StemStore(ctx);
+const signatures = new SignatureStore(ctx);
+const blends = new BlendStore(ctx);
+clock.extraLatencySec = graph.processingLatencySec;
+const bus = new Bus<ShowEvent>({ role: 'show' });
+
+// Audio objects for what the machine calls current / incoming / outgoing.
+const rt: Runtime = { current: null, incoming: null, outgoing: null, tasks: [], lastState: null, catalog: new Map() };
+let show: Show | null = null;
+// Solve stats per plan, for the HUD (the plan itself belongs to the machine).
+const spinStats = new WeakMap<ShowPlan, SpinStats>();
+
+// The machine, once boot() has created it; effects and decode results only come after that.
+function machine(): Show {
+  if (!show) throw new Error('the show has not started');
+  return show;
+}
+
+const drum = new DrumView({
+  drum: $('drum'),
+  viewport: $('viewport'),
+  flapper: $('flapper'),
+  reticle: $('reticle'),
+  blurNode: $('motion-blur-node', SVGFEGaussianBlurElement),
+  ctx,
+  tickDestination: () => graph.drumBus,
+  reducedMotion,
+  onLand: (spin) => showNowPlaying(spin.targetId),
+});
+
+// ---------------------------------------------------------------------------------------------- boot
+async function boot() {
+  const pool = await fetchJson('/api/pool').catch(() => null);
+  const poolName = isRecord(pool) && typeof pool.name === 'string' && /^[a-z0-9-]+$/.test(pool.name) ? pool.name : 'default';
+  if (poolName !== 'default') storagePrefix = `mixer.${poolName}`;
+  journal = new LocalJournal(persistJournal ? browserStorage() : null, `${storagePrefix}.journal`);
+  const songs = playableSongs(await fetchJson('/analysis/index.json'));
+  let cards: readonly Card[] = [];
+  try {
+    cards = checkCards(await fetchJson('/cards/cards.json'));
+  } catch (error) {
+    console.warn('cards.json not available; the Phase falls back to the placeholder', error);
+  }
+  for (const s of songs) rt.catalog.set(s.id, { id: s.id, title: s.title, artist: s.artist, cover: `/covers/${s.id}.jpg` });
+  const fixedQueue = params.get('queue')?.split(',').map(Number).filter(Number.isInteger) ?? null;
+  const settings: NonNullable<ShowOptions['settings']> = {};
+  if (params.has('suw')) settings.songsUntilWinner = Number(params.get('suw'));
+  const phase = params.get('phase');
+  if (isPhaseName(phase)) settings.phaseOverride = phase;
+  if (params.get('auto') === '0') settings.autoAdvance = false;
+  if (params.has('pace')) settings.pace = Number(params.get('pace'));
+  let restore: ShowOptions['restore'] = null;
+  if (persistJournal && params.get('fresh') !== '1') {
+    const resumed = journal.resume(Date.now(), ENGINE.resumeWithinMs);
+    if (resumed.ok) restore = resumed.record;
+    else if (resumed.reason !== 'none') console.warn(`journal not resumed (${resumed.reason})`, resumed.detail ?? '');
+  }
+  const created = new Show({
+    env: {
+      now: () => ctx.currentTime,
+      nowMs: () => Date.now(),
+      toEpochMs: (t) => clock.ctxToEpochMs(t),
+      analysis: (id) => loader.get(id)?.analysis ?? null,
+      isDecoded: (id) => loader.isReady(id),
+      stems: (id) => stems.summary(id),
+      signatures: (id) => signatures.summary(id),
+      blend: (aSongId, hookId) => blends.summary(aSongId, hookId),
+      random: secureRandom,
+      shuffle: (ids) => secureShuffle(ids),
+    },
+    songs: [...rt.catalog.values()],
+    cards,
+    cardsInPlay: params.get('cards') ?? readStored(cardsKey()) ?? '',
+    fixedQueue,
+    settings,
+    restore,
+  });
+  show = created;
+  run(created.flush());
+  const resumed = restore?.round;
+  if (resumed) {
+    console.info(`resumed game ${created.gameId}: round ${resumed.number}, song ${resumed.position + 1} of ${resumed.queue.length}`);
+    showStatusLine(`Resumed round ${resumed.number} after song ${resumed.position + 1}: press Next`);
+  }
+  bus.on((message, { local }) => {
+    if (!local && isRecord(message) && message.type === 'cmd') run(created.command(message));
+  });
+  bus.onOpen = () => run(created.command(makeCommand('getState')));
+  bus.connect();
+  graph.loadSamples(ENGINE.fxSamples);
+  blends.loadKeys();
+  graph.loadSamples(ENGINE.stingers, '/stingers/');
+  holdMusic.prepare().catch((error) => console.warn('hold music', error));
+  setInterval(tick, ENGINE.taskIntervalMs);
+  setInterval(emitHealth, ENGINE.healthIntervalMs);
+  setInterval(watchdog, 1000);
+  watchLongTasks();
+  requestAnimationFrame(frame);
+}
+
+function send<C extends CommandName>(cmd: C, ...fields: CommandArgs<C>): void {
+  if (!show) return;
+  // Commands from this page carry a `local-` reqId instead of the one makeCommand draws.
+  run(show.command({ ...makeCommand(cmd, ...fields), reqId: `local-${Date.now().toString(36)}` }));
+}
+
+// ------------------------------------------------------------------------------------------ effects
+function run(effects: readonly Effect[]): void {
+  for (const effect of effects) {
+    try {
+      apply(effect);
+    } catch (error) {
+      console.error('effect failed', effect.type, error);
+      ensureMusic();
+    }
+  }
+}
+
+function apply(effect: Effect): void {
+  const now = ctx.currentTime;
+  switch (effect.type) {
+    case 'emit':
+      bus.emit(effect.message);
+      if (effect.message.type === 'state') renderState(effect.message);
+      return;
+    case 'reject':
+      return flash(`${effect.cmd ?? 'command'}: ${effect.reason}${effect.detail ? ` (${effect.detail})` : ''}`);
+    case 'prefetch':
+      return prefetch(effect.ids);
+    case 'startTransition':
+      return startTransition(effect);
+    case 'landed':
+      return landed(effect.plan);
+    case 'cancelTransition':
+      return cancelTransition(effect);
+    case 'duck':
+      return graph.glide(graph.holdDuck.gain, effect.db, effect.seconds);
+    case 'holdMusic':
+      return void holdMusic.start({ at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: effect.mood }).catch((e) => console.error('hold music', e));
+    case 'songToHoldMusic':
+      return songToHoldMusic(effect.fadeSec, effect.mood);
+    case 'rewind':
+      rt.current?.rewindOut(now + 0.02, HOLD.rewindSec);
+      rt.current = null;
+      SYNTHS.downlifter(ctx, graph.synthBus, { t0: now + 0.02, t1: now + HOLD.rewindSec + 0.2, peakDb: -15 });
+      return;
+    case 'drumBack':
+      drum.turnBack({ audible: clock.audible(), card: cardFor(effect.insertId), select: effect.selectId != null });
+      if (effect.selectId == null) showStatusLine('');
+      return;
+    case 'drumReset':
+      drum.spin = null;
+      // A restored Game's last landing stays under the pointer; otherwise any card may be.
+      drum.setCards(
+        (effect.selectId == null ? secureShuffle(effect.ids) : [effect.selectId, ...secureShuffle(effect.ids.filter((id) => id !== effect.selectId))])
+          .map(cardFor)
+          .filter((card) => card !== null),
+        0,
+      );
+      showStatusLine(show?.status === 'locked' ? 'Loading…' : 'Press Next to start');
+      return;
+    case 'stopAll':
+      return stopAll(effect.fadeSec);
+    case 'sfx':
+      return void playSfx(effect.name, effect.at);
+    case 'journal':
+      return journal.append(effect.entry);
+    case 'startSuspense':
+      return startSuspense(effect);
+    case 'suspenseBar':
+      applyPlan({ events: effect.events }, { graph, decks: {} });
+      return;
+    case 'prepareBlend':
+      blends.retain([effect.aSongId]);
+      return void blends.prepare(effect);
+    default: {
+      const unhandled: never = effect; // every effect is handled above; an unknown one is only logged
+      console.warn('unknown effect', unhandled);
+    }
+  }
+}
+
+function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTransition'>): void {
+  const entry = loader.get(plan.b.songId);
+  if (!entry) throw new Error(`song ${plan.b.songId} is not decoded`);
+  // Audio: B is scheduled sample-exactly so its hook downbeat sounds at T.
+  const deck = new Deck(graph, { songId: plan.b.songId, buffer: entry.buffer, analysis: entry.analysis, trimDb: plan.b.trimDb });
+  deck.fader.gain.value = 0;
+  deck.start(plan.b.startCtx, plan.b.offset, plan.b.rate);
+  deck.hookId = plan.hook.id;
+  deck.stems = stems.forHook(plan.b.songId, plan.hook.id);
+  deck.signatures = signatures.buffersFor(plan.b.songId);
+  deck.blend = plan.blend && plan.a ? blends.forPair(plan.a.songId, plan.hook.id) : null;
+  // A released Suspense: A is already finishing (or has finished) the exit it started when the Suspense opened.
+  const outgoing = wheel.brake ? rt.outgoing : plan.a ? rt.current : null;
+  if (!plan.a && !wheel.brake && rt.current) rt.current.fadeOut(0.8); // ran out: whatever is left goes under the build
+  applyPlan(plan, { graph, decks: { A: outgoing, B: deck } });
+  if (outgoing && plan.a) outgoing.stop(plan.a.stopAt);
+  if (fromHoldMusic) holdMusic.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
+  rt.incoming = deck;
+  rt.outgoing = outgoing;
+  rt.current = outgoing;
+
+  if (wheel.brake) {
+    // The drum has been coasting since the Suspense opened: it brakes onto the card exactly at T.
+    drum.brakeTo({ audible: clock.audible(), targetId: wheel.targetId, landAt: plan.T });
+    showStatusLine('♪');
+    renderHud();
+    return;
+  }
+  // Drum: the last counted card leaves, then a solved Spin lands on the target at T.
+  drum.settle();
+  if (wheel.removeId != null) drum.removeCard(wheel.removeId);
+  const targetIndex = drum.indexOf(wheel.targetId);
+  const t0 = performance.now();
+  const solution = solveSpin({
+    cardCount: drum.cards.length,
+    fromIndex: drum.currentIndex,
+    targetIndex,
+    durationSec: plan.D,
+    isCalm: reducedMotion,
+    minLaps: drum.cards.length < 3 ? 0 : wheel.minLaps,
+  });
+  spinStats.set(plan, { method: solution.method, scale: solution.scale, laps: Math.abs(solution.traveled) / drum.cards.length, solveMs: performance.now() - t0, cards: drum.cards.length });
+  drum.startSpin({ solution, startCtx: plan.spinStart, landAt: plan.T, targetId: wheel.targetId });
+  showStatusLine('♪');
+  renderHud();
+}
+
+// Suspense opens: A ducks and exits on its downbeat, the loop's bars follow (suspenseBar effects), the drum coasts.
+function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSuspense'>): void {
+  const outgoing = open.a ? rt.current : null;
+  if (!open.a && rt.current) rt.current.fadeOut(0.8);
+  applyPlan({ events: open.events }, { graph, decks: { A: outgoing } });
+  if (outgoing && open.a) outgoing.stop(open.a.stopAt);
+  if (fromHoldMusic) holdMusic.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
+  rt.incoming = null;
+  rt.outgoing = outgoing;
+  rt.current = outgoing;
+  drum.settle();
+  if (wheel.removeId != null) drum.removeCard(wheel.removeId);
+  drum.coast({
+    startCtx: open.spinStart,
+    targetId: wheel.targetId,
+    durationSec: SUSPENSE.autoReleaseSec + 15,
+    spinUpSec: SUSPENSE.coastSpinUpSec,
+    gap: SUSPENSE.coastGap,
+    minSpeed: SUSPENSE.coastSpeed[0],
+    maxSpeed: SUSPENSE.coastSpeed[1],
+    periodSec: SUSPENSE.swingBars * open.bar,
+  });
+  showStatusLine('Suspense…');
+  renderHud();
+}
+
+function landed(plan: ShowPlan): void {
+  const outgoing = rt.outgoing;
+  rt.current = rt.incoming;
+  rt.incoming = null;
+  rt.outgoing = null;
+  if (outgoing) addTask(Math.max(plan.a?.stopAt ?? plan.T, plan.T) + 3, () => outgoing.dispose());
+}
+
+function cancelTransition({ keepOutgoing, drum: wheel }: EffectOf<'cancelTransition'>): void {
+  const now = ctx.currentTime;
+  graph.resetTransient(0.08);
+  rt.incoming?.fadeOut(0.06);
+  rt.incoming = null;
+  if (keepOutgoing && rt.outgoing) {
+    rt.outgoing.restore(0.3);
+    rt.current = rt.outgoing;
+  } else {
+    rt.outgoing?.fadeOut(0.25);
+    rt.current = null;
+  }
+  rt.outgoing = null;
+  SYNTHS.downlifter(ctx, graph.synthBus, { t0: now, t1: now + 0.9, peakDb: -14 });
+  drum.cancelSpin({ audible: clock.audible(), card: cardFor(wheel.insertId), select: wheel.selectId != null });
+  if (wheel.selectId == null) showStatusLine('');
+}
+
+// The ducked song washes out into reverb while Hold music comes in.
+function songToHoldMusic(fadeSec: number, mood: HoldMood): void {
+  const deck = rt.current;
+  rt.current = null;
+  const now = ctx.currentTime;
+  if (deck) {
+    deck.cancelAutomation(now);
+    for (const [p, to, curve] of [[deck.reverbSend.gain, 0.7, 'lin'], [deck.lpf.frequency, 400, 'exp'], [deck.fader.gain, 0.0001, 'exp']] as const) {
+      p.setValueAtTime(p.value, now);
+      if (curve === 'exp') p.exponentialRampToValueAtTime(to, now + fadeSec);
+      else p.linearRampToValueAtTime(to, now + fadeSec * 0.4);
+    }
+    deck.stop(now + fadeSec + 0.05);
+    addTask(now + fadeSec + 3, () => deck.dispose());
+  }
+  holdMusic.start({ at: now + fadeSec * 0.3, levelDb: HOLD.holdMusicLevelDb, fadeSec, mood }).catch((e) => console.error('hold music', e));
+}
+
+function stopAll(fadeSec: number): void {
+  const now = ctx.currentTime;
+  graph.glide(graph.master.gain, -80, fadeSec);
+  drum.freeze(clock.audible());
+  const decks = [rt.current, rt.incoming, rt.outgoing];
+  rt.current = rt.incoming = rt.outgoing = null;
+  setTimeout(() => {
+    for (const deck of decks) deck?.dispose();
+    holdMusic.kill();
+    graph.resetTransient();
+    graph.holdDuck.gain.cancelScheduledValues(ctx.currentTime);
+    graph.holdDuck.gain.setValueAtTime(1, ctx.currentTime);
+    graph.glide(graph.master.gain, 0, 0.05);
+  }, fadeSec * 1000 + 30);
+  void now;
+}
+
+function prefetch(ids: readonly number[]): void {
+  const keep = [...ids, rt.current?.songId, rt.incoming?.songId, rt.outgoing?.songId];
+  loader.retain(keep);
+  stems.retain(keep);
+  signatures.retain(keep);
+  for (const id of ids) {
+    signatures.ensure(id); // the playing song keeps its own for an echo exit
+    loader
+      .ensure(id)
+      .then((entry) => {
+        // Stems for the songs still to land (a Tease uses them); a missing stem never blocks the landing.
+        if (id !== rt.current?.songId) stems.ensure(id, entry.analysis);
+        run(machine().decoded(id));
+      })
+      .catch((error: unknown) => {
+        console.warn('decode', id, error);
+        run(machine().decodeFailed(id, errorText(error)));
+      });
+  }
+}
+
+async function playSfx(name: SoundName, at = ctx.currentTime + 0.01): Promise<void> {
+  if (!graph.samples.has(name)) await graph.loadSamples([name], isStingerName(name) ? '/stingers/' : '/fx/');
+  graph.playSample(name, Math.max(at, ctx.currentTime + 0.01), -4);
+}
+
+// The music never stops by accident: whatever went wrong, Hold music covers silence the machine did not ask for.
+function ensureMusic(): void {
+  if (!show || ['locked', 'idle'].includes(show.status)) return;
+  if (rt.current || rt.incoming || holdMusic.playing) return;
+  console.warn('watchdog: no music while', show.status, '— starting Hold music');
+  holdMusic.start({ levelDb: HOLD.holdMusicLevelDb, fadeSec: 1 }).catch((e) => console.error('hold music', e));
+}
+
+// Act only when the silence lasts two checks in a row (a track may be starting).
+let silentChecks = 0;
+function watchdog(): void {
+  if (ctx.state !== 'running' || !show || ['locked', 'idle'].includes(show.status)) return;
+  const silent = !rt.current && !rt.incoming && !holdMusic.playing;
+  silentChecks = silent ? silentChecks + 1 : 0;
+  if (silentChecks >= 2) {
+    silentChecks = 0;
+    ensureMusic();
+  }
+}
+
+// ------------------------------------------------------------------------------------------ loops
+function addTask(at: number, fn: () => void): void {
+  rt.tasks.push({ at, fn });
+}
+
+function tick(): void {
+  if (ctx.state !== 'running' || !show) return;
+  const now = ctx.currentTime;
+  drum.scheduleTicks(now);
+  const due = rt.tasks.filter((task) => task.at <= now);
+  if (due.length) {
+    rt.tasks = rt.tasks.filter((task) => task.at > now);
+    for (const task of due) task.fn();
+  }
+  run(show.tick());
+}
+
+let lastUi = 0;
+function frame(nowMs: number): void {
+  requestAnimationFrame(frame);
+  const audible = clock.audible(nowMs);
+  drum.render(audible);
+  if (nowMs - lastUi > 250) {
+    lastUi = nowMs;
+    renderHud(audible);
+    renderCountdown();
+  }
+}
+
+let longTasks = 0;
+function watchLongTasks(): void {
+  try {
+    new PerformanceObserver((list) => (longTasks += list.getEntries().length)).observe({ type: 'longtask', buffered: false });
+  } catch {}
+}
+
+function emitHealth(): void {
+  bus.emit(makeEvent({
+    type: 'engine.health',
+    atMs: Date.now(),
+    ...clock.latencyMs(),
+    contextState: ctx.state,
+    decodedMB: loader.decodedMB(),
+    jsHeapMB: hasMemoryInfo(performance) ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null,
+    longTasks,
+    holdMusic: holdMusic.title,
+  }));
+}
+
+// ------------------------------------------------------------------------------------------ page
+function cardFor(id: number | null): DrumCard | null {
+  return id == null ? null : rt.catalog.get(id) ?? null;
+}
+
+function showNowPlaying(id: number | null): void {
+  const song = id == null ? undefined : rt.catalog.get(id);
+  if (!song) return;
+  const title = document.createElement('span');
+  title.className = 'result-title';
+  title.textContent = song.title;
+  const details = document.createElement('span');
+  details.className = 'result-details';
+  details.textContent = song.artist;
+  $('result').replaceChildren(title, details);
+}
+
+function showStatusLine(text: string): void {
+  const status = document.createElement('span');
+  status.className = 'result-status';
+  status.textContent = text;
+  $('result').replaceChildren(status);
+}
+
+let flashTimer: ReturnType<typeof setTimeout> | undefined;
+function flash(text: string): void {
+  $('flash').textContent = text;
+  $('flash').hidden = false;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => ($('flash').hidden = true), 1800);
+}
+
+const clockTime = (ms: number | null) => (ms ? new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—');
+const signed = (sec: number) => `${sec > 0 ? '+' : sec < 0 ? '−' : '±'}${Math.abs(Math.round(sec / 60))} min`;
+
+function renderState(state: ShowState): void {
+  rt.lastState = state;
+  // Cards in play are entered once for the whole game: keep them across reloads of the show page.
+  if (state.cards.inPlay !== readStored(cardsKey())) store(cardsKey(), state.cards.inPlay);
+  $('phase-badge').textContent = `${state.phase}${state.game.phaseOverride ? ' (fixed)' : ''}`;
+  $('phase-badge').dataset.phase = state.phase;
+  $('suw', HTMLInputElement).value = String(state.game.songsUntilWinner);
+  $('phase-select', HTMLSelectElement).value = state.game.phaseOverride || '';
+  $('auto-advance', HTMLInputElement).checked = state.game.autoAdvance;
+  $('auto-final', HTMLInputElement).checked = state.game.autoAdvanceFinal;
+  $('pace', HTMLInputElement).value = String(state.pace.sec);
+  $('pace-lock', HTMLInputElement).checked = state.pace.locked;
+  $('btn-hold').textContent = state.status === 'hold' ? '▶ Release' : '❚❚ Hold';
+  $('btn-hold').dataset.active = String(state.status === 'hold');
+  $('remaining').textContent = `round ${state.round.number} · ${state.queue.position + 1}/${state.queue.length}`;
+  $('schedule').textContent = `ends ${clockTime(state.schedule.roundEndMs)} (${signed(state.schedule.roundDriftSec)}) · game ${clockTime(state.schedule.gameEndMs)}${state.pace.nudge !== 1 ? ` · pace ×${state.pace.nudge}` : ''}`;
+  if (state.status === 'hold') showHoldLine(state);
+}
+
+function showHoldLine(state: ShowState): void {
+  if (drum.spin) return;
+  if (!state.current && state.queue.position < 0) showStatusLine(state.holdMusic ? 'Hold ♫' : 'Hold');
+}
+
+function renderCountdown(): void {
+  const s = rt.lastState;
+  let text = '';
+  if (s?.status === 'playing' && s.autoAtMs) text = `next in ${Math.max(0, (s.autoAtMs - Date.now()) / 1000).toFixed(0)} s`;
+  else if (s?.status === 'hold' && s.hold) text = `hold ${Math.round((Date.now() - s.hold.sinceMs) / 1000)} s${s.holdMusic ? ' ♫' : ''}`;
+  $('auto-countdown').textContent = text;
+}
+
+function renderHud(audible = clock.audible()): void {
+  if ($('hud').hidden || !show) return;
+  const cur = rt.current;
+  const t = show.transition;
+  const p = t?.plan;
+  const wheel = p ? spinStats.get(p) : undefined;
+  const variant = p?.variant && 'kind' in p.variant ? p.variant.kind : null;
+  const last = show.history[show.history.length - 1];
+  const lat = clock.latencyMs();
+  const nextId = show.queue[show.position + 1];
+  const lines = [
+    `status ${show.status}${show.pending ? ' (loading)' : ''}${show.hold ? ` (${show.hold.reason})` : ''} · queue ${show.position + 1}/${show.queue.length} · hold music ${holdMusic.title ?? 'off'}`,
+    cur ? `now  #${cur.songId} ${cur.analysis.title} · ${cur.analysis.tempo.bpm} BPM · ${cur.hookId} · pos ${cur.posAt(ctx.currentTime)?.toFixed(1) ?? '—'} s` : 'now  —',
+    `next #${nextId ?? '—'} ${loader.isReady(nextId) ? 'decoded' : 'decoding…'}`,
+    p
+      ? `plan ${p.id} ${p.recipe} ${p.recipeName}${p.exit ? ` (exit ${p.exit})` : ''}${variant ? ` (${variant})` : ''} ${p.phase} D=${p.D.toFixed(2)} s (target ${p.window.dTarget.toFixed(1)}) · bridge ${p.bridgeBars} bars · gap ${p.gapBeats} beat · tease ${p.teaseBars}${p.teaseStyle ? ` (${p.teaseStyle})` : ''}${p.blend ? ` · blend ${p.blend.bars} bars${p.blend.bass ? ' + bass' : ''} @ ${p.blend.toBpm.toFixed(1)}` : ''}${p.signature ? ` · signature ${p.signature.id} (${p.signature.deck}${p.signature.rate !== 1 ? ` ×${p.signature.rate.toFixed(3)}` : ''})` : ''} · ${p.phraseClass ?? ''}${p.relaxed ? ' (relaxed)' : ''} · hook ${p.hook.id} pickup ${p.hook.pickupSec.toFixed(2)} · lands in ${(p.T - audible).toFixed(2)} s`
+      : `last ${last ? `${last.recipe}${last.exit ? `/${last.exit}` : ''} ${last.phase} → #${last.songId} ${last.hookId}` : '—'}`,
+    wheel ? `drum ${wheel.method} scale ${wheel.scale.toFixed(3)} laps ${wheel.laps.toFixed(2)} · ${wheel.cards} cards · solved in ${wheel.solveMs.toFixed(1)} ms` : '',
+    `phase ${show.phaseName()} from ${show.game.phaseOverride ? 'override' : show.phaseModel.plan ? `cards (${show.phaseModel.valid.length} valid, towards ${show.phaseModel.kind}, heat ${show.phaseStep(show.position + 1)?.heat?.toFixed(2) ?? '—'})` : 'placeholder'}`,
+    `pace ${show.game.pace} s${show.game.paceLocked ? ' (locked)' : ''} · nudge ×${show.nudge.toFixed(2)} · auto ${show.game.autoAdvance ? 'on' : 'off'}${show.timers.autoAt ? ` in ${(show.timers.autoAt - ctx.currentTime).toFixed(1)} s` : ''}`,
+    `audio out ${lat.outputLatencyMs} ms base ${lat.baseLatencyMs} ms · display offset ${clock.displayOffsetMs} ms · decoded ${loader.decodedMB()} MB`,
+  ];
+  $('hud').textContent = lines.filter(Boolean).join('\n');
+}
+
+// ------------------------------------------------------------------------------------------ inputs
+async function unlock(): Promise<void> {
+  await ctx.resume();
+  $('start-overlay').hidden = true;
+  send('unlock');
+  if (params.get('autostart') === '1') send('next');
+}
+
+$('start-button').addEventListener('click', unlock);
+$('btn-next').addEventListener('click', () => send('next'));
+$('btn-back').addEventListener('click', () => send('back'));
+$('btn-hold').addEventListener('click', () => send('hold'));
+$('btn-hold-music').addEventListener('click', () => send('holdMusic'));
+$('btn-suspense').addEventListener('click', () => send('suspense'));
+$('btn-panic').addEventListener('click', () => send('panic'));
+$('btn-line').addEventListener('click', () => send('confirmLine'));
+$('btn-round').addEventListener('click', () => send('newRound'));
+$('pace').addEventListener('change', (e) => send('setPace', { pace: Number(targetOf(e, HTMLInputElement).value) }));
+$('pace-down').addEventListener('click', () => send('setPace', { delta: -PACE.fineStepSec }));
+$('pace-up').addEventListener('click', () => send('setPace', { delta: PACE.fineStepSec }));
+$('pace-lock').addEventListener('change', (e) => send('setPace', { locked: targetOf(e, HTMLInputElement).checked }));
+$('suw').addEventListener('change', (e) => send('setGame', { songsUntilWinner: Math.max(0, Math.round(Number(targetOf(e, HTMLInputElement).value))) }));
+$('phase-select').addEventListener('change', (e) => {
+  const phase = targetOf(e, HTMLSelectElement).value;
+  send('setGame', { phaseOverride: isPhaseName(phase) ? phase : null });
+});
+$('auto-advance').addEventListener('change', (e) => send('setGame', { autoAdvance: targetOf(e, HTMLInputElement).checked }));
+$('auto-final').addEventListener('change', (e) => send('setGame', { autoAdvanceFinal: targetOf(e, HTMLInputElement).checked }));
+for (const preset of PACE.presets) {
+  const option = document.createElement('option');
+  option.value = String(preset);
+  option.textContent = `${preset} s`;
+  $('pace-presets').append(option);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.target instanceof Element && e.target.matches('input, select')) return;
+  if (show?.status === 'locked') {
+    if (e.key === 'Enter' || e.key === ' ') unlock();
+    return;
+  }
+  const key = e.key;
+  if (key === 'ArrowRight' || key === 'n' || key === 'Enter') send('next');
+  else if (key === 'ArrowLeft' || key === 'b') send('back');
+  else if (key === ' ') {
+    e.preventDefault();
+    send('hold');
+  } else if (key === 'm') send('holdMusic');
+  else if (key === 's') send('suspense');
+  else if (key === 'Escape') send('panic');
+  else if (key === '+' || key === '=') send('setPace', { delta: PACE.fineStepSec });
+  else if (key === '-') send('setPace', { delta: -PACE.fineStepSec });
+  else if (key === 'l') send('setPace', { locked: !machine().game.paceLocked });
+  else if (/^[0-4]$/.test(key)) send('setGame', { phaseOverride: ([null, 'early', 'mid', 'late', 'final'] as const)[Number(key)] });
+  else if (key === 'a') send('setGame', { autoAdvance: !machine().game.autoAdvance });
+  else if (key === 'd') {
+    $('hud').hidden = !$('hud').hidden;
+    renderHud();
+  } else if (key === 'h') document.body.classList.toggle('hide-controls');
+  else if (key === '[' || key === ']') {
+    clock.setDisplayOffsetMs(clock.displayOffsetMs + (key === ']' ? 5 : -5));
+    flash(`display offset ${clock.displayOffsetMs} ms`);
+  }
+});
+
+// Exposed for tests and debugging.
+window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, send, bus };
+boot().catch((error: unknown) => {
+  console.error(error);
+  showStatusLine(`Failed to start: ${errorText(error)}`);
+});

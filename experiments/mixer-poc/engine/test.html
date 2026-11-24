@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tests · mixer POC</title>
+    <link rel="stylesheet" href="css/tools.css" />
+    <style>
+      .pass { color: var(--green); }
+      .fail { color: var(--red); }
+      #flash-area { height: 40vh; border-radius: 0.8rem; background: #000; display: grid; place-items: center; font-size: 2rem; }
+      #flash-area.on { background: #fff; color: #000; }
+      table { border-collapse: collapse; }
+      td, th { padding: 0.25rem 0.6rem; border-bottom: 1px solid rgb(255 255 255 / 0.08); text-align: left; }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <h1>Tests</h1>
+      <a href="./">Show</a>
+      <a href="audition.html">Audition</a>
+    </header>
+    <main>
+      <section>
+        <h2>Landing (OfflineAudioContext render through the real graph, decks and scheduler)</h2>
+        <p class="muted">A synthetic B has a DC step from its first sample and a click exactly at its hook downbeat; A is a DC level. We render each recipe and measure B's first sample, the hook click and A's residual after its exit. Pass: B starts at round((T − lead)·sr) ± latency, the click is within ±5 ms of T, A is silent after the cut.</p>
+        <button type="button" id="run" class="primary">Run landing tests</button>
+        <p id="summary" class="mono"></p>
+        <table id="results"></table>
+      </section>
+      <section>
+        <h2>Flash-and-click (film with a phone in slow motion)</h2>
+        <p class="muted">A click every 1.5 s on the audio clock; the area flashes white for one frame when the click is audible (getOutputTimestamp + display offset). Tune the offset until flash and click coincide on the projector, then the show page uses the same stored value.</p>
+        <div class="row">
+          <button type="button" id="flash-start" class="primary">Start</button>
+          <button type="button" id="offset-down">−5 ms</button>
+          <button type="button" id="offset-up">+5 ms</button>
+          <span id="offset" class="mono"></span>
+        </div>
+        <div id="flash-area">●</div>
+      </section>
+    </main>
+    <script type="module" src="src/test.ts"></script>
+  </body>
+</html>

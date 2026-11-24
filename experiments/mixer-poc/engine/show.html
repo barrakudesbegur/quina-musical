@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quina musical · show</title>
+    <link rel="stylesheet" href="css/drum.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>Quina musical</h1>
+        <p class="meta">
+          <span class="phase-badge" id="phase-badge">early</span>
+          <span id="remaining"></span>
+          <span id="auto-countdown"></span>
+          <span id="schedule"></span>
+        </p>
+      </header>
+
+      <section class="stage" aria-label="Song drum">
+        <div class="viewport" id="viewport">
+          <ul class="drum" id="drum" aria-label="Songs"></ul>
+        </div>
+        <div class="flapper" id="flapper" aria-hidden="true"></div>
+        <div class="reticle" id="reticle" aria-hidden="true"></div>
+      </section>
+
+      <p class="result" id="result" aria-live="polite"><span class="result-status">Loading…</span></p>
+
+      <nav class="controls" aria-label="Show controls">
+        <button type="button" class="quiet-button" id="btn-back" title="Back: undo the last landing, or cancel the Spin (←)">◀ Back</button>
+        <button type="button" class="quiet-button" id="btn-hold" title="Hold / release (Space)">❚❚ Hold</button>
+        <button type="button" class="spin-button" id="btn-next" title="Next (→ / Enter); releases a Suspense">Next</button>
+        <button type="button" class="quiet-button" id="btn-suspense" title="Suspense: hold the next transition open; Next releases it (S)">Suspense</button>
+        <button type="button" class="quiet-button" id="btn-hold-music" title="Hold music now (M)">♫ Hold music</button>
+        <label class="option">Pace
+          <button type="button" class="quiet-button small" id="pace-down" title="−1 s (−)">−</button>
+          <input type="number" id="pace" min="8" max="60" step="1" list="pace-presets" />
+          <datalist id="pace-presets"></datalist>
+          <button type="button" class="quiet-button small" id="pace-up" title="+1 s (+)">+</button>
+          s
+        </label>
+        <label class="option"><input type="checkbox" id="pace-lock" /> Lock pace (L)</label>
+        <label class="option"><input type="checkbox" id="auto-advance" /> Auto-advance (A)</label>
+        <label class="option"><input type="checkbox" id="auto-final" /> …in final</label>
+        <label class="option">Phase
+          <select id="phase-select" title="0 auto · 1 early · 2 mid · 3 late · 4 final">
+            <option value="">auto</option>
+            <option value="early">early</option>
+            <option value="mid">mid</option>
+            <option value="late">late</option>
+            <option value="final">final</option>
+          </select>
+        </label>
+        <label class="option" title="Placeholder until cards in play decide the Phase">Until a winner <input type="number" id="suw" min="0" max="77" step="1" /></label>
+        <button type="button" class="quiet-button" id="btn-line" title="A claimed Line passed its Check">Line confirmed</button>
+        <button type="button" class="quiet-button" id="btn-round">New round</button>
+        <button type="button" class="quiet-button danger" id="btn-panic" title="Panic: silence everything (Esc)">Panic</button>
+      </nav>
+      <p class="hint">→ next · ← back · space hold · M hold music · + − pace · L lock pace · A auto-advance · 0–4 phase · D debug · H hide controls · [ ] display offset · esc panic</p>
+    </main>
+
+    <pre class="hud" id="hud" hidden></pre>
+    <p class="flash" id="flash" hidden></p>
+
+    <div class="start-overlay" id="start-overlay">
+      <button type="button" class="spin-button" id="start-button">Start show</button>
+      <p>Audio needs one click (or launch Chrome with <code>--autoplay-policy=no-user-gesture-required</code>).</p>
+    </div>
+
+    <svg width="0" height="0" aria-hidden="true" focusable="false" class="filters">
+      <filter id="motion-blur" x="-5%" y="0" width="110%" height="100%" color-interpolation-filters="sRGB">
+        <feGaussianBlur id="motion-blur-node" stdDeviation="0 0" />
+      </filter>
+    </svg>
+    <script type="module" src="src/main.ts"></script>
+  </body>
+</html>

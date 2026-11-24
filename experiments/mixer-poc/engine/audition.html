@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audition · mixer POC</title>
+    <link rel="stylesheet" href="css/tools.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <h1>Audition</h1>
+      <button type="button" id="prev-song" title="Previous song ([)">◀</button>
+      <select id="song-select" aria-label="Song"></select>
+      <button type="button" id="next-song" title="Next song (])">▶</button>
+      <label class="check"><input type="checkbox" id="flagged-only" /> Flagged only</label>
+      <span class="spacer"></span>
+      <a href="./">Show</a>
+      <a href="/data/report.md" target="_blank">Report</a>
+    </header>
+
+    <main>
+      <section class="song-info">
+        <h2 id="title">Loading…</h2>
+        <p id="tempo" class="muted"></p>
+        <ul id="flags" class="flags"></ul>
+      </section>
+
+      <canvas id="overview" height="70" aria-label="Whole song: click to seek"></canvas>
+      <canvas id="zoom" height="170" aria-label="Beat grid around the playhead"></canvas>
+
+      <section class="transport">
+        <button type="button" id="play" class="primary">Play</button>
+        <span id="position" class="mono">0:00.00</span>
+        <button type="button" id="land" title="Silence, 1-bar count-in on the hook's grid, then the hook lands (L)">Land selected hook</button>
+        <button type="button" id="pre-hook" title="Play from 4 bars before the selected hook (H)">−4 bars</button>
+        <label class="check"><input type="checkbox" id="clicks-on" checked /> Clicks (C)</label>
+        <label>Clicks <input type="range" id="click-volume" min="0" max="1" step="0.05" value="0.6" /></label>
+        <label>Music <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.8" /></label>
+        <span class="muted small">Space play/pause · ←/→ bar · ⇧←/→ beat · 1–9 select hook</span>
+      </section>
+
+      <section>
+        <h3>Hooks</h3>
+        <table class="hooks">
+          <thead>
+            <tr>
+              <th></th><th>Hook</th><th>Tag s</th><th>Lands s</th><th>Tag in bar</th><th>Pickup</th><th>Gain dB</th><th>Issues</th><th>Fix</th>
+            </tr>
+          </thead>
+          <tbody id="hooks"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <h3>Signatures <span class="muted small">(short iconic pieces layered into transitions; only approved ones play)</span></h3>
+        <table class="hooks">
+          <thead>
+            <tr>
+              <th>Signature</th><th>Kind</th><th>Part</th><th>From s</th><th>Beats</th><th>Score</th><th>Decision</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="signatures"></tbody>
+        </table>
+        <p id="signatures-empty" class="muted small" hidden>No Signature candidates for this song yet (analysis/signatures.py).</p>
+      </section>
+
+      <section class="overrides">
+        <h3>Overrides <span class="muted small">(saved to analysis/overrides/&lt;id&gt;.json, then re-derived)</span></h3>
+        <div class="row">
+          <button type="button" data-song-fix="shift:-1">Downbeats −1 beat</button>
+          <button type="button" data-song-fix="shift:1">Downbeats +1 beat</button>
+          <button type="button" data-song-fix="tempo:0.5">Half tempo</button>
+          <button type="button" data-song-fix="tempo:2">Double tempo</button>
+          <button type="button" data-song-fix="tempo:1">Native tempo</button>
+          <button type="button" data-song-fix="exclude">Toggle exclude</button>
+          <button type="button" data-song-fix="reset">Reset all</button>
+        </div>
+        <label class="note">Note <input type="text" id="override-note" placeholder="what you heard" /></label>
+        <pre id="override-json" class="mono"></pre>
+        <div class="row">
+          <button type="button" id="save-override" class="primary">Save &amp; re-derive</button>
+          <span id="save-status" class="muted"></span>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="src/audition.ts"></script>
+  </body>
+</html>
