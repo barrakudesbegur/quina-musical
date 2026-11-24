@@ -18,10 +18,17 @@ The package `@quina/protocol` (`protocol/`) is the source of truth, and this pag
 
 | Message | Direction | Meaning |
 |---|---|---|
-| `{ v, type: 'hello', role, clientId }` | client → relay | First message after connecting. `role` is `show`, `admin`, `tablet`, `drum` or `cloud` (the laptop's cloud link, which keeps a copy of the journal and uploads it) |
-| `{ v, type: 'relay.clients', clients: [{ role, clientId }] }` | relay → all | Who is connected (for example, whether the show page is open) |
+| `{ v, type: 'hello', role, clientId, token? }` | client → relay | First message after connecting. `role` is `show`, `admin`, `tablet`, `drum` or `cloud` (the laptop's cloud link, which keeps a copy of the journal and uploads it). `token` pairs a device on the hotspot (see below) |
+| `{ v, type: 'relay.clients', clients: [{ role, clientId }] }` | relay → paired clients | Who is connected (for example, whether the show page is open) |
 
-The relay forwards commands only to the `show` role, and events only from it. A new client immediately gets the last `state` event.
+**Who may say what.**
+- **Binding:** the relay listens on this laptop only unless it is started with `--lan`.
+- **Laptop-only roles:** `show` and `cloud` are accepted only from this laptop.
+- **Pairing:** a device on the hotspot (`tablet`, `admin`, `drum`) pairs with the relay token. The token is printed at start as part of the LAN URL (`?t=…`), kept in `cache/relay-token`, and can be overridden with `--token` or `QUINA_RELAY_TOKEN`.
+- **Unpaired sockets:** a socket without a valid hello hears nothing.
+- **Events:** they come only from the show socket. The Game journal (`journal.entry`, `journal.entries`: Queue, seeds, names) goes only to `cloud`. Every other event goes to the paired remotes and the link, and a newly paired one gets the last `state`.
+- **Commands:** they come only from `tablet`, `admin` and `cloud`, and go to the show. `getJournal` comes only from `cloud`.
+- **This laptop only:** `/api/*` (hook overrides, stretch renders) and `/cloud/` (except `plan.json`) answer only to this laptop.
 
 ## Commands
 

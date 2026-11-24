@@ -93,39 +93,48 @@ test('a release lands B\'s hook on the first free bar line, with the final bar\'
   }
 });
 
-test('the drum coasts with near-stops, then brakes onto the card exactly at the landing without turning back', () => {
+test('the drum spins to a random card unrelated to the target, wanders around it, then brakes onto the target exactly at the landing', () => {
+  const rng = seededRandom(9);
   for (const cards of [4, 12, 40, 77]) {
-    const coast = coastSpin({ cardCount: cards, fromIndex: 3, targetIndex: 1, durationSec: 45, spinUpSec: 3, gap: 9, minLaps: 1, minSpeed: 0.03, maxSpeed: 0.45, periodSec: 3.6 });
-    // Where the target comes round after the spin-up: the spin-up stops `ahead` cards before it.
-    const ahead = Math.min(9, cards - 1);
-    const spinUpEnd = 3 + ((((1 - ahead - 3) % cards) + cards) % cards) + cards;
-    const target = spinUpEnd + ahead;
-    let previous = 3;
-    for (let t = 0.001; t <= 45; t += 0.02) {
-      const p = positionAt(coast, t);
-      assert.ok(p >= previous - 1e-6, 'never turns back');
-      previous = p;
-      if (t > 3) assert.ok(velocityAt(coast, t) <= 0.45 + 1e-3, 'a crawl after the spin-up');
+    for (let k = 0; k < 5; k++) {
+      const stopIndex = Math.floor(rng() * cards);
+      const amp1 = Math.min(3, cards / 3);
+      const amp2 = Math.min(1.5, cards / 6);
+      const coast = coastSpin({ cardCount: cards, fromIndex: 3, stopIndex, durationSec: 45, spinUpSec: 3, minLaps: 1, amp1, period1: 7.6, amp2, period2: 20.9, phase2: rng() * 6.28 });
+      const stop = positionAt(coast, 3);
+      assert.equal(((Math.round(stop) % cards) + cards) % cards, stopIndex, 'the spin-up stops on the chosen card');
+      assert.ok(stop - 3 >= cards - 1e-6, 'after at least a lap');
+      // Continuous by construction (the spin-up ends at the wander's speed); the replay samples every 4 ms while
+      // the spin-up still brakes hard, hence the tolerance.
+      assert.ok(Math.abs(velocityAt(coast, 2.999) - velocityAt(coast, 3.001)) < 1, 'the speed is continuous into the wander');
+      for (let t = 3; t <= 45; t += 0.05) {
+        assert.ok(Math.abs(positionAt(coast, t) - stop) <= amp1 + 2 * amp2 + 1e-6, 'it wanders around the stop card');
+      }
     }
-    assert.ok(Math.abs(positionAt(coast, 3) - spinUpEnd) < 1e-3, 'the spin-up ends `ahead` cards before the target, after a lap');
-    assert.ok(previous < target - 0.4, `${cards} cards: it never reaches the target while coasting`);
   }
-  const rng = seededRandom(3);
   for (let n = 0; n < 500; n++) {
     const cards = 5 + Math.floor(rng() * 70);
     const from = rng() * cards;
-    const velocity = rng() * 0.45;
-    // After the coast's spin-up the target is at most SUSPENSE.coastGap cards ahead.
-    const targetIndex = (Math.floor(from) + 1 + Math.floor(rng() * Math.min(SUSPENSE.coastGap, cards - 1))) % cards;
+    const velocity = (rng() - 0.5) * 5; // caught mid-wander, either way
+    const targetIndex = Math.floor(rng() * cards); // anywhere: the wander has nothing to do with it
     const D = 1.3 + rng() * 3;
     const s = landingBrake({ cardCount: cards, fromPosition: from, velocity, targetIndex, durationSec: D });
     const rest = from + s.traveled;
     assert.ok(Math.abs(positionAt(s, D) - rest) < 0.05, 'the replay reaches it at the landing');
     assert.ok(Math.abs(rest - Math.round(rest)) < 1e-4, 'rests on a card');
     assert.equal(((Math.round(rest) % cards) + cards) % cards, targetIndex, 'on the target card');
-    assert.ok(Math.abs(velocityAt(s, 1e-4) - velocity) < 1e-3, 'the speed is continuous');
-    assert.ok(Math.abs(velocityAt(s, D - 1e-4)) < 0.2, 'at rest at the landing');
-    for (let t = 1e-4; t <= D; t += D / 50) assert.ok(velocityAt(s, t) >= -1e-4, 'never turns back');
+    assert.ok(Math.abs(velocityAt(s, 1e-4) - velocity) < 1e-2, 'the speed is continuous');
+    // It turns round at most once (a backward wander), then only moves forward into the card.
+    let turns = 0;
+    let sign = Math.sign(velocityAt(s, 1e-4));
+    for (let t = 1e-4; t < D - 0.01; t += D / 200) {
+      const v = velocityAt(s, t);
+      if (Math.abs(v) > 1e-3 && Math.sign(v) !== sign) {
+        turns++;
+        sign = Math.sign(v);
+      }
+    }
+    assert.ok(turns <= 1, `turned ${turns} times`);
   }
 });
 

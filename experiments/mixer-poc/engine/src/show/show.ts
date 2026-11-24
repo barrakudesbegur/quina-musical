@@ -747,7 +747,8 @@ export class Show {
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
-    if (drawn.tied) this.out.push({ type: 'log', level: 'warn', message: `round ${number}: every Shuffle up to ${FLOW.shuffleMaxAttempts} had a Tie; kept the last (seed ${drawn.seed})` });
+    // The seed is a secret (with the cards it gives the Queue): never in a log.
+    if (drawn.tied) this.out.push({ type: 'log', level: 'warn', message: `round ${number}: every Shuffle up to ${FLOW.shuffleMaxAttempts} had a Tie; kept the last` });
     this.position = -1;
     this.resetLive({ keepMusic });
     this.landings = [];
@@ -1507,6 +1508,7 @@ export class Show {
   }
 
   panic() {
+    this.announceCancel('panic');
     this.out.push({ type: 'stopAll', fadeSec: 0.3 });
     this.stopCheck(); // a running Check goes back to the queue
     this.current = null;
@@ -1518,6 +1520,14 @@ export class Show {
     this.bed = null;
     this.timers = { autoAt: null, holdMusicAt: null };
     this.status = 'idle';
+  }
+
+  /** A Spin or Suspense that Panic or a new round stops: nothing lands, and the remotes stop their Spin. */
+  announceCancel(reason: 'panic' | 'newRound') {
+    const id = this.transition?.id ?? this.suspense?.id;
+    if (!id) return;
+    const keptOutgoing = false;
+    this.emit({ type: 'transition.cancelled', id, reason, keptOutgoing, atMs: this.env.nowMs() });
   }
 
   // Choose the next song's hook as soon as it is decoded, and ask for its Blend render (B's bars before the
@@ -1887,6 +1897,7 @@ export class Show {
   /** Run a round's public Shuffle. The Interval's music goes on under it, and the first Spin builds out of it. */
   newRound(number: number, kind: RoundKind) {
     const keepMusic = this.bed === 'interval' && !this.current && !this.transition && !this.suspense;
+    this.announceCancel('newRound');
     this.stopCheck();
     // Journaled before `round.started`, which ends the intro in the record too.
     if (this.scene !== 'roundStart') this.setScene('roundStart', number, kind);

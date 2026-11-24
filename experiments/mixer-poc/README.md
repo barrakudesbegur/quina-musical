@@ -12,10 +12,10 @@ A proof of concept of the bingo "DJ" built from `reports/Bingo DJ mixer research
 cd experiments/mixer-poc
 npm install                       # Node ≥ 23.6 (type stripping): Vite, Svelte, TypeScript, ws
 npm run prep                      # prepare the default pool: covers, decode, analysis, Check snippets, report, keys, stems, Signatures
-npm run dev                       # relay + Vite on http://localhost:5174 (a manual reload picks up edits)
+npm run dev                       # relay + Vite on http://localhost:5174, this laptop only (a manual reload picks up edits)
 ```
 
-For a show, run the built pages instead: `npm run build && npm start` (the relay serves `dist/`).
+For a show, run the built pages instead: `npm run build && npm start` (the relay serves `dist/`). Add `-- --lan` so the hotspot's tablets and phones can connect. They pair with the relay token in the LAN URL the relay prints (`?t=…`, see docs/protocol.md › Relay).
 
 The Python venvs (never `/usr/bin/python3`, it is 3.9):
 - `uv venv --python /opt/homebrew/bin/python3.13 analysis/.venv && uv pip install --python analysis/.venv/bin/python -r analysis/requirements-layering.txt -r analysis/requirements-test.txt` (the analysis, keys and tests);
@@ -134,7 +134,7 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
 - **Suspense** (`plan/suspense.ts`, GLOSSARY): the presenters hold the next transition open, and it is never started automatically.
   - A exits on its first downbeat after the duck. From there a loop runs on B's grid, at its hook's bar, without B itself. Each bar is a riser, a snare roll and heartbeat kicks, and gets more intense over about 24 s. Every bar is self-contained and scheduled 0.35 s ahead.
   - Next, or a second Suspense press, releases it: the final bar takes the next free bar line, with its build and its silence, and B's hook lands after it. It releases by itself after 30 s.
-  - The drum spins up to a few cards before the target, at least a lap. It then crawls with near-stops and never reaches the target, and on release it brakes onto the card exactly at the landing.
+  - The drum spins, at least a lap, to a random card unrelated to the target, then wanders back and forth around it. Where it waits gives nothing away. On release it brakes onto the target exactly at the landing, turning round once if it was caught moving backwards.
   - Back or Hold cancel it like a Spin.
 - **The show state machine** (`show/show.ts`) is pure: no Web Audio, no DOM. It takes commands, clock ticks and decode results, and returns effects that `main.ts` carries out on the audio graph, the drum and the network. States are `locked`, `idle`, `playing`, `transition` and `hold`.
   - **Pace:** auto-advance keeps landing to landing at the Pace (22 s in round 1, 14 s after; presets 11–30 s, ±1 s). The Spin takes about half the Pace (3–11 s), and the landed song keeps playing under it. Late phases stretch the slot by 25%, and a landing that probably completes a card stretches it by 50%. In the final phase, auto-advance is off unless the presenters keep it on.

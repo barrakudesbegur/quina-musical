@@ -376,45 +376,43 @@ export function brakeSpin({ cardCount, fromPosition, velocity, restPosition }: {
   });
 }
 
-// Suspense: a real spin up to `gap` cards before the target (at least `minLaps` laps, `spinUpSec`), then a
-// crawl with near-stops: the speed swings smoothly between `minSpeed` and `maxSpeed` once every `periodSec`.
-// The crawl is slowed when needed so it never reaches the target within `durationSec`; a release then only
-// needs a short brake (landingBrake) onto it.
-export function coastSpin({ cardCount, fromIndex, targetIndex, durationSec, spinUpSec, gap, minLaps, minSpeed, maxSpeed, periodSec }: {
-  cardCount: number; fromIndex: number; targetIndex: number; durationSec: number; spinUpSec: number; gap: number;
-  minLaps: number; minSpeed: number; maxSpeed: number; periodSec: number;
+// Suspense: a real spin (at least `minLaps` laps, `spinUpSec`) to card `stopIndex`, then a wander back and
+// forth around it: two slow swings of `amp1` and `amp2` cards (periods `period1`, `period2`, the second
+// shifted by `phase2`). The stop card is chosen by the caller and has nothing to do with the target, so where
+// the drum waits gives nothing away; the brake onto the target (landingBrake) is solved only at the release.
+// The wander starts moving forward (amp1/period1 dominates), so the spin-up ends at the wander's speed.
+export function coastSpin({ cardCount, fromIndex, stopIndex, durationSec, spinUpSec, minLaps, amp1, period1, amp2, period2, phase2 }: {
+  cardCount: number; fromIndex: number; stopIndex: number; durationSec: number; spinUpSec: number; minLaps: number;
+  amp1: number; period1: number; amp2: number; period2: number; phase2: number;
 }): Solution {
   const n = cardCount;
-  const ahead = Math.max(1, Math.min(gap, n - 1));
-  // Spin up: from rest to `ahead` cards before the target, whole laps on top, arriving at the crawl speed.
-  const stop = (((targetIndex - ahead - fromIndex) % n) + n) % n;
-  const L = stop + n * Math.max(0, minLaps) || n; // never a standstill spin-up
-  // The crawl may cover at most `ahead - 0.5` cards over the rest of the coast.
-  const crawlSec = Math.max(0.1, durationSec - spinUpSec);
-  const mean = (minSpeed + maxSpeed) / 2;
-  const k = Math.min(1, (ahead - 0.5) / (mean * crawlSec + (maxSpeed - minSpeed) * periodSec / (2 * Math.PI)));
-  const lo = minSpeed * k;
-  const swing = (maxSpeed - minSpeed) * k;
+  const L = (((stopIndex - fromIndex) % n) + n) % n + n * Math.max(0, minLaps) || n; // never a standstill spin-up
+  const w1 = (2 * Math.PI) / period1;
+  const w2 = (2 * Math.PI) / period2;
+  const wander = (u: number) => amp1 * Math.sin(w1 * u) + amp2 * (Math.sin(w2 * u + phase2) - Math.sin(phase2));
+  const wanderV = (u: number) => amp1 * w1 * Math.cos(w1 * u) + amp2 * w2 * Math.cos(w2 * u + phase2);
+  const v1 = wanderV(0);
   const t1 = spinUpSec;
-  const b = (3 * L) / t1 ** 2 - lo / t1;
-  const c = lo / t1 ** 2 - (2 * L) / t1 ** 3;
-  const w = (2 * Math.PI) / periodSec;
+  const b = (3 * L) / t1 ** 2 - v1 / t1;
+  const c = v1 / t1 ** 2 - (2 * L) / t1 ** 3;
   return sampledSolution({
     cardCount, fromIndex, durationSec, method: 'coast',
-    x: (t) => (t <= t1 ? b * t * t + c * t ** 3 : L + lo * (t - t1) + swing * ((t - t1) / 2 - Math.sin(w * (t - t1)) / (2 * w))),
-    v: (t) => (t <= t1 ? 2 * b * t + 3 * c * t * t : lo + swing * (0.5 - 0.5 * Math.cos(w * (t - t1)))),
+    x: (t) => (t <= t1 ? b * t * t + c * t ** 3 : L + wander(t - t1)),
+    v: (t) => (t <= t1 ? 2 * b * t + 3 * c * t * t : wanderV(t - t1)),
   });
 }
 
 // From the drum's current motion to rest exactly on card `targetIndex` exactly `durationSec` later (a
 // released Suspense lands on the beat). A cubic keeps the speed continuous at the start and ends at rest. The
-// card is the first one ahead at least v·D/3 away, which keeps the drum from ever turning back.
+// card is the first one ahead at least v·D/3 away, which keeps a forward-moving drum from turning back; a drum
+// caught moving backwards turns round once, smoothly.
 export function landingBrake({ cardCount, fromPosition, velocity, targetIndex, durationSec }: {
   cardCount: number; fromPosition: number; velocity: number; targetIndex: number; durationSec: number;
 }): Solution {
   const D = Math.max(0.05, durationSec);
-  const v0 = Math.max(0, velocity);
-  const minAhead = Math.max((v0 * D) / 3, 0.05);
+  // The drum's own speed, even backwards (caught mid-wander): the brake turns it round smoothly.
+  const v0 = velocity;
+  const minAhead = Math.max((Math.max(0, v0) * D) / 3, 0.05);
   let target = targetIndex + cardCount * Math.ceil((fromPosition + minAhead - targetIndex) / cardCount);
   if (target - fromPosition < minAhead - 1e-9) target += cardCount;
   const d = target - fromPosition;

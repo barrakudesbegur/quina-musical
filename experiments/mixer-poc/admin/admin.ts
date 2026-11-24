@@ -21,7 +21,8 @@ import {
   type SoundName,
 } from '@quina/protocol';
 
-const bus = new Bus<Command>({ role: 'tablet' });
+// On the hotspot the relay pairs this remote by its token (the LAN URL's `?t=`); on the laptop it needs none.
+const bus = new Bus<Command>({ role: 'tablet', token: new URLSearchParams(location.search).get('t') });
 let state: ShowState | null = null;
 
 /** A command's fields, which may be left out when it has none that are required. */

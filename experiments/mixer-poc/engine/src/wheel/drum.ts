@@ -256,16 +256,17 @@ export class DrumView {
   }
 
   // Suspense: the drum coasts with slow ticks and near-stops, for as long as it may be held open.
-  coast({ startCtx, targetId, durationSec, spinUpSec, gap, minSpeed, maxSpeed, periodSec }: {
-    startCtx: number; targetId: number; durationSec: number; spinUpSec: number; gap: number; minSpeed: number; maxSpeed: number; periodSec: number;
+  // Where it waits is a secure random card, unrelated to the target, so it gives nothing away.
+  coast({ startCtx, durationSec, spinUpSec, amp1, period1, amp2, period2, random }: {
+    startCtx: number; durationSec: number; spinUpSec: number; amp1: number; period1: number; amp2: number; period2: number; random: () => number;
   }): void {
-    const targetIndex = this.indexOf(targetId);
-    if (!this.cards.length || targetIndex < 0) return;
+    const n = this.cards.length;
+    if (!n) return;
     this.clearSelection();
     this.lastDirection = 1;
     const solution = coastSpin({
-      cardCount: this.cards.length, fromIndex: this.currentIndex, targetIndex, durationSec, spinUpSec, gap,
-      minLaps: this.cards.length < 3 ? 0 : 1, minSpeed, maxSpeed, periodSec,
+      cardCount: n, fromIndex: this.currentIndex, stopIndex: Math.floor(random() * n), durationSec, spinUpSec,
+      minLaps: n < 3 ? 0 : 1, amp1: Math.min(amp1, n / 3), period1, amp2: Math.min(amp2, n / 6), period2, phase2: random() * 2 * Math.PI,
     });
     this.spin = {
       solution, startCtx, landAt: startCtx + durationSec, targetId: null,

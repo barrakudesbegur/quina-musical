@@ -198,12 +198,11 @@ export const SUSPENSE = Object.freeze({
   scheduleAheadSec: 0.35,
   /** The final bar starts at least this long after the release (to schedule it and B). */
   minReleaseLeadSec: 0.25,
-  /** The drum spins up to `coastGap` cards before the target (`coastSpinUpSec`, at least a lap), then crawls
-   * with near-stops, its speed swinging between these (cards per second) once every `swingBars` bars. */
+  /** The drum spins (`coastSpinUpSec`, at least a lap) to a random card, unrelated to the target, then wanders
+   * back and forth around it: swings of `wanderCards` cards, `wanderBars` bars long. */
   coastSpinUpSec: 3,
-  coastGap: 9,
-  coastSpeed: [0.03, 0.45] as const,
-  swingBars: 2,
+  wanderCards: [3, 1.5] as const,
+  wanderBars: [4, 11] as const,
   /** Exit moves for the outgoing song as the Suspense starts. */
   exits: ['echo', 'wash', 'brake', 'spinback'] as const,
 });

@@ -75,20 +75,24 @@ export class WebSocketTransport implements Transport {
 export interface BusOptions {
   role: Role;
   clientId?: string;
+  /** The relay token, for a device on the hotspot (the LAN URL carries it as `?t=`). */
+  token?: string | null;
 }
 
 /** `Out`: what this page sends (the show page emits `ShowEvent`s; a remote sends `Command`s). */
 export class Bus<Out> {
   readonly role: Role;
   readonly clientId: string;
+  readonly token: string | null;
   readonly listeners = new Set<BusListener>();
   transport: Transport | null = null;
   /** Called on every (re)connection, after the hello. */
   onOpen: (() => void) | null = null;
 
-  constructor({ role, clientId = `${role}-${Math.random().toString(36).slice(2, 7)}` }: BusOptions) {
+  constructor({ role, clientId = `${role}-${Math.random().toString(36).slice(2, 7)}`, token = null }: BusOptions) {
     this.role = role;
     this.clientId = clientId;
+    this.token = token;
   }
 
   get connected(): boolean {
@@ -116,7 +120,7 @@ export class Bus<Out> {
     this.transport = transport;
     transport.connect({
       open: () => {
-        const hello: RelayHello = { v: PROTOCOL_VERSION, type: 'hello', role: this.role, clientId: this.clientId };
+        const hello: RelayHello = { v: PROTOCOL_VERSION, type: 'hello', role: this.role, clientId: this.clientId, ...(this.token ? { token: this.token } : {}) };
         transport.send(JSON.stringify(hello));
         this.onOpen?.();
       },

@@ -453,3 +453,24 @@ test('approved Signatures reach the planner for both songs, and a planned one is
     assert.equal(events[0].id, effect.plan.signature.id);
   }
 });
+
+test('Panic or a new round during a Spin or a Suspense tells the remotes it was cancelled (nothing lands)', () => {
+  for (const [stop, reason] of [['panic', 'panic'], ['newRound', 'newRound']] as const) {
+    for (const open of ['next', 'suspense'] as const) {
+      const h = setup({ seed: 2, settings: { autoAdvance: false } });
+      h.send('unlock');
+      h.send('next');
+      h.until(() => h.show.status === 'playing');
+      h.send(open);
+      const id = h.show.transition?.id ?? h.show.suspense?.id;
+      assert.ok(id, open);
+      const position = h.show.position;
+      const out = stop === 'panic' ? h.send('panic') : h.send('newRound', { number: 2 });
+      const cancelled = emitted(out, 'transition.cancelled');
+      assert.equal(cancelled.length, 1, `${stop} during ${open}`);
+      assert.equal(cancelled[0].id, id);
+      assert.equal(cancelled[0].reason, reason);
+      if (stop === 'panic') assert.equal(h.show.position, position, 'nothing landed');
+    }
+  }
+});

@@ -386,7 +386,8 @@ export interface TransitionCancelled {
   v: ProtocolVersion;
   type: 'transition.cancelled';
   id: string;
-  reason: 'back' | 'hold';
+  /** 'panic' and 'newRound' stop it with everything else (nothing lands; remotes stop their Spin). */
+  reason: 'back' | 'hold' | 'panic' | 'newRound';
   keptOutgoing: boolean;
   atMs: number;
 }
@@ -561,6 +562,12 @@ export interface RelayHello {
   type: 'hello';
   role: Role;
   clientId: string;
+  /**
+   * The relay token, for a device on the hotspot's LAN (tablet, admin phone, a split drum): it pairs the
+   * device. This laptop's own pages need none; `show` and `cloud` are accepted only from this laptop. A socket
+   * without a valid hello hears nothing.
+   */
+  token?: string;
 }
 
 /** Who is connected (for example, whether the show page is open). Sent by the relay to everyone. */

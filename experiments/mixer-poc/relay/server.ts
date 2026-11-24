@@ -37,7 +37,9 @@ const argValue = (name: string, fallback: string): string => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 const PORT = Number(argValue('--port', process.env.PORT || '5174'));
-const HOST = argValue('--host', '0.0.0.0');
+// Only this laptop by default; the hotspot's devices (tablet, admin phone, a split drum) need `--lan`.
+const LAN = args.includes('--lan');
+const HOST = argValue('--host', LAN ? '0.0.0.0' : '127.0.0.1');
 const USE_DIST = args.includes('--dist');
 const POOL: Pool = poolOrExit(argValue('--pool', process.env[POOL_ENV] || DEFAULT_POOL));
 const ANALYSIS_DIR = path.join(POOL.dataDir, 'analysis');
@@ -168,6 +170,38 @@ async function serveFile(req: http.IncomingMessage, res: http.ServerResponse, { 
   if (req.method === 'HEAD') res.end();
   else fs.createReadStream(file).pipe(res);
   return true;
+}
+
+/** A request from this machine (the show page, the preflight), not from the hotspot's LAN. */
+const isLoopback = (address: string | undefined): boolean => address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
+/** This machine, by loopback or by one of its own LAN addresses (the show page opened at the LAN URL). */
+function isThisMachine(address: string | undefined): boolean {
+  if (isLoopback(address)) return true;
+  const plain = address?.replace(/^::ffff:/, '');
+  return Object.values(os.networkInterfaces()).flat().some((i) => i?.address === plain);
+}
+
+/**
+ * The relay token: LAN devices (tablet, admin phone, a split drum) send it in their hello; this laptop's own
+ * pages need none. Kept in cache/ so a restart doesn't unpair the tablets; `--token` or QUINA_RELAY_TOKEN
+ * override it.
+ */
+const TOKEN = relayToken();
+function relayToken(): string {
+  const given = argValue('--token', process.env.QUINA_RELAY_TOKEN ?? '');
+  if (given) return given;
+  const file = path.join(POC, 'cache', 'relay-token');
+  try {
+    const stored = fs.readFileSync(file, 'utf8').trim();
+    if (/^[A-Za-z0-9]{12,64}$/.test(stored)) return stored;
+  } catch {}
+  const alphabet = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
+  const fresh = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => alphabet[b % alphabet.length]).join('');
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, fresh + '\n', { mode: 0o600 });
+  } catch {}
+  return fresh;
 }
 
 const notFound = (res: http.ServerResponse) => res.writeHead(404, { 'content-type': 'text/plain' }).end('not found');
@@ -337,7 +371,16 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
   const url = new URL(req.url ?? '/', 'http://local');
   if (url.pathname === '/' || url.pathname === '/show') return res.writeHead(302, { location: '/show/' }).end();
   if (url.pathname === '/admin') return res.writeHead(302, { location: '/admin/' }).end();
-  if (url.pathname.startsWith('/api/') && (await handleApi(req, res, url))) return;
+  // The APIs rewrite hooks and render audio: only this laptop's own pages (show, audition) may call them.
+  if (url.pathname.startsWith('/api/')) {
+    if (!isThisMachine(req.socket.remoteAddress)) return res.writeHead(403, { 'content-type': 'text/plain' }).end('only on the show laptop');
+    if (await handleApi(req, res, url)) return;
+  }
+  // The cloud link's folder holds the journal (the Queue, winners' names) and Admin's resume: only this laptop's
+  // own pages may read it (the show page's boot check). The Game plan is public and the LAN screens need it.
+  if (url.pathname.startsWith('/cloud/') && url.pathname !== '/cloud/plan.json' && !isThisMachine(req.socket.remoteAddress)) {
+    return res.writeHead(403, { 'content-type': 'text/plain' }).end('only on the show laptop');
+  }
   const target = resolveStatic(url.pathname);
   if (target) {
     if (!(await serveFile(req, res, target))) notFound(res);
@@ -349,6 +392,11 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
 });
 
 // ---- WebSocket hub ---------------------------------------------------------------------------------------
+// Who may say what. The show page and the cloud link run on this laptop (`show` and `cloud` are accepted only
+// from it); the hotspot's devices pair with the relay token. A socket without a valid hello hears nothing.
+// - Events come only from the show socket. The Game journal (journal.entry, journal.entries: the Queue, seeds,
+//   names) goes to the cloud link only; every other event goes to the paired remotes and the link.
+// - Commands come only from paired remotes and the link, and go to the show; `getJournal` only from the link.
 interface Client {
   role: Role | 'unknown';
   clientId: string;
@@ -356,6 +404,14 @@ interface Client {
 const clients = new Map<WebSocket, Client>();
 const wss = new WebSocketServer({ noServer: true });
 let lastState: ShowState | null = null;
+const LOCAL_ROLES: readonly Role[] = ['show', 'cloud'];
+const LISTENERS: readonly Role[] = ['tablet', 'admin', 'drum', 'cloud'];
+const COMMANDERS: readonly Role[] = ['tablet', 'admin', 'cloud'];
+const JOURNAL_EVENTS = new Set(['journal.entry', 'journal.entries']);
+
+/** Whether `client` should receive a show event of this type. */
+const receives = (client: Client, type: unknown): boolean =>
+  client.role !== 'unknown' && LISTENERS.includes(client.role) && (!JOURNAL_EVENTS.has(String(type)) || client.role === 'cloud');
 
 // Only /ws upgrades belong to the hub.
 server.on('upgrade', (req, socket, head) => {
@@ -363,7 +419,8 @@ server.on('upgrade', (req, socket, head) => {
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
 });
 
-wss.on('connection', (socket: WebSocket) => {
+wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
+  const local = isThisMachine(req.socket.remoteAddress);
   const self: Client = { role: 'unknown', clientId: '' };
   clients.set(socket, self);
   socket.on('message', (data) => {
@@ -377,20 +434,25 @@ wss.on('connection', (socket: WebSocket) => {
     }
     if (message.v !== PROTOCOL_VERSION) return; // wrong or missing protocol version
     if (message.type === 'hello') {
-      self.role = (ROLES as readonly unknown[]).includes(message.role) ? (message.role as Role) : 'unknown';
+      const role = (ROLES as readonly unknown[]).includes(message.role) ? (message.role as Role) : null;
+      const paired = local || message.token === TOKEN;
+      self.role = role && (LOCAL_ROLES.includes(role) ? local : paired) ? role : 'unknown';
       self.clientId = String(message.clientId ?? '');
-      if (lastState && self.role !== 'show') socket.send(JSON.stringify(lastState));
+      if (self.role === 'unknown') return; // unpaired: it hears nothing
+      if (lastState && receives(self, 'state')) socket.send(JSON.stringify(lastState));
       broadcast(clientList());
       return;
     }
-    // Commands go to the engine (the show role checks them); only the engine's events go to everyone else.
     const isCommand = message.type === 'cmd';
-    if (!isCommand && self.role !== 'show') return;
+    if (isCommand) {
+      if (self.role === 'unknown' || !COMMANDERS.includes(self.role)) return;
+      if (message.cmd === 'getJournal' && self.role !== 'cloud') return;
+    } else if (self.role !== 'show') return;
     if (message.type === 'state') lastState = message as unknown as ShowState;
     const text = JSON.stringify(message);
     for (const [other, info] of clients) {
       if (other === socket || other.readyState !== other.OPEN) continue;
-      if (isCommand && info.role !== 'show') continue;
+      if (isCommand ? info.role !== 'show' : !receives(info, message.type)) continue;
       other.send(text);
     }
   });
@@ -417,13 +479,14 @@ function clientList(): RelayClients {
 
 function broadcast(message: RelayClients) {
   const text = JSON.stringify(message);
-  for (const socket of clients.keys()) if (socket.readyState === socket.OPEN) socket.send(text);
+  for (const [socket, info] of clients) if (info.role !== 'unknown' && socket.readyState === socket.OPEN) socket.send(text);
 }
 
 server.listen(PORT, HOST, () => {
   const lan = Object.values(os.networkInterfaces()).flat().find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
   const mode = USE_DIST ? 'dist/' : 'Vite dev';
   console.log(`mixer POC relay (${mode}) on http://localhost:${PORT}/show/  (audition: /show/audition.html, admin: /admin/)`);
-  if (lan) console.log(`LAN: http://${lan}:${PORT}/admin/`);
+  if (LAN && lan) console.log(`LAN (pair with the token): http://${lan}:${PORT}/admin/?t=${TOKEN}`);
+  else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
   console.log(`pool ${POOL.name} (${display(POOL.manifest)}): ${poolStatus()}`);
 });

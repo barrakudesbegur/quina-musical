@@ -111,6 +111,7 @@ function checkCards(json: unknown): readonly Card[] {
 // keeps the original key names, so what is already stored stays.
 let storagePrefix = 'mixer';
 const cardsKey = () => `${storagePrefix}.cardsInPlay`;
+const CONTROLS_KEY = 'mixer.controls';
 const readStored = (key: string) => {
   try {
     return localStorage.getItem(key);
@@ -174,6 +175,10 @@ const stageMounted = Boolean(stageEl && params.get('stage') !== '0');
 if (stageEl && stageMounted) {
   mountStage(stageEl, { bus });
   document.body.classList.add('has-stage');
+  // Over the projected stage the operator's controls are hidden unless H showed them last time (remembered),
+  // the debug HUD needs ?debug=1 (it shows the next song and the Phase), and flash messages show only with
+  // the controls.
+  if (readStored(CONTROLS_KEY) !== 'shown') document.body.classList.add('hide-controls');
 }
 
 // Audio objects for what the machine calls current / incoming / outgoing.
@@ -483,13 +488,13 @@ function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSusp
   if (wheel.removeId != null) drum.removeCard(wheel.removeId);
   drum.coast({
     startCtx: open.spinStart,
-    targetId: wheel.targetId,
     durationSec: SUSPENSE.autoReleaseSec + 15,
     spinUpSec: SUSPENSE.coastSpinUpSec,
-    gap: SUSPENSE.coastGap,
-    minSpeed: SUSPENSE.coastSpeed[0],
-    maxSpeed: SUSPENSE.coastSpeed[1],
-    periodSec: SUSPENSE.swingBars * open.bar,
+    amp1: SUSPENSE.wanderCards[0],
+    period1: SUSPENSE.wanderBars[0] * open.bar,
+    amp2: SUSPENSE.wanderCards[1],
+    period2: SUSPENSE.wanderBars[1] * open.bar,
+    random: secureRandom,
   });
   showStatusLine('Suspense…');
   renderHud();
@@ -612,7 +617,9 @@ function prefetch(ids: readonly number[]): void {
       })
       .catch((error: unknown) => {
         console.warn('decode', id, error);
-        run(machine().decodeFailed(id, errorText(error)));
+        // The reason goes to this console only: a rejection is broadcast and flashed, and it must not name the
+        // next song (its id is in the error).
+        run(machine().decodeFailed(id, 'the next song could not be loaded'));
       });
   }
 }
@@ -717,6 +724,7 @@ function showStatusLine(text: string): void {
 
 let flashTimer: ReturnType<typeof setTimeout> | undefined;
 function flash(text: string): void {
+  if (stageMounted && document.body.classList.contains('hide-controls')) return console.info(text);
   $('flash').textContent = text;
   $('flash').hidden = false;
   clearTimeout(flashTimer);
@@ -839,9 +847,13 @@ document.addEventListener('keydown', (e) => {
   else if (/^[0-4]$/.test(key)) send('setGame', { phaseOverride: ([null, 'early', 'mid', 'late', 'final'] as const)[Number(key)] });
   else if (key === 'a') send('setGame', { autoAdvance: !machine().game.autoAdvance });
   else if (key === 'd') {
+    if (stageMounted && params.get('debug') !== '1') return;
     $('hud').hidden = !$('hud').hidden;
     renderHud();
-  } else if (key === 'h') document.body.classList.toggle('hide-controls');
+  } else if (key === 'h') {
+    const hidden = document.body.classList.toggle('hide-controls');
+    if (stageMounted) store(CONTROLS_KEY, hidden ? 'hidden' : 'shown');
+  }
   else if (key === '[' || key === ']') {
     clock.setDisplayOffsetMs(clock.displayOffsetMs + (key === ']' ? 5 : -5));
     flash(`display offset ${clock.displayOffsetMs} ms`);
