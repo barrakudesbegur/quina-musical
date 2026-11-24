@@ -89,7 +89,7 @@
     {:else if route === 'nit'}
       <GameControls {show} {commands} plan={session.current} />
       <WinnersList {show} {commands} plan={session.current} {catalog} />
-      <ManualResume />
+      <ManualResume {show} {commands} {catalog} cloud={session.store.kind === 'cloud'} />
       <PhoneCards />
       <PlayerSettings />
     {:else if route === 'eines'}

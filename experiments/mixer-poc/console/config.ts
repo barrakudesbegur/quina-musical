@@ -8,6 +8,8 @@ export const CONSOLE = Object.freeze({
     label: 'quina.console.label.v1',
     theme: 'quina.console.theme.v1',
     checklist: 'quina.console.checklist.v1',
+    /** The latest resume code (plan B), kept so a replacement laptop can be resumed from this device. */
+    resume: 'quina.console.resume.v1',
   },
   /** The device label: what the header shows ("Tauleta", "Mòbil admin"). */
   labelMaxLength: 24,

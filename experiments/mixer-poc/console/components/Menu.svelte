@@ -1,6 +1,6 @@
 <!--
   The rarely used things, tucked away in a drawer: this device (label, theme), start and end the night,
-  the Schedule, the technical pause, a Phase override, a Line confirmed without a Check, Panic, the
+  the Schedule, the technical pause, a Phase override, a Line confirmed without a Check, plan B resume, Panic, the
   connections, Wii pairing, and a QR to open the console on another phone.
 -->
 <script lang="ts">
@@ -14,6 +14,7 @@
   import Icon from './Icon.svelte';
   import LanQr from './LanQr.svelte';
   import LongPressButton from './LongPressButton.svelte';
+  import ResumePanel from './ResumePanel.svelte';
   import Switch from './Switch.svelte';
 
   let { open = $bindable(false) }: { open: boolean } = $props();
@@ -126,6 +127,8 @@
       <LongPressButton label={S.menu.confirmLine} note={S.menu.confirmLineNote} icon="check" tone="accent" disabled={snap.round.lineConfirmed || !model.can('confirmLine')} onconfirm={() => model.act('confirmLine')} />
     </section>
   {/if}
+
+  {#if open}<ResumePanel />{/if}
 
   <section class="drawer__section" aria-labelledby="{uid}-panic">
     <h3 class="panel__subtitle" id="{uid}-panic">{S.menu.panic}</h3>

@@ -1,7 +1,7 @@
 // The console's state, one per page: the engine's view (ShowStore, through ui/client), the Game plan, the
 // printed cards' song titles, this device's label, theme and checklist, and the toasts. It derives what the
 // components need from the pure logic in logic/, and `act` is the one way commands leave the console.
-import type { CommandRejected } from '@quina/protocol';
+import type { CommandRejected, ResumePoint } from '@quina/protocol';
 import { createShow, type ShowStore } from '../ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
 import { LocalPlanStore, loadPlanForPage } from '../ui/data/plan-store.ts';
@@ -11,6 +11,7 @@ import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
+import { nextSavedCode, resumeCommand } from '../ui/rules/resume.ts';
 import { consoleAlert, isOnline } from './logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, pushToast, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';
@@ -36,6 +37,8 @@ export class ConsoleModel {
   theme = $state<Theme>(DEFAULT_THEME);
   checklist = $state.raw<readonly string[]>([]);
   toasts = $state.raw<readonly Toast[]>([]);
+  /** The latest resume code seen on this device (plan B), kept across reloads. */
+  savedResume = $state<string | null>(readStored(CONSOLE.storage.resume));
 
   /** Commands can reach the engine (relay connected, show page on it). */
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
@@ -62,6 +65,14 @@ export class ConsoleModel {
     // Who started each Spin: the reqId starts with the sender's device label (null: auto-advance).
     this.show.client.on((event) => {
       if (event.type === 'transition.scheduled' || event.type === 'suspense.started') this.lastSpin = lastSpinOf(event);
+      // Plan B: keep the engine's latest resume code on this device (never on the demo transport).
+      if (event.type === 'state' && !this.show.demo) {
+        const next = nextSavedCode(this.savedResume, event.resume);
+        if (next !== this.savedResume) {
+          this.savedResume = next;
+          writeStored(CONSOLE.storage.resume, next);
+        }
+      }
     });
 
     this.theme = resolveTheme(readStored(CONSOLE.storage.theme), DEFAULT_THEME);
@@ -75,6 +86,11 @@ export class ConsoleModel {
     else this.sent.remember(reqId);
     return reqId;
   };
+
+  /** Plan B: resume a round by hand on this laptop (a replacement one, or after a restart). */
+  resume(point: ResumePoint): string | null {
+    return this.act('resumeAt', resumeCommand(point));
+  }
 
   /** Whether `cmd` would be accepted now, as far as the console can tell (the engine has the last word). */
   can(cmd: AnyCommandName): boolean {

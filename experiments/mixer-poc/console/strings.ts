@@ -293,6 +293,7 @@ export const S = {
     { id: 'charger', text: "Mòbil del punt d'accés al carregador" },
     { id: 'autolock', text: 'Bloqueig automàtic de la tauleta: mai' },
     { id: 'reach', text: "Portàtil i tauleta provats al punt d'accés de debò" },
+    { id: 'resumeCode', text: 'A cada barreja, codi de recuperació apuntat (menú › Recuperar el show)' },
   ] as const,
 
   sounds: {
@@ -371,6 +372,27 @@ export const S = {
     lanLabel: 'Mòbil admin',
   },
 
+  resume: {
+    title: 'Recuperar el show',
+    current: 'Codi de recuperació de la quina',
+    currentNote: "Apunteu-lo a cada barreja i guardeu-lo com la caixa dels cartrons. Amb aquest codi, un altre portàtil continua la quina on era.",
+    reveal: 'Mostra el codi',
+    hide: 'Amaga el codi',
+    none: 'Encara no hi ha codi: apareix quan es barreja la primera quina.',
+    field: 'Codi per recuperar',
+    placeholder: 'Q3N-4K7XM2P-17-S41',
+    useSaved: 'Fes servir el darrer codi desat',
+    invalid: 'Aquest codi no és vàlid. Ha de ser com Q3N-4K7XM2P-17-S41.',
+    preview: (round: string, counted: number, title: string | null) =>
+      counted === 0
+        ? `${round}: encara no ha comptat cap cançó.`
+        : `${round}: ${counted} cançons comptades. L'última: ${title ?? 'cançó desconeguda'}.`,
+    lineFrom: (song: number) => `Línia confirmada (la quina comptava des de la cançó ${song}).`,
+    send: 'Recuperar el show',
+    sendNote: 'Mantén premut. El portàtil reconstrueix la quina i es queda en espera.',
+    notNow: "Només es pot recuperar abans de començar, a la mitja part o al final, i amb el portàtil connectat.",
+  },
+
   toast: {
     region: 'Avisos',
     close: 'Tanca',
@@ -393,6 +415,7 @@ export const S = {
     noSuspense: 'no hi ha cap suspens obert',
     wrongScene: 'ara no es pot fer',
     unknownClaim: 'aquest cartró cantat no existeix',
+    cannotResume: 'no es pot recuperar amb aquest codi: revisa la quina, la llavor i la cançó',
   } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,
   reasonFallback: "l'ordre no s'ha acceptat",
 

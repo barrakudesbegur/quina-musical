@@ -54,5 +54,6 @@ test("Admin's copy has the laptop keys, the Wii reminder and the whole setup che
   const keys = CHEAT_SHEET_COPY.keys.map((k) => k.keys).join(' ');
   for (const key of ['→', '←', 'Espai', 'S', 'M', 'Esc', '+', 'L', 'A', '0–4', 'D', 'H', '[']) assert.ok(keys.includes(key), `key ${key}`);
   assert.match(CHEAT_SHEET_COPY.wiiReminder, /portàtil/);
-  assert.equal(CHEAT_SHEET_COPY.checklist.length, 6);
+  assert.equal(CHEAT_SHEET_COPY.checklist.length, 7);
+  assert.ok(CHEAT_SHEET_COPY.checklist.some((line) => /codi de recuperació/.test(line)), 'note the resume code at each Shuffle');
 });
