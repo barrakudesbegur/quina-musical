@@ -15,7 +15,8 @@
     "start": "npm start -w @quina/show",
     "test": "npm test -w @quina/show && npm test -w @quina/cloud",
     "test:pipeline": "npm run test:pipeline -w @quina/show",
-    "test:e2e": "npm test -w @quina/e2e"
+    "test:e2e": "npm test -w @quina/e2e",
+    "setup:laptop": "node tools/laptop/setup.ts"
   },
   "engines": {
     "node": ">=23.6"

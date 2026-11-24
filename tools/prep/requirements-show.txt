@@ -1,0 +1,8 @@
+# The show laptop's Python (tools/prep/.venv), for what the relay runs during the show: the Blend renders
+# (stretch.py: numpy and soundfile, plus Homebrew's Rubber Band library, loaded through ctypes). Preparing a pool
+# needs the full requirements.txt (Beat This!, torch, librosa…), on the laptop that prepares it.
+#   uv venv --python 3.13 tools/prep/.venv
+#   uv pip install --python tools/prep/.venv/bin/python -r tools/prep/requirements-show.txt
+# (npm run setup:laptop does both.)
+numpy==2.5.5
+soundfile==0.14.0
