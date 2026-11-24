@@ -50,18 +50,18 @@ All of this is on `main`, green when committed.
 | **quina-dev redeployed** (version `82c1b157`) with a coherent build of `b73e864`: the usage report, the pool list and prune, the console, Wii and projector UI (logged in deploy-plan.md) | `b73e864` (deploy only) |
 | **Card type per round, step B:** journal-check accepts `cardType` (format only); the projection gives `PublicRound.cardType` and `intro.cardType` (else the kind's default); the GameRoom reads its stored plan through `checkGamePlan` on load (older versions migrate, and phones' public plan is derived again); the resume point carries `cardType`; `card-types.json` is served beside `cards.json` and synced to takeover laptops; the preflight checks every card's type against `card-types.json` and that every round's type has printed cards | `f3e8ade` |
 | **The Desgraciat round, step B:** journal-check takes round and win kinds from the protocol's lists (`desgraciat`, `standing` accepted; a `fallen` verdict refused); a valid `standing` claim ends the round like a Bingo, with no Line; `ShowState.standing`, the Futur's `lastStandingAt`/`standingCurve` and a Check's `outcome` are checked never to reach phones (projection test, e2e) | `cb35dd1` |
+| **quina-dev redeployed** (version `ee41deae`) with `cbcc1d3`: card type per round (the live v2 plan migrates on read) and the Desgraciat round's cloud side, so Sound engine's C may journal the new kinds | `cbcc1d3` (deploy only) |
 | **`npm run sync-main`** (tools/git): brings the shared main up to origin without touching anyone's uncommitted work. It replays local commits in the object store, writes only the files origin changed, and refuses if one of them is being edited. Tested on throwaway repos (`npm run test:tools`, in `npm test` and CI) | `53c09db`, `b4c8981` |
 
 ## In progress
 
 - **Card type per round** (agreed with Sound engine on 2026-11-25): it lands in steps A/B/C so CI stays green. **A** (Sound engine, b71d843, with Frontend's bc88409 and Platform's test fixture 98404d9) is on origin. **B** (Platform's side) is built, see Done. **C** (Sound engine: plan v3, `cardTypes` removed) comes next. **When C lands, redeploy quina-dev:** its stored plan is v2 with `cardTypes`, and the new load path migrates it.
-- **The Desgraciat round:** agreed with Sound engine on 2026-11-25, in steps A/B/C. Their A (caa5662) and Platform's B (cb35dd1) are committed in local main; they go to origin with Frontend's Desgraciat label keys, which the UI typecheck needs. Then **redeploy quina-dev and tell Sound engine**: their C (the engine journalling the new kinds) waits for that, not just for origin.
+- **The Desgraciat round:** agreed with Sound engine on 2026-11-25, in steps A/B/C. Their A (caa5662) and Platform's B (cb35dd1) are on origin, and quina-dev runs them (version `ee41deae`). Sound engine was told its C (the engine journalling the new kinds) may go.
 
 ## The next queue, in priority order
 
 1. **Redeploy quina-dev when card type's step C lands** (plan v3): build from a clean worktree, check `/api/plan` shows every round's `cardType`, and log it.
-2. **Push the Desgraciat A+B** once Frontend's label keys are in: `npm run sync-main`, the full `npm test` on the committed state (a clean worktree), the sensitive-file check, push; then redeploy quina-dev and tell Sound engine that C may go.
-3. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+2. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
 
