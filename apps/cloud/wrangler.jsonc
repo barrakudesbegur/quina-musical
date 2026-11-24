@@ -7,6 +7,9 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
+  // The cloud's own hostname, so Access can protect paths (/api, /ws/console, /ws/show) and leave /feed public.
+  // Cloudflare creates this NEW record and its certificate only; nothing else in the zone changes.
+  "routes": [{ "pattern": "quina-dev.barrakudesbegur.org", "custom_domain": true }],
   "preview_urls": false,
   "vars": {
     // The year tag in the players' links (quina.barrakudesbegur.org/26/123); it names the GameRoom.

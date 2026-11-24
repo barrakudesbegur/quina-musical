@@ -27,6 +27,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 | 2026-11-24 | Redeployed (version `61d29019`) with the UI build of c3770c8: the player never takes the relay in production, masked resume codes, relay pairing, Admin's plan B. Checked live: every page's assets load, the locked routes still answer 403, a phone gets its snapshot. | the same Worker | `npx wrangler rollback` |
 | 2026-11-24 | Redeployed (version `ca93f44c`): the Worker with the `relay.plan` push and `link.plan` (12c9f40), the UI build of 60f9d12 (the repo reorganisation), and the covers as JPEG XL with a JPEG fallback (`/covers/<id>.jxl` and `.jpg`, 256 px, `image/jxl` set in `_headers`). The old `.webp` covers stay until the player that uses `<picture>` is deployed. Checked live: the three cover types, `/api/health`, `/sw.js`, the cards and the player answer. | the same Worker | `npx wrangler rollback` |
 | 2026-11-24 | Redeployed (version `a03d0bcb`): logos and prize pictures as JPEG XL pairs (`POST /api/media` takes the PNG or JPEG fallback, `PUT /api/media/<key>.jxl` its JXL, `GET /api/media` lists them; WebP uploads refused; the GameRoom's `media` table gained a `name` column and a `media_jxl` table, added in place), the UI build of c4bc94c (the player's covers as `<picture>`, JXL first), and no more WebP covers. Checked live: `.jxl` and `.jpg` covers, `/api/health`, the player. | the same Worker (the two schema additions stay on a rollback, unused) | `npx wrangler rollback` |
+| 2026-11-24 | **Added the Custom Domain `quina-dev.barrakudesbegur.org`** to the Worker, with the user's direct OK in this session (`routes` in wrangler.jsonc, applied with `npx wrangler triggers deploy`: no new version). Before: no record of that name existed (checked with dig). Cloudflare created that one record and its certificate; nothing else in the zone changed. Checked live: `/api/health` 200, the player and covers answer, `/api/plan` and `/api/stats` refuse (403) until Access is set up. workers.dev keeps working. | the zone `barrakudesbegur.org`: one new DNS record; the Worker's domains | remove the `routes` line and run `npx wrangler triggers deploy`, or delete the domain under Workers & Pages → quina-cloud → Settings → Domains & Routes |
 
 The first `wrangler deploy` was stopped by Claude Code's permission check (auto mode); the user then allowed `npx wrangler deploy` in this project (`.claude/settings.local.json`, personal and gitignored).
 
@@ -49,7 +50,7 @@ npm run deploy      # = npm run assets (dist/) + wrangler deploy
 - Check: `curl https://quina-cloud.<subdomain>.workers.dev/api/health` → `{"ok":true,"edition":"26"}`. A phone feed: `wss://…/feed?cards=1`.
 - Undo: `npx wrangler rollback` (the previous version), or `npx wrangler delete quina-cloud`, which removes the Worker **and the GameRoom's data**: export first (`/api/export`).
 
-### 2. A new subdomain for the cloud (needed for Access)
+### 2. A new subdomain for the cloud (needed for Access): DONE (2026-11-24)
 
 Cloudflare documents Access for `workers.dev` only for a whole URL ("Access can protect one Worker's production `workers.dev` URL, preview URLs, or both"). That would put the phones' `/feed` behind a login too. Path-scoped applications (`/api`, `/ws/show`) belong on a hostname in one of the account's zones.
 
