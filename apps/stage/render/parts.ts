@@ -5,6 +5,7 @@ import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
 import { formatClock } from '../../../packages/rules/time.ts';
+import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText } from './dom.ts';
 
@@ -76,11 +77,22 @@ export class SponsorList {
     this.key = key;
     this.list.replaceChildren(
       ...sponsors.map((s) => {
-        const logo = s.logo ? h('img', { class: 'sponsors__logo', attrs: { src: s.logo, alt: s.label } }) : null;
+        const logo = s.logo ? logoPicture(s.logo, s.label) : null;
         return h('li', 'sponsors__item', logo ?? h('span', 'sponsors__name', s.label));
       }),
     );
   }
+}
+
+/** A sponsor's logo: its JPEG XL where the browser reads it, else the PNG (packages/ui/data/media.ts). */
+function logoPicture(path: string, label: string): HTMLElement {
+  const { jxl, src } = imageSources(path);
+  return h(
+    'picture',
+    'sponsors__picture',
+    jxl ? h('source', { attrs: { type: 'image/jxl', srcset: jxl } }) : null,
+    h('img', { class: 'sponsors__logo', attrs: { src, alt: label } }),
+  );
 }
 
 /** A landed song: cover, title and artist. */

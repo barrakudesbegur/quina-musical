@@ -387,6 +387,10 @@
   font-weight: var(--font-weight-strong);
 }
 
+.sponsors__picture {
+  display: contents;
+}
+
 .sponsors__logo {
   height: var(--stage-logo);
   width: auto;
