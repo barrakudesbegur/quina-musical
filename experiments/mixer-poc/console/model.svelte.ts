@@ -4,7 +4,7 @@
 import type { CommandRejected, ResumePoint } from '@quina/protocol';
 import { createShow, type ShowStore } from '../ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
-import { LocalPlanStore, loadPlanForPage } from '../ui/data/plan-store.ts';
+import { loadPlanForPage, planStoreForPage } from '../ui/data/plan-store.ts';
 import type { AnyCommandArgs, AnyCommandName } from '../ui/flow.ts';
 import type { GamePlan } from '../ui/plan.ts';
 import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
@@ -53,7 +53,7 @@ export class ConsoleModel {
   private toastSeq = 0;
 
   constructor() {
-    const planStore = new LocalPlanStore();
+    const planStore = planStoreForPage();
     this.plan = loadPlanForPage(planStore);
     planStore.subscribe(() => (this.plan = loadPlanForPage(planStore)));
 

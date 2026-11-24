@@ -12,7 +12,7 @@ import type { Bus } from '../engine/src/net/bus.ts';
 import type { ShowClient } from '../ui/client/show-client.ts';
 import { flowOf, type ShowScene } from '../ui/flow.ts';
 import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
-import { LocalPlanStore, loadPlanForPage, type PlanStore } from '../ui/data/plan-store.ts';
+import { loadPlanForPage, planStoreForPage, type PlanStore } from '../ui/data/plan-store.ts';
 import type { GamePlan } from '../ui/plan.ts';
 import { HeatSmoother } from '../ui/rules/heat.ts';
 import '../ui/tokens.css';
@@ -125,7 +125,7 @@ class Stage {
     this.random = options.random ?? secureRandom;
     this.motionQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
     this.heat = new HeatSmoother(this.random);
-    this.planStore = options.planStore ?? new LocalPlanStore();
+    this.planStore = options.planStore ?? planStoreForPage();
     this.plan = loadPlanForPage(this.planStore);
     this.state = source.latest();
 
