@@ -1,16 +1,20 @@
 <!--
-  Now playing: the cover, title and artist, and a ring counting down to the next auto-advance. A small green
-  badge on the ring's corner says auto-advance applies; the ring's label says why it isn't running. Under the
-  artist, who started the last Spin (this device's label names it), and a note when the final phase stopped
-  auto-advance by itself.
+  Now playing: the cover, title and artist, and the ring that shows what happens next (NowRing, from
+  logic/now-ring.ts): the auto-advance countdown, a Spin, a Suspense, "press Següent", or why the show waits.
+  Under the artist, a chip says that state in words (with how long a Hold or pause has lasted), and who
+  started the last Spin (this device's label names it). While Hold music (or a failed Check's error music)
+  plays instead of the song, the panel names that music instead.
 -->
 <script lang="ts">
+  import { CONSOLE } from '../config.ts';
+  import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
-  import { autoAdvanceCountdown, autoAdvanceStatus, autoModeOn } from '../logic/countdown.ts';
+  import { elapsedSec } from '../logic/countdown.ts';
+  import { nowRing } from '../logic/now-ring.ts';
   import { S } from '../strings.ts';
-  import CountdownRing from './CountdownRing.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
+  import NowRing from './NowRing.svelte';
   import { registerMorphRoot } from '../morph.ts';
 
   const model = getConsole();
@@ -21,37 +25,61 @@
   });
   const uid = $props.id();
   const snap = $derived(model.show.state);
-  const auto = $derived(snap ? autoAdvanceCountdown(snap, model.show.now) : null);
-  const why = $derived(snap ? autoAdvanceStatus(snap) : 'waiting');
-  const autoOn = $derived(snap ? autoModeOn(snap) : false);
-  const autoText = $derived(
-    { running: S.nowPlaying.autoIn, off: S.nowPlaying.autoOff, offFinal: S.nowPlaying.autoOffFinal, held: S.nowPlaying.autoHeld, spinning: S.nowPlaying.spinning, waiting: S.nowPlaying.idle }[why],
-  );
+  const ring = $derived(snap ? nowRing({ state: snap, flow: model.show.flow, nowMs: model.show.now, lastSec: CONSOLE.ringLastSec }) : null);
+  /** The music playing instead of the song, if any. */
+  const music = $derived(!ring?.holdMusic ? null : ring.state === 'checkFailed' ? 'error' : ring.state === 'paused' ? 'pause' : 'hold');
+  const since = $derived(ring?.sinceMs != null ? formatCountdown(elapsedSec(ring.sinceMs, model.show.now)) : '0:00');
+  const chip = $derived.by(() => {
+    if (!ring) return null;
+    const C = S.nowPlaying.ring.chip;
+    switch (ring.state) {
+      case 'spinning':
+        return C.spinning(ring.countdown && !ring.countdown.done ? ring.countdown.secondsLeft : null);
+      case 'suspense':
+      case 'manual':
+      case 'manualFinal':
+      case 'checkFailed':
+        return C[ring.state];
+      case 'talk':
+      case 'stay':
+      case 'paused':
+        return C[ring.state](since);
+      case 'checking':
+        return C.checking(ring.cardId);
+      default:
+        return null;
+    }
+  });
 </script>
 
-{#if snap}
-  <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} aria-labelledby="{uid}-title">
-    <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
+{#if snap && ring}
+  <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring={ring.state} aria-labelledby="{uid}-title">
+    {#if music}
+      <span class="cover cover--lg cover--missing now-playing__music" data-music={music} aria-hidden="true"><Icon name="music" /></span>
+    {:else}
+      <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
+    {/if}
     <div class="now-playing__song">
       <h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>
-      {#if snap.current}
+      {#if music}
+        <p class="now-playing__name">{music === 'error' ? S.nowPlaying.errorMusic : S.nowPlaying.holdMusic}</p>
+      {:else if snap.current}
         <p class="now-playing__name" data-morph="title">{snap.current.title}</p>
         <p class="now-playing__artist" data-morph="artist">{snap.current.artist}</p>
       {:else}
-        <p class="now-playing__name">{snap.holdMusic ? S.nowPlaying.holdMusic : S.nowPlaying.nothing}</p>
+        <p class="now-playing__name">{S.nowPlaying.nothing}</p>
+      {/if}
+      {#if chip}
+        <p class="now-playing__chip" data-state={ring.state}>
+          {#if ring.state === 'manual' || ring.state === 'manualFinal'}<Icon name="next" />{/if}<span>{chip}</span>
+        </p>
       {/if}
       {#if model.lastSpin}
         <p class="now-playing__by" data-by={model.lastSpin.by ?? 'auto'}>{S.nowPlaying.lastSpinBy(model.lastSpin.by)}</p>
       {/if}
-      {#if why === 'offFinal'}<p class="now-playing__note">{S.nowPlaying.autoOffFinal}</p>{/if}
     </div>
     <div class="now-playing__ring">
-      <CountdownRing remaining={auto?.remaining ?? 0} seconds={auto?.secondsLeft ?? null} label={autoText} unit="s" />
-      {#if autoOn}
-        <span class="auto-badge" title={S.nowPlaying.autoBadge}>
-          <Icon name="auto" /><span class="visually-hidden">{S.nowPlaying.autoBadge}</span>
-        </span>
-      {/if}
+      <NowRing view={ring} />
     </div>
   </section>
 {/if}

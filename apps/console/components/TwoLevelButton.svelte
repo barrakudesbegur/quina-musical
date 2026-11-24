@@ -1,0 +1,163 @@
+<!--
+  Parlem or Aguanta, with its second level (Pausa, Suspens) on a strip along the button's bottom edge
+  ("mantén ‖ Pausa", the Consola-Joc board), so the link between the two reads at a glance. A tap is the first level; holding past CONSOLE.escalateHoldMs is
+  the second (logic/two-level.ts decides which, logic/hold-modes.ts what each sends). While pressing, the
+  strip fills with light from left to right (hook escalate-hold); when the second level is reached the strip
+  turns its colour and stays so while it is on (an open Suspens pulses there with its auto-release countdown: hook
+  suspense-hold). With reduced motion the strip shows a percentage instead of the sweep.
+-->
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { CONSOLE } from '../config.ts';
+  import { getConsole } from '../context.ts';
+  import { suspenseCountdown } from '../logic/countdown.ts';
+  import { modeCommand, secondLevel, type HoldMode } from '../logic/hold-modes.ts';
+  import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../logic/two-level.ts';
+  import { S } from '../strings.ts';
+  import Icon from './Icon.svelte';
+
+  interface Props {
+    mode: HoldMode;
+    /** The Hold in progress, if any (its mode shows pressed). */
+    active: HoldMode | null;
+    enabled: boolean;
+  }
+
+  let { mode, active, enabled }: Props = $props();
+
+  const model = getConsole();
+  const uid = $props.id();
+  const TEXT = {
+    talk: { label: S.cluster.talk, note: S.cluster.talkNote, icon: 'hold', level: S.cluster.pauseLevel, levelIcon: 'pause' },
+    stay: { label: S.cluster.stay, note: S.cluster.stayNote, icon: 'stay', level: S.cluster.suspense, levelIcon: 'suspense' },
+  } as const;
+  const t = $derived(TEXT[mode]);
+
+  let press = $state<TwoLevelState>(TWO_LEVEL_IDLE);
+  let progress = $state(0);
+  let frame = 0;
+
+  const level2 = $derived(
+    secondLevel(mode, {
+      paused: model.show.flow.pause !== null,
+      suspenseOpen: model.controls.suspense.open,
+      canPause: model.can('pause'),
+      canSuspense: model.controls.suspense.enabled,
+    }),
+  );
+  const pressed = $derived(active === mode);
+  // Usable when either level is: the first one (hold), or leaving the second (a tap while it's on).
+  const usable = $derived(enabled || level2.on || level2.canEnter);
+  const countdown = $derived(mode === 'stay' && level2.on && model.show.state ? suspenseCountdown(model.show.state, model.show.now) : null);
+  const note = $derived.by(() => {
+    if (mode === 'talk' && level2.on) return S.cluster.pauseOn;
+    if (mode === 'stay' && level2.on) return press.phase === 'escalated' ? S.cluster.suspenseOpen : S.cluster.suspenseTap;
+    return pressed ? S.cluster.activeNote : t.note;
+  });
+
+  const config = () => ({ holdMs: CONSOLE.escalateHoldMs, canEscalate: level2.canEnter });
+
+  function feed(event: TwoLevelEvent): void {
+    const cfg = config();
+    const result = twoLevel(press, event, cfg);
+    press = result.state;
+    progress = twoLevelProgress(press, event.atMs, cfg);
+    for (const action of result.actions) {
+      // Read the current state for each action: a tap acts on what is on now.
+      const command = modeCommand(mode, action, active, level2);
+      // No command when its level isn't allowed now (a tap while only the second level could be entered).
+      if (!command || (command.cmd === 'hold' && !enabled)) continue;
+      if (command.cmd === 'hold') model.act('hold', command.args);
+      else if (command.cmd === 'pause') model.act('pause', command.args);
+      else model.act('suspense', command.args);
+    }
+    cancelAnimationFrame(frame);
+    if (press.phase === 'pressing') frame = requestAnimationFrame(() => feed({ type: 'tick', atMs: performance.now() }));
+  }
+
+  const at = () => performance.now();
+  const isPressKey = (e: KeyboardEvent) => e.key === 'Enter' || e.key === ' ';
+
+  function onpointerdown(e: PointerEvent): void {
+    if (e.button !== 0 || !usable) return;
+    try {
+      // Keep getting this finger's events when it slides off the button.
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // No such active pointer (synthetic events): the press still counts.
+    }
+    feed({ type: 'down', atMs: at() });
+  }
+
+  function onkeydown(e: KeyboardEvent): void {
+    if (!isPressKey(e)) return;
+    e.preventDefault();
+    if (!e.repeat && usable) feed({ type: 'down', atMs: at() });
+  }
+
+  function onkeyup(e: KeyboardEvent): void {
+    if (!isPressKey(e)) return;
+    e.preventDefault();
+    feed({ type: 'up', atMs: at() });
+  }
+
+  // Assistive technology may activate the button with a bare click (no pointer or key events): a tap.
+  function onclick(e: MouseEvent): void {
+    if (e.detail !== 0 || press.phase !== 'idle' || !usable) return;
+    feed({ type: 'down', atMs: at() });
+    feed({ type: 'up', atMs: at() });
+  }
+
+  // Never leave a Suspens held by a finger that is gone: a hidden page lets go.
+  function onvisibilitychange(): void {
+    if (document.hidden) feed({ type: 'cancel', atMs: at() });
+  }
+
+  onDestroy(() => {
+    cancelAnimationFrame(frame);
+    if (press.phase !== 'idle') feed({ type: 'cancel', atMs: at() });
+  });
+</script>
+
+<svelte:document {onvisibilitychange} />
+
+<button
+  type="button"
+  class="big-button two-level"
+  data-action={mode}
+  data-anim="press escalate-hold{mode === 'stay' && level2.on ? ' suspense-hold' : ''}"
+  data-state={press.phase}
+  data-level2={level2.on || undefined}
+  style:--progress={progress}
+  style:--suspense-progress={countdown ? 1 - countdown.remaining : 0}
+  aria-pressed={pressed || level2.on}
+  aria-describedby="{uid}-how"
+  disabled={!usable}
+  {onpointerdown}
+  onpointerup={() => feed({ type: 'up', atMs: at() })}
+  onpointercancel={() => feed({ type: 'cancel', atMs: at() })}
+  {onkeydown}
+  {onkeyup}
+  {onclick}
+  onblur={() => feed({ type: 'cancel', atMs: at() })}
+  oncontextmenu={(e) => e.preventDefault()}
+>
+  <span class="two-level__main">
+    <Icon name={t.icon} outline />
+    <span class="big-button__text">
+      <span class="big-button__label">{t.label}</span>
+      <span class="big-button__note">{note}</span>
+    </span>
+  </span>
+  <span class="two-level__second" data-on={level2.on || undefined} data-ready={level2.canEnter || undefined}>
+    <span class="two-level__fill" aria-hidden="true"></span>
+    <span class="two-level__second-content">
+      {#if !level2.on}<span class="two-level__how" aria-hidden="true">{S.cluster.holdFor}</span>{/if}
+      <Icon name={t.levelIcon} />
+      <span class="two-level__second-label">{t.level}</span>
+      {#if countdown}<span class="two-level__count" role="timer">{S.cluster.suspenseAutoRelease(countdown.secondsLeft)}</span>{/if}
+      <span class="two-level__percent" aria-hidden="true">{Math.round(progress * 100)} %</span>
+    </span>
+  </span>
+</button>
+<span class="visually-hidden" id="{uid}-how">{S.cluster.holdForLong(t.level)}</span>

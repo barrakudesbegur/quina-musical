@@ -88,7 +88,7 @@
             <ul class="candidate-list">
               {#each candidates as c (c.kind + c.cardId)}
                 <li class="candidate-list__item" data-kind={c.kind} data-state={c.notSold ? 'not-sold' : 'sold'}>
-                  <strong class="candidate-list__card">{c.cardId}</strong>
+                  <strong class="candidate-list__card">#{c.cardId}</strong>
                   <span class="candidate-list__what">
                     {S.future.kind[c.kind]}{#if c.rows.length}&nbsp;· {S.future.rows(c.rows)}{/if}
                     {#if c.completedBy !== null}<span class="candidate-list__song"> {S.future.completedBy(title(c.completedBy))}</span>{/if}
@@ -98,9 +98,6 @@
               {/each}
             </ul>
           {/if}
-          <button type="button" class="mini future__hide" data-anim="press" onclick={() => model.revealFuture(false)}>
-            <Icon name="eyeOff" /><span>{S.future.hide}</span>
-          </button>
         </section>
       </div>
     {/if}

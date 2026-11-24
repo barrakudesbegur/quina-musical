@@ -1,6 +1,6 @@
 // The console's icons, on a 24×24 grid, drawn in currentColor by Icon.svelte so a theme recolours them with
 // the text. Most paths are strokes; a `fill` part is filled with the stroke colour too, and an `accent` part
-// takes the button's colour inside a big button (the check in the Claim rosette). The paths of the in-play
+// takes the button's colour inside a big button. The paths of the in-play
 // icons are the approved console boards' (Consola-Joc). Every icon sits next to a text label, or carries one.
 
 /** A filled shape, or a detail drawn in the button's own colour. */
@@ -11,7 +11,6 @@ export interface IconPart {
 export type IconPath = string | IconPart;
 
 const fill = (d: string): IconPart => ({ d, part: 'fill' });
-const accent = (d: string): IconPart => ({ d, part: 'accent' });
 
 export const ICONS = {
   next: [fill('M5 5l10 7-10 7z'), 'M19 5v14'],
@@ -34,14 +33,19 @@ export const ICONS = {
     'M21 3l-6 4.5',
   ],
   back: ['M9 14L4 9l5-5', 'M4 9h10a6 6 0 0 1 0 12h-3'],
-  /** Comprovar cartró: a verification rosette with a check. */
+  /**
+   * Comprovar: an outline verification rosette, a smooth regular wavy ring (r(θ) = R + a·cos(nθ), 10 bumps),
+   * with a check inside; one colour, no fill (the Consola-Joc board's path).
+   */
   claim: [
-    fill('M12 2.5l2.3 1.6 2.8-.2 1 2.6 2.4 1.5-.7 2.7 1 2.6-2.2 1.7-.5 2.8-2.8.4-1.9 2.1-2.4-1.4-2.4 1.4-1.9-2.1-2.8-.4-.5-2.8-2.2-1.7 1-2.6-.7-2.7 2.4-1.5 1-2.6 2.8.2z'),
-    accent('M8.2 12.3l2.6 2.6 5-5.3'),
+    'M12 4.2C12.41 4.2 12.83 3.94 13.31 3.7C13.8 3.46 14.33 3.29 14.78 3.44C15.23 3.59 15.56 4.04 15.81 4.52C16.06 5 16.25 5.45 16.58 5.69C16.92 5.93 17.41 5.97 17.94 6.06C18.47 6.15 19 6.33 19.28 6.71C19.56 7.09 19.56 7.65 19.48 8.19C19.4 8.72 19.29 9.2 19.42 9.59C19.54 9.98 19.92 10.3 20.3 10.69C20.68 11.07 21 11.53 21 12C21 12.47 20.68 12.93 20.3 13.31C19.92 13.7 19.54 14.02 19.42 14.41C19.29 14.8 19.4 15.28 19.48 15.81C19.56 16.35 19.56 16.91 19.28 17.29C19 17.67 18.47 17.85 17.94 17.94C17.41 18.03 16.92 18.07 16.58 18.31C16.25 18.55 16.06 19 15.81 19.48C15.56 19.96 15.23 20.41 14.78 20.56C14.33 20.71 13.8 20.54 13.31 20.3C12.83 20.06 12.41 19.8 12 19.8C11.59 19.8 11.17 20.06 10.69 20.3C10.2 20.54 9.67 20.71 9.22 20.56C8.77 20.41 8.44 19.96 8.19 19.48C7.94 19 7.75 18.55 7.42 18.31C7.08 18.07 6.59 18.03 6.06 17.94C5.53 17.85 5 17.67 4.72 17.29C4.44 16.91 4.44 16.35 4.52 15.81C4.6 15.28 4.71 14.8 4.58 14.41C4.46 14.02 4.08 13.7 3.7 13.31C3.32 12.93 3 12.47 3 12C3 11.53 3.32 11.07 3.7 10.69C4.08 10.3 4.46 9.98 4.58 9.59C4.71 9.2 4.6 8.72 4.52 8.19C4.44 7.65 4.44 7.09 4.72 6.71C5 6.33 5.53 6.15 6.06 6.06C6.59 5.97 7.08 5.93 7.42 5.69C7.75 5.45 7.94 5 8.19 4.52C8.44 4.04 8.77 3.59 9.22 3.44C9.67 3.29 10.2 3.46 10.69 3.7C11.17 3.94 11.59 4.2 12 4.2Z',
+    'M8.8 12.3l2.2 2.2 4.3-4.6',
   ],
   /** Efectes: a speaker. */
   sound: ['M4 9h4l5-4v14l-5-4H4z', 'M17 9a4 4 0 0 1 0 6'],
   fanfare: ['M8 4h8v5a4 4 0 0 1-8 0z', 'M8 6H5a3 3 0 0 0 3 4', 'M16 6h3a3 3 0 0 1-3 4', 'M12 13v4', 'M8 20h8'],
+  /** Auto-advance off: the auto arrows struck through. */
+  autoOff: ['M19 8.5A8 8 0 0 0 5.5 7', 'M5 15.5A8 8 0 0 0 18.5 17', 'M5.5 3v4h4', 'M18.5 21v-4h-4', 'M4 4l16 16'],
   menu: ['M4 6h16', 'M4 12h16', 'M4 18h16'],
   close: ['M6 6l12 12', 'M18 6L6 18'],
   backspace: ['M21 5H8l-6 7 6 7h13z', 'M12 9l6 6', 'M18 9l-6 6'],
@@ -79,6 +83,12 @@ export const ICONS = {
   pause: ['M8 5v14', 'M16 5v14'],
   star: ['M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z'],
   clock: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M12 7v5l3 2'],
+  /** The menu's groups (Consola-Menu): this device, the connections, plan B resume, the cheat sheet. */
+  device: ['M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M11 18h2'],
+  wifi: ['M2.5 9a14 14 0 0 1 19 0', 'M5.5 12.5a9.5 9.5 0 0 1 13 0', 'M8.6 16a5 5 0 0 1 6.8 0', 'M12 19.5h.01'],
+  lifebuoy: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M5.6 5.6l3.6 3.6', 'M14.8 14.8l3.6 3.6', 'M18.4 5.6l-3.6 3.6', 'M9.2 14.8l-3.6 3.6'],
+  keyboard: ['M3 7h18v10H3z', 'M7 11h.01', 'M11 11h.01', 'M15 11h.01', 'M8 14h8'],
+  chevron: ['M9 6l6 6-6 6'],
 } as const satisfies Record<string, readonly IconPath[]>;
 
 export type IconName = keyof typeof ICONS;

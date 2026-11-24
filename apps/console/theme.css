@@ -63,6 +63,22 @@
   --dur-toast: 200ms;
   --dur-conn: 200ms;
   --dur-ring-step: 250ms;
+  /* The ring by Ara sona (ANIMATIONS.md › ring-spin, ring-last, ring-manual, ring-state) */
+  --dur-ring-spin: 1.2s;
+  --dur-ring-record: 1.8s;
+  --dur-ring-breathe: 1.6s;
+  --dur-ring-tick: 300ms;
+  --dur-ring-state: 150ms;
+  /* The menu sheet slides in (ANIMATIONS.md › menu-sheet) */
+  --dur-menu-sheet: 200ms;
+
+  /* The ring's state chips under the song (Consola-Anell): pale pills, ink text, the same in both themes */
+  --ring-chip-spin: #ffe3c2;
+  --ring-chip-gold: #fff0b8;
+  --ring-chip-talk: #d6f1ff;
+  --ring-chip-stay: #ebddff;
+  --ring-chip-ok: #d3f2df;
+  --ring-chip-error: #ffd9da;
 }
 
 /* Dark (Consola-Joc-Fosc): ui/tokens.css's night palette, with the board's surfaces. */
@@ -79,6 +95,9 @@
   --color-text-muted: var(--color-muted);
   --color-title: var(--color-gold);
   --color-danger: #ff5a60;
+  /* The menu's danger zone (Consola-Menu, dark) */
+  --color-danger-zone: #3a1e3f;
+  --color-danger-text: #ff8a8f;
 }
 
 /* Light (Consola-Joc) */
@@ -106,6 +125,9 @@
   --color-focus: var(--color-night);
   --color-on-danger: #ffffff;
   --color-on-ok: #ffffff;
+  /* The menu's danger zone (Consola-Menu, light) */
+  --color-danger-zone: #ffe1e1;
+  --color-danger-text: #c4252c;
 }
 
 @media (prefers-reduced-motion: reduce) {

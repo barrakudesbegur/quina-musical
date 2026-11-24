@@ -66,18 +66,27 @@ export const S = {
     label: 'Controls principals',
     next: 'Següent',
     talk: 'Parlem',
-    talkNote: 'la música baixa i no gira',
+    talkNote: 'toca: la música baixa',
     stay: 'Aguanta',
-    stayNote: 'la cançó segueix; no gira',
+    stayNote: 'toca: la cançó segueix',
     /** A pressed Parlem or Aguanta: pressing it again releases the Hold. */
     activeNote: 'prem per reprendre',
+    /** The second levels, reached by holding Parlem or Aguanta. */
+    pauseLevel: 'Pausa',
     suspense: 'Suspens',
-    suspenseIdle: 'mantén per crear tensió',
+    /** On the second-level strip: hold the button to get there. */
+    holdFor: 'mantén',
+    /** Spoken: what holding the button does. */
+    holdForLong: (level: string) => `Mantén premut per passar a ${level}`,
+    /** The second level is on: a tap leaves it. */
+    pauseOn: 'en pausa · toca per tornar',
     suspenseOpen: 'deixa anar per aterrar',
-    suspenseAutoRelease: "s'allibera sol en",
+    suspenseTap: 'toca per aterrar',
+    suspenseAutoRelease: (s: number) => `s'allibera sol en ${s} s`,
     back: 'Enrere',
-    backHint: "Mantén premut per desfer l'última cançó",
-    claim: 'Comprovar cartró',
+    /** Under "Enrere" in its narrow button: just "hold, don't tap". */
+    backHint: 'mantén',
+    claim: 'Comprovar',
   },
 
   longPress: { hint: 'Mantén premut per confirmar', percent: (p: number) => `${p} %` },
@@ -86,14 +95,35 @@ export const S = {
     title: CA.nowPlaying,
     nothing: 'No sona cap cançó',
     holdMusic: "Música d'espera",
-    autoIn: 'Següent automàtic',
-    autoOff: 'Avanç automàtic aturat',
-    autoOffFinal: 'Fase final: sense avanç automàtic',
-    autoHeld: 'En espera: sense avanç automàtic',
-    spinning: 'Girant…',
-    idle: 'Esperant «Següent»',
-    autoBadge: 'Avança sol',
+    errorMusic: "Música d'error",
     seconds,
+    /** The ring by the song (logic/now-ring.ts): its spoken label, its corner badge and the chip under the song. */
+    ring: {
+      label: {
+        auto: (s: number) => `Següent automàtic en ${s} ${s === 1 ? 'segon' : 'segons'}`,
+        spinning: (s: number | null) => (s === null ? 'Girant' : `Girant: la cançó nova aterra en ${s} ${s === 1 ? 'segon' : 'segons'}`),
+        suspense: (s: number | null) => (s === null ? 'Suspens obert' : `Suspens obert: s'allibera sol en ${s} ${s === 1 ? 'segon' : 'segons'}`),
+        manual: 'Avanç automàtic aturat: prem Següent',
+        manualFinal: 'Fase final: sense avanç automàtic. Prem Següent',
+        held: 'En espera: sense avanç automàtic',
+        checking: 'En espera: comprovant un cartró',
+        checkFailed: "En espera: música d'error fins a Reprèn",
+        paused: 'Pausa tècnica',
+        waiting: 'Esperant «Següent»',
+      },
+      badge: { auto: 'Avança sol', autoOff: 'Avanç automàtic aturat', final: 'Fase final', talk: 'Parlem', stay: 'Aguanta', held: 'En espera' },
+      chip: {
+        spinning: (s: number | null) => (s === null ? 'Girant' : `Girant · aterra en ${s} s`),
+        suspense: 'Suspens obert · deixa anar per aterrar',
+        manual: 'Manual · prem «Següent»',
+        manualFinal: 'Fase final · prem «Següent»',
+        talk: (since: string) => `Parlem · des de fa ${since}`,
+        stay: (since: string) => `Aguanta · des de fa ${since}`,
+        checking: (cardId: number | null) => (cardId === null ? 'Comprovant un cartró' : `Comprovant el cartró #${cardId}`),
+        checkFailed: 'Cap cartró vàlid · prem «Reprèn»',
+        paused: (since: string) => `Pausa tècnica · des de fa ${since}`,
+      },
+    },
     lastSpinBy: (device: string | null) => (device ? `Últim gir: ${device}` : 'Últim gir: automàtic'),
   },
 
@@ -119,7 +149,11 @@ export const S = {
     auto: 'Auto',
     autoNote: 'Avanç automàtic',
     autoFinal: 'Avanç automàtic a la fase final',
-    recommended: 'recomanat',
+    /** Each preset's name, keyed by its seconds; a preset without one shows only its seconds. */
+    names: { 11: 'Molt ràpid', 14: 'Ràpid', 18: 'Normal', 22: 'Tranquil' } as Readonly<Partial<Record<number, string>>>,
+    recommended: 'Recomanat',
+    /** A preset button's accessible name ("Ràpid, 14 s, recomanat"). */
+    presetLabel: (name: string | null, s: number, recommended: boolean) => [name, `${s} s`, recommended ? 'recomanat' : null].filter(Boolean).join(', '),
     recovery: ({ direction, seconds: s }: RecoveryNotice) =>
       direction === 'faster'
         ? `Recuperant l'horari: cada cançó dura ${s > 0 ? `${s} s` : 'una mica'} menys.`
@@ -301,6 +335,8 @@ export const S = {
     line: CA.prize.line,
     bingo: CA.prize.bingo,
     sponsoredBy: CA.sponsoredBy,
+    /** The ticket's ribbon ("LÍNIA", "QUINA"; drawn in capitals). */
+    ribbon: kindLabel,
     none: 'Sense premi',
     special: CA.specialRound,
     noPlan: "Encara no hi ha pla de la nit: deseu-lo des de l'Admin.",
@@ -388,6 +424,9 @@ export const S = {
 
   menu: {
     title: 'Menú',
+    /** Under the title: this device and the round ("Tauleta · Quina 3 de 8"). */
+    subtitle: (label: string | null, round: number | null, total: number) =>
+      [label, round !== null && round >= 1 ? CA.roundOf(round, total) : null].filter(Boolean).join(' · '),
     close: 'Tanca',
     device: 'Aquest dispositiu',
     labelField: 'Nom del dispositiu',
@@ -398,24 +437,27 @@ export const S = {
     night: 'La nit',
     start: 'Començar la nit',
     startNote: 'Presenta la Quina 1 al projector.',
+    started: 'La nit ja ha començat',
     end: 'Acabar la nit',
-    endNote: 'Mantén premut',
-    schedule: 'Horari',
+    endNote: 'Mantén premut · passa al final de la nit',
     roundsTotal: 'Quines en total',
     roundsMinus: 'Una quina menys',
     roundsPlus: 'Una quina més',
-    gameEnd: (clock: string, drift: string) => `Final previst de la nit: ${clock} (${drift})`,
+    gameEnd: 'Final previst de la nit',
+    game: 'Joc',
     pause: 'Pausa tècnica',
-    pace: 'Ritme',
+    pauseNote: 'Projector i mòbils: «Tornem de seguida»',
     phase: 'Fase',
     phaseAuto: 'Automàtica',
     winners: CA.winners,
     planB: 'Xuleta del pla B',
+    planBNote: 'Tecles del portàtil i preparació',
     tools: 'Eines',
-    confirmLine: 'Confirma la línia sense comprovació',
-    confirmLineNote: 'Només si no s\'ha pogut fer la comprovació.',
+    confirmLine: 'Confirmar la línia sense comprovació',
+    confirmLineNote: "Mantén premut · només si no s'ha pogut comprovar",
+    danger: 'Pànic i final de la nit',
     panic: 'Pànic',
-    panicNote: 'Mantén premut: silencia-ho tot al moment.',
+    panicNote: 'Mantén premut: silencia-ho tot al moment',
     wii: 'Comandament Wii',
     wiiNote: "S'aparella al portàtil, no aquí. És opcional: la consola fa tot el que fa el comandament.",
     lan: 'Obre la consola en un altre mòbil',

@@ -18,6 +18,9 @@ export const CONSOLE = Object.freeze({
   labelPresets: ['Tauleta', 'Mòbil admin'] as const,
   /** Long press: used only when the `--dur-hold-confirm` token can't be read. */
   holdConfirmFallbackMs: 900,
+  /** Holding Parlem or Aguanta this long reaches its second level, Pausa or Suspens (logic/two-level.ts;
+   *  ANIMATIONS.md › escalate-hold). Long enough that a firm tap never escalates, short enough to feel direct. */
+  escalateHoldMs: 800,
   /** How long the "Mantén premut per confirmar" hint stays up (ANIMATIONS.md › hold-hint). */
   holdHintMs: 1500,
   /** A toast hides by itself after this long (ANIMATIONS.md › toast-in). */
@@ -31,6 +34,8 @@ export const CONSOLE = Object.freeze({
   cardMax: 9999,
   /** How many past landings Now playing lists. */
   recentLandings: 3,
+  /** The auto-advance ring's last seconds, drawn in red (logic/now-ring.ts; ANIMATIONS.md › ring-last). */
+  ringLastSec: 3,
 });
 
 export type Theme = 'light' | 'dark';
@@ -57,9 +62,11 @@ export const WII = Object.freeze({
   shake: { peakG: 2.6, resetG: 1.6, minGapMs: 110, count: 3, windowMs: 1500 },
   /** 1 or 2 held this long is Enrere. */
   backHoldMs: 1500,
+  /** − or + held this long is Pausa (a shorter press is Parlem). */
+  pauseHoldMs: 800,
   /** The D-pad's four effects. */
   dpad: { up: 'tada', right: 'orchestra-hit', down: 'sad-trombone', left: 'among-us' },
-  rumble: { tap: [70], suspense: [90, 70, 90, 70, 260], back: [600], autoOn: [80, 80, 80], autoOff: [420] },
+  rumble: { tap: [70], suspense: [90, 70, 90, 70, 260], pause: [250, 120, 250], back: [600], autoOn: [80, 80, 80], autoOff: [420] },
   /** How often held buttons are checked (Enrere's long press). */
   tickMs: 50,
   /** LED 1 lit: this remote is connected. */

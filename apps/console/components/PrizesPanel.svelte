@@ -1,7 +1,7 @@
 <!--
-  The Premis tab: this round's prize bundles and sponsors (the next round's in the Interval), whether phones
-  may see them yet with "Revelar premis" while they can't (GamePlan.prizeReveal), the claim rules under them,
-  and the special round's rules when this round is the special one (Game plan).
+  The Premis tab: this round's prize bundles and sponsors as two tickets (the next round's in the Interval),
+  whether phones may see them yet with "Revelar premis" while they can't (GamePlan.prizeReveal), the claim
+  rules under them as numbered steps, and the special round's rules when this round is the special one.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
@@ -48,9 +48,9 @@
   {#if rules && rules.claimRules.length}
     <section class="prizes-tab__section">
       <h3 class="panel__label">{S.cheatSheet.claimRules}</h3>
-      <ul class="rule-list">
+      <ol class="rule-list rule-list--steps">
         {#each rules.claimRules as rule, i (i)}<li>{rule}</li>{/each}
-      </ul>
+      </ol>
     </section>
   {/if}
 </div>

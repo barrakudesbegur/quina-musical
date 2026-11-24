@@ -8,7 +8,7 @@
 </script>
 
 <section class="checklist" aria-labelledby="{uid}-title">
-  <h3 class="panel__subtitle" id="{uid}-title">{S.cheatSheet.checklist}</h3>
+  <h4 class="menu-group__field" id="{uid}-title">{S.cheatSheet.checklist}</h4>
   <ul class="checklist__list">
     {#each S.checklist as item (item.id)}
       <li class="checklist__item" data-state={model.checklist.includes(item.id) ? 'done' : 'todo'}>

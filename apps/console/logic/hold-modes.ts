@@ -3,8 +3,11 @@
 // - Aguanta, the Stay: the song keeps playing at full volume.
 // Pressing the active one again releases it; pressing the other one switches mode in place (`hold { duck }`
 // while holding never releases). The active one shows pressed, from the engine's private `hold.ducked`.
+// Each button has a second level, reached by holding it (logic/two-level.ts): Parlem → Pausa (the Pause),
+// Aguanta → Suspens. A tap while the second level is on leaves it.
 // Pure.
 import type { CommandFields, ShowState } from '@quina/protocol';
+import type { TwoLevelAction } from './two-level.ts';
 
 export type HoldMode = 'talk' | 'stay';
 
@@ -24,4 +27,47 @@ export function activeHoldMode(state: Pick<ShowState, 'status' | 'hold'> | null)
 export function holdPress(mode: HoldMode, active: HoldMode | null): CommandFields['hold'] {
   if (active === mode) return { on: false };
   return withDuck(mode === 'talk');
+}
+
+/** What a mode button's second level is now. */
+export interface SecondLevel {
+  /** It is on: a Pausa (Parlem), an open Suspens (Aguanta). */
+  on: boolean;
+  /** Holding the button would enter it now (the scene allows it and it isn't on yet). */
+  canEnter: boolean;
+}
+
+export interface SecondLevelInput {
+  /** The technical pause is on (`flow.pause`): Pausa, Parlem's second level. */
+  paused: boolean;
+  /** A Suspens is open: Aguanta's second level. */
+  suspenseOpen: boolean;
+  canPause: boolean;
+  canSuspense: boolean;
+}
+
+export function secondLevel(mode: HoldMode, input: SecondLevelInput): SecondLevel {
+  return mode === 'talk' ? { on: input.paused, canEnter: !input.paused && input.canPause } : { on: input.suspenseOpen, canEnter: !input.suspenseOpen && input.canSuspense };
+}
+
+export type ModeCommand =
+  | { cmd: 'hold'; args: CommandFields['hold'] }
+  | { cmd: 'pause'; args: CommandFields['pause'] }
+  | { cmd: 'suspense'; args: CommandFields['suspense'] };
+
+/**
+ * The command for an action on a mode button (null: none):
+ * - Parlem: a tap toggles Parlem, or leaves Pausa when it's on; a hold enters Pausa; letting go of it does
+ *   nothing more (Pausa stays until a tap, or the pause panel's button);
+ * - Aguanta: a tap toggles Aguanta, or releases an open Suspens; a hold opens Suspens and letting go lands.
+ */
+export function modeCommand(mode: HoldMode, action: TwoLevelAction, active: HoldMode | null, level2: SecondLevel): ModeCommand | null {
+  if (mode === 'talk') {
+    if (action === 'escalate') return { cmd: 'pause', args: { on: true } };
+    if (action === 'release') return null;
+    return level2.on ? { cmd: 'pause', args: { on: false } } : { cmd: 'hold', args: holdPress('talk', active) };
+  }
+  if (action === 'escalate') return { cmd: 'suspense', args: { on: true } };
+  if (action === 'release') return { cmd: 'suspense', args: { on: false } };
+  return level2.on ? { cmd: 'suspense', args: { on: false } } : { cmd: 'hold', args: holdPress('stay', active) };
 }

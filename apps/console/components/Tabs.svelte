@@ -5,6 +5,7 @@
   The look (console.css › tabs): one panel rounded on every corner; the tabs start inside its corner radius,
   drawn with the panel's own line; the selected tab is 6 px taller and drops 4 px over the panel's top line,
   so it joins the panel (hook tab-switch: it rises as the old one sinks, the content cross-fades).
+  `actions`, if given, sits at the right end of the tab strip, outside the tablist (Futur's "Amagar").
 -->
 <script lang="ts" generics="T extends string">
   import type { Snippet } from 'svelte';
@@ -24,13 +25,15 @@
     /** The tablist's name for assistive technology. */
     label: string;
     panel: Snippet<[T]>;
+    /** Buttons at the right end of the tab strip (not tabs). */
+    actions?: Snippet;
     onselect?: (id: T) => void;
   }
 
-  let { tabs, selected = $bindable(), label, panel, onselect }: Props = $props();
+  let { tabs, selected = $bindable(), label, panel, actions, onselect }: Props = $props();
 
   const uid = $props.id();
-  const buttons: HTMLButtonElement[] = [];
+  const buttons: HTMLButtonElement[] = $state([]);
 
   function select(id: T): void {
     selected = id;
@@ -48,6 +51,7 @@
 </script>
 
 <div class="tabs">
+  <div class="tabs__bar">
   <div class="tabs__list" role="tablist" aria-label={label}>
     {#each tabs as tab, i (tab.id)}
       <button
@@ -66,6 +70,8 @@
         {#if tab.icon}<Icon name={tab.icon} />{/if}<span>{tab.label}</span>
       </button>
     {/each}
+  </div>
+  {#if actions}<div class="tabs__actions">{@render actions()}</div>{/if}
   </div>
   {#each tabs as tab (tab.id)}
     <div class="tabs__panel" role="tabpanel" id="{uid}-panel-{tab.id}" aria-labelledby="{uid}-tab-{tab.id}" hidden={selected !== tab.id} tabindex="0">

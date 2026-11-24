@@ -27,15 +27,15 @@
   const allowed = $derived(model.can('resumeAt'));
 </script>
 
-<section class="drawer__section resume" aria-labelledby="{uid}-title" data-state={allowed ? 'ready' : 'blocked'}>
-  <h3 class="panel__subtitle" id="{uid}-title">{S.resume.title}</h3>
+<section class="menu-group resume" aria-labelledby="{uid}-title" data-state={allowed ? 'ready' : 'blocked'}>
+  <h3 class="menu-group__title" id="{uid}-title"><Icon name="lifebuoy" />{S.resume.title}</h3>
 
   <!-- One reveal for every code on this panel; it resets when the menu closes (the panel unmounts). -->
   <button type="button" class="action" data-anim="reveal" aria-expanded={revealed} onclick={() => (revealed = !revealed)}>
     <Icon name={revealed ? 'eyeOff' : 'eye'} /><span>{revealed ? S.resume.hide : S.resume.reveal}</span>
   </button>
 
-  <h4 class="panel__subtitle">{S.resume.current}</h4>
+  <h4 class="menu-group__field">{S.resume.current}</h4>
   {#if live}
     <p class="note">{S.resume.currentNote}</p>
     {#if revealed}<output class="resume__code" data-anim="reveal">{live.text}</output>{/if}
