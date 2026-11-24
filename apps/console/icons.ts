@@ -89,6 +89,8 @@ export const ICONS = {
   lifebuoy: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M5.6 5.6l3.6 3.6', 'M14.8 14.8l3.6 3.6', 'M18.4 5.6l-3.6 3.6', 'M9.2 14.8l-3.6 3.6'],
   keyboard: ['M3 7h18v10H3z', 'M7 11h.01', 'M11 11h.01', 'M15 11h.01', 'M8 14h8'],
   chevron: ['M9 6l6 6-6 6'],
+  /** The Wii remote: its body, the cross, the A and the 1 and 2. */
+  remote: ['M9.5 2h5A2.5 2.5 0 0 1 17 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 19.5v-15A2.5 2.5 0 0 1 9.5 2z', 'M12 4.8v3M10.5 6.3h3', fill('M10.6 11a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0z'), 'M12 15.5v.01M12 18.5v.01'],
 } as const satisfies Record<string, readonly IconPath[]>;
 
 export type IconName = keyof typeof ICONS;

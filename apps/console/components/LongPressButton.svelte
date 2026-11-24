@@ -2,10 +2,10 @@
   A risky action (Back, End the night, Panic, a verdict against the Check's result): it fires only after a
   press of --dur-hold-confirm. A short tap shows "Mantén premut per confirmar" (hook hold-hint). The fill
   sweeps the whole button (hook long-press-confirm) and drains back when released early; with reduced
-  motion a percentage shows instead. The timing is logic/long-press.ts; this component only feeds it.
+  motion a percentage shows instead. `badge`: a decoration inside the button (a WiiBadge). The timing is logic/long-press.ts; this component only feeds it.
 -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, type Snippet } from 'svelte';
   import { CONSOLE } from '../config.ts';
   import type { IconName } from '../icons.ts';
   import { LONG_PRESS_IDLE, longPress, longPressProgress, parseCssDurationMs, type LongPressEvent, type LongPressState } from '../logic/long-press.ts';
@@ -23,9 +23,10 @@
     action?: string | null;
     disabled?: boolean;
     onconfirm: () => void;
+    badge?: Snippet;
   }
 
-  let { label, note = null, icon = null, tone = 'danger', big = false, action = null, disabled = false, onconfirm }: Props = $props();
+  let { label, note = null, icon = null, tone = 'danger', big = false, action = null, disabled = false, onconfirm, badge }: Props = $props();
 
   const uid = $props.id();
   let button: HTMLButtonElement | undefined = $state();
@@ -119,6 +120,7 @@
       </span>
       <span class="long-press__percent" aria-hidden="true">{S.longPress.percent(Math.round(progress * 100))}</span>
     </span>
+    {@render badge?.()}
   </button>
   <span class="visually-hidden" id="{uid}-how">{S.longPress.hint}</span>
   <span class="hold-hint" role="status" data-anim="hold-hint" data-state={press.phase === 'hint' ? 'shown' : 'hidden'}>

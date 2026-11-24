@@ -8,6 +8,7 @@
   import { CA, S } from '../strings.ts';
   import CelebrationMusic from './CelebrationMusic.svelte';
   import Icon from './Icon.svelte';
+  import WiiBadge from './WiiBadge.svelte';
   import WinnerForm from './WinnerForm.svelte';
 
   const model = getConsole();
@@ -16,6 +17,7 @@
   const celebration = $derived(flow.celebration);
   const winners = $derived(celebrationWinners(flow.winners, celebration));
   const song = $derived(celebration ? songTitleOf(celebration.winningSongId, snap, model.catalog) : null);
+  const isDefault = $derived(model.defaultAction?.control === 'interval');
   const lastRound = $derived(snap !== null && celebration !== null && celebration.round >= snap.game.roundsTotal);
 </script>
 
@@ -39,8 +41,9 @@
     {#if celebration.kind === 'line'}
       <p class="note">{S.celebration.continueLine}</p>
     {:else}
-      <button type="button" class="action action--big tone-primary" data-anim="press" disabled={!model.can('interval')} onclick={() => model.act('interval')}>
+      <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('interval')} onclick={() => model.act('interval')}>
         <Icon name="next" /><span>{S.celebration.toInterval}</span>
+        {#if isDefault}<WiiBadge button="a" />{/if}
       </button>
       <p class="note">{lastRound ? S.celebration.lastRound : S.celebration.toIntervalNote}</p>
     {/if}

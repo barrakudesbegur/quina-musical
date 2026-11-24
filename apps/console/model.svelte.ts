@@ -17,6 +17,7 @@ import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
+import { defaultAction } from './logic/default-action.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
 import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
@@ -62,6 +63,17 @@ export class ConsoleModel {
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
   readonly scene = $derived(sceneContext(this.show.flow, this.show.state));
   readonly controls = $derived(controlsModel({ state: this.show.state, flow: this.show.flow, online: this.online }));
+  /** "Go ahead" here: the control drawn as primary, and what the Wii's A sends (logic/default-action.ts). */
+  readonly defaultAction = $derived(
+    defaultAction({
+      state: this.show.state,
+      flow: this.show.flow,
+      nowMs: this.show.now,
+      plan: this.plan,
+      nextEnabled: this.controls.next.enabled,
+      can: (cmd) => this.can(cmd),
+    }),
+  );
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
   readonly counted = $derived(this.show.state ? countedSongs(this.landingLog, this.show.state) : { ids: [], complete: false });
   readonly futureRevealed = $derived(this.show.state !== null && this.futureRevealedFor === roundKey(this.show.state.round));

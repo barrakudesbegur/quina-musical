@@ -245,6 +245,7 @@
 }
 
 .action {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3664,7 +3665,10 @@ kbd {
     animation: none !important;
   }
 
-  .dialog[data-anim~='menu-sheet'][open] {
+  .dialog[data-anim~='menu-sheet'][open],
+  .dialog[data-anim~='wii-dialog'][open],
+  .wii-badge,
+  [data-default] {
     animation: none;
   }
 
@@ -3673,5 +3677,301 @@ kbd {
   .heat__rail,
   .now-ring__fill {
     transition: none;
+  }
+}
+
+/* ---- the Wii remote: the default action, the badges, the Comandament dialog ----------------------------- */
+
+/* The default action's control (logic/default-action.ts): a ring in A's orange (ANIMATIONS.md › default-move).
+   The ring fades in when the default moves to it; with reduced motion it just appears. */
+[data-default] {
+  outline: 4px solid var(--default-ring);
+  outline-offset: 3px;
+  animation: default-ring-in var(--dur-default-ring) var(--ease-out);
+}
+
+@keyframes default-ring-in {
+  from {
+    outline-color: transparent;
+  }
+}
+
+/* WiiBadge: which Wii button triggers a control (ANIMATIONS.md › wii-badge). Decorative and never in the way
+   of a press. Inside a big sticker button it drops the label's outline and shadow. */
+.wii-badge {
+  position: absolute;
+  z-index: 2;
+  top: 7px;
+  right: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  animation: wii-badge-in var(--dur-wii-badge) var(--ease-bounce) both;
+}
+
+.wii-badge[data-hold] {
+  top: 13px;
+  right: 13px;
+}
+
+.wii-badge__key {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border: 3px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--wii-colour);
+  /* a white halo, so A stays clear on Següent's orange (and every badge on its own colour) */
+  box-shadow: 0 0 0 2.5px #ffffff;
+}
+
+.wii-badge__key svg {
+  width: 15px;
+  height: 15px;
+  fill: var(--color-ink);
+}
+
+/* A hold: a three-quarter ring around the key, "a ring that fills" */
+.wii-badge[data-hold] .wii-badge__key::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 999px;
+  background: conic-gradient(var(--color-ink) 0 270deg, transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+}
+
+.wii-badge[data-size='sm'] {
+  top: 4px;
+  right: 4px;
+  font-size: 0.75rem;
+}
+
+.wii-badge[data-size='sm'][data-hold] {
+  top: 8px;
+  right: 8px;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__key {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-width: 2px;
+  box-shadow: 0 0 0 1.5px #ffffff;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__key svg {
+  width: 11px;
+  height: 11px;
+}
+
+.wii-badge[data-size='sm'][data-hold] .wii-badge__key::after {
+  inset: -6px;
+}
+
+/* On a two-level button's strip: at its right end, centred */
+.wii-badge[data-place='strip'] {
+  top: 50%;
+  right: 12px;
+  translate: 0 -50%;
+}
+
+.wii-badge__shake {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 4px;
+  padding: 2px 5px;
+  border: 2px solid var(--color-ink);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.wii-badge__shake svg {
+  width: 15px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+@keyframes wii-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+/* Enrere is narrow: its badge sits in the bottom corner, clear of the label */
+.big-button[data-action='back'] > .wii-badge {
+  top: auto;
+  bottom: 9px;
+}
+
+/* The strips: the badge at the right end, the strip's words moved left to make room for it */
+.wii-badge[data-place='strip'] {
+  right: 9px;
+}
+
+.two-level__second:has(> .wii-badge[data-wii='talk']) {
+  padding-right: 40px;
+}
+
+.two-level__second:has(> .wii-badge[data-wii='b']) {
+  padding-right: 92px;
+}
+
+.wii-badge[data-place='strip'] .wii-badge__shake {
+  margin-left: 6px;
+  padding: 1px 4px;
+  border-width: 1.5px;
+  font-size: 0.6875rem;
+}
+
+/* A phone or a narrow window (the compact cluster): every badge small and centred on its right edge; the
+   strips' and Enrere's badges hide, so the labels stay readable (the Comandament dialog still lists them). A
+   remote connects on the laptop, so this is the rare case. */
+@media (orientation: portrait), (max-width: 47.99rem) {
+  .wii-badge,
+  .wii-badge[data-hold] {
+    top: 50%;
+    right: 8px;
+    translate: 0 -50%;
+    font-size: 0.75rem;
+  }
+
+  .wii-badge .wii-badge__key {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    border-width: 2px;
+    box-shadow: 0 0 0 1.5px #ffffff;
+  }
+
+  .wii-badge[data-hold] .wii-badge__key::after {
+    inset: -6px;
+  }
+
+  .two-level__second .wii-badge,
+  .big-button[data-action='back'] > .wii-badge {
+    display: none;
+  }
+
+  .two-level__second:has(> .wii-badge[data-wii='talk']),
+  .two-level__second:has(> .wii-badge[data-wii='b']) {
+    padding-right: 0;
+  }
+}
+
+/* Small hosts: the pads keep their text clear of the arrow; the Auto toggle wears HOME on its corner */
+.pad:has(> .wii-badge) {
+  padding-right: 26px;
+}
+
+.pad > .wii-badge {
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.pace__toggle > .wii-badge {
+  top: -9px;
+  right: -9px;
+}
+
+.pause-panel .action > .wii-badge {
+  top: -9px;
+  right: -9px;
+}
+
+/* The connection state of the remote (menu row, dialog head) */
+.wii-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-chip);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.wii-status[data-state='connected'] {
+  background: var(--color-green);
+  color: #ffffff;
+}
+
+.menu-wii__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+/* The Comandament dialog (Consola-Comandament): the drawing and the legend side by side, stacked when narrow */
+.wii-dialog {
+  width: min(62rem, calc(100vw - var(--space-4)));
+  background: var(--color-surface-private, var(--color-surface));
+  --wii-height: min(24rem, 52dvh);
+  --wii-muted: var(--color-text-muted);
+}
+
+.wii-dialog:not([open]) {
+  display: none;
+}
+
+.wii-dialog__head {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.wii-dialog__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+
+.wii-dialog__title .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.wii-dialog__spacer {
+  flex: 1;
+}
+
+.wii-dialog__guide {
+  font-size: var(--text-md);
+}
+
+.dialog[data-anim~='wii-dialog'][open] {
+  animation: wii-dialog-in var(--dur-wii-dialog) var(--ease-out);
+}
+
+@keyframes wii-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }

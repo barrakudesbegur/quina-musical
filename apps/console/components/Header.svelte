@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import { clockParts, formatClock, formatDrift } from '../../../packages/rules/time.ts';
-  import { getConsole } from '../context.ts';
+  import { getConsole, getWii } from '../context.ts';
   import { HEAT_BANDS } from '../logic/engine-rules.ts';
   import { phaseZones } from '../logic/phase-zones.ts';
   import { HEADER_CHIPS, driftTone, headerChips, heatPercent, linksOf, roundOnScreen } from '../logic/status.ts';
@@ -20,11 +20,12 @@
 
   const ZONES = phaseZones(HEAT_BANDS);
   const model = getConsole();
+  const wii = getWii();
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
   const round = $derived(roundOnScreen(snap, flow));
   const clock = $derived(clockParts(model.show.now));
-  const chips = $derived(headerChips(linksOf(model.show.connected, model.show.showOnline)));
+  const chips = $derived(headerChips(linksOf(model.show.connected, model.show.showOnline, wii.status)));
 </script>
 
 <header class="header" data-scene={flow.scene} data-stale={!model.online || undefined}>

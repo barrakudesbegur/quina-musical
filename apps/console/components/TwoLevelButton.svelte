@@ -5,6 +5,8 @@
   strip fills with light from left to right (hook escalate-hold); when the second level is reached the strip
   turns its colour and stays so while it is on (an open Suspens pulses there with its auto-release countdown: hook
   suspense-hold). With reduced motion the strip shows a percentage instead of the sweep.
+  With a Wii remote connected, each level shows its Wii button (WiiBadge): Parlem −+ (a tap) and Pausa −+ held;
+  Aguanta B held, and Suspens B held plus the shake.
 -->
 <script lang="ts">
   import { onDestroy } from 'svelte';
@@ -15,6 +17,7 @@
   import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../logic/two-level.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import WiiBadge from './WiiBadge.svelte';
 
   interface Props {
     mode: HoldMode;
@@ -158,6 +161,8 @@
       {#if countdown}<span class="two-level__count" role="timer">{S.cluster.suspenseAutoRelease(countdown.secondsLeft)}</span>{/if}
       <span class="two-level__percent" aria-hidden="true">{Math.round(progress * 100)} %</span>
     </span>
+    {#if mode === 'talk'}<WiiBadge button="talk" hold place="strip" size="sm" />{:else}<WiiBadge button="b" hold shake place="strip" size="sm" />{/if}
   </span>
+  {#if mode === 'talk'}<WiiBadge button="talk" />{:else}<WiiBadge button="b" hold />{/if}
 </button>
 <span class="visually-hidden" id="{uid}-how">{S.cluster.holdForLong(t.level)}</span>

@@ -1,6 +1,6 @@
 // Small lookups the panels share: a song's title, a round's prize bundles from the Game plan and whether phones
 // may see them yet, the Winners of a Celebration, and the Winners grouped by round. Pure.
-import type { RoundKind, ShowState } from '@quina/protocol';
+import type { CommandFields, RoundKind, ShowState } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
 import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
@@ -47,6 +47,12 @@ export function roundPrizes(plan: GamePlan | null, number: number): RoundPrizesR
   const round = roundPlan(plan, number);
   if (!round) return { status: 'noRound', number };
   return { status: 'ok', prizes: { number, kind: round.kind, line: bundleView(plan, round.line), bingo: bundleView(plan, round.bingo) } };
+}
+
+/** The `roundIntro` that introduces round `number`: with its kind from the plan when the plan has that round. */
+export function roundIntroArgs(plan: GamePlan | null, number: number): CommandFields['roundIntro'] {
+  const planned = roundPrizes(plan, number);
+  return planned.status === 'ok' ? { number, kind: planned.prizes.kind } : { number };
 }
 
 /**

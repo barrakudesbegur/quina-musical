@@ -6,21 +6,22 @@
   import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { guideCountdown } from '../logic/countdown.ts';
-  import { roundPrizes } from '../logic/show-data.ts';
+  import { roundIntroArgs } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
+  import WiiBadge from './WiiBadge.svelte';
 
   const model = getConsole();
   const uid = $props.id();
   const interval = $derived(model.show.flow.interval);
   const total = $derived(model.show.state?.game.roundsTotal ?? 0);
   const guide = $derived(guideCountdown(interval, model.show.now));
-  const planned = $derived(interval ? roundPrizes(model.plan, interval.nextRound) : null);
+  const isDefault = $derived(model.defaultAction?.control === 'roundIntro');
 
   function start(): void {
     if (!interval) return;
-    model.act('roundIntro', planned?.status === 'ok' ? { number: interval.nextRound, kind: planned.prizes.kind } : { number: interval.nextRound });
+    model.act('roundIntro', roundIntroArgs(model.plan, interval.nextRound));
   }
 </script>
 
@@ -41,8 +42,9 @@
     <PrizeList round={interval.nextRound} />
 
 
-    <button type="button" class="action action--big tone-primary" data-anim="press" disabled={!model.can('roundIntro')} onclick={start}>
+    <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('roundIntro')} onclick={start}>
       <Icon name="play" /><span>{S.interval.start}</span>
+      {#if isDefault}<WiiBadge button="a" />{/if}
     </button>
     <p class="note">{S.interval.startNote}</p>
   </section>

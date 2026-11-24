@@ -3,22 +3,34 @@
 import type { ShowState, ShowStatus } from '@quina/protocol';
 import { formatDrift } from '../../../packages/rules/time.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
+import type { WiiStatus } from '../wii/controller.svelte.ts';
 
 export const LINK_NAMES = ['relay', 'show', 'cloud', 'feed', 'wii'] as const;
-/** relay: this console ↔ the laptop's relay; show: the show page on the relay; cloud, feed (phones), wii: not wired yet. */
+/** relay: this console ↔ the laptop's relay; show: the show page on the relay; wii: a remote on this device;
+ *  cloud, feed (phones): not wired yet. */
 export type LinkName = (typeof LINK_NAMES)[number];
 export type LinkState = 'up' | 'down' | 'unknown';
 export type Links = Record<LinkName, LinkState>;
 
-/** The connection chips. Cloud, the phones' feed and the Wii remote have no source yet, so they read "unknown". */
-export function linksOf(connected: boolean, showOnline: boolean): Links {
+/**
+ * The Wii remote's link: up when connected, down when a connected remote went away, unknown otherwise (none
+ * connected yet, or no WebHID here: a tablet or phone; the remote pairs with the laptop).
+ */
+export function wiiLink(status: WiiStatus): LinkState {
+  if (status === 'connected') return 'up';
+  // The remote is optional: only one that was connected and went away is worth a red chip.
+  return status === 'lost' ? 'down' : 'unknown';
+}
+
+/** The connection chips. Cloud and the phones' feed have no source yet, so they read "unknown". */
+export function linksOf(connected: boolean, showOnline: boolean, wii: WiiStatus = 'unsupported'): Links {
   return {
     relay: connected ? 'up' : 'down',
     // Without the relay we can't know whether the show page is open.
     show: !connected ? 'unknown' : showOnline ? 'up' : 'down',
     cloud: 'unknown',
     feed: 'unknown',
-    wii: 'unknown',
+    wii: wiiLink(wii),
   };
 }
 

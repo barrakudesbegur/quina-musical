@@ -1,14 +1,19 @@
 <!-- The printable cheat sheet (#xuleta): every round's prizes with sponsors, the claim and special-round
-     rules, the laptop's Plan B keys, the Wii remote reminder and the setup checklist. The content model is
-     logic/cheatsheet.ts; print.css turns it into an A4 page in black on white. -->
+     rules, the laptop's Plan B keys, the setup checklist, and the Wii remote ("Comandament": the same drawing
+     and legend as the console's dialog, packages/ui/wii, with the console's own mapping, so the sheet
+     always matches the remote). The content model is logic/cheatsheet.ts; print.css turns it into an A4 page
+     in black on white (the remote's colours print too, and every button also carries its own label). -->
 <script lang="ts">
   import { CA } from '../../../packages/ui/i18n/ca.ts';
   import type { GamePlan } from '../../../packages/ui/plan.ts';
+  import WiiGuide from '../../../packages/ui/wii/WiiGuide.svelte';
+  import { consoleWiiLegend } from '../../console/wii/guide.ts';
   import { cheatSheetModel } from '../logic/cheatsheet.ts';
   import { CHEAT_SHEET_COPY, S } from '../strings.ts';
 
   let { plan }: { plan: GamePlan | null } = $props();
   const sheet = $derived(cheatSheetModel(plan, CHEAT_SHEET_COPY));
+  const wiiLegend = consoleWiiLegend();
 </script>
 
 <div class="cheat-sheet__actions no-print panel__actions">
@@ -92,8 +97,6 @@
           </div>
         {/each}
       </dl>
-      <h3 class="cheat-sheet__subheading">{S.cheat.wii}</h3>
-      <p>{sheet.wiiReminder}</p>
     </section>
     <section class="cheat-sheet__section">
       <h2 class="cheat-sheet__heading">{S.cheat.checklist}</h2>
@@ -102,6 +105,12 @@
       </ul>
     </section>
   </div>
+
+  <section class="cheat-sheet__section cheat-sheet__wii" aria-labelledby="cheat-wii">
+    <h2 class="cheat-sheet__heading" id="cheat-wii">{S.cheat.wii}</h2>
+    <p>{sheet.wiiReminder}</p>
+    <WiiGuide items={wiiLegend} footer={CA.wii.footer} sideLabel={CA.wii.side} />
+  </section>
 </article>
 
 <style>
@@ -117,10 +126,6 @@
   .cheat-sheet__heading {
     font-size: var(--text-lg);
     margin-bottom: var(--space-2);
-  }
-  .cheat-sheet__subheading {
-    font-size: var(--text-md);
-    margin: var(--space-3) 0 var(--space-1);
   }
   .cheat-sheet__section ul {
     margin: 0;
@@ -182,6 +187,14 @@
   .cheat-sheet__checklist {
     list-style: '☐  ';
   }
+  .cheat-sheet__wii {
+    display: grid;
+    gap: var(--space-3);
+    --wii-height: 18rem;
+  }
+  .cheat-sheet__wii p {
+    margin: 0;
+  }
 
   @media print {
     .cheat-sheet {
@@ -194,6 +207,10 @@
     }
     .cheat-sheet__prizes tr {
       break-inside: avoid;
+    }
+    .cheat-sheet__wii {
+      --wii-height: 15rem;
+      --wii-muted: #000;
     }
   }
 </style>

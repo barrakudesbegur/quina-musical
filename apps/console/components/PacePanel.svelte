@@ -14,6 +14,7 @@
   import { recommendedPreset, recoveryNotice } from '../logic/pace-panel.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import WiiBadge from './WiiBadge.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -73,6 +74,7 @@
         </button>
         <button type="button" class="mini pace__toggle" data-toggle="auto" data-anim="press" aria-pressed={snap.game.autoAdvance} title={S.pace.autoNote} disabled={!gameOk} onclick={() => model.act('setGame', { autoAdvance: !snap.game.autoAdvance })}>
           <Icon name="auto" /><span>{S.pace.auto}</span>
+          <WiiBadge button="home" size="sm" />
         </button>
       </div>
     </div>

@@ -1,7 +1,8 @@
 <!--
   The rarely used things, in a sheet from the right (the Consola-Menu board): a title with this device and the
   round, then cards in three columns (two, then one, on narrower screens):
-  - this device (label, theme), the connections with the Wii note, a QR to open the console on another phone;
+  - this device (label, theme), the connections, the Wii remote (its status, Connectar, and the Comandament
+    dialog), a QR to open the console on another phone;
   - the night (rounds in total, the night's expected end with its drift, start the night), the game (the
     technical pause, which is the Pausa, auto-advance in the final phase, a Phase override), the tools (a Line
     confirmed without a Check);
@@ -14,8 +15,8 @@
   import { PHASE_NAMES, type PhaseName } from '@quina/protocol';
   import { formatClock, formatDrift } from '../../../packages/rules/time.ts';
   import { CONSOLE, type Theme } from '../config.ts';
-  import { getConsole } from '../context.ts';
-  import { roundPrizes } from '../logic/show-data.ts';
+  import { getConsole, getWii } from '../context.ts';
+  import { roundIntroArgs } from '../logic/show-data.ts';
   import { LINK_NAMES, driftTone, linksOf } from '../logic/status.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -26,16 +27,18 @@
   import Switch from './Switch.svelte';
   import WinnersList from './WinnersList.svelte';
 
-  let { open = $bindable(false) }: { open: boolean } = $props();
+  /** `onwii`: open the Comandament dialog (the menu closes). */
+  let { open = $bindable(false), onwii }: { open: boolean; onwii: () => void } = $props();
 
   const model = getConsole();
+  const wii = getWii();
   const uid = $props.id();
   let dialog: HTMLDialogElement | undefined = $state();
   let labelDraft = $state('');
   let planBOpen = $state(false);
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
-  const links = $derived(linksOf(model.show.connected, model.show.showOnline));
+  const links = $derived(linksOf(model.show.connected, model.show.showOnline, wii.status));
   const THEMES: readonly Theme[] = ['light', 'dark'];
   const subtitle = $derived(S.menu.subtitle(model.label, snap ? snap.round.number : null, snap?.game.roundsTotal ?? 0));
   const startable = $derived(flow.scene === 'before' && model.can('roundIntro'));
@@ -57,8 +60,7 @@
   }
 
   function startNight(): void {
-    const first = roundPrizes(model.plan, 1);
-    model.act('roundIntro', first.status === 'ok' ? { number: 1, kind: first.prizes.kind } : { number: 1 });
+    model.act('roundIntro', roundIntroArgs(model.plan, 1));
     open = false;
   }
 
@@ -105,7 +107,18 @@
             <div class="link-list__item" data-state={links[name]}><dt>{S.links.names[name]}</dt><dd>{S.links.states[links[name]]}</dd></div>
           {/each}
         </dl>
-        <p class="note"><strong>{S.menu.wii}.</strong> {S.menu.wiiNote}</p>
+      </section>
+
+      <section class="menu-group menu-wii" data-state={wii.status} aria-labelledby="{uid}-wii">
+        <h3 class="menu-group__title" id="{uid}-wii"><Icon name="remote" />{S.wii.title}</h3>
+        <p class="menu-wii__row">
+          <span class="wii-status" data-state={wii.status}>{S.wii.status[wii.status]}</span>
+          {#if wii.status === 'disconnected' || wii.status === 'lost'}
+            <button type="button" class="mini tone-primary" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
+          {/if}
+          <button type="button" class="mini" data-anim="press" onclick={onwii}>{S.wii.open}</button>
+        </p>
+        <p class="note">{S.menu.wiiNote}</p>
       </section>
 
       <section class="menu-group" aria-labelledby="{uid}-lan">

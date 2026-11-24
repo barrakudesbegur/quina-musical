@@ -39,9 +39,11 @@ test('the shake: three strong jolts inside the window, each one counted once', (
   assert.ok(Array.from({ length: 200 }, (_, i) => dance.push(i * 10, 1 + Math.abs(Math.sin(i / 3)) * 1.4)).every((f) => !f));
 });
 
-test('A is Següent; − and + toggle Parlem; HOME toggles auto with different rumbles; the D-pad plays effects', () => {
+test('A is the default action; − and + toggle Parlem; HOME toggles auto with different rumbles; the D-pad plays effects', () => {
   const m = new WiiMapper(WII);
-  assert.deepEqual(cmds(m.press('a', 0, idle)), [{ cmd: 'next' }]);
+  // Resolved by the controller at the press (logic/default-action.ts; tests in default-action.test.ts).
+  assert.deepEqual(m.press('a', 0, idle), [{ command: { cmd: 'default' }, rumble: 'tap' }]);
+  assert.deepEqual(cmds(m.press('a', 0, { ...idle, holdMode: 'stay', paused: true })), [{ cmd: 'default' }], 'whatever the context');
   assert.deepEqual(cmds(m.press('minus', 0, idle)), [], 'decided on release');
   assert.deepEqual(cmds(m.release('minus', idle)), [{ cmd: 'hold', args: { on: true, duck: true } }]);
   m.press('plus', 0, idle);

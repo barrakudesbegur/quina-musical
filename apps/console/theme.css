@@ -71,6 +71,12 @@
   --dur-ring-state: 150ms;
   /* The menu sheet slides in (ANIMATIONS.md › menu-sheet) */
   --dur-menu-sheet: 200ms;
+  /* The Wii remote (ANIMATIONS.md › default-move, wii-badge, wii-dialog) */
+  --dur-default-ring: 200ms;
+  --dur-wii-badge: 240ms;
+  --dur-wii-dialog: 200ms;
+  /* The default action's ring: A's orange (the dark theme's), its darker edge on the light background */
+  --default-ring: var(--color-orange);
 
   /* The ring's state chips under the song (Consola-Anell): pale pills, ink text, the same in both themes */
   --ring-chip-spin: #ffe3c2;
@@ -125,6 +131,7 @@
   --color-focus: var(--color-night);
   --color-on-danger: #ffffff;
   --color-on-ok: #ffffff;
+  --default-ring: var(--color-orange-edge);
   /* The menu's danger zone (Consola-Menu, light) */
   --color-danger-zone: #ffe1e1;
   --color-danger-text: #c4252c;
@@ -144,5 +151,8 @@
     --dur-toast: 0ms;
     --dur-conn: 0ms;
     --dur-ring-step: 0ms;
+    --dur-default-ring: 0ms;
+    --dur-wii-badge: 0ms;
+    --dur-wii-dialog: 0ms;
   }
 }

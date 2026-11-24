@@ -1,15 +1,25 @@
 // The Wii Remote in the console: finds or asks for the remote (WebHID), turns its reports into the user's
 // mapping (mapping.ts) and sends the commands exactly as the console's own buttons do, with a rumble for each.
-// The remote pairs with the laptop, so this runs where the console is open on the laptop.
+// The remote pairs with the laptop, so this runs where the console is open on the laptop. A is resolved here,
+// at the moment of the press, to the console's default action (logic/default-action.ts), the same one the
+// console draws as primary; when there is none, or it's disabled, A sends nothing and doesn't rumble.
+// Development only: `?wii=demo` fakes a connected remote, so the badges and the dialog can be reviewed.
 import type { ShowState } from '@quina/protocol';
 import { WII } from '../config.ts';
+import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
 import type { ConsoleModel } from '../model.svelte.ts';
 import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type WiiRemote } from './driver.ts';
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
 
-export type WiiStatus = 'unsupported' | 'disconnected' | 'connecting' | 'connected';
+/** `lost`: a remote that was connected went away (worth a red chip); `disconnected`: none yet (optional, grey). */
+export type WiiStatus = 'unsupported' | 'disconnected' | 'connecting' | 'connected' | 'lost';
+
+/** `?wii=demo`, in development builds only (Vite drops the check from production builds). */
+function demoRemote(): boolean {
+  return import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('wii') === 'demo';
+}
 
 /** What the mapping needs from a snapshot. Pure. */
 export function wiiContext(state: ShowState | null): WiiContext {
@@ -17,9 +27,13 @@ export function wiiContext(state: ShowState | null): WiiContext {
 }
 
 export class WiiController {
-  status = $state<WiiStatus>(wiiSupported() ? 'disconnected' : 'unsupported');
-  /** Set when a remote connects: the Comandament dialog opens by itself. */
+  /** A fake remote (`?wii=demo`, development only): shows as connected, sends nothing. */
+  readonly demo = demoRemote();
+  status = $state<WiiStatus>(this.demo ? 'connected' : wiiSupported() ? 'disconnected' : 'unsupported');
+  /** Set when a remote connects: the Comandament dialog opens by itself (and clears it). */
   justConnected = $state(false);
+  /** The console shows each control's Wii button while a remote is connected. */
+  readonly badges = $derived(this.status === 'connected');
   private readonly model: ConsoleModel;
   private readonly mapper = new WiiMapper(WII);
   private remote: WiiRemote | null = null;
@@ -32,7 +46,7 @@ export class WiiController {
 
   /** Reconnect a remote this browser already knows, and follow connects and disconnects. */
   start(): () => void {
-    if (this.status === 'unsupported') return () => {};
+    if (this.status === 'unsupported' || this.demo) return () => {};
     void knownWiiRemote().then((remote) => remote && this.attach(remote));
     onWiiConnection((connected) => {
       if (connected && !this.remote) void knownWiiRemote().then((remote) => remote && this.attach(remote));
@@ -75,7 +89,7 @@ export class WiiController {
     this.remote = null;
     this.pressed = new Set();
     this.mapper.reset();
-    if (this.status !== 'unsupported') this.status = 'disconnected';
+    if (this.status !== 'unsupported') this.status = this.status === 'connected' ? 'lost' : 'disconnected';
   }
 
   private onReport(report: WiiReport): void {
@@ -90,16 +104,18 @@ export class WiiController {
 
   private apply(outputs: readonly WiiOutput[]): void {
     for (const o of outputs) {
-      if (o.command) this.send(o.command);
-      this.remote?.rumble(WII.rumble[o.rumble]);
+      // Only what was sent rumbles: an A with nothing to do stays still, so the presenter feels the difference.
+      const sent = o.command ? this.send(o.command) : true;
+      if (sent) this.remote?.rumble(WII.rumble[o.rumble]);
     }
   }
 
-  private send(c: WiiCommand): void {
+  /** Whether something was sent. */
+  private send(c: WiiCommand): boolean {
     switch (c.cmd) {
-      case 'next':
-        this.model.act('next');
-        break;
+      case 'default':
+        // Resolved now, from the console's current state: exactly what its highlighted control would send.
+        return sendDefault(this.model.act, this.model.defaultAction) !== null;
       case 'back':
         this.model.act('back');
         break;
@@ -119,5 +135,6 @@ export class WiiController {
         this.model.act('sfx', c.args);
         break;
     }
+    return true;
   }
 }

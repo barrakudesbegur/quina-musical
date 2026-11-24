@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { flowOf } from '../../../../../packages/ui/flow.ts';
-import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../../console/logic/status.ts';
+import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen, wiiLink } from '../../../../console/logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../../console/logic/toasts.ts';
 import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../../console/logic/device.ts';
 import { defaultClaimKind, prizeRevealOf, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
@@ -16,6 +16,15 @@ test('links: relay and show are real, the rest unknown for now', () => {
   assert.deepEqual(linksOf(true, true), { relay: 'up', show: 'up', cloud: 'unknown', feed: 'unknown', wii: 'unknown' });
   assert.equal(linksOf(true, false).show, 'down');
   assert.equal(linksOf(false, false).show, 'unknown', 'without the relay the show page cannot be known');
+});
+
+test('the Wii link: up when connected, down only when a connected remote went away, otherwise unknown', () => {
+  assert.equal(linksOf(true, true, 'connected').wii, 'up');
+  assert.equal(linksOf(true, true, 'lost').wii, 'down');
+  assert.equal(linksOf(true, true, 'disconnected').wii, 'unknown', 'optional: none yet is no alarm');
+  assert.equal(linksOf(true, true, 'connecting').wii, 'unknown');
+  assert.equal(linksOf(true, true, 'unsupported').wii, 'unknown', 'a tablet: the remote pairs with the laptop');
+  assert.equal(wiiLink('connected'), 'up');
 });
 
 test('the alert names the most serious failure first', () => {

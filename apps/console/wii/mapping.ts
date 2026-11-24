@@ -1,7 +1,8 @@
 // What each Wii Remote button does (the user's mapping, docs/show-ui-and-platform-decisions.md). Pure: button
 // edges, accelerometer samples and clock ticks in; commands and rumbles out. The caller sends the commands
 // exactly as the console's own buttons would.
-//   A: Següent · B held: Aguanta, released: back to normal · B held + a deliberate shake: Suspens, and
+//   A: the default action (logic/default-action.ts: Següent in play, the Check's verdict once due…), resolved by
+//   the caller at the moment of the press · B held: Aguanta, released: back to normal · B held + a deliberate shake: Suspens, and
 //   releasing B lands it · − or + tapped: Parlem on/off (or leaves Pausa), held: Pausa · 1 or 2 held 1.5 s:
 //   Enrere · HOME: auto-advance on/off
 //   (different rumbles) · D-pad: four effects. Claims never come from the remote.
@@ -14,7 +15,8 @@ export type RumbleName = 'tap' | 'suspense' | 'pause' | 'back' | 'autoOn' | 'aut
 export type DpadButton = 'up' | 'right' | 'down' | 'left';
 
 export type WiiCommand =
-  | { cmd: 'next' }
+  /** "Go ahead": whatever the console's default action is when it's pressed (the caller resolves it). */
+  | { cmd: 'default' }
   | { cmd: 'back' }
   | { cmd: 'hold'; args: CommandFields['hold'] }
   | { cmd: 'suspense'; args: CommandFields['suspense'] }
@@ -63,7 +65,7 @@ export class WiiMapper {
   press(button: WiiButton, tMs: number, ctx: WiiContext): WiiOutput[] {
     switch (button) {
       case 'a':
-        return out({ cmd: 'next' });
+        return out({ cmd: 'default' });
       case 'b':
         this.bHeld = true;
         this.suspenseOn = false;

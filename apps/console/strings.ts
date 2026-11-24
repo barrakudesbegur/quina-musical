@@ -10,6 +10,7 @@ import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
 import type { ChartGap } from './logic/future.ts';
 import type { ConsoleCommand, Theme } from './config.ts';
+import type { WiiStatus } from './wii/controller.svelte.ts';
 
 export { CA };
 
@@ -422,6 +423,18 @@ export const S = {
     close: 'Tanca',
   },
 
+  /** The Wii remote (optional, paired with the laptop): the menu's row, the Comandament dialog, the badges. */
+  wii: {
+    title: CA.wii.title,
+    status: { connected: 'Connectat', connecting: 'Connectant…', disconnected: 'Desconnectat', lost: "S'ha desconnectat", unsupported: 'No disponible aquí' } satisfies Record<WiiStatus, string>,
+    connect: 'Connectar',
+    open: 'Veure el comandament',
+    close: 'Tancar',
+    connectNote: "Aparelleu-lo abans amb el Bluetooth del portàtil; després, «Connectar» i trieu-lo a la llista.",
+    unsupportedNote: 'Aquest navegador no pot connectar el comandament. Es connecta a la consola oberta amb Chrome al portàtil, on està aparellat.',
+    demo: 'Comandament de prova (només en desenvolupament)',
+  },
+
   menu: {
     title: 'Menú',
     /** Under the title: this device and the round ("Tauleta · Quina 3 de 8"). */
@@ -458,7 +471,6 @@ export const S = {
     danger: 'Pànic i final de la nit',
     panic: 'Pànic',
     panicNote: 'Mantén premut: silencia-ho tot al moment',
-    wii: 'Comandament Wii',
     wiiNote: "S'aparella al portàtil, no aquí. És opcional: la consola fa tot el que fa el comandament.",
     lan: 'Obre la consola en un altre mòbil',
     lanNote: "Escanegeu-lo amb un mòbil connectat al mateix punt d'accés.",

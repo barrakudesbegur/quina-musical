@@ -8,12 +8,14 @@
   import { CA, S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
+  import WiiBadge from './WiiBadge.svelte';
 
   const model = getConsole();
   const uid = $props.id();
   const flow = $derived(model.show.flow);
   const round = $derived(flow.intro?.round ?? flow.shuffle?.round ?? model.show.state?.round.number ?? 1);
   const shuffling = $derived(shuffleCountdown(flow.shuffle, model.show.now));
+  const isDefault = $derived(model.defaultAction?.control === 'shuffle');
 </script>
 
 <section class="panel round-start" data-state={model.scene.introduced ? 'introduced' : shuffling ? 'shuffling' : 'shuffled'} aria-labelledby="{uid}-title">
@@ -22,8 +24,9 @@
   <PrizeList {round} />
 
   {#if model.scene.introduced}
-    <button type="button" class="action action--big tone-primary" data-anim="press" disabled={!model.can('newRound')} onclick={() => model.act('newRound')}>
+    <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('newRound')} onclick={() => model.act('newRound')}>
       <Icon name="shuffle" /><span>{S.roundStart.shuffle}</span>
+      {#if isDefault}<WiiBadge button="a" />{/if}
     </button>
     <p class="note">{S.roundStart.shuffleNote}</p>
   {:else if shuffling}

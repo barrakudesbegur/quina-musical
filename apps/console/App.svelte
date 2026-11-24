@@ -6,12 +6,14 @@
     the whole body;
   - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
-  and data-status hooks for themes.
+  and data-status hooks for themes, and data-wii while a Wii remote is connected (its badges show).
+  The Wii remote's controller is made here, once, and shared through context (context.ts › getWii).
 -->
 <script lang="ts">
-  import { untrack } from 'svelte';
-  import { setConsole } from './context.ts';
+  import { onMount, untrack } from 'svelte';
+  import { setConsole, setWii } from './context.ts';
   import { ConsoleModel } from './model.svelte.ts';
+  import { WiiController } from './wii/controller.svelte.ts';
   import { S } from './strings.ts';
   import AfterPanel from './components/AfterPanel.svelte';
   import BeforePanel from './components/BeforePanel.svelte';
@@ -31,13 +33,17 @@
   import RoundStartPanel from './components/RoundStartPanel.svelte';
   import ThumbCluster from './components/ThumbCluster.svelte';
   import Toasts from './components/Toasts.svelte';
+  import WiiDialog from './components/WiiDialog.svelte';
 
   const model = setConsole(new ConsoleModel());
+  const wii = setWii(new WiiController(model));
+  onMount(() => wii.start());
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
   const board = $derived(snap !== null && flow.scene === 'check' ? 'check' : 'play');
   let padOpen = $state(false);
   let menuOpen = $state(false);
+  let wiiOpen = $state(false);
 
   // A rejection of one of this console's commands becomes a toast (untracked: toasting writes state).
   $effect(() => {
@@ -55,6 +61,7 @@
   data-online={model.online}
   data-paused={flow.pause !== null || undefined}
   data-alert={model.alert ?? undefined}
+  data-wii={wii.badges || undefined}
 >
   <div class="console__top">
     <Header onmenu={() => (menuOpen = true)} />
@@ -103,6 +110,7 @@
   {/if}
 
   <NumberPad bind:open={padOpen} />
-  <Menu bind:open={menuOpen} />
+  <Menu bind:open={menuOpen} onwii={() => ((menuOpen = false), (wiiOpen = true))} />
+  <WiiDialog bind:open={wiiOpen} />
   <Toasts />
 </div>

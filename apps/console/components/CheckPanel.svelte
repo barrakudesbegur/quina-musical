@@ -4,7 +4,8 @@
   - the claimed cards, "Un altre cartró", and Back (long press, still allowed in a Check);
   - the Check song by song (hook check-step), the result once it is due, and the re-check;
   - the verdict: the one that agrees with the Check is a tap, the one against it a long press; then the
-    Celebration music and the winner's name and notes.
+    Celebration music and the winner's name and notes. Once the result is due, the tap is the default action
+    (data-default, and the Wii's A while a remote is connected).
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
@@ -17,6 +18,7 @@
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
   import LongPressButton from './LongPressButton.svelte';
+  import WiiBadge from './WiiBadge.svelte';
   import WinnerForm from './WinnerForm.svelte';
 
   let { onclaim }: { onclaim: () => void } = $props();
@@ -32,6 +34,7 @@
   const kind = $derived(check?.kind ?? current?.kind ?? defaultClaimKind(snap));
   const valid = $derived(check ? suggestedVerdict(check.outcome) : false);
   const canDecide = $derived(progress?.stage === 'result' && current !== null && !current.decided && model.can('decide'));
+  const defaultControl = $derived(model.defaultAction?.control ?? null);
   const winner = $derived(check ? (flow.winners.find((w) => w.claimId === check.claimId) ?? null) : null);
   const title = (songId: number) => songTitleOf(songId, snap, model.catalog) ?? String(songId);
   const result = $derived.by(() => {
@@ -58,7 +61,9 @@
     <button type="button" class="mini check-board__add" data-anim="press" disabled={!model.can('claim')} onclick={onclaim}>
       <Icon name="plus" /><span>{S.check.addClaim}</span>
     </button>
-    <LongPressButton label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!model.controls.back.enabled} onconfirm={() => model.act('back')} />
+    <LongPressButton label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!model.controls.back.enabled} onconfirm={() => model.act('back')}>
+      {#snippet badge()}<WiiBadge button="back" hold size="sm" />{/snippet}
+    </LongPressButton>
   </section>
 
   <section class="panel check-board__steps" aria-labelledby="{uid}-steps">
@@ -110,12 +115,14 @@
     {#if check}
       {#each VERDICTS as v (v.valid)}
         {#if v.valid === valid}
-          <button type="button" class="big-button" data-action={v.valid ? 'confirm' : 'reject'} data-anim="press" disabled={!canDecide} onclick={() => decide(v.valid)}>
+          {@const isDefault = defaultControl === (v.valid ? 'confirm' : 'reject')}
+          <button type="button" class="big-button" data-action={v.valid ? 'confirm' : 'reject'} data-anim="press" data-default={isDefault || undefined} disabled={!canDecide} onclick={() => decide(v.valid)}>
             <Icon name={v.icon} outline />
             <span class="big-button__text">
               <span class="big-button__label">{v.label}</span>
               <span class="big-button__note">{v.note}</span>
             </span>
+            {#if isDefault}<WiiBadge button="a" />{/if}
           </button>
         {:else}
           <LongPressButton big action={v.valid ? 'confirm' : 'reject'} label={v.label} note={S.check.againstResult} icon={v.icon} disabled={!canDecide} onconfirm={() => decide(v.valid)} />
