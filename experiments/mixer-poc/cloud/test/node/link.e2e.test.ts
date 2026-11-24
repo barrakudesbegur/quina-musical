@@ -13,6 +13,7 @@ import { freePort, startDevServer, type DevServer } from '../../loadtest/dev-ser
 import { followFeed, type PublicView } from '../../src/feed/public.ts';
 import type { EditionExport } from '../../src/api.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
+import { PLAN } from '../support/plan.ts';
 
 const v = PROTOCOL_VERSION;
 
@@ -149,6 +150,26 @@ test('a tablet on the cloud drives the show through the link, and sees the full 
 
     tablet.close();
     await until('the link to know nobody listens', () => link.status().consoles === 0);
+  } finally {
+    link.stop();
+    await relay.close();
+    await server.stop();
+  }
+});
+
+test("the laptop keeps Admin's Game plan on disk, so it has it with no internet", async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const link = makeLink(relay.url, server.ws);
+  const file = path.join(link.journal.dir, 'plan.json');
+  try {
+    link.start();
+    await until('the link on the cloud', () => link.status().cloud === 'online');
+    const saved = await fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(PLAN) });
+    assert.equal(saved.status, 200);
+    await until('the plan on disk', () => fs.existsSync(file) && JSON.parse(fs.readFileSync(file, 'utf8'))?.title === PLAN.title);
+    assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')), PLAN);
+    assert.equal(link.status().plan?.title, PLAN.title);
   } finally {
     link.stop();
     await relay.close();

@@ -10,6 +10,7 @@ import type { EditionExport, RoomStats } from '../../src/api.ts';
 import type { GameRoom } from '../../src/game-room.ts';
 import { roomOf } from '../../src/worker.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
+import { PLAN } from '../support/plan.ts';
 
 const BASE = 'http://localhost';
 
@@ -93,8 +94,10 @@ async function laptop(gameId: string | null, lastSeq = 0) {
   client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId, lastSeq, sentAtMs: now() });
   const welcome = (await client.next()) as CloudMessage;
   expect(welcome.type).toBe('cloud.welcome');
-  expect(await client.next()).toMatchObject({ type: 'cloud.consoles' }); // how many consoles listen
-  return { client, welcome };
+  // The rest of the greeting: how many consoles listen, and the Game plan.
+  const greeting = [(await client.next()) as CloudMessage, (await client.next()) as CloudMessage];
+  expect(greeting.map((m) => m.type)).toEqual(['cloud.consoles', 'cloud.plan']);
+  return { client, welcome, greeting };
 }
 
 async function upload(client: Client, gameId: string, entries: readonly unknown[]) {
@@ -209,6 +212,7 @@ describe('the laptop and the phones', () => {
     client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId: 'g-a', lastSeq: a.entries.length, sentAtMs: now() });
     expect(await client.next()).toMatchObject({ type: 'cloud.welcome', gameId: 'g-a', ackSeq: a.entries.length });
     expect(await client.next()).toMatchObject({ type: 'cloud.consoles' });
+    expect(await client.next()).toMatchObject({ type: 'cloud.plan' });
     view = await p.view();
     expect(view.state.gameId).toBe('g-a');
     expect(view.state.winners).toHaveLength(2);
@@ -328,6 +332,60 @@ describe('consoles through the cloud', () => {
     rude.send({ v, type: 'cmd', cmd: 'next', reqId: 'x' });
     await rude.drain();
     expect(rude.closed?.code).toBe(CLOSE.badHello);
+  });
+});
+
+describe('the Game plan and its media (Admin)', () => {
+  const put = (body: unknown, url = `${BASE}/api/plan`) => SELF.fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+
+  it('Admin saves a checked plan; phones and the laptop get it; Admin reads it back', async () => {
+    const { client: link } = await laptop(null);
+    const p = await phone();
+    const bad = await put({ ...PLAN, rounds: 'many' });
+    expect(bad.status).toBe(400);
+    expect(((await bad.json()) as { errors: string[] }).errors.join()).toContain('plan.rounds');
+    expect((await put({ ...PLAN, edition: '25' })).status).toBe(400);
+    expect((await put('{not json')).status).toBe(400);
+
+    const saved = await put(PLAN);
+    expect(saved.status).toBe(200);
+    expect(await getJson('/api/plan')).toEqual({ plan: PLAN });
+    expect((await p.view()).state.plan).toEqual(PLAN);
+    const messages = await link.drain();
+    expect(messages).toContainEqual(expect.objectContaining({ type: 'cloud.plan', plan: PLAN }));
+
+    const { greeting } = await laptop(null); // a laptop connecting later gets it too
+    expect(greeting[1]).toMatchObject({ type: 'cloud.plan', plan: PLAN });
+  });
+
+  it('logos: uploaded once by content, served immutable and public; only raster images', async () => {
+    const webp = new Uint8Array([82, 73, 70, 70, 1, 2, 3, 4, 87, 69, 66, 80]);
+    const upload = (bytes: Uint8Array, type: string) => SELF.fetch(`${BASE}/api/media`, { method: 'POST', headers: { 'content-type': type }, body: bytes });
+    const first = await upload(webp, 'image/webp');
+    expect(first.status).toBe(201);
+    const { path } = (await first.json()) as { path: string };
+    expect(path).toMatch(/^\/media\/[0-9a-f]{32}\.webp$/);
+    expect(((await (await upload(webp, 'image/webp')).json()) as { path: string }).path).toBe(path);
+
+    const served = await SELF.fetch(`https://quina.example${path}`); // public, from anywhere
+    expect(served.status).toBe(200);
+    expect(served.headers.get('content-type')).toBe('image/webp');
+    expect(served.headers.get('cache-control')).toContain('immutable');
+    expect(served.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(new Uint8Array(await served.arrayBuffer())).toEqual(webp);
+
+    expect((await upload(new TextEncoder().encode('<svg onload="alert(1)"/>'), 'image/svg+xml')).status).toBe(415);
+    expect((await upload(new Uint8Array(0), 'image/png')).status).toBe(413);
+    expect((await upload(new Uint8Array(400 * 1024), 'image/png')).status).toBe(413);
+    expect((await SELF.fetch(`${BASE}/media/${'0'.repeat(32)}.webp`)).status).toBe(404);
+    expect((await SELF.fetch(`${BASE}/media/not-a-hash.webp`)).status).toBe(404);
+  });
+
+  it('only organizers may change the plan or upload; methods are checked', async () => {
+    expect((await put(PLAN, 'https://quina.example/api/plan')).status).toBe(403);
+    expect((await SELF.fetch('https://quina.example/api/media', { method: 'POST', body: 'x' })).status).toBe(403);
+    expect((await SELF.fetch(`${BASE}/api/media`)).status).toBe(405);
+    expect((await SELF.fetch(`${BASE}/api/plan`, { method: 'DELETE' })).status).toBe(405);
   });
 });
 

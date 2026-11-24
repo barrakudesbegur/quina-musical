@@ -15,7 +15,7 @@
 //
 // Times are epoch ms on the cloud's clock. Every message carries `nowMs` (the cloud's clock when it was sent),
 // so a phone estimates its own offset as `nowMs - Date.now()` on arrival.
-import { PROTOCOL_VERSION, type ProtocolVersion, type RoundKind, type ShowScene, type WinKind } from '@quina/protocol';
+import { PROTOCOL_VERSION, type GamePlan, type ProtocolVersion, type RoundKind, type ShowScene, type WinKind } from '@quina/protocol';
 
 /** The phones' tunables. */
 export const PUBLIC_FEED = Object.freeze({
@@ -130,8 +130,8 @@ export interface PublicState {
   interval: PublicInterval | null;
   /** The expected end of the Game, rounded to `gameEndRoundingMs`. */
   gameEndMs: number | null;
-  /** The Game plan from Admin (rounds, prizes, sponsors, schedule): protocol/plan.ts `GamePlan`, once it lands. */
-  plan: unknown;
+  /** The Game plan from Admin (rounds, prizes, sponsors with logo paths, schedule), or null until one is set. */
+  plan: GamePlan | null;
   /** Admin's banner to every phone. */
   notice: string | null;
   /** Admin's default for interface sounds; a player's own choice wins. */
@@ -156,7 +156,7 @@ export type PublicChange =
   | { kind: 'pause'; pause: { sinceMs: number } | null }
   | { kind: 'link'; link: PublicLink }
   | { kind: 'gameEnd'; gameEndMs: number | null }
-  | { kind: 'plan'; plan: unknown }
+  | { kind: 'plan'; plan: GamePlan | null }
   | { kind: 'notice'; notice: string | null }
   | { kind: 'sounds'; soundsDefault: boolean };
 export type PublicChangeKind = PublicChange['kind'];

@@ -5,7 +5,10 @@
 // the consoles' commands, which the cloud has already checked, so a cloud problem can't touch playback.
 //
 // To the cloud it authenticates with an Access service token (headers, which a browser WebSocket can't set).
-// Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume.
+// Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume. It also keeps the
+// edition's Game plan from Admin in `<dataDir>/plan.json`, so the laptop has it with no internet.
+import fs from 'node:fs';
+import path from 'node:path';
 import WebSocket from 'ws';
 import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/protocol';
 import { LINK } from '../src/config.ts';
@@ -45,6 +48,8 @@ export interface LinkStatus {
   consoles: number;
   /** Console commands handed to the relay. */
   commands: number;
+  /** The Game plan's title and when the cloud last sent it, or null before it did. */
+  plan: { title: string; receivedAtMs: number } | null;
   pending: number;
   uploader: UploaderState;
 }
@@ -62,6 +67,7 @@ export class CloudLink {
   private latestState: ForwardableEvent | null = null;
   private consoles = 0;
   private commands = 0;
+  private plan: LinkStatus['plan'] = null;
   private lastStateSentAtMs = 0;
   private stateTimer: NodeJS.Timeout | null = null;
   private retryTimer: NodeJS.Timeout | null = null;
@@ -109,6 +115,7 @@ export class CloudLink {
       ackSeq: this.uploader.ackSeq,
       consoles: this.consoles,
       commands: this.commands,
+      plan: this.plan,
       pending: this.uploader.pending(),
       uploader: this.uploader.state,
     };
@@ -255,6 +262,8 @@ export class CloudLink {
           this.commands += 1;
         }
         return;
+      case 'cloud.plan':
+        return this.keepPlan(message.plan, now);
       case 'cloud.consoles': {
         const before = this.consoles;
         this.consoles = message.count;
@@ -262,6 +271,20 @@ export class CloudLink {
         if (before !== message.count) this.log(`cloud: ${message.count} console(s) through the cloud`);
         return;
       }
+    }
+  }
+
+  /** Keep the plan on disk (written whole, then renamed, so a reader never sees half a file). */
+  private keepPlan(plan: unknown, now: number): void {
+    const file = path.join(this.options.dataDir, 'plan.json');
+    try {
+      fs.writeFileSync(`${file}.tmp`, `${JSON.stringify(plan, null, 2)}\n`, { flush: true });
+      fs.renameSync(`${file}.tmp`, file);
+      const title = plan && typeof plan === 'object' && 'title' in plan ? String(plan.title) : '(none)';
+      if (this.plan?.title !== title) this.log(`cloud: Game plan "${title}" kept in ${file}`);
+      this.plan = { title, receivedAtMs: now };
+    } catch (error) {
+      this.log(`cloud: could not keep the Game plan: ${String(error)}`);
     }
   }
 

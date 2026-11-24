@@ -21,7 +21,7 @@
   "assets": {
     "directory": "./public",
     "not_found_handling": "none",
-    "run_worker_first": ["/feed", "/ws/*", "/api/*"]
+    "run_worker_first": ["/feed", "/ws/*", "/api/*", "/media/*"]
   },
   "observability": { "enabled": true }
 }

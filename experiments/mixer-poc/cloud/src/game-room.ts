@@ -13,16 +13,18 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   PROTOCOL_VERSION,
   checkCommand,
+  checkGamePlan,
   emptyRecord,
   extendJournal,
   replayJournal,
   type CommandRejected,
+  type GamePlan,
   type GameRecord,
   type JournalEntry,
   type RelayClients,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
-import type { EditionExport, RoomStats } from './api.ts';
+import type { EditionExport, MediaSave, PlanSave, RoomStats } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
@@ -217,6 +219,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
     this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq });
     this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
+    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan });
   }
 
   private onJournal(ws: WebSocket, upload: LinkJournal, ctx: ProjectionContext): void {
@@ -392,6 +395,42 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return { edition: this.env.EDITION, exportedAtMs: Date.now(), currentGameId: this.room.game?.gameId ?? null, games, publicState: this.room.feed.state };
   }
 
+  // ---- the Game plan and its media (Admin) -------------------------------------------------------------
+  /** The edition's Game plan. It is all public (prizes, sponsors, schedule), so it lives in the public state. */
+  getPlan(): GamePlan | null {
+    return this.room.feed.state.plan;
+  }
+
+  /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Phones and the laptop get it. */
+  setPlan(json: unknown): PlanSave {
+    const check = checkGamePlan(json);
+    if (!check.ok) return check;
+    if (check.plan.edition !== this.env.EDITION) return { ok: false, errors: [`plan.edition: this cloud serves edition ${this.env.EDITION}`] };
+    this.publish([{ kind: 'plan', plan: check.plan }]);
+    for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.plan', plan: check.plan });
+    return { ok: true, plan: check.plan };
+  }
+
+  /** Keep an uploaded image under its content hash; the same file twice is stored once. */
+  async putMedia(bytes: ArrayBuffer, contentType: string): Promise<MediaSave> {
+    const ext = CLOUD.media.types[contentType];
+    if (!ext) return { ok: false, status: 415, error: `only ${Object.keys(CLOUD.media.types).join(', ')}` };
+    if (bytes.byteLength === 0 || bytes.byteLength > CLOUD.media.maxBytes) return { ok: false, status: 413, error: `files of 1 byte to ${CLOUD.media.maxBytes / 1024} KB` };
+    const id = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+    const known = this.rows('SELECT id FROM media WHERE id = ?', id).length > 0;
+    if (!known) {
+      const count = Number(this.rows('SELECT COUNT(*) AS n FROM media')[0]?.n ?? 0);
+      if (count >= CLOUD.media.maxFiles) return { ok: false, status: 507, error: `at most ${CLOUD.media.maxFiles} files` };
+      this.rows('INSERT INTO media (id, content_type, bytes, at_ms) VALUES (?, ?, ?, ?)', id, contentType, bytes, Date.now());
+    }
+    return { ok: true, path: `/media/${id}.${ext}` };
+  }
+
+  getMedia(id: string): { bytes: ArrayBuffer; contentType: string } | null {
+    const row = this.rows('SELECT content_type, bytes FROM media WHERE id = ?', id)[0];
+    return row ? { bytes: row.bytes as ArrayBuffer, contentType: String(row.content_type) } : null;
+  }
+
   getStats(): RoomStats {
     return { ...this.stats, phonesConnected: this.sockets('phone').length, consolesConnected: this.consoles().length };
   }
@@ -407,6 +446,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
       PRIMARY KEY (game_id, seq)
     ) WITHOUT ROWID`);
     this.rows('CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK (id = 1), body TEXT NOT NULL)');
+    this.rows('CREATE TABLE IF NOT EXISTS media (id TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BLOB NOT NULL, at_ms REAL NOT NULL) WITHOUT ROWID');
   }
 
   private load(): RoomSnapshot {
@@ -433,7 +473,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   /** Run SQL, count the rows it read and wrote (the free plan's units), and return its result rows. */
-  private rows(query: string, ...bindings: (string | number | null)[]): Record<string, SqlStorageValue>[] {
+  private rows(query: string, ...bindings: (string | number | null | ArrayBuffer)[]): Record<string, SqlStorageValue>[] {
     const cursor = this.sql.exec(query, ...bindings);
     const rows = cursor.toArray();
     this.stats.rowsRead += cursor.rowsRead;

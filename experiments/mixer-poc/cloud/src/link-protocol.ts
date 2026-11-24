@@ -14,9 +14,10 @@
 //                  cloud.refused a message it could not take (bad shape, broken entry)
 //                  cloud.command a console's command (checked), for the show: the link hands it to the relay
 //                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0)
+//                  cloud.plan    the Game plan from Admin, on hello and on every change (the laptop keeps a copy)
 // Close codes: 4001 another laptop connected (this one stops reconnecting), 4002 silent for too long,
 // 4400 a malformed hello.
-import { PROTOCOL_VERSION, isEvent, type Command, type IncomingEvent, type ProtocolVersion } from '@quina/protocol';
+import { PROTOCOL_VERSION, isEvent, type Command, type GamePlan, type IncomingEvent, type ProtocolVersion } from '@quina/protocol';
 import { NEVER_FORWARDED } from './domain/consoles.ts';
 
 export interface LinkHello {
@@ -118,7 +119,15 @@ export interface CloudConsoles {
   nowMs: number;
 }
 
-export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused | CloudCommand | CloudConsoles;
+/** The edition's Game plan (null before Admin saves one). */
+export interface CloudPlan {
+  v: ProtocolVersion;
+  type: 'cloud.plan';
+  plan: GamePlan | null;
+  nowMs: number;
+}
+
+export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused | CloudCommand | CloudConsoles | CloudPlan;
 
 export const CLOSE = Object.freeze({
   /** Another laptop connected and took over: don't reconnect. */
@@ -203,5 +212,5 @@ export function linkMessage<M extends LinkMessage>(body: Omit<M, 'v' | 'sentAtMs
 /** Accept a message from the cloud on the laptop. It trusts the cloud for the fields. */
 export function isCloudMessage(value: unknown): value is CloudMessage {
   if (!isRecord(value) || value.v !== PROTOCOL_VERSION || typeof value.type !== 'string') return false;
-  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused', 'cloud.command', 'cloud.consoles'].includes(value.type);
+  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused', 'cloud.command', 'cloud.consoles', 'cloud.plan'].includes(value.type);
 }
