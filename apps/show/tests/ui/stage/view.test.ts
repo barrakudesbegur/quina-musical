@@ -7,6 +7,7 @@ import { FIXTURES, FIXTURE_NAMES } from '../../../../../packages/ui/fixtures/sta
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { parseCards, type Catalog } from '../../../../../packages/ui/data/catalog.ts';
 import { stageView, type StageView } from '../../../../stage/view.ts';
+import { firstMiss, plaqueSpot } from '../../../../stage/model/check.ts';
 
 const NOW = 1_800_000_000_000;
 
@@ -180,6 +181,22 @@ test('check without the catalog: only the played songs', () => {
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, null);
   if (view.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(view.body.check.cells.map((c) => [c.songId, c.row, c.col]), [[2, 2, 0], [62, 2, 1], [16, 2, 2], [20, 2, 3]]);
+});
+
+test('a failed check: the first song that didn\'t sound is named from the catalog, its tile is on the Line\'s row', () => {
+  const state = FIXTURES.check(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  const c = view.body.check;
+  const miss = firstMiss(c);
+  assert.deepEqual(miss, { step: 3, songId: 20, title: 'Song 20' });
+  const tile = c.cells.find((cell) => cell.step === miss?.step);
+  assert.deepEqual(tile && [tile.row, tile.col], [2, 3]);
+  assert.deepEqual(plaqueSpot(c), { at: 1 / 3, over: 'rows' });
+  // Without the catalog the song hasn't landed, so the projector has no title for it: it names none.
+  const bare = stageView(state, flowOf(state), SAMPLE_PLAN, null);
+  if (bare.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(firstMiss(bare.body.check), { step: 3, songId: 20, title: null });
 });
 
 test('check of an unknown or wrong-type card: not valid, no steps, no grid', () => {

@@ -35,6 +35,13 @@ export const STAGE = Object.freeze({
   linkLostAfterMs: 3000,
   /** The Check marks a step when its snippet ends (ANIMATIONS.md `check-step`), or when it starts. */
   checkMarkAt: 'end' as 'end' | 'start',
+  /**
+   * Ninos stickers, by where they show: URLs of the game-style versions (flat colour, sticker border) of
+   * `brand/ninos/`, kept in `assets/` and bundled by Vite. A null sticker is left out (its plaque centres its
+   * text instead). `checkFailed`: the nino-espatxarrat (from `brand/ninos/figures/nino-espatxarrat.svg`)
+   * tumbling onto a failed Check's plaque (`check-result`).
+   */
+  stickers: Object.freeze({ checkFailed: new URL('./assets/nino-espatxarrat.svg', import.meta.url).href as string | null }),
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */
     area: Object.freeze({ x: 40, y: 40, width: 1360, height: 1000 }),

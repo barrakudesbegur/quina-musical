@@ -45,6 +45,7 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 - **Relay lost:** the scene stays. After 3 s a small dot turns red (`link-lost`).
 - **`cards.json` or covers missing:** titles still show, from the snapshot. A Check grid shows only the played songs.
 - **No plan:** the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`.
+- **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`). Today: `nino-espatxarrat.svg` on a failed Check's plaque. A null sticker is left out and the plaque centres its text.
 
 ## Theming
 
@@ -52,6 +53,7 @@ A theme targets these hooks without touching any logic:
 - `data-scene` on each scene's `<section>`, plus `data-scene` on the root for the current scene;
 - `data-anim` with the ANIMATIONS.md hook names;
 - `data-state` on Check cells (`pending`, `playing`, `landed`, `missed`, `idle`) and covers (`loading`, `loaded`, `missing`, `empty`);
+- on the Check's `.check`: `data-verdict` (`complete`, `incomplete`, `notValid`) once the result shows, `data-plaque` (`rows`, `row`, `card`) and `--plaque-at` for where the result plaque sits (`model/check.ts` › `plaqueSpot`); `data-sticker` on the plaque when its nino shows;
 - the BEM classes;
 - `data-drum="shown|hidden"`, `data-link` and `data-paused` on the root.
 

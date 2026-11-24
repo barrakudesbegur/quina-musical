@@ -21,7 +21,15 @@
   --color-gold-edge: #c98a00;
   --color-ice: #5cc8ff;
   --color-ice-edge: #2d8fc4;
+  --color-lilac: #b57bff;
+  --color-lilac-edge: #7d4bc4;
   --color-muted: #afc0ff;
+  --color-slate: #5a6390;
+  --color-slate-edge: #3b4370;
+  --color-slate-deep: #2b3566;
+  --color-slate-deep-edge: #1b2456;
+  --color-mist: #c9d3ff;
+  --color-night-shadow: #0a0e26;
 
   /* Roles: components use these, never the palette directly */
   --color-bg: var(--color-night);
@@ -37,8 +45,17 @@
   --color-ok: var(--color-green); /* landed, valid, Claim */
   --color-accent: var(--color-gold); /* titles, prizes, banners */
   --color-calm: var(--color-ice); /* Hold, waiting */
+  --color-stay: var(--color-lilac); /* Stay ("Aguanta"): no landing, the song keeps playing */
   --color-focus: var(--color-gold);
   --color-marked: var(--color-gold); /* the corn kernel */
+  --color-primary-edge: var(--color-orange-edge); /* the darker edge and tails of a primary piece */
+  --color-accent-edge: var(--color-gold-edge);
+  --color-fail: var(--color-slate); /* a Check without a prize: no red, it isn't an error */
+  --color-fail-edge: var(--color-slate-edge);
+  --color-fail-panel: var(--color-slate-deep); /* the "no prize" plaque */
+  --color-fail-panel-edge: var(--color-slate-deep-edge);
+  --color-text-on-fail: var(--color-mist);
+  --color-shadow: var(--color-night-shadow); /* the chunky drop shadow under game pieces */
 
   /* A followed card's identity: colour N goes with mark icon N (apps/player/logic/marks-identity.ts). Order
      matters: new cards take the next free one, and the first is corn gold. Eight colours that can't be
@@ -87,6 +104,7 @@
   --radius-lg: 1.25rem;
   --radius-pill: 999px;
   --line-width: 3px;
+  --line-width-bold: 4px; /* the game look's panels, tabs and big buttons */
   --tap-min: 48px; /* minimum touch target */
   --tap-big: 72px; /* the console's big buttons, the player's main actions */
 

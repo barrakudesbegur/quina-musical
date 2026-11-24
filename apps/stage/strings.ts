@@ -2,6 +2,25 @@
 // ui/i18n/ca.ts; this file holds what only the projector says. Pure, so the formatting is tested.
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { WinKind } from '../../packages/ui/flow.ts';
+import type { CheckVerdict } from './model/check.ts';
+
+/** The Check ribbon's pill: "Línia · fila 3" (a Line, its row counted from 1), "Línia", or "Quina". */
+export function checkKindLabel(kind: WinKind, row: number | null): string {
+  if (kind === 'bingo') return CA.bingo;
+  return row === null ? CA.line : `${CA.line} · fila ${row + 1}`;
+}
+
+/** Kept on one line (no-break spaces) when the plaque's second line wraps. */
+const GAME_GOES_ON = 'El\u00a0joc\u00a0continua!';
+
+/**
+ * The plaque's second line. A failed Check: "Falta «title». El joc continua!", naming the first song that
+ * didn't sound when its title is known, else "El joc continua!". A valid one has none.
+ */
+export function checkResultDetail(verdict: CheckVerdict, missedTitle: string | null): string | null {
+  if (verdict === 'complete') return null;
+  return verdict === 'incomplete' && missedTitle ? `Falta «${missedTitle}». ${GAME_GOES_ON}` : GAME_GOES_ON;
+}
 
 /** "57", "57 i 301", "12, 57 i 301". */
 export function joinCa(items: readonly (string | number)[]): string {
@@ -30,6 +49,8 @@ export const STAGE_TEXT = {
   prize: CA.prize,
   sponsoredBy: CA.sponsoredBy,
   checking: CA.checking,
+  /** The ribbon once a Check has failed: just "Cartró N". */
+  checkedCard: CA.card,
   checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, notValid: 'Cartró no vàlid' },
   mark: { landed: '✓', missed: '✗' },
   markLabel: { landed: CA.landed, missed: CA.notLanded },
