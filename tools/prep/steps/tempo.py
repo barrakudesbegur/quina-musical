@@ -4,6 +4,27 @@ from __future__ import annotations
 import numpy as np
 
 UNSTABLE_BAR_SPREAD_PCT = 3.0
+# Half time (Beat This! counting twice the tempo). With Spotify features: Spotify and librosa both within 3% of half.
+HALF_TIME_TOLERANCE = 0.03
+# Without them (the playlist fetcher doesn't produce them, so this year's pool has none): librosa within 5% of half, and Beat This!
+# at least 160 BPM, too fast for this music. On last year's 77 songs this halves exactly the one song Spotify did
+# (Besos: Beat This! 214, librosa 103.4) and no other; the fast songs that really are fast (158–176) keep their tempo.
+HALF_TIME_TOLERANCE_LIBROSA_ONLY = 0.05
+HALF_TIME_MIN_BPM_LIBROSA_ONLY = 160.0
+
+
+def half_time(raw_bpm: float, librosa_bpm: float | None, spotify_bpm: float | None) -> str | None:
+    """Why Beat This!'s tempo should be halved, or None: 'spotify' when Spotify and librosa both put it at half;
+    'librosa' when there is no Spotify tempo, librosa puts it at half and Beat This!'s is implausibly fast."""
+    if not raw_bpm or not librosa_bpm:
+        return None
+    half = raw_bpm / 2
+    if spotify_bpm:
+        ok = abs(spotify_bpm / half - 1) < HALF_TIME_TOLERANCE and abs(librosa_bpm / half - 1) < HALF_TIME_TOLERANCE
+        return "spotify" if ok else None
+    if raw_bpm >= HALF_TIME_MIN_BPM_LIBROSA_ONLY and abs(librosa_bpm / half - 1) < HALF_TIME_TOLERANCE_LIBROSA_ONLY:
+        return "librosa"
+    return None
 
 
 def tempo_summary(beats: np.ndarray, downbeats: np.ndarray, bpb: int) -> dict:

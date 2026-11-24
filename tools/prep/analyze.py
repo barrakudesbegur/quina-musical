@@ -132,14 +132,14 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
     sp = (spotify.get(str(song_id)) or {}).get("features") or {}
     auto_notes: list[str] = []
 
-    # Half time: when Spotify and librosa both put the tempo at half of Beat This!'s, trust them.
+    # Half time: when Spotify and librosa both put the tempo at half of Beat This!'s, trust them; with no Spotify
+    # tempo, librosa alone when Beat This!'s is implausibly fast (steps/tempo.py half_time).
     tempo_factor = override.get("tempoFactor")
     raw_bpm = 60.0 / float(np.median(np.diff(beats))) if len(beats) > 1 else 0
-    if tempo_factor is None and sp.get("tempo") and raw.get("librosaTempo"):
-        half = raw_bpm / 2
-        if abs(sp["tempo"] / half - 1) < 0.03 and abs(raw["librosaTempo"] / half - 1) < 0.03:
-            tempo_factor = 0.5
-            auto_notes.append("auto_half_time")
+    half_reason = tempo_step.half_time(raw_bpm, raw.get("librosaTempo"), sp.get("tempo")) if tempo_factor is None else None
+    if half_reason:
+        tempo_factor = 0.5
+        auto_notes.append("auto_half_time" if half_reason == "spotify" else "auto_half_time_librosa")
     if tempo_factor in (0.5, 2):
         beats, db_idx = beats_step.apply_tempo_factor(beats, db_idx, tempo_factor)
     bpb = int(override.get("beatsPerBar") or 0) or beats_step.beats_per_bar(db_idx)
@@ -156,7 +156,7 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
     # halving the phase is a coin flip: let the tags decide. Otherwise only flag a much better fit.
     tag_times = [float(t["time"]) for t in song.get("timestamps", []) if float(t["time"]) < duration]
     phase_fit = beats_step.tag_phase_fit(beats, db_idx, tag_times, bpb)
-    if "auto_half_time" in auto_notes and "downbeatShiftBeats" not in override and phase_fit:
+    if half_reason and "downbeatShiftBeats" not in override and phase_fit:
         best_shift = min((0, 2), key=lambda k: phase_fit["meanDistBeats"][k])
         if best_shift:
             db_idx = db_idx + best_shift
