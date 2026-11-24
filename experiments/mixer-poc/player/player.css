@@ -1,0 +1,1099 @@
+/*
+ * Player app: the basic theme. Deliberately plain: layout, big touch targets, high contrast. Every look value
+ * comes from ui/tokens.css (or the player tokens below, proposed for tokens.css), so the final game look drops
+ * in as a theme on the same BEM classes, data-scene / data-state attributes and data-anim hooks
+ * (ui/ANIMATIONS.md, Player table). Animations move only transform and opacity.
+ */
+
+/* ---- player tokens (proposed for ui/tokens.css) ---------------------------------------------------------- */
+.player {
+  --dur-tab-switch: var(--dur-fast);
+  --dur-player-landing: 400ms;
+  --dur-mark-in: var(--dur-base);
+  --dur-near-win: 500ms;
+  --dur-near-win-shimmer: 6s;
+  --dur-check-dots: 1.2s;
+  --dur-confetti: 1800ms;
+  --dur-overlay: 300ms;
+  --dur-reconnect: 200ms;
+  --dur-countdown: 1s;
+  --dur-twinkle: 2.4s;
+  --dur-shuffle-jiggle: 400ms;
+  --tab-bar-height: var(--tap-big);
+  --reel-size: min(70vw, 16rem);
+  --kernel-size: 42%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player {
+    --dur-tab-switch: 0ms;
+    --dur-player-landing: 0ms;
+    --dur-mark-in: 0ms;
+    --dur-near-win: 0ms;
+    --dur-overlay: 0ms;
+    --dur-reconnect: 0ms;
+  }
+}
+
+/* ---- shell --------------------------------------------------------------------------------------------- */
+.player {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-lg);
+  padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-2) + env(safe-area-inset-top, 0px)) var(--space-4) var(--space-2);
+  background: var(--color-bg-deep);
+}
+
+.app-header__title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.app-header__badge,
+.prize-round__badge {
+  font-size: var(--text-sm);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-text-on-paper);
+}
+
+.app-header__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.icon-button {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: var(--space-2);
+  display: inline-grid;
+  place-items: center;
+}
+
+.icon {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.player__alerts {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-banner);
+  max-height: 45dvh;
+  overflow-y: auto;
+}
+
+.player__main {
+  flex: 1;
+  padding: var(--space-4);
+}
+
+.player__tab > * + * {
+  margin-top: var(--space-5);
+}
+
+.player__tab section > * + * {
+  margin-top: var(--space-3);
+}
+
+.big-button {
+  width: 100%;
+  min-height: var(--tap-big);
+  font-size: var(--text-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+
+h3 {
+  font-size: var(--text-lg);
+  color: var(--color-accent);
+}
+
+/* ---- tab bar ------------------------------------------------------------------------------------------- */
+.tab-bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--z-banner);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-bg-deep);
+  border-top: var(--line-width) solid var(--color-line);
+}
+
+.tab-bar__tab {
+  min-height: var(--tab-bar-height);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.tab-bar__tab.is-active {
+  color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+/* ---- the "1 song away" banner -------------------------------------------------------------------------- */
+.near-win {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-text-on-paper);
+  border-bottom: var(--line-width) solid var(--color-line);
+}
+
+.near-win__title {
+  font-size: var(--text-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.near-win__star {
+  display: inline-grid;
+}
+
+.near-win__list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.near-win__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-left: calc(var(--line-width) * 3) solid var(--card-color);
+  border-radius: var(--radius-md);
+}
+
+.near-win__kind,
+.near-win__songs {
+  grid-column: 1 / -1;
+}
+
+.near-win__name {
+  margin-right: var(--space-2);
+}
+
+.near-win__kind {
+  font-weight: var(--font-weight-strong);
+}
+
+.near-win__songs strong {
+  font-size: var(--text-xl);
+}
+
+.near-win__note {
+  margin-top: var(--space-2);
+  font-size: var(--text-md);
+}
+
+/* ---- status strips ------------------------------------------------------------------------------------- */
+.notice,
+.check-strip,
+.pill {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--line-width) solid var(--color-line);
+}
+
+.notice {
+  background: var(--color-calm);
+  color: var(--color-text-on-paper);
+}
+
+.check-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface);
+}
+
+.check-strip__text {
+  font-weight: var(--font-weight-strong);
+}
+
+.check-strip[data-state='valid'] {
+  background: var(--color-ok);
+}
+
+.check-strip[data-state='invalid'] {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.check-strip__dots {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.check-strip__dots span {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+.pill {
+  text-align: center;
+  background: var(--color-surface);
+}
+
+.pill[data-state='connected'] {
+  background: var(--color-ok);
+}
+
+/* ---- swatch, cover, card backs ------------------------------------------------------------------------- */
+.swatch {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: var(--radius-sm);
+  background: var(--card-color);
+  border: var(--line-width) solid var(--color-line);
+  vertical-align: middle;
+}
+
+.cover {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.cover--md {
+  width: 4rem;
+}
+
+.cover--lg {
+  width: var(--reel-size);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.cover__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reel__back {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  border: var(--line-width) solid var(--color-line);
+  background: repeating-linear-gradient(45deg, var(--color-primary) 0 12%, var(--color-bg) 12% 16%);
+}
+
+.reel__back--1 {
+  background: repeating-linear-gradient(45deg, var(--color-ok) 0 12%, var(--color-bg) 12% 16%);
+}
+
+.reel__back--2 {
+  background: repeating-linear-gradient(45deg, var(--color-danger) 0 12%, var(--color-bg) 12% 16%);
+}
+
+/* ---- Ara ----------------------------------------------------------------------------------------------- */
+.now {
+  text-align: center;
+}
+
+.now__links {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.reel {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.reel__window {
+  width: var(--reel-size);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.reel__strip {
+  height: 500%;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  will-change: transform;
+}
+
+.reel__landed {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  perspective: 600px;
+}
+
+.reel__caption {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.reel__label {
+  color: var(--color-text-muted);
+}
+
+.reel__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+}
+
+.reel__artist {
+  color: var(--color-text-muted);
+}
+
+.reel__still,
+.reel__waiting {
+  font-size: var(--text-xl);
+}
+
+.song-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.song-list__item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+}
+
+.song-list__text {
+  display: grid;
+}
+
+.song-list__artist {
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.song-list__dots {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.song-list__dot {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: var(--radius-pill);
+  background: var(--card-color);
+  border: 2px solid var(--color-line);
+}
+
+.heat__garland {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.heat__light {
+  width: 1.1rem;
+  height: 1.4rem;
+  border-radius: 50% 50% 45% 45%;
+  border: 2px solid var(--color-line);
+  background: var(--color-calm);
+  opacity: calc(0.45 + var(--heat, 0) * 0.55);
+}
+
+.heat[data-level='warm'] .heat__light {
+  background: var(--color-accent);
+}
+
+.heat[data-level='hot'] .heat__light {
+  background: var(--color-primary);
+}
+
+.heat[data-level='fire'] .heat__light {
+  background: var(--color-danger);
+}
+
+.shuffle__tiles {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 20rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+/* ---- prizes, schedule ---------------------------------------------------------------------------------- */
+.prize-lines {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.prize-lines__row {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.prize-lines__kind {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-strong);
+}
+
+.prize-lines__prize {
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.prize-lines__title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-strong);
+}
+
+.prize-lines__sponsor,
+.prize-lines__detail {
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+.prizes__list,
+.schedule__rounds,
+.now__summary,
+.cards__list,
+.cards__resting-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.prize-round__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin-bottom: var(--space-2);
+}
+
+.prize-round__state,
+.schedule__round-state {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.prize-round[data-state='current'],
+.schedule__round[data-state='current'] {
+  outline: var(--line-width) solid var(--color-accent);
+  outline-offset: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.prize-round[data-state='done'] {
+  opacity: 0.75;
+}
+
+.winner-numbers__card {
+  display: inline-block;
+  font-weight: var(--font-weight-strong);
+}
+
+.winner-numbers__card.is-own {
+  color: var(--card-color);
+}
+
+.schedule__progress {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+
+.schedule__round {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.schedule__round-name {
+  flex: 1;
+  font-weight: var(--font-weight-strong);
+}
+
+.countdown {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-strong);
+}
+
+/* ---- cards --------------------------------------------------------------------------------------------- */
+.player-card {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: var(--line-width) solid var(--color-line);
+  border-top: calc(var(--line-width) * 3) solid var(--card-color);
+  border-radius: var(--radius-lg);
+}
+
+.player-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.player-card__title {
+  flex: 1;
+  color: var(--color-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.player-card__name {
+  color: var(--card-color);
+}
+
+.player-card__actions,
+.cards__resting-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.card-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-1);
+}
+
+.card-grid__cell {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-1);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border-radius: var(--radius-sm);
+  /* every 4th cell starts a Line: a thicker gap between lines, never a highlight */
+}
+
+.card-grid__cell[data-line='1'],
+.card-grid__cell[data-line='2'] {
+  margin-top: var(--space-1);
+}
+
+.card-grid__title {
+  font-size: var(--text-xs);
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.card-grid__kernel {
+  position: absolute;
+  top: 18%;
+  left: 29%;
+  width: var(--kernel-size);
+  aspect-ratio: 0.8;
+  border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+  background: var(--color-marked);
+  border: var(--line-width) solid var(--color-line);
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.cards__resting-item {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.cards__resting-label {
+  flex: 1;
+}
+
+.add-prompt {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.how-to-play {
+  text-align: left;
+}
+
+.how-to-play__steps {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  margin: var(--space-2) 0;
+}
+
+.how-to-play__note,
+.legacy-notice__text {
+  color: var(--color-text-muted);
+}
+
+.legacy-notice {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.legacy-notice__text {
+  color: var(--color-text-on-paper);
+}
+
+.legacy-notice__actions,
+.confirm__actions,
+.rename__actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* ---- sheets (dialogs) ---------------------------------------------------------------------------------- */
+.sheet {
+  width: 100%;
+  max-width: 32rem;
+  max-height: 92dvh;
+  margin: auto auto 0;
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.sheet::backdrop {
+  background: var(--color-bg-deep);
+  opacity: 0.8;
+}
+
+.sheet__header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+}
+
+.sheet__title {
+  flex: 1;
+  font-size: var(--text-xl);
+}
+
+.sheet__body {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.number-pad__key {
+  min-height: var(--tap-big);
+  font-size: var(--text-2xl);
+}
+
+.number-pad__key--ok {
+  font-size: var(--text-lg);
+}
+
+.number-pad__display {
+  display: block;
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--text-3xl);
+  font-variant-numeric: tabular-nums;
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border-radius: var(--radius-md);
+}
+
+.number-pad__display[data-state='empty'] {
+  font-size: var(--text-lg);
+  color: var(--color-text-on-paper);
+  opacity: 0.6;
+}
+
+.number-pad__error {
+  color: var(--color-text-on-paper);
+  background: var(--color-accent);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.rename {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.rename__input {
+  min-height: var(--tap-big);
+  font-size: var(--text-xl);
+}
+
+.help__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.help__label {
+  flex: 1;
+}
+
+.help__toggle {
+  min-width: var(--tap-big);
+  min-height: var(--tap-min);
+}
+
+/* ---- overlays ------------------------------------------------------------------------------------------ */
+.scene-overlay,
+.celebration {
+  position: fixed;
+  inset: 0 0 calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: var(--color-bg-deep);
+  text-align: center;
+}
+
+.scene-overlay__panel,
+.celebration__panel {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+  max-width: 28rem;
+}
+
+.scene-overlay__title {
+  font-size: var(--text-3xl);
+}
+
+.celebration__shout {
+  font-size: var(--text-3xl);
+  color: var(--color-accent);
+}
+
+.celebration__numbers {
+  font-size: var(--text-3xl);
+  font-family: var(--font-display);
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.toast {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--tab-bar-height) + var(--space-3) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast);
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.toast__text {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+}
+
+/* ---- animation hooks (ui/ANIMATIONS.md, Player). Transform and opacity only. --------------------------- */
+@keyframes player-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes player-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+}
+
+@keyframes player-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@keyframes player-flip-in {
+  from {
+    opacity: 0;
+    transform: rotateY(90deg);
+  }
+}
+
+@keyframes player-kernel-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) rotate(var(--tilt, 0deg)) scale(1.2, 0.8);
+  }
+}
+
+@keyframes player-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes player-tick {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes player-dot-step {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  33% {
+    opacity: 1;
+  }
+}
+
+@keyframes player-shimmer {
+  0%,
+  85% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes player-wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}
+
+@keyframes player-twinkle {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes player-jiggle {
+  to {
+    transform: translate(2px, -2px) rotate(3deg);
+  }
+}
+
+[data-anim='tab-switch'] {
+  animation: player-fade-in var(--dur-tab-switch) var(--ease-out) both;
+}
+
+.reel__landed[data-anim='landing'] .cover {
+  animation: player-flip-in var(--dur-player-landing) var(--ease-bounce) both;
+}
+
+.reel__landed[data-anim='landing'] .reel__caption,
+.song-list__item[data-anim='landing'] {
+  animation: player-rise-in var(--dur-player-landing) var(--ease-out) both;
+}
+
+.card-grid__kernel[data-anim='mark-in'] {
+  animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
+}
+
+.near-win[data-anim='near-win'],
+.near-win__item[data-anim='near-win'] {
+  animation: player-drop-in var(--dur-near-win) var(--ease-bounce) both;
+}
+
+.near-win__star {
+  animation: player-wiggle var(--dur-near-win) var(--ease-out) 1;
+}
+
+.near-win::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 40%, var(--color-paper) 50%, transparent 60%);
+  opacity: 0.35;
+  transform: translateX(-120%);
+  animation: player-shimmer var(--dur-near-win-shimmer) linear infinite;
+}
+
+.check-strip[data-anim='check'] .check-strip__result {
+  animation: player-rise-in var(--dur-base) var(--ease-out) both;
+}
+
+.check-strip__dots span {
+  animation: player-dot-step var(--dur-check-dots) steps(1) infinite;
+}
+
+.check-strip__dots span:nth-child(2) {
+  animation-delay: calc(var(--dur-check-dots) / 3);
+}
+
+.check-strip__dots span:nth-child(3) {
+  animation-delay: calc(var(--dur-check-dots) * 2 / 3);
+}
+
+.celebration[data-anim='celebrate'] .celebration__shout {
+  animation: player-pop var(--dur-celebrate) var(--ease-bounce) both;
+}
+
+.winner-numbers__card[data-anim='celebrate'] {
+  animation: player-pop var(--dur-base) var(--ease-bounce) var(--stagger, 0ms) both;
+}
+
+[data-anim='countdown'][data-state='final'] {
+  animation: player-tick var(--dur-countdown) var(--ease-out) both;
+}
+
+.pill[data-anim='reconnect'] {
+  animation: player-drop-in var(--dur-reconnect) var(--ease-out) both;
+}
+
+.scene-overlay[data-anim='offline'],
+.scene-overlay[data-anim='pause'] {
+  animation: player-fade-in var(--dur-overlay) var(--ease-out) both;
+}
+
+.heat__light {
+  animation: player-twinkle calc(var(--dur-twinkle) * (1.4 - var(--heat, 0))) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.31s);
+}
+
+.shuffle[data-state='running'] .shuffle__tile {
+  animation: player-jiggle var(--dur-shuffle-jiggle) ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -70ms);
+}
+
+/* Never animate while the page is hidden. */
+.player[data-hidden='true'] *,
+.player[data-hidden='true'] *::before,
+.player[data-hidden='true'] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Reduced motion and Data Saver: the still fallbacks (every hook keeps its information without moving). */
+@media (prefers-reduced-motion: reduce) {
+  .player *,
+  .player *::before,
+  .player *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.player[data-motion='reduced'] *,
+.player[data-motion='reduced'] *::before,
+.player[data-motion='reduced'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.player[data-motion='reduced'] .near-win::after {
+  display: none;
+}

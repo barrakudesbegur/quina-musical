@@ -1,0 +1,186 @@
+// The pure rules behind the screens: the offline and pause notices, the reconnect pill, the reel synced to the
+// Spin, the feedback cues (one at a time; marks follow the grace rule), and the derived views.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { emptyPublicState, type PublicState } from '../../../player/feed/public.ts';
+import { feedbackFor, type FeedbackSnapshot } from '../../../player/logic/feedback.ts';
+import { reelOffset, reelState } from '../../../player/logic/reel.ts';
+import { overlayFor, reconnectPill } from '../../../player/logic/status.ts';
+import { addCard, emptyData } from '../../../player/logic/storage.ts';
+import {
+  cardViews,
+  celebrationOf,
+  focusRoundNumber,
+  heatLevel,
+  historyGroups,
+  kernelTilt,
+  markKeys,
+  markedColors,
+  padValue,
+  plannedStarts,
+  prizeRounds,
+  progress,
+} from '../../../player/logic/view.ts';
+import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
+import { parseCards } from '../../../ui/data/catalog.ts';
+
+const T = 1_000_000;
+const playing = (patch: Partial<PublicState> = {}): PublicState => ({
+  ...emptyPublicState('26'),
+  gameId: 'g',
+  scene: 'play',
+  link: { online: true, sinceMs: 0 },
+  rounds: [{ number: 3, kind: 'normal', startedAtMs: 0, lineConfirmed: false, ended: false, landings: [] }],
+  ...patch,
+});
+const online = { online: true, sinceMs: 0, lastOutageMs: 0 };
+
+// ---- notices ----------------------------------------------------------------------------------------------
+test('offline after 20 s without the laptop link, or without the feed, while the show is on', () => {
+  const linkDown = playing({ link: { online: false, sinceMs: T } });
+  assert.equal(overlayFor({ state: linkDown, connection: online, localNowMs: T, cloudNowMs: T + 19_000 }), null);
+  assert.equal(overlayFor({ state: linkDown, connection: online, localNowMs: T, cloudNowMs: T + 20_000 }), 'offline');
+  const feedDown = { online: false, sinceMs: T, lastOutageMs: 0 };
+  assert.equal(overlayFor({ state: playing(), connection: feedDown, localNowMs: T + 19_999, cloudNowMs: 0 }), null);
+  assert.equal(overlayFor({ state: playing(), connection: feedDown, localNowMs: T + 20_000, cloudNowMs: 0 }), 'offline');
+});
+
+test('no offline notice before or after the Game, when a switched-off laptop is normal', () => {
+  const before = { ...playing({ link: { online: false, sinceMs: 0 } }), scene: 'before' as const };
+  assert.equal(overlayFor({ state: before, connection: online, localNowMs: T, cloudNowMs: T }), null);
+  assert.equal(overlayFor({ state: { ...before, scene: 'after' }, connection: online, localNowMs: T, cloudNowMs: T }), null);
+  assert.equal(overlayFor({ state: null, connection: { online: false, sinceMs: 0, lastOutageMs: 0 }, localNowMs: T, cloudNowMs: T }), null);
+});
+
+test('the technical pause shows "Tornem de seguida"; offline wins over it', () => {
+  assert.equal(overlayFor({ state: playing({ pause: { sinceMs: T } }), connection: online, localNowMs: T, cloudNowMs: T }), 'pause');
+  const both = playing({ pause: { sinceMs: T }, link: { online: false, sinceMs: 0 } });
+  assert.equal(overlayFor({ state: both, connection: online, localNowMs: T, cloudNowMs: T }), 'offline');
+});
+
+test('the reconnect pill: after 3 s down, then "Connectat" for 1 s after an outage of 3 s or more', () => {
+  assert.equal(reconnectPill({ online: false, sinceMs: T, lastOutageMs: 0 }, T + 2999), null);
+  assert.equal(reconnectPill({ online: false, sinceMs: T, lastOutageMs: 0 }, T + 3000), 'reconnecting');
+  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 5000 }, T + 500), 'connected');
+  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 5000 }, T + 1000), null);
+  assert.equal(reconnectPill({ online: true, sinceMs: T, lastOutageMs: 800 }, T + 100), null, 'a blip shows nothing');
+});
+
+// ---- reel -------------------------------------------------------------------------------------------------
+test('the reel speeds up, slows down and stops exactly at landAtMs', () => {
+  const total = 6000;
+  const end = reelOffset(total, total);
+  assert.ok(reelOffset(100, total) < reelOffset(1000, total));
+  assert.ok(Math.abs(reelOffset(total - 1, total) - end) < 0.001, 'zero speed at the landing');
+  assert.equal(reelOffset(total + 5000, total), end);
+  // Monotone: it never runs backwards.
+  let prev = -1;
+  for (let t = 0; t <= total; t += 50) {
+    const o = reelOffset(t, total);
+    assert.ok(o >= prev);
+    prev = o;
+  }
+});
+
+test('reel phases: generic until the landing is public, never the song in advance', () => {
+  const spin = { startAtMs: T, landAtMs: T + 6000 };
+  const earlier = { position: 4, songId: 7, atMs: T - 10_000 };
+  assert.equal(reelState(null, null, T).phase, 'idle');
+  assert.equal(reelState(null, earlier, T).phase, 'landed');
+  assert.equal(reelState(spin, earlier, T + 1000).phase, 'spinning', 'the previous song is not shown while spinning');
+  assert.equal(reelState(spin, earlier, T + 6500).phase, 'stopped', 'stopped, waiting for the public landing');
+  assert.equal(reelState(spin, { position: 5, songId: 9, atMs: T + 6000 }, T + 6500).phase, 'landed');
+  const suspense = reelState({ startAtMs: T, landAtMs: null }, earlier, T + 2000);
+  assert.equal(suspense.phase, 'coasting');
+  assert.ok(suspense.offset > 0);
+});
+
+// ---- feedback ---------------------------------------------------------------------------------------------
+const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({ round: 3, landings: 5, marks: [], banner: [], celebration: null, ...patch });
+
+test('the first update and a new round are quiet', () => {
+  assert.deepEqual(feedbackFor(null, snap({ marks: ['1:2'] })), { cue: null, freshMarks: [] });
+  assert.deepEqual(feedbackFor(snap(), snap({ round: 4, landings: 1, marks: ['1:2'] })), { cue: null, freshMarks: [] });
+});
+
+test('one cue at a time, the most important: celebrate > near-win > mark > landing', () => {
+  assert.equal(feedbackFor(snap(), snap({ landings: 6 })).cue, 'landing');
+  assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { cue: 'mark', freshMarks: ['1:3', '4:3'] });
+  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], banner: ['line:1:9'] })).cue, 'nearWin');
+  assert.equal(feedbackFor(snap(), snap({ banner: ['line:1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
+});
+
+test('the near-win chime only when the banner first appears', () => {
+  assert.equal(feedbackFor(snap({ banner: ['line:1:9'] }), snap({ banner: ['line:1:9', 'line:2:4'] })).cue, null);
+});
+
+// ---- views ------------------------------------------------------------------------------------------------
+const catalog = parseCards([
+  { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
+  { id: 412, type: 'especial', lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] },
+]);
+const saved = (() => {
+  let d = emptyData('26');
+  for (const id of [123, 412, 999]) {
+    const r = addCard(d, id, 0);
+    if (r.ok) d = r.data;
+  }
+  return d.cards;
+})();
+
+test('card views: only the right kind plays; marks follow the grace rule; unknown cards stay listed', () => {
+  const round = { number: 3, kind: 'normal' as const, startedAtMs: 0, lineConfirmed: false, ended: false, landings: [2, 17, 41].map((songId, position) => ({ position, songId, atMs: 0 })) };
+  const views = cardViews(saved, catalog, round);
+  assert.deepEqual(views.map((v) => [v.saved.id, v.valid]), [[123, true], [412, false], [999, true]]);
+  assert.equal(views[0].marks?.count, 3);
+  assert.equal(views[1].marks, null);
+  assert.equal(views[2].card, null);
+  assert.deepEqual(markKeys(views), ['123:2', '123:17', '123:41']);
+  assert.deepEqual(markedColors(views).get(17), [1]);
+  const special = cardViews(saved, catalog, { ...round, kind: 'special' });
+  assert.deepEqual(special.filter((v) => v.valid && v.card).map((v) => v.saved.id), [412]);
+  assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
+});
+
+test('prizes, progress and the planned times come from the plan and the winners', () => {
+  const state = playing({ winners: [{ round: 3, kind: 'line', cardIds: [123, 57] }] });
+  const rounds = prizeRounds(SAMPLE_PLAN, state);
+  assert.equal(rounds.length, SAMPLE_PLAN.rounds.length);
+  assert.equal(rounds[2].state, 'current');
+  assert.deepEqual(rounds[2].lines[0].winners, [123, 57]);
+  assert.equal(rounds[2].lines[0].sponsor, '[Patrocinador 1]');
+  assert.equal(rounds[6].kind, 'special');
+  assert.deepEqual(progress(SAMPLE_PLAN, state), { current: 3, total: 8 });
+  const interval = playing({ scene: 'interval', interval: { nextRound: 4, guideEndMs: T } });
+  assert.equal(focusRoundNumber(interval), 4);
+  assert.equal(prizeRounds(SAMPLE_PLAN, interval)[3].state, 'next');
+  assert.equal(plannedStarts(SAMPLE_PLAN), null, 'no start time in the sample plan');
+  const starts = plannedStarts({ ...SAMPLE_PLAN, schedule: { startAtMs: T, roundMinutes: 25, intervalMinutes: 5 } });
+  assert.equal(starts?.get(2), T + 30 * 60_000);
+});
+
+test('the Celebration shows the latest prize of the round; history is newest first', () => {
+  const state = playing({ scene: 'celebration', winners: [{ round: 3, kind: 'line', cardIds: [57] }] });
+  assert.deepEqual(celebrationOf(state), { key: 'celebration:3:line', kind: 'line', round: 3, cardIds: [57] });
+  assert.equal(celebrationOf(playing()), null);
+  const withHistory = playing({
+    rounds: [
+      { number: 2, kind: 'normal', startedAtMs: 0, lineConfirmed: true, ended: true, landings: [{ position: 0, songId: 1, atMs: 0 }] },
+      { number: 3, kind: 'normal', startedAtMs: 0, lineConfirmed: false, ended: false, landings: [{ position: 0, songId: 5, atMs: 0 }, { position: 1, songId: 6, atMs: 1 }] },
+    ],
+  });
+  const groups = historyGroups(withHistory);
+  assert.deepEqual(groups.map((g) => [g.round, g.current, g.landings.map((l) => l.songId)]), [[3, true, [6, 5]], [2, false, [1]]]);
+});
+
+test('small helpers: Heat levels, kernel tilt, the number pad', () => {
+  assert.deepEqual([0, 0.3, 0.6, 0.9].map(heatLevel), ['cold', 'warm', 'hot', 'fire']);
+  const tilt = kernelTilt(123, 17);
+  assert.equal(kernelTilt(123, 17), tilt, 'stable');
+  assert.ok(tilt >= -15 && tilt <= 15);
+  assert.equal(padValue('', '0'), '');
+  assert.equal(padValue('12', '3'), '123');
+  assert.equal(padValue('1234', '5'), '1234');
+  assert.equal(padValue('123', 'back'), '12');
+  assert.equal(padValue('12', 'x'), '12');
+});
