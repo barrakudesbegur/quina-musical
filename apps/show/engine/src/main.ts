@@ -159,6 +159,13 @@ const cloudCopy: CloudCopy = {
 const ctx = new AudioContext({ sampleRate: 48000, latencyHint: 'interactive' });
 const clock = new AudioClock(ctx);
 const graph = new AudioGraph(ctx);
+// ?mute=1: everything runs and is scheduled as usual, but nothing reaches the speakers (headless smoke tests).
+if (params.get('mute') === '1') {
+  const silent = ctx.createGain();
+  silent.gain.value = 0;
+  graph.limiter.disconnect();
+  graph.limiter.connect(silent).connect(ctx.destination);
+}
 const loader = new SongLoader(ctx);
 const holdMusic = new HoldMusic(graph);
 // The Interval playlist; how far a Game's order has got is kept per pool, so a reload doesn't repeat tracks.

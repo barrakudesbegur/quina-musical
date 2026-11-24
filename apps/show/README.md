@@ -64,7 +64,7 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
 - `pace=14`: Pace in seconds.
 - `cards=1-200,400-450`: cards in play. Once entered, they are kept in the page's local storage.
 - `phase=late`: fixed Phase. `suw=20`: songs until a winner, used only when no cards are in play.
-- `auto=0`: auto-advance off. `queue=3,17,45`: a fixed Queue. `autostart=1`.
+- `auto=0`: auto-advance off. `queue=3,17,45`: a fixed Queue. `autostart=1`. `mute=1`: everything runs but nothing reaches the speakers (headless smoke tests). `fresh=1`: ignore the local journal.
 - `fresh=1`: start a new Game instead of resuming the current one. `journal=0`: keep the Game journal in memory only (as `queue=` does).
 
 **Resume after a reload or a crash:** the show page keeps a numbered Game journal (rounds, Queues, landings, undos, the confirmed Line, cards in play, settings) in its storage. A reload resumes the current Game where it was, and the presenters press Next. The journal is in the protocol package (`packages/protocol/journal.ts`, explained in [`docs/protocol.md`](docs/protocol.md#game-journal)), so a cloud store or another device can replay the same journal later.
