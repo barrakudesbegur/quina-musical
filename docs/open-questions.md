@@ -50,3 +50,11 @@ I can't use real phones or the venue's projector, so these are yours:
 4. **The projector:** open `/show/` on the laptop with the real projector at 4:3, then at 16:9. Check the drum band, the last-3 row and the Check card are readable from the back of the tent.
 5. **The console on the actual tablet**, over the phone hotspot: open the relay's printed link (it carries `?t=`), then scan the console's own QR with a phone to pair it as "Mòbil admin".
 **Default taken:** none of these block the build. Results go into the rehearsal checklist.
+
+## How fast should a Suspense resolve? (quina-musical-ed, 2026-11-24)
+In the new Suspense the playing song loops its 4-bar phrase, and the release lands the next song at the end of a pass (on the outgoing song's phrase boundary), after its exit move. So Next can take up to about 9 s to land. Options: (a) keep it, since a phrase-aligned resolution is part of the drama; (b) land on the next 2-bar boundary, about twice as fast but half a phrase.
+**Default taken:** (a). To change it, set SUSPENSE.loopBars to 2, or let the release take a 2-bar boundary in plan/suspense.ts releaseOverLoop.
+
+## Signatures are rarer now (quina-musical-ed, 2026-11-24)
+Signatures are now instrumental only (riff, build into the chorus, chorus motif), and only the next song's plays, before the landing. On last year's songs 38 of 77 get an automatic pick, and they play in about 5% of transitions (it was 37% with the vocal calls and shouts). Over the outgoing song a Signature needs agreeing keys and tempos within 4%. Options: (a) keep it; (b) lower the automatic pick's score (0.6) to pick more; (c) pick more by hand on the audition page.
+**Default taken:** (a), plus (c) when you review this year's playlist.
