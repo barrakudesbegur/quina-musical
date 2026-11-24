@@ -79,6 +79,22 @@ test('Back takes the song off the phones; it lands again later at the same posit
   assert.deepEqual(project(b.entries).state.rounds[0]?.landings.map((l) => l.position), [0, 1, 2]);
 });
 
+test('a manual resume brings the round back whole, its counted songs only, straight into play', () => {
+  const b = new JournalBuilder('g-resume');
+  b.startRound().land(5);
+  b.scene('interval', 2);
+  b.resume(3, 9, { lineConfirmedFrom: 6 }).land(1);
+  const { state, record } = project(b.entries);
+  assert.deepEqual(state.rounds.map((r) => [r.number, r.ended, r.lineConfirmed, r.landings.length]), [
+    [1, true, false, 5],
+    [3, false, true, 11],
+  ]);
+  assert.deepEqual(state.rounds[1]?.landings.map((l) => l.songId), record.round?.queue.slice(0, 11));
+  assert.equal(state.scene, 'play');
+  assert.equal(state.interval, null);
+  assert.deepEqual(forbiddenKeys(state), []);
+});
+
 test('the round being introduced is public before its Shuffle, and goes once it starts', () => {
   const b = new JournalBuilder('g-intro');
   b.scene('roundStart', 1, 'special');

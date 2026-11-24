@@ -30,7 +30,7 @@ const entries = sample.entries;
 
 test('the sample journal replays (it uses every entry kind)', () => {
   const kinds = new Set(entries.map((e) => e.kind));
-  assert.equal(kinds.size, 10);
+  assert.equal(kinds.size, 10); // every kind but round.resumed (its own test in projection.test.ts)
   assert.doesNotThrow(() => replayJournal(entries));
 });
 
@@ -131,6 +131,7 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
     ['empty gameId', { ...started, gameId: '' }],
     ['atMs as text', { ...started, atMs: '1' }],
     ['unknown kind', { ...started, kind: 'round.paused' }],
+    ['resumed past the Queue', { ...started, kind: 'round.resumed', position: 77, lineConfirmedFrom: null }],
     ['huge', { ...started, padding: 'x'.repeat(70_000) }],
   ];
   for (const [what, value] of bad) assert.equal(checkJournalEntry(value).ok, false, what);

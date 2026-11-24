@@ -37,6 +37,30 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       if (state.check) changes.push({ kind: 'check', check: null });
       return changes;
     }
+    case 'round.resumed': {
+      // A manual resume (plan B): the round comes back whole, with songs 0..position counted (their real landing
+      // times are unknown, so they carry the resume's), straight into play. Never its Queue beyond `position`.
+      const changes: PublicChange[] = [];
+      const previous = state.rounds.at(-1);
+      if (previous && !previous.ended && previous.number !== entry.round) changes.push({ kind: 'roundEnded', round: previous.number });
+      const atMs = ctx.toCloudMs(entry.atMs);
+      const round: PublicRound = {
+        number: entry.round,
+        kind: entry.roundKind,
+        startedAtMs: ctx.toCloudMs(entry.startedAtMs),
+        lineConfirmed: entry.lineConfirmedFrom !== null,
+        ended: false,
+        landings: entry.queue.slice(0, entry.position + 1).map((songId, position) => ({ position, songId, atMs })),
+      };
+      changes.push({ kind: 'round', round });
+      if (state.intro) changes.push({ kind: 'intro', intro: null });
+      if (state.shuffle) changes.push({ kind: 'shuffle', shuffle: null });
+      if (state.spin && atMs >= state.spin.startAtMs) changes.push({ kind: 'spin', spin: null });
+      if (state.check) changes.push({ kind: 'check', check: null });
+      if (state.interval) changes.push({ kind: 'interval', interval: null });
+      if (state.scene !== 'play') changes.push({ kind: 'scene', scene: 'play' });
+      return changes;
+    }
     case 'song.landed': {
       const atMs = ctx.toCloudMs(entry.atMs);
       const changes: PublicChange[] = [{ kind: 'landed', round: entry.round, landing: { position: entry.position, songId: entry.songId, atMs } }];

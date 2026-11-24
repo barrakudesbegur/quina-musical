@@ -65,6 +65,19 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
     shuffleSeed: optional(finite),
     shuffleAttempts: optional(integer(0)),
   },
+  'round.resumed': {
+    round,
+    roundKind,
+    queue: songIds,
+    phaseSeed: finite,
+    startedAtMs: finite,
+    targetEndMs: finite,
+    settings,
+    shuffleSeed: finite,
+    shuffleAttempts: integer(0),
+    position: integer(-1, 4999),
+    lineConfirmedFrom: nullable(integer(-1, 4999)),
+  },
   'song.landed': { round, position, songId: integer(0) },
   'landing.undone': { round, position, songId: integer(0) },
   'line.confirmed': { round, fromPosition: integer(-1, 4999) },
@@ -95,10 +108,16 @@ export function checkJournalEntry(value: unknown): EntryCheck {
   if (!isRecord(value)) return { ok: false, error: 'an entry must be an object' };
   const kind = value.kind;
   if (typeof kind !== 'string' || !Object.hasOwn(KINDS, kind)) return { ok: false, error: `unknown entry kind ${String(kind)}` };
-  const error = fieldsError(value, BASE) ?? fieldsError(value, KINDS[kind as JournalEntryKind]);
+  const error = fieldsError(value, BASE) ?? fieldsError(value, KINDS[kind as JournalEntryKind]) ?? crossError(value);
   if (error) return { ok: false, error: `entry ${String(value.seq)} (${kind}): ${error}` };
   if (canonicalJson(value).length > CLOUD.maxEntryBytes) return { ok: false, error: `entry ${String(value.seq)} is too big` };
   return { ok: true, entry: value as unknown as JournalEntry };
+}
+
+/** Checks across fields that the reducer doesn't make (it would accept them and record a wrong round). */
+function crossError(value: Fields): string | null {
+  if (value.kind === 'round.resumed' && (value.position as number) >= (value.queue as unknown[]).length) return 'position must be inside the Queue';
+  return null;
 }
 
 /**

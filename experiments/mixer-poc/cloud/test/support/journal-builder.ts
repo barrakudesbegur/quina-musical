@@ -99,6 +99,32 @@ export class JournalBuilder {
     return this.scene('play');
   }
 
+  /** A manual resume (plan B): round `round` again from `queue`, with songs 0..position counted. */
+  resume(round: number, position: number, { kind = 'normal' as RoundKind, queue = shuffledQueue(round), lineConfirmedFrom = null as number | null } = {}): this {
+    this.round = round;
+    this.roundKind = kind;
+    this.queue = queue;
+    this.position = position;
+    this.push(
+      {
+        kind: 'round.resumed',
+        round,
+        roundKind: kind,
+        queue,
+        phaseSeed: 1234 + round,
+        startedAtMs: this.clock ? this.clock() : this.nowMs,
+        targetEndMs: this.nowMs + 25 * 60_000,
+        settings: SETTINGS,
+        shuffleSeed: 99 + round,
+        shuffleAttempts: 0,
+        position,
+        lineConfirmedFrom,
+      },
+      5_000,
+    );
+    return this;
+  }
+
   /** Land the next `count` songs of the Queue. */
   land(count = 1): this {
     for (let i = 0; i < count; i++) {

@@ -43,6 +43,11 @@ export interface GameSummary {
   /** The rounds it reached. */
   rounds: number;
   current: boolean;
+  /**
+   * For the current Game: where its round stands, to prefill Admin's manual resume (`resumeAt`). SECRET: the
+   * seed, with the Pool and the cards in play, gives the whole Queue; organizers only, never on a screen.
+   */
+  resumePoint: { round: number; kind: 'normal' | 'special'; shuffleSeed: number; shuffleAttempts: number; position: number; lineConfirmedFrom: number | null } | null;
 }
 
 /** The answer to POST /api/resume. */

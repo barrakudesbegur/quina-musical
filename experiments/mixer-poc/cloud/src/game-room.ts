@@ -452,17 +452,32 @@ export class GameRoom extends DurableObject<RoomEnv> {
   listGames(): GameSummary[] {
     const rows = this.rows(
       `SELECT game_id, MAX(seq) AS seq, MIN(at_ms) AS first_at, MAX(at_ms) AS last_at,
-              SUM(CASE WHEN kind = 'round.started' THEN 1 ELSE 0 END) AS rounds
+              COUNT(DISTINCT CASE WHEN kind IN ('round.started', 'round.resumed') THEN json_extract(entry, '$.round') END) AS rounds
        FROM journal GROUP BY game_id ORDER BY last_at DESC`,
     );
-    return rows.map((r) => ({
-      gameId: String(r.game_id),
-      seq: Number(r.seq),
-      firstAtMs: Number(r.first_at),
-      lastAtMs: Number(r.last_at),
-      rounds: Number(r.rounds),
-      current: String(r.game_id) === this.room.game?.gameId,
-    }));
+    const round = this.room.game?.round ?? null;
+    return rows.map((r) => {
+      const current = String(r.game_id) === this.room.game?.gameId;
+      return {
+        gameId: String(r.game_id),
+        seq: Number(r.seq),
+        firstAtMs: Number(r.first_at),
+        lastAtMs: Number(r.last_at),
+        rounds: Number(r.rounds),
+        current,
+        resumePoint:
+          current && round
+            ? {
+                round: round.number,
+                kind: round.kind,
+                shuffleSeed: round.shuffleSeed,
+                shuffleAttempts: round.shuffleAttempts,
+                position: round.position,
+                lineConfirmedFrom: round.climbingTo === 'bingo' ? round.climbFrom : null,
+              }
+            : null,
+      };
+    });
   }
 
   /**

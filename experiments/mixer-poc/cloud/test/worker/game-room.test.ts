@@ -421,7 +421,12 @@ describe("a new laptop, and Admin's manual resume", () => {
     await upload(client, 'g-rehearsal', a.entries);
     await upload(client, 'g-night', b.entries);
     const { games } = await getJson<{ games: { gameId: string; seq: number; rounds: number; current: boolean }[] }>('/api/games');
-    expect(games.find((g) => g.gameId === 'g-night')).toMatchObject({ seq: b.entries.length, rounds: 1, current: true });
+    expect(games.find((g) => g.gameId === 'g-night')).toMatchObject({
+      seq: b.entries.length,
+      rounds: 1,
+      current: true,
+      resumePoint: { round: 1, kind: 'normal', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lineConfirmedFrom: null },
+    });
     expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false });
 
     const p = await phone();

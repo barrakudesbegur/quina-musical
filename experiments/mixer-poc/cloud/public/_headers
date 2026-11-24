@@ -1,0 +1,5 @@
+# Static file headers (Workers static assets). The kill switch must never be cached, or an old phone could keep
+# last year's worker.
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: text/javascript; charset=utf-8
