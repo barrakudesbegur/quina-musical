@@ -52,6 +52,7 @@ All of this is on `main`, green when committed.
 | **The Desgraciat round, step B:** journal-check takes round and win kinds from the protocol's lists (`desgraciat`, `standing` accepted; a `fallen` verdict refused); a valid `standing` claim ends the round like a Bingo, with no Line; `ShowState.standing`, the Futur's `lastStandingAt`/`standingCurve` and a Check's `outcome` are checked never to reach phones (projection test, e2e) | `cb35dd1` |
 | **quina-dev redeployed** (version `ee41deae`) with `cbcc1d3`: card type per round (the live v2 plan migrates on read) and the Desgraciat round's cloud side, so Sound engine's C may journal the new kinds | `cbcc1d3` (deploy only) |
 | **Card type per round, step C** (Sound engine's plan v3, with Platform's v3 test fixtures `91b1a43`); quina-dev redeployed (version `3095a797`): its stored v2 plan reads as v3 | `ebf1a5d` (deploy) |
+| **The live Desgraciat run on quina-dev** (`tools/e2e/desgraciat-live.spec.ts`, opt-in with `QUINA_LIVE_CLOUD`). It found two cloud bugs, both fixed and deployed: phones never saw round 1's intro, because the engine journals round 1 at boot (`5ed3a84`); and the cloud refused a `standing` Check's live event (`92002a6`). Then it passed: intro, every landing, the Check, the winner, the round's end, nothing refused, nothing private | `5ed3a84`, `92002a6` |
 | **`npm run sync-main`** (tools/git): brings the shared main up to origin without touching anyone's uncommitted work. It replays local commits in the object store, writes only the files origin changed, and refuses if one of them is being edited. Tested on throwaway repos (`npm run test:tools`, in `npm test` and CI) | `53c09db`, `b4c8981` |
 
 ## In progress
@@ -60,8 +61,13 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 
 ## The next queue, in priority order
 
-1. **Watch the first rehearsal of a Desgraciat round on quina-dev** (Sound engine's C, 2e359dd, journals it): phones should show the round's kind and a `standing` winner, and the link must never report a refused entry.
-2. **This year's pool** (milestone Thu 10 Dec): measure it on 2 Dec. If it's over about 100 songs, decide with Sound engine (by 2 Dec, with the user's number) between keeping the format, the orchestrator's option (d) (the original download plus stems as Opus 256k, about 15–20 MB a song, decoded on the laptop at sync time), extra R2 storage (the user's OK), or a USB disk. Then deploy-plan step 6.
+1. **Rerun the live Desgraciat spec after Frontend's Desgraciat player lands** (`QUINA_LIVE_CLOUD=https://quina-dev.barrakudesbegur.org npx playwright test desgraciat-live` in tools/e2e) and look at the phone screenshots in `tools/e2e/results/`. It passed on 2026-11-25 against `ce77e303`.
+2. **This year's pool** (milestone Thu 10 Dec): measure it on 2 Dec, then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
+   - **Contingency (option d)**, only if the final pool goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
+     - push: the pool's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
+     - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
+     - the manifest then lists the .opus and source files. The decoded FLACs stay local, so the preflight's hash check must skip them.
+   - **Provisional hooks** (Sound engine, coming): a bulk approval of each song's top automatic hook, marked `provisional: true`, so a new pool can be rehearsed before the user's approval pass. The preflight should WARN when a playable song's best hook is provisional. Sound engine sends the exact field.
 3. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
