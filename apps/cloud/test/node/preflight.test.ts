@@ -36,7 +36,15 @@ test('power, disk and the browser', () => {
   assert.equal(c.diskCheck(3e9).status, 'warn');
   assert.equal(c.diskCheck(50e9).status, 'pass');
   const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --kiosk http://localhost:5174/show/`]).status, 'pass');
+  const flags = '--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows';
+  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${flags} --kiosk http://localhost:5174/show/?autostart=1`]).status, 'pass');
+  // Without the throttling flags a covered window stalls the show: fail.
+  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --kiosk http://localhost:5174/show/`]).status, 'fail');
+  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --kiosk http://localhost:5174/show/`]).status, 'fail');
+  // The flags but no autoplay: the page waits for a click.
+  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show ${flags} --kiosk http://localhost:5174/show/`]).status, 'warn');
+  // Only someone's everyday Chrome: not the show's.
+  assert.equal(c.browserCheck([`${chrome} --profile-directory=Default`]).status, 'warn');
   assert.equal(c.browserCheck([chrome, `${chrome} Helper (Renderer) --type=renderer`]).status, 'warn');
   assert.equal(c.browserCheck(['/usr/bin/zsh']).status, 'warn');
 });

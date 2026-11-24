@@ -52,7 +52,7 @@ export function cardsCheck(cards: unknown, poolSongIds: ReadonlySet<number>, pla
 
 /** The songs: how many the pool has, and how many are ready to play. */
 export function songsCheck(poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>, missingAudio: readonly number[]): Check {
-  if (playableIds.size === 0) return check('Pool', 'Songs', 'fail', 'no playable song: run the preparation (npm run prep)');
+  if (playableIds.size === 0) return check('Pool', 'Songs', 'fail', 'no playable song: pull the prepared media (npm run media -- pull, or npm run setup:laptop), or prepare the pool (npm run prep in apps/show)');
   if (missingAudio.length > 0) return check('Pool', 'Songs', 'fail', `playable songs without their decoded audio: ${missingAudio.slice(0, 10).join(', ')}${missingAudio.length > 10 ? '…' : ''}`);
   const notReady = [...poolSongIds].filter((id) => !playableIds.has(id));
   if (notReady.length > 0) return check('Pool', 'Songs', 'warn', `${playableIds.size} of ${poolSongIds.size} playable; not ready: ${notReady.slice(0, 10).join(', ')}${notReady.length > 10 ? '…' : ''}`);
@@ -145,13 +145,24 @@ export function diskCheck(freeBytes: number): Check {
 }
 
 /** The show page's browser, from the process list: it must play sound without a click. */
+/**
+ * Chrome must keep the show page's timers running even when its window isn't in front: a throttled page starves
+ * the engine's lookahead (a hidden tab's timers fire once a minute after five minutes).
+ */
+export const SHOW_CHROME_FLAGS = ['--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] as const;
+
 export function browserCheck(processes: readonly string[]): Check {
   const chrome = processes.filter((p) => /Google Chrome\.app\/Contents\/MacOS\/Google Chrome(\s|$)/.test(p));
   if (chrome.length === 0) return check('Laptop', 'Browser', 'warn', 'Chrome is not running: open the show page with the kiosk command (night runbook)');
-  if (chrome.some((p) => p.includes('--autoplay-policy=no-user-gesture-required'))) {
-    return check('Laptop', 'Browser', 'pass', `Chrome with autoplay allowed${chrome.some((p) => p.includes('--kiosk')) ? ', in kiosk mode' : ''}`);
+  // The show's own Chrome: the kiosk command's profile or the show page's address.
+  const show = chrome.find((p) => p.includes('--user-data-dir=/tmp/quina-show') || /\/show\/(\?|show\.html|\s|"|$)/.test(p) || p.includes('--kiosk'));
+  if (!show) return check('Laptop', 'Browser', 'warn', "Chrome runs, but not the show's: open the show page with the kiosk command (night runbook)");
+  const missing = SHOW_CHROME_FLAGS.filter((f) => !show.includes(f));
+  if (missing.length) return check('Laptop', 'Browser', 'fail', `the show's Chrome runs without ${missing.join(' ')}: a covered or minimised window would stall the show. Quit it and start it with the kiosk command (night runbook)`);
+  if (!show.includes('--autoplay-policy=no-user-gesture-required')) {
+    return check('Laptop', 'Browser', 'warn', "the show's Chrome runs without --autoplay-policy=no-user-gesture-required: the show page needs a click before it plays");
   }
-  return check('Laptop', 'Browser', 'warn', 'Chrome runs without --autoplay-policy=no-user-gesture-required: the show page needs a click before it plays');
+  return check('Laptop', 'Browser', 'pass', `the show's Chrome: no background throttling, autoplay allowed${show.includes('--kiosk') ? ', in kiosk mode' : ''}`);
 }
 
 // ---- the network and the cloud ----------------------------------------------------------------------------
