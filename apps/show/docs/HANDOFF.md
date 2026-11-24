@@ -183,3 +183,8 @@ From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
 - **Orchestrator, 2026-11-24:** the user decided Q26 = A+ (an installed show laptop, media pulled from R2). No browser time-stretcher is needed; "nothing installed" is deferred until after the event.
 - **Orchestrator, 2026-11-24 (from 1e, c424649):** make `apps/cards/dist/cards.json` plus `card-types.json` the formal source of card types, with a type per round in `RoundPlan`. Then drop `plan.cardTypes`' name, colour and price. For now, Admin shows the types read-only from `card-types.json` and keeps `plan.cardTypes` in step (`withPrintedCardTypes`).
 - **Orchestrator, 2026-11-24:** Pause (Pausa) reuses the existing `pause {on}` / `ShowState.pause` / public `pause`, the same state as the technical pause. The only engine change: **during a pause, play the interval music instead of the Hold music**, and resume into the round with a normal transition. The UI (1e) and the feed (b2) need nothing new.
+- **Orchestrator, 2026-11-24 (from b2):** `tools/prep/tests/test_hooks_auto.py::test_the_candidates_are_the_chorus_starts_…` is flaky. `hook_detect.section_kinds` uses `scipy.linalg.eigh` on a near-degenerate Laplacian, and multithreaded BLAS can flip the segmentation, so the top-1 ranking changes (bar 40 at 0.925 vs bar 4 at 0.82). CI now pins BLAS to 1 thread, which hides it. To fix:
+  - (a) make section_kinds deterministic and robust (fix the eigenvector signs, and/or average over several k);
+  - (b) widen the synthetic song's chorus/verse gap;
+  - (c) assert the docstring's real claim (all chorus starts in the top 4) instead of an exact top-1.
+  On real songs it only changes which candidate is proposed first, since a human approves hooks.
