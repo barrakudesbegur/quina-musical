@@ -241,7 +241,7 @@ export const S = {
     winnersTitle: 'Guanyadors',
     privacy: 'Els noms són privats: mai surten al projector, als mòbils ni a git. Només es guarden a les dades de la partida.',
     noWinners: 'Encara no hi ha guanyadors.',
-    col: { round: 'Quina', kind: 'Premi', card: 'Cartó', song: 'Cançó guanyadora', prize: 'Què guanya', name: 'Nom', notes: 'Notes', action: 'Desar' },
+    col: { round: 'Quina', kind: 'Premi', card: 'Cartró', song: 'Cançó guanyadora', prize: 'Què guanya', name: 'Nom', notes: 'Notes', action: 'Desar' },
     nameLabel: (card: string) => `Nom del guanyador del ${card.toLowerCase()}`,
     notesLabel: (card: string) => `Notes del ${card.toLowerCase()}`,
     saveWinner: 'Desar',
