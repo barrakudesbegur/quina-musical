@@ -92,6 +92,59 @@ The console is a tool. Its motion is feedback, never decoration, and it never de
 | `toast-in` | `command.rejected`, saved and other notices | A toast slides up from the bottom and auto-hides after 4 s | 200 ms in and out | It appears |
 | `conn-change` | A connection chip changes state | The colour fades and the chip blinks once | 200 ms | Colour only |
 
+## The Desgraciat round (Quina Desgraciada)
+
+Status: a draft for the user's review (2026-11-25), with boards on the design canvas under "Quina Desgraciada". Nothing here is coded yet. The protocol shapes are being agreed with Sound engine (`RoundKind 'desgraciat'`, `claim {kind:'standing'}`, the Check outcome `'fallen'`, the private `ShowState.standing`).
+
+The rules (GLOSSARY, decisions › Changes): everyone stands; a card is out ("Assegut") as soon as any of its songs lands; the last card standing ("Dempeus") wins. The motion follows the same principles as the rest of the show:
+- **A card falls only at its landing.** Nothing moves before `landAtMs`.
+- **The standing count stays off the projector and phones.** It's the console's private data, like the possible winners.
+- **On every screen, a ✓ means "good for the claim".** In this round a ✓ means the song hasn't sounded, and a ✗ marks the song that sank the card.
+
+### Projector
+
+| Hook | Trigger | What moves | Time · easing | Sound (engine) | Reduced motion |
+|---|---|---|---|---|---|
+| `scene-enter` (the round's intro) | `roundStart` for a Desgraciat round | Same as any intro: the name "Quina Desgraciada" and its prize rise in. Then the hands-up nino (nino-mans-adalt) bounces in beside the name: the "everyone stand up" cue. The presenters explain the rules out loud | Name 480 ms ease-out; nino 600 ms `--ease-bounce`, 300 ms after | Interval music, as for any intro | All appear at once; still nino |
+| (play) | Landings in a Desgraciat round | Nothing new. The corner label reads "Quina Desgraciada" instead of "Quina N". Heat climbs as fewer cards stand (the engine's `'standing'` Phase), so the garland carries the tension | As in play | As in play | As in play |
+| `check-enter` (standing) | `check.scheduled` with `kind: 'standing'` | As for a Bingo: the plate "CARTRÓ #57" and the card-type badge drop in, and all 12 covers deal in row by row. No row dims | Plate and badge 400 ms `--ease-bounce`; deal 600 ms | none | They appear |
+| `check-type` | As for every Check | Unchanged: the badge gets its ✓, or its ✗ for a card of another type | 300 ms | none | Unchanged |
+| `check-step` (standing) | Each `steps[i].atMs`, in card order (row by row) | The cover being checked gets the pulsing orange ring for `durationMs`. At its end the mark stamps on at the corner. **Not landed:** a green ✓ (scale 2 → 1, −12°), a green ring and one small bounce, with the accessible label "No ha sonat". **Landed:** the tile shakes (3 × 6 px), its cover turns grey, and it gets a red ring and a red ✗ ("Ha sonat"). The Check stops at the first landed song | Ring per step (shorter than a Bingo's snippets: about 600 ms, the engine's choice); stamp 300 ms `--ease-bounce` | The engine's per-step sound on ✓; the "broken record" on ✗ | Static outline; marks appear with no stamp or shake |
+| `check-result` (standing, valid) | `endAtMs`, all 12 ✓ | The gold plaque "Cartró correcte!" slides up over the middle of the card, exactly as for a Bingo | 400 ms ease-out | none (the presenters decide) | It appears |
+| `check-fallen` | `endAtMs` with outcome `'fallen'` | ① The plate turns slate with one shake. ② A dark scrim fades over the card, and the red beams fade in behind it. ③ The huge red ✗ slams in over the middle. ④ **The song that sank the card is lifted above the scrim:** its tile pops (scale 1 → 1.12 → 1.06) with its ✗, so the whole tent sees which song it was. ⑤ The sitting nino (nino-sentat) tumbles down beside the ✗ (instead of the squashed nino of a normal failure): the card sat down. The tiles after the sinking song were never checked and fade to 10 % | Plate shake 300 ms; scrim 400 ms; ✗ 400 ms `--ease-bounce`; tile pop 500 ms `--ease-bounce`, 150 ms after the ✗; nino 600 ms `--ease-bounce`, 200 ms after the pop | The Failure fanfare, at the presenters' decision | Slate plate, scrim, ✗, the lifted tile and the nino appear at once; still beams |
+| `celebrate` (standing) | `celebration.started` with `kind: 'standing'` | The Bingo-sized Celebration: gold flash, then **"DEMPEUS!"** slams in from scale 3 at −5°, double confetti, rotating rays and the prize panel. The hands-up nino bounces in. No card numbers, as in every Celebration | `--dur-celebrate` 1.2 s; idle loop afterwards | Impact plus the Clear fanfare, then the Celebration music | Title and prize appear together |
+
+### Player app
+
+Phones work out each card's state from the public landings, the round's kind and the round's card type. They never know the count or the other cards, so they never announce a winner.
+
+| Hook | Trigger | What moves | Time · easing | Sound (phone) | Reduced motion |
+|---|---|---|---|---|---|
+| `stand-up` | The Desgraciat round starts (its Shuffle) and the phone holds cards of the round's type | Each valid card's green **DEMPEUS** badge pops in at the card header's right (scale 0.4 → 1 with an overshoot), and the card's green outline and glow fade in. Cards stagger by 80 ms. Cards of another type show nothing new: they don't play this round. The glow is static, never breathing, to save battery | Badge 300 ms `--ease-bounce`; glow 300 ms | Tap blip, once | Badge and outline appear |
+| `card-fall` | A landing (at `landAtMs`) is on a card that is still standing | ① **The ✗ stamps on the cell:** a red ✗ over a red-tinted cover, scale 2 → 1 at −12° like the projector's stamp. ② **The card sits down,** 250 ms later: it drops 10 px and tilts −2° with a small squash (scaleY 0.94 → 1). A grey veil (an overlay layer's opacity, never a CSS filter) fades over it to 45 %. The badge flips DEMPEUS → **ASSEGUT** (rotateX 90° → 0°, slate). The glow fades out. ③ The sitting nino sticker drops onto the card's top-right corner (translateY −40 px → 0, landing at −14°). With several of the phone's cards falling on the same song, they follow each other by 120 ms. **Cards never reorder:** people find their card by its place | Stamp 300 ms `--ease-bounce`; sit 450 ms `--ease-bounce`; veil 300 ms; badge flip 300 ms; nino 400 ms `--ease-bounce` | A short descending two-note "bloop" (180 ms), once per landing however many cards fall. Bonus 60 ms vibration (Android only) | The ✗, veil, ASSEGUT badge and nino appear at once |
+| `mark-in` (Desgraciat) | A later landing on a card that has already sat down | Only the cell's ✗ stamps on. Nothing else moves, and there's no sound: that card already fell | 300 ms `--ease-bounce` | none | The ✗ appears |
+| `celebrate` (standing) | Scene `celebration` with `kind: 'standing'` | If the confirmed winner is one of the phone's own cards: "Dempeus fins al final!" with that card, green rays and 40 confetti pieces (board "Quina Desgraciada: el teu cartró és l'últim dempeus"). Otherwise the regular Celebration screen titled "DEMPEUS!" | 1.8 s | The celebration blip | No confetti; title and card appear |
+
+The near-win highlight doesn't run in this round, since there is no Line or Quina to be near. The landing reel, Historial, the Check's "Comprovant…" and the pause work as usual.
+
+### Console
+
+The presenters need the standing cards to call the winner, so the list is always visible during this round. It's present-tense information, not a forecast, so it doesn't hide behind "Mirar el futur". It's private: it never reaches the projector or phones.
+
+| Hook | Trigger | What moves | Time · easing | Reduced motion |
+|---|---|---|---|---|
+| (layout) | A Desgraciat round is on | A **Dempeus** tab comes first in the Tabs component and is selected when the round starts. It shows the big count ("23 dempeus de 180") and, from 60 cards down, every standing card as a chip ("#57"), sorted. Chips of cards not in play (not sold) have a dashed outline and a "no venut" icon. Futur shows the songs left until one card stands, behind its usual reveal | none | none |
+| `standing-count` | `standing.count` changes | The old number slides down 12 px and fades as the new one drops in from −12 px. From 3 cards down the number turns gold | 200 ms `--ease-out` | It changes at once |
+| `standing-fall` | The landing knocks cards out (the chips missing from the new `standing.cardIds`) | Each fallen chip turns red with a ✗ and holds for 600 ms so the presenters can read it out, then shrinks (scale 1 → 0.6) and fades. The remaining chips slide together (FLIP translate). At most 20 chips animate; the rest vanish at once | Red at once; hold 600 ms; out 250 ms; close-up 250 ms `--ease-out`; 30 ms stagger | Fallen chips disappear; the rest jump into place |
+| `standing-last` | `standing.count` reaches 1 | The last chip grows into a big gold-ringed card number ("#57", with "no venut" when it isn't in play). A **Comprovar #57** button slides up under it and becomes the default action (`default-move`: the A ring and the Wii A badge move to it). Pressing it sends `claim {cardId: 57, kind: 'standing'}`. The presenters still decide | Grow 300 ms `--ease-bounce`; button 200 ms `--ease-out` | Number and button appear |
+| `check-step` (standing) | Each `steps[i].atMs` | The Check list row reads "no ha sonat ✓" or "ha sonat ✗" as each song is checked, like a normal Check | 150 ms | It appears |
+
+The claim dialog in this round takes only the card number: there is no Line or Quina choice.
+
+### Admin
+
+There's no motion here. The round editor offers a third kind, **Desgraciada**, and refuses a second one in the same night. That round shows one prize bundle, "Premi de l'últim dempeus", with no Line bundle. Its card type defaults to the normal card and can be changed like any round's. It can be moved like any upcoming round.
+
 ## Sound map
 
 | Who | What |
@@ -99,10 +152,14 @@ The console is a tool. Its motion is feedback, never decoration, and it never de
 | Engine, on the PA | Transitions, landings and impacts, effects, Signatures, the Shuffle's item box, Final Lap, Check snippets and the "broken record", the Failure and Clear fanfares, Celebration and Interval music, Hold music |
 | Projector | Silent (on the laptop the audio comes from the engine) |
 | Console | Silent |
-| Phones | Interface sounds only, ON by default and switchable off: tap blip, landing pop, mark "tock", near-win chime, celebration blip, and the reel's ticks (limited to 10 a second). They're synthesised in WebAudio, under 200 ms (the celebration blip 0.8 s), quiet (−24 dBFS peak), never more than one at a time, and never while the page is hidden. 400 phones play them at different moments, so they stay short and soft so they never compete with the presenters |
+| Phones | Interface sounds only, ON by default and switchable off: tap blip, landing pop, mark "tock", near-win chime, the Desgraciat's fall "bloop", celebration blip, and the reel's ticks (limited to 10 a second). They're synthesised in WebAudio, under 200 ms (the celebration blip 0.8 s), quiet (−24 dBFS peak), never more than one at a time, and never while the page is hidden. 400 phones play them at different moments, so they stay short and soft so they never compete with the presenters |
 
 ## Open points for the review
 
 - The confetti amounts (projector 120 or 200, phones 40), and whether the phone's Celebration should show at all for rounds the player has no card in.
 - How hard the landing title should slam: the bounce overshoot (`--ease-bounce`), tuned at the rehearsal from the back of the tent.
 - Whether the Shuffle should be shorter (6 s) in later rounds, once people know it.
+- **The Desgraciat:**
+  - Should the projector show the standing count ("Queden 12 dempeus")? The default is no: the count is private. It also includes cards that weren't sold, which would confuse the audience.
+  - The sitting nino on a fallen card, on phones and on the projector's `check-fallen`: keep it, or use the squashed nino of a normal failure?
+  - "DEMPEUS!" as the Celebration title.
