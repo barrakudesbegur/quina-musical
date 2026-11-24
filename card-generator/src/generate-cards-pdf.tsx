@@ -15,6 +15,7 @@ import { chunk } from 'lodash';
 import { join } from 'path';
 import React from 'react';
 import { Card } from './generate-cards-json';
+import { CARD_TITLE, PAPER_COLOR, VERSION_STAMP } from './config';
 import { generateQRCodeDataUri } from './utils/qr';
 
 type CardWithQR = Card & { qrCodeDataUri: string };
@@ -44,6 +45,7 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     flexGrow: 1,
+    backgroundColor: PAPER_COLOR,
   },
   pageColumns: {
     display: 'flex',
@@ -388,8 +390,8 @@ export async function generateCardsPDF(data: Card[], outputPath: string) {
   await render(
     <AllCardsDocument
       cards={cardsWithQR}
-      title="QUINA QUINA!"
-      version="2025"
+      title={CARD_TITLE}
+      version={VERSION_STAMP}
     />,
     outputPath
   );

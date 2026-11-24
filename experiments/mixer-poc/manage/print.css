@@ -1,0 +1,46 @@
+/*
+ * Print theme for the cheat sheet (Admin's #xuleta view): A4, black on white, large type. Like any theme,
+ * it overrides the role tokens rather than styling components; black and white are not tokens yet (proposed
+ * as --color-print-ink and --color-print-paper in ui/tokens.css), so they are set here.
+ */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  :root {
+    --color-bg: #fff;
+    --color-bg-deep: #fff;
+    --color-surface: #fff;
+    --color-paper: #fff;
+    --color-text: #000;
+    --color-text-muted: #000;
+    --color-text-on-paper: #000;
+    --color-line: #000;
+    --color-accent: #000;
+    --line-width: 1pt;
+    /* Large type on paper: read at arm's length, in a dim tent */
+    --text-xs: 10pt;
+    --text-sm: 11pt;
+    --text-md: 13pt;
+    --text-lg: 16pt;
+    --text-2xl: 22pt;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    print-color-adjust: exact;
+  }
+
+  .manage__header,
+  .manage__nav {
+    display: none;
+  }
+
+  .manage__main {
+    max-width: none;
+    padding: 0;
+  }
+}

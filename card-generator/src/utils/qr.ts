@@ -1,13 +1,11 @@
 import QRCodeStyling from 'qr-code-styling';
 import { JSDOM } from 'jsdom';
 import nodeCanvas from 'canvas';
-import { urlWithParams } from './urls';
+import { cardUrl } from '../config';
 
-const BASE_URL = 'https://quina.barrakudesbegur.org';
-const PARAM_CARD_ID = 'c';
-
+/** The card's QR (its year-tagged link, see config.ts) as a PNG data URI. */
 export async function generateQRCodeDataUri(
-  cardId: string,
+  cardId: number,
   size: number = 300
 ) {
   const qrCode = new QRCodeStyling({
@@ -17,7 +15,7 @@ export async function generateQRCodeDataUri(
     shape: 'square',
     jsdom: JSDOM,
     nodeCanvas,
-    data: urlWithParams(BASE_URL, { [PARAM_CARD_ID]: cardId }),
+    data: cardUrl(cardId),
     margin: 0,
     qrOptions: {
       typeNumber: 0,
