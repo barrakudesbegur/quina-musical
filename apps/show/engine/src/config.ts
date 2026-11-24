@@ -259,8 +259,18 @@ export const SUSPENSE = Object.freeze({
   coastSpinUpSec: 3,
   wanderCards: [3, 1.5] as const,
   wanderBars: [4, 11] as const,
-  /** Exit moves for the outgoing song as the Suspense starts. */
+  /** Exit moves for the outgoing song: as the Suspense starts (nothing to loop), or in its final bar (A's loop). */
   exits: ['echo', 'wash', 'brake', 'spinback'] as const,
+  /** A keeps playing and repeats the phrase of this many bars it is in (plan/loop.ts) while the build grows. */
+  loopBars: 4,
+  /** Over A's loop, A's high-pass climbs to this and its level dips by this as the build reaches full intensity. */
+  aHpfTopHz: 350,
+  aDipDb: -3,
+  /** The drum hovers over this many pending songs (the real next one among them), and each is teased in turn
+   * over A's loop: its hook, low-passed, at this level (on its hook's loudness trim). */
+  hoverSongs: 3,
+  teaseLpfHz: 1100,
+  teaseGainDb: -9,
 });
 
 /**

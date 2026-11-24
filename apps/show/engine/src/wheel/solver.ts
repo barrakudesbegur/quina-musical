@@ -55,7 +55,7 @@ export interface SimRun {
 export type RecordedRun = SimRun & { positions: number[]; velocities: number[] };
 
 /** How a Solution was made: a physics spin, the analytic fallback, or a sampled glide or brake. */
-export type SolutionMethod = 'physics' | 'analytic' | 'glide' | 'brake' | 'coast' | 'landing';
+export type SolutionMethod = 'physics' | 'analytic' | 'glide' | 'brake' | 'coast' | 'landing' | 'hover';
 
 /**
  * A replayable drum motion, from any of the solvers. `positions` are cards relative to `fromIndex`, sampled
@@ -325,7 +325,7 @@ export function landedIndex(solution: Solution): number {
 // Build a replayable solution from a sampled motion x(t) (cards, relative to fromIndex) over durationSec.
 function sampledSolution({ cardCount, fromIndex, durationSec, x, v, method }: {
   cardCount: number; fromIndex: number; durationSec: number; x: (t: number) => number;
-  v: (t: number) => number; method: 'glide' | 'brake' | 'coast' | 'landing';
+  v: (t: number) => number; method: 'glide' | 'brake' | 'coast' | 'landing' | 'hover';
 }): Solution {
   const steps = Math.max(1, Math.ceil(durationSec / FIXED_STEP));
   const positions = new Float32Array(steps + 1);
@@ -422,6 +422,29 @@ export function landingBrake({ cardCount, fromPosition, velocity, targetIndex, d
     cardCount, fromIndex: fromPosition, durationSec: D, method: 'landing',
     x: (t) => v0 * t + b * t * t + c * t ** 3,
     v: (t) => v0 + 2 * b * t + 3 * c * t * t,
+  });
+}
+
+// Over a Suspense's loop: from the drum's current motion to card `targetIndex` by `arriveSec`, the shortest way
+// round (it may swing back), speed continuous at the start and at rest on arrival; then it hovers around the card,
+// swaying a third of a card either way and settling in from rest, until `durationSec`.
+export function hoverSpin({ cardCount, fromPosition, velocity, targetIndex, arriveSec, durationSec, sway = 0.33, swayPeriodSec = 1.6 }: {
+  cardCount: number; fromPosition: number; velocity: number; targetIndex: number; arriveSec: number; durationSec: number; sway?: number; swayPeriodSec?: number;
+}): Solution {
+  const A = Math.max(0.05, arriveSec);
+  const target = targetIndex + cardCount * Math.round((fromPosition - targetIndex) / cardCount);
+  const d = target - fromPosition;
+  const v0 = velocity;
+  const b = (3 * d) / A ** 2 - (2 * v0) / A;
+  const c = v0 / A ** 2 - (2 * d) / A ** 3;
+  const w = (2 * Math.PI) / swayPeriodSec;
+  const settle = 0.5;
+  const swayAt = (u: number) => sway * Math.sin(w * u) * (1 - Math.exp(-u / settle));
+  const swayV = (u: number) => sway * (w * Math.cos(w * u) * (1 - Math.exp(-u / settle)) + (Math.sin(w * u) * Math.exp(-u / settle)) / settle);
+  return sampledSolution({
+    cardCount, fromIndex: fromPosition, durationSec: Math.max(A, durationSec), method: 'hover',
+    x: (t) => (t <= A ? v0 * t + b * t * t + c * t ** 3 : d + swayAt(t - A)),
+    v: (t) => (t <= A ? v0 + 2 * b * t + 3 * c * t * t : swayV(t - A)),
   });
 }
 

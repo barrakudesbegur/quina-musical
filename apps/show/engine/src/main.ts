@@ -375,7 +375,11 @@ function apply(effect: Effect): void {
     case 'startSuspense':
       return startSuspense(effect);
     case 'suspenseBar':
-      applyPlan({ events: effect.events }, { graph, decks: {} });
+      // Over A's loop a bar also thins A out and may tease a hovered song.
+      applyPlan({ events: effect.events }, { graph, decks: { A: rt.outgoing }, decoy: playDecoy });
+      return;
+    case 'suspenseHover':
+      drum.hoverTo({ audible: clock.audible(), targetId: effect.cardId, arriveAt: effect.at, until: effect.until });
       return;
     case 'prepareBlend':
       blends.retain([effect.aSongId]);
@@ -496,8 +500,10 @@ function playDecoy({ songId, at, offset, cutAt, cutSec, gainDb, lpfHz }: DecoyEv
 
 // Suspense opens: A ducks and exits on its downbeat, the loop's bars follow (suspenseBar effects), the drum coasts.
 function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSuspense'>): void {
-  const outgoing = open.a ? rt.current : null;
-  if (!open.a && rt.current) rt.current.fadeOut(0.8);
+  // Over A's loop A keeps playing (its phrase repeats by `cue` effects); otherwise it exits, or fades if it can't.
+  const keepsA = open.loop != null && rt.current?.songId === open.loop.songId;
+  const outgoing = open.a || keepsA ? rt.current : null;
+  if (!open.a && !keepsA && rt.current) rt.current.fadeOut(0.8);
   applyPlan({ events: open.events }, { graph, decks: { A: outgoing } });
   if (outgoing && open.a) outgoing.stop(open.a.stopAt);
   if (fromHoldMusic) {

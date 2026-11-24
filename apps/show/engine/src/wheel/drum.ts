@@ -1,7 +1,7 @@
 // The 3D drum from shuffle-test, driven by a solved trajectory replayed on the audible audio clock.
 // The DOM structure, layout and blur come from shuffle-test/main.js; cards from shuffle-test/cards.js.
 import { Flapper, FIXED_STEP } from './physics.ts';
-import { positionAt, velocityAt, tickTimes, brakeSpin, brakeRest, glideSpin, coastSpin, landingBrake, type Solution, type Tick } from './solver.ts';
+import { positionAt, velocityAt, tickTimes, brakeSpin, brakeRest, glideSpin, coastSpin, hoverSpin, landingBrake, type Solution, type Tick } from './solver.ts';
 import { drumTick } from '../audio/synth/clicks.ts';
 import { createAlbumCard, type Album } from './shuffle-cards.ts';
 
@@ -270,6 +270,22 @@ export class DrumView {
     });
     this.spin = {
       solution, startCtx, landAt: startCtx + durationSec, targetId: null,
+      ticks: tickTimes(solution), audioTick: 0, visualTick: 0, lastTickCtx: -1, landed: false, quiet: true, kind: 'coast',
+    };
+  }
+
+  // Over a Suspense's loop: from wherever it is, swing to `targetId` (a pending song being teased) by `arriveAt`,
+  // the shortest way, and hover around it until `until`. The release's brakeTo takes over from there.
+  hoverTo({ audible, targetId, arriveAt, until }: { audible: number; targetId: number; arriveAt: number; until: number }): void {
+    const n = this.cards.length;
+    const targetIndex = this.indexOf(targetId);
+    if (!n || targetIndex < 0) return;
+    const { position, velocity } = this.motionAt(audible);
+    const from = position - Math.floor(position / n) * n;
+    const solution = hoverSpin({ cardCount: n, fromPosition: from, velocity, targetIndex, arriveSec: Math.max(0.4, arriveAt - audible), durationSec: Math.max(1, until - audible) });
+    this.clearSelection();
+    this.spin = {
+      solution, startCtx: audible, landAt: until, targetId: null,
       ticks: tickTimes(solution), audioTick: 0, visualTick: 0, lastTickCtx: -1, landed: false, quiet: true, kind: 'coast',
     };
   }

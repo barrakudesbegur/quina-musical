@@ -61,9 +61,9 @@ import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
-import { openSuspense, releaseSuspense, suspenseBar, type SuspenseOpen } from '../plan/suspense.ts';
+import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
 import { withDecoy } from '../plan/decoys.ts';
-import { pickHook } from '../plan/hooks.ts';
+import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
@@ -137,6 +137,10 @@ export interface SuspenseState {
   nextBar: number;
   fromSongId: number | null;
   fromHoldMusic: boolean;
+  /** Over A's loop: the pending songs the drum hovers over and teases in turn (the real next one among them). */
+  hover: number[];
+  /** Teases played so far (the next one is of `hover[teases % hover.length]`). */
+  teases: number;
 }
 
 export interface Landing {
@@ -163,6 +167,14 @@ export interface HoldState {
 }
 
 // ---- effects: what the runtime must do. Audio-clock times in seconds. -------------------------------------
+/** Over a Suspense's loop, the drum swings to `cardId` (a pending song being teased) by `at` and hovers there until `until`. */
+export interface SuspenseHoverEffect {
+  type: 'suspenseHover';
+  cardId: number;
+  at: number;
+  until: number;
+}
+
 /** Re-cue the playing song so `offset` plays at `at` (a repeat of the phrase loop, plan/loop.ts). */
 export interface CueEffect {
   type: 'cue';
@@ -369,6 +381,7 @@ export type Effect =
   | JournalRequestEffect
   | StartSuspenseEffect
   | SuspenseBarEffect
+  | SuspenseHoverEffect
   | CheckSnippetsEffect
   | CancelCheckEffect
   | CelebrationMusicEffect
@@ -1236,11 +1249,17 @@ export class Show {
     this.startPlaying();
     const id = `tr-${++this.transitionCount}`;
     const fromHoldMusic = this.holdMusic || this.bed != null;
+    // Over A's loop the drum hovers over a few pending songs, the real next one among them, teased in turn.
+    const hover = open.loop ? this.hoverSongs(songId, seed) : [];
     this.suspense = {
       id, reqId, songId, targetPos, open, seed, startedAt: now, autoReleaseAt: now + SUSPENSE.autoReleaseSec, nextBar: 0,
-      fromSongId: A ? A.songId : null, fromHoldMusic,
+      fromSongId: A ? A.songId : null, fromHoldMusic, hover, teases: 0,
     };
-    if (!A) this.current = null;
+    if (open.loop && cur) {
+      // A keeps playing: its phrase repeats from its end until the release lands B on it.
+      this.loop = { songId: cur.songId, phrase: open.loop.phrase, nextAt: open.loop.firstPassAt + open.loop.passSec, until: null, purpose: 'suspense' };
+    } else if (!A) this.current = null;
+    if (hover.length) this.prefetch();
     this.status = 'transition';
     this.hold = null;
     this.timers = { autoAt: null, holdMusicAt: null };
@@ -1272,10 +1291,46 @@ export class Show {
       return;
     }
     const { open } = s;
-    while (open.loopStart + s.nextBar * open.bar - SUSPENSE.scheduleAheadSec <= now) {
-      this.out.push({ type: 'suspenseBar', bar: s.nextBar, events: suspenseBar(open, s.nextBar) });
+    while (barSpan(open, s.nextBar).t0 - SUSPENSE.scheduleAheadSec <= now) {
+      const events = suspenseBar(open, s.nextBar);
+      const tease = this.teaseFor(s, s.nextBar);
+      if (tease) {
+        events.push(...tease.events);
+        this.out.push({ type: 'suspenseHover', cardId: tease.songId, at: tease.at, until: tease.until });
+      }
+      this.out.push({ type: 'suspenseBar', bar: s.nextBar, events });
       s.nextBar++;
     }
+  }
+
+  /**
+   * The pending songs a Suspense hovers over: the real next one and up to SUSPENSE.hoverSongs − 1 others still to
+   * play this round, in a seeded order (where the real one sits gives nothing away).
+   */
+  hoverSongs(next: number, seed: number): number[] {
+    const rng = seededRandom(seed ^ 0x68e31da4);
+    const pending = this.queue.slice(this.position + 2);
+    const others: number[] = [];
+    while (others.length < SUSPENSE.hoverSongs - 1 && pending.length) others.push(...pending.splice(Math.floor(rng() * pending.length), 1));
+    const all = [next, ...others];
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return all;
+  }
+
+  /** Bar `k`'s tease over A's loop, of the next hovered song whose audio is decoded (it is skipped otherwise). */
+  teaseFor(s: SuspenseState, k: number): { events: PlanEvent[]; songId: number; at: number; until: number } | null {
+    if (!s.open.loop || !s.hover.length) return null;
+    const songId = s.hover[s.teases % s.hover.length];
+    const analysis = this.env.analysis(songId);
+    const hook = songId === s.songId ? s.open.hook : analysis ? usableHooks(analysis)[0] : null;
+    if (!analysis || !hook) return null;
+    const tease = suspenseTease(s.open, k, { songId, analysis, hook });
+    if (!tease) return null;
+    s.teases++;
+    return { ...tease, songId };
   }
 
   releaseSuspense(reqId: string | null) {
@@ -1294,7 +1349,9 @@ export class Show {
     });
     const plan: ShowPlan = { ...planned, seed: s.seed, reqId: s.reqId, targetPos: s.targetPos };
     this.suspense = null;
-    this.current = null; // A left as the Suspense opened
+    const overLoop = s.open.loop != null && this.current?.songId === s.open.loop.songId;
+    if (overLoop && this.loop) this.loop.until = plan.T; // A repeats its phrase up to the landing
+    else this.current = null; // A left as the Suspense opened
     this.transition = {
       id: s.id,
       reqId: s.reqId,
@@ -1303,8 +1360,8 @@ export class Show {
       plan,
       spinStart: plan.spinStart,
       T: plan.T,
-      fromSongId: null,
-      aExitStart: null,
+      fromSongId: overLoop ? s.fromSongId : null,
+      aExitStart: overLoop ? plan.a?.exitStart ?? null : null,
       fromHoldMusic: s.fromHoldMusic,
       afterLanding: null,
     };
@@ -1335,8 +1392,11 @@ export class Show {
   // not started; otherwise Hold music takes over.
   cancelSuspense(s: SuspenseState, reason: 'back' | 'hold') {
     const now = this.env.now();
-    const keepOutgoing = s.fromSongId != null && s.open.a != null && s.open.a.exitStart > now + 0.05 && this.current?.songId === s.fromSongId;
+    // Over A's loop A never left: it plays on from the phrase it is in.
+    const overLoop = s.open.loop != null && this.current?.songId === s.open.loop.songId;
+    const keepOutgoing = overLoop || (s.fromSongId != null && s.open.a != null && s.open.a.exitStart > now + 0.05 && this.current?.songId === s.fromSongId);
     if (!keepOutgoing) this.current = null;
+    if (this.loop?.purpose === 'suspense') this.loop = null;
     this.suspense = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
     this.out.push({ type: 'cancelTransition', planId: s.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId } });
@@ -1623,6 +1683,7 @@ export class Show {
     }
     const keepOutgoing = t.fromSongId != null && t.aExitStart != null && t.aExitStart > now + 0.05 && this.current?.songId === t.fromSongId;
     if (!keepOutgoing) this.current = null;
+    if (this.loop?.purpose === 'suspense') this.loop = null; // a released Suspense's A plays on from its phrase
     this.transition = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
     this.out.push({ type: 'cancelTransition', planId: t.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId } });
@@ -2247,6 +2308,8 @@ export class Show {
 
   prefetch() {
     const ids = [this.queue[this.position], this.queue[this.position + 1], this.queue[this.position + 2]].filter((id) => id != null);
+    // An open Suspense teases the songs it hovers over: their audio stays decoded too.
+    for (const id of this.suspense?.hover ?? []) if (!ids.includes(id)) ids.push(id);
     // With Decoys on, the song a Decoy would tease stays decoded too (the runtime drops whatever isn't listed).
     const decoy = this.decoys.enabled ? this.decoyCandidate() : null;
     if (decoy != null && !ids.includes(decoy)) ids.push(decoy);

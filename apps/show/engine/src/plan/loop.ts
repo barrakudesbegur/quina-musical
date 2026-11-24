@@ -17,7 +17,7 @@ export interface PhraseLoop {
 export interface LoopSong {
   analysis: Analysis;
   deck: DeckClock;
-  landedDownbeatIndex: number | null;
+  landedDownbeatIndex?: number | null;
 }
 
 const clockAt = (deck: DeckClock, pos: number) => deck.startCtx + (pos - deck.offset) / (deck.rate || 1);
@@ -43,6 +43,20 @@ export function nextPhraseLoop(song: LoopSong, after: number, bars = 4): PhraseL
   const from = posAt(song.deck, after);
   const start = phraseStarts(song, bars).find((k) => downbeats[k] >= from);
   return start == null ? null : { fromSec: downbeats[start], toSec: downbeats[start + bars], fromIndex: start, bars };
+}
+
+/**
+ * The phrase of `bars` the song is in at its first downbeat at or after `after` (context time), and that downbeat's
+ * index: Suspense builds from that bar on, and the phrase repeats from its end.
+ * @returns null without a landed hook to count from, or when the song has no such phrase left
+ */
+export function currentPhraseLoop(song: LoopSong, after: number, bars = 4): { phrase: PhraseLoop; downbeat: number } | null {
+  const downbeats = song.analysis.downbeats;
+  const from = posAt(song.deck, after);
+  const downbeat = downbeats.findIndex((d) => d >= from - 1e-9);
+  if (downbeat < 0) return null;
+  const start = phraseStarts(song, bars).filter((k) => k <= downbeat && downbeat < k + bars).at(-1);
+  return start == null ? null : { phrase: { fromSec: downbeats[start], toSec: downbeats[start + bars], fromIndex: start, bars }, downbeat };
 }
 
 /**

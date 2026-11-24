@@ -43,7 +43,8 @@ export const COMMANDS = Object.freeze({
   holdMusic: {},
   /**
    * Suspense: start the next song's transition and hold it open (`on: true`, or no `on` when none is open):
-   * the build loops and intensifies and the drum coasts. Release it (`on: false`, no `on`, or `next`) and the
+   * the playing song repeats its phrase while the build intensifies over it, and the drum hovers over a few
+   * pending songs as each is teased. Release it (`on: false`, no `on`, or `next`) and the
    * song lands on the next bar; it releases by itself after about 30 s. Never started automatically.
    */
   suspense: { on: { type: 'boolean', optional: true } },
