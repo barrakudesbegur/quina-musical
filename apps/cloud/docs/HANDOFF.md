@@ -48,23 +48,19 @@ All of this is on `main`, green when committed.
 | **Cutover kit:** `npm run media -- prune` for this year's pool; deploy-plan steps 6 (the new pool) and 7 (the QR domain) | `94bc4f1` |
 | **The e2e on the phones' production path:** the Worker in wrangler dev, the cloud link, a phone on `/feed`, the player as the cloud serves it; prize secrecy and "nothing private" checked on everything the phone got | `b73e864` |
 | **quina-dev redeployed** (version `82c1b157`) with a coherent build of `b73e864`: the usage report, the pool list and prune, the console, Wii and projector UI (logged in deploy-plan.md) | `b73e864` (deploy only) |
-| **Card type per round, step B:** journal-check accepts `cardType` (format only); the projection gives `PublicRound.cardType` and `intro.cardType` (else the kind's default); the GameRoom reads its stored plan through `checkGamePlan` on load (older versions migrate, and phones' public plan is derived again); the resume point carries `cardType`; `card-types.json` is served beside `cards.json` and synced to takeover laptops; the preflight checks every card's type against `card-types.json` and that every round's type has printed cards | `abb2254` |
+| **Card type per round, step B:** journal-check accepts `cardType` (format only); the projection gives `PublicRound.cardType` and `intro.cardType` (else the kind's default); the GameRoom reads its stored plan through `checkGamePlan` on load (older versions migrate, and phones' public plan is derived again); the resume point carries `cardType`; `card-types.json` is served beside `cards.json` and synced to takeover laptops; the preflight checks every card's type against `card-types.json` and that every round's type has printed cards | `1c3e571` |
+| **The Desgraciat round, step B:** journal-check takes round and win kinds from the protocol's lists (`desgraciat`, `standing` accepted; a `fallen` verdict refused); a valid `standing` claim ends the round like a Bingo, with no Line; `ShowState.standing`, the Futur's `lastStandingAt`/`standingCurve` and a Check's `outcome` are checked never to reach phones (projection test, e2e) | `ed869bc` |
+| **`npm run sync-main`** (tools/git): brings the shared main up to origin without touching anyone's uncommitted work. It replays local commits in the object store, writes only the files origin changed, and refuses if one of them is being edited. Tested on throwaway repos (`npm run test:tools`, in `npm test` and CI) | `25ca141`, `55475f2` |
 
 ## In progress
 
 - **Card type per round** (agreed with Sound engine on 2026-11-25): it lands in steps A/B/C so CI stays green. **A** (Sound engine, b71d843, with Frontend's bc88409 and Platform's test fixture 98404d9) is on origin. **B** (Platform's side) is built, see Done. **C** (Sound engine: plan v3, `cardTypes` removed) comes next. **When C lands, redeploy quina-dev:** its stored plan is v2 with `cardTypes`, and the new load path migrates it.
-- **The Desgraciat round:** agreed with Sound engine on 2026-11-25, in steps A/B/C. Platform's B goes on top of their A once it's in local main. Their C (the engine journalling the new kinds) waits until **quina-dev is redeployed with B**, not just until B is on origin. Platform tells them.
+- **The Desgraciat round:** agreed with Sound engine on 2026-11-25, in steps A/B/C. Their A (7016cea) and Platform's B (ed869bc) are committed in local main; they go to origin with Frontend's Desgraciat label keys, which the UI typecheck needs. Then **redeploy quina-dev and tell Sound engine**: their C (the engine journalling the new kinds) waits for that, not just for origin.
 
 ## The next queue, in priority order
 
 1. **Redeploy quina-dev when card type's step C lands** (plan v3): build from a clean worktree, check `/api/plan` shows every round's `cardType`, and log it.
-2. **The Desgraciat round, step B** (milestone Mon 30 Nov; on top of Sound engine's A):
-   - **order:** journal-check is strict on enums (`roundKind` normal|special, `winKind` line|bingo, `verdict` valid|invalid). A refused entry stops the link's uploads. So the cloud accepts `'desgraciat'` and `'standing'` first, quina-dev is redeployed, and only then does Sound engine push C;
-   - journal-check: `roundKind` `'desgraciat'`, `winKind` `'standing'`;
-   - projection: a valid `'standing'` claim ends the round like a Bingo and never sets the Line;
-   - `'fallen'` is a live CheckOutcome only, never journalled or public (confirmed by Sound engine). `claim.decided.verdict` stays valid|invalid;
-   - `ShowState.standing` and `FutureInfo.lastStandingAt` / `standingCurve` are private. The projection only takes pause, interval and gameEnd from ShowState, but add them to the e2e's and the projection test's "never" lists;
-   - `resumeToken()` passes `kind` as is (the code's head letter becomes D).
+2. **Push the Desgraciat A+B** once Frontend's label keys are in: `npm run sync-main`, the full `npm test` on the committed state (a clean worktree), the sensitive-file check, push; then redeploy quina-dev and tell Sound engine that C may go.
 3. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
@@ -79,7 +75,7 @@ All of this is on `main`, green when committed.
 - **Prepared data.** The e2e and the media sync need the default pool prepared on this machine (`data/out`, `data/cache`); without it the e2e skips. CI has no prepared pool, so CI doesn't run the e2e.
 - **Free plan.** A pessimistic night is about half the daily request quota; rehearsals the same UTC day share it (deploy-plan step 5).
 - **R2 is 10 GB free;** last year's pool takes 6.6 GB, so it goes before this year's is pushed (step 6). **This year's pool may not fit.** Each song is about 92 MB in the bucket (the decoded `mix.flac` about 45 MB, plus `stems/` about 47 MB). With the shared Hold and Interval music, that's room for about **100 songs**. If the playlist is bigger, the options are: R2 storage beyond 10 GB (a few cents a month, but it needs the user's OK because the rule is free plan only); leaving the stems out of the bucket and rendering them on the spare laptop; or copying the overflow laptop to laptop on a USB disk. Measure it once the pool is prepared (2 Dec): `npm run media -- prune` shows the bucket against 10 GB.
-- **The shared tree.** Other sessions' uncommitted edits sit in the same checkout: commit by path, and test the committed state in a detached worktree of HEAD (node_modules symlinked, `QUINA_OUT_DIR` pointing at the real `data/out`). Never `rm` inside a copy whose node_modules is a symlink.
+- **The shared tree.** Other sessions' uncommitted edits sit in the same checkout: commit by path, and test the committed state in a detached worktree of HEAD (node_modules symlinked, `QUINA_OUT_DIR` pointing at the real `data/out`). Never `rm` inside a copy whose node_modules is a symlink. When main and origin have diverged, use `npm run sync-main`, never `pull --rebase --autostash`.
 - **Don't commit** `legacy/2025/last-year-data/` (last year's app database export: personal data) or anything from `legacy/2025` that isn't Platform's.
 - **macOS has no `timeout`:** use `perl -e 'alarm N; exec @ARGV' …`.
 
