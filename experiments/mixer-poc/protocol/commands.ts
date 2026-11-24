@@ -57,6 +57,11 @@ export const COMMANDS = Object.freeze({
     roundsTotal: { type: 'integer', optional: true, min: 1, max: 20 },
     holdMusicAfterSec: { type: 'number', optional: true, min: 0, max: 3600 },
     finalLapStinger: { type: 'boolean', optional: true },
+    /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
+     * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
+    holdMusicOn: { type: 'boolean', optional: true },
+    /** The Interval playlist's level in dB (0 = the tracks at the songs' loudness), applied at once. */
+    intervalVolumeDb: { type: 'number', optional: true, min: -30, max: 0 },
   },
   /** A claimed Line passed its Check: the Phase starts climbing towards the Bingo. A manual override for when
    * no Check was run (a valid `decide` confirms the Line by itself); allowed in play and in the Celebration. */
@@ -124,6 +129,9 @@ export const COMMANDS = Object.freeze({
   celebrationMusic: { choice: { type: 'string', oneOf: CELEBRATION_MUSIC } },
   /** After a Bingo's Celebration: the Interval (it also starts by itself after a while). */
   interval: {},
+  /** The Interval playlist moves on to its next track, with its usual transition on the playing track's next
+   * downbeat. Only while the Interval music plays (state `intervalMusic`). */
+  intervalSkip: {},
   /** The end of the Game (scene `after`). */
   endGame: {},
   /** The technical pause ("Tornem de seguida"): on, off, or toggle (no `on`). Hold music plays meanwhile. */

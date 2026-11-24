@@ -52,8 +52,9 @@ export interface PhaseTiming {
 export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   early: {
     name: 'early',
-    // docs/dj-techniques.md › Starting weights. R8 and D10 need B's stretched render, D8 and D10 A's stem
-    // lanes, D11 B's vocals: without them the rest share the draw.
+    // docs/dj-techniques.md › Weights. R8, D10 and D16 need B's stretched render, D8, D10, D15 and D16 A's stem
+    // lanes, D11 and D19 B's vocals, D16 B's stretched voice (tight tempos, agreeing keys): without them the rest
+    // share the draw. Early keeps the Blend and the build common; the theatrical moves wait for mid.
     weights: { R8: 1, D10: 0.6, R7: 0.3, D1: 0.25, D3: 0.2, D8: 0.15, D2: 0.1, R2: 0.1, R4: 0.1, R5: 0.08, R1: 0.05, R6: 0.05 },
     bridgeBars: [1, 2],
     tease: 0,
@@ -69,7 +70,11 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   mid: {
     name: 'mid',
-    weights: { R8: 0.8, D10: 0.6, R7: 0.4, D8: 0.25, D1: 0.2, D3: 0.2, D2: 0.15, D11: 0.15, R4: 0.12, R5: 0.1, R2: 0.1, R6: 0.04, R1: 0.04 },
+    // D16 is rare (about 7.5% of pairs qualify), so it is drawn often when it does.
+    weights: {
+      R8: 0.8, D16: 1, D10: 0.6, R7: 0.45, D8: 0.25, D1: 0.2, D3: 0.2, D2: 0.15, D11: 0.15, D19: 0.12, D15: 0.12, D7: 0.12, R4: 0.12,
+      R5: 0.1, R2: 0.1, R6: 0.04, R1: 0.04,
+    },
     bridgeBars: [2],
     tease: 0.5,
     stemTease: 0.8,
@@ -84,7 +89,10 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   late: {
     name: 'late',
-    weights: { R7: 0.6, D10: 0.4, R8: 0.4, D8: 0.3, D11: 0.25, D2: 0.2, D3: 0.15, R4: 0.15, R5: 0.15, D1: 0.12 },
+    weights: {
+      R7: 0.6, D16: 0.9, D10: 0.4, R8: 0.4, D8: 0.3, D11: 0.25, D6: 0.2, D2: 0.2, D19: 0.18, D15: 0.15, D7: 0.15, D3: 0.15, R4: 0.15,
+      R5: 0.15, D1: 0.12,
+    },
     bridgeBars: [2, 4],
     tease: 1,
     stemTease: 1,
@@ -99,8 +107,9 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   final: {
     name: 'final',
-    // R10 is no longer the only final move: D2's crawl, D8's long strip-down, and the final gate and spiral.
-    weights: { R10: 0.5, D2: 0.4, D8: 0.3, D1: 0.2, D3: 0.15 },
+    // R10 is no longer the only final move: D2's crawl, D8's long strip-down, the fake drop, the braker, the
+    // mashup, the scratch, and the final gate and spiral.
+    weights: { R10: 0.5, D2: 0.4, D16: 0.4, D8: 0.3, D6: 0.3, D15: 0.2, D1: 0.2, D19: 0.15, D3: 0.15 },
     bridgeBars: [3, 4],
     tease: 1,
     stemTease: 1,
@@ -273,7 +282,7 @@ export const LAYERING = Object.freeze({
 type ByPhase<T> = Readonly<Record<PhaseName, T>>;
 
 /**
- * The DJ techniques of docs/dj-techniques.md (D1–D12) and the variants of the older recipes: what varies at
+ * The DJ techniques of docs/dj-techniques.md (D1–D16, D19) and the variants of the older recipes: what varies at
  * random, and what scales with the Phase. Levels are linear gains unless named `Db`; lengths in beats or bars
  * of the deck named. The shapes of the moves are in plan/moves.ts, plan/bridges.ts and plan/landing.ts.
  */
@@ -365,6 +374,9 @@ export const MOVES = Object.freeze({
     /** Keys incompatible or unknown: air more than pitch. */
     airHpfHz: 1500,
     airSend: 0.3,
+    /** Keys compatible: "the ghost becomes a voice", B's dry vocals at this level in the ghost's last beat. */
+    voiceChance: 0.3,
+    voiceDb: -18,
   }),
   /** D11 Vocal-chop stutter build: B's first syllable chopped faster and faster on B's grid (S2). */
   chop: Object.freeze({
@@ -398,15 +410,17 @@ export const MOVES = Object.freeze({
     minSec: 0.25,
     /** With a gap under this many B beats the swell overlaps A: A must be cut low, or the keys agree. */
     clearGapBeats: 0.5,
+    /** Rendered from B's vocals instead of its mix (when B sings at its hook and the render is ready). */
+    vocalsChance: 0.5,
   }),
-  /** The landing layer, rotated: the reverse cymbal, a dry landing, or D12's pre-verb (when rendered). */
+  /** The landing layer, rotated: the reverse cymbal, a dry landing, D12's pre-verb (when rendered) or D14's tape start. */
   landing: Object.freeze({
     weights: {
-      early: { cymbal: 0.45, dry: 0.3, preverb: 0.45 },
-      mid: { cymbal: 0.45, dry: 0.2, preverb: 0.5 },
-      late: { cymbal: 0.5, dry: 0.1, preverb: 0.5 },
-      final: { cymbal: 0.5, dry: 0, preverb: 0.5 },
-    } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb', number>>>,
+      early: { cymbal: 0.45, dry: 0.3, preverb: 0.45, tape: 0 },
+      mid: { cymbal: 0.45, dry: 0.2, preverb: 0.5, tape: 0.15 },
+      late: { cymbal: 0.5, dry: 0.1, preverb: 0.5, tape: 0.25 },
+      final: { cymbal: 0.5, dry: 0, preverb: 0.5, tape: 0.25 },
+    } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb' | 'tape', number>>>,
     /** Sample layers on the impact, one set drawn per landing ([name, gain dB]). */
     impacts: {
       early: [[['boom', -12]], [['boom', -14]], [['orchestra-hit', -14]], [['horn', -18]]],
@@ -432,6 +446,118 @@ export const MOVES = Object.freeze({
     toneRiser: 0.4,
     kicks: 0.6,
     claps: 0.5,
+  }),
+  /** D14 Tape start (P5): B powers up from a growl to full speed exactly at its pickup, in the gap. */
+  tape: Object.freeze({
+    durSec: [0.35, 0.45, 0.6] as const,
+    fromRate: 0.25,
+    fromDb: -12,
+    lpfFromHz: 800,
+    /** At least this much of it must fit in the gap (it is shortened to the gap). */
+    minSec: 0.3,
+    /** Its weight after a stop (R5, R10, D2, D15): "stop → silence → power-up" is a complete gag. */
+    afterStop: 2.5,
+    /** Its first milliseconds fade in from silence. */
+    fadeInSec: 0.005,
+  }),
+  /** D5 Riff bed: B's approved riff Signature looped on B's grid under R7's bridge (a Tease). */
+  riff: Object.freeze({
+    chance: { early: 0, mid: 0.3, late: 0.5, final: 0.6 } as ByPhase<number>,
+    gainDb: { early: -8, mid: -8, late: -7, final: -6 } as ByPhase<number>,
+    variants: { dry: 0.4, throw: 0.35, gate: 0.25 },
+    /** The build plays on top with its snare roll about 15 velocity quieter, so the riff speaks. */
+    rollScale: 0.88,
+    seamFadeSec: 0.005,
+    endFadeSec: 0.01,
+    /** At least this many of B's bars from the bridge's start to the gap (a two-bar bridge less its pickup and gap). */
+    minBars: 1.25,
+    throwSend: 0.5,
+    throwDelayBeats: [0.5, 0.75] as const,
+    throwFeedback: 0.5,
+    /** The gate variant: the last bar chopped in eighths of a beat, open half of each. */
+    gateStepBeats: 0.125,
+    gateDuty: 0.5,
+  }),
+  /** D6 Fake drop: the build peaks, a beat of silence, a bar of something else, a short re-build, the real landing. */
+  fake: Object.freeze({
+    kinds: { drums: 0.4, comedy: 0.35, kicks: 0.25 },
+    comedy: ['spongebob-boowomp', 'duck-quack', 'anime-wow'] as const,
+    comedyDb: -8,
+    kick: 0.55,
+    impact: 0.5,
+    rebuildHpfHz: 500,
+    /** The bridge must hold the first build, the fake bar and the re-build. */
+    minBridgeBars: 3,
+    /** Never within this many transitions: about once per climb to a win. */
+    cooldown: 8,
+    impactBoost: 0.1,
+  }),
+  /** D7 Pitch-up rush: A becomes the riser, its tape speed (pitch and tempo) climbing, then a breath and the hook. */
+  rush: Object.freeze({
+    bars: { early: [1], mid: [1], late: [1, 2], final: [1] } as ByPhase<readonly number[]>,
+    semitones: { early: 3, mid: 3, late: 4, final: 4 } as ByPhase<number>,
+    maxSemitones: 5,
+    hpfToHz: [400, 700] as const,
+    liftDb: 1,
+    cutSec: 0.03,
+    /** A runs ahead of its grid: at least this much silence before the pickup. */
+    minGapBeats: { early: 0.5, mid: 0.5, late: 0.5, final: 0.5 } as ByPhase<number>,
+    /** Late: a D1 gate on top, synced to A's climbing tempo. */
+    gateChance: { early: 0, mid: 0, late: 0.3, final: 0 } as ByPhase<number>,
+    /** A's voice this far above its median level in those bars: a semitone less (no chipmunks). */
+    loudVocalsDb: 3,
+    riserDb: { early: -12, mid: -10, late: -8, final: -6 } as ByPhase<number>,
+  }),
+  /** D15 Instrumental braker: A's band brakes to a halt while its singer carries on dry, then the voice is thrown. */
+  braker: Object.freeze({
+    /** The brake's length, in A's bars. */
+    brakeBars: [0.75, 1] as const,
+    /** A's voice must be singing in its last bars (stems bars, dB); unknown counts as singing. */
+    minVocalsDb: -28,
+    lpfToHz: 500,
+    rateTo: 0.02,
+    /** The dry voice goes into the echo this many of A's beats before the gap. */
+    throwBeats: 0.5,
+    throwDelayBeats: [0.5, 0.75] as const,
+    throwFeedback: 0.5,
+    riserDb: { early: -14, mid: -12, late: -10, final: -8 } as ByPhase<number>,
+  }),
+  /** D16 Acapella-in mashup: A's singer out, B's voice (stretched to A's tempo) sings over A's band. */
+  acapella: Object.freeze({
+    bars: { early: [1], mid: [1], late: [1, 2], final: [2] } as ByPhase<readonly number[]>,
+    vocals: 1,
+    hpfHz: 150,
+    /** A makes room: a little down and high-passed (there is no mid EQ). */
+    aDownDb: -3,
+    aHpfHz: 120,
+    exits: { echo: 0.6, wash: 0.4 },
+    /** B sings in the bars before its hook (stems bars, dB). */
+    minVocalsDb: -26,
+  }),
+  /** D19 Scratch-in (P7): B's first syllable scratched back and forth on B's grid, released into the hook. */
+  scratch: Object.freeze({
+    /** Beats of scratching before the pickup (S2). */
+    beats: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    styles: { baby: 0.45, chirp: 0.3, forward: 0.25 },
+    /** How far the hand moves the record each stroke, in B's beats of the source. */
+    grainBeats: [0.2, 0.25, 0.3] as const,
+    gainDb: { early: -2, mid: -1, late: 0, final: 1 } as ByPhase<number>,
+    hpfHz: 150,
+    /** Needle noise at the record's normal speed. */
+    needleDb: -42,
+    /** The crossfader's edges. */
+    edgeSec: 0.003,
+    /** The release ends this long before the pickup. */
+    breathSec: 0.03,
+    minGapBeats: { early: 0.5, mid: 0.5, late: 1, final: 1 } as ByPhase<number>,
+    /** The build under the scratch: the snare roll's velocity scale. */
+    rollScale: 0.7,
+  }),
+  /** A layer in an S1 gap of at least a beat: D11's one-beat chop or D19's one-beat scratch (they live in the gap). */
+  gapLayer: Object.freeze({
+    chance: { early: 0, mid: 0.3, late: 0.45, final: 0.45 } as ByPhase<number>,
+    kinds: { chop: 0.6, scratch: 0.4 },
+    minGapBeats: 1,
   }),
   /** Variants of the older recipes (docs/dj-techniques.md › weakest recipes). */
   variants: Object.freeze({
@@ -498,14 +624,67 @@ export const FLOW = Object.freeze({
   }),
   /** The Failure fanfare on an invalid Claim. */
   failureFanfare: 'mkwii-mission-failure' as StingerName,
-  /** Interval music ('celebration' mood Hold music until an Interval playlist exists). */
-  intervalDb: -8,
-  intervalFadeSec: 2,
-  /** The Interval's countdown is only a guide. */
+  /** The Interval's countdown is only a guide. Its music: INTERVAL below. */
   intervalGuideSec: SCHEDULE.intervalSec,
   /** The phones' Heat (`heat.sample`): a random 4–15 s after a landing, never at it; held 15 s at most when no
    * next sample is due yet. */
   heatSample: Object.freeze({ minDelaySec: 4, maxDelaySec: 15, holdSec: 15 }),
+});
+
+/**
+ * The Interval playlist (analysis/interval.py → data/interval/): the break music between rounds, also under a
+ * round's intro and Shuffle and in `after`. Tracks hand over with an echo-out of the outgoing track on its
+ * downbeat while the next one swells or opens up into that same downbeat (engine/src/interval/plan.ts).
+ */
+export const INTERVAL = Object.freeze({
+  /** Its level by default (`setGame intervalVolumeDb`, −30..0): under the presenters' talk. */
+  volumeDb: -6,
+  /** A volume change glides over this long. */
+  volumeGlideSec: 0.3,
+  /** From silence (nothing playing before it), the first track fades in over this long. */
+  fadeInSec: 2,
+  /** A natural handover's echo-out lands on a downbeat in the last `minBeforeEndSec + windowSec` to
+   * `minBeforeEndSec` seconds of the track's sound, and no later than `intoFadeSec` into its closing fade. */
+  minBeforeEndSec: 8,
+  windowSec: 4,
+  intoFadeSec: 1,
+  /** A track plays at least this long before it hands over. */
+  minPlaySec: 20,
+  /** Bars count from the first downbeat; a handover prefers the start of a phrase of this many bars. */
+  phraseBars: 4,
+  /** The runtime commits a natural handover this long before the incoming track enters. */
+  armLeadSec: 2.5,
+  /** A skip's downbeat is at least this far ahead (time to schedule the next track). */
+  skipLeadSec: 0.6,
+  /** Tempos this close (after folding ×2, ÷2) overlap their bars into the downbeat; otherwise the next track
+   * drops on the one after its pickup, so two grids never clash. */
+  matchedTempo: 0.04,
+  /** Tempos matched: the next track rises under the outgoing one for this many of the outgoing track's bars
+   * (a skip: `skipOverlapBars`, or less if its downbeat is near), within `overlapSec`. */
+  overlapBars: 2,
+  skipOverlapBars: 1,
+  overlapSec: Object.freeze({ min: 3, max: 8 }),
+  /** Tempos apart: the next track's pickup before the one, at most this many of its beats. */
+  pickupBeats: 1,
+  /** Swell: the next track rises from `swellFromDb` and its high-pass falls from `swellHpfHz`. */
+  swellFromDb: -30,
+  swellHpfHz: 600,
+  /** Filter opening: the next track's low-pass opens from `filterFromHz`, fully at the one (tempos matched) or
+   * `filterAfterBars` of its bars after it (tempos apart). */
+  filterFromHz: 300,
+  filterOpenHz: 20000,
+  filterAfterBars: 2,
+  /** The outgoing track thins out (high-pass) while the next one comes in. */
+  outHpfHz: 250,
+  /** The echo-out: the outgoing track's last beat into a synced echo (one beat; half a beat when beats are
+   * longer than `echoHalfBeatOverSec`), its dry signal cut on the one over `cutSec`. */
+  echoFeedback: 0.5,
+  echoTailSec: 4,
+  echoHpfHz: Object.freeze({ from: 150, to: 2000 }),
+  echoHalfBeatOverSec: 0.9,
+  cutSec: 0.03,
+  /** Music without a beat grid: its echo uses this beat. */
+  fallbackBeatSec: 0.5,
 });
 
 export const ENGINE = Object.freeze({
@@ -515,7 +694,8 @@ export const ENGINE = Object.freeze({
   resumeWithinMs: 12 * 3600 * 1000,
   /** A current song this close to its end is not used as the outgoing deck. */
   minOutgoingTailSec: 0.5,
-  fxSamples: ['boom', 'orchestra-hit', 'horn'] as const,
+  /** Samples the plans play (impacts, D6's comedy bar), loaded at start. */
+  fxSamples: ['boom', 'orchestra-hit', 'horn', ...MOVES.fake.comedy] as const,
   /** One-shot fanfares (client/public/audios/stingers). */
   stingers: STINGER_NAMES,
   /** Played once per climb (towards the Line, then the Bingo) as the first Spin at or above

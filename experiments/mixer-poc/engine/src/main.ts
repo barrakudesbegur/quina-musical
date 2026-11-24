@@ -7,6 +7,7 @@ import { AudioGraph } from './audio/graph.ts';
 import { Deck } from './audio/deck.ts';
 import { applyPlan } from './audio/scheduler.ts';
 import { HoldMusic } from './audio/holdmusic.ts';
+import { IntervalPlayer } from './audio/interval.ts';
 import { StemStore } from './audio/stems.ts';
 import { SignatureStore } from './audio/signatures.ts';
 import { BlendStore } from './audio/blend.ts';
@@ -81,6 +82,7 @@ interface MixerDebug {
   loader: SongLoader;
   drum: DrumView;
   holdMusic: HoldMusic;
+  intervalPlayer: IntervalPlayer;
   send: typeof send;
   bus: Bus<ShowEvent>;
   checkPlayer: CheckPlayer;
@@ -159,6 +161,9 @@ const clock = new AudioClock(ctx);
 const graph = new AudioGraph(ctx);
 const loader = new SongLoader(ctx);
 const holdMusic = new HoldMusic(graph);
+// The Interval playlist; how far a Game's order has got is kept per pool, so a reload doesn't repeat tracks.
+const intervalPlayer = new IntervalPlayer(graph, { storage: browserStorage(), storageKey: () => `${storagePrefix}.interval` });
+intervalPlayer.onTrack = (track, at) => show && run(show.intervalTrack(track, at));
 const stems = new StemStore(ctx);
 const signatures = new SignatureStore(ctx);
 const blends = new BlendStore(ctx);
@@ -278,6 +283,7 @@ async function boot() {
   blends.loadKeys();
   graph.loadSamples(ENGINE.stingers, '/stingers/');
   holdMusic.prepare().catch((error) => console.warn('hold music', error));
+  void intervalPlayer.prepare();
   void snippets.loadIndex();
   setInterval(tick, ENGINE.taskIntervalMs);
   setInterval(emitHealth, ENGINE.healthIntervalMs);
@@ -326,8 +332,9 @@ function apply(effect: Effect): void {
     case 'holdMusic': {
       const start = { at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: effect.mood };
       if (!effect.switch) return void holdMusic.start(start).catch((e) => console.error('hold music', e));
-      // Other music gives way: the Celebration's loop, or Hold music of another mood.
+      // Other music gives way: the Celebration's loop, the Interval playlist, or Hold music of another mood.
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
+      intervalPlayer.stop({ at: effect.at, fadeSec: effect.fadeSec });
       return void holdMusic.switchTo(start).catch((e) => console.error('hold music', e));
     }
     case 'songToHoldMusic':
@@ -376,10 +383,20 @@ function apply(effect: Effect): void {
       return;
     case 'celebrationMusic':
       return void celebrationMusic(effect);
-    case 'intervalMusic':
+    case 'intervalMusic': {
       dropCurrentSong(effect.fadeSec);
+      // The music playing (the victory track, Hold music, the Winning song's loop) hands over on its downbeat.
+      const from = holdMusic.handoff() ?? winningLoop.handoff();
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
-      return void holdMusic.switchTo({ at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: 'celebration' }).catch((e) => console.error('interval music', e));
+      holdMusic.stop({ at: effect.at, fadeSec: effect.fadeSec });
+      void holdMusic.starting?.then(() => holdMusic.stop({ fadeSec: effect.fadeSec })); // one still loading gives way too
+      return intervalPlayer.start({ levelDb: effect.levelDb, gameId: machine().gameId, from });
+    }
+    case 'intervalSkip':
+      if (!intervalPlayer.skip()) console.info('interval: nothing to skip yet');
+      return;
+    case 'intervalVolume':
+      return intervalPlayer.setVolume(effect.db, effect.seconds);
     case 'pauseOverlay':
       // With the stage mounted it shows "Tornem de seguida" itself.
       $('pause-overlay').hidden = stageMounted || !effect.on;
@@ -398,10 +415,11 @@ function apply(effect: Effect): void {
 function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTransition'>): void {
   const entry = loader.get(plan.b.songId);
   if (!entry) throw new Error(`song ${plan.b.songId} is not decoded`);
-  // Audio: B is scheduled sample-exactly so its hook downbeat sounds at T.
+  // Audio: B is scheduled sample-exactly so its hook downbeat sounds at T (with a tape start, its rate climbs to
+  // the pickup and it still lands there: P5).
   const deck = new Deck(graph, { songId: plan.b.songId, buffer: entry.buffer, analysis: entry.analysis, trimDb: plan.b.trimDb });
   deck.fader.gain.value = 0;
-  deck.start(plan.b.startCtx, plan.b.offset, plan.b.rate);
+  deck.start(plan.b.startCtx, plan.b.offset, plan.b.rate, plan.b.powerUp ?? null);
   deck.hookId = plan.hook.id;
   deck.stems = stems.forHook(plan.b.songId, plan.hook.id);
   deck.signatures = signatures.buffersFor(plan.b.songId);
@@ -415,6 +433,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   if (fromHoldMusic) {
     holdMusic.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
     winningLoop.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
+    intervalPlayer.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
   }
   rt.incoming = deck;
   rt.outgoing = outgoing;
@@ -480,6 +499,7 @@ function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSusp
   if (fromHoldMusic) {
     holdMusic.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
     winningLoop.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
+    intervalPlayer.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
   }
   rt.incoming = null;
   rt.outgoing = outgoing;
@@ -561,13 +581,14 @@ function dropCurrentSong(fadeSec: number): void {
 // The song still playing (ducked under the Check) washes out. Without a usable Winning song, the victory track.
 async function celebrationMusic({ choice, songId, hookId, at, fadeSec, levelDb }: EffectOf<'celebrationMusic'>): Promise<void> {
   dropCurrentSong(Math.min(2, fadeSec + 0.5));
+  intervalPlayer.stop({ at, fadeSec });
   if (choice === 'winningSong' && songId != null) {
     try {
       const entry = loader.get(songId) ?? (await loader.ensure(songId));
       const region = hookLoop(entry.analysis, hookId, { bars: FLOW.celebration.loopBars, minBars: FLOW.celebration.loopMinBars });
       if (region) {
         holdMusic.stop({ at, fadeSec });
-        winningLoop.start(entry.buffer, region, { at, levelDb, fadeSec });
+        winningLoop.start(entry.buffer, region, { at, levelDb, fadeSec, beatsPerBar: entry.analysis.tempo.beatsPerBar });
         return;
       }
     } catch (error) {
@@ -591,6 +612,7 @@ function stopAll(fadeSec: number): void {
   setTimeout(() => {
     for (const deck of decks) deck?.dispose();
     holdMusic.kill();
+    intervalPlayer.kill();
     graph.resetTransient();
     graph.holdDuck.gain.cancelScheduledValues(ctx.currentTime);
     graph.holdDuck.gain.setValueAtTime(1, ctx.currentTime);
@@ -611,8 +633,11 @@ function prefetch(ids: readonly number[]): void {
       .ensure(id)
       .then((entry) => {
         // Stems for the songs still to land (a Tease uses them); a missing stem never blocks the landing.
-        if (id !== rt.current?.songId) stems.ensure(id, entry.analysis);
-        if (id !== rt.current?.songId) preverbs.ensure(id, entry.analysis, entry.buffer);
+        if (id !== rt.current?.songId) {
+          preverbs.ensure(id, entry.analysis, entry.buffer);
+          // D12 from B's voice: a second pre-verb per hook from its vocal stem, once the stems are decoded.
+          void stems.ensure(id, entry.analysis).then(() => preverbs.ensureVocals(id, entry.analysis, (hookId) => stems.forHook(id, hookId)));
+        }
         run(machine().decoded(id));
       })
       .catch((error: unknown) => {
@@ -632,7 +657,7 @@ async function playSfx(name: SoundName, at = ctx.currentTime + 0.01): Promise<vo
 // The music never stops by accident: whatever went wrong, Hold music covers silence the machine did not ask for.
 function ensureMusic(): void {
   if (!show || ['locked', 'idle'].includes(show.status)) return;
-  if (rt.current || rt.incoming || holdMusic.playing || winningLoop.playing) return;
+  if (rt.current || rt.incoming || holdMusic.playing || winningLoop.playing || intervalPlayer.playing) return;
   console.warn('watchdog: no music while', show.status, '— starting Hold music');
   holdMusic.start({ levelDb: HOLD.holdMusicLevelDb, fadeSec: 1 }).catch((e) => console.error('hold music', e));
 }
@@ -641,7 +666,7 @@ function ensureMusic(): void {
 let silentChecks = 0;
 function watchdog(): void {
   if (ctx.state !== 'running' || !show || ['locked', 'idle'].includes(show.status)) return;
-  const silent = !rt.current && !rt.incoming && !holdMusic.playing && !winningLoop.playing;
+  const silent = !rt.current && !rt.incoming && !holdMusic.playing && !winningLoop.playing && !intervalPlayer.playing;
   silentChecks = silent ? silentChecks + 1 : 0;
   if (silentChecks >= 2) {
     silentChecks = 0;
@@ -658,6 +683,7 @@ function tick(): void {
   if (ctx.state !== 'running' || !show) return;
   const now = ctx.currentTime;
   drum.scheduleTicks(now);
+  intervalPlayer.tick();
   const due = rt.tasks.filter((task) => task.at <= now);
   if (due.length) {
     rt.tasks = rt.tasks.filter((task) => task.at > now);
@@ -777,7 +803,7 @@ function renderHud(audible = clock.audible()): void {
   const lat = clock.latencyMs();
   const nextId = show.queue[show.position + 1];
   const lines = [
-    `status ${show.status}${show.pending ? ' (loading)' : ''}${show.hold ? ` (${show.hold.reason})` : ''} · queue ${show.position + 1}/${show.queue.length} · hold music ${holdMusic.title ?? 'off'}`,
+    `status ${show.status}${show.pending ? ' (loading)' : ''}${show.hold ? ` (${show.hold.reason})` : ''} · queue ${show.position + 1}/${show.queue.length} · hold music ${holdMusic.title ?? 'off'} · interval ${intervalPlayer.title ?? 'off'}`,
     cur ? `now  #${cur.songId} ${cur.analysis.title} · ${cur.analysis.tempo.bpm} BPM · ${cur.hookId} · pos ${cur.posAt(ctx.currentTime)?.toFixed(1) ?? '—'} s` : 'now  —',
     `next #${nextId ?? '—'} ${loader.isReady(nextId) ? 'decoded' : 'decoding…'}`,
     p
@@ -861,7 +887,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Exposed for tests and debugging.
-window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, send, bus, checkPlayer, winningLoop };
+window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, intervalPlayer, send, bus, checkPlayer, winningLoop };
 boot().catch((error: unknown) => {
   console.error(error);
   showStatusLine(`Failed to start: ${errorText(error)}`);

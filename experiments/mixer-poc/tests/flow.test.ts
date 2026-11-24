@@ -73,14 +73,16 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [
     ['before', { scene: 'before' }, [...PLAY, 'roundIntro', 'resumeAt']],
-    ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound']],
-    ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound']],
+    ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound', 'intervalSkip']],
+    ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound', 'intervalSkip']],
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
     ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide']],
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
-    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt']],
-    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt']],
+    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip']],
+    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip']],
+    ['roundStart without Interval music', { scene: 'roundStart', intervalMusic: false }, ['next', 'newRound']],
+    ['play with the Interval music still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'intervalSkip']],
     ['paused in play', { scene: 'play', paused: true }, []],
     ['paused in a Check', { scene: 'check', paused: true }, []],
   ];

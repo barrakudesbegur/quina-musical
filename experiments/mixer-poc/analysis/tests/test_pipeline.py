@@ -266,6 +266,13 @@ def test_relay_maps_the_engine_urls_to_the_pool(relay):
     hold = pools.POC / "data/hold/index.json"
     if hold.exists():
         assert request(port, "GET", "/data/hold/index.json")[2] == hold.read_bytes()
+    # So is the Interval playlist: its data and audio whatever the pool (this one's dataDir has none).
+    interval = pools.POC / "data/interval/index.json"
+    if interval.exists():
+        assert request(port, "GET", "/data/interval/index.json")[2] == interval.read_bytes()
+        slug = json.loads(interval.read_text())["tracks"][0]["slug"]
+        status, headers, _ = request(port, "GET", f"/intervalaudio/{slug}.flac", headers={"range": "bytes=0-3"})
+        assert status == 206 and headers["cache-control"] == "no-cache"
 
 
 def test_relay_override_rederives_in_the_pool(relay):

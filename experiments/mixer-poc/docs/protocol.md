@@ -43,7 +43,7 @@ The package `@quina/protocol` (`protocol/`) is the source of truth, and this pag
 | `holdMusic` | | Switch to Hold music now (enters the Hold if needed) |
 | `suspense` | `on?: boolean` | Suspense: start the next song's transition and hold it open (`true`, or no `on` when none is open). The build loops and grows, and the drum crawls. Releasing it (`false`, no `on`, or `next`) lands the song on the next free bar line; after 30 s it releases by itself. `back` or `hold` cancel it like a Spin. It is never started automatically. `false` without an open Suspense is rejected as `noSuspense` |
 | `setPace` | `pace?: number`, `delta?: number`, `locked?: boolean` | Set the Pace in seconds (clamped to `PACE_LIMITS_SEC`, 8–60), nudge it, and/or lock it against Drift catch-up |
-| `setGame` | `autoAdvance?`, `autoAdvanceFinal?`, `finalLapStinger?`, `phaseOverride?: phase\|null`, `songsUntilWinner?`, `roundsTotal?`, `holdMusicAfterSec?` | Settings. `songsUntilWinner` only drives the Phase when no cards are in play |
+| `setGame` | `autoAdvance?`, `autoAdvanceFinal?`, `finalLapStinger?`, `phaseOverride?: phase\|null`, `songsUntilWinner?`, `roundsTotal?`, `holdMusicAfterSec?`, `holdMusicOn?: boolean`, `intervalVolumeDb?: number −30..0` | Settings. `songsUntilWinner` only drives the Phase when no cards are in play. `holdMusicOn: false` ("Hold music off"): a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`; Hold music still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out in a Hold). `intervalVolumeDb` (default −6) sets the Interval playlist's level at once (a 0.3 s glide) |
 | `setCardsInPlay` | `ranges: string` | Cards in play for the whole game, for example `1-180, 200-215, 400-460`. An empty string clears them |
 | `confirmLine` | | The Phase starts climbing towards the Bingo. A manual override for when no Check was run: a valid `decide` on a Line does it by itself. Play and Celebration only |
 | `newRound` | `number?`, `kind?: 'normal'\|'special'` | Run the round's public, tie-free Shuffle (below). Scene `roundStart` with `shuffle.scheduled`; it becomes `play` when the Shuffle ends, and a Next pressed meanwhile waits for it. Without `number`/`kind`: the introduced round's, else (in `before`) round 1 again, else the next one. The Interval music goes on under the Shuffle; from anywhere else everything stops first. Anywhere but in a Check |
@@ -54,6 +54,7 @@ The package `@quina/protocol` (`protocol/`) is the source of truth, and this pag
 | `winnerInfo` | `claimId`, `name?: string ≤ 80`, `notes?: string ≤ 500` | Set or edit a Winner's name and notes, at any time (an empty string clears one). PRIVATE |
 | `celebrationMusic` | `choice: 'winningSong'\|'victory'\|'holdMusic'` | Change the Celebration's music. Never blocks anything |
 | `interval` | | After a Bingo's Celebration: the Interval. It also comes by itself after `FLOW.celebration.toIntervalSec` (60 s) |
+| `intervalSkip` | | The Interval playlist moves on to its next track, with its usual transition, on the playing track's next downbeat (at least 0.6 s ahead). Only while the Interval music plays (the state's `intervalMusic`); a skip while a track is still coming in, or before the first one has, does nothing. The state shows the new track once it has taken over |
 | `endGame` | | The end of the Game (scene `after`), from anywhere; closing music until Panic. Within 0.15 s of a landing: `busy` |
 | `pause` | `on?: boolean` | The technical pause ("Tornem de seguida"), on, off or toggled, over any scene |
 | `sfx` | `name` | Play a sound effect or a stinger: one of `SOUND_NAMES` (`STINGER_NAMES` and `SFX_NAMES`); any other name is rejected as `invalid` |
@@ -72,20 +73,27 @@ The scene is where the show is in the Game; `status` stays the audio state under
 | Scene | Accepts, besides the commands allowed everywhere* | Leaves by |
 |---|---|---|
 | `before` | everything `play` accepts except `claim`, plus `roundIntro` | the first Spin → `play`; `roundIntro` → `roundStart`; `newRound` → `roundStart` |
-| `roundStart` | `newRound`; once the Shuffle is drawn, `next` (it waits for the animation) | the Shuffle's end → `play` |
+| `roundStart` | `newRound`; once the Shuffle is drawn, `next` (it waits for the animation); `intervalSkip` while the Interval music plays | the Shuffle's end → `play` |
 | `play` | `next`, `back`, `hold`, `holdMusic`, `suspense`, `confirmLine`, `newRound`, `claim` | `claim` → `check`; `newRound` → `roundStart` |
 | `check` | `claim`, `checkStart`, `decide`, `back`, `holdMusic` | the last verdict → `celebration`, `play` (`checkFailed`) or the interrupted Celebration |
 | `celebration` | `claim`, `celebrationMusic`, `confirmLine`, `newRound`; a Line's: `next`, `hold`; a Bingo's: `interval`, `roundIntro` | Line: `next` / `hold {on: false}` → `play`. Bingo: `interval` (or by itself after 60 s) → `interval`; `roundIntro` → `roundStart` |
-| `interval` | `roundIntro`, `newRound` | rounds always start by hand |
-| `after` | `roundIntro`, `newRound` (so an `endGame` by mistake can be undone) | |
+| `interval` | `roundIntro`, `newRound`, `intervalSkip` | rounds always start by hand |
+| `after` | `roundIntro`, `newRound` (so an `endGame` by mistake can be undone), `intervalSkip` | |
 
 \* Allowed everywhere: `unlock`, `getState`, `getJournal`, `setPace`, `setGame`, `setCardsInPlay`, `sfx`, `overrideNextRecipe`, `panic`, `pause`, `endGame`, `winnerInfo`. During the technical pause only these go through.
+
+`intervalSkip` follows the Interval music rather than the scene: `SceneContext.intervalMusic` (the state's `intervalMusic` is not null) allows it, also in `play` after the Shuffle until the first Spin builds out of the music, and refuses it in a `roundStart` whose `newRound` came from the round in play (that stops everything). A remote that leaves the flag out gets the scenes that start the music: `interval`, `roundStart` and `after`.
 
 - **A fresh Game starts in `before`**, and `before` accepts every command `play` accepts today, so nothing that worked before the show flow is rejected. Round 1's Queue is drawn when the show page starts (no public Shuffle); the first Spin moves the scene to `play`. To run the public Shuffle instead, the presenters send `roundIntro` (optional) and `newRound`.
 - **Shuffle.** `newRound` draws a secret seed from the secure generator and reshuffles deterministically (draw 0, 1, 2… of the seed, `engine/src/game/shuffle.ts`) until neither the first Line nor the first Bingo is a Tie among the cards in play valid for the round. With no cards in play the first draw is kept. After `FLOW.shuffleMaxAttempts` (500) draws it keeps the last and logs a warning. The seed and the number of reshuffles are journaled (`round.started`). The projector gets only `shuffle.scheduled` (never the Queue), and no song lands before its `endAtMs` (`FLOW.shuffleSec`, 8 s). A fixed Queue (tests, `?queue=`) bypasses the tie check: seed 0, attempts 0.
 - **Check.** The engine computes it from the card (any generated card), the kind claimed and the counted landings now: `unknownCard` (a number outside the generated cards) and `wrongType` (a special card in a regular round, or the other way round) have no steps and show at once; `notSold` is only a warning. A Line plays its completed row (the first to complete, top on a tie; the others are in `otherRows`), else the row with most landed songs (top on a tie); a Bingo plays all 12. Each ✓ step plays the song's 3 s hook snippet (`analysis/snippets.py`, `/snippets/<id>.flac`) for 2.5 s; each ✗ step plays a short synthesized "broken record" (1.2 s). The steps are timed in advance (`FLOW.check`), and the song or Hold music is ducked far down (−32 dB) under them. Back during a Check undoes the landing; undecided Claims survive and wait for `checkStart`.
 - **Celebration.** The Clear fanfare and an impact, then its music: the Winning song's hook (the one it landed on) looped in whole bars for a Line, the victory track (the `celebration` mood of Hold music) for a Bingo. Every valid Claim of that kind in the round shares it (`cardIds`: claims on the same landing share the prize).
-- **Interval.** Its music is the `celebration` Hold music mood until an Interval playlist exists; a victory track playing flows on into it. `interval.guideEndMs` is only a guide.
+- **Interval.** `interval.guideEndMs` is only a guide. Its music is the **Interval playlist** (`client/public/audios/interval/`, analysed by `analysis/interval.py` into `data/interval/`), which also plays while a round is introduced, under its Shuffle until the first Spin builds out of it, and in `after`.
+  - **Order:** shuffled per Game (seeded from the Game id, so a reload keeps it; how far it got is kept in the page's storage), every track once before any repeats, and a recording only once (#04 and #16 of the playlist are one).
+  - **No silence:** the music playing when it starts (the victory track, Hold music after a pause, the Winning song's loop) goes on until the first track is decoded, then echoes out on its own downbeat while the first track comes in on that downbeat. From silence (a fresh page's first `roundIntro`) the first track fades in.
+  - **Between tracks:** the outgoing track's last beat goes into an echo synced to its beat on a downbeat 8–12 s before its sound ends (a phrase start when there is one, never more than a second into a closing fade), its dry signal stops on that one, and the echo thins out over 4 s. The next track's downbeat lands on the same one. With tempos within 4% (after ×2 and ÷2), two bars of it rise under the outgoing track first, by a swell (gain and high-pass) or a filter opening (low-pass), the two alternating, while the outgoing track thins out. With tempos apart, only its pickup plays before the one and its low-pass keeps opening for two of its bars, so the two grids never clash. No drum, nothing else: it is the break, under the presenters' talk.
+  - **Skip** (`intervalSkip`): the same transition on the playing track's next downbeat. **Volume:** `setGame {intervalVolumeDb}`.
+  - It plays on its own bus under the songs (the Hold duck, a Check's duck and a build's high-pass treat it like them), and gives way like Hold music: it fades out from the first Spin's start (+0.2 s, over 1.6 s) while the build comes out of it, or cross-fades to Hold music (the pause, `holdMusic`).
 - **Technical pause.** Nothing lands (a Spin in flight is cancelled; a running Check stops and its Claim queues again), Hold music plays, and the show page shows "Tornem de seguida". Ending it brings the scene's own music back; in `play` the Hold stays until Resume.
 
 ## Events
@@ -123,7 +131,8 @@ current       { songId, title, artist, hookId, posSec, endsAtMs } | null
 next          { songId, title, artist } | null
 queue         { position, length }   position = Queue index of the last counted landing (−1 before the first)
 round         { number, kind, startedAtMs, targetEndMs, lineConfirmed }
-game          { pace, paceLocked, autoAdvance, autoAdvanceFinal, finalLapStinger, songsUntilWinner, phaseOverride, roundsTotal, holdMusicAfterSec, nextRecipe }
+game          { pace, paceLocked, autoAdvance, autoAdvanceFinal, finalLapStinger, songsUntilWinner, phaseOverride, roundsTotal, holdMusicAfterSec, holdMusicOn, intervalVolumeDb, nextRecipe }
+                holdMusicOn and intervalVolumeDb are optional in the type only (added later in v1): the engine always sends them
 phase         'early' | 'mid' | 'late' | 'final'   (the coming transition's)
 heat          0..1 placeholder, or null without cards in play
 cards         { inPlay, inPlayCount, validCount, phaseSource: 'cards'|'placeholder'|'override', climbingTo: 'line'|'bingo' }
@@ -146,6 +155,10 @@ check         { claimId, cardId, kind, outcome, row, otherRows, steps: [{ songId
                 the Check on screen, running or showing its result until it is decided
 celebration   { kind, round, cardIds, winningSongId, sinceMs, music: 'winningSong'|'victory'|'holdMusic' } | null
 interval      { sinceMs, nextRound, guideEndMs } | null
+intervalMusic { track: { title, artist, index, count, sinceMs } | null } | null
+                while the Interval playlist plays (interval, roundStart, after, and play until the first Spin); track is null
+                until the first one takes over; index is its 1-based place in the Game's order (it wraps after count).
+                Optional in the type only; the engine always sends it
 winners       the whole Game's: [{ round, kind, cardId, claimId, winningSongId, position, atMs, name, notes }]   PRIVATE: name, notes
 resume        { round, kind, shuffleSeed, shuffleAttempts, position, lastSongId, lineConfirmedFrom, text } | null   PRIVATE (plan B, see "Resuming by hand")
 ```
@@ -235,5 +248,7 @@ Players' phones get the Game from the cloud, never from the relay. The cloud bui
 ## Analysis files
 
 The Check plays `/snippets/<id>.flac` (`<cacheDir>/<id>/snippet.flac`, 3 s from the song's best hook's pickup) at the trim in `/data/snippets/index.json` (`analysis/snippets.py`, the prepare step `snippets`).
+
+The Interval playlist is global, like Hold music: `/data/interval/index.json` (the tracks in playlist order, the duplicates dropped and the entries without a file) and `/data/interval/<slug>.json` (title and artist from `playlist.spotdl`, beats, regularized downbeats, tempo, loudness, and the edges: where the sound starts and ends, where the closing fade starts, the first downbeat; schema v1, checked by `engine/src/interval/tracks.ts`), with the audio at `/intervalaudio/<slug>.flac` (`cache/interval/`, 48 kHz). The relay serves them whatever the pool.
 
 The engine also checks the analysis JSON it loads (`data/analysis/<id>.json`, written by `analysis/analyze.py`, `schemaVersion: 1`) against `engine/js/analysis.js`. A song whose file fails the check is left out of the round, or its decode is rejected and Hold music covers.

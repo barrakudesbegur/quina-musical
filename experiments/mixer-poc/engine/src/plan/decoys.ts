@@ -55,12 +55,12 @@ export function decoyLayer({ plan, source, phase, rng, config = DECOYS }: DecoyR
 }
 
 /**
- * When anything of the landing song is first heard: B itself, its stems, stem lanes, slices (a vocal chop),
- * pre-verb, Signature, Blend, or a B param move.
+ * When anything of the landing song is first heard: B itself, its stems, stem lanes, slices (a vocal chop, a
+ * riff gate), scratch, pre-verb, Signature (a call, a riff bed), Blend, or a B param move.
  */
 export function firstSoundOfB(plan: Plan): number {
   const bEvents = plan.events.filter((e) =>
-    e.kind === 'stems' || e.kind === 'blend' || e.kind === 'preverb' ||
+    e.kind === 'stems' || e.kind === 'blend' || e.kind === 'preverb' || e.kind === 'scratch' ||
     ((e.kind === 'signature' || e.kind === 'stemLane' || e.kind === 'slices') && e.deck === 'B') ||
     ('target' in e && e.target.startsWith('B.')));
   return Math.min(plan.b.startCtx, ...bEvents.map(eventStart));

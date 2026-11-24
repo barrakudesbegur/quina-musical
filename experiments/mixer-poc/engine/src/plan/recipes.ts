@@ -3,21 +3,23 @@
 // T = the moment B's hook downbeat sounds (and the drum locks). Every recipe is a DJ move with effects —
 // never a bare volume change — and every landing gets a landing layer and an impact (plan/landing.ts).
 //
-// The DJ techniques D1–D11 come from docs/dj-techniques.md; their moves are in plan/moves.ts (A's side),
+// The DJ techniques D1–D19 come from docs/dj-techniques.md; their moves are in plan/moves.ts (A's side),
 // plan/layers.ts (B's side) and plan/bridges.ts (the S2 builds). Tunables are in config.ts MOVES.
 import { LAYERING, MOVES } from '../config.ts';
 import type { PhaseEffects, PhaseName } from '../config.ts';
 import type { ExitName, RecipeFamily, RecipeId, RecipeShape } from '@quina/protocol';
 import { weightedPick } from '../rng.ts';
-import { OPEN_LPF, SILENT, pick, ramp, set, sfx, synth } from './events.ts';
+import { OPEN_LPF, SILENT, dbToGain, pick, ramp, set, sfx, synth } from './events.ts';
 import type { LanePart, PlanEvent, Slice, StemName, StemParts, BlendEvent } from './events.ts';
 import { bridgeLayers, buildLayers, chooseBridge } from './bridges.ts';
 import type { BridgePattern } from './bridges.ts';
 import { impactLayer, swellLayer } from './landing.ts';
 import type { Landing } from './landing.ts';
-import { chopSlices } from './layers.ts';
-import type { ChopSource } from './layers.ts';
-import { GATE_MODES, PEEL_ORDERS, aGrid, fitBars, gateMove, peelMove, spiralMove, stabsMove, vocalThrow } from './moves.ts';
+import { RIFF_VARIANTS, SCRATCH_STYLES, chopSlices, riffBed, scratchMove } from './layers.ts';
+import type { ChopSource, LayerName, RiffSource } from './layers.ts';
+import {
+  GATE_MODES, PEEL_ORDERS, aGrid, brakerMove, fitBars, gateMove, peelMove, rushMove, singsBefore, spiralMove, stabsMove, vocalThrow,
+} from './moves.ts';
 import type { LaneWindow, OutgoingDeck } from './moves.ts';
 import type { HookGrid, Timeline } from './timeline.ts';
 
@@ -221,21 +223,28 @@ export const EXITS = {
 //    B's tempo and phase-locked to the hook (a DJ bringing in the next track's groove);
 //  - otherwise B's full mix through a closed low-pass.
 /** What a landing of B needs from the recipe's BuildArgs. */
-export type LandingArgs = Pick<BuildArgs, 'T' | 'pickupAt' | 'gapStart' | 'bStart' | 'tease' | 'teaseStems' | 'gB' | 'phase' | 'landing'>;
+export type LandingArgs = Pick<BuildArgs, 'T' | 'pickupAt' | 'gapStart' | 'bStart' | 'teaseFrom' | 'tease' | 'teaseStems' | 'gB' | 'phase' | 'landing'>;
 
-/** @param boost  added to the impact's level (D2's crowd gap lands bigger) */
-export function landB({ T, pickupAt, gapStart, bStart, tease, teaseStems, gB, phase, landing = null }: LandingArgs, boost = 0): PlanEvent[] {
+/**
+ * The Tease and B's entry, then the impact. A stem Tease plays from `teaseFrom` (B's own clock, apart from its
+ * main source), a low-passed one plays B itself from `bStart`. B opens on its pickup (a 4 ms declick), or with
+ * D14's tape landing it powers up from `bStart` (inside the gap): −12 dB and low-passed at 800 Hz while its rate
+ * climbs (the planner starts B with that rate ramp, P5), fully open on the pickup. The tape never follows a
+ * low-passed Tease (the planner checks).
+ * @param boost  added to the impact's level (D2's crowd gap lands bigger)
+ */
+export function landB({ T, pickupAt, gapStart, bStart, teaseFrom, tease, teaseStems, gB, phase, landing = null }: LandingArgs, boost = 0): PlanEvent[] {
   const events: PlanEvent[] = [];
-  if (tease && teaseStems?.includes('drums') && gapStart - bStart > gB.beat) {
-    const span = gapStart - bStart;
-    const parts: StemParts = { drums: { from: SILENT, to: 0.9, t0: bStart, t1: bStart + Math.min(gB.bar, span / 2) } };
-    if (teaseStems.includes('bass') && span >= 1.5 * gB.bar) {
+  const from = teaseFrom ?? bStart;
+  const stemTease = tease && Boolean(teaseStems?.includes('drums')) && gapStart - from > gB.beat;
+  if (stemTease) {
+    const span = gapStart - from;
+    const parts: StemParts = { drums: { from: SILENT, to: 0.9, t0: from, t1: from + Math.min(gB.bar, span / 2) } };
+    if (teaseStems?.includes('bass') && span >= 1.5 * gB.bar) {
       const t0 = gapStart - gB.bar;
       parts.bass = { from: SILENT, to: 0.8, t0, t1: t0 + gB.beat };
     }
-    events.push({ kind: 'stems', deck: 'B', at: bStart, until: gapStart, parts });
-    events.push(set('B.gain', bStart, SILENT));
-    events.push(ramp('B.gain', pickupAt - 0.003, pickupAt, SILENT, 1, 'lin'));
+    events.push({ kind: 'stems', deck: 'B', at: from, until: gapStart, parts });
   } else if (tease) {
     events.push(set('B.lpf', bStart, 380));
     events.push(ramp('B.gain', bStart, bStart + gB.bar / 2, SILENT, 0.3, 'lin'));
@@ -243,7 +252,19 @@ export function landB({ T, pickupAt, gapStart, bStart, tease, teaseStems, gB, ph
     events.push(ramp('B.gain', gapStart - 0.01, gapStart, 0.3, SILENT, 'lin'));
     events.push(set('B.lpf', pickupAt - 0.002, OPEN_LPF));
     events.push(ramp('B.gain', pickupAt - 0.003, pickupAt, SILENT, 1, 'lin'));
-  } else {
+  }
+  if (landing?.style === 'tape') {
+    const cfg = MOVES.tape;
+    const growl = dbToGain(cfg.fromDb);
+    events.push(
+      ramp('B.gain', bStart, bStart + cfg.fadeInSec, SILENT, growl, 'lin'),
+      ramp('B.gain', bStart + cfg.fadeInSec, pickupAt, growl, 1, 'exp'),
+      ramp('B.lpf', bStart, pickupAt, cfg.lpfFromHz, OPEN_LPF, 'exp'),
+    );
+  } else if (stemTease) {
+    events.push(set('B.gain', bStart, SILENT));
+    events.push(ramp('B.gain', pickupAt - 0.003, pickupAt, SILENT, 1, 'lin'));
+  } else if (!tease) {
     events.push(ramp('B.gain', bStart, pickupAt, SILENT, 1, 'lin'));
   }
   events.push(...impactLayer({ T, phase, landing, boost }));
@@ -267,15 +288,17 @@ export interface VariantForce {
 
 /** What may be layered or used besides A and B themselves; recipes that need more say so (`needs`). */
 export interface Caps {
-  /** B's render stretched to A's tempo for this hook (R8, D10). */
+  /** B's render stretched to A's tempo for this hook (R8, D10, D16). */
   blend: boolean;
   /** A's stem lanes (P1), where they are valid; null when A has none here, or does not run at rate 1. */
   aLanes: LaneWindow | null;
-  /** B's grain for a vocal chop (D11). */
+  /** B's grain for a vocal chop or a scratch (D11, D19). */
   chop: ChopSource | null;
+  /** B's stretched voice may sing over A (D16): rendered, tempos within ±4%, keys agreeing, B singing before its hook. */
+  blendVocals: boolean;
 }
 
-export const NO_CAPS: Caps = { blend: false, aLanes: null, chop: null };
+export const NO_CAPS: Caps = { blend: false, aLanes: null, chop: null, blendVocals: false };
 
 export interface BuildArgs {
   A: OutgoingDeck | null;
@@ -284,7 +307,10 @@ export interface BuildArgs {
   T: number;
   pickupAt: number;
   gapStart: number;
+  /** When B's own source starts (a declick before its lead, or its tape start). */
   bStart: number;
+  /** Where a stem Tease starts, when it is not `bStart` (B powers up after it). */
+  teaseFrom?: number;
   tease: boolean;
   teaseStems?: readonly StemName[] | null;
   gB: HookGrid;
@@ -296,8 +322,10 @@ export interface BuildArgs {
   minStart?: number;
   /** A's stem lanes, where they are valid (P1). */
   aLanes?: LaneWindow | null;
-  /** B's grain for D11's chops. */
+  /** B's grain for D11's chops and D19's scratch. */
   chop?: ChopSource | null;
+  /** D5: B's riff to loop under the bridge (R7), when the planner drew it. */
+  riff?: RiffSource | null;
   /** The landing layer (plan/landing.ts); the classic cymbal when left out. */
   landing?: Landing | null;
   force?: VariantForce | null;
@@ -318,6 +346,8 @@ export interface RecipeResult {
   variant?: RecipeVariant;
   /** The recipe plays B's call Signature itself: no other Signature of B is layered. */
   usesBSignature?: boolean;
+  /** Layers the recipe played itself (D5's riff bed). */
+  layers?: readonly LayerName[];
 }
 
 export interface Recipe {
@@ -343,8 +373,18 @@ export interface Recipe {
   cooldown?: number;
   /** A is cut low (or already gone) by the gap, so a pre-verb swell may overlap it. */
   aClearsLows?: boolean;
-  /** An S1 recipe the Ghost Tease (D9) may decorate: it leaves the reverb alone. */
+  /** A recipe the Ghost Tease (D9) may decorate: it leaves the reverb alone (S1, or an S2 bridge whose exit is not a wash). */
   ghostHost?: boolean;
+  /** An S1 recipe that leaves its gap silent (nothing of A rings in it), so a one-beat chop or scratch may fill it. */
+  gapHost?: boolean;
+  /** An S2 recipe whose bridge may carry D5's riff bed. */
+  riffHost?: boolean;
+  /** S2: the bridge is at least this many of B's bars. */
+  minBridgeBars?: number;
+  /** S2: never Teased by B's stems or a low-passed B (D6's fake bar must not give B away). */
+  noTease?: boolean;
+  /** S1 and S3: whether the move suits A's bars before downbeat `i` (D15 needs A singing there). */
+  fits?: (A: OutgoingDeck, i: number) => boolean;
 }
 
 /**
@@ -385,6 +425,15 @@ const R1_KINDS = ['hpf', 'lpf', 'stab'] as const;
 const R2_KINDS = ['echo', 'freeze', 'vocalThrow'] as const;
 const R5_KINDS = ['spinback', 'brake'] as const;
 const D10_EXITS = ['echo', 'wash', 'throw'] as const;
+const D6_KINDS = ['drums', 'comedy', 'kicks'] as const;
+const D7_KINDS = ['plain', 'gate'] as const;
+const D16_EXITS = ['echo', 'wash'] as const;
+
+/** An S2 recipe's exit lead: the exit the planner drew from `exits` (never null for these). */
+const exitLead = (id: RecipeId) => (tl: Timeline, i: number, exit?: ExitName | null): number => {
+  if (!exit) throw new Error(`${id} needs an exit move`);
+  return EXITS[exit].lead(tl, i);
+};
 
 export const RECIPES: Record<RecipeId, Recipe> = {
   // R1 · Slam cut: A's high-pass (or a low-pass dive, the door closing) and a riser climb over its last bar,
@@ -397,6 +446,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     family: 'cut',
     aClearsLows: true,
     ghostHost: true,
+    gapHost: true,
     aLeadSec: (tl, i) => tl.barAt(i),
     build(x) {
       const { A, i, T, gapStart, gB, rng, landing } = riding(x);
@@ -506,6 +556,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     theatrical: true,
     aClearsLows: true,
     ghostHost: true,
+    gapHost: true,
     aLeadSec: (tl, i) => 2 * tl.barAt(i),
     build(x) {
       const { A, i, gapStart, phase, rng } = riding(x);
@@ -534,6 +585,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     family: 'stop',
     theatrical: true,
     ghostHost: true,
+    gapHost: true,
     aLeadSec: () => 1.3,
     build(x) {
       const { A, gapStart, rng, landing } = riding(x);
@@ -585,7 +637,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
 
   // R7 · Build: A exits (echo / roll / brake / spinback / wash / gate / spiral), then N bars of a build on B's
   // grid (a bridge pattern drawn apart from the exit: the roll, half-time, a kick roll or a clap-along), a
-  // Tease of B, a beat of silence, and the landing.
+  // Tease of B (sometimes D5's riff bed: B's riff looping under the build), a beat of silence, and the landing.
   R7: {
     id: 'R7',
     name: 'Build & land',
@@ -593,17 +645,22 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     implemented: true,
     family: 'build',
     exits: R7_EXITS,
+    ghostHost: true,
+    riffHost: true,
     aLeadSec: (tl, i, exit) => {
       // The planner passes the exit it drew from `exits`, so it is never null here.
       if (!exit) throw new Error('R7 needs an exit move');
       return EXITS[exit].lead(tl, i);
     },
-    build(x) {
-      const { e, gapStart, pickupAt, gB, phase, rng, landing } = x;
+    build(x): RecipeResult {
+      const { e, T, gapStart, pickupAt, gB, phase, rng, landing, riff } = x;
       const out = s2Exit(x);
       const pattern = chooseBridge(phase, (gapStart - e) / gB.bar, rng, x.force?.bridge ?? null);
-      const events = [...out.events, ...bridgeLayers({ pattern, t0: e, gapStart, pickupAt, gB, phase, rng, landing }), ...landB(x)];
-      return { events, aStopAt: out.aStopAt, variant: { kind: pattern } };
+      const bed = riff ? riffBed({ riff, e, T, gapStart, pickupAt, gB, phase: phase.name, signatureDb: phase.signatureDb, rng, variant: forced(x, RIFF_VARIANTS) }) : null;
+      const rollScale = bed ? MOVES.riff.rollScale : 1;
+      const events = [...out.events, ...bridgeLayers({ pattern, t0: e, gapStart, pickupAt, gB, phase, rng, landing, rollScale }), ...(bed?.events ?? []), ...landB(x)];
+      if (!bed) return { events, aStopAt: out.aStopAt, variant: { kind: pattern } };
+      return { events, aStopAt: out.aStopAt, variant: { kind: pattern, riff: bed.variant }, usesBSignature: true, layers: ['riff'] };
     },
   },
 
@@ -616,6 +673,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     implemented: true,
     family: 'powerdown',
     theatrical: true,
+    ghostHost: true,
     exits: ['brake'],
     aLeadSec: () => 1.6,
     build(x) {
@@ -687,6 +745,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     implemented: true,
     family: 'gate',
     ghostHost: true,
+    gapHost: true,
     aLeadSec: (tl, i) => tl.barAt(i) + tl.beatAt(i),
     build(x) {
       const { A, i, T, gapStart, pickupAt, phase, rng, minStart, landing } = riding(x);
@@ -734,6 +793,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     family: 'spiral',
     aClearsLows: true,
     ghostHost: true,
+    gapHost: true,
     aLeadSec: (tl, i) => tl.barAt(i) + tl.beatAt(i),
     build(x) {
       const { A, i, T, gapStart, pickupAt, phase, rng, minStart, landing } = riding(x);
@@ -882,6 +942,193 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       if (slices) events.push(slices);
       events.push(...landB(x));
       return { events, aStopAt: out.aStopAt, variant: { kind: chop.from, bars: slices ? bars : 0 }, usesBSignature: Boolean(slices) && chop.from === 'signature' };
+    },
+  },
+
+  // D6 · Fake drop (the overshooter): A exits as in R7, a build peaks, a beat of silence where everyone expects
+  // the hook, then a bar of something else (B's drums alone, a comedy sample, or heartbeat kicks) with a small
+  // hit, a short faster re-build with the music bus high-passing, the gap, and the real landing, bigger.
+  D6: {
+    id: 'D6',
+    name: 'Fake drop',
+    shape: 'S2',
+    implemented: true,
+    family: 'fake',
+    theatrical: true,
+    exits: R7_EXITS,
+    cooldown: MOVES.fake.cooldown,
+    minBridgeBars: MOVES.fake.minBridgeBars,
+    noTease: true,
+    aLeadSec: exitLead('D6'),
+    build(x) {
+      const { e, T, gapStart, pickupAt, gB, phase, rng, landing, teaseStems } = x;
+      const cfg = MOVES.fake;
+      const out = s2Exit(x);
+      // On B's grid: the fake bar two bars before the hook, a beat of silence before it, the re-build after it.
+      const fakeAt = T - 2 * gB.bar;
+      const firstEnd = fakeAt - gB.beat;
+      const rebuildAt = fakeAt + gB.bar;
+      if (firstEnd - e < 0.3 || gapStart - rebuildAt < gB.beat / 2) {
+        // Never with the planner's minimum bridge; a plain build if it happens.
+        return { events: [...out.events, ...buildLayers({ t0: e, gapStart, pickupAt, gB, phase, rng, landing }), ...landB(x)], aStopAt: out.aStopAt, variant: { kind: 'short' } };
+      }
+      const canDrums = Boolean(teaseStems?.includes('drums'));
+      let kind = forced(x, D6_KINDS) ?? weightedPick(canDrums ? cfg.kinds : { ...cfg.kinds, drums: 0 }, rng) ?? 'comedy';
+      if (kind === 'drums' && !canDrums) kind = 'comedy';
+      const loud = riserLoud(phase, { early: -12, mid: -9, late: -7, final: -5 });
+      const events: PlanEvent[] = [
+        ...out.events,
+        // The first build: it peaks into a silence, with the same landing layer the real one will have.
+        ...buildLayers({ t0: e, gapStart: firstEnd, pickupAt: fakeAt, gB, phase, rng, landing }),
+        // The fake bar.
+        synth('impact', { at: fakeAt, level: cfg.impact }),
+      ];
+      const beats = Array.from({ length: gB.bpb }, (_, k) => fakeAt + k * gB.beat);
+      if (kind === 'drums') {
+        events.push({ kind: 'stems', deck: 'B', at: fakeAt, until: rebuildAt - 0.02, parts: { drums: { from: SILENT, to: 0.9, t0: fakeAt, t1: fakeAt + 0.005 } } });
+      } else if (kind === 'comedy') {
+        events.push(sfx(pick(cfg.comedy, rng), fakeAt, cfg.comedyDb), synth('kicks', { times: beats.filter((_, k) => k % 2 === 0), level: cfg.kick }));
+      } else {
+        events.push(synth('kicks', { times: beats.flatMap((t) => [t, t + 0.28 * gB.beat]), level: cfg.kick }), synth('downlifter', { t0: fakeAt, t1: rebuildAt, peakDb: -18 }));
+      }
+      // The re-build: faster and higher, the bus high-passing, into the real gap.
+      events.push(
+        synth('snareRoll', { t0: rebuildAt, t1: gapStart, beat: gB.beat, pitchTo: (phase.snarePitch ?? 5) + 2, stages: [0.25, 0.125], velFrom: 70, velTo: 124 }),
+        synth('riser', { t0: rebuildAt, t1: gapStart, fromHz: 1200, toHz: 10000, fromDb: -20, toDb: loud + 2, tone: true }),
+        ramp('bus.hpf', rebuildAt, gapStart, 10, cfg.rebuildHpfHz, 'exp'),
+        set('bus.hpf', pickupAt - 0.002, 10),
+        ...swellLayer(landing, Math.max(rebuildAt, gapStart - 2 * gB.beat), gapStart, loud),
+        ...landB(x, cfg.impactBoost),
+      );
+      return { events, aStopAt: out.aStopAt, variant: { kind } };
+    },
+  },
+
+  // D7 · Pitch-up rush: A becomes the riser — its tape speed climbs (pitch and tempo together, at most +5
+  // semitones), its high-pass opening, a breath of silence, the hook. Late, a gate may chop it on its rising beats.
+  D7: {
+    id: 'D7',
+    name: 'Pitch-up rush',
+    shape: 'S1',
+    implemented: true,
+    family: 'pitch',
+    theatrical: true,
+    ghostHost: true,
+    gapHost: true,
+    minGapBeats: (phase) => MOVES.rush.minGapBeats[phase],
+    aLeadSec: (tl, i) => tl.barAt(i) + tl.beatAt(i),
+    build(x) {
+      const { A, i, T, gapStart, phase, rng, minStart, landing } = riding(x);
+      const { barA, beatA, end } = aGrid(A, i, T, gapStart);
+      const bars = fitBars(pick(MOVES.rush.bars[phase.name], rng), end, barA, minStart);
+      const variant = forced(x, D7_KINDS);
+      const rush = rushMove({ A, i, end, bars, phase: phase.name, rng, gate: variant ? variant === 'gate' : null });
+      const events = [...rush.events, ...swellLayer(landing, Math.max(rush.start, end - 2 * beatA), end, MOVES.rush.riserDb[phase.name] - 2), ...landB(x)];
+      return { events, aStopAt: end + 0.05, variant: { kind: rush.gated ? 'gate' : 'plain', bars, semitones: rush.semitones } };
+    },
+  },
+
+  // D15 · Instrumental braker: A's band grinds to a halt over its last bar while its singer carries on, dry and
+  // at speed; half a beat before the gap the voice is thrown into the echo, then B lands.
+  D15: {
+    id: 'D15',
+    name: 'Instrumental braker',
+    shape: 'S1',
+    implemented: true,
+    family: 'stop',
+    theatrical: true,
+    needs: (caps) => lanesHave(caps.aLanes, ['vocals']),
+    aLaneParts: ['vocals'],
+    fits: (A, i) => singsBefore(A, i, 2, MOVES.braker.minVocalsDb),
+    aLeadSec: (tl, i) => tl.barAt(i) + tl.beatAt(i),
+    build(x) {
+      const { A, i, T, gapStart, pickupAt, gB, phase, rng, landing } = riding(x);
+      const { barA, beatA, end } = aGrid(A, i, T, gapStart);
+      const brake = brakerMove({ A, i, end, pickupAt, beatB: gB.beat, rng });
+      const loud = MOVES.braker.riserDb[phase.name];
+      const events = [
+        ...brake.events,
+        synth('riser', { t0: brake.start, t1: end, fromHz: 700, toHz: 8000, fromDb: loud - 22, toDb: loud, tone: false }),
+        ...swellLayer(landing, end - 2 * beatA, end, loud - 2),
+        ...landB(x),
+      ];
+      return { events, aStopAt: brake.aStopAt, variant: { kind: 'braker', brakeBars: Number((brake.brakeSec / barA).toFixed(2)) } };
+    },
+  },
+
+  // D16 · Acapella-in mashup: on one of A's downbeats its singer drops out and B's pre-chorus voice, stretched to
+  // A's tempo, sings over A's band (A a little down and high-passed to make room, its drums kept); A leaves by
+  // echo or wash on its last beat and B's own chorus lands — a live mashup. Tight tempos and agreeing keys only.
+  D16: {
+    id: 'D16',
+    name: 'Acapella-in mashup',
+    shape: 'S3',
+    implemented: true,
+    family: 'swap',
+    needs: (caps) => caps.blend && caps.blendVocals && lanesHave(caps.aLanes, ['vocals']),
+    aLaneParts: ['vocals'],
+    aLeadSec: (tl, i) => 2 * tl.barAt(i),
+    build(x) {
+      const { A, i, T, gapStart, pickupAt, bStart, phase, rng, blend, aLanes, minStart, landing } = riding(x);
+      if (!blend || !aLanes) throw new Error('D16 needs a blend layer and A\'s stem lanes');
+      const cfg = MOVES.acapella;
+      const barA = A.tl.barAt(i);
+      const beatA = A.tl.beatAt(i);
+      // The swap's downbeat: n of A's bars before T, inside the layer and the lanes, after the duck.
+      const floor = Math.max(blend.at, aLanes.from, minStart);
+      const downs = A.tl.downbeatsBetween(floor - 1e-6, T - barA + 1e-6).filter((d) => d.index < i);
+      const want = pick(cfg.bars[phase.name], rng);
+      const swapAt = downs.find((d) => d.index === i - want) ?? downs[downs.length - 1];
+      if (!swapAt) throw new Error('D16: no downbeat to swap on (the planner checks the lanes and the layer)');
+      const L = swapAt.ctxTime;
+      const aStop = gapStart + 0.05;
+      const lowered = A.level * dbToGain(cfg.aDownDb);
+      const events: PlanEvent[] = [
+        // A's singer out, B's in (a quarter beat), A making room.
+        { kind: 'stemLane', deck: 'A', part: 'vocals', at: L, until: aStop, direct: [[L, 0], [L + 0.01, -1]] },
+        {
+          kind: 'blend', deck: 'B', at: L, until: pickupAt, fileAt: blend.fileAt + (L - blend.at),
+          parts: { vocals: { from: SILENT, to: cfg.vocals, t0: L, t1: L + beatA / 4 } }, hpfHz: cfg.hpfHz,
+        },
+        ramp('A.gain', L, L + 0.05, A.level, lowered, 'lin'),
+        ramp('A.hpf', L, L + 0.05, 20, cfg.aHpfHz, 'exp'),
+      ];
+      const kind = forced(x, D16_EXITS) ?? weightedPick(cfg.exits, rng) ?? 'echo';
+      const exit = EXITS[kind].build({ A: { ...A, level: lowered }, i, end: gapStart, rng, tailBeats: 1 });
+      events.push(...exit.events);
+      const loud = riserLoud(phase, { early: -12, mid: -10, late: -8, final: -6 });
+      events.push(synth('riser', { t0: Math.max(L, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: false }));
+      events.push(...swellLayer(landing, gapStart - Math.min(barA, 2 * beatA), gapStart, loud - 1));
+      // B's own mix takes over from its stretched voice on the pickup, then the impact.
+      events.push(set('B.gain', bStart, SILENT));
+      events.push(ramp('B.gain', pickupAt - LAYERING.handoverSec, pickupAt, SILENT, 1, 'lin'));
+      events.push(...impactLayer({ T, phase, landing }));
+      return { events, aStopAt: exit.aStopAt, variant: { kind, bars: i - swapAt.index } };
+    },
+  },
+
+  // D19 · Scratch-in: A exits as in R7, the build runs on B's grid (its roll down), and B's first syllable is
+  // scratched back and forth on B's eighths over the last beats (baby, chirp or forward strokes), released forward
+  // into the pickup, where the whole word comes in with the song.
+  D19: {
+    id: 'D19',
+    name: 'Scratch-in',
+    shape: 'S2',
+    implemented: true,
+    family: 'scratch',
+    exits: R7_EXITS,
+    needs: (caps) => caps.chop != null,
+    minGapBeats: (phase) => MOVES.scratch.minGapBeats[phase],
+    aLeadSec: exitLead('D19'),
+    build(x) {
+      const { e, gapStart, pickupAt, gB, phase, rng, chop, landing } = x;
+      if (!chop) throw new Error('D19 needs a grain to scratch');
+      const out = s2Exit(x);
+      const events = [...out.events, ...buildLayers({ t0: e, gapStart, pickupAt, gB, phase, rng, landing, rollScale: MOVES.scratch.rollScale })];
+      const scratch = scratchMove({ source: chop, pickupAt, from: e, beats: MOVES.scratch.beats[phase.name], gB, phase: phase.name, signatureDb: phase.signatureDb, rng, style: forced(x, SCRATCH_STYLES) });
+      if (scratch) events.push(scratch.event);
+      events.push(...landB(x));
+      return { events, aStopAt: out.aStopAt, variant: { kind: scratch?.style ?? 'none', beats: scratch?.beats ?? 0 }, usesBSignature: Boolean(scratch) && chop.from === 'signature' };
     },
   },
 

@@ -12,9 +12,10 @@ Steps (default: all, always run in this order):
     keys        keys.py        musical keys → <dataDir>/keys/
     stems       stems.py       Demucs stems (in analysis/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
     signatures  signatures.py  Signature candidates from the stems → <dataDir>/signatures/
+    interval    interval.py    the Interval playlist, global (no pool owns it) → cache/interval/, data/interval/
 
 --song limits covers, decode, analyze, snippets, stems and signatures to those songs; validate and keys always
-cover the whole pool (their cached work is skipped). Each step is its own process, given the
+cover the whole pool (their cached work is skipped); interval is the same for every pool. Each step is its own process, given the
 pool's manifest path. The first failing step stops the run (--keep-going runs the rest anyway);
 the exit status is 0 when every step succeeded, 3 when the stems disk guard stopped the run, else 1.
 """
@@ -45,6 +46,7 @@ class Step:
     python: Path
     per_song: bool  # takes --song
     setup_hint: str = ""
+    pooled: bool = True  # takes --pool (the Interval playlist belongs to no pool)
 
 
 STEPS = (
@@ -59,6 +61,7 @@ STEPS = (
          "uv venv --python /opt/homebrew/bin/python3.13 analysis/.venv-stems && "
          "uv pip install --python analysis/.venv-stems/bin/python -r analysis/requirements-stems.txt"),
     Step("signatures", "signatures.py", VENV_PY, True),
+    Step("interval", "interval.py", VENV_PY, False, pooled=False),
 )
 STEP_NAMES = tuple(s.name for s in STEPS)
 
@@ -128,9 +131,18 @@ def _sum_signatures(pool: pools.Pool, ids: list[int]) -> str:
             f"{sum(s.get('approved', 0) for s in songs)} approved")
 
 
+def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
+    index = _load(pools.POC / "data" / "interval" / "index.json")
+    if not index:
+        return "no Interval playlist"
+    dropped, missing = len(index.get("dropped", [])), len(index.get("missing", []))
+    return (f"{len(index['tracks'])} Interval tracks (global)" + (f", {dropped} duplicates dropped" if dropped else "")
+            + (f", {missing} missing" if missing else ""))
+
+
 SUMMARIES: dict[str, Callable[[pools.Pool, list[int]], str]] = {
     "covers": _sum_covers, "decode": _sum_decode, "analyze": _sum_analyze, "snippets": _sum_snippets, "validate": _sum_validate,
-    "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures,
+    "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures, "interval": _sum_interval,
 }
 
 
@@ -147,7 +159,9 @@ def parse_steps(text: str | None) -> list[Step]:
 
 
 def command(step: Step, pool: pools.Pool, songs: list[int]) -> list[str]:
-    cmd = [str(step.python), str(ANALYSIS / step.script), "--pool", str(pool.manifest)]
+    cmd = [str(step.python), str(ANALYSIS / step.script)]
+    if step.pooled:
+        cmd += ["--pool", str(pool.manifest)]
     if step.per_song:
         for sid in songs:
             cmd += ["--song", str(sid)]

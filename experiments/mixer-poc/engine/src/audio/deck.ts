@@ -4,15 +4,32 @@
 // stem lanes can play sample-locked to it and subtract a part exactly.
 import type { Analysis } from '../analysis.ts';
 import type {
-  BlendEvent, PreverbEvent, SignatureEvent, StemEnvelope, StemLaneEvent, StemName, StemParts, StemsEvent, SlicesEvent,
+  BlendEvent, PreverbEvent, ScratchEvent, SignatureEvent, SliceSource, StemEnvelope, StemLaneEvent, StemName, StemParts, StemsEvent,
+  SlicesEvent,
 } from '../plan/recipes.ts';
+import type { RateRamp } from '../plan/rate.ts';
+import type { PowerUp } from '../plan/planner.ts';
+import { powerUpOffset } from '../plan/rate.ts';
 import type { BlendBuffers } from './blend.ts';
 import type { AudioGraph } from './graph.ts';
 import type { HookStems, StemSlices } from './stems.ts';
 import { frameAligned, laneSources, laneStart, onsetShift, schedulePoints } from './lanes.ts';
-import { SIGNATURES } from '../config.ts';
+import { preverbKey } from './preverb.ts';
+import { renderScratch } from './scratch.ts';
+import { MOVES, SIGNATURES } from '../config.ts';
 
 const SIGNATURE_FADE_SEC = SIGNATURES.fadeSec;
+/** AudioBufferSourceNode reads its k-rate playbackRate once per render quantum of 128 frames. */
+const QUANTUM_FRAMES = 128;
+
+/** The same automation on a source's playbackRate as the scheduler puts on a deck's `rate` (stem lanes, D15). */
+function scheduleRate(param: AudioParam, r: RateRamp, now: number): void {
+  const t0 = Math.max(r.t0, now);
+  const t1 = Math.max(r.t1, t0 + 0.001);
+  param.setValueAtTime(r.from, t0);
+  if (r.curve === 'exp') param.exponentialRampToValueAtTime(Math.max(r.to, 0.0001), t1);
+  else param.linearRampToValueAtTime(r.to, t1);
+}
 
 /** The decks a plan addresses: A, the outgoing song, and B, the incoming one. */
 export type DeckName = 'A' | 'B';
@@ -61,7 +78,7 @@ export class Deck {
   preverbs: ReadonlyMap<string, AudioBuffer> | null;
   blend: BlendBuffers | null;
   stemOut: GainNode;
-  /** Stem lanes' echo and reverb sends (past the fader), at the deck's loudness trim. */
+  /** Stem lanes' echo and reverb sends (past the fader), at the deck's loudness trim. `stemOut` takes their solo. */
   laneEchoOut: GainNode;
   laneReverbOut: GainNode;
   /** This song's approved Signatures by id (SignatureStore.buffersFor), and their own output. */
@@ -136,23 +153,44 @@ export class Deck {
     this.hookId = null;
   }
 
-  start(when: number, offset: number, rate = 1): AudioBufferSourceNode {
+  /**
+   * Starts the song so position `offset` plays at `when`, at `rate`. With `powerUp` (P5, D14's tape start) it
+   * starts at `powerUp.from` and its rate climbs exponentially to `rate` by `powerUp.until`; `offset` is then the
+   * plan's clock (where the song would be at `when` had it run at `rate` all along), so from `until` on the song
+   * is exactly there, and the deck's clock (posAt, lanes) is that clock.
+   */
+  start(when: number, offset: number, rate = 1, powerUp: PowerUp | null = null): AudioBufferSourceNode {
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
-    source.playbackRate.value = rate;
     // The main source has its own gain so it can be faded apart from loop rolls and spinbacks.
     this.sourceGain = this.ctx.createGain();
     source.connect(this.sourceGain).connect(this.trim);
-    // At rate 1, on whole frames (within 21 µs of the plan), so lanes can lock to it.
     const sr = this.ctx.sampleRate;
-    const at = rate === 1 ? frameAligned(when, offset, sr) : { when, offset };
-    source.start(at.when, at.offset);
+    if (powerUp && powerUp.until > when) {
+      // The intrinsic value covers the render quantum the source starts in (k-rate: read at the quantum's start).
+      source.playbackRate.value = powerUp.from;
+      source.playbackRate.setValueAtTime(powerUp.from, when);
+      source.playbackRate.exponentialRampToValueAtTime(rate, powerUp.until);
+      const real = powerUpOffset({ virtualOffset: offset, when, until: powerUp.until, from: powerUp.from, to: rate, quantumSec: QUANTUM_FRAMES / sr });
+      source.start(when, Math.max(0, real));
+      // The clock the plan lands on: lanes (B's ghost) lock to it, approximately while the rate climbs.
+      const clock = rate === 1 ? frameAligned(when, offset, sr) : { when, offset };
+      this.startCtx = clock.when;
+      this.offset = clock.offset;
+      this.startFrame = rate === 1 ? Math.round(clock.when * sr) : null;
+      this.offsetFrame = rate === 1 ? Math.round(clock.offset * sr) : null;
+    } else {
+      source.playbackRate.value = rate;
+      // At rate 1, on whole frames (within 21 µs of the plan), so lanes can lock to it.
+      const at = rate === 1 ? frameAligned(when, offset, sr) : { when, offset };
+      source.start(at.when, at.offset);
+      this.startCtx = at.when;
+      this.offset = at.offset;
+      this.startFrame = rate === 1 ? Math.round(at.when * sr) : null;
+      this.offsetFrame = rate === 1 ? Math.round(at.offset * sr) : null;
+    }
     this.source = source;
-    this.startCtx = at.when;
-    this.offset = at.offset;
     this.rate = rate;
-    this.startFrame = rate === 1 ? Math.round(at.when * sr) : null;
-    this.offsetFrame = rate === 1 ? Math.round(at.offset * sr) : null;
     return source;
   }
 
@@ -312,9 +350,11 @@ export class Deck {
   }
 
   // P1, a stem lane: one part of this song, sample-locked to the main source (whole frames, rate 1 only), into
-  // the deck's chain (`direct`, −1 removes the part) and/or alone into the echo or reverb. A lane its decoded
-  // stems do not cover entirely is not played at all (half a subtraction would be worse than none).
-  playLane({ part, at, until, direct, echo, reverb }: Omit<StemLaneEvent, 'kind' | 'deck'>): boolean {
+  // the deck's chain (`direct`, −1 removes the part), alone past the fader (`solo`) and/or alone into the echo or
+  // reverb. With `rate`, its sources get the main source's rate automation, so it stays locked while the deck
+  // brakes. A lane its decoded stems do not cover entirely is not played at all (half a subtraction would be worse
+  // than none).
+  playLane({ part, at, until, direct, solo, echo, reverb, rate }: Omit<StemLaneEvent, 'kind' | 'deck'>): boolean {
     if (this.startFrame == null || this.offsetFrame == null || !this.source) return false;
     const { startFrame, offsetFrame } = this;
     const sr = this.ctx.sampleRate;
@@ -336,13 +376,18 @@ export class Deck {
         if (!x) continue;
         const src = this.ctx.createBufferSource();
         src.buffer = x.buffer;
+        if (rate) {
+          src.playbackRate.value = rate.from;
+          scheduleRate(src.playbackRate, rate, this.ctx.currentTime);
+        }
         const g = this.ctx.createGain();
         g.gain.value = x.gain;
         src.connect(g).connect(sum);
         src.start(when, x.offsetFrames / sr, frames / sr);
+        src.stop(until + 0.02);
         this.extraSources.push(src);
       }
-      const routes: [typeof direct | undefined, AudioNode][] = [[direct, this.trim], [echo, this.laneEchoOut], [reverb, this.laneReverbOut]];
+      const routes: [typeof direct | undefined, AudioNode][] = [[direct, this.trim], [solo, this.stemOut], [echo, this.laneEchoOut], [reverb, this.laneReverbOut]];
       for (const [points, destination] of routes) {
         if (!points?.length) continue;
         const g = this.ctx.createGain();
@@ -354,9 +399,10 @@ export class Deck {
     return false;
   }
 
-  // P3, a pre-verb swell: the end of this hook's render (PreverbStore), so it ends at `until`, faded in.
-  playPreverb({ hookId, at, until, gainDb, hpfHz }: Omit<PreverbEvent, 'kind' | 'deck'>): void {
-    const buffer = this.preverbs?.get(hookId);
+  // P3, a pre-verb swell: the end of this hook's render (PreverbStore; of its mix, or of its vocals), so it ends
+  // at `until`, faded in.
+  playPreverb({ hookId, at, until, gainDb, hpfHz, source = 'mix' }: Omit<PreverbEvent, 'kind' | 'deck'>): void {
+    const buffer = this.preverbs?.get(preverbKey(hookId, source));
     if (!buffer) return;
     const start = Math.max(at, until - buffer.duration, this.ctx.currentTime + 0.005);
     if (until - start < 0.05) return;
@@ -378,10 +424,18 @@ export class Deck {
 
   // The Blend: this song's bars before its hook, stretched to the outgoing song's tempo (BlendStore.forPair),
   // played so the render's time `fileAt` sounds at `at`. Parts ramp in like playStems and are cut at `until`.
-  playBlend({ at, until, fileAt, parts }: Pick<BlendEvent, 'at' | 'until' | 'fileAt' | 'parts'>): void {
+  playBlend({ at, until, fileAt, parts, hpfHz }: Pick<BlendEvent, 'at' | 'until' | 'fileAt' | 'parts' | 'hpfHz'>): void {
     const blend = this.blend;
     if (!blend) return;
     const now = this.ctx.currentTime;
+    let out: AudioNode = this.stemOut;
+    if (hpfHz) {
+      const hpf = this.ctx.createBiquadFilter();
+      hpf.type = 'highpass';
+      hpf.frequency.value = hpfHz;
+      hpf.connect(this.stemOut);
+      out = hpf;
+    }
     for (const [name, env] of stemEntries(parts)) {
       const buffer = blend.buffers[name];
       if (!buffer || !env) continue;
@@ -397,28 +451,29 @@ export class Deck {
       g.linearRampToValueAtTime(env.to * blend.scale, Math.max(start + 0.001, env.t1));
       g.setValueAtTime(env.to * blend.scale, Math.max(start + 0.002, until - 0.008));
       g.linearRampToValueAtTime(0, until);
-      src.connect(gain).connect(this.stemOut);
+      src.connect(gain).connect(out);
       src.start(start, offset, until - start + 0.02);
       this.extraSources.push(src);
     }
   }
 
   // One of this song's Signatures: its anchor sounds at `at`, resampled by `rate`, faded out at `until`;
-  // `echo` also sends it into the shared echo. Skipped when its audio is not decoded (or already too late).
-  playSignature({ id, at, anchorSec, rate, gainDb, until, echo }: Omit<SignatureEvent, 'kind' | 'deck'>): void {
+  // `echo` also sends it into the shared echo; `from` starts it later in its file (a riff loop that comes in
+  // mid-riff), `fadeSec` sets its fades. Skipped when its audio is not decoded (or already too late).
+  playSignature({ id, at, anchorSec, rate, gainDb, until, echo, from, fadeSec }: Omit<SignatureEvent, 'kind' | 'deck'>): void {
     const buffer = this.signatures?.get(id);
     if (!buffer) return;
     const now = this.ctx.currentTime;
     const startAt = at - anchorSec / rate;
-    const start = Math.max(startAt, now + 0.005);
+    const start = Math.max(startAt, from ?? -Infinity, now + 0.005);
     const offset = (start - startAt) * rate;
-    if (offset >= buffer.duration || until <= start + 0.02) return;
+    const fade = fadeSec ?? SIGNATURE_FADE_SEC;
+    if (offset >= buffer.duration || until <= start + Math.min(0.02, 2 * fade)) return;
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
     src.playbackRate.value = rate;
     const gain = this.ctx.createGain();
     const level = 10 ** (gainDb / 20);
-    const fade = SIGNATURE_FADE_SEC;
     gain.gain.setValueAtTime(0, start);
     gain.gain.linearRampToValueAtTime(level, start + Math.min(fade, 0.004));
     gain.gain.setValueAtTime(level, Math.max(start + 0.005, until - fade));
@@ -431,6 +486,53 @@ export class Deck {
     }
     src.start(start, offset, until - start + 0.02);
     this.extraSources.push(src);
+  }
+
+  // P7, a scratch (D19): the grain rendered along the hand's strokes (audio/scratch.ts), played past the fader
+  // through a high-pass. Skipped when its source is not decoded (or already too late).
+  playScratch({ at, until, source, offset, strokes, gate, gainDb, hpfHz, snap }: Omit<ScratchEvent, 'kind' | 'deck'>): void {
+    const start = Math.max(at, this.ctx.currentTime + 0.005);
+    if (until - start < 0.02) return;
+    const read = this.sourceFor(source, offset, 4);
+    if (!read) return;
+    const { buffer, base, scale, out } = read;
+    const sr = buffer.sampleRate;
+    const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) => buffer.getChannelData(c));
+    const shift = snap ? onsetShift(channels, sr, offset - base, snap.searchSec, snap.consonantSec) : 0;
+    const frames = Math.ceil((until - start) * sr);
+    const rendered = renderScratch({
+      channels, sampleRate: sr, originFrame: (offset - base + shift) * sr, strokes, gate, at: start, frames,
+      gain: 10 ** (gainDb / 20) * scale, noise: 10 ** (MOVES.scratch.needleDb / 20), rng: Math.random,
+    });
+    const audio = this.ctx.createBuffer(rendered.length, frames, sr);
+    rendered.forEach((data, c) => audio.copyToChannel(data, c));
+    const src = this.ctx.createBufferSource();
+    src.buffer = audio;
+    const hpf = this.ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = hpfHz;
+    src.connect(hpf).connect(out);
+    src.start(start);
+    this.extraSources.push(src);
+  }
+
+  /**
+   * Where a slice or a scratch reads its audio: the buffer, the song (or file) seconds where it starts, the gain
+   * that undoes a stem's stored scale, and the output past the fader (a Signature's own, or the stems').
+   * @param reach  seconds of the source after `offset` it may read
+   */
+  private sourceFor(source: SliceSource, offset: number, reach: number): { buffer: AudioBuffer; base: number; scale: number; out: AudioNode } | null {
+    if (source.from === 'mix') return { buffer: this.buffer, base: 0, scale: 1, out: this.stemOut };
+    if (source.from === 'signature') {
+      const buffer = this.signatures?.get(source.id);
+      return buffer ? { buffer, base: 0, scale: 1, out: this.signatureOut } : null;
+    }
+    const store = [this.lanes, this.stems].find((x) => {
+      const b = x?.buffers[source.part];
+      return x != null && b != null && offset >= x.startSec && offset < x.startSec + b.duration - Math.min(reach, 0.25);
+    });
+    const buffer = store?.buffers[source.part];
+    return store && buffer ? { buffer, base: store.startSec, scale: store.scale, out: this.stemOut } : null;
   }
 
   // A Tease from this song's own stems, in sync with its timeline: each part ramps in, holds, and is cut

@@ -1,21 +1,28 @@
 // Moves of the outgoing deck A that recipes and exits share (docs/dj-techniques.md): D1's gate and pump,
-// D3's spiral echo, D2's stop-time stabs and D8's stem peel. Each is pure and returns plan events; each
-// works on A's own grid (its beats before the landing downbeat) and leaves A silent at `end`.
+// D3's spiral echo, D2's stop-time stabs, D8's stem peel, D7's pitch-up rush and D15's instrumental braker. Each
+// is pure and returns plan events; each works on A's own grid (its beats before the landing downbeat) and leaves
+// A silent at `end`.
 import { MOVES } from '../config.ts';
 import type { PhaseName } from '../config.ts';
 import { weightedPick } from '../rng.ts';
-import { SILENT, dbToGain, pick, ramp, set, sfx, synth } from './events.ts';
+import { OPEN_LPF, SILENT, dbToGain, pick, ramp, set, sfx, synth } from './events.ts';
 import type { LanePart, LanePoints, PlanEvent, StemLaneEvent } from './events.ts';
+import { rampTimeAt } from './rate.ts';
+import type { RateRamp } from './rate.ts';
 import type { Timeline } from './timeline.ts';
 
 /** Per-bar RMS of a song's stems (data/stems `bars`, dB), by downbeat index. */
 export type StemBars = Readonly<Partial<Record<LanePart, readonly number[]>>>;
 
-/** The outgoing deck as recipes see it: its timeline, its level after the spin-start duck, its stems' bar levels. */
+/**
+ * The outgoing deck as recipes see it: its timeline, its level after the spin-start duck, its stems' bar levels,
+ * and its playback rate (1 when left out).
+ */
 export interface OutgoingDeck {
   tl: Timeline;
   level: number;
   bars?: StemBars | null;
+  rate?: number;
 }
 
 /** Where A's stem lanes may play (P1): context times inside its decoded stems, and the parts it has. */
@@ -48,13 +55,25 @@ const median = (values: readonly number[]): number => {
   return sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
 };
 
+/** The mean level (dB) of a part of A over the `bars` bars before downbeat `i`; null when unknown. */
+function barsLevel(A: OutgoingDeck, part: LanePart, i: number, bars: number): { mean: number; max: number; median: number } | null {
+  const levels = A.bars?.[part];
+  if (!levels?.length) return null;
+  const span = levels.slice(Math.max(0, i - bars), i);
+  if (!span.length) return null;
+  return { mean: span.reduce((a, b) => a + b, 0) / span.length, max: Math.max(...span), median: median(levels) };
+}
+
 /** True when A's drums in the bars before downbeat `i` are far under the song's median (a gate would sound like dropouts). */
 export function sparseDrums(A: OutgoingDeck, i: number, bars: number): boolean {
-  const drums = A.bars?.drums;
-  if (!drums?.length) return false;
-  const span = drums.slice(Math.max(0, i - bars), i);
-  if (!span.length) return false;
-  return span.reduce((a, b) => a + b, 0) / span.length < median(drums) + MOVES.gate.sparseDrumsDb;
+  const drums = barsLevel(A, 'drums', i, bars);
+  return drums != null && drums.mean < drums.median + MOVES.gate.sparseDrumsDb;
+}
+
+/** True when A sings in the bars before downbeat `i` (D15 needs a voice to keep); unknown counts as singing. */
+export function singsBefore(A: OutgoingDeck, i: number, bars: number, minDb: number): boolean {
+  const vocals = barsLevel(A, 'vocals', i, bars);
+  return vocals == null || vocals.max >= minDb;
 }
 
 // ------------------------------------------------------------------------------------- D1 gate and pump
@@ -80,6 +99,11 @@ export interface GateArgs {
   mode?: GateMode | null;
   /** The exit's gate: one bar, the mid ladder at −24 dB. */
   exit?: boolean;
+  /**
+   * Where a time of A's grid sounds: identity, unless A's tape speeds up under the gate (D7's rush), so every
+   * step still opens on one of A's beats as it arrives.
+   */
+  timeMap?: (t: number) => number;
 }
 
 /**
@@ -87,7 +111,7 @@ export interface GateArgs {
  * 1/32 ladder), or pumped on every beat like a sidechain with kicks, or both. Every edge is a 2 ms ramp;
  * A's high-pass is above 250 Hz before the fast stages; A is silent at `end`.
  */
-export function gateMove({ A, i, end, bars, phase, rng, mode = null, exit = false }: GateArgs): { events: PlanEvent[]; mode: GateMode; start: number } {
+export function gateMove({ A, i, end, bars, phase, rng, mode = null, exit = false, timeMap = (t) => t }: GateArgs): { events: PlanEvent[]; mode: GateMode; start: number } {
   const cfg = MOVES.gate;
   const barA = A.tl.barAt(i);
   const beatA = A.tl.beatAt(i);
@@ -115,39 +139,42 @@ export function gateMove({ A, i, end, bars, phase, rng, mode = null, exit = fals
       const count = Math.round((spanBeats * scale) / stepBeats);
       if (stepBeats <= 0.25 && fastAt == null) fastAt = t;
       for (let j = 0; j < count; j++) {
-        const at = t + j * step;
+        const at = timeMap(t + j * step);
+        const off = timeMap(t + j * step + duty * step);
         if (tresillo && stepBeats === 0.25 && ![0, 3, 6].includes(j % 8)) continue;
         events.push(ramp('A.gain', at, at + edge, level, open, 'lin'));
-        events.push(ramp('A.gain', at + duty * step - edge, at + duty * step, open, closed, 'lin'));
+        events.push(ramp('A.gain', off - edge, off, open, closed, 'lin'));
         level = closed;
       }
       t += count * step;
     }
-    if (closed > SILENT) events.push(ramp('A.gain', end - edge, end, closed, SILENT, 'lin'));
+    if (closed > SILENT) events.push(ramp('A.gain', timeMap(end) - edge, timeMap(end), closed, SILENT, 'lin'));
   }
   if (drawn !== 'gate') {
     // The pump's kicks on every beat (louder as it goes); the pump itself only when the gate is off.
     const beats = Math.round(bars * bpb);
     for (let j = 0; j < beats; j++) {
-      const at = start + j * beatA;
+      const at = timeMap(start + j * beatA);
       const u = beats > 1 ? j / (beats - 1) : 1;
       events.push(synth('kicks', { times: [at], level: cfg.kicks[0] + (cfg.kicks[1] - cfg.kicks[0]) * u }));
       if (drawn !== 'pump') continue;
       const deep = A.level * dbToGain(cfg.pumpDb[0] + (cfg.pumpDb[1] - cfg.pumpDb[0]) * u);
       const sub = j === beats - 1 ? 2 : 1; // the last beat pumps in eighths
       for (let s = 0; s < sub; s++) {
-        const p = at + (s * beatA) / sub;
+        const p = timeMap(start + j * beatA + (s * beatA) / sub);
+        const back = timeMap(start + j * beatA + ((s + cfg.pumpRecoverBeats) * beatA) / sub);
         events.push(ramp('A.gain', p, p + 0.005, A.level, deep, 'lin'));
-        events.push(ramp('A.gain', p + 0.005, p + (cfg.pumpRecoverBeats * beatA) / sub, deep, A.level, 'exp'));
+        events.push(ramp('A.gain', p + 0.005, back, deep, A.level, 'exp'));
       }
     }
-    if (drawn === 'pump') events.push(ramp('A.gain', end - 0.004, end, A.level, SILENT, 'lin'));
+    if (drawn === 'pump') events.push(ramp('A.gain', timeMap(end) - 0.004, timeMap(end), A.level, SILENT, 'lin'));
   }
+  const mappedEnd = timeMap(end);
   if (fastAt != null && fastAt > start + 0.01) {
-    events.push(ramp('A.hpf', start, fastAt, 20, cfg.fastStageHpfHz, 'exp'));
-    events.push(ramp('A.hpf', fastAt, end, cfg.fastStageHpfHz, Math.max(hpfTo, cfg.fastStageHpfHz), 'exp'));
+    events.push(ramp('A.hpf', start, timeMap(fastAt), 20, cfg.fastStageHpfHz, 'exp'));
+    events.push(ramp('A.hpf', timeMap(fastAt), mappedEnd, cfg.fastStageHpfHz, Math.max(hpfTo, cfg.fastStageHpfHz), 'exp'));
   } else {
-    events.push(ramp('A.hpf', start, end, 20, hpfTo, 'exp'));
+    events.push(ramp('A.hpf', start, mappedEnd, 20, hpfTo, 'exp'));
   }
   return { events, mode: drawn, start };
 }
@@ -352,13 +379,113 @@ export function vocalThrow({ throwAt, end, beatA, pickupAt, beatB, rng }: {
   const pre = throwAt - 0.01;
   const edge: LanePoints = [[throwAt - 0.005, 0], [throwAt, 1]];
   return [
-    set('echo.time', pre, pick(cfg.throwDelayBeats, rng) * beatA),
-    set('echo.feedback', pre, cfg.throwFeedback),
+    ...throwEcho({ pre, delay: pick(cfg.throwDelayBeats, rng) * beatA, feedback: cfg.throwFeedback, pickupAt, beatB }),
+    { kind: 'stemLane', deck: 'A', part: 'vocals', at: pre, until: end + 0.02, direct: edge.map(([t, v]) => [t, -v] as const), echo: edge },
+  ];
+}
+
+/** The echo set for a throw from `pre`: tempo-synced, high-pass climbing, faded a beat after B's pickup and flushed. */
+export function throwEcho({ pre, delay, feedback, pickupAt, beatB }: { pre: number; delay: number; feedback: number; pickupAt: number; beatB: number }): PlanEvent[] {
+  return [
+    set('echo.time', pre, delay),
+    set('echo.feedback', pre, feedback),
     ramp('echo.hpf', pre, Math.max(pickupAt, pre + 0.05), 250, 1800, 'exp'),
     set('echo.return', pre, 1),
-    { kind: 'stemLane', deck: 'A', part: 'vocals', at: pre, until: end + 0.02, direct: edge.map(([t, v]) => [t, -v] as const), echo: edge },
     ramp('echo.return', pickupAt, pickupAt + beatB, 1, SILENT, 'lin'),
     set('echo.feedback', pickupAt + beatB + 0.01, 0),
     set('echo.return', pickupAt + beatB + 0.4, 1),
   ];
+}
+
+// ------------------------------------------------------------------------------------ D7 pitch-up rush
+export interface RushArgs {
+  A: OutgoingDeck;
+  i: number;
+  end: number;
+  bars: number;
+  phase: PhaseName;
+  rng: () => number;
+  /** A D1 gate on top (late); null draws it with the Phase's chance. */
+  gate?: boolean | null;
+}
+
+/**
+ * D7: A becomes the riser. Its tape speed climbs exponentially over its last `bars` bars (most of the rise in the
+ * last beat) by 3–5 semitones, a semitone less when its singer is loud there (no chipmunks); its high-pass opens,
+ * it lifts a dB, and it is cut 30 ms before `end`. A runs ahead of its grid, so the planner keeps a gap of at
+ * least half a beat. Late, a D1 gate may chop it instead, each step on one of A's beats as the tape brings it.
+ */
+export function rushMove({ A, i, end, bars, phase, rng, gate = null }: RushArgs): { events: PlanEvent[]; start: number; semitones: number; gated: boolean } {
+  const cfg = MOVES.rush;
+  const barA = A.tl.barAt(i);
+  const beatA = A.tl.beatAt(i);
+  const start = end - bars * barA;
+  const rate0 = A.rate ?? 1;
+  const vocals = barsLevel(A, 'vocals', i, bars);
+  const loud = vocals != null && vocals.mean > vocals.median + cfg.loudVocalsDb;
+  const semitones = Math.max(2, Math.min(cfg.maxSemitones, cfg.semitones[phase] + Math.round(rng() * 2 - 1) - (loud ? 1 : 0)));
+  const rampEnd = end - cfg.cutSec;
+  const tape: RateRamp = { t0: start, t1: rampEnd, from: rate0, to: rate0 * 2 ** (semitones / 12), curve: 'exp' };
+  const gated = gate ?? rng() < cfg.gateChance[phase];
+  const events: PlanEvent[] = [ramp('A.rate', tape.t0, tape.t1, tape.from, tape.to, 'exp')];
+  if (gated) {
+    // A grid time τ sounds once the climbing tape has played (τ − start)·rate0 song seconds.
+    const timeMap = (t: number) => (t <= start ? t : rampTimeAt(tape, (t - start) * rate0));
+    events.push(...gateMove({ A, i, end, bars, phase, rng, mode: 'gate', timeMap }).events);
+  } else {
+    const lifted = A.level * dbToGain(cfg.liftDb);
+    events.push(
+      ramp('A.hpf', start, end, 20, pick(cfg.hpfToHz, rng), 'exp'),
+      ramp('A.gain', start, start + beatA, A.level, lifted, 'lin'),
+      ramp('A.gain', end - cfg.cutSec, end, lifted, SILENT, 'lin'),
+    );
+  }
+  events.push(synth('riser', { t0: start, t1: end, fromHz: 800, toHz: 9000, fromDb: -36, toDb: cfg.riserDb[phase], tone: true }));
+  return { events, start, semitones, gated };
+}
+
+// ------------------------------------------------------------------------------ D15 instrumental braker
+export interface BrakerArgs {
+  A: OutgoingDeck;
+  i: number;
+  end: number;
+  pickupAt: number;
+  beatB: number;
+  rng: () => number;
+}
+
+/**
+ * D15: over A's last bar its band brakes to a halt (the rate to 0.02 and the low-pass closing, as EXITS.brake)
+ * while its singer carries on, dry and at speed: a −vocals lane braking with the band (the same rate automation,
+ * so it still cancels the voice inside the braking mix) and a vocals lane past the fader at rate 1. Half a beat
+ * before `end` the voice goes into the echo alone (the throw), which rings into the gap.
+ */
+export function brakerMove({ A, i, end, pickupAt, beatB, rng }: BrakerArgs): { events: PlanEvent[]; start: number; brakeSec: number; aStopAt: number } {
+  const cfg = MOVES.braker;
+  const barA = A.tl.barAt(i);
+  const beatA = A.tl.beatAt(i);
+  const start = end - barA;
+  const brakeSec = pick(cfg.brakeBars, rng) * barA;
+  const stopAt = start + brakeSec;
+  const rate: RateRamp = { t0: start, t1: stopAt, from: A.rate ?? 1, to: cfg.rateTo, curve: 'lin' };
+  const throwAt = end - cfg.throwBeats * beatA;
+  const fade = 0.005;
+  const aStopAt = end + 0.05;
+  const events: PlanEvent[] = [
+    // The band brakes.
+    ramp('A.rate', rate.t0, rate.t1, rate.from, rate.to, 'lin'),
+    ramp('A.lpf', start, stopAt, OPEN_LPF, cfg.lpfToHz, 'exp'),
+    ramp('A.gain', stopAt - 0.12, stopAt, A.level, SILENT, 'lin'),
+    synth('downlifter', { t0: start, t1: stopAt + 0.2, peakDb: -16 }),
+    // Its voice leaves the braking mix (a −lane braking with it) ...
+    { kind: 'stemLane', deck: 'A', part: 'vocals', at: start, until: stopAt + 0.01, direct: [[start, 0], [start + fade, -1]], rate },
+    // ... and carries on dry past the fader, at A's level, until it is thrown into the echo.
+    {
+      kind: 'stemLane', deck: 'A', part: 'vocals', at: start, until: end + 0.02, direct: [[start, 0]],
+      solo: [[start, 0], [start + fade, A.level], [throwAt - fade, A.level], [throwAt, 0]],
+      echo: [[throwAt - fade, 0], [throwAt, 1]],
+    },
+    ...throwEcho({ pre: throwAt - 0.01, delay: pick(cfg.throwDelayBeats, rng) * beatA, feedback: cfg.throwFeedback, pickupAt, beatB }),
+  ];
+  return { events, start, brakeSec, aStopAt };
 }

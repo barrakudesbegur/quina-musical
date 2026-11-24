@@ -14,7 +14,8 @@
 //   coversDir, /cards/* → the folder of its cardsJson, GET/POST /api/override/<id> → its overridesDir (the
 //   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/pool → { name }.
 // Not part of a pool: /fx/<name>.mp3, /stingers/<name>.mp3, /holdaudio/<name>.flac (cache/hold, Hold music
-// decoded by analysis/hold.py) and /data/hold/* (its loops), /ws (WebSocket).
+// decoded by analysis/hold.py) and /data/hold/* (its loops), /intervalaudio/<slug>.flac (cache/interval, the
+// Interval playlist decoded by analysis/interval.py) and /data/interval/* (its tracks), /ws (WebSocket).
 // Pool media is revalidated (ETag) instead of cached for a day: the same URL means another file in another pool.
 // The hub forwards commands (@quina/protocol) to the show engine and the engine's events to everyone else.
 import crypto from 'node:crypto';
@@ -81,6 +82,7 @@ const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
   ['/stingers/', path.join(ROOT, 'client/public/audios/stingers'), 'public, max-age=3600'],
   ['/analysis/', ANALYSIS_DIR, 'no-store'],
   ['/data/hold/', path.join(POC, 'data/hold'), 'no-store'],
+  ['/data/interval/', path.join(POC, 'data/interval'), 'no-store'],
   ['/data/', POOL.dataDir, 'no-store'],
   // The whole card-generator output folder, as before; a pool without cards serves none (the engine falls back).
   ['/cards/', POOL.cardsJson && path.dirname(POOL.cardsJson), 'no-store'],
@@ -120,6 +122,8 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   if (stretched) return { file: path.join(cache, 'stretch', stretched[1], stretched[2], `${stretched[3]}.flac`), cache: REVALIDATE };
   const hold = urlPath.match(/^\/holdaudio\/([A-Za-z0-9._-]+)\.flac$/);
   if (hold) return { file: path.join(POC, 'cache', 'hold', `${hold[1]}.flac`), cache: LONG_CACHE };
+  const interval = urlPath.match(/^\/intervalaudio\/([a-z0-9][a-z0-9-]*)\.flac$/);
+  if (interval) return { file: path.join(POC, 'cache', 'interval', `${interval[1]}.flac`), cache: REVALIDATE };
   if (urlPath === '/data/hold-report.md') return { file: path.join(POC, 'data/hold-report.md'), cache: 'no-store' };
   for (const [prefix, dir, cacheControl] of MOUNTS) {
     if (!urlPath.startsWith(prefix)) continue;

@@ -8,7 +8,9 @@
 // Loops always start and end inside the track (never a restart from the top), on checked seams. Hold music is never a pool song, so players can't
 // mistake it for one.
 import { isRecord } from './loader.ts';
+import { loopGrid, type OutgoingMusic } from '../interval/plan.ts';
 import type { AudioGraph } from './graph.ts';
+import type { Handoff } from './interval.ts';
 
 /** Moods come from the folder: hold/ is fail music ('error'), celebration/ is victory music; 'hold' is an ordinary Hold. */
 export type HoldMusicMood = 'hold' | 'error' | 'celebration';
@@ -26,7 +28,13 @@ interface HoldLoopMeta {
   afterIntro?: boolean | null;
   gainToTargetDb?: number | null;
   bpm?: number | null;
+  /** Whole bars between the loop points, and their beats: the loop's grid (an Interval handover's downbeats).
+   * Read only when they are whole numbers; a loop without them still plays. */
+  bars?: unknown;
+  beatsPerBar?: unknown;
 }
+
+const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 1;
 
 function isHoldLoopMeta(l: unknown): l is HoldLoopMeta {
   if (!isRecord(l)) return false;
@@ -44,6 +52,8 @@ interface PlaceholderLoop {
   endSec: number;
   gainDb: number;
   loopStartSec?: number;
+  bars: number;
+  beatsPerBar: number;
 }
 
 /**
@@ -57,6 +67,8 @@ interface TrackLoop {
   bpm: number | null | undefined;
   kind: 'body' | 'bars';
   withIntro: boolean;
+  bars: number | null;
+  beatsPerBar: number;
   buffer?: AudioBuffer;
   loopStartSec?: number;
 }
@@ -93,6 +105,8 @@ interface HoldVoice {
   trackGain: number;
   levelDb: number;
   mood: HoldMusicMood;
+  /** The loop's downbeats on the audio clock (null without whole bars): the Interval hands over on one. */
+  grid: OutgoingMusic | null;
 }
 
 export interface HoldMusicStart {
@@ -289,7 +303,10 @@ export class HoldMusic {
       title: placeholder.title,
       mood: 'hold',
       placeholder: true,
-      loops: [{ buffer: placeholder.buffer, startSec: 0, endSec: placeholder.loopSec, gainDb: TARGET_RMS_DB - rmsDb(placeholder.buffer) }],
+      loops: [{
+        buffer: placeholder.buffer, startSec: 0, endSec: placeholder.loopSec, gainDb: TARGET_RMS_DB - rmsDb(placeholder.buffer),
+        bars: PLACEHOLDER.bars, beatsPerBar: 4,
+      }],
       next: 0,
     });
     try {
@@ -321,7 +338,8 @@ export class HoldMusic {
           mood: category === 'error' || category === 'celebration' ? category : 'hold',
           preferred: ordered[0]?.preferred ? 1 : 0,
           loops: ordered.map((l) => ({ startSample: l.startSample, endSample: l.endSample, gainDb: l.gainToTargetDb ?? 0, bpm: l.bpm,
-            kind: l.kind ?? 'bars', withIntro: Boolean(l.kind === 'body' && l.preferred && l.afterIntro !== false) })),
+            kind: l.kind ?? 'bars', withIntro: Boolean(l.kind === 'body' && l.preferred && l.afterIntro !== false),
+            bars: isCount(l.bars) ? l.bars : null, beatsPerBar: isCount(l.beatsPerBar) ? l.beatsPerBar : 4 })),
           next: 0,
         });
       }
@@ -427,7 +445,33 @@ export class HoldMusic {
     gain.gain.linearRampToValueAtTime(trackGain * 10 ** (levelDb / 20), when + fadeSec);
     source.connect(lpf).connect(gain).connect(this.graph.holdBus);
     source.start(when);
-    this.voice = { source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb, mood: asked };
+    const grid = loop.bars ? loopGrid({ startAt: when, offsetSec: 0, loopStartSec: source.loopStart, loopEndSec: source.loopEnd, bars: loop.bars, beatsPerBar: loop.beatsPerBar }) : null;
+    this.voice = { source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb, mood: asked, grid };
+  }
+
+  /**
+   * Hand the loop playing over to the Interval playlist (audio/interval.ts): it leaves this player, unplugged from
+   * the Hold bus, and the playlist routes it on and echoes it out on one of its downbeats. Null when nothing plays.
+   */
+  handoff(): Handoff | null {
+    const voice = this.voice;
+    if (!voice) return null;
+    this.voice = null;
+    voice.gain.disconnect();
+    return {
+      title: voice.title,
+      grid: voice.grid,
+      output: voice.gain,
+      bus: this.graph.holdBus,
+      release: (at) => {
+        try {
+          voice.source.stop(Math.max(at, this.ctx.currentTime));
+        } catch {}
+        setTimeout(() => {
+          for (const node of [voice.source, voice.lpf, voice.gain]) node.disconnect();
+        }, Math.max(0, at - this.ctx.currentTime) * 1000 + 300);
+      },
+    };
   }
 
   setLevel(levelDb: number, seconds = 0.6): void {

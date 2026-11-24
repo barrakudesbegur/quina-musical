@@ -61,6 +61,9 @@ export function applyPlan(plan: { events: readonly PlanEvent[] }, outputs: PlanO
       case 'preverb':
         decks[event.deck]?.playPreverb(event);
         continue;
+      case 'scratch':
+        decks[event.deck]?.playScratch(event);
+        continue;
       case 'spinback':
         decks[event.deck]?.spinback(event);
         continue;

@@ -16,11 +16,18 @@ export interface SceneContext {
   /** In `roundStart`, a round is introduced and its Shuffle has not run yet. */
   introduced: boolean;
   paused: boolean;
+  /**
+   * The Interval playlist is playing (the state's `intervalMusic` is not null). Optional: without it the rules
+   * assume it plays in `interval`, `roundStart` and `after`, the scenes that start it.
+   */
+  intervalMusic?: boolean;
 }
 
 type Rule = 'any' | readonly ShowScene[] | ((ctx: SceneContext) => boolean);
 
 const PLAY: readonly ShowScene[] = ['before', 'play'];
+/** The scenes that start the Interval playlist (it goes on in `play` until the round's first Spin). */
+const INTERVAL_MUSIC: readonly ShowScene[] = ['interval', 'roundStart', 'after'];
 const celebratingLine = (c: SceneContext) => c.scene === 'celebration' && c.celebrating === 'line';
 const celebratingBingo = (c: SceneContext) => c.scene === 'celebration' && c.celebrating === 'bingo';
 
@@ -55,6 +62,8 @@ const RULES = {
   decide: ['check'],
   celebrationMusic: ['celebration'],
   interval: celebratingBingo,
+  // Whenever the Interval playlist plays: the Interval, a round's intro and Shuffle (until the first Spin), `after`.
+  intervalSkip: (c) => c.intervalMusic ?? INTERVAL_MUSIC.includes(c.scene),
 } satisfies Record<CommandName, Rule>;
 
 export const SCENE_RULES: Readonly<Record<CommandName, Rule>> = Object.freeze(RULES);

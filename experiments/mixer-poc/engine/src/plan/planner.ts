@@ -13,20 +13,20 @@ import { pickHook } from './hooks.ts';
 import { SPIN_LIMITS, spinWindow } from './pace.ts';
 import { compatible } from './keys.ts';
 import { chooseLanding, preverbEvent } from './landing.ts';
-import { ghostLayer } from './layers.ts';
+import { gapChopSlices, ghostLayer, scratchMove } from './layers.ts';
 import { weightedPick } from '../rng.ts';
 import { PLANNER, LAYERING, MOVES, SIGNATURES, STEMS } from '../config.ts';
 import type { Analysis, Hook, SignatureKind } from '../analysis.ts';
 import type { PhaseEffects, PhaseName } from '../config.ts';
 import type { KeyInfo } from './keys.ts';
 import type { SpinWindow } from './pace.ts';
-import type { DeckClock, PhraseClass, Timeline } from './timeline.ts';
+import type { DeckClock, HookGrid, PhraseClass, Timeline } from './timeline.ts';
 import type { BridgePattern } from './bridges.ts';
 import type { LandingStyle } from './landing.ts';
-import type { ChopSource, LayerName } from './layers.ts';
+import type { ChopSource, LayerName, RiffSource } from './layers.ts';
 import type {
-  BlendLayer, Caps, ExitName, LanePart, LaneWindow, OutgoingDeck, PlanEvent, Recipe, RecipeFamily, RecipeId, RecipeShape, RecipeVariant,
-  SignatureEvent, StemBars, StemName,
+  BlendLayer, Caps, ExitName, LanePart, LaneWindow, OutgoingDeck, PlanEvent, PreverbSource, Recipe, RecipeFamily, RecipeId, RecipeShape,
+  RecipeVariant, SignatureEvent, StemBars, StemName,
 } from './recipes.ts';
 
 export const LOOKAHEAD_SEC = PLANNER.lookaheadSec;
@@ -89,6 +89,8 @@ export interface IncomingSong {
   stemBars?: StemBars | null;
   /** Hook ids whose pre-verb swell is rendered (P3, runtime PreverbStore). */
   preverbs?: readonly string[] | null;
+  /** Hook ids whose pre-verb is also rendered from the vocal stem (D12 from B's voice). */
+  vocalPreverbs?: readonly string[] | null;
   /** Its hooks' keys, by hook id (data/keys). */
   keys?: Readonly<Record<string, KeyInfo>> | null;
 }
@@ -96,7 +98,8 @@ export interface IncomingSong {
 /**
  * B's bars before a hook, stretched onto a constant grid at A's tempo (analysis/stretch.py). Times are in
  * the rendered file: `hookSec` is the hook downbeat, `barSec` the grid's bar. `bass` = B's bass may layer
- * too (tempos within ±4% and compatible keys).
+ * too (tempos within ±4% and compatible keys); `vocals` = B's stretched voice is decoded and may sing over A
+ * (D16: the same rule as the bass).
  */
 export interface BlendSource {
   aSongId: number;
@@ -106,6 +109,17 @@ export interface BlendSource {
   firstDownbeatSec: number;
   barSec: number;
   bass: boolean;
+  vocals?: boolean;
+}
+
+/**
+ * P5: B starts at this rate and climbs exponentially to its own rate by `until` (D14's tape start, ending on the
+ * pickup). The plan's `startCtx` and `offset` stay the clock B lands on (where it would be had it run at its
+ * rate all along), so its hook still sounds at T; the Deck works out the real start offset.
+ */
+export interface PowerUp {
+  from: number;
+  until: number;
 }
 
 /** A landing candidate. `blend`: where B's stretched layer goes, for S3. */
@@ -178,7 +192,7 @@ export interface Plan {
   signature: { deck: 'A' | 'B'; id: string; at: number; rate: number } | null;
   /** The landing layer (plan/landing.ts). */
   landing: LandingStyle;
-  /** Layers of B decorating the recipe (D9's Ghost Tease). */
+  /** Layers of B decorating the recipe (D9's Ghost Tease and its voice, D5's riff bed, a gap chop or scratch). */
   layers: readonly LayerName[];
   phraseClass: PhraseClass | null;
   /** True when no candidate fit the Pace window and SPIN_LIMITS was used. */
@@ -189,7 +203,7 @@ export interface Plan {
   hook: { id: string; tag: string; downbeatSec: number; downbeatIndex: number; pickupSec: number; bar: number; beat: number };
   /** Null when nothing was playing. */
   a: { songId: number; stopAt: number; exitStart: number } | null;
-  b: { songId: number; startCtx: number; offset: number; rate: number; lead: number; trimDb: number; bpm: number };
+  b: { songId: number; startCtx: number; offset: number; rate: number; lead: number; trimDb: number; bpm: number; powerUp?: PowerUp | null };
   /** Sorted by start time. */
   events: PlanEvent[];
 }
@@ -212,7 +226,13 @@ export interface RecipeChoice {
   caps?: Caps;
 }
 
-/** Variants a test or the audition page may force (never the show): the landing, R7's bridge, a recipe's variant, the Ghost. */
+/** What fills an S1 gap of at least a beat: D11's one-beat chop or D19's one-beat scratch. */
+export type GapLayerKind = 'chop' | 'scratch';
+
+/**
+ * Variants a test or the audition page may force (never the show): the landing, R7's bridge, a recipe's variant,
+ * the Ghost and its voice, the riff bed, a gap layer, the pre-verb's source. Each wins only when it is possible.
+ */
 export interface PlanForce {
   landing?: LandingStyle | null;
   /** The exit move of an S2 recipe, when it is one of the recipe's exits. */
@@ -220,6 +240,10 @@ export interface PlanForce {
   bridge?: BridgePattern | null;
   variant?: string | null;
   ghost?: boolean | null;
+  ghostVoice?: boolean | null;
+  riff?: boolean | null;
+  gapLayer?: GapLayerKind | null;
+  preverbSource?: PreverbSource | null;
 }
 
 /** What planTransition needs. */
@@ -323,7 +347,13 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   // The beat-matched Blend needs B's stretched render for this hook at this A's tempo (runtime BlendStore).
   const blend = tl && A && B.blend && B.blend.hookId === hook.id && B.blend.aSongId === A.songId ? B.blend : null;
   const teaseStems = B.stems?.[hook.id]?.parts ?? null;
-  const caps: Caps = { blend: Boolean(blend), aLanes: laneWindow(A, tl), chop: chopSource(B, hook, pickup, teaseStems) };
+  const caps: Caps = {
+    blend: Boolean(blend),
+    aLanes: laneWindow(A, tl),
+    chop: chopSource(B, hook, pickup, teaseStems),
+    blendVocals: Boolean(blend?.vocals) && singsBeforeHook(B, hook, teaseStems),
+  };
+  const aState: OutgoingDeck | null = tl ? { tl, level: duckLevel, bars: A?.stemBars ?? null, rate: A?.deck.rate ?? 1 } : null;
   let recipe = chooseRecipe({ hasA: Boolean(tl), phase, history, rng, override: recipeOverride, caps });
   let exit = chooseExit(recipe, history, rng);
   if (force?.exit && recipe.exits?.includes(force.exit)) exit = force.exit;
@@ -367,6 +397,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
             if (gapStart - aLead < minStart) continue;
             if (r.aLaneParts && !lanesCover(gapStart - aLead, gapStart + 0.1)) continue;
           }
+          if (r.fits && aState && !r.fits(aState, d.index)) continue;
           candidateCount++;
           const phraseClass = tl.phraseClass(d.index);
           const cost = DRIFT_COST_PER_SEC * Math.abs(T - spinStart - win.dTarget) + PHRASE_COST[phraseClass];
@@ -375,9 +406,9 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
         if (found) break;
       }
     } else if (r.shape === 'S2') {
-      const wantsTease = rng() < teaseChance;
+      const wantsTease = rng() < teaseChance && !r.noTease;
       for (const [pass, [dMin, dMax]] of windows.entries()) {
-        const bridgeOptions = pass === 0 ? phase.bridgeBars : [1, 2, 3, 4];
+        const bridgeOptions = (pass === 0 ? phase.bridgeBars : [1, 2, 3, 4]).filter((n) => n >= (r.minBridgeBars ?? 0));
         for (const d of tl.downbeatsBetween(minStart, spinStart + dMax)) {
           const e = d.ctxTime;
           if (e - r.aLeadSec(tl, d.index, x, phase.name) < minStart) continue;
@@ -426,7 +457,9 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   if (!best && tl) {
     // Nothing fits this recipe (e.g. A's bars are irregular here): another real move before the bare fade.
     const fallbacks: Recipe[] = [];
-    if (recipe.shape === 'S3' || recipe.aLaneParts) fallbacks.push(chooseRecipe({ hasA: true, phase, history, rng, caps: { ...caps, blend: false, aLanes: null } }));
+    if (recipe.shape === 'S3' || recipe.aLaneParts || recipe.minBridgeBars || recipe.fits) {
+      fallbacks.push(chooseRecipe({ hasA: true, phase, history, rng, caps: { ...caps, blend: false, blendVocals: false, aLanes: null } }));
+    }
     fallbacks.push(RECIPES.R7, RECIPES.R2, RECIPES.R1);
     for (const r of fallbacks) {
       if (r === recipe) continue;
@@ -461,51 +494,107 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
 
   const { T, i, e, n, teaseBars } = best;
   const gapBeats = gapBeatsFor(recipe);
-  const declick = Math.min(DECLICK_SEC, Math.max(0, hook.downbeatSec - best.lead));
-  const lead = best.lead + declick;
   const pickupAt = T - pickup;
   const gapStart = pickupAt - gapBeats * gB.beat;
-  const bStart = T - lead;
   const events: PlanEvent[] = [];
-  const aState: OutgoingDeck | null = tl ? { tl, level: duckLevel, bars: A?.stemBars ?? null } : null;
   if (tl) events.push(ramp('A.gain', spinStart, spinStart + 0.4, 1, duckLevel, 'lin'));
   events.push(sfx('whoosh', spinStart, phase.name === 'early' ? -8 : -5));
 
-  // The landing layer: the reverse cymbal, a dry landing, or B's pre-verb (when it is rendered and A is cut
-  // low, gone, or in a compatible key by then).
+  // The landing layer: the reverse cymbal, a dry landing, B's pre-verb (when it is rendered and A is cut low,
+  // gone, or in a compatible key by then), or D14's tape start (B powering up inside a silent gap, never after a
+  // low-passed Tease or under a Blend; most often after a stop).
   const keysMatch = keysAgree(A, B, hook);
   const preverbFits = Boolean(B.preverbs?.includes(hook.id)) &&
     (!tl || recipe.shape === 'S2' || gapBeats >= MOVES.preverb.clearGapBeats || Boolean(recipe.aClearsLows) || keysMatch);
-  const landing = chooseLanding({ phase, rng, preverb: preverbFits, force: force?.landing ?? null });
-  const preverb = landing.style === 'preverb' ? preverbEvent({ hookId: hook.id, pickupAt, minStart: tl ? minStart : spinStart + 0.1, gB, phase, rng }) : null;
+  // A stem Tease plays from B's stems on B's clock, so B may still power up after it; a low-passed one plays B itself
+  // (landB plays the stems when they hold the drums and more than a beat fits before the gap).
+  const stemTease = teaseBars > 0 && Boolean(teaseStems?.includes('drums')) && gapStart - (T - best.lead) > gB.beat;
+  const tapeRoom = recipe.shape === 'S3' || (teaseBars > 0 && !stemTease)
+    ? 0
+    : Math.min(gapBeats * gB.beat - 0.02, pickupAt - (tl ? minStart : spinStart + 0.1), hook.downbeatSec - pickup);
+  const tapeBoost = ['stop', 'powerdown', 'hits'].includes(recipe.family) ? MOVES.tape.afterStop : 1;
+  const landing = chooseLanding({ phase, rng, preverb: preverbFits, tape: tapeRoom >= MOVES.tape.minSec, tapeBoost, force: force?.landing ?? null });
+  const vocalPreverb = Boolean(B.vocalPreverbs?.includes(hook.id)) && singsAtHook(B, hook);
+  const preverbSource: PreverbSource = vocalPreverb ? (force?.preverbSource ?? (landing.style === 'preverb' && rng() < MOVES.preverb.vocalsChance ? 'vocals' : 'mix')) : 'mix';
+  const preverb = landing.style === 'preverb'
+    ? preverbEvent({ hookId: hook.id, pickupAt, minStart: tl ? minStart : spinStart + 0.1, gB, phase, rng, source: preverbSource })
+    : null;
   if (landing.style === 'preverb' && !preverb) landing.style = 'cymbal';
 
+  // Where B starts: a declick before its lead, or (tape) inside the gap with its rate climbing to the pickup.
+  let lead: number;
+  let powerUp: PowerUp | null = null;
+  if (landing.style === 'tape') {
+    const d = Math.min(pick(MOVES.tape.durSec, rng), tapeRoom);
+    lead = pickup + d;
+    powerUp = { from: MOVES.tape.fromRate, until: pickupAt };
+  } else {
+    lead = best.lead + Math.min(DECLICK_SEC, Math.max(0, hook.downbeatSec - best.lead));
+  }
+  const bStart = T - lead;
+
+  // D5: B's riff looping under R7's bridge, when it has an approved riff on its grid (never under a low-passed Tease).
+  // Its draw is made for every riff host, so a plan that does not loop a riff is the same with or without Signatures.
+  const riffDraw = recipe.riffHost ? rng() : 1;
+  const riffSrc = recipe.riffHost ? riffSource(B, gB) : null;
+  const riff = riffSrc && gapStart - e >= MOVES.riff.minBars * gB.bar && (teaseBars === 0 || stemTease) &&
+    (force?.riff ?? riffDraw < MOVES.riff.chance[phase.name]) ? riffSrc : null;
+
   const built = recipe.build({
-    A: aState, i, e, T, pickupAt, gapStart, bStart, tease: teaseBars > 0, teaseStems, gB, phase, rng, exit, blend: best.blend,
-    minStart, aLanes: caps.aLanes, chop: caps.chop, landing, force: force ? { bridge: force.bridge ?? null, variant: force.variant ?? null } : null,
+    A: aState, i, e, T, pickupAt, gapStart, bStart, teaseFrom: powerUp ? T - best.lead : bStart, tease: teaseBars > 0, teaseStems, gB, phase, rng,
+    exit, blend: best.blend, minStart, aLanes: caps.aLanes, chop: caps.chop, riff, landing,
+    force: force ? { bridge: force.bridge ?? null, variant: force.variant ?? null } : null,
   });
   const teaseStyle = teaseBars > 0 ? (built.events.some((x) => x.kind === 'stems') ? 'stems' : 'lpf') : null;
   events.push(...built.events);
   if (preverb) events.push(preverb);
+  const layers: LayerName[] = [...(built.layers ?? [])];
+  let usesBSignature = Boolean(built.usesBSignature);
 
-  // D9's Ghost Tease decorates S1 moves that leave the reverb alone, when B's vocals are decoded.
-  const layers: LayerName[] = [];
-  if (tl && recipe.shape === 'S1' && recipe.ghostHost && teaseStems?.includes('vocals')) {
-    const wants = force?.ghost ?? rng() < MOVES.ghost.chance[phase.name];
-    // B's stems start STEMS.leadSec before its hook: the ghost stays inside them.
-    const stemsFrom = T - (hook.downbeatSec - Math.max(0, hook.downbeatSec - STEMS.leadSec)) + STEMS.laneMarginSec;
-    const ghost = wants && i != null
-      ? ghostLayer({ T, pickupAt, gapStart, gB, barA: tl.barAt(i), minStart: Math.max(minStart, stemsFrom), phase: phase.name, rng, keysMatch })
-      : null;
-    if (ghost) {
-      events.push(...ghost);
-      layers.push('ghost');
+  // A one-beat chop or scratch of B's first syllable in an S1 gap of at least a beat, after a move that leaves its
+  // gap silent (not with the tape start or the pre-verb, which live in the gap too).
+  let gapUsed = false;
+  if (tl && recipe.shape === 'S1' && recipe.gapHost && caps.chop && landing.style !== 'tape' && landing.style !== 'preverb' &&
+    gapBeats >= MOVES.gapLayer.minGapBeats - 1e-9) {
+    const kind = force?.gapLayer ?? (rng() < MOVES.gapLayer.chance[phase.name] ? weightedPick(MOVES.gapLayer.kinds, rng) : null);
+    const chop = caps.chop;
+    const layer = kind === 'chop'
+      ? gapChopSlices({ source: chop, pickupAt, gB, phase: phase.name, signatureDb: phase.signatureDb, rng })
+      : kind === 'scratch'
+        ? scratchMove({ source: chop, pickupAt, from: pickupAt - gB.beat, beats: 1, gB, phase: phase.name, signatureDb: phase.signatureDb, rng })?.event ?? null
+        : null;
+    if (layer) {
+      events.push(layer);
+      layers.push(kind === 'chop' ? 'gapChop' : 'gapScratch');
+      gapUsed = true;
+      if (chop.from === 'signature') usesBSignature = true;
     }
   }
 
+  // D9's Ghost Tease decorates moves that leave the reverb alone when B's vocals are decoded: A's last bars (S1),
+  // or the bridge's last bars (S2, unless A washes out or B's riff is the bed). One voice of B at a time.
+  const ghostFits = recipe.ghostHost && !gapUsed && !layers.includes('riff') &&
+    (recipe.shape === 'S1' ? tl != null && i != null : recipe.shape === 'S2' && exit !== 'wash');
+  if (ghostFits && teaseStems?.includes('vocals')) {
+    const wants = force?.ghost ?? rng() < MOVES.ghost.chance[phase.name];
+    // B's stems start STEMS.leadSec before its hook: the ghost stays inside them.
+    const stemsFrom = T - (hook.downbeatSec - Math.max(0, hook.downbeatSec - STEMS.leadSec)) + STEMS.laneMarginSec;
+    const bar = recipe.shape === 'S1' && tl && i != null ? tl.barAt(i) : gB.bar;
+    const from = recipe.shape === 'S2' ? Math.max(e, tl ? minStart : spinStart + 0.1) : minStart;
+    const ghost = wants
+      ? ghostLayer({ T, pickupAt, gapStart, gB, bar, minStart: Math.max(from, stemsFrom), phase: phase.name, rng, keysMatch, voice: force?.ghostVoice ?? null })
+      : null;
+    if (ghost) {
+      events.push(...ghost.events);
+      layers.push('ghost');
+      if (ghost.voice) layers.push('ghostVoice');
+    }
+  }
+
+  // B's call is cut where B itself starts with a tape start (it powers up in the gap).
   const signature = signatureLayer({
-    shape: recipe.id === 'FADE' ? 'S0' : recipe.shape, tl, A, B, aRate: A?.deck.rate ?? 1, gB, spinStart, e, n, pickupAt, exit, phase, rng,
-    skipB: Boolean(built.usesBSignature),
+    shape: recipe.id === 'FADE' ? 'S0' : recipe.shape, tl, A, B, aRate: A?.deck.rate ?? 1, gB, spinStart, e, n,
+    pickupAt: powerUp ? bStart : pickupAt, exit, phase, rng, skipB: usesBSignature,
   });
   if (signature) events.push(signature);
   events.sort((x, y) => eventStart(x) - eventStart(y));
@@ -563,6 +652,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
       lead,
       trimDb: trimDbFor(B.analysis, hook),
       bpm: B.analysis.tempo?.bpm,
+      powerUp,
     },
     events,
   };
@@ -590,6 +680,35 @@ function chopSource(B: IncomingSong, hook: Hook, pickup: number, parts: readonly
   const call = B.signatures?.find((s) => s.kind === 'call');
   if (call) return { from: 'signature', id: call.id, offset: 0, gainDb: call.gainDb };
   return { from: 'stem', offset: hook.downbeatSec - pickup };
+}
+
+/** B sings in the bars before its hook (D16's voice): its vocals bars when known, else its decoded stems there. */
+function singsBeforeHook(B: IncomingSong, hook: Hook, parts: readonly StemName[] | null): boolean {
+  const bars = B.stemBars?.vocals;
+  if (!bars?.length) return Boolean(parts?.includes('vocals'));
+  const before = bars.slice(Math.max(0, hook.downbeatIndex - STEMS.teaseBarsChecked), hook.downbeatIndex);
+  return before.length > 0 && before.reduce((a, b) => a + b, 0) / before.length >= MOVES.acapella.minVocalsDb;
+}
+
+/** B sings at its hook (D12 from its voice): its vocals bar there when known; unknown counts as singing. */
+function singsAtHook(B: IncomingSong, hook: Hook): boolean {
+  const db = B.stemBars?.vocals?.[hook.downbeatIndex];
+  return db == null || db >= MOVES.chop.minVocalsDb;
+}
+
+/**
+ * D5's riff: B's first approved riff Signature that sits on B's grid at its hook with at most a slight resample
+ * (SIGNATURES.maxRateShift), looped in whole bars of B.
+ */
+function riffSource(B: IncomingSong, gB: HookGrid): RiffSource | null {
+  for (const s of B.signatures ?? []) {
+    if (s.kind !== 'riff' || s.bpm <= 0) continue;
+    const rate = 60 / gB.beat / s.bpm;
+    const bars = Math.round(s.beats / gB.bpb);
+    if (Math.abs(rate - 1) > SIGNATURES.maxRateShift || bars < 1) continue;
+    return { id: s.id, anchorSec: s.anchorSec, durationSec: s.durationSec, bars, rate, gainDb: s.gainDb };
+  }
+  return null;
 }
 
 /** A's landed hook and B's hook have compatible keys, confidently enough to layer melodic parts. Unknown counts as not. */

@@ -4,13 +4,14 @@
 //  - landing: A is a DC level, B a tiny DC with one click at its hook; B's click must sound at T (±5 ms after
 //    the limiter's fixed pre-delay) and A must leave no residual;
 //  - mix: noise on both songs (and their stems) with every effect on: no NaN, peaks under +0.5 dBFS;
-//  - silence: A is noise, B silent, the effect returns cut: A's own path must be silent after its exit.
-// Then two primitive checks: P1 subtraction on a real song's stems (from the relay; skipped without them)
-// and the P3 pre-verb render's shape.
+//  - silence: A is noise, B silent and disconnected (a scratch's needle noise is B's), the effect returns cut: A's
+//    own path must be silent after its exit.
+// Then the primitive checks: P1 subtraction on a real song's stems (from the relay; skipped without them), P1
+// with a lane rate (D15: a braking −lane still cancels its part), and the P3 pre-verb render's shape.
 import { AudioGraph } from './audio/graph.ts';
 import { Deck } from './audio/deck.ts';
 import { applyPlan } from './audio/scheduler.ts';
-import { renderPreverb } from './audio/preverb.ts';
+import { preverbKey, renderPreverb } from './audio/preverb.ts';
 import { planTransition } from './plan/planner.ts';
 import { PHASES } from './plan/phases.ts';
 import { AudioClock } from './clock.ts';
@@ -27,13 +28,20 @@ import type { ExitName, PhaseName } from '@quina/protocol';
 const SR = 48000;
 const SONG_SEC = 120;
 
-/** What a case gives the planner and the decks besides A and B: A's stem lanes, B's render, B's vocals, B's call, B's pre-verb. */
+/**
+ * What a case gives the planner and the decks besides A and B: A's stem lanes, B's render (and its stretched
+ * voice), B's vocals, B's call and riff, B's pre-verb (and its vocal one), agreeing keys.
+ */
 interface Kit {
   lanes?: boolean;
   blend?: boolean;
+  blendVocals?: boolean;
   vocals?: boolean;
   call?: boolean;
+  riff?: boolean;
   preverb?: boolean;
+  vocalPreverb?: boolean;
+  keys?: boolean;
 }
 
 /** One render: A playing from its hook, Next pressed `pressOffset` s later, B's hook `pickupBeats` after its pickup. */
@@ -183,35 +191,51 @@ async function runCase(c: RenderCase, mode: Mode): Promise<RenderResult> {
   const { startCtx, offset, rate } = deckA;
   if (startCtx == null) throw new Error('deck A did not start');
   const now = 0.5 + c.pressOffset;
+  const keys = kit.keys ? { [A.hooks[0].id]: KEY, [hook.id]: KEY } : null;
   const aSong: OutgoingSong = {
     songId: 1, analysis: A, deck: { startCtx, offset, rate }, landedDownbeatIndex: 8,
     lanes: kit.lanes ? { fromSec: A.hooks[0].downbeatSec - 1, toSec: A.hooks[0].downbeatSec + 48, parts: ['drums', 'bass', 'vocals', 'other'] } : null,
+    keys,
   };
   const barA = (4 * 60) / c.bpmA;
-  const blend: BlendSource | null = kit.blend ? { aSongId: 1, hookId: hook.id, toBpm: c.bpmA, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barA, barSec: barA, bass: true } : null;
+  const blend: BlendSource | null = kit.blend
+    ? { aSongId: 1, hookId: hook.id, toBpm: c.bpmA, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barA, barSec: barA, bass: true, vocals: Boolean(kit.blendVocals) }
+    : null;
   const callLength = (4.5 * 60) / c.bpmB;
+  const riffLength = (8 * 60) / c.bpmB + 0.05;
   const bSong: IncomingSong = {
-    songId: 2, analysis: B, blend,
+    songId: 2, analysis: B, blend, keys,
     stems: kit.vocals ? { [hook.id]: { parts: ['drums', 'bass', 'vocals'] } } : null,
-    signatures: kit.call ? [{ id: '2-call-0', kind: 'call', durationSec: callLength, anchorSec: (0.5 * 60) / c.bpmB, beats: 4, bpm: c.bpmB, gainDb: -2 }] : [],
+    signatures: [
+      ...(kit.call ? [{ id: '2-call-0', kind: 'call', durationSec: callLength, anchorSec: (0.5 * 60) / c.bpmB, beats: 4, bpm: c.bpmB, gainDb: -2 } as const] : []),
+      ...(kit.riff ? [{ id: '2-riff-0', kind: 'riff', durationSec: riffLength, anchorSec: 0, beats: 8, bpm: c.bpmB, gainDb: -3 } as const] : []),
+    ],
     preverbs: kit.preverb ? [hook.id] : null,
+    vocalPreverbs: kit.vocalPreverb ? [hook.id] : null,
   };
   const plan = planTransition({ now, A: aSong, B: bSong, phase: PHASES[c.phase], rng: seededRandom(7), recipeOverride: c.recipe, force: c.force ?? null });
   if ('error' in plan) throw new Error(`${c.label}: no plan (${plan.error})`);
   const deckB = new Deck(graph, { songId: 2, buffer: bufB, analysis: B, trimDb: 0 });
   deckB.fader.gain.value = 0;
-  deckB.start(plan.b.startCtx, plan.b.offset);
+  deckB.start(plan.b.startCtx, plan.b.offset, plan.b.rate, plan.b.powerUp ?? null);
+  if (mode === 'silence') for (const out of [deckB.fader, deckB.stemOut, deckB.signatureOut]) out.disconnect();
   if (kit.vocals) deckB.stems = { ...bStems, parts: ['drums', 'bass', 'vocals'] };
   if (blend) {
     const render = (n: number) => buffer(ctx, blend.hookSec + 2 * barA, (d) => (mode === 'landing' ? d.fill(0.01) : noise(n * (mode === 'silence' ? 0 : 1))(d)));
-    deckB.blend = { buffers: { drums: render(0.2), bass: render(0.15) }, scale: 1 };
+    deckB.blend = { buffers: { drums: render(0.2), bass: render(0.15), vocals: render(0.12) }, scale: 1 };
   }
-  if (kit.call) deckB.signatures = new Map([['2-call-0', buffer(ctx, callLength, (d) => d.forEach((_, i) => (d[i] = mode === 'silence' ? 0 : 0.3 * Math.sin((2 * Math.PI * 330 * i) / SR) * Math.min(1, i / 480))))]]);
-  if (kit.preverb) {
+  // B's Signatures: a sine call and a riff of two bars of chords (silent in silence mode).
+  const tone = (seconds: number, hz: number) => buffer(ctx, seconds, (d) => d.forEach((_, i) => (d[i] = mode === 'silence' ? 0 : 0.3 * Math.sin((2 * Math.PI * hz * i) / SR) * Math.min(1, i / 480))));
+  deckB.signatures = new Map([...(kit.call ? [['2-call-0', tone(callLength, 330)] as const] : []), ...(kit.riff ? [['2-riff-0', tone(riffLength, 220)] as const] : [])]);
+  if (kit.preverb || kit.vocalPreverb) {
     // Rendered from B without its click, so the swell cannot be mistaken for the hook.
     const source = mode === 'landing' ? buffer(ctx, SONG_SEC, (d) => d.fill(0.01)) : bufB;
     const beat = 60 / c.bpmB;
-    deckB.preverbs = new Map([[hook.id, await renderPreverb(source, { fromSec: hook.downbeatSec - hook.pickupSec, durSec: beat, rt60: MOVES.preverb.rt60Bars * 4 * beat, fadeInSec: MOVES.preverb.fadeInSec })]]);
+    const cut = { fromSec: hook.downbeatSec - hook.pickupSec, durSec: beat, rt60: MOVES.preverb.rt60Bars * 4 * beat, fadeInSec: MOVES.preverb.fadeInSec };
+    const renders = new Map<string, AudioBuffer>();
+    if (kit.preverb) renders.set(preverbKey(hook.id), await renderPreverb(source, cut));
+    if (kit.vocalPreverb) renders.set(preverbKey(hook.id, 'vocals'), await renderPreverb(songB.stems.buffers.vocals ?? source, { ...cut, gain: 2 }));
+    deckB.preverbs = renders;
   }
   // Schedule at the plan's press time, like the live engine.
   ctx.suspend(now).then(() => {
@@ -228,19 +252,23 @@ async function runCase(c: RenderCase, mode: Mode): Promise<RenderResult> {
     else if (Math.abs(v) > peak) peak = Math.abs(v);
   }
   const forcedRecipe = plan.recipe === c.recipe;
-  // A forced variant shows as the plan's variant kind, as a flag of it (R4's pitchUp, D10's juggle), or not at all
-  // for an exit's own variant (the spiral's direction under R7).
+  // A forced variant shows as the plan's variant kind, as a flag or a detail of it (R4's pitchUp, D10's juggle,
+  // R7's riff), or not at all for an exit's own variant (the spiral's direction under R7).
   const v = c.force?.variant;
-  const forcedVariant = !v || plan.variant?.kind === v || plan.variant?.[v] === true || (plan.recipe === 'R7' && (v === 'up' || v === 'down'));
+  const forcedVariant = !v || plan.variant?.kind === v || plan.variant?.[v] === true || Object.values(plan.variant ?? {}).includes(v) ||
+    (plan.recipe === 'R7' && (v === 'up' || v === 'down'));
   const forcedBridge = !c.force?.bridge || plan.variant?.kind === c.force.bridge;
   const forcedLanding = !c.force?.landing || plan.landing === c.force.landing;
-  const forcedGhost = !c.force?.ghost || plan.layers.includes('ghost');
+  const forcedGhost = (!c.force?.ghost || plan.layers.includes('ghost')) && (!c.force?.ghostVoice || plan.layers.includes('ghostVoice'));
   const forcedExit = !c.force?.exit || plan.exit === c.force.exit;
+  const forcedLayers = (!c.force?.riff || plan.layers.includes('riff')) &&
+    (!c.force?.gapLayer || plan.layers.includes(c.force.gapLayer === 'chop' ? 'gapChop' : 'gapScratch')) &&
+    (!c.force?.preverbSource || plan.events.some((e) => e.kind === 'preverb' && (e.source ?? 'mix') === c.force?.preverbSource));
   const result: RenderResult = {
     label: c.label, mode, recipe: plan.recipe, exit: plan.exit, variant: plan.variant ? String(plan.variant.kind) : '', landing: `${plan.landing}${plan.layers.length ? ` + ${plan.layers.join(', ')}` : ''}`,
     phase: c.phase, bpm: `${c.bpmA}→${c.bpmB}`, pickupBeats: c.pickupBeats, D: plan.D.toFixed(2),
     clickErrorMs: 0, residual: 0, peakDb: 20 * Math.log10(Math.max(peak, 1e-9)), finite,
-    asForced: forcedRecipe && forcedVariant && forcedBridge && forcedLanding && forcedGhost && forcedExit, pass: false,
+    asForced: forcedRecipe && forcedVariant && forcedBridge && forcedLanding && forcedGhost && forcedExit && forcedLayers, pass: false,
   };
   const T = Math.round(plan.T * SR);
   if (mode === 'landing') {
@@ -320,7 +348,72 @@ function renderSet(): RenderCase[] {
   add('pre-verb landing (S1)', 'D3', 'mid', { kit: { preverb: true }, force: { landing: 'preverb' } });
   add('D9 ghost', 'R2', 'mid', { kit: { vocals: true }, force: { ghost: true } }, true);
   add('D9 ghost on D1', 'D1', 'late', { kit: { vocals: true }, force: { ghost: true } });
+  // The second batch: D6, D7, D15, D16, D19 in their Phases and variants; D5's riff bed; D14's tape start; the gap
+  // layers; the ghost on a bridge and its voice; D12 from B's voice.
+  // D6 needs three of B's bars of bridge: at 88 BPM that is longer than a 14 s Pace's Spin (the planner falls back).
+  const fakePairs: [number, number][] = [[128, 128], [96, 140]];
+  for (const phase of ['late', 'final'] as const) add(`D6 ${phase}`, 'D6', phase, { kit: { vocals: true } }, phase === 'late', fakePairs);
+  for (const variant of ['drums', 'comedy', 'kicks'] as const) add(`D6 ${variant}`, 'D6', 'late', { kit: { vocals: true }, force: { variant } });
+  for (const phase of ['mid', 'late'] as const) add(`D7 ${phase}`, 'D7', phase, { force: { variant: 'plain' } }, phase === 'mid');
+  add('D7 gate', 'D7', 'late', { force: { variant: 'gate' } }, true);
+  for (const phase of ['mid', 'late', 'final'] as const) add(`D15 ${phase}`, 'D15', phase, { kit: { lanes: true } }, phase === 'late');
+  for (const phase of ['mid', 'late', 'final'] as const) add(`D16 ${phase}`, 'D16', phase, { kit: { lanes: true, blend: true, blendVocals: true, vocals: true } }, phase === 'mid', near);
+  for (const phase of ['mid', 'late', 'final'] as const) add(`D19 ${phase}`, 'D19', phase, { kit: { vocals: true } }, phase === 'late');
+  for (const variant of ['baby', 'chirp', 'forward'] as const) add(`D19 ${variant}`, 'D19', 'late', { kit: { vocals: true, call: true }, force: { variant } });
+  // Late always Teases: the riff bed plays over B's stem Tease (never under a low-passed B).
+  for (const variant of ['dry', 'throw', 'gate'] as const) add(`D5 riff ${variant}`, 'R7', 'late', { kit: { riff: true, vocals: true }, force: { riff: true, variant } }, variant === 'dry');
+  add('D14 tape after R5', 'R5', 'late', { force: { landing: 'tape' } }, true);
+  add('D14 tape after R10 (stem Tease)', 'R10', 'final', { kit: { vocals: true }, force: { landing: 'tape' } });
+  add('D14 tape after D2', 'D2', 'final', { force: { landing: 'tape' } });
+  add('gap chop (D11 in S1)', 'R1', 'late', { kit: { vocals: true }, force: { gapLayer: 'chop', landing: 'cymbal' } }, true);
+  add('gap scratch (D19 in S1)', 'D3', 'final', { kit: { vocals: true, call: true }, force: { gapLayer: 'scratch', landing: 'cymbal' } });
+  add('D9 ghost on a bridge', 'R7', 'late', { kit: { vocals: true }, force: { ghost: true, exit: 'echo' } });
+  add('D9 ghost becomes a voice', 'R2', 'late', { kit: { vocals: true, keys: true }, force: { ghost: true, ghostVoice: true } });
+  add('D12 from B\'s vocals', 'R7', 'late', { kit: { preverb: true, vocalPreverb: true, vocals: true }, force: { landing: 'preverb', preverbSource: 'vocals' } }, true);
   return cases;
+}
+
+/** A confident key, the same for both songs: their hooks agree (D9's voice). */
+const KEY = { key: 'C', mode: 'major', camelot: '8B', confidence: 0.9 } as const;
+
+/**
+ * P1 with a lane rate (D15): a song whose mix is its voice alone brakes (its rate ramps to 0.02, as A.rate does),
+ * and a −vocals lane with the same rate automation removes the voice: the braking mix must be silent. The lane
+ * starts half a second before the brake, so the deck's filters have rung out the voice they held by then.
+ */
+async function laneRateCheck(): Promise<CheckResult> {
+  const name = 'P1 lane rate: a braking −lane cancels its part';
+  try {
+    const seconds = 3;
+    const render = async (withLane: boolean) => {
+      const ctx = new OfflineAudioContext(1, SR * seconds, SR);
+      const graph = new AudioGraph(ctx);
+      graph.limiter.threshold.value = 0;
+      graph.limiter.ratio.value = 1;
+      const vocals = buffer(ctx, 20, noise(0.1));
+      const mix = buffer(ctx, 20, (d) => d.set(vocals.getChannelData(0).map((v) => 2 * v)));
+      const deck = new Deck(graph, { songId: 9, buffer: mix, analysis: fakeAnalysis({ songId: 9, bpm: 120, seconds: 20, hookBar: 1 }) });
+      deck.lanes = { buffers: { vocals }, startSec: 0, scale: 2 };
+      deck.start(0.0123456, 5.4321);
+      const brake = { t0: 1.0001, t1: 1.8, from: 1, to: 0.02, curve: 'lin' } as const;
+      ctx.suspend(0.5).then(() => {
+        const param = deck.param('rate');
+        param?.setValueAtTime(brake.from, brake.t0);
+        param?.linearRampToValueAtTime(brake.to, brake.t1);
+        if (withLane) deck.playLane({ part: 'vocals', at: brake.t0 - 0.5, until: 2.5, direct: [[brake.t0 - 0.5, -1]], rate: brake });
+        ctx.resume();
+      });
+      return (await ctx.startRendering()).getChannelData(0);
+    };
+    const plain = await render(false);
+    const cancelled = await render(true);
+    const span = [Math.round(1.0 * SR), Math.round(1.75 * SR)];
+    const rms = (d: Float32Array) => Math.sqrt(d.slice(span[0], span[1]).reduce((s, v) => s + v * v, 0) / (span[1] - span[0]));
+    const db = 20 * Math.log10(Math.max(rms(cancelled), 1e-12) / Math.max(rms(plain), 1e-12));
+    return { name, pass: db < -60, skipped: false, detail: `the voice left in the mix while it brakes: ${db.toFixed(1)} dB` };
+  } catch (error) {
+    return { name, pass: false, skipped: false, detail: String(error) };
+  }
 }
 
 /** P1 through the real graph, on a real song from the relay: mix with every part removed is silent; mix − drums is exact. */
@@ -403,8 +496,9 @@ async function preverbCheck(): Promise<CheckResult> {
 
 async function runAll(): Promise<TestResults> {
   $('summary').textContent = 'Rendering…';
-  // `?only=checks` runs just the primitive checks (P1, P3).
-  const cases = new URLSearchParams(location.search).get('only') === 'checks' ? [] : renderSet();
+  // `?only=checks` runs just the primitive checks (P1, P3); `?only=<text>` the cases whose label contains it.
+  const only = new URLSearchParams(location.search).get('only');
+  const cases = only === 'checks' ? [] : renderSet().filter((c) => !only || c.label.includes(only));
   // The limiter (DynamicsCompressor) adds a fixed pre-delay; measure it once with a bare impulse.
   const latencyMs = await measureLimiterLatency();
   const rows: RenderResult[] = [];
@@ -420,7 +514,7 @@ async function runAll(): Promise<TestResults> {
     rows.push(await runCase(c, 'silence'));
   }
   for (const r of rows) r.pass = judge(r, latencyMs);
-  const checks = [await laneCheck(), await preverbCheck()];
+  const checks = [await laneCheck(), await laneRateCheck(), await preverbCheck()];
   const failures = rows.filter((r) => !r.pass).length + checks.filter((c) => !c.pass).length;
   const table = $('results');
   table.innerHTML = '<tr><th>Case</th><th>Mode</th><th>Recipe</th><th>Exit</th><th>Variant</th><th>Landing</th><th>Phase</th><th>BPM</th><th>Pickup</th><th>D s</th><th>Click − T (ms, after pre-delay)</th><th>A residual</th><th>Peak dBFS</th><th></th></tr>';

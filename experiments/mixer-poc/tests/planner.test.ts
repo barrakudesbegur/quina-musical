@@ -142,6 +142,8 @@ test('a Tease uses B\'s own stems when they cover the hook: drums first, bass in
       A: { songId: A.songId, analysis: A, deck: { startCtx: 100, offset: aHook.downbeatSec, rate: 1 }, landedDownbeatIndex: aHook.downbeatIndex },
       B: { songId: B.songId, analysis: B, stems },
     }));
+    // D6's fake bar may play B's drums alone, a bar before its re-build (tests/recipes.test.ts checks it).
+    if (plan.recipe === 'D6') continue;
     const stemEvents = plan.events.filter((e) => e.kind === 'stems');
     if (plan.teaseStyle !== 'stems') {
       assert.equal(stemEvents.length, 0);
@@ -150,11 +152,14 @@ test('a Tease uses B\'s own stems when they cover the hook: drums first, bass in
     stemTeases++;
     assert.equal(stemEvents.length, 1);
     const [st] = stemEvents;
-    assert.ok(Math.abs(st.at - plan.b.startCtx) < 1e-9, 'stems start with B');
+    // With a tape start (D14) B's own source starts later, in the gap; the Tease keeps its lead.
+    const teaseFrom = plan.landing === 'tape' ? plan.T - Math.max(plan.hook.pickupSec, plan.teaseBars * plan.hook.bar) : plan.b.startCtx;
+    assert.ok(Math.abs(st.at - teaseFrom) < 1e-9, 'stems start with B');
     assert.ok(st.until <= plan.T - plan.hook.pickupSec + 1e-9, 'stems stop before the pickup');
     assert.ok(st.parts.drums && st.parts.drums.t0 >= st.at - 1e-9);
     if (st.parts.bass) assert.ok(st.parts.bass.t0 > st.parts.drums.t0, 'bass comes in after the drums');
-    assert.ok(!plan.events.some((e) => targetOf(e) === 'B.lpf'), 'no low-pass Tease on top');
+    // (A tape start opens B's own low-pass from where B starts, in the gap: that is not a Tease.)
+    assert.ok(!plan.events.some((e) => targetOf(e) === 'B.lpf' && (plan.landing !== 'tape' || eventStart(e) < plan.b.startCtx - 1e-9)), 'no low-pass Tease on top');
     const bGain = plan.events.filter((e) => targetOf(e) === 'B.gain');
     assert.ok(bGain.some((e) => e.kind === 'ramp' && Math.abs(e.t1 - (plan.T - plan.hook.pickupSec)) < 1e-9 && e.to === 1), 'full mix opens on the pickup');
   }
@@ -266,6 +271,8 @@ test('Signatures: on the beat, after the duck, faded at B\'s pickup, resampled o
     const plain = planned(planTransition(request(false)));
     const plan = planned(planTransition(request(true)));
     assert.equal(plain.signature, null);
+    // D5's riff bed loops B's riff Signature under R7's bridge: that plan differs by design (recipes.test.ts).
+    if (plan.layers.includes('riff')) continue;
     // The Signature draws come last, so everything else about the plan is the same.
     const { signature, events, ...rest } = plan;
     const { signature: _none, events: plainEvents, ...plainRest } = plain;

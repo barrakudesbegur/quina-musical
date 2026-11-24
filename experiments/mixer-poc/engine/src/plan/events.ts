@@ -4,6 +4,9 @@
 //
 // Targets: A|B . gain hpf lpf echoSend reverbSend rate · echo.time echo.feedback echo.hpf echo.return ·
 //          reverb.return reverb.hpf · bus.hpf
+import type { RateRamp } from './rate.ts';
+
+export type { RateRamp } from './rate.ts';
 
 /** An audio parameter the scheduler can set or ramp: a deck's own chain, or a shared send or bus. */
 export type ParamTarget =
@@ -137,6 +140,8 @@ export interface BlendEvent {
   until: number;
   fileAt: number;
   parts: StemParts;
+  /** High-passes the parts (D16's stretched vocals, against bleed). */
+  hpfHz?: number;
 }
 
 /** Breakpoints `[time, value]`: linear between them, held before the first and after the last. */
@@ -147,9 +152,13 @@ export type LanePoints = readonly (readonly [number, number])[];
  * in 5 ms at `until`). Levels are in part units, where 1 is the part as it sounds in the mix:
  * - `direct` goes into the deck's chain (trim → filters → fader), so −1 removes the part from the deck's
  *   mix and 0 leaves the mix as it is;
+ * - `solo` plays the part alone past the deck's filters and fader (at its loudness trim): A's voice carrying on
+ *   dry over its braking band (D15), B's voice while B's fader is still closed (D9's "ghost becomes a voice");
  * - `echo` and `reverb` send the part alone into the shared echo or reverb, past the fader (a vocal throw, a
  *   ghost).
- * A lane only plays while the deck runs at rate 1, inside its decoded stems.
+ * A lane plays while the deck runs at rate 1, inside its decoded stems. `rate` gives the lane the deck's own
+ * rate automation from `rate.t0` (the same calls on its playbackRate, so the same k-rate values per render
+ * quantum): a −1 lane then still cancels its part while the deck brakes (D15).
  */
 export interface StemLaneEvent {
   kind: 'stemLane';
@@ -158,13 +167,19 @@ export interface StemLaneEvent {
   at: number;
   until: number;
   direct: LanePoints;
+  solo?: LanePoints;
   echo?: LanePoints;
   reverb?: LanePoints;
+  rate?: RateRamp;
 }
 
+/** What a pre-verb is rendered from: B's mix (the chord) or its vocal stem (its first word). */
+export type PreverbSource = 'mix' | 'vocals';
+
 /**
- * P3, a pre-verb swell (D12): the render of B's first beat reversed through the reverb, played over
- * [at, until] so it ends a breath before B's pickup, with a high-pass, past B's fader.
+ * P3, a pre-verb swell (D12): the render of B's first beat (its mix, or its vocals when `source` says so)
+ * reversed through the reverb, played over [at, until] so it ends a breath before B's pickup, with a high-pass,
+ * past B's fader.
  */
 export interface PreverbEvent {
   kind: 'preverb';
@@ -174,11 +189,14 @@ export interface PreverbEvent {
   until: number;
   gainDb: number;
   hpfHz: number;
+  source?: PreverbSource;
 }
 
 /**
  * An approved Signature of the deck's song (its own file): its anchor (first downbeat, or a shout's
  * attack) sounds at `at`, resampled by `rate`; it fades out at `until`. `echo` sends it into the echo bus.
+ * `from` starts it later than its file does (a loop of D5's riff bed that comes in mid-riff, or skips its
+ * pre-roll); `fadeSec` replaces the default fades (short seams between loops).
  */
 export interface SignatureEvent {
   kind: 'signature';
@@ -190,6 +208,43 @@ export interface SignatureEvent {
   gainDb: number;
   until: number;
   echo: number;
+  from?: number;
+  fadeSec?: number;
+}
+
+/**
+ * One stroke of a scratch (D19): the grain's position goes from `p0` to `p1` (seconds of the source past the
+ * scratch's `offset`) over [t0, t1], eased like a hand on the record (still at both ends) or at a steady speed
+ * (`ease: false`, the forward release).
+ */
+export interface ScratchStroke {
+  t0: number;
+  t1: number;
+  p0: number;
+  p1: number;
+  ease: boolean;
+}
+
+/**
+ * P7, a scratch (D19): B's first syllable (its call Signature, or its vocal stem from the pickup) read along a
+ * position curve of strokes, forward and backward like a hand moving the record, rendered when the plan is
+ * applied (no negative playbackRate needed) and played past B's fader over [at, until]. `gate` is the
+ * crossfader (breakpoints of the level, 0–1); `gainDb` its level; a little needle noise follows the hand's speed.
+ */
+export interface ScratchEvent {
+  kind: 'scratch';
+  deck: 'B';
+  at: number;
+  until: number;
+  source: SliceSource;
+  /** Where the grain starts in the source (song seconds for a stem, file seconds for a Signature). */
+  offset: number;
+  strokes: readonly ScratchStroke[];
+  gate: LanePoints;
+  gainDb: number;
+  hpfHz: number;
+  /** Snap `offset` to the syllable's onset (P2's snap). */
+  snap?: { searchSec: number; consonantSec: number };
 }
 
 /**
@@ -209,7 +264,7 @@ export interface DecoyEvent {
 
 export type PlanEvent =
   | SetEvent | RampEvent | SfxEvent | SynthEvent | SlicesEvent | SpinbackEvent | StemsEvent | BlendEvent | StemLaneEvent
-  | PreverbEvent | SignatureEvent | DecoyEvent;
+  | PreverbEvent | SignatureEvent | ScratchEvent | DecoyEvent;
 export type PlanEventKind = PlanEvent['kind'];
 
 export const SILENT = 0.0001;
@@ -248,10 +303,11 @@ export function eventStart(x: PlanEvent): number {
     case 'blend':
     case 'stemLane':
     case 'preverb':
+    case 'scratch':
     case 'decoy':
       return x.at;
     case 'signature':
-      return x.at - x.anchorSec / x.rate;
+      return Math.max(x.at - x.anchorSec / x.rate, x.from ?? -Infinity);
     case 'ramp':
       return x.t0;
     case 'synth': {
@@ -280,6 +336,7 @@ export function eventEnd(x: PlanEvent): number {
     case 'blend':
     case 'stemLane':
     case 'preverb':
+    case 'scratch':
       return x.until;
     case 'ramp':
       return x.t1;

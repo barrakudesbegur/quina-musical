@@ -1,5 +1,6 @@
-// Renders for the Blend (R8): the next song's bars before its chosen hook, stretched to the current song's
-// tempo by analysis/stretch.py (through the relay), decoded ahead of the Spin. Only drums and bass are kept.
+// Renders for the Blend (R8, D10, D16): the next song's bars before its chosen hook, stretched to the current song's
+// tempo by analysis/stretch.py (through the relay), decoded ahead of the Spin. Drums, bass and vocals are kept
+// (`other` is not used); the vocals only matter for D16's acapella-in, which needs tight tempos and agreeing keys.
 import { LAYERING } from '../config.ts';
 import { compatible } from '../plan/keys.ts';
 import type { KeyInfo, Mode } from '../plan/keys.ts';
@@ -8,7 +9,7 @@ import type { StemName } from '../plan/recipes.ts';
 import { isRecord } from './loader.ts';
 import type { StemBuffers } from './stems.ts';
 
-const PARTS: readonly StemName[] = ['drums', 'bass'];
+const PARTS: readonly StemName[] = ['drums', 'bass', 'vocals'];
 
 /** A decoded render for one outgoing song and hook (BlendStore.forPair); `scale` undoes the stored part gain. */
 export interface BlendBuffers {
@@ -184,6 +185,8 @@ export class BlendStore {
       firstDownbeatSec: r.request.firstDownbeatSec,
       barSec: r.request.targetBeatSec * (r.beatsPerBar || beatsPerBar),
       bass: Boolean(buffers.bass) && this.bassAllowed({ tight, aSongId, aHookId, bSongId, bHookId: hookId }),
+      // B's voice over A's band needs what its bass does: tempos within ±4% and compatible keys.
+      vocals: Boolean(buffers.vocals) && this.bassAllowed({ tight, aSongId, aHookId, bSongId, bHookId: hookId }),
     };
   }
 

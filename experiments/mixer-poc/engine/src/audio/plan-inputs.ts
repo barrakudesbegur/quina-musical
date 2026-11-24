@@ -1,7 +1,7 @@
 // The planner with the runtime inputs the show machine does not pass itself: what the audio stores have
 // decoded or rendered for the two songs of a transition. main.ts hands this to Show as `env.plan`.
 //  - A: its stem lanes (P1), its stems' bar levels, its hooks' keys;
-//  - B: its stems' bar levels, its pre-verb renders (P3), its hooks' keys.
+//  - B: its stems' bar levels, its pre-verb renders (P3, of its mix and of its vocals), its hooks' keys.
 // Whatever a store does not have yet is simply left out, and the planner plans without it.
 import { planTransition } from '../plan/planner.ts';
 import type { BlendStore } from './blend.ts';
@@ -29,6 +29,7 @@ export function plannerWithInputs({ stems, preverbs, blends }: PlanInputStores):
         ...B,
         stemBars: B.stemBars ?? stems.barLevels(B.songId),
         preverbs: B.preverbs ?? preverbs.hooksFor(B.songId),
+        vocalPreverbs: B.vocalPreverbs ?? preverbs.vocalHooksFor(B.songId),
         keys: B.keys ?? blends.hookKeys(B.songId),
       },
     });

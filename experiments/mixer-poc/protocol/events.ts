@@ -72,6 +72,14 @@ export interface GameSettings {
   nextRecipe: string | null;
   /** A fanfare once per climb, as the Phase reaches the engine's Final Lap phase. */
   finalLapStinger: boolean;
+  /**
+   * Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`; Hold music
+   * still covers what would be silence (after Back, a cancelled Spin, a song that runs out). Default true.
+   * Optional in the type only (added later in v1): the engine always sends it, and an older journal lacks it.
+   */
+  holdMusicOn?: boolean;
+  /** The Interval playlist's level in dB, −30..0 (default −6). Optional in the type only, like `holdMusicOn`. */
+  intervalVolumeDb?: number;
 }
 
 export interface CardsInfo {
@@ -229,6 +237,26 @@ export interface IntervalInfo {
   guideEndMs: number;
 }
 
+/** A track of the Interval playlist (analysis/interval.py: title and artist from the playlist). */
+export interface IntervalTrackInfo {
+  title: string;
+  artist: string;
+  /** Its place in this Game's shuffled order, 1-based (it wraps after `count` tracks), and the playlist's length. */
+  index: number;
+  count: number;
+  /** When it took over from the music before it. */
+  sinceMs: number;
+}
+
+/**
+ * The Interval playlist while it plays: in `interval`, while a round is introduced and its Shuffle runs
+ * (`roundStart`, and `play` until the first Spin builds out of it), and in `after`. Null otherwise.
+ */
+export interface IntervalMusicInfo {
+  /** The track playing; null until the first one takes over (the music before it, such as the victory track, goes on). */
+  track: IntervalTrackInfo | null;
+}
+
 /** The technical pause ("Tornem de seguida"), over whatever scene is underneath. */
 export interface PauseInfo {
   sinceMs: number;
@@ -306,6 +334,9 @@ export interface ShowState {
    * engine always sends it.
    */
   resume?: ResumeToken | null;
+  /** The Interval playlist while it plays, else null (`intervalSkip` is allowed then). Optional in the type only
+   * (added later in v1); the engine always sends it. */
+  intervalMusic?: IntervalMusicInfo | null;
 }
 
 /** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */

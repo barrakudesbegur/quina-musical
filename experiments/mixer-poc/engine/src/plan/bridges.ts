@@ -83,6 +83,7 @@ export function buildLayers({ t0, gapStart, pickupAt, gB, phase, roll = true, rn
 
 /** The build for a pattern; falls back to the classic roll when the bridge is too short for it. */
 export function bridgeLayers(args: BridgeArgs & { pattern: BridgePattern; rng: () => number }): PlanEvent[] {
+  // Under a riff bed (D5) the rolls step back (`rollScale`) whatever the pattern.
   const { pattern, t0, gapStart, gB } = args;
   const lastBar = gapStart - gB.bar; // the bar before the gap (its end is the gap)
   const bars = (gapStart - t0) / gB.bar;
@@ -98,7 +99,7 @@ export function bridgeLayers(args: BridgeArgs & { pattern: BridgePattern; rng: (
 }
 
 /** D4: heavy half-time bars, straight time, then the roll in the last bar. */
-function halfTime({ t0, gapStart, pickupAt, gB, phase, rng, landing = null }: BridgeArgs & { rng: () => number }, lastBar: number): PlanEvent[] {
+function halfTime({ t0, gapStart, pickupAt, gB, phase, rng, landing = null, rollScale = 1 }: BridgeArgs & { rng: () => number }, lastBar: number): PlanEvent[] {
   const loud = loudness(phase);
   const kick = MOVES.bridges.kicks;
   const fullBars = Math.max(1, Math.floor((lastBar - t0) / gB.bar + 1e-6));
@@ -116,16 +117,16 @@ function halfTime({ t0, gapStart, pickupAt, gB, phase, rng, landing = null }: Br
   }
   events.push(synth('kicks', { times: kicks, level: kick }));
   // One snare per bar, on its third beat.
-  events.push(synth('snareRoll', { t0: t0 + 2 * gB.beat, t1: halfEnd, beat: gB.beat, pitchTo: 0, stages: [gB.bpb], velFrom: 100, velTo: 110 }));
+  events.push(synth('snareRoll', { t0: t0 + 2 * gB.beat, t1: halfEnd, beat: gB.beat, pitchTo: 0, stages: [gB.bpb], velFrom: 100 * rollScale, velTo: 110 * rollScale }));
   if (lastBar - halfEnd > gB.beat - 1e-6) {
     // Double time arrives: a snare and a kick on every beat.
     const straight: number[] = [];
     for (let b = halfEnd; b < lastBar - 1e-6; b += gB.beat) straight.push(b);
-    events.push(synth('snareRoll', { t0: halfEnd, t1: lastBar, beat: gB.beat, pitchTo: 1, stages: [1], velFrom: 80, velTo: 100 }));
+    events.push(synth('snareRoll', { t0: halfEnd, t1: lastBar, beat: gB.beat, pitchTo: 1, stages: [1], velFrom: 80 * rollScale, velTo: 100 * rollScale }));
     events.push(synth('kicks', { times: straight, level: kick }));
   }
   const rollFrom = Math.max(halfEnd, lastBar);
-  events.push(synth('snareRoll', { t0: rollFrom, t1: gapStart, beat: gB.beat, pitchTo: phase.snarePitch ?? 5, stages: [0.5, 0.25, 0.125], velFrom: 90, velTo: 124 }));
+  events.push(synth('snareRoll', { t0: rollFrom, t1: gapStart, beat: gB.beat, pitchTo: phase.snarePitch ?? 5, stages: [0.5, 0.25, 0.125], velFrom: 90 * rollScale, velTo: 124 * rollScale }));
   events.push(...swellLayer(landing, Math.max(t0, gapStart - 2 * gB.beat), gapStart, loud - 2));
   events.push(...busSweep(t0, gapStart, pickupAt, gB));
   return events;
@@ -152,7 +153,7 @@ function kickRoll({ t0, gapStart, pickupAt, gB, phase, landing = null }: BridgeA
 }
 
 /** D13: claps on 2 and 4 (or stomp-stomp-clap, or every beat), every beat in the last bar, then a short roll. */
-function clapAlong({ t0, gapStart, pickupAt, gB, phase, rng, landing = null }: BridgeArgs & { rng: () => number }, lastBar: number): PlanEvent[] {
+function clapAlong({ t0, gapStart, pickupAt, gB, phase, rng, landing = null, rollScale = 1 }: BridgeArgs & { rng: () => number }, lastBar: number): PlanEvent[] {
   const level = MOVES.bridges.claps;
   const bpm = 60 / gB.beat;
   const style = bpm < 90 || bpm > 150 ? 'plain' : pick(['plain', 'plain', 'stomp', 'every'] as const, rng);
@@ -181,7 +182,7 @@ function clapAlong({ t0, gapStart, pickupAt, gB, phase, rng, landing = null }: B
   ];
   if (stomps.length) events.push(synth('claps', { times: stomps, level, stomp: true }));
   const rollFrom = Math.max(t0, gapStart - 2 * gB.beat);
-  events.push(synth('snareRoll', { t0: rollFrom, t1: gapStart, beat: gB.beat, pitchTo: phase.snarePitch ?? 5, stages: [0.25, 0.125], velFrom: 80, velTo: 120 }));
+  events.push(synth('snareRoll', { t0: rollFrom, t1: gapStart, beat: gB.beat, pitchTo: phase.snarePitch ?? 5, stages: [0.25, 0.125], velFrom: 80 * rollScale, velTo: 120 * rollScale }));
   events.push(...swellLayer(landing, rollFrom, gapStart, loudness(phase) - 2));
   events.push(...busSweep(t0, gapStart, pickupAt, gB));
   return events;

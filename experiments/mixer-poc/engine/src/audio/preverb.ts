@@ -1,10 +1,16 @@
 // P3, the pre-verb render (D12): a song's first beat at a hook, reversed, convolved through a noise reverb
 // (100% wet) and reversed back, so the reverb swells *into* the moment the hook's pickup starts (Kern Audio's
 // reverse reverb). Rendered once per hook in an OfflineAudioContext when the song is decoded (about 0.1 s of
-// CPU), and played by the incoming deck as a landing layer (Deck.playPreverb).
+// CPU), and played by the incoming deck as a landing layer (Deck.playPreverb). Once the song's stems are decoded,
+// a second render per hook comes from its vocal stem (its first word, not the chord).
 import { MOVES } from '../config.ts';
 import { hookGrid } from '../plan/timeline.ts';
-import type { Analysis } from '../analysis.ts';
+import type { Analysis, Hook } from '../analysis.ts';
+import type { PreverbSource } from '../plan/events.ts';
+import type { StemSlices } from './stems.ts';
+
+/** The key of a hook's render in a song's map (Deck.preverbs): the mix's is the hook id itself. */
+export const preverbKey = (hookId: string, source: PreverbSource = 'mix'): string => (source === 'mix' ? hookId : `${hookId}:${source}`);
 
 export interface PreverbOptions {
   /** The excerpt: song seconds from `fromSec`, `durSec` long (the hook's pickup, one beat). */
@@ -14,6 +20,8 @@ export interface PreverbOptions {
   rt60: number;
   /** Fade-in at the swell's start, so it never starts cut off. */
   fadeInSec: number;
+  /** Gain on the excerpt (a stem stored at half scale renders at full scale with 2). */
+  gain?: number;
 }
 
 /** A stereo noise impulse response with an exponential decay (the graph's reverb, AudioGraph.impulseResponse). */
@@ -35,7 +43,7 @@ function noiseImpulse(ctx: BaseAudioContext, rt60: number): AudioBuffer {
  * sample would sound, so playing it to end at the pickup (minus a breath) inhales into the hook.
  * @returns a buffer of the reverb's length (rt60 × 1.2)
  */
-export async function renderPreverb(source: AudioBuffer, { fromSec, durSec, rt60, fadeInSec }: PreverbOptions): Promise<AudioBuffer> {
+export async function renderPreverb(source: AudioBuffer, { fromSec, durSec, rt60, fadeInSec, gain = 1 }: PreverbOptions): Promise<AudioBuffer> {
   const sr = source.sampleRate;
   const channels = Math.min(2, source.numberOfChannels);
   const from = Math.max(0, Math.round(fromSec * sr));
@@ -48,7 +56,7 @@ export async function renderPreverb(source: AudioBuffer, { fromSec, durSec, rt60
   for (let c = 0; c < channels; c++) {
     const input = source.getChannelData(c);
     const out = reversed.getChannelData(c);
-    for (let n = 0; n < length; n++) out[n] = input[from + length - 1 - n] * (n < fade ? n / fade : 1);
+    for (let n = 0; n < length; n++) out[n] = gain * input[from + length - 1 - n] * (n < fade ? n / fade : 1);
   }
   const src = offline.createBufferSource();
   src.buffer = reversed;
@@ -69,10 +77,22 @@ export async function renderPreverb(source: AudioBuffer, { fromSec, durSec, rt60
   return swell;
 }
 
-/** One song's renders: `promise` settles once every hook is rendered (or given up on). */
+/** One song's renders, by preverbKey: `promise` settles once every hook is rendered (or given up on); `vocals` once
+ * the vocal renders are. */
 interface SongPreverbs {
   promise: Promise<void>;
+  vocals: Promise<void> | null;
   buffers: Map<string, AudioBuffer>;
+}
+
+/** The hooks a pre-verb is rendered for: the valid best and main ones. */
+const renderedHooks = (analysis: Analysis): Hook[] => analysis.hooks.filter((h) => h.valid && (h.tag === 'best' || h.tag === 'main'));
+
+/** The excerpt for a hook: its pickup, one beat, and the reverb's length. */
+function excerpt(analysis: Analysis, hook: Hook): { fromSec: number; durSec: number; rt60: number } {
+  const grid = hookGrid(analysis, hook);
+  const pickup = Math.min(hook.pickupSec || 0, hook.downbeatSec);
+  return { fromSec: hook.downbeatSec - pickup, durSec: grid.beat, rt60: MOVES.preverb.rt60Bars * grid.bar };
 }
 
 export class PreverbStore {
@@ -82,17 +102,10 @@ export class PreverbStore {
   ensure(songId: number, analysis: Analysis, buffer: AudioBuffer): Promise<void> {
     let entry = this.songs.get(songId);
     if (!entry) {
-      const created: SongPreverbs = { buffers: new Map(), promise: Promise.resolve() };
+      const created: SongPreverbs = { buffers: new Map(), promise: Promise.resolve(), vocals: null };
       created.promise = (async () => {
-        for (const hook of analysis.hooks.filter((h) => h.valid && (h.tag === 'best' || h.tag === 'main'))) {
-          const grid = hookGrid(analysis, hook);
-          const pickup = Math.min(hook.pickupSec || 0, hook.downbeatSec);
-          created.buffers.set(hook.id, await renderPreverb(buffer, {
-            fromSec: hook.downbeatSec - pickup,
-            durSec: grid.beat,
-            rt60: MOVES.preverb.rt60Bars * grid.bar,
-            fadeInSec: MOVES.preverb.fadeInSec,
-          }));
+        for (const hook of renderedHooks(analysis)) {
+          created.buffers.set(preverbKey(hook.id), await renderPreverb(buffer, { ...excerpt(analysis, hook), fadeInSec: MOVES.preverb.fadeInSec }));
         }
       })().catch((error: unknown) => console.warn('preverb', songId, error));
       this.songs.set(songId, created);
@@ -101,9 +114,37 @@ export class PreverbStore {
     return entry.promise;
   }
 
-  /** What the planner may use: the hooks whose render is ready. */
+  /**
+   * D12 from B's voice: render each hook's pre-verb from its vocal stem too, once the stems around it are decoded
+   * (`stemsFor`, StemStore.forHook). Hooks whose stems do not cover the excerpt are skipped. Never rejects.
+   */
+  ensureVocals(songId: number, analysis: Analysis, stemsFor: (hookId: string) => StemSlices | null): Promise<void> {
+    const entry = this.songs.get(songId);
+    if (!entry) return Promise.resolve();
+    entry.vocals ??= (async () => {
+      await entry.promise;
+      for (const hook of renderedHooks(analysis)) {
+        const stems = stemsFor(hook.id);
+        const vocals = stems?.buffers.vocals;
+        if (!stems || !vocals) continue;
+        const cut = excerpt(analysis, hook);
+        const fromSec = cut.fromSec - stems.startSec;
+        if (fromSec < 0 || fromSec + cut.durSec > vocals.duration) continue;
+        entry.buffers.set(preverbKey(hook.id, 'vocals'), await renderPreverb(vocals, { ...cut, fromSec, gain: stems.scale, fadeInSec: MOVES.preverb.fadeInSec }));
+      }
+    })().catch((error: unknown) => console.warn('preverb vocals', songId, error));
+    return entry.vocals;
+  }
+
+  /** What the planner may use: the hooks whose render of the mix is ready. */
   hooksFor(songId: number): string[] {
-    return [...(this.songs.get(songId)?.buffers.keys() ?? [])];
+    return [...(this.songs.get(songId)?.buffers.keys() ?? [])].filter((key) => !key.includes(':'));
+  }
+
+  /** The hooks whose render of the vocals is ready (D12 from B's voice). */
+  vocalHooksFor(songId: number): string[] {
+    const suffix = preverbKey('', 'vocals');
+    return [...(this.songs.get(songId)?.buffers.keys() ?? [])].filter((key) => key.endsWith(suffix)).map((key) => key.slice(0, -suffix.length));
   }
 
   /** The renders by hook id, for a Deck: the live map. */

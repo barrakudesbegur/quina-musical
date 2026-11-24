@@ -26,6 +26,7 @@ import type {
   CommandFields,
   GameRecord,
   IntervalInfo,
+  IntervalTrackInfo,
   IntroInfo,
   PauseInfo,
   RecordedClaim,
@@ -51,7 +52,7 @@ import type {
   SongRef,
   SoundName,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, type DecoyConfig } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, type DecoyConfig } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle } from '../game/shuffle.ts';
@@ -290,12 +291,25 @@ export interface CelebrationMusicEffect {
   fadeSec: number;
   levelDb: number;
 }
-/** Interval music (the 'celebration' mood until an Interval playlist exists); a victory track playing goes on. */
+/**
+ * The Interval playlist (audio/interval.ts) at `levelDb`: the music playing (the victory track, Hold music, the
+ * Winning song's loop) hands over to its first track on its own downbeat; from silence the track fades in.
+ */
 export interface IntervalMusicEffect {
   type: 'intervalMusic';
   at: number;
   fadeSec: number;
   levelDb: number;
+}
+/** The Interval playlist moves on to its next track on the playing track's next downbeat. */
+export interface IntervalSkipEffect {
+  type: 'intervalSkip';
+}
+/** The Interval playlist's level, gliding over `seconds`. */
+export interface IntervalVolumeEffect {
+  type: 'intervalVolume';
+  db: number;
+  seconds: number;
 }
 /** The technical pause's "Tornem de seguida" on the show page (its Hold music comes as a holdMusic effect). */
 export interface PauseOverlayEffect {
@@ -333,6 +347,8 @@ export type Effect =
   | CancelCheckEffect
   | CelebrationMusicEffect
   | IntervalMusicEffect
+  | IntervalSkipEffect
+  | IntervalVolumeEffect
   | PauseOverlayEffect
   | LogEffect;
 export type EffectType = Effect['type'];
@@ -489,6 +505,8 @@ export class Show {
   /** The hook the Winning song landed on, for its Celebration loop. */
   winningHook: string | null = null;
   interval: IntervalInfo | null = null;
+  /** The Interval playlist's track playing (the runtime reports it on each handover), while its music plays. */
+  intervalNow: IntervalTrackInfo | null = null;
   winners: WinnerInfo[] = [];
   /** Scene music playing instead of a song or Hold music. */
   bed: Bed | null = null;
@@ -515,6 +533,8 @@ export class Show {
       holdMusicAfterSec: HOLD.holdMusicAfterSec,
       nextRecipe: null,
       finalLapStinger: true,
+      holdMusicOn: true,
+      intervalVolumeDb: INTERVAL.volumeDb,
       ...settings,
     };
     // Its effects wait for the runtime's first flush().
@@ -633,6 +653,10 @@ export class Show {
       case 'interval':
         this.startInterval();
         break;
+      case 'intervalSkip':
+        // The scene rules let it through only while the Interval music plays; the runtime picks the downbeat.
+        this.out.push({ type: 'intervalSkip' });
+        return this.flush(); // the state changes when the next track takes over (intervalTrack)
       case 'endGame':
         // Within 0.15 s of a landing a Spin can no longer be cancelled: press again.
         if (this.transition && this.transition.T - this.env.now() < HOLD.cancelMinSec) this.reject(reqId, c.cmd, 'busy');
@@ -1363,7 +1387,8 @@ export class Show {
       else this.startHoldMusic(now + musicDelaySec);
     } else {
       this.out.push({ type: 'duck', db: HOLD.duckDb, seconds: HOLD.duckSec });
-      this.timers.holdMusicAt = now + this.game.holdMusicAfterSec;
+      // With Hold music off the ducked song stays (it still hands over if it runs out).
+      this.timers.holdMusicAt = this.game.holdMusicOn === false ? null : now + this.game.holdMusicAfterSec;
     }
   }
 
@@ -1492,6 +1517,11 @@ export class Show {
     for (const key of SET_GAME_FIELDS) assignDefined(this.game, fields, key);
     this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     this.rescheduleAuto();
+    if (fields.intervalVolumeDb != null) this.out.push({ type: 'intervalVolume', db: fields.intervalVolumeDb, seconds: INTERVAL.volumeGlideSec });
+    // Hold music switched on or off in a Hold with the song ducked: its timed switch goes or comes back.
+    if (fields.holdMusicOn != null && this.status === 'hold' && this.hold && this.current && !this.holdMusic) {
+      this.timers.holdMusicAt = fields.holdMusicOn ? Math.max(this.env.now() + 1, this.hold.since + this.game.holdMusicAfterSec) : null;
+    }
   }
 
   rescheduleAuto() {
@@ -1587,7 +1617,10 @@ export class Show {
 
   // ---------------------------------------------------------------------------------- show flow
   sceneContext(): SceneContext {
-    return { scene: this.scene, celebrating: this.celebration?.kind ?? null, introduced: this.intro != null, paused: this.pause != null };
+    return {
+      scene: this.scene, celebrating: this.celebration?.kind ?? null, introduced: this.intro != null, paused: this.pause != null,
+      intervalMusic: this.bed === 'interval',
+    };
   }
 
   /** Move to another scene: journaled (a resumed Game comes back in it) and announced to the projector. */
@@ -1873,15 +1906,30 @@ export class Show {
     return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + FLOW.intervalGuideSec * 1000 };
   }
 
-  /** The Interval's music (also while a round is introduced, and after the Game); a victory track flows on. */
+  /**
+   * The Interval playlist (also while a round is introduced, and after the Game): the music playing, such as the
+   * victory track, hands over to it on its own downbeat, so the end of a round flows into the Interval.
+   */
   playIntervalMusic() {
     this.flowHold('music');
     this.timers.holdMusicAt = null;
     if (this.bed === 'interval') return;
-    this.out.push({ type: 'intervalMusic', at: this.env.now(), fadeSec: FLOW.intervalFadeSec, levelDb: FLOW.intervalDb });
+    this.out.push({ type: 'intervalMusic', at: this.env.now(), fadeSec: INTERVAL.fadeInSec, levelDb: this.game.intervalVolumeDb ?? INTERVAL.volumeDb });
     this.current = null;
     this.holdMusic = false;
     this.bed = 'interval';
+    this.intervalNow = null;
+  }
+
+  /**
+   * The runtime: an Interval track took over at `at` (audio clock). Shown in the state while the Interval music
+   * plays; a report that comes after the music gave way is ignored.
+   */
+  intervalTrack(track: Omit<IntervalTrackInfo, 'sinceMs'>, at = this.env.now()): Effect[] {
+    if (this.bed !== 'interval') return this.flush();
+    this.intervalNow = { title: track.title, artist: track.artist, index: track.index, count: track.count, sinceMs: Math.round(this.env.toEpochMs(at)) };
+    this.emitState();
+    return this.flush();
   }
 
   /** Introduce a round: its name and prizes on screen while the Interval music plays. No Queue yet. */
@@ -2125,6 +2173,7 @@ export class Show {
       interval: this.interval ? { ...this.interval } : null,
       winners: this.winners.map((w) => ({ ...w })),
       resume: this.resumeToken(),
+      intervalMusic: this.bed === 'interval' ? { track: this.intervalNow ? { ...this.intervalNow } : null } : null,
     };
   }
 
