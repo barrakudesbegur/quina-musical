@@ -12,7 +12,7 @@
 import type { FutureInfo, PossibleWinners, RoundInfo, ShowState } from '@quina/protocol';
 import { cardMarks, cardsForRound, type PlayerCard } from '../../../packages/rules/marks.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
-import { possibleWinnersView, type CardsInPlay, type PossibleWinnersView } from './possible-winners.ts';
+import { possibleWinnersOf, possibleWinnersView, type CardsInPlay, type PossibleWinnersView } from './possible-winners.ts';
 
 // ---- the round's counted songs -------------------------------------------------------------------------
 /** The songs seen at each Queue index this round. The Queue never changes after the Shuffle, so an index
@@ -155,7 +155,7 @@ export interface FutureView {
 
 export function futureView({ engine, position = -1, printed, inPlay, cardType, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
   const settled = (kind: WinKind): SongsAhead | null =>
-    kind === 'line' && lineConfirmed ? { state: 'done' } : possibleWinners[kind].length > 0 ? { state: 'now' } : null;
+    kind === 'line' && lineConfirmed ? { state: 'done' } : possibleWinnersOf(possibleWinners, kind).length > 0 ? { state: 'now' } : null;
   if (engine) {
     // The engine's numbers: the whole round's marks and the exact songs ahead, even on a console opened late.
     const at = (kind: WinKind): SongsAhead => {

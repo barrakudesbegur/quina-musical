@@ -43,7 +43,8 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     this.prize.set(body.prize);
     if (body.key !== this.key) {
       this.key = body.key;
-      this.buildConfetti(body.kind === 'bingo' ? STAGE.confetti.bingo : STAGE.confetti.line);
+      // The last card standing ends its round like a Bingo, so it gets the Bingo's confetti.
+      this.buildConfetti(body.kind === 'line' ? STAGE.confetti.line : STAGE.confetti.bingo);
     }
   }
 

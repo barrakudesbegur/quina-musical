@@ -10,7 +10,7 @@
   import { PAD_DIGITS, padKeyFromKeyboard, padPress, padValue, type PadKey } from '../logic/numpad.ts';
   import { isNotSold } from '../logic/possible-winners.ts';
   import { defaultClaimKind } from '../logic/show-data.ts';
-  import type { WinKind } from '../../../packages/ui/flow.ts';
+  import type { ClaimKind } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 
@@ -21,10 +21,11 @@
   const limits = { maxDigits: CONSOLE.cardDigits, max: CONSOLE.cardMax };
   let dialog: HTMLDialogElement | undefined = $state();
   let digits = $state('');
-  let kind = $state<WinKind>('line');
+  /** What `claim` takes for now: 'standing' opens with the Desgraciat round. */
+  let kind = $state<ClaimKind>('line');
   const value = $derived(padValue(digits, limits));
   const notSold = $derived(value !== null && isNotSold(value, model.inPlay));
-  const KINDS: readonly WinKind[] = ['line', 'bingo'];
+  const KINDS: readonly ClaimKind[] = ['line', 'bingo'];
 
   $effect(() => {
     if (!dialog) return;

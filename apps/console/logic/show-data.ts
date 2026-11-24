@@ -3,7 +3,7 @@
 import type { CommandFields, RoundKind, ShowState } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
-import { revealedRounds, roundCardType, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { revealedRounds, roundIntroFields, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 
 /** A song's title: from the snapshot (current, next, recent landings), then the printed cards, else null. */
 export function songTitleOf(songId: number | null | undefined, state: ShowState | null, catalog: Catalog | null): string | null {
@@ -49,15 +49,8 @@ export function roundPrizes(plan: GamePlan | null, number: number): RoundPrizesR
   return { status: 'ok', prizes: { number, kind: round.kind, line: bundleView(plan, round.line), bingo: bundleView(plan, round.bingo) } };
 }
 
-/**
- * The `roundIntro` that introduces round `number`: with its kind and printed card type from the plan when the plan
- * has that round (a plan from before card types per round plays its kind's default). The engine keeps the type for
- * the round's `newRound`.
- */
-export function roundIntroArgs(plan: GamePlan | null, number: number): CommandFields['roundIntro'] {
-  const planned = roundPlan(plan, number);
-  return planned ? { number, kind: planned.kind, cardType: roundCardType(planned) } : { number };
-}
+/** The `roundIntro` that introduces round `number`, kind and card type from the plan (ui/plan.ts roundIntroFields). */
+export const roundIntroArgs = (plan: GamePlan | null, number: number): CommandFields['roundIntro'] => roundIntroFields(plan, number);
 
 /**
  * Whether phones may see a round's prizes yet (plan.ts revealedRounds over the engine's `prizes.revealed`):
@@ -91,7 +84,10 @@ export function winnersByRound(winners: readonly WinnerInfo[]): WinnersByRound[]
 }
 
 /** The kind of the next Claim when the presenters don't pick one: what the Phase is climbing towards. */
-export function defaultClaimKind(state: ShowState | null): WinKind {
+/** A Claim's kind as `claim` takes it ('standing' opens there with the Desgraciat round). */
+export type ClaimKind = NonNullable<CommandFields['claim']['kind']>;
+
+export function defaultClaimKind(state: ShowState | null): ClaimKind {
   if (!state) return 'line';
   return state.cards.climbingTo === 'bingo' || state.round.lineConfirmed ? 'bingo' : 'line';
 }

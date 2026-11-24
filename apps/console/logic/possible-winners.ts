@@ -45,6 +45,10 @@ export interface PossibleWinnersView {
   total: number;
 }
 
+/** The engine's possible winners for a win kind. The last card standing (the Desgraciat round) has none: the
+ * engine lists the cards still standing apart (`state.standing`). */
+export const possibleWinnersOf = (pw: PossibleWinners, kind: WinKind): readonly PossibleWinner[] => (kind === 'standing' ? [] : pw[kind]);
+
 const view = (kind: WinKind, inPlay: CardsInPlay) => (w: PossibleWinner): CandidateView => ({
   cardId: w.cardId,
   kind,

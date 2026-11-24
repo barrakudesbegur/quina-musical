@@ -15,9 +15,9 @@ import type { WiiStatus } from './wii/controller.svelte.ts';
 export { CA };
 
 const seconds = (s: number) => `${s} s`;
-const kindLabel: Record<WinKind, string> = { line: CA.line, bingo: CA.bingo };
+const kindLabel: Record<WinKind, string> = { line: CA.line, bingo: CA.bingo, standing: CA.standing };
 /** "línia" or "quina", inside a sentence. */
-const kindWord: Record<WinKind, string> = { line: 'línia', bingo: 'quina' };
+const kindWord: Record<WinKind, string> = { line: 'línia', bingo: 'quina', standing: 'últim dempeus' };
 /** "A, B i C". */
 const listing = (items: readonly string[]) => (items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} i ${items[items.length - 1]}`);
 
@@ -43,7 +43,7 @@ export const S = {
   },
 
   phase: { early: 'Inici', mid: 'Mig', late: 'Tardana', final: 'Final' } satisfies Record<PhaseName, string>,
-  climbing: { line: 'cap a la línia', bingo: 'cap a la quina' } satisfies Record<WinKind, string>,
+  climbing: { line: 'cap a la línia', bingo: 'cap a la quina', standing: 'fins que en quedi un dempeus' } satisfies Record<WinKind, string>,
 
   links: {
     title: 'Connexions',
@@ -87,7 +87,7 @@ export const S = {
     back: 'Enrere',
     /** Under "Enrere" in its narrow button: just "hold, don't tap". */
     backHint: 'mantén',
-    claim: 'Comprovar',
+    claim: 'Comprovar cartró',
   },
 
   longPress: { hint: 'Mantén premut per confirmar', percent: (p: number) => `${p} %` },
@@ -242,6 +242,7 @@ export const S = {
     outcome: {
       complete: 'Complet',
       incomplete: 'Incomplet',
+      fallen: 'Ha caigut: una de les seves cançons ja ha sonat',
       unknownCard: 'Aquest número de cartró no existeix',
       wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
     } satisfies Record<CheckOutcome, string>,

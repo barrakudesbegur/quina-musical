@@ -135,7 +135,7 @@ export function kernelTilt(cardId: number, songId: number): number {
 
 export interface HistoryRound {
   round: number;
-  kind: 'normal' | 'special';
+  kind: RoundKind;
   /** Newest first. */
   landings: PublicLanding[];
 }
@@ -166,7 +166,7 @@ export interface PrizeLine {
 
 export interface PrizeRound {
   number: number;
-  kind: 'normal' | 'special';
+  kind: RoundKind;
   state: 'done' | 'current' | 'next' | 'later';
   /**
    * Its prizes aren't revealed yet (shown locked, game-style): 'intro' when they come as the round is

@@ -7,15 +7,18 @@ export const CA = {
   gameTitle: 'Quina Musical',
   round: (n: number) => `Quina ${n}`,
   roundOf: (n: number, total: number) => `Quina ${n} de ${total}`,
-  specialRound: 'Quina especial',
+  specialRound: 'Quina Especial',
+  desgraciatRound: 'Quina Desgraciada',
   card: (id: number) => `Cartró ${id}`,
   /** A printed card type card-types.json doesn't name (its id, "Cartró daurat"). */
   cardType: (id: string) => `Cartró ${id}`,
   cards: 'Cartrons',
   line: 'Línia',
   bingo: 'Quina',
-  shout: { line: 'LÍNIA!', bingo: 'QUINA!' } satisfies Record<WinKind, string>,
-  prize: { line: 'Premi de línia', bingo: 'Premi de quina' } satisfies Record<WinKind, string>,
+  /** The Desgraciat round's win: the last card standing. */
+  standing: 'Dempeus',
+  shout: { line: 'LÍNIA!', bingo: 'QUINA!', standing: 'DEMPEUS!' } satisfies Record<WinKind, string>,
+  prize: { line: 'Premi de línia', bingo: 'Premi de quina', standing: "Premi de l'últim dempeus" } satisfies Record<WinKind, string>,
   sponsoredBy: (name: string) => `Gentilesa de ${name}`,
   /** Under a bundle's headline prizes: how many smaller ones come with them. */
   morePrizes: (n: number) => (n === 1 ? 'i 1 premi més' : `i ${n} premis més`),

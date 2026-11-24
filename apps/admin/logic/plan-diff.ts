@@ -37,7 +37,8 @@ export interface PlanDiff {
   cardTypes: boolean;
 }
 
-const KINDS: readonly WinKind[] = ['line', 'bingo'];
+/** The plan's two bundles per round. */
+const KINDS = ['line', 'bingo'] as const satisfies readonly WinKind[];
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const bundleKey = (bundle: readonly Prize[] | undefined) => (bundle ?? []).map((p) => [p.title, p.detail, p.sponsorId, p.image, p.headline]);
 

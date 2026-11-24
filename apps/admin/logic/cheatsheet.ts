@@ -58,7 +58,8 @@ export interface CheatSheetModel {
   checklist: readonly string[];
 }
 
-const KINDS: readonly WinKind[] = ['line', 'bingo'];
+/** The plan's two bundles per round (a Desgraciat round's win reads the `bingo` one). */
+const KINDS = ['line', 'bingo'] as const satisfies readonly WinKind[];
 
 function cheatItem(plan: GamePlan, prize: Prize, headline: boolean): CheatPrizeItem {
   return { title: prize.title, detail: prize.detail || null, sponsor: sponsorOf(plan, prize)?.name ?? null, headline };

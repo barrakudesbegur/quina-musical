@@ -3,7 +3,7 @@
 <script lang="ts">
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { CA } from '../../../packages/ui/i18n/ca.ts';
-  import type { GamePlan } from '../../../packages/ui/plan.ts';
+  import { roundIntroFields, type GamePlan } from '../../../packages/ui/plan.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { S } from '../strings.ts';
   import CommandStatus from './CommandStatus.svelte';
@@ -18,8 +18,8 @@
   const canEnd = $derived(snapshot !== null && scene !== 'after' && confirmed && commands.canSend);
 
   function start() {
-    const first = plan?.rounds[0];
-    commands.send('roundIntro', null, { number: 1, kind: first?.kind ?? 'normal' });
+    // Its kind and card type from the plan, as the console sends them.
+    commands.send('roundIntro', null, roundIntroFields(plan, 1));
   }
 
   function end(event: SubmitEvent) {

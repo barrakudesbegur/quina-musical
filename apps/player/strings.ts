@@ -107,7 +107,7 @@ export const S = {
 
   // Check and Celebration
   checking: CA.checking,
-  checkFor: { line: 'Línia', bingo: 'Quina' },
+  checkFor: { line: 'Línia', bingo: 'Quina', standing: CA.standing },
   checkValid: CA.checkValid,
   checkInvalid: CA.checkInvalid,
   shout: CA.shout,

@@ -224,7 +224,7 @@ function projectCheck(flow: FlowFields, round: number): PublicCheck | null {
 /** Winning card numbers per prize, in the order they were won, plus a Celebration's cards. Never names or notes. */
 function projectWinners(flow: FlowFields): PublicWinner[] {
   const out: PublicWinner[] = [];
-  const add = (round: number, kind: 'line' | 'bingo', cardId: number) => {
+  const add = (round: number, kind: PublicWinner['kind'], cardId: number) => {
     let group = out.find((w) => w.round === round && w.kind === kind);
     if (!group) {
       group = { round, kind, cardIds: [] };
