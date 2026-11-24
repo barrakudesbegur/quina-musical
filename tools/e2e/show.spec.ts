@@ -97,7 +97,7 @@ test('one whole show, every screen following', async ({ browser }) => {
   await expectScenes(screens, 'play');
   for (let i = 0; i < 2; i++) state = await land(state.current?.songId ?? null);
   const playing = state.current?.songId;
-  await soft(consolePage.locator('[data-testid="now-playing"]:visible').first()).toHaveAttribute('data-song-id', String(playing));
+  await soft(consolePage.getByTestId('now-playing')).toHaveAttribute('data-song-id', String(playing));
   await soft(player.getByTestId('now')).toHaveAttribute('data-song-id', String(playing));
   await soft(show.getByTestId('drum')).toHaveAttribute('data-landed-id', String(playing));
 
