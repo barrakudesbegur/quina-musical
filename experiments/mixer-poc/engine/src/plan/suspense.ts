@@ -9,6 +9,7 @@ import { PLANNER, SUSPENSE } from '../config.ts';
 import { EXITS, RECIPES, pick, ramp, sfx, synth } from './recipes.ts';
 import { deckTimeline, hookGrid, dbToGain } from './timeline.ts';
 import { pickHook } from './hooks.ts';
+import { classicLanding, impactName } from './landing.ts';
 import { LOOKAHEAD_SEC, eventStart, signatureLayer, trimDbFor, type IncomingSong, type OutgoingSong, type Plan, type PlanError, type PlanSummary } from './planner.ts';
 import type { Hook } from '../analysis.ts';
 import type { PhaseEffects } from '../config.ts';
@@ -166,6 +167,7 @@ export function releaseSuspense({ open, releaseAt, firstFreeBar, B, rng, id = nu
     blend: null,
     signature: signature ? { deck: signature.deck, id: signature.id, at: signature.at, rate: signature.rate } : null,
     landing: 'cymbal',
+    impact: impactName(classicLanding(phase)),
     layers: [],
     phraseClass: null,
     relaxed: false,

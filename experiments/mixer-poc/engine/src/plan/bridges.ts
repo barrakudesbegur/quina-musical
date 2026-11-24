@@ -5,7 +5,7 @@
 //  - halftime (D4): heavy half-time bars (kick on 1, snare on 3), straight time, then the roll;
 //  - kickroll: kicks at ¼ → ⅛ → 1/16, quieter at each stage (a high-passed kick roll), under the riser;
 //  - clap (D13, P4 claps): a clap-along on 2 and 4 the room can join, every beat in the last bar, a short roll.
-import { MOVES } from '../config.ts';
+import { MOVES, VARIETY } from '../config.ts';
 import type { PhaseEffects } from '../config.ts';
 import { weightedPick } from '../rng.ts';
 import { pick, ramp, set, synth } from './events.ts';
@@ -13,6 +13,8 @@ import type { PlanEvent } from './events.ts';
 import { swellLayer } from './landing.ts';
 import type { Landing } from './landing.ts';
 import type { HookGrid } from './timeline.ts';
+import { freshWeights } from './variety.ts';
+import type { Recent } from './variety.ts';
 
 export const BRIDGE_PATTERNS = ['roll', 'halftime', 'kickroll', 'clap'] as const;
 export type BridgePattern = (typeof BRIDGE_PATTERNS)[number];
@@ -40,15 +42,15 @@ const loudness = (phase: PhaseEffects): number => ({ early: -12, mid: -9, late: 
 const TWO_BARS_MIN = 1.5;
 
 /**
- * The bridge pattern for a build of `bars` of B's bars (from the bridge's start to the gap). A forced pattern
- * that does not fit falls back to the roll.
+ * The bridge pattern for a build of `bars` of B's bars (from the bridge's start to the gap), the patterns of the
+ * last builds (`recent`, newest last) turned down. A forced pattern that does not fit falls back to the roll.
  */
-export function chooseBridge(phase: PhaseEffects, bars: number, rng: () => number, force: BridgePattern | null = null): BridgePattern {
+export function chooseBridge(phase: PhaseEffects, bars: number, rng: () => number, force: BridgePattern | null = null, recent: Recent<string> = []): BridgePattern {
   const fits = (p: BridgePattern) => bars >= TWO_BARS_MIN || !NEEDS_TWO_BARS.has(p);
   if (force) return fits(force) ? force : 'roll';
   const weights = { ...MOVES.bridges.weights[phase.name] };
   for (const p of NEEDS_TWO_BARS) if (!fits(p)) weights[p] = 0;
-  return weightedPick(weights, rng) ?? 'roll';
+  return weightedPick(freshWeights<BridgePattern>(weights, recent, VARIETY.bridge), rng) ?? 'roll';
 }
 
 /** The music bus's high-pass over the last bar into the gap, reset just before the pickup. */

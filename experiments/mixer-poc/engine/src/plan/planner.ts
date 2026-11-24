@@ -12,10 +12,11 @@ import { deckTimeline, hookGrid, dbToGain } from './timeline.ts';
 import { pickHook } from './hooks.ts';
 import { SPIN_LIMITS, spinWindow } from './pace.ts';
 import { compatible } from './keys.ts';
-import { chooseLanding, preverbEvent } from './landing.ts';
+import { chooseLanding, impactName, preverbEvent } from './landing.ts';
 import { gapChopSlices, ghostLayer, scratchMove } from './layers.ts';
+import { freshNumber, freshWeights, memoryOf, recency } from './variety.ts';
 import { weightedPick } from '../rng.ts';
-import { PLANNER, LAYERING, MOVES, SIGNATURES, STEMS } from '../config.ts';
+import { PLANNER, LAYERING, MOVES, SIGNATURES, STEMS, VARIETY } from '../config.ts';
 import type { Analysis, Hook, SignatureKind } from '../analysis.ts';
 import type { PhaseEffects, PhaseName } from '../config.ts';
 import type { KeyInfo } from './keys.ts';
@@ -24,6 +25,7 @@ import type { DeckClock, HookGrid, PhraseClass, Timeline } from './timeline.ts';
 import type { BridgePattern } from './bridges.ts';
 import type { LandingStyle } from './landing.ts';
 import type { ChopSource, LayerName, RiffSource } from './layers.ts';
+import type { Memory, Remembered } from './variety.ts';
 import type {
   BlendLayer, Caps, ExitName, LanePart, LaneWindow, OutgoingDeck, PlanEvent, PreverbSource, Recipe, RecipeFamily, RecipeId, RecipeShape,
   RecipeVariant, SignatureEvent, StemBars, StemName,
@@ -34,7 +36,6 @@ const DECLICK_SEC = PLANNER.declickSec;
 const AFTER_DUCK = PLANNER.afterDuckSec;
 const PHRASE_COST = PLANNER.phraseCost;
 const DRIFT_COST_PER_SEC = PLANNER.driftCostPerSec;
-const REPEAT_PENALTY = PLANNER.repeatPenalty;
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 /** RECIPES by any string: phase weights and history entries may name a recipe that does not exist (yet). */
 const RECIPE_LOOKUP: Readonly<Partial<Record<string, Recipe>>> = RECIPES;
@@ -140,15 +141,20 @@ export interface Candidate {
 const MAX_BLEND_DRIFT_SEC = 0.03;
 
 /**
- * What the planner remembers of an earlier landing, oldest first (show.ts keeps these). Typed loosely
- * (string, not RecipeId) because the history is kept outside the planner.
+ * What the planner remembers of an earlier landing, oldest first (show.ts keeps these, from `summarize`): the
+ * song and hook it landed (hook rotation), and what it sounded like (plan/variety.ts, the rotation memory). Typed
+ * loosely (string, not RecipeId) because the history is kept outside the planner.
  */
-export interface PlanSummary {
-  recipe: string;
-  family: string;
-  exit: string | null;
+export interface PlanSummary extends Remembered {
   songId: number;
   hookId: string;
+}
+
+/** A plan's summary, typed by the transition vocabulary (what `summarize` returns). */
+export interface PlanMemory extends PlanSummary {
+  recipe: RecipeId;
+  family: RecipeFamily;
+  exit: ExitName | null;
 }
 
 /**
@@ -192,6 +198,8 @@ export interface Plan {
   signature: { deck: 'A' | 'B'; id: string; at: number; rate: number } | null;
   /** The landing layer (plan/landing.ts). */
   landing: LandingStyle;
+  /** The impact's samples by name ('dry' for a dry landing). */
+  impact: string;
   /** Layers of B decorating the recipe (D9's Ghost Tease and its voice, D5's riff bed, a gap chop or scratch). */
   layers: readonly LayerName[];
   phraseClass: PhraseClass | null;
@@ -290,20 +298,28 @@ function possible(recipe: Recipe, hasA: boolean, caps: Caps): boolean {
   return recipe.needs?.(caps) ?? true;
 }
 
+/**
+ * The recipe: the Phase's weights for what this transition can play, the recipes and families of the last
+ * transitions turned down (plan/variety.ts), then the hard rules: never one family three times in a row, two
+ * theatrical moves never back to back, a cooldown waits its turn. Without A (a build from silence) one of the
+ * Phase's openers (VARIETY.openers) under the same rules.
+ */
 export function chooseRecipe({ hasA, phase, history = [], rng, override = null, caps = NO_CAPS }: RecipeChoice): Recipe {
   const forced = override && RECIPES[override];
   if (forced && possible(forced, hasA, caps)) return forced;
-  if (!hasA) return phase.name === 'final' ? RECIPES.R10 : RECIPES.R7;
+  const memory = memoryOf(history);
+  const families = memory.families.map((f) => (f == null ? f : familyGroup(f)));
   const last = history[history.length - 1];
   const lastTwo = history.slice(-2);
-  const many = Object.keys(phase.weights).length > 1;
+  const table = hasA ? phase.weights : VARIETY.openers[phase.name];
+  const many = Object.keys(table).length > 1;
   const weights: Partial<Record<RecipeId, number>> = {};
-  for (const [id, w] of Object.entries(phase.weights)) {
-    // phase.weights may name a recipe that does not exist (yet): the lookup can miss.
+  for (const [id, w] of Object.entries(table)) {
+    // The weights may name a recipe that does not exist (yet): the lookup can miss.
     const recipe = RECIPE_LOOKUP[id];
-    if (!recipe || !possible(recipe, true, caps)) continue;
+    if (!recipe || !possible(recipe, hasA, caps)) continue;
     let weight = w;
-    if (many && id === last?.recipe) weight *= REPEAT_PENALTY;
+    if (many) weight *= recency(id, memory.recipes, VARIETY.recipe) * recency(familyGroup(recipe.family), families, VARIETY.family);
     if (many && id !== 'R10' && THEATRICAL.has(id) && last && THEATRICAL.has(last.recipe)) weight = 0;
     // Never one family (the spiral counts as an echo) three times in a row.
     if (many && lastTwo.length === 2 && lastTwo.every((h) => familyGroup(h.family) === familyGroup(recipe.family))) weight = 0;
@@ -311,20 +327,67 @@ export function chooseRecipe({ hasA, phase, history = [], rng, override = null, 
     if (recipe.cooldown && history.slice(-recipe.cooldown).some((h) => h.recipe === id)) weight = 0;
     weights[recipe.id] = weight; // RECIPES are keyed by their id, so this is `id`, typed
   }
+  if (!hasA) return RECIPES[weightedPick(weights, rng) ?? (phase.name === 'final' ? 'R10' : 'R7')];
   // DEFAULT_WEIGHTS are all positive, so a recipe is always drawn.
   const id = weightedPick(weights, rng) ?? weightedPick(DEFAULT_WEIGHTS, rng)!;
   return RECIPES[id];
 }
 
 /**
- * The exit move for an S2 recipe, avoiding the last one used.
+ * The exit move for an S2 recipe, the ways A left in the last transitions turned down (an R7 echo-out right
+ * after R2's echo sounds like the same move).
  * @returns null when the recipe has no exit moves
  */
-function chooseExit(recipe: Recipe, history: readonly PlanSummary[], rng: () => number): ExitName | null {
+function chooseExit(recipe: Recipe, memory: Memory, rng: () => number): ExitName | null {
   if (!recipe.exits) return null;
-  const last = history.map((h) => h.exit).filter(Boolean).pop();
-  const fresh = recipe.exits.filter((x) => x !== last);
-  return pick(fresh.length ? fresh : recipe.exits, rng);
+  const weights: Partial<Record<ExitName, number>> = {};
+  for (const x of recipe.exits) weights[x] = 1;
+  return weightedPick(freshWeights<ExitName>(weights, memory.moves, VARIETY.move), rng) ?? pick(recipe.exits, rng);
+}
+
+/** Variants that say how A left (an S1 or S3 move's own exit), as `moveOf` reports them. */
+const HEARD_VARIANTS: ReadonlySet<string> = new Set(['echo', 'wash', 'throw', 'vocalThrow', 'freeze', 'brake', 'spinback', 'stab']);
+
+/**
+ * How A left, as heard: the S2 exit; else the S1 or S3 move's exit when its variant names one (R8's echo or
+ * wash, R5's brake or spinback, R2's freeze or vocal throw), else its family (gate, spiral, roll, hits…).
+ * @returns null without A
+ */
+export function moveOf(plan: Pick<Plan, 'a' | 'exit' | 'variant' | 'family'>): string | null {
+  if (!plan.a) return null;
+  if (plan.exit) return plan.exit;
+  const kind = plan.variant?.kind;
+  if (kind && HEARD_VARIANTS.has(kind)) return kind === 'vocalThrow' ? 'throw' : kind;
+  return plan.family;
+}
+
+/** The flavour of a plan's first riser: 'noise', or 'tone' (the synth's default adds a climbing saw); null without one. */
+function riserOf(events: readonly PlanEvent[]): string | null {
+  for (const e of events) if (e.kind === 'synth' && e.name === 'riser') return e.params.tone === false ? 'noise' : 'tone';
+  return null;
+}
+
+/** What the planner remembers of a plan once it has landed (show.ts keeps these as its history). */
+export function summarize(plan: Plan): PlanMemory {
+  const s2 = plan.shape === 'S2';
+  const pattern = plan.variant?.kind;
+  const bars = plan.variant?.bars;
+  return {
+    recipe: plan.recipe,
+    family: plan.family,
+    exit: plan.exit,
+    songId: plan.b.songId,
+    hookId: plan.hook.id,
+    move: moveOf(plan),
+    landing: plan.landing,
+    impact: plan.impact,
+    riser: riserOf(plan.events),
+    // R7 reports its bridge pattern; the other S2 builds play the classic roll.
+    bridge: s2 ? (plan.recipe === 'R7' && typeof pattern === 'string' ? pattern : 'roll') : null,
+    bridgeBars: s2 ? plan.bridgeBars : null,
+    bars: !s2 && typeof bars === 'number' ? bars : null,
+    gapBeats: plan.gapBeats,
+  };
 }
 
 export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null, force = null, allowTease = true }: PlanRequest): Plan | PlanError {
@@ -354,12 +417,13 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     blendVocals: Boolean(blend?.vocals) && singsBeforeHook(B, hook, teaseStems),
   };
   const aState: OutgoingDeck | null = tl ? { tl, level: duckLevel, bars: A?.stemBars ?? null, rate: A?.deck.rate ?? 1 } : null;
+  const memory = memoryOf(history);
   let recipe = chooseRecipe({ hasA: Boolean(tl), phase, history, rng, override: recipeOverride, caps });
-  let exit = chooseExit(recipe, history, rng);
+  let exit = chooseExit(recipe, memory, rng);
   if (force?.exit && recipe.exits?.includes(force.exit)) exit = force.exit;
   // Silence before the hit, never when the pickup is long (the first syllable must not clip); some recipes
-  // want at least a little (D2's crowd gap, D11's breath after the chops).
-  const drawnGap = pickup > gB.beat ? 0 : pick(phase.gapBeats, rng);
+  // want at least a little (D2's crowd gap, D11's breath after the chops). It varies, away from the last gaps.
+  const drawnGap = pickup > gB.beat ? 0 : freshNumber(phase.gapBeats, memory.gaps, VARIETY.gap, rng);
   const gapBeatsFor = (r: Recipe) => (pickup > gB.beat ? 0 : Math.max(drawnGap, r.minGapBeats?.(phase.name) ?? 0));
   // A Tease from B's own stems when they cover this hook; otherwise a low-passed one, less often.
   const teaseChance = !allowTease ? 0 : teaseStems?.includes('drums') ? phase.stemTease ?? phase.tease ?? 0 : phase.tease ?? 0;
@@ -369,6 +433,11 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
 
   let candidateCount = 0;
   const windows: ReadonlyArray<readonly [number, number]> = [[win.dMin, win.dMax], SPIN_LIMITS];
+  // An S2 bridge as long as the last builds costs a little more, and every length gets a small random cost, so
+  // the builds' lengths vary rather than follow the tempo alone.
+  const bridgeJitter = [1, 2, 3, 4].map(() => VARIETY.bridgeBarsJitter * rng());
+  const bridgeCost = (n: number) => (bridgeJitter[n - 1] ?? 0) +
+    VARIETY.bridgeBarsCost.reduce((sum, c, k) => sum + (memory.bridgeBars[memory.bridgeBars.length - 1 - k] === n ? c : 0), 0);
 
   /**
    * The best landing for a recipe: S1 lands on one of A's downbeats; S2 bridges on B's grid; S3 blends
@@ -424,7 +493,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
             if (T - lead - DECLICK_SEC < spinStart + 0.05) continue;
             candidateCount++;
             const phraseClass = tl.phraseClass(d.index);
-            const cost = DRIFT_COST_PER_SEC * Math.abs(D - win.dTarget) + PHRASE_COST[phraseClass];
+            const cost = DRIFT_COST_PER_SEC * Math.abs(D - win.dTarget) + PHRASE_COST[phraseClass] + bridgeCost(n);
             if (!found || cost < (found.cost ?? Infinity)) found = { T, i: d.index, e, phraseClass, cost, lead, n, teaseBars, relaxed: pass > 0, blend: null };
           }
         }
@@ -463,7 +532,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     fallbacks.push(RECIPES.R7, RECIPES.R2, RECIPES.R1);
     for (const r of fallbacks) {
       if (r === recipe) continue;
-      const x = chooseExit(r, history, rng);
+      const x = chooseExit(r, memory, rng);
       const found = search(r, x);
       if (found) {
         recipe = r;
@@ -513,7 +582,10 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     ? 0
     : Math.min(gapBeats * gB.beat - 0.02, pickupAt - (tl ? minStart : spinStart + 0.1), hook.downbeatSec - pickup);
   const tapeBoost = ['stop', 'powerdown', 'hits'].includes(recipe.family) ? MOVES.tape.afterStop : 1;
-  const landing = chooseLanding({ phase, rng, preverb: preverbFits, tape: tapeRoom >= MOVES.tape.minSec, tapeBoost, force: force?.landing ?? null });
+  const landing = chooseLanding({
+    phase, rng, preverb: preverbFits, tape: tapeRoom >= MOVES.tape.minSec, tapeBoost, force: force?.landing ?? null,
+    recent: { styles: memory.landings, impacts: memory.impacts },
+  });
   const vocalPreverb = Boolean(B.vocalPreverbs?.includes(hook.id)) && singsAtHook(B, hook);
   const preverbSource: PreverbSource = vocalPreverb ? (force?.preverbSource ?? (landing.style === 'preverb' && rng() < MOVES.preverb.vocalsChance ? 'vocals' : 'mix')) : 'mix';
   const preverb = landing.style === 'preverb'
@@ -542,7 +614,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
 
   const built = recipe.build({
     A: aState, i, e, T, pickupAt, gapStart, bStart, teaseFrom: powerUp ? T - best.lead : bStart, tease: teaseBars > 0, teaseStems, gB, phase, rng,
-    exit, blend: best.blend, minStart, aLanes: caps.aLanes, chop: caps.chop, riff, landing,
+    exit, blend: best.blend, minStart, aLanes: caps.aLanes, chop: caps.chop, riff, landing, memory,
     force: force ? { bridge: force.bridge ?? null, variant: force.variant ?? null } : null,
   });
   const teaseStyle = teaseBars > 0 ? (built.events.some((x) => x.kind === 'stems') ? 'stems' : 'lpf') : null;
@@ -626,6 +698,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     blend: best.blend && blend ? { bars: best.blend.bars, bass: best.blend.bass, at: best.blend.at, fileAt: best.blend.fileAt, toBpm: blend.toBpm } : null,
     signature: signature ? { deck: signature.deck, id: signature.id, at: signature.at, rate: signature.rate } : null,
     landing: landing.style,
+    impact: impactName(landing),
     layers,
     phraseClass: best.phraseClass,
     relaxed: Boolean(best.relaxed),

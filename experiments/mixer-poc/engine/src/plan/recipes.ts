@@ -5,7 +5,7 @@
 //
 // The DJ techniques D1–D19 come from docs/dj-techniques.md; their moves are in plan/moves.ts (A's side),
 // plan/layers.ts (B's side) and plan/bridges.ts (the S2 builds). Tunables are in config.ts MOVES.
-import { LAYERING, MOVES } from '../config.ts';
+import { LAYERING, MOVES, VARIETY } from '../config.ts';
 import type { PhaseEffects, PhaseName } from '../config.ts';
 import type { ExitName, RecipeFamily, RecipeId, RecipeShape } from '@quina/protocol';
 import { weightedPick } from '../rng.ts';
@@ -22,6 +22,8 @@ import {
 } from './moves.ts';
 import type { LaneWindow, OutgoingDeck } from './moves.ts';
 import type { HookGrid, Timeline } from './timeline.ts';
+import { freshNumber, freshWeights } from './variety.ts';
+import type { Memory } from './variety.ts';
 
 // The transition vocabulary is part of the show protocol. Shapes: S1 rides A and lands on its downbeat,
 // S2 bridges on B's grid, S3 layers B (stretched to A's tempo) under A and lands on A's downbeat, S0 is
@@ -329,6 +331,8 @@ export interface BuildArgs {
   /** The landing layer (plan/landing.ts); the classic cymbal when left out. */
   landing?: Landing | null;
   force?: VariantForce | null;
+  /** What the round's last transitions did (plan/variety.ts): a move's length and A's exit avoid repeating them. */
+  memory?: Memory | null;
 }
 
 /** S1 recipes only run with A playing and one of its downbeats chosen (planner.ts guarantees both). */
@@ -402,6 +406,18 @@ function forced<K extends string>(x: BuildArgs, kinds: readonly K[]): K | null {
   return kinds.find((k) => k === x.force?.variant) ?? null;
 }
 
+/** A move's length in A's bars from `options`, away from the last moves' lengths. */
+const drawBars = (x: BuildArgs, options: readonly number[]): number => freshNumber(options, x.memory?.bars ?? [], VARIETY.bars, x.rng);
+
+/** The riser's flavour for a move that does not pick its own: sometimes the tone riser, away from the last risers. */
+const riserTone = (x: BuildArgs): boolean =>
+  weightedPick(freshWeights({ tone: MOVES.riser.tone, noise: 1 - MOVES.riser.tone }, x.memory?.risers ?? [], VARIETY.riser), x.rng) === 'tone';
+
+/** One of `weights`' exits for A, the ways A left in the last transitions turned down. */
+function freshExit<K extends string>(x: BuildArgs, weights: Readonly<Partial<Record<K, number>>>): K | null {
+  return weightedPick(freshWeights<K>(weights, x.memory?.moves ?? [], VARIETY.move), x.rng);
+}
+
 /** True when the lane window has every part. */
 export function lanesHave(lanes: LaneWindow | null | undefined, parts: readonly LanePart[]): lanes is LaneWindow {
   return Boolean(lanes) && parts.every((p) => lanes?.parts.includes(p));
@@ -424,6 +440,8 @@ function s2Exit(x: BuildArgs): { events: PlanEvent[]; aStopAt: number | null } {
 const R1_KINDS = ['hpf', 'lpf', 'stab'] as const;
 const R2_KINDS = ['echo', 'freeze', 'vocalThrow'] as const;
 const R5_KINDS = ['spinback', 'brake'] as const;
+const R5_WEIGHTS: Readonly<Record<(typeof R5_KINDS)[number], number>> = { spinback: 1, brake: 1 };
+const R8_EXITS: Readonly<Record<'echo' | 'wash', number>> = { echo: 0.6, wash: 0.4 };
 const D10_EXITS = ['echo', 'wash', 'throw'] as const;
 const D6_KINDS = ['drums', 'comedy', 'kicks'] as const;
 const D7_KINDS = ['plain', 'gate'] as const;
@@ -470,7 +488,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
         );
       } else events.push(ramp('A.gain', gapStart - 0.01, gapStart, A.level, SILENT, 'lin'));
       events.push(
-        synth('riser', { t0: gapStart - barA, t1: gapStart, fromHz: 900, toHz: 9000, fromDb: -36, toDb: -10, tone: false }),
+        synth('riser', { t0: gapStart - barA, t1: gapStart, fromHz: 900, toHz: 9000, fromDb: -36, toDb: -10, tone: riserTone(x) }),
         ...swellLayer(landing, gapStart - Math.min(barA, 2 * gB.beat), gapStart, -10),
         ...landB(x),
       );
@@ -537,7 +555,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
         );
       }
       events.push(
-        synth('riser', { t0: gapStart - barA, t1: gapStart, fromHz: 800, toHz: 8000, fromDb: -36, toDb: -11, tone: false }),
+        synth('riser', { t0: gapStart - barA, t1: gapStart, fromHz: 800, toHz: 8000, fromDb: -36, toDb: -11, tone: riserTone(x) }),
         ...swellLayer(landing, gapStart - Math.min(barA, 2 * gB.beat), gapStart, -11),
         ...landB(x),
       );
@@ -590,7 +608,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     build(x) {
       const { A, gapStart, rng, landing } = riding(x);
       const cfg = MOVES.variants.R5;
-      const kind = forced(x, R5_KINDS) ?? (rng() < 0.5 ? 'spinback' : 'brake');
+      const kind = forced(x, R5_KINDS) ?? freshExit(x, R5_WEIGHTS) ?? 'spinback';
       let exit: ExitResult;
       if (kind === 'brake') exit = EXITS.brake.build({ A, end: gapStart, dur: pick(cfg.brakeSec, rng) });
       else {
@@ -655,7 +673,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     build(x): RecipeResult {
       const { e, T, gapStart, pickupAt, gB, phase, rng, landing, riff } = x;
       const out = s2Exit(x);
-      const pattern = chooseBridge(phase, (gapStart - e) / gB.bar, rng, x.force?.bridge ?? null);
+      const pattern = chooseBridge(phase, (gapStart - e) / gB.bar, rng, x.force?.bridge ?? null, x.memory?.bridges ?? []);
       const bed = riff ? riffBed({ riff, e, T, gapStart, pickupAt, gB, phase: phase.name, signatureDb: phase.signatureDb, rng, variant: forced(x, RIFF_VARIANTS) }) : null;
       const rollScale = bed ? MOVES.riff.rollScale : 1;
       const events = [...out.events, ...bridgeLayers({ pattern, t0: e, gapStart, pickupAt, gB, phase, rng, landing, rollScale }), ...(bed?.events ?? []), ...landB(x)];
@@ -673,6 +691,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     implemented: true,
     family: 'powerdown',
     theatrical: true,
+    cooldown: MOVES.powerDown.cooldown,
     ghostHost: true,
     exits: ['brake'],
     aLeadSec: () => 1.6,
@@ -721,11 +740,11 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       if (parts.bass) events.push(ramp('A.hpf', bassAt, bassAt + beatA, 20, 260, 'exp'));
       else events.push(ramp('A.hpf', Math.max(blend.at, T - barA), gapStart, 20, 180, 'exp'));
       // A leaves over its last beats.
-      const kind = rng() < 0.6 ? 'echo' : 'wash';
+      const kind = freshExit(x, R8_EXITS) ?? 'echo';
       const out = EXITS[kind].build({ A, i, end: gapStart, rng, tailBeats: 1 });
       events.push(...out.events);
       const loud = riserLoud(phase, { early: -12, mid: -10, late: -8, final: -6 });
-      events.push(synth('riser', { t0: Math.max(blend.at, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: false }));
+      events.push(synth('riser', { t0: Math.max(blend.at, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: riserTone(x) }));
       events.push(...swellLayer(landing, gapStart - Math.min(barA, 2 * beatA), gapStart, loud - 1));
       // B's own mix takes over from the stretched layer on the pickup, then the impact.
       events.push(set('B.gain', bStart, SILENT));
@@ -750,12 +769,12 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     build(x) {
       const { A, i, T, gapStart, pickupAt, phase, rng, minStart, landing } = riding(x);
       const { barA, beatA, end } = aGrid(A, i, T, gapStart);
-      const bars = fitBars(MOVES.gate.bars[phase.name], end, barA, minStart);
+      const bars = fitBars(drawBars(x, MOVES.gate.bars[phase.name]), end, barA, minStart);
       const gate = gateMove({ A, i, end, bars, phase: phase.name, rng, mode: forced(x, GATE_MODES) });
       const loud = MOVES.gate.riserDb[phase.name];
       const events: PlanEvent[] = [
         ...gate.events,
-        synth('riser', { t0: gate.start, t1: end, fromHz: 800, toHz: 9000, fromDb: -36, toDb: loud, tone: false }),
+        synth('riser', { t0: gate.start, t1: end, fromHz: 800, toHz: 9000, fromDb: -36, toDb: loud, tone: riserTone(x) }),
         ...swellLayer(landing, Math.max(gate.start, end - 2 * beatA), end, loud - 2),
       ];
       if (phase.name === 'final') events.push(ramp('bus.hpf', end - barA, end, 10, MOVES.gate.finalBusHpfHz, 'exp'), set('bus.hpf', pickupAt - 0.002, 10));
@@ -798,7 +817,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     build(x) {
       const { A, i, T, gapStart, pickupAt, phase, rng, minStart, landing } = riding(x);
       const { barA, beatA, end } = aGrid(A, i, T, gapStart);
-      const bars = fitBars(MOVES.spiral.bars[phase.name], end, barA, minStart);
+      const bars = fitBars(drawBars(x, MOVES.spiral.bars[phase.name]), end, barA, minStart);
       const spiral = spiralMove({ A, i, end, bars, phase: phase.name, rng, restoreAt: pickupAt + 0.3 });
       const events = [...spiral.events, ...swellLayer(landing, end - 2 * beatA, end, -11), ...landB(x)];
       return { events, aStopAt: end + 0.05, variant: { kind: 'up', bars } };
@@ -820,12 +839,12 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       const { A, i, T, gapStart, pickupAt, gB, phase, rng, minStart, aLanes, landing } = riding(x);
       if (!aLanes) throw new Error('D8 needs A\'s stem lanes');
       const { barA, beatA, end } = aGrid(A, i, T, gapStart);
-      const bars = fitBars(pick(MOVES.peel.bars[phase.name], rng), end, barA, Math.max(minStart, aLanes.from));
+      const bars = fitBars(drawBars(x, MOVES.peel.bars[phase.name]), end, barA, Math.max(minStart, aLanes.from));
       const peel = peelMove({ A, i, end, bars, T, pickupAt, beatB: gB.beat, phase: phase.name, rng, order: forced(x, PEEL_ORDERS) });
       const loud = riserLoud(phase, { early: -12, mid: -10, late: -8, final: -6 });
       const events = [
         ...peel.events,
-        synth('riser', { t0: peel.start, t1: end, fromHz: 700, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: false }),
+        synth('riser', { t0: peel.start, t1: end, fromHz: 700, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: riserTone(x) }),
         ...swellLayer(landing, end - 2 * beatA, end, loud - 2),
         ...landB(x),
       ];
@@ -855,7 +874,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       // The swap's downbeat: n of A's bars before T, inside the layer and the lanes, after the duck.
       const floor = Math.max(blend.at, aLanes.from, minStart);
       const downs = A.tl.downbeatsBetween(floor - 1e-6, T - barA + 1e-6).filter((d) => d.index < i);
-      const want = pick(cfg.bars[phase.name], rng);
+      const want = drawBars(x, cfg.bars[phase.name]);
       const swapAt = downs.find((d) => d.index === i - want) ?? downs[0];
       if (!swapAt) throw new Error('D10: no downbeat to swap on (the planner checks the lanes and the layer)');
       const L = swapAt.ctxTime;
@@ -891,7 +910,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       if (!bassDown) events.push(ramp('A.hpf', L, L + 0.05, 20, cfg.aHpfHz, 'exp'));
       // A leaves over its last beats.
       const canThrow = lanesHave(aLanes, ['vocals']);
-      let kind = forced(x, D10_EXITS) ?? weightedPick(canThrow ? cfg.exits : { ...cfg.exits, throw: 0 }, rng) ?? 'echo';
+      let kind = forced(x, D10_EXITS) ?? freshExit(x, canThrow ? cfg.exits : { ...cfg.exits, throw: 0 }) ?? 'echo';
       if (kind === 'throw' && !canThrow) kind = 'echo';
       let aStopAt = aStop;
       if (kind === 'throw') {
@@ -907,7 +926,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
         aStopAt = exit.aStopAt;
       }
       const loud = riserLoud(phase, { early: -12, mid: -10, late: -8, final: -6 });
-      events.push(synth('riser', { t0: Math.max(L, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: false }));
+      events.push(synth('riser', { t0: Math.max(L, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: riserTone(x) }));
       events.push(...swellLayer(landing, gapStart - Math.min(barA, 2 * beatA), gapStart, loud - 1));
       events.push(set('B.gain', bStart, SILENT));
       events.push(ramp('B.gain', pickupAt - LAYERING.handoverSec, pickupAt, SILENT, 1, 'lin'));
@@ -1020,7 +1039,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
     build(x) {
       const { A, i, T, gapStart, phase, rng, minStart, landing } = riding(x);
       const { barA, beatA, end } = aGrid(A, i, T, gapStart);
-      const bars = fitBars(pick(MOVES.rush.bars[phase.name], rng), end, barA, minStart);
+      const bars = fitBars(drawBars(x, MOVES.rush.bars[phase.name]), end, barA, minStart);
       const variant = forced(x, D7_KINDS);
       const rush = rushMove({ A, i, end, bars, phase: phase.name, rng, gate: variant ? variant === 'gate' : null });
       const events = [...rush.events, ...swellLayer(landing, Math.max(rush.start, end - 2 * beatA), end, MOVES.rush.riserDb[phase.name] - 2), ...landB(x)];
@@ -1048,7 +1067,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       const loud = MOVES.braker.riserDb[phase.name];
       const events = [
         ...brake.events,
-        synth('riser', { t0: brake.start, t1: end, fromHz: 700, toHz: 8000, fromDb: loud - 22, toDb: loud, tone: false }),
+        synth('riser', { t0: brake.start, t1: end, fromHz: 700, toHz: 8000, fromDb: loud - 22, toDb: loud, tone: riserTone(x) }),
         ...swellLayer(landing, end - 2 * beatA, end, loud - 2),
         ...landB(x),
       ];
@@ -1074,15 +1093,21 @@ export const RECIPES: Record<RecipeId, Recipe> = {
       const cfg = MOVES.acapella;
       const barA = A.tl.barAt(i);
       const beatA = A.tl.beatAt(i);
-      // The swap's downbeat: n of A's bars before T, inside the layer and the lanes, after the duck.
+      // The swap's downbeat: n of A's bars before T, inside the layer and the lanes, after the duck, and before A's
+      // exit fades over its last beat before the gap (a long pickup and gap in a short bar reach back that far).
       const floor = Math.max(blend.at, aLanes.from, minStart);
-      const downs = A.tl.downbeatsBetween(floor - 1e-6, T - barA + 1e-6).filter((d) => d.index < i);
-      const want = pick(cfg.bars[phase.name], rng);
+      const fadeAt = gapStart - beatA;
+      const all = A.tl.downbeatsBetween(floor - 1e-6, T - barA + 1e-6).filter((d) => d.index < i);
+      const roomy = all.filter((d) => d.ctxTime + 0.05 <= fadeAt + 1e-9);
+      const downs = roomy.length ? roomy : all;
+      const want = drawBars(x, cfg.bars[phase.name]);
       const swapAt = downs.find((d) => d.index === i - want) ?? downs[downs.length - 1];
       if (!swapAt) throw new Error('D16: no downbeat to swap on (the planner checks the lanes and the layer)');
       const L = swapAt.ctxTime;
       const aStop = gapStart + 0.05;
-      const lowered = A.level * dbToGain(cfg.aDownDb);
+      // A makes room (a little down) only before its exit's fade; once it fades, the fade is all the room B needs.
+      const makesRoom = L + 0.05 <= fadeAt + 1e-9;
+      const lowered = makesRoom ? A.level * dbToGain(cfg.aDownDb) : A.level;
       const events: PlanEvent[] = [
         // A's singer out, B's in (a quarter beat), A making room.
         { kind: 'stemLane', deck: 'A', part: 'vocals', at: L, until: aStop, direct: [[L, 0], [L + 0.01, -1]] },
@@ -1090,14 +1115,14 @@ export const RECIPES: Record<RecipeId, Recipe> = {
           kind: 'blend', deck: 'B', at: L, until: pickupAt, fileAt: blend.fileAt + (L - blend.at),
           parts: { vocals: { from: SILENT, to: cfg.vocals, t0: L, t1: L + beatA / 4 } }, hpfHz: cfg.hpfHz,
         },
-        ramp('A.gain', L, L + 0.05, A.level, lowered, 'lin'),
+        ...(makesRoom ? [ramp('A.gain', L, L + 0.05, A.level, lowered, 'lin')] : []),
         ramp('A.hpf', L, L + 0.05, 20, cfg.aHpfHz, 'exp'),
       ];
-      const kind = forced(x, D16_EXITS) ?? weightedPick(cfg.exits, rng) ?? 'echo';
+      const kind = forced(x, D16_EXITS) ?? freshExit(x, cfg.exits) ?? 'echo';
       const exit = EXITS[kind].build({ A: { ...A, level: lowered }, i, end: gapStart, rng, tailBeats: 1 });
       events.push(...exit.events);
       const loud = riserLoud(phase, { early: -12, mid: -10, late: -8, final: -6 });
-      events.push(synth('riser', { t0: Math.max(L, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: false }));
+      events.push(synth('riser', { t0: Math.max(L, T - 2 * barA), t1: gapStart, fromHz: 800, toHz: 9000, fromDb: loud - 24, toDb: loud, tone: riserTone(x) }));
       events.push(...swellLayer(landing, gapStart - Math.min(barA, 2 * beatA), gapStart, loud - 1));
       // B's own mix takes over from its stretched voice on the pickup, then the impact.
       events.push(set('B.gain', bStart, SILENT));

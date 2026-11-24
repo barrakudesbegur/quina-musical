@@ -16,7 +16,7 @@ export interface PhaseEffects {
   readonly name: PhaseName;
   /** Recipe id → weight. Keyed by string: a weight may name a recipe that does not exist (yet). */
   readonly weights: Readonly<Record<string, number>>;
-  /** S2 bridge lengths, in B's bars. */
+  /** S2 bridge lengths, in B's bars: the search takes the one nearest the Pace, preferring one the last builds did not have. */
   readonly bridgeBars: readonly number[];
   /** Chance of a Tease of B before an S2 landing. */
   readonly tease: number;
@@ -26,7 +26,7 @@ export interface PhaseEffects {
   readonly signature: number;
   /** A Signature's level against its normalized loudness, in dB. */
   readonly signatureDb: number;
-  /** Silence before the pickup, in B's beats (one is drawn). */
+  /** Silence before the pickup, in B's beats: one is drawn (a value listed twice weighs double), away from the last gaps. */
   readonly gapBeats: readonly number[];
   /** How far the snare roll's pitch climbs. */
   readonly snarePitch: number;
@@ -75,12 +75,12 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
       R8: 0.8, D16: 1, D10: 0.6, R7: 0.45, D8: 0.25, D1: 0.2, D3: 0.2, D2: 0.15, D11: 0.15, D19: 0.12, D15: 0.12, D7: 0.12, R4: 0.12,
       R5: 0.1, R2: 0.1, R6: 0.04, R1: 0.04,
     },
-    bridgeBars: [2],
+    bridgeBars: [2, 3],
     tease: 0.5,
     stemTease: 0.8,
     signature: 0.55,
     signatureDb: -4,
-    gapBeats: [0.5],
+    gapBeats: [0.5, 0.5, 1],
     snarePitch: 5,
     duckDb: -3,
     impactSamples: [['boom', -8]],
@@ -93,12 +93,12 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
       R7: 0.6, D16: 0.9, D10: 0.4, R8: 0.4, D8: 0.3, D11: 0.25, D6: 0.2, D2: 0.2, D19: 0.18, D15: 0.15, D7: 0.15, D3: 0.15, R4: 0.15,
       R5: 0.15, D1: 0.12,
     },
-    bridgeBars: [2, 4],
+    bridgeBars: [2, 3, 4],
     tease: 1,
     stemTease: 1,
     signature: 0.7,
     signatureDb: -3,
-    gapBeats: [1],
+    gapBeats: [1, 1, 0.5, 2],
     snarePitch: 7,
     duckDb: -4,
     impactSamples: [['orchestra-hit', -6], ['boom', -8]],
@@ -115,7 +115,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     stemTease: 1,
     signature: 0.85,
     signatureDb: -2,
-    gapBeats: [2],
+    gapBeats: [2, 2, 1],
     snarePitch: 12,
     duckDb: -4,
     impactSamples: [['orchestra-hit', -3], ['boom', -5]],
@@ -289,7 +289,8 @@ type ByPhase<T> = Readonly<Record<PhaseName, T>>;
 export const MOVES = Object.freeze({
   /** D1 Trans gate and pump: A chopped on its own grid over its last bars. */
   gate: Object.freeze({
-    bars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    /** Its length in A's bars (one is drawn, away from the last builds' lengths); two bars play the long ladder. */
+    bars: { early: [1, 1, 2], mid: [1, 2], late: [2, 2, 1], final: [2] } as ByPhase<readonly number[]>,
     /** The gate's closed level (a partial gate keeps the groove early); null closes it to silence. */
     closedDb: { early: -15, mid: -24, late: null, final: null } as ByPhase<number | null>,
     modes: { gate: 0.5, pump: 0.3, gatePump: 0.2 },
@@ -312,7 +313,8 @@ export const MOVES = Object.freeze({
   }),
   /** D3 Spiral echo-out: A's last beat caught in an echo whose delay shrinks, so the repeats climb. */
   spiral: Object.freeze({
-    bars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    /** Its length in A's bars (one is drawn, away from the last builds' lengths). */
+    bars: { early: [1, 1, 2], mid: [1, 2], late: [2, 2, 1], final: [2] } as ByPhase<readonly number[]>,
     delayBeats: [0.5, 0.75, 1] as const,
     endBeats: [1 / 16, 1 / 12] as const,
     feedbackFrom: 0.55,
@@ -324,6 +326,11 @@ export const MOVES = Object.freeze({
     downChance: 0.25,
     downBeats: [0.25, 1] as const,
   }),
+  /** R10 Power-down: at most once in a final stretch (final covers the last 1–3 songs of a climb). */
+  powerDown: Object.freeze({ cooldown: 3 }),
+  /** The riser under an S1 or S3 move that does not pick its own: a tone riser (noise and a climbing saw) this often,
+   * else the noise alone; the risers of the last transitions are turned down (VARIETY.riser). */
+  riser: Object.freeze({ tone: 0.35 }),
   /** D2 Stop-time hits: A only on chosen beats, silence between, the crowd fills the gap. */
   hits: Object.freeze({
     holdBeats: [0.2, 0.3] as const,
@@ -341,7 +348,7 @@ export const MOVES = Object.freeze({
   }),
   /** D8 Stem peel: A taken apart stem by stem, its voice thrown into the echo. */
   peel: Object.freeze({
-    bars: { early: [1], mid: [2], late: [2], final: [2, 3, 4] } as ByPhase<readonly number[]>,
+    bars: { early: [1, 1, 2], mid: [2, 2, 1], late: [2], final: [2, 3, 4] } as ByPhase<readonly number[]>,
     orders: { acapella: 0.5, beat: 0.25, drumsVoice: 0.25 },
     /** Chance a removal slides over a beat instead of cutting on the one. */
     slide: 0.5,
@@ -355,7 +362,7 @@ export const MOVES = Object.freeze({
   }),
   /** D10 Drum swap: A's drums out, B's stretched drums in, under A's voice. */
   swap: Object.freeze({
-    bars: { early: [1], mid: [2], late: [2, 3, 4], final: [2, 3, 4] } as ByPhase<readonly number[]>,
+    bars: { early: [1, 1, 2], mid: [2, 2, 1], late: [2, 3, 4], final: [2, 3, 4] } as ByPhase<readonly number[]>,
     juggle: 0.3,
     drums: 0.9,
     bass: 0.85,
@@ -575,11 +582,49 @@ export const PLANNER = Object.freeze({
   afterDuckSec: 0.45,
   phraseCost: Object.freeze({ phrase8: 0, phrase4: 1.0, bar: 2.5 }),
   driftCostPerSec: 1.0,
-  repeatPenalty: 0.2,
   /** Hook-based LUFS trim is clamped to this range (dB). */
   trimLimitsDb: [-12, 6] as const,
   /** songs.json `volume` was the old player's manual loudness fix; it double-compensates LUFS. */
   useLegacyVolume: false,
+});
+
+/**
+ * Rotation memory (plan/variety.ts): a listener hears the whole night, so every choice a transition draws remembers
+ * what the last transitions of the round did. An option used k transitions ago weighs `[k − 1]` times as much, once
+ * for every time it was used; nothing is forbidden here (the hard rules stay in chooseRecipe). Measured by
+ * tests/variety.test.ts over whole simulated nights.
+ */
+export const VARIETY = Object.freeze({
+  /** How many transitions back the planner remembers (the round's; a new round starts afresh). */
+  memory: 4,
+  /** The recipe itself, and its family (the spiral counts as an echo). */
+  recipe: [0.2, 0.5, 0.8] as const,
+  family: [0.55, 0.8, 0.9] as const,
+  /** How A leaves (an S2 exit, or what an S1 or S3 move does to A: an echo, a wash, a brake…). */
+  move: [0.15, 0.45, 0.75] as const,
+  /** The landing layer and the impact's samples. */
+  landing: [0.35, 0.65, 0.85] as const,
+  /** The riser's flavour (noise, or noise with a climbing saw) under an S1 or S3 move. */
+  riser: [0.4, 0.75] as const,
+  impact: [0.25, 0.6] as const,
+  /** R7's bridge pattern, against the last S2 builds (D11, D19, D6 and R10 build on the classic roll). */
+  bridge: [0.3, 0.6, 0.85] as const,
+  /** The gap before the pickup. */
+  gap: [0.35, 0.7] as const,
+  /** A's move length in its bars (D1, D3, D7, D8, D10, D16), against the last moves'. */
+  bars: [0.4, 0.75] as const,
+  /** S2: a bridge as long as the last S2 builds costs this much more (seconds of distance from the Pace's target). */
+  bridgeBarsCost: [0.9, 0.4] as const,
+  /** S2: each bridge length also gets a random cost up to this, drawn per transition, so tempo alone does not decide. */
+  bridgeBarsJitter: 0.5,
+  /** Builds from silence (the round's first Spin, after Hold music or a Celebration), per Phase: R7 unless B sings
+   * at its hook (D11's chops and D19's scratch need its voice); final keeps the power-down. */
+  openers: {
+    early: { R7: 1, D11: 0.35, D19: 0.25 },
+    mid: { R7: 1, D11: 0.5, D19: 0.4 },
+    late: { R7: 1, D11: 0.6, D19: 0.5 },
+    final: { R10: 1, R7: 0.4, D11: 0.4, D19: 0.4 },
+  } as ByPhase<Readonly<Record<string, number>>>,
 });
 
 /** The show flow (docs/protocol.md › Scenes): the Shuffle, the Check, the Celebration and the Interval. */

@@ -164,11 +164,34 @@ def candidates_for(paths: Paths, song_id: int) -> tuple[list[dict], list[str]]:
     return entries, warnings
 
 
+# The automatic pick (the user's decision, Q27 a): per song, the best-scoring candidate at or above this plays,
+# unless someone vetoed it on the audition page; a veto promotes the next best. A manual approve is an
+# explicit pick and replaces the automatic one; `signaturesOff` in the song's override turns them all off.
+AUTO_MIN_SCORE = 0.6
+
+
 def apply_decisions(doc: dict, override: dict | None) -> dict:
-    decisions = (override or {}).get("signatures") or {}
+    """Set `approved` (plays or not) and `pick` ('manual', 'auto' or None) from the audition decisions."""
+    o = override or {}
+    decisions = o.get("signatures") or {}
+    doc["off"] = bool(o.get("signaturesOff"))
     for s in doc["signatures"]:
         decision = decisions.get(s["id"])
-        s["approved"] = decision if isinstance(decision, bool) else None
+        s["vetoed"] = decision is False
+        s["approved"] = False
+        s["pick"] = None
+    if doc["off"]:
+        return doc
+    manual = [s for s in doc["signatures"] if decisions.get(s["id"]) is True]
+    for s in manual:
+        s["approved"] = True
+        s["pick"] = "manual"
+    if not manual:
+        eligible = [s for s in doc["signatures"] if not s["vetoed"] and s["score"] >= AUTO_MIN_SCORE]
+        if eligible:
+            best = max(eligible, key=lambda s: (s["score"], -s["startSec"]))
+            best["approved"] = True
+            best["pick"] = "auto"
     return doc
 
 

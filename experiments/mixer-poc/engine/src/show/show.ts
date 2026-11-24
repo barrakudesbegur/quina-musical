@@ -59,7 +59,7 @@ import { tieFreeShuffle } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
-import { planTransition } from '../plan/planner.ts';
+import { planTransition, summarize } from '../plan/planner.ts';
 import { openSuspense, releaseSuspense, suspenseBar, type SuspenseOpen } from '../plan/suspense.ts';
 import { withDecoy } from '../plan/decoys.ts';
 import { pickHook } from '../plan/hooks.ts';
@@ -69,7 +69,7 @@ import { mixSeed, seededRandom } from '../rng.ts';
 import type { Analysis, Hook } from '../analysis.ts';
 import type { Card } from '../game/cards.ts';
 import type { PhaseStep } from '../game/phase.ts';
-import type { BlendSource, Plan, SignatureSource } from '../plan/planner.ts';
+import type { BlendSource, Plan, PlanMemory, SignatureSource } from '../plan/planner.ts';
 import type { PlanEvent, StemName } from '../plan/recipes.ts';
 
 /** Which Hold music fits: 'error' after Back and a failed Check, 'hold' otherwise. */
@@ -463,7 +463,8 @@ export class Show {
   hold: HoldState | null = null;
   holdMusic = false;
   timers: Timers = { autoAt: null, holdMusicAt: null };
-  history: HistoryEntry[] = [];
+  /** This round's landings as the planner remembers them (its rotation memory); the state shows their HistoryEntry part. */
+  history: (HistoryEntry & PlanMemory)[] = [];
   landings: Landing[] = [];
   nudge = 1;
   seq = 0;
@@ -1328,7 +1329,7 @@ export class Show {
     this.transition = null;
     this.status = 'playing';
     this.game.songsUntilWinner = Math.max(0, this.game.songsUntilWinner - 1);
-    this.history.push({ recipe: plan.recipe, family: plan.family, exit: plan.exit, songId: t.songId, hookId: plan.hook.id, phase: plan.phase });
+    this.history.push({ ...summarize(plan), songId: t.songId, phase: plan.phase });
     const atMs = this.env.toEpochMs(t.T);
     this.landings.push({ songId: t.songId, position: t.targetPos, T: t.T, atMs, undone: false });
     this.journal({ kind: 'song.landed', round: this.round.number, position: t.targetPos, songId: t.songId }, atMs);
@@ -2170,7 +2171,7 @@ export class Show {
         ? { id: this.suspense.id, sinceMs: this.env.toEpochMs(this.suspense.open.spinStart), autoReleaseAtMs: this.env.toEpochMs(this.suspense.autoReleaseAt) }
         : null,
       landings: this.landings.slice(-10).map((l) => ({ ...this.songRef(l.songId), position: l.position, atMs: l.atMs, undone: l.undone })),
-      history: this.history.slice(-8),
+      history: this.history.slice(-8).map(({ recipe, family, exit, songId, hookId, phase }) => ({ recipe, family, exit, songId, hookId, phase })),
       scene: this.scene,
       pause: this.pause ? { ...this.pause } : null,
       shuffle: this.shuffle ? { round: this.shuffle.round, startAtMs: this.env.toEpochMs(this.shuffle.startAt), endAtMs: this.env.toEpochMs(this.shuffle.endAt) } : null,
