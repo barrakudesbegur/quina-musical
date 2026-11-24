@@ -95,3 +95,21 @@ ADR 0003 says that a laptop restarted while offline is resumed by hand from Admi
 ## The spelling "cartró" (quina-musical-1e, 2026-11-24)
 The printed cards say CARTRÓ, the brief says "Afegir cartró", and the standard Catalan is "cartró" (plural "cartrons"). The glossary's Card entry says "Cartó".
 **Default taken:** every screen now says "cartró". The glossary's spelling is the orchestrator's to fix.
+
+## Screen behaviours chosen overnight (quina-musical-1e, 2026-11-24)
+The brief didn't settle these. Each is a single setting or a small change.
+- **Player app:**
+  - **The Quina banner** stays until the round ends, not just until the next song. If it vanished one song after the player's own card completed, that would tell them they won.
+  - **The offline notice** isn't shown before or after the Game, when the laptop being off is normal. A small "reconnecting" pill still shows.
+  - **A Check on phones** reads "pending" until a presenter decides. Phones never show the engine's finding early.
+  - **The Celebration** shows on every phone, even without a winning card. It can be closed for the night.
+- **Projector:**
+  - **During a Check,** each song gets a ring while its snippet plays, and its ✓ or ✗ stamps on when the snippet ends (`STAGE.checkMarkAt`).
+  - **The engine's finding** shows at the Check's end, before the presenter confirms.
+  - **The last-3 row** includes the current song.
+- **Console:**
+  - **The Celebration music choice** is only active in the Celebration, because the engine accepts it only there.
+  - **A manual "Line confirmed"** without a Check sits in the menu, behind a long press.
+  - **The light theme** is the default.
+
+**Default taken:** as listed. These are tunables in `player/config.ts`, `stage/config.ts` and `console/config.ts`.
