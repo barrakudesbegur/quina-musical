@@ -60,24 +60,22 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 
 ## In progress
 
-### 1. Card type per round (step B of Sound engine's proposal, agreed 2026-11-25)
+### 1. Card type per round: step B done (2026-11-25)
 
-Sound engine lands step A first (additive protocol fields). When they name the commit, do step B:
-- **apps/cards:** `card-types.json` (next to `cards.json`) is the formal source of the types. Any id matching `/^[a-z][a-z0-9]{0,23}$/` is allowed, not only `normal` and `especial`. Check that every card's `type` exists in it.
-- **packages/ui:**
-  - `data/card-types.ts`: `readPrintedCardTypes` takes any valid id. Drop `withPrintedCardTypes`, since `plan.cardTypes` goes away.
-  - `data/catalog.ts`: load `card-types.json` next to `cards.json`. If it's missing, fall back to "Cartró <id>" in a neutral colour.
-- **packages/rules:** `cardsForRound(cards, cardType)` instead of a round kind.
-- **Admin:** a card type picker per round, from `card-types.json`. It defaults to `defaultCardType(kind)`: normal → `normal`, special → `especial`, Desgraciat → `normal`. Drop the engine `ROUND_TYPES` import in `logic/cards-preview.ts`.
-- **Console:** `roundIntroArgs` (`logic/show-data.ts`) sends the plan round's `cardType`, and so does `newRound` whenever it names a round.
-- **Stage:**
-  - The night preview (`model/night.ts`) works from the rounds' `cardType` plus `card-types.json`, not `CardType.rounds`.
-  - The Check badge (`model/check.ts` `cardTypeBadge`) looks the type up in `card-types.json`.
-  - Update the ANIMATIONS.md `check-type` entry: "the type that plays this round", not normal-vs-especial.
-- **Player:** `planOf` and the card validity (`logic/view.ts`) use `PublicRound.cardType`. Older snapshots fall back to `defaultCardType(kind)`.
-- **Then** tell Sound engine that B is in, so they can do step C (PLAN_VERSION 3, `cardTypes` removed).
+`b443da5` (473 UI tests, up from 447). Each round names its printed card type, and the screens read names, colours and prices from `card-types.json`:
+- packages/ui:
+  - `data/card-types.ts`: `cardTypeLabel`, `knownCardTypes`, `roundsByCardType`;
+  - `data/catalog.ts` loads `card-types.json` next to `cards.json`;
+  - `plan.ts`: `roundIntroFields`, `prizeBundleOf`.
+- Admin: a type picker per round, with the kind-change rule and the unknown-type warning.
+- Console and Admin's start: `roundIntro` carries `cardType`.
+- Stage: the night preview and the Check badge.
+- Player: validity uses `PublicRound.cardType`, and a round that plays a non-default type shows a one-line rule.
+- apps/cards: checks the type ids and every card's type before writing.
 
-The stage's "Cartró normal ✓" first step is already built (`cc58d92`, `check-type` in ANIMATIONS.md). Only its lookup changes.
+The only reader of the deprecated `plan.cardTypes` left is `knownCardTypes`' fallback (plus `DEFAULT_CARD_TYPES` in Admin's `blankPlan` and `SAMPLE_PLAN`), which Sound engine's step C deletes.
+
+**Raised with Sound engine:** `parseCardRanges` still lives in the engine. Admin's `cards-preview.ts` and the console's `possible-winners.ts` import it from there; it should move to `@quina/protocol`.
 
 ### 2. The Desgraciat round (approved; the rules are in the decisions doc › Changes and in the GLOSSARY)
 
@@ -101,7 +99,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
   - The Check goes over the 12 songs in card order. Each ✓ step is a ~0.6 s tick. It stops at the first landed song, which plays its snippet (~2.5 s) and gives `'fallen'`.
   - Auto-advance stops once one card stands.
   - Phones get nothing new on the feed.
-- **Landing order:** Sound engine commits its step A to local main and tells me the commit. I add the new keys on top so everything compiles: the `Record<WinKind | CheckOutcome>` maps in `apps/console/strings.ts`, `shout`/`prize` in `packages/ui/i18n/ca.ts`, the stage's `{line, bingo}` maps in `render/celebration.ts` and `render/parts.ts`, the console's `future.ts`, and the `RoundKind` widenings. Then they push both together. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
+- **Landing:** Sound engine's step A (`7016cea`) and my compile keys (`23a459c`) are in. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
 - **Screens to build:**
   - console: the Dempeus tab;
   - stage: the round's name, the "no ha sonat ✓" steps, `check-fallen`, "DEMPEUS!";
@@ -112,11 +110,16 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. Card type per round, step B (above). Due Fri 27 Nov.
-2. The Desgraciat: the compile keys on Sound engine's step A, then the screens after their step C. Due Fri 4 Dec.
+1. The Desgraciat screens, after Sound engine's step C (the compile keys are in: `23a459c`). Due Fri 4 Dec. Known gaps the keys commit left:
+   - the console's default action after a 'standing' Celebration doesn't go to the Interval;
+   - the player's `celebrationOf` ignores 'standing';
+   - Admin's kind select has no 'desgraciat' option;
+   - `roundsByCardType` counts a Desgraciat round as a regular one;
+   - `roundIntroFields` leaves out a 'desgraciat' kind until the commands accept it (step C).
+2. The audit fixes (item 4 below).
 3. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
    Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
-4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`66aeb34`); the code isn't:
+4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`23b9fd5`); the code isn't:
    - **Phones never show winning card numbers.** Remove `WinnerNumbers` from `Celebration.svelte`, `PrizeLines.svelte` and `NowTab.svelte`. Someone else's win shows "Línia!"/"Quina!" and the prize; the player's own confirmed card shows "La teva línia!" (ANIMATIONS.md `celebrate`, boards "App · celebració").
    - **Offline keeps the normal screen:** a slate strip at the top and the screen greyed, with everything still usable, instead of `SceneOverlay`'s full-screen notice (board "App · sense connexió"). **Pausa** shows the meditating nino in the drum's place, with Historial and the cards untouched (board "App · pausa tècnica").
    - **The decided 3 tabs:** Ara (the drum plus a Historial | Cartrons switch, remembered per device; Cartrons by default for players following cards), Premis and Horari, plus the menu sheet. The code still has 5 tabs and says "Programa": rename it "Horari". Build the home so tabs and drawers are only a container swap, because the drawers layout may replace the tabs.
