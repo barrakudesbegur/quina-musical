@@ -47,7 +47,7 @@ function landings(now: number): LandingInfo[] {
 /** A complete `state` snapshot in play, with the show flow's fields set to their in-play values. */
 export function baseState(now: number): FullState {
   const position = FIXTURE_LANDED.length - 1;
-  const state: ShowState = {
+  const state: Omit<ShowState, keyof FlowFields> = {
     v: PROTOCOL_VERSION,
     type: 'state',
     seq: 1,
@@ -88,6 +88,7 @@ export function baseState(now: number): FullState {
     scene: 'play',
     pause: null,
     shuffle: null,
+    intro: null,
     claims: [],
     check: null,
     celebration: null,
@@ -132,7 +133,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   roundStart: (now) => {
     const s = baseState(now);
     return {
-      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 } }),
+      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', sinceMs: now - 20000 } }),
     };
   },
   shuffle: (now) => {
