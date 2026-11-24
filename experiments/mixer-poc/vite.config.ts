@@ -1,4 +1,4 @@
-// One Vite app with several pages. In development the relay (relay/server.ts) runs Vite as middleware, so
+// One Vite app with several pages (new top-level apps with an index.html join the build by themselves). In development the relay (relay/server.ts) runs Vite as middleware, so
 // the pages, /ws, /api and the audio share one origin on port 5174; `npm run build` writes dist/ and
 // `npm start` serves that instead.
 import fs from 'node:fs';
@@ -8,21 +8,22 @@ import { defineConfig } from 'vite';
 
 const root = import.meta.dirname;
 
-/** Every page; console/ and stage/ (the UI session's apps) join automatically once they exist. */
-const PAGES: Record<string, string> = {
+/** The engine's pages, plus every `<dir>/index.html` at the top (admin/, console/, stage/, player/, manage/…). */
+const ENGINE_PAGES: Record<string, string> = {
   home: 'engine/index.html',
   show: 'engine/show.html',
   audition: 'engine/audition.html',
   test: 'engine/test.html',
-  admin: 'admin/index.html',
-  console: 'console/index.html',
-  stage: 'stage/index.html',
 };
+const NOT_PAGES = new Set(['engine', 'node_modules', 'dist', 'cache', 'reference', 'data', 'analysis', 'tests', 'docs', 'reports', 'research_notes', 'protocol', 'relay']);
+const appPages = Object.fromEntries(
+  fs.readdirSync(root, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('.') && !NOT_PAGES.has(d.name) && fs.existsSync(path.join(root, d.name, 'index.html')))
+    .map((d) => [d.name, `${d.name}/index.html`] as const),
+);
 
 const input = Object.fromEntries(
-  Object.entries(PAGES)
-    .map(([name, file]) => [name, path.join(root, file)] as const)
-    .filter(([, file]) => fs.existsSync(file)),
+  Object.entries({ ...ENGINE_PAGES, ...appPages }).map(([name, file]) => [name, path.join(root, file)] as const),
 );
 
 export default defineConfig({
