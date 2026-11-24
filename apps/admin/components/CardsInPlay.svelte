@@ -3,11 +3,26 @@
 <script lang="ts">
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
+  import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
   import { RANGES_MAX_LENGTH, previewCardRanges, sameCards, type CardTypes, type RangesError } from '../logic/cards-preview.ts';
   import { S } from '../strings.ts';
   import CommandStatus from './CommandStatus.svelte';
 
-  let { show, commands, cardTypes, catalogFailed }: { show: ShowStore; commands: CommandTracker; cardTypes: CardTypes | null; catalogFailed: boolean } = $props();
+  let {
+    show,
+    commands,
+    cardTypes,
+    catalogFailed,
+    types = [],
+  }: {
+    show: ShowStore;
+    commands: CommandTracker;
+    /** Card id → printed type (cards.json). */
+    cardTypes: CardTypes | null;
+    catalogFailed: boolean;
+    /** The types' names (knownCardTypes). */
+    types?: readonly PrintedCardType[];
+  } = $props();
 
   const engine = $derived(show.state?.cards ?? null);
   let text = $state('');
@@ -66,7 +81,7 @@
         <p class="cards-in-play__counts">
           <strong>{S.cards.count(preview.count)}</strong>
           {#if preview.types}
-            · {S.cards.normal(preview.types.normal)} · {S.cards.special(preview.types.special)}
+            {#each preview.types.byType as t (t.type)} · {S.cards.ofType(cardTypeLabel(t.type, types).name, t.count)}{/each}
           {/if}
         </p>
         {#if preview.types && preview.types.unknownCount}

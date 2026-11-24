@@ -1,7 +1,8 @@
 import { sumBy } from 'lodash';
 import { generateCardsJson } from './generate-cards-json';
 import { generateCardsPDF } from './generate-cards-pdf';
-import { CARD_TYPES } from './config';
+import { CARD_TYPES, type CardTypeId } from './config';
+import { assertCardTypes } from './card-types';
 import songs from './songs.json';
 import { saveJsonToFile } from './utils/files';
 
@@ -16,7 +17,7 @@ const cardAmounts = [
     type: 'especial',
     amount: 300, // Must be multiple of 3
   },
-] as const satisfies { type: string; amount: number }[];
+] as const satisfies { type: CardTypeId; amount: number }[];
 
 const cardsByType = cardAmounts.map((cardAmount, index) => {
   const startId = sumBy(cardAmounts.slice(0, index), 'amount') + 1;
@@ -33,6 +34,8 @@ const cardsByType = cardAmounts.map((cardAmount, index) => {
 });
 
 const allCards = cardsByType.flatMap((cardAmount) => cardAmount.cards);
+// Before writing anything: valid type ids, and no card of a type card-types.json doesn't list.
+assertCardTypes(allCards, CARD_TYPES);
 saveJsonToFile(allCards, './dist/cards.json');
 saveJsonToFile(CARD_TYPES, './dist/card-types.json');
 

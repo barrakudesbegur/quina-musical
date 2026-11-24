@@ -146,6 +146,25 @@ test('before: start time, the night\'s card types, sponsors and the player app l
   assert.deepEqual(none.body.cardTypes, [], 'no plan: no preview');
 });
 
+test("before: card-types.json's names, colours and prices win over the plan's old copy", () => {
+  const state = FIXTURES.before(NOW).state;
+  const printed = [
+    { type: 'normal', name: 'Cartró blau', color: '#aaccee', title: '', priceCents: 200 },
+    { type: 'especial', name: 'Cartró rosa', color: '#eeaacc', title: '', priceCents: 500 },
+  ];
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, { ...CATALOG, cardTypes: printed });
+  if (view.body.scene !== 'before') return assert.fail('not before');
+  assert.deepEqual(view.body.cardTypes.map((t) => [t.label, t.color, t.priceCents]), [['Cartró blau', '#aaccee', 200], ['Cartró rosa', '#eeaacc', 500]]);
+});
+
+test("check: the badge is named from card-types.json; ✓ or ✗ from the Check's outcome", () => {
+  const printed = [{ type: 'especial', name: 'Cartró rosa', color: '#eeaacc', title: '', priceCents: null }];
+  const state = FIXTURES.checkWrongType(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, { ...CATALOG, cardTypes: printed });
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Cartró rosa', color: '#eeaacc', special: true, ok: false });
+});
+
 test('roundStart: headline prizes with sponsors and how many more; the Shuffle grid by song id, its window from the engine', () => {
   const state = FIXTURES.shuffle(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);

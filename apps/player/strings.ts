@@ -46,6 +46,8 @@ export const S = {
   notPlaying: 'No juguen en aquesta quina',
   specialRule: 'A la quina especial només compten els cartrons especials.',
   normalRule: 'Els cartrons especials només juguen a la quina especial.',
+  /** A round that plays another printed type than its kind's usual one (card-types.json's name). */
+  typeRule: (name: string) => `En aquesta quina només compten els cartrons de tipus «${name}».`,
   unknownCard: 'No trobem aquest cartró.',
   loadingCards: 'Carregant els cartrons…',
   catalogError: 'No s’han pogut carregar els cartrons. Ho tornem a provar…',

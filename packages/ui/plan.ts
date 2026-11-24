@@ -2,7 +2,7 @@
 // keep one import path, and adds the screens' own small helpers for prize bundles.
 import { headlinePrizes, type Prize, type PrizeBundle } from '@quina/protocol';
 
-export { PLAN_VERSION, DEFAULT_CARD_TYPES, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan } from '@quina/protocol';
+export { PLAN_VERSION, DEFAULT_CARD_TYPES, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType } from '@quina/protocol';
 export type {
   GamePlan,
   Sponsor,

@@ -2,6 +2,7 @@
   // Cartrons: the player's cards that count in this round as grids; the others listed so they can be managed.
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
+  import { roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import CardPanel from './CardPanel.svelte';
@@ -17,7 +18,8 @@
     <AddCardPrompt onadd={() => app.open({ kind: 'pad' })} />
   {:else}
     {#if app.round && app.restingViews.length}
-      <p class="cards__rule">{app.round.kind === 'special' ? S.specialRule : S.normalRule}</p>
+      {@const rule = roundRule(app.round, app.cardTypes)}
+      <p class="cards__rule">{rule.kind === 'type' ? S.typeRule(rule.name) : rule.kind === 'special' ? S.specialRule : S.normalRule}</p>
     {/if}
     <ul class="cards__list">
       {#each app.playingViews as view, i (view.saved.id)}

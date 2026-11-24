@@ -62,9 +62,9 @@ test('counted songs: the Queue up to its position, complete only when every inde
   assert.equal(countedSongs(late, { round: ROUND, queue: queue(16) }).complete, false);
 });
 
-test('valid cards: in play and of the round kind', () => {
+test("valid cards: in play and of the round's card type", () => {
   assert.deepEqual(validCards(PRINTED, new Set([1, 3]), 'normal').map((c) => c.id), [1]);
-  assert.deepEqual(validCards(PRINTED, new Set([1, 2, 3]), 'special').map((c) => c.id), [3]);
+  assert.deepEqual(validCards(PRINTED, new Set([1, 2, 3]), 'especial').map((c) => c.id), [3]);
 });
 
 test('the marks chart: cards per number of marked songs, most marked first', () => {
@@ -92,7 +92,7 @@ test('the fewest songs any card misses: a lower bound on the first Line and Quin
 const input = (over: Partial<FutureInput>): FutureInput => ({
   printed: PRINTED,
   inPlay: cardsInPlay('1-2'),
-  roundKind: 'normal',
+  cardType: 'normal',
   counted: { ids: [1, 2, 3, 13], complete: true },
   possibleWinners: NO_WINNERS,
   lineConfirmed: false,

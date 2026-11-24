@@ -45,7 +45,8 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 
 - **Relay lost:** the scene stays. After 3 s a small dot turns red (`link-lost`).
 - **`cards.json` or covers missing:** titles still show, from the snapshot. A Check grid shows only the played songs.
-- **No plan:** the night's preview, the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`. The Check's type badge uses the default card types' colours.
+- **No plan:** the night's preview, the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`. The Check's type badge still names the type (below).
+- **`card-types.json` missing or broken:** card type names, colours and prices fall back to the plan's old copy (`plan.cardTypes`, deprecated) while plans carry one, then to "Cartró <id>" in a neutral colour.
 - **QR can't be drawn:** the short link shows in its place.
 - **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`): `nino-sentat` on the QR before the Game, `nino-meditant` and `nino-sardana` either side of the Interval's countdown, `nino-espatxarrat` beside a failed Check's ✗. A null sticker is left out.
 

@@ -21,8 +21,14 @@ test('a code typed with spaces and lower case reads back to the same point', () 
   assert.equal(draft.error, null);
   assert.equal(draft.text, token.text);
   assert.deepEqual(draft.point && resumeCommand(draft.point), {
-    round: 3, kind: 'normal', shuffleSeed: 123456789, position: 17, lineConfirmedFrom: 12, lastSongId: 41, shuffleAttempts: 2,
+    round: 3, kind: 'normal', shuffleSeed: 123456789, position: 17, lineConfirmedFrom: 12, lastSongId: 41, shuffleAttempts: 2, cardType: 'normal',
   });
+});
+
+test("a code carries the round's card type to resumeAt", () => {
+  const text = formatResumeToken({ ...token, cardType: 'desgraciat' });
+  assert.equal(resumeCommand(readResume(text).point!).cardType, 'desgraciat');
+  assert.equal(resumeCommand(readResume(formatResumeToken({ ...token, kind: 'special' })).point!).cardType, 'especial', "no T part: the kind's default");
 });
 
 test('empty and malformed codes are told apart', () => {

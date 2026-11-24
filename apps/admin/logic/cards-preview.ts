@@ -1,13 +1,14 @@
 // Cards in play, as Admin previews them before sending `setCardsInPlay`: how many cards the ranges name, how
-// many are normal and how many special, which numbers are not among the generated cards, and the compact
-// ranges that will be sent. Pure: the generated cards' types come in as a map (from cards.json).
+// many of each printed type, which numbers are not among the generated cards, and the compact ranges that will
+// be sent. Pure: the generated cards' types come in as a map (from cards.json).
 import { COMMANDS } from '@quina/protocol';
-import { ROUND_TYPES, parseCardRanges } from '../../show/engine/src/game/cards.ts';
+// parseCardRanges is still the engine's: it belongs in @quina/protocol, so Admin needn't reach into the engine.
+import { parseCardRanges } from '../../show/engine/src/game/cards.ts';
 
 /** `setCardsInPlay.ranges` may not be longer than this (the protocol's limit). */
 export const RANGES_MAX_LENGTH: number = COMMANDS.setCardsInPlay.ranges.maxLength;
 
-/** Card id → its type as printed ('normal' or 'especial'), from cards.json. */
+/** Card id → its printed type's id ('normal', 'especial'…), from cards.json. */
 export type CardTypes = ReadonlyMap<number, string>;
 
 export type RangesError =
@@ -30,8 +31,8 @@ export interface CardsPreview {
   ranges: string;
   /** null when the generated cards are unknown (cards.json didn't load). */
   types: {
-    normal: number;
-    special: number;
+    /** How many cards of each printed type, in the order the lowest numbered card of each comes. */
+    byType: { type: string; count: number }[];
     /** Numbers that aren't generated cards, as compact ranges (invalid if claimed). */
     unknownRanges: string;
     unknownCount: number;
@@ -72,16 +73,14 @@ export function previewCardRanges(text: string, cardTypes: CardTypes | null): Ca
   const tooLong = ranges.length > RANGES_MAX_LENGTH;
   let types: CardsPreview['types'] = null;
   if (cardTypes) {
-    let normal = 0;
-    let special = 0;
+    const counts = new Map<string, number>();
     const unknown: number[] = [];
     for (const id of ids) {
       const type = cardTypes.get(id);
-      if (type === ROUND_TYPES.normal) normal++;
-      else if (type === ROUND_TYPES.special) special++;
-      else unknown.push(id);
+      if (type === undefined) unknown.push(id);
+      else counts.set(type, (counts.get(type) ?? 0) + 1);
     }
-    types = { normal, special, unknownRanges: formatRanges(unknown), unknownCount: unknown.length };
+    types = { byType: [...counts].map(([type, count]) => ({ type, count })), unknownRanges: formatRanges(unknown), unknownCount: unknown.length };
   }
   return {
     ok: !tooLong,

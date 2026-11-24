@@ -9,6 +9,7 @@ import type { RoundKind, ShowState } from '@quina/protocol';
 import type { FlowFields, WinKind } from '../../packages/ui/flow.ts';
 import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
+import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';
@@ -183,7 +184,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const play = (): PlayView => ({ scene: 'play', round: roundView(roundNumber, plan, state), motion: motionView(state, notes.spin) });
   switch (scene) {
     case 'before':
-      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, cardTypes: nightCardTypes(plan), sponsors: sponsorsOf(plan), link };
+      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, cardTypes: nightCardTypes(plan, knownCardTypes(catalog?.cardTypes, plan)), sponsors: sponsorsOf(plan), link };
     case 'roundStart': {
       // The round being introduced (`intro`, set before the Shuffle) names it; then the Shuffle's; then the state's.
       const intro = flow.intro;
@@ -209,7 +210,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
           key: `${c.cardId}@${c.startAtMs}`,
           cardId: c.cardId,
           kind: c.kind,
-          cardType: cardTypeBadge(c.cardType, c.outcome, plan?.cardTypes ?? null),
+          cardType: cardTypeBadge(c.cardType, c.outcome, knownCardTypes(catalog?.cardTypes, plan), plan),
           verdict,
           row: c.kind === 'line' ? c.row : null,
           cells: verdict === 'notValid' ? [] : checkCells(card, steps, c.row, (id) => lookup(id)?.title ?? null),

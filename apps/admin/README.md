@@ -10,7 +10,7 @@ One view per URL hash:
 
 | Hash | View | What it does |
 |---|---|---|
-| `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the card types (name, colour, price), cards in play (sent with `setCardsInPlay`), rounds with their prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
+| `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the printed card types (read-only, from card-types.json), cards in play (sent with `setCardsInPlay`), rounds with their card type and prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
 | `#json` | Import and export | Bulk import of a whole plan (paste or file) with every error and a diff, then "Substituir". Export as a download or a copy |
 | `#nit` | On the night | Show status, start (`roundIntro`) and end (`endGame`) the Game, the Winners' names and notes (`winnerInfo`), plus stubs for Plan B resume, cards open on phones and player-app settings |
 | `#eines` | Tools | The hook audition page, a full JSON export (the plan plus the night's data), and Shuffle seeds (stub) |
@@ -108,6 +108,7 @@ Rules (every key is required, and an unknown key is an error, so a typo can't si
 - `title`: the edition's name, on every screen (`"Quina Quina 3"`).
 - `prizeReveal`: `"perRound"` (phones see round 1's prizes from the start and each round's as it is introduced) or `"allSecret"` (phones see none until the presenters reveal a round from the console).
 - `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps. `kind` is `"normal"` or `"special"`, and at most one round is special.
+  - `cardType`: the printed card type the round plays, an id from `apps/cards/dist/card-types.json` (`"normal"`, `"especial"`…): only cards of that type count in it. Optional: a round without one plays its kind's default (normal cards in normal rounds, especial cards in the special round). Admin picks it per round and warns when the id isn't in card-types.json.
 - `line` and `bingo` (the Quina's prizes): the bundle, a list of up to 40 prizes in the order screens show them, `[]` while there are none. Headline prizes (usually one or two) come first.
   - `title`: what is won, as presenters read it out (1–200 characters).
   - `detail`: extra text, or `null`.
@@ -118,7 +119,7 @@ Rules (every key is required, and an unknown key is an error, so a typo can't si
   - `id`: lowercase letters, digits and dashes (`forn-can-pep`), unique. Prizes refer to sponsors by this id.
   - `name`: as shown on screen.
   - `logo`: `null`. Logos are added and cleaned up in Admin. Admin's own export also accepts a PNG data URL of up to 200 KB.
-- `cardTypes`: the printed card types, `"normal"` and `"especial"`, each once.
+- `cardTypes` (deprecated: names, colours and prices now come from card-types.json, and each round names its `cardType`; plan version 3 drops it, and Admin only passes it through): the printed card types, `"normal"` and `"especial"`, each once.
   - `name`: as shown on screen (`"Cartró normal"`).
   - `color`: its pastel colour, `"#rrggbb"`.
   - `priceCents`: its price in cents, or `null`.

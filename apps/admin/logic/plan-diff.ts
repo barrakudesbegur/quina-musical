@@ -1,7 +1,7 @@
-// What an import would change, shown before "Substituir" replaces the plan: rounds added, removed or
-// switched between normal and special, prize bundles changed, sponsors added, removed or changed, and whether
+// What an import would change, shown before "Substituir" replaces the plan: rounds added, removed,
+// switched between normal and special or to another card type, prize bundles changed, sponsors added, removed or changed, and whether
 // the schedule, the cheat-sheet rules, the title, the edition, the prize reveal or the card types changed. Pure.
-import { bundleSummary, type GamePlan, type Prize, type RoundPlan, type Sponsor } from '../../../packages/ui/plan.ts';
+import { bundleSummary, roundCardType, type GamePlan, type Prize, type RoundPlan, type Sponsor } from '../../../packages/ui/plan.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 
 export interface PrizeChange {
@@ -24,6 +24,8 @@ export interface PlanDiff {
     added: number[];
     removed: number[];
     kindChanged: number[];
+    /** Rounds that play another card type (a plan without one plays its kind's default). */
+    cardTypeChanged: number[];
   };
   /** Bundles that differ in any prize, field or order, in rounds that exist before and after. */
   prizes: PrizeChange[];
@@ -46,11 +48,13 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
   const added = [...newRounds.keys()].filter((n) => !oldRounds.has(n));
   const removed = [...oldRounds.keys()].filter((n) => !newRounds.has(n));
   const kindChanged: number[] = [];
+  const cardTypeChanged: number[] = [];
   const prizes: PrizeChange[] = [];
   for (const [n, next] of newRounds) {
     const prev = oldRounds.get(n);
     if (!prev) continue;
     if (prev.kind !== next.kind) kindChanged.push(n);
+    if (roundCardType(prev) !== roundCardType(next)) cardTypeChanged.push(n);
     for (const kind of KINDS) {
       if (!same(bundleKey(prev[kind]), bundleKey(next[kind]))) prizes.push({ round: n, kind, before: bundleSummary(prev[kind]), after: bundleSummary(next[kind]) });
     }
@@ -71,7 +75,7 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     same: false,
     title: before?.title !== after.title,
     edition: before?.edition !== after.edition,
-    rounds: { before: before?.rounds.length ?? 0, after: after.rounds.length, added, removed, kindChanged },
+    rounds: { before: before?.rounds.length ?? 0, after: after.rounds.length, added, removed, kindChanged, cardTypeChanged },
     prizes,
     sponsors,
     schedule: !same(before?.schedule ?? null, after.schedule),
@@ -85,6 +89,7 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     !added.length &&
     !removed.length &&
     !kindChanged.length &&
+    !cardTypeChanged.length &&
     !prizes.length &&
     !sponsors.added.length &&
     !sponsors.removed.length &&

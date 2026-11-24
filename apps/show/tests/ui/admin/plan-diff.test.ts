@@ -58,6 +58,17 @@ test('the prize reveal and the card types', () => {
   assert.equal(diffPlans(SAMPLE_PLAN, clone(SAMPLE_PLAN)).cardTypes, false);
 });
 
+test("a round that plays another card type; a plan without card types plays its kind's default", () => {
+  const next = clone(SAMPLE_PLAN);
+  next.rounds[4].cardType = 'desgraciat';
+  const d = diffPlans(SAMPLE_PLAN, next);
+  assert.deepEqual(d.rounds.cardTypeChanged, [5]);
+  assert.equal(d.same, false);
+  const bare = clone(SAMPLE_PLAN);
+  for (const r of bare.rounds) delete r.cardType;
+  assert.deepEqual(diffPlans(bare, SAMPLE_PLAN).rounds.cardTypeChanged, [], 'the defaults, spelt out or not');
+});
+
 test('sponsors added, removed and changed (name or logo)', () => {
   const next = clone(SAMPLE_PLAN);
   next.sponsors = next.sponsors.filter((s) => s.id !== 'patrocinador-2').map((s) => (s.id === 'barrakudes' ? { ...s, logo: 'data:image/png;base64,AAAA' } : s));

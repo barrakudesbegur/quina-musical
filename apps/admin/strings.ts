@@ -1,11 +1,14 @@
 // Admin's on-screen words, in Catalan. Shared terms ("Quina 3", "Línia", "Premi de quina", the scene names)
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
-import type { RoundKind, ShowStatus } from '@quina/protocol';
+import type { ShowStatus } from '@quina/protocol';
 import type { CheatSheet, PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+/** "1, 2 i 3". */
+const joinCa = (items: readonly (string | number)[]): string =>
+  items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} i ${items[items.length - 1]}`;
 
 export const S = {
   pageTitle: 'Admin · Quina Musical',
@@ -60,14 +63,18 @@ export const S = {
       allSecret: 'Els mòbils no veuen cap premi fins que els presentadors els revelen des de la consola, quina a quina.',
     } satisfies Record<PrizeReveal, string>,
     cardTypes: 'Tipus de cartró',
-    cardTypesHelp: 'Venen dels cartrons impresos (apps/cards): nom, color i preu es canvien allà. Els normals juguen a les quines normals i els especials a la quina especial.',
-    cardTypesMissing: "No s'han pogut llegir els tipus dels cartrons impresos: es mostren els que ja té el pla.",
+    cardTypesHelp: 'Venen dels cartrons impresos (apps/cards, card-types.json): nom, color i preu es canvien allà. Cada quina tria quin tipus hi juga, a «Quines».',
+    cardTypesMissing: "No s'han pogut llegir els tipus dels cartrons impresos (card-types.json): es mostren els que ja té el pla, si en té.",
     cardPriceLabel: (cents: number | null) => (cents === null ? 'Sense preu' : `${(cents / 100).toLocaleString('ca-ES', { minimumFractionDigits: cents % 100 ? 2 : 0 })} €`),
     cardName: 'Nom',
     cardColor: 'Color',
     cardPrice: 'Preu (€)',
     cardPriceHelp: 'Buit: sense preu.',
-    cardRounds: (kinds: readonly RoundKind[]) => `Juga a: ${kinds.map((k) => (k === 'special' ? 'la quina especial' : 'les quines normals')).join(' i ')}`,
+    /** Where a type plays tonight: its regular rounds by number, and the special round. */
+    cardRounds: (regular: readonly number[], special: boolean) => {
+      const parts = [...(regular.length ? [regular.length === 1 ? `la Quina ${regular[0]}` : `les quines ${joinCa(regular)}`] : []), ...(special ? ['la quina especial'] : [])];
+      return parts.length ? `Juga a ${joinCa(parts)}` : 'No juga a cap quina';
+    },
   },
 
   errors: {
@@ -77,13 +84,13 @@ export const S = {
 
   cards: {
     title: 'Cartrons en joc',
-    help: 'Els cartrons venuts, per rangs: «1-180, 200-215, 400-460». Cada quina només compta els que hi valen: normals o especials.',
+    help: 'Els cartrons venuts, per rangs: «1-180, 200-215, 400-460». Cada quina només compta els del tipus que hi juga.',
     label: 'Rangs de cartrons',
     count: (n: number) => plural(n, 'cartró', 'cartrons'),
-    normal: (n: number) => plural(n, 'normal', 'normals'),
-    special: (n: number) => plural(n, 'especial', 'especials'),
+    /** How many cards of a printed type ("Cartró normal: 180"). */
+    ofType: (name: string, n: number) => `${name}: ${n}`,
     unknown: (n: number, ranges: string) => `${plural(n, 'número no és', 'números no són')} cap cartró generat: ${ranges}`,
-    typesUnknown: "No s'han pogut carregar els cartrons generats: no se sap quins són normals o especials.",
+    typesUnknown: "No s'han pogut carregar els cartrons generats: no se sap de quin tipus és cada un.",
     willSend: "S'enviarà",
     empty: "Buit: s'esborraran els cartrons en joc.",
     send: 'Enviar al show',
@@ -101,14 +108,17 @@ export const S = {
 
   rounds: {
     title: 'Quines',
-    help: 'Cada quina, normal o especial, amb els premis de línia i els de quina. Es numeren soles quan les mous.',
+    help: 'Cada quina, normal o especial, amb el tipus de cartró que hi juga i els premis de línia i els de quina. Es numeren soles quan les mous.',
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
     fixedLabel: (n: number) => `La Quina ${n} ja ha començat: no es pot moure ni treure`,
     kind: 'Tipus',
     normal: 'Normal',
-    special: 'Especial (només cartrons especials)',
+    special: 'Especial',
+    cardType: 'Cartrons que hi juguen',
+    unknownCardType: (id: string) =>
+      `El tipus «${id}» no és a card-types.json dels cartrons impresos: cap cartró no comptaria en aquesta quina. Tria'n un de la llista, o genera abans els cartrons d'aquest tipus.`,
     up: 'Pujar',
     down: 'Baixar',
     upLabel: (n: number) => `Pujar la Quina ${n}`,
@@ -259,6 +269,7 @@ export const S = {
     roundsAdded: (list: string) => `afegides: ${list}`,
     roundsRemoved: (list: string) => `tretes: ${list}`,
     roundsKind: (list: string) => `canvien de tipus: ${list}`,
+    roundsCardType: (list: string) => `canvien de cartrons: ${list}`,
     prizes: (n: number) => plural(n, 'premi canvia', 'premis canvien'),
     prizeLine: (round: string, label: string, before: string | null, after: string | null) => `${round}, ${label.toLowerCase()}: ${before ?? '(cap)'} → ${after ?? '(cap)'}`,
     sponsorsAdded: (list: string) => `Patrocinadors nous: ${list}`,

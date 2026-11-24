@@ -9,6 +9,8 @@ export const CA = {
   roundOf: (n: number, total: number) => `Quina ${n} de ${total}`,
   specialRound: 'Quina especial',
   card: (id: number) => `Cartró ${id}`,
+  /** A printed card type card-types.json doesn't name (its id, "Cartró daurat"). */
+  cardType: (id: string) => `Cartró ${id}`,
   cards: 'Cartrons',
   line: 'Línia',
   bingo: 'Quina',

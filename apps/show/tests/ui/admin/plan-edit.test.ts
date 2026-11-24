@@ -4,10 +4,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import {
   addPrize,
   addRound,
   blankPlan,
+  blankRound,
+  cardTypeChoices,
+  isUnknownCardType,
+  withRoundKind,
   blankPrize,
   fromLocalInput,
   lockedRoundCount,
@@ -80,6 +85,53 @@ test('a blank plan passes the validator; a blank prize is reported until it has 
   assert.equal(checkGamePlan(plan).ok, false, 'empty prize titles are reported, not hidden');
   plan.rounds[0].bingo[0].title = 'Pernil';
   assert.equal(checkGamePlan(plan).ok, true);
+});
+
+// ---- a round's card type
+
+const PRINTED = readPrintedCardTypes([
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null },
+  { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: null },
+]);
+
+test("a new round plays its kind's default card type", () => {
+  assert.equal(blankRound(1).cardType, 'normal');
+  assert.equal(blankRound(2, 'special').cardType, 'especial');
+  assert.equal(addRound([], 'special')[0].cardType, 'especial');
+  assert.equal(checkGamePlan(blankPlan('26', 'Quina Musical', SAMPLE_PLAN.cheatSheet)).ok, true);
+});
+
+test("changing a round's kind moves its card type along only while it is the old kind's default", () => {
+  const normal = blankRound(3);
+  assert.equal(withRoundKind(normal, 'special').cardType, 'especial', 'normal cards → especial cards');
+  assert.equal(withRoundKind(withRoundKind(normal, 'special'), 'normal').cardType, 'normal', 'and back');
+  assert.equal(withRoundKind({ ...normal, cardType: 'desgraciat' }, 'special').cardType, 'desgraciat', 'a type picked on purpose stays');
+  assert.equal(withRoundKind({ ...normal, kind: 'special', cardType: 'normal' }, 'normal').cardType, 'normal');
+  const { cardType: _none, ...older } = normal;
+  assert.equal(withRoundKind(older, 'special').cardType, 'especial', 'a round without one (an older plan) counts as the default');
+  assert.equal(withRoundKind(normal, 'normal'), normal, 'the same kind changes nothing');
+});
+
+test("the card type picker offers card-types.json's types, plus the round's own when the list lacks it", () => {
+  const types = PRINTED ?? [];
+  assert.deepEqual(cardTypeChoices(types, 'normal'), ['normal', 'especial', 'desgraciat']);
+  assert.deepEqual(cardTypeChoices(types, 'daurat'), ['normal', 'especial', 'desgraciat', 'daurat']);
+  assert.deepEqual(cardTypeChoices([], 'especial'), ['especial'], 'no list at all: just what the plan says');
+});
+
+test('a round naming a type card-types.json lacks gets a warning; without the file nothing can be said', () => {
+  assert.equal(isUnknownCardType('desgraciat', PRINTED), false);
+  assert.equal(isUnknownCardType('daurat', PRINTED), true);
+  assert.equal(isUnknownCardType('daurat', null), false);
+});
+
+test("a plan whose rounds name no card type still loads, and shows each kind's default", () => {
+  const plan = structuredClone(SAMPLE_PLAN) as unknown as Record<string, unknown> & { rounds: Record<string, unknown>[] };
+  for (const r of plan.rounds) delete r.cardType;
+  const check = checkGamePlan(plan);
+  assert.ok(check.ok);
+  assert.deepEqual([check.plan.rounds[0].cardType, check.plan.rounds[6].cardType], ['normal', 'especial']);
 });
 
 const named = (title: string, headline = false) => ({ ...blankPrize(headline), title });

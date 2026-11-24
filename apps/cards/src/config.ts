@@ -6,6 +6,7 @@
 // Game plan's `edition` (Admin).
 //
 // This year's title and paper colour aren't decided yet; the defaults are last year's.
+import type { CardTypeSpec } from './card-types';
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
 export const EDITION = '26';
@@ -28,11 +29,15 @@ export const PAPER_COLOR = '#ffffff';
 export const VERSION_STAMP = `20${EDITION}`;
 
 /**
- * The card types, the source of truth for every screen (the before-the-Game preview on the projector and on
- * phones, and Admin, which shows them read-only). `type` matches the cards' `type` in cards.json. Price in
- * cents, or null until it's decided. Generated next to cards.json as card-types.json.
+ * The card types, written next to cards.json as card-types.json: the formal list of printed types, which every
+ * screen reads (their names, colours and prices) and whose ids the Game plan's rounds name (each round plays one
+ * type, picked in Admin). `type` is the id the cards carry in cards.json: lowercase letters and digits
+ * (card-types.ts checks it). Price in cents, or null until it's decided.
  */
 export const CARD_TYPES = [
   { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: null },
   { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: null },
-] as const satisfies readonly { type: 'normal' | 'especial'; name: string; color: string; title: string; priceCents: number | null }[];
+] as const satisfies readonly CardTypeSpec[];
+
+/** A printed type's id, one of CARD_TYPES. */
+export type CardTypeId = (typeof CARD_TYPES)[number]['type'];

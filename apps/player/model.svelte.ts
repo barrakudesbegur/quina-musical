@@ -2,6 +2,7 @@
 // saved data, the catalogue, the clock) and derives everything the components show, so components stay thin.
 // Side effects (storage, sounds, vibration, the feed's cards) happen here, never in components.
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
+import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
 import { heatAt } from '../../packages/rules/heat.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { vibrate } from './device/screen.ts';
@@ -74,6 +75,8 @@ export class PlayerApp {
   focusRound = $derived(focusRoundNumber(this.state));
   latest = $derived(latestLanding(this.round));
   views = $derived(cardViews(this.data.cards, this.catalog, this.round));
+  /** The printed card types' names and colours: card-types.json, else the plan's old copy (knownCardTypes). */
+  cardTypes = $derived(knownCardTypes(this.catalog?.cardTypes, this.plan));
   playingViews = $derived(this.views.filter((v) => v.valid));
   restingViews = $derived(this.views.filter((v) => !v.valid));
   /** The near-win highlights on the playing cards ("cardId:songId"). */

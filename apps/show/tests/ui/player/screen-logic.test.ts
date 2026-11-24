@@ -21,6 +21,7 @@ import {
   planOf,
   prizeRounds,
   progress,
+  roundRule,
 } from '../../../../player/logic/view.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { publicPlan } from '../../../../../packages/ui/plan.ts';
@@ -146,6 +147,30 @@ test('card views: only the right kind plays; every landed song is marked; unknow
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
 });
 
+test("a round of any card type counts only that type's cards; an older snapshot plays its kind's default", () => {
+  const typed = parseCards([
+    { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
+    { id: 412, type: 'especial', lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] },
+    { id: 999, type: 'desgraciat', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
+  ]);
+  const round = { number: 5, kind: 'normal' as const, startedAtMs: 0, lineConfirmed: false, ended: false, landings: [2, 17].map((songId, position) => ({ position, songId, atMs: 0 })) };
+  const valid = (r: typeof round & { cardType?: string; kind: 'normal' | 'special' }) => cardViews(saved, typed, r).filter((v) => v.valid).map((v) => v.saved.id);
+  assert.deepEqual(valid({ ...round, cardType: 'desgraciat' }), [999], 'a normal round that plays the desgraciat cards');
+  assert.equal(cardViews(saved, typed, { ...round, cardType: 'desgraciat' })[2].marks?.count, 2, 'and marks them');
+  assert.deepEqual(valid({ ...round, kind: 'special', cardType: 'normal' }), [123], 'a special round that plays the normal cards');
+  assert.deepEqual(valid({ ...round, cardType: 'daurat' }), [], 'a type no card has: every card rests');
+  assert.deepEqual(valid(round), [123], 'no card type (an older cloud): normal round, normal cards');
+  assert.deepEqual(valid({ ...round, kind: 'special' }), [412], 'no card type: special round, especial cards');
+});
+
+test("which cards a round counts, in the phone's words: the usual rules, else the type by name", () => {
+  const types = [{ type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: null }];
+  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'normal' }, types), { kind: 'normal' });
+  assert.deepEqual(roundRule({ kind: 'special' }, types), { kind: 'special' }, "an older snapshot: the kind's default");
+  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'desgraciat' }, types), { kind: 'type', name: 'Cartró desgraciat' });
+  assert.deepEqual(roundRule({ kind: 'special', cardType: 'daurat' }, []), { kind: 'type', name: 'Cartró daurat' }, 'unlisted: the stand-in name');
+});
+
 /** The sample plan as phones get it with rounds 1 to 3 revealed. */
 const PUBLIC = publicPlan(SAMPLE_PLAN, [1, 2, 3]);
 
@@ -193,6 +218,13 @@ test('the feed\'s plan is checked as a public plan: locked rounds stay locked, j
   assert.equal(planOf(playing({ plan: { nonsense: true } as never })), null);
   assert.equal(planOf(playing({ plan: { ...PUBLIC, rounds: PUBLIC.rounds.map((r) => (r.number === 1 ? { ...r, line: [{ title: '' }] } : r)) } as never })), null);
   assert.equal(planOf(playing()), null);
+});
+
+test("the feed's plan keeps each round's card type; an older cloud's rounds get their kind's default", () => {
+  const typed = publicPlan({ ...SAMPLE_PLAN, rounds: SAMPLE_PLAN.rounds.map((r) => (r.number === 2 ? { ...r, cardType: 'desgraciat' } : r)) }, [1]);
+  assert.deepEqual(planOf(playing({ plan: typed }))?.rounds.slice(0, 3).map((r) => r.cardType), ['normal', 'desgraciat', 'normal'], 'locked rounds too');
+  const older = { ...PUBLIC, rounds: PUBLIC.rounds.map(({ cardType: _gone, ...r }) => r) };
+  assert.deepEqual(planOf(playing({ plan: older }))?.rounds.map((r) => r.cardType)[6], 'especial');
 });
 
 test('the Celebration shows the latest prize of the round; Historial is the current round, newest first', () => {

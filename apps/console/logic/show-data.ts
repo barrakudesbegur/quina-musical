@@ -3,7 +3,7 @@
 import type { CommandFields, RoundKind, ShowState } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
-import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { revealedRounds, roundCardType, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 
 /** A song's title: from the snapshot (current, next, recent landings), then the printed cards, else null. */
 export function songTitleOf(songId: number | null | undefined, state: ShowState | null, catalog: Catalog | null): string | null {
@@ -49,10 +49,14 @@ export function roundPrizes(plan: GamePlan | null, number: number): RoundPrizesR
   return { status: 'ok', prizes: { number, kind: round.kind, line: bundleView(plan, round.line), bingo: bundleView(plan, round.bingo) } };
 }
 
-/** The `roundIntro` that introduces round `number`: with its kind from the plan when the plan has that round. */
+/**
+ * The `roundIntro` that introduces round `number`: with its kind and printed card type from the plan when the plan
+ * has that round (a plan from before card types per round plays its kind's default). The engine keeps the type for
+ * the round's `newRound`.
+ */
 export function roundIntroArgs(plan: GamePlan | null, number: number): CommandFields['roundIntro'] {
-  const planned = roundPrizes(plan, number);
-  return planned.status === 'ok' ? { number, kind: planned.prizes.kind } : { number };
+  const planned = roundPlan(plan, number);
+  return planned ? { number, kind: planned.kind, cardType: roundCardType(planned) } : { number };
 }
 
 /**

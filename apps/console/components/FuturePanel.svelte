@@ -6,6 +6,7 @@
   console can't know shows "—" (logic/future.ts says why).
 -->
 <script lang="ts">
+  import { roundCardType } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { futureView, type SongsAhead } from '../logic/future.ts';
   import { songTitleOf } from '../logic/show-data.ts';
@@ -22,7 +23,7 @@
           position: snap.queue.position,
           printed: model.catalog?.cards ?? null,
           inPlay: model.inPlay,
-          roundKind: snap.round.kind,
+          cardType: roundCardType(snap.round),
           counted: model.counted,
           possibleWinners: snap.possibleWinners,
           lineConfirmed: snap.round.lineConfirmed,

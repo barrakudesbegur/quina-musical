@@ -7,7 +7,9 @@
 // its accessible label. Pure.
 import type { CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 import type { PlayerCard } from '../../../packages/rules/marks.ts';
-import { DEFAULT_CARD_TYPES, type CardType } from '../../../packages/ui/plan.ts';
+import { defaultCardType } from '@quina/protocol';
+import { roundCardType, type GamePlan } from '../../../packages/ui/plan.ts';
+import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
 export interface CheckStepView {
   songId: number;
@@ -21,9 +23,9 @@ export interface CheckStepView {
  * Public: it is printed on the card itself.
  */
 export interface CardTypeBadge {
-  /** 'normal', 'especial'. */
+  /** 'normal', 'especial'… */
   type: string;
-  /** The type's name from the plan ("Cartró normal"); the badge shows its short form. */
+  /** The type's name from card-types.json ("Cartró normal"); the badge shows its short form. */
   label: string;
   color: string;
   /** It plays the Quina Especial (the mini card gets a star). */
@@ -32,23 +34,21 @@ export interface CardTypeBadge {
   ok: boolean;
 }
 
-/** A colour for a type the plan doesn't list: a neutral paper tone. */
-const UNKNOWN_TYPE_COLOR = '#e8e4da';
-
 /**
- * The badge for a checked card's type, from the plan's card types (the defaults without a plan). Null for an
- * unknown card, whose type isn't known.
+ * The badge for a checked card's type: its name and colour from the card types (card-types.json, or what stands in
+ * for it: knownCardTypes), its star when the plan's Quina Especial plays it (without a plan: the special round's
+ * default type), and ✓ or ✗ from the Check's outcome only. Null for an unknown card, whose type isn't known.
  */
-export function cardTypeBadge(type: string | null | undefined, outcome: CheckOutcome, cardTypes: readonly CardType[] | null): CardTypeBadge | null {
+export function cardTypeBadge(
+  type: string | null | undefined,
+  outcome: CheckOutcome,
+  types: readonly PrintedCardType[],
+  plan: Pick<GamePlan, 'rounds'> | null,
+): CardTypeBadge | null {
   if (!type) return null;
-  const known = (cardTypes?.length ? cardTypes : DEFAULT_CARD_TYPES).find((t) => t.type === type);
-  return {
-    type,
-    label: known?.name ?? type,
-    color: known?.color ?? UNKNOWN_TYPE_COLOR,
-    special: known ? known.rounds.includes('special') : type === 'especial',
-    ok: outcome !== 'wrongType',
-  };
+  const label = cardTypeLabel(type, types);
+  const special = plan ? plan.rounds.some((r) => r.kind === 'special' && roundCardType(r) === type) : type === defaultCardType('special');
+  return { type, label: label.name, color: label.color, special, ok: outcome !== 'wrongType' };
 }
 
 /** What the projector says once the Check is over. */

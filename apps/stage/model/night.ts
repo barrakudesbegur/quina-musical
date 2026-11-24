@@ -1,12 +1,14 @@
 // The night's preview before the Game: each printed card type, its colour and price, and the rounds it
 // plays, so the audience sees at a glance that one card is only for the Quina Especial (the user's review,
-// 2026-11-24). Read from the Game plan only: the card types (`plan.cardTypes`, from the card generation) and
-// the rounds' kinds, in play order. Pure.
-import type { CardType, GamePlan } from '../../../packages/ui/plan.ts';
+// 2026-11-24). Which rounds a type plays comes from the plan's rounds (each names its card type, in play order);
+// its name, colour and price from card-types.json (ui/data/card-types.ts knownCardTypes says what stands in when
+// that file is missing). Pure.
+import type { GamePlan } from '../../../packages/ui/plan.ts';
+import { cardTypeLabel, roundsByCardType, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
 export interface NightCardType {
-  /** The printed type ('normal', 'especial'). */
-  type: CardType['type'];
+  /** The printed type's id ('normal', 'especial'…). */
+  type: string;
   /** Its name, "Cartró normal" (`label`, as everywhere on the stage: `name` is a winner's, which never comes out). */
   label: string;
   /** Its pastel colour, "#rrggbb". */
@@ -19,25 +21,21 @@ export interface NightCardType {
 }
 
 /**
- * The card types that play tonight, in the plan's order (normal first), each with the rounds it plays: the
- * plan's rounds whose kind the type accepts (`CardType.rounds`). A type that plays no round is left out.
- * The plan's round kinds are 'normal' and 'special' only: the Desgraciat round isn't in the plan yet, so it
- * can't be shown (reported to the protocol owner).
+ * The card types that play tonight, each with the rounds it plays: card-types.json's order first (normal first),
+ * then any type a round names that the list doesn't have, in play order. A type that plays no round is left out.
  */
-export function nightCardTypes(plan: Pick<GamePlan, 'cardTypes' | 'rounds'> | null): NightCardType[] {
+export function nightCardTypes(plan: Pick<GamePlan, 'rounds'> | null, types: readonly PrintedCardType[]): NightCardType[] {
   if (!plan) return [];
-  const rounds = [...plan.rounds].sort((a, b) => a.number - b.number);
-  return plan.cardTypes
-    .map((t) => {
-      const plays = rounds.filter((r) => t.rounds.includes(r.kind));
-      return {
-        type: t.type,
-        label: t.name,
-        color: t.color,
-        priceCents: t.priceCents,
-        regularRounds: plays.filter((r) => r.kind === 'normal').map((r) => r.number),
-        special: plays.some((r) => r.kind === 'special'),
-      };
-    })
-    .filter((t) => t.regularRounds.length > 0 || t.special);
+  const order = (type: string) => {
+    const i = types.findIndex((t) => t.type === type);
+    return i < 0 ? types.length : i;
+  };
+  return roundsByCardType(plan.rounds)
+    .map((plays, i) => ({ plays, i }))
+    // A stable sort: listed types in the list's order, then the unlisted ones as the rounds name them.
+    .sort((a, b) => order(a.plays.type) - order(b.plays.type) || a.i - b.i)
+    .map(({ plays }) => {
+      const label = cardTypeLabel(plays.type, types);
+      return { type: plays.type, label: label.name, color: label.color, priceCents: label.priceCents, regularRounds: plays.regularRounds, special: plays.special };
+    });
 }

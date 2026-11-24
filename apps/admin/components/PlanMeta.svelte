@@ -2,13 +2,17 @@
      revealed to phones, and the card types: read-only, from the printed cards (apps/cards' card-types.json). -->
 <script lang="ts">
   import type { PrizeReveal } from '../../../packages/ui/plan.ts';
+  import { knownCardTypes, roundsByCardType, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { errorsAt } from '../logic/plan-check.ts';
   import { S } from '../strings.ts';
 
-  let { session, printed = false }: { session: PlanSession; printed?: boolean } = $props();
+  let { session, printed = null }: { session: PlanSession; printed?: readonly PrintedCardType[] | null } = $props();
   const errors = $derived(['plan.title', 'plan.edition', 'plan.prizeReveal', 'plan.cardTypes'].flatMap((path) => errorsAt(session.errors, path)));
   const REVEALS: readonly PrizeReveal[] = ['perRound', 'allSecret'];
+  /** card-types.json's types (else the plan's old copy), each with the rounds that pick it. */
+  const types = $derived(knownCardTypes(printed, session.draft));
+  const plays = $derived(roundsByCardType(session.draft.rounds));
 </script>
 
 <section class="panel surface plan-meta" aria-labelledby="plan-meta-title">
@@ -38,12 +42,13 @@
     <legend>{S.plan.cardTypes}</legend>
     <p class="panel__help">{printed ? S.plan.cardTypesHelp : S.plan.cardTypesMissing}</p>
     <ul class="plan-meta__card-list">
-      {#each session.draft.cardTypes as cardType (cardType.type)}
+      {#each types as cardType (cardType.type)}
+        {@const rounds = plays.find((p) => p.type === cardType.type)}
         <li class="plan-meta__card" style:--card-color={cardType.color}>
           <span class="plan-meta__swatch" aria-hidden="true"></span>
           <span class="plan-meta__card-name">{cardType.name}</span>
           <span class="plan-meta__card-price">{S.plan.cardPriceLabel(cardType.priceCents)}</span>
-          <span class="field__help">{S.plan.cardRounds(cardType.rounds)}</span>
+          <span class="field__help">{S.plan.cardRounds(rounds?.regularRounds ?? [], rounds?.special ?? false)}</span>
         </li>
       {/each}
     </ul>

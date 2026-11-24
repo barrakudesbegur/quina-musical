@@ -15,7 +15,8 @@ export const MANAGE_CONFIG = Object.freeze({
   }),
   /** Where the relay serves the printed cards (apps/cards' cards.json). */
   cardsUrl: '/cards/cards.json',
-  /** The card types next to it (apps/cards' card-types.json): name, colour, price. Admin only shows them. */
+  /** The card types next to it (apps/cards' card-types.json): name, colour, price. Admin shows them and each
+   * round picks one. */
   cardTypesUrl: '/cards/card-types.json',
   /** The hook audition page (the relay maps /show/* to engine/*). */
   auditionUrl: '/show/audition.html',

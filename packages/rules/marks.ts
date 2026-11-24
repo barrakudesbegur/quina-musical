@@ -9,7 +9,7 @@
 /** A card as the player app knows it: 3 lines of 4 song ids. */
 export interface PlayerCard {
   id: number;
-  /** 'normal' or 'especial', as in apps/cards' cards.json. */
+  /** Its printed type's id ('normal', 'especial'…), as in apps/cards' cards.json. */
   type: string;
   lines: readonly (readonly number[])[];
 }
@@ -79,8 +79,10 @@ export function nearWins(card: PlayerCard, marks: CardMarks, { lineConfirmed, ro
   return out;
 }
 
-/** The cards that count in a round: special cards only in the special round, normal cards otherwise. */
-export function cardsForRound<C extends PlayerCard>(cards: readonly C[], roundKind: 'normal' | 'special'): C[] {
-  const want = roundKind === 'special' ? 'especial' : 'normal';
-  return cards.filter((c) => c.type === want);
+/**
+ * The cards that count in a round: those of the printed type it plays (the round's `cardType`; read it with
+ * @quina/protocol's roundCardType, which falls back to its kind's default for an older snapshot).
+ */
+export function cardsForRound<C extends PlayerCard>(cards: readonly C[], cardType: string): C[] {
+  return cards.filter((c) => c.type === cardType);
 }

@@ -11,7 +11,7 @@
 //   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
 //   the cloud's).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
-import { PROTOCOL_VERSION, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
+import { PROTOCOL_VERSION, defaultCardType, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
 import { publicPlan, revealedRounds, type GamePlan } from '../../../packages/ui/plan.ts';
 import { HeatSmoother } from '../../../packages/rules/heat.ts';
@@ -34,6 +34,8 @@ export interface ProjectionContext {
 interface RoundLog {
   number: number;
   kind: RoundKind;
+  /** The printed card type it plays (public: it's on the cards). */
+  cardType: string;
   startedAtMs: number;
   lineConfirmed: boolean;
   /** position → landing, counted landings only. */
@@ -41,7 +43,7 @@ interface RoundLog {
 }
 
 /** The round being introduced, as newer engines send it (`state.intro`); older ones don't. */
-type MaybeIntro = { intro?: { round: number; kind: RoundKind } | null };
+type MaybeIntro = { intro?: { round: number; kind: RoundKind; cardType?: string } | null };
 
 /** Keep the first-seen time of at most this many Spins. */
 const SPIN_MEMORY = 8;
@@ -83,8 +85,8 @@ export class PublicProjector {
    * Seed an earlier round the projector never saw (the demo's history). Live feeds don't need it: they log
    * every round from the moment they connect.
    */
-  seedRound(number: number, kind: RoundKind, startedAtMs: number, lineConfirmed: boolean, landings: readonly PublicLanding[]): void {
-    const log: RoundLog = { number, kind, startedAtMs, lineConfirmed, landings: new Map() };
+  seedRound(number: number, kind: RoundKind, startedAtMs: number, lineConfirmed: boolean, landings: readonly PublicLanding[], cardType = defaultCardType(kind)): void {
+    const log: RoundLog = { number, kind, cardType, startedAtMs, lineConfirmed, landings: new Map() };
     for (const l of landings) log.landings.set(l.position, landing(l.position, l.songId, l.atMs));
     this.rounds.set(number, log);
   }
@@ -99,10 +101,11 @@ export class PublicProjector {
     // `rounds` only once it starts.
     const introducing = flow.scene === 'roundStart' && !flow.shuffle && (!current || current.landings.size === 0);
     const explicitIntro = s ? (s as MaybeIntro).intro : null;
+    // An older engine sends no card type: the kind's default.
     const intro = explicitIntro
-      ? { round: explicitIntro.round, kind: explicitIntro.kind }
+      ? { round: explicitIntro.round, kind: explicitIntro.kind, cardType: explicitIntro.cardType ?? defaultCardType(explicitIntro.kind) }
       : introducing && s && currentNumber !== null
-        ? { round: currentNumber, kind: s.round.kind }
+        ? { round: currentNumber, kind: s.round.kind, cardType: s.round.cardType ?? defaultCardType(s.round.kind) }
         : null;
     const winners = projectWinners(flow);
     const rounds = [...this.rounds.values()]
@@ -143,10 +146,11 @@ export class PublicProjector {
       // The same round number started again (a new run): forget the old landings.
       if (log && log.startedAtMs && s.round.startedAtMs && log.startedAtMs !== s.round.startedAtMs) log = undefined;
       if (!log) {
-        log = { number: n, kind: s.round.kind, startedAtMs: s.round.startedAtMs, lineConfirmed: false, landings: new Map() };
+        log = { number: n, kind: s.round.kind, cardType: defaultCardType(s.round.kind), startedAtMs: s.round.startedAtMs, lineConfirmed: false, landings: new Map() };
         this.rounds.set(n, log);
       }
       log.kind = s.round.kind === 'special' ? 'special' : 'normal';
+      log.cardType = s.round.cardType ?? defaultCardType(log.kind);
       log.startedAtMs = s.round.startedAtMs || log.startedAtMs;
       log.lineConfirmed = s.round.lineConfirmed;
       const last = s.queue.position;
@@ -196,6 +200,7 @@ function projectRound(log: RoundLog, currentNumber: number | null, flow: FlowFie
   return {
     number: log.number,
     kind: log.kind,
+    cardType: log.cardType,
     startedAtMs: log.startedAtMs,
     lineConfirmed: log.lineConfirmed || won('line') || won('bingo'),
     ended,

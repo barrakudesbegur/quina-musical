@@ -62,7 +62,7 @@ export function baseState(now: number): FullState {
     current: { ...song(7), hookId: 'h1', posSec: 6, endsAtMs: now + 60000 },
     next: song(74),
     queue: { position, length: 77 },
-    round: { number: 3, kind: 'normal', startedAtMs: now - 8 * 60000, targetEndMs: now + 18 * 60000, lineConfirmed: false },
+    round: { number: 3, kind: 'normal', cardType: 'normal', startedAtMs: now - 8 * 60000, targetEndMs: now + 18 * 60000, lineConfirmed: false },
     game: {
       pace: 14,
       paceLocked: false,
@@ -139,7 +139,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   roundStart: (now) => {
     const s = baseState(now);
     return {
-      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', sinceMs: now - 20000 }, prizes: revealedUpTo(4) }),
+      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', cardType: 'normal', sinceMs: now - 20000 }, prizes: revealedUpTo(4) }),
     };
   },
   shuffle: (now) => {

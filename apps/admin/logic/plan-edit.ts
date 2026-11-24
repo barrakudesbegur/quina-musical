@@ -1,15 +1,39 @@
 // Edits to the Game plan that need more than setting a field: adding, removing and reordering rounds (they
 // are renumbered 1, 2, 3… every time), a Line's or Quina's prize bundle (add, remove, move, mark headline:
 // headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
-// blank prizes and plans, card prices, and the schedule's local date-time. Pure: each returns new values and
+// blank prizes and plans, a round's card type, and the schedule's local date-time. Pure: each returns new values and
 // never mutates its input.
 import { DEFAULT_CARD_TYPES, PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
-import type { RoundKind } from '@quina/protocol';
+import { defaultCardType, roundCardType, type RoundKind } from '@quina/protocol';
+import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
 export const blankPrize = (headline = false): Prize => ({ title: '', detail: null, sponsorId: null, image: null, headline });
 
-/** A new round: no prizes yet (empty bundles are valid; screens say the prizes are still to come). */
-export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPlan => ({ number, kind, line: [], bingo: [] });
+/** A new round: its kind's card type, and no prizes yet (empty bundles are valid; screens say the prizes are still to come). */
+export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPlan => ({ number, kind, cardType: defaultCardType(kind), line: [], bingo: [] });
+
+// ---- a round's card type ---------------------------------------------------------------------------------
+
+/**
+ * A round switched to another kind. Its card type follows when it was still the old kind's default (a normal round
+ * made special now plays the especial cards); a type picked on purpose stays.
+ */
+export function withRoundKind(round: RoundPlan, kind: RoundKind): RoundPlan {
+  if (round.kind === kind) return round;
+  const type = roundCardType(round);
+  return { ...round, kind, cardType: type === defaultCardType(round.kind) ? defaultCardType(kind) : type };
+}
+
+/** The card types a round's picker offers: card-types.json's, plus the round's own when the list lacks it (so the
+ * picker still shows what the plan says, next to its warning). */
+export function cardTypeChoices(types: readonly PrintedCardType[], current: string): string[] {
+  const ids = types.map((t) => t.type);
+  return ids.includes(current) ? ids : [...ids, current];
+}
+
+/** A round names a type card-types.json doesn't have (a typo, or a type not printed yet). Unknowable without the file. */
+export const isUnknownCardType = (type: string, printed: readonly PrintedCardType[] | null): boolean =>
+  printed !== null && !printed.some((t) => t.type === type);
 
 export const DEFAULT_SCHEDULE: SchedulePlan = Object.freeze({ startAtMs: null, roundMinutes: 25, intervalMinutes: 3 });
 

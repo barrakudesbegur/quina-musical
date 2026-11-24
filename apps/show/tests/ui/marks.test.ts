@@ -60,8 +60,10 @@ test('two lines missing the same song are listed once', () => {
   assert.equal(nearWins(cross, m, { lineConfirmed: false, roundEnded: false }).length, 1);
 });
 
-test('special cards count only in the special round', () => {
-  const cards: PlayerCard[] = [card, { id: 412, type: 'especial', lines: card.lines }];
+test("a round counts only the cards of its card type, whatever its kind", () => {
+  const cards: PlayerCard[] = [card, { id: 412, type: 'especial', lines: card.lines }, { id: 777, type: 'desgraciat', lines: card.lines }];
   assert.deepEqual(cardsForRound(cards, 'normal').map((c) => c.id), [123]);
-  assert.deepEqual(cardsForRound(cards, 'special').map((c) => c.id), [412]);
+  assert.deepEqual(cardsForRound(cards, 'especial').map((c) => c.id), [412]);
+  assert.deepEqual(cardsForRound(cards, 'desgraciat').map((c) => c.id), [777]);
+  assert.deepEqual(cardsForRound(cards, 'daurat'), [], 'a type no card has: none count');
 });

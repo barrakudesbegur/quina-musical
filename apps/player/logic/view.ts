@@ -1,10 +1,11 @@
 // What the screens show, derived from the public state, the player's cards and the printed catalogue. Pure, so
 // the Svelte components stay thin and the rules are tested in node.
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
-import { checkGamePlan, publicPlan, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
+import { checkGamePlan, publicPlan, roundCardType, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { nearSongs } from './near-win.ts';
-import type { PublicLanding, PublicRound, PublicState, PublicWinKind } from '../feed/public.ts';
+import { defaultCardType, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
 
 /** The round being played or last played: the last of `rounds`. */
@@ -44,7 +45,18 @@ export function planOf(state: PublicState | null): PublicPlan | null {
     edition: raw.edition,
     title: raw.title,
     prizeReveal: raw.prizeReveal,
-    rounds: raw.rounds.map((r: unknown) => (isRec(r) ? { number: r.number, kind: r.kind, line: r.revealed === true ? r.line : [], bingo: r.revealed === true ? r.bingo : [] } : r)),
+    rounds: raw.rounds.map((r: unknown) =>
+      isRec(r)
+        ? {
+            number: r.number,
+            kind: r.kind,
+            // Only when sent: an older cloud's plan has none (checkGamePlan then fills the kind's default).
+            ...(r.cardType !== undefined ? { cardType: r.cardType } : {}),
+            line: r.revealed === true ? r.line : [],
+            bingo: r.revealed === true ? r.bingo : [],
+          }
+        : r,
+    ),
     sponsors: raw.sponsors,
     cardTypes: raw.cardTypes,
     schedule: raw.schedule,
@@ -57,7 +69,7 @@ export interface CardView {
   saved: SavedCard;
   /** null while the catalogue loads, or for a number that isn't a printed card. */
   card: PlayerCard | null;
-  /** Counts in the current round (normal cards in normal rounds, special cards in the special round). */
+  /** Counts in the current round: the card is of the printed type the round plays. */
   valid: boolean;
   marks: CardMarks | null;
   /** The songs gently highlighted on this card's grid: each one is all the card is missing for a Line or the Quina. */
@@ -69,10 +81,24 @@ export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, 
   const landed = landedIds(round);
   return saved.map((s) => {
     const card = catalog?.cards.get(s.id) ?? null;
-    const valid = !card || !round ? true : cardsForRound([card], round.kind).length === 1;
+    // An older snapshot's round has no card type: it plays its kind's default (roundCardType).
+    const valid = !card || !round ? true : cardsForRound([card], roundCardType(round)).length === 1;
     const marks = card && round && valid ? cardMarks(card, landed) : null;
     return { saved: s, card, valid, marks, near: nearSongs(card, marks, round) };
   });
+}
+
+/**
+ * Which cards a round counts, as the phone words it: the special round's or a normal round's usual rule when it plays
+ * its kind's default type, else the printed type by name (card-types.json, knownCardTypes; "Cartró <id>" when it
+ * isn't listed).
+ */
+export type RoundRule = { kind: 'normal' } | { kind: 'special' } | { kind: 'type'; name: string };
+
+export function roundRule(round: { kind: RoundKind; cardType?: string }, types: readonly PrintedCardType[]): RoundRule {
+  const type = roundCardType(round);
+  if (type !== defaultCardType(round.kind)) return { kind: 'type', name: cardTypeLabel(type, types).name };
+  return { kind: round.kind === 'special' ? 'special' : 'normal' };
 }
 
 /** Which of the player's cards show a song as marked: songId → the cards' identities (Historial shows their icons). */

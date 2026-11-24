@@ -3,8 +3,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ShowStore } from '../../packages/ui/client/show.svelte.ts';
-  import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
-  import { readPrintedCardTypes, withPrintedCardTypes, type PrintedCardType } from '../../packages/ui/data/card-types.ts';
+  import { loadCardTypes, loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
+  import { knownCardTypes, type PrintedCardType } from '../../packages/ui/data/card-types.ts';
   import type { PlanSession } from './state/plan-session.svelte.ts';
   import type { CommandTracker } from './state/commands.svelte.ts';
   import { ROUTES, routeFromHash, type Route } from './logic/route.ts';
@@ -36,14 +36,10 @@
   let route = $state<Route>(routeFromHash(location.hash));
   let catalog = $state.raw<Catalog | null>(null);
   let catalogFailed = $state(false);
+  /** card-types.json (null when missing or broken): the rounds' card type pickers and the read-only list. */
   let printedTypes = $state.raw<PrintedCardType[] | null>(null);
-
-  // The plan's card types are a copy of the printed cards' (apps/cards): refresh it whenever they differ.
-  $effect(() => {
-    if (!printedTypes) return;
-    const draft = $state.snapshot(session.draft);
-    if (withPrintedCardTypes(draft, printedTypes) !== draft) session.update((plan) => withPrintedCardTypes(plan, printedTypes ?? []));
-  });
+  /** The types' names for the cards-in-play counts: card-types.json, else the plan's old copy. */
+  const knownTypes = $derived(knownCardTypes(printedTypes ?? catalog?.cardTypes, session.draft));
   const cardTypes = $derived<CardTypes | null>(catalog ? new Map([...catalog.cards].map(([id, card]) => [id, card.type])) : null);
 
   onMount(() => {
@@ -53,10 +49,8 @@
       (c) => (catalog = c),
       () => (catalogFailed = true),
     );
-    fetch(MANAGE_CONFIG.cardTypesUrl, { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => (printedTypes = readPrintedCardTypes(json)))
-      .catch(() => (printedTypes = null));
+    // On its own, not through the catalog: the pickers work even when cards.json fails.
+    loadCardTypes(MANAGE_CONFIG.cardTypesUrl, { cache: 'no-store' }).then((types) => (printedTypes = types));
     return () => window.removeEventListener('hashchange', onHash);
   });
 </script>
@@ -92,9 +86,9 @@
   <main class="manage__main">
     {#if route === 'preparacio'}
       <PlanErrors errors={session.errors} />
-      <PlanMeta {session} printed={printedTypes !== null} />
-      <CardsInPlay {show} {commands} {cardTypes} {catalogFailed} />
-      <RoundsEditor {session} {show} {commands} />
+      <PlanMeta {session} printed={printedTypes} />
+      <CardsInPlay {show} {commands} {cardTypes} {catalogFailed} types={knownTypes} />
+      <RoundsEditor {session} {show} {commands} printed={printedTypes} />
       <SponsorsEditor {session} />
       <SponsorImport {session} />
       {#if session.store.kind === 'cloud'}<LogoBulkUpload store={session.store} />{/if}

@@ -4,7 +4,7 @@
   import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { plannedStarts, prizeRounds } from '../logic/view.ts';
+  import { plannedStarts, prizeRounds, roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
@@ -22,7 +22,9 @@
   const startAtMs = $derived(app.plan ? (plannedStarts(app.plan)?.get(app.plan.rounds[0]?.number ?? 1) ?? null) : null);
   const shuffle = $derived(app.state?.shuffle ?? null);
   const shuffling = $derived(shuffle !== null && app.cloudNow < shuffle.endAtMs);
-  const special = $derived((app.state?.intro?.kind ?? app.round?.kind) === 'special');
+  // The round being introduced (else the current one) and which cards it counts: said unless it's the usual normal one.
+  const introduced = $derived(app.state?.intro ?? app.round);
+  const rule = $derived(introduced ? roundRule(introduced, app.cardTypes) : null);
   const HOUR = 60 * 60_000;
 </script>
 
@@ -48,7 +50,7 @@
     </div>
   {:else if app.scene === 'roundStart'}
     {#if app.focusRound !== null}<h2 class="now__heading">{S.round(app.focusRound)}</h2>{/if}
-    {#if special}<p class="now__rule">{S.specialRule}</p>{/if}
+    {#if rule?.kind === 'special'}<p class="now__rule">{S.specialRule}</p>{:else if rule?.kind === 'type'}<p class="now__rule">{S.typeRule(rule.name)}</p>{/if}
     {#if shuffle}<Shuffle running={shuffling} />{/if}
     {#if focusPrizes}
       <h3 class="now__subheading">{S.prizesOf(focusPrizes.number)}</h3>

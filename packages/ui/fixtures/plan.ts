@@ -1,6 +1,7 @@
 // A sample Game plan for demos and tests. Prizes and sponsors are placeholders: the real ones come from the
 // organizers' sheet through Admin's JSON import. Each Line and Quina has a bundle: one headline prize (two in
 // the last Quina) and a few smaller ones.
+import { defaultCardType } from '@quina/protocol';
 import { DEFAULT_CARD_TYPES, type GamePlan, type Prize } from '../plan.ts';
 
 const SPONSORS = ['patrocinador-1', 'patrocinador-2', null] as const;
@@ -19,10 +20,12 @@ export const SAMPLE_PLAN: GamePlan = {
     { id: 'patrocinador-2', name: '[Patrocinador 2]', logo: null },
     { id: 'barrakudes', name: 'Barrakudes', logo: null },
   ],
+  // Deprecated (card-types.json has the types now): kept only while plans still carry it.
   cardTypes: DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })),
   rounds: Array.from({ length: 8 }, (_, i) => ({
     number: i + 1,
     kind: i === 6 ? ('special' as const) : ('normal' as const),
+    cardType: defaultCardType(i === 6 ? 'special' : 'normal'),
     line: [
       { title: `[Premi de línia ${i + 1}]`, detail: null, sponsorId: i % 2 ? 'patrocinador-2' : 'patrocinador-1', image: null, headline: true },
       ...smallPrizes(`de la línia ${i + 1}`, 2 + (i % 3), i),
