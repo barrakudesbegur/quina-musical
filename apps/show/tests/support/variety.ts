@@ -87,7 +87,7 @@ export interface Sameness {
   exitWithin3: number;
   topLanding: Share;
   landingRepeat: number;
-  /** The impact's samples, and the riser's flavour, are the previous transition's. */
+  /** The impact's samples (when it has any), and the riser's flavour, are the previous transition's. */
   impactRepeat: number;
   riserRepeat: number;
   /** Builds from silence (no A): the most common recipe, of those. */
@@ -214,8 +214,9 @@ function scopeSameness(rounds: readonly NightTransition[][], scope: Scope): Same
           bump(pairs, `${prev.plan.recipe}→${t.plan.recipe}`);
           if (aExit(prev) === aExit(t)) exitRepeat++;
           if (prev.plan.landing === t.plan.landing) landingRepeat++;
-          if (impactOf(prev) === impactOf(t)) impactRepeat++;
-          if (riserOf(prev) === riserOf(t)) riserRepeat++;
+          // Two landings without samples in a row do not sound alike: silence is not a repeated sound.
+          if (impactOf(t) !== 'dry' && impactOf(prev) === impactOf(t)) impactRepeat++;
+          if (riserOf(t) !== 'none' && riserOf(prev) === riserOf(t)) riserRepeat++;
           if (buildBars(prev) === buildBars(t)) buildRepeat++;
           if (prev.plan.gapBeats === t.plan.gapBeats) gapRepeat++;
         }

@@ -49,9 +49,14 @@ export function checkLanding(plan: Plan, A: OutgoingSong | null): void {
   } else assert.ok(!plan.b.powerUp, `${what}: a power-up without the tape landing`);
   // Nothing starts before the Spin.
   for (const e of plan.events) assert.ok(eventStart(e) >= plan.spinStart - 0.03 - 1e-9, `${what}: ${e.kind} ${targetOf(e)} before the Spin`);
-  // An audible produced effect: an impact, and at least two moves that are not just gain.
-  assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'), `${what}: no impact`);
-  assert.ok(plan.events.filter((e) => e.kind !== 'sfx' && !targetOf(e).endsWith('.gain')).length >= 2, `${what}: no effects`);
+  // A produced move, never a bare fade: at least one move that is not just gain (early, a cut on the one after a
+  // filter sweep can be all there is). The hit is the landing's
+  // (none on many early landings; a move that lands bigger always hits), and the orchestra hit waits for late.
+  assert.ok(plan.events.filter((e) => e.kind !== 'sfx' && !targetOf(e).endsWith('.gain')).length >= 1, `${what}: no effects`);
+  if (plan.impact !== 'none') assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'), `${what}: no impact`);
+  const samples = plan.events.filter((e) => e.kind === 'sfx' && Math.abs(e.at - plan.T) <= 0.06 && e.name !== 'whoosh').map((e) => (e.kind === 'sfx' ? e.name : ''));
+  if (plan.impact === 'none' || plan.impact === 'sub') assert.ok(!samples.some((n) => n === 'boom' || n === 'orchestra-hit' || n === 'horn'), `${what}: samples on a ${plan.impact} landing`);
+  if (plan.phase === 'early' || plan.phase === 'mid') assert.ok(!samples.includes('orchestra-hit'), `${what}: an orchestra hit in ${plan.phase}`);
   if (!plan.a || !A) return;
   // A is silent from the end of its move (the gap, or the bridge's start) and stays silent.
   const silentAt = (plan.shape === 'S2' ? plan.exitAt : gapStartOf(plan)) + 0.03;

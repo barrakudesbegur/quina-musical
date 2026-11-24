@@ -86,9 +86,10 @@ test(`planner invariants over ${PAIRS} random pairs × press times × phases × 
       const atLanding = phrases.phraseClass(plan.landIndex);
       assert.equal(plan.phraseClass, atLanding !== 'bar' || plan.shape !== 'S2' ? atLanding : phrases.phraseClass(plan.exitIndex));
       if (plan.phraseClass !== 'bar') onPhrase++;
-      // Every transition carries effects: an impact and at least one synth layer or deck move besides gain.
-      assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'), `${plan.recipe}: no impact`);
-      assert.ok(plan.events.filter((e) => e.kind !== 'sfx' && !targetOf(e).endsWith('.gain')).length >= 2, `${plan.recipe}: no effects`);
+      // Every transition carries effects: at least one synth layer or deck move besides gain, and the hit the
+      // landing drew (none on many early landings).
+      if (plan.impact !== 'none') assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'), `${plan.recipe}: no impact`);
+      assert.ok(plan.events.filter((e) => e.kind !== 'sfx' && !targetOf(e).endsWith('.gain')).length >= 1, `${plan.recipe}: no effects`);
     }
     for (const e of plan.events) assert.ok(eventStart(e) >= plan.spinStart - 0.03 - 1e-9, `event ${e.kind} ${targetOf(e) || ('name' in e ? e.name : undefined)} before spinStart: ${plan.recipe} ${plan.exit} D=${plan.D.toFixed(2)} pace ${pace} ${phase.name} n=${plan.bridgeBars} at ${(eventStart(e) - plan.spinStart).toFixed(2)}`);
     // B: hook downbeat sounds at T exactly.
@@ -220,8 +221,7 @@ test('R8 Blend: B\'s stretched layer starts on an A downbeat inside the Spin, it
     assert.ok(plan.blend && plan.blend.bars >= 2 && plan.blend.bars <= 8);
     if (ev.parts.bass) assert.ok(plan.events.some((e) => e.kind === 'ramp' && e.target === 'A.hpf' && e.to >= 250), 'bass swap cuts A\'s bass');
     if (n % 2 === 1) assert.ok(!ev.parts.bass, 'no bass layer when the keys or tempos do not allow it');
-    assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'));
-    assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'riser'));
+    if (plan.impact !== 'none') assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'));
   }
   console.log('blends', blends, 'fell back', fellBack);
   assert.ok(blends > 200, `only ${blends} blends`);

@@ -13,6 +13,7 @@ import { pickHook } from './hooks.ts';
 import { SPIN_LIMITS, spinWindow } from './pace.ts';
 import { compatible } from './keys.ts';
 import { chooseLanding, impactName, preverbEvent } from './landing.ts';
+import type { ImpactKind } from './landing.ts';
 import { gapChopSlices, ghostLayer, scratchMove } from './layers.ts';
 import { freshNumber, freshWeights, memoryOf, recency } from './variety.ts';
 import { weightedPick } from '../rng.ts';
@@ -259,6 +260,10 @@ export type GapLayerKind = 'chop' | 'scratch';
  */
 export interface PlanForce {
   landing?: LandingStyle | null;
+  /** What hits on the landing. */
+  impact?: ImpactKind | null;
+  /** Keep (true) or drop (false) an S1 or S3 move's riser, whatever the Phase's dress draws. */
+  riser?: boolean | null;
   /** The exit move of an S2 recipe, when it is one of the recipe's exits. */
   exit?: ExitName | null;
   bridge?: BridgePattern | null;
@@ -404,6 +409,21 @@ export function summarize(plan: Plan): PlanMemory {
     bars: !s2 && typeof bars === 'number' ? bars : null,
     gapBeats: plan.gapBeats,
   };
+}
+
+/**
+ * The Phase's dress over a recipe's events: an S1 or S3 move keeps its riser only when `keepRiser` (drawn at the
+ * Phase's chance; early moves are mostly clean), and every riser sits at the Phase's level. An S2 build keeps
+ * its riser, which is the build.
+ */
+function dress(events: readonly PlanEvent[], recipe: Recipe, phase: PhaseEffects, keepRiser: boolean, force: boolean | null): PlanEvent[] {
+  const keep = recipe.shape === 'S2' || (force ?? keepRiser);
+  const db = phase.dress.riserDb;
+  return events.flatMap((e): PlanEvent[] => {
+    if (e.kind !== 'synth' || e.name !== 'riser') return [e];
+    if (!keep) return [];
+    return db === 0 ? [e] : [{ ...e, params: { ...e.params, fromDb: e.params.fromDb + db, toDb: e.params.toDb + db } }];
+  });
 }
 
 export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null, force = null, allowTease = true }: PlanRequest): Plan | PlanError {
@@ -598,7 +618,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   const gapStart = pickupAt - gapBeats * gB.beat;
   const events: PlanEvent[] = [];
   if (tl) events.push(ramp('A.gain', spinStart, spinStart + 0.4, 1, duckLevel, 'lin'));
-  events.push(sfx('whoosh', spinStart, phase.name === 'early' ? -8 : -5));
+  events.push(sfx('whoosh', spinStart, phase.dress.whooshDb));
 
   // The landing layer: the reverse cymbal, a dry landing, B's pre-verb (when it is rendered and A is cut low,
   // gone, or in a compatible key by then), or D14's tape start (B powering up inside a silent gap, never after a
@@ -613,16 +633,23 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     ? 0
     : Math.min(gapBeats * gB.beat - 0.02, pickupAt - (tl ? minStart : spinStart + 0.1), hook.downbeatSec - pickup);
   const tapeBoost = ['stop', 'powerdown', 'hits'].includes(recipe.family) ? MOVES.tape.afterStop : 1;
+  const lastOrchestra = history.findLastIndex((h) => h.impact?.includes('orchestra-hit'));
   const landing = chooseLanding({
     phase, rng, preverb: preverbFits, tape: tapeRoom >= MOVES.tape.minSec, tapeBoost, force: force?.landing ?? null,
-    recent: { styles: memory.landings, impacts: memory.impacts },
+    forceImpact: force?.impact ?? null, recent: { styles: memory.landings, impacts: memory.impacts },
+    sinceOrchestra: lastOrchestra < 0 ? Infinity : history.length - lastOrchestra,
   });
   const vocalPreverb = Boolean(B.vocalPreverbs?.includes(hook.id)) && singsAtHook(B, hook);
   const preverbSource: PreverbSource = vocalPreverb ? (force?.preverbSource ?? (landing.style === 'preverb' && rng() < MOVES.preverb.vocalsChance ? 'vocals' : 'mix')) : 'mix';
   const preverb = landing.style === 'preverb'
     ? preverbEvent({ hookId: hook.id, pickupAt, minStart: tl ? minStart : spinStart + 0.1, gB, phase, rng, source: preverbSource })
     : null;
-  if (landing.style === 'preverb' && !preverb) landing.style = 'cymbal';
+  if (landing.style === 'preverb' && !preverb) {
+    // No room for the pre-verb: the Phase's lighter plain landing instead (early, dry without samples).
+    const styles = MOVES.landing.weights[phase.name];
+    landing.style = styles.dry >= styles.cymbal ? 'dry' : 'cymbal';
+    if (landing.style === 'dry' && landing.impact === 'samples') Object.assign(landing, { impact: 'sub', samples: [] });
+  }
 
   // Where B starts: a declick before its lead, or (tape) inside the gap with its rate climbing to the pickup.
   let lead: number;
@@ -649,7 +676,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     force: force ? { bridge: force.bridge ?? null, variant: force.variant ?? null } : null,
   });
   const teaseStyle = teaseBars > 0 ? (built.events.some((x) => x.kind === 'stems') ? 'stems' : 'lpf') : null;
-  events.push(...built.events);
+  events.push(...dress(built.events, recipe, phase, rng() < phase.dress.riser, force?.riser ?? null));
   if (preverb) events.push(preverb);
   const layers: LayerName[] = [...(built.layers ?? [])];
   let usesBSignature = Boolean(built.usesBSignature);

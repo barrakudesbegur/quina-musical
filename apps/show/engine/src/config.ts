@@ -8,9 +8,23 @@ import type { PhaseName, SoundName, StingerName } from '@quina/protocol';
 export type { PhaseName } from '@quina/protocol';
 
 /**
+ * How dressed a Phase's transitions are, beyond the move itself (the user's first listen: too intense
+ * everywhere; light, quick and clean early, growing with the Phase).
+ */
+export interface PhaseDress {
+  /** Chance an S1 or S3 move keeps its riser (an S2 build keeps its own: the riser is the build). */
+  readonly riser: number;
+  /** Every riser's level, against the recipe's, in dB. */
+  readonly riserDb: number;
+  /** The whoosh as the Spin starts, in dB. */
+  readonly whooshDb: number;
+}
+
+/**
  * Effects per Phase. Every phase uses produced DJ moves from the first song (the user rejected plain cuts
- * and fades); toward a win the builds get longer, the silence before the landing grows, the snare
- * climbs higher and the impacts get bigger.
+ * and fades), but early ones are light, quick and clean: a cut on the one, a short echo, a filter or drum
+ * swap, and many landings without an impact. Toward a win the builds get longer, the silence before the
+ * landing grows, the snare climbs higher and the impacts get bigger and more frequent.
  */
 export interface PhaseEffects {
   readonly name: PhaseName;
@@ -37,6 +51,7 @@ export interface PhaseEffects {
   /** Which hook tags this Phase may land. */
   readonly hookTags: readonly string[];
   readonly autoAdvance: boolean;
+  readonly dress: PhaseDress;
 }
 
 /** How the Pace plays out in one Phase. */
@@ -54,26 +69,30 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     name: 'early',
     // docs/dj-techniques.md › Weights. R8, D10 and D16 need B's stretched render, D8, D10, D15 and D16 A's stem
     // lanes, D11 and D19 B's vocals, D16 B's stretched voice (tight tempos, agreeing keys): without them the rest
-    // share the draw. Early keeps the Blend and the build common; the theatrical moves wait for mid.
-    weights: { R8: 1, D10: 0.6, R7: 0.3, D1: 0.25, D3: 0.2, D8: 0.15, D2: 0.1, R2: 0.1, R4: 0.1, R5: 0.08, R1: 0.05, R6: 0.05 },
+    // share the draw. Early is light and clean: the Blend and the drum swap when they fit, else a cut on the one
+    // (R1, often a filter swap), a short echo (R2) or a quick strip-down (D8); builds, gates and spirals are
+    // rare, and the theatrical moves wait for mid.
+    weights: { R8: 1, D10: 0.8, R1: 0.8, R2: 0.7, D8: 0.5, D1: 0.2, R6: 0.15, D3: 0.12, R7: 0.12, R4: 0.05, R5: 0.04 },
     bridgeBars: [1, 2],
     tease: 0,
     stemTease: 0.5,
     signature: 0.4,
     signatureDb: -5,
-    gapBeats: [0, 0.5],
+    gapBeats: [0, 0, 0.5],
     snarePitch: 3,
     duckDb: -2,
     impactSamples: [['boom', -12]],
     hookTags: ['best'],
     autoAdvance: true,
+    dress: { riser: 0.2, riserDb: -6, whooshDb: -12 },
   },
   mid: {
     name: 'mid',
     // D16 is rare (about 7.5% of pairs qualify), so it is drawn often when it does.
+    // Mid keeps the clean moves common and brings in the builds, gates, spirals and chops.
     weights: {
-      R8: 0.8, D16: 1, D10: 0.6, R7: 0.45, D8: 0.25, D1: 0.2, D3: 0.2, D2: 0.15, D11: 0.15, D19: 0.12, D15: 0.12, D7: 0.12, R4: 0.12,
-      R5: 0.1, R2: 0.1, R6: 0.04, R1: 0.04,
+      R8: 0.8, D16: 1, D10: 0.6, R7: 0.4, R2: 0.35, D8: 0.35, R1: 0.3, D1: 0.2, D3: 0.2, D11: 0.15, D2: 0.1, D19: 0.1, D15: 0.12,
+      D7: 0.1, R4: 0.1, R5: 0.1, R6: 0.05,
     },
     bridgeBars: [2, 3],
     tease: 0.5,
@@ -86,6 +105,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     impactSamples: [['boom', -8]],
     hookTags: ['best', 'main'],
     autoAdvance: true,
+    dress: { riser: 0.55, riserDb: -3, whooshDb: -8 },
   },
   late: {
     name: 'late',
@@ -104,6 +124,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     impactSamples: [['orchestra-hit', -6], ['boom', -8]],
     hookTags: ['best', 'main'],
     autoAdvance: true,
+    dress: { riser: 0.85, riserDb: -1, whooshDb: -6 },
   },
   final: {
     name: 'final',
@@ -121,6 +142,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
     impactSamples: [['orchestra-hit', -3], ['boom', -5]],
     hookTags: ['best'],
     autoAdvance: false, // the presenters advance by hand, unless they keep it on
+    dress: { riser: 1, riserDb: 0, whooshDb: -5 },
   },
 });
 
@@ -434,19 +456,30 @@ export const MOVES = Object.freeze({
   }),
   /** The landing layer, rotated: the reverse cymbal, a dry landing, D12's pre-verb (when rendered) or D14's tape start. */
   landing: Object.freeze({
+    // Early lands dry most of the time (no reverse cymbal), the cymbal grows with the Phase.
     weights: {
-      early: { cymbal: 0.45, dry: 0.3, preverb: 0.45, tape: 0 },
-      mid: { cymbal: 0.45, dry: 0.2, preverb: 0.5, tape: 0.15 },
+      early: { cymbal: 0.1, dry: 0.6, preverb: 0.4, tape: 0 },
+      mid: { cymbal: 0.3, dry: 0.35, preverb: 0.5, tape: 0.15 },
       late: { cymbal: 0.5, dry: 0.1, preverb: 0.5, tape: 0.25 },
       final: { cymbal: 0.5, dry: 0, preverb: 0.5, tape: 0.25 },
     } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb' | 'tape', number>>>,
-    /** Sample layers on the impact, one set drawn per landing ([name, gain dB]). */
+    /** What hits on the landing: nothing (many landings, most early), the sub drop alone, or with samples. */
+    impactKinds: {
+      early: { none: 0.65, sub: 0.25, samples: 0.1 },
+      mid: { none: 0.4, sub: 0.3, samples: 0.3 },
+      late: { none: 0.15, sub: 0.25, samples: 0.6 },
+      final: { none: 0, sub: 0.15, samples: 0.85 },
+    } as ByPhase<Readonly<Record<'none' | 'sub' | 'samples', number>>>,
+    /** Sample layers on the impact, one set drawn per landing ([name, gain dB]). The orchestra hit is rare: late
+     * and final only, never within its cooldown. */
     impacts: {
-      early: [[['boom', -12]], [['boom', -14]], [['orchestra-hit', -14]], [['horn', -18]]],
-      mid: [[['boom', -8]], [['orchestra-hit', -9]], [['boom', -9], ['orchestra-hit', -12]], [['horn', -14]]],
-      late: [[['orchestra-hit', -6], ['boom', -8]], [['boom', -6]], [['orchestra-hit', -5]]],
+      early: [[['boom', -14]], [['boom', -16]]],
+      mid: [[['boom', -9]], [['boom', -11]], [['horn', -16]]],
+      late: [[['orchestra-hit', -6], ['boom', -8]], [['boom', -6]], [['boom', -8]], [['horn', -12]]],
       final: [[['orchestra-hit', -3], ['boom', -5]], [['orchestra-hit', -3]], [['boom', -4]]],
     } as ByPhase<ReadonlyArray<ReadonlyArray<readonly [string, number]>>>,
+    /** Transitions after an orchestra hit before the next may come (this round's). */
+    orchestraCooldown: { early: 1000, mid: 1000, late: 6, final: 3 } as ByPhase<number>,
     /** The samples sit this far before T (their attack). */
     sampleLeadSec: [0.02, 0.04] as const,
     dryImpactScale: 0.8,
