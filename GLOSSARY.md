@@ -10,6 +10,10 @@ A live music bingo show. Players mark songs on printed cards as they recognize t
 The whole set of rounds played on the night of the event. On screen it is just the event's name, "Quina Musical".
 _Avoid_: Night, session, event, partida
 
+**Edition**:
+One year's Quina Musical, named by its year (for example "26"). Cards, their QR links and the data on players' phones belong to an edition. A rehearsal is a separate Game in the same edition.
+_Avoid_: Year, season
+
 **Round**:
 One game of bingo, from its first song until a Bingo is confirmed. Labelled "Quina 1", "Quina 2"… on screen, as people in town call it.
 _Avoid_: Game, match, ronda

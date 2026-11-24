@@ -20,7 +20,18 @@ These override the sections below where they differ.
 - **The near-win cue on phones is subtle:** the missing song is gently highlighted on that card's grid. There is no banner, and no win is ever announced.
 - **Hooks for this year's songs are detected automatically** (the chorus start, an energy jump, the vocals coming in, snapped to phrases), and the user approves, rejects or nudges each one on the audition page.
 - **The console's crystal ball ("Futur" tab).** It replaces the possible-winners tab and is hidden until a presenter taps "Mirar el futur". It shows a chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners. It is private: it never reaches phones or the projector.
-- **The repo is being reorganised:** `apps/`, `packages/`, `tools/` and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
+- **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
+- **Resolved from the open questions:**
+  - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.
+  - **The visual direction is approved**, with per-card icons.
+  - **Console words:** the defaults stand, except Hold, which is "Parlem".
+  - **The QR library** is approved.
+  - **The admin login helper** copied from coin-reader is OK.
+  - **Phones keep their cards per edition**, so a rehearsal or a new Game never wipes them.
+  - **Same-day rehearsals** share the free quota; hold big rehearsals on another day.
+  - **Plan B resume** is built (resume codes).
+  - **The overnight screen behaviours are accepted**, except where the grace rule's removal makes them moot.
+
 
 ## Who builds what
 
