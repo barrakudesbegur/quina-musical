@@ -3,8 +3,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROTOCOL_VERSION, type IncomingEvent, type ShowState } from '@quina/protocol';
-import { baseState, FIXTURE_LANDED } from '../../../../../packages/ui/fixtures/states.ts';
+import { baseState, FIXTURE_LANDED, FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { PublicProjector, type ProjectionContext } from '../../../../player/feed/project.ts';
+import { ProjectedFeedCore } from '../../../../player/feed/projected-feed.ts';
 import { followFeed } from '../../../../player/feed/public.ts';
 
 const NOW = 1_700_000_000_000;
@@ -215,4 +217,75 @@ test('the Heat leaves only as an eased sample that starts later', () => {
   assert.ok(heat);
   assert.ok(heat.fromMs >= NOW + 4000, 'never moves at the moment it changes');
   assert.ok(heat.toMs > heat.fromMs);
+});
+
+test('the plan goes out as the public plan: locked rounds without prizes, never the cheat sheet', () => {
+  const p = new PublicProjector(() => 0.5);
+  p.ingest(baseState(NOW) as unknown as ShowState, NOW); // rounds 1 to 3 introduced
+  const out = p.project({ ...ctx, plan: SAMPLE_PLAN });
+  assert.ok(out.plan);
+  assert.deepEqual(out.plan.rounds.map((r) => r.revealed), [true, true, true, false, false, false, false, false]);
+  assert.equal(out.plan.rounds[2].bingo?.[0].title, '[Premi de quina 3]');
+  assert.deepEqual(Object.keys(out.plan.rounds[3]).sort(), ['kind', 'number', 'revealed'], 'a locked round: only its skeleton');
+  const json = JSON.stringify(out);
+  assert.ok(!json.includes('cheatSheet') && !json.includes(SAMPLE_PLAN.cheatSheet.claimRules[0]));
+  assert.ok(!json.includes('Premi de línia 4'), "a locked round's prizes never leave");
+  // All secret: the intro reveals count for nothing, the presenters' do.
+  const secret = p.project({ ...ctx, plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } });
+  assert.deepEqual(secret.plan?.rounds.filter((r) => r.revealed).map((r) => r.number), []);
+  const revealed = new PublicProjector(() => 0.5);
+  revealed.ingest({ ...baseState(NOW), prizes: { revealed: [{ round: 5, by: 'presenters' }] } } as unknown as ShowState, NOW);
+  assert.deepEqual(revealed.project({ ...ctx, plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } }).plan?.rounds.filter((r) => r.revealed).map((r) => r.number), [5]);
+});
+
+test('the dev feed follows the engine through every scene: before → roundStart → play after a landing', () => {
+  const core = new ProjectedFeedCore(() => 0.5, () => NOW);
+  const publish = () => core.publish({ ...ctx, plan: SAMPLE_PLAN });
+  const before = FIXTURES.before(NOW).state as unknown as ShowState;
+  core.projector.ingest(before, NOW);
+  publish();
+  assert.equal(core.follower.state?.scene, 'before');
+  assert.deepEqual(core.follower.state?.plan?.rounds.filter((r) => r.revealed).map((r) => r.number), [1], 'before the night: round 1 only');
+
+  const intro = { ...before, seq: 2, scene: 'roundStart', round: { ...before.round, number: 1 }, intro: { round: 1, kind: 'normal', sinceMs: NOW }, prizes: { revealed: [{ round: 1, by: 'intro' }] } } as unknown as ShowState;
+  core.projector.ingest(intro, NOW);
+  publish();
+  assert.equal(core.follower.state?.scene, 'roundStart');
+  assert.deepEqual(core.follower.state?.intro, { round: 1, kind: 'normal' });
+
+  const playing = { ...intro, seq: 3, scene: 'play', intro: null, round: { ...intro.round, startedAtMs: NOW }, queue: { position: 0, length: 77 }, landings: [{ songId: 25, title: 'Gasolina', artist: 'Daddy Yankee', position: 0, atMs: NOW, undone: false }] } as unknown as ShowState;
+  core.projector.ingest(playing, NOW);
+  core.projector.ingest({ v: PROTOCOL_VERSION, type: 'transition.landed', id: 'tr-1', songId: 25, position: 0, atMs: NOW }, NOW);
+  publish();
+  assert.equal(core.follower.state?.scene, 'play');
+  assert.deepEqual(core.follower.state?.rounds.at(-1)?.landings.map((l) => l.songId), [25]);
+  assert.equal(core.follower.view?.seq, 3, 'every snapshot was taken');
+});
+
+test('DevRelayFeed over a relay socket: the engine\'s states reach the player as before → roundStart → play', async () => {
+  const { DevRelayFeed } = await import('../../../../player/feed/relay-feed.ts');
+  const { ShowClient } = await import('../../../../../packages/ui/client/show-client.ts');
+  let handlers: { open(): void; message(text: string): void; close(): void } | null = null;
+  const sent: string[] = [];
+  const transport = { connected: false, connect(h: typeof handlers) { handlers = h; }, send(text: string) { sent.push(text); return true; } };
+  const client = new ShowClient({ role: 'drum', transport });
+  const planStore = { load: () => SAMPLE_PLAN, save: () => {}, subscribe: () => () => {} };
+  const feed = new DevRelayFeed({ client, planStore, random: () => 0.5 });
+  const scenes: (string | null)[] = [];
+  feed.subscribe((u) => scenes.push(u.state?.scene ?? null));
+  feed.start();
+  transport.connected = true;
+  handlers!.open();
+  const deliver = (event: unknown) => handlers!.message(JSON.stringify(event));
+  deliver({ v: PROTOCOL_VERSION, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show' }] });
+  const before = FIXTURES.before(NOW).state;
+  deliver(before);
+  deliver({ v: PROTOCOL_VERSION, type: 'relay.plan', plan: SAMPLE_PLAN });
+  deliver({ ...before, seq: 2, scene: 'roundStart', round: { ...before.round, number: 1 }, intro: { round: 1, kind: 'normal', sinceMs: NOW }, prizes: { revealed: [{ round: 1, by: 'intro' }] } });
+  assert.equal(scenes.at(-1), 'roundStart');
+  deliver({ ...before, seq: 3, scene: 'play', intro: null, round: { ...before.round, number: 1, startedAtMs: NOW }, queue: { position: 0, length: 77 }, landings: [{ songId: 25, title: 'x', artist: 'y', position: 0, atMs: NOW, undone: false }] });
+  deliver({ v: PROTOCOL_VERSION, type: 'transition.landed', id: 'tr-1', songId: 25, position: 0, atMs: NOW });
+  assert.equal(scenes.at(-1), 'play');
+  assert.ok(scenes.includes('before'));
+  feed.stop();
 });

@@ -5,7 +5,7 @@
 // no private field ever comes out.
 import type { RoundKind, ShowState } from '@quina/protocol';
 import type { FlowFields, WinKind, WinnerInfo } from '../../packages/ui/flow.ts';
-import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
+import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
@@ -14,14 +14,19 @@ import { motionView, type MotionView, type SpinNote } from './model/motion.ts';
 import { checkCells, verdictOf, type CheckView } from './model/check.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
-import { STAGE_TEXT } from './strings.ts';
+import { STAGE_TEXT, joinCa } from './strings.ts';
 
+/** A Line's or a Quina's prize bundle as the projector shows it: its headline prizes, and how many more. */
 export interface PrizeView {
   kind: WinKind;
+  /** The headline prizes' titles, joined ("Sopar per a dos i Pernil"). */
   title: string;
+  /** A single headline prize's detail (null with several). */
   detail: string | null;
-  /** The sponsor's name, or null. */
+  /** The headline prizes' sponsors' names, joined, or null. */
   sponsor: string | null;
+  /** How many other prizes the bundle holds ("i 3 premis més"). */
+  more: number;
 }
 
 /** A sponsor as the projector shows it (`label`: its public name; a winner's name never gets here). */
@@ -130,14 +135,32 @@ export interface LiveNotes {
 
 const NO_NOTES: LiveNotes = { landed: [], spin: null };
 
-function prizeView(plan: GamePlan, kind: WinKind, prize: Prize | null): PrizeView | null {
-  if (!prize || !prize.title) return null;
-  return { kind, title: prize.title, detail: prize.detail || null, sponsor: sponsorOf(plan, prize)?.name ?? null };
+function prizeView(plan: GamePlan, kind: WinKind, bundle: readonly Prize[]): PrizeView | null {
+  const { headline, others } = splitBundle(bundle.filter((p) => p.title));
+  if (!headline.length) return null;
+  const sponsors = [...new Set(headline.map((p) => sponsorOf(plan, p)?.name).filter((n): n is string => !!n))];
+  return {
+    kind,
+    title: joinCa(headline.map((p) => p.title)),
+    detail: headline.length === 1 ? headline[0].detail || null : null,
+    sponsor: sponsors.length ? joinCa(sponsors) : null,
+    more: others.length,
+  };
 }
 
-function prizesOf(plan: GamePlan | null, round: number): PrizeView[] {
+/**
+ * The rounds whose prizes the projector may show: what phones may see (plan.ts revealedRounds over the
+ * engine's `prizes.revealed`). Null (every round) from an engine that doesn't report reveals.
+ */
+function openRounds(plan: GamePlan | null, state: ShowState | null): ReadonlySet<number> | null {
+  if (!plan || !state?.prizes) return null;
+  return new Set(revealedRounds(plan, state.prizes.revealed));
+}
+
+/** A round's prizes, unless they are still secret. */
+function prizesOf(plan: GamePlan | null, round: number, open: ReadonlySet<number> | null): PrizeView[] {
   const r = plan ? roundPlan(plan, round) : null;
-  if (!plan || !r) return [];
+  if (!plan || !r || (open && !open.has(round))) return [];
   return [prizeView(plan, 'line', r.line), prizeView(plan, 'bingo', r.bingo)].filter((p): p is PrizeView => p !== null);
 }
 
@@ -177,6 +200,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const scene = stageScene(flow);
   const link = playerAppLink(plan?.edition, STAGE.playerApp);
   const roundNumber = state?.round.number ?? 0;
+  const open = openRounds(plan, state);
   const play = (): PlayView => ({ scene: 'play', round: roundView(roundNumber, plan, state), motion: motionView(state, notes.spin) });
   switch (scene) {
     case 'before':
@@ -189,7 +213,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       return {
         scene,
         round: roundView(number, plan, state, intro?.round === number ? intro.kind : null),
-        prizes: prizesOf(plan, number),
+        prizes: prizesOf(plan, number, open),
         shuffle: s ? { ...shuffleTimeline(s.startAtMs, s.endAtMs, STAGE.shuffle.split), key: `${s.round}@${s.startAtMs}` } : null,
         tiles: catalog ? [...catalog.songs.keys()].sort((a, b) => a - b) : [],
       };
@@ -206,6 +230,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
           key: `${c.cardId}@${c.startAtMs}`,
           cardId: c.cardId,
           kind: c.kind,
+          cardType: c.cardType ?? null,
           verdict,
           row: c.kind === 'line' ? c.row : null,
           cells: verdict === 'notValid' ? [] : checkCells(card, steps, c.row, (id) => lookup(id)?.title ?? null),
@@ -218,7 +243,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
     case 'celebration': {
       const c = flow.celebration;
       if (!c) return play();
-      const prize = prizesOf(plan, c.round).find((p) => p.kind === c.kind) ?? null;
+      const prize = prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null;
       return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, cardIds: [...c.cardIds], prize };
     }
     case 'interval': {
@@ -229,7 +254,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
         scene,
         nextRound: roundView(next, plan, state) ?? { number: next, special: false },
         roundsTotal: plan?.rounds.length || state?.game.roundsTotal || null,
-        prizes: prizesOf(plan, next),
+        prizes: prizesOf(plan, next, open),
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,
         lastRound,

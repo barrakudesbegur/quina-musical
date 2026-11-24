@@ -125,6 +125,9 @@ export const S = {
   prize: CA.prize,
   sponsoredBy: CA.sponsoredBy,
   noPrize: 'Per anunciar',
+  morePrizes: CA.morePrizes,
+  /** A round whose prizes aren't revealed yet (PrizeRound.lockedUntil). */
+  prizesLocked: { intro: 'Es revelen quan comenci la quina', presenters: 'Secrets: es revelaran durant la nit' },
   noPlan: 'Els premis encara no s’han anunciat.',
   winners: CA.winners,
   roundState: { done: 'Feta', current: 'Ara', next: 'La següent', later: '' },

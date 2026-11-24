@@ -7,6 +7,7 @@ import { checkGamePlan, type GamePlan } from '../plan.ts';
 import { SAMPLE_PLAN } from '../fixtures/plan.ts';
 import { CloudPlanStore, checkedPlan } from './cloud-plan.ts';
 import { isLocalHost } from '../client/endpoints.ts';
+import { relayTokenForPage } from '../client/pairing.ts';
 
 export { checkedPlan };
 
@@ -74,21 +75,28 @@ export class LocalPlanStore implements PlanStore {
   }
 }
 
+/** The fetch LaptopPlanStore needs: a GET with optional headers. */
+export type PlanFetch = (url: string, init?: { headers?: Record<string, string> }) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
+
 /**
  * The plan on the show laptop: the cloud link writes the cloud's plan to `/cloud/plan.json` (served read-only
  * by the relay), and it wins over this browser's stored copy, which stays the offline fallback. It refreshes
- * on demand (`refresh()`), and the page calls that at start and when it regains focus.
+ * on demand (`refresh()`), and the page calls that at start and when it regains focus. The relay serves the
+ * whole plan only to the laptop itself and to paired devices (the relay token as a Bearer header); anyone else
+ * on the hotspot gets the public plan, which isn't a GamePlan and is ignored here.
  */
 export class LaptopPlanStore implements PlanStore {
   private laptop: GamePlan | null = null;
   private laptopJson: string | null = null;
   private readonly local: PlanStore;
-  private readonly fetchImpl: (url: string) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
+  private readonly fetchImpl: PlanFetch;
+  private readonly token: string | null;
   private readonly listeners = new Set<(plan: GamePlan | null) => void>();
 
-  constructor(fetchImpl: (url: string) => Promise<{ ok: boolean; json(): Promise<unknown> }>, local: PlanStore = new LocalPlanStore()) {
+  constructor(fetchImpl: PlanFetch, local: PlanStore = new LocalPlanStore(), token: string | null = null) {
     this.fetchImpl = fetchImpl;
     this.local = local;
+    this.token = token;
   }
 
   load(): GamePlan | null {
@@ -113,7 +121,7 @@ export class LaptopPlanStore implements PlanStore {
    * `receive()`: at start and when the page regains focus. */
   async refresh(): Promise<GamePlan | null> {
     try {
-      const res = await this.fetchImpl('/cloud/plan.json');
+      const res = await this.fetchImpl('/cloud/plan.json', this.token ? { headers: { authorization: `Bearer ${this.token}` } } : undefined);
       if (!res.ok) return this.load();
       const check = checkGamePlan(await res.json());
       this.use(check.ok ? check.plan : null);
@@ -149,7 +157,8 @@ export function planStoreForPage(): PlanStore {
   const demo = typeof location !== 'undefined' && new URLSearchParams(location.search).has('demo');
   if (demo || typeof location === 'undefined' || typeof fetch === 'undefined') return new LocalPlanStore();
   const noStore = (url: string, init?: RequestInit) => fetch(url, { cache: 'no-store', credentials: 'same-origin', ...init });
-  const store = isLocalHost(location.hostname) ? new LaptopPlanStore((url) => noStore(url)) : new CloudPlanStore((url, init) => noStore(url, init));
+  // A paired device (the console on the LAN) proves it with the relay token to get the whole plan.
+  const store = isLocalHost(location.hostname) ? new LaptopPlanStore((url, init) => noStore(url, init), new LocalPlanStore(), relayTokenForPage()) : new CloudPlanStore((url, init) => noStore(url, init));
   void store.refresh();
   if (typeof window !== 'undefined') window.addEventListener('focus', () => void store.refresh());
   return store;

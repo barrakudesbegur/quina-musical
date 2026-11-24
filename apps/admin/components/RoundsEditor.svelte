@@ -1,4 +1,4 @@
-<!-- The rounds plan: each round normal or special, with its Line and Quina prizes. Rounds are added, removed
+<!-- The rounds plan: each round normal or special, with its Line's and Quina's prize bundles. Rounds are added, removed
      and reordered here; they are renumbered 1, 2, 3… every time. During the night the rounds already played and
      the one in play (or being introduced) are fixed; the upcoming ones can be moved and edited live. -->
 <script lang="ts">
@@ -65,8 +65,8 @@
             </div>
           </div>
           <div class="round__prizes">
-            <PrizeFields bind:prize={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
-            <PrizeFields bind:prize={round.bingo} kind="bingo" sponsors={session.draft.sponsors} idPrefix="round-{i}-bingo" errors={errorsAt(session.errors, `plan.rounds[${i}].bingo`)} />
+            <PrizeFields bind:bundle={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
+            <PrizeFields bind:bundle={round.bingo} kind="bingo" sponsors={session.draft.sponsors} idPrefix="round-{i}-bingo" errors={errorsAt(session.errors, `plan.rounds[${i}].bingo`)} />
           </div>
           <ul class="error-list">
             {#each errorsAt(session.errors, `plan.rounds[${i}]`).filter((e) => !e.includes('.line') && !e.includes('.bingo')) as error, j (j)}<li>{error}</li>{/each}

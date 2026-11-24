@@ -44,6 +44,9 @@ function landings(now: number): LandingInfo[] {
   return ids.slice(-10).map((id, i, arr) => ({ ...song(id), position: ids.length - arr.length + i, atMs: now - (arr.length - 1 - i) * 14000, undone: false }));
 }
 
+/** Rounds 1 to `n` introduced, so their prizes are revealed. */
+const revealedUpTo = (n: number): NonNullable<ShowState['prizes']> => ({ revealed: Array.from({ length: n }, (_, i) => ({ round: i + 1, by: 'intro' as const })) });
+
 /** A complete `state` snapshot in play, with the show flow's fields set to their in-play values. */
 export function baseState(now: number): FullState {
   const position = FIXTURE_LANDED.length - 1;
@@ -83,6 +86,7 @@ export function baseState(now: number): FullState {
     suspense: null,
     landings: landings(now),
     history: [],
+    prizes: revealedUpTo(3),
   };
   const flow: FlowFields = {
     scene: 'play',
@@ -111,6 +115,7 @@ export interface DemoScript {
 
 const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s, ...patch });
 
+
 /** Every demo fixture by name. */
 export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   before: (now) => {
@@ -127,13 +132,14 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         winners: [],
         autoAtMs: null,
         heat: null,
+        prizes: { revealed: [] },
       }),
     };
   },
   roundStart: (now) => {
     const s = baseState(now);
     return {
-      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', sinceMs: now - 20000 } }),
+      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', sinceMs: now - 20000 }, prizes: revealedUpTo(4) }),
     };
   },
   shuffle: (now) => {
@@ -149,6 +155,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         autoAtMs: null,
         round: { ...s.round, number: 4 },
         shuffle: { round: 4, startAtMs: now + 500, endAtMs: now + 9500 },
+        prizes: revealedUpTo(4),
       }),
     };
   },
@@ -194,7 +201,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
           { claimId: 'cl-5', round: 3, cardId: 57, kind: 'line', atMs: now - 4000, position: s.queue.position, status: 'checking', outcome: 'incomplete', completeSince: null, warnings: [] },
           { claimId: 'cl-6', round: 3, cardId: 204, kind: 'line', atMs: now - 2000, position: s.queue.position, status: 'queued', outcome: null, completeSince: null, warnings: ['notSold'] },
         ],
-        check: { claimId: 'cl-5', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, otherRows: [], steps, startAtMs: now + 600, endAtMs: now + 600 + 4 * 3000 },
+        check: { claimId: 'cl-5', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, otherRows: [], cardType: 'normal', steps, startAtMs: now + 600, endAtMs: now + 600 + 4 * 3000 },
       }),
     };
   },
@@ -209,7 +216,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         autoAtMs: null,
         hold: { sinceMs: now - 20000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
         claims: [{ claimId: 'cl-7', round: 3, cardId: 123, kind: 'line', atMs: now - 20000, position: s.queue.position, status: 'checked', outcome: 'complete', completeSince: s.queue.position, warnings: [] }],
-        check: { claimId: 'cl-7', cardId: 123, kind: 'line', outcome: 'complete', row: 0, otherRows: [], steps, startAtMs: now - 13000, endAtMs: now - 1000 },
+        check: { claimId: 'cl-7', cardId: 123, kind: 'line', outcome: 'complete', row: 0, otherRows: [], cardType: 'normal', steps, startAtMs: now - 13000, endAtMs: now - 1000 },
       }),
     };
   },

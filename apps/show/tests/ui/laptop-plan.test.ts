@@ -72,3 +72,23 @@ test('followPlanPushes feeds relay.plan messages, and only those, to the store',
   listener({ type: 'relay.plan', plan: fromCloud });
   assert.equal(store.load()?.title, 'Del núvol');
 });
+
+test('a paired device sends the relay token, so the relay gives it the whole plan; the laptop itself sends none', async () => {
+  const calls: { url: string; headers: Record<string, string> | undefined }[] = [];
+  const fetchImpl = async (url: string, init?: { headers?: Record<string, string> }) => {
+    calls.push({ url, headers: init?.headers });
+    return { ok: true, json: async () => fromCloud };
+  };
+  await new LaptopPlanStore(fetchImpl, new MemoryStore(local), 'tok_12345678').refresh();
+  await new LaptopPlanStore(fetchImpl, new MemoryStore(local)).refresh();
+  assert.deepEqual(calls, [
+    { url: '/cloud/plan.json', headers: { authorization: 'Bearer tok_12345678' } },
+    { url: '/cloud/plan.json', headers: undefined },
+  ]);
+});
+
+test('the public plan (what an unpaired device gets) is not a plan here: the stored copy stands', async () => {
+  const { publicPlan } = await import('../../../../packages/ui/plan.ts');
+  const store = new LaptopPlanStore(async () => ({ ok: true, json: async () => publicPlan(fromCloud, [1]) }), new MemoryStore(local));
+  assert.equal((await store.refresh())?.title, 'Local');
+});

@@ -129,7 +129,7 @@ test('before: start time, sponsors and the player app link from the plan', () =>
   const state = FIXTURES.before(NOW).state;
   const plan = { ...SAMPLE_PLAN, schedule: { ...SAMPLE_PLAN.schedule, startAtMs: NOW + 600_000 } };
   const view = stageView(state, flowOf(state), plan, null);
-  assert.equal(view.title, 'Quina Musical');
+  assert.equal(view.title, 'Quina Quina 3', "the edition's name");
   assert.deepEqual(view.body, {
     scene: 'before',
     startAtMs: NOW + 600_000,
@@ -138,15 +138,15 @@ test('before: start time, sponsors and the player app link from the plan', () =>
   });
 });
 
-test('roundStart: prizes with sponsors; the Shuffle grid by song id, its window from the engine', () => {
+test('roundStart: headline prizes with sponsors and how many more; the Shuffle grid by song id, its window from the engine', () => {
   const state = FIXTURES.shuffle(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'roundStart');
   if (view.body.scene !== 'roundStart') return;
   assert.deepEqual(view.body.round, { number: 4, special: false });
   assert.deepEqual(view.body.prizes, [
-    { kind: 'line', title: '[Premi de línia 4]', detail: null, sponsor: '[Patrocinador 2]' },
-    { kind: 'bingo', title: '[Premi de quina 4]', detail: null, sponsor: '[Patrocinador 1]' },
+    { kind: 'line', title: '[Premi de línia 4]', detail: null, sponsor: '[Patrocinador 2]', more: 2 },
+    { kind: 'bingo', title: '[Premi de quina 4]', detail: null, sponsor: '[Patrocinador 1]', more: 4 },
   ]);
   assert.equal(view.body.shuffle?.startAtMs, NOW + 500);
   assert.equal(view.body.shuffle?.endAtMs, NOW + 9500);
@@ -218,8 +218,56 @@ test('celebration: shout kind, card numbers and the round prize', () => {
     key: `3:bingo@${NOW - 1500}`,
     kind: 'bingo',
     cardIds: [57, 301],
-    prize: { kind: 'bingo', title: '[Premi de quina 3]', detail: null, sponsor: '[Patrocinador 1]' },
+    prize: { kind: 'bingo', title: '[Premi de quina 3]', detail: null, sponsor: '[Patrocinador 1]', more: 3 },
   });
+});
+
+test('two headline prizes share one block: titles and sponsors joined, no single detail', () => {
+  const { state } = FIXTURES.roundStart(NOW);
+  const last: FlowState = { ...state, intro: { round: 8, kind: 'normal', sinceMs: NOW }, prizes: { revealed: [{ round: 8, by: 'intro' }] } };
+  const view = stageView(last, flowOf(last), SAMPLE_PLAN, null);
+  if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
+  assert.deepEqual(view.body.prizes[1], { kind: 'bingo', title: '[Premi de quina 8] i [Gran premi final]', detail: null, sponsor: 'Barrakudes i [Patrocinador 2]', more: 4 });
+});
+
+test('secret prizes never reach the projector: only revealed rounds show theirs', () => {
+  // The Interval before round 4 is introduced: its prizes are still secret.
+  const interval = FIXTURES.interval(NOW).state;
+  const view = stageView(interval, flowOf(interval), SAMPLE_PLAN, null);
+  if (view.body.scene !== 'interval') return assert.fail('not interval');
+  assert.deepEqual(view.body.prizes, []);
+  assert.ok(!JSON.stringify(view).includes('Premi de línia 4'));
+  // The presenters reveal them from the console.
+  const revealed: FlowState = { ...interval, prizes: { revealed: [{ round: 4, by: 'presenters' }] } };
+  const shown = stageView(revealed, flowOf(revealed), SAMPLE_PLAN, null);
+  if (shown.body.scene !== 'interval') return assert.fail('not interval');
+  assert.equal(shown.body.prizes[0]?.title, '[Premi de línia 4]');
+  // All secret: introducing a round doesn't reveal it, and the Celebration shows no prize either.
+  const secret = { ...SAMPLE_PLAN, prizeReveal: 'allSecret' as const };
+  const intro = FIXTURES.roundStart(NOW).state;
+  const atIntro = stageView(intro, flowOf(intro), secret, null);
+  if (atIntro.body.scene !== 'roundStart') return assert.fail('not roundStart');
+  assert.deepEqual(atIntro.body.prizes, []);
+  const celebration = FIXTURES.celebrationBingo(NOW).state;
+  const won = stageView(celebration, flowOf(celebration), secret, null);
+  if (won.body.scene !== 'celebration') return assert.fail('not celebration');
+  assert.equal(won.body.prize, null);
+  // An engine that doesn't report reveals: every round, as before.
+  const old: FlowState = { ...interval, prizes: undefined };
+  const fromOld = stageView(old, flowOf(old), SAMPLE_PLAN, null);
+  if (fromOld.body.scene !== 'interval') return assert.fail('not interval');
+  assert.equal(fromOld.body.prizes.length, 2);
+});
+
+test('a Check carries the card\'s printed type, which is public', () => {
+  const state = FIXTURES.check(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(view.body.check.cardType, 'normal');
+  const unknown: FlowState = { ...state, check: state.check ? { ...state.check, outcome: 'unknownCard', cardType: null, steps: [] } : null };
+  const none = stageView(unknown, flowOf(unknown), SAMPLE_PLAN, CATALOG);
+  if (none.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(none.body.check.cardType, null);
 });
 
 test('interval: next round, count, last round winners (card numbers only)', () => {

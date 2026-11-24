@@ -305,6 +305,9 @@ export const S = {
     special: CA.specialRound,
     noPlan: "Encara no hi ha pla de la nit: deseu-lo des de l'Admin.",
     noRound: (n: number) => `El pla no té la ${CA.round(n)}.`,
+    secret: 'Secrets: els mòbils encara no els veuen',
+    reveal: 'Revelar premis',
+    revealed: 'Revelats: els mòbils ja els veuen',
   },
 
   tabs: { label: 'Ajudes', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
@@ -491,6 +494,7 @@ export const S = {
     pause: 'Pausa tècnica',
     intervalSkip: 'Saltar cançó',
     resumeAt: 'Recuperar el show',
+    revealPrizes: 'Revelar premis',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 

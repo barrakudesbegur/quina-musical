@@ -347,7 +347,8 @@
 }
 
 .prize__kind,
-.prize__detail {
+.prize__detail,
+.prize__more {
   font-size: var(--stage-text-sm);
   color: var(--color-text-muted);
 }

@@ -18,10 +18,12 @@ import {
   markedIdentities,
   padValue,
   plannedStarts,
+  planOf,
   prizeRounds,
   progress,
 } from '../../../../player/logic/view.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { publicPlan } from '../../../../../packages/ui/plan.ts';
 import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
 
 const T = 1_000_000;
@@ -144,21 +146,53 @@ test('card views: only the right kind plays; every landed song is marked; unknow
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
 });
 
+/** The sample plan as phones get it with rounds 1 to 3 revealed. */
+const PUBLIC = publicPlan(SAMPLE_PLAN, [1, 2, 3]);
+
 test('prizes, progress and the planned times come from the plan and the winners', () => {
   const state = playing({ winners: [{ round: 3, kind: 'line', cardIds: [123, 57] }] });
-  const rounds = prizeRounds(SAMPLE_PLAN, state);
+  const rounds = prizeRounds(PUBLIC, state);
   assert.equal(rounds.length, SAMPLE_PLAN.rounds.length);
   assert.equal(rounds[2].state, 'current');
   assert.deepEqual(rounds[2].lines[0].winners, [123, 57]);
-  assert.equal(rounds[2].lines[0].sponsor, '[Patrocinador 1]');
+  assert.deepEqual(rounds[2].lines[0].headline, [{ title: '[Premi de línia 3]', detail: null, sponsor: '[Patrocinador 1]' }]);
+  assert.equal(rounds[2].lines[0].others.length, 4, 'the rest of the bundle, after the headline prize');
   assert.equal(rounds[6].kind, 'special');
-  assert.deepEqual(progress(SAMPLE_PLAN, state), { current: 3, total: 8 });
+  assert.deepEqual(progress(PUBLIC, state), { current: 3, total: 8 });
   const interval = playing({ scene: 'interval', interval: { nextRound: 4, guideEndMs: T } });
   assert.equal(focusRoundNumber(interval), 4);
-  assert.equal(prizeRounds(SAMPLE_PLAN, interval)[3].state, 'next');
+  assert.equal(prizeRounds(PUBLIC, interval)[3].state, 'next');
   assert.equal(plannedStarts(SAMPLE_PLAN), null, 'no start time in the sample plan');
-  const starts = plannedStarts({ ...SAMPLE_PLAN, schedule: { startAtMs: T, roundMinutes: 25, intervalMinutes: 5 } });
+  const starts = plannedStarts({ ...PUBLIC, schedule: { startAtMs: T, roundMinutes: 25, intervalMinutes: 5 } });
   assert.equal(starts?.get(2), T + 30 * 60_000);
+});
+
+test('rounds not revealed yet show locked, with no prize, but keep their winners', () => {
+  const state = playing({ scene: 'interval', interval: { nextRound: 4, guideEndMs: T } });
+  const rounds = prizeRounds(PUBLIC, state);
+  assert.deepEqual(rounds.map((r) => r.lockedUntil), [null, null, null, 'intro', 'intro', 'intro', 'intro', 'intro']);
+  assert.deepEqual(rounds[3].lines.map((l) => [l.headline, l.others]), [[[], []], [[], []]], 'nothing of a locked round, not even how many');
+  const secret = prizeRounds({ ...publicPlan(SAMPLE_PLAN, [2]), prizeReveal: 'allSecret' }, playing({ winners: [{ round: 1, kind: 'bingo', cardIds: [9] }] }));
+  assert.deepEqual(secret.map((r) => r.lockedUntil).slice(0, 3), ['presenters', null, 'presenters'], 'all secret: until the presenters reveal them');
+  assert.deepEqual(secret[0].lines[1].winners, [9], 'a locked round still lists its winning cards');
+});
+
+test('the feed\'s plan is checked as a public plan: locked rounds stay locked, junk reads as no plan', () => {
+  const state = playing({ plan: PUBLIC });
+  const plan = planOf(state);
+  assert.ok(plan);
+  assert.deepEqual(plan.rounds.map((r) => r.revealed), [true, true, true, false, false, false, false, false]);
+  assert.equal(plan.rounds[0].line?.[0].title, '[Premi de línia 1]');
+  assert.equal(plan.rounds[3].line, undefined);
+  assert.equal('cheatSheet' in plan, false, 'never a cheat sheet');
+  // A locked round that carries prizes anyway: they are dropped, never shown.
+  const leaky = { ...PUBLIC, rounds: PUBLIC.rounds.map((r) => (r.revealed ? r : { ...r, line: SAMPLE_PLAN.rounds[r.number - 1].line })) };
+  assert.equal(planOf(playing({ plan: leaky }))?.rounds[3].line, undefined);
+  const whole = planOf(playing({ plan: SAMPLE_PLAN as never }));
+  assert.ok(whole && whole.rounds.every((r) => !r.revealed && r.line === undefined), 'a whole plan (no `revealed` marks): every round locked');
+  assert.equal(planOf(playing({ plan: { nonsense: true } as never })), null);
+  assert.equal(planOf(playing({ plan: { ...PUBLIC, rounds: PUBLIC.rounds.map((r) => (r.number === 1 ? { ...r, line: [{ title: '' }] } : r)) } as never })), null);
+  assert.equal(planOf(playing()), null);
 });
 
 test('the Celebration shows the latest prize of the round; Historial is the current round, newest first', () => {

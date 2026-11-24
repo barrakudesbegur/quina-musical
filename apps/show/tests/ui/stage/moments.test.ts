@@ -131,7 +131,9 @@ test('heat fires when a new sample starts; pause and link-lost when they change'
 });
 
 test('the Interval prizes rotate every 8 s', () => {
-  const state = FIXTURES.interval(NOW).state; // sinceMs = NOW - 40000: the 6th period starts at NOW + 8000
+  // sinceMs = NOW - 40000: the 6th period starts at NOW + 8000. The presenters revealed the next round's prizes.
+  const interval = FIXTURES.interval(NOW).state;
+  const state: FlowState = { ...interval, prizes: { revealed: [...(interval.prizes?.revealed ?? []), { round: 4, by: 'presenters' }] } };
   const at = (ms: number) => momentsOf(viewOf(state), inputs(NOW + ms));
   assert.deepEqual(diffMoments(at(7999), at(8000)), [{ name: 'interval-rotate', index: 0 }]);
   assert.deepEqual(diffMoments(at(15999), at(16000)), [{ name: 'interval-rotate', index: 1 }]);

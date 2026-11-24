@@ -22,11 +22,12 @@
     <h2 class="celebration__shout" id="celebration-shout">{S.shout[celebration.kind]}</h2>
     <p class="celebration__label">{S.winningCards}</p>
     <p class="celebration__numbers"><WinnerNumbers cardIds={celebration.cardIds} {mine} anim /></p>
-    {#if prize?.prize}
+    {#if prize?.headline.length}
       <p class="celebration__prize">
         <span class="celebration__prize-kind">{S.prize[celebration.kind]}:</span>
-        {prize.prize.title}
-        {#if prize.sponsor}<span class="celebration__sponsor">{S.sponsoredBy(prize.sponsor)}</span>{/if}
+        {prize.headline.map((p) => p.title).join(' · ')}
+        {#if prize.others.length}<span class="celebration__more">{S.morePrizes(prize.others.length)}</span>{/if}
+        {#if prize.headline[0].sponsor}<span class="celebration__sponsor">{S.sponsoredBy(prize.headline[0].sponsor)}</span>{/if}
       </p>
     {/if}
     <button type="button" class="big-button celebration__close" onclick={onclose}>{S.close}</button>

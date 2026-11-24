@@ -13,9 +13,13 @@ export function resolveToken(param: string | null, stored: string | null): { tok
   return { token: stored !== null && TOKEN_RE.test(stored) ? stored : null, store: false };
 }
 
+/** The token this page resolved, so every caller gets the same one (the address bar loses `?t=` on the first). */
+let pageToken: string | null | undefined;
+
 /** This page's relay token: from `?t=` (then stored, and removed from the address bar) or from storage. */
 export function relayTokenForPage(): string | null {
   if (typeof location === 'undefined') return null;
+  if (pageToken !== undefined) return pageToken;
   const url = new URL(location.href);
   const param = url.searchParams.get('t');
   let stored: string | null = null;
@@ -40,6 +44,7 @@ export function relayTokenForPage(): string | null {
       // Some embedded views refuse it; the token just stays in the address bar.
     }
   }
+  pageToken = token;
   return token;
 }
 

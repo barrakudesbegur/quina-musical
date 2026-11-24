@@ -8,11 +8,12 @@
 // is spread or copied whole. It never reads, so can never leak:
 //   state.next, state.queue (beyond the last counted position), transition.to, drum.targetId, possibleWinners,
 //   phase, the raw Heat, claims' outcome/warnings/completeSince, a Check's steps, winners' names and notes,
-//   the journal.
+//   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
+//   the cloud's).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { PROTOCOL_VERSION, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
-import type { GamePlan } from '../../../packages/ui/plan.ts';
+import { publicPlan, revealedRounds, type GamePlan } from '../../../packages/ui/plan.ts';
 import { HeatSmoother } from '../../../packages/rules/heat.ts';
 import { roundGameEnd, type PublicCheck, type PublicHeat, type PublicLanding, type PublicLink, type PublicRound, type PublicShuffle, type PublicSnapshot, type PublicSpin, type PublicState, type PublicWinner } from './public.ts';
 
@@ -24,6 +25,7 @@ export interface ProjectionContext {
   gameId: string | null;
   /** Is the show page (the laptop) connected. */
   link: PublicLink;
+  /** The whole plan: the projection keeps only what phones may see (publicPlan, with the engine's reveals). */
   plan: GamePlan | null;
   notice: string | null;
   soundsDefault: boolean;
@@ -122,7 +124,7 @@ export class PublicProjector {
       winners,
       interval: flow.interval ? { nextRound: flow.interval.nextRound, guideEndMs: flow.interval.guideEndMs } : null,
       gameEndMs: s && s.schedule.gameEndMs > 0 ? roundGameEnd(s.schedule.gameEndMs) : null,
-      plan: ctx.plan,
+      plan: ctx.plan ? publicPlan(ctx.plan, revealedRounds(ctx.plan, s?.prizes?.revealed ?? [])) : null,
       notice: ctx.notice,
       soundsDefault: ctx.soundsDefault,
     };

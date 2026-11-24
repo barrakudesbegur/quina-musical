@@ -1,4 +1,4 @@
-// The import's diff summary: rounds, prizes, sponsors, schedule and rules.
+// The import's diff summary: rounds, prize bundles, sponsors, schedule, rules, the prize reveal and card types.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { GamePlan } from '../../../../../packages/ui/plan.ts';
@@ -24,32 +24,45 @@ test('rounds added and removed, kinds and prizes changed', () => {
   const next = clone(SAMPLE_PLAN);
   next.rounds = next.rounds.slice(0, 6); // rounds 7 and 8 removed
   next.rounds[1].kind = 'special';
-  next.rounds[2].line = { ...next.rounds[2].line!, title: 'Pernil' };
-  next.rounds[3].bingo = null;
+  next.rounds[2].line = [{ ...next.rounds[2].line[0], title: 'Pernil' }];
+  next.rounds[3].bingo = [];
   const d = diffPlans(SAMPLE_PLAN, next);
   assert.equal(d.same, false);
   assert.deepEqual(d.rounds.removed, [7, 8]);
   assert.deepEqual(d.rounds.added, []);
   assert.deepEqual(d.rounds.kindChanged, [2]);
   assert.deepEqual(d.prizes, [
-    { round: 3, kind: 'line', before: '[Premi de línia 3]', after: 'Pernil' },
-    { round: 4, kind: 'bingo', before: '[Premi de quina 4]', after: null },
+    { round: 3, kind: 'line', before: '[Premi de línia 3] +4', after: 'Pernil' },
+    { round: 4, kind: 'bingo', before: '[Premi de quina 4] +4', after: null },
   ]);
 });
 
-test('a prize whose sponsor changes counts as changed', () => {
+test('a prize whose sponsor, place or headline mark changes counts as changed', () => {
   const next = clone(SAMPLE_PLAN);
-  next.rounds[0].line!.sponsorId = 'barrakudes';
+  next.rounds[0].line[1].sponsorId = 'barrakudes';
+  next.rounds[1].bingo.reverse();
+  next.rounds[2].line[1].headline = true;
   const d = diffPlans(SAMPLE_PLAN, next);
-  assert.equal(d.prizes.length, 1);
-  assert.equal(d.prizes[0].before, d.prizes[0].after);
+  assert.deepEqual(d.prizes.map((p) => [p.round, p.kind]), [[1, 'line'], [2, 'bingo'], [3, 'line']]);
+  assert.equal(d.prizes[0].before, d.prizes[0].after, 'the summary may stay the same');
+});
+
+test('the prize reveal and the card types', () => {
+  const next = clone(SAMPLE_PLAN);
+  next.prizeReveal = 'allSecret';
+  next.cardTypes[0].priceCents = 300;
+  const d = diffPlans(SAMPLE_PLAN, next);
+  assert.equal(d.prizeReveal, true);
+  assert.equal(d.cardTypes, true);
+  assert.equal(d.same, false);
+  assert.equal(diffPlans(SAMPLE_PLAN, clone(SAMPLE_PLAN)).cardTypes, false);
 });
 
 test('sponsors added, removed and changed (name or logo)', () => {
   const next = clone(SAMPLE_PLAN);
   next.sponsors = next.sponsors.filter((s) => s.id !== 'patrocinador-2').map((s) => (s.id === 'barrakudes' ? { ...s, logo: 'data:image/png;base64,AAAA' } : s));
   next.sponsors.push({ id: 'forn', name: 'Forn', logo: null });
-  for (const r of next.rounds) if (r.line?.sponsorId === 'patrocinador-2') r.line.sponsorId = null;
+  for (const r of next.rounds) for (const p of [...r.line, ...r.bingo]) if (p.sponsorId === 'patrocinador-2') p.sponsorId = null;
   const d = diffPlans(SAMPLE_PLAN, next);
   assert.deepEqual(d.sponsors, { added: ['forn'], removed: ['patrocinador-2'], changed: ['barrakudes'] });
 });

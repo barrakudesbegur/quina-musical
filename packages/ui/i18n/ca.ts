@@ -15,6 +15,8 @@ export const CA = {
   shout: { line: 'LÍNIA!', bingo: 'QUINA!' } satisfies Record<WinKind, string>,
   prize: { line: 'Premi de línia', bingo: 'Premi de quina' } satisfies Record<WinKind, string>,
   sponsoredBy: (name: string) => `Gentilesa de ${name}`,
+  /** Under a bundle's headline prizes: how many smaller ones come with them. */
+  morePrizes: (n: number) => (n === 1 ? 'i 1 premi més' : `i ${n} premis més`),
   checking: (id: number) => `Comprovant el cartró ${id}…`,
   checkValid: 'Cartró correcte!',
   checkInvalid: 'Aquest cartró no té premi',

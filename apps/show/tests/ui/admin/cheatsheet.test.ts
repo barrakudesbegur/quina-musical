@@ -1,4 +1,5 @@
-// The cheat sheet's content model: prizes with sponsors per round, rules, the fixed parts.
+// The cheat sheet's content model: prize bundles (headline prizes first) with sponsors per round, rules, the
+// fixed parts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
@@ -7,16 +8,23 @@ import { CHEAT_SHEET_COPY } from '../../../../admin/strings.ts';
 
 const COPY: CheatSheetCopy = { keys: [{ keys: '→', action: 'Següent' }], wiiReminder: 'Wii', checklist: ['Carregador'] };
 
-test('every round with both prizes, their sponsors and the special flag', () => {
+test('every round with both bundles, their sponsors and the special flag', () => {
   const m = cheatSheetModel(SAMPLE_PLAN, COPY);
-  assert.equal(m.title, 'Quina Musical');
+  assert.equal(m.title, 'Quina Quina 3');
   assert.equal(m.rounds.length, 8);
   const r1 = m.rounds[0];
   assert.equal(r1.label, 'Quina 1');
   assert.equal(r1.special, false);
-  assert.deepEqual(r1.prizes.map((p) => [p.kind, p.label, p.title, p.sponsor]), [
-    ['line', 'Premi de línia', '[Premi de línia 1]', '[Patrocinador 1]'],
-    ['bingo', 'Premi de quina', '[Premi de quina 1]', '[Patrocinador 1]'],
+  assert.deepEqual(r1.prizes.map((p) => [p.kind, p.label, p.items.length]), [
+    ['line', 'Premi de línia', 3],
+    ['bingo', 'Premi de quina', 4],
+  ]);
+  assert.deepEqual(r1.prizes[0].items[0], { title: '[Premi de línia 1]', detail: null, sponsor: '[Patrocinador 1]', headline: true });
+  assert.deepEqual(r1.prizes[1].items.map((i) => i.headline), [true, false, false, false]);
+  assert.deepEqual(m.rounds[7].prizes[1].items.slice(0, 3).map((i) => [i.title, i.headline]), [
+    ['[Premi de quina 8]', true],
+    ['[Gran premi final]', true],
+    ['[Obsequi 1 de la quina 8]', false],
   ]);
   assert.equal(m.rounds[6].special, true);
   assert.equal(m.hasSpecialRound, true);
@@ -25,14 +33,13 @@ test('every round with both prizes, their sponsors and the special flag', () => 
   assert.equal(m.keys, COPY.keys);
 });
 
-test('a round without a prize says so with a null title', () => {
+test('a round without prizes says so with an empty bundle; a prize without a sponsor has none', () => {
   const plan = structuredClone(SAMPLE_PLAN);
-  plan.rounds[0].line = null;
-  plan.rounds[0].bingo!.sponsorId = null;
+  plan.rounds[0].line = [];
+  plan.rounds[0].bingo[0].sponsorId = null;
   const r = cheatRound(plan, plan.rounds[0]);
-  assert.equal(r.prizes[0].title, null);
-  assert.equal(r.prizes[0].sponsor, null);
-  assert.equal(r.prizes[1].sponsor, null);
+  assert.deepEqual(r.prizes[0].items, []);
+  assert.equal(r.prizes[1].items[0].sponsor, null);
 });
 
 test('special-round rules only when a special round is planned', () => {

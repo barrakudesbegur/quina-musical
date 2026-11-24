@@ -32,6 +32,8 @@ export interface CheckView {
   key: string;
   cardId: number;
   kind: WinKind;
+  /** The card's printed type ('normal', 'especial'; public, on the card itself), or null for an unknown card. */
+  cardType: string | null;
   verdict: CheckVerdict;
   /** A Line's row (0–2), whose songs play; the other rows dim. Null for a Bingo. */
   row: number | null;

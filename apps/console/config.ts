@@ -41,6 +41,6 @@ export const DEFAULT_THEME: Theme = 'light';
 export const CONSOLE_COMMANDS = [
   'next', 'back', 'hold', 'holdMusic', 'suspense', 'setPace', 'setGame', 'confirmLine', 'newRound', 'panic', 'sfx',
   'roundIntro', 'claim', 'checkStart', 'decide', 'winnerInfo', 'celebrationMusic', 'interval', 'endGame', 'pause',
-  'intervalSkip', 'resumeAt',
+  'intervalSkip', 'resumeAt', 'revealPrizes',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];

@@ -1,24 +1,28 @@
 // Edits to the Game plan that need more than setting a field: adding, removing and reordering rounds (they
-// are renumbered 1, 2, 3… every time), sponsor ids that follow their name and keep prizes pointing at them,
-// blank prizes and plans, and the schedule's local date-time. Pure: each returns new values and never
-// mutates its input.
-import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+// are renumbered 1, 2, 3… every time), a Line's or Quina's prize bundle (add, remove, move, mark headline:
+// headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
+// blank prizes and plans, card prices, and the schedule's local date-time. Pure: each returns new values and
+// never mutates its input.
+import { DEFAULT_CARD_TYPES, PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import type { RoundKind } from '@quina/protocol';
 
-export const blankPrize = (): Prize => ({ title: '', detail: null, sponsorId: null, image: null });
+export const blankPrize = (headline = false): Prize => ({ title: '', detail: null, sponsorId: null, image: null, headline });
 
-export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPlan => ({ number, kind, line: blankPrize(), bingo: blankPrize() });
+/** A new round: no prizes yet (empty bundles are valid; screens say the prizes are still to come). */
+export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPlan => ({ number, kind, line: [], bingo: [] });
 
 export const DEFAULT_SCHEDULE: SchedulePlan = Object.freeze({ startAtMs: null, roundMinutes: 25, intervalMinutes: 3 });
 
-/** A new plan with one normal round, no sponsors and the given cheat-sheet rules. */
+/** A new plan with one normal round, no sponsors, the default card types and the given cheat-sheet rules. */
 export function blankPlan(edition: string, title: string, cheatSheet: CheatSheet): GamePlan {
   return {
     v: PLAN_VERSION,
     edition,
     title,
+    prizeReveal: 'perRound',
     rounds: [blankRound(1)],
     sponsors: [],
+    cardTypes: DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })),
     schedule: { ...DEFAULT_SCHEDULE },
     cheatSheet: { claimRules: [...cheatSheet.claimRules], specialRoundRules: [...cheatSheet.specialRoundRules] },
   };
@@ -60,6 +64,67 @@ export function moveRound(rounds: readonly RoundPlan[], from: number, to: number
   return renumber(out);
 }
 
+// ---- prize bundles ------------------------------------------------------------------------------------
+
+/** How many prizes at the start of a bundle are headline ones. */
+const headlineCount = (bundle: readonly Prize[]): number => {
+  const first = bundle.findIndex((p) => !p.headline);
+  return first < 0 ? bundle.length : first;
+};
+
+/** Headline prizes first, each group in its order (what checkGamePlan requires). */
+export function sortBundle(bundle: readonly Prize[]): PrizeBundle {
+  return [...bundle.filter((p) => p.headline), ...bundle.filter((p) => !p.headline)];
+}
+
+/** Add a blank prize: a headline one after the other headline prizes, any other at the end. */
+export function addPrize(bundle: readonly Prize[], headline = false): PrizeBundle {
+  const sorted = sortBundle(bundle);
+  const at = headline ? headlineCount(sorted) : sorted.length;
+  return [...sorted.slice(0, at), blankPrize(headline), ...sorted.slice(at)];
+}
+
+export function removePrize(bundle: readonly Prize[], index: number): PrizeBundle {
+  return bundle.filter((_, i) => i !== index);
+}
+
+/** The range a prize may move in: headline prizes among themselves, the others below them. */
+export function prizeMoveRange(bundle: readonly Prize[], index: number): { min: number; max: number } {
+  const headlines = headlineCount(bundle);
+  return bundle[index]?.headline ? { min: 0, max: headlines - 1 } : { min: headlines, max: bundle.length - 1 };
+}
+
+/** Move a prize from `from` to `to`, clamped to its group (a headline prize never drops below another prize). */
+export function movePrize(bundle: readonly Prize[], from: number, to: number): PrizeBundle {
+  const out = [...bundle];
+  if (from < 0 || from >= out.length) return out;
+  const { min, max } = prizeMoveRange(out, from);
+  const target = Math.max(min, Math.min(max, to));
+  const [moved] = out.splice(from, 1);
+  out.splice(target, 0, moved);
+  return out;
+}
+
+/** Mark a prize as headline (it joins the end of the headline ones) or not (it leads the others). */
+export function setHeadline(bundle: readonly Prize[], index: number, headline: boolean): PrizeBundle {
+  const prize = bundle[index];
+  if (!prize) return [...bundle];
+  const rest = sortBundle(bundle.filter((_, i) => i !== index));
+  const at = headlineCount(rest);
+  return [...rest.slice(0, at), { ...prize, headline }, ...rest.slice(at)];
+}
+
+/** A card type's price as the euros a number input shows ("" when not set). */
+export const priceInput = (cents: number | null): string => (cents === null ? '' : String(cents / 100));
+
+/** A number input's euros as cents; null when empty, junk or negative. */
+export function fromPriceInput(value: string): number | null {
+  const v = value.trim().replace(',', '.');
+  if (!v) return null;
+  const euros = Number(v);
+  return Number.isFinite(euros) && euros >= 0 ? Math.round(euros * 100) : null;
+}
+
 // ---- sponsors -------------------------------------------------------------------------------------------
 
 /** "Forn Can Pep, S.L." → "forn-can-pep-s-l": lowercase letters, digits and dashes, as checkGamePlan wants. */
@@ -89,11 +154,10 @@ export function sponsorIdFor(name: string, taken: Iterable<string>, fallback = '
 
 /** How many prizes point at a sponsor. */
 export function sponsorUsage(plan: GamePlan, id: string): number {
-  return plan.rounds.reduce((n, r) => n + (r.line?.sponsorId === id ? 1 : 0) + (r.bingo?.sponsorId === id ? 1 : 0), 0);
+  return plan.rounds.reduce((n, r) => n + [...r.line, ...r.bingo].filter((p) => p.sponsorId === id).length, 0);
 }
 
-const mapPrizes = (plan: GamePlan, fn: (p: Prize) => Prize): RoundPlan[] =>
-  plan.rounds.map((r) => ({ ...r, line: r.line && fn(r.line), bingo: r.bingo && fn(r.bingo) }));
+const mapPrizes = (plan: GamePlan, fn: (p: Prize) => Prize): RoundPlan[] => plan.rounds.map((r) => ({ ...r, line: r.line.map(fn), bingo: r.bingo.map(fn) }));
 
 /** Change a sponsor's id and every prize that points at it. */
 export function renameSponsor(plan: GamePlan, oldId: string, newId: string): GamePlan {

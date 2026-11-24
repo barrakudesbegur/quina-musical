@@ -1,9 +1,9 @@
-// Small lookups the panels share: a song's title, a round's prizes from the Game plan, the Winners of a
-// Celebration, and the Winners grouped by round. Pure.
+// Small lookups the panels share: a song's title, a round's prize bundles from the Game plan and whether phones
+// may see them yet, the Winners of a Celebration, and the Winners grouped by round. Pure.
 import type { RoundKind, ShowState } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
-import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 
 /** A song's title: from the snapshot (current, next, recent landings), then the printed cards, else null. */
 export function songTitleOf(songId: number | null | undefined, state: ShowState | null, catalog: Catalog | null): string | null {
@@ -16,30 +16,47 @@ export function songTitleOf(songId: number | null | undefined, state: ShowState 
 }
 
 export interface PrizeView {
-  kind: WinKind;
   title: string;
   detail: string | null;
   sponsor: string | null;
+  /** Shown first and bigger. */
+  headline: boolean;
 }
 
 export interface RoundPrizes {
   number: number;
   kind: RoundKind;
-  line: PrizeView | null;
-  bingo: PrizeView | null;
+  /** The bundles, headline prizes first; empty when none is set. */
+  line: PrizeView[];
+  bingo: PrizeView[];
 }
 
 /** What `roundPrizes` found: the plan is missing, the round isn't in it, or its prizes. */
 export type RoundPrizesResult = { status: 'noPlan' } | { status: 'noRound'; number: number } | { status: 'ok'; prizes: RoundPrizes };
 
-const prizeView = (plan: GamePlan, kind: WinKind, prize: Prize | null): PrizeView | null =>
-  prize ? { kind, title: prize.title, detail: prize.detail, sponsor: sponsorOf(plan, prize)?.name ?? null } : null;
+const prizeView = (plan: GamePlan, prize: Prize, headline: boolean): PrizeView => ({ title: prize.title, detail: prize.detail, sponsor: sponsorOf(plan, prize)?.name ?? null, headline });
+
+/** A bundle as the console lists it: headline prizes first (splitBundle), then the others. */
+function bundleView(plan: GamePlan, bundle: readonly Prize[]): PrizeView[] {
+  const { headline, others } = splitBundle(bundle);
+  return [...headline.map((p) => prizeView(plan, p, true)), ...others.map((p) => prizeView(plan, p, false))];
+}
 
 export function roundPrizes(plan: GamePlan | null, number: number): RoundPrizesResult {
   if (!plan) return { status: 'noPlan' };
   const round = roundPlan(plan, number);
   if (!round) return { status: 'noRound', number };
-  return { status: 'ok', prizes: { number, kind: round.kind, line: prizeView(plan, 'line', round.line), bingo: prizeView(plan, 'bingo', round.bingo) } };
+  return { status: 'ok', prizes: { number, kind: round.kind, line: bundleView(plan, round.line), bingo: bundleView(plan, round.bingo) } };
+}
+
+/**
+ * Whether phones may see a round's prizes yet (plan.ts revealedRounds over the engine's `prizes.revealed`):
+ * 'revealed', 'secret' (the presenters can reveal them), or 'unknown' without a plan or from an engine that
+ * doesn't report reveals.
+ */
+export function prizeRevealOf(plan: Pick<GamePlan, 'prizeReveal'> | null, state: Pick<ShowState, 'prizes'> | null, round: number): 'revealed' | 'secret' | 'unknown' {
+  if (!plan || !state?.prizes) return 'unknown';
+  return revealedRounds(plan, state.prizes.revealed).includes(round) ? 'revealed' : 'secret';
 }
 
 /** The Winners this Celebration is for. */

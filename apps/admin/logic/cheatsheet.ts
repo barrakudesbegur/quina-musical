@@ -1,9 +1,10 @@
-// The cheat sheet's content, apart from how it looks: every round's Line and Quina prizes with their sponsors,
+// The cheat sheet's content, apart from how it looks: every round's Line and Quina prize bundles (headline
+// prizes first) with their sponsors,
 // the claim and special-round rules from the plan, and the fixed parts (the laptop's Plan B keys, the Wii
 // remote reminder, the setup checklist) passed in as copy. Pure, so the console can show the same content
 // (one round's prizes during the Interval) and Admin prints all of it.
 // Proposed for ui/ (rules + words) once the console needs it.
-import { sponsorOf, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
+import { sponsorOf, splitBundle, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import { CA } from '../../../packages/ui/i18n/ca.ts';
 
@@ -20,15 +21,21 @@ export interface CheatSheetCopy {
   checklist: readonly string[];
 }
 
+export interface CheatPrizeItem {
+  title: string;
+  detail: string | null;
+  /** The sponsor's name, or null. */
+  sponsor: string | null;
+  /** Shown first and in bold. */
+  headline: boolean;
+}
+
 export interface CheatPrize {
   kind: WinKind;
   /** "Premi de línia" / "Premi de quina". */
   label: string;
-  /** null: this round has no such prize. */
-  title: string | null;
-  detail: string | null;
-  /** The sponsor's name, or null. */
-  sponsor: string | null;
+  /** The bundle, headline prizes first; empty: this round has no such prize yet. */
+  items: CheatPrizeItem[];
 }
 
 export interface CheatRound {
@@ -53,17 +60,20 @@ export interface CheatSheetModel {
 
 const KINDS: readonly WinKind[] = ['line', 'bingo'];
 
-function cheatPrize(plan: GamePlan, kind: WinKind, prize: Prize | null): CheatPrize {
+function cheatItem(plan: GamePlan, prize: Prize, headline: boolean): CheatPrizeItem {
+  return { title: prize.title, detail: prize.detail || null, sponsor: sponsorOf(plan, prize)?.name ?? null, headline };
+}
+
+function cheatPrize(plan: GamePlan, kind: WinKind, bundle: readonly Prize[]): CheatPrize {
+  const { headline, others } = splitBundle(bundle);
   return {
     kind,
     label: CA.prize[kind],
-    title: prize?.title || null,
-    detail: prize?.detail || null,
-    sponsor: sponsorOf(plan, prize)?.name ?? null,
+    items: [...headline.map((p) => cheatItem(plan, p, true)), ...others.map((p) => cheatItem(plan, p, false))],
   };
 }
 
-/** One round's prize lines, as the console shows them before the round. */
+/** One round's prize bundles, as the console shows them before the round. */
 export function cheatRound(plan: GamePlan, round: RoundPlan): CheatRound {
   return {
     number: round.number,

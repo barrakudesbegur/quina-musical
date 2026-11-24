@@ -1281,6 +1281,39 @@
   font-size: var(--text-md);
 }
 
+/* The rest of a bundle, under its headline prizes: a compact list. */
+.prize-lines__others {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.125rem;
+  font-size: var(--text-md);
+}
+
+.prize-lines__other .prize-lines__sponsor {
+  font-size: inherit;
+}
+
+/* A round whose prizes aren't revealed yet: a lock, game-style. */
+.prize-lines__locked {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--line-width) dashed var(--color-line);
+  border-radius: var(--radius-lg);
+  color: var(--prize-soft, var(--color-text-muted));
+  font-weight: var(--font-weight-strong);
+}
+
+.prize-lines__locked .icon {
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+}
+
 .prize-lines__winners {
   display: flex;
   flex-wrap: wrap;
@@ -1439,6 +1472,16 @@
 .now__summary .prize-lines__title {
   font-size: var(--text-md);
   line-height: 1.15;
+}
+
+.prize-round .prize-lines__others,
+.now__summary .prize-lines__others,
+.prize-round .prize-lines__locked {
+  font-size: var(--text-xs);
+}
+
+.prize-round .prize-lines__locked {
+  padding: var(--space-2);
 }
 
 .prize-round .prize-lines__sponsor,
@@ -2310,7 +2353,9 @@
   color: var(--color-text-on-paper-muted);
 }
 
+.celebration__more,
 .celebration__sponsor {
+  display: block;
   font-size: var(--text-md);
   font-weight: var(--player-weight-body);
   color: var(--color-text-on-paper-muted);

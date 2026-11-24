@@ -1,11 +1,11 @@
 // The night's Winners as Admin lists them: in round order, the Line before the Quina, with the prize from the
 // plan, and whether the name or notes being typed differ from what the engine has. Pure.
-import { roundPlan, type GamePlan } from '../../../packages/ui/plan.ts';
+import { bundleSummary, roundPlan, type GamePlan } from '../../../packages/ui/plan.ts';
 import type { WinnerInfo } from '../../../packages/ui/flow.ts';
 
 export interface WinnerRow {
   winner: WinnerInfo;
-  /** The prize title from the plan, or null. */
+  /** The prize bundle from the plan in a few words (its headline prizes, "+3" for the others), or null. */
   prize: string | null;
 }
 
@@ -14,7 +14,7 @@ export function winnerRows(winners: readonly WinnerInfo[], plan: GamePlan | null
   const order = { line: 0, bingo: 1 } as const;
   return [...winners]
     .sort((a, b) => a.round - b.round || order[a.kind] - order[b.kind] || a.atMs - b.atMs || a.cardId - b.cardId)
-    .map((winner) => ({ winner, prize: roundPlan(plan, winner.round)?.[winner.kind]?.title || null }));
+    .map((winner) => ({ winner, prize: bundleSummary(roundPlan(plan, winner.round)?.[winner.kind] ?? []) }));
 }
 
 export interface WinnerEdit {

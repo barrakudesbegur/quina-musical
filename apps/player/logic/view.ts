@@ -1,7 +1,7 @@
 // What the screens show, derived from the public state, the player's cards and the printed catalogue. Pure, so
 // the Svelte components stay thin and the rules are tested in node.
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
-import { checkGamePlan, roundPlan, sponsorOf, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { checkGamePlan, publicPlan, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { nearSongs } from './near-win.ts';
 import type { PublicLanding, PublicRound, PublicState, PublicWinKind } from '../feed/public.ts';
@@ -27,11 +27,30 @@ export const latestLanding = (round: PublicRound | null): PublicLanding | null =
   return round.landings.reduce((a, b) => (b.position > a.position ? b : a));
 };
 
-/** The Game plan in the feed, checked (it arrives untyped). */
-export function planOf(state: PublicState | null): GamePlan | null {
-  if (!state?.plan) return null;
-  const check = checkGamePlan(state.plan);
-  return check.ok ? check.plan : null;
+type Rec = Record<string, unknown>;
+const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * The public plan in the feed, checked (it arrives untyped). It goes through the full plan's validator with
+ * what phones never get filled in (a locked round's bundles empty, no cheat-sheet rules), then back to the
+ * public shape: only the rounds the feed marks `revealed` keep their bundles. Anything else reads as no plan.
+ */
+export function planOf(state: PublicState | null): PublicPlan | null {
+  const raw: unknown = state?.plan;
+  if (!isRec(raw) || !Array.isArray(raw.rounds)) return null;
+  const revealed = raw.rounds.filter((r): r is Rec => isRec(r) && r.revealed === true).map((r) => r.number);
+  const check = checkGamePlan({
+    v: raw.v,
+    edition: raw.edition,
+    title: raw.title,
+    prizeReveal: raw.prizeReveal,
+    rounds: raw.rounds.map((r: unknown) => (isRec(r) ? { number: r.number, kind: r.kind, line: r.revealed === true ? r.line : [], bingo: r.revealed === true ? r.bingo : [] } : r)),
+    sponsors: raw.sponsors,
+    cardTypes: raw.cardTypes,
+    schedule: raw.schedule,
+    cheatSheet: { claimRules: [], specialRoundRules: [] },
+  });
+  return check.ok ? publicPlan(check.plan, revealed.filter((n): n is number => typeof n === 'number')) : null;
 }
 
 export interface CardView {
@@ -102,10 +121,20 @@ export function historyOf(state: PublicState | null): HistoryRound | null {
   return { round: r.number, kind: r.kind, landings: [...r.landings].sort((a, b) => b.position - a.position) };
 }
 
+/** One prize as the phone shows it. */
+export interface PrizeItem {
+  title: string;
+  detail: string | null;
+  /** The sponsor's name, or null. */
+  sponsor: string | null;
+}
+
 export interface PrizeLine {
   kind: PublicWinKind;
-  prize: Prize | null;
-  sponsor: string | null;
+  /** The bundle's headline prizes, shown first and bigger; empty when none is set (or it is locked). */
+  headline: PrizeItem[];
+  /** The rest of the bundle, smaller. */
+  others: PrizeItem[];
   winners: number[];
 }
 
@@ -113,11 +142,16 @@ export interface PrizeRound {
   number: number;
   kind: 'normal' | 'special';
   state: 'done' | 'current' | 'next' | 'later';
+  /**
+   * Its prizes aren't revealed yet (shown locked, game-style): 'intro' when they come as the round is
+   * introduced, 'presenters' when only the presenters reveal them (an all-secret plan). Null once revealed.
+   */
+  lockedUntil: 'intro' | 'presenters' | null;
   lines: PrizeLine[];
 }
 
-/** Premis: every planned round with its Line and Quina prizes and the winning card numbers. */
-export function prizeRounds(plan: GamePlan | null, state: PublicState | null): PrizeRound[] {
+/** Premis: every planned round with its Line and Quina bundles (locked until revealed) and the winning card numbers. */
+export function prizeRounds(plan: PublicPlan | null, state: PublicState | null): PrizeRound[] {
   const winners = state?.winners ?? [];
   const current = currentRound(state);
   const focus = focusRoundNumber(state);
@@ -125,7 +159,7 @@ export function prizeRounds(plan: GamePlan | null, state: PublicState | null): P
   return [...numbers]
     .sort((a, b) => a - b)
     .map((number) => {
-      const planned = roundPlan(plan, number);
+      const planned = plan?.rounds.find((r) => r.number === number) ?? null;
       const played = state?.rounds.find((r) => r.number === number);
       const done = Boolean(played?.ended);
       const roundState: PrizeRound['state'] = done
@@ -135,28 +169,33 @@ export function prizeRounds(plan: GamePlan | null, state: PublicState | null): P
           : number === focus
             ? 'next'
             : 'later';
+      const item = (p: Prize): PrizeItem => ({ title: p.title, detail: p.detail, sponsor: plan?.sponsors.find((s) => s.id === p.sponsorId)?.name ?? null });
       const line = (kind: PublicWinKind): PrizeLine => {
-        const prize = planned ? (kind === 'line' ? planned.line : planned.bingo) : null;
+        const { headline, others } = splitBundle((kind === 'line' ? planned?.line : planned?.bingo) ?? []);
         return {
           kind,
-          prize,
-          sponsor: plan && prize ? (sponsorOf(plan, prize)?.name ?? null) : null,
+          headline: headline.map(item),
+          others: others.map(item),
           winners: winners.filter((w) => w.round === number && w.kind === kind).flatMap((w) => w.cardIds),
         };
       };
-      return { number, kind: planned?.kind ?? played?.kind ?? 'normal', state: roundState, lines: [line('line'), line('bingo')] };
+      const lockedUntil = planned && !planned.revealed ? (plan?.prizeReveal === 'allSecret' ? 'presenters' : 'intro') : null;
+      return { number, kind: planned?.kind ?? played?.kind ?? 'normal', state: roundState, lockedUntil, lines: [line('line'), line('bingo')] };
     });
 }
 
+/** What the schedule views need of a plan (public or whole). */
+type ScheduleOf = { rounds: readonly { number: number }[]; schedule: SchedulePlan };
+
 /** "Quina 4 de 12": the round in focus and how many are planned (null without a plan or a round). */
-export function progress(plan: GamePlan | null, state: PublicState | null): { current: number; total: number } | null {
+export function progress(plan: ScheduleOf | null, state: PublicState | null): { current: number; total: number } | null {
   const total = plan?.rounds.length ?? 0;
   const current = focusRoundNumber(state);
   return total && current ? { current, total } : null;
 }
 
 /** Each planned round's rough start time from the schedule, or null when the schedule has no start. */
-export function plannedStarts(plan: GamePlan | null): Map<number, number> | null {
+export function plannedStarts(plan: ScheduleOf | null): Map<number, number> | null {
   if (!plan?.schedule.startAtMs) return null;
   const step = (plan.schedule.roundMinutes + plan.schedule.intervalMinutes) * 60_000;
   return new Map(plan.rounds.map((r, i) => [r.number, plan.schedule.startAtMs! + i * step] as const));

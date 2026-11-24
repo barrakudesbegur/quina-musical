@@ -1,21 +1,37 @@
 // A sample Game plan for demos and tests. Prizes and sponsors are placeholders: the real ones come from the
-// organizers' sheet through Admin's JSON import.
-import type { GamePlan } from '../plan.ts';
+// organizers' sheet through Admin's JSON import. Each Line and Quina has a bundle: one headline prize (two in
+// the last Quina) and a few smaller ones.
+import { DEFAULT_CARD_TYPES, type GamePlan, type Prize } from '../plan.ts';
+
+const SPONSORS = ['patrocinador-1', 'patrocinador-2', null] as const;
+
+/** The smaller prizes of a bundle: `count` of them, sponsors in turn. */
+const smallPrizes = (label: string, count: number, offset: number): Prize[] =>
+  Array.from({ length: count }, (_, k) => ({ title: `[Obsequi ${k + 1} ${label}]`, detail: null, sponsorId: SPONSORS[(k + offset) % SPONSORS.length], image: null, headline: false }));
 
 export const SAMPLE_PLAN: GamePlan = {
-  v: 1,
+  v: 2,
   edition: '26',
-  title: 'Quina Musical',
+  title: 'Quina Quina 3',
+  prizeReveal: 'perRound',
   sponsors: [
     { id: 'patrocinador-1', name: '[Patrocinador 1]', logo: null },
     { id: 'patrocinador-2', name: '[Patrocinador 2]', logo: null },
     { id: 'barrakudes', name: 'Barrakudes', logo: null },
   ],
+  cardTypes: DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })),
   rounds: Array.from({ length: 8 }, (_, i) => ({
     number: i + 1,
     kind: i === 6 ? ('special' as const) : ('normal' as const),
-    line: { title: `[Premi de línia ${i + 1}]`, detail: null, sponsorId: i % 2 ? 'patrocinador-2' : 'patrocinador-1', image: null },
-    bingo: { title: `[Premi de quina ${i + 1}]`, detail: null, sponsorId: i === 7 ? 'barrakudes' : 'patrocinador-1', image: null },
+    line: [
+      { title: `[Premi de línia ${i + 1}]`, detail: null, sponsorId: i % 2 ? 'patrocinador-2' : 'patrocinador-1', image: null, headline: true },
+      ...smallPrizes(`de la línia ${i + 1}`, 2 + (i % 3), i),
+    ],
+    bingo: [
+      { title: `[Premi de quina ${i + 1}]`, detail: null, sponsorId: i === 7 ? 'barrakudes' : 'patrocinador-1', image: null, headline: true },
+      ...(i === 7 ? [{ title: '[Gran premi final]', detail: null, sponsorId: 'patrocinador-2', image: null, headline: true }] : []),
+      ...smallPrizes(`de la quina ${i + 1}`, 3 + (i % 2), i + 1),
+    ],
   })),
   schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 },
   cheatSheet: {

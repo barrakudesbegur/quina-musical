@@ -10,7 +10,7 @@ One view per URL hash:
 
 | Hash | View | What it does |
 |---|---|---|
-| `#preparacio` | Setup | The night's name and edition, cards in play (sent with `setCardsInPlay`), rounds, prizes, sponsors and logos, the schedule, and the cheat-sheet rules |
+| `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the card types (name, colour, price), cards in play (sent with `setCardsInPlay`), rounds with their prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
 | `#json` | Import and export | Bulk import of a whole plan (paste or file) with every error and a diff, then "Substituir". Export as a download or a copy |
 | `#nit` | On the night | Show status, start (`roundIntro`) and end (`endGame`) the Game, the Winners' names and notes (`winnerInfo`), plus stubs for Plan B resume, cards open on phones and player-app settings |
 | `#eines` | Tools | The hook audition page, a full JSON export (the plan plus the night's data), and Shuffle seeds (stub) |
@@ -57,27 +57,38 @@ The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, c
 
 ```json
 {
-  "v": 1,
+  "v": 2,
   "edition": "26",
-  "title": "Quina Musical",
+  "title": "Quina Quina 3",
+  "prizeReveal": "perRound",
   "rounds": [
     {
       "number": 1,
       "kind": "normal",
-      "line": { "title": "Coca de recapte", "detail": null, "sponsorId": "forn-can-pep", "image": null },
-      "bingo": { "title": "Sopar per a dos", "detail": "Qualsevol divendres de gener", "sponsorId": "restaurant-el-far", "image": null }
+      "line": [
+        { "title": "Coca de recapte", "detail": null, "sponsorId": "forn-can-pep", "image": null, "headline": true },
+        { "title": "Samarreta", "detail": null, "sponsorId": "barrakudes", "image": null, "headline": false }
+      ],
+      "bingo": [
+        { "title": "Sopar per a dos", "detail": "Qualsevol divendres de gener", "sponsorId": "restaurant-el-far", "image": null, "headline": true },
+        { "title": "Lot de productes", "detail": null, "sponsorId": "forn-can-pep", "image": null, "headline": false }
+      ]
     },
     {
       "number": 2,
       "kind": "special",
-      "line": null,
-      "bingo": { "title": "Pernil", "detail": null, "sponsorId": "barrakudes", "image": null }
+      "line": [],
+      "bingo": [{ "title": "Pernil", "detail": null, "sponsorId": "barrakudes", "image": null, "headline": true }]
     }
   ],
   "sponsors": [
     { "id": "forn-can-pep", "name": "Forn Can Pep", "logo": null },
     { "id": "restaurant-el-far", "name": "Restaurant El Far", "logo": null },
     { "id": "barrakudes", "name": "Barrakudes", "logo": null }
+  ],
+  "cardTypes": [
+    { "type": "normal", "name": "Cartró normal", "color": "#cfe8ff", "priceCents": 300, "rounds": ["normal"] },
+    { "type": "especial", "name": "Cartró especial", "color": "#ffd9e8", "priceCents": 500, "rounds": ["special"] }
   ],
   "schedule": { "startAtMs": 1798306200000, "roundMinutes": 25, "intervalMinutes": 3 },
   "cheatSheet": {
@@ -92,26 +103,33 @@ The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, c
 ```
 
 Rules (every key is required, and an unknown key is an error, so a typo can't silently drop a prize):
-- `v`: always `1`.
+- `v`: always `2` (a version 1 plan, with one prize object or `null` per Line and Quina, is still read: each prize becomes a bundle of one headline prize).
 - `edition`: the two-digit year as a string (`"26"`). It must match the cards' QR links (`apps/cards/src/config.ts`).
-- `title`: the night's name on screen, usually `"Quina Musical"`.
+- `title`: the edition's name, on every screen (`"Quina Quina 3"`).
+- `prizeReveal`: `"perRound"` (phones see round 1's prizes from the start and each round's as it is introduced) or `"allSecret"` (phones see none until the presenters reveal a round from the console).
 - `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps. `kind` is `"normal"` or `"special"`, and at most one round is special.
-- `line` and `bingo` (the Quina prize): an object, or `null` when that round has no such prize.
+- `line` and `bingo` (the Quina's prizes): the bundle, a list of up to 40 prizes in the order screens show them, `[]` while there are none. Headline prizes (usually one or two) come first.
   - `title`: what is won, as presenters read it out (1–200 characters).
   - `detail`: extra text, or `null`.
   - `sponsorId`: the `id` of a sponsor in `sponsors`, or `null`.
-  - `image`: a picture path, or `null`.
+  - `image`: a picture path, or `null` (screens show it for headline prizes).
+  - `headline`: `true` for the prizes shown first and bigger.
 - `sponsors`: up to 200.
   - `id`: lowercase letters, digits and dashes (`forn-can-pep`), unique. Prizes refer to sponsors by this id.
   - `name`: as shown on screen.
-  - `logo`: `null`. Logos are added and cleaned up in Admin. Admin's own export also accepts a `data:image/webp;base64,…` or PNG data URL of up to 200 KB.
+  - `logo`: `null`. Logos are added and cleaned up in Admin. Admin's own export also accepts a PNG data URL of up to 200 KB.
+- `cardTypes`: the printed card types, `"normal"` and `"especial"`, each once.
+  - `name`: as shown on screen (`"Cartró normal"`).
+  - `color`: its pastel colour, `"#rrggbb"`.
+  - `priceCents`: its price in cents, or `null`.
+  - `rounds`: the round kinds it plays in: `["normal"]` for normal cards, `["special"]` for special ones.
 - `schedule`:
   - `startAtMs`: when the first round starts, in epoch milliseconds (the example is 26 Dec 2026, 18:30 in Begur), or `null`.
   - `roundMinutes`: 1–240.
   - `intervalMinutes`: 0–120.
 - `cheatSheet`: `claimRules` and `specialRoundRules`, each a list of up to 30 non-empty sentences in Catalan.
 
-Text is trimmed. Errors come back as `path: message` lines, for example `plan.rounds[2].line.sponsorId: no sponsor with id "forn"`. An agent can fix them all and paste again.
+Text is trimmed. Errors come back as `path: message` lines, for example `plan.rounds[2].line[0].sponsorId: no sponsor with id "forn"`. An agent can fix them all and paste again.
 
 **Full export** (`#eines`): `{ "kind": "quina.fullExport", "v": 1, "private": true, "exportedAtMs", "plan", "game": { "cardsInPlay", "cardsInPlayCount", "winners" } | null }`. It holds the Winners' names. Those are PRIVATE: they never go to git, the projector or the phones.
 

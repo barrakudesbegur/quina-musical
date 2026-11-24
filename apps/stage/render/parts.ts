@@ -37,13 +37,15 @@ export class PrizeBlock {
   private readonly title: HTMLElement;
   private readonly detail: HTMLElement;
   private readonly sponsor: HTMLElement;
+  private readonly more: HTMLElement;
 
   constructor(extraClass = '') {
     this.kind = h('p', 'prize__kind');
     this.title = h('p', 'prize__title');
     this.detail = h('p', 'prize__detail');
     this.sponsor = h('p', 'prize__sponsor');
-    this.root = h('article', { class: `prize ${extraClass}`.trim(), hidden: true }, this.kind, this.title, this.detail, this.sponsor);
+    this.more = h('p', 'prize__more');
+    this.root = h('article', { class: `prize ${extraClass}`.trim(), hidden: true }, this.kind, this.title, this.detail, this.sponsor, this.more);
   }
 
   set(prize: PrizeView | null): void {
@@ -56,6 +58,8 @@ export class PrizeBlock {
     setHidden(this.detail, !prize.detail);
     setText(this.sponsor, prize.sponsor ? STAGE_TEXT.sponsoredBy(prize.sponsor) : '');
     setHidden(this.sponsor, !prize.sponsor);
+    setText(this.more, prize.more ? STAGE_TEXT.morePrizes(prize.more) : '');
+    setHidden(this.more, !prize.more);
   }
 }
 

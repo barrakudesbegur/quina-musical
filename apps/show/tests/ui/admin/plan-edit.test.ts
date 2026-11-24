@@ -1,19 +1,29 @@
-// Plan edits: rounds renumbered after every change, sponsor ids and references, the schedule's local time.
+// Plan edits: rounds renumbered after every change, prize bundles (headline prizes first), sponsor ids and
+// references, card prices, the schedule's local time.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import {
+  addPrize,
   addRound,
   blankPlan,
+  blankPrize,
   fromLocalInput,
+  fromPriceInput,
   lockedRoundCount,
+  movePrize,
   moveRound,
   plannedEndMs,
+  priceInput,
+  prizeMoveRange,
+  removePrize,
   removeRound,
   removeSponsor,
   renameSponsor,
+  setHeadline,
   slugify,
+  sortBundle,
   sponsorIdFor,
   sponsorUsage,
   toLocalInput,
@@ -62,12 +72,69 @@ test('edits never mutate their input', () => {
   assert.equal(JSON.stringify(rounds), before);
 });
 
-test('a blank plan (once given prize titles) passes the validator', () => {
-  const plan = blankPlan('26', 'Quina Musical', SAMPLE_PLAN.cheatSheet);
-  assert.equal(checkGamePlan(plan).ok, false, 'empty prize titles are reported, not hidden');
-  plan.rounds[0].line!.title = 'Coca';
-  plan.rounds[0].bingo!.title = 'Pernil';
+test('a blank plan passes the validator; a blank prize is reported until it has a title', () => {
+  const plan = blankPlan('26', 'Quina Quina 3', SAMPLE_PLAN.cheatSheet);
+  assert.equal(plan.prizeReveal, 'perRound');
+  assert.deepEqual(plan.cardTypes.map((c) => c.type), ['normal', 'especial']);
+  assert.deepEqual([plan.rounds[0].line, plan.rounds[0].bingo], [[], []], 'no prizes yet');
   assert.equal(checkGamePlan(plan).ok, true);
+  plan.rounds[0].bingo = addPrize(plan.rounds[0].bingo, true);
+  assert.equal(checkGamePlan(plan).ok, false, 'empty prize titles are reported, not hidden');
+  plan.rounds[0].bingo[0].title = 'Pernil';
+  assert.equal(checkGamePlan(plan).ok, true);
+});
+
+const named = (title: string, headline = false) => ({ ...blankPrize(headline), title });
+const titles = (bundle: { title: string }[]) => bundle.map((p) => p.title);
+const BUNDLE = [named('A', true), named('B', true), named('c'), named('d'), named('e')];
+
+test('a bundle: add, remove and move prizes; headline ones always stay first', () => {
+  assert.deepEqual(titles(addPrize(BUNDLE)), ['A', 'B', 'c', 'd', 'e', ''], 'a smaller prize goes last');
+  const withHeadline = addPrize(BUNDLE, true);
+  assert.deepEqual(titles(withHeadline), ['A', 'B', '', 'c', 'd', 'e'], 'a headline prize joins the headline ones');
+  assert.equal(withHeadline[2].headline, true);
+  assert.deepEqual(titles(removePrize(BUNDLE, 0)), ['B', 'c', 'd', 'e']);
+  assert.deepEqual(titles(movePrize(BUNDLE, 3, 2)), ['A', 'B', 'd', 'c', 'e']);
+  assert.deepEqual(titles(movePrize(BUNDLE, 2, 0)), ['A', 'B', 'c', 'd', 'e'], 'a smaller prize never climbs above a headline one');
+  assert.deepEqual(titles(movePrize(BUNDLE, 1, 4)), ['A', 'B', 'c', 'd', 'e'], 'a headline prize never drops below a smaller one');
+  assert.deepEqual(titles(movePrize(BUNDLE, 1, 0)), ['B', 'A', 'c', 'd', 'e']);
+  assert.deepEqual(prizeMoveRange(BUNDLE, 0), { min: 0, max: 1 });
+  assert.deepEqual(prizeMoveRange(BUNDLE, 3), { min: 2, max: 4 });
+});
+
+test('marking a prize "Destacat" moves it up with the headline ones; unmarking moves it down', () => {
+  const up = setHeadline(BUNDLE, 3, true);
+  assert.deepEqual(titles(up), ['A', 'B', 'd', 'c', 'e']);
+  assert.deepEqual(up.map((p) => p.headline), [true, true, true, false, false]);
+  const down = setHeadline(BUNDLE, 0, false);
+  assert.deepEqual(titles(down), ['B', 'A', 'c', 'd', 'e']);
+  assert.deepEqual(down.map((p) => p.headline), [true, false, false, false, false]);
+  assert.deepEqual(titles(sortBundle([named('x'), named('Y', true), named('z')])), ['Y', 'x', 'z']);
+  for (const edited of [up, down, addPrize(BUNDLE, true), movePrize(BUNDLE, 4, 0)]) {
+    const plan = structuredClone(SAMPLE_PLAN);
+    plan.rounds[0].line = edited.map((p) => ({ ...p, title: p.title || 'x' }));
+    assert.equal(checkGamePlan(plan).ok, true, 'every edit keeps the bundle valid');
+  }
+});
+
+test('bundle edits never mutate their input', () => {
+  const bundle = structuredClone(BUNDLE);
+  const before = JSON.stringify(bundle);
+  addPrize(bundle, true);
+  removePrize(bundle, 1);
+  movePrize(bundle, 3, 2);
+  setHeadline(bundle, 4, true);
+  assert.equal(JSON.stringify(bundle), before);
+});
+
+test('card prices: euros in the input, cents in the plan', () => {
+  assert.equal(priceInput(null), '');
+  assert.equal(priceInput(350), '3.5');
+  assert.equal(fromPriceInput('3.5'), 350);
+  assert.equal(fromPriceInput('2,50'), 250);
+  assert.equal(fromPriceInput(''), null);
+  assert.equal(fromPriceInput('-1'), null);
+  assert.equal(fromPriceInput('molt'), null);
 });
 
 test('slugify and unique sponsor ids', () => {

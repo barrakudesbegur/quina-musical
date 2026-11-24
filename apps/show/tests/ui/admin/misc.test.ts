@@ -31,11 +31,11 @@ test('the command log marks rejections by reqId and finds the latest per command
   assert.equal(recordCommand(log, rec('r-9', 'x'), 2).length, 2);
 });
 
-test('Winners are listed by round, Line first, with the planned prize', () => {
+test('Winners are listed by round, Line first, with the planned bundle in a few words', () => {
   const winners = [...baseState(0).winners].reverse();
   const rows = winnerRows(winners, SAMPLE_PLAN);
   assert.deepEqual(rows.map((r) => [r.winner.round, r.winner.kind]), [[1, 'line'], [1, 'bingo'], [2, 'line'], [2, 'bingo']]);
-  assert.equal(rows[0].prize, '[Premi de línia 1]');
+  assert.equal(rows[0].prize, '[Premi de línia 1] +2');
   assert.equal(winnerRows(winners, null)[0].prize, null);
 });
 

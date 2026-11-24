@@ -1271,9 +1271,28 @@
   margin: 0;
 }
 
-.prize-list__title {
+.prize-list__bundle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prize-list__entry {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Headline prizes first and bigger; the rest of the bundle as a compact list under them. */
+.prize-list__entry[data-headline='true'] .prize-list__title {
   font-size: var(--text-lg);
   font-weight: var(--font-weight-strong);
+}
+
+.prize-list__entry[data-headline='false'] .prize-list__title {
+  font-size: var(--text-md);
 }
 
 .prize-list__sponsor,
@@ -1281,6 +1300,13 @@
 .prize-list__none {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+}
+
+.prizes-tab__reveal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .rule-list {

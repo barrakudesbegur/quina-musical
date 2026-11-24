@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The top bar: where the show is ("Quina 3"), the sound switch and Help.
+  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3"), the sound switch and Help.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -13,7 +13,7 @@
 <header class="app-header">
   <h1 class="app-header__title">
     {#if app.scene === 'before' || app.scene === 'after' || app.focusRound === null}
-      {S.appTitle}
+      {app.plan?.title || S.appTitle}
     {:else}
       <span class="app-header__round">{S.round(app.focusRound)}</span>
       {#if special}<span class="app-header__badge">{S.specialRound}</span>{/if}

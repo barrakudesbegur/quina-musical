@@ -6,7 +6,7 @@ import { flowOf } from '../../../../../packages/ui/flow.ts';
 import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../../console/logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../../console/logic/toasts.ts';
 import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../../console/logic/device.ts';
-import { defaultClaimKind, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
+import { defaultClaimKind, prizeRevealOf, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { PROTOCOL_VERSION } from '@quina/protocol';
 
@@ -105,16 +105,34 @@ test('who sent a command, from its reqId', () => {
   assert.deepEqual(lastSpinOf({ ...spin, reqId: null, recipe: 'SUSPENSE' }), { by: null, suspense: true });
 });
 
-test('round prizes from the plan, or why not', () => {
+test('round prize bundles from the plan, headline prizes first, or why not', () => {
   assert.deepEqual(roundPrizes(null, 1), { status: 'noPlan' });
   assert.deepEqual(roundPrizes(SAMPLE_PLAN, 99), { status: 'noRound', number: 99 });
   const r = roundPrizes(SAMPLE_PLAN, 7);
   assert.equal(r.status, 'ok');
   if (r.status === 'ok') {
     assert.equal(r.prizes.kind, 'special');
-    assert.equal(r.prizes.line?.sponsor, '[Patrocinador 1]');
-    assert.equal(r.prizes.bingo?.title, '[Premi de quina 7]');
+    assert.equal(r.prizes.line[0].sponsor, '[Patrocinador 1]');
+    assert.deepEqual(r.prizes.bingo.map((p) => [p.title, p.headline]).slice(0, 2), [['[Premi de quina 7]', true], ['[Obsequi 1 de la quina 7]', false]]);
+    assert.equal(r.prizes.bingo.length, SAMPLE_PLAN.rounds[6].bingo.length);
   }
+  const plan = structuredClone(SAMPLE_PLAN);
+  plan.rounds[0].bingo = [{ ...plan.rounds[0].bingo[1], title: 'Tassa' }, { ...plan.rounds[0].bingo[0], title: 'Pernil' }];
+  const unsorted = roundPrizes(plan, 1);
+  assert.deepEqual(unsorted.status === 'ok' && unsorted.prizes.bingo.map((p) => p.title), ['Pernil', 'Tassa'], 'headline first even from an unsorted bundle');
+});
+
+test('whether phones may see a round\'s prizes: the plan\'s reveal setting over the engine\'s reveals', () => {
+  const state = { prizes: { revealed: [{ round: 3, by: 'intro' as const }, { round: 5, by: 'presenters' as const }] } };
+  assert.equal(prizeRevealOf(SAMPLE_PLAN, state, 1), 'revealed', 'perRound: round 1 from the start');
+  assert.equal(prizeRevealOf(SAMPLE_PLAN, state, 3), 'revealed');
+  assert.equal(prizeRevealOf(SAMPLE_PLAN, state, 4), 'secret');
+  const secret = { ...SAMPLE_PLAN, prizeReveal: 'allSecret' as const };
+  assert.equal(prizeRevealOf(secret, state, 1), 'secret');
+  assert.equal(prizeRevealOf(secret, state, 3), 'secret', 'allSecret ignores intro reveals');
+  assert.equal(prizeRevealOf(secret, state, 5), 'revealed');
+  assert.equal(prizeRevealOf(null, state, 1), 'unknown');
+  assert.equal(prizeRevealOf(SAMPLE_PLAN, {}, 1), 'unknown', 'an engine that does not report reveals');
 });
 
 test('winners: grouped by round, latest first; a Celebration’s own', () => {

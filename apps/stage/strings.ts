@@ -48,6 +48,7 @@ export const STAGE_TEXT = {
   shout: CA.shout,
   prize: CA.prize,
   sponsoredBy: CA.sponsoredBy,
+  morePrizes: CA.morePrizes,
   checking: CA.checking,
   /** The ribbon once a Check has failed: just "Cartró N". */
   checkedCard: CA.card,

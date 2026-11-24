@@ -1,7 +1,7 @@
 // Admin's on-screen words, in Catalan. Shared terms ("Quina 3", "Línia", "Premi de quina", the scene names)
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
-import type { ShowStatus } from '@quina/protocol';
-import type { CheatSheet } from '../../packages/ui/plan.ts';
+import type { RoundKind, ShowStatus } from '@quina/protocol';
+import type { CheatSheet, PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
 
@@ -46,14 +46,31 @@ export const S = {
 
   plan: {
     title: 'La nit',
-    name: 'Nom a la pantalla',
+    name: "Nom de l'edició",
+    nameHelp: 'Surt a totes les pantalles: per exemple, «Quina Quina 3».',
     edition: 'Edició (any, dues xifres)',
     editionHelp: 'Va als QR dels cartrons (/26/123) i separa les dades de cada any.',
+    prizeReveal: 'Premis',
+    prizeRevealOptions: {
+      perRound: 'Es revelen a cada quina',
+      allSecret: 'Tots secrets',
+    } satisfies Record<PrizeReveal, string>,
+    prizeRevealHelp: {
+      perRound: 'Els mòbils veuen els premis de la Quina 1 des del principi, i els de cada quina quan es presenta. La consola també els pot revelar abans.',
+      allSecret: 'Els mòbils no veuen cap premi fins que els presentadors els revelen des de la consola, quina a quina.',
+    } satisfies Record<PrizeReveal, string>,
+    cardTypes: 'Tipus de cartró',
+    cardTypesHelp: 'Com es diuen, de quin color són i quant valen. Els normals juguen a les quines normals i els especials a la quina especial.',
+    cardName: 'Nom',
+    cardColor: 'Color',
+    cardPrice: 'Preu (€)',
+    cardPriceHelp: 'Buit: sense preu.',
+    cardRounds: (kinds: readonly RoundKind[]) => `Juga a: ${kinds.map((k) => (k === 'special' ? 'la quina especial' : 'les quines normals')).join(' i ')}`,
   },
 
   errors: {
     title: (n: number) => plural(n, 'cosa per corregir', 'coses per corregir'),
-    help: 'Cada error porta el seu camí dins del JSON: plan.rounds[2].line.title és el premi de línia de la Quina 3.',
+    help: 'Cada error porta el seu camí dins del JSON: plan.rounds[2].line[0].title és el primer premi de línia de la Quina 3.',
   },
 
   cards: {
@@ -82,7 +99,7 @@ export const S = {
 
   rounds: {
     title: 'Quines',
-    help: 'Cada quina, normal o especial, amb el seu premi de línia i el de quina. Es numeren soles quan les mous.',
+    help: 'Cada quina, normal o especial, amb els premis de línia i els de quina. Es numeren soles quan les mous.',
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
@@ -105,7 +122,14 @@ export const S = {
   prize: {
     offer: (text: string) => `Segons el full, regala: «${text}»`,
     useOffer: 'Usar-ho com a títol',
-    has: (label: string) => `Hi ha ${label.toLowerCase()}`,
+    empty: 'Encara no hi ha cap premi: les pantalles diran que està per anunciar.',
+    add: 'Afegir un premi',
+    headline: 'Destacat (surt primer i més gran)',
+    upLabel: (n: number) => `Pujar el premi ${n}`,
+    downLabel: (n: number) => `Baixar el premi ${n}`,
+    remove: 'Treure',
+    removeLabel: (n: number) => `Treure el premi ${n}`,
+    confirmRemove: 'Segur? Treure',
     title: 'Premi',
     detail: 'Detall (opcional)',
     sponsor: 'Patrocinador',
@@ -240,6 +264,8 @@ export const S = {
     sponsorsChanged: (list: string) => `Patrocinadors que canvien (nom o logo): ${list}`,
     schedule: "L'horari canvia",
     cheatSheet: 'Les normes de la xuleta canvien',
+    prizeReveal: 'Canvia quan es revelen els premis',
+    cardTypes: 'Els tipus de cartró canvien (nom, color o preu)',
     title: 'El nom canvia',
     edition: "L'edició canvia",
     order: "Només canvia l'ordre dels patrocinadors",

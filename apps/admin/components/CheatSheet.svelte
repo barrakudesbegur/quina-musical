@@ -40,10 +40,16 @@
               </th>
               {#each round.prizes as prize (prize.kind)}
                 <td>
-                  {#if prize.title}
-                    <strong>{prize.title}</strong>
-                    {#if prize.detail}<span class="cheat-sheet__detail">{prize.detail}</span>{/if}
-                    {#if prize.sponsor}<span class="cheat-sheet__sponsor">{CA.sponsoredBy(prize.sponsor)}</span>{/if}
+                  {#if prize.items.length}
+                    <ul class="cheat-sheet__bundle">
+                      {#each prize.items as item, j (j)}
+                        <li class="cheat-sheet__item" data-headline={item.headline}>
+                          {#if item.headline}<strong>{item.title}</strong>{:else}{item.title}{/if}
+                          {#if item.detail}<span class="cheat-sheet__detail">{item.detail}</span>{/if}
+                          {#if item.sponsor}<span class="cheat-sheet__sponsor">{CA.sponsoredBy(item.sponsor)}</span>{/if}
+                        </li>
+                      {/each}
+                    </ul>
                   {:else}
                     <span class="cheat-sheet__none">{S.cheat.noPrize}</span>
                   {/if}
@@ -140,6 +146,14 @@
   }
   .cheat-sheet__prizes tbody th {
     white-space: nowrap;
+  }
+  .cheat-sheet__section .cheat-sheet__bundle {
+    list-style: none;
+    padding: 0;
+    gap: var(--space-1);
+  }
+  .cheat-sheet__item[data-headline='false'] {
+    font-size: var(--text-sm);
   }
   .cheat-sheet__special,
   .cheat-sheet__detail,

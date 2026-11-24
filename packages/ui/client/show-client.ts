@@ -88,8 +88,9 @@ export class ShowClient {
     this.reqPrefix = tag ?? 'r';
     this.token = token;
     this.bus = new Bus<unknown>({ role, token, clientId: clientId ?? (tag ? `${tag}-${randomSuffix()}` : undefined) });
-    const fallback = typeof location === 'undefined' ? new WebSocketTransport() : new WebSocketTransport(controlSocketUrl(location.href));
-    this.transport = new ObservedTransport(transport ?? fallback, () => this.changed());
+    // The relay's socket only when no transport is given (a test's or the demo's never opens one).
+    const inner = transport ?? (typeof location === 'undefined' ? new WebSocketTransport() : new WebSocketTransport(controlSocketUrl(location.href)));
+    this.transport = new ObservedTransport(inner, () => this.changed());
   }
 
   /** Connect and ask for a fresh snapshot on every (re)connection. Safe to call twice. */

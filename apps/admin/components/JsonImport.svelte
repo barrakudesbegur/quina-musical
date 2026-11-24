@@ -107,6 +107,8 @@
             {#if diff.sponsors.changed.length}<li>{S.json.sponsorsChanged(list(diff.sponsors.changed))}</li>{/if}
             {#if diff.schedule}<li>{S.json.schedule}</li>{/if}
             {#if diff.cheatSheet}<li>{S.json.cheatSheet}</li>{/if}
+            {#if diff.prizeReveal}<li>{S.json.prizeReveal}</li>{/if}
+            {#if diff.cardTypes}<li>{S.json.cardTypes}</li>{/if}
           </ul>
         </div>
         <div class="panel__actions">
