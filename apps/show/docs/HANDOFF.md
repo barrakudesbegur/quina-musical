@@ -128,7 +128,67 @@ b2 built prize secrecy on top (`6fbbc32`). 1e moved the UI to plan v2 (`07ed72f`
 ## Known issues and risks
 
 - **Prepared data.** `data/out` is gitignored. The engine tests that need it skip without it (`tests/support/data.ts`), and CI runs the rest. `QUINA_OUT_DIR=/nonexistent node --test "apps/show/tests/*.test.ts"` reproduces CI.
-- **Automatic hooks are proposals.** On last year's hand-tagged songs the top candidate is within a bar of a tagged hook in 25 of 77 songs, and one of the top three in 48 of 77 (chance is about 1 in 8 per candidate).
+- **Automatic hooks are proposals.** On last year's hand-tagged songs the top candidate is within a bar of a tagged hook in 26 of 77 songs, and one of the top three in 48 of 77 (chance is about 1 in 8 per candidate).
+- **Hand tags scatter about ±2 beats.** The refine step suggests a one-bar shift for 45 of 386 tags, mostly a bar later. That fits the earlier finding that about 14% look a bar off. Until hooks are refined, phrase counting from a wrong hook is off too.
+- **Signatures are rarer.** 38 of 77 songs get an automatic pick, and they play in about 5% of transitions. Over A they need agreeing keys and tempos within 4%. The user can pick more by hand.
+- **The Pace is met on average.** Gaps between landings are whole phrases (8 bars at 120 bpm = 16 s), and the Drift nudge evens the round out.
+- **The relay gets killed by other sessions' restarts.** When another Vite dev server holds port 24678, `npm run dev` exits. Use `npm run build && npm start` (dist) instead.
+
+## How to run, test and listen
+
+From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
+
+**Run it:**
+- `npm run dev`: relay plus Vite on http://localhost:5174, this laptop only. Add `-- --lan` for the hotspot, which pairs with the printed `?t=` token.
+- `npm run build && npm start`: the built pages (more robust when other sessions run Vite).
+
+**Pages:**
+- **Show page:** `http://localhost:5174/show/`. Parameters:
+  - `auto=0`: auto-advance off;
+  - `pace=8..60`: the Pace;
+  - `autostart=1`: start right away;
+  - `mute=1`: everything runs, nothing reaches the speakers;
+  - `fresh=1`: ignore the local journal;
+  - `stage=0`: no projector stage over the page;
+  - `debug=1`: the plan line, D toggles;
+  - `queue=3,17,45`: a fixed Queue;
+  - `decoys=1`: the old Decoys experiment.
+
+  Keys:
+  - → / Enter: Next (it also releases a Suspense);
+  - ←: Back;
+  - Space: Hold / release;
+  - S: Suspense;
+  - M: Hold music;
+  - Esc: Panic;
+  - + / −: Pace;
+  - A: auto-advance;
+  - 0–4: Phase;
+  - D: debug HUD (with `debug=1`);
+  - H: hide the controls.
+- **Audition page:** `http://localhost:5174/show/audition.html?song=N`: beat-grid clicks, hooks and their fixes, the "Suggested" bar shift, **Automatic hooks** (Best, Main, Reject, nudge), and **Signatures** (Pick, Veto, Undo, Off). Save re-derives the song.
+- **Transition bench:** `http://localhost:5174/show/test.html?run=1` renders every technique in three modes: landing click, mix and silence.
+
+**Test:**
+- `npm test`: typecheck, engine node tests and UI tests.
+- `npm run test:pipeline`: pytest for tools/prep.
+- `node tests/support/variety.ts 4 1`: the sameness table over whole nights.
+
+**Prepare:**
+- `npm run prep -- --pool <name>`: covers, decode, analyze, snippets, validate, keys, stems, signatures, hooks, interval.
+- Single steps: `tools/prep/.venv/bin/python tools/prep/hooks_auto.py --report` or `tools/prep/signatures.py --force`.
+
+## Added by others while paused, and what became of it
+
+- **Q26 = A+** (orchestrator): recorded above under "Decided since the pause". Done.
+- **Pause plays the Interval music** (orchestrator): Pausa reuses `pause {on}` / `ShowState.pause` / the public `pause`. During a pause the engine now plays the Interval music instead of Hold music, and the round resumes with a normal transition out of it (a Check after a pause goes back to Hold music under its snippets). Done; `tests/flow.test.ts` covers it.
+- **The flaky hook-ranking test** (b2): `section_kinds` now fixes each eigenvector's sign (largest component positive), and the test asserts the real claim (every chorus start in the top four) instead of an exact top 1. It passes with 1, 4 and 8 BLAS threads. On real songs: 26 of 77 top candidates within a bar of a tagged hook, 48 of 77 in the top three. Done.
+- **Card types from the printed cards** (1e, c424649): `apps/cards/dist/cards.json` plus `card-types.json` become the formal source, with a type per round in `RoundPlan`; then `plan.cardTypes`' name, colour and price go. Admin already shows them read-only (`withPrintedCardTypes`). **Not done:** it is item 1 of the next queue (the plan and engine side, to agree with 1e and b2).
+
+## Known issues and risks
+
+- **Prepared data.** `data/out` is gitignored. The engine tests that need it skip without it (`tests/support/data.ts`), and CI runs the rest. `QUINA_OUT_DIR=/nonexistent node --test "apps/show/tests/*.test.ts"` reproduces CI.
+- **Automatic hooks are proposals.** On last year's hand-tagged songs the top candidate is within a bar of a tagged hook in 26 of 77 songs, and one of the top three in 48 of 77 (chance is about 1 in 8 per candidate).
 - **Hand tags scatter about ±2 beats.** The refine step suggests a one-bar shift for 45 of 386 tags, mostly a bar later. That fits the earlier finding that about 14% look a bar off. Until hooks are refined, phrase counting from a wrong hook is off too.
 - **Signatures are rarer.** 38 of 77 songs get an automatic pick, and they play in about 5% of transitions. Over A they need agreeing keys and tempos within 4%. The user can pick more by hand.
 - **The Pace is met on average.** Gaps between landings are whole phrases (8 bars at 120 bpm = 16 s), and the Drift nudge evens the round out.

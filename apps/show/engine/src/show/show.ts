@@ -2198,8 +2198,10 @@ export class Show {
     this.pause = { sinceMs: this.env.nowMs() };
     this.out.push({ type: 'pauseOverlay', on: true });
     if (this.status === 'transition') return;
+    // A pause (Pausa, the second level of Parlem) plays the Interval music rather than Hold music; after it the
+    // round goes on with a normal transition out of that music.
     this.flowHold(this.hold?.reason ?? 'music');
-    this.switchToHoldMusic('hold');
+    this.playIntervalMusic();
   }
 
   /**
@@ -2217,8 +2219,9 @@ export class Show {
       case 'roundStart':
         return this.playIntervalMusic();
       case 'check':
-        // The Checks go on (a running one was queued again), with Hold music under them.
+        // The Checks go on (a running one was queued again), with Hold music under them (not the pause's music).
         if (this.status !== 'hold') this.enterHold('claim', { music: true });
+        else if (this.bed === 'interval') this.switchToHoldMusic('hold');
         this.autoCheck = true;
         return;
       case 'before':

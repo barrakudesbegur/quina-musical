@@ -375,7 +375,7 @@ test('the Celebration music changes without blocking anything; Hold music in the
   assert.equal(h.show.scene, 'play');
 });
 
-test('the technical pause: Hold music, a running Check queued again, only safe commands; off brings the scene back', () => {
+test('the pause: the Interval music, a running Check queued again, only safe commands; off brings the scene back', () => {
   const h = flow();
   landSongs(h, 2);
   h.send('next');
@@ -384,14 +384,17 @@ test('the technical pause: Hold music, a running Check queued again, only safe c
   assert.deepEqual(find(on, 'pauseOverlay'), { type: 'pauseOverlay', on: true });
   assert.deepEqual(emitted(on, 'transition.cancelled').map((e) => e.reason), ['hold']);
   assert.equal(h.show.status, 'hold');
-  assert.ok(find(on, 'songToHoldMusic') || find(on, 'holdMusic'), 'Hold music while paused');
+  // A pause (Pausa, Parlem's second level) plays the Interval music, not Hold music.
+  assert.ok(find(on, 'intervalMusic') && !find(on, 'holdMusic') && !find(on, 'songToHoldMusic'), 'the Interval music while paused');
+  assert.equal(h.show.snapshot().intervalMusic != null || h.show.bed === 'interval', true);
   assert.deepEqual(rejected(h.send('next')), ['wrongScene']);
   assert.deepEqual(rejected(h.send('claim', { cardId: card.id })), ['wrongScene']);
   assert.deepEqual(rejected(h.send('setPace', { delta: 1 })), []);
   const off = h.send('pause', { on: false });
   assert.deepEqual(find(off, 'pauseOverlay'), { type: 'pauseOverlay', on: false });
   assert.equal(h.show.status, 'hold', 'in play, the Hold stays until Resume');
-  assert.ok(find(h.send('next'), 'startTransition'));
+  const resume = find(h.send('next'), 'startTransition');
+  assert.ok(resume && resume.fromHoldMusic, 'the round goes on with a normal transition out of the Interval music');
 
   // In a Check: the running Check stops; after the pause it starts again by itself.
   const c = flow(9);
@@ -403,12 +406,13 @@ test('the technical pause: Hold music, a running Check queued again, only safe c
   assert.deepEqual(rejected(c.send('decide', { claimId: 'cl-1', valid: true })), ['wrongScene']);
   const resumed = c.send('pause', { on: false });
   assert.ok(find(resumed, 'checkSnippets'));
+  assert.ok(find(resumed, 'holdMusic'), 'back to Hold music under the Check');
   assert.equal(c.show.claims[0].status, 'checking');
 
-  // In a Celebration: Hold music meanwhile, then its own music again; the auto Interval waits.
+  // In a Celebration: the Interval music meanwhile, then its own music again; the auto Interval waits.
   c.send('decide', { claimId: 'cl-1', valid: true });
   const celebrationPause = c.send('pause');
-  assert.equal(find(celebrationPause, 'holdMusic')?.switch, true, 'the Celebration music gives way to Hold music');
+  assert.ok(find(celebrationPause, 'intervalMusic'), 'the Celebration music gives way to the Interval music');
   const back = c.send('pause');
   assert.equal(find(back, 'celebrationMusic')?.choice, 'winningSong');
 });

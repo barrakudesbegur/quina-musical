@@ -8,7 +8,7 @@ A hook is where a chorus lands. Three kinds of evidence, per bar (index = downbe
   back;
 - an energy jump: the next 4 bars are louder than the 4 before;
 - a vocal onset: the singer comes in (silent in the 2 bars before, singing on this one).
-On last year's songs (hand-tagged), the top candidate lands within a bar of a tagged hook in 25 of 77 songs and
+On last year's songs (hand-tagged), the top candidate lands within a bar of a tagged hook in 26 of 77 songs and
 one of the top three in 48 (chance: about one in eight per candidate): proposals, not answers. The user
 approves, rejects or nudges each on the audition page, and only approved ones become hooks. The refine step moves
 a candidate by at most a bar onto the song's 4-bar phrase grid when the grid's bar scores nearly as well, and
@@ -80,6 +80,9 @@ def section_kinds(chroma: np.ndarray, mfcc: np.ndarray, k: int = 4) -> np.ndarra
     mu = deg_path.dot(deg_path + deg_rec) / (np.sum((deg_path + deg_rec) ** 2) + 1e-9)
     lap = scipy.sparse.csgraph.laplacian(mu * rec + (1 - mu) * path, normed=True)
     _, vecs = scipy.linalg.eigh(lap)
+    # An eigenvector's sign is arbitrary (it can differ between BLAS builds and thread counts): fix it so its
+    # largest component is positive.
+    vecs = vecs * np.where(vecs[np.abs(vecs).argmax(axis=0), np.arange(vecs.shape[1])] < 0, -1.0, 1.0)
     vecs = scipy.ndimage.median_filter(vecs, size=(5, 1))
     norm = np.cumsum(vecs**2, axis=1) ** 0.5
     return _kmeans(vecs[:, :k] / (norm[:, k - 1:k] + 1e-9), k)
