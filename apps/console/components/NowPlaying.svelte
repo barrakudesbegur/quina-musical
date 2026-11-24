@@ -11,8 +11,14 @@
   import CountdownRing from './CountdownRing.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
+  import { registerMorphRoot } from '../morph.ts';
 
   const model = getConsole();
+  let root = $state<HTMLElement | null>(null);
+  $effect(() => {
+    registerMorphRoot('now', root);
+    return () => registerMorphRoot('now', null);
+  });
   const uid = $props.id();
   const snap = $derived(model.show.state);
   const auto = $derived(snap ? autoAdvanceCountdown(snap, model.show.now) : null);
@@ -24,13 +30,13 @@
 </script>
 
 {#if snap}
-  <section class="panel now-playing" data-state={snap.status} aria-labelledby="{uid}-title">
-    <Cover songId={snap.current?.songId ?? null} size="lg" />
+  <section bind:this={root} class="panel now-playing" data-state={snap.status} aria-labelledby="{uid}-title">
+    <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
     <div class="now-playing__song">
       <h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>
       {#if snap.current}
-        <p class="now-playing__name">{snap.current.title}</p>
-        <p class="now-playing__artist">{snap.current.artist}</p>
+        <p class="now-playing__name" data-morph="title">{snap.current.title}</p>
+        <p class="now-playing__artist" data-morph="artist">{snap.current.artist}</p>
       {:else}
         <p class="now-playing__name">{snap.holdMusic ? S.nowPlaying.holdMusic : S.nowPlaying.nothing}</p>
       {/if}

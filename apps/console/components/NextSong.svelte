@@ -6,9 +6,15 @@
   import { getConsole } from '../context.ts';
   import { landingCountdown, suspenseCountdown } from '../logic/countdown.ts';
   import { S } from '../strings.ts';
+  import { registerMorphRoot } from '../morph.ts';
   import Cover from './Cover.svelte';
 
   const model = getConsole();
+  let root = $state<HTMLElement | null>(null);
+  $effect(() => {
+    registerMorphRoot('next', root);
+    return () => registerMorphRoot('next', null);
+  });
   const uid = $props.id();
   const snap = $derived(model.show.state);
   const next = $derived(snap?.next ?? null);
@@ -18,13 +24,13 @@
 
 <!-- Nothing to show before a round's Queue exists. -->
 {#if snap && (next || snap.queue.length > 0)}
-  <section class="panel panel--private next-song" data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
+  <section bind:this={root} class="panel panel--private next-song" data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
     {#if next}
-      <Cover songId={next.songId} />
+      <Cover songId={next.songId} morph="cover" />
       <div class="next-song__song">
         <h2 class="panel__label" id="{uid}-title">{S.nextSong.title}<span class="visually-hidden"> ({S.nextSong.private})</span></h2>
-        <p class="next-song__name">{next.title}</p>
-        <p class="next-song__artist">{next.artist}</p>
+        <p class="next-song__name" data-morph="title">{next.title}</p>
+        <p class="next-song__artist" data-morph="artist">{next.artist}</p>
         {#if snap.pending === 'next'}<p class="next-song__pending">{S.nextSong.decoding}</p>{/if}
       </div>
       {#if landing}

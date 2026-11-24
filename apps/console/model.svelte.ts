@@ -6,6 +6,11 @@ import type { CommandRejected, ResumePoint } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
+import { tick } from 'svelte';
+import { capture, play, type Captured } from './morph.ts';
+import { shouldMorph } from './logic/next-to-now.ts';
+
+const prefersReducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 import type { AnyCommandArgs, AnyCommandName } from '../../packages/ui/flow.ts';
 import type { GamePlan } from '../../packages/ui/plan.ts';
 import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
@@ -77,6 +82,8 @@ export class ConsoleModel {
     }),
   );
 
+  /** The next-to-now morph captured at a landing, played once Ara sona shows that song. Not reactive. */
+  private morph: Captured | null = null;
   private readonly sent = new SentLog(CONSOLE.sentLogSize);
   private toastSeq = 0;
 
@@ -97,6 +104,15 @@ export class ConsoleModel {
     this.show.client.on((event) => {
       if (event.type === 'transition.scheduled' || event.type === 'suspense.started') this.lastSpin = lastSpinOf(event);
       if (event.type === 'state') this.landingLog = recordLandings(this.landingLog, event);
+      // next-to-now: at the landing the panels still show the old songs; once Ara sona shows it, fly it in.
+      if (event.type === 'transition.landed' && shouldMorph(event.songId, this.show.state?.next?.songId, prefersReducedMotion())) {
+        this.morph = capture(event.songId);
+      }
+      if (event.type === 'state' && this.morph) {
+        const morph = this.morph;
+        this.morph = null;
+        if (event.current?.songId === morph.songId) void tick().then(() => play(morph));
+      }
       // Plan B: keep the engine's latest resume code on this device (never on the demo transport).
       if (event.type === 'state' && !this.show.demo) {
         const next = nextSavedCode(this.savedResume, event.resume);
