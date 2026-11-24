@@ -1,7 +1,7 @@
 // The laptop's plan: the cloud link's copy wins over this browser's, which stays the offline fallback.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LaptopPlanStore, type PlanStore } from '../../../../packages/ui/data/plan-store.ts';
+import { LaptopPlanStore, followPlanPushes, type PlanStore } from '../../../../packages/ui/data/plan-store.ts';
 import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
 import type { GamePlan } from '../../../../packages/ui/plan.ts';
 
@@ -47,4 +47,28 @@ test('without the link folder, or offline, the stored copy stands', async () => 
 test('an invalid or empty link copy falls back to the stored plan', async () => {
   const store = new LaptopPlanStore(async () => ({ ok: true, json: async () => null }), new MemoryStore(local));
   assert.equal((await store.refresh())?.title, 'Local');
+});
+
+test('a pushed plan (relay.plan) wins at once; the same one again is quiet; an invalid one is ignored', () => {
+  const store = new LaptopPlanStore(async () => ({ ok: false, json: async () => null }), new MemoryStore(local));
+  const heard: string[] = [];
+  store.subscribe((p) => heard.push(p?.title ?? 'none'));
+  store.receive(fromCloud);
+  store.receive(fromCloud);
+  store.receive({ nonsense: true });
+  assert.equal(store.load()?.title, 'Del núvol');
+  store.receive(null);
+  assert.equal(store.load()?.title, 'Local', 'no plan on the link: the stored copy stands');
+  assert.deepEqual(heard, ['Del núvol', 'Local']);
+});
+
+test('followPlanPushes feeds relay.plan messages, and only those, to the store', () => {
+  const store = new LaptopPlanStore(async () => ({ ok: false, json: async () => null }), new MemoryStore(local));
+  let listener: (event: { type: string; plan?: unknown }) => void = () => {};
+  const client = { on: (l: typeof listener) => ((listener = l), () => {}) };
+  followPlanPushes(client, store);
+  listener({ type: 'state', plan: fromCloud });
+  assert.equal(store.load()?.title, 'Local');
+  listener({ type: 'relay.plan', plan: fromCloud });
+  assert.equal(store.load()?.title, 'Del núvol');
 });

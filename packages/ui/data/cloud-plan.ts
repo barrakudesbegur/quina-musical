@@ -19,6 +19,13 @@ export type MediaResult = { ok: true; path: string } | { ok: false; status: numb
 
 const isRec = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 
+/** A pushed or fetched plan, checked: the plan, null for "no plan", or undefined when it isn't a valid plan. */
+export function checkedPlan(raw: unknown): GamePlan | null | undefined {
+  if (raw === null || raw === undefined) return null;
+  const check = checkGamePlan(raw);
+  return check.ok ? check.plan : undefined;
+}
+
 export class CloudPlanStore implements PlanStore {
   private plan: GamePlan | null = null;
   private readonly listeners = new Set<(plan: GamePlan | null) => void>();
@@ -58,6 +65,13 @@ export class CloudPlanStore implements PlanStore {
     } catch {
       return this.plan;
     }
+  }
+
+  /** A plan the cloud pushed on the console socket (`relay.plan`): subscribers hear about it when it changed. */
+  receive(raw: unknown): void {
+    const plan = checkedPlan(raw);
+    if (plan === undefined || JSON.stringify(plan) === JSON.stringify(this.plan)) return;
+    this.set(plan);
   }
 
   /** Save the whole plan. The cloud validates it with the same checkGamePlan; its errors come back with paths. */

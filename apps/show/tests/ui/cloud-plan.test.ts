@@ -53,3 +53,17 @@ test('media upload returns the public path, or a reason', async () => {
     { ok: false, status: 0, reason: 'network' },
   );
 });
+
+test('a plan pushed on the console socket notifies subscribers once; our own put stays quiet', async () => {
+  const store = new CloudPlanStore(async () => reply(200, { ok: true, plan: SAMPLE_PLAN }));
+  const heard: (string | null)[] = [];
+  store.subscribe((p) => heard.push(p?.title ?? null));
+  await store.put(SAMPLE_PLAN);
+  store.receive(SAMPLE_PLAN);
+  const other = { ...SAMPLE_PLAN, title: 'Canviat a Admin' };
+  store.receive(other);
+  store.receive(other);
+  store.receive('not a plan');
+  assert.deepEqual(heard, ['Canviat a Admin']);
+  assert.equal(store.load()?.title, 'Canviat a Admin');
+});

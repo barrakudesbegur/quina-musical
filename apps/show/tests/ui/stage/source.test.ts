@@ -68,6 +68,17 @@ test('landings, cancels and undos pass; health, journal and rejections do not', 
   assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'relay.clients', clients: [] }), null);
 });
 
+test('the relay\'s plan push reaches the stage from the transport (it is public)', () => {
+  const bus = new Bus<unknown>({ role: 'show', clientId: 'test' });
+  const source = busSource(bus, { clock: () => NOW });
+  const heard: StageEvent[] = [];
+  source.onEvent((e) => heard.push(e));
+  const push = { v: PROTOCOL_VERSION, type: 'relay.plan', plan: { title: 'x' }, savedAtMs: NOW };
+  for (const listener of bus.listeners) listener(push, { local: false });
+  assert.deepEqual(heard, [{ kind: 'plan', plan: { title: 'x' } }]);
+  source.dispose();
+});
+
 test('the bus source hears the page\'s own emissions only, never remote messages', () => {
   const bus = new Bus<unknown>({ role: 'show', clientId: 'test' });
   let clock = NOW;

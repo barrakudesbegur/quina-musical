@@ -18,7 +18,9 @@ export type StageEvent =
   | { kind: 'cancelled'; id: string; atMs: number }
   | { kind: 'undone'; position: number; atMs: number }
   /** The engine's Heat sample, the same one phones get: the projector and the phones show the same Heat. */
-  | { kind: 'heat'; value: number; fromMs: number; toMs: number };
+  | { kind: 'heat'; value: number; fromMs: number; toMs: number }
+  /** The Game plan the relay pushes (`relay.plan`): public, the same plan phones get. Unchecked here. */
+  | { kind: 'plan'; plan: unknown };
 
 /** `online`; `offline`: the relay is gone; `noShow`: the relay is up but the show page isn't on it. */
 export type LinkState = 'online' | 'offline' | 'noShow';
@@ -52,6 +54,8 @@ export function toStageEvent(event: IncomingEvent): StageEvent | null {
       return { kind: 'undone', position: event.position, atMs: event.atMs };
     case 'heat.sample':
       return { kind: 'heat', value: event.value, fromMs: event.fromMs, toMs: event.toMs };
+    case 'relay.plan':
+      return { kind: 'plan', plan: event.plan };
     default:
       return null;
   }
@@ -59,14 +63,15 @@ export function toStageEvent(event: IncomingEvent): StageEvent | null {
 
 /**
  * The show page's own Bus: its local emissions are the engine's events, on this very clock. Messages from
- * the transport (remotes' commands) are ignored.
+ * the transport (remotes' commands) are ignored, except the relay's plan push (`relay.plan`), which is public
+ * and is how a kiosk projector, which never regains focus, learns that Admin changed the plan.
  */
 export function busSource(bus: Bus<unknown>, { clock = () => Date.now() }: { clock?: () => number } = {}): StageSource {
   const offset = new ClockOffset();
   const listeners = new Set<(event: StageEvent) => void>();
   let latest: ShowState | null = null;
   const off = bus.on((message, { local }) => {
-    if (!local || !isEvent(message)) return;
+    if (!isEvent(message) || (!local && message.type !== 'relay.plan')) return;
     const event = toStageEvent(message);
     if (!event) return;
     if (event.kind === 'state') {

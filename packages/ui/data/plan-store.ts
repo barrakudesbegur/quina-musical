@@ -5,15 +5,31 @@
 // - localStorage plus the sample plan in demo mode (`?demo=`).
 import { checkGamePlan, type GamePlan } from '../plan.ts';
 import { SAMPLE_PLAN } from '../fixtures/plan.ts';
-import { CloudPlanStore } from './cloud-plan.ts';
+import { CloudPlanStore, checkedPlan } from './cloud-plan.ts';
 import { isLocalHost } from '../client/endpoints.ts';
+
+export { checkedPlan };
 
 export interface PlanStore {
   load(): GamePlan | null;
   save(plan: GamePlan): void;
   /** Called with the new plan whenever it changes (also from another tab). Returns an unsubscribe function. */
   subscribe(listener: (plan: GamePlan | null) => void): () => void;
+  /**
+   * A plan pushed by the relay or the cloud (`relay.plan`, on every hello and whenever Admin saves). It is
+   * checked like any other plan; subscribers hear about it only when it changed. Stores that only read this
+   * browser's storage (demo) don't take pushes.
+   */
+  receive?(plan: unknown): void;
 }
+
+/** Follow the relay's plan pushes on a client (the console, a standalone stage). Returns an unsubscribe function. */
+export function followPlanPushes(client: { on(listener: (event: { type: string; plan?: unknown }) => void): () => void }, store: PlanStore): () => void {
+  return client.on((event) => {
+    if (event.type === 'relay.plan') store.receive?.(event.plan ?? null);
+  });
+}
+
 
 export const PLAN_STORAGE_KEY = 'quina.plan.v1';
 
@@ -93,23 +109,32 @@ export class LaptopPlanStore implements PlanStore {
     };
   }
 
-  /** Fetch `/cloud/plan.json`; subscribers hear about it when it changed. Never throws. */
+  /** Fetch `/cloud/plan.json`; subscribers hear about it when it changed. Never throws. The fallback for
+   * `receive()`: at start and when the page regains focus. */
   async refresh(): Promise<GamePlan | null> {
     try {
       const res = await this.fetchImpl('/cloud/plan.json');
       if (!res.ok) return this.load();
       const check = checkGamePlan(await res.json());
-      const plan = check.ok ? check.plan : null;
-      const json = JSON.stringify(plan);
-      if (json !== this.laptopJson) {
-        this.laptopJson = json;
-        this.laptop = plan;
-        for (const l of this.listeners) l(this.load());
-      }
+      this.use(check.ok ? check.plan : null);
     } catch {
       // No link folder (no cloud link running) or offline: the stored copy stands.
     }
     return this.load();
+  }
+
+  /** A plan the relay pushed (`relay.plan`). An invalid one is ignored; null means the link has no plan. */
+  receive(raw: unknown): void {
+    const plan = checkedPlan(raw);
+    if (plan !== undefined) this.use(plan);
+  }
+
+  private use(plan: GamePlan | null): void {
+    const json = JSON.stringify(plan);
+    if (json === this.laptopJson) return;
+    this.laptopJson = json;
+    this.laptop = plan;
+    for (const l of this.listeners) l(this.load());
   }
 }
 

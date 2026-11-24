@@ -213,6 +213,10 @@ class Stage {
       case 'heat':
         this.heatSamples = [...this.heatSamples, { value: event.value, fromMs: event.fromMs, toMs: event.toMs }].slice(-STAGE.heatSamplesKept);
         break;
+      case 'plan':
+        // The relay's push: the store checks it and, when it changed, its subscription above redraws.
+        this.planStore.receive?.(event.plan);
+        return;
     }
     this.update();
   }
