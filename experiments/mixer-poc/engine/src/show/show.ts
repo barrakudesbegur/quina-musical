@@ -969,6 +969,9 @@ export class Show {
     this.blendRequested = '';
     const planner = this.env.plan ?? planTransition;
     const id = `tr-${++this.transitionCount}`;
+    // Decoys (experiment): rolled before planning, so a Decoy takes the place of B's Tease. Its own random
+    // stream; with Decoys off nothing here runs.
+    const wantDecoy = this.decoys.enabled && this.decoyCandidate() != null && seededRandom(seed ^ 0x2545f491)() < (this.decoys.chance[phase.name] ?? 0);
     const planned = planner({
       now,
       A,
@@ -982,11 +985,12 @@ export class Show {
       recipeOverride: RECIPE_IDS.find((r) => r === this.game.nextRecipe) ?? null,
       kind: 'next',
       id,
+      ...(wantDecoy ? { allowTease: false } : {}),
     });
     if ('error' in planned) return this.reject(reqId, 'next', 'planFailed', planned.error);
     this.startPlaying();
     let plan: ShowPlan = { ...planned, seed, reqId, targetPos };
-    if (this.decoys.enabled) plan = this.addDecoy(plan);
+    if (wantDecoy) plan = this.addDecoy(plan);
     this.game.nextRecipe = null;
     this.transition = {
       id,
@@ -1052,7 +1056,9 @@ export class Show {
       const landedOn = [...this.history].reverse().find((h) => h.songId === l.songId)?.hookId;
       const hook = analysis?.hooks.find((h) => h.id === landedOn) ?? analysis?.hooks.find((h) => h.valid);
       if (!analysis || !hook) continue;
-      return withDecoy(plan, { source: { songId: l.songId, analysis, hook }, phase: plan.phase, rng: seededRandom(plan.seed ^ 0x2545f491), config: this.decoys });
+      // The dice were rolled before planning (beginTransition), so it is placed whenever it fits.
+      const always = { early: 1, mid: 1, late: 1, final: 1 };
+      return withDecoy(plan, { source: { songId: l.songId, analysis, hook }, phase: plan.phase, rng: () => 0, config: { ...this.decoys, chance: always } });
     }
     return plan;
   }
@@ -1953,7 +1959,17 @@ export class Show {
 
   prefetch() {
     const ids = [this.queue[this.position], this.queue[this.position + 1], this.queue[this.position + 2]].filter((id) => id != null);
+    // With Decoys on, the song a Decoy would tease stays decoded too (the runtime drops whatever isn't listed).
+    const decoy = this.decoys.enabled ? this.decoyCandidate() : null;
+    if (decoy != null && !ids.includes(decoy)) ids.push(decoy);
     this.out.push({ type: 'prefetch', ids });
+  }
+
+  /** The song a Decoy would tease: the newest counted landing that isn't the current song. */
+  decoyCandidate(): number | null {
+    const current = this.position >= 0 ? this.queue[this.position] : null;
+    for (const l of [...this.landings].reverse()) if (!l.undone && l.songId !== current) return l.songId;
+    return null;
   }
 
   /** A song as the remotes see it; an id missing from the catalog still gets a placeholder. */

@@ -233,7 +233,7 @@ export const DECOYS: DecoyConfig = Object.freeze({
   enabled: false,
   chance: Object.freeze({ early: 0, mid: 0.12, late: 0.18, final: 0 }),
   minBridgeBars: 2,
-  minSec: 1,
+  minSec: 0.7,
   maxSec: 2.4,
   gainDb: -4,
   lpfHz: 3200,

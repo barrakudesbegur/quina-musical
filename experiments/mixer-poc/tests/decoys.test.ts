@@ -10,7 +10,7 @@ import { usableHooks } from '../engine/src/plan/hooks.ts';
 import { DECOYS, type DecoyConfig } from '../engine/src/config.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import type { DecoyEvent } from '../engine/src/plan/recipes.ts';
-import { setup, analyses } from './support/harness.ts';
+import { setup, analyses, type Harness } from './support/harness.ts';
 
 const ON: DecoyConfig = { ...DECOYS, enabled: true, chance: { early: 1, mid: 1, late: 1, final: 1 } };
 const ids = [...analyses.keys()];
@@ -60,46 +60,95 @@ test('a Decoy sits in the first bars of an S2 bridge, is cut off before anything
   assert.ok(s2 > 300 && placed > 100, `enough cases: ${s2} S2 plans, ${placed} with a Decoy`);
 });
 
-test('the Decoy flag is off by default, and off changes nothing in the show', () => {
-  assert.equal(DECOYS.enabled, false);
-  const plain = setup({ seed: 12, settings: { autoAdvance: false } });
-  const off = setup({ seed: 12, settings: { autoAdvance: false }, decoys: { enabled: false, chance: ON.chance } });
-  for (const h of [plain, off]) {
-    h.send('unlock');
-    for (let i = 0; i < 4; i++) {
-      h.send('overrideNextRecipe', { recipe: 'R7' });
-      h.send('next');
-      h.until(() => h.show.status === 'playing');
-      h.advance(3);
-    }
+/**
+ * A show driven like the app: only the songs the show's last `prefetch` asked the runtime to keep are
+ * decoded (main.ts drops the rest), so a Decoy can only use a song that really is in memory.
+ */
+function realShow(decoys: Partial<DecoyConfig>, seed = 3) {
+  const holder: { h?: Harness } = {};
+  const kept = (id: number) => {
+    const prefetches = holder.h?.log.filter((e) => e.type === 'prefetch') ?? [];
+    const last = prefetches.at(-1);
+    return last?.type === 'prefetch' ? last.ids.includes(id) : true; // before the first prefetch: the constructor's songs
+  };
+  const h = setup({ seed, decoded: kept, settings: { autoAdvance: false, phaseOverride: 'mid' }, decoys });
+  holder.h = h;
+  h.send('unlock');
+  h.advance(9); // past the Shuffle
+  const recipes = ['R7', 'R7', 'R2', 'R7', 'R6', 'R7', 'R4', 'R7', 'R7', 'R1', 'R7', 'R7'] as const;
+  for (const recipe of recipes) {
+    h.send('overrideNextRecipe', { recipe });
+    h.send('next');
+    h.until(() => h.show.status === 'playing');
+    h.advance(2);
   }
-  // Identical apart from the request ids makeCommand draws.
-  const normal = (log: unknown[]) => JSON.stringify(log).replace(/"reqId":"[^"]*"/g, '"reqId":"r"');
-  assert.equal(normal(off.log), normal(plain.log));
-  assert.ok(!off.log.some((e) => e.type === 'startTransition' && e.plan.events.some((x) => x.kind === 'decoy')));
+  return h;
+}
+
+const decoyEvents = (h: Harness) => h.log.flatMap((e) => (e.type === 'startTransition' ? e.plan.events.filter((x): x is DecoyEvent => x.kind === 'decoy') : []));
+/** The log without what Decoys may change: the Decoy itself and its cut sound, and the prefetch keep set. */
+function withoutDecoys(h: Harness, cutSfx: string) {
+  return JSON.stringify(
+    h.log
+      .filter((e) => e.type !== 'prefetch')
+      .map((e) => {
+        if (e.type !== 'startTransition') return e;
+        const cuts = new Set(e.plan.events.filter((x): x is DecoyEvent => x.kind === 'decoy').map((d) => d.cutAt + DECOYS.cutSec * 0.6));
+        return { ...e, plan: { ...e.plan, events: e.plan.events.filter((x) => x.kind !== 'decoy' && !(x.kind === 'sfx' && x.name === cutSfx && cuts.has(x.at))) } };
+      }),
+  ).replace(/"reqId":"[^"]*"/g, '"reqId":"r"');
+}
+
+test('with Decoys on, the song to tease stays decoded, so Decoys really play (the app\'s real decode window)', () => {
+  const off = realShow({ enabled: false });
+  const on = realShow({ enabled: true, chance: ON.chance });
+  assert.equal(decoyEvents(off).length, 0);
+  assert.ok(decoyEvents(on).length >= 3, `Decoys played: ${decoyEvents(on).length}`);
+  for (const e of on.log) {
+    if (e.type !== 'prefetch' || on.show.position < 1) continue;
+    assert.ok(e.ids.length <= 4, 'at most one extra song kept');
+  }
 });
 
-test('with Decoys on, the teased song is one that already counted, and only the real songs land', () => {
-  const on = setup({ seed: 3, settings: { autoAdvance: false, phaseOverride: 'mid' }, decoys: { enabled: true, chance: ON.chance } });
-  on.send('unlock');
-  let decoys = 0;
-  for (let i = 0; i < 12; i++) {
-    on.send('overrideNextRecipe', { recipe: 'R7' });
-    on.send('next');
-    on.until(() => on.show.status === 'playing');
-    on.advance(2);
-  }
+test('the Decoy flag is off by default, and enabled with no chance changes nothing but the keep set', () => {
+  assert.equal(DECOYS.enabled, false);
+  const off = realShow({ enabled: false });
+  const zero = realShow({ enabled: true, chance: { early: 0, mid: 0, late: 0, final: 0 } });
+  assert.equal(withoutDecoys(zero, DECOYS.cutSfx), withoutDecoys(off, DECOYS.cutSfx));
+});
+
+test('with Decoys on, everything but the Decoy is the same show: same plans, events and journal; only real songs land', () => {
+  const off = realShow({ enabled: false });
+  const on = realShow({ enabled: true, chance: ON.chance });
+  assert.ok(decoyEvents(on).length > 0);
+  // Everything the show tells the world is the same: emitted events and journal entries (so a Decoy can never
+  // look as if it counted).
+  const told = (h: Harness) => JSON.stringify(h.log.filter((e) => e.type === 'emit' || e.type === 'journal')).replace(/"reqId":"[^"]*"/g, '"reqId":"r"');
+  assert.equal(told(on), told(off));
+  // Transitions without a Decoy have the same plan; one with a Decoy lands the same way (its Decoy replaced B's Tease).
+  const plans = (h: Harness) => h.log.flatMap((e) => (e.type === 'startTransition' ? [e.plan] : []));
+  const [onPlans, offPlans] = [plans(on), plans(off)];
+  assert.equal(onPlans.length, offPlans.length);
+  onPlans.forEach((p, i) => {
+    const q = offPlans[i];
+    const hasDecoy = p.events.some((e) => e.kind === 'decoy');
+    // Rounded to 6 decimals: a Decoy's plan starts B through a different lead, so later times differ by ~1e-13.
+    const round = (x: object) => JSON.stringify({ ...x, reqId: 'r' }, (_k, v: unknown) => (typeof v === 'number' ? Math.round(v * 1e6) / 1e6 : v));
+    if (!hasDecoy) assert.equal(round(p), round(q), `plan ${p.id}`);
+    else {
+      assert.deepEqual([p.recipe, p.hook.id, p.exit, p.shape], [q.recipe, q.hook.id, q.exit, q.shape], `plan ${p.id} lands the same way`);
+      assert.ok(Math.abs(p.T - q.T) < 1e-6, `plan ${p.id} lands at the same time`);
+      assert.equal(p.teaseBars, 0, 'the Decoy took the place of the Tease');
+    }
+  });
   const landed = on.show.landings.filter((l) => !l.undone).map((l) => l.songId);
   assert.deepEqual(landed, on.show.queue.slice(0, landed.length), 'only the Queue\'s songs land, in order');
   for (const e of on.log) {
     if (e.type !== 'startTransition') continue;
     for (const d of e.plan.events.filter((x): x is DecoyEvent => x.kind === 'decoy')) {
-      decoys++;
-      const before = on.show.queue.slice(0, e.plan.targetPos);
-      assert.ok(before.includes(d.songId), 'a song that already landed');
+      assert.ok(on.show.queue.slice(0, e.plan.targetPos).includes(d.songId), 'a song that already landed');
       assert.notEqual(d.songId, e.plan.b.songId);
       assert.notEqual(d.songId, e.plan.a?.songId, 'not the song that is leaving');
     }
   }
-  assert.ok(decoys > 0, 'some transitions had a Decoy');
 });

@@ -6,6 +6,9 @@ A Decoy teases a song that is not next. One beat after the outgoing song's exit 
 - It is never the song that lands, nor the one that is leaving. It is always a song that already counted, so marking it again changes nothing.
 - It ends, tape stop included, before anything of the landing song is heard, and at least a bar before the landing. The landing is unmistakable.
 - It needs an S2 transition (an exit, then a bridge) with the outgoing song playing and a bridge of at least 2 bars.
+- It takes the place of that transition's Tease of the landing song. The dice are rolled before planning, and the planner is told "no Tease" (`allowTease: false`), so the Decoy has the first bars to itself.
+- With the flag on, the song it would tease (the newest counted landing that isn't the current song) stays in the show page's decode window, one extra song. Without that, it would already be gone from memory.
+- Nothing the show emits or journals changes. Only the plan's audio events differ, and `tests/decoys.test.ts` checks it against the real decode window.
 
 ## Try it
 
@@ -34,7 +37,8 @@ The experiment touches these places only:
 - `DECOYS` and `DecoyConfig` in `engine/src/config.ts`;
 - the `DecoyEvent` type and its place in the `PlanEvent` union (`plan/recipes.ts`), and the `'decoy'` case in `eventStart` (`plan/planner.ts`);
 - the `decoy` output and its case in `audio/scheduler.ts`;
-- `addDecoy` and the `decoys` option in `show/show.ts`;
+- `addDecoy`, `decoyCandidate`, the Decoy roll in `beginTransition`, the extra id in `prefetch` and the `decoys` option in `show/show.ts`;
+- the `allowTease` option in `plan/planner.ts`;
 - `playDecoy` and the `?decoys=1` switch in `main.ts`, plus the `decoys` option in `tests/support/harness.ts`.
 
 Delete those and `npm test` shows anything left over.
