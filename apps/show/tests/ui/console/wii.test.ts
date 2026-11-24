@@ -6,7 +6,7 @@ import { buttonChanges, parseReport, REPORT } from '../../../../console/wii/repo
 import { ShakeDetector } from '../../../../console/wii/shake.ts';
 import { WiiMapper, type WiiContext, type WiiOutput } from '../../../../console/wii/mapping.ts';
 
-const idle: WiiContext = { holdMode: null, autoAdvance: true };
+const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false };
 const cmds = (outs: WiiOutput[]) => outs.map((o) => o.command);
 const rest = { x: 0, y: 0, z: 1 };
 const jolt = { x: 3.2, y: 0.4, z: 1 };
@@ -42,8 +42,10 @@ test('the shake: three strong jolts inside the window, each one counted once', (
 test('A is Següent; − and + toggle Parlem; HOME toggles auto with different rumbles; the D-pad plays effects', () => {
   const m = new WiiMapper(WII);
   assert.deepEqual(cmds(m.press('a', 0, idle)), [{ cmd: 'next' }]);
-  assert.deepEqual(cmds(m.press('minus', 0, idle)), [{ cmd: 'hold', args: { on: true, duck: true } }]);
-  assert.deepEqual(cmds(m.press('plus', 0, { ...idle, holdMode: 'talk' })), [{ cmd: 'hold', args: { on: false } }]);
+  assert.deepEqual(cmds(m.press('minus', 0, idle)), [], 'decided on release');
+  assert.deepEqual(cmds(m.release('minus', idle)), [{ cmd: 'hold', args: { on: true, duck: true } }]);
+  m.press('plus', 0, idle);
+  assert.deepEqual(cmds(m.release('plus', { ...idle, holdMode: 'talk' })), [{ cmd: 'hold', args: { on: false } }]);
   const off = m.press('home', 0, idle);
   assert.deepEqual(off, [{ command: { cmd: 'setGame', args: { autoAdvance: false } }, rumble: 'autoOff' }]);
   assert.equal(m.press('home', 0, { ...idle, autoAdvance: false })[0].rumble, 'autoOn');
@@ -55,7 +57,7 @@ test('B held is Aguanta; releasing it goes back to normal', () => {
   const m = new WiiMapper(WII);
   assert.deepEqual(cmds(m.press('b', 0, idle)), [{ cmd: 'hold', args: { on: true, duck: false } }]);
   assert.deepEqual(cmds(m.motion(100, rest)), []);
-  assert.deepEqual(cmds(m.release('b')), [{ cmd: 'hold', args: { on: false } }]);
+  assert.deepEqual(cmds(m.release('b', idle)), [{ cmd: 'hold', args: { on: false } }]);
 });
 
 test('B held plus the shake switches to Suspens once; releasing B lands it', () => {
@@ -64,7 +66,7 @@ test('B held plus the shake switches to Suspens once; releasing B lands it', () 
   const samples = [jolt, rest, jolt, rest, jolt, rest, jolt];
   const outs = samples.flatMap((a, i) => m.motion(100 + i * 120, a));
   assert.deepEqual(outs, [{ command: { cmd: 'suspense', args: { on: true } }, rumble: 'suspense' }], 'once, with its own rumble');
-  assert.deepEqual(cmds(m.release('b')), [{ cmd: 'suspense', args: { on: false } }]);
+  assert.deepEqual(cmds(m.release('b', idle)), [{ cmd: 'suspense', args: { on: false } }]);
   // Shaking without B does nothing.
   assert.deepEqual(samples.flatMap((a, i) => m.motion(2000 + i * 120, a)), []);
 });
@@ -75,8 +77,19 @@ test('1 or 2 held for 1.5 s is Enrere, once per press, with a long rumble; a sho
   assert.deepEqual(m.tick(1000), []);
   assert.deepEqual(m.tick(1500), [{ command: { cmd: 'back' }, rumble: 'back' }]);
   assert.deepEqual(m.tick(2500), [], 'still held: only once');
-  m.release('one');
+  m.release('one', idle);
   m.press('two', 3000, idle);
-  m.release('two');
+  m.release('two', idle);
   assert.deepEqual(m.tick(5000), []);
+});
+
+test('− or + held is Pausa (once, its own rumble, nothing on release); a tap in Pausa leaves it', () => {
+  const m = new WiiMapper(WII);
+  m.press('minus', 0, idle);
+  assert.deepEqual(m.tick(WII.pauseHoldMs - 10), []);
+  assert.deepEqual(m.tick(WII.pauseHoldMs), [{ command: { cmd: 'pause', args: { on: true } }, rumble: 'pause' }]);
+  assert.deepEqual(m.tick(WII.pauseHoldMs + 500), [], 'only once');
+  assert.deepEqual(m.release('minus', idle), [], 'the hold already acted');
+  m.press('plus', 5000, { ...idle, paused: true });
+  assert.deepEqual(cmds(m.release('plus', { ...idle, paused: true })), [{ cmd: 'pause', args: { on: false } }]);
 });

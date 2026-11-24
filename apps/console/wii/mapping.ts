@@ -2,14 +2,15 @@
 // edges, accelerometer samples and clock ticks in; commands and rumbles out. The caller sends the commands
 // exactly as the console's own buttons would.
 //   A: Següent · B held: Aguanta, released: back to normal · B held + a deliberate shake: Suspens, and
-//   releasing B lands it · − or +: Parlem on/off · 1 or 2 held 1.5 s: Enrere · HOME: auto-advance on/off
+//   releasing B lands it · − or + tapped: Parlem on/off (or leaves Pausa), held: Pausa · 1 or 2 held 1.5 s:
+//   Enrere · HOME: auto-advance on/off
 //   (different rumbles) · D-pad: four effects. Claims never come from the remote.
 import type { CommandFields, SoundName } from '@quina/protocol';
 import { holdPress, type HoldMode } from '../logic/hold-modes.ts';
 import { magnitude, type Accel, type WiiButton } from './report.ts';
 import { ShakeDetector, type ShakeConfig } from './shake.ts';
 
-export type RumbleName = 'tap' | 'suspense' | 'back' | 'autoOn' | 'autoOff';
+export type RumbleName = 'tap' | 'suspense' | 'pause' | 'back' | 'autoOn' | 'autoOff';
 export type DpadButton = 'up' | 'right' | 'down' | 'left';
 
 export type WiiCommand =
@@ -17,6 +18,7 @@ export type WiiCommand =
   | { cmd: 'back' }
   | { cmd: 'hold'; args: CommandFields['hold'] }
   | { cmd: 'suspense'; args: CommandFields['suspense'] }
+  | { cmd: 'pause'; args: CommandFields['pause'] }
   | { cmd: 'setGame'; args: { autoAdvance: boolean } }
   | { cmd: 'sfx'; args: { name: SoundName } };
 
@@ -28,6 +30,8 @@ export interface WiiOutput {
 export interface WiiMappingConfig {
   shake: ShakeConfig;
   backHoldMs: number;
+  /** − or + held this long is Pausa; shorter is a Parlem tap. */
+  pauseHoldMs: number;
   dpad: Readonly<Record<DpadButton, SoundName>>;
 }
 
@@ -35,6 +39,8 @@ export interface WiiMappingConfig {
 export interface WiiContext {
   holdMode: HoldMode | null;
   autoAdvance: boolean;
+  /** In Pausa (the long break): a tap on − or + leaves it. */
+  paused: boolean;
 }
 
 const out = (command: WiiCommand | null, rumble: RumbleName = 'tap'): WiiOutput[] => [{ command, rumble }];
@@ -46,6 +52,8 @@ export class WiiMapper {
   private suspenseOn = false;
   private backSince: number | null = null;
   private backFired = false;
+  private talkSince: number | null = null;
+  private talkFired = false;
 
   constructor(cfg: WiiMappingConfig) {
     this.cfg = cfg;
@@ -63,7 +71,12 @@ export class WiiMapper {
         return out({ cmd: 'hold', args: { on: true, duck: false } });
       case 'minus':
       case 'plus':
-        return out({ cmd: 'hold', args: holdPress('talk', ctx.holdMode) });
+        // Decided on release (a tap) or by the clock (held long enough: Pausa).
+        if (this.talkSince === null) {
+          this.talkSince = tMs;
+          this.talkFired = false;
+        }
+        return [];
       case 'one':
       case 'two':
         if (this.backSince === null) {
@@ -78,7 +91,7 @@ export class WiiMapper {
     }
   }
 
-  release(button: WiiButton): WiiOutput[] {
+  release(button: WiiButton, ctx: WiiContext): WiiOutput[] {
     if (button === 'b' && this.bHeld) {
       this.bHeld = false;
       const landing = this.suspenseOn;
@@ -86,6 +99,11 @@ export class WiiMapper {
       return out(landing ? { cmd: 'suspense', args: { on: false } } : { cmd: 'hold', args: { on: false } });
     }
     if (button === 'one' || button === 'two') this.backSince = null;
+    if ((button === 'minus' || button === 'plus') && this.talkSince !== null) {
+      const tapped = !this.talkFired;
+      this.talkSince = null;
+      if (tapped) return out(ctx.paused ? { cmd: 'pause', args: { on: false } } : { cmd: 'hold', args: holdPress('talk', ctx.holdMode) });
+    }
     return [];
   }
 
@@ -97,11 +115,18 @@ export class WiiMapper {
     return out({ cmd: 'suspense', args: { on: true } }, 'suspense');
   }
 
-  /** The clock: 1 or 2 held long enough is Enrere (once per press). */
+  /** The clock: 1 or 2 held long enough is Enrere, − or + held long enough is Pausa (once per press). */
   tick(tMs: number): WiiOutput[] {
-    if (this.backSince === null || this.backFired || tMs - this.backSince < this.cfg.backHoldMs) return [];
-    this.backFired = true;
-    return out({ cmd: 'back' }, 'back');
+    const outs: WiiOutput[] = [];
+    if (this.talkSince !== null && !this.talkFired && tMs - this.talkSince >= this.cfg.pauseHoldMs) {
+      this.talkFired = true;
+      outs.push(...out({ cmd: 'pause', args: { on: true } }, 'pause'));
+    }
+    if (this.backSince !== null && !this.backFired && tMs - this.backSince >= this.cfg.backHoldMs) {
+      this.backFired = true;
+      outs.push(...out({ cmd: 'back' }, 'back'));
+    }
+    return outs;
   }
 
   /** The remote went away: forget held buttons (the caller releases a hold it started if it wants). */
@@ -109,6 +134,7 @@ export class WiiMapper {
     this.bHeld = false;
     this.suspenseOn = false;
     this.backSince = null;
+    this.talkSince = null;
     this.shake.reset();
   }
 }
