@@ -82,6 +82,10 @@ export const S = {
   rounds: {
     title: 'Quines',
     help: 'Cada quina, normal o especial, amb el seu premi de línia i el de quina. Es numeren soles quan les mous.',
+    liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
+    played: 'Jugada',
+    inPlay: 'En joc',
+    fixedLabel: (n: number) => `La Quina ${n} ja ha començat: no es pot moure ni treure`,
     kind: 'Tipus',
     normal: 'Normal',
     special: 'Especial (només cartrons especials)',

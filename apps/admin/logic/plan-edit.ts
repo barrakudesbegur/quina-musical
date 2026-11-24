@@ -33,16 +33,28 @@ export function addRound(rounds: readonly RoundPlan[], kind: RoundKind = 'normal
   return [...rounds, blankRound(rounds.length + 1, kind)];
 }
 
-export function removeRound(rounds: readonly RoundPlan[], index: number): RoundPlan[] {
-  if (index < 0 || index >= rounds.length) return [...rounds];
+/**
+ * How many rounds at the top of the plan are fixed during the night: the ones played, and the one in play or
+ * being introduced. Their number, order and kind can't change (the engine, the projector and the phones already
+ * know them); the upcoming ones can still be moved and edited live. 0 before the first round.
+ */
+export function lockedRoundCount(current: { number: number; startedAtMs: number } | null | undefined, introduced: number | null = null): number {
+  const started = current && current.startedAtMs > 0 ? current.number : 0;
+  return Math.max(started, introduced ?? 0);
+}
+
+/** Remove the round at `index`, then renumber. A fixed round (below `locked`) stays. */
+export function removeRound(rounds: readonly RoundPlan[], index: number, locked = 0): RoundPlan[] {
+  if (index < locked || index < 0 || index >= rounds.length) return [...rounds];
   return renumber(rounds.filter((_, i) => i !== index));
 }
 
-/** Move the round at `from` to `to` (both clamped), then renumber. */
-export function moveRound(rounds: readonly RoundPlan[], from: number, to: number): RoundPlan[] {
+/** Move the round at `from` to `to` (clamped), then renumber. Fixed rounds (below `locked`) never move, and
+ * nothing moves above them. */
+export function moveRound(rounds: readonly RoundPlan[], from: number, to: number, locked = 0): RoundPlan[] {
   const out = [...rounds];
-  if (from < 0 || from >= out.length) return out;
-  const target = Math.max(0, Math.min(out.length - 1, to));
+  if (from < locked || from < 0 || from >= out.length) return out;
+  const target = Math.max(locked, Math.min(out.length - 1, to));
   const [moved] = out.splice(from, 1);
   out.splice(target, 0, moved);
   return renumber(out);

@@ -7,6 +7,7 @@ import {
   addRound,
   blankPlan,
   fromLocalInput,
+  lockedRoundCount,
   moveRound,
   plannedEndMs,
   removeRound,
@@ -30,6 +31,27 @@ test('adding, removing and moving rounds keeps them numbered 1, 2, 3…', () => 
   assert.deepEqual(numbers(removeRound(moved, 1)), [1, 2]);
   assert.deepEqual(numbers(moveRound(three, 0, 99)), [1, 2, 3], 'out-of-range targets are clamped');
   assert.equal(removeRound(three, 7).length, 3, 'removing a missing round changes nothing');
+});
+
+test('during the night, played rounds and the one in play stay fixed; upcoming ones move live', () => {
+  const rounds = structuredClone(SAMPLE_PLAN.rounds);
+  const locked = lockedRoundCount({ number: 3, startedAtMs: 1 });
+  assert.equal(locked, 3);
+  const kinds = (rs: { kind: string }[]) => rs.map((r) => r.kind).join(',');
+  assert.equal(kinds(moveRound(rounds, 2, 5, locked)), kinds(rounds), 'the round in play never moves');
+  assert.equal(kinds(moveRound(rounds, 6, 0, locked).slice(0, 3)), kinds(rounds.slice(0, 3)), 'nothing moves above the fixed rounds');
+  const moved = moveRound(rounds, 6, 0, locked);
+  assert.equal(moved[3].kind, rounds[6].kind, 'the special round becomes the next one');
+  assert.deepEqual(numbers(moved), numbers(rounds), 'still numbered 1, 2, 3…');
+  assert.equal(removeRound(rounds, 1, locked).length, rounds.length, 'a played round is never removed');
+  assert.equal(removeRound(rounds, 4, locked).length, rounds.length - 1);
+});
+
+test('the fixed rounds: none before the night, and an introduced round counts as in play', () => {
+  assert.equal(lockedRoundCount(null), 0);
+  assert.equal(lockedRoundCount({ number: 0, startedAtMs: 0 }), 0);
+  assert.equal(lockedRoundCount({ number: 0, startedAtMs: 0 }, 1), 1);
+  assert.equal(lockedRoundCount({ number: 3, startedAtMs: 1 }, 4), 4);
 });
 
 test('edits never mutate their input', () => {

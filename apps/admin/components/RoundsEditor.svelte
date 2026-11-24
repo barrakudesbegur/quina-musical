@@ -1,11 +1,13 @@
 <!-- The rounds plan: each round normal or special, with its Line and Quina prizes. Rounds are added, removed
-     and reordered here; they are renumbered 1, 2, 3… every time. -->
+     and reordered here; they are renumbered 1, 2, 3… every time. During the night the rounds already played and
+     the one in play (or being introduced) are fixed; the upcoming ones can be moved and edited live. -->
 <script lang="ts">
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import { flowOf } from '../../../packages/ui/flow.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
-  import { addRound, moveRound, removeRound } from '../logic/plan-edit.ts';
+  import { addRound, lockedRoundCount, moveRound, removeRound } from '../logic/plan-edit.ts';
   import { errorsAt } from '../logic/plan-check.ts';
   import { S } from '../strings.ts';
   import PrizeFields from './PrizeFields.svelte';
@@ -18,39 +20,46 @@
   const engineTotal = $derived(show.state?.game.roundsTotal ?? null);
   const planTotal = $derived(session.draft.rounds.length);
   const listErrors = $derived(session.errors.filter((e) => e.startsWith('plan.rounds:')));
+  /** Rounds 1..locked are fixed: played, in play, or being introduced. */
+  const locked = $derived(show.state ? lockedRoundCount(show.state.round, flowOf(show.state).intro?.round ?? null) : 0);
 
-  const move = (from: number, to: number) => session.update((p) => ({ ...p, rounds: moveRound(p.rounds, from, to) }));
+  const move = (from: number, to: number) => session.update((p) => ({ ...p, rounds: moveRound(p.rounds, from, to, locked) }));
   function remove(index: number) {
     if (confirming !== index) {
       confirming = index;
       return;
     }
     confirming = null;
-    session.update((p) => ({ ...p, rounds: removeRound(p.rounds, index) }));
+    session.update((p) => ({ ...p, rounds: removeRound(p.rounds, index, locked) }));
   }
 </script>
 
 <section class="panel surface rounds" aria-labelledby="rounds-title">
   <h2 class="panel__title" id="rounds-title">{S.rounds.title}</h2>
   <p class="panel__help">{S.rounds.help}</p>
+  {#if locked > 0}<p class="panel__help rounds__live">{S.rounds.liveHelp}</p>{/if}
 
   <ol class="rounds__list">
     {#each session.draft.rounds as round, i (i)}
-      <li class="rounds__item" data-kind={round.kind}>
+      {@const fixed = i < locked}
+      <li class="rounds__item" data-kind={round.kind} data-state={fixed ? (round.number === locked ? 'current' : 'played') : 'upcoming'}>
         <fieldset class="round">
-          <legend class="round__name">{CA.round(round.number)}{round.kind === 'special' ? ` · ${CA.specialRound}` : ''}</legend>
+          <legend class="round__name">
+            {CA.round(round.number)}{round.kind === 'special' ? ` · ${CA.specialRound}` : ''}
+            {#if fixed}<span class="round__badge" title={S.rounds.fixedLabel(round.number)}>{round.number === locked ? S.rounds.inPlay : S.rounds.played}</span>{/if}
+          </legend>
           <div class="round__head">
             <label class="field">
               <span class="field__label">{S.rounds.kind}</span>
-              <select bind:value={round.kind}>
+              <select bind:value={round.kind} disabled={fixed}>
                 <option value="normal">{S.rounds.normal}</option>
                 <option value="special">{S.rounds.special}</option>
               </select>
             </label>
             <div class="round__tools">
-              <button type="button" onclick={() => move(i, i - 1)} disabled={i === 0} aria-label={S.rounds.upLabel(round.number)}>↑ {S.rounds.up}</button>
-              <button type="button" onclick={() => move(i, i + 1)} disabled={i === planTotal - 1} aria-label={S.rounds.downLabel(round.number)}>↓ {S.rounds.down}</button>
-              <button type="button" class={confirming === i ? 'tone-danger' : ''} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(round.number)} disabled={planTotal === 1}>
+              <button type="button" onclick={() => move(i, i - 1)} disabled={fixed || i <= locked} aria-label={S.rounds.upLabel(round.number)}>↑ {S.rounds.up}</button>
+              <button type="button" onclick={() => move(i, i + 1)} disabled={fixed || i === planTotal - 1} aria-label={S.rounds.downLabel(round.number)}>↓ {S.rounds.down}</button>
+              <button type="button" class={confirming === i ? 'tone-danger' : ''} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(round.number)} disabled={fixed || planTotal === 1}>
                 {confirming === i ? S.rounds.confirmRemove : S.rounds.remove}
               </button>
             </div>
@@ -101,6 +110,29 @@
   }
   .round__name {
     font-size: var(--text-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .round__badge {
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    border: var(--line-width) solid var(--color-line);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-strong);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+  }
+  .rounds__item[data-state='current'] .round__badge {
+    background: var(--color-ok);
+    color: var(--color-paper);
+  }
+  .rounds__item[data-state='played'] .round {
+    opacity: 0.7;
+  }
+  .rounds__live {
+    color: var(--color-text);
+    font-weight: var(--font-weight-strong);
   }
   .round__head {
     display: flex;
