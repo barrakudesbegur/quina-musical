@@ -13,10 +13,12 @@
     "dev": "npm run dev -w @quina/show",
     "build": "npm run build -w @quina/show",
     "start": "npm start -w @quina/show",
-    "test": "npm test -w @quina/show && npm test -w @quina/cloud",
+    "test": "npm test -w @quina/show && npm test -w @quina/cloud && npm run test:tools",
     "test:pipeline": "npm run test:pipeline -w @quina/show",
     "test:e2e": "npm test -w @quina/e2e",
-    "setup:laptop": "node tools/laptop/setup.ts"
+    "test:tools": "tsc -p tools/git/tsconfig.json && node --test \"tools/git/*.test.ts\"",
+    "setup:laptop": "node tools/laptop/setup.ts",
+    "sync-main": "node tools/git/sync-main.ts"
   },
   "engines": {
     "node": ">=23.6"

@@ -55,6 +55,9 @@ jobs:
           cp .dev.vars.example .dev.vars
           npm test
 
+      - name: "Repo tools: typecheck and tests (sync-main)"
+        run: npm run test:tools
+
       - name: "Relay lockdown audit (on the build)"
         working-directory: apps/cloud
         run: npm run relay-audit
