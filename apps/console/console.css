@@ -1858,17 +1858,15 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
-  min-height: 2.375rem;
-  padding: 0 4px 0 15px;
+  justify-content: center;
+  min-height: 3.25rem;
+  padding: 0;
   overflow: hidden;
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-sm);
-  background: var(--color-chip);
-  color: var(--color-text);
-  font-size: 0.8125rem;
-  line-height: 1.05;
-  text-align: left;
+  /* Paper in both themes: the icons are drawn with ink outlines (the board's look). */
+  background: var(--color-paper);
+  color: var(--color-ink);
   box-shadow: 0 3px 0 var(--color-ink);
 }
 
@@ -1876,51 +1874,55 @@
   box-shadow: 0 1px 0 var(--color-ink);
 }
 
-/* Each effect's LED strip on its left edge */
+/* Each effect's LED strip on its left edge, in the effect's own colour (sound-icons.ts `led`) */
 .pad__led {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
   width: 6px;
-  border-right: var(--line-width-thin) solid var(--color-line);
+  border-radius: 3px;
   background: var(--led, var(--color-ice));
 }
 
-.pad[data-led='1'] {
-  --led: var(--color-lilac);
-}
-.pad[data-led='2'] {
-  --led: var(--color-green);
-}
-.pad[data-led='3'] {
-  --led: var(--color-orange);
-}
-.pad[data-led='4'] {
-  --led: var(--color-red);
-}
-.pad[data-led='5'] {
-  --led: #22d3ee;
-}
-.pad[data-led='6'] {
-  --led: var(--color-gold);
-}
-.pad[data-led='7'] {
-  --led: #ff4fa3;
-}
-
 .pad--stinger {
-  padding-left: 6px;
   background: var(--color-gold);
-  color: var(--color-ink);
   box-shadow: inset 0 -4px 0 var(--color-gold-edge), 0 3px 0 var(--color-ink);
 }
 
-.pad--stinger .icon {
-  width: 1rem;
-  height: 1rem;
-  stroke-width: 2.6;
+/* The sound icons (SoundIcon.svelte): each shape's tone comes from a token */
+.sound-icon {
+  width: 2.125rem;
+  height: 2.125rem;
+  flex: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
+
+.pad:disabled .sound-icon {
+  opacity: 0.45;
+}
+
+.pad[data-led='ink'], .sound-icon__fill-ink { --led: var(--color-ink); fill: var(--color-ink); }
+.pad[data-led='paper'], .sound-icon__fill-paper { --led: var(--color-paper); fill: var(--color-paper); }
+.pad[data-led='gold'], .sound-icon__fill-gold { --led: var(--color-gold); fill: var(--color-gold); }
+.pad[data-led='orange'], .sound-icon__fill-orange { --led: var(--color-orange); fill: var(--color-orange); }
+.pad[data-led='red'], .sound-icon__fill-red { --led: var(--color-red); fill: var(--color-red); }
+.pad[data-led='green'], .sound-icon__fill-green { --led: var(--color-green); fill: var(--color-green); }
+.pad[data-led='ice'], .sound-icon__fill-ice { --led: var(--color-ice); fill: var(--color-ice); }
+.pad[data-led='iceLight'], .sound-icon__fill-iceLight { --led: var(--color-ice-light); fill: var(--color-ice-light); }
+.pad[data-led='lilac'], .sound-icon__fill-lilac { --led: var(--color-lilac); fill: var(--color-lilac); }
+.pad[data-led='pink'], .sound-icon__fill-pink { --led: var(--card-color-5); fill: var(--card-color-5); }
+.pad[data-led='purple'], .sound-icon__fill-purple { --led: var(--card-color-7); fill: var(--card-color-7); }
+.pad[data-led='slate'], .sound-icon__fill-slate { --led: var(--color-slate); fill: var(--color-slate); }
+.pad[data-led='lemon'], .sound-icon__fill-lemon { --led: var(--color-gold-light); fill: var(--color-gold-light); }
+.sound-icon__fill-none { fill: none; }
+.sound-icon__stroke-none { stroke: none; }
+.sound-icon__stroke-ink { stroke: var(--color-ink); }
+.sound-icon__stroke-paper { stroke: var(--color-paper); }
+.sound-icon__stroke-gold { stroke: var(--color-gold); }
+.sound-icon__stroke-red { stroke: var(--color-red); }
+.sound-icon__stroke-ice { stroke: var(--color-ice); }
 
 /* ---- the action cluster (big sticker buttons) ------------------------------------------------------------ */
 .thumb-cluster {
