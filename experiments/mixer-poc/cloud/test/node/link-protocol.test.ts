@@ -20,11 +20,13 @@ test('a hello, an upload, a ping and the forwarded events pass', () => {
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'shuffle.scheduled', round: 2, startAtMs: 1, endAtMs: 2 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'bingo' } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 9 } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'relay.clients', clients: [] } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'claim.opened', claim: {} } },
   ];
   for (const message of good) assert.ok(checkLinkMessage(message).ok, JSON.stringify(message));
 });
 
-test('anything malformed, or an event type that is not forwarded, is refused', () => {
+test('anything malformed, an unknown event type, or the journal as an event, is refused', () => {
   const bad = [
     null,
     { v: 2, type: 'link.ping', sentAtMs: 1 },
@@ -36,6 +38,8 @@ test('anything malformed, or an event type that is not forwarded, is refused', (
     { v, type: 'link.journal', gameId: '', entries: [], sentAtMs: 1 },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'journal.entry', entry: {} } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'engine.health' } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'journal.entries', entries: [] } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'made.up' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: 5, interval: null, schedule: { gameEndMs: 9 } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'house' } } },

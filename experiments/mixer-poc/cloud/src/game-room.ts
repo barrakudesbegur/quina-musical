@@ -4,16 +4,28 @@
 // is decided by the pure modules in domain/ and feed/.
 //
 // WebSockets use the Hibernation API, so idle phones cost nothing. Phones send nothing; the laptop sends its
-// journal, a few live events and a keepalive. An alarm notices a laptop that went silent.
+// journal, a few live events and a keepalive. An alarm notices a laptop that went silent. Consoles (C2) speak the
+// relay protocol on /ws/console: their commands go to the laptop link, the show's events come back to them.
 //
 // SQLite: `journal` (game_id, seq) → canonical entry JSON, and `snapshot` (one row). On wake the GameRoom reads
 // the snapshot only; it reads a Game's history back only to switch to another Game or to export.
 import { DurableObject } from 'cloudflare:workers';
-import { PROTOCOL_VERSION, emptyRecord, extendJournal, replayJournal, type GameRecord, type JournalEntry } from '@quina/protocol';
+import {
+  PROTOCOL_VERSION,
+  checkCommand,
+  emptyRecord,
+  extendJournal,
+  replayJournal,
+  type CommandRejected,
+  type GameRecord,
+  type JournalEntry,
+  type RelayClients,
+} from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
 import type { EditionExport, RoomStats } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
+import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
 import { ingest } from './domain/ingest.ts';
 import { projectEntry, projectEvent, type ProjectionContext } from './domain/projection.ts';
 import {
@@ -49,6 +61,17 @@ interface ShowAttachment {
   lastSeenMs: number;
   /** Cloud − laptop clock, ms (domain/clock.ts). */
   offsetMs: number | null;
+  /** Who is on the laptop's relay, as it last said (kept here so it survives hibernation). */
+  relayClients: RelayClients['clients'] | null;
+}
+
+interface ConsoleAttachment {
+  role: 'console';
+  identity: string;
+  /** From its hello: 'tablet' or 'admin', and its clientId ('Tauleta-3f2a'); null before the hello. */
+  consoleRole: ConsoleRole | null;
+  clientId: string | null;
+  connectedAtMs: number;
 }
 
 interface PhoneAttachment {
@@ -57,7 +80,8 @@ interface PhoneAttachment {
   connectedAtMs: number;
 }
 
-type Attachment = ShowAttachment | PhoneAttachment;
+type Attachment = ShowAttachment | PhoneAttachment | ConsoleAttachment;
+type SocketTag = Attachment['role'];
 
 type RoomEnv = Env & AccessEnv;
 
@@ -65,6 +89,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
   private readonly sql: SqlStorage;
   private room: RoomSnapshot;
   private readonly stats: RoomStats;
+  /** The show's last `state`, for a console that connects (memory only: after hibernation, its getState asks again). */
+  private lastState: string | null = null;
 
   constructor(ctx: DurableObjectState, env: RoomEnv) {
     super(ctx, env);
@@ -79,7 +105,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
     if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') return text(426, 'expected a WebSocket');
     const url = new URL(request.url);
     if (url.pathname === '/feed') return this.acceptPhone(url);
-    if (url.pathname === '/ws/show') return this.acceptShow(request.headers.get(IDENTITY_HEADER) ?? 'unknown');
+    const identity = request.headers.get(IDENTITY_HEADER) ?? 'unknown';
+    if (url.pathname === '/ws/show') return this.acceptShow(identity);
+    if (url.pathname === '/ws/console') return this.acceptConsole(identity);
     return text(404, 'not found');
   }
 
@@ -102,10 +130,19 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const [client, server] = [pair[0], pair[1]];
     const now = Date.now();
     this.ctx.acceptWebSocket(server, ['show']);
-    server.serializeAttachment({ role: 'show', identity, clientId: null, connectedAtMs: now, lastSeenMs: now, offsetMs: null } satisfies ShowAttachment);
+    server.serializeAttachment({ role: 'show', identity, clientId: null, connectedAtMs: now, lastSeenMs: now, offsetMs: null, relayClients: null } satisfies ShowAttachment);
     this.stats.showsAccepted += 1;
     this.publish([{ kind: 'link', link: { online: true, sinceMs: now } }]);
     if ((await this.ctx.storage.getAlarm()) === null) await this.ctx.storage.setAlarm(now + CLOUD.showSilenceMs);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  private acceptConsole(identity: string): Response {
+    const pair = new WebSocketPair();
+    const [client, server] = [pair[0], pair[1]];
+    this.ctx.acceptWebSocket(server, ['console']);
+    server.serializeAttachment({ role: 'console', identity, consoleRole: null, clientId: null, connectedAtMs: Date.now() } satisfies ConsoleAttachment);
+    this.stats.consolesAccepted += 1;
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -116,6 +153,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
       this.stats.phoneMessagesIn += 1; // phones send nothing; whatever arrives is ignored
       return;
     }
+    if (attachment.role === 'console') return this.onConsoleMessage(ws, attachment, message);
     const now = Date.now();
     if (typeof message !== 'string' || message.length > CLOUD.maxLinkMessageBytes) return this.refuse(ws, 'messages must be JSON text of at most 1 MB', null);
     let parsed: unknown;
@@ -139,7 +177,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
       case 'link.journal':
         return this.onJournal(ws, link, ctx);
       case 'link.event':
-        return this.onEvent(link, ctx);
+        return this.onEvent(ws, link, ctx);
       case 'link.ping':
         return;
     }
@@ -153,6 +191,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     }
     const attachment = ws.deserializeAttachment() as Attachment | null;
     if (attachment?.role === 'show' && this.sockets('show').every((other) => other === ws)) this.markOffline(Date.now());
+    if (attachment?.role === 'console') this.consolesChanged(ws);
   }
 
   override async webSocketError(ws: WebSocket): Promise<void> {
@@ -177,6 +216,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     if (hello.gameId !== null && hello.gameId !== this.room.game?.gameId) this.switchGame(hello.gameId);
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
     this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq });
+    this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
   }
 
   private onJournal(ws: WebSocket, upload: LinkJournal, ctx: ProjectionContext): void {
@@ -224,8 +264,76 @@ export class GameRoom extends DurableObject<RoomEnv> {
     }
   }
 
-  private onEvent(link: LinkEvent, ctx: ProjectionContext): void {
-    this.publish(projectEvent(this.room.feed.state, link.event, ctx));
+  private onEvent(ws: WebSocket, link: LinkEvent, ctx: ProjectionContext): void {
+    const event = link.event;
+    if (event.type === 'relay.clients') {
+      const show = ws.deserializeAttachment() as ShowAttachment;
+      ws.serializeAttachment({ ...show, relayClients: event.clients } satisfies ShowAttachment);
+      return this.sendClients();
+    }
+    this.publish(projectEvent(this.room.feed.state, event, ctx));
+    // Consoles get the show's events raw, as the relay would hand them over.
+    const text = JSON.stringify(event);
+    if (event.type === 'state') this.lastState = text;
+    for (const consoleWs of this.consoles()) this.send(consoleWs, text);
+  }
+
+  // ---- consoles ----------------------------------------------------------------------------------------------
+  private onConsoleMessage(ws: WebSocket, attachment: ConsoleAttachment, message: string | ArrayBuffer): void {
+    if (typeof message !== 'string' || message.length > 64 * 1024) return;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(message);
+    } catch {
+      return;
+    }
+    const m = parsed as Record<string, unknown> | null;
+    if (!m || typeof m !== 'object' || m.v !== PROTOCOL_VERSION) return;
+    if (m.type === 'hello') {
+      const clientId = typeof m.clientId === 'string' && m.clientId.length > 0 && m.clientId.length <= 60 ? m.clientId : null;
+      if (!isConsoleRole(m.role) || !clientId) return ws.close(CLOSE.badHello, 'a console says hello as tablet or admin, with a clientId');
+      ws.serializeAttachment({ ...attachment, consoleRole: m.role, clientId } satisfies ConsoleAttachment);
+      if (this.lastState) this.send(ws, this.lastState);
+      return this.consolesChanged(null);
+    }
+    if (m.type !== 'cmd') return;
+    if (attachment.clientId === null) return ws.close(CLOSE.badHello, 'say hello first');
+    const check = checkCommand(parsed);
+    if (!check.ok) return this.rejectCommand(ws, check.reqId, check.cmd, 'invalid', check.error);
+    const show = this.sockets('show')[0];
+    if (!show) return this.rejectCommand(ws, check.command.reqId, check.command.cmd, 'notReady', 'the show laptop is offline');
+    this.reply(show, { type: 'cloud.command', command: check.command });
+    this.stats.commandsRelayed += 1;
+  }
+
+  private rejectCommand(ws: WebSocket, reqId: string | null, cmd: string | null, reason: CommandRejected['reason'], detail: string): void {
+    const rejected: CommandRejected = { v: PROTOCOL_VERSION, type: 'command.rejected', reqId, cmd, reason, detail };
+    this.send(ws, JSON.stringify(rejected));
+  }
+
+  /** Consoles that said hello. */
+  private consoles(except: WebSocket | null = null): WebSocket[] {
+    return this.sockets('console').filter((ws) => ws !== except && (ws.deserializeAttachment() as ConsoleAttachment).clientId !== null);
+  }
+
+  /** A console came or went: tell the consoles who is here, and the laptop how many listen. */
+  private consolesChanged(closing: WebSocket | null): void {
+    this.sendClients(closing);
+    const count = this.consoles(closing).length;
+    for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.consoles', count });
+  }
+
+  /** The merged client list (the laptop's relay plus the cloud's consoles) to every console. */
+  private sendClients(closing: WebSocket | null = null): void {
+    const show = this.sockets('show')[0];
+    const relayClients = show ? (show.deserializeAttachment() as ShowAttachment).relayClients : null;
+    const consoles = this.consoles(closing).map((ws) => {
+      const a = ws.deserializeAttachment() as ConsoleAttachment;
+      return { role: a.consoleRole ?? ('tablet' as const), clientId: a.clientId ?? '' };
+    });
+    const list: RelayClients = { v: PROTOCOL_VERSION, type: 'relay.clients', clients: mergedClients(relayClients, Boolean(show), consoles) };
+    const text = JSON.stringify(list);
+    for (const ws of this.consoles(closing)) this.send(ws, text);
   }
 
   // ---- the Game ------------------------------------------------------------------------------------------
@@ -259,6 +367,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   private markOffline(now: number): void {
     if (this.room.feed.state.link.online) this.publish([{ kind: 'link', link: { online: false, sinceMs: now } }]);
+    this.lastState = null;
+    this.sendClients();
   }
 
   // ---- RPC for the Worker ------------------------------------------------------------------------------
@@ -283,7 +393,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   getStats(): RoomStats {
-    return { ...this.stats, phonesConnected: this.sockets('phone').length };
+    return { ...this.stats, phonesConnected: this.sockets('phone').length, consolesConnected: this.consoles().length };
   }
 
   // ---- storage ---------------------------------------------------------------------------------------------
@@ -332,7 +442,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   // ---- sending -----------------------------------------------------------------------------------------
-  private sockets(tag: 'show' | 'phone'): WebSocket[] {
+  private sockets(tag: SocketTag): WebSocket[] {
     return this.ctx.getWebSockets(tag).filter((ws) => ws.readyState === WebSocket.OPEN);
   }
 
@@ -381,6 +491,9 @@ function newStats(sinceMs: number): RoomStats {
     sinceMs,
     phonesConnected: 0,
     phonesAccepted: 0,
+    consolesConnected: 0,
+    consolesAccepted: 0,
+    commandsRelayed: 0,
     showsAccepted: 0,
     messagesIn: 0,
     phoneMessagesIn: 0,

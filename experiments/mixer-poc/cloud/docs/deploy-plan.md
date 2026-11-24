@@ -10,7 +10,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 |---|---|---|
 | Worker | `quina-cloud` | `src/worker.ts`; about 87 KiB (23 KiB gzipped) |
 | Durable Object class | `GameRoom` (SQLite) | migration `v1` (`new_sqlite_classes`); one object per edition, named `edition:26`, placed in western Europe |
-| Static assets | `public/` | a placeholder page for now; later the player app and covers (free, they never run the Worker) |
+| Static assets | `public/` | a placeholder page for now. At deploy time the UI build goes in (agreed with the UI session): the player app at the root, with an SPA fallback so `/26/123` serves it (set `not_found_handling: "single-page-application"` in wrangler.jsonc when it lands); `console/` and `admin/` (built as `manage`); `assets/`; and the covers. No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker |
 | Variable | `EDITION = "26"` | in wrangler.jsonc |
 | Secrets | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `CF_ACCESS_EMAILS` (or `CF_ACCESS_EMAIL_DOMAIN`), `CF_ACCESS_SERVICE_TOKENS` | `wrangler secret put`; until they exist, every admin route and the laptop route answer 403 (fail-closed), and only `/feed` and `/api/health` work |
 
@@ -57,9 +57,9 @@ Cloudflare documents Access for `workers.dev` only for a whole URL ("Access can 
 
 Coin-reader (`fitxes`) already uses Access with Google, so the Zero Trust team and its Google login method probably exist. Reuse them. If not, see step 3d.
 
-**a. The admin app** (Zero Trust → Access → Applications → Add → Self-hosted):
-- Name `quina-cloud admin`.
-- Destination `quina-dev.barrakudesbegur.org`, path `api`.
+**a. The organizers' app** (Zero Trust → Access → Applications → Add → Self-hosted):
+- Name `quina-cloud organizers`.
+- Destinations on `quina-dev.barrakudesbegur.org`, one per path: `api`, `ws/console`, `console` and `admin`. The console and Admin pages must be behind the same login as their WebSocket, so the Access cookie reaches `/ws/console`.
 - Login method: Google.
 - Policy "Organizers": action Allow, include the organizers' emails.
 - Copy the app's **AUD tag**.
@@ -94,7 +94,7 @@ npx wrangler secret put CF_ACCESS_SERVICE_TOKENS   # the service token's Client 
 ```
 
 **f. Check.**
-- `https://quina-dev.barrakudesbegur.org/api/stats` asks for a Google login, then answers.
+- `https://quina-dev.barrakudesbegur.org/api/stats` asks for a Google login, then answers. The console at `/console/` connects to `/ws/console`.
 - `npm run link` on the laptop logs `cloud: connected`.
 - `/feed` stays public.
 

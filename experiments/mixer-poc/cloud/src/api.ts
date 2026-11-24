@@ -8,6 +8,10 @@ export interface RoomStats {
   sinceMs: number;
   phonesConnected: number;
   phonesAccepted: number;
+  consolesConnected: number;
+  consolesAccepted: number;
+  /** Console commands handed to the laptop link. */
+  commandsRelayed: number;
   showsAccepted: number;
   messagesIn: number;
   phoneMessagesIn: number;

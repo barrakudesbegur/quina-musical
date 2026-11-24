@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -20,6 +20,8 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/feed': { name: 'feed', websocket: true, access: null },
   /** The show laptop's cloud link (its Access service token). */
   '/ws/show': { name: 'show', websocket: true, access: SERVICES },
+  /** Presenters' and admins' consoles: the relay protocol, through the cloud (organizers). */
+  '/ws/console': { name: 'console', websocket: true, access: PEOPLE },
   /** The whole edition as JSON: every Game's journal and record (admins). */
   '/api/export': { name: 'export', websocket: false, access: PEOPLE },
   /** Connections, messages and SQLite rows since the GameRoom last woke (admins, the load test). */

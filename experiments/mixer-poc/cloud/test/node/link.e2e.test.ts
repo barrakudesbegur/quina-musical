@@ -123,3 +123,35 @@ test('a second laptop takes over; the first stops instead of fighting back', asy
     await server.stop();
   }
 });
+
+test('a tablet on the cloud drives the show through the link, and sees the full event stream', async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const link = makeLink(relay.url, server.ws);
+  try {
+    link.start();
+    await until('the link on the cloud', () => link.status().cloud === 'online');
+    relay.emit({ v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show-1' }, { role: 'cloud', clientId: 'laptop-test' }] });
+
+    const tablet = new WebSocket(`${server.ws}/ws/console`);
+    const seen: { type: string; [key: string]: unknown }[] = [];
+    tablet.addEventListener('message', (event) => seen.push(JSON.parse(String(event.data))));
+    await new Promise((resolve) => tablet.addEventListener('open', resolve, { once: true }));
+    tablet.send(JSON.stringify({ v, type: 'hello', role: 'tablet', clientId: 'Tauleta-e2e' }));
+    await until('the link to know a tablet listens', () => link.status().consoles === 1);
+    await until('the tablet to see the show online', () => seen.some((m) => m.type === 'relay.clients' && (m.clients as { role: string }[]).some((c) => c.role === 'show')));
+
+    tablet.send(JSON.stringify({ v, type: 'cmd', cmd: 'next', reqId: 'Tauleta-r-1' }));
+    await until('the command on the relay', () => relay.received.some((m) => (m as { reqId?: string }).reqId === 'Tauleta-r-1'));
+
+    relay.emit({ v, type: 'claim.opened', claim: { claimId: 'cl-1', cardId: 12 } }); // console-only: sent while a tablet listens
+    await until('the tablet to get it', () => seen.some((m) => m.type === 'claim.opened'));
+
+    tablet.close();
+    await until('the link to know nobody listens', () => link.status().consoles === 0);
+  } finally {
+    link.stop();
+    await relay.close();
+    await server.stop();
+  }
+});

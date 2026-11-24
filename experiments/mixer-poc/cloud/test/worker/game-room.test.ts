@@ -93,6 +93,7 @@ async function laptop(gameId: string | null, lastSeq = 0) {
   client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId, lastSeq, sentAtMs: now() });
   const welcome = (await client.next()) as CloudMessage;
   expect(welcome.type).toBe('cloud.welcome');
+  expect(await client.next()).toMatchObject({ type: 'cloud.consoles' }); // how many consoles listen
   return { client, welcome };
 }
 
@@ -207,6 +208,7 @@ describe('the laptop and the phones', () => {
 
     client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId: 'g-a', lastSeq: a.entries.length, sentAtMs: now() });
     expect(await client.next()).toMatchObject({ type: 'cloud.welcome', gameId: 'g-a', ackSeq: a.entries.length });
+    expect(await client.next()).toMatchObject({ type: 'cloud.consoles' });
     view = await p.view();
     expect(view.state.gameId).toBe('g-a');
     expect(view.state.winners).toHaveLength(2);
@@ -256,6 +258,79 @@ describe('the laptop and the phones', () => {
   });
 });
 
+describe('consoles through the cloud', () => {
+  async function consoleClient(clientId = 'Tauleta-3f2a', role = 'tablet') {
+    const client = await connect('/ws/console');
+    client.send({ v, type: 'hello', role, clientId });
+    return client;
+  }
+  const clientsIn = (messages: unknown[]) => messages.filter((m) => (m as { type?: string }).type === 'relay.clients').at(-1) as { clients: { role: string; clientId: string }[] } | undefined;
+
+  it('without the laptop: the console sees only itself, and a command is refused as notReady at once', async () => {
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // no laptop left over from other tests
+    const c = await consoleClient();
+    expect(clientsIn(await c.drain())?.clients).toEqual([{ role: 'tablet', clientId: 'Tauleta-3f2a' }]);
+    c.send({ v, type: 'cmd', cmd: 'next', reqId: 'Tauleta-r-1' });
+    expect(await c.next()).toMatchObject({ type: 'command.rejected', reqId: 'Tauleta-r-1', cmd: 'next', reason: 'notReady' });
+    c.send({ v, type: 'cmd', cmd: 'setPace', reqId: 'Tauleta-r-2', pace: 'fast' });
+    expect(await c.next()).toMatchObject({ type: 'command.rejected', reqId: 'Tauleta-r-2', reason: 'invalid' });
+    c.ws.close();
+  });
+
+  it('with the laptop: commands go to the link, events come back raw, the client list is merged', async () => {
+    const { client: link } = await laptop(null);
+    const c = await consoleClient('Mobil-admin-77', 'admin');
+    expect(await link.next()).toMatchObject({ type: 'cloud.consoles', count: 1 });
+
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show-1' }, { role: 'cloud', clientId: 'laptop-1' }] } });
+    await c.drain();
+    c.send({ v, type: 'cmd', cmd: 'hold', reqId: 'Mobil-r-1', on: true });
+    expect(await link.next()).toMatchObject({ type: 'cloud.command', command: { v, type: 'cmd', cmd: 'hold', reqId: 'Mobil-r-1', on: true } });
+
+    const p = await phone();
+    const secret = 424_242;
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'transition.scheduled', id: 't', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 5000 } });
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'claim.opened', claim: { claimId: 'cl-1', cardId: 12 } } });
+    const got = await c.drain();
+    expect(got.map((m) => (m as { type: string }).type)).toEqual(['transition.scheduled', 'claim.opened']);
+    expect((got[0] as { to: number }).to).toBe(secret); // consoles see the private fields, as on the relay
+    await p.view();
+    expect(JSON.stringify(p.seen)).not.toContain(String(secret)); // phones never do
+
+    const fresh = await consoleClient('Tauleta-9');
+    const greeting = await fresh.drain();
+    expect(clientsIn(greeting)?.clients.map((x) => x.clientId)).toEqual(['show-1', 'laptop-1', 'Mobil-admin-77', 'Tauleta-9']);
+
+    fresh.ws.close();
+    c.ws.close();
+    await link.drain();
+    const stats = await getJson<RoomStats>('/api/stats');
+    expect(stats.commandsRelayed).toBeGreaterThanOrEqual(1);
+    expect(stats.consolesConnected).toBe(0);
+  });
+
+  it('the laptop going offline takes the show off every console', async () => {
+    const { client: link } = await laptop(null);
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show-1' }] } });
+    const c = await consoleClient('Tauleta-5');
+    expect(clientsIn(await c.drain())?.clients.some((x) => x.role === 'show')).toBe(true);
+    link.ws.close();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(clientsIn(await c.drain())?.clients.some((x) => x.role === 'show')).toBe(false);
+    c.ws.close();
+  });
+
+  it('a console may not pretend to be the show, and must say hello first', async () => {
+    const impostor = await consoleClient('evil', 'show');
+    await impostor.drain();
+    expect(impostor.closed?.code).toBe(CLOSE.badHello);
+    const rude = await connect('/ws/console');
+    rude.send({ v, type: 'cmd', cmd: 'next', reqId: 'x' });
+    await rude.drain();
+    expect(rude.closed?.code).toBe(CLOSE.badHello);
+  });
+});
+
 describe('the Worker', () => {
   it('serves the export: every Game, replayed with the protocol reducer', async () => {
     const game = JournalBuilder.sampleGame('g-export');
@@ -277,6 +352,7 @@ describe('the Worker', () => {
     // The dev bypass only works on localhost: anywhere else, the admin routes are closed.
     expect((await SELF.fetch('https://quina.example/api/export')).status).toBe(403);
     expect((await SELF.fetch('https://quina.example/ws/show', { headers: { upgrade: 'websocket' } })).status).toBe(403);
+    expect((await SELF.fetch('https://quina.example/ws/console', { headers: { upgrade: 'websocket' } })).status).toBe(403);
     expect(await getJson('/api/health')).toEqual({ ok: true, edition: '26' });
   });
 

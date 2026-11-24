@@ -1,19 +1,17 @@
 // The show laptop's cloud link: a Node process next to the relay (ADR 0003). It follows the relay like a remote,
-// keeps its own copy of the Game journal on disk, uploads it to the edition's GameRoom, and forwards the few
-// live events phones need (FORWARDED_EVENT_TYPES; `state` at most every LINK.stateEveryMs). It never sends
-// anything to the show except `getJournal`, so a cloud problem can't touch playback.
+// keeps its own copy of the Game journal on disk, uploads it to the edition's GameRoom, and forwards live events
+// (domain/consoles.ts `shouldForward`: what phones need, and everything but the journal while a console listens
+// through the cloud; `state` at most every LINK.stateEveryMs). Towards the show it sends only `getJournal` and
+// the consoles' commands, which the cloud has already checked, so a cloud problem can't touch playback.
 //
 // To the cloud it authenticates with an Access service token (headers, which a browser WebSocket can't set).
 // Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume.
-// Waiting on protocol patch 0001 (folded in by the sound engine session): the relay role `cloud` (until then the
-// relay treats this link as an unknown remote, which still gets every event) and `getJournal` /
-// `journal.entries` to fill holes (until then only live entries arrive, so start the link before the show).
 import WebSocket from 'ws';
-import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry, type ShowEvent } from '@quina/protocol';
+import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/protocol';
 import { LINK } from '../src/config.ts';
-import { isForwardedEventType } from '../src/domain/projection.ts';
+import { shouldForward } from '../src/domain/consoles.ts';
 import { reconnectDelayMs } from '../src/feed/public.ts';
-import { CLOSE, isCloudMessage, type CloudMessage, type LinkEvent, type LinkMessage } from '../src/link-protocol.ts';
+import { CLOSE, isCloudMessage, type CloudMessage, type ForwardableEvent, type LinkEvent, type LinkMessage } from '../src/link-protocol.ts';
 import { JournalCopy } from './journal-copy.ts';
 import { Uploader, type UploaderState } from './uploader.ts';
 
@@ -43,6 +41,10 @@ export interface LinkStatus {
   journalled: number;
   /** The cloud has entries 1..ackSeq. */
   ackSeq: number;
+  /** Consoles listening through the cloud. */
+  consoles: number;
+  /** Console commands handed to the relay. */
+  commands: number;
   pending: number;
   uploader: UploaderState;
 }
@@ -57,7 +59,9 @@ export class CloudLink {
   private cloudAttempt = 0;
   private cloudOpenedAtMs = 0;
   private lastSentAtMs = 0;
-  private latestState: ShowEvent | null = null;
+  private latestState: ForwardableEvent | null = null;
+  private consoles = 0;
+  private commands = 0;
   private lastStateSentAtMs = 0;
   private stateTimer: NodeJS.Timeout | null = null;
   private retryTimer: NodeJS.Timeout | null = null;
@@ -103,6 +107,8 @@ export class CloudLink {
       gameId,
       journalled: gameId ? this.journal.contiguous(gameId) : 0,
       ackSeq: this.uploader.ackSeq,
+      consoles: this.consoles,
+      commands: this.commands,
       pending: this.uploader.pending(),
       uploader: this.uploader.state,
     };
@@ -134,23 +140,21 @@ export class CloudLink {
     } catch {
       return;
     }
-    // `journal.entries` (getJournal's answer) is read before isEvent knows it (protocol patch 0001).
-    const m = message as { v?: unknown; type?: unknown; entries?: unknown };
-    if (m?.v === PROTOCOL_VERSION && m.type === 'journal.entries' && Array.isArray(m.entries)) return this.addEntries(m.entries);
     if (!isEvent(message)) return;
     switch (message.type) {
       case 'journal.entry':
         return this.addEntries([message.entry]);
+      case 'journal.entries':
+        return this.addEntries(message.entries);
       case 'relay.clients': {
         // The show page (re)connected: it may have journalled while this link wasn't listening.
         const show = message.clients.some((c) => c.role === 'show');
         if (show && !this.showConnected) this.requestJournal(1);
         this.showConnected = show;
-        return;
+        break;
       }
-      default:
-        if (isForwardedEventType(message.type)) this.forward(message);
     }
+    if (shouldForward(message.type, this.consoles)) this.forward(message as ForwardableEvent);
   }
 
   private addEntries(entries: readonly unknown[]): void {
@@ -244,6 +248,20 @@ export class CloudLink {
         this.log(`cloud: refused: ${message.detail}`);
         if (message.seq !== null) this.uploader.stop(`the cloud refused entry ${message.seq}: ${message.detail}`);
         return;
+      case 'cloud.command':
+        // A console's command, checked by the cloud: the relay hands it to the show, which checks it again.
+        if (this.relay?.readyState === WebSocket.OPEN) {
+          this.relay.send(JSON.stringify(message.command));
+          this.commands += 1;
+        }
+        return;
+      case 'cloud.consoles': {
+        const before = this.consoles;
+        this.consoles = message.count;
+        if (before === 0 && message.count > 0 && this.latestState) this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.event', event: this.latestState, sentAtMs: now } as LinkEvent);
+        if (before !== message.count) this.log(`cloud: ${message.count} console(s) through the cloud`);
+        return;
+      }
     }
   }
 
@@ -260,8 +278,8 @@ export class CloudLink {
     if (upload) this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.journal', gameId: upload.gameId, entries: upload.entries, sentAtMs: this.options.now() });
   }
 
-  /** A live event for the phones: sent now, except `state`, which goes at most every LINK.stateEveryMs. */
-  private forward(event: ShowEvent): void {
+  /** A live event: sent now, except `state`, which goes at most every LINK.stateEveryMs (the latest wins). */
+  private forward(event: ForwardableEvent): void {
     if (event.type !== 'state') {
       this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.event', event, sentAtMs: this.options.now() } as LinkEvent);
       return;

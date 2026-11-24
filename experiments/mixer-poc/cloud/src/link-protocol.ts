@@ -4,17 +4,20 @@
 //
 //   link → cloud   link.hello    once per connection: which Game the laptop is playing and how far its journal goes
 //                  link.journal  journal entries, in seq order (idempotent: resending is always safe)
-//                  link.event    one live show event (only FORWARDED_EVENT_TYPES)
+//                  link.event    one live show event (domain/consoles.ts says which: what phones need, plus
+//                                everything but the journal while a console listens in the cloud)
 //                  link.ping     a keepalive when nothing else was sent for a while (laptop only; phones never)
 //   cloud → link   cloud.welcome the cloud's edition, and the last entry it has for the hello's Game
 //                  cloud.ack     the last entry it has after an upload (send from ackSeq + 1)
 //                  cloud.need    entries are missing: send again from fromSeq
 //                  cloud.conflict the cloud has a different entry `seq` for this Game: stop uploading, a person decides
 //                  cloud.refused a message it could not take (bad shape, broken entry)
+//                  cloud.command a console's command (checked), for the show: the link hands it to the relay
+//                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0)
 // Close codes: 4001 another laptop connected (this one stops reconnecting), 4002 silent for too long,
 // 4400 a malformed hello.
-import { PROTOCOL_VERSION, type ProtocolVersion, type ShowEvent } from '@quina/protocol';
-import { isForwardedEventType, type ForwardedEventType } from './domain/projection.ts';
+import { PROTOCOL_VERSION, isEvent, type Command, type IncomingEvent, type ProtocolVersion } from '@quina/protocol';
+import { NEVER_FORWARDED } from './domain/consoles.ts';
 
 export interface LinkHello {
   v: ProtocolVersion;
@@ -37,10 +40,13 @@ export interface LinkJournal {
   sentAtMs: number;
 }
 
+/** An event the link may forward: any show event or the relay's client list, but never the journal. */
+export type ForwardableEvent = Exclude<IncomingEvent, { type: (typeof NEVER_FORWARDED)[number] }>;
+
 export interface LinkEvent {
   v: ProtocolVersion;
   type: 'link.event';
-  event: Extract<ShowEvent, { type: ForwardedEventType }>;
+  event: ForwardableEvent;
   sentAtMs: number;
 }
 
@@ -97,7 +103,22 @@ export interface CloudRefused {
   nowMs: number;
 }
 
-export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused;
+/** A console's command, already checked with `checkCommand`. */
+export interface CloudCommand {
+  v: ProtocolVersion;
+  type: 'cloud.command';
+  command: Command;
+  nowMs: number;
+}
+
+export interface CloudConsoles {
+  v: ProtocolVersion;
+  type: 'cloud.consoles';
+  count: number;
+  nowMs: number;
+}
+
+export type CloudMessage = CloudWelcome | CloudAck | CloudNeed | CloudConflict | CloudRefused | CloudCommand | CloudConsoles;
 
 export const CLOSE = Object.freeze({
   /** Another laptop connected and took over: don't reconnect. */
@@ -142,10 +163,13 @@ export function checkLinkMessage(value: unknown): LinkCheck {
 
 const isCount = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 0;
 
-/** The fields of a forwarded event that the cloud reads (src/domain/projection.ts). */
+/**
+ * A forwarded event: a known event type that isn't the journal, and for the types the public projection reads
+ * (src/domain/projection.ts), the fields it reads. Consoles render the rest as the relay would hand it to them.
+ */
 function forwardedEventError(event: unknown): string | null {
-  if (!isRecord(event) || event.v !== PROTOCOL_VERSION) return 'event must be a show event';
-  if (!isForwardedEventType(event.type)) return `event type ${String(event.type)} is not forwarded`;
+  if (!isRecord(event) || !isEvent(event)) return 'event must be a show event';
+  if ((NEVER_FORWARDED as readonly string[]).includes(event.type)) return `event type ${event.type} is not forwarded`;
   switch (event.type) {
     case 'state': {
       const { pause, interval, schedule } = event;
@@ -164,8 +188,9 @@ function forwardedEventError(event: unknown): string | null {
       const check = event.check;
       return isRecord(check) && isCount(check.cardId) && (check.kind === 'line' || check.kind === 'bingo') ? null : 'check.scheduled needs check.cardId and check.kind';
     }
-    case 'transition.cancelled':
-    case 'transition.landed':
+    case 'relay.clients':
+      return Array.isArray(event.clients) ? null : 'relay.clients needs clients';
+    default:
       return null;
   }
 }
@@ -178,5 +203,5 @@ export function linkMessage<M extends LinkMessage>(body: Omit<M, 'v' | 'sentAtMs
 /** Accept a message from the cloud on the laptop. It trusts the cloud for the fields. */
 export function isCloudMessage(value: unknown): value is CloudMessage {
   if (!isRecord(value) || value.v !== PROTOCOL_VERSION || typeof value.type !== 'string') return false;
-  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused'].includes(value.type);
+  return ['cloud.welcome', 'cloud.ack', 'cloud.need', 'cloud.conflict', 'cloud.refused', 'cloud.command', 'cloud.consoles'].includes(value.type);
 }

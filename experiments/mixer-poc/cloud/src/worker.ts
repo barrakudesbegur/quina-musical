@@ -32,7 +32,8 @@ export default {
       case 'stats':
         return json(await room.getStats());
       case 'feed':
-      case 'show': {
+      case 'show':
+      case 'console': {
         // The identity header is always the Worker's own, never a client's.
         const headers = new Headers(request.headers);
         headers.set(IDENTITY_HEADER, identity);
