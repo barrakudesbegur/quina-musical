@@ -24,6 +24,7 @@ import {
   type WinKind,
 } from './vocabulary.ts';
 import type { JournalEntry } from './journal.ts';
+import type { GamePlan } from './plan.ts';
 
 // ---- the `state` snapshot -----------------------------------------------------------------------------
 export interface SongRef {
@@ -613,8 +614,22 @@ export interface RelayClients {
   clients: { role: Role | 'unknown'; clientId: string }[];
 }
 
-/** What a remote receives: the engine's events plus the relay's client list. */
-export type IncomingEvent = ShowEvent | RelayClients;
+/**
+ * The edition's Game plan, from the relay to every paired screen (the show page and its stage too) and from
+ * the cloud to its consoles: on hello and whenever it changes, so a screen that never regains focus (the
+ * projector) still follows Admin's edits. The relay sends the laptop's newest copy: the cloud's, or one saved
+ * on the laptop's network with no cloud (newest `savedAtMs` wins). Public, like the plan itself.
+ */
+export interface RelayPlan {
+  v: ProtocolVersion;
+  type: 'relay.plan';
+  plan: GamePlan | null;
+  /** When that plan was saved (ms since the epoch, the saver's clock); null when there is no plan. */
+  savedAtMs: number | null;
+}
+
+/** What a remote receives: the engine's events plus the relay's client list and the Game plan. */
+export type IncomingEvent = ShowEvent | RelayClients | RelayPlan;
 
 type Unversioned<E> = E extends unknown ? Omit<E, 'v'> : never;
 /** An event as the engine builds it, before `makeEvent` stamps the version. */
@@ -633,5 +648,5 @@ export function isEvent(message: unknown): message is IncomingEvent {
   if (!message || typeof message !== 'object') return false;
   const m = message as Record<string, unknown>;
   if (m.v !== PROTOCOL_VERSION || typeof m.type !== 'string') return false;
-  return (EVENT_TYPES as readonly string[]).includes(m.type) || m.type === 'relay.clients';
+  return (EVENT_TYPES as readonly string[]).includes(m.type) || m.type === 'relay.clients' || m.type === 'relay.plan';
 }

@@ -20,6 +20,7 @@ The package `@quina/protocol` (`packages/protocol/`) is the source of truth, and
 |---|---|---|
 | `{ v, type: 'hello', role, clientId, token? }` | client → relay | First message after connecting. `role` is `show`, `admin`, `tablet`, `drum` or `cloud` (the laptop's cloud link, which keeps a copy of the journal and uploads it). `token` pairs a device on the hotspot (see below) |
 | `{ v, type: 'relay.clients', clients: [{ role, clientId }] }` | relay → paired clients | Who is connected (for example, whether the show page is open) |
+| `{ v, type: 'relay.plan', plan, savedAtMs }` | relay → paired clients (the show page too, for its stage); cloud → its consoles | The edition's Game plan, on hello and whenever it changes, so a screen that never regains focus (the projector) follows Admin's edits. The relay sends the laptop's newest copy: the cloud's, or one saved on the laptop's network with no cloud (newest `savedAtMs` wins). `plan` is null when there is none. Public, like the plan |
 
 **Who may say what.**
 - **Binding:** the relay listens on this laptop only unless it is started with `--lan`.

@@ -325,3 +325,10 @@ test('getJournal: the show asks its runtime for the entries, even while locked, 
   assert.equal(checkCommand({ v: 1, type: 'cmd', cmd: 'getJournal', reqId: 'r', fromSeq: 0 }).ok, false, 'fromSeq starts at 1');
   assert.ok(isEvent({ v: 1, type: 'journal.entries', reqId: 'r', gameId: null, entries: [] }));
 });
+
+test('the relay\'s own messages are events a remote accepts: the client list and the Game plan', () => {
+  assert.ok(isEvent({ v: 1, type: 'relay.clients', clients: [] }));
+  assert.ok(isEvent({ v: 1, type: 'relay.plan', plan: null, savedAtMs: null }));
+  assert.equal(isEvent({ v: 2, type: 'relay.plan', plan: null, savedAtMs: null }), false, 'another protocol version');
+  assert.equal(isEvent({ v: 1, type: 'relay.secrets' }), false);
+});
