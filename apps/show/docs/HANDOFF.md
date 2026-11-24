@@ -60,7 +60,7 @@ Over 4 simulated 12-round nights (`node tests/support/variety.ts 4 1`, 2,430 tra
 - `publicPlan` / `revealedRounds`;
 - `CheckInfo.cardType` with `wrongType` as its own failure.
 
-b2 built prize secrecy on top (`6fbbc32`). 1e is migrating the UI to plan v2: `test:ui` stays red until that lands, which is 1e's to finish.
+b2 built prize secrecy on top (`6fbbc32`). 1e moved the UI to plan v2 (`07ed72f`): Admin edits bundles, the title, `prizeReveal` and card types; the console's Premis tab sends `revealPrizes`; the stage and phones show only revealed rounds' bundles. The Check view carries `cardType` but doesn't draw it yet: the projector's "Cartró normal ✓" first step waits for its ANIMATIONS.md entry (1e's).
 
 **Not started: two items from the user's latest decisions (`00bd75f`).** The orchestrator asked to leave both for after the pause.
 
@@ -130,7 +130,6 @@ b2 built prize secrecy on top (`6fbbc32`). 1e is migrating the UI to plan v2: `t
 - **Signatures are rarer.** 38 of 77 songs get an automatic pick, and they play in about 5% of transitions. Over A they need agreeing keys and tempos within 4%. The user can pick more by hand.
 - **The Pace is met on average.** Gaps between landings are whole phrases (8 bars at 120 bpm = 16 s), and the Drift nudge evens the round out.
 - **The relay gets killed by other sessions' restarts.** When another Vite dev server holds port 24678, `npm run dev` exits. Use `npm run build && npm start` (dist) instead.
-- **`test:ui` is red** until 1e finishes the plan v2 migration.
 
 ## How to run, test and listen
 
