@@ -194,6 +194,30 @@ export class Deck {
     return source;
   }
 
+  /**
+   * Re-cue the song so position `offset` plays at `at`, at its rate (a repeat of the phrase loop): the old source
+   * fades out over `fadeSec` into `at` as the new one fades in, both on the same clock, so the jump lands on the
+   * downbeat. Stem lanes scheduled before the jump keep the old clock; new ones follow the new.
+   */
+  cue(at: number, offset: number, fadeSec = 0.005): void {
+    const old = this.source;
+    const oldGain = this.sourceGain;
+    const t0 = Math.max(at - fadeSec, this.ctx.currentTime);
+    if (old && oldGain) {
+      oldGain.gain.setValueAtTime(1, t0);
+      oldGain.gain.linearRampToValueAtTime(0, at);
+      try {
+        old.stop(at + 0.01);
+      } catch {}
+    }
+    this.start(t0, offset - (at - t0) * this.rate, this.rate);
+    const gain = this.sourceGain;
+    if (gain) {
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(1, at);
+    }
+  }
+
   stop(when: number): void {
     this.stopAt = when;
     try {

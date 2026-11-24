@@ -35,7 +35,7 @@ import {
   type SoundName,
 } from '@quina/protocol';
 import { playableSongs } from './analysis.ts';
-import { ENGINE, FLOW, HOLD, PACE, SUSPENSE, isStingerName } from './config.ts';
+import { ENGINE, FLOW, HOLD, LOOP, PACE, SUSPENSE, isStingerName } from './config.ts';
 import { secureShuffle, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
 import type { Card } from './game/cards.ts';
@@ -329,6 +329,10 @@ function apply(effect: Effect): void {
       return cancelTransition(effect);
     case 'duck':
       return graph.glide(graph.holdDuck.gain, effect.db, effect.seconds);
+    case 'cue':
+      // A repeat of the phrase loop (Aguanta, Suspense): the playing song jumps back to the phrase's start.
+      if (rt.current?.songId === effect.songId) rt.current.cue(effect.at, effect.offset, LOOP.fadeSec);
+      return;
     case 'holdMusic': {
       const start = { at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: effect.mood };
       if (!effect.switch) return void holdMusic.start(start).catch((e) => console.error('hold music', e));

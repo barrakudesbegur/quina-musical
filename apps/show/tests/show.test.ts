@@ -6,7 +6,7 @@ import { planTransition, type PlanRequest, type SignatureSource } from '../engin
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { makeCommand } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
-import { HOLD, ENGINE, FLOW, PACE } from '../engine/src/config.ts';
+import { HOLD, ENGINE, FLOW, PACE, LOOP } from '../engine/src/config.ts';
 import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
 import { deckTimeline } from '../engine/src/plan/timeline.ts';
 import { seededRandom } from '../engine/src/rng.ts';
@@ -547,4 +547,41 @@ test('Futur (private): where the known Queue first completes a Line and a Bingo,
   assert.ok(after.lineAt == null || after.lineAt > h.show.position, 'from the next song on');
   assert.equal(h.show.snapshot().future === null, false);
   assert.equal(setup().show.snapshot().future, null, 'none without cards in play');
+});
+
+test('Aguanta near the song\'s end: its last full phrase repeats on its downbeats until the Hold is released', () => {
+  const h = setup({ seed: 6 });
+  startAndLand(h);
+  h.send('hold', { on: true, duck: false });
+  const cur = h.show.current;
+  assert.ok(cur);
+  const analysis = analyses.get(cur.songId);
+  assert.ok(analysis);
+  const endAt = cur.endCtx;
+  // Well past the song's own end: it never runs out, never hands over to Hold music.
+  const out = h.until(() => h.clock.t > endAt + 60, 400);
+  assert.equal(h.show.holdMusic, false);
+  assert.equal(find(out, 'songToHoldMusic'), undefined);
+  const cues = h.log.filter((e) => e.type === 'cue');
+  assert.ok(cues.length >= 3, `${cues.length} repeats`);
+  const loop = h.show.loop;
+  assert.ok(loop && loop.purpose === 'stay');
+  const { phrase } = loop;
+  assert.ok(phrase.bars === 8 || phrase.bars === 4);
+  assert.ok((phrase.fromIndex - (cur.landedDownbeatIndex ?? 0)) % phrase.bars === 0, 'a phrase counted from the landed hook');
+  assert.ok(phrase.toSec <= analysis.source.durationSec - LOOP.stayTailSec + 1e-9, 'before the outro');
+  for (const [k, c] of cues.entries()) {
+    assert.ok(c.type === 'cue' && c.offset === phrase.fromSec && c.songId === cur.songId);
+    if (k > 0) {
+      const prev = cues[k - 1];
+      assert.ok(prev.type === 'cue' && Math.abs(c.at - prev.at - (phrase.toSec - phrase.fromSec) / cur.rate) < 1e-6, 'one phrase apart');
+    }
+  }
+  // Released: no more repeats, the song plays on into its end, and auto-advance takes over.
+  h.send('hold', { on: false });
+  assert.equal(h.show.loop, null);
+  assert.equal(h.show.status, 'playing');
+  const count = h.log.filter((e) => e.type === 'cue').length;
+  h.advance(30);
+  assert.equal(h.log.filter((e) => e.type === 'cue').length, count);
 });

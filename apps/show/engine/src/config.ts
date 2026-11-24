@@ -217,6 +217,18 @@ export const HOLD = Object.freeze({
   cancelMinSec: 0.15,
 });
 
+/** The phrase loop (plan/loop.ts): Aguanta's last phrase near the song's end, Suspense's phrase under its build. */
+export const LOOP = Object.freeze({
+  /** Each repeat is re-cued this long before it starts. */
+  aheadSec: 0.35,
+  /** The deck's crossfade at each repeat (a click guard, on the downbeat). */
+  fadeSec: 0.005,
+  /** Aguanta looks for the song's last phrase this long before the song ends. */
+  stayLookSec: 40,
+  /** The phrase Aguanta loops ends at least this long before the song does (its outro and fade stay out). */
+  stayTailSec: 8,
+});
+
 export const STEMS = Object.freeze({
   /** A stem Teases a hook only if its last bars before the hook are at least this loud (bar RMS, dBFS). */
   teaseMinBarDb: -26,

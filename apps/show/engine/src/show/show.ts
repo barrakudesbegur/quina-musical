@@ -53,7 +53,7 @@ import type {
   SongRef,
   SoundName,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, type DecoyConfig } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, LOOP, type DecoyConfig } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle } from '../game/shuffle.ts';
@@ -67,6 +67,7 @@ import { pickHook } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
+import { firstRepeatAt, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
 import { mixSeed, seededRandom } from '../rng.ts';
 import type { Analysis, Hook } from '../analysis.ts';
 import type { Card } from '../game/cards.ts';
@@ -78,6 +79,17 @@ import type { PlanEvent, StemName } from '../plan/recipes.ts';
 export type HoldMood = 'hold' | 'error';
 /** Scene music that is not Hold music: the Celebration's ('winningSong', 'victory') or the Interval's. */
 export type Bed = 'winningSong' | 'victory' | 'interval';
+
+/** The playing song repeating one of its phrases (plan/loop.ts): `nextAt` is the next repeat's start, `until` the
+ * last moment a repeat may start (a Suspense's landing), or null to loop until it is stopped. */
+export interface LoopState {
+  songId: number;
+  phrase: PhraseLoop;
+  nextAt: number;
+  until: number | null;
+  /** Aguanta's last phrase near the song's end, or Suspense's phrase under its build. */
+  purpose: 'stay' | 'suspense';
+}
 
 /** The song that is playing (it may be ducked in a Hold). Times are audio-clock seconds. */
 export interface PlayingSong {
@@ -151,6 +163,14 @@ export interface HoldState {
 }
 
 // ---- effects: what the runtime must do. Audio-clock times in seconds. -------------------------------------
+/** Re-cue the playing song so `offset` plays at `at` (a repeat of the phrase loop, plan/loop.ts). */
+export interface CueEffect {
+  type: 'cue';
+  songId: number;
+  at: number;
+  offset: number;
+}
+
 /** Send an event to the remotes. */
 export interface EmitEffect {
   type: 'emit';
@@ -336,6 +356,7 @@ export type Effect =
   | LandedEffect
   | CancelTransitionEffect
   | DuckEffect
+  | CueEffect
   | HoldMusicEffect
   | SongToHoldMusicEffect
   | RewindEffect
@@ -467,6 +488,8 @@ export class Show {
   pending: PendingNext | null = null;
   hold: HoldState | null = null;
   holdMusic = false;
+  /** The playing song repeating a phrase, or null. */
+  loop: LoopState | null = null;
   timers: Timers = { autoAt: null, holdMusicAt: null };
   /** This round's landings as the planner remembers them (its rotation memory); the state shows their HistoryEntry part. */
   history: (HistoryEntry & PlanMemory)[] = [];
@@ -718,6 +741,8 @@ export class Show {
     // After any landing in this tick, which replaces a sample not yet sent: never one at a landing.
     this.sendHeatSample(now);
     if (this.suspense) this.tickSuspense(this.suspense, now);
+    this.tickStay(now);
+    this.tickLoop(now);
     if (this.status === 'playing' && this.timers.autoAt != null && now >= this.timers.autoAt) {
       this.timers.autoAt = null;
       this.next(null);
@@ -1462,6 +1487,43 @@ export class Show {
     if (this.current) this.out.push({ type: 'duck', db: 0, seconds });
     this.hold = null;
     this.timers.holdMusicAt = null;
+    // Leaving Aguanta: the song plays on from the phrase it is in, into the rest of it.
+    if (this.loop?.purpose === 'stay') this.loop = null;
+  }
+
+  // ---------------------------------------------------------------------------------- the phrase loop
+  /**
+   * Aguanta (a Hold at full volume) keeps the dancing going: near the song's end, its last full phrase (8 bars, else
+   * 4, before the outro) starts repeating. Without one in reach the song hands over to Hold music at its end.
+   */
+  tickStay(now: number) {
+    const cur = this.current;
+    if (this.status !== 'hold' || !this.hold || this.hold.ducked || this.holdMusic || !cur || this.loop) return;
+    if (now < cur.endCtx - LOOP.stayLookSec) return;
+    const analysis = this.env.analysis(cur.songId);
+    if (!analysis) return;
+    const phrase = lastPhraseLoop({ analysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex }, now + LOOP.aheadSec + 0.05, LOOP.stayTailSec);
+    if (phrase) this.loop = { songId: cur.songId, phrase, nextAt: firstRepeatAt(cur, phrase), until: null, purpose: 'stay' };
+  }
+
+  /** Re-cue each repeat of the loop a moment ahead; the playing song's clock follows it. */
+  tickLoop(now: number) {
+    const loop = this.loop;
+    const cur = this.current;
+    if (!loop) return;
+    if (!cur || cur.songId !== loop.songId) {
+      this.loop = null;
+      return;
+    }
+    while (now >= loop.nextAt - LOOP.aheadSec && (loop.until == null || loop.nextAt < loop.until - 1e-6)) {
+      const at = loop.nextAt;
+      const endPos = cur.offset + (cur.endCtx - cur.startCtx) * cur.rate;
+      this.out.push({ type: 'cue', songId: cur.songId, at, offset: loop.phrase.fromSec });
+      cur.startCtx = at;
+      cur.offset = loop.phrase.fromSec;
+      cur.endCtx = at + (endPos - loop.phrase.fromSec) / cur.rate;
+      loop.nextAt = at + loopSeconds(cur, loop.phrase);
+    }
   }
 
   startHoldMusic(at: number) {
@@ -1612,6 +1674,7 @@ export class Show {
     this.hold = null;
     this.holdMusic = false;
     this.bed = null;
+    this.loop = null;
     this.timers = { autoAt: null, holdMusicAt: null };
     this.status = 'idle';
   }
