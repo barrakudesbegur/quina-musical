@@ -7,12 +7,12 @@ A live music bingo show. Players mark songs on printed cards as they recognize t
 ### The game
 
 **Game**:
-The whole set of rounds played on the night of the event.
-_Avoid_: Night, session, event
+The whole set of rounds played on the night of the event. On screen it is just the event's name, "Quina Musical".
+_Avoid_: Night, session, event, partida
 
 **Round**:
-One game of bingo, from its first song until a Bingo is confirmed. Labelled "quina" in the app.
-_Avoid_: Game, match
+One game of bingo, from its first song until a Bingo is confirmed. Labelled "Quina 1", "Quina 2"… on screen, as people in town call it.
+_Avoid_: Game, match, ronda
 
 **Special round**:
 A round played with special cards instead of the normal ones.
@@ -34,8 +34,11 @@ A completed row of 4 songs on a card.
 _Avoid_: Línia (outside the UI)
 
 **Bingo**:
-A completed card: all 12 of its songs have landed. It ends the round.
-_Avoid_: Quina (for the win), full house
+A completed card: all 12 of its songs have landed. It ends the round. Players shout "Quina!", and that is its label on screen ("premi de quina").
+_Avoid_: Full house, full card, quina (outside the UI)
+
+**Tie**:
+Two or more cards completing the same Line or Bingo on the same landing. The shuffle avoids ties among the cards in play.
 
 **Interval**:
 The time between two rounds, with music playing and the next round's prizes on screen.
@@ -77,7 +80,7 @@ _Avoid_: Playlist
 The song whose landing completed the card that won a Line or a Bingo.
 
 **Shuffle**:
-The public moment at the start of a round where the queue is decided, shown on the projector as the songs moving from a grid into the drum.
+The public moment at the start of a round where the queue is decided, shown on the projector as the songs moving from a grid into the drum. It reshuffles, deterministically, until neither the first Line nor the first Bingo would be a tie.
 
 **Hook**:
 A moment in a song where its most recognizable part starts on a downbeat, such as a chorus. Songs only ever land on a hook.
@@ -118,6 +121,20 @@ How "hot" the round looks on screen. It follows the phase with some randomness, 
 _Avoid_: Temperature, progress
 
 ### Running the show
+
+**Projector**:
+The audience screen: the drum, the current song and the big moments of the show.
+
+**Console**:
+The presenters' control page. It runs on the shared tablet, opens unchanged on an admin's phone, and every open console stays in sync.
+_Avoid_: Remote, presenter page, tablet page
+
+**Admin**:
+The setup and fixes page for organizers: cards in play, rounds, prizes, sponsors, schedule.
+
+**Player app**:
+The app players open on their phones from the QR code on their card, following their own cards.
+_Avoid_: Mobile view, PWA (in conversation)
 
 **Pace**:
 The target time from one landing to the next, set by the presenters and gently adjusted by the system to keep to the schedule.
