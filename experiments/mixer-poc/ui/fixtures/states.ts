@@ -248,6 +248,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         current: null,
         next: null,
         interval: { sinceMs: now - 40000, nextRound: 4, guideEndMs: now + 140000 },
+        intervalMusic: { track: { title: 'Last Christmas', artist: 'Wham!', index: 3, count: 24, sinceMs: now - 25000 } },
       }),
     };
   },

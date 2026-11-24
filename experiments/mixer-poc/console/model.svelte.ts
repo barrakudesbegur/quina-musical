@@ -44,7 +44,7 @@ export class ConsoleModel {
 
   /** Commands can reach the engine (relay connected, show page on it). */
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
-  readonly scene = $derived(sceneContext(this.show.flow));
+  readonly scene = $derived(sceneContext(this.show.flow, this.show.state));
   readonly controls = $derived(controlsModel({ state: this.show.state, flow: this.show.flow, online: this.online }));
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
   readonly alert = $derived(

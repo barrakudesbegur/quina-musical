@@ -1,6 +1,6 @@
 <!--
   The Interval: the next round and its prizes to announce, the guide countdown (rounds always start by
-  hand), the Interval music (no protocol yet), and Start round.
+  hand) and Start round. The Interval music has its own panel (IntervalMusic), shown wherever it plays.
 -->
 <script lang="ts">
   import { formatCountdown } from '../../ui/rules/time.ts';
@@ -40,15 +40,6 @@
     <h3 class="panel__subtitle">{S.roundStart.announce}</h3>
     <PrizeList round={interval.nextRound} />
 
-    <fieldset class="interval-panel__music" disabled>
-      <legend class="panel__subtitle"><Icon name="music" /> {S.interval.music}</legend>
-      <button type="button" class="action"><Icon name="next" /><span>{S.interval.skip}</span></button>
-      <label class="field field--inline" for="{uid}-volume">
-        <span class="field__label">{S.interval.volume}</span>
-        <input id="{uid}-volume" type="range" min="0" max="100" value="70" />
-      </label>
-      <p class="note">{S.interval.musicNote}</p>
-    </fieldset>
 
     <button type="button" class="action action--big tone-primary" data-anim="press" disabled={!model.can('roundIntro')} onclick={start}>
       <Icon name="play" /><span>{S.interval.start}</span>

@@ -27,6 +27,13 @@
         disabled={snap.holdMusic || !model.can('holdMusic')}
         onchange={() => model.act('holdMusic')}
       />
+      <Switch
+        label={S.hold.autoMusic}
+        on={snap.game.holdMusicOn ?? true}
+        note={S.hold.autoMusicNote}
+        disabled={!model.can('setGame')}
+        onchange={(on) => model.act('setGame', { holdMusicOn: on })}
+      />
       <button type="button" class="action tone-primary" data-anim="press" disabled={!model.can('hold')} onclick={() => model.act('hold', { on: false })}>
         <Icon name="play" /><span>{S.hold.resume}</span>
       </button>

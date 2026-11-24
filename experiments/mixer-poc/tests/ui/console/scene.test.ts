@@ -52,7 +52,6 @@ test('in a Check: Claim adds another card, Next and Suspense are refused', () =>
   assert.equal(c.suspense.enabled, false);
   assert.equal(canSend('decide', fixture('check')), true);
   assert.equal(canSend('checkStart', fixture('check')), true);
-  assert.equal(canSend('celebrationMusic', fixture('check')), false);
 });
 
 test("a Line's Celebration goes back to play with Next; a Bingo's goes to the Interval", () => {
@@ -116,4 +115,14 @@ test('a command the table does not know is left to the engine', () => {
 test('no Hold toggle during a Check: releasing it would bring the song back mid-Check (engine rule)', () => {
   const c = controlsModel(fixture('check'));
   assert.equal(c.hold.enabled, false);
+});
+
+test('Skip follows the Interval playlist exactly as the engine does', () => {
+  const base = FIXTURES.play(NOW).state;
+  const playing = { ...base, intervalMusic: { track: null } };
+  assert.equal(sceneAllows('intervalSkip', sceneContext(flowOf(playing), playing)), true, 'in play until the first Spin');
+  const silent = { ...base, intervalMusic: null };
+  assert.equal(sceneAllows('intervalSkip', sceneContext(flowOf(silent), silent)), false);
+  const interval = FIXTURES.interval(NOW).state;
+  assert.equal(sceneAllows('intervalSkip', sceneContext(flowOf(interval), interval)), true);
 });

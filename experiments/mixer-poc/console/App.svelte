@@ -18,6 +18,7 @@
   import Header from './components/Header.svelte';
   import HoldPanel from './components/HoldPanel.svelte';
   import IntervalPanel from './components/IntervalPanel.svelte';
+  import IntervalMusic from './components/IntervalMusic.svelte';
   import Menu from './components/Menu.svelte';
   import NextSong from './components/NextSong.svelte';
   import NowPlaying from './components/NowPlaying.svelte';
@@ -91,6 +92,7 @@
       {:else if flow.scene === 'after'}
         <AfterPanel />
       {/if}
+      {#if snap?.intervalMusic}<IntervalMusic />{/if}
     </main>
 
     <aside class="console__side">

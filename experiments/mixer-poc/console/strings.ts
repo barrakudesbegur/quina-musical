@@ -142,6 +142,8 @@ export const S = {
     reasonFallback: 'En espera',
     since: (clock: string) => `des de fa ${clock}`,
     holdMusicIn: (s: number) => `Música d'espera en ${s} s`,
+    autoMusic: "Música d'espera automàtica",
+    autoMusicNote: "Apagada, en una espera llarga la cançó continua baixa en lloc de canviar a música d'espera.",
     holdMusic: "Música d'espera",
     holdMusicOn: "Sona la música d'espera. «Reprèn» torna a les cançons.",
     resume: 'Reprèn',
@@ -228,12 +230,19 @@ export const S = {
     next: (n: number, total: number) => CA.roundOf(n, total),
     guide: 'Compte enrere orientatiu',
     over: (clock: string) => `+${clock}`,
-    music: 'Música de la mitja part',
-    skip: 'Salta la cançó',
-    volume: 'Volum',
-    musicNote: "Encara no es pot controlar des de la consola: falta l'ordre al protocol.",
     start: 'Comença la quina',
     startNote: 'Primer anuncieu els premis.',
+  },
+
+  intervalMusic: {
+    title: 'Música de la mitja part',
+    track: (title: string, artist: string) => (artist ? `${title} · ${artist}` : title),
+    position: (index: number, count: number) => `Cançó ${index} de ${count}`,
+    waiting: 'Encara sona la música anterior; la llista entra tot seguit.',
+    skip: 'Salta la cançó',
+    skipNote: 'Canvia al següent compàs, amb una sortida suau.',
+    volume: 'Volum',
+    volumeValue: (db: number) => (db === 0 ? '0 dB (màxim)' : `${db} dB`),
   },
 
   roundStart: {
@@ -441,6 +450,8 @@ export const S = {
     interval: 'Mitja part',
     endGame: 'Acabar la nit',
     pause: 'Pausa tècnica',
+    intervalSkip: 'Saltar cançó',
+    resumeAt: 'Recuperar el show',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 

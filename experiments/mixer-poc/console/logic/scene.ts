@@ -7,12 +7,14 @@ import type { AnyCommandName, FlowFields } from '../../ui/flow.ts';
 /** The engine's scene rules, shared through @quina/protocol (protocol/scenes.ts), so the console can't drift. */
 export { SCENE_RULES, sceneAllows, type SceneContext } from '@quina/protocol';
 
-export function sceneContext(flow: FlowFields): SceneContext {
+export function sceneContext(flow: FlowFields, state: ShowState | null = null): SceneContext {
   return {
     scene: flow.scene,
     celebrating: flow.scene === 'celebration' ? (flow.celebration?.kind ?? null) : null,
     introduced: flow.scene === 'roundStart' && flow.intro !== null,
     paused: flow.pause !== null,
+    // The Interval playlist is playing: exactly the engine's own test for `intervalSkip`.
+    ...(state && 'intervalMusic' in state ? { intervalMusic: state.intervalMusic != null } : {}),
   };
 }
 
@@ -37,7 +39,7 @@ export interface ControlsModel {
 /** Whether a command can be sent now: the show is reachable and running, and the scene allows it. */
 export function canSend(cmd: AnyCommandName, { state, flow, online }: ControlsInput): boolean {
   if (!online || !state || state.status === 'locked') return false;
-  return sceneAllows(cmd, sceneContext(flow));
+  return sceneAllows(cmd, sceneContext(flow, state));
 }
 
 export function controlsModel(input: ControlsInput): ControlsModel {
