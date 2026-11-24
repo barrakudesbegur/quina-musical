@@ -28,6 +28,8 @@ const RULES = {
   unlock: 'any',
   getState: 'any',
   getJournal: 'any',
+  // Plan B on a show page with nothing going on (a fresh page is in `before`; also after an Interval or an end).
+  resumeAt: ['before', 'interval', 'after'],
   setPace: 'any',
   setGame: 'any',
   setCardsInPlay: 'any',

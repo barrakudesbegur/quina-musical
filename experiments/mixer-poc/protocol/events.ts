@@ -299,6 +299,28 @@ export interface ShowState {
   interval: IntervalInfo | null;
   /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
   winners: WinnerInfo[];
+  /**
+   * PRIVATE (tablet only, never a public screen): how to resume this round by hand on another show page
+   * (`resumeAt`). Null before the round's Queue exists, or for a fixed test Queue. The seed is a secret:
+   * with the cards in play it gives the whole Queue. Optional in the type only (added later in v1); the
+   * engine always sends it.
+   */
+  resume?: ResumeToken | null;
+}
+
+/** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */
+export interface ResumeToken {
+  round: number;
+  kind: RoundKind;
+  shuffleSeed: number;
+  shuffleAttempts: number;
+  /** Queue index of the last counted song (−1 before the first). */
+  position: number;
+  /** The song at `position`, for the console's preview and the engine's check. */
+  lastSongId: number | null;
+  /** Where the Bingo climb started, if a Line was confirmed. */
+  lineConfirmedFrom: number | null;
+  text: string;
 }
 
 // ---- the other events ---------------------------------------------------------------------------------

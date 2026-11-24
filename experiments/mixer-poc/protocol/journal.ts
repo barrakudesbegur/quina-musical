@@ -39,6 +39,25 @@ export interface RoundStartedEntry extends EntryBase {
   shuffleAttempts: number;
 }
 
+/**
+ * A round resumed by hand (`resumeAt`, plan B): the round as `round.started` would have it, with the songs up
+ * to `position` already counted (their real times are unknown: they count from this entry's `atMs`).
+ */
+export interface RoundResumedEntry extends EntryBase {
+  kind: 'round.resumed';
+  round: number;
+  roundKind: RoundKind;
+  queue: number[];
+  phaseSeed: number;
+  startedAtMs: number;
+  targetEndMs: number;
+  settings: JournalSettings;
+  shuffleSeed: number;
+  shuffleAttempts: number;
+  position: number;
+  lineConfirmedFrom: number | null;
+}
+
 /** A song landed and counts from now. */
 export interface SongLandedEntry extends EntryBase {
   kind: 'song.landed';
@@ -116,6 +135,7 @@ export interface WinnerNotedEntry extends EntryBase {
 
 export type JournalEntry =
   | RoundStartedEntry
+  | RoundResumedEntry
   | SongLandedEntry
   | LandingUndoneEntry
   | LineConfirmedEntry
@@ -246,6 +266,27 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       };
       record.intro = null; // the introduced round has started
       record.claims = [];
+      return;
+    case 'round.resumed':
+      record.settings = { ...entry.settings };
+      record.round = {
+        number: entry.round,
+        kind: entry.roundKind,
+        queue: [...entry.queue],
+        phaseSeed: entry.phaseSeed,
+        startedAtMs: entry.startedAtMs,
+        targetEndMs: entry.targetEndMs,
+        position: entry.position,
+        climbingTo: entry.lineConfirmedFrom != null ? 'bingo' : 'line',
+        climbFrom: entry.lineConfirmedFrom ?? 0,
+        landings: entry.queue.slice(0, entry.position + 1).map((songId, position) => ({ position, songId, atMs: entry.atMs, undone: false })),
+        shuffleSeed: entry.shuffleSeed,
+        shuffleAttempts: entry.shuffleAttempts,
+      };
+      record.intro = null;
+      record.claims = [];
+      record.scene = 'play';
+      record.sceneSinceMs = entry.atMs;
       return;
     case 'song.landed': {
       const round = currentRound(record, entry);

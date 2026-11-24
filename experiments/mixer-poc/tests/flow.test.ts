@@ -72,15 +72,15 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
   const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'setPace', 'setGame', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo'];
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [
-    ['before', { scene: 'before' }, [...PLAY, 'roundIntro']],
+    ['before', { scene: 'before' }, [...PLAY, 'roundIntro', 'resumeAt']],
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound']],
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
     ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide']],
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
-    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro']],
-    ['after', { scene: 'after' }, ['newRound', 'roundIntro']],
+    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt']],
+    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt']],
     ['paused in play', { scene: 'play', paused: true }, []],
     ['paused in a Check', { scene: 'check', paused: true }, []],
   ];

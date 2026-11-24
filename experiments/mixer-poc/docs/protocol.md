@@ -53,9 +53,10 @@ The relay forwards commands only to the `show` role, and events only from it. A 
 | `overrideNextRecipe` | `recipe: string\|null` | Force the next transition's recipe (for testing) |
 | `panic` | | Silence everything at once. Position is kept and the state becomes `idle` |
 | `getState` | | Ask for a fresh `state` event |
+| `resumeAt` | `round, kind, shuffleSeed, position, lineConfirmedFrom?, lastSongId?, shuffleAttempts?` | Plan B: resume a round by hand on a show page with no journal, such as a replacement laptop offline (see "Resuming by hand" below). Allowed in `before`, `interval` and `after`, and while locked. Refused as `cannotResume` when the rebuilt Queue doesn't match the token |
 | `getJournal` | `fromSeq?: integer ≥ 1` | Ask for the current Game's journal from entry `fromSeq` on (all of it without `fromSeq`). Answered by `journal.entries`. Allowed while locked. The cloud link uses it to fill in entries it missed |
 
-Rejection reasons (`command.rejected.reason`): `invalid`, `locked`, `busy`, `endOfQueue`, `nothingToUndo`, `notHolding`, `notReady`, `decodeFailed`, `planFailed`, `unknownSfx`, `unknownCommand`, `noSuspense`, `wrongScene` (the command isn't accepted in this scene, or during the pause; `detail` names the scene), `unknownClaim` (no such Claim in this round, or it is already decided; for `winnerInfo`, no Winner with that `claimId`).
+Rejection reasons (`command.rejected.reason`): `invalid`, `locked`, `busy`, `endOfQueue`, `nothingToUndo`, `notHolding`, `notReady`, `decodeFailed`, `planFailed`, `unknownSfx`, `unknownCommand`, `noSuspense`, `wrongScene` (the command isn't accepted in this scene, or during the pause; `detail` names the scene), `unknownClaim` (no such Claim in this round, or it is already decided; for `winnerInfo`, no Winner with that `claimId`), `cannotResume` (`resumeAt`'s Queue doesn't match: `detail` says what).
 
 ## Scenes
 
@@ -139,6 +140,7 @@ check         { claimId, cardId, kind, outcome, row, otherRows, steps: [{ songId
 celebration   { kind, round, cardIds, winningSongId, sinceMs, music: 'winningSong'|'victory'|'holdMusic' } | null
 interval      { sinceMs, nextRound, guideEndMs } | null
 winners       the whole Game's: [{ round, kind, cardId, claimId, winningSongId, position, atMs, name, notes }]   PRIVATE: name, notes
+resume        { round, kind, shuffleSeed, shuffleAttempts, position, lastSongId, lineConfirmedFrom, text } | null   PRIVATE (plan B, see "Resuming by hand")
 ```
 
 `hold.reason` adds `claim` (a Check, through the Celebration) and `checkFailed` (every Claim of the last Check was invalid). In `celebration`, `interval` and `after` the status is `hold` too: no song lands, the scene's music plays.
@@ -166,6 +168,7 @@ The Game is what must survive a restart: the round and its Queue, the landings a
 
 | `kind` | Fields | Written when |
 |---|---|---|
+| `round.resumed` | the same as `round.started`, plus `position, lineConfirmedFrom` | A round resumed by hand (`resumeAt`). The songs up to `position` count from this entry's `atMs`, because their real times are unknown. The Game is in `play`, and the round's Claims and intro are reset |
 | `round.started` | `round, roundKind, queue, phaseSeed, startedAtMs, targetEndMs, settings, shuffleSeed, shuffleAttempts` | A round starts: its tie-free Shuffle (the Queue is draw number `shuffleAttempts` of `shuffleSeed`; 0 and 0 for a fixed Queue) and the secret seed that blurs its Phase. A journal from before the tie-free Shuffle replays both as 0 |
 | `song.landed` | `round, position, songId` | A song lands (`atMs` is the Landing) |
 | `landing.undone` | `round, position, songId` | Back undoes a landing |
@@ -180,6 +183,19 @@ The Game is what must survive a restart: the round and its Queue, the landings a
 Every entry also carries `gameId`, `seq` (1, 2, 3… with no gaps within a Game) and `atMs`. `replayJournal(entries)` turns a journal into a `GameRecord`, and every side uses that one reducer, so they all agree. `extendJournal(record, entries)` applies more entries to a record without replaying the history, and gives the same result as replaying the whole journal; the cloud uses it on every upload. Besides the round and its landings, the record keeps the show flow: `scene` and `sceneSinceMs`, `intro` (in `roundStart`, the round introduced), the round's `claims` (`{ claimId, round, cardId, kind, position, atMs, verdict }`, `verdict` null while undecided), `claimCount` (claim ids go on from it: `cl-<n>`) and the Game's `winners` (PRIVATE: `name`, `notes`). A verdict on an unknown Claim, a Claim decided twice or a Winner's note without a Winner throws a `JournalError` too. A gap, a repeat, another Game's entry or a song that isn't at its Queue index throws a `JournalError`, and nothing is resumed from a wrong state.
 
 **Resuming.** A reloaded show page resumes the current Game from its journal if the last entry is under 12 hours old (`ENGINE.resumeWithinMs`). Resumed means the same round, Queue, position, landings, Line and settings, with the drum showing the last landing, in the same scene with the round's Claims and the Game's Winners. A Check that was running is queued again; the Celebration and the Interval come back from the scene and the Claims. Once unlocked, a Celebration, Interval or introduced round gets its music back and a Check starts again; a song only plays with Next. `?fresh=1` starts a new Game, and the old journal stays stored. A test show with `?queue=`, or with `?journal=0`, keeps its journal in memory only.
+
+## Resuming by hand (plan B)
+
+On a show page with no journal (a replacement laptop, offline), the presenters resume the round with `resumeAt`.
+- **How it works:** the Shuffle is seeded. Its seed, the Pool and the cards in play give back the exact Queue, and the engine checks that against the token. A token is `{round, kind, shuffleSeed, shuffleAttempts, position, lastSongId, lineConfirmedFrom}`; `text` is the same as a short code (`protocol/resume.ts`).
+- **The code:** for example `Q3N-4K7XM2P-17-S41-L12` is round 3 (normal), the seed in 7 Crockford base32 characters, the last counted position, the song there, and where the Bingo climb started. `formatResumeToken` and `parseResumeToken` read and write it.
+- **State:** the state's `resume` holds the current token. It is PRIVATE: tablets only, never a public screen or a phone.
+- **Where the seed comes from, in this order:**
+  1. the laptop's local journal (localStorage, or the cloud link's disk copy);
+  2. the cloud, if the round started before the connection dropped;
+  3. the code an admin noted at the Shuffle. The console shows it on its tucked-away panel. Keep it like the box of cards: with the cards in play it gives the whole Queue.
+- **Refusals:** a Queue that doesn't match is refused (`cannotResume`), never resumed. That covers other cards in play, a mistyped seed, position or song, and a different draw number. Without the round's seed, no Queue can match the cards, so there is no resume.
+- **What doesn't come back:** a resumed round starts a new Game id, because its earlier journal isn't on this laptop. Its earlier landings count, but their times and the round's Claims don't come back.
 
 ## Public feed (phones)
 

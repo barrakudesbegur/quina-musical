@@ -14,8 +14,10 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, formatResumeToken } from '@quina/protocol';
 import type {
+  CommandOf,
+  ResumeToken,
   CelebrationInfo,
   CelebrationMusic,
   CheckInfo,
@@ -542,7 +544,8 @@ export class Show {
     const c = check.command;
     const reqId = c.reqId;
     const cmd: string = c.cmd;
-    if (this.status === 'locked' && c.cmd !== 'unlock' && c.cmd !== 'getState' && c.cmd !== 'getJournal') {
+    // A locked page (no "Start show" click yet) still answers, and may be resumed by hand before the click.
+    if (this.status === 'locked' && c.cmd !== 'unlock' && c.cmd !== 'getState' && c.cmd !== 'getJournal' && c.cmd !== 'resumeAt') {
       this.reject(reqId, c.cmd, 'locked');
       return this.flush();
     }
@@ -656,6 +659,9 @@ export class Show {
       case 'getJournal':
         this.out.push({ type: 'journalRequest', reqId, fromSeq: c.fromSeq ?? 1 });
         return this.flush(); // nothing changed
+      case 'resumeAt':
+        this.resumeAt(c);
+        break;
       default:
         // checkCommand only lets known commands through, and the compiler checks every one is handled here.
         c satisfies never;
@@ -784,6 +790,81 @@ export class Show {
     }
     this.out.push({ type: 'drumReset', ids: [...this.queue] });
     this.prefetch();
+  }
+
+  /**
+   * Plan B (`resumeAt`): resume a round by hand on a page with no journal. The seeded Shuffle rebuilds the
+   * round's Queue from its seed and the cards in play; the songs up to `position` count from now. A Queue
+   * that doesn't match what the token says (draw number, song at the position) is refused, never resumed.
+   */
+  resumeAt(c: CommandOf<'resumeAt'>) {
+    if (this.transition || this.suspense || this.pending || this.check) return this.reject(c.reqId, c.cmd, 'busy');
+    const cards = validCards(this.allCards, this.cardsInPlay, c.kind);
+    const drawn = tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed: c.shuffleSeed, maxAttempts: FLOW.shuffleMaxAttempts });
+    const lineFrom = c.lineConfirmedFrom ?? null;
+    const refuse = (detail: string) => this.reject(c.reqId, c.cmd, 'cannotResume', detail);
+    if (c.shuffleAttempts != null && drawn.attempts !== c.shuffleAttempts) {
+      return refuse(`the Shuffle took draw ${drawn.attempts} here, ${c.shuffleAttempts} there: are the cards in play the same?`);
+    }
+    if (c.position >= drawn.queue.length) return refuse(`position ${c.position} is past the Queue (${drawn.queue.length} songs)`);
+    if (c.lastSongId != null && (c.position < 0 || drawn.queue[c.position] !== c.lastSongId)) {
+      return refuse(`song ${c.lastSongId} is not at position ${c.position} of this Queue: check the seed and the position`);
+    }
+    if (lineFrom != null && lineFrom > c.position + 1) return refuse(`the Line cannot be confirmed from position ${lineFrom}, after the last counted song`);
+    this.resetLive();
+    this.queue = drawn.queue;
+    this.shuffleSeed = drawn.seed;
+    this.shuffleAttempts = drawn.attempts;
+    this.position = c.position;
+    const now = this.env.now();
+    const nowMs = this.env.nowMs();
+    this.landings = this.queue.slice(0, c.position + 1).map((songId, position) => ({ songId, position, atMs: nowMs, undone: false, T: now }));
+    this.claims = [];
+    this.check = null;
+    this.batch = null;
+    this.autoCheck = false;
+    this.celebration = null;
+    this.winningHook = null;
+    this.interval = null;
+    this.intro = null;
+    this.shuffle = null;
+    this.round = { number: c.round, kind: c.kind, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace }), lineConfirmed: lineFrom != null };
+    this.phaseModel = { kind: lineFrom != null ? 'bingo' : 'line', start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
+    this.rebuildPhase();
+    this.updateNudge();
+    this.journal({
+      kind: 'round.resumed', round: c.round, roundKind: c.kind, queue: [...this.queue], phaseSeed: this.phaseModel.seed,
+      startedAtMs: this.round.startedAtMs, targetEndMs: this.round.targetEndMs, settings: this.journalSettings(),
+      shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, position: c.position, lineConfirmedFrom: lineFrom,
+    }, nowMs);
+    // The journal entry already puts the Game in `play`; the projector still hears about the scene.
+    if (this.scene !== 'play') {
+      const previous = this.scene;
+      this.scene = 'play';
+      this.sceneSinceMs = nowMs;
+      this.emit({ type: 'scene.changed', scene: 'play', previous, atMs: nowMs });
+    }
+    const last = c.position >= 0 ? this.queue[c.position] : undefined;
+    const remaining = this.queue.slice(c.position + 1);
+    this.out.push(last == null ? { type: 'drumReset', ids: remaining } : { type: 'drumReset', ids: [last, ...remaining], selectId: last });
+    this.prefetch();
+    // The music never stops by accident: Hold music until the presenters press Next.
+    if (this.unlocked) this.enterHold('music', { music: true });
+  }
+
+  /** The state's `resume`: how to resume this round by hand elsewhere (null for a fixed test Queue). */
+  resumeToken(): ResumeToken | null {
+    if (this.fixedQueue?.length) return null;
+    const point = {
+      round: this.round.number,
+      kind: this.round.kind,
+      shuffleSeed: this.shuffleSeed,
+      shuffleAttempts: this.shuffleAttempts,
+      position: this.position,
+      lastSongId: this.position >= 0 ? this.queue[this.position] ?? null : null,
+      lineConfirmedFrom: this.round.lineConfirmed ? this.phaseModel.start : null,
+    };
+    return { ...point, text: formatResumeToken(point) };
   }
 
   /**
@@ -2032,6 +2113,7 @@ export class Show {
       celebration: this.celebration ? { ...this.celebration, cardIds: [...this.celebration.cardIds] } : null,
       interval: this.interval ? { ...this.interval } : null,
       winners: this.winners.map((w) => ({ ...w })),
+      resume: this.resumeToken(),
     };
   }
 

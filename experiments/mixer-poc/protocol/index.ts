@@ -6,5 +6,6 @@ export * from './commands.ts';
 export * from './events.ts';
 export * from './journal.ts';
 export * from './scenes.ts';
+export * from './resume.ts';
 export * from './plan.ts';
 export * from './public.ts';

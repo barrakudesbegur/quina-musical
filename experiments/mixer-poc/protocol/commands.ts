@@ -81,6 +81,21 @@ export const COMMANDS = Object.freeze({
   /** Ask for the current Game's journal from entry `fromSeq` on (all of it without `fromSeq`); answered by a
    * `journal.entries` event. The cloud link uses it to fill in entries it missed. */
   getJournal: { fromSeq: { type: 'integer', optional: true, min: 1 } },
+  /**
+   * Plan B: resume a round by hand on a show page with no journal (a replacement laptop, offline). The seeded
+   * Shuffle rebuilds the round's Queue from its seed; the fields are the state's `resume` token. With
+   * `shuffleAttempts` or `lastSongId`, a Queue that doesn't match (other cards in play, a mistyped seed or
+   * position) is refused as `cannotResume` instead of resumed wrongly.
+   */
+  resumeAt: {
+    round: { type: 'integer', min: 1, max: 20 },
+    kind: { type: 'string', oneOf: ['normal', 'special'] },
+    shuffleSeed: { type: 'integer', min: 0, max: 4294967295 },
+    position: { type: 'integer', min: -1, max: 999 },
+    lineConfirmedFrom: { type: 'integer', optional: true, nullable: true, min: 0, max: 999 },
+    lastSongId: { type: 'integer', optional: true, nullable: true, min: 1 },
+    shuffleAttempts: { type: 'integer', optional: true, nullable: true, min: 0 },
+  },
 
   // ---- the show flow (docs/protocol.md › Scenes) ----
   /** Introduce the next round (scene `roundStart`): its name and prizes on screen, Interval music on. No
