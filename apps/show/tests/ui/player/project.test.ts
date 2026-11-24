@@ -226,7 +226,7 @@ test('the plan goes out as the public plan: locked rounds without prizes, never 
   assert.ok(out.plan);
   assert.deepEqual(out.plan.rounds.map((r) => r.revealed), [true, true, true, false, false, false, false, false]);
   assert.equal(out.plan.rounds[2].bingo?.[0].title, '[Premi de quina 3]');
-  assert.deepEqual(Object.keys(out.plan.rounds[3]).sort(), ['kind', 'number', 'revealed'], 'a locked round: only its skeleton');
+  assert.deepEqual(Object.keys(out.plan.rounds[3]).sort(), ['cardType', 'kind', 'number', 'revealed'], 'a locked round: only its skeleton (its card type is printed, never secret)');
   const json = JSON.stringify(out);
   assert.ok(!json.includes('cheatSheet') && !json.includes(SAMPLE_PLAN.cheatSheet.claimRules[0]));
   assert.ok(!json.includes('Premi de línia 4'), "a locked round's prizes never leave");
