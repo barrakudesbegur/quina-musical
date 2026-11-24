@@ -175,6 +175,10 @@ _Avoid_: Pause, low volume
 A state in which no new song can land and the current song keeps playing at full volume, looping a phrase if needed, for dancing or crowd moments (labelled "Aguanta" on the console).
 _Avoid_: Freeze, loop mode
 
+**Pause**:
+A long break in the middle of a round: no song lands, the interval music plays instead of the current song, and the projector and phones show a pause screen. It is the second level of Hold (labelled "Pausa").
+_Avoid_: Break, interval (for this)
+
 **Hold music**:
 Looping background tracks, such as a video-game waiting tune, that take over during a long hold.
 _Avoid_: Background music, bed

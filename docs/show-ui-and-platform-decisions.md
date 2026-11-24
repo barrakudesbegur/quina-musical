@@ -58,13 +58,18 @@ These override the sections below where they differ.
   | **A** | Següent |
   | **B** (hold) | Aguanta while held; letting go returns to normal |
   | **B** (hold) plus **3 strong shakes** | Turns into Suspens; letting go of B lands the song. Needs a deliberate shake pattern so dancing doesn't trigger it, and a distinct rumble confirms it. The console keeps its own Suspens button as a fallback |
-  | **−** or **+** | Parlem on/off |
+  | **−** or **+** | Tap: Parlem on/off. Hold: **Pausa** (Pause), and the interval music plays |
   | **1** or **2** (hold 1.5 s) | Enrere |
   | **HOME** | Auto-advance on/off, with different rumbles for on and off |
   | **D-pad** | 4 configurable effects |
   | Claim | Console only |
 
   Every action gets a short rumble. An accidental A is safe: Parlem or Aguanta cancel a running transition. The console has a "Comandament" button that opens a drawing of the remote with each action; it opens by itself when a remote connects and is also printed on the cheat sheet.
+- **Pause (Pausa), a second level of Parlem:** for a very long break mid-round, so the current song doesn't loop for ages.
+  - No song lands, the interval music plays, and the projector and player app show a pause screen.
+  - On the console, holding Parlem enters Pausa; on the Wii, holding − or +.
+  - **Two levels per button:** Parlem → Pausa, and Aguanta → Suspens (the Wii's shake, or a hold on the console). The console shows each relationship visually.
+  - **The console's bottom row:** Enrere takes about a quarter to a third of the width, with a very short "hold it" hint inside the button; Comprovar cartró takes the rest.
 - **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 - **Resolved from the open questions:**
   - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.
