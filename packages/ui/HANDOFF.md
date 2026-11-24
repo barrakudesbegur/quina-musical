@@ -57,6 +57,10 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 | Projector to the latest boards: the night's card types before the Game, the compact Check plate, the card-type step (`check-type`), the red ✗ with beams | `cc58d92` |
 | Console to the latest boards: two-level buttons (Parlem → Pausa, Aguanta → Suspens), the ring's states, the new menu and tabs | `2133faf` |
 | Wii Remote: report parsing, the deliberate shake and the user's mapping; − or + tapped is Parlem, held is Pausa; A follows the console's default action, with badges on the controls; the Comandament dialog; the remote's status shared between consoles (`remote.status`) | `357cba4`, `b9825f1`, `c4632f8`, `35573a0` |
+| **2026-11-25:** card type per round on every screen: steps B and C, and the protocol's card ranges | `5579442`, `b717bc6`, `360523f` |
+| **2026-11-25:** the Desgraciat round's spec, canvas boards (v50) and the keys that make the screens compile with its protocol | `4f350ab`, `3690a53`, `b47a633` |
+| **2026-11-25, the docs audit:** the motion spec; the player app (3 tabs plus the ☰ menu, no winning card numbers, offline keeps the screen, Pausa in the drum's place, the add-card leave guard; "Com es juga" removed, cards written "#123"); the console's Efectes pads with icons; "Quina Especial" and "Comprovar cartró" | `974f95f`, `c1dbb5c`, `66faf9d`, `b47a633` |
+| **2026-11-25:** the Wii Remote's status message comes from `@quina/protocol` | `71e618e` |
 
 ## In progress
 
@@ -117,19 +121,10 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    - Admin's kind select has no 'desgraciat' option;
    - `roundsByCardType` counts a Desgraciat round as a regular one;
    - `roundIntroFields` leaves out a 'desgraciat' kind until the commands accept it (step C).
-2. The audit fixes (item 4 below).
-3. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
+2. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
    Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
-4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`974f95f`); the code isn't:
-   - **Phones never show winning card numbers.** Remove `WinnerNumbers` from `Celebration.svelte`, `PrizeLines.svelte` and `NowTab.svelte`. Someone else's win shows "Línia!"/"Quina!" and the prize; the player's own confirmed card shows "La teva línia!" (ANIMATIONS.md `celebrate`, boards "App · celebració").
-   - **Offline keeps the normal screen:** a slate strip at the top and the screen greyed, with everything still usable, instead of `SceneOverlay`'s full-screen notice (board "App · sense connexió"). **Pausa** shows the meditating nino in the drum's place, with Historial and the cards untouched (board "App · pausa tècnica").
-   - **The decided 3 tabs:** Ara (the drum plus a Historial | Cartrons switch, remembered per device; Cartrons by default for players following cards), Premis and Horari, plus the menu sheet. The code still has 5 tabs and says "Programa": rename it "Horari". Build the home so tabs and drawers are only a container swap, because the drawers layout may replace the tabs.
-   - ~~Console Efectes pads with icons~~: done (`66faf9d`). `apps/console/sound-icons.ts` holds the board's 20 icons as data, with each tone mapped to a token in console.css. The pads are paper in both themes, and each name is the pad's tooltip and accessible name.
-   - **Add-card by number asks before leaving** when a number was typed (not built).
-   - **Round icons:** the Especial's star exists. The Desgraciat's sad face comes with its screens.
-   - "Quina Especial" (capital E) and the console's "Comprovar cartró" go in with the Desgraciat compile commit.
-5. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
-6. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+3. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+4. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
