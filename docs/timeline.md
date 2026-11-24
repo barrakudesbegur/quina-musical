@@ -31,9 +31,10 @@ Rehearsals use the cloud's free daily quota too, so never hold one on the day of
 ## The user's tasks, by date
 
 - **By 30 Nov:**
-  - the 4 design choices on the canvas (prizes corner icon, the effect when the landed song is on your card, the Efectes pads, the player drawers);
+  - the 3 design choices on the canvas (prizes corner icon, the effect when the landed song is on your card, the player drawers);
+  - how many songs the playlist will have (the cloud's free storage holds about 100 in today's format);
   - a listening pass on the new sound;
-  - the card's title, colour and prices;
+  - the card's title, colour, card types and prices;
   - upload the logo library in Admin.
 - **1 Dec:** the final playlist.
 - **2–3 Dec:** swap any unusable songs; proof and send the cards to print.

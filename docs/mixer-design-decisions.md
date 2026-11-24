@@ -2,7 +2,17 @@
 
 These were agreed with the user in a design interview. They override the build brief in `docs/research/reports/Bingo DJ mixer research.md` wherever the two conflict. The terms follow [GLOSSARY.md](../GLOSSARY.md), and the lasting decisions are in [docs/adr](./adr).
 
+> **A dated record.** For how the Quina works today, read [how-the-quina-works.md](how-the-quina-works.md). It applies every later decision, and it wins where this record differs. Parts below are superseded: Signatures, Decoys, Suspense, the possible-winners list (now the console's Futur tab), the Interval showing next prizes (prizes now wait for the round's intro), the proof-of-concept scope, and cards in play without a card type per round.
+
 > **Updated 2026-11-24.** [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) covers the screens, the player app and hosting, and overrides this document where they differ. In particular: there is one shared tablet, no router at the venue, hosting follows ADR 0003, and the "later" items below are now in the UI/UX session's scope.
+
+## Changes after the first listen (2026-11-24)
+
+The user's first listen to the transitions. These override the sections below, together with the "Changes" section of [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) (intensity range, Signatures, Suspense).
+- **On the phrase.** "They feel like they end at any moment and start at any moment." The playing song leaves at the end of a 4- or 8-bar phrase, and the next one lands on its downbeat. A presenter's Next starts the Spin at once, and the landing waits up to about 11 s for a phrase boundary. A test keeps over 90% of landings on a phrase.
+- **The orchestra hit is rare.** Impacts are rare early and absent from many landings. The orchestra hit only comes late or in the final Phase, with a cooldown.
+- **Sudden vocals.** A song whose vocals start suddenly gets a quick, clean transition straight into the voice, optionally with its Signature teased just before.
+- **Vocals across songs.** When both songs have vocals, they can feel continuous: a line of the outgoing song answered by a line of the incoming one on the downbeat (call and response).
 
 ## The goal is a great night, not only great mixing
 

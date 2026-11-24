@@ -4,6 +4,8 @@ App to use during the musical bingo.
 
 Use it here: <https://quina.barrakudesbegur.org>
 
+New here? Read [How the Quina works](docs/how-the-quina-works.md) first: one night of the Quina, start to finish, as it works now.
+
 ## Repository layout
 
 This year's app (2026) and last year's (2025) live side by side:

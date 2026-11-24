@@ -2,6 +2,8 @@
 
 Agreed with the user in a second design interview. This covers the screens left out of the mixer proof of concept, the new player app, and hosting. It builds on [mixer-design-decisions.md](mixer-design-decisions.md) and overrides it where they differ. Terms follow [GLOSSARY.md](../GLOSSARY.md); lasting decisions are in [docs/adr](adr).
 
+> **A dated record.** For how the Quina works today, read [how-the-quina-works.md](how-the-quina-works.md). It applies every change below, and it wins where this record differs. The sections after "Changes" are the interview as first agreed, and parts are superseded: the player's 5 tabs, the grace rule and the "1 song away" banner, how-to-play text, winning card numbers, prizes in the Interval, wiping data on a new Game, WebP images, the console's old buttons and tabs, "normal or special" rounds in Admin, resuming an offline laptop by hand, and "Who builds what" (see [team.md](team.md) for the roles).
+
 ## Changes after the first listen and review (2026-11-24, later)
 
 These override the sections below where they differ.
@@ -23,16 +25,16 @@ These override the sections below where they differ.
 - **The player app has 3 tabs** (decided 2026-11-24):
   - **Ara:** the drum on top, then a Historial | Cartrons switch, remembered per device. Cartrons is the default for players following cards, with the drum shrunk to a strip.
   - **Premis**.
-  - **Programa**.
+  - **Horari** (the schedule; first called "Programa").
 
-  A menu, shown as its own screen, holds how to play, the player's cards, sounds, last year's card and "Esborrar dades". The history includes the song playing now.
+  A menu, shown as its own screen, holds the player's cards, sounds, last year's card and "Esborrar dades". There's no how-to-play entry. The history includes the song playing now.
 - **Ten card icons:** each followed card gets its own colour and shape, always corn first (yellow), then cyan, red, green, pink (heart), orange, purple (grapes), white, black (top hat) and brown (the Tió).
 - **Times show in the am/pm format,** at the user's request (one setting, easy to change back).
 - **Names on screen:** the schedule screen is "Horari" (not "Programa"). The special round is "Quina Especial", without a number; numbering appears only as "Quina X de Y". Card numbers are written "#123".
 - **The event's name is set per edition in Admin** (this year "Quina Quina 3").
 - **Prizes come in bundles:** each Line and Quina has many prizes, usually with one or two headline ones. Screens show the bundle with the headline prizes first, never a single prize.
 - **Prize secrecy:** a round's bundle is revealed at its **intro**, the moment the presenters present the round. It then appears on the projector and phones at once. Until then it is locked everywhere, so the Interval doesn't show the next round's prizes. Future rounds stay locked, game-style. Before the night, only round 1's bundle is visible. An "everything secret" option exists for organizers. The cloud enforces it, so locked prizes never reach the public feed.
-- **Card types come from the card generation** (`cards.json`: type, colour, title, price), not from Admin. Admin only chooses which card type each round uses: normal for regular rounds and especial for the Quina Especial; the Desgraciat uses whichever type Admin picks.
+- **Card types come from the card generation** (`cards.json` and `card-types.json`: type, colour, title, price), not from Admin. Admin only chooses which card type each round uses: normal for regular rounds and especial for the Quina Especial; the Desgraciat uses whichever type Admin picks.
 - **The Desgraciat round:**
   - a card is out as soon as any of its songs lands;
   - the console privately shows the cards still standing, and the presenters call the winner (unsold cards count too);
@@ -40,7 +42,16 @@ These override the sections below where they differ.
   - its Check shows that none of the card's songs landed;
   - the Phase and Heat climb as fewer cards stand;
   - phones show "Dempeus" or "Assegut" per card;
-  - one per night, and it can be moved.
+  - one per night, and it can be moved;
+  - (2026-11-25, agreed by the sessions within these rules) the standing cards are the round's cards in play, so unsold cards in an entered range count too. Auto-advance stops at one card standing. There's no Line: the only prize is the last standing card's bundle ("Premi de l'últim dempeus"), celebrated as "DEMPEUS!". A standing Check stops at the first landed song (the card has fallen);
+  - **Still open:** what the presenters do when the room has nobody standing, or the system's last card is unsold. Default: they decide, and the console lists the cards that fell on the latest landing.
+- **Round icons:** the Quina Especial uses a star and the Desgraciat a sad face.
+- **The Efectes pads are icons, not words.** The word version stays as a separate board.
+- **Phones offline** keep their normal screens, visibly marked as offline, rather than a full-screen notice.
+- **The console header has no device label** ("Tauleta"); the device's name is in the menu.
+- **Adding a card by number asks before leaving** when a number was typed.
+- **Late claims** (another card completed earlier and wasn't claimed): the user would not give the prize only to the late claimer, and leans towards sharing it. The organizers' team settles the rule; until then it's decided on the spot, helped by the console's "complete since song N".
+- **Pending the user's confirmation:** the phones' card-stacking scroll (cards stack as you scroll). It needs its ANIMATIONS.md entry before it's built.
 - **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (from the card generation), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
 - **Winning card numbers are not shown** on the projector or phones ("people don't care who won unless it's them"). They aren't secret: the Check shows the card being checked. So the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards ("La teva línia!"). There's also no QR on the projector during the Interval.
 - **A Check also fails for a card of the wrong type for the round.** It's shown as its own reason.

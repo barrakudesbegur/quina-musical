@@ -26,12 +26,27 @@ _Avoid_: Quina especial (outside the UI)
 A round played in reverse: everyone stands, a card is out as soon as any of its songs lands, and the last card standing wins. One per game.
 _Avoid_: Reverse round, elimination round
 
+**Fallen**:
+A card knocked out of the Desgraciat round: one of its songs has landed. Its player sits down ("Assegut" on phones, against "Dempeus" for a card still standing).
+
+**Last standing**:
+The Desgraciat round's only win: the one card in play none of whose songs has landed. Its prize is the round's bundle ("Premi de l'últim dempeus"), and its Celebration reads "DEMPEUS!".
+_Avoid_: Survivor, reverse bingo
+
+**Intro**:
+The moment a round is presented, when the presenters press "Comença la quina": the projector shows the round and its prize bundles, and the same bundles unlock on phones. The Shuffle comes after it, as its own step.
+_Avoid_: Round start
+
 **Card**:
 A printed sheet of 12 songs in 3 lines of 4, identified by its number (shown as "#123"). A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
 _Avoid_: Cartró (outside the UI), ticket
 
 **Special card**:
 A card that is only valid in the special round.
+
+**Card type**:
+A kind of printed card, defined by the card generation (`card-types.json`): a name, a pastel colour, a printed title and a price. This year: normal and especial. Each round plays one card type, chosen in Admin, and only cards of that type are valid in it.
+_Avoid_: Card colour, card kind
 
 **Cards in play**:
 The cards sold for the game, entered once. Each round only counts the ones valid for it: normal cards in regular rounds, special cards in the special round.

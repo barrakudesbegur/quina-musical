@@ -5,7 +5,7 @@ The venue is a pop-up tent with no Wi-Fi and no router, only 5G and phone hotspo
 The laptop that drives the projector and the PA still owns live playback. It reports every landing to the cloud and keeps its own journal, so:
 
 - If the laptop fails, any prepared device resumes the Game from the cloud.
-- If the internet or the cloud fails, the laptop carries on alone and uploads its journal when the connection returns. If it was restarted while offline, an admin resumes it by hand (round and song).
+- If the internet or the cloud fails, the laptop carries on alone and uploads its journal when the connection returns. If it was restarted while offline, an admin resumes it by hand (round and song). (Since 2026-11-24 this uses the round's resume code, noted at each Shuffle.)
 
 ## Considered options
 
