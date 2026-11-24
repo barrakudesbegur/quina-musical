@@ -114,6 +114,19 @@ export interface PossibleWinners {
 }
 
 /**
+ * PRIVATE (console only; never the stage, the feed or phones): the Desgraciat round's cards still standing. They are
+ * the round's valid cards in play (its card type within the ranges, sold or not: the ranges can't tell) with none of
+ * their songs counted yet.
+ */
+export interface StandingInfo {
+  count: number;
+  /** Sorted; null when more than STANDING_LIST_MAX stand. */
+  cardIds: number[] | null;
+}
+/** The most standing cards `StandingInfo.cardIds` lists. */
+export const STANDING_LIST_MAX = 60;
+
+/**
  * PRIVATE (the console's Futur tab, hidden until revealed): what the round's valid cards in play (sold or not)
  * and the known Queue say about the wins to come. Never in the public feed, on the stage or on phones.
  */
@@ -128,6 +141,12 @@ export interface FutureInfo {
   toBingo: number[];
   /** Valid cards by their counted (landed) songs: index = songs marked (0–12), value = cards. */
   markCounts: number[];
+  /** Desgraciat round: the Queue index whose landing leaves one card standing; null when none does, or in another
+   * round. (`lineAt` and `bingoAt` are null there, `toLine` and `toBingo` empty.) Optional in the type only. */
+  lastStandingAt?: number | null;
+  /** Desgraciat round: the standing count after each of the next landings, up to the one that leaves one card
+   * (included); [] in another round. Optional in the type only. */
+  standingCurve?: number[];
 }
 
 export interface PaceInfo {
@@ -218,7 +237,7 @@ export interface CheckInfo {
   kind: WinKind;
   outcome: CheckOutcome;
   /** Line: the row played (the completed row, else the row with most landed songs, top row on a tie).
-   * Bingo: null (all 12 songs). */
+   * Bingo and standing: null (all 12 songs, card order; a standing Check stops on the first landed one). */
   row: number | null;
   /** Line: the other completed rows, which the console mentions. */
   otherRows: number[];
@@ -239,7 +258,7 @@ export interface CelebrationInfo {
   cardIds: number[];
   winningSongId: number | null;
   sinceMs: number;
-  /** Default: Line → 'winningSong', Bingo → 'victory'. */
+  /** Default: Line → 'winningSong', Bingo and standing → 'victory'. */
   music: CelebrationMusic;
 }
 
@@ -334,6 +353,8 @@ export interface ShowState {
   possibleWinners: PossibleWinners;
   /** PRIVATE: the console's Futur tab; absent without cards in play or from an older engine. */
   future?: FutureInfo | null;
+  /** PRIVATE (console only): in a Desgraciat round, the cards still standing; null otherwise or without cards in play. */
+  standing?: StandingInfo | null;
   /** The rounds whose prizes were revealed, and how (the journal's `prizes.revealed`; plan.ts revealedRounds). */
   prizes?: { revealed: { round: number; by: 'presenters' | 'intro' }[] };
   pace: PaceInfo;

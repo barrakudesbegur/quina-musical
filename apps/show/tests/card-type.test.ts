@@ -112,7 +112,7 @@ test('resume by hand: the token carries a non-default type, and the fresh page r
   assert.deepEqual(parseResumeToken(token.text), fields);
 
   const b = setup({ seed: 77, cards: allCards, cardsInPlay: CARDS, settings: { autoAdvance: false } });
-  assert.deepEqual(rejected(b.dispatch(makeCommand('resumeAt', fields))), []);
+  assert.deepEqual(rejected(b.dispatch(makeCommand('resumeAt', { ...fields, kind: 'normal' }))), []);
   assert.deepEqual(b.show.queue, a.show.queue);
   assert.equal(b.show.round.cardType, 'especial');
   assert.equal(b.show.snapshot().resume?.text, token.text);

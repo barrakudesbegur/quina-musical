@@ -17,8 +17,10 @@ export type ShowStatus = 'locked' | 'idle' | 'playing' | 'transition' | 'hold';
 /** Why the show is in a Hold. `claim`: a Claim is being checked (also through the Celebration);
  * `checkFailed`: every claim of the last Check was invalid (error Hold music until Resume). */
 export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed';
-/** A normal round, or the special round (special cards only). */
-export type RoundKind = 'normal' | 'special';
+/** A normal round, the special round, or the Desgraciat round (played in reverse: the last card standing wins). */
+export type RoundKind = 'normal' | 'special' | 'desgraciat';
+export const ROUND_KINDS = ['normal', 'special', 'desgraciat'] as const satisfies readonly RoundKind[];
+export const isRoundKind = (value: unknown): value is RoundKind => typeof value === 'string' && (ROUND_KINDS as readonly string[]).includes(value);
 
 /**
  * A printed card type's id, as in apps/cards' card-types.json and each card's `type` in cards.json ('normal',
@@ -27,14 +29,16 @@ export type RoundKind = 'normal' | 'special';
 export const CARD_TYPE_ID_RE = /^[a-z][a-z0-9]{0,23}$/;
 export const isCardTypeId = (value: unknown): value is string => typeof value === 'string' && CARD_TYPE_ID_RE.test(value);
 /** The card type a round plays when nothing says otherwise: normal cards in normal rounds, especial in the special one. */
-export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial' });
+export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial', desgraciat: 'normal' });
 /** The card type a round of this kind plays unless the plan picks another (an older journal or plan has none). */
 export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[kind] ?? DEFAULT_CARD_TYPE.normal;
-/** What the round's Phase is climbing towards. */
-export type ClimbTarget = 'line' | 'bingo';
-/** What a Claim is for, and what a Winner won: a Line or the Bingo. */
+/** What the round's Phase is climbing towards: the Line, then the Bingo; in the Desgraciat round, the last card standing. */
+export type ClimbTarget = 'line' | 'bingo' | 'standing';
+/** What a Claim is for, and what a Winner won: a Line, the Bingo, or (Desgraciat round) being the last card standing. */
 export type WinKind = ClimbTarget;
-export const WIN_KINDS = ['line', 'bingo'] as const satisfies readonly WinKind[];
+export const WIN_KINDS = ['line', 'bingo', 'standing'] as const satisfies readonly WinKind[];
+/** The kinds a round of this kind can be won by: a Desgraciat round only by the last card standing. */
+export const winKindsOf = (round: RoundKind): readonly WinKind[] => (round === 'desgraciat' ? ['standing'] : ['line', 'bingo']);
 
 /**
  * Where the show is in the Game (the show flow), on top of the audio `ShowStatus`. A Hold while talking is
@@ -48,8 +52,9 @@ export const isShowScene = (value: unknown): value is ShowScene =>
 
 /** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
 export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'valid' | 'invalid';
-/** What the engine found. A presenter still always decides. */
-export type CheckOutcome = 'complete' | 'incomplete' | 'unknownCard' | 'wrongType';
+/** What the engine found. A presenter still always decides. `fallen`: a 'standing' claim for a card one of whose
+ * songs landed (the Check stops on it); a card still standing is `complete`. */
+export type CheckOutcome = 'complete' | 'incomplete' | 'fallen' | 'unknownCard' | 'wrongType';
 /** Only a warning: the card is not among the cards in play. */
 export type ClaimWarning = 'notSold';
 /** The Celebration's music, which the presenters may change: the Winning song's hook looped, the victory

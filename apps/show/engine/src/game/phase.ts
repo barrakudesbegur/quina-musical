@@ -18,6 +18,9 @@
 //    never lower than mid. final is never more than 2 songs before a completion.
 // 4. Heat (placeholder, 0..1) sits in a band per phase, nudged by the public chance and seeded noise.
 //
+// The Desgraciat round has its own model (standingPlan, at the end): its Phase follows the count of cards still
+// standing, which the room sees anyway, so it gives nothing away and needs no blur.
+//
 // The engine calls phasePlan({ kind: 'line', startPosition: 0, … }) at the start of a round, and again with
 // kind 'bingo' and startPosition = the next queue index once a Line is confirmed (the reset). It reads
 // plan[position - startPosition] at each landing; presenter overrides stay in the engine. Draw the seed
@@ -33,12 +36,13 @@
 //   cardWinChance(missingByLine, kind, within, remaining) → 0..1 for one card
 //   thresholdScale(kind, cardsInPlayCount, config), midThresholdFor(kind, cardsInPlayCount, config)
 
-import { cardSongIds, completions, queuePositions } from './cards.ts';
+import { cardSongIds, completions, queuePositions, standingCourse } from './cards.ts';
 import { seededRandom } from '../rng.ts';
 import { HEAT_BANDS, type PhaseName } from '@quina/protocol';
-import type { Card, WinKind } from './cards.ts';
+import type { Card, CompletionKind } from './cards.ts';
 
-export type { WinKind } from './cards.ts';
+/** What the Line/Bingo model climbs towards (the Desgraciat round has its own: standingPlan). */
+export type WinKind = CompletionKind;
 
 /** The Phase: how close the round is to a winner. */
 export type Phase = PhaseName;
@@ -47,7 +51,7 @@ export type Phase = PhaseName;
  * before late), 'false-alarm', 'pre-final' (late before the expected win), 'final', 'unclaimed' (after a
  * completion nobody claimed).
  */
-export type PhaseReason = 'quiet' | 'chance' | 'ramp' | 'false-alarm' | 'pre-final' | 'final' | 'unclaimed';
+export type PhaseReason = 'quiet' | 'chance' | 'ramp' | 'false-alarm' | 'pre-final' | 'final' | 'unclaimed' | 'standing';
 /** The Phase and Heat at one queue position. */
 export interface PhaseStep {
   position: number;
@@ -425,4 +429,77 @@ export function describePlan(steps: ReadonlyArray<PhaseStep>): PlanSummary {
     out.falseAlarms.push({ from, to: p });
   }
   return out;
+}
+
+// --------------------------------------------------------------------------------- the Desgraciat round
+
+/** The 'standing' model's tunables: the standing counts at which each Phase starts (tests/support/desgraciat.ts). */
+export interface StandingModelConfig {
+  /** mid from this many cards standing (never more than half the round's cards, so a round starts early). */
+  mid: number;
+  late: number;
+  final: number;
+  heatBands: Readonly<Record<Phase, readonly [number, number]>>;
+  heatJitter: number;
+  heatSmoothing: number;
+}
+
+/**
+ * Tuned by simulation against cards.json (node apps/show/tests/support/desgraciat.ts; 150–300 normal cards, the
+ * win after 19–30 songs). Songs before the win, p10/p50/p90: ≤15 standing 6/10/14, ≤6 3/6/10, ≤3 1/3/6 (the normal
+ * model: mid ~8–10, late 3–8, final 1–3). Only about 4% of wins come with 4 or more cards falling together, so
+ * the winning landing is in final ~96% of the time and late otherwise.
+ */
+export const STANDING_MODEL_DEFAULTS: Readonly<StandingModelConfig> = Object.freeze({
+  mid: 15,
+  late: 6,
+  final: 3,
+  heatBands: HEAT_BANDS,
+  heatJitter: 0.04,
+  heatSmoothing: 0.6,
+});
+
+export interface StandingPlanOptions {
+  /** The round's valid cards in play. */
+  cards: ReadonlyArray<Card>;
+  queue: ReadonlyArray<number>;
+  startPosition?: number;
+  seed?: number;
+  random?: () => number;
+  config?: Partial<StandingModelConfig>;
+}
+
+/**
+ * The Desgraciat round's Phase and Heat for every queue position from `startPosition` on: the Phase from the cards
+ * still standing as that song lands (the room's count before it), the Heat rising within its Phase's band as the
+ * count falls (log scale). `expectedWinAt` is where one card is left; `completes` how many cards the song knocks out.
+ */
+export function standingPlan({ cards, queue, startPosition = 0, seed = 0, random, config }: StandingPlanOptions): PhaseStep[] {
+  const cfg = { ...STANDING_MODEL_DEFAULTS, ...Object.fromEntries(Object.entries(config ?? {}).filter(([, v]) => v !== undefined)) } as StandingModelConfig;
+  const rand = random ?? seededRandom(seed);
+  const start = Math.max(0, Math.min(queue.length, Math.floor(startPosition)));
+  const course = standingCourse(cards, queue);
+  const total = cards.length;
+  const mid = Math.min(cfg.mid, Math.ceil(total / 2));
+  // [Phase, the count it starts at, the count its band ends at]
+  const bands: [Phase, number, number][] = [['final', cfg.final, 1], ['late', cfg.late, cfg.final], ['mid', mid, cfg.late], ['early', total, mid]];
+  const steps: PhaseStep[] = [];
+  let prevPhase: Phase | null = null;
+  let prevHeat = 0;
+  for (let p = start; p < queue.length; p++) {
+    const before = p === 0 ? total : course.standingAfter[p - 1];
+    const [phase, from, to] = bands.find(([, at]) => before <= at) ?? bands[3];
+    const [lo, hi] = cfg.heatBands[phase];
+    const span = Math.log(Math.max(from, 1)) - Math.log(Math.max(to, 1));
+    const u = span > 0 ? clamp01((Math.log(Math.max(from, 1)) - Math.log(Math.max(before, 1))) / span) : 1;
+    const raw = lo + (hi - lo) * u + (rand() * 2 - 1) * cfg.heatJitter;
+    const heat = phase === prevPhase ? prevHeat + cfg.heatSmoothing * (raw - prevHeat) : raw;
+    prevPhase = phase;
+    prevHeat = Math.round(clamp01(heat) * 1000) / 1000;
+    steps.push({
+      position: p, phase, heat: prevHeat, expectedWinAt: course.lastStandingAt,
+      chance: total ? 1 - before / total : 0, completes: before - course.standingAfter[p], reason: 'standing',
+    });
+  }
+  return steps;
 }

@@ -6,7 +6,6 @@ import {
   PROTOCOL_VERSION,
   PACE_LIMITS_SEC,
   SOUND_NAMES,
-  WIN_KINDS,
   CELEBRATION_MUSIC,
   CARD_TYPE_ID_RE,
   isPhaseName,
@@ -134,7 +133,8 @@ export const COMMANDS = Object.freeze({
    * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
   claim: {
     cardId: { type: 'integer', min: 1, max: 9999 },
-    kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
+    // 'standing' opens with the Desgraciat round (once the cloud's journal check accepts it).
+    kind: { type: 'string', optional: true, oneOf: ['line', 'bingo'] },
   },
   /** (Re)start a Claim's Check: a re-check, or another order. */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },

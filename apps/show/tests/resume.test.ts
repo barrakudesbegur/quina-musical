@@ -28,7 +28,8 @@ const tokenOf = (h: Harness): ResumeToken => {
   assert.ok(token, 'the state carries a resume token');
   return token;
 };
-const fieldsOf = ({ text: _text, ...point }: ResumeToken): CommandFields['resumeAt'] => point;
+// The command takes the Desgraciat round's kind only from step C of that round (once the cloud accepts it).
+const fieldsOf = ({ text: _text, kind, ...point }: ResumeToken): CommandFields['resumeAt'] => ({ ...point, kind: kind as CommandFields['resumeAt']['kind'] });
 
 test('seed codes and resume tokens survive paper: 7 characters, forgiving O/0 and I/L/1, every field round-trips', () => {
   for (const seed of [0, 1, 31, 32, 0xdeadbeef, 0xffffffff, 123456789]) {

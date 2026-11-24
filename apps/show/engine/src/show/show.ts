@@ -58,7 +58,7 @@ import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt } 
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
-import { phasePlan } from '../game/phase.ts';
+import { phasePlan, standingPlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
 import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
@@ -1800,9 +1800,9 @@ export class Show {
   rebuildPhase() {
     const m = this.phaseModel;
     m.valid = validCards(this.allCards, this.cardsInPlay, this.round.cardType);
-    m.plan = m.valid.length
-      ? phasePlan({ cards: m.valid, queue: this.queue, kind: m.kind, startPosition: m.start, seed: m.seed, cardsInPlayCount: m.valid.length })
-      : null;
+    if (!m.valid.length) m.plan = null;
+    else if (m.kind === 'standing') m.plan = standingPlan({ cards: m.valid, queue: this.queue, startPosition: m.start, seed: m.seed });
+    else m.plan = phasePlan({ cards: m.valid, queue: this.queue, kind: m.kind, startPosition: m.start, seed: m.seed, cardsInPlayCount: m.valid.length });
   }
 
   // A claimed Line passed its Check: from the next song the Phase climbs again, towards the Bingo.

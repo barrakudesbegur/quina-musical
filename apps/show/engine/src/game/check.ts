@@ -12,8 +12,11 @@
 //   - notSold (a warning only): the card is not among the cards in play. Its Check still runs.
 //   - A Line plays its completed row (the first to complete, top on a tie), else the row with most landed
 //     songs (top on a tie); the other completed rows are listed. A Bingo plays all 12 songs, row by row.
+//   - 'standing' (the Desgraciat round) proves that none of the card's 12 songs landed: they play in card order
+//     and stop at the first one that landed (`fallen`); a card still standing plays all 12 (`complete`), and is
+//     `completeSince` the landing after which every other valid card in play had fallen.
 import type { CheckOutcome, ClaimWarning, WinKind } from '@quina/protocol';
-import { cardSongIds, completionIndex, queuePositions, type Card } from './cards.ts';
+import { cardSongIds, completionIndex, fallIndex, queuePositions, type Card } from './cards.ts';
 
 export interface CheckInput {
   /** Every generated card (cards.json), not only the cards in play. */
@@ -74,6 +77,16 @@ export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, qu
   const landedAt = queuePositions(queue.slice(0, Math.max(0, position + 1)));
   const rows = cardSongIds(card);
   const steps = (songs: number[]) => songs.map((songId) => ({ songId, landed: landedAt.has(songId) }));
+
+  if (kind === 'standing') {
+    const songs = rows.flat();
+    const sank = songs.findIndex((id) => landedAt.has(id));
+    if (sank >= 0) return { outcome: 'fallen', row: null, otherRows: [], steps: steps(songs.slice(0, sank + 1)), completeSince: null, warnings };
+    // The last one standing since every other valid card in play fell (within the counted landings).
+    const others = allCards.filter((c) => c.id !== cardId && c.type === cardType && cardsInPlay.has(c.id)).map((c) => fallIndex(c, landedAt));
+    const lastFall = others.length ? Math.max(...others) : -1;
+    return { outcome: 'complete', row: null, otherRows: [], steps: steps(songs), completeSince: Number.isFinite(lastFall) ? lastFall : null, warnings };
+  }
   const rowEnd = (row: number[]) => Math.max(...row.map((id) => landedAt.get(id) ?? Infinity));
   const ends = rows.map(rowEnd);
   const since = completionIndex(card, landedAt, kind);

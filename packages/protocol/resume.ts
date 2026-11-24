@@ -1,6 +1,6 @@
 // Plan B resume tokens (`resumeAt`, the state's `resume`): the round, its Shuffle seed and how far it got, as a
 // short code a person can note on paper and type back in, e.g. `Q3N-4K7XM2P-17-S41-L12`:
-//   Q<round><N|E>  round number, then N (normal) or E (especial, the special round)
+//   Q<round><N|E|D> round number, then N (normal), E (especial, the special round) or D (the Desgraciat round)
 //   <7 chars>      the Shuffle seed, Crockford base32 (no I, L, O or U; reading is case-insensitive and
 //                  forgives O→0 and I/L→1)
 //   <position>     the Queue index of the last counted song (−1 before the first)
@@ -12,6 +12,7 @@ import { defaultCardType, isCardTypeId, type RoundKind } from './vocabulary.ts';
 import type { ResumeToken } from './events.ts';
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const KIND_LETTER: Readonly<Record<RoundKind, string>> = { normal: 'N', special: 'E', desgraciat: 'D' };
 
 /** A 32-bit seed as 7 Crockford base32 characters. */
 export function seedCode(seed: number): string {
@@ -36,7 +37,7 @@ export function parseSeedCode(code: string): number | null {
 export type ResumePoint = Omit<ResumeToken, 'text'>;
 
 export function formatResumeToken(t: ResumePoint): string {
-  const parts = [`Q${t.round}${t.kind === 'special' ? 'E' : 'N'}`, seedCode(t.shuffleSeed), String(t.position)];
+  const parts = [`Q${t.round}${KIND_LETTER[t.kind]}`, seedCode(t.shuffleSeed), String(t.position)];
   if (t.lastSongId != null) parts.push(`S${t.lastSongId}`);
   if (t.lineConfirmedFrom != null) parts.push(`L${t.lineConfirmedFrom}`);
   if (t.shuffleAttempts) parts.push(`A${t.shuffleAttempts}`);
@@ -47,7 +48,7 @@ export function formatResumeToken(t: ResumePoint): string {
 /** A token's fields from its text (as `formatResumeToken` writes it, any case, spaces ignored), or null. */
 export function parseResumeToken(text: string): ResumePoint | null {
   const parts = text.replace(/\s+/g, '').toUpperCase().split('-');
-  const head = /^Q(\d{1,2})([NE])$/.exec(parts[0] ?? '');
+  const head = /^Q(\d{1,2})([NED])$/.exec(parts[0] ?? '');
   const shuffleSeed = parseSeedCode(parts[1] ?? '');
   // The position may be −1: "Q1N-XXXXXXX--1" splits into an empty part before "1".
   let rest = parts.slice(2);
@@ -60,7 +61,7 @@ export function parseResumeToken(text: string): ResumePoint | null {
     rest = rest.slice(1);
   }
   if (!head || shuffleSeed == null || position == null) return null;
-  const kind: RoundKind = head[2] === 'E' ? 'special' : 'normal';
+  const kind: RoundKind = head[2] === 'E' ? 'special' : head[2] === 'D' ? 'desgraciat' : 'normal';
   const point: ResumePoint = {
     round: Number(head[1]), kind, cardType: defaultCardType(kind),
     shuffleSeed, shuffleAttempts: 0, position, lastSongId: null, lineConfirmedFrom: null,

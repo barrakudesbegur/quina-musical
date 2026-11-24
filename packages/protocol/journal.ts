@@ -281,7 +281,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         startedAtMs: entry.startedAtMs,
         targetEndMs: entry.targetEndMs,
         position: -1,
-        climbingTo: 'line',
+        climbingTo: entry.roundKind === 'desgraciat' ? 'standing' : 'line',
         climbFrom: 0,
         landings: [],
         // A journal from before the tie-free Shuffle has neither.
@@ -302,7 +302,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         startedAtMs: entry.startedAtMs,
         targetEndMs: entry.targetEndMs,
         position: entry.position,
-        climbingTo: entry.lineConfirmedFrom != null ? 'bingo' : 'line',
+        climbingTo: entry.roundKind === 'desgraciat' ? 'standing' : entry.lineConfirmedFrom != null ? 'bingo' : 'line',
         climbFrom: entry.lineConfirmedFrom ?? 0,
         landings: entry.queue.slice(0, entry.position + 1).map((songId, position) => ({ position, songId, atMs: entry.atMs, undone: false })),
         shuffleSeed: entry.shuffleSeed,

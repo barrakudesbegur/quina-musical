@@ -1,7 +1,8 @@
 // The Game plan: the setup that Admin edits and the cloud stores. The laptop, projector, console and phones
 // all read it:
 // - the edition's name on every screen ("Quina Quina 3");
-// - the rounds, each normal or special, with its Line's and Quina's prize bundles (headline prizes first);
+// - the rounds, each normal, special or Desgraciat, with its Line's and Quina's prize bundles (headline prizes
+//   first; the Desgraciat round has no Line, and its `bingo` bundle is the last card standing's prize);
 // - when the prizes are revealed (round by round as the presenters announce them, or all kept secret);
 // - each round's printed card type (its name, colour and price are apps/cards' card-types.json);
 // - the sponsors;
@@ -12,7 +13,7 @@
 // organizers' spreadsheet.
 //
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
-import { defaultCardType, isCardTypeId, type RoundKind } from './vocabulary.ts';
+import { defaultCardType, isCardTypeId, isRoundKind, type RoundKind } from './vocabulary.ts';
 
 /** Version 2: prize bundles, card types and the prize reveal. checkGamePlan still reads version 1 plans. */
 export const PLAN_VERSION = 2;
@@ -50,7 +51,7 @@ export interface RoundPlan {
    */
   cardType?: string;
   line: PrizeBundle;
-  /** The full-card prizes ("premis de quina"). */
+  /** The full-card prizes ("premis de quina"); in the Desgraciat round, the last card standing's (its `line` is empty). */
   bingo: PrizeBundle;
 }
 
@@ -227,11 +228,11 @@ export function checkGamePlan(json: unknown): PlanCheck {
     const number = num(r, 'number', path, 1, LIMITS.rounds, { integer: true });
     if (number !== null && number !== i + 1) err(`${path}.number`, `must be ${i + 1} (rounds are numbered 1, 2, 3… in order)`);
     const kind = r.kind;
-    if (kind !== 'normal' && kind !== 'special') err(`${path}.kind`, 'must be "normal" or "special"');
+    if (!isRoundKind(kind)) err(`${path}.kind`, 'must be "normal", "special" or "desgraciat"');
     if (r.cardType !== undefined && !isCardTypeId(r.cardType)) err(`${path}.cardType`, 'must be a card type id from card-types.json, such as "normal" or "especial"');
     rounds.push({
       number: number ?? i + 1,
-      kind: kind === 'special' ? 'special' : 'normal',
+      kind: isRoundKind(kind) ? kind : 'normal',
       // Filled below when the plan doesn't name one (from its old card types, else the kind's default).
       ...(isCardTypeId(r.cardType) ? { cardType: r.cardType } : {}),
       line: bundle(r, 'line', path),
@@ -240,6 +241,10 @@ export function checkGamePlan(json: unknown): PlanCheck {
   });
   if (rounds.length === 0 && Array.isArray(json.rounds)) err('plan.rounds', 'needs at least one round');
   if (rounds.filter((r) => r.kind === 'special').length > 1) err('plan.rounds', 'only one special round is supported');
+  if (rounds.filter((r) => r.kind === 'desgraciat').length > 1) err('plan.rounds', 'only one Desgraciat round per night');
+  rounds.forEach((r, i) => {
+    if (r.kind === 'desgraciat' && r.line.length) err(`plan.rounds[${i}].line`, 'a Desgraciat round has no Line: put its prizes in "bingo" (the last card standing)');
+  });
 
   const cardTypes: CardType[] = v1 ? DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })) : [];
   if (!v1) {
