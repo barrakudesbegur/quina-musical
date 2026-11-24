@@ -39,6 +39,7 @@ Agreed with the user in a second design interview. This covers the screens left 
   - Reconnect with backoff and jitter.
   - Store one snapshot row, not history reads.
   - Serve covers as static files, not through the Worker.
+- **Deployed (2026-11-24):** the Worker `quina-cloud` is live at `https://quina-cloud.barrakudes.workers.dev`, on workers.dev only, with no DNS change. It serves the player app, the phone feed, cards and covers. Organizer and laptop routes refuse every request until Access is set up. Steps and undo are in `experiments/mixer-poc/cloud/docs/deploy-plan.md`. Still to do: the `quina-dev` subdomain, the Access apps and service token, the secrets, the organizer emails, and the R2 bucket.
 - **The venue:** a pop-up tent with no Wi-Fi and no router; good 5G and phone hotspots.
   - The laptop is tethered by USB to a phone, with a second phone (another carrier) as a backup hotspot.
   - The laptop sits in the first row or at the side of the stage.

@@ -68,10 +68,6 @@ The QR now points to `quina.barrakudesbegur.org/26/<card>`. The card's title and
 Admin cleans up each logo in the browser (removes the white background, trims it, makes a WebP).
 **Default taken:** until the Platform session's R2 storage exists, the cleaned logo is kept inside the Game plan as a data URL. It's exported with the JSON and kept in the browser's storage.
 
-## Deploy the cloud to workers.dev (quina-musical-b2, 2026-11-24)
-Milestone C1 is built and tested locally: the Worker and GameRoom, the laptop link, the phone feed, and a 400-phone load test. When I ran `wrangler deploy` after your `wrangler login`, Claude Code's permission check (auto mode) stopped it, and I don't work around such stops. Run `cd experiments/mixer-poc/cloud && npm test && npm run deploy` yourself, or allow `npx wrangler deploy` in `/permissions` so a session can. It creates a new Worker, `quina-cloud`, on workers.dev and touches no DNS or existing project.
-**Default taken:** not deployed. The phone feed and the laptop link run under `wrangler dev`. Every step is in `experiments/mixer-poc/cloud/docs/deploy-plan.md`, each with its undo.
-
 ## A new subdomain for the cloud, and Access (quina-musical-b2, 2026-11-24)
 Access needs path-scoped protection (`/api` for admins, `/ws/show` for the laptop) while the phones' `/feed` stays public. Cloudflare documents Access on workers.dev only for the whole URL. So the cloud needs a hostname in the barrakudesbegur.org zone. Proposed: a NEW `quina-dev.barrakudesbegur.org`, added as a Worker Custom Domain; `quina` and `fitxes` are untouched. The deploy plan lists the Access steps: two self-hosted apps, a service token for the laptop, Google login (probably already set up for coin-reader), and 4 Worker secrets. It also needs the **list of organizer emails** allowed into Admin.
 **Default taken:** nothing created. Until the secrets exist, every admin route and the laptop route answer 403 (fail-closed).
