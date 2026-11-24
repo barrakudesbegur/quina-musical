@@ -54,7 +54,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/ping` | signed in (the laptop's token, or organizers) | The cloud's clock, edition and current Game: the preflight's sign-in and clock check |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
-| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json`, `covers/<id>.jxl` with `covers/<id>.jpg` as the fallback, and `sw.js`, which removes last year's service worker. Served without running the Worker |
+| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json` with `cards/card-types.json` (each printed type's name, colour, title and price), `covers/<id>.jxl` with `covers/<id>.jpg` as the fallback, and `sw.js`, which removes last year's service worker. Served without running the Worker |
 
 ## How it works
 
@@ -69,10 +69,10 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
   - How: the laptop pushes them to the private R2 bucket through the Worker, with its service token; a takeover laptop pulls them. Only changed files move, by SHA-256, with hashes cached by size and mtime (7.5 s for 6 GB). A pull writes `<file>.part`, checks its size and hash, then renames it, and never deletes anything.
   - When: once, the day before the show. Each file is one request.
 - **Preflight** (`npm run preflight`, [`laptop/preflight/`](laptop/preflight)), run before every rehearsal and show. FAIL means it would hurt the show; WARN is worth a look; the exit code is 1 on any FAIL.
-  - Pool: songs analysed with their audio; every song on a card playable; fanfares, effects and Hold music present; every media file re-hashed against the cloud's manifest (or the last push or pull).
+  - Pool: songs analysed with their audio; every song on a card playable, and every card's type in card-types.json; fanfares, effects and Hold music present; every media file re-hashed against the cloud's manifest (or the last push or pull).
   - Laptop: the audio output (Bluetooth and AirPlay fail), system and display sleep, power, disk, Chrome's autoplay flag.
   - Network: the relay and its pool; the show page connected; the console's LAN address answering.
-  - Cloud: reachable; the laptop token signs in, with round trip and clock offset; the link's status file fresh and in sync; the Game and edition; the Game plan.
+  - Cloud: reachable; the laptop token signs in, with round trip and clock offset; the link's status file fresh and in sync; the Game and edition; the Game plan, with printed cards of every round's card type.
   It never connects as a second laptop: the link writes `data/link/status.json` every 5 s for it.
 - **The Game plan** is all public (rounds, prizes, sponsors, schedule), so it lives in the public state. Saving it sends one change to every phone and a `cloud.plan` to the laptop, which also gets it on every hello. Logos are files under `/media/`, never data URLs in the plan, so a phone's snapshot stays small.
 - **A silent laptop** (nothing for 50 s) is marked offline by an alarm. Phones show "Connexió perduda" after 20 s of `link.online === false`.

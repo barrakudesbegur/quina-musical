@@ -18,6 +18,11 @@ export function poolRoots(pool: Pool): RootDir[] {
     { root: 'fx', dir: path.join(MEDIA, 'fx') },
     { root: 'stingers', dir: path.join(MEDIA, 'stingers') },
   ];
-  if (pool.cardsJson) roots.push({ root: 'cards', dir: path.dirname(pool.cardsJson), exclude: (rel) => rel !== path.basename(pool.cardsJson as string) });
+  // The printed cards and their types (card-types.json, beside cards.json as apps/cards writes it), nothing else
+  // of that folder (the PDFs).
+  if (pool.cardsJson) {
+    const keep = new Set([path.basename(pool.cardsJson), 'card-types.json']);
+    roots.push({ root: 'cards', dir: path.dirname(pool.cardsJson), exclude: (rel) => !keep.has(rel) });
+  }
   return roots;
 }

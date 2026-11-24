@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { isPhaseName, isShowScene, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { isCardTypeId, isPhaseName, isShowScene, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -49,6 +49,8 @@ const settings: FieldCheck = (value) => {
 const round = integer(1, 99);
 const position = integer(0, 4999);
 const roundKind = oneOf('normal', 'special');
+/** A card-types.json id. Older journals lack it: the round plays its kind's default type. */
+const cardType = optional((value) => (isCardTypeId(value) ? null : 'a card type id (a-z, 0-9, at most 24)'));
 const winKind = oneOf('line', 'bingo');
 const claimId = text(40);
 
@@ -64,6 +66,7 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
     settings,
     shuffleSeed: optional(finite),
     shuffleAttempts: optional(integer(0)),
+    cardType,
   },
   'round.resumed': {
     round,
@@ -77,13 +80,14 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
     shuffleAttempts: integer(0),
     position: integer(-1, 4999),
     lineConfirmedFrom: nullable(integer(-1, 4999)),
+    cardType,
   },
   'song.landed': { round, position, songId: integer(0) },
   'landing.undone': { round, position, songId: integer(0) },
   'line.confirmed': { round, fromPosition: integer(-1, 4999) },
   'cards.set': { ranges: text(2000, true) },
   'settings.changed': { settings },
-  'scene.changed': { scene, round: integer(0, 99), roundKind },
+  'scene.changed': { scene, round: integer(0, 99), roundKind, cardType },
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999) },
   'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)) },

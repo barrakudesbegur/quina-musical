@@ -75,23 +75,25 @@ export class JournalBuilder {
     return this;
   }
 
-  scene(scene: ShowScene, round = Math.max(this.round, 1), roundKind: RoundKind = this.roundKind): this {
-    this.push({ kind: 'scene.changed', scene, round, roundKind }, 2_000);
+  /** `cardType` as the engine journals it with a round's intro (absent: the kind's default). */
+  scene(scene: ShowScene, round = Math.max(this.round, 1), roundKind: RoundKind = this.roundKind, cardType?: string): this {
+    this.push({ kind: 'scene.changed', scene, round, roundKind, ...(cardType ? { cardType } : {}) }, 2_000);
     return this;
   }
 
-  /** Introduce the next round, Shuffle it and start it, then go to play. */
-  startRound(kind: RoundKind = 'normal', queue = shuffledQueue(this.round + 1)): this {
+  /** Introduce the next round, Shuffle it and start it, then go to play. `cardType`: absent, the kind's default. */
+  startRound(kind: RoundKind = 'normal', queue = shuffledQueue(this.round + 1), cardType?: string): this {
     this.round += 1;
     this.roundKind = kind;
     this.queue = queue;
     this.position = -1;
-    this.scene('roundStart', this.round, kind);
+    this.scene('roundStart', this.round, kind, cardType);
     this.push(
       {
         kind: 'round.started',
         round: this.round,
         roundKind: kind,
+        ...(cardType ? { cardType } : {}),
         queue,
         phaseSeed: 1234 + this.round,
         startedAtMs: this.clock ? this.clock() : this.nowMs + 5_000,

@@ -91,8 +91,14 @@ export async function runPreflight(o: PreflightOptions): Promise<checks.Check[]>
   if (want('Pool')) out.push(...(await poolChecks(o, pool)));
   if (want('Laptop')) out.push(...(await laptopChecks()));
   if (want('Network')) out.push(...(await networkChecks(o, pool.name)));
-  if (want('Cloud')) out.push(...(await cloudChecks(o)));
+  if (want('Cloud')) out.push(...(await cloudChecks(o, pool)));
   return out;
+}
+
+/** The pool's printed cards (cards.json) and their types (card-types.json beside it), as apps/cards writes them. */
+function printedCards(pool: ReturnType<typeof loadPool>): { cards: unknown; types: unknown } {
+  if (!pool.cardsJson) return { cards: null, types: null };
+  return { cards: readJson(pool.cardsJson), types: readJson(path.join(path.dirname(pool.cardsJson), 'card-types.json')) };
 }
 
 async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>): Promise<checks.Check[]> {
@@ -107,7 +113,8 @@ async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>
   }
   const missingAudio = playable.filter((id) => !fs.existsSync(path.join(pool.cacheDir, String(id), 'mix.flac')));
   out.push(checks.songsCheck(poolSongIds, new Set(playable), missingAudio));
-  out.push(checks.cardsCheck(pool.cardsJson ? readJson(pool.cardsJson) : null, poolSongIds, new Set(playable)));
+  const printed = printedCards(pool);
+  out.push(checks.cardsCheck(printed.cards, checks.cardTypeIds(printed.types), poolSongIds, new Set(playable)));
 
   const missingSounds = [
     ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'stingers', `${n}.mp3`))),
@@ -163,7 +170,7 @@ async function networkChecks(o: PreflightOptions, poolName: string): Promise<che
   return out;
 }
 
-async function cloudChecks(o: PreflightOptions): Promise<checks.Check[]> {
+async function cloudChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   // The cloud's plan as the link keeps it ({ savedAtMs, plan }); the relay serves the newest to the screens.
   const plan = (readJson(path.join(o.dataDir, CLOUD_PLAN_FILE)) as { plan?: unknown } | null)?.plan ?? null;
@@ -189,6 +196,6 @@ async function cloudChecks(o: PreflightOptions): Promise<checks.Check[]> {
   }
   out.push(checks.linkCheck(link, Date.now()));
   out.push(checks.gameCheck(link, cloudCurrent, edition));
-  out.push(checks.planCheck(plan));
+  out.push(checks.planCheck(plan, checks.printedByType(printedCards(pool).cards)));
   return out;
 }

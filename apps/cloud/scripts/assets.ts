@@ -4,7 +4,8 @@
 // Unless --quick, it then adds, as agreed with the UI session:
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
 //     /26/123), console/, admin/, assets/; never stage/ (the projector runs on the laptop);
-//   - the pool's printed cards: cards/cards.json;
+//   - the pool's printed cards: cards/cards.json, and card-types.json from the same folder (each type's name,
+//     colour, title and price; rounds name the type they play);
 //   - the pool's covers, small, as JPEG XL with a JPEG fallback (the user's choice: JXL, never WebP):
 //     covers/<songId>.jxl and covers/<songId>.jpg, both at most 256 px a side (sips, then cjxl; cached in
 //     .assets-cache/). Pages use <picture><source type="image/jxl" srcset=".jxl"><img src=".jpg"></picture>.
@@ -64,6 +65,14 @@ if (!quick) {
     fs.mkdirSync(path.join(OUT, 'cards'), { recursive: true });
     fs.copyFileSync(pool.cardsJson, path.join(OUT, 'cards', 'cards.json'));
     lines.push(`cards (pool ${pool.name}) → dist/cards/cards.json`);
+    // Beside cards.json, as apps/cards writes it and the relay serves it (/cards/ is that folder).
+    const types = path.join(path.dirname(pool.cardsJson), 'card-types.json');
+    if (fs.existsSync(types)) {
+      fs.copyFileSync(types, path.join(OUT, 'cards', 'card-types.json'));
+      lines.push('dist/cards/card-types.json');
+    } else {
+      warnings.push(`pool ${pool.name} has no card-types.json beside its cards.json: phones show no card type names`);
+    }
   } else {
     warnings.push(`pool ${pool.name} has no cards.json yet`);
   }

@@ -1,6 +1,7 @@
 // The preflight's checks: pure functions from facts (gathered by gather.ts) to a verdict, so each rule is tested
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
+import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId } from '@quina/protocol';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -20,16 +21,33 @@ export interface CardLike {
   lines: { id: number }[][];
 }
 
+/** card-types.json's type ids (apps/cards writes it beside cards.json), or null when it's missing or malformed. */
+export function cardTypeIds(json: unknown): string[] | null {
+  if (!Array.isArray(json) || json.length === 0) return null;
+  const ids: unknown[] = json.map((t: unknown) => (t && typeof t === 'object' ? (t as { type?: unknown }).type : undefined));
+  return ids.every(isCardTypeId) ? ids : null;
+}
+
+/** How many printed cards there are of each type. */
+export function printedByType(cards: unknown): Map<string, number> | null {
+  if (!Array.isArray(cards)) return null;
+  const counts = new Map<string, number>();
+  for (const card of cards as Partial<CardLike>[]) if (typeof card?.type === 'string') counts.set(card.type, (counts.get(card.type) ?? 0) + 1);
+  return counts;
+}
+
 /**
  * The printed cards against the pool: every card 3 lines of 4 songs, ids unique, every song in the pool, and
- * every song on a card PLAYABLE (analysed, with a valid hook), or that card could never be completed.
+ * every song on a card PLAYABLE (analysed, with a valid hook), or that card could never be completed. Every card's
+ * type must be one of card-types.json's (`types`), or no round could ever play it; without that file, the
+ * default types stand in and it warns, since screens can't name the types.
  */
-export function cardsCheck(cards: unknown, poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
+export function cardsCheck(cards: unknown, types: readonly string[] | null, poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
   if (!Array.isArray(cards) || cards.length === 0) return check('Pool', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
+  const known = types ?? Object.values(DEFAULT_CARD_TYPE);
   const problems: string[] = [];
   const seen = new Set<number>();
   const unplayable = new Set<number>();
-  let special = 0;
   for (const raw of cards as CardLike[]) {
     if (!raw || !Number.isInteger(raw.id) || !Array.isArray(raw.lines)) {
       problems.push('a card without an id or lines');
@@ -37,9 +55,7 @@ export function cardsCheck(cards: unknown, poolSongIds: ReadonlySet<number>, pla
     }
     if (seen.has(raw.id)) problems.push(`card ${raw.id} twice`);
     seen.add(raw.id);
-    // The printed types are 'normal' and 'especial' (the engine maps the special ROUND to 'especial' cards).
-    if (raw.type === 'especial') special += 1;
-    else if (raw.type !== 'normal') problems.push(`card ${raw.id} has type ${JSON.stringify(raw.type)} (normal or especial)`);
+    if (!known.includes(raw.type)) problems.push(`card ${raw.id} has type ${JSON.stringify(raw.type)}, not in card-types.json (${known.join(', ')})`);
     const songs = raw.lines.flat();
     if (raw.lines.length !== 3 || raw.lines.some((l) => !Array.isArray(l) || l.length !== 4)) problems.push(`card ${raw.id} is not 3 lines of 4`);
     for (const song of songs) {
@@ -49,7 +65,10 @@ export function cardsCheck(cards: unknown, poolSongIds: ReadonlySet<number>, pla
   }
   if (unplayable.size > 0) problems.push(`songs on cards that can't play (no analysis or hook): ${[...unplayable].sort((a, b) => a - b).join(', ')}`);
   if (problems.length > 0) return check('Pool', 'Cards', 'fail', `${problems.slice(0, 4).join('; ')}${problems.length > 4 ? ` (+${problems.length - 4} more)` : ''}`);
-  return check('Pool', 'Cards', 'pass', `${cards.length} cards (${special} special), every song on them playable`);
+  const byType = [...(printedByType(cards) ?? [])].map(([type, n]) => `${n} ${type}`).join(', ');
+  const detail = `${cards.length} cards (${byType}), every song on them playable`;
+  if (!types) return check('Pool', 'Cards', 'warn', `${detail}; no card-types.json beside cards.json (apps/cards writes it): screens and phones can't name the card types`);
+  return check('Pool', 'Cards', 'pass', detail);
 }
 
 /** The songs: how many the pool has, and how many are ready to play. */
@@ -271,10 +290,25 @@ export function gameCheck(link: LinkStatusFile | null, cloudCurrent: { gameId: s
   return check('Cloud', 'Game', 'pass', detail);
 }
 
-export function planCheck(plan: unknown): Check {
+/**
+ * The Game plan the link keeps: it must pass checkGamePlan (as the relay and the screens read it), and every
+ * round's card type must have printed cards (`printed`, by type; null when there's no cards.json, which the
+ * cards check already fails), or that round could never be won.
+ */
+export function planCheck(plan: unknown, printed: ReadonlyMap<string, number> | null): Check {
   if (!plan || typeof plan !== 'object') return check('Cloud', 'Game plan', 'warn', 'no Game plan on this laptop (prizes, sponsors): save one in Admin with the link running');
-  const p = plan as { title?: string; rounds?: unknown[]; edition?: string };
-  return check('Cloud', 'Game plan', 'pass', `"${p.title ?? '?'}", ${p.rounds?.length ?? 0} rounds, edition ${p.edition ?? '?'}`);
+  const read = checkGamePlan(plan);
+  if (!read.ok) return check('Cloud', 'Game plan', 'fail', `the plan doesn't pass the protocol's check (the screens would ignore it): ${read.errors.slice(0, 3).join('; ')}`);
+  const { title, rounds, edition } = read.plan;
+  const typeOf = (r: (typeof rounds)[number]) => r.cardType ?? defaultCardType(r.kind);
+  const unprinted = rounds.filter((r) => printed && !printed.get(typeOf(r)));
+  if (unprinted.length > 0) {
+    return check('Cloud', 'Game plan', 'fail', unprinted.map((r) => `round ${r.number} plays "${typeOf(r)}" cards, but no printed card has that type`).join('; '));
+  }
+  const perType = new Map<string, number>();
+  for (const r of rounds) perType.set(typeOf(r), (perType.get(typeOf(r)) ?? 0) + 1);
+  const types = [...perType].map(([type, n]) => `${n} ${type}`).join(', ');
+  return check('Cloud', 'Game plan', 'pass', `"${title}", ${rounds.length} rounds${types ? ` (${types})` : ''}, edition ${edition}`);
 }
 
 /** Exit status: 1 when anything failed. */

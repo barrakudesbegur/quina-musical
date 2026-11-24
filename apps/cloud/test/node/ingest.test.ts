@@ -122,7 +122,13 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.ok(checkJournalEntry({ ...started, addedLater: true }).ok, 'an additive field');
   const { shuffleSeed: _seed, shuffleAttempts: _attempts, ...older } = started as JournalEntry & { shuffleSeed: number; shuffleAttempts: number };
   assert.ok(checkJournalEntry(older).ok, 'a journal from before the tie-free Shuffle');
+  assert.ok(checkJournalEntry({ ...started, cardType: 'especial' }).ok, 'a round naming its card type');
+  const intro = entries.find((e) => e.kind === 'scene.changed') as JournalEntry;
+  assert.ok(checkJournalEntry({ ...intro, cardType: 'groc' }).ok, 'an intro naming its card type');
   const bad: [string, unknown][] = [
+    ['card type with a dash (the resume code splits on it)', { ...started, cardType: 'cartro-groc' }],
+    ['card type in capitals', { ...intro, cardType: 'Especial' }],
+    ['card type as a number', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, cardType: 2 }],
     ['queue with a repeat', { ...started, queue: [1, 2, 2] }],
     ['queue of strings', { ...started, queue: ['1'] }],
     ['settings missing a field', { ...started, settings: { pace: 14 } }],

@@ -102,13 +102,21 @@ type SocketTag = Attachment['role'];
 type RoomEnv = Env & AccessEnv;
 
 /**
- * Snapshots from before prize secrecy kept the whole plan in the public state. Keep it apart (checkGamePlan reads
- * a v1 plan as v2) and leave phones only the public plan.
+ * The stored plan as this code reads plans. The snapshot keeps the plan as it was saved, so it goes through
+ * checkGamePlan again, which reads every older plan version as the current one (v2's `cardTypes` become each
+ * round's `cardType`), and phones' public plan is derived from it again. That only changes anything after a
+ * deploy, which drops every WebSocket anyway, so phones reconnect to the new snapshot. Snapshots from before
+ * prize secrecy kept the whole plan in the public state: it's taken from there.
  */
-function withPlanKeptApart(stored: RoomSnapshot): RoomSnapshot {
-  if (stored.plan !== undefined) return stored;
-  const old: unknown = stored.feed.state.plan;
-  const check = old ? checkGamePlan(old) : null;
+function withCurrentPlan(stored: RoomSnapshot): RoomSnapshot {
+  const beforeSecrecy = stored.plan === undefined;
+  const saved: unknown = beforeSecrecy ? stored.feed.state.plan : stored.plan;
+  const check = saved ? checkGamePlan(saved) : null;
+  if (check && !check.ok && !beforeSecrecy) {
+    // Never lose Admin's plan to a stricter check: keep it as saved until Admin saves it again.
+    console.error(`the stored Game plan no longer passes checkGamePlan, kept as saved: ${check.errors.join('; ')}`);
+    return stored;
+  }
   const plan = check?.ok ? check.plan : null;
   const revealed = plan ? revealedRounds(plan, stored.game?.prizesRevealed ?? []) : [];
   return { ...stored, plan, feed: { ...stored.feed, state: { ...stored.feed.state, plan: plan ? publicPlan(plan, revealed) : null } } };
@@ -736,7 +744,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const row = this.rows('SELECT body FROM snapshot WHERE id = 1')[0];
     if (row) {
       const stored = JSON.parse(String(row.body)) as RoomSnapshot;
-      if (stored.schema === SCHEMA_VERSION) return withPlanKeptApart(stored);
+      if (stored.schema === SCHEMA_VERSION) return withCurrentPlan(stored);
       console.error(`snapshot schema ${String(stored.schema)} is not ${SCHEMA_VERSION}: starting from an empty snapshot`);
     }
     return { schema: SCHEMA_VERSION, game: null, feed: { seq: 0, state: emptyPublicState(this.env.EDITION) } };
@@ -815,6 +823,9 @@ function resumeToken(round: NonNullable<GameRecord['round']>): ResumeToken {
   const point = {
     round: round.number,
     kind: round.kind,
+    // The round's valid cards, and so its Queue, depend on its card type (formatResumeToken writes it only when
+    // it isn't the kind's default).
+    cardType: round.cardType,
     shuffleSeed: round.shuffleSeed,
     shuffleAttempts: round.shuffleAttempts,
     position: round.position,

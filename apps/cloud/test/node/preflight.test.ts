@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as c from '../../laptop/preflight/checks.ts';
+import { PLAN } from '../support/plan.ts';
 
 const device = (name: string, transport: string, extra: Record<string, string> = {}) => ({
   SPAudioDataType: [{ _items: [{ _name: 'MacBook Pro Microphone', coreaudio_device_transport: 'coreaudio_device_type_builtin' }, { _name: name, coreaudio_default_audio_output_device: 'spaudio_yes', coreaudio_device_transport: `coreaudio_device_type_${transport}`, ...extra }] }],
@@ -54,16 +55,51 @@ test('cards: every song on a card must be in the pool and playable, or that card
   const card = (id: number, ids: number[], type = 'normal') => ({ id, type, lines: [line(...ids.slice(0, 4)), line(...ids.slice(4, 8)), line(...ids.slice(8, 12))] });
   const pool = new Set(Array.from({ length: 20 }, (_, i) => i + 1));
   const ids = Array.from({ length: 12 }, (_, i) => i + 1);
-  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], pool, pool);
+  const types = ['normal', 'especial'];
+  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], types, pool, pool);
   assert.equal(both.status, 'pass');
-  assert.match(both.detail, /2 cards \(1 special\)/);
-  // A type the engine doesn't know (the round kind's spelling, not the printed one) would never count in a round.
-  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], pool, pool).detail, /card 2 has type "special" \(normal or especial\)/);
-  assert.match(c.cardsCheck([card(1, ids)], pool, new Set([...pool].filter((id) => id !== 5))).detail, /can't play.*5/);
-  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], pool, pool).detail, /99, not in the pool/);
-  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], pool, pool).detail, /twice/);
-  assert.match(c.cardsCheck([{ id: 3, type: 'normal', lines: [line(1, 2, 3)] }], pool, pool).detail, /3 lines of 4/);
-  assert.equal(c.cardsCheck([], pool, pool).status, 'fail');
+  assert.match(both.detail, /2 cards \(1 normal, 1 especial\)/);
+  // A type card-types.json doesn't list (here the round kind's spelling, not the printed one) could never play.
+  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], types, pool, pool).detail, /card 2 has type "special", not in card-types.json \(normal, especial\)/);
+  // This year's types are whatever apps/cards prints.
+  assert.equal(c.cardsCheck([card(1, ids, 'groc')], ['groc'], pool, pool).status, 'pass');
+  // Without card-types.json: the default types stand in, and it warns (screens can't name them).
+  const untyped = c.cardsCheck([card(1, ids)], null, pool, pool);
+  assert.equal(untyped.status, 'warn');
+  assert.match(untyped.detail, /no card-types.json/);
+  assert.match(c.cardsCheck([card(1, ids)], types, pool, new Set([...pool].filter((id) => id !== 5))).detail, /can't play.*5/);
+  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], types, pool, pool).detail, /99, not in the pool/);
+  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], types, pool, pool).detail, /twice/);
+  assert.match(c.cardsCheck([{ id: 3, type: 'normal', lines: [line(1, 2, 3)] }], types, pool, pool).detail, /3 lines of 4/);
+  assert.equal(c.cardsCheck([], types, pool, pool).status, 'fail');
+});
+
+test("card-types.json's ids, and the printed cards by type", () => {
+  assert.deepEqual(c.cardTypeIds([{ type: 'normal', name: 'Cartró normal' }, { type: 'especial' }]), ['normal', 'especial']);
+  assert.equal(c.cardTypeIds(null), null);
+  assert.equal(c.cardTypeIds([]), null);
+  assert.equal(c.cardTypeIds([{ type: 'Not-An-Id' }]), null);
+  assert.deepEqual([...(c.printedByType([{ type: 'normal' }, { type: 'normal' }, { type: 'especial' }]) ?? [])], [['normal', 2], ['especial', 1]]);
+});
+
+test("the Game plan: it must pass the protocol's check, and every round's card type must be printed", () => {
+  const printed = new Map([['normal', 399], ['especial', 300]]);
+  const ok = c.planCheck(PLAN, printed);
+  assert.equal(ok.status, 'pass');
+  assert.match(ok.detail, /"Quina Musical", 2 rounds \(1 normal, 1 especial\), edition 26/);
+  assert.equal(c.planCheck(null, printed).status, 'warn');
+  // A round of a type nobody printed could never be won.
+  const groc = c.planCheck({ ...PLAN, rounds: PLAN.rounds.map((r) => (r.number === 2 ? { ...r, cardType: 'groc' } : r)) }, printed);
+  assert.equal(groc.status, 'fail');
+  assert.match(groc.detail, /round 2 plays "groc" cards, but no printed card has that type/);
+  // Without cards.json the cards check fails already: the plan isn't held against it.
+  assert.equal(c.planCheck(PLAN, null).status, 'pass');
+  // A plan the screens would refuse.
+  assert.equal(c.planCheck({ ...PLAN, rounds: 'many' }, printed).status, 'fail');
+  // An older plan reads as the current one: v2's card types give each round its type.
+  const { rounds, ...rest } = PLAN;
+  const v2 = { ...rest, rounds: rounds.map((r) => ({ number: r.number, kind: r.kind, line: r.line, bingo: r.bingo })) };
+  assert.equal(c.planCheck(v2, printed).status, 'pass');
 });
 
 test('songs, sounds and media files', () => {

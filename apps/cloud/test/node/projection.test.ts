@@ -98,11 +98,26 @@ test('a manual resume brings the round back whole, its counted songs only, strai
 test('the round being introduced is public before its Shuffle, and goes once it starts', () => {
   const b = new JournalBuilder('g-intro');
   b.scene('roundStart', 1, 'special');
-  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'special' });
+  // A journal from before card type per round: the kind's default type.
+  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'special', cardType: 'especial' });
   b.startRound('special');
   const { state } = project(b.entries);
   assert.equal(state.intro, null);
   assert.equal(state.scene, 'play');
+  assert.equal(state.rounds[0]?.cardType, 'especial');
+});
+
+test("a round's card type is public from its intro: the one it names, else its kind's default", () => {
+  const b = new JournalBuilder('g-types');
+  b.scene('roundStart', 1, 'normal', 'groc');
+  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'normal', cardType: 'groc' });
+  b.startRound('normal', undefined, 'groc');
+  assert.equal(project(b.entries).state.rounds.at(-1)?.cardType, 'groc');
+  b.startRound('normal');
+  assert.equal(project(b.entries).state.rounds.at(-1)?.cardType, 'normal');
+  // A manual resume (plan B) carries it too.
+  const r = new JournalBuilder('g-types-resume').resume(3, 4, { kind: 'special' });
+  assert.equal(project(r.entries).state.rounds.at(-1)?.cardType, 'especial');
 });
 
 test('a Check is public as "pending" from its start, without its steps, and shows its verdict only once decided', () => {

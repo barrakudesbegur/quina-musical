@@ -2,7 +2,7 @@
 // survives the GameRoom restarting, and the export replays to the same record.
 import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { PROTOCOL_VERSION, parseResumeToken, publicPlan, replayJournal, type JournalEntry } from '@quina/protocol';
+import { PROTOCOL_VERSION, parseResumeToken, publicPlan, replayJournal, type GamePlan, type JournalEntry } from '@quina/protocol';
 import { followFeed, type PublicView } from '@quina/protocol';
 import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
 import { CLOSE } from '../../src/link-protocol.ts';
@@ -359,6 +359,28 @@ describe('the Game plan and its media (Admin)', () => {
     expect(greeting[1]).toMatchObject({ type: 'cloud.plan', plan: PLAN });
   });
 
+  it('a plan stored in an older shape is read as the current one after a restart: v2 card types become each round\'s', async () => {
+    expect((await put(PLAN)).status).toBe(200);
+    // As a cloud from before card type per round saved it: no round names its card type, `cardTypes` says where
+    // each type plays (here the especial cards in every round).
+    const older = {
+      ...PLAN,
+      rounds: PLAN.rounds.map((r) => ({ number: r.number, kind: r.kind, line: r.line, bingo: r.bingo })),
+      cardTypes: [{ type: 'especial', name: 'Cartró especial', color: '#ffd9e8', priceCents: null, rounds: ['normal', 'special'] }],
+    };
+    await runInDurableObject(roomOf(env), (_room: GameRoom, state) => {
+      const body = JSON.parse(String(state.storage.sql.exec('SELECT body FROM snapshot WHERE id = 1').one().body)) as object;
+      state.storage.sql.exec('UPDATE snapshot SET body = ? WHERE id = 1', JSON.stringify({ ...body, plan: older }));
+    });
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a deploy, or the GameRoom waking up
+
+    const { plan } = await getJson<{ plan: GamePlan }>('/api/plan');
+    expect(plan.rounds.map((r) => r.cardType)).toEqual(['especial', 'especial']);
+    const p = await phone(); // phones get the public plan derived again from it
+    expect((await p.view()).state.plan?.rounds.map((r) => r.cardType)).toEqual(['especial', 'especial']);
+    expect((await put(PLAN)).status).toBe(200); // leave the test plan for the next tests
+  });
+
   it("a locked round's prizes never reach the public feed, until the show reveals them", async () => {
     await evictDurableObject(roomOf(env), { webSockets: 'close' });
     const p = await phone();
@@ -513,7 +535,7 @@ describe("a new laptop, and Admin's manual resume", () => {
 
   it('Admin lists the Games and resumes one: it becomes current, and its journal goes to the laptop', async () => {
     const a = JournalBuilder.sampleGame('g-rehearsal');
-    const b = new JournalBuilder('g-night').startRound().land(4);
+    const b = new JournalBuilder('g-night').startRound('normal', undefined, 'groc').land(4); // a round of this year's own card type
     const { client } = await laptop('g-rehearsal');
     await upload(client, 'g-rehearsal', a.entries);
     await upload(client, 'g-night', b.entries);
@@ -522,10 +544,11 @@ describe("a new laptop, and Admin's manual resume", () => {
       seq: b.entries.length,
       rounds: 1,
       current: true,
-      resumePoint: { round: 1, kind: 'normal', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lastSongId: b.queue[3], lineConfirmedFrom: null },
+      resumePoint: { round: 1, kind: 'normal', cardType: 'groc', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lastSongId: b.queue[3], lineConfirmedFrom: null },
     });
     const night = games.find((g) => g.gameId === 'g-night') as unknown as { resumePoint: { text: string } };
-    expect(parseResumeToken(night.resumePoint.text)).toMatchObject({ round: 1, position: 3, shuffleSeed: 100, lastSongId: b.queue[3] });
+    // The code carries the card type, since the round's valid cards (and so its Queue) depend on it.
+    expect(parseResumeToken(night.resumePoint.text)).toMatchObject({ round: 1, cardType: 'groc', position: 3, shuffleSeed: 100, lastSongId: b.queue[3] });
     expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false, resumePoint: null });
 
     const p = await phone();

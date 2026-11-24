@@ -6,7 +6,7 @@
 // steps before its verdict, a claim's details, or winners' names.
 // Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
 import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
-import { roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
+import { defaultCardType, roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
 
 export interface ProjectionContext {
   /** A laptop-clock epoch ms on the cloud's clock. */
@@ -26,6 +26,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       const round: PublicRound = {
         number: entry.round,
         kind: entry.roundKind,
+        cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: false,
         ended: false,
@@ -47,6 +48,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       const round: PublicRound = {
         number: entry.round,
         kind: entry.roundKind,
+        cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: entry.lineConfirmedFrom !== null,
         ended: false,
@@ -80,7 +82,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       const changes: PublicChange[] = [];
       if (entry.scene !== state.scene) changes.push({ kind: 'scene', scene: entry.scene });
       if (entry.scene === 'roundStart' && !state.rounds.some((r) => r.number === entry.round)) {
-        changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind } });
+        changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind) } });
       } else if (state.intro) {
         changes.push({ kind: 'intro', intro: null });
       }
