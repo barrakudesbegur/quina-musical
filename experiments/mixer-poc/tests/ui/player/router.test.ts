@@ -60,7 +60,10 @@ test('review hints: tab, dialog and demo cards', () => {
 
 test('the feed comes from the URL: demo, relay, cloud; dev on this machine or the LAN defaults to the relay', () => {
   assert.deepEqual(chooseFeed({ search: '?demo=play', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'demo', demo: 'play' });
-  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'relay', demo: null });
+  // A production build never takes the relay (it hands out the full private state), whatever the URL says.
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'cloud', demo: null });
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: '192.168.1.20', dev: false }), { kind: 'cloud', demo: null });
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.example.org', dev: true }), { kind: 'relay', demo: null });
   assert.deepEqual(chooseFeed({ search: '', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'cloud', demo: null });
   assert.deepEqual(chooseFeed({ search: '', hostname: 'localhost', dev: true }), { kind: 'relay', demo: null });
   assert.deepEqual(chooseFeed({ search: '', hostname: 'localhost', dev: false }), { kind: 'cloud', demo: null });

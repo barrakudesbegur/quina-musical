@@ -71,14 +71,17 @@ const LOCAL_HOST = /^(localhost|127\.\d+\.\d+\.\d+|\[?::1\]?|10\.\d+\.\d+\.\d+|1
 export const isLocalHost = (hostname: string): boolean => LOCAL_HOST.test(hostname);
 
 /**
- * `?demo=<fixture>` → DemoFeed; `?feed=relay` → DevRelayFeed; `?feed=cloud` → CloudFeed; otherwise CloudFeed,
- * except a development build served from this machine or the LAN, which defaults to the relay.
+ * `?demo=<fixture>` → DemoFeed; `?feed=cloud` → CloudFeed; otherwise CloudFeed.
+ * DEVELOPMENT ONLY: a development build may use the relay (`?feed=relay`, or by default when served from this
+ * machine or the LAN). The relay hands out the full private state (the next song, possible winners, the resume
+ * code), so a production build never connects to it, whatever the URL says.
  */
 export function chooseFeed({ search, hostname, dev }: FeedChoiceInput): FeedChoice {
   const params = new URLSearchParams(search);
   const demo = params.get('demo');
   if (demo) return { kind: 'demo', demo };
+  if (!dev) return { kind: 'cloud', demo: null };
   const feed = params.get('feed');
   if (feed === 'relay' || feed === 'cloud') return { kind: feed, demo: null };
-  return { kind: dev && isLocalHost(hostname) ? 'relay' : 'cloud', demo: null };
+  return { kind: isLocalHost(hostname) ? 'relay' : 'cloud', demo: null };
 }
