@@ -1,6 +1,6 @@
 // Variety over whole nights, judged the way a listener hears them: four simulated nights of 12 rounds through the
-// real Show (tests/support/night.ts: real analysis data and cards, the Line and the Bingo claimed, Holds, Back and
-// false Claims), every transition checked for the landing invariants, and the sameness table kept under the
+// real Show (tests/support/night.ts: real analysis data and cards, the Line and the Bingo claimed, a Desgraciat
+// round, Holds, Back and false Claims), every transition checked for the landing invariants, and the sameness table kept under the
 // thresholds below so the rotation memory (plan/variety.ts) cannot silently regress.
 //
 // The thresholds sit between the engine before the rotation memory (first column of each comment) and after it
@@ -39,6 +39,17 @@ test('whole nights: every transition keeps the landing invariants and the hard r
         if (cooldown) assert.ok(!before.slice(-cooldown).some((x) => x.plan.recipe === t.plan.recipe), `${what}: within its cooldown`);
       });
     }
+  }
+});
+
+test('whole nights: the Desgraciat round plays to its last card standing, climbing to final like any round', () => {
+  for (const log of nights()) {
+    assert.equal(log.desgraciat, 7, `night ${log.seed}: round 7 is the Desgraciat`);
+    const round = roundsOf(log).find((r) => r[0]?.round === log.desgraciat);
+    assert.ok(round && round.length >= 10, `night ${log.seed}: a Desgraciat round of ${round?.length} songs`);
+    const phases = round.map((t) => t.phase);
+    assert.equal(phases[0], 'early');
+    assert.equal(phases.at(-1), 'final', `night ${log.seed}: the last card is left standing in final`);
   }
 });
 

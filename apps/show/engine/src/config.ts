@@ -743,6 +743,8 @@ export const FLOW = Object.freeze({
     stepSec: 2.5,
     /** A ✗ step: the short "broken record" sound. */
     missSec: 1.2,
+    /** A standing Check's ✓ (the Desgraciat round: the song hasn't landed): a short knock. 12 of them take ~11 s. */
+    stillSec: 0.55,
     /** Silence between steps. */
     gapSec: 0.35,
     /** After the last step, the result shows. */
@@ -754,6 +756,7 @@ export const FLOW = Object.freeze({
     snippetDb: -2,
     snippetFadeSec: 0.25,
     brokenDb: -8,
+    stillDb: -12,
   }),
   celebration: Object.freeze({
     /** The Clear fanfare and an impact on the Celebration's start. */

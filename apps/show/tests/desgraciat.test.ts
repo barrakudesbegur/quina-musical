@@ -168,9 +168,9 @@ test('a Desgraciat round climbs to the last card standing in the journal, and it
   assert.deepEqual(parseResumeToken(text), point);
 });
 
-test('until the cloud accepts them, commands still refuse the Desgraciat round and standing claims', () => {
-  for (const command of [makeCommand('claim', { cardId: 3 }), makeCommand('newRound', {}), makeCommand('roundIntro', {})]) assert.ok(checkCommand(command).ok);
-  assert.equal(checkCommand({ ...makeCommand('newRound', {}), kind: 'desgraciat' }).ok, false);
-  assert.equal(checkCommand({ ...makeCommand('roundIntro', {}), kind: 'desgraciat' }).ok, false);
-  assert.equal(checkCommand({ ...makeCommand('claim', { cardId: 3 }), kind: 'standing' }).ok, false);
+test('commands take the Desgraciat round and standing claims', () => {
+  assert.ok(checkCommand({ ...makeCommand('newRound', {}), kind: 'desgraciat' }).ok);
+  assert.ok(checkCommand({ ...makeCommand('roundIntro', {}), kind: 'desgraciat' }).ok);
+  assert.ok(checkCommand({ ...makeCommand('claim', { cardId: 3 }), kind: 'standing' }).ok);
+  assert.equal(checkCommand({ ...makeCommand('newRound', {}), kind: 'reverse' }).ok, false);
 });

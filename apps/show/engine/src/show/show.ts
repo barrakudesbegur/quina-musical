@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, defaultCardType, formatResumeToken } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, defaultCardType, formatResumeToken, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
@@ -52,11 +52,12 @@ import type {
   ShowStatus,
   SongRef,
   SoundName,
+  StandingInfo,
 } from '@quina/protocol';
 import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, INTERVAL, LOOP, type DecoyConfig } from '../config.ts';
-import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt } from '../game/cards.ts';
+import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
-import { tieFreeShuffle } from '../game/shuffle.ts';
+import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan, standingPlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
@@ -467,6 +468,12 @@ type SetGameField = keyof CommandFields['setGame'];
 const SET_GAME_FIELDS = Object.keys(COMMANDS.setGame) as SetGameField[]; // Object.keys only knows string[]
 
 const round2 = (x: number) => Math.round(x * 100) / 100;
+/** The Celebration a set of valid Claims makes: the round's end (a Bingo, the last card standing) over a Line. */
+const roundWin = (kinds: readonly WinKind[]): WinKind => (kinds.includes('standing') ? 'standing' : kinds.includes('bingo') ? 'bingo' : 'line');
+/** The Shuffle's Tie rule for a round: one last card standing in the Desgraciat round, else no shared first win. */
+const tieRule = (kind: RoundKind): TieRule => (kind === 'desgraciat' ? 'lastStanding' : 'firstWins');
+/** What a round's Phase climbs towards from its first song: the Line, or the Desgraciat round's last card standing. */
+const firstClimb = (kind: RoundKind): ClimbTarget => (kind === 'desgraciat' ? 'standing' : 'line');
 const PHASE_RANK: Record<PhaseName, number> = { early: 0, mid: 1, late: 2, final: 3 };
 
 /** Copy one field when the source sets it. The call compiles only if the source's field fits the target's. */
@@ -657,7 +664,8 @@ export class Show {
         this.setGame(c);
         break;
       case 'confirmLine':
-        this.confirmLine();
+        if (this.round.kind === 'desgraciat') this.reject(reqId, c.cmd, 'invalid', 'the Desgraciat round has no Line');
+        else this.confirmLine();
         break;
       case 'setCardsInPlay': {
         try {
@@ -684,9 +692,12 @@ export class Show {
         this.roundIntro(c.number ?? (this.scene === 'before' ? this.round.number : this.round.number + 1), kind, c.cardType ?? defaultCardType(kind));
         break;
       }
-      case 'claim':
-        this.claim(c.cardId, c.kind ?? this.phaseModel.kind);
+      case 'claim': {
+        const kind = c.kind ?? this.phaseModel.kind;
+        if (!winKindsOf(this.round.kind).includes(kind)) this.reject(reqId, c.cmd, 'invalid', `a ${this.round.kind} round isn't won by a ${kind}`);
+        else this.claim(c.cardId, kind);
         break;
+      }
       case 'checkStart': {
         const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
         if (claim) this.runCheck(claim);
@@ -827,7 +838,7 @@ export class Show {
    */
   startRound(number: number, kind: RoundKind, cardType: string, { stop = false, keepPace = false, shuffle = false, keepMusic = false } = {}) {
     if (stop) this.out.push({ type: 'stopAll', fadeSec: 0.3 });
-    const drawn = this.drawQueue(cardType);
+    const drawn = this.drawQueue(cardType, kind);
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
@@ -852,7 +863,7 @@ export class Show {
     // The round's target end comes from the Pace it starts with; Drift is measured against it.
     this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace }), lineConfirmed: false };
     // A secret seed drawn at the Shuffle blurs this round's Phase; it stays with the Queue.
-    this.phaseModel = { kind: 'line', start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
+    this.phaseModel = { kind: firstClimb(kind), start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.rebuildPhase();
     this.journal({
       kind: 'round.started',
@@ -888,8 +899,8 @@ export class Show {
     if (this.transition || this.suspense || this.pending || this.check) return this.reject(c.reqId, c.cmd, 'busy');
     const cardType = c.cardType ?? defaultCardType(c.kind);
     const cards = validCards(this.allCards, this.cardsInPlay, cardType);
-    const drawn = tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed: c.shuffleSeed, maxAttempts: FLOW.shuffleMaxAttempts });
-    const lineFrom = c.lineConfirmedFrom ?? null;
+    const drawn = tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed: c.shuffleSeed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(c.kind) });
+    const lineFrom = c.kind === 'desgraciat' ? null : c.lineConfirmedFrom ?? null;
     const refuse = (detail: string) => this.reject(c.reqId, c.cmd, 'cannotResume', detail);
     if (c.shuffleAttempts != null && drawn.attempts !== c.shuffleAttempts) {
       return refuse(`the Shuffle took draw ${drawn.attempts} here, ${c.shuffleAttempts} there: are the cards in play the same?`);
@@ -918,7 +929,7 @@ export class Show {
     this.intro = null;
     this.shuffle = null;
     this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace }), lineConfirmed: lineFrom != null };
-    this.phaseModel = { kind: lineFrom != null ? 'bingo' : 'line', start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
+    this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.rebuildPhase();
     this.updateNudge();
     this.journal({
@@ -961,12 +972,12 @@ export class Show {
    * The round's Queue: the tie-free Shuffle of the Pool (game/shuffle.ts) from a secret seed, checked against
    * the cards in play valid for a round of this card type. A fixed Queue bypasses it (seed 0, attempts 0).
    */
-  drawQueue(cardType: string): { queue: number[]; seed: number; attempts: number; tied: boolean } {
+  drawQueue(cardType: string, kind: RoundKind): { queue: number[]; seed: number; attempts: number; tied: boolean } {
     const fixed = this.fixedQueue?.filter((id) => this.catalog.has(id));
     if (fixed?.length) return { queue: fixed, seed: 0, attempts: 0, tied: false };
     const seed = Math.floor(this.env.random() * 2 ** 32) >>> 0;
     const cards = validCards(this.allCards, this.cardsInPlay, cardType);
-    return tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed, maxAttempts: FLOW.shuffleMaxAttempts });
+    return tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(kind) });
   }
 
   /** The public Shuffle is still animating: no song may land yet. */
@@ -1048,7 +1059,7 @@ export class Show {
     }));
     if (this.scene === 'check') this.batch = { claimIds: this.claims.filter((c) => c.status === 'queued').map((c) => c.claimId), celebration: null };
     if (this.scene === 'celebration') {
-      const kind: WinKind = this.claims.some((c) => c.status === 'valid' && c.kind === 'bingo') ? 'bingo' : 'line';
+      const kind = roundWin(this.claims.filter((c) => c.status === 'valid').map((c) => c.kind));
       this.celebration = this.celebrationOf(kind, this.sceneSinceMs, kind === 'line' ? 'winningSong' : 'victory');
     }
     if (this.scene === 'interval') this.interval = this.intervalFrom(this.sceneSinceMs);
@@ -1490,6 +1501,8 @@ export class Show {
 
   autoAdvanceAllowed() {
     if (this.position + 1 >= this.queue.length) return false;
+    // The Desgraciat round: never take out the last card standing by itself.
+    if (this.phaseModel.kind === 'standing' && this.phaseModel.valid.length && this.standingNow().length <= 1) return false;
     const phase = this.phaseName();
     return phase === 'final' ? this.game.autoAdvanceFinal : this.game.autoAdvance;
   }
@@ -1807,7 +1820,7 @@ export class Show {
 
   // A claimed Line passed its Check: from the next song the Phase climbs again, towards the Bingo.
   confirmLine() {
-    if (this.round.lineConfirmed) return;
+    if (this.round.lineConfirmed || this.round.kind === 'desgraciat') return;
     this.round.lineConfirmed = true;
     this.phaseModel.kind = 'bingo';
     this.phaseModel.start = this.position + 1;
@@ -1877,9 +1890,9 @@ export class Show {
       }
     }
     if (this.maybeAutoCheck()) changed = true;
-    // A Bingo's Celebration flows into the Interval by itself, so the show never stalls.
+    // A Bingo's (or the last card standing's) Celebration flows into the Interval by itself, so the show never stalls.
     const c = this.celebration;
-    if (this.scene === 'celebration' && c?.kind === 'bingo' && !this.pause && this.env.nowMs() >= c.sinceMs + FLOW.celebration.toIntervalSec * 1000) {
+    if (this.scene === 'celebration' && c != null && c.kind !== 'line' && !this.pause && this.env.nowMs() >= c.sinceMs + FLOW.celebration.toIntervalSec * 1000) {
       this.startInterval();
       changed = true;
     }
@@ -1954,7 +1967,7 @@ export class Show {
     this.stopCheck();
     const result = this.evaluate(claim);
     const now = this.env.now();
-    const timed = timeCheck(result.steps, now, FLOW.check);
+    const timed = timeCheck(result.steps, now, FLOW.check, claim.kind);
     const ms = (t: number) => this.env.toEpochMs(t);
     const info: CheckInfo = {
       claimId: claim.claimId, cardId: claim.cardId, kind: claim.kind, outcome: result.outcome, row: result.row, otherRows: result.otherRows,
@@ -2021,7 +2034,7 @@ export class Show {
     this.batch = null;
     this.autoCheck = false;
     const won = this.claims.filter((c) => c.status === 'valid' && (batch?.claimIds.includes(c.claimId) ?? false));
-    if (won.length) return this.celebrate(won.some((c) => c.kind === 'bingo') ? 'bingo' : 'line', batch?.celebration ?? null);
+    if (won.length) return this.celebrate(roundWin(won.map((c) => c.kind)), batch?.celebration ?? null);
     if (batch?.celebration) {
       // A late Claim during a Celebration was not valid: the Celebration goes on.
       this.celebration = { ...batch.celebration, sinceMs: this.env.nowMs() };
@@ -2293,7 +2306,7 @@ export class Show {
   // Cards that now have a Line or a Bingo. Private to the tablet: "possible", since unsold cards count too.
   possibleWinners(): PossibleWinners {
     const valid = this.phaseModel.valid;
-    if (!valid.length) return { line: [], bingo: [] };
+    if (!valid.length || this.phaseModel.kind === 'standing') return { line: [], bingo: [] };
     const landed = this.landings.filter((l) => !l.undone).map((l) => l.songId);
     const strip = (list: ReturnType<typeof possibleWinners>) => list.slice(0, 60).map(({ cardId, lines, completedBy }) => ({ cardId, lines, completedBy }));
     return { line: strip(possibleWinners(valid, landed, 'line')), bingo: strip(possibleWinners(valid, landed, 'bingo')) };
@@ -2309,13 +2322,35 @@ export class Show {
     const landed = this.landings.filter((l) => !l.undone).map((l) => l.songId);
     const counts = cardCounts(valid, landed);
     const from = this.position + 1;
+    if (this.phaseModel.kind === 'standing') {
+      const course = standingCourse(valid, this.queue);
+      const at = course.lastStandingAt != null && course.lastStandingAt >= from ? course.lastStandingAt : null;
+      return {
+        lineAt: null, bingoAt: null, toLine: [], toBingo: [], markCounts: counts.marked,
+        lastStandingAt: at, standingCurve: at == null ? [] : course.standingAfter.slice(from, at + 1),
+      };
+    }
     return {
       lineAt: firstWinAt(valid, this.queue, 'line', from)?.index ?? null,
       bingoAt: firstWinAt(valid, this.queue, 'bingo', from)?.index ?? null,
       toLine: counts.toLine,
       toBingo: counts.toBingo,
       markCounts: counts.marked,
+      lastStandingAt: null,
+      standingCurve: [],
     };
+  }
+
+  /** The Desgraciat round's valid cards still standing after the counted landings. */
+  standingNow() {
+    return standingCards(this.phaseModel.valid, this.landings.filter((l) => !l.undone).map((l) => l.songId));
+  }
+
+  /** PRIVATE, for the console: the Desgraciat round's cards still standing; null in other rounds or without cards. */
+  standing(): StandingInfo | null {
+    if (this.phaseModel.kind !== 'standing' || !this.phaseModel.valid.length) return null;
+    const ids = this.standingNow().map((c) => c.id);
+    return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids };
   }
 
   spin() {
@@ -2397,6 +2432,7 @@ export class Show {
       },
       possibleWinners: this.possibleWinners(),
       future: this.future(),
+      standing: this.standing(),
       prizes: { revealed: this.prizesRevealed.map((r) => ({ ...r })) },
       pace: { sec: this.game.pace, defaultSec: defaultPace(this.round.number), locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
       schedule: { ...schedule, roundDriftSec: Math.round(schedule.roundDriftSec), gameDriftSec: schedule.gameDriftSec == null ? null : Math.round(schedule.gameDriftSec) },

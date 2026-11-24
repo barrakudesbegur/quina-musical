@@ -1,6 +1,7 @@
 // A whole show night through the real Show on a fake clock (harness.ts), the way a listener hears it: 12 rounds
 // over the real analysis data and the real cards, auto-advance at the Pace, the Line claimed and confirmed, the
-// Bingo climb, the Celebrations and the Intervals, plus the occasional long Hold, Back and false Claim.
+// Bingo climb, the Celebrations and the Intervals, plus the occasional long Hold, Back and false Claim. One round
+// in the middle of the night is the Desgraciat: cards fall as their songs land, and the last one standing wins.
 //
 // The planner gets what the runtime stores would hold (audio/plan-inputs.ts), built from the files on disk:
 //  - B's stems around its valid best/main hooks (data/stems, the parts audible before the hook, like StemStore);
@@ -207,8 +208,10 @@ export interface NightLog {
   music: NightMusic[];
   /** Seconds of Interval music per Interval (from its start to the next round's first Spin). */
   intervalSec: number[];
-  /** Rounds that ended in a Bingo. */
+  /** Rounds that ended in a Bingo (or, the Desgraciat round, with its last card standing). */
   rounds: number;
+  /** The Desgraciat round's number (0: none). */
+  desgraciat: number;
 }
 
 export interface NightOptions {
@@ -238,7 +241,9 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200', tickSec = 0
   const show = h.show;
   landedHook.of = () => show.current?.hookId ?? null;
   const clock = h.clock;
-  const log: NightLog = { seed, transitions: [], music: [], intervalSec: [], rounds: 0 };
+  // The Desgraciat round: one per night, in its second half.
+  const desgraciat = rounds >= 3 ? Math.floor(rounds / 2) + 1 : 0;
+  const log: NightLog = { seed, transitions: [], music: [], intervalSec: [], rounds: 0, desgraciat };
   let round = 1;
   let index = 0;
   let intervalFrom: number | null = null;
@@ -283,7 +288,7 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200', tickSec = 0
     if (round > 1) {
       // The Interval plays out, the round is introduced, the public Shuffle, the first Spin.
       run(between(100, 160));
-      send('roundIntro');
+      send('roundIntro', round === desgraciat ? { kind: 'desgraciat' } : {});
       run(between(15, 30));
       send('newRound');
     }
@@ -303,6 +308,29 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200', tickSec = 0
       if (landed() === before) throw new Error(`night ${seed}: round ${round} stalled at position ${show.position} (${show.status}, ${show.scene})`);
       const t = log.transitions.at(-1);
       if (!t) continue;
+      if (round === desgraciat) {
+        // The last card standing claims a few seconds after it is alone (auto-advance waits for the presenters).
+        const standing = show.standing();
+        if (standing?.count === 1 && standing.cardIds?.[0] != null) {
+          run(between(2, 6));
+          send('claim', { cardId: standing.cardIds[0] });
+          const claim = show.claims.at(-1);
+          if (!claim) throw new Error('no claim');
+          run(90, () => show.claims.find((c) => c.claimId === claim.claimId)?.status === 'checked');
+          run(between(1, 4));
+          send('decide', { claimId: claim.claimId, valid: true });
+          bingo = true;
+          run(70, () => show.scene === 'interval');
+          continue;
+        }
+        if (index === holdAt) {
+          run(between(1, 4));
+          send('hold', { on: true });
+          run(between(45, 75));
+          send('hold', { on: false });
+        }
+        continue;
+      }
       const winners = show.possibleWinners();
       const lineDone = show.round.lineConfirmed;
       const cardId = (lineDone ? winners.bingo : winners.line)[0]?.cardId;

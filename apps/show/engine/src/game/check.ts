@@ -4,7 +4,7 @@
 //
 // API
 //   computeCheck(input)              → { outcome, row, otherRows, steps: [{ songId, landed }], completeSince, warnings }
-//   timeCheck(steps, startAt, timing) → the steps with their start times and lengths, and when the result shows
+//   timeCheck(steps, startAt, timing, kind) → the steps with their start times, lengths and sounds, and when the result shows
 //
 // Rules (docs/show-ui-and-platform-decisions.md › Check):
 //   - unknownCard: a number outside the generated cards; wrongType: a card of another type than the round's
@@ -51,13 +51,20 @@ export interface CheckTiming {
   leadSec: number;
   stepSec: number;
   missSec: number;
+  /** A standing Check's ✓ (a song that hasn't landed): a short knock. */
+  stillSec: number;
   gapSec: number;
   tailSec: number;
 }
 
+/** What a step sounds like: a landed song's snippet, the "broken record" (a Line's or Bingo's missing song), or the
+ * standing Check's knock (a song that hasn't landed: good for that claim). */
+export type StepSound = 'snippet' | 'miss' | 'still';
+
 export interface TimedStep extends CheckSong {
   at: number;
   durationSec: number;
+  sound: StepSound;
 }
 
 export interface TimedCheck {
@@ -107,13 +114,15 @@ export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, qu
   return { outcome, row, otherRows: completed.filter((i) => i !== row), steps: steps(rows[row]), completeSince, warnings };
 }
 
-/** Lay the steps out from `startAt` (audio-clock seconds): a lead, then each step and a gap. */
-export function timeCheck(songs: readonly CheckSong[], startAt: number, timing: CheckTiming): TimedCheck {
+/** Lay the steps out from `startAt` (audio-clock seconds): a lead, then each step and a gap. A landed song always
+ * plays its snippet (in a standing Check, as the proof that sank the card). */
+export function timeCheck(songs: readonly CheckSong[], startAt: number, timing: CheckTiming, kind: WinKind = 'line'): TimedCheck {
   if (!songs.length) return { steps: [], startAt, endAt: startAt };
   let t = startAt + timing.leadSec;
   const steps = songs.map((s) => {
-    const durationSec = s.landed ? timing.stepSec : timing.missSec;
-    const step = { ...s, at: t, durationSec };
+    const sound: StepSound = s.landed ? 'snippet' : kind === 'standing' ? 'still' : 'miss';
+    const durationSec = sound === 'snippet' ? timing.stepSec : sound === 'still' ? timing.stillSec : timing.missSec;
+    const step = { ...s, at: t, durationSec, sound };
     t += durationSec + timing.gapSec;
     return step;
   });

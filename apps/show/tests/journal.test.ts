@@ -48,7 +48,7 @@ test('every journal entry keeps the replayed record equal to the show (random co
       () => makeCommand('interval'),
       () => makeCommand('roundIntro'),
       () => makeCommand('pause'),
-      () => makeCommand('newRound', { kind: rnd() < 0.8 ? 'normal' : 'special' }),
+      () => makeCommand('newRound', { kind: rnd() < 0.6 ? 'normal' : rnd() < 0.5 ? 'special' : 'desgraciat' }),
     ];
     for (let step = 0; step < 120; step++) {
       // newRound is rare, so a round gets many landings.

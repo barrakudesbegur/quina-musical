@@ -1,8 +1,10 @@
 // A Check's sound (show.ts CheckSnippetsEffect): each landed song's hook snippet (tools/prep/snippets.py cuts
 // 3 s from its best hook's pickup, /snippets/<id>.flac, its loudness trim in data/snippets/index.json), or
-// the "broken record" for a song that has not landed, at the step times the machine scheduled. Everything
+// the "broken record" for a song that has not landed (in a standing Check, where not landing is the point, a
+// short knock instead), at the step times the machine scheduled. Everything
 // else (the songs, Hold music, the Celebration's loop) is ducked far down from the Check's start to its end.
 import { brokenRecord } from './synth/broken.ts';
+import { stillKnock } from './synth/still.ts';
 import type { AudioGraph } from './graph.ts';
 import type { TimedStep } from '../game/check.ts';
 
@@ -73,6 +75,7 @@ export interface CheckLevels {
   snippetDb: number;
   snippetFadeSec: number;
   brokenDb: number;
+  stillDb: number;
   duckFadeSec: number;
 }
 
@@ -107,7 +110,8 @@ export class CheckPlayer {
     }
     void this.snippets.loadIndex();
     for (const step of steps) {
-      if (step.landed) void this.playSnippet(out, step);
+      if (step.sound === 'snippet') void this.playSnippet(out, step);
+      else if (step.sound === 'still') stillKnock(ctx, out, { t0: step.at, levelDb: this.levels.stillDb });
       else brokenRecord(ctx, out, { t0: step.at, durationSec: step.durationSec, levelDb: this.levels.brokenDb });
     }
   }

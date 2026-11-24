@@ -8,6 +8,8 @@ import {
   SOUND_NAMES,
   CELEBRATION_MUSIC,
   CARD_TYPE_ID_RE,
+  ROUND_KINDS,
+  WIN_KINDS,
   isPhaseName,
   type PhaseName,
   type ProtocolVersion,
@@ -81,7 +83,7 @@ export const COMMANDS = Object.freeze({
    * (`roundIntro`), else the next one. */
   newRound: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
-    kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
+    kind: { type: 'string', optional: true, oneOf: ROUND_KINDS },
     /** The printed card type the round plays (the plan round's `cardType`). Default: the introduced round's, else
      * defaultCardType(kind). */
     cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
@@ -105,7 +107,7 @@ export const COMMANDS = Object.freeze({
    */
   resumeAt: {
     round: { type: 'integer', min: 1, max: 20 },
-    kind: { type: 'string', oneOf: ['normal', 'special'] },
+    kind: { type: 'string', oneOf: ROUND_KINDS },
     shuffleSeed: { type: 'integer', min: 0, max: 4294967295 },
     position: { type: 'integer', min: -1, max: 999 },
     lineConfirmedFrom: { type: 'integer', optional: true, nullable: true, min: 0, max: 999 },
@@ -120,7 +122,7 @@ export const COMMANDS = Object.freeze({
    * Queue yet: `newRound` runs the Shuffle. */
   roundIntro: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
-    kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
+    kind: { type: 'string', optional: true, oneOf: ROUND_KINDS },
     /** The printed card type the round plays (the plan round's `cardType`; default defaultCardType(kind)). */
     cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
   },
@@ -129,12 +131,12 @@ export const COMMANDS = Object.freeze({
    * `perRound` a round is also revealed as it is introduced (`roundIntro`); with `allSecret` only by this.
    */
   revealPrizes: { round: { type: 'integer', min: 1, max: 20 } },
-  /** A player claims a Line or the Bingo for a card (`kind` defaults to what the Phase is climbing towards).
+  /** A player claims a Line or the Bingo for a card, or in the Desgraciat round to be the last card standing
+   * (`kind` defaults to what the Phase is climbing towards; a kind the round can't be won by is `invalid`).
    * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
   claim: {
     cardId: { type: 'integer', min: 1, max: 9999 },
-    // 'standing' opens with the Desgraciat round (once the cloud's journal check accepts it).
-    kind: { type: 'string', optional: true, oneOf: ['line', 'bingo'] },
+    kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
   },
   /** (Re)start a Claim's Check: a re-check, or another order. */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },

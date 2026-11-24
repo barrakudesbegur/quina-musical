@@ -29,7 +29,8 @@ const PLAY: readonly ShowScene[] = ['before', 'play'];
 /** The scenes that start the Interval playlist (it goes on in `play` until the round's first Spin). */
 const INTERVAL_MUSIC: readonly ShowScene[] = ['interval', 'roundStart', 'after'];
 const celebratingLine = (c: SceneContext) => c.scene === 'celebration' && c.celebrating === 'line';
-const celebratingBingo = (c: SceneContext) => c.scene === 'celebration' && c.celebrating === 'bingo';
+/** The round's end is celebrated: its Bingo, or the Desgraciat round's last card standing. */
+const celebratingBingo = (c: SceneContext) => c.scene === 'celebration' && (c.celebrating === 'bingo' || c.celebrating === 'standing');
 
 const RULES = {
   unlock: 'any',
