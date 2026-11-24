@@ -170,7 +170,7 @@ export function showPageCheck(clients: readonly { role: string }[] | null): Chec
 
 export function lanCheck(url: string | null, reachable: boolean): Check {
   if (!url) return check('Network', 'Console on the LAN', 'warn', 'no network: join the phone hotspot (USB tethering alone gives the tablet no way in)');
-  if (!reachable) return check('Network', 'Console on the LAN', 'fail', `${url} doesn't answer: check the relay and the firewall`);
+  if (!reachable) return check('Network', 'Console on the LAN', 'fail', `${url} doesn't answer: start the relay with "npm start -- --lan" (it listens only on this laptop otherwise), and check the firewall`);
   return check('Network', 'Console on the LAN', 'pass', `${url} (if the tablet can't open it, the hotspot isolates its clients: see the runbook)`);
 }
 
