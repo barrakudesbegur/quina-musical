@@ -438,6 +438,12 @@ export class CloudLink {
   private tick(): void {
     this.pump();
     const now = this.options.now();
+    // A hole in the journal copy (the show page wrote entries before this link heard them) is asked for again
+    // until it's filled: a request skipped by the 5-second limit isn't lost, so the cloud never waits for the
+    // next entry to catch up (it used to miss a round's intro at the start of a Game).
+    const gameId = this.journal.currentGameId;
+    const missing = gameId ? this.journal.firstMissing(gameId) : null;
+    if (missing !== null) this.requestJournal(missing);
     if (now - this.lastStatusWriteMs >= 5000) {
       this.lastStatusWriteMs = now;
       this.writeFile('status.json', { ...this.status(), updatedAtMs: now });

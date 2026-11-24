@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PROTOCOL_VERSION, replayJournal } from '@quina/protocol';
+import { PROTOCOL_VERSION, replayJournal, type JournalEntry } from '@quina/protocol';
 import { CloudLink } from '../../laptop/link.ts';
 import { fakeRelay } from '../../loadtest/fake-relay.ts';
 import { freePort, startDevServer, type DevServer } from '../../loadtest/dev-server.ts';
@@ -267,5 +267,29 @@ test("a new laptop copies the cloud's Game; Admin's manual resume leaves resume.
     fresh?.stop();
     await relay.close();
     await server.stop();
+  }
+});
+
+test('a hole in the journal copy is asked for again until filled, even after a request the rate limit skipped', async () => {
+  const relay = await fakeRelay();
+  // No cloud needed: the journal copy and its requests to the show are the link's own.
+  const link = makeLink(relay.url, 'ws://127.0.0.1:9');
+  const asks = () => relay.received.filter((m) => (m as { cmd?: string }).cmd === 'getJournal') as { fromSeq: number }[];
+  try {
+    link.start();
+    await until('the link on the relay', () => link.status().relay);
+    // The show page connects: the link asks for its journal from 1 (nothing there yet)…
+    relay.emit({ v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show' }] });
+    await until('the first ask', () => asks().length === 1);
+    // …then hears entry 2 first (entry 1 went out before it listened): a hole, inside the 5-second limit.
+    const game = JournalBuilder.sampleGame('g-hole');
+    relay.journal([game.entries[1] as JournalEntry]);
+    await until('the hole asked for again', () => asks().length >= 2, 8_000);
+    assert.equal(asks().at(-1)?.fromSeq, 1);
+    relay.emit({ v, type: 'journal.entries', reqId: 'x', gameId: 'g-hole', entries: game.entries.slice(0, 2) });
+    await until('the hole filled', () => link.status().journalled === 2);
+  } finally {
+    link.stop();
+    await relay.close();
   }
 });
