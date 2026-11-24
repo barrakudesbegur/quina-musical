@@ -365,6 +365,7 @@ describe('the Game plan and its media (Admin)', () => {
     // each type plays (here the especial cards in every round).
     const older = {
       ...PLAN,
+      v: 2,
       rounds: PLAN.rounds.map((r) => ({ number: r.number, kind: r.kind, line: r.line, bingo: r.bingo })),
       cardTypes: [{ type: 'especial', name: 'Cartró especial', color: '#ffd9e8', priceCents: null, rounds: ['normal', 'special'] }],
     };

@@ -103,7 +103,7 @@ type RoomEnv = Env & AccessEnv;
 
 /**
  * The stored plan as this code reads plans. The snapshot keeps the plan as it was saved, so it goes through
- * checkGamePlan again, which reads every older plan version as the current one (v2's `cardTypes` become each
+ * checkGamePlan again, which reads every older plan version as the current one (v2's `cardTypes` pick each
  * round's `cardType`), and phones' public plan is derived from it again. That only changes anything after a
  * deploy, which drops every WebSocket anyway, so phones reconnect to the new snapshot. Snapshots from before
  * prize secrecy kept the whole plan in the public state: it's taken from there.

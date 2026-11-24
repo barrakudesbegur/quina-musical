@@ -98,7 +98,7 @@ test("the Game plan: it must pass the protocol's check, and every round's card t
   assert.equal(c.planCheck({ ...PLAN, rounds: 'many' }, printed).status, 'fail');
   // An older plan reads as the current one: v2's card types give each round its type.
   const { rounds, ...rest } = PLAN;
-  const v2 = { ...rest, rounds: rounds.map((r) => ({ number: r.number, kind: r.kind, line: r.line, bingo: r.bingo })) };
+  const v2 = { ...rest, v: 2, cardTypes: [], rounds: rounds.map((r) => ({ number: r.number, kind: r.kind, line: r.line, bingo: r.bingo })) };
   assert.equal(c.planCheck(v2, printed).status, 'pass');
 });
 
