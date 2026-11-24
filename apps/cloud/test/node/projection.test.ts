@@ -122,6 +122,25 @@ test('the Desgraciat round: public as its kind; the last card standing wins it a
   assert.equal(state.rounds[0]?.lineConfirmed, false);
 });
 
+test("round 1's intro is public too, though the engine drew round 1 at boot; a round in play is never reintroduced", () => {
+  const b = new JournalBuilder('g-boot').boot(); // round 1's Queue, drawn without the public Shuffle
+  assert.equal(project(b.entries).state.rounds[0]?.kind, 'normal');
+  assert.equal(project(b.entries).state.scene, 'before');
+  // The presenters introduce round 1 as the Desgraciat round: phones see the intro.
+  b.scene('roundStart', 1, 'desgraciat');
+  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'desgraciat', cardType: 'normal' });
+  // Its Shuffle starts it again, as introduced: the intro goes.
+  b.restartRound('desgraciat');
+  let { state } = project(b.entries);
+  assert.equal(state.intro, null);
+  assert.equal(state.rounds.length, 1);
+  assert.equal(state.rounds[0]?.kind, 'desgraciat');
+  // A round with landings is never reintroduced (a scene change back to roundStart for it).
+  b.land(3).scene('roundStart', 1, 'desgraciat');
+  ({ state } = project(b.entries));
+  assert.equal(state.intro, null);
+});
+
 test("a round's card type is public from its intro: the one it names, else its kind's default", () => {
   const b = new JournalBuilder('g-types');
   b.scene('roundStart', 1, 'normal', 'groc');

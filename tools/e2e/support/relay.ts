@@ -55,8 +55,14 @@ export async function startRelay(): Promise<Relay> {
           linkDir,
           log: () => output,
           stop: async () => {
-            child.kill();
-            await new Promise((resolve) => child.once('exit', resolve));
+            if (child.exitCode === null) {
+              // SIGTERM, then SIGKILL if the relay is still waiting on a client (a page left open after a failure).
+              const killer = setTimeout(() => child.kill('SIGKILL'), 5000);
+              const exited = new Promise((resolve) => child.once('exit', resolve));
+              child.kill();
+              await exited;
+              clearTimeout(killer);
+            }
             fs.rmSync(linkDir, { recursive: true, force: true });
           },
         };

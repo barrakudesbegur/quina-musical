@@ -108,6 +108,8 @@ test('one whole show, every screen following', async ({ browser }) => {
   await remote.command('roundIntro', { number: 1 });
   await remote.until('round 1 introduced', (s) => s.scene === 'roundStart' && s.intro !== null);
   await expectScenes(screens, 'roundStart');
+  // Round 1 was drawn at boot, yet its intro reaches the phones too.
+  await soft.poll(() => phone.view?.state.intro?.round, { message: "the phone sees round 1's intro" }).toBe(1);
   await remote.command('newRound', { number: 1 });
   const shuffled = await remote.until('the Shuffle drawn', (s) => s.shuffle !== null);
   await remote.waitFor(() => Date.now() > (shuffled.shuffle?.endAtMs ?? 0) + 200, 60_000);

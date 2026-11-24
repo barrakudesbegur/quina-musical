@@ -83,11 +83,29 @@ export class JournalBuilder {
 
   /** Introduce the next round, Shuffle it and start it, then go to play. `cardType`: absent, the kind's default. */
   startRound(kind: RoundKind = 'normal', queue = shuffledQueue(this.round + 1), cardType?: string): this {
+    this.scene('roundStart', this.round + 1, kind, cardType);
+    this.drawRound(kind, queue, cardType);
+    return this.scene('play');
+  }
+
+  /** What the engine journals at boot: round 1's Queue, drawn without the public Shuffle; the scene stays 'before'. */
+  boot(): this {
+    return this.drawRound('normal', shuffledQueue(1));
+  }
+
+  /** The presenters' Shuffle of the round already introduced (scene roundStart): it's drawn again, then play. */
+  restartRound(kind: RoundKind = this.roundKind, cardType?: string): this {
+    this.round -= 1;
+    this.drawRound(kind, shuffledQueue(this.round + 1), cardType);
+    return this.scene('play');
+  }
+
+  /** The next round's round.started (its Queue), as the engine journals it. */
+  private drawRound(kind: RoundKind, queue: number[], cardType?: string): this {
     this.round += 1;
     this.roundKind = kind;
     this.queue = queue;
     this.position = -1;
-    this.scene('roundStart', this.round, kind, cardType);
     this.push(
       {
         kind: 'round.started',
@@ -104,7 +122,7 @@ export class JournalBuilder {
       },
       5_000,
     );
-    return this.scene('play');
+    return this;
   }
 
   /** A manual resume (plan B): round `round` again from `queue`, with songs 0..position counted. */

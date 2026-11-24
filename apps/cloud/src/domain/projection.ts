@@ -81,7 +81,10 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
     case 'scene.changed': {
       const changes: PublicChange[] = [];
       if (entry.scene !== state.scene) changes.push({ kind: 'scene', scene: entry.scene });
-      if (entry.scene === 'roundStart' && !state.rounds.some((r) => r.number === entry.round)) {
+      // The round being introduced, unless it's already in play. Round 1 is already public before its intro: the
+      // engine draws its Queue at boot (round.started, no Shuffle) so the first Spin can come without one.
+      const inPlay = state.rounds.some((r) => r.number === entry.round && (r.landings.length > 0 || r.ended));
+      if (entry.scene === 'roundStart' && !inPlay) {
         changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind) } });
       } else if (state.intro) {
         changes.push({ kind: 'intro', intro: null });
