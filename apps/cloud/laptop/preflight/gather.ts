@@ -183,6 +183,9 @@ async function cloudChecks(o: PreflightOptions): Promise<checks.Check[]> {
     const body = ping.body as { nowMs?: number; current?: { gameId: string; seq: number } | null } | undefined;
     cloudCurrent = body?.current ?? null;
     out.push(checks.cloudAuthCheck({ ok: ping.ok && typeof body?.nowMs === 'number', status: ping.status, rttMs: t1 - t0, offsetMs: (body?.nowMs ?? 0) - (t0 + t1) / 2, error: ping.error }));
+    // Today's usage against the free plan's daily limits, as the cloud counts it.
+    const stats = await getJson(`${o.cloud}/api/stats`, o.headers);
+    out.push(checks.usageCheck(stats.ok ? (stats.body as checks.CloudStats) : null, Date.now()));
   }
   out.push(checks.linkCheck(link, Date.now()));
   out.push(checks.gameCheck(link, cloudCurrent, edition));

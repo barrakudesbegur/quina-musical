@@ -634,3 +634,33 @@ describe('the Worker', () => {
     expect(p.client.closed).toBeNull();
   });
 });
+
+describe("show-night health: today's usage against the free plan", () => {
+  it('counts requests, incoming messages, rows and the phones peak, and reports the link', async () => {
+    type Health = RoomStats & {
+      today: { day: string; requests: number; wsMessagesIn: number; rowsWritten: number; phonesPeak: number; billedRequests: number; level: string; resetAtMs: number; shares: { requests: number } };
+      link: { online: boolean; lastSeenAgoMs: number | null; journalDelayMs: number | null };
+    };
+    const before = await getJson<Health>('/api/stats');
+    const { client: link } = await laptop('g-health');
+    const p1 = await phone();
+    const p2 = await phone();
+    await upload(link, 'g-health', new JournalBuilder('g-health', Date.now() - 2_000).startRound().land(2).entries);
+    const after = await getJson<Health>('/api/stats');
+    expect(after.today.day).toBe(new Date().toISOString().slice(0, 10));
+    expect(after.today.requests).toBeGreaterThan(before.today.requests);
+    expect(after.today.wsMessagesIn).toBeGreaterThan(before.today.wsMessagesIn);
+    expect(after.today.rowsWritten).toBeGreaterThan(0);
+    expect(after.today.phonesPeak).toBeGreaterThanOrEqual(2);
+    expect(after.today.billedRequests).toBe(after.today.requests + Math.ceil(after.today.wsMessagesIn / 20));
+    expect(after.today.level).toBe('ok');
+    expect(after.today.resetAtMs).toBeGreaterThan(Date.now());
+    expect(after.link.online).toBe(true);
+    expect(after.link.journalDelayMs).toBeTypeOf('number');
+    // Saved now and then (getStats saves first): a GameRoom that wakes again carries on from that row.
+    const saved = await runInDurableObject(roomOf(env), async (_room: GameRoom, state) => state.storage.sql.exec('SELECT body FROM usage WHERE day = ?', after.today.day).toArray());
+    expect(JSON.parse(String(saved[0]?.body)).requests).toBeGreaterThanOrEqual(after.today.requests - 1);
+    void p1;
+    void p2;
+  }, 20_000);
+});

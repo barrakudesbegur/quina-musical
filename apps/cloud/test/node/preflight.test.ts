@@ -112,3 +112,29 @@ test('the cloud link and the Game', () => {
   assert.equal(c.exitCode([{ group: 'Pool', name: 'x', status: 'warn', detail: '' }]), 0);
   assert.equal(c.exitCode([{ group: 'Pool', name: 'x', status: 'fail', detail: '' }]), 1);
 });
+
+test('the daily usage: WARN from 60 %, FAIL from 85 %, with the reset time in Catalonia', () => {
+  const stats = (shareRequests: number): c.CloudStats => ({
+    phonesConnected: 120,
+    today: {
+      billedRequests: Math.round(shareRequests * 100_000),
+      rowsRead: 0,
+      rowsWritten: 0,
+      phonesPeak: 180,
+      limits: { requests: 100_000, rowsRead: 5_000_000, rowsWritten: 100_000 },
+      shares: { requests: shareRequests, rowsRead: 0, rowsWritten: 0.01 },
+      level: shareRequests >= 0.85 ? 'fail' : shareRequests >= 0.6 ? 'warn' : 'ok',
+      resetAtMs: Date.UTC(2026, 11, 21),
+    },
+    link: { online: true, lastSeenAgoMs: 1000, journalDelayMs: 1200 },
+  });
+  const night = Date.UTC(2026, 11, 20, 21, 30); // 22:30 in Catalonia
+  const ok = c.usageCheck(stats(0.21), night);
+  assert.equal(ok.status, 'pass');
+  assert.match(ok.detail, /requests 21 % \(21,000 of 100,000\)/);
+  assert.match(ok.detail, /120 phones now, 180 at most today; resets at 01:00 \(in 2 h 30 min\)/);
+  assert.match(ok.detail, /1\.2 s late/);
+  assert.equal(c.usageCheck(stats(0.6), night).status, 'warn');
+  assert.equal(c.usageCheck(stats(0.9), night).status, 'fail');
+  assert.equal(c.usageCheck(null, night).status, 'warn');
+});

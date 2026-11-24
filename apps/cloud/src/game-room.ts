@@ -34,6 +34,7 @@ import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanS
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
+import { UsageCounter, usageReport, type DailyUsage, type UsageReport } from './domain/usage.ts';
 import { ingest } from './domain/ingest.ts';
 import { projectEntry, projectEvent, type ProjectionContext } from './domain/projection.ts';
 import {
@@ -136,16 +137,31 @@ export class GameRoom extends DurableObject<RoomEnv> {
   /** The show's last `state`, for a console that connects (memory only: after hibernation, its getState asks again). */
   private lastState: string | null = null;
 
+  /** Today's usage against the free plan's daily limits (domain/usage.ts), saved now and then. */
+  private readonly usage: UsageCounter;
+  /** How late the laptop's last journal entry reached the cloud (cloud clock), or null before any. */
+  private journalDelayMs: number | null = null;
+
   constructor(ctx: DurableObjectState, env: RoomEnv) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.stats = newStats(Date.now());
     this.migrate();
     this.room = this.load();
+    const saved = this.rows('SELECT body FROM usage ORDER BY day DESC LIMIT 1')[0];
+    this.usage = new UsageCounter(saved ? (JSON.parse(String(saved.body)) as DailyUsage) : null, Date.now(), (u) => {
+      this.rows('INSERT INTO usage (day, body) VALUES (?, ?) ON CONFLICT (day) DO UPDATE SET body = excluded.body', u.day, JSON.stringify(u));
+    });
+  }
+
+  /** One request into the GameRoom (a WebSocket upgrade, a call from the Worker, an alarm), for today's usage. */
+  private counted(): void {
+    this.usage?.count('requests', 1, Date.now());
   }
 
   // ---- connections -------------------------------------------------------------------------------------
   override async fetch(request: Request): Promise<Response> {
+    this.counted();
     if (request.headers.get('upgrade')?.toLowerCase() !== 'websocket') return text(426, 'expected a WebSocket');
     const url = new URL(request.url);
     if (url.pathname === '/feed') return this.acceptPhone(url);
@@ -164,6 +180,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     server.serializeAttachment({ role: 'phone', cards, connectedAtMs: Date.now() } satisfies PhoneAttachment);
     this.send(server, this.snapshotMessage());
     this.stats.phonesAccepted += 1;
+    this.usage.phones(this.sockets('phone').length, Date.now());
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -192,6 +209,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     this.stats.messagesIn += 1;
+    this.usage.count('wsMessagesIn', 1, Date.now());
     const attachment = ws.deserializeAttachment() as Attachment;
     if (attachment.role === 'phone') {
       this.stats.phoneMessagesIn += 1; // phones send nothing; whatever arrives is ignored
@@ -248,6 +266,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** The silence check: a laptop that said nothing for CLOUD.showSilenceMs is gone. */
   override async alarm(): Promise<void> {
+    this.counted();
     const now = Date.now();
     let latest = 0;
     for (const ws of this.sockets('show')) {
@@ -294,6 +313,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
         this.save();
       });
       this.stats.entriesStored += result.accepted.length;
+      const last = result.accepted.at(-1)?.entry;
+      if (last) this.journalDelayMs = Math.max(0, Date.now() - ctx.toCloudMs(last.atMs));
       if (changes.length > 0) this.broadcast(this.deltaMessage(changes));
       // A round's prizes revealed (prizes.revealed): phones get that round's bundles now.
       if (result.accepted.some(({ entry }) => entry.kind === 'prizes.revealed')) this.refreshPublicPlan();
@@ -442,6 +463,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   // ---- RPC for the Worker ------------------------------------------------------------------------------
   /** Every Game of the edition, replayed with the protocol's own reducer as a check. */
   exportEdition(): EditionExport {
+    this.counted();
     const rows = this.rows('SELECT game_id, entry FROM journal ORDER BY game_id, seq');
     const byGame = new Map<string, JournalEntry[]>();
     for (const row of rows) {
@@ -463,6 +485,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   // ---- the Game plan and its media (Admin) -------------------------------------------------------------
   /** The edition's Game plan. It is all public (prizes, sponsors, schedule), so it lives in the public state. */
   getPlan(): GamePlan | null {
+    this.counted();
     return this.room.plan ?? null;
   }
 
@@ -473,6 +496,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Everyone gets it. */
   setPlan(json: unknown): PlanSave {
+    this.counted();
     const check = this.checkPlan(json);
     if (!check.ok) return check;
     // Never older than the plan it replaces, so a laptop's copy saved a moment ago can't win over it.
@@ -538,6 +562,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
    * name replaces the old). Its JPEG XL comes separately (putMediaJxl).
    */
   async putMedia(bytes: ArrayBuffer, contentType: string, name: string | null = null): Promise<MediaSave> {
+    this.counted();
     const ext = CLOUD.media.types[contentType];
     const only = `only ${Object.keys(CLOUD.media.types).join(', ')} (a JPEG XL goes to PUT /api/media/<key>.jxl)`;
     if (!ext) return { ok: false, status: 415, error: only };
@@ -557,6 +582,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** Attach the JPEG XL to an uploaded fallback (replacing an earlier one). */
   putMediaJxl(id: string, bytes: ArrayBuffer): MediaSave {
+    this.counted();
     if (this.rows('SELECT id FROM media WHERE id = ?', id).length === 0) return { ok: false, status: 404, error: 'upload the PNG or JPEG first (POST /api/media)' };
     if (bytes.byteLength === 0 || bytes.byteLength > CLOUD.media.maxBytes) return { ok: false, status: 413, error: `files of 1 byte to ${CLOUD.media.maxBytes / 1024} KB` };
     if (!isImage(bytes, 'image/jxl')) return { ok: false, status: 415, error: 'only image/jxl' };
@@ -566,6 +592,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** A stored file: the fallback, or for `jxl` the JPEG XL (`isFallback` when there is none, so the fallback answers). */
   getMedia(id: string, jxl = false): { bytes: ArrayBuffer; contentType: string; isFallback: boolean } | null {
+    this.counted();
     if (jxl) {
       const row = this.rows('SELECT bytes FROM media_jxl WHERE id = ?', id)[0];
       if (row) return { bytes: row.bytes as ArrayBuffer, contentType: 'image/jxl', isFallback: false };
@@ -576,6 +603,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** Every uploaded pair, newest first: Admin's picker. */
   listMedia(): MediaItem[] {
+    this.counted();
     const rows = this.rows(
       'SELECT m.id, m.name, m.content_type, length(m.bytes) AS size, m.at_ms, length(j.bytes) AS jxl_size FROM media m LEFT JOIN media_jxl j ON j.id = m.id ORDER BY m.at_ms DESC',
     );
@@ -599,6 +627,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   // ---- Games and Admin's manual resume ---------------------------------------------------------------------
   /** Every Game of the edition, newest first (Admin's resume picker). */
   listGames(): GameSummary[] {
+    this.counted();
     const rows = this.rows(
       `SELECT game_id, MAX(seq) AS seq, MIN(at_ms) AS first_at, MAX(at_ms) AS last_at,
               COUNT(DISTINCT CASE WHEN kind IN ('round.started', 'round.resumed') THEN json_extract(entry, '$.round') END) AS rounds
@@ -624,6 +653,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
    * it for the show page to resume from. History is never rewritten; to go back in a Game, the show uses Back.
    */
   resumeGame(gameId: string, by: string): ResumeResult {
+    this.counted();
     const seq = Number(this.rows('SELECT MAX(seq) AS seq FROM journal WHERE game_id = ?', gameId)[0]?.seq ?? 0);
     if (!seq) return { ok: false, error: `no Game ${gameId} in edition ${this.env.EDITION}` };
     if (this.room.game?.gameId !== gameId) this.switchGame(gameId);
@@ -637,6 +667,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   // ---- what Admin sees of the phones, and says to them ------------------------------------------------------
   phonesNow(): PhonesNow {
+    this.counted();
     const counts = new Map<number, number>();
     const phones = this.sockets('phone');
     for (const ws of phones) for (const card of (ws.deserializeAttachment() as PhoneAttachment).cards) counts.set(card, (counts.get(card) ?? 0) + 1);
@@ -644,6 +675,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   setNotice(notice: unknown): SettingSave {
+    this.counted();
     if (notice !== null && (typeof notice !== 'string' || notice.trim().length > CLOUD.maxNoticeLength)) {
       return { ok: false, error: `notice must be null or a text of at most ${CLOUD.maxNoticeLength} characters` };
     }
@@ -653,6 +685,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   setSoundsDefault(soundsDefault: unknown): SettingSave {
+    this.counted();
     if (typeof soundsDefault !== 'boolean') return { ok: false, error: 'soundsDefault must be true or false' };
     if (soundsDefault !== this.room.feed.state.soundsDefault) this.publish([{ kind: 'sounds', soundsDefault }]);
     return { ok: true };
@@ -660,12 +693,24 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** The cloud's clock, edition and current Game (the laptop's preflight). */
   ping(): { nowMs: number; edition: string; current: { gameId: string; seq: number } | null } {
+    this.counted();
     const game = this.room.game;
     return { nowMs: Date.now(), edition: this.env.EDITION, current: game && game.seq > 0 ? { gameId: game.gameId, seq: game.seq } : null };
   }
 
-  getStats(): RoomStats {
-    return { ...this.stats, phonesConnected: this.sockets('phone').length, consolesConnected: this.consoles().length };
+  getStats(): RoomStats & { today: UsageReport; link: { online: boolean; lastSeenAgoMs: number | null; journalDelayMs: number | null } } {
+    this.counted();
+    const now = Date.now();
+    this.usage.flush(now);
+    const show = this.sockets('show')[0];
+    const lastSeenMs = show ? (show.deserializeAttachment() as ShowAttachment).lastSeenMs : null;
+    return {
+      ...this.stats,
+      phonesConnected: this.sockets('phone').length,
+      consolesConnected: this.consoles().length,
+      today: usageReport(this.usage.read(now), now),
+      link: { online: Boolean(show), lastSeenAgoMs: lastSeenMs === null ? null : now - lastSeenMs, journalDelayMs: this.journalDelayMs },
+    };
   }
 
   // ---- storage ---------------------------------------------------------------------------------------------
@@ -683,6 +728,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
     // Added with the JPEG XL pairs: a name for Admin's picker, and each fallback's JXL.
     if (!this.rows('PRAGMA table_info(media)').some((c) => c.name === 'name')) this.rows('ALTER TABLE media ADD COLUMN name TEXT');
     this.rows('CREATE TABLE IF NOT EXISTS media_jxl (id TEXT PRIMARY KEY, bytes BLOB NOT NULL, at_ms REAL NOT NULL) WITHOUT ROWID');
+    // Today's usage against the free plan's limits (domain/usage.ts): one row a day, saved now and then.
+    this.rows('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, body TEXT NOT NULL) WITHOUT ROWID');
   }
 
   private load(): RoomSnapshot {
@@ -714,6 +761,11 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const rows = cursor.toArray();
     this.stats.rowsRead += cursor.rowsRead;
     this.stats.rowsWritten += cursor.rowsWritten;
+    if (this.usage) {
+      const now = Date.now();
+      this.usage.count('rowsRead', cursor.rowsRead, now);
+      this.usage.count('rowsWritten', cursor.rowsWritten, now);
+    }
     return rows;
   }
 

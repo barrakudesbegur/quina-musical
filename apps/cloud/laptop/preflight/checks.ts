@@ -168,6 +168,39 @@ export function browserCheck(processes: readonly string[]): Check {
 }
 
 // ---- the network and the cloud ----------------------------------------------------------------------------
+/** What the preflight reads from the cloud's /api/stats (src/domain/usage.ts UsageReport, and the link). */
+export interface CloudStats {
+  phonesConnected: number;
+  today: {
+    billedRequests: number;
+    rowsRead: number;
+    rowsWritten: number;
+    phonesPeak: number;
+    limits: { requests: number; rowsRead: number; rowsWritten: number };
+    shares: { requests: number; rowsRead: number; rowsWritten: number };
+    level: 'ok' | 'warn' | 'fail';
+    resetAtMs: number;
+  };
+  link: { online: boolean; lastSeenAgoMs: number | null; journalDelayMs: number | null };
+}
+
+/** The cloud's daily usage against the free plan: WARN from 60 % of a limit, FAIL from 85 %, with when it resets. */
+export function usageCheck(stats: CloudStats | null, nowMs: number): Check {
+  if (!stats?.today) return check('Cloud', 'Daily usage', 'warn', "couldn't read the cloud's usage (/api/stats)");
+  const t = stats.today;
+  const pct = (share: number) => `${Math.round(share * 100)} %`;
+  const reset = new Date(t.resetAtMs).toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+  const inMin = Math.max(0, Math.round((t.resetAtMs - nowMs) / 60_000));
+  const detail =
+    `requests ${pct(t.shares.requests)} (${t.billedRequests.toLocaleString('en')} of ${t.limits.requests.toLocaleString('en')}), ` +
+    `rows written ${pct(t.shares.rowsWritten)}, rows read ${pct(t.shares.rowsRead)}; ` +
+    `${stats.phonesConnected} phones now, ${t.phonesPeak} at most today; resets at ${reset} (in ${Math.floor(inMin / 60)} h ${inMin % 60} min)` +
+    (stats.link.journalDelayMs !== null ? `; the journal reached the cloud ${(stats.link.journalDelayMs / 1000).toFixed(1)} s late` : '');
+  if (t.level === 'fail') return check('Cloud', 'Daily usage', 'fail', `${detail}. Near the free plan's daily limit: phones may stop updating. Upgrade to Workers Paid now (deploy plan step 5), or wait for the reset`);
+  if (t.level === 'warn') return check('Cloud', 'Daily usage', 'warn', `${detail}. Watch it: past 85 % upgrade to Workers Paid (deploy plan step 5)`);
+  return check('Cloud', 'Daily usage', 'pass', detail);
+}
+
 export function relayCheck(pool: string, answer: { ok: boolean; name?: string; error?: string }): Check {
   if (!answer.ok) return check('Network', 'Relay', 'fail', `not running (${answer.error ?? 'no answer'}): start it with "npm start" in apps/show`);
   if (answer.name !== pool) return check('Network', 'Relay', 'fail', `it serves pool "${answer.name}", not "${pool}": restart it with --pool ${pool}`);

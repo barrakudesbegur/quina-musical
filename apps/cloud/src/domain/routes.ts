@@ -48,8 +48,9 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   /** The player app's default for interface sounds: `{ soundsDefault: boolean }` (a player's own choice wins). */
   '/api/sounds': { name: 'sounds', websocket: false, access: PEOPLE, methods: ['PUT'] },
   '/api/export': { name: 'export', websocket: false, access: PEOPLE, methods: GET },
-  /** Connections, messages and SQLite rows since the GameRoom last woke (admins, the load test). */
-  '/api/stats': { name: 'stats', websocket: false, access: PEOPLE, methods: GET },
+  /** Connections, messages and rows since the GameRoom last woke, today's usage against the free plan's daily limits, and the laptop link's lag (admins, the preflight, the load test). */
+  // Counts only (no names, no Queue): the laptop's preflight reads today's usage against the free limits too.
+  '/api/stats': { name: 'stats', websocket: false, access: ANYONE_SIGNED_IN, methods: GET },
   /** Signed in (the laptop's preflight, organizers): the cloud's clock, edition and current Game. */
   '/api/ping': { name: 'ping', websocket: false, access: ANYONE_SIGNED_IN, methods: GET },
   /** Liveness, without waking the GameRoom. */
