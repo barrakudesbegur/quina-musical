@@ -4,6 +4,8 @@
  * markup or logic. The values below are the basic theme, taken from the "Quina Musical look" mockups'
  * palette so the move to the full look is small.
  */
+@import './fonts.css';
+
 :root {
   /* Palette (names from the mockups) */
   --color-night: #18204a;

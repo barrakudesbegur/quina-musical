@@ -1,0 +1,10 @@
+/*
+ * The game look's two typefaces, self-hosted (Fontsource, SIL Open Font License) so the projector and the
+ * LAN console have them with no internet at the venue: Londrina Solid for titles (the outlined game text) and
+ * Nunito for everything else. Latin only (it covers Catalan: à, ç, l·l…), and only the weights in use.
+ */
+@import '@fontsource/londrina-solid/latin-900.css';
+@import '@fontsource/nunito/latin-600.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/nunito/latin-800.css';
+@import '@fontsource/nunito/latin-900.css';
