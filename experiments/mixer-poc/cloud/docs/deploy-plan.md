@@ -24,6 +24,8 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 | 2026-11-24 | Read-only checks: `wrangler whoami`; `wrangler deployments list --name quina-cloud` (no Worker of that name existed, so a deploy overwrote nothing); `wrangler deploy --dry-run` | none | nothing to undo |
 | 2026-11-24 | **Deployed the Worker `quina-cloud`** (version `27b8ce0a`), after the user allowed `npx wrangler deploy`: the GameRoom Durable Object class (SQLite, migration `v1`) and 121 static files (the player at the root, console, Admin, `cards.json` and the covers as WebP, all from last year's test pool). No secrets yet, so every admin and laptop route answers 403 and only the phone feed and `/api/health` work. Checked on the edge: a phone gets its snapshot in about 0.7 s. | https://quina-cloud.barrakudes.workers.dev (workers.dev only: no DNS record, no zone change) | `npx wrangler rollback` (the previous version), or `npx wrangler delete quina-cloud`, which also deletes the GameRoom's data (export first) |
 
+| 2026-11-24 | Redeployed (version `61d29019`) with the UI build of c3770c8: the player never takes the relay in production, masked resume codes, relay pairing, Admin's plan B. Checked live: every page's assets load, the locked routes still answer 403, a phone gets its snapshot. | the same Worker | `npx wrangler rollback` |
+
 The first `wrangler deploy` was stopped by Claude Code's permission check (auto mode); the user then allowed `npx wrangler deploy` in this project (`.claude/settings.local.json`, personal and gitignored).
 
 ## Needs the user
