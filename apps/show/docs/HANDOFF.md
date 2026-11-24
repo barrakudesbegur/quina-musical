@@ -1,13 +1,13 @@
 # Sound engine handoff
 
-The single place to resume the sound engine's work from. It was written when the user paused the work.
+The single place to resume the sound engine's work from. It was first written when the user paused the work (2026-11-24) and is kept current at each milestone.
 
 **What this covers:** the show engine and its transitions, Signatures, Suspense and Decoys, the song preparation pipeline (tools/prep), `@quina/protocol` and the Game journal. The journal is shared with the platform session.
 
 **Where else to look:**
-- The decisions are in `GLOSSARY.md`, `docs/mixer-design-decisions.md`, `docs/show-ui-and-platform-decisions.md` (its "Changes" section) and `docs/adr/`. They override older research.
-- The team roles are in `docs/team.md`.
-- Questions only the user can answer go in `docs/open-questions.md`.
+- The decisions are in `GLOSSARY.md`, `docs/how-the-quina-works.md` (the current-state read of a whole night), `docs/mixer-design-decisions.md`, `docs/show-ui-and-platform-decisions.md` (its "Changes" section) and `docs/adr/`. They override older research.
+- The dates are in `docs/timeline.md`: the playlist is final on Tue 1 Dec, the night is Sun 27 Dec.
+- The team roles are in `docs/team.md`. Questions only the user can answer go in `docs/open-questions.md`.
 
 ## Done so far
 
@@ -31,12 +31,12 @@ All of this is on `main`, green when committed.
 | `?mute=1` on the show page, for b2's headless e2e test | `ea79df7` |
 | **Plan v2:** prize bundles with headline prizes, `prizeReveal`, `revealPrizes`, the journal's `prizes.revealed` (also at every `roundIntro`), `revealedRounds()` / `publicPlan()`, and `CheckInfo.cardType` | `7e502c4` |
 | **The variety review.** D20 Count-in (a new family), the open landing, R1's sweep lengths, and early quarter-beat gaps. Before → after is in the next section | `6871c26` |
+| **Card type per round**, step A: each round plays the printed type it is given (`RoundPlan.cardType`, a card-types.json id; `roundIntro`/`newRound`/`resumeAt { cardType? }`). It drives the valid cards, the Shuffle's Tie check, the Phase and the Check's `wrongType`; journaled in `round.started`/`round.resumed`/`scene.changed`; resume tokens add `-T<ID>` when it isn't the kind's default. Frontend's and Backend's step B followed (card-types.json on every screen, the cloud's projection and preflight) | `b71d843`, B: `5579442`, `f3e8ade` |
+| **The Desgraciat round** (played in reverse: the last card standing wins). A: `RoundKind 'desgraciat'`, `WinKind 'standing'`, `CheckOutcome 'fallen'`, the console's private `standing` and Futur's `lastStandingAt`/`standingCurve`; the pure parts (`fallIndex`, `standingCourse`, the Shuffle's `lastStanding` rule, the standing Check, the count-based `standingPlan`). C: the engine plays it (commands, standing claims, auto-advance stops at one card, a 0.55 s knock per song not heard yet, the Celebration and Interval like a Bingo). Covered by `desgraciat.test.ts`, `desgraciat-flow.test.ts` (with a fuzz), and a Desgraciat round 7 in every simulated night | A `caa5662`, C `2e359dd`; cloud B `cb35dd1` |
 
 Earlier work, before the move, is summarised in the README and `docs/dj-techniques.md` › Built: the planner, every recipe up to D19, the show state machine, the journal, resumeAt, the Interval and the relay security.
 
-## In progress when paused
-
-### The variety review: done
+### The variety measures
 
 Over 4 simulated 12-round nights (`node tests/support/variety.ts 4 1`, 2,430 transitions):
 
@@ -48,58 +48,18 @@ Over 4 simulated 12-round nights (`node tests/support/variety.ts 4 1`, 2,430 tra
 | Gap = previous | 27% | 20% |
 | Effective recipes early | 8.9 | 9.8 |
 
-**Not fixable in code:** Hold music replays a loop heard that night 53% of the time, and the victory track 92%. There are only 3 Hold loops and 1 victory track (`data/media/hold`, `data/media/celebration`). The orchestrator is taking this to the user.
+Since `2e359dd` every simulated night plays a Desgraciat round (round 7), so the same command now covers 2,331 transitions; the measures barely move (family again within 3: 18%, landing = previous: 13%, build length = previous: 35%, gap = previous: 20%, effective recipes early: 9.9).
 
-### The protocol batch: built except two items
+**Not fixable in code:** Hold music replays a loop heard that night 53% of the time, and the victory track 92%. There are only 3 Hold loops and 1 victory track (`data/media/hold`, `data/media/celebration`): the user may add more (see Waiting on the user).
 
-**Built and agreed with 1e and b2:**
-- plan v2 bundles;
-- `prizeReveal` (`perRound` reveals at the round's intro; round 1 is open before the night);
-- the edition `title` on every screen;
-- `revealPrizes`;
-- `publicPlan` / `revealedRounds`;
-- `CheckInfo.cardType` with `wrongType` as its own failure.
+## In progress
 
-b2 built prize secrecy on top (`6fbbc32`). 1e moved the UI to plan v2 (`07ed72f`): Admin edits bundles, the title, `prizeReveal` and card types; the console's Premis tab sends `revealPrizes`; the stage and phones show only revealed rounds' bundles. The Check view carries `cardType` but doesn't draw it yet: the projector's "Cartró normal ✓" first step waits for its ANIMATIONS.md entry (1e's).
-
-**Not started: two items from the user's latest decisions (`00bd75f`).** The orchestrator asked to leave both for after the pause.
-
-1. **Card types come from the card generation, not Admin.** cards.json gets a `types` table (name, pastel colour, title, price), owned by **1e** (apps/cards). Admin only assigns a card type per round. Design:
-   - **Plan:** take `cardTypes`, colour and price out of `GamePlan`. Add `RoundPlan.cardType: string` (a cards.json type id; it defaults by kind: normal → `'normal'`, special → `'especial'`). `checkGamePlan` checks the format only; screens check it against cards.json. Migrate plans that carry `cardTypes` by dropping it.
-   - **Engine:** a round's accepted card type comes from the command, instead of the fixed rule in `engine/src/game/cards.ts` `validCards`. Add `newRound { cardType? }` and `roundIntro { cardType? }` (the console sends the plan's value). `game/check.ts` then gives `wrongType` against that type. Journal it in `round.started` (`cardType`) so a resume knows it.
-   - **To agree:** 1e (Admin, console, the cards.json `types` table) and b2 (the plan in the cloud and `publicPlan`).
-   - **Done when:**
-     - a round of any type only accepts its type's cards;
-     - the Check's `cardType` and `wrongType` follow the round;
-     - resume keeps it;
-     - v2 plans with `cardTypes` still load.
-2. **The Desgraciat round** (approved). The rules: a card is out as soon as any of its songs lands, and the last card standing wins. Design:
-   - **Protocol:**
-     - `RoundKind` gains `'desgraciat'`, and the public round shows it.
-     - The private `ShowState.standing?: { count, cardIds (≤ 60) }` serves the console.
-     - Claims stay presenter-driven: `claim { cardId, kind: 'standing' }`. `WinKind` gains `'standing'`.
-     - The Check proves that none of the card's 12 songs landed: every step is a "not landed ✓", and any landed song fails it. A new `CheckOutcome` value, `'fallen'`, marks a card that has been knocked out.
-     - Phones work out Dempeus or Assegut from the public landings and the round kind. Nothing new is needed on the feed.
-   - **Shuffle:** `game/shuffle.ts` `tieFreeShuffle` gains a Desgraciat rule. Each valid card's elimination index is the first Queue index of any of its songs. The largest index must be held by exactly one card, so the last two can never fall on the same song. Reshuffle until it is (like today's tie rule), and journal the attempts.
-   - **Phase and Heat:**
-     - The climb follows the standing count. `final` comes when 2–3 cards stand, `late` around 5–8, `mid` around 15. Tune these by simulation with cards.json.
-     - The expected win is the Queue index where the count reaches 1, known from the Queue.
-     - Add a `PhaseModel` kind `'standing'` in `game/phase.ts`.
-   - **Plan and card type:** one Desgraciat round per night, movable. Its card type is whatever Admin assigns (item 1).
-   - **To agree:**
-     - 1e: console standing list, stage Check steps, phone Dempeus/Assegut, Admin round kind;
-     - b2: the projection of the new kind and outcome, the journal check of `kind: 'standing'`.
-   - **Done when:**
-     - a simulated Desgraciat round always has exactly one last card;
-     - its Check passes or fails as described;
-     - the console sees the standing cards privately;
-     - `variety` and `journal` replay tests cover it.
+- **Card type per round, step C** (in local `main` as `bd29f4d`, not pushed): plan version 3. `RoundPlan.cardType` is required; `GamePlan.cardTypes`, `PublicPlan.cardTypes`, `CardType` and `DEFAULT_CARD_TYPES` are gone; `checkGamePlan` reads v1 and v2 plans as v3 (a v2 `cardTypes` list only picks each round's type). `parseCardRanges` moved to `@quina/protocol` (`ranges.ts`), re-exported by the engine. It breaks Frontend's compile and Backend's fixtures until their fixes are committed on top; then the full suite, the push, and Backend redeploys quina-dev.
+- **`remote.status` in `@quina/protocol`** (`cccfd82`, local): the relay imports it there; Frontend points `packages/ui/client/remote-status.ts` at it when convenient.
 
 ## The next queue, in priority order
 
-1. **Card type per round** (above). Agree with 1e and b2 first.
-2. **The Desgraciat round** (above). It depends on 1.
-3. **The user's listening pass on the new sound** (not heard yet):
+1. **The user's listening pass on the new sound** (not heard yet). Transitions and effects stay frozen until then:
    - phrase landings, the light early palette and rare impacts;
    - Signatures before the landing;
    - the new Suspense (A loops, hover, teases);
@@ -108,22 +68,27 @@ b2 built prize secrecy on top (`6fbbc32`). 1e moved the UI to plan v2 (`07ed72f`
    - D20 Count-in and the open landing.
 
    Adjust from their notes. One known candidate: **the Suspense release can take up to ~9 s** (B waits for the end of a 4-bar pass plus A's exit in free bars). A faster option would land on the next 2-bar boundary.
-4. **This year's playlist, when it arrives:**
-   - Make it a pool (`data/pools/<name>.json`) and run `npm run prep -- --pool <name>`. The `hooks` and `signatures` steps propose candidates.
-   - The user approves hooks and vets Signatures on the audition page. Then rerun the variety and phrase measures on that pool.
+2. **Ready for this year's playlist by Mon 30 Nov** (timeline): run the prep pipeline end to end on a few songs of the draft playlist (Spotify `0EOwwaDVItDHMRkYoO1m8y`, fetched with `tools/prep/playlist-fetcher`) so a new pool has no surprises, and free disk space (about 20 GB free on 2026-11-25).
+3. **This year's playlist, when it arrives (Tue 1 Dec):**
+   - Make it a pool (`data/pools/<name>.json`) and run `npm run prep -- --pool <name>` by **Wed 2 Dec**. Flag unusable songs the same day, so the user can swap them before the cards print (Thu 3 Dec).
+   - The `hooks` and `signatures` steps propose candidates. The user approves hooks and vets Signatures on the audition page by **Thu 10 Dec**; stems and the variety and phrase measures rerun on that pool by then.
    - **Done when:** every playable song has an approved best hook and reviewed Signatures, and `npm test` is green on the new pool.
-5. **Retire or keep the old Decoys experiment** (`DECOYS.enabled`, off by default; `plan/decoys.ts`, `docs/decoys.md`). Suspense's teases now do the user's version of Decoys. Ask the orchestrator before removing it.
+4. **Retire the old Decoys experiment** (`DECOYS.enabled`, off by default; `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1`). The orchestrator decided it (2026-11-25): Suspense's teases are the user's version of Decoys, and the term stays in the glossary for them.
 
 ## Waiting on the user
 
-- **The Wii remote mapping** (Q34, being iterated): proposed A Següent, B-hold Suspens, 1 Parlem, 2 Aguanta, − (hold) Enrere, + Claim, D-pad effects. Nothing is built.
-- **This year's playlist:** hooks to approve and Signature vetoes (see the queue).
-- **Listening feedback** not yet given on the new sound (queue item 3), including the ~9 s Suspense release.
+- **Listening feedback** on the new sound (queue item 1), including the ~9 s Suspense release.
+- **This year's playlist** (Tue 1 Dec), then its hooks to approve and Signatures to vet.
 - **More Hold music and victory tracks** (the media pools are tiny).
+- **The last card standing unsold** (the orchestrator asked): until the user says otherwise, the presenters decide by the room. The engine needs nothing either way.
 
 ## Decided since the pause
 
 - **Q26 = A+:** the show laptop stays installed (the relay, plus Python Rubber Band for the Blend renders) and pulls its media from R2. No WASM or browser time-stretcher; "nothing installed" is deferred until after the event.
+- **The Wii remote mapping** (Q34) is decided and built by Frontend (`357cba4`, `c4632f8`, `b9825f1`); the engine needed nothing new.
+- **Pause plays the Interval music** (orchestrator): Pausa reuses `pause {on}` / `ShowState.pause`; during a pause the engine plays the Interval music instead of Hold music, and the round resumes with a normal transition (`a11a224`, covered by `tests/flow.test.ts`).
+- **The flaky hook-ranking test** (from Backend) is fixed: `section_kinds` fixes each eigenvector's sign, and the test asserts every chorus start in the top four (`a11a224`).
+- **The Desgraciat details** (orchestrator, 2026-11-25): the standing set is the round's cards in play of its card type (the ranges can't tell sold from unsold); thresholds from the count alone; auto-advance stops at one card.
 
 ## Known issues and risks
 
@@ -177,75 +142,3 @@ From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
 **Prepare:**
 - `npm run prep -- --pool <name>`: covers, decode, analyze, snippets, validate, keys, stems, signatures, hooks, interval.
 - Single steps: `tools/prep/.venv/bin/python tools/prep/hooks_auto.py --report` or `tools/prep/signatures.py --force`.
-
-## Added by others while paused, and what became of it
-
-- **Q26 = A+** (orchestrator): recorded above under "Decided since the pause". Done.
-- **Pause plays the Interval music** (orchestrator): Pausa reuses `pause {on}` / `ShowState.pause` / the public `pause`. During a pause the engine now plays the Interval music instead of Hold music, and the round resumes with a normal transition out of it (a Check after a pause goes back to Hold music under its snippets). Done; `tests/flow.test.ts` covers it.
-- **The flaky hook-ranking test** (b2): `section_kinds` now fixes each eigenvector's sign (largest component positive), and the test asserts the real claim (every chorus start in the top four) instead of an exact top 1. It passes with 1, 4 and 8 BLAS threads. On real songs: 26 of 77 top candidates within a bar of a tagged hook, 48 of 77 in the top three. Done.
-- **Card types from the printed cards** (1e, c424649): `apps/cards/dist/cards.json` plus `card-types.json` become the formal source, with a type per round in `RoundPlan`; then `plan.cardTypes`' name, colour and price go. Admin already shows them read-only (`withPrintedCardTypes`). **Not done:** it is item 1 of the next queue (the plan and engine side, to agree with 1e and b2).
-
-## Known issues and risks
-
-- **Prepared data.** `data/out` is gitignored. The engine tests that need it skip without it (`tests/support/data.ts`), and CI runs the rest. `QUINA_OUT_DIR=/nonexistent node --test "apps/show/tests/*.test.ts"` reproduces CI.
-- **Automatic hooks are proposals.** On last year's hand-tagged songs the top candidate is within a bar of a tagged hook in 26 of 77 songs, and one of the top three in 48 of 77 (chance is about 1 in 8 per candidate).
-- **Hand tags scatter about ±2 beats.** The refine step suggests a one-bar shift for 45 of 386 tags, mostly a bar later. That fits the earlier finding that about 14% look a bar off. Until hooks are refined, phrase counting from a wrong hook is off too.
-- **Signatures are rarer.** 38 of 77 songs get an automatic pick, and they play in about 5% of transitions. Over A they need agreeing keys and tempos within 4%. The user can pick more by hand.
-- **The Pace is met on average.** Gaps between landings are whole phrases (8 bars at 120 bpm = 16 s), and the Drift nudge evens the round out.
-- **The relay gets killed by other sessions' restarts.** When another Vite dev server holds port 24678, `npm run dev` exits. Use `npm run build && npm start` (dist) instead.
-
-## How to run, test and listen
-
-From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
-
-**Run it:**
-- `npm run dev`: relay plus Vite on http://localhost:5174, this laptop only. Add `-- --lan` for the hotspot, which pairs with the printed `?t=` token.
-- `npm run build && npm start`: the built pages (more robust when other sessions run Vite).
-
-**Pages:**
-- **Show page:** `http://localhost:5174/show/`. Parameters:
-  - `auto=0`: auto-advance off;
-  - `pace=8..60`: the Pace;
-  - `autostart=1`: start right away;
-  - `mute=1`: everything runs, nothing reaches the speakers;
-  - `fresh=1`: ignore the local journal;
-  - `stage=0`: no projector stage over the page;
-  - `debug=1`: the plan line, D toggles;
-  - `queue=3,17,45`: a fixed Queue;
-  - `decoys=1`: the old Decoys experiment.
-
-  Keys:
-  - → / Enter: Next (it also releases a Suspense);
-  - ←: Back;
-  - Space: Hold / release;
-  - S: Suspense;
-  - M: Hold music;
-  - Esc: Panic;
-  - + / −: Pace;
-  - A: auto-advance;
-  - 0–4: Phase;
-  - D: debug HUD (with `debug=1`);
-  - H: hide the controls.
-- **Audition page:** `http://localhost:5174/show/audition.html?song=N`: beat-grid clicks, hooks and their fixes, the "Suggested" bar shift, **Automatic hooks** (Best, Main, Reject, nudge), and **Signatures** (Pick, Veto, Undo, Off). Save re-derives the song.
-- **Transition bench:** `http://localhost:5174/show/test.html?run=1` renders every technique in three modes: landing click, mix and silence.
-
-**Test:**
-- `npm test`: typecheck, engine node tests and UI tests.
-- `npm run test:pipeline`: pytest for tools/prep.
-- `node tests/support/variety.ts 4 1`: the sameness table over whole nights.
-
-**Prepare:**
-- `npm run prep -- --pool <name>`: covers, decode, analyze, snippets, validate, keys, stems, signatures, hooks, interval.
-- Single steps: `tools/prep/.venv/bin/python tools/prep/hooks_auto.py --report` or `tools/prep/signatures.py --force`.
-
-## Added by others while paused
-
-- **Orchestrator, 2026-11-24:** the user decided Q26 = A+ (an installed show laptop, media pulled from R2). No browser time-stretcher is needed; "nothing installed" is deferred until after the event.
-- **Orchestrator, 2026-11-24 (from 1e, c424649):** make `apps/cards/dist/cards.json` plus `card-types.json` the formal source of card types, with a type per round in `RoundPlan`. Then drop `plan.cardTypes`' name, colour and price. For now, Admin shows the types read-only from `card-types.json` and keeps `plan.cardTypes` in step (`withPrintedCardTypes`).
-- **Orchestrator, 2026-11-24:** Pause (Pausa) reuses the existing `pause {on}` / `ShowState.pause` / public `pause`, the same state as the technical pause. The only engine change: **during a pause, play the interval music instead of the Hold music**, and resume into the round with a normal transition. The UI (1e) and the feed (b2) need nothing new.
-- **Orchestrator, 2026-11-24 (from b2):** `tools/prep/tests/test_hooks_auto.py::test_the_candidates_are_the_chorus_starts_…` is flaky. `hook_detect.section_kinds` uses `scipy.linalg.eigh` on a near-degenerate Laplacian, and multithreaded BLAS can flip the segmentation, so the top-1 ranking changes (bar 40 at 0.925 vs bar 4 at 0.82). CI now pins BLAS to 1 thread, which hides it. To fix:
-  - (a) make section_kinds deterministic and robust (fix the eigenvector signs, and/or average over several k);
-  - (b) widen the synthetic song's chorus/verse gap;
-  - (c) assert the docstring's real claim (all chorus starts in the top 4) instead of an exact top-1.
-  On real songs it only changes which candidate is proposed first, since a human approves hooks.
-- **Backend (b2), 2026-11-24:** `relay/server.ts` forwards the Wii Remote's status (`remote.status { connected, battery, sinceMs }`, Frontend's proposal, 35573a0). It goes from the console that hosts the remote to the other paired consoles only (tablet and admin roles), with the sender's `clientId` added. The last one per host is replayed on every console hello, and `{ connected: false, battery: null }` is sent when the host's socket closes. It never goes to the show page, the drum, the cloud link or phones (the cloud's NEVER_FORWARDED lists it too). The type is in `packages/ui/client/remote-status.ts`; move it to `@quina/protocol` (events.ts, next to RelayPlan) when you're back, and point the relay's import there. Covered by the relay audit and a cloud test.
