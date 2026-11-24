@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { activeHeatSample, garlandLook, heatDisplay } from '../../../stage/model/garland.ts';
+import { STAGE } from '../../../stage/config.ts';
 
 test('cool, warm and hot looks', () => {
   assert.deepEqual(garlandLook(0), { warm: 0, hot: 0, glow: 0, twinkleMs: 3200, chase: 0 });
@@ -27,7 +28,13 @@ test('the displayed Heat eases, or steps under reduced motion', () => {
   assert.ok(eased > 0.2 && eased < 0.8);
   assert.equal(heatDisplay(samples, 40000, true), 0.8);
   assert.equal(heatDisplay(samples, 29999, true), 0.2);
-  assert.equal(heatDisplay([], 0, false), 0);
+  assert.equal(heatDisplay([], 0, false), STAGE.heatNeutral);
+});
+
+test('a page loaded mid-round shows a calm glow, never the target before its sample starts', () => {
+  const future = [{ value: 0.9, fromMs: 10000, toMs: 30000 }];
+  assert.equal(heatDisplay(future, 5000, false), STAGE.heatNeutral);
+  assert.equal(heatDisplay(future, 5000, true), STAGE.heatNeutral);
 });
 
 test('the active sample is the latest that has started', () => {

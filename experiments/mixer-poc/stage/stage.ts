@@ -14,7 +14,7 @@ import { flowOf, type ShowScene } from '../ui/flow.ts';
 import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
 import { loadPlanForPage, planStoreForPage, type PlanStore } from '../ui/data/plan-store.ts';
 import type { GamePlan } from '../ui/plan.ts';
-import { HeatSmoother } from '../ui/rules/heat.ts';
+import type { HeatSample } from '../ui/rules/heat.ts';
 import '../ui/tokens.css';
 import './stage.css';
 import { STAGE } from './config.ts';
@@ -100,7 +100,8 @@ class Stage {
   private readonly pause: HTMLElement;
   private readonly link: HTMLElement;
   private readonly scenes: Renderers;
-  private readonly heat: HeatSmoother;
+  /** The engine's Heat samples (`heat.sample`), newest last: the same ones the phones ease through. */
+  private heatSamples: HeatSample[] = [];
   private readonly planStore: PlanStore;
   private readonly cleanups: (() => void)[] = [];
   private readonly motionQuery: MediaQueryList | null;
@@ -124,7 +125,6 @@ class Stage {
     this.mode = mode;
     this.random = options.random ?? secureRandom;
     this.motionQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-    this.heat = new HeatSmoother(this.random);
     this.planStore = options.planStore ?? planStoreForPage();
     this.plan = loadPlanForPage(this.planStore);
     this.state = source.latest();
@@ -210,6 +210,9 @@ class Stage {
       case 'undone':
         this.landed = undoNotes(this.landed, event);
         break;
+      case 'heat':
+        this.heatSamples = [...this.heatSamples, { value: event.value, fromMs: event.fromMs, toMs: event.toMs }].slice(-STAGE.heatSamplesKept);
+        break;
     }
     this.update();
   }
@@ -242,7 +245,6 @@ class Stage {
   private update(): void {
     if (this.destroyed) return;
     this.view = this.computeView();
-    this.heat.push(this.view.heat, this.source.now());
     const body = this.view.body;
     this.show(body.scene);
     switch (body.scene) {
@@ -321,12 +323,12 @@ class Stage {
     const landAtMs = body.scene === 'play' ? (body.motion?.landAtMs ?? null) : null;
     if (now - this.lastHeatPaint >= STAGE.heatRepaintMs && !nearLanding(landAtMs, now, STAGE.quietBeforeLandingMs)) {
       this.lastHeatPaint = now;
-      this.scenes.play.paintHeat(garlandLook(heatDisplay(this.heat.samples, now, this.reducedMotion)));
+      this.scenes.play.paintHeat(garlandLook(heatDisplay(this.heatSamples, now, this.reducedMotion)));
     }
 
     const next = momentsOf(this.view, {
       nowMs: now,
-      heat: activeHeatSample(this.heat.samples, now),
+      heat: activeHeatSample(this.heatSamples, now),
       linkLost: linkLost(this.linkDownSinceMs, Date.now(), STAGE.linkLostAfterMs),
       checkMarkAt: STAGE.checkMarkAt,
       prizeRotationMs: STAGE.prizeRotationMs,

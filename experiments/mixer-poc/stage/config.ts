@@ -4,6 +4,10 @@
 // ui/tokens.css and stage/stage.css. Timings here are the ones the pure timing logic needs.
 
 export const STAGE = Object.freeze({
+  /** The Heat shown before the first `heat.sample` starts: a calm glow. */
+  heatNeutral: 0.2,
+  /** How many of the engine's Heat samples the stage keeps. */
+  heatSamplesKept: 8,
   /** The reference box every scene is laid out in (px). */
   box: Object.freeze({ width: 1440, height: 1080 }),
   /**

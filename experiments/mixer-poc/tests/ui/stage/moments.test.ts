@@ -124,7 +124,7 @@ test('heat fires when a new sample starts; pause and link-lost when they change'
   const b = momentsOf(v, inputs(NOW, { heat: { value: 0.7, fromMs: NOW, toMs: NOW + 20000 }, linkLost: true }));
   assert.deepEqual(diffMoments(a, b), [
     { name: 'link-lost', lost: true },
-    { name: 'heat', level: 0.7 },
+    { name: 'heat' },
   ]);
   const paused = momentsOf(viewOf(FIXTURES.pause(NOW).state), inputs(NOW));
   assert.deepEqual(diffMoments(a, paused), [{ name: 'pause', on: true }]);

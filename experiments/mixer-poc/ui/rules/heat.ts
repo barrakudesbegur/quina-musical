@@ -1,7 +1,8 @@
-// Heat on screen: how hot the round looks. The engine's `heat` is already blurred so it never tells how many
-// songs are left. This module makes sure the display never moves at a landing either:
-// - A new target becomes a sample that starts easing a random 4–15 s later and takes about 20 s to arrive.
-// - The projector and the phones run the same `heatAt`, so they agree.
+// Heat on screen: how hot the round looks. The engine's Heat is already blurred so it never tells how many
+// songs are left, and it publishes it as `heat.sample` events {value, fromMs, toMs} that start a random
+// 4–15 s after a change, so the display never moves at a landing. The projector and the phones both ease
+// through those same samples with `heatAt`, so they show the same Heat. `HeatSmoother` makes such samples
+// from a raw value, for development projections that only see `state.heat`.
 // Pure: the random source and the clock are passed in.
 
 export interface HeatSample {

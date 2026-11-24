@@ -39,7 +39,7 @@ export type AnimDetail =
   | { name: 'spin' }
   | { name: 'landing'; songId: number }
   | { name: 'suspense' }
-  | { name: 'heat'; level: number }
+  | { name: 'heat' }
   | { name: 'shuffle'; phase: ShufflePhase }
   | { name: 'check-enter'; cardId: number; kind: WinKind }
   | { name: 'check-step'; index: number; songId: number; state: StepState }
@@ -66,7 +66,7 @@ export interface Moments {
   shuffle: { key: string; phase: ShufflePhase } | null;
   celebration: { key: string; kind: WinKind; cardIds: number[] } | null;
   /** The Heat sample that has started (its `fromMs`). */
-  heat: { fromMs: number; level: number } | null;
+  heat: { fromMs: number } | null;
   /** The Interval's prize rotation. */
   rotation: { key: string; index: number } | null;
 }
@@ -94,7 +94,7 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
     check: null,
     shuffle: null,
     celebration: null,
-    heat: heat ? { fromMs: heat.fromMs, level: heat.value } : null,
+    heat: heat ? { fromMs: heat.fromMs } : null,
     rotation: null,
   };
   switch (body.scene) {
@@ -181,7 +181,7 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
   const ns = next.shuffle;
   if (ns && ns.phase !== 'before' && (ps?.key !== ns.key ? ns.phase !== 'done' : ps.phase !== ns.phase)) out.push({ name: 'shuffle', phase: ns.phase });
 
-  if (next.heat && next.heat.fromMs !== prev.heat?.fromMs) out.push({ name: 'heat', level: next.heat.level });
+  if (next.heat && next.heat.fromMs !== prev.heat?.fromMs) out.push({ name: 'heat' });
 
   if (next.rotation && prev.rotation?.key === next.rotation.key && prev.rotation.index !== next.rotation.index) {
     out.push({ name: 'interval-rotate', index: next.rotation.index });

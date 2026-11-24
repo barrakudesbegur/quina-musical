@@ -2,6 +2,7 @@
 // colour, glow and twinkle speed follow the Heat: cool white-blue with a slow twinkle, warm gold and orange,
 // hot red with a faster chase. Never a bar that fills, so it can't be read as progress. The display value
 // comes from ui/rules/heat.ts, which already delays and eases every change away from landings. Pure.
+import { STAGE } from '../config.ts';
 import { heatAt, type HeatSample } from '../../ui/rules/heat.ts';
 
 export interface GarlandLook {
@@ -36,11 +37,11 @@ export function garlandLook(heat: number | null, { slowMs = 3200, fastMs = 1000,
  * The Heat to display at `nowMs`. Normally the eased value. With reduced motion, the value jumps to each
  * sample's target when it starts (the CSS fades it over 2 s instead of a 20 s ease).
  */
-export function heatDisplay(samples: readonly HeatSample[], nowMs: number, reducedMotion: boolean): number {
-  if (samples.length === 0) return 0;
-  if (!reducedMotion) return heatAt(samples, nowMs, samples[0].value);
-  const started = activeHeatSample(samples, nowMs);
-  return started ? started.value : samples[0].value;
+export function heatDisplay(samples: readonly HeatSample[], nowMs: number, reducedMotion: boolean, neutral = STAGE.heatNeutral): number {
+  // Until a sample starts, a calm neutral glow: never the target before its time (a page loaded mid-round
+  // must not jump straight to it).
+  if (!reducedMotion) return heatAt(samples, nowMs, neutral);
+  return activeHeatSample(samples, nowMs)?.value ?? neutral;
 }
 
 /** The latest sample that has started by `nowMs` (its `fromMs` is the `heat` moment), or null. */

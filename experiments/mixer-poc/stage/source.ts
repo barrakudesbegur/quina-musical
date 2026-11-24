@@ -16,7 +16,9 @@ export type StageEvent =
   | { kind: 'spin'; id: string; spinStartAtMs: number; landAtMs: number | null; autoReleaseAtMs: number | null }
   | { kind: 'landed'; id: string; songId: number; position: number; atMs: number }
   | { kind: 'cancelled'; id: string; atMs: number }
-  | { kind: 'undone'; position: number; atMs: number };
+  | { kind: 'undone'; position: number; atMs: number }
+  /** The engine's Heat sample, the same one phones get: the projector and the phones show the same Heat. */
+  | { kind: 'heat'; value: number; fromMs: number; toMs: number };
 
 /** `online`; `offline`: the relay is gone; `noShow`: the relay is up but the show page isn't on it. */
 export type LinkState = 'online' | 'offline' | 'noShow';
@@ -48,6 +50,8 @@ export function toStageEvent(event: IncomingEvent): StageEvent | null {
       return { kind: 'cancelled', id: event.id, atMs: event.atMs };
     case 'landing.undone':
       return { kind: 'undone', position: event.position, atMs: event.atMs };
+    case 'heat.sample':
+      return { kind: 'heat', value: event.value, fromMs: event.fromMs, toMs: event.toMs };
     default:
       return null;
   }

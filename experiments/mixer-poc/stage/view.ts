@@ -117,8 +117,6 @@ export interface StageView {
   title: string;
   /** A technical pause: "Tornem de seguida" over any scene. */
   paused: boolean;
-  /** The engine's Heat target. Public: it is blurred so it never tells how many songs are left. */
-  heat: number | null;
   /** The round's revealed songs, newest first (landed only, each with its landing time). */
   songs: StageSong[];
   body: SceneView;
@@ -264,7 +262,6 @@ export function stageView(
     synced: state !== null,
     title: plan?.title || STAGE_TEXT.title,
     paused: flow.pause !== null,
-    heat: typeof state?.heat === 'number' && Number.isFinite(state.heat) ? state.heat : null,
     songs: revealedSongs(state, notes.landed, lookup),
     body: sceneView(state, flow, plan, catalog, lookup, notes),
   };

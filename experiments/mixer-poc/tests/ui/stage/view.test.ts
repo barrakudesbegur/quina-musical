@@ -255,5 +255,5 @@ test('without any state: the before scene, never a crash', () => {
   const view = stageView(null, flowOf(null), null, null);
   assert.equal(view.body.scene, 'before');
   assert.deepEqual(view.songs, []);
-  assert.equal(view.heat, null);
+  assert.equal('heat' in view, false, 'the raw Heat never reaches the view: the garland eases the engine samples');
 });
