@@ -16,6 +16,7 @@ This year's app (2026) and last year's (2025) live side by side:
 | `apps/cards/` | The printed bingo cards (`cards.json`, the PDF) |
 | `packages/protocol/`, `packages/rules/`, `packages/ui/` | `@quina/protocol`, `@quina/rules` and `@quina/ui`, shared by the apps |
 | `tools/prep/` | The Python pipeline that prepares a song pool (analysis, stems, Hold music…), and the playlist fetcher |
+| `tools/logos/` | The sponsors' logo cleanup: transparent background, trimmed, PNG + JPEG XL, with a contact sheet (`clean.py`) |
 | `data/` | Pool manifests (`data/pools/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
 | `docs/`, `brand/` | Decisions, research and the runbook; the brand assets |
 | `legacy/2025/` | Last year's app (`client/`, `server/`), unchanged and runnable on its own; everything below is about it |
