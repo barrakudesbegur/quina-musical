@@ -108,7 +108,7 @@ The brief didn't settle these. Each is a single setting or a small change.
   - **The engine's finding** shows at the Check's end, before the presenter confirms.
   - **The last-3 row** includes the current song.
 - **Console:**
-  - **The Celebration music choice** is only active in the Celebration, because the engine accepts it only there.
+  - **The Celebration music choice** can be picked during the Check: the Celebration that follows starts with it, and a failed Check drops it.
   - **A manual "Line confirmed"** without a Check sits in the menu, behind a long press.
   - **The light theme** is the default.
 
