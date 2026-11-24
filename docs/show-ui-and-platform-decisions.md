@@ -16,7 +16,7 @@ These override the sections below where they differ.
 - **Signatures are picked automatically**, with a veto. They are instrumental intro or pre-chorus pieces, teased *before* a landing.
 - **Suspense keeps the current song playing.** The drum hovers over about 3 pending songs while their decoys tease, then resolves to the real next song.
 - **Transitions have an intensity range.** Lighter, quick and well-made at the start of a round, growing with the phase. Always produced DJ moves, never bare volume fades.
-- **The presenters' actions:** Següent; Parlem (Hold: no landing, music ducked); **Aguanta** (Stay: no landing, full volume); Suspens; Enrere (long press); Comprovar cartró; Efectes; Ritme. The Wii remote mapping is still to be decided.
+- **The presenters' actions:** Següent; Parlem (Hold: no landing, music ducked); **Aguanta** (Stay: no landing, full volume); Suspens; Enrere (long press); Comprovar cartró; Efectes; Ritme. The Wii remote mapping is decided (see below).
 - **The near-win cue on phones is subtle:** the missing song is gently highlighted on that card's grid. There is no banner, and no win is ever announced.
 - **Hooks for this year's songs are detected automatically** (the chorus start, an energy jump, the vocals coming in, snapped to phrases), and the user approves, rejects or nudges each one on the audition page.
 - **The console's crystal ball ("Futur" tab).** It replaces the possible-winners tab and is hidden until a presenter taps "Mirar el futur". It shows a chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners. It is private: it never reaches phones or the projector.
@@ -51,6 +51,20 @@ These override the sections below where they differ.
   - Any laptop becomes show-ready with one setup command that installs, pulls the pool and media from R2, and runs the preflight. So nothing depends on files that live only on one person's laptop.
   - The offline hotspot console and the best-quality blends (Rubber Band) stay.
   - "Nothing installed" (the show page in the browser) is deferred until after this year's event.
+- **Wii remote mapping (optional controller, paired to the show laptop):**
+
+  | Button | Action |
+  |---|---|
+  | **A** | Següent |
+  | **B** (hold) | Aguanta while held; letting go returns to normal |
+  | **B** (hold) plus **3 strong shakes** | Turns into Suspens; letting go of B lands the song. Needs a deliberate shake pattern so dancing doesn't trigger it, and a distinct rumble confirms it. The console keeps its own Suspens button as a fallback |
+  | **−** or **+** | Parlem on/off |
+  | **1** or **2** (hold 1.5 s) | Enrere |
+  | **HOME** | Auto-advance on/off, with different rumbles for on and off |
+  | **D-pad** | 4 configurable effects |
+  | Claim | Console only |
+
+  Every action gets a short rumble. An accidental A is safe: Parlem or Aguanta cancel a running transition. The console has a "Comandament" button that opens a drawing of the remote with each action; it opens by itself when a remote connects and is also printed on the cheat sheet.
 - **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 - **Resolved from the open questions:**
   - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.
