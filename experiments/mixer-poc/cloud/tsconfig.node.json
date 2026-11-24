@@ -6,5 +6,5 @@
     "lib": ["es2023"],
     "types": ["node"]
   },
-  "include": ["laptop", "loadtest", "test/node", "test/support", "src/domain", "src/feed", "src/link-protocol.ts", "src/config.ts", "src/api.ts"]
+  "include": ["laptop", "loadtest", "scripts", "test/node", "test/support", "src/domain", "src/feed", "src/link-protocol.ts", "src/config.ts", "src/api.ts"]
 }

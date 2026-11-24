@@ -17,10 +17,11 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
   // Static files (the player app, covers) are served without running the Worker, so they cost no requests.
-  // Only these paths reach it.
+  // Only the run_worker_first paths reach it. dist/ is built by `npm run assets` (scripts/assets.ts) from static/,
+  // the UI build, the cards and the covers; the player at the root takes every other page (/26/123).
   "assets": {
-    "directory": "./public",
-    "not_found_handling": "none",
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
     "run_worker_first": ["/feed", "/ws/*", "/api/*", "/media/*"]
   },
   "observability": { "enabled": true }

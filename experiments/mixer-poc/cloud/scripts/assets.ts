@@ -1,0 +1,95 @@
+// Assemble the static files the Worker serves (wrangler.jsonc `assets.directory` = dist/), at deploy time:
+//   npm run assets -- [--quick] [--pool default] [--ui ../dist]
+// It copies static/ (committed: the kill switch for last year's service worker, _headers, a placeholder page).
+// Unless --quick, it then adds, as agreed with the UI session:
+//   - the UI build (`vite build` in experiments/mixer-poc): the player at the root (the SPA fallback serves it
+//     for /26/123), console/, admin/ (built as manage/), assets/; never stage/ (the projector runs on the laptop);
+//   - the pool's printed cards: cards/cards.json;
+//   - the pool's covers as small WebP: covers/<songId>.webp (cwebp, 320 px wide, cached in .assets-cache/).
+// dist/ and .assets-cache/ are gitignored: the built UI and the album covers never go into the public repo.
+// Static files are free and never run the Worker.
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { loadPool } from '../../relay/pool.ts';
+
+const ROOT = path.resolve(import.meta.dirname, '..');
+const OUT = path.join(ROOT, 'dist');
+const CACHE = path.join(ROOT, '.assets-cache', 'covers');
+const COVER = Object.freeze({ widthPx: 320, quality: 72 });
+
+const args = process.argv.slice(2);
+const flag = (name: string): string | undefined => {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+};
+const quick = args.includes('--quick');
+const uiDir = path.resolve(ROOT, flag('--ui') ?? '../dist');
+
+const kb = (bytes: number) => `${(bytes / 1024).toFixed(0)} KB`;
+const sizeOf = (dir: string): number =>
+  fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true, withFileTypes: true }).filter((e) => e.isFile()).reduce((sum, e) => sum + fs.statSync(path.join(e.parentPath, e.name)).size, 0) : 0;
+const warnings: string[] = [];
+
+fs.rmSync(OUT, { recursive: true, force: true });
+fs.cpSync(path.join(ROOT, 'static'), OUT, { recursive: true });
+const lines = [`static/ → dist/`];
+
+if (!quick) {
+  // ---- the UI build ------------------------------------------------------------------------------------------
+  const ui: [from: string, to: string][] = [
+    ['player/index.html', 'index.html'],
+    ['console', 'console'],
+    ['manage', 'admin'],
+    ['assets', 'assets'],
+  ];
+  for (const [from, to] of ui) {
+    const source = path.join(uiDir, from);
+    if (!fs.existsSync(source)) {
+      warnings.push(`no ${path.relative(ROOT, source)}: build the UI first (cd experiments/mixer-poc && npm run build)`);
+      continue;
+    }
+    fs.cpSync(source, path.join(OUT, to), { recursive: true });
+    lines.push(`${path.relative(ROOT, source)} → dist/${to}`);
+  }
+
+  // ---- the pool: cards and covers ----------------------------------------------------------------------------
+  const pool = loadPool(flag('--pool'));
+  if (pool.cardsJson && fs.existsSync(pool.cardsJson)) {
+    fs.mkdirSync(path.join(OUT, 'cards'), { recursive: true });
+    fs.copyFileSync(pool.cardsJson, path.join(OUT, 'cards', 'cards.json'));
+    lines.push(`cards (pool ${pool.name}) → dist/cards/cards.json`);
+  } else {
+    warnings.push(`pool ${pool.name} has no cards.json yet`);
+  }
+
+  const covers = fs.existsSync(pool.coversDir) ? fs.readdirSync(pool.coversDir).filter((f) => /^\d+\.(jpe?g|png|webp)$/i.test(f)) : [];
+  if (covers.length === 0) warnings.push(`pool ${pool.name} has no covers in ${pool.coversDir}`);
+  else {
+    try {
+      execFileSync('cwebp', ['-version'], { stdio: 'ignore' });
+    } catch {
+      throw new Error('covers need cwebp (brew install webp), or run with --quick');
+    }
+    fs.mkdirSync(CACHE, { recursive: true });
+    fs.mkdirSync(path.join(OUT, 'covers'), { recursive: true });
+    let encoded = 0;
+    for (const file of covers) {
+      const source = path.join(pool.coversDir, file);
+      const id = file.split('.')[0] as string;
+      const stat = fs.statSync(source);
+      // The cache key is the source's size and time, so a changed cover is encoded again.
+      const cached = path.join(CACHE, `${pool.name}-${id}-${stat.size}-${Math.floor(stat.mtimeMs)}-${COVER.widthPx}q${COVER.quality}.webp`);
+      if (!fs.existsSync(cached)) {
+        execFileSync('cwebp', ['-quiet', '-q', String(COVER.quality), '-resize', String(COVER.widthPx), '0', source, '-o', `${cached}.tmp`]);
+        fs.renameSync(`${cached}.tmp`, cached);
+        encoded += 1;
+      }
+      fs.copyFileSync(cached, path.join(OUT, 'covers', `${id}.webp`));
+    }
+    lines.push(`${covers.length} covers (pool ${pool.name}, ${encoded} encoded now) → dist/covers/, ${kb(sizeOf(path.join(OUT, 'covers')))} (from ${kb(sizeOf(pool.coversDir))})`);
+  }
+}
+
+console.log(`static assets: ${lines.join('; ')}. dist/ is ${kb(sizeOf(OUT))}.`);
+for (const warning of warnings) console.warn(`  warning: ${warning}`);

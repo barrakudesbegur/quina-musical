@@ -10,7 +10,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 |---|---|---|
 | Worker | `quina-cloud` | `src/worker.ts`; about 87 KiB (23 KiB gzipped) |
 | Durable Object class | `GameRoom` (SQLite) | migration `v1` (`new_sqlite_classes`); one object per edition, named `edition:26`, placed in western Europe |
-| Static assets | `public/` | a placeholder page for now. At deploy time the UI build goes in (agreed with the UI session): the player app at the root, with an SPA fallback so `/26/123` serves it (set `not_found_handling: "single-page-application"` in wrangler.jsonc when it lands); `console/` and `admin/` (built as `manage`); `assets/`; and the covers. No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker |
+| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` (built as `manage`) and `assets/`; plus `cards/cards.json` and the covers as 320 px WebP (about 15 KB each). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
 | Variable | `EDITION = "26"` | in wrangler.jsonc |
 | Secrets | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `CF_ACCESS_EMAILS` (or `CF_ACCESS_EMAIL_DOMAIN`), `CF_ACCESS_SERVICE_TOKENS` | `wrangler secret put`; until they exist, every admin route and the laptop route answer 403 (fail-closed), and only `/feed` and `/api/health` work |
 
@@ -30,11 +30,14 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 ### 1. Deploy the Worker (2 minutes)
 
 ```sh
-cd experiments/mixer-poc/cloud
+cd experiments/mixer-poc && npm run build     # the UI build (player, console, Admin)
+cd cloud
 npm install
 npm test            # green before any deploy
-npm run deploy      # = wrangler deploy
+npm run deploy      # = npm run assets (dist/) + wrangler deploy
 ```
+
+`npm run assets` needs `cwebp` for the covers (`brew install webp`). It warns about every missing piece: without the UI build, phones get the placeholder page.
 
 - It creates the Worker `quina-cloud` at `https://quina-cloud.<account subdomain>.workers.dev` (every account has a workers.dev subdomain).
 - To let a Claude session deploy next time, allow it in Claude Code (`/permissions`, for example `Bash(npx wrangler deploy:*)`), or just run the command yourself.
@@ -113,6 +116,12 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 - **Rehearsals the same UTC day share the quota.** Rehearse on another day when it's big, or keep rehearsals to a few phones.
 - If it happens anyway: phones and remote consoles stop getting updates, and the show itself goes on, because the laptop never needs the cloud (ADR 0003). Upgrade on the spot: Dashboard → Workers & Pages → Plans → **Workers Paid** (5 USD a month minimum, usage-based beyond what's included). It takes effect at once.
 - Watch it live: Workers & Pages → quina-cloud → Metrics, plus Durable Objects → GameRoom, and `/api/stats` (admins).
+
+## Privacy on the night
+
+- **The laptop's hotspot must have a password.** Anyone on it can read, through the relay, the journal and so the Queue (`/cloud/`, and the relay's `journal.entry` events).
+- **Resume codes and Shuffle seeds are secret.** A code (from the console, or `resumePoint.text` in Admin's `GET /api/games`), together with the Pool and the cards in play, gives the whole Queue. Keep a noted code like the box of cards, and never show it on a screen.
+- Winners' names stay in the cloud's journal only. They are never in the public feed, and never in git.
 
 ## On the night
 

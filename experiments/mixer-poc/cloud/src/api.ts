@@ -1,6 +1,6 @@
 // What the Worker's HTTP API answers (/api/export, /api/stats). Types only, so Node code (the load test, the
 // tests, a future Admin) can use them without the Workers runtime.
-import type { GamePlan, GameRecord, JournalEntry } from '@quina/protocol';
+import type { GamePlan, GameRecord, JournalEntry, ResumeToken } from '@quina/protocol';
 import type { PublicState } from '@quina/protocol';
 
 /** Counters since the GameRoom last woke (hibernation and restarts reset them). */
@@ -44,10 +44,11 @@ export interface GameSummary {
   rounds: number;
   current: boolean;
   /**
-   * For the current Game: where its round stands, to prefill Admin's manual resume (`resumeAt`). SECRET: the
-   * seed, with the Pool and the cards in play, gives the whole Queue; organizers only, never on a screen.
+   * For the current Game: where its round stands, as the engine's `resumeAt` takes it, with `text` the same
+   * short code the laptop shows (protocol/resume.ts). SECRET: the seed, with the Pool and the cards in play,
+   * gives the whole Queue; organizers only, never on a screen by default.
    */
-  resumePoint: { round: number; kind: 'normal' | 'special'; shuffleSeed: number; shuffleAttempts: number; position: number; lineConfirmedFrom: number | null } | null;
+  resumePoint: ResumeToken | null;
 }
 
 /** The answer to POST /api/resume. */

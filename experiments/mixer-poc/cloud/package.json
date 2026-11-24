@@ -5,13 +5,14 @@
   "description": "The cloud backend of the Quina Musical: a Cloudflare Worker and one Durable Object per edition that owns the Game, plus the laptop's cloud link and the load test.",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "assets": "node scripts/assets.ts",
+    "dev": "node scripts/assets.ts --quick && wrangler dev",
+    "deploy": "node scripts/assets.ts && wrangler deploy",
     "types": "wrangler types",
     "typecheck": "wrangler types > /dev/null && tsc -p tsconfig.json && tsc -p tsconfig.node.json",
-    "test": "npm run typecheck && node --test \"test/node/**/*.test.ts\" && vitest run",
+    "test": "node scripts/assets.ts --quick && npm run typecheck && node --test \"test/node/**/*.test.ts\" && vitest run",
     "link": "node laptop/main.ts",
-    "loadtest": "node loadtest/run.ts"
+    "loadtest": "node scripts/assets.ts --quick && node loadtest/run.ts"
   },
   "dependencies": {
     "@quina/protocol": "file:../protocol",

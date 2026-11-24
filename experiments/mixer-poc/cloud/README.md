@@ -20,7 +20,8 @@ Terms follow [GLOSSARY.md](../../../GLOSSARY.md). The shared contracts are in `@
 cd experiments/mixer-poc/cloud
 npm install
 cp .dev.vars.example .dev.vars      # the dev Access bypass (localhost only)
-npm run dev                          # wrangler dev on http://localhost:8787
+npm run dev                          # wrangler dev on http://localhost:8787 (static files: static/ only)
+npm run assets                       # dist/: static/ + the UI build + cards.json + covers as WebP (needs cwebp)
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
 npm test                             # typecheck, Node tests, workerd tests (about 10 s)
 npm run loadtest -- --report reports/loadtest-$(date +%F).md   # 400 phones (about 1 min)
@@ -46,7 +47,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /api/export` | admins (Access) | Every Game of the edition: journal entries, each Game replayed with the protocol's reducer, and the public state |
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
-| anything else | anyone | Static files from `public/` (the player app and covers later), served without running the Worker |
+| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json`, `covers/<id>.webp`, and `sw.js`, which removes last year's service worker. Served without running the Worker |
 
 ## How it works
 
@@ -71,11 +72,12 @@ Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLI
 | `src/worker.ts` | The Worker: Access, routing |
 | `src/game-room.ts` | The Durable Object: SQLite, WebSockets, the alarm (I/O only) |
 | `src/domain/` | Pure logic: journal check and ingest, the public projection, consoles (forwarding, client list), routes, clock |
-| `src/feed/public.ts` | The public feed contract (draft of `protocol/public.ts`) |
 | `src/link-protocol.ts` | Laptop ↔ cloud messages |
 | `src/api.ts` | The HTTP API's response types |
 | `laptop/` | The laptop link: `main.ts` (CLI), `link.ts`, `uploader.ts` (pure), `journal-copy.ts` (disk) |
 | `loadtest/` | `run.ts`, the night `model.ts`, `dev-server.ts`, `fake-relay.ts` |
+| `scripts/assets.ts` | Builds `dist/`, the static files (gitignored: the built UI and album covers never enter the repo) |
+| `static/` | The committed static files: `sw.js`, `_headers`, a placeholder page |
 | `test/node/` | Pure modules, Access, the link end to end against `wrangler dev` |
 | `test/worker/` | The GameRoom in workerd (`@cloudflare/vitest-plugin`), hibernation included |
 | `test/support/journal-builder.ts` | Realistic journals for tests and the load test |

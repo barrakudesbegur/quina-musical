@@ -14,6 +14,7 @@ import {
   PROTOCOL_VERSION,
   checkCommand,
   checkGamePlan,
+  formatResumeToken,
   emptyRecord,
   extendJournal,
   replayJournal,
@@ -22,6 +23,7 @@ import {
   type GameRecord,
   type JournalEntry,
   type RelayClients,
+  type ResumeToken,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
 import type { EditionExport, GameSummary, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
@@ -465,17 +467,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
         lastAtMs: Number(r.last_at),
         rounds: Number(r.rounds),
         current,
-        resumePoint:
-          current && round
-            ? {
-                round: round.number,
-                kind: round.kind,
-                shuffleSeed: round.shuffleSeed,
-                shuffleAttempts: round.shuffleAttempts,
-                position: round.position,
-                lineConfirmedFrom: round.climbingTo === 'bingo' ? round.climbFrom : null,
-              }
-            : null,
+        resumePoint: current && round ? resumeToken(round) : null,
       };
     });
   }
@@ -609,6 +601,20 @@ export class GameRoom extends DurableObject<RoomEnv> {
 }
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
+/** Where a round stands, as the engine's `resumeAt` takes it, with its short code. */
+function resumeToken(round: NonNullable<GameRecord['round']>): ResumeToken {
+  const point = {
+    round: round.number,
+    kind: round.kind,
+    shuffleSeed: round.shuffleSeed,
+    shuffleAttempts: round.shuffleAttempts,
+    position: round.position,
+    lastSongId: round.position >= 0 ? (round.queue[round.position] ?? null) : null,
+    lineConfirmedFrom: round.climbingTo === 'bingo' ? round.climbFrom : null,
+  };
+  return { ...point, text: formatResumeToken(point) };
+}
 
 function text(status: number, body: string): Response {
   return new Response(`${body}\n`, { status, headers: { 'content-type': 'text/plain; charset=utf-8' } });

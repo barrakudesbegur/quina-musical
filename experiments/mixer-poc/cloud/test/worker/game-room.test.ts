@@ -2,7 +2,7 @@
 // survives the GameRoom restarting, and the export replays to the same record.
 import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { PROTOCOL_VERSION, replayJournal, type JournalEntry } from '@quina/protocol';
+import { PROTOCOL_VERSION, parseResumeToken, replayJournal, type JournalEntry } from '@quina/protocol';
 import { followFeed, type PublicView } from '@quina/protocol';
 import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
 import { CLOSE } from '../../src/link-protocol.ts';
@@ -425,9 +425,11 @@ describe("a new laptop, and Admin's manual resume", () => {
       seq: b.entries.length,
       rounds: 1,
       current: true,
-      resumePoint: { round: 1, kind: 'normal', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lineConfirmedFrom: null },
+      resumePoint: { round: 1, kind: 'normal', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lastSongId: b.queue[3], lineConfirmedFrom: null },
     });
-    expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false });
+    const night = games.find((g) => g.gameId === 'g-night') as unknown as { resumePoint: { text: string } };
+    expect(parseResumeToken(night.resumePoint.text)).toMatchObject({ round: 1, position: 3, shuffleSeed: 100, lastSongId: b.queue[3] });
+    expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false, resumePoint: null });
 
     const p = await phone();
     const missing = await SELF.fetch(`${BASE}/api/resume`, { method: 'POST', body: JSON.stringify({ gameId: 'g-nope' }) });

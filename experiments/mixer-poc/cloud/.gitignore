@@ -11,5 +11,8 @@ laptop-data/
 worker-configuration.d.ts
 # Patches sent to other sessions for review; they live in the protocol once merged.
 proposals/
+# Built by `npm run assets`: the UI build and the album covers never go into the public repo.
+dist/
+.assets-cache/
 # Load-test raw output (the summary report is committed under reports/).
 loadtest/out/
