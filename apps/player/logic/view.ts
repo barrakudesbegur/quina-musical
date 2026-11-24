@@ -3,6 +3,7 @@
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import { checkGamePlan, roundPlan, sponsorOf, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
+import { nearSongs } from './near-win.ts';
 import type { PublicLanding, PublicRound, PublicState, PublicWinKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
 
@@ -40,6 +41,8 @@ export interface CardView {
   /** Counts in the current round (normal cards in normal rounds, special cards in the special round). */
   valid: boolean;
   marks: CardMarks | null;
+  /** The songs gently highlighted on this card's grid: each one is all the card is missing for a Line or the Quina. */
+  near: ReadonlySet<number>;
 }
 
 /** Each saved card with its marks for the round. Before any round every card shows, unmarked. */
@@ -48,13 +51,13 @@ export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, 
   return saved.map((s) => {
     const card = catalog?.cards.get(s.id) ?? null;
     const valid = !card || !round ? true : cardsForRound([card], round.kind).length === 1;
-    const marks = card && round && valid ? cardMarks(card, landed, { roundEnded: round.ended }) : null;
-    return { saved: s, card, valid, marks };
+    const marks = card && round && valid ? cardMarks(card, landed) : null;
+    return { saved: s, card, valid, marks, near: nearSongs(card, marks, round) };
   });
 }
 
-/** Which of the player's cards show a song as marked: songId → the cards' colours (for Historial's dots). */
-export function markedColors(views: readonly CardView[]): Map<number, number[]> {
+/** Which of the player's cards show a song as marked: songId → the cards' identities (Historial shows their icons). */
+export function markedIdentities(views: readonly CardView[]): Map<number, number[]> {
   const out = new Map<number, number[]>();
   for (const v of views) {
     if (!v.card || !v.marks) continue;
@@ -85,21 +88,18 @@ export function kernelTilt(cardId: number, songId: number): number {
   return (h % 31) - 15;
 }
 
-export interface HistoryGroup {
+export interface HistoryRound {
   round: number;
   kind: 'normal' | 'special';
-  current: boolean;
   /** Newest first. */
   landings: PublicLanding[];
 }
 
-/** Historial: this round's songs, then earlier rounds', newest first. */
-export function historyGroups(state: PublicState | null): HistoryGroup[] {
-  const rounds = state?.rounds ?? [];
-  const last = rounds[rounds.length - 1]?.number;
-  return [...rounds]
-    .sort((a, b) => b.number - a.number)
-    .map((r) => ({ round: r.number, kind: r.kind, current: r.number === last && !r.ended, landings: [...r.landings].sort((a, b) => b.position - a.position) }));
+/** Historial: the current round's songs only (the last round played, until the next one starts), newest first. */
+export function historyOf(state: PublicState | null): HistoryRound | null {
+  const r = currentRound(state);
+  if (!r) return null;
+  return { round: r.number, kind: r.kind, landings: [...r.landings].sort((a, b) => b.position - a.position) };
 }
 
 export interface PrizeLine {

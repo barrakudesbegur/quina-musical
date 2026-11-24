@@ -1,7 +1,9 @@
 <script lang="ts">
-  // One of the player's cards: its colour, name and number, the grid, and its rename and remove buttons.
+  // One of the player's cards: its icon (the card's identity), its name, its number small, the grid, and its
+  // edit and remove buttons. Cards are named by icon and name, never only by number.
   import type { Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardView } from '../logic/view.ts';
+  import { markName } from '../logic/marks-identity.ts';
   import { S } from '../strings.ts';
   import CardGrid from './CardGrid.svelte';
   import Swatch from './Swatch.svelte';
@@ -29,8 +31,8 @@
   <header class="player-card__header">
     <Swatch color={view.saved.color} />
     <h3 class="player-card__title">
-      {#if view.saved.name}<span class="player-card__name">{view.saved.name}</span>{/if}
-      <span class="player-card__number">{S.card(view.saved.id)}</span>
+      <span class="player-card__name">{view.saved.name ?? S.markLabel(markName(view.saved.color))}</span>
+      <span class="player-card__number">{S.cardNumber(view.saved.id)}</span>
     </h3>
     <div class="player-card__actions">
       <button type="button" class="player-card__rename" onclick={onrename}>{S.rename}</button>
@@ -38,7 +40,7 @@
     </div>
   </header>
   {#if view.card}
-    <CardGrid card={view.card} identity={view.saved.color} marks={view.marks} {catalog} {fresh} {stagger} />
+    <CardGrid card={view.card} identity={view.saved.color} marks={view.marks} near={view.near} {catalog} {fresh} {stagger} />
   {:else if catalog}
     <p class="player-card__missing">{S.unknownCard}</p>
   {:else}

@@ -1,4 +1,5 @@
-// The player's own data: cards with colours and names, the edition wipe, the gameId reset, sounds.
+// The player's own data: cards with their identities (icon and colour) and names, the edition wipe, the gameId
+// reset, sounds.
 import { test } from 'node:test';
 import { markName } from '../../../../player/logic/marks-identity.ts';
 import assert from 'node:assert/strict';
@@ -14,6 +15,7 @@ import {
   readData,
   removeCard,
   renameCard,
+  setIdentity,
   setSounds,
   soundsOn,
   type PlayerData,
@@ -56,7 +58,39 @@ test('once all eight identities are used, they cycle; the first card is always c
   );
   assert.equal(nextColor([]), 1);
   assert.equal(markName(data.cards[0].color), 'corn');
-  assert.deepEqual(data.cards.slice(0, 8).map((c) => markName(c.color)), ['corn', 'star', 'moon', 'triangle', 'gift', 'clubs', 'circle', 'square']);
+  assert.deepEqual(data.cards.slice(0, 8).map((c) => markName(c.color)), ['corn', 'shootingStar', 'moon', 'tree', 'snowflake', 'clubs', 'bauble', 'crown']);
+});
+
+test('the player can pick a free icon when adding a card; a taken one falls back to the first free', () => {
+  let d = emptyData('26');
+  const first = addCard(d, 123, 0, 3);
+  assert.ok(first.ok);
+  d = first.ok ? first.data : d;
+  assert.equal(markName(d.cards[0].color), 'moon', 'the pick');
+  const second = addCard(d, 57, 0, 3);
+  assert.ok(second.ok);
+  assert.equal(second.ok && second.card.color, 1, 'moon is taken: the first free one, corn');
+});
+
+test("a card's icon can change to a free one, never to another card's", () => {
+  let d = emptyData('26');
+  for (const id of [123, 57]) {
+    const r = addCard(d, id, 0);
+    if (r.ok) d = r.data;
+  }
+  assert.equal(setIdentity(d, 57, 1), d, 'corn belongs to card 123');
+  assert.equal(setIdentity(d, 57, 8).cards[1].color, 8);
+  assert.equal(setIdentity(d, 57, 9), d, 'no ninth icon');
+});
+
+test('once every icon is in use, a new card may repeat any', () => {
+  let d = emptyData('26');
+  for (let id = 1; id <= 8; id++) {
+    const r = addCard(d, id, 0);
+    if (r.ok) d = r.data;
+  }
+  const ninth = addCard(d, 9, 0, 4);
+  assert.equal(ninth.ok && ninth.card.color, 4);
 });
 
 test('a card is added once, valid numbers only, up to 30', () => {

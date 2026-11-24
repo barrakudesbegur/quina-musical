@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The player app's shell: header, the "1 song away" banner and status strips on every tab, the tab content,
+  // The player app's shell: header and status strips on every tab, the tab content,
   // the tab bar, and the overlays and sheets. All state lives in PlayerApp; this only lays it out.
   import type { PlayerApp } from './model.svelte.ts';
   import AppHeader from './components/AppHeader.svelte';
@@ -9,7 +9,6 @@
   import HelpSheet from './components/HelpSheet.svelte';
   import HistoryTab from './components/HistoryTab.svelte';
   import LegacyNotice from './components/LegacyNotice.svelte';
-  import NearWinBanner from './components/NearWinBanner.svelte';
   import NowTab from './components/NowTab.svelte';
   import NumberPad from './components/NumberPad.svelte';
   import PrizesTab from './components/PrizesTab.svelte';
@@ -38,7 +37,6 @@
 >
   <AppHeader {app} />
   <div class="player__alerts">
-    <NearWinBanner items={app.banner} catalog={app.catalog} />
     <StatusStrip {app} />
   </div>
 
@@ -82,12 +80,19 @@
   {/if}
 
   {#if dialog?.kind === 'pad'}
-    <NumberPad onadd={(id) => app.addCard(id)} onclose={() => app.closeDialog()} onkey={() => app.blip('tap')} />
+    <NumberPad cards={app.data.cards} onadd={(id, identity) => app.addCard(id, true, identity)} onclose={() => app.closeDialog()} onkey={() => app.blip('tap')} />
   {:else if dialog?.kind === 'help'}
     <HelpSheet {app} />
   {:else if dialog?.kind === 'rename'}
     {@const card = named(dialog.cardId)}
-    <RenameSheet cardId={dialog.cardId} name={card?.name ?? null} onsave={(name) => app.renameCard(dialog.cardId, name)} onclose={() => app.closeDialog()} />
+    {#if card}
+      <RenameSheet
+        {card}
+        others={app.data.cards.filter((c) => c.id !== card.id)}
+        onsave={(name, identity) => app.editCard(card.id, name, identity)}
+        onclose={() => app.closeDialog()}
+      />
+    {/if}
   {:else if dialog?.kind === 'remove'}
     {@const card = named(dialog.cardId)}
     <ConfirmSheet

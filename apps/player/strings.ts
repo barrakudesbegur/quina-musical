@@ -1,7 +1,6 @@
 // Every word the player app shows, in plain Catalan. Shared terms come from ui/i18n/ca.ts (a Round is
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
-// COPY RULE: the copy may warn that the last song isn't always marked, but never explains when it gets marked.
-// The phone never says "you won".
+// COPY RULE: the phone never says "you won" and never announces a Line or a Quina: players claim them.
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { HeatLevel } from './logic/view.ts';
 import type { TabId } from './logic/tabs.ts';
@@ -14,6 +13,8 @@ export const S = {
   roundOf: CA.roundOf,
   specialRound: CA.specialRound,
   card,
+  /** A card's number in small print under its name: "nº 123". */
+  cardNumber: (id: number) => `nº ${id}`,
 
   tabs: { ara: 'Ara', cartrons: 'Cartrons', historial: 'Historial', premis: 'Premis', programa: 'Programa' } satisfies Record<TabId, string>,
   tabBar: 'Seccions',
@@ -48,8 +49,11 @@ export const S = {
   unknownCard: 'No trobem aquest cartró.',
   loadingCards: 'Carregant els cartrons…',
   catalogError: 'No s’han pogut carregar els cartrons. Ho tornem a provar…',
-  rename: 'Posar nom',
-  renameTitle: (id: number) => `Nom del ${card(id).toLowerCase()}`,
+  rename: 'Nom i icona',
+  renameTitle: (id: number) => `Nom i icona del ${card(id).toLowerCase()}`,
+  iconLabel: 'Icona',
+  iconHint: 'Cada cartró en té una de diferent',
+  iconTaken: (icon: string, owner: string) => `${icon}: ja la fa servir ${owner}`,
   nameLabel: 'Nom (opcional)',
   namePlaceholder: 'Per exemple: Àvia',
   save: 'Desar',
@@ -60,14 +64,7 @@ export const S = {
   removeYes: 'Sí, treure’l',
   cell: (title: string, marked: boolean) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}`,
   markLabel: (mark: string) =>
-    (({ corn: 'Gra de blat de moro', star: 'Estrella', moon: 'Lluna', triangle: 'Triangle', gift: 'Regal', clubs: 'Trèvol', circle: 'Rodona', square: 'Quadrat' }) as Record<string, string>)[mark] ?? mark,
-
-  // The "1 song away" banner
-  bannerTitle: 'Estigues atent!',
-  bannerKind: { line: 'A 1 cançó de Línia', bingo: 'A 1 cançó de Quina' },
-  missing: 'Falta',
-  or: ' o ',
-  attention: 'Estigues atent: l’última cançó no sempre queda marcada.',
+    (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', moon: 'Lluna', tree: 'Arbre de Nadal', snowflake: 'Floc de neu', clubs: 'Trèvol', bauble: 'Bola de Nadal', crown: 'Corona de rei' }) as Record<string, string>)[mark] ?? mark,
 
   // Ara
   nowPlaying: CA.nowPlaying,
@@ -141,9 +138,10 @@ export const S = {
 
   // Historial
   historyTitle: 'Historial',
-  thisRound: 'Aquesta quina',
   noHistory: 'Encara no ha sonat cap cançó.',
-  onYourCards: 'Als teus cartrons',
+  songCount: (n: number) => (n === 1 ? '1 cançó' : `${n} cançons`),
+  /** A song's icons in Historial: "Al cartró Gra de blat de moro i Lluna". */
+  onCards: (names: readonly string[]) => `Als teus cartrons: ${names.join(', ')}`,
 
   // Last year's links
   legacyTitle: 'Aquest cartró és de l’any passat',

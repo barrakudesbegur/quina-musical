@@ -1,5 +1,5 @@
 // The pure rules behind the screens: the offline and pause notices, the reconnect pill, the reel synced to the
-// Spin, the feedback cues (one at a time; marks follow the grace rule), and the derived views.
+// Spin, the feedback cues (one at a time), the near-win highlight, and the derived views.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
@@ -12,10 +12,10 @@ import {
   celebrationOf,
   focusRoundNumber,
   heatLevel,
-  historyGroups,
+  historyOf,
   kernelTilt,
   markKeys,
-  markedColors,
+  markedIdentities,
   padValue,
   plannedStarts,
   prizeRounds,
@@ -96,7 +96,7 @@ test('reel phases: generic until the landing is public, never the song in advanc
 });
 
 // ---- feedback ---------------------------------------------------------------------------------------------
-const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({ round: 3, landings: 5, marks: [], banner: [], celebration: null, ...patch });
+const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({ round: 3, landings: 5, marks: [], near: [], celebration: null, ...patch });
 
 test('the first update and a new round are quiet', () => {
   assert.deepEqual(feedbackFor(null, snap({ marks: ['1:2'] })), { cue: null, freshMarks: [] });
@@ -106,12 +106,12 @@ test('the first update and a new round are quiet', () => {
 test('one cue at a time, the most important: celebrate > near-win > mark > landing', () => {
   assert.equal(feedbackFor(snap(), snap({ landings: 6 })).cue, 'landing');
   assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { cue: 'mark', freshMarks: ['1:3', '4:3'] });
-  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], banner: ['line:1:9'] })).cue, 'nearWin');
-  assert.equal(feedbackFor(snap(), snap({ banner: ['line:1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
+  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], near: ['1:9'] })).cue, 'nearWin');
+  assert.equal(feedbackFor(snap(), snap({ near: ['1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
 });
 
-test('the near-win chime only when the banner first appears', () => {
-  assert.equal(feedbackFor(snap({ banner: ['line:1:9'] }), snap({ banner: ['line:1:9', 'line:2:4'] })).cue, null);
+test('the near-win chime only when a card first gets a highlighted song', () => {
+  assert.equal(feedbackFor(snap({ near: ['1:9'] }), snap({ near: ['1:9', '2:4'] })).cue, null);
 });
 
 // ---- views ------------------------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ const saved = (() => {
   return d.cards;
 })();
 
-test('card views: only the right kind plays; marks follow the grace rule; unknown cards stay listed', () => {
+test('card views: only the right kind plays; every landed song is marked; unknown cards stay listed', () => {
   const round = { number: 3, kind: 'normal' as const, startedAtMs: 0, lineConfirmed: false, ended: false, landings: [2, 17, 41].map((songId, position) => ({ position, songId, atMs: 0 })) };
   const views = cardViews(saved, catalog, round);
   assert.deepEqual(views.map((v) => [v.saved.id, v.valid]), [[123, true], [412, false], [999, true]]);
@@ -136,7 +136,9 @@ test('card views: only the right kind plays; marks follow the grace rule; unknow
   assert.equal(views[1].marks, null);
   assert.equal(views[2].card, null);
   assert.deepEqual(markKeys(views), ['123:2', '123:17', '123:41']);
-  assert.deepEqual(markedColors(views).get(17), [1]);
+  assert.deepEqual(markedIdentities(views).get(17), [1]);
+  assert.deepEqual([...views[0].near], [69], 'card 123 is 1 song from its first Line: that song is highlighted');
+  assert.deepEqual([...cardViews(saved, catalog, { ...round, lineConfirmed: true })[0].near], [], 'no Line highlight once a Line is confirmed');
   const special = cardViews(saved, catalog, { ...round, kind: 'special' });
   assert.deepEqual(special.filter((v) => v.valid && v.card).map((v) => v.saved.id), [412]);
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
@@ -159,7 +161,7 @@ test('prizes, progress and the planned times come from the plan and the winners'
   assert.equal(starts?.get(2), T + 30 * 60_000);
 });
 
-test('the Celebration shows the latest prize of the round; history is newest first', () => {
+test('the Celebration shows the latest prize of the round; Historial is the current round, newest first', () => {
   const state = playing({ scene: 'celebration', winners: [{ round: 3, kind: 'line', cardIds: [57] }] });
   assert.deepEqual(celebrationOf(state), { key: 'celebration:3:line', kind: 'line', round: 3, cardIds: [57] });
   assert.equal(celebrationOf(playing()), null);
@@ -169,8 +171,9 @@ test('the Celebration shows the latest prize of the round; history is newest fir
       { number: 3, kind: 'normal', startedAtMs: 0, lineConfirmed: false, ended: false, landings: [{ position: 0, songId: 5, atMs: 0 }, { position: 1, songId: 6, atMs: 1 }] },
     ],
   });
-  const groups = historyGroups(withHistory);
-  assert.deepEqual(groups.map((g) => [g.round, g.current, g.landings.map((l) => l.songId)]), [[3, true, [6, 5]], [2, false, [1]]]);
+  const history = historyOf(withHistory);
+  assert.deepEqual([history?.round, history?.landings.map((l) => l.songId)], [3, [6, 5]], 'earlier rounds are not shown');
+  assert.equal(historyOf(playing({ rounds: [] })), null);
 });
 
 test('small helpers: Heat levels, kernel tilt, the number pad', () => {

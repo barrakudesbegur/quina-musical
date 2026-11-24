@@ -1,13 +1,10 @@
 // What a player's card shows: which songs are marked, and which cards are 1 song away. Pure functions,
 // shared by the player app (and anything else that draws a player's card). The rules come from the decisions:
-// - Every counted landing of the round is marked, the latest song included.
-// - The grace rule: if the latest song would complete the whole card (a Bingo), that card keeps it unmarked
-//   until the next song lands or the round ends. A Line made by the latest song shows as plain marks; the
-//   app never announces it.
-// - When the round ends, everything is revealed.
-// - The "1 song away" list names the card and the missing song. For a Line it only counts until someone's
-//   Line is confirmed. For a Bingo it counts only marked songs, so the grace rule is never revealed.
-// Proposed for @quina/rules (owned by the sound engine session) when the repo moves.
+// - Every counted landing of the round is marked, the latest song included. (The old grace rule, which kept
+//   the latest song unmarked when it completed a card, was dropped by the user on 2026-11-24.)
+// - A Line or a Quina shows as plain marks: the app never announces it. Players claim it themselves.
+// - The "1 song away" list names the card and the missing song; the player app only highlights that song on
+//   the card's grid. For a Line it only counts until someone's Line is confirmed.
 
 /** A card as the player app knows it: 3 lines of 4 song ids. */
 export interface PlayerCard {
@@ -20,35 +17,24 @@ export interface PlayerCard {
 export interface CardMarks {
   /** [line][slot]: is that song shown as marked. */
   marked: boolean[][];
-  /** The song kept unmarked by the grace rule, or null. */
-  heldBack: number | null;
   /** How many songs show as marked. */
   count: number;
 }
 
-export interface MarkOptions {
-  /** The round is over (its Bingo was confirmed): reveal everything. */
-  roundEnded: boolean;
-}
-
 /**
- * The marks a card shows, from the round's counted landings in landing order (undone ones removed).
+ * The marks a card shows, from the round's counted landings (undone ones removed): every landed song on it.
  */
-export function cardMarks(card: PlayerCard, landed: readonly number[], { roundEnded }: MarkOptions): CardMarks {
+export function cardMarks(card: PlayerCard, landed: readonly number[]): CardMarks {
   const landedSet = new Set(landed);
-  const latest = landed.length ? landed[landed.length - 1] : null;
-  const songs = card.lines.flat();
-  const all = songs.length > 0 && songs.every((id) => landedSet.has(id));
-  const heldBack = !roundEnded && all && latest !== null && songs.includes(latest) ? latest : null;
   let count = 0;
   const marked = card.lines.map((line) =>
     line.map((id) => {
-      const on = landedSet.has(id) && id !== heldBack;
+      const on = landedSet.has(id);
       if (on) count++;
       return on;
     }),
   );
-  return { marked, heldBack, count };
+  return { marked, count };
 }
 
 export interface NearWin {

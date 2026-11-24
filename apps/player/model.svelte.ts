@@ -8,7 +8,7 @@ import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';
 import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
 import type { PublicHeat, PublicState } from './feed/public.ts';
-import { bannerItems } from './logic/banner.ts';
+import { nearKeys } from './logic/near-win.ts';
 import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
 import type { DialogId, Route } from './logic/router.ts';
 import { overlayFor, reconnectPill } from './logic/status.ts';
@@ -20,6 +20,7 @@ import {
   noteGame,
   removeCard,
   renameCard,
+  setIdentity,
   setSounds,
   soundsOn,
   type PlayerData,
@@ -75,15 +76,8 @@ export class PlayerApp {
   views = $derived(cardViews(this.data.cards, this.catalog, this.round));
   playingViews = $derived(this.views.filter((v) => v.valid));
   restingViews = $derived(this.views.filter((v) => !v.valid));
-  banner = $derived(
-    this.round
-      ? bannerItems(
-          this.playingViews.flatMap((v) => (v.card ? [{ card: v.card, color: v.saved.color, name: v.saved.name }] : [])),
-          [...this.round.landings].sort((a, b) => a.position - b.position).map((l) => l.songId),
-          { lineConfirmed: this.round.lineConfirmed, ended: this.round.ended },
-        )
-      : [],
-  );
+  /** The near-win highlights on the playing cards ("cardId:songId"). */
+  near = $derived(nearKeys(this.playingViews.map((v) => ({ cardId: v.saved.id, near: v.near }))));
   celebration = $derived(celebrationOf(this.state));
   celebrationOpen = $derived(this.celebration !== null && !this.data.dismissed.includes(this.celebration.key));
   overlay = $derived(overlayFor({ state: this.state, connection: this.connection, localNowMs: this.localNow, cloudNowMs: this.cloudNow }));
@@ -185,9 +179,9 @@ export class PlayerApp {
    * Add a card by number. With `checkCatalog`, a number that isn't a printed card is refused (the pad);
    * a scanned link is trusted. Returns the error to show, or null.
    */
-  addCard(id: number, checkCatalog = true): string | null {
+  addCard(id: number, checkCatalog = true, identity?: number): string | null {
     if (checkCatalog && this.catalog && !this.catalog.cards.has(id)) return S.addError.unknown(id);
-    const result = addCard(this.data, id, Date.now());
+    const result = addCard(this.data, id, Date.now(), identity);
     if (!result.ok) return result.reason === 'duplicate' ? S.addError.duplicate(id) : result.reason === 'full' ? S.addError.full(PLAYER_CONFIG.maxCards) : S.addError.invalid;
     this.saveData(result.data);
     this.showToast(S.added(id));
@@ -199,8 +193,9 @@ export class PlayerApp {
     this.dialog = null;
   }
 
-  renameCard(id: number, name: string): void {
-    this.saveData(renameCard(this.data, id, name));
+  /** The card's sheet: its name and its icon. */
+  editCard(id: number, name: string, identity: number): void {
+    this.saveData(setIdentity(renameCard(this.data, id, name), id, identity));
     this.dialog = null;
   }
 
@@ -290,7 +285,7 @@ export class PlayerApp {
       round: this.round?.number ?? null,
       landings: this.round?.landings.length ?? 0,
       marks: markKeys(this.views),
-      banner: this.banner.map((b) => b.key),
+      near: this.near,
       celebration: this.celebration?.key ?? null,
     };
   }

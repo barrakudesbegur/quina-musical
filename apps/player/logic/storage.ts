@@ -81,14 +81,33 @@ export function nextColor(cards: readonly Pick<SavedCard, 'color'>[], colors = P
   return (cards.length % colors) + 1;
 }
 
+/**
+ * Can a card use this identity (icon and colour)? Each card gets its own while any is free; once all are
+ * used (a phone can follow more cards than there are icons), any can repeat. `others` excludes the card itself.
+ */
+export function identityFree(others: readonly Pick<SavedCard, 'color'>[], identity: number, colors = PLAYER_CONFIG.cardColors): boolean {
+  if (!Number.isInteger(identity) || identity < 1 || identity > colors) return false;
+  const used = new Set(others.map((c) => c.color));
+  return !used.has(identity) || used.size >= colors;
+}
+
 export type AddResult = { ok: true; data: PlayerData; card: SavedCard } | { ok: false; reason: 'invalid' | 'duplicate' | 'full' };
 
-export function addCard(data: PlayerData, id: number, nowMs: number): AddResult {
+/** Adds a card with the identity the player picked, or the first free one when the pick isn't available. */
+export function addCard(data: PlayerData, id: number, nowMs: number, identity?: number): AddResult {
   if (!validId(id)) return { ok: false, reason: 'invalid' };
   if (data.cards.some((c) => c.id === id)) return { ok: false, reason: 'duplicate' };
   if (data.cards.length >= PLAYER_CONFIG.maxCards) return { ok: false, reason: 'full' };
-  const card: SavedCard = { id, color: nextColor(data.cards), name: null, addedAtMs: nowMs };
+  const color = identity !== undefined && identityFree(data.cards, identity) ? identity : nextColor(data.cards);
+  const card: SavedCard = { id, color, name: null, addedAtMs: nowMs };
   return { ok: true, data: { ...data, cards: [...data.cards, card] }, card };
+}
+
+/** Gives a card another identity, if no other card has it (or every identity is already in use). */
+export function setIdentity(data: PlayerData, id: number, identity: number): PlayerData {
+  const others = data.cards.filter((c) => c.id !== id);
+  if (!data.cards.some((c) => c.id === id) || !identityFree(others, identity)) return data;
+  return { ...data, cards: data.cards.map((c) => (c.id === id ? { ...c, color: identity } : c)) };
 }
 
 export const removeCard = (data: PlayerData, id: number): PlayerData => ({ ...data, cards: data.cards.filter((c) => c.id !== id) });

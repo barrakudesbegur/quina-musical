@@ -55,12 +55,12 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   spin: { fixture: 'spin', cards: 'default', live: true },
   suspense: { fixture: 'suspense', cards: 'default' },
   hold: { fixture: 'hold', cards: 'default' },
-  /** Card 123's top Line is complete: plain marks, and its banner stays up until a Line is confirmed. */
+  /** Card 123's top Line is complete: plain marks, nothing announced. */
   lineDone: { fixture: 'play', cards: 'default', extraLanded: [69] },
   /** Card 123 is 1 song from Quina (a Line was confirmed earlier). */
   nearBingo: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
-  /** Card 123's last song just landed: the grace rule keeps it unmarked. */
-  grace: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55, 66], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
+  /** Card 123's last song just landed: every song marked, nothing announced (players claim it themselves). */
+  cardFull: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55, 66], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
   special: { fixture: 'play', cards: 'default', patch: (s) => ({ ...s, round: { ...s.round, kind: 'special' } }) },
   check: { fixture: 'check', cards: 'default' },
   checkValid: { fixture: 'checkValid', cards: 'default', patch: decided('valid') },

@@ -9,5 +9,4 @@
       <li class="how-to-play__step">{step}</li>
     {/each}
   </ol>
-  <p class="how-to-play__note">{S.attention}</p>
 </section>

@@ -46,11 +46,24 @@ export function formatCountdown(totalSec: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-/** "22:14", 24-hour local clock time, or "—". */
-export function formatClock(ms: number | null | undefined): string {
-  if (!ms) return '—';
+/** A local clock time split for display: "10:14" and "pm". 12-hour clock, as the user asked for every screen. */
+export interface ClockParts {
+  time: string;
+  period: 'am' | 'pm';
+}
+
+/** The parts of a local clock time, or null without a time. Midnight is "12:00 am", noon "12:00 pm". */
+export function clockParts(ms: number | null | undefined): ClockParts | null {
+  if (!ms) return null;
   const d = new Date(ms);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const h = d.getHours();
+  return { time: `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`, period: h < 12 ? 'am' : 'pm' };
+}
+
+/** "10:14 pm", 12-hour local clock time, or "—". */
+export function formatClock(ms: number | null | undefined): string {
+  const parts = clockParts(ms);
+  return parts ? `${parts.time} ${parts.period}` : '—';
 }
 
 /** Drift for presenters: "a l'hora", "+3 min" (late) or "−2 min" (early). */

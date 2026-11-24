@@ -21,7 +21,8 @@
     el.height = Math.round(h * dpr);
     ctx.scale(dpr, dpr);
     const style = getComputedStyle(el);
-    const colors = [1, 2, 3, 4, 5, 6].map((n) => style.getPropertyValue(`--card-color-${n}`).trim()).filter(Boolean);
+    // Every card colour but black (6), which would vanish against the night sky.
+    const colors = [1, 2, 3, 4, 5, 7, 8].map((n) => style.getPropertyValue(`--card-color-${n}`).trim()).filter(Boolean);
     const duration = ms(style.getPropertyValue('--dur-confetti')) || 1800;
     const gravity = h * 1.6;
     const bits = Array.from({ length: pieces }, () => ({
