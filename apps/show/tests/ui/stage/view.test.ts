@@ -13,10 +13,17 @@ const NOW = 1_800_000_000_000;
 
 /** A tiny catalog: card 57 and card 123 as printed (row songs as in the fixtures). */
 const song = (id: number) => ({ id, title: `Song ${id}`, artist: `Artist ${id}` });
-const CATALOG: Catalog = parseCards([
-  { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]].map((l) => l.map(song)) },
-  { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]].map((l) => l.map(song)) },
-]);
+const CATALOG: Catalog = {
+  ...parseCards([
+    { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]].map((l) => l.map(song)) },
+    { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]].map((l) => l.map(song)) },
+  ]),
+  // card-types.json, as apps/cards writes it: the only source of the types' names and colours.
+  cardTypes: [
+    { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null },
+    { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null },
+  ],
+};
 
 const SECRET = {
   nextSongId: 900001,
@@ -129,7 +136,7 @@ test('play: the round and the motion as timestamps, never the incoming song', ()
 test('before: start time, the night\'s card types, sponsors and the player app link from the plan', () => {
   const state = FIXTURES.before(NOW).state;
   const plan = { ...SAMPLE_PLAN, schedule: { ...SAMPLE_PLAN.schedule, startAtMs: NOW + 600_000 } };
-  const view = stageView(state, flowOf(state), plan, null);
+  const view = stageView(state, flowOf(state), plan, CATALOG);
   assert.equal(view.title, 'Quina Quina 3', "the edition's name");
   assert.deepEqual(view.body, {
     scene: 'before',

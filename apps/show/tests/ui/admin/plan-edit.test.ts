@@ -78,7 +78,7 @@ test('edits never mutate their input', () => {
 test('a blank plan passes the validator; a blank prize is reported until it has a title', () => {
   const plan = blankPlan('26', 'Quina Quina 3', SAMPLE_PLAN.cheatSheet);
   assert.equal(plan.prizeReveal, 'perRound');
-  assert.deepEqual(plan.cardTypes.map((c) => c.type), ['normal', 'especial']);
+  assert.equal(plan.rounds[0].cardType, 'normal', "the round plays its kind's card type");
   assert.deepEqual([plan.rounds[0].line, plan.rounds[0].bingo], [[], []], 'no prizes yet');
   assert.equal(checkGamePlan(plan).ok, true);
   plan.rounds[0].bingo = addPrize(plan.rounds[0].bingo, true);

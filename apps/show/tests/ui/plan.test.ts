@@ -31,10 +31,10 @@ test('a good plan passes and comes back trimmed and typed', () => {
   assert.equal(roundPlan(r.plan, 2)?.kind, 'special');
 });
 
-test('the sample plan is a valid version 2 plan with bundles', () => {
+test('the sample plan is a valid version 3 plan with bundles', () => {
   const r = checkGamePlan(SAMPLE_PLAN);
   assert.equal(r.ok, true, r.ok ? '' : r.errors.join('\n'));
-  assert.equal(SAMPLE_PLAN.v, 2);
+  assert.equal(SAMPLE_PLAN.v, 3);
   assert.ok(SAMPLE_PLAN.rounds.every((round) => round.line.length >= 3 && round.bingo.length >= 4), 'a headline prize and a few smaller ones');
   assert.equal(SAMPLE_PLAN.rounds[7].bingo.filter((p) => p.headline).length, 2, 'the last Quina has two headline prizes');
 });

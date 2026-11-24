@@ -58,7 +58,6 @@ export function planOf(state: PublicState | null): PublicPlan | null {
         : r,
     ),
     sponsors: raw.sponsors,
-    cardTypes: raw.cardTypes,
     schedule: raw.schedule,
     cheatSheet: { claimRules: [], specialRoundRules: [] },
   });

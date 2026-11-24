@@ -47,15 +47,13 @@ test('a prize whose sponsor, place or headline mark changes counts as changed', 
   assert.equal(d.prizes[0].before, d.prizes[0].after, 'the summary may stay the same');
 });
 
-test('the prize reveal and the card types', () => {
+test('the prize reveal', () => {
   const next = clone(SAMPLE_PLAN);
   next.prizeReveal = 'allSecret';
-  next.cardTypes[0].priceCents = 300;
   const d = diffPlans(SAMPLE_PLAN, next);
   assert.equal(d.prizeReveal, true);
-  assert.equal(d.cardTypes, true);
   assert.equal(d.same, false);
-  assert.equal(diffPlans(SAMPLE_PLAN, clone(SAMPLE_PLAN)).cardTypes, false);
+  assert.equal(diffPlans(SAMPLE_PLAN, clone(SAMPLE_PLAN)).same, true);
 });
 
 test("a round that plays another card type; a plan without card types plays its kind's default", () => {
@@ -65,7 +63,7 @@ test("a round that plays another card type; a plan without card types plays its 
   assert.deepEqual(d.rounds.cardTypeChanged, [5]);
   assert.equal(d.same, false);
   const bare = clone(SAMPLE_PLAN);
-  for (const r of bare.rounds) delete r.cardType;
+  for (const r of bare.rounds) delete (r as Partial<typeof r>).cardType;
   assert.deepEqual(diffPlans(bare, SAMPLE_PLAN).rounds.cardTypeChanged, [], 'the defaults, spelt out or not');
 });
 
