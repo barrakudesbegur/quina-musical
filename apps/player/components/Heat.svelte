@@ -18,6 +18,8 @@
 
 <div
   class="heat"
+  data-testid="heat"
+  data-heat={value === null ? '' : value.toFixed(3)}
   data-level={level}
   data-state={value === null ? 'idle' : 'live'}
   style:--heat={shown.toFixed(3)}

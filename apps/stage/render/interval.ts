@@ -28,6 +28,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
   private sponsorIndex = -1;
 
   constructor() {
+    this.root.dataset.testid = 'interval';
     setData(this.title.root, 'anim', 'idle');
     this.of = h('p', 'interval__of');
     this.rotator = h('div', 'interval__rotator', this.prize.root);

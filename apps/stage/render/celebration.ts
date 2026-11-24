@@ -4,7 +4,7 @@
 import { STAGE } from '../config.ts';
 import { confettiPieces } from '../model/confetti.ts';
 import type { AnimDetail } from '../model/moments.ts';
-import { cardsLabel, STAGE_TEXT } from '../strings.ts';
+import { STAGE_TEXT } from '../strings.ts';
 import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setText } from './dom.ts';
 import { PrizeBlock } from './parts.ts';
@@ -17,7 +17,6 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   private readonly stagePanel: HTMLElement;
   private readonly confetti: HTMLElement;
   private readonly shout: HTMLElement;
-  private readonly cards: HTMLElement;
   private readonly prize = new PrizeBlock('celebration__prize');
   private key: string | null = null;
 
@@ -25,7 +24,6 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     this.env = env;
     this.confetti = h('div', { class: 'confetti', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
-    this.cards = h('p', 'celebration__cards');
     this.stagePanel = h(
       'div',
       'celebration',
@@ -33,16 +31,15 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       h('div', { class: 'celebration__rays', attrs: { 'aria-hidden': 'true' } }),
       this.confetti,
       this.shout,
-      h('div', 'celebration__plate', this.cards),
       this.prize.root,
     );
+    this.stagePanel.dataset.testid = 'celebration';
     this.root.append(this.stagePanel);
   }
 
   render(body: CelebrationView): void {
     setData(this.stagePanel, 'kind', body.kind);
     setText(this.shout, STAGE_TEXT.shout[body.kind]);
-    setText(this.cards, cardsLabel(body.cardIds));
     this.prize.set(body.prize);
     if (body.key !== this.key) {
       this.key = body.key;

@@ -28,7 +28,7 @@
   } = $props();
 </script>
 
-<ul class="card-grid" aria-label={S.card(card.id)}>
+<ul class="card-grid" data-testid="card" data-card-id={card.id} aria-label={S.card(card.id)}>
   {#each card.lines as line, li (li)}
     {#each line as songId, si (songId)}
       {@const marked = Boolean(marks?.marked[li]?.[si])}
@@ -36,6 +36,9 @@
       {@const isNear = !marked && near.has(songId)}
       <li
         class="card-grid__cell"
+        data-testid="card-cell"
+        data-song-id={songId}
+        data-marked={marked ? 'true' : 'false'}
         class:is-marked={marked}
         class:is-near={isNear}
         data-state={marked ? 'marked' : isNear ? 'near' : 'empty'}

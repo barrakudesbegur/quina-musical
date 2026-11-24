@@ -26,7 +26,7 @@
   const HOUR = 60 * 60_000;
 </script>
 
-<section class="now" data-scene={app.scene}>
+<section class="now" data-testid="now" data-song-id={app.latest?.songId ?? ''} data-scene={app.scene}>
   {#if app.scene === 'before'}
     <h2 class="now__heading">{S.welcome}</h2>
     {#if !app.data.cards.length}

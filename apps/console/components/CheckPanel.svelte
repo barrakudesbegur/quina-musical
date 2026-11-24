@@ -91,7 +91,7 @@
       {#if progress.stage === 'waiting'}<p class="note">{S.check.waiting}</p>{/if}
 
       {#if progress.stage === 'result'}
-        <div class="check-result" data-outcome={check.outcome} role="status">
+        <div class="check-result" data-testid="check-result" data-outcome={check.outcome} role="status">
           <p class="check-result__title">{result}</p>
           {#if check.otherRows.length}<p>{S.check.otherRows(check.otherRows)}</p>{/if}
           {#if current?.completeSinceSong}<p>{S.check.completeSince(current.completeSinceSong)}</p>{/if}

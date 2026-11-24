@@ -24,7 +24,7 @@
 
 <!-- Nothing to show before a round's Queue exists. -->
 {#if snap && (next || snap.queue.length > 0)}
-  <section bind:this={root} class="panel panel--private next-song" data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
+  <section bind:this={root} class="panel panel--private next-song" data-testid="next-song" data-song-id={next?.songId ?? ''} data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
     {#if next}
       <Cover songId={next.songId} morph="cover" />
       <div class="next-song__song">

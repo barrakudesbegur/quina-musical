@@ -34,6 +34,7 @@
 </script>
 
 <section class="thumb-cluster" aria-label={S.cluster.label} data-live={c.live}>
+  <span hidden data-testid="hold" data-mode={active ?? 'none'}></span>
   <div class="thumb-cluster__slot thumb-cluster__slot--back">
     <LongPressButton big action="back" label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!c.back.enabled} onconfirm={() => model.act('back')} />
   </div>

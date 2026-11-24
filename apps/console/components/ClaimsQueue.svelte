@@ -17,7 +17,7 @@
 
 <ol class="claims__list">
   {#each items as claim (claim.claimId)}
-    <li class="claims__item" data-status={claim.status} data-current={claim.current || undefined}>
+    <li class="claims__item" data-testid="claim-row" data-claim-id={claim.claimId} data-card-id={claim.cardId} data-status={claim.status} data-current={claim.current || undefined}>
       <p class="claims__head">
         <span class="claims__card">{claim.cardId}</span>
         <span class="claims__status">{S.check.status[claim.status]}</span>

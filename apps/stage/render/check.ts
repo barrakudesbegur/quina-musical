@@ -82,6 +82,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     setText(this.pill, checkKindLabel(check.kind, check.row));
     setData(this.panel, 'kind', check.kind);
     setData(this.panel, 'verdict', null);
+    setData(this.panel, 'result', 'pending');
     setData(this.ribbon, 'anim', null);
     setHidden(this.result, true);
     this.layOut(check, grid);
@@ -146,6 +147,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     const result = reveal.result;
     if (result !== this.resultShown) {
       this.resultShown = result;
+      setData(this.panel, 'result', result ?? 'pending');
       this.showResult(check, result);
     }
   }

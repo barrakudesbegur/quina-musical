@@ -23,6 +23,8 @@ export class PlayScene implements SceneRenderer<PlayView> {
   private readonly suspense: HTMLElement;
   private readonly recent: HTMLElement;
   private readonly tiles: SongTile[];
+  /** The drum's band (test hook `drum`, with the landed song's id). */
+  private band!: HTMLElement;
   private songs: StageSong[] = [];
   private body: PlayView | null = null;
   private shownKey: string | null = null;
@@ -37,7 +39,9 @@ export class PlayScene implements SceneRenderer<PlayView> {
     this.suspense = h('p', { class: 'play__suspense', hidden: true, attrs: { 'aria-hidden': 'true' } }, STAGE_TEXT.suspense);
     this.tiles = Array.from({ length: STAGE.recentSongs }, () => new SongTile('li'));
     this.recent = h('ol', 'play__recent', ...this.tiles.map((t) => t.root));
-    this.root.append(this.garland.root, this.round.root, h('div', 'play__band', this.now, this.suspense), this.recent);
+    const band = h('div', { class: 'play__band', data: { testid: 'drum', landedId: '' } }, this.now, this.suspense);
+    this.band = band;
+    this.root.append(this.garland.root, this.round.root, band, this.recent);
   }
 
   render(body: PlayView, view: StageView): void {
@@ -52,6 +56,7 @@ export class PlayScene implements SceneRenderer<PlayView> {
     if (key !== this.shownKey) {
       this.shownKey = key;
       const current = visible[0] ?? null;
+      setData(this.band, 'landedId', current ? String(current.songId) : '');
       setText(this.title, current?.title ?? '');
       setText(this.artist, current?.artist ?? '');
       setHidden(this.now, current === null);

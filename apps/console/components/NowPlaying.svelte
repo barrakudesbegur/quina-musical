@@ -30,7 +30,7 @@
 </script>
 
 {#if snap}
-  <section bind:this={root} class="panel now-playing" data-state={snap.status} aria-labelledby="{uid}-title">
+  <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} aria-labelledby="{uid}-title">
     <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
     <div class="now-playing__song">
       <h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>

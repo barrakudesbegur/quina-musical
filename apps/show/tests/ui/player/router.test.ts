@@ -63,6 +63,12 @@ test('the feed comes from the URL: demo, relay, cloud; dev on this machine or th
   // A production build never takes the relay (it hands out the full private state), whatever the URL says.
   assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'cloud', demo: null });
   assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: '192.168.1.20', dev: false }), { kind: 'cloud', demo: null });
+  // …except on this machine itself, when asked: the laptop running the built show (`npm start`, the e2e test).
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: '127.0.0.1', dev: false }), { kind: 'relay', demo: null });
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'localhost', dev: false }), { kind: 'relay', demo: null });
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: '[::1]', dev: false }), { kind: 'relay', demo: null });
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.local', dev: false }), { kind: 'cloud', demo: null }, 'the LAN never');
+  assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: '127.0.0.1.evil.example', dev: false }), { kind: 'cloud', demo: null });
   assert.deepEqual(chooseFeed({ search: '?feed=relay', hostname: 'quina.example.org', dev: true }), { kind: 'relay', demo: null });
   assert.deepEqual(chooseFeed({ search: '', hostname: 'quina.barrakudesbegur.org', dev: false }), { kind: 'cloud', demo: null });
   assert.deepEqual(chooseFeed({ search: '', hostname: 'localhost', dev: true }), { kind: 'relay', demo: null });
