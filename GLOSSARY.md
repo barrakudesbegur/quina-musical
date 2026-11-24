@@ -20,7 +20,7 @@ _Avoid_: Quina especial (outside the UI)
 
 **Card**:
 A printed sheet of 12 songs in 3 lines of 4. A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
-_Avoid_: Cartó (outside the UI), ticket
+_Avoid_: Cartró (outside the UI), ticket
 
 **Special card**:
 A card that is only valid in the special round.
