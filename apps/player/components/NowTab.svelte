@@ -1,5 +1,6 @@
 <script lang="ts">
-  // Ara: what is happening now, by scene. In play: the reel and the current song, the two before it, the Heat.
+  // Ara: what is happening now, by scene. In play: the reel and the current song, and the two before it. (The Heat
+  // garland hangs across the top of every screen: App.svelte.)
   import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
@@ -8,7 +9,6 @@
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
   import Cover from './Cover.svelte';
-  import Heat from './Heat.svelte';
   import HowToPlay from './HowToPlay.svelte';
   import PrizeLines from './PrizeLines.svelte';
   import Reel from './Reel.svelte';
@@ -103,6 +103,5 @@
         </ol>
       </section>
     {/if}
-    {#if app.heat !== null}<Heat value={app.heat} />{/if}
   {/if}
 </section>

@@ -6,6 +6,7 @@
   import CardsTab from './components/CardsTab.svelte';
   import Celebration from './components/Celebration.svelte';
   import ConfirmSheet from './components/ConfirmSheet.svelte';
+  import Heat from './components/Heat.svelte';
   import HelpSheet from './components/HelpSheet.svelte';
   import HistoryTab from './components/HistoryTab.svelte';
   import LegacyNotice from './components/LegacyNotice.svelte';
@@ -35,6 +36,7 @@
   data-motion={app.reducedMotion ? 'reduced' : 'full'}
   data-hidden={app.hidden ? 'true' : 'false'}
 >
+  <Heat value={app.heat} />
   <AppHeader {app} />
   <div class="player__alerts">
     <StatusStrip {app} />

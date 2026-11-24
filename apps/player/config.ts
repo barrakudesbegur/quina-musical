@@ -49,6 +49,11 @@ export const PLAYER_CONFIG = Object.freeze({
   maxAnimated: 24,
   markStaggerMs: 80,
 
+  /** The Heat garland across the top: its shape, in px of the 390 px design width (it stretches to the screen).
+   * Its lights twinkle in 3 groups (3 animated elements, whatever the count). With no Heat yet (before the
+   * Game, between feeds) it glows calm at `idleHeat`, as decoration only. */
+  garland: Object.freeze({ width: 390, height: 62, bulbs: 13, swags: 2, top: 6, sag: 16, idleHeat: 0.1 }),
+
   /** Sounds: −24 dBFS peak, one at a time. */
   soundPeakGain: 0.063,
   vibrateNearWin: [30, 40, 30] as readonly number[],

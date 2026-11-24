@@ -32,6 +32,17 @@
   --color-slate-deep-edge: #1b2456;
   --color-mist: #c9d3ff;
   --color-night-shadow: #0a0e26;
+  --color-snow-edge: #e8d9bc; /* the 3D bottom edge of a paper piece */
+  --color-ink-soft: #4a4270; /* small print on paper */
+  --color-gold-light: #ffe08a;
+  --color-gold-pale: #ffe3a3;
+  --color-panel-sunk: #1c2556;
+  --color-panel-raised: #3a4a9a;
+  --color-night-line: #4a5ba8; /* dashed rules on the night sky */
+  --color-live: #3ee07f;
+  --color-ice-pale: #e6f7ff;
+  --color-ice-light: #9fe0ff;
+  --color-red-light: #ff8a80;
 
   /* Roles: components use these, never the palette directly */
   --color-bg: var(--color-night);
@@ -58,6 +69,34 @@
   --color-fail-panel-edge: var(--color-slate-deep-edge);
   --color-text-on-fail: var(--color-mist);
   --color-shadow: var(--color-night-shadow); /* the chunky drop shadow under game pieces */
+  --color-paper-edge: var(--color-snow-edge);
+  --color-text-on-paper-muted: var(--color-ink-soft);
+  --color-text-soft: var(--color-mist); /* body copy on the night sky, softer than --color-text */
+  --color-surface-sunk: var(--color-panel-sunk); /* a done round, a pressed-in panel */
+  --color-surface-raised: var(--color-panel-raised); /* a chosen option on a panel */
+  --color-highlight: var(--color-gold-pale); /* "now" on paper */
+  --color-divider: var(--color-night-line);
+  --color-online: var(--color-live);
+  --color-danger-on-night: var(--color-red-light); /* red words and outlines on the night sky */
+
+  /* The game look: chunky pieces with an ink outline, a hard drop shadow and a 3D edge, outlined titles, and
+     the starry night sky (the "Quina Musical look" boards). */
+  --shadow-piece: 0 6px 0 var(--color-shadow);
+  --shadow-piece-sm: 0 4px 0 var(--color-shadow);
+  --edge-piece: inset 0 -8px 0 rgb(0 0 0 / 0.22), inset 0 5px 0 rgb(255 255 255 / 0.35); /* a button's 3D edge */
+  --edge-piece-sm: inset 0 -5px 0 rgb(0 0 0 / 0.22), inset 0 3px 0 rgb(255 255 255 / 0.3);
+  --shine-panel: inset 0 4px 0 rgb(255 255 255 / 0.1); /* a panel's top highlight */
+  --title-stroke: 6px; /* outlined title: an ink stroke painted under the fill, so half of it shows */
+  --title-stroke-sm: 4px; /* small outlined titles: thinner, so they stay legible */
+  --title-drop: 0 4px 0 var(--color-line);
+  --title-drop-sm: 0 3px 0 var(--color-line);
+  --title-tracking: 0.01em;
+  --title-tracking-sm: 0.035em;
+  --sky-stars:
+    radial-gradient(circle, rgb(255 255 255 / 0.5) 1.1px, transparent 1.6px),
+    radial-gradient(circle, rgb(255 255 255 / 0.25) 0.9px, transparent 1.3px);
+  --sky-stars-size: 120px 120px, 76px 76px;
+  --sky-stars-position: 22px 34px, 61px 12px;
 
   /* A followed card's identity: colour N goes with mark icon N (apps/player/logic/marks-identity.ts). Order
      matters: new cards take the next free one, and the first is corn gold. Eight colours that can't be
@@ -104,6 +143,7 @@
   --radius-sm: 0.5rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
   --radius-pill: 999px;
   --line-width: 3px;
   --line-width-bold: 4px; /* the game look's panels, tabs and big buttons */
