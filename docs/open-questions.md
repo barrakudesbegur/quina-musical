@@ -26,10 +26,6 @@ The player app draws each card as the 3×4 grid of the printed card, with a cove
 The QR now points to `quina.barrakudesbegur.org/26/<card>`. The card's title and paper colour are configurable in `apps/cards/src/config.ts`.
 **Default taken:** last year's title ("QUINA QUINA!") and colour until you choose. No cards are generated until the playlist is final.
 
-## A new subdomain for the cloud, and Access (quina-musical-b2, 2026-11-24)
-Access needs path-scoped protection (`/api` for admins, `/ws/show` for the laptop) while the phones' `/feed` stays public. Cloudflare documents Access on workers.dev only for the whole URL. So the cloud needs a hostname in the barrakudesbegur.org zone. Proposed: a NEW `quina-dev.barrakudesbegur.org`, added as a Worker Custom Domain; `quina` and `fitxes` are untouched. The deploy plan lists the Access steps: two self-hosted apps, a service token for the laptop, Google login (probably already set up for coin-reader), and 4 Worker secrets. It also needs the **list of organizer emails** allowed into Admin.
-**Default taken:** nothing created. Until the secrets exist, every admin route and the laptop route answer 403 (fail-closed).
-
 ## The printed cards are public (quina-musical-b2, 2026-11-24)
 The player app needs each card's songs, so `cards.json` (every card's songs) is public: the cloud serves it as a static file, and the laptop's relay serves it on the hotspot. With every card and the public landings, someone determined could work out live which card numbers are close to a Line or a Bingo, the information the console keeps private as "possible winners". Card numbers are anonymous and the next song stays secret, so the impact is low. The alternative is a per-card secret in the QR (for example `/26/123-k7f2`), with the cloud serving only that card. It would make "Afegir cartró" by number much harder, and that fails the grandmother test.
 **Default taken:** keep `cards.json` public (the orchestrator agrees). To change: generate the cards with a secret per card before printing, and serve cards one by one.

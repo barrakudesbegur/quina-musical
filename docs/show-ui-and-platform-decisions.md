@@ -96,7 +96,11 @@ These override the sections below where they differ.
   - Reconnect with backoff and jitter.
   - Store one snapshot row, not history reads.
   - Serve covers as static files, not through the Worker.
-- **Deployed (2026-11-24):** the Worker `quina-cloud` is live at `https://quina-cloud.barrakudes.workers.dev`, on workers.dev only, with no DNS change. It serves the player app, the phone feed, cards and covers. Organizer and laptop routes refuse every request until Access is set up. Steps and undo are in `apps/cloud/docs/deploy-plan.md`. Still to do: the `quina-dev` subdomain, the Access apps and service token, the secrets, the organizer emails, and the R2 bucket.
+- **Deployed (2026-11-24):**
+  - **Worker:** `quina-cloud` is live at `https://quina-dev.barrakudesbegur.org`, a Custom Domain that added one new DNS record and nothing else. workers.dev also still answers.
+  - **Admin login:** Cloudflare Access with Google for anyone **@barrakudesbegur.org**, reusing the team and policy that Fitxes uses. It covers Admin, the console and the organizer API. The laptop uses its own service token, stored only on that machine. Health, the player app and covers stay public.
+  - **Media:** the private R2 bucket `quina-media` exists. It's wired in on the next deploy.
+  - **Undo steps:** every step and its undo are in `apps/cloud/docs/deploy-plan.md`.
 - **The venue:** a pop-up tent with no Wi-Fi and no router; good 5G and phone hotspots.
   - The laptop is tethered by USB to a phone, with a second phone (another carrier) as a backup hotspot.
   - The laptop sits in the first row or at the side of the stage.
