@@ -116,9 +116,17 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
 2. The Desgraciat: the compile keys on Sound engine's step A, then the screens after their step C. Due Fri 4 Dec.
 3. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
    Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
-4. Ack Sound engine when they move the `remote.status` type from `packages/ui/client/remote-status.ts` into `@quina/protocol`, then repoint the imports. Already acked in advance.
-5. When the user decides: the player drawers layout, the theme pass, and the four design choices below.
-6. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+4. **Fixes from the Orchestrator's docs audit** (2026-11-25; the reference is `docs/how-the-quina-works.md`). The spec side is done (`66aeb34`); the code isn't:
+   - **Phones never show winning card numbers.** Remove `WinnerNumbers` from `Celebration.svelte`, `PrizeLines.svelte` and `NowTab.svelte`. Someone else's win shows "Línia!"/"Quina!" and the prize; the player's own confirmed card shows "La teva línia!" (ANIMATIONS.md `celebrate`, boards "App · celebració").
+   - **Offline keeps the normal screen:** a slate strip at the top and the screen greyed, with everything still usable, instead of `SceneOverlay`'s full-screen notice (board "App · sense connexió"). **Pausa** shows the meditating nino in the drum's place, with Historial and the cards untouched (board "App · pausa tècnica").
+   - **The decided 3 tabs:** Ara (the drum plus a Historial | Cartrons switch, remembered per device; Cartrons by default for players following cards), Premis and Horari, plus the menu sheet. The code still has 5 tabs and says "Programa": rename it "Horari". Build the home so tabs and drawers are only a container swap, because the drawers layout may replace the tabs.
+   - **Console Efectes pads with icons** (decided by the user on the canvas, 24 Nov: "use icons, no words"; keep the word design on the canvas). Board "Consola · Efectes amb icones"; code `apps/console/components/SoundPad.svelte`.
+   - **Add-card by number asks before leaving** when a number was typed (not built).
+   - **Round icons:** the Especial's star exists. The Desgraciat's sad face comes with its screens.
+   - "Quina Especial" (capital E) and the console's "Comprovar cartró" go in with the Desgraciat compile commit.
+5. Ack Sound engine when they move the `remote.status` type from `packages/ui/client/remote-status.ts` into `@quina/protocol`, then repoint the imports. Already acked in advance.
+6. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+7. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
@@ -130,11 +138,14 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
   - the sitting nino on a fallen card;
   - "DEMPEUS!" as the Celebration title.
 - **The theme pass:** the approved look applied to the basic stage, console and Admin screens. The player already has it (`cd9fa6d`).
-- **Four design choices left open by the previous session (2026-11-24):**
+- **Three design choices left open by the previous session (2026-11-24):**
   1. The prizes corner icon: board "Component · icona de premis", options A–E (A is in use).
   2. The effect when a landed song is on your card: board "App · quan la cançó és teva", options A–D.
-  3. The Efectes pads, as icons or words: board "Consola · Efectes amb icones" has 20 icon pads; the word version still exists.
-  4. The player drawers layout (above).
+  3. The player drawers layout (above).
+
+  The Efectes pads were decided (icons): see the queue.
+- **The card stack on phones** (24 Nov, "I will need to confirm this"): specced as `card-stack` in ANIMATIONS.md, not built.
+- **Naming the "Ara" tab** (the user's comment, "I would call this songs"): the Orchestrator raises it with the drawers choice.
 - **Canvas comments:** about 100 plain comments were addressed (versions 40–46) but remain open, because they weren't sent to Claude.
 - **My entries in `docs/open-questions.md`:** card text size on phones, this year's printed card title and colour, and the checks that need real phones, the projector and the tablet.
 
