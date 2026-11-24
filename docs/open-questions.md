@@ -67,3 +67,23 @@ The QR now points to `quina.barrakudesbegur.org/26/<card>`. The card's title and
 ## Sponsor logos before the cloud exists (quina-musical-1e, 2026-11-24)
 Admin cleans up each logo in the browser (removes the white background, trims it, makes a WebP).
 **Default taken:** until the Platform session's R2 storage exists, the cleaned logo is kept inside the Game plan as a data URL. It's exported with the JSON and kept in the browser's storage.
+
+## Deploy the cloud to workers.dev (quina-musical-b2, 2026-11-24)
+Milestone C1 is built and tested locally: the Worker and GameRoom, the laptop link, the phone feed, and a 400-phone load test. When I ran `wrangler deploy` after your `wrangler login`, Claude Code's permission check (auto mode) stopped it, and I don't work around such stops. Run `cd experiments/mixer-poc/cloud && npm test && npm run deploy` yourself, or allow `npx wrangler deploy` in `/permissions` so a session can. It creates a new Worker, `quina-cloud`, on workers.dev and touches no DNS or existing project.
+**Default taken:** not deployed. The phone feed and the laptop link run under `wrangler dev`. Every step is in `experiments/mixer-poc/cloud/docs/deploy-plan.md`, each with its undo.
+
+## A new subdomain for the cloud, and Access (quina-musical-b2, 2026-11-24)
+Access needs path-scoped protection (`/api` for admins, `/ws/show` for the laptop) while the phones' `/feed` stays public. Cloudflare documents Access on workers.dev only for the whole URL. So the cloud needs a hostname in the barrakudesbegur.org zone. Proposed: a NEW `quina-dev.barrakudesbegur.org`, added as a Worker Custom Domain; `quina` and `fitxes` are untouched. The deploy plan lists the Access steps: two self-hosted apps, a service token for the laptop, Google login (probably already set up for coin-reader), and 4 Worker secrets. It also needs the **list of organizer emails** allowed into Admin.
+**Default taken:** nothing created. Until the secrets exist, every admin route and the laptop route answer 403 (fail-closed).
+
+## coin-reader's access helper in this public repo (quina-musical-b2, 2026-11-24)
+coin-reader is a private repo. Its `functions/_lib/access.ts` (`requireAccess`) is a generic helper with no secrets.
+**Default taken:** copied in adapted form to `experiments/mixer-poc/cloud/src/access.ts`, with a note saying where it came from. The adaptations: Access service tokens for the laptop (client-ID allow-list), people refused unless an email list or domain is configured, and the dev bypass only on localhost. To undo: rewrite it from the Access docs.
+
+## Phones keep their cards per edition, not per Game (quina-musical-b2, 2026-11-24)
+The laptop starts a new Game id for every rehearsal and for `?fresh=1`. If phones wiped their saved cards whenever the Game id changed, a rehearsal or an accidental `?fresh=1` on the night would wipe every phone.
+**Default taken:** phones tag their saved data with the **edition** (`26`, as in the QR links) and wipe only when that changes. A new Game id only resets the rounds they show. Agreed with quina-musical-1e.
+
+## Same-day rehearsals share the free quota (quina-musical-b2, 2026-11-24)
+The free plan's daily limits reset at 00:00 UTC (01:00 in Catalonia in winter). The 400-phone load test projects a typical show night at about 21% of the request limit and a pessimistic one at about 50% (`experiments/mixer-poc/cloud/reports/`). A big same-day rehearsal with many phones would eat into that.
+**Default taken:** the projection includes a small same-day rehearsal (20 phones, 2 h). Keep a big rehearsal on another day, or upgrade to Workers Paid (5 USD a month) for the week.
