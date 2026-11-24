@@ -225,8 +225,19 @@ export function syncMain({ cwd, fetch = true, dryRun = false }: SyncOptions): Sy
     if (c.newMode === '120000') fs.symlinkSync(blob.toString('utf8'), full);
     else fs.writeFileSync(full, blob, { mode: c.newMode === '100755' ? 0o755 : 0o644 });
   }
-  // The index follows: each path as it now is in the working tree (added, updated, or removed).
-  if (plan.length > 0) git(top, ['update-index', '--add', '--remove', '-z', '--stdin'], plan.map((c) => c.path).join('\0') + '\0');
+  // The index follows: each path as it now is in the working tree (added, updated, or removed). Another session's
+  // git command may hold the index lock for a moment: wait for it, up to a few seconds.
+  if (plan.length > 0) {
+    const paths = plan.map((c) => c.path).join('\0') + '\0';
+    for (let attempt = 1; ; attempt++) {
+      const indexed = run(top, ['update-index', '--add', '--remove', '-z', '--stdin'], paths);
+      if (indexed.status === 0) break;
+      if (!indexed.err.includes('index.lock') || attempt >= 50) {
+        throw new Error(`main moved and the files are written, but the index wasn't updated (${indexed.err.trim()}). Fix it with: git reset -q -- ${plan.map((c) => c.path).join(' ')}`);
+      }
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+    }
+  }
   return result;
 }
 
