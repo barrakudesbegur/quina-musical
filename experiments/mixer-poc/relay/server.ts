@@ -82,6 +82,10 @@ const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
   ['/data/', POOL.dataDir, 'no-store'],
   // The whole card-generator output folder, as before; a pool without cards serves none (the engine falls back).
   ['/cards/', POOL.cardsJson && path.dirname(POOL.cardsJson), 'no-store'],
+  // The laptop's cloud link folder, read-only (cloud/laptop-data/): the Game plan from Admin (plan.json), the journal
+  // copy (current, journal/<gameId>.jsonl) and Admin's manual resume (resume.json). The show page's boot check
+  // and the LAN screens read it; only the link writes it.
+  ['/cloud/', path.join(POC, 'cloud/laptop-data'), 'no-store'],
 ];
 
 interface StaticTarget {
