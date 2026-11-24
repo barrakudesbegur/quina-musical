@@ -1,0 +1,154 @@
+// The public projection: which public changes a journal entry or a live show event makes. Pure. This is the
+// one place that decides what phones may learn, so it is a whitelist by construction:
+// - journal entries: an exhaustive switch, so tsc makes every new kind decide whether anything of it is public;
+// - live events: only the cases below, and only the fields named there; every other event is private.
+// Phones never get the Queue, the next song, possible winners, the Phase, the real Heat, `roundEndMs`, a Check's
+// steps before its verdict, a claim's details, or winners' names.
+// Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
+import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
+import { roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '../feed/public.ts';
+
+export interface ProjectionContext {
+  /** A laptop-clock epoch ms on the cloud's clock. */
+  toCloudMs(laptopMs: number): number;
+}
+
+/**
+ * The public changes a new journal entry makes. `state` is the public state before it, `record` the Game's
+ * record right after it (for what the entry itself doesn't say, such as a decided claim's card).
+ */
+export function projectEntry(state: PublicState, entry: JournalEntry, record: GameRecord, ctx: ProjectionContext): PublicChange[] {
+  switch (entry.kind) {
+    case 'round.started': {
+      const changes: PublicChange[] = [];
+      const previous = state.rounds.at(-1);
+      if (previous && !previous.ended && previous.number !== entry.round) changes.push({ kind: 'roundEnded', round: previous.number });
+      const round: PublicRound = {
+        number: entry.round,
+        kind: entry.roundKind,
+        startedAtMs: ctx.toCloudMs(entry.startedAtMs),
+        lineConfirmed: false,
+        ended: false,
+        landings: [],
+      };
+      changes.push({ kind: 'round', round });
+      if (state.intro) changes.push({ kind: 'intro', intro: null });
+      if (state.spin && ctx.toCloudMs(entry.atMs) >= state.spin.startAtMs) changes.push({ kind: 'spin', spin: null }); // not a late upload's
+      if (state.check) changes.push({ kind: 'check', check: null });
+      return changes;
+    }
+    case 'song.landed': {
+      const atMs = ctx.toCloudMs(entry.atMs);
+      const changes: PublicChange[] = [{ kind: 'landed', round: entry.round, landing: { position: entry.position, songId: entry.songId, atMs } }];
+      // This landing ends the Spin only if it came after the Spin started: a journal catching up after an
+      // offline stretch must not stop a newer Spin that the live events already showed.
+      if (state.spin && atMs >= state.spin.startAtMs) changes.push({ kind: 'spin', spin: null });
+      // A song only lands in play; this covers a journal whose `scene.changed` to play is still on its way.
+      if (state.scene === 'roundStart' || state.scene === 'before') changes.push({ kind: 'scene', scene: 'play' });
+      if (state.shuffle) changes.push({ kind: 'shuffle', shuffle: null });
+      return changes;
+    }
+    case 'landing.undone':
+      return [{ kind: 'undone', round: entry.round, position: entry.position }];
+    case 'line.confirmed':
+      return state.rounds.find((r) => r.number === entry.round)?.lineConfirmed ? [] : [{ kind: 'line', round: entry.round }];
+    case 'scene.changed': {
+      const changes: PublicChange[] = [];
+      if (entry.scene !== state.scene) changes.push({ kind: 'scene', scene: entry.scene });
+      if (entry.scene === 'roundStart' && !state.rounds.some((r) => r.number === entry.round)) {
+        changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind } });
+      } else if (state.intro) {
+        changes.push({ kind: 'intro', intro: null });
+      }
+      if (entry.scene !== 'check' && state.check) changes.push({ kind: 'check', check: null });
+      if (entry.scene !== 'roundStart' && state.shuffle) changes.push({ kind: 'shuffle', shuffle: null });
+      if (entry.scene !== 'interval' && state.interval) changes.push({ kind: 'interval', interval: null });
+      return changes;
+    }
+    case 'claim.opened':
+      // The Check is public once it starts (check.scheduled), not when the claim is queued.
+      return [];
+    case 'claim.decided': {
+      const claim = record.claims.find((c) => c.claimId === entry.claimId);
+      if (!claim) return [];
+      const changes: PublicChange[] = [];
+      if (state.check && state.check.cardId === claim.cardId && state.check.result === 'pending') {
+        changes.push({ kind: 'check', check: { ...state.check, result: entry.verdict } });
+      }
+      if (entry.verdict === 'valid') {
+        changes.push({ kind: 'winner', winner: { round: entry.round, kind: claim.kind, cardIds: [claim.cardId] } });
+        const round = state.rounds.find((r) => r.number === entry.round);
+        if (claim.kind === 'line' && round && !round.lineConfirmed) changes.push({ kind: 'line', round: entry.round });
+        if (claim.kind === 'bingo' && round && !round.ended) changes.push({ kind: 'roundEnded', round: entry.round });
+      }
+      return changes;
+    }
+    case 'winner.noted': // names and notes are private
+    case 'cards.set': // the cards in play are the organizers' business
+    case 'settings.changed': // Pace, auto-advance and the Phase placeholder would hint at the Phase
+      return [];
+    default:
+      entry satisfies never;
+      return [];
+  }
+}
+
+/** The public changes a live show event makes. */
+export function projectEvent(state: PublicState, event: ShowEvent, ctx: ProjectionContext): PublicChange[] {
+  switch (event.type) {
+    case 'transition.scheduled':
+      return spinChange(state, { startAtMs: ctx.toCloudMs(event.spinStartAtMs), landAtMs: ctx.toCloudMs(event.landAtMs) });
+    case 'suspense.started':
+      return spinChange(state, { startAtMs: ctx.toCloudMs(event.spinStartAtMs), landAtMs: null });
+    case 'transition.cancelled':
+    case 'transition.landed': // the song itself comes from the journal's song.landed
+      return spinChange(state, null);
+    case 'shuffle.scheduled':
+      return [{ kind: 'shuffle', shuffle: { round: event.round, startAtMs: ctx.toCloudMs(event.startAtMs), endAtMs: ctx.toCloudMs(event.endAtMs) } }];
+    case 'check.scheduled': {
+      // Only which card and what for: the steps' ✓/✗ would spoil the result before the projector shows it.
+      const round = state.rounds.at(-1)?.number ?? 0;
+      const { cardId, kind } = event.check;
+      if (state.check && state.check.cardId === cardId && state.check.kind === kind && state.check.result === 'pending') return [];
+      return [{ kind: 'check', check: { round, cardId, kind, result: 'pending' } }];
+    }
+    case 'state':
+      return projectState(state, event, ctx);
+    default:
+      return [];
+  }
+}
+
+/** From the engine's full state, only the pause, the Interval and the Game's end, rounded. */
+function projectState(state: PublicState, show: ShowState, ctx: ProjectionContext): PublicChange[] {
+  const changes: PublicChange[] = [];
+  const pause = show.pause ? { sinceMs: ctx.toCloudMs(show.pause.sinceMs) } : null;
+  if (pause?.sinceMs !== state.pause?.sinceMs) changes.push({ kind: 'pause', pause });
+  const interval = show.interval ? { nextRound: show.interval.nextRound, guideEndMs: ctx.toCloudMs(show.interval.guideEndMs) } : null;
+  if (interval?.nextRound !== state.interval?.nextRound || interval?.guideEndMs !== state.interval?.guideEndMs) changes.push({ kind: 'interval', interval });
+  const gameEndMs = roundGameEnd(ctx.toCloudMs(show.schedule.gameEndMs));
+  if (gameEndMs !== state.gameEndMs) changes.push({ kind: 'gameEnd', gameEndMs });
+  return changes;
+}
+
+function spinChange(state: PublicState, spin: PublicSpin | null): PublicChange[] {
+  const same = spin === null ? state.spin === null : state.spin !== null && state.spin.startAtMs === spin.startAtMs && state.spin.landAtMs === spin.landAtMs;
+  return same ? [] : [{ kind: 'spin', spin }];
+}
+
+/**
+ * The live show events the laptop forwards to the cloud. The link drops every other type before sending, and
+ * the cloud refuses any other type it receives. `state` goes at most every LINK.stateEveryMs.
+ */
+export const FORWARDED_EVENT_TYPES = [
+  'state',
+  'transition.scheduled',
+  'suspense.started',
+  'transition.cancelled',
+  'transition.landed',
+  'shuffle.scheduled',
+  'check.scheduled',
+] as const satisfies readonly ShowEvent['type'][];
+export type ForwardedEventType = (typeof FORWARDED_EVENT_TYPES)[number];
+export const isForwardedEventType = (type: unknown): type is ForwardedEventType =>
+  typeof type === 'string' && (FORWARDED_EVENT_TYPES as readonly string[]).includes(type);

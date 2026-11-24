@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+# The dev bypass: every Access check passes with a placeholder identity, and only on localhost.
+ACCESS_DEV=true

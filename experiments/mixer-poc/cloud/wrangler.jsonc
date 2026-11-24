@@ -1,0 +1,27 @@
+{
+  // The Quina Musical cloud: one Worker and one GameRoom Durable Object per edition (docs/deploy-plan.md).
+  // Secrets (Access team domain, AUDs, allowed emails, service tokens) are set with `wrangler secret put`
+  // and never written here; locally they come from .dev.vars.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "quina-cloud",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    // The year tag in the players' links (quina.barrakudesbegur.org/26/123); it names the GameRoom.
+    "EDITION": "26"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "GAME_ROOM", "class_name": "GameRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+  // Static files (the player app, covers) are served without running the Worker, so they cost no requests.
+  // Only these paths reach it.
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "none",
+    "run_worker_first": ["/feed", "/ws/*", "/api/*"]
+  },
+  "observability": { "enabled": true }
+}

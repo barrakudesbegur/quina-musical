@@ -1,0 +1,32 @@
+{
+  "name": "@quina/cloud",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The cloud backend of the Quina Musical: a Cloudflare Worker and one Durable Object per edition that owns the Game, plus the laptop's cloud link and the load test.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "typecheck": "wrangler types > /dev/null && tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "test": "npm run typecheck && node --test \"test/node/**/*.test.ts\" && vitest run",
+    "link": "node laptop/main.ts",
+    "loadtest": "node loadtest/run.ts"
+  },
+  "dependencies": {
+    "@quina/protocol": "file:../protocol",
+    "jose": "6.2.17",
+    "ws": "8.22.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.6.1",
+    "@types/node": "26.6.6",
+    "@types/ws": "8.18.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12",
+    "wrangler": "4.159.0"
+  },
+  "engines": {
+    "node": ">=23.6"
+  }
+}

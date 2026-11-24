@@ -1,0 +1,291 @@
+// The GameRoom end to end in workerd: the laptop uploads its journal, phones follow the public feed, the snapshot
+// survives the GameRoom restarting, and the export replays to the same record.
+import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
+import { describe, expect, it } from 'vitest';
+import { PROTOCOL_VERSION, replayJournal, type JournalEntry } from '@quina/protocol';
+import { followFeed, type PublicView } from '../../src/feed/public.ts';
+import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
+import { CLOSE } from '../../src/link-protocol.ts';
+import type { EditionExport, RoomStats } from '../../src/api.ts';
+import type { GameRoom } from '../../src/game-room.ts';
+import { roomOf } from '../../src/worker.ts';
+import { JournalBuilder } from '../support/journal-builder.ts';
+
+const BASE = 'http://localhost';
+
+/** A WebSocket client with a message queue. */
+async function connect(path: string) {
+  const response = await SELF.fetch(`${BASE}${path}`, { headers: { upgrade: 'websocket' } });
+  const ws = response.webSocket;
+  if (!ws) throw new Error(`no WebSocket for ${path}: ${response.status} ${await response.text()}`);
+  ws.accept();
+  const queue: unknown[] = [];
+  const waiting: ((message: unknown) => void)[] = [];
+  let closed: { code: number; reason: string } | null = null;
+  ws.addEventListener('message', (event) => {
+    const message: unknown = JSON.parse(String(event.data));
+    const waiter = waiting.shift();
+    if (waiter) waiter(message);
+    else queue.push(message);
+  });
+  ws.addEventListener('close', (event) => {
+    closed = { code: event.code, reason: event.reason };
+  });
+  return {
+    ws,
+    get closed() {
+      return closed;
+    },
+    /** The next message (waits up to 2 s). */
+    next(): Promise<unknown> {
+      const queued = queue.shift();
+      if (queued !== undefined) return Promise.resolve(queued);
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error(`no message on ${path}`)), 2000);
+        waiting.push((message) => {
+          clearTimeout(timer);
+          resolve(message);
+        });
+      });
+    },
+    /** Everything queued now, after letting pending messages arrive. */
+    async drain(): Promise<unknown[]> {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return queue.splice(0);
+    },
+    send(message: LinkMessage | Record<string, unknown>): void {
+      ws.send(JSON.stringify(message));
+    },
+  };
+}
+
+type Client = Awaited<ReturnType<typeof connect>>;
+
+/** A phone following the feed with the shared reducer. */
+async function phone(cards = '12,33') {
+  const client = await connect(`/feed?cards=${cards}`);
+  let view: PublicView | null = null;
+  const seen: unknown[] = [];
+  const follow = (message: unknown) => {
+    seen.push(message);
+    const result = followFeed(view, message);
+    if (result.kind === 'resync') throw new Error('the phone saw a gap');
+    if (result.kind === 'ok') view = result.view;
+  };
+  follow(await client.next());
+  return {
+    client,
+    /** Every message this phone got. */
+    seen,
+    async view(): Promise<PublicView> {
+      for (const message of await client.drain()) follow(message);
+      if (!view) throw new Error('no snapshot');
+      return view;
+    },
+  };
+}
+
+const v = PROTOCOL_VERSION;
+const now = () => Date.now();
+
+async function laptop(gameId: string | null, lastSeq = 0) {
+  const client = await connect('/ws/show');
+  client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId, lastSeq, sentAtMs: now() });
+  const welcome = (await client.next()) as CloudMessage;
+  expect(welcome.type).toBe('cloud.welcome');
+  return { client, welcome };
+}
+
+async function upload(client: Client, gameId: string, entries: readonly unknown[]) {
+  client.send({ v, type: 'link.journal', gameId, entries: [...entries], sentAtMs: now() });
+  const ack = (await client.next()) as CloudMessage;
+  expect(ack.type).toBe('cloud.ack');
+  return ack as Extract<CloudMessage, { type: 'cloud.ack' }>;
+}
+
+async function getJson<T>(path: string): Promise<T> {
+  const response = await SELF.fetch(`${BASE}${path}`);
+  expect(response.status).toBe(200);
+  return (await response.json()) as T;
+}
+
+describe('the laptop and the phones', () => {
+  it('a phone gets the snapshot at once, then each landing as it is uploaded', async () => {
+    const p = await phone();
+    expect((await p.view()).state.edition).toBe('26');
+    expect((await p.view()).state.link.online).toBe(false);
+
+    const game = JournalBuilder.sampleGame('g-live');
+    const { client, welcome } = await laptop('g-live');
+    expect(welcome).toMatchObject({ type: 'cloud.welcome', edition: '26', gameId: 'g-live', ackSeq: 0 });
+
+    const firstLanding = game.entries.findIndex((e) => e.kind === 'song.landed');
+    const ack = await upload(client, 'g-live', game.entries.slice(0, firstLanding + 1));
+    expect(ack.ackSeq).toBe(firstLanding + 1);
+    let view = await p.view();
+    expect(view.state.gameId).toBe('g-live');
+    expect(view.state.link.online).toBe(true);
+    expect(view.state.rounds[0]?.landings).toHaveLength(1);
+    const landed = game.entries[firstLanding] as Extract<JournalEntry, { kind: 'song.landed' }>;
+    expect(view.state.rounds[0]?.landings[0]?.songId).toBe(landed.songId);
+
+    await upload(client, 'g-live', game.entries.slice(firstLanding + 1));
+    view = await p.view();
+    expect(view.state.winners).toEqual([
+      { round: 1, kind: 'line', cardIds: [33, 77] },
+      { round: 1, kind: 'bingo', cardIds: [150] },
+    ]);
+    expect(JSON.stringify(view)).not.toContain('Àvia Rosa');
+    expect(JSON.stringify(view)).not.toContain('"queue"');
+  });
+
+  it('resending is harmless, a gap asks for the rest, a different entry is a conflict', async () => {
+    const game = JournalBuilder.sampleGame('g-resend');
+    const { client } = await laptop('g-resend');
+    await upload(client, 'g-resend', game.entries.slice(0, 10));
+    expect((await upload(client, 'g-resend', game.entries.slice(0, 10))).ackSeq).toBe(10);
+
+    expect((await upload(client, 'g-resend', game.entries.slice(12, 14))).ackSeq).toBe(10);
+    expect(await client.next()).toMatchObject({ type: 'cloud.need', fromSeq: 11 });
+
+    const different = { ...game.entries[5], atMs: 1 };
+    expect((await upload(client, 'g-resend', [different])).ackSeq).toBe(10);
+    expect(await client.next()).toMatchObject({ type: 'cloud.conflict', seq: 6 });
+
+    const stats = await getJson<RoomStats>('/api/stats');
+    expect(stats.duplicates).toBe(10);
+    expect(stats.gaps).toBe(1);
+    expect(stats.conflicts).toBe(1);
+  });
+
+  it('hibernation: the GameRoom wakes from its snapshot, and the same sockets carry on without a gap', async () => {
+    const game = JournalBuilder.sampleGame('g-hibernate');
+    const { client } = await laptop('g-hibernate');
+    await upload(client, 'g-hibernate', game.entries.slice(0, 20));
+    const p = await phone();
+    const before = await p.view();
+
+    await evictDurableObject(roomOf(env)); // memory gone, hibernated WebSockets kept
+    expect((await upload(client, 'g-hibernate', game.entries.slice(20, 30))).ackSeq).toBe(30);
+    const after = await p.view(); // followFeed throws on a gap
+    expect(after.seq).toBeGreaterThan(before.seq);
+    expect(after.state.rounds[0]?.landings.length).toBeGreaterThan(before.state.rounds[0]?.landings.length ?? 0);
+  });
+
+  it('a laptop that reconnects after a restart learns where to resume', async () => {
+    const game = JournalBuilder.sampleGame('g-resume');
+    const first = await laptop('g-resume');
+    await upload(first.client, 'g-resume', game.entries.slice(0, 20));
+
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a restart: only SQLite remains
+    const second = await laptop('g-resume', 20);
+    expect(second.welcome).toMatchObject({ ackSeq: 20 });
+    await upload(second.client, 'g-resume', game.entries.slice(20));
+    const view = await (await phone()).view();
+    expect(view.state.rounds.map((r) => r.number)).toEqual([1, 2]);
+  });
+
+  it('a new laptop replaces the old one, which is told not to come back', async () => {
+    const old = await laptop(null);
+    await laptop(null);
+    await old.client.drain();
+    expect(old.client.closed?.code).toBe(CLOSE.replaced);
+  });
+
+  it('a new Game resets the rounds on the phones; going back to an old Game rebuilds it from its journal', async () => {
+    const a = JournalBuilder.sampleGame('g-a');
+    const { client } = await laptop('g-a');
+    await upload(client, 'g-a', a.entries);
+    const p = await phone();
+
+    const b = new JournalBuilder('g-b').startRound().land(2);
+    await upload(client, 'g-b', b.entries);
+    let view = await p.view();
+    expect(view.state.gameId).toBe('g-b');
+    expect(view.state.rounds[0]?.landings).toHaveLength(2);
+    expect(view.state.winners).toEqual([]);
+
+    client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId: 'g-a', lastSeq: a.entries.length, sentAtMs: now() });
+    expect(await client.next()).toMatchObject({ type: 'cloud.welcome', gameId: 'g-a', ackSeq: a.entries.length });
+    view = await p.view();
+    expect(view.state.gameId).toBe('g-a');
+    expect(view.state.winners).toHaveLength(2);
+  });
+
+  it('live events move the Spin; private fields never reach the phones', async () => {
+    const game = new JournalBuilder('g-spin').startRound().land(1);
+    const { client } = await laptop('g-spin');
+    await upload(client, 'g-spin', game.entries);
+    const p = await phone();
+    const secret = 987_654;
+    client.send({
+      v,
+      type: 'link.event',
+      sentAtMs: now(),
+      event: { v, type: 'transition.scheduled', id: 't9', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000 },
+    });
+    const view = await p.view();
+    expect(p.seen).toHaveLength(2); // the snapshot, then the Spin
+    expect(JSON.stringify(p.seen)).not.toContain(String(secret));
+    expect(view.state.spin?.landAtMs).toBeGreaterThan(now());
+  });
+
+  it('a silent laptop is marked offline by the alarm', async () => {
+    await laptop(null);
+    const p = await phone();
+    expect((await p.view()).state.link.online).toBe(true);
+    const stub = roomOf(env);
+    await runInDurableObject(stub, (_instance: GameRoom, state) => {
+      for (const ws of state.getWebSockets('show')) ws.serializeAttachment({ ...(ws.deserializeAttachment() as object), lastSeenMs: 0 });
+    });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    expect((await p.view()).state.link.online).toBe(false);
+  });
+
+  it('the laptop must say hello first, and malformed messages are refused, not thrown', async () => {
+    const quiet = await connect('/ws/show');
+    quiet.send({ v, type: 'link.ping', sentAtMs: now() });
+    await quiet.drain();
+    expect(quiet.closed?.code).toBe(CLOSE.badHello);
+
+    const { client } = await laptop(null);
+    client.ws.send('not json');
+    expect(await client.next()).toMatchObject({ type: 'cloud.refused', detail: 'not JSON' });
+    client.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'journal.entry', entry: {} } });
+    expect(await client.next()).toMatchObject({ type: 'cloud.refused' });
+  });
+});
+
+describe('the Worker', () => {
+  it('serves the export: every Game, replayed with the protocol reducer', async () => {
+    const game = JournalBuilder.sampleGame('g-export');
+    const { client } = await laptop('g-export');
+    await upload(client, 'g-export', game.entries);
+    const exported = await getJson<EditionExport>('/api/export');
+    expect(exported.edition).toBe('26');
+    expect(exported.currentGameId).toBe('g-export');
+    const mine = exported.games.find((g) => g.gameId === 'g-export');
+    expect(mine?.entries).toEqual(game.entries);
+    expect(mine?.record).toEqual(replayJournal(game.entries));
+  });
+
+  it('refuses what it should', async () => {
+    expect((await SELF.fetch(`${BASE}/feed`)).status).toBe(426);
+    expect((await SELF.fetch(`${BASE}/feed?cards=0`, { headers: { upgrade: 'websocket' } })).status).toBe(400);
+    expect((await SELF.fetch(`${BASE}/nope`)).status).toBe(404);
+    expect((await SELF.fetch(`${BASE}/api/export`, { method: 'POST' })).status).toBe(405);
+    // The dev bypass only works on localhost: anywhere else, the admin routes are closed.
+    expect((await SELF.fetch('https://quina.example/api/export')).status).toBe(403);
+    expect((await SELF.fetch('https://quina.example/ws/show', { headers: { upgrade: 'websocket' } })).status).toBe(403);
+    expect(await getJson('/api/health')).toEqual({ ok: true, edition: '26' });
+  });
+
+  it('a phone that sends something is ignored, and costs only a counter', async () => {
+    const p = await phone();
+    p.client.ws.send('hello?');
+    await p.client.drain();
+    const stats = await getJson<RoomStats>('/api/stats');
+    expect(stats.phoneMessagesIn).toBeGreaterThanOrEqual(1);
+    expect(p.client.closed).toBeNull();
+  });
+});

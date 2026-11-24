@@ -1,0 +1,10 @@
+{
+  // Node code: the laptop's cloud link, the load test and the Node tests. Node 26 strips the types and runs
+  // these files as they are. The pure modules of src/ are checked here too, so they never use a Workers API.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2023"],
+    "types": ["node"]
+  },
+  "include": ["laptop", "loadtest", "test/node", "test/support", "src/domain", "src/feed", "src/link-protocol.ts", "src/config.ts", "src/api.ts"]
+}

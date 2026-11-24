@@ -1,0 +1,24 @@
+{
+  // The Worker and the Durable Object (src/), plus their workerd tests (test/worker/). Strict, and limited
+  // to erasable TypeScript so Node runs the pure modules (src/domain/, src/feed/, src/link-protocol.ts) as
+  // they are. Runtime types come from `wrangler types` (worker-configuration.d.ts, generated, not committed).
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2023"],
+    "types": ["./worker-configuration.d.ts", "@cloudflare/vitest-plugin/types"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "test/worker", "test/support", "vitest.config.ts"]
+}
