@@ -1,10 +1,12 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Trigger the workflow every time you push to the `main` branch
-  # Using a different branch name? Replace `main` with your branch’s name
+  # Last year's site: redeploy only when a push to `main` changes it (legacy/2025) or this workflow.
   push:
     branches: [main]
+    paths:
+      - "legacy/2025/**"
+      - ".github/workflows/deploy.yml"
   # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
