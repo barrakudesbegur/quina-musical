@@ -121,8 +121,15 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    - Admin's kind select has no 'desgraciat' option;
    - `roundsByCardType` counts a Desgraciat round as a regular one;
    - `roundIntroFields` leaves out a 'desgraciat' kind until the commands accept it (step C).
-2. The card generator, ready for this year by Mon 30 Nov. It needs title, colour, card types and prices from the user (the Orchestrator is asking). The cards are generated from the final pool and proofed with the user by Thu 3 Dec, then printed.
-   Title and colour are in `apps/cards/src/config.ts`; the QR is `/26/<id>`. Don't generate the cards before the playlist is final.
+2. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
+   - it draws from a song pool (`--pool <name>`, the same `data/pools/<name>.json` as the prep and the relay);
+   - `--check` validates without writing;
+   - the amounts and the seed are in `src/config.ts`;
+   - the default pool still gives exactly the committed `cards.json`.
+
+   Still needed from the user (the Orchestrator is asking): title, paper colour, card types, prices and amounts. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
+
+   Then the dates: the pool on Tue 1 Dec (86 songs in the draft), cards generated and proofed with the user by Thu 3 Dec, then printed. Don't generate before the playlist is final. The README has the steps.
 3. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
 4. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
