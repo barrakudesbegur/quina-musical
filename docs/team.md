@@ -24,7 +24,12 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, note it in [`open-questions.md`](open-questions.md), and keep going.
 - **Subagent effort** (user rule, 2026-11-24): default **high**, **medium** for repetitive or mechanical work, **xhigh** only for a very important task. Don't stop agents already running.
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
-- **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout. Never push without the user's approval.
+- **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout.
+- **Pushing (allowed for every session, user rule 2026-11-24):** push `main` when your work is ready. Everyone shares one `main`, so a push also publishes the other sessions' local commits. Before pushing:
+  - run `npm test` (and the cloud and prep suites if you touched them) on the committed state;
+  - make sure nothing sensitive is in the range (no audio, secrets, `.env*`, `data/`, `temp/` or local paths).
+
+  CI runs on every push. If it goes red, the session that broke it fixes it at once.
 - **Never commit:** copyrighted audio, `data/cache/`, `apps/show/reference/`, `spotify_features.json`, secrets, or personal data (the repo is public).
 - **Cloudflare (approved by the user on 2026-11-24):** Platform may configure and deploy with wrangler or a Cloudflare MCP, within these limits:
   - never touch existing DNS records or projects (`quina`, `fitxes`, …); deploy to `*.workers.dev` or a new subdomain such as `quina-dev`;
