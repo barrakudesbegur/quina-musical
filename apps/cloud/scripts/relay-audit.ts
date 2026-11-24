@@ -192,6 +192,29 @@ try {
   expect("LAN GET /cloud/plan.json carries no locked round's prizes", !lanPlan.includes(SECRET_PRIZE) && !lanPlan.includes('cheatSheet'), lanPlan.includes(SECRET_PRIZE) ? 'LEAKED' : 'filtered');
   const pairedPlan = await (await fetch(`http://${lan}:${port}/cloud/plan.json`, { headers: { authorization: `Bearer ${TOKEN}` } })).text();
   expect('a paired device gets the whole plan', pairedPlan.includes(SECRET_PRIZE), pairedPlan.includes(SECRET_PRIZE) ? 'whole' : 'MISSING');
+  // The Wii Remote's status (remote.status): from the console hosting it to the other paired consoles only.
+  for (const p of [show, cloud, ...Object.values(peers)]) p.heard.length = 0;
+  const wii = (p: Peer, connected: boolean) => p.heard.some((m) => m.type === 'remote.status' && m.connected === connected);
+  peers.noToken.send({ v, type: 'remote.status', connected: true, battery: 0.5, sinceMs: Date.now() });
+  peers.drum.send({ v, type: 'remote.status', connected: true, battery: 0.5, sinceMs: Date.now() });
+  await sleep(300);
+  const forgedWii = [show, cloud, ...Object.values(peers)].some((p) => p.heard.some((m) => m.type === 'remote.status'));
+  expect("a stranger's or the drum's remote.status goes nowhere", !forgedWii, forgedWii ? 'FORWARDED' : 'dropped');
+  peers.localTablet.send({ v, type: 'remote.status', connected: true, battery: 0.8, sinceMs: Date.now() });
+  await sleep(300);
+  const fromHost = peers.tablet.heard.find((m) => m.type === 'remote.status');
+  expect('the host console\'s remote.status reaches the other paired console, with its clientId', fromHost?.connected === true && fromHost?.clientId === 'local-tablet', JSON.stringify(fromHost ?? null));
+  const leaked = [show, cloud, peers.drum, peers.noHello, peers.noToken, peers.badToken, peers.fakeShow, peers.fakeCloud].filter((p) => p.heard.some((m) => m.type === 'remote.status'));
+  expect('it never reaches the show page, the cloud link, the drum or strangers', leaked.length === 0, leaked.length ? `REACHED ${leaked.map((p) => p.name).join(', ')}` : 'consoles only');
+  const late = await peer('lan-tablet-late', remote, { role: 'tablet', token: TOKEN });
+  await sleep(300);
+  expect('a console saying hello later gets the last status', wii(late, true), `heard: ${types(late)}`);
+  peers.tablet.heard.length = 0;
+  peers.localTablet.ws.close();
+  await sleep(300);
+  const gone = peers.tablet.heard.find((m) => m.type === 'remote.status');
+  expect("the host's socket closing reports its remote disconnected", gone?.connected === false && gone?.battery === null && gone?.clientId === 'local-tablet', JSON.stringify(gone ?? null));
+  late.ws.close();
   for (const p of [show, cloud, ...Object.values(peers)]) p.ws.close();
 } finally {
   server.kill();

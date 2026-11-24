@@ -33,3 +33,17 @@ test("consoles see the laptop relay's list only while the laptop link is online,
   assert.deepEqual(mergedClients(relay, false, cloud), cloud, 'link offline: no show listed');
   assert.deepEqual(mergedClients(null, true, cloud), cloud, 'the relay has not said yet');
 });
+
+test("the Wii Remote's status stays on the laptop: never forwarded, never a link event, never public", async () => {
+  const { checkLinkMessage } = await import('../../src/link-protocol.ts');
+  const { projectEvent } = await import('../../src/domain/projection.ts');
+  const { emptyPublicState } = await import('@quina/protocol');
+  // The relay sends it to the laptop's paired consoles only; even with consoles in the cloud the link keeps it.
+  assert.equal(shouldForward('remote.status', 0), false);
+  assert.equal(shouldForward('remote.status', 3), false);
+  const status = { v: 1, type: 'remote.status', connected: true, battery: 0.8, sinceMs: 1, clientId: 'Tauleta-3f2a' };
+  // A link that sent it anyway is refused, so it can't reach the GameRoom's projection or its consoles.
+  assert.equal(checkLinkMessage({ v: 1, type: 'link.event', event: status, sentAtMs: 1 }).ok, false);
+  // And the public projection makes nothing of it.
+  assert.deepEqual(projectEvent(emptyPublicState('26'), status as never, { toCloudMs: (ms) => ms }), []);
+});

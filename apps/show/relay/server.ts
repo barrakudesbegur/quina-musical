@@ -29,6 +29,8 @@ import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { PROTOCOL_VERSION, ROLES, publicPlan, revealedRounds, type RelayClients, type RelayPlan, type Role, type ShowState } from '@quina/protocol';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
+// The Wii Remote's status between consoles (Frontend's type; it moves to @quina/protocol when Sound engine resumes).
+import { readRemoteStatus, remoteStatusMessage, REMOTE_STATUS_TYPE, type RemoteStatusMessage } from '../../../packages/ui/client/remote-status.ts';
 import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
 
 const DIST = path.join(SHOW, 'dist');
@@ -522,7 +524,16 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       if (self.role === 'unknown') return; // unpaired: it hears nothing
       if (lastState && receives(self, 'state')) socket.send(JSON.stringify(lastState));
       socket.send(JSON.stringify(planMessage(PLAN.current())));
+      if (isConsole(self)) for (const [clientId, status] of remoteStatuses) if (clientId !== self.clientId) socket.send(JSON.stringify(status));
       broadcast(clientList());
+      return;
+    }
+    // A console that hosts the Wii Remote reports it: kept per host, sent to the other paired consoles only.
+    if (message.type === REMOTE_STATUS_TYPE) {
+      if (!isConsole(self)) return;
+      const status = readRemoteStatus(message);
+      if (!status) return;
+      rememberRemote(socket, self.clientId, { connected: status.connected, battery: status.battery, sinceMs: status.sinceMs });
       return;
     }
     const isCommand = message.type === 'cmd';
@@ -540,9 +551,33 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
   });
   socket.on('close', () => {
     clients.delete(socket);
+    // The host's remote goes with its socket: the other consoles see it disconnected.
+    if (remoteHosts.get(self.clientId) === socket) {
+      remoteHosts.delete(self.clientId);
+      rememberRemote(null, self.clientId, { connected: false, battery: null, sinceMs: Date.now() });
+    }
     broadcast(clientList());
   });
 });
+
+/** Paired consoles: the presenters' tablets and Admin (never the drum, the show page or the cloud link). */
+function isConsole(client: Client): boolean {
+  return client.role === 'tablet' || client.role === 'admin';
+}
+
+/** The last `remote.status` of each host console, replayed to every console that says hello. */
+const remoteStatuses = new Map<string, RemoteStatusMessage>();
+/** Which socket each host reported from, so only its own close marks its remote disconnected. */
+const remoteHosts = new Map<string, WebSocket>();
+
+/** Keep a host's status and send it to the other paired consoles. Private: never to the link, so never to phones. */
+function rememberRemote(from: WebSocket | null, clientId: string, status: { connected: boolean; battery: number | null; sinceMs: number }): void {
+  const message: RemoteStatusMessage = { ...remoteStatusMessage(status), clientId };
+  remoteStatuses.set(clientId, message);
+  if (from) remoteHosts.set(clientId, from);
+  const text = JSON.stringify(message);
+  for (const [socket, info] of clients) if (socket !== from && isConsole(info) && socket.readyState === socket.OPEN) socket.send(text);
+}
 
 /** One line about the pool's preparation, for the start-up log. */
 function poolStatus(): string {
