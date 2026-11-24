@@ -136,6 +136,24 @@ try {
     const s = await status(p);
     expect(`LAN GET ${p} is refused`, s === 403, String(s));
   }
+  // Admin's images as the link keeps them: public, and a .jxl with no JPEG XL answers with the PNG.
+  const key = 'a'.repeat(32);
+  fs.mkdirSync(path.join(LINK_DIR, 'media'), { recursive: true });
+  fs.writeFileSync(path.join(LINK_DIR, 'media', `${key}.png`), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const typeOf = async (p: string) => {
+    try {
+      const res = await fetch(`http://${lan}:${port}${p}`);
+      return `${res.status} ${res.headers.get('content-type') ?? ''}`;
+    } catch (error) {
+      return String(error);
+    }
+  };
+  const logo = await typeOf(`/media/${key}.png`);
+  expect("LAN GET a plan's logo is served (public)", logo === '200 image/png', logo);
+  const logoJxl = await typeOf(`/media/${key}.jxl`);
+  expect('LAN GET its .jxl answers with the PNG while there is no JXL', logoJxl === '200 image/png', logoJxl);
+  const traversal = await typeOf('/media/..%2Fcloud-plan.json');
+  expect('LAN GET /media/ outside the media folder is refused', !traversal.startsWith('200'), traversal);
   const noPlan = await status('/cloud/plan.json');
   expect('LAN GET /cloud/plan.json with no plan is 404', noPlan === 404, String(noPlan));
 

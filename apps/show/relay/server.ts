@@ -64,6 +64,8 @@ const MIME: Record<string, string> = {
   '.mp3': 'audio/mpeg',
   '.jpg': 'image/jpeg',
   '.png': 'image/png',
+  '.jxl': 'image/jxl',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.ogg': 'audio/ogg',
   '.wav': 'audio/wav',
@@ -91,6 +93,19 @@ const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
   // and the LAN screens read it; only the link writes it.
   ['/cloud/', LINK, 'no-store'],
 ];
+
+/**
+ * Admin's uploaded images (sponsor logos, prize pictures) as the cloud link keeps them (data/link/media/, fetched
+ * for the plan's /media/ paths), so the projector shows them with no internet. Like the cloud, a .jxl with no
+ * JPEG XL answers with the fallback's bytes, so a <picture> never breaks.
+ */
+function mediaTarget(key: string, ext: string): StaticTarget {
+  const dir = path.join(LINK, 'media');
+  const file = path.join(dir, `${key}.${ext}`);
+  if (ext !== 'jxl' || fs.existsSync(file)) return { file, cache: 'public, max-age=31536000, immutable' };
+  const fallback = ['png', 'jpg', 'webp'].map((e) => path.join(dir, `${key}.${e}`)).find((f) => fs.existsSync(f));
+  return { file: fallback ?? file, cache: 'public, max-age=300' };
+}
 
 interface StaticTarget {
   file: string;
@@ -125,6 +140,8 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   const interval = urlPath.match(/^\/intervalaudio\/([a-z0-9][a-z0-9-]*)\.flac$/);
   if (interval) return { file: path.join(CACHE, 'interval', `${interval[1]}.flac`), cache: REVALIDATE };
   if (urlPath === '/data/hold-report.md') return { file: path.join(OUT, 'hold-report.md'), cache: 'no-store' };
+  const media = urlPath.match(/^\/media\/([0-9a-f]{32})\.(png|jpg|webp|jxl)$/);
+  if (media) return mediaTarget(media[1] as string, media[2] as string);
   for (const [prefix, dir, cacheControl] of MOUNTS) {
     if (!urlPath.startsWith(prefix)) continue;
     return dir ? insideDir(dir, urlPath.slice(prefix.length), cacheControl) : MISSING;

@@ -179,6 +179,33 @@ test("the laptop keeps Admin's Game plan on disk, so it has it with no internet"
   }
 });
 
+test("the plan's logos are copied to the laptop, with their JPEG XL when there is one", async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const link = makeLink(relay.url, server.ws);
+  const dir = path.join(link.journal.dir, 'media');
+  const png = (n: number) => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, n]);
+  const upload = async (bytes: Uint8Array) => ((await (await fetch(`${server.http}/api/media`, { method: 'POST', headers: { 'content-type': 'image/png' }, body: bytes })).json()) as { path: string; key: string });
+  try {
+    const withJxl = await upload(png(1));
+    const withoutJxl = await upload(png(2));
+    const jxl = new Uint8Array([0xff, 0x0a, 5, 5]);
+    assert.equal((await fetch(`${server.http}/api/media/${withJxl.key}.jxl`, { method: 'PUT', headers: { 'content-type': 'image/jxl' }, body: jxl })).status, 201);
+    const plan = { ...PLAN, sponsors: [{ id: 'forn', name: 'Forn', logo: withJxl.path }, { id: 'croak', name: 'Croak', logo: withoutJxl.path }] };
+    assert.equal((await fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) })).status, 200);
+    link.start();
+    await until('the logos on disk', () => fs.existsSync(path.join(dir, `${withJxl.key}.png`)) && fs.existsSync(path.join(dir, `${withoutJxl.key}.png`)) && fs.existsSync(path.join(dir, `${withJxl.key}.jxl`)));
+    assert.deepEqual(new Uint8Array(fs.readFileSync(path.join(dir, `${withJxl.key}.jxl`))), jxl);
+    assert.deepEqual(new Uint8Array(fs.readFileSync(path.join(dir, `${withoutJxl.key}.png`))), png(2));
+    // No JPEG XL uploaded: none is kept (the relay answers .jxl with the PNG, as the cloud does).
+    assert.equal(fs.existsSync(path.join(dir, `${withoutJxl.key}.jxl`)), false);
+  } finally {
+    link.stop();
+    await relay.close();
+    await server.stop();
+  }
+});
+
 test("a plan saved on the laptop with no cloud goes up when the cloud is back, and the cloud's newer one wins", async () => {
   const server = await startDevServer();
   const relay = await fakeRelay();

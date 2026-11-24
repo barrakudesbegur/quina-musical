@@ -31,6 +31,7 @@ The package `@quina/protocol` (`packages/protocol/`) is the source of truth, and
 - **Commands:** they come only from `tablet`, `admin` and `cloud`, and go to the show. `getJournal` comes only from `cloud`.
 - **This laptop only:** `/api/*` (hook overrides, stretch renders) and `/cloud/` (except `plan.json`) answer only to this laptop.
 - **The Game plan (relay/plan.ts):** `/cloud/plan.json` is public: the newest of the cloud link's `cloud-plan.json` and a plan saved on the laptop's network (`local-plan.json`), both `{ savedAtMs, plan }` in the link folder; it is pushed as `relay.plan`. `GET`/`PUT /api/plan` answer this laptop and devices paired with the token (`authorization: Bearer <token>`); PUT is plan B's save with no cloud: checked with `checkGamePlan` (and the cloud copy's edition), at most 512 KB, answered like the cloud's `/api/plan` plus `savedAtMs`. When the cloud is back, the link sends a newer local save up (`link.plan`); the cloud keeps the newest, and the local file goes.
+- **Admin's images:** the link copies the plan's `/media/<key>.png|.jpg` (and each one's JPEG XL, when uploaded) into `data/link/media/`, and the relay serves them publicly at `/media/`, immutable. Like the cloud, a `.jxl` with no JPEG XL answers with the fallback's bytes.
 
 ## Commands
 

@@ -37,6 +37,8 @@ export const CLOUD = Object.freeze({
 
 /** The laptop's cloud link (laptop/). */
 export const LINK = Object.freeze({
+  /** How long the link waits for one of the plan's images from the cloud (/media/…). */
+  mediaFetchTimeoutMs: 15_000,
   /** A keepalive when nothing else was sent for this long: one client, about 1 request an hour (20 messages = 1). */
   keepaliveMs: 20_000,
   /** Reconnect to the cloud: full jitter, the first retry within 1 s, doubling up to 30 s. */
