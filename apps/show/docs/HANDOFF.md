@@ -70,7 +70,12 @@ Nothing: items 1 and 2 of the old queue and the Decoys retirement are done and p
    - D20 Count-in and the open landing.
 
    Adjust from their notes. One known candidate: **the Suspense release can take up to ~9 s** (B waits for the end of a 4-bar pass plus A's exit in free bars). A faster option would land on the next 2-bar boundary.
-2. **Ready for this year's playlist by Mon 30 Nov** (timeline): run the prep pipeline end to end on a few songs of the draft playlist (Spotify `0EOwwaDVItDHMRkYoO1m8y`, fetched with `tools/prep/playlist-fetcher`) so a new pool has no surprises, and free disk space (about 20 GB free on 2026-11-25).
+2. **Ready for this year's playlist by Mon 30 Nov: dry run done (2026-11-25), one blocker for the user.** The draft playlist has 86 songs. The pipeline ran end to end on a 4-song draft pool (`data/media/draft/pool.json`, gitignored: the draft songs that were also in last year's pool, with last year's audio):
+   - **Blocker:** spotDL can't download. YouTube answers "Sign in to confirm you're not a bot" (yt-dlp 2026.10.26). It needs the user's browser cookies (`--cookies-from-browser`), or the user downloads the playlist themselves. Asked through the orchestrator.
+   - **Timings per song:** decode about 1.5 s, analyse 6 s, stems 21 s, so a full run of 86 songs takes about 45 minutes. Hook approval is the user's part, about 2 minutes a song.
+   - **A pool nobody tagged** is playable only after its automatic hooks are approved and prep runs again; the README's steps say so now.
+   - **No Spotify features** this year, so the half-time rule now also works from librosa alone (`680e4bc`; Besos comes out at 105 BPM again).
+   - **Size per song in R2:** about 68 MB with two approved hooks (mix.flac 28–47 MB, stems 19–30 MB, Signatures and snippet about 1 MB), up to about 92 MB with more hooks (last year's). For 86 songs that's 5.9–7.9 GB plus the shared Hold and Interval music, so it fits in 10 GB once last year's pool is pruned. With option (d) (the original MP3 plus Opus 256k stems, decoded at sync time) it's about 20 MB a song. Measured: the mix re-decodes bit-identically, and Opus stems come back at their exact length within 2 samples.
 3. **This year's playlist, when it arrives (Tue 1 Dec):**
    - Make it a pool (`data/pools/<name>.json`) and run `npm run prep -- --pool <name>` by **Wed 2 Dec**. Flag unusable songs the same day, so the user can swap them before the cards print (Thu 3 Dec).
    - The `hooks` and `signatures` steps propose candidates. The user approves hooks and vets Signatures on the audition page by **Thu 10 Dec**; stems and the variety and phrase measures rerun on that pool by then.
