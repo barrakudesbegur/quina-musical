@@ -8,7 +8,9 @@
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
 import type { GamePlan } from '../../ui/plan.ts';
 import { LocalPlanStore, type PlanStore } from '../../ui/data/plan-store.ts';
-import { planForStorage, planFromStorage } from '../logic/plan-check.ts';
+import { CloudPlanStore, uploadMedia, type FetchLike } from '../../ui/data/cloud-plan.ts';
+import { isLocalHost } from '../../ui/client/endpoints.ts';
+import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
 import { MANAGE_CONFIG } from '../config.ts';
 
 export interface LogoStore {
@@ -18,7 +20,8 @@ export interface LogoStore {
 }
 
 export type SaveFailure = 'quota' | 'error';
-export type SaveResult = { ok: true } | { ok: false; reason: SaveFailure; detail: string };
+/** `saved`: the plan as the store kept it, when that differs from what was sent (cloud: logos became paths). */
+export type SaveResult = { ok: true; saved?: GamePlan } | { ok: false; reason: SaveFailure; detail: string };
 
 /** A full localStorage, in every browser's spelling. */
 export function isQuotaError(e: unknown): boolean {
@@ -100,28 +103,66 @@ export class MemoryLogoStore implements LogoStore {
 }
 
 /**
- * Where saves end up: this browser's storage (`local`), nowhere beyond the page because it is a demo
- * (`demo`), or nowhere because the browser refuses storage (`unavailable`: the page must say so).
+ * Where saves end up:
+ * - `cloud`: the cloud's /api/plan, when Admin is served from the cloud hostname;
+ * - `local`: this browser's storage;
+ * - `demo`: nowhere beyond the page;
+ * - `unavailable`: nowhere, because the browser refuses storage, and the page must say so.
  */
-export type StoreKind = 'local' | 'demo' | 'unavailable';
+export type StoreKind = 'cloud' | 'local' | 'demo' | 'unavailable';
 
 export class AdminPlanStore {
   readonly plans: PlanStore;
   readonly logos: LogoStore;
   readonly kind: StoreKind;
+  /** Set for `cloud`: saves go through it, and logos are uploaded as media first. */
+  readonly cloud: CloudPlanStore | null;
+  private readonly fetchImpl: FetchLike | null;
 
-  constructor(plans: PlanStore, logos: LogoStore, kind: StoreKind) {
+  constructor(plans: PlanStore, logos: LogoStore, kind: StoreKind, cloud: { store: CloudPlanStore; fetchImpl: FetchLike } | null = null) {
     this.plans = plans;
     this.logos = logos;
     this.kind = kind;
+    this.cloud = cloud?.store ?? null;
+    this.fetchImpl = cloud?.fetchImpl ?? null;
   }
 
-  /** The browser's stored plan (localStorage), or an in-memory copy of it in demo mode. */
+  /**
+   * Served from the cloud: the cloud's plan. Served by the show laptop (or localhost): this browser's
+   * stored plan. In demo mode: an in-memory copy.
+   */
   static forPage(demo: boolean): AdminPlanStore {
+    if (!demo && typeof location !== 'undefined' && !isLocalHost(location.hostname)) {
+      const fetchImpl: FetchLike = (input, init) => fetch(input, { ...init, credentials: 'same-origin' });
+      const store = new CloudPlanStore(fetchImpl);
+      void store.refresh();
+      return new AdminPlanStore(store, new MemoryLogoStore(), 'cloud', { store, fetchImpl });
+    }
     const local = new AdminPlanStore(new LocalPlanStore(), new LocalLogoStore(), storageWritable() ? 'local' : 'unavailable');
     if (!demo && local.kind === 'local') return local;
     // Demo pages (and browsers that refuse storage) start from whatever is stored, and never write it.
     return new AdminPlanStore(new MemoryPlanStore(local.load()), new MemoryLogoStore(), demo ? 'demo' : 'unavailable');
+  }
+
+  /** Cloud: upload inline (data URL) logos as media, then save the whole plan. Never throws. */
+  private async saveToCloud(plan: GamePlan): Promise<SaveResult> {
+    const cloud = this.cloud;
+    const fetchImpl = this.fetchImpl;
+    if (!cloud || !fetchImpl) return { ok: false, reason: 'error', detail: 'no cloud' };
+    const sponsors = [];
+    for (const s of plan.sponsors) {
+      if (!isInlineLogo(s.logo)) {
+        sponsors.push(s);
+        continue;
+      }
+      const up = await uploadMedia(fetchImpl, dataUrlToBlob(s.logo));
+      if (!up.ok) return { ok: false, reason: 'error', detail: `logo ${s.id}: ${up.reason}` };
+      sponsors.push({ ...s, logo: up.path });
+    }
+    const toSave = { ...plan, sponsors };
+    const put = await cloud.put(toSave);
+    if (!put.ok) return { ok: false, reason: 'error', detail: put.errors.slice(0, 3).join(' · ') };
+    return { ok: true, saved: put.plan };
   }
 
   /** The stored plan with its logos, or null. Never throws. */
@@ -134,8 +175,9 @@ export class AdminPlanStore {
     }
   }
 
-  /** Store a valid plan. Logos go first: they are the big part, so a full storage shows up there. */
-  save(plan: GamePlan): SaveResult {
+  /** Store a valid plan. Local: logos go first (they are the big part, so a full storage shows up there). Cloud: asynchronous. */
+  save(plan: GamePlan): SaveResult | Promise<SaveResult> {
+    if (this.kind === 'cloud') return this.saveToCloud(plan);
     const { plan: stored, logos } = planForStorage(plan);
     let logoFailure: SaveResult | null = null;
     try {
@@ -161,4 +203,19 @@ export class AdminPlanStore {
 function failure(e: unknown): SaveResult {
   if (isQuotaError(e)) return { ok: false, reason: 'quota', detail: '' };
   return { ok: false, reason: 'error', detail: e instanceof Error ? e.message : String(e) };
+}
+
+/** A `data:` URL as a Blob, without fetch (works in Node tests too). */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  const meta = dataUrl.slice(5, comma);
+  const type = meta.split(';')[0] || 'application/octet-stream';
+  const payload = dataUrl.slice(comma + 1);
+  if (meta.endsWith(';base64')) {
+    const bin = atob(payload);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type });
+  }
+  return new Blob([decodeURIComponent(payload)], { type });
 }

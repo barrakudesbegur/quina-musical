@@ -4,7 +4,7 @@
 // page) instead of saving it, and notices when another tab saved a different plan.
 import type { GamePlan } from '../../ui/plan.ts';
 import { CA } from '../../ui/i18n/ca.ts';
-import type { AdminPlanStore, SaveFailure } from '../data/admin-plan-store.ts';
+import type { AdminPlanStore, SaveFailure, SaveResult } from '../data/admin-plan-store.ts';
 import { checkPlanDraft } from '../logic/plan-check.ts';
 import { blankPlan, removeSponsor, renameSponsor } from '../logic/plan-edit.ts';
 import { MANAGE_CONFIG } from '../config.ts';
@@ -141,7 +141,16 @@ export class PlanSession {
       return;
     }
     this.savingJson = planJson;
-    const result = this.store.save(plan);
+    const outcome = this.store.save(plan);
+    if (outcome instanceof Promise) {
+      // The cloud: the status stays 'pending' until it answers.
+      void outcome.then((result) => this.finishSave(plan, planJson, result));
+    } else {
+      this.finishSave(plan, planJson, outcome);
+    }
+  }
+
+  private finishSave(plan: GamePlan, planJson: string, result: SaveResult): void {
     this.savingJson = null;
     if (!result.ok) {
       // Keep the draft and say why; the next edit tries again.
@@ -149,8 +158,13 @@ export class PlanSession {
       return;
     }
     this.settled = this.store.kind === 'demo' ? { kind: 'demo' } : { kind: 'saved', atMs: Date.now() };
-    this.savedPlan = plan;
-    this.savedJson = planJson;
+    // The store may have kept a different plan (the cloud turns inline logos into media paths): adopt it,
+    // unless the draft moved on meanwhile.
+    const saved = result.saved ?? plan;
+    const savedJson = json(saved);
+    if (saved !== plan && this.check.ok && json(this.check.plan) === planJson) this.draft = structuredClone(saved);
+    this.savedPlan = saved;
+    this.savedJson = savedJson;
     this.pristineJson = JSON.stringify($state.snapshot(this.draft));
   }
 
@@ -161,11 +175,14 @@ export class PlanSession {
     if (theirs === this.savingJson || theirs === this.savedJson) return;
     const check = this.check;
     const clean = check.ok && json(check.plan) === this.savedJson;
-    if (clean) {
+    // Nothing edited since the page opened (for example the cloud's first answer): just take it.
+    const untouched = JSON.stringify($state.snapshot(this.draft)) === this.pristineJson;
+    if (clean || untouched) {
       this.draft = structuredClone(plan);
       this.savedPlan = plan;
       this.savedJson = theirs;
       this.settled = { kind: 'saved', atMs: null };
+      this.pristineJson = JSON.stringify($state.snapshot(this.draft));
     } else {
       this.external = plan;
     }
