@@ -639,6 +639,29 @@ export const MOVES = Object.freeze({
   }),
 });
 
+/**
+ * Vocals across a transition (the user's first listen). A song whose singer comes in suddenly at its hook (silent
+ * in the bars before, singing on the downbeat) gets a fast, clean move straight into the voice, often with its
+ * Signature teased just before. When A is singing as it leaves and B sings at its hook, the landing answers A's
+ * line with B's on the downbeat (call and response): the moves that keep A's voice to the end are favoured, and so
+ * are landings right after a sung bar of A. Levels are the stems' bar RMS (dBFS).
+ */
+export const VOCALS = Object.freeze({
+  onDb: -26,
+  offDb: -36,
+  /** Recipe weight factors for a sudden vocal entry: a cut on the one, a short echo or strip-down; builds rare. */
+  entryWeights: Object.freeze({ R1: 2.5, R2: 1.8, D8: 1.3, D3: 1.2, R7: 0.4, R4: 0.6, R5: 0.6, R6: 0.5, D1: 0.7 }) as Readonly<Record<string, number>>,
+  /** The silence before a sudden vocal entry, in B's beats (none or half a beat: straight into the voice). */
+  entryGapBeats: [0, 0, 0.5] as const,
+  /** The Signature's chance is multiplied by this before a sudden vocal entry (capped at 1). */
+  entrySignature: 1.6,
+  /** Recipe weight factors for call and response: moves that keep A's voice until it leaves, mildly (most pop
+   * transitions qualify, so a strong factor would flatten the rotation). */
+  callWeights: Object.freeze({ R1: 1.15, R2: 1.25, D8: 1.25, D15: 1.25 }) as Readonly<Record<string, number>>,
+  /** Within a search pass, a landing right after a sung bar of A costs this much less. */
+  callCost: 0.6,
+});
+
 export const PLANNER = Object.freeze({
   lookaheadSec: 0.08,
   declickSec: 0.004,

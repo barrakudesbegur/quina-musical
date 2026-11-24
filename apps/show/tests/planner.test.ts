@@ -323,3 +323,49 @@ test('Signatures: B\'s only, teased just before it lands, ending on the landing;
   assert.ok(seen.shape.has('S1') && seen.shape.has('S2'));
   assert.deepEqual([...seen.kinds].sort(), ['build', 'motif', 'riff']);
 });
+
+test('vocals: a sudden vocal entry gets a quick move straight into the voice; a line of A is answered by B\'s on the downbeat', () => {
+  const rng = seededRandom(77);
+  const ids = [...analyses.keys()];
+  const bars = (n: number, f: (k: number) => number) => Array.from({ length: n }, (_, k) => f(k));
+  const count = { entry: 0, call: 0, entryR1: 0, plainR1: 0, plain: 0 };
+  for (let n = 0; n < 1200; n++) {
+    const aId = ids[Math.floor(rng() * ids.length)];
+    let bId = ids[Math.floor(rng() * ids.length)];
+    if (bId === aId) bId = ids[(ids.indexOf(aId) + 1) % ids.length];
+    const A = analysisOf(aId);
+    const B = analysisOf(bId);
+    const aHook = usableHooks(A)[0];
+    const hook = usableHooks(B)[0];
+    const phase = [PHASES.early, PHASES.mid][n % 2];
+    const deck = { startCtx: 100, offset: aHook.downbeatSec, rate: 1 };
+    const now = 100 + 2 + rng() * 20;
+    const k = hook.downbeatIndex;
+    if (k < 2) continue; // a hook on the song's first bars has no bars before it to be silent
+    const mode = n % 3; // 0: B's singer comes in suddenly; 1: both sing (call and response); 2: B's hook is instrumental
+    const bVocals = bars(B.downbeats.length, (j) => (mode === 2 ? -60 : mode === 0 && j < k && j >= k - 2 ? -60 : -18));
+    const aVocals = bars(A.downbeats.length, () => (mode === 1 ? -16 : -60));
+    const plan = planned(planTransition({
+      now, phase, spin: spinWindow({ pace: 14, phase: phase.name }), rng, history: [],
+      A: { songId: aId, analysis: A, deck, landedDownbeatIndex: aHook.downbeatIndex, stemBars: { vocals: aVocals } },
+      B: { songId: bId, analysis: B, stemBars: { vocals: bVocals } }, hookOverride: hook,
+    }));
+    if (mode === 0) {
+      assert.equal(plan.vocal, 'entry');
+      count.entry++;
+      if (plan.recipe === 'R1') count.entryR1++;
+      // Straight into the voice: no more silence than half a beat, unless the move itself needs its gap (D2's crowd
+      // gap, D7's rush, D11's chops, D19's scratch).
+      if (hook.pickupSec <= plan.hook.beat && !['D2', 'D7', 'D11', 'D19'].includes(plan.recipe)) assert.ok(plan.gapBeats <= 0.5 + 1e-9, `straight into the voice (${plan.recipe} ${plan.gapBeats})`);
+    } else if (mode === 1) {
+      assert.equal(plan.vocal, 'callResponse');
+      count.call++;
+    } else {
+      assert.equal(plan.vocal ?? null, null);
+      count.plain++;
+      if (plan.recipe === 'R1') count.plainR1++;
+    }
+  }
+  // A cut on the one is much more likely before a sudden vocal entry.
+  assert.ok(count.entryR1 / count.entry > 1.3 * (count.plainR1 / count.plain), JSON.stringify(count));
+});

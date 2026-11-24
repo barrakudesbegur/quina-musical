@@ -125,6 +125,9 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
   - The next song's hook is chosen as soon as that song is decoded. When the pair's tempos are within ±8%, the relay renders B's 8 bars before that hook at A's tempo (`tools/prep/stretch.py`, Rubber Band R3, with stems, about 1–2 s, cached).
   - Keys come from `data/out/keys/` (essentia, Temperley profile; `tools/prep/keys.py`); B's bass layers only if the keys are compatible with a confidence of at least 0.7.
   - If no landing fits the blend, the planner falls back through other real moves (R7, R2, R1), never the bare fade.
+- **Vocals across a transition** (`VOCALS` in config.ts, from the stems' bar levels):
+  - **A sudden vocal entry** (B's singer silent in the two bars before its hook and singing on the downbeat) gets a fast, clean move straight into the voice: a cut on the one, a short echo or a strip-down are favoured (builds rare), the silence before it is none or half a beat, and B's Signature is teased before it more often. Last year's songs: 4% of transitions.
+  - **Call and response** (B sings at its hook and A sings where it may leave): a landing right after a sung bar of A is preferred within each search pass, so A's line is answered by B's on the downbeat, and the moves that keep A's voice to the end are mildly favoured.
 - **Signatures** (GLOSSARY): short, recognizable **instrumental** pieces of a song, teased just before it lands. Never a vocal line (the user's first listen), and never after the landing.
   - `tools/prep/signatures.py` proposes candidates from the stems' bar levels (`tools/prep/steps/signatures.py`) and cuts each without the vocals to its own file (`data/cache/<id>/signatures/`, with metadata in `data/out/signatures/<id>.json`). There are three kinds, two bars each, starting on a downbeat:
     - a **riff** is the steadiest, loudest two bars of the instrumental intro, before the first sung bar;
