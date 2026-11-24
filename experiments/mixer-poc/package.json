@@ -11,7 +11,8 @@
     "prep": "analysis/.venv/bin/python analysis/prepare.py",
     "test:pipeline": "analysis/.venv/bin/python -m pytest analysis/tests",
     "analyze": "analysis/.venv/bin/python analysis/analyze.py",
-    "validate": "analysis/.venv/bin/python analysis/validate.py"
+    "validate": "analysis/.venv/bin/python analysis/validate.py",
+    "test:ui": "tsc -p tsconfig.ui.json && svelte-check --tsconfig ./tsconfig.ui.json --threshold error && node --test \"tests/ui/**/*.test.ts\""
   },
   "dependencies": {
     "@quina/protocol": "file:protocol",
