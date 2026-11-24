@@ -66,12 +66,23 @@ test.afterEach(async ({}, testInfo) => {
   await testInfo.attach('last events', { body: JSON.stringify(remote.events.slice(-40), null, 2), contentType: 'application/json' });
 });
 
+/** One teardown step, at most `ms`: a step that hangs is named in the output instead of holding the run. */
+async function bounded(what: string, step: () => unknown, ms = 15_000): Promise<void> {
+  const started = Date.now();
+  let timer: NodeJS.Timeout | undefined;
+  const late = new Promise<'late'>((resolve) => (timer = setTimeout(() => resolve('late'), ms)));
+  const result = await Promise.race([Promise.resolve().then(step).then(() => 'done' as const), late]);
+  clearTimeout(timer);
+  if (result === 'late') console.warn(`teardown: ${what} still not done after ${ms} ms; going on`);
+  else if (Date.now() - started > 2000) console.warn(`teardown: ${what} took ${Date.now() - started} ms`);
+}
+
 test.afterAll(async () => {
-  for (const context of contexts) await context.close();
-  phone?.close();
-  link?.stop();
-  remote?.close();
-  await relay?.stop();
+  for (const [i, context] of contexts.entries()) await bounded(`closing browser context ${i}`, () => context.close());
+  await bounded('the phone', () => phone?.close());
+  await bounded('the cloud link', () => link?.stop());
+  await bounded('the remote', () => remote?.close());
+  await bounded('the relay', () => relay?.stop());
 });
 
 async function land(previous: number | null): Promise<ShowState> {

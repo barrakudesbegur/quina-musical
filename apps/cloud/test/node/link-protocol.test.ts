@@ -19,6 +19,8 @@ test('a hello, an upload, a ping and the forwarded events pass', () => {
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.landed' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'shuffle.scheduled', round: 2, startAtMs: 1, endAtMs: 2 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'bingo' } } },
+    // The Desgraciat round's Check, for the last card standing.
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'standing' } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'relay.clients', clients: [] } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'claim.opened', claim: {} } },

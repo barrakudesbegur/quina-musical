@@ -23,7 +23,7 @@
 //                  cloud.resume  Admin's manual resume: the show page should resume this Game (then cloud.journal)
 // Close codes: 4001 another laptop connected (this one stops reconnecting), 4002 silent for too long,
 // 4400 a malformed hello.
-import { PROTOCOL_VERSION, isEvent, type Command, type GamePlan, type IncomingEvent, type JournalEntry, type ProtocolVersion } from '@quina/protocol';
+import { PROTOCOL_VERSION, WIN_KINDS, isEvent, type Command, type GamePlan, type IncomingEvent, type JournalEntry, type ProtocolVersion } from '@quina/protocol';
 import { NEVER_FORWARDED } from './domain/consoles.ts';
 
 export interface LinkHello {
@@ -255,7 +255,8 @@ function forwardedEventError(event: unknown): string | null {
       return isCount(event.round) && isTime(event.startAtMs) && isTime(event.endAtMs) ? null : 'shuffle.scheduled needs round, startAtMs and endAtMs';
     case 'check.scheduled': {
       const check = event.check;
-      return isRecord(check) && isCount(check.cardId) && (check.kind === 'line' || check.kind === 'bingo') ? null : 'check.scheduled needs check.cardId and check.kind';
+      // The protocol's own win kinds (line, bingo, standing), as the journal check takes them.
+      return isRecord(check) && isCount(check.cardId) && (WIN_KINDS as readonly unknown[]).includes(check.kind) ? null : 'check.scheduled needs check.cardId and check.kind';
     }
     case 'relay.clients':
       return Array.isArray(event.clients) ? null : 'relay.clients needs clients';
