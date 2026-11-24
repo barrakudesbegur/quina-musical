@@ -98,7 +98,7 @@
     <Icon name="plus" /><span>{S.check.addClaim}</span>
   </button>
 
-  <CelebrationMusic kind={check?.kind ?? current?.kind ?? defaultClaimKind(snap)} current={null} />
+  <CelebrationMusic kind={check?.kind ?? current?.kind ?? defaultClaimKind(snap)} current={snap?.celebrationChoice ?? null} />
 
   {#if check}
     <WinnerForm claimId={check.claimId} name={winner?.name ?? null} notes={winner?.notes ?? null} title={CA.card(check.cardId)} />

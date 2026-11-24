@@ -200,7 +200,7 @@ export const S = {
     music: 'Música de la celebració',
     choices: { winningSong: 'Cançó guanyadora', victory: 'Música de victòria', holdMusic: "Música d'espera" } satisfies Record<CelebrationMusic, string>,
     suggested: 'suggerida',
-    musicInCelebration: 'Es pot canviar quan comenci la celebració.',
+    musicForLater: 'Si el cartró és bo, la celebració començarà amb aquesta música.',
     continueLine: 'Prem «Següent» per continuar la quina.',
     toInterval: 'Passa a la mitja part',
     toIntervalNote: "També hi passa sola al cap d'una estona.",

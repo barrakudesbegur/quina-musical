@@ -1,6 +1,7 @@
 <!--
-  The Celebration's music: a suggested default the presenters can change without blocking anything. The
-  engine takes the change only once the Celebration has started; before that it shows what will play.
+  The Celebration's music: a suggested default the presenters can change without blocking anything. During
+  the Check the pick is kept for the Celebration that may follow (`state.celebrationChoice`; a failed Check
+  drops it); during the Celebration it switches the music live.
 -->
 <script lang="ts">
   import type { CelebrationMusic, WinKind } from '../../ui/flow.ts';
@@ -8,7 +9,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 
-  /** `current`: the engine's choice during the Celebration, else null (the suggestion for `kind` shows). */
+  /** `current`: the engine's choice (the Celebration's music, or the Check's kept pick), else null (the suggestion shows). */
   let { kind, current }: { kind: WinKind; current: CelebrationMusic | null } = $props();
 
   const model = getConsole();
@@ -28,5 +29,5 @@
       </button>
     {/each}
   </div>
-  {#if !enabled && model.show.flow.scene === 'check'}<p class="note">{S.celebration.musicInCelebration}</p>{/if}
+  {#if model.show.flow.scene === 'check'}<p class="note">{S.celebration.musicForLater}</p>{/if}
 </section>
