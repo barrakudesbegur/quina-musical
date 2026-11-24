@@ -1,11 +1,12 @@
-// The show flow's scene rules: which command each scene accepts (docs/protocol.md › Scenes). Pure. The show
-// rejects any other command as `wrongScene`. The table is the agreed one, plus three rules that keep
+// The show flow's scene rules: which command each scene accepts (docs/protocol.md › Scenes). Pure, and shared:
+// the show engine rejects any other command as `wrongScene`, and remotes (the console) grey out the same ones. The table is the agreed one, plus three rules that keep
 // today's commands working:
 //   - `before` (a fresh Game) accepts everything `play` does; the first Spin moves it to `play`.
 //   - `newRound` stays the manual override it was: allowed anywhere but in a Check.
 //   - `roundIntro` and `newRound` are allowed in `after`, so an `endGame` by mistake can be undone.
 // During the technical pause only the commands allowed in every scene go through.
-import type { CommandName, ShowScene, WinKind } from '@quina/protocol';
+import type { CommandName } from './commands.ts';
+import type { ShowScene, WinKind } from './vocabulary.ts';
 
 /** What the rules look at. */
 export interface SceneContext {

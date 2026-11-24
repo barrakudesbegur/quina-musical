@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { COMMAND_NAMES, replayJournal, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
-import { sceneAllows, type SceneContext } from '../engine/src/show/flow.ts';
+import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { FLOW, HOLD } from '../engine/src/config.ts';
 import { cardSongIds, type Card } from '../engine/src/game/cards.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';

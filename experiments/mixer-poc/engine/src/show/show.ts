@@ -53,7 +53,7 @@ import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, DECOYS, FLOW, type DecoyConfig } 
 import { validCards, possibleWinners, parseCardRanges } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle } from '../game/shuffle.ts';
-import { sceneAllows, type SceneContext } from './flow.ts';
+import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition } from '../plan/planner.ts';

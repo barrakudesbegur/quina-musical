@@ -59,7 +59,7 @@ Rejection reasons (`command.rejected.reason`): `invalid`, `locked`, `busy`, `end
 
 ## Scenes
 
-The scene is where the show is in the Game; `status` stays the audio state underneath. A Hold while the presenters talk is `play` with `status: 'hold'`, so the projector shows no change. `engine/src/show/flow.ts` holds the rules; the engine rejects any other command as `wrongScene`.
+The scene is where the show is in the Game; `status` stays the audio state underneath. A Hold while the presenters talk is `play` with `status: 'hold'`, so the projector shows no change. `protocol/scenes.ts` holds the rules (`SCENE_RULES`, `sceneAllows`), shared with the remotes; the engine rejects any other command as `wrongScene`.
 
 | Scene | Accepts, besides the commands allowed everywhere* | Leaves by |
 |---|---|---|
