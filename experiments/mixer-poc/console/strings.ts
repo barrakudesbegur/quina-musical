@@ -46,6 +46,7 @@ export const S = {
 
   alerts: {
     disconnected: 'Sense connexió amb el portàtil. Reconnectant…',
+    unpaired: "Aquest dispositiu no està vinculat amb el portàtil. Obriu la consola amb l'enllaç o el QR del portàtil (porta el codi «t=»).",
     showOffline: 'La pàgina del show no està oberta al portàtil: les ordres no arriben.',
     waiting: "Esperant l'estat del show…",
     locked: 'La pàgina del show espera un clic a «Start show» al portàtil.',

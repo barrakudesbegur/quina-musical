@@ -1,6 +1,7 @@
 // The standalone projector page (/stage/): for development (`?demo=<fixture>`) and for split mode, where the
 // projector runs on another device than the show laptop and follows it through the relay. In the show page
 // itself the stage is mounted over the drum with `mountStage(el, { bus })` instead (see README.md).
+import { relayTokenForPage } from '../ui/client/pairing.ts';
 import '../ui/tokens.css';
 import '../ui/base.css';
 import { ShowClient } from '../ui/client/show-client.ts';
@@ -12,7 +13,7 @@ if (!root) throw new Error('stage: #stage is missing from the page');
 
 const demo = demoNameFromLocation();
 // 'drum' is the relay role of a projector on its own device (split mode).
-const client = new ShowClient({ role: 'drum', transport: demo ? new DemoTransport(demo) : undefined });
+const client = new ShowClient({ role: 'drum', token: demo ? null : relayTokenForPage(), transport: demo ? new DemoTransport(demo) : undefined });
 const stage = mountStage(root, { client });
 client.start();
 

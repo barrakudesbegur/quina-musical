@@ -26,6 +26,8 @@ export interface ShowClientOptions {
   clientId?: string;
   /** The device label ("Tauleta", "Mòbil admin"). It starts the clientId and every reqId, so screens can say who did what. */
   label?: string;
+  /** The relay token for a device on the hotspot's LAN (ui/client/pairing.ts); pages on the laptop need none. */
+  token?: string | null;
 }
 
 const randomSuffix = () => Math.random().toString(36).slice(2, 6);
@@ -78,10 +80,14 @@ export class ShowClient {
   /** Starts every reqId this client sends (the device label, or 'r'). */
   readonly reqPrefix: string;
 
-  constructor({ role, transport, clientId, label }: ShowClientOptions) {
+  /** The relay token this client pairs with, or null. */
+  readonly token: string | null;
+
+  constructor({ role, transport, clientId, label, token = null }: ShowClientOptions) {
     const tag = label ? labelForId(label) : null;
     this.reqPrefix = tag ?? 'r';
-    this.bus = new Bus<unknown>({ role, clientId: clientId ?? (tag ? `${tag}-${randomSuffix()}` : undefined) });
+    this.token = token;
+    this.bus = new Bus<unknown>({ role, token, clientId: clientId ?? (tag ? `${tag}-${randomSuffix()}` : undefined) });
     const fallback = typeof location === 'undefined' ? new WebSocketTransport() : new WebSocketTransport(controlSocketUrl(location.href));
     this.transport = new ObservedTransport(transport ?? fallback, () => this.changed());
   }

@@ -4,6 +4,7 @@ import type { CommandRejected, RelayClients, Role, ShowState } from '@quina/prot
 import { flowOf, type AnyCommandArgs, type AnyCommandName, type FlowFields } from '../flow.ts';
 import { ShowClient } from './show-client.ts';
 import { DemoTransport, demoNameFromLocation } from './demo.ts';
+import { relayTokenForPage } from './pairing.ts';
 
 export class ShowStore {
   readonly client: ShowClient;
@@ -41,11 +42,12 @@ export class ShowStore {
 
 /**
  * The page's ShowStore: the demo transport with `?demo=<fixture>`, else the page origin's control socket
- * (the relay on the LAN, the cloud's console socket otherwise). `label` names this device in ids.
+ * (the relay on the LAN, the cloud's console socket otherwise). `label` names this device in ids; the relay
+ * token (`?t=`, then kept on the device) pairs it with the laptop on the hotspot.
  */
 export function createShow(role: Role, { label }: { label?: string } = {}): ShowStore {
   const demo = demoNameFromLocation();
-  const client = new ShowClient({ role, label, transport: demo ? new DemoTransport(demo) : undefined });
+  const client = new ShowClient({ role, label, token: demo ? null : relayTokenForPage(), transport: demo ? new DemoTransport(demo) : undefined });
   const store = new ShowStore(client, demo);
   client.start();
   return store;

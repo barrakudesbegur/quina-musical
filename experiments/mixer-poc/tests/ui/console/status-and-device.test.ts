@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../ui/fixtures/states.ts';
 import { flowOf } from '../../../ui/flow.ts';
-import { consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../console/logic/status.ts';
+import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../console/logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../console/logic/toasts.ts';
 import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../console/logic/device.ts';
 import { defaultClaimKind, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../console/logic/show-data.ts';
@@ -24,6 +24,7 @@ test('the alert names the most serious failure first', () => {
   assert.equal(consoleAlert({ connected: true, showOnline: true, hasState: false, status: null }), 'waiting');
   assert.equal(consoleAlert({ connected: true, showOnline: true, hasState: true, status: 'locked' }), 'locked');
   assert.equal(consoleAlert({ connected: true, showOnline: true, hasState: true, status: 'hold' }), null);
+  assert.equal(consoleAlert({ connected: true, showOnline: false, hasState: false, status: null, unpaired: true }), 'unpaired');
 });
 
 test('Heat as a whole percentage', () => {
@@ -146,4 +147,13 @@ test('tab keys wrap around', () => {
   assert.equal(tabIndexForKey(1, 'Home', 3), 0);
   assert.equal(tabIndexForKey(1, 'End', 3), 2);
   assert.equal(tabIndexForKey(1, 'a', 3), null);
+});
+
+test('an unpaired device is told so: connected, silent relay, after the grace, not on the laptop itself', () => {
+  const base = { connected: true, heardClients: false, hasState: false, hostname: '192.168.43.20', connectedForMs: 4000, graceMs: 3000 };
+  assert.equal(looksUnpaired(base), true);
+  assert.equal(looksUnpaired({ ...base, connectedForMs: 1000 }), false, 'within the grace');
+  assert.equal(looksUnpaired({ ...base, heardClients: true }), false, 'the relay talks: paired');
+  assert.equal(looksUnpaired({ ...base, hostname: 'localhost' }), false, 'the laptop needs no token');
+  assert.equal(looksUnpaired({ ...base, hostname: '127.0.0.1' }), false);
 });

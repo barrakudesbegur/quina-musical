@@ -3,10 +3,15 @@
   The qrcode library loads only when the menu shows this. On localhost there is nothing to share.
 -->
 <script lang="ts">
+  import { withToken } from '../../ui/client/pairing.ts';
+  import { getConsole } from '../context.ts';
   import { consoleLinkFor } from '../logic/device.ts';
   import { S } from '../strings.ts';
 
-  const link = typeof location === 'undefined' ? null : consoleLinkFor(location.origin, S.menu.lanLabel);
+  // The link carries the relay token, so the other phone pairs with the laptop when it opens it.
+  const model = getConsole();
+  const base = typeof location === 'undefined' ? null : consoleLinkFor(location.origin, S.menu.lanLabel);
+  const link = base ? withToken(base, model.show.client.token) : null;
   let svg = $state<string | null>(null);
 
   $effect(() => {

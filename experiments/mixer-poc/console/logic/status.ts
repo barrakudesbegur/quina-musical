@@ -22,17 +22,20 @@ export function linksOf(connected: boolean, showOnline: boolean): Links {
 }
 
 /** The one alert the console shows above everything, most serious first. */
-export type ConsoleAlert = 'disconnected' | 'showOffline' | 'waiting' | 'locked';
+export type ConsoleAlert = 'disconnected' | 'unpaired' | 'showOffline' | 'waiting' | 'locked';
 
 export interface AlertInput {
   connected: boolean;
   showOnline: boolean;
   hasState: boolean;
   status: ShowStatus | null;
+  /** Connected for a while but the relay has sent nothing (it ignores unpaired devices on the hotspot). */
+  unpaired?: boolean;
 }
 
-export function consoleAlert({ connected, showOnline, hasState, status }: AlertInput): ConsoleAlert | null {
+export function consoleAlert({ connected, showOnline, hasState, status, unpaired = false }: AlertInput): ConsoleAlert | null {
   if (!connected) return 'disconnected';
+  if (unpaired) return 'unpaired';
   if (!showOnline) return 'showOffline';
   if (!hasState) return 'waiting';
   if (status === 'locked') return 'locked';
@@ -65,4 +68,18 @@ export function roundOnScreen(state: ShowState | null, flow: FlowFields): RoundO
   if (flow.scene === 'roundStart' && flow.shuffle) return { number: flow.shuffle.round, special: state.round.kind === 'special' };
   if (flow.scene === 'before' || state.round.number < 1) return null;
   return { number: state.round.number, special: state.round.kind === 'special' };
+}
+
+/** This machine (the laptop itself), where the relay needs no token. */
+export function isLoopback(hostname: string): boolean {
+  const h = hostname.replace(/^\[|\]$/g, '');
+  return h === 'localhost' || h === '::1' || /^127\./.test(h);
+}
+
+/**
+ * The relay sends an unpaired device nothing at all, not even who is connected. So: connected, no client
+ * list and no state after `graceMs`, on an address other than the laptop's own.
+ */
+export function looksUnpaired(input: { connected: boolean; heardClients: boolean; hasState: boolean; hostname: string; connectedForMs: number; graceMs: number }): boolean {
+  return input.connected && !input.heardClients && !input.hasState && !isLoopback(input.hostname) && input.connectedForMs >= input.graceMs;
 }

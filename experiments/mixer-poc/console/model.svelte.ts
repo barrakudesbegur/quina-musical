@@ -12,7 +12,7 @@ import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel,
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { nextSavedCode, resumeCommand } from '../ui/rules/resume.ts';
-import { consoleAlert, isOnline } from './logic/status.ts';
+import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, pushToast, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';
 import { readStored, writeStored } from './storage.ts';
@@ -26,6 +26,8 @@ function startingLabel(): string | null {
 }
 
 export class ConsoleModel {
+  /** When this page started (the pairing check waits a moment after it). */
+  private readonly startedAt = Date.now();
   /** This device's label, shown in the header. It also starts this console's clientId and reqIds. */
   label = $state<string | null>(startingLabel());
   /** The engine's view (relay, or the demo transport with `?demo=`). */
@@ -46,7 +48,20 @@ export class ConsoleModel {
   readonly controls = $derived(controlsModel({ state: this.show.state, flow: this.show.flow, online: this.online }));
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
   readonly alert = $derived(
-    consoleAlert({ connected: this.show.connected, showOnline: this.show.showOnline, hasState: this.show.state !== null, status: this.show.state?.status ?? null }),
+    consoleAlert({
+      connected: this.show.connected,
+      showOnline: this.show.showOnline,
+      hasState: this.show.state !== null,
+      status: this.show.state?.status ?? null,
+      unpaired: looksUnpaired({
+        connected: this.show.connected,
+        heardClients: this.show.clients.length > 0,
+        hasState: this.show.state !== null,
+        hostname: typeof location === 'undefined' ? 'localhost' : location.hostname,
+        connectedForMs: this.show.now - this.startedAt,
+        graceMs: CONSOLE.pairingGraceMs,
+      }),
+    }),
   );
 
   private readonly sent = new SentLog(CONSOLE.sentLogSize);

@@ -13,6 +13,8 @@ export const CONSOLE = Object.freeze({
   },
   /** The device label: what the header shows ("Tauleta", "Mòbil admin"). */
   labelMaxLength: 24,
+  /** How long a silent relay connection waits before the console says the device isn't paired. */
+  pairingGraceMs: 3000,
   labelPresets: ['Tauleta', 'Mòbil admin'] as const,
   /** Long press: used only when the `--dur-hold-confirm` token can't be read. */
   holdConfirmFallbackMs: 900,
