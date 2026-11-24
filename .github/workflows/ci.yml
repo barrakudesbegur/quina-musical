@@ -95,5 +95,11 @@ jobs:
           path: ~/.cache/torch/hub/checkpoints
           key: beat-this-final0-v1
 
+      # One BLAS thread: multithreaded sums come out in a different order from run to run, and the automatic hook
+      # detection's eigenvectors (a close call on the synthetic song) followed them.
       - name: "Pipeline tests"
+        env:
+          OPENBLAS_NUM_THREADS: "1"
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
         run: npm run test:pipeline -w @quina/show
