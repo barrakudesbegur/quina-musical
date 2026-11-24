@@ -121,6 +121,21 @@ function writeReference(o: SyncOptions, manifest: MediaManifest): void {
 }
 
 /** Upload what changed, then the manifest (last, so a pull never sees files that aren't there yet). */
+/** A line every few seconds while files move: how many and how much, of the total. */
+function progress(verb: string, totalFiles: number, totalBytes: number, log: (line: string) => void, everyMs = 5000) {
+  let files = 0;
+  let bytes = 0;
+  let lastMs = Date.now();
+  const mb = (n: number) => (n / 1e6).toFixed(0);
+  return (size: number) => {
+    files += 1;
+    bytes += size;
+    if (Date.now() - lastMs < everyMs && files < totalFiles) return;
+    lastMs = Date.now();
+    log(`  ${verb} ${files}/${totalFiles} files, ${mb(bytes)} of ${mb(totalBytes)} MB`);
+  };
+}
+
 export async function push(o: SyncOptions): Promise<SyncReport> {
   const log = o.log ?? console.log;
   const skipped: string[] = [];
@@ -129,6 +144,7 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
   const todo = changedFiles(manifestFiles(local), remote.files);
   let bytes = 0;
   log(`media push: ${local.size} files here, ${todo.length} to upload`);
+  const moved = progress('uploaded', todo.length, todo.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0), log);
   await inParallel(todo, o.concurrency ?? 4, async (syncPath) => {
     const file = local.get(syncPath) as LocalFile;
     const response = await fetch(`${o.cloud}/api/sync/${o.pool}/file?path=${encodeURIComponent(syncPath)}`, {
@@ -139,6 +155,7 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
     } as RequestInit);
     if (!response.ok) throw new Error(`upload ${syncPath}: HTTP ${response.status} ${await response.text()}`);
     bytes += file.size;
+    moved(file.size);
   });
   const manifest: MediaManifest = { v: 1, pool: o.pool, files: manifestFiles(local), updatedAtMs: Date.now() };
   const saved = await fetch(`${o.cloud}/api/sync/${o.pool}/manifest`, { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) });
@@ -158,7 +175,8 @@ export async function pull(o: SyncOptions): Promise<SyncReport> {
   const dirs = new Map(o.roots.map((r) => [r.root, r.dir]));
   const skipped: string[] = [];
   let bytes = 0;
-  log(`media pull: ${Object.keys(remote.files).length} files in the cloud, ${todo.length} to download`);
+  log(`media pull: ${Object.keys(remote.files).length} files in the cloud, ${todo.length} to download (a pull cut off resumes where it stopped)`);
+  const moved = progress('downloaded', todo.length, todo.reduce((sum, p) => sum + (remote.files[p]?.size ?? 0), 0), log);
   await inParallel(todo, o.concurrency ?? 4, async (syncPath) => {
     const expected = remote.files[syncPath] as MediaManifest['files'][string];
     const [root, ...rest] = syncPath.split('/');
@@ -188,6 +206,7 @@ export async function pull(o: SyncOptions): Promise<SyncReport> {
     }
     fs.renameSync(part, target);
     bytes += size;
+    moved(size);
   });
   await scan(o.roots, o.dataDir); // refresh the index with the new files
   if (skipped.length === 0) writeReference(o, remote);

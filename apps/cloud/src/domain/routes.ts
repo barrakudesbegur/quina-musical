@@ -28,7 +28,9 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   /** Presenters' and admins' consoles: the relay protocol, through the cloud (organizers). */
   '/ws/console': { name: 'console', websocket: true, access: PEOPLE, methods: GET },
   /** The Game plan: Admin reads it (GET) and saves it whole (PUT, checked with checkGamePlan). */
-  '/api/plan': { name: 'plan', websocket: false, access: PEOPLE, methods: ['GET', 'PUT'] },
+  // The laptop's service token may read it (a spare laptop's setup fetches it without connecting as the show
+  // laptop, which would take over from the one playing); only people save it.
+  '/api/plan': { name: 'plan', websocket: false, access: ANYONE_SIGNED_IN, methods: ['GET', 'PUT'] },
   /**
    * Admin's media: POST a logo or prize picture (the body is the PNG or JPEG fallback, `?name=` optional; answers
    * its /media/ path and key), GET the list for the picker.

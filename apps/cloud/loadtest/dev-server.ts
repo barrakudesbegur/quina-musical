@@ -38,11 +38,14 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
   // Wrangler's own entry point, wherever npm put it (the workspace hoists it to the repo's node_modules).
   const wrangler = path.join(path.dirname(createRequire(import.meta.url).resolve('wrangler/package.json')), 'bin', 'wrangler.js');
   const config: string[] = [];
-  if (media) {
-    // A copy of wrangler.jsonc beside it (its paths stay right), with the R2 binding switched on.
-    const file = path.join(ROOT, 'wrangler.media-test.jsonc');
-    const text = fs.readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8').replace('// "r2_buckets"', '"r2_buckets"');
-    if (!text.includes('\n  "r2_buckets"')) throw new Error('wrangler.jsonc has no commented r2_buckets line to switch on');
+  if (!media) {
+    // A copy of wrangler.jsonc beside it (its paths stay right) without the R2 binding: most tests run without
+    // the bucket, as a cloud that has none (the sync answers 503).
+    // One per dev server: tests start several at once.
+    const file = path.join(ROOT, `wrangler.no-media-test.${chosen}.jsonc`);
+    const source = fs.readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8');
+    const text = source.replace(/\n  "r2_buckets": [^\n]*\n/, '\n');
+    if (text === source) throw new Error('wrangler.jsonc has no r2_buckets line to switch off');
     fs.writeFileSync(file, text);
     config.push('--config', file);
   }
@@ -76,8 +79,12 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
     ws: `ws://127.0.0.1:${chosen}`,
     stop: () =>
       new Promise((resolve) => {
-        if (child.exitCode !== null) return resolve();
-        child.once('exit', () => resolve());
+        const done = () => {
+          for (const at of config.filter((_, i) => i % 2 === 1)) fs.rmSync(at, { force: true });
+          resolve();
+        };
+        if (child.exitCode !== null) return done();
+        child.once('exit', done);
         child.kill('SIGTERM');
         setTimeout(() => child.kill('SIGKILL'), 5000).unref();
       }),

@@ -349,7 +349,7 @@ describe('the Game plan and its media (Admin)', () => {
 
     const saved = await put(PLAN);
     expect(saved.status).toBe(200);
-    expect(await getJson('/api/plan')).toEqual({ plan: PLAN });
+    expect(await getJson('/api/plan')).toEqual({ plan: PLAN, savedAtMs: expect.any(Number) });
     // Phones get only what they may see: round 1's prizes (perRound), round 2 locked, no cheat sheet.
     expect((await p.view()).state.plan).toEqual(publicPlan(PLAN, [1]));
     const messages = await link.drain();

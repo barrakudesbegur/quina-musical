@@ -20,6 +20,7 @@ import { shouldForward } from '../src/domain/consoles.ts';
 import { reconnectDelayMs } from '@quina/protocol';
 import { CLOSE, isCloudMessage, type CloudMessage, type ForwardableEvent, type LinkEvent, type LinkMessage, type LinkPlan } from '../src/link-protocol.ts';
 import { CLOUD_PLAN_FILE, LOCAL_PLAN_FILE, readStoredPlan, type StoredPlan } from '../../show/relay/plan.ts';
+import { fetchPlanMedia } from './plan-media.ts';
 import { JournalCopy } from './journal-copy.ts';
 import { Uploader, type UploaderState } from './uploader.ts';
 
@@ -333,35 +334,10 @@ export class CloudLink {
     if (plan) void this.fetchPlanMedia(plan);
   }
 
-  /**
-   * Admin's images the plan uses (/media/<key>.png|.jpg, and each one's JPEG XL when there is one), copied into
-   * `<dataDir>/media/` so the relay can serve them to the projector with no internet. Each file once (immutable).
-   */
+  /** Admin's images the plan uses, copied for the relay (plan-media.ts). */
   private async fetchPlanMedia(plan: object): Promise<void> {
-    const paths = new Set(JSON.stringify(plan).match(/\/media\/[0-9a-f]{32}\.(?:png|jpg|webp)/g) ?? []);
-    if (paths.size === 0) return;
-    const dir = path.join(this.options.dataDir, 'media');
     const base = this.options.cloudUrl.replace(/^ws/, 'http').replace(/\/ws\/show$/, '');
-    let fetched = 0;
-    for (const fallback of paths) {
-      const key = fallback.slice('/media/'.length, '/media/'.length + 32);
-      for (const [url, name, type] of [[fallback, path.basename(fallback), null], [`/media/${key}.jxl`, `${key}.jxl`, 'image/jxl']] as const) {
-        const file = path.join(dir, name);
-        if (fs.existsSync(file)) continue;
-        try {
-          const res = await fetch(`${base}${url}`, { headers: this.options.cloudHeaders, signal: AbortSignal.timeout(LINK.mediaFetchTimeoutMs) });
-          // A .jxl with none uploaded yet answers with the fallback: keep only a real JPEG XL (the relay falls back too).
-          if (!res.ok || (type && !(res.headers.get('content-type') ?? '').startsWith(type))) continue;
-          fs.mkdirSync(dir, { recursive: true });
-          fs.writeFileSync(`${file}.tmp`, Buffer.from(await res.arrayBuffer()));
-          fs.renameSync(`${file}.tmp`, file);
-          fetched += 1;
-        } catch (error) {
-          this.log(`cloud: could not fetch ${url}: ${String(error)}`);
-        }
-      }
-    }
-    if (fetched > 0) this.log(`cloud: ${fetched} image(s) of the Game plan kept in ${dir}`);
+    await fetchPlanMedia(plan, { base, headers: this.options.cloudHeaders, dataDir: this.options.dataDir, log: (line) => this.log(line) });
   }
 
   /**

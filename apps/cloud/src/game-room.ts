@@ -466,6 +466,11 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return this.room.plan ?? null;
   }
 
+  /** When the plan was saved (cloud clock), or null without one. */
+  getPlanSavedAtMs(): number | null {
+    return this.planSavedAtMs();
+  }
+
   /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Everyone gets it. */
   setPlan(json: unknown): PlanSave {
     const check = this.checkPlan(json);
