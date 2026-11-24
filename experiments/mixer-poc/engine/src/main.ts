@@ -19,7 +19,7 @@ import { SYNTHS } from './audio/synth/fx.ts';
 import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
 import { DrumView, type DrumCard } from './wheel/drum.ts';
 import { Bus } from './net/bus.ts';
-import { LocalJournal, type KeyValueStorage } from './journal-store.ts';
+import { LocalJournal, chooseResume, parseJournalLines, type CloudCopy, type KeyValueStorage } from './journal-store.ts';
 import { mountStage } from '../../stage/stage.ts';
 import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
 import type { DecoyEvent } from './plan/recipes.ts';
@@ -136,6 +136,22 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const params = new URLSearchParams(location.search);
 const persistJournal = !params.has('queue') && params.get('journal') !== '0';
 let journal = new LocalJournal(null); // replaced in boot(), once the pool is known
+// What the laptop's cloud link left for this page (relay /cloud/, read-only); anything missing reads as null.
+const cloudCopy: CloudCopy = {
+  resume: async () => {
+    const r = await fetchJson('/cloud/resume.json').catch(() => null);
+    return isRecord(r) && typeof r.gameId === 'string' && Number.isInteger(r.seq) && typeof r.atMs === 'number' ? { gameId: r.gameId, seq: Number(r.seq), atMs: r.atMs } : null;
+  },
+  current: async () => {
+    const response = await fetch('/cloud/current', { cache: 'no-store' }).catch(() => null);
+    const text = response?.ok ? (await response.text()).trim() : '';
+    return text || null;
+  },
+  journal: async (gameId) => {
+    const response = await fetch(`/cloud/journal/${encodeURIComponent(gameId)}.jsonl`, { cache: 'no-store' }).catch(() => null);
+    return response?.ok ? parseJournalLines(await response.text()) : null;
+  },
+};
 
 const ctx = new AudioContext({ sampleRate: 48000, latencyHint: 'interactive' });
 const clock = new AudioClock(ctx);
@@ -205,11 +221,17 @@ async function boot() {
   if (isPhaseName(phase)) settings.phaseOverride = phase;
   if (params.get('auto') === '0') settings.autoAdvance = false;
   if (params.has('pace')) settings.pace = Number(params.get('pace'));
+  // Resume: Admin's manual resume from the cloud, else this page's own journal, else the cloud copy's current
+  // Game (a new laptop). `?fresh=1` starts a new Game; old journals are never deleted.
   let restore: ShowOptions['restore'] = null;
+  let resumedFrom: 'cloud' | 'local' | null = null;
   if (persistJournal && params.get('fresh') !== '1') {
-    const resumed = journal.resume(Date.now(), ENGINE.resumeWithinMs);
-    if (resumed.ok) restore = resumed.record;
-    else if (resumed.reason !== 'none') console.warn(`journal not resumed (${resumed.reason})`, resumed.detail ?? '');
+    const choice = await chooseResume({ local: journal, cloud: cloudCopy, nowMs: Date.now(), maxAgeMs: ENGINE.resumeWithinMs });
+    for (const warning of choice.warnings) console.warn(warning);
+    if (choice.source !== 'none') {
+      restore = choice.record;
+      resumedFrom = choice.source;
+    }
   }
   const created = new Show({
     env: {
@@ -238,8 +260,9 @@ async function boot() {
   run(created.flush());
   const resumed = restore?.round;
   if (resumed) {
-    console.info(`resumed game ${created.gameId}: round ${resumed.number}, song ${resumed.position + 1} of ${resumed.queue.length}`);
-    showStatusLine(`Resumed round ${resumed.number} after song ${resumed.position + 1}: press Next`);
+    const where = resumedFrom === 'cloud' ? 'des del núvol' : "des d'aquest portàtil";
+    console.info(`resumed game ${created.gameId} (${resumedFrom}): round ${resumed.number}, song ${resumed.position + 1} of ${resumed.queue.length}`);
+    showStatusLine(`Represa ${where}: Quina ${resumed.number}, cançó ${resumed.position + 1}`);
   }
   bus.on((message, { local }) => {
     if (!local && isRecord(message) && message.type === 'cmd') run(created.command(message));
