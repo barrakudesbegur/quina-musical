@@ -22,6 +22,10 @@ _Avoid_: Game, match, ronda
 A round played with special cards instead of the normal ones. Shown as "Quina Especial", never with a number.
 _Avoid_: Quina especial (outside the UI)
 
+**Desgraciat round**:
+A round played in reverse: everyone stands, a card is out as soon as any of its songs lands, and the last card standing wins. One per game.
+_Avoid_: Reverse round, elimination round
+
 **Card**:
 A printed sheet of 12 songs in 3 lines of 4, identified by its number (shown as "#123"). A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
 _Avoid_: Cartró (outside the UI), ticket

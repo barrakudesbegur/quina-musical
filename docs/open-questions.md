@@ -12,10 +12,6 @@ Format:
 
 ---
 
-## The Desgraciat round (orchestrator, 2026-11-24)
-Proposed model (Q30): a card is out as soon as any of its songs lands, and the last card standing wins. The tablet privately shows the cards still standing, and the presenters call the winner. The Shuffle avoids a tie at the end. Phones show "Dempeus/Assegut" per card.
-**Open:** which cards does it use? Last year's Desgraciat winner (card 433) was a special card.
-
 ## The Wii remote mapping (orchestrator, 2026-11-24)
 Proposed (Q34): A Següent · B (hold) Suspens · 1 Parlem · 2 Aguanta · − (hold 1.5 s) Enrere · + Claim · D-pad 4 effects · HOME unused · a rumble on every action.
 

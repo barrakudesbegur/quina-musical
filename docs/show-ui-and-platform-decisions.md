@@ -31,8 +31,17 @@ These override the sections below where they differ.
 - **Names on screen:** the schedule screen is "Horari" (not "Programa"). The special round is "Quina Especial", without a number; numbering appears only as "Quina X de Y". Card numbers are written "#123".
 - **The event's name is set per edition in Admin** (this year "Quina Quina 3").
 - **Prizes come in bundles:** each Line and Quina has many prizes, usually with one or two headline ones. Screens show the bundle with the headline prizes first, never a single prize.
-- **Prize secrecy:** prizes are revealed round by round as the presenters announce them. Phones show the revealed rounds' bundles; future rounds stay locked, game-style. Before the night, only round 1's bundle is visible. An "everything secret" option exists for organizers. The cloud enforces it, so locked prizes never reach the public feed.
-- **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (set in Admin), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
+- **Prize secrecy:** a round's bundle is revealed at its **intro**, the moment the presenters present the round. It then appears on the projector and phones at once. Until then it is locked everywhere, so the Interval doesn't show the next round's prizes. Future rounds stay locked, game-style. Before the night, only round 1's bundle is visible. An "everything secret" option exists for organizers. The cloud enforces it, so locked prizes never reach the public feed.
+- **Card types come from the card generation** (`cards.json`: type, colour, title, price), not from Admin. Admin only chooses which card type each round uses: normal for regular rounds and especial for the Quina Especial; the Desgraciat uses whichever type Admin picks.
+- **The Desgraciat round:**
+  - a card is out as soon as any of its songs lands;
+  - the console privately shows the cards still standing, and the presenters call the winner (unsold cards count too);
+  - the Shuffle avoids a tie at the end;
+  - its Check shows that none of the card's songs landed;
+  - the Phase and Heat climb as fewer cards stand;
+  - phones show "Dempeus" or "Assegut" per card;
+  - one per night, and it can be moved.
+- **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (from the card generation), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
 - **Winning card numbers are not shown** on the projector or phones ("people don't care who won unless it's them"). They aren't secret: the Check shows the card being checked. So the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards ("La teva línia!"). There's also no QR on the projector during the Interval.
 - **A Check also fails for a card of the wrong type for the round.** It's shown as its own reason.
 - **Horari off schedule:** real times for what has happened, and "~" predictions for what's next.
