@@ -1,6 +1,6 @@
 // The console's tunables, in one place. Look values (colours, sizes, animation lengths) are CSS tokens in
 // ui/tokens.css and console/theme.css instead; the timings here are behaviour, read by the logic.
-import type { CommandName } from '@quina/protocol';
+import type { CommandName, SoundName } from '@quina/protocol';
 
 export const CONSOLE = Object.freeze({
   /** localStorage keys (this device only). */
@@ -44,3 +44,24 @@ export const CONSOLE_COMMANDS = [
   'intervalSkip', 'resumeAt', 'revealPrizes',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
+
+/**
+ * The Wii Remote (optional): pairs with the show laptop over WebHID (desktop Chrome). Button mapping in
+ * wii/mapping.ts; these are its numbers. Rumble patterns are on/off durations in ms, starting with on.
+ */
+export const WII = Object.freeze({
+  vendorId: 0x057e,
+  /** Raw accelerometer value at 0 g, and counts per g (the remotes' usual calibration). */
+  accel: { zero: 128, perG: 26 },
+  /** Suspens needs 3 strong jolts inside 1.5 s while B is held (dancing shouldn't do it). */
+  shake: { peakG: 2.6, resetG: 1.6, minGapMs: 110, count: 3, windowMs: 1500 },
+  /** 1 or 2 held this long is Enrere. */
+  backHoldMs: 1500,
+  /** The D-pad's four effects. */
+  dpad: { up: 'tada', right: 'orchestra-hit', down: 'sad-trombone', left: 'among-us' },
+  rumble: { tap: [70], suspense: [90, 70, 90, 70, 260], back: [600], autoOn: [80, 80, 80], autoOff: [420] },
+  /** How often held buttons are checked (Enrere's long press). */
+  tickMs: 50,
+  /** LED 1 lit: this remote is connected. */
+  leds: 0x10,
+} as const satisfies { dpad: Record<'up' | 'right' | 'down' | 'left', SoundName> } & Record<string, unknown>);
