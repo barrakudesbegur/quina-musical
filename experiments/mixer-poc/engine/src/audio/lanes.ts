@@ -22,6 +22,17 @@ export function frameAligned(when: number, offset: number, sampleRate: number): 
   return { when: (frame - FRAME_EPS) / sampleRate, offset: Math.max(0, pos) / sampleRate };
 }
 
+/**
+ * Where a lane starts so it reads the same song frame the main source plays (both on whole frames): the main
+ * source started at context frame `startFrame` from song frame `offsetFrame`; a lane wanted at `at` starts
+ * on the frame `frame` (at `when`) and reads its buffer from `offsetFrames`, the song frame then minus where its
+ * buffer starts in the song (`bufferStartFrame`; 0 for the mix itself).
+ */
+export function laneStart(startFrame: number, offsetFrame: number, at: number, sampleRate: number, bufferStartFrame: number): { frame: number; when: number; offsetFrames: number } {
+  const frame = Math.round(at * sampleRate);
+  return { frame, when: (frame - FRAME_EPS) / sampleRate, offsetFrames: offsetFrame + (frame - startFrame) - bufferStartFrame };
+}
+
 /** One buffer a lane plays, with the gain that turns it into its share of the part (at full scale). */
 export interface LaneSource {
   from: 'mix' | StemName;

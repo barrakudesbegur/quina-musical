@@ -10,6 +10,8 @@ import { HoldMusic } from './audio/holdmusic.ts';
 import { StemStore } from './audio/stems.ts';
 import { SignatureStore } from './audio/signatures.ts';
 import { BlendStore } from './audio/blend.ts';
+import { PreverbStore } from './audio/preverb.ts';
+import { plannerWithInputs } from './audio/plan-inputs.ts';
 import { CheckPlayer, SnippetStore } from './audio/check.ts';
 import { WinningLoop } from './audio/celebration.ts';
 import { hookLoop } from './plan/hookloop.ts';
@@ -18,6 +20,7 @@ import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
 import { DrumView, type DrumCard } from './wheel/drum.ts';
 import { Bus } from './net/bus.ts';
 import { LocalJournal, type KeyValueStorage } from './journal-store.ts';
+import { mountStage } from '../../stage/stage.ts';
 import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
 import type { DecoyEvent } from './plan/recipes.ts';
 import {
@@ -142,11 +145,20 @@ const holdMusic = new HoldMusic(graph);
 const stems = new StemStore(ctx);
 const signatures = new SignatureStore(ctx);
 const blends = new BlendStore(ctx);
+const preverbs = new PreverbStore();
 const snippets = new SnippetStore(ctx);
 const checkPlayer = new CheckPlayer(graph, snippets, FLOW.check);
 const winningLoop = new WinningLoop(graph);
 clock.extraLatencySec = graph.processingLatencySec;
 const bus = new Bus<ShowEvent>({ role: 'show' });
+// The projector stage (stage/, the UI session's): scenes drawn around the drum. Read-only on this page's bus;
+// mounted before boot() so it sees the first state. `?stage=0` shows the bare engine page.
+const stageEl = document.getElementById('stage');
+const stageMounted = Boolean(stageEl && params.get('stage') !== '0');
+if (stageEl && stageMounted) {
+  mountStage(stageEl, { bus });
+  document.body.classList.add('has-stage');
+}
 
 // Audio objects for what the machine calls current / incoming / outgoing.
 const rt: Runtime = { current: null, incoming: null, outgoing: null, tasks: [], lastState: null, catalog: new Map() };
@@ -209,6 +221,8 @@ async function boot() {
       stems: (id) => stems.summary(id),
       signatures: (id) => signatures.summary(id),
       blend: (aSongId, hookId) => blends.summary(aSongId, hookId),
+      // The planner plus what the audio stores have for the two songs (A's stem lanes, B's pre-verbs, keys).
+      plan: plannerWithInputs({ stems, preverbs, blends }),
       random: secureRandom,
     },
     songs: [...rt.catalog.values()],
@@ -339,7 +353,8 @@ function apply(effect: Effect): void {
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
       return void holdMusic.switchTo({ at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: 'celebration' }).catch((e) => console.error('interval music', e));
     case 'pauseOverlay':
-      $('pause-overlay').hidden = !effect.on;
+      // With the stage mounted it shows "Tornem de seguida" itself.
+      $('pause-overlay').hidden = stageMounted || !effect.on;
       return;
     case 'log':
       if (effect.level === 'warn') console.warn(effect.message);
@@ -363,6 +378,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   deck.stems = stems.forHook(plan.b.songId, plan.hook.id);
   deck.signatures = signatures.buffersFor(plan.b.songId);
   deck.blend = plan.blend && plan.a ? blends.forPair(plan.a.songId, plan.hook.id) : null;
+  deck.preverbs = preverbs.buffersFor(plan.b.songId);
   // A released Suspense: A is already finishing (or has finished) the exit it started when the Suspense opened.
   const outgoing = wheel.brake ? rt.outgoing : plan.a ? rt.current : null;
   if (!plan.a && !wheel.brake && rt.current) rt.current.fadeOut(0.8); // ran out: whatever is left goes under the build
@@ -461,6 +477,9 @@ function landed(plan: ShowPlan): void {
   rt.current = rt.incoming;
   rt.incoming = null;
   rt.outgoing = null;
+  // The landed song's stem lanes (P1), for its own exit next time.
+  const deck = rt.current;
+  if (deck?.hookId) void stems.ensureLanes(deck.songId, deck.hookId, deck.analysis).then((lanes) => (deck.lanes = lanes));
   if (outgoing) addTask(Math.max(plan.a?.stopAt ?? plan.T, plan.T) + 3, () => outgoing.dispose());
 }
 
@@ -557,6 +576,7 @@ function prefetch(ids: readonly number[]): void {
   loader.retain(keep);
   stems.retain(keep);
   signatures.retain(keep);
+  preverbs.retain(keep);
   for (const id of ids) {
     signatures.ensure(id); // the playing song keeps its own for an echo exit
     loader
@@ -564,6 +584,7 @@ function prefetch(ids: readonly number[]): void {
       .then((entry) => {
         // Stems for the songs still to land (a Tease uses them); a missing stem never blocks the landing.
         if (id !== rt.current?.songId) stems.ensure(id, entry.analysis);
+        if (id !== rt.current?.songId) preverbs.ensure(id, entry.analysis, entry.buffer);
         run(machine().decoded(id));
       })
       .catch((error: unknown) => {
@@ -729,7 +750,7 @@ function renderHud(audible = clock.audible()): void {
     cur ? `now  #${cur.songId} ${cur.analysis.title} · ${cur.analysis.tempo.bpm} BPM · ${cur.hookId} · pos ${cur.posAt(ctx.currentTime)?.toFixed(1) ?? '—'} s` : 'now  —',
     `next #${nextId ?? '—'} ${loader.isReady(nextId) ? 'decoded' : 'decoding…'}`,
     p
-      ? `plan ${p.id} ${p.recipe} ${p.recipeName}${p.exit ? ` (exit ${p.exit})` : ''}${variant ? ` (${variant})` : ''} ${p.phase} D=${p.D.toFixed(2)} s (target ${p.window.dTarget.toFixed(1)}) · bridge ${p.bridgeBars} bars · gap ${p.gapBeats} beat · tease ${p.teaseBars}${p.teaseStyle ? ` (${p.teaseStyle})` : ''}${p.blend ? ` · blend ${p.blend.bars} bars${p.blend.bass ? ' + bass' : ''} @ ${p.blend.toBpm.toFixed(1)}` : ''}${p.signature ? ` · signature ${p.signature.id} (${p.signature.deck}${p.signature.rate !== 1 ? ` ×${p.signature.rate.toFixed(3)}` : ''})` : ''} · ${p.phraseClass ?? ''}${p.relaxed ? ' (relaxed)' : ''} · hook ${p.hook.id} pickup ${p.hook.pickupSec.toFixed(2)} · lands in ${(p.T - audible).toFixed(2)} s`
+      ? `plan ${p.id} ${p.recipe} ${p.recipeName}${p.exit ? ` (exit ${p.exit})` : ''}${variant ? ` (${variant})` : ''} ${p.phase} D=${p.D.toFixed(2)} s (target ${p.window.dTarget.toFixed(1)}) · bridge ${p.bridgeBars} bars · gap ${p.gapBeats} beat · landing ${p.landing}${p.layers.length ? ` + ${p.layers.join(', ')}` : ''} · tease ${p.teaseBars}${p.teaseStyle ? ` (${p.teaseStyle})` : ''}${p.blend ? ` · blend ${p.blend.bars} bars${p.blend.bass ? ' + bass' : ''} @ ${p.blend.toBpm.toFixed(1)}` : ''}${p.signature ? ` · signature ${p.signature.id} (${p.signature.deck}${p.signature.rate !== 1 ? ` ×${p.signature.rate.toFixed(3)}` : ''})` : ''} · ${p.phraseClass ?? ''}${p.relaxed ? ' (relaxed)' : ''} · hook ${p.hook.id} pickup ${p.hook.pickupSec.toFixed(2)} · lands in ${(p.T - audible).toFixed(2)} s`
       : `last ${last ? `${last.recipe}${last.exit ? `/${last.exit}` : ''} ${last.phase} → #${last.songId} ${last.hookId}` : '—'}`,
     wheel ? `drum ${wheel.method} scale ${wheel.scale.toFixed(3)} laps ${wheel.laps.toFixed(2)} · ${wheel.cards} cards · solved in ${wheel.solveMs.toFixed(1)} ms` : '',
     `phase ${show.phaseName()} from ${show.game.phaseOverride ? 'override' : show.phaseModel.plan ? `cards (${show.phaseModel.valid.length} valid, towards ${show.phaseModel.kind}, heat ${show.phaseStep(show.position + 1)?.heat?.toFixed(2) ?? '—'})` : 'placeholder'}`,

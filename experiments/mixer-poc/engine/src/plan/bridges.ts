@@ -36,11 +36,18 @@ export interface BridgeArgs {
 
 const loudness = (phase: PhaseEffects): number => ({ early: -12, mid: -9, late: -7, final: -5 })[phase.name] ?? -9;
 
-/** The bridge pattern for `bars` of B's bridge. A forced pattern that does not fit falls back to the roll. */
+/** A pattern that needs two bars plays only on a build of at least this many of B's bars (up to the gap). */
+const TWO_BARS_MIN = 1.5;
+
+/**
+ * The bridge pattern for a build of `bars` of B's bars (from the bridge's start to the gap). A forced pattern
+ * that does not fit falls back to the roll.
+ */
 export function chooseBridge(phase: PhaseEffects, bars: number, rng: () => number, force: BridgePattern | null = null): BridgePattern {
-  if (force) return bars < 2 && NEEDS_TWO_BARS.has(force) ? 'roll' : force;
+  const fits = (p: BridgePattern) => bars >= TWO_BARS_MIN || !NEEDS_TWO_BARS.has(p);
+  if (force) return fits(force) ? force : 'roll';
   const weights = { ...MOVES.bridges.weights[phase.name] };
-  if (bars < 2) for (const p of NEEDS_TWO_BARS) weights[p] = 0;
+  for (const p of NEEDS_TWO_BARS) if (!fits(p)) weights[p] = 0;
   return weightedPick(weights, rng) ?? 'roll';
 }
 
@@ -79,7 +86,7 @@ export function bridgeLayers(args: BridgeArgs & { pattern: BridgePattern; rng: (
   const { pattern, t0, gapStart, gB } = args;
   const lastBar = gapStart - gB.bar; // the bar before the gap (its end is the gap)
   const bars = (gapStart - t0) / gB.bar;
-  if (pattern === 'roll' || (NEEDS_TWO_BARS.has(pattern) && bars < 1.5) || gapStart - t0 < 0.3) return buildLayers(args);
+  if (pattern === 'roll' || (NEEDS_TWO_BARS.has(pattern) && bars < TWO_BARS_MIN) || gapStart - t0 < 0.3) return buildLayers(args);
   switch (pattern) {
     case 'halftime':
       return halfTime(args, lastBar);

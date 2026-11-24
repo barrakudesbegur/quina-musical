@@ -118,6 +118,11 @@ export class BlendStore {
     }
   }
 
+  /** A song's hook keys by hook id (data/keys), for the planner's key checks (D9's Ghost, D12's overlap). */
+  hookKeys(songId: number): Readonly<Record<string, KeyInfo>> | null {
+    return this.keys?.get(songId)?.hooks ?? null;
+  }
+
   // B's bass may layer over A only when the tempos are within ±4% and the hooks' keys are compatible.
   bassAllowed({ tight, aSongId, aHookId, bSongId, bHookId }: {
     tight: boolean;

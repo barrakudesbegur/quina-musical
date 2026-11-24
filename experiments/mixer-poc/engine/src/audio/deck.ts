@@ -9,7 +9,7 @@ import type {
 import type { BlendBuffers } from './blend.ts';
 import type { AudioGraph } from './graph.ts';
 import type { HookStems, StemSlices } from './stems.ts';
-import { frameAligned, laneSources, onsetShift, schedulePoints } from './lanes.ts';
+import { frameAligned, laneSources, laneStart, onsetShift, schedulePoints } from './lanes.ts';
 import { SIGNATURES } from '../config.ts';
 
 const SIGNATURE_FADE_SEC = SIGNATURES.fadeSec;
@@ -316,19 +316,18 @@ export class Deck {
   // stems do not cover entirely is not played at all (half a subtraction would be worse than none).
   playLane({ part, at, until, direct, echo, reverb }: Omit<StemLaneEvent, 'kind' | 'deck'>): boolean {
     if (this.startFrame == null || this.offsetFrame == null || !this.source) return false;
+    const { startFrame, offsetFrame } = this;
     const sr = this.ctx.sampleRate;
-    const frame = Math.round(Math.max(at, this.ctx.currentTime + 0.005) * sr);
-    const when = (frame - 1e-6) / sr;
+    const first = Math.max(at, this.ctx.currentTime + 0.005);
+    const when = laneStart(startFrame, offsetFrame, first, sr, 0).when;
     const frames = Math.ceil((until - when) * sr) + 1;
     if (frames < sr * 0.01) return false;
-    // The frame of the song the main source plays at `frame`.
-    const songFrame = this.offsetFrame + (frame - this.startFrame);
     for (const store of [this.lanes, this.stems]) {
       if (!store) continue;
-      const startFrame = Math.round(store.startSec * sr);
+      const storeFrame = Math.round(store.startSec * sr);
       const sources = laneSources(part, store.scale).map(({ from, gain }) => {
         const buffer = from === 'mix' ? this.buffer : store.buffers[from];
-        const offsetFrames = songFrame - (from === 'mix' ? 0 : startFrame);
+        const { offsetFrames } = laneStart(startFrame, offsetFrame, first, sr, from === 'mix' ? 0 : storeFrame);
         return buffer && offsetFrames >= 0 && offsetFrames + frames <= buffer.length ? { buffer, gain, offsetFrames } : null;
       });
       if (sources.some((x) => !x)) continue;

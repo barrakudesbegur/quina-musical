@@ -1,60 +1,91 @@
-// Landing tests (B11) and the flash-and-click calibration.
+// Landing tests (B11), the DJ techniques' renders (docs/dj-techniques.md) and the flash-and-click calibration.
+// Every case plans a transition with the real planner and renders it through the real graph, decks and
+// scheduler in an OfflineAudioContext, in three modes:
+//  - landing: A is a DC level, B a tiny DC with one click at its hook; B's click must sound at T (±5 ms after
+//    the limiter's fixed pre-delay) and A must leave no residual;
+//  - mix: noise on both songs (and their stems) with every effect on: no NaN, peaks under +0.5 dBFS;
+//  - silence: A is noise, B silent, the effect returns cut: A's own path must be silent after its exit.
+// Then two primitive checks: P1 subtraction on a real song's stems (from the relay; skipped without them)
+// and the P3 pre-verb render's shape.
 import { AudioGraph } from './audio/graph.ts';
 import { Deck } from './audio/deck.ts';
 import { applyPlan } from './audio/scheduler.ts';
+import { renderPreverb } from './audio/preverb.ts';
 import { planTransition } from './plan/planner.ts';
 import { PHASES } from './plan/phases.ts';
 import { AudioClock } from './clock.ts';
 import { metronomeClick } from './audio/synth/clicks.ts';
 import { seededRandom } from './rng.ts';
-import { ANALYSIS_SCHEMA_VERSION, type Analysis } from './analysis.ts';
+import { ANALYSIS_SCHEMA_VERSION, checkStemsMeta, type Analysis } from './analysis.ts';
+import { MOVES } from './config.ts';
 import { el as $ } from './dom.ts';
-import type { RecipeId } from './plan/recipes.ts';
+import type { BlendSource, IncomingSong, OutgoingSong, PlanForce } from './plan/planner.ts';
+import type { RecipeId, StemName } from './plan/recipes.ts';
+import type { StemSlices } from './audio/stems.ts';
 import type { ExitName, PhaseName } from '@quina/protocol';
 
 const SR = 48000;
+const SONG_SEC = 120;
 
-/** One landing render: A playing from its hook, Next pressed `pressOffset` s later, B's hook `pickupBeats` after its pickup. */
-interface LandingCase {
+/** What a case gives the planner and the decks besides A and B: A's stem lanes, B's render, B's vocals, B's call, B's pre-verb. */
+interface Kit {
+  lanes?: boolean;
+  blend?: boolean;
+  vocals?: boolean;
+  call?: boolean;
+  preverb?: boolean;
+}
+
+/** One render: A playing from its hook, Next pressed `pressOffset` s later, B's hook `pickupBeats` after its pickup. */
+interface RenderCase {
+  label: string;
   recipe: RecipeId;
   phase: PhaseName;
+  force?: PlanForce;
+  kit?: Kit;
   bpmA: number;
   bpmB: number;
   pickupBeats: number;
   pressOffset: number;
 }
 
-/** Where B's hook click landed against T, and what was left of A after its exit. */
-interface LandingResult {
+type Mode = 'landing' | 'mix' | 'silence';
+
+/** One render's measurements. */
+interface RenderResult {
+  label: string;
+  mode: Mode;
   recipe: RecipeId;
   exit: ExitName | null;
+  variant: string;
+  landing: string;
   phase: PhaseName;
   bpm: string;
   pickupBeats: number;
   D: string;
-  T: string;
-  lead: string;
+  /** landing: B's click against T (ms, before the limiter's pre-delay is taken off). */
   clickErrorMs: number;
+  /** landing: what is left of A after T; silence: A after its exit. */
   residual: number;
-  expectStart: number;
-  planStartSample: number;
-}
-
-/** A full-mix render's peak level. */
-interface MixResult {
-  recipe: RecipeId;
-  exit: ExitName | null;
-  phase: PhaseName;
-  bpm: string;
   peakDb: number;
   finite: boolean;
-  events: number;
+  /** The forced recipe or variant was played (it may fall back when it does not fit). */
+  asForced: boolean;
+  pass: boolean;
+}
+
+/** A primitive check (P1, P3). */
+interface CheckResult {
+  name: string;
+  pass: boolean;
+  skipped: boolean;
+  detail: string;
 }
 
 /** What `window.testResults` holds after a run (read by the browser automation). */
 interface TestResults {
-  rows: LandingResult[];
-  mixes: MixResult[];
+  rows: RenderResult[];
+  checks: CheckResult[];
   latencyMs: number;
   failures: number;
   summary: string;
@@ -88,58 +119,100 @@ function fakeAnalysis({ songId, bpm, seconds, hookBar, pickupBeats = 0 }: { song
   };
 }
 
-function buffer(ctx: BaseAudioContext, seconds: number, fill: (data: Float32Array) => void): AudioBuffer {
-  const b = ctx.createBuffer(1, Math.ceil(seconds * SR), SR);
-  fill(b.getChannelData(0));
+function buffer(ctx: BaseAudioContext, seconds: number, fill: (data: Float32Array) => void, channels = 1): AudioBuffer {
+  const b = ctx.createBuffer(channels, Math.ceil(seconds * SR), SR);
+  for (let c = 0; c < channels; c++) fill(b.getChannelData(c));
   return b;
 }
 
-async function runCase(c: LandingCase & { fullMix: true }): Promise<MixResult>;
-async function runCase(c: LandingCase & { fullMix?: false }): Promise<LandingResult>;
-// fullMix: noise on both songs with every effect on, to check the peaks instead of the landing.
-async function runCase({ recipe, phase, bpmA, bpmB, pickupBeats, pressOffset, fullMix = false }: LandingCase & { fullMix?: boolean }): Promise<LandingResult | MixResult> {
-  const seconds = 22;
+const noise = (level: number) => (d: Float32Array) => d.forEach((_, i) => (d[i] = (Math.random() * 2 - 1) * level));
+
+/**
+ * A song and its stems, stored at half scale like analysis/stems.py: mix = 2·(drums + bass + vocals) + other.
+ * Landing mode uses DC levels (0.5 in all); the other modes noise.
+ */
+function songWithStems(ctx: BaseAudioContext, mode: Mode | 'quiet'): { mix: AudioBuffer; stems: StemSlices } {
+  const level = mode === 'quiet' ? 0 : 1;
+  const part = (dc: number, n: number) => buffer(ctx, SONG_SEC, (d) => (mode === 'landing' ? d.fill(dc) : noise(n * level)(d)));
+  const drums = part(0.05, 0.08);
+  const bass = part(0.05, 0.05);
+  const vocals = part(0.1, 0.06);
+  const mix = buffer(ctx, SONG_SEC, (d) => {
+    const [a, b, c] = [drums, bass, vocals].map((x) => x.getChannelData(0));
+    for (let i = 0; i < d.length; i++) d[i] = 2 * (a[i] + b[i] + c[i]) + (mode === 'landing' ? 0.1 : (Math.random() * 2 - 1) * 0.05 * level);
+  });
+  return { mix, stems: { buffers: { drums, bass, vocals }, startSec: 0, scale: 2 } };
+}
+
+async function runCase(c: RenderCase, mode: Mode): Promise<RenderResult> {
+  const seconds = 24;
   const ctx = new OfflineAudioContext(1, SR * seconds, SR);
   const graph = new AudioGraph(ctx);
-  if (!fullMix) {
-    // Measure B alone: no impacts, risers, rolls or whoosh, and a transparent limiter.
+  if (mode !== 'mix') {
+    // Measure B (or A) alone: no impacts, risers, rolls or whoosh, and a transparent limiter.
     graph.fxBus.gain.value = 0;
     graph.synthBus.gain.value = 0;
     graph.limiter.threshold.value = 0;
     graph.limiter.ratio.value = 1;
   }
-  const A = fakeAnalysis({ songId: 1, bpm: bpmA, seconds: 120, hookBar: 8 });
-  const B = fakeAnalysis({ songId: 2, bpm: bpmB, seconds: 120, hookBar: 16, pickupBeats });
-  const hookSample = Math.round(B.hooks[0].downbeatSec * SR);
-  // Landing mode: A is DC (any leftover is easy to see), B is a tiny DC plus one click at the hook.
-  // Full-mix mode: both are noise at a pop-like level, to check peaks with every effect on.
-  const bufA = buffer(ctx, 120, (d) => (fullMix ? d.forEach((_, i) => (d[i] = (Math.random() * 2 - 1) * 0.35)) : d.fill(0.5)));
-  const bufB = buffer(ctx, 120, (d) => {
-    if (fullMix) d.forEach((_, i) => (d[i] = (Math.random() * 2 - 1) * 0.35));
-    else d.fill(0.01);
-    d[hookSample] = 0.9;
+  if (mode === 'silence') {
+    // Only A's own path: the echo and the reverb carry its tails on purpose.
+    graph.echo.ret.disconnect();
+    graph.reverb.ret.disconnect();
+  }
+  const kit = c.kit ?? {};
+  const A = fakeAnalysis({ songId: 1, bpm: c.bpmA, seconds: SONG_SEC, hookBar: 8 });
+  const B = fakeAnalysis({ songId: 2, bpm: c.bpmB, seconds: SONG_SEC, hookBar: 16, pickupBeats: c.pickupBeats });
+  const hook = B.hooks[0];
+  const hookSample = Math.round(hook.downbeatSec * SR);
+  const songA = songWithStems(ctx, mode);
+  const songB = songWithStems(ctx, mode === 'silence' ? 'quiet' : mode === 'landing' ? 'landing' : 'mix');
+  // B: a tiny DC with one click at its hook (landing), noise (mix) or nothing (silence). Its stems never click.
+  const bufB = buffer(ctx, SONG_SEC, (d) => {
+    if (mode === 'mix') noise(0.35)(d);
+    else d.fill(mode === 'landing' ? 0.01 : 0);
   });
+  if (mode === 'landing') bufB.getChannelData(0)[hookSample] = 0.9;
+  const bStems = { ...songB.stems, buffers: { drums: songB.stems.buffers.drums, bass: songB.stems.buffers.bass, vocals: songB.stems.buffers.vocals } };
 
   // A has been playing from its hook since ctx time 0.5.
-  const deckA = new Deck(graph, { songId: 1, buffer: bufA, analysis: A });
+  const deckA = new Deck(graph, { songId: 1, buffer: songA.mix, analysis: A });
   deckA.start(0.5, A.hooks[0].downbeatSec);
   deckA.landedDownbeatIndex = 8;
-  // The planner reads A's clock (DeckClock), which a started deck has.
+  if (kit.lanes) deckA.lanes = songA.stems;
   const { startCtx, offset, rate } = deckA;
   if (startCtx == null) throw new Error('deck A did not start');
-  const now = 0.5 + pressOffset;
-  const plan = planTransition({
-    now,
-    A: { songId: 1, analysis: A, deck: { startCtx, offset, rate }, landedDownbeatIndex: 8 },
-    B: { songId: 2, analysis: B },
-    phase: PHASES[phase],
-    rng: seededRandom(7),
-    recipeOverride: recipe,
-  });
-  if ('error' in plan) throw new Error(`${recipe}: no plan (${plan.error})`);
+  const now = 0.5 + c.pressOffset;
+  const aSong: OutgoingSong = {
+    songId: 1, analysis: A, deck: { startCtx, offset, rate }, landedDownbeatIndex: 8,
+    lanes: kit.lanes ? { fromSec: A.hooks[0].downbeatSec - 1, toSec: A.hooks[0].downbeatSec + 48, parts: ['drums', 'bass', 'vocals', 'other'] } : null,
+  };
+  const barA = (4 * 60) / c.bpmA;
+  const blend: BlendSource | null = kit.blend ? { aSongId: 1, hookId: hook.id, toBpm: c.bpmA, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barA, barSec: barA, bass: true } : null;
+  const callLength = (4.5 * 60) / c.bpmB;
+  const bSong: IncomingSong = {
+    songId: 2, analysis: B, blend,
+    stems: kit.vocals ? { [hook.id]: { parts: ['drums', 'bass', 'vocals'] } } : null,
+    signatures: kit.call ? [{ id: '2-call-0', kind: 'call', durationSec: callLength, anchorSec: (0.5 * 60) / c.bpmB, beats: 4, bpm: c.bpmB, gainDb: -2 }] : [],
+    preverbs: kit.preverb ? [hook.id] : null,
+  };
+  const plan = planTransition({ now, A: aSong, B: bSong, phase: PHASES[c.phase], rng: seededRandom(7), recipeOverride: c.recipe, force: c.force ?? null });
+  if ('error' in plan) throw new Error(`${c.label}: no plan (${plan.error})`);
   const deckB = new Deck(graph, { songId: 2, buffer: bufB, analysis: B, trimDb: 0 });
   deckB.fader.gain.value = 0;
   deckB.start(plan.b.startCtx, plan.b.offset);
+  if (kit.vocals) deckB.stems = { ...bStems, parts: ['drums', 'bass', 'vocals'] };
+  if (blend) {
+    const render = (n: number) => buffer(ctx, blend.hookSec + 2 * barA, (d) => (mode === 'landing' ? d.fill(0.01) : noise(n * (mode === 'silence' ? 0 : 1))(d)));
+    deckB.blend = { buffers: { drums: render(0.2), bass: render(0.15) }, scale: 1 };
+  }
+  if (kit.call) deckB.signatures = new Map([['2-call-0', buffer(ctx, callLength, (d) => d.forEach((_, i) => (d[i] = mode === 'silence' ? 0 : 0.3 * Math.sin((2 * Math.PI * 330 * i) / SR) * Math.min(1, i / 480))))]]);
+  if (kit.preverb) {
+    // Rendered from B without its click, so the swell cannot be mistaken for the hook.
+    const source = mode === 'landing' ? buffer(ctx, SONG_SEC, (d) => d.fill(0.01)) : bufB;
+    const beat = 60 / c.bpmB;
+    deckB.preverbs = new Map([[hook.id, await renderPreverb(source, { fromSec: hook.downbeatSec - hook.pickupSec, durSec: beat, rt60: MOVES.preverb.rt60Bars * 4 * beat, fadeInSec: MOVES.preverb.fadeInSec })]]);
+  }
   // Schedule at the plan's press time, like the live engine.
   ctx.suspend(now).then(() => {
     applyPlan(plan, { graph, decks: { A: deckA, B: deckB } });
@@ -147,77 +220,227 @@ async function runCase({ recipe, phase, bpmA, bpmB, pickupBeats, pressOffset, fu
     ctx.resume();
   });
   const rendered = (await ctx.startRendering()).getChannelData(0);
-  if (fullMix) {
-    let peak = 0;
-    let finite = true;
-    for (let k = 0; k < rendered.length; k++) {
-      const v = rendered[k];
-      if (!Number.isFinite(v)) finite = false;
-      else if (Math.abs(v) > peak) peak = Math.abs(v);
-    }
-    return { recipe: plan.recipe, exit: plan.exit, phase, bpm: `${bpmA}→${bpmB}`, peakDb: 20 * Math.log10(peak), finite, events: plan.events.length };
+  let peak = 0;
+  let finite = true;
+  for (let k = 0; k < rendered.length; k++) {
+    const v = rendered[k];
+    if (!Number.isFinite(v)) finite = false;
+    else if (Math.abs(v) > peak) peak = Math.abs(v);
   }
-
-  // Measurements. A is 0.5 DC; after the exit only B (0.01 DC + click) should remain.
-  const expectStart = Math.round(plan.b.startCtx * SR);
-  const T = Math.round(plan.T * SR);
-  let clickAt = -1;
-  let clickPeak = 0;
-  for (let i = T - SR * 0.1; i < T + SR * 0.1; i++) {
-    if (Math.abs(rendered[i]) > clickPeak) {
-      clickPeak = Math.abs(rendered[i]);
-      clickAt = i;
-    }
-  }
-  const afterCut = rendered.slice(T + Math.round(0.2 * SR), T + Math.round(0.4 * SR));
-  // B's DC is removed by the deck's 20 Hz high-pass, so anything left is A or its echo.
-  const residual = Math.max(...afterCut.map((v) => Math.abs(v)));
-  return {
-    recipe: plan.recipe,
-    exit: plan.exit,
-    phase,
-    bpm: `${bpmA}→${bpmB}`,
-    pickupBeats,
-    D: plan.D.toFixed(2),
-    T: plan.T.toFixed(4),
-    lead: plan.b.lead.toFixed(4),
-    clickErrorMs: ((clickAt - T) / SR) * 1000,
-    residual,
-    expectStart,
-    planStartSample: plan.b.startCtx * SR,
+  const forcedRecipe = plan.recipe === c.recipe;
+  // A forced variant shows as the plan's variant kind, as a flag of it (R4's pitchUp, D10's juggle), or not at all
+  // for an exit's own variant (the spiral's direction under R7).
+  const v = c.force?.variant;
+  const forcedVariant = !v || plan.variant?.kind === v || plan.variant?.[v] === true || (plan.recipe === 'R7' && (v === 'up' || v === 'down'));
+  const forcedBridge = !c.force?.bridge || plan.variant?.kind === c.force.bridge;
+  const forcedLanding = !c.force?.landing || plan.landing === c.force.landing;
+  const forcedGhost = !c.force?.ghost || plan.layers.includes('ghost');
+  const forcedExit = !c.force?.exit || plan.exit === c.force.exit;
+  const result: RenderResult = {
+    label: c.label, mode, recipe: plan.recipe, exit: plan.exit, variant: plan.variant ? String(plan.variant.kind) : '', landing: `${plan.landing}${plan.layers.length ? ` + ${plan.layers.join(', ')}` : ''}`,
+    phase: c.phase, bpm: `${c.bpmA}→${c.bpmB}`, pickupBeats: c.pickupBeats, D: plan.D.toFixed(2),
+    clickErrorMs: 0, residual: 0, peakDb: 20 * Math.log10(Math.max(peak, 1e-9)), finite,
+    asForced: forcedRecipe && forcedVariant && forcedBridge && forcedLanding && forcedGhost && forcedExit, pass: false,
   };
+  const T = Math.round(plan.T * SR);
+  if (mode === 'landing') {
+    let clickAt = -1;
+    let clickPeak = 0;
+    for (let i = T - SR * 0.1; i < T + SR * 0.1; i++) {
+      if (Math.abs(rendered[i]) > clickPeak) {
+        clickPeak = Math.abs(rendered[i]);
+        clickAt = i;
+      }
+    }
+    // B's DC is removed by the deck's 20 Hz high-pass, so anything left is A or its echo.
+    result.clickErrorMs = ((clickAt - T) / SR) * 1000;
+    result.residual = maxAbs(rendered, T + Math.round(0.2 * SR), T + Math.round(0.4 * SR));
+  } else if (mode === 'silence' && plan.a) {
+    // A's own path from the end of its move (the gap, or the bridge's start) until after the landing.
+    const silentAt = plan.shape === 'S2' ? plan.exitAt : plan.T - plan.hook.pickupSec - plan.gapBeats * plan.hook.beat;
+    const from = Math.round((Math.max(plan.a.stopAt, silentAt) + 0.03) * SR);
+    result.residual = maxAbs(rendered, from, T + Math.round(0.5 * SR));
+  }
+  return result;
+}
+
+/** The largest |sample| in [from, to) (a loop: a spread of half a million samples overflows the call stack). */
+function maxAbs(data: Float32Array, from: number, to: number): number {
+  let peak = 0;
+  for (let k = Math.max(0, from); k < Math.min(data.length, to); k++) peak = Math.max(peak, Math.abs(data[k]));
+  return peak;
+}
+
+/** Each case's own pass rule (the landing's needs the limiter's pre-delay, measured once). */
+function judge(r: RenderResult, latencyMs: number): boolean {
+  if (!r.finite || !r.asForced) return false;
+  if (r.mode === 'landing') return Math.abs(r.clickErrorMs - latencyMs) <= 5 && r.residual < 0.005;
+  if (r.mode === 'silence') return r.residual < 0.001;
+  return r.peakDb <= 0.5;
+}
+
+/** The render set: every recipe, each new technique per Phase, every variant, bridge, exit, landing and layer. */
+function renderSet(): RenderCase[] {
+  const cases: RenderCase[] = [];
+  const pairs: [number, number][] = [[128, 128], [96, 140], [150, 88]];
+  const add = (label: string, recipe: RecipeId, phase: PhaseName, extra: Pick<RenderCase, 'force' | 'kit'> = {}, all = false, bpms: [number, number][] = pairs) => {
+    for (const [bpmA, bpmB] of all ? bpms : bpms.slice(0, 1)) {
+      for (const pickupBeats of [0, 1]) cases.push({ label, recipe, phase, bpmA, bpmB, pickupBeats, pressOffset: 3.3, ...extra });
+    }
+  };
+  // The first recipes, as before (every tempo pair).
+  for (const [recipe, phase] of [['R1', 'early'], ['R2', 'early'], ['R4', 'mid'], ['R5', 'early'], ['R6', 'early'], ['R7', 'late'], ['R10', 'final']] as const) add(recipe, recipe, phase, {}, true);
+  // D1, D2, D3 in every Phase; D8 and D10 with A's stem lanes, D10 with B's render too; D11 with B's vocals or call.
+  for (const phase of ['early', 'mid', 'late', 'final'] as const) {
+    add(`D1 ${phase}`, 'D1', phase, {}, phase === 'mid');
+    add(`D2 ${phase}`, 'D2', phase, {}, phase === 'late');
+    add(`D3 ${phase}`, 'D3', phase, {}, phase === 'early');
+    add(`D8 ${phase}`, 'D8', phase, { kit: { lanes: true } }, phase === 'late');
+  }
+  for (const variant of ['gate', 'pump', 'gatePump'] as const) add(`D1 ${variant}`, 'D1', 'mid', { force: { variant } });
+  for (const variant of ['acapella', 'beat', 'drumsVoice'] as const) add(`D8 ${variant}`, 'D8', 'final', { kit: { lanes: true }, force: { variant } });
+  const near: [number, number][] = [[128, 126], [100, 104]];
+  add('D10', 'D10', 'mid', { kit: { lanes: true, blend: true } }, true, near);
+  add('D10 juggle', 'D10', 'late', { kit: { lanes: true, blend: true }, force: { variant: 'juggle' } }, false, near);
+  add('D10 throw', 'D10', 'mid', { kit: { lanes: true, blend: true }, force: { variant: 'throw' } }, false, near);
+  add('D11 stem', 'D11', 'mid', { kit: { vocals: true } }, true);
+  add('D11 call', 'D11', 'late', { kit: { vocals: true, call: true } });
+  // Variants of the older recipes, R7's bridges and new exits, the landings and the Ghost.
+  for (const variant of ['lpf', 'stab'] as const) add(`R1 ${variant}`, 'R1', 'early', { force: { variant } });
+  add('R2 freeze', 'R2', 'mid', { force: { variant: 'freeze' } });
+  add('R2 vocal throw', 'R2', 'mid', { kit: { lanes: true }, force: { variant: 'vocalThrow' } });
+  for (const variant of ['triplet', 'pitchUp', 'lastBeat'] as const) add(`R4 ${variant}`, 'R4', 'mid', { force: { variant } });
+  for (const variant of ['brake', 'spinback'] as const) add(`R5 ${variant}`, 'R5', 'late', { force: { variant } });
+  for (const bridge of ['halftime', 'kickroll', 'clap'] as const) add(`R7 ${bridge}`, 'R7', 'mid', { force: { bridge } });
+  add('R7 gate exit', 'R7', 'mid', { force: { exit: 'gate' } });
+  add('R7 spiral exit', 'R7', 'late', { force: { exit: 'spiral', variant: 'up' } });
+  add('R7 spiral-down exit', 'R7', 'late', { force: { exit: 'spiral', variant: 'down' } });
+  add('dry landing', 'R1', 'early', { force: { landing: 'dry' } });
+  add('pre-verb landing (S2)', 'R7', 'late', { kit: { preverb: true }, force: { landing: 'preverb' } }, true);
+  add('pre-verb landing (S1)', 'D3', 'mid', { kit: { preverb: true }, force: { landing: 'preverb' } });
+  add('D9 ghost', 'R2', 'mid', { kit: { vocals: true }, force: { ghost: true } }, true);
+  add('D9 ghost on D1', 'D1', 'late', { kit: { vocals: true }, force: { ghost: true } });
+  return cases;
+}
+
+/** P1 through the real graph, on a real song from the relay: mix with every part removed is silent; mix − drums is exact. */
+async function laneCheck(songId = 1): Promise<CheckResult> {
+  const name = 'P1 stem-lane subtraction (real stems)';
+  try {
+    const metaResponse = await fetch(`/data/stems/${songId}.json`, { cache: 'no-store' });
+    const meta = metaResponse.ok ? checkStemsMeta(await metaResponse.json()) : null;
+    const mixResponse = await fetch(`/audio/${songId}.flac`);
+    if (!meta || !mixResponse.ok) return { name, pass: true, skipped: true, detail: `no stems or audio for song ${songId} on this relay` };
+    const window = meta.windows[0];
+    const seconds = 4;
+    const ctx = new OfflineAudioContext(2, SR * seconds, SR);
+    const mix = await ctx.decodeAudioData(await mixResponse.arrayBuffer());
+    const stems: Partial<Record<StemName, AudioBuffer>> = {};
+    for (const part of ['drums', 'bass', 'vocals'] as const) {
+      const r = await fetch(`/stems/${songId}/${part}.${window.startSample}.flac`);
+      if (!r.ok) return { name, pass: true, skipped: true, detail: `no ${part} stem` };
+      stems[part] = await ctx.decodeAudioData(await r.arrayBuffer());
+    }
+    const render = async (parts: readonly ('drums' | 'bass' | 'vocals' | 'other')[], song: AudioBuffer = mix) => {
+      const off = new OfflineAudioContext(2, SR * seconds, SR);
+      const graph = new AudioGraph(off);
+      graph.limiter.threshold.value = 0;
+      graph.limiter.ratio.value = 1;
+      const deck = new Deck(graph, { songId, buffer: song, analysis: fakeAnalysis({ songId, bpm: 120, seconds: 10, hookBar: 1 }) });
+      deck.lanes = { buffers: stems, startSec: window.startSample / SR, scale: 1 / meta.stemGain };
+      // An arbitrary, non-frame start, as a plan gives.
+      deck.start(0.0123456, 52.3711 - 0.4123);
+      for (const part of parts) deck.playLane({ part, at: 1.0003, until: 3.5, direct: [[1.0003, -1]] });
+      return off.startRendering();
+    };
+    const drums = stems.drums;
+    if (!drums) throw new Error('no drums');
+    // The truth for mix − drums: the song with its drums subtracted sample by sample, played by a plain deck
+    // through the same graph (so the same filters), started the same way.
+    const truth = new AudioBuffer({ numberOfChannels: mix.numberOfChannels, length: mix.length, sampleRate: SR });
+    for (let c = 0; c < mix.numberOfChannels; c++) {
+      const out = truth.getChannelData(c);
+      out.set(mix.getChannelData(c));
+      const d = drums.getChannelData(Math.min(c, drums.numberOfChannels - 1));
+      for (let k = 0; k < d.length && window.startSample + k < out.length; k++) out[window.startSample + k] -= d[k] / meta.stemGain;
+    }
+    const plain = await render([]);
+    const noDrums = await render(['drums']);
+    const nothing = await render(['drums', 'bass', 'vocals', 'other']);
+    const reference = await render([], truth);
+    const span = [Math.round(1.1 * SR), Math.round(3.4 * SR)];
+    const rms = (f: (c: number, k: number) => number) => {
+      let sum = 0;
+      for (let c = 0; c < 2; c++) for (let k = span[0]; k < span[1]; k++) sum += f(c, k) ** 2;
+      return Math.sqrt(sum / (2 * (span[1] - span[0])));
+    };
+    const mixRms = rms((c, k) => plain.getChannelData(c)[k]);
+    const leftDb = 20 * Math.log10(Math.max(rms((c, k) => nothing.getChannelData(c)[k]), 1e-12) / mixRms);
+    const drumsDb = 20 * Math.log10(Math.max(rms((c, k) => noDrums.getChannelData(c)[k] - reference.getChannelData(c)[k]), 1e-12) / mixRms);
+    const pass = leftDb < -60 && drumsDb < -60;
+    return { name, pass, skipped: false, detail: `song ${songId}: every part removed ${leftDb.toFixed(1)} dB, drums removed ${drumsDb.toFixed(1)} dB (against the mix)` };
+  } catch (error) {
+    return { name, pass: false, skipped: false, detail: String(error) };
+  }
+}
+
+/** P3: the pre-verb of a click swells into its end, finite, as long as the reverb. */
+async function preverbCheck(): Promise<CheckResult> {
+  const ctx = new OfflineAudioContext(1, SR, SR);
+  const source = buffer(ctx, 3, (d) => {
+    d[Math.round(1 * SR)] = 0.9;
+  }, 2);
+  const rt60 = 1.5;
+  const swell = await renderPreverb(source, { fromSec: 1, durSec: 0.5, rt60, fadeInSec: 0.02 });
+  const data = swell.getChannelData(0);
+  const tenth = Math.floor(data.length / 10);
+  const rmsOf = (a: number, b: number) => Math.sqrt(data.slice(a, b).reduce((s, v) => s + v * v, 0) / (b - a));
+  const rise = 20 * Math.log10(rmsOf(data.length - tenth, data.length) / Math.max(rmsOf(0, tenth), 1e-12));
+  const finite = data.every((v) => Number.isFinite(v));
+  const lengthOk = data.length === Math.floor(SR * rt60 * 1.2);
+  return { name: 'P3 pre-verb render', pass: finite && lengthOk && rise > 30, skipped: false, detail: `${data.length} frames, last tenth ${rise.toFixed(1)} dB over the first, finite ${finite}` };
 }
 
 async function runAll(): Promise<TestResults> {
   $('summary').textContent = 'Rendering…';
-  const cases: LandingCase[] = [];
-  const recipePhases: [RecipeId, PhaseName][] = [['R1', 'early'], ['R2', 'early'], ['R4', 'mid'], ['R5', 'early'], ['R6', 'early'], ['R7', 'late'], ['R10', 'final']];
-  for (const [recipe, phase] of recipePhases) {
-    for (const [bpmA, bpmB] of [[128, 128], [96, 140], [150, 88]]) {
-      for (const pickupBeats of [0, 1]) cases.push({ recipe, phase, bpmA, bpmB, pickupBeats, pressOffset: 3.3 });
-    }
-  }
-  const rows: LandingResult[] = [];
-  for (const c of cases) rows.push(await runCase(c));
-  const mixes: MixResult[] = [];
-  for (const [recipe, phase] of recipePhases) mixes.push(await runCase({ recipe, phase, bpmA: 124, bpmB: 100, pickupBeats: 0, pressOffset: 3.3, fullMix: true }));
+  // `?only=checks` runs just the primitive checks (P1, P3).
+  const cases = new URLSearchParams(location.search).get('only') === 'checks' ? [] : renderSet();
   // The limiter (DynamicsCompressor) adds a fixed pre-delay; measure it once with a bare impulse.
   const latencyMs = await measureLimiterLatency();
-  let failures = 0;
+  const rows: RenderResult[] = [];
+  const mixesDone = new Set<string>();
+  for (const c of cases) {
+    $('summary').textContent = `Rendering ${c.label} (${rows.length} renders done)…`;
+    rows.push(await runCase(c, 'landing'));
+    // One mix and one silence render per case label and tempo pair.
+    const key = `${c.label} ${c.bpmA}→${c.bpmB}`;
+    if (mixesDone.has(key)) continue;
+    mixesDone.add(key);
+    rows.push(await runCase(c, 'mix'));
+    rows.push(await runCase(c, 'silence'));
+  }
+  for (const r of rows) r.pass = judge(r, latencyMs);
+  const checks = [await laneCheck(), await preverbCheck()];
+  const failures = rows.filter((r) => !r.pass).length + checks.filter((c) => !c.pass).length;
   const table = $('results');
-  table.innerHTML = '<tr><th>Recipe</th><th>Exit</th><th>Phase</th><th>BPM</th><th>Pickup</th><th>D s</th><th>Click − T (ms)</th><th>after limiter latency</th><th>A residual</th><th></th></tr>';
+  table.innerHTML = '<tr><th>Case</th><th>Mode</th><th>Recipe</th><th>Exit</th><th>Variant</th><th>Landing</th><th>Phase</th><th>BPM</th><th>Pickup</th><th>D s</th><th>Click − T (ms, after pre-delay)</th><th>A residual</th><th>Peak dBFS</th><th></th></tr>';
   for (const r of rows) {
-    const corrected = r.clickErrorMs - latencyMs;
-    const pass = Math.abs(corrected) <= 5 && r.residual < 0.005;
-    if (!pass) failures++;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.recipe}</td><td>${r.exit ?? ''}</td><td>${r.phase}</td><td>${r.bpm}</td><td>${r.pickupBeats}</td><td>${r.D}</td><td>${r.clickErrorMs.toFixed(2)}</td><td>${corrected.toFixed(2)}</td><td>${r.residual.toFixed(4)}</td><td class="${pass ? 'pass' : 'fail'}">${pass ? 'pass' : 'FAIL'}</td>`;
+    const click = r.mode === 'landing' ? (r.clickErrorMs - latencyMs).toFixed(2) : '';
+    tr.innerHTML = `<td>${r.label}</td><td>${r.mode}</td><td>${r.recipe}</td><td>${r.exit ?? ''}</td><td>${r.variant}</td><td>${r.landing}</td><td>${r.phase}</td><td>${r.bpm}</td><td>${r.pickupBeats}</td><td>${r.D}</td><td>${click}</td><td>${r.mode === 'mix' ? '' : r.residual.toFixed(5)}</td><td>${r.peakDb.toFixed(1)}</td><td class="${r.pass ? 'pass' : 'fail'}">${r.pass ? 'pass' : r.asForced ? 'FAIL' : 'FAIL (fell back)'}</td>`;
     table.append(tr);
   }
-  const badMix = mixes.filter((m) => !m.finite || m.peakDb > 0.5);
-  const summary = `${rows.length - failures}/${rows.length} landings pass · limiter pre-delay ${latencyMs.toFixed(2)} ms · full-mix peaks ${mixes.map((m) => `${m.recipe} ${m.peakDb.toFixed(1)} dBFS`).join(', ')}${badMix.length ? ' · BAD MIX' : ''}`;
+  for (const c of checks) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="13">${c.name}: ${c.detail}</td><td class="${c.pass ? 'pass' : 'fail'}">${c.skipped ? 'skipped' : c.pass ? 'pass' : 'FAIL'}</td>`;
+    table.append(tr);
+  }
+  const by = (mode: Mode) => rows.filter((r) => r.mode === mode);
+  const passed = (mode: Mode) => by(mode).filter((r) => r.pass).length;
+  const worstPeak = Math.max(...by('mix').map((r) => r.peakDb));
+  const summary = `${passed('landing')}/${by('landing').length} landings · ${passed('silence')}/${by('silence').length} silent after exit · ${passed('mix')}/${by('mix').length} mixes (worst peak ${worstPeak.toFixed(1)} dBFS) · limiter pre-delay ${latencyMs.toFixed(2)} ms · ${checks.map((c) => `${c.name}: ${c.skipped ? 'skipped' : c.pass ? 'pass' : 'FAIL'}`).join(' · ')}`;
   $('summary').textContent = summary;
-  const results: TestResults = { rows, mixes, latencyMs, failures: failures + badMix.length, summary };
+  const results: TestResults = { rows, checks, latencyMs, failures, summary };
   window.testResults = results;
   return results;
 }
@@ -243,7 +466,14 @@ async function measureLimiterLatency(): Promise<number> {
 
 $('run').addEventListener('click', runAll);
 window.runLandingTests = runAll;
-if (new URLSearchParams(location.search).get('run') === '1') runAll();
+if (new URLSearchParams(location.search).get('run') === '1') {
+  // A case that throws still ends the run, so the automation never waits for nothing.
+  runAll().catch((error: unknown) => {
+    const summary = `run failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`;
+    $('summary').textContent = summary;
+    window.testResults = { rows: [], checks: [], latencyMs: 0, failures: 1, summary };
+  });
+}
 
 // ---------------------------------------------------------------------------- flash-and-click
 let live: { ctx: AudioContext; clock: AudioClock } | null = null;

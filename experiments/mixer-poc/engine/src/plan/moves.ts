@@ -101,7 +101,7 @@ export function gateMove({ A, i, end, bars, phase, rng, mode = null, exit = fals
 
   if (drawn !== 'pump') {
     const ladder = bars >= 2 ? LATE_LADDER : exit || phase !== 'early' ? MID_LADDER : pick(EARLY_LADDERS, rng);
-    const closedDb = exit ? -24 : bars >= 2 ? cfg.closedDb[phase] ?? cfg.closedDb.late : cfg.closedDb[phase] ?? -24;
+    const closedDb = exit ? -24 : cfg.closedDb[phase];
     const closed = closedDb == null ? SILENT : A.level * dbToGain(closedDb);
     const open = A.level * dbToGain(cfg.openLiftDb);
     const duty = pick(cfg.duty, rng);
@@ -259,7 +259,9 @@ export function stabsMove({ A, i, T, gapStart, pickupAt, minStart, phase, rng }:
   const last = stabs[stabs.length - 1];
   events.push(set('A.reverbSend', last, cfg.ringSend), set('reverb.return', last, 1));
   events.push(set('A.reverbSend', last + length + 0.02, 0));
-  events.push(ramp('reverb.return', last + length, Math.max(pickupAt, last + length + 0.05), 1, SILENT, 'lin'));
+  // The ring is out just before the pickup (the stabs end at least 20 ms before the gap).
+  const ringEnd = Math.max(last + length + 0.01, pickupAt - 0.01);
+  events.push(ramp('reverb.return', Math.min(last + length, ringEnd - 0.01), ringEnd, 1, SILENT, 'lin'));
   events.push(set('reverb.return', T + 1.5, 1));
   if (phase === 'late' && rng() < cfg.lateRiserChance) {
     events.push(synth('riser', { t0: stabs[0], t1: gapStart, fromHz: 900, toHz: 8000, fromDb: -42, toDb: -30 }));

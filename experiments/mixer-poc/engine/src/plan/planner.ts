@@ -215,6 +215,8 @@ export interface RecipeChoice {
 /** Variants a test or the audition page may force (never the show): the landing, R7's bridge, a recipe's variant, the Ghost. */
 export interface PlanForce {
   landing?: LandingStyle | null;
+  /** The exit move of an S2 recipe, when it is one of the recipe's exits. */
+  exit?: ExitName | null;
   bridge?: BridgePattern | null;
   variant?: string | null;
   ghost?: boolean | null;
@@ -324,6 +326,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   const caps: Caps = { blend: Boolean(blend), aLanes: laneWindow(A, tl), chop: chopSource(B, hook, pickup, teaseStems) };
   let recipe = chooseRecipe({ hasA: Boolean(tl), phase, history, rng, override: recipeOverride, caps });
   let exit = chooseExit(recipe, history, rng);
+  if (force?.exit && recipe.exits?.includes(force.exit)) exit = force.exit;
   // Silence before the hit, never when the pickup is long (the first syllable must not clip); some recipes
   // want at least a little (D2's crowd gap, D11's breath after the chops).
   const drawnGap = pickup > gB.beat ? 0 : pick(phase.gapBeats, rng);

@@ -547,3 +547,38 @@ body.hide-controls .hint {
 .hide-controls .flash {
   display: none;
 }
+
+/* ---------- With the projector stage mounted (stage/, main.ts adds body.has-stage) ---------- */
+/* The stage paints its scenes everywhere except a full-width band; the drum fills that band, edge to edge,
+   and the stage shows the round, the Heat and the current song itself. Operator controls stay on top
+   (H hides them for the projector). */
+body.has-stage {
+  --card-size: clamp(140px, calc(var(--stage-band-height, 60vh) - var(--caption-height) - 4rem), 560px);
+  /* Redeclared here: :root computed it from its own, smaller --card-size. */
+  --card-height: calc(var(--card-size) + 0.5rem + var(--caption-height));
+}
+body.has-stage .stage {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--stage-band-top, 0px);
+  height: var(--stage-band-height, 60vh);
+}
+body.has-stage .header,
+body.has-stage #result {
+  visibility: hidden;
+}
+body.has-stage .controls {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(1.6rem + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+  padding: 0.5rem 1rem;
+  background: rgb(14 10 22 / 0.72);
+  backdrop-filter: blur(6px);
+}
+body.has-stage .hint {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0.3rem;
+  z-index: 5;
+}
