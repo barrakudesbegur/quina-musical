@@ -58,8 +58,8 @@
     <path class="card-mark__trail-under" d={FLAKE} />
     <path class="card-mark__trail" d={FLAKE} />
   {:else if kind === 'topHat'}
-    <path class="card-mark__outside" d="M7.2 3.6h9.6l-.45 12.6h4.85a1.7 1.7 0 0 1 0 3.4H2.8a1.7 1.7 0 0 1 0-3.4h4.85Z" />
-    <path class="card-mark__band" d="M7.55 12.1h8.9l-.13 3.3H7.68Z" />
+    <path class="card-mark__outside" d="M5.9 3.6h12.2l-.5 12.6h4.4a1.7 1.7 0 0 1 0 3.4H1.9a1.7 1.7 0 0 1 0-3.4h4.5Z" />
+    <path class="card-mark__band" d="M6.25 12h11.5l-.14 3.4H6.39Z" />
   {:else}
     <path class="card-mark__fill" d="M3.6 18.4c0-2.2 1.7-3.6 3.6-3.6h9.6c1.9 0 3.6 1.4 3.6 3.6 0 1.7-1.4 2.8-3.2 2.8H6.8c-1.8 0-3.2-1.1-3.2-2.8Z" />
     <path class="card-mark__fill" d="M6 14.6c0-1.9 1.4-3.2 3.2-3.2h5.6c1.8 0 3.2 1.3 3.2 3.2 0 .3 0 .5-.1.8H6.1c-.1-.3-.1-.5-.1-.8Z" />
@@ -121,9 +121,6 @@
   }
   .card-mark__band {
     fill: var(--color-red);
-    stroke: var(--color-line);
-    stroke-width: 1.1;
-    stroke-linejoin: round;
   }
   .card-mark__stem {
     fill: none;
