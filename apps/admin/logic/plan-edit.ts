@@ -114,17 +114,6 @@ export function setHeadline(bundle: readonly Prize[], index: number, headline: b
   return [...rest.slice(0, at), { ...prize, headline }, ...rest.slice(at)];
 }
 
-/** A card type's price as the euros a number input shows ("" when not set). */
-export const priceInput = (cents: number | null): string => (cents === null ? '' : String(cents / 100));
-
-/** A number input's euros as cents; null when empty, junk or negative. */
-export function fromPriceInput(value: string): number | null {
-  const v = value.trim().replace(',', '.');
-  if (!v) return null;
-  const euros = Number(v);
-  return Number.isFinite(euros) && euros >= 0 ? Math.round(euros * 100) : null;
-}
-
 // ---- sponsors -------------------------------------------------------------------------------------------
 
 /** "Forn Can Pep, S.L." → "forn-can-pep-s-l": lowercase letters, digits and dashes, as checkGamePlan wants. */

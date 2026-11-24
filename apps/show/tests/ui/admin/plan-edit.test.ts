@@ -10,12 +10,10 @@ import {
   blankPlan,
   blankPrize,
   fromLocalInput,
-  fromPriceInput,
   lockedRoundCount,
   movePrize,
   moveRound,
   plannedEndMs,
-  priceInput,
   prizeMoveRange,
   removePrize,
   removeRound,
@@ -125,16 +123,6 @@ test('bundle edits never mutate their input', () => {
   movePrize(bundle, 3, 2);
   setHeadline(bundle, 4, true);
   assert.equal(JSON.stringify(bundle), before);
-});
-
-test('card prices: euros in the input, cents in the plan', () => {
-  assert.equal(priceInput(null), '');
-  assert.equal(priceInput(350), '3.5');
-  assert.equal(fromPriceInput('3.5'), 350);
-  assert.equal(fromPriceInput('2,50'), 250);
-  assert.equal(fromPriceInput(''), null);
-  assert.equal(fromPriceInput('-1'), null);
-  assert.equal(fromPriceInput('molt'), null);
 });
 
 test('slugify and unique sponsor ids', () => {

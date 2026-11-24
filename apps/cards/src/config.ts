@@ -26,3 +26,13 @@ export const PAPER_COLOR = '#ffffff';
 
 /** The faint year stamp printed on every card. */
 export const VERSION_STAMP = `20${EDITION}`;
+
+/**
+ * The card types, the source of truth for every screen (the before-the-Game preview on the projector and on
+ * phones, and Admin, which shows them read-only). `type` matches the cards' `type` in cards.json. Price in
+ * cents, or null until it's decided. Generated next to cards.json as card-types.json.
+ */
+export const CARD_TYPES = [
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: null },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: null },
+] as const satisfies readonly { type: 'normal' | 'especial'; name: string; color: string; title: string; priceCents: number | null }[];
