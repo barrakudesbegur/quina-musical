@@ -180,15 +180,15 @@ These override the sections below where they differ.
 
 | State | Projector |
 |---|---|
-| Before the Game | "Quina Musical", a "scan your card" QR, how to play in 3 lines, sponsors, a rough countdown; Interval music |
-| Round start | "Quina N" with its Line and Quina prizes and sponsors while presenters announce them, then the Shuffle (grid into the drum, item-box sound) |
-| In play | Drum; current song big after each landing; **only the last 3 songs**; "Quina N"; Heat. No QR or URL during play |
+| Before the Game | The edition's name, a preview of the night's rounds (regular, Desgraciat, Especial), the card types with their colour and price (making clear which is only for the Especial), a "scan your card" QR, sponsors, a rough countdown; Interval music. No how-to-play |
+| Round start (intro) | "Quina N" (or "Quina Especial") with its prize bundles and sponsors, revealed now as the presenters announce them; then the Shuffle (grid into the drum, item-box sound) |
+| In play | A big edge-to-edge drum (pending songs only); the current song big after each landing; **only the last 3 songs** in a row under the drum; "Quina N"; Heat. No QR or URL during play |
 | Hold (talking) | No visible change |
-| Claim and Check | "Comprovant el cartó 123…", the card grid, songs ✓/✗ one by one, the result |
-| Celebration | "LÍNIA!" or "QUINA!" huge, winning card number(s), prize and sponsor, confetti, ninos; then back to play (Line) or into the Interval (Bingo) |
-| Interval | Next round's name, its prizes and sponsors in rotation, a rough countdown, "Quina 4 de 12", sponsor thanks, last round's winning card numbers, the QR |
-| After the Game | Thanks, sponsor credits, every round's winning card numbers |
-| Technical pause | "Tornem de seguida" |
+| Claim and Check | "CARTRÓ #123", the card-type check first, the card grid, songs ✓/✗ one by one, the result. A failed check shows a red ✗ (wrong type or a missed song) |
+| Celebration | "LÍNIA!" or "QUINA!" huge, the prize bundle and sponsors, confetti, ninos. **No winning card number.** Then back to play (Line) or into the Interval (Bingo) |
+| Interval | The next round's name (its prizes stay hidden until its intro), a rough countdown, "Quina 4 de 12", sponsor thanks. No prizes, no winners, no QR |
+| After the Game | Thanks and sponsor credits. No winning card numbers |
+| Pause (Pausa or technical) | "Tornem de seguida" while the Interval music plays |
 
 - **Heat:**
   - It follows the Phase on its own smoothed clock and never jumps at a landing.
