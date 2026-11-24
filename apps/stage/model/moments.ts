@@ -25,6 +25,7 @@ export const ANIM_NAMES = [
   'check-type',
   'check-step',
   'check-result',
+  'check-fallen',
   'celebrate',
   'interval-rotate',
   'idle',
@@ -46,6 +47,8 @@ export type AnimDetail =
   | { name: 'check-type'; ok: boolean }
   | { name: 'check-step'; index: number; songId: number; state: StepState }
   | { name: 'check-result'; result: CheckVerdict }
+  /** The Desgraciat round: a standing claim's card has fallen (its result, instead of `check-result`). */
+  | { name: 'check-fallen'; cardId: number }
   | { name: 'celebrate'; kind: WinKind }
   | { name: 'interval-rotate' }
   | { name: 'idle'; scene: ShowScene }
@@ -143,6 +146,10 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
 
 const IDLE_SCENES: ReadonlySet<ShowScene> = new Set(['before', 'interval', 'after']);
 
+/** A Check's result moment: `check-fallen` for a card that fell in the Desgraciat round, else `check-result`. */
+const resultMoment = (cardId: number, result: CheckVerdict): AnimDetail =>
+  result === 'fallen' ? { name: 'check-fallen', cardId } : { name: 'check-result', result };
+
 /** What entering a scene starts. */
 function enterScene(next: Moments): AnimDetail[] {
   const out: AnimDetail[] = [{ name: 'scene-enter', scene: next.scene }];
@@ -150,7 +157,7 @@ function enterScene(next: Moments): AnimDetail[] {
   // A Check with no songs (a card of the wrong type, or unknown) has its type mark and result from the start.
   if (next.check && next.check.steps.length === 0) {
     if (next.check.type && next.check.type !== 'pending') out.push({ name: 'check-type', ok: next.check.type === 'ok' });
-    if (next.check.result) out.push({ name: 'check-result', result: next.check.result });
+    if (next.check.result) out.push(resultMoment(next.check.cardId, next.check.result));
   }
   if (next.celebration) out.push({ name: 'celebrate', kind: next.celebration.kind });
   if (IDLE_SCENES.has(next.scene)) out.push({ name: 'idle', scene: next.scene });
@@ -191,7 +198,7 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
     nc.steps.forEach((state, index) => {
       if (state !== 'pending' && state !== pc.steps[index]) out.push({ name: 'check-step', index, songId: nc.songIds[index], state });
     });
-    if (nc.result && !pc.result) out.push({ name: 'check-result', result: nc.result });
+    if (nc.result && !pc.result) out.push(resultMoment(nc.cardId, nc.result));
   }
 
   const ps = prev.shuffle;

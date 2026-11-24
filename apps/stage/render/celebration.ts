@@ -1,13 +1,15 @@
-// The Celebration: "LÍNIA!" or "QUINA!" huge over the drum's victory lap, the winning card number(s), the
-// round's prize and sponsor, a flash, rays and CSS confetti (ANIMATIONS.md `celebrate`). The scene itself
-// moves on to play (Line) or the Interval (Bingo) when the engine's scene changes.
+// The Celebration: "LÍNIA!" or "QUINA!" huge over the drum's victory lap (never the winning card numbers), the
+// round's prize and sponsor, a flash, rays and CSS confetti (ANIMATIONS.md `celebrate`). The Desgraciat round's last
+// card standing gets "DEMPEUS!" at the Bingo's size, the Bingo's gold flash and double confetti, and the hands-up nino
+// bouncing in. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
+// scene changes.
 import { STAGE } from '../config.ts';
 import { confettiPieces } from '../model/confetti.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { STAGE_TEXT } from '../strings.ts';
 import type { CelebrationView } from '../view.ts';
-import { h, playAnim, setData, setText } from './dom.ts';
-import { PrizeBlock } from './parts.ts';
+import { h, playAnim, setData, setHidden, setText } from './dom.ts';
+import { PrizeBlock, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
 export class CelebrationScene implements SceneRenderer<CelebrationView> {
@@ -18,12 +20,16 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   private readonly confetti: HTMLElement;
   private readonly shout: HTMLElement;
   private readonly prize = new PrizeBlock('celebration__prize');
+  /** The hands-up nino, for the last card standing (null while the stage has no sticker for it). */
+  private readonly standUp: HTMLImageElement | null;
   private key: string | null = null;
 
   constructor(env: SceneEnv) {
     this.env = env;
     this.confetti = h('div', { class: 'confetti', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
+    this.standUp = stickerImage(STAGE.stickers.standUp, 'nino-mans-adalt', 'celebration__sticker');
+    if (this.standUp) this.standUp.hidden = true;
     this.stagePanel = h(
       'div',
       'celebration',
@@ -32,6 +38,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       this.confetti,
       this.shout,
       this.prize.root,
+      this.standUp,
     );
     this.stagePanel.dataset.testid = 'celebration';
     this.root.append(this.stagePanel);
@@ -40,6 +47,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   render(body: CelebrationView): void {
     setData(this.stagePanel, 'kind', body.kind);
     setText(this.shout, STAGE_TEXT.shout[body.kind]);
+    if (this.standUp) setHidden(this.standUp, body.kind !== 'standing');
     this.prize.set(body.prize);
     if (body.key !== this.key) {
       this.key = body.key;

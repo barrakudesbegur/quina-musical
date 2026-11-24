@@ -1,8 +1,8 @@
 // The Check on the projector: grid from the card, each step's state from its timestamps, and the failed result.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_ROWS, cardTypeBadge, checkCells, checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, typeMarkAt, typeReveal, verdictOf, type CheckStepView } from '../../../../stage/model/check.ts';
-import { checkResultDetail, shortTypeName, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { CARD_ROWS, cardTypeBadge, checkCells, checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, resultX, stepMark, typeMarkAt, typeReveal, verdictOf, type CheckStepView } from '../../../../stage/model/check.ts';
+import { checkResultDetail, nextRoundLabel, roundName, shortTypeName, STAGE_TEXT } from '../../../../stage/strings.ts';
 import { UNKNOWN_CARD_TYPE_COLOR, knownCardTypes, readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 
@@ -172,4 +172,66 @@ test('the grid is redrawn within a Check only when its cells change (the catalog
   assert.equal(bare, gridKey(checkCells(null, steps, 2, () => null)), 'same cells, same key');
   assert.notEqual(gridKey(checkCells(card, steps, 2, title)), bare, 'the whole card once the catalog is in');
   assert.notEqual(gridKey(checkCells(null, steps, 2, title)), bare, 'titles known later');
+});
+
+// ---- the Desgraciat round's standing Check
+
+/** #57's 12 songs in card order, checked up to `sankAt` (that song landed), as the engine schedules them. */
+const standingSteps = (sankAt: number | null): CheckStepView[] =>
+  card.lines
+    .flat()
+    .slice(0, sankAt === null ? 12 : sankAt + 1)
+    .map((songId, i) => ({ songId, landed: i === sankAt, atMs: 1000 + i * 900, durationMs: i === sankAt ? 2500 : 550 }));
+
+test("a standing Check's marks mean good for the claim: ✓ for a song that hasn't sounded, ✗ for one that has", () => {
+  assert.equal(stepMark('standing', 'missed'), 'ok');
+  assert.equal(stepMark('standing', 'landed'), 'bad');
+  assert.equal(stepMark('bingo', 'landed'), 'ok');
+  assert.equal(stepMark('line', 'missed'), 'bad');
+  assert.equal(stepMark('standing', 'playing'), null);
+  assert.equal(stepMark('line', 'pending'), null);
+  assert.deepEqual(STAGE_TEXT.mark, { ok: '✓', bad: '✗' });
+  // The tile's words say what happened to the song, the same in every round.
+  assert.deepEqual(STAGE_TEXT.markLabel, { landed: 'Ha sonat', missed: 'No ha sonat' });
+});
+
+test('a fallen card: the verdict, the song that sank it, and its words', () => {
+  assert.equal(verdictOf('fallen'), 'fallen');
+  assert.equal(isFailed('fallen'), true);
+  const steps = standingSteps(6); // SUPERESTRELLA, row 2, 3rd song
+  const cells = checkCells(card, steps, null, title);
+  assert.equal(cells.length, 12);
+  assert.deepEqual(cells.filter((c) => c.step === null).map((c) => c.songId), [69, 2, 62, 16, 20], 'the songs after it are never checked');
+  const miss = firstMiss({ kind: 'standing', steps, cells });
+  assert.deepEqual(miss, { step: 6, songId: 60, title: 'T60' });
+  assert.equal(checkResultDetail('fallen', miss?.title ?? null), '«T60» ja ha sonat. El\u00a0joc\u00a0continua!');
+  assert.equal(checkResultDetail('fallen', null), 'El\u00a0joc\u00a0continua!');
+  assert.equal(STAGE_TEXT.checkResult.fallen, 'Cartró caigut');
+  // A standing card that passed has no ✗.
+  assert.equal(firstMiss({ kind: 'standing', steps: standingSteps(null), cells }), null);
+  const reveal = checkReveal({ steps, endAtMs: 99999, verdict: 'fallen' }, 1000 + 6 * 900 + 2500);
+  assert.deepEqual(reveal.steps, ['missed', 'missed', 'missed', 'missed', 'missed', 'missed', 'landed']);
+});
+
+test("a fallen card's ✗ lands over the half of the card away from the song that sank it", () => {
+  const x = (sankAt: number) => {
+    const steps = standingSteps(sankAt);
+    return resultX({ kind: 'standing', verdict: 'fallen', steps, cells: checkCells(card, steps, null, title) });
+  };
+  assert.equal(x(6), 0.25, '3rd column: the ✗ on the left half');
+  assert.equal(x(3), 0.25, '4th column');
+  assert.equal(x(4), 0.75, '1st column: the right half');
+  assert.equal(x(9), 0.75, '2nd column');
+  const steps = standingSteps(6);
+  const cells = checkCells(card, steps, null, title);
+  assert.equal(resultX({ kind: 'standing', verdict: 'complete', steps: standingSteps(null), cells }), 0.5, 'a valid card: the middle');
+  assert.equal(resultX({ kind: 'bingo', verdict: 'incomplete', steps, cells }), 0.5);
+  assert.deepEqual(plaqueSpot({ row: null, cells }), { at: 0.5, over: 'card' });
+});
+
+test('the round names: "Quina Desgraciada", never with a number', () => {
+  assert.equal(roundName({ number: 5, desgraciat: true }), 'Quina Desgraciada');
+  assert.equal(roundName({ number: 5 }), 'Quina 5');
+  assert.equal(nextRoundLabel({ number: 5, special: false, desgraciat: true }, 8), 'Següent: Quina Desgraciada');
+  assert.equal(nextRoundLabel({ number: 5, special: false, desgraciat: false }, 8), 'Següent: Quina 5 de 8');
 });

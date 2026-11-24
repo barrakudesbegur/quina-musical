@@ -17,9 +17,28 @@ const TYPES: PrintedCardType[] = [
 test('each card type lists the regular rounds it plays, and whether it plays the Quina Especial', () => {
   const rounds = [round(1, 'normal', 'normal'), round(2, 'normal', 'normal'), round(3, 'normal', 'normal'), round(4, 'special', 'especial'), round(5, 'normal', 'normal')];
   assert.deepEqual(nightCardTypes({ rounds }, TYPES), [
-    { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: 200, regularRounds: [1, 2, 3, 5], special: false },
-    { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: 300, regularRounds: [], special: true },
+    { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: 200, regularRounds: [1, 2, 3, 5], special: false, desgraciat: false },
+    { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: 300, regularRounds: [], special: true, desgraciat: false },
   ]);
+});
+
+test('the Quina Desgraciada is its own entry (its sad-face pill), not one of the numbered rounds', () => {
+  const rounds = [round(1, 'normal'), round(2, 'desgraciat'), round(3, 'normal'), round(4, 'special')];
+  assert.deepEqual(
+    nightCardTypes({ rounds }, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]),
+    [
+      ['normal', [1, 3], false, true],
+      ['especial', [], true, false],
+    ],
+  );
+  // The sample plan: round 5 is the Desgraciat round, round 7 the Especial.
+  assert.deepEqual(
+    nightCardTypes(SAMPLE_PLAN, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]),
+    [
+      ['normal', [1, 2, 3, 4, 6, 8], false, true],
+      ['especial', [], true, false],
+    ],
+  );
 });
 
 test('a type plays the rounds that name it, whatever their kind; listed types keep card-types.json\'s order', () => {
@@ -50,8 +69,8 @@ test('a card type that plays no round tonight is left out; no plan, no preview',
 test('without card-types.json: a neutral stand-in names each type; unlisted types go last', () => {
   const rounds = [round(1, 'normal', 'daurat'), round(2, 'normal')];
   assert.deepEqual(nightCardTypes({ rounds }, knownCardTypes(null)), [
-    { type: 'daurat', label: 'Cartró daurat', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [1], special: false },
-    { type: 'normal', label: 'Cartró normal', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [2], special: false },
+    { type: 'daurat', label: 'Cartró daurat', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [1], special: false, desgraciat: false },
+    { type: 'normal', label: 'Cartró normal', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [2], special: false, desgraciat: false },
   ]);
   assert.deepEqual(nightCardTypes({ rounds }, TYPES).map((t) => t.type), ['normal', 'daurat'], 'a listed type before an unlisted one');
 });

@@ -57,6 +57,9 @@
   --stage-plaque-title: 5.25rem;
   --stage-scrim: color-mix(in srgb, var(--color-bg-deep) 72%, transparent);
   --stage-sticker-tilt: -12deg;
+  --stage-standing: var(--color-live); /* the Desgraciat round's DEMPEUS! */
+  --stage-lift-pop: 1.12; /* check-fallen: the sinking song's tile pops to this, then settles at --stage-lift */
+  --stage-lift: 1.06;
   --stage-light: 1.375rem;
   --stage-light-cool: color-mix(in oklab, var(--color-calm) 55%, var(--color-paper));
   --stage-ring: 0.5rem;
@@ -98,6 +101,10 @@
   --stage-dur-result: 400ms;
   --stage-dur-sticker: 600ms;
   --stage-delay-sticker: 200ms;
+  --stage-dur-lift: 500ms; /* check-fallen: the sinking song's tile pops, 150 ms after the ✗; the nino 200 ms later */
+  --stage-delay-lift: 150ms;
+  --stage-delay-fallen-nino: 350ms;
+  --stage-delay-stand-up: 300ms; /* the Desgraciat intro's nino, after the name */
   --stage-dur-flash: 120ms;
   --stage-dur-slam: 600ms;
   --stage-delay-prize: 600ms;
@@ -794,6 +801,26 @@
   height: 2.5rem;
 }
 
+.night__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* The Quina Desgraciada's sad face: ink features on an ice-blue disc. */
+.sad-icon__face {
+  fill: var(--color-calm);
+  stroke: var(--color-line);
+  stroke-width: 2;
+}
+
+.sad-icon__ink {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
 .before__countdown.countdown {
   justify-self: start;
   padding: 0.25rem 1.625rem 0.625rem;
@@ -859,6 +886,39 @@
   align-content: start;
   gap: var(--space-4);
   padding: var(--space-4) var(--stage-pad) var(--stage-pad);
+}
+
+.round-start__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+/* The Desgraciat round's intro: the hands-up nino beside the name ("everyone stand up"), bouncing in 300 ms after
+   the name rises (`scene-enter`). */
+.round-start__sticker {
+  flex: none;
+  height: 12rem;
+  width: auto;
+  rotate: 6deg;
+}
+
+.scene[data-anim='scene-enter'] .round-start__sticker {
+  transition:
+    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-stand-up),
+    opacity var(--dur-fast) linear var(--stage-delay-stand-up);
+}
+
+.scene[data-anim='scene-enter'].is-entering .round-start__sticker {
+  transform: translateY(var(--stage-title-drop)) scale(0.4);
+  opacity: 0;
+  transition: none;
+}
+
+/* Its one prize (the last card standing's), alone and centred. */
+.scene--roundStart[data-round='desgraciat'] .round-start__prizes {
+  grid-template-columns: minmax(0, 40rem);
+  justify-content: center;
 }
 
 .round-start__title {
@@ -1224,7 +1284,7 @@
   transition: background-color var(--dur-base) var(--ease-out);
 }
 
-.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .check__plate {
+.check:is([data-verdict='incomplete'], [data-verdict='fallen'], [data-verdict='notValid']) .check__plate {
   --plate: var(--color-fail);
   --plate-edge: var(--color-fail-edge);
 }
@@ -1519,7 +1579,8 @@
 }
 
 /* `check-step`: a pulsing ring and glow while the snippet plays, then the mark stamps on and the cover gets a
-   green (landed) or red (missed, and grey) ring. */
+   green ring (`data-mark='ok'`: good for the claim) or a red one and turns grey (`bad`). For a Line or a Bingo the
+   good songs are the landed ones; in the Desgraciat round's standing Check, the ones that haven't sounded. */
 .card-grid__art::after {
   content: '';
   position: absolute;
@@ -1537,28 +1598,28 @@
   animation: stage-ring var(--stage-dur-ring) var(--stage-ease-in-out) infinite;
 }
 
-.card-grid__cell[data-state='landed'] .card-grid__cover {
+.card-grid__cell[data-mark='ok'] .card-grid__cover {
   box-shadow:
     0 0 0 var(--stage-check-ring) var(--color-ok),
     0 var(--stage-drop) 0 var(--stage-check-ring) var(--color-shadow);
 }
 
-.card-grid__cell[data-state='missed'] .card-grid__cover {
+.card-grid__cell[data-mark='bad'] .card-grid__cover {
   box-shadow:
     0 0 0 var(--stage-check-ring) var(--color-danger),
     0 var(--stage-drop) 0 var(--stage-check-ring) var(--color-shadow);
 }
 
-.card-grid__cell[data-state='landed'] .card-grid__mark {
+.card-grid__cell[data-mark='ok'] .card-grid__mark {
   background: var(--color-ok);
 }
 
-.card-grid__cell[data-state='missed'] .card-grid__mark {
+.card-grid__cell[data-mark='bad'] .card-grid__mark {
   background: var(--color-danger);
 }
 
 /* On the image only, so the red ring keeps its colour. */
-.card-grid__cell[data-state='missed'] .cover-art__img {
+.card-grid__cell[data-mark='bad'] .cover-art__img {
   filter: grayscale(1) brightness(0.7);
 }
 
@@ -1571,11 +1632,11 @@
   transition: none;
 }
 
-.card-grid__cell[data-anim='check-step'][data-state='landed'] {
+.card-grid__cell[data-anim='check-step'][data-mark='ok'] {
   animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
 }
 
-.card-grid__cell[data-anim='check-step'][data-state='missed'] {
+.card-grid__cell[data-anim='check-step'][data-mark='bad'] {
   animation: stage-shake var(--stage-dur-shake) linear;
 }
 
@@ -1590,7 +1651,7 @@
   transition: opacity var(--stage-dur-result) var(--ease-out);
 }
 
-.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .check__beams {
+.check:is([data-verdict='incomplete'], [data-verdict='fallen'], [data-verdict='notValid']) .check__beams {
   opacity: 1;
 }
 
@@ -1601,7 +1662,7 @@
 .check__rays,
 .check__glow {
   position: absolute;
-  left: 50%;
+  left: calc(var(--plaque-x, 0.5) * 100%);
   top: calc(var(--plaque-at, 0.5) * 100%);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -1631,7 +1692,8 @@
   transition: opacity var(--stage-dur-result) var(--ease-out);
 }
 
-.check[data-verdict='incomplete'][data-plaque='card'] .check__scrim {
+.check[data-verdict='incomplete'][data-plaque='card'] .check__scrim,
+.check[data-verdict='fallen'] .check__scrim {
   opacity: 1;
 }
 
@@ -1642,7 +1704,7 @@
   --plaque-edge: var(--color-accent-edge);
   position: absolute;
   z-index: 3;
-  left: 50%;
+  left: calc(var(--plaque-x, 0.5) * 100%);
   top: calc(var(--plaque-at, 0.5) * 100%);
   translate: -50% -50%;
   rotate: var(--stage-plaque-tilt);
@@ -1677,7 +1739,7 @@
 
 /* A failed card: no plaque and no text, only the huge red ✗ (tilted −6°), the fallen nino beside it, and for
    a card of the wrong type a big card in its type's colour under the ✗. */
-.check-result:is([data-result='incomplete'], [data-result='notValid']) {
+.check-result:is([data-result='incomplete'], [data-result='fallen'], [data-result='notValid']) {
   width: var(--stage-cross);
   aspect-ratio: 1;
   padding: 0;
@@ -1697,7 +1759,7 @@
   overflow: visible;
 }
 
-.check-result:is([data-result='incomplete'], [data-result='notValid']) .check-result__cross {
+.check-result:is([data-result='incomplete'], [data-result='fallen'], [data-result='notValid']) .check-result__cross {
   display: block;
 }
 
@@ -1786,6 +1848,73 @@
   animation: stage-shake-x var(--stage-dur-shake) linear;
 }
 
+/* `check-fallen` (the Desgraciat round: a standing claim's card has fallen). Like a failed Bingo (slate plate with a
+   shake, the scrim, red beams, the big ✗), but the ✗ lands over the half of the card away from the song that sank it
+   (`--plaque-x`, `data-side`), that song's tile is lifted above the scrim and pops (1 → 1.12 → 1.06) with its ✗, the
+   sitting nino tumbles in beside the ✗, and the songs never checked fade to 10 %. */
+.check[data-verdict='fallen'] .card-grid {
+  z-index: auto; /* no stacking context, so the lifted tile can rise above the scrim */
+}
+
+.check[data-verdict='fallen'] .card-grid__cell.is-unchecked {
+  opacity: var(--stage-fail-dim-opacity);
+  transition: opacity var(--stage-dur-result) var(--ease-out);
+}
+
+.check[data-verdict='fallen'] .card-grid__cell[data-lifted='true'] {
+  position: relative;
+  z-index: 3;
+  scale: var(--stage-lift);
+}
+
+.card-grid__cell[data-anim='check-fallen'] {
+  animation: stage-lift-pop var(--stage-dur-lift) var(--ease-bounce) var(--stage-delay-lift) both;
+}
+
+@keyframes stage-lift-pop {
+  0% {
+    scale: 1;
+  }
+  60% {
+    scale: var(--stage-lift-pop);
+  }
+  100% {
+    scale: var(--stage-lift);
+  }
+}
+
+.check__plate[data-anim='check-fallen'] {
+  animation: stage-shake-x var(--stage-dur-shake) linear;
+}
+
+.check-result[data-anim='check-fallen'].is-entering {
+  transform: scale(2.2) rotate(-10deg);
+  opacity: 0;
+  transition: none;
+}
+
+/* The sitting nino, beside the ✗ on the card's inner side (the ✗ is tilted −6°, so it sits at about −6°). */
+.check-result__sticker--fallen {
+  z-index: 2;
+  left: 69%;
+  top: 70%;
+  width: 46%;
+  rotate: 0deg;
+  transition:
+    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-fallen-nino),
+    opacity var(--dur-fast) linear var(--stage-delay-fallen-nino);
+}
+
+.check[data-side='right'] .check-result__sticker--fallen {
+  left: -15%;
+}
+
+.check-result[data-anim='check-fallen'].is-entering .check-result__sticker {
+  transform: translate(-20%, -160%) rotate(-1turn);
+  opacity: 0;
+  transition: none;
+}
+
 /* ------------------------------------------------------------------------------------- celebration */
 .celebration {
   position: absolute;
@@ -1804,8 +1933,34 @@
   opacity: 0;
 }
 
-.celebration[data-kind='bingo'] .celebration__flash {
+.celebration:is([data-kind='bingo'], [data-kind='standing']) .celebration__flash {
   background: var(--color-accent);
+}
+
+/* The Desgraciat round's last card standing: "DEMPEUS!" in green, and the hands-up nino at the bottom left. */
+.celebration[data-kind='standing'] .shout {
+  color: var(--stage-standing);
+}
+
+.celebration__sticker {
+  position: absolute;
+  left: 4.375rem;
+  bottom: 2.5rem;
+  height: 18rem;
+  width: auto;
+  rotate: -4deg;
+}
+
+.celebration[data-anim='celebrate'] .celebration__sticker {
+  transition:
+    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-prize),
+    opacity var(--dur-fast) linear var(--stage-delay-prize);
+}
+
+.celebration[data-anim='celebrate'].is-entering .celebration__sticker {
+  transform: translateY(var(--stage-title-drop)) scale(0.4);
+  opacity: 0;
+  transition: none;
 }
 
 .celebration__rays {
@@ -2219,6 +2374,10 @@
     --stage-dur-result: 0ms;
     --stage-dur-sticker: 0ms;
     --stage-delay-sticker: 0ms;
+    --stage-dur-lift: 0ms;
+    --stage-delay-lift: 0ms;
+    --stage-delay-fallen-nino: 0ms;
+    --stage-delay-stand-up: 0ms;
     --stage-dur-slam: 0ms;
     --stage-delay-prize: 0ms;
     --stage-dur-rotate: 0ms;
@@ -2232,6 +2391,8 @@
   .card-grid__cell[data-state='playing'] .card-grid__art::after,
   .card-grid__cell[data-anim='check-step'],
   .check__plate[data-anim='check-result'],
+  .check__plate[data-anim='check-fallen'],
+  .card-grid__cell[data-anim='check-fallen'],
   .check__type[data-anim='check-type'],
   .check__rays,
   .stage-root .sticker[data-anim='idle'],

@@ -4,9 +4,27 @@
 // cover gets a ring while its snippet plays, then its mark (✓ or ✗). From `endAtMs` the result shows: a valid
 // card's gold plaque; a failed card's huge red ✗ over red light beams with the fallen nino, and no text (the
 // failed song keeps its ✗ in the row). A card of the wrong type shows a big card in its colour under the ✗.
+// The Desgraciat round's standing Check: a ✓ marks a song that has NOT sounded, and the Check stops on the first one
+// that has (its ✗, grey cover). Fallen (`check-fallen`): the ✗ lands over the half of the card away from that song,
+// whose tile is lifted above the scrim and pops; the sitting nino tumbles in beside the ✗ (the card sat down), and
+// the songs never checked fade to 10 %.
 // Everything is read from the timestamps (`checkReveal`, `typeReveal`) and the pure rules in model/check.ts.
 import { STAGE } from '../config.ts';
-import { checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, typeReveal, type CheckCell, type CheckVerdict, type CheckView, type StepState, type TypeState } from '../model/check.ts';
+import {
+  checkReveal,
+  firstMiss,
+  gridKey,
+  isFailed,
+  plaqueSpot,
+  resultX,
+  stepMark,
+  typeReveal,
+  type CheckCell,
+  type CheckVerdict,
+  type CheckView,
+  type StepState,
+  type TypeState,
+} from '../model/check.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { checkResultDetail, shortTypeName, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
@@ -57,6 +75,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   private readonly bigCard = new MiniCard('check-result__card');
   /** The nino beside a failed Check's ✗; null while the stage has no sticker for it (STAGE.stickers). */
   private readonly sticker: HTMLImageElement | null;
+  /** The sitting nino beside a fallen card's ✗ (the Desgraciat round), instead of the one above. */
+  private readonly fallenSticker: HTMLImageElement | null;
   private check: CheckView | null = null;
   private cells: CellNodes[] = [];
   /** Cell nodes by step index. */
@@ -81,12 +101,15 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     this.resultTitle = h('p', 'check-result__title');
     this.sticker = stickerImage(STAGE.stickers.checkFailed, 'nino-espatxarrat', 'check-result__sticker');
     if (this.sticker) this.sticker.hidden = true;
+    this.fallenSticker = stickerImage(STAGE.stickers.checkFallen, 'nino-sentat', 'check-result__sticker check-result__sticker--fallen');
+    if (this.fallenSticker) this.fallenSticker.hidden = true;
     this.result = h(
       'div',
       { class: 'check-result', hidden: true, attrs: { role: 'status', 'aria-live': 'assertive' } },
       this.bigCard.root,
       bigCross(),
       this.sticker,
+      this.fallenSticker,
       this.resultTitle,
     );
     const beams = h('div', { class: 'check__beams', attrs: { 'aria-hidden': 'true' } }, h('div', 'check__rays'), h('div', 'check__glow'));
@@ -133,8 +156,11 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   /** The grid and the result's spot; the next tick puts every mark and the result back. */
   private layOut(check: CheckView, grid: string): void {
     const spot = plaqueSpot(check);
+    const x = resultX(check);
     setData(this.panel, 'plaque', spot.over);
+    setData(this.panel, 'side', x < 0.5 ? 'left' : x > 0.5 ? 'right' : null);
     setVar(this.panel, '--plaque-at', String(spot.at));
+    setVar(this.panel, '--plaque-x', String(x));
     this.buildGrid(check);
     this.gridShown = grid;
     this.shown = [];
@@ -160,6 +186,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
             : h('span', { class: 'card-grid__eq', attrs: { 'aria-hidden': 'true' } }, ...Array.from({ length: EQ_BARS }, () => h('span', 'card-grid__eq-bar')));
         const art = h('div', 'card-grid__art', cover.root, mark, eq);
         const root = h('figure', { class: 'card-grid__cell', data: { state: cell.step === null ? 'idle' : 'pending' } }, art, h('figcaption', 'card-grid__title', cell.title ?? ''));
+        // A song the Check never plays (one after the song that sank a standing claim): it fades if the card falls.
+        if (cell.step === null) root.classList.add('is-unchecked');
         root.style.setProperty('--deal-index', String(deal++));
         const nodes = { root, mark, cell };
         this.cells.push(nodes);
@@ -180,7 +208,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     if (type !== this.typeShown) {
       this.typeShown = type;
       setData(this.type, 'state', type ?? 'pending');
-      setText(this.typeMark, type === 'ok' ? STAGE_TEXT.mark.landed : type === 'wrong' ? STAGE_TEXT.mark.missed : '');
+      setText(this.typeMark, type === 'ok' ? STAGE_TEXT.mark.ok : type === 'wrong' ? STAGE_TEXT.mark.bad : '');
       if (check.cardType) this.type.setAttribute('aria-label', STAGE_TEXT.checkType(check.cardType.label, type === 'pending' || type === null ? null : type === 'ok'));
     }
     const reveal = checkReveal(check, nowMs, STAGE.checkMarkAt);
@@ -189,8 +217,12 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       this.shown[i] = state;
       const nodes = this.byStep.get(i);
       if (!nodes) return;
+      // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
+      // happened to the song.
+      const mark = stepMark(check.kind, state);
       setData(nodes.root, 'state', state);
-      setText(nodes.mark, state === 'landed' ? STAGE_TEXT.mark.landed : state === 'missed' ? STAGE_TEXT.mark.missed : '');
+      setData(nodes.root, 'mark', mark);
+      setText(nodes.mark, mark ? STAGE_TEXT.mark[mark] : '');
       nodes.root.setAttribute('aria-label', `${nodes.cell.title ?? ''} ${state === 'landed' ? STAGE_TEXT.markLabel.landed : state === 'missed' ? STAGE_TEXT.markLabel.missed : ''}`.trim());
     });
     const result = reveal.result;
@@ -201,20 +233,29 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     }
   }
 
-  /** The verdict: a valid card's plaque, or a failed card's big ✗ with the nino (and no text on screen). */
+  /**
+   * The verdict: a valid card's plaque, or a failed card's big ✗ with the nino (and no text on screen). A fallen
+   * card's sinking song is lifted above the scrim (`data-lifted`), and the sitting nino replaces the squashed one.
+   */
   private showResult(check: CheckView, result: CheckVerdict | null): void {
     const failed = result !== null && isFailed(result);
+    const fallen = result === 'fallen';
     setHidden(this.result, result === null);
     setData(this.panel, 'verdict', result);
     setData(this.result, 'result', result);
-    if (this.sticker) setHidden(this.sticker, !failed);
-    setData(this.result, 'sticker', failed && this.sticker ? 'nino-espatxarrat' : null);
+    if (this.sticker) setHidden(this.sticker, !failed || (fallen && this.fallenSticker !== null));
+    if (this.fallenSticker) setHidden(this.fallenSticker, !fallen);
+    const sticker = fallen && this.fallenSticker ? 'nino-sentat' : failed && this.sticker ? 'nino-espatxarrat' : null;
+    setData(this.result, 'sticker', sticker);
     setHidden(this.bigCard.root, !(failed && check.cardType?.ok === false));
     setHidden(this.resultTitle, failed);
+    const miss = firstMiss(check);
+    const sank = fallen && miss ? (this.byStep.get(miss.step) ?? null) : null;
+    for (const nodes of this.cells) setData(nodes.root, 'lifted', nodes === sank ? 'true' : null);
     if (!result) return;
     const title = STAGE_TEXT.checkResult[result];
     setText(this.resultTitle, title);
-    const detail = checkResultDetail(result, firstMiss(check)?.title ?? null);
+    const detail = checkResultDetail(result, miss?.title ?? null);
     this.result.setAttribute('aria-label', detail ? `${title}. ${detail}` : title);
   }
 
@@ -227,6 +268,11 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     } else if (detail.name === 'check-result') {
       playAnim(this.result, 'check-result');
       if (isFailed(detail.result)) playAnim(this.plate, 'check-result');
+    } else if (detail.name === 'check-fallen') {
+      // The plate shakes, the ✗ slams in, the song that sank the card pops above the scrim, the nino tumbles in.
+      playAnim(this.result, 'check-fallen');
+      playAnim(this.plate, 'check-fallen');
+      for (const nodes of this.cells) if (nodes.root.dataset.lifted === 'true') playAnim(nodes.root, 'check-fallen');
     }
   }
 }

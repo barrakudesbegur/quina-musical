@@ -5,9 +5,9 @@
 // come out: only the Check names the card being checked. `stageView` picks out only what the projector may
 // draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
 // ever comes out.
-import type { RoundKind, ShowState } from '@quina/protocol';
+import { winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
 import type { FlowFields, WinKind } from '../../packages/ui/flow.ts';
-import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
+import { prizeBundleOf, revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
@@ -20,7 +20,8 @@ import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
 import { STAGE_TEXT, joinCa } from './strings.ts';
 
-/** A Line's or a Quina's prize bundle as the projector shows it: its headline prizes, and how many more. */
+/** A Line's or a Quina's prize bundle (the Desgraciat round's: the last card standing's) as the projector shows it:
+ * its headline prizes, and how many more. */
 export interface PrizeView {
   kind: WinKind;
   /** The headline prizes' titles, joined ("Sopar per a dos i Pernil"). */
@@ -42,6 +43,8 @@ export interface SponsorView {
 export interface RoundView {
   number: number;
   special: boolean;
+  /** The Desgraciat round: named "Quina Desgraciada" instead of "Quina N". */
+  desgraciat: boolean;
 }
 
 export interface LinkView {
@@ -151,18 +154,21 @@ function openRounds(plan: GamePlan | null, state: ShowState | null): ReadonlySet
   return new Set(revealedRounds(plan, state.prizes.revealed));
 }
 
-/** A round's prizes, unless they are still secret. */
+/** A round's prizes, one per win it can have (the Desgraciat round's one bundle is the last card standing's), unless
+ * they are still secret. */
 function prizesOf(plan: GamePlan | null, round: number, open: ReadonlySet<number> | null): PrizeView[] {
   const r = plan ? roundPlan(plan, round) : null;
   if (!plan || !r || (open && !open.has(round))) return [];
-  return [prizeView(plan, 'line', r.line), prizeView(plan, 'bingo', r.bingo)].filter((p): p is PrizeView => p !== null);
+  return winKindsOf(r.kind)
+    .map((kind) => prizeView(plan, kind, prizeBundleOf(r, kind)))
+    .filter((p): p is PrizeView => p !== null);
 }
 
 function roundView(number: number | null | undefined, plan: GamePlan | null, state: ShowState | null, known: RoundKind | null = null): RoundView | null {
   if (!number || number < 1) return null;
   const planned = roundPlan(plan, number);
   const kind = planned?.kind ?? known ?? (state?.round.number === number ? state.round.kind : 'normal');
-  return { number, special: kind === 'special' };
+  return { number, special: kind === 'special', desgraciat: kind === 'desgraciat' };
 }
 
 
@@ -231,7 +237,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       const next = i?.nextRound ?? roundNumber + 1;
       return {
         scene,
-        nextRound: roundView(next, plan, state) ?? { number: next, special: false },
+        nextRound: roundView(next, plan, state) ?? { number: next, special: false, desgraciat: false },
         roundsTotal: plan?.rounds.length || state?.game.roundsTotal || null,
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,

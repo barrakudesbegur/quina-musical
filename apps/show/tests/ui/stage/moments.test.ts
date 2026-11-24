@@ -22,7 +22,7 @@ const names = (a: AnimDetail[]) => a.map((x) => x.name);
 
 test('the hook names are exactly the ANIMATIONS.md projector hooks', () => {
   assert.deepEqual([...ANIM_NAMES].sort(), [
-    'celebrate', 'check-enter', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'suspense',
+    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'suspense',
   ]);
 });
 
@@ -155,4 +155,29 @@ test('the card type: marked after the lead, before the first snippet; at once (w
   assert.deepEqual(names(diffMoments(at(100), momentsOf(viewOf(wrong), inputs(NOW + 100)))), ['check-enter', 'check-type', 'check-result']);
   const entered = diffMoments(null, momentsOf(viewOf(wrong), inputs(NOW)));
   assert.deepEqual(entered.filter((a) => a.name === 'check-type'), [{ name: 'check-type', ok: false }]);
+});
+
+test("a fallen standing Check ends with `check-fallen` (not `check-result`); a valid one with the plaque's `check-result`", () => {
+  const state = FIXTURES.checkStanding(NOW).state;
+  const check = state.check;
+  assert.ok(check);
+  const at = (ms: number) => momentsOf(viewOf(state), inputs(ms));
+  const sank = check.steps.length - 1;
+  const markAt = check.steps[sank].atMs + check.steps[sank].durationMs;
+  assert.deepEqual(diffMoments(at(markAt - 1), at(markAt)), [{ name: 'check-step', index: sank, songId: 41, state: 'landed' }]);
+  assert.deepEqual(diffMoments(at(check.endAtMs - 1), at(check.endAtMs)), [{ name: 'check-fallen', cardId: 23 }]);
+
+  const valid = FIXTURES.checkStandingValid(NOW).state;
+  const entered = momentsOf(viewOf(valid), inputs(NOW));
+  assert.equal(entered.check?.result, 'complete');
+  assert.deepEqual(names(diffMoments(null, entered)), ['scene-enter', 'check-enter'], 'joining late never replays the result');
+});
+
+test('the Desgraciat celebration: `celebrate` with kind standing', () => {
+  const play = momentsOf(viewOf(FIXTURES.desgraciatLast(NOW).state), inputs(NOW));
+  const celebration = momentsOf(viewOf(FIXTURES.celebrationStanding(NOW).state), inputs(NOW));
+  assert.deepEqual(diffMoments(play, celebration), [
+    { name: 'scene-enter', scene: 'celebration' },
+    { name: 'celebrate', kind: 'standing' },
+  ]);
 });

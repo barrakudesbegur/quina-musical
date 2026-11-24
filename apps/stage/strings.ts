@@ -9,11 +9,13 @@ const GAME_GOES_ON = 'El\u00a0joc\u00a0continua!';
 /**
  * A failed Check's words, which the projector doesn't print (the big ✗ says it) but gives the result as its
  * accessible label: "Falta «title». El joc continua!", naming the first song that didn't sound when its title
- * is known, else "El joc continua!". A valid one has none.
+ * is known, else "El joc continua!"; for a card that fell in the Desgraciat round, "«title» ja ha sonat. El joc
+ * continua!", naming the song that sank it. A valid one has none.
  */
-export function checkResultDetail(verdict: CheckVerdict, missedTitle: string | null): string | null {
+export function checkResultDetail(verdict: CheckVerdict, songTitle: string | null): string | null {
   if (verdict === 'complete') return null;
-  return verdict === 'incomplete' && missedTitle ? `Falta «${missedTitle}». ${GAME_GOES_ON}` : GAME_GOES_ON;
+  if (verdict === 'fallen' && songTitle) return `«${songTitle}» ja ha sonat. ${GAME_GOES_ON}`;
+  return verdict === 'incomplete' && songTitle ? `Falta «${songTitle}». ${GAME_GOES_ON}` : GAME_GOES_ON;
 }
 
 /** "57", "57 i 301", "12, 57 i 301". */
@@ -37,9 +39,16 @@ export function shortTypeName(name: string): string {
   return short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : name;
 }
 
-/** The Interval's plate: "Següent: Quina 4 de 8", "Següent: Quina 4" without a total, "Següent: Quina Especial". */
-export function nextRoundLabel(round: { number: number; special: boolean }, total: number | null): string {
+/** A round as the stage names it: "Quina 4", or "Quina Desgraciada" (no number: there's only one). */
+export function roundName(round: { number: number; desgraciat?: boolean }): string {
+  return round.desgraciat ? CA.desgraciatRound : CA.round(round.number);
+}
+
+/** The Interval's plate: "Següent: Quina 4 de 8", "Següent: Quina 4" without a total, "Següent: Quina Especial",
+ * "Següent: Quina Desgraciada". */
+export function nextRoundLabel(round: { number: number; special: boolean; desgraciat?: boolean }, total: number | null): string {
   if (round.special) return `Següent: ${STAGE_TEXT.specialRoundName}`;
+  if (round.desgraciat) return `Següent: ${CA.desgraciatRound}`;
   return `Següent: ${total ? CA.roundOf(round.number, total) : CA.round(round.number)}`;
 }
 
@@ -59,8 +68,10 @@ export const STAGE_TEXT = {
   checkPlate: (id: number) => `Cartró #${id}`,
   /** The Check's card-type badge, for its accessible label: "Cartró normal: correcte". */
   checkType: (name: string, ok: boolean | null) => (ok === null ? name : `${name}: ${ok ? 'correcte' : 'no val per a aquesta quina'}`),
-  checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, notValid: 'Cartró no vàlid' },
-  mark: { landed: '✓', missed: '✗' },
+  checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, fallen: 'Cartró caigut', notValid: 'Cartró no vàlid' } satisfies Record<CheckVerdict, string>,
+  /** A Check's marks mean "good for the claim": ✓, else ✗ (model/check.ts stepMark). */
+  mark: { ok: '✓', bad: '✗' },
+  /** What a checked song's tile says, by what happened to the song (the same in every round). */
   markLabel: { landed: CA.landed, missed: CA.notLanded },
   pause: CA.pause,
   scanYourCard: CA.scanYourCard,
@@ -70,6 +81,7 @@ export const STAGE_TEXT = {
   roundsWord: 'Quina',
   roundsLabel: (numbers: readonly number[]) => (numbers.length === 1 ? CA.round(numbers[0]) : `Quines ${joinCa(numbers)}`),
   specialRoundName: 'Quina Especial',
+  desgraciatRoundName: CA.desgraciatRound,
   priceOf: (name: string, price: string | null) => (price ? `${name}: ${price}` : name),
   sponsorsTitle: 'Amb el suport de',
   intervalTitle: CA.scene.interval,

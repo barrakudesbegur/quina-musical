@@ -45,9 +45,14 @@ export const STAGE = Object.freeze({
    * - `before`: the sitting nino (`nino-sentat`) on the QR's top-right corner before the Game.
    * - `intervalLeft`, `intervalRight`: the meditating and the dancing ninos (`nino-meditant`, `nino-sardana`)
    *   either side of the Interval's countdown.
+   * - The Desgraciat round: `standUp`, the hands-up nino (`nino-mans-adalt`, from packages/ui/assets/ninos) beside
+   *   the round's name at its intro and on its Celebration ("everyone stand up"); `checkFallen`, the sitting nino
+   *   beside a fallen card's big ✗ (`check-fallen`: the card sat down).
    */
   stickers: Object.freeze({
     checkFailed: new URL('./assets/nino-espatxarrat.svg', import.meta.url).href as string | null,
+    checkFallen: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
+    standUp: new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href as string | null,
     before: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
     intervalLeft: new URL('./assets/nino-meditant.svg', import.meta.url).href as string | null,
     intervalRight: new URL('./assets/nino-sardana.svg', import.meta.url).href as string | null,

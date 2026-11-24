@@ -68,10 +68,12 @@ export function cardTypeLabel(type: string, types: readonly PrintedCardType[]): 
 /** Where a card type plays tonight. */
 export interface CardTypeRounds {
   type: string;
-  /** The regular rounds it plays, by number, in play order. */
+  /** The regular rounds it plays, by number, in play order (not the Quina Especial or the Quina Desgraciada). */
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;
+  /** It plays the Quina Desgraciada (named, not numbered, like the Especial). */
+  desgraciat: boolean;
 }
 
 /** Each type the rounds play (in the order a round first plays it), with the rounds it plays. */
@@ -79,8 +81,9 @@ export function roundsByCardType(rounds: readonly { number: number; kind: RoundK
   const out = new Map<string, CardTypeRounds>();
   for (const r of [...rounds].sort((a, b) => a.number - b.number)) {
     const type = roundCardType(r);
-    const entry = out.get(type) ?? { type, regularRounds: [], special: false };
+    const entry = out.get(type) ?? { type, regularRounds: [], special: false, desgraciat: false };
     if (r.kind === 'special') entry.special = true;
+    else if (r.kind === 'desgraciat') entry.desgraciat = true;
     else entry.regularRounds.push(r.number);
     out.set(type, entry);
   }

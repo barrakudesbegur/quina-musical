@@ -6,10 +6,10 @@ import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
 import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
-import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
+import { roundName, STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, setData, setHidden, setText, setVar } from './dom.ts';
 
-/** "Quina 4", plus the special-round badge. */
+/** "Quina 4" (or "Quina Desgraciada": strings.ts roundName), plus the special-round badge. */
 export class RoundTitle {
   readonly root: HTMLElement;
   private readonly name: HTMLElement;
@@ -21,12 +21,13 @@ export class RoundTitle {
     this.root = h(tag, `round-title ${extraClass}`.trim(), this.name, this.badge);
   }
 
-  set(round: RoundView | null, label: (n: number) => string = STAGE_TEXT.round): void {
+  set(round: RoundView | null): void {
     setHidden(this.root, round === null);
     if (!round) return;
-    setText(this.name, label(round.number));
+    setText(this.name, roundName(round));
     setHidden(this.badge, !round.special);
     setData(this.root, 'special', round.special ? 'true' : null);
+    setData(this.root, 'desgraciat', round.desgraciat ? 'true' : null);
   }
 }
 
@@ -156,6 +157,24 @@ export function starIcon(className: string): SVGSVGElement {
   const path = document.createElementNS(SVG_NS, 'path');
   path.setAttribute('d', 'M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.1l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z');
   svg.append(path);
+  return svg;
+}
+
+/** The Quina Desgraciada's sad face: two eyes and a frown in ink, on a paper disc (colours from stage.css). */
+export function sadIcon(className: string): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', `sad-icon ${className}`.trim());
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const face = document.createElementNS(SVG_NS, 'circle');
+  face.setAttribute('class', 'sad-icon__face');
+  face.setAttribute('cx', '12');
+  face.setAttribute('cy', '12');
+  face.setAttribute('r', '10.5');
+  const features = document.createElementNS(SVG_NS, 'path');
+  features.setAttribute('class', 'sad-icon__ink');
+  features.setAttribute('d', 'M8.5 8.5v2.2M15.5 8.5v2.2M7.5 17.5c1.3-2.2 2.8-3.1 4.5-3.1s3.2.9 4.5 3.1');
+  svg.append(face, features);
   return svg;
 }
 

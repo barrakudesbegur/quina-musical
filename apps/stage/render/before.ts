@@ -1,5 +1,6 @@
 // Before the Game: the edition's name, a preview of the night (each card type that plays, in its colour, with
-// its price and its rounds: one band per type, so it's plain that one card is only for the Quina Especial), a
+// its price and its rounds: one band per type, so it's plain that one card is only for the Quina Especial; the
+// Quina Desgraciada gets its own pill with a sad face, like the Especial's star), a
 // rough countdown to the planned start, the player app's QR as large as possible (no text; the sitting nino
 // on its corner) and the sponsors' logos. No how-to-play text: the presenters explain.
 import { STAGE } from '../config.ts';
@@ -7,7 +8,7 @@ import type { NightCardType } from '../model/night.ts';
 import type { BeforeView, StageView } from '../view.ts';
 import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import { h, setData, setHidden, setText } from './dom.ts';
-import { CountdownChip, MiniCard, SponsorList, starIcon, stickerImage } from './parts.ts';
+import { CountdownChip, MiniCard, SponsorList, sadIcon, starIcon, stickerImage } from './parts.ts';
 import { QrBlock } from './qr.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
@@ -26,11 +27,12 @@ function typeBand(t: NightCardType): HTMLElement {
       )
     : null;
   const special = t.special ? h('p', 'night__pill', starIcon('night__pill-icon'), STAGE_TEXT.specialRoundName) : null;
+  const desgraciat = t.desgraciat ? h('p', { class: 'night__pill', data: { round: 'desgraciat' } }, sadIcon('night__pill-icon'), STAGE_TEXT.desgraciatRoundName) : null;
   const band = h(
     'li',
     { class: 'night__band', data: { type: t.type, special: String(t.special) }, attrs: { 'aria-label': STAGE_TEXT.priceOf(t.label, price) } },
     art,
-    h('div', 'night__info', h('p', 'night__name', t.label), rounds, special),
+    h('div', 'night__info', h('p', 'night__name', t.label), rounds, special || desgraciat ? h('div', 'night__pills', special, desgraciat) : null),
   );
   band.style.setProperty('--type-color', t.color);
   return band;

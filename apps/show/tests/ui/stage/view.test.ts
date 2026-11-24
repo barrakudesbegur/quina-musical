@@ -35,6 +35,8 @@ const SECRET = {
   winnerName: 'SECRET-WINNER-NAME',
   winnerNotes: 'SECRET-WINNER-NOTES',
   claimId: 'SECRET-CLAIM-ID',
+  standingCount: 4545,
+  standingCard: 900005,
 };
 
 /** A fixture with every private field filled with a recognisable secret. */
@@ -46,7 +48,9 @@ function withSecrets(name: string): FlowState {
     next: { songId: SECRET.nextSongId, title: SECRET.nextTitle, artist: SECRET.nextArtist },
     transition: { id: 'tr-x', recipe: 'R7', phase: 'final', to: SECRET.transitionTo, landAtMs: NOW + 5000 },
     possibleWinners: { line: [{ cardId: SECRET.possibleWinnerCard, lines: [0], completedBy: SECRET.nextSongId }], bingo: [] },
-    future: { lineAt: 4242, bingoAt: 4343, toLine: [0, 7], toBingo: [], markCounts: [5, 6] },
+    future: { lineAt: 4242, bingoAt: 4343, toLine: [0, 7], toBingo: [], markCounts: [5, 6], lastStandingAt: 4444, standingCurve: [4646, 4747] },
+    // The Desgraciat round's standing count and cards: the console's only.
+    standing: { count: SECRET.standingCount, cardIds: [SECRET.standingCard] },
     hold: { sinceMs: NOW, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ducked: false },
     queue: { ...state.queue, length: 777 },
     history: [{ recipe: 'R7', family: 'build', exit: null, songId: SECRET.nextSongId, hookId: 'h-secret', phase: 'final' }],
@@ -73,7 +77,7 @@ function withSecrets(name: string): FlowState {
 }
 
 // Winning card numbers aren't secret, but the projector never shows them: no list of winners or cards comes out.
-const FORBIDDEN_KEYS = ['winners', 'lastWinners', 'cardIds', 'next', 'queue', 'possibleWinners', 'future', 'lineAt', 'bingoAt', 'toLine', 'toBingo', 'markCounts', 'ducked', 'claims', 'claimId', 'warnings', 'completeSince', 'otherRows', 'winningSongId', 'name', 'notes', 'phase', 'history', 'to', 'targetId', 'pace', 'schedule', 'game', 'cards', 'hold', 'status'];
+const FORBIDDEN_KEYS = ['standing', 'lastStandingAt', 'standingCurve', 'winners', 'lastWinners', 'cardIds', 'next', 'queue', 'possibleWinners', 'future', 'lineAt', 'bingoAt', 'toLine', 'toBingo', 'markCounts', 'ducked', 'claims', 'claimId', 'warnings', 'completeSince', 'otherRows', 'winningSongId', 'name', 'notes', 'phase', 'history', 'to', 'targetId', 'pace', 'schedule', 'game', 'cards', 'hold', 'status'];
 
 function keysDeep(value: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(value)) for (const v of value) keysDeep(v, out);
@@ -91,7 +95,7 @@ function assertNoSecrets(view: StageView, label: string): void {
   for (const text of [SECRET.nextTitle, SECRET.nextArtist, SECRET.winnerName, SECRET.winnerNotes, SECRET.claimId, 'h-secret', 'notSold']) {
     assert.ok(!json.includes(text), `${label}: "${text}" leaked`);
   }
-  for (const id of [SECRET.nextSongId, SECRET.transitionTo, SECRET.possibleWinnerCard, SECRET.queuedClaimCard, 777]) {
+  for (const id of [SECRET.nextSongId, SECRET.transitionTo, SECRET.possibleWinnerCard, SECRET.queuedClaimCard, 777, SECRET.standingCount, SECRET.standingCard, 4444, 4646]) {
     assert.ok(!new RegExp(`\\b${id}\\b`).test(json), `${label}: ${id} leaked`);
   }
   const keys = keysDeep(view);
@@ -129,7 +133,7 @@ test('play: the round and the motion as timestamps, never the incoming song', ()
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'play');
   if (view.body.scene !== 'play') return;
-  assert.deepEqual(view.body.round, { number: 3, special: false });
+  assert.deepEqual(view.body.round, { number: 3, special: false, desgraciat: false });
   assert.deepEqual(view.body.motion, { kind: 'spin', startAtMs: null, landAtMs: NOW + 5000, sinceMs: null, autoReleaseAtMs: null });
 });
 
@@ -142,8 +146,8 @@ test('before: start time, the night\'s card types, sponsors and the player app l
     scene: 'before',
     startAtMs: NOW + 600_000,
     cardTypes: [
-      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 5, 6, 8], special: false },
-      { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: null, regularRounds: [], special: true },
+      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 6, 8], special: false, desgraciat: true },
+      { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: null, regularRounds: [], special: true, desgraciat: false },
     ],
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
     link: { href: 'https://quina.barrakudesbegur.org/26', label: 'quina.barrakudesbegur.org/26' },
@@ -177,7 +181,7 @@ test('roundStart: headline prizes with sponsors and how many more; the Shuffle g
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'roundStart');
   if (view.body.scene !== 'roundStart') return;
-  assert.deepEqual(view.body.round, { number: 4, special: false });
+  assert.deepEqual(view.body.round, { number: 4, special: false, desgraciat: false });
   assert.deepEqual(view.body.prizes, [
     { kind: 'line', title: '[Premi de línia 4]', detail: null, sponsor: '[Patrocinador 2]', more: 2 },
     { kind: 'bingo', title: '[Premi de quina 4]', detail: null, sponsor: '[Patrocinador 1]', more: 4 },
@@ -327,7 +331,7 @@ test('interval: the next round, the count and the countdown guide; no winners, n
   if (view.body.scene !== 'interval') return assert.fail('not interval');
   assert.deepEqual(view.body, {
     scene: 'interval',
-    nextRound: { number: 4, special: false },
+    nextRound: { number: 4, special: false, desgraciat: false },
     roundsTotal: 8,
     sinceMs: NOW - 40_000,
     guideEndMs: NOW + 140_000,
@@ -353,10 +357,10 @@ test('the special round is labelled from the plan', () => {
   const special: FlowState = { ...state, intro: { round: 7, kind: 'special', sinceMs: NOW } };
   const view = stageView(special, flowOf(special), SAMPLE_PLAN, null);
   if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(view.body.round, { number: 7, special: true });
+  assert.deepEqual(view.body.round, { number: 7, special: true, desgraciat: false });
   const unplanned = stageView(special, flowOf(special), null, null);
   if (unplanned.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(unplanned.body.round, { number: 7, special: true }, 'without a plan, the intro\'s kind');
+  assert.deepEqual(unplanned.body.round, { number: 7, special: true, desgraciat: false }, 'without a plan, the intro\'s kind');
 });
 
 test('the round start names the round being introduced, before the Shuffle', () => {
@@ -373,4 +377,62 @@ test('without any state: the before scene, never a crash', () => {
   assert.equal(view.body.scene, 'before');
   assert.deepEqual(view.songs, []);
   assert.equal('heat' in view, false, 'the raw Heat never reaches the view: the garland eases the engine samples');
+});
+
+// ---- the Desgraciat round (Quina 5 in SAMPLE_PLAN) ----
+
+test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro and in the Interval before it', () => {
+  const play = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), SAMPLE_PLAN, CATALOG);
+  assert.equal(play.body.scene, 'play');
+  if (play.body.scene !== 'play') return;
+  assert.deepEqual(play.body.round, { number: 5, special: false, desgraciat: true });
+  // Without a plan, the state's round kind says it.
+  const bare = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), null, null);
+  assert.ok(bare.body.scene === 'play' && bare.body.round?.desgraciat);
+
+  const introState = FIXTURES.desgraciatIntro(NOW).state;
+  const intro = stageView(introState, flowOf(introState), SAMPLE_PLAN, CATALOG);
+  assert.equal(intro.body.scene, 'roundStart');
+  if (intro.body.scene !== 'roundStart') return;
+  assert.equal(intro.body.round?.desgraciat, true);
+  // One prize: the last card standing's (the plan's `bingo` bundle), and no Line.
+  assert.deepEqual(intro.body.prizes.map((p) => [p.kind, p.title]), [['standing', "[Premi de l'últim dempeus]"]]);
+
+  const intervalState = FIXTURES.intervalDesgraciat(NOW).state;
+  const interval = stageView(intervalState, flowOf(intervalState), SAMPLE_PLAN, CATALOG);
+  assert.ok(interval.body.scene === 'interval' && interval.body.nextRound.desgraciat && interval.body.nextRound.number === 5);
+});
+
+test('a standing Check: all 12 songs, no row dimmed; a fallen one names the song that sank it and lands its ✗ away from it', () => {
+  const running = FIXTURES.checkStanding(NOW).state;
+  const view = stageView(running, flowOf(running), SAMPLE_PLAN, null);
+  assert.equal(view.body.scene, 'check');
+  if (view.body.scene !== 'check') return;
+  const c = view.body.check;
+  assert.equal(c.kind, 'standing');
+  assert.equal(c.row, null, 'no row dims');
+  assert.equal(c.verdict, 'fallen');
+  assert.equal(plaqueSpot(c).over, 'card');
+  // Without the catalog only the played songs: «Limbo», the 7th, sank it.
+  assert.deepEqual(firstMiss(c), { step: 6, songId: 41, title: 'Limbo' });
+
+  const valid = FIXTURES.checkStandingValid(NOW).state;
+  const passed = stageView(valid, flowOf(valid), SAMPLE_PLAN, CATALOG);
+  assert.ok(passed.body.scene === 'check');
+  if (passed.body.scene !== 'check') return;
+  assert.equal(passed.body.check.verdict, 'complete');
+  assert.equal(passed.body.check.cells.length, 12);
+  assert.ok(passed.body.check.cells.every((cell) => cell.step !== null), 'every song was checked');
+  assert.equal(firstMiss(passed.body.check), null);
+});
+
+test('the last card standing is celebrated with its prize, and no card number', () => {
+  const state = FIXTURES.celebrationStanding(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  assert.equal(view.body.scene, 'celebration');
+  if (view.body.scene !== 'celebration') return;
+  assert.equal(view.body.kind, 'standing');
+  assert.equal(view.body.prize?.kind, 'standing');
+  assert.equal(view.body.prize?.title, "[Premi de l'últim dempeus]");
+  assert.ok(!/\b57\b/.test(JSON.stringify(view.body)), 'no winning card number');
 });

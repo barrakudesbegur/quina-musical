@@ -59,11 +59,12 @@ test('which rounds each type plays, from the rounds (a round without a type play
     { number: 2, kind: 'normal' as const, cardType: 'normal' },
     { number: 4, kind: 'special' as const },
     { number: 5, kind: 'normal' as const, cardType: 'especial' },
+    { number: 6, kind: 'desgraciat' as const },
   ];
   assert.deepEqual(roundsByCardType(rounds), [
-    { type: 'normal', regularRounds: [1, 2], special: false },
-    { type: 'desgraciat', regularRounds: [3], special: false },
-    { type: 'especial', regularRounds: [5], special: true },
+    { type: 'normal', regularRounds: [1, 2], special: false, desgraciat: true },
+    { type: 'desgraciat', regularRounds: [3], special: false, desgraciat: false },
+    { type: 'especial', regularRounds: [5], special: true, desgraciat: false },
   ]);
 });
 

@@ -4,7 +4,8 @@
 // of the wrong type), then the playing tile gets a ring for each snippet and its mark (✓ or ✗) stamps on, and
 // the result shows from `endAtMs` (ANIMATIONS.md `check-type`, `check-step`, `check-result`). A failed Check
 // places its big ✗ where it hides nothing that was checked, and names the first song that didn't sound in
-// its accessible label. Pure.
+// its accessible label. The Desgraciat round's standing Check reads the other way round: a ✓ is a song that has
+// NOT sounded, it stops on the first one that has, and that card has fallen (`check-fallen`). Pure.
 import type { CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 import type { PlayerCard } from '../../../packages/rules/marks.ts';
 import { defaultCardType } from '@quina/protocol';
@@ -51,8 +52,9 @@ export function cardTypeBadge(
   return { type, label: label.name, color: label.color, special, ok: outcome !== 'wrongType' };
 }
 
-/** What the projector says once the Check is over. */
-export type CheckVerdict = 'complete' | 'incomplete' | 'notValid';
+/** What the projector says once the Check is over: `fallen` is a standing claim for a card one of whose songs has
+ * landed (the Desgraciat round). */
+export type CheckVerdict = 'complete' | 'incomplete' | 'fallen' | 'notValid';
 
 export interface CheckCell {
   songId: number;
@@ -73,7 +75,7 @@ export interface CheckView {
   /** The card's printed type (public, on the card itself), or null for an unknown card. */
   cardType: CardTypeBadge | null;
   verdict: CheckVerdict;
-  /** A Line's row (0–2), whose songs play; the other rows dim. Null for a Bingo. */
+  /** A Line's row (0–2), whose songs play; the other rows dim. Null for a Bingo and a standing Check. */
   row: number | null;
   /** The card's 12 songs (3 × 4), or only the played ones when the card is not in the catalog. */
   cells: CheckCell[];
@@ -84,7 +86,7 @@ export interface CheckView {
 
 /** The engine's finding as the projector words it: unknown cards and wrong-type cards are "not valid". */
 export const verdictOf = (outcome: CheckOutcome): CheckVerdict =>
-  outcome === 'complete' ? 'complete' : outcome === 'incomplete' ? 'incomplete' : 'notValid';
+  outcome === 'complete' || outcome === 'incomplete' || outcome === 'fallen' ? outcome : 'notValid';
 
 /**
  * The grid for a checked card. With the card in the catalog (and holding every played song): its 3 × 4
@@ -156,6 +158,16 @@ export function checkReveal(
   return { steps, playing, result };
 }
 
+/**
+ * A checked song's mark, which always means "good for the claim" (ANIMATIONS.md): ✓ (`ok`) or ✗ (`bad`); null before
+ * it's marked. For a Line or a Bingo a landed song is good; in a standing Check (the Desgraciat round) a song that has
+ * NOT landed is, and the landed one is the ✗ that sank the card.
+ */
+export function stepMark(kind: WinKind, state: StepState): 'ok' | 'bad' | null {
+  if (state !== 'landed' && state !== 'missed') return null;
+  return (state === 'landed') !== (kind === 'standing') ? 'ok' : 'bad';
+}
+
 /** The card-type step: not yet, passed (✓) or failed (✗). */
 export type TypeState = 'pending' | 'ok' | 'wrong';
 
@@ -177,10 +189,10 @@ export function typeReveal(check: Pick<CheckView, 'startAtMs' | 'steps' | 'cardT
   return check.cardType.ok ? 'ok' : 'wrong';
 }
 
-/** A Check that ends without a prize: the card is incomplete, or not valid. */
+/** A Check that ends without a prize: the card is incomplete, fallen, or not valid. */
 export const isFailed = (verdict: CheckVerdict): boolean => verdict !== 'complete';
 
-/** The song a failed Check names: the first step (in the order they played) that didn't land. */
+/** The song a failed Check names: the first step (in the order they played) marked ✗. */
 export interface CheckMiss {
   /** Index into `steps`; its tile is the one marked ✗ first. */
   step: number;
@@ -189,11 +201,32 @@ export interface CheckMiss {
   title: string | null;
 }
 
-export function firstMiss(check: Pick<CheckView, 'steps' | 'cells'>): CheckMiss | null {
-  const step = check.steps.findIndex((s) => !s.landed);
+/**
+ * The first step marked ✗: for a Line or a Bingo the first song that didn't land; in a standing Check (`kind`
+ * 'standing') the song that landed and sank the card, its last step.
+ */
+export function firstMiss(check: Pick<CheckView, 'steps' | 'cells'> & { kind?: WinKind }): CheckMiss | null {
+  const standing = check.kind === 'standing';
+  const step = check.steps.findIndex((s) => s.landed === standing);
   if (step < 0) return null;
   const cell = check.cells.find((c) => c.step === step);
   return { step, songId: check.steps[step].songId, title: cell?.title ?? null };
+}
+
+/** Columns on a card. */
+export const CARD_COLS = 4;
+
+/**
+ * Where a fallen card's big ✗ lands across the card (a share of its width): over the half away from the song that
+ * sank it (`check-fallen`), so that song's lifted tile stays in plain view beside it. 0.5 (the middle) for every other
+ * result, or when the sinking song isn't on the grid.
+ */
+export function resultX(check: Pick<CheckView, 'verdict' | 'steps' | 'cells' | 'kind'>): number {
+  if (check.verdict !== 'fallen') return 0.5;
+  const miss = firstMiss(check);
+  const cell = miss ? check.cells.find((c) => c.step === miss.step) : undefined;
+  if (!cell) return 0.5;
+  return cell.col < CARD_COLS / 2 ? 0.75 : 0.25;
 }
 
 /** Rows on a card. The grid keeps all three slots even when it only knows the played songs. */

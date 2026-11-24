@@ -18,6 +18,8 @@ export interface NightCardType {
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;
+  /** It plays the Quina Desgraciada (its own entry, with the sad face; not one of the numbered rounds). */
+  desgraciat: boolean;
 }
 
 /**
@@ -36,6 +38,14 @@ export function nightCardTypes(plan: Pick<GamePlan, 'rounds'> | null, types: rea
     .sort((a, b) => order(a.plays.type) - order(b.plays.type) || a.i - b.i)
     .map(({ plays }) => {
       const label = cardTypeLabel(plays.type, types);
-      return { type: plays.type, label: label.name, color: label.color, priceCents: label.priceCents, regularRounds: plays.regularRounds, special: plays.special };
+      return {
+        type: plays.type,
+        label: label.name,
+        color: label.color,
+        priceCents: label.priceCents,
+        regularRounds: plays.regularRounds,
+        special: plays.special,
+        desgraciat: plays.desgraciat,
+      };
     });
 }
