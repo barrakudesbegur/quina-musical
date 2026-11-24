@@ -87,6 +87,7 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999) },
   'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)) },
+  'prizes.revealed': { round, by: oneOf('presenters', 'intro') },
 };
 
 const BASE: Record<string, FieldCheck> = {

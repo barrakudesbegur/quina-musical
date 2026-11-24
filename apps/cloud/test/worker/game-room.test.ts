@@ -2,7 +2,7 @@
 // survives the GameRoom restarting, and the export replays to the same record.
 import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { PROTOCOL_VERSION, parseResumeToken, replayJournal, type JournalEntry } from '@quina/protocol';
+import { PROTOCOL_VERSION, parseResumeToken, publicPlan, replayJournal, type JournalEntry } from '@quina/protocol';
 import { followFeed, type PublicView } from '@quina/protocol';
 import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
 import { CLOSE } from '../../src/link-protocol.ts';
@@ -10,7 +10,7 @@ import type { EditionExport, RoomStats } from '../../src/api.ts';
 import type { GameRoom } from '../../src/game-room.ts';
 import { roomOf } from '../../src/worker.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
-import { PLAN } from '../support/plan.ts';
+import { PLAN, SECRET_PRIZE } from '../support/plan.ts';
 
 const BASE = 'http://localhost';
 
@@ -350,12 +350,48 @@ describe('the Game plan and its media (Admin)', () => {
     const saved = await put(PLAN);
     expect(saved.status).toBe(200);
     expect(await getJson('/api/plan')).toEqual({ plan: PLAN });
-    expect((await p.view()).state.plan).toEqual(PLAN);
+    // Phones get only what they may see: round 1's prizes (perRound), round 2 locked, no cheat sheet.
+    expect((await p.view()).state.plan).toEqual(publicPlan(PLAN, [1]));
     const messages = await link.drain();
     expect(messages).toContainEqual(expect.objectContaining({ type: 'cloud.plan', plan: PLAN }));
 
     const { greeting } = await laptop(null); // a laptop connecting later gets it too
     expect(greeting[1]).toMatchObject({ type: 'cloud.plan', plan: PLAN });
+  });
+
+  it("a locked round's prizes never reach the public feed, until the show reveals them", async () => {
+    await evictDurableObject(roomOf(env), { webSockets: 'close' });
+    const p = await phone();
+    expect((await put(PLAN)).status).toBe(200);
+    const { client: link } = await laptop('g-secret');
+    const view = async () => (await p.view()).state.plan;
+    expect((await view())?.rounds).toEqual([
+      { number: 1, kind: 'normal', revealed: true, line: PLAN.rounds[0]?.line, bingo: PLAN.rounds[0]?.bingo },
+      { number: 2, kind: 'special', revealed: false },
+    ]);
+    // Nothing of round 2 anywhere in what phones got: not its prize, not its count, nor the cheat sheet.
+    const heard = JSON.stringify(p.seen);
+    expect(heard).not.toContain(SECRET_PRIZE);
+    expect(heard).not.toContain('El primer que canta guanya');
+    const late = await phone(); // a phone joining now gets a snapshot: the same filter
+    expect(JSON.stringify(late.seen)).not.toContain(SECRET_PRIZE);
+    expect(JSON.stringify((await late.view()).state)).not.toContain(SECRET_PRIZE);
+
+    // The show introduces round 2: its prizes go public with the journal entry.
+    const game = new JournalBuilder('g-secret').startRound().land(3).reveal(2, 'intro');
+    await upload(link, 'g-secret', game.entries);
+    await expect.poll(async () => (await view())?.rounds[1]).toMatchObject({ number: 2, revealed: true, bingo: PLAN.rounds[1]?.bingo });
+
+    // allSecret: an intro reveals nothing, only the presenters do.
+    expect((await put({ ...PLAN, prizeReveal: 'allSecret' })).status).toBe(200);
+    await expect.poll(async () => (await view())?.rounds.map((r) => r.revealed)).toEqual([false, false]);
+    expect(JSON.stringify((await late.view()).state)).not.toContain(SECRET_PRIZE); // locked again in what phones hold
+    await link.drain(); // the new plan, sent to the laptop
+    await upload(link, 'g-secret', new JournalBuilder('g-secret').startRound().land(3).reveal(2, 'intro').reveal(2, 'presenters').entries.slice(game.entries.length));
+    await expect.poll(async () => (await view())?.rounds.map((r) => r.revealed)).toEqual([false, true]);
+
+    // Admin and the laptop always have the whole plan.
+    expect(((await getJson('/api/plan')) as { plan: { cheatSheet: unknown } }).plan.cheatSheet).toEqual(PLAN.cheatSheet);
   });
 
   it("consoles get the plan on hello and on every save; a laptop's newer plan wins, an older one doesn't", async () => {
@@ -379,7 +415,7 @@ describe('the Game plan and its media (Admin)', () => {
     link.send({ v, type: 'link.plan', plan: { ...PLAN, title: 'Desada al portàtil' }, savedAtMs: now(), sentAtMs: now() });
     expect(await link.next()).toMatchObject({ type: 'cloud.plan', plan: { title: 'Desada al portàtil' } });
     expect(plans(await c.drain()).at(-1)?.plan?.title).toBe('Desada al portàtil');
-    expect(((await p.view()).state.plan as { title: string } | null)?.title).toBe('Desada al portàtil');
+    expect((await p.view()).state.plan?.title).toBe('Desada al portàtil');
 
     // An older one (or the cloud's own plan again) changes nothing: the laptop gets the cloud's back.
     link.send({ v, type: 'link.plan', plan: { ...PLAN, title: 'Antiga' }, savedAtMs: 1000, sentAtMs: now() });

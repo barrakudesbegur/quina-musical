@@ -27,7 +27,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { PROTOCOL_VERSION, ROLES, type RelayClients, type RelayPlan, type Role, type ShowState } from '@quina/protocol';
+import { PROTOCOL_VERSION, ROLES, publicPlan, revealedRounds, type RelayClients, type RelayPlan, type Role, type ShowState } from '@quina/protocol';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
 
@@ -425,7 +425,11 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
   if (url.pathname === '/cloud/plan.json' && (req.method === 'GET' || req.method === 'HEAD')) {
     const { plan } = PLAN.current();
     if (!plan) return notFound(res);
-    return res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }).end(req.method === 'HEAD' ? undefined : JSON.stringify(plan));
+    // This laptop's pages and paired devices get the whole plan; anyone else on the hotspot only what phones may
+    // see (plan.ts publicPlan: no locked round's prizes, no cheat sheet), the rounds revealed as the show says.
+    const whole = isThisMachine(req.socket.remoteAddress) || hasToken(req.headers.authorization);
+    const body = whole ? plan : publicPlan(plan, revealedRounds(plan, lastState?.prizes?.revealed ?? []));
+    return res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }).end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
   }
   // The APIs rewrite hooks and render audio: only this laptop's own pages (show, audition) may call them.
   if (url.pathname.startsWith('/api/')) {

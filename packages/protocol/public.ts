@@ -15,7 +15,7 @@
 // Times are epoch ms on the cloud's clock. Every message carries `nowMs` (the cloud's clock when it was sent),
 // so a phone estimates its own offset as `nowMs - Date.now()` on arrival.
 import { PROTOCOL_VERSION, type ProtocolVersion, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
-import type { GamePlan } from './plan.ts';
+import type { PublicPlan } from './plan.ts';
 
 /** The phones' tunables. */
 export const PUBLIC_FEED = Object.freeze({
@@ -130,8 +130,12 @@ export interface PublicState {
   interval: PublicInterval | null;
   /** The expected end of the Game, rounded to `gameEndRoundingMs`. */
   gameEndMs: number | null;
-  /** The Game plan from Admin (rounds, prizes, sponsors with logo paths, schedule), or null until one is set. */
-  plan: GamePlan | null;
+  /**
+   * The Game plan from Admin as phones may see it (plan.ts publicPlan): rounds, sponsors with logo paths, card
+   * types, schedule, and only the revealed rounds' prizes (a locked round shows no bundle and no count; never the
+   * cheat sheet). Null until one is set.
+   */
+  plan: PublicPlan | null;
   /** Admin's banner to every phone. */
   notice: string | null;
   /** Admin's default for interface sounds; a player's own choice wins. */
@@ -156,7 +160,7 @@ export type PublicChange =
   | { kind: 'pause'; pause: { sinceMs: number } | null }
   | { kind: 'link'; link: PublicLink }
   | { kind: 'gameEnd'; gameEndMs: number | null }
-  | { kind: 'plan'; plan: GamePlan | null }
+  | { kind: 'plan'; plan: PublicPlan | null }
   | { kind: 'notice'; notice: string | null }
   | { kind: 'sounds'; soundsDefault: boolean };
 export type PublicChangeKind = PublicChange['kind'];

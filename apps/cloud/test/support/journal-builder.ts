@@ -59,6 +59,12 @@ export class JournalBuilder {
     return entry;
   }
 
+  /** A round's prizes revealed: by the presenters (revealPrizes) or as the round is introduced. */
+  reveal(round: number, by: 'presenters' | 'intro' = 'intro'): this {
+    this.push({ kind: 'prizes.revealed', round, by }, 1_000);
+    return this;
+  }
+
   cards(ranges: string): this {
     this.push({ kind: 'cards.set', ranges }, 1_000);
     return this;

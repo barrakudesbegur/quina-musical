@@ -11,7 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import WebSocket from 'ws';
 import { freePort } from '../loadtest/dev-server.ts';
-import { PLAN } from '../test/support/plan.ts';
+import { PLAN, SECRET_PRIZE } from '../test/support/plan.ts';
 
 const SHOW = path.resolve(import.meta.dirname, '../../show');
 const TOKEN = 'AUDITTOKEN234567';
@@ -187,6 +187,11 @@ try {
   expect('unpaired sockets never get the plan', !strangers.some(pushedTo), strangers.some(pushedTo) ? 'SENT' : 'nothing');
   const servedPlan = await status('/cloud/plan.json');
   expect('LAN GET /cloud/plan.json is then served (public)', servedPlan === 200, String(servedPlan));
+  // Prize secrecy: a stranger on the hotspot gets no locked round's prizes and no cheat sheet; paired, the whole plan.
+  const lanPlan = await (await fetch(`http://${lan}:${port}/cloud/plan.json`)).text();
+  expect("LAN GET /cloud/plan.json carries no locked round's prizes", !lanPlan.includes(SECRET_PRIZE) && !lanPlan.includes('cheatSheet'), lanPlan.includes(SECRET_PRIZE) ? 'LEAKED' : 'filtered');
+  const pairedPlan = await (await fetch(`http://${lan}:${port}/cloud/plan.json`, { headers: { authorization: `Bearer ${TOKEN}` } })).text();
+  expect('a paired device gets the whole plan', pairedPlan.includes(SECRET_PRIZE), pairedPlan.includes(SECRET_PRIZE) ? 'whole' : 'MISSING');
   for (const p of [show, cloud, ...Object.values(peers)]) p.ws.close();
 } finally {
   server.kill();

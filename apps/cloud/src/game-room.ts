@@ -14,12 +14,15 @@ import {
   PROTOCOL_VERSION,
   checkCommand,
   checkGamePlan,
+  publicPlan,
+  revealedRounds,
   formatResumeToken,
   emptyRecord,
   extendJournal,
   replayJournal,
   type CommandRejected,
   type GamePlan,
+  type PublicPlan,
   type GameRecord,
   type JournalEntry,
   type RelayClients,
@@ -56,7 +59,12 @@ interface RoomSnapshot {
   game: GameRecord | null;
   /** The public state and its feed position. */
   feed: { seq: number; state: PublicState };
-  /** When the plan in the public state was saved (cloud clock); absent in snapshots from before it was kept. */
+  /**
+   * The edition's whole Game plan, as Admin saved it (the public state carries only what phones may see of it:
+   * publicPlan, with the locked rounds' prizes left out). Absent in snapshots from before prize secrecy.
+   */
+  plan?: GamePlan | null;
+  /** When `plan` was saved (cloud clock); absent in snapshots from before it was kept. */
   planSavedAtMs?: number | null;
 }
 
@@ -91,6 +99,19 @@ type Attachment = ShowAttachment | PhoneAttachment | ConsoleAttachment;
 type SocketTag = Attachment['role'];
 
 type RoomEnv = Env & AccessEnv;
+
+/**
+ * Snapshots from before prize secrecy kept the whole plan in the public state. Keep it apart (checkGamePlan reads
+ * a v1 plan as v2) and leave phones only the public plan.
+ */
+function withPlanKeptApart(stored: RoomSnapshot): RoomSnapshot {
+  if (stored.plan !== undefined) return stored;
+  const old: unknown = stored.feed.state.plan;
+  const check = old ? checkGamePlan(old) : null;
+  const plan = check?.ok ? check.plan : null;
+  const revealed = plan ? revealedRounds(plan, stored.game?.prizesRevealed ?? []) : [];
+  return { ...stored, plan, feed: { ...stored.feed, state: { ...stored.feed.state, plan: plan ? publicPlan(plan, revealed) : null } } };
+}
 
 /** Whether the bytes start like the image type they claim (PNG, JPEG, or JPEG XL as a codestream or a container). */
 function isImage(bytes: ArrayBuffer, contentType: string): boolean {
@@ -245,7 +266,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
     this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq, current });
     this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
-    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan, savedAtMs: this.planSavedAtMs() });
+    this.reply(ws, { type: 'cloud.plan', plan: this.room.plan ?? null, savedAtMs: this.planSavedAtMs() });
   }
 
   private onJournal(ws: WebSocket, upload: LinkJournal, ctx: ProjectionContext): void {
@@ -274,6 +295,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
       });
       this.stats.entriesStored += result.accepted.length;
       if (changes.length > 0) this.broadcast(this.deltaMessage(changes));
+      // A round's prizes revealed (prizes.revealed): phones get that round's bundles now.
+      if (result.accepted.some(({ entry }) => entry.kind === 'prizes.revealed')) this.refreshPublicPlan();
     }
 
     const gameId = upload.gameId;
@@ -395,6 +418,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
       // The stored journal was checked on the way in, so this should never happen; keep the GameRoom usable.
       console.error(`game ${gameId}: its stored journal does not replay`, error);
     }
+    // Another Game reveals its own rounds: phones see only what this Game revealed.
+    state = { ...state, plan: this.publicPlanFor(record) };
     this.room = { ...this.room, game: record, feed: { seq: this.room.feed.seq + 1, state } };
     this.save();
     this.broadcast(this.snapshotMessage());
@@ -438,7 +463,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
   // ---- the Game plan and its media (Admin) -------------------------------------------------------------
   /** The edition's Game plan. It is all public (prizes, sponsors, schedule), so it lives in the public state. */
   getPlan(): GamePlan | null {
-    return this.room.feed.state.plan;
+    return this.room.plan ?? null;
   }
 
   /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Everyone gets it. */
@@ -459,13 +484,13 @@ export class GameRoom extends DurableObject<RoomEnv> {
   }
 
   private planSavedAtMs(): number | null {
-    return this.room.feed.state.plan ? (this.room.planSavedAtMs ?? 0) : null;
+    return this.room.plan ? (this.room.planSavedAtMs ?? 0) : null;
   }
 
   /** A new plan: the phones (public delta), the laptop (cloud.plan) and the consoles (relay.plan) get it. */
   private adoptPlan(plan: GamePlan, savedAtMs: number): void {
-    this.room = { ...this.room, planSavedAtMs: savedAtMs };
-    this.publish([{ kind: 'plan', plan }]);
+    this.room = { ...this.room, plan, planSavedAtMs: savedAtMs };
+    this.refreshPublicPlan();
     for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.plan', plan, savedAtMs });
     const text = JSON.stringify(this.planMessage());
     for (const consoleWs of this.consoles()) this.send(consoleWs, text);
@@ -473,7 +498,19 @@ export class GameRoom extends DurableObject<RoomEnv> {
 
   /** The plan for a console, as the relay pushes it to the laptop's screens (protocol RelayPlan). */
   private planMessage(): RelayPlan {
-    return { v: PROTOCOL_VERSION, type: 'relay.plan', plan: this.room.feed.state.plan, savedAtMs: this.planSavedAtMs() };
+    return { v: PROTOCOL_VERSION, type: 'relay.plan', plan: this.room.plan ?? null, savedAtMs: this.planSavedAtMs() };
+  }
+
+  /** What phones may see of the plan for this Game: only the revealed rounds' prizes (plan.ts revealedRounds). */
+  private publicPlanFor(record: GameRecord | null): PublicPlan | null {
+    const plan = this.room.plan ?? null;
+    return plan ? publicPlan(plan, revealedRounds(plan, record?.prizesRevealed ?? [])) : null;
+  }
+
+  /** Publish the public plan again if it changed (a new plan, a round's prizes revealed, another Game). */
+  private refreshPublicPlan(): void {
+    const next = this.publicPlanFor(this.room.game);
+    if (JSON.stringify(next) !== JSON.stringify(this.room.feed.state.plan)) this.publish([{ kind: 'plan', plan: next }]);
   }
 
   /**
@@ -486,9 +523,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
     // On the cloud's clock, and never in the future (a laptop with a wrong clock can't pin its plan forever).
     const savedAtMs = Math.min(ctx.toCloudMs(link.savedAtMs), now);
     const own = this.planSavedAtMs();
-    const same = JSON.stringify(check.plan) === JSON.stringify(this.room.feed.state.plan);
+    const same = JSON.stringify(check.plan) === JSON.stringify(this.room.plan ?? null);
     if (!same && (own === null || savedAtMs > own)) return this.adoptPlan(check.plan, savedAtMs);
-    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan, savedAtMs: own });
+    this.reply(ws, { type: 'cloud.plan', plan: this.room.plan ?? null, savedAtMs: own });
   }
 
   /**
@@ -647,7 +684,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const row = this.rows('SELECT body FROM snapshot WHERE id = 1')[0];
     if (row) {
       const stored = JSON.parse(String(row.body)) as RoomSnapshot;
-      if (stored.schema === SCHEMA_VERSION) return stored;
+      if (stored.schema === SCHEMA_VERSION) return withPlanKeptApart(stored);
       console.error(`snapshot schema ${String(stored.schema)} is not ${SCHEMA_VERSION}: starting from an empty snapshot`);
     }
     return { schema: SCHEMA_VERSION, game: null, feed: { seq: 0, state: emptyPublicState(this.env.EDITION) } };

@@ -107,6 +107,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       }
       return changes;
     }
+    case 'prizes.revealed': // the GameRoom publishes the plan again, with this round's prizes (it holds the full plan)
     case 'winner.noted': // names and notes are private
     case 'cards.set': // the cards in play are the organizers' business
     case 'settings.changed': // Pace, auto-advance and the Phase placeholder would hint at the Phase
