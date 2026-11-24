@@ -50,7 +50,10 @@ These override the sections below where they differ.
 - **Phones offline** keep their normal screens, visibly marked as offline, rather than a full-screen notice.
 - **The console header has no device label** ("Tauleta"); the device's name is in the menu.
 - **Adding a card by number asks before leaving** when a number was typed.
-- **Late claims** (another card completed earlier and wasn't claimed): the user would not give the prize only to the late claimer, and leans towards sharing it. The organizers' team settles the rule; until then it's decided on the spot, helped by the console's "complete since song N".
+- **Late claims** (Q12; the organizers' team settles the rule, and until then it's decided on the spot, helped by the console's "complete since song N"). The user's leaning:
+  - a late claimer still wins if nobody else claimed;
+  - if someone else claimed first, the late claimer has lost their chance;
+  - if the late claim comes first and a timely claim follows in the same round, they share.
 - **Pending the user's confirmation:** the phones' card-stacking scroll (cards stack as you scroll). It needs its ANIMATIONS.md entry before it's built.
 - **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (from the card generation), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
 - **Winning card numbers are not shown** on the projector or phones ("people don't care who won unless it's them"). They aren't secret: the Check shows the card being checked. So the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards ("La teva línia!"). There's also no QR on the projector during the Interval.
