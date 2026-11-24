@@ -48,29 +48,23 @@ All of this is on `main`, green when committed.
 | **Cutover kit:** `npm run media -- prune` for this year's pool; deploy-plan steps 6 (the new pool) and 7 (the QR domain) | `94bc4f1` |
 | **The e2e on the phones' production path:** the Worker in wrangler dev, the cloud link, a phone on `/feed`, the player as the cloud serves it; prize secrecy and "nothing private" checked on everything the phone got | `b73e864` |
 | **quina-dev redeployed** (version `82c1b157`) with a coherent build of `b73e864`: the usage report, the pool list and prune, the console, Wii and projector UI (logged in deploy-plan.md) | `b73e864` (deploy only) |
+| **Card type per round, step B:** journal-check accepts `cardType` (format only); the projection gives `PublicRound.cardType` and `intro.cardType` (else the kind's default); the GameRoom reads its stored plan through `checkGamePlan` on load (older versions migrate, and phones' public plan is derived again); the resume point carries `cardType`; `card-types.json` is served beside `cards.json` and synced to takeover laptops; the preflight checks every card's type against `card-types.json` and that every round's type has printed cards | `abb2254` |
 
 ## In progress
 
-- **Card type per round** (Sound engine's proposal, 2026-11-25): Platform answered OK. It lands in three steps so CI stays green: **A** (Sound engine) adds every new field; **B** (Platform and Frontend) makes the cloud carry them; **C** (Sound engine) moves to plan v3 and drops `cardTypes`. Platform's step B waits for A on main. Its parts are in the queue below.
+- **Card type per round** (agreed with Sound engine on 2026-11-25): it lands in steps A/B/C so CI stays green. **A** (Sound engine, b71d843, with Frontend's bc88409 and Platform's test fixture 98404d9) is on origin. **B** (Platform's side) is built, see Done. **C** (Sound engine: plan v3, `cardTypes` removed) comes next. **When C lands, redeploy quina-dev:** its stored plan is v2 with `cardTypes`, and the new load path migrates it.
+- **The Desgraciat round:** agreed with Sound engine on 2026-11-25, in steps A/B/C. Platform's B goes on top of their A once it's in local main. Their C (the engine journalling the new kinds) waits until **quina-dev is redeployed with B**, not just until B is on origin. Platform tells them.
 
 ## The next queue, in priority order
 
-1. **Card type per round, step B** (once Sound engine's step A is on main). Agreed with Sound engine on 2026-11-25:
-   - `journal-check.ts`: an optional `cardType` on `round.started`, `round.resumed` and `scene.changed`, with the format `/^[a-z][a-z0-9]{0,23}$/` when present. Unknown keys are already ignored, so step A can't break ingest;
-   - `projection.ts`: `PublicRound.cardType` and `intro.cardType`, falling back to `defaultCardType(kind)` when the entry has none;
-   - `scripts/assets.ts`: copy `card-types.json` into `dist/cards/` from the folder of the pool's `cardsJson` (the relay serves that folder at `/cards/`);
-   - `test/support/plan.ts`: drop `cardTypes` and set each round's `cardType`;
-   - **the stored plan:** the GameRoom loads `room.plan` from its snapshot row without running `checkGamePlan` (game-room.ts, the snapshot load). Make it run `checkGamePlan` on load, so a v2 plan migrates to v3 in step C. quina-dev holds a v2 plan with `cardTypes` today. The relay's plan files already go through `checkGamePlan` (relay/plan.ts);
-   - Admin's resume point: `resumeToken()` in game-room.ts adds `cardType` from `RecordedRound.cardType` (the valid cards, and so the Queue, depend on it);
-   - media sync: the `cards` root syncs only `cards.json` today (`laptop/pool-roots.ts`). Add `card-types.json`, so a takeover laptop's relay serves it too;
-   - preflight: every card's type and every round's `cardType` must be in `card-types.json`, and each round's type must have cards in play. This replaces the fixed normal/especial check from `82c1ff1`.
-
-   Sound engine tells Platform when step C lands. Redeploy quina-dev then, so the migration runs on the live plan.
-2. **The Desgraciat round** (Sound engine's item 2, after 1). Its proposal hasn't come yet. Platform's side:
-   - **order:** journal-check is strict on enums (`roundKind` normal|special, `winKind` line|bingo, `verdict` valid|invalid). A refused entry stops the link's uploads, so the cloud must accept `'desgraciat'` and `'standing'` before the engine journals them (the same A/B/C);
-   - the public projection of the round kind `'desgraciat'` (`src/domain/projection.ts`, the exhaustive switch). If `'fallen'` is only a live CheckOutcome, the cloud has nothing to project for it; Sound engine is asked to confirm;
-   - the journal check of `claim { kind: 'standing' }` and `WinKind` `'standing'`;
-   - the private `ShowState.standing` must never reach phones (add it to the e2e's "never" list and the projection test).
+1. **Redeploy quina-dev when card type's step C lands** (plan v3): build from a clean worktree, check `/api/plan` shows every round's `cardType`, and log it.
+2. **The Desgraciat round, step B** (milestone Mon 30 Nov; on top of Sound engine's A):
+   - **order:** journal-check is strict on enums (`roundKind` normal|special, `winKind` line|bingo, `verdict` valid|invalid). A refused entry stops the link's uploads. So the cloud accepts `'desgraciat'` and `'standing'` first, quina-dev is redeployed, and only then does Sound engine push C;
+   - journal-check: `roundKind` `'desgraciat'`, `winKind` `'standing'`;
+   - projection: a valid `'standing'` claim ends the round like a Bingo and never sets the Line;
+   - `'fallen'` is a live CheckOutcome only, never journalled or public (confirmed by Sound engine). `claim.decided.verdict` stays valid|invalid;
+   - `ShowState.standing` and `FutureInfo.lastStandingAt` / `standingCurve` are private. The projection only takes pause, interval and gameEnd from ShowState, but add them to the e2e's and the projection test's "never" lists;
+   - `resumeToken()` passes `kind` as is (the code's head letter becomes D).
 3. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
