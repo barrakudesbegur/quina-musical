@@ -7,9 +7,10 @@
 // what the song routes serve; the URLs are the same for every pool. <cache> and <data> are its cacheDir and
 // dataDir (cache/ and data/ for the default pool):
 //   /audio/<id>.flac → <cache>/<id>/mix.flac, /stems/<id>/<stem>.<startSample>.flac → <cache>/<id>/stems/,
-//   /signatures/<id>/<sigId>.flac → <cache>/<id>/signatures/, /stretch/<id>/<render>/<part>.flac →
+//   /signatures/<id>/<sigId>.flac → <cache>/<id>/signatures/, /snippets/<id>.flac → <cache>/<id>/snippet.flac
+//   (a Check's 3 s from the song's best hook, analysis/snippets.py), /stretch/<id>/<render>/<part>.flac →
 //   <cache>/stretch/ (POST /api/stretch renders B's bars before a hook at A's tempo), /analysis/* →
-//   <data>/analysis/, /data/* → <data>/ (stems, keys, signatures, report.md, ...), /covers/<id>.jpg → its
+//   <data>/analysis/, /data/* → <data>/ (stems, keys, signatures, snippets, report.md, ...), /covers/<id>.jpg → its
 //   coversDir, /cards/* → the folder of its cardsJson, GET/POST /api/override/<id> → its overridesDir (the
 //   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/pool → { name }.
 // Not part of a pool: /fx/<name>.mp3, /stingers/<name>.mp3, /holdaudio/<name>.flac (cache/hold, Hold music
@@ -107,6 +108,8 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   if (stem) return { file: path.join(cache, stem[1], 'stems', `${stem[2]}.${stem[3]}.flac`), cache: REVALIDATE };
   const signature = urlPath.match(/^\/signatures\/(\d+)\/(\d+-[a-z]+-\d+)\.flac$/);
   if (signature) return { file: path.join(cache, signature[1], 'signatures', `${signature[2]}.flac`), cache: REVALIDATE };
+  const snippet = urlPath.match(/^\/snippets\/(\d+)\.flac$/);
+  if (snippet) return { file: path.join(cache, snippet[1], 'snippet.flac'), cache: REVALIDATE };
   const stretched = safeDecode(urlPath).match(/^\/stretch\/(\d+)\/(\d+-[a-z]+-\d+@[0-9.]+)\/(drums|bass|vocals|other|mix)\.flac$/);
   if (stretched) return { file: path.join(cache, 'stretch', stretched[1], stretched[2], `${stretched[3]}.flac`), cache: REVALIDATE };
   const hold = urlPath.match(/^\/holdaudio\/([A-Za-z0-9._-]+)\.flac$/);

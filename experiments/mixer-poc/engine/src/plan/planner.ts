@@ -7,18 +7,26 @@
 //     so T = e + N·barB. B's timeline is the clock during the bridge, so the riser, roll and B's
 //     low-passed Tease are phase-locked to the hook without any time-stretching.
 // The Spin window (dMin, dTarget, dMax) comes from the Pace (pace.ts); the phase sets the effects.
-import { RECIPES, THEATRICAL, DEFAULT_WEIGHTS, ramp, sfx, SILENT, pick } from './recipes.ts';
+import { RECIPES, THEATRICAL, DEFAULT_WEIGHTS, NO_CAPS, familyGroup, ramp, sfx, SILENT, pick, eventStart } from './recipes.ts';
 import { deckTimeline, hookGrid, dbToGain } from './timeline.ts';
 import { pickHook } from './hooks.ts';
 import { SPIN_LIMITS, spinWindow } from './pace.ts';
+import { compatible } from './keys.ts';
+import { chooseLanding, preverbEvent } from './landing.ts';
+import { ghostLayer } from './layers.ts';
 import { weightedPick } from '../rng.ts';
-import { PLANNER, LAYERING, SIGNATURES } from '../config.ts';
+import { PLANNER, LAYERING, MOVES, SIGNATURES, STEMS } from '../config.ts';
 import type { Analysis, Hook, SignatureKind } from '../analysis.ts';
 import type { PhaseEffects, PhaseName } from '../config.ts';
+import type { KeyInfo } from './keys.ts';
 import type { SpinWindow } from './pace.ts';
 import type { DeckClock, PhraseClass, Timeline } from './timeline.ts';
+import type { BridgePattern } from './bridges.ts';
+import type { LandingStyle } from './landing.ts';
+import type { ChopSource, LayerName } from './layers.ts';
 import type {
-  BlendLayer, ExitName, OutgoingDeck, PlanEvent, Recipe, RecipeFamily, RecipeId, RecipeShape, RecipeVariant, SignatureEvent, StemName,
+  BlendLayer, Caps, ExitName, LanePart, LaneWindow, OutgoingDeck, PlanEvent, Recipe, RecipeFamily, RecipeId, RecipeShape, RecipeVariant,
+  SignatureEvent, StemBars, StemName,
 } from './recipes.ts';
 
 export const LOOKAHEAD_SEC = PLANNER.lookaheadSec;
@@ -39,6 +47,19 @@ export interface OutgoingSong {
   landedDownbeatIndex?: number | null;
   /** Its approved Signatures whose audio is decoded (runtime SignatureStore). */
   signatures?: readonly SignatureSource[] | null;
+  /** Its stem lanes (P1), decoded around the hook it landed on (runtime StemStore.laneSummary). */
+  lanes?: LaneCoverage | null;
+  /** Its stems' per-bar levels (data/stems `bars`), by downbeat index. */
+  stemBars?: StemBars | null;
+  /** Its hooks' keys, by hook id (data/keys). */
+  keys?: Readonly<Record<string, KeyInfo>> | null;
+}
+
+/** The part of a song its decoded stem lanes cover, in song seconds, and the parts they can play. */
+export interface LaneCoverage {
+  fromSec: number;
+  toSec: number;
+  parts: readonly LanePart[];
 }
 
 /** An approved, decoded Signature as the planner sees it (analysis.ts SignatureMeta, without the audio). */
@@ -64,6 +85,12 @@ export interface IncomingSong {
   blend?: BlendSource | null;
   /** Its approved Signatures whose audio is decoded (runtime SignatureStore). */
   signatures?: readonly SignatureSource[] | null;
+  /** Its stems' per-bar levels (data/stems `bars`), by downbeat index. */
+  stemBars?: StemBars | null;
+  /** Hook ids whose pre-verb swell is rendered (P3, runtime PreverbStore). */
+  preverbs?: readonly string[] | null;
+  /** Its hooks' keys, by hook id (data/keys). */
+  keys?: Readonly<Record<string, KeyInfo>> | null;
 }
 
 /**
@@ -149,6 +176,10 @@ export interface Plan {
   blend: { bars: number; bass: boolean; at: number; fileAt: number; toBpm: number } | null;
   /** The Signature layered into this transition, if any: B's call before it lands, or A's echoing out. */
   signature: { deck: 'A' | 'B'; id: string; at: number; rate: number } | null;
+  /** The landing layer (plan/landing.ts). */
+  landing: LandingStyle;
+  /** Layers of B decorating the recipe (D9's Ghost Tease). */
+  layers: readonly LayerName[];
   phraseClass: PhraseClass | null;
   /** True when no candidate fit the Pace window and SPIN_LIMITS was used. */
   relaxed: boolean;
@@ -177,8 +208,16 @@ export interface RecipeChoice {
   rng: () => number;
   /** Used when implemented and possible (at runtime an unknown id is ignored). */
   override?: RecipeId | null;
-  /** B's stretched render for A's tempo is ready (R8 is possible). */
-  canBlend?: boolean;
+  /** What this transition could layer (B's render, A's stem lanes, B's vocals); none when left out. */
+  caps?: Caps;
+}
+
+/** Variants a test or the audition page may force (never the show): the landing, R7's bridge, a recipe's variant, the Ghost. */
+export interface PlanForce {
+  landing?: LandingStyle | null;
+  bridge?: BridgePattern | null;
+  variant?: string | null;
+  ghost?: boolean | null;
 }
 
 /** What planTransition needs. */
@@ -198,6 +237,8 @@ export interface PlanRequest {
   rng: () => number;
   /** Force a recipe when it is implemented and possible. */
   recipeOverride?: RecipeId | null;
+  /** Force variants (tests). */
+  force?: PlanForce | null;
   /** Land this hook instead of picking one. */
   hookOverride?: Hook | null;
   /** Copied to the plan ('next' by default). */
@@ -215,9 +256,15 @@ export function trimDbFor(analysis: Analysis, hook: Hook): number {
   return clamp(gain, PLANNER.trimLimitsDb[0], PLANNER.trimLimitsDb[1]) + 20 * Math.log10(volume);
 }
 
-export function chooseRecipe({ hasA, phase, history = [], rng, override = null, canBlend = false }: RecipeChoice): Recipe {
+/** True when the recipe can play with what this transition has (an opener only plays S2 recipes). */
+function possible(recipe: Recipe, hasA: boolean, caps: Caps): boolean {
+  if (!recipe.implemented || recipe.shape === 'S0' || (!hasA && recipe.shape !== 'S2')) return false;
+  return recipe.needs?.(caps) ?? true;
+}
+
+export function chooseRecipe({ hasA, phase, history = [], rng, override = null, caps = NO_CAPS }: RecipeChoice): Recipe {
   const forced = override && RECIPES[override];
-  if (forced?.implemented && (hasA || forced.shape === 'S2') && (forced.shape !== 'S3' || canBlend)) return forced;
+  if (forced && possible(forced, hasA, caps)) return forced;
   if (!hasA) return phase.name === 'final' ? RECIPES.R10 : RECIPES.R7;
   const last = history[history.length - 1];
   const lastTwo = history.slice(-2);
@@ -226,11 +273,14 @@ export function chooseRecipe({ hasA, phase, history = [], rng, override = null, 
   for (const [id, w] of Object.entries(phase.weights)) {
     // phase.weights may name a recipe that does not exist (yet): the lookup can miss.
     const recipe = RECIPE_LOOKUP[id];
-    if (!recipe?.implemented || recipe.shape === 'S0' || (recipe.shape === 'S3' && !canBlend)) continue;
+    if (!recipe || !possible(recipe, true, caps)) continue;
     let weight = w;
     if (many && id === last?.recipe) weight *= REPEAT_PENALTY;
     if (many && id !== 'R10' && THEATRICAL.has(id) && last && THEATRICAL.has(last.recipe)) weight = 0;
-    if (many && lastTwo.length === 2 && lastTwo.every((h) => h.family === recipe.family)) weight = 0;
+    // Never one family (the spiral counts as an echo) three times in a row.
+    if (many && lastTwo.length === 2 && lastTwo.every((h) => familyGroup(h.family) === familyGroup(recipe.family))) weight = 0;
+    // A gimmick (D2) waits its turn.
+    if (recipe.cooldown && history.slice(-recipe.cooldown).some((h) => h.recipe === id)) weight = 0;
     weights[recipe.id] = weight; // RECIPES are keyed by their id, so this is `id`, typed
   }
   // DEFAULT_WEIGHTS are all positive, so a recipe is always drawn.
@@ -249,8 +299,9 @@ function chooseExit(recipe: Recipe, history: readonly PlanSummary[], rng: () => 
   return pick(fresh.length ? fresh : recipe.exits, rng);
 }
 
-export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null }: PlanRequest): Plan | PlanError {
+export function planTransition({ now, A, B, phase, spin = null, history = [], rng, recipeOverride = null, hookOverride = null, kind = 'next', id = null, force = null }: PlanRequest): Plan | PlanError {
   const spinStart = now + LOOKAHEAD_SEC;
+  const minStart = spinStart + AFTER_DUCK;
   const win = spin ?? spinWindow({ pace: 14, phase: phase.name });
   const hook = hookOverride || pickHook(B.analysis, phase, history, rng, { minTailSec: Math.min(12, (win.slot ?? 14) + 2) });
   if (!hook) return { error: 'noHook' };
@@ -267,26 +318,32 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
 
   // The beat-matched Blend needs B's stretched render for this hook at this A's tempo (runtime BlendStore).
   const blend = tl && A && B.blend && B.blend.hookId === hook.id && B.blend.aSongId === A.songId ? B.blend : null;
-  let recipe = chooseRecipe({ hasA: Boolean(tl), phase, history, rng, override: recipeOverride, canBlend: Boolean(blend) });
-  let exit = chooseExit(recipe, history, rng);
-  // Silence before the hit, never when the pickup is long (the first syllable must not clip).
-  const gapBeats = pickup > gB.beat ? 0 : pick(phase.gapBeats, rng);
-  const gap = gapBeats * gB.beat;
-  // A Tease from B's own stems when they cover this hook; otherwise a low-passed one, less often.
   const teaseStems = B.stems?.[hook.id]?.parts ?? null;
+  const caps: Caps = { blend: Boolean(blend), aLanes: laneWindow(A, tl), chop: chopSource(B, hook, pickup, teaseStems) };
+  let recipe = chooseRecipe({ hasA: Boolean(tl), phase, history, rng, override: recipeOverride, caps });
+  let exit = chooseExit(recipe, history, rng);
+  // Silence before the hit, never when the pickup is long (the first syllable must not clip); some recipes
+  // want at least a little (D2's crowd gap, D11's breath after the chops).
+  const drawnGap = pickup > gB.beat ? 0 : pick(phase.gapBeats, rng);
+  const gapBeatsFor = (r: Recipe) => (pickup > gB.beat ? 0 : Math.max(drawnGap, r.minGapBeats?.(phase.name) ?? 0));
+  // A Tease from B's own stems when they cover this hook; otherwise a low-passed one, less often.
   const teaseChance = teaseStems?.includes('drums') ? phase.stemTease ?? phase.tease ?? 0 : phase.tease ?? 0;
   const leadFor = (teaseBars: number) => clamp(Math.max(pickup, teaseBars * gB.bar), 0, hook.downbeatSec);
+  /** A's stem lanes cover [t0, t1]. */
+  const lanesCover = (t0: number, t1: number) => Boolean(caps.aLanes && caps.aLanes.from <= t0 + 1e-9 && caps.aLanes.to >= t1 - 1e-9);
 
   let candidateCount = 0;
   const windows: ReadonlyArray<readonly [number, number]> = [[win.dMin, win.dMax], SPIN_LIMITS];
 
   /**
    * The best landing for a recipe: S1 lands on one of A's downbeats; S2 bridges on B's grid; S3 blends
-   * B's stretched bars under A's last bars and lands on an A downbeat.
+   * B's stretched bars under A's last bars and lands on an A downbeat. Recipes playing A's stem lanes land
+   * only where the lanes cover their move.
    */
   function search(r: Recipe, x: ExitName | null): Candidate | null {
     if (!tl) return null;
     let found: Candidate | null = null;
+    const gap = gapBeatsFor(r) * gB.beat;
     if (r.shape === 'S1' || r.shape === 'S3') {
       const lead = leadFor(0);
       for (const [pass, [dMin, dMax]] of windows.entries()) {
@@ -299,7 +356,12 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
           if (r.shape === 'S3') {
             blendAt = blendStart(d.index, T);
             if (!blendAt) continue;
-          } else if (gapStart - r.aLeadSec(tl, d.index) < spinStart + AFTER_DUCK) continue;
+            if (r.aLaneParts && !lanesCover(T - tl.barAt(d.index), gapStart + 0.1)) continue;
+          } else {
+            const aLead = r.aLeadSec(tl, d.index, null, phase.name);
+            if (gapStart - aLead < minStart) continue;
+            if (r.aLaneParts && !lanesCover(gapStart - aLead, gapStart + 0.1)) continue;
+          }
           candidateCount++;
           const phraseClass = tl.phraseClass(d.index);
           const cost = DRIFT_COST_PER_SEC * Math.abs(T - spinStart - win.dTarget) + PHRASE_COST[phraseClass];
@@ -311,9 +373,9 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
       const wantsTease = rng() < teaseChance;
       for (const [pass, [dMin, dMax]] of windows.entries()) {
         const bridgeOptions = pass === 0 ? phase.bridgeBars : [1, 2, 3, 4];
-        for (const d of tl.downbeatsBetween(spinStart + AFTER_DUCK, spinStart + dMax)) {
+        for (const d of tl.downbeatsBetween(minStart, spinStart + dMax)) {
           const e = d.ctxTime;
-          if (e - r.aLeadSec(tl, d.index, x) < spinStart + AFTER_DUCK) continue;
+          if (e - r.aLeadSec(tl, d.index, x, phase.name) < minStart) continue;
           if (tl.posAt(e) > tl.durationSec - 0.25) continue;
           for (const n of bridgeOptions) {
             const T = e + n * gB.bar;
@@ -348,7 +410,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     for (let k = Math.min(fileBars, LAYERING.renderBars); k >= LAYERING.minBars; k--) {
       if (index - k < 0) break;
       const at = tl.ctxAt(downbeats[index - k]);
-      if (at < spinStart + AFTER_DUCK) continue;
+      if (at < minStart) continue;
       if (Math.abs(T - at - k * blend.barSec) > MAX_BLEND_DRIFT_SEC) continue;
       return { at, fileAt: blend.hookSec - (T - at), bars: k, bass: blend.bass };
     }
@@ -359,7 +421,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   if (!best && tl) {
     // Nothing fits this recipe (e.g. A's bars are irregular here): another real move before the bare fade.
     const fallbacks: Recipe[] = [];
-    if (recipe.shape === 'S3') fallbacks.push(chooseRecipe({ hasA: true, phase, history, rng, canBlend: false }));
+    if (recipe.shape === 'S3' || recipe.aLaneParts) fallbacks.push(chooseRecipe({ hasA: true, phase, history, rng, caps: { ...caps, blend: false, aLanes: null } }));
     fallbacks.push(RECIPES.R7, RECIPES.R2, RECIPES.R1);
     for (const r of fallbacks) {
       if (r === recipe) continue;
@@ -389,25 +451,56 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     recipe = RECIPES.FADE;
     exit = null;
     const T = spinStart + win.dTarget;
-    best = { T, i: null, e: T - pickup - gap, phraseClass: null, cost: null, lead: leadFor(0), n: 0, teaseBars: 0, relaxed: false, blend: null };
+    best = { T, i: null, e: T - pickup - gapBeatsFor(recipe) * gB.beat, phraseClass: null, cost: null, lead: leadFor(0), n: 0, teaseBars: 0, relaxed: false, blend: null };
   }
 
   const { T, i, e, n, teaseBars } = best;
+  const gapBeats = gapBeatsFor(recipe);
   const declick = Math.min(DECLICK_SEC, Math.max(0, hook.downbeatSec - best.lead));
   const lead = best.lead + declick;
   const pickupAt = T - pickup;
-  const gapStart = pickupAt - gap;
+  const gapStart = pickupAt - gapBeats * gB.beat;
   const bStart = T - lead;
   const events: PlanEvent[] = [];
-  const aState: OutgoingDeck | null = tl ? { tl, level: duckLevel } : null;
+  const aState: OutgoingDeck | null = tl ? { tl, level: duckLevel, bars: A?.stemBars ?? null } : null;
   if (tl) events.push(ramp('A.gain', spinStart, spinStart + 0.4, 1, duckLevel, 'lin'));
   events.push(sfx('whoosh', spinStart, phase.name === 'early' ? -8 : -5));
 
-  const built = recipe.build({ A: aState, i, e, T, pickupAt, gapStart, bStart, tease: teaseBars > 0, teaseStems, gB, phase, rng, exit, blend: best.blend });
+  // The landing layer: the reverse cymbal, a dry landing, or B's pre-verb (when it is rendered and A is cut
+  // low, gone, or in a compatible key by then).
+  const keysMatch = keysAgree(A, B, hook);
+  const preverbFits = Boolean(B.preverbs?.includes(hook.id)) &&
+    (!tl || recipe.shape === 'S2' || gapBeats >= MOVES.preverb.clearGapBeats || Boolean(recipe.aClearsLows) || keysMatch);
+  const landing = chooseLanding({ phase, rng, preverb: preverbFits, force: force?.landing ?? null });
+  const preverb = landing.style === 'preverb' ? preverbEvent({ hookId: hook.id, pickupAt, minStart: tl ? minStart : spinStart + 0.1, gB, phase, rng }) : null;
+  if (landing.style === 'preverb' && !preverb) landing.style = 'cymbal';
+
+  const built = recipe.build({
+    A: aState, i, e, T, pickupAt, gapStart, bStart, tease: teaseBars > 0, teaseStems, gB, phase, rng, exit, blend: best.blend,
+    minStart, aLanes: caps.aLanes, chop: caps.chop, landing, force: force ? { bridge: force.bridge ?? null, variant: force.variant ?? null } : null,
+  });
   const teaseStyle = teaseBars > 0 ? (built.events.some((x) => x.kind === 'stems') ? 'stems' : 'lpf') : null;
   events.push(...built.events);
+  if (preverb) events.push(preverb);
+
+  // D9's Ghost Tease decorates S1 moves that leave the reverb alone, when B's vocals are decoded.
+  const layers: LayerName[] = [];
+  if (tl && recipe.shape === 'S1' && recipe.ghostHost && teaseStems?.includes('vocals')) {
+    const wants = force?.ghost ?? rng() < MOVES.ghost.chance[phase.name];
+    // B's stems start STEMS.leadSec before its hook: the ghost stays inside them.
+    const stemsFrom = T - (hook.downbeatSec - Math.max(0, hook.downbeatSec - STEMS.leadSec)) + STEMS.laneMarginSec;
+    const ghost = wants && i != null
+      ? ghostLayer({ T, pickupAt, gapStart, gB, barA: tl.barAt(i), minStart: Math.max(minStart, stemsFrom), phase: phase.name, rng, keysMatch })
+      : null;
+    if (ghost) {
+      events.push(...ghost);
+      layers.push('ghost');
+    }
+  }
+
   const signature = signatureLayer({
     shape: recipe.id === 'FADE' ? 'S0' : recipe.shape, tl, A, B, aRate: A?.deck.rate ?? 1, gB, spinStart, e, n, pickupAt, exit, phase, rng,
+    skipB: Boolean(built.usesBSignature),
   });
   if (signature) events.push(signature);
   events.sort((x, y) => eventStart(x) - eventStart(y));
@@ -438,6 +531,8 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     // A candidate only gets a blend layer when B's render (`blend`) is there.
     blend: best.blend && blend ? { bars: best.blend.bars, bass: best.blend.bass, at: best.blend.at, fileAt: best.blend.fileAt, toBpm: blend.toBpm } : null,
     signature: signature ? { deck: signature.deck, id: signature.id, at: signature.at, rate: signature.rate } : null,
+    landing: landing.style,
+    layers,
     phraseClass: best.phraseClass,
     relaxed: Boolean(best.relaxed),
     cost: best.cost,
@@ -468,7 +563,39 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   };
 }
 
-/** When an event starts: its `at` or `t0`, its synth's start, or its first slice. */
+/**
+ * Where A's stem lanes may play, in context time: inside what is decoded (less a margin), and only while A runs
+ * at rate 1 (a lane must stay sample-locked to A's main source).
+ */
+function laneWindow(A: OutgoingSong | null, tl: Timeline | null): LaneWindow | null {
+  if (!A?.lanes || !tl || (A.deck.rate ?? 1) !== 1 || !A.lanes.parts.length) return null;
+  const from = tl.ctxAt(A.lanes.fromSec + STEMS.laneMarginSec);
+  const to = tl.ctxAt(A.lanes.toSec - STEMS.laneMarginSec);
+  return to > from ? { from, to, parts: A.lanes.parts } : null;
+}
+
+/**
+ * D11's grain: B must sing at its hook (its vocal stem is decoded there, and its vocals bar is loud enough when
+ * known); the grain is B's approved call when there is one, else the vocal stem from its pickup.
+ */
+function chopSource(B: IncomingSong, hook: Hook, pickup: number, parts: readonly StemName[] | null): ChopSource | null {
+  if (!parts?.includes('vocals')) return null;
+  const vocalsDb = B.stemBars?.vocals?.[hook.downbeatIndex];
+  if (vocalsDb != null && vocalsDb < MOVES.chop.minVocalsDb) return null;
+  const call = B.signatures?.find((s) => s.kind === 'call');
+  if (call) return { from: 'signature', id: call.id, offset: 0, gainDb: call.gainDb };
+  return { from: 'stem', offset: hook.downbeatSec - pickup };
+}
+
+/** A's landed hook and B's hook have compatible keys, confidently enough to layer melodic parts. Unknown counts as not. */
+function keysAgree(A: OutgoingSong | null, B: IncomingSong, hook: Hook): boolean {
+  if (!A?.keys || !B.keys) return false;
+  const aHook = A.analysis.hooks.find((h) => h.downbeatIndex === A.landedDownbeatIndex);
+  const aKey = aHook ? A.keys[aHook.id] : undefined;
+  const bKey = B.keys[hook.id];
+  return Boolean(aKey && bKey && compatible(aKey, bKey, { minConfidence: LAYERING.minKeyConfidence }));
+}
+
 /** What signatureLayer needs from planTransition. `shape` S0 means a fallback with no grid to place on. */
 export interface SignatureArgs {
   shape: RecipeShape;
@@ -487,6 +614,8 @@ export interface SignatureArgs {
   exit: ExitName | null;
   phase: PhaseEffects;
   rng: () => number;
+  /** The recipe already plays B's call (D11's chops): only A's Signature may be layered. */
+  skipB?: boolean;
 }
 
 /**
@@ -498,8 +627,8 @@ export interface SignatureArgs {
  * - Otherwise A's own Signature thrown into the echo as A leaves on an echo or wash exit (S2).
  * Draws from `rng` only when a song has Signatures, so plans without any are unchanged.
  */
-export function signatureLayer({ shape, tl, A, B, aRate, gB, spinStart, e, n, pickupAt, exit, phase, rng }: SignatureArgs): SignatureEvent | null {
-  const bSigs = B.signatures ?? [];
+export function signatureLayer({ shape, tl, A, B, aRate, gB, spinStart, e, n, pickupAt, exit, phase, rng, skipB = false }: SignatureArgs): SignatureEvent | null {
+  const bSigs = skipB ? [] : B.signatures ?? [];
   const aSigs = A?.signatures ?? [];
   if (shape === 'S0' || (!bSigs.length && !aSigs.length)) return null;
   const minStart = spinStart + AFTER_DUCK;
@@ -546,29 +675,4 @@ function shuffled<T>(list: readonly T[], rng: () => number): T[] {
   return a;
 }
 
-export function eventStart(x: PlanEvent): number {
-  switch (x.kind) {
-    case 'set':
-    case 'sfx':
-    case 'spinback':
-    case 'stems':
-    case 'blend':
-      return x.at;
-    case 'signature':
-      return x.at - x.anchorSec / x.rate;
-    case 'decoy':
-      return x.at;
-    case 'ramp':
-      return x.t0;
-    case 'synth': {
-      const { params } = x;
-      if ('t0' in params) return params.t0;
-      if ('at' in params) return params.at;
-      return params.times[0] ?? 0;
-    }
-    case 'slices':
-      return x.slices[0]?.at ?? 0;
-  }
-}
-
-export { SILENT, SPIN_LIMITS };
+export { SILENT, SPIN_LIMITS, eventStart };

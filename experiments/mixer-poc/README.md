@@ -11,7 +11,7 @@ A proof of concept of the bingo "DJ" built from `reports/Bingo DJ mixer research
 ```sh
 cd experiments/mixer-poc
 npm install                       # Node ≥ 23.6 (type stripping): Vite, Svelte, TypeScript, ws
-npm run prep                      # prepare the default pool: covers, decode, analysis, report, keys, stems, Signatures
+npm run prep                      # prepare the default pool: covers, decode, analysis, Check snippets, report, keys, stems, Signatures
 npm run dev                       # relay + Vite on http://localhost:5174 (a manual reload picks up edits)
 ```
 
@@ -31,8 +31,8 @@ The Python venvs (never `/usr/bin/python3`, it is 3.9):
 | `coversDir` | `<cacheDir>/covers` | `<id>.jpg`, served at `/covers/<id>.jpg`; the covers step fetches them from the `cover` URLs |
 | `cardsJson` | none | card-generator's `cards.json`, served at `/cards/cards.json` (its folder at `/cards/`). Without it the Phase uses its placeholder |
 | `spotifyFeatures` | `<dataDir>/spotify_features.json` | optional (the Spotify API is deprecated): without the file there is no tempo or key cross-check |
-| `dataDir` | `data/pools/<name>` | `analysis/`, `report.md`, `keys/`, `stems/`, `signatures/` |
-| `cacheDir` | `cache/pools/<name>` | `<id>/mix.flac`, `<id>/raw.json`, `<id>/stems/`, `<id>/signatures/`, `keys/`, `stretch/` (gitignored) |
+| `dataDir` | `data/pools/<name>` | `analysis/`, `snippets/`, `report.md`, `keys/`, `stems/`, `signatures/` |
+| `cacheDir` | `cache/pools/<name>` | `<id>/mix.flac`, `<id>/raw.json`, `<id>/snippet.flac`, `<id>/stems/`, `<id>/signatures/`, `keys/`, `stretch/` (gitignored) |
 | `overridesDir` | `analysis/overrides/<name>` | the audition page's hand fixes, `<id>.json` |
 | `description` | | free text |
 
@@ -42,7 +42,7 @@ Relative paths are relative to `experiments/mixer-poc`; absolute ones work too.
 1. `cd playlist-fetcher && ./main.sh <playlist URL>` writes `output/songs.json` and `output/songs/<n> <title> - <artist>.mp3`.
 2. Tag the hooks in that songs.json (`"timestamps": [{"time": 53.2, "tag": "best"}, ...]`). Ids are playlist positions, so reordering the playlist after tagging moves the tags onto other songs. An untagged song is analysed but not playable, and the report lists it (there is no automatic hook detection yet).
 3. Write `analysis/pools/2026.json`: `{"name": "2026", "songsJson": "../../playlist-fetcher/output/songs.json", "audioDir": "../../playlist-fetcher/output/songs"}`, plus `cardsJson` once the cards are printed.
-4. `npm run prep -- --pool 2026`. Run it again after any change: finished work is skipped, and a changed MP3 is decoded and analysed again. Options: `--steps decode,analyze,...` (covers, decode, analyze, validate, keys, stems, signatures; always run in that order), `--song N` (repeatable; validate and keys always cover the pool), `--keep-going`. It stops at the first failing step; validate fails on hard errors, and the stems disk guard (10 GB free, 4 GB of stems per pool) stops it with exit status 3.
+4. `npm run prep -- --pool 2026`. Run it again after any change: finished work is skipped, and a changed MP3 is decoded and analysed again. Options: `--steps decode,analyze,...` (covers, decode, analyze, snippets, validate, keys, stems, signatures; always run in that order), `--song N` (repeatable; validate and keys always cover the pool), `--keep-going`. It stops at the first failing step; validate fails on hard errors, and the stems disk guard (10 GB free, 4 GB of stems per pool) stops it with exit status 3.
 5. `npm run dev -- --pool 2026` (or `npm start -- --pool 2026`) serves it. The pages' URLs are the same for every pool.
 
 | Page | URL | What |
@@ -71,13 +71,14 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
 
 **Code:** TypeScript everywhere (strict, erasable syntax only, so Node 26 runs the relay and the tests directly), served and built by Vite; Svelte 5 for the remotes' forms (the coming `console/`). The protocol is the linked package `@quina/protocol` (`protocol/`), which imports no engine code, so remotes, the player app and a Worker can share it; [`docs/protocol.md`](docs/protocol.md) explains it. Every tunable number lives in `engine/src/config.ts`.
 
-**Tests:** `npm test` runs the type check (`tsc` on the browser and Node code, `svelte-check`) and the Node tests: planner, solver, Pace, Phase, cards, and the show state machine (Back, Hold, cancelled Spins, Pace timing, and a fuzz test that the music never stops by accident). `npm run test:pipeline` (pytest, about 30 s) checks pool resolution in Python and in `relay/pool.ts`, then prepares a two-song synthetic pool in a temp dir (one song without hook tags, no Spotify features), re-runs it to check that nothing changes, and has a relay serve it.
+**Tests:** `npm test` runs the type check (`tsc` on the browser and Node code, `svelte-check`) and the Node tests: planner, solver, Pace, Phase, cards, the show state machine (Back, Hold, cancelled Spins, Pace timing, and a fuzz test that the music never stops by accident), the Check, the tie-free Shuffle on the real cards, the show flow (scene rules, a whole round from Claim to Interval, invalid Claims, Claims during a Spin, the pause, and a fuzz test of every flow command), and the journal (replay, `extendJournal` at every split, resuming into each scene). `npm run test:pipeline` (pytest, about 30 s) checks pool resolution in Python and in `relay/pool.ts`, then prepares a two-song synthetic pool in a temp dir (one song without hook tags, no Spotify features), re-runs it to check that nothing changes, and has a relay serve it.
 
 ## What is built
 
 **M0: offline analysis** (`analysis/`, Python 3.13 + uv, Beat This! 1.1.0 `final0` on CPU, about 3 s per song)
 - Every step works on one pool (see Pools above), and `prepare.py` runs them in order. The paths below are the default pool's; a new pool's are under `data/pools/<name>/`, `cache/pools/<name>/` and `analysis/overrides/<name>/`.
 - `covers.py` fetches missing covers from the songs.json `cover` URLs. `decode.py` decodes each song to `cache/<id>/mix.flac` (48 kHz 16-bit FLAC, audio stream only) and records its source in `mix.json`, so a changed MP3 is decoded again.
+- `snippets.py` cuts 3 s from each song's best hook (its pickup) to `cache/<id>/snippet.flac`, with a loudness trim in `data/snippets/index.json`: what a Check plays for each landed song. A few seconds for the whole pool, no stems needed.
 - `analyze.py` writes `data/analysis/<id>.json` (schema v1, B4) and `index.json`. Model output is cached per MP3 sha256 in `cache/<id>/raw.json`, so `--derive-only` re-applies hook and override logic in seconds. A file whose content would not change (apart from its `createdAt`) is not rewritten.
 - Beat grid: Beat This! beats get a sub-frame refinement (a local linear fit removes its 20 ms frame quantization in steady regions). Downbeats are **regularized** into consistent bars: spurious half-bar downbeats are dropped, missing ones are filled, and real phase changes are followed only when later bars support them.
 - Tempo is checked against librosa and Spotify (`data/spotify_features.json`). If both put Beat This! at double time, the tempo is halved automatically (song 6, Besos: 209 → 105 BPM). A pool without Spotify features is checked against librosa only, with no automatic halving, and `keys.py` then uses the method that scored best on the default pool (`essentia-temperley`), unscored.
@@ -141,8 +142,9 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
   - **Phase:** from the cards in play valid for the round (normal cards, or special ones in the special round) and the known Queue, blurred by `game/phase.ts`: late starts 3–8 songs before the expected win, with occasional false alarms, and final covers the last 1–3 songs. It resets towards the Bingo when a Line is confirmed. Without cards in play it falls back to a "songs until a winner" placeholder.
   - **Possible winners:** after each landing, the tablet privately lists the cards that now have a Line or a Bingo.
   - **Panic** fades everything out in 0.3 s. A runtime watchdog starts Hold music whenever the state says music should be playing and nothing is.
+  - **The show flow** (`show/flow.ts` and the scene rules in [`docs/protocol.md`](docs/protocol.md#scenes)): scenes from `before` to `after`; the public **tie-free Shuffle** (`game/shuffle.ts`: deterministic reshuffles of a secret seed until neither the first Line nor the first Bingo is a Tie among the cards in play; 8 s of animation before anything lands); **Claims** and their **Check** (`game/check.ts`: the completed row or all 12 songs, 2.5 s hook snippets for ✓ and a synthesized "broken record" for ✗, timed in advance, everything else ducked far down); the presenters' verdict (the Failure fanfare and the error Hold music, or the **Celebration**: the Clear fanfare, then the Winning song's hook looped in whole bars, or the victory track); the **Interval** (by hand, or 60 s after a Bingo's Celebration); **Winners** with private names and notes; the technical **pause**. All of it is journaled, so a resumed laptop comes back in the same scene. Every number is in `config.ts` `FLOW`.
 
-**Relay and remote:** `relay/server.ts` serves the pages (Vite in development, `dist/` with `--dist`) and the audio, and runs a WebSocket hub on `/ws`. `--pool` picks the pool whose files the song routes serve (`/audio`, `/stems`, `/signatures`, `/stretch`, `/analysis`, `/data`, `/covers`, `/cards`, `/api/override`); the URLs never change, so the pool's media is revalidated by ETag instead of cached for a day. It forwards commands to the show page and the show page's events to everyone else, and caches the last state for new clients. `admin/` is the tablet and phone remote: Next, Back, Hold, Hold music, Pace presets, ±1 s and lock, auto-advance, the Schedule and Drift, a sound-effects pad, cards in play, possible winners, the Phase override, Line confirmed, New round and Panic (these two need a second tap).
+**Relay and remote:** `relay/server.ts` serves the pages (Vite in development, `dist/` with `--dist`) and the audio, and runs a WebSocket hub on `/ws`. `--pool` picks the pool whose files the song routes serve (`/audio`, `/stems`, `/signatures`, `/snippets`, `/stretch`, `/analysis`, `/data`, `/covers`, `/cards`, `/api/override`); the URLs never change, so the pool's media is revalidated by ETag instead of cached for a day. It forwards commands to the show page and the show page's events to everyone else, and caches the last state for new clients. `admin/` is the tablet and phone remote: Next, Back, Hold, Hold music, Pace presets, ±1 s and lock, auto-advance, the Schedule and Drift, a sound-effects pad, cards in play, possible winners, the Phase override, Line confirmed, New round and Panic (these two need a second tap).
 
 ## Verification so far
 

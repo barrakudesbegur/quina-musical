@@ -1,11 +1,13 @@
 // The Game journal: an append-only, numbered record of what happened in the Game (rounds, Queues, landings,
-// undos, confirmed Lines, cards in play, settings). The show engine writes one entry per fact; a device
-// that restarts, or another device that takes over, replays the journal to the same GameRecord and resumes
-// from it. Whoever owns the Game (the show laptop now; maybe a cloud store later) keeps the entries in
-// `seq` order; `replayJournal` is the one reducer every side uses, so they all agree on the result.
-// Live playback (decks, effects, the Spin in flight) is deliberately not in here: it restarts fresh.
-import type { ClimbTarget, RoundKind } from './vocabulary.ts';
-import type { GameSettings } from './events.ts';
+// undos, confirmed Lines, cards in play, settings, scenes, Claims and their verdicts, Winners). The show
+// engine writes one entry per fact; a device that restarts, or another device that takes over, replays the
+// journal to the same GameRecord and resumes from it. Whoever keeps the Game (the show laptop, and the
+// cloud, which extends its record with each upload) keeps the entries in `seq` order; `replayJournal` and
+// `extendJournal` share the one reducer every side uses, so they all agree on the result.
+// Live playback (decks, effects, the Spin in flight, a Check's snippets) is deliberately not in here: it
+// restarts fresh. PRIVATE as a whole: it holds the Queues and the Winners' names.
+import type { ClimbTarget, RoundKind, ShowScene, WinKind } from './vocabulary.ts';
+import type { GameSettings, WinnerInfo } from './events.ts';
 
 /** The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). */
 export type JournalSettings = Omit<GameSettings, 'nextRecipe'>;
@@ -19,7 +21,7 @@ interface EntryBase {
   atMs: number;
 }
 
-/** A round started: its secure Shuffle (the Queue) and the secret seed that blurs its Phase. */
+/** A round started: its secure, tie-free Shuffle (the Queue) and the secret seed that blurs its Phase. */
 export interface RoundStartedEntry extends EntryBase {
   kind: 'round.started';
   round: number;
@@ -30,6 +32,11 @@ export interface RoundStartedEntry extends EntryBase {
   targetEndMs: number;
   /** The settings as the round starts (the Pace may reset with a new round). */
   settings: JournalSettings;
+  /** The Shuffle's secret seed, kept for debugging (0 for a fixed Queue). */
+  shuffleSeed: number;
+  /** How many times the Shuffle reshuffled to avoid a Tie: the Queue is draw number `shuffleAttempts` from
+   * `shuffleSeed` (0: the first draw was kept). */
+  shuffleAttempts: number;
 }
 
 /** A song landed and counts from now. */
@@ -68,7 +75,56 @@ export interface SettingsChangedEntry extends EntryBase {
   settings: JournalSettings;
 }
 
-export type JournalEntry = RoundStartedEntry | SongLandedEntry | LandingUndoneEntry | LineConfirmedEntry | CardsSetEntry | SettingsChangedEntry;
+/** The show moved to another scene (a resumed laptop must come back in the Interval, not in play). `round` and
+ * `roundKind` are the round the scene is about: in `roundStart`, the round being introduced. */
+export interface SceneChangedEntry extends EntryBase {
+  kind: 'scene.changed';
+  scene: ShowScene;
+  round: number;
+  roundKind: RoundKind;
+}
+
+/** A Claim was made. (`winKind`, because `kind` names the entry.) */
+export interface ClaimOpenedEntry extends EntryBase {
+  kind: 'claim.opened';
+  round: number;
+  claimId: string;
+  cardId: number;
+  winKind: WinKind;
+  /** The Queue index of the last counted landing when it was made. */
+  position: number;
+}
+
+/** The presenters decided a Claim. For a valid one, `winningSongId` and `position` are the Winning song and
+ * its Queue index; for an invalid one, `winningSongId` is null and `position` is the claim's. */
+export interface ClaimDecidedEntry extends EntryBase {
+  kind: 'claim.decided';
+  round: number;
+  claimId: string;
+  verdict: 'valid' | 'invalid';
+  winningSongId: number | null;
+  position: number;
+}
+
+/** A Winner's name and notes, as they are now. PRIVATE, like the whole journal. */
+export interface WinnerNotedEntry extends EntryBase {
+  kind: 'winner.noted';
+  claimId: string;
+  name: string | null;
+  notes: string | null;
+}
+
+export type JournalEntry =
+  | RoundStartedEntry
+  | SongLandedEntry
+  | LandingUndoneEntry
+  | LineConfirmedEntry
+  | CardsSetEntry
+  | SettingsChangedEntry
+  | SceneChangedEntry
+  | ClaimOpenedEntry
+  | ClaimDecidedEntry
+  | WinnerNotedEntry;
 export type JournalEntryKind = JournalEntry['kind'];
 type WithoutBase<E> = E extends unknown ? Omit<E, keyof EntryBase> : never;
 /** An entry as the engine builds it, before the journal stamps `gameId`, `seq` and `atMs`. */
@@ -95,6 +151,20 @@ export interface RecordedRound {
   climbingTo: ClimbTarget;
   climbFrom: number;
   landings: RecordedLanding[];
+  shuffleSeed: number;
+  shuffleAttempts: number;
+}
+
+/** A Claim of the round in progress, as the journal knows it (its Check is live playback: not kept). */
+export interface RecordedClaim {
+  claimId: string;
+  round: number;
+  cardId: number;
+  kind: WinKind;
+  position: number;
+  atMs: number;
+  /** null while undecided. */
+  verdict: 'valid' | 'invalid' | null;
 }
 
 /** Everything needed to resume the Game: the result of replaying its journal. */
@@ -105,10 +175,29 @@ export interface GameRecord {
   cardsInPlay: string;
   settings: JournalSettings | null;
   round: RecordedRound | null;
+  /** The scene, and since when (0: the Game has not left `before`). */
+  scene: ShowScene;
+  sceneSinceMs: number;
+  /** In `roundStart` before its Shuffle, the round being introduced. */
+  intro: { round: number; kind: RoundKind } | null;
+  /** The round in progress's Claims, oldest first. */
+  claims: RecordedClaim[];
+  /** Claims made in the whole Game: claim ids go on from it. */
+  claimCount: number;
+  /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
+  winners: WinnerInfo[];
 }
 
 export class JournalError extends Error {
   override name = 'JournalError';
+}
+
+/** The record of a Game before its first entry. */
+export function emptyRecord(gameId: string): GameRecord {
+  return {
+    gameId, seq: 0, cardsInPlay: '', settings: null, round: null,
+    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [],
+  };
 }
 
 /**
@@ -116,14 +205,24 @@ export class JournalError extends Error {
  * broken journal throws a JournalError rather than resuming from a wrong state.
  */
 export function replayJournal(entries: readonly JournalEntry[], gameId = entries[0]?.gameId ?? ''): GameRecord {
-  const record: GameRecord = { gameId, seq: 0, cardsInPlay: '', settings: null, round: null };
+  return extendJournal(emptyRecord(gameId), entries);
+}
+
+/**
+ * Apply more entries to a record: `extendJournal(replayJournal(a), b)` equals `replayJournal([...a, ...b])`.
+ * The cloud keeps only the latest record and extends it with each upload, without reading the history
+ * back. The record passed in is never changed. The entries must continue it (same Game, `seq` from
+ * `record.seq + 1` with no gaps); otherwise it throws a JournalError.
+ */
+export function extendJournal(record: GameRecord, entries: readonly JournalEntry[]): GameRecord {
+  const next = structuredClone(record);
   for (const entry of entries) {
-    if (entry.gameId !== gameId) throw new JournalError(`entry ${entry.seq} belongs to game ${entry.gameId}, not ${gameId}`);
-    if (entry.seq !== record.seq + 1) throw new JournalError(`entry ${entry.seq} follows ${record.seq}: missing or repeated entries`);
-    record.seq = entry.seq;
-    applyEntry(record, entry);
+    if (entry.gameId !== next.gameId) throw new JournalError(`entry ${entry.seq} belongs to game ${entry.gameId}, not ${next.gameId}`);
+    if (entry.seq !== next.seq + 1) throw new JournalError(`entry ${entry.seq} follows ${next.seq}: missing or repeated entries`);
+    next.seq = entry.seq;
+    applyEntry(next, entry);
   }
-  return record;
+  return next;
 }
 
 function applyEntry(record: GameRecord, entry: JournalEntry): void {
@@ -141,7 +240,12 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         climbingTo: 'line',
         climbFrom: 0,
         landings: [],
+        // A journal from before the tie-free Shuffle has neither.
+        shuffleSeed: entry.shuffleSeed ?? 0,
+        shuffleAttempts: entry.shuffleAttempts ?? 0,
       };
+      record.intro = null; // the introduced round has started
+      record.claims = [];
       return;
     case 'song.landed': {
       const round = currentRound(record, entry);
@@ -171,6 +275,42 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
     case 'settings.changed':
       record.settings = { ...entry.settings };
       return;
+    case 'scene.changed':
+      record.scene = entry.scene;
+      record.sceneSinceMs = entry.atMs;
+      // Entering `roundStart` introduces a round; its `round.started` (the Shuffle), or leaving, ends the intro.
+      record.intro = entry.scene === 'roundStart' ? { round: entry.round, kind: entry.roundKind } : null;
+      return;
+    case 'claim.opened': {
+      currentRound(record, entry);
+      if (record.claims.some((c) => c.claimId === entry.claimId) || record.winners.some((w) => w.claimId === entry.claimId)) {
+        throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} already exists`);
+      }
+      record.claims.push({ claimId: entry.claimId, round: entry.round, cardId: entry.cardId, kind: entry.winKind, position: entry.position, atMs: entry.atMs, verdict: null });
+      record.claimCount += 1;
+      return;
+    }
+    case 'claim.decided': {
+      currentRound(record, entry);
+      const claim = record.claims.find((c) => c.claimId === entry.claimId);
+      if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
+      if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already decided`);
+      claim.verdict = entry.verdict;
+      if (entry.verdict === 'valid') {
+        record.winners.push({
+          round: entry.round, kind: claim.kind, cardId: claim.cardId, claimId: claim.claimId,
+          winningSongId: entry.winningSongId, position: entry.position, atMs: entry.atMs, name: null, notes: null,
+        });
+      }
+      return;
+    }
+    case 'winner.noted': {
+      const winner = record.winners.find((w) => w.claimId === entry.claimId);
+      if (!winner) throw new JournalError(`entry ${entry.seq}: no winner for claim ${entry.claimId}`);
+      winner.name = entry.name;
+      winner.notes = entry.notes;
+      return;
+    }
     default:
       entry satisfies never;
   }

@@ -3,7 +3,7 @@
 // (Recipe-internal shapes, such as riser frequencies, still live next to each recipe in plan/recipes.ts.)
 // The numbers the remotes share (Pace limits and presets, sound names) come from @quina/protocol.
 import { PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
-import type { PhaseName, StingerName } from '@quina/protocol';
+import type { PhaseName, SoundName, StingerName } from '@quina/protocol';
 
 export type { PhaseName } from '@quina/protocol';
 
@@ -52,7 +52,9 @@ export interface PhaseTiming {
 export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   early: {
     name: 'early',
-    weights: { R8: 1, R7: 0.3, R4: 0.18, R5: 0.17, R2: 0.15, R6: 0.1, R1: 0.1 },
+    // docs/dj-techniques.md › Starting weights. R8 and D10 need B's stretched render, D8 and D10 A's stem
+    // lanes, D11 B's vocals: without them the rest share the draw.
+    weights: { R8: 1, D10: 0.6, R7: 0.3, D1: 0.25, D3: 0.2, D8: 0.15, D2: 0.1, R2: 0.1, R4: 0.1, R5: 0.08, R1: 0.05, R6: 0.05 },
     bridgeBars: [1, 2],
     tease: 0,
     stemTease: 0.5,
@@ -67,7 +69,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   mid: {
     name: 'mid',
-    weights: { R8: 1, R7: 0.4, R4: 0.18, R5: 0.14, R2: 0.14, R6: 0.07, R1: 0.07 },
+    weights: { R8: 0.8, D10: 0.6, R7: 0.4, D8: 0.25, D1: 0.2, D3: 0.2, D2: 0.15, D11: 0.15, R4: 0.12, R5: 0.1, R2: 0.1, R6: 0.04, R1: 0.04 },
     bridgeBars: [2],
     tease: 0.5,
     stemTease: 0.8,
@@ -82,7 +84,7 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   late: {
     name: 'late',
-    weights: { R8: 0.5, R7: 0.7, R4: 0.15, R5: 0.15 },
+    weights: { R7: 0.6, D10: 0.4, R8: 0.4, D8: 0.3, D11: 0.25, D2: 0.2, D3: 0.15, R4: 0.15, R5: 0.15, D1: 0.12 },
     bridgeBars: [2, 4],
     tease: 1,
     stemTease: 1,
@@ -97,7 +99,8 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
   },
   final: {
     name: 'final',
-    weights: { R10: 1 },
+    // R10 is no longer the only final move: D2's crawl, D8's long strip-down, and the final gate and spiral.
+    weights: { R10: 0.5, D2: 0.4, D8: 0.3, D1: 0.2, D3: 0.15 },
     bridgeBars: [3, 4],
     tease: 1,
     stemTease: 1,
@@ -177,6 +180,11 @@ export const STEMS = Object.freeze({
   /** Stems kept per hook: this long before the hook downbeat, and after it. */
   leadSec: 14,
   tailSec: 1,
+  /** P1 stem lanes of the playing song (A): decoded from just before its landed hook to this long after it
+   * (the stored window ends at hook + 48 s), and used only this far inside what is decoded. */
+  laneLeadSec: 1,
+  laneTailSec: 48,
+  laneMarginSec: 0.5,
 });
 
 /** Beat-matched layering (the Blend recipe, R8): B's bars before its hook, stretched to A's tempo. */
@@ -262,6 +270,179 @@ export const LAYERING = Object.freeze({
   handoverSec: 0.008,
 });
 
+/** A value per Phase. */
+type ByPhase<T> = Readonly<Record<PhaseName, T>>;
+
+/**
+ * The DJ techniques of docs/dj-techniques.md (D1–D12) and the variants of the older recipes: what varies at
+ * random, and what scales with the Phase. Levels are linear gains unless named `Db`; lengths in beats or bars
+ * of the deck named. The shapes of the moves are in plan/moves.ts, plan/bridges.ts and plan/landing.ts.
+ */
+export const MOVES = Object.freeze({
+  /** D1 Trans gate and pump: A chopped on its own grid over its last bars. */
+  gate: Object.freeze({
+    bars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    /** The gate's closed level (a partial gate keeps the groove early); null closes it to silence. */
+    closedDb: { early: -15, mid: -24, late: null, final: null } as ByPhase<number | null>,
+    modes: { gate: 0.5, pump: 0.3, gatePump: 0.2 },
+    duty: [0.5, 0.6] as const,
+    /** Chance of the 3-3-2 pattern in the 1/16 stage instead of straight steps. */
+    tresillo: 0.2,
+    edgeSec: 0.002,
+    /** Open steps get a little lift against the perceived level dip. */
+    openLiftDb: 1,
+    /** A's high-pass reaches at least this before the 1/16 stage (AM sidebands buzz in the lows). */
+    fastStageHpfHz: 250,
+    hpfToHz: [300, 500, 800] as const,
+    riserDb: { early: -12, mid: -10, late: -8, final: -6 } as ByPhase<number>,
+    pumpDb: [-6, -14] as const,
+    pumpRecoverBeats: 0.7,
+    kicks: [0.35, 0.55] as const,
+    /** Bars whose drums are this far under the song's median are sparse: the gate would sound like dropouts. */
+    sparseDrumsDb: -9,
+    finalBusHpfHz: 300,
+  }),
+  /** D3 Spiral echo-out: A's last beat caught in an echo whose delay shrinks, so the repeats climb. */
+  spiral: Object.freeze({
+    bars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    delayBeats: [0.5, 0.75, 1] as const,
+    endBeats: [1 / 16, 1 / 12] as const,
+    feedbackFrom: 0.55,
+    feedbackTo: { early: 0.7, mid: 0.75, late: 0.8, final: 0.85 } as ByPhase<number>,
+    send: 0.8,
+    hpfFromHz: 300,
+    hpfToHz: [1500, 2500] as const,
+    /** "Spiral down" (only as an R7 exit, a bridge follows): the delay grows and the repeats fall. */
+    downChance: 0.25,
+    downBeats: [0.25, 1] as const,
+  }),
+  /** D2 Stop-time hits: A only on chosen beats, silence between, the crowd fills the gap. */
+  hits: Object.freeze({
+    holdBeats: [0.2, 0.3] as const,
+    openSec: 0.003,
+    closeSec: 0.03,
+    kick: 0.55,
+    thunkDb: -12,
+    ringSend: 0.4,
+    /** The silence before the pickup, in B's beats, whatever the Phase's gap. */
+    minGapBeats: { early: 1, mid: 1, late: 1, final: 2 } as ByPhase<number>,
+    lateRiserChance: 0.3,
+    impactBoost: 0.1,
+    /** Never within this many previous transitions (at most one in six). */
+    cooldown: 5,
+  }),
+  /** D8 Stem peel: A taken apart stem by stem, its voice thrown into the echo. */
+  peel: Object.freeze({
+    bars: { early: [1], mid: [2], late: [2], final: [2, 3, 4] } as ByPhase<readonly number[]>,
+    orders: { acapella: 0.5, beat: 0.25, drumsVoice: 0.25 },
+    /** Chance a removal slides over a beat instead of cutting on the one. */
+    slide: 0.5,
+    cutSec: 0.01,
+    /** A stem is never exposed alone longer than this many A bars. */
+    maxExposedBars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    reverbSend: [0.15, 0.35] as const,
+    hpfHz: 120,
+    throwDelayBeats: [0.5, 0.75] as const,
+    throwFeedback: 0.5,
+  }),
+  /** D10 Drum swap: A's drums out, B's stretched drums in, under A's voice. */
+  swap: Object.freeze({
+    bars: { early: [1], mid: [2], late: [2, 3, 4], final: [2, 3, 4] } as ByPhase<readonly number[]>,
+    juggle: 0.3,
+    drums: 0.9,
+    bass: 0.85,
+    /** During the swap, B's kick against A's bassline: A's bass a little down, or A high-passed. */
+    aBassDown: -0.29,
+    aHpfHz: 80,
+    exits: { echo: 0.4, wash: 0.3, throw: 0.3 },
+  }),
+  /** D9 Ghost Tease: B's voice only through the reverb, behind A's last bars (S1). */
+  ghost: Object.freeze({
+    chance: { early: 0, mid: 0.4, late: 0.5, final: 0.5 } as ByPhase<number>,
+    bars: { early: 0, mid: 1, late: 1.5, final: 2 } as ByPhase<number>,
+    send: { early: 0, mid: 0.4, late: 0.5, final: 0.55 } as ByPhase<number>,
+    hpfFromHz: 400,
+    hpfToHz: [700, 1200] as const,
+    /** Keys incompatible or unknown: air more than pitch. */
+    airHpfHz: 1500,
+    airSend: 0.3,
+  }),
+  /** D11 Vocal-chop stutter build: B's first syllable chopped faster and faster on B's grid (S2). */
+  chop: Object.freeze({
+    bars: { early: 1, mid: 1, late: 2, final: 2 } as ByPhase<number>,
+    grainBeats: [0.25, 0.125] as const,
+    rateTo: { early: 1, mid: 1.06, late: 1.12, final: 1.19 } as ByPhase<number>,
+    gainDb: { early: -1, mid: 0, late: 1, final: 2 } as ByPhase<number>,
+    octaveChance: 0.3,
+    octaveDb: -10,
+    fadeMs: 3,
+    hpfHz: 150,
+    /** The grain starts on the syllable's onset, searched this far after the source point, past at most
+     * `consonantSec` of noise-like consonant. */
+    onsetSearchSec: 0.25,
+    consonantSec: 0.03,
+    minGapBeats: { early: 0.5, mid: 0.5, late: 1, final: 1 } as ByPhase<number>,
+    /** The build under the chops: the snare roll's velocity scale (about −6 dB). */
+    rollScale: 0.65,
+    /** B sings at its hook when its vocals bar is at least this loud (stems bars, dB). */
+    minVocalsDb: -30,
+  }),
+  /** D12 Pre-verb swell (P3): B's own first beat, reversed through a reverb, inhaled into the landing. */
+  preverb: Object.freeze({
+    lengthBars: { early: 0.5, mid: 0.75, late: 1, final: 1 } as ByPhase<number>,
+    gainDb: { early: -12, mid: -10, late: -8, final: -7 } as ByPhase<number>,
+    breathSec: [0.03, 0.06] as const,
+    hpfHz: 200,
+    /** The render: B's mix from its pickup for one beat, RT60 = this × B's bar, faded in. */
+    rt60Bars: 1.25,
+    fadeInSec: 0.02,
+    minSec: 0.25,
+    /** With a gap under this many B beats the swell overlaps A: A must be cut low, or the keys agree. */
+    clearGapBeats: 0.5,
+  }),
+  /** The landing layer, rotated: the reverse cymbal, a dry landing, or D12's pre-verb (when rendered). */
+  landing: Object.freeze({
+    weights: {
+      early: { cymbal: 0.45, dry: 0.3, preverb: 0.45 },
+      mid: { cymbal: 0.45, dry: 0.2, preverb: 0.5 },
+      late: { cymbal: 0.5, dry: 0.1, preverb: 0.5 },
+      final: { cymbal: 0.5, dry: 0, preverb: 0.5 },
+    } as ByPhase<Readonly<Record<'cymbal' | 'dry' | 'preverb', number>>>,
+    /** Sample layers on the impact, one set drawn per landing ([name, gain dB]). */
+    impacts: {
+      early: [[['boom', -12]], [['boom', -14]], [['orchestra-hit', -14]], [['horn', -18]]],
+      mid: [[['boom', -8]], [['orchestra-hit', -9]], [['boom', -9], ['orchestra-hit', -12]], [['horn', -14]]],
+      late: [[['orchestra-hit', -6], ['boom', -8]], [['boom', -6]], [['orchestra-hit', -5]]],
+      final: [[['orchestra-hit', -3], ['boom', -5]], [['orchestra-hit', -3]], [['boom', -4]]],
+    } as ByPhase<ReadonlyArray<ReadonlyArray<readonly [string, number]>>>,
+    /** The samples sit this far before T (their attack). */
+    sampleLeadSec: [0.02, 0.04] as const,
+    dryImpactScale: 0.8,
+  }),
+  /** R7's bridge patterns, independent of its exit (D4 half-time, D13 clap-along, a kick roll). */
+  bridges: Object.freeze({
+    weights: {
+      early: { roll: 1, clap: 0.6, kickroll: 0.4, halftime: 0 },
+      mid: { roll: 1, halftime: 0.5, clap: 0.4, kickroll: 0.4 },
+      late: { roll: 1, halftime: 0.7, kickroll: 0.4, clap: 0 },
+      final: { roll: 1, halftime: 0.6, kickroll: 0, clap: 0 },
+    } as ByPhase<Readonly<Record<'roll' | 'halftime' | 'kickroll' | 'clap', number>>>,
+    /** Classic roll variety: start at 1/8 sometimes, triplets in the last beat, a tone riser. */
+    eighthStart: 0.3,
+    tripletEnd: 0.3,
+    toneRiser: 0.4,
+    kicks: 0.6,
+    claps: 0.5,
+  }),
+  /** Variants of the older recipes (docs/dj-techniques.md › weakest recipes). */
+  variants: Object.freeze({
+    R1: { hpf: 0.5, lpf: 0.3, stab: 0.2 },
+    R2: { delayBeats: [0.5, 0.5, 0.75, 1] as const, freeze: 0.2, vocalThrow: 0.35, freezeFeedback: 0.92 },
+    R4: { lastBeat: 0.35, triplet: 0.3, pitchUp: { early: 0, mid: 0.3, late: 0.4, final: 0.4 } as ByPhase<number>, pitchTo: 1.12 },
+    R5: { brakeSec: [0.6, 0.8, 1.0] as const, spinRate: [2.5, 3, 3.5] as const, spinSec: [0.8, 1.0, 1.2] as const },
+  }),
+});
+
 export const PLANNER = Object.freeze({
   lookaheadSec: 0.08,
   declickSec: 0.004,
@@ -276,6 +457,58 @@ export const PLANNER = Object.freeze({
   useLegacyVolume: false,
 });
 
+/** The show flow (docs/protocol.md › Scenes): the Shuffle, the Check, the Celebration and the Interval. */
+export const FLOW = Object.freeze({
+  /** The public Shuffle's animation: the scene becomes `play` after it, and no song lands before then. */
+  shuffleSec: 8,
+  /** The tie-free Shuffle reshuffles at most this many times; then it keeps the last Queue and warns. */
+  shuffleMaxAttempts: 500,
+  check: Object.freeze({
+    /** From the Check's start to its first snippet: the projector shows the card first. */
+    leadSec: 1.5,
+    /** A ✓ step: the landed song's hook snippet (analysis/snippets.py cuts 3 s). */
+    stepSec: 2.5,
+    /** A ✗ step: the short "broken record" sound. */
+    missSec: 1.2,
+    /** Silence between steps. */
+    gapSec: 0.35,
+    /** After the last step, the result shows. */
+    tailSec: 0.4,
+    /** The song or Hold music under the Check, far down. */
+    duckDb: -32,
+    duckFadeSec: 0.4,
+    /** Snippets play at their loudness-normalised level plus this. */
+    snippetDb: -2,
+    snippetFadeSec: 0.25,
+    brokenDb: -8,
+  }),
+  celebration: Object.freeze({
+    /** The Clear fanfare and an impact on the Celebration's start. */
+    fanfare: 'mkwii-mission-clear' as StingerName,
+    impact: 'orchestra-hit' as SoundName,
+    /** The Celebration's music comes in under the fanfare. */
+    musicDelaySec: 1.2,
+    musicFadeSec: 1.5,
+    /** 'winningSong': the Winning song's landed hook looped in whole bars (at most this many). */
+    loopBars: 8,
+    loopMinBars: 2,
+    winningSongDb: -4,
+    victoryDb: -6,
+    /** After a Bingo's Celebration, the Interval starts by itself so the show never stalls. */
+    toIntervalSec: 60,
+  }),
+  /** The Failure fanfare on an invalid Claim. */
+  failureFanfare: 'mkwii-mission-failure' as StingerName,
+  /** Interval music ('celebration' mood Hold music until an Interval playlist exists). */
+  intervalDb: -8,
+  intervalFadeSec: 2,
+  /** The Interval's countdown is only a guide. */
+  intervalGuideSec: SCHEDULE.intervalSec,
+  /** The phones' Heat (`heat.sample`): a random 4–15 s after a landing, never at it; held 15 s at most when no
+   * next sample is due yet. */
+  heatSample: Object.freeze({ minDelaySec: 4, maxDelaySec: 15, holdSec: 15 }),
+});
+
 export const ENGINE = Object.freeze({
   taskIntervalMs: 25,
   healthIntervalMs: 5000,
@@ -283,7 +516,7 @@ export const ENGINE = Object.freeze({
   resumeWithinMs: 12 * 3600 * 1000,
   /** A current song this close to its end is not used as the outgoing deck. */
   minOutgoingTailSec: 0.5,
-  fxSamples: ['boom', 'orchestra-hit'] as const,
+  fxSamples: ['boom', 'orchestra-hit', 'horn'] as const,
   /** One-shot fanfares (client/public/audios/stingers). */
   stingers: STINGER_NAMES,
   /** Played once per climb (towards the Line, then the Bingo) as the first Spin at or above

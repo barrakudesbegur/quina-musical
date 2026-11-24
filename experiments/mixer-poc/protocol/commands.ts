@@ -2,7 +2,16 @@
 // COMMANDS is the single source of truth: the engine checks every arriving command against it, and the
 // TypeScript types below are derived from it, so a field can never be documented in one place and
 // checked differently in another. docs/protocol.md explains each command.
-import { PROTOCOL_VERSION, PACE_LIMITS_SEC, SOUND_NAMES, isPhaseName, type PhaseName, type ProtocolVersion } from './vocabulary.ts';
+import {
+  PROTOCOL_VERSION,
+  PACE_LIMITS_SEC,
+  SOUND_NAMES,
+  WIN_KINDS,
+  CELEBRATION_MUSIC,
+  isPhaseName,
+  type PhaseName,
+  type ProtocolVersion,
+} from './vocabulary.ts';
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'phase' | 'integer';
 export interface FieldSpec {
@@ -49,11 +58,14 @@ export const COMMANDS = Object.freeze({
     holdMusicAfterSec: { type: 'number', optional: true, min: 0, max: 3600 },
     finalLapStinger: { type: 'boolean', optional: true },
   },
-  /** A claimed Line passed its Check: the Phase starts climbing towards the Bingo. */
+  /** A claimed Line passed its Check: the Phase starts climbing towards the Bingo. A manual override for when
+   * no Check was run (a valid `decide` confirms the Line by itself); allowed in play and in the Celebration. */
   confirmLine: {},
   /** Cards in play for the whole game, as ranges ("1-180, 200-215, 400-460"); empty clears them. */
   setCardsInPlay: { ranges: { type: 'string', allowEmpty: true, maxLength: 2000 } },
-  /** Stop, then run a new secure Shuffle of the Pool for the round. */
+  /** Run the round's public, tie-free Shuffle (scene `roundStart`, `shuffle.scheduled`); the scene becomes
+   * `play` when it ends, and the first Next waits for it. Without `number`/`kind`: the introduced round's
+   * (`roundIntro`), else the next one. */
   newRound: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
     kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
@@ -66,6 +78,41 @@ export const COMMANDS = Object.freeze({
   overrideNextRecipe: { recipe: { type: 'string', optional: true, nullable: true } },
   /** Ask for a fresh `state` event. */
   getState: {},
+  /** Ask for the current Game's journal from entry `fromSeq` on (all of it without `fromSeq`); answered by a
+   * `journal.entries` event. The cloud link uses it to fill in entries it missed. */
+  getJournal: { fromSeq: { type: 'integer', optional: true, min: 1 } },
+
+  // ---- the show flow (docs/protocol.md › Scenes) ----
+  /** Introduce the next round (scene `roundStart`): its name and prizes on screen, Interval music on. No
+   * Queue yet: `newRound` runs the Shuffle. */
+  roundIntro: {
+    number: { type: 'integer', optional: true, min: 1, max: 20 },
+    kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
+  },
+  /** A player claims a Line or the Bingo for a card (`kind` defaults to what the Phase is climbing towards).
+   * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
+  claim: {
+    cardId: { type: 'integer', min: 1, max: 9999 },
+    kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
+  },
+  /** (Re)start a Claim's Check: a re-check, or another order. */
+  checkStart: { claimId: { type: 'string', maxLength: 40 } },
+  /** The presenters' verdict on a Claim. Both are journaled. */
+  decide: { claimId: { type: 'string', maxLength: 40 }, valid: { type: 'boolean' } },
+  /** Set or edit a Winner's name and notes (PRIVATE), at any time. An empty string clears one. */
+  winnerInfo: {
+    claimId: { type: 'string', maxLength: 40 },
+    name: { type: 'string', optional: true, allowEmpty: true, maxLength: 80 },
+    notes: { type: 'string', optional: true, allowEmpty: true, maxLength: 500 },
+  },
+  /** Change the Celebration's music without blocking anything. */
+  celebrationMusic: { choice: { type: 'string', oneOf: CELEBRATION_MUSIC } },
+  /** After a Bingo's Celebration: the Interval (it also starts by itself after a while). */
+  interval: {},
+  /** The end of the Game (scene `after`). */
+  endGame: {},
+  /** The technical pause ("Tornem de seguida"): on, off, or toggle (no `on`). Hold music plays meanwhile. */
+  pause: { on: { type: 'boolean', optional: true } },
 } as const satisfies Record<string, Record<string, FieldSpec>>);
 
 type Specs = typeof COMMANDS;

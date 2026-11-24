@@ -14,6 +14,18 @@ export function seededRandom(seed: number): () => number {
   };
 }
 
+/**
+ * A well-spread 32-bit seed for draw number `n` from `seed` (the SplitMix32 step and finalizer), so the draws
+ * 0, 1, 2… of one seed are unrelated streams.
+ * @returns an unsigned 32-bit seed
+ */
+export function mixSeed(seed: number, n: number): number {
+  let z = ((seed >>> 0) + Math.imul((n + 1) >>> 0, 0x9e3779b9)) >>> 0;
+  z = Math.imul(z ^ (z >>> 16), 0x85ebca6b) >>> 0;
+  z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35) >>> 0;
+  return (z ^ (z >>> 16)) >>> 0;
+}
+
 /** @returns uniform in [0, 1), from the platform's secure generator */
 export function secureRandom(): number {
   const buffer = new Uint32Array(1);

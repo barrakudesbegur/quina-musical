@@ -1,6 +1,7 @@
 // The show's Web Audio graph:
-//   decks (trim → HPF → LPF → fader) → musicBus → holdDuck → busHPF ┐
-//   Hold music → holdBus ┤
+//   decks (trim → HPF → LPF → fader) → musicBus → holdDuck → checkDuck.music → busHPF ┐
+//   Hold music, Interval music, the Celebration's loop → holdBus → checkDuck.hold ┤
+//   a Check's snippets and "broken record" sounds → checkBus ┤
 //   deck fader → echo send → echo (delay ⟲ HPF · feedback) → echo return ┤
 //   deck fader → reverb send → convolver → HPF → reverb return ┤
 //   synth layers (riser, snare roll, swell, impact) → synthBus ┤
@@ -42,8 +43,12 @@ export class AudioGraph {
   processingLatencySec: number;
   busHpf: BiquadFilterNode;
   holdDuck: GainNode;
+  /** Everything but a Check's own sounds goes far down under it (the songs, and the Hold music bus). */
+  checkDuck: { music: GainNode; hold: GainNode };
   musicBus: GainNode;
   holdBus: GainNode;
+  /** A Check's snippets: never ducked. */
+  checkBus: GainNode;
   fxBus: GainNode;
   synthBus: GainNode;
   drumBus: GainNode;
@@ -71,13 +76,18 @@ export class AudioGraph {
     this.busHpf.frequency.value = 10;
     this.busHpf.Q.value = 0.9;
     this.busHpf.connect(this.master);
+    this.checkDuck = { music: ctx.createGain(), hold: ctx.createGain() };
+    this.checkDuck.music.connect(this.busHpf);
+    this.checkDuck.hold.connect(this.master);
     this.holdDuck = ctx.createGain();
-    this.holdDuck.connect(this.busHpf);
+    this.holdDuck.connect(this.checkDuck.music);
     this.musicBus = ctx.createGain();
     this.musicBus.connect(this.holdDuck);
     // Hold music has its own bus: it is never ducked by the Hold, it is set to its own level.
     this.holdBus = ctx.createGain();
-    this.holdBus.connect(this.master);
+    this.holdBus.connect(this.checkDuck.hold);
+    this.checkBus = ctx.createGain();
+    this.checkBus.connect(this.master);
 
     this.fxBus = this.bus(-2);
     this.synthBus = this.bus(-3);

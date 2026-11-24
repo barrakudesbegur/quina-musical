@@ -4,5 +4,7 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["relay", "tests", "vite.config.ts"]
+  "include": ["relay", "tests", "vite.config.ts"],
+  // The UI apps' tests are checked by `npm run test:ui` with their own tsconfig.
+  "exclude": ["tests/ui"]
 }

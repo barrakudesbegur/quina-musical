@@ -53,7 +53,13 @@ export function applyPlan(plan: { events: readonly PlanEvent[] }, outputs: PlanO
         applied.synth++;
         continue;
       case 'slices':
-        decks[event.deck]?.playSlices(event.slices);
+        decks[event.deck]?.playSlices(event);
+        continue;
+      case 'stemLane':
+        decks[event.deck]?.playLane(event);
+        continue;
+      case 'preverb':
+        decks[event.deck]?.playPreverb(event);
         continue;
       case 'spinback':
         decks[event.deck]?.spinback(event);

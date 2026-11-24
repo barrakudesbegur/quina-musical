@@ -7,7 +7,7 @@
     "start": "node relay/server.ts --dist",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && svelte-check --tsconfig ./tsconfig.json --threshold error",
-    "test": "npm run typecheck && node --test \"tests/**/*.test.ts\"",
+    "test": "npm run typecheck && node --test \"tests/*.test.ts\"",
     "prep": "analysis/.venv/bin/python analysis/prepare.py",
     "test:pipeline": "analysis/.venv/bin/python -m pytest analysis/tests",
     "analyze": "analysis/.venv/bin/python analysis/analyze.py",

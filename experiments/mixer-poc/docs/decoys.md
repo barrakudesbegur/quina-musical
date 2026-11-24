@@ -1,6 +1,6 @@
 # Decoys (experiment, off by default)
 
-A Decoy teases a song that is not next. After the outgoing song exits, in the first bars of an S2 bridge, the "wrong record" comes in: a song that already landed this round, low-passed, from its hook. A tape stop cuts it off, and the real build carries on into the song that lands.
+A Decoy teases a song that is not next. One beat after the outgoing song's exit downbeat, in the first bars of an S2 bridge, the "wrong record" comes in as the outgoing song's echo or wash fades: a song that already landed this round, low-passed, from its hook. A tape stop cuts it off, and the real build carries on into the song that lands.
 
 **Rules.** The code enforces these, and `tests/decoys.test.ts` checks them:
 - It is never the song that lands, nor the one that is leaving. It is always a song that already counted, so marking it again changes nothing.
@@ -24,6 +24,8 @@ Everything is in `DECOYS` in `engine/src/config.ts`:
 | `gainDb`, `lpfHz` | How loud it is (on top of its own loudness trim) and how muffled ("the wrong record") |
 | `cutSec`, `cutSfx` | The tape stop's length, and the sound on the cut |
 | `minBridgeBars` | The shortest bridge it may use |
+
+`chance.final` is 0 on purpose. The final phase mostly plays R10 (the power-down), and a Decoy over its tape stop and heartbeat would muddy the moment. Raise it only after listening.
 
 ## Remove it
 

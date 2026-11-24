@@ -481,6 +481,18 @@ body.hide-controls .hint {
   background: rgb(0 0 0 / 0.8);
 }
 
+/* The technical pause (show protocol `pause`). */
+.pause-overlay {
+  z-index: 9;
+}
+
+.pause-title {
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 800;
+  color: var(--gold);
+}
+
 .start-overlay {
   position: fixed;
   inset: 0;

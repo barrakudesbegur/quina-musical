@@ -3,6 +3,10 @@
 // (ADR 0002: devices share timestamps, never an audio clock). docs/protocol.md explains each event.
 import {
   PROTOCOL_VERSION,
+  type CelebrationMusic,
+  type CheckOutcome,
+  type ClaimStatus,
+  type ClaimWarning,
   type ClimbTarget,
   type ExitName,
   type HoldReason,
@@ -15,7 +19,9 @@ import {
   type RejectReason,
   type Role,
   type RoundKind,
+  type ShowScene,
   type ShowStatus,
+  type WinKind,
 } from './vocabulary.ts';
 import type { JournalEntry } from './journal.ts';
 
@@ -141,6 +147,107 @@ export interface HistoryEntry {
   phase: PhaseName;
 }
 
+// ---- the show flow: scenes, Claims, the Check, Celebration, Interval, Winners ---------------------------
+/** A Claim of this round. */
+export interface ClaimInfo {
+  /** 'cl-3': unique within the Game. */
+  claimId: string;
+  round: number;
+  cardId: number;
+  kind: WinKind;
+  atMs: number;
+  /** The Queue index of the last counted landing when the claim was made. */
+  position: number;
+  status: ClaimStatus;
+  /** Set when its Check is scheduled (or the claim is decided without one). */
+  outcome: CheckOutcome | null;
+  /** PRIVATE (console only): the Queue index at which the card first completed this kind, or null. The
+   * console shows "complete since song 34" (index + 1). */
+  completeSince: number | null;
+  /** PRIVATE (console only). */
+  warnings: ClaimWarning[];
+}
+
+/** One song of a Check: its snippet (✓) or the "broken record" sound (✗), revealed at `atMs`. */
+export interface CheckStep {
+  songId: number;
+  landed: boolean;
+  /** When the snippet starts, scheduled in advance (ADR 0002). */
+  atMs: number;
+  durationMs: number;
+}
+
+/** A Check, scheduled in advance: the projector reveals each step at its `atMs`. */
+export interface CheckInfo {
+  claimId: string;
+  cardId: number;
+  kind: WinKind;
+  outcome: CheckOutcome;
+  /** Line: the row played (the completed row, else the row with most landed songs, top row on a tie).
+   * Bingo: null (all 12 songs). */
+  row: number | null;
+  /** Line: the other completed rows, which the console mentions. */
+  otherRows: number[];
+  /** Empty for `unknownCard` and `wrongType`. */
+  steps: CheckStep[];
+  startAtMs: number;
+  /** The result shows from here. */
+  endAtMs: number;
+}
+
+export interface CelebrationInfo {
+  kind: WinKind;
+  round: number;
+  /** Several when claims share the prize. */
+  cardIds: number[];
+  winningSongId: number | null;
+  sinceMs: number;
+  /** Default: Line → 'winningSong', Bingo → 'victory'. */
+  music: CelebrationMusic;
+}
+
+/** A Claim the presenters decided valid. */
+export interface WinnerInfo {
+  round: number;
+  kind: WinKind;
+  cardId: number;
+  claimId: string;
+  winningSongId: number | null;
+  /** The Queue index of the Winning song. */
+  position: number;
+  atMs: number;
+  /** PRIVATE: the console and cloud data only; never the projector or phones. */
+  name: string | null;
+  /** PRIVATE. */
+  notes: string | null;
+}
+
+export interface IntervalInfo {
+  sinceMs: number;
+  nextRound: number;
+  /** Only a countdown guide: rounds always start by hand. */
+  guideEndMs: number;
+}
+
+/** The technical pause ("Tornem de seguida"), over whatever scene is underneath. */
+export interface PauseInfo {
+  sinceMs: number;
+}
+
+/** The round's public Shuffle (the projector animates it; it never reveals the Queue). */
+export interface ShuffleInfo {
+  round: number;
+  startAtMs: number;
+  endAtMs: number;
+}
+
+/** The round being introduced (`roundIntro`), before its Shuffle. */
+export interface IntroInfo {
+  round: number;
+  kind: RoundKind;
+  sinceMs: number;
+}
+
 /** The whole show as the engine sees it. Sent after every change and in answer to `getState`. */
 export interface ShowState {
   v: ProtocolVersion;
@@ -176,6 +283,22 @@ export interface ShowState {
   landings: LandingInfo[];
   /** The last 8 transitions. */
   history: HistoryEntry[];
+  // ---- the show flow ----
+  scene: ShowScene;
+  /** The technical pause, or null. */
+  pause: PauseInfo | null;
+  /** The Shuffle while it runs (scene `roundStart`), else null. */
+  shuffle: ShuffleInfo | null;
+  /** In `roundStart`, the round being introduced, else null. */
+  intro: IntroInfo | null;
+  /** This round's Claims, oldest first. */
+  claims: ClaimInfo[];
+  /** The Check on screen (running, or showing its result until it is decided), else null. */
+  check: CheckInfo | null;
+  celebration: CelebrationInfo | null;
+  interval: IntervalInfo | null;
+  /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
+  winners: WinnerInfo[];
 }
 
 // ---- the other events ---------------------------------------------------------------------------------
@@ -290,6 +413,82 @@ export interface JournalAppended {
   entry: JournalEntry;
 }
 
+/**
+ * The answer to `getJournal`: the current Game's entries from the asked `fromSeq` on, in `seq` order (empty when
+ * there are none, `gameId` null before the first entry). PRIVATE, like `journal.entry`.
+ */
+export interface JournalEntries {
+  v: ProtocolVersion;
+  type: 'journal.entries';
+  reqId: string | null;
+  gameId: string | null;
+  entries: JournalEntry[];
+}
+
+/**
+ * The phones' public Heat: ease towards `value` (0..1) between `fromMs` and `toMs`. Sent a random 4–15 s after a
+ * landing, never at it, so the Heat never marks the landing that changed it; `toMs` is when the next sample is
+ * due (the Spin in flight's), else `fromMs` + 15 s. Only with cards in play. Public (a blurred display value).
+ */
+export interface HeatSample {
+  v: ProtocolVersion;
+  type: 'heat.sample';
+  value: number;
+  fromMs: number;
+  toMs: number;
+}
+
+/** The scene changed: a trigger for the projector's scene animations. */
+export interface SceneChanged {
+  v: ProtocolVersion;
+  type: 'scene.changed';
+  scene: ShowScene;
+  previous: ShowScene;
+  atMs: number;
+}
+
+/** A round's Shuffle: the projector animates it between these times. Never the Queue. */
+export interface ShuffleScheduled {
+  v: ProtocolVersion;
+  type: 'shuffle.scheduled';
+  round: number;
+  kind: RoundKind;
+  startAtMs: number;
+  endAtMs: number;
+  songCount: number;
+}
+
+/** A Claim was made (its `completeSince` and `warnings` are PRIVATE). */
+export interface ClaimOpened {
+  v: ProtocolVersion;
+  type: 'claim.opened';
+  claim: ClaimInfo;
+}
+
+/** A Check starts: its steps are timed in advance. */
+export interface CheckScheduled {
+  v: ProtocolVersion;
+  type: 'check.scheduled';
+  check: CheckInfo;
+}
+
+/** The presenters decided a Claim. */
+export interface ClaimDecided {
+  v: ProtocolVersion;
+  type: 'claim.decided';
+  claimId: string;
+  cardId: number;
+  verdict: 'valid' | 'invalid';
+  atMs: number;
+}
+
+/** A Celebration starts (or its winning cards change). */
+export interface CelebrationStarted {
+  v: ProtocolVersion;
+  type: 'celebration.started';
+  celebration: CelebrationInfo;
+}
+
 /** Everything the show engine emits. */
 export type ShowEvent =
   | ShowState
@@ -300,7 +499,15 @@ export type ShowEvent =
   | LandingUndone
   | CommandRejected
   | EngineHealth
-  | JournalAppended;
+  | JournalAppended
+  | JournalEntries
+  | HeatSample
+  | SceneChanged
+  | ShuffleScheduled
+  | ClaimOpened
+  | CheckScheduled
+  | ClaimDecided
+  | CelebrationStarted;
 export type ShowEventType = ShowEvent['type'];
 /** One event by type, for example `EventOf<'transition.landed'>`. */
 export type EventOf<T extends ShowEventType> = Extract<ShowEvent, { type: T }>;
@@ -315,6 +522,14 @@ export const EVENT_TYPES = Object.freeze([
   'command.rejected',
   'engine.health',
   'journal.entry',
+  'journal.entries',
+  'heat.sample',
+  'scene.changed',
+  'shuffle.scheduled',
+  'claim.opened',
+  'check.scheduled',
+  'claim.decided',
+  'celebration.started',
 ] as const satisfies readonly ShowEventType[]);
 
 // ---- relay messages -------------------------------------------------------------------------------------

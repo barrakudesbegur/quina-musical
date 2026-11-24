@@ -165,6 +165,8 @@ export function releaseSuspense({ open, releaseAt, firstFreeBar, B, rng, id = nu
     teaseStyle: null,
     blend: null,
     signature: signature ? { deck: signature.deck, id: signature.id, at: signature.at, rate: signature.rate } : null,
+    landing: 'cymbal',
+    layers: [],
     phraseClass: null,
     relaxed: false,
     cost: null,

@@ -20,7 +20,9 @@
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
 // 'bingo'. Everything derived from cards in play is "possible": the ranges include unsold cards.
 
-import type { RoundKind } from '@quina/protocol';
+import type { RoundKind, WinKind } from '@quina/protocol';
+
+export type { WinKind } from '@quina/protocol';
 
 /** A song on a printed card. */
 export interface CardSong {
@@ -38,7 +40,6 @@ export interface Card {
 }
 /** A normal round, or the special round (special cards only). */
 export type RoundType = RoundKind;
-export type WinKind = 'line' | 'bingo';
 /** The songs that have landed: a Set, or an array in landing order. */
 export type LandedSongs = ReadonlySet<number> | ReadonlyArray<number>;
 export interface CardStatus {

@@ -2,8 +2,8 @@
 // and is cut off by a tape stop before anything of the song that lands; with the flag off nothing changes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { decoyLayer } from '../engine/src/plan/decoys.ts';
-import { planTransition, eventStart } from '../engine/src/plan/planner.ts';
+import { decoyLayer, firstSoundOfB } from '../engine/src/plan/decoys.ts';
+import { planTransition } from '../engine/src/plan/planner.ts';
 import { PHASES } from '../engine/src/plan/phases.ts';
 import { spinWindow } from '../engine/src/plan/pace.ts';
 import { usableHooks } from '../engine/src/plan/hooks.ts';
@@ -50,9 +50,9 @@ test('a Decoy sits in the first bars of an S2 bridge, is cut off before anything
     const decoy = events.find((e): e is DecoyEvent => e.kind === 'decoy');
     assert.ok(decoy);
     assert.equal(decoy.songId, dId);
-    assert.ok(decoy.at >= result.exitAt, 'after A has gone');
+    assert.ok(decoy.at >= result.exitAt + result.hook.beat - 1e-9, 'a beat after A\'s exit downbeat, as its tail fades');
     assert.ok(decoy.cutAt - decoy.at >= ON.minSec - 1e-9 && decoy.cutAt - decoy.at <= ON.maxSec + 1e-9);
-    const bFirst = Math.min(result.b.startCtx, ...result.events.filter((e) => 'target' in e && e.target.startsWith('B.')).map(eventStart));
+    const bFirst = firstSoundOfB(result);
     assert.ok(decoy.cutAt + decoy.cutSec < bFirst, 'cut off before anything of B');
     assert.ok(decoy.cutAt + decoy.cutSec <= result.T - result.hook.bar + 1e-9, 'the last bar belongs to the real build');
     assert.ok(Math.abs(decoy.offset - (hook.downbeatSec - Math.min(hook.pickupSec || 0, hook.downbeatSec))) < 1e-9, 'from its hook');

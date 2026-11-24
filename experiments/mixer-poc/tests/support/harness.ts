@@ -24,24 +24,14 @@ export const analyses = new Map(index.map((s) => [s.id, readJson<SongAnalysis>(p
 export const songs = index.map((s) => ({ id: s.id, title: s.title, artist: s.artist }));
 export const allCards = readJson<Card[]>(path.join(import.meta.dirname, '../../../../card-generator/dist/cards.json'));
 
-export function seededShuffle(seed: number) {
-  const rnd = seededRandom(seed);
-  return (ids: number[]) => {
-    const a = [...ids];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(rnd() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
-}
-
 export interface SetupOptions {
   seed?: number;
   decoded?: (songId: number) => boolean;
   settings?: Partial<GameSettings>;
   cards?: Card[];
   cardsInPlay?: string;
+  /** A fixed Queue (it bypasses the tie-free Shuffle). */
+  fixedQueue?: number[] | null;
   /** Resume this Game (a restarted show page). */
   restore?: GameRecord | null;
   /** Start the fake audio clock here (a restarted page's clock starts again near 0). */
@@ -54,7 +44,7 @@ export interface SetupOptions {
   decoys?: Partial<DecoyConfig>;
 }
 
-export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardsInPlay = '', restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {}, decoys = {} }: SetupOptions = {}) {
+export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardsInPlay = '', fixedQueue = null, restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {}, decoys = {} }: SetupOptions = {}) {
   const clock = { t: startSec };
   const env: Env = {
     now: () => clock.t,
@@ -63,10 +53,9 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     analysis: (id) => (decoded(id) ? analyses.get(id) ?? null : null),
     isDecoded: (id) => decoded(id),
     random: seededRandom(seed),
-    shuffle: seededShuffle(seed),
     ...extra,
   };
-  const show = new Show({ env, songs, settings, cards, cardsInPlay, restore, decoys });
+  const show = new Show({ env, songs, settings, cards, cardsInPlay, fixedQueue, restore, decoys });
   const log: Effect[] = [...show.flush()];
   // Any message, as a remote might send it.
   const dispatch = (message: unknown) => {

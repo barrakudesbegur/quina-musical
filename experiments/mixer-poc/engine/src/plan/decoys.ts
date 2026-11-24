@@ -32,11 +32,11 @@ export function decoyLayer({ plan, source, phase, rng, config = DECOYS }: DecoyR
   if (source.songId === plan.b.songId) return null; // never the song that lands
   if (plan.shape !== 'S2' || !plan.a || plan.bridgeBars < config.minBridgeBars) return null;
   if (!(rng() < (config.chance[phase] ?? 0))) return null;
-  const start = plan.exitAt + 0.02;
+  // It comes in one of B's beats after A's exit downbeat, as A's echo or wash tail fades.
+  const start = plan.exitAt + plan.hook.beat;
   // It must be over (tape stop included) before B or anything of B is heard, and leave the last bar of the
   // bridge to the real build.
-  const bEvents = plan.events.filter((e) => e.kind === 'signature' || e.kind === 'stems' || ('target' in e && e.target.startsWith('B.')));
-  const bFirst = Math.min(plan.b.startCtx, ...bEvents.map(eventStart));
+  const bFirst = firstSoundOfB(plan);
   const lastBar = plan.T - plan.hook.bar;
   const cutAt = Math.min(start + config.maxSec, bFirst - config.cutSec - 0.1, lastBar - config.cutSec);
   if (cutAt - start < config.minSec) return null;
@@ -52,6 +52,12 @@ export function decoyLayer({ plan, source, phase, rng, config = DECOYS }: DecoyR
     lpfHz: config.lpfHz,
   };
   return [decoy, sfx(config.cutSfx, cutAt + config.cutSec * 0.6, -6)];
+}
+
+/** When anything of the landing song is first heard: B itself, its stems, its Signature or a B param move. */
+export function firstSoundOfB(plan: Plan): number {
+  const bEvents = plan.events.filter((e) => (e.kind === 'signature' && e.deck === 'B') || e.kind === 'stems' || e.kind === 'blend' || ('target' in e && e.target.startsWith('B.')));
+  return Math.min(plan.b.startCtx, ...bEvents.map(eventStart));
 }
 
 /** The plan with a Decoy, if `decoyLayer` gives one; the same plan object otherwise. */

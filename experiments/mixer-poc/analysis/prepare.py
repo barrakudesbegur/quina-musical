@@ -7,12 +7,13 @@ Steps (default: all, always run in this order):
     covers      covers.py      songs.json `cover` URLs → <coversDir>/<id>.jpg
     decode      decode.py      source audio → <cacheDir>/<id>/mix.flac
     analyze     analyze.py     beat grid, tempo, hooks, loudness → <dataDir>/analysis/
+    snippets    snippets.py    3 s from each song's best hook, for the Check → <cacheDir>/<id>/snippet.flac, <dataDir>/snippets/
     validate    validate.py    flags and audition queue → <dataDir>/report.md (hard errors stop here)
     keys        keys.py        musical keys → <dataDir>/keys/
     stems       stems.py       Demucs stems (in analysis/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
     signatures  signatures.py  Signature candidates from the stems → <dataDir>/signatures/
 
---song limits covers, decode, analyze, stems and signatures to those songs; validate and keys always
+--song limits covers, decode, analyze, snippets, stems and signatures to those songs; validate and keys always
 cover the whole pool (their cached work is skipped). Each step is its own process, given the
 pool's manifest path. The first failing step stops the run (--keep-going runs the rest anyway);
 the exit status is 0 when every step succeeded, 3 when the stems disk guard stopped the run, else 1.
@@ -50,6 +51,7 @@ STEPS = (
     Step("covers", "covers.py", VENV_PY, True),
     Step("decode", "decode.py", VENV_PY, True),
     Step("analyze", "analyze.py", VENV_PY, True),
+    Step("snippets", "snippets.py", VENV_PY, True),
     Step("validate", "validate.py", VENV_PY, False),
     Step("keys", "keys.py", VENV_PY, False,
          "uv pip install --python analysis/.venv/bin/python -r analysis/requirements-layering.txt"),
@@ -89,6 +91,14 @@ def _sum_analyze(pool: pools.Pool, ids: list[int]) -> str:
             + (f", {untagged} without hook tags" if untagged else ""))
 
 
+def _sum_snippets(pool: pools.Pool, ids: list[int]) -> str:
+    index = _load(pool.data_dir / "snippets" / "index.json")
+    if not index:
+        return "no snippets index"
+    have = {s["id"] for s in index.get("songs", [])}
+    return f"{len(have & set(ids))}/{len(ids)} songs with a Check snippet"
+
+
 def _sum_validate(pool: pools.Pool, ids: list[int]) -> str:
     return f"report {pools.display(pool.report_path)}"
 
@@ -119,7 +129,7 @@ def _sum_signatures(pool: pools.Pool, ids: list[int]) -> str:
 
 
 SUMMARIES: dict[str, Callable[[pools.Pool, list[int]], str]] = {
-    "covers": _sum_covers, "decode": _sum_decode, "analyze": _sum_analyze, "validate": _sum_validate,
+    "covers": _sum_covers, "decode": _sum_decode, "analyze": _sum_analyze, "snippets": _sum_snippets, "validate": _sum_validate,
     "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures,
 }
 

@@ -84,7 +84,7 @@ interface FileTrack {
 
 export type HoldTrack = PlaceholderTrack | FileTrack;
 
-/** The loop playing now. */
+/** The loop playing now; `mood` is the one asked for (a mood without a track plays the placeholder). */
 interface HoldVoice {
   source: AudioBufferSourceNode;
   gain: GainNode;
@@ -92,6 +92,7 @@ interface HoldVoice {
   title: string;
   trackGain: number;
   levelDb: number;
+  mood: HoldMusicMood;
 }
 
 export interface HoldMusicStart {
@@ -381,7 +382,19 @@ export class HoldMusic {
     return this.starting;
   }
 
-  async startNow({ at = this.ctx.currentTime, levelDb = HOLD_LEVEL_DB, fadeSec = 1.5, mood = 'hold' }: HoldMusicStart = {}): Promise<void> {
+  /**
+   * Hold music of `mood`: the loop playing goes on (at the new level) if it is of that mood; otherwise it
+   * fades out while one of that mood fades in. The Celebration and the Interval use it to change moods.
+   */
+  async switchTo(options: HoldMusicStart = {}): Promise<void> {
+    const mood = options.mood ?? 'hold';
+    if (this.starting) await this.starting.catch(() => {});
+    if (this.voice?.mood === mood) return this.setLevel(options.levelDb ?? HOLD_LEVEL_DB, Math.max(0.3, options.fadeSec ?? 0.6));
+    if (this.voice) this.stop({ at: options.at, fadeSec: options.fadeSec ?? 1.2 });
+    return this.start(options);
+  }
+
+  async startNow({ at = this.ctx.currentTime, levelDb = HOLD_LEVEL_DB, fadeSec = 1.5, mood = 'hold' }: HoldMusicStart = {}, asked: HoldMusicMood = mood): Promise<void> {
     if (!this.tracks.length) await this.prepare();
     let track = this.pick(mood);
     try {
@@ -389,7 +402,7 @@ export class HoldMusic {
     } catch (error) {
       console.warn('hold music', track.title, error);
       this.tracks = this.tracks.filter((t) => t !== track);
-      return this.startNow({ at, levelDb, fadeSec, mood: 'hold' });
+      return this.startNow({ at, levelDb, fadeSec, mood: 'hold' }, asked);
     }
     if (this.voice) return this.setLevel(levelDb, 0.5); // started meanwhile
     // Always the preferred body loop when there is one; otherwise the bar loops take turns.
@@ -414,7 +427,7 @@ export class HoldMusic {
     gain.gain.linearRampToValueAtTime(trackGain * 10 ** (levelDb / 20), when + fadeSec);
     source.connect(lpf).connect(gain).connect(this.graph.holdBus);
     source.start(when);
-    this.voice = { source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb };
+    this.voice = { source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb, mood: asked };
   }
 
   setLevel(levelDb: number, seconds = 0.6): void {

@@ -47,7 +47,7 @@ def prepared(tmp_path_factory):
     """The synthetic pool after one full prepare run (the stems steps only when their venv exists)."""
     root = tmp_path_factory.mktemp("pool")
     pool = build_synth_pool(root)
-    steps = ["covers", "decode", "analyze", "validate"]
+    steps = ["covers", "decode", "analyze", "snippets", "validate"]
     if has_essentia():
         steps.append("keys")
     if STEMS_PY.exists():
@@ -100,6 +100,23 @@ def test_analysis_marks_the_missing_inputs(prepared):
     assert playable(index) == [1]
 
 
+def test_snippets_cut_from_the_best_hook(prepared):
+    pool, _, _ = prepared
+    import soundfile as sf
+    index = json.loads((pool.data_dir / "snippets" / "index.json").read_text())
+    assert [e["id"] for e in index["songs"]] == [1]  # song 2 has no hook: no snippet
+    entry = index["songs"][0]
+    analysis = json.loads((pool.analysis_dir / "1.json").read_text())
+    best = next(h for h in analysis["hooks"] if h["id"] == "1-best-0")
+    assert entry["hookId"] == "1-best-0"
+    assert entry["startSec"] == pytest.approx(best["downbeatSec"] - best["pickupSec"], abs=1e-3)
+    assert -12 <= entry["gainDb"] <= 6
+    info = sf.info(pool.song_cache(1) / "snippet.flac")
+    assert (info.samplerate, info.channels, info.subtype) == (48000, 2, "PCM_16")
+    assert info.duration == pytest.approx(3.0, abs=0.01)
+    assert not (pool.song_cache(2) / "snippet.flac").exists()
+
+
 def test_report_flags_the_missing_inputs(prepared):
     pool, _, _ = prepared
     report = pool.report_path.read_text()
@@ -135,13 +152,15 @@ def test_stems_and_signatures_use_the_pool_dirs(prepared):
 def test_a_second_run_changes_nothing(prepared):
     pool, steps, first = prepared
     assert first.returncode == 0
-    before = {d: snapshot(d) for d in (pool.analysis_dir, pool.keys_dir) if d.exists()}
+    before = {d: snapshot(d) for d in (pool.analysis_dir, pool.keys_dir, pool.data_dir / "snippets") if d.exists()}
+    snippet = (pool.song_cache(1) / "snippet.flac").stat().st_mtime_ns
     report = pool.report_path.read_bytes()
     again = prepare(pool.manifest, "--steps", ",".join(s for s in steps if s != "stems"))
     assert again.returncode == 0, again.stdout[-3000:]
     assert "decode (synth): 2 songs: 2 skipped" in again.stdout
     assert "1 present" in again.stdout
     assert {d: snapshot(d) for d in before} == before  # same bytes, same mtimes
+    assert (pool.song_cache(1) / "snippet.flac").stat().st_mtime_ns == snippet  # not cut again
     assert pool.report_path.read_bytes() == report
 
 
@@ -233,6 +252,10 @@ def test_relay_maps_the_engine_urls_to_the_pool(relay):
     assert request(port, "GET", "/covers/1.jpg")[2] == pool.cover_path(1).read_bytes()
     assert request(port, "GET", "/covers/2.jpg")[0] == 404
     assert request(port, "GET", "/cards/cards.json")[0] == 404  # this pool has no cards
+    status, _, body = request(port, "GET", "/snippets/1.flac")
+    assert status == 200 and body == (pool.song_cache(1) / "snippet.flac").read_bytes()
+    assert request(port, "GET", "/snippets/2.flac")[0] == 404
+    assert json.loads(request(port, "GET", "/data/snippets/index.json")[2])["songs"][0]["id"] == 1
     stems = pool.stems_dir / "1.json"
     if stems.exists():
         assert request(port, "GET", "/data/stems/1.json")[2] == stems.read_bytes()

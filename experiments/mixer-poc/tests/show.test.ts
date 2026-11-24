@@ -6,7 +6,7 @@ import { planTransition, type PlanRequest, type SignatureSource } from '../engin
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { makeCommand } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
-import { HOLD, ENGINE } from '../engine/src/config.ts';
+import { HOLD, ENGINE, FLOW } from '../engine/src/config.ts';
 import { spinWindow } from '../engine/src/plan/pace.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import { describePlan } from '../engine/src/game/phase.ts';
@@ -81,7 +81,10 @@ test('auto-advance keeps landing to landing near the Pace (round 1: 22 s; later 
   for (const round of [1, 2]) {
     const h = setup({ seed: 7 + round });
     h.send('unlock');
-    if (round === 2) h.send('newRound', { number: 2 });
+    if (round === 2) {
+      h.send('newRound', { number: 2 });
+      h.advance(FLOW.shuffleSec + 0.1); // the Shuffle's animation: nothing lands before it ends
+    }
     assert.equal(h.show.game.pace, round === 1 ? 22 : 14);
     startAndLand(h);
     for (let k = 1; k <= 6; k++) h.until(() => h.show.position === k && h.show.status === 'playing', 80);
@@ -388,6 +391,7 @@ test('the next hook is chosen early; a Blend render is requested for tempo-match
     h.show.fixedQueue = [...pair, ...songs.map((s) => s.id).filter((id) => !pair.includes(id))];
     h.send('unlock');
     h.send('newRound', { number: 1 });
+    h.advance(FLOW.shuffleSec + 0.1);
     h.show.env.blend = (aSongId, hookId) => {
       requests.push([aSongId, hookId]);
       // Like the runtime: a render exists only if it was asked for.

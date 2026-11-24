@@ -1,6 +1,6 @@
 // Procedural build-up layers, generated at the incoming song's tempo and scheduled on the audio clock:
 // noise riser, accelerating snare roll, reverse-cymbal swell, sub impact, heartbeat kick, tape-stop
-// sweep. Levels are relative to music normalized at −14 LUFS; tune by ear.
+// sweep, hand claps and stomps. Levels are relative to music normalized at −14 LUFS; tune by ear.
 import { noiseBuffer } from './clicks.ts';
 import type { SynthName, SynthParams } from '../../plan/recipes.ts';
 
@@ -230,6 +230,48 @@ export function downlifter(ctx: BaseAudioContext, destination: AudioNode, { t0, 
   noise.stop(t1 + 0.02);
 }
 
+// P4, a hand clap: three noise bursts 8–12 ms apart through a band-pass around 1–1.5 kHz, then a 120 ms tail.
+export function clap(ctx: BaseAudioContext, destination: AudioNode, time: number, { level = 0.5 }: { level?: number } = {}): void {
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 1000 + 500 * Math.random();
+  bp.Q.value = 1.5;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(EPS, time);
+  let t = time;
+  for (let k = 0; k < 3; k++) {
+    g.gain.setValueAtTime(EPS, t);
+    g.gain.exponentialRampToValueAtTime(level, t + 0.001);
+    g.gain.exponentialRampToValueAtTime(level * 0.15, t + 0.007);
+    t += 0.008 + 0.004 * Math.random();
+  }
+  g.gain.setValueAtTime(EPS, t);
+  g.gain.exponentialRampToValueAtTime(level, t + 0.001);
+  g.gain.exponentialRampToValueAtTime(EPS, t + 0.12);
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer(ctx);
+  noise.connect(bp).connect(g).connect(destination);
+  noise.start(time, Math.random() * 0.5);
+  noise.stop(t + 0.14);
+}
+
+// A stomp: a low kick and a short low-passed noise thump.
+export function stomp(ctx: BaseAudioContext, destination: AudioNode, time: number, { level = 0.5 }: { level?: number } = {}): void {
+  kick(ctx, destination, time, { level: level * 0.9 });
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 300;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(EPS, time);
+  g.gain.exponentialRampToValueAtTime(level * 0.6, time + 0.003);
+  g.gain.exponentialRampToValueAtTime(EPS, time + 0.08);
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer(ctx);
+  noise.connect(lp).connect(g).connect(destination);
+  noise.start(time, Math.random() * 0.5);
+  noise.stop(time + 0.1);
+}
+
 /** One synth voice as a plan's synth event plays it (recipes.ts SynthParams). */
 export type SynthVoice<N extends SynthName> = (ctx: BaseAudioContext, destination: AudioNode, params: SynthParams[N]) => void;
 
@@ -239,5 +281,6 @@ export const SYNTHS: { [N in SynthName]: SynthVoice<N> } = {
   swell: (ctx, dest, p) => swell(ctx, dest, p),
   impact: (ctx, dest, p) => impact(ctx, dest, p.at, p),
   kicks: (ctx, dest, p) => p.times.forEach((t) => kick(ctx, dest, t, p)),
+  claps: (ctx, dest, p) => p.times.forEach((t) => (p.stomp ? stomp : clap)(ctx, dest, t, p)),
   downlifter: (ctx, dest, p) => downlifter(ctx, dest, p),
 };
