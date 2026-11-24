@@ -43,6 +43,7 @@ test(`planner invariants over ${PAIRS} random pairs × press times × phases × 
   const recipes: Record<string, number> = {};
   let fallbacks = 0;
   let relaxed = 0;
+  let onPhrase = 0;
   for (let n = 0; n < PAIRS; n++) {
     const aId = ids[Math.floor(rng() * ids.length)];
     let bId = ids[Math.floor(rng() * ids.length)];
@@ -78,6 +79,13 @@ test(`planner invariants over ${PAIRS} random pairs × press times × phases × 
         assert.ok(onA(plan.exitAt), 'S2: exit not on an A downbeat');
         assert.ok(Math.abs(plan.T - plan.exitAt - plan.bridgeBars * plan.hook.bar) < 1e-9, 'S2: bridge not N·barB');
       }
+      // The landing counts in A's bars: S2's bridge takes the place of A's last bars. Its phrase is the
+      // landing's, or (S2, when B's bars cannot reach A's boundary) the exit's after A's completed phrase.
+      assert.ok(plan.exitIndex != null && plan.landIndex === plan.exitIndex + (plan.shape === 'S2' ? plan.bridgeBars : 0), `landIndex ${plan.landIndex}`);
+      const phrases = deckTimeline(A, deck, aHook.downbeatIndex);
+      const atLanding = phrases.phraseClass(plan.landIndex);
+      assert.equal(plan.phraseClass, atLanding !== 'bar' || plan.shape !== 'S2' ? atLanding : phrases.phraseClass(plan.exitIndex));
+      if (plan.phraseClass !== 'bar') onPhrase++;
       // Every transition carries effects: an impact and at least one synth layer or deck move besides gain.
       assert.ok(plan.events.some((e) => e.kind === 'synth' && e.name === 'impact'), `${plan.recipe}: no impact`);
       assert.ok(plan.events.filter((e) => e.kind !== 'sfx' && !targetOf(e).endsWith('.gain')).length >= 2, `${plan.recipe}: no effects`);
@@ -92,8 +100,10 @@ test(`planner invariants over ${PAIRS} random pairs × press times × phases × 
     // A cancelled Spin may keep A only before its exit move starts; that moment is inside the Spin.
     if (plan.a) assert.ok(plan.a.exitStart >= plan.spinStart + 0.4 - 1e-9 && plan.a.exitStart <= plan.T + 1e-9, `exitStart ${plan.a.exitStart}`);
   }
-  console.log('recipes', recipes, 'fallbacks', fallbacks, 'relaxed', relaxed);
+  console.log('recipes', recipes, 'fallbacks', fallbacks, 'relaxed', relaxed, 'on a phrase', `${((100 * onPhrase) / (PAIRS - fallbacks)).toFixed(1)}%`);
   assert.ok(fallbacks / PAIRS < 0.02, `fallbacks ${fallbacks}/${PAIRS}`);
+  // A Next at any moment (a presenter's press) still waits, up to the Spin's 11 s, for one of A's phrases.
+  assert.ok(onPhrase / (PAIRS - fallbacks) > 0.85, `on a phrase ${onPhrase}/${PAIRS - fallbacks}`);
   for (const r of ['R1', 'R2', 'R4', 'R5', 'R6', 'R7', 'R10']) assert.ok(recipes[r] > 0, `never chose ${r}: ${JSON.stringify(recipes)}`);
 });
 

@@ -127,6 +127,8 @@ export interface PowerUp {
 export interface Candidate {
   T: number;
   i: number | null;
+  /** A's bar where B lands (S2: the exit downbeat plus the bridge's bars); null without A. */
+  land: number | null;
   e: number;
   phraseClass: PhraseClass | null;
   cost: number | null;
@@ -135,6 +137,17 @@ export interface Candidate {
   teaseBars: number;
   relaxed: boolean;
   blend: BlendLayer | null;
+}
+
+/** One sweep of the landing search: the Spin lengths it tries, and whether only phrase boundaries count. */
+interface SearchPass {
+  window: readonly [number, number];
+  phraseOnly: boolean;
+  /** True when the window is the Spin's limits rather than the Pace's. */
+  relaxed: boolean;
+  /** S2 bridge lengths: the Phase's, those up to the Phase's longest (a slower B's bars still reach A's
+   * boundary in one), or any (1–4 bars). */
+  bridges: 'phase' | 'shorter' | 'any';
 }
 
 /** How far A's real bars may drift from the render's constant grid over the blend. */
@@ -185,6 +198,8 @@ export interface Plan {
   exitAt: number;
   /** A's exit downbeat; null in the opener and FADE fallbacks. */
   exitIndex: number | null;
+  /** A's bar where B lands, counted like A's downbeats (S2: exitIndex + bridgeBars); null without A. */
+  landIndex: number | null;
   /** S2 bridge length in B's bars (0 for S1 and FADE). */
   bridgeBars: number;
   /** Silence before the pickup, in B's beats. */
@@ -202,6 +217,7 @@ export interface Plan {
   impact: string;
   /** Layers of B decorating the recipe (D9's Ghost Tease and its voice, D5's riff bed, a gap chop or scratch). */
   layers: readonly LayerName[];
+  /** Where the landing sits in A's phrases (of `landIndex`). */
   phraseClass: PhraseClass | null;
   /** True when no candidate fit the Pace window and SPIN_LIMITS was used. */
   relaxed: boolean;
@@ -432,7 +448,15 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
   const lanesCover = (t0: number, t1: number) => Boolean(caps.aLanes && caps.aLanes.from <= t0 + 1e-9 && caps.aLanes.to >= t1 - 1e-9);
 
   let candidateCount = 0;
-  const windows: ReadonlyArray<readonly [number, number]> = [[win.dMin, win.dMax], SPIN_LIMITS];
+  // The landing goes on one of A's phrase boundaries (4 or 8 bars from the hook A landed on) when one is in
+  // reach: first in the Pace's window, then anywhere in the Spin's limits (a manual Next waits up to 11 s for
+  // one), and only then on a plain bar.
+  const passes: readonly SearchPass[] = [
+    { window: [win.dMin, win.dMax], phraseOnly: true, relaxed: false, bridges: 'phase' },
+    { window: SPIN_LIMITS, phraseOnly: true, relaxed: true, bridges: 'shorter' },
+    { window: [win.dMin, win.dMax], phraseOnly: false, relaxed: false, bridges: 'phase' },
+    { window: SPIN_LIMITS, phraseOnly: false, relaxed: true, bridges: 'any' },
+  ];
   // An S2 bridge as long as the last builds costs a little more, and every length gets a small random cost, so
   // the builds' lengths vary rather than follow the tempo alone.
   const bridgeJitter = [1, 2, 3, 4].map(() => VARIETY.bridgeBarsJitter * rng());
@@ -450,8 +474,10 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     const gap = gapBeatsFor(r) * gB.beat;
     if (r.shape === 'S1' || r.shape === 'S3') {
       const lead = leadFor(0);
-      for (const [pass, [dMin, dMax]] of windows.entries()) {
+      for (const { window: [dMin, dMax], phraseOnly, relaxed } of passes) {
         for (const d of tl.downbeatsBetween(spinStart + dMin, spinStart + dMax)) {
+          const phraseClass = tl.phraseClass(d.index);
+          if (phraseOnly && phraseClass === 'bar') continue;
           const T = d.ctxTime;
           const gapStart = T - pickup - gap;
           if (T - lead - DECLICK_SEC < spinStart + 0.05) continue;
@@ -468,21 +494,27 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
           }
           if (r.fits && aState && !r.fits(aState, d.index)) continue;
           candidateCount++;
-          const phraseClass = tl.phraseClass(d.index);
           const cost = DRIFT_COST_PER_SEC * Math.abs(T - spinStart - win.dTarget) + PHRASE_COST[phraseClass];
-          if (!found || cost < (found.cost ?? Infinity)) found = { T, i: d.index, e: gapStart, phraseClass, cost, lead, n: 0, teaseBars: 0, relaxed: pass > 0, blend: blendAt };
+          if (!found || cost < (found.cost ?? Infinity)) found = { T, i: d.index, land: d.index, e: gapStart, phraseClass, cost, lead, n: 0, teaseBars: 0, relaxed, blend: blendAt };
         }
         if (found) break;
       }
     } else if (r.shape === 'S2') {
       const wantsTease = rng() < teaseChance && !r.noTease;
-      for (const [pass, [dMin, dMax]] of windows.entries()) {
-        const bridgeOptions = (pass === 0 ? phase.bridgeBars : [1, 2, 3, 4]).filter((n) => n >= (r.minBridgeBars ?? 0));
+      for (const { window: [dMin, dMax], phraseOnly, relaxed, bridges } of passes) {
+        const lengths = bridges === 'phase' ? phase.bridgeBars : bridges === 'shorter' ? [1, 2, 3, 4].filter((n) => n <= Math.max(...phase.bridgeBars)) : [1, 2, 3, 4];
+        const bridgeOptions = lengths.filter((n) => n >= (r.minBridgeBars ?? 0));
         for (const d of tl.downbeatsBetween(minStart, spinStart + dMax)) {
           const e = d.ctxTime;
           if (e - r.aLeadSec(tl, d.index, x, phase.name) < minStart) continue;
           if (tl.posAt(e) > tl.durationSec - 0.25) continue;
           for (const n of bridgeOptions) {
+            // Best, B lands where A's bar `d.index + n` would have started: the bridge takes A's last bars and
+            // the landing keeps A's phrases. Else A completes its phrase and the build comes after it (a B far
+            // slower or faster than A cannot reach A's boundary in whole bars).
+            const atLanding = tl.phraseClass(d.index + n);
+            const phraseClass = atLanding !== 'bar' ? atLanding : tl.phraseClass(d.index);
+            if (phraseOnly && phraseClass === 'bar') continue;
             const T = e + n * gB.bar;
             const D = T - spinStart;
             if (D < dMin || D > dMax) continue;
@@ -492,9 +524,8 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
             const lead = leadFor(teaseBars);
             if (T - lead - DECLICK_SEC < spinStart + 0.05) continue;
             candidateCount++;
-            const phraseClass = tl.phraseClass(d.index);
-            const cost = DRIFT_COST_PER_SEC * Math.abs(D - win.dTarget) + PHRASE_COST[phraseClass] + bridgeCost(n);
-            if (!found || cost < (found.cost ?? Infinity)) found = { T, i: d.index, e, phraseClass, cost, lead, n, teaseBars, relaxed: pass > 0, blend: null };
+            const cost = DRIFT_COST_PER_SEC * Math.abs(D - win.dTarget) + PHRASE_COST[phraseClass] + bridgeCost(n) + (atLanding === 'bar' ? PLANNER.phraseAtExitCost : 0);
+            if (!found || cost < (found.cost ?? Infinity)) found = { T, i: d.index, land: d.index + n, e, phraseClass, cost, lead, n, teaseBars, relaxed, blend: null };
           }
         }
         if (found) break;
@@ -552,13 +583,13 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     const n = clamp(Math.floor((win.dTarget - 0.4) / gB.bar), 1, 4);
     const e = Math.max(spinStart + 0.1, T - n * gB.bar);
     const teaseBars = wantsTease ? 1 : 0;
-    best = { T, i: null, e, phraseClass: null, cost: null, lead: leadFor(teaseBars), n, teaseBars, relaxed: false, blend: null };
+    best = { T, i: null, land: null, e, phraseClass: null, cost: null, lead: leadFor(teaseBars), n, teaseBars, relaxed: false, blend: null };
   } else if (!best) {
     // A has no usable downbeat in the window (near its end, no grid): fade it under a swell, then land.
     recipe = RECIPES.FADE;
     exit = null;
     const T = spinStart + win.dTarget;
-    best = { T, i: null, e: T - pickup - gapBeatsFor(recipe) * gB.beat, phraseClass: null, cost: null, lead: leadFor(0), n: 0, teaseBars: 0, relaxed: false, blend: null };
+    best = { T, i: null, land: null, e: T - pickup - gapBeatsFor(recipe) * gB.beat, phraseClass: null, cost: null, lead: leadFor(0), n: 0, teaseBars: 0, relaxed: false, blend: null };
   }
 
   const { T, i, e, n, teaseBars } = best;
@@ -690,6 +721,7 @@ export function planTransition({ now, A, B, phase, spin = null, history = [], rn
     window: { dMin: win.dMin, dTarget: win.dTarget, dMax: win.dMax },
     exitAt: e,
     exitIndex: i,
+    landIndex: best.land,
     bridgeBars: n,
     gapBeats,
     teaseBars,

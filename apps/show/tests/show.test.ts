@@ -6,8 +6,9 @@ import { planTransition, type PlanRequest, type SignatureSource } from '../engin
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { makeCommand } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
-import { HOLD, ENGINE, FLOW } from '../engine/src/config.ts';
-import { spinWindow } from '../engine/src/plan/pace.ts';
+import { HOLD, ENGINE, FLOW, PACE } from '../engine/src/config.ts';
+import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
+import { deckTimeline } from '../engine/src/plan/timeline.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import { describePlan } from '../engine/src/game/phase.ts';
 
@@ -37,6 +38,21 @@ function autoAt(show: Show): number {
   const at = show.timers.autoAt;
   assert.ok(at != null, 'no automatic Next scheduled');
   return at;
+}
+
+/**
+ * Where the scheduled automatic Next aims to land, after the last landing at `landedAt`, and how that
+ * moment sits in the playing song's phrases (counted from the hook it landed on).
+ */
+function autoLanding(show: Show, landedAt: number): { offset: number; phrase: string } {
+  const cur = show.current;
+  assert.ok(cur, 'a song is playing');
+  const analysis = analyses.get(cur.songId);
+  assert.ok(analysis);
+  const landAt = autoAt(show) + LOOKAHEAD_SEC + Math.min(show.spin().dTarget, PACE.alignedSpinMaxSec);
+  const tl = deckTimeline(analysis, cur, cur.landedDownbeatIndex);
+  const downbeat = tl.downbeatsBetween(landAt - 1e-6, landAt + 1e-6)[0];
+  return { offset: landAt - landedAt, phrase: downbeat ? tl.phraseClass(downbeat.index) : 'off the grid' };
 }
 
 function startAndLand(h: Harness) {
@@ -77,7 +93,7 @@ test('Next lands the first song of the Queue; a second Next during the Spin is i
   assert.ok(autoAt(h.show) > h.clock.t);
 });
 
-test('auto-advance keeps landing to landing near the Pace (round 1: 22 s; later rounds 14 s)', () => {
+test('auto-advance lands on the phrases near the Pace (round 1: 22 s; later rounds 14 s)', () => {
   for (const round of [1, 2]) {
     const h = setup({ seed: 7 + round });
     h.send('unlock');
@@ -88,12 +104,16 @@ test('auto-advance keeps landing to landing near the Pace (round 1: 22 s; later 
     assert.equal(h.show.game.pace, round === 1 ? 22 : 14);
     startAndLand(h);
     for (let k = 1; k <= 6; k++) h.until(() => h.show.position === k && h.show.status === 'playing', 80);
-    const Ts = h.log.filter((e) => e.type === 'landed').map((e) => e.plan.T);
+    const plans = h.log.flatMap((e) => (e.type === 'landed' ? [e.plan] : []));
+    const Ts = plans.map((p) => p.T);
     const gaps = Ts.slice(1).map((t, i) => t - Ts[i]);
     const pace = h.show.game.pace;
-    for (const g of gaps) assert.ok(Math.abs(g - pace) < 0.35 * pace, `gap ${g.toFixed(2)} vs pace ${pace}`);
+    // Each landing goes on the outgoing song's phrase boundary nearest its slot (×0.75–1.4, a little wider
+    // when a slow song's 4 bars straddle it), so a gap is a whole number of phrases rather than the Pace.
+    for (const g of gaps) assert.ok(g > PACE.phraseSlotRangeWide[0] * pace && g < PACE.phraseSlotRangeWide[1] * pace, `gap ${g.toFixed(2)} vs pace ${pace}`);
+    for (const p of plans.slice(1)) assert.notEqual(p.phraseClass, 'bar', `${p.id} lands mid-phrase`);
     const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-    assert.ok(Math.abs(mean - pace) < 0.08 * pace, `mean gap ${mean.toFixed(2)} vs pace ${pace}`);
+    assert.ok(Math.abs(mean - pace) < 0.15 * pace, `mean gap ${mean.toFixed(2)} vs pace ${pace}`);
   }
 });
 
@@ -221,11 +241,13 @@ test('final phase: auto-advance is off by default; a song running out hands over
   const out = h.until(() => h.show.status === 'hold', 600);
   assert.ok(find(out, 'songToHoldMusic'), JSON.stringify(types(out)) + ' ' + JSON.stringify(h.show.hold) + ' cur ' + JSON.stringify(h.show.current) + ' t ' + h.clock.t);
   assert.equal(h.show.holdMusic, true);
-  // Keeping auto-advance on in final: the slot stretches (late/final timing), the Spin keeps its length.
+  // Keeping auto-advance on in final: the slot stretches (late/final timing) and the landing goes on a phrase
+  // boundary near it.
   const k = setup({ seed: 5, settings: { songsUntilWinner: 1, autoAdvanceFinal: true, pace: 14 } });
   startAndLand(k);
-  const landedAt = lastLandedAt(k.log);
-  assert.ok(Math.abs(autoAt(k.show) + spinWindow({ pace: 14, phase: 'final' }).dTarget - landedAt - 17.5) < 1e-6);
+  const { offset, phrase } = autoLanding(k.show, lastLandedAt(k.log));
+  assert.ok(offset >= PACE.phraseSlotRange[0] * 17.5 && offset <= PACE.phraseSlotRange[1] * 17.5, `lands ${offset.toFixed(2)} s after`);
+  assert.notEqual(phrase, 'bar');
 });
 
 test('cards in play drive the Phase; the landing that completes a card stretches its slot by 50%; Line confirmed resets', () => {
@@ -246,9 +268,10 @@ test('cards in play drive the Phase; the landing that completes a card stretches
   assert.ok(step.completes > 0);
   const winners = h.show.snapshot().possibleWinners.line;
   assert.ok(winners.length >= step.completes && winners.every((w) => w.completedBy === h.show.queue[winAt]));
-  const landedAt = lastLandedAt(h.log);
-  const spin = spinWindow({ pace: 14, phase: h.show.phaseName() }).dTarget;
-  assert.ok(Math.abs(autoAt(h.show) + spin - landedAt - 21) < 1e-6, `slot ${(autoAt(h.show) + spin - landedAt).toFixed(2)}`);
+  // The stretched slot is a minimum: the landing goes on the first phrase boundary at or after it that fits.
+  const { offset, phrase } = autoLanding(h.show, lastLandedAt(h.log));
+  assert.ok(offset >= 21 - 1e-6 && offset <= PACE.phraseSlotRangeWide[1] * 21, `slot ${offset.toFixed(2)}`);
+  assert.notEqual(phrase, 'bar');
   // The presenters check the claim and confirm the Line: the Phase starts again towards the Bingo.
   h.send('hold');
   h.send('confirmLine');
@@ -299,8 +322,10 @@ test('Pace changes the Spin; locking it stops Drift nudges', () => {
   h.send('setPace', { delta: -2, locked: true });
   assert.equal(h.show.game.pace, 28);
   assert.equal(h.show.nudge, 1);
+  // A manual Next: the Spin aims at the Pace's length, unless a phrase boundary is in reach elsewhere.
   const start = get(h.send('next'), 'startTransition');
-  assert.ok(start.plan.D > 8, `D ${start.plan.D}`);
+  assert.ok(start.plan.window.dTarget > 8, `target ${start.plan.window.dTarget}`);
+  assert.ok(start.plan.D > 8 || start.plan.phraseClass !== 'bar', `D ${start.plan.D} on a ${start.plan.phraseClass}`);
   h.send('setPace', { pace: 1 });
   assert.equal(h.show.game.pace, 8, 'clamped to the limits');
 });

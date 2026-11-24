@@ -59,12 +59,13 @@ import { tieFreeShuffle } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
-import { planTransition, summarize } from '../plan/planner.ts';
+import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
 import { openSuspense, releaseSuspense, suspenseBar, type SuspenseOpen } from '../plan/suspense.ts';
 import { withDecoy } from '../plan/decoys.ts';
 import { pickHook } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
-import { spinWindow, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
+import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
+import { deckTimeline } from '../plan/timeline.ts';
 import { mixSeed, seededRandom } from '../rng.ts';
 import type { Analysis, Hook } from '../analysis.ts';
 import type { Card } from '../game/cards.ts';
@@ -1347,9 +1348,34 @@ export class Show {
 
   /** `completes`: cards this landing probably completes. */
   scheduleAuto(landedAt: number, completes = 0) {
-    this.timers.autoAt = this.autoAdvanceAllowed()
-      ? autoPressAt({ landedAt, pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge, minStretch: completes > 0 ? PACE.completionStretch : 1 })
-      : null;
+    this.timers.autoAt = this.autoAdvanceAllowed() ? this.autoPressAfter(landedAt, completes, landedAt) : null;
+  }
+
+  /**
+   * When the automatic Next presses after a landing at `landedAt`: timed back from the playing song's phrase
+   * boundary nearest the slot (pace.ts alignedPress), else one slot after the landing. Never before `earliest`.
+   */
+  autoPressAfter(landedAt: number, completes: number, earliest: number): number {
+    const timing = { pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge, minStretch: completes > 0 ? PACE.completionStretch : 1 };
+    const slot = slotSec(timing);
+    // A slot stretched for a Claim is a minimum: the landing never comes sooner.
+    const aligned = this.phrasePress(landedAt + slot, slot, Math.max(earliest, landedAt + PACE.minSoloSec), completes > 0 ? 1 : undefined);
+    return aligned ?? Math.max(earliest, autoPressAt({ landedAt, ...timing }));
+  }
+
+  /**
+   * The press for a landing on the playing song's 4- or 8-bar phrase boundary near `idealLandAt`, counted from
+   * the hook it landed on; null when it has none in reach.
+   */
+  phrasePress(idealLandAt: number, slot: number, earliestPress: number, minShare?: number): number | null {
+    const cur = this.current;
+    const analysis = cur ? this.env.analysis(cur.songId) : null;
+    if (!cur || !analysis || cur.landedDownbeatIndex == null) return null;
+    const grid = deckTimeline(analysis, cur, cur.landedDownbeatIndex);
+    // A bridge on a slower B lands a little later than A's boundary: leave it room under the Spin's limit.
+    const dTarget = Math.min(this.spin().dTarget, PACE.alignedSpinMaxSec);
+    const aligned = alignedPress({ grid, idealLandAt, slot, dTarget, earliestPress, latestLand: cur.endCtx - PACE.endMarginSec, lookaheadSec: LOOKAHEAD_SEC, minShare });
+    return aligned?.pressAt ?? null;
   }
 
   autoAdvanceAllowed() {
@@ -1374,13 +1400,19 @@ export class Show {
       this.leaveHold(HOLD.releaseSec);
       this.status = 'playing';
       const now = this.env.now();
-      this.timers.autoAt = this.autoAdvanceAllowed()
-        ? pressAfterHold({ now, pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge })
-        : null;
+      this.timers.autoAt = this.autoAdvanceAllowed() ? this.pressAfterRelease(now) : null;
       return;
     }
     // On Hold music there is no song to go back to: releasing the Hold moves on to the next song.
     this.next(reqId);
+  }
+
+  /** After a Hold is released with the song still playing: let it breathe, then land on one of its phrases. */
+  pressAfterRelease(now: number): number {
+    const timing = { pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge };
+    const press = pressAfterHold({ now, ...timing });
+    const { slot, dTarget } = spinWindow(timing);
+    return this.phrasePress(press + LOOKAHEAD_SEC + dTarget, slot, now + PACE.minAfterHoldSec) ?? press;
   }
 
   enterHold(reason: HoldReason, { music, musicDelaySec = 0 }: { music: boolean; musicDelaySec?: number }) {
@@ -1539,9 +1571,7 @@ export class Show {
       return;
     }
     const completes = this.phaseStep(last.position)?.completes ?? 0;
-    const minStretch = completes > 0 ? PACE.completionStretch : 1;
-    const at = autoPressAt({ landedAt: last.T, pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge, minStretch });
-    this.timers.autoAt = Math.max(at, this.env.now() + 1);
+    this.timers.autoAt = this.autoPressAfter(last.T, completes, this.env.now() + 1);
   }
 
   panic() {

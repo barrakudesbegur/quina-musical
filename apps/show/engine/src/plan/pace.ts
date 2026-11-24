@@ -4,6 +4,7 @@
 import { isPhaseName } from '@quina/protocol';
 import { PACE, SCHEDULE } from '../config.ts';
 import type { PhaseTiming } from '../config.ts';
+import type { Timeline } from './timeline.ts';
 
 /** The Schedule's numbers (config.ts SCHEDULE); tests may pass their own. */
 export type ScheduleConfig = { readonly [K in keyof typeof SCHEDULE]: number };
@@ -70,6 +71,50 @@ export function autoPressAt({ landedAt, pace, phase, nudge = 1, minSoloSec = PAC
   const slot = slotSec({ pace, phase, nudge, minStretch });
   const { dTarget } = spinWindow({ pace, phase, nudge });
   return landedAt + Math.max(minSoloSec, slot - dTarget);
+}
+
+/** A's downbeats on the context clock and where they sit in its phrases (a deckTimeline). */
+export type PhraseGrid = Pick<Timeline, 'downbeatsBetween' | 'phraseClass'>;
+
+/** Where an automatic Next should land, in the outgoing song A, and when it should press for that. */
+export interface AlignArgs {
+  grid: PhraseGrid;
+  /** When the landing would come without phrases (context time). */
+  idealLandAt: number;
+  /** The slot it belongs to: the range around the ideal landing is a share of it (PACE.phraseSlotRange). */
+  slot: number;
+  /** The Spin's target length: the press comes this long before the landing. */
+  dTarget: number;
+  /** The press never comes before this. */
+  earliestPress: number;
+  /** A must still be playing at the landing (context time of A's end, with a margin). */
+  latestLand: number;
+  /** How long a press takes to start the Spin (the planner's lookahead). */
+  lookaheadSec: number;
+  /** Never land sooner than this share of the slot (1 when the slot was stretched for a Claim). */
+  minShare?: number;
+}
+
+/**
+ * The press for a landing on A's phrase boundary: the 8-bar boundary nearest the ideal landing within the
+ * slot's range (×0.75–1.4 for a landing's slot), else the nearest 4-bar one. A 4-bar boundary wins only when it
+ * is much nearer (PACE.phrase4Penalty, a share of the slot), so the Pace holds. The press comes `dTarget` before
+ * the landing, so the planner finds the boundary in the middle of its window.
+ * @returns null when no boundary fits (no landed hook to count from, irregular bars, the song ends)
+ */
+export function alignedPress({ grid, idealLandAt, slot, dTarget, earliestPress, latestLand, lookaheadSec, minShare }: AlignArgs): { pressAt: number; landAt: number; index: number } | null {
+  const earliestLand = earliestPress + lookaheadSec + dTarget;
+  const boundaries = ([lo, hi]: readonly [number, number]) => {
+    const from = Math.max(idealLandAt - (1 - Math.max(lo, minShare ?? 0)) * slot, earliestLand);
+    const to = Math.min(idealLandAt + (hi - 1) * slot, latestLand);
+    return to < from ? [] : grid.downbeatsBetween(from, to).map((d) => ({ ...d, cls: grid.phraseClass(d.index) })).filter((d) => d.cls !== 'bar');
+  };
+  const cost = (d: { ctxTime: number; cls: string }) => Math.abs(d.ctxTime - idealLandAt) / slot + (d.cls === 'phrase8' ? 0 : PACE.phrase4Penalty);
+  const cheapest = <T extends { ctxTime: number; cls: string }>(list: T[]) => list.reduce<T | null>((b, d) => (!b || cost(d) < cost(b) ? d : b), null);
+  // A slow song's 4 bars can straddle the slot's range: a boundary a little outside it still beats a landing
+  // mid-phrase.
+  const best = cheapest(boundaries(PACE.phraseSlotRange)) ?? cheapest(boundaries(PACE.phraseSlotRangeWide));
+  return best && { pressAt: best.ctxTime - dTarget - lookaheadSec, landAt: best.ctxTime, index: best.index };
 }
 
 /** After a Hold is released with the landed song still playing: let it breathe, then move on. */

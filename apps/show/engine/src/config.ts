@@ -153,6 +153,18 @@ export const PACE = Object.freeze({
   minSoloSec: 2,
   /** After a Hold is released with the song still playing, at least this long before an automatic Next. */
   minAfterHoldSec: 4,
+  /** An automatic Next lands on the outgoing song's 8-bar (else 4-bar) phrase boundary nearest its slot,
+   * between these shares of the slot after the last landing. */
+  phraseSlotRange: [0.75, 1.4] as const,
+  /** With no phrase boundary in that range (a slow song's 4 bars can straddle it): the nearest one in this one. */
+  phraseSlotRangeWide: [0.6, 1.6] as const,
+  /** An 8-bar boundary is preferred: a 4-bar one wins only when it is nearer the slot by this share of it. */
+  phrase4Penalty: 0.15,
+  /** The Spin an automatic Next aims at a phrase boundary with, at most: an S2 bridge on B's slower bars lands
+   * a little after A's boundary and must stay inside the Spin's 11 s limit. */
+  alignedSpinMaxSec: 10,
+  /** An automatic Next lands at least this long before the outgoing song ends. */
+  endMarginSec: 1,
 });
 
 export const SCHEDULE = Object.freeze({
@@ -581,6 +593,8 @@ export const PLANNER = Object.freeze({
   /** A's exit move starts after the spin-start duck. */
   afterDuckSec: 0.45,
   phraseCost: Object.freeze({ phrase8: 0, phrase4: 1.0, bar: 2.5 }),
+  /** An S2 build after A's completed phrase (rather than in place of its last bars) costs this much more. */
+  phraseAtExitCost: 0.5,
   driftCostPerSec: 1.0,
   /** Hook-based LUFS trim is clamped to this range (dB). */
   trimLimitsDb: [-12, 6] as const,

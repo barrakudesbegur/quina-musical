@@ -160,6 +160,8 @@ export function releaseSuspense({ open, releaseAt, firstFreeBar, B, rng, id = nu
     window: { dMin: 0, dTarget: T - open.spinStart, dMax: T - open.spinStart },
     exitAt: open.loopStart,
     exitIndex: open.exitIndex,
+    // B lands on its own loop's grid after A has gone, not on a bar of A.
+    landIndex: null,
     bridgeBars: m + 1,
     gapBeats,
     teaseBars: 0,

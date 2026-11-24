@@ -9,6 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { familyGroup } from '../engine/src/plan/recipes.ts';
 import { MOVES } from '../engine/src/config.ts';
+import { deckTimeline } from '../engine/src/plan/timeline.ts';
 import { checkLanding } from './support/landing.ts';
 import { formatTable, roundsOf, runNights, varietyReport } from './support/variety.ts';
 import type { NightLog } from './support/night.ts';
@@ -76,4 +77,25 @@ test('whole nights: the sameness table stays under its thresholds', () => {
   // Signatures do not come back at once, and nothing sounds like one of the last three.
   under(all.signatureReuse, 0.1, 'Signature again within 10'); // 1% → 2%
   under(all.sameAsRecent, 0.03, 'sounds like one of the last 3'); // 4% → 1%
+});
+
+test('whole nights: the landings keep the outgoing song\'s phrases', () => {
+  // Counted from the hook A landed on: B lands on a 4- or 8-bar boundary of A (an S2 bridge takes A's last bars),
+  // or, for an S2 build, A completes its phrase first. Before phrase-aware auto-advance 59% of them fell
+  // mid-phrase.
+  const byPhase: Record<string, { on: number; all: number }> = {};
+  for (const log of nights()) {
+    for (const t of log.transitions) {
+      if (!t.A || t.A.landedDownbeatIndex == null || t.plan.landIndex == null) continue;
+      const tl = deckTimeline(t.A.analysis, t.A.deck, t.A.landedDownbeatIndex);
+      const atExit = t.plan.shape === 'S2' && t.plan.exitIndex != null && tl.phraseClass(t.plan.exitIndex) !== 'bar';
+      const count = (byPhase[t.plan.phase] ??= { on: 0, all: 0 });
+      count.all++;
+      if (tl.phraseClass(t.plan.landIndex) !== 'bar' || atExit) count.on++;
+    }
+  }
+  const total = Object.values(byPhase).reduce((sum, c) => ({ on: sum.on + c.on, all: sum.all + c.all }), { on: 0, all: 0 });
+  console.log('on a phrase:', Object.entries(byPhase).map(([phase, c]) => `${phase} ${((100 * c.on) / c.all).toFixed(1)}%`).join(', '));
+  assert.ok(total.all > 500, `only ${total.all} transitions with A`);
+  assert.ok(total.on / total.all > 0.9, `on a phrase: ${total.on}/${total.all}`);
 });
