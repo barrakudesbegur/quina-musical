@@ -69,7 +69,7 @@ const lastClaimId = (h: Harness) => {
 
 // ---------------------------------------------------------------------------------------- the scene rules
 test('the scene rules: what each scene accepts (the agreed table, plus `before` acting as `play`)', () => {
-  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'setPace', 'setGame', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo'];
+  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'setPace', 'setGame', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes'];
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [
     ['before', { scene: 'before' }, [...PLAY, 'roundIntro', 'resumeAt']],
@@ -253,6 +253,9 @@ test('unknown cards and cards of the wrong type: the result at once, no snippets
   assert.equal(h.show.claims[1].status, 'queued');
   const next = h.send('decide', { claimId: 'cl-1', valid: false });
   assert.equal(emitted(next, 'check.scheduled')[0]?.check.outcome, 'wrongType');
+  // The card's printed type is in the Check (the projector's first step): here a special card in a normal round.
+  assert.equal(emitted(next, 'check.scheduled')[0]?.check.cardType, 'especial');
+  assert.equal(emitted(out, 'check.scheduled')[0]?.check.cardType, null, 'no such card');
   assert.equal(h.show.scene, 'check');
   h.send('decide', { claimId: 'cl-2', valid: false });
   assert.equal(h.show.scene, 'play');
@@ -524,4 +527,20 @@ test('the Celebration music can be picked during the Check; the pick is in the s
   finishCheck(g);
   g.send('decide', { claimId: 'cl-1', valid: false });
   assert.equal(g.show.snapshot().celebrationChoice, null);
+});
+
+test('prizes are revealed as a round is introduced and by the presenters, once each way, in the journal and the state', () => {
+  const h = flow();
+  landSongs(h, 1);
+  h.send('revealPrizes', { round: 3 });
+  h.send('revealPrizes', { round: 3 });
+  const entries = journalOf(h.log).filter((e) => e.kind === 'prizes.revealed');
+  assert.deepEqual(entries.map((e) => e.kind === 'prizes.revealed' && [e.round, e.by]), [[3, 'presenters']], 'once');
+  assert.deepEqual(h.show.snapshot().prizes?.revealed, [{ round: 3, by: 'presenters' }]);
+  assert.deepEqual(replayJournal(journalOf(h.log)).prizesRevealed, [{ round: 3, by: 'presenters' }]);
+  // A round introduced between rounds reveals its prizes (a plan with every prize secret ignores it).
+  h.send('endGame');
+  h.send('roundIntro', { number: 2 });
+  const intro = journalOf(h.log).filter((e) => e.kind === 'prizes.revealed').at(-1);
+  assert.ok(intro?.kind === 'prizes.revealed' && intro.round === 2 && intro.by === 'intro');
 });

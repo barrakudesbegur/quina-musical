@@ -50,7 +50,8 @@ The package `@quina/protocol` (`packages/protocol/`) is the source of truth, and
 | `setCardsInPlay` | `ranges: string` | Cards in play for the whole game, for example `1-180, 200-215, 400-460`. An empty string clears them |
 | `confirmLine` | | The Phase starts climbing towards the Bingo. A manual override for when no Check was run: a valid `decide` on a Line does it by itself. Play and Celebration only |
 | `newRound` | `number?`, `kind?: 'normal'\|'special'` | Run the round's public, tie-free Shuffle (below). Scene `roundStart` with `shuffle.scheduled`; it becomes `play` when the Shuffle ends, and a Next pressed meanwhile waits for it. Without `number`/`kind`: the introduced round's, else (in `before`) round 1 again, else the next one. The Interval music goes on under the Shuffle; from anywhere else everything stops first. Anywhere but in a Check |
-| `roundIntro` | `number?`, `kind?` | Introduce a round (scene `roundStart`): its name and prizes on screen, Interval music on. No Queue yet. From `before`, `interval`, `after` or a Bingo's Celebration |
+| `roundIntro` | `number?`, `kind?` | Introduce a round (scene `roundStart`): its name and prizes on screen, Interval music on. No Queue yet. It also reveals the round's prizes (journal `prizes.revealed`, `by: 'intro'`; ignored when the plan keeps every prize secret). From `before`, `interval`, `after` or a Bingo's Celebration |
+| `revealPrizes` | `round` | The presenters reveal a round's prizes: phones may show its bundles from now on (journal `prizes.revealed`, `by: 'presenters'`). Any scene |
 | `claim` | `cardId: integer 1–9999`, `kind?: 'line'\|'bingo'` | A Claim (`kind` defaults to what the Phase climbs towards: the Line until one is confirmed, then the Bingo). Enters the Hold (reason `claim`), cancelling a Spin like `hold` does (`transition.cancelled`, reason `hold`; within 0.15 s of its landing the Hold comes right after it). Scene `check`; the Claim queues, and its Check starts when none is on screen. From `play`, `check` or `celebration` |
 | `checkStart` | `claimId` | (Re)start an undecided Claim's Check from the counted landings now (a re-check, or another order). A running Check it replaces goes back to the queue |
 | `decide` | `claimId`, `valid: boolean` | The presenters' verdict (both are journaled). Invalid: the Failure fanfare. The next queued Claim's Check starts by itself. Once every Claim is decided: any valid one → `celebration` (a Line confirms the Line; a Bingo ends the round); none → back to `play` in a Hold (reason `checkFailed`) with the error Hold music until Resume (`next` or `hold {on: false}`), or back to the Celebration a late Claim interrupted |
@@ -141,6 +142,7 @@ heat          0..1 placeholder, or null without cards in play
 cards         { inPlay, inPlayCount, validCount, phaseSource: 'cards'|'placeholder'|'override', climbingTo: 'line'|'bingo' }
 possibleWinners { line: [{ cardId, lines, completedBy }], bingo: [...] }   PRIVATE: tablet only, never the projector
 future        { lineAt, bingoAt, toLine: [cards by songs missing], toBingo, markCounts: [cards by songs marked] } | null   PRIVATE: the console's Futur tab
+prizes        { revealed: [{ round, by: 'presenters' | 'intro' }] }   the plan's revealedRounds() turns it into what phones see
 pace          { sec, defaultSec, locked, nudge, slotSec, spinSec }   defaultSec: the round's starting Pace (PACE_DEFAULT_SEC), which the console recommends; HEAT_BANDS gives each Phase's Heat band
 schedule      { roundEndMs, gameEndMs, roundDriftSec, gameDriftSec }   Drift > 0 = running late
 autoAtMs      when auto-advance will press Next, or null
@@ -155,7 +157,7 @@ intro         { round, kind, sinceMs } | null   in roundStart, the round being i
 claims        this round's, oldest first: [{ claimId, round, cardId, kind, atMs, position, status, outcome, completeSince, warnings }]
                 status 'queued'|'checking'|'checked'|'valid'|'invalid'; outcome 'complete'|'incomplete'|'unknownCard'|'wrongType'|null
                 PRIVATE: completeSince (Queue index; the console shows "complete since song N" = index + 1), warnings (['notSold'])
-check         { claimId, cardId, kind, outcome, row, otherRows, steps: [{ songId, landed, atMs, durationMs }], startAtMs, endAtMs } | null
+check         { claimId, cardId, kind, outcome, row, otherRows, cardType, steps: [{ songId, landed, atMs, durationMs }], startAtMs, endAtMs } | null   cardType: the printed type ('normal', 'especial'; null for an unknown card), the projector's first step; outcome 'wrongType' is its own failure: the card doesn't play in this round
                 the Check on screen, running or showing its result until it is decided
 celebration   { kind, round, cardIds, winningSongId, sinceMs, music: 'winningSong'|'victory'|'holdMusic' } | null
 celebrationChoice  the music picked during a Check for the coming Celebration, or null (the default)
@@ -176,16 +178,18 @@ The setup that Admin edits and the cloud stores. The laptop, the projector, the 
 
 | Field | Meaning |
 |---|---|
-| `v` | `1` |
+| `v` | `2` (version 1 plans are still read: each prize becomes a bundle of one headline prize, with the default card types and `perRound`) |
 | `edition` | The year tag, for example `"26"`. It's in the cards' QR links (`/26/123`) and names the cloud room. Phones keep their cards per edition and wipe them only when it changes. It isn't the journal's `gameId`, which changes with every run and rehearsal |
-| `title` | The night's name on screen: `"Quina Musical"` |
-| `rounds[]` | `{ number, kind: 'normal'\|'special', line: Prize\|null, bingo: Prize\|null }`, numbered 1, 2, 3… in play order. At most one special round |
-| `sponsors[]` | `{ id, name, logo }`. `id` is lowercase with dashes; `logo` is the cleaned-up WebP's asset path or null |
-| `Prize` | `{ title, detail\|null, sponsorId\|null, image\|null }`. `sponsorId` must name a sponsor |
+| `title` | The edition's name, on every screen: `"Quina Quina 3"` |
+| `prizeReveal` | `'perRound'` (round 1 from the start, each round as it is introduced or revealed by the presenters) or `'allSecret'` (only what the presenters reveal) |
+| `rounds[]` | `{ number, kind: 'normal'\|'special', line: Prize[], bingo: Prize[] }`, numbered 1, 2, 3… in play order. Each bundle has at most 40 prizes, headline ones first (`[]` until set). At most one special round |
+| `Prize` | `{ title, detail\|null, sponsorId\|null, image\|null, headline }`. `sponsorId` must name a sponsor; screens show `image` for headline prizes |
+| `cardTypes[]` | `{ type: 'normal'\|'especial', name, color: '#rrggbb', priceCents\|null, rounds: RoundKind[] }`: how screens show each printed card type before the night, and which rounds accept it (the engine's rule: normal cards in normal rounds, especial in the special one) |
+| `sponsors[]` | `{ id, name, logo }`. `id` is lowercase with dashes; `logo` is `/media/<key>.png` or `.jpg` (a `.jxl` beside it) or null |
 | `schedule` | `{ startAtMs\|null, roundMinutes, intervalMinutes }`. The Interval countdown guide is `intervalMinutes` |
-| `cheatSheet` | `{ claimRules: string[], specialRoundRules: string[] }` |
+| `cheatSheet` | `{ claimRules: string[], specialRoundRules: string[] }` (presenters only) |
 
-`checkGamePlan(json)` never throws. It returns `{ ok: true, plan }` (trimmed and typed) or `{ ok: false, errors }`, with every problem and its JSON path (`plan.rounds[1].line.sponsorId: no sponsor with id "x"`). Unknown keys are errors, so a typo can't silently drop a prize. `sponsorOf(plan, prize)` and `roundPlan(plan, n)` are lookups.
+`checkGamePlan(json)` never throws. It returns `{ ok: true, plan }` (trimmed and typed, always version 2) or `{ ok: false, errors }`, with every problem and its JSON path (`plan.rounds[1].line[0].sponsorId: no sponsor with id "x"`). Unknown keys are errors, so a typo can't silently drop a prize. `sponsorOf(plan, prize)`, `roundPlan(plan, n)` and `headlinePrizes(bundle)` are lookups. **What phones see:** `publicPlan(plan, revealedRounds(plan, record.prizesRevealed))`: every round's `{ number, kind, revealed }`, a revealed round's `line` and `bingo`, never a locked round's prizes nor how many, and no cheat sheet.
 
 ## Game journal
 
@@ -204,6 +208,7 @@ The Game is what must survive a restart: the round and its Queue, the landings a
 | `claim.opened` | `round, claimId, cardId, winKind, position` | A Claim (`winKind`, because `kind` names the entry) |
 | `claim.decided` | `round, claimId, verdict, winningSongId, position` | A verdict. Valid: the Winning song and its Queue index (the card's completion, else the landing it was claimed on); invalid: null and the claim's position |
 | `winner.noted` | `claimId, name, notes` | A Winner's name and notes, as they are now |
+| `prizes.revealed` | `round, by: 'presenters' \| 'intro'` | A round's prizes revealed: by `revealPrizes`, or as the round was introduced. The record keeps them in `prizesRevealed`; `revealedRounds(plan, …)` applies the plan's `prizeReveal` (`perRound`: round 1 from the start plus every reveal; `allSecret`: the presenters' only) and `publicPlan(plan, rounds)` is what phones get: every round's skeleton, only revealed rounds' bundles, no cheat sheet |
 
 Every entry also carries `gameId`, `seq` (1, 2, 3… with no gaps within a Game) and `atMs`. `replayJournal(entries)` turns a journal into a `GameRecord`, and every side uses that one reducer, so they all agree. `extendJournal(record, entries)` applies more entries to a record without replaying the history, and gives the same result as replaying the whole journal; the cloud uses it on every upload. Besides the round and its landings, the record keeps the show flow: `scene` and `sceneSinceMs`, `intro` (in `roundStart`, the round introduced), the round's `claims` (`{ claimId, round, cardId, kind, position, atMs, verdict }`, `verdict` null while undecided), `claimCount` (claim ids go on from it: `cl-<n>`) and the Game's `winners` (PRIVATE: `name`, `notes`). A verdict on an unknown Claim, a Claim decided twice or a Winner's note without a Winner throws a `JournalError` too. A gap, a repeat, another Game's entry or a song that isn't at its Queue index throws a `JournalError`, and nothing is resumed from a wrong state.
 

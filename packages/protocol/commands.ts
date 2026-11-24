@@ -115,6 +115,11 @@ export const COMMANDS = Object.freeze({
     number: { type: 'integer', optional: true, min: 1, max: 20 },
     kind: { type: 'string', optional: true, oneOf: ['normal', 'special'] },
   },
+  /**
+   * The presenters reveal a round's prizes (GamePlan.prizeReveal): phones may show its bundles from now on. With
+   * `perRound` a round is also revealed as it is introduced (`roundIntro`); with `allSecret` only by this.
+   */
+  revealPrizes: { round: { type: 'integer', min: 1, max: 20 } },
   /** A player claims a Line or the Bingo for a card (`kind` defaults to what the Phase is climbing towards).
    * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
   claim: {

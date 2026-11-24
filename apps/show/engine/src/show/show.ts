@@ -503,6 +503,8 @@ export class Show {
   holdMusic = false;
   /** The playing song repeating a phrase, or null. */
   loop: LoopState | null = null;
+  /** The rounds whose prizes were revealed, and how (the journal's `prizes.revealed`). */
+  prizesRevealed: { round: number; by: 'presenters' | 'intro' }[] = [];
   timers: Timers = { autoAt: null, holdMusicAt: null };
   /** This round's landings as the planner remembers them (its rotation memory); the state shows their HistoryEntry part. */
   history: (HistoryEntry & PlanMemory)[] = [];
@@ -733,6 +735,9 @@ export class Show {
         return this.flush(); // nothing changed
       case 'resumeAt':
         this.resumeAt(c);
+        break;
+      case 'revealPrizes':
+        this.revealPrizes(c.round, 'presenters');
         break;
       default:
         // checkCommand only lets known commands through, and the compiler checks every one is handled here.
@@ -1023,6 +1028,7 @@ export class Show {
     this.sceneSinceMs = record.sceneSinceMs;
     this.claimCount = record.claimCount;
     this.winners = record.winners.map((w) => ({ ...w }));
+    this.prizesRevealed = (record.prizesRevealed ?? []).map((r) => ({ ...r }));
     this.intro = record.intro ? { round: record.intro.round, kind: record.intro.kind, sinceMs: record.sceneSinceMs } : null;
     const inPlay = new Set(this.cardsInPlay);
     this.claims = record.claims.map((c) => ({
@@ -1054,6 +1060,7 @@ export class Show {
       })),
       claimCount: this.claimCount,
       winners: this.winners.map((w) => ({ ...w })),
+      prizesRevealed: this.prizesRevealed.map((r) => ({ ...r })),
       round: {
         number: this.round.number,
         kind: this.round.kind,
@@ -1940,6 +1947,8 @@ export class Show {
     const ms = (t: number) => this.env.toEpochMs(t);
     const info: CheckInfo = {
       claimId: claim.claimId, cardId: claim.cardId, kind: claim.kind, outcome: result.outcome, row: result.row, otherRows: result.otherRows,
+      // The printed card's type: the projector shows it as the Check's first step (and a wrongType fails on it).
+      cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null,
       steps: timed.steps.map((s) => ({ songId: s.songId, landed: s.landed, atMs: ms(s.at), durationMs: Math.round(s.durationSec * 1000) })),
       startAtMs: ms(timed.startAt),
       endAtMs: ms(timed.endAt),
@@ -2130,7 +2139,16 @@ export class Show {
     this.interval = null;
     this.intro = { round: number, kind, sinceMs: this.env.nowMs() };
     this.setScene('roundStart', number, kind);
+    // Announcing a round reveals its prizes (unless the plan keeps them all secret: plan.ts revealedRounds).
+    this.revealPrizes(number, 'intro');
     this.playIntervalMusic();
+  }
+
+  /** A round's prizes revealed, once per way (the journal's `prizes.revealed`). */
+  revealPrizes(round: number, by: 'presenters' | 'intro') {
+    if (this.prizesRevealed.some((r) => r.round === round && r.by === by)) return;
+    this.prizesRevealed.push({ round, by });
+    this.journal({ kind: 'prizes.revealed', round, by });
   }
 
   /** Run a round's public Shuffle. The Interval's music goes on under it, and the first Spin builds out of it. */
@@ -2365,6 +2383,7 @@ export class Show {
       },
       possibleWinners: this.possibleWinners(),
       future: this.future(),
+      prizes: { revealed: this.prizesRevealed.map((r) => ({ ...r })) },
       pace: { sec: this.game.pace, defaultSec: defaultPace(this.round.number), locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
       schedule: { ...schedule, roundDriftSec: Math.round(schedule.roundDriftSec), gameDriftSec: schedule.gameDriftSec == null ? null : Math.round(schedule.gameDriftSec) },
       autoAtMs: toMs(this.timers.autoAt),

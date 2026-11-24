@@ -219,6 +219,9 @@ export interface CheckInfo {
   row: number | null;
   /** Line: the other completed rows, which the console mentions. */
   otherRows: number[];
+  /** The card's printed type ('normal', 'especial'), shown as the Check's first step; null for `unknownCard`.
+   * `wrongType`: it doesn't play in this round. */
+  cardType?: string | null;
   /** Empty for `unknownCard` and `wrongType`. */
   steps: CheckStep[];
   startAtMs: number;
@@ -326,6 +329,8 @@ export interface ShowState {
   possibleWinners: PossibleWinners;
   /** PRIVATE: the console's Futur tab; absent without cards in play or from an older engine. */
   future?: FutureInfo | null;
+  /** The rounds whose prizes were revealed, and how (the journal's `prizes.revealed`; plan.ts revealedRounds). */
+  prizes?: { revealed: { round: number; by: 'presenters' | 'intro' }[] };
   pace: PaceInfo;
   schedule: ScheduleInfo;
   /** When auto-advance will press Next, or null. */

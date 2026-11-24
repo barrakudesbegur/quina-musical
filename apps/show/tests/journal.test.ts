@@ -62,7 +62,7 @@ test('every journal entry keeps the replayed record equal to the show (random co
     for (const entry of journalOf(h.log)) seen.add(entry.kind);
   }
   assert.deepEqual([...seen].sort(), [
-    'cards.set', 'claim.decided', 'claim.opened', 'landing.undone', 'line.confirmed', 'round.started', 'scene.changed', 'settings.changed', 'song.landed', 'winner.noted',
+    'cards.set', 'claim.decided', 'claim.opened', 'landing.undone', 'line.confirmed', 'prizes.revealed', 'round.started', 'scene.changed', 'settings.changed', 'song.landed', 'winner.noted',
   ]);
 });
 
@@ -123,7 +123,7 @@ test('a journal without its round, or out of order, or for another Game is refus
   assert.deepEqual(replayJournal([]), emptyRecord(''));
   assert.deepEqual(emptyRecord('g'), {
     gameId: 'g', seq: 0, cardsInPlay: '', settings: null, round: null,
-    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [],
+    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [],
   });
 });
 

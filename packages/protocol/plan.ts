@@ -1,16 +1,21 @@
 // The Game plan: the setup that Admin edits and the cloud stores. The laptop, projector, console and phones
 // all read it:
-// - the rounds, each normal or special, with its Line and Quina prizes;
+// - the edition's name on every screen ("Quina Quina 3");
+// - the rounds, each normal or special, with its Line's and Quina's prize bundles (headline prizes first);
+// - when the prizes are revealed (round by round as the presenters announce them, or all kept secret);
+// - the card types, with their name, colour, price and the rounds that accept them;
 // - the sponsors;
 // - the schedule;
-// - the cheat sheet's rules.
+// - the cheat sheet's rules (presenters only).
+// Phones see it through publicPlan: locked rounds keep only their skeleton, and the cheat sheet stays out.
 // Admin's bulk JSON import and export use exactly this shape, so an AI agent can fill it from the
 // organizers' spreadsheet.
 //
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
 import type { RoundKind } from './vocabulary.ts';
 
-export const PLAN_VERSION = 1;
+/** Version 2: prize bundles, card types and the prize reveal. checkGamePlan still reads version 1 plans. */
+export const PLAN_VERSION = 2;
 
 export interface Sponsor {
   /** Stable id, referenced by prizes (for example "forn-can-pep"). */
@@ -25,18 +30,40 @@ export interface Prize {
   title: string;
   detail: string | null;
   sponsorId: string | null;
-  /** Optional picture of the prize (an asset path). */
+  /** Optional picture of the prize (an asset path); screens show it for headline prizes. */
   image: string | null;
+  /** Shown first and bigger: usually one or two per bundle, and they come first in it. */
+  headline: boolean;
 }
+
+/** A Line's or a Quina's prizes, in the order screens list them (headline prizes first); empty until set. */
+export type PrizeBundle = Prize[];
 
 export interface RoundPlan {
   /** 1, 2, 3… in play order. */
   number: number;
   kind: RoundKind;
-  line: Prize | null;
-  /** The full-card prize ("premi de quina"). */
-  bingo: Prize | null;
+  line: PrizeBundle;
+  /** The full-card prizes ("premis de quina"). */
+  bingo: PrizeBundle;
 }
+
+/** The printed card types (cards.json `type`): how screens show them before the night, and where they play. */
+export interface CardType {
+  type: 'normal' | 'especial';
+  /** "Cartró normal". */
+  name: string;
+  /** Its pastel colour, "#rrggbb". */
+  color: string;
+  /** Its price in cents, or null when not set. */
+  priceCents: number | null;
+  /** The round kinds that accept it (the engine's rule: normal cards in normal rounds, especial in the special one). */
+  rounds: RoundKind[];
+}
+
+/** When phones see each round's prizes: round by round as announced (round 1 from the start), or all kept secret
+ * until the presenters reveal a round. */
+export type PrizeReveal = 'perRound' | 'allSecret';
 
 export interface SchedulePlan {
   /** When the first round should start (epoch ms), or null when not set. */
@@ -56,17 +83,25 @@ export interface GamePlan {
   v: typeof PLAN_VERSION;
   /** The year tag ("26"): in the cards' QR links (/26/123), names the cloud room; phones keep their cards per edition. */
   edition: string;
-  /** The night's name on screen: "Quina Musical". */
+  /** The edition's name, on every screen: "Quina Quina 3". */
   title: string;
+  prizeReveal: PrizeReveal;
   rounds: RoundPlan[];
   sponsors: Sponsor[];
+  cardTypes: CardType[];
   schedule: SchedulePlan;
   cheatSheet: CheatSheet;
 }
 
 export type PlanCheck = { ok: true; plan: GamePlan } | { ok: false; errors: string[] };
 
-const LIMITS = { rounds: 20, sponsors: 200, text: 200, detail: 1000, id: 64, rules: 30 } as const;
+const LIMITS = { rounds: 20, sponsors: 200, text: 200, detail: 1000, id: 64, rules: 30, bundle: 40, priceCents: 100_000 } as const;
+const COLOR_RE = /^#[0-9a-f]{6}$/i;
+/** The card types every plan starts with (and a version 1 plan gets). */
+export const DEFAULT_CARD_TYPES: readonly CardType[] = Object.freeze([
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', priceCents: null, rounds: ['normal'] },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', priceCents: null, rounds: ['special'] },
+]);
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const EDITION_RE = /^[0-9]{2}$/;
 
@@ -118,8 +153,13 @@ export function checkGamePlan(json: unknown): PlanCheck {
   };
 
   if (!isRec(json)) return { ok: false, errors: ['plan: must be a JSON object'] };
-  keys(json, 'plan', ['v', 'edition', 'title', 'rounds', 'sponsors', 'schedule', 'cheatSheet']);
-  if (json.v !== PLAN_VERSION) err('plan.v', `must be ${PLAN_VERSION}`);
+  // Version 1 (one prize per Line or Quina, no card types, no reveal setting) is read as version 2: each prize
+  // becomes a bundle of one headline prize.
+  const v1 = json.v === 1;
+  keys(json, 'plan', v1 ? ['v', 'edition', 'title', 'rounds', 'sponsors', 'schedule', 'cheatSheet'] : ['v', 'edition', 'title', 'prizeReveal', 'rounds', 'sponsors', 'cardTypes', 'schedule', 'cheatSheet']);
+  if (json.v !== PLAN_VERSION && !v1) err('plan.v', `must be ${PLAN_VERSION}`);
+  const prizeReveal: PrizeReveal = v1 ? 'perRound' : json.prizeReveal === 'allSecret' ? 'allSecret' : 'perRound';
+  if (!v1 && json.prizeReveal !== 'perRound' && json.prizeReveal !== 'allSecret') err('plan.prizeReveal', 'must be "perRound" or "allSecret"');
   const edition = str(json, 'edition', 'plan', { max: 2 });
   if (edition !== null && !EDITION_RE.test(edition)) err('plan.edition', 'must be the two-digit year, for example "26"');
   const title = str(json, 'title', 'plan');
@@ -136,23 +176,36 @@ export function checkGamePlan(json: unknown): PlanCheck {
   });
   const sponsorIds = new Set(sponsors.map((s) => s.id));
 
-  const prize = (rec: Rec, key: 'line' | 'bingo', path: string): Prize | null => {
-    const p = rec[key];
-    if (p === null) return null;
-    const ppath = `${path}.${key}`;
+  const prize = (p: unknown, ppath: string, headline: boolean | null): Prize | null => {
     if (!isRec(p)) {
-      err(ppath, 'must be an object or null');
+      err(ppath, 'must be an object');
       return null;
     }
-    keys(p, ppath, ['title', 'detail', 'sponsorId', 'image']);
+    keys(p, ppath, headline === null ? ['title', 'detail', 'sponsorId', 'image', 'headline'] : ['title', 'detail', 'sponsorId', 'image']);
     const sponsorId = str(p, 'sponsorId', ppath, { nullable: true, max: LIMITS.id });
     if (sponsorId !== null && !sponsorIds.has(sponsorId)) err(`${ppath}.sponsorId`, `no sponsor with id "${sponsorId}"`);
+    if (headline === null && typeof p.headline !== 'boolean') err(`${ppath}.headline`, 'must be true or false');
     return {
       title: str(p, 'title', ppath) ?? '',
       detail: str(p, 'detail', ppath, { nullable: true, max: LIMITS.detail, empty: true }),
       sponsorId,
       image: str(p, 'image', ppath, { nullable: true, max: 500 }),
+      headline: headline ?? p.headline === true,
     };
+  };
+  /** A bundle (version 2: a list, headline prizes first), or a version 1 prize (one headline prize, or null). */
+  const bundle = (rec: Rec, key: 'line' | 'bingo', path: string): PrizeBundle => {
+    const v = rec[key];
+    const bpath = `${path}.${key}`;
+    if (v1) {
+      if (v === null) return [];
+      const one = prize(v, bpath, true);
+      return one ? [one] : [];
+    }
+    const items = list(rec, key, path, LIMITS.bundle).flatMap((p, i) => prize(p, `${bpath}[${i}]`, null) ?? []);
+    const firstOther = items.findIndex((p) => !p.headline);
+    if (firstOther >= 0 && items.slice(firstOther).some((p) => p.headline)) err(bpath, 'headline prizes must come first');
+    return items;
   };
 
   const rounds: RoundPlan[] = [];
@@ -164,10 +217,32 @@ export function checkGamePlan(json: unknown): PlanCheck {
     if (number !== null && number !== i + 1) err(`${path}.number`, `must be ${i + 1} (rounds are numbered 1, 2, 3… in order)`);
     const kind = r.kind;
     if (kind !== 'normal' && kind !== 'special') err(`${path}.kind`, 'must be "normal" or "special"');
-    rounds.push({ number: number ?? i + 1, kind: kind === 'special' ? 'special' : 'normal', line: prize(r, 'line', path), bingo: prize(r, 'bingo', path) });
+    rounds.push({ number: number ?? i + 1, kind: kind === 'special' ? 'special' : 'normal', line: bundle(r, 'line', path), bingo: bundle(r, 'bingo', path) });
   });
   if (rounds.length === 0 && Array.isArray(json.rounds)) err('plan.rounds', 'needs at least one round');
   if (rounds.filter((r) => r.kind === 'special').length > 1) err('plan.rounds', 'only one special round is supported');
+
+  const cardTypes: CardType[] = v1 ? DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })) : [];
+  if (!v1) {
+    list(json, 'cardTypes', 'plan', 10).forEach((c, i) => {
+      const path = `plan.cardTypes[${i}]`;
+      if (!isRec(c)) return err(path, 'must be an object');
+      keys(c, path, ['type', 'name', 'color', 'priceCents', 'rounds']);
+      if (c.type !== 'normal' && c.type !== 'especial') err(`${path}.type`, 'must be "normal" or "especial" (as on the printed cards)');
+      if (cardTypes.some((o) => o.type === c.type)) err(`${path}.type`, `repeats "${String(c.type)}"`);
+      const color = str(c, 'color', path, { max: 7 });
+      if (color !== null && !COLOR_RE.test(color)) err(`${path}.color`, 'must be a colour like "#cfe8ff"');
+      const kinds = Array.isArray(c.rounds) ? c.rounds : [];
+      if (!Array.isArray(c.rounds) || !kinds.length || kinds.some((k) => k !== 'normal' && k !== 'special')) err(`${path}.rounds`, 'must list "normal" and/or "special"');
+      cardTypes.push({
+        type: c.type === 'especial' ? 'especial' : 'normal',
+        name: str(c, 'name', path) ?? '',
+        color: color ?? '',
+        priceCents: num(c, 'priceCents', path, 0, LIMITS.priceCents, { nullable: true, integer: true }),
+        rounds: kinds.filter((k): k is RoundKind => k === 'normal' || k === 'special'),
+      });
+    });
+  }
 
   let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 };
   const sch = json.schedule;
@@ -198,7 +273,63 @@ export function checkGamePlan(json: unknown): PlanCheck {
   }
 
   if (errors.length) return { ok: false, errors };
-  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', rounds, sponsors, schedule, cheatSheet } };
+  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', prizeReveal, rounds, sponsors, cardTypes, schedule, cheatSheet } };
+}
+
+/** A bundle's headline prizes (the first ones), or its first prize when none is marked. */
+export function headlinePrizes(bundle: PrizeBundle): Prize[] {
+  const marked = bundle.filter((p) => p.headline);
+  return marked.length ? marked : bundle.slice(0, 1);
+}
+
+/** A round's prize reveal, as the journal records it (`prizes.revealed`): by the presenters, or as it was introduced. */
+export interface PrizesRevealed {
+  round: number;
+  by: 'presenters' | 'intro';
+}
+
+/**
+ * The rounds whose prizes phones may see. `perRound`: round 1 from the start, and every round the journal says was
+ * revealed (as introduced or by the presenters). `allSecret`: only the rounds the presenters revealed.
+ */
+export function revealedRounds(plan: Pick<GamePlan, 'prizeReveal'>, revealed: readonly PrizesRevealed[]): number[] {
+  const perRound = plan.prizeReveal === 'perRound';
+  const rounds = new Set<number>(perRound ? [1] : []);
+  for (const r of revealed) if (perRound || r.by === 'presenters') rounds.add(r.round);
+  return [...rounds].sort((a, b) => a - b);
+}
+
+/** A round as phones see it: its skeleton always (to show it locked, game-style), its bundles once revealed. */
+export interface PublicRoundPlan {
+  number: number;
+  kind: RoundKind;
+  revealed: boolean;
+  line?: PrizeBundle;
+  bingo?: PrizeBundle;
+}
+
+/** The plan as phones and public screens see it: no locked round's prizes (not even how many), no cheat sheet. */
+export interface PublicPlan {
+  v: typeof PLAN_VERSION;
+  edition: string;
+  title: string;
+  prizeReveal: PrizeReveal;
+  rounds: PublicRoundPlan[];
+  sponsors: Sponsor[];
+  cardTypes: CardType[];
+  schedule: SchedulePlan;
+}
+
+/** The public plan: `revealed` are the rounds whose prizes may be seen (revealedRounds). */
+export function publicPlan(plan: GamePlan, revealed: readonly number[]): PublicPlan {
+  const open = new Set(revealed);
+  return {
+    v: plan.v, edition: plan.edition, title: plan.title, prizeReveal: plan.prizeReveal,
+    rounds: plan.rounds.map((r) => (open.has(r.number)
+      ? { number: r.number, kind: r.kind, revealed: true, line: r.line, bingo: r.bingo }
+      : { number: r.number, kind: r.kind, revealed: false })),
+    sponsors: plan.sponsors, cardTypes: plan.cardTypes, schedule: plan.schedule,
+  };
 }
 
 /** The sponsor of a prize, if any. */

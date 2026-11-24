@@ -46,6 +46,7 @@ const RULES = {
   pause: 'any',
   endGame: 'any',
   winnerInfo: 'any',
+  revealPrizes: 'any',
   // In roundStart, once the Shuffle has been drawn (it waits for the animation to end); in a Line's
   // Celebration, back to the round.
   next: (c) => PLAY.includes(c.scene) || (c.scene === 'roundStart' && !c.introduced) || celebratingLine(c),

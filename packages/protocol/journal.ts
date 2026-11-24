@@ -133,6 +133,16 @@ export interface WinnerNotedEntry extends EntryBase {
   notes: string | null;
 }
 
+/**
+ * A round's prizes revealed: by the presenters (`revealPrizes`), or as the round is introduced (`roundIntro`, which
+ * a plan with `prizeReveal: 'allSecret'` ignores: plan.ts revealedRounds).
+ */
+export interface PrizesRevealedEntry extends EntryBase {
+  kind: 'prizes.revealed';
+  round: number;
+  by: 'presenters' | 'intro';
+}
+
 export type JournalEntry =
   | RoundStartedEntry
   | RoundResumedEntry
@@ -144,7 +154,8 @@ export type JournalEntry =
   | SceneChangedEntry
   | ClaimOpenedEntry
   | ClaimDecidedEntry
-  | WinnerNotedEntry;
+  | WinnerNotedEntry
+  | PrizesRevealedEntry;
 export type JournalEntryKind = JournalEntry['kind'];
 type WithoutBase<E> = E extends unknown ? Omit<E, keyof EntryBase> : never;
 /** An entry as the engine builds it, before the journal stamps `gameId`, `seq` and `atMs`. */
@@ -206,6 +217,8 @@ export interface GameRecord {
   claimCount: number;
   /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
   winners: WinnerInfo[];
+  /** The rounds whose prizes were revealed, and how (plan.ts revealedRounds turns them into what phones see). */
+  prizesRevealed: { round: number; by: 'presenters' | 'intro' }[];
 }
 
 export class JournalError extends Error {
@@ -216,7 +229,7 @@ export class JournalError extends Error {
 export function emptyRecord(gameId: string): GameRecord {
   return {
     gameId, seq: 0, cardsInPlay: '', settings: null, round: null,
-    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [],
+    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [],
   };
 }
 
@@ -236,6 +249,7 @@ export function replayJournal(entries: readonly JournalEntry[], gameId = entries
  */
 export function extendJournal(record: GameRecord, entries: readonly JournalEntry[]): GameRecord {
   const next = structuredClone(record);
+  next.prizesRevealed ??= []; // a record kept from before prize reveals
   for (const entry of entries) {
     if (entry.gameId !== next.gameId) throw new JournalError(`entry ${entry.seq} belongs to game ${entry.gameId}, not ${next.gameId}`);
     if (entry.seq !== next.seq + 1) throw new JournalError(`entry ${entry.seq} follows ${next.seq}: missing or repeated entries`);
@@ -312,6 +326,9 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
     }
     case 'cards.set':
       record.cardsInPlay = entry.ranges;
+      return;
+    case 'prizes.revealed':
+      if (!record.prizesRevealed.some((r) => r.round === entry.round && r.by === entry.by)) record.prizesRevealed.push({ round: entry.round, by: entry.by });
       return;
     case 'settings.changed':
       record.settings = { ...entry.settings };
