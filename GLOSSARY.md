@@ -160,8 +160,12 @@ Undoing the last landing: that song stops counting and becomes the next song aga
 _Avoid_: Previous, undo, replay, anterior (outside the UI)
 
 **Hold**:
-A state in which no new song can land and the music keeps playing under the presenters' voices (labelled "Parlem" on the console), used for claims and whenever the presenters want to talk. The music never stops unless silence is intended.
+A state in which no new song can land and the music ducks under the presenters' voices, used for claims and whenever the presenters want to talk (labelled "Parlem" on the console). The music never stops unless silence is intended.
 _Avoid_: Pause, low volume
+
+**Stay**:
+A state in which no new song can land and the current song keeps playing at full volume, looping a phrase if needed, for dancing or crowd moments (labelled "Aguanta" on the console).
+_Avoid_: Freeze, loop mode
 
 **Hold music**:
 Looping background tracks, such as a video-game waiting tune, that take over during a long hold.

@@ -16,6 +16,9 @@ These override the sections below where they differ.
 - **Signatures are picked automatically**, with a veto. They are instrumental intro or pre-chorus pieces, teased *before* a landing.
 - **Suspense keeps the current song playing.** The drum hovers over about 3 pending songs while their decoys tease, then resolves to the real next song.
 - **Transitions have an intensity range.** Lighter, quick and well-made at the start of a round, growing with the phase. Always produced DJ moves, never bare volume fades.
+- **The presenters' actions:** Següent; Parlem (Hold: no landing, music ducked); **Aguanta** (Stay: no landing, full volume); Suspens; Enrere (long press); Comprovar cartró; Efectes; Ritme. The Wii remote mapping is still to be decided.
+- **The near-win cue on phones is subtle:** the missing song is gently highlighted on that card's grid. There is no banner, and no win is ever announced.
+- **Hooks for this year's songs are detected automatically** (the chorus start, an energy jump, the vocals coming in, snapped to phrases), and the user approves, rejects or nudges each one on the audition page.
 - **The repo is being reorganised:** `apps/`, `packages/`, `tools/` and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 
 ## Who builds what
