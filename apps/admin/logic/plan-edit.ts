@@ -2,7 +2,7 @@
 // are renumbered 1, 2, 3… every time), sponsor ids that follow their name and keep prizes pointing at them,
 // blank prizes and plans, and the schedule's local date-time. Pure: each returns new values and never
 // mutates its input.
-import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type RoundPlan, type SchedulePlan } from '../../ui/plan.ts';
+import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import type { RoundKind } from '@quina/protocol';
 
 export const blankPrize = (): Prize => ({ title: '', detail: null, sponsorId: null, image: null });

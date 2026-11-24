@@ -1,8 +1,8 @@
 <!-- One prize of a round (Line or Quina): whether there is one, its title, detail, sponsor and picture. -->
 <script lang="ts">
-  import type { Prize, Sponsor } from '../../ui/plan.ts';
-  import type { WinKind } from '../../ui/flow.ts';
-  import { CA } from '../../ui/i18n/ca.ts';
+  import type { Prize, Sponsor } from '../../../packages/ui/plan.ts';
+  import type { WinKind } from '../../../packages/ui/flow.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { blankPrize } from '../logic/plan-edit.ts';
   import { S } from '../strings.ts';
 

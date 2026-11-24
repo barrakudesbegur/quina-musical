@@ -1,11 +1,11 @@
 """The Interval playlist: the music of the break between rounds. Global, like Hold music: no pool owns it.
 
-Usage (from experiments/mixer-poc):
-    analysis/.venv/bin/python analysis/interval.py             # every track in client/public/audios/interval/
-    analysis/.venv/bin/python analysis/interval.py --force     # re-decode, re-run Beat This!, re-derive
+Usage (from the repo root):
+    tools/prep/.venv/bin/python tools/prep/interval.py             # every track in data/media/interval/
+    tools/prep/.venv/bin/python tools/prep/interval.py --force     # re-decode, re-run Beat This!, re-derive
     npm run prep -- --steps interval                           # the same, as a prepare step
 
-Source: client/public/audios/interval/ (gitignored), spotDL's `NN Title - Artist.mp3` files plus its
+Source: data/media/interval/ (gitignored), spotDL's `NN Title - Artist.mp3` files plus its
 playlist.spotdl (a JSON list of the playlist's entries; `list_position` is the file's NN). Title and artist come
 from the playlist entry; a file without one falls back to its own name.
 
@@ -45,11 +45,10 @@ from steps import beats as beats_step  # noqa: E402
 from steps import loudness as loud_step  # noqa: E402
 from steps import tempo as tempo_step  # noqa: E402
 
-POC = Path(__file__).resolve().parent.parent
-ROOT = POC.parent.parent
-SOURCE = ROOT / "client/public/audios/interval"
-CACHE = POC / "cache/interval"
-OUT = POC / "data/interval"
+ROOT = Path(__file__).resolve().parent.parent.parent  # the repo: the paths stored in index.json are relative to it
+SOURCE = ROOT / "data/media/interval"
+CACHE = ROOT / "data/cache/interval"
+OUT = ROOT / "data/out/interval"
 PLAYLIST = "playlist.spotdl"
 EXTENSIONS = {".mp3", ".m4a", ".opus", ".ogg", ".flac", ".wav"}
 

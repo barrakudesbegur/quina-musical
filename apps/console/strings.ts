@@ -4,8 +4,8 @@
 // shows something sensible instead of breaking the build; tests/ui/console/strings.test.ts checks that
 // every known value has its own text.
 import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName } from '@quina/protocol';
-import { CA } from '../ui/i18n/ca.ts';
-import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKind } from '../ui/flow.ts';
+import { CA } from '../../packages/ui/i18n/ca.ts';
+import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { LinkName, LinkState } from './logic/status.ts';
 import type { ConsoleCommand, Theme } from './config.ts';
 

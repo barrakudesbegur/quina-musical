@@ -5,7 +5,7 @@
 // every file is one request of the daily quota (about 730 for last year's pool).
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadPool } from '../../relay/pool.ts';
+import { LINK, loadPool } from '../../show/relay/pool.ts';
 import { pull, push } from './media-sync.ts';
 import { poolRoots } from './pool-roots.ts';
 
@@ -34,7 +34,7 @@ const options = {
   headers: (id && secret ? { 'CF-Access-Client-Id': id, 'CF-Access-Client-Secret': secret } : {}) as Record<string, string>,
   pool: pool.name,
   roots: poolRoots(pool),
-  dataDir: path.join(ROOT, 'laptop-data'),
+  dataDir: LINK,
 };
 console.log(`media ${action}: pool ${pool.name} ↔ ${cloud}`);
 const report = await (action === 'push' ? push(options) : pull(options));

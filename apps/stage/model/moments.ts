@@ -4,8 +4,8 @@
 // Moments are timed by the show's clock (landing times, step times, the Shuffle window), never by when a
 // message arrives, and the first summary after mounting only enters the scene: a late join never replays
 // past steps or landings. Pure.
-import type { ShowScene, WinKind } from '../../ui/flow.ts';
-import type { HeatSample } from '../../ui/rules/heat.ts';
+import type { ShowScene, WinKind } from '../../../packages/ui/flow.ts';
+import type { HeatSample } from '../../../packages/rules/heat.ts';
 import type { StageView } from '../view.ts';
 import { checkReveal, type CheckVerdict, type StepState } from './check.ts';
 import { motionAt, type MotionPhase } from './motion.ts';
@@ -73,7 +73,7 @@ export interface Moments {
 
 export interface MomentInputs {
   nowMs: number;
-  /** The Heat sample that has started by now (ui/rules/heat.ts), or null. */
+  /** The Heat sample that has started by now (packages/rules/heat.ts), or null. */
   heat: HeatSample | null;
   linkLost: boolean;
   checkMarkAt: 'end' | 'start';

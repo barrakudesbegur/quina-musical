@@ -2,8 +2,8 @@
 // engine knows about the night: Winners and cards in play). The full export holds the Winners' names, which
 // are PRIVATE: it is for the organizers' records, never for git or the projector. Pure.
 import type { CardsInfo } from '@quina/protocol';
-import type { GamePlan } from '../../ui/plan.ts';
-import type { WinnerInfo } from '../../ui/flow.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
+import type { WinnerInfo } from '../../../packages/ui/flow.ts';
 
 export const FULL_EXPORT_KIND = 'quina.fullExport';
 export const FULL_EXPORT_VERSION = 1;

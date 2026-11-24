@@ -3,9 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROTOCOL_VERSION, type IncomingEvent, type ShowState } from '@quina/protocol';
-import { baseState, FIXTURE_LANDED } from '../../../ui/fixtures/states.ts';
-import { PublicProjector, type ProjectionContext } from '../../../player/feed/project.ts';
-import { followFeed } from '../../../player/feed/public.ts';
+import { baseState, FIXTURE_LANDED } from '../../../../../packages/ui/fixtures/states.ts';
+import { PublicProjector, type ProjectionContext } from '../../../../player/feed/project.ts';
+import { followFeed } from '../../../../player/feed/public.ts';
 
 const NOW = 1_700_000_000_000;
 

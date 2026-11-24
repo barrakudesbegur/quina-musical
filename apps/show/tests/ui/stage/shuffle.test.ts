@@ -2,7 +2,7 @@
 // into the drum.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coverFlights, gridShape, shuffleLayout, shufflePhaseAt, shuffleSequence, shuffleTimeline } from '../../../stage/model/shuffle.ts';
+import { coverFlights, gridShape, shuffleLayout, shufflePhaseAt, shuffleSequence, shuffleTimeline } from '../../../../stage/model/shuffle.ts';
 
 const SPLIT = { appear: 1, jiggle: 2, fly: 5, settle: 1 };
 

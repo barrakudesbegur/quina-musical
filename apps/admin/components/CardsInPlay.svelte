@@ -1,7 +1,7 @@
 <!-- Cards in play as ranges, with a live preview, sent to the engine with `setCardsInPlay`. They live in the
      engine's Game journal, not in the plan. -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { RANGES_MAX_LENGTH, previewCardRanges, sameCards, type CardTypes, type RangesError } from '../logic/cards-preview.ts';
   import { S } from '../strings.ts';

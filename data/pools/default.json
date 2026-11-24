@@ -1,12 +1,12 @@
 {
   "name": "default",
-  "description": "Last year's 77 songs (the old player's songs.json). Test material; its outputs stay where they always were.",
-  "songsJson": "../../server/db/default/songs.json",
-  "audioDir": "../../client/public/audios/song",
-  "coversDir": "../../client/public/images/covers",
-  "cardsJson": "../../card-generator/dist/cards.json",
-  "spotifyFeatures": "data/spotify_features.json",
-  "dataDir": "data",
-  "cacheDir": "cache",
-  "overridesDir": "analysis/overrides"
+  "description": "Last year's 77 songs (the old player's songs.json). Test material; its outputs are the top level of data/out/ and data/cache/.",
+  "songsJson": "data/pools/default/songs.json",
+  "audioDir": "data/media/song",
+  "coversDir": "data/media/covers",
+  "cardsJson": "apps/cards/dist/cards.json",
+  "spotifyFeatures": "data/out/spotify_features.json",
+  "dataDir": "data/out",
+  "cacheDir": "data/cache",
+  "overridesDir": "data/pools/default/overrides"
 }

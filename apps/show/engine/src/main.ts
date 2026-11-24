@@ -21,7 +21,7 @@ import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
 import { DrumView, type DrumCard } from './wheel/drum.ts';
 import { Bus } from './net/bus.ts';
 import { LocalJournal, chooseResume, parseJournalLines, type CloudCopy, type KeyValueStorage } from './journal-store.ts';
-import { mountStage } from '../../stage/stage.ts';
+import { mountStage } from '../../../stage/stage.ts';
 import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
 import type { DecoyEvent } from './plan/recipes.ts';
 import {
@@ -103,7 +103,7 @@ const isCardSongRef = (x: unknown) => Number.isInteger(x) || (isRecord(x) && Num
 const isCard = (x: unknown): x is Card =>
   isRecord(x) && Number.isInteger(x.id) && typeof x.type === 'string' && isArray(x.lines) && x.lines.every((line) => isArray(line) && line.every(isCardSongRef));
 
-/** card-generator's cards.json, checked: card ids, types and song ids (titles are trusted). */
+/** apps/cards' cards.json, checked: card ids, types and song ids (titles are trusted). */
 function checkCards(json: unknown): readonly Card[] {
   if (!isArray(json) || !json.every(isCard)) throw new Error('cards.json: not a list of cards');
   return json;

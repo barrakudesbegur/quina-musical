@@ -66,7 +66,7 @@ export function soundsCheck(missingSounds: readonly string[], holdCount: number,
       ? check('Pool', 'Fanfares and effects', 'fail', `missing: ${missingSounds.join(', ')}`)
       : check('Pool', 'Fanfares and effects', 'pass', 'every sound the console can play is there'),
     holdCount === 0 || missingHold.length > 0
-      ? check('Pool', 'Hold music', 'fail', holdCount === 0 ? 'no Hold music prepared (analysis/hold.py)' : `missing decoded files: ${missingHold.join(', ')}`)
+      ? check('Pool', 'Hold music', 'fail', holdCount === 0 ? 'no Hold music prepared (tools/prep/hold.py)' : `missing decoded files: ${missingHold.join(', ')}`)
       : check('Pool', 'Hold music', 'pass', `${holdCount} tracks`),
   ];
 }
@@ -156,7 +156,7 @@ export function browserCheck(processes: readonly string[]): Check {
 
 // ---- the network and the cloud ----------------------------------------------------------------------------
 export function relayCheck(pool: string, answer: { ok: boolean; name?: string; error?: string }): Check {
-  if (!answer.ok) return check('Network', 'Relay', 'fail', `not running (${answer.error ?? 'no answer'}): start it with "npm start" in experiments/mixer-poc`);
+  if (!answer.ok) return check('Network', 'Relay', 'fail', `not running (${answer.error ?? 'no answer'}): start it with "npm start" in apps/show`);
   if (answer.name !== pool) return check('Network', 'Relay', 'fail', `it serves pool "${answer.name}", not "${pool}": restart it with --pool ${pool}`);
   return check('Network', 'Relay', 'pass', `up, pool ${pool}`);
 }
@@ -206,7 +206,7 @@ export interface LinkStatusFile {
 
 /** The laptop's cloud link, from the status file it writes every few seconds. */
 export function linkCheck(status: LinkStatusFile | null, nowMs: number): Check {
-  if (!status) return check('Cloud', 'Cloud link', 'fail', 'not running: start it with "npm run link" in experiments/mixer-poc/cloud');
+  if (!status) return check('Cloud', 'Cloud link', 'fail', 'not running: start it with "npm run link" in apps/cloud');
   const age = Math.round((nowMs - status.updatedAtMs) / 1000);
   if (age > 60) return check('Cloud', 'Cloud link', 'fail', `silent for ${age} s: is "npm run link" still running?`);
   if (status.uploader.kind === 'stopped') return check('Cloud', 'Cloud link', 'fail', `uploads stopped: ${status.uploader.reason ?? '?'}`);

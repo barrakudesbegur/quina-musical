@@ -14,5 +14,5 @@ chmod +x main.sh
 ./main.sh <playlist_id|playlist_url>
 
 # Crop downloaded songs from the first main timestamp to the end
-python crop_songs.py --songs-json ../server/db/default/songs.json
+python crop_songs.py --songs-json ../../../data/pools/default/songs.json
 ```

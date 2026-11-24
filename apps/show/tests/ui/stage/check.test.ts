@@ -1,7 +1,7 @@
 // The Check on the projector: grid from the card, and each step's state from its timestamps.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkCells, checkReveal, verdictOf, type CheckStepView } from '../../../stage/model/check.ts';
+import { checkCells, checkReveal, verdictOf, type CheckStepView } from '../../../../stage/model/check.ts';
 
 const card = { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]] };
 const steps: CheckStepView[] = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: 1000 + i * 3000, durationMs: 2500 }));

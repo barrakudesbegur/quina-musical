@@ -4,10 +4,10 @@
 // The Game plan comes from Admin's store on this origin (ui/data/plan-store.ts), like the other dev screens.
 // Limitation: the engine's snapshot carries only the last 10 landings, so a page opened mid-round knows the
 // earlier ones only from then on (the cloud's feed carries them all).
-import { relayTokenForPage } from '../../ui/client/pairing.ts';
-import { ShowClient } from '../../ui/client/show-client.ts';
-import { LocalPlanStore, type PlanStore } from '../../ui/data/plan-store.ts';
-import type { GamePlan } from '../../ui/plan.ts';
+import { relayTokenForPage } from '../../../packages/ui/client/pairing.ts';
+import { ShowClient } from '../../../packages/ui/client/show-client.ts';
+import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { PLAYER_CONFIG } from '../config.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
 import { ProjectedFeedCore } from './projected-feed.ts';

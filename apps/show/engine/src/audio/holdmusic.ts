@@ -1,7 +1,7 @@
 // Hold music: looping waiting-screen tracks that take over during a long Hold, after Back, or when a song
 // runs out while the presenters talk. The music never stops unless silence is intended.
 //
-// The user's tracks go in client/public/audios/hold/ (gitignored). analysis/hold.py decodes them to
+// The user's tracks go in data/media/hold/ (gitignored). tools/prep/hold.py decodes them to
 // cache/hold/<name>.flac (served at /holdaudio/) and picks seamless whole-bar loops (data/hold/<name>.json).
 // Moods come from the folder: hold/ is "fail" music (category "error": after Back, and later a failed
 // Check), celebration/ is victory music. A synthesized chiptune placeholder covers ordinary Holds.
@@ -16,7 +16,7 @@ import type { Handoff } from './interval.ts';
 export type HoldMusicMood = 'hold' | 'error' | 'celebration';
 
 /**
- * One loop in data/hold/<name>.json (analysis/hold.py), the fields read here: whole bars ('bars') or the
+ * One loop in data/hold/<name>.json (tools/prep/hold.py), the fields read here: whole bars ('bars') or the
  * composer's loop body ('body') between two samples of the decoded track. `preferred` marks the loop to play;
  * `afterIntro`, that it starts after the track's intro; `gainToTargetDb` trims it to the songs' loudness.
  */
@@ -295,7 +295,7 @@ export class HoldMusic {
     this.starting = null; // a start() still loading its track
   }
 
-  // The user's tracks (client/public/audios/hold, analysed by analysis/hold.py into seamless bar loops) plus
+  // The user's tracks (data/media/hold, analysed by tools/prep/hold.py into seamless bar loops) plus
   // the synthesized placeholder, which covers any mood without a track.
   async prepare(): Promise<void> {
     const placeholder = await renderPlaceholder(this.ctx.sampleRate);
@@ -310,7 +310,7 @@ export class HoldMusic {
       next: 0,
     });
     try {
-      // data/hold/index.json (analysis/hold.py) lists the analysed tracks by `name`.
+      // data/hold/index.json (tools/prep/hold.py) lists the analysed tracks by `name`.
       const index: unknown = await (await fetch('/data/hold/index.json', { cache: 'no-store' })).json();
       if (!isRecord(index)) throw new Error('data/hold/index.json: not an object');
       const files: unknown[] = Array.isArray(index.files) ? index.files : [];
@@ -432,7 +432,7 @@ export class HoldMusic {
     const when = Math.max(at, ctx.currentTime + 0.02);
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    // Loop points inside the track (analysis/hold.py): never a restart from the very start or end.
+    // Loop points inside the track (tools/prep/hold.py): never a restart from the very start or end.
     source.loop = true;
     source.loopStart = loop.loopStartSec ?? 0;
     source.loopEnd = buffer.duration;

@@ -41,7 +41,7 @@ const targetOf = (e: PlanEvent): string => ('target' in e ? e.target : '');
 const PHASE_LIST = [PHASES.early, PHASES.mid, PHASES.late, PHASES.final];
 const ALL_PARTS = ['drums', 'bass', 'vocals', 'other'] as const;
 
-/** B's 8 bars before its hook rendered at A's tempo (as analysis/stretch.py's meta), for R8, D10 and D16 (`bass` and `vocals` allowed alike). */
+/** B's 8 bars before its hook rendered at A's tempo (as tools/prep/stretch.py's meta), for R8, D10 and D16 (`bass` and `vocals` allowed alike). */
 function blendSourceFor(A: Analysis, hook: Hook, bass: boolean, vocals = bass): BlendSource {
   const barSec = (60 / A.tempo.bpm) * (A.tempo.beatsPerBar || 4);
   return { aSongId: A.songId, hookId: hook.id, toBpm: A.tempo.bpm, firstDownbeatSec: 0.1, hookSec: 0.1 + 8 * barSec, barSec, bass, vocals };
@@ -53,7 +53,7 @@ function callOf(B: Analysis): SignatureSource {
   return { id: `${B.songId}-call-0`, kind: 'call', durationSec: 4.5 * beat, anchorSec: 0.5 * beat, beats: 4, bpm: B.tempo.bpm, gainDb: -2 };
 }
 
-/** A two-bar intro riff, for D5's bed (cut from its first downbeat, like analysis/steps/signatures.py). */
+/** A two-bar intro riff, for D5's bed (cut from its first downbeat, like tools/prep/steps/signatures.py). */
 function riffOf(B: Analysis): SignatureSource {
   const bar = (60 / B.tempo.bpm) * (B.tempo.beatsPerBar || 4);
   return { id: `${B.songId}-riff-0`, kind: 'riff', durationSec: 2 * bar + 0.05, anchorSec: 0, beats: 2 * (B.tempo.beatsPerBar || 4), bpm: B.tempo.bpm, gainDb: -3 };

@@ -23,6 +23,7 @@ import {
 } from '../engine/src/interval/plan.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { setup, type Harness } from './support/harness.ts';
+import { OUT } from '../relay/pool.ts';
 
 const find = <T extends EffectType>(effects: readonly Effect[], type: T) => effects.find((e): e is EffectOf<T> => e.type === type);
 const rejected = (effects: readonly Effect[]) => effects.filter((e) => e.type === 'reject').map((e) => e.reason);
@@ -143,7 +144,7 @@ test('a track hands over on a downbeat 8–12 s before its sound ends, preferrin
 });
 
 test('the real playlist (data/interval, when analysed): every natural handover is on a downbeat in its window', (t) => {
-  const dir = path.join(import.meta.dirname, '../data/interval');
+  const dir = path.join(OUT, 'interval');
   if (!fs.existsSync(path.join(dir, 'index.json'))) return t.skip('no data/interval (run npm run prep -- --steps interval)');
   const slugs = intervalSlugs(JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')));
   assert.ok(slugs.length > 0);

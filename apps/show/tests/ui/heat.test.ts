@@ -1,7 +1,7 @@
 // Heat display: never moves at a landing, eases to new targets, both screens agree.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { HEAT, HeatSmoother, heatAt } from '../../ui/rules/heat.ts';
+import { HEAT, HeatSmoother, heatAt } from '../../../../packages/rules/heat.ts';
 
 test('heatAt holds the previous value until a sample starts, then eases to it', () => {
   const samples = [{ value: 0.8, fromMs: 10_000, toMs: 30_000 }];

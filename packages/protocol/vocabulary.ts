@@ -77,9 +77,9 @@ export const PACE_PRESETS_SEC = [11, 14, 18, 22, 30] as const;
 /** The remotes' −/+ step. */
 export const PACE_FINE_STEP_SEC = 1;
 
-/** One-shot fanfares (client/public/audios/stingers). */
+/** One-shot fanfares (data/media/stingers). */
 export const STINGER_NAMES = ['mkwii-final-lap', 'mkwii-mission-clear', 'mkwii-mission-failure', 'mkwii-low-place-fanfare'] as const;
-/** Sound effects (client/public/audios/fx). */
+/** Sound effects (data/media/fx). */
 export const SFX_NAMES = [
   'among-us', 'anime-wow', 'boom', 'bum-bum-buaaa', 'buzzer', 'correct', 'duck-quack', 'fear-melody', 'heaven',
   'horn', 'metal-gear-alert', 'orchestra-hit', 'sad-trombone', 'spongebob-boowomp', 'spongebob-fail', 'tada',

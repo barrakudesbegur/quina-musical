@@ -1,6 +1,6 @@
 // The console page: tokens and base theme from ui/, the console's layout and light/dark themes, then the app.
-import '../ui/tokens.css';
-import '../ui/base.css';
+import '../../packages/ui/tokens.css';
+import '../../packages/ui/base.css';
 import './theme.css';
 import './console.css';
 import { mount } from 'svelte';

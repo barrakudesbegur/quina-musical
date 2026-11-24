@@ -1,8 +1,8 @@
 // Plan edits: rounds renumbered after every change, sponsor ids and references, the schedule's local time.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan } from '../../../ui/plan.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
+import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import {
   addRound,
   blankPlan,
@@ -16,7 +16,7 @@ import {
   sponsorIdFor,
   sponsorUsage,
   toLocalInput,
-} from '../../../manage/logic/plan-edit.ts';
+} from '../../../../admin/logic/plan-edit.ts';
 
 const numbers = (rounds: { number: number }[]) => rounds.map((r) => r.number);
 

@@ -1,6 +1,6 @@
 # Cloud: the Game's home in Cloudflare
 
-The cloud backend of the Quina Musical ([ADR 0003](../../../docs/adr/0003-cloud-owns-the-game-laptop-owns-playback.md)): a Cloudflare Worker and **one GameRoom Durable Object per edition**, with SQLite storage and the WebSocket Hibernation API. The show laptop owns playback and keeps journalling offline. The cloud owns the Game: it takes the laptop's journal, feeds the players' phones, and exports everything as JSON.
+The cloud backend of the Quina Musical ([ADR 0003](../../docs/adr/0003-cloud-owns-the-game-laptop-owns-playback.md)): a Cloudflare Worker and **one GameRoom Durable Object per edition**, with SQLite storage and the WebSocket Hibernation API. The show laptop owns playback and keeps journalling offline. The cloud owns the Game: it takes the laptop's journal, feeds the players' phones, and exports everything as JSON.
 
 ```
 show page ──(relay /ws)── laptop link ──(wss /ws/show, Access service token)──┐
@@ -12,13 +12,13 @@ admins ──(https /api/export, /api/stats, Access with Google)─────�
 player app, covers ── static assets, never through the Worker (free) ┘
 ```
 
-Terms follow [GLOSSARY.md](../../../GLOSSARY.md). The shared contracts are in `@quina/protocol` (`../protocol/`): the commands, the events, and the Game journal with `replayJournal`/`extendJournal`. The public feed for phones is drafted here as [`src/feed/public.ts`](src/feed/public.ts) and moves into the protocol once it's merged.
+Terms follow [GLOSSARY.md](../../GLOSSARY.md). The shared contracts are in `@quina/protocol` (`packages/protocol/`): the commands, the events, and the Game journal with `replayJournal`/`extendJournal`. The public feed for phones is [`packages/protocol/public.ts`](../../packages/protocol/public.ts).
 
 ## Run it
 
 ```sh
-cd experiments/mixer-poc/cloud
-npm install
+npm install                          # at the repo root (npm workspaces)
+cd apps/cloud
 cp .dev.vars.example .dev.vars      # the dev Access bypass (localhost only)
 npm run dev                          # wrangler dev on http://localhost:8787 (static files: static/ only)
 npm run assets                       # dist/: static/ + the UI build + cards.json + covers as WebP (needs cwebp)
@@ -38,11 +38,11 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /feed?cards=12,123` (WebSocket) | anyone (phones) | The public feed: a `public.state` snapshot, then `public.delta` messages. Phones send nothing. The card numbers (at most 30) feed Admin's anonymous "cards opened on phones" |
 | `GET /ws/show` (WebSocket) | the laptop's Access service token | The laptop link: journal uploads, live events, a keepalive; the consoles' commands back ([`src/link-protocol.ts`](src/link-protocol.ts)) |
 | `GET /ws/console` (WebSocket) | organizers (Access) | A console through the cloud, speaking the **relay protocol**: `hello` as `tablet` or `admin`, then commands. It gets the show's events raw (private ones included, as on the relay; never the journal) and a `relay.clients` list that merges the laptop's relay with the cloud's consoles. With the laptop offline, a command is refused at once as `notReady` |
-| `GET`, `PUT /api/plan` | admins (Access) | The edition's Game plan (`GamePlan`, protocol/plan.ts). PUT saves it whole, checked with `checkGamePlan` and only for this edition (400 with every error otherwise). Phones get it in the feed, and the laptop link keeps a copy in `laptop-data/plan.json` |
+| `GET`, `PUT /api/plan` | admins (Access) | The edition's Game plan (`GamePlan`, protocol/plan.ts). PUT saves it whole, checked with `checkGamePlan` and only for this edition (400 with every error otherwise). Phones get it in the feed, and the laptop link keeps a copy in `data/link/plan.json` |
 | `POST /api/media` | admins (Access) | Upload a sponsor logo or prize picture (WebP, PNG or JPEG, at most 300 KB; the body is the file). Answers `{ path: '/media/<hash>.webp' }`, which goes in the plan. The same file twice is stored once |
 | `GET /media/<hash>.<ext>` | anyone | An uploaded image, immutable (cached a year by browsers, and by Cloudflare's cache on a custom domain) |
 | `GET /api/games` | admins (Access) | The edition's Games, newest first (rehearsals, the night): last entry, rounds, which is current, and for the current one its resume point (round, kind, Shuffle seed, position, Line), to prefill a manual `resumeAt`. The seed is secret |
-| `POST /api/resume` `{ gameId }` | admins (Access) | Admin's manual resume: that Game becomes current and its whole journal goes to the laptop, which writes `laptop-data/resume.json` for the show page's boot check |
+| `POST /api/resume` `{ gameId }` | admins (Access) | Admin's manual resume: that Game becomes current and its whole journal goes to the laptop, which writes `data/link/resume.json` for the show page's boot check |
 | `GET /api/phones` | admins (Access) | Phones following the feed now, and which card numbers (anonymous): "cards opened on phones" |
 | `PUT /api/notice` `{ notice }` | admins (Access) | The banner on every phone (at most 200 characters; null clears it) |
 | `PUT /api/sounds` `{ soundsDefault }` | admins (Access) | The player app's default for interface sounds; a player's own choice wins |
@@ -70,14 +70,14 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
   - Laptop: the audio output (Bluetooth and AirPlay fail), system and display sleep, power, disk, Chrome's autoplay flag.
   - Network: the relay and its pool; the show page connected; the console's LAN address answering.
   - Cloud: reachable; the laptop token signs in, with round trip and clock offset; the link's status file fresh and in sync; the Game and edition; the Game plan.
-  It never connects as a second laptop: the link writes `laptop-data/status.json` every 5 s for it.
+  It never connects as a second laptop: the link writes `data/link/status.json` every 5 s for it.
 - **The Game plan** is all public (rounds, prizes, sponsors, schedule), so it lives in the public state. Saving it sends one change to every phone and a `cloud.plan` to the laptop, which also gets it on every hello. Logos are files under `/media/`, never data URLs in the plan, so a phone's snapshot stays small.
 - **A silent laptop** (nothing for 50 s) is marked offline by an alarm. Phones show "Connexió perduda" after 20 s of `link.online === false`.
 - **Clocks.** Every link message carries the laptop's clock; the GameRoom keeps the smallest (receive − send) as the offset. The feed's times are on the cloud's clock, and every message carries `nowMs` for the phones.
 - **Access** ([`src/access.ts`](src/access.ts), adapted from coin-reader's `requireAccess`) is checked once in the Worker, before the GameRoom. It accepts multiple AUDs and fails closed. People pass on admin routes when their email is on `CF_ACCESS_EMAILS` or under `CF_ACCESS_EMAIL_DOMAIN`. The laptop's service token passes on `/ws/show` when its client ID is in `CF_ACCESS_SERVICE_TOKENS`. `ACCESS_DEV=true` only works on localhost.
 - **Free plan.** Phones send nothing; there are no heartbeats except the laptop's, one snapshot row, and static files that never run the Worker. The [load test](reports/) puts a pessimistic show night at about half the daily request quota.
 
-Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLIC_FEED` in `src/feed/public.ts`. Deployment, secrets and dashboard steps: [docs/deploy-plan.md](docs/deploy-plan.md).
+Every tunable is in [`src/config.ts`](src/config.ts); the phones' own are `PUBLIC_FEED` in `packages/protocol/public.ts`. Deployment, secrets and dashboard steps: [docs/deploy-plan.md](docs/deploy-plan.md).
 
 ## Layout
 

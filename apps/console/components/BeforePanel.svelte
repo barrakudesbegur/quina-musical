@@ -1,6 +1,6 @@
 <!-- Before the night: when it starts, the first round's prizes, how to start, and the setup checklist. -->
 <script lang="ts">
-  import { formatClock } from '../../ui/rules/time.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { CA, S } from '../strings.ts';
   import PrizeList from './PrizeList.svelte';

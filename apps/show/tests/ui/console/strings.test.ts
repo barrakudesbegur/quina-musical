@@ -2,8 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { REJECT_REASONS, SOUND_NAMES } from '@quina/protocol';
-import { CONSOLE_COMMANDS } from '../../../console/config.ts';
-import { S, commandText, reasonText, soundText, holdReasonText } from '../../../console/strings.ts';
+import { CONSOLE_COMMANDS } from '../../../../console/config.ts';
+import { S, commandText, reasonText, soundText, holdReasonText } from '../../../../console/strings.ts';
 
 test('every rejection reason has a message', () => {
   for (const reason of REJECT_REASONS) assert.ok(S.reasons[reason], `missing reason ${reason}`);

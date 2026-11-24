@@ -6,10 +6,10 @@
 //   the plan is stored whole and the side store stays empty, with no change here.
 // - Defined failures. save() never throws: it reports a full storage (big logos), storage the browser
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
-import type { GamePlan } from '../../ui/plan.ts';
-import { LocalPlanStore, type PlanStore } from '../../ui/data/plan-store.ts';
-import { CloudPlanStore, uploadMedia, type FetchLike } from '../../ui/data/cloud-plan.ts';
-import { isLocalHost } from '../../ui/client/endpoints.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
+import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
+import { CloudPlanStore, uploadMedia, type FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
+import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
 import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
 import { MANAGE_CONFIG } from '../config.ts';
 

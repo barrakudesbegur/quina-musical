@@ -1,6 +1,6 @@
 // The one path every feed adapter's messages take: the contract's `followFeed` (snapshot, deltas, gap →
 // resync) plus the clock offset from each message's `nowMs`. Pure apart from the local time passed in.
-import { ClockOffset } from '../../ui/rules/time.ts';
+import { ClockOffset } from '../../../packages/rules/time.ts';
 import { followFeed, type PublicState, type PublicView } from './public.ts';
 
 export type FollowResult = 'ok' | 'resync' | 'ignore';

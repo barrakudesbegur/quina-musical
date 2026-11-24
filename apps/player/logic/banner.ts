@@ -1,4 +1,4 @@
-// The "1 song away" banner across all of a player's cards. It builds on ui/rules/marks.ts (cardMarks, nearWins,
+// The "1 song away" banner across all of a player's cards. It builds on packages/rules/marks.ts (cardMarks, nearWins,
 // with the latest-song grace rule) and adds what the banner needs on top:
 // - LATCHING. Once a card has been 1 song from a Line, that item stays up until someone's Line is confirmed;
 //   once 1 song from Quina, until the round ends. So the banner never changes because the player's own card
@@ -7,7 +7,7 @@
 // - One item per card and prize, naming every missing song; a song a card needs for Quina isn't repeated
 //   under its Line. Quina items first, then Lines, each in the player's card order.
 // Pure.
-import { cardMarks, nearWins, type PlayerCard } from '../../ui/rules/marks.ts';
+import { cardMarks, nearWins, type PlayerCard } from '../../../packages/rules/marks.ts';
 
 export interface BannerCard {
   card: PlayerCard;

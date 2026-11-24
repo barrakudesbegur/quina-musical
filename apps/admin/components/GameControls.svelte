@@ -1,9 +1,9 @@
 <!-- The show's status, and starting and ending the Game. Start introduces the first round (`roundIntro`);
      End (`endGame`) can't be undone, so it needs the confirmation word typed. -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
-  import { CA } from '../../ui/i18n/ca.ts';
-  import type { GamePlan } from '../../ui/plan.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import type { GamePlan } from '../../../packages/ui/plan.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { S } from '../strings.ts';
   import CommandStatus from './CommandStatus.svelte';

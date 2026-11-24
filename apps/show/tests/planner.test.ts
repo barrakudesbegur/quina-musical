@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { planTransition, eventStart } from '../engine/src/plan/planner.ts';
 import { PHASES } from '../engine/src/plan/phases.ts';
 import { spinWindow, SPIN_LIMITS, PACE_PRESETS } from '../engine/src/plan/pace.ts';
@@ -13,8 +12,9 @@ import type { Analysis, Hook, IndexSong } from '../engine/src/analysis.ts';
 import type { BlendSource, Plan, PlanError, PlanSummary, SignatureSource } from '../engine/src/plan/planner.ts';
 import { PLANNER, SIGNATURES } from '../engine/src/config.ts';
 import type { PlanEvent } from '../engine/src/plan/recipes.ts';
+import { OUT } from '../relay/pool.ts';
 
-const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../data/analysis');
+const DIR = path.join(OUT, 'analysis');
 const readJson = (file: string): unknown => JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'));
 const index = (readJson('index.json') as { songs: IndexSong[] }).songs.filter((s) => !s.excluded);
 const analyses = new Map(index.map((s) => [s.id, readJson(`${s.id}.json`) as Analysis] as const));
@@ -166,7 +166,7 @@ test('a Tease uses B\'s own stems when they cover the hook: drums first, bass in
   assert.ok(stemTeases > 50, `only ${stemTeases} stem Teases`);
 });
 
-// A synthetic render of B's 8 bars before its hook at A's tempo, like analysis/stretch.py's meta.json.
+// A synthetic render of B's 8 bars before its hook at A's tempo, like tools/prep/stretch.py's meta.json.
 function blendSourceFor(A: Analysis, B: Analysis, hook: Hook, bass = true): BlendSource {
   const barSec = (60 / A.tempo.bpm) * (A.tempo.beatsPerBar || 4);
   const firstDownbeatSec = 0.1;

@@ -10,7 +10,7 @@
   import { PAD_DIGITS, padKeyFromKeyboard, padPress, padValue, type PadKey } from '../logic/numpad.ts';
   import { isNotSold } from '../logic/possible-winners.ts';
   import { defaultClaimKind } from '../logic/show-data.ts';
-  import type { WinKind } from '../../ui/flow.ts';
+  import type { WinKind } from '../../../packages/ui/flow.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 

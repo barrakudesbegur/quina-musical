@@ -1,6 +1,6 @@
 <!-- During a Hold: why, for how long, Hold music, and Resume. -->
 <script lang="ts">
-  import { formatCountdown } from '../../ui/rules/time.ts';
+  import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { elapsedSec, holdMusicCountdown } from '../logic/countdown.ts';
   import { S, holdReasonText } from '../strings.ts';

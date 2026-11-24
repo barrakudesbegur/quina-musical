@@ -1,7 +1,7 @@
 // Player card marks: the latest-song grace rule, Lines shown as plain marks, the "1 song away" list.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardMarks, cardsForRound, nearWins, type PlayerCard } from '../../ui/rules/marks.ts';
+import { cardMarks, cardsForRound, nearWins, type PlayerCard } from '../../../../packages/rules/marks.ts';
 
 const card: PlayerCard = {
   id: 123,

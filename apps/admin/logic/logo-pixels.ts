@@ -6,7 +6,7 @@
 //      logo survive; 'all' clears that colour everywhere (for holes such as the inside of an "O");
 //   3. contentBounds + crop: trim to the content's bounding box;
 //   4. fitInside: the final size, inside 512×256 keeping the aspect (the canvas does the resampling).
-// No DOM, no canvas: the browser glue is data/logo-canvas.ts. Tested in tests/ui/manage/logo-pixels.test.ts.
+// No DOM, no canvas: the browser glue is data/logo-canvas.ts. Tested in tests/ui/admin/logo-pixels.test.ts.
 import { LOGO_CONFIG } from '../config.ts';
 
 /** RGBA pixels, row by row, 4 bytes each: the shape of the DOM's ImageData. */

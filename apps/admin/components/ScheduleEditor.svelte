@@ -1,7 +1,7 @@
 <!-- The Schedule: when the first round starts (this device's local time), and how long rounds and Intervals
      should last. -->
 <script lang="ts">
-  import { formatClock } from '../../ui/rules/time.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { errorsAt } from '../logic/plan-check.ts';
   import { fromLocalInput, plannedEndMs, toLocalInput } from '../logic/plan-edit.ts';

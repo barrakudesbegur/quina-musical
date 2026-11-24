@@ -509,7 +509,7 @@ Sources: [Digital DJ Tips: Serato's "vinyl brake the instruments only (leaving t
 
 ### D16 · Acapella-in mashup, needs P1, plus loading B's stretched vocals
 
-The stretch render (`analysis/stretch.py --stems`) already writes vocals and other. The engine loads only drums and bass today.
+The stretch render (`tools/prep/stretch.py --stems`) already writes vocals and other. The engine loads only drums and bass today.
 
 Sources: [Mixed In Key: acapella + instrumental mashups](https://mixedinkey.com/workflows/make-acapella-instrumental-mashups/) · [StemSplit: acapella drop; keys must match; a 1–2 semitone shift widens options](https://stemsplit.io/blog/dj-stem-separation-guide) · [Crossfader: Wordplay and Sample Switch Up](https://wearecrossfader.co.uk/blog/12-high-energy-dj-transitions/) · [Digital DJ Tips: overlapping a few vocals of the incoming song](https://www.digitaldjtips.com/djs-do-not-ignore-stems/)
 

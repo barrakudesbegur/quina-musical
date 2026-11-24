@@ -18,7 +18,7 @@
     "relay-audit": "node scripts/relay-audit.ts"
   },
   "dependencies": {
-    "@quina/protocol": "file:../protocol",
+    "@quina/protocol": "*",
     "jose": "6.2.17",
     "ws": "8.22.2"
   },

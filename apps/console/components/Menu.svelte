@@ -5,7 +5,7 @@
 -->
 <script lang="ts">
   import { PHASE_NAMES, type PhaseName } from '@quina/protocol';
-  import { formatClock, formatDrift } from '../../ui/rules/time.ts';
+  import { formatClock, formatDrift } from '../../../packages/rules/time.ts';
   import { CONSOLE, type Theme } from '../config.ts';
   import { getConsole } from '../context.ts';
   import { roundPrizes } from '../logic/show-data.ts';

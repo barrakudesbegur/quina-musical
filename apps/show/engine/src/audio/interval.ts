@@ -125,7 +125,7 @@ export class IntervalPlayer {
     this.storageKey = storageKey;
   }
 
-  /** Read data/interval/index.json and every track's JSON (analysis/interval.py); a track that fails its check is left out. */
+  /** Read data/interval/index.json and every track's JSON (tools/prep/interval.py); a track that fails its check is left out. */
   prepare(): Promise<void> {
     this.ready ??= (async () => {
       try {

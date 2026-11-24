@@ -4,7 +4,7 @@
 // `resumePoint` is set for the current Game only. It holds the Shuffle's seed, so it is SECRET: the seed, the
 // Pool and the cards in play give the whole Queue. Never show it on a shared screen.
 import type { ResumePoint, RoundKind } from '@quina/protocol';
-import type { FetchLike } from '../../ui/data/cloud-plan.ts';
+import type { FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
 
 export interface CloudGame {
   gameId: string;

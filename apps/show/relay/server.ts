@@ -2,20 +2,21 @@
 //   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist] [--pool NAME|PATH]
 // Pages are a Vite app (vite.config.ts): in development Vite runs here as middleware, so everything shares
 // one origin; with --dist the relay serves the built dist/ instead (`npm run build` first).
-// Old page URLs keep working: /show/* → engine/*.
-// The pool (--pool, else $QUINA_POOL, else "default"; relay/pool.ts reads analysis/pools/<name>.json) decides
+// The build is rooted at apps/ (vite.config.ts): the engine's pages are /show/engine/*, and /show/<page> still works.
+// The pool (--pool, else $QUINA_POOL, else "default"; relay/pool.ts reads data/pools/<name>.json) decides
 // what the song routes serve; the URLs are the same for every pool. <cache> and <data> are its cacheDir and
-// dataDir (cache/ and data/ for the default pool):
+// dataDir (data/cache/ and data/out/ for the default pool):
 //   /audio/<id>.flac → <cache>/<id>/mix.flac, /stems/<id>/<stem>.<startSample>.flac → <cache>/<id>/stems/,
 //   /signatures/<id>/<sigId>.flac → <cache>/<id>/signatures/, /snippets/<id>.flac → <cache>/<id>/snippet.flac
-//   (a Check's 3 s from the song's best hook, analysis/snippets.py), /stretch/<id>/<render>/<part>.flac →
+//   (a Check's 3 s from the song's best hook, tools/prep/snippets.py), /stretch/<id>/<render>/<part>.flac →
 //   <cache>/stretch/ (POST /api/stretch renders B's bars before a hook at A's tempo), /analysis/* →
 //   <data>/analysis/, /data/* → <data>/ (stems, keys, signatures, snippets, report.md, ...), /covers/<id>.jpg → its
 //   coversDir, /cards/* → the folder of its cardsJson, GET/POST /api/override/<id> → its overridesDir (the
 //   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/pool → { name }.
-// Not part of a pool: /fx/<name>.mp3, /stingers/<name>.mp3, /holdaudio/<name>.flac (cache/hold, Hold music
-// decoded by analysis/hold.py) and /data/hold/* (its loops), /intervalaudio/<slug>.flac (cache/interval, the
-// Interval playlist decoded by analysis/interval.py) and /data/interval/* (its tracks), /ws (WebSocket).
+// Not part of a pool: /fx/<name>.mp3 and /stingers/<name>.mp3 (data/media), /holdaudio/<name>.flac (data/cache/hold,
+// Hold music decoded by tools/prep/hold.py) and /data/hold/* (data/out/hold, its loops), /intervalaudio/<slug>.flac
+// (data/cache/interval, the Interval playlist decoded by tools/prep/interval.py) and /data/interval/*
+// (data/out/interval, its tracks), /cloud/* (data/link, the cloud link's folder), /ws (WebSocket).
 // Pool media is revalidated (ETag) instead of cached for a day: the same URL means another file in another pool.
 // The hub forwards commands (@quina/protocol) to the show engine and the engine's events to everyone else.
 import crypto from 'node:crypto';
@@ -27,11 +28,9 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { PROTOCOL_VERSION, ROLES, type RelayClients, type Role, type ShowState } from '@quina/protocol';
-import { DEFAULT_POOL, POOL_ENV, display, loadPool, type Pool } from './pool.ts';
+import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
 
-const POC = path.resolve(import.meta.dirname, '..');
-const ROOT = path.resolve(POC, '../..');
-const DIST = path.join(POC, 'dist');
+const DIST = path.join(SHOW, 'dist');
 const args = process.argv.slice(2);
 const argValue = (name: string, fallback: string): string => {
   const i = args.indexOf(name);
@@ -78,18 +77,18 @@ const REVALIDATE = 'no-cache';
 /** Media and data the pages load at run time, longest prefix first. The pages themselves come from Vite (or dist/). */
 const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
   ['/covers/', POOL.coversDir, REVALIDATE],
-  ['/fx/', path.join(ROOT, 'client/public/audios/fx'), 'public, max-age=3600'],
-  ['/stingers/', path.join(ROOT, 'client/public/audios/stingers'), 'public, max-age=3600'],
+  ['/fx/', path.join(MEDIA, 'fx'), 'public, max-age=3600'],
+  ['/stingers/', path.join(MEDIA, 'stingers'), 'public, max-age=3600'],
   ['/analysis/', ANALYSIS_DIR, 'no-store'],
-  ['/data/hold/', path.join(POC, 'data/hold'), 'no-store'],
-  ['/data/interval/', path.join(POC, 'data/interval'), 'no-store'],
+  ['/data/hold/', path.join(OUT, 'hold'), 'no-store'],
+  ['/data/interval/', path.join(OUT, 'interval'), 'no-store'],
   ['/data/', POOL.dataDir, 'no-store'],
-  // The whole card-generator output folder, as before; a pool without cards serves none (the engine falls back).
+  // The whole apps/cards output folder, as before; a pool without cards serves none (the engine falls back).
   ['/cards/', POOL.cardsJson && path.dirname(POOL.cardsJson), 'no-store'],
-  // The laptop's cloud link folder, read-only (cloud/laptop-data/): the Game plan from Admin (plan.json), the journal
+  // The laptop's cloud link folder, read-only (data/link/): the Game plan from Admin (plan.json), the journal
   // copy (current, journal/<gameId>.jsonl) and Admin's manual resume (resume.json). The show page's boot check
   // and the LAN screens read it; only the link writes it.
-  ['/cloud/', path.join(POC, 'cloud/laptop-data'), 'no-store'],
+  ['/cloud/', LINK, 'no-store'],
 ];
 
 interface StaticTarget {
@@ -121,10 +120,10 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   const stretched = safeDecode(urlPath).match(/^\/stretch\/(\d+)\/(\d+-[a-z]+-\d+@[0-9.]+)\/(drums|bass|vocals|other|mix)\.flac$/);
   if (stretched) return { file: path.join(cache, 'stretch', stretched[1], stretched[2], `${stretched[3]}.flac`), cache: REVALIDATE };
   const hold = urlPath.match(/^\/holdaudio\/([A-Za-z0-9._-]+)\.flac$/);
-  if (hold) return { file: path.join(POC, 'cache', 'hold', `${hold[1]}.flac`), cache: LONG_CACHE };
+  if (hold) return { file: path.join(CACHE, 'hold', `${hold[1]}.flac`), cache: LONG_CACHE };
   const interval = urlPath.match(/^\/intervalaudio\/([a-z0-9][a-z0-9-]*)\.flac$/);
-  if (interval) return { file: path.join(POC, 'cache', 'interval', `${interval[1]}.flac`), cache: REVALIDATE };
-  if (urlPath === '/data/hold-report.md') return { file: path.join(POC, 'data/hold-report.md'), cache: 'no-store' };
+  if (interval) return { file: path.join(CACHE, 'interval', `${interval[1]}.flac`), cache: REVALIDATE };
+  if (urlPath === '/data/hold-report.md') return { file: path.join(OUT, 'hold-report.md'), cache: 'no-store' };
   for (const [prefix, dir, cacheControl] of MOUNTS) {
     if (!urlPath.startsWith(prefix)) continue;
     return dir ? insideDir(dir, urlPath.slice(prefix.length), cacheControl) : MISSING;
@@ -194,7 +193,7 @@ const TOKEN = relayToken();
 function relayToken(): string {
   const given = argValue('--token', process.env.QUINA_RELAY_TOKEN ?? '');
   if (given) return given;
-  const file = path.join(POC, 'cache', 'relay-token');
+  const file = path.join(CACHE, 'relay-token');
   try {
     const stored = fs.readFileSync(file, 'utf8').trim();
     if (/^[A-Za-z0-9]{12,64}$/.test(stored)) return stored;
@@ -224,12 +223,12 @@ function readBody(req: http.IncomingMessage, limit = 1 << 20): Promise<string> {
   });
 }
 
-const PYTHON = path.join(POC, 'analysis/.venv/bin/python');
+const PYTHON = path.join(PREP, '.venv/bin/python');
 
 /** Run an analysis script on this relay's pool. */
 function runAnalysis(script: string, argv: string[]): Promise<{ code: number | null; output: string }> {
   return new Promise((resolve) => {
-    const child = spawn(PYTHON, [path.join(POC, 'analysis', script), '--pool', POOL.manifest, ...argv], { cwd: POC });
+    const child = spawn(PYTHON, [path.join(PREP, script), '--pool', POOL.manifest, ...argv], { cwd: REPO });
     let output = '';
     child.stdout.on('data', (d) => (output += d));
     child.stderr.on('data', (d) => (output += d));
@@ -247,7 +246,7 @@ async function rederive(songId: number): Promise<{ code: number | null; output: 
   return { code: signatures.code, output: [analysis.output, signatures.output].filter(Boolean).join('\n') };
 }
 
-// ---- stretch renders (analysis/stretch.py), one at a time: B's bars before a hook at A's tempo, with stems.
+// ---- stretch renders (tools/prep/stretch.py), one at a time: B's bars before a hook at A's tempo, with stems.
 interface StretchRequest {
   song: number;
   hook: string;
@@ -261,9 +260,9 @@ let stretchQueue: Promise<unknown> = Promise.resolve();
 function stretchRender({ song, hook, toBpm, bars, afterBars }: StretchRequest): Promise<StretchResult> {
   const run = () =>
     new Promise<StretchResult>((resolve) => {
-      const argv = [path.join(POC, 'analysis/stretch.py'), '--pool', POOL.manifest, '--song', String(song), '--hook', hook,
+      const argv = [path.join(PREP, 'stretch.py'), '--pool', POOL.manifest, '--song', String(song), '--hook', hook,
         '--to-bpm', String(toBpm), '--bars', String(bars), '--after-bars', String(afterBars), '--stems', '--json'];
-      const child = spawn(PYTHON, argv, { cwd: POC });
+      const child = spawn(PYTHON, argv, { cwd: REPO });
       let out = '';
       let err = '';
       const timer = setTimeout(() => child.kill('SIGKILL'), 60_000);
@@ -352,7 +351,7 @@ const server = http.createServer();
 type Middleware = (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => void;
 let pages: Middleware;
 if (USE_DIST) {
-  if (!fs.existsSync(path.join(DIST, 'engine/show.html'))) {
+  if (!fs.existsSync(path.join(DIST, 'show/engine/show.html'))) {
     console.error('dist/ is missing or incomplete: run `npm run build` first.');
     process.exit(1);
   }
@@ -364,7 +363,7 @@ if (USE_DIST) {
 } else {
   const { createServer } = await import('vite');
   const vite = await createServer({
-    configFile: path.join(POC, 'vite.config.ts'),
+    configFile: path.join(SHOW, 'vite.config.ts'),
     appType: 'mpa',
     server: { middlewareMode: true, hmr: false },
   });
@@ -390,10 +389,28 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
     if (!(await serveFile(req, res, target))) notFound(res);
     return;
   }
-  // Old page URLs: /show/<page> → /engine/<page>.
-  if (url.pathname.startsWith('/show/')) req.url = '/engine/' + req.url!.slice('/show/'.length);
+  // The engine's pages live at /show/engine/<page> (the build is rooted at apps/); /show/<page> keeps working.
+  if (isEnginePath(url.pathname)) req.url = '/show/engine/' + req.url!.slice('/show/'.length);
   pages(req, res, () => notFound(res));
 });
+
+/**
+ * /show/<page> for an engine page or file (apps/show/engine/<page>): /show/ itself, show.html, audition.html…
+ * Anything else under /show/ is left alone: the test remote (/show/remote/) and Vite's own files (in development
+ * Vite serves apps/show/node_modules/vite/… as /show/node_modules/…).
+ */
+function isEnginePath(pathname: string): boolean {
+  if (!pathname.startsWith('/show/') || pathname.startsWith('/show/engine/')) return false;
+  let rest: string;
+  try {
+    rest = decodeURIComponent(pathname.slice('/show/'.length));
+  } catch {
+    return false;
+  }
+  if (rest === '') return true;
+  if (rest.split('/').includes('..')) return false;
+  return fs.existsSync(path.join(SHOW, 'engine', rest));
+}
 
 // ---- WebSocket hub ---------------------------------------------------------------------------------------
 // Who may say what. The show page and the cloud link run on this laptop (`show` and `cloud` are accepted only
@@ -489,10 +506,10 @@ function broadcast(message: RelayClients) {
 server.listen(PORT, HOST, () => {
   const lan = Object.values(os.networkInterfaces()).flat().find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
   const mode = USE_DIST ? 'dist/' : 'Vite dev';
-  console.log(`mixer POC relay (${mode}) on http://localhost:${PORT}/show/  (audition: /show/audition.html, admin: /admin/)`);
+  console.log(`show relay (${mode}) on http://localhost:${PORT}/show/  (audition: /show/audition.html, Admin: /admin/)`);
   if (LAN && lan) {
     console.log(`Console for the presenters (pairs with the token): http://${lan}:${PORT}/console/?t=${TOKEN}`);
-    console.log(`  (dev test remote: http://${lan}:${PORT}/admin/?t=${TOKEN})`);
+    console.log(`  (dev test remote: http://${lan}:${PORT}/show/remote/?t=${TOKEN})`);
   }
   else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
   console.log(`pool ${POOL.name} (${display(POOL.manifest)}): ${poolStatus()}`);

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { LandingInfo } from '@quina/protocol';
-import { noteOf, pruneNotes, revealedSongs, songsKey, undoNotes, visibleSongs, type SongLookup } from '../../../stage/model/songs.ts';
+import { noteOf, pruneNotes, revealedSongs, songsKey, undoNotes, visibleSongs, type SongLookup } from '../../../../stage/model/songs.ts';
 
 const landing = (songId: number, position: number, atMs: number, undone = false): LandingInfo => ({
   songId,

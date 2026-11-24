@@ -15,7 +15,7 @@ import {
   toHex,
   type Pixels,
   type Rgb,
-} from '../../../manage/logic/logo-pixels.ts';
+} from '../../../../admin/logic/logo-pixels.ts';
 
 type Rgba = [number, number, number, number];
 const WHITE: Rgba = [255, 255, 255, 255];

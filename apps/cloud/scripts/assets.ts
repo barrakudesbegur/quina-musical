@@ -1,9 +1,9 @@
 // Assemble the static files the Worker serves (wrangler.jsonc `assets.directory` = dist/), at deploy time:
-//   npm run assets -- [--quick] [--pool default] [--ui ../dist]
+//   npm run assets -- [--quick] [--pool default] [--ui ../show/dist]
 // It copies static/ (committed: the kill switch for last year's service worker, _headers, a placeholder page).
 // Unless --quick, it then adds, as agreed with the UI session:
-//   - the UI build (`vite build` in experiments/mixer-poc): the player at the root (the SPA fallback serves it
-//     for /26/123), console/, admin/ (built as manage/), assets/; never stage/ (the projector runs on the laptop);
+//   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
+//     /26/123), console/, admin/, assets/; never stage/ (the projector runs on the laptop);
 //   - the pool's printed cards: cards/cards.json;
 //   - the pool's covers as small WebP: covers/<songId>.webp (cwebp, 320 px wide, cached in .assets-cache/).
 // dist/ and .assets-cache/ are gitignored: the built UI and the album covers never go into the public repo.
@@ -11,7 +11,7 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadPool } from '../../relay/pool.ts';
+import { loadPool } from '../../show/relay/pool.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'dist');
@@ -24,7 +24,7 @@ const flag = (name: string): string | undefined => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const quick = args.includes('--quick');
-const uiDir = path.resolve(ROOT, flag('--ui') ?? '../dist');
+const uiDir = path.resolve(ROOT, flag('--ui') ?? '../show/dist');
 
 const kb = (bytes: number) => `${(bytes / 1024).toFixed(0)} KB`;
 const sizeOf = (dir: string): number =>
@@ -40,13 +40,13 @@ if (!quick) {
   const ui: [from: string, to: string][] = [
     ['player/index.html', 'index.html'],
     ['console', 'console'],
-    ['manage', 'admin'],
+    ['admin', 'admin'],
     ['assets', 'assets'],
   ];
   for (const [from, to] of ui) {
     const source = path.join(uiDir, from);
     if (!fs.existsSync(source)) {
-      warnings.push(`no ${path.relative(ROOT, source)}: build the UI first (cd experiments/mixer-poc && npm run build)`);
+      warnings.push(`no ${path.relative(ROOT, source)}: build the UI first (npm run build in apps/show)`);
       continue;
     }
     fs.cpSync(source, path.join(OUT, to), { recursive: true });

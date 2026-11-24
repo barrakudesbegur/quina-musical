@@ -1,7 +1,7 @@
 // The printed cards and the songs on them, as every screen needs them: card grids, the Check, titles for
-// song ids. The source is card-generator's cards.json (public: it is printed). Each song on a card carries
+// song ids. The source is apps/cards' cards.json (public: it is printed). Each song on a card carries
 // its title and artist, so the song index is built from the cards themselves and needs no other file.
-import type { PlayerCard } from '../rules/marks.ts';
+import type { PlayerCard } from '../../rules/marks.ts';
 
 export interface SongInfo {
   id: number;

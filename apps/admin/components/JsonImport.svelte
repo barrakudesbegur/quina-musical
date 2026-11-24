@@ -1,9 +1,9 @@
-<!-- Bulk import: paste or upload a plan as JSON (the shape in manage/README.md, so an AI agent can produce it
+<!-- Bulk import: paste or upload a plan as JSON (the shape in apps/admin/README.md, so an AI agent can produce it
      from the organizers' spreadsheet). Every error is listed with its path; a valid plan shows what would
      change, and only "Substituir" replaces the current plan. -->
 <script lang="ts">
-  import { CA } from '../../ui/i18n/ca.ts';
-  import type { GamePlan } from '../../ui/plan.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import type { GamePlan } from '../../../packages/ui/plan.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { checkPlanText, type PlanTextCheck } from '../logic/plan-check.ts';
   import { diffPlans } from '../logic/plan-diff.ts';

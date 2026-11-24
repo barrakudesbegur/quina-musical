@@ -3,7 +3,7 @@
   The qrcode library loads only when the menu shows this. On localhost there is nothing to share.
 -->
 <script lang="ts">
-  import { withToken } from '../../ui/client/pairing.ts';
+  import { withToken } from '../../../packages/ui/client/pairing.ts';
   import { getConsole } from '../context.ts';
   import { consoleLinkFor } from '../logic/device.ts';
   import { S } from '../strings.ts';

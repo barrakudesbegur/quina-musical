@@ -1,9 +1,9 @@
 // The import's diff summary: rounds, prizes, sponsors, schedule and rules.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { GamePlan } from '../../../ui/plan.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { diffPlans } from '../../../manage/logic/plan-diff.ts';
+import type { GamePlan } from '../../../../../packages/ui/plan.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { diffPlans } from '../../../../admin/logic/plan-diff.ts';
 
 const clone = (p: GamePlan): GamePlan => structuredClone(p);
 

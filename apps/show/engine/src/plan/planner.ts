@@ -97,7 +97,7 @@ export interface IncomingSong {
 }
 
 /**
- * B's bars before a hook, stretched onto a constant grid at A's tempo (analysis/stretch.py). Times are in
+ * B's bars before a hook, stretched onto a constant grid at A's tempo (tools/prep/stretch.py). Times are in
  * the rendered file: `hookSec` is the hook downbeat, `barSec` the grid's bar. `bass` = B's bass may layer
  * too (tempos within ±4% and compatible keys); `vocals` = B's stretched voice is decoded and may sing over A
  * (D16: the same rule as the bass).

@@ -13,8 +13,8 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 
 ## Contracts between roles
 
-- **`@quina/protocol`** (in `experiments/mixer-poc/protocol/`, documented in `docs/protocol.md` there) is the only coupling between engine, screens and cloud. Anyone may propose changes. The sound engine session reviews and merges them, with tests.
-- **The Game journal** (`protocol/journal.ts`) is shared by the laptop and the Durable Object. Changes to it are reviewed by both Sound engine and Platform.
+- **`@quina/protocol`** (in `packages/protocol/`, documented in `apps/show/docs/protocol.md`) is the only coupling between engine, screens and cloud. Anyone may propose changes. The sound engine session reviews and merges them, with tests.
+- **The Game journal** (`packages/protocol/journal.ts`) is shared by the laptop and the Durable Object. Changes to it are reviewed by both Sound engine and Platform.
 - **The public feed for phones** is defined by Platform and UI together. It never carries the Queue, the next song or possible winners.
 
 ## Working rules
@@ -24,12 +24,12 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, note it in [`open-questions.md`](open-questions.md), and keep going.
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
 - **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout. Never push without the user's approval.
-- **Never commit:** copyrighted audio, `cache/`, `reference/`, `data/spotify_features.json`, secrets, or personal data (the repo is public).
+- **Never commit:** copyrighted audio, `data/cache/`, `apps/show/reference/`, `spotify_features.json`, secrets, or personal data (the repo is public).
 - **Cloudflare (approved by the user on 2026-11-24):** Platform may configure and deploy with wrangler or a Cloudflare MCP, within these limits:
   - never touch existing DNS records or projects (`quina`, `fitxes`, …); deploy to `*.workers.dev` or a new subdomain such as `quina-dev`;
   - free plan only;
   - private R2;
   - secrets only through `wrangler secret`;
-  - log every change, with how to undo it, in `cloud/docs/deploy-plan.md`.
+  - log every change, with how to undo it, in `apps/cloud/docs/deploy-plan.md`.
 - **Anything else external** (purchases, other accounts, switching `quina.barrakudesbegur.org` over) still needs the user.
 - **If your session's permission check denies a command,** don't work around it and don't ask another session to run it. Log it in `open-questions.md` for the user.

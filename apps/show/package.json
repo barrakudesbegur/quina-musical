@@ -1,6 +1,7 @@
 {
-  "name": "quina-mixer-poc",
+  "name": "@quina/show",
   "private": true,
+  "description": "The show: the engine, the show page and the relay. Its Vite build also builds the screens in apps/.",
   "type": "module",
   "scripts": {
     "dev": "node relay/server.ts",
@@ -8,14 +9,14 @@
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && svelte-check --tsconfig ./tsconfig.json --threshold error",
     "test": "npm run typecheck && node --test \"tests/*.test.ts\" && npm run test:ui",
-    "prep": "analysis/.venv/bin/python analysis/prepare.py",
-    "test:pipeline": "analysis/.venv/bin/python -m pytest analysis/tests",
-    "analyze": "analysis/.venv/bin/python analysis/analyze.py",
-    "validate": "analysis/.venv/bin/python analysis/validate.py",
+    "prep": "../../tools/prep/.venv/bin/python ../../tools/prep/prepare.py",
+    "test:pipeline": "../../tools/prep/.venv/bin/python -m pytest ../../tools/prep/tests",
+    "analyze": "../../tools/prep/.venv/bin/python ../../tools/prep/analyze.py",
+    "validate": "../../tools/prep/.venv/bin/python ../../tools/prep/validate.py",
     "test:ui": "tsc -p tsconfig.ui.json && svelte-check --tsconfig ./tsconfig.ui.json --threshold error && node --test \"tests/ui/**/*.test.ts\""
   },
   "dependencies": {
-    "@quina/protocol": "file:protocol",
+    "@quina/protocol": "*",
     "qrcode": "1.5.4",
     "ws": "^8.18.0"
   },

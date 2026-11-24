@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { formatResumeToken, type ResumeToken } from '@quina/protocol';
-import { nextSavedCode, readResume, resumeCommand, resumeSummary } from '../../ui/rules/resume.ts';
+import { nextSavedCode, readResume, resumeCommand, resumeSummary } from '../../../../packages/rules/resume.ts';
 
 const token: ResumeToken = {
   round: 3,

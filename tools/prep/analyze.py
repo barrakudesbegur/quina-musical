@@ -1,15 +1,15 @@
 """Offline analysis for the mixer POC: beat/downbeat grid, tempo, hooks, loudness, energy, flags.
 
-Usage (from experiments/mixer-poc; every command takes --pool NAME|PATH, see analysis/pool.py):
-    analysis/.venv/bin/python analysis/analyze.py            # all songs
-    analysis/.venv/bin/python analysis/analyze.py --song 12  # one song
-    analysis/.venv/bin/python analysis/analyze.py --derive-only   # re-apply hooks/overrides, no model
+Usage (from the repo root; every command takes --pool NAME|PATH, see tools/prep/pool.py):
+    tools/prep/.venv/bin/python tools/prep/analyze.py            # all songs
+    tools/prep/.venv/bin/python tools/prep/analyze.py --song 12  # one song
+    tools/prep/.venv/bin/python tools/prep/analyze.py --derive-only   # re-apply hooks/overrides, no model
 
 Paths are the pool's (the default pool's in brackets): reads <cacheDir>/<id>/mix.flac [cache/],
-writes <dataDir>/analysis/<id>.json and index.json [data/analysis/]. Expensive results (Beat This!,
+writes <dataDir>/analysis/<id>.json and index.json [data/out/analysis/]. Expensive results (Beat This!,
 loudness, onset envelope) are cached in <cacheDir>/<id>/raw.json keyed by the source audio's sha256,
 so re-runs only redo the cheap derive step, and a file whose content would not change (apart from
-its createdAt) is left as it is. Overrides in <overridesDir>/<id>.json [analysis/overrides/] are
+its createdAt) is left as it is. Overrides in <overridesDir>/<id>.json [data/pools/default/overrides/] are
 merged last.
 
 Optional inputs: without Spotify features the tempo is checked against librosa only (no automatic
@@ -108,7 +108,7 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
     flac = pool.mix_flac(song_id)
     if not flac.exists():
         raise FileNotFoundError(f"{flac} missing: run the decode step first "
-                                f"(analysis/prepare.py --pool {pool.name} --steps decode)")
+                                f"(tools/prep/prepare.py --pool {pool.name} --steps decode)")
     signal, sr = sf.read(flac, dtype="float32", always_2d=True)
     raw_path = pool.song_cache(song_id) / "raw.json"
     if derive_only and raw_path.exists():

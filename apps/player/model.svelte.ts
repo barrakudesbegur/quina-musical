@@ -1,8 +1,8 @@
 // The player app's model: Svelte 5 runes over the pure logic. It holds what came in (the feed, the player's
 // saved data, the catalogue, the clock) and derives everything the components show, so components stay thin.
 // Side effects (storage, sounds, vibration, the feed's cards) happen here, never in components.
-import type { Catalog } from '../ui/data/catalog.ts';
-import { heatAt } from '../ui/rules/heat.ts';
+import type { Catalog } from '../../packages/ui/data/catalog.ts';
+import { heatAt } from '../../packages/rules/heat.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';

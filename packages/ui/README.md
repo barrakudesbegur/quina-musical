@@ -1,22 +1,22 @@
-# ui/: shared foundation for every screen
+# packages/ui: shared foundation for every screen
 
 Owned by the UI/UX session. The apps that use it:
-- `stage/`: projector scenes, plain TypeScript;
-- `console/`: the presenters' console, Svelte 5;
-- `player/`: the player app, Svelte 5;
-- `manage/`: Admin, Svelte 5.
+- `apps/stage/`: projector scenes, plain TypeScript;
+- `apps/console/`: the presenters' console, Svelte 5;
+- `apps/player/`: the player app, Svelte 5;
+- `apps/admin/`: Admin, Svelte 5.
 
-They live inside the mixer POC until the repo moves to `apps/*` and `packages/*` (see `docs/open-questions.md`). Each app imports only from `ui/`, `@quina/protocol` and `engine/src/net/bus.ts`, never from engine internals. That keeps the later move mechanical.
+Each app imports only from `packages/ui/`, `packages/rules/`, `@quina/protocol` and `apps/show/engine/src/net/bus.ts`, never from engine internals.
 
 ## Layers
 
 | Layer | Where | Rule |
 |---|---|---|
-| Contract | `@quina/protocol`, plus `ui/flow.ts` and `ui/plan.ts` until the show-flow proposal is merged | Types only, plus pure validators |
-| Rules | `ui/rules/` | Pure functions: no DOM, no clock, no randomness unless injected. Tested in `tests/ui/` |
-| Client | `ui/client/` | `ShowClient` connects a `Bus` and keeps the latest `state`. `show.svelte.ts` makes it reactive for Svelte. The `demo` transport replays fixtures |
-| Look | `ui/tokens.css`, `ui/base.css` | Every colour, size, radius and duration is a CSS custom property in `tokens.css`. Nothing else hard-codes them |
-| Words | `ui/i18n/ca.ts` (shared terms) and `<app>/strings.ts` | All on-screen text is Catalan and lives in these files, never inline in markup |
+| Contract | `@quina/protocol`, plus `packages/ui/flow.ts` and `packages/ui/plan.ts` until the show-flow proposal is merged | Types only, plus pure validators |
+| Rules | `packages/rules/` | Pure functions: no DOM, no clock, no randomness unless injected. Tested in `apps/show/tests/ui/` |
+| Client | `packages/ui/client/` | `ShowClient` connects a `Bus` and keeps the latest `state`. `show.svelte.ts` makes it reactive for Svelte. The `demo` transport replays fixtures |
+| Look | `packages/ui/tokens.css`, `packages/ui/base.css` | Every colour, size, radius and duration is a CSS custom property in `tokens.css`. Nothing else hard-codes them |
+| Words | `packages/ui/i18n/ca.ts` (shared terms) and `<app>/strings.ts` | All on-screen text is Catalan and lives in these files, never inline in markup |
 
 ## Theming contract
 
@@ -36,4 +36,4 @@ node --test "tests/ui/**/*.test.ts"                                # pure rules
 
 ## Demo mode
 
-Any app page accepts `?demo=<fixture>` (for example `/console/?demo=check`) and runs on `ui/client/demo.ts` instead of the relay. It replays the typed fixtures in `ui/fixtures/`, so every scene can be reviewed without the show page or audio.
+Any app page accepts `?demo=<fixture>` (for example `/console/?demo=check`) and runs on `packages/ui/client/demo.ts` instead of the relay. It replays the typed fixtures in `packages/ui/fixtures/`, so every scene can be reviewed without the show page or audio.

@@ -13,7 +13,7 @@ export const MANAGE_CONFIG = Object.freeze({
     /** Player-app settings, local only until the cloud exists. */
     playerSettings: 'quina.manage.playerSettings.v1',
   }),
-  /** Where the relay serves the printed cards (card-generator's cards.json). */
+  /** Where the relay serves the printed cards (apps/cards' cards.json). */
   cardsUrl: '/cards/cards.json',
   /** The hook audition page (the relay maps /show/* to engine/*). */
   auditionUrl: '/show/audition.html',

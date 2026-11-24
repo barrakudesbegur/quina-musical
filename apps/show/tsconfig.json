@@ -19,5 +19,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["engine/src", "protocol", "admin", "console", "stage"]
+  "include": ["engine/src", "remote", "../console", "../stage", "../../packages/protocol"]
 }

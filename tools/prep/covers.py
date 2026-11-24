@@ -2,7 +2,7 @@
 serves at /covers/<id>.jpg for the drum. Existing files are kept (--force fetches again); songs
 without a URL are listed, since the drum shows them without art.
 
-    analysis/.venv/bin/python analysis/covers.py [--pool NAME|PATH] [--song N ...] [--force]
+    tools/prep/.venv/bin/python tools/prep/covers.py [--pool NAME|PATH] [--song N ...] [--force]
 """
 from __future__ import annotations
 

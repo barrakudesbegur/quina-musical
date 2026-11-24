@@ -2,8 +2,8 @@
 // edits that touch several places (reorder rounds, rename a sponsor). The session checks every change, saves
 // a valid plan a moment after the last edit, keeps an invalid draft in memory (and warns before leaving the
 // page) instead of saving it, and notices when another tab saved a different plan.
-import type { GamePlan } from '../../ui/plan.ts';
-import { CA } from '../../ui/i18n/ca.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
+import { CA } from '../../../packages/ui/i18n/ca.ts';
 import type { AdminPlanStore, SaveFailure, SaveResult } from '../data/admin-plan-store.ts';
 import { checkPlanDraft } from '../logic/plan-check.ts';
 import { blankPlan, removeSponsor, renameSponsor } from '../logic/plan-edit.ts';

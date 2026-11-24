@@ -1,7 +1,7 @@
 // Fitting the 1440×1080 box to 4:3 and 16:9 screens, the drum band, the credits roll.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bandOnScreen, creditsRollMs, fitBox } from '../../../stage/model/layout.ts';
+import { bandOnScreen, creditsRollMs, fitBox } from '../../../../stage/model/layout.ts';
 
 test('a 4:3 projector fills the screen', () => {
   assert.deepEqual(fitBox(1024, 768, 1440, 1080), { scale: 1024 / 1440, x: 0, y: 0 });

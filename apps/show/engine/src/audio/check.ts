@@ -1,4 +1,4 @@
-// A Check's sound (show.ts CheckSnippetsEffect): each landed song's hook snippet (analysis/snippets.py cuts
+// A Check's sound (show.ts CheckSnippetsEffect): each landed song's hook snippet (tools/prep/snippets.py cuts
 // 3 s from its best hook's pickup, /snippets/<id>.flac, its loudness trim in data/snippets/index.json), or
 // the "broken record" for a song that has not landed, at the step times the machine scheduled. Everything
 // else (the songs, Hold music, the Celebration's loop) is ducked far down from the Check's start to its end.
@@ -6,7 +6,7 @@ import { brokenRecord } from './synth/broken.ts';
 import type { AudioGraph } from './graph.ts';
 import type { TimedStep } from '../game/check.ts';
 
-/** data/snippets/index.json (analysis/snippets.py): the fields read here. */
+/** data/snippets/index.json (tools/prep/snippets.py): the fields read here. */
 interface SnippetIndexEntry {
   id: number;
   gainDb: number;

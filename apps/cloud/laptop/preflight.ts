@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { exitCode, type Check } from './preflight/checks.ts';
 import { runPreflight } from './preflight/gather.ts';
+import { LINK } from '../../show/relay/pool.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const envFile = path.join(ROOT, '.env.link');
@@ -27,7 +28,7 @@ const checks = await runPreflight({
   relay: (flag('--relay') ?? 'http://127.0.0.1:5174').replace(/\/+$/, ''),
   cloud: cloud ? cloud.replace(/\/+$/, '') : null,
   headers: id && secret ? { 'CF-Access-Client-Id': id, 'CF-Access-Client-Secret': secret } : {},
-  dataDir: path.join(ROOT, 'laptop-data'),
+  dataDir: LINK,
   fast: args.includes('--fast'),
   only: flag('--only')?.split(',') as Check['group'][] | undefined,
 });

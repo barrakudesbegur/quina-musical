@@ -1,8 +1,8 @@
 // What an import would change, shown before "Substituir" replaces the plan: rounds added, removed or
 // switched between normal and special, prizes changed, sponsors added, removed or changed, and whether the
 // schedule, the cheat-sheet rules, the title or the edition changed. Pure.
-import type { GamePlan, Prize, RoundPlan, Sponsor } from '../../ui/plan.ts';
-import type { WinKind } from '../../ui/flow.ts';
+import type { GamePlan, Prize, RoundPlan, Sponsor } from '../../../packages/ui/plan.ts';
+import type { WinKind } from '../../../packages/ui/flow.ts';
 
 export interface PrizeChange {
   round: number;

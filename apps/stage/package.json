@@ -1,0 +1,7 @@
+{
+  "name": "@quina/stage",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The projector scenes (plain TypeScript), built by apps/show.",
+  "type": "module"
+}

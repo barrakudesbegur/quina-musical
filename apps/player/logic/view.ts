@@ -1,8 +1,8 @@
 // What the screens show, derived from the public state, the player's cards and the printed catalogue. Pure, so
 // the Svelte components stay thin and the rules are tested in node.
-import type { Catalog } from '../../ui/data/catalog.ts';
-import { checkGamePlan, roundPlan, sponsorOf, type GamePlan, type Prize } from '../../ui/plan.ts';
-import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../ui/rules/marks.ts';
+import type { Catalog } from '../../../packages/ui/data/catalog.ts';
+import { checkGamePlan, roundPlan, sponsorOf, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
+import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import type { PublicLanding, PublicRound, PublicState, PublicWinKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
 

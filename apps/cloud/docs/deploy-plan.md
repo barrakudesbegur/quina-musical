@@ -10,7 +10,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 |---|---|---|
 | Worker | `quina-cloud` | `src/worker.ts`; about 87 KiB (23 KiB gzipped) |
 | Durable Object class | `GameRoom` (SQLite) | migration `v1` (`new_sqlite_classes`); one object per edition, named `edition:26`, placed in western Europe |
-| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` (built as `manage`) and `assets/`; plus `cards/cards.json` and the covers as 320 px WebP (about 15 KB each). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
+| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` and `assets/`; plus `cards/cards.json` and the covers as 320 px WebP (about 15 KB each). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
 | Variable | `EDITION = "26"` | in wrangler.jsonc |
 | Secrets | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `CF_ACCESS_EMAILS` (or `CF_ACCESS_EMAIL_DOMAIN`), `CF_ACCESS_SERVICE_TOKENS` | `wrangler secret put`; until they exist, every admin route and the laptop route answer 403 (fail-closed), and only `/feed` and `/api/health` work |
 
@@ -33,9 +33,9 @@ The first `wrangler deploy` was stopped by Claude Code's permission check (auto 
 ### 1. Deploy the Worker: DONE (2026-11-24), redeploy the same way
 
 ```sh
-cd experiments/mixer-poc && npm run build     # the UI build (player, console, Admin)
-cd cloud
-npm install
+npm install                                   # once, at the repo root (npm workspaces)
+cd apps/show && npm run build                 # the UI build (player, console, Admin)
+cd ../cloud
 npm test            # green before any deploy
 npm run deploy      # = npm run assets (dist/) + wrangler deploy
 ```
@@ -79,7 +79,7 @@ Coin-reader (`fitxes`) already uses Access with Google, so the Zero Trust team a
 **c. The laptop's service token** (Zero Trust → Access → Service credentials → Service Tokens → Create):
 - Name `quina-laptop`, duration 1 year.
 - Copy the **Client ID** and **Client Secret**. The secret is shown only once.
-- On the show laptop, create `experiments/mixer-poc/cloud/.env.link` (gitignored):
+- On the show laptop, create `apps/cloud/.env.link` (gitignored):
   ```sh
   QUINA_CLOUD_URL=wss://quina-dev.barrakudesbegur.org/ws/show
   CF_ACCESS_CLIENT_ID=<client id>
@@ -91,7 +91,7 @@ Coin-reader (`fitxes`) already uses Access with Google, so the Zero Trust team a
 2. Create an OAuth client ID of type Web application, with the authorized redirect URI `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`.
 3. In Zero Trust → Settings → Authentication → Login methods → Add → Google, paste the client ID and secret.
 
-**e. The Worker's secrets** (in `experiments/mixer-poc/cloud`; each command asks for the value):
+**e. The Worker's secrets** (in `apps/cloud/`; each command asks for the value):
 ```sh
 npx wrangler secret put CF_ACCESS_TEAM_DOMAIN      # https://<team>.cloudflareaccess.com
 npx wrangler secret put CF_ACCESS_AUD              # <admin app AUD>,<laptop app AUD>
@@ -112,7 +112,7 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 - Switch the binding on in wrangler.jsonc: uncomment `"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "quina-media" }]`, then `npm run deploy`. Without it, `/api/sync` answers 503 and nothing else changes. With it and no bucket, a deploy fails.
 - No public `r2.dev` access and no custom domain on the bucket. Files only go in and out through the Worker, with the laptop's service token.
 - If the dashboard asks to enable R2, or to add a payment method first, that's the user's call. Copyrighted audio goes to the private bucket only, never to git.
-- Then, the day before the show, on the show laptop: `npm run media -- push`. On a takeover laptop: `npm run media -- pull` (it needs the same pool manifest in `analysis/pools/`).
+- Then, the day before the show, on the show laptop: `npm run media -- push`. On a takeover laptop: `npm run media -- pull` (it needs the same pool manifest in `data/pools/`).
 - Size: last year's pool is 6 GB in 1,085 files (1,086 requests to push; R2's free tier is 10 GB). Two pools don't fit, so delete last year's test pool from the bucket (`pools/default/`) before pushing this year's.
 - Undo: `npx wrangler r2 bucket delete quina-media` (empty it first).
 
@@ -132,8 +132,8 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 ## On the night
 
 - **The show laptop runs:**
-  - the relay: `npm start` in `experiments/mixer-poc`;
-  - the cloud link: `npm run link` in `experiments/mixer-poc/cloud`, with `.env.link`.
+  - the relay: `npm start` in `apps/show/`;
+  - the cloud link: `npm run link` in `apps/cloud/`, with `.env.link`.
 - **Its log says:**
   - `cloud: connected`;
   - every 30 s, a status line ("N journalled, N in the cloud, 0 to send").

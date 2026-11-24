@@ -10,7 +10,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
 2. **Motion never tells a secret.** Nothing moves *before* a song lands:
    - no anticipation of the title;
    - no near-win pulse timed to songs;
-   - Heat never changes at a landing (`ui/rules/heat.ts` delays and eases it).
+   - Heat never changes at a landing (`packages/rules/heat.ts` delays and eases it).
    A phone's reel is generic until the landing.
 3. **Timed by the show's clock, not by when a message arrives.** Moments with a timestamp (`landAtMs`, `steps[i].atMs`, `shuffle.startAtMs`/`endAtMs`, `spin.startAtMs`) start at that time on the sender's clock, corrected with `ClockOffset`. So the projector, the console and the phones agree, and a late message starts mid-animation instead of late.
 4. **Sound belongs to whoever owns the speaker:**
@@ -18,7 +18,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
    - the projector is silent;
    - the console is silent;
    - phones play only short interface sounds (see "Sound map").
-5. **Reduced motion** (`prefers-reduced-motion: reduce`, and on phones also Data Saver): every animation has a still fallback that keeps the information. The tokens drop to 0 ms (`ui/tokens.css`) and the fallbacks below take over.
+5. **Reduced motion** (`prefers-reduced-motion: reduce`, and on phones also Data Saver): every animation has a still fallback that keeps the information. The tokens drop to 0 ms (`packages/ui/tokens.css`) and the fallbacks below take over.
 6. **Budgets:**
    - Animate only `transform` and `opacity` (and `filter` on the projector only).
    - Never animate layout properties.
@@ -26,7 +26,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
    - **Phones** (the target is a 4-year-old mid-range Android): at most 24 elements animating at once; no blur or backdrop filters; under 4 ms of JS per frame.
    - **Projector** (the show laptop at 60 fps, sharing the CPU with the audio engine): at most 150 animated elements; keep the main thread free around `landAtMs`, with no layout work in the 300 ms before a landing.
 
-## Projector (`stage/`)
+## Projector (`apps/stage/`)
 
 | Hook | Trigger | What moves | Time · easing | Sound (engine) | Reduced motion |
 |---|---|---|---|---|---|
@@ -46,7 +46,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
 | `pause` | `pause` set or cleared | A full-screen overlay fades in. The meditating nino breathes (scale 1 → 1.04, 4 s period) | 300 ms in, 300 ms out | Hold music (engine) | The overlay appears; the nino is still |
 | `link-lost` | The relay drops for over 3 s | A small dot in the corner fades to red. The scene stays as it was, since the show may still be running | 200 ms | none | Same |
 
-## Player app (`player/`)
+## Player app (`apps/player/`)
 
 | Hook | Trigger | What moves | Time · easing | Sound (phone) | Reduced motion |
 |---|---|---|---|---|---|
@@ -63,7 +63,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
 | `offline` | The laptop link is down for 20 s (`OFFLINE_NOTICE_AFTER_MS`), or the feed for 20 s | A full-screen calm notice fades in ("Connexió perduda, tornem de seguida") with the meditating nino. The cards stay reachable beneath it | 300 ms | none | It appears |
 | `pause` | The presenters' technical pause | Same as `offline`, with "Tornem de seguida" | 300 ms | none | It appears |
 
-## Console (`console/`)
+## Console (`apps/console/`)
 
 The console is a tool. Its motion is feedback, never decoration, and it never delays an action.
 

@@ -3,8 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROTOCOL_VERSION, type IncomingEvent } from '@quina/protocol';
 import { Bus } from '../../../engine/src/net/bus.ts';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { busSource, toStageEvent, type StageEvent } from '../../../stage/source.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { busSource, toStageEvent, type StageEvent } from '../../../../stage/source.ts';
 
 const NOW = 1_800_000_000_000;
 

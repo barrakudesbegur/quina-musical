@@ -2,11 +2,11 @@
 // scene from the right data (fixtures from ui/fixtures).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { flowOf, type FlowState } from '../../../ui/flow.ts';
-import { FIXTURES, FIXTURE_NAMES } from '../../../ui/fixtures/states.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { parseCards, type Catalog } from '../../../ui/data/catalog.ts';
-import { stageView, type StageView } from '../../../stage/view.ts';
+import { flowOf, type FlowState } from '../../../../../packages/ui/flow.ts';
+import { FIXTURES, FIXTURE_NAMES } from '../../../../../packages/ui/fixtures/states.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { parseCards, type Catalog } from '../../../../../packages/ui/data/catalog.ts';
+import { stageView, type StageView } from '../../../../stage/view.ts';
 
 const NOW = 1_800_000_000_000;
 

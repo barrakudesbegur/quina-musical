@@ -1,5 +1,5 @@
 // Admin's views, one per URL hash (#preparacio, #json, #nit, #eines, #xuleta), so a link or a reload opens
-// the same view and the cheat sheet can be opened directly at /manage/#xuleta. Pure.
+// the same view and the cheat sheet can be opened directly at /admin/#xuleta. Pure.
 
 export const ROUTES = ['preparacio', 'json', 'nit', 'eines', 'xuleta'] as const;
 export type Route = (typeof ROUTES)[number];

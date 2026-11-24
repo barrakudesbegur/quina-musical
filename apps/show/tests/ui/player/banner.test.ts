@@ -2,7 +2,7 @@
 // changes because the player's own card completed), the grace rule, Back, a confirmed Line, the round's end.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bannerItems, type BannerCard } from '../../../player/logic/banner.ts';
+import { bannerItems, type BannerCard } from '../../../../player/logic/banner.ts';
 
 const A: BannerCard = { card: { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] }, color: 1, name: 'Àvia' };
 const B: BannerCard = { card: { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]] }, color: 2, name: null };

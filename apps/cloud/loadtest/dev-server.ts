@@ -4,6 +4,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -34,7 +35,8 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
   const chosen = port ?? (await freePort());
   const inspector = await freePort(); // its own debugger port, so several dev servers can run at once (parallel tests)
   const state = persistTo ?? fs.mkdtempSync(path.join(os.tmpdir(), 'quina-cloud-'));
-  const wrangler = path.join(ROOT, 'node_modules', '.bin', 'wrangler');
+  // Wrangler's own entry point, wherever npm put it (the workspace hoists it to the repo's node_modules).
+  const wrangler = path.join(path.dirname(createRequire(import.meta.url).resolve('wrangler/package.json')), 'bin', 'wrangler.js');
   const config: string[] = [];
   if (media) {
     // A copy of wrangler.jsonc beside it (its paths stay right), with the R2 binding switched on.
@@ -45,8 +47,8 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
     config.push('--config', file);
   }
   const child: ChildProcess = spawn(
-    wrangler,
-    ['dev', ...config, '--port', String(chosen), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'ACCESS_DEV:true', '--log-level', 'warn', '--show-interactive-dev-session=false'],
+    process.execPath,
+    [wrangler, 'dev', ...config, '--port', String(chosen), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'ACCESS_DEV:true', '--log-level', 'warn', '--show-interactive-dev-session=false'],
     { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' } },
   );
   let output = '';

@@ -16,7 +16,7 @@ Tempo: the speed ratio is target / source. When the direct ratio is outside ±8%
 and half or double time is inside, B is stretched to half or double A's tempo (each B beat then
 spans 2 A beats, or half of one). Outside both, nothing is rendered (exit 2).
 
-Paths are the pool's (--pool, analysis/pool.py; the default pool's are cache/ and data/).
+Paths are the pool's (--pool, tools/prep/pool.py; the default pool's are cache/ and data/).
 Inputs: <cacheDir>/<B>/mix.flac and <dataDir>/analysis/<B>.json; with --stems, the drums/bass/vocals
 windows from <dataDir>/stems/<B>.json (stored at stemGain 0.5) plus other = mix - (drums + bass +
 vocals). Songs without stems, or whose windows don't cover the section, render the mix only
@@ -28,8 +28,8 @@ nominal speed ratio, effective BPM / the song's analysed BPM, 4 decimals; meta.r
 one over the rendered bars. Cached: a render is reused when its inputs match and it covers the
 requested bars and parts; the result's `request` block says where the requested bars start.
 
-CLI (from experiments/mixer-poc):
-    analysis/.venv/bin/python analysis/stretch.py --song 12 --hook 12-best-0 --to-bpm 126 \
+CLI (from the repo root):
+    tools/prep/.venv/bin/python tools/prep/stretch.py --song 12 --hook 12-best-0 --to-bpm 126 \
         [--bars 4] [--after-bars 1] [--stems] [--max-stretch 0.08] [--force] [--verify] [--json] [--pool NAME]
 
 Python (every function takes pool=; None means $QUINA_POOL, else the default pool):
@@ -145,13 +145,13 @@ def stems_source(song: int, start_sample: int, end_sample: int,
         meta = json.loads(meta_path.read_text())
     except (OSError, ValueError) as err:
         return None, f"unreadable stems json: {err}"
-    # pathTemplate is relative to experiments/mixer-poc (or absolute, for a cache outside it).
+    # pathTemplate is relative to the repo root (or absolute, for a cache outside it).
     template = meta.get("pathTemplate", f"{pools.display(pool.stems_cache(song))}/{{stem}}.{{startSample}}.flac")
     for win in meta.get("windows", []):
         w0 = int(win["startSample"])
         w1 = w0 + int(win["lengthSamples"])
         if w0 <= start_sample and end_sample <= w1:
-            paths = {s: pools.POC / template.format(stem=s, startSample=w0) for s in STEM_PARTS}
+            paths = {s: pools.REPO / template.format(stem=s, startSample=w0) for s in STEM_PARTS}
             missing = [s for s, p in paths.items() if not p.exists()]
             if missing:
                 return None, f"window {w0} is missing {', '.join(missing)}"

@@ -2,8 +2,8 @@
 // the engine lists them, flagged "no registrat com a venut" when they aren't among the cards in play. Also
 // used by the Claim number pad to warn about an unsold card before it is claimed. Pure.
 import type { PossibleWinner, PossibleWinners } from '@quina/protocol';
-import { parseCardRanges } from '../../engine/src/game/cards.ts';
-import type { WinKind } from '../../ui/flow.ts';
+import { parseCardRanges } from '../../show/engine/src/game/cards.ts';
+import type { WinKind } from '../../../packages/ui/flow.ts';
 
 /** The cards in play as a set, when they can be known. */
 export interface CardsInPlay {

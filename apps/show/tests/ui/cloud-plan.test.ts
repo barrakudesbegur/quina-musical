@@ -1,8 +1,8 @@
 // The cloud plan store and media upload: success, validation errors with paths, network failures as values.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CloudPlanStore, uploadMedia, type FetchLike } from '../../ui/data/cloud-plan.ts';
-import { SAMPLE_PLAN } from '../../ui/fixtures/plan.ts';
+import { CloudPlanStore, uploadMedia, type FetchLike } from '../../../../packages/ui/data/cloud-plan.ts';
+import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
 
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 

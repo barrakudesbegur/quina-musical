@@ -1,7 +1,7 @@
 <script lang="ts">
   // "1 song away": unmissable, on every tab. It names the card (colour and name) and the missing song, and has
   // no effect tied to songs (no "playing now!"). Items come from logic/banner.ts, which latches them.
-  import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
+  import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { BannerItem } from '../logic/banner.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';

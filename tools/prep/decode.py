@@ -9,7 +9,7 @@ a song is skipped while its source is unchanged, and decoded again when the sour
 MP3's sha256 or on mix.flac, so it redoes that song. A mix.flac without mix.json (written by the old
 decode_all.sh) is adopted as it is, never re-decoded.
 
-    analysis/.venv/bin/python analysis/decode.py [--pool NAME|PATH] [--song N ...] [--force]
+    tools/prep/.venv/bin/python tools/prep/decode.py [--pool NAME|PATH] [--song N ...] [--force]
 """
 from __future__ import annotations
 

@@ -4,7 +4,7 @@ import type { RoundView, PrizeView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
-import { formatClock } from '../../ui/rules/time.ts';
+import { formatClock } from '../../../packages/rules/time.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText } from './dom.ts';
 

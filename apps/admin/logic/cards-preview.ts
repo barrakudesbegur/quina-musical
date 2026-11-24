@@ -2,7 +2,7 @@
 // many are normal and how many special, which numbers are not among the generated cards, and the compact
 // ranges that will be sent. Pure: the generated cards' types come in as a map (from cards.json).
 import { COMMANDS } from '@quina/protocol';
-import { ROUND_TYPES, parseCardRanges } from '../../engine/src/game/cards.ts';
+import { ROUND_TYPES, parseCardRanges } from '../../show/engine/src/game/cards.ts';
 
 /** `setCardsInPlay.ranges` may not be longer than this (the protocol's limit). */
 export const RANGES_MAX_LENGTH: number = COMMANDS.setCardsInPlay.ranges.maxLength;

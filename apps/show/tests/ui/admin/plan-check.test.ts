@@ -2,9 +2,9 @@
 // inline logos is stored so every other screen can still load it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan } from '../../../ui/plan.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { base64Bytes, checkPlanDraft, checkPlanText, errorsAt, inlineLogoError, planForStorage, planFromStorage } from '../../../manage/logic/plan-check.ts';
+import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { base64Bytes, checkPlanDraft, checkPlanText, errorsAt, inlineLogoError, planForStorage, planFromStorage } from '../../../../admin/logic/plan-check.ts';
 
 const LOGO = `data:image/webp;base64,${Buffer.alloc(2000, 7).toString('base64')}`; // longer than the shared 500-character limit
 const withLogo = (logo: string) => ({ ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 1 ? { ...s, logo } : s)) });

@@ -2,7 +2,7 @@
 // the scene rules in @quina/protocol and rejects the rest (`wrongScene`), and the console shows that as a
 // toast. The console reads the same shared rules only to grey out what would be refused anyway. Pure.
 import { sceneAllows, type SceneContext, type ShowState } from '@quina/protocol';
-import type { AnyCommandName, FlowFields } from '../../ui/flow.ts';
+import type { AnyCommandName, FlowFields } from '../../../packages/ui/flow.ts';
 
 /** The engine's scene rules, shared through @quina/protocol (protocol/scenes.ts), so the console can't drift. */
 export { SCENE_RULES, sceneAllows, type SceneContext } from '@quina/protocol';

@@ -1,10 +1,10 @@
 // Admin in the cloud: inline logos are uploaded as media first, then the whole plan is saved; failures are values.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AdminPlanStore, MemoryLogoStore, dataUrlToBlob } from '../../../manage/data/admin-plan-store.ts';
-import { CloudPlanStore, type FetchLike } from '../../../ui/data/cloud-plan.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import type { GamePlan } from '../../../ui/plan.ts';
+import { AdminPlanStore, MemoryLogoStore, dataUrlToBlob } from '../../../../admin/data/admin-plan-store.ts';
+import { CloudPlanStore, type FetchLike } from '../../../../../packages/ui/data/cloud-plan.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import type { GamePlan } from '../../../../../packages/ui/plan.ts';
 
 const reply = (status: number, body: unknown) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 const LOGO = 'data:image/webp;base64,UklGRg==';

@@ -1,11 +1,11 @@
 """Musical key of every song, globally and around each valid hook, plus tempo-pair statistics.
 
-    analysis/.venv/bin/python analysis/keys.py            # detect (cached), evaluate, write <dataDir>/keys/
-    analysis/.venv/bin/python analysis/keys.py eval       # accuracy table only (needs the cache)
-    analysis/.venv/bin/python analysis/keys.py pairs      # tempo-pair and key-compatibility statistics
+    tools/prep/.venv/bin/python tools/prep/keys.py            # detect (cached), evaluate, write <dataDir>/keys/
+    tools/prep/.venv/bin/python tools/prep/keys.py eval       # accuracy table only (needs the cache)
+    tools/prep/.venv/bin/python tools/prep/keys.py pairs      # tempo-pair and key-compatibility statistics
     options: --pool NAME|PATH, --song N (repeatable), --force, --json
 
-Paths are the pool's (analysis/pool.py); the default pool's are data/keys/, cache/keys/ and
+Paths are the pool's (tools/prep/pool.py); the default pool's are data/keys/, cache/keys/ and
 data/spotify_features.json.
 
 Methods (all on the mix, mono):

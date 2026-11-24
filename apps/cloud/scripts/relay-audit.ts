@@ -12,7 +12,7 @@ import path from 'node:path';
 import WebSocket from 'ws';
 import { freePort } from '../loadtest/dev-server.ts';
 
-const POC = path.resolve(import.meta.dirname, '../..');
+const SHOW = path.resolve(import.meta.dirname, '../../show');
 const TOKEN = 'AUDITTOKEN234567';
 const v = 1;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -27,7 +27,7 @@ if (!lan) {
 async function relay(port: number, flags: string[]): Promise<ChildProcess> {
   const patch = path.join(os.tmpdir(), 'quina-relay-audit-interfaces.mjs');
   fs.writeFileSync(patch, `import os from 'node:os';\nconst real = os.networkInterfaces;\nos.networkInterfaces = () => Object.fromEntries(Object.entries(real()).map(([n, l]) => [n, l.filter((i) => i.internal)]));\n`);
-  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, ...flags], { cwd: POC, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, ...flags], { cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '';
   child.stdout?.on('data', (d) => (output += d));
   child.stderr?.on('data', (d) => (output += d));

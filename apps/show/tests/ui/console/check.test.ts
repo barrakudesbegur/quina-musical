@@ -2,9 +2,9 @@
 // for endAtMs.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { checkProgress, stepState, suggestedVerdict } from '../../../console/logic/check.ts';
-import type { CheckInfo } from '../../../ui/flow.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { checkProgress, stepState, suggestedVerdict } from '../../../../console/logic/check.ts';
+import type { CheckInfo } from '../../../../../packages/ui/flow.ts';
 
 const NOW = 1_800_000_000_000;
 const check = (): CheckInfo => {

@@ -4,9 +4,9 @@
 // the projector may draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that
 // no private field ever comes out.
 import type { RoundKind, ShowState } from '@quina/protocol';
-import type { FlowFields, WinKind, WinnerInfo } from '../ui/flow.ts';
-import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../ui/plan.ts';
-import type { Catalog } from '../ui/data/catalog.ts';
+import type { FlowFields, WinKind, WinnerInfo } from '../../packages/ui/flow.ts';
+import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
+import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';

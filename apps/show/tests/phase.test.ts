@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   phasePlan,
   describePlan,
@@ -20,9 +19,9 @@ import { firstWinAt } from '../engine/src/game/cards.ts';
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
 import type { Card, WinKind } from '../engine/src/game/cards.ts';
 import type { Phase, PhaseModelOverrides } from '../engine/src/game/phase.ts';
+import { REPO } from '../relay/pool.ts';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const CARDS: Card[] = JSON.parse(fs.readFileSync(path.join(HERE, '../../../card-generator/dist/cards.json'), 'utf8'));
+const CARDS: Card[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
 const NORMAL = CARDS.filter((c) => c.type === 'normal');
 const POOL = Array.from({ length: 77 }, (_, i) => i + 1);
 const ROUNDS = Number(process.env.PHASE_SIM_ROUNDS || 400);

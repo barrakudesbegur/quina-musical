@@ -1,9 +1,9 @@
 // The laptop's plan: the cloud link's copy wins over this browser's, which stays the offline fallback.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LaptopPlanStore, type PlanStore } from '../../ui/data/plan-store.ts';
-import { SAMPLE_PLAN } from '../../ui/fixtures/plan.ts';
-import type { GamePlan } from '../../ui/plan.ts';
+import { LaptopPlanStore, type PlanStore } from '../../../../packages/ui/data/plan-store.ts';
+import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
+import type { GamePlan } from '../../../../packages/ui/plan.ts';
 
 class MemoryStore implements PlanStore {
   plan: GamePlan | null;

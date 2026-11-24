@@ -1,7 +1,7 @@
 // Admin's on-screen words, in Catalan. Shared terms ("Quina 3", "Línia", "Premi de quina", the scene names)
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
 import type { ShowStatus } from '@quina/protocol';
-import type { CheatSheet } from '../ui/plan.ts';
+import type { CheatSheet } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
 
@@ -173,7 +173,7 @@ export const S = {
 
   json: {
     importTitle: 'Importar un pla',
-    importHelp: "Enganxa el JSON o tria un fitxer. El format és a manage/README.md, perquè un agent d'IA el pugui fer a partir del full de càlcul.",
+    importHelp: "Enganxa el JSON o tria un fitxer. El format és a apps/admin/README.md, perquè un agent d'IA el pugui fer a partir del full de càlcul.",
     paste: 'JSON del pla',
     file: 'O tria un fitxer .json',
     check: 'Comprovar',

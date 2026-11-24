@@ -1,7 +1,7 @@
 <script lang="ts">
   // Programa: progress ("Quina 4 de 12"), the countdown to the next round, the expected end, every round's
   // rough start time.
-  import { formatClock } from '../../ui/rules/time.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { plannedStarts, prizeRounds, progress } from '../logic/view.ts';
   import { S } from '../strings.ts';

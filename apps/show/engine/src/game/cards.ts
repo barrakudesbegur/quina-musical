@@ -2,7 +2,7 @@
 // No DOM and no Node-only APIs.
 //
 // A card is `{ id, type: 'normal' | 'especial', lines: [[song × 4] × 3] }`, as in
-// card-generator/dist/cards.json, where a song is `{ id, title, artist }`. Plain song ids work too
+// apps/cards/dist/cards.json, where a song is `{ id, title, artist }`. Plain song ids work too
 // (`lines: [[1, 2, 3, 4], …]`), which keeps synthetic cards in tests short. Song ids are the ids of the
 // app's songs.json, the same ids the mixer uses in data/analysis/index.json.
 //

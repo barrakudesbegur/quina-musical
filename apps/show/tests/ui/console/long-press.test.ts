@@ -1,7 +1,7 @@
 // Long press to confirm (Back, End the night, Panic): fires once after holdMs, a short tap shows the hint.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LONG_PRESS_IDLE, longPress, longPressProgress, parseCssDurationMs, type LongPressEvent, type LongPressState } from '../../../console/logic/long-press.ts';
+import { LONG_PRESS_IDLE, longPress, longPressProgress, parseCssDurationMs, type LongPressEvent, type LongPressState } from '../../../../console/logic/long-press.ts';
 
 const config = { holdMs: 900, hintMs: 1500 };
 

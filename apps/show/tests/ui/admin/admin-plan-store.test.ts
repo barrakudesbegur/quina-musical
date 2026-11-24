@@ -2,9 +2,9 @@
 // instead of thrown.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan } from '../../../ui/plan.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { AdminPlanStore, MemoryLogoStore, MemoryPlanStore, isQuotaError, type LogoStore } from '../../../manage/data/admin-plan-store.ts';
+import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { AdminPlanStore, MemoryLogoStore, MemoryPlanStore, isQuotaError, type LogoStore } from '../../../../admin/data/admin-plan-store.ts';
 
 const LOGO = `data:image/webp;base64,${Buffer.alloc(3000, 1).toString('base64')}`;
 const withLogo = () => ({ ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 0 ? { ...s, logo: LOGO } : s)) });

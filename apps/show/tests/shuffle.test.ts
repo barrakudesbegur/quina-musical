@@ -1,4 +1,4 @@
-// The tie-free Shuffle (game/shuffle.ts) on the real cards (card-generator/dist/cards.json), and how the show
+// The tie-free Shuffle (game/shuffle.ts) on the real cards (apps/cards/dist/cards.json), and how the show
 // uses it: deterministic from its seed, never a Tie on the first Line or Bingo among the valid cards in play.
 import test from 'node:test';
 import assert from 'node:assert/strict';

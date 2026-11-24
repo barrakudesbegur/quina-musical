@@ -1,7 +1,7 @@
 // Where consoles connect: the relay when served by the laptop on the LAN, the cloud's console socket otherwise.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { controlSocketUrl, isLocalHost, labelForId } from '../../ui/client/endpoints.ts';
+import { controlSocketUrl, isLocalHost, labelForId } from '../../../../packages/ui/client/endpoints.ts';
 
 test('the laptop on a hotspot or this machine counts as local', () => {
   for (const h of ['localhost', '127.0.0.1', '192.168.43.12', '172.20.10.3', '10.0.0.5', 'quina.local', '[::1]']) assert.equal(isLocalHost(h), true, h);

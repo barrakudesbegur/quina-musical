@@ -1,7 +1,7 @@
 // The Game plan validator: accepts a good plan, collects every problem with its path, never throws.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan, roundPlan, sponsorOf } from '../../ui/plan.ts';
+import { checkGamePlan, roundPlan, sponsorOf } from '../../../../packages/ui/plan.ts';
 
 const good = () => ({
   v: 1,

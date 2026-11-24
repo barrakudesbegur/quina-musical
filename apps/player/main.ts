@@ -1,10 +1,10 @@
 // The player app's entry: pick the feed from the URL, take in the link that opened the app, clear last year's
 // leftovers, and mount. The relay and demo feeds load on demand, so production phones never download them.
-import '../ui/tokens.css';
-import '../ui/base.css';
+import '../../packages/ui/tokens.css';
+import '../../packages/ui/base.css';
 import './player.css';
 import { mount } from 'svelte';
-import { loadCatalog } from '../ui/data/catalog.ts';
+import { loadCatalog } from '../../packages/ui/data/catalog.ts';
 import App from './App.svelte';
 import { PlayerApp } from './model.svelte.ts';
 import { PLAYER_CONFIG } from './config.ts';

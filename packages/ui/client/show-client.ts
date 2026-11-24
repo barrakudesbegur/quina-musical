@@ -2,7 +2,7 @@
 // socket) and keeps the latest `state`, the show flow, who is connected and the clock offset. It holds no
 // game logic: everything comes from the engine's snapshots and events. Framework-free, so the projector
 // stage (plain TS) and the Svelte apps (through show.svelte.ts) share it.
-import { Bus, WebSocketTransport, type Transport, type TransportHandlers } from '../../engine/src/net/bus.ts';
+import { Bus, WebSocketTransport, type Transport, type TransportHandlers } from '../../../apps/show/engine/src/net/bus.ts';
 import {
   PROTOCOL_VERSION,
   isEvent,
@@ -14,7 +14,7 @@ import {
   type ShowState,
 } from '@quina/protocol';
 import { flowOf, type AnyCommandArgs, type AnyCommandName, type FlowFields } from '../flow.ts';
-import { ClockOffset } from '../rules/time.ts';
+import { ClockOffset } from '../../rules/time.ts';
 import { controlSocketUrl, labelForId } from './endpoints.ts';
 
 export type ClientListener = (event: IncomingEvent) => void;

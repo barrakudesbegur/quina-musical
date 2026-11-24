@@ -1,0 +1,13 @@
+# Not ours to publish (the repo is public): the songs, the user's own tracks (hold, celebration, interval,
+# stingers) and the album covers stay on the laptops; the cloud media sync copies them between laptops.
+# Only the sound effects and the README are committed.
+/media/*
+!/media/fx/
+!/media/README.md
+# Made by tools/prep (npm run prep in apps/show): the analysis, stems, Hold and Interval data, and the decoded audio.
+/out/
+/cache/
+# The laptop's cloud link folder (apps/cloud, npm run link): the Game plan, the journal copy, the manual resume.
+/link/
+# Never ours to publish, wherever a pool keeps it.
+spotify_features.json

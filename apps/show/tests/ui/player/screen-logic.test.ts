@@ -2,11 +2,11 @@
 // Spin, the feedback cues (one at a time; marks follow the grace rule), and the derived views.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyPublicState, type PublicState } from '../../../player/feed/public.ts';
-import { feedbackFor, type FeedbackSnapshot } from '../../../player/logic/feedback.ts';
-import { reelOffset, reelState } from '../../../player/logic/reel.ts';
-import { overlayFor, reconnectPill } from '../../../player/logic/status.ts';
-import { addCard, emptyData } from '../../../player/logic/storage.ts';
+import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
+import { feedbackFor, type FeedbackSnapshot } from '../../../../player/logic/feedback.ts';
+import { reelOffset, reelState } from '../../../../player/logic/reel.ts';
+import { overlayFor, reconnectPill } from '../../../../player/logic/status.ts';
+import { addCard, emptyData } from '../../../../player/logic/storage.ts';
 import {
   cardViews,
   celebrationOf,
@@ -20,9 +20,9 @@ import {
   plannedStarts,
   prizeRounds,
   progress,
-} from '../../../player/logic/view.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { parseCards } from '../../../ui/data/catalog.ts';
+} from '../../../../player/logic/view.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
 
 const T = 1_000_000;
 const playing = (patch: Partial<PublicState> = {}): PublicState => ({

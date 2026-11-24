@@ -26,7 +26,7 @@ export interface SynthParams {
 }
 export type SynthName = keyof SynthParams;
 
-/** A deck's own stems (analysis/stems.py): stored drums, bass and vocals. */
+/** A deck's own stems (tools/prep/stems.py): stored drums, bass and vocals. */
 export type StemName = 'drums' | 'bass' | 'vocals';
 /** A part of a deck's mix a stem lane can play or remove: a stored stem, or `other` (mix − the stems). */
 export type LanePart = StemName | 'other';

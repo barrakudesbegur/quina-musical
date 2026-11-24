@@ -1,6 +1,6 @@
 // The player's own data: cards with colours and names, the edition wipe, the gameId reset, sounds.
 import { test } from 'node:test';
-import { markName } from '../../../player/logic/marks-identity.ts';
+import { markName } from '../../../../player/logic/marks-identity.ts';
 import assert from 'node:assert/strict';
 import {
   MemoryStorage,
@@ -17,7 +17,7 @@ import {
   setSounds,
   soundsOn,
   type PlayerData,
-} from '../../../player/logic/storage.ts';
+} from '../../../../player/logic/storage.ts';
 
 const add = (data: PlayerData, ...ids: number[]): PlayerData =>
   ids.reduce((d, id) => {

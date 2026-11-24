@@ -1,0 +1,21 @@
+{
+  "name": "quina-musical",
+  "private": true,
+  "description": "The Quina Musical: the show (apps/show), its screens (apps/stage, console, admin, player), the cloud (apps/cloud), shared packages and the preparation tools. The cards generator (apps/cards) keeps its own install; last year's app is in legacy/2025.",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "!apps/cards",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @quina/show",
+    "build": "npm run build -w @quina/show",
+    "start": "npm start -w @quina/show",
+    "test": "npm test -w @quina/show && npm test -w @quina/cloud",
+    "test:pipeline": "npm run test:pipeline -w @quina/show"
+  },
+  "engines": {
+    "node": ">=23.6"
+  }
+}

@@ -1,4 +1,4 @@
-// The analysis JSON contract (written by analysis/analyze.py, schema v1). The engine checks every file as
+// The analysis JSON contract (written by tools/prep/analyze.py, schema v1). The engine checks every file as
 // it loads; a song whose analysis fails the check is left out of the round instead of breaking a landing.
 
 export const ANALYSIS_SCHEMA_VERSION = 1;
@@ -98,7 +98,7 @@ export interface StemWindow {
 }
 
 /**
- * Stems written by analysis/stems.py (data/stems/<id>.json): drums, bass and vocals, stored at `stemGain`
+ * Stems written by tools/prep/stems.py (data/stems/<id>.json): drums, bass and vocals, stored at `stemGain`
  * scale in windows of the song (cache/<id>/stems/<stem>.<startSample>.flac); "other" = mix − the rest.
  */
 export interface StemsMeta {
@@ -128,7 +128,7 @@ export function stemWindowFor(meta: StemsMeta, fromSec: number, toSec: number): 
   return meta.windows.find((w) => w.startSec <= fromSec + 1e-6 && w.endSec >= toSec - 1e-6) ?? null;
 }
 
-// ---- Signatures (data/signatures/<id>.json, written by analysis/signatures.py) ---------------------------
+// ---- Signatures (data/signatures/<id>.json, written by tools/prep/signatures.py) ---------------------------
 export type SignatureKind = 'call' | 'riff' | 'shout';
 
 /**

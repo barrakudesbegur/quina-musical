@@ -11,14 +11,14 @@ stem, <cacheDir>/<id>/stems/<stem>.<startSample>.flac (48 kHz, 16-bit stereo), w
 sample <startSample> of mix.flac. --full writes one window covering the whole song instead.
 
 Outputs: <dataDir>/stems/<id>.json per song and <dataDir>/stems/index.json (the pool's directories,
-analysis/pool.py; the default pool's are cache/ and data/). Songs without a valid hook are skipped:
+tools/prep/pool.py; the default pool's are cache/ and data/). Songs without a valid hook are skipped:
 the engine never plays them.
 Idempotent: a song is skipped when its JSON matches mix.flac (size + mtime), the model, the mode,
 the downbeats and the windows, and all its files exist. --force redoes it.
 Disk guards: stop (exit 3) before free space would drop under 10 GB, or the pool's stem files
 would pass 4 GB.
 
-Run: analysis/.venv-stems/bin/python analysis/stems.py [--pool NAME|PATH] [--song N ...] [--force] [--full]
+Run: tools/prep/.venv-stems/bin/python tools/prep/stems.py [--pool NAME|PATH] [--song N ...] [--force] [--full]
 """
 from __future__ import annotations
 

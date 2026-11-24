@@ -1,7 +1,7 @@
 // Musical keys on the Camelot wheel, for checking that melodic layers of two songs can overlap.
 // Two keys are compatible when they are the same, a fifth apart (±1 on the wheel, same letter), or
 // relative major/minor (same number, other letter). Keys come from data/keys/<id>.json
-// (analysis/keys.py). Pure module: no DOM, no Web Audio.
+// (tools/prep/keys.py). Pure module: no DOM, no Web Audio.
 
 export type Mode = 'major' | 'minor';
 export type CamelotLetter = 'A' | 'B';

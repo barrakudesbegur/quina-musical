@@ -1,7 +1,7 @@
 <script lang="ts">
   // The Ara reel, synced to the projector's Spin on the cloud's clock. Generic card backs only: the song shows
   // once its landing is public, never before. Reduced motion: a still "Sona la ruleta…".
-  import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
+  import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
   import { reelState } from '../logic/reel.ts';
   import { S } from '../strings.ts';

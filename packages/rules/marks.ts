@@ -12,7 +12,7 @@
 /** A card as the player app knows it: 3 lines of 4 song ids. */
 export interface PlayerCard {
   id: number;
-  /** 'normal' or 'especial', as in card-generator's cards.json. */
+  /** 'normal' or 'especial', as in apps/cards' cards.json. */
   type: string;
   lines: readonly (readonly number[])[];
 }

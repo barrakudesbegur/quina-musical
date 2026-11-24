@@ -8,14 +8,14 @@
 // 16:9), with the drum's band stretched to the full screen width. In the show page the band is left open so
 // the real drum shows through; standalone, a labelled placeholder stands in for it.
 import type { ShowState } from '@quina/protocol';
-import type { Bus } from '../engine/src/net/bus.ts';
-import type { ShowClient } from '../ui/client/show-client.ts';
-import { flowOf, type ShowScene } from '../ui/flow.ts';
-import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
-import { loadPlanForPage, planStoreForPage, type PlanStore } from '../ui/data/plan-store.ts';
-import type { GamePlan } from '../ui/plan.ts';
-import type { HeatSample } from '../ui/rules/heat.ts';
-import '../ui/tokens.css';
+import type { Bus } from '../show/engine/src/net/bus.ts';
+import type { ShowClient } from '../../packages/ui/client/show-client.ts';
+import { flowOf, type ShowScene } from '../../packages/ui/flow.ts';
+import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
+import { loadPlanForPage, planStoreForPage, type PlanStore } from '../../packages/ui/data/plan-store.ts';
+import type { GamePlan } from '../../packages/ui/plan.ts';
+import type { HeatSample } from '../../packages/rules/heat.ts';
+import '../../packages/ui/tokens.css';
 import './stage.css';
 import { STAGE } from './config.ts';
 import { activeHeatSample, garlandLook, heatDisplay } from './model/garland.ts';

@@ -1,9 +1,9 @@
 // The Heat garland's look (ANIMATIONS.md `heat`): a string of lights that are all always on. Only their
 // colour, glow and twinkle speed follow the Heat: cool white-blue with a slow twinkle, warm gold and orange,
 // hot red with a faster chase. Never a bar that fills, so it can't be read as progress. The display value
-// comes from ui/rules/heat.ts, which already delays and eases every change away from landings. Pure.
+// comes from packages/rules/heat.ts, which already delays and eases every change away from landings. Pure.
 import { STAGE } from '../config.ts';
-import { heatAt, type HeatSample } from '../../ui/rules/heat.ts';
+import { heatAt, type HeatSample } from '../../../packages/rules/heat.ts';
 
 export interface GarlandLook {
   /** 0..1: cool → gold (first half of the Heat). */

@@ -1,4 +1,4 @@
-// Tempo matching for layering (same rules as analysis/steps/tempo_match.py): B can be beat-matched to A by
+// Tempo matching for layering (same rules as tools/prep/steps/tempo_match.py): B can be beat-matched to A by
 // pitch-preserving stretch when their tempos are within ±8% ("tight" within ±4%). Pure module.
 import { LAYERING } from '../config.ts';
 

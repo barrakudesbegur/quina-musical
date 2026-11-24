@@ -4,7 +4,7 @@
     {
       "label": "install",
       "type": "shell",
-      "command": "npm i",
+      "command": "npm i && npm i --prefix legacy/2025",
       "presentation": {
         "echo": true,
         "focus": false,
@@ -28,6 +28,9 @@
         "showReuseMessage": false,
         "clear": false,
         "group": "dev"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/legacy/2025"
       }
     },
     {
@@ -42,18 +45,27 @@
         "showReuseMessage": false,
         "clear": false,
         "group": "dev"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/legacy/2025"
       }
     },
     {
       "label": "dev",
       "type": "shell",
       "dependsOrder": "parallel",
-      "dependsOn": ["dev:client", "dev:server"]
+      "dependsOn": [
+        "dev:client",
+        "dev:server"
+      ]
     },
     {
       "label": "Install and run",
       "dependsOrder": "sequence",
-      "dependsOn": ["install", "dev"],
+      "dependsOn": [
+        "install",
+        "dev"
+      ],
       "runOptions": {
         "runOn": "folderOpen"
       }

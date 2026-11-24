@@ -1,9 +1,9 @@
 // Cards in play preview: counts, normal vs special, unknown numbers, compact ranges, and typed errors.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { RANGES_MAX_LENGTH, formatRanges, previewCardRanges, sameCards } from '../../../manage/logic/cards-preview.ts';
+import { RANGES_MAX_LENGTH, formatRanges, previewCardRanges, sameCards } from '../../../../admin/logic/cards-preview.ts';
 
-/** Cards 1–10 normal, 11–15 special (as card-generator types them). */
+/** Cards 1–10 normal, 11–15 special (as apps/cards types them). */
 const TYPES = new Map<number, string>([
   ...Array.from({ length: 10 }, (_, i) => [i + 1, 'normal'] as const),
   ...Array.from({ length: 5 }, (_, i) => [i + 11, 'especial'] as const),

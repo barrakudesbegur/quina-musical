@@ -1,9 +1,9 @@
 // Small lookups the panels share: a song's title, a round's prizes from the Game plan, the Winners of a
 // Celebration, and the Winners grouped by round. Pure.
 import type { RoundKind, ShowState } from '@quina/protocol';
-import type { Catalog } from '../../ui/data/catalog.ts';
-import type { CelebrationInfo, WinKind, WinnerInfo } from '../../ui/flow.ts';
-import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../../ui/plan.ts';
+import type { Catalog } from '../../../packages/ui/data/catalog.ts';
+import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
+import { roundPlan, sponsorOf, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
 
 /** A song's title: from the snapshot (current, next, recent landings), then the printed cards, else null. */
 export function songTitleOf(songId: number | null | undefined, state: ShowState | null, catalog: Catalog | null): string | null {

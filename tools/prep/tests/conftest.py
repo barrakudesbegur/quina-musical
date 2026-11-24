@@ -1,6 +1,6 @@
 """Shared fixtures for the pipeline tests: synthetic audio and throwaway pools in a temp dir.
 
-Nothing here writes under experiments/mixer-poc: every pool built by these fixtures keeps its data,
+Nothing here writes under the repo: every pool built by these fixtures keeps its data,
 cache, overrides and covers inside pytest's temp dir, which pytest removes.
 """
 from __future__ import annotations
@@ -82,5 +82,5 @@ def build_synth_pool(root: Path) -> pools.Pool:
 
 
 def run_script(script: str, *args: str, python: Path = VENV_PY) -> subprocess.CompletedProcess:
-    return subprocess.run([str(python), str(ANALYSIS / script), *args], cwd=pools.POC,
+    return subprocess.run([str(python), str(ANALYSIS / script), *args], cwd=pools.REPO,
                           capture_output=True, text=True, timeout=600, check=False)

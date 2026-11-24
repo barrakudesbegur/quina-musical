@@ -1,8 +1,8 @@
 // Possible winners: unsold cards are flagged only when the cards in play are known.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { cardsInPlay, isNotSold, possibleWinnersView } from '../../../console/logic/possible-winners.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { cardsInPlay, isNotSold, possibleWinnersView } from '../../../../console/logic/possible-winners.ts';
 
 test('cards in play are parsed from the engine text; junk or empty means unknown', () => {
   const known = cardsInPlay('1-210, 400-440');

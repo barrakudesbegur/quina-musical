@@ -1,8 +1,8 @@
 <script lang="ts">
   // A song's cover, lazy-loaded. A missing cover leaves the generic card back (no broken image).
-  import { coverUrl } from '../../ui/data/catalog.ts';
+  import { coverUrl } from '../../../packages/ui/data/catalog.ts';
   import { PLAYER_CONFIG } from '../config.ts';
-  import { isLocalHost } from '../../ui/client/endpoints.ts';
+  import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
 
   let { songId, alt = '', size = 'md' }: { songId: number; alt?: string; size?: 'sm' | 'md' | 'lg' } = $props();
   // The laptop's dev relay serves the original JPEGs; production serves WebP.

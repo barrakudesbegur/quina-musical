@@ -1,6 +1,6 @@
 """Prepare a pool for the show with one command: every offline step, in order, each skipping work already done.
 
-    analysis/.venv/bin/python analysis/prepare.py --pool NAME|PATH [--steps covers,decode,...] [--song N ...]
+    tools/prep/.venv/bin/python tools/prep/prepare.py --pool NAME|PATH [--steps covers,decode,...] [--song N ...]
     npm run prep -- --pool NAME
 
 Steps (default: all, always run in this order):
@@ -10,7 +10,7 @@ Steps (default: all, always run in this order):
     snippets    snippets.py    3 s from each song's best hook, for the Check → <cacheDir>/<id>/snippet.flac, <dataDir>/snippets/
     validate    validate.py    flags and audition queue → <dataDir>/report.md (hard errors stop here)
     keys        keys.py        musical keys → <dataDir>/keys/
-    stems       stems.py       Demucs stems (in analysis/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
+    stems       stems.py       Demucs stems (in tools/prep/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
     signatures  signatures.py  Signature candidates from the stems → <dataDir>/signatures/
     interval    interval.py    the Interval playlist, global (no pool owns it) → cache/interval/, data/interval/
 
@@ -33,7 +33,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import pool as pools  # noqa: E402
 
-ANALYSIS = pools.POC / "analysis"
+ANALYSIS = pools.PREP
 VENV_PY = ANALYSIS / ".venv" / "bin" / "python"
 STEMS_PY = ANALYSIS / ".venv-stems" / "bin" / "python"
 DISK_GUARD_EXIT = 3  # stems.py: the disk guard stopped the run
@@ -56,10 +56,10 @@ STEPS = (
     Step("snippets", "snippets.py", VENV_PY, True),
     Step("validate", "validate.py", VENV_PY, False),
     Step("keys", "keys.py", VENV_PY, False,
-         "uv pip install --python analysis/.venv/bin/python -r analysis/requirements-layering.txt"),
+         "uv pip install --python tools/prep/.venv/bin/python -r tools/prep/requirements-layering.txt"),
     Step("stems", "stems.py", STEMS_PY, True,
-         "uv venv --python /opt/homebrew/bin/python3.13 analysis/.venv-stems && "
-         "uv pip install --python analysis/.venv-stems/bin/python -r analysis/requirements-stems.txt"),
+         "uv venv --python /opt/homebrew/bin/python3.13 tools/prep/.venv-stems && "
+         "uv pip install --python tools/prep/.venv-stems/bin/python -r tools/prep/requirements-stems.txt"),
     Step("signatures", "signatures.py", VENV_PY, True),
     Step("interval", "interval.py", VENV_PY, False, pooled=False),
 )
@@ -132,7 +132,7 @@ def _sum_signatures(pool: pools.Pool, ids: list[int]) -> str:
 
 
 def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
-    index = _load(pools.POC / "data" / "interval" / "index.json")
+    index = _load(pools.OUT / "interval" / "index.json")
     if not index:
         return "no Interval playlist"
     dropped, missing = len(index.get("dropped", [])), len(index.get("missing", []))
@@ -173,7 +173,7 @@ def run_step(step: Step, pool: pools.Pool, songs: list[int]) -> int:
         print(f"prepare: {step.name} needs {pools.display(step.python)}, which is missing"
               + (f"; set it up with:\n  {step.setup_hint}" if step.setup_hint else ""), file=sys.stderr)
         return 1
-    return subprocess.run(command(step, pool, songs), cwd=pools.POC, check=False).returncode
+    return subprocess.run(command(step, pool, songs), cwd=pools.REPO, check=False).returncode
 
 
 def header(pool: pools.Pool) -> list[str]:

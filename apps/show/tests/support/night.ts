@@ -31,8 +31,9 @@ import type { Effect, HoldMood, ShowPlan } from '../../engine/src/show/show.ts';
 import type { LanePart, StemName } from '../../engine/src/plan/events.ts';
 import type { StemBars } from '../../engine/src/plan/moves.ts';
 import type { PhaseName } from '../../engine/src/config.ts';
+import { OUT } from '../../relay/pool.ts';
 
-const DATA = path.join(import.meta.dirname, '../../data');
+const DATA = OUT;
 const readJson = (file: string): unknown => JSON.parse(fs.readFileSync(file, 'utf8'));
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const PARTS: readonly StemName[] = ['drums', 'bass', 'vocals'];
@@ -69,7 +70,7 @@ function keysOf(songId: number): { hooks: Record<string, KeyInfo> | null; global
   if (!fs.existsSync(file)) return { hooks: null, global: null };
   const json = readJson(file);
   if (!isRecord(json)) return { hooks: null, global: null };
-  // data/keys/<id>.json (analysis/keys.py): KeyInfo per hook, and the song's.
+  // data/keys/<id>.json (tools/prep/keys.py): KeyInfo per hook, and the song's.
   const hooks = isRecord(json.hooks) ? (json.hooks as Record<string, KeyInfo>) : null;
   const global = isRecord(json.global) ? (json.global as KeyInfo) : null;
   return { hooks, global };

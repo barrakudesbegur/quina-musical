@@ -6,9 +6,9 @@
   and the preview shows only what is already public (the round, how many songs, the last landed song).
 -->
 <script lang="ts">
-  import { CA } from '../../ui/i18n/ca.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { getConsole } from '../context.ts';
-  import { readResume, resumeSummary } from '../../ui/rules/resume.ts';
+  import { readResume, resumeSummary } from '../../../packages/rules/resume.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';

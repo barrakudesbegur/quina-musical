@@ -2,9 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import QRCode from 'qrcode';
-import { playerAppLink, qrPathData } from '../../../stage/model/qr.ts';
-import { confettiPieces } from '../../../stage/model/confetti.ts';
-import { cardsLabel, joinCa, STAGE_TEXT } from '../../../stage/strings.ts';
+import { playerAppLink, qrPathData } from '../../../../stage/model/qr.ts';
+import { confettiPieces } from '../../../../stage/model/confetti.ts';
+import { cardsLabel, joinCa, STAGE_TEXT } from '../../../../stage/strings.ts';
 
 test('the QR path draws one run per row of dark modules, inside a quiet zone', () => {
   const dark = new Set(['0,0', '0,1', '1,1']);

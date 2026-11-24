@@ -3,7 +3,7 @@
   hand) and Start round. The Interval music has its own panel (IntervalMusic), shown wherever it plays.
 -->
 <script lang="ts">
-  import { formatCountdown } from '../../ui/rules/time.ts';
+  import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { guideCountdown } from '../logic/countdown.ts';
   import { roundPrizes } from '../logic/show-data.ts';

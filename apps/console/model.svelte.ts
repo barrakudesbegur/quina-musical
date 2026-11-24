@@ -2,16 +2,16 @@
 // printed cards' song titles, this device's label, theme and checklist, and the toasts. It derives what the
 // components need from the pure logic in logic/, and `act` is the one way commands leave the console.
 import type { CommandRejected, ResumePoint } from '@quina/protocol';
-import { createShow, type ShowStore } from '../ui/client/show.svelte.ts';
-import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
-import { loadPlanForPage, planStoreForPage } from '../ui/data/plan-store.ts';
-import type { AnyCommandArgs, AnyCommandName } from '../ui/flow.ts';
-import type { GamePlan } from '../ui/plan.ts';
+import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
+import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
+import { loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
+import type { AnyCommandArgs, AnyCommandName } from '../../packages/ui/flow.ts';
+import type { GamePlan } from '../../packages/ui/plan.ts';
 import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
-import { nextSavedCode, resumeCommand } from '../ui/rules/resume.ts';
+import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
 import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
 import { SentLog, dismissToast, isOwnRejection, pushToast, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';

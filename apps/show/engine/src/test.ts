@@ -136,7 +136,7 @@ function buffer(ctx: BaseAudioContext, seconds: number, fill: (data: Float32Arra
 const noise = (level: number) => (d: Float32Array) => d.forEach((_, i) => (d[i] = (Math.random() * 2 - 1) * level));
 
 /**
- * A song and its stems, stored at half scale like analysis/stems.py: mix = 2·(drums + bass + vocals) + other.
+ * A song and its stems, stored at half scale like tools/prep/stems.py: mix = 2·(drums + bass + vocals) + other.
  * Landing mode uses DC levels (0.5 in all); the other modes noise.
  */
 function songWithStems(ctx: BaseAudioContext, mode: Mode | 'quiet'): { mix: AudioBuffer; stems: StemSlices } {

@@ -1,8 +1,8 @@
 <!-- The rounds plan: each round normal or special, with its Line and Quina prizes. Rounds are added, removed
      and reordered here; they are renumbered 1, 2, 3… every time. -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
-  import { CA } from '../../ui/i18n/ca.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { addRound, moveRound, removeRound } from '../logic/plan-edit.ts';

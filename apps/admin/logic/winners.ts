@@ -1,7 +1,7 @@
 // The night's Winners as Admin lists them: in round order, the Line before the Quina, with the prize from the
 // plan, and whether the name or notes being typed differ from what the engine has. Pure.
-import { roundPlan, type GamePlan } from '../../ui/plan.ts';
-import type { WinnerInfo } from '../../ui/flow.ts';
+import { roundPlan, type GamePlan } from '../../../packages/ui/plan.ts';
+import type { WinnerInfo } from '../../../packages/ui/flow.ts';
 
 export interface WinnerRow {
   winner: WinnerInfo;

@@ -1,9 +1,9 @@
 // What the console offers in each scene (mirroring the engine's scene rules), and the thumb cluster.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXTURES, baseState } from '../../../ui/fixtures/states.ts';
-import { flowOf, type FlowState } from '../../../ui/flow.ts';
-import { canSend, controlsModel, sceneAllows, sceneContext } from '../../../console/logic/scene.ts';
+import { FIXTURES, baseState } from '../../../../../packages/ui/fixtures/states.ts';
+import { flowOf, type FlowState } from '../../../../../packages/ui/flow.ts';
+import { canSend, controlsModel, sceneAllows, sceneContext } from '../../../../console/logic/scene.ts';
 
 const NOW = 1_800_000_000_000;
 const input = (state: FlowState, online = true) => ({ state, flow: flowOf(state), online });

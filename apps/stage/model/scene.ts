@@ -1,5 +1,5 @@
 // Which scene the projector draws, and whether the drum shows through. Pure.
-import type { FlowFields, ShowScene } from '../../ui/flow.ts';
+import type { FlowFields, ShowScene } from '../../../packages/ui/flow.ts';
 import type { ShufflePhase } from './shuffle.ts';
 
 /**

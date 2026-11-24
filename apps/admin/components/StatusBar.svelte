@@ -1,7 +1,7 @@
 <!-- Connection to the relay and the show, and whether the plan is saved. -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
-  import { formatClock } from '../../ui/rules/time.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { S } from '../strings.ts';
 

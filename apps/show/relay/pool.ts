@@ -1,13 +1,29 @@
 // Song pools for the relay: which pool's files /audio, /analysis, /data, /stems, /covers, /cards ... serve.
-// The TypeScript twin of analysis/pool.py: README.md › "Pools" documents the manifest format, and
-// analysis/tests/test_pool.py checks that both resolve a manifest to the same paths.
-//   node relay/pool.ts [NAME|PATH]    prints the resolved pool as JSON
+// The TypeScript twin of tools/prep/pool.py: apps/show/README.md › "Pools" documents the manifest format, and
+// tools/prep/tests/test_pool.py checks that both resolve a manifest to the same paths. It also names the repo's
+// layout (where media, outputs and the cloud link's folder live), so the relay, the tests and the cloud agree.
+//   node apps/show/relay/pool.ts [NAME|PATH]    prints the resolved pool as JSON
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** experiments/mixer-poc: relative manifest paths resolve against it. */
-export const POC = path.resolve(import.meta.dirname, '..');
-export const POOLS_DIR = path.join(POC, 'analysis', 'pools');
+/** The repo root: relative manifest paths resolve against it. */
+export const REPO = path.resolve(import.meta.dirname, '../../..');
+/** apps/show: the engine, the relay and their tests. */
+export const SHOW = path.resolve(import.meta.dirname, '..');
+/** The repo's data: what the show reads and the preparation writes, outside the apps' code. */
+export const DATA = path.join(REPO, 'data');
+/** Pool manifests, each pool's songs list and hand overrides (tracked). */
+export const POOLS_DIR = path.join(DATA, 'pools');
+/** Audio and covers: songs, effects (tracked), stingers, Hold music, celebration, Interval, covers. */
+export const MEDIA = path.join(DATA, 'media');
+/** What the preparation writes: analysis, stems and keys metadata, Signatures, Hold and Interval indexes, reports. */
+export const OUT = path.join(DATA, 'out');
+/** Decoded audio, stems, Signatures, Blend renders, Hold and Interval audio, the relay token. */
+export const CACHE = path.join(DATA, 'cache');
+/** The laptop's cloud link folder (journal copy, plan.json, resume.json, status.json), served at /cloud/. */
+export const LINK = path.join(DATA, 'link');
+/** tools/prep: the preparation pipeline (Python), which the relay also runs during the show. */
+export const PREP = path.join(REPO, 'tools', 'prep');
 export const POOL_ENV = 'QUINA_POOL';
 export const DEFAULT_POOL = 'default';
 
@@ -33,13 +49,13 @@ export class PoolError extends Error {
   override name = 'PoolError';
 }
 
-/** `file` relative to experiments/mixer-poc when inside it, else absolute. */
+/** `file` relative to the repo root when inside it, else absolute. */
 export function display(file: string): string {
-  const rel = path.relative(POC, file);
+  const rel = path.relative(REPO, file);
   return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel.split(path.sep).join('/') : file;
 }
 
-/** A pool name → analysis/pools/<name>.json; anything with a slash or ending in .json → that file (from the cwd). */
+/** A pool name → data/pools/<name>.json; anything with a slash or ending in .json → that file (from the cwd). */
 export function manifestPath(spec: string): string {
   if (spec.includes('/') || spec.includes(path.sep) || spec.endsWith('.json')) return path.resolve(spec);
   if (!NAME_RE.test(spec)) throw new PoolError(`bad pool name ${JSON.stringify(spec)}: use lowercase letters, digits, - and _ (or a path to a manifest)`);
@@ -65,7 +81,7 @@ export function loadPool(spec?: string): Pool {
   } catch {
     const byName = inPoolsDir && path.basename(file, '.json') === chosen;
     const hint = byName ? `available: ${availablePools().join(', ') || 'none'}` : 'no such file';
-    throw new PoolError(`no pool manifest ${display(file)} (${hint}); see README.md › Pools`);
+    throw new PoolError(`no pool manifest ${display(file)} (${hint}); see apps/show/README.md › Pools`);
   }
   let doc: unknown;
   try {
@@ -87,11 +103,12 @@ export function loadPool(spec?: string): Pool {
   if (!NAME_RE.test(name)) throw new PoolError(`${display(file)}: bad name ${JSON.stringify(name)} (lowercase letters, digits, - and _)`);
   if (inPoolsDir && path.basename(file, '.json') !== name) throw new PoolError(`${display(file)}: name ${JSON.stringify(name)} must match the file name`);
 
-  // Absolute paths stay; relative ones resolve against experiments/mixer-poc.
-  const resolve = (value: string) => path.resolve(POC, value);
+  // Absolute paths stay; relative ones resolve against the repo root. Outputs default to data/out and data/cache,
+  // never to data/pools, which holds the tracked inputs.
+  const resolve = (value: string) => path.resolve(REPO, value);
   const opt = (key: string, fallback: string) => resolve(str(key) || fallback);
-  const dataDir = opt('dataDir', `data/pools/${name}`);
-  const cacheDir = opt('cacheDir', `cache/pools/${name}`);
+  const dataDir = opt('dataDir', `data/out/pools/${name}`);
+  const cacheDir = opt('cacheDir', `data/cache/pools/${name}`);
   return {
     name,
     manifest: file,
@@ -102,7 +119,7 @@ export function loadPool(spec?: string): Pool {
     spotifyFeatures: opt('spotifyFeatures', path.join(dataDir, 'spotify_features.json')),
     dataDir,
     cacheDir,
-    overridesDir: opt('overridesDir', `analysis/overrides/${name}`),
+    overridesDir: opt('overridesDir', `data/pools/${name}/overrides`),
   };
 }
 

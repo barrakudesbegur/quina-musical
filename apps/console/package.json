@@ -1,0 +1,7 @@
+{
+  "name": "@quina/console",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The presenters' console (Svelte), built by apps/show.",
+  "type": "module"
+}

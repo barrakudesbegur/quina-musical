@@ -13,8 +13,8 @@ Format:
 ---
 
 ## Commit the mixer POC's generated data? (quina-musical-ed, 2026-11-24)
-The mixer POC code, analysis scripts and docs are committed locally (cff415a, c62db2a, cc690fc), and nothing is pushed. The generated `data/` folder is not committed: analysis, stems, keys, Signatures, Hold loops and the reports. It's reproducible with `npm run prep`, but slow (about 30 min with stems). Some of those files carry per-song values derived from the Spotify features file (`tempo.estimates.spotify`, the report's tables), and that file itself is kept out of the public repo.
-**Default taken:** `data/` stays uncommitted. To commit it, strip the Spotify-derived fields first, or confirm they may be published. The research report and `research_notes/` in the same folder belong to the orchestrator and are left for it.
+The mixer POC code, analysis scripts and docs are committed locally (cff415a, c62db2a, cc690fc), and nothing is pushed. The generated `data/out/` folder is not committed: analysis, stems, keys, Signatures, Hold loops and the reports. It's reproducible with `npm run prep`, but slow (about 30 min with stems). Some of those files carry per-song values derived from the Spotify features file (`tempo.estimates.spotify`, the report's tables), and that file itself is kept out of the public repo.
+**Default taken:** `data/out/` stays uncommitted. To commit it, strip the Spotify-derived fields first, or confirm they may be published. The research report and `research_notes/` (now in `docs/research/`) belong to the orchestrator and are left for it.
 
 ## Signature candidates need your ear (quina-musical-ed, 2026-11-24)
 Ten test songs have 37 candidates: 41, 26, 47, 12, 61, 21, 73, 2, 40 and 6. Approve or reject them on the audition page (`/show/audition.html?song=41`, "Signatures" section).
@@ -50,7 +50,7 @@ Link: https://claude.ai/code/artifact/c959a819-18bf-486f-9443-2ecf508c1f3f (priv
 
 ## Console button words (quina-musical-1e, 2026-11-24)
 On the console: Next = "Següent", Hold = "Espera", Suspense = "Suspens", Back = "Enrere", Claim = "Comprovar cartó", Resume = "Continuar", Shuffle = "Barrejar". The one most open to debate is Hold: "Espera"? "Parlem"? "Pausa" is avoided, because the music never stops.
-**Default taken:** the words above. They live in `console/strings.ts`.
+**Default taken:** the words above. They live in `apps/console/strings.ts`.
 
 ## A QR library for the projector and console (quina-musical-1e, 2026-11-24)
 The projector shows a "scan your card" QR (before the Game and in the Interval). The console's setup screen should show a QR with its LAN address. Both need a small QR encoder, for example `qrcode` (MIT, no dependencies). Adding it touches the mixer POC's `package.json` (sound engine's file).
@@ -61,7 +61,7 @@ The player app draws each card as the 3×4 grid of the printed card, with a cove
 **Default taken:** the grid stays (cover first, title under it, the 1-song-away banner names the song in large type). Possible change: a "Lletra gran" switch that shows each card as a list.
 
 ## This year's printed card (quina-musical-1e, 2026-11-24)
-The QR now points to `quina.barrakudesbegur.org/26/<card>`. The card's title and paper colour are configurable in `card-generator/src/config.ts`.
+The QR now points to `quina.barrakudesbegur.org/26/<card>`. The card's title and paper colour are configurable in `apps/cards/src/config.ts`.
 **Default taken:** last year's title ("QUINA QUINA!") and colour until you choose. No cards are generated until the playlist is final.
 
 ## Sponsor logos before the cloud exists (quina-musical-1e, 2026-11-24)
@@ -74,14 +74,14 @@ Access needs path-scoped protection (`/api` for admins, `/ws/show` for the lapto
 
 ## coin-reader's access helper in this public repo (quina-musical-b2, 2026-11-24)
 coin-reader is a private repo. Its `functions/_lib/access.ts` (`requireAccess`) is a generic helper with no secrets.
-**Default taken:** copied in adapted form to `experiments/mixer-poc/cloud/src/access.ts`, with a note saying where it came from. The adaptations: Access service tokens for the laptop (client-ID allow-list), people refused unless an email list or domain is configured, and the dev bypass only on localhost. To undo: rewrite it from the Access docs.
+**Default taken:** copied in adapted form to `apps/cloud/src/access.ts`, with a note saying where it came from. The adaptations: Access service tokens for the laptop (client-ID allow-list), people refused unless an email list or domain is configured, and the dev bypass only on localhost. To undo: rewrite it from the Access docs.
 
 ## Phones keep their cards per edition, not per Game (quina-musical-b2, 2026-11-24)
 The laptop starts a new Game id for every rehearsal and for `?fresh=1`. If phones wiped their saved cards whenever the Game id changed, a rehearsal or an accidental `?fresh=1` on the night would wipe every phone.
 **Default taken:** phones tag their saved data with the **edition** (`26`, as in the QR links) and wipe only when that changes. A new Game id only resets the rounds they show. Agreed with quina-musical-1e.
 
 ## Same-day rehearsals share the free quota (quina-musical-b2, 2026-11-24)
-The free plan's daily limits reset at 00:00 UTC (01:00 in Catalonia in winter). The 400-phone load test projects a typical show night at about 21% of the request limit and a pessimistic one at about 50% (`experiments/mixer-poc/cloud/reports/`). A big same-day rehearsal with many phones would eat into that.
+The free plan's daily limits reset at 00:00 UTC (01:00 in Catalonia in winter). The 400-phone load test projects a typical show night at about 21% of the request limit and a pessimistic one at about 50% (`apps/cloud/reports/`). A big same-day rehearsal with many phones would eat into that.
 **Default taken:** the projection includes a small same-day rehearsal (20 phones, 2 h). Keep a big rehearsal on another day, or upgrade to Workers Paid (5 USD a month) for the week.
 
 ## Plan B: resuming by hand (quina-musical-1e, 2026-11-24)
@@ -108,7 +108,7 @@ The brief didn't settle these. Each is a single setting or a small change.
   - **A manual "Line confirmed"** without a Check sits in the menu, behind a long press.
   - **The light theme** is the default.
 
-**Default taken:** as listed. These are tunables in `player/config.ts`, `stage/config.ts` and `console/config.ts`.
+**Default taken:** as listed. These are tunables in `apps/player/config.ts`, `apps/stage/config.ts` and `apps/console/config.ts`.
 
 ## The printed cards are public (quina-musical-b2, 2026-11-24)
 The player app needs each card's songs, so `cards.json` (every card's songs) is public: the cloud serves it as a static file, and the laptop's relay serves it on the hotspot. With every card and the public landings, someone determined could work out live which card numbers are close to a Line or a Bingo, the information the console keeps private as "possible winners". Card numbers are anonymous and the next song stays secret, so the impact is low. The alternative is a per-card secret in the QR (for example `/26/123-k7f2`), with the cloud serving only that card. It would make "Afegir cartró" by number much harder, and that fails the grandmother test.

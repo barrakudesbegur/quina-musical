@@ -1,11 +1,11 @@
 // Animation moments: named as in ANIMATIONS.md, timed by the show's clock, never replayed on a late join.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { flowOf, type FlowState } from '../../../ui/flow.ts';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { stageView } from '../../../stage/view.ts';
-import { ANIM_NAMES, diffMoments, momentsOf, type AnimDetail, type MomentInputs, type Moments } from '../../../stage/model/moments.ts';
+import { flowOf, type FlowState } from '../../../../../packages/ui/flow.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { stageView } from '../../../../stage/view.ts';
+import { ANIM_NAMES, diffMoments, momentsOf, type AnimDetail, type MomentInputs, type Moments } from '../../../../stage/model/moments.ts';
 
 const NOW = 1_800_000_000_000;
 const inputs = (nowMs: number, extra: Partial<MomentInputs> = {}): MomentInputs => ({

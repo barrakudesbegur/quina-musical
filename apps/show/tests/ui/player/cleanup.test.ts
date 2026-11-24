@@ -2,8 +2,8 @@
 // per edition, and a missing or failing API never stops it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_CLEANUP, cleanupLegacy, type CleanupEnv, type RegistrationLike } from '../../../player/logic/cleanup.ts';
-import { MemoryStorage } from '../../../player/logic/storage.ts';
+import { DEFAULT_CLEANUP, cleanupLegacy, type CleanupEnv, type RegistrationLike } from '../../../../player/logic/cleanup.ts';
+import { MemoryStorage } from '../../../../player/logic/storage.ts';
 
 function fakeEnv() {
   const unregistered: string[] = [];

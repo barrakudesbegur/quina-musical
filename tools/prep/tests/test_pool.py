@@ -1,4 +1,4 @@
-"""Pool resolution (analysis/pool.py) and its TypeScript twin (relay/pool.ts)."""
+"""Pool resolution (tools/prep/pool.py) and its TypeScript twin (apps/show/relay/pool.ts)."""
 from __future__ import annotations
 
 import json
@@ -10,13 +10,12 @@ import pool as pools
 import pytest
 from conftest import run_script, write_manifest
 
-POC = pools.POC
 REPO = pools.REPO
 
 
 @pytest.fixture
 def pools_dir(tmp_path, monkeypatch):
-    """A private analysis/pools/ so name lookups never touch the real one."""
+    """A private data/pools/ so name lookups never touch the real one."""
     d = tmp_path / "pools"
     d.mkdir()
     monkeypatch.setattr(pools, "POOLS_DIR", d)
@@ -36,17 +35,17 @@ def test_default_pool_points_at_the_existing_locations(monkeypatch):
     monkeypatch.delenv(pools.ENV_VAR, raising=False)
     p = pools.load()
     assert p.name == "default"
-    assert p.manifest == POC / "analysis/pools/default.json"
-    assert p.songs_json == REPO / "server/db/default/songs.json"
-    assert p.audio_dir == REPO / "client/public/audios/song"
-    assert p.covers_dir == REPO / "client/public/images/covers"
-    assert p.cards_json == REPO / "card-generator/dist/cards.json"
-    assert p.spotify_features == POC / "data/spotify_features.json"
-    assert (p.data_dir, p.cache_dir, p.overrides_dir) == (POC / "data", POC / "cache", POC / "analysis/overrides")
-    assert p.analysis_dir == POC / "data/analysis"
-    assert p.mix_flac(12) == POC / "cache/12/mix.flac"
-    assert p.signatures_cache(12) == POC / "cache/12/signatures"
-    assert pools.display(p.stems_cache(12)) == "cache/12/stems"  # stems.py's pathTemplate stays as it was
+    assert p.manifest == REPO / "data/pools/default.json"
+    assert p.songs_json == REPO / "data/pools/default/songs.json"
+    assert p.audio_dir == REPO / "data/media/song"
+    assert p.covers_dir == REPO / "data/media/covers"
+    assert p.cards_json == REPO / "apps/cards/dist/cards.json"
+    assert p.spotify_features == REPO / "data/out/spotify_features.json"
+    assert (p.data_dir, p.cache_dir, p.overrides_dir) == (REPO / "data/out", REPO / "data/cache", REPO / "data/pools/default/overrides")
+    assert p.analysis_dir == REPO / "data/out/analysis"
+    assert p.mix_flac(12) == REPO / "data/cache/12/mix.flac"
+    assert p.signatures_cache(12) == REPO / "data/cache/12/signatures"
+    assert pools.display(p.stems_cache(12)) == "data/cache/12/stems"  # stems.py's pathTemplate, relative to the repo
 
 
 # ---------------------------------------------------------------- precedence: --pool, $QUINA_POOL, default
@@ -79,21 +78,21 @@ def test_from_args_uses_the_pool_option(tmp_path):
 
 # ---------------------------------------------------------------- paths and defaults
 
-def test_relative_paths_resolve_against_the_poc_and_new_pools_get_their_own_dirs(pools_dir):
-    named_manifest(pools_dir, "next", songsJson="../../playlist-fetcher/output/songs.json",
+def test_relative_paths_resolve_against_the_repo_and_new_pools_get_their_own_dirs(pools_dir):
+    named_manifest(pools_dir, "next", songsJson="tools/prep/playlist-fetcher/output/songs.json",
                    audioDir="/Volumes/Music/next")
     p = pools.load("next")
-    assert p.songs_json == REPO / "playlist-fetcher/output/songs.json"
+    assert p.songs_json == REPO / "tools/prep/playlist-fetcher/output/songs.json"
     assert p.audio_dir == Path("/Volumes/Music/next")
-    assert p.data_dir == POC / "data/pools/next"
-    assert p.cache_dir == POC / "cache/pools/next"
-    assert p.overrides_dir == POC / "analysis/overrides/next"
-    assert p.covers_dir == POC / "cache/pools/next/covers"
-    assert p.spotify_features == POC / "data/pools/next/spotify_features.json"
+    assert p.data_dir == REPO / "data/out/pools/next"
+    assert p.cache_dir == REPO / "data/cache/pools/next"
+    assert p.overrides_dir == REPO / "data/pools/next/overrides"
+    assert p.covers_dir == REPO / "data/cache/pools/next/covers"
+    assert p.spotify_features == REPO / "data/out/pools/next/spotify_features.json"
     assert p.cards_json is None
     assert not p.has_spotify and p.spotify() == {}
-    assert p.report_path == POC / "data/pools/next/report.md"
-    assert p.signatures_dir == POC / "data/pools/next/signatures"
+    assert p.report_path == REPO / "data/out/pools/next/report.md"
+    assert p.signatures_dir == REPO / "data/out/pools/next/signatures"
 
 
 # ---------------------------------------------------------------- errors
@@ -136,7 +135,7 @@ def test_bad_pool_names_are_refused(pools_dir):
 def test_cli_reports_a_missing_pool_clearly():
     result = run_script("pool.py", "--pool", "no-such-pool")
     assert result.returncode != 0
-    assert "pool error: no pool manifest analysis/pools/no-such-pool.json" in result.stderr
+    assert "pool error: no pool manifest data/pools/no-such-pool.json" in result.stderr
 
 
 # ---------------------------------------------------------------- songs.json and the audio folder
@@ -185,7 +184,7 @@ def test_typescript_twin_resolves_the_same_paths(tmp_path, which):
                                           "cardsJson": "cards/cards.json"}))
     else:
         spec = str(write_manifest(tmp_path, "abs", spotifyFeatures=str(tmp_path / "sp.json")))
-    node = subprocess.run(["node", str(POC / "relay/pool.ts"), spec], cwd=POC, capture_output=True, text=True,
+    node = subprocess.run(["node", str(pools.SHOW / "relay/pool.ts"), spec], cwd=REPO, capture_output=True, text=True,
                           timeout=60, check=False)
     assert node.returncode == 0, node.stderr
     assert json.loads(node.stdout) == pools.load(spec).to_json()
@@ -195,7 +194,7 @@ def test_typescript_twin_resolves_the_same_paths(tmp_path, which):
 def test_typescript_twin_refuses_what_python_refuses(tmp_path):
     path = tmp_path / "bad.json"
     path.write_text(json.dumps({"name": "bad", "songsJson": "a", "audioDir": "b", "dataDirectory": "c"}))
-    node = subprocess.run(["node", str(POC / "relay/pool.ts"), str(path)], cwd=POC, capture_output=True, text=True,
+    node = subprocess.run(["node", str(pools.SHOW / "relay/pool.ts"), str(path)], cwd=REPO, capture_output=True, text=True,
                           timeout=60, check=False)
     assert node.returncode == 1 and "unknown field(s) dataDirectory" in node.stderr
     with pytest.raises(pools.PoolError, match="unknown field"):

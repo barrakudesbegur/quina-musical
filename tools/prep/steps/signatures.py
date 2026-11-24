@@ -1,6 +1,6 @@
 """Signature candidates: short, iconic, isolated pieces of a song that a transition can layer (GLOSSARY:
 Signature). Pure functions over the analysis (beats, downbeats, hooks) and the stems' bar levels, plus a
-vocal envelope for shouts; analysis/signatures.py cuts the audio and writes the files.
+vocal envelope for shouts; tools/prep/signatures.py cuts the audio and writes the files.
 
 Three kinds, all placed on the song's own grid so the engine can line their anchor up with a beat:
 - call: the vocal line that opens a hook (from its pickup to the end of its first bar). Hooks are the
@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-# Bar levels (dBFS, the stems' bar RMS from analysis/stems.py, at stemGain scale) that count as audible.
+# Bar levels (dBFS, the stems' bar RMS from tools/prep/stems.py, at stemGain scale) that count as audible.
 VOCAL_ON_DB = -26.0
 VOCAL_OFF_DB = -38.0
 OTHER_ON_DB = -28.0

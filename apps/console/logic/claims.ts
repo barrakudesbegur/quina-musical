@@ -1,5 +1,5 @@
 // The queue of claimed cards during a Check: what each claim's row says and which actions it offers. Pure.
-import type { CheckInfo, ClaimInfo, ClaimStatus, CheckOutcome, WinKind } from '../../ui/flow.ts';
+import type { CheckInfo, ClaimInfo, ClaimStatus, CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 
 export interface ClaimView {
   claimId: string;

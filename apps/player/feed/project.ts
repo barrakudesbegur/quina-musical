@@ -11,9 +11,9 @@
 //   the journal.
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { PROTOCOL_VERSION, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
-import { flowOf, type FlowFields } from '../../ui/flow.ts';
-import type { GamePlan } from '../../ui/plan.ts';
-import { HeatSmoother } from '../../ui/rules/heat.ts';
+import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
+import { HeatSmoother } from '../../../packages/rules/heat.ts';
 import { roundGameEnd, type PublicCheck, type PublicHeat, type PublicLanding, type PublicLink, type PublicRound, type PublicShuffle, type PublicSnapshot, type PublicSpin, type PublicState, type PublicWinner } from './public.ts';
 
 /** What the projection needs besides the engine's events. */

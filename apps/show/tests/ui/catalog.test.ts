@@ -1,7 +1,7 @@
 // cards.json parsing: cards and the song index come from the printed cards; bad cards are skipped.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCards } from '../../ui/data/catalog.ts';
+import { parseCards } from '../../../../packages/ui/data/catalog.ts';
 
 test('cards and song titles come from cards.json', () => {
   const json = [

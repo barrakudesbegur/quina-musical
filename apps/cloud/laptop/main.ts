@@ -1,5 +1,5 @@
 // Run the show laptop's cloud link next to the relay:
-//   npm run link -- [--relay ws://localhost:5174/ws] [--cloud wss://<worker>/ws/show] [--data laptop-data]
+//   npm run link -- [--relay ws://localhost:5174/ws] [--cloud wss://<worker>/ws/show] [--data <folder>]
 // Settings come from flags, else from the environment or `.env.link` (gitignored):
 //   QUINA_CLOUD_URL            the GameRoom's laptop endpoint (default: wrangler dev, ws://localhost:8787/ws/show)
 //   QUINA_RELAY_URL            the relay (default ws://localhost:5174/ws)
@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { LINK } from '../../show/relay/pool.ts';
 import { CloudLink } from './link.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -22,7 +23,8 @@ const flag = (name: string): string | undefined => {
 
 const relayUrl = flag('--relay') ?? process.env.QUINA_RELAY_URL ?? 'ws://localhost:5174/ws';
 const cloudUrl = flag('--cloud') ?? process.env.QUINA_CLOUD_URL ?? 'ws://localhost:8787/ws/show';
-const dataDir = path.resolve(ROOT, flag('--data') ?? 'laptop-data');
+// The link's folder (data/link/ by default): the relay serves it at /cloud/.
+const dataDir = path.resolve(ROOT, flag('--data') ?? LINK);
 const id = process.env.CF_ACCESS_CLIENT_ID;
 const secret = process.env.CF_ACCESS_CLIENT_SECRET;
 if (Boolean(id) !== Boolean(secret)) {

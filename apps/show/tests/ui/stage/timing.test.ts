@@ -1,7 +1,7 @@
 // Rotations, rough countdowns and small time helpers of the stage.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linkLost, nearLanding, parseCssTime, rotationIndex, roughCountdown, sameCountdown } from '../../../stage/model/timing.ts';
+import { linkLost, nearLanding, parseCssTime, rotationIndex, roughCountdown, sameCountdown } from '../../../../stage/model/timing.ts';
 
 const OPTS = { clockAboveMin: 90, fineBelowMin: 10, coarseStepMin: 5 };
 

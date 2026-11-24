@@ -15,7 +15,7 @@ interface IndexRow {
   excluded: boolean;
 }
 
-/** The hook fields this page shows besides the ones the engine checks (analysis/analyze.py writes them). */
+/** The hook fields this page shows besides the ones the engine checks (tools/prep/analyze.py writes them). */
 interface AuditionHook extends Hook {
   tagTimeSec?: number;
   beatIndex?: number;
@@ -23,7 +23,7 @@ interface AuditionHook extends Hook {
   pickupBeats?: number;
 }
 
-/** The analysis fields this page shows besides the ones the engine checks (analysis/analyze.py writes them). */
+/** The analysis fields this page shows besides the ones the engine checks (tools/prep/analyze.py writes them). */
 interface AuditionAnalysis extends Analysis {
   hooks: AuditionHook[];
   downbeatBeatIndex?: number[];
@@ -36,7 +36,7 @@ interface AuditionAnalysis extends Analysis {
   energy?: { barRmsDb?: number[] };
 }
 
-/** analysis/overrides/<id>.json: hand fixes, re-derived by the relay. Unknown fields are kept as they are. */
+/** data/pools/<pool>/overrides/<id>.json: hand fixes, re-derived by the relay. Unknown fields are kept as they are. */
 interface Override {
   note?: string | null;
   downbeatShiftBeats?: number | null;
@@ -45,7 +45,7 @@ interface Override {
   disableHooks?: string[] | null;
   hookDownbeats?: Record<string, number> | null;
   hookPickupBeats?: Record<string, number> | null;
-  /** Signature id → approved (true) or rejected (false); analysis/signatures.py applies them. */
+  /** Signature id → approved (true) or rejected (false); tools/prep/signatures.py applies them. */
   signatures?: Record<string, boolean> | null;
   [field: string]: unknown;
 }

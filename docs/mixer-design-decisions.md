@@ -1,6 +1,6 @@
 # Mixer design decisions (2026-11-23)
 
-These were agreed with the user in a design interview. They override the build brief in `experiments/mixer-poc/reports/Bingo DJ mixer research.md` wherever the two conflict. The terms follow [GLOSSARY.md](../GLOSSARY.md), and the lasting decisions are in [docs/adr](./adr).
+These were agreed with the user in a design interview. They override the build brief in `docs/research/reports/Bingo DJ mixer research.md` wherever the two conflict. The terms follow [GLOSSARY.md](../GLOSSARY.md), and the lasting decisions are in [docs/adr](./adr).
 
 > **Updated 2026-11-24.** [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) covers the screens, the player app and hosting, and overrides this document where they differ. In particular: there is one shared tablet, no router at the venue, hosting follows ADR 0003, and the "later" items below are now in the UI/UX session's scope.
 
@@ -91,7 +91,7 @@ The engine must support these now; the full flow is built later.
 - Cards in play are entered once for the whole game, normal and special ranges together.
 - Each round counts only the cards valid for it:
   - normal cards in regular rounds;
-  - special cards only in the special round. These are `type: "especial"` in `card-generator/dist/cards.json`, ids 400–699.
+  - special cards only in the special round. These are `type: "especial"` in `apps/cards/dist/cards.json`, ids 400–699.
 - The current app keeps a single game-wide list, which is a bug for this.
 
 ## Devices (ADR 0002)

@@ -1,7 +1,7 @@
 // What the always-visible header shows: the connections, the console-wide alert, the round on screen and the
 // Heat. Pure: everything comes in as arguments.
 import type { ShowState, ShowStatus } from '@quina/protocol';
-import type { FlowFields } from '../../ui/flow.ts';
+import type { FlowFields } from '../../../packages/ui/flow.ts';
 
 export const LINK_NAMES = ['relay', 'show', 'cloud', 'feed', 'wii'] as const;
 /** relay: this console ↔ the laptop's relay; show: the show page on the relay; cloud, feed (phones), wii: not wired yet. */

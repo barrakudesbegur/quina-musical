@@ -8,11 +8,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { frameAligned, laneSources, laneStart, onsetShift, pointsAt, schedulePoints } from '../engine/src/audio/lanes.ts';
 import type { LanePart, StemName } from '../engine/src/plan/events.ts';
+import { CACHE, OUT } from '../relay/pool.ts';
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 const SR = 48000;
 
 test('frameAligned: whole frames, within a frame of the plan, the song keeps its place in time', () => {
@@ -81,8 +81,8 @@ interface StemsJson {
 
 test('P1 subtraction on real stems through the Deck\'s frame arithmetic: −60 dB residual, and every part removed leaves silence', (t) => {
   const id = 1;
-  const meta = path.join(ROOT, 'data/stems', `${id}.json`);
-  const mixFile = path.join(ROOT, 'cache', String(id), 'mix.flac');
+  const meta = path.join(OUT, 'stems', `${id}.json`);
+  const mixFile = path.join(CACHE, String(id), 'mix.flac');
   if (!fs.existsSync(meta) || !fs.existsSync(mixFile)) return t.skip(`no stems or audio for song ${id} (cache/ is not in the repo)`);
   const { stemGain, windows } = JSON.parse(fs.readFileSync(meta, 'utf8')) as StemsJson;
   const window = windows[0];
@@ -98,7 +98,7 @@ test('P1 subtraction on real stems through the Deck\'s frame arithmetic: −60 d
   const songFrame = offsetFrame + (mixAt.frame - startFrame); // what the main source plays at the lane's first frame
   const mix = decode(mixFile, songFrame, songFrame + frames);
   if (!mix) return t.skip('ffmpeg is not available');
-  const stem = (name: StemName) => decode(path.join(ROOT, 'cache', String(id), 'stems', `${name}.${window.startSample}.flac`), stemAt.offsetFrames, stemAt.offsetFrames + frames);
+  const stem = (name: StemName) => decode(path.join(CACHE, String(id), 'stems', `${name}.${window.startSample}.flac`), stemAt.offsetFrames, stemAt.offsetFrames + frames);
   const stems: Partial<Record<StemName, Float32Array>> = { drums: stem('drums') ?? undefined, bass: stem('bass') ?? undefined, vocals: stem('vocals') ?? undefined };
   // Each lane's source buffers, read at the lane's offsets (a mix source in a lane reads it like the main source).
   const mixLane = decode(mixFile, mixAt.offsetFrames, mixAt.offsetFrames + frames);
@@ -109,7 +109,7 @@ test('P1 subtraction on real stems through the Deck\'s frame arithmetic: −60 d
   const mixRms = rms((k) => mix[k]);
   // mix + (−1)·drums against mix − drums/stemGain read straight from the files at the same song frames.
   const drums = stems.drums;
-  const truth = decode(path.join(ROOT, 'cache', String(id), 'stems', `drums.${window.startSample}.flac`), songFrame - window.startSample, songFrame - window.startSample + frames);
+  const truth = decode(path.join(CACHE, String(id), 'stems', `drums.${window.startSample}.flac`), songFrame - window.startSample, songFrame - window.startSample + frames);
   assert.ok(drums && truth && mixRms > 0);
   const removeDrums = lane('drums', -1);
   const residual = rms((k) => mix[k] + removeDrums(k) - (mix[k] - truth[k] / stemGain));
@@ -121,7 +121,7 @@ test('P1 subtraction on real stems through the Deck\'s frame arithmetic: −60 d
   const leftDb = 20 * Math.log10(Math.max(left, 1e-12) / mixRms);
   assert.ok(leftDb < -60, `everything removed leaves ${leftDb.toFixed(1)} dB`);
   // The check is sharp: drums read one frame off would leave a residual far above −60 dB.
-  const late = decode(path.join(ROOT, 'cache', String(id), 'stems', `drums.${window.startSample}.flac`), stemAt.offsetFrames + 1, stemAt.offsetFrames + 1 + frames);
+  const late = decode(path.join(CACHE, String(id), 'stems', `drums.${window.startSample}.flac`), stemAt.offsetFrames + 1, stemAt.offsetFrames + 1 + frames);
   assert.ok(late);
   const offDb = 20 * Math.log10(rms((k) => late[k] - truth[k]) / stemGain / mixRms);
   assert.ok(offDb > -60, `a one-frame misalignment shows (${offDb.toFixed(1)} dB)`);

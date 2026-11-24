@@ -1,6 +1,6 @@
 // The contract between the stage controller and each scene's renderer.
 import type { AnimDetail } from '../model/moments.ts';
-import { CA } from '../../ui/i18n/ca.ts';
+import { CA } from '../../../packages/ui/i18n/ca.ts';
 import type { SceneView, StageView } from '../view.ts';
 
 export interface SceneEnv {

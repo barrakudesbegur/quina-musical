@@ -2,10 +2,10 @@
      with `winnerInfo`. An edit stays here until the engine's state shows it, so a rejected or unsent one is
      never lost. -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
-  import { CA } from '../../ui/i18n/ca.ts';
-  import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
-  import type { GamePlan } from '../../ui/plan.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
+  import type { GamePlan } from '../../../packages/ui/plan.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { editDiffers, editOf, winnerInfoFields, winnerRows, type WinnerEdit } from '../logic/winners.ts';
   import { S } from '../strings.ts';

@@ -5,7 +5,7 @@
   - links: the connection chips, then the device label and the menu.
 -->
 <script lang="ts">
-  import { formatClock, formatDrift } from '../../ui/rules/time.ts';
+  import { formatClock, formatDrift } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { LINK_NAMES, heatPercent, linksOf, roundOnScreen } from '../logic/status.ts';
   import { CA, S } from '../strings.ts';

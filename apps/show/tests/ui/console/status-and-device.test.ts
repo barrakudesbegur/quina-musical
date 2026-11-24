@@ -1,13 +1,13 @@
 // The header (connections, alerts, Heat, round on screen), the toasts, and this device's settings.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { flowOf } from '../../../ui/flow.ts';
-import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../console/logic/status.ts';
-import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../console/logic/toasts.ts';
-import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../console/logic/device.ts';
-import { defaultClaimKind, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../console/logic/show-data.ts';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { flowOf } from '../../../../../packages/ui/flow.ts';
+import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen } from '../../../../console/logic/status.ts';
+import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../../console/logic/toasts.ts';
+import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../../console/logic/device.ts';
+import { defaultClaimKind, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { PROTOCOL_VERSION } from '@quina/protocol';
 
 const NOW = 1_800_000_000_000;

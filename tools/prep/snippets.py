@@ -11,7 +11,7 @@ on the snippet itself and capped like theirs (at most +6 dB). Idempotent: a song
 hook or its mix.flac changes (or with --force), and the index is rewritten only when it changes. A song
 without a valid hook gets no snippet (it is not playable either).
 
-    analysis/.venv/bin/python analysis/snippets.py [--pool NAME|PATH] [--song N ...] [--force]
+    tools/prep/.venv/bin/python tools/prep/snippets.py [--pool NAME|PATH] [--song N ...] [--force]
 """
 from __future__ import annotations
 

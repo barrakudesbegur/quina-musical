@@ -1,7 +1,7 @@
 // Pairing with the relay: ?t= wins and is kept; junk is ignored; the QR link carries the token.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveToken, withToken } from '../../ui/client/pairing.ts';
+import { resolveToken, withToken } from '../../../../packages/ui/client/pairing.ts';
 
 const TOKEN = 'k3Jx9QpL2mZ7';
 

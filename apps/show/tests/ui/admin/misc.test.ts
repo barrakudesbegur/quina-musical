@@ -1,13 +1,13 @@
 // Admin's smaller pure modules: routes, the command log, Winners rows, exports, player-app settings.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { baseState } from '../../../ui/fixtures/states.ts';
-import { routeFromHash } from '../../../manage/logic/route.ts';
-import { applyRejection, lastCommand, recordCommand, type CommandRecord } from '../../../manage/logic/command-log.ts';
-import { editDiffers, editOf, winnerInfoFields, winnerRows } from '../../../manage/logic/winners.ts';
-import { exportFileName, fullExport } from '../../../manage/logic/exports.ts';
-import { DEFAULT_PLAYER_SETTINGS, readPlayerSettings } from '../../../manage/logic/player-settings.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { baseState } from '../../../../../packages/ui/fixtures/states.ts';
+import { routeFromHash } from '../../../../admin/logic/route.ts';
+import { applyRejection, lastCommand, recordCommand, type CommandRecord } from '../../../../admin/logic/command-log.ts';
+import { editDiffers, editOf, winnerInfoFields, winnerRows } from '../../../../admin/logic/winners.ts';
+import { exportFileName, fullExport } from '../../../../admin/logic/exports.ts';
+import { DEFAULT_PLAYER_SETTINGS, readPlayerSettings } from '../../../../admin/logic/player-settings.ts';
 
 test('routes come from the hash, unknown ones fall back to setup', () => {
   assert.equal(routeFromHash('#xuleta'), 'xuleta');

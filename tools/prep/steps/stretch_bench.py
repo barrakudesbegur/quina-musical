@@ -1,7 +1,7 @@
 """Benchmarks for the layering stretcher (writes nothing outside <cacheDir>/stretch/bench/).
 
-    analysis/.venv/bin/python analysis/steps/stretch_bench.py engines   # Rubber Band vs fallbacks
-    analysis/.venv/bin/python analysis/steps/stretch_bench.py sections  # stretch.py on many hooks
+    tools/prep/.venv/bin/python tools/prep/steps/stretch_bench.py engines   # Rubber Band vs fallbacks
+    tools/prep/.venv/bin/python tools/prep/steps/stretch_bench.py sections  # stretch.py on many hooks
 
 `engines`: 10 s clips (a steady stretch of the mix, and the drums stem where it exists) at speed
 ratios 0.92, 0.96, 1.04 and 1.08, through Rubber Band R3 (standard and short window), Rubber Band R2,

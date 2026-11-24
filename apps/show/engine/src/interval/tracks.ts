@@ -1,4 +1,4 @@
-// The Interval playlist's JSON contract (written by analysis/interval.py, schema v1): data/interval/index.json
+// The Interval playlist's JSON contract (written by tools/prep/interval.py, schema v1): data/interval/index.json
 // lists the tracks in playlist order (a recording once), data/interval/<slug>.json holds each one's beat grid,
 // loudness and edges. Every time is in the decoded FLAC's timeline (/intervalaudio/<slug>.flac). The engine
 // checks every file as it loads; a track whose file fails the check is left out of the playlist. Pure.

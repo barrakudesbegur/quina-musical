@@ -1,5 +1,5 @@
 // Renders for the Blend (R8, D10, D16): the next song's bars before its chosen hook, stretched to the current song's
-// tempo by analysis/stretch.py (through the relay), decoded ahead of the Spin. Drums, bass and vocals are kept
+// tempo by tools/prep/stretch.py (through the relay), decoded ahead of the Spin. Drums, bass and vocals are kept
 // (`other` is not used); the vocals only matter for D16's acapella-in, which needs tight tempos and agreeing keys.
 import { LAYERING } from '../config.ts';
 import { compatible } from '../plan/keys.ts';
@@ -42,7 +42,7 @@ interface BlendRender extends BlendState {
 }
 
 /**
- * One song in data/keys/index.json (analysis/keys.py): its global key and each hook's (by hook id), in the
+ * One song in data/keys/index.json (tools/prep/keys.py): its global key and each hook's (by hook id), in the
  * `key`, `mode`, `camelot`, `confidence` form plan/keys.ts reads.
  */
 interface KeysIndexSong {
@@ -52,7 +52,7 @@ interface KeysIndexSong {
 }
 
 /**
- * The relay's answer to POST /api/stretch (relay/server.ts stretchRender, from analysis/stretch.py --json), the
+ * The relay's answer to POST /api/stretch (relay/server.ts stretchRender, from tools/prep/stretch.py --json), the
  * fields read here. `dir` is the render's folder under /stretch/<song>/, `parts` the decoded parts in it, stored at
  * `partGain`. `request` places the requested bars inside a (possibly larger) cached render, in file seconds;
  * `mode` is 'direct', 'half' or 'double' time.

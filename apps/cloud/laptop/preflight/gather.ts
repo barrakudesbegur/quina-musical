@@ -7,8 +7,8 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import WebSocket from 'ws';
 import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
-import { playableSongs } from '../../../engine/src/analysis.ts';
-import { loadPool, POC } from '../../../relay/pool.ts';
+import { playableSongs } from '../../../show/engine/src/analysis.ts';
+import { DATA, loadPool, MEDIA, OUT, REPO } from '../../../show/relay/pool.ts';
 import { referenceFile, scan } from '../media-sync.ts';
 import { poolRoots } from '../pool-roots.ts';
 import * as checks from './checks.ts';
@@ -108,14 +108,13 @@ async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>
   out.push(checks.songsCheck(poolSongIds, new Set(playable), missingAudio));
   out.push(checks.cardsCheck(pool.cardsJson ? readJson(pool.cardsJson) : null, poolSongIds, new Set(playable)));
 
-  const audios = path.resolve(POC, '../../client/public/audios');
   const missingSounds = [
-    ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(audios, 'stingers', `${n}.mp3`))),
-    ...SFX_NAMES.filter((n) => !fs.existsSync(path.join(audios, 'fx', `${n}.mp3`))),
+    ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'stingers', `${n}.mp3`))),
+    ...SFX_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'fx', `${n}.mp3`))),
   ];
-  const holdIndex = readJson(path.join(POC, 'data', 'hold', 'index.json')) as { files?: { name: string; pcm: string }[] } | null;
+  const holdIndex = readJson(path.join(OUT, 'hold', 'index.json')) as { files?: { name: string; pcm: string }[] } | null;
   const hold = holdIndex?.files ?? [];
-  out.push(...checks.soundsCheck(missingSounds, hold.length, hold.filter((h) => !fs.existsSync(path.resolve(POC, h.pcm))).map((h) => h.name)));
+  out.push(...checks.soundsCheck(missingSounds, hold.length, hold.filter((h) => !fs.existsSync(path.resolve(REPO, h.pcm))).map((h) => h.name)));
 
   let reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null = null;
   if (o.cloud) {
@@ -144,7 +143,7 @@ async function laptopChecks(): Promise<checks.Check[]> {
   } else {
     out.push({ group: 'Laptop', name: 'macOS settings', status: 'warn', detail: `not macOS (${process.platform}): check the audio output and sleep by hand` });
   }
-  const disk = fs.statfsSync(POC);
+  const disk = fs.statfsSync(DATA);
   out.push(checks.diskCheck(disk.bavail * disk.bsize));
   out.push(checks.browserCheck(((await shell('ps', ['-axo', 'command'])) ?? '').split('\n')));
   return out;

@@ -4,7 +4,7 @@
   drops it); during the Celebration it switches the music live.
 -->
 <script lang="ts">
-  import type { CelebrationMusic, WinKind } from '../../ui/flow.ts';
+  import type { CelebrationMusic, WinKind } from '../../../packages/ui/flow.ts';
   import { getConsole } from '../context.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';

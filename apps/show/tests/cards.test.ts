@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   parseCardRanges,
   validCards,
@@ -17,15 +16,15 @@ import {
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
 import type { Card, CardSong, FirstWin, RoundType } from '../engine/src/game/cards.ts';
 import type { IndexSong } from '../engine/src/analysis.ts';
+import { OUT, REPO } from '../relay/pool.ts';
 
-/** A card as card-generator/dist/cards.json prints it: songs as objects. */
+/** A card as apps/cards/dist/cards.json prints it: songs as objects. */
 interface PrintedCard extends Card {
   lines: CardSong[][];
 }
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const CARDS: PrintedCard[] = JSON.parse(fs.readFileSync(path.join(HERE, '../../../card-generator/dist/cards.json'), 'utf8'));
-const INDEX: IndexSong[] = JSON.parse(fs.readFileSync(path.join(HERE, '../data/analysis/index.json'), 'utf8')).songs;
+const CARDS: PrintedCard[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
+const INDEX: IndexSong[] = JSON.parse(fs.readFileSync(path.join(OUT, 'analysis/index.json'), 'utf8')).songs;
 const NORMAL = CARDS.filter((c) => c.type === 'normal');
 const POOL = Array.from({ length: 77 }, (_, i) => i + 1);
 const ROUNDS = Number(process.env.CARD_SIM_ROUNDS || 1500);

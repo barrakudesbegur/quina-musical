@@ -3,9 +3,9 @@
 // remote reminder, the setup checklist) passed in as copy. Pure, so the console can show the same content
 // (one round's prizes during the Interval) and Admin prints all of it.
 // Proposed for ui/ (rules + words) once the console needs it.
-import { sponsorOf, type GamePlan, type Prize, type RoundPlan } from '../../ui/plan.ts';
-import type { WinKind } from '../../ui/flow.ts';
-import { CA } from '../../ui/i18n/ca.ts';
+import { sponsorOf, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
+import type { WinKind } from '../../../packages/ui/flow.ts';
+import { CA } from '../../../packages/ui/i18n/ca.ts';
 
 export interface ShowKey {
   /** The key(s) as printed on the sheet ("→ / Retorn"). */

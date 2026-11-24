@@ -1,7 +1,7 @@
 // The cloud's Games for plan B: parsing is defensive, and only the current Game carries a resume point.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseGames } from '../../../manage/data/cloud-games.ts';
+import { parseGames } from '../../../../admin/data/cloud-games.ts';
 
 test('games parse defensively, keeping the resume point only when it is complete', () => {
   const games = parseGames({

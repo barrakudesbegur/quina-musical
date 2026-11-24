@@ -2,15 +2,15 @@
 
 A Pool is the set of songs the cards are printed from (GLOSSARY.md). Song ids restart at 1 in every
 pool, so each pool keeps its own data, cache and overrides. A pool is described by a manifest,
-analysis/pools/<name>.json; README.md › "Pools" documents the format, and relay/pool.ts is the
-TypeScript twin of this module (analysis/tests/test_pool.py checks that both resolve a manifest to
-the same paths).
+data/pools/<name>.json; apps/show/README.md › "Pools" documents the format, and
+apps/show/relay/pool.ts is the TypeScript twin of this module (tools/prep/tests/test_pool.py checks that
+both resolve a manifest to the same paths).
 
 Every pool-specific script takes --pool <name|path>. Without it: $QUINA_POOL, then "default".
 
-    analysis/.venv/bin/python analysis/pool.py [--pool NAME|PATH]   # print the resolved paths as JSON
+    tools/prep/.venv/bin/python tools/prep/pool.py [--pool NAME|PATH]   # print the resolved paths as JSON
 
-Only the standard library: analysis/.venv-stems imports this module too.
+Only the standard library: tools/prep/.venv-stems imports this module too.
 """
 from __future__ import annotations
 
@@ -22,9 +22,20 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-POC = Path(__file__).resolve().parent.parent
-REPO = POC.parent.parent
-POOLS_DIR = POC / "analysis" / "pools"
+PREP = Path(__file__).resolve().parent
+"""tools/prep: this pipeline (its venvs live here)."""
+REPO = PREP.parent.parent
+"""The repo root: manifests' relative paths, and the paths generated files store, resolve against it."""
+SHOW = REPO / "apps" / "show"
+DATA = REPO / "data"
+POOLS_DIR = DATA / "pools"
+"""Pool manifests, each pool's songs list and hand overrides (tracked)."""
+MEDIA = DATA / "media"
+"""Audio and covers: songs, effects, stingers, Hold music, celebration, Interval, covers."""
+OUT = DATA / "out"
+"""What the preparation writes: analysis, stems and keys metadata, Signatures, Hold and Interval indexes."""
+CACHE = DATA / "cache"
+"""Decoded audio, stems, Signatures, Blend renders, Hold and Interval audio."""
 ENV_VAR = "QUINA_POOL"
 DEFAULT_POOL = "default"
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
@@ -41,11 +52,11 @@ class PoolError(Exception):
 
 
 def _resolve_path(value: str) -> Path:
-    """Manifest paths: absolute as they are, relative ones against experiments/mixer-poc (no symlink resolution)."""
-    return Path(os.path.normpath(os.path.join(POC, value)))
+    """Manifest paths: absolute as they are, relative ones against the repo root (no symlink resolution)."""
+    return Path(os.path.normpath(os.path.join(REPO, value)))
 
 
-def display(path: Path, base: Path = POC) -> str:
+def display(path: Path, base: Path = REPO) -> str:
     """`path` relative to `base` when inside it (POSIX separators), else absolute."""
     try:
         return path.relative_to(base).as_posix()
@@ -220,7 +231,7 @@ class Pool:
 
 
 def manifest_path(spec: str) -> Path:
-    """A pool name → analysis/pools/<name>.json; anything with a slash or ending in .json → that file
+    """A pool name → data/pools/<name>.json; anything with a slash or ending in .json → that file
     (relative to the working directory)."""
     if "/" in spec or os.sep in spec or spec.endswith(".json"):
         return Path(os.path.abspath(spec))
@@ -266,8 +277,9 @@ def load(spec: str | os.PathLike | None = None) -> Pool:
     def opt(key: str, fallback: str) -> Path:
         return _resolve_path(doc.get(key) or fallback)
 
-    data_dir = opt("dataDir", f"data/pools/{name}")
-    cache_dir = opt("cacheDir", f"cache/pools/{name}")
+    # Outputs default to data/out and data/cache, never to data/pools, which holds the tracked inputs.
+    data_dir = opt("dataDir", f"data/out/pools/{name}")
+    cache_dir = opt("cacheDir", f"data/cache/pools/{name}")
     return Pool(
         name=name,
         manifest=path,
@@ -278,14 +290,14 @@ def load(spec: str | os.PathLike | None = None) -> Pool:
         spotify_features=opt("spotifyFeatures", str(data_dir / "spotify_features.json")),
         data_dir=data_dir,
         cache_dir=cache_dir,
-        overrides_dir=opt("overridesDir", f"analysis/overrides/{name}"),
+        overrides_dir=opt("overridesDir", f"data/pools/{name}/overrides"),
         description=doc.get("description", ""),
     )
 
 
 def add_argument(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--pool", metavar="NAME|PATH",
-                        help=f"pool name (analysis/pools/<name>.json) or manifest path; default ${ENV_VAR}, "
+                        help=f"pool name (data/pools/<name>.json) or manifest path; default ${ENV_VAR}, "
                              f"then {DEFAULT_POOL!r}")
 
 

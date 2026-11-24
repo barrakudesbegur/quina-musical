@@ -2,7 +2,7 @@
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
 // COPY RULE: the copy may warn that the last song isn't always marked, but never explains when it gets marked.
 // The phone never says "you won".
-import { CA } from '../ui/i18n/ca.ts';
+import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { HeatLevel } from './logic/view.ts';
 import type { TabId } from './logic/tabs.ts';
 

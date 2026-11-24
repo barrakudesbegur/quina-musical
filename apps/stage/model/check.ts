@@ -2,8 +2,8 @@
 // engine schedules every step in advance (`steps[i].atMs`, `durationMs`, `endAtMs`), so the projector only
 // reads its clock: the playing tile gets a ring for the snippet, then its mark (✓ or ✗) stamps on, and the
 // result shows from `endAtMs` (ANIMATIONS.md `check-step`, `check-result`). Pure.
-import type { CheckOutcome, WinKind } from '../../ui/flow.ts';
-import type { PlayerCard } from '../../ui/rules/marks.ts';
+import type { CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
+import type { PlayerCard } from '../../../packages/rules/marks.ts';
 
 export interface CheckStepView {
   songId: number;

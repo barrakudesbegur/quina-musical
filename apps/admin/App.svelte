@@ -2,8 +2,8 @@
      #xuleta); the plan, the show connection and the command log come in from main.ts. -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { ShowStore } from '../ui/client/show.svelte.ts';
-  import { loadCatalog, type Catalog } from '../ui/data/catalog.ts';
+  import type { ShowStore } from '../../packages/ui/client/show.svelte.ts';
+  import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
   import type { PlanSession } from './state/plan-session.svelte.ts';
   import type { CommandTracker } from './state/commands.svelte.ts';
   import { ROUTES, routeFromHash, type Route } from './logic/route.ts';

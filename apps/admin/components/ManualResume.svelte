@@ -4,12 +4,12 @@
      - Served from the cloud: also pick one of the cloud's Games, and the laptop takes it over when it connects. -->
 <script lang="ts">
   import { formatResumeToken, sceneAllows } from '@quina/protocol';
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
-  import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
-  import type { FetchLike } from '../../ui/data/cloud-plan.ts';
-  import { CA } from '../../ui/i18n/ca.ts';
-  import { formatClock } from '../../ui/rules/time.ts';
-  import { readResume, resumeCommand, resumeSummary } from '../../ui/rules/resume.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+  import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
+  import type { FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
+  import { readResume, resumeCommand, resumeSummary } from '../../../packages/rules/resume.ts';
   import { fetchGames, resumeGame, type CloudGame } from '../data/cloud-games.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { S } from '../strings.ts';

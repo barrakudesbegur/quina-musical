@@ -1,9 +1,9 @@
 // The cheat sheet's content model: prizes with sponsors per round, rules, the fixed parts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SAMPLE_PLAN } from '../../../ui/fixtures/plan.ts';
-import { cheatRound, cheatSheetModel, type CheatSheetCopy } from '../../../manage/logic/cheatsheet.ts';
-import { CHEAT_SHEET_COPY } from '../../../manage/strings.ts';
+import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
+import { cheatRound, cheatSheetModel, type CheatSheetCopy } from '../../../../admin/logic/cheatsheet.ts';
+import { CHEAT_SHEET_COPY } from '../../../../admin/strings.ts';
 
 const COPY: CheatSheetCopy = { keys: [{ keys: '→', action: 'Següent' }], wiiReminder: 'Wii', checklist: ['Carregador'] };
 

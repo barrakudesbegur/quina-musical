@@ -1,8 +1,8 @@
 // The Heat garland: every light on, only colour/glow/twinkle follow the Heat; reduced motion steps.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { activeHeatSample, garlandLook, heatDisplay } from '../../../stage/model/garland.ts';
-import { STAGE } from '../../../stage/config.ts';
+import { activeHeatSample, garlandLook, heatDisplay } from '../../../../stage/model/garland.ts';
+import { STAGE } from '../../../../stage/config.ts';
 
 test('cool, warm and hot looks', () => {
   assert.deepEqual(garlandLook(0), { warm: 0, hot: 0, glow: 0, twinkleMs: 3200, chase: 0 });

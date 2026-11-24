@@ -249,7 +249,7 @@ export const DECOYS: DecoyConfig = Object.freeze({
   cutSfx: 'thunk',
 });
 
-/** Signatures: short, iconic, approved pieces of a song (analysis/signatures.py, approved on the audition page). */
+/** Signatures: short, iconic, approved pieces of a song (tools/prep/signatures.py, approved on the audition page). */
 export const SIGNATURES = Object.freeze({
   /** Over A's grid (S1, S3) B's Signature is resampled to A's tempo only within this (a slight pitch shift). */
   maxRateShift: 0.04,
@@ -267,7 +267,7 @@ export const LAYERING = Object.freeze({
   /** Pitch-preserving stretch limits (decisions: up to about ±8%); bass also layers only within ±4%. */
   maxStretch: 0.08,
   tightStretch: 0.04,
-  /** Bars rendered before the hook (and after it), by analysis/stretch.py through the relay. */
+  /** Bars rendered before the hook (and after it), by tools/prep/stretch.py through the relay. */
   renderBars: 8,
   renderAfterBars: 1,
   /** Bars of the blend under A: at least this many, else the planner uses another recipe. */
@@ -636,7 +636,7 @@ export const FLOW = Object.freeze({
   check: Object.freeze({
     /** From the Check's start to its first snippet: the projector shows the card first. */
     leadSec: 1.5,
-    /** A ✓ step: the landed song's hook snippet (analysis/snippets.py cuts 3 s). */
+    /** A ✓ step: the landed song's hook snippet (tools/prep/snippets.py cuts 3 s). */
     stepSec: 2.5,
     /** A ✗ step: the short "broken record" sound. */
     missSec: 1.2,
@@ -677,7 +677,7 @@ export const FLOW = Object.freeze({
 });
 
 /**
- * The Interval playlist (analysis/interval.py → data/interval/): the break music between rounds, also under a
+ * The Interval playlist (tools/prep/interval.py → data/interval/): the break music between rounds, also under a
  * round's intro and Shuffle and in `after`. Tracks hand over with an echo-out of the outgoing track on its
  * downbeat while the next one swells or opens up into that same downbeat (engine/src/interval/plan.ts).
  */
@@ -741,7 +741,7 @@ export const ENGINE = Object.freeze({
   minOutgoingTailSec: 0.5,
   /** Samples the plans play (impacts, D6's comedy bar), loaded at start. */
   fxSamples: ['boom', 'orchestra-hit', 'horn', ...MOVES.fake.comedy] as const,
-  /** One-shot fanfares (client/public/audios/stingers). */
+  /** One-shot fanfares (data/media/stingers). */
   stingers: STINGER_NAMES,
   /** Played once per climb (towards the Line, then the Bingo) as the first Spin at or above
    * `finalLapStingerPhase` starts; game.finalLapStinger turns it off. 'late' because late starts a random
@@ -749,7 +749,7 @@ export const ENGINE = Object.freeze({
    * ('final' would: it is 1–3 songs before a likely win). Pending the user's answer (research Q18). */
   finalLapStinger: 'mkwii-final-lap' as StingerName, // widened: a setting, not a fixed literal
   finalLapStingerPhase: 'late' as PhaseName,
-  /** Sound effects the remotes may fire (files in client/public/audios/fx). */
+  /** Sound effects the remotes may fire (files in data/media/fx). */
   sfx: SFX_NAMES,
 });
 

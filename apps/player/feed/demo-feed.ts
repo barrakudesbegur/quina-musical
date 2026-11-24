@@ -4,9 +4,9 @@
 // state, cut the laptop link, drop the feed, post Admin's notice or keep landing songs (`live`).
 // Fixture names that aren't player demos run as they are; unknown names fall back to `play`.
 import { PROTOCOL_VERSION, type LandingInfo, type ShowState } from '@quina/protocol';
-import { FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../ui/fixtures/states.ts';
-import { SAMPLE_PLAN } from '../../ui/fixtures/plan.ts';
-import type { FlowFields } from '../../ui/flow.ts';
+import { FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
+import { SAMPLE_PLAN } from '../../../packages/ui/fixtures/plan.ts';
+import type { FlowFields } from '../../../packages/ui/flow.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
 import { ProjectedFeedCore } from './projected-feed.ts';
 import type { PublicLink } from './public.ts';

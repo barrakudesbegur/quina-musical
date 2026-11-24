@@ -2,7 +2,7 @@
 // few bars before each likely hook, drums, bass and vocals (the Ghost Tease and the vocal chops use B's
 // voice). The playing song also gets its stem lanes (P1): its stems from its landed hook on, so a recipe can
 // remove or throw one of its parts. Every slice starts on a whole frame of the song, sample-aligned with the
-// mix (analysis/stems.py), so a lane subtracts exactly.
+// mix (tools/prep/stems.py), so a lane subtracts exactly.
 import { checkStemsMeta, stemWindowFor } from '../analysis.ts';
 import type { Analysis, Hook, StemsMeta } from '../analysis.ts';
 import { STEMS } from '../config.ts';

@@ -1,6 +1,6 @@
 # stage/: the projector
 
-The audience screen's scenes, in plain TypeScript and the DOM. It follows the show, never commands it. The brief is `docs/show-ui-and-platform-decisions.md` › Projector, and the motion is `ui/ANIMATIONS.md` › Projector.
+The audience screen's scenes, in plain TypeScript and the DOM. It follows the show, never commands it. The brief is `docs/show-ui-and-platform-decisions.md` › Projector, and the motion is `packages/ui/ANIMATIONS.md` › Projector.
 
 - **In the show page:** it mounts over the drum with `mountStage(el, { bus })` (see Integration).
 - **Standalone** (`/stage/`): used for development and split mode. It runs on the relay, or on a fixture with `?demo=<fixture>`. Add `?debug` to log every animation moment.
@@ -20,12 +20,12 @@ The projector is 4:3 and far from the audience, but the stage must also work at 
 | Layer | Files | Rule |
 |---|---|---|
 | Privacy boundary | `view.ts` | `stageView(state, flow, plan, catalog, notes)` returns only what the projector may draw. The DOM code reads nothing else |
-| Pure rules | `model/*.ts` | No DOM, no clock, no randomness unless injected. Tested in `tests/ui/stage/` |
+| Pure rules | `model/*.ts` | No DOM, no clock, no randomness unless injected. Tested in `apps/show/tests/ui/stage/` |
 | Feed | `source.ts` | Turns the show page's Bus (local emissions only) or a `ShowClient` into one read-only feed. Strips `to` and `drum.targetId` from Spin events |
 | Controller | `stage.ts` | `mountStage`. Keeps the snapshot, draws the view, runs one frame loop and fires the moments |
 | Renderers | `render/*.ts` | One small class per scene that updates its own nodes. Text goes in only through `textContent` |
-| Look | `stage.css` | Everything is scoped under `.stage-root`, and values come from `ui/tokens.css` plus the stage's component tokens at its top |
-| Words | `strings.ts` | Catalan, building on `ui/i18n/ca.ts` |
+| Look | `stage.css` | Everything is scoped under `.stage-root`, and values come from `packages/ui/tokens.css` plus the stage's component tokens at its top |
+| Words | `strings.ts` | Catalan, building on `packages/ui/i18n/ca.ts` |
 | Tunables | `config.ts` | Geometry, rotation periods, Shuffle split, confetti counts, the player app URL |
 
 ### Privacy
@@ -38,7 +38,7 @@ The stage holds the full state, but these never reach the view:
 - claims (`completeSince` and `warnings` included);
 - winners' names and notes.
 
-Songs are named only from landings (the `transition.landed` event, or the snapshot's `landings` and `current`), and only from their landing time. `tests/ui/stage/view.test.ts` fills every private field with a secret and checks that none comes out, in every fixture.
+Songs are named only from landings (the `transition.landed` event, or the snapshot's `landings` and `current`), and only from their landing time. `apps/show/tests/ui/stage/view.test.ts` fills every private field with a secret and checks that none comes out, in every fixture.
 
 ### Failure behaviour
 
@@ -64,7 +64,7 @@ Each event fires at the show-clock time from its timestamp, never when the messa
 
 ## Integration with the show page (for the engine session)
 
-1. **`engine/show.html`:** add the stage element as the last child of `<body>`, before the script:
+1. **`apps/show/engine/show.html`:** add the stage element as the last child of `<body>`, before the script:
 
    ```html
    <div id="stage"></div>
@@ -74,7 +74,7 @@ Each event fires at the show-clock time from its timestamp, never when the messa
    - It sits above the drum and the page, and below `.hud` (5), `.flash` (6) and `.start-overlay` (10), so "Start show" stays visible.
    - Clicks and keys pass through to the page.
 
-2. **`engine/src/main.ts`:** mount it right after the Bus is created and before `boot()`. That way it sees the first `state` from `created.flush()`, since `bus.emit` delivers locally even before `bus.connect()`.
+2. **`apps/show/engine/src/main.ts`:** mount it right after the Bus is created and before `boot()`. That way it sees the first `state` from `created.flush()`, since `bus.emit` delivers locally even before `bus.connect()`.
 
    ```ts
    import { mountStage } from '../../stage/stage.ts';
@@ -85,7 +85,7 @@ Each event fires at the show-clock time from its timestamp, never when the messa
 
    - It only calls `bus.on` and reads local emissions. It never emits.
    - `Bus<ShowEvent>` is assignable to `Bus<unknown>`.
-   - It imports `stage.css` and `ui/tokens.css` itself. These only add `--color-*`, `--stage-*` and the like to `:root`, with no global element styles.
+   - It imports `stage.css` and `packages/ui/tokens.css` itself. These only add `--color-*`, `--stage-*` and the like to `:root`, with no global element styles.
 
 3. **Put the drum in the band.** The stage paints its background everywhere except the drum's band, which spans the full width.
    - **Where the band is:**

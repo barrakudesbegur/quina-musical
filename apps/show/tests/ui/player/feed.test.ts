@@ -3,11 +3,11 @@
 // coming back to the foreground).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Backoff, resumeDelayMs } from '../../../player/feed/backoff.ts';
-import { CloudFeed, cloudFeedUrl, defaultFeedBase, type SocketLike, type Timers, type VisibilitySource } from '../../../player/feed/cloud-feed.ts';
-import type { FeedUpdate } from '../../../player/feed/feed.ts';
-import { FeedFollower } from '../../../player/feed/follow.ts';
-import { emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicDelta, type PublicSnapshot } from '../../../player/feed/public.ts';
+import { Backoff, resumeDelayMs } from '../../../../player/feed/backoff.ts';
+import { CloudFeed, cloudFeedUrl, defaultFeedBase, type SocketLike, type Timers, type VisibilitySource } from '../../../../player/feed/cloud-feed.ts';
+import type { FeedUpdate } from '../../../../player/feed/feed.ts';
+import { FeedFollower } from '../../../../player/feed/follow.ts';
+import { emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicDelta, type PublicSnapshot } from '../../../../player/feed/public.ts';
 
 const snapshot = (seq: number, nowMs = 10_000): PublicSnapshot => ({ v: 1, type: 'public.state', seq, nowMs, state: { ...emptyPublicState('26'), gameId: 'g' } });
 const delta = (seq: number, changes: PublicChange[], nowMs = 10_000): PublicDelta => ({ v: 1, type: 'public.delta', seq, nowMs, changes });

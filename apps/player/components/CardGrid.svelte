@@ -1,8 +1,8 @@
 <script lang="ts">
   // A card as printed: 3 lines of 4 songs, with the card's own mark on each marked song (corn for the first card). A completed Line shows only
   // plain marks (no glow, no row highlight). Marks come from cardMarks (the grace rule included).
-  import { songTitle, type Catalog } from '../../ui/data/catalog.ts';
-  import type { CardMarks, PlayerCard } from '../../ui/rules/marks.ts';
+  import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
+  import type { CardMarks, PlayerCard } from '../../../packages/rules/marks.ts';
   import { kernelTilt } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';

@@ -1,7 +1,7 @@
 <!-- Tools: the hook audition page, the full JSON export (plan + the night's data, PRIVATE), and the Shuffle
      seeds (a stub until Admin can read the Game journal). -->
 <script lang="ts">
-  import type { ShowStore } from '../../ui/client/show.svelte.ts';
+  import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { exportFileName, fullExport, toJson } from '../logic/exports.ts';
   import { downloadText } from '../data/files.ts';

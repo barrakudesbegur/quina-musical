@@ -2,8 +2,8 @@
 // the address after a link is taken in, the review hints, and which feed the URL picks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { devHints, homeHref, legacyCardIds, parseRoute } from '../../../player/logic/router.ts';
-import { chooseFeed, isLocalHost } from '../../../player/feed/feed.ts';
+import { devHints, homeHref, legacyCardIds, parseRoute } from '../../../../player/logic/router.ts';
+import { chooseFeed, isLocalHost } from '../../../../player/feed/feed.ts';
 
 const opts = { edition: '26', base: '/player/' };
 const url = (pathname: string, search = '', hash = '') => ({ pathname, search, hash });

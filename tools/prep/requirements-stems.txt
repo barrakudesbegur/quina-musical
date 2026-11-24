@@ -1,7 +1,7 @@
-# Stem separation venv (analysis/stems.py), separate from analysis/.venv:
-#   uv venv --python /opt/homebrew/bin/python3.13 analysis/.venv-stems
-#   uv pip install --python analysis/.venv-stems/bin/python -r analysis/requirements-stems.txt
-# torch / torchaudio / numpy / soundfile / soxr match analysis/requirements.txt.
+# Stem separation venv (tools/prep/stems.py), separate from tools/prep/.venv:
+#   uv venv --python /opt/homebrew/bin/python3.13 tools/prep/.venv-stems
+#   uv pip install --python tools/prep/.venv-stems/bin/python -r tools/prep/requirements-stems.txt
+# torch / torchaudio / numpy / soundfile / soxr match tools/prep/requirements.txt.
 # Weights (htdemucs, ~80 MB) download on first run to ~/.cache/huggingface.
 demucs==4.1.0
 torch==2.15.0

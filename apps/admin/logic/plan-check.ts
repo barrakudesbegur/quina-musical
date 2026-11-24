@@ -3,7 +3,7 @@
 // session stores logos in R2. checkGamePlan limits `logo` to a 500-character path, so the data URLs are
 // checked here (format and size) and set aside while the rest goes through checkGamePlan unchanged.
 // Every function returns every problem with its JSON path and never throws.
-import { checkGamePlan, type GamePlan, type PlanCheck } from '../../ui/plan.ts';
+import { checkGamePlan, type GamePlan, type PlanCheck } from '../../../packages/ui/plan.ts';
 import { LOGO_CONFIG } from '../config.ts';
 
 const DATA_URL_RE = /^data:image\/(webp|png);base64,([A-Za-z0-9+/]+={0,2})$/;

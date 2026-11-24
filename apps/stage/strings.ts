@@ -1,7 +1,7 @@
 // The projector's words, in Catalan. Shared terms (Quina N, Línia, QUINA!, the check results…) come from
 // ui/i18n/ca.ts; this file holds what only the projector says. Pure, so the formatting is tested.
-import { CA } from '../ui/i18n/ca.ts';
-import type { WinKind } from '../ui/flow.ts';
+import { CA } from '../../packages/ui/i18n/ca.ts';
+import type { WinKind } from '../../packages/ui/flow.ts';
 
 /** "57", "57 i 301", "12, 57 i 301". */
 export function joinCa(items: readonly (string | number)[]): string {

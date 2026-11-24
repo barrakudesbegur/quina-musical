@@ -4,7 +4,7 @@
 // receives (console and `window.__quinaDemoLog`) without acting on it.
 // `?demo=list` logs the fixture names.
 import { PROTOCOL_VERSION, type IncomingEvent } from '@quina/protocol';
-import type { Transport, TransportHandlers } from '../../engine/src/net/bus.ts';
+import type { Transport, TransportHandlers } from '../../../apps/show/engine/src/net/bus.ts';
 import { FIXTURES, FIXTURE_NAMES } from '../fixtures/states.ts';
 
 declare global {

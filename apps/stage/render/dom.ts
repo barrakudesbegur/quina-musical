@@ -1,6 +1,6 @@
 // Tiny DOM helpers for the stage's renderers. Text always goes in as text nodes (`textContent`), never as
 // markup, and every write is skipped when nothing changed, so a 60 fps loop stays cheap.
-import { coverUrl } from '../../ui/data/catalog.ts';
+import { coverUrl } from '../../../packages/ui/data/catalog.ts';
 import type { AnimName } from '../model/moments.ts';
 
 type Child = Node | string | null | undefined | false;

@@ -4,6 +4,24 @@ App to use during the musical bingo.
 
 Use it here: <https://quina.barrakudesbegur.org>
 
+## Repository layout
+
+This year's app (2026) and last year's (2025) live side by side:
+
+| Folder | What |
+|---|---|
+| `apps/show/` | The show: the engine, the show page and the relay (`npm run dev` / `npm start` there). Its Vite build also builds the screens below |
+| `apps/stage/`, `apps/console/`, `apps/admin/`, `apps/player/` | The projector scenes, the presenters' console, Admin, and the player app |
+| `apps/cloud/` | The Cloudflare Worker and the laptop's cloud link |
+| `apps/cards/` | The printed bingo cards (`cards.json`, the PDF) |
+| `packages/protocol/`, `packages/rules/`, `packages/ui/` | `@quina/protocol`, `@quina/rules` and `@quina/ui`, shared by the apps |
+| `tools/prep/` | The Python pipeline that prepares a song pool (analysis, stems, Hold music…), and the playlist fetcher |
+| `data/` | Pool manifests (`data/pools/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
+| `docs/`, `brand/` | Decisions, research and the runbook; the brand assets |
+| `legacy/2025/` | Last year's app (`client/`, `server/`), unchanged and runnable on its own; everything below is about it |
+
+Install once at the root (`npm install`, npm workspaces); every app's scripts run from its own folder.
+
 Features:
 
 - 🎶 Displays the curently playing song, history, and round info.
@@ -28,11 +46,12 @@ Features:
 
 Deployed on **GitHub Pages**.
 
-Build the client and deploy the generated static files:
+Build the client and deploy the generated static files (in `legacy/2025/`):
 
 ```zsh
+cd legacy/2025
 npm run build:client
-# Deploy the client/dist folder to GitHub Pages
+# Deploy the legacy/2025/client/dist folder to GitHub Pages
 ```
 
 ### Backend
@@ -40,7 +59,7 @@ npm run build:client
 Hosted on a **VPS** (own server).
 
 ```zsh
-cd server
+cd legacy/2025/server
 npm run build
 npm run start
 ```
@@ -55,13 +74,14 @@ Audio files are stored in an **S3 bucket**.
 
 ### Database
 
-The database are simple `json` files in the folder [`/server/db/local`](/server/db/local).
+The database are simple `json` files in the folder [`/legacy/2025/server/db/local`](/legacy/2025/server/db/local).
 
 ### Commands
 
-You can use `dev`, `build`, and `start`. Used as-is, they run both client and server, but you can also specify with one to run by adding `:client` or `:server`, for example: `npm run build:server`
+In `legacy/2025/`, you can use `dev`, `build`, and `start`. Used as-is, they run both client and server, but you can also specify with one to run by adding `:client` or `:server`, for example: `npm run build:server`
 
 ```zsh
+cd legacy/2025
 # Always install first
 npm i
 

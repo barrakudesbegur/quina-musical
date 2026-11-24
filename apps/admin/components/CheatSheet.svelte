@@ -2,8 +2,8 @@
      rules, the laptop's Plan B keys, the Wii remote reminder and the setup checklist. The content model is
      logic/cheatsheet.ts; print.css turns it into an A4 page in black on white. -->
 <script lang="ts">
-  import { CA } from '../../ui/i18n/ca.ts';
-  import type { GamePlan } from '../../ui/plan.ts';
+  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import type { GamePlan } from '../../../packages/ui/plan.ts';
   import { cheatSheetModel } from '../logic/cheatsheet.ts';
   import { CHEAT_SHEET_COPY, S } from '../strings.ts';
 

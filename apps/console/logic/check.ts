@@ -2,7 +2,7 @@
 // (`steps[i].atMs`, `durationMs`), so which step is playing is just the clock against those times
 // (ANIMATIONS.md › check-step: the playing row is highlighted, its ✓/✗ shows at the step's end). The result
 // shows once now ≥ `endAtMs`, never before, so the console stays in step with the projector. Pure.
-import type { CheckInfo, CheckOutcome } from '../../ui/flow.ts';
+import type { CheckInfo, CheckOutcome } from '../../../packages/ui/flow.ts';
 
 export type StepState = 'pending' | 'playing' | 'done';
 

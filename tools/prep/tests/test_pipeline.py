@@ -65,8 +65,8 @@ def test_prepare_runs_every_step(prepared):
     assert "Spotify features: none (no tempo or key cross-check)" in result.stdout
     assert "hook tags: 1/2 songs" in result.stdout
     # Nothing landed in the repo's own pool folders.
-    assert not (pools.POC / "data/pools" / pool.name).exists()
-    assert not (pools.POC / "cache/pools" / pool.name).exists()
+    assert not (pools.OUT / "pools" / pool.name).exists()
+    assert not (pools.CACHE / "pools" / pool.name).exists()
 
 
 def test_decode_and_covers(prepared):
@@ -140,7 +140,7 @@ def test_keys_without_spotify_use_the_default_method(prepared):
 def test_stems_and_signatures_use_the_pool_dirs(prepared):
     pool, steps, _ = prepared
     if "stems" not in steps:
-        pytest.skip("no analysis/.venv-stems")
+        pytest.skip("no tools/prep/.venv-stems")
     meta = json.loads((pool.stems_dir / "1.json").read_text())
     assert meta["pathTemplate"] == f"{pool.stems_cache(1)}/{{stem}}.{{startSample}}.flac"
     assert all((pool.stems_cache(1) / f"{s}.{w['startSample']}.flac").exists()
@@ -223,7 +223,7 @@ def relay(prepared):
     assert result.returncode == 0
     port = free_port()
     proc = subprocess.Popen(["node", "relay/server.ts", "--host", "127.0.0.1", "--port", str(port),
-                             "--pool", str(pool.manifest)], cwd=pools.POC,
+                             "--pool", str(pool.manifest)], cwd=pools.SHOW,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     try:
         for _ in range(120):
@@ -263,11 +263,11 @@ def test_relay_maps_the_engine_urls_to_the_pool(relay):
         drums = request(port, "GET", f"/stems/1/drums.{start}.flac")
         assert drums[0] == 200 and drums[2] == (pool.stems_cache(1) / f"drums.{start}.flac").read_bytes()
     # Hold music is global.
-    hold = pools.POC / "data/hold/index.json"
+    hold = pools.OUT / "hold/index.json"
     if hold.exists():
         assert request(port, "GET", "/data/hold/index.json")[2] == hold.read_bytes()
     # So is the Interval playlist: its data and audio whatever the pool (this one's dataDir has none).
-    interval = pools.POC / "data/interval/index.json"
+    interval = pools.OUT / "interval/index.json"
     if interval.exists():
         assert request(port, "GET", "/data/interval/index.json")[2] == interval.read_bytes()
         slug = json.loads(interval.read_text())["tracks"][0]["slug"]

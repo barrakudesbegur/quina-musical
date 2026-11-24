@@ -1,7 +1,7 @@
 <script lang="ts">
   // Historial: this round's songs with their covers, newest first, then earlier rounds'. A dot in a card's
   // colour shows the song is marked on that card (the same marks as the grids).
-  import { songTitle } from '../../ui/data/catalog.ts';
+  import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { historyGroups, markedColors } from '../logic/view.ts';
   import { S } from '../strings.ts';

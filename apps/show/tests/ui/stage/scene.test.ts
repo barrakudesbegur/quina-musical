@@ -1,8 +1,8 @@
 // Which scene the projector draws, and when the drum shows through.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { flowOf } from '../../../ui/flow.ts';
-import { drumShown, stageScene } from '../../../stage/model/scene.ts';
+import { flowOf } from '../../../../../packages/ui/flow.ts';
+import { drumShown, stageScene } from '../../../../stage/model/scene.ts';
 
 const base = flowOf(null);
 

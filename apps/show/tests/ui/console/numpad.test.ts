@@ -1,7 +1,7 @@
 // The Claim number pad.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { padKeyFromKeyboard, padPress, padValue, type PadKey } from '../../../console/logic/numpad.ts';
+import { padKeyFromKeyboard, padPress, padValue, type PadKey } from '../../../../console/logic/numpad.ts';
 
 const limits = { maxDigits: 4, max: 9999 };
 const type = (keys: PadKey[]) => keys.reduce((d, k) => padPress(d, k, limits), '');

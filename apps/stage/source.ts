@@ -6,9 +6,9 @@
 // incoming song (`transition.scheduled`, `suspense.started`) are reduced to their timestamps here, so `to`
 // and `drum.targetId` never reach the rest of the stage. No DOM; tested in tests/ui/stage/source.test.ts.
 import { isEvent, type IncomingEvent, type ShowState } from '@quina/protocol';
-import type { Bus } from '../engine/src/net/bus.ts';
-import type { ShowClient } from '../ui/client/show-client.ts';
-import { ClockOffset } from '../ui/rules/time.ts';
+import type { Bus } from '../show/engine/src/net/bus.ts';
+import type { ShowClient } from '../../packages/ui/client/show-client.ts';
+import { ClockOffset } from '../../packages/rules/time.ts';
 
 /** What the stage hears, already stripped to public facts (the snapshot is stripped by `stageView`). */
 export type StageEvent =

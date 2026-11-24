@@ -1,8 +1,8 @@
-# manage/: Admin
+# apps/admin: Admin
 
-The organizers' setup and fixes page (GLOSSARY: **Admin**). Svelte 5 on the shared foundation in `ui/` (see `ui/README.md`). It connects as relay role `admin`.
+The organizers' setup and fixes page (GLOSSARY: **Admin**). Svelte 5 on the shared foundation in `packages/ui/` (see `packages/ui/README.md`). It connects as relay role `admin`.
 
-Open it at `/manage/` on the relay (`node relay/server.ts`). Any `?demo=<fixture>` from `ui/fixtures/states.ts` replays a fixture instead of the relay, for example `/manage/?demo=celebration#nit`. In demo mode nothing is saved.
+Open it at `/admin/` on the relay (`npm run dev` in `apps/show`). Any `?demo=<fixture>` from `packages/ui/fixtures/states.ts` replays a fixture instead of the relay, for example `/admin/?demo=celebration#nit`. In demo mode nothing is saved.
 
 ## Views
 
@@ -19,12 +19,12 @@ One view per URL hash:
 ## Layout
 
 ```
-manage/
+apps/admin/
   index.html, main.ts   entry: show client, plan session, command tracker → App.svelte
   App.svelte            header, tabs, one view per hash
   components/           one component per section; markup and looks only
   state/                reactive glue (.svelte.ts): PlanSession (draft, check, autosave, other tabs), CommandTracker
-  logic/                pure, tested in tests/ui/manage/: cards preview, plan checks and diff, plan edits,
+  logic/                pure, tested in apps/show/tests/ui/admin/: cards preview, plan checks and diff, plan edits,
                         logo pixel pipeline, cheat-sheet model, command log, Winners, exports, routes
   data/                 I/O: plan store adapter (logos, failures), logo canvas glue, files, local settings
   config.ts             every tunable (autosave delay, logo limits, storage keys)
@@ -34,7 +34,7 @@ manage/
 
 ## How the plan is saved
 
-- **Autosave, valid plans only.** A plan is saved through the `PlanStore` (`ui/data/plan-store.ts`, localStorage today, a cloud store later) 0.6 s after the last edit, but only when it passes the check. Otherwise Admin lists every error with its path and keeps the draft in memory. Leaving the page with unsaved edits asks first.
+- **Autosave, valid plans only.** A plan is saved through the `PlanStore` (`packages/ui/data/plan-store.ts`, localStorage today, a cloud store later) 0.6 s after the last edit, but only when it passes the check. Otherwise Admin lists every error with its path and keeps the draft in memory. Leaving the page with unsaved edits asks first.
 - **Logos.** A cleaned logo is a WebP data URL in `Sponsor.logo`. The shared validator only accepts logo paths of up to 500 characters, and a plan it refuses would read as "no plan" on every other screen. So Admin stores data-URL logos beside the plan (key `quina.manage.logos.v1`, by sponsor id), stores the plan with `logo: null` for them, and puts them back on load. Export and import carry them inline. When the Platform session moves logos to R2, `logo` becomes a short URL and this goes away by itself: a plan the shared validator accepts is always stored whole.
 - **Another tab** saved a different plan: if this page has no unsaved edits, it loads it. Otherwise it asks which one wins.
 
@@ -53,7 +53,7 @@ manage/
 
 ## The plan's JSON (for an AI agent)
 
-The import and the export use the `GamePlan` shape from `ui/plan.ts`, checked by `checkGamePlan`. To fill it from the organizers' Google Sheet, produce exactly this:
+The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, checked by `checkGamePlan`. To fill it from the organizers' Google Sheet, produce exactly this:
 
 ```json
 {
@@ -93,7 +93,7 @@ The import and the export use the `GamePlan` shape from `ui/plan.ts`, checked by
 
 Rules (every key is required, and an unknown key is an error, so a typo can't silently drop a prize):
 - `v`: always `1`.
-- `edition`: the two-digit year as a string (`"26"`). It must match the cards' QR links (`card-generator/src/config.ts`).
+- `edition`: the two-digit year as a string (`"26"`). It must match the cards' QR links (`apps/cards/src/config.ts`).
 - `title`: the night's name on screen, usually `"Quina Musical"`.
 - `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps. `kind` is `"normal"` or `"special"`, and at most one round is special.
 - `line` and `bingo` (the Quina prize): an object, or `null` when that round has no such prize.

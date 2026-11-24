@@ -1,7 +1,7 @@
 <script lang="ts">
   // Ara: what is happening now, by scene. In play: the reel and the current song, the two before it, the Heat.
-  import { songTitle } from '../../ui/data/catalog.ts';
-  import { formatClock } from '../../ui/rules/time.ts';
+  import { songTitle } from '../../../packages/ui/data/catalog.ts';
+  import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { plannedStarts, prizeRounds } from '../logic/view.ts';
   import { S } from '../strings.ts';

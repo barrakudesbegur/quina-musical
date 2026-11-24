@@ -1,7 +1,7 @@
 // The drum's motion as the stage knows it: timestamps only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { breathPeriodMs, motionAt, motionView, pruneSpinNote, type SpinNote } from '../../../stage/model/motion.ts';
+import { breathPeriodMs, motionAt, motionView, pruneSpinNote, type SpinNote } from '../../../../stage/model/motion.ts';
 
 const spinNote: SpinNote = { id: 'tr-1', spinStartAtMs: 1000, landAtMs: 8000, autoReleaseAtMs: null };
 const transition = { id: 'tr-1', recipe: 'R7' as const, phase: 'late' as const, to: 74, landAtMs: 8000 };

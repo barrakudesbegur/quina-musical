@@ -1,4 +1,4 @@
-"""The Interval playlist (analysis/interval.py): matching files to playlist.spotdl, playing a recording once, the
+"""The Interval playlist (tools/prep/interval.py): matching files to playlist.spotdl, playing a recording once, the
 slugs, the edges; then the whole step on three synthetic tracks in a temp dir (one of them a duplicate).
 
 Nothing here reads the real playlist: its audio is copyrighted and gitignored.

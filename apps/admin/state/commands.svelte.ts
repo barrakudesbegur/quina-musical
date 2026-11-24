@@ -1,8 +1,8 @@
 // Sends Admin's commands and keeps what became of each (logic/command-log.ts), so a button can show
 // "not sent: no relay", "sent" or the engine's rejection next to it. A command is not sent at all when the
 // relay is unreachable or the show page isn't connected: the relay would silently drop it.
-import type { ShowStore } from '../../ui/client/show.svelte.ts';
-import type { AnyCommandArgs, AnyCommandName } from '../../ui/flow.ts';
+import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
+import type { AnyCommandArgs, AnyCommandName } from '../../../packages/ui/flow.ts';
 import { applyRejection, lastCommand, recordCommand, type CommandRecord, type CommandStatus } from '../logic/command-log.ts';
 import { MANAGE_CONFIG } from '../config.ts';
 

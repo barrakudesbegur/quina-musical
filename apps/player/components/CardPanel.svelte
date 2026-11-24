@@ -1,6 +1,6 @@
 <script lang="ts">
   // One of the player's cards: its colour, name and number, the grid, and its rename and remove buttons.
-  import type { Catalog } from '../../ui/data/catalog.ts';
+  import type { Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardView } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import CardGrid from './CardGrid.svelte';

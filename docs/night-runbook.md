@@ -8,13 +8,13 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
 2. **Laptop**: plug in the power. Plug the **PA in with a cable** (headphone jack, USB or HDMI), never Bluetooth or AirPlay. Connect the **projector** by HDMI.
 3. **Keep the laptop awake**: in a terminal, run `caffeinate -dis` and leave it open.
 4. **Start the show** (each in its own terminal, and leave them open):
-   - the relay: `cd experiments/mixer-poc && npm start -- --lan`. Without `--lan` it only listens on the laptop and the tablet can't reach it. At start it prints the tablet's pairing address with its **token** (`?t=…`);
-   - the cloud link: `cd experiments/mixer-poc/cloud && npm run link`. It should say `cloud: connected`.
+   - the relay: `cd apps/show && npm start -- --lan`. Without `--lan` it only listens on the laptop and the tablet can't reach it. At start it prints the tablet's pairing address with its **token** (`?t=…`);
+   - the cloud link: `cd apps/cloud && npm run link`. It should say `cloud: connected`.
 5. **Open the show page on the projector**:
    `open -na "Google Chrome" --args --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --kiosk "http://localhost:5174/show/?autostart=1"`
    For the night's Game, add `&fresh=1` the first time, so the rehearsal's Game isn't continued.
 6. **Tablet**: join phone A's hotspot and open the console with the token: `http://<laptop IP>:5174/console/?t=<token>` (the address and token the relay printed, or the console's QR). The tablet remembers the pairing, even across relay restarts, so a tablet paired at the rehearsal stays paired. Treat the token like the hotspot password: no photos. Away from the hotspot, the tablet uses the cloud console instead (the cloud's address + `/console/`).
-7. **Run the checks**: `cd experiments/mixer-poc/cloud && npm run preflight`. **Fix every FAIL** before the doors open; read the WARNs.
+7. **Run the checks**: `cd apps/cloud && npm run preflight`. **Fix every FAIL** before the doors open; read the WARNs.
 8. **Sound check**: play an effect from the console at low volume, then a few seconds of Hold music.
 
 At each Shuffle, note the round's **resume code** (console → **Codi de recuperació de la quina** → **Mostra el codi**). Keep it like the box of cards: never on a screen, never in a photo.

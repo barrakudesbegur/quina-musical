@@ -3,7 +3,7 @@
   runs, so a presenter can say it on the hit.
 -->
 <script lang="ts">
-  import { coverUrl } from '../../ui/data/catalog.ts';
+  import { coverUrl } from '../../../packages/ui/data/catalog.ts';
   import { getConsole } from '../context.ts';
   import { landingCountdown, suspenseCountdown } from '../logic/countdown.ts';
   import { S } from '../strings.ts';

@@ -1,6 +1,6 @@
 <!-- The technical pause ("Tornem de seguida"), over whatever scene is underneath. -->
 <script lang="ts">
-  import { formatCountdown } from '../../ui/rules/time.ts';
+  import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { elapsedSec } from '../logic/countdown.ts';
   import { S } from '../strings.ts';

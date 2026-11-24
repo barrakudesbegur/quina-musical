@@ -1,9 +1,9 @@
 // The claimed cards' queue: order, warnings, "complete since song N", what each row offers.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FIXTURES } from '../../../ui/fixtures/states.ts';
-import { summarizeClaims } from '../../../console/logic/claims.ts';
-import type { ClaimInfo } from '../../../ui/flow.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
+import { summarizeClaims } from '../../../../console/logic/claims.ts';
+import type { ClaimInfo } from '../../../../../packages/ui/flow.ts';
 
 const NOW = 1_800_000_000_000;
 

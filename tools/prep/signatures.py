@@ -1,6 +1,6 @@
 """Signature candidates (GLOSSARY: Signature) for the mixer POC: short, iconic, isolated pieces of a song
-that transitions layer. The candidates come from analysis/steps/signatures.py; this script cuts their
-audio from the stems (analysis/stems.py) and writes, per song:
+that transitions layer. The candidates come from tools/prep/steps/signatures.py; this script cuts their
+audio from the stems (tools/prep/stems.py) and writes, per song:
 
     <dataDir>/signatures/<id>.json   schema 1: { songId, sampleRate, signatures: [...] } (engine/src/analysis.ts)
     <cacheDir>/<id>/signatures/<sigId>.flac   48 kHz 16-bit stereo, short fades, at the stems' real level
@@ -9,8 +9,8 @@ Approvals come from the audition page, through <overridesDir>/<id>.json `signatu
 --derive-only re-applies them without touching the audio (the relay runs it after a Save). Only
 approved Signatures play in the show.
 
-Run: analysis/.venv/bin/python analysis/signatures.py [--pool NAME|PATH] [--song N ...] [--derive-only] [--force]
-(the directories are the pool's: analysis/pool.py; the default pool's are data/, cache/, analysis/overrides/)
+Run: tools/prep/.venv/bin/python tools/prep/signatures.py [--pool NAME|PATH] [--song N ...] [--derive-only] [--force]
+(the directories are the pool's: tools/prep/pool.py; the default pool's are data/out/, data/cache/, data/pools/default/overrides/)
 """
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
-# Layering prep (analysis/stretch.py, analysis/keys.py, analysis/steps/stretch_bench.py).
+# Layering prep (tools/prep/stretch.py, tools/prep/keys.py, tools/prep/steps/stretch_bench.py).
 # Installs into the same venv as requirements.txt: none of these move its pins.
-#   uv pip install --python analysis/.venv/bin/python -r analysis/requirements-layering.txt
+#   uv pip install --python tools/prep/.venv/bin/python -r tools/prep/requirements-layering.txt
 # System library (not pip): Homebrew rubberband 4.0.0, loaded through ctypes from
 #   /opt/homebrew/opt/rubberband/lib/librubberband.dylib (override with RUBBERBAND_LIB)
 #   brew install rubberband    # GPL-2.0-or-later; offline preparation only

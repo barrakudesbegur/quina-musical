@@ -6,8 +6,8 @@
 // - the Interval's guide (flow.interval.guideEndMs), which may run over.
 // Pure.
 import type { ShowState } from '@quina/protocol';
-import { secondsLeft } from '../../ui/rules/time.ts';
-import type { IntervalInfo, ShuffleInfo } from '../../ui/flow.ts';
+import { secondsLeft } from '../../../packages/rules/time.ts';
+import type { IntervalInfo, ShuffleInfo } from '../../../packages/ui/flow.ts';
 
 export interface Countdown {
   /** Whole seconds left, rounded up (never negative). */

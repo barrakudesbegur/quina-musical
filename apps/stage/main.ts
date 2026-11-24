@@ -1,11 +1,11 @@
 // The standalone projector page (/stage/): for development (`?demo=<fixture>`) and for split mode, where the
 // projector runs on another device than the show laptop and follows it through the relay. In the show page
 // itself the stage is mounted over the drum with `mountStage(el, { bus })` instead (see README.md).
-import { relayTokenForPage } from '../ui/client/pairing.ts';
-import '../ui/tokens.css';
-import '../ui/base.css';
-import { ShowClient } from '../ui/client/show-client.ts';
-import { DemoTransport, demoNameFromLocation } from '../ui/client/demo.ts';
+import { relayTokenForPage } from '../../packages/ui/client/pairing.ts';
+import '../../packages/ui/tokens.css';
+import '../../packages/ui/base.css';
+import { ShowClient } from '../../packages/ui/client/show-client.ts';
+import { DemoTransport, demoNameFromLocation } from '../../packages/ui/client/demo.ts';
 import { ANIM_EVENT, mountStage, type AnimDetail } from './stage.ts';
 
 const root = document.getElementById('stage');

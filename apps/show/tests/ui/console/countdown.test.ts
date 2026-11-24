@@ -1,7 +1,7 @@
 // The console's countdowns: auto-advance ring, landing, Suspense release, Hold music, Shuffle, Interval guide.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { baseState } from '../../../ui/fixtures/states.ts';
+import { baseState } from '../../../../../packages/ui/fixtures/states.ts';
 import {
   autoAdvanceCountdown,
   autoAdvanceStatus,
@@ -13,7 +13,7 @@ import {
   lastLandingAtMs,
   shuffleCountdown,
   suspenseCountdown,
-} from '../../../console/logic/countdown.ts';
+} from '../../../../console/logic/countdown.ts';
 
 const NOW = 1_800_000_000_000;
 

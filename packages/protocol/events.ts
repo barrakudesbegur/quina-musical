@@ -237,7 +237,7 @@ export interface IntervalInfo {
   guideEndMs: number;
 }
 
-/** A track of the Interval playlist (analysis/interval.py: title and artist from the playlist). */
+/** A track of the Interval playlist (tools/prep/interval.py: title and artist from the playlist). */
 export interface IntervalTrackInfo {
   title: string;
   artist: string;
