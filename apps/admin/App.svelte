@@ -39,7 +39,7 @@
   /** card-types.json (null when missing or broken): the rounds' card type pickers and the read-only list. */
   let printedTypes = $state.raw<PrintedCardType[] | null>(null);
   /** The types' names for the cards-in-play counts: card-types.json, else the plan's old copy. */
-  const knownTypes = $derived(knownCardTypes(printedTypes ?? catalog?.cardTypes, session.draft));
+  const knownTypes = $derived(knownCardTypes(printedTypes ?? catalog?.cardTypes));
   const cardTypes = $derived<CardTypes | null>(catalog ? new Map([...catalog.cards].map(([id, card]) => [id, card.type])) : null);
 
   onMount(() => {

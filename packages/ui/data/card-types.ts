@@ -49,17 +49,12 @@ export function readPrintedCardTypes(json: unknown): PrintedCardType[] | null {
  * The plan's old copy of the card types (`GamePlan.cardTypes`, deprecated), as printed types. Only a fallback for
  * when card-types.json didn't load; plan version 3 drops the field, and then this and its one caller go.
  */
-interface LegacyPlanTypes {
-  cardTypes?: readonly { type: string; name: string; color: string; priceCents: number | null }[];
-}
-
 /**
- * The card types a screen names things with: card-types.json's when it loaded, else the plan's old copy while
- * plans still carry one, else none (every type is then named by cardTypeLabel's stand-in).
+ * The card types a screen names things with: card-types.json's when it loaded, else none (every type is then named
+ * by cardTypeLabel's stand-in, "Cartró <id>"). The plan carries no copy any more (plan version 3).
  */
-export function knownCardTypes(printed: readonly PrintedCardType[] | null | undefined, plan?: LegacyPlanTypes | null): readonly PrintedCardType[] {
-  if (printed) return printed;
-  return (plan?.cardTypes ?? []).map((c) => ({ type: c.type, name: c.name, color: c.color, title: '', priceCents: c.priceCents }));
+export function knownCardTypes(printed: readonly PrintedCardType[] | null | undefined): readonly PrintedCardType[] {
+  return printed ?? [];
 }
 
 /** How a screen names a type: its listed name and colour, or "Cartró <id>" in a neutral colour. */

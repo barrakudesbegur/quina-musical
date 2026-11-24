@@ -2,7 +2,7 @@
 // organizers' sheet through Admin's JSON import. Each Line and Quina has a bundle: one headline prize (two in
 // the last Quina) and a few smaller ones.
 import { defaultCardType } from '@quina/protocol';
-import { DEFAULT_CARD_TYPES, type GamePlan, type Prize } from '../plan.ts';
+import type { GamePlan, Prize } from '../plan.ts';
 
 const SPONSORS = ['patrocinador-1', 'patrocinador-2', null] as const;
 
@@ -11,7 +11,7 @@ const smallPrizes = (label: string, count: number, offset: number): Prize[] =>
   Array.from({ length: count }, (_, k) => ({ title: `[Obsequi ${k + 1} ${label}]`, detail: null, sponsorId: SPONSORS[(k + offset) % SPONSORS.length], image: null, headline: false }));
 
 export const SAMPLE_PLAN: GamePlan = {
-  v: 2,
+  v: 3,
   edition: '26',
   title: 'Quina Quina 3',
   prizeReveal: 'perRound',
@@ -20,8 +20,6 @@ export const SAMPLE_PLAN: GamePlan = {
     { id: 'patrocinador-2', name: '[Patrocinador 2]', logo: null },
     { id: 'barrakudes', name: 'Barrakudes', logo: null },
   ],
-  // Deprecated (card-types.json has the types now): kept only while plans still carry it.
-  cardTypes: DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })),
   rounds: Array.from({ length: 8 }, (_, i) => ({
     number: i + 1,
     kind: i === 6 ? ('special' as const) : ('normal' as const),

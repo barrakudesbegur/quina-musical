@@ -34,7 +34,6 @@ export interface PlanDiff {
   schedule: boolean;
   cheatSheet: boolean;
   prizeReveal: boolean;
-  cardTypes: boolean;
 }
 
 /** The plan's two bundles per round. */
@@ -82,7 +81,6 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     schedule: !same(before?.schedule ?? null, after.schedule),
     cheatSheet: !same(before?.cheatSheet ?? null, after.cheatSheet),
     prizeReveal: before?.prizeReveal !== after.prizeReveal,
-    cardTypes: !same(before?.cardTypes ?? null, after.cardTypes),
   };
   diff.same =
     !diff.title &&
@@ -98,7 +96,6 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     !diff.schedule &&
     !diff.cheatSheet &&
     !diff.prizeReveal &&
-    !diff.cardTypes &&
     // Same content in another order (rounds are matched by number, sponsors by id).
     same(before?.sponsors.map((s) => s.id), after.sponsors.map((s) => s.id));
   return diff;

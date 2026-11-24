@@ -45,16 +45,11 @@ test('a type is named from the list; one nobody lists is "Cartró <id>" in a neu
   assert.equal(cardTypeLabel('especial', []).name, 'Cartró especial', 'with no list at all, the default ids still read well');
 });
 
-test("the types to name things with: card-types.json, else the plan's old copy, else none", () => {
+test('the types to name things with: card-types.json, else none (the plan carries no copy since version 3)', () => {
   const printed = readPrintedCardTypes(PRINTED);
-  assert.equal(knownCardTypes(printed, SAMPLE_PLAN), printed, 'the file wins over the plan');
-  const fromPlan = knownCardTypes(null, SAMPLE_PLAN);
-  assert.deepEqual(fromPlan.map((t) => [t.type, t.name, t.color]), SAMPLE_PLAN.cardTypes.map((c) => [c.type, c.name, c.color]), 'missing file: the deprecated copy');
-  assert.deepEqual(knownCardTypes(null, { ...SAMPLE_PLAN, cardTypes: [] }), []);
-  assert.deepEqual(knownCardTypes(undefined, null), []);
-  // A plan without the deprecated field at all (plan version 3) still works.
-  const { cardTypes: _dropped, ...v3 } = SAMPLE_PLAN;
-  assert.deepEqual(knownCardTypes(null, v3), []);
+  assert.equal(knownCardTypes(printed), printed);
+  assert.deepEqual(knownCardTypes(null), []);
+  assert.deepEqual(knownCardTypes(undefined), []);
 });
 
 test('which rounds each type plays, from the rounds (a round without a type plays its kind\'s default)', () => {
@@ -111,8 +106,7 @@ test('a missing or broken card-types.json never breaks the screen: the types rea
     const catalog = await loadCatalog('/cards/cards.json');
     assert.equal(catalog.cards.size, 1, 'the cards still load');
     assert.equal(catalog.cardTypes, null);
-    assert.equal(knownCardTypes(catalog.cardTypes, SAMPLE_PLAN)[1].name, 'Cartró especial', "the plan's old copy stands in");
-    assert.equal(cardTypeLabel('especial', knownCardTypes(catalog.cardTypes, null)).color, UNKNOWN_CARD_TYPE_COLOR, 'then the neutral stand-in');
+    assert.equal(cardTypeLabel('especial', knownCardTypes(catalog.cardTypes)).color, UNKNOWN_CARD_TYPE_COLOR, 'the neutral stand-in');
   });
   await withFetch({ '/cards/cards.json': CARDS, '/cards/card-types.json': '{ not json' }, async () => {
     assert.equal((await loadCatalog('/cards/cards.json')).cardTypes, null);

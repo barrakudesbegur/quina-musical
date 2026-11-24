@@ -1,9 +1,7 @@
 // Cards in play, as Admin previews them before sending `setCardsInPlay`: how many cards the ranges name, how
 // many of each printed type, which numbers are not among the generated cards, and the compact ranges that will
 // be sent. Pure: the generated cards' types come in as a map (from cards.json).
-import { COMMANDS } from '@quina/protocol';
-// parseCardRanges is still the engine's: it belongs in @quina/protocol, so Admin needn't reach into the engine.
-import { parseCardRanges } from '../../show/engine/src/game/cards.ts';
+import { COMMANDS, parseCardRanges } from '@quina/protocol';
 
 /** `setCardsInPlay.ranges` may not be longer than this (the protocol's limit). */
 export const RANGES_MAX_LENGTH: number = COMMANDS.setCardsInPlay.ranges.maxLength;

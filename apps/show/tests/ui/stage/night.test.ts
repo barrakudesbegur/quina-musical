@@ -47,11 +47,9 @@ test('a card type that plays no round tonight is left out; no plan, no preview',
   assert.deepEqual(nightCardTypes(null, TYPES), []);
 });
 
-test("without card-types.json: the plan's old copy names them, then a neutral stand-in; unlisted types go last", () => {
-  const fromPlan = nightCardTypes(SAMPLE_PLAN, knownCardTypes(null, SAMPLE_PLAN));
-  assert.deepEqual(fromPlan.map((t) => [t.type, t.label, t.color]), [['normal', 'Cartró normal', '#cfe8ff'], ['especial', 'Cartró especial', '#ffd9e8']]);
+test('without card-types.json: a neutral stand-in names each type; unlisted types go last', () => {
   const rounds = [round(1, 'normal', 'daurat'), round(2, 'normal')];
-  assert.deepEqual(nightCardTypes({ rounds }, knownCardTypes(null, null)), [
+  assert.deepEqual(nightCardTypes({ rounds }, knownCardTypes(null)), [
     { type: 'daurat', label: 'Cartró daurat', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [1], special: false },
     { type: 'normal', label: 'Cartró normal', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [2], special: false },
   ]);

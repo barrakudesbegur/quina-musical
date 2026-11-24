@@ -141,9 +141,8 @@ test("the type badge takes the type's name and colour from card-types.json, and 
   assert.equal(cardTypeBadge('especial', 'wrongType', TYPES, plan)?.special, false);
 });
 
-test('the type badge without card-types.json: the plan\'s old copy, then "Cartró <id>" in a neutral colour', () => {
-  assert.equal(cardTypeBadge('especial', 'complete', knownCardTypes(null, SAMPLE_PLAN), SAMPLE_PLAN)?.color, '#ffd9e8', "the plan's deprecated copy");
-  const bare = cardTypeBadge('especial', 'complete', knownCardTypes(null, null), null);
+test('the type badge without card-types.json: "Cartró <id>" in a neutral colour', () => {
+  const bare = cardTypeBadge('especial', 'complete', knownCardTypes(null), null);
   assert.deepEqual(bare, { type: 'especial', label: 'Cartró especial', color: UNKNOWN_CARD_TYPE_COLOR, special: true, ok: true }, "no plan: the special round's default type gets the star");
   assert.equal(cardTypeBadge('rara', 'complete', TYPES, SAMPLE_PLAN)?.label, 'Cartró rara', 'a type nobody lists still shows');
   assert.equal(shortTypeName('Cartró normal'), 'Normal');

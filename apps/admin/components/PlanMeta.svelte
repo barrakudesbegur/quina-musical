@@ -11,7 +11,7 @@
   const errors = $derived(['plan.title', 'plan.edition', 'plan.prizeReveal', 'plan.cardTypes'].flatMap((path) => errorsAt(session.errors, path)));
   const REVEALS: readonly PrizeReveal[] = ['perRound', 'allSecret'];
   /** card-types.json's types (else the plan's old copy), each with the rounds that pick it. */
-  const types = $derived(knownCardTypes(printed, session.draft));
+  const types = $derived(knownCardTypes(printed));
   const plays = $derived(roundsByCardType(session.draft.rounds));
 </script>
 

@@ -14,7 +14,7 @@ import {
   type WinKind,
 } from '@quina/protocol';
 
-export { PLAN_VERSION, DEFAULT_CARD_TYPES, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType } from '@quina/protocol';
+export { PLAN_VERSION, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType } from '@quina/protocol';
 export type {
   GamePlan,
   Sponsor,
@@ -22,7 +22,6 @@ export type {
   PrizeBundle,
   PrizeReveal,
   PrizesRevealed,
-  CardType,
   RoundPlan,
   SchedulePlan,
   CheatSheet,

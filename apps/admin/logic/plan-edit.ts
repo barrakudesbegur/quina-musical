@@ -3,7 +3,7 @@
 // headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
 // blank prizes and plans, a round's card type, and the schedule's local date-time. Pure: each returns new values and
 // never mutates its input.
-import { DEFAULT_CARD_TYPES, PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { defaultCardType, roundCardType, type RoundKind } from '@quina/protocol';
 import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
@@ -37,7 +37,7 @@ export const isUnknownCardType = (type: string, printed: readonly PrintedCardTyp
 
 export const DEFAULT_SCHEDULE: SchedulePlan = Object.freeze({ startAtMs: null, roundMinutes: 25, intervalMinutes: 3 });
 
-/** A new plan with one normal round, no sponsors, the default card types and the given cheat-sheet rules. */
+/** A new plan with one normal round (it plays its kind's card type), no sponsors and the given cheat-sheet rules. */
 export function blankPlan(edition: string, title: string, cheatSheet: CheatSheet): GamePlan {
   return {
     v: PLAN_VERSION,
@@ -46,7 +46,6 @@ export function blankPlan(edition: string, title: string, cheatSheet: CheatSheet
     prizeReveal: 'perRound',
     rounds: [blankRound(1)],
     sponsors: [],
-    cardTypes: DEFAULT_CARD_TYPES.map((c) => ({ ...c, rounds: [...c.rounds] })),
     schedule: { ...DEFAULT_SCHEDULE },
     cheatSheet: { claimRules: [...cheatSheet.claimRules], specialRoundRules: [...cheatSheet.specialRoundRules] },
   };

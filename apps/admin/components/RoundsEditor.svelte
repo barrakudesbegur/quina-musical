@@ -18,8 +18,8 @@
 
   let { session, show, commands, printed = null }: { session: PlanSession; show: ShowStore; commands: CommandTracker; printed?: readonly PrintedCardType[] | null } = $props();
 
-  /** The types to pick from and name: card-types.json's, else the plan's old copy (knownCardTypes). */
-  const types = $derived(knownCardTypes(printed, session.draft));
+  /** The types to pick from and name: card-types.json's (knownCardTypes). */
+  const types = $derived(knownCardTypes(printed));
   const setKind = (index: number, kind: RoundKind) =>
     session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind) : r)) }));
   const setCardType = (index: number, cardType: string) =>

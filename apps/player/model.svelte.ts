@@ -75,8 +75,8 @@ export class PlayerApp {
   focusRound = $derived(focusRoundNumber(this.state));
   latest = $derived(latestLanding(this.round));
   views = $derived(cardViews(this.data.cards, this.catalog, this.round));
-  /** The printed card types' names and colours: card-types.json, else the plan's old copy (knownCardTypes). */
-  cardTypes = $derived(knownCardTypes(this.catalog?.cardTypes, this.plan));
+  /** The printed card types' names and colours, from card-types.json (knownCardTypes). */
+  cardTypes = $derived(knownCardTypes(this.catalog?.cardTypes));
   playingViews = $derived(this.views.filter((v) => v.valid));
   restingViews = $derived(this.views.filter((v) => !v.valid));
   /** The near-win highlights on the playing cards ("cardId:songId"). */

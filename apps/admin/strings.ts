@@ -278,7 +278,6 @@ export const S = {
     schedule: "L'horari canvia",
     cheatSheet: 'Les normes de la xuleta canvien',
     prizeReveal: 'Canvia quan es revelen els premis',
-    cardTypes: 'Els tipus de cartró canvien (nom, color o preu)',
     title: 'El nom canvia',
     edition: "L'edició canvia",
     order: "Només canvia l'ordre dels patrocinadors",
