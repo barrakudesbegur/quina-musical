@@ -24,7 +24,7 @@ import {
   type RelayClients,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
-import type { EditionExport, GameSummary, MediaSave, PlanSave, ResumeResult, RoomStats } from './api.ts';
+import type { EditionExport, GameSummary, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
@@ -494,6 +494,29 @@ export class GameRoom extends DurableObject<RoomEnv> {
       this.sendJournal(show, gameId, 1);
     }
     return { ok: true, gameId, seq, laptopOnline: Boolean(show) };
+  }
+
+  // ---- what Admin sees of the phones, and says to them ------------------------------------------------------
+  phonesNow(): PhonesNow {
+    const counts = new Map<number, number>();
+    const phones = this.sockets('phone');
+    for (const ws of phones) for (const card of (ws.deserializeAttachment() as PhoneAttachment).cards) counts.set(card, (counts.get(card) ?? 0) + 1);
+    return { phones: phones.length, cards: [...counts].sort((a, b) => a[0] - b[0]).map(([card, n]) => ({ card, phones: n })) };
+  }
+
+  setNotice(notice: unknown): SettingSave {
+    if (notice !== null && (typeof notice !== 'string' || notice.trim().length > CLOUD.maxNoticeLength)) {
+      return { ok: false, error: `notice must be null or a text of at most ${CLOUD.maxNoticeLength} characters` };
+    }
+    const text = typeof notice === 'string' && notice.trim() ? notice.trim() : null;
+    if (text !== this.room.feed.state.notice) this.publish([{ kind: 'notice', notice: text }]);
+    return { ok: true };
+  }
+
+  setSoundsDefault(soundsDefault: unknown): SettingSave {
+    if (typeof soundsDefault !== 'boolean') return { ok: false, error: 'soundsDefault must be true or false' };
+    if (soundsDefault !== this.room.feed.state.soundsDefault) this.publish([{ kind: 'sounds', soundsDefault }]);
+    return { ok: true };
   }
 
   getStats(): RoomStats {

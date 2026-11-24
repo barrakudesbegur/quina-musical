@@ -40,6 +40,9 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /media/<hash>.<ext>` | anyone | An uploaded image, immutable (cached a year by browsers, and by Cloudflare's cache on a custom domain) |
 | `GET /api/games` | admins (Access) | The edition's Games, newest first (rehearsals, the night): last entry, rounds, which is current, and for the current one its resume point (round, kind, Shuffle seed, position, Line), to prefill a manual `resumeAt`. The seed is secret |
 | `POST /api/resume` `{ gameId }` | admins (Access) | Admin's manual resume: that Game becomes current and its whole journal goes to the laptop, which writes `laptop-data/resume.json` for the show page's boot check |
+| `GET /api/phones` | admins (Access) | Phones following the feed now, and which card numbers (anonymous): "cards opened on phones" |
+| `PUT /api/notice` `{ notice }` | admins (Access) | The banner on every phone (at most 200 characters; null clears it) |
+| `PUT /api/sounds` `{ soundsDefault }` | admins (Access) | The player app's default for interface sounds; a player's own choice wins |
 | `GET /api/export` | admins (Access) | Every Game of the edition: journal entries, each Game replayed with the protocol's reducer, and the public state |
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |

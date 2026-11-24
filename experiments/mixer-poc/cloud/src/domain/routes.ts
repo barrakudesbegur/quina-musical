@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'games' | 'resume' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -35,6 +35,12 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/api/games': { name: 'games', websocket: false, access: PEOPLE, methods: GET },
   /** Admin's manual resume: `{ gameId }` becomes current and its journal goes to the laptop. */
   '/api/resume': { name: 'resume', websocket: false, access: PEOPLE, methods: ['POST'] },
+  /** Phones following the feed now, and the card numbers they follow (anonymous): Admin's "cards opened on phones". */
+  '/api/phones': { name: 'phones', websocket: false, access: PEOPLE, methods: GET },
+  /** Admin's banner to every phone: `{ notice: string | null }`. */
+  '/api/notice': { name: 'notice', websocket: false, access: PEOPLE, methods: ['PUT'] },
+  /** The player app's default for interface sounds: `{ soundsDefault: boolean }` (a player's own choice wins). */
+  '/api/sounds': { name: 'sounds', websocket: false, access: PEOPLE, methods: ['PUT'] },
   '/api/export': { name: 'export', websocket: false, access: PEOPLE, methods: GET },
   /** Connections, messages and SQLite rows since the GameRoom last woke (admins, the load test). */
   '/api/stats': { name: 'stats', websocket: false, access: PEOPLE, methods: GET },

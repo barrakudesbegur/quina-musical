@@ -445,6 +445,27 @@ describe("a new laptop, and Admin's manual resume", () => {
   });
 });
 
+describe("Admin and the phones", () => {
+  it('Admin sees which cards are open on phones (anonymous), and sends a banner and the sound default', async () => {
+    await evictDurableObject(roomOf(env), { webSockets: 'close' });
+    const a = await phone('12,33');
+    const b = await phone('33');
+    expect(await getJson('/api/phones')).toEqual({ phones: 2, cards: [{ card: 12, phones: 1 }, { card: 33, phones: 2 }] });
+
+    const send = (path: string, body: unknown) => SELF.fetch(`${BASE}${path}`, { method: 'PUT', body: JSON.stringify(body) });
+    expect((await send('/api/notice', { notice: '  Tornem en 5 minuts  ' })).status).toBe(200);
+    expect((await a.view()).state.notice).toBe('Tornem en 5 minuts');
+    expect((await send('/api/notice', { notice: 'x'.repeat(201) })).status).toBe(400);
+    expect((await send('/api/notice', { notice: null })).status).toBe(200);
+    expect((await b.view()).state.notice).toBeNull();
+    expect((await send('/api/sounds', { soundsDefault: false })).status).toBe(200);
+    expect((await b.view()).state.soundsDefault).toBe(false);
+    expect((await send('/api/sounds', { soundsDefault: 'no' })).status).toBe(400);
+    expect((await SELF.fetch('https://quina.example/api/phones')).status).toBe(403);
+    expect((await SELF.fetch('https://quina.example/api/notice', { method: 'PUT', body: '{"notice":"hack"}' })).status).toBe(403);
+  });
+});
+
 describe('the Worker', () => {
   it('serves the export: every Game, replayed with the protocol reducer', async () => {
     const game = JournalBuilder.sampleGame('g-export');

@@ -53,6 +53,16 @@ export interface GameSummary {
 /** The answer to POST /api/resume. */
 export type ResumeResult = { ok: true; gameId: string; seq: number; laptopOnline: boolean } | { ok: false; error: string };
 
+/** Phones following the feed now (GET /api/phones). Anonymous: card numbers only, never who. */
+export interface PhonesNow {
+  phones: number;
+  /** Each card number followed, and on how many phones, by card number. */
+  cards: { card: number; phones: number }[];
+}
+
+/** The answer to PUT /api/notice and PUT /api/sounds. */
+export type SettingSave = { ok: true } | { ok: false; error: string };
+
 /** The whole edition as JSON (Admin's export). */
 export interface EditionExport {
   edition: string;

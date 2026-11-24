@@ -13,6 +13,8 @@ export const CLOUD = Object.freeze({
    * every `linkKeepaliveMs` when it has nothing else to say, so a silence means the connection is gone.
    */
   showSilenceMs: 50_000,
+  /** The longest banner Admin may send to every phone. */
+  maxNoticeLength: 200,
   /** The largest Game plan Admin may save (bytes of JSON). Logos are files, never inside it. */
   maxPlanBytes: 256 * 1024,
   /** Media Admin uploads (sponsor logos, prize pictures): kept in the GameRoom, served at /media/<hash>.<ext>. */

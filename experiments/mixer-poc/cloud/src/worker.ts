@@ -61,6 +61,20 @@ export default {
         const resumed = await room.resumeGame(gameId, identity);
         return json(resumed, {}, resumed.ok ? 200 : 404);
       }
+      case 'phones':
+        return json(await room.phonesNow());
+      case 'notice':
+      case 'sounds': {
+        const body = await readBody(request, 4096);
+        let parsed: Record<string, unknown> = {};
+        try {
+          parsed = body ? (JSON.parse(new TextDecoder().decode(body)) as Record<string, unknown>) : {};
+        } catch {
+          return json({ ok: false, error: 'not JSON' }, {}, 400);
+        }
+        const saved = route.name === 'notice' ? await room.setNotice(parsed?.notice) : await room.setSoundsDefault(parsed?.soundsDefault);
+        return json(saved, {}, saved.ok ? 200 : 400);
+      }
       case 'export':
         return json(await room.exportEdition(), { 'content-disposition': `attachment; filename="quina-${env.EDITION}-export.json"` });
       case 'stats':
