@@ -20,6 +20,14 @@ These override the sections below where they differ.
 - **The near-win cue on phones is subtle:** the missing song is gently highlighted on that card's grid. There is no banner, and no win is ever announced.
 - **Hooks for this year's songs are detected automatically** (the chorus start, an energy jump, the vocals coming in, snapped to phrases), and the user approves, rejects or nudges each one on the audition page.
 - **The console's crystal ball ("Futur" tab).** It replaces the possible-winners tab and is hidden until a presenter taps "Mirar el futur". It shows a chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners. It is private: it never reaches phones or the projector.
+- **The player app has 3 tabs** (decided 2026-11-24):
+  - **Ara:** the drum on top, then a Historial | Cartrons switch, remembered per device. Cartrons is the default for players following cards, with the drum shrunk to a strip.
+  - **Premis**.
+  - **Programa**.
+
+  A menu, shown as its own screen, holds how to play, the player's cards, sounds, last year's card and "Esborrar dades". The history includes the song playing now.
+- **Ten card icons:** each followed card gets its own colour and shape, always corn first (yellow), then cyan, red, green, pink (heart), orange, purple (grapes), white, black (top hat) and brown (the Tió).
+- **Times show in the am/pm format,** at the user's request (one setting, easy to change back).
 - **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 - **Resolved from the open questions:**
   - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.
