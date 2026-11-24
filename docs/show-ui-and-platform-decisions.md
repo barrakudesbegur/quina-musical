@@ -2,6 +2,22 @@
 
 Agreed with the user in a second design interview. This covers the screens left out of the mixer proof of concept, the new player app, and hosting. It builds on [mixer-design-decisions.md](mixer-design-decisions.md) and overrides it where they differ. Terms follow [GLOSSARY.md](../GLOSSARY.md); lasting decisions are in [docs/adr](adr).
 
+## Changes after the first listen and review (2026-11-24, later)
+
+These override the sections below where they differ.
+- **No more grace rule.** Phones mark every landed song, the latest included. They still never announce or celebrate a Line or a Quina: players must claim it.
+- **Players see only the current round's history.**
+- **The drum holds only pending songs.** Landed songs leave it; Back puts one back.
+- **Round order can change during the event.** Admin edits upcoming rounds live; the laptop picks the changes up.
+- **The Hold button on the console reads "Parlem"**, with a microphone icon.
+- **Per-card icons on phones,** always corn for the first card (shape alone tells them apart).
+- **Images are JPEG XL**, with a PNG fallback (logos) or a JPEG fallback (covers). Never WebP.
+- **A logo library** is kept privately in the cloud, cleaned in bulk; Admin picks from it.
+- **Signatures are picked automatically**, with a veto. They are instrumental intro or pre-chorus pieces, teased *before* a landing.
+- **Suspense keeps the current song playing.** The drum hovers over about 3 pending songs while their decoys tease, then resolves to the real next song.
+- **Transitions have an intensity range.** Lighter, quick and well-made at the start of a round, growing with the phase. Always produced DJ moves, never bare volume fades.
+- **The repo is being reorganised:** `apps/`, `packages/`, `tools/` and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
+
 ## Who builds what
 
 - **UI/UX session** builds every screen:

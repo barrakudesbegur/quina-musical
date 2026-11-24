@@ -95,18 +95,21 @@ Any part of the incoming song heard before its landing. A tease never counts for
 _Avoid_: Preview, hint, pre-roll
 
 **Decoy**:
-A tease of a song that is not the next one, used to bluff. It never counts and always resolves clearly into the song that actually lands.
+A tease of a pending song that is not the next one, used during suspense to bluff. It never counts and always resolves clearly into the song that actually lands.
 _Avoid_: Bluff, fake song
 
 **Signature**:
-A short, iconic, isolated piece of a song, such as its opening riff or a famous shout, that can be layered into transitions.
+A short, recognizable instrumental piece of a song, such as its intro riff or the build into its chorus, teased just before that song lands. Never a vocal line repeated after the landing.
 _Avoid_: Sample, riff
 
 **Suspense**:
-A transition the presenters hold open on purpose, keeping its build-up going while they work the crowd, until they release it and the song lands.
+A transition the presenters hold open on purpose. The current song keeps playing while the build grows and the drum hovers over a few pending songs with decoy teases, until they release it and the real next song lands.
 _Avoid_: Stall, freeze
 
 ### The drum
+
+**Drum**:
+The reel of covers on the projector. It holds only the round's songs that haven't landed yet.
 
 **Spin**:
 The movement of the drum during a transition.
@@ -157,7 +160,7 @@ Undoing the last landing: that song stops counting and becomes the next song aga
 _Avoid_: Previous, undo, replay, anterior (outside the UI)
 
 **Hold**:
-A state in which no new song can land and the music keeps playing under the presenters' voices, used for claims and whenever the presenters want to talk. The music never stops unless silence is intended.
+A state in which no new song can land and the music keeps playing under the presenters' voices (labelled "Parlem" on the console), used for claims and whenever the presenters want to talk. The music never stops unless silence is intended.
 _Avoid_: Pause, low volume
 
 **Hold music**:
