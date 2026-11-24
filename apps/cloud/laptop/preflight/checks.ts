@@ -37,7 +37,9 @@ export function cardsCheck(cards: unknown, poolSongIds: ReadonlySet<number>, pla
     }
     if (seen.has(raw.id)) problems.push(`card ${raw.id} twice`);
     seen.add(raw.id);
-    if (raw.type === 'special') special += 1;
+    // The printed types are 'normal' and 'especial' (the engine maps the special ROUND to 'especial' cards).
+    if (raw.type === 'especial') special += 1;
+    else if (raw.type !== 'normal') problems.push(`card ${raw.id} has type ${JSON.stringify(raw.type)} (normal or especial)`);
     const songs = raw.lines.flat();
     if (raw.lines.length !== 3 || raw.lines.some((l) => !Array.isArray(l) || l.length !== 4)) problems.push(`card ${raw.id} is not 3 lines of 4`);
     for (const song of songs) {

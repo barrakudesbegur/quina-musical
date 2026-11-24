@@ -54,7 +54,11 @@ test('cards: every song on a card must be in the pool and playable, or that card
   const card = (id: number, ids: number[], type = 'normal') => ({ id, type, lines: [line(...ids.slice(0, 4)), line(...ids.slice(4, 8)), line(...ids.slice(8, 12))] });
   const pool = new Set(Array.from({ length: 20 }, (_, i) => i + 1));
   const ids = Array.from({ length: 12 }, (_, i) => i + 1);
-  assert.equal(c.cardsCheck([card(1, ids), card(2, ids, 'special')], pool, pool).status, 'pass');
+  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], pool, pool);
+  assert.equal(both.status, 'pass');
+  assert.match(both.detail, /2 cards \(1 special\)/);
+  // A type the engine doesn't know (the round kind's spelling, not the printed one) would never count in a round.
+  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], pool, pool).detail, /card 2 has type "special" \(normal or especial\)/);
   assert.match(c.cardsCheck([card(1, ids)], pool, new Set([...pool].filter((id) => id !== 5))).detail, /can't play.*5/);
   assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], pool, pool).detail, /99, not in the pool/);
   assert.match(c.cardsCheck([card(1, ids), card(1, ids)], pool, pool).detail, /twice/);
