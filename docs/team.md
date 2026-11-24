@@ -25,4 +25,11 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
 - **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout. Never push without the user's approval.
 - **Never commit:** copyrighted audio, `cache/`, `reference/`, `data/spotify_features.json`, secrets, or personal data (the repo is public).
-- **No external changes without the user:** no deployments, account changes or purchases (Cloudflare included) until the user approves.
+- **Cloudflare (approved by the user on 2026-11-24):** Platform may configure and deploy with wrangler or a Cloudflare MCP, within these limits:
+  - never touch existing DNS records or projects (`quina`, `fitxes`, …); deploy to `*.workers.dev` or a new subdomain such as `quina-dev`;
+  - free plan only;
+  - private R2;
+  - secrets only through `wrangler secret`;
+  - log every change, with how to undo it, in `cloud/docs/deploy-plan.md`.
+- **Anything else external** (purchases, other accounts, switching `quina.barrakudesbegur.org` over) still needs the user.
+- **If your session's permission check denies a command,** don't work around it and don't ask another session to run it. Log it in `open-questions.md` for the user.
