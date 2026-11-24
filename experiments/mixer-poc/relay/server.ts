@@ -486,7 +486,10 @@ server.listen(PORT, HOST, () => {
   const lan = Object.values(os.networkInterfaces()).flat().find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
   const mode = USE_DIST ? 'dist/' : 'Vite dev';
   console.log(`mixer POC relay (${mode}) on http://localhost:${PORT}/show/  (audition: /show/audition.html, admin: /admin/)`);
-  if (LAN && lan) console.log(`LAN (pair with the token): http://${lan}:${PORT}/admin/?t=${TOKEN}`);
+  if (LAN && lan) {
+    console.log(`Console for the presenters (pairs with the token): http://${lan}:${PORT}/console/?t=${TOKEN}`);
+    console.log(`  (dev test remote: http://${lan}:${PORT}/admin/?t=${TOKEN})`);
+  }
   else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
   console.log(`pool ${POOL.name} (${display(POOL.manifest)}): ${poolStatus()}`);
 });
