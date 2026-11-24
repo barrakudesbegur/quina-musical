@@ -366,9 +366,10 @@ describe('the Game plan and its media (Admin)', () => {
     const { client: link } = await laptop('g-secret');
     const view = async () => (await p.view()).state.plan;
     expect((await view())?.rounds).toEqual([
-      { number: 1, kind: 'normal', revealed: true, line: PLAN.rounds[0]?.line, bingo: PLAN.rounds[0]?.bingo },
-      { number: 2, kind: 'special', revealed: false },
+      { number: 1, kind: 'normal', cardType: 'normal', revealed: true, line: PLAN.rounds[0]?.line, bingo: PLAN.rounds[0]?.bingo },
+      { number: 2, kind: 'special', cardType: 'especial', revealed: false },
     ]);
+    // A locked round shows its kind and card type (both printed on the cards), never its prizes.
     // Nothing of round 2 anywhere in what phones got: not its prize, not its count, nor the cheat sheet.
     const heard = JSON.stringify(p.seen);
     expect(heard).not.toContain(SECRET_PRIZE);

@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   cloud = await startCloud(relay.ws, relay.linkDir);
   // Admin's plan in the cloud: round 2's prizes stay secret until its intro (perRound). Both rounds are normal,
   // like the show this test plays (cards 1-300 in play).
-  const plan = { ...PLAN, rounds: PLAN.rounds.map((r) => ({ ...r, kind: 'normal' as const })) };
+  const plan = { ...PLAN, rounds: PLAN.rounds.map((r) => ({ ...r, kind: 'normal' as const, cardType: 'normal' })) };
   const saved = await fetch(`${cloud.server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) });
   if (!saved.ok) throw new Error(`the cloud refused the test plan: ${saved.status} ${await saved.text()}`);
   phone = new Phone(`${cloud.server.ws}/feed?cards=${CARDS.join(',')}`);
