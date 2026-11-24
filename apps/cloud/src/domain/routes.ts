@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'ping' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'uploadJxl' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'ping' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -29,8 +29,11 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/ws/console': { name: 'console', websocket: true, access: PEOPLE, methods: GET },
   /** The Game plan: Admin reads it (GET) and saves it whole (PUT, checked with checkGamePlan). */
   '/api/plan': { name: 'plan', websocket: false, access: PEOPLE, methods: ['GET', 'PUT'] },
-  /** Admin uploads a logo or prize picture (the body is the image); answers its /media/ path. */
-  '/api/media': { name: 'upload', websocket: false, access: PEOPLE, methods: ['POST'] },
+  /**
+   * Admin's media: POST a logo or prize picture (the body is the PNG or JPEG fallback, `?name=` optional; answers
+   * its /media/ path and key), GET the list for the picker.
+   */
+  '/api/media': { name: 'upload', websocket: false, access: PEOPLE, methods: ['GET', 'POST'] },
   /** The whole edition as JSON: every Game's journal and record (admins). */
   /** The edition's Games (rehearsals, the night), newest first: Admin's resume picker. */
   '/api/games': { name: 'games', websocket: false, access: PEOPLE, methods: GET },
@@ -51,9 +54,13 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/api/health': { name: 'health', websocket: false, access: null, methods: GET },
 });
 
-/** Uploaded media, by content hash: public and immutable (phones, the projector). */
+/** Uploaded media, by content hash: public and immutable (phones, the projector). WebP: uploads from before JXL. */
 export const MEDIA_ROUTE: Route = Object.freeze({ name: 'media', websocket: false, access: null, methods: GET });
-const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg)$/;
+const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg|jxl)$/;
+
+/** Admin attaches the JPEG XL to an uploaded fallback: PUT /api/media/<key>.jxl (the body is the JXL). */
+export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: PEOPLE, methods: ['PUT'] });
+const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
 
 /** The pool's media in R2 (C3): `/api/sync/<pool>/manifest` and `/api/sync/<pool>/file?path=…`. The laptops only. */
 export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT'] });
@@ -62,6 +69,7 @@ const SYNC_PATH = /^\/api\/sync\/([a-z0-9_-]{1,40})\/(manifest|file)$/;
 export function findRoute(pathname: string): Route | null {
   if (Object.hasOwn(ROUTES, pathname)) return ROUTES[pathname] ?? null;
   if (SYNC_PATH.test(pathname)) return SYNC_ROUTE;
+  if (MEDIA_JXL_PATH.test(pathname)) return MEDIA_JXL_ROUTE;
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
 }
 
@@ -74,4 +82,14 @@ export function syncTarget(pathname: string): { pool: string; resource: 'manifes
 /** The media id in a /media/ path, or null. */
 export function mediaId(pathname: string): string | null {
   return MEDIA_PATH.exec(pathname)?.[1] ?? null;
+}
+
+/** Whether a /media/ path asks for the JPEG XL. */
+export function wantsJxl(pathname: string): boolean {
+  return MEDIA_PATH.exec(pathname)?.[2] === 'jxl';
+}
+
+/** The key in a PUT /api/media/<key>.jxl path, or null. */
+export function jxlUploadKey(pathname: string): string | null {
+  return MEDIA_JXL_PATH.exec(pathname)?.[1] ?? null;
 }

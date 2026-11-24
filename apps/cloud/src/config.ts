@@ -17,12 +17,19 @@ export const CLOUD = Object.freeze({
   maxNoticeLength: 200,
   /** The largest Game plan Admin may save (bytes of JSON). Logos are files, never inside it. */
   maxPlanBytes: 256 * 1024,
-  /** Media Admin uploads (sponsor logos, prize pictures): kept in the GameRoom, served at /media/<hash>.<ext>. */
+  /**
+   * Media Admin uploads (sponsor logos, prize pictures), kept in the GameRoom. Each is a pair, keyed by the
+   * fallback's content hash: the PNG or JPEG at /media/<key>.png|.jpg and its JPEG XL at /media/<key>.jxl (the
+   * user's choice: JXL, never WebP; Admin encodes it in the browser). Each file at most maxBytes.
+   */
   media: {
     maxBytes: 300 * 1024,
     maxFiles: 200,
-    /** Raster images only: an SVG served from this origin could run script. */
-    types: { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg' } as Readonly<Record<string, string>>,
+    /** The fallbacks: raster images only (an SVG served from this origin could run script). */
+    types: { 'image/png': 'png', 'image/jpeg': 'jpg' } as Readonly<Record<string, string>>,
+    maxNameLength: 100,
+    /** How long a .jxl URL that answered with the fallback (no JXL yet) may be cached. */
+    fallbackForJxlMaxAgeS: 300,
   },
   /** The GameRoom is placed near the venue (Begur, Catalonia). */
   locationHint: 'weur' as DurableObjectLocationHintName,

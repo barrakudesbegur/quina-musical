@@ -392,33 +392,59 @@ describe('the Game plan and its media (Admin)', () => {
     expect(await link.next()).toMatchObject({ type: 'cloud.refused' });
   });
 
-  it('logos: uploaded once by content, served immutable and public; only raster images', async () => {
-    const webp = new Uint8Array([82, 73, 70, 70, 1, 2, 3, 4, 87, 69, 66, 80]);
-    const upload = (bytes: Uint8Array, type: string) => SELF.fetch(`${BASE}/api/media`, { method: 'POST', headers: { 'content-type': type }, body: bytes });
-    const first = await upload(webp, 'image/webp');
+  it('logos: a PNG or JPEG by content hash, its JPEG XL beside it, public and immutable; never WebP or SVG', async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+    const jxl = new Uint8Array([0xff, 0x0a, 9, 8, 7, 6]);
+    const upload = (bytes: Uint8Array, type: string, query = '') => SELF.fetch(`${BASE}/api/media${query}`, { method: 'POST', headers: { 'content-type': type }, body: bytes });
+    const attach = (key: string, bytes: Uint8Array) => SELF.fetch(`${BASE}/api/media/${key}.jxl`, { method: 'PUT', headers: { 'content-type': 'image/jxl' }, body: bytes });
+    const first = await upload(png, 'image/png', '?name=Croak');
     expect(first.status).toBe(201);
-    const { path } = (await first.json()) as { path: string };
-    expect(path).toMatch(/^\/media\/[0-9a-f]{32}\.webp$/);
-    expect(((await (await upload(webp, 'image/webp')).json()) as { path: string }).path).toBe(path);
+    const { path, key } = (await first.json()) as { path: string; key: string };
+    expect(path).toBe(`/media/${key}.png`);
+    expect(key).toMatch(/^[0-9a-f]{32}$/);
+    expect(((await (await upload(png, 'image/png')).json()) as { path: string }).path).toBe(path);
 
-    const served = await SELF.fetch(`https://quina.example${path}`); // public, from anywhere
-    expect(served.status).toBe(200);
-    expect(served.headers.get('content-type')).toBe('image/webp');
-    expect(served.headers.get('cache-control')).toContain('immutable');
-    expect(served.headers.get('x-content-type-options')).toBe('nosniff');
-    expect(new Uint8Array(await served.arrayBuffer())).toEqual(webp);
+    // Before its JPEG XL, the .jxl answers with the PNG (so a <picture> never breaks), cached only briefly.
+    const early = await SELF.fetch(`https://quina.example/media/${key}.jxl`);
+    expect(early.status).toBe(200);
+    expect(early.headers.get('content-type')).toBe('image/png');
+    expect(early.headers.get('cache-control')).not.toContain('immutable');
 
+    expect((await attach(key, new Uint8Array([1, 2, 3]))).status).toBe(415); // not a JPEG XL
+    expect((await attach('0'.repeat(32), jxl)).status).toBe(404); // no fallback with that key
+    const attached = await attach(key, jxl);
+    expect(attached.status).toBe(201);
+    expect(await attached.json()).toEqual({ ok: true, path: `/media/${key}.jxl`, key });
+
+    for (const [ext, type, bytes] of [['png', 'image/png', png], ['jxl', 'image/jxl', jxl]] as const) {
+      const served = await SELF.fetch(`https://quina.example/media/${key}.${ext}?v=after`); // public, from anywhere
+      expect(served.status).toBe(200);
+      expect(served.headers.get('content-type')).toBe(type);
+      expect(served.headers.get('cache-control')).toContain('immutable');
+      expect(served.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(new Uint8Array(await served.arrayBuffer())).toEqual(bytes);
+    }
+
+    // Admin's picker: every pair, with its name and both paths.
+    const { media } = await getJson<{ media: { key: string; name: string | null; fallback: string; jxl: string; size: number; jxlSize: number | null }[] }>('/api/media');
+    expect(media.find((m) => m.key === key)).toMatchObject({ name: 'Croak', fallback: path, jxl: `/media/${key}.jxl`, size: png.length, jxlSize: jxl.length });
+
+    const webp = new Uint8Array([82, 73, 70, 70, 1, 2, 3, 4, 87, 69, 66, 80]);
+    expect((await upload(webp, 'image/webp')).status).toBe(415);
+    expect((await upload(new Uint8Array([1, 2, 3, 4]), 'image/png')).status).toBe(415); // claims PNG, isn't one
     expect((await upload(new TextEncoder().encode('<svg onload="alert(1)"/>'), 'image/svg+xml')).status).toBe(415);
     expect((await upload(new Uint8Array(0), 'image/png')).status).toBe(413);
     expect((await upload(new Uint8Array(400 * 1024), 'image/png')).status).toBe(413);
-    expect((await SELF.fetch(`${BASE}/media/${'0'.repeat(32)}.webp`)).status).toBe(404);
-    expect((await SELF.fetch(`${BASE}/media/not-a-hash.webp`)).status).toBe(404);
+    expect((await SELF.fetch(`${BASE}/media/${'0'.repeat(32)}.png`)).status).toBe(404);
+    expect((await SELF.fetch(`${BASE}/media/not-a-hash.png`)).status).toBe(404);
   });
 
   it('only organizers may change the plan or upload; methods are checked', async () => {
     expect((await put(PLAN, 'https://quina.example/api/plan')).status).toBe(403);
     expect((await SELF.fetch('https://quina.example/api/media', { method: 'POST', body: 'x' })).status).toBe(403);
-    expect((await SELF.fetch(`${BASE}/api/media`)).status).toBe(405);
+    expect((await SELF.fetch(`${BASE}/api/media`, { method: 'DELETE' })).status).toBe(405);
+    expect((await SELF.fetch('https://quina.example/api/media')).status).toBe(403);
+    expect((await SELF.fetch(`https://quina.example/api/media/${'0'.repeat(32)}.jxl`, { method: 'PUT', body: 'x' })).status).toBe(403);
     expect((await SELF.fetch(`${BASE}/api/plan`, { method: 'DELETE' })).status).toBe(405);
   });
 });

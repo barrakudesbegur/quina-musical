@@ -26,6 +26,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 
 | 2026-11-24 | Redeployed (version `61d29019`) with the UI build of c3770c8: the player never takes the relay in production, masked resume codes, relay pairing, Admin's plan B. Checked live: every page's assets load, the locked routes still answer 403, a phone gets its snapshot. | the same Worker | `npx wrangler rollback` |
 | 2026-11-24 | Redeployed (version `ca93f44c`): the Worker with the `relay.plan` push and `link.plan` (12c9f40), the UI build of 60f9d12 (the repo reorganisation), and the covers as JPEG XL with a JPEG fallback (`/covers/<id>.jxl` and `.jpg`, 256 px, `image/jxl` set in `_headers`). The old `.webp` covers stay until the player that uses `<picture>` is deployed. Checked live: the three cover types, `/api/health`, `/sw.js`, the cards and the player answer. | the same Worker | `npx wrangler rollback` |
+| 2026-11-24 | Redeployed (version `a03d0bcb`): logos and prize pictures as JPEG XL pairs (`POST /api/media` takes the PNG or JPEG fallback, `PUT /api/media/<key>.jxl` its JXL, `GET /api/media` lists them; WebP uploads refused; the GameRoom's `media` table gained a `name` column and a `media_jxl` table, added in place), the UI build of c4bc94c (the player's covers as `<picture>`, JXL first), and no more WebP covers. Checked live: `.jxl` and `.jpg` covers, `/api/health`, the player. | the same Worker (the two schema additions stay on a rollback, unused) | `npx wrangler rollback` |
 
 The first `wrangler deploy` was stopped by Claude Code's permission check (auto mode); the user then allowed `npx wrangler deploy` in this project (`.claude/settings.local.json`, personal and gitignored).
 
@@ -41,7 +42,7 @@ npm test            # green before any deploy
 npm run deploy      # = npm run assets (dist/) + wrangler deploy
 ```
 
-`npm run assets` needs `sips` (macOS) and `cjxl` (`brew install jpeg-xl`) for the covers, and `cwebp` (`brew install webp`) while the old player's WebP covers are still made. It warns about every missing piece: without the UI build, phones get the placeholder page.
+`npm run assets` needs `sips` (macOS) and `cjxl` (`brew install jpeg-xl`) for the covers. It warns about every missing piece: without the UI build, phones get the placeholder page.
 
 - It creates the Worker `quina-cloud` at `https://quina-cloud.<account subdomain>.workers.dev` (every account has a workers.dev subdomain).
 - To let a Claude session deploy next time, allow it in Claude Code (`/permissions`, for example `Bash(npx wrangler deploy:*)`), or just run the command yourself.

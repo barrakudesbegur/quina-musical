@@ -30,8 +30,23 @@ export interface RoomStats {
 /** The answer to PUT /api/plan, and to the GameRoom's setPlan. */
 export type PlanSave = { ok: true; plan: GamePlan } | { ok: false; errors: string[] };
 
-/** The answer to POST /api/media: where the file is served. */
-export type MediaSave = { ok: true; path: string } | { ok: false; status: 413 | 415 | 507; error: string };
+/** The answer to POST /api/media (the fallback) and PUT /api/media/<key>.jxl: where it is served, and its key. */
+export type MediaSave = { ok: true; path: string; key: string } | { ok: false; status: 404 | 413 | 415 | 507; error: string };
+
+/** One uploaded image pair, for Admin's picker (GET /api/media), newest first. */
+export interface MediaItem {
+  key: string;
+  name: string | null;
+  /** The PNG or JPEG (or a WebP from before JXL), at /media/<key>.<ext>. */
+  fallback: string;
+  /** /media/<key>.jxl: the JPEG XL, or the fallback's bytes while there is none (so a <picture> never breaks). */
+  jxl: string;
+  contentType: string;
+  size: number;
+  /** The JPEG XL's size, or null when there is none yet. */
+  jxlSize: number | null;
+  uploadedAtMs: number;
+}
 
 /** One Game of the edition, for Admin's resume picker (GET /api/games). */
 export interface GameSummary {

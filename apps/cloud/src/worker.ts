@@ -2,7 +2,7 @@
 // edition's GameRoom. Static files never get here (wrangler.jsonc `run_worker_first`).
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
-import { findRoute, mediaId, syncTarget } from './domain/routes.ts';
+import { findRoute, jxlUploadKey, mediaId, syncTarget, wantsJxl } from './domain/routes.ts';
 import { checkManifest, fileKey, isSha256, isSyncPath, manifestKey, MAX_SYNC_FILE_BYTES } from './domain/media-sync.ts';
 import { GameRoom, IDENTITY_HEADER } from './game-room.ts';
 
@@ -31,7 +31,7 @@ export default {
     }
 
     if (route.name === 'health') return json({ ok: true, edition: env.EDITION });
-    if (route.name === 'media') return media(request, env, ctx, mediaId(url.pathname) as string);
+    if (route.name === 'media') return media(request, env, ctx, mediaId(url.pathname) as string, wantsJxl(url.pathname));
     if (route.name === 'sync') return sync(request, env, url);
     const room = roomOf(env);
     switch (route.name) {
@@ -49,9 +49,17 @@ export default {
         return json(saved, {}, saved.ok ? 200 : 400);
       }
       case 'upload': {
+        if (request.method === 'GET') return json({ media: await room.listMedia() });
         const body = await readBody(request, CLOUD.media.maxBytes);
         if (body === null) return text(413, `files of at most ${CLOUD.media.maxBytes / 1024} KB`);
-        const saved = await room.putMedia(body, (request.headers.get('content-type') ?? '').split(';')[0]?.trim() ?? '');
+        const name = url.searchParams.get('name')?.trim().slice(0, CLOUD.media.maxNameLength) || null;
+        const saved = await room.putMedia(body, (request.headers.get('content-type') ?? '').split(';')[0]?.trim() ?? '', name);
+        return json(saved, {}, saved.ok ? 201 : saved.status);
+      }
+      case 'uploadJxl': {
+        const body = await readBody(request, CLOUD.media.maxBytes);
+        if (body === null) return text(413, `files of at most ${CLOUD.media.maxBytes / 1024} KB`);
+        const saved = await room.putMediaJxl(jxlUploadKey(url.pathname) as string, body);
         return json(saved, {}, saved.ok ? 201 : saved.status);
       }
       case 'games':
@@ -112,14 +120,16 @@ export function roomOf(env: Env): DurableObjectStub<GameRoom> {
  * A media file, by content hash, so it never changes: cached for a year by browsers and by Cloudflare's cache
  * (on a custom domain; the Cache API does nothing on workers.dev), so phones rarely wake the GameRoom for it.
  */
-async function media(request: Request, env: Env, ctx: ExecutionContext, id: string): Promise<Response> {
+async function media(request: Request, env: Env, ctx: ExecutionContext, id: string, jxl: boolean): Promise<Response> {
   const cache = caches.default;
   const cached = await cache.match(request);
   if (cached) return cached;
-  const file = await roomOf(env).getMedia(id);
+  const file = await roomOf(env).getMedia(id, jxl);
   if (!file) return text(404, 'not found');
+  // A .jxl with no JPEG XL yet answers with the fallback's bytes (a <picture> never breaks), cached only briefly.
+  const cacheControl = file.isFallback ? `public, max-age=${CLOUD.media.fallbackForJxlMaxAgeS}` : 'public, max-age=31536000, immutable';
   const response = new Response(file.bytes, {
-    headers: { 'content-type': file.contentType, 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' },
+    headers: { 'content-type': file.contentType, 'cache-control': cacheControl, 'x-content-type-options': 'nosniff' },
   });
   ctx.waitUntil(cache.put(request, response.clone()));
   return response;

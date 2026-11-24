@@ -27,7 +27,7 @@ import {
   type ResumeToken,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
-import type { EditionExport, GameSummary, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
+import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
@@ -91,6 +91,22 @@ type Attachment = ShowAttachment | PhoneAttachment | ConsoleAttachment;
 type SocketTag = Attachment['role'];
 
 type RoomEnv = Env & AccessEnv;
+
+/** Whether the bytes start like the image type they claim (PNG, JPEG, or JPEG XL as a codestream or a container). */
+function isImage(bytes: ArrayBuffer, contentType: string): boolean {
+  const b = new Uint8Array(bytes, 0, Math.min(12, bytes.byteLength));
+  const starts = (...sig: number[]) => sig.every((v, i) => b[i] === v);
+  switch (contentType) {
+    case 'image/png':
+      return starts(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case 'image/jpeg':
+      return starts(0xff, 0xd8, 0xff);
+    case 'image/jxl':
+      return starts(0xff, 0x0a) || starts(0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a);
+    default:
+      return false;
+  }
+}
 
 export class GameRoom extends DurableObject<RoomEnv> {
   private readonly sql: SqlStorage;
@@ -475,24 +491,67 @@ export class GameRoom extends DurableObject<RoomEnv> {
     this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan, savedAtMs: own });
   }
 
-  /** Keep an uploaded image under its content hash; the same file twice is stored once. */
-  async putMedia(bytes: ArrayBuffer, contentType: string): Promise<MediaSave> {
+  /**
+   * Keep an uploaded fallback (PNG or JPEG) under its content hash; the same file twice is stored once (a new
+   * name replaces the old). Its JPEG XL comes separately (putMediaJxl).
+   */
+  async putMedia(bytes: ArrayBuffer, contentType: string, name: string | null = null): Promise<MediaSave> {
     const ext = CLOUD.media.types[contentType];
-    if (!ext) return { ok: false, status: 415, error: `only ${Object.keys(CLOUD.media.types).join(', ')}` };
+    const only = `only ${Object.keys(CLOUD.media.types).join(', ')} (a JPEG XL goes to PUT /api/media/<key>.jxl)`;
+    if (!ext) return { ok: false, status: 415, error: only };
     if (bytes.byteLength === 0 || bytes.byteLength > CLOUD.media.maxBytes) return { ok: false, status: 413, error: `files of 1 byte to ${CLOUD.media.maxBytes / 1024} KB` };
+    if (!isImage(bytes, contentType)) return { ok: false, status: 415, error: `${only}: these bytes aren't a ${ext.toUpperCase()}` };
     const id = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
     const known = this.rows('SELECT id FROM media WHERE id = ?', id).length > 0;
     if (!known) {
       const count = Number(this.rows('SELECT COUNT(*) AS n FROM media')[0]?.n ?? 0);
       if (count >= CLOUD.media.maxFiles) return { ok: false, status: 507, error: `at most ${CLOUD.media.maxFiles} files` };
-      this.rows('INSERT INTO media (id, content_type, bytes, at_ms) VALUES (?, ?, ?, ?)', id, contentType, bytes, Date.now());
+      this.rows('INSERT INTO media (id, content_type, bytes, at_ms, name) VALUES (?, ?, ?, ?, ?)', id, contentType, bytes, Date.now(), name);
+    } else if (name !== null) {
+      this.rows('UPDATE media SET name = ? WHERE id = ?', name, id);
     }
-    return { ok: true, path: `/media/${id}.${ext}` };
+    return { ok: true, path: `/media/${id}.${ext}`, key: id };
   }
 
-  getMedia(id: string): { bytes: ArrayBuffer; contentType: string } | null {
+  /** Attach the JPEG XL to an uploaded fallback (replacing an earlier one). */
+  putMediaJxl(id: string, bytes: ArrayBuffer): MediaSave {
+    if (this.rows('SELECT id FROM media WHERE id = ?', id).length === 0) return { ok: false, status: 404, error: 'upload the PNG or JPEG first (POST /api/media)' };
+    if (bytes.byteLength === 0 || bytes.byteLength > CLOUD.media.maxBytes) return { ok: false, status: 413, error: `files of 1 byte to ${CLOUD.media.maxBytes / 1024} KB` };
+    if (!isImage(bytes, 'image/jxl')) return { ok: false, status: 415, error: 'only image/jxl' };
+    this.rows('INSERT INTO media_jxl (id, bytes, at_ms) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET bytes = excluded.bytes, at_ms = excluded.at_ms', id, bytes, Date.now());
+    return { ok: true, path: `/media/${id}.jxl`, key: id };
+  }
+
+  /** A stored file: the fallback, or for `jxl` the JPEG XL (`isFallback` when there is none, so the fallback answers). */
+  getMedia(id: string, jxl = false): { bytes: ArrayBuffer; contentType: string; isFallback: boolean } | null {
+    if (jxl) {
+      const row = this.rows('SELECT bytes FROM media_jxl WHERE id = ?', id)[0];
+      if (row) return { bytes: row.bytes as ArrayBuffer, contentType: 'image/jxl', isFallback: false };
+    }
     const row = this.rows('SELECT content_type, bytes FROM media WHERE id = ?', id)[0];
-    return row ? { bytes: row.bytes as ArrayBuffer, contentType: String(row.content_type) } : null;
+    return row ? { bytes: row.bytes as ArrayBuffer, contentType: String(row.content_type), isFallback: jxl } : null;
+  }
+
+  /** Every uploaded pair, newest first: Admin's picker. */
+  listMedia(): MediaItem[] {
+    const rows = this.rows(
+      'SELECT m.id, m.name, m.content_type, length(m.bytes) AS size, m.at_ms, length(j.bytes) AS jxl_size FROM media m LEFT JOIN media_jxl j ON j.id = m.id ORDER BY m.at_ms DESC',
+    );
+    const exts: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+    return rows.map((r) => {
+      const key = String(r.id);
+      const contentType = String(r.content_type);
+      return {
+        key,
+        name: r.name === null || r.name === undefined ? null : String(r.name),
+        fallback: `/media/${key}.${exts[contentType] ?? 'png'}`,
+        jxl: `/media/${key}.jxl`,
+        contentType,
+        size: Number(r.size),
+        jxlSize: r.jxl_size === null || r.jxl_size === undefined ? null : Number(r.jxl_size),
+        uploadedAtMs: Number(r.at_ms),
+      };
+    });
   }
 
   // ---- Games and Admin's manual resume ---------------------------------------------------------------------
@@ -579,6 +638,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
     ) WITHOUT ROWID`);
     this.rows('CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK (id = 1), body TEXT NOT NULL)');
     this.rows('CREATE TABLE IF NOT EXISTS media (id TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BLOB NOT NULL, at_ms REAL NOT NULL) WITHOUT ROWID');
+    // Added with the JPEG XL pairs: a name for Admin's picker, and each fallback's JXL.
+    if (!this.rows('PRAGMA table_info(media)').some((c) => c.name === 'name')) this.rows('ALTER TABLE media ADD COLUMN name TEXT');
+    this.rows('CREATE TABLE IF NOT EXISTS media_jxl (id TEXT PRIMARY KEY, bytes BLOB NOT NULL, at_ms REAL NOT NULL) WITHOUT ROWID');
   }
 
   private load(): RoomSnapshot {
