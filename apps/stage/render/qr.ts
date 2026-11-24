@@ -1,6 +1,7 @@
-// The player app's QR with its short link underneath (before the Game and in the Interval only, never in
-// play). The code is drawn as one SVG path built from the `qrcode` package's module matrix; no markup is
-// parsed. If the code can't be made, the short link alone stays as the fallback.
+// The player app's QR, before the Game only (never in play, nor in the Interval). No text around it, so the
+// code is as large as possible (the user's review); the short link is its accessible label. The code is drawn
+// as one SVG path built from the `qrcode` package's module matrix; no markup is parsed. If the code can't be
+// made, the short link shows instead, as the fallback.
 import QRCode from 'qrcode';
 import { qrPathData } from '../model/qr.ts';
 import type { LinkView } from '../view.ts';
@@ -39,18 +40,20 @@ export class QrBlock {
   private readonly label: HTMLElement;
   private href = '';
 
-  constructor() {
+  constructor(extraClass = '') {
     this.code = h('div', 'qr__frame');
-    this.label = h('p', 'qr__url');
-    this.root = h('figure', 'qr', h('figcaption', 'qr__caption', STAGE_TEXT.scanYourCard), this.code, this.label);
+    this.label = h('p', { class: 'qr__url', hidden: true });
+    this.root = h('figure', { class: `qr ${extraClass}`.trim(), attrs: { role: 'img' } }, this.code, this.label);
   }
 
   set(link: LinkView): void {
     setText(this.label, link.label);
+    this.root.setAttribute('aria-label', `${STAGE_TEXT.scanYourCard}: ${link.label}`);
     if (link.href === this.href) return;
     this.href = link.href;
     const svg = qrSvg(link.href);
     this.code.replaceChildren(...(svg ? [svg] : []));
     setHidden(this.code, svg === null);
+    setHidden(this.label, svg !== null);
   }
 }

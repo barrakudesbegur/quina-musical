@@ -13,7 +13,8 @@ const inputs = (nowMs: number, extra: Partial<MomentInputs> = {}): MomentInputs 
   heat: null,
   linkLost: false,
   checkMarkAt: 'end',
-  prizeRotationMs: 8000,
+  checkTypeLeadMs: 900,
+  countdown: { clockAboveMin: 90, fineBelowMin: 10, coarseStepMin: 5 },
   ...extra,
 });
 const viewOf = (state: FlowState, notes = { landed: [], spin: null }) => stageView(state, flowOf(state), SAMPLE_PLAN, null, notes);
@@ -21,7 +22,7 @@ const names = (a: AnimDetail[]) => a.map((x) => x.name);
 
 test('the hook names are exactly the ANIMATIONS.md projector hooks', () => {
   assert.deepEqual([...ANIM_NAMES].sort(), [
-    'celebrate', 'check-enter', 'check-result', 'check-step', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'suspense',
+    'celebrate', 'check-enter', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'suspense',
   ]);
 });
 
@@ -78,10 +79,14 @@ test('spin starts at its start time; suspense when it opens', () => {
 });
 
 test('check steps: playing then marked, each at its time, and the result at the end', () => {
-  const state = FIXTURES.check(NOW).state; // steps at +600, +3600, +6600, +9600 (2.5 s each); end +12600
+  const state = FIXTURES.check(NOW).state; // starts +600; steps at +600, +3600, +6600, +9600 (2.5 s each); end +12600
   const at = (ms: number) => momentsOf(viewOf(state), inputs(NOW + ms));
   const entered = at(0);
-  assert.deepEqual(diffMoments(entered, at(600)), [{ name: 'check-step', index: 0, songId: 2, state: 'playing' }]);
+  // The card type is the first step; here the first snippet starts with the Check, so it's marked then too.
+  assert.deepEqual(diffMoments(entered, at(600)), [
+    { name: 'check-type', ok: true },
+    { name: 'check-step', index: 0, songId: 2, state: 'playing' },
+  ]);
   assert.deepEqual(diffMoments(at(600), at(3100)), [{ name: 'check-step', index: 0, songId: 2, state: 'landed' }]);
   assert.deepEqual(diffMoments(at(9600), at(12100)), [{ name: 'check-step', index: 3, songId: 20, state: 'missed' }]);
   assert.deepEqual(diffMoments(at(12599), at(12600)), [{ name: 'check-result', result: 'incomplete' }]);
@@ -92,7 +97,7 @@ test('scene changes: check → celebration → interval', () => {
   const celebration = momentsOf(viewOf(FIXTURES.celebration(NOW).state), inputs(NOW));
   assert.deepEqual(diffMoments(check, celebration), [
     { name: 'scene-enter', scene: 'celebration' },
-    { name: 'celebrate', kind: 'line', cardIds: [123] },
+    { name: 'celebrate', kind: 'line' },
   ]);
   const interval = momentsOf(viewOf(FIXTURES.interval(NOW).state), inputs(NOW));
   assert.deepEqual(names(diffMoments(celebration, interval)), ['scene-enter', 'idle']);
@@ -130,12 +135,24 @@ test('heat fires when a new sample starts; pause and link-lost when they change'
   assert.deepEqual(diffMoments(a, paused), [{ name: 'pause', on: true }]);
 });
 
-test('the Interval prizes rotate every 8 s', () => {
-  // sinceMs = NOW - 40000: the 6th period starts at NOW + 8000. The presenters revealed the next round's prizes.
-  const interval = FIXTURES.interval(NOW).state;
-  const state: FlowState = { ...interval, prizes: { revealed: [...(interval.prizes?.revealed ?? []), { round: 4, by: 'presenters' }] } };
+test('the Interval countdown ticks when what it says changes, once a minute at most', () => {
+  // guideEndMs = NOW + 140000: "3 minutes" until NOW + 20000, then "2 minutes"; under a minute it's "soon".
+  const state = FIXTURES.interval(NOW).state;
   const at = (ms: number) => momentsOf(viewOf(state), inputs(NOW + ms));
-  assert.deepEqual(diffMoments(at(7999), at(8000)), [{ name: 'interval-rotate', index: 0 }]);
-  assert.deepEqual(diffMoments(at(15999), at(16000)), [{ name: 'interval-rotate', index: 1 }]);
-  assert.deepEqual(diffMoments(at(8000), at(9000)), []);
+  assert.deepEqual(diffMoments(at(0), at(19999)), []);
+  assert.deepEqual(diffMoments(at(19999), at(20000)), [{ name: 'interval-rotate' }]);
+  assert.deepEqual(diffMoments(at(79999), at(80000)), [{ name: 'interval-rotate' }], '"soon"');
+  assert.deepEqual(diffMoments(at(80000), at(200000)), [], 'stays "soon" when overdue');
+});
+
+test('the card type: marked after the lead, before the first snippet; at once (with the result) for a wrong-type card', () => {
+  const { state } = FIXTURES.check(NOW);
+  const early: FlowState = { ...state, check: state.check ? { ...state.check, startAtMs: NOW - 2000 } : null }; // first snippet at +600
+  const at = (ms: number) => momentsOf(viewOf(early), inputs(NOW + ms));
+  assert.deepEqual(diffMoments(at(-1101), at(-1100)), [{ name: 'check-type', ok: true }], '900 ms after the start');
+  assert.deepEqual(diffMoments(at(100), at(600)), [{ name: 'check-step', index: 0, songId: 2, state: 'playing' }]);
+  const wrong = FIXTURES.checkWrongType(NOW).state;
+  assert.deepEqual(names(diffMoments(at(100), momentsOf(viewOf(wrong), inputs(NOW + 100)))), ['check-enter', 'check-type', 'check-result']);
+  const entered = diffMoments(null, momentsOf(viewOf(wrong), inputs(NOW)));
+  assert.deepEqual(entered.filter((a) => a.name === 'check-type'), [{ name: 'check-type', ok: false }]);
 });

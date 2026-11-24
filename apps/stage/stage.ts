@@ -335,7 +335,8 @@ class Stage {
       heat: activeHeatSample(this.heatSamples, now),
       linkLost: linkLost(this.linkDownSinceMs, Date.now(), STAGE.linkLostAfterMs),
       checkMarkAt: STAGE.checkMarkAt,
-      prizeRotationMs: STAGE.prizeRotationMs,
+      checkTypeLeadMs: STAGE.checkTypeLeadMs,
+      countdown: STAGE.countdown,
     });
     // The drum band's own hook follows the motion: `spin` while it spins, `suspense` while one is held open.
     setData(this.slot, 'anim', next.motion === 'idle' ? null : next.motion);

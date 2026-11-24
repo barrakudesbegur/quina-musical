@@ -1,5 +1,5 @@
-// Building blocks shared by the scenes: a prize, the sponsors, a round title, a song tile, a countdown.
-// Each owns its DOM nodes and updates them from view data only.
+// Building blocks shared by the scenes: a prize, the sponsors, a round title, a song tile, a countdown, a
+// mini card and a nino sticker. Each owns its DOM nodes and updates them from view data only.
 import type { RoundView, PrizeView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
@@ -7,7 +7,7 @@ import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/tim
 import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
-import { CoverArt, h, playAnim, setData, setHidden, setText } from './dom.ts';
+import { CoverArt, h, setData, setHidden, setText, setVar } from './dom.ts';
 
 /** "Quina 4", plus the special-round badge. */
 export class RoundTitle {
@@ -120,7 +120,7 @@ export class SongTile {
   }
 }
 
-/** A rough countdown chip; it plays `interval-rotate` when its text changes (once a minute at most). */
+/** A rough countdown in words ("Comencem a les 10:00 pm", "Tornem d'aquí a uns 2 minuts"). */
 export class CountdownChip {
   readonly root: HTMLElement;
   private last: RoughCountdown | null = null;
@@ -131,10 +131,9 @@ export class CountdownChip {
     this.root = h('p', { class: 'countdown', hidden: true });
   }
 
-  update(targetMs: number | null, nowMs: number, animate: boolean): void {
+  update(targetMs: number | null, nowMs: number): void {
     const next = roughCountdown(targetMs, nowMs, STAGE.countdown);
     if (sameCountdown(next, this.last)) return;
-    const had = this.last !== null;
     this.last = next;
     setHidden(this.root, next === null);
     if (!next) return;
@@ -143,6 +142,49 @@ export class CountdownChip {
       this.root,
       next.kind === 'soon' ? STAGE_TEXT.countdown.soon(ctx) : next.kind === 'at' ? STAGE_TEXT.countdown.at(ctx, formatClock(next.atMs)) : STAGE_TEXT.countdown.minutes(ctx, next.minutes),
     );
-    if (animate && had) playAnim(this.root, 'interval-rotate');
   }
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The Quina Especial's star (a five-pointed star in gold, with an ink outline; colours from stage.css). */
+export function starIcon(className: string): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', `star-icon ${className}`.trim());
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.1l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z');
+  svg.append(path);
+  return svg;
+}
+
+/**
+ * A printed card in miniature: a title bar over its 3 × 4 grid, in the card type's colour (`--type-color`),
+ * with the star when it plays the Quina Especial. Decorative: the type's name is said next to it.
+ */
+export class MiniCard {
+  readonly root: HTMLElement;
+  private readonly star: SVGSVGElement;
+
+  constructor(extraClass = '') {
+    this.star = starIcon('mini-card__star');
+    this.root = h(
+      'div',
+      { class: `mini-card ${extraClass}`.trim(), attrs: { 'aria-hidden': 'true' } },
+      h('div', 'mini-card__bar'),
+      h('div', 'mini-card__grid', ...Array.from({ length: 12 }, () => h('span', 'mini-card__cell'))),
+      this.star,
+    );
+  }
+
+  set(color: string, special: boolean): void {
+    setVar(this.root, '--type-color', color);
+    this.star.style.display = special ? '' : 'none';
+  }
+}
+
+/** A nino sticker (game-style, with its white border), or null when the stage has none for this spot. */
+export function stickerImage(url: string | null, name: string, extraClass: string): HTMLImageElement | null {
+  return url ? h('img', { class: `sticker ${extraClass}`.trim(), data: { sticker: name }, attrs: { src: url, alt: '', decoding: 'async', draggable: 'false' } }) : null;
 }

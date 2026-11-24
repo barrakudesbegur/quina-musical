@@ -43,13 +43,8 @@
   --stage-gloss: color-mix(in srgb, var(--color-paper) 30%, transparent);
   --stage-text-stroke: 0.5625rem;
   --stage-text-drop: 0.4375rem;
-  /* The Check: the ribbon, covers floating with no box, the result plaque (1440 px reference sizes) */
-  --stage-ribbon-width: 73.75rem;
-  --stage-ribbon-height: 7.375rem;
-  --stage-ribbon-tail: 9.375rem;
-  --stage-ribbon-tail-out: 3.75rem;
-  --stage-check-heading: 4rem;
-  --stage-check-pill: 1.625rem;
+  /* The Check: the plate and type badge, covers floating with no box, the result (1440 px reference sizes) */
+  --stage-check-heading: 4.75rem;
   --stage-check-cover: 13rem;
   --stage-check-cover-radius: 1.125rem;
   --stage-check-title: 2.125rem;
@@ -60,15 +55,23 @@
   --stage-plaque-radius: 2.125rem;
   --stage-plaque-tilt: -2deg;
   --stage-plaque-title: 5.25rem;
-  --stage-plaque-detail: 2.25rem;
   --stage-scrim: color-mix(in srgb, var(--color-bg-deep) 72%, transparent);
-  --stage-sticker: 20.625rem;
-  --stage-sticker-room: 18.75rem;
   --stage-sticker-tilt: -12deg;
   --stage-light: 1.375rem;
   --stage-light-cool: color-mix(in oklab, var(--color-calm) 55%, var(--color-paper));
   --stage-ring: 0.5rem;
   --stage-qr: 18.75rem;
+  --stage-qr-box: 34.25rem;
+  --stage-title-big: 9.375rem;
+  --stage-strip-columns: 8;
+  --stage-strip-tile: 4.75rem;
+  --stage-logo-tile: #fff; /* logos and QR on white: many logos are drawn for white paper */
+  --stage-ring-size: 24.375rem;
+  --stage-fail-dim-opacity: 0.1;
+  --stage-fail-beam: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --stage-fail-glow: color-mix(in srgb, var(--color-danger) 50%, transparent);
+  --stage-cross: 36.25rem;
+  --stage-cross-row: 17.5rem;
   --stage-logo: 6rem;
   --stage-tile-cover: 11.25rem;
   --stage-confetti: 1.125rem;
@@ -97,12 +100,12 @@
   --stage-delay-sticker: 200ms;
   --stage-dur-flash: 120ms;
   --stage-dur-slam: 600ms;
-  --stage-delay-plate: 300ms;
   --stage-delay-prize: 600ms;
   --stage-dur-rays: 20s;
   --stage-dur-confetti: 2400ms;
   --stage-dur-rotate: 400ms;
   --stage-dur-idle: 8s;
+  --stage-dur-sway: 8s;
   --stage-dur-pause: 300ms;
   --stage-dur-link: 200ms;
   /* Reduced-motion fades (they stay when motion is reduced) */
@@ -407,19 +410,171 @@
   box-shadow: 0 4px 0 var(--color-shadow);
 }
 
+/* The logos strip (before the Game, the Interval): white tiles in rows of 8, logos contained, names when a
+   sponsor has no logo yet. */
+.sponsors--strip {
+  width: 100%;
+}
+
+.sponsors--strip .sponsors__list {
+  --strip-gap: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem var(--strip-gap);
+}
+
+.sponsors--strip .sponsors__item {
+  flex: none;
+  width: calc((100% - (var(--stage-strip-columns) - 1) * var(--strip-gap)) / var(--stage-strip-columns));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: var(--stage-strip-tile);
+  padding: 0.375rem 0.625rem;
+  overflow: hidden;
+  border: 0.25rem solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--stage-logo-tile);
+  box-shadow: 0 0.3125rem 0 var(--color-shadow);
+}
+
+.sponsors--strip .sponsors__logo {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.sponsors--strip .sponsors__name {
+  font-size: 1.125rem;
+  line-height: 1.05;
+  color: var(--color-text-on-paper);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Outlined display text (Londrina, white with a thick ink stroke and a hard drop), as on the boards. */
+.game-text,
+.before__title,
+.interval__title,
+.interval__plate,
+.night__name,
+.night__price,
+.before__countdown,
+.ring__value,
+.interval__words,
+.check__type-name {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  color: var(--color-text);
+  -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--stage-text-drop) 0 var(--color-line);
+  letter-spacing: 0.01em;
+}
+
+/* A gold plate with a darker bottom edge (the Interval's next round, the start time). */
+.interval__plate,
+.before__countdown.countdown {
+  border: 0.375rem solid var(--color-line);
+  border-radius: 1.5rem;
+  background: var(--color-accent);
+  box-shadow:
+    inset 0 -0.625rem 0 var(--color-accent-edge),
+    inset 0 0.3125rem 0 var(--stage-gloss),
+    0 0.5625rem 0 var(--color-shadow);
+}
+
+/* A printed card in miniature, in its type's colour (`--type-color`): a title bar over a 3 × 4 grid, with a
+   star when it plays the Quina Especial. Its sizes are set per use. */
+.mini-card {
+  --mc-width: 11.25rem;
+  --mc-border: 0.375rem;
+  --mc-radius: 1rem;
+  --mc-pad: 0.625rem;
+  --mc-gap: 0.4375rem;
+  --mc-bar: 0.875rem;
+  --mc-cell-border: 0.1875rem;
+  --mc-cell-radius: 0.3125rem;
+  --mc-cell-gap: 0.375rem;
+  --mc-star: 4.125rem;
+  --mc-tilt: -5deg;
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-gap);
+  width: var(--mc-width);
+  aspect-ratio: 180 / 140;
+  padding: var(--mc-pad);
+  border: var(--mc-border) solid var(--color-line);
+  border-radius: var(--mc-radius);
+  background: var(--type-color, var(--color-paper));
+  box-shadow: 0 calc(var(--mc-border) * 1.5) 0 color-mix(in srgb, var(--color-shadow) 50%, transparent);
+  rotate: var(--mc-tilt);
+}
+
+.mini-card__bar {
+  flex: none;
+  height: var(--mc-bar);
+  border-radius: calc(var(--mc-bar) * 0.4);
+  background: color-mix(in srgb, var(--color-line) 22%, transparent);
+}
+
+.mini-card__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: var(--mc-cell-gap);
+}
+
+.mini-card__cell {
+  border: var(--mc-cell-border) solid var(--color-line);
+  border-radius: var(--mc-cell-radius);
+  background: var(--stage-logo-tile);
+}
+
+.mini-card__star {
+  position: absolute;
+  right: calc(var(--mc-star) * -0.45);
+  top: calc(var(--mc-star) * -0.48);
+  width: var(--mc-star);
+  height: var(--mc-star);
+  rotate: 12deg;
+}
+
+.star-icon path {
+  fill: var(--color-accent);
+  stroke: var(--color-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* A nino sticker: game-style art with its white border, and a soft hard-edged drop. */
+.sticker {
+  height: auto;
+  filter: drop-shadow(0 0.625rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent));
+}
+
+/* `idle` on a nino: it sways ±3° (each with its own period, so they never sync). */
+.stage-root .sticker[data-anim='idle'] {
+  animation: stage-sway var(--stage-dur-sway) var(--stage-ease-in-out) infinite alternate;
+}
+
 .countdown {
   justify-self: center;
   padding: var(--space-2) var(--space-6);
   border-radius: var(--radius-pill);
   background: var(--stage-panel);
   font-size: var(--stage-text-md);
-  transition: transform var(--stage-dur-rotate) var(--ease-out);
-}
-
-/* `interval-rotate` on the countdown: a small tick each minute. */
-.countdown[data-anim='interval-rotate'].is-entering {
-  transform: scale(1.08);
-  transition: none;
 }
 
 .qr {
@@ -428,14 +583,12 @@
   justify-items: center;
 }
 
-.qr__caption,
+/* Shown only when the code can't be drawn (the fallback). */
 .qr__url {
-  font-size: var(--stage-text-sm);
-}
-
-.qr__url {
+  font-size: var(--stage-text-md);
   font-weight: var(--font-weight-strong);
-  color: var(--color-accent);
+  color: var(--color-text-on-paper);
+  overflow-wrap: anywhere;
 }
 
 .qr__frame {
@@ -459,16 +612,14 @@
 }
 
 /* ------------------------------------------------------------------------------------------ before */
+/* The edition's name on top; the night's preview (one band per card type, colour-matched) and the start time
+   on the left; the QR, as large as possible, on the right with the sitting nino on its corner; the logos. */
 .scene--before {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--stage-gap);
-  padding: var(--stage-pad);
-}
-
-.before__head {
-  display: grid;
-  gap: var(--space-4);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  row-gap: 2.375rem;
+  padding: 5.25rem 4rem 1.625rem;
 }
 
 .before__title,
@@ -481,42 +632,219 @@
   color: var(--color-accent);
 }
 
+.before__title,
+.interval__title {
+  max-width: 100%;
+  font-size: var(--stage-title-big);
+  -webkit-text-stroke: 0.875rem var(--color-line);
+  text-shadow: 0 0.75rem 0 var(--color-line);
+}
+
+.before__title {
+  color: var(--color-accent);
+}
+
 .before__main {
+  width: 100%;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) var(--stage-qr-box);
+  align-items: start;
+  gap: 2.5rem;
+}
+
+.before__night {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.night {
+  width: 100%;
+  display: grid;
+  gap: 1.625rem;
+}
+
+/* One card type: its band in its pastel colour, with a darker bottom edge in the same colour. */
+.night__band {
+  display: flex;
   align-items: center;
-  gap: var(--space-7);
+  gap: 1.375rem;
+  min-height: 11.625rem;
+  padding: 1.25rem 1.5rem 1.75rem 1.375rem;
+  border: 0.375rem solid var(--color-line);
+  border-radius: 2rem;
+  background: var(--type-color);
+  box-shadow:
+    inset 0 -0.75rem 0 color-mix(in oklab, var(--type-color) 80%, var(--color-line)),
+    inset 0 0.375rem 0 color-mix(in srgb, white 45%, transparent),
+    0 0.625rem 0 var(--color-shadow);
+  color: var(--color-text-on-paper);
+}
+
+.night__art {
+  position: relative;
+  flex: none;
+  width: 12.75rem;
+  height: 10rem;
+}
+
+.night__card {
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+}
+
+/* The price tag: gold, tilted, pinned on the card's corner. */
+.night__price {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0 1.25rem 0.5rem 1.875rem;
+  border: 0.375rem solid var(--color-line);
+  border-radius: 1.375rem;
+  background: var(--color-accent);
+  box-shadow:
+    inset 0 -0.625rem 0 var(--color-accent-edge),
+    inset 0 0.3125rem 0 var(--stage-gloss),
+    0 0.5rem 0 var(--color-shadow);
+  font-size: 4.5rem;
+  white-space: nowrap;
+  rotate: 7deg;
+}
+
+.night__price::before {
+  content: '';
+  position: absolute;
+  left: 0.5625rem;
+  top: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.625rem;
+  border: 0.1875rem solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-bg);
+}
+
+.night__info {
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 0.875rem;
   text-align: start;
 }
 
-.how-to {
-  display: grid;
-  gap: var(--space-5);
+.night__name {
+  font-size: 3.375rem;
 }
 
-.how-to__title {
+.night__rounds {
+  /* The balls shrink a little so up to 8 regular rounds fit on one line (`--balls`: how many). */
+  --stage-ball: clamp(2.5rem, calc(21rem / var(--balls, 6) - 0.375rem), 3.25rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.night__word {
+  margin-inline-end: 0.5rem;
   font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
-  font-size: var(--stage-text-md);
-  color: var(--color-accent);
+  font-size: 2.625rem;
+  line-height: 1;
 }
 
-.how-to__steps {
+.night__ball {
   display: grid;
-  gap: var(--space-5);
-  counter-reset: how-to;
-}
-
-.how-to__step {
-  counter-increment: how-to;
-  font-size: var(--stage-text-md);
-  line-height: 1.15;
-}
-
-.how-to__step::before {
-  content: counter(how-to) '. ';
-  color: var(--color-accent);
+  place-items: center;
+  width: var(--stage-ball);
+  height: var(--stage-ball);
+  border: 0.3125rem solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 0.3125rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent);
+  font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
+  font-size: calc(var(--stage-ball) * 0.62);
+  line-height: 1;
+}
+
+/* A round the card plays apart from the numbered ones: "Quina Especial", with its star. */
+.night__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 3.875rem;
+  padding: 0 1.5rem 0.25rem;
+  border: 0.3125rem solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  box-shadow: 0 0.375rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: 2.5rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.night__pill-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.before__countdown.countdown {
+  justify-self: start;
+  padding: 0.25rem 1.625rem 0.625rem;
+  border-width: 0.3125rem;
+  border-radius: 1.375rem;
+  font-size: 3.125rem;
+  -webkit-text-stroke-width: 0.5rem;
+  text-shadow: 0 0.3125rem 0 var(--color-line);
+}
+
+.before__qr-spot {
+  position: relative;
+}
+
+.before__qr {
+  display: block;
+  width: var(--stage-qr-box);
+  aspect-ratio: 1;
+  padding: 1.125rem;
+  border: 0.375rem solid var(--color-line);
+  border-radius: 1.875rem;
+  background: var(--color-paper);
+  box-shadow: 0 0.625rem 0 var(--color-shadow);
+  place-content: center;
+}
+
+.before__qr .qr__frame {
+  width: 100%;
+  height: 100%;
+}
+
+.before__qr .qr__code {
+  border-radius: 0.875rem;
+}
+
+.before__qr .qr__paper {
+  fill: var(--stage-logo-tile);
+}
+
+/* The sitting nino, on the QR box's top-right corner. */
+.before__sticker {
+  position: absolute;
+  right: -0.625rem;
+  top: -8.5rem;
+  height: 13.125rem;
+  width: auto;
+  --stage-dur-sway: 9s;
+}
+
+.before__sponsors {
+  align-self: end;
 }
 
 /* -------------------------------------------------------------------------------------- roundStart */
@@ -853,9 +1181,10 @@
 }
 
 /* ------------------------------------------------------------------------------------------- check */
-/* The Check: a ribbon with notched tails over the card, whose covers float on the night background with their
-   titles, with no box behind them. The result plaque sits where it hides nothing that was checked
-   (`--plaque-at`, `data-plaque` from model/check.ts). A failed Check turns the ribbon slate. */
+/* The Check: a compact plate "CARTRÓ #57" and the card-type badge over the card, whose covers float on the
+   night background with their titles, with no box behind them. The result sits where it hides nothing that
+   was checked (`--plaque-at`, `data-plaque` from model/check.ts): a valid card's gold plaque, or a failed
+   card's huge red ✗ over red light beams, with the fallen nino. A failed Check turns the plate slate. */
 .scene--check {
   padding: var(--space-4) var(--space-5);
 }
@@ -865,61 +1194,39 @@
   height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
-/* The ribbon: a band in the primary colour with a darker bottom edge, and two notched tails behind it. */
-.check__ribbon {
-  --ribbon: var(--color-primary);
-  --ribbon-edge: var(--color-primary-edge);
+.check__head {
   position: relative;
-  z-index: 2; /* above a failed Bingo's scrim */
-  isolation: isolate;
-  justify-self: center;
-  width: min(var(--stage-ribbon-width), calc(100% - 2 * var(--stage-ribbon-tail-out)));
-  height: var(--stage-ribbon-height);
-}
-
-.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .check__ribbon {
-  --ribbon: var(--color-fail);
-  --ribbon-edge: var(--color-fail-edge);
-}
-
-.check__ribbon::before,
-.check__ribbon::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  top: 25%;
-  width: var(--stage-ribbon-tail);
-  height: 73%;
-  background: var(--ribbon-edge);
-}
-
-.check__ribbon::before {
-  left: calc(var(--stage-ribbon-tail-out) * -1);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 28% 50%);
-}
-
-.check__ribbon::after {
-  right: calc(var(--stage-ribbon-tail-out) * -1);
-  clip-path: polygon(0 0, 100% 0, 72% 50%, 100% 100%, 0 100%);
-}
-
-.check__band {
-  height: 100%;
+  z-index: 4; /* above a failed Bingo's scrim and the result */
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: var(--space-6);
-  padding-inline: var(--space-6);
+  align-items: center;
+  gap: 3.75rem;
+  padding-top: 0.25rem;
+}
+
+/* The plate: the primary colour with a darker bottom edge; slate once the Check has failed (never red: it
+   isn't an error). */
+.check__plate {
+  --plate: var(--color-primary);
+  --plate-edge: var(--color-primary-edge);
+  padding: 0.375rem 2.125rem 0.875rem;
   border: var(--stage-outline) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--ribbon);
+  border-width: 0.375rem;
+  border-radius: 1.625rem;
+  background: var(--plate);
   box-shadow:
-    inset 0 calc(var(--stage-drop) * -1.25) 0 var(--ribbon-edge),
-    inset 0 calc(var(--stage-drop) * 0.75) 0 var(--stage-gloss),
-    0 var(--stage-drop) 0 var(--color-shadow);
+    inset 0 -0.75rem 0 var(--plate-edge),
+    inset 0 0.375rem 0 var(--stage-gloss),
+    0 0.625rem 0 var(--color-shadow);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .check__plate {
+  --plate: var(--color-fail);
+  --plate-edge: var(--color-fail-edge);
 }
 
 /* Display text with a thick ink outline and a hard drop, as on the mockups. */
@@ -938,32 +1245,117 @@
   font-size: var(--stage-check-heading);
   line-height: 1;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
-.check__pill {
-  flex: none;
-  padding: 0.1875rem var(--space-4) 0.375rem;
-  border: 0.25rem solid var(--color-line);
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
-  color: var(--color-text-on-paper);
-  font-weight: var(--font-weight-strong);
-  font-size: var(--stage-check-pill);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+/* The card-type badge (the Check's first step): a mini card in the type's colour and its short name. It gets
+   a green ring and ✓ when the type plays this round, a red ring and ✗ when it doesn't. */
+.check__type {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.625rem 3.25rem 0.625rem 0.75rem;
+  border: 0.375rem solid var(--color-line);
+  border-radius: 1.5rem;
+  background: var(--color-surface);
+  box-shadow: 0 0.5rem 0 var(--color-shadow);
+}
+
+.check__type[data-state='ok'] {
+  box-shadow:
+    0 0 0 var(--stage-check-ring) var(--color-ok),
+    0 0.5rem 0 var(--stage-check-ring) var(--color-shadow);
+}
+
+.check__type[data-state='wrong'] {
+  box-shadow:
+    0 0 0 var(--stage-check-ring) var(--color-danger),
+    0 0.5rem 0 var(--stage-check-ring) var(--color-shadow);
+}
+
+.check__type-card {
+  --mc-width: 6.75rem;
+  --mc-border: 0.3125rem;
+  --mc-radius: 0.75rem;
+  --mc-pad: 0.375rem;
+  --mc-gap: 0.25rem;
+  --mc-bar: 0.5rem;
+  --mc-cell-border: 0.125rem;
+  --mc-cell-radius: 0.1875rem;
+  --mc-cell-gap: 0.1875rem;
+  --mc-star: 3.125rem;
+  --mc-tilt: -4deg;
+}
+
+/* On the badge the star sits on the mini card's top-left corner, clear of the mark. */
+.check__type-card .mini-card__star {
+  left: calc(var(--mc-star) * -0.48);
+  right: auto;
+  rotate: 0deg;
+}
+
+.check__type-name {
+  font-size: 3.5rem;
+  -webkit-text-stroke-width: 0.5rem;
+  text-shadow: 0 0.375rem 0 var(--color-line);
   white-space: nowrap;
 }
 
-.check__pill:empty {
+/* Its ✓ / ✗, at the badge's top-right corner, like a song's. */
+.check__type-mark {
+  position: absolute;
+  right: -1.875rem;
+  top: -1.875rem;
+  display: grid;
+  place-items: center;
+  width: var(--stage-check-mark);
+  aspect-ratio: 1;
+  border: var(--stage-check-ring) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-weight: var(--font-weight-strong);
+  font-size: calc(var(--stage-check-mark) * 0.5);
+  line-height: 1;
+  filter: drop-shadow(0 0.3125rem 0 color-mix(in srgb, var(--color-shadow) 50%, transparent));
+}
+
+.check__type-mark:empty {
   display: none;
 }
 
-/* `check-enter`: the ribbon drops in; the card deals in, tile by tile. */
-.check[data-anim='check-enter'] .check__ribbon {
+.check__type[data-state='ok'] .check__type-mark {
+  background: var(--color-ok);
+}
+
+.check__type[data-state='wrong'] .check__type-mark {
+  background: var(--color-danger);
+}
+
+/* `check-type`: the mark stamps on like a song's (2 → 1, −12°); the badge bounces (✓) or shakes (✗). */
+.check__type[data-anim='check-type'] .check__type-mark {
+  transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+}
+
+.check__type[data-anim='check-type'].is-entering .check__type-mark {
+  transform: scale(2) rotate(-12deg);
+  transition: none;
+}
+
+.check__type[data-anim='check-type'][data-state='ok'] {
+  animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+}
+
+.check__type[data-anim='check-type'][data-state='wrong'] {
+  animation: stage-shake var(--stage-dur-shake) linear;
+}
+
+/* `check-enter`: the plate and the badge drop in; the card deals in, tile by tile. */
+.check[data-anim='check-enter'] .check__head {
   transition: transform var(--stage-dur-ribbon) var(--ease-bounce);
 }
 
-.check[data-anim='check-enter'].is-entering .check__ribbon {
+.check[data-anim='check-enter'].is-entering .check__head {
   transform: translateY(-150%);
   transition: none;
 }
@@ -987,6 +1379,8 @@
 }
 
 .card-grid {
+  position: relative;
+  z-index: 1; /* above the beams */
   height: 100%;
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
@@ -1016,6 +1410,11 @@
 
 .card-grid__row.is-dimmed {
   opacity: var(--stage-dim-opacity);
+}
+
+/* A failed Check: the rows that weren't checked fade further, so the beams and the ✗ read. */
+.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .card-grid__row.is-dimmed {
+  opacity: var(--stage-fail-dim-opacity);
 }
 
 /* A tile: the cover and its title, floating. Room for two title lines in every tile, so the covers of a row
@@ -1180,7 +1579,48 @@
   animation: stage-shake var(--stage-dur-shake) linear;
 }
 
-/* `check-result`. A failed Bingo: a dark scrim over the whole scene, under the ribbon and the plaque. */
+/* `check-result`, failed: red light beams turn slowly behind the card (the Celebration's rays, in red), with
+   a red glow, centred where the ✗ lands. Over a failed Bingo's scrim, so they still show. */
+.check__beams {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--stage-dur-result) var(--ease-out);
+}
+
+.check:is([data-verdict='incomplete'], [data-verdict='notValid']) .check__beams {
+  opacity: 1;
+}
+
+.check[data-plaque='card'] .check__beams {
+  z-index: 2;
+}
+
+.check__rays,
+.check__glow {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--plaque-at, 0.5) * 100%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+
+.check__rays {
+  width: 112.5rem;
+  background: repeating-conic-gradient(var(--stage-fail-beam) 0 8deg, transparent 8deg 16deg);
+  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
+  animation: stage-spin var(--stage-dur-rays) linear infinite;
+}
+
+.check__glow {
+  width: 56.25rem;
+  background: radial-gradient(circle, var(--stage-fail-glow) 0, color-mix(in srgb, var(--color-danger) 18%, transparent) 34%, transparent 62%);
+}
+
+/* A failed Bingo: a dark scrim over the whole card, under the plate, the beams and the ✗. */
 .check__scrim {
   position: absolute;
   z-index: 1;
@@ -1195,8 +1635,8 @@
   opacity: 1;
 }
 
-/* The plaque: gold for a valid card; slate, with the nino sticker on its left edge, for a failed one. It is
-   placed with `translate`/`rotate`, so its entrance can use `transform`. */
+/* The result. A valid card: a gold plaque, tilted −2°. It is placed with `translate`/`rotate`, so its
+   entrance can use `transform`. */
 .check-result {
   --plaque: var(--color-accent);
   --plaque-edge: var(--color-accent-edge);
@@ -1222,28 +1662,11 @@
     opacity var(--stage-dur-result) var(--ease-out);
 }
 
-.check-result:is([data-result='incomplete'], [data-result='notValid']) {
-  --plaque: var(--color-fail-panel);
-  --plaque-edge: var(--color-fail-panel-edge);
-  transition-timing-function: var(--ease-bounce), var(--ease-out);
-}
-
-.check-result[data-sticker] {
-  padding-inline-start: var(--stage-sticker-room);
-  text-align: start;
-}
-
-/* Over one row only (a Line checked on the middle row): a compact plaque, so it fits that row. */
+/* Over one row only (a Line checked on the middle row): a compact plaque, or a smaller ✗, so it fits. */
 .check[data-plaque='row'] .check-result {
   --stage-plaque-title: 4.25rem;
-  --stage-plaque-detail: 1.875rem;
-  --stage-sticker: 15rem;
-  --stage-sticker-room: 14rem;
+  --stage-cross: var(--stage-cross-row);
   padding-block: 1.5rem 1.75rem;
-}
-
-.check[data-plaque='row'] .check-result__sticker {
-  bottom: -1.5rem;
 }
 
 .check-result__title {
@@ -1252,27 +1675,96 @@
   text-wrap: balance;
 }
 
-.check-result__detail {
-  font-weight: var(--font-weight-strong);
-  font-size: var(--stage-plaque-detail);
-  line-height: 1.15;
-  color: var(--color-text-on-fail);
+/* A failed card: no plaque and no text, only the huge red ✗ (tilted −6°), the fallen nino beside it, and for
+   a card of the wrong type a big card in its type's colour under the ✗. */
+.check-result:is([data-result='incomplete'], [data-result='notValid']) {
+  width: var(--stage-cross);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  rotate: -6deg;
+  transition-timing-function: var(--ease-bounce), var(--ease-out);
 }
 
+.check-result__cross {
+  position: relative;
+  z-index: 1; /* over a wrong-type card's big card */
+  display: none;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.check-result:is([data-result='incomplete'], [data-result='notValid']) .check-result__cross {
+  display: block;
+}
+
+.check-result__cross path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.check-result__cross-drop {
+  stroke: var(--color-shadow);
+  stroke-width: 58;
+  transform: translateY(7px);
+}
+
+.check-result__cross-ink {
+  stroke: var(--color-line);
+  stroke-width: 58;
+}
+
+.check-result__cross-edge {
+  stroke: var(--color-red-edge);
+  stroke-width: 40;
+}
+
+.check-result__cross-face {
+  stroke: var(--color-danger);
+  stroke-width: 32;
+  transform: translateY(-3px);
+}
+
+.check-result__cross-gloss {
+  stroke: color-mix(in srgb, white 50%, transparent);
+  stroke-width: 8;
+}
+
+/* A card of the wrong type: the big card, centred under the ✗ (−5° on screen). */
+.check-result__card {
+  --mc-width: 103%;
+  --mc-border: 0.625rem;
+  --mc-radius: 2.125rem;
+  --mc-pad: 1.625rem;
+  --mc-gap: 1.125rem;
+  --mc-bar: 1.875rem;
+  --mc-cell-border: 0.375rem;
+  --mc-cell-radius: 0.75rem;
+  --mc-cell-gap: 1rem;
+  --mc-star: 8.125rem;
+  --mc-tilt: 1deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+/* The nino, fallen beside the ✗ (at −14° on screen). */
 .check-result__sticker {
   position: absolute;
-  left: -2.5rem;
-  bottom: -3.75rem;
-  width: var(--stage-sticker);
-  height: auto;
+  left: -53%;
+  top: 43%;
+  width: 57%;
   rotate: var(--stage-sticker-tilt);
-  filter: drop-shadow(0 0.625rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent));
   transition:
     transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-sticker),
     opacity var(--dur-fast) linear var(--stage-delay-sticker);
 }
 
-/* Valid: the plaque slides up. Failed: it drops in with a bounce, then the sticker tumbles onto it. */
+/* Valid: the plaque slides up. Failed: the ✗ slams in from big with a bounce, then the nino tumbles down. */
 .check-result[data-anim='check-result'].is-entering {
   transform: translateY(100%);
   opacity: 0;
@@ -1280,7 +1772,7 @@
 }
 
 .check-result:is([data-result='incomplete'], [data-result='notValid'])[data-anim='check-result'].is-entering {
-  transform: translateY(-60%) scale(1.15);
+  transform: scale(2.2) rotate(-10deg);
 }
 
 .check-result[data-anim='check-result'].is-entering .check-result__sticker {
@@ -1289,8 +1781,8 @@
   transition: none;
 }
 
-/* Failed: the ribbon turns slate with one shake (on `translate`, so it never fights the entrance drop). */
-.check__ribbon[data-anim='check-result'] {
+/* Failed: the plate turns slate with one shake (on `translate`, so it never fights the entrance drop). */
+.check__plate[data-anim='check-result'] {
   animation: stage-shake-x var(--stage-dur-shake) linear;
 }
 
@@ -1341,22 +1833,13 @@
   text-shadow: 0 var(--space-3) 0 var(--color-line);
 }
 
-.celebration__plate {
-  grid-row: 2;
-  position: relative;
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-strong);
-  font-size: var(--stage-text-xl);
-  line-height: 1;
-}
-
 .celebration__prize {
   grid-row: 3;
   position: relative;
   min-width: 50%;
 }
 
-/* `celebrate`: flash, the shout slams in (scale 3, −5°), the card plate drops in, then the prize rises. */
+/* `celebrate`: flash, the shout slams in (scale 3, −5°), then the prize rises. No card numbers. */
 .celebration[data-anim='celebrate'] .celebration__flash {
   animation: stage-flash var(--stage-dur-flash) var(--ease-out);
 }
@@ -1367,12 +1850,6 @@
     opacity var(--dur-fast) linear;
 }
 
-.celebration[data-anim='celebrate'] .celebration__plate {
-  transition:
-    transform var(--dur-base) var(--ease-out) var(--stage-delay-plate),
-    opacity var(--dur-base) var(--ease-out) var(--stage-delay-plate);
-}
-
 .celebration[data-anim='celebrate'] .celebration__prize {
   transition:
     transform var(--dur-slow) var(--ease-out) var(--stage-delay-prize),
@@ -1381,12 +1858,6 @@
 
 .celebration[data-anim='celebrate'].is-entering .shout {
   transform: scale(3) rotate(-5deg);
-  opacity: 0;
-  transition: none;
-}
-
-.celebration[data-anim='celebrate'].is-entering .celebration__plate {
-  transform: translateY(calc(var(--stage-title-drop) * -1));
   opacity: 0;
   transition: none;
 }
@@ -1438,77 +1909,149 @@
 }
 
 /* -------------------------------------------------------------------------------------- interval */
+/* A big "Mitja part", the next round's plate, a large countdown ring between the two ninos, the logos. */
 .scene--interval {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--stage-gap);
-  padding: var(--stage-pad);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  justify-items: center;
+  row-gap: 2.125rem;
+  padding: 5.25rem 4rem 1.625rem;
 }
 
-.interval__head {
-  display: grid;
-  gap: var(--space-3);
+.interval__title {
+  color: var(--color-text-soft);
 }
 
-.interval__of {
-  font-size: var(--stage-text-md);
+.interval__plate {
+  padding: 0.25rem 1.875rem 0.75rem;
+  font-size: 4rem;
+  -webkit-text-stroke-width: 0.5625rem;
+  text-shadow: 0 0.375rem 0 var(--color-line);
 }
 
 .interval__main {
+  width: 100%;
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-7);
 }
 
-.interval__rotator {
-  transition: opacity var(--stage-dur-rotate) var(--stage-ease-in-out);
+.interval__countdown {
+  grid-column: 2;
+  display: grid;
+  justify-items: center;
+  gap: 1.125rem;
 }
 
-/* `interval-rotate`: the prize card crossfades in. */
-.interval__rotator[data-anim='interval-rotate'].is-entering {
-  opacity: 0;
+.interval__nino {
+  height: var(--nino-h);
+  width: auto;
+  max-width: 100%;
+  rotate: var(--nino-tilt);
+}
+
+.interval__nino--left {
+  --nino-h: 21.25rem;
+  --nino-tilt: -4deg;
+  --stage-dur-sway: 7s;
+  grid-column: 1;
+  justify-self: center;
+}
+
+.interval__nino--right {
+  --nino-h: 23.75rem;
+  --nino-tilt: 5deg;
+  --stage-dur-sway: 9.5s;
+  grid-column: 3;
+  justify-self: center;
+}
+
+.interval__words {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 3.625rem;
+}
+
+/* The countdown ring: a dark plate with a track, its ice-blue arc emptying towards the guide end (linear),
+   and the rough minutes in the middle. */
+.ring {
+  position: relative;
+  width: var(--stage-ring-size);
+  aspect-ratio: 1;
+}
+
+.ring__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ring__plate {
+  fill: var(--color-surface);
+  stroke: var(--color-line);
+  stroke-width: 5;
+}
+
+.ring__track {
+  fill: none;
+  stroke: var(--color-bg-deep);
+  stroke-width: 18;
+}
+
+.ring__fill {
+  fill: none;
+  stroke: var(--color-calm);
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-dasharray: var(--ring-left, 1) 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+.ring__hub {
+  fill: var(--color-bg);
+  stroke: var(--color-line);
+  stroke-width: 4;
+}
+
+.ring__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform var(--stage-dur-rotate) var(--ease-out);
+}
+
+.ring__value {
+  font-size: 10.625rem;
+  line-height: 0.85;
+  -webkit-text-stroke-width: 0.75rem;
+}
+
+.ring__face[data-long] .ring__value {
+  font-size: 4.5rem;
+}
+
+.ring__unit {
+  font-weight: var(--font-weight-strong);
+  font-size: 2.5rem;
+  color: var(--color-text-soft);
+}
+
+/* `interval-rotate`: the number ticks (1.08 → 1) when the rough countdown changes. */
+.ring__face[data-anim='interval-rotate'].is-entering {
+  transform: scale(1.08);
   transition: none;
 }
 
-.interval__prize .prize__title {
-  font-size: var(--stage-text-lg);
-}
-
-.interval__prize .prize__kind,
-.interval__prize .prize__sponsor {
-  font-size: var(--stage-text-md);
-}
-
-.interval__foot {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.interval__winners {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.interval__winners-title {
-  font-size: var(--stage-text-sm);
-  color: var(--color-text-muted);
-}
-
-.interval__winners-list {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-7);
-}
-
-.interval__winner,
-.interval__thanks {
-  font-size: var(--stage-text-md);
-  font-weight: var(--font-weight-strong);
-}
-
-.interval__thanks {
-  color: var(--color-accent);
+.interval__sponsors {
+  align-self: end;
 }
 
 /* ------------------------------------------------------------------------------------------- after */
@@ -1533,35 +2076,6 @@
 /* `credits`: the roll scrolls slowly upward when it doesn't fit. */
 .credits[data-anim='credits'] .credits__roll {
   animation: stage-credits var(--credits-ms) linear infinite;
-}
-
-.after__winners {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.after__winners-title {
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-strong);
-  font-size: var(--stage-text-md);
-  color: var(--color-accent);
-}
-
-.after__winners-list {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.after__winner {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-5);
-  font-size: var(--stage-text-md);
-}
-
-.after__round {
-  color: var(--color-accent);
-  font-weight: var(--font-weight-strong);
 }
 
 /* ----------------------------------------------------------------------------------------- motion */
@@ -1648,6 +2162,21 @@
   }
 }
 
+@keyframes stage-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes stage-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+
 @keyframes stage-rays {
   to {
     transform: translate(-50%, -50%) rotate(1turn);
@@ -1691,7 +2220,6 @@
     --stage-dur-sticker: 0ms;
     --stage-delay-sticker: 0ms;
     --stage-dur-slam: 0ms;
-    --stage-delay-plate: 0ms;
     --stage-delay-prize: 0ms;
     --stage-dur-rotate: 0ms;
     --stage-dur-pause: 0ms;
@@ -1703,7 +2231,10 @@
   .shuffle[data-phase='jiggle'] .shuffle__spin,
   .card-grid__cell[data-state='playing'] .card-grid__art::after,
   .card-grid__cell[data-anim='check-step'],
-  .check__ribbon[data-anim='check-result'],
+  .check__plate[data-anim='check-result'],
+  .check__type[data-anim='check-type'],
+  .check__rays,
+  .stage-root .sticker[data-anim='idle'],
   .celebration__rays,
   .celebration[data-anim='celebrate'] .celebration__flash,
   .credits[data-anim='credits'] .credits__roll {
@@ -1717,7 +2248,7 @@
   .shuffle__tile.is-flying,
   .shuffle__tile.is-flying .shuffle__lift,
   .shuffle__tile.is-flying .shuffle__spin,
-  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__plate, .celebration__prize) {
+  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__prize) {
     transform: none;
   }
 

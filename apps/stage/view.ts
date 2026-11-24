@@ -1,17 +1,20 @@
 // The projector's privacy boundary. The stage runs on the show laptop and receives the full state, which
 // holds secrets the audience must never see: the next song (`next`, `transition.to`), the Queue, possible
-// winners, the Phase, claims and their warnings, winners' names and notes. `stageView` picks out only what
-// the projector may draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that
-// no private field ever comes out.
+// winners, the Phase, claims and their warnings, winners' names and notes. Winning card numbers aren't secret
+// but are never shown either (the user's review: "people don't care who won unless it's them"), so they don't
+// come out: only the Check names the card being checked. `stageView` picks out only what the projector may
+// draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
+// ever comes out.
 import type { RoundKind, ShowState } from '@quina/protocol';
-import type { FlowFields, WinKind, WinnerInfo } from '../../packages/ui/flow.ts';
+import type { FlowFields, WinKind } from '../../packages/ui/flow.ts';
 import { revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';
 import { motionView, type MotionView, type SpinNote } from './model/motion.ts';
-import { checkCells, verdictOf, type CheckView } from './model/check.ts';
+import { cardTypeBadge, checkCells, verdictOf, type CheckView } from './model/check.ts';
+import { nightCardTypes, type NightCardType } from './model/night.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
 import { STAGE_TEXT, joinCa } from './strings.ts';
@@ -40,18 +43,6 @@ export interface RoundView {
   special: boolean;
 }
 
-export interface WinnerView {
-  round: number;
-  kind: WinKind;
-  cardId: number;
-}
-
-export interface RoundWinnersView {
-  round: number;
-  line: number[];
-  bingo: number[];
-}
-
 export interface LinkView {
   href: string;
   label: string;
@@ -60,6 +51,8 @@ export interface LinkView {
 export interface BeforeView {
   scene: 'before';
   startAtMs: number | null;
+  /** The night's preview: each card type that plays, its colour, price and rounds (model/night.ts). */
+  cardTypes: NightCardType[];
   sponsors: SponsorView[];
   link: LinkView;
 }
@@ -85,31 +78,31 @@ export interface CheckSceneView {
   check: CheckView;
 }
 
+/** No winning card numbers: the shout, and the round's prize once revealed. */
 export interface CelebrationView {
   scene: 'celebration';
   key: string;
   kind: WinKind;
-  cardIds: number[];
   prize: PrizeView | null;
 }
 
+/**
+ * The Interval: the next round and the countdown guide. No winning card numbers, no QR, and none of the next
+ * round's prizes: they are revealed at its intro (the round start), never here.
+ */
 export interface IntervalView {
   scene: 'interval';
   /** The round about to start (named `nextRound`: `next` is the private next song everywhere else). */
   nextRound: RoundView;
   roundsTotal: number | null;
-  prizes: PrizeView[];
   sinceMs: number;
   guideEndMs: number | null;
-  lastRound: number;
-  lastWinners: WinnerView[];
   sponsors: SponsorView[];
-  link: LinkView;
 }
 
+/** Thanks and the sponsors' credits; no winning card numbers. */
 export interface AfterView {
   scene: 'after';
-  winners: RoundWinnersView[];
   sponsors: SponsorView[];
 }
 
@@ -174,20 +167,6 @@ function roundView(number: number | null | undefined, plan: GamePlan | null, sta
 
 const sponsorsOf = (plan: GamePlan | null): SponsorView[] => (plan?.sponsors ?? []).map((s) => ({ label: s.name, logo: s.logo }));
 
-/** Only the round, the kind and the card: never a winner's name or notes. */
-const winnerView = (w: WinnerInfo): WinnerView => ({ round: w.round, kind: w.kind, cardId: w.cardId });
-
-function winnersByRound(winners: readonly WinnerInfo[]): RoundWinnersView[] {
-  const rounds = new Map<number, RoundWinnersView>();
-  for (const w of winners) {
-    const r = rounds.get(w.round) ?? { round: w.round, line: [], bingo: [] };
-    const list = w.kind === 'line' ? r.line : r.bingo;
-    if (!list.includes(w.cardId)) list.push(w.cardId);
-    rounds.set(w.round, r);
-  }
-  return [...rounds.values()].sort((a, b) => a.round - b.round);
-}
-
 /** Titles from the snapshot's landed songs first, then the catalog. */
 function songLookup(state: ShowState | null, catalog: Catalog | null): SongLookup {
   const fromState = new Map<number, { title: string; artist: string }>();
@@ -204,7 +183,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const play = (): PlayView => ({ scene: 'play', round: roundView(roundNumber, plan, state), motion: motionView(state, notes.spin) });
   switch (scene) {
     case 'before':
-      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, sponsors: sponsorsOf(plan), link };
+      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, cardTypes: nightCardTypes(plan), sponsors: sponsorsOf(plan), link };
     case 'roundStart': {
       // The round being introduced (`intro`, set before the Shuffle) names it; then the Shuffle's; then the state's.
       const intro = flow.intro;
@@ -230,7 +209,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
           key: `${c.cardId}@${c.startAtMs}`,
           cardId: c.cardId,
           kind: c.kind,
-          cardType: c.cardType ?? null,
+          cardType: cardTypeBadge(c.cardType, c.outcome, plan?.cardTypes ?? null),
           verdict,
           row: c.kind === 'line' ? c.row : null,
           cells: verdict === 'notValid' ? [] : checkCells(card, steps, c.row, (id) => lookup(id)?.title ?? null),
@@ -244,27 +223,22 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       const c = flow.celebration;
       if (!c) return play();
       const prize = prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null;
-      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, cardIds: [...c.cardIds], prize };
+      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, prize };
     }
     case 'interval': {
       const i = flow.interval;
       const next = i?.nextRound ?? roundNumber + 1;
-      const lastRound = next - 1;
       return {
         scene,
         nextRound: roundView(next, plan, state) ?? { number: next, special: false },
         roundsTotal: plan?.rounds.length || state?.game.roundsTotal || null,
-        prizes: prizesOf(plan, next, open),
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,
-        lastRound,
-        lastWinners: flow.winners.filter((w) => w.round === lastRound).map(winnerView),
         sponsors: sponsorsOf(plan),
-        link,
       };
     }
     case 'after':
-      return { scene, winners: winnersByRound(flow.winners), sponsors: sponsorsOf(plan) };
+      return { scene, sponsors: sponsorsOf(plan) };
     case 'play':
       return play();
   }

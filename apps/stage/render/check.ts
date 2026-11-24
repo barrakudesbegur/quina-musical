@@ -1,14 +1,17 @@
-// The Check: an orange ribbon with notched tails, "Comprovant el cartró N…" and the kind's pill, over the
-// card's covers floating on the night background with their titles (no boxes). For a Line, the other rows dim.
-// Each step's cover gets a ring while its snippet plays, then its mark (✓ or ✗); the result plaque shows from
-// `endAtMs`. A failed Check turns the ribbon slate ("Cartró N") and its plaque names the first song that
-// didn't sound. Everything is read from the step timestamps (`checkReveal`) and the pure rules in model/check.ts.
+// The Check: a compact plate "CARTRÓ #57" and the card-type badge (a mini card in the type's colour and its
+// name) over the card's covers, which float on the night background with their titles. The type is the first
+// step: its badge gets ✓ (or ✗ for a card of the wrong type). For a Line, the other rows dim. Each song's
+// cover gets a ring while its snippet plays, then its mark (✓ or ✗). From `endAtMs` the result shows: a valid
+// card's gold plaque; a failed card's huge red ✗ over red light beams with the fallen nino, and no text (the
+// failed song keeps its ✗ in the row). A card of the wrong type shows a big card in its colour under the ✗.
+// Everything is read from the timestamps (`checkReveal`, `typeReveal`) and the pure rules in model/check.ts.
 import { STAGE } from '../config.ts';
-import { checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, type CheckCell, type CheckVerdict, type CheckView, type StepState } from '../model/check.ts';
+import { checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, typeReveal, type CheckCell, type CheckVerdict, type CheckView, type StepState, type TypeState } from '../model/check.ts';
 import type { AnimDetail } from '../model/moments.ts';
-import { checkKindLabel, checkResultDetail, STAGE_TEXT } from '../strings.ts';
+import { checkResultDetail, shortTypeName, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
+import { MiniCard, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 interface CellNodes {
@@ -20,51 +23,75 @@ interface CellNodes {
 /** Bars of the "playing" badge (their heights are the theme's). */
 const EQ_BARS = 4;
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The failed Check's big ✗: one stroked cross drawn in layers (drop, ink, dark red, red, gloss); colours from stage.css. */
+function bigCross(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'check-result__cross');
+  svg.setAttribute('viewBox', '0 0 200 200');
+  svg.setAttribute('aria-hidden', 'true');
+  const cross = 'M46 46L154 154M154 46L46 154';
+  for (const [layer, d] of [['drop', cross], ['ink', cross], ['edge', cross], ['face', cross], ['gloss', 'M52 49L74 71M148 49L134 63']] as const) {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('class', `check-result__cross-${layer}`);
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}
+
 export class CheckScene implements SceneRenderer<CheckSceneView> {
   readonly root = sceneRoot('check');
   private readonly panel: HTMLElement;
-  private readonly ribbon: HTMLElement;
+  private readonly plate: HTMLElement;
   private readonly heading: HTMLElement;
-  private readonly pill: HTMLElement;
+  private readonly type: HTMLElement;
+  private readonly typeCard = new MiniCard('check__type-card');
+  private readonly typeName: HTMLElement;
+  private readonly typeMark: HTMLElement;
   private readonly grid: HTMLElement;
   private readonly result: HTMLElement;
   private readonly resultTitle: HTMLElement;
-  private readonly resultDetail: HTMLElement;
-  /** The nino on a failed Check's plaque; null while the stage has no sticker for it (STAGE.stickers). */
+  /** A card of the wrong type: a big card in its colour, under the ✗. */
+  private readonly bigCard = new MiniCard('check-result__card');
+  /** The nino beside a failed Check's ✗; null while the stage has no sticker for it (STAGE.stickers). */
   private readonly sticker: HTMLImageElement | null;
   private check: CheckView | null = null;
   private cells: CellNodes[] = [];
   /** Cell nodes by step index. */
   private byStep = new Map<number, CellNodes>();
   private shown: StepState[] = [];
+  private typeShown: TypeState | null = null;
   private resultShown: CheckVerdict | null = null;
   /** `gridKey` of the drawn grid. */
   private gridShown = '';
 
   constructor() {
     this.heading = h('h1', 'check__heading');
-    this.pill = h('span', 'check__pill');
-    this.ribbon = h('header', 'check__ribbon', h('div', 'check__band', this.heading, this.pill));
+    this.plate = h('div', 'check__plate', this.heading);
     // The failed Check's shake plays once: a scene shown again would otherwise restart it.
-    this.ribbon.addEventListener('animationend', (e) => {
-      if (e.target === this.ribbon) setData(this.ribbon, 'anim', null);
+    this.plate.addEventListener('animationend', (e) => {
+      if (e.target === this.plate) setData(this.plate, 'anim', null);
     });
+    this.typeName = h('p', 'check__type-name');
+    this.typeMark = h('span', { class: 'check__type-mark', attrs: { 'aria-hidden': 'true' } });
+    this.type = h('div', { class: 'check__type', data: { state: 'pending' } }, this.typeCard.root, this.typeName, this.typeMark);
     this.grid = h('div', 'card-grid');
     this.resultTitle = h('p', 'check-result__title');
-    this.resultDetail = h('p', 'check-result__detail');
-    const stickerUrl = STAGE.stickers.checkFailed;
-    this.sticker = stickerUrl
-      ? h('img', { class: 'check-result__sticker', data: { sticker: 'nino-espatxarrat' }, attrs: { src: stickerUrl, alt: '', decoding: 'async', draggable: 'false' }, hidden: true })
-      : null;
+    this.sticker = stickerImage(STAGE.stickers.checkFailed, 'nino-espatxarrat', 'check-result__sticker');
+    if (this.sticker) this.sticker.hidden = true;
     this.result = h(
       'div',
       { class: 'check-result', hidden: true, attrs: { role: 'status', 'aria-live': 'assertive' } },
+      this.bigCard.root,
+      bigCross(),
       this.sticker,
       this.resultTitle,
-      this.resultDetail,
     );
+    const beams = h('div', { class: 'check__beams', attrs: { 'aria-hidden': 'true' } }, h('div', 'check__rays'), h('div', 'check__glow'));
     const scrim = h('div', { class: 'check__scrim', attrs: { 'aria-hidden': 'true' } });
-    this.panel = h('div', 'check', this.ribbon, h('div', 'check__card', this.grid, this.result), scrim);
+    this.panel = h('div', { class: 'check', data: { testid: 'check' } }, h('header', 'check__head', this.plate, this.type), h('div', 'check__card', beams, this.grid, this.result), scrim);
     this.root.append(this.panel);
   }
 
@@ -78,17 +105,32 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       if (grid !== this.gridShown) this.layOut(check, grid);
       return;
     }
-    setText(this.heading, STAGE_TEXT.checking(check.cardId));
-    setText(this.pill, checkKindLabel(check.kind, check.row));
+    setText(this.heading, STAGE_TEXT.checkPlate(check.cardId));
+    this.setType(check);
     setData(this.panel, 'kind', check.kind);
     setData(this.panel, 'verdict', null);
     setData(this.panel, 'result', 'pending');
-    setData(this.ribbon, 'anim', null);
+    setData(this.panel, 'wrongType', check.cardType?.ok === false ? 'true' : null);
+    setData(this.plate, 'anim', null);
     setHidden(this.result, true);
     this.layOut(check, grid);
   }
 
-  /** The grid and the plaque's spot; the next tick puts every mark and the result back. */
+  /** The type badge: hidden for an unknown card; its mark comes in `tick`. */
+  private setType(check: CheckView): void {
+    const t = check.cardType;
+    setHidden(this.type, t === null);
+    this.typeShown = null;
+    setData(this.type, 'state', 'pending');
+    setText(this.typeMark, '');
+    if (!t) return;
+    this.typeCard.set(t.color, t.special);
+    this.bigCard.set(t.color, t.special);
+    setText(this.typeName, shortTypeName(t.label));
+    this.type.setAttribute('aria-label', STAGE_TEXT.checkType(t.label, null));
+  }
+
+  /** The grid and the result's spot; the next tick puts every mark and the result back. */
   private layOut(check: CheckView, grid: string): void {
     const spot = plaqueSpot(check);
     setData(this.panel, 'plaque', spot.over);
@@ -134,6 +176,13 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   tick(nowMs: number): void {
     const check = this.check;
     if (!check) return;
+    const type = typeReveal(check, nowMs, STAGE.checkTypeLeadMs);
+    if (type !== this.typeShown) {
+      this.typeShown = type;
+      setData(this.type, 'state', type ?? 'pending');
+      setText(this.typeMark, type === 'ok' ? STAGE_TEXT.mark.landed : type === 'wrong' ? STAGE_TEXT.mark.missed : '');
+      if (check.cardType) this.type.setAttribute('aria-label', STAGE_TEXT.checkType(check.cardType.label, type === 'pending' || type === null ? null : type === 'ok'));
+    }
     const reveal = checkReveal(check, nowMs, STAGE.checkMarkAt);
     reveal.steps.forEach((state, i) => {
       if (this.shown[i] === state) return;
@@ -152,30 +201,32 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     }
   }
 
-  /** The verdict: a failed one turns the ribbon slate and names the missing song; a valid one keeps it. */
+  /** The verdict: a valid card's plaque, or a failed card's big ✗ with the nino (and no text on screen). */
   private showResult(check: CheckView, result: CheckVerdict | null): void {
     const failed = result !== null && isFailed(result);
     setHidden(this.result, result === null);
     setData(this.panel, 'verdict', result);
     setData(this.result, 'result', result);
-    setText(this.heading, failed ? STAGE_TEXT.checkedCard(check.cardId) : STAGE_TEXT.checking(check.cardId));
     if (this.sticker) setHidden(this.sticker, !failed);
     setData(this.result, 'sticker', failed && this.sticker ? 'nino-espatxarrat' : null);
+    setHidden(this.bigCard.root, !(failed && check.cardType?.ok === false));
+    setHidden(this.resultTitle, failed);
     if (!result) return;
-    setText(this.resultTitle, STAGE_TEXT.checkResult[result]);
+    const title = STAGE_TEXT.checkResult[result];
+    setText(this.resultTitle, title);
     const detail = checkResultDetail(result, firstMiss(check)?.title ?? null);
-    setText(this.resultDetail, detail ?? '');
-    setHidden(this.resultDetail, detail === null);
+    this.result.setAttribute('aria-label', detail ? `${title}. ${detail}` : title);
   }
 
   onAnim(detail: AnimDetail): void {
     if (detail.name === 'check-enter') playAnim(this.panel, 'check-enter');
+    else if (detail.name === 'check-type') playAnim(this.type, 'check-type');
     else if (detail.name === 'check-step' && (detail.state === 'landed' || detail.state === 'missed')) {
       const nodes = this.byStep.get(detail.index);
       if (nodes) playAnim(nodes.root, 'check-step');
     } else if (detail.name === 'check-result') {
       playAnim(this.result, 'check-result');
-      if (isFailed(detail.result)) playAnim(this.ribbon, 'check-result');
+      if (isFailed(detail.result)) playAnim(this.plate, 'check-result');
     }
   }
 }

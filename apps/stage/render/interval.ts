@@ -1,86 +1,120 @@
-// The Interval: the next round's name, its prizes in rotation (`interval-rotate`, every 8 s), a rough
-// countdown (a guide: rounds start by hand), "Quina 4 de 12", the last round's winning card numbers, sponsor
-// thanks in rotation, and the player app's QR.
+// The Interval: a big "Mitja part", a plate naming the next round ("Següent: Quina 4 de 8"), a large
+// countdown (a ring emptying towards the guide end, the rough minutes inside it and the rough countdown in
+// words under it; a guide only, since rounds start by hand), the meditating and the dancing ninos either
+// side, and the sponsors' logos. No winning card numbers, no QR, and none of the next round's prizes (they
+// are revealed at its intro).
+import { formatClock } from '../../../packages/rules/time.ts';
 import { STAGE } from '../config.ts';
 import type { AnimDetail } from '../model/moments.ts';
-import { rotationIndex } from '../model/timing.ts';
-import { STAGE_TEXT } from '../strings.ts';
+import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
+import { nextRoundLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
-import { h, playAnim, setData, setHidden, setText } from './dom.ts';
-import { CountdownChip, PrizeBlock, RoundTitle } from './parts.ts';
-import { QrBlock } from './qr.ts';
+import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
+import { CountdownChip, SponsorList, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+/** The ring's radius in its 156-unit viewBox (as on the board). */
+const RING_R = 56;
+
+function circle(className: string, r: number): SVGCircleElement {
+  const c = document.createElementNS(SVG_NS, 'circle');
+  c.setAttribute('class', className);
+  c.setAttribute('cx', '78');
+  c.setAttribute('cy', '78');
+  c.setAttribute('r', String(r));
+  return c;
+}
+
+/** What the ring's face says: the rough minutes, "<1" under a minute, or the clock time when it's far off. */
+function ringFace(at: RoughCountdown, clock: (ms: number) => string): { value: string; unit: string } {
+  if (at.kind === 'minutes') return { value: String(at.minutes), unit: STAGE_TEXT.minutesUnit };
+  if (at.kind === 'soon') return { value: STAGE_TEXT.ringSoon, unit: STAGE_TEXT.minutesUnit };
+  return { value: clock(at.atMs), unit: '' };
+}
+
+/** The Interval's countdown: a ring that empties linearly towards the guide end, with the minutes inside. */
+class CountdownRing {
+  readonly root: HTMLElement;
+  private readonly fill: SVGCircleElement;
+  private readonly face: HTMLElement;
+  private readonly value: HTMLElement;
+  private readonly unit: HTMLElement;
+  private last: RoughCountdown | null = null;
+
+  constructor() {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'ring__svg');
+    svg.setAttribute('viewBox', '0 0 156 156');
+    this.fill = circle('ring__fill', RING_R);
+    this.fill.setAttribute('pathLength', '1');
+    svg.append(circle('ring__plate', 72), circle('ring__track', RING_R), this.fill, circle('ring__hub', 44));
+    this.value = h('span', 'ring__value');
+    this.unit = h('span', 'ring__unit');
+    this.face = h('span', 'ring__face', this.value, this.unit);
+    this.root = h('div', { class: 'ring', attrs: { 'aria-hidden': 'true' } }, svg, this.face);
+  }
+
+  update(at: RoughCountdown | null, left: number | null, clock: (ms: number) => string): void {
+    setHidden(this.root, at === null);
+    if (left !== null) setVar(this.root, '--ring-left', String(left));
+    if (!at || sameCountdown(at, this.last)) return;
+    this.last = at;
+    const face = ringFace(at, clock);
+    setText(this.value, face.value);
+    setText(this.unit, face.unit);
+    setHidden(this.unit, !face.unit);
+    setData(this.face, 'long', face.value.length > 2 ? 'true' : null);
+  }
+
+  /** `interval-rotate`: the number ticks when it changes. */
+  tickAnim(): void {
+    playAnim(this.face, 'interval-rotate');
+  }
+}
 
 export class IntervalScene implements SceneRenderer<IntervalView> {
   readonly root = sceneRoot('interval');
-  private readonly title = new RoundTitle('h1', 'interval__title');
-  private readonly of: HTMLElement;
-  private readonly countdown = new CountdownChip('back');
-  private readonly rotator: HTMLElement;
-  private readonly prize = new PrizeBlock('interval__prize');
-  private readonly qr = new QrBlock();
-  private readonly winners: HTMLElement;
-  private readonly winnersTitle: HTMLElement;
-  private readonly winnersList: HTMLElement;
-  private readonly thanks: HTMLElement;
+  private readonly title: HTMLElement;
+  private readonly plate: HTMLElement;
+  private readonly ring = new CountdownRing();
+  private readonly words = new CountdownChip('back');
+  private readonly sponsors = new SponsorList(null, 'sponsors--strip interval__sponsors');
   private body: IntervalView | null = null;
-  private prizeIndex = -1;
-  private sponsorIndex = -1;
 
   constructor() {
     this.root.dataset.testid = 'interval';
-    setData(this.title.root, 'anim', 'idle');
-    this.of = h('p', 'interval__of');
-    this.rotator = h('div', 'interval__rotator', this.prize.root);
-    this.winnersTitle = h('h2', 'interval__winners-title');
-    this.winnersList = h('ul', 'interval__winners-list');
-    this.winners = h('section', { class: 'interval__winners', hidden: true }, this.winnersTitle, this.winnersList);
-    this.thanks = h('p', { class: 'interval__thanks', hidden: true });
+    this.title = h('h1', { class: 'interval__title', data: { anim: 'idle' } }, STAGE_TEXT.intervalTitle);
+    this.plate = h('p', 'interval__plate');
+    this.words.root.classList.add('interval__words');
+    this.words.root.setAttribute('role', 'timer');
+    const left = stickerImage(STAGE.stickers.intervalLeft, 'nino-meditant', 'interval__nino interval__nino--left');
+    const right = stickerImage(STAGE.stickers.intervalRight, 'nino-sardana', 'interval__nino interval__nino--right');
+    for (const s of [left, right]) if (s) setData(s, 'anim', 'idle');
     this.root.append(
-      h('header', 'interval__head', this.title.root, this.of, this.countdown.root),
-      h('div', 'interval__main', this.rotator, this.qr.root),
-      h('footer', 'interval__foot', this.winners, this.thanks),
+      this.title,
+      this.plate,
+      h('div', 'interval__main', left, h('section', 'interval__countdown', this.ring.root, this.words.root), right),
+      this.sponsors.root,
     );
   }
 
   render(body: IntervalView): void {
-    const changedRound = this.body?.nextRound.number !== body.nextRound.number;
     this.body = body;
-    this.title.set(body.nextRound, STAGE_TEXT.nextRound);
-    setText(this.of, body.roundsTotal ? STAGE_TEXT.roundOf(body.nextRound.number, body.roundsTotal) : '');
-    setHidden(this.of, !body.roundsTotal);
-    this.qr.set(body.link);
-    setText(this.winnersTitle, STAGE_TEXT.lastWinners(body.lastRound));
-    const lines = (['line', 'bingo'] as const)
-      .map((kind) => ({ kind, ids: body.lastWinners.filter((w) => w.kind === kind).map((w) => w.cardId) }))
-      .filter((l) => l.ids.length > 0);
-    this.winnersList.replaceChildren(...lines.map((l) => h('li', { class: 'interval__winner', data: { kind: l.kind } }, STAGE_TEXT.winnerLine(l.kind, l.ids))));
-    setHidden(this.winners, lines.length === 0);
-    if (changedRound) {
-      this.prizeIndex = -1;
-      this.sponsorIndex = -1;
-    }
+    setText(this.plate, nextRoundLabel(body.nextRound, body.roundsTotal));
+    setData(this.plate, 'special', body.nextRound.special ? 'true' : null);
+    this.sponsors.set(body.sponsors);
   }
 
   tick(nowMs: number): void {
     const body = this.body;
     if (!body) return;
-    const p = rotationIndex(nowMs, body.sinceMs, STAGE.prizeRotationMs, body.prizes.length);
-    if (p !== this.prizeIndex) {
-      this.prizeIndex = p;
-      this.prize.set(body.prizes[p] ?? null);
-    }
-    const s = rotationIndex(nowMs, body.sinceMs, STAGE.sponsorRotationMs, body.sponsors.length);
-    if (s !== this.sponsorIndex) {
-      this.sponsorIndex = s;
-      const sponsor = body.sponsors[s];
-      setHidden(this.thanks, !sponsor);
-      setText(this.thanks, sponsor ? STAGE_TEXT.sponsorThanks(sponsor.label) : '');
-    }
-    this.countdown.update(body.guideEndMs, nowMs, true);
+    const at = roughCountdown(body.guideEndMs, nowMs, STAGE.countdown);
+    this.ring.update(at, ringLeft(body.sinceMs, body.guideEndMs, nowMs), formatClock);
+    this.words.update(body.guideEndMs, nowMs);
   }
 
   onAnim(detail: AnimDetail): void {
-    if (detail.name === 'interval-rotate') playAnim(this.rotator, 'interval-rotate');
+    if (detail.name === 'interval-rotate') this.ring.tickAnim();
   }
 }

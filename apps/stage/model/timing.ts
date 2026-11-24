@@ -1,15 +1,5 @@
-// Time-driven bits of the scenes that are not animations: rotations and rough countdowns. Pure: the time is
-// passed in (the show's clock, `client.now()`).
-
-/**
- * Which of `count` items shows at `nowMs` when they rotate every `periodMs` from `sinceMs` (the Interval's
- * prizes and sponsor thanks). Every screen computing it from the same `sinceMs` shows the same item.
- */
-export function rotationIndex(nowMs: number, sinceMs: number, periodMs: number, count: number): number {
-  if (count <= 1 || periodMs <= 0) return 0;
-  const elapsed = Math.max(0, nowMs - sinceMs);
-  return Math.floor(elapsed / periodMs) % count;
-}
+// Time-driven bits of the scenes that are not animations: rough countdowns and the Interval's ring. Pure:
+// the time is passed in (the show's clock, `client.now()`).
 
 /** A countdown that only promises what is true: rounds start by hand, so it is a guide. */
 export type RoughCountdown = { kind: 'at'; atMs: number } | { kind: 'minutes'; minutes: number } | { kind: 'soon' };
@@ -39,6 +29,18 @@ export function sameCountdown(a: RoughCountdown | null, b: RoughCountdown | null
   if (a.kind === 'minutes' && b.kind === 'minutes') return a.minutes === b.minutes;
   if (a.kind === 'at' && b.kind === 'at') return a.atMs === b.atMs;
   return a.kind === b.kind;
+}
+
+/**
+ * The Interval ring's share still to go, 1 → 0, from the Interval's start to its guide end (rounded to 1/1000,
+ * so a 60 fps loop only writes when it moves). Null without a guide end.
+ */
+export function ringLeft(sinceMs: number, endMs: number | null, nowMs: number): number | null {
+  if (endMs === null || !Number.isFinite(endMs)) return null;
+  const span = endMs - sinceMs;
+  if (span <= 0) return 0;
+  const left = Math.min(1, Math.max(0, (endMs - nowMs) / span));
+  return Math.round(left * 1000) / 1000;
 }
 
 /** A CSS time ("480ms", "0.4s", "0s") in ms, or `fallback` when it can't be read. */

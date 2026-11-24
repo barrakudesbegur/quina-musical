@@ -1,18 +1,18 @@
-// Rotations, rough countdowns and small time helpers of the stage.
+// Rough countdowns, the Interval's ring and small time helpers of the stage.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linkLost, nearLanding, parseCssTime, rotationIndex, roughCountdown, sameCountdown } from '../../../../stage/model/timing.ts';
+import { linkLost, nearLanding, parseCssTime, ringLeft, roughCountdown, sameCountdown } from '../../../../stage/model/timing.ts';
 
 const OPTS = { clockAboveMin: 90, fineBelowMin: 10, coarseStepMin: 5 };
 
-test('the Interval rotation is the same for everyone with the same start', () => {
-  assert.equal(rotationIndex(0, 0, 8000, 2), 0);
-  assert.equal(rotationIndex(7999, 0, 8000, 2), 0);
-  assert.equal(rotationIndex(8000, 0, 8000, 2), 1);
-  assert.equal(rotationIndex(16000, 0, 8000, 2), 0);
-  assert.equal(rotationIndex(-5000, 0, 8000, 3), 0, 'before the start');
-  assert.equal(rotationIndex(99999, 0, 8000, 1), 0);
-  assert.equal(rotationIndex(99999, 0, 8000, 0), 0);
+test('the Interval ring empties from its start to the guide end, and never goes past', () => {
+  assert.equal(ringLeft(0, 180_000, 0), 1);
+  assert.equal(ringLeft(0, 180_000, 90_000), 0.5);
+  assert.equal(ringLeft(0, 180_000, 200_000), 0, 'overdue');
+  assert.equal(ringLeft(0, 180_000, -5000), 1, 'before the start');
+  assert.equal(ringLeft(0, 3000, 1), 1, 'rounded to 1/1000, so a frame loop rarely writes');
+  assert.equal(ringLeft(0, null, 0), null, 'no guide end: no ring');
+  assert.equal(ringLeft(10, 10, 0), 0);
 });
 
 test('a rough countdown: clock time when far, rounded minutes, then "soon"', () => {

@@ -1,16 +1,54 @@
 // The Check on the projector: the claimed card's grid, and which step shows what at a given time. The
 // engine schedules every step in advance (`steps[i].atMs`, `durationMs`, `endAtMs`), so the projector only
-// reads its clock: the playing tile gets a ring for the snippet, then its mark (✓ or ✗) stamps on, and the
-// result shows from `endAtMs` (ANIMATIONS.md `check-step`, `check-result`). A failed Check also names the
-// first song that didn't sound and places its plaque where it hides nothing that was checked. Pure.
+// reads its clock. The card's printed type is checked first (`check-type`: its badge gets ✓, or ✗ for a card
+// of the wrong type), then the playing tile gets a ring for each snippet and its mark (✓ or ✗) stamps on, and
+// the result shows from `endAtMs` (ANIMATIONS.md `check-type`, `check-step`, `check-result`). A failed Check
+// places its big ✗ where it hides nothing that was checked, and names the first song that didn't sound in
+// its accessible label. Pure.
 import type { CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 import type { PlayerCard } from '../../../packages/rules/marks.ts';
+import { DEFAULT_CARD_TYPES, type CardType } from '../../../packages/ui/plan.ts';
 
 export interface CheckStepView {
   songId: number;
   landed: boolean;
   atMs: number;
   durationMs: number;
+}
+
+/**
+ * The card's printed type as the Check's badge shows it: a mini card in the type's colour and its short name.
+ * Public: it is printed on the card itself.
+ */
+export interface CardTypeBadge {
+  /** 'normal', 'especial'. */
+  type: string;
+  /** The type's name from the plan ("Cartró normal"); the badge shows its short form. */
+  label: string;
+  color: string;
+  /** It plays the Quina Especial (the mini card gets a star). */
+  special: boolean;
+  /** False for a card of the wrong type for the round (`wrongType`): its badge gets the ✗. */
+  ok: boolean;
+}
+
+/** A colour for a type the plan doesn't list: a neutral paper tone. */
+const UNKNOWN_TYPE_COLOR = '#e8e4da';
+
+/**
+ * The badge for a checked card's type, from the plan's card types (the defaults without a plan). Null for an
+ * unknown card, whose type isn't known.
+ */
+export function cardTypeBadge(type: string | null | undefined, outcome: CheckOutcome, cardTypes: readonly CardType[] | null): CardTypeBadge | null {
+  if (!type) return null;
+  const known = (cardTypes?.length ? cardTypes : DEFAULT_CARD_TYPES).find((t) => t.type === type);
+  return {
+    type,
+    label: known?.name ?? type,
+    color: known?.color ?? UNKNOWN_TYPE_COLOR,
+    special: known ? known.rounds.includes('special') : type === 'especial',
+    ok: outcome !== 'wrongType',
+  };
 }
 
 /** What the projector says once the Check is over. */
@@ -32,8 +70,8 @@ export interface CheckView {
   key: string;
   cardId: number;
   kind: WinKind;
-  /** The card's printed type ('normal', 'especial'; public, on the card itself), or null for an unknown card. */
-  cardType: string | null;
+  /** The card's printed type (public, on the card itself), or null for an unknown card. */
+  cardType: CardTypeBadge | null;
   verdict: CheckVerdict;
   /** A Line's row (0–2), whose songs play; the other rows dim. Null for a Bingo. */
   row: number | null;
@@ -118,6 +156,27 @@ export function checkReveal(
   return { steps, playing, result };
 }
 
+/** The card-type step: not yet, passed (✓) or failed (✗). */
+export type TypeState = 'pending' | 'ok' | 'wrong';
+
+/**
+ * When the type badge gets its mark: `leadMs` after the Check starts (once the plate and badge have dropped
+ * in), but never after the first song's snippet starts. A Check with no songs (a card of the wrong type, or
+ * unknown) marks it at once, with its result.
+ */
+export function typeMarkAt(check: Pick<CheckView, 'startAtMs' | 'steps'>, leadMs: number): number {
+  const first = check.steps[0];
+  return first ? Math.min(check.startAtMs + Math.max(0, leadMs), first.atMs) : check.startAtMs;
+}
+
+/** The type badge's state at `nowMs`; null without a badge (an unknown card). */
+export function typeReveal(check: Pick<CheckView, 'startAtMs' | 'steps' | 'cardType'>, nowMs: number, leadMs: number): TypeState | null {
+  if (!check.cardType) return null;
+  // With no songs (a card of the wrong type), the mark shows at once, like the result.
+  if (check.steps.length > 0 && nowMs < typeMarkAt(check, leadMs)) return 'pending';
+  return check.cardType.ok ? 'ok' : 'wrong';
+}
+
 /** A Check that ends without a prize: the card is incomplete, or not valid. */
 export const isFailed = (verdict: CheckVerdict): boolean => verdict !== 'complete';
 
@@ -140,7 +199,7 @@ export function firstMiss(check: Pick<CheckView, 'steps' | 'cells'>): CheckMiss 
 /** Rows on a card. The grid keeps all three slots even when it only knows the played songs. */
 export const CARD_ROWS = 3;
 
-/** Where the result plaque sits over the card. */
+/** Where the result (a valid card's plaque, a failed card's big ✗) sits over the card. */
 export interface PlaqueSpot {
   /** Its centre, as a share of the card's height (0 top, 1 bottom). */
   at: number;

@@ -36,7 +36,8 @@ The stage holds the full state, but these never reach the view:
 - possible winners;
 - the Phase;
 - claims (`completeSince` and `warnings` included);
-- winners' names and notes.
+- winners' names and notes;
+- winning card numbers: not secret, but never shown (the user's review), so no list of winners or `cardIds` comes out. Only the Check names the card being checked.
 
 Songs are named only from landings (the `transition.landed` event, or the snapshot's `landings` and `current`), and only from their landing time. `apps/show/tests/ui/stage/view.test.ts` fills every private field with a secret and checks that none comes out, in every fixture.
 
@@ -44,8 +45,9 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 
 - **Relay lost:** the scene stays. After 3 s a small dot turns red (`link-lost`).
 - **`cards.json` or covers missing:** titles still show, from the snapshot. A Check grid shows only the played songs.
-- **No plan:** the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`.
-- **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`). Today: `nino-espatxarrat.svg` on a failed Check's plaque. A null sticker is left out and the plaque centres its text.
+- **No plan:** the night's preview, the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`. The Check's type badge uses the default card types' colours.
+- **QR can't be drawn:** the short link shows in its place.
+- **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`): `nino-sentat` on the QR before the Game, `nino-meditant` and `nino-sardana` either side of the Interval's countdown, `nino-espatxarrat` beside a failed Check's ✗. A null sticker is left out.
 
 ## Theming
 
@@ -53,13 +55,13 @@ A theme targets these hooks without touching any logic:
 - `data-scene` on each scene's `<section>`, plus `data-scene` on the root for the current scene;
 - `data-anim` with the ANIMATIONS.md hook names;
 - `data-state` on Check cells (`pending`, `playing`, `landed`, `missed`, `idle`) and covers (`loading`, `loaded`, `missing`, `empty`);
-- on the Check's `.check`: `data-verdict` (`complete`, `incomplete`, `notValid`) once the result shows, `data-plaque` (`rows`, `row`, `card`) and `--plaque-at` for where the result plaque sits (`model/check.ts` › `plaqueSpot`); `data-sticker` on the plaque when its nino shows;
+- on the Check's `.check` (`data-testid="check"`): `data-result` (`pending`, then the verdict), `data-verdict` (`complete`, `incomplete`, `notValid`) once the result shows, `data-wrong-type` for a card of the wrong type, `data-plaque` (`rows`, `row`, `card`) and `--plaque-at` for where the result (plaque or ✗) sits (`model/check.ts` › `plaqueSpot`); `data-state` (`pending`, `ok`, `wrong`) on the type badge `.check__type`; `data-sticker` on the result when its nino shows;
 - the BEM classes;
 - `data-drum="shown|hidden"`, `data-link` and `data-paused` on the root.
 
 On each hook, the basic theme plays a short CSS transition: the element is held in `.is-entering` for one frame, then transitions in. The root also dispatches `quina:anim` events with `detail.name`, one of:
 - `scene-enter`, `spin`, `landing`, `suspense`, `heat`;
-- `shuffle`, `check-enter`, `check-step`, `check-result`;
+- `shuffle`, `check-enter`, `check-type`, `check-step`, `check-result`;
 - `celebrate`, `interval-rotate`, `idle`, `credits`, `pause`, `link-lost`.
 
 Each event fires at the show-clock time from its timestamp, never when the message arrives. A late join enters the scene without replaying past moments. `prefers-reduced-motion` switches to the still fallbacks.
@@ -119,5 +121,6 @@ Each event fires at the show-clock time from its timestamp, never when the messa
 npx tsc -p tsconfig.ui.json
 node --test "tests/ui/**/*.test.ts"
 node relay/server.ts --port 5192   # then open /stage/?demo=play (or before, roundStart, shuffle, spin, hold,
-                                   # suspense, check, checkValid, celebration, celebrationBingo, interval, after, pause)
+                                   # suspense, check, checkValid, checkFailed, checkWrongType, celebration, celebrationBingo,
+                                   # interval, after, pause)
 ```

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import QRCode from 'qrcode';
 import { playerAppLink, qrPathData } from '../../../../stage/model/qr.ts';
 import { confettiPieces } from '../../../../stage/model/confetti.ts';
-import { cardsLabel, joinCa, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { joinCa, nextRoundLabel, priceLabel, STAGE_TEXT } from '../../../../stage/strings.ts';
 
 test('the QR path draws one run per row of dark modules, inside a quiet zone', () => {
   const dark = new Set(['0,0', '0,1', '1,1']);
@@ -43,9 +43,22 @@ test('Catalan lists and labels', () => {
   assert.equal(joinCa([57]), '57');
   assert.equal(joinCa([57, 301]), '57 i 301');
   assert.equal(joinCa([12, 57, 301]), '12, 57 i 301');
-  assert.equal(cardsLabel([123]), 'Cartró 123');
-  assert.equal(cardsLabel([57, 301]), 'Cartrons 57 i 301');
   assert.equal(STAGE_TEXT.countdown.minutes('start', 1), "Comencem d'aquí a un minut");
   assert.equal(STAGE_TEXT.countdown.minutes('back', 5), "Tornem d'aquí a uns 5 minuts");
-  assert.equal(STAGE_TEXT.winnerLine('bingo', [57, 301]), 'Quina: 57 i 301');
+  assert.equal(STAGE_TEXT.roundsLabel([1, 2, 3]), 'Quines 1, 2 i 3');
+  assert.equal(STAGE_TEXT.roundsLabel([8]), 'Quina 8');
+});
+
+test('card prices: whole euros, or with cents', () => {
+  assert.equal(priceLabel(200), '2 €');
+  assert.equal(priceLabel(250), '2,50 €');
+  assert.equal(priceLabel(5), '0,05 €');
+  assert.equal(priceLabel(null), null);
+  assert.equal(priceLabel(-1), null);
+});
+
+test('the Interval\'s plate names the next round, with the total when known', () => {
+  assert.equal(nextRoundLabel({ number: 4, special: false }, 8), 'Següent: Quina 4 de 8');
+  assert.equal(nextRoundLabel({ number: 4, special: false }, null), 'Següent: Quina 4');
+  assert.equal(nextRoundLabel({ number: 7, special: true }, 8), 'Següent: Quina Especial', 'the special round has no number');
 });

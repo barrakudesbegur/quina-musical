@@ -7,11 +7,11 @@
 import type { ShowScene, WinKind } from '../../../packages/ui/flow.ts';
 import type { HeatSample } from '../../../packages/rules/heat.ts';
 import type { StageView } from '../view.ts';
-import { checkReveal, type CheckVerdict, type StepState } from './check.ts';
+import { checkReveal, typeReveal, type CheckVerdict, type StepState, type TypeState } from './check.ts';
 import { motionAt, type MotionPhase } from './motion.ts';
 import { shufflePhaseAt, type ShufflePhase } from './shuffle.ts';
 import { visibleSongs } from './songs.ts';
-import { rotationIndex } from './timing.ts';
+import { roughCountdown, sameCountdown, type RoughCountdown, type RoughCountdownOptions } from './timing.ts';
 
 /** Every projector hook, as in ANIMATIONS.md. */
 export const ANIM_NAMES = [
@@ -22,6 +22,7 @@ export const ANIM_NAMES = [
   'heat',
   'shuffle',
   'check-enter',
+  'check-type',
   'check-step',
   'check-result',
   'celebrate',
@@ -42,10 +43,11 @@ export type AnimDetail =
   | { name: 'heat' }
   | { name: 'shuffle'; phase: ShufflePhase }
   | { name: 'check-enter'; cardId: number; kind: WinKind }
+  | { name: 'check-type'; ok: boolean }
   | { name: 'check-step'; index: number; songId: number; state: StepState }
   | { name: 'check-result'; result: CheckVerdict }
-  | { name: 'celebrate'; kind: WinKind; cardIds: number[] }
-  | { name: 'interval-rotate'; index: number }
+  | { name: 'celebrate'; kind: WinKind }
+  | { name: 'interval-rotate' }
   | { name: 'idle'; scene: ShowScene }
   | { name: 'credits' }
   | { name: 'pause'; on: boolean }
@@ -62,13 +64,13 @@ export interface Moments {
   motion: MotionPhase;
   /** The newest song on screen. */
   landing: { songId: number; atMs: number } | null;
-  check: { key: string; cardId: number; kind: WinKind; songIds: number[]; steps: StepState[]; result: CheckVerdict | null } | null;
+  check: { key: string; cardId: number; kind: WinKind; type: TypeState | null; songIds: number[]; steps: StepState[]; result: CheckVerdict | null } | null;
   shuffle: { key: string; phase: ShufflePhase } | null;
-  celebration: { key: string; kind: WinKind; cardIds: number[] } | null;
+  celebration: { key: string; kind: WinKind } | null;
   /** The Heat sample that has started (its `fromMs`). */
   heat: { fromMs: number } | null;
-  /** The Interval's prize rotation. */
-  rotation: { key: string; index: number } | null;
+  /** The Interval's rough countdown: it ticks (`interval-rotate`) when what it says changes. */
+  countdown: { key: string; at: RoughCountdown | null } | null;
 }
 
 export interface MomentInputs {
@@ -77,10 +79,13 @@ export interface MomentInputs {
   heat: HeatSample | null;
   linkLost: boolean;
   checkMarkAt: 'end' | 'start';
-  prizeRotationMs: number;
+  /** When the card-type badge gets its mark, after the Check starts (model/check.ts `typeMarkAt`). */
+  checkTypeLeadMs: number;
+  /** The rough countdown's steps (config.ts `countdown`). */
+  countdown: RoughCountdownOptions;
 }
 
-export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt, prizeRotationMs }: MomentInputs): Moments {
+export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt, checkTypeLeadMs, countdown }: MomentInputs): Moments {
   const body = view.body;
   const newest = visibleSongs(view.songs, nowMs, 1)[0] ?? null;
   const moments: Moments = {
@@ -95,7 +100,7 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
     shuffle: null,
     celebration: null,
     heat: heat ? { fromMs: heat.fromMs } : null,
-    rotation: null,
+    countdown: null,
   };
   switch (body.scene) {
     case 'play':
@@ -109,17 +114,24 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
     case 'check': {
       const c = body.check;
       const reveal = checkReveal(c, nowMs, checkMarkAt);
-      moments.check = { key: c.key, cardId: c.cardId, kind: c.kind, songIds: c.steps.map((s) => s.songId), steps: reveal.steps, result: reveal.result };
+      moments.check = {
+        key: c.key,
+        cardId: c.cardId,
+        kind: c.kind,
+        type: typeReveal(c, nowMs, checkTypeLeadMs),
+        songIds: c.steps.map((s) => s.songId),
+        steps: reveal.steps,
+        result: reveal.result,
+      };
       break;
     }
     case 'celebration':
       moments.sceneKey = `celebration:${body.key}`;
-      moments.celebration = { key: body.key, kind: body.kind, cardIds: body.cardIds };
+      moments.celebration = { key: body.key, kind: body.kind };
       break;
     case 'interval': {
       moments.sceneKey = `interval:${body.nextRound.number}`;
-      const count = body.prizes.length;
-      moments.rotation = { key: moments.sceneKey, index: rotationIndex(nowMs, body.sinceMs, prizeRotationMs, count) };
+      moments.countdown = { key: moments.sceneKey, at: roughCountdown(body.guideEndMs, nowMs, countdown) };
       break;
     }
     case 'before':
@@ -135,8 +147,12 @@ const IDLE_SCENES: ReadonlySet<ShowScene> = new Set(['before', 'interval', 'afte
 function enterScene(next: Moments): AnimDetail[] {
   const out: AnimDetail[] = [{ name: 'scene-enter', scene: next.scene }];
   if (next.check) out.push({ name: 'check-enter', cardId: next.check.cardId, kind: next.check.kind });
-  if (next.check?.result && next.check.steps.length === 0) out.push({ name: 'check-result', result: next.check.result });
-  if (next.celebration) out.push({ name: 'celebrate', kind: next.celebration.kind, cardIds: next.celebration.cardIds });
+  // A Check with no songs (a card of the wrong type, or unknown) has its type mark and result from the start.
+  if (next.check && next.check.steps.length === 0) {
+    if (next.check.type && next.check.type !== 'pending') out.push({ name: 'check-type', ok: next.check.type === 'ok' });
+    if (next.check.result) out.push({ name: 'check-result', result: next.check.result });
+  }
+  if (next.celebration) out.push({ name: 'celebrate', kind: next.celebration.kind });
   if (IDLE_SCENES.has(next.scene)) out.push({ name: 'idle', scene: next.scene });
   if (next.scene === 'after') out.push({ name: 'credits' });
   return out;
@@ -171,6 +187,7 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
   const pc = prev.check;
   const nc = next.check;
   if (pc && nc && pc.key === nc.key) {
+    if (nc.type && nc.type !== 'pending' && nc.type !== pc.type) out.push({ name: 'check-type', ok: nc.type === 'ok' });
     nc.steps.forEach((state, index) => {
       if (state !== 'pending' && state !== pc.steps[index]) out.push({ name: 'check-step', index, songId: nc.songIds[index], state });
     });
@@ -183,8 +200,8 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
 
   if (next.heat && next.heat.fromMs !== prev.heat?.fromMs) out.push({ name: 'heat' });
 
-  if (next.rotation && prev.rotation?.key === next.rotation.key && prev.rotation.index !== next.rotation.index) {
-    out.push({ name: 'interval-rotate', index: next.rotation.index });
-  }
+  const pt = prev.countdown;
+  const nt = next.countdown;
+  if (pt && nt && pt.key === nt.key && pt.at && nt.at && !sameCountdown(pt.at, nt.at)) out.push({ name: 'interval-rotate' });
   return out;
 }

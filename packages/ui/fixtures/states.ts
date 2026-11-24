@@ -220,6 +220,35 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
       }),
     };
   },
+  checkFailed: (now) => {
+    // The same claim as `check`, over: Elefants didn't sound, so card 57 has no Line.
+    const s = baseState(now);
+    const steps = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: now - 13000 + i * 3000, durationMs: 2500 }));
+    return {
+      state: withFlow(s, {
+        scene: 'check',
+        status: 'hold',
+        autoAtMs: null,
+        hold: { sinceMs: now - 16000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
+        claims: [{ claimId: 'cl-5', round: 3, cardId: 57, kind: 'line', atMs: now - 16000, position: s.queue.position, status: 'checked', outcome: 'incomplete', completeSince: null, warnings: [] }],
+        check: { claimId: 'cl-5', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, otherRows: [], cardType: 'normal', steps, startAtMs: now - 14500, endAtMs: now - 1000 },
+      }),
+    };
+  },
+  checkWrongType: (now) => {
+    // A special card claimed in a regular round: its type fails, so no song is played.
+    const s = baseState(now);
+    return {
+      state: withFlow(s, {
+        scene: 'check',
+        status: 'hold',
+        autoAtMs: null,
+        hold: { sinceMs: now - 3000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
+        claims: [{ claimId: 'cl-8', round: 3, cardId: 508, kind: 'line', atMs: now - 3000, position: s.queue.position, status: 'checked', outcome: 'wrongType', completeSince: null, warnings: [] }],
+        check: { claimId: 'cl-8', cardId: 508, kind: 'line', outcome: 'wrongType', row: null, otherRows: [], cardType: 'especial', steps: [], startAtMs: now + 600, endAtMs: now + 600 },
+      }),
+    };
+  },
   celebration: (now) => {
     const s = baseState(now);
     return {

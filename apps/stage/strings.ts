@@ -1,21 +1,15 @@
 // The projector's words, in Catalan. Shared terms (Quina N, Línia, QUINA!, the check results…) come from
 // ui/i18n/ca.ts; this file holds what only the projector says. Pure, so the formatting is tested.
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import type { WinKind } from '../../packages/ui/flow.ts';
 import type { CheckVerdict } from './model/check.ts';
-
-/** The Check ribbon's pill: "Línia · fila 3" (a Line, its row counted from 1), "Línia", or "Quina". */
-export function checkKindLabel(kind: WinKind, row: number | null): string {
-  if (kind === 'bingo') return CA.bingo;
-  return row === null ? CA.line : `${CA.line} · fila ${row + 1}`;
-}
 
 /** Kept on one line (no-break spaces) when the plaque's second line wraps. */
 const GAME_GOES_ON = 'El\u00a0joc\u00a0continua!';
 
 /**
- * The plaque's second line. A failed Check: "Falta «title». El joc continua!", naming the first song that
- * didn't sound when its title is known, else "El joc continua!". A valid one has none.
+ * A failed Check's words, which the projector doesn't print (the big ✗ says it) but gives the result as its
+ * accessible label: "Falta «title». El joc continua!", naming the first song that didn't sound when its title
+ * is known, else "El joc continua!". A valid one has none.
  */
 export function checkResultDetail(verdict: CheckVerdict, missedTitle: string | null): string | null {
   if (verdict === 'complete') return null;
@@ -29,10 +23,24 @@ export function joinCa(items: readonly (string | number)[]): string {
   return `${parts.slice(0, -1).join(', ')} i ${parts[parts.length - 1]}`;
 }
 
-/** "Cartró 123" or "Cartrons 57 i 301" (empty for none). */
-export function cardsLabel(cardIds: readonly number[]): string {
-  if (cardIds.length === 0) return '';
-  return cardIds.length === 1 ? CA.card(cardIds[0]) : `${CA.cards} ${joinCa(cardIds)}`;
+/** A card type's price: "2 €", "2,50 €"; null when it isn't set. */
+export function priceLabel(cents: number | null): string | null {
+  if (cents === null || !Number.isFinite(cents) || cents < 0) return null;
+  const whole = Math.floor(cents / 100);
+  const rest = Math.round(cents % 100);
+  return rest ? `${whole},${String(rest).padStart(2, '0')} €` : `${whole} €`;
+}
+
+/** A card type's short name for the Check's badge: "Cartró normal" → "Normal", "Cartró especial" → "Especial". */
+export function shortTypeName(name: string): string {
+  const short = name.trim().replace(/^cartr[óo]\s+/i, '');
+  return short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : name;
+}
+
+/** The Interval's plate: "Següent: Quina 4 de 8", "Següent: Quina 4" without a total, "Següent: Quina Especial". */
+export function nextRoundLabel(round: { number: number; special: boolean }, total: number | null): string {
+  if (round.special) return `Següent: ${STAGE_TEXT.specialRoundName}`;
+  return `Següent: ${total ? CA.roundOf(round.number, total) : CA.round(round.number)}`;
 }
 
 /** What a rough countdown says. `start`: before the Game; `back`: the Interval. */
@@ -41,32 +49,33 @@ export type CountdownContext = 'start' | 'back';
 export const STAGE_TEXT = {
   title: CA.gameTitle,
   round: CA.round,
-  roundOf: CA.roundOf,
-  nextRound: CA.nextRound,
   specialRound: CA.specialRound,
   specialRule: 'Només compten els cartrons especials',
   shout: CA.shout,
   prize: CA.prize,
   sponsoredBy: CA.sponsoredBy,
   morePrizes: CA.morePrizes,
-  checking: CA.checking,
-  /** The ribbon once a Check has failed: just "Cartró N". */
-  checkedCard: CA.card,
+  /** The Check's plate: "Cartró #57" (shown in capitals). */
+  checkPlate: (id: number) => `Cartró #${id}`,
+  /** The Check's card-type badge, for its accessible label: "Cartró normal: correcte". */
+  checkType: (name: string, ok: boolean | null) => (ok === null ? name : `${name}: ${ok ? 'correcte' : 'no val per a aquesta quina'}`),
   checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, notValid: 'Cartró no vàlid' },
   mark: { landed: '✓', missed: '✗' },
   markLabel: { landed: CA.landed, missed: CA.notLanded },
   pause: CA.pause,
   scanYourCard: CA.scanYourCard,
   thanks: CA.thanks,
-  winners: CA.winners,
   shuffling: 'Barrejant…',
-  howToPlayTitle: 'Com es juga',
-  howToPlay: ['Quan soni una cançó del teu cartró, marca-la.', 'Quatre en una fila? Crida «Línia!»', 'Tot el cartró ple? Crida «Quina!»'],
+  /** Before the Game: the night's preview. A regular round's ball reads its number after "Quina". */
+  roundsWord: 'Quina',
+  roundsLabel: (numbers: readonly number[]) => (numbers.length === 1 ? CA.round(numbers[0]) : `Quines ${joinCa(numbers)}`),
+  specialRoundName: 'Quina Especial',
+  priceOf: (name: string, price: string | null) => (price ? `${name}: ${price}` : name),
   sponsorsTitle: 'Amb el suport de',
-  sponsorThanks: (name: string) => `Gràcies, ${name}!`,
-  lastWinners: (round: number) => `Guanyadors de la ${CA.round(round)}`,
-  winnerLine: (kind: WinKind, cardIds: readonly number[]) => `${kind === 'line' ? CA.line : CA.bingo}: ${joinCa(cardIds)}`,
-  noWinner: '—',
+  intervalTitle: CA.scene.interval,
+  minutesUnit: 'min',
+  /** The Interval ring's number under a minute. */
+  ringSoon: '<1',
   suspense: '?',
   drumPlaceholder: 'Tambor · a la pàgina del show',
   link: { offline: 'Sense connexió', noShow: 'Esperant el show' },

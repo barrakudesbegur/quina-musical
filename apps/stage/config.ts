@@ -23,10 +23,6 @@ export const STAGE = Object.freeze({
   heatRepaintMs: 250,
   /** No optional DOM writes this close before a landing (ANIMATIONS.md budget). */
   quietBeforeLandingMs: 300,
-  /** Interval: each prize stays this long before the next one rotates in (`interval-rotate`). */
-  prizeRotationMs: 8000,
-  /** Interval and after: sponsor thanks rotation. */
-  sponsorRotationMs: 5000,
   /** Rough countdowns: a clock time above this many minutes, rounded minutes below. */
   countdown: Object.freeze({ clockAboveMin: 90, fineBelowMin: 10, coarseStepMin: 5 }),
   /** `suspense`: the "?" breathes once per this period, speeding up towards the auto-release. */
@@ -36,12 +32,26 @@ export const STAGE = Object.freeze({
   /** The Check marks a step when its snippet ends (ANIMATIONS.md `check-step`), or when it starts. */
   checkMarkAt: 'end' as 'end' | 'start',
   /**
+   * `check-type`: the card-type badge gets its ✓ this long after the Check starts, once the plate and badge
+   * have dropped in (never after the first snippet starts; the engine leaves 1.5 s before it).
+   */
+  checkTypeLeadMs: 900,
+  /**
    * Ninos stickers, by where they show: URLs of the game-style versions (flat colour, sticker border) of
    * `brand/ninos/`, kept in `assets/` and bundled by Vite. A null sticker is left out (its plaque centres its
-   * text instead). `checkFailed`: the nino-espatxarrat (from `brand/ninos/figures/nino-espatxarrat.svg`)
-   * tumbling onto a failed Check's plaque (`check-result`).
+   * text instead).
+   * - `checkFailed`: the nino-espatxarrat (`brand/ninos/figures/nino-espatxarrat.svg`), fallen beside a failed
+   *   Check's big ✗ (`check-result`).
+   * - `before`: the sitting nino (`nino-sentat`) on the QR's top-right corner before the Game.
+   * - `intervalLeft`, `intervalRight`: the meditating and the dancing ninos (`nino-meditant`, `nino-sardana`)
+   *   either side of the Interval's countdown.
    */
-  stickers: Object.freeze({ checkFailed: new URL('./assets/nino-espatxarrat.svg', import.meta.url).href as string | null }),
+  stickers: Object.freeze({
+    checkFailed: new URL('./assets/nino-espatxarrat.svg', import.meta.url).href as string | null,
+    before: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
+    intervalLeft: new URL('./assets/nino-meditant.svg', import.meta.url).href as string | null,
+    intervalRight: new URL('./assets/nino-sardana.svg', import.meta.url).href as string | null,
+  }),
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */
     area: Object.freeze({ x: 40, y: 40, width: 1360, height: 1000 }),
@@ -61,7 +71,7 @@ export const STAGE = Object.freeze({
   }),
   /** `credits`: the after-the-Game roll's speed. */
   creditsPxPerSec: 40,
-  /** The player app, for the QR before the Game and in the Interval (never during play). */
+  /** The player app, for the QR before the Game (never in play, nor in the Interval: the user's review). */
   playerApp: Object.freeze({ origin: 'https://quina.barrakudesbegur.org', label: 'quina.barrakudesbegur.org' }),
   catalogUrl: '/cards/cards.json',
 } as const);

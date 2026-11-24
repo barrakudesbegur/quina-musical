@@ -1,8 +1,9 @@
 // The Check on the projector: grid from the card, each step's state from its timestamps, and the failed result.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_ROWS, checkCells, checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, verdictOf, type CheckStepView } from '../../../../stage/model/check.ts';
-import { checkKindLabel, checkResultDetail, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { CARD_ROWS, cardTypeBadge, checkCells, checkReveal, firstMiss, gridKey, isFailed, plaqueSpot, typeMarkAt, typeReveal, verdictOf, type CheckStepView } from '../../../../stage/model/check.ts';
+import { checkResultDetail, shortTypeName, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { DEFAULT_CARD_TYPES } from '../../../../../packages/ui/plan.ts';
 
 const card = { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]] };
 const steps: CheckStepView[] = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: 1000 + i * 3000, durationMs: 2500 }));
@@ -114,13 +115,44 @@ test('a Bingo\'s plaque, or one with no grid, sits over the middle of the card',
   assert.deepEqual(plaqueSpot({ row: 2, cells: [] }), { at: 0.5, over: 'card' });
 });
 
-test('the ribbon\'s pill: the Line and its row counted from 1, or the Bingo', () => {
-  assert.equal(checkKindLabel('line', 2), 'Línia · fila 3');
-  assert.equal(checkKindLabel('line', 0), 'Línia · fila 1');
-  assert.equal(checkKindLabel('line', null), 'Línia');
-  assert.equal(checkKindLabel('bingo', null), 'Quina');
-  assert.equal(STAGE_TEXT.checkedCard(57), 'Cartró 57');
+test('the plate names the card being checked; the result plaque\'s words', () => {
+  assert.equal(STAGE_TEXT.checkPlate(57), 'Cartró #57');
   assert.equal(STAGE_TEXT.checkResult.incomplete, 'Aquest cartró no té premi');
+  assert.equal(STAGE_TEXT.checkResult.complete, 'Cartró correcte!');
+});
+
+// ---- the card-type step: the badge, and when it gets its mark
+
+test('the type badge takes the type\'s colour and name from the plan, and fails only for a wrong-type card', () => {
+  const plan = [
+    { type: 'normal' as const, name: 'Cartró normal', color: '#cfe8ff', priceCents: 200, rounds: ['normal' as const] },
+    { type: 'especial' as const, name: 'Cartró especial', color: '#ffd9e8', priceCents: 300, rounds: ['special' as const] },
+  ];
+  assert.deepEqual(cardTypeBadge('normal', 'incomplete', plan), { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', special: false, ok: true });
+  assert.deepEqual(cardTypeBadge('especial', 'wrongType', plan), { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', special: true, ok: false });
+  assert.equal(cardTypeBadge(null, 'unknownCard', plan), null, 'an unknown card has no type');
+  assert.equal(cardTypeBadge('normal', 'complete', null)?.color, DEFAULT_CARD_TYPES[0].color, 'the defaults without a plan');
+  assert.equal(cardTypeBadge('rara', 'complete', plan)?.label, 'rara', 'a type the plan doesn\'t list still shows');
+  assert.equal(shortTypeName('Cartró normal'), 'Normal');
+  assert.equal(shortTypeName('Cartró especial'), 'Especial');
+  assert.equal(shortTypeName('Especial'), 'Especial');
+});
+
+test('the type is the first step: marked after the lead, never after the first snippet starts', () => {
+  const cardType = cardTypeBadge('normal', 'incomplete', null);
+  const check = { startAtMs: 0, steps, cardType };
+  assert.equal(typeMarkAt(check, 900), 900);
+  assert.equal(typeMarkAt(check, 5000), steps[0].atMs, 'clamped to the first snippet');
+  assert.equal(typeReveal(check, 899, 900), 'pending');
+  assert.equal(typeReveal(check, 900, 900), 'ok');
+  assert.equal(typeReveal({ ...check, cardType: null }, 900, 900), null, 'no badge for an unknown card');
+});
+
+test('a wrong-type card has no songs: its type fails at once, with the result', () => {
+  const cardType = cardTypeBadge('especial', 'wrongType', null);
+  const check = { startAtMs: 5000, steps: [], cardType, endAtMs: 5000, verdict: verdictOf('wrongType') };
+  assert.equal(typeReveal(check, 0, 900), 'wrong');
+  assert.equal(checkReveal(check, 0).result, 'notValid');
 });
 
 test('the grid is redrawn within a Check only when its cells change (the catalog arriving late)', () => {
