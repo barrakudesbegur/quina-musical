@@ -29,15 +29,18 @@ export async function freePort(): Promise<number> {
 
 /**
  * Start `wrangler dev`; resolves once /api/health answers. `port` lets a test start it on a port chosen earlier.
- * `media` turns on a local R2 bucket for the media sync (wrangler.jsonc keeps it off until the real bucket exists).
+ * `media` keeps the R2 binding (a local bucket) for the media sync; without it the Worker runs as a cloud with no
+ * bucket. `assets` serves another static folder than dist/.
  */
-export async function startDevServer({ port, persistTo, media = false }: { port?: number; persistTo?: string; media?: boolean } = {}): Promise<DevServer> {
+export async function startDevServer({ port, persistTo, media = false, assets }: { port?: number; persistTo?: string; media?: boolean; assets?: string } = {}): Promise<DevServer> {
   const chosen = port ?? (await freePort());
   const inspector = await freePort(); // its own debugger port, so several dev servers can run at once (parallel tests)
   const state = persistTo ?? fs.mkdtempSync(path.join(os.tmpdir(), 'quina-cloud-'));
   // Wrangler's own entry point, wherever npm put it (the workspace hoists it to the repo's node_modules).
   const wrangler = path.join(path.dirname(createRequire(import.meta.url).resolve('wrangler/package.json')), 'bin', 'wrangler.js');
   const config: string[] = [];
+  /** Config copies written for this server, removed when it stops. */
+  const copies: string[] = [];
   if (!media) {
     // A copy of wrangler.jsonc beside it (its paths stay right) without the R2 binding: most tests run without
     // the bucket, as a cloud that has none (the sync answers 503).
@@ -47,8 +50,11 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
     const text = source.replace(/\n  "r2_buckets": [^\n]*\n/, '\n');
     if (text === source) throw new Error('wrangler.jsonc has no r2_buckets line to switch off');
     fs.writeFileSync(file, text);
+    copies.push(file);
     config.push('--config', file);
   }
+  // Another static folder than dist/ (tools/e2e assembles its own build, so a deploy's dist/ is never touched).
+  if (assets) config.push('--assets', assets);
   const child: ChildProcess = spawn(
     process.execPath,
     [wrangler, 'dev', ...config, '--port', String(chosen), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'ACCESS_DEV:true', '--log-level', 'warn', '--show-interactive-dev-session=false'],
@@ -80,7 +86,7 @@ export async function startDevServer({ port, persistTo, media = false }: { port?
     stop: () =>
       new Promise((resolve) => {
         const done = () => {
-          for (const at of config.filter((_, i) => i % 2 === 1)) fs.rmSync(at, { force: true });
+          for (const at of copies) fs.rmSync(at, { force: true });
           resolve();
         };
         if (child.exitCode !== null) return done();

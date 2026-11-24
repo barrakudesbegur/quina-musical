@@ -28,6 +28,8 @@ async function freePort(): Promise<number> {
 export interface Relay {
   url: string;
   ws: string;
+  /** Its scratch cloud link folder (QUINA_LINK_DIR): the test's cloud link writes there too. */
+  linkDir: string;
   log: () => string;
   stop: () => Promise<void>;
 }
@@ -50,6 +52,7 @@ export async function startRelay(): Promise<Relay> {
         return {
           url,
           ws: `ws://127.0.0.1:${port}/ws`,
+          linkDir,
           log: () => output,
           stop: async () => {
             child.kill();

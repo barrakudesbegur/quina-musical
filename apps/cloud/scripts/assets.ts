@@ -1,5 +1,5 @@
 // Assemble the static files the Worker serves (wrangler.jsonc `assets.directory` = dist/), at deploy time:
-//   npm run assets -- [--quick] [--pool default] [--ui ../show/dist]
+//   npm run assets -- [--quick] [--pool default] [--ui ../show/dist] [--out dist]
 // It copies static/ (committed: the kill switch for last year's service worker, _headers, a placeholder page).
 // Unless --quick, it then adds, as agreed with the UI session:
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
@@ -16,7 +16,7 @@ import path from 'node:path';
 import { loadPool } from '../../show/relay/pool.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const OUT = path.join(ROOT, 'dist');
+
 const CACHE = path.join(ROOT, '.assets-cache', 'covers');
 /** Covers: the longest side in px, the JPEG fallback's quality, and the JXL distance (1 = visually lossless). */
 const COVER = Object.freeze({ sizePx: 256, jpegQuality: 80, jxlDistance: 1.5, jxlEffort: 7 });
@@ -28,6 +28,8 @@ const flag = (name: string): string | undefined => {
 };
 const quick = args.includes('--quick');
 const uiDir = path.resolve(ROOT, flag('--ui') ?? '../show/dist');
+/** Where to assemble them: dist/ (what wrangler.jsonc serves and deploys), or elsewhere for a test (tools/e2e). */
+const OUT = path.resolve(ROOT, flag('--out') ?? 'dist');
 
 const kb = (bytes: number) => `${(bytes / 1024).toFixed(0)} KB`;
 const sizeOf = (dir: string): number =>

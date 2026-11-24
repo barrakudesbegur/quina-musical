@@ -1,12 +1,16 @@
-// One whole show, headless: the relay, the show page (with its stage), the console and a player, driven through
-// the protocol like the presenters' tablet. Each step waits for the engine's state, then checks every screen
-// through its stable hooks (data-scene, data-testid; agreed with the UI session):
+// One whole show, headless: the relay, the show page (with its stage), the console and a player on the relay, plus
+// the phones' production path (the cloud link, the Worker in wrangler dev, a phone on /feed and the player app as
+// the cloud serves it), driven through the protocol like the presenters' tablet. Each step waits for the engine's
+// state, then checks every screen through its stable hooks (data-scene, data-testid; agreed with the UI session)
+// and what the phones follow; at the end, that the phones never got anything private:
 //   before → round 1 introduced → Shuffle → three landings → Parlem → Aguanta → Suspense → a Line claimed,
 //   checked and celebrated → back to the round → the Bingo claimed, checked and celebrated → the Interval →
 //   round 2 introduced → Shuffle → its first landing.
 // It needs the default pool prepared on this machine; without it the test is skipped.
 import { expect, test, type Page } from '@playwright/test';
 import type { ShowState } from '@quina/protocol';
+import { PLAN, SECRET_PRIZE } from '../../apps/cloud/test/support/plan.ts';
+import { Phone, startCloud, type Cloud } from './support/cloud.ts';
 import { hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
 import { Remote } from './support/remote.ts';
 
@@ -20,12 +24,21 @@ test.skip(!hasPreparedPool(), 'the default pool is not prepared here (npm run pr
 
 let relay: Relay;
 let remote: Remote;
+let cloud: Cloud;
+let phone: Phone;
 /** What the screens logged as errors and warnings. */
 const logs: string[] = [];
 
 test.beforeAll(async () => {
   relay = await startRelay();
   remote = await Remote.connect(relay.ws);
+  cloud = await startCloud(relay.ws, relay.linkDir);
+  // Admin's plan in the cloud: round 2's prizes stay secret until its intro (perRound). Both rounds are normal,
+  // like the show this test plays (cards 1-300 in play).
+  const plan = { ...PLAN, rounds: PLAN.rounds.map((r) => ({ ...r, kind: 'normal' as const })) };
+  const saved = await fetch(`${cloud.server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) });
+  if (!saved.ok) throw new Error(`the cloud refused the test plan: ${saved.status} ${await saved.text()}`);
+  phone = new Phone(`${cloud.server.ws}/feed?cards=${CARDS.join(',')}`);
 });
 
 // On failure: the screens' logs and the protocol's last events, attached to the report.
@@ -37,7 +50,9 @@ test.afterEach(async ({}, testInfo) => {
 });
 
 test.afterAll(async () => {
+  phone?.close();
   remote?.close();
+  await cloud?.stop();
   await relay?.stop();
 });
 
@@ -48,10 +63,13 @@ async function sceneOf(page: Page, root: string): Promise<string | null> {
 
 // The screens' checks are soft: one run lists every screen that didn't follow, while the protocol's (the engine's
 // state and events) stop the test at once.
-async function expectScenes(screens: { show: Page; console: Page; player: Page }, scene: string): Promise<void> {
+async function expectScenes(screens: { show: Page; console: Page; player: Page; phonePage: Page }, scene: string): Promise<void> {
   await soft.poll(() => sceneOf(screens.console, '.console'), { message: `console in ${scene}` }).toBe(scene);
   await soft.poll(() => sceneOf(screens.player, '[data-scene]'), { message: `player in ${scene}` }).toBe(scene);
   await soft(screens.show.locator(`#stage [data-scene="${scene}"]`).first(), `stage in ${scene}`).toBeVisible();
+  // The phones' production path: the public feed through the link and the cloud, and the player as served there.
+  await soft.poll(() => phone.view?.state.scene, { message: `phone (feed) in ${scene}` }).toBe(scene);
+  await soft.poll(() => sceneOf(screens.phonePage, '[data-scene]'), { message: `phone (player on the cloud) in ${scene}` }).toBe(scene);
 }
 
 /** Ask for the next song and wait until it has landed and plays. */
@@ -65,8 +83,9 @@ test('one whole show, every screen following', async ({ browser }) => {
   const show = await context.newPage();
   const consolePage = await context.newPage();
   const player = await (await browser.newContext()).newPage(); // its own storage, like a phone
+  const phonePage = await (await browser.newContext()).newPage(); // a phone on the cloud, as the player app runs there
   const errors: string[] = [];
-  for (const [name, page] of [['show', show], ['console', consolePage], ['player', player]] as const) {
+  for (const [name, page] of [['show', show], ['console', consolePage], ['player', player], ['phone', phonePage]] as const) {
     page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
     page.on('console', (m) => {
       if (m.type() === 'error' || m.type() === 'warning') logs.push(`${name} ${m.type()}: ${m.text()}`);
@@ -81,7 +100,8 @@ test('one whole show, every screen following', async ({ browser }) => {
   await remote.command('setCardsInPlay', { ranges: '1-300' });
   await consolePage.goto(`${relay.url}/console/`);
   await player.goto(`${relay.url}/player/?feed=relay#/26/${CARDS[0]}`);
-  const screens = { show, console: consolePage, player };
+  await phonePage.goto(`${cloud.server.http}/#/26/${CARDS[0]}`);
+  const screens = { show, console: consolePage, player, phonePage };
   await expectScenes(screens, 'before');
 
   // ---- round 1: introduced, then the Shuffle -------------------------------------------------------------
@@ -100,6 +120,8 @@ test('one whole show, every screen following', async ({ browser }) => {
   await soft(consolePage.getByTestId('now-playing')).toHaveAttribute('data-song-id', String(playing));
   await soft(player.getByTestId('now')).toHaveAttribute('data-song-id', String(playing));
   await soft(show.getByTestId('drum')).toHaveAttribute('data-landed-id', String(playing));
+  await soft(phonePage.getByTestId('now')).toHaveAttribute('data-song-id', String(playing));
+  await soft.poll(() => phone.view?.state.rounds.find((r) => r.number === 1)?.landings.length, { message: 'the phone counted three landings' }).toBe(3);
 
   // ---- Parlem (the song ducks), then Aguanta (it stays up) -------------------------------------------------
   await remote.command('hold', { on: true });
@@ -143,9 +165,13 @@ test('one whole show, every screen following', async ({ browser }) => {
   await soft(show.getByTestId('interval')).toBeVisible();
 
   // ---- round 2 -------------------------------------------------------------------------------------------
+  // Prize secrecy: until round 2's intro, nothing of its prizes has reached a phone.
+  expect(phone.everything(), "round 2's prize before its intro").not.toContain(SECRET_PRIZE);
   await remote.command('roundIntro', { number: 2 });
   // The intro names the round to come; the state's round changes when its Shuffle starts it.
   await remote.until('round 2 introduced', (s) => s.scene === 'roundStart' && s.intro?.round === 2);
+  await expect.poll(() => phone.view?.state.plan?.rounds.find((r) => r.number === 2)?.revealed, { message: "round 2's prizes revealed at its intro", timeout: 20_000 }).toBe(true);
+  expect(phone.everything()).toContain(SECRET_PRIZE);
   await remote.command('newRound', { number: 2 });
   const shuffled2 = await remote.until('round 2 Shuffle', (s) => s.shuffle !== null && s.shuffle.round === 2);
   await remote.waitFor(() => Date.now() > (shuffled2.shuffle?.endAtMs ?? 0) + 200, 60_000);
@@ -161,4 +187,12 @@ test('one whole show, every screen following', async ({ browser }) => {
   }
   expect(remote.events.filter((e) => e.type === 'command.rejected')).toEqual([]);
   soft(errors).toEqual([]);
+
+  // What the phones got, all show long: a gap-free feed with nothing private in it. Not the Queue or the next
+  // song, not possible winners or the Futur, no seeds or resume codes, no cheat sheet, no Wii status.
+  expect(phone.gaps, 'the feed never had to resync').toBe(0);
+  const all = phone.everything();
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"']) {
+    expect(all, `phones never get ${secret}`).not.toContain(secret);
+  }
 });
