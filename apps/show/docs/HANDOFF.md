@@ -177,3 +177,8 @@ From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
 **Prepare:**
 - `npm run prep -- --pool <name>`: covers, decode, analyze, snippets, validate, keys, stems, signatures, hooks, interval.
 - Single steps: `tools/prep/.venv/bin/python tools/prep/hooks_auto.py --report` or `tools/prep/signatures.py --force`.
+
+## Added by others while paused
+
+- **Orchestrator, 2026-11-24:** the user decided Q26 = A+ (an installed show laptop, media pulled from R2). No browser time-stretcher is needed; "nothing installed" is deferred until after the event.
+- **Orchestrator, 2026-11-24 (from 1e, c424649):** make `apps/cards/dist/cards.json` plus `card-types.json` the formal source of card types, with a type per round in `RoundPlan`. Then drop `plan.cardTypes`' name, colour and price. For now, Admin shows the types read-only from `card-types.json` and keeps `plan.cardTypes` in step (`withPrintedCardTypes`).
