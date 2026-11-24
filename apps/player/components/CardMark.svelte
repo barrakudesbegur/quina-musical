@@ -7,8 +7,9 @@
 
   let { identity, decorative = false }: { identity: number; decorative?: boolean } = $props();
   const kind = $derived(markName(identity));
-  const STAR = 'M15.4 2.2L16.99 6.42L21.49 6.62L17.97 9.43L19.16 13.78L15.4 11.3L11.64 13.78L12.83 9.43L9.31 6.62L13.81 6.42Z';
-  const TAILS = 'M10.6 13.4L3.2 20.8M12.6 15.6L7.6 20.6M8.4 11.4L3.4 16.4';
+  // The big star, a little down and left, with its tail streaking off the top-right (like fa-star-shooting).
+  const STAR = 'M9.60 5.60L11.77 11.21L17.78 11.54L13.12 15.34L14.65 21.16L9.60 17.90L4.55 21.16L6.08 15.34L1.42 11.54L7.43 11.21Z';
+  const TAILS = 'M11.72 7.27L15.40 3.59M14.83 8.97L20.21 3.59M16.53 12.08L20.21 8.40';
   const FLAKE =
     'M12 12V3M12 6.4L9.81 4.21M12 6.4L14.19 4.21M12 12L4.21 7.5M7.15 9.2L4.16 10M7.15 9.2L6.35 6.21M12 12L4.21 16.5M7.15 14.8L6.35 17.79M7.15 14.8L4.16 14M12 12V21M12 17.6L14.19 19.79M12 17.6L9.81 19.79M12 12L19.79 16.5M16.85 14.8L19.84 14M16.85 14.8L17.65 17.79M12 12L19.79 7.5M16.85 9.2L17.65 6.21M16.85 9.2L19.84 10';
 </script>
@@ -46,12 +47,11 @@
     <circle class="card-mark__fill" cx="12" cy="14.4" r="7.4" />
     <path class="card-mark__shine" d="M8.4 12.6a4.4 4.4 0 0 1 2.8-2.8" />
   {:else}
-    <path class="card-mark__fill" d="M4 17.6V7.8L8.6 12L12 4.8L15.4 12L20 7.8V17.6Z" />
-    <rect class="card-mark__band" x="4" y="16.2" width="16" height="4" rx="1" />
+    <path class="card-mark__fill" d="M4 20.2V7.8L8.6 12L12 4.8L15.4 12L20 7.8V20.2Z" />
     <circle class="card-mark__pearl" cx="4" cy="7.4" r="1.6" />
     <circle class="card-mark__pearl" cx="12" cy="4.4" r="1.6" />
     <circle class="card-mark__pearl" cx="20" cy="7.4" r="1.6" />
-    <circle class="card-mark__jewel" cx="12" cy="18.2" r="1.1" />
+    <path class="card-mark__jewel" d="M12 11.6L14.4 14.8L12 18L9.6 14.8Z" />
   {/if}
 </svg>
 
@@ -97,7 +97,6 @@
   }
   .card-mark__trunk,
   .card-mark__gold,
-  .card-mark__band,
   .card-mark__pearl,
   .card-mark__jewel {
     stroke: var(--color-line);
@@ -110,15 +109,11 @@
   .card-mark__gold {
     fill: var(--color-gold);
   }
-  .card-mark__band {
-    fill: var(--color-orange-edge);
-    stroke-width: 2;
-  }
   .card-mark__pearl {
     fill: var(--color-paper);
   }
   .card-mark__jewel {
     fill: var(--color-red);
-    stroke-width: 1.2;
+    stroke-width: 1.4;
   }
 </style>
