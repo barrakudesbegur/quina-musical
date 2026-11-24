@@ -2,6 +2,8 @@
   // A card as printed: 3 lines of 4 songs, with the card's own mark on each marked song (corn for the first card).
   // A completed Line shows only plain marks (no glow, no row highlight). The near-win cue: a song that is all the
   // card is missing for a Line or the Quina is gently highlighted in the card's colour (ANIMATIONS.md `near-win`).
+  // In the Desgraciat round (`crosses`) a landed song gets a red ✗ over a red-tinted cover instead of a mark: on
+  // every screen a ✗ marks the song that sank the card. A fresh one stamps on (scale 2 → 1 at −12°).
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardMarks, PlayerCard } from '../../../packages/rules/marks.ts';
   import { kernelTilt } from '../logic/view.ts';
@@ -17,6 +19,7 @@
     fresh,
     near = new Set(),
     stagger = 0,
+    crosses = false,
   }: {
     card: PlayerCard;
     identity: number;
@@ -25,6 +28,8 @@
     fresh: ReadonlySet<string>;
     near?: ReadonlySet<number>;
     stagger?: number;
+    /** The Desgraciat round: landed songs get a ✗, not the card's mark. */
+    crosses?: boolean;
   } = $props();
 </script>
 
@@ -40,6 +45,7 @@
         data-song-id={songId}
         data-marked={marked ? 'true' : 'false'}
         class:is-marked={marked}
+        class:is-crossed={marked && crosses}
         class:is-near={isNear}
         data-state={marked ? 'marked' : isNear ? 'near' : 'empty'}
         data-anim={isNear ? 'near-win' : undefined}
@@ -48,7 +54,14 @@
       >
         <Cover {songId} size="sm" />
         <span class="card-grid__title" aria-hidden="true">{title}</span>
-        {#if marked}
+        {#if marked && crosses}
+          <span
+            class="card-grid__cross"
+            data-anim={fresh.has(`${card.id}:${songId}`) ? 'mark-in' : undefined}
+            style:--stagger="{stagger}ms"
+            aria-hidden="true"
+          ><svg class="cross" viewBox="0 0 24 24" focusable="false"><path class="cross__edge" d="M6 6l12 12M18 6L6 18" /><path class="cross__mark" d="M6 6l12 12M18 6L6 18" /></svg></span>
+        {:else if marked}
           <span
             class="card-grid__kernel"
             data-anim={fresh.has(`${card.id}:${songId}`) ? 'mark-in' : undefined}

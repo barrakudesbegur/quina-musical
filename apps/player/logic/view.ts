@@ -4,6 +4,7 @@ import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 import { checkGamePlan, publicPlan, roundCardType, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
+import { standOf, type CardStand } from './desgraciat.ts';
 import { nearSongs } from './near-win.ts';
 import { defaultCardType, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
@@ -17,6 +18,16 @@ export function focusRoundNumber(state: PublicState | null): number | null {
   if (state.intro) return state.intro.round;
   if (state.scene === 'interval' && state.interval) return state.interval.nextRound;
   return currentRound(state)?.number ?? null;
+}
+
+/**
+ * A round's kind, wherever the phone learns it: the round being introduced, a round played, else the plan.
+ * 'normal' when nothing says (a round the plan doesn't list).
+ */
+export function roundKindOf(number: number | null, state: PublicState | null, plan: { rounds: readonly { number: number; kind: RoundKind }[] } | null): RoundKind {
+  if (number === null) return 'normal';
+  if (state?.intro?.round === number) return state.intro.kind;
+  return state?.rounds.find((r) => r.number === number)?.kind ?? plan?.rounds.find((r) => r.number === number)?.kind ?? 'normal';
 }
 
 /** The round's counted landings' song ids, in landing order. */
@@ -73,6 +84,8 @@ export interface CardView {
   marks: CardMarks | null;
   /** The songs gently highlighted on this card's grid: each one is all the card is missing for a Line or the Quina. */
   near: ReadonlySet<number>;
+  /** In the Desgraciat round, a playing card's state (standing, or the landing that sank it); else null. */
+  stand: CardStand | null;
 }
 
 /** Each saved card with its marks for the round. Before any round every card shows, unmarked. */
@@ -83,7 +96,7 @@ export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, 
     // An older snapshot's round has no card type: it plays its kind's default (roundCardType).
     const valid = !card || !round ? true : cardsForRound([card], roundCardType(round)).length === 1;
     const marks = card && round && valid ? cardMarks(card, landed) : null;
-    return { saved: s, card, valid, marks, near: nearSongs(card, marks, round) };
+    return { saved: s, card, valid, marks, near: nearSongs(card, marks, round), stand: standOf(card, valid, round) };
   });
 }
 
@@ -208,12 +221,17 @@ export function prizeRounds(plan: PublicPlan | null, state: PublicState | null, 
             : 'later';
       const item = (p: Prize): PrizeItem => ({ title: p.title, detail: p.detail, sponsor: plan?.sponsors.find((s) => s.id === p.sponsorId)?.name ?? null });
       const line = (kind: PublicWinKind): PrizeLine => {
+        // The Desgraciat round's last card standing wins its `bingo` bundle (ui/plan.ts prizeBundleOf).
         const { headline, others } = splitBundle((kind === 'line' ? planned?.line : planned?.bingo) ?? []);
         const cardIds = winners.filter((w) => w.round === number && w.kind === kind).flatMap((w) => w.cardIds);
         return { kind, headline: headline.map(item), others: others.map(item), won: cardIds.length > 0, ownCardIds: cardIds.filter((id) => ownIds.includes(id)) };
       };
       const lockedUntil = planned && !planned.revealed ? (plan?.prizeReveal === 'allSecret' ? 'presenters' : 'intro') : null;
-      return { number, kind: planned?.kind ?? played?.kind ?? 'normal', state: roundState, lockedUntil, lines: [line('line'), line('bingo')] };
+      // The round as played wins over the plan (it's what the phones' cards play).
+      const kind = played?.kind ?? planned?.kind ?? 'normal';
+      // The Desgraciat round has one bundle, the last card standing's (the plan keeps it as its `bingo`), and no Line.
+      const lines = kind === 'desgraciat' ? [line('standing')] : [line('line'), line('bingo')];
+      return { number, kind, state: roundState, lockedUntil, lines };
     });
 }
 
@@ -246,12 +264,15 @@ export interface CelebrationView {
   ownCardIds: number[];
 }
 
-/** The Celebration on screen: the latest prize won in the current round. `ownIds` are the phone's cards. */
+/**
+ * The Celebration on screen: the latest prize won in the current round (the Quina over the Line; the Desgraciat
+ * round's last card standing, its only prize). `ownIds` are the phone's cards.
+ */
 export function celebrationOf(state: PublicState | null, ownIds: readonly number[] = []): CelebrationView | null {
   if (state?.scene !== 'celebration') return null;
   const round = currentRound(state)?.number;
   const won = state.winners.filter((w) => w.round === round);
-  const latest = won.find((w) => w.kind === 'bingo') ?? won.find((w) => w.kind === 'line');
+  const latest = won.find((w) => w.kind === 'standing') ?? won.find((w) => w.kind === 'bingo') ?? won.find((w) => w.kind === 'line');
   if (!latest || round === undefined) return null;
   return { key: `celebration:${round}:${latest.kind}`, kind: latest.kind, round, ownCardIds: latest.cardIds.filter((id) => ownIds.includes(id)) };
 }

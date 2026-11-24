@@ -8,11 +8,15 @@ import type { Cue } from '../logic/feedback.ts';
 
 export type Blip = Cue | 'tap' | 'tick';
 
-/** A note: frequency (Hz), start and length (s) within the blip, waveform. */
-type Note = [freq: number, at: number, len: number, wave?: OscillatorType];
+/** A note: frequency (Hz), start and length (s) within the blip, waveform, and the pitch it slides to (a glide). */
+type Note = [freq: number, at: number, len: number, wave?: OscillatorType, glideTo?: number];
+
+const TAP: Note[] = [[880, 0, 0.04]];
 
 const BLIPS: Record<Blip, Note[]> = {
-  tap: [[880, 0, 0.04]],
+  tap: TAP,
+  /** The Desgraciat round stands everyone up: the tap blip, once. */
+  standUp: TAP,
   tick: [[1400, 0, 0.012, 'square']],
   landing: [
     [520, 0, 0.05],
@@ -22,6 +26,11 @@ const BLIPS: Record<Blip, Note[]> = {
   nearWin: [
     [660, 0, 0.08],
     [990, 0.09, 0.1],
+  ],
+  /** The Desgraciat's fall: a short descending two-note "bloop", each note sagging a little (180 ms in all). */
+  fall: [
+    [587, 0, 0.08, 'sine', 523],
+    [392, 0.07, 0.11, 'sine', 330],
   ],
   celebrate: [
     [523, 0, 0.12],
@@ -68,12 +77,13 @@ export class Sounds {
     if (now < this.busyUntil) return;
     const notes = BLIPS[blip];
     let end = now;
-    for (const [freq, at, len, wave = 'sine'] of notes) {
+    for (const [freq, at, len, wave = 'sine', glideTo] of notes) {
       const start = now + at;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = wave;
       osc.frequency.setValueAtTime(freq, start);
+      if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, start + len);
       gain.gain.setValueAtTime(0, start);
       gain.gain.linearRampToValueAtTime(PLAYER_CONFIG.soundPeakGain, start + Math.min(0.01, len / 4));
       gain.gain.exponentialRampToValueAtTime(0.0001, start + len);

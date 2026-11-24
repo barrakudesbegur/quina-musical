@@ -2,6 +2,6 @@
   "name": "@quina/rules",
   "private": true,
   "version": "0.0.0",
-  "description": "Pure game rules shared by the screens: Heat easing, marks, resume codes, time.",
+  "description": "Pure game rules shared by the screens: Heat easing, marks, the Desgraciat round's standing cards, resume codes, time.",
   "type": "module"
 }

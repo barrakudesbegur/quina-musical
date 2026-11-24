@@ -9,6 +9,7 @@ import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';
 import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
 import type { PublicHeat, PublicState } from './feed/public.ts';
+import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
 import { nearKeys } from './logic/near-win.ts';
 import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
 import type { DialogId, Route } from './logic/router.ts';
@@ -29,7 +30,7 @@ import {
   type PlayerStorage,
 } from './logic/storage.ts';
 import { araViewFor, type AraView, type TabId } from './logic/tabs.ts';
-import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf } from './logic/view.ts';
+import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
 import { S } from './strings.ts';
 
 /** The sheet open over the app. A sheet opened from the menu goes back to the menu when it closes. */
@@ -67,8 +68,12 @@ export class PlayerApp {
   toast = $state<string | null>(null);
   reducedMotion = $state(false);
   hidden = $state(false);
-  /** Kernels that just dropped in ("cardId:songId"): the mark-in animation. */
+  /** Kernels that just dropped in ("cardId:songId"): the mark-in animation (a ✗ stamping, in the Desgraciat round). */
   freshMarks = $state.raw<ReadonlySet<string>>(new Set());
+  /** Desgraciat round: the cards falling right now (`card-fall`), each with its place in the 120 ms stagger. */
+  falls = $state.raw<ReadonlyMap<number, number>>(new Map());
+  /** Desgraciat round: it just started, so the playing cards stand up (`stand-up`). */
+  standUp = $state(false);
   /** The connection strip (offline, reconnecting, connected), stepped on every feed update and clock tick. */
   banner = $state.raw<BannerState>(NO_BANNER);
 
@@ -77,6 +82,10 @@ export class PlayerApp {
   round = $derived(currentRound(this.state));
   scene = $derived(this.state?.scene ?? 'before');
   focusRound = $derived(focusRoundNumber(this.state));
+  /** The kind of the round the screens talk about ('desgraciat' names it "Quina Desgraciada"). */
+  focusKind = $derived(roundKindOf(this.focusRound, this.state, this.plan));
+  /** The current round is the Desgraciat one: the cards stand or sit, and nothing is near a win. */
+  desgraciat = $derived(isDesgraciat(this.round));
   latest = $derived(latestLanding(this.round));
   views = $derived(cardViews(this.data.cards, this.catalog, this.round));
   /** The printed card types' names and colours, from card-types.json (knownCardTypes). */
@@ -106,6 +115,7 @@ export class PlayerApp {
   private stops: (() => void)[] = [];
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private freshTimer: ReturnType<typeof setTimeout> | null = null;
+  private standUpTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor({ feed, storage, sounds, loadCatalog, edition = PLAYER_CONFIG.edition }: PlayerAppOptions) {
     this.feed = feed;
@@ -294,28 +304,45 @@ export class PlayerApp {
     if (h && (!last || last.value !== h.value || last.fromMs !== h.fromMs)) this.heatSamples = [...this.heatSamples, h].slice(-HEAT_KEEP);
   }
 
-  /** Sounds, vibration and the mark-in cells for what just changed. */
+  /** Sounds, vibration, the mark-in cells, the falls and the stand-up for what just changed. */
   private react(): void {
     const next = this.feedbackSnapshot();
-    const { cue, freshMarks } = feedbackFor(this.lastFeedback, next);
+    const { cue, freshMarks, freshFalls, standUp } = feedbackFor(this.lastFeedback, next);
     this.lastFeedback = next;
-    if (freshMarks.length) {
-      this.freshMarks = new Set(freshMarks.slice(0, PLAYER_CONFIG.maxAnimated));
+    if (freshMarks.length || freshFalls.length) {
+      // Within the phone budget: the falls first (each with its own ✗), then the other cells.
+      const falls = fallStagger(freshFalls);
+      this.falls = falls;
+      this.freshMarks = new Set(budgetMarks(freshMarks, falls));
       if (this.freshTimer) clearTimeout(this.freshTimer);
-      this.freshTimer = setTimeout(() => (this.freshMarks = new Set()), 1500);
+      this.freshTimer = setTimeout(() => {
+        this.freshMarks = new Set();
+        this.falls = new Map();
+      }, PLAYER_CONFIG.freshMs);
+    }
+    if (standUp) {
+      this.standUp = true;
+      if (this.standUpTimer) clearTimeout(this.standUpTimer);
+      this.standUpTimer = setTimeout(() => (this.standUp = false), PLAYER_CONFIG.freshMs);
     }
     if (!cue) return;
     this.sounds.play(cue);
     if (cue === 'nearWin') vibrate(PLAYER_CONFIG.vibrateNearWin);
+    if (cue === 'fall') vibrate(PLAYER_CONFIG.vibrateFall);
   }
 
   private feedbackSnapshot(): FeedbackSnapshot {
+    const stands = this.playingViews.map((v) => ({ cardId: v.saved.id, stand: v.stand }));
     return {
       round: this.round?.number ?? null,
       landings: this.round?.landings.length ?? 0,
       marks: markKeys(this.views),
       near: this.near,
       celebration: this.celebration?.key ?? null,
+      desgraciat: this.desgraciat,
+      standing: standingIds(stands),
+      fallen: fallenKeys(stands),
+      latest: this.latest?.position ?? null,
     };
   }
 

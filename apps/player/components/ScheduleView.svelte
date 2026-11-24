@@ -1,11 +1,13 @@
 <script lang="ts">
   // Horari (first called "Programa"): progress ("Quina 4 de 12"), the countdown to the next round, the expected end, every round's
-  // rough start time. Self-contained, so it can sit in a tab or a drawer.
+  // rough start time. The special round's dot carries a star, the Desgraciat round's a sad face (RoundMark).
+  // Self-contained, so it can sit in a tab or a drawer.
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { plannedStarts, prizeRounds, progress } from '../logic/view.ts';
+  import { plannedStarts, prizeRounds, progress, roundKindOf } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import Countdown from './Countdown.svelte';
+  import RoundMark from './RoundMark.svelte';
 
   let { app }: { app: PlayerApp } = $props();
   const where = $derived(progress(app.plan, app.state));
@@ -20,7 +22,7 @@
   </p>
   {#if app.scene === 'interval' && app.state?.interval}
     <p class="schedule__countdown">
-      {S.nextRound(app.state.interval.nextRound)}:
+      {S.nextRound(S.roundName(app.state.interval.nextRound, roundKindOf(app.state.interval.nextRound, app.state, app.plan)))}:
       <Countdown atMs={app.state.interval.guideEndMs} nowMs={app.cloudNow} label={S.startsIn} doneLabel={S.startsSoon} />
     </p>
   {/if}
@@ -31,7 +33,8 @@
     <ol class="schedule__rounds">
       {#each rounds as round (round.number)}
         <li class="schedule__round" data-state={round.state} data-kind={round.kind}>
-          <span class="schedule__round-name">{S.round(round.number)}{round.kind === 'special' ? ` · ${S.specialRound}` : ''}</span>
+          <RoundMark kind={round.kind} />
+          <span class="schedule__round-name">{S.roundName(round.number, round.kind)}{round.kind === 'special' ? ` · ${S.specialRound}` : ''}</span>
           {#if S.roundState[round.state]}<span class="schedule__round-state">{S.roundState[round.state]}</span>{/if}
           {#if starts?.get(round.number) && round.state !== 'done'}<span class="schedule__round-time">{S.around(formatClock(starts.get(round.number)))}</span>{/if}
         </li>

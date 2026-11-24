@@ -1,7 +1,7 @@
 <script lang="ts" module>
   // Small line icons (inline SVG, currentColor), so the theme recolours them and nothing is downloaded. The
   // stroke width is the theme's (--icon-stroke): the active tab draws them a little bolder.
-  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'lock' | 'edit' | 'trash' | 'offline';
+  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'sad' | 'lock' | 'edit' | 'trash' | 'offline';
 </script>
 
 <script lang="ts">
@@ -46,6 +46,8 @@
     <path d="M12 5v14M5 12h14" />
   {:else if name === 'star'}
     <path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="currentColor" />
+  {:else if name === 'sad'}
+    <path d="M8 8.5v2.2M16 8.5v2.2M7 18c1.4-2.4 3-3.4 5-3.4s3.6 1 5 3.4" />
   {:else if name === 'lock'}
     <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
   {/if}

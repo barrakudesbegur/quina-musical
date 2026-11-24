@@ -30,6 +30,15 @@
   --dur-celebrate-title: 400ms; /* "Línia!" slams in */
   --dur-celebrate-prize: 300ms; /* the prize (and the player's own card) rise… */
   --delay-celebrate-prize: 200ms; /* …this long after the title */
+  /* the Desgraciat round: `stand-up` as it starts, `card-fall` when a card's song lands (ANIMATIONS.md) */
+  --dur-stand-up: 300ms; /* the DEMPEUS badge pops in, the green glow fades in */
+  --dur-stamp: 300ms; /* a ✗ stamps on its cell */
+  --delay-sit: 250ms; /* the card sits down this long after its ✗ */
+  --dur-sit: 450ms;
+  --dur-veil: 300ms;
+  --dur-badge-flip: 300ms; /* DEMPEUS → ASSEGUT */
+  --delay-nino: 650ms; /* the sitting nino lands as the card settles (the board's timing) */
+  --dur-nino-drop: 400ms;
 
   /* layout */
   --player-gutter: var(--space-3);
@@ -54,6 +63,7 @@
   --player-text-hero: 2.75rem; /* the song now playing, the welcome */
   --player-text-round: 4.5rem; /* "Quina 4" as it starts */
   --player-text-shout: 7rem; /* LÍNIA! QUINA! */
+  --player-text-shout-long: 5.25rem; /* DEMPEUS!, two letters longer */
   --player-weight-body: 800;
 
   /* the Heat garland */
@@ -82,6 +92,23 @@
   --player-sticker-line: url('../../packages/ui/assets/ninos/nino-salt-cames-obertes.svg');
   --player-sticker-bingo: url('../../packages/ui/assets/ninos/nino-mans-adalt.svg');
   --player-sticker-legacy: url('../../packages/ui/assets/ninos/nino-confeti.svg');
+  --player-sticker-seated: url('../../packages/ui/assets/ninos/nino-sentat.svg'); /* on a card that sat down */
+  --player-sticker-stand-up: url('../../packages/ui/assets/ninos/nino-mans-adalt.svg'); /* everyone stand up */
+
+  /* the Desgraciat round: a standing card's green badge, outline and glow; a seated card's slate badge, veil
+     (its opacity, never a filter), drop and tilt; the red ✗ over a red-tinted cover on a landed song */
+  --player-stand: var(--color-ok);
+  --player-stand-glow: var(--color-online);
+  --player-seated: var(--color-fail);
+  --player-seated-veil: var(--color-fail-panel);
+  --player-seated-veil-opacity: 0.45;
+  --player-seated-drop: 10px;
+  --player-seated-tilt: -2deg;
+  --player-cross: var(--color-danger);
+  --player-cross-tint: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  --player-cross-tilt: -12deg;
+  --player-stand-badge-w: 6.75rem; /* both badges, so the flip doesn't jump */
+  --player-nino-seated: 3.5rem;
 
   /* offline: a slate strip, and a veil that greys the screen under it (its opacity, never a filter) */
   --player-offline-strip: color-mix(in srgb, var(--color-slate) 50%, var(--color-muted));
@@ -105,6 +132,14 @@
     --dur-celebrate-title: 0ms;
     --dur-celebrate-prize: 0ms;
     --delay-celebrate-prize: 0ms;
+    --dur-stand-up: 0ms;
+    --dur-stamp: 0ms;
+    --delay-sit: 0ms;
+    --dur-sit: 0ms;
+    --dur-veil: 0ms;
+    --dur-badge-flip: 0ms;
+    --delay-nino: 0ms;
+    --dur-nino-drop: 0ms;
   }
 }
 
@@ -1685,6 +1720,209 @@
   height: var(--kernel-size);
 }
 
+/* ---- the Desgraciat round (Quina Desgraciada) ------------------------------------------------------------ */
+/* A landed song: a red ✗ over a red-tinted cover (the song that sank the card, and any after it). */
+.card-grid__cell.is-crossed .cover::after {
+  background: var(--player-cross-tint);
+}
+
+.player .card-grid__cross {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  transform: rotate(var(--player-cross-tilt));
+}
+
+.cross {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.cross__edge {
+  stroke: var(--color-line);
+  stroke-width: 7;
+}
+
+.cross__mark {
+  stroke: var(--player-cross);
+  stroke-width: 3.6;
+}
+
+.player-card-wrap {
+  position: relative;
+}
+
+/* A card that plays the round: nothing clips the nino that sits on its header. */
+.player-card-wrap[data-stand] .player-card {
+  position: relative;
+  overflow: visible;
+}
+
+.player-card-wrap[data-stand] .player-card__header {
+  flex-wrap: nowrap;
+  border-radius: calc(var(--radius-lg) - var(--line-width-bold)) calc(var(--radius-lg) - var(--line-width-bold)) 0 0;
+}
+
+/* Standing: a static green outline and glow (never breathing, to save battery). */
+.player-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 var(--line-width-bold) var(--player-stand-glow),
+    0 0 1.625rem 0.375rem color-mix(in srgb, var(--player-stand-glow) 55%, transparent);
+  pointer-events: none;
+}
+
+.player-card__stand {
+  position: relative;
+  flex: none;
+  perspective: 200px;
+}
+
+.stand-badge {
+  display: block;
+  box-sizing: border-box;
+  min-width: var(--player-stand-badge-w);
+  padding: 0.1875rem 0.625rem;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-text);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  backface-visibility: hidden;
+}
+
+.stand-badge[data-state='standing'] {
+  background: var(--player-stand);
+  box-shadow: 0 0 0.75rem 0.125rem color-mix(in srgb, var(--player-stand-glow) 60%, transparent);
+}
+
+.stand-badge[data-state='seated'] {
+  background: var(--player-seated);
+}
+
+/* DEMPEUS, flipping away over ASSEGUT as the card sits down. */
+.stand-badge--out {
+  position: absolute;
+  inset: 0;
+}
+
+/* The sitting nino's place beside the badge: kept in the round, so it never lands on the card number. */
+.player-card__nino-slot {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: var(--player-nino-seated);
+}
+
+.player-card__nino {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 30%;
+  aspect-ratio: 578 / 819;
+  background: var(--player-sticker-seated) center bottom / contain no-repeat;
+  filter: var(--player-sticker-shadow);
+  transform: rotate(-14deg);
+}
+
+/* Seated: the grey veil, and the card sits a little lower, tilted. */
+.player-card__veil {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: calc(var(--radius-lg) - var(--line-width-bold));
+  background: var(--player-seated-veil);
+  opacity: var(--player-seated-veil-opacity);
+  pointer-events: none;
+}
+
+.player-card-wrap[data-stand='seated'] {
+  transform: translateY(var(--player-seated-drop)) rotate(var(--player-seated-tilt));
+  transform-origin: 30% 100%;
+}
+
+/* Round marks where rounds are listed: a gold star for the Quina Especial, a sad face for the Quina Desgraciada. */
+.round-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+
+.round-mark .icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.round-mark[data-kind='special'] .icon {
+  color: var(--color-accent);
+  stroke: var(--color-line);
+  stroke-width: 2;
+}
+
+.round-mark[data-kind='desgraciat'] .icon {
+  stroke-width: 3;
+}
+
+/* On paper (Premis' current round), the sad face is ink. */
+.prize-round[data-state='current'] .round-mark {
+  color: var(--color-text-on-paper);
+}
+
+/* Horari: the mark sits in a bigger dot on the timeline. */
+.schedule__round:has(.round-mark)::before {
+  left: 0.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.875rem;
+}
+
+.schedule__round .round-mark {
+  position: absolute;
+  z-index: 2;
+  left: 0.25rem;
+  top: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.875rem;
+  font-size: 0.75rem;
+  color: var(--color-text-on-paper);
+}
+
+/* The intro of the Desgraciat round: its long name a little smaller, and the hands-up nino (everyone stand up). */
+.now[data-scene='roundStart'] > .now__heading[data-kind='desgraciat'] {
+  font-size: var(--text-3xl);
+}
+
+.now__heading .round-mark {
+  margin-right: var(--space-2);
+  vertical-align: middle;
+}
+
+.now[data-scene='roundStart']:has(> .now__heading[data-kind='desgraciat'])::before {
+  background-image: var(--player-sticker-stand-up);
+}
+
+/* The last card standing's prize gets the Quina's gold ring: it's the round's only prize. */
+.prize-lines__row[data-kind='standing'] {
+  box-shadow:
+    0 0 0 5px var(--color-accent),
+    0 6px 0 5px var(--color-shadow);
+}
+
 .cards__resting-item {
   display: flex;
   flex-wrap: wrap;
@@ -2578,6 +2816,22 @@
   width: min(100%, 20rem);
 }
 
+.celebration[data-kind='standing'][data-state='other'] .celebration__shout {
+  font-size: var(--player-text-shout-long);
+}
+
+/* The player's own card is the last standing: green rays, the hands-up nino over the standing card. */
+.celebration[data-kind='standing'][data-state='own']::before {
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--player-stand-glow) 22%, transparent) 0deg 9deg, transparent 9deg 22deg);
+}
+
+.celebration__nino {
+  width: var(--player-sticker-md);
+  aspect-ratio: 592 / 834;
+  background: var(--player-sticker-stand-up) center / contain no-repeat;
+  filter: var(--player-sticker-shadow);
+}
+
 .player-card.is-glowing {
   box-shadow:
     0 0 0 var(--line-width-bold) var(--card-color),
@@ -2727,6 +2981,93 @@
   animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
 }
 
+/* The Desgraciat round. A ✗ stamps on its cell (`mark-in`, and step ① of `card-fall`): scale 2 → 1 at −12°. */
+@keyframes player-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(var(--player-cross-tilt)) scale(2);
+  }
+}
+
+/* ② The card sits down: it drops and tilts, squashed (scaleY 0.94), and the squash springs back. */
+@keyframes player-sit {
+  from {
+    transform: none;
+  }
+  55% {
+    transform: translateY(var(--player-seated-drop)) rotate(var(--player-seated-tilt)) scaleY(0.94);
+  }
+  to {
+    transform: translateY(var(--player-seated-drop)) rotate(var(--player-seated-tilt)) scaleY(1);
+  }
+}
+
+@keyframes player-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes player-flip-away {
+  to {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+}
+
+@keyframes player-flip-down {
+  from {
+    opacity: 0;
+    transform: rotateX(-90deg);
+  }
+}
+
+/* ③ The sitting nino drops onto the header, landing at −14°. */
+@keyframes player-nino-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) rotate(-4deg);
+  }
+}
+
+.card-grid__cross[data-anim='mark-in'] {
+  animation: player-stamp var(--dur-stamp) var(--ease-bounce) var(--stagger, 0ms) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] {
+  --sit-at: calc(var(--fall-delay, 0ms) + var(--delay-sit));
+  animation: player-sit var(--dur-sit) var(--ease-bounce) var(--sit-at) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] .player-card__veil {
+  animation: player-fade-in var(--dur-veil) var(--ease-out) var(--sit-at) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] .player-card__glow {
+  animation: player-fade-out var(--dur-veil) var(--ease-out) var(--sit-at) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] .stand-badge--out {
+  animation: player-flip-away calc(var(--dur-badge-flip) / 2) ease-in var(--sit-at) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] .stand-badge[data-state='seated'] {
+  animation: player-flip-down calc(var(--dur-badge-flip) / 2) var(--ease-out) calc(var(--sit-at) + var(--dur-badge-flip) / 2) both;
+}
+
+.player-card-wrap[data-anim='card-fall'] .player-card__nino {
+  animation: player-nino-drop var(--dur-nino-drop) var(--ease-bounce) calc(var(--fall-delay, 0ms) + var(--delay-nino)) both;
+}
+
+/* `stand-up`: the DEMPEUS badge pops in (0.4 → 1, overshooting) and the green glow fades in, 80 ms apart. */
+.player-card-wrap[data-anim='stand-up'] .stand-badge {
+  animation: player-pop var(--dur-stand-up) var(--ease-bounce) var(--stand-delay, 0ms) both;
+}
+
+.player-card-wrap[data-anim='stand-up'] .player-card__glow {
+  animation: player-fade-in var(--dur-stand-up) var(--ease-out) var(--stand-delay, 0ms) both;
+}
+
 .check-strip[data-anim='check'] .check-strip__result {
   animation: player-rise-in var(--dur-base) var(--ease-out) both;
 }
@@ -2807,6 +3148,17 @@
     animation: none !important;
     transition: none !important;
   }
+
+  /* A falling card appears seated at once: no DEMPEUS badge or glow left over it. */
+  .player .stand-badge--out,
+  .player .player-card-wrap[data-anim='card-fall'] .player-card__glow {
+    display: none;
+  }
+}
+
+.player[data-motion='reduced'] .stand-badge--out,
+.player[data-motion='reduced'] .player-card-wrap[data-anim='card-fall'] .player-card__glow {
+  display: none;
 }
 
 .player[data-motion='reduced'] *,

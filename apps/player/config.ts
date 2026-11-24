@@ -48,6 +48,12 @@ export const PLAYER_CONFIG = Object.freeze({
   /** Animations: at most this many elements animate at once on a phone (ui/ANIMATIONS.md budget). */
   maxAnimated: 24,
   markStaggerMs: 80,
+  /** The Desgraciat round: cards falling on the same landing follow each other by this much (`card-fall`); cards
+   * standing up as it starts, by this much (`stand-up`). */
+  fallStaggerMs: 120,
+  standUpStaggerMs: 80,
+  /** How long a fresh cell, fall or stand-up keeps its animation hook (longer than the longest of them). */
+  freshMs: 2000,
 
   /** The Heat garland across the top: its shape, in px of the 390 px design width (it stretches to the screen).
    * Its lights twinkle in 3 groups (3 animated elements, whatever the count). With no Heat yet (before the
@@ -57,6 +63,8 @@ export const PLAYER_CONFIG = Object.freeze({
   /** Sounds: −24 dBFS peak, one at a time. */
   soundPeakGain: 0.063,
   vibrateNearWin: [30, 40, 30] as readonly number[],
+  /** The Desgraciat round: one of the player's cards sat down (Android only; nothing depends on it). */
+  vibrateFall: [60] as readonly number[],
 
   /** Storage keys (localStorage, this origin). */
   storageKey: 'quina.player.v1',

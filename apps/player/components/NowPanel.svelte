@@ -5,12 +5,13 @@
   // screen: App.svelte.)
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { plannedStarts, prizeRounds, roundRule } from '../logic/view.ts';
+  import { plannedStarts, prizeRounds, roundKindOf, roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
   import PrizeLines from './PrizeLines.svelte';
   import Reel from './Reel.svelte';
+  import RoundMark from './RoundMark.svelte';
   import Shuffle from './Shuffle.svelte';
 
   let { app, compact = false, stopped = false }: { app: PlayerApp; compact?: boolean; stopped?: boolean } = $props();
@@ -24,6 +25,8 @@
   const introduced = $derived(app.state?.intro ?? app.round);
   const rule = $derived(introduced ? roundRule(introduced, app.cardTypes) : null);
   const HOUR = 60 * 60_000;
+  const nextNumber = $derived(app.state?.interval?.nextRound ?? null);
+  const nextName = $derived(nextNumber === null ? '' : S.roundName(nextNumber, roundKindOf(nextNumber, app.state, app.plan)));
 </script>
 
 <section class="now" data-scene={app.scene} data-size={compact ? 'strip' : 'full'}>
@@ -42,21 +45,21 @@
       </p>
     {/if}
   {:else if app.scene === 'roundStart'}
-    {#if app.focusRound !== null}<h2 class="now__heading">{S.round(app.focusRound)}</h2>{/if}
+    {#if app.focusRound !== null}<h2 class="now__heading" data-kind={app.focusKind}><RoundMark kind={app.focusKind} />{S.roundName(app.focusRound, app.focusKind)}</h2>{/if}
     {#if rule?.kind === 'special'}<p class="now__rule">{S.specialRule}</p>{:else if rule?.kind === 'type'}<p class="now__rule">{S.typeRule(rule.name)}</p>{/if}
     {#if shuffle}<Shuffle running={shuffling} />{/if}
     {#if focusPrizes}
-      <h3 class="now__subheading">{S.prizesOf(focusPrizes.number)}</h3>
+      <h3 class="now__subheading">{S.prizesOf(S.roundName(focusPrizes.number, focusPrizes.kind))}</h3>
       <PrizeLines round={focusPrizes} />
     {/if}
   {:else if app.scene === 'interval'}
     <h2 class="now__heading">{S.interval}</h2>
     {#if app.state?.interval}
-      <p class="now__next">{S.nextRound(app.state.interval.nextRound)}</p>
+      <p class="now__next">{S.nextRound(nextName)}</p>
       <p class="now__countdown"><Countdown atMs={app.state.interval.guideEndMs} nowMs={app.cloudNow} label={S.startsIn} doneLabel={S.startsSoon} /></p>
     {/if}
     {#if focusPrizes}
-      <h3 class="now__subheading">{S.prizesOf(focusPrizes.number)}</h3>
+      <h3 class="now__subheading">{S.prizesOf(S.roundName(focusPrizes.number, focusPrizes.kind))}</h3>
       <PrizeLines round={focusPrizes} />
     {/if}
     {#if justPlayed && justPlayed.lines.some((l) => l.won)}
@@ -69,7 +72,7 @@
     <ul class="now__summary">
       {#each prizes.filter((r) => r.lines.some((l) => l.won)) as round (round.number)}
         <li class="now__summary-round">
-          <h4 class="now__summary-title">{S.round(round.number)}</h4>
+          <h4 class="now__summary-title">{S.roundName(round.number, round.kind)}</h4>
           <PrizeLines {round} mine={app.data.cards} />
         </li>
       {/each}

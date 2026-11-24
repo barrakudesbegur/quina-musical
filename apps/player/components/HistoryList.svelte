@@ -21,7 +21,7 @@
   {#if !history?.landings.length}
     <p class="history__empty">{S.noHistory}</p>
   {:else}
-    <p class="history__round-title">{S.round(history.round)}{history.kind === 'special' ? ` · ${S.specialRound}` : ''} · {S.songCount(history.landings.length)}</p>
+    <p class="history__round-title">{S.roundName(history.round, history.kind)}{history.kind === 'special' ? ` · ${S.specialRound}` : ''} · {S.songCount(history.landings.length)}</p>
     <ol class="song-list" reversed>
       {#each history.landings as l, i (l.position)}
         {@const identities = marks.get(l.songId) ?? []}

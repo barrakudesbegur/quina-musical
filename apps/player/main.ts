@@ -42,7 +42,8 @@ async function createFeed(choice: FeedChoice): Promise<PlayerFeed> {
 async function demoStorage(name: string, hints: DevHints): Promise<PlayerStorage> {
   const { DEMO_CARDS, demoFor } = await import('./feed/demo-feed.ts');
   const storage = new PlayerStorage(new MemoryStorage());
-  const ids = hints.cards ?? (demoFor(name).cards === 'none' ? [] : DEMO_CARDS.map((c) => c.id));
+  const cards = demoFor(name).cards;
+  const ids = hints.cards ?? (cards === 'none' ? [] : cards === 'default' ? DEMO_CARDS.map((c) => c.id) : cards);
   let data = emptyData(edition);
   for (const id of ids) {
     const added = addCard(data, id, Date.now());

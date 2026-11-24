@@ -1,12 +1,13 @@
-// Interface feedback from one public update to the next: which blip to play, which kernels drop in. Pure.
-// Sound map (packages/ui/ANIMATIONS.md): landing pop, mark "tock" (once, not per card), a soft near-win chime
-// (only when a card first gets a highlighted song, after none), celebration blip; never more than one at a time,
-// so the most important cue wins.
+// Interface feedback from one public update to the next: which blip to play, which kernels drop in, which cards
+// fall or stand up. Pure. Sound map (packages/ui/ANIMATIONS.md): landing pop, mark "tock" (once, not per card),
+// a soft near-win chime (only when a card first gets a highlighted song, after none), the Desgraciat's fall
+// "bloop" (once per landing however many cards fall), the tap blip as the Desgraciat round stands everyone up,
+// celebration blip; never more than one at a time, so the most important cue wins.
 
-export type Cue = 'celebrate' | 'nearWin' | 'mark' | 'landing';
+export type Cue = 'celebrate' | 'nearWin' | 'fall' | 'mark' | 'standUp' | 'landing';
 
 /** Most important first: only the first cue of an update plays. */
-export const CUE_PRIORITY: readonly Cue[] = ['celebrate', 'nearWin', 'mark', 'landing'];
+export const CUE_PRIORITY: readonly Cue[] = ['celebrate', 'nearWin', 'fall', 'mark', 'standUp', 'landing'];
 
 export interface FeedbackSnapshot {
   /** The current round's number (a new round starts quiet). */
@@ -19,6 +20,14 @@ export interface FeedbackSnapshot {
   near: readonly string[];
   /** The Celebration on screen, or null. */
   celebration: string | null;
+  /** The current round is the Desgraciat one. */
+  desgraciat: boolean;
+  /** Desgraciat round: the phone's cards still standing. */
+  standing: readonly number[];
+  /** Desgraciat round: "cardId:position" of the phone's seated cards (desgraciat.ts fallenKeys). */
+  fallen: readonly string[];
+  /** The latest counted landing's position, or null. */
+  latest: number | null;
 }
 
 export interface Feedback {
@@ -26,17 +35,37 @@ export interface Feedback {
   cue: Cue | null;
   /** Cells to animate (mark-in), in card order. */
   freshMarks: string[];
+  /** Desgraciat round: the cards that just fell, at the latest landing only, in card order (`card-fall`). */
+  freshFalls: number[];
+  /** Desgraciat round: it just started with some of the phone's cards playing (`stand-up`). */
+  standUp: boolean;
 }
 
+const QUIET: Feedback = { cue: null, freshMarks: [], freshFalls: [], standUp: false };
+
 export function feedbackFor(prev: FeedbackSnapshot | null, next: FeedbackSnapshot): Feedback {
-  // The first update after opening, or a new round: show the state as it is, quietly.
-  if (!prev || prev.round !== next.round) return { cue: null, freshMarks: [] };
+  // The first update after opening: show the state as it is, quietly.
+  if (!prev) return QUIET;
+  // A new round starts quiet, except the Desgraciat round standing the phone's cards up (once, at its start).
+  if (prev.round !== next.round) {
+    const standUp = next.desgraciat && next.standing.length > 0 && next.landings === 0;
+    return standUp ? { ...QUIET, cue: 'standUp', standUp } : QUIET;
+  }
   const before = new Set(prev.marks);
   const freshMarks = next.marks.filter((k) => !before.has(k));
+  // A card falls only at its landing: a newly seated card whose sinking landing is the latest one.
+  const seated = new Set(prev.fallen);
+  const freshFalls = next.fallen
+    .filter((k) => !seated.has(k))
+    .map((k) => k.split(':').map(Number) as [number, number])
+    .filter(([, position]) => position === next.latest)
+    .map(([cardId]) => cardId);
   const cues = new Set<Cue>();
   if (next.celebration && next.celebration !== prev.celebration) cues.add('celebrate');
   if (prev.near.length === 0 && next.near.length > 0) cues.add('nearWin');
-  if (freshMarks.length) cues.add('mark');
+  if (freshFalls.length) cues.add('fall');
+  // In the Desgraciat round a ✗ on a card that already sat down makes no sound: that card already fell.
+  if (freshMarks.length && !next.desgraciat) cues.add('mark');
   if (next.landings > prev.landings) cues.add('landing');
-  return { cue: CUE_PRIORITY.find((c) => cues.has(c)) ?? null, freshMarks };
+  return { cue: CUE_PRIORITY.find((c) => cues.has(c)) ?? null, freshMarks, freshFalls, standUp: false };
 }

@@ -11,7 +11,7 @@
 //   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
 //   the cloud's).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
-import { PROTOCOL_VERSION, defaultCardType, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
+import { PROTOCOL_VERSION, defaultCardType, isRoundKind, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
 import { publicPlan, revealedRounds, type GamePlan } from '../../../packages/ui/plan.ts';
 import { HeatSmoother } from '../../../packages/rules/heat.ts';
@@ -149,7 +149,7 @@ export class PublicProjector {
         log = { number: n, kind: s.round.kind, cardType: defaultCardType(s.round.kind), startedAtMs: s.round.startedAtMs, lineConfirmed: false, landings: new Map() };
         this.rounds.set(n, log);
       }
-      log.kind = s.round.kind === 'special' ? 'special' : 'normal';
+      log.kind = isRoundKind(s.round.kind) ? s.round.kind : 'normal';
       log.cardType = s.round.cardType ?? defaultCardType(log.kind);
       log.startedAtMs = s.round.startedAtMs || log.startedAtMs;
       log.lineConfirmed = s.round.lineConfirmed;
@@ -194,9 +194,10 @@ export class PublicProjector {
 const landing = (position: number, songId: number, atMs: number): PublicLanding => ({ position, songId, atMs });
 
 function projectRound(log: RoundLog, currentNumber: number | null, flow: FlowFields, winners: readonly PublicWinner[]): PublicRound {
-  const won = (kind: 'line' | 'bingo') => winners.some((w) => w.round === log.number && w.kind === kind);
+  const won = (kind: PublicWinner['kind']) => winners.some((w) => w.round === log.number && w.kind === kind);
   const isCurrent = log.number === currentNumber;
-  const ended = won('bingo') || (currentNumber !== null && log.number < currentNumber) || (isCurrent && (flow.scene === 'interval' || flow.scene === 'after'));
+  // The Bingo, or the Desgraciat round's last card standing, ends the round (as the cloud's projection does).
+  const ended = won('bingo') || won('standing') || (currentNumber !== null && log.number < currentNumber) || (isCurrent && (flow.scene === 'interval' || flow.scene === 'after'));
   return {
     number: log.number,
     kind: log.kind,

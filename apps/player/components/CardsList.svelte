@@ -1,9 +1,10 @@
 <script lang="ts">
   // Cartrons: the player's cards that count in this round as grids, the others listed by name, and "Afegir
   // cartró". The cards simply scroll (the stacking scroll waits for the user). Naming and removing them is in the
-  // menu.
+  // menu. Cards never reorder, in the Desgraciat round too: people find their card by its place.
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
+  import { standUpPlace } from '../logic/desgraciat.ts';
   import { roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
@@ -32,6 +33,8 @@
             catalogFailed={app.catalogFailed}
             fresh={app.freshMarks}
             stagger={i * PLAYER_CONFIG.markStaggerMs}
+            fall={app.falls.get(view.saved.id) ?? null}
+            standUp={standUpPlace(i, app.standUp)}
           />
         </li>
       {/each}

@@ -2,8 +2,10 @@
   // The Celebration (ANIMATIONS.md `celebrate`). No winning card numbers, ever: people only care when it's them.
   // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize. The
   // player's own confirmed card (a confirmed winner that is one of the phone's cards): "La teva línia!" with
-  // that card's grid glowing in its own colour, and the confetti in its colours. Reduced motion: it all appears,
-  // with no confetti.
+  // that card's grid glowing in its own colour, and the confetti in its colours. The Desgraciat round's last card
+  // standing ('standing'): "DEMPEUS!" with the prize, or, when it's the phone's own card, "Dempeus fins al final!"
+  // with the hands-up nino, that card standing in its green glow, green rays and green confetti. Reduced motion:
+  // it all appears, with no confetti.
   import type { Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardView, CelebrationView, PrizeRound } from '../logic/view.ts';
   import { S } from '../strings.ts';
@@ -29,6 +31,10 @@
   const prize = $derived(round?.lines.find((l) => l.kind === celebration.kind) ?? null);
   const own = $derived(views.filter((v) => celebration.ownCardIds.includes(v.saved.id)));
   const NO_FRESH: ReadonlySet<string> = new Set();
+  const standing = $derived(celebration.kind === 'standing');
+  /** The last card standing's confetti: the standing green, gold, paper and ice. */
+  const STANDING_CONFETTI = ['--color-online', '--color-accent', '--color-paper', '--color-calm'];
+  const palette = $derived(standing ? STANDING_CONFETTI : undefined);
 </script>
 
 <div
@@ -39,12 +45,14 @@
   role="dialog"
   aria-labelledby="celebration-shout"
 >
-  {#if !reduced}<Confetti tones={own.length ? own.map((v) => v.saved.color) : undefined} />{/if}
+  {#if !reduced}<Confetti tones={own.length ? own.map((v) => v.saved.color) : undefined} {palette} />{/if}
   <div class="celebration__panel">
     <h2 class="celebration__shout" id="celebration-shout">{own.length ? S.yourWin[celebration.kind] : S.shout[celebration.kind]}</h2>
+    {#if standing && own.length}<span class="celebration__nino" aria-hidden="true"></span>{/if}
     {#each own as view (view.saved.id)}
       <div class="celebration__card">
-        <CardPanel {view} {catalog} catalogFailed={false} fresh={NO_FRESH} stagger={0} glow />
+        <!-- The last card standing keeps its own green glow (CardPanel's stand); other wins glow in the card's colour. -->
+        <CardPanel {view} {catalog} catalogFailed={false} fresh={NO_FRESH} stagger={0} glow={!standing} />
       </div>
     {/each}
     {#if prize?.headline.length}

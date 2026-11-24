@@ -4,7 +4,7 @@
 // state, cut the laptop link, drop the feed, post Admin's notice or keep landing songs (`live`).
 // Fixture names that aren't player demos run as they are; unknown names fall back to `play`.
 import { PROTOCOL_VERSION, type LandingInfo, type ShowState } from '@quina/protocol';
-import { FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
+import { DESGRACIAT_LANDED, FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../packages/ui/fixtures/plan.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
@@ -14,8 +14,8 @@ import type { PublicLink } from './public.ts';
 export interface PlayerDemo {
   /** The shared fixture it starts from. */
   fixture: string;
-  /** Which cards the demo phone holds ('none' shows the empty, first-open screens). */
-  cards: 'none' | 'default';
+  /** Which cards the demo phone holds ('none' shows the empty, first-open screens), or these card numbers. */
+  cards: 'none' | 'default' | readonly number[];
   /** Landings after the fixture's, oldest first. */
   extraLanded?: readonly number[];
   /** Engine-side changes before the projection (a claim's verdict, the round kind…). */
@@ -25,6 +25,8 @@ export interface PlayerDemo {
   notice?: string;
   /** Keep spinning and landing songs (and land a fixture's running transition). */
   live?: boolean;
+  /** The songs a live demo lands first (else LIVE_FIRST). */
+  liveFirst?: readonly number[];
   /** Drop the feed after `afterMs`, for `forMs` (the reconnect pill). */
   dropFeed?: { afterMs: number; forMs: number };
 }
@@ -73,6 +75,19 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   offline: { fixture: 'play', cards: 'default', link: { online: false, agoMs: 25_000 } },
   reconnect: { fixture: 'play', cards: 'default', dropFeed: { afterMs: 1500, forMs: 6000 } },
   notice: { fixture: 'play', cards: 'default', notice: 'El bar tanca a les 00:30. Gràcies per venir!' },
+  // The Desgraciat round (Quina 5 in the shared fixtures, played on the normal cards; ANIMATIONS.md › The
+  // Desgraciat round › Player app). Of the demo cards, «Breaking Free» (11) sinks #123 and «SUPERESTRELLA» (60)
+  // sinks #57; #412 is an especial card, so it doesn't play. In the fixtures' story #57 is the last one standing.
+  /** Two landings in: both playing cards stand (DEMPEUS). */
+  desgraciat: { fixture: 'desgraciat', cards: 'default' },
+  /** Live: «Breaking Free» lands and sinks #123 (`card-fall`); later landings on it only stamp their ✗. */
+  desgraciatFall: { fixture: 'desgraciat', cards: 'default', live: true, liveFirst: [11, ...DESGRACIAT_LANDED.slice(2).filter((id) => id !== 11)] },
+  /** Both playing cards seated (ASSEGUT), each with the ✗s of its landed songs. */
+  desgraciatSeated: { fixture: 'desgraciat', cards: 'default', extraLanded: [30, 11, 45, 60, 56, 41] },
+  /** #57, one of the phone's cards, is the last standing and confirmed: "Dempeus fins al final!". */
+  desgraciatMine: { fixture: 'celebrationStanding', cards: 'default' },
+  /** Someone else's card (#57) is the last standing: "DEMPEUS!" and the prize, no card number. */
+  desgraciatOther: { fixture: 'celebrationStanding', cards: [123, 412] },
 };
 
 /** The demo for a name: a player demo, else a shared fixture as it is, else `play`. */
@@ -87,12 +102,19 @@ const SLOT_MS = 14_000;
 
 const songRef = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ?? `Cançó ${songId}`, artist: FIXTURE_SONGS[songId]?.[1] ?? '' });
 
-/** The fixture story's whole round so far (the fixture snapshot carries only its last 10), plus `extra`. */
+/** The fixtures' stories: Quina 3's, and the Desgraciat round's (Quina 5). */
+const STORIES: readonly (readonly number[])[] = [FIXTURE_LANDED, DESGRACIAT_LANDED];
+
+/**
+ * A fixture story's whole round so far (the fixture snapshot carries only its last 10, so a card could look
+ * sunk by the wrong song), plus `extra`.
+ */
 export function storyLandings(state: ShowState, extra: readonly number[], nowMs: number): LandingInfo[] | null {
   const tail = state.landings;
-  const isStory = tail.length > 0 && tail.every((l) => FIXTURE_LANDED[l.position] === l.songId);
-  if (!isStory && !extra.length) return null;
-  const ids = [...(isStory ? FIXTURE_LANDED : tail.map((l) => l.songId)), ...extra];
+  const last = tail[tail.length - 1]?.position ?? -1;
+  const story = tail.length > 0 ? STORIES.find((ids) => tail.every((l) => ids[l.position] === l.songId)) : undefined;
+  if (!story && !extra.length) return null;
+  const ids = [...(story ? story.slice(0, last + 1) : tail.map((l) => l.songId)), ...extra];
   return ids.map((songId, position) => ({ ...songRef(songId), position, atMs: nowMs - (ids.length - 1 - position) * SLOT_MS, undone: false }));
 }
 
@@ -138,12 +160,13 @@ export class DemoFeed implements PlayerFeed {
     this.engine = state;
     this.link = this.demo.link ? { online: this.demo.link.online, sinceMs: now - this.demo.link.agoMs } : { online: true, sinceMs: now - 60 * 60_000 };
     // Earlier rounds, so Historial and Premis have something to show.
-    for (let r = 1; r < state.round.number && r <= 2; r++) {
-      const count = r === 1 ? 49 : 52;
-      this.core.projector.seedRound(r, 'normal', now - (4 - r) * 30 * 60_000, true, pastRound(r, count, now - (3 - r) * 30 * 60_000));
+    const n = state.round.number;
+    for (let r = 1; r < n; r++) {
+      const count = 49 + ((r * 3) % 7);
+      this.core.projector.seedRound(r, 'normal', now - (n - r + 1) * 30 * 60_000, true, pastRound(r, count, now - (n - r) * 30 * 60_000));
     }
     const landed = new Set([...state.landings.map((l) => l.songId), ...(state.transition ? [state.transition.to] : [])]);
-    this.upcoming = [...LIVE_FIRST, ...Array.from({ length: 77 }, (_, i) => i + 1)].filter((id, i, all) => !landed.has(id) && all.indexOf(id) === i);
+    this.upcoming = [...(this.demo.liveFirst ?? LIVE_FIRST), ...Array.from({ length: 77 }, (_, i) => i + 1)].filter((id, i, all) => !landed.has(id) && all.indexOf(id) === i);
     this.later(50, () => {
       this.online = true;
       this.core.setOnline(true);

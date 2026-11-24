@@ -2,7 +2,7 @@
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
 // COPY RULE: the phone never says "you won" and never announces a Line or a Quina: players claim them.
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import type { PublicWinKind } from './feed/public.ts';
+import type { PublicWinKind, RoundKind } from './feed/public.ts';
 import type { HeatLevel } from './logic/view.ts';
 import type { AraView, TabId } from './logic/tabs.ts';
 
@@ -13,6 +13,9 @@ export const S = {
   round: CA.round,
   roundOf: CA.roundOf,
   specialRound: CA.specialRound,
+  desgraciatRound: CA.desgraciatRound,
+  /** A round by name where it is named: "Quina 4", but the Desgraciat round is "Quina Desgraciada" (ca.ts). */
+  roundName: (n: number, kind: RoundKind) => (kind === 'desgraciat' ? CA.desgraciatRound : CA.round(n)),
   card,
   /** A card's number next to its name: "#123" (the user's decision on names on screen). */
   cardNumber: (id: number) => `#${id}`,
@@ -56,6 +59,10 @@ export const S = {
   /** A round that plays another printed type than its kind's usual one (card-types.json's name). */
   typeRule: (name: string) => `En aquesta quina només compten els cartrons de tipus «${name}».`,
   unknownCard: 'No trobem aquest cartró.',
+  /** The Desgraciat round: a playing card's badge, still standing or seated (sunk by one of its songs). */
+  stand: { standing: 'Dempeus', seated: 'Assegut' },
+  /** A seated card, for screen readers: which song sank it. */
+  sankBy: (title: string) => `Assegut: ha sonat «${title}»`,
   loadingCards: 'Carregant els cartrons…',
   catalogError: 'No s’han pogut carregar els cartrons. Ho tornem a provar…',
   renameTitle: (id: number) => `Nom i icona del ${card(id).toLowerCase()}`,
@@ -87,11 +94,13 @@ export const S = {
 
   // Round start
   shuffling: 'Barrejant les cançons…',
-  prizesOf: (n: number) => `Premis de la ${CA.round(n)}`,
+  /** "Premis de la Quina 4", with the round's name (S.roundName). */
+  prizesOf: (name: string) => `Premis de la ${name}`,
 
   // Interval
   interval: CA.scene.interval,
-  nextRound: CA.nextRound,
+  /** "Següent: Quina 5", with the round's name (S.roundName). */
+  nextRound: (name: string) => `Següent: ${name}`,
   startsIn: (mmss: string) => `Comença d’aquí a uns ${mmss}`,
   startsSoon: 'Comença ben aviat',
   lastWinners: 'Premis de la quina anterior',

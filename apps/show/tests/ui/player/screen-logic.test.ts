@@ -140,16 +140,28 @@ test('reel phases: generic until the landing is public, never the song in advanc
 });
 
 // ---- feedback ---------------------------------------------------------------------------------------------
-const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({ round: 3, landings: 5, marks: [], near: [], celebration: null, ...patch });
+const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({
+  round: 3,
+  landings: 5,
+  marks: [],
+  near: [],
+  celebration: null,
+  desgraciat: false,
+  standing: [],
+  fallen: [],
+  latest: 4,
+  ...patch,
+});
+const quiet = { cue: null, freshMarks: [], freshFalls: [], standUp: false };
 
 test('the first update and a new round are quiet', () => {
-  assert.deepEqual(feedbackFor(null, snap({ marks: ['1:2'] })), { cue: null, freshMarks: [] });
-  assert.deepEqual(feedbackFor(snap(), snap({ round: 4, landings: 1, marks: ['1:2'] })), { cue: null, freshMarks: [] });
+  assert.deepEqual(feedbackFor(null, snap({ marks: ['1:2'] })), quiet);
+  assert.deepEqual(feedbackFor(snap(), snap({ round: 4, landings: 1, marks: ['1:2'] })), quiet);
 });
 
 test('one cue at a time, the most important: celebrate > near-win > mark > landing', () => {
   assert.equal(feedbackFor(snap(), snap({ landings: 6 })).cue, 'landing');
-  assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { cue: 'mark', freshMarks: ['1:3', '4:3'] });
+  assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { ...quiet, cue: 'mark', freshMarks: ['1:3', '4:3'] });
   assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], near: ['1:9'] })).cue, 'nearWin');
   assert.equal(feedbackFor(snap(), snap({ near: ['1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
 });
