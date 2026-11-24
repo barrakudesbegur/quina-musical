@@ -113,3 +113,7 @@ The brief didn't settle these. Each is a single setting or a small change.
   - **The light theme** is the default.
 
 **Default taken:** as listed. These are tunables in `player/config.ts`, `stage/config.ts` and `console/config.ts`.
+
+## The printed cards are public (quina-musical-b2, 2026-11-24)
+The player app needs each card's songs, so `cards.json` (every card's songs) is public: the cloud serves it as a static file, and the laptop's relay serves it on the hotspot. With every card and the public landings, someone determined could work out live which card numbers are close to a Line or a Bingo, the information the console keeps private as "possible winners". Card numbers are anonymous and the next song stays secret, so the impact is low. The alternative is a per-card secret in the QR (for example `/26/123-k7f2`), with the cloud serving only that card. It would make "Afegir cartró" by number much harder, and that fails the grandmother test.
+**Default taken:** keep `cards.json` public (the orchestrator agrees). To change: generate the cards with a secret per card before printing, and serve cards one by one.
