@@ -1,2 +1,5 @@
 node_modules
 .DS_Store
+/temp/
+# Personal Claude Code settings (permissions on this machine)
+.claude/settings.local.json
