@@ -32,6 +32,8 @@ The new Quina musical is built by several Claude sessions working in parallel, e
   - make sure nothing sensitive is in the range (no audio, secrets, `.env*`, `data/`, `temp/` or local paths).
 
   CI runs on every push. If it goes red, the session that broke it fixes it at once.
+
+  If `main` and origin have diverged (the orchestrator commits docs from a worktree), run `npm run sync-main`. It replays main's local commits onto origin without touching anyone's uncommitted files, and prints old → new hashes to pass on. Never use `git pull --rebase --autostash` or `git stash` in the shared checkout: they reset other sessions' files mid-edit.
 - **Never commit:** copyrighted audio, `data/cache/`, `apps/show/reference/`, `spotify_features.json`, secrets, or personal data (the repo is public).
 - **Cloudflare (approved by the user on 2026-11-24):** Platform may configure and deploy with wrangler or a Cloudflare MCP, within these limits:
   - never touch existing DNS records or projects (`quina`, `fitxes`, …); deploy to `*.workers.dev` or a new subdomain such as `quina-dev`;
