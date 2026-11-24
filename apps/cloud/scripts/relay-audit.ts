@@ -11,9 +11,12 @@ import os from 'node:os';
 import path from 'node:path';
 import WebSocket from 'ws';
 import { freePort } from '../loadtest/dev-server.ts';
+import { PLAN } from '../test/support/plan.ts';
 
 const SHOW = path.resolve(import.meta.dirname, '../../show');
 const TOKEN = 'AUDITTOKEN234567';
+/** A scratch link folder, so the audit never reads or writes the laptop's real Game plan. */
+const LINK_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-relay-audit-link-'));
 const v = 1;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -27,7 +30,7 @@ if (!lan) {
 async function relay(port: number, flags: string[]): Promise<ChildProcess> {
   const patch = path.join(os.tmpdir(), 'quina-relay-audit-interfaces.mjs');
   fs.writeFileSync(patch, `import os from 'node:os';\nconst real = os.networkInterfaces;\nos.networkInterfaces = () => Object.fromEntries(Object.entries(real()).map(([n, l]) => [n, l.filter((i) => i.internal)]));\n`);
-  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, ...flags], { cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, ...flags], { cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, QUINA_LINK_DIR: LINK_DIR } });
   let output = '';
   child.stdout?.on('data', (d) => (output += d));
   child.stderr?.on('data', (d) => (output += d));
@@ -133,11 +136,43 @@ try {
     const s = await status(p);
     expect(`LAN GET ${p} is refused`, s === 403, String(s));
   }
-  const plan = await status('/cloud/plan.json');
-  expect('LAN GET /cloud/plan.json is allowed (public)', plan !== 403, String(plan));
+  const noPlan = await status('/cloud/plan.json');
+  expect('LAN GET /cloud/plan.json with no plan is 404', noPlan === 404, String(noPlan));
+
+  // The Game plan from the hotspot (plan B: Admin saves on the laptop with no cloud): only with the relay token.
+  const putPlan = async (body: string, token: string | null) => {
+    try {
+      const headers: Record<string, string> = { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) };
+      return (await fetch(`http://${lan}:${port}/api/plan`, { method: 'PUT', headers, body })).status;
+    } catch (error) {
+      return String(error);
+    }
+  };
+  const planBody = JSON.stringify({ ...PLAN, title: 'Pla de prova' });
+  const noToken = await putPlan(planBody, null);
+  expect('LAN PUT /api/plan without the token is refused', noToken === 403, String(noToken));
+  const wrongToken = await putPlan(planBody, 'X'.repeat(TOKEN.length));
+  expect('LAN PUT /api/plan with a wrong token is refused', wrongToken === 403, String(wrongToken));
+  const huge = await putPlan(JSON.stringify({ ...PLAN, title: 'x'.repeat(600 * 1024) }), TOKEN);
+  expect('LAN PUT /api/plan over 512 KB is refused', huge === 400, String(huge));
+  const invalid = await putPlan(JSON.stringify({ ...PLAN, secret: 'Q1N-SECRET-3' }), TOKEN);
+  expect('LAN PUT /api/plan with an unknown key is refused', invalid === 400, String(invalid));
+  const quiet = [show, cloud, ...Object.values(peers)].every((p) => !p.heard.some((m) => m.type === 'relay.plan' && (m.plan as { title?: string } | null)?.title));
+  expect('no refused plan reaches a screen', quiet, quiet ? 'nothing sent' : 'SENT');
+  for (const p of [show, cloud, ...Object.values(peers)]) p.heard.length = 0;
+  const saved = await putPlan(planBody, TOKEN);
+  await sleep(300);
+  expect('a paired device saves a checked plan', saved === 200, String(saved));
+  const pushedTo = (p: Peer) => p.heard.some((m) => m.type === 'relay.plan' && (m.plan as { title?: string } | null)?.title === 'Pla de prova');
+  expect('the plan reaches the show page, the link and the paired screens', [show, cloud, peers.tablet, peers.drum, peers.localTablet].every(pushedTo), [show, cloud, peers.tablet, peers.drum, peers.localTablet].map((p) => `${p.name}: ${pushedTo(p) ? 'yes' : 'NO'}`).join(', '));
+  const strangers = [peers.noHello, peers.noToken, peers.badToken];
+  expect('unpaired sockets never get the plan', !strangers.some(pushedTo), strangers.some(pushedTo) ? 'SENT' : 'nothing');
+  const servedPlan = await status('/cloud/plan.json');
+  expect('LAN GET /cloud/plan.json is then served (public)', servedPlan === 200, String(servedPlan));
   for (const p of [show, cloud, ...Object.values(peers)]) p.ws.close();
 } finally {
   server.kill();
+  fs.rmSync(LINK_DIR, { recursive: true, force: true });
 }
 
 // Without --lan, the LAN address doesn't answer at all.

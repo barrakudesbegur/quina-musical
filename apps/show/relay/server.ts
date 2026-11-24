@@ -27,7 +27,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { PROTOCOL_VERSION, ROLES, type RelayClients, type Role, type ShowState } from '@quina/protocol';
+import { PROTOCOL_VERSION, ROLES, type RelayClients, type RelayPlan, type Role, type ShowState } from '@quina/protocol';
+import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
 
 const DIST = path.join(SHOW, 'dist');
@@ -296,6 +297,34 @@ function isStretchRequest(b: unknown): b is StretchRequest {
     int(r.bars, 1, 16) && int(r.afterBars, 0, 4);
 }
 
+/**
+ * GET and PUT /api/plan: the laptop's Game plan (relay/plan.ts). This laptop's pages, or a device paired with
+ * the relay token (`authorization: Bearer <token>`). PUT saves Admin's plan on the laptop when there is no cloud
+ * (checked like the cloud checks it); the cloud link uploads it once the cloud is back, if it is still the newest.
+ * The answers match the cloud's /api/plan, plus `savedAtMs`.
+ */
+async function handlePlanApi(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  const json = (status: number, body: unknown): void => void res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(body));
+  if (!isThisMachine(req.socket.remoteAddress) && !hasToken(req.headers.authorization)) return json(403, { ok: false, errors: ['pair this device with the relay token first'] });
+  if (req.method === 'GET') return json(200, PLAN.current());
+  if (req.method !== 'PUT') return json(405, { ok: false, errors: ['GET or PUT'] });
+  let body: unknown;
+  try {
+    body = JSON.parse(await readBody(req, 512 * 1024));
+  } catch (error) {
+    return json(400, { ok: false, errors: [`not a JSON plan of at most 512 KB: ${String(error)}`] });
+  }
+  const saved = PLAN.saveLocal(body, Date.now());
+  json(saved.ok ? 200 : 400, saved);
+}
+
+/** Whether an `authorization` header carries the relay token. */
+function hasToken(header: string | undefined): boolean {
+  const given = Buffer.from(header?.match(/^Bearer (.+)$/)?.[1] ?? '');
+  const token = Buffer.from(TOKEN);
+  return given.length === token.length && crypto.timingSafeEqual(given, token);
+}
+
 async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL): Promise<boolean> {
   const json = (status: number, body: unknown) => res.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify(body));
   // Which pool this relay serves: song ids only mean something within a pool (e.g. for keys of stored Games).
@@ -374,6 +403,13 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
   const url = new URL(req.url ?? '/', 'http://local');
   if (url.pathname === '/' || url.pathname === '/show') return res.writeHead(302, { location: '/show/' }).end();
   if (url.pathname === '/admin') return res.writeHead(302, { location: '/admin/' }).end();
+  // The Game plan: any paired screen may read it, and Admin may save one with no cloud (plan B).
+  if (url.pathname === '/api/plan') return handlePlanApi(req, res);
+  if (url.pathname === '/cloud/plan.json' && (req.method === 'GET' || req.method === 'HEAD')) {
+    const { plan } = PLAN.current();
+    if (!plan) return notFound(res);
+    return res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }).end(req.method === 'HEAD' ? undefined : JSON.stringify(plan));
+  }
   // The APIs rewrite hooks and render audio: only this laptop's own pages (show, audition) may call them.
   if (url.pathname.startsWith('/api/')) {
     if (!isThisMachine(req.socket.remoteAddress)) return res.writeHead(403, { 'content-type': 'text/plain' }).end('only on the show laptop');
@@ -423,6 +459,9 @@ interface Client {
   clientId: string;
 }
 const clients = new Map<WebSocket, Client>();
+/** The laptop's Game plan (cloud-plan.json or local-plan.json in the link folder, the newest), pushed on change. */
+const PLAN = new LaptopPlan(LINK, (current) => broadcast(planMessage(current)));
+PLAN.start();
 const wss = new WebSocketServer({ noServer: true });
 let lastState: ShowState | null = null;
 const LOCAL_ROLES: readonly Role[] = ['show', 'cloud'];
@@ -461,6 +500,7 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       self.clientId = String(message.clientId ?? '');
       if (self.role === 'unknown') return; // unpaired: it hears nothing
       if (lastState && receives(self, 'state')) socket.send(JSON.stringify(lastState));
+      socket.send(JSON.stringify(planMessage(PLAN.current())));
       broadcast(clientList());
       return;
     }
@@ -498,7 +538,13 @@ function clientList(): RelayClients {
   return { v: PROTOCOL_VERSION, type: 'relay.clients', clients: [...clients.values()].map(({ role, clientId }) => ({ role, clientId })) };
 }
 
-function broadcast(message: RelayClients) {
+/** The Game plan for the screens (protocol RelayPlan): on hello and whenever the laptop's newest copy changes. */
+function planMessage(current: CurrentPlan): RelayPlan {
+  return { v: PROTOCOL_VERSION, type: 'relay.plan', plan: current.plan, savedAtMs: current.savedAtMs };
+}
+
+/** To every paired socket: the show page (its stage), the remotes and the cloud link. */
+function broadcast(message: RelayClients | RelayPlan) {
   const text = JSON.stringify(message);
   for (const [socket, info] of clients) if (info.role !== 'unknown' && socket.readyState === socket.OPEN) socket.send(text);
 }

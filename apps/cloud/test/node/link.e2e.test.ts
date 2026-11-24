@@ -161,15 +161,44 @@ test("the laptop keeps Admin's Game plan on disk, so it has it with no internet"
   const server = await startDevServer();
   const relay = await fakeRelay();
   const link = makeLink(relay.url, server.ws);
-  const file = path.join(link.journal.dir, 'plan.json');
+  const file = path.join(link.journal.dir, 'cloud-plan.json');
+  const read = () => JSON.parse(fs.readFileSync(file, 'utf8')) as { savedAtMs: number; plan: typeof PLAN | null };
   try {
     link.start();
     await until('the link on the cloud', () => link.status().cloud === 'online');
     const saved = await fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(PLAN) });
     assert.equal(saved.status, 200);
-    await until('the plan on disk', () => fs.existsSync(file) && JSON.parse(fs.readFileSync(file, 'utf8'))?.title === PLAN.title);
-    assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')), PLAN);
+    await until('the plan on disk', () => fs.existsSync(file) && read().plan?.title === PLAN.title);
+    assert.deepEqual(read().plan, PLAN);
+    assert.ok(read().savedAtMs > 0);
     assert.equal(link.status().plan?.title, PLAN.title);
+  } finally {
+    link.stop();
+    await relay.close();
+    await server.stop();
+  }
+});
+
+test("a plan saved on the laptop with no cloud goes up when the cloud is back, and the cloud's newer one wins", async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const link = makeLink(relay.url, server.ws);
+  const local = path.join(link.journal.dir, 'local-plan.json');
+  const cloudPlan = async () => ((await (await fetch(`${server.http}/api/plan`)).json()) as { plan: typeof PLAN | null }).plan;
+  const put = (plan: typeof PLAN) => fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) });
+  try {
+    assert.equal((await put(PLAN)).status, 200);
+    // Saved on the laptop (the relay's PUT /api/plan writes this file) while the link was away.
+    fs.writeFileSync(local, JSON.stringify({ savedAtMs: Date.now(), plan: { ...PLAN, title: 'Desada al portàtil' } }));
+    link.start();
+    await until('the cloud to take the laptop\'s plan', async () => (await cloudPlan())?.title === 'Desada al portàtil');
+    await until('the local copy to go once the cloud has it', () => !fs.existsSync(local));
+
+    // Admin saves on the laptop again, and then in the cloud: the cloud's later save wins, the laptop's goes.
+    fs.writeFileSync(local, JSON.stringify({ savedAtMs: Date.now() - 60_000, plan: { ...PLAN, title: 'Antiga' } }));
+    relay.emit({ v, type: 'relay.plan', plan: null, savedAtMs: null }); // the relay saw the file change
+    await until('the cloud to answer the older save', () => !fs.existsSync(local));
+    assert.equal((await cloudPlan())?.title, 'Desada al portàtil');
   } finally {
     link.stop();
     await relay.close();

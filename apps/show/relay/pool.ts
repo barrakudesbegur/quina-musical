@@ -20,8 +20,11 @@ export const MEDIA = path.join(DATA, 'media');
 export const OUT = path.join(DATA, 'out');
 /** Decoded audio, stems, Signatures, Blend renders, Hold and Interval audio, the relay token. */
 export const CACHE = path.join(DATA, 'cache');
-/** The laptop's cloud link folder (journal copy, plan.json, resume.json, status.json), served at /cloud/. */
-export const LINK = path.join(DATA, 'link');
+/**
+ * The laptop's cloud link folder (journal copy, cloud-plan.json and local-plan.json, resume.json, status.json),
+ * served at /cloud/. QUINA_LINK_DIR moves it (the relay audit uses a scratch folder).
+ */
+export const LINK = process.env.QUINA_LINK_DIR ? path.resolve(process.env.QUINA_LINK_DIR) : path.join(DATA, 'link');
 /** tools/prep: the preparation pipeline (Python), which the relay also runs during the show. */
 export const PREP = path.join(REPO, 'tools', 'prep');
 export const POOL_ENV = 'QUINA_POOL';

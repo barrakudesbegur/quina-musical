@@ -8,6 +8,8 @@
 //                                everything but the journal while a console listens in the cloud)
 //                  link.ping     a keepalive when nothing else was sent for a while (laptop only; phones never)
 //                  link.fetch    send me a Game's entries from fromSeq (a new laptop, or a copy behind the cloud's)
+//                  link.plan     a Game plan saved on the laptop's network with no cloud (the relay's PUT /api/plan),
+//                                newer than the cloud's: the cloud takes it if it passes checkGamePlan for its edition
 //   cloud → link   cloud.welcome the cloud's edition, and the last entry it has for the hello's Game
 //                  cloud.ack     the last entry it has after an upload (send from ackSeq + 1)
 //                  cloud.need    entries are missing: send again from fromSeq
@@ -15,7 +17,8 @@
 //                  cloud.refused a message it could not take (bad shape, broken entry)
 //                  cloud.command a console's command (checked), for the show: the link hands it to the relay
 //                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0)
-//                  cloud.plan    the Game plan from Admin, on hello and on every change (the laptop keeps a copy)
+//                  cloud.plan    the Game plan and when it was saved, on hello and on every change (the laptop keeps
+//                                a copy: cloud-plan.json, which the relay pushes to the laptop's screens)
 //                  cloud.journal entries the link asked for, or Admin's resume pushed, in chunks (`done` on the last)
 //                  cloud.resume  Admin's manual resume: the show page should resume this Game (then cloud.journal)
 // Close codes: 4001 another laptop connected (this one stops reconnecting), 4002 silent for too long,
@@ -68,7 +71,18 @@ export interface LinkFetch {
   sentAtMs: number;
 }
 
-export type LinkMessage = LinkHello | LinkJournal | LinkEvent | LinkPing | LinkFetch;
+/** A plan saved on the laptop while the cloud was away, newer than the cloud's (relay/plan.ts, local-plan.json). */
+export interface LinkPlan {
+  v: ProtocolVersion;
+  type: 'link.plan';
+  /** A GamePlan; the cloud checks it with checkGamePlan. */
+  plan: unknown;
+  /** When it was saved, on the laptop's clock (the cloud converts it with the clock offset it keeps). */
+  savedAtMs: number;
+  sentAtMs: number;
+}
+
+export type LinkMessage = LinkHello | LinkJournal | LinkEvent | LinkPing | LinkFetch | LinkPlan;
 
 export interface CloudWelcome {
   v: ProtocolVersion;
@@ -132,11 +146,12 @@ export interface CloudConsoles {
   nowMs: number;
 }
 
-/** The edition's Game plan (null before Admin saves one). */
+/** The edition's Game plan (null before Admin saves one), and when it was saved (cloud clock; null without a plan). */
 export interface CloudPlan {
   v: ProtocolVersion;
   type: 'cloud.plan';
   plan: GamePlan | null;
+  savedAtMs: number | null;
   nowMs: number;
 }
 
@@ -205,6 +220,10 @@ export function checkLinkMessage(value: unknown): LinkCheck {
       if (!isGameId(value.gameId)) return { ok: false, error: 'gameId must be a short string' };
       if (!Number.isInteger(value.fromSeq) || (value.fromSeq as number) < 1) return { ok: false, error: 'fromSeq must be an integer ≥ 1' };
       return { ok: true, message: value as unknown as LinkFetch };
+    case 'link.plan':
+      if (!isTime(value.savedAtMs)) return { ok: false, error: 'savedAtMs must be a number' };
+      if (!isRecord(value.plan)) return { ok: false, error: 'plan must be a Game plan' };
+      return { ok: true, message: value as unknown as LinkPlan };
     default:
       return { ok: false, error: `unknown message type ${String(value.type)}` };
   }

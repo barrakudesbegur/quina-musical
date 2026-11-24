@@ -9,6 +9,7 @@ import WebSocket from 'ws';
 import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
 import { playableSongs } from '../../../show/engine/src/analysis.ts';
 import { DATA, loadPool, MEDIA, OUT, REPO } from '../../../show/relay/pool.ts';
+import { CLOUD_PLAN_FILE } from '../../../show/relay/plan.ts';
 import { referenceFile, scan } from '../media-sync.ts';
 import { poolRoots } from '../pool-roots.ts';
 import * as checks from './checks.ts';
@@ -23,7 +24,7 @@ export interface PreflightOptions {
   cloud: string | null;
   /** The Access service token headers. */
   headers: Record<string, string>;
-  /** The cloud link's data folder (status.json, plan.json, the media reference). */
+  /** The cloud link's data folder (status.json, cloud-plan.json, the media reference). */
   dataDir: string;
   /** Trust the hash index instead of re-hashing every file. */
   fast: boolean;
@@ -164,13 +165,14 @@ async function networkChecks(o: PreflightOptions, poolName: string): Promise<che
 
 async function cloudChecks(o: PreflightOptions): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
-  const plan = readJson(path.join(o.dataDir, 'plan.json'));
+  // The cloud's plan as the link keeps it ({ savedAtMs, plan }); the relay serves the newest to the screens.
+  const plan = (readJson(path.join(o.dataDir, CLOUD_PLAN_FILE)) as { plan?: unknown } | null)?.plan ?? null;
   const planEdition = (plan as { edition?: string } | null)?.edition ?? null;
   const link = readJson(path.join(o.dataDir, 'status.json')) as checks.LinkStatusFile | null;
   let cloudCurrent: { gameId: string; seq: number } | null = null;
   let edition: string | null = planEdition;
   if (!o.cloud) {
-    out.push({ group: 'Cloud', name: 'Cloud', status: 'fail', detail: 'no cloud configured: set QUINA_CLOUD_URL in cloud/.env.link' });
+    out.push({ group: 'Cloud', name: 'Cloud', status: 'fail', detail: 'no cloud configured: set QUINA_CLOUD_URL in apps/cloud/.env.link' });
   } else {
     const health = await getJson(`${o.cloud}/api/health`);
     edition = (health.body as { edition?: string } | undefined)?.edition ?? edition;

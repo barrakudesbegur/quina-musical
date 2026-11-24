@@ -358,6 +358,40 @@ describe('the Game plan and its media (Admin)', () => {
     expect(greeting[1]).toMatchObject({ type: 'cloud.plan', plan: PLAN });
   });
 
+  it("consoles get the plan on hello and on every save; a laptop's newer plan wins, an older one doesn't", async () => {
+    const plans = (messages: unknown[]) => messages.filter((m) => (m as { type?: string }).type === 'relay.plan') as { plan: { title: string } | null; savedAtMs: number | null }[];
+    expect((await put(PLAN)).status).toBe(200);
+    const c = await connect('/ws/console');
+    c.send({ v, type: 'hello', role: 'admin', clientId: 'Admin-1' });
+    const [hello] = plans(await c.drain());
+    expect(hello).toMatchObject({ v, plan: PLAN });
+    expect(hello?.savedAtMs).toBeTypeOf('number');
+
+    // Admin saves again: the console hears it, never older than before.
+    expect((await put({ ...PLAN, title: 'Quina 2' })).status).toBe(200);
+    const [saved] = plans(await c.drain());
+    expect(saved?.plan?.title).toBe('Quina 2');
+    expect(saved?.savedAtMs).toBeGreaterThan(hello?.savedAtMs ?? Infinity);
+
+    // A plan saved on the laptop while the cloud was away, and newer: everyone gets it.
+    const { client: link } = await laptop(null);
+    const p = await phone();
+    link.send({ v, type: 'link.plan', plan: { ...PLAN, title: 'Desada al portàtil' }, savedAtMs: now(), sentAtMs: now() });
+    expect(await link.next()).toMatchObject({ type: 'cloud.plan', plan: { title: 'Desada al portàtil' } });
+    expect(plans(await c.drain()).at(-1)?.plan?.title).toBe('Desada al portàtil');
+    expect(((await p.view()).state.plan as { title: string } | null)?.title).toBe('Desada al portàtil');
+
+    // An older one (or the cloud's own plan again) changes nothing: the laptop gets the cloud's back.
+    link.send({ v, type: 'link.plan', plan: { ...PLAN, title: 'Antiga' }, savedAtMs: 1000, sentAtMs: now() });
+    expect(await link.next()).toMatchObject({ type: 'cloud.plan', plan: { title: 'Desada al portàtil' } });
+    expect(plans(await c.drain())).toEqual([]);
+    expect(await getJson('/api/plan')).toMatchObject({ plan: { title: 'Desada al portàtil' } });
+
+    // Another edition's plan is refused.
+    link.send({ v, type: 'link.plan', plan: { ...PLAN, edition: '25' }, savedAtMs: now(), sentAtMs: now() });
+    expect(await link.next()).toMatchObject({ type: 'cloud.refused' });
+  });
+
   it('logos: uploaded once by content, served immutable and public; only raster images', async () => {
     const webp = new Uint8Array([82, 73, 70, 70, 1, 2, 3, 4, 87, 69, 66, 80]);
     const upload = (bytes: Uint8Array, type: string) => SELF.fetch(`${BASE}/api/media`, { method: 'POST', headers: { 'content-type': type }, body: bytes });

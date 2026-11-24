@@ -6,7 +6,9 @@
 //
 // To the cloud it authenticates with an Access service token (headers, which a browser WebSocket can't set).
 // Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume. It also keeps the
-// edition's Game plan from Admin in `<dataDir>/plan.json`, so the laptop has it with no internet. A new laptop
+// edition's Game plan from Admin in `<dataDir>/cloud-plan.json`, so the laptop has it with no internet (the relay
+// serves the newest plan to the laptop's screens: relay/plan.ts). A plan Admin saved on the laptop's network
+// with no cloud (`local-plan.json`) goes up once the cloud is back; the cloud keeps the newest. A new laptop
 // (or a copy behind the cloud's) fetches the cloud's current Game into its copy, and Admin's manual resume
 // writes `<dataDir>/resume.json` next to the Game's journal: the show page resumes from those files.
 import fs from 'node:fs';
@@ -16,7 +18,8 @@ import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/p
 import { LINK } from '../src/config.ts';
 import { shouldForward } from '../src/domain/consoles.ts';
 import { reconnectDelayMs } from '@quina/protocol';
-import { CLOSE, isCloudMessage, type CloudMessage, type ForwardableEvent, type LinkEvent, type LinkMessage } from '../src/link-protocol.ts';
+import { CLOSE, isCloudMessage, type CloudMessage, type ForwardableEvent, type LinkEvent, type LinkMessage, type LinkPlan } from '../src/link-protocol.ts';
+import { CLOUD_PLAN_FILE, LOCAL_PLAN_FILE, readStoredPlan, type StoredPlan } from '../../show/relay/plan.ts';
 import { JournalCopy } from './journal-copy.ts';
 import { Uploader, type UploaderState } from './uploader.ts';
 
@@ -72,6 +75,10 @@ export class CloudLink {
   private consoles = 0;
   private commands = 0;
   private plan: LinkStatus['plan'] = null;
+  /** The cloud's plan as it last sent it on this connection (null until it does). */
+  private cloudPlan: StoredPlan | null = null;
+  /** The local plan sent up and not answered yet (its savedAtMs): one at a time. */
+  private offeredPlanAtMs: number | null = null;
   private resume: LinkStatus['resume'] = null;
   /** A fetch from the cloud in progress (not asked again until it is done). */
   private fetching: string | null = null;
@@ -156,6 +163,8 @@ export class CloudLink {
     } catch {
       return;
     }
+    // The relay's plan changed (maybe Admin saved one on the laptop): the cloud may need it.
+    if (message && typeof message === 'object' && (message as { type?: unknown }).type === 'relay.plan') return this.offerLocalPlan();
     if (!isEvent(message)) return;
     switch (message.type) {
       case 'journal.entry':
@@ -236,6 +245,8 @@ export class CloudLink {
     ws.on('close', (code, reason) => {
       if (this.cloud === ws) this.cloud = null;
       this.uploader.disconnected();
+      this.cloudPlan = null;
+      this.offeredPlanAtMs = null;
       this.fetching = null; // a fetch cut off is asked again after the next welcome
       if (code === CLOSE.replaced) {
         this.cloudState = 'replaced';
@@ -284,7 +295,7 @@ export class CloudLink {
         }
         return;
       case 'cloud.plan':
-        return this.keepPlan(message.plan, now);
+        return this.keepPlan(message.plan, message.savedAtMs, now);
       case 'cloud.journal':
         this.addEntries(message.entries);
         if (message.done) {
@@ -308,12 +319,48 @@ export class CloudLink {
     }
   }
 
-  /** Keep the plan on disk, for the laptop's screens with no internet. */
-  private keepPlan(plan: unknown, now: number): void {
-    if (!this.writeFile('plan.json', plan)) return;
-    const title = plan && typeof plan === 'object' && 'title' in plan ? String(plan.title) : '(none)';
-    if (this.plan?.title !== title) this.log(`cloud: Game plan "${title}" kept in ${path.join(this.options.dataDir, 'plan.json')}`);
-    this.plan = { title, receivedAtMs: now };
+  /** Keep the cloud's plan on disk, for the laptop's screens with no internet; then settle a local plan. */
+  private keepPlan(plan: StoredPlan['plan'], savedAtMs: number | null, now: number): void {
+    const stored: StoredPlan = { savedAtMs: savedAtMs ?? 0, plan };
+    this.cloudPlan = stored;
+    if (this.writeFile(CLOUD_PLAN_FILE, stored)) {
+      const title = plan ? plan.title : '(none)';
+      if (this.plan?.title !== title) this.log(`cloud: Game plan "${title}" kept in ${path.join(this.options.dataDir, CLOUD_PLAN_FILE)}`);
+      this.plan = { title, receivedAtMs: now };
+    }
+    this.settleLocalPlan();
+    this.offerLocalPlan();
+  }
+
+  /**
+   * After the cloud answered a local plan sent up: it kept it (the same plan comes back) or kept a newer one of
+   * its own. Either way the cloud's copy now stands for that save, so the local file goes and the laptop's
+   * screens follow the cloud's. A newer local save made meanwhile stays, and goes up next.
+   */
+  private settleLocalPlan(): void {
+    if (this.offeredPlanAtMs === null) return;
+    const offered = this.offeredPlanAtMs;
+    this.offeredPlanAtMs = null;
+    const file = path.join(this.options.dataDir, LOCAL_PLAN_FILE);
+    const local = readStoredPlan(file);
+    if (!local || local.savedAtMs !== offered) return;
+    const kept = JSON.stringify(local.plan) === JSON.stringify(this.cloudPlan?.plan ?? null);
+    this.log(kept ? "cloud: took the Game plan saved on this laptop" : "cloud: kept its newer Game plan; this laptop's save is dropped");
+    try {
+      fs.rmSync(file, { force: true });
+    } catch (error) {
+      this.log(`could not remove ${file}: ${String(error)}`);
+    }
+  }
+
+  /** Send up a plan saved on the laptop's network, if it differs from the cloud's and may be newer (the cloud decides). */
+  private offerLocalPlan(): void {
+    if (this.cloud?.readyState !== WebSocket.OPEN || !this.cloudPlan || this.offeredPlanAtMs !== null) return;
+    const local = readStoredPlan(path.join(this.options.dataDir, LOCAL_PLAN_FILE));
+    if (!local?.plan || JSON.stringify(local.plan) === JSON.stringify(this.cloudPlan.plan)) return;
+    this.offeredPlanAtMs = local.savedAtMs;
+    this.log(`cloud: sending up the Game plan "${local.plan.title}" saved on this laptop`);
+    this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.plan', plan: local.plan, savedAtMs: local.savedAtMs, sentAtMs: this.options.now() } satisfies LinkPlan);
   }
 
   /** Write a JSON file in the data folder whole, then rename it, so a reader never sees half a file. */

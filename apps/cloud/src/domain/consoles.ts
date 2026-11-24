@@ -3,8 +3,11 @@
 import type { RelayClients, Role } from '@quina/protocol';
 import { FORWARDED_EVENT_TYPES } from './projection.ts';
 
-/** Never sent to the cloud as events: the journal travels as `link.journal`; engine health is local chatter. */
-export const NEVER_FORWARDED = ['journal.entry', 'journal.entries', 'engine.health'] as const;
+/**
+ * Never sent to the cloud as events: the journal travels as `link.journal`; engine health is local chatter; the
+ * relay's plan push never rides along (the cloud has its own, and `link.plan` carries a laptop's newer one).
+ */
+export const NEVER_FORWARDED = ['journal.entry', 'journal.entries', 'engine.health', 'relay.plan'] as const;
 
 /** Always forwarded: what phones need, and who is on the relay (tiny and rare). */
 export const ALWAYS_FORWARDED: readonly string[] = [...FORWARDED_EVENT_TYPES, 'relay.clients'];

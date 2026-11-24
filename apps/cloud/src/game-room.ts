@@ -23,6 +23,7 @@ import {
   type GameRecord,
   type JournalEntry,
   type RelayClients,
+  type RelayPlan,
   type ResumeToken,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
@@ -42,7 +43,7 @@ import {
   type PublicSnapshot,
   type PublicState,
 } from '@quina/protocol';
-import { CLOSE, checkLinkMessage, type CloudMessage, type LinkEvent, type LinkFetch, type LinkHello, type LinkJournal } from './link-protocol.ts';
+import { CLOSE, checkLinkMessage, type CloudMessage, type LinkEvent, type LinkFetch, type LinkHello, type LinkJournal, type LinkPlan } from './link-protocol.ts';
 
 /** The header the Worker sets to tell the GameRoom who connected (after Access); never taken from a client. */
 export const IDENTITY_HEADER = 'x-quina-identity';
@@ -55,6 +56,8 @@ interface RoomSnapshot {
   game: GameRecord | null;
   /** The public state and its feed position. */
   feed: { seq: number; state: PublicState };
+  /** When the plan in the public state was saved (cloud clock); absent in snapshots from before it was kept. */
+  planSavedAtMs?: number | null;
 }
 
 interface ShowAttachment {
@@ -184,6 +187,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
         return this.onEvent(ws, link, ctx);
       case 'link.fetch':
         return this.onFetch(ws, link);
+      case 'link.plan':
+        return this.onLinkPlan(ws, link, ctx, now);
       case 'link.ping':
         return;
     }
@@ -224,7 +229,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
     this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq, current });
     this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
-    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan });
+    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan, savedAtMs: this.planSavedAtMs() });
   }
 
   private onJournal(ws: WebSocket, upload: LinkJournal, ctx: ProjectionContext): void {
@@ -315,6 +320,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
       if (!isConsoleRole(m.role) || !clientId) return ws.close(CLOSE.badHello, 'a console says hello as tablet or admin, with a clientId');
       ws.serializeAttachment({ ...attachment, consoleRole: m.role, clientId } satisfies ConsoleAttachment);
       if (this.lastState) this.send(ws, this.lastState);
+      this.send(ws, JSON.stringify(this.planMessage()));
       return this.consolesChanged(null);
     }
     if (m.type !== 'cmd') return;
@@ -419,14 +425,54 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return this.room.feed.state.plan;
   }
 
-  /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Phones and the laptop get it. */
+  /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Everyone gets it. */
   setPlan(json: unknown): PlanSave {
+    const check = this.checkPlan(json);
+    if (!check.ok) return check;
+    // Never older than the plan it replaces, so a laptop's copy saved a moment ago can't win over it.
+    this.adoptPlan(check.plan, Math.max(Date.now(), (this.planSavedAtMs() ?? 0) + 1));
+    return { ok: true, plan: check.plan };
+  }
+
+  /** checkGamePlan, for this edition only. */
+  private checkPlan(json: unknown): ReturnType<typeof checkGamePlan> {
     const check = checkGamePlan(json);
     if (!check.ok) return check;
     if (check.plan.edition !== this.env.EDITION) return { ok: false, errors: [`plan.edition: this cloud serves edition ${this.env.EDITION}`] };
-    this.publish([{ kind: 'plan', plan: check.plan }]);
-    for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.plan', plan: check.plan });
-    return { ok: true, plan: check.plan };
+    return check;
+  }
+
+  private planSavedAtMs(): number | null {
+    return this.room.feed.state.plan ? (this.room.planSavedAtMs ?? 0) : null;
+  }
+
+  /** A new plan: the phones (public delta), the laptop (cloud.plan) and the consoles (relay.plan) get it. */
+  private adoptPlan(plan: GamePlan, savedAtMs: number): void {
+    this.room = { ...this.room, planSavedAtMs: savedAtMs };
+    this.publish([{ kind: 'plan', plan }]);
+    for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.plan', plan, savedAtMs });
+    const text = JSON.stringify(this.planMessage());
+    for (const consoleWs of this.consoles()) this.send(consoleWs, text);
+  }
+
+  /** The plan for a console, as the relay pushes it to the laptop's screens (protocol RelayPlan). */
+  private planMessage(): RelayPlan {
+    return { v: PROTOCOL_VERSION, type: 'relay.plan', plan: this.room.feed.state.plan, savedAtMs: this.planSavedAtMs() };
+  }
+
+  /**
+   * A plan Admin saved on the laptop's network while the cloud was away. The newest wins: the cloud takes it if
+   * it is newer than its own and differs, and otherwise answers with its own, so the laptop's copy follows.
+   */
+  private onLinkPlan(ws: WebSocket, link: LinkPlan, ctx: ProjectionContext, now: number): void {
+    const check = this.checkPlan(link.plan);
+    if (!check.ok) return this.refuse(ws, `link.plan: ${check.errors.slice(0, 5).join('; ')}`, null);
+    // On the cloud's clock, and never in the future (a laptop with a wrong clock can't pin its plan forever).
+    const savedAtMs = Math.min(ctx.toCloudMs(link.savedAtMs), now);
+    const own = this.planSavedAtMs();
+    const same = JSON.stringify(check.plan) === JSON.stringify(this.room.feed.state.plan);
+    if (!same && (own === null || savedAtMs > own)) return this.adoptPlan(check.plan, savedAtMs);
+    this.reply(ws, { type: 'cloud.plan', plan: this.room.feed.state.plan, savedAtMs: own });
   }
 
   /** Keep an uploaded image under its content hash; the same file twice is stored once. */
