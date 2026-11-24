@@ -5,7 +5,8 @@
 // (`?c=123` links), and the player app keeps each player's cards per edition. Keep EDITION equal to the
 // Game plan's `edition` (Admin).
 //
-// This year's title and paper colour aren't decided yet; the defaults are last year's.
+// This year's title, paper colour, card types, prices and amounts aren't decided yet: the defaults are last
+// year's. The songs come from a pool (pool.ts), chosen on the command line.
 import type { CardTypeSpec } from './card-types';
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
@@ -41,3 +42,14 @@ export const CARD_TYPES = [
 
 /** A printed type's id, one of CARD_TYPES. */
 export type CardTypeId = (typeof CARD_TYPES)[number]['type'];
+
+/** How many cards of each type to print, numbered in this order from 1 (normal 1–399, then especial 400–699).
+ * Each amount must be a multiple of 3: the PDF prints 3 cards a page. */
+export const CARD_AMOUNTS = [
+  { type: 'normal', amount: 399 },
+  { type: 'especial', amount: 300 },
+] as const satisfies readonly { type: CardTypeId; amount: number }[];
+
+/** The shuffle's seed: the same seed and pool always give the same cards, so a reprint matches. Change it to
+ * draw a different set. */
+export const SEED = 'barrakudes-cigronet';

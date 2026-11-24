@@ -4,18 +4,27 @@ This project generates bingo cards for a musical bingo game. The cards are gener
 
 ## Usage
 
-> [!NOTE]
-> The output files are commited, so you can get them directly from the [`dist`](./dist) folder, without running the code:
->
-> - [`cards.pdf`](./dist/cards.pdf)
-> - [`cards.json`](./dist/cards.json)
+The output files are committed in [`dist`](./dist): `cards.json`, `card-types.json` and one PDF per card type
+(`cards-normal.pdf`, `cards-especial.pdf`). Until this year's playlist is final they are last year's test cards; don't
+regenerate them for real before then.
 
-1. Install node (I recommend using [nvm](https://github.com/nvm-sh/nvm)).
-1. Run `npm install` to install the dependencies.
-1. Save the songs in [`src/data/songs.ts`](./src/data/songs.ts).
-1. Set a `SEED`, if necessary, in [`src/index.ts`](./src/index.ts).
-1. Run `bun ./src/index.ts` to generate the bingo cards.
-1. The [`pdf`](./dist/cards.pdf) and [`json`](./dist/cards.json) files will be saved in the [`dist`](./dist) folder.
+The cards are drawn from a **song pool**, `data/pools/<name>.json`: the same file the song preparation (`tools/prep`)
+and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `cards.json` goes, with
+`card-types.json` and the PDFs beside it (the folder the relay serves at `/cards/`).
+
+1. Once, in this folder: `npm install`. npm here doesn't run install scripts, and the PDF renderer needs the native
+   `canvas` module built, so also run `npm install-scripts approve canvas` (then `npm rebuild canvas` if it says so).
+2. Set this year's values in [`src/config.ts`](./src/config.ts):
+   - `CARD_TITLE` (the big title) and `PAPER_COLOR`;
+   - `CARD_TYPES`: each type's id, name, pastel colour and price in cents;
+   - `CARD_AMOUNTS`: how many cards of each type, each a multiple of 3 (3 cards a page);
+   - `EDITION`: the year tag in the QR links (`/26/123`), the same as the Game plan's `edition`;
+   - `SEED` (optional): the same seed and pool always give the same cards.
+3. Check without writing anything: `npm run build && node build/index.js --pool <name> --check`. It reports the pool's
+   songs, the types and the amounts, and fails on any problem (a duplicate song id, a song without a title, a bad type
+   id, an amount that isn't a multiple of 3, fewer than 12 songs).
+4. Generate: `npm start -- --pool <name>`. Without `--pool` it uses `default` (last year's 77 songs).
+5. Proof the PDFs, then commit `dist/` (the cards are public: the player app needs every card's songs).
 
 ## Card types
 
