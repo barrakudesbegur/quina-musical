@@ -14,7 +14,8 @@
     "link": "node laptop/main.ts",
     "loadtest": "node scripts/assets.ts --quick && node loadtest/run.ts",
     "media": "node laptop/media.ts",
-    "preflight": "node laptop/preflight.ts"
+    "preflight": "node laptop/preflight.ts",
+    "relay-audit": "node scripts/relay-audit.ts"
   },
   "dependencies": {
     "@quina/protocol": "file:../protocol",
