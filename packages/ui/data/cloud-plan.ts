@@ -109,9 +109,10 @@ export const mediaKey = (path: string): string | null => /^\/media\/([^/?#.]+)\.
 const mediaFailure = (status: number): MediaResult => ({ ok: false, status, reason: status === 415 ? 'type' : status === 413 ? 'size' : status === 507 ? 'full' : 'error' });
 
 /** Upload an image's fallback (PNG for logos and pictures, JPEG for photos) and get its public, immutable path. */
-export async function uploadMedia(fetchImpl: FetchLike, image: Blob, base = ''): Promise<MediaResult> {
+export async function uploadMedia(fetchImpl: FetchLike, image: Blob, base = '', name?: string): Promise<MediaResult> {
   try {
-    const res = await fetchImpl(`${base}/api/media`, { method: 'POST', headers: { 'content-type': image.type || 'application/octet-stream' }, body: image });
+    const query = name ? `?name=${encodeURIComponent(name)}` : '';
+    const res = await fetchImpl(`${base}/api/media${query}`, { method: 'POST', headers: { 'content-type': image.type || 'application/octet-stream' }, body: image });
     const body: unknown = await res.json().catch(() => null);
     if (res.ok && isRec(body) && typeof body.path === 'string') {
       const key = typeof body.key === 'string' ? body.key : mediaKey(body.path);
@@ -132,5 +133,43 @@ export async function uploadMediaJxl(fetchImpl: FetchLike, key: string, jxl: Blo
     return mediaFailure(res.status);
   } catch {
     return { ok: false, status: 0, reason: 'network' };
+  }
+}
+
+/** One uploaded image in the cloud's media library (GET /api/media, admins only). */
+export interface MediaItem {
+  key: string;
+  /** The name given at upload (`?name=`), or null. */
+  name: string | null;
+  /** The fallback's public path (`/media/<key>.png|.jpg`): what a plan stores. */
+  fallback: string;
+  /** Whether its JPEG XL exists. */
+  jxl: boolean;
+  uploadedAtMs: number;
+}
+
+export type MediaList = { ok: true; media: MediaItem[] } | { ok: false; status: number };
+
+/** The media library, newest first. Malformed entries are skipped; failures are values, never thrown. */
+export async function listMedia(fetchImpl: FetchLike, base = ''): Promise<MediaList> {
+  try {
+    const res = await fetchImpl(`${base}/api/media`);
+    if (!res.ok) return { ok: false, status: res.status };
+    const body: unknown = await res.json().catch(() => null);
+    const raw = isRec(body) && Array.isArray(body.media) ? body.media : [];
+    const media: MediaItem[] = [];
+    for (const m of raw) {
+      if (!isRec(m) || typeof m.key !== 'string' || typeof m.fallback !== 'string' || !m.fallback.startsWith('/media/')) continue;
+      media.push({
+        key: m.key,
+        name: typeof m.name === 'string' && m.name.trim() ? m.name.trim() : null,
+        fallback: m.fallback,
+        jxl: Boolean(m.jxl),
+        uploadedAtMs: typeof m.uploadedAtMs === 'number' ? m.uploadedAtMs : 0,
+      });
+    }
+    return { ok: true, media: media.sort((a, b) => b.uploadedAtMs - a.uploadedAtMs) };
+  } catch {
+    return { ok: false, status: 0 };
   }
 }

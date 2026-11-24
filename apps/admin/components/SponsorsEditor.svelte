@@ -5,6 +5,7 @@
   import { sponsorIdFor, sponsorUsage } from '../logic/plan-edit.ts';
   import { S } from '../strings.ts';
   import LogoCleaner from './LogoCleaner.svelte';
+  import LogoLibrary from './LogoLibrary.svelte';
 
   let { session }: { session: PlanSession } = $props();
 
@@ -13,6 +14,9 @@
   let confirming = $state<string | null>(null);
   /** The sponsor whose logo is being cleaned up. */
   let cleaning = $state<string | null>(null);
+  /** The sponsor whose logo is being picked from the cloud's library (cloud only). */
+  let browsing = $state<string | null>(null);
+  const hasLibrary = $derived(session.store.kind === 'cloud');
   const listErrors = $derived(session.errors.filter((e) => e.startsWith('plan.sponsors:')));
 
   const otherIds = (id: string) => session.draft.sponsors.map((s) => s.id).filter((other) => other !== id);
@@ -87,11 +91,25 @@
             {/if}
             <div class="panel__actions">
               <button type="button" onclick={() => (cleaning = cleaning === sponsor.id ? null : sponsor.id)} aria-expanded={cleaning === sponsor.id}>{S.sponsors.editLogo}</button>
+              {#if hasLibrary}
+                <button type="button" onclick={() => (browsing = browsing === sponsor.id ? null : sponsor.id)} aria-expanded={browsing === sponsor.id}>{S.library.open}</button>
+              {/if}
               {#if sponsor.logo}
                 <button type="button" onclick={() => (sponsor.logo = null)}>{S.sponsors.removeLogo}</button>
               {/if}
             </div>
           </div>
+          {#if browsing === sponsor.id}
+            <LogoLibrary
+              load={() => session.store.mediaLibrary()}
+              sponsorName={sponsor.name || sponsor.id}
+              onpick={(path) => {
+                sponsor.logo = path;
+                browsing = null;
+              }}
+              onclose={() => (browsing = null)}
+            />
+          {/if}
           {#if cleaning === sponsor.id}
             <LogoCleaner sponsorName={sponsor.name || sponsor.id} onuse={(url) => useLogo(sponsor.id, url)} onclose={() => (cleaning = null)} />
           {/if}

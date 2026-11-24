@@ -17,6 +17,7 @@
   import RoundsEditor from './components/RoundsEditor.svelte';
   import SponsorsEditor from './components/SponsorsEditor.svelte';
   import SponsorImport from './components/SponsorImport.svelte';
+  import LogoBulkUpload from './components/LogoBulkUpload.svelte';
   import ScheduleEditor from './components/ScheduleEditor.svelte';
   import RulesEditor from './components/RulesEditor.svelte';
   import JsonImport from './components/JsonImport.svelte';
@@ -83,6 +84,7 @@
       <RoundsEditor {session} {show} {commands} />
       <SponsorsEditor {session} />
       <SponsorImport {session} />
+      {#if session.store.kind === 'cloud'}<LogoBulkUpload store={session.store} />{/if}
       <ScheduleEditor {session} />
       <RulesEditor {session} />
     {:else if route === 'json'}

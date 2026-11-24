@@ -131,6 +131,28 @@ export const S = {
     logoAlt: (name: string) => `Logo de ${name}`,
   },
 
+  library: {
+    open: 'Triar de la biblioteca',
+    title: (name: string) => `Biblioteca de logos per a ${name}`,
+    search: 'Cercar',
+    close: 'Tancar',
+    loading: 'Carregant la biblioteca…',
+    failed: "No s'ha pogut carregar la biblioteca de logos del núvol.",
+    empty: 'Encara no hi ha cap logo pujat.',
+    noMatch: 'Cap logo coincideix amb la cerca.',
+    pick: (name: string) => `Fer servir ${name}`,
+  },
+
+  bulk: {
+    title: 'Pujar logos a la biblioteca',
+    help: "Tria els logos nets d'una carpeta (els PNG i, si n'hi ha, els JXL amb el mateix nom). Cada un es puja amb el seu nom, i després el trobes a «Triar de la biblioteca». Els que ja hi són no es tornen a pujar.",
+    files: 'Fitxers',
+    skipped: (names: readonly string[]) => `No es pugen: ${names.join(', ')}`,
+    upload: (n: number) => (n === 1 ? 'Pujar 1 logo' : `Pujar ${n} logos`),
+    progress: (done: number, total: number) => `${done} de ${total} pujats`,
+    state: { waiting: 'per pujar', uploading: 'pujant…', done: 'pujat', exists: 'ja hi era', failed: 'error' },
+  },
+
   sponsorImport: {
     title: 'Importar patrocinadors del full',
     help: "Exporta el full de col·laboradors com a CSV i puja'l aquí. Només es llegeixen el nom, la categoria, si participa, què regala i si hi ha logo; la resta del full (qui ho té, entregues, tasques) no es llegeix mai. Els que participen surten marcats.",

@@ -8,7 +8,7 @@
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
 import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
-import { CloudPlanStore, uploadMedia, uploadMediaJxl, type FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
+import { CloudPlanStore, listMedia, uploadMedia, uploadMediaJxl, type FetchLike, type MediaList, type MediaResult } from '../../../packages/ui/data/cloud-plan.ts';
 import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
 import { relayTokenForPage } from '../../../packages/ui/client/pairing.ts';
 import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
@@ -191,6 +191,25 @@ export class AdminPlanStore {
     const put = await cloud.put(toSave);
     if (!put.ok) return { ok: false, reason: 'error', detail: put.errors.slice(0, 3).join(' · ') };
     return { ok: true, saved: put.plan };
+  }
+
+  /** The cloud's media library, for the logo picker; only in the cloud (the relay has no library). */
+  async mediaLibrary(): Promise<MediaList> {
+    if (this.kind !== 'cloud' || !this.fetchImpl) return { ok: false, status: 0 };
+    return listMedia(this.fetchImpl);
+  }
+
+  /**
+   * Upload one logo to the library (cloud only): its fallback with a name, then its JPEG XL, the one given (the
+   * logo tool's) or one encoded here. A failed JPEG XL doesn't fail the upload. Never throws.
+   */
+  async uploadLogo(fallback: Blob, jxl: Blob | null, name: string): Promise<MediaResult> {
+    if (this.kind !== 'cloud' || !this.fetchImpl) return { ok: false, status: 0, reason: 'error' };
+    const up = await uploadMedia(this.fetchImpl, fallback, '', name);
+    if (!up.ok) return up;
+    const jxlBlob = jxl ?? (await this.toJxl(fallback).catch(() => null));
+    if (jxlBlob) await uploadMediaJxl(this.fetchImpl, up.key, jxlBlob.type === 'image/jxl' ? jxlBlob : new Blob([jxlBlob], { type: 'image/jxl' }));
+    return up;
   }
 
   /** The stored plan with its logos, or null. Never throws. */
