@@ -46,6 +46,11 @@ These override the sections below where they differ.
 - **A Check also fails for a card of the wrong type for the round.** It's shown as its own reason.
 - **Horari off schedule:** real times for what has happened, and "~" predictions for what's next.
 - **Proposed, pending the user's confirmation:** the player app's 3 tabs (above) become a single "now" screen, with two corner buttons opening stackable drawers (Premis, Horari), plus drawers for add-card, the menu and last year's card.
+- **Where the show runs (Q26): A+, installed with media from the cloud.**
+  - The show laptop runs the installed setup: the repo, Node, the local relay and the cloud link.
+  - Any laptop becomes show-ready with one setup command that installs, pulls the pool and media from R2, and runs the preflight. So nothing depends on files that live only on one person's laptop.
+  - The offline hotspot console and the best-quality blends (Rubber Band) stay.
+  - "Nothing installed" (the show page in the browser) is deferred until after this year's event.
 - **The repo is reorganised** (3399fb3 and 60f9d12): `apps/` (show, stage, console, admin, player, cloud, cards), `packages/` (protocol, rules, ui), `tools/prep`, `data/` (gitignored media, pools and cache) and `legacy/2025/`. Nothing is called a POC anymore; this is this year's app.
 - **Resolved from the open questions:**
   - **Generated song data** never goes in git. It goes to the private R2 bucket and the database, so any laptop can run the Quina.

@@ -15,9 +15,6 @@ Format:
 ## The Wii remote mapping (orchestrator, 2026-11-24)
 Proposed (Q34): A Següent · B (hold) Suspens · 1 Parlem · 2 Aguanta · − (hold 1.5 s) Enrere · + Claim · D-pad 4 effects · HOME unused · a rumble on every action.
 
-## Any laptop, nothing installed? (orchestrator, 2026-11-24)
-Q26, under discussion. Options: A, installed (today); B, nothing installed (the show page from the cloud, the pool cached in the browser, a browser time-stretcher); C, both (B by default, A's local programs for an offline hotspot console). The orchestrator leans towards C.
-
 ## Card text size on phones (quina-musical-1e, 2026-11-24)
 The player app draws each card as the 3×4 grid of the printed card, with a cover and 2 lines of title per song. On a phone that makes titles about 12–13 px, which is small for the grandmother test.
 **Default taken:** the grid stays (cover first, title under it, the 1-song-away banner names the song in large type). Possible change: a "Lletra gran" switch that shows each card as a list.
