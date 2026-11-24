@@ -52,6 +52,7 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
 |---|---|---|---|---|---|
 | `tab-switch` | Tapping a tab | The content crossfades | `--dur-fast` 120 ms | Tap blip | Instant |
 | `reel-spin` | `spin.startAtMs` | The Ara reel scrolls generic card backs (no songs), speeding up, then slowing so it stops at `landAtMs`. With `landAtMs: null` (a Suspense), it coasts slowly until the landing | Tied to `landAtMs`, eased so it stops exactly then | Soft ticks as cards pass (rate-limited to 10/s) | A spinner reading "Sona la ruleta…" |
+| `shuffle` | `shuffle` set (round start) | A small fan of tilted card backs jiggles, like a shaken deck. It never shows songs, so it can't hint at the order | Loop while the Shuffle runs, 400 ms per jiggle | Tap blip once | A static fan with "Barrejant…" |
 | `landing` | A new landing becomes public | The cover flips in from the back (rotateY 90° → 0°, 400 ms) and the title rises. In Historial the new row slides down from the top | 400 ms `--ease-bounce` | A soft "pop" | The cover and title appear |
 | `mark-in` | A song lands that is on one of the player's cards | A corn kernel drops onto the cell: translateY −24 px → 0, squash 1.2/0.8 → 1, and a random −15…15° tilt that stays. With several cards, they stagger by 80 ms. The latest-song grace rule decides which cells get one, so the motion never hints at the held-back song | 220 ms ease-out | A tiny "tock" (once, not per card) | The kernel appears |
 | `near-win` | `nearWins` goes from none to some, or names a new song | The banner drops from the top with a bounce, and the star sticker wiggles. **No pulse tied to songs.** An idle shimmer sweeps across every 6 s | Entrance 500 ms `--ease-bounce` | A two-note chime, only when it first appears. Bonus vibration of 30-40-30 ms (Android only; nothing depends on it) | The banner appears with no shimmer |
@@ -85,7 +86,7 @@ The console is a tool. Its motion is feedback, never decoration, and it never de
 | Engine, on the PA | Transitions, landings and impacts, effects, Signatures, the Shuffle's item box, Final Lap, Check snippets and the "broken record", the Failure and Clear fanfares, Celebration and Interval music, Hold music |
 | Projector | Silent (on the laptop the audio comes from the engine) |
 | Console | Silent |
-| Phones | Interface sounds only, ON by default and switchable off: tap blip, landing pop, mark "tock", near-win chime, celebration blip. They're synthesised in WebAudio, under 200 ms (the celebration blip 0.8 s), quiet (−24 dBFS peak), never more than one at a time, and never while the page is hidden. 400 phones play them at different moments, so they stay short and soft so they never compete with the presenters |
+| Phones | Interface sounds only, ON by default and switchable off: tap blip, landing pop, mark "tock", near-win chime, celebration blip, and the reel's ticks (limited to 10 a second). They're synthesised in WebAudio, under 200 ms (the celebration blip 0.8 s), quiet (−24 dBFS peak), never more than one at a time, and never while the page is hidden. 400 phones play them at different moments, so they stay short and soft so they never compete with the presenters |
 
 ## Open points for the review
 
