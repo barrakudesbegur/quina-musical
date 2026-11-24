@@ -10,6 +10,9 @@
   // The cloud's own hostname, so Access can protect paths (/api, /ws/console, /ws/show) and leave /feed public.
   // Cloudflare creates this NEW record and its certificate only; nothing else in the zone changes.
   "routes": [{ "pattern": "quina-dev.barrakudesbegur.org", "custom_domain": true }],
+  // wrangler dev: requests keep a localhost URL (by default it would take the route's hostname, and the dev
+  // Access bypass, which only works on localhost, would refuse them).
+  "dev": { "host": "localhost" },
   "preview_urls": false,
   "vars": {
     // The year tag in the players' links (quina.barrakudesbegur.org/26/123); it names the GameRoom.
