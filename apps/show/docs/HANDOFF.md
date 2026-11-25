@@ -11,18 +11,24 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** nothing. **No work on the draft playlist before 1 Dec (D80).** Until then, work on last year's 77 songs.
-  - The download was stopped on 25 Nov at 26 of 151 songs: 99 MB of Opus in `data/media/draft/output/songs/`. No prep ran on the draft, and nothing went to R2.
-  - Keep every file already downloaded, the 4-song dry run included. Its pool is `data/media/draft/pool.json` (`draft2026`, gitignored).
-  - **What's ready for 1 Dec:**
-    - **The cause of the bot check was the VPN.** All traffic went through ProtonVPN, and YouTube asks VPN addresses to sign in. With the VPN off, spotDL downloads at about 30 s a song.
-    - **Ids are stable** (`fb321f4`, D79): a track keeps its first id (`output/song-ids.json`), and audio is named `<Spotify id>.opus`. A rerun of the fetcher downloads only the missing songs.
+- **In progress:** nothing. **This year's songs are downloaded, and temporary cards are made (D99, 25 Nov; it amends D80).** The playlist had 76 songs when fetched; the organizers are cutting it to about 70, so work with whatever it holds.
+  - **The pool `2026-temp`:** `data/pools/2026-temp.json`, untracked, never deployed. Audio is in `data/media/2026/output/songs/<Spotify id>.opus`. The ids are in `output/song-ids.json`, 1–76 in the order of 25 Nov; a cut leaves gaps and moves nothing.
+    - Its data, cache and overrides folders are pool `2026`'s (`data/out/pools/2026`, `data/cache/pools/2026`, `data/pools/2026/overrides`), so nothing is redone when it becomes pool 2026.
+    - Run it from apps/show: `npm run prep -- --pool 2026-temp --steps decode,quality`.
+  - **All 76 are downloaded, and none need a hand download.**
+    - spotDL fell back to plain YouTube videos for 11 songs. 7 of them (12, 29, 35, 40, 46, 61, 70) were swapped for YouTube Music's official upload with `yt-dlp -f 251 -x --audio-format opus`; the replaced files are kept in `output/rejected/`.
+    - Quality: 122–159 kbps Opus (median 138), every song within 4 s of Spotify's length. The only flag left is song 29's own "Remix" title, the playlist's pick.
+    - Decoded: `data/cache/pools/2026`. No hooks, Signatures or stems yet, and nothing in R2: those wait for the user.
+  - **Temporary cards:** `data/media/2026/cards-TEMPORARY-not-for-print/`: cards.json, card-types.json, and the PDFs named `TEMPORARY-NOT-FOR-PRINT-*`. 699 cards (399 normal, 300 especial) from the 76 songs, never for print; remade after the cut.
+  - The old draft (`data/media/draft`, 26 of 151 songs, plus the 4-song dry run) is kept as it is.
+  - **The VPN:** YouTube asks ProtonVPN's address to sign in. Download with it off, and never touch it yourself.
 - **Next:**
   - **1 Dec, first commit (agreed with Frontend and Backend on 25 Nov):** the pool and cards path. Frontend's and Backend's moves go on top the same day; send them the sha.
     - Create `data/pools/2026.json`, tracked, with `cardsJson` set to `apps/cards/dist/cards.json`. The user makes the cards with `npm start -- --pool 2026` in apps/cards; `--check` validates without writing.
     - Copy today's `apps/cards/dist/{cards,card-types}.json` to `data/pools/default/cards/`, byte-identical, with 65b74ef's fixes; not legacy's file, which repeats #398's and #492's lines. Point `data/pools/default.json`'s `cardsJson` there. Gitignore `data/pools/*/cards/*.pdf`.
     - Make my tests read the cards through the default pool (relay/pool.ts `loadPool('default').cardsJson`, pool.py): support/harness.ts, support/data.ts, the cards, phase and shuffle tests, support/desgraciat.ts, support/listen-demo.ts, tools/prep/tests/test_pool.py, the engine/src/game/cards.ts comment.
     - Frontend: the UI tests check both files, and the fixtures read the default pool's copy. Backend: the e2e reads `loadPool().cardsJson`; the live run checks that quina-dev serves the same cards; deploys name their pool, and the preflight checks the cloud's cards match.
+  - **After the cut (about 70 songs):** fetch the playlist again (`fetch.py` from `data/media/2026`), then remake the temporary cards with `npm start -- --pool 2026-temp` in apps/cards. Download new songs, if any, with the VPN off.
   - **1–3 Dec, if the playlist is ready on 1 Dec (D83):**
     - fetch it, then download the rest with the VPN off;
     - run prep with `quality`;
