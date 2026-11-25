@@ -8,14 +8,13 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - the cloud's side of the shared Desgraciat win, the slip and the Check's result (`cf9666c`): `flaggedDecisions`, never refusals;
   - the preflight's card prices, U5 (`6beadc7`);
   - the whole-show e2e claiming real wins on a fixed Queue;
-  - sync-main listing what a push publishes.
+  - sync-main listing what a push publishes;
+  - the preflight's Wii line showing the remote's drops in the last 10 minutes, a WARN from 2 (`147e535`, on Frontend's 150f213).
 
   quina-dev runs `2e37fc1` (version `81e0d0ad`).
 - **Next:**
   - this year's pool from 2 Dec: measure, prune, push, and sync both laptops by 10 Dec;
   - the provisional-hooks WARN, once Sound engine sends the field.
-- **Coming from other sessions** (join when proposed):
-  - **A Wii range signal:** `remote.status` counting disconnects (low priority). Then the preflight's Wii line shows recent drops.
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md): **U15**, the QR domain switch (deploy-plan step 7, by 11 Dec); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android); **U24**, housekeeping (the previous session's `ci-head` worktree).
 
