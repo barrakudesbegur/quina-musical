@@ -10,11 +10,11 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 |---|---|
 | Card type per round, every screen and the cloud | **Done** |
 | The Desgraciat round: engine, cloud and screens | **Done**, including the shared win and no celebration title. Its default card type becomes the special card (D70) |
-| Songs downloadable | **Unblocked by D66:** the method is Sound engine's call; the user fetches only the leftovers by hand |
+| Songs downloaded | **Running (25 Nov):** the draft's 151 songs, with the VPN off (it caused the bot check). Then prep and one short leftover list for the user (D66) |
 | The card generator ready | **Ready**, with provisional values (D67, D68) and the PDF's install-script approval still to do (U17) |
 | The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
-| Hooks approved | Waits on the pool, then the user (U14); before the first rehearsal |
-| This year's pool in R2, laptops synced | Waits on the pool. It fits the free tier (about 68 MB a song) |
+| Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
+| This year's pool in R2, laptops synced | Waits on the pool. About 100 songs fit the free tier; above that, U32 |
 | QR domain switched | **Go (D76):** Backend switches it now |
 | Rehearsals | **Dates open (U27).** Wait on the plan in Admin (U18) and the real-device checks (U19) |
 | Cards printed | **Date open (U28).** Waits on the final pool |

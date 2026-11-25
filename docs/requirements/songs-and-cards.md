@@ -53,7 +53,8 @@ _From event.md › The songs; the decisions doc › Changes; the mixer decisions
 - **Every song lands on a Hook:** a moment where its most recognizable part starts on a downbeat, usually a chorus. A song can have more than one.
 - This year's hooks are detected automatically: the chorus start, an energy jump and the vocals coming in, snapped to phrases.
 - **They're proposals.** On last year's songs, the top automatic candidate was within a bar of the real hook in only 26 of 77 songs.
-- **The user approves, rejects or nudges each hook** on the audition page, about 2 minutes a song (pending U14, by 10 December). A song can't play until its hook is approved.
+- **The user approves, rejects or nudges each hook** on the audition page, about 2 minutes a song (pending U14, before the first rehearsal). A song can't play until its hook is approved.
+- A song keeps its id when the playlist is reordered (the id follows its Spotify track), so approvals made on the draft carry over to the final pool (D79).
 - A provisional bulk approval of each song's top hook may stand in for rehearsals, marked as provisional everywhere, with a preflight warning. **Not built yet.**
 
 ## Song preparation
@@ -61,7 +62,7 @@ _From event.md › The songs; the decisions doc › Changes; the mixer decisions
 _From event.md › The songs; the Sound engine handoff._
 
 - The tech prepares every song: download, decode, analysis, snippets, validation, keys, stems, Signatures, hooks and the Interval music. A full run on 86 songs takes about 45 minutes.
-- The download method is the tech's call (D66): whatever gets every song through the quality check below with little work for the user. The user downloads by hand only the few songs it can't get.
+- The download method is the tech's call (D66): whatever gets every song through the quality check below with little work for the user. The user downloads by hand only the few songs it can't get. Downloads run with the VPN off: YouTube asks VPN addresses to sign in.
 - **The quality check.** Every source must pass, or be flagged for the user to check by ear:
   - a bitrate of about 128 kbps or more;
   - no brick-wall low-pass under 15 kHz;

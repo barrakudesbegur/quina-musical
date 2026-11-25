@@ -32,6 +32,10 @@ Printing takes a few hours and cards are sold only on the night (D71), but event
 For the player app the user said no fallback layout in the code (D73). event.md also asks that anything new has "a simple fallback to the old way", and the code has operational plan Bs (the tablet for the Wii remote, the laptop's keys for the tablet, the laptop for the cloud).
 **Default:** the operational plan Bs stay; no alternative versions of a screen or feature are kept in the code.
 
+### U32 · If the final playlist is over about 100 songs
+R2's free storage is 10 GB, about 100 songs in today's format (68 MB a song); the draft's 151 would take about 10.3 GB. Either (a) pay for the extra storage, which costs cents a month at Cloudflare's listed price (about 0.015 $ per GB a month), or (b) build the lighter format (about 20 MB a song: the original audio plus Opus stems, decoded when a laptop syncs; measured, not built, and both laptops need ffmpeg with Opus).
+**Default:** moot unless the final list is over about 100 songs.
+
 ### U30 · Pick the drawers and corner buttons
 Once Frontend has its proposals (D73): the drawers' content and hierarchy, the prizes drawer, and the corner buttons' style and icons, in one consistent style.
 **Default:** waits on the proposals.
@@ -39,7 +43,7 @@ Once Frontend has its proposals (D73): the drawers' content and hierarchy, the p
 ## Tasks only the user can do
 
 ### U14 · Approve this year's hooks · before the first rehearsal
-On the audition page: about 2 minutes a song, about 3 hours for 86. A song can't play until its hook is approved. Start early on draft songs once they're prepared.
+On the audition page: about 2 minutes a song, so about 5 hours for the draft's 151, less once the list is filtered. A song can't play until its hook is approved. Approvals can start on draft songs as soon as they're prepared, because they carry over to the final pool (D79).
 
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
@@ -60,6 +64,11 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 
 ### U20 · More Hold music and victory tracks
 Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/hold`, `data/media/celebration`). You'll add more.
+
+### U33 · Free disk space on the show Mac
+12 GB free; preparing 151 songs takes about 4 GB, and the stems guard wants 10 GB free. Sound engine's permission check won't delete files, so:
+- the 4-song dry run, about 273 MB: `data/cache/pools/draft`, `data/out/pools/draft`, `data/media/draft/{overrides,covers,lastyear-audio,prev-fetch,songs4.json}`;
+- last year's test pool in `data/cache`, about 7 GB, once the draft can replace it.
 
 ## Housekeeping
 

@@ -726,7 +726,7 @@ A journal entry the cloud refuses stops the laptop's uploads, and with them ever
 By: the sessions, agreed (Sound engine and Backend). Source: card type per round and the Desgraciat (steps A, B, C); Backend's report of 2026-11-25. Lives in: requirements/operations.md › Where things run.
 
 ### D66 · How the songs are downloaded · 2026-11-25 · Active
-The download method is the Sound engine's call: any method that passes the quality check without much work for the user. The user downloads by hand only the few songs it can't get. Last year's spotDL method fetched the 77 test songs on 23 Nov; YouTube's bot check appeared on 25 Nov after a burst of downloads. Answers U1.
+The download method is the Sound engine's call: any method that passes the quality check without much work for the user. The user downloads by hand only the few songs it can't get. The bot check came from the Mac's VPN, since YouTube asks VPN addresses to sign in. With the VPN paused, last year's spotDL method works again, keeping YouTube's own Opus audio. Answers U1.
 By: the user. Source: open-questions.md › Answered (U1); the user's answers of 2026-11-25. Lives in: requirements/songs-and-cards.md › Preparing the songs.
 
 ### D67 · This year's printed card, provisionally · 2026-11-25 · Active
@@ -776,3 +776,7 @@ By: the user. Source: open-questions.md › Answered (U21). Lives in: requiremen
 ### D78 · Public unless there's a reason · 2026-11-25 · Active
 Every card's songs stay public. Anything may be public unless there's a reason to hide it; the code stays simple. Answers U22.
 By: the user. Source: open-questions.md › Answered (U22). Lives in: requirements/operations.md › Privacy.
+
+### D79 · A song keeps its id when the playlist changes · 2026-11-25 · Active
+A song's id follows its Spotify track, not its playlist position. The draft grew from 86 to 151 songs and 83 moved, so ids by position would have moved every hook approval, cache and download onto another song. Hook approvals made on the draft carry over to the final pool.
+By: the sessions (Sound engine, within its remit). Source: commit fb321f4; Sound engine's report of 2026-11-25. Lives in: requirements/songs-and-cards.md › Hooks.
