@@ -171,6 +171,29 @@ def test_audio_files_accept_both_naming_conventions(tmp_path):
         p.audio_files()
 
 
+def test_audio_files_named_by_spotify_id_follow_the_playlist_order(tmp_path):
+    p = pools.load(write_manifest(tmp_path))
+    d = p.audio_dir
+    d.mkdir(parents=True)
+    for name in ("0kosUz0jePvjiz4ctmR6wL.opus", "7BKLCZ1jbUBVqRi2FVlTVw.opus", "4uLU6hMCjMI75M1A2tKUQC.mp3"):
+        (d / name).write_bytes(b"x")
+    songs = [{"id": 1, "title": "a", "artist": "x", "spotifyId": "7BKLCZ1jbUBVqRi2FVlTVw"},
+             {"id": 2, "title": "b", "artist": "y", "spotifyId": "0kosUz0jePvjiz4ctmR6wL"},
+             {"id": 3, "title": "c", "artist": "z"}]
+    p.songs_json.parent.mkdir(parents=True, exist_ok=True)
+    p.songs_json.write_text(json.dumps(songs))
+    # The third file's song left the playlist: ignored.
+    assert p.audio_files() == {1: d / "7BKLCZ1jbUBVqRi2FVlTVw.opus", 2: d / "0kosUz0jePvjiz4ctmR6wL.opus"}
+    # The playlist reordered: the same files follow their songs.
+    songs[0]["id"], songs[1]["id"] = 2, 1
+    p.songs_json.write_text(json.dumps(songs))
+    assert p.audio_files() == {1: d / "0kosUz0jePvjiz4ctmR6wL.opus", 2: d / "7BKLCZ1jbUBVqRi2FVlTVw.opus"}
+    # A hand download by id for a song that already has one is two candidates.
+    (d / "1.mp3").write_bytes(b"x")
+    with pytest.raises(pools.PoolError, match="several audio files for song 1"):
+        p.audio_files()
+
+
 # ---------------------------------------------------------------- relay/pool.ts resolves the same paths
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")

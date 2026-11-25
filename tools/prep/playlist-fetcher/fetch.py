@@ -10,6 +10,8 @@ from pathlib import Path
 from spotapi import Public
 from spotapi.playlist import PublicPlaylist
 
+import song_ids
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python fetch-playlist.py <playlist_id>", file=sys.stderr)
@@ -123,6 +125,9 @@ def save_csv(playlist_data: dict, filename: str) -> list:
     
     for position, item in enumerate(items, start=1):
         item_data = item.get('itemV2', {}).get('data', {})
+        uri = item_data.get('uri', '')
+        if not uri.startswith('spotify:track:'):
+            raise ValueError(f"playlist position {position} is not a Spotify track ({uri or 'no uri'}): take it off the playlist")
         
         # Get track name
         title = item_data.get('name', 'Unknown')
@@ -138,15 +143,22 @@ def save_csv(playlist_data: dict, filename: str) -> list:
         
         # Spotify's length and id: tools/prep/quality.py flags a download whose length is off (another version).
         duration_ms = item_data.get('trackDuration', {}).get('totalMilliseconds')
-        uri = item_data.get('uri', '')
         tracks.append({
-            'id': position,
+            'id': None,
             'title': title,
             'artist': artist,
             'cover': cover_url,
             'durationMs': duration_ms if isinstance(duration_ms, int) else None,
-            'spotifyId': uri.split(':')[-1] if uri.startswith('spotify:track:') else None,
+            'spotifyId': uri.split(':')[-1],
         })
+
+    # Stable ids: a track keeps the id it got when first fetched, so a reordered playlist moves no hook decision,
+    # cache or download onto another song (song_ids.py).
+    record_path = Path(filename).parent / 'song-ids.json'
+    ids, record = song_ids.assign_ids([t['spotifyId'] for t in tracks], song_ids.load(record_path))
+    for track, sid in zip(tracks, ids):
+        track['id'] = sid
+    song_ids.save(record_path, record)
     
     # Write CSV
     with open(filename, 'w', encoding='utf-8', newline='') as f:

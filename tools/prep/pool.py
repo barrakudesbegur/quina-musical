@@ -187,14 +187,21 @@ class Pool:
         return songs
 
     def audio_files(self) -> dict[int, Path]:
-        """Source audio by song id. `<id>.mp3` wins over a "<id> <title> - <artist>.mp3" name; two
-        candidates of the same kind for one id are an error."""
+        """Source audio by song id. `<id>.mp3`, or `<spotifyId>.mp3` for a song whose songs.json entry has that
+        `spotifyId` (the playlist fetcher's names: they survive a reordered playlist), wins over a
+        "<id> <title> - <artist>.mp3" name; two candidates of the same kind for one id are an error. A file
+        named after a Spotify id that isn't in songs.json (a song taken off the playlist) is ignored."""
         if not self.audio_dir.is_dir():
             raise PoolError(f"pool {self.name}: audio folder not found: {self.audio_dir}")
+        by_spotify = {s["spotifyId"]: s["id"] for s in self.songs() if isinstance(s.get("spotifyId"), str)} \
+            if self.songs_json.is_file() else {}
         exact: dict[int, list[Path]] = {}
         named: dict[int, list[Path]] = {}
         for path in sorted(self.audio_dir.iterdir()):
             if path.name.startswith(".") or path.suffix.lower() not in AUDIO_EXTS or not path.is_file():
+                continue
+            if path.stem in by_spotify:
+                exact.setdefault(by_spotify[path.stem], []).append(path)
                 continue
             match = _AUDIO_NAME_RE.match(path.stem)
             if not match:
