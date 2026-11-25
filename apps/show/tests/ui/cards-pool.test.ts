@@ -33,3 +33,21 @@ test("the default pool (last year's songs) is fit for cards", () => {
   const songs = JSON.parse(readFileSync(new URL(`../../../../${pool.songsJson}`, import.meta.url), 'utf8'));
   assert.deepEqual(songProblems(songs, 12), []);
 });
+
+test('the pool-size report (R1-Q31): songs to the first Line, the Quina and the last card standing', async () => {
+  const { poolReport, describeReport, seededRandom } = await import('../../../cards/src/report.ts');
+  // Two cards over 24 songs: card A is songs 1–12, card B 13–24.
+  const card = (from: number) => ({ lines: [0, 1, 2].map((l) => [0, 1, 2, 3].map((c) => from + l * 4 + c)) });
+  const songs = Array.from({ length: 24 }, (_, i) => i + 1);
+  const r = poolReport(songs, [card(1), card(13)], 500, 7);
+  assert.equal(r.songs, 24);
+  for (const s of [r.firstLine, r.bingo, r.lastStanding]) assert.ok(s.p10 <= s.median && s.median <= s.p90);
+  assert.ok(r.firstLine.p10 >= 4, 'a Line needs at least its 4 songs');
+  assert.ok(r.bingo.p90 <= 24 && r.bingo.p10 >= 12, 'a full card needs at least 12 songs');
+  assert.ok(r.firstLine.median <= r.bingo.median);
+  assert.deepEqual(poolReport(songs, [card(1), card(13)], 500, 7), r, 'the same seed, the same report');
+  assert.throws(() => poolReport(songs, [card(1)], 10), /at least 2 cards/);
+  assert.match(describeReport(r, 30), /^24 songs, 2 cards sold: first Line after \d+ \(\d+–\d+\) songs ≈ \d+ min/);
+  const random = seededRandom(1);
+  assert.ok(Array.from({ length: 100 }, random).every((x) => x >= 0 && x < 1));
+});

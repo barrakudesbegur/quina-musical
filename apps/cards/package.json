@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "npx nodemon",
     "start": "npm run build && node build/index.js",
-    "build": "rimraf ./build && rimraf ./dist && tsc"
+    "build": "rimraf ./build && tsc",
+    "report": "ts-node src/pool-report.ts"
   },
   "repository": {
     "type": "git",
