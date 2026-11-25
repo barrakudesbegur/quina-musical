@@ -4,19 +4,19 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Now (2026-11-25, afternoon)
 
-- **In progress: the QR domain switch (deploy-plan step 7).** The user OK'd it on 25 Nov (D76: "nobody uses it"). On quina-dev, `/26/123` and last year's `/?c=123` both work. Claude Code's auto mode refused `npx wrangler triggers deploy` because the OK came through the orchestrator, so it waits for the user to run it or allow it. Step 7 now lists the exact commands, the checks and the undo. The undo's DNS record needs the dashboard.
+- **In progress:** nothing half-built.
 - **Just done:**
-  - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type, so Sound engine can flip `DEFAULT_CARD_TYPE.desgraciat` to `especial` (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip. Once it's flipped, the live Desgraciat e2e plays especial cards 400–429.
+  - **`quina.barrakudesbegur.org` serves this year's player** (deploy-plan step 7, D76; 14:20 UTC on 25 Nov). The user deleted the old CNAME, `wrangler triggers deploy` attached the name, and the GitHub Pages custom domain was removed. Checked live: `/26/123` adds the card; `?c=123` shows last year's notice; `/sw.js` is the kill switch; `/api/*` refuses (no Access destinations on the name yet; optional, see step 7).
+  - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip, which is on origin (`364c916`). The live Desgraciat e2e now plays especial cards 400–429.
   - D69 (2025's prices): a preflight test with 1.50 €/5 €, 15 € before round 1 and 5 € before the Desgraciat (`9c83ebe`). The real check passes once Frontend puts the prices in `apps/cards/src/config.ts`. Today they're `null`, so it WARNs.
 
   quina-dev runs `2e37fc1` (version `81e0d0ad`).
 - **Next:**
-  - run step 7 once the user allows it; check, log it and tell the orchestrator;
-  - after Sound engine's D70 flip, rerun the live Desgraciat e2e on quina-dev;
+  - redeploy with origin's head (Sound engine's D70 flip `1ced37a`, Frontend's D70 player), then rerun the live Desgraciat e2e on quina-dev. One Worker serves both names, so a deploy also changes what the QR codes open;
   - this year's pool from 2 Dec: measure, prune, push, and sync both laptops **before the first rehearsal** (D71; the rehearsal dates are U27);
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
-- **Waiting on the user** (docs/open-questions.md): running or allowing step 7 (above); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch); **U24**, housekeeping (the previous session's `ci-head` worktree); **U27**, the rehearsal dates, and **U28**, the print date, which set the pool's deadline.
+- **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch); **U24**, housekeeping (the previous session's `ci-head` worktree); **U27**, the rehearsal dates, and **U28**, the print date, which set the pool's deadline.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
@@ -33,7 +33,7 @@ The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**. Thos
 | When | Platform's milestone | Depends on |
 |---|---|---|
 | Done (25 Nov) | The cloud side of card type per round and of the Desgraciat round | |
-| Now | `quina.barrakudesbegur.org` points at the Worker (deploy-plan step 7) | the user's OK (given, D76); the user runs or allows the command |
+| Done (25 Nov) | `quina.barrakudesbegur.org` points at the Worker (deploy-plan step 7, D76) | |
 | From Wed 2 Dec | This year's pool measured against R2's 10 GB | the pool prepared |
 | Before the first rehearsal | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared; hooks and stems done |
 | Each rehearsal | The preflight; watch the daily quota (`/api/stats`) | U27 |
@@ -89,7 +89,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## Waiting on the user
 
 - **deploy-plan step 6:** this year's pool (the playlist isn't final). Don't start.
-- **deploy-plan step 7:** pointing `quina.barrakudesbegur.org` (the printed QR codes) at the Worker. The user OK'd it (D76), but auto mode refused the command, so the user runs it or allows it.
+- **deploy-plan step 7.4 (optional):** Access destinations for `quina.barrakudesbegur.org`. Until then, organizers and the laptop use quina-dev.
 - **Open questions** in `docs/open-questions.md`: the player checked on desktop only (U19). The printed cards being public is answered (D78: public unless there's a reason).
 - **The logo library** isn't uploaded yet. Admin's upload needs a person's Google login. The user offered to sign in and let Platform drive their Chrome, but that was called off. Only start it if the user asks directly.
 

@@ -7,9 +7,13 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
-  // The cloud's own hostname, so Access can protect paths (/api, /ws/console, /ws/show) and leave /feed public.
-  // Cloudflare creates this NEW record and its certificate only; nothing else in the zone changes.
-  "routes": [{ "pattern": "quina-dev.barrakudesbegur.org", "custom_domain": true }],
+  // The cloud's hostnames, so Access can protect paths (/api, /ws/console, /ws/show) and leave /feed public.
+  // quina-dev: the organizers' and the laptop's. quina: the printed QR codes (D76; it replaced last year's
+  // GitHub Pages CNAME, see docs/deploy-plan.md step 7 for the undo).
+  "routes": [
+    { "pattern": "quina-dev.barrakudesbegur.org", "custom_domain": true },
+    { "pattern": "quina.barrakudesbegur.org", "custom_domain": true }
+  ],
   // wrangler dev: requests keep a localhost URL (by default it would take the route's hostname, and the dev
   // Access bypass, which only works on localhost, would refuse them).
   "dev": { "host": "localhost" },

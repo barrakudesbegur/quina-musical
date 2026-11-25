@@ -2,7 +2,7 @@
 
 What gets deployed, what this session changed in the Cloudflare account, and what needs the user. No secret, token, AUD tag or account ID is written here or anywhere in git: they go in with `wrangler secret put`, or in the gitignored `.dev.vars` and `.env.link`.
 
-Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch existing DNS records or projects (`quina` is still the old app on GitHub Pages, `fitxes` is coin-reader). Deploy to `*.workers.dev` or a NEW subdomain. Free plan only. Private R2 bucket only. Moving `quina.barrakudesbegur.org` to the new app needed the user's explicit OK: given on 2026-11-25 (D76, step 7).
+Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch existing DNS records or projects (`quina` is still the old app on GitHub Pages, `fitxes` is coin-reader). Deploy to `*.workers.dev` or a NEW subdomain. Free plan only. Private R2 bucket only. Moving `quina.barrakudesbegur.org` to the new app needed the user's explicit OK: given on 2026-11-25 (D76), and done (step 7).
 
 ## What gets deployed
 
@@ -38,6 +38,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 | 2026-11-25 | Redeployed (version `179f45ed`) with main at `d218b3e`: Frontend's Desgraciat player and projector. Before it, `npm test` and the whole-show e2e passed on that commit in a clean worktree. Then the live Desgraciat run passed against it: "Quina Desgraciada", DEMPEUS and ASSEGUT cards, the Check banner, the "DEMPEUS!" Celebration. | the same Worker | `npx wrangler rollback` (to `ce77e303`) |
 | 2026-11-25 | Redeployed (version `8d2b8696`) with main at `809c924` (the player's reel gets `data-testid="reel"`); `npm test` passed on that commit in a clean worktree first. The live Desgraciat run passed against it: the phone's reel showed every landing within 2 s, and the phone holding the winning card (added from its `/26/<card>` link) showed "Dempeus fins al final!". | the same Worker | `npx wrangler rollback` (to `179f45ed`) |
 | 2026-11-25 | Redeployed twice from clean worktrees. First version `b5e5ac38` (`28abef7`): the cloud's side of the shared Desgraciat win, the winner's slip and the Check's result (`flaggedDecisions` in Admin's Games and the export), and the preflight's card prices. Then version `81e0d0ad` (`2e37fc1`, origin's head): the same, plus Frontend's card prices by round, Admin's planned breaks and the Última volta switch. `npm test` passed on both commits, and the e2e on `cf9666c`. Checked live: `/api/health`, the player, `card-types.json`, `/admin/` asks for the Google login, the laptop's token gets `/api/ping`. | the same Worker | `npx wrangler rollback` (to `8d2b8696`) |
+| 2026-11-25 | **`quina.barrakudesbegur.org` now points at the Worker** (step 7), with the user's OK (D76, then confirmed directly in this session). At 14:15 UTC Cloudflare refused the Custom Domain while the old record existed ("externally managed DNS records", code 100117: wrangler's override covers only records Workers manage), and nothing changed. The user deleted the `quina` CNAME (→ `barrakudesbegur.github.io`) in the dashboard. At 14:20 UTC `npx wrangler triggers deploy` attached the name (no new version), and Cloudflare created its record (proxied) and certificate. Then the repository's Pages custom domain was removed (`gh api … pages` with `cname: null`), so last year's app is at `https://barrakudesbegur.github.io/quina-musical/`. Checked live through Cloudflare: `server: cloudflare`; `/api/health` 200; `/26/123` adds card 123 on a phone-sized Chrome, and `/?c=123` shows "Aquest cartró és de l'any passat"; `/sw.js` is the kill switch; `cards/card-types.json` answers; `/api/stats` and `/api/plan` answer 403 (fail-closed: no Access destinations on this name yet); the `/admin/` and `/console/` page shells load. Downtime: about 2 minutes, plus DNS caches (TTL 5 min). | the zone: the `quina` record (now the Worker's); the Worker's domains; GitHub Pages: no custom domain | see step 7's undo |
 
 The first `wrangler deploy` was stopped by Claude Code's permission check (auto mode); the user then allowed `npx wrangler deploy` in this project (`.claude/settings.local.json`, personal and gitignored).
 
@@ -70,7 +71,7 @@ Cloudflare documents Access for `workers.dev` only for a whole URL ("Access can 
   ```
   Cloudflare then creates the DNS record and the certificate for that NEW name only. Nothing else in the zone changes.
 - Undo: remove the route and deploy again, or delete the Custom Domain under Workers & Pages → quina-cloud → Settings → Domains & Routes.
-- Moving `quina.barrakudesbegur.org` (last year's app on GitHub Pages) to the new player app: step 7 (the user's OK, D76).
+- `quina.barrakudesbegur.org` (until 2026-11-25 last year's app on GitHub Pages) now serves the new player app: step 7.
 
 ### 3. Cloudflare Access (Zero Trust) for admins and the laptop: DONE (2026-11-24, see the log)
 
@@ -148,26 +149,25 @@ The R2 free tier is 10 GB and last year's test pool takes 6.6 GB, so the old poo
 
 Undo: push the old pool again from a laptop that still has it (`npm run media -- push --pool default`).
 
-### 7. Point quina.barrakudesbegur.org at the Worker: the user's OK given (2026-11-25, D76), not run yet
+### 7. Point quina.barrakudesbegur.org at the Worker: DONE (2026-11-25, see the log), Access destinations left
 
-This year's printed cards have QR codes to `https://quina.barrakudesbegur.org/26/<card>`. Today that name is last year's app on GitHub Pages: a DNS-only `CNAME quina → barrakudesbegur.github.io`, with the repository's Pages custom domain set to `quina.barrakudesbegur.org` (checked 2026-11-24 and 2026-11-25). Phones that scan a card must reach this year's player. The user answered U15 on 2026-11-25 with "we can point at it now. nobody uses it" (D76), so it may go live now.
+This year's printed cards have QR codes to `https://quina.barrakudesbegur.org/26/<card>`. Until 2026-11-25 that name was last year's app on GitHub Pages: a DNS-only `CNAME quina → barrakudesbegur.github.io`, with the repository's Pages custom domain set to `quina.barrakudesbegur.org`. The user answered U15 with "we can point at it now. nobody uses it" (D76), then confirmed it in the Platform session.
 
-On 2026-11-25 Claude Code's auto mode refused `npx wrangler triggers deploy` for this step (the OK had come through the orchestrator). The user runs it, or allows it in this session.
+How it was done:
+1. **DNS:** the user deleted the record `quina` (`CNAME → barrakudesbegur.github.io`) in the dashboard. Cloudflare refuses a Custom Domain over a record that Workers doesn't manage, whatever wrangler's override says (code 100117), and wrangler's login can't edit DNS. Nothing else in the zone was touched (`quina-api`, `fitxes`, `quina-dev` stay).
+2. **The Worker:** added `{ "pattern": "quina.barrakudesbegur.org", "custom_domain": true }` to `routes` in `wrangler.jsonc`, then ran `npx wrangler triggers deploy` in `apps/cloud` (no new version). Cloudflare created the record and its certificate within seconds.
+3. **GitHub Pages:** removed the custom domain with `gh api -X PUT repos/barrakudesbegur/quina-musical/pages --input - <<< '{"cname":null}'`. Last year's app stays at `https://barrakudesbegur.github.io/quina-musical/`. Its deploy workflow can stay: it only runs when `legacy/2025` changes, and it never sets a custom domain (`build_type: workflow`).
+4. **Still to do (optional), Access for the organizers on the new name.** Organizers and the laptop keep using quina-dev, which is enough. Without Access, the Worker refuses `/api/*` and `/ws/*` on this name (403, fail-closed), so nothing private is open. Only the `/console/` and `/admin/` page shells load there (public code), and they get 403s. To use the new name for everything, go to Zero Trust → Access → Applications:
+   - add to `quina-cloud organizers` the destinations `quina.barrakudesbegur.org/api`, `/ws/console`, `/console` and `/admin`;
+   - add to `quina-cloud laptop` the destination `quina.barrakudesbegur.org/ws/show`;
+   - add to `quina-cloud health (public)` the destination `quina.barrakudesbegur.org/api/health`.
 
-Checked on quina-dev before the switch (same Worker, 2026-11-25): `/26/123` opens card 123; `/?c=123` shows "Aquest cartró és de l'any passat" and offers this year's card.
-
-Steps, in this order (about 10 minutes):
-1. **The Worker takes the name.** Add `{ "pattern": "quina.barrakudesbegur.org", "custom_domain": true }` to `routes` in `wrangler.jsonc`, then `npx wrangler triggers deploy` in `apps/cloud` (no new version). When the command has no terminal, wrangler 4 replaces the conflicting `quina` CNAME itself (`override_existing_dns_record`); in a terminal it asks first. So there's no separate DNS deletion, and the name never points at GitHub without a Pages claim. Cloudflare creates the record and its certificate (a minute or two). Nothing else in the zone is touched (`quina-api`, `fitxes`, `quina-dev` stay).
-2. **GitHub Pages:** remove the custom domain: `gh api -X PUT repos/barrakudesbegur/quina-musical/pages --input - <<< '{"cname":null}'` (or Settings → Pages). Last year's app stays at `https://barrakudesbegur.github.io/quina-musical/`. Its deploy workflow can stay; it only runs when `legacy/2025` changes, and it never sets a custom domain (`build_type: workflow`).
-3. **Access**, for the organizers on the new name. The Worker refuses `/api/*` and `/ws/*` there without an Access token (fail-closed, 403), so nothing private opens up meanwhile. Only the `/console/` and `/admin/` page shells (static files, public code) load there, and they get 403s. Organizers keep using quina-dev until this is done. In Zero Trust → Access → Applications, add to `quina-cloud organizers` the destinations `quina.barrakudesbegur.org/api`, `/ws/console`, `/console` and `/admin`; to `quina-cloud laptop` add `quina.barrakudesbegur.org/ws/show`; to `quina-cloud health (public)` add `quina.barrakudesbegur.org/api/health`. The apps' AUD tags don't change, so the Worker's secrets stay as they are. Use the dashboard, or a short-lived API token from the user.
-4. **Check:**
-   - `dig quina.barrakudesbegur.org` gives Cloudflare's addresses, and `curl -sI` shows `server: cloudflare`;
-   - `https://quina.barrakudesbegur.org/26/123` opens the player with card 123; `/?c=123` shows last year's notice;
-   - `/sw.js` is the kill switch: a phone that had last year's app gets it cleaned;
-   - `/api/health` answers; `/api/stats` refuses (403 before step 3, the Google login after);
-   - a phone's `/feed` snapshot;
-   - after step 3, the preflight with `QUINA_CLOUD_URL=wss://quina.barrakudesbegur.org/ws/show` passes (the link can stay on quina-dev; both names serve the same Worker).
-5. Log it in Done, with the time.
+   The apps' AUD tags don't change, so the Worker's secrets stay as they are. Then the preflight with `QUINA_CLOUD_URL=wss://quina.barrakudesbegur.org/ws/show` should pass.
+5. **Checks** (all passed on 2026-11-25, see the log):
+   - `server: cloudflare`;
+   - `/26/123` opens the player with card 123, and `/?c=123` shows last year's notice;
+   - `/sw.js` is the kill switch: a phone that had last year's app gets it cleaned (on a real phone: U19);
+   - `/api/health` answers; `/api/stats` refuses.
 
 Undo (a few minutes):
 1. Set the Pages custom domain back: `gh api -X PUT repos/barrakudesbegur/quina-musical/pages -f cname=quina.barrakudesbegur.org`.
