@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import WebSocket from 'ws';
-import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
+import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES, readRemoteStatus, type RemoteStatus } from '@quina/protocol';
 import { playableSongs } from '../../../show/engine/src/analysis.ts';
 import { DATA, loadPool, MEDIA, OUT, REPO } from '../../../show/relay/pool.ts';
 import { CLOUD_PLAN_FILE } from '../../../show/relay/plan.ts';
@@ -28,6 +28,8 @@ export interface PreflightOptions {
   dataDir: string;
   /** Trust the hash index instead of re-hashing every file. */
   fast: boolean;
+  /** Without the tablet: the tech drives from the console on the laptop's own screen (runbook: "Without the tablet"). */
+  laptopOnly?: boolean;
   /** Only these groups (all when absent). */
   only?: readonly checks.Check['group'][];
 }
@@ -59,22 +61,37 @@ async function getJson(url: string, headers: Record<string, string> = {}, timeou
   }
 }
 
-/** Who is on the relay: connect briefly as an admin remote and read the first client list. */
-function relayClients(relay: string): Promise<{ role: string }[] | null> {
+/**
+ * Who is on the relay, and the Wii remote's last status: connect briefly as an admin remote. The relay answers the
+ * hello with its client list and replays each remote host's last `remote.status`; wait a moment after the list
+ * for those.
+ */
+function relayView(relay: string): Promise<{ clients: { role: string }[]; remote: RemoteStatus | null } | null> {
   return new Promise((resolve) => {
     const ws = new WebSocket(`${relay.replace(/^http/, 'ws')}/ws`);
-    const done = (value: { role: string }[] | null) => {
+    let clients: { role: string }[] | null = null;
+    const remotes: RemoteStatus[] = [];
+    const done = () => {
       clearTimeout(timer);
+      clearTimeout(settle);
       ws.terminate();
-      resolve(value);
+      // Several hosts: a connected remote first, else the latest change.
+      const remote = [...remotes].sort((a, b) => Number(b.connected) - Number(a.connected) || b.sinceMs - a.sinceMs)[0] ?? null;
+      resolve(clients ? { clients, remote } : null);
     };
-    const timer = setTimeout(() => done(null), 3000);
+    const timer = setTimeout(done, 3000);
+    let settle: NodeJS.Timeout | undefined;
     ws.on('open', () => ws.send(JSON.stringify({ v: PROTOCOL_VERSION, type: 'hello', role: 'admin', clientId: 'preflight' })));
     ws.on('message', (data) => {
       const m = JSON.parse(String(data)) as { type?: string; clients?: { role: string; clientId: string }[] };
-      if (m.type === 'relay.clients' && Array.isArray(m.clients)) done(m.clients.filter((c) => c.clientId !== 'preflight'));
+      const remote = readRemoteStatus(m);
+      if (remote) remotes.push(remote);
+      if (m.type === 'relay.clients' && Array.isArray(m.clients)) {
+        clients = m.clients.filter((c) => c.clientId !== 'preflight');
+        settle ??= setTimeout(done, 400);
+      }
     });
-    ws.on('error', () => done(null));
+    ws.on('error', done);
   });
 }
 
@@ -89,7 +106,7 @@ export async function runPreflight(o: PreflightOptions): Promise<checks.Check[]>
   const pool = loadPool(o.pool);
   const want = (group: checks.Check['group']) => !o.only || o.only.includes(group);
   if (want('Pool')) out.push(...(await poolChecks(o, pool)));
-  if (want('Laptop')) out.push(...(await laptopChecks()));
+  if (want('Laptop')) out.push(...(await laptopChecks(o)));
   if (want('Network')) out.push(...(await networkChecks(o, pool.name)));
   if (want('Cloud')) out.push(...(await cloudChecks(o, pool)));
   return out;
@@ -141,11 +158,13 @@ async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>
   return out;
 }
 
-async function laptopChecks(): Promise<checks.Check[]> {
+async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   if (process.platform === 'darwin') {
     const profile = await shell('system_profiler', ['SPAudioDataType', '-json']);
     out.push(checks.audioOutputCheck(profile ? JSON.parse(profile) : null));
+    const displays = await shell('system_profiler', ['SPDisplaysDataType', '-json']);
+    out.push(checks.displaysCheck(displays ? JSON.parse(displays) : null, o.laptopOnly === true));
     out.push(...checks.sleepChecks((await shell('pmset', ['-g'])) ?? '', (await shell('pmset', ['-g', 'assertions'])) ?? ''));
     out.push(checks.powerCheck((await shell('pmset', ['-g', 'batt'])) ?? ''));
   } else {
@@ -161,12 +180,15 @@ async function networkChecks(o: PreflightOptions, poolName: string): Promise<che
   const out: checks.Check[] = [];
   const relayAnswer = await getJson(`${o.relay}/api/pool`, {}, 3000);
   out.push(checks.relayCheck(poolName, { ok: relayAnswer.ok, name: (relayAnswer.body as { name?: string } | undefined)?.name, error: relayAnswer.error }));
-  out.push(checks.showPageCheck(relayAnswer.ok ? await relayClients(o.relay) : null));
+  const view = relayAnswer.ok ? await relayView(o.relay) : null;
+  out.push(checks.showPageCheck(view?.clients ?? null));
+  out.push(checks.consoleCheck(view?.clients ?? null, o.laptopOnly === true));
+  if (view) out.push(checks.wiiRemoteCheck(view.remote, Date.now()));
   const lan = lanAddress();
   const port = new URL(o.relay).port || '80';
   const lanUrl = lan ? `http://${lan}:${port}/console/` : null;
   const lanAnswer = lanUrl ? await getJson(lanUrl, {}, 3000) : null;
-  out.push(checks.lanCheck(lanUrl, Boolean(lanAnswer?.ok)));
+  out.push(checks.lanCheck(lanUrl, Boolean(lanAnswer?.ok), o.laptopOnly === true));
   return out;
 }
 

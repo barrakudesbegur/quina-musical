@@ -14,10 +14,28 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
    `open -na "Google Chrome" --args --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --kiosk "http://localhost:5174/show/?autostart=1"`
    Never minimise or cover the show window. The flags above stop Chrome slowing down a hidden show page (the music would keep playing, but transitions could stall). For the night's Game, add `&fresh=1` the first time, so the rehearsal's Game isn't continued.
 6. **Tablet**: join phone A's hotspot and open the console with the token: `http://<laptop IP>:5174/console/?t=<token>` (the address and token the relay printed, or the console's QR). The tablet remembers the pairing, even across relay restarts, so a tablet paired at the rehearsal stays paired. Treat the token like the hotspot password: no photos. Away from the hotspot, the tablet uses the cloud console instead (the cloud's address + `/console/`).
-7. **Run the checks**: `cd apps/cloud && npm run preflight`. **Fix every FAIL** before the doors open; read the WARNs.
-8. **Sound check**: play an effect from the console at low volume, then a few seconds of Hold music.
+7. **Wii remote** (optional; it pairs with the **laptop**, not the tablet):
+   - Pair it in the laptop's Bluetooth settings. Open the console on the laptop in Chrome (`http://localhost:5174/console/`; on the laptop itself it needs no token), then menu → **Comandament** → **Connectar**, and pick it from the list. Keep that console window open on the laptop's own screen.
+   - **Range test**, at the setup and at every rehearsal. In 2025 the range from the stage to the laptop was at the limit. Stand where the presenters will stand, at both ends of the stage, and press a **D-pad arrow** every few seconds for a minute: each press plays an effect through the PA. Every press should play at once, and the console must not say «S'ha desconnectat».
+   - If presses get lost or it disconnects:
+     - move the laptop nearer the stage, in sight of it (no metal or crowd in between, lid open);
+     - or put a USB Bluetooth adapter on a USB extension cable near the stage. On a Mac this only helps if macOS actually uses the adapter instead of its own Bluetooth, and many adapters and Apple-silicon Macs don't. Try it at a rehearsal, never for the first time on the night;
+     - otherwise the presenters use the tablet: it does everything the remote does.
+   - The preflight shows whether the remote is connected and its battery. It can't measure the range: only this test can.
+8. **Run the checks**: `cd apps/cloud && npm run preflight`. **Fix every FAIL** before the doors open; read the WARNs.
+9. **Sound check**: play an effect from the console at low volume, then a few seconds of Hold music.
 
 At each Shuffle, note the round's **resume code** (console → **Codi de recuperació de la quina** → **Mostra el codi**). Keep it like the box of cards: never on a screen, never in a photo.
+
+## Without the tablet
+
+If the presenters don't want the tablet, or it fails, the **tech drives the whole show from the laptop** and the presenters advance by hand or with the Wii remote. Set up as above (the tablet's step 6 can be skipped), with these changes:
+
+1. **The projector as a separate display, never mirrored.** System Settings → Displays → select the projector → **Use as: Main display**. The console will be on the laptop's own screen: mirrored, the next song and the possible winners would be on the projector for everyone.
+2. **The show page** (step 5): with the projector as the main display, the kiosk window opens on it.
+3. **The console on the laptop's screen:** `open -na "Google Chrome" --args --user-data-dir=/tmp/quina-console --app=http://localhost:5174/console/`, then move its window to the laptop's screen (drag it there, or Window → Move to the built-in display). On the laptop itself it needs no token. This is also the console that hosts the Wii remote (step 7).
+4. **Run the checks** with `npm run preflight -- --laptop-only`. It fails if the console isn't open or the projector mirrors the laptop's screen, and it doesn't need the tablet's LAN address.
+5. **Drive from the console.** The show page's keys (→, Space…) only work while its window has focus, and that window is on the projector, so stay on the console.
 
 ## Prepare a spare laptop
 
@@ -35,7 +53,7 @@ Do this at home, the day before or earlier, with good internet: it downloads abo
 
 After any change to the prepared pool (new songs, approved hooks, overrides), the main laptop runs `npm run media -- push` in `apps/cloud`, so spares pull the same files.
 
-**To swap laptops on the night,** follow steps 3–7 of "Setting up" on the spare. Its link takes over from the main laptop's when it connects.
+**To swap laptops on the night,** follow steps 3–8 of "Setting up" on the spare (the Wii remote pairs with the spare too). Its link takes over from the main laptop's when it connects.
 
 ## When something goes wrong
 

@@ -1,6 +1,8 @@
 // Before every rehearsal and show, on the show laptop, with the relay, the show page and the cloud link running:
 //   npm run preflight -- [--pool default] [--relay http://127.0.0.1:5174] [--cloud https://…] [--fast] [--json]
-//                        [--only Pool,Laptop,Network,Cloud]
+//                        [--only Pool,Laptop,Network,Cloud] [--laptop-only]
+// --laptop-only: the presenters don't use the tablet; the tech drives from the console on the laptop's own screen
+// (it must be open, the projector must be a separate display, and the tablet's LAN address is optional).
 // A table of checks: FAIL is anything that would hurt the show (fix it before the doors open), WARN is worth a
 // look. Exits 1 when anything failed. The cloud and the service token come from `.env.link`, as for the link.
 import fs from 'node:fs';
@@ -30,6 +32,7 @@ const checks = await runPreflight({
   headers: id && secret ? { 'CF-Access-Client-Id': id, 'CF-Access-Client-Secret': secret } : {},
   dataDir: LINK,
   fast: args.includes('--fast'),
+  laptopOnly: args.includes('--laptop-only'),
   only: flag('--only')?.split(',') as Check['group'][] | undefined,
 });
 

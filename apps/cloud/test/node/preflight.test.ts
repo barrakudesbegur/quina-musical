@@ -174,3 +174,43 @@ test('the daily usage: WARN from 60 %, FAIL from 85 %, with the reset time in Ca
   assert.equal(c.usageCheck(stats(0.9), night).status, 'fail');
   assert.equal(c.usageCheck(null, night).status, 'warn');
 });
+
+test('without the tablet: a console must be open on the laptop, and the LAN address is optional', () => {
+  const show = { role: 'show' };
+  assert.equal(c.consoleCheck([show, { role: 'tablet' }], true).status, 'pass');
+  assert.equal(c.consoleCheck([show], true).status, 'fail');
+  assert.equal(c.consoleCheck([show], false).status, 'warn', 'with the tablet, it may just not be open yet');
+  assert.equal(c.consoleCheck(null, true).status, 'warn');
+  assert.equal(c.lanCheck('http://172.20.10.2:5174/console/', false).status, 'fail');
+  assert.equal(c.lanCheck('http://172.20.10.2:5174/console/', false, true).status, 'warn');
+});
+
+test('the projector: connected, and never mirroring the laptop when the console is on its screen', () => {
+  const display = (name: string, internal: boolean, mirror = false, main = false) => ({
+    _name: name,
+    spdisplays_connection_type: internal ? 'spdisplays_internal' : 'spdisplays_displayport',
+    spdisplays_main: main ? 'spdisplays_yes' : 'spdisplays_no',
+    spdisplays_mirror: mirror ? 'spdisplays_on' : 'spdisplays_off',
+    spdisplays_online: 'spdisplays_yes',
+  });
+  const profile = (...ds: object[]) => ({ SPDisplaysDataType: [{ spdisplays_ndrvs: ds }] });
+  const separate = c.displaysCheck(profile(display('Color LCD', true, false, true), display('EPSON PJ', false)), true);
+  assert.equal(separate.status, 'pass');
+  assert.match(separate.detail, /EPSON PJ, a separate display \(main display: Color LCD\)/);
+  assert.equal(c.displaysCheck(profile(display('Color LCD', true)), false).status, 'warn', 'no projector yet');
+  const mirrored = profile(display('Color LCD', true, true, true), display('EPSON PJ', false, true));
+  assert.equal(c.displaysCheck(mirrored, true).status, 'fail', "the console's secrets would be on the projector");
+  assert.equal(c.displaysCheck(mirrored, false).status, 'warn');
+  assert.equal(c.displaysCheck(null, false).status, 'warn');
+});
+
+test('the Wii remote: optional, so it only warns; connected, battery, and when it last dropped', () => {
+  const now = 1_800_000_000_000;
+  const ok = c.wiiRemoteCheck({ connected: true, battery: 0.8, sinceMs: now - 12 * 60_000 }, now);
+  assert.equal(ok.status, 'pass');
+  assert.match(ok.detail, /connected for 12 min, battery 80%/);
+  assert.equal(c.wiiRemoteCheck({ connected: true, battery: 0.1, sinceMs: now }, now).status, 'warn');
+  assert.match(c.wiiRemoteCheck({ connected: false, battery: 0.9, sinceMs: now - 3 * 60_000 }, now).detail, /disconnected 3 min ago.*range/);
+  assert.equal(c.wiiRemoteCheck({ connected: true, battery: null, sinceMs: now }, now).status, 'pass');
+  assert.equal(c.wiiRemoteCheck(null, now).status, 'warn');
+});

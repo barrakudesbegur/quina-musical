@@ -1,7 +1,7 @@
 // The preflight's checks: pure functions from facts (gathered by gather.ts) to a verdict, so each rule is tested
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
-import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId } from '@quina/protocol';
+import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId, type RemoteStatus } from '@quina/protocol';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -233,10 +233,72 @@ export function showPageCheck(clients: readonly { role: string }[] | null): Chec
   return check('Network', 'Show page', 'pass', `connected${others.length ? `; also on the relay: ${others.join(', ')}` : ''}`);
 }
 
-export function lanCheck(url: string | null, reachable: boolean): Check {
+/**
+ * The tablet's way in: the console's LAN address. With `laptopOnly` (the presenters don't use the tablet, and the
+ * tech drives from the laptop's own screen) it isn't needed, so a missing one only warns.
+ */
+export function lanCheck(url: string | null, reachable: boolean, laptopOnly = false): Check {
   if (!url) return check('Network', 'Console on the LAN', 'warn', 'no network: join the phone hotspot (USB tethering alone gives the tablet no way in)');
+  if (!reachable && laptopOnly) return check('Network', 'Console on the LAN', 'warn', `${url} doesn't answer: fine without the tablet, but start the relay with "npm start -- --lan" if the tech's phone should reach the console`);
   if (!reachable) return check('Network', 'Console on the LAN', 'fail', `${url} doesn't answer: start the relay with "npm start -- --lan" (it listens only on this laptop otherwise), and check the firewall`);
   return check('Network', 'Console on the LAN', 'pass', `${url} (if the tablet can't open it, the hotspot isolates its clients: see the runbook)`);
+}
+
+/**
+ * A console on the relay (tablet or admin role). Without the tablet (`laptopOnly`) the tech drives from the
+ * console on the laptop's own screen, so it must be open; with the tablet, it may not be connected yet.
+ */
+export function consoleCheck(clients: readonly { role: string }[] | null, laptopOnly: boolean): Check {
+  if (!clients) return check('Network', 'Console', 'warn', "couldn't ask the relay who is connected");
+  const consoles = clients.filter((c) => c.role === 'tablet' || c.role === 'admin').length;
+  if (consoles > 0) return check('Network', 'Console', 'pass', `${consoles} connected`);
+  if (laptopOnly) return check('Network', 'Console', 'fail', 'no console: open it on the laptop\'s own screen (runbook: "Without the tablet")');
+  return check('Network', 'Console', 'warn', 'no console connected yet: open it on the tablet (runbook step 6)');
+}
+
+interface DisplayLike {
+  _name?: string;
+  spdisplays_connection_type?: string;
+  spdisplays_main?: string;
+  spdisplays_mirror?: string;
+  spdisplays_online?: string;
+}
+
+/**
+ * The projector, from `system_profiler SPDisplaysDataType -json`: connected, and a separate display. Mirrored, the
+ * laptop's screen goes up on the projector: with the console there (`laptopOnly`), the next song and the possible
+ * winners would be on screen for everyone, so that fails; otherwise it only warns (the terminals, the pairing token).
+ */
+export function displaysCheck(profile: unknown, laptopOnly: boolean): Check {
+  const gpus = (profile as { SPDisplaysDataType?: { spdisplays_ndrvs?: DisplayLike[] }[] } | null)?.SPDisplaysDataType;
+  if (!Array.isArray(gpus)) return check('Laptop', 'Projector', 'warn', "couldn't read the displays (system_profiler)");
+  const displays = gpus.flatMap((g) => g.spdisplays_ndrvs ?? []).filter((d) => d.spdisplays_online !== 'spdisplays_no');
+  const external = displays.filter((d) => d.spdisplays_connection_type !== 'spdisplays_internal');
+  if (external.length === 0) return check('Laptop', 'Projector', 'warn', 'no projector connected: plug it in by HDMI, as a separate display (not mirrored)');
+  const names = external.map((d) => d._name ?? 'display').join(', ');
+  if (displays.some((d) => d.spdisplays_mirror === 'spdisplays_on')) {
+    if (laptopOnly) return check('Laptop', 'Projector', 'fail', `${names} mirrors the laptop's screen: the console (the next song, possible winners) would be on the projector. System Settings → Displays → use it as a separate display`);
+    return check('Laptop', 'Projector', 'warn', `${names} mirrors the laptop's screen (terminals, the tablet's pairing token): use it as a separate display`);
+  }
+  const main = displays.find((d) => d.spdisplays_main === 'spdisplays_yes');
+  return check('Laptop', 'Projector', 'pass', `${names}, a separate display${main ? ` (main display: ${main._name ?? '?'})` : ''}`);
+}
+
+/** Below this, the Wii remote's batteries should be changed before the night. */
+const WII_BATTERY_LOW = 0.25;
+
+/**
+ * The Wii remote, as the relay last heard from the console that hosts it (it pairs with this laptop's Chrome).
+ * Optional: the console does everything it does, so nothing here fails. Its status has no signal strength, so
+ * the range can't be read here: the runbook's walk test covers it.
+ */
+export function wiiRemoteCheck(status: RemoteStatus | null, nowMs: number): Check {
+  if (!status) return check('Network', 'Wii remote', 'warn', 'no Wii remote connected (optional: the console does everything it does). It pairs with the console on this laptop (night runbook, step 7)');
+  const minutes = Math.max(0, Math.round((nowMs - status.sinceMs) / 60_000));
+  const battery = status.battery === null ? 'battery unknown' : `battery ${Math.round(status.battery * 100)}%`;
+  if (!status.connected) return check('Network', 'Wii remote', 'warn', `disconnected ${minutes} min ago: check its batteries and its range from the stage (night runbook, step 7: the range test)`);
+  if (status.battery !== null && status.battery < WII_BATTERY_LOW) return check('Network', 'Wii remote', 'warn', `connected, but ${battery}: change the batteries`);
+  return check('Network', 'Wii remote', 'pass', `connected for ${minutes} min, ${battery}. Its range: the night runbook's range test (step 7)`);
 }
 
 export function cloudCheck(cloud: string, answer: { ok: boolean; status?: number; edition?: string; error?: string }, planEdition: string | null): Check {

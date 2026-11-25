@@ -25,7 +25,7 @@ npm run assets                       # dist/: static/ + the UI build + cards.jso
 npm run link                         # the laptop link: relay ws://localhost:5174/ws → ws://localhost:8787/ws/show
 npm run media -- push                # the pool's prepared media → the cloud's private R2 (pull on a takeover laptop)
 npm run media -- prune               # the bucket's pools and sizes (10 GB free); --pool NAME [--yes] deletes one
-npm run preflight                    # before every rehearsal and show: a pass/warn/fail table (exits 1 on any FAIL)
+npm run preflight                    # before every rehearsal and show: a pass/warn/fail table (exits 1 on any FAIL); --laptop-only without the tablet
 npm test                             # typecheck, Node tests, workerd tests (about 10 s)
 npm run loadtest -- --report reports/loadtest-$(date +%F).md   # 400 phones (about 1 min)
 ```
@@ -70,8 +70,8 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
   - When: once, the day before the show. Each file is one request.
 - **Preflight** (`npm run preflight`, [`laptop/preflight/`](laptop/preflight)), run before every rehearsal and show. FAIL means it would hurt the show; WARN is worth a look; the exit code is 1 on any FAIL.
   - Pool: songs analysed with their audio; every song on a card playable, and every card's type in card-types.json; fanfares, effects and Hold music present; every media file re-hashed against the cloud's manifest (or the last push or pull).
-  - Laptop: the audio output (Bluetooth and AirPlay fail), system and display sleep, power, disk, Chrome's autoplay flag.
-  - Network: the relay and its pool; the show page connected; the console's LAN address answering.
+  - Laptop: the audio output (Bluetooth and AirPlay fail), the projector (a separate display; mirrored fails with `--laptop-only`), system and display sleep, power, disk, Chrome's autoplay flag.
+  - Network: the relay and its pool; the show page and a console connected; the Wii remote (connected, battery; it can't measure the range); the console's LAN address answering (optional with `--laptop-only`, when the tech drives from the laptop without the tablet).
   - Cloud: reachable; the laptop token signs in, with round trip and clock offset; the link's status file fresh and in sync; the Game and edition; the Game plan, with printed cards of every round's card type.
   It never connects as a second laptop: the link writes `data/link/status.json` every 5 s for it.
 - **The Game plan** is all public (rounds, prizes, sponsors, schedule), so it lives in the public state. Saving it sends one change to every phone and a `cloud.plan` to the laptop, which also gets it on every hello. Logos are files under `/media/`, never data URLs in the plan, so a phone's snapshot stays small.
