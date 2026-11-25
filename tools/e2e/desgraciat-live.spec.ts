@@ -13,7 +13,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseEnv } from 'node:util';
-import type { ShowState } from '@quina/protocol';
+import { defaultCardType, type ShowState } from '@quina/protocol';
 import { CloudLink } from '../../apps/cloud/laptop/link.ts';
 import { Phone } from './support/cloud.ts';
 import { REPO, hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
@@ -21,10 +21,13 @@ import { Remote } from './support/remote.ts';
 
 const LIVE = process.env.QUINA_LIVE_CLOUD?.replace(/\/+$/, '') ?? null;
 const ENV_LINK = path.join(REPO, 'apps/cloud/.env.link');
-/** Few cards in play, so one stands after about twenty landings (with 300, about thirty-five). */
-const CARDS_IN_PLAY = '1-30';
+/** The card type the Desgraciat round plays when the plan names none (D70: the especial card, as in 2025). */
+const CARD_TYPE = defaultCardType('desgraciat');
+/** Few cards of that type in play, so one stands after about twenty landings (with 300, about thirty-five). */
+const PLAYED = cardIdsOfType(CARD_TYPE).slice(0, 30);
+const CARDS_IN_PLAY = PLAYED.join(',');
 /** The phone follows these (anonymous card numbers, as a player's saved cards). */
-const PHONE_CARDS = [1, 2, 3];
+const PHONE_CARDS = PLAYED.slice(0, 3);
 const LANDING_MS = 90_000;
 const MAX_LANDINGS = 77;
 
@@ -34,6 +37,15 @@ test.skip(!LIVE, 'opt-in: set QUINA_LIVE_CLOUD to a deployed cloud (it gets a re
 test.use({ trace: 'off' });
 test.skip(!hasPreparedPool(), 'the default pool is not prepared here (npm run prep in apps/show)');
 test.skip(!fs.existsSync(ENV_LINK), 'no apps/cloud/.env.link: the laptop service token is needed');
+test.skip(PLAYED.length < 30, `fewer than 30 ${CARD_TYPE} cards in apps/cards/dist/cards.json (npm run build in apps/cards)`);
+
+/** The printed cards of one type, by number (the default pool's cards, as the relay serves them). */
+function cardIdsOfType(type: string): number[] {
+  const file = path.join(REPO, 'apps/cards/dist/cards.json');
+  if (!fs.existsSync(file)) return [];
+  const cards = JSON.parse(fs.readFileSync(file, 'utf8')) as { id: number; type?: string }[];
+  return cards.filter((c) => c.type === type).map((c) => c.id).sort((a, b) => a - b);
+}
 
 let relay: Relay;
 let remote: Remote;
@@ -122,7 +134,7 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   // ---- the round: introduced as Desgraciat, then its Shuffle ------------------------------------------------
   await remote.command('roundIntro', { number: 1, kind: 'desgraciat' });
   await remote.until('round 1 introduced', (s) => s.scene === 'roundStart' && s.intro?.round === 1);
-  await expect.poll(() => phone.view?.state.intro, { message: 'the phone sees the Desgraciat intro', timeout: 20_000 }).toMatchObject({ round: 1, kind: 'desgraciat', cardType: 'normal' });
+  await expect.poll(() => phone.view?.state.intro, { message: 'the phone sees the Desgraciat intro', timeout: 20_000 }).toMatchObject({ round: 1, kind: 'desgraciat', cardType: CARD_TYPE });
   await remote.command('newRound', { number: 1, kind: 'desgraciat' });
   const shuffled = await remote.until('the Shuffle drawn', (s) => s.shuffle !== null);
   await remote.waitFor(() => Date.now() > (shuffled.shuffle?.endAtMs ?? 0) + 200, 60_000);
@@ -146,7 +158,7 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   test.info().annotations.push({ type: 'standing', description: `${startedWith} at the start; after each landing: ${curve.join(', ')}` });
   expect(last?.count, 'one card stands').toBe(1);
   const winner = last?.cardIds?.[0] as number;
-  expect(phone.view?.state.rounds.at(-1)).toMatchObject({ number: 1, kind: 'desgraciat', cardType: 'normal', ended: false, lineConfirmed: false });
+  expect(phone.view?.state.rounds.at(-1)).toMatchObject({ number: 1, kind: 'desgraciat', cardType: CARD_TYPE, ended: false, lineConfirmed: false });
   await snap(phonePage, 'phone-one-standing');
 
   // ---- the last card standing claims; its Check; the Celebration --------------------------------------------

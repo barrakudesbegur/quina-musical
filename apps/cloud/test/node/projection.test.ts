@@ -1,7 +1,7 @@
 // The public projection: phones learn the landings, scenes, Check results and winning cards, and nothing private.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type ShowEvent, type ShowState } from '@quina/protocol';
+import { defaultCardType, emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type ShowEvent, type ShowState } from '@quina/protocol';
 import { projectEntry, projectEvent, type ProjectionContext } from '../../src/domain/projection.ts';
 import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicState } from '@quina/protocol';
 import { JournalBuilder } from '../support/journal-builder.ts';
@@ -112,7 +112,7 @@ test('the Desgraciat round: public as its kind; the last card standing wins it a
   b.startRound('desgraciat').land(30);
   let { state } = project(b.entries);
   assert.equal(state.rounds[0]?.kind, 'desgraciat');
-  assert.equal(state.rounds[0]?.cardType, 'normal', "its kind's default card type");
+  assert.equal(state.rounds[0]?.cardType, defaultCardType('desgraciat'), "its kind's default card type");
   assert.equal(state.rounds[0]?.landings.length, 30, 'phones work out Dempeus or Assegut from the landings');
   const claimId = b.claim(34, 'standing');
   b.scene('check').decide(claimId, 'valid').scene('celebration');
@@ -128,7 +128,7 @@ test("round 1's intro is public too, though the engine drew round 1 at boot; a r
   assert.equal(project(b.entries).state.scene, 'before');
   // The presenters introduce round 1 as the Desgraciat round: phones see the intro.
   b.scene('roundStart', 1, 'desgraciat');
-  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'desgraciat', cardType: 'normal' });
+  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'desgraciat', cardType: defaultCardType('desgraciat') });
   // Its Shuffle starts it again, as introduced: the intro goes.
   b.restartRound('desgraciat');
   let { state } = project(b.entries);
