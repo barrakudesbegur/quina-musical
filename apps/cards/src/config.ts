@@ -5,8 +5,11 @@
 // (`?c=123` links), and the player app keeps each player's cards per edition. Keep EDITION equal to the
 // Game plan's `edition` (Admin).
 //
-// This year's title, paper colour, card types, prices and amounts aren't decided yet: the defaults are last
-// year's. The songs come from a pool (pool.ts), chosen on the command line.
+// This year's values are provisional (the user, 25 Nov: D67, D68, D69) and may change at print time: the title
+// "QUINA QUINA! 3" with last year's colours, last year's types and amounts (399 normal, 300 especial) and last year's
+// prices (1.50 € a regular round for a normal card, 5 € for the especial card). Cards are sold only on the night and
+// print in a few hours (D71); the print date is open (U28). The songs come from a pool (pool.ts), chosen on the
+// command line.
 import type { CardTypeSpec } from './card-types';
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
@@ -21,7 +24,7 @@ export function cardUrl(cardId: number, edition: string = EDITION): string {
 }
 
 /** The big title at the top of every card. */
-export const CARD_TITLE = 'QUINA QUINA!';
+export const CARD_TITLE = 'QUINA QUINA! 3';
 
 /** The page (paper) background colour. The QR keeps its own white background so it always scans. */
 export const PAPER_COLOR = '#ffffff';
@@ -38,8 +41,8 @@ export const VERSION_STAMP = `20${EDITION}`;
  * to play (a normal card, 1.50 € a round in 2025), 'fixed' the price itself (the especial card).
  */
 export const CARD_TYPES = [
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: null, priceRule: 'perRegularRound' },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: null, priceRule: 'fixed' },
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: 150, priceRule: 'perRegularRound' },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: 500, priceRule: 'fixed' },
 ] as const satisfies readonly CardTypeSpec[];
 
 /** A printed type's id, one of CARD_TYPES. */

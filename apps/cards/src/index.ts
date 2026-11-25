@@ -46,11 +46,11 @@ const cardsByType = CARD_AMOUNTS.map((cardAmount, index) => {
 const allCards = cardsByType.flatMap((cardAmount) => cardAmount.cards);
 // Before writing anything: valid type ids, and no card of a type card-types.json doesn't list.
 assertCardTypes(allCards, CARD_TYPES);
-saveJsonToFile(allCards, pool.cardsJson);
-saveJsonToFile(CARD_TYPES, path.join(outDir, 'card-types.json'));
-
-// The PDF renderer loads only now: it needs the native canvas module, which a --check run can do without.
-import('./generate-cards-pdf')
+// The JSON is written (awaited) before the PDF renderer loads: it needs the native canvas module, which a --check run
+// can do without, and a renderer that fails to load must not lose the JSON the screens read.
+Promise.all([saveJsonToFile(allCards, pool.cardsJson), saveJsonToFile(CARD_TYPES, path.join(outDir, 'card-types.json'))])
+  .then(() => console.log(`✅ ${path.relative(process.cwd(), pool.cardsJson)} and card-types.json written.`))
+  .then(() => import('./generate-cards-pdf'))
   .then(({ generateCardsPDF }) =>
     Promise.all(cardsByType.map((cardAmount) => generateCardsPDF(cardAmount.cards, path.join(outDir, `cards-${cardAmount.type}.pdf`)))),
   )

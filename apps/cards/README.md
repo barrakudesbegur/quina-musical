@@ -6,7 +6,11 @@ This project generates bingo cards for a musical bingo game. The cards are gener
 
 The output files are committed in [`dist`](./dist): `cards.json`, `card-types.json` and one PDF per card type
 (`cards-normal.pdf`, `cards-especial.pdf`). Until this year's playlist is final they are last year's test cards; don't
-regenerate them for real before then.
+regenerate them for real before then. `card-types.json` already carries this year's provisional title and prices (D67,
+D69); the committed PDFs still show last year's title until the PDF renderer can build (step 1).
+
+The JSON files are written before the PDF renderer loads, so `cards.json` and `card-types.json` are written even when
+the native `canvas` module is missing (the run then fails at the PDF step).
 
 The cards are drawn from a **song pool**, `data/pools/<name>.json`: the same file the song preparation (`tools/prep`)
 and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `cards.json` goes, with
