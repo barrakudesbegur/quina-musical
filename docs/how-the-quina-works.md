@@ -1,6 +1,6 @@
 # How the Quina works
 
-A walk through one night of the Quina Musical, as it works now. It is for anyone new to the project: an organizer, or a fresh Claude session. Read it in about ten minutes, then go to the linked docs for detail.
+A walk through one night of the Quina Musical, as it works now. It is for anyone new to the project: an organizer, or a fresh Claude session. Read it in about ten minutes, then go to the linked docs for detail. For the event itself, without any software, read [event.md](event.md): it's the root the requirements come from.
 
 **This page is the current state.** The decision docs ([mixer-design-decisions.md](mixer-design-decisions.md), [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md)) are dated records of the user's interviews, and their older sections are partly superseded. Where they disagree with this page, this page wins; tell the orchestrator, who keeps it current. The terms are the ones in [GLOSSARY.md](../GLOSSARY.md); words in quotes are the Catalan labels people see on screen.
 
@@ -9,7 +9,7 @@ A walk through one night of the Quina Musical, as it works now. It is for anyone
 The Quina Musical is a live music bingo. Barrakudes runs it once a year in a pop-up tent; this year's night is **Sunday 27 December 2026**.
 
 - Players hold printed **Cards** of 12 songs and cover a song with a corn seed when they hear it.
-- Two presenters on stage run the show from a shared tablet. They improvise and work the crowd.
+- Two presenters on stage run the show with a Wii remote and a shared tablet. They improvise and work the crowd. The **tech**, the organizer who prepared the songs, cards and software, sits by the laptop to run it and help them.
 - A projector shows a **Drum** of album covers that reveals each song.
 - The music comes from the show laptop through the PA, mixed like a real DJ set.
 - Players can follow their cards on their phones.
@@ -37,19 +37,19 @@ On screen everything is in Catalan:
 
 ## The rounds
 
-**A regular round** runs from its first song until a Quina is confirmed. It has two prizes: the Line comes first, and once a Line is confirmed the round plays on towards the Quina.
+**A regular round** runs from its first song until a Quina is confirmed. It has two prizes: the Line comes first (only one Line per round), and once a Line is confirmed the round plays on towards the Quina.
 
 **The Quina Especial** is played with especial cards only. On phones, only those cards show during it.
 
 **The Desgraciat** is played in reverse, once a night:
 - everyone stands; a card is out (its player sits) as soon as any of its songs lands, and the last card standing wins;
 - the console privately shows the cards still standing among the round's cards in play. Cards in play are entered as ranges, so some may be unsold, and the system can't tell which. That's why it never ends the round itself: auto-advance stops when one card stands, and the presenters call the winner by looking at the room;
-- there is no Line: the round's only prize is the last standing card's bundle ("Premi de l'últim dempeus"), and its Celebration reads "DEMPEUS!";
+- there is no Line: the round's only prize is the last standing card's bundle ("Premi de l'últim dempeus"). If the last players standing all sit on the same song, they share it. The Celebration's title is still to be confirmed ("DEMPEUS!" is the proposal);
 - the Shuffle makes sure the last two cards can't fall on the same song;
 - its Check shows that none of the card's songs has landed, and stops at the first one that has (the card has **fallen**);
 - the Phase and the Heat climb as fewer cards stand;
 - phones show "Dempeus" or "Assegut" for each card;
-- it can be moved to any point in the night, and Admin picks its card type.
+- it can be moved to any point in the night. It's played with normal cards (Admin picks the type).
 
 The Desgraciat's rules are approved; the engine and screens are being built (see [timeline.md](timeline.md)).
 
@@ -141,17 +141,17 @@ Every transition is a produced DJ move from the very first song. A bare volume f
 - a number outside the generated cards is invalid;
 - a card of the wrong type for the round is invalid, shown as its own reason;
 - "not registered as sold" is only a private warning on the console;
-- a presenter always confirms or rejects the card, and both are recorded.
+- **the Check's result decides.** In a strange case the presenters can still reject a card that passed, but they can never accept a card that failed. Both outcomes are recorded.
 
 **A failed Check** shows a huge red ✗ with red light beams, and no text. The Failure fanfare plays, then the error Hold music until the presenters press "Reprèn". The round goes on.
 
 **Who wins:**
 - the first to claim wins;
 - claims on the same landing share the prize, and the winners agree the split;
-- a late claimer wins if nobody else claimed. Other late-claim disputes are decided on the spot, so the console shows when each card became complete ("complete since song 34"). The organizers' team still has to settle the exact rule;
+- a late claimer wins if nobody else claimed. Other late-claim disputes are decided on the spot, so the console shows when each card became complete ("complete since song 34");
 - an unclaimed win is lost.
 
-**Winners** give their name (optional), and the presenters can add notes. They collect their prizes later by showing their card to the organizers, so there's no prize ceremony. Names stay in the cloud's data only: never on the projector, never in git.
+**Winners** are noted by their name or by a numbered slip handed to them, and the presenters can add notes. They collect their prizes later by showing their card or slip, so there's no prize ceremony. Names stay in the cloud's data only: never on the projector, never in git.
 
 **The Celebration** follows a confirmed win:
 - an impact, the Clear fanfare, "LÍNIA!" or "QUINA!" huge, the prize bundle and sponsors, confetti, ninos, and a victory lap of the drum. No winning card number is shown;
@@ -162,7 +162,7 @@ On phones, a confirmed win only celebrates when the winning card is one of that 
 
 ## The Interval
 
-The **Interval** is the time between rounds. Its music is a local playlist played by the same engine, with simple transitions and no drum, so a round flows into it with no silence.
+The **Interval** is the time between rounds. Its music is a local playlist played by the same engine, with simple transitions and no drum, so a round flows into it with no silence. Between some rounds the Interval is a longer break of about 5 minutes ("parón"), when organizers throw fuets, sweets or chocolates to the crowd; the Schedule allows for it.
 
 - **The projector** shows the next round's name, a rough countdown, "Quina 4 de 12" and sponsor thanks. It shows no prizes (they wait for the intro), no winners and no QR.
 - **The console** shows the next round and its prizes to announce, the guide countdown, the music's skip and volume, and "Comença la quina".
@@ -183,7 +183,7 @@ The audience screen. It's a 4:3 projector far from the audience, so only big ele
 
 ### Console
 
-The presenters' control page, on one shared tablet in landscape. The same page opens in portrait on an admin's phone, and every open console stays in sync. It has a simpler, light theme.
+The presenters' control page, on one shared tablet in landscape. The same page opens in portrait on the tech's phone, and every open console stays in sync. It has a simpler, light theme.
 - **Always visible:** the round, the Phase and the real Heat, the clock, the expected end of the round, the Drift and the connections.
 - **"Ara sona"** is the playing song, with a ring that counts down to the next auto-advance and shows the state (manual, Parlem, Aguanta…). **"Següent"** is the next song, private, with a countdown to its landing so the presenters can name it on the hit.
 - **The buttons** from the table above. Enrere takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest.
@@ -227,7 +227,8 @@ The model is in [ADR 0003](adr/0003-cloud-owns-the-game-laptop-owns-playback.md)
 
 - **The cloud owns the Game:** rounds, Queues, every landing, cards in play, claims, winners, prizes, sponsors and the Schedule, in one Cloudflare Durable Object, exportable as JSON. Songs and media are in a private R2 bucket. Organizers log in with Google through Cloudflare Access. The free plan comes first; if a limit is hit on the night, upgrading takes minutes, and meanwhile only the phones and remote consoles pause, never the show.
 - **The show laptop owns playback.** It plays the music and drives the projector from one clock. It journals everything, reports every landing to the cloud, and carries on alone when the internet drops. It's installed with one command (`npm run setup:laptop`) that pulls the pool and media from R2, so any prepared laptop can take over. It sits in the first row or at the side of the stage, wired to the PA, tethered by USB to a phone, with a second phone on another carrier as a backup hotspot.
-- **The tablet** joins the laptop's phone hotspot and talks to the laptop directly. Away from the hotspot, a console goes through the cloud.
+- **The tablet** joins the laptop's phone hotspot and talks to the laptop directly. Away from the hotspot, a console goes through the cloud. Both iPad and Android tablets must work.
+- **Fallbacks are requirements.** The tablet is new, and the presenters may reject it: then the **tech** drives the whole show from the laptop and the presenters advance by hand. The Wii remote is the presenters' intended controller, with the tablet as its plan B; in 2025 its range from the stage to the laptop was at the limit.
 - **Phones** use only the cloud, on their own mobile data. The public feed never carries the Queue, the next song, the possible winners, the standing cards or locked prizes. A phone learns a song only at its landing, and its reel stays generic until then.
 - **Plan B:**
   - if 5G drops, the show goes on, driven from the tablet on the hotspot, the laptop's keys or the Wii remote;
@@ -258,9 +259,9 @@ The model is in [ADR 0003](adr/0003-cloud-owns-the-game-laptop-owns-playback.md)
 These wait on the user, with defaults in place:
 - the player drawers layout, and two more design choices on the canvas (listed in [packages/ui/HANDOFF.md](../packages/ui/HANDOFF.md));
 - the Suspense release time and how rare Signatures are ([open-questions.md](open-questions.md));
-- the exact late-claim rule, which the organizers' team settles;
-- the Desgraciat when the room has nobody left standing, or the last card is unsold. Default: the presenters decide, and the console lists the cards that fell on the latest landing;
-- this year's card title, colour, types and prices, and when cards are handed out ([timeline.md](timeline.md)).
+- the Desgraciat's Celebration title ("DEMPEUS!" is the proposal);
+- card prices: a normal card's price drops with each regular round played (2025: 1.50 € per round still to play), so the projector either shows the current price or none;
+- this year's card title, colour, types and amounts, and when cards are handed out ([timeline.md](timeline.md)).
 
 ## Read more
 

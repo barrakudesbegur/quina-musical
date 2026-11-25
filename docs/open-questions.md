@@ -58,3 +58,11 @@ The last cookie-free method left is a PO-token provider plugin for yt-dlp (`bgut
 - (b) download the playlist yourself with your browser's cookies, e.g. type `! cd tools/prep/playlist-fetcher && venv/bin/spotdl download <playlist URL> --cookie-file <exported cookies.txt> --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --format opus --bitrate disable` in a session (`--format opus` keeps YouTube's own stream, no re-encode);
 - (c) another source.
 **Default taken:** nothing downloaded. The pipeline is ready: a 4-song dry run passed on audio from last year's pool. Whatever the source, the prep `quality` step (added 2026-11-25) flags songs under about 128 kbps, more than 5 s off Spotify's length, or of a suspicious version (live, cover, karaoke, sped up), for you to check.
+
+## Card prices on the projector (Orchestrator, 2026-11-25)
+A normal card's price drops with each regular round played (2025: 1.50 € per regular round still to play, 15 € before round 1; the Desgraciat doesn't count), and a special card has a fixed price (2025: 5 €). Today each card type has one fixed price, and the before-the-start screen shows it. Options: (a) model the price per regular round still to play, so the projector shows the current price before the start and in each Interval; (b) show no price on the projector (the price list hangs at the bar).
+**Default taken:** (b) until you choose: the projector shows the card types and colours without a price. The card generator doesn't need prices, since they aren't printed.
+
+## The Desgraciat's celebration title (Orchestrator, 2026-11-25)
+The screens built for the last card standing say "DEMPEUS!" (standing, "still on your feet!"), with "Dempeus fins al final!" on the winner's phone and the prize "Premi de l'últim dempeus". You questioned "DEMPEUS!" in the event draft. Options: keep it, or name the title you want (for example "L'ÚLTIM DEMPEUS!" or "QUINA DESGRACIADA!").
+**Default taken:** "DEMPEUS!" stays in the built screens until you choose; one string to change.

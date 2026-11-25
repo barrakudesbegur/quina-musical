@@ -44,16 +44,21 @@ These override the sections below where they differ.
   - phones show "Dempeus" or "Assegut" per card;
   - one per night, and it can be moved;
   - (2026-11-25, agreed by the sessions within these rules) the standing cards are the round's cards in play, so unsold cards in an entered range count too. Auto-advance stops at one card standing. There's no Line: the only prize is the last standing card's bundle ("Premi de l'últim dempeus"), celebrated as "DEMPEUS!". A standing Check stops at the first landed song (the card has fallen);
-  - **Still open:** what the presenters do when the room has nobody standing, or the system's last card is unsold. Default: they decide, and the console lists the cards that fell on the latest landing.
+  - (2026-11-25, the user via event.md) if the last players standing all sit on the same song, they share the win; "nobody left standing" can't happen while anyone plays. The Desgraciat uses normal cards. The Celebration's title "DEMPEUS!" is not approved yet: the user questioned it.
 - **Round icons:** the Quina Especial uses a star and the Desgraciat a sad face.
 - **The Efectes pads are icons, not words.** The word version stays as a separate board.
 - **Phones offline** keep their normal screens, visibly marked as offline, rather than a full-screen notice.
 - **The console header has no device label** ("Tauleta"); the device's name is in the menu.
 - **Adding a card by number asks before leaving** when a number was typed.
-- **Late claims** (Q12; the organizers' team settles the rule, and until then it's decided on the spot, helped by the console's "complete since song N"). The user's leaning:
-  - a late claimer still wins if nobody else claimed;
-  - if someone else claimed first, the late claimer has lost their chance;
-  - if the late claim comes first and a timely claim follows in the same round, they share.
+- **Late claims** (Q12, settled 2026-11-25 via event.md): a late claimer still wins if nobody else claimed. Any other late case is decided by the team on the spot, helped by the console's "complete since song N". There's no further rule to settle.
+- **From the event document (2026-11-25, approved by the user; see [event.md](event.md)):**
+  - **The Check's result decides.** The presenters can reject a card that passed, in a strange case, but can never accept a card that failed.
+  - **Only one Line per round.**
+  - **Winners** are noted by name or by a numbered slip handed to them.
+  - **Throw breaks ("parón"):** between some rounds, a break of about 5 minutes for throws to the crowd. The Schedule allows for it.
+  - **Fallbacks are requirements:** if the presenters reject the tablet, the tech drives the whole show from the laptop and they advance by hand. The Wii remote is the intended controller, with the tablet as its plan B. Both iPad and Android tablets must work.
+  - **The tech** ("el tècnic") is the organizer who runs the laptop; "Admin" names only the page.
+  - **Card prices aren't printed.** A normal card's price drops with each regular round played (2025: 1.50 € per regular round still to play; the Desgraciat doesn't count), and a special card has a fixed price. **Open:** the projector shows the current price, or none.
 - **Pending the user's confirmation:** the phones' card-stacking scroll (cards stack as you scroll). It needs its ANIMATIONS.md entry before it's built.
 - **Before the Game:** the projector and phones show a preview of the night's rounds (regular rounds, Desgraciat, Especial) and each card type with its price and colour (from the card generation), making clear that one card type is only for the Especial. No how-to-play text anywhere; the presenters explain.
 - **Winning card numbers are not shown** on the projector or phones ("people don't care who won unless it's them"). They aren't secret: the Check shows the card being checked. So the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards ("La teva línia!"). There's also no QR on the projector during the Interval.

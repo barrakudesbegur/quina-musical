@@ -30,7 +30,7 @@ _Avoid_: Reverse round, elimination round
 A card knocked out of the Desgraciat round: one of its songs has landed. Its player sits down ("Assegut" on phones, against "Dempeus" for a card still standing).
 
 **Last standing**:
-The Desgraciat round's only win: the one card in play none of whose songs has landed. Its prize is the round's bundle ("Premi de l'últim dempeus"), and its Celebration reads "DEMPEUS!".
+The Desgraciat round's only win: the last card still standing, none of whose songs has landed. If the last players standing all sit on the same song, they share the win. Its prize is the round's bundle ("Premi de l'últim dempeus"). The Celebration's title is still to be confirmed by the user ("DEMPEUS!" is the proposal).
 _Avoid_: Survivor, reverse bingo
 
 **Intro**:
@@ -152,8 +152,12 @@ _Avoid_: Temperature, progress
 The audience screen: the drum, the current song and the big moments of the show.
 
 **Console**:
-The presenters' control page. It runs on the shared tablet, opens unchanged on an admin's phone, and every open console stays in sync.
+The presenters' control page. It runs on the shared tablet, opens unchanged on the tech's phone, and every open console stays in sync.
 _Avoid_: Remote, presenter page, tablet page
+
+**Tech**:
+The organizer who prepares the songs, the cards and the software, and on the night sits by the laptop to run the show, fix problems and help the presenters. The team calls them "el tècnic".
+_Avoid_: Admin (that's the page), show engineer, operator
 
 **Admin**:
 The setup and fixes page for organizers: cards in play, rounds, prizes, sponsors, schedule.
