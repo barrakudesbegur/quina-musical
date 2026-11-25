@@ -20,9 +20,13 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.md)) gives candidate nights from a first song at 18:05: 60 songs (rounds end about 21:16), 65 (21:25), 70 (21:34, bad case 21:46), 77 (21:47, no margin before 22:00), 86, the whole draft (22:04).
 **Default:** 70, the study's recommendation.
 
+### U35 · What the print shop needs
+The PDF is A4 portrait, 3 cards a page in cut-stack order, with no bleed or crop marks: the same layout as the 2025 PDFs, now titled "QUINA QUINA! 3".
+**Default:** the same as last year; ask the print shop only if they asked for changes then.
+
 ### U30 · Pick the drawers and corner buttons
-Once Frontend has its proposals (D73): the drawers' content and hierarchy, the prizes drawer, and the corner buttons' style and icons, in one consistent style.
-**Default:** waits on the proposals.
+Frontend's proposals are drawn (D73), in `temp/design-canvas/look/project/`: `Component-Cantonades-Estils.dc.html` (corner styles A/B/C), `Mobil-Calaixos-Jerarquia.dc.html` (drawers J1/J2/J3) and `Mobil-Premis-Propostes.dc.html` (prizes drawer P1/P2/P3). Not on the canvas until the user OKs the publish in Frontend's session.
+**Default:** nothing built until the user picks.
 
 ## Tasks only the user can do
 
