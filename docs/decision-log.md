@@ -824,3 +824,7 @@ By: the user. Source: open-questions.md › Answered (U40); the user's answers o
 ### D90 · Effects and Celebrations over open drawers · 2026-11-25 · Active
 A Celebration closes the Premis, Horari and Ajustos drawers, but not the add-card pad while a number is being typed. The flashes and particles of the your-song effect (D74) play on top of everything, so a player inside any drawer still sees them. Answers U41.
 By: the user. Source: open-questions.md › Answered (U41). Amends: D73, D74. Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.
+
+### D91 · The console's Wii badges and holds look like the real remote · 2026-11-25 · Active
+The console's Wii badges look like the remote's own buttons: A a big circle, B a rectangular trigger, HOME round with a house, and −, +, 1 and 2 each their own round key, never merged ("−/+", "1/2"). The play buttons carry no "mantén" word: a hold shows as a pressed-in key (1 2 on Enrere, B on Aguanta, − + on the Pausa strip) or a pressed-in strip (Pausa, Suspens), and tap keys stay raised. Designs only; the built console still has the old badges (boards first, D-entry for the record).
+By: the user via canvas (comments of 24 Nov, sent to Claude on 25 Nov). Source: the "Quina Musical look" canvas v55, "Consola · en joc". Lives in: requirements/screens.md › Console, Wii remote.

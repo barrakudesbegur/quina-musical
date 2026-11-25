@@ -38,6 +38,10 @@ D89 puts the whole night's settings in one git-tracked JSON file. But this repo 
 Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
 **Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
 
+### U44 · The menu's rare, risky holds
+The play buttons now show a hold as a pressed-in key, with no "mantén" word (D91). Should the menu's rare, risky holds (Pànic, Acabar la nit, Confirmar la línia sense comprovació) keep their "Mantén premut…" text, or use the pressed look too? Open on the canvas (thread 6018fe8c).
+**Default:** keep the words on those three.
+
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
 **Default:** nothing built for the prizes drawer until the user picks.
