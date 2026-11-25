@@ -21,7 +21,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - Frontend: a content spec for the double-sided card for me to check, then boards with the user (D102); nothing before the user comes.
 
   Frontend's content spec for the double-sided card arrived and checks out (notes sent on 25 Nov). Backend's facts arrived: storage is U53, and its "one prepared pool of 210 with three lists" became the naming question U54. Sound engine's impact report arrived: one night pool with a playlist per song; card types list their sides; `RoundPlan.side`; about a day for the engine. Told on 25 Nov:
-  - start: the expected end at 70; the protocol proposal to Frontend and Backend (field names wait on U54);
+  - start: the expected end at 70 (done, 8e6f563); the protocol proposal to Frontend and Backend (agreed, below);
   - wait: the engine build (after Frontend and Backend agree and U54 is answered), round 6's pace (U51), preparing Part 1 (U55), storage (U53), the hook tools (U56).
 
   **The side/Part protocol is agreed** by all three sessions (25 Nov). It waits on U54 (`part` by default) and the user's go:

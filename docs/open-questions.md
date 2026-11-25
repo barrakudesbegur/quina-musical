@@ -48,7 +48,8 @@ The presenters explain the sides in rounds 1 and 6 (D102).
 ### U51 · Round 6's pace
 Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). Round 6 starts a new pool, so its songs are all new too.
 Sound engine: easy, since the rule becomes "the first round of each pool". That makes the first special round slow too, because its songs are new.
-**Default:** round 6, and the first special round, play at round 1's slower pace.
+Related: in 2025 the night sped up (about 18 s a song early, 11 s late). The expected end is now worked out from each round's own Pace, so a faster default Pace for later rounds is also the user's call.
+**Default:** round 6, and the first special round, play at round 1's slower pace (about 22 s); every other round stays at about 14 s.
 
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
