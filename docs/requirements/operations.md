@@ -30,6 +30,8 @@ _From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-g
 - **The tech's phone** opens the console the same way.
 - **Players' phones** use only the cloud, on their own mobile data.
 - By default the laptop plays both the audio and the drum. The audio can also run on a separate device near the mixer, kept in sync by landing times announced in advance.
+- **The engine enforces the rules, never the cloud.** The cloud accepts what the engine journals and only flags oddities for an admin (for example an accepted card whose Check didn't pass). Refusing would freeze phones over a judgement the engine already made.
+- **The deployed cloud learns a new value before any laptop journals it.** A journal entry the cloud refuses stops the laptop's uploads, and with them every phone update for the rest of the night. So a new round kind, win kind or similar reaches the deployed cloud first: the protocol change, then the cloud's acceptance and a redeploy, then the engine journaling it.
 
 ## The public feed's privacy
 
@@ -39,7 +41,7 @@ The feed to phones must never carry:
 - the Queue or the next song: a phone learns a song only at its landing;
 - the possible winners, Futur, or the standing cards and their count;
 - a locked prize: only revealed rounds' bundles reach it;
-- a Check's outcome, or a winner's name;
+- a Check's outcome, a winner's name, or a winner's slip number;
 - the round's exact end time (only the Game's end, rounded to 5 minutes).
 
 It never sends client heartbeats or polling. Phones reconnect with backoff and jitter, and catch up from a snapshot.
@@ -112,7 +114,7 @@ _From event.md › What must never fail (Privacy), The songs._
 - Every card's songs are public, because phones need them (pending U22).
 - Phones have no account. Admin only sees which card numbers were opened, never who opened them.
 - Admin, the console and the organizers' routes are behind the organizers' Google login. The laptop has its own key, kept only on the show laptops and never sent by chat or email.
-- The console's pairing token and the hotspot password are treated like the resume code: no photos.
+- The console's pairing token and the hotspot password are treated like the resume code: no photos. The hotspot password is the first line of defence, because anyone on the hotspot can reach the laptop's relay; the token then guards the commands.
 - The repo is public: no people's or businesses' names, no emails, secrets or personal data.
 
 ## The day itself

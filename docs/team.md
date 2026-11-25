@@ -29,7 +29,8 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
 - **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout.
 - **Pushing (allowed for every session, user rule 2026-11-24):** push `main` when your work is ready. Everyone shares one `main`, so a push also publishes the other sessions' local commits. Before pushing:
-  - run `npm test` (and the cloud and prep suites if you touched them) on the committed state;
+  - list the whole range the push would publish, with authors (`git log origin/main..main`): it includes the other sessions' local commits;
+  - run `npm test` (and the cloud and prep suites if the range touches them) on the committed state of that whole range, not just your own commit;
   - make sure nothing sensitive is in the range (no audio, secrets, `.env*`, `data/`, `temp/` or local paths).
 
   CI runs on every push. If it goes red, the session that broke it fixes it at once.

@@ -720,3 +720,7 @@ By: the sessions, agreed. Source: commit 233e3a3; the orchestrator's brief of 20
 ### D64 · Where the card price rule lives · 2026-11-25 · Active
 Each card type in card-types.json carries a `priceRule` (a per-round price for normal cards, a fixed price for special cards), and the protocol's `roundCardPrice` helper gives the price for the coming round, so every screen computes it the same way.
 By: the sessions, agreed (Sound engine and Frontend). Source: the orchestrator's brief of 2026-11-25. Implements: D61. Lives in: requirements/songs-and-cards.md › Prices.
+
+### D65 · A new journal value reaches the deployed cloud first · 2026-11-25 · Active
+A journal entry the cloud refuses stops the laptop's uploads, and with them every phone update for the rest of the night. So a new value in the journal (a round kind, a win kind, a Check outcome) lands in three steps: the protocol change, then the cloud's acceptance and a redeploy, then the engine journaling it. The cloud also accepts what the engine journals and only flags oddities.
+By: the sessions, agreed (Sound engine and Backend). Source: card type per round and the Desgraciat (steps A, B, C); Backend's report of 2026-11-25. Lives in: requirements/operations.md › Where things run.
