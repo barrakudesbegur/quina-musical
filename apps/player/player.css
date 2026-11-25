@@ -19,6 +19,15 @@
   --dur-overlay: 300ms;
   /* `your-song` (D74): the flash, then the gold, the spotlights and the particles come in; they leave at the next Spin
      (their out times are the component's: gold 900 ms, spotlights 760 ms, particles 520 ms) */
+  --dur-drawer-grow: 360ms; /* drawer-open, out of a corner */
+  --dur-drawer-rise: 320ms; /* drawer-open, up from the bottom edge */
+  --dur-drawer-backdrop: 240ms;
+  --dur-drawer-out: 240ms; /* drawer-close */
+  --dur-drawer-spring: 200ms; /* drawer-drag, springing back */
+  --dur-drawer-stack: 300ms; /* drawer-stack, the one under steps back */
+  --dur-corner-press: 90ms;
+  --dur-corner-back: 260ms;
+  --dur-card-shift: 160ms; /* card-reorder, rows making room */
   --dur-your-song-flash: 600ms;
   --delay-your-song-gold: 100ms; /* at the flash's first peak, so the colour change hides in it */
   --dur-your-song-gold: 70ms;
@@ -55,9 +64,9 @@
 
   /* layout */
   --player-gutter: var(--space-3);
-  --player-tab-bar-height: 5.5rem; /* the bar, without the safe area */
-  --player-tab-height: 4rem;
-  --tab-bar-height: var(--player-tab-bar-height);
+  --player-corner: 13rem; /* a corner button's disc (208 px); a quarter of it shows */
+  --player-corner-space: 7.5rem; /* room at the bottom of the home screen, so the last row scrolls clear of the corners */
+  --player-drawer-top: 6rem; /* a tall drawer leaves the garland and the title showing above it */
   --reel-size: min(42vw, 10rem);
   --player-reel-flank: 0.74; /* the drum's side cards, relative to the centre one */
   --player-cover-row: 3.5rem;
@@ -166,7 +175,7 @@
   overflow-x: clip;
   font-size: var(--player-text-body);
   font-weight: var(--player-weight-body);
-  padding-bottom: calc(var(--player-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
   background-color: var(--color-bg);
   background-image: var(--sky-stars);
   background-size: var(--sky-stars-size);
@@ -180,13 +189,11 @@
 .reel__title,
 .player-card__name,
 .prize-round__title,
-.schedule__progress,
-.schedule__end,
 .now__when,
 .now__next,
 .check-strip__text,
 .check-strip__result,
-.sheet__title,
+.drawer__title,
 .now__summary-title,
 .pause-notice__title,
 .menu__card-name,
@@ -204,10 +211,9 @@
 .prize-round__title,
 .check-strip__text,
 .check-strip__result,
-.sheet__title,
+.drawer__title,
 .now__summary-title,
 .now__when,
-.schedule__end,
 .big-button,
 .pause-notice__title,
 .menu__card-name {
@@ -394,10 +400,10 @@
   color: var(--color-accent);
 }
 
-/* Before the Game and as a round starts, Ara's big heading already says it: the header keeps its title for
-   screen readers only. */
-.player[data-scene='before'][data-tab='ara'] .app-header__title,
-.player[data-scene='roundStart'][data-tab='ara'] .app-header__title {
+/* Before the Game and as a round starts, the home screen's big heading already says it: the header keeps its title
+   for screen readers only. */
+.player[data-scene='before'] .app-header__title,
+.player[data-scene='roundStart'] .app-header__title {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -530,7 +536,6 @@
 }
 
 /* Small actions: paper chips with ink words. */
-.sheet__close,
 .menu__toggle {
   min-height: var(--tap-min);
   padding: 0 var(--space-3) 0.1875rem;
@@ -543,59 +548,6 @@
     var(--shadow-piece-sm);
 }
 
-
-/* ---- tab bar: list-driven, so adding or removing a tab is only its list ------------------------------- */
-.tab-bar {
-  position: fixed;
-  inset: auto 0 0;
-  z-index: var(--z-banner);
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: var(--space-1);
-  min-height: calc(var(--player-tab-bar-height) + env(safe-area-inset-bottom, 0px));
-  padding: var(--space-2) var(--space-2) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
-  background: var(--color-bg-deep);
-  border-top: var(--line-width-bold) solid var(--color-line);
-}
-
-.player .tab-bar__tab {
-  min-width: 0;
-  min-height: var(--player-tab-height);
-  padding: var(--space-1) 0;
-  border: var(--line-width) solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text-soft);
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.1875rem;
-  font-size: var(--text-xs);
-  font-weight: var(--player-weight-body);
-}
-
-.player .tab-bar__tab.is-active {
-  --icon-stroke: 2.6;
-  color: var(--color-text-on-paper);
-  background: var(--color-accent);
-  border-color: var(--color-line);
-  box-shadow: inset 0 -5px 0 var(--color-accent-edge);
-}
-
-.tab-bar__tab .icon {
-  width: 1.625rem;
-  height: 1.625rem;
-}
-
-.tab-bar__label {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* ---- status strips ------------------------------------------------------------------------------------- */
 .player__alerts {
@@ -732,22 +684,20 @@
   padding: var(--space-3) var(--player-gutter) var(--space-6);
 }
 
-.player__tab > * + * {
+.player__main > * + * {
   margin-top: var(--space-5);
 }
 
-.player__tab section > * + * {
+.player__main section > * + *,
+.drawer .prizes > * + * {
   margin-top: var(--space-3);
 }
 
 /* Panels (night blue, inked) and paper pieces. */
 .add-prompt,
 .shuffle,
-.schedule__progress,
 .now__summary,
 .cards__resting-item,
-.menu__row,
-.menu__card,
 .legacy-notice {
   background: var(--color-surface);
   color: var(--color-text);
@@ -1467,133 +1417,159 @@
   font-size: var(--text-xs);
 }
 
-/* ---- Horari -------------------------------------------------------------------------------------------- */
-.schedule__progress {
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  font-size: 2rem;
-  line-height: 1;
-  text-align: center;
-  color: var(--color-accent);
+/* ---- Horari (the J2 look, D87): plain rows on the night, the current round on paper ------------------------ */
+.schedule {
+  display: grid;
+  gap: var(--space-3);
 }
 
-.schedule__countdown {
-  padding: var(--space-3) var(--space-4);
+.schedule__note {
+  margin: 0;
   font-weight: var(--font-weight-strong);
-  border: var(--line-width) dashed var(--color-divider);
-  border-radius: var(--radius-lg);
+  color: var(--color-text-soft);
 }
 
-.schedule__end {
-  padding: var(--space-2) var(--space-4) var(--space-3);
-  font-size: 1.625rem;
-  line-height: 1.05;
-  color: var(--color-text);
-  background: var(--color-accent);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    inset 0 -7px 0 var(--color-accent-edge),
-    inset 0 4px 0 rgb(255 255 255 / 0.45),
-    var(--shadow-piece);
-}
-
-/* The timetable: a paper card with the rounds on a line of dots. */
-.player .schedule__rounds {
-  gap: 0;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-piece);
-}
-
-.schedule__round {
+.player .schedule__rounds,
+.drawer .schedule__rounds {
   position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+}
+
+/* The line through the dots. */
+.schedule__rounds::before {
+  content: '';
+  position: absolute;
+  left: calc(4rem + var(--space-3) + 0.8125rem - 2px);
+  top: 1rem;
+  bottom: 1rem;
+  width: 3px;
+  background: var(--color-divider);
+  border-radius: 2px;
+}
+
+.schedule__round-button,
+.player :is(.menu__grip, .menu__card-edit, .menu__card-remove, .menu__row-button, .menu__wipe),
+.drawer :is(.menu__grip, .menu__card-edit, .menu__card-remove, .menu__row-button, .menu__wipe) {
+  box-shadow: none;
+}
+
+.schedule__round-button {
+  position: relative;
+  width: 100%;
+  min-height: var(--tap-min);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0 var(--space-2);
-  min-height: 2.75rem;
-  padding: var(--space-1) var(--space-2) var(--space-1) 2.25rem;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: var(--line-width-bold) solid transparent;
   border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-/* The line… */
-.schedule__round::after {
-  content: '';
-  position: absolute;
-  left: 1.0625rem;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--color-paper-edge);
+.schedule__round-time {
+  width: 4rem;
+  flex: none;
+  text-align: right;
+  font-weight: var(--font-weight-strong);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
 }
 
-.schedule__round:first-child::after {
-  top: 50%;
-}
-
-.schedule__round:last-child::after {
-  bottom: 50%;
-}
-
-/* …and each round's dot: gold once done, orange now, white still to come. */
-.schedule__round::before {
-  content: '';
-  position: absolute;
+/* Each round's dot: gold once done (a tick), orange now, empty still to come; its kind's mark inside. */
+.schedule__dot {
+  position: relative;
   z-index: 1;
-  left: 0.5625rem;
-  top: 50%;
-  width: 1.125rem;
-  height: 1.125rem;
-  margin-top: -0.5625rem;
-  background: var(--color-paper);
-  border: var(--line-width) solid var(--color-line);
+  width: 1.625rem;
+  height: 1.625rem;
+  flex: none;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background: var(--color-surface-raised);
+  border: var(--line-width-bold) solid var(--color-line);
   border-radius: 50%;
+  color: var(--color-text);
 }
 
-.schedule__round[data-state='done']::before {
+.schedule__round[data-state='done'] .schedule__dot {
   background: var(--color-accent);
+  color: var(--color-text-on-paper);
 }
 
-.schedule__round[data-state='current'] {
-  background: var(--color-highlight);
+.schedule__round[data-state='done']:not([data-kind='special'], [data-kind='desgraciat']) .schedule__dot::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.3rem;
+  margin-top: -0.15rem;
+  border: solid var(--color-line);
+  border-width: 0 0 3px 3px;
+  transform: rotate(-45deg);
 }
 
-.schedule__round[data-state='current']::before {
-  left: 0.4375rem;
-  width: 1.375rem;
-  height: 1.375rem;
-  margin-top: -0.6875rem;
+.schedule__round[data-state='current'] .schedule__dot {
   background: var(--color-primary);
+}
+
+.schedule__dot .round-mark {
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.75rem;
 }
 
 .schedule__round-name {
   flex: 1;
+  min-width: 0;
   font-weight: var(--font-weight-strong);
+  font-size: var(--text-md);
+}
+
+.schedule__round[data-state='done'] :is(.schedule__round-name, .schedule__round-time) {
+  color: var(--color-text-muted);
+}
+
+.schedule__chevron {
+  display: flex;
+  color: var(--color-text-muted);
+}
+
+.schedule__chevron .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Only the current round is paper, ringed in orange, with "Ara". */
+.schedule__round[data-state='current'] .schedule__round-button {
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  border-color: var(--color-line);
+  box-shadow: 0 0 0 3px var(--color-primary), var(--shadow-piece-sm);
+}
+
+.schedule__round[data-state='current'] :is(.schedule__round-time, .schedule__chevron) {
+  color: var(--color-text-on-paper);
 }
 
 .schedule__round-state {
-  padding: 0 0.5rem 0.125rem;
+  padding: 0.0625rem 0.5rem;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  background: var(--color-primary);
   border: 2px solid var(--color-line);
   border-radius: var(--radius-pill);
 }
 
-.schedule__round[data-state='current'] .schedule__round-state {
-  background: var(--color-primary);
-}
-
-.schedule__round-time {
-  font-size: var(--text-sm);
-  color: var(--color-text-on-paper-muted);
-}
-
-.schedule__round[data-state='done'] .schedule__round-name {
-  color: var(--color-text-on-paper-muted);
-}
 
 .countdown {
   display: inline-block;
@@ -1921,26 +1897,6 @@
   color: var(--color-text-on-paper);
 }
 
-/* Horari: the mark sits in a bigger dot on the timeline. */
-.schedule__round:has(.round-mark)::before {
-  left: 0.25rem;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-top: -0.875rem;
-}
-
-.schedule__round .round-mark {
-  position: absolute;
-  z-index: 2;
-  left: 0.25rem;
-  top: 50%;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-top: -0.875rem;
-  font-size: 0.75rem;
-  color: var(--color-text-on-paper);
-}
-
 /* The intro of the Desgraciat round: its long name a little smaller, and the hands-up nino (everyone stand up). */
 .now[data-scene='roundStart'] > .now__heading[data-kind='desgraciat'] {
   font-size: var(--text-3xl);
@@ -2018,56 +1974,167 @@
   width: 100%;
 }
 
-/* ---- sheets (dialogs) ---------------------------------------------------------------------------------- */
-.sheet {
+/* ---- drawers (D73; the J2 look, D87): one title, a grab handle, the content scrolls; ANIMATIONS.md `drawer-*` ---- */
+html:has(.drawer[open]) {
+  overflow: hidden;
+}
+
+.drawer {
+  --drawer-bg: var(--color-panel);
   width: 100%;
   max-width: 32rem;
-  max-height: 92dvh;
+  max-height: calc(100dvh - var(--player-drawer-top));
   margin: auto auto 0;
   padding: 0 0 env(safe-area-inset-bottom, 0px);
-  background-color: var(--color-bg);
-  background-image: var(--sky-stars);
-  background-size: var(--sky-stars-size);
-  background-position: var(--sky-stars-position);
+  box-sizing: border-box;
+  background: var(--drawer-bg);
   color: var(--color-text);
   font-size: var(--player-text-body);
   font-weight: var(--player-weight-body);
   border: var(--line-width-bold) solid var(--color-line);
   border-bottom: 0;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -6px 0 rgb(10 14 38 / 0.5);
+  overflow: hidden;
+  transform: translateY(var(--drag-y, 0px));
+  transform-origin: 50% 100%;
+  transition: transform var(--dur-drawer-spring) var(--ease-out);
 }
 
-.sheet::backdrop {
-  background: var(--color-bg-deep);
-  opacity: 0.85;
+.drawer[open] {
+  display: flex;
+  flex-direction: column;
 }
 
-.sheet__header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+/* The tall drawers reach up to the title; the questions (remove, wipe, leave) stay as tall as their words. */
+.drawer:is(.drawer--premis, .drawer--horari, .drawer--ajustos, .drawer--pad) {
+  height: calc(100dvh - var(--player-drawer-top));
+}
+
+.drawer::backdrop {
+  background: rgb(8 10 30 / 0.55);
+  animation: player-fade-in var(--dur-drawer-backdrop) var(--ease-out);
+}
+
+.drawer__top {
+  flex: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.drawer__grab {
+  display: block;
+  width: 2.875rem;
+  height: 0.375rem;
+  margin: 0.5625rem auto 0;
+  border-radius: 3px;
+  background: var(--color-mist);
+}
+
+.drawer__header {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3);
-  background: var(--color-bg);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-2);
 }
 
-.sheet__title {
+.drawer__title {
   flex: 1;
-  font-size: var(--text-xl);
-  line-height: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-2xl);
+  line-height: 1.05;
   color: var(--color-text);
 }
 
-.sheet__body {
+.player .drawer__button,
+.drawer .drawer__button {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
   display: grid;
+  place-items: center;
+  padding: 0;
+  box-sizing: border-box;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: 0 3px 0 var(--color-night-shadow);
+  cursor: pointer;
+}
+
+.drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   gap: var(--space-4);
   padding: var(--space-1) var(--space-4) var(--space-5);
 }
 
-.sheet__body > p {
+.drawer__body > p,
+.drawer__note {
   color: var(--color-text-soft);
+}
+
+/* Opening: out of its corner (Premis, Horari), else up from the bottom edge. */
+.drawer[data-state='open'][data-origin='left'] {
+  transform-origin: 0% 100%;
+  animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
+}
+
+.drawer[data-state='open'][data-origin='right'] {
+  transform-origin: 100% 100%;
+  animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
+}
+
+.drawer[data-state='open'][data-origin='bottom'] {
+  animation: player-drawer-rise var(--dur-drawer-rise) var(--ease-out);
+}
+
+/* Following the finger: no spring until it lets go. */
+.drawer[data-dragging='true'] {
+  transition: none;
+}
+
+/* Another drawer over this one: it steps back. */
+.drawer[data-depth='under'] {
+  transform-origin: 50% 0%;
+  transform: translateY(-0.75rem) scale(0.94);
+  transition: transform var(--dur-drawer-stack) var(--ease-out);
+}
+
+.drawer[data-state='closing'] {
+  animation: player-drawer-out var(--dur-drawer-out) ease-in forwards;
+}
+
+@keyframes player-drawer-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  33% {
+    opacity: 1;
+  }
+}
+
+@keyframes player-drawer-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes player-drawer-out {
+  from {
+    transform: translateY(var(--drag-y, 0px));
+  }
+  to {
+    transform: translateY(100%);
+  }
 }
 
 /* The number pad: the card's icon and the number on a paper plate, then paper keys. */
@@ -2131,13 +2198,13 @@
   border-radius: var(--radius-lg);
 }
 
-.sheet .number-pad__key {
+.drawer .number-pad__key {
   box-shadow:
     inset 0 -7px 0 var(--color-paper-edge),
     var(--shadow-piece-sm);
 }
 
-.sheet .number-pad__key--back {
+.drawer .number-pad__key--back {
   color: var(--color-text);
   background: var(--color-surface);
   box-shadow:
@@ -2145,7 +2212,7 @@
     var(--shadow-piece-sm);
 }
 
-.sheet .number-pad__key--ok {
+.drawer .number-pad__key--ok {
   font-size: 1.75rem;
   color: var(--color-text);
   -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
@@ -2586,16 +2653,26 @@
   visibility: visible;
 }
 
-/* ---- the menu: the player's cards, sounds, last year's cards, "Esborrar dades" ---------------------------- */
+/* ---- Ajustos (D87; the J2 look): the cards as plain rows with a grip, the settings in one group -------------- */
 .menu {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
-.menu__cards,
-.menu__legacy {
+.menu__cards {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
+}
+
+.menu__heading {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
 }
 
 .menu__card-list {
@@ -2603,20 +2680,49 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .menu__card {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
-  border-width: var(--line-width);
+  min-height: 3.5rem;
+  border-bottom: 2px solid var(--color-divider);
+  background: var(--drawer-bg, var(--color-panel));
+  transform: translateY(var(--shift, 0px));
+}
+
+.menu__card[data-moving='true'] {
+  transition: transform var(--dur-card-shift) var(--ease-out);
+}
+
+.menu__card[data-dragging='true'] {
+  position: relative;
+  z-index: 1;
+  transform: translateY(var(--shift, 0px)) scale(1.03);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 0 var(--color-night-shadow);
+}
+
+.player .menu__grip,
+.drawer .menu__grip {
+  width: 2.25rem;
+  height: var(--tap-min);
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
 }
 
 .menu__card .swatch {
-  width: 2.125rem;
-  height: 2.125rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .menu__card-name {
@@ -2624,43 +2730,78 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 1.5rem;
+  font-size: 1.4375rem;
   line-height: 1.1;
   color: var(--color-text);
 }
 
 .menu__card-number {
   flex: 1;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  line-height: 1;
+  font-weight: var(--font-weight-strong);
+  font-size: var(--text-md);
   color: var(--color-text-soft);
 }
 
-.player .menu__card .icon-button,
-.sheet .menu__card .icon-button {
-  width: 2.75rem;
-  min-width: 2.75rem;
-  height: 2.75rem;
-  min-height: 2.75rem;
-  border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
+.player :is(.menu__card-edit, .menu__card-remove),
+.drawer :is(.menu__card-edit, .menu__card-remove) {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
 }
 
-.menu__card-remove {
+.player .menu__card-remove,
+.drawer .menu__card-remove {
   color: var(--color-danger-on-night);
 }
 
 .menu__add.big-button {
   justify-self: center;
   width: auto;
+  margin-top: var(--space-2);
+}
+
+.menu__settings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--color-surface);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .menu__row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  min-height: 3.25rem;
+  padding: var(--space-1) var(--space-3);
+}
+
+.menu__row + .menu__row {
+  border-top: 2px solid var(--color-divider);
+}
+
+.menu__row-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .menu__label {
@@ -2680,27 +2821,191 @@
     var(--shadow-piece-sm);
 }
 
-.menu__heading {
-  margin: 0;
-}
-
 .menu__note,
 .menu__empty {
+  margin: 0;
   color: var(--color-text-soft);
 }
 
 .player .menu__wipe,
-.sheet .menu__wipe {
-  min-height: 3.25rem;
-  font-family: var(--font-body);
-  font-size: 1.1875rem;
+.drawer .menu__wipe {
+  justify-self: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: var(--font-weight-strong);
   color: var(--color-danger-on-night);
-  -webkit-text-stroke: 0;
-  letter-spacing: 0;
-  text-shadow: none;
-  background: transparent;
-  border-color: var(--color-danger);
-  box-shadow: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* The header's Ajustos button stays on the right, even when the title is visually hidden (before the Game). */
+.app-header__menu {
+  margin-left: auto;
+}
+
+/* ---- the corner buttons (D73; style B, D87): paper discs centred on the bottom corners ---------------------- */
+.corners::before {
+  /* The home screen fades out under them, so a row passing behind never fights the buttons. */
+  content: '';
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 4;
+  height: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--color-bg) 70%);
+  pointer-events: none;
+}
+
+.player .corner {
+  position: fixed;
+  z-index: 5;
+  bottom: calc(env(safe-area-inset-bottom, 0px) - var(--player-corner) / 2);
+  width: var(--player-corner);
+  height: var(--player-corner);
+  padding: 0;
+  box-sizing: border-box;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  cursor: pointer;
+  transition: transform var(--dur-corner-back) var(--ease-bounce);
+}
+
+.player .corner--left {
+  left: calc(var(--player-corner) / -2);
+  box-shadow:
+    inset -10px 10px 0 rgb(255 255 255 / 0.6),
+    inset 0 0 0 5px var(--color-gold),
+    0 -2px 0 4px rgb(10 14 38 / 0.35);
+}
+
+.player .corner--right {
+  right: calc(var(--player-corner) / -2);
+  box-shadow:
+    inset 10px 10px 0 rgb(255 255 255 / 0.6),
+    inset 0 0 0 5px var(--color-ice),
+    0 -2px 0 4px rgb(10 14 38 / 0.35);
+}
+
+.player .corner:active {
+  transform: scale(0.94);
+  transition-duration: var(--dur-corner-press);
+}
+
+.corner--left:active {
+  transform-origin: 0 100%;
+}
+
+.corner--right:active {
+  transform-origin: 100% 100%;
+}
+
+/* The icon and its word sit in the quarter that shows. */
+.corner__in {
+  position: absolute;
+  top: 0.5rem;
+  width: 5.375rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: var(--font-weight-strong);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+
+.corner--left .corner__in {
+  right: 0.75rem;
+}
+
+.corner--right .corner__in {
+  left: 0.75rem;
+}
+
+.corner-icon {
+  width: 3.125rem;
+  height: 3.125rem;
+  overflow: visible;
+}
+
+.corner-icon--premis {
+  transform: rotate(-6deg);
+}
+
+.corner-icon--horari {
+  transform: rotate(6deg);
+}
+
+.corner-icon__outline > * {
+  fill: var(--color-line);
+  stroke: var(--color-line);
+  stroke-width: 8.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.corner-icon__sticker > * {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.corner-icon__art * {
+  stroke: var(--color-line);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.corner-icon__box {
+  fill: var(--color-ice);
+}
+
+.corner-icon__shade {
+  fill: var(--color-ice-edge);
+  stroke: none;
+}
+
+.corner-icon__lid {
+  fill: var(--color-ice-light);
+}
+
+.corner-icon__ribbon,
+.corner-icon__body {
+  fill: var(--card-color-5);
+}
+
+.corner-icon__bell {
+  fill: var(--color-ice);
+}
+
+.corner-icon__face {
+  fill: var(--color-paper);
+  stroke-width: 2;
+}
+
+.corner-icon__hand,
+.corner-icon__leg {
+  fill: none;
+}
+
+.corner-icon__leg {
+  stroke-width: 3.6;
+}
+
+.corner-icon__pin {
+  fill: var(--color-line);
+  stroke: none;
+}
+
+.corner-icon__shine {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.7);
 }
 
 /* ---- prizes: won, by someone, or by one of the player's cards (its icon, never a number) ------------------ */
@@ -2733,7 +3038,7 @@
 /* ---- overlays ------------------------------------------------------------------------------------------ */
 .celebration {
   position: fixed;
-  inset: 0 0 calc(var(--player-tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  inset: 0;
   z-index: var(--z-overlay);
   display: grid;
   place-items: center;
@@ -2890,7 +3195,7 @@
   position: fixed;
   left: var(--space-4);
   right: var(--space-4);
-  bottom: calc(var(--player-tab-bar-height) + var(--space-3) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
   z-index: var(--z-toast);
   display: grid;
   justify-items: center;

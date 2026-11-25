@@ -52,18 +52,13 @@ test('after taking a link in, the address drops the card and c= but keeps dev hi
   assert.equal(homeHref(url('/player/', '?c=1&feed=relay'), opts), '/player/?feed=relay');
 });
 
-test('review hints: tab, Ara\'s view, dialog and demo cards', () => {
-  assert.deepEqual(devHints('?tab=premis&open=pad&cards=123,57'), { tab: 'premis', view: null, open: 'pad', cards: [123, 57] });
-  assert.deepEqual(devHints('?tab=horari&open=menu'), { tab: 'horari', view: null, open: 'menu', cards: null });
-  assert.deepEqual(devHints('?view=historial'), { tab: null, view: 'historial', open: null, cards: null });
-  assert.deepEqual(devHints('?tab=nope&open=x'), { tab: null, view: null, open: null, cards: null });
-  assert.deepEqual(devHints('?cards='), { tab: null, view: null, open: null, cards: [] });
-});
-
-test('older review links still land: the 5 tabs became Ara\'s two views, Programa became Horari, help the menu', () => {
-  assert.deepEqual(devHints('?tab=cartrons'), { tab: 'ara', view: 'cartrons', open: null, cards: null });
-  assert.deepEqual(devHints('?tab=historial'), { tab: 'ara', view: 'historial', open: null, cards: null });
-  assert.deepEqual(devHints('?tab=programa&open=help'), { tab: 'horari', view: null, open: 'menu', cards: null });
+test('review hints: the home screen\'s view, a drawer to open and demo cards', () => {
+  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57] });
+  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null });
+  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null });
+  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null });
+  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null }, 'the tabs and the menu are gone (no fallback, D84)');
+  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [] });
 });
 
 test('the feed comes from the URL: demo, relay, cloud; dev on this machine or the LAN defaults to the relay', () => {

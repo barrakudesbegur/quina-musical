@@ -12,13 +12,15 @@ import type { PublicHeat, PublicState } from './feed/public.ts';
 import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
 import { nearKeys } from './logic/near-win.ts';
 import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
-import type { DialogId, Route } from './logic/router.ts';
+import { popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
+import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
 import {
   addCard,
   dismiss,
   emptyData,
   noteEdition,
+  moveCard,
   noteGame,
   removeCard,
   renameCard,
@@ -29,13 +31,12 @@ import {
   type PlayerData,
   type PlayerStorage,
 } from './logic/storage.ts';
-import { araViewFor, type AraView, type TabId } from './logic/tabs.ts';
+import { araViewFor, type AraView } from './logic/tabs.ts';
 import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
 import { songsOnCards, yourSongOf } from './logic/your-song.ts';
 import { S } from './strings.ts';
 
 /** The sheet open over the app. A sheet opened from the menu goes back to the menu when it closes. */
-export type Dialog = ({ kind: DialogId | 'wipe' } | { kind: 'remove' | 'rename'; cardId: number }) & { from?: 'menu' };
 
 export interface PlayerAppOptions {
   feed: PlayerFeed;
@@ -60,10 +61,10 @@ export class PlayerApp {
   heatSamples = $state.raw<PublicHeat[]>([]);
 
   // ---- UI state -----------------------------------------------------------------------------------------
-  tab = $state<TabId>('ara');
   /** Ara's view for this visit only (after adding a card, its cards), over the player's saved choice. */
   araSession = $state<AraView | null>(null);
-  dialog = $state.raw<Dialog | null>(null);
+  /** The open drawers, bottom first (logic/drawers.ts); empty: the home screen. */
+  drawers = $state.raw<Drawer[]>([]);
   /** Last year's link (or another edition's) that opened the app, until dismissed. */
   legacy = $state.raw<Extract<Route, { kind: 'legacy' | 'otherEdition' }> | null>(null);
   toast = $state<string | null>(null);
@@ -196,11 +197,6 @@ export class PlayerApp {
   }
 
   // ---- actions (components call these) ------------------------------------------------------------------
-  selectTab(tab: TabId): void {
-    if (tab !== this.tab) this.blip('tap');
-    this.tab = tab;
-  }
-
   /** Ara's Historial | Cartrons switch: remembered on this device. */
   selectAraView(view: AraView): void {
     if (view !== this.araView) this.blip('tap');
@@ -208,15 +204,26 @@ export class PlayerApp {
     this.saveData(setAraView(this.data, view), false);
   }
 
-  open(dialog: Dialog): void {
+  /** Open a drawer over whatever is open (ANIMATIONS.md `drawer-open`, `drawer-stack`). */
+  open(drawer: Drawer): void {
     this.blip('tap');
-    this.dialog = dialog;
+    this.drawers = pushDrawer(this.drawers, drawer);
   }
 
-  /** Close the open sheet; a card's sheet opened from the menu goes back to the menu. */
-  closeDialog(): void {
-    const d = this.dialog;
-    this.dialog = d?.from === 'menu' ? { kind: 'menu' } : null;
+  /** Close the top drawer ("‹", the back gesture, a swipe down): the one under it comes back. */
+  closeTop(): void {
+    this.drawers = popDrawer(this.drawers);
+  }
+
+  /** Close every drawer (✕ on a stacked drawer): back to the home screen. */
+  closeAll(): void {
+    this.drawers = [];
+  }
+
+  /** Move a card in the player's list (Ajustos, the grip): the home screen shows them in this order. */
+  moveCard(id: number, to: number): void {
+    const next = moveCard(this.data, id, to);
+    if (next !== this.data) this.saveData(next, false);
   }
 
   /**
@@ -229,21 +236,21 @@ export class PlayerApp {
     if (!result.ok) return result.reason === 'duplicate' ? S.addError.duplicate(id) : result.reason === 'full' ? S.addError.full(PLAYER_CONFIG.maxCards) : S.addError.invalid;
     this.saveData(result.data);
     this.showToast(S.added(id));
-    // Added: straight to the cards, never back to the menu it may have come from.
-    this.dialog = null;
+    // Added: straight to the cards, never back to the drawers it was opened from.
+    this.drawers = [];
     this.showCards();
     return null;
   }
 
   removeCard(id: number): void {
     this.saveData(removeCard(this.data, id));
-    this.closeDialog();
+    this.closeTop();
   }
 
   /** The card's sheet: its name and its icon. */
   editCard(id: number, name: string, identity: number): void {
     this.saveData(setIdentity(renameCard(this.data, id, name), id, identity));
-    this.closeDialog();
+    this.closeTop();
   }
 
   toggleSounds(): void {
@@ -261,8 +268,7 @@ export class PlayerApp {
     this.storage.save(this.data);
     this.feed.setCards([]);
     this.resetFeedback();
-    this.dialog = null;
-    this.tab = 'ara';
+    this.drawers = [];
     this.araSession = null;
     this.showToast(S.wiped);
   }
@@ -285,9 +291,8 @@ export class PlayerApp {
   }
 
   // ---- internals ----------------------------------------------------------------------------------------
-  /** A card was just added (or its link opened): Ara with the cards, for this visit only. */
+  /** A card was just added (or its link opened): the home screen with the cards, for this visit only. */
   private showCards(): void {
-    this.tab = 'ara';
     this.araSession = 'cartrons';
   }
 

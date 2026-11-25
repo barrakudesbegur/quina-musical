@@ -1,6 +1,6 @@
 <script lang="ts">
   // The presenters' technical pause, in the drum's place (ANIMATIONS.md `pause`): the meditating nino breathing
-  // over "Tornem de seguida". Historial, the cards and the tabs stay as they are. `compact`: the strip size,
+  // over "Tornem de seguida". Historial, the cards and the drawers stay as they are. `compact`: the strip size,
   // when Ara shows the cards. Its container crossfades it in (AraHome); reduced motion: the nino is still.
   import { S } from '../strings.ts';
 

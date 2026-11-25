@@ -4,7 +4,7 @@
   import type { SavedCard } from '../logic/storage.ts';
   import { S } from '../strings.ts';
   import IconPicker from './IconPicker.svelte';
-  import Sheet from './Sheet.svelte';
+  import Drawer from './Drawer.svelte';
 
   let {
     card,
@@ -19,7 +19,7 @@
   let identity = $state(card.color);
 </script>
 
-<Sheet name="rename" title={S.renameTitle(card.id)} {onclose}>
+<Drawer name="rename" title={S.renameTitle(card.id)} {onclose}>
   <form
     class="rename"
     onsubmit={(e) => {
@@ -35,4 +35,4 @@
       <button type="button" class="big-button" onclick={onclose}>{S.cancel}</button>
     </div>
   </form>
-</Sheet>
+</Drawer>

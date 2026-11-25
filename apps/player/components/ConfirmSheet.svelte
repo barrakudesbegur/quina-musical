@@ -2,7 +2,7 @@
   // A confirmation for something that can't be undone with one tap (removing a card, wiping the data, leaving
   // "Afegir cartró" with a number typed). `danger` paints the yes in red; `no` names the way back.
   import { S } from '../strings.ts';
-  import Sheet from './Sheet.svelte';
+  import Drawer from './Drawer.svelte';
 
   let {
     name,
@@ -16,10 +16,10 @@
   }: { name: string; title: string; text?: string; yes: string; no?: string; danger?: boolean; onyes: () => void; onclose: () => void } = $props();
 </script>
 
-<Sheet {name} {title} {onclose}>
+<Drawer {name} {title} {onclose}>
   {#if text}<p class="confirm__text">{text}</p>{/if}
   <div class="confirm__actions">
     <button type="button" class="big-button confirm__yes" class:tone-danger={danger} onclick={onyes}>{yes}</button>
     <button type="button" class="big-button confirm__no" class:tone-primary={!danger} onclick={onclose}>{no}</button>
   </div>
-</Sheet>
+</Drawer>

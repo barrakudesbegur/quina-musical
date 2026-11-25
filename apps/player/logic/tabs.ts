@@ -1,8 +1,5 @@
-// The player app's sections (the user's decision, 24 Nov): three tabs, Ara, Premis and Horari, plus a menu
-// sheet of its own. Ara shows the drum on top and, under it, either Historial or the player's Cartrons.
-// The tab bar is list-driven, so the drawers layout (still a proposal) would only swap the container.
-export const TAB_IDS = ['ara', 'premis', 'horari'] as const;
-export type TabId = (typeof TAB_IDS)[number];
+// The home screen (D73): the drum on top and, under it, either Historial or the player's Cartrons. There are no tabs:
+// Premis, Horari and Ajustos are drawers (logic/drawers.ts).
 
 /** What Ara shows under the drum: the Historial | Cartrons switch. */
 export const ARA_VIEWS = ['historial', 'cartrons'] as const;

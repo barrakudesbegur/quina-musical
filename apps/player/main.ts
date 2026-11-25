@@ -73,9 +73,8 @@ async function main(): Promise<void> {
 
   app.openRoute(route);
   if (route.kind !== 'home') history.replaceState(null, '', homeHref(location, { edition }));
-  if (hints.tab) app.tab = hints.tab;
   if (hints.view) app.araSession = hints.view;
-  if (hints.open) app.dialog = { kind: hints.open };
+  if (hints.open) app.drawers = [{ kind: hints.open }];
 
   const motion = watchReducedMotion((reduced) => app.setReducedMotion(reduced));
   app.setReducedMotion(motion.reduced);

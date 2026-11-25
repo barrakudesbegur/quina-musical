@@ -1,7 +1,7 @@
 <script lang="ts" module>
   // Small line icons (inline SVG, currentColor), so the theme recolours them and nothing is downloaded. The
-  // stroke width is the theme's (--icon-stroke): the active tab draws them a little bolder.
-  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'sad' | 'lock' | 'edit' | 'trash' | 'offline';
+  // stroke width is the theme's (--icon-stroke).
+  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'sad' | 'lock' | 'edit' | 'trash' | 'offline' | 'close' | 'back' | 'chevron' | 'settings' | 'grip';
 </script>
 
 <script lang="ts">
@@ -48,6 +48,16 @@
     <path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="currentColor" />
   {:else if name === 'sad'}
     <path d="M8 8.5v2.2M16 8.5v2.2M7 18c1.4-2.4 3-3.4 5-3.4s3.6 1 5 3.4" />
+  {:else if name === 'close'}
+    <path d="M6 6l12 12M18 6L6 18" />
+  {:else if name === 'back'}
+    <path d="M15 5l-7 7 7 7" />
+  {:else if name === 'chevron'}
+    <path d="M9 5l7 7-7 7" />
+  {:else if name === 'settings'}
+    <circle cx="12" cy="12" r="3.2" /><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" /><circle cx="12" cy="12" r="6.6" />
+  {:else if name === 'grip'}
+    <g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.9" /><circle cx="15" cy="6" r="1.9" /><circle cx="9" cy="12" r="1.9" /><circle cx="15" cy="12" r="1.9" /><circle cx="9" cy="18" r="1.9" /><circle cx="15" cy="18" r="1.9" /></g>
   {:else if name === 'lock'}
     <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
   {/if}

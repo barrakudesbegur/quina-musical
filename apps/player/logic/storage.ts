@@ -120,6 +120,18 @@ export function setIdentity(data: PlayerData, id: number, identity: number): Pla
 
 export const removeCard = (data: PlayerData, id: number): PlayerData => ({ ...data, cards: data.cards.filter((c) => c.id !== id) });
 
+/** Moves a card to place `to` (0-based, clamped) in the player's list: the home screen shows the cards in this order. */
+export function moveCard(data: PlayerData, id: number, to: number): PlayerData {
+  const from = data.cards.findIndex((c) => c.id === id);
+  if (from < 0) return data;
+  const place = Math.max(0, Math.min(data.cards.length - 1, Math.round(to)));
+  if (place === from) return data;
+  const cards = [...data.cards];
+  const [card] = cards.splice(from, 1);
+  cards.splice(place, 0, card);
+  return { ...data, cards };
+}
+
 export const renameCard = (data: PlayerData, id: number, name: string): PlayerData => ({
   ...data,
   cards: data.cards.map((c) => (c.id === id ? { ...c, name: cleanName(name) } : c)),

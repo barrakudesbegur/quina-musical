@@ -4,7 +4,7 @@
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { PublicWinKind, RoundKind } from './feed/public.ts';
 import type { HeatLevel } from './logic/view.ts';
-import type { AraView, TabId } from './logic/tabs.ts';
+import type { AraView } from './logic/tabs.ts';
 
 const card = CA.card;
 
@@ -16,17 +16,22 @@ export const S = {
   desgraciatRound: CA.desgraciatRound,
   /** A round by name where it is named: "Quina 4", but the Desgraciat round is "Quina Desgraciada" (ca.ts). */
   roundName: (n: number, kind: RoundKind) => (kind === 'desgraciat' ? CA.desgraciatRound : CA.round(n)),
+  /** A round where the night's rounds are listed (Horari, a round's prizes): the special one by its name too. */
+  roundTitle: (n: number, kind: RoundKind) => (kind === 'desgraciat' ? CA.desgraciatRound : kind === 'special' ? CA.specialRound : CA.round(n)),
   card,
   /** A card's number next to its name: "#123" (the user's decision on names on screen). */
   cardNumber: (id: number) => `#${id}`,
 
-  tabs: { ara: 'Ara', premis: 'Premis', horari: 'Horari' } satisfies Record<TabId, string>,
-  tabBar: 'Seccions',
-  /** Ara's switch under the drum. */
+  /** The home screen's switch under the drum. */
   araViews: { historial: 'Historial', cartrons: 'Cartrons' } satisfies Record<AraView, string>,
   araSwitch: 'Què vols veure sota el tambor',
 
-  menu: 'Menú',
+  /** The header's button and its drawer (D87: "something else like settings"; it was "Menú"). */
+  settings: 'Ajustos',
+  /** The two corner buttons, Premis and Horari. */
+  cornersLabel: 'Premis i horari',
+  /** A stacked drawer's "‹". */
+  back: 'Enrere',
 
   // Adding cards
   addCard: 'Afegir cartró',
@@ -164,6 +169,8 @@ export const S = {
   myCards: 'Els meus cartrons',
   editLabel: (who: string) => `Nom i icona: ${who}`,
   removeLabel: (who: string) => `Treure: ${who}`,
+  /** A card's grip in Ajustos: drag it, or ↑ and ↓. */
+  moveLabel: (who: string) => `Moure ${who}: arrossega, o fes servir les fletxes amunt i avall`,
   soundsLabel: 'Sons',
   on: 'Sí',
   off: 'No',

@@ -1,19 +1,19 @@
 <script lang="ts">
-  // Premis: every round's Line and Quina prizes from the plan (the Desgraciat round's single bundle, the last card
-  // standing's), and which were already won (never by which card).
-  // Self-contained, so it can sit in a tab or a drawer.
+  // The Premis drawer: every round's Line and Quina prizes from the plan (the Desgraciat round's single bundle, the last
+  // card standing's), and which were already won (never by which card); one round's only when opened from Horari.
+  // Its content is being redesigned from the prizes model and real data (U30); this is the previous content.
   import type { PlayerApp } from '../model.svelte.ts';
   import { prizeRounds } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import PrizeLines from './PrizeLines.svelte';
   import RoundMark from './RoundMark.svelte';
 
-  let { app }: { app: PlayerApp } = $props();
-  const rounds = $derived(prizeRounds(app.plan, app.state, app.data.cards.map((c) => c.id)));
+  let { app, round: only }: { app: PlayerApp; round?: number } = $props();
+  const all = $derived(prizeRounds(app.plan, app.state, app.data.cards.map((c) => c.id)));
+  const rounds = $derived(only === undefined ? all : all.filter((r) => r.number === only));
 </script>
 
 <section class="prizes">
-  <h2 class="prizes__heading">{S.prizesTitle}</h2>
   {#if !rounds.length}
     <p class="prizes__empty">{S.noPlan}</p>
   {/if}

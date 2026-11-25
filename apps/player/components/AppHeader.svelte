@@ -1,6 +1,6 @@
 <script lang="ts">
   // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3", or "Quina Desgraciada"),
-  // and the menu (☰): the player's cards, sounds, last year's cards and "Esborrar dades" live there.
+  // and Ajustos (D87): the player's cards, sounds, last year's card and "Esborrar dades" live in its drawer.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -17,7 +17,7 @@
       {#if app.focusKind === 'special'}<span class="app-header__badge">{S.specialRound}</span>{/if}
     {/if}
   </h1>
-  <button type="button" class="icon-button app-header__menu" aria-label={S.menu} aria-haspopup="dialog" onclick={() => app.open({ kind: 'menu' })}>
-    <Icon name="menu" />
+  <button type="button" class="icon-button app-header__menu" data-testid="open-settings" aria-label={S.settings} aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })}>
+    <Icon name="settings" />
   </button>
 </header>

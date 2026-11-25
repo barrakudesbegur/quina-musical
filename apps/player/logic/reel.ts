@@ -1,4 +1,4 @@
-// The Ara tab's reel, synced to the projector's Spin on the cloud's clock. It shows generic card backs only:
+// The home screen's reel, synced to the projector's Spin on the cloud's clock. It shows generic card backs only:
 // the song appears once its landing is public, never before (the feed doesn't carry the target anyway).
 // `offset` is how many card backs have passed: it speeds up, cruises, and slows so it stops exactly at
 // `landAtMs`. A Suspense (`landAtMs: null`) coasts slowly until released. Pure.

@@ -7,7 +7,7 @@
   import CardMark from './CardMark.svelte';
   import ConfirmSheet from './ConfirmSheet.svelte';
   import IconPicker from './IconPicker.svelte';
-  import Sheet from './Sheet.svelte';
+  import Drawer from './Drawer.svelte';
 
   let {
     cards,
@@ -43,7 +43,7 @@
   }
 </script>
 
-<Sheet name="pad" title={S.padTitle} {onclose} {canClose}>
+<Drawer name="pad" title={S.padTitle} {onclose} {canClose}>
   <p class="number-pad__hint">{S.padHint}</p>
   <div class="number-pad__entry" style:--card-color="var(--card-color-{identity})">
     <span class="number-pad__mark" aria-hidden="true"><CardMark {identity} decorative /></span>
@@ -62,7 +62,7 @@
       {/if}
     {/each}
   </div>
-</Sheet>
+</Drawer>
 {#if leaving}
   <ConfirmSheet name="leave-pad" title={S.leaveTitle} text={S.leaveText} yes={S.leaveYes} no={S.leaveNo} danger={false} onyes={onclose} onclose={() => (leaving = false)} />
 {/if}

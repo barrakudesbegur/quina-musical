@@ -2,10 +2,11 @@
 // - Production links: quina.barrakudesbegur.org/<edition>/<cardId>, for example /26/123 (the printed QR).
 // - Development: the app lives at /player/, so the same route also works as a hash: /player/#/26/123.
 // - Last year's links: /?c=123 (several c= allowed). They get "Aquest cartró és de l'any passat".
-// - Development hints, for reviewing screens: &tab=ara|premis|horari, &view=historial|cartrons (Ara's switch),
-//   &open=pad|menu, &cards=123,57 (demo cards).
+// - Development hints, for reviewing screens: &view=historial|cartrons (the home screen's switch),
+//   &open=premis|horari|ajustos|pad (a drawer), &cards=123,57 (demo cards).
 import { LEGACY, PLAYER_CONFIG } from '../config.ts';
-import { isAraView, TAB_IDS, type AraView, type TabId } from './tabs.ts';
+import { isOpenable, type OpenableDrawer } from './drawers.ts';
+import { isAraView, type AraView } from './tabs.ts';
 
 export type Route =
   /** No card in the link. */
@@ -87,13 +88,11 @@ export function homeHref(url: UrlParts, { edition, base = PLAYER_CONFIG.devBase 
   return `${path}${query}`;
 }
 
-export type DialogId = 'pad' | 'menu';
-
 export interface DevHints {
-  tab: TabId | null;
-  /** Ara's view (the switch under the drum). */
+  /** The home screen's view (the switch under the drum). */
   view: AraView | null;
-  open: DialogId | null;
+  /** A drawer to open. */
+  open: OpenableDrawer | null;
   /** Demo cards: null to use the demo's own, [] for none. */
   cards: number[] | null;
 }
@@ -101,15 +100,12 @@ export interface DevHints {
 /** Review hints in the query (development and demos). */
 export function devHints(search: string): DevHints {
   const params = new URLSearchParams(search);
-  // The older review links still work: the 5 tabs became Ara's two views, and Programa became Horari.
-  const tab = params.get('tab');
-  const view = params.get('view') ?? tab;
+  const view = params.get('view');
   const open = params.get('open');
   const cards = params.get('cards');
   return {
-    tab: isAraView(tab) ? 'ara' : tab === 'programa' ? 'horari' : tab && (TAB_IDS as readonly string[]).includes(tab) ? (tab as TabId) : null,
     view: isAraView(view) ? view : null,
-    open: open === 'pad' ? 'pad' : open === 'menu' || open === 'help' ? 'menu' : null,
+    open: isOpenable(open) ? open : null,
     cards: cards === null ? null : cards.split(/\D+/).map(cardId).filter((id): id is number => id !== null),
   };
 }

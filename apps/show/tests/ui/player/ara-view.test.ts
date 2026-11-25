@@ -3,11 +3,10 @@
 // card on top.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ARA_VIEWS, TAB_IDS, araViewFor } from '../../../../player/logic/tabs.ts';
+import { ARA_VIEWS, araViewFor } from '../../../../player/logic/tabs.ts';
 import { MemoryStorage, PlayerStorage, addCard, emptyData, readData, setAraView } from '../../../../player/logic/storage.ts';
 
-test('three tabs: Ara, Premis and Horari', () => {
-  assert.deepEqual([...TAB_IDS], ['ara', 'premis', 'horari']);
+test('the home screen shows Historial or Cartrons under the drum (no tabs: D73)', () => {
   assert.deepEqual([...ARA_VIEWS], ['historial', 'cartrons']);
 });
 

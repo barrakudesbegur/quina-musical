@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Thin strips under the header, on every tab: Admin's notice, and the Check in progress and its result. (The
+  // Thin strips under the header, on the home screen: Admin's notice, and the Check in progress and its result. (The
   // connection strip is ConnectionStrip, at the very top.)
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';

@@ -1,7 +1,7 @@
 <script lang="ts">
   // Ara, the home: the drum on top (or what the scene shows there, or the pause's nino), then the Historial |
   // Cartrons switch and that view. The switch is remembered on the device; Cartrons shrinks the drum to a strip.
-  // Self-contained: it doesn't know whether it sits in a tab or under drawers.
+  // The home screen (D73): always there, under the drawers.
   import type { PlayerApp } from '../model.svelte.ts';
   import CardsList from './CardsList.svelte';
   import HistoryList from './HistoryList.svelte';
