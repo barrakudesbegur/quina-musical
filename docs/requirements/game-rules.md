@@ -22,6 +22,7 @@ _From event.md › The night, step by step, One round, The special rounds._
 
 - Each edition decides how many rounds it plays and in what order. The night's plan in Admin holds them (pending U18). 2025 played 10 regular rounds, then the Desgraciat, then the Especial: 12 rounds. 2024's 12 rounds felt long.
 - Each round plays one card type, chosen in Admin. Only cards of that type are valid in it.
+- Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026: Quines 1–5 play pool 1 (side 1), Quines 6–10 pool 2 (side 2); the special rounds pending U49. The presenters explain the sides in rounds 1 and 6.
 - **The order can change during the night.** Upcoming rounds can be reordered and edited live, for example to move the Desgraciat. Rounds already played stay fixed.
 - A round never starts by itself. The presenters start it when they've announced its prizes.
 - On screen a round is "Quina 1", "Quina 2"…. The special round is "Quina Especial", with no number, and the Desgraciat is "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".
@@ -31,7 +32,7 @@ _From event.md › The night, step by step, One round, The special rounds._
 _From event.md › One round._
 
 - A regular round runs from its first song until a Bingo is confirmed. It plays normal cards.
-- Every round plays a shuffle of the whole Pool. It ends long before the Pool runs out.
+- Every round plays a shuffle of its whole pool. It ends long before the pool runs out.
 - **Only landings count.** A song counts for the cards from its Landing. A Tease or a Decoy never counts.
 - **The Line:** the first card with a complete row of 4 songs wins the Line prize. There's only one Line per round. The round goes on.
 - **The Bingo:** the first full card, with all 12 songs landed, wins the round's main prize. Players shout "Quina!". The round ends.
@@ -71,7 +72,7 @@ _From event.md › The cards (Knowing which cards are sold); the mixer decisions
 - Sellers take cards in order from stacks of 50, so the sold numbers form ranges.
 - The tech updates the ranges during the night. It's reliable but not exact: a range can contain unsold cards.
 - Each round counts only the cards in play of its card type.
-- One normal card serves every regular round. The corn seeds come off easily between rounds.
+- One normal card serves every regular round: side 1 in Quines 1–5, side 2 in Quines 6–10 (D102). The corn seeds come off easily between rounds.
 - One special card plays both the Desgraciat and the Quina Especial, as in 2025 (D81).
 
 ## Claims

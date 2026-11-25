@@ -16,10 +16,17 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U34 · How many songs in the pool
-The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.md)) gives candidate nights from a first song at 18:05: 60 songs (rounds end about 21:16), 65 (21:25), 70 (21:34, bad case 21:46), 77 (21:47, no margin before 22:00), 86, the whole draft (22:04).
-The user leans to 70 and is discussing it with the organizers (25 Nov); the playlist is at 80 for now (D99).
-**Default:** 70, the study's recommendation.
+### U49 · The special rounds' pool
+D101 gives Quines 1–5 and 6–10 a pool each. The Quina Especial and the Desgraciat may play a third.
+**Default:** a third pool of 70 for the special card, which plays both special rounds (D81), printed on one side.
+
+### U50 · How the screens point to the right side
+The presenters explain the sides in rounds 1 and 6 (D102).
+**Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 6; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
+
+### U51 · Round 6's pace
+Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). Round 6 starts a new pool, so its songs are all new too.
+**Default:** round 6 plays at round 1's slower pace.
 
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
@@ -78,6 +85,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U34 · How many songs in the pool** (2026-11-25) → D100: 70, final, for each pool.
 - **U42 · Where the night's settings file lives** (2026-11-25) → D97 and D98: in this public repo, every prize included; hiding prizes is only for the hype on the players' screens.
 - **U45 · The shake icon** (2026-11-25) → D94: option C with a smaller, medium "×3" (size option 2 for now), no frame.
 - **U44 · The menu's rare, risky holds** (2026-11-25) → D92: they keep "Mantén premut", as a tag beside the label.

@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D100**, **U49**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D103**, **U52**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -15,7 +15,13 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## In flight
 
-- **The playlist (D99, 25 Nov).** It held 76 songs when fetched. Sound engine downloaded and checked all of them (none left for the user) and made temporary cards in `data/media/2026/cards-TEMPORARY-not-for-print/` from an untracked pool `data/pools/2026-temp.json`. About 10 more are cut, probably to 70 (U34 stays open until the user confirms). When the cut comes, tell Sound engine to re-fetch and remake the cards (minutes), and log U34 if the user settles it.
+- **Two pools and double-sided cards (D100–D102, 25 Nov).** Pool 1 (70, final) plays Quines 1–5 on side 1; pool 2 (being filled, then 70) plays Quines 6–10 on side 2; the special rounds' pool is U49 (default: a third). Asked on 25 Nov:
+  - Sound engine: re-fetch pool 1 and remake the temporary cards; an impact report on several pools (engine, protocol, Shuffle, cards.json with sides, disk, R2, hook time) before building; don't download pool 2 until the user says it's filtered;
+  - Backend: the cloud's side (a round's pool, a card's sides on phones, the settings file) and R2 options past 10 GB;
+  - Frontend: a content spec for the double-sided card for me to check, then boards with the user (D102); nothing before the user comes.
+
+  When the reports arrive: raise storage, disk and hook time as U's with options.
+- **Playlist covers:** a session named quina-musical-df is making three Spotify covers (part 1, part 2, especial) with the user. I briefed it on 25 Nov; it reports decisions to me.
 - **The Check's redesign (grilling the user in chat, from 25 Nov evening).** The user dislikes today's Check flow and the console's Check screen. The projector's look is fine. Their complaints: it's an awkward, boring moment; the presenters can't build hype or time the fanfare around their voices; the console should show the card as a grid; the queue makes no sense, since it's usually one card; and the Confirmar button goes against the model, since rejecting is only for exceptions. Round 1 asked: Q1 the presenters pace each reveal, plus "Seguides" stopping before the last song; Q2 the console knows the result first, in private; Q3 a pass needs no confirmation and the fanfare fires on the presenters' cue; Q4 the suspense order, deciding song last; Q5 "Algú més?" asked while taking the number. Next round: the cue's form, an exceptional reject, how a fail plays out, the console's grid, the Desgraciat's Check, voices in the Celebration. When understanding is shared: D-entries, then the requirements (game-rules › The Check, screens › Console, show-and-music › the Check's sound), then Sound engine (engine and protocol) and Frontend (a content spec, then boards). No code until the user says "implement".
 - **Frontend's canvas comments are done** (v61, logged as D95 and D96). Two threads on `Mobil-B-J2` stay open for the user: #3 is U47 (the icon picker's style) and #4 is U46 (Londrina's two lowercase exceptions). Frontend's to-do for when the code unfreezes: the corn's shade path in CardMark and pending covers on the drum's decoy tiles; IconPicker, NumberField's QR button, the save button and the corners follow the v61 boards.
 - **71caa9c, keep or revert:** Frontend's handoff says the orchestrator would ask the user. Asked in chat on 25 Nov; no answer yet. Meanwhile it stays, until the user agrees the boards that replace it.
@@ -36,9 +42,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - U48: I recommend sponsors' names and logos in the file, never their money amounts.
 
   Backend's plan: `npm run plan -- check|push|pull` and a preflight diff, about a day of work, built after U43. Then the orchestrator parses the organizers' spreadsheet into the file.
-- **The pool size (U34):** the study is in `docs/research/reports/pool-size-2026.md`, and the user's page is https://claude.ai/code/artifact/dd4e4ff9-b838-4402-8f64-d6b02677703b. I recommend 70. When the user picks:
-  - tell Sound engine (its expected-end proposal: seconds per song per round, from the seeded Queue);
-  - tell Frontend (Admin's default `roundMinutes`, 25 → about 15).
+- **The pool size is 70 (D100, answering U34).** Told on 25 Nov: Sound engine (its expected-end proposal, seconds per song per round from the seeded Queue) and Frontend (Admin's default `roundMinutes`, 25 → about 15, when the code unfreezes).
 - **The listening pass (U13):** the user is listening. Transitions stay frozen until then.
 
 ## Where things are

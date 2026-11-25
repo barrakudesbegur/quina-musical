@@ -80,6 +80,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - **special cards** play the Quina Especial. Its prizes are bigger, so its card is sold separately.
   - In 2025 the special card also played the Quina del Desgraciat: the price sheet at the bar listed it for "Quina especial i quina del desgraciat".
   - The types are fixed when the cards are printed, with fewer special cards than normal ones. Each type has its own colour.
+- **2026: the normal card is printed on both sides,** with the same number. Side 1 plays Quines 1–5 and side 2 plays Quines 6–10, each with its own songs. Side 2 has its own design, and each side shows which rounds it's for. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
 - **Each edition** has a new title (the paper colour may stay), so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
 - **Printing:**
@@ -105,11 +106,12 @@ This page explains the event: what happens on the night, who does what, and how 
 
 - **The pool** is the curated playlist the cards are printed from.
   - Over several weeks, everyone in the team adds songs to a shared Spotify playlist.
-  - Then a few members meet and filter it down to the final count. This year's list is final on **1 December 2026**.
+  - Then a few members meet and filter it down to the final count.
+  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–5 and one for Quines 6–10. The first was final on 25 November; the second is still being filled. The Especial and the Desgraciat may get a third.
   - An archive playlist keeps past songs.
 - **The size is a hard choice** because it shapes the night: more songs mean longer rounds. 2024 had 87 songs, which was too many. 2025 had 77 (the plan said about 80, and fewer was fine). Each edition decides its own.
 - **The songs:** popular hits from every era and genre, including Catalan, Spanish and Christmas songs.
-- **Every round plays a shuffle of the whole pool.** A round ends long before the pool runs out: in 2025 about 48 of 77 songs.
+- **Every round plays a shuffle of its whole pool.** A round ends long before the pool runs out: in 2025 about 48 of 77 songs.
 - **Every song starts at its hook,** its most recognizable moment, usually a chorus.
   - Before the software, songs were cut by hand, which was tedious.
   - Now the tech prepares them.

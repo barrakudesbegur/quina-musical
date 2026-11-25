@@ -11,12 +11,13 @@ What the song pool, the song preparation and the printed cards must be, as it st
 
 _From event.md › The songs._
 
-- The **Pool** is the curated playlist the cards are printed from. Every round's Queue is a shuffle of the whole Pool.
+- A **Pool** is a curated playlist a side of the cards is printed from. Each round plays one pool, and its Queue is a shuffle of that whole pool.
+- **2026 has two pools of 70 songs** with different songs (D101): pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special rounds' pool is pending U49 (default: a third pool of 70).
 - The team builds it together:
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
   - an archive playlist keeps past songs.
-- This year's list is final on **1 December 2026**. On 25 Nov it was filtered down to 80 songs, with about 10 more to cut that day (D99).
+- Pool 1 was final on 25 Nov at 70 songs (D100). Pool 2 (https://open.spotify.com/playlist/0sWgctjhXP6TS1aB4jfaHb) is still being filled by the organizers, then filtered to 70.
 - The songs are popular hits from every era and genre, including Catalan, Spanish and Christmas songs.
 - Last year's 77 songs are only test material. Everything that depends on the Pool must run again on a new one: preparation, hooks, cards and storage.
 - **The songs are never published.** Audio stays out of the public repo and off the public internet.
@@ -25,7 +26,7 @@ _From event.md › The songs._
 
 _From event.md › The songs, Timing; 2025's song-count notes; the mixer decisions › Phase and Heat._
 
-The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31). For 2026 a study proposes candidate schedules by pool size; the list will almost surely be under 100 songs (D80). Since 25 Nov Sound engine downloads the 80-song list and makes temporary cards from it (D99).
+The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31). For 2026: 70 songs per pool, final (D100), the study's recommendation.
 
 **2025's planning numbers:**
 
@@ -77,6 +78,7 @@ _From event.md › The songs; the Sound engine handoff._
 _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
+- **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
 - Each edition has a new title, so last year's cards are easy to spot; the paper colour may stay (D85). 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
 - Each card carries a faint year stamp.
 - The price isn't printed.

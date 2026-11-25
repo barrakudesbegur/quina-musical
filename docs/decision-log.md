@@ -860,3 +860,15 @@ By: the user (to Backend, 25 Nov: "it is part of the model"). Source: Backend's 
 ### D99 · The playlist is down to 80 songs · 2026-11-25 · Active
 The organizers have filtered the playlist down to 80 songs. It's not the final count: about 10 are cut later that day, probably to 70, which the user is discussing with the organizers (U34). Meanwhile Sound engine may download the 80 songs and make temporary cards from them. When fetched, the playlist held 76 (the organizers may be removing songs), and the user said to go with whatever it holds.
 By: the user. Source: the user's message of 25 Nov. Amends: D80. Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.
+
+### D100 · 70 songs is the final count · 2026-11-25 · Active
+Each pool has 70 songs. Playlist 1 is filtered to its final 70; playlist 2 is being filled and will be filtered to 70 too (D101). Answers U34.
+By: the user. Source: open-questions.md › Answered (U34); the user's message of 25 Nov. Amends: D99. Lives in: requirements/songs-and-cards.md › The pool's size.
+
+### D101 · Two pools of 70, one for each half of the regular rounds · 2026-11-25 · Active; the special rounds' pool Pending (U49)
+The night has two playlists of 70 songs each, with different songs: Quines 1–5 play pool 1 and Quines 6–10 play pool 2. Pool 1 is final; the organizers are adding songs to pool 2 before filtering it to 70. Which pool the Quina Especial and the Desgraciat play isn't decided; assume a third one (U49).
+By: the user. Source: the user's message of 25 Nov. Amends: D99; event.md's "every round plays a shuffle of the whole pool" (now: of its own pool). Lives in: requirements/songs-and-cards.md › The pool; requirements/game-rules.md › The night's rounds.
+
+### D102 · The normal card is printed on both sides · 2026-11-25 · Active
+Side 1 plays Quines 1–5 (pool 1) and side 2 plays Quines 6–10 (pool 2), with the same card number on both sides. Side 2 has its own design, and each side carries a new mark showing the rounds it's for; the user designs both with Frontend, so nobody changes the card's design before then. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
+By: the user. Source: the user's message of 25 Nov. Lives in: requirements/songs-and-cards.md › The card; event.md › The cards.

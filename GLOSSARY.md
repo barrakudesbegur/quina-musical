@@ -38,8 +38,12 @@ The moment a round is presented, when the presenters press "Comença la quina": 
 _Avoid_: Round start
 
 **Card**:
-A printed sheet of 12 songs in 3 lines of 4, identified by its number (shown as "#123"). A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
+A printed sheet identified by its number (shown as "#123"), with 12 songs in 3 lines of 4 on each of its sides. A normal card is kept for every regular round of the game; players mark its songs with corn seeds.
 _Avoid_: Cartró (outside the UI), ticket
+
+**Side**:
+One printed face of a card: 12 songs from one pool, valid only in the rounds that play that pool. Both sides of a card share its number. A normal card has two sides; in a round, only the side of the round's pool counts.
+_Avoid_: Face, half
 
 **Special card**:
 A card that is only valid in the special round.
@@ -92,7 +96,7 @@ Whoever provides a prize: Barrakudes itself or an outside business.
 ### The music
 
 **Pool**:
-The full set of songs the cards are printed from. Every round's queue is a shuffle of the whole pool.
+A set of songs one side of the cards is printed from. An edition can have several; each round plays one, and its queue is a shuffle of that whole pool.
 _Avoid_: Song list, catalogue
 
 **Queue**:

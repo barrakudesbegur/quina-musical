@@ -10,8 +10,8 @@ The playlist → the pool prepared and checked → the cards made → the hooks 
 
 | When | Milestone | Who |
 |---|---|---|
-| Now | The playlist is down to 76 (D99): downloaded, checked, temporary cards made (25 Nov). About 10 more are cut, probably to 70 (U34, with the organizers); then Sound engine re-fetches and remakes the cards in minutes | User, Sound engine |
-| **Tue 1 Dec** | **Playlist final** | User |
+| Now | Two pools of 70 (D100, D101). Pool 1 is final (25 Nov): Sound engine re-fetches it and remakes the temporary cards. Pool 2 is being filled by the organizers, then filtered to 70. The double-sided card's design: the user with Frontend (D102) | User, Sound engine, Frontend |
+| **Tue 1 Dec** | **Playlists final** (pool 1 already on 25 Nov) | User |
 | 1 Dec, first | `data/pools/2026.json` created, its cards at `apps/cards/dist/cards.json`; last year's test cards move to `data/pools/default/cards/`, and every test reads cards through its pool | Sound engine, then Frontend and Backend |
 | 1–3 Dec | The pool downloaded, prepared and quality-checked. Unusable songs are flagged at once, so the user can swap them; the user downloads only the leftovers by hand | Sound engine, user |
 | **4–5 Dec** | **The cards generated (`npm start -- --pool 2026` in apps/cards), proofed and printed**. No song changes after this | User, Frontend |
@@ -36,9 +36,10 @@ The items themselves, with their defaults, are in [open-questions.md](open-quest
 
 - **Song downloads (25 Nov).** YouTube asked for a sign-in because the Mac's traffic went through a VPN. With the VPN off, downloads work (D66); the user downloads only the leftovers. All 76 songs downloaded on 25 Nov with none left for the user; 7 YouTube fallbacks were wrong versions or off-length and were swapped for official uploads (D99).
 - **Hook approval is on the critical path.** A new pool has no playable song until its hooks are approved: about 2 minutes a song, about 3 hours for 86 songs. Prep then runs again in about 30 minutes.
-- **Storage:** about 68 MB a song, so about 100 songs fit R2's free 10 GB. The final list will almost surely be under 100 (D80).
+- **Storage:** about 68 MB a song, so about 100 songs fit R2's free 10 GB. Two pools are 140 songs (about 9.5 GB) and a third would make 210 (about 14 GB): over the free tier. Backend and Sound engine are asked for options (25 Nov).
+- **Hook approval doubles or triples:** about 2 minutes a song is about 4.5 hours for 140 songs and 7 for 210. Sound engine is asked how to cut it.
 
-- **Disk space:** 12 GB free on 25 Nov; preparing a pool takes about 4 GB, and the stems guard wants 10 GB free. Nothing is deleted (D80).
+- **Disk space:** 12 GB free on 25 Nov; preparing a pool takes about 4 GB, and the stems guard wants 10 GB free, so two or three pools may not fit. Nothing is deleted (D80).
 - **A late playlist change** is possible until the cards are made on 4–5 Dec (D83). The quality check must flag bad songs by 3 Dec, so the swaps fit.
 - **Hooks are proposals:** on last year's songs the automatic top candidate was within a bar of the real hook in only 26 of 77 songs. The user's approval pass is needed, not optional.
 - **The QR domain switch** retires last year's app at that address; nobody uses it (D76). It's in `apps/cloud/docs/deploy-plan.md` (step 7), with an undo.

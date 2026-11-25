@@ -10,7 +10,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 |---|---|
 | Card type per round, every screen and the cloud | **Done** |
 | The Desgraciat round: engine, cloud and screens | **Done**, including the shared win and no celebration title. Its default card type becomes the special card (D70) |
-| Songs downloaded | **Done for the current list (25 Nov, D99):** all 76 songs the playlist held, checked (122–159 kbps, within 4 s of Spotify), none left for the user. Temporary cards made, not for print. Redone in minutes after the cut to about 70 (U34) |
+| Songs downloaded | **Two pools of 70 (D100, D101).** Pool 1 is final: the 76 were downloaded and checked, and the temporary cards are remade from its 70. Pool 2 is still being filled; the special rounds' pool is pending U49. Storage, disk and hook time for 140–210 songs are being checked |
 | The card generator ready | **Ready**, with provisional values (D67, D68) and the PDF's install-script approval still to do (U17) |
 | The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
 | Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
@@ -23,10 +23,10 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
-| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | The 76 songs downloaded and checked; temporary cards made (D99) | After the cut: re-fetch and remake the temporary cards; then prep by 3 Dec; the expected end once U34 is picked | U13, U14, U34 |
-| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U46, U47 |
+| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Pool 1 final (D100): re-fetch and remake the temporary cards; the impact of several pools (D101) | Pool 2 when filtered; prep by 3 Dec; the expected end for 70 songs | U13, U14, U49, U51 |
+| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The double-sided card with the user (D102); the prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U46, U47, U50 |
 | **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The settings file (`plan check/push/pull`) after U43 | U16, U19, U43, U48 |
-| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D99 logged on 25 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U34, U36–U39, U43, U48 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D102 logged on 25 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U36–U39, U43, U48, U49 |
 
 ## Recently done (25–26 Nov)
 
