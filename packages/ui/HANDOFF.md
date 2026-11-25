@@ -6,7 +6,7 @@ Resume the Frontend's work from this file. Keep it current at every milestone, b
 
 - **In progress:** the U30 proposals are drawn (three boards, see "In progress"). Publishing them to the design canvas waits on the user's OK: this session's permission check stopped the publish.
 - **Next:**
-  - **the cards, before 4 Dec (D83):** the user makes them on 4–5 Dec if the playlist is ready on 1 Dec, and the pool is prepared and checked by 3 Dec. The generator is ready (provisional values D67–D69; no repeated card or line, `65b74ef`; `--check` draws the cards too). The PDF needs U17 (the user's task, before 4 Dec). Then proof the PDFs with the user. A new title each edition; the paper colour may stay (D85);
+  - **the cards, before 4 Dec (D83):** the user makes them on 4–5 Dec if the playlist is ready on 1 Dec, and the pool is prepared and checked by 3 Dec. The generator is ready (provisional values D67–D69; no repeated card or line, `65b74ef`; `--check` draws the cards too). The PDF renders end to end (U17 done: canvas approved and built; `fbfe5bb` copies the fonts into the build): both PDFs in about 30 s. Still needed: the 2026 pool file's `cardsJson` (Sound engine; suggested `apps/cards/dist/cards.json`), the user's final values, then generate, proof with the user, commit dist/ and Backend redeploys. A new title each edition; the paper colour may stay (D85);
   - when the user picks (U30): build the drawers. One home screen, the two corner buttons and stacked drawers; the tabs go, with no fallback version in the code (D73, D84; the operational plan Bs stay);
   - when the user picks the pool size (U34; the study says 70): Admin's default `roundMinutes` follows it (about 15 at 70 songs). The Orchestrator sends it with the pick;
   - the presenters' checklist on the cheat sheet (from the 2025 running order: welcome points, every prize and sponsor before each round, the throw breaks, the close);
@@ -17,7 +17,6 @@ Resume the Frontend's work from this file. Keep it current at every milestone, b
 - **Blocked:** publishing to the design canvas (the user's OK).
 - **On hold:** the theme pass (U12: "not ready yet").
 - **Waiting on the user** (`docs/open-questions.md`):
-  - U17 (the PDF install script), before 4 Dec;
   - U30 (the corner buttons' style and the Horari icon, the drawers' hierarchy, the prizes drawer), and the OK to publish the boards;
   - U34 (the pool size).
 
@@ -126,7 +125,7 @@ The user's dates: the playlist Tue 1 Dec; the pool prepared and checked by Thu 3
    - the amounts and the seed are in `src/config.ts`;
    - the default pool still gives exactly the committed `cards.json`.
 
-   Prices aren't printed (docs/event.md); the screens read them from card-types.json. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call, U17: it runs an install script).
+   Prices aren't printed (docs/event.md); the screens read them from card-types.json. The PDF's native `canvas` module is approved and built in the main checkout (U17); a fresh checkout needs `npm install-scripts approve canvas` in `apps/cards` once (the user's call).
 
    Then: the playlist on Tue 1 Dec, the pool prepared and checked by Thu 3 Dec, and the user makes the cards on 4–5 Dec (D83): generate and proof the PDFs with them, never before the playlist is final. Cards are sold only on the night (D71). The README has the steps.
 3. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
@@ -139,7 +138,7 @@ The user's dates: the playlist Tue 1 Dec; the pool prepared and checked by Thu 3
 - **The theme pass (U12):** on hold, "not ready yet".
 - **Naming the "Ara" tab** ("I would call this songs"): moot once the tabs go (D73).
 - **Canvas comments:** the your-song thread and the menu's drag-handle thread were sent to Claude and are addressed but still open; reply and resolve when the user says "address the comments". About 100 plain comments were addressed (versions 40–46) but remain open, because they weren't sent to Claude.
-- **U17** (before 4 Dec), **U34** (the pool size) in `docs/open-questions.md`, and U19 (the checks on real phones, the projector and the tablet). Answered on 25 Nov: D81 (one special card plays both the Desgraciat and the Especial: phones and the projector checked, a test pins it), D83 (the card dates), D84 (no fallback versions in code; the operational plan Bs stay), D85 (a new title each edition; the paper colour may stay).
+- **U34** (the pool size) in `docs/open-questions.md`, and U19 (the checks on real phones, the projector and the tablet). Answered on 25 Nov: D81 (one special card plays both the Desgraciat and the Especial: phones and the projector checked, a test pins it), D83 (the card dates), D84 (no fallback versions in code; the operational plan Bs stay), D85 (a new title each edition; the paper colour may stay).
 
 ## Agreements with the other sessions
 
