@@ -113,7 +113,8 @@ _From event.md › The cards (Printing); timeline.md._
 - The generator checks everything before it writes: duplicate songs, songs without a title, bad type ids, amounts, a Pool of fewer than 12 songs.
 - **Once the cards are printed, no song can change.** A playlist change after the cards go to print means reprinting them; after they're printed, it's not possible.
 - **Print well ahead.** Never the day before. Printing takes a few hours at a local print shop, and cards are sold only on the night (D71), The user makes the cards on 4–5 December if the playlist is ready (D83), so the pool is prepared and quality-checked between 1 and 4 December, and swaps happen before then.
-- The PDF needs a native module whose install script the user must approve (pending U17).
+- **Duplex (D102):** the PDF alternates front and back pages in the same card order, for a long-edge flip ("dúplex, vora llarga"). Every element stays at least 5 mm inside the cut edges on both sides; the cut lines are on the front only; the back has no full-bleed colour that depends on alignment. One proof sheet comes first (pending U52).
+- The PDF needs a native module; the user approved its install script (U17).
 - Every card's songs are public, because phones need them (D78).
 
 ## Prices

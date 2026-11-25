@@ -18,7 +18,20 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 
 ### U49 · The special rounds' pool
 D101 gives Quines 1–5 and 6–10 a pool each. The Quina Especial and the Desgraciat may play a third.
-**Default:** a third pool of 70 for the special card, which plays both special rounds (D81), printed on one side.
+**Default:** a third pool of 70 for the special card, which plays both special rounds (D81), printed on one side with a blank back. The back could carry something instead (house rules, sponsors); that needs deciding before print.
+
+### U52 · Duplex printing and the paper
+Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
+**Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
+
+### U53 · Storage past the free 10 GB
+140 songs take about 9.5 GB in R2 and 210 take about 14 GB, at about 68 MB a song (Backend, Cloudflare's prices read on 25 Nov). R2 charges $0.015 per GB-month beyond 10 GB, averaged over the month: 14 GB from 12 to 28 Dec, pruned after the night, costs $0; from 5 Dec, about $0.01; kept a whole month, $0.06. The alternative is storing each song smaller (about 20 MB, 4.2 GB for 210), which is about a day of Backend's work plus Sound engine's.
+**Default:** the plain pool, pushed about a week before the night and pruned right after. It needs the user's OK past the "free plan only" rule, and a check that R2 has a payment method in Cloudflare's dashboard.
+
+### U54 · What to call each set of 70 songs
+The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
+**Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
+
 
 ### U50 · How the screens point to the right side
 The presenters explain the sides in rounds 1 and 6 (D102).

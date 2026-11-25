@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D103**, **U52**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D103**, **U55**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -20,7 +20,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - Backend: the cloud's side (a round's pool, a card's sides on phones, the settings file) and R2 options past 10 GB;
   - Frontend: a content spec for the double-sided card for me to check, then boards with the user (D102); nothing before the user comes.
 
-  When the reports arrive: raise storage, disk and hook time as U's with options.
+  Frontend's content spec for the double-sided card arrived and checks out (notes sent on 25 Nov). Backend's facts arrived: storage is U53, and its "one prepared pool of 210 with three lists" became the naming question U54. Still due from Sound engine: the engine's impact, disk and hook time. Then raise disk and hook time as U's.
 - **Playlist covers:** a session named quina-musical-df is making three Spotify covers (part 1, part 2, especial) with the user. I briefed it on 25 Nov; it reports decisions to me.
 - **The Check's redesign (grilling the user in chat, from 25 Nov evening).** The user dislikes today's Check flow and the console's Check screen. The projector's look is fine. Their complaints: it's an awkward, boring moment; the presenters can't build hype or time the fanfare around their voices; the console should show the card as a grid; the queue makes no sense, since it's usually one card; and the Confirmar button goes against the model, since rejecting is only for exceptions. Round 1 asked: Q1 the presenters pace each reveal, plus "Seguides" stopping before the last song; Q2 the console knows the result first, in private; Q3 a pass needs no confirmation and the fanfare fires on the presenters' cue; Q4 the suspense order, deciding song last; Q5 "Algú més?" asked while taking the number. Next round: the cue's form, an exceptional reject, how a fail plays out, the console's grid, the Desgraciat's Check, voices in the Celebration. When understanding is shared: D-entries, then the requirements (game-rules › The Check, screens › Console, show-and-music › the Check's sound), then Sound engine (engine and protocol) and Frontend (a content spec, then boards). No code until the user says "implement".
 - **Frontend's canvas comments are done** (v61, logged as D95 and D96). Two threads on `Mobil-B-J2` stay open for the user: #3 is U47 (the icon picker's style) and #4 is U46 (Londrina's two lowercase exceptions). Frontend's to-do for when the code unfreezes: the corn's shade path in CardMark and pending covers on the drum's decoy tiles; IconPicker, NumberField's QR button, the save button and the corners follow the v61 boards.
