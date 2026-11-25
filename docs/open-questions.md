@@ -86,7 +86,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 - **U22 · The printed cards are public** (2026-11-25) → D78: public, and anything may be public unless there's a reason.
 - **U5 · Card prices on the projector** (2026-11-25): show only the price for the coming round, on that round's Interval screen (the before-the-start screen is round 1's). A normal card costs the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat (2025: 1.50 €, so 15 € before round 1); before the Quina Especial, the special card's fixed price. The prices come from setup data, never hard-coded.
 - **U6 · The Desgraciat's celebration title** (2026-11-25): none. "DEMPEUS!" is dropped; the rest of its Celebration stays. The phones' per-card "Dempeus" / "Assegut" labels stay.
-- **Rehearsal dates:** 13 and 19 December (event.md).
+- **Rehearsal dates:** withdrawn. The 13 and 19 December written in event.md were the orchestrator's defaults, not the user's; reopened as U27.
 - **Late claims (R2-Q12):** a late claimer wins if nobody else claimed; any other case is decided on the spot (event.md).
 - **The Desgraciat when the last players fall together:** they share the win (event.md).
 - **The Efectes pads:** icons, with the word version kept as a board (canvas, 24 Nov).
