@@ -103,7 +103,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - Admin's resume point carries side (`-C<n>`);
    - the preflight's cards check reads `sides` (each side 3×4, its songs in its Part), and every round's Part is prepared;
    - the "side exists for that card type" check, and the protocol's `sideWarnings(plan, cardTypes)` (side 2 never played, a side's rounds not contiguous), in the preflight;
-   - the cards.json conversion to `sides` is Frontend's commit; my two readers (the preflight's cards check, show.spec.ts) go on top at once and are pushed together with it, with no dual-shape reader (D84);
+   - the cards.json conversion to `sides` is one commit by Frontend, which includes my two readers (the preflight's cards check, show.spec.ts), with no dual-shape reader (D84). Send Frontend that diff once step A's types exist; Frontend sends the hash before pushing;
    - show.spec.ts reads lines through the round's side; the plan fixtures.
    The default test pool: all songs in Part "1", both card types one side on Part "1".
 6. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
