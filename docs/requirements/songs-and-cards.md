@@ -25,7 +25,7 @@ _From event.md › The songs._
 
 _From event.md › The songs, Timing; 2025's song-count notes; the mixer decisions › Phase and Heat._
 
-The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31).
+The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31). For 2026 a study proposes candidate schedules by pool size; the list will almost surely be under 100 songs (D80). Until the user hands it over, the team works with last year's songs.
 
 **2025's planning numbers:**
 

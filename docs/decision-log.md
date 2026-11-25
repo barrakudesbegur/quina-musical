@@ -780,3 +780,7 @@ By: the user. Source: open-questions.md › Answered (U22). Lives in: requiremen
 ### D79 · A song keeps its id when the playlist changes · 2026-11-25 · Active
 A song's id follows its Spotify track, not its playlist position. The draft grew from 86 to 151 songs and 83 moved, so ids by position would have moved every hook approval, cache and download onto another song. Hook approvals made on the draft carry over to the final pool.
 By: the sessions (Sound engine, within its remit). Source: commit fb321f4; Sound engine's report of 2026-11-25. Lives in: requirements/songs-and-cards.md › Hooks.
+
+### D80 · No work on this year's songs until the playlist is handed over · 2026-11-25 · Active
+Until the user hands over the playlist, the team works with last year's data: no downloads, prep or uploads of the draft. Files already downloaded stay. The final playlist will almost surely have fewer than 100 songs, so today's format fits R2's free storage. A study proposes the pool size, with candidate schedules to choose from. Answers U32; withdraws U33.
+By: the user. Source: open-questions.md › Answered (U32); the user's answers of 2026-11-25. Amends: D66 (no downloads until then). Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.

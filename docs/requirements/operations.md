@@ -95,7 +95,7 @@ _From the Sound engine and Backend handoffs; timeline.md › Risks._
 
 - R2's free storage is 10 GB.
 - A song is about 68 MB in today's format, with two approved hooks (up to about 92 MB with more). About 100 songs fit once last year's pool is pruned; the draft's 151 would take about 10.3 GB.
-- Past about 100 songs, either a lighter format (about 20 MB a song: the original audio plus Opus stems, decoded at sync; measured, not built) or paid storage (pending U32).
+- The final playlist will almost surely be under 100 songs (D80), so today's format stays.
 - Storage beyond 10 GB would cost money, so it needs the user's OK.
 
 ## Rehearsals
