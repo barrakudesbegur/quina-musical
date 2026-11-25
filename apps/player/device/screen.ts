@@ -1,35 +1,9 @@
 // Browser niceties, each feature-detected so nothing depends on it:
-// - a Screen Wake Lock, re-acquired when the page becomes visible again (the browser drops it when hidden);
+// - a Screen Wake Lock (packages/ui/client/wake-lock.ts, re-exported here);
 // - vibration, only as a bonus (iPhone Safari has none);
 // - motion preferences: reduced motion, and Data Saver on phones, both mean the still fallbacks.
 
-/** Keep the screen on while the app is visible. Returns a function that stops it. */
-export function keepScreenOn(): () => void {
-  if (typeof navigator === 'undefined' || typeof document === 'undefined' || !('wakeLock' in navigator)) return () => {};
-  let sentinel: WakeLockSentinel | null = null;
-  let stopped = false;
-  const request = async () => {
-    if (stopped || sentinel || document.visibilityState !== 'visible') return;
-    try {
-      sentinel = await navigator.wakeLock.request('screen');
-      sentinel.addEventListener('release', () => {
-        sentinel = null;
-      });
-    } catch {
-      // Refused (battery saver, not a secure context): the screen simply follows the phone's settings.
-      sentinel = null;
-    }
-  };
-  const onVisibility = () => void request();
-  document.addEventListener('visibilitychange', onVisibility);
-  void request();
-  return () => {
-    stopped = true;
-    document.removeEventListener('visibilitychange', onVisibility);
-    void sentinel?.release().catch(() => {});
-    sentinel = null;
-  };
-}
+export { keepScreenOn } from '../../../packages/ui/client/wake-lock.ts';
 
 /** A short vibration where supported (Android); a no-op elsewhere. */
 export function vibrate(pattern: readonly number[]): void {

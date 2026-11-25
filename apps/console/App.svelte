@@ -7,13 +7,18 @@
   - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
   and data-status hooks for themes, and data-wii while a Wii remote is connected (its badges show).
-  The Wii remote's controller is made here, once, and shared through context (context.ts › getWii).
+  The Wii remote's controller is made here, once, and shared through context (context.ts › getWii). The keyboard's
+  fallback (→ or PageDown: the default action, as the remote's A; logic/keys.ts) and the screen wake lock (the
+  tablet mustn't dim mid-show; only where the browser allows it) are set up here too.
 -->
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { setConsole, setWii } from './context.ts';
   import { ConsoleModel } from './model.svelte.ts';
   import { WiiController } from './wii/controller.svelte.ts';
+  import { keyCommand } from './logic/keys.ts';
+  import { sendDefault } from './logic/default-action.ts';
+  import { keepScreenOn } from '../../packages/ui/client/wake-lock.ts';
   import { S } from './strings.ts';
   import AfterPanel from './components/AfterPanel.svelte';
   import BeforePanel from './components/BeforePanel.svelte';
@@ -38,6 +43,25 @@
   const model = setConsole(new ConsoleModel());
   const wii = setWii(new WiiController(model));
   onMount(() => wii.start());
+  onMount(() => keepScreenOn());
+
+  function onKey(e: KeyboardEvent): void {
+    const target = e.target instanceof HTMLElement ? e.target : null;
+    const command = keyCommand({
+      key: e.key,
+      repeat: e.repeat,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      shiftKey: e.shiftKey,
+      targetTag: target && target !== document.body ? target.tagName.toLowerCase() : null,
+      targetEditable: target?.isContentEditable ?? false,
+      dialogOpen: document.querySelector('dialog[open]') !== null,
+    });
+    if (command !== 'default') return;
+    e.preventDefault();
+    sendDefault(model.act, model.defaultAction);
+  }
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
   const board = $derived(snap !== null && flow.scene === 'check' ? 'check' : 'play');
@@ -51,6 +75,8 @@
     if (rejection) untrack(() => model.rejected(rejection));
   });
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <div
   class="console"
