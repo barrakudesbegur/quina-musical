@@ -97,7 +97,15 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - `npm run plan -- check|push|pull` (check: `checkGamePlan`; push: the laptop's relay `PUT /api/plan`, which the link carries to the cloud, newest wins; pull: the cloud's plan read with the laptop's token, written to the file);
    - a preflight WARN when the laptop's plan differs from the file.
    My default for U43: the file wins until the doors open; on the night the cloud's newest plan wins, and `plan pull` brings phone edits back into the file.
-5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+5. **Card sides and Parts, step B** (D100–D102; agreed with Sound engine on 25 Nov; waits on U54 and Sound engine's step A). One night pool. Each song has a `part`; card-types.json's `sides: [{side, part}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
+   - journal-check accepts `side`;
+   - the projection's PublicRound.side and intro.side, 1 when absent;
+   - Admin's resume point carries side (`-C<n>`);
+   - the preflight's cards check reads `sides` (each side 3×4, its songs in its Part), and every round's Part is prepared;
+   - the "side exists for that card type" check, in the preflight;
+   - show.spec.ts reads lines through the round's side; the plan fixtures.
+   The default test pool: all songs in Part "1", both card types one side on Part "1".
+6. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
 
