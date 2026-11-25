@@ -6,16 +6,33 @@
 //   before → round 1 introduced → Shuffle → three landings → Parlem → Aguanta → Suspense → a Line claimed,
 //   checked and celebrated → back to the round → the Bingo claimed, checked and celebrated → the Interval →
 //   round 2 introduced → Shuffle → its first landing.
+// The claims are real wins: the Check decides (a card that fails it can't be accepted), so the show runs a fixed
+// Queue (?queue=) that completes a Line of the first card, then all of the second card.
 // It needs the default pool prepared on this machine; without it the test is skipped.
+import fs from 'node:fs';
+import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { ShowState } from '@quina/protocol';
 import { PLAN, SECRET_PRIZE } from '../../apps/cloud/test/support/plan.ts';
 import { Phone, startCloud, type Cloud } from './support/cloud.ts';
-import { hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
+import { REPO, hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
 import { Remote } from './support/remote.ts';
 
 /** The player follows these cards (the first two are the ones claimed). */
 const CARDS = [12, 34];
+
+/** The default pool's printed cards (apps/cards), each card's songs line by line. */
+function printedCard(id: number): number[][] {
+  if (!hasPreparedPool()) return [[]];
+  const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; lines: { id: number }[][] }[];
+  const card = cards.find((c) => c.id === id);
+  if (!card) throw new Error(`card ${id} is not in cards.json`);
+  return card.lines.map((line) => line.map((song) => song.id));
+}
+/** The first card's first Line, the second card's twelve songs (its Bingo), then the rest of a few other cards. */
+const LINE_SONGS = printedCard(CARDS[0] as number)[0] as number[];
+const BINGO_SONGS = printedCard(CARDS[1] as number).flat();
+const QUEUE = [...new Set([...LINE_SONGS, ...BINGO_SONGS, ...[1, 2, 3, 4, 5].flatMap((id) => printedCard(id).flat())])];
 const LANDING_MS = 90_000;
 /** The screens' checks: soft, so one run lists them all. */
 const soft = expect.configure({ soft: true });
@@ -72,10 +89,15 @@ async function expectScenes(screens: { show: Page; console: Page; player: Page; 
   await soft.poll(() => sceneOf(screens.phonePage, '[data-scene]'), { message: `phone (player on the cloud) in ${scene}` }).toBe(scene);
 }
 
+/** Every song landed so far in round 1 (the claims wait for their card's songs). */
+const landed = new Set<number>();
+
 /** Ask for the next song and wait until it has landed and plays. */
 async function land(previous: number | null): Promise<ShowState> {
   await remote.command('next');
-  return remote.until('a landing', (s) => s.status === 'playing' && s.current !== null && s.current.songId !== previous && s.transition === null, LANDING_MS);
+  const state = await remote.until('a landing', (s) => s.status === 'playing' && s.current !== null && s.current.songId !== previous && s.transition === null, LANDING_MS);
+  if (state.current) landed.add(state.current.songId);
+  return state;
 }
 
 test('one whole show, every screen following', async ({ browser }) => {
@@ -94,7 +116,7 @@ test('one whole show, every screen following', async ({ browser }) => {
 
   // ---- the show page starts, the screens connect --------------------------------------------------------
   // Silent (mute), fresh (no local journal), no auto-advance, the shortest Pace (Spins of about 4 s).
-  await show.goto(`${relay.url}/show/show.html?fresh=1&auto=0&mute=1&pace=8`);
+  await show.goto(`${relay.url}/show/show.html?fresh=1&auto=0&mute=1&pace=8&queue=${QUEUE.join(',')}`);
   await show.locator('#start-button').click();
   await remote.until('the show unlocked', (s) => s.status !== 'locked');
   await remote.command('setCardsInPlay', { ranges: '1-300' });
@@ -142,6 +164,7 @@ test('one whole show, every screen following', async ({ browser }) => {
   state = await land(playing ?? null);
 
   // ---- a Line: claimed, checked, celebrated, back to the round ---------------------------------------------
+  expect(LINE_SONGS.every((id) => landed.has(id)), `card ${CARDS[0]}'s first Line has landed`).toBe(true);
   await remote.command('claim', { cardId: CARDS[0], kind: 'line' });
   const checking = await remote.until('the Line checked', (s) => s.scene === 'check' && s.check !== null);
   await expectScenes(screens, 'check');
@@ -156,6 +179,9 @@ test('one whole show, every screen following', async ({ browser }) => {
   await expectScenes(screens, 'play');
 
   // ---- the Bingo, then the Interval -----------------------------------------------------------------------
+  // Until all twelve of the second card's songs have landed (the fixed Queue brings them next).
+  for (let i = 0; i < BINGO_SONGS.length && !BINGO_SONGS.every((id) => landed.has(id)); i++) state = await land(state.current?.songId ?? null);
+  expect(BINGO_SONGS.every((id) => landed.has(id)), `all of card ${CARDS[1]} has landed`).toBe(true);
   await remote.command('claim', { cardId: CARDS[1], kind: 'bingo' });
   const bingo = await remote.until('the Bingo checked', (s) => s.scene === 'check' && s.check?.kind === 'bingo');
   await remote.command('decide', { claimId: bingo.check?.claimId, valid: true });
