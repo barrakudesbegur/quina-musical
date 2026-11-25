@@ -12,6 +12,10 @@ The single place to resume the sound engine's work from. It was first written wh
 ## Now (kept current at each milestone)
 
 - **In progress:** nothing. Done on 25 Nov: the expected end at 70 (D100, `8e6f563`). The side/Part protocol is agreed with Frontend and Backend: step A (my protocol types and checks) waits for U54 and the user's go.
+  - **Part 1's ids are alphabetical (D103, 26 Nov):** ids 1–70 are the user's title-sorted playlist positions.
+    - The decoded audio moved with each song; the 6 cut songs' audio is in `data/cache/pools/2026/_cut/<Spotify id>`. The old id record and song list are kept as `output/*.before-D103.json`.
+    - The temporary cards were remade with these ids.
+    - Part 2 (U57, default ids 71–140): the same once the user says it's filtered and sorted.
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
