@@ -29,7 +29,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 | State | What it shows |
 |---|---|
-| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour, making clear which is only for the Especial; the price of a card for round 1; a large "scan your card" QR; the sponsors; a rough countdown |
+| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the special card: the Desgraciat and the Especial); the price of a card for round 1; a large "scan your card" QR; the sponsors; a rough countdown |
 | A round's intro | "Quina N" (or "Quina Especial", "Quina Desgraciada") with its prize bundles and sponsors, revealed now as the presenters announce them |
 | The Shuffle | Every cover in a grid, shaken, flying into the drum |
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
@@ -99,7 +99,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it.
 - **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
 - **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its reel stays generic until then); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
-- **When the landed song is on your card (D74):** stage spotlights with flashes, without a lightning-bolt drawing. The background colour changes smoothly into it, and it fades out smoothly when the drum starts spinning.
+- **When the landed song is on your card (D74):** a flash turns the background from dark blue to gold, stage spotlights loop on the gold with option A's particles (a shooting-star streak, rising corn and hearts), and no lightning-bolt drawing. Two in a row play it again. It fades out smoothly when the drum starts spinning, and never plays in the Desgraciat (the card falls instead).
 - **A fallen card** in the Desgraciat shows the sitting nino (D72).
 - **The cards** keep the printed 3×4 grid in the current design's style (D77). No card-stacking scroll (D75).
 

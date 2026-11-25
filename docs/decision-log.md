@@ -758,8 +758,8 @@ The tabs go away, and no fallback layout stays in the code. The drawers' current
 By: the user. Source: open-questions.md › Answered (U8, U10). Lives in: requirements/screens.md › Player app.
 
 ### D74 · The effect when the landed song is yours · 2026-11-25 · Active
-The stage spotlights with the flashes, without the lightning-bolt drawing. The background colour changes smoothly into it, and the whole effect fades out smoothly when the drum starts spinning. Answers U9.
-By: the user (and a canvas comment). Source: open-questions.md › Answered (U9). Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.
+The stage spotlights with the flashes, without the lightning-bolt drawing. Inside the flash the background turns from dark blue to gold, the spotlights loop on the gold, and the particles are option A's: the shooting-star streak and rising corn and hearts. Two of your songs in a row play it again. The whole effect fades out smoothly when the drum starts spinning, and it never plays in the Desgraciat, where the card falls instead. Answers U9.
+By: the user, in chat and a canvas comment (25 Nov, 01:02Z), relayed by Frontend. Source: open-questions.md › Answered (U9). Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.
 
 ### D75 · No card-stacking scroll · 2026-11-25 · Active
 Discarded for now: the cards keep the previous mockups' look. It may be tried once the UI is built. Answers U11.

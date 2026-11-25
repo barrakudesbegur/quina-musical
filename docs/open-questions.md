@@ -63,15 +63,13 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Housekeeping
 
-### U23 · Frontend's session can't reach GitHub
-`git fetch` fails there with "Permission denied (publickey)". Try `! ssh -T git@github.com` in that session, or restart it. Not blocking: other sessions push the shared main.
-
 ### U24 · Stray local files
 - Uncommitted edits in `legacy/2025/client` (`VITE_SONGS_URL`) and the untracked `legacy/2025/last-year-data/` and `legacy/2025/shuffle-test/`: whose are they? `last-year-data/` is last year's database export and must never be committed.
 - An old detached worktree from a previous Backend session (`…/scratchpad/ci-head`): OK to delete?
 
 ## Answered
 
+- **U23 · Frontend's session can't reach GitHub** (2026-11-25): resolved; the user ran `ssh -T git@github.com` there and it authenticates.
 - **U1 · How to download the songs** (2026-11-25) → D66: the method is Sound engine's call, as long as the quality is right and the user does little work; the user downloads only the few leftovers by hand.
 - **U2 · The printed card's title and colours** (2026-11-25) → D67: "QUINA QUINA! 3" with last year's colours, provisionally; may change at print time.
 - **U3 · Card types and amounts** (2026-11-25) → D68: as in 2025, provisionally.
