@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as c from '../../laptop/preflight/checks.ts';
+import { roundCardPrice, type GamePlan } from '@quina/protocol';
 import { PLAN } from '../support/plan.ts';
 
 const device = (name: string, transport: string, extra: Record<string, string> = {}) => ({
@@ -236,4 +237,25 @@ test('card prices (U5): every card type a round plays has a price and a known ru
   assert.equal(c.cardPricesCheck([{ type: 'normal', priceCents: null }, types[1]], PLAN)?.status, 'warn');
   assert.equal(c.cardPricesCheck([{ ...types[0], priceRule: 'perGame' }, types[1]], PLAN)?.status, 'fail');
   assert.equal(c.cardPricesCheck(types, null), null, 'no plan: the plan check speaks');
+});
+
+test("card prices as in 2025 (D69), the Desgraciat on special cards (D70): 15 € before round 1, the special card's 5 € before the Desgraciat", () => {
+  const [normal, special] = PLAN.rounds as [GamePlan['rounds'][number], GamePlan['rounds'][number]];
+  const rounds = [
+    ...Array.from({ length: 10 }, (_, i) => ({ ...normal, number: i + 1 })),
+    { ...special, number: 11, kind: 'desgraciat' as const, cardType: 'especial' },
+    { ...special, number: 12 },
+  ];
+  const plan: GamePlan = { ...PLAN, rounds };
+  const types = [
+    { type: 'normal', name: 'Cartró normal', priceCents: 150, priceRule: 'perRegularRound' as const },
+    { type: 'especial', name: 'Cartró especial', priceCents: 500, priceRule: 'fixed' as const },
+  ];
+  const ok = c.cardPricesCheck(types, plan);
+  assert.equal(ok?.status, 'pass');
+  assert.match(ok?.detail ?? '', /normal 1,50 € a round \(15,00 € before round 1\); especial 5,00 €/);
+  // What the projector shows at each Interval (the protocol's roundCardPrice): never the Desgraciat counted.
+  assert.equal(roundCardPrice(plan, 10, types[0]), 150, 'a normal card before round 10: one regular round left');
+  assert.equal(roundCardPrice(plan, 11, types[1]), 500, 'the special card before the Desgraciat');
+  assert.equal(roundCardPrice(plan, 12, types[1]), 500, 'and before the Quina Especial');
 });
