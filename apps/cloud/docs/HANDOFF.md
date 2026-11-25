@@ -16,6 +16,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - this year's pool: prepared 1–4 Dec, cards made 4–5 Dec (D83); then measure, prune, push, and sync both laptops **before the tech rehearsal** (D82: no fixed date; the user runs it when everything feels ready);
+  - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch).
@@ -86,7 +87,12 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
      - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
      - the manifest then lists the .opus and source files. The decoded FLACs stay local, so the preflight's hash check must skip them.
    - **Provisional hooks** (Sound engine, coming): a bulk approval of each song's top automatic hook, marked `provisional: true`, so a new pool can be rehearsed before the user's approval pass. The preflight should WARN when a playable song's best hook is provisional. Sound engine sends the exact field.
-3. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+3. **The cards move (1–3 Dec, agreed with Sound engine and Frontend; nothing before 1 Dec, D80).** The 2026 pool (`data/pools/2026.json`, Sound engine's) uses `apps/cards/dist/cards.json`, which becomes this year's cards on 4–5 Dec. Last year's test cards move to `data/pools/default/cards/`. Sound engine commits first; then mine, on top:
+   - `tools/e2e/show.spec.ts` and `desgraciat-live.spec.ts` read the cards through `loadPool().cardsJson` ($QUINA_POOL, else default), as the e2e's relay does;
+   - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that pool's, and fails at once if not (after the 2026 deploy: `QUINA_POOL=2026`);
+   - **deploys name their pool** (`--pool 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
+   - a preflight check that the cloud's cards.json matches the pool's (FAIL if not).
+4. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
 
