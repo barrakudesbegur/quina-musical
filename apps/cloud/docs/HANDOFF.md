@@ -2,6 +2,16 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
+## Now (2026-11-25)
+
+- **In progress:**
+  - the event.md fallbacks: the night runbook's "Without the tablet" and the Wii remote's range test, plus the preflight's `--laptop-only`, projector, console and Wii lines (`9504881`, being tested before the push);
+  - the sponsor-sheet guide for Admin (`apps/admin/docs/sponsor-sheet.md`, location being agreed with Frontend);
+  - Sound engine's A–C (the shared Desgraciat win `fellLast`, the winner's slip, `claim.decided.outcome`). Platform's B goes on top: journal-check, a private slip, flagging (never refusing) a decision against the Check.
+- **Next:** this year's pool from 2 Dec (measure, prune, push and sync both laptops by 10 Dec); the provisional-hooks WARN once Sound engine sends the field.
+- **Blocked:** nothing.
+- **Waiting on the user:** the QR domain switch (deploy-plan step 7, by 11 Dec). Open-question IDs come once the orchestrator numbers them.
+
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
 **Where else to look:**
