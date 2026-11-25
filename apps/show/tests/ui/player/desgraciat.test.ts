@@ -60,6 +60,19 @@ test('the round plays its card type: a Desgraciat round on the especial cards', 
   assert.deepEqual(views.map((v) => [v.saved.id, v.stand]), [[123, null], [57, null], [412, { fall: { songId: 31, position: 0 } }]]);
 });
 
+test('one special card plays the Desgraciat and then the Especial (D81): its fall stays in the Desgraciat round', () => {
+  // The Desgraciat on the special cards: #412 sits down when 31 lands.
+  const desgraciat = cardViews(saved, catalog, round([31, 45], { number: 5, cardType: 'especial' }));
+  assert.deepEqual(desgraciat.map((v) => [v.saved.id, v.valid]), [[123, false], [57, false], [412, true]]);
+  assert.deepEqual(desgraciat[2].stand, { fall: { songId: 31, position: 0 } });
+  // The Especial, later, on the same phone: #412 plays again, standing nowhere, marked only by this round's songs.
+  const especial = cardViews(saved, catalog, round([45, 7], { number: 7, kind: 'special', cardType: 'especial' }));
+  assert.deepEqual(especial.map((v) => [v.saved.id, v.valid, v.stand]), [[123, false, null], [57, false, null], [412, true, null]]);
+  assert.equal(especial[2].marks?.count, 1, '45 only; the Desgraciat round\'s 31 is not carried over');
+  assert.deepEqual([...especial[2].near], [], 'nothing near a win yet');
+  assert.equal(S.typeRule('Cartró especial'), 'En aquesta quina només juga el cartró especial.', 'the same line in both rounds');
+});
+
 test('outside the Desgraciat round no card has a stand; the near-win highlight never runs in it', () => {
   assert.ok(cardViews(saved, catalog, round([2, 17, 41], { kind: 'normal' })).every((v) => v.stand === null));
   assert.deepEqual([...cardViews(saved, catalog, round([2, 17, 41], { kind: 'normal' }))[0].near], [69], 'a normal round: 1 song from a Line');

@@ -2,24 +2,24 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
-## Now (2026-11-25, night)
+## Now (2026-11-25, late night)
 
 - **In progress:** the U30 proposals are drawn (three boards, see "In progress"). Publishing them to the design canvas waits on the user's OK: this session's permission check stopped the publish.
 - **Next:**
-  - when the user picks (U30): build the drawers. One home screen, the two corner buttons and stacked drawers; the tabs go, with no fallback layout in the code (D73);
+  - **the cards, before 4 Dec (D83):** the user makes them on 4–5 Dec if the playlist is ready on 1 Dec, and the pool is prepared and checked by 3 Dec. The generator is ready (provisional values D67–D69; no repeated card or line, `65b74ef`; `--check` draws the cards too). The PDF needs U17 (the user's task, before 4 Dec). Then proof the PDFs with the user. A new title each edition; the paper colour may stay (D85);
+  - when the user picks (U30): build the drawers. One home screen, the two corner buttons and stacked drawers; the tabs go, with no fallback version in the code (D73, D84; the operational plan Bs stay);
+  - when the user picks the pool size (U34; the study says 70): Admin's default `roundMinutes` follows it (about 15 at 70 songs). The Orchestrator sends it with the pick;
   - the presenters' checklist on the cheat sheet (from the 2025 running order: welcome points, every prize and sponsor before each round, the throw breaks, the close);
-  - the player's before-the-Game card types preview (the Mobil-Abans board). The special card plays the Especial and the Desgraciat (D70), so nothing says it's "only for the Especial";
+  - the player's before-the-Game card types preview (the Mobil-Abans board): one special card plays the Especial and the Desgraciat (D81), as the projector already shows;
   - Admin's Games view shows Backend's `flaggedDecisions` (accepted claims whose Check didn't pass; a safety net);
   - "el tècnic" wording;
   - the player router's `hashchange`.
 - **Blocked:** publishing to the design canvas (the user's OK).
 - **On hold:** the theme pass (U12: "not ready yet").
 - **Waiting on the user** (`docs/open-questions.md`):
-  - U30 (the corner buttons' style and the Horari icon, the drawers' hierarchy, the prizes drawer);
-  - U17 (the PDF install script; until then the committed PDFs keep last year's title);
-  - U26 (one special card for both the Especial and the Desgraciat; the default is yes);
-  - U28 (when the cards are printed);
-  - U29 (how far "no fallbacks" goes).
+  - U17 (the PDF install script), before 4 Dec;
+  - U30 (the corner buttons' style and the Horari icon, the drawers' hierarchy, the prizes drawer), and the OK to publish the boards;
+  - U34 (the pool size).
 
 **What this covers:** every screen and its motion, which is the UI/UX and animation role in `docs/team.md`:
 - the projector stage (`apps/stage`, plain TypeScript);
@@ -101,7 +101,7 @@ They're generated into `temp/design-canvas/look/project/` with `canvas.json` upd
 
 ## The next queue, in priority order
 
-The user's only dates: the playlist arrives Tue 1 Dec and the night is Sun 27 Dec 2026. The other dates in older notes were invented, and were dropped on 25 Nov.
+The user's dates: the playlist Tue 1 Dec; the pool prepared and checked by Thu 3 Dec; the cards made on Fri 4 – Sat 5 Dec (D83); the night Sun 27 Dec 2026. Any other date in older notes was invented, and was dropped on 25 Nov.
 
 1. **From `docs/event.md`** (approved by the user; the Orchestrator's brief of 2026-11-25), in this order:
    - ~~The Check decides~~ and ~~no prices on the projector~~: done (`ff13a81`). Sound engine adds the `failedCheck` reject reason, plus its console string.
@@ -128,7 +128,7 @@ The user's only dates: the playlist arrives Tue 1 Dec and the night is Sun 27 De
 
    Prices aren't printed (docs/event.md); the screens read them from card-types.json. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call, U17: it runs an install script).
 
-   Then: the pool arrives Tue 1 Dec (86 songs in the draft); generate and proof with the user after it, never before the playlist is final. Cards are sold only on the night and print in a few hours (D71); the print date is open (U28). The README has the steps.
+   Then: the playlist on Tue 1 Dec, the pool prepared and checked by Thu 3 Dec, and the user makes the cards on 4–5 Dec (D83): generate and proof the PDFs with them, never before the playlist is final. Cards are sold only on the night (D71). The README has the steps.
 3. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
 4. When the user picks (U30): the drawers. The theme pass is on hold (U12).
 5. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
@@ -139,7 +139,7 @@ The user's only dates: the playlist arrives Tue 1 Dec and the night is Sun 27 De
 - **The theme pass (U12):** on hold, "not ready yet".
 - **Naming the "Ara" tab** ("I would call this songs"): moot once the tabs go (D73).
 - **Canvas comments:** the your-song thread and the menu's drag-handle thread were sent to Claude and are addressed but still open; reply and resolve when the user says "address the comments". About 100 plain comments were addressed (versions 40–46) but remain open, because they weren't sent to Claude.
-- **U17, U26, U28, U29** in `docs/open-questions.md`, and U19 (the checks on real phones, the projector and the tablet).
+- **U17** (before 4 Dec), **U34** (the pool size) in `docs/open-questions.md`, and U19 (the checks on real phones, the projector and the tablet). Answered on 25 Nov: D81 (one special card plays both the Desgraciat and the Especial: phones and the projector checked, a test pins it), D83 (the card dates), D84 (no fallback versions in code; the operational plan Bs stay), D85 (a new title each edition; the paper colour may stay).
 
 ## Agreements with the other sessions
 
