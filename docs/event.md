@@ -80,7 +80,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - **special cards** play the Quina Especial. Its prizes are bigger, so its card is sold separately.
   - In 2025 the special card also played the Quina del Desgraciat: the price sheet at the bar listed it for "Quina especial i quina del desgraciat".
   - The types are fixed when the cards are printed, with fewer special cards than normal ones. Each type has its own colour.
-- **Each edition** has a new paper colour and title, so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
+- **Each edition** has a new title (the paper colour may stay), so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
 - **Printing:**
   - The cards are generated from the final song list, so no two cards or lines are the same.

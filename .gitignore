@@ -3,3 +3,5 @@ node_modules
 /temp/
 # Personal Claude Code settings (permissions on this machine)
 .claude/settings.local.json
+# Last year's database export: personal data, never committed
+/legacy/2025/last-year-data/

@@ -2,7 +2,7 @@
 
 One screen: where each area stands, what's blocked, and what waits on the user. Written by the orchestrator from each handoff's "Now" block; the detail is in the handoffs. Dates are in [timeline.md](timeline.md), and the user's items (U1, U2…) in [open-questions.md](open-questions.md).
 
-**Updated:** 2026-11-25. **The night:** Sun 27 Dec. **The final playlist:** Tue 1 Dec. Cards are sold only on the night and print in a few hours (D71), so the other dates hang on the rehearsals (U27) and the print date (U28).
+**Updated:** 2026-11-25. **The night:** Sun 27 Dec. **The final playlist:** Tue 1 Dec. The cards are made on 4–5 Dec if the playlist is ready (D83); rehearsals have no fixed dates (D82).
 
 ## The critical path
 
@@ -16,8 +16,8 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 | Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
 | This year's pool in R2, laptops synced | Waits on the pool. Under 100 songs fits the free tier (D80) |
 | QR domain switched | **Done (25 Nov, 14:20 UTC):** the QR address serves this year's player; last year's app moved to its GitHub Pages address |
-| Rehearsals | **Dates open (U27).** Wait on the plan in Admin (U18) and the real-device checks (U19) |
-| Cards printed | **Date open (U28).** Waits on the final pool |
+| Rehearsals | **No fixed dates (D82):** the tech rehearsal when everything feels ready; maybe a presenters' one a day or two before or on the day |
+| Cards made | **4–5 Dec (D83)**, if the playlist is ready. Waits on the pool's quality check (1–3 Dec) and U17. The generator now refuses repeated lines (65b74ef) |
 
 ## By area
 
@@ -26,7 +26,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 | **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Nothing running; the listening demo is out for U13 | Download this year's draft songs by any method that passes the quality check (D66), prep, propose hooks | U13, U14 |
 | **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | Nothing running | Proposals for the drawers' content, the prizes drawer and the corner buttons (D73); the your-song effect's spec (D74); the presenters' checklist; the card-types preview on phones | U12, U17, U30 |
 | **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | Nothing running | The QR domain switch now (D76); this year's pool in R2 | U16, U19, U24 |
-| **Orchestrator** | Recording the user's answers of 25 Nov (D66–D78) | The next round: U13, U24, U26–U29; the timeline rebuilt once U27 and U28 are answered | — |
+| **Orchestrator** | The user's answers of 25 Nov recorded (D66–D86); the pool-size study delivered (U34) | 2025's export aggregates into a doc (U24); the pool size relayed once picked | — |
 
 ## Recently done (25–26 Nov)
 

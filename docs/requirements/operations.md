@@ -102,7 +102,7 @@ _From the Sound engine and Backend handoffs; timeline.md › Risks._
 
 _From event.md › Timing (Rehearsals)._
 
-- Full-show rehearsals happen on days before the night, never on the day itself: they share the cloud's free daily quota. The 2026 dates are open (pending U27).
+- Full-show rehearsals happen on days before the night, never on the day itself: they share the cloud's free daily quota. In 2026 the user runs a tech rehearsal when everything feels ready, and maybe a presenters' rehearsal a day or two before or on the day itself (D82). A rehearsal on the day must not eat into the night's quota (Backend checks how).
 - They use this year's Pool, the real plan, the tablet, the Wii remote, real phones, and the spare laptop.
 - A rehearsal is its own Game in the same edition, so phones keep their cards.
 

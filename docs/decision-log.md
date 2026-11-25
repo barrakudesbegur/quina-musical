@@ -697,7 +697,7 @@ By: the user (event.md). Source: event.md › The special rounds, The cards; tra
 Every prize and its sponsor is read out before each round, money donors included, and every sponsor appears somewhere on the projector during the night.
 By: the user (event.md). Source: event.md › Prizes and sponsors (Mention everyone). Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Every sponsor appears.
 
-### D59 · The dates · 2026-11-25 · Active; the rehearsal dates Pending (U27)
+### D59 · The dates · 2026-11-25 · Active; the rehearsal dates Superseded by D82
 The night is Sunday 27 December 2026; the playlist is final on 1 December; rehearsals happen before the night, never on the day itself. The rehearsal dates written here (13 and 19 December) were the orchestrator's defaults, which the user doesn't recognise: pending U27.
 By: the user (event.md). Source: event.md › When and where, The songs, Timing. Lives in: requirements/operations.md › Rehearsals; docs/timeline.md.
 
@@ -784,3 +784,27 @@ By: the sessions (Sound engine, within its remit). Source: commit fb321f4; Sound
 ### D80 · No work on this year's songs until the playlist is handed over · 2026-11-25 · Active
 Until the user hands over the playlist, the team works with last year's data: no downloads, prep or uploads of the draft. Files already downloaded stay. The final playlist will almost surely have fewer than 100 songs, so today's format fits R2's free storage. A study proposes the pool size, with candidate schedules to choose from. Answers U32; withdraws U33.
 By: the user. Source: open-questions.md › Answered (U32); the user's answers of 2026-11-25. Amends: D66 (no downloads until then). Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.
+
+### D81 · One special card plays both the Desgraciat and the Especial · 2026-11-25 · Active
+A special card bought before the Desgraciat also plays the Quina Especial. The projector shows its 5 € before each of the two rounds, for players who don't have one yet. Answers U26.
+By: the user. Source: open-questions.md › Answered (U26). Amends: D70. Lives in: requirements/game-rules.md › Cards in play.
+
+### D82 · Rehearsals have no fixed dates · 2026-11-25 · Active
+The user runs a tech rehearsal when everything feels ready. A presenters' rehearsal, if there is one, is a day or two before the night or on the day itself. Answers U27.
+By: the user. Source: open-questions.md › Answered (U27). Supersedes: D59's rehearsal dates. Lives in: requirements/operations.md › Rehearsals; docs/timeline.md.
+
+### D83 · The cards are made on 4–5 December · 2026-11-25 · Active
+If the playlist is ready, the user makes the cards on 4–5 December. So the pool is downloaded, prepared and quality-checked between 1 and 4 December, with any swaps done before the cards are made. Answers U28.
+By: the user. Source: open-questions.md › Answered (U28). Lives in: requirements/songs-and-cards.md › Generating and printing; docs/timeline.md.
+
+### D84 · No fallback versions in the code; the operational plan Bs stay · 2026-11-25 · Active
+No alternative versions of a screen or feature are kept in the code. The operational plan Bs stay, because they're the night's safety net: the tablet for the Wii remote, the laptop's own keys for the tablet, and the laptop running without the cloud. Answers U29.
+By: the user. Source: open-questions.md › Answered (U29). Amends: D73, D78. Lives in: requirements/operations.md › Fallbacks.
+
+### D85 · A new title each edition; the colour may stay · 2026-11-25 · Active
+The new title, with the faint year stamp, tells this year's cards from last year's; the paper colour may stay the same. Answers U31.
+By: the user. Source: open-questions.md › Answered (U31). Amends: event.md's "a new paper colour and title". Lives in: event.md › The cards; requirements/songs-and-cards.md › The card.
+
+### D86 · Last year's API is gone · 2026-11-25 · Active
+The user deleted the `quina-api` record: last year's API, a tunnel to the 2025 server that was already down, used only by last year's app.
+By: the user. Source: Backend's report of 2026-11-25. Lives in: apps/cloud/docs/deploy-plan.md.

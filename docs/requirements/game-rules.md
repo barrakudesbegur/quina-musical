@@ -72,7 +72,7 @@ _From event.md › The cards (Knowing which cards are sold); the mixer decisions
 - The tech updates the ranges during the night. It's reliable but not exact: a range can contain unsold cards.
 - Each round counts only the cards in play of its card type.
 - One normal card serves every regular round. The corn seeds come off easily between rounds.
-- A special card plays the Desgraciat and the Quina Especial, as in 2025 (pending U26: whether the same card plays both, or each round needs its own).
+- One special card plays both the Desgraciat and the Quina Especial, as in 2025 (D81).
 
 ## Claims
 

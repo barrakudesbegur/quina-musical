@@ -16,26 +16,6 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U26 · One special card for both the Desgraciat and the Especial?
-In 2025 the special card (5 €) played the Quina del Desgraciat and the Quina Especial (D70). Does one special card play both rounds, or does each round need its own?
-**Default:** one card plays both; the plan's Desgraciat plays special cards.
-
-### U27 · The rehearsal dates
-The docs said 13 and 19 December, but those were the orchestrator's defaults, not yours. Are there full-show rehearsals before the night, and when?
-**Default:** no dates in the plan until you give them.
-
-### U28 · When the cards are printed
-Printing takes a few hours and cards are sold only on the night (D71), but event.md says never the day before.
-**Default:** none set.
-
-### U29 · How far "no fallbacks" goes
-For the player app the user said no fallback layout in the code (D73). event.md also asks that anything new has "a simple fallback to the old way", and the code has operational plan Bs (the tablet for the Wii remote, the laptop's keys for the tablet, the laptop for the cloud).
-**Default:** the operational plan Bs stay; no alternative versions of a screen or feature are kept in the code.
-
-### U31 · A new colour each edition?
-event.md says each edition gets a new paper colour and title, so last year's cards are easy to spot. 2026 keeps 2025's colours (D67); the "3" in the title and the faint year stamp tell them apart.
-**Default:** that's enough; the rule becomes "a new title each edition, the colour may stay".
-
 ### U34 · How many songs in the pool
 The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.md)) gives candidate nights from a first song at 18:05: 60 songs (rounds end about 21:16), 65 (21:25), 70 (21:34, bad case 21:46), 77 (21:47, no margin before 22:00), 86, the whole draft (22:04).
 **Default:** 70, the study's recommendation.
@@ -52,7 +32,7 @@ On the audition page: about 2 minutes a song, so about 3 hours for 90 songs. A s
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
 
-### U17 · Approve the install script for printing cards to PDF
+### U17 · Approve the install script for printing cards to PDF · before 4 Dec
 Run it yourself: `! cd apps/cards && npm install-scripts approve canvas`
 
 ### U18 · The night's plan in Admin · before the first rehearsal
@@ -69,14 +49,14 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 ### U20 · More Hold music and victory tracks
 Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/hold`, `data/media/celebration`). You'll add more.
 
-## Housekeeping
-
-### U24 · Stray local files
-- Uncommitted edits in `legacy/2025/client` (`VITE_SONGS_URL`) and the untracked `legacy/2025/last-year-data/` and `legacy/2025/shuffle-test/`: whose are they? `last-year-data/` is last year's database export and must never be committed.
-- An old detached worktree from a previous Backend session (`…/scratchpad/ci-head`): OK to delete?
-
 ## Answered
 
+- **U26 · One special card for both special rounds** (2026-11-25) → D81: yes, one card plays both.
+- **U27 · The rehearsal dates** (2026-11-25) → D82: no fixed dates; a tech rehearsal when ready, maybe a presenters' one a day or two before or on the day.
+- **U28 · When the cards are printed** (2026-11-25) → D83: the user makes them on 4–5 December, if the playlist is ready.
+- **U29 · How far "no fallbacks" goes** (2026-11-25) → D84: no fallback versions in the code; the operational plan Bs stay.
+- **U31 · A new colour each edition?** (2026-11-25) → D85: a new title each edition; the colour may stay.
+- **U24 · Stray local files** (2026-11-25): `legacy/2025/last-year-data/` is git-ignored; the rest of `legacy/2025/` stays; the old `ci-head` worktree is removed. Useful aggregates from the export go into a doc.
 - **U32 · Storage past 100 songs** (2026-11-25) → D80: moot; the final playlist will almost surely be under 100 songs. No work on the draft until the user hands over the playlist.
 - **U33 · Disk space** (2026-11-25): withdrawn by D80; nothing is deleted.
 - **U23 · Frontend's session can't reach GitHub** (2026-11-25): resolved; the user ran `ssh -T git@github.com` there and it authenticates.
