@@ -2,17 +2,13 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
-## Now (2026-11-25, evening)
+## Now (2026-11-25, late evening)
 
-- **In progress:**
-  - realistic prize bundles (17–19-item hampers) in the fixtures, so the projector, phones, console and cheat sheet fit them; a helper agent is on it;
-  - next, the projector's card price on the Interval and before-the-start screens (U5). `comingRoundPrice` is ready (`dfc3cf2`); it waits for the prize work, which edits the same stage files.
+- **In progress:** nothing running.
 - **Next:**
-  - the console switch for the automatic "Final Lap!" (R2-Q18);
-  - the presenters' checklist on the cheat sheet;
-  - the generator's pool-size report (R1-Q31);
-  - the player's before-the-Game card types preview;
-  - Wii range drops in `remote.status` (to agree with Sound engine);
+  - the presenters' checklist on the cheat sheet (from the 2025 running order: welcome points, every prize and sponsor before each round, the throw breaks, the close);
+  - the player's before-the-Game card types preview (the Mobil-Abans board);
+  - Admin's Games view shows Backend's `flaggedDecisions` (accepted claims whose Check didn't pass; a safety net);
   - "el tècnic" wording;
   - the player router's `hashchange`.
 - **Blocked:** nothing.
@@ -86,6 +82,7 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 | **2026-11-25:** the Desgraciat round's spec, canvas boards (v50) and the keys that make the screens compile with its protocol | `4f350ab`, `3690a53`, `b47a633` |
 | **2026-11-25, the docs audit:** the motion spec; the player app (3 tabs plus the ☰ menu, no winning card numbers, offline keeps the screen, Pausa in the drum's place, the add-card leave guard; "Com es juga" removed, cards written "#123"); the console's Efectes pads with icons; "Quina Especial" and "Comprovar cartró" | `974f95f`, `c1dbb5c`, `66faf9d`, `b47a633` |
 | **2026-11-25:** the Wii Remote's status message comes from `@quina/protocol` | `71e618e` |
+| **2026-11-25, evening:** the Desgraciat's shared win (`fellLast`) and the winner's numbered slip; no title in the Desgraciat Celebration (U6); planned breaks in Admin's Schedule; the Final Lap switch (R2-Q18); card prices by round (U5: `priceRule` in card-types.json, `comingRoundPrice`, the projector's price tag before the Game and in the Interval); the pool-size report (R1-Q31, `npm run report` in apps/cards; the build no longer deletes `dist/`); real-sized prize bundles in SAMPLE_PLAN and every prize view fitting them (the cheat sheet lists every prize and sponsor); the projector's sponsor strip paging (`sponsor-pages`); the Wii range (`remote.status.drops`) | `5152a81`, `6857f31`, `1f0bfef`, `2e37fc1`, `e75d5b3`, `8cc02af`, `527a02c`, `df7e321`, `3436cf8`, `150f213` |
 | **2026-11-25: the Desgraciat round on every screen**, ahead of the 4 Dec milestone. Projector: the name, the intro nino, the standing Check, `check-fallen`, DEMPEUS!, the night preview's sad face. Console: the Dempeus tab (count, chips, the fall, the last card's "Comprovar #57" as the default action), the standing claim pad, "no ha sonat" Check rows, Futur's songs to the last card and its curve, the ring with one card standing. Admin: the Desgraciada kind, one per night, one bundle, Line prizes moved over, never lost. Phones: DEMPEUS/ASSEGUT, the fall and its bloop, "Dempeus fins al final!", the name and sad face. Fixtures: `desgraciatIntro`, `desgraciat`, `desgraciatFew`, `desgraciatLast`, `checkStanding`, `checkFallen`, `checkStandingValid`, `celebrationStanding`, `intervalDesgraciat`; player demos `desgraciatFall` (live), `desgraciatSeated`, `desgraciatMine`, `desgraciatOther` | `f91f80d`, `553b304`, `6b14e76`, `a618730`, `3940353`, `7fc4162` |
 
 ## In progress
