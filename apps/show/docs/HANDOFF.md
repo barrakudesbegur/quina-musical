@@ -11,24 +11,28 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** nothing. **The draft playlist is on hold (the user, 25 Nov):** the playlist isn't ready, and they'll hand it over in a few days. Until then, work on last year's 77 songs, and don't get ahead.
+- **In progress:** nothing. **No work on the draft playlist before 1 Dec (D80).** Until then, work on last year's 77 songs.
   - The download was stopped on 25 Nov at 26 of 151 songs: 99 MB of Opus in `data/media/draft/output/songs/`. No prep ran on the draft, and nothing went to R2.
   - Keep every file already downloaded, the 4-song dry run included. Its pool is `data/media/draft/pool.json` (`draft2026`, gitignored).
-  - **What's ready for the handover:**
+  - **What's ready for 1 Dec:**
     - **The cause of the bot check was the VPN.** All traffic went through ProtonVPN, and YouTube asks VPN addresses to sign in. With the VPN off, spotDL downloads at about 30 s a song.
     - **Ids are stable** (`fb321f4`, D79): a track keeps its first id (`output/song-ids.json`), and audio is named `<Spotify id>.opus`. A rerun of the fetcher downloads only the missing songs.
 - **Next:**
-  - when the user hands over the playlist:
+  - **1–3 Dec, if the playlist is ready on 1 Dec (D83):**
     - fetch it, then download the rest with the VPN off;
     - run prep with `quality`;
-    - give the user one short list of the songs spotDL couldn't get or that `quality` flags; they download those by hand as `<id>.mp3`;
-    - propose automatic hooks, and tell the orchestrator;
+    - give the user one short list of the songs spotDL couldn't get or that `quality` flags, at once, so they can swap them before making the cards on 4–5 Dec. They download the leftovers by hand as `<id>.mp3`.
+  - **After the cards, before the tech rehearsal (D82, D83):** propose automatic hooks, and the user approves them (U14). Then Signatures and stems, and tell the orchestrator.
+  - **U34 (the pool size; about 70 songs recommended by `docs/research/reports/pool-size-2026.md`), not before the user picks:** `SCHEDULE` in `engine/src/config.ts` is fixed for 77 songs: `bingoAtSong` 50, `lineAtSong` 16, `desgraciatAtSong` 24. At 70 songs with about 190 normal cards in play it should be about 46, 14–15 and 21, or the Drift reads late and speeds the Pace for nothing.
+    - Proposal: derive these from the round's Queue and its cards in play instead of hard-coding them. The engine knows the seeded Queue at the Shuffle, so it can count the songs to the first possible Line and Bingo (Futur's numbers) or the last card standing. The Drift then aims at the real end, which is fixed for whatever pool size and sales.
+    - The constants stay only as the guess before cards are in play. `pace.ts` reads them in two places: `roundSongs` and `songsLeft`.
   - until then, nothing new on sound: transitions stay frozen until U13.
 - **Blocked:** nothing.
 - **Waiting on the user:**
-  - the playlist;
+  - the playlist (1 Dec), and U34 (the pool size);
   - U13: the listening pass (transitions stay frozen until then). The demo for it is rendered, and the orchestrator has sent it: `data/out/listen-demo/listen-demo.m4a` plus `cues.md`, made by `node apps/show/tests/support/listen-demo.ts` (804e35f). A plan is ready (not applied) if call and response feels too frequent: it labels 70% of transitions today, and would become an occasional move at about 15–25%, with a variety bound;
-  - U14: hook approval, before the first rehearsal (U27 sets when that is).
+  - U14: hook approval, after the cards and before the tech rehearsal (D82: no fixed date; the user calls it when ready).
+- **Decided:** D81: one special card plays both the Desgraciat and the Especial; the engine's default (D70) already fits.
 - **Size:** the final playlist will have fewer than 100 songs (the user), so today's format (about 68 MB a song) fits R2's free 10 GB, and option (d) isn't needed. Disk: 15 GB free on 25 Nov.
 - **Code rule (D78, U29 pending):** keep code simple, and keep no alternative versions of a feature; the operational plan Bs stay. Two unused, deprecated aliases are gone (`1ced37a`).
 - **Rules:** a new question for the user goes to the orchestrator, never into open-questions.md directly. A decision the user gives me directly is reported to the orchestrator the same day.
