@@ -69,6 +69,15 @@ export interface SchedulePlan {
   roundMinutes: number;
   /** Planned length of an Interval, in minutes (the countdown guide). */
   intervalMinutes: number;
+  /** Planned breaks ("parón") after some rounds, on top of the Interval: the Schedule and the countdown allow for
+   * them. Optional in the type only: checkGamePlan always fills it ([] when none). */
+  breaks?: PlannedBreak[];
+}
+
+/** A planned break after round `afterRound` (never the last), of `minutes`. */
+export interface PlannedBreak {
+  afterRound: number;
+  minutes: number;
 }
 
 export interface CheatSheet {
@@ -237,15 +246,29 @@ export function checkGamePlan(json: unknown): PlanCheck {
   };
   for (const r of rounds) r.cardType ||= oldTypeFor(r.kind) ?? defaultCardType(r.kind);
 
-  let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 };
+  let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3, breaks: [] };
   const sch = json.schedule;
   if (!isRec(sch)) err('plan.schedule', 'must be an object');
   else {
-    keys(sch, 'plan.schedule', ['startAtMs', 'roundMinutes', 'intervalMinutes']);
+    keys(sch, 'plan.schedule', ['startAtMs', 'roundMinutes', 'intervalMinutes', 'breaks']);
+    const breaks: PlannedBreak[] = [];
+    if (sch.breaks !== undefined) {
+      list(sch, 'breaks', 'plan.schedule', LIMITS.rounds).forEach((b, i) => {
+        const path = `plan.schedule.breaks[${i}]`;
+        if (!isRec(b)) return err(path, 'must be an object');
+        keys(b, path, ['afterRound', 'minutes']);
+        const afterRound = num(b, 'afterRound', path, 1, LIMITS.rounds, { integer: true });
+        const minutes = num(b, 'minutes', path, 1, 60);
+        if (afterRound !== null && rounds.length && afterRound >= rounds.length) err(`${path}.afterRound`, `must be a round before the last (1–${rounds.length - 1})`);
+        if (afterRound !== null && breaks.some((o) => o.afterRound === afterRound)) err(`${path}.afterRound`, `repeats round ${afterRound}`);
+        if (afterRound !== null && minutes !== null) breaks.push({ afterRound, minutes });
+      });
+    }
     schedule = {
       startAtMs: num(sch, 'startAtMs', 'plan.schedule', 0, 8.64e15, { nullable: true, integer: true }),
       roundMinutes: num(sch, 'roundMinutes', 'plan.schedule', 1, 240) ?? schedule.roundMinutes,
       intervalMinutes: num(sch, 'intervalMinutes', 'plan.schedule', 0, 120) ?? schedule.intervalMinutes,
+      breaks: breaks.sort((a, b) => a.afterRound - b.afterRound),
     };
   }
 
@@ -335,6 +358,30 @@ export function sponsorOf(plan: GamePlan, prize: Prize | null): Sponsor | null {
 /** The card type a planned round plays: its own, else its kind's default (a round from before card types per round). */
 export function roundCardType(round: { kind: RoundKind; cardType?: string }): string {
   return round.cardType || defaultCardType(round.kind);
+}
+
+/** How a printed card type is priced (apps/cards card-types.json `priceRule`): by the regular rounds it still plays
+ * (a normal card), or one fixed price (the especial card). */
+export type CardPriceRule = 'perRegularRound' | 'fixed';
+
+/** A card type's price as card-types.json gives it. */
+export interface CardTypePrice {
+  priceCents: number | null;
+  /** Default: 'perRegularRound'. */
+  priceRule?: CardPriceRule;
+}
+
+/**
+ * What a card costs before round `roundNumber` (the projector's Interval screen, and before the start for round 1;
+ * docs/event.md U5), in cents: 'perRegularRound' is the price × the plan's normal rounds from that one on (the coming
+ * one included; the Desgraciat and the Especial never count), 'fixed' the price itself. null without a price.
+ * `type` is the card type the coming round plays (its `cardType` in card-types.json).
+ */
+export function roundCardPrice(plan: Pick<GamePlan, 'rounds'>, roundNumber: number, type: CardTypePrice): number | null {
+  if (type.priceCents == null) return null;
+  if (type.priceRule === 'fixed') return type.priceCents;
+  const regular = plan.rounds.filter((r) => r.kind === 'normal' && r.number >= roundNumber).length;
+  return type.priceCents * regular;
 }
 
 /** The plan of round `number`, if planned. */

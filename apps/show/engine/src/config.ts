@@ -195,6 +195,8 @@ export const SCHEDULE = Object.freeze({
   /** Random-card simulation (77 songs, ~200 cards): first Line around song 16, Bingo around song 50. */
   lineAtSong: 16,
   bingoAtSong: 50,
+  /** The Desgraciat round: the last card standing after about 24 songs (tests/support/desgraciat.ts, 150–300 cards). */
+  desgraciatAtSong: 24,
   lineCheckSec: 100, // last year 70–134 s
   bingoCheckSec: 150, // check plus finish, last year 85–220 s
   intervalSec: 150, // about 2.5 min

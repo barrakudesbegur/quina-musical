@@ -25,6 +25,7 @@ import { mountStage } from '../../../stage/stage.ts';
 import { Show, type Effect, type EffectOf, type HoldMood, type ShowOptions, type ShowPlan } from './show/show.ts';
 import type { DecoyEvent } from './plan/recipes.ts';
 import {
+  checkGamePlan,
   makeCommand,
   makeEvent,
   isPhaseName,
@@ -281,6 +282,11 @@ async function boot() {
   }
   bus.on((message, { local }) => {
     if (!local && isRecord(message) && message.type === 'cmd') run(created.command(message));
+    // The edition's plan, pushed by the relay: the Schedule and the Interval's countdown follow it.
+    if (!local && isRecord(message) && message.type === 'relay.plan') {
+      const check = message.plan == null ? null : checkGamePlan(message.plan);
+      run(created.setPlan(check?.ok ? check.plan : null));
+    }
   });
   bus.onOpen = () => run(created.command(makeCommand('getState')));
   bus.connect();

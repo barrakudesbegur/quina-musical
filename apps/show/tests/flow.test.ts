@@ -3,7 +3,7 @@
 // real cards.
 import { HAS_DATA, NO_CARD, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
-import { COMMAND_NAMES, replayJournal, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
+import { COMMAND_NAMES, checkGamePlan, replayJournal, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { FLOW, HOLD } from '../engine/src/config.ts';
 import { cardSongIds, type Card } from '../engine/src/game/cards.ts';
@@ -403,6 +403,36 @@ test('the Celebration music changes without blocking anything; Hold music in the
   const back = h.send('hold', { on: false });
   assert.ok(find(back, 'startTransition')?.fromHoldMusic);
   assert.equal(h.show.scene, 'play');
+});
+
+test('with the plan, the expected end allows for each round\'s kind and the planned breaks; the countdown too', () => {
+  const plan = checkGamePlan({
+    v: 3, edition: '26', title: 'Quina Quina 3', prizeReveal: 'perRound', sponsors: [],
+    rounds: [1, 2, 3].map((number) => ({ number, kind: number === 2 ? 'desgraciat' : 'normal', line: [], bingo: [] })),
+    schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 4, breaks: [{ afterRound: 1, minutes: 5 }] },
+    cheatSheet: { claimRules: [], specialRoundRules: [] },
+  });
+  assert.ok(plan.ok);
+  const h = flow();
+  landSongs(h, 2);
+  const without = h.show.schedule().gameEndMs;
+  h.show.setPlan(plan.plan);
+  const withPlan = h.show.schedule().gameEndMs;
+  const noBreak = { ...plan.plan, schedule: { ...plan.plan.schedule, breaks: [] } };
+  h.show.setPlan(noBreak);
+  assert.equal(withPlan - h.show.schedule().gameEndMs, 5 * 60_000, 'the 5-minute break after round 1');
+  assert.ok(h.show.schedule().gameEndMs !== without, 'the plan\'s rounds and Interval, not the defaults');
+  h.show.setPlan(plan.plan);
+  // Round 1's Bingo, then its Interval: the countdown is the planned Interval plus the break after round 1.
+  landSongs(h, 12);
+  h.send('claim', { cardId: card.id, kind: 'bingo' });
+  h.send('decide', { claimId: lastClaimId(h), valid: true });
+  h.send('interval');
+  const interval = h.show.snapshot().interval;
+  assert.ok(interval);
+  assert.equal(interval.guideEndMs - interval.sinceMs, (4 + 5) * 60_000);
+  h.show.setPlan(null);
+  assert.equal(h.show.snapshot().interval?.guideEndMs, interval.sinceMs + FLOW.intervalGuideSec * 1000, 'without a plan: the default guide');
 });
 
 test('the pause: the Interval music, a running Check queued again, only safe commands; off brings the scene back', () => {

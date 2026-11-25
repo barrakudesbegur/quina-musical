@@ -1,7 +1,7 @@
 // Pace, Spin length, auto-advance timing, and a basic Schedule estimate with Drift. Pure functions, tested
 // in Node. Terms follow GLOSSARY.md: the Pace is the target time from one landing to the next; the Spin
 // takes about half of it (3–11 s); late phases may stretch a song's slot by up to about 50%.
-import { isPhaseName } from '@quina/protocol';
+import { isPhaseName, type RoundKind } from '@quina/protocol';
 import { PACE, SCHEDULE } from '../config.ts';
 import type { PhaseTiming } from '../config.ts';
 import type { Timeline } from './timeline.ts';
@@ -123,19 +123,24 @@ export function pressAfterHold({ now, pace, phase, nudge = 1 }: PaceArgs & { now
   return now + Math.max(PACE.minAfterHoldSec, (slot - dTarget) / 2);
 }
 
+/** Songs a round of this kind is expected to last: a Desgraciat round ends far sooner, and has no Line to check. */
+const roundSongs = (kind: RoundKind, cfg: ScheduleConfig) => (kind === 'desgraciat' ? cfg.desgraciatAtSong : cfg.bingoAtSong);
+const roundChecksSec = (kind: RoundKind, cfg: ScheduleConfig, lineConfirmed = false) =>
+  (kind === 'desgraciat' || lineConfirmed ? 0 : cfg.lineCheckSec) + cfg.bingoCheckSec;
+
 /** Expected seconds until the current round ends, from the Queue position (index of the last landed song). */
-export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, cfg = SCHEDULE, nudge = 1 }: {
-  position: number; pace: number; phase?: string; lineConfirmed?: boolean; cfg?: ScheduleConfig; nudge?: number;
+export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, kind = 'normal', cfg = SCHEDULE, nudge = 1 }: {
+  position: number; pace: number; phase?: string; lineConfirmed?: boolean; kind?: RoundKind; cfg?: ScheduleConfig; nudge?: number;
 }): number {
   const landed = position + 1;
-  const songsLeft = Math.max(2, cfg.bingoAtSong - landed);
+  const songsLeft = Math.max(2, roundSongs(kind, cfg) - landed);
   const slot = slotSec({ pace, phase: 'early', nudge }) * 0.75 + slotSec({ pace, phase, nudge }) * 0.25;
-  return songsLeft * slot + (lineConfirmed ? 0 : cfg.lineCheckSec) + cfg.bingoCheckSec;
+  return songsLeft * slot + roundChecksSec(kind, cfg, lineConfirmed);
 }
 
 /** A whole round from its first song, at a given Pace (the round's target, and later rounds). */
-export function roundLengthSec({ pace, cfg = SCHEDULE }: { pace: number; cfg?: ScheduleConfig }): number {
-  return cfg.bingoAtSong * pace + cfg.lineCheckSec + cfg.bingoCheckSec;
+export function roundLengthSec({ pace, kind = 'normal', cfg = SCHEDULE }: { pace: number; kind?: RoundKind; cfg?: ScheduleConfig }): number {
+  return roundSongs(kind, cfg) * pace + roundChecksSec(kind, cfg);
 }
 
 /** When the round and the game should end (epoch ms), and the Drift in seconds (positive = running late). */
@@ -146,13 +151,25 @@ export interface ScheduleEstimate {
   gameDriftSec: number | null;
 }
 
+/**
+ * The rest of the night as the Game plan has it: the rounds after the current one (in order, by kind), the planned
+ * Interval, and the planned breaks still to come (the one after the current round included).
+ */
+export interface LaterRounds {
+  kinds: readonly RoundKind[];
+  intervalSec: number;
+  breaksSec: number;
+}
+
 /** What scheduleEstimate needs. `round.targetEndMs` is fixed when the round starts. */
 export interface ScheduleArgs extends PaceArgs {
   nowMs: number;
-  round: { number: number; targetEndMs?: number | null };
+  round: { number: number; kind?: RoundKind; targetEndMs?: number | null };
   game: { roundsTotal?: number; targetEndMs?: number | null };
   position: number;
   lineConfirmed?: boolean;
+  /** From the Game plan; without one, `game.roundsTotal` normal rounds with the default Interval and no breaks. */
+  later?: LaterRounds | null;
   cfg?: ScheduleConfig;
 }
 
@@ -160,10 +177,12 @@ export interface ScheduleArgs extends PaceArgs {
  * Basic Schedule: when the round and the game should end, and the Drift (positive = running late).
  * Times are epoch ms; `round.targetEndMs` is fixed when the round starts.
  */
-export function scheduleEstimate({ nowMs, round, game, position, pace, phase, lineConfirmed = false, cfg = SCHEDULE, nudge = 1 }: ScheduleArgs): ScheduleEstimate {
-  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, cfg, nudge });
-  const roundsAfter = Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number);
-  const later = roundsAfter * (cfg.intervalSec + roundLengthSec({ pace: defaultPace(round.number + 1), cfg }));
+export function scheduleEstimate({ nowMs, round, game, position, pace, phase, lineConfirmed = false, later: plan = null, cfg = SCHEDULE, nudge = 1 }: ScheduleArgs): ScheduleEstimate {
+  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, cfg, nudge });
+  const laterPace = defaultPace(round.number + 1);
+  const later = plan
+    ? plan.kinds.reduce((sec, kind) => sec + plan.intervalSec + roundLengthSec({ pace: laterPace, kind, cfg }), plan.breaksSec)
+    : Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) * (cfg.intervalSec + roundLengthSec({ pace: laterPace, cfg }));
   const gameEndMs = roundEndMs + 1000 * later;
   return {
     roundEndMs,

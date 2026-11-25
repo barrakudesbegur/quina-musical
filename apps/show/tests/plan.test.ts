@@ -2,7 +2,7 @@
 // problem with its path, never throws; and the public plan phones see (locked rounds keep only their skeleton).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkGamePlan, headlinePrizes, publicPlan, revealedRounds, roundCardType, roundPlan, sponsorOf, PLAN_VERSION } from '../../../packages/protocol/plan.ts';
+import { checkGamePlan, headlinePrizes, publicPlan, revealedRounds, roundCardPrice, roundCardType, roundPlan, sponsorOf, PLAN_VERSION } from '../../../packages/protocol/plan.ts';
 
 const prize = (title: string, headline: boolean, sponsorId: string | null = null) => ({ title, detail: null, sponsorId, image: null, headline });
 
@@ -154,4 +154,40 @@ test('a round\'s card type must look like a card-types.json id', () => {
     assert.equal(r.ok, false, String(bad));
     if (!r.ok) assert.match(r.errors.join('\n'), /plan\.rounds\[0\]\.cardType/);
   }
+});
+
+test('planned breaks: after a round that isn\'t the last, once each, 1–60 minutes; none by default', () => {
+  const r = checkGamePlan(good());
+  assert.ok(r.ok);
+  assert.deepEqual(r.plan.schedule.breaks, []);
+  const p = good();
+  (p.schedule as Record<string, unknown>).breaks = [{ afterRound: 1, minutes: 5 }];
+  const ok = checkGamePlan(p);
+  assert.ok(ok.ok);
+  assert.deepEqual(ok.plan.schedule.breaks, [{ afterRound: 1, minutes: 5 }]);
+  assert.deepEqual(publicPlan(ok.plan, [1]).schedule.breaks, [{ afterRound: 1, minutes: 5 }], 'public: phones show it in Horari');
+  for (const bad of [[{ afterRound: 2, minutes: 5 }], [{ afterRound: 1, minutes: 0 }], [{ afterRound: 1, minutes: 5 }, { afterRound: 1, minutes: 3 }], [{ afterRound: 1 }], 'x']) {
+    const q = good();
+    (q.schedule as Record<string, unknown>).breaks = bad;
+    const c = checkGamePlan(q);
+    assert.equal(c.ok, false, JSON.stringify(bad));
+    if (!c.ok) assert.match(c.errors.join('\n'), /plan\.schedule\.breaks/);
+  }
+});
+
+test('the card price before a round: per regular round still to play, or the especial card\'s fixed price', () => {
+  const rounds = [
+    { number: 1, kind: 'normal' as const }, { number: 2, kind: 'normal' as const }, { number: 3, kind: 'desgraciat' as const },
+    { number: 4, kind: 'normal' as const }, { number: 5, kind: 'special' as const },
+  ];
+  const plan = { rounds: rounds.map((r) => ({ ...r, cardType: r.kind === 'special' ? 'especial' : 'normal', line: [], bingo: [] })) };
+  const normal = { priceCents: 150 };
+  assert.equal(roundCardPrice(plan, 1, normal), 450, 'before round 1: 3 regular rounds (the Desgraciat and the Especial never count)');
+  assert.equal(roundCardPrice(plan, 3, normal), 150, 'before the Desgraciat: the regular rounds after it');
+  assert.equal(roundCardPrice(plan, 4, { priceCents: 150, priceRule: 'perRegularRound' }), 150);
+  assert.equal(roundCardPrice(plan, 5, { priceCents: 500, priceRule: 'fixed' }), 500);
+  assert.equal(roundCardPrice(plan, 1, { priceCents: null }), null);
+  // Last year's night: 10 regular rounds at 1.50 €, 15 € before round 1.
+  const ten = { rounds: Array.from({ length: 10 }, (_, i) => ({ number: i + 1, kind: 'normal' as const, cardType: 'normal', line: [], bingo: [] })) };
+  assert.equal(roundCardPrice(ten, 1, normal), 1500);
 });

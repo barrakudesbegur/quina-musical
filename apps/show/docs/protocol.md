@@ -147,7 +147,7 @@ future        { lineAt, bingoAt, toLine: [cards by songs missing], toBingo, mark
 standing      { count, cardIds: number[] | null, fellLast: number[] | null } | null   PRIVATE: console only. fellLast: the valid cards whose first landed song is the latest landing (they sat down with it: their Check is `fellLast` and may share the win), sorted, null above 60. Desgraciat round: the valid cards in play (its card type within the ranges, sold or not) none of whose songs counted yet; cardIds sorted, null above STANDING_LIST_MAX (60). null in other rounds
 prizes        { revealed: [{ round, by: 'presenters' | 'intro' }] }   the plan's revealedRounds() turns it into what phones see
 pace          { sec, defaultSec, locked, nudge, slotSec, spinSec }   defaultSec: the round's starting Pace (PACE_DEFAULT_SEC), which the console recommends; HEAT_BANDS gives each Phase's Heat band
-schedule      { roundEndMs, gameEndMs, roundDriftSec, gameDriftSec }   Drift > 0 = running late
+schedule      { roundEndMs, gameEndMs, roundDriftSec, gameDriftSec }   Drift > 0 = running late; with the plan (relay.plan), gameEndMs allows for each remaining round's kind, the planned Interval and breaks
 autoAtMs      when auto-advance will press Next, or null
 transition    { id, recipe, phase, to, landAtMs } | null
 suspense      { id, sinceMs, autoReleaseAtMs } | null   (status is 'transition' while it is open)
@@ -164,7 +164,7 @@ check         { claimId, cardId, kind, outcome, row, otherRows, cardType, steps:
                 the Check on screen, running or showing its result until it is decided
 celebration   { kind, round, cardIds, winningSongId, sinceMs, music: 'winningSong'|'victory'|'holdMusic' } | null
 celebrationChoice  the music picked during a Check for the coming Celebration, or null (the default)
-interval      { sinceMs, nextRound, guideEndMs } | null
+interval      { sinceMs, nextRound, guideEndMs } | null   guideEndMs: the plan's intervalMinutes plus any break planned after this round (else 2.5 min)
 intervalMusic { track: { title, artist, index, count, sinceMs } | null } | null
                 while the Interval playlist plays (interval, roundStart, after, and play until the first Spin); track is null
                 until the first one takes over; index is its 1-based place in the Game's order (it wraps after count).
@@ -188,7 +188,7 @@ The setup that Admin edits and the cloud stores. The laptop, the projector, the 
 | `rounds[]` | `{ number, kind: 'normal'\|'special'\|'desgraciat', cardType, line: Prize[], bingo: Prize[] }`, numbered 1, 2, 3… in play order. At most one Desgraciat round (played in reverse: the last card standing wins); its `line` must be empty and its `bingo` is the last card standing's prize, and it plays `'normal'` cards unless it names another type. `cardType` is the printed card type the round plays: an id from apps/cards' `card-types.json` (lowercase letters and digits, `CARD_TYPE_ID_RE`); the plan checks only its format, screens check it against `card-types.json`. A plan file may leave it out: `checkGamePlan` fills in `defaultCardType(kind)`. Card type names, colours and prices are not in the plan: screens read `card-types.json` (served at `/cards/card-types.json`, next to `cards.json`). Each bundle has at most 40 prizes, headline ones first (`[]` until set). At most one special round |
 | `Prize` | `{ title, detail\|null, sponsorId\|null, image\|null, headline }`. `sponsorId` must name a sponsor; screens show `image` for headline prizes |
 | `sponsors[]` | `{ id, name, logo }`. `id` is lowercase with dashes; `logo` is `/media/<key>.png` or `.jpg` (a `.jxl` beside it) or null |
-| `schedule` | `{ startAtMs\|null, roundMinutes, intervalMinutes }`. The Interval countdown guide is `intervalMinutes` |
+| `schedule` | `{ startAtMs\|null, roundMinutes, intervalMinutes, breaks: [{ afterRound, minutes }] }`. `breaks` are planned breaks ("parón") after a round that isn't the last, once each, 1–60 minutes (`[]` when none). The show page reads the plan from `relay.plan`: the Interval's countdown guide is `intervalMinutes` plus the break after that round, and the Schedule's expected end (`gameEndMs`) follows each remaining round's kind (a Desgraciat round about 24 songs, no Line), the planned Interval and the breaks still to come. `roundCardPrice(plan, round, type)` is what a card costs before a round (the Interval screen; docs/event.md U5): card-types.json's `priceCents` × the plan's normal rounds from that one on for `priceRule: 'perRegularRound'` (the default), or the price itself for `'fixed'` |
 | `cheatSheet` | `{ claimRules: string[], specialRoundRules: string[] }` (presenters only) |
 
 `checkGamePlan(json)` never throws. It returns `{ ok: true, plan }` (trimmed and typed, always version 3) or `{ ok: false, errors }`, with every problem and its JSON path (`plan.rounds[1].line[0].sponsorId: no sponsor with id "x"`). Unknown keys are errors, so a typo can't silently drop a prize. `sponsorOf(plan, prize)`, `roundPlan(plan, n)` and `headlinePrizes(bundle)` are lookups. **What phones see:** `publicPlan(plan, revealedRounds(plan, record.prizesRevealed))`: every round's `{ number, kind, cardType, revealed }` (the card type is printed, never secret), a revealed round's `line` and `bingo`, never a locked round's prizes nor how many, and no cheat sheet.

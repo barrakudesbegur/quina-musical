@@ -25,6 +25,7 @@ import type {
   ClimbTarget,
   CommandFields,
   GameRecord,
+  GamePlan,
   IntervalInfo,
   IntervalTrackInfo,
   IntroInfo,
@@ -489,6 +490,8 @@ export class Show {
   readonly env: Env;
   /** Every printed card (cards.json); only the ones in play and valid for the round count. */
   readonly allCards: readonly Card[];
+  /** The edition's Game plan (setPlan), or null: only the Schedule and the Interval's countdown read it. */
+  plan: GamePlan | null = null;
   cardsInPlayText = '';
   cardsInPlay: number[] = [];
   phaseModel: PhaseModel = { kind: 'line', start: 0, seed: 0, valid: [], plan: null };
@@ -859,7 +862,7 @@ export class Show {
     if (!this.game.paceLocked && !keepPace) this.game.pace = defaultPace(number);
     const nowMs = this.env.nowMs();
     // The round's target end comes from the Pace it starts with; Drift is measured against it.
-    this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace }), lineConfirmed: false };
+    this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind }), lineConfirmed: false };
     // A secret seed drawn at the Shuffle blurs this round's Phase; it stays with the Queue.
     this.phaseModel = { kind: firstClimb(kind), start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.rebuildPhase();
@@ -926,7 +929,7 @@ export class Show {
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
-    this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace }), lineConfirmed: lineFrom != null };
+    this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind: c.kind }), lineConfirmed: lineFrom != null };
     this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.rebuildPhase();
     this.updateNudge();
@@ -2107,8 +2110,32 @@ export class Show {
     this.playIntervalMusic();
   }
 
+  /** The Interval after this round: its countdown guide is the plan's Interval plus any break planned after it. */
   intervalFrom(sinceMs: number): IntervalInfo {
-    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + FLOW.intervalGuideSec * 1000 };
+    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + 1000 * (this.intervalSec() + this.breakSecAfter(this.round.number)) };
+  }
+
+  /** The planned Interval (the plan's intervalMinutes), else the default guide. */
+  intervalSec(): number {
+    return this.plan ? this.plan.schedule.intervalMinutes * 60 : FLOW.intervalGuideSec;
+  }
+
+  /** The break planned after round `number` ("parón"), in seconds. */
+  breakSecAfter(number: number): number {
+    return 60 * (this.plan?.schedule.breaks?.find((b) => b.afterRound === number)?.minutes ?? 0);
+  }
+
+  /**
+   * The edition's Game plan, as the relay pushes it (`relay.plan`, checked by the runtime): the Schedule then follows
+   * the planned rounds' kinds, the planned Interval and breaks. Not part of the Game (not journaled): it is the
+   * edition's setup, and a restarted page gets it again from the relay.
+   */
+  setPlan(plan: GamePlan | null): Effect[] {
+    this.plan = plan;
+    if (this.interval) this.interval = this.intervalFrom(this.interval.sinceMs);
+    this.updateNudge();
+    this.emitState();
+    return this.flush();
   }
 
   /**
@@ -2343,6 +2370,8 @@ export class Show {
   }
 
   schedule() {
+    const plan = this.plan;
+    const after = plan?.rounds.filter((r) => r.number > this.round.number) ?? [];
     return scheduleEstimate({
       nowMs: this.env.nowMs(),
       round: this.round,
@@ -2351,6 +2380,13 @@ export class Show {
       pace: this.game.pace,
       phase: this.phaseName(),
       lineConfirmed: this.round.lineConfirmed,
+      later: plan
+        ? {
+            kinds: after.map((r) => r.kind),
+            intervalSec: this.intervalSec(),
+            breaksSec: (plan.schedule.breaks ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes, 0),
+          }
+        : null,
     });
   }
 

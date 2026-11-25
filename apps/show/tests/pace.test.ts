@@ -81,3 +81,21 @@ test('auto-advance lands on the phrase boundary nearest the slot: 8 bars first, 
   assert.equal(alignedPress({ grid: steadyGrid(2), ...base, latestLand: 6 }), null);
   assert.equal(alignedPress({ grid: steadyGrid(2, { phrases: false }), ...base }), null);
 });
+
+test('the Schedule follows the plan: each round by its kind, the planned Interval, and the breaks still to come', () => {
+  const nowMs = 1_700_000_000_000;
+  const round = { number: 2, targetEndMs: null };
+  const base = { nowMs, round, game: { roundsTotal: 4 }, position: 9, pace: 14, phase: 'early', lineConfirmed: false } as const;
+  const none = scheduleEstimate(base);
+  const sameAsDefault = scheduleEstimate({ ...base, later: { kinds: ['normal', 'normal'], intervalSec: 150, breaksSec: 0 } });
+  assert.equal(sameAsDefault.gameEndMs, none.gameEndMs, 'two normal rounds and the default Interval: as without a plan');
+  const withBreak = scheduleEstimate({ ...base, later: { kinds: ['normal', 'normal'], intervalSec: 150, breaksSec: 300 } });
+  assert.equal(withBreak.gameEndMs - none.gameEndMs, 300_000, 'a 5-minute break moves the end 5 minutes');
+  const desgraciat = scheduleEstimate({ ...base, later: { kinds: ['desgraciat', 'normal'], intervalSec: 150, breaksSec: 0 } });
+  assert.ok(desgraciat.gameEndMs < none.gameEndMs, 'a Desgraciat round is shorter');
+  assert.ok(roundLengthSec({ pace: 14, kind: 'desgraciat' }) < roundLengthSec({ pace: 14 }) * 0.6, '24 songs and no Line, against 50 songs');
+  // The current round, when it is the Desgraciat: fewer songs left, no Line to check.
+  const now = scheduleEstimate({ ...base, round: { ...round, kind: 'desgraciat' }, later: { kinds: [], intervalSec: 150, breaksSec: 0 } });
+  assert.ok(now.roundEndMs < none.roundEndMs);
+  assert.equal(now.roundEndMs, now.gameEndMs, 'the last round');
+});
