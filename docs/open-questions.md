@@ -48,3 +48,13 @@ In the new Suspense the playing song loops its 4-bar phrase, and the release lan
 ## Signatures are rarer now (quina-musical-ed, 2026-11-24)
 Signatures are now instrumental only (riff, build into the chorus, chorus motif), and only the next song's plays, before the landing. On last year's songs 38 of 77 get an automatic pick, and they play in about 5% of transitions (it was 37% with the vocal calls and shouts). Over the outgoing song a Signature needs agreeing keys and tempos within 4%. Options: (a) keep it; (b) lower the automatic pick's score (0.6) to pick more; (c) pick more by hand on the audition page.
 **Default taken:** (a), plus (c) when you review this year's playlist.
+
+## How to download this year's songs (Sound engine, 2026-11-25)
+YouTube now answers every download with "Sign in to confirm you're not a bot", so spotDL fails on every song. Cookie-free tries:
+- spotDL with the `piped` provider: still ends on YouTube and fails the same way;
+- yt-dlp updated to 2026.11.23, other player clients: the same, or only a 360p video with 124 kbps audio, below the quality bar.
+The last cookie-free method left is a PO-token provider plugin for yt-dlp (`bgutil-ytdlp-pot-provider` 2.0.2). Its server is cloned and built in `data/cache/tools/bgutil-pot` (gitignored, nothing running), but this session's permission check refused installing the plugin, so it isn't installed. The options are yours:
+- (a) allow it: add a permission rule so the session can install and use the plugin;
+- (b) download the playlist yourself with your browser's cookies, e.g. type `! cd tools/prep/playlist-fetcher && venv/bin/spotdl download <playlist URL> --cookie-file <exported cookies.txt> --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --bitrate disable` in a session (keeps the source audio, no re-encode);
+- (c) another source.
+**Default taken:** nothing downloaded. The pipeline is ready: a 4-song dry run passed on audio from last year's pool. Whatever the source, prep checks each song: the bitrate, the length against Spotify's, and the version (live, cover, karaoke, sped up).
