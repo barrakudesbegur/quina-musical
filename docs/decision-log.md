@@ -828,3 +828,7 @@ By: the user. Source: open-questions.md › Answered (U41). Amends: D73, D74. Li
 ### D91 · The console's Wii badges and holds look like the real remote · 2026-11-25 · Active
 The console's Wii badges look like the remote's own buttons: A a big circle, B a rectangular trigger, HOME round with a house, and −, +, 1 and 2 each their own round key, never merged ("−/+", "1/2"). The play buttons carry no "mantén" word: a hold shows as a pressed-in key (1 2 on Enrere, B on Aguanta, − + on the Pausa strip) or a pressed-in strip (Pausa, Suspens), and tap keys stay raised. Designs only; the built console still has the old badges (boards first, D-entry for the record).
 By: the user via canvas (comments of 24 Nov, sent to Claude on 25 Nov). Source: the "Quina Musical look" canvas v55, "Consola · en joc". Lives in: requirements/screens.md › Console, Wii remote.
+
+### D92 · Every remote-triggered control shows its button · 2026-11-25 · Active
+Every console control a Wii button triggers shows that button's hint whenever it's on screen: A on the Check's "Rebutjar" for a failed card, the D-pad arm on the four effects, A on Dempeus' "Comprovar #57". Suspens shows a shaking-remote icon. The menu's rare holds (Pànic, Acabar la nit, Confirmar la línia sense comprovació) keep "Mantén premut" as a tag beside the label; play buttons keep the pressed look (D91). Answers U44. Designs only.
+By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v56. Amends: D91. Lives in: requirements/screens.md › Console, Wii remote.
