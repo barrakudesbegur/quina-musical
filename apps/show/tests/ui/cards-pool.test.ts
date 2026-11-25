@@ -35,7 +35,7 @@ test("the default pool (last year's songs) is fit for cards", () => {
 });
 
 test('the pool-size report (R1-Q31): songs to the first Line, the Quina and the last card standing', async () => {
-  const { poolReport, describeReport, seededRandom } = await import('../../../cards/src/report.ts');
+  const { poolReport, describeReport, seededRandom, roundMinutes, nightMinutes, DEFAULT_TIMING } = await import('../../../cards/src/report.ts');
   // Two cards over 24 songs: card A is songs 1–12, card B 13–24.
   const card = (from: number) => ({ lines: [0, 1, 2].map((l) => [0, 1, 2, 3].map((c) => from + l * 4 + c)) });
   const songs = Array.from({ length: 24 }, (_, i) => i + 1);
@@ -47,7 +47,22 @@ test('the pool-size report (R1-Q31): songs to the first Line, the Quina and the 
   assert.ok(r.firstLine.median <= r.bingo.median);
   assert.deepEqual(poolReport(songs, [card(1), card(13)], 500, 7), r, 'the same seed, the same report');
   assert.throws(() => poolReport(songs, [card(1)], 10), /at least 2 cards/);
-  assert.match(describeReport(r, 30), /^24 songs, 2 cards sold: first Line after \d+ \(\d+–\d+\) songs ≈ \d+ min/);
+  const text = describeReport(r, { kinds: ['normal', 'desgraciat', 'special'], intervalMinutes: 3, breakMinutes: 5 });
+  assert.match(text, /^24 songs, 2 cards sold:\n  first Line after \d+ \(\d+–\d+\) songs/);
+  assert.match(text, /the night \(3 rounds, 3-min Intervals, 5 min of breaks\): about \d h \d\d min to \d h \d\d min/);
+  // Minutes: the songs at the Pace (22 s in round 1, 14 s after), plus the Checks.
+  assert.deepEqual(roundMinutes(48, 'regular', false), [(48 * 14) / 60 + 1 + 1.5, (48 * 14) / 60 + 2 + 3.5], "2025's 48-song rounds: about 13.7 to 16.7 min");
+  assert.deepEqual(roundMinutes(30, 'desgraciat', true), [(30 * 22) / 60 + 1.5, (30 * 22) / 60 + 3.5], 'no Line Check in the Desgraciat');
+  const [lo, hi] = nightMinutes(r, { kinds: ['normal', 'normal'], intervalMinutes: 3, breakMinutes: 5 });
+  const one = roundMinutes(r.bingo.median, 'regular', true), two = roundMinutes(r.bingo.median, 'regular', false);
+  assert.deepEqual([lo, hi], [one[0] + two[0] + 3 + 5, one[1] + two[1] + 3 + 5]);
+  assert.equal(DEFAULT_TIMING.firstRoundSec, 22);
   const random = seededRandom(1);
   assert.ok(Array.from({ length: 100 }, random).every((x) => x >= 0 && x < 1));
+});
+
+test("the report's Pace is the protocol's (a copy, since apps/cards builds on its own)", async () => {
+  const { DEFAULT_TIMING } = await import('../../../cards/src/report.ts');
+  const { PACE_DEFAULT_SEC } = await import('@quina/protocol');
+  assert.deepEqual([DEFAULT_TIMING.firstRoundSec, DEFAULT_TIMING.laterRoundsSec], [PACE_DEFAULT_SEC.firstRound, PACE_DEFAULT_SEC.laterRounds]);
 });

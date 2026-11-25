@@ -96,12 +96,68 @@ export function poolReport(songIds: readonly number[], cards: readonly ReportCar
   return { songs: songIds.length, cards: cards.length, runs, firstLine: spread(firstLine), bingo: spread(bingo), lastStanding: spread(lastStanding) };
 }
 
-/** One line of the report, in plain words: "80 songs, 250 cards: first Line at 12 songs (9–15)…". */
-export function describeReport(r: PoolReport, secondsPerSong: number | null): string {
+/**
+ * How long the songs take, and the Checks on top (docs/requirements/show-and-music.md). The Pace is a copy of
+ * @quina/protocol PACE_DEFAULT_SEC (22 s a song in round 1, 14 s after), which this package can't import (it builds on
+ * its own); keep the two the same. 2025's real rounds averaged 16 minutes for about 48 songs.
+ */
+export interface Timing {
+  firstRoundSec: number;
+  laterRoundsSec: number;
+  /** A Line's Check, in minutes (low, high). */
+  lineCheckMin: readonly [number, number];
+  /** The Quina's (or the last card standing's) Check and the round's end, in minutes (low, high). */
+  endCheckMin: readonly [number, number];
+}
+
+export const DEFAULT_TIMING: Timing = Object.freeze({ firstRoundSec: 22, laterRoundsSec: 14, lineCheckMin: [1, 2] as const, endCheckMin: [1.5, 3.5] as const });
+
+/** A round's length in minutes (low, high): its median songs at the Pace, plus the Checks. */
+export function roundMinutes(songs: number, kind: 'regular' | 'desgraciat', first: boolean, t: Timing = DEFAULT_TIMING): [number, number] {
+  const play = (songs * (first ? t.firstRoundSec : t.laterRoundsSec)) / 60;
+  const line = kind === 'regular' ? t.lineCheckMin : ([0, 0] as const);
+  return [play + line[0] + t.endCheckMin[0], play + line[1] + t.endCheckMin[1]];
+}
+
+/** The plan's shape the night estimate needs (the Game plan JSON, read loosely: this package can't use the protocol). */
+export interface NightShape {
+  /** In play order: 'normal', 'special' or 'desgraciat'. */
+  kinds: string[];
+  intervalMinutes: number;
+  breakMinutes: number;
+}
+
+/** The whole night in minutes (low, high): every round in order (the first at round 1's Pace), the Intervals between
+ * them and the planned breaks. */
+export function nightMinutes(r: PoolReport, night: NightShape, t: Timing = DEFAULT_TIMING): [number, number] {
+  let lo = 0;
+  let hi = 0;
+  night.kinds.forEach((kind, i) => {
+    const desgraciat = kind === 'desgraciat';
+    const [a, b] = roundMinutes(desgraciat ? r.lastStanding.median : r.bingo.median, desgraciat ? 'desgraciat' : 'regular', i === 0, t);
+    lo += a;
+    hi += b;
+  });
+  const between = Math.max(0, night.kinds.length - 1) * night.intervalMinutes + night.breakMinutes;
+  return [lo + between, hi + between];
+}
+
+const range = ([a, b]: readonly [number, number]) => `${Math.round(a)}–${Math.round(b)} min`;
+const hours = (m: number) => `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')} min`;
+
+/** The report in plain words: the songs first (what matters most), then how long rounds and the night take. */
+export function describeReport(r: PoolReport, night: NightShape | null = null, t: Timing = DEFAULT_TIMING): string {
   const s = (x: Spread) => `${x.median} (${x.p10}–${x.p90})`;
-  const minutes = (songs: number) => (secondsPerSong ? ` ≈ ${Math.round((songs * secondsPerSong) / 60)} min` : '');
-  return (
-    `${r.songs} songs, ${r.cards} cards sold: first Line after ${s(r.firstLine)} songs${minutes(r.firstLine.median)}; ` +
-    `Quina after ${s(r.bingo)}${minutes(r.bingo.median)}; Desgraciat's last card after ${s(r.lastStanding)}${minutes(r.lastStanding.median)}`
-  );
+  const lines = [
+    `${r.songs} songs, ${r.cards} cards sold:`,
+    `  first Line after ${s(r.firstLine)} songs`,
+    `  Quina after ${s(r.bingo)} songs`,
+    `  the Desgraciat's last card standing after ${s(r.lastStanding)} songs`,
+    `  a regular round takes about ${range(roundMinutes(r.bingo.median, 'regular', false, t))} (round 1: ${range(roundMinutes(r.bingo.median, 'regular', true, t))}); the Desgraciat about ${range(roundMinutes(r.lastStanding.median, 'desgraciat', false, t))}`,
+  ];
+  if (night) {
+    const [lo, hi] = nightMinutes(r, night, t);
+    lines.push(`  the night (${night.kinds.length} rounds, ${night.intervalMinutes}-min Intervals${night.breakMinutes ? `, ${night.breakMinutes} min of breaks` : ''}): about ${hours(lo)} to ${hours(hi)}`);
+  }
+  return lines.join('\n');
 }

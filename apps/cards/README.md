@@ -31,9 +31,11 @@ and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `c
 
 **Choosing the playlist's size (R1-Q31):** `npm run report -- --pool <name> --sold 250` simulates rounds against the cards
 drawn from that pool and prints how many songs it takes to the first Line, the Quina and the Desgraciat's last card (the
-median and the 10th–90th percentile, with minutes at `--pace` seconds a song). `--sizes 60,80,100` does the same for
-pools of those sizes, before the playlist exists. With last year's 77 songs and 250 cards sold: the first Line after
-about 15 songs, the Quina after about 50, and the Desgraciat's last card after about 25.
+median and the 10th–90th percentile), then how long a round takes: the songs at the Pace (22 s a song in round 1, 14 s
+after) plus the Checks. `--sizes 60,80,100` does the same for pools of those sizes, before the playlist exists, and
+`--plan <file>` (Admin's plan export) adds the whole night with its Intervals and breaks. With last year's 77 songs and
+250 cards sold: the first Line after about 15 songs, the Quina after about 50, and the Desgraciat's last card after
+about 25.
 
 ## Card types
 
