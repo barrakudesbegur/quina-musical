@@ -222,6 +222,9 @@ export const S = {
     claimLast: (id: number) => `Comprovar #${id}`,
     lastNote: (id: number) => `Pregunteu qui té el #${id}. Si ningú el té, decidiu vosaltres.`,
     none: 'No en queda cap dempeus: decidiu vosaltres com acaba la quina.',
+    /** The shared win: the cards that sat down with the last song (CheckOutcome 'fellLast'). */
+    fellLast: (song: string | null) => (song ? `Han caigut amb l'última («${song}»)` : "Han caigut amb l'última cançó"),
+    fellLastNote: "Si ningú de la sala queda dempeus, els que han caigut amb l'última es reparteixen el premi: comproveu cada cartró.",
     noCards: "No hi ha cartrons en joc registrats: no es pot comptar qui queda dempeus.",
   },
 
@@ -267,6 +270,8 @@ export const S = {
     resultComplete: (kind: WinKind) =>
       kind === 'standing' ? "Resultat: no n'ha sonat cap. Aquest cartró és l'últim dempeus!" : `Resultat: han sonat totes. Aquest cartró té ${kindWord[kind]}!`,
     /** A standing claim for a card that fell (the Desgraciat round), naming the song that sank it. */
+    resultFellLast: (title: string | null) =>
+      `Resultat: ha caigut amb l'última cançó${title ? `, «${title}»` : ''}. Comparteix el premi si ningú més queda dempeus.`,
     resultFallen: (title: string | null) => (title ? `Resultat: «${title}» ja ha sonat. Aquest cartró ha caigut.` : "Resultat: una de les seves cançons ja ha sonat. Aquest cartró ha caigut."),
     decide: 'Decisió',
     confirmNote: 'ha passat la comprovació',
@@ -291,6 +296,8 @@ export const S = {
     otherRows: (rows: readonly number[]) =>
       rows.length > 1 ? `També té completes les files ${rows.map((r) => r + 1).join(', ')}` : `També té completa la fila ${rows.map((r) => r + 1).join(', ')}`,
     landed: CA.landed,
+    /** A standing card that sat down with the song that just landed (the shared win): that step passes. */
+    landedLast: "Ha sonat amb l'última",
     notLanded: CA.notLanded,
     pending: 'Pendent',
     playing: 'Sonant',
@@ -318,6 +325,8 @@ export const S = {
 
   winnerForm: {
     name: 'Nom (opcional)',
+    /** The numbered slip handed to a winner instead of (or as well as) taking a name. */
+    slip: 'Número de butlleta (opcional)',
     notes: 'Notes',
     save: 'Desa',
     saved: 'Desat',
@@ -327,6 +336,8 @@ export const S = {
   },
 
   winnersList: {
+    /** A winner known by the numbered slip they were given. */
+    slip: (n: string) => `Butlleta ${n}`,
     title: CA.winners,
     empty: 'Encara no hi ha guanyadors.',
     item: (kind: WinKind, cardId: number) => `${kindLabel[kind]} · ${CA.card(cardId)}`,

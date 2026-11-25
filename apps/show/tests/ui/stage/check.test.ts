@@ -190,7 +190,13 @@ test("a standing Check's marks mean good for the claim: ✓ for a song that hasn
   assert.equal(stepMark('line', 'missed'), 'bad');
   assert.equal(stepMark('standing', 'playing'), null);
   assert.equal(stepMark('line', 'pending'), null);
-  assert.deepEqual(STAGE_TEXT.mark, { ok: '✓', bad: '✗' });
+  assert.deepEqual(STAGE_TEXT.mark, { ok: '✓', last: '✓', bad: '✗' });
+  // The shared win: a standing card that sat down with the last song; that song's tile passes, in gold.
+  assert.equal(stepMark('standing', 'landed', 'fellLast'), 'last');
+  assert.equal(stepMark('standing', 'missed', 'fellLast'), 'ok');
+  assert.equal(stepMark('standing', 'landed', 'fallen'), 'bad');
+  assert.equal(verdictOf('fellLast'), 'fellLast');
+  assert.equal(isFailed('fellLast'), false, 'it passes');
   // The tile's words say what happened to the song, the same in every round.
   assert.deepEqual(STAGE_TEXT.markLabel, { landed: 'Ha sonat', missed: 'No ha sonat' });
 });

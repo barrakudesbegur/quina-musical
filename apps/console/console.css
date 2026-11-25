@@ -2653,6 +2653,11 @@
   color: var(--color-ok);
 }
 
+/* The Desgraciat's shared win: the song the card sat down with is the last one to land, so it passes, in gold */
+.check-steps__item[data-mark='last'] .check-steps__mark {
+  color: var(--color-accent-edge);
+}
+
 .check-steps__item[data-mark='bad'] .check-steps__mark {
   color: var(--color-danger);
 }
@@ -4264,4 +4269,23 @@ kbd {
     opacity: 0;
     transform: scale(0.96);
   }
+}
+
+/* The Desgraciat's shared win (StandingPanel): the cards that sat down with the last song, each with its check */
+.standing__fell-last {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--line-width-thin) dashed var(--color-line);
+}
+
+.standing__fell-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

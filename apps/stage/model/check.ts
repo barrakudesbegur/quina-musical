@@ -53,8 +53,9 @@ export function cardTypeBadge(
 }
 
 /** What the projector says once the Check is over: `fallen` is a standing claim for a card one of whose songs has
- * landed (the Desgraciat round). */
-export type CheckVerdict = 'complete' | 'incomplete' | 'fallen' | 'notValid';
+ * landed (the Desgraciat round); `fellLast`, one that sat down with the song that just landed, which passes (the
+ * shared win when nobody in the room is left standing). */
+export type CheckVerdict = 'complete' | 'incomplete' | 'fellLast' | 'fallen' | 'notValid';
 
 export interface CheckCell {
   songId: number;
@@ -86,7 +87,7 @@ export interface CheckView {
 
 /** The engine's finding as the projector words it: unknown cards and wrong-type cards are "not valid". */
 export const verdictOf = (outcome: CheckOutcome): CheckVerdict =>
-  outcome === 'complete' || outcome === 'incomplete' || outcome === 'fallen' ? outcome : 'notValid';
+  outcome === 'complete' || outcome === 'incomplete' || outcome === 'fellLast' || outcome === 'fallen' ? outcome : 'notValid';
 
 /**
  * The grid for a checked card. With the card in the catalog (and holding every played song): its 3 × 4
@@ -163,8 +164,10 @@ export function checkReveal(
  * it's marked. For a Line or a Bingo a landed song is good; in a standing Check (the Desgraciat round) a song that has
  * NOT landed is, and the landed one is the ✗ that sank the card.
  */
-export function stepMark(kind: WinKind, state: StepState): 'ok' | 'bad' | null {
+export function stepMark(kind: WinKind, state: StepState, verdict: CheckVerdict | null = null): 'ok' | 'last' | 'bad' | null {
   if (state !== 'landed' && state !== 'missed') return null;
+  // The shared win: a standing card that sat down with the song that just landed. That song passes, in gold.
+  if (kind === 'standing' && state === 'landed' && verdict === 'fellLast') return 'last';
   return (state === 'landed') !== (kind === 'standing') ? 'ok' : 'bad';
 }
 
@@ -189,8 +192,9 @@ export function typeReveal(check: Pick<CheckView, 'startAtMs' | 'steps' | 'cardT
   return check.cardType.ok ? 'ok' : 'wrong';
 }
 
-/** A Check that ends without a prize: the card is incomplete, fallen, or not valid. */
-export const isFailed = (verdict: CheckVerdict): boolean => verdict !== 'complete';
+/** A Check that ends without a prize: the card is incomplete, fallen, or not valid. A card that fell with the last
+ * song passes (the shared win). */
+export const isFailed = (verdict: CheckVerdict): boolean => verdict !== 'complete' && verdict !== 'fellLast';
 
 /** The song a failed Check names: the first step (in the order they played) marked ✗. */
 export interface CheckMiss {

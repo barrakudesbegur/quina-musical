@@ -33,7 +33,7 @@
       <section class="celebration-panel__winners">
         <h3 class="panel__subtitle">{S.celebration.winnersTitle}</h3>
         {#each winners as w (w.claimId)}
-          <WinnerForm claimId={w.claimId} name={w.name} notes={w.notes} title={CA.card(w.cardId)} />
+          <WinnerForm claimId={w.claimId} name={w.name} slip={w.slip ?? null} notes={w.notes} title={CA.card(w.cardId)} />
         {/each}
       </section>
     {/if}

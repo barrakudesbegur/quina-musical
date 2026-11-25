@@ -65,11 +65,13 @@ test('a Check without steps (unknown card, wrong type) goes straight to its resu
   assert.equal(p.total, 0);
 });
 
-test('only a complete card points to a valid verdict', () => {
-  assert.equal(suggestedVerdict('complete'), true);
-  assert.equal(suggestedVerdict('incomplete'), false);
-  assert.equal(suggestedVerdict('unknownCard'), false);
-  assert.equal(suggestedVerdict('wrongType'), false);
+test('only a passing result points to a valid verdict: complete, or a standing card that fell with the last song', () => {
+  assert.equal(suggestedVerdict('complete', 'line'), true);
+  assert.equal(suggestedVerdict('incomplete', 'line'), false);
+  assert.equal(suggestedVerdict('unknownCard', 'bingo'), false);
+  assert.equal(suggestedVerdict('wrongType', 'bingo'), false);
+  assert.equal(suggestedVerdict('fellLast', 'standing'), true, 'the shared Desgraciat win');
+  assert.equal(suggestedVerdict('fallen', 'standing'), false);
 });
 
 test('the result names the songs that had not landed', () => {
@@ -79,6 +81,8 @@ test('the result names the songs that had not landed', () => {
 });
 
 test('the Check decides: a passed card may still be rejected, a failed card can never be accepted (docs/event.md)', () => {
-  assert.deepEqual(allowedVerdicts('complete'), [false, true]);
-  for (const failed of ['incomplete', 'unknownCard', 'wrongType', 'fallen'] as const) assert.deepEqual(allowedVerdicts(failed), [false], failed);
+  assert.deepEqual(allowedVerdicts('complete', 'bingo'), [false, true]);
+  assert.deepEqual(allowedVerdicts('fellLast', 'standing'), [false, true], 'a card that sat with the last song may share the win');
+  for (const failed of ['incomplete', 'unknownCard', 'wrongType'] as const) assert.deepEqual(allowedVerdicts(failed, 'bingo'), [false], failed);
+  assert.deepEqual(allowedVerdicts('fallen', 'standing'), [false], 'fell on an earlier song');
 });

@@ -19,7 +19,7 @@ import { checkProgress, suggestedVerdict } from './check.ts';
 import { summarizeClaims } from './claims.ts';
 import { shuffleCountdown } from './countdown.ts';
 import { roundIntroArgs } from './show-data.ts';
-import { standingSummary } from './standing.ts';
+import { nextFellLast, standingSummary } from './standing.ts';
 
 /** The console control that does it (each carries `data-default` when it's the one). */
 export type DefaultControl = 'next' | 'confirm' | 'reject' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause' | 'claimLast';
@@ -64,11 +64,12 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
       if (!check || checkProgress(check, nowMs).stage !== 'result') return null;
       const current = summarizeClaims(flow.claims, check).items.find((c) => c.current);
       if (!current || current.decided) return null;
-      const valid = suggestedVerdict(check.outcome);
+      const valid = suggestedVerdict(check.outcome, check.kind);
       return { control: valid ? 'confirm' : 'reject', command: { cmd: 'decide', args: { claimId: check.claimId, valid } }, enabled: can('decide') };
     }
     case 'play': {
-      const last = lastStanding(state);
+      // The Desgraciat's end: the last card standing; with none left, the next card that sat with the last song.
+      const last = lastStanding(state) ?? fellLastToClaim(state, flow.claims);
       if (last !== null) return { control: 'claimLast', command: { cmd: 'claim', args: { cardId: last, kind: 'standing' } }, enabled: can('claim') };
       return next(input);
     }
@@ -87,6 +88,13 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
     case 'after':
       return null;
   }
+}
+
+/** With nobody left standing, the next card that sat down with the last song and has no claim yet (the shared win). */
+function fellLastToClaim(state: ShowState, claims: readonly { cardId: number; round: number }[]): number | null {
+  const summary = standingSummary(state.standing, state.cards.validCount);
+  if (!summary || summary.count !== 0) return null;
+  return nextFellLast(summary.fellLast, claims, state.round.number);
 }
 
 /** The Desgraciat round's last card standing, when exactly one is left (its number, from the private `standing`). */

@@ -219,7 +219,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       if (!nodes) return;
       // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
       // happened to the song.
-      const mark = stepMark(check.kind, state);
+      const mark = stepMark(check.kind, state, check.verdict);
       setData(nodes.root, 'state', state);
       setData(nodes.root, 'mark', mark);
       setText(nodes.mark, mark ? STAGE_TEXT.mark[mark] : '');

@@ -32,7 +32,7 @@
   const claims = $derived(summarizeClaims(flow.claims, check));
   const current = $derived(claims.items.find((c) => c.current) ?? null);
   const kind = $derived(check?.kind ?? current?.kind ?? defaultClaimKind(snap));
-  const valid = $derived(check ? suggestedVerdict(check.outcome) : false);
+  const valid = $derived(check ? suggestedVerdict(check.outcome, check.kind) : false);
   const canDecide = $derived(progress?.stage === 'result' && current !== null && !current.decided && model.can('decide'));
   const defaultControl = $derived(model.defaultAction?.control ?? null);
   const winner = $derived(check ? (flow.winners.find((w) => w.claimId === check.claimId) ?? null) : null);
@@ -41,9 +41,10 @@
     if (!check) return '';
     if (check.outcome === 'complete') return S.check.resultComplete(check.kind);
     if (check.outcome === 'incomplete') return S.check.resultMissing(missingSongs(check).map(title), check.kind);
-    if (check.outcome === 'fallen') {
+    if (check.outcome === 'fallen' || check.outcome === 'fellLast') {
       const sank = sinkingSong(check);
-      return S.check.resultFallen(sank === null ? null : title(sank));
+      const song = sank === null ? null : title(sank);
+      return check.outcome === 'fallen' ? S.check.resultFallen(song) : S.check.resultFellLast(song);
     }
     return S.check.outcome[check.outcome];
   });
@@ -52,10 +53,10 @@
     { valid: true, label: S.check.confirm, note: S.check.confirmNote, icon: 'check' },
   ] as const;
   /** A failed card can't be accepted: only reject is offered (allowedVerdicts). */
-  const verdicts = $derived(check ? VERDICTS.filter((v) => allowedVerdicts(check.outcome).includes(v.valid)) : []);
+  const verdicts = $derived(check ? VERDICTS.filter((v) => allowedVerdicts(check.outcome, check.kind).includes(v.valid)) : []);
 
   function decide(verdict: boolean): void {
-    if (check && allowedVerdicts(check.outcome).includes(verdict)) model.act('decide', { claimId: check.claimId, valid: verdict });
+    if (check && allowedVerdicts(check.outcome, check.kind).includes(verdict)) model.act('decide', { claimId: check.claimId, valid: verdict });
   }
 </script>
 
@@ -85,13 +86,13 @@
       {#if progress.total}
         <ol class="check-steps" aria-label={S.check.progress(progress.doneCount, progress.total)}>
           {#each progress.steps as step (step.index)}
-            {@const mark = stepMark(check.kind, step.landed)}
+            {@const mark = stepMark(check.kind, step.landed, check.outcome)}
             <li class="check-steps__item" data-state={step.state} data-landed={step.landed === null ? undefined : String(step.landed)} data-mark={mark ?? undefined} data-anim="check-step" aria-current={step.state === 'playing' ? 'step' : undefined}>
               <Cover songId={step.songId} size="sm" />
               <span class="check-steps__song">{title(step.songId)}</span>
               <span class="check-steps__mark">
                 <!-- The icon says whether it's good for the claim (a standing claim: not sounded); the words, what happened. -->
-                {#if step.landed !== null}<Icon name={mark === 'ok' ? 'check' : 'cross'} /><span>{step.landed ? S.check.landed : S.check.notLanded}</span>
+                {#if step.landed !== null}<Icon name={mark === 'bad' ? 'cross' : 'check'} /><span>{mark === 'last' ? S.check.landedLast : step.landed ? S.check.landed : S.check.notLanded}</span>
                 {:else if step.state === 'playing'}<Icon name="music" /><span>{S.check.playing}</span>
                 {:else}<span>{S.check.pending}</span>{/if}
               </span>
@@ -141,7 +142,7 @@
     <div class="panel check-board__after">
       <CelebrationMusic {kind} current={snap?.celebrationChoice ?? null} />
       {#if check}
-        <WinnerForm claimId={check.claimId} name={winner?.name ?? null} notes={winner?.notes ?? null} title={CA.card(check.cardId)} />
+        <WinnerForm claimId={check.claimId} name={winner?.name ?? null} slip={winner?.slip ?? null} notes={winner?.notes ?? null} title={CA.card(check.cardId)} />
       {/if}
     </div>
   </section>

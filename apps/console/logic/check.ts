@@ -2,6 +2,7 @@
 // (`steps[i].atMs`, `durationMs`), so which step is playing is just the clock against those times
 // (ANIMATIONS.md › check-step: the playing row is highlighted, its ✓/✗ shows at the step's end). The result
 // shows once now ≥ `endAtMs`, never before, so the console stays in step with the projector. Pure.
+import { isPassingOutcome } from '@quina/protocol';
 import type { CheckInfo, CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
 
 export type StepState = 'pending' | 'playing' | 'done';
@@ -63,8 +64,10 @@ export function missingSongs(check: Pick<CheckInfo, 'steps'>): number[] {
  * standing Check (the Desgraciat round) a song that has NOT landed is, and the landed one is the ✗ that sank the card.
  * Null before the step is done.
  */
-export function stepMark(kind: WinKind, landed: boolean | null): 'ok' | 'bad' | null {
+export function stepMark(kind: WinKind, landed: boolean | null, outcome: CheckOutcome | null = null): 'ok' | 'last' | 'bad' | null {
   if (landed === null) return null;
+  // The Desgraciat's shared win: the card sat down with the song that just landed, so that song passes (`last`).
+  if (kind === 'standing' && landed && outcome === 'fellLast') return 'last';
   return landed !== (kind === 'standing') ? 'ok' : 'bad';
 }
 
@@ -74,9 +77,10 @@ export function sinkingSong(check: Pick<CheckInfo, 'kind' | 'steps'>): number | 
   return check.steps.find((s) => s.landed)?.songId ?? null;
 }
 
-/** The verdict the engine's finding points to. */
-export function suggestedVerdict(outcome: CheckOutcome): boolean {
-  return outcome === 'complete';
+/** The verdict the engine's finding points to: a passing result (`isPassingOutcome`: complete, or a standing card that
+ * fell with the last song, which may share the win). */
+export function suggestedVerdict(outcome: CheckOutcome, kind: WinKind): boolean {
+  return isPassingOutcome(outcome, kind);
 }
 
 /**
@@ -84,6 +88,6 @@ export function suggestedVerdict(outcome: CheckOutcome): boolean {
  * be rejected, in a strange case, with a long press against the result; a card that failed can never be accepted,
  * so only "reject" is offered.
  */
-export function allowedVerdicts(outcome: CheckOutcome): readonly boolean[] {
-  return suggestedVerdict(outcome) ? [false, true] : [false];
+export function allowedVerdicts(outcome: CheckOutcome, kind: WinKind): readonly boolean[] {
+  return suggestedVerdict(outcome, kind) ? [false, true] : [false];
 }

@@ -21,13 +21,13 @@
           <li class="winners-list__item" data-kind={w.kind}>
             <div class="winners-list__row">
               <span class="winners-list__what">{S.winnersList.item(w.kind, w.cardId)}</span>
-              <span class="winners-list__name" data-state={w.name ? 'named' : 'unnamed'}>{w.name ?? S.winnersList.noName}</span>
+              <span class="winners-list__name" data-state={w.name || w.slip ? 'named' : 'unnamed'}>{w.name ?? (w.slip ? S.winnersList.slip(w.slip) : S.winnersList.noName)}{#if w.name && w.slip}<span class="winners-list__slip"> · {S.winnersList.slip(w.slip)}</span>{/if}</span>
               <button type="button" class="winners-list__edit" data-anim="press" aria-expanded={editing === w.claimId} onclick={() => (editing = editing === w.claimId ? null : w.claimId)}>
                 {editing === w.claimId ? S.winnerForm.close : S.winnerForm.edit}
               </button>
             </div>
             {#if w.notes && editing !== w.claimId}<p class="winners-list__notes">{w.notes}</p>{/if}
-            {#if editing === w.claimId}<WinnerForm claimId={w.claimId} name={w.name} notes={w.notes} />{/if}
+            {#if editing === w.claimId}<WinnerForm claimId={w.claimId} name={w.name} slip={w.slip ?? null} notes={w.notes} />{/if}
           </li>
         {/each}
       </ul>

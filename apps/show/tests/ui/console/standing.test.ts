@@ -20,6 +20,7 @@ import {
   helperTabAfter,
   helperTabsFor,
   standingChips,
+  nextFellLast,
   standingFuture,
   standingSummary,
 } from '../../../../console/logic/standing.ts';
@@ -63,7 +64,7 @@ test('Dempeus is selected as the round starts and when one card is left; otherwi
 
 test('the count "N dempeus de M cartrons": the bar above 60, the sorted cards from 60 down, gold from 3 down', () => {
   const many = standingSummary(state('desgraciat').standing, 210);
-  assert.deepEqual(many, { count: 143, total: 210, seated: 67, share: 143 / 210, ids: null, last: null, gold: false });
+  assert.deepEqual(many, { count: 143, total: 210, seated: 67, share: 143 / 210, ids: null, last: null, gold: false, fellLast: [] });
   assert.equal(S.standing.countLabel(143, 210), '143 dempeus de 210 cartrons');
   assert.equal(S.standing.seated(67), '67 asseguts');
   assert.equal(S.standing.listLater, `Quan en quedin ${STANDING_LIST_MAX} o menys, hi veuràs els números.`);
@@ -136,6 +137,7 @@ test("a standing Check's rows: ✓ when the song hasn't sounded, ✗ for the one
   const rows = checkProgress(fallen, NOW).steps;
   assert.deepEqual(rows.map((r) => stepMark(fallen.kind, r.landed)), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'bad']);
   assert.deepEqual(rows.map((r) => (r.landed ? S.check.landed : S.check.notLanded)).slice(-2), ['No ha sonat', 'Ha sonat']);
+  assert.deepEqual(rows.map((r) => stepMark(fallen.kind, r.landed, 'fellLast')), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'last'], 'fell with the last song: its step passes');
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('bingo', false), 'bad');
   assert.equal(stepMark('standing', null), null);
@@ -181,4 +183,20 @@ test('the round named, its intro and resume sending its kind, its one prize', ()
   assert.equal(S.prizes.ribbon.standing, 'Dempeus');
   assert.equal(S.cheatSheet.prizes(5, true), 'Premis de la Quina Desgraciada');
   assert.equal(S.cheatSheet.prizes(4), 'Premis de la Quina 4');
+});
+
+test("the shared win: the cards that sat with the last song show once one card or none stands, and get checked in turn", () => {
+  const last = state('desgraciatLast');
+  const withFell = { ...last.standing!, fellLast: [90, 12] };
+  assert.deepEqual(standingSummary(withFell, 210)?.fellLast, [12, 90], 'one card standing: the group shows, sorted');
+  assert.deepEqual(standingSummary({ count: 5, cardIds: [1, 2, 3, 4, 5], fellLast: [6] }, 210)?.fellLast, [], 'more standing: not yet');
+  assert.deepEqual(standingSummary({ count: 1, cardIds: [57] }, 210)?.fellLast, [], 'an older engine without the field');
+  const claims = [{ cardId: 12, round: 5 }, { cardId: 90, round: 4 }];
+  assert.equal(nextFellLast([12, 90], claims, 5), 90, 'card 12 was already claimed this round');
+  assert.equal(nextFellLast([12], claims, 5), null);
+  // Nobody standing: the default action checks the next card that sat with the last song.
+  const none = { ...last, standing: { count: 0, cardIds: [], fellLast: [12, 90] } } as ShowState;
+  assert.deepEqual(defaultAction(input(none))?.command, { cmd: 'claim', args: { cardId: 12, kind: 'standing' } });
+  // One card still standing in the engine (maybe unsold): it stays the default; the group is there to choose from.
+  assert.deepEqual(defaultAction(input({ ...last, standing: withFell } as ShowState))?.command, { cmd: 'claim', args: { cardId: 57, kind: 'standing' } });
 });
