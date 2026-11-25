@@ -2,21 +2,21 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-25)
+## Now (2026-11-25, afternoon)
 
-- **In progress:** nothing half-built. Just done:
-  - the cloud's side of the shared Desgraciat win, the slip and the Check's result (`cf9666c`): `flaggedDecisions`, never refusals;
-  - the preflight's card prices, U5 (`6beadc7`);
-  - the whole-show e2e claiming real wins on a fixed Queue;
-  - sync-main listing what a push publishes;
-  - the preflight's Wii line showing the remote's drops in the last 10 minutes, a WARN from 2 (`147e535`, on Frontend's 150f213).
+- **In progress: the QR domain switch (deploy-plan step 7).** The user OK'd it on 25 Nov (D76: "nobody uses it"). On quina-dev, `/26/123` and last year's `/?c=123` both work. Claude Code's auto mode refused `npx wrangler triggers deploy` because the OK came through the orchestrator, so it waits for the user to run it or allow it. Step 7 now lists the exact commands, the checks and the undo. The undo's DNS record needs the dashboard.
+- **Just done:**
+  - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type, so Sound engine can flip `DEFAULT_CARD_TYPE.desgraciat` to `especial` (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip. Once it's flipped, the live Desgraciat e2e plays especial cards 400–429.
+  - D69 (2025's prices): a preflight test with 1.50 €/5 €, 15 € before round 1 and 5 € before the Desgraciat (`9c83ebe`). The real check passes once Frontend puts the prices in `apps/cards/src/config.ts`. Today they're `null`, so it WARNs.
 
   quina-dev runs `2e37fc1` (version `81e0d0ad`).
 - **Next:**
-  - this year's pool from 2 Dec: measure, prune, push, and sync both laptops by 10 Dec;
+  - run step 7 once the user allows it; check, log it and tell the orchestrator;
+  - after Sound engine's D70 flip, rerun the live Desgraciat e2e on quina-dev;
+  - this year's pool from 2 Dec: measure, prune, push, and sync both laptops **before the first rehearsal** (D71; the rehearsal dates are U27);
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
-- **Waiting on the user** (docs/open-questions.md): **U15**, the QR domain switch (deploy-plan step 7, by 11 Dec); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android); **U24**, housekeeping (the previous session's `ci-head` worktree).
+- **Waiting on the user** (docs/open-questions.md): running or allowing step 7 (above); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch); **U24**, housekeeping (the previous session's `ci-head` worktree); **U27**, the rehearsal dates, and **U28**, the print date, which set the pool's deadline.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
@@ -28,16 +28,16 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Milestones
 
-The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**. The whole plan is in [`docs/timeline.md`](../../../docs/timeline.md). Tell the orchestrator early if one of these slips.
+The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**. Those are the only dates the user gave. Cards are sold only on the night and print in a few hours (D71). The rehearsal dates (U27) and the print date (U28) are open, so no other dates are set. The whole plan is in [`docs/timeline.md`](../../../docs/timeline.md). Tell the orchestrator early if one of these slips.
 
-| By | Platform's milestone | Depends on |
+| When | Platform's milestone | Depends on |
 |---|---|---|
-| Fri 27 Nov | The cloud side of card type per round (queue item 1) | Sound engine's step A on main |
-| Mon 30 Nov | The cloud side of the Desgraciat round (queue item 2) | Sound engine's proposal and its types |
-| Thu 10 Dec | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared (2 Dec), hooks and stems done (10 Dec) |
-| Fri 11 Dec | `quina.barrakudesbegur.org` points at the Worker, checked with a printed card (deploy-plan step 7) | **the user's explicit OK**; the cards printed |
-| Sun 13, Sat 19 Dec | Rehearsals (default dates): watch the daily quota (`/api/stats`, the preflight) | |
-| Mon 21 Dec | Code freeze: only fixes for what a rehearsal finds | |
+| Done (25 Nov) | The cloud side of card type per round and of the Desgraciat round | |
+| Now | `quina.barrakudesbegur.org` points at the Worker (deploy-plan step 7) | the user's OK (given, D76); the user runs or allows the command |
+| From Wed 2 Dec | This year's pool measured against R2's 10 GB | the pool prepared |
+| Before the first rehearsal | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared; hooks and stems done |
+| Each rehearsal | The preflight; watch the daily quota (`/api/stats`) | U27 |
+| Sun 27 Dec | The night | |
 
 ## Done so far
 
@@ -78,7 +78,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## The next queue, in priority order
 
 1. **Provisional hooks WARN in the preflight**, once Sound engine sends the field (see item 2).
-2. **This year's pool** (milestone Thu 10 Dec): measure it on 2 Dec, then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
+2. **This year's pool** (before the first rehearsal): measure it on 2 Dec, then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
    - **Contingency (option d)**, only if the final pool goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
      - push: the pool's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
      - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
@@ -89,8 +89,8 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## Waiting on the user
 
 - **deploy-plan step 6:** this year's pool (the playlist isn't final). Don't start.
-- **deploy-plan step 7:** pointing `quina.barrakudesbegur.org` (the printed QR codes) at the Worker. Needs the user's explicit OK. Don't start.
-- **Open questions** in `docs/open-questions.md`: the printed cards are public (impact low), the player checked on desktop only.
+- **deploy-plan step 7:** pointing `quina.barrakudesbegur.org` (the printed QR codes) at the Worker. The user OK'd it (D76), but auto mode refused the command, so the user runs it or allows it.
+- **Open questions** in `docs/open-questions.md`: the player checked on desktop only (U19). The printed cards being public is answered (D78: public unless there's a reason).
 - **The logo library** isn't uploaded yet. Admin's upload needs a person's Google login. The user offered to sign in and let Platform drive their Chrome, but that was called off. Only start it if the user asks directly.
 
 ## Known issues and risks
