@@ -241,6 +241,36 @@ test('an invalid Claim: the Failure fanfare, back to play in a Hold with the err
   assert.equal(h.show.scene, 'play');
 });
 
+test('the Check decides: a card that failed can never be accepted; one that passed may still be rejected', () => {
+  const h = flow();
+  landSongs(h, 2);
+  // Nothing complete yet: the Check fails, so `valid: true` is refused and the Claim stays undecided.
+  h.send('claim', { cardId: card.id });
+  const failed = lastClaimId(h);
+  finishCheck(h);
+  assert.equal(h.show.claims.at(-1)?.outcome, 'incomplete');
+  assert.deepEqual(rejected(h.send('decide', { claimId: failed, valid: true })), ['failedCheck']);
+  assert.equal(h.show.claims.at(-1)?.status, 'checked');
+  assert.equal(h.show.winners.length, 0);
+  for (const kind of ['unknownCard', 'wrongType']) {
+    h.send('decide', { claimId: lastClaimId(h), valid: false });
+    h.send('hold', { on: false });
+    h.send('claim', { cardId: kind === 'unknownCard' ? 9999 : specialCard.id });
+    assert.equal(h.show.claims.at(-1)?.outcome, kind);
+    assert.deepEqual(rejected(h.send('decide', { claimId: lastClaimId(h), valid: true })), ['failedCheck'], kind);
+  }
+  h.send('decide', { claimId: lastClaimId(h), valid: false });
+  h.send('hold', { on: false });
+  // Complete after 4 landings: accepted, or (a strange case) rejected by the presenters.
+  landSongs(h, 2);
+  h.send('claim', { cardId: card.id });
+  assert.deepEqual(rejected(h.send('decide', { claimId: lastClaimId(h), valid: false })), [], 'a passed card may be rejected');
+  h.send('hold', { on: false });
+  h.send('claim', { cardId: card.id });
+  assert.deepEqual(rejected(h.send('decide', { claimId: lastClaimId(h), valid: true })), [], 'decided before its Check ends: it passes');
+  assert.deepEqual(h.show.winners.map((w) => w.cardId), [card.id]);
+});
+
 test('unknown cards and cards of the wrong type: the result at once, no snippets', () => {
   const h = flow();
   landSongs(h, 2);
@@ -441,13 +471,32 @@ test('fuzz: random show-flow commands never break the invariants, and the journa
   for (let seed = 1; seed <= 6; seed++) {
     const h = setup({ seed, cards: allCards, cardsInPlay: '1-200, 400-450', fixedQueue: seed % 2 ? QUEUE : null, settings: { autoAdvance: seed % 3 !== 0 } });
     h.send('unlock');
+    // Head starts on the fixed Queue, so real wins and the scenes after them come up (only a card that completed can
+    // be accepted): seed 1 starts in its Bingo's Celebration, seed 3 in the Interval after it, seed 5 one song from
+    // the Line.
+    if (seed === 1 || seed === 3) {
+      landSongs(h, 14);
+      h.send('claim', { cardId: card.id, kind: 'bingo' });
+      h.send('decide', { claimId: lastClaimId(h), valid: true });
+      assert.equal(h.show.scene, 'celebration');
+      if (seed === 3) h.send('interval');
+    } else if (seed === 5) landSongs(h, 3);
     let rnd = seed * 7919;
     const pick = <T>(list: readonly T[]): T => list[(rnd = (rnd * 48271) % 2147483647) % list.length];
     const claimId = () => pick([...h.show.claims.map((c) => c.claimId), 'cl-99']);
     const commands = [
-      () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('back'), () => h.send('hold'),
+      // Songs land far more often than anything else happens, so rounds get far enough for real wins.
+      () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('next'),
+      () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('next'), () => h.send('back'), () => h.send('hold'),
       () => h.send('hold', { on: false }), () => h.send('holdMusic'), () => h.send('suspense'),
       () => h.send('claim', { cardId: pick([card.id, loser.id, 9999, 410]) }), () => h.send('claim', { cardId: card.id, kind: pick(['line', 'bingo'] as const) }),
+      // A presenter deciding the Check on screen by its result (a failed card can't be accepted).
+      ...Array.from({ length: 3 }, () => () => {
+        const c = h.show.claims.find((x) => x.status === 'checking' || x.status === 'checked');
+        return c ? h.send('decide', { claimId: c.claimId, valid: c.outcome === 'complete' }) : h.send('next');
+      }),
+      // A card that really completed (only those can be accepted: the Check's result decides).
+      () => h.send('claim', { cardId: pick([...h.show.possibleWinners().line, ...h.show.possibleWinners().bingo].map((w) => w.cardId).concat(card.id)) }),
       () => h.send('checkStart', { claimId: claimId() }), () => h.send('decide', { claimId: claimId(), valid: pick([true, false]) }),
       () => h.send('decide', { claimId: claimId(), valid: true }),
       () => h.send('winnerInfo', { claimId: claimId(), name: pick(['', 'Pep']) }),

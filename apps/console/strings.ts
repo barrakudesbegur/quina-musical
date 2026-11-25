@@ -563,6 +563,7 @@ export const S = {
     wrongScene: 'ara no es pot fer',
     unknownClaim: 'aquest cartró cantat no existeix',
     cannotResume: 'no es pot recuperar amb aquest codi: revisa la quina, la llavor i la cançó',
+    failedCheck: 'un cartró que no ha passat la comprovació no es pot donar per bo',
   } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,
   reasonFallback: "l'ordre no s'ha acceptat",
 

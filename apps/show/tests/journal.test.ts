@@ -27,6 +27,16 @@ test('every journal entry keeps the replayed record equal to the show (random co
   for (const seed of [3, 8, 13, 21]) {
     const h = setup({ seed, cards: allCards, cardsInPlay: '1-120', settings: { autoAdvance: false } });
     h.send('unlock');
+    // A head start: the round is introduced (its prizes revealed), then played until a real Line exists, which is
+    // claimed and accepted (only a card that completed can be: the Check's result decides).
+    h.send('roundIntro');
+    h.send('newRound');
+    h.advance(10);
+    for (let k = 0; k < 60 && !h.show.possibleWinners().line.length; k++) landSongs(h, 1);
+    const first = h.show.possibleWinners().line[0];
+    assert.ok(first, `seed ${seed}: a Line within 60 songs`);
+    h.send('claim', { cardId: first.cardId });
+    h.send('decide', { claimId: h.show.claims.at(-1)!.claimId, valid: true });
     const rnd = seededRandom(seed * 7);
     const commands: (() => Command)[] = [
       () => makeCommand('next'),
@@ -43,6 +53,17 @@ test('every journal entry keeps the replayed record equal to the show (random co
       () => makeCommand('setCardsInPlay', { ranges: rnd() < 0.5 ? '1-80' : '1-200, 400-450' }),
       // The show flow: Claims and verdicts by number (claim ids are cl-1, cl-2… in the Game), Winners, scenes.
       () => makeCommand('claim', { cardId: 1 + Math.floor(rnd() * 130) }),
+      // A presenter deciding the Check on screen by its result (a failed card can't be accepted).
+      () => {
+        const c = h.show.claims.find((x) => x.status === 'checking' || x.status === 'checked');
+        return c ? makeCommand('decide', { claimId: c.claimId, valid: c.outcome === 'complete' }) : makeCommand('next');
+      },
+      // A card that really completed (only those can be accepted: the Check's result decides).
+      () => {
+        const winners = h.show.possibleWinners();
+        const ids = [...winners.line, ...winners.bingo].map((w) => w.cardId);
+        return makeCommand('claim', { cardId: ids.length ? ids[Math.floor(rnd() * ids.length)] : 1 });
+      },
       () => makeCommand('decide', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, valid: rnd() < 0.7 }),
       () => makeCommand('winnerInfo', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, notes: 'fila 2' }),
       () => makeCommand('interval'),

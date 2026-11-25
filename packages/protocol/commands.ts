@@ -140,7 +140,8 @@ export const COMMANDS = Object.freeze({
   },
   /** (Re)start a Claim's Check: a re-check, or another order. */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },
-  /** The presenters' verdict on a Claim. Both are journaled. */
+  /** The presenters' verdict on a Claim. Both are journaled. The Check's result decides (docs/event.md): a presenter
+   * may reject a card that passed, but `valid: true` on a card whose Check failed is refused as `failedCheck`. */
   decide: { claimId: { type: 'string', maxLength: 40 }, valid: { type: 'boolean' } },
   /** Set or edit a Winner's name and notes (PRIVATE), at any time. An empty string clears one. */
   winnerInfo: {

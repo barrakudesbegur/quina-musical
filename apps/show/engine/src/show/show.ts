@@ -700,7 +700,10 @@ export class Show {
       }
       case 'decide': {
         const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
-        if (claim) this.decide(claim, c.valid);
+        if (!claim) break;
+        // The Check's result decides (docs/event.md): a passed card may still be rejected, a failed one never accepted.
+        if (c.valid && !this.passes(claim)) this.reject(reqId, c.cmd, 'failedCheck', `claim ${claim.claimId}: card ${claim.cardId} ${claim.outcome}`);
+        else this.decide(claim, c.valid);
         break;
       }
       case 'winnerInfo':
@@ -1976,6 +1979,12 @@ export class Show {
       c.completeSince = null;
     }
     this.autoCheck = false;
+  }
+
+  /** Whether a Claim's card passes its Check from the counted landings now (evaluated if it hasn't run yet). */
+  passes(claim: ClaimInfo): boolean {
+    if (claim.outcome == null) this.evaluate(claim);
+    return claim.outcome === 'complete';
   }
 
   /** The presenters' verdict, journaled either way. A valid Claim makes a Winner; an invalid one gets the Failure fanfare. */

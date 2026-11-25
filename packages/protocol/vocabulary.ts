@@ -125,7 +125,7 @@ export const isSoundName = (value: unknown): value is SoundName =>
 /** Reasons a command may be rejected (`command.rejected.reason`). */
 export const REJECT_REASONS = [
   'invalid', 'locked', 'busy', 'endOfQueue', 'nothingToUndo', 'notHolding', 'notReady', 'decodeFailed', 'planFailed',
-  'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume',
+  'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume', 'failedCheck',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];
 
