@@ -38,6 +38,17 @@ D89 puts the whole night's settings in one git-tracked JSON file. But this repo 
 Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
 **Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
 
+### U46 · Londrina's two lowercase exceptions
+D96 puts every Londrina text in capitals. Frontend proposes two exceptions (canvas comment #4 on `Mobil-B-J2`, still open):
+- unit symbols next to a number stay lowercase ("9 s", "25 m", "10:14 pm"), because "S" and "PM" read as other things;
+- Nunito text inside a Londrina button keeps its normal case.
+
+**Default:** both exceptions, as drawn on canvas v61.
+
+### U47 · The card icon picker's style
+On "Afegir cartró", the icon picker has light buttons, every icon in full colour, and owner names in a dark tag on the bottom edge. Three styles on the board "Component · icona del cartró a «Afegir cartró» (tria)": A framed (icons already taken are pressed in), B frameless, C round with the name below (canvas comment #3, still open).
+**Default:** A, which `Mobil-B-J2` uses.
+
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
 **Default:** nothing built for the prizes drawer until the user picks.

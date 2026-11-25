@@ -840,3 +840,11 @@ By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v57. A
 ### D94 · The shake icon · 2026-11-25 · Active
 Option C: a remote with a motion trail plus a smaller, medium-weight "×3" (size and weight option 2 of 1–4 on the options board, until the user says otherwise; canvas v60), with no frame and a remote with small corners. It's used on the console's Suspens strip and in the remote's legend (B + shake → Suspens). On the console's two-level buttons, the hold strips (Pausa, Suspens) keep their label centred, with the remote hint at the strip's right edge. Answers U45. Designs only.
 By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v59. Lives in: requirements/screens.md › Console, Wii remote.
+
+### D95 · One save button when adding a card · 2026-11-25 · Active
+The add-card drawer has one save button: full width, square corners, with a tick icon. "Desar i afegir-ne un altre" is removed. Designs only (canvas v61); the built pad still has the old buttons.
+By: the user via canvas (comment #14 on `Mobil-B-J2`, 25 Nov). Source: the "Quina Musical look" canvas v61. Lives in: requirements/screens.md › Player app.
+
+### D96 · Londrina is always in capitals · 2026-11-25 · Active; two exceptions Pending (U46)
+Every text set in Londrina is in capitals, on every screen: titles, buttons, names and numbers, as the design system says. Frontend checked all 59 boards: no place reads better in lowercase, and capitals cause no new overflow. Designs only (canvas v61).
+By: the user via canvas (comment #4 on `Mobil-B-J2`, 25 Nov). Source: the "Quina Musical look" canvas v61. Lives in: requirements/screens.md › Every screen.

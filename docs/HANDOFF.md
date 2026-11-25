@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D95**, **U46**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D97**, **U48**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -15,11 +15,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## In flight
 
-- **Waiting on Frontend (canvas comments, 25 Nov 18:35–18:50):** it's fixing 15 threads on `Mobil-B-J2`, on the boards only. When it reports, log:
-  - **D95:** "Desar i afegir-ne un altre" is removed; one full-width, square save button with an icon;
-  - **D96:** Londrina is used in capitals on every screen. Frontend proposes where lowercase might be right, and that goes to the user as a U.
-
-  Several threads were regressions (real covers, the cards' slight rotation, the corn's dark shade). Frontend was told to check every redraw against the agreed boards and the design system.
+- **Frontend's canvas comments are done** (v61, logged as D95 and D96). Two threads on `Mobil-B-J2` stay open for the user: #3 is U47 (the icon picker's style) and #4 is U46 (Londrina's two lowercase exceptions). Frontend's to-do for when the code unfreezes: the corn's shade path in CardMark and pending covers on the drum's decoy tiles; IconPicker, NumberField's QR button, the save button and the corners follow the v61 boards.
+- **71caa9c, keep or revert:** Frontend's handoff says the orchestrator would ask the user. Asked in chat on 25 Nov; no answer yet. Meanwhile it stays, until the user agrees the boards that replace it.
 - **UI code is frozen.** `71caa9c` (the drawers, B + J2) stays as it is. D90's started code is set aside in `temp/patches/d90-player-code.patch`. Build only on the user's explicit "implement", from the canvas boards.
 - **The prizes model (U36–U39)** was asked in chat and is unanswered. My recommendations:
   - U36: the Line wins a 2024-style small bundle;

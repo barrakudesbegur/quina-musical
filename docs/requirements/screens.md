@@ -17,6 +17,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - **A show, not a meeting:** a festive Christmas look, styled like a mobile game, "juicy" and full of animation. The projector and the player app get the full look; the console and Admin can be simpler. One design system covers all of them.
 - **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
+- **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (pending U46).
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
 - The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
@@ -84,6 +85,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
+  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker's style is still to pick (pending U47).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).

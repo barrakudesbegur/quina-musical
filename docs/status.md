@@ -24,9 +24,9 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
 | **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Waiting: no work on this year's songs before 1 Dec (D80) | 1 Dec: `data/pools/2026.json`, then download, prep and quality by 3 Dec; the expected end once U34 is picked | U13, U14, U34 |
-| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. Fixing the user's 15 comments on `Mobil-B-J2` | The prizes drawer after U36–U39; build only on the user's "implement" | U12, U30 |
+| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U46, U47 |
 | **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The settings file (`plan check/push/pull`) after U42/U43 | U16, U19, U42, U43 |
-| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D94 logged on 25 Nov; the pool-size study and the 2025 data delivered | Log Frontend's comment decisions (D95, D96); the prizes model once U36–U39 are answered | U34, U36–U39, U42, U43 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D96 logged on 25 Nov; the pool-size study and the 2025 data delivered | The prizes model once U36–U39 are answered | U34, U36–U39, U42, U43 |
 
 ## Recently done (25–26 Nov)
 
