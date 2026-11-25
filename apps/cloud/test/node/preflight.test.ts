@@ -214,3 +214,17 @@ test('the Wii remote: optional, so it only warns; connected, battery, and when i
   assert.equal(c.wiiRemoteCheck({ connected: true, battery: null, sinceMs: now }, now).status, 'pass');
   assert.equal(c.wiiRemoteCheck(null, now).status, 'warn');
 });
+
+test('card prices (U5): every card type a round plays has a price and a known rule', () => {
+  const types = [
+    { type: 'normal', name: 'Cartró normal', priceCents: 300 },
+    { type: 'especial', name: 'Cartró especial', priceCents: 500, priceRule: 'fixed' },
+  ];
+  const ok = c.cardPricesCheck(types, PLAN);
+  assert.equal(ok?.status, 'pass');
+  // Round 1 is the plan's only normal round: 3,00 € a round, so 3,00 € before it (the protocol's roundCardPrice).
+  assert.match(ok?.detail ?? '', /normal 3,00 € a round \(3,00 € before round 1\); especial 5,00 €/);
+  assert.equal(c.cardPricesCheck([{ type: 'normal', priceCents: null }, types[1]], PLAN)?.status, 'warn');
+  assert.equal(c.cardPricesCheck([{ ...types[0], priceRule: 'perGame' }, types[1]], PLAN)?.status, 'fail');
+  assert.equal(c.cardPricesCheck(types, null), null, 'no plan: the plan check speaks');
+});

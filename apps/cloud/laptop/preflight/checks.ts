@@ -1,7 +1,7 @@
 // The preflight's checks: pure functions from facts (gathered by gather.ts) to a verdict, so each rule is tested
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
-import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId, type RemoteStatus } from '@quina/protocol';
+import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, type CardTypePrice, type RemoteStatus } from '@quina/protocol';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -371,6 +371,41 @@ export function planCheck(plan: unknown, printed: ReadonlyMap<string, number> | 
   for (const r of rounds) perType.set(typeOf(r), (perType.get(typeOf(r)) ?? 0) + 1);
   const types = [...perType].map(([type, n]) => `${n} ${type}`).join(', ');
   return check('Cloud', 'Game plan', 'pass', `"${title}", ${rounds.length} rounds${types ? ` (${types})` : ''}, edition ${edition}`);
+}
+
+const euros = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
+const PRICE_RULES = ['perRegularRound', 'fixed'];
+
+/**
+ * The card prices (U5), from card-types.json (`types`) for every card type a planned round plays: the projector
+ * shows the coming round's price at the Interval (and round 1's before the start), worked out by the protocol's
+ * roundCardPrice. A missing price only warns (no price shows); an unknown rule fails (the screens would misread it).
+ * Null when there's no valid plan to check against (the plan check says why).
+ */
+export function cardPricesCheck(types: unknown, plan: unknown): Check | null {
+  const read = plan ? checkGamePlan(plan) : null;
+  if (!read?.ok) return null;
+  const listed = Array.isArray(types) ? (types as ({ type?: unknown } & Partial<CardTypePrice>)[]) : [];
+  const played = [...new Set(read.plan.rounds.map((r) => r.cardType ?? defaultCardType(r.kind)))];
+  const unknownRule = played.filter((id) => {
+    const rule = listed.find((t) => t.type === id)?.priceRule;
+    return rule !== undefined && !PRICE_RULES.includes(rule);
+  });
+  if (unknownRule.length) return check('Cloud', 'Card prices', 'fail', `card-types.json: unknown priceRule for ${unknownRule.join(', ')} (perRegularRound or fixed)`);
+  const priced: string[] = [];
+  const missing: string[] = [];
+  for (const id of played) {
+    const type = listed.find((t) => t.type === id);
+    if (!type || typeof type.priceCents !== 'number') {
+      missing.push(id);
+      continue;
+    }
+    const first = read.plan.rounds.find((r) => (r.cardType ?? defaultCardType(r.kind)) === id);
+    const before = first ? roundCardPrice(read.plan, first.number, { priceCents: type.priceCents, priceRule: type.priceRule }) : null;
+    priced.push(type.priceRule === 'fixed' ? `${id} ${euros(type.priceCents)}` : `${id} ${euros(type.priceCents)} a round${before !== null && first ? ` (${euros(before)} before round ${first.number})` : ''}`);
+  }
+  if (missing.length) return check('Cloud', 'Card prices', 'warn', `no price in card-types.json for ${missing.join(', ')}: the projector shows none before its rounds${priced.length ? `; ${priced.join('; ')}` : ''}`);
+  return check('Cloud', 'Card prices', 'pass', priced.join('; '));
 }
 
 /** Exit status: 1 when anything failed. */

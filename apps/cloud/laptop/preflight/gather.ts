@@ -219,5 +219,7 @@ async function cloudChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool
   out.push(checks.linkCheck(link, Date.now()));
   out.push(checks.gameCheck(link, cloudCurrent, edition));
   out.push(checks.planCheck(plan, checks.printedByType(printedCards(pool).cards)));
+  const prices = checks.cardPricesCheck(printedCards(pool).types, plan);
+  if (prices) out.push(prices);
   return out;
 }
