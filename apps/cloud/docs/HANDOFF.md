@@ -5,15 +5,16 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 ## Now (2026-11-25)
 
 - **In progress:**
-  - the event.md fallbacks: the night runbook's "Without the tablet" and the Wii remote's range test, plus the preflight's `--laptop-only`, projector, console and Wii lines (`9504881`, being tested before the push);
-  - the sponsor-sheet guide for Admin (`apps/admin/docs/sponsor-sheet.md`, location being agreed with Frontend);
-  - Sound engine's A–C (the shared Desgraciat win `fellLast`, the winner's slip, `claim.decided.outcome`). Platform's B goes on top: journal-check, a private slip, flagging (never refusing) a decision against the Check.
-- **Next:** this year's pool from 2 Dec (measure, prune, push and sync both laptops by 10 Dec); the provisional-hooks WARN once Sound engine sends the field.
+  - My B for Sound engine's 30ef20d (the shared Desgraciat win `fellLast`, the winner's slip, `claim.decided.outcome`): journal-check takes outcomes from `CHECK_OUTCOMES`; the slip stays private, with a test; a valid decision whose outcome fails `isPassingOutcome` is flagged in Admin's Games and the export, never refused.
+  - The whole-show e2e claims real wins on a fixed Queue (`179b1a3`, local), since the Check decides. Being run in a clean worktree, then pushed.
+- **Next:**
+  - this year's pool from 2 Dec: measure, prune, push, and sync both laptops by 10 Dec;
+  - the provisional-hooks WARN, once Sound engine sends the field.
 - **Coming from other sessions** (join when proposed):
-  - **Per-round card prices** (the user's U5). The projector shows the coming round's price at the Interval. A normal card costs the per-round price × the regular rounds left; the Especial has a fixed price. Sound engine and Frontend design the plan shape. Platform's part: the rule passes `checkGamePlan`, the cloud and the feed (prices are public); check the preflight with it.
-  - **A Wii range signal:** `remote.status` counting disconnects (low priority, the orchestrator suggests it to Frontend and Sound engine). Then the preflight's Wii line shows recent drops.
+  - **Per-round card prices** (U5, answered): `priceRule` in card-types.json and a pure `roundCardPrice()` in the protocol (Sound engine's proposal, OK'd). Nothing new in the feed. Platform adds preflight checks for each played type's rule and price;
+  - **A Wii range signal:** `remote.status` counting disconnects (low priority). Then the preflight's Wii line shows recent drops.
 - **Blocked:** nothing.
-- **Waiting on the user:** the QR domain switch (deploy-plan step 7, by 11 Dec). Open-question IDs come once the orchestrator numbers them.
+- **Waiting on the user** (docs/open-questions.md): **U15**, the QR domain switch (deploy-plan step 7, by 11 Dec); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android); **U24**, housekeeping (the previous session's `ci-head` worktree).
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
