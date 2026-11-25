@@ -29,6 +29,9 @@ const LANDING_MS = 90_000;
 const MAX_LANDINGS = 77;
 
 test.skip(!LIVE, 'opt-in: set QUINA_LIVE_CLOUD to a deployed cloud (it gets a rehearsal Game)');
+// No trace: minutes of a show page streaming audio make one so big that saving it after a failure outlasted the
+// hook timeout. The screenshots and the attachments say what happened.
+test.use({ trace: 'off' });
 test.skip(!hasPreparedPool(), 'the default pool is not prepared here (npm run prep in apps/show)');
 test.skip(!fs.existsSync(ENV_LINK), 'no apps/cloud/.env.link: the laptop service token is needed');
 
@@ -90,7 +93,12 @@ async function land(previous: number | null): Promise<ShowState> {
   return remote.until('a landing', (s) => s.status === 'playing' && s.current !== null && s.current.songId !== previous && s.transition === null, LANDING_MS);
 }
 
+/** The phone's reel (the player's Ara reel, also its strip above the cards). */
+const reelState = (page: Page) => page.getByTestId('reel').getAttribute('data-state');
+
+/** A screenshot once the landing's 400 ms flip-in is over (earlier ones catch it half-way). */
 async function snap(page: Page, name: string): Promise<void> {
+  await page.waitForTimeout(700);
   const file = test.info().outputPath(`${name}.png`);
   await page.screenshot({ path: file });
   await test.info().attach(name, { path: file, contentType: 'image/png' });
@@ -128,6 +136,9 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
     const standing = await remote.until('the standing count', (s) => s.standing != null && s.current?.songId === state.current?.songId);
     curve.push(standing.standing?.count ?? -1);
     await expect.poll(() => phone.view?.state.rounds.at(-1)?.landings.length, { message: `the phone got landing ${i}`, timeout: 20_000 }).toBe(i);
+    // The player shows the landed song within moments: on 2026-11-25 its reel turned 'landed' 70–150 ms after
+    // the engine's landing, through the link and the cloud. Two seconds leaves room for a slow network.
+    await expect.poll(() => reelState(phonePage), { message: `the phone's reel shows landing ${i}`, timeout: 2_000 }).toBe('landed');
     if (i === 3) await snap(phonePage, 'phone-after-3-landings');
     if ((standing.standing?.count ?? 0) <= 1) break;
   }
@@ -139,6 +150,9 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   await snap(phonePage, 'phone-one-standing');
 
   // ---- the last card standing claims; its Check; the Celebration --------------------------------------------
+  // The phone adds the winning card as a player does, from the card's QR link (/26/<card>), so its Celebration
+  // is its own.
+  await phonePage.goto(`${LIVE}/26/${winner}`);
   await remote.command('claim', { cardId: winner, kind: 'standing' });
   const checking = await remote.until('the standing Check', (s) => s.scene === 'check' && s.check?.kind === 'standing');
   await expect.poll(() => phone.view?.state.check, { message: 'the phone sees the Check pending', timeout: 20_000 }).toMatchObject({ cardId: winner, kind: 'standing', result: 'pending' });
@@ -150,6 +164,7 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   await expect.poll(() => phone.view?.state.rounds.at(-1)?.ended, { message: 'the round ended', timeout: 20_000 }).toBe(true);
   expect(phone.view?.state.rounds.at(-1)?.lineConfirmed, 'no Line in a Desgraciat round').toBe(false);
   await expect.poll(() => phonePage.locator('[data-scene]').first().getAttribute('data-scene'), { message: 'the player app in the Celebration', timeout: 20_000 }).toBe('celebration');
+  await expect(phonePage.locator('[data-anim="celebrate"][data-state="own"]'), "the winning card's phone celebrates its own card").toBeVisible({ timeout: 20_000 });
   await snap(phonePage, 'phone-celebration');
 
   // ---- the link: everything journalled is in the cloud, nothing refused ---------------------------------------
