@@ -3,16 +3,17 @@
 // has to be redrawn so that one card is the last standing. It is the measure the 'standing' thresholds were
 // tuned with (game/phase.ts).
 //
-//   node apps/show/tests/support/desgraciat.ts [rounds per size = 2000] [card type = normal]
+//   node apps/show/tests/support/desgraciat.ts [rounds per size = 2000] [card type = the Desgraciat's default, especial]
 import fs from 'node:fs';
 import path from 'node:path';
+import { defaultCardType } from '@quina/protocol';
 import { REPO } from '../../relay/pool.ts';
 import { seededQueue } from '../../engine/src/game/shuffle.ts';
 import { cardSongIds, type Card } from '../../engine/src/game/cards.ts';
 import { mixSeed, seededRandom } from '../../engine/src/rng.ts';
 
 const ROUNDS = Number(process.argv[2] ?? 2000);
-const TYPE = process.argv[3] ?? 'normal';
+const TYPE = process.argv[3] ?? defaultCardType('desgraciat');
 const all: Card[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
 const ofType = all.filter((c) => c.type === TYPE);
 const pool = [...new Set(all.flatMap((c) => cardSongIds(c).flat()))].sort((a, b) => a - b);

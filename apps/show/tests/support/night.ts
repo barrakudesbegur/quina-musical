@@ -227,7 +227,7 @@ export interface NightOptions {
  * Next by hand in final, claim the first possible Line and Bingo a few seconds after it lands, confirm them, and
  * move on; now and then they hold for a minute (Hold music), press Back, or check a false Claim.
  */
-export function runNight({ seed, rounds = 12, cardsInPlay = '1-200', tickSec = 0.05 }: NightOptions): NightLog {
+export function runNight({ seed, rounds = 12, cardsInPlay = '1-200,400-499', tickSec = 0.05 }: NightOptions): NightLog {
   const random = seededRandom(seed ^ 0x5bd1e995);
   const between = (lo: number, hi: number) => lo + (hi - lo) * random();
   // The Blend's bass and voice check A's landed hook: the Show's current song, once the harness has made it.

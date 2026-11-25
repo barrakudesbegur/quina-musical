@@ -28,8 +28,8 @@ export const isRoundKind = (value: unknown): value is RoundKind => typeof value 
  */
 export const CARD_TYPE_ID_RE = /^[a-z][a-z0-9]{0,23}$/;
 export const isCardTypeId = (value: unknown): value is string => typeof value === 'string' && CARD_TYPE_ID_RE.test(value);
-/** The card type a round plays when nothing says otherwise: normal cards in normal rounds, especial in the special one. */
-export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial', desgraciat: 'normal' });
+/** The card type a round plays when nothing says otherwise: normal cards in normal rounds, especial in the special one and the Desgraciat (2025's special card played both, D70). */
+export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial', desgraciat: 'especial' });
 /** The card type a round of this kind plays unless the plan picks another (an older journal or plan has none). */
 export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[kind] ?? DEFAULT_CARD_TYPE.normal;
 /** What the round's Phase is climbing towards: the Line, then the Bingo; in the Desgraciat round, the last card standing. */

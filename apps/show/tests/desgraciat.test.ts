@@ -146,7 +146,7 @@ dataTest('with the printed cards, the winning song comes in final nearly always,
   assert.ok(inFinal / rounds >= 0.85, `in final ${inFinal} of ${rounds}`);
 });
 
-test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays normal cards unless it says otherwise', () => {
+test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays especial cards unless it says otherwise (D70)', () => {
   const prize = { title: 'Pernil', detail: null, sponsorId: null, image: null, headline: true };
   const plan = (rounds: unknown[]) => ({
     v: 3, edition: '26', title: 'Quina Quina 3', prizeReveal: 'perRound', sponsors: [], rounds,
@@ -155,8 +155,8 @@ test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays
   const ok = checkGamePlan(plan([{ number: 1, kind: 'normal', line: [], bingo: [] }, { number: 2, kind: 'desgraciat', line: [], bingo: [prize] }]));
   assert.ok(ok.ok);
   assert.equal(ok.plan.rounds[1].kind, 'desgraciat');
-  assert.equal(ok.plan.rounds[1].cardType, 'normal');
-  assert.equal(defaultCardType('desgraciat'), 'normal');
+  assert.equal(ok.plan.rounds[1].cardType, 'especial');
+  assert.equal(defaultCardType('desgraciat'), 'especial');
   const two = checkGamePlan(plan([{ number: 1, kind: 'desgraciat', line: [], bingo: [] }, { number: 2, kind: 'desgraciat', line: [], bingo: [] }]));
   assert.ok(!two.ok && two.errors.some((e) => /only one Desgraciat/.test(e)));
   const line = checkGamePlan(plan([{ number: 1, kind: 'desgraciat', line: [prize], bingo: [] }]));
@@ -168,11 +168,11 @@ test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays
 test('a Desgraciat round climbs to the last card standing in the journal, and its resume token reads D', () => {
   const settings = { pace: 14, paceLocked: false, autoAdvance: true, autoAdvanceFinal: false, songsUntilWinner: 30, phaseOverride: null, roundsTotal: 3, holdMusicAfterSec: 20, finalLapStinger: true };
   const entry: JournalEntry = {
-    gameId: 'g', seq: 1, atMs: 1, kind: 'round.started', round: 4, roundKind: 'desgraciat', cardType: 'normal', queue: [1, 2, 3],
+    gameId: 'g', seq: 1, atMs: 1, kind: 'round.started', round: 4, roundKind: 'desgraciat', cardType: 'especial', queue: [1, 2, 3],
     phaseSeed: 1, startedAtMs: 1, targetEndMs: 2, settings, shuffleSeed: 5, shuffleAttempts: 0,
   };
   assert.equal(replayJournal([entry]).round?.climbingTo, 'standing');
-  const point = { round: 4, kind: 'desgraciat' as const, cardType: 'normal', shuffleSeed: 5, shuffleAttempts: 2, position: 7, lastSongId: 3, lineConfirmedFrom: null };
+  const point = { round: 4, kind: 'desgraciat' as const, cardType: 'especial', shuffleSeed: 5, shuffleAttempts: 2, position: 7, lastSongId: 3, lineConfirmedFrom: null };
   const text = formatResumeToken(point);
   assert.match(text, /^Q4D-/);
   assert.deepEqual(parseResumeToken(text), point);

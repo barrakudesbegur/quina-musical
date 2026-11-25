@@ -9,7 +9,8 @@ import { standingCourse } from '../engine/src/game/cards.ts';
 import type { Effect } from '../engine/src/show/show.ts';
 import { setup, allCards, type Harness } from './support/harness.ts';
 
-const CARDS = '1-60';
+// Especial cards: the Desgraciat plays them unless the plan says otherwise (D70).
+const CARDS = '400-459';
 const journalOf = (effects: readonly Effect[]): JournalEntry[] => effects.flatMap((e) => (e.type === 'journal' ? [e.entry] : []));
 const rejected = (effects: readonly Effect[]) => effects.flatMap((e) => (e.type === 'reject' ? [e.reason] : []));
 const checksIn = (effects: readonly Effect[]) =>
@@ -45,7 +46,7 @@ test('the Desgraciat round: cards fall as their songs land, the console sees who
   const h = desgraciat();
   const state = h.show.snapshot();
   assert.equal(state.round.kind, 'desgraciat');
-  assert.equal(state.round.cardType, 'normal');
+  assert.equal(state.round.cardType, 'especial');
   assert.equal(state.cards.climbingTo, 'standing');
   assert.equal(state.standing?.count, 60);
   assert.equal(state.standing?.cardIds?.length, 60, 'listed up to STANDING_LIST_MAX');
@@ -165,7 +166,7 @@ test('the last players standing who sit on the same song share the win; a card t
 });
 
 test('a standing claim in a normal round is invalid; resume by hand rebuilds a Desgraciat round', () => {
-  const n = setup({ seed: 3, cards: allCards, cardsInPlay: CARDS, settings: { autoAdvance: false } });
+  const n = setup({ seed: 3, cards: allCards, cardsInPlay: '1-60', settings: { autoAdvance: false } });
   n.send('unlock');
   land(n, 1);
   assert.deepEqual(rejected(n.send('claim', { cardId: 5, kind: 'standing' })), ['invalid']);
@@ -187,7 +188,7 @@ test('fuzz: random commands through Desgraciat rounds never break the invariants
   const scenes = new Set<string>();
   const celebrated = new Set<string>();
   for (let seed = 1; seed <= 5; seed++) {
-    const h = setup({ seed, cards: allCards, cardsInPlay: '1-40', settings: { autoAdvance: seed % 2 === 0 } });
+    const h = setup({ seed, cards: allCards, cardsInPlay: '400-439', settings: { autoAdvance: seed % 2 === 0 } });
     h.send('unlock');
     h.send('roundIntro', { number: 1, kind: 'desgraciat' });
     h.send('newRound');
@@ -196,14 +197,14 @@ test('fuzz: random commands through Desgraciat rounds never break the invariants
     // Mostly an undecided Claim, so Checks get decided and the round moves on.
     const open = () => h.show.claims.filter((c) => c.status !== 'valid' && c.status !== 'invalid').map((c) => c.claimId);
     const claimId = () => pick([...open(), ...open(), ...open(), ...h.show.claims.map((c) => c.claimId), 'cl-99']);
-    const standingCard = () => h.show.snapshot().standing?.cardIds?.[0] ?? 1;
+    const standingCard = () => h.show.snapshot().standing?.cardIds?.[0] ?? 400;
     // Songs land far more often than anyone claims, as on the night.
     const next = () => h.send('next');
     const commands = [
       next, next, next, next, next, next, next, next, () => h.send('back'), () => h.send('hold'), () => h.send('hold', { on: false }),
       () => h.send('suspense'), () => h.send('pause'),
       () => h.send('claim', { cardId: standingCard() }),
-      () => h.send('claim', { cardId: pick([1, 7, 30, 9999, 410]), kind: pick([undefined, 'line', 'bingo', 'standing'] as const) }),
+      () => h.send('claim', { cardId: pick([400, 407, 430, 9999, 10]), kind: pick([undefined, 'line', 'bingo', 'standing'] as const) }),
       () => h.send('checkStart', { claimId: claimId() }), () => h.send('decide', { claimId: claimId(), valid: pick([true, false]) }),
       () => h.send('decide', { claimId: claimId(), valid: true }), () => h.send('decide', { claimId: claimId(), valid: false }),
       () => h.send('confirmLine'), () => h.send('interval'), () => h.send('roundIntro', { kind: 'desgraciat' }),
@@ -220,7 +221,7 @@ test('fuzz: random commands through Desgraciat rounds never break the invariants
       assert.equal(s.snapshot().standing?.count, s.standingNow().length, where);
       assert.equal(s.round.kind, 'desgraciat', where);
       assert.ok(s.claims.every((c) => c.kind === 'standing'), `${where}: only standing claims`);
-      assert.ok(s.claims.every((c) => c.outcome == null || ['complete', 'fallen', 'unknownCard', 'wrongType'].includes(c.outcome)), `${where}: a standing Check's outcome`);
+      assert.ok(s.claims.every((c) => c.outcome == null || ['complete', 'fallen', 'fellLast', 'unknownCard', 'wrongType'].includes(c.outcome)), `${where}: a standing Check's outcome`);
       assert.deepEqual(replayJournal(journalOf(h.log)), s.record(), `${where}: the journal replays to the show`);
       scenes.add(s.scene);
       if (s.celebration) celebrated.add(s.celebration.kind);
