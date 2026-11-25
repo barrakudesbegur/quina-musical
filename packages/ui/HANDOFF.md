@@ -61,6 +61,7 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 | **2026-11-25:** the Desgraciat round's spec, canvas boards (v50) and the keys that make the screens compile with its protocol | `4f350ab`, `3690a53`, `b47a633` |
 | **2026-11-25, the docs audit:** the motion spec; the player app (3 tabs plus the ☰ menu, no winning card numbers, offline keeps the screen, Pausa in the drum's place, the add-card leave guard; "Com es juga" removed, cards written "#123"); the console's Efectes pads with icons; "Quina Especial" and "Comprovar cartró" | `974f95f`, `c1dbb5c`, `66faf9d`, `b47a633` |
 | **2026-11-25:** the Wii Remote's status message comes from `@quina/protocol` | `71e618e` |
+| **2026-11-25: the Desgraciat round on every screen**, ahead of the 4 Dec milestone. Projector: the name, the intro nino, the standing Check, `check-fallen`, DEMPEUS!, the night preview's sad face. Console: the Dempeus tab (count, chips, the fall, the last card's "Comprovar #57" as the default action), the standing claim pad, "no ha sonat" Check rows, Futur's songs to the last card and its curve, the ring with one card standing. Admin: the Desgraciada kind, one per night, one bundle, Line prizes moved over, never lost. Phones: DEMPEUS/ASSEGUT, the fall and its bloop, "Dempeus fins al final!", the name and sad face. Fixtures: `desgraciatIntro`, `desgraciat`, `desgraciatFew`, `desgraciatLast`, `checkStanding`, `checkFallen`, `checkStandingValid`, `celebrationStanding`, `intervalDesgraciat`; player demos `desgraciatFall` (live), `desgraciatSeated`, `desgraciatMine`, `desgraciatOther` | `f91f80d`, `553b304`, `6b14e76`, `a618730`, `3940353`, `7fc4162` |
 
 ## In progress
 
@@ -115,12 +116,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. The Desgraciat screens. Sound engine's step C is live (`2e359dd`): the commands take kind 'desgraciat' and claim kind 'standing'. My compile keys are `b47a633`. Due Fri 4 Dec. Known gaps the keys commit left:
-   - the console's default action after a 'standing' Celebration doesn't go to the Interval;
-   - the player's `celebrationOf` ignores 'standing';
-   - Admin's kind select has no 'desgraciat' option;
-   - `roundsByCardType` counts a Desgraciat round as a regular one;
-   - `roundIntroFields` leaves out a 'desgraciat' kind until the commands accept it (step C).
+1. **Follow-ups from Backend's live Desgraciat run on quina-dev** (it passed end to end; the screenshots are in `tools/e2e/results/desgraciat-live-…`): ~1 s after a landing, the phone still showed the Spin (a dim title and a card back), and was normal ~3 s later. Backend is logging the phone's clock against the landing's `atMs`. If the landing reaches phones before `atMs`, that's a feed fix (the song would be on the wire early). If the phone's clock offset is off, it's mine (the player's ClockOffset).
 2. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
    - it draws from a song pool (`--pool <name>`, the same `data/pools/<name>.json` as the prep and the relay);
    - `--check` validates without writing;
