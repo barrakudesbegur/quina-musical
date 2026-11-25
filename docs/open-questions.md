@@ -24,9 +24,9 @@ The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.
 The PDF is A4 portrait, 3 cards a page in cut-stack order, with no bleed or crop marks: the same layout as the 2025 PDFs, now titled "QUINA QUINA! 3".
 **Default:** the same as last year; ask the print shop only if they asked for changes then.
 
-### U30 · Pick the drawers and corner buttons
-Frontend's proposals are drawn (D73), in `temp/design-canvas/look/project/`: `Component-Cantonades-Estils.dc.html` (corner styles A/B/C), `Mobil-Calaixos-Jerarquia.dc.html` (drawers J1/J2/J3) and `Mobil-Premis-Propostes.dc.html` (prizes drawer P1/P2/P3). Not on the canvas until the user OKs the publish in Frontend's session.
-**Default:** nothing built until the user picks.
+### U30 · Pick the prizes drawer
+Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
+**Default:** nothing built for the prizes drawer until the user picks.
 
 ## Tasks only the user can do
 

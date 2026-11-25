@@ -808,3 +808,7 @@ By: the user. Source: open-questions.md › Answered (U31). Amends: event.md's "
 ### D86 · Last year's API is gone · 2026-11-25 · Active
 The user deleted the `quina-api` record: last year's API, a tunnel to the 2025 server that was already down, used only by last year's app.
 By: the user. Source: Backend's report of 2026-11-25. Lives in: apps/cloud/docs/deploy-plan.md.
+
+### D87 · The corner buttons' style and the drawers' hierarchy · 2026-11-25 · Active
+Corner-button style B, with its matching icons, and drawer hierarchy J2. The menu drawer's title "Menu" changes to a settings word. The prizes drawer isn't chosen yet: the user needs P1–P3 drawn with real prizes and logos, and P3's dashed circle and left corners fixed (U30 stays open for it).
+By: the user. Source: open-questions.md › U30; the user's answers of 2026-11-25. Implements: D73. Lives in: requirements/screens.md › Player app.
