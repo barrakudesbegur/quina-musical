@@ -1647,6 +1647,8 @@
 .prize-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  /* A Line's short ticket keeps its height beside a 17–19-prize hamper. */
+  align-items: start;
   gap: var(--space-4) 14px;
   padding-top: 10px;
 }
@@ -1760,26 +1762,29 @@
   list-style: none;
 }
 
+/* One of the rest: its title, then its sponsor, wrapping onto the next line rather than cut (every sponsor is read
+   out). A hamper's staples share one item, wrapping between prizes, never inside one. */
 .ticket__item {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 5px;
-  overflow: hidden;
+  column-gap: 5px;
   font-size: 0.84rem;
   line-height: 1.4;
-  white-space: nowrap;
 }
 
 .ticket__item b {
   font-weight: var(--font-weight-strong);
 }
 
-.ticket__item span {
-  overflow: hidden;
+.ticket__item > span {
   font-size: 0.78rem;
   font-weight: 800;
   color: var(--color-ink-soft);
-  text-overflow: ellipsis;
+}
+
+.ticket__staple {
+  white-space: nowrap;
 }
 
 .prizes-tab__reveal {

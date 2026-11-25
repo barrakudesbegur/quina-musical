@@ -1,5 +1,5 @@
 // The cheat sheet's content, apart from how it looks: every round's Line and Quina prize bundles (headline
-// prizes first) with their sponsors,
+// prizes first) with their sponsors, the sponsors no prize names (money donors: every sponsor is thanked),
 // the claim and special-round rules from the plan, and the fixed parts (the laptop's Plan B keys, the Wii
 // remote reminder, the setup checklist) passed in as copy. Pure, so the console can show the same content
 // (one round's prizes during the Interval) and Admin prints all of it.
@@ -53,6 +53,8 @@ export interface CheatRound {
 export interface CheatSheetModel {
   title: string;
   rounds: CheatRound[];
+  /** The sponsors no prize names (money donors, docs/event.md): the presenters thank them too. */
+  otherSponsors: string[];
   claimRules: string[];
   /** Shown only when a special round is planned. */
   specialRoundRules: string[];
@@ -91,9 +93,11 @@ export function cheatRound(plan: GamePlan, round: RoundPlan): CheatRound {
 export function cheatSheetModel(plan: GamePlan | null, copy: CheatSheetCopy): CheatSheetModel {
   const rounds = plan ? plan.rounds.map((r) => cheatRound(plan, r)) : [];
   const hasSpecialRound = rounds.some((r) => r.special);
+  const named = new Set(plan ? plan.rounds.flatMap((r) => [...r.line, ...r.bingo]).map((p) => p.sponsorId) : []);
   return {
     title: plan?.title || CA.gameTitle,
     rounds,
+    otherSponsors: plan ? plan.sponsors.filter((s) => !named.has(s.id)).map((s) => s.name) : [],
     claimRules: plan ? [...plan.cheatSheet.claimRules] : [],
     specialRoundRules: plan && hasSpecialRound ? [...plan.cheatSheet.specialRoundRules] : [],
     hasSpecialRound,

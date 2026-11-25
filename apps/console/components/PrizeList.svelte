@@ -1,11 +1,14 @@
 <!--
   A round's Line and Quina prize bundles with their sponsors, from the Game plan (which may be missing), as
   two prize tickets (the Consola-Pestanyes board): a ribbon names the prize ("LÍNIA", "QUINA"); the headline
-  prizes come first, big, with their sponsor; a perforation; then the rest of the bundle, one line each. The Quina
+  prizes come first, big, with their sponsor; a perforation; then the rest of the bundle: a hamper's staples (no
+  sponsor, no detail) as one wrapped run, then each sponsor's prize on its own line, wrapping rather than cut, since
+  the presenters read every sponsor out (a real hamper holds 17–19 prizes; the tab scrolls). The Quina
   Desgraciada has one ticket, "DEMPEUS" (the last card standing's prize), and no Line.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
+  import { prizeRuns } from '../../../packages/ui/plan.ts';
   import { roundPrizes } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -40,11 +43,19 @@
         {#if rest.length}
           <span class="ticket__perf" aria-hidden="true"></span>
           <ul class="ticket__items">
-            {#each rest as prize, j (j)}
-              <li class="ticket__item">
-                <b>+ {prize.title}</b>
-                {#if prize.detail || prize.sponsor}<span>· {[prize.detail, prize.sponsor].filter(Boolean).join(' · ')}</span>{/if}
-              </li>
+            {#each prizeRuns(rest) as run, j (j)}
+              {#if run.plain}
+                <!-- A hamper's staples (no sponsor, no detail): one wrapped run. -->
+                <li class="ticket__item" data-plain="true">
+                  <b>+ {#each run.items as prize, k (k)}<span class="ticket__staple">{prize.title}</span>{#if k < run.items.length - 1}{' · '}{/if}{/each}</b>
+                </li>
+              {:else}
+                {@const prize = run.items[0]}
+                <li class="ticket__item">
+                  <b>+ {prize.title}</b>
+                  <span>· {[prize.detail, prize.sponsor].filter(Boolean).join(' · ')}</span>
+                </li>
+              {/if}
             {/each}
           </ul>
         {/if}

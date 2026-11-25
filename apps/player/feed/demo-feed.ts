@@ -1,12 +1,13 @@
 // DemoFeed: `?demo=<name>` runs the player app on the shared fixtures (ui/fixtures/states.ts), projected through
 // the same whitelist and the same `followFeed` path as the real feeds, so every screen can be reviewed without
 // the show page, the relay or the cloud. A player demo picks a fixture and may add landings, patch the engine
-// state, cut the laptop link, drop the feed, post Admin's notice or keep landing songs (`live`).
+// state, cut the laptop link, drop the feed, post Admin's notice, keep landing songs (`live`) or publish another plan.
 // Fixture names that aren't player demos run as they are; unknown names fall back to `play`.
 import { PROTOCOL_VERSION, type LandingInfo, type ShowState } from '@quina/protocol';
 import { DESGRACIAT_LANDED, FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../packages/ui/fixtures/plan.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
+import type { GamePlan } from '../../../packages/ui/plan.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
 import { ProjectedFeedCore } from './projected-feed.ts';
 import type { PublicLink } from './public.ts';
@@ -29,6 +30,8 @@ export interface PlayerDemo {
   liveFirst?: readonly number[];
   /** Drop the feed after `afterMs`, for `forMs` (the reconnect pill). */
   dropFeed?: { afterMs: number; forMs: number };
+  /** The Game plan the demo publishes (else SAMPLE_PLAN). */
+  plan?: GamePlan;
 }
 
 /** The demo phone's cards: card 123 (named) and 57 are each 1 song from a Line in the fixture story; 412 is a special card. */
@@ -88,6 +91,9 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   desgraciatMine: { fixture: 'celebrationStanding', cards: 'default' },
   /** Someone else's card (#57) is the last standing: the prize and confetti, no title, no card number. */
   desgraciatOther: { fixture: 'celebrationStanding', cards: [123, 412] },
+  /** Every prize kept secret until the presenters reveal it (GamePlan.prizeReveal 'allSecret'): Premis shows the
+   * "Secrets" lock on every round not revealed yet. */
+  prizesSecret: { fixture: 'play', cards: 'default', plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } },
 };
 
 /** The demo for a name: a player demo, else a shared fixture as it is, else `play`. */
@@ -220,7 +226,7 @@ export class DemoFeed implements PlayerFeed {
       edition: SAMPLE_PLAN.edition,
       gameId: `demo-${this.name}`,
       link: this.link,
-      plan: SAMPLE_PLAN,
+      plan: this.demo.plan ?? SAMPLE_PLAN,
       notice: this.demo.notice ?? null,
       soundsDefault: true,
     });

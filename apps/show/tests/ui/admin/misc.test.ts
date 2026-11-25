@@ -35,7 +35,7 @@ test('Winners are listed by round, Line first, with the planned bundle in a few 
   const winners = [...baseState(0).winners].reverse();
   const rows = winnerRows(winners, SAMPLE_PLAN);
   assert.deepEqual(rows.map((r) => [r.winner.round, r.winner.kind]), [[1, 'line'], [1, 'bingo'], [2, 'line'], [2, 'bingo']]);
-  assert.equal(rows[0].prize, '[Premi de línia 1] +2');
+  assert.equal(rows[0].prize, 'Ampolla de vi blanc +3');
   assert.equal(winnerRows(winners, null)[0].prize, null);
 });
 

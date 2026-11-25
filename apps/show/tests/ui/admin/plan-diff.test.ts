@@ -32,8 +32,8 @@ test('rounds added and removed, kinds and prizes changed', () => {
   assert.deepEqual(d.rounds.added, []);
   assert.deepEqual(d.rounds.kindChanged, [2]);
   assert.deepEqual(d.prizes, [
-    { round: 3, kind: 'line', before: '[Premi de línia 3] +4', after: 'Pernil' },
-    { round: 4, kind: 'bingo', before: '[Premi de quina 4] +4', after: null },
+    { round: 3, kind: 'line', before: 'Ampolla de vi blanc +3', after: 'Pernil' },
+    { round: 4, kind: 'bingo', before: "Fregidora d'aire +17", after: null },
   ]);
 });
 

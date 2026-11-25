@@ -19,7 +19,8 @@
   {/if}
   <ol class="prizes__list">
     {#each rounds as round (round.number)}
-      <li class="prize-round" data-state={round.state} data-kind={round.kind}>
+      <!-- A round whose bundles show takes the whole width (a hamper is long); a locked one is a small tile, two by two. -->
+      <li class="prize-round" data-state={round.state} data-kind={round.kind} data-open={!round.lockedUntil || round.lines.some((l) => l.won)}>
         <h3 class="prize-round__title">
           <RoundMark kind={round.kind} />
           {S.roundName(round.number, round.kind)}

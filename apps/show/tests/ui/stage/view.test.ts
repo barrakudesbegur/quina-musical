@@ -11,6 +11,14 @@ import { firstMiss, plaqueSpot } from '../../../../stage/model/check.ts';
 
 const NOW = 1_800_000_000_000;
 
+/** Round 4's prize titles that no earlier round has (its hamper's headline, its sponsors' gifts): what would give
+ * its secret bundles away. The sample hampers share their staples, so those can't tell. */
+const ROUND_4_ONLY = (() => {
+  const titles = (r: (typeof SAMPLE_PLAN.rounds)[number]) => [...r.line, ...r.bingo].map((p) => p.title);
+  const earlier = new Set(SAMPLE_PLAN.rounds.slice(0, 3).flatMap(titles));
+  return titles(SAMPLE_PLAN.rounds[3]).filter((t) => !earlier.has(t));
+})();
+
 /** A tiny catalog: card 57 and card 123 as printed (row songs as in the fixtures). */
 const song = (id: number) => ({ id, title: `Song ${id}`, artist: `Artist ${id}` });
 const CATALOG: Catalog = {
@@ -183,8 +191,8 @@ test('roundStart: headline prizes with sponsors and how many more; the Shuffle g
   if (view.body.scene !== 'roundStart') return;
   assert.deepEqual(view.body.round, { number: 4, special: false, desgraciat: false });
   assert.deepEqual(view.body.prizes, [
-    { kind: 'line', title: '[Premi de línia 4]', detail: null, sponsor: '[Patrocinador 2]', more: 2 },
-    { kind: 'bingo', title: '[Premi de quina 4]', detail: null, sponsor: '[Patrocinador 1]', more: 4 },
+    { kind: 'line', title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 2]', more: 3 },
+    { kind: 'bingo', title: "Fregidora d'aire", detail: null, sponsor: '[Patrocinador 2]', more: 17 },
   ]);
   assert.equal(view.body.shuffle?.startAtMs, NOW + 500);
   assert.equal(view.body.shuffle?.endAtMs, NOW + 9500);
@@ -254,7 +262,7 @@ test('celebration: the shout kind and the round prize, never the winning card nu
     scene: 'celebration',
     key: `3:bingo@${NOW - 1500}`,
     kind: 'bingo',
-    prize: { kind: 'bingo', title: '[Premi de quina 3]', detail: null, sponsor: '[Patrocinador 1]', more: 3 },
+    prize: { kind: 'bingo', title: 'Pernil', detail: null, sponsor: '[Patrocinador 1]', more: 16 },
   });
   assert.ok(!/\b(57|301)\b/.test(JSON.stringify(view)), 'no winning card number');
 });
@@ -263,7 +271,8 @@ test('no winning card number on the projector after a win: Celebration, Interval
   const winning = [12, 188, 77, 140, 123];
   for (const name of ['celebration', 'interval', 'after']) {
     const state = withSecrets(name);
-    const json = JSON.stringify(stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG));
+    // Sponsors' placeholder names carry numbers too ("[Patrocinador 12]"): they aren't card numbers.
+    const json = JSON.stringify(stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG)).replaceAll(/\[Patrocinador \d+\]/g, '');
     for (const id of winning) assert.ok(!new RegExp(`\\b${id}\\b`).test(json), `${name}: card ${id} shown`);
   }
 });
@@ -273,7 +282,7 @@ test('two headline prizes share one block: titles and sponsors joined, no single
   const last: FlowState = { ...state, intro: { round: 8, kind: 'normal', sinceMs: NOW }, prizes: { revealed: [{ round: 8, by: 'intro' }] } };
   const view = stageView(last, flowOf(last), SAMPLE_PLAN, null);
   if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(view.body.prizes[1], { kind: 'bingo', title: '[Premi de quina 8] i [Gran premi final]', detail: null, sponsor: 'Barrakudes i [Patrocinador 2]', more: 4 });
+  assert.deepEqual(view.body.prizes[1], { kind: 'bingo', title: 'Pernil i Planxa de cuina', detail: null, sponsor: 'Barrakudes i [Patrocinador 2]', more: 16 });
 });
 
 test('secret prizes never reach the projector: only revealed rounds show theirs, and never in the Interval', () => {
@@ -281,15 +290,17 @@ test('secret prizes never reach the projector: only revealed rounds show theirs,
   const interval = FIXTURES.interval(NOW).state;
   const view = stageView(interval, flowOf(interval), SAMPLE_PLAN, null);
   if (view.body.scene !== 'interval') return assert.fail('not interval');
-  assert.ok(!JSON.stringify(view).includes('Premi de'));
+  assert.ok(ROUND_4_ONLY.includes("Fregidora d'aire") && ROUND_4_ONLY.length >= 5, 'round 4 has prizes of its own to give away');
+  const leaks = (v: StageView) => ROUND_4_ONLY.filter((t) => JSON.stringify(v).includes(JSON.stringify(t).slice(1, -1)));
+  assert.deepEqual(leaks(view), []);
   // Even revealed early from the console, the Interval shows none: they show at the round's intro.
   const revealed: FlowState = { ...interval, prizes: { revealed: [{ round: 4, by: 'presenters' }] } };
   const shown = stageView(revealed, flowOf(revealed), SAMPLE_PLAN, null);
-  assert.ok(!JSON.stringify(shown).includes('Premi de'));
+  assert.deepEqual(leaks(shown), []);
   const introduced: FlowState = { ...FIXTURES.roundStart(NOW).state, prizes: { revealed: [{ round: 4, by: 'presenters' }] } };
   const atIntro4 = stageView(introduced, flowOf(introduced), SAMPLE_PLAN, null);
   if (atIntro4.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.equal(atIntro4.body.prizes[0]?.title, '[Premi de línia 4]');
+  assert.equal(atIntro4.body.prizes[1]?.title, "Fregidora d'aire");
   // All secret: introducing a round doesn't reveal it, and the Celebration shows no prize either.
   const secret = { ...SAMPLE_PLAN, prizeReveal: 'allSecret' as const };
   const intro = FIXTURES.roundStart(NOW).state;
@@ -369,7 +380,7 @@ test('the round start names the round being introduced, before the Shuffle', () 
   const view = stageView(introduced, flowOf(introduced), SAMPLE_PLAN, null);
   if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
   assert.equal(view.body.round?.number, 4);
-  assert.equal(view.body.prizes[0]?.title, '[Premi de línia 4]');
+  assert.equal(view.body.prizes[1]?.title, "Fregidora d'aire");
 });
 
 test('without any state: the before scene, never a crash', () => {
@@ -396,7 +407,7 @@ test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro an
   if (intro.body.scene !== 'roundStart') return;
   assert.equal(intro.body.round?.desgraciat, true);
   // One prize: the last card standing's (the plan's `bingo` bundle), and no Line.
-  assert.deepEqual(intro.body.prizes.map((p) => [p.kind, p.title]), [['standing', "[Premi de l'últim dempeus]"]]);
+  assert.deepEqual(intro.body.prizes.map((p) => [p.kind, p.title, p.more]), [['standing', 'Pernil', 18]]);
 
   const intervalState = FIXTURES.intervalDesgraciat(NOW).state;
   const interval = stageView(intervalState, flowOf(intervalState), SAMPLE_PLAN, CATALOG);
@@ -433,6 +444,6 @@ test('the last card standing is celebrated with its prize, and no card number', 
   if (view.body.scene !== 'celebration') return;
   assert.equal(view.body.kind, 'standing');
   assert.equal(view.body.prize?.kind, 'standing');
-  assert.equal(view.body.prize?.title, "[Premi de l'últim dempeus]");
+  assert.equal(view.body.prize?.title, 'Pernil');
   assert.ok(!/\b57\b/.test(JSON.stringify(view.body)), 'no winning card number');
 });

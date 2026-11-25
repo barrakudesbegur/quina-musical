@@ -57,3 +57,24 @@ export function bundleSummary(bundle: readonly Prize[]): string | null {
   const titles = headline.map((p) => p.title || '…').join(' · ');
   return others.length ? `${titles} +${others.length}` : titles;
 }
+
+/** A stretch of a bundle's other prizes for a compact list: `plain` ones (no sponsor, no detail: a hamper's staples)
+ * flow together on one wrapped line ("Xocolata · Torró · Neules…"); the others, which name a sponsor or a detail,
+ * take a line each. */
+export interface PrizeRun<T> {
+  plain: boolean;
+  items: T[];
+}
+
+/** A bundle's other prizes as runs (PrizeRun), in their order: consecutive plain prizes share a run, every other
+ * prize is a run of its own. Nothing is dropped or reordered. */
+export function prizeRuns<T extends { detail: string | null; sponsor: string | null }>(items: readonly T[]): PrizeRun<T>[] {
+  const runs: PrizeRun<T>[] = [];
+  for (const item of items) {
+    const plain = !item.detail && !item.sponsor;
+    const last = runs.at(-1);
+    if (plain && last?.plain) last.items.push(item);
+    else runs.push({ plain, items: [item] });
+  }
+  return runs;
+}

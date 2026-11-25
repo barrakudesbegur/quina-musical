@@ -1,11 +1,11 @@
-<!-- The printable cheat sheet (#xuleta): every round's prizes with sponsors, the claim and special-round
+<!-- The printable cheat sheet (#xuleta): every round's prizes with sponsors, the sponsors no prize names, the claim and special-round
      rules, the laptop's Plan B keys, the setup checklist, and the Wii remote ("Comandament": the same drawing
      and legend as the console's dialog, packages/ui/wii, with the console's own mapping, so the sheet
-     always matches the remote). The content model is logic/cheatsheet.ts; print.css turns it into an A4 page
+     always matches the remote). The content model is logic/cheatsheet.ts; print.css turns it into A4 pages
      in black on white (the remote's colours print too, and every button also carries its own label). -->
 <script lang="ts">
   import { CA } from '../../../packages/ui/i18n/ca.ts';
-  import type { GamePlan } from '../../../packages/ui/plan.ts';
+  import { prizeRuns, type GamePlan } from '../../../packages/ui/plan.ts';
   import WiiGuide from '../../../packages/ui/wii/WiiGuide.svelte';
   import { consoleWiiLegend } from '../../console/wii/guide.ts';
   import { cheatSheetModel } from '../logic/cheatsheet.ts';
@@ -26,9 +26,14 @@
   {#if !plan}<p class="cheat-sheet__note no-print">{S.cheat.noPlan}</p>{/if}
 
   {#if sheet.rounds.length}
-    <section class="cheat-sheet__section">
+    <section class="cheat-sheet__section cheat-sheet__section--prizes">
       <h2 class="cheat-sheet__heading">{S.cheat.prizes}</h2>
       <table class="cheat-sheet__prizes">
+        <colgroup>
+          <col class="cheat-sheet__col-round" />
+          <col class="cheat-sheet__col-line" />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th scope="col"><span class="visually-hidden">{S.rounds.title}</span></th>
@@ -49,13 +54,27 @@
                 <td colspan={round.desgraciat ? 2 : undefined}>
                   {#if round.desgraciat}<span class="cheat-sheet__label">{prize.label}</span>{/if}
                   {#if prize.items.length}
+                    <!-- The headline prizes in bold with "Gentilesa de …" under each; then the rest, compact: a hamper's
+                         staples (no sponsor, no detail) as one wrapped run, each sponsor's prize on its own line. -->
                     <ul class="cheat-sheet__bundle">
-                      {#each prize.items as item, j (j)}
-                        <li class="cheat-sheet__item" data-headline={item.headline}>
-                          {#if item.headline}<strong>{item.title}</strong>{:else}{item.title}{/if}
+                      {#each prize.items.filter((i) => i.headline) as item, j (j)}
+                        <li class="cheat-sheet__item" data-headline="true">
+                          <strong>{item.title}</strong>
                           {#if item.detail}<span class="cheat-sheet__detail">{item.detail}</span>{/if}
                           {#if item.sponsor}<span class="cheat-sheet__sponsor">{CA.sponsoredBy(item.sponsor)}</span>{/if}
                         </li>
+                      {/each}
+                      {#each prizeRuns(prize.items.filter((i) => !i.headline)) as run, j (j)}
+                        {#if run.plain}
+                          <li class="cheat-sheet__item" data-headline="false" data-plain="true">
+                            {#each run.items as item, k (k)}<span class="cheat-sheet__staple">{item.title}</span>{#if k < run.items.length - 1}{' · '}{/if}{/each}
+                          </li>
+                        {:else}
+                          {@const item = run.items[0]}
+                          <li class="cheat-sheet__item" data-headline="false">
+                            {item.title}{#if item.detail}<span class="cheat-sheet__aside">{` · ${item.detail}`}</span>{/if}{#if item.sponsor}<span class="cheat-sheet__aside">{` · ${item.sponsor}`}</span>{/if}
+                          </li>
+                        {/if}
                       {/each}
                     </ul>
                   {:else}
@@ -67,6 +86,13 @@
           {/each}
         </tbody>
       </table>
+    </section>
+  {/if}
+
+  {#if sheet.otherSponsors.length}
+    <section class="cheat-sheet__section">
+      <h2 class="cheat-sheet__heading">{S.cheat.otherSponsors}</h2>
+      <p class="cheat-sheet__others">{sheet.otherSponsors.join(' · ')}</p>
     </section>
   {/if}
 
@@ -171,6 +197,22 @@
   .cheat-sheet__item[data-headline='false'] {
     font-size: var(--text-sm);
   }
+  /* A Line holds a few prizes, a Quina's hamper 17–19: the hamper gets the room. */
+  .cheat-sheet__col-round {
+    width: 6.5em;
+  }
+  .cheat-sheet__col-line {
+    width: 32%;
+  }
+  .cheat-sheet__staple {
+    white-space: nowrap;
+  }
+  .cheat-sheet__aside {
+    font-weight: var(--font-weight-body);
+  }
+  .cheat-sheet__others {
+    margin: 0;
+  }
   .cheat-sheet__special,
   .cheat-sheet__detail,
   .cheat-sheet__sponsor {
@@ -215,6 +257,13 @@
     }
     .cheat-sheet__section {
       break-inside: avoid;
+    }
+    /* The prizes run over pages (10 hampers don't fit one): a round never splits, and the column heads repeat. */
+    .cheat-sheet__section--prizes {
+      break-inside: auto;
+    }
+    .cheat-sheet__heading {
+      break-after: avoid;
     }
     .cheat-sheet__prizes tr {
       break-inside: avoid;

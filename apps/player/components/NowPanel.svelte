@@ -73,7 +73,7 @@
       {#each prizes.filter((r) => r.lines.some((l) => l.won)) as round (round.number)}
         <li class="now__summary-round">
           <h4 class="now__summary-title">{S.roundName(round.number, round.kind)}</h4>
-          <PrizeLines {round} mine={app.data.cards} />
+          <PrizeLines {round} mine={app.data.cards} brief />
         </li>
       {/each}
     </ul>

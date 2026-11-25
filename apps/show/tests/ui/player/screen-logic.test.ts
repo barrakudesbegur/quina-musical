@@ -236,8 +236,9 @@ test('prizes, progress and the planned times come from the plan and the winners'
   assert.deepEqual(rounds[2].lines[0].ownCardIds, [], 'nobody else\'s card is named');
   assert.equal(rounds[2].lines[1].won, false);
   assert.deepEqual(prizeRounds(PUBLIC, state, [57, 9])[2].lines[0].ownCardIds, [57], 'only the phone\'s own cards');
-  assert.deepEqual(rounds[2].lines[0].headline, [{ title: '[Premi de línia 3]', detail: null, sponsor: '[Patrocinador 1]' }]);
-  assert.equal(rounds[2].lines[0].others.length, 4, 'the rest of the bundle, after the headline prize');
+  assert.deepEqual(rounds[2].lines[0].headline, [{ title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]' }]);
+  assert.equal(rounds[2].lines[0].others.length, 3, 'the rest of the bundle, after the headline prize');
+  assert.equal(rounds[2].lines[1].others.length, 16, "the rest of the Quina's hamper");
   assert.equal(rounds[6].kind, 'special');
   assert.deepEqual(progress(PUBLIC, state), { current: 3, total: 8 });
   const interval = playing({ scene: 'interval', interval: { nextRound: 4, guideEndMs: T } });
@@ -263,7 +264,7 @@ test('the feed\'s plan is checked as a public plan: locked rounds stay locked, j
   const plan = planOf(state);
   assert.ok(plan);
   assert.deepEqual(plan.rounds.map((r) => r.revealed), [true, true, true, false, false, false, false, false]);
-  assert.equal(plan.rounds[0].line?.[0].title, '[Premi de línia 1]');
+  assert.equal(plan.rounds[0].line?.[0].title, 'Ampolla de vi blanc');
   assert.equal(plan.rounds[3].line, undefined);
   assert.equal('cheatSheet' in plan, false, 'never a cheat sheet');
   // A locked round that carries prizes anyway: they are dropped, never shown.

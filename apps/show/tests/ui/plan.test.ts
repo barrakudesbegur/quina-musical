@@ -2,7 +2,7 @@
 // problem with its path, never throws; and the screens' bundle helpers (headline prizes first).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bundleSummary, checkGamePlan, roundPlan, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
+import { bundleSummary, checkGamePlan, prizeRuns, roundPlan, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
 
 const prize = (title: string, headline: boolean, sponsorId: string | null = null) => ({ title, detail: null, sponsorId, image: null, headline });
@@ -35,8 +35,6 @@ test('the sample plan is a valid version 3 plan with bundles', () => {
   const r = checkGamePlan(SAMPLE_PLAN);
   assert.equal(r.ok, true, r.ok ? '' : r.errors.join('\n'));
   assert.equal(SAMPLE_PLAN.v, 3);
-  const regular = SAMPLE_PLAN.rounds.filter((round) => round.kind !== 'desgraciat');
-  assert.ok(regular.every((round) => round.line.length >= 3 && round.bingo.length >= 4), 'a headline prize and a few smaller ones');
   assert.deepEqual(
     SAMPLE_PLAN.rounds.filter((round) => round.kind !== 'normal').map((round) => [round.number, round.kind]),
     [
@@ -45,8 +43,63 @@ test('the sample plan is a valid version 3 plan with bundles', () => {
     ],
   );
   const desgraciat = SAMPLE_PLAN.rounds[4];
-  assert.ok(desgraciat.line.length === 0 && desgraciat.bingo.length >= 4, "the Desgraciat round: no Line, the last card standing's bundle");
+  assert.ok(desgraciat.line.length === 0 && desgraciat.bingo.length >= 17, "the Desgraciat round: no Line, the last card standing's hamper");
   assert.equal(SAMPLE_PLAN.rounds[7].bingo.filter((p) => p.headline).length, 2, 'the last Quina has two headline prizes');
+});
+
+/** The 12 staples in every sample hamper (docs/event.md "Prizes and sponsors"), the fruit and the sweet varying. */
+const STAPLES = ['Xocolata', 'Torró', 'Neules', 'Vi negre', 'Vi blanc', 'Cava', "Paquet d'arròs", 'Tomàquet', 'Fuet', 'Samarreta de Barrakudes'];
+
+test('the sample plan has real-sized bundles: a 17–19-prize hamper per Quina, a small Line, placeholder sponsors only', () => {
+  const sponsorName = (id: string | null) => SAMPLE_PLAN.sponsors.find((s) => s.id === id)?.name;
+  for (const round of SAMPLE_PLAN.rounds) {
+    const at = `round ${round.number}`;
+    const hamper = round.bingo;
+    // The hamper (the Desgraciat round's too, in its `bingo` bundle): 17–19 prizes, the plan's limit far off.
+    assert.ok(hamper.length >= 17 && hamper.length <= 19 && hamper.length <= 40, `${at}: ${hamper.length} prizes in the hamper`);
+    const { headline, others } = splitBundle(hamper);
+    assert.deepEqual(headline, hamper.filter((p) => p.headline), `${at}: headline prizes marked and first`);
+    assert.equal(headline.length, round.number === 8 ? 2 : 1, `${at}: one headline prize (two in the last Quina)`);
+    if (round.kind === 'special') assert.equal(headline[0].title, 'Televisor', 'the Especial is played for a TV');
+    for (const title of STAPLES) assert.ok(others.some((p) => p.title === title), `${at}: ${title}`);
+    assert.ok(others.some((p) => p.title === 'Panettone' || p.title === 'Bombons') && others.some((p) => p.title === 'Taronges' || p.title === 'Pinya'), `${at}: a sweet and a fruit`);
+    assert.equal(others.filter((p) => !p.sponsorId).length, 11, `${at}: the club's 11 staples (its T-shirt is its own gift)`);
+    const gifts = others.filter((p) => p.sponsorId && p.sponsorId !== 'barrakudes');
+    assert.ok(gifts.length >= 4 && gifts.length <= 6, `${at}: ${gifts.length} sponsors' vouchers or products`);
+    assert.equal(new Set(gifts.map((p) => p.sponsorId)).size, gifts.length, `${at}: each gift from a different sponsor`);
+    // The Line: something small (a bottle of white wine, a fuet, neules and a small sponsor's prize); none in the Desgraciat round.
+    if (round.kind === 'desgraciat') assert.deepEqual(round.line, [], `${at}: no Line`);
+    else {
+      assert.deepEqual(round.line.map((p) => p.title).slice(0, 3), ['Ampolla de vi blanc', 'Fuet', 'Neules'], `${at}: the Line's prize`);
+      assert.equal(round.line.length, 4);
+      assert.ok(round.line[0].headline && round.line[3].sponsorId, `${at}: the wine leads, a small sponsor's prize closes`);
+    }
+    for (const p of [...round.line, ...round.bingo]) assert.ok(!p.sponsorId || sponsorName(p.sponsorId), `${at}: ${p.title}'s sponsor is in the plan`);
+  }
+  // Made-up sponsors only: bracketed placeholders, obviously generic ones, or the club itself. Never a real business.
+  for (const s of SAMPLE_PLAN.sponsors) assert.match(s.name, /^(\[Patrocinador \d+\]|Barrakudes|Forn del poble|Botiga d'esports|Restaurant del port)$/, s.name);
+  // Every sponsor but the money donor gives something.
+  const giving = new Set(SAMPLE_PLAN.rounds.flatMap((r) => [...r.line, ...r.bingo]).map((p) => p.sponsorId));
+  assert.deepEqual(SAMPLE_PLAN.sponsors.filter((s) => !giving.has(s.id)).map((s) => s.id), ['patrocinador-16']);
+});
+
+test("a bundle's other prizes run compact: plain ones together, each with a sponsor or a detail alone, nothing reordered", () => {
+  const p = (title: string, sponsor: string | null = null, detail: string | null = null) => ({ title, sponsor, detail });
+  const items = [p('Xocolata'), p('Torró'), p('Samarreta', 'Barrakudes'), p('Neules'), p('Sopar', null, 'Per a dos'), p('Val de 20 €', 'Forn'), p('Fuet'), p('Cava')];
+  const runs = prizeRuns(items);
+  assert.deepEqual(
+    runs.map((r) => [r.plain, r.items.map((i) => i.title)]),
+    [
+      [true, ['Xocolata', 'Torró']],
+      [false, ['Samarreta']],
+      [true, ['Neules']],
+      [false, ['Sopar']],
+      [false, ['Val de 20 €']],
+      [true, ['Fuet', 'Cava']],
+    ],
+  );
+  assert.deepEqual(runs.flatMap((r) => r.items), items, 'every prize, in order');
+  assert.deepEqual(prizeRuns([]), []);
 });
 
 test('a bundle splits into its headline prizes and the rest, and sums up in a few words', () => {

@@ -408,9 +408,10 @@ export const S = {
   cheat: {
     title: 'Xuleta',
     print: 'Imprimir',
-    printHelp: 'Un full A4, en blanc i negre i lletra gran.',
+    printHelp: 'En fulls A4, en blanc i negre i lletra gran: una quina mai queda partida entre dos fulls.',
     noPlan: 'No hi ha cap pla vàlid: només surt la part fixa.',
     prizes: 'Premis',
+    otherSponsors: 'Altres patrocinadors: agraïu-los també',
     noPrize: 'Sense premi',
     special: 'Especial',
     desgraciat: 'Desgraciada',

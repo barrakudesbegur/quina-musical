@@ -131,7 +131,7 @@ test('round prize bundles from the plan, headline prizes first, or why not', () 
   if (r.status === 'ok') {
     assert.equal(r.prizes.kind, 'special');
     assert.equal(r.prizes.line[0].sponsor, '[Patrocinador 1]');
-    assert.deepEqual(r.prizes.bingo.map((p) => [p.title, p.headline]).slice(0, 2), [['[Premi de quina 7]', true], ['[Obsequi 1 de la quina 7]', false]]);
+    assert.deepEqual(r.prizes.bingo.map((p) => [p.title, p.headline]).slice(0, 2), [['Televisor', true], ['Xocolata', false]]);
     assert.equal(r.prizes.bingo.length, SAMPLE_PLAN.rounds[6].bingo.length);
   }
   const plan = structuredClone(SAMPLE_PLAN);

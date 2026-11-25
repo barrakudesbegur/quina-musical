@@ -176,7 +176,7 @@ test('the round named, its intro and resume sending its kind, its one prize', ()
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');
   const prizes = roundPrizes(SAMPLE_PLAN, 5);
   assert.ok(prizes.status === 'ok');
-  assert.deepEqual(prizes.prizes.bundles.map((b) => [b.kind, b.prizes[0]?.title]), [['standing', "[Premi de l'últim dempeus]"]]);
+  assert.deepEqual(prizes.prizes.bundles.map((b) => [b.kind, b.prizes[0]?.title]), [['standing', 'Pernil']]);
   const normal = roundPrizes(SAMPLE_PLAN, 4);
   assert.ok(normal.status === 'ok');
   assert.deepEqual(normal.prizes.bundles.map((b) => b.kind), ['line', 'bingo']);

@@ -16,21 +16,43 @@ test('every round with both bundles, their sponsors and the special flag', () =>
   assert.equal(r1.label, 'Quina 1');
   assert.equal(r1.special, false);
   assert.deepEqual(r1.prizes.map((p) => [p.kind, p.label, p.items.length]), [
-    ['line', 'Premi de línia', 3],
-    ['bingo', 'Premi de quina', 4],
+    ['line', 'Premi de línia', 4],
+    ['bingo', 'Premi de quina', 18],
   ]);
-  assert.deepEqual(r1.prizes[0].items[0], { title: '[Premi de línia 1]', detail: null, sponsor: '[Patrocinador 1]', headline: true });
-  assert.deepEqual(r1.prizes[1].items.map((i) => i.headline), [true, false, false, false]);
+  assert.deepEqual(r1.prizes[0].items[0], { title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]', headline: true });
+  assert.deepEqual(r1.prizes[1].items.map((i) => i.headline), [true, ...Array(17).fill(false)]);
   assert.deepEqual(m.rounds[7].prizes[1].items.slice(0, 3).map((i) => [i.title, i.headline]), [
-    ['[Premi de quina 8]', true],
-    ['[Gran premi final]', true],
-    ['[Obsequi 1 de la quina 8]', false],
+    ['Pernil', true],
+    ['Planxa de cuina', true],
+    ['Xocolata', false],
   ]);
+  assert.deepEqual(m.rounds[6].prizes[1].items[0], { title: 'Televisor', detail: '50 polzades', sponsor: '[Patrocinador 2]', headline: true });
   assert.equal(m.rounds[6].special, true);
   assert.equal(m.hasSpecialRound, true);
   assert.deepEqual(m.claimRules, SAMPLE_PLAN.cheatSheet.claimRules);
   assert.deepEqual(m.specialRoundRules, SAMPLE_PLAN.cheatSheet.specialRoundRules);
   assert.equal(m.keys, COPY.keys);
+});
+
+test('every prize of every round is on the sheet, each with its sponsor, and every sponsor is named', () => {
+  const m = cheatSheetModel(SAMPLE_PLAN, COPY);
+  const listed = m.rounds.flatMap((r) => r.prizes.flatMap((p) => p.items.map((i) => `${r.number}|${p.kind}|${i.title}|${i.detail}|${i.sponsor}`)));
+  const name = (id: string | null) => SAMPLE_PLAN.sponsors.find((s) => s.id === id)?.name ?? null;
+  const planned = SAMPLE_PLAN.rounds.flatMap((r) =>
+    (r.kind === 'desgraciat' ? (['bingo'] as const) : (['line', 'bingo'] as const)).flatMap((kind) => r[kind].map((p) => `${r.number}|${kind === 'bingo' && r.kind === 'desgraciat' ? 'standing' : kind}|${p.title}|${p.detail}|${name(p.sponsorId)}`)),
+  );
+  assert.equal(listed.length, planned.length);
+  assert.deepEqual([...listed].sort(), [...planned].sort(), 'no prize dropped, none added');
+  const onSheet = new Set([...m.rounds.flatMap((r) => r.prizes.flatMap((p) => p.items.map((i) => i.sponsor))), ...m.otherSponsors]);
+  for (const s of SAMPLE_PLAN.sponsors) assert.ok(onSheet.has(s.name), `${s.name} is thanked`);
+  assert.deepEqual(m.otherSponsors, ['[Patrocinador 16]'], 'the money donor, which no prize names');
+});
+
+test('without sponsors that give no prize, no such list', () => {
+  const plan = structuredClone(SAMPLE_PLAN);
+  plan.sponsors = plan.sponsors.filter((s) => s.id !== 'patrocinador-16');
+  assert.deepEqual(cheatSheetModel(plan, COPY).otherSponsors, []);
+  assert.deepEqual(cheatSheetModel(null, COPY).otherSponsors, []);
 });
 
 test('a round without prizes says so with an empty bundle; a prize without a sponsor has none', () => {

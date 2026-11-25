@@ -53,7 +53,8 @@ test("the cheat sheet: the Desgraciat round's one prize, the last card standing'
   assert.equal(r5.desgraciat, true);
   assert.equal(r5.special, false);
   assert.deepEqual(r5.prizes.map((p) => [p.kind, p.label]), [['standing', "Premi de l'últim dempeus"]]);
-  assert.equal(r5.prizes[0].items[0].title, "[Premi de l'últim dempeus]");
+  assert.deepEqual(r5.prizes[0].items.slice(0, 2).map((i) => [i.title, i.headline]), [['Pernil', true], ['Xocolata', false]], 'a whole hamper');
+  assert.equal(r5.prizes[0].items.length, SAMPLE_PLAN.rounds[4].bingo.length);
   assert.deepEqual(cheatRound(SAMPLE_PLAN, SAMPLE_PLAN.rounds[0]).prizes.map((p) => p.kind), ['line', 'bingo']);
   assert.equal(S.cheat.desgraciat, 'Desgraciada');
 });
@@ -66,5 +67,5 @@ test('the plan diff, the card types and the winners name the round and the win',
   assert.equal(S.plan.cardRounds([1, 2, 3, 4, 6, 8], false, true), 'Juga a les quines 1, 2, 3, 4, 6 i 8 i la quina desgraciada');
   assert.deepEqual(S.night.kind, { line: 'Línia', bingo: 'Quina', standing: 'Últim dempeus' });
   const rows = winnerRows([{ round: 5, kind: 'standing', cardId: 57, claimId: 'cl-13', winningSongId: 1, position: 21, atMs: 1, name: null, notes: null }], SAMPLE_PLAN);
-  assert.equal(rows[0].prize, "[Premi de l'últim dempeus] +3");
+  assert.equal(rows[0].prize, 'Pernil +18');
 });

@@ -41,8 +41,9 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
     this.intro = h(
       'div',
       'round-start__intro',
-      h('div', 'round-start__head', this.title.root, this.standUp),
-      this.special,
+      // The special round's rule sits beside its name, not on a line of its own: the band below the drum keeps the
+      // room for the prizes (a headline prize with a detail, such as the Especial's TV, makes the panel taller).
+      h('div', 'round-start__head', this.title.root, this.standUp, this.special),
       h('div', 'round-start__prizes', ...this.prizes.map((p) => p.root)),
     );
     this.grid = h('div', { class: 'shuffle', hidden: true, attrs: { 'aria-hidden': 'true' } });
