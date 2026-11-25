@@ -70,7 +70,7 @@ export interface SchedulePlan {
   /** Planned length of an Interval, in minutes (the countdown guide). */
   intervalMinutes: number;
   /** Planned breaks ("parón") after some rounds, on top of the Interval: the Schedule and the countdown allow for
-   * them. Optional in the type only: checkGamePlan always fills it ([] when none). */
+   * them. Absent when there are none (a plan without breaks reads back unchanged); read it as `breaks ?? []`. */
   breaks?: PlannedBreak[];
 }
 
@@ -246,7 +246,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
   };
   for (const r of rounds) r.cardType ||= oldTypeFor(r.kind) ?? defaultCardType(r.kind);
 
-  let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3, breaks: [] };
+  let schedule: SchedulePlan = { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 };
   const sch = json.schedule;
   if (!isRec(sch)) err('plan.schedule', 'must be an object');
   else {
@@ -268,7 +268,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
       startAtMs: num(sch, 'startAtMs', 'plan.schedule', 0, 8.64e15, { nullable: true, integer: true }),
       roundMinutes: num(sch, 'roundMinutes', 'plan.schedule', 1, 240) ?? schedule.roundMinutes,
       intervalMinutes: num(sch, 'intervalMinutes', 'plan.schedule', 0, 120) ?? schedule.intervalMinutes,
-      breaks: breaks.sort((a, b) => a.afterRound - b.afterRound),
+      ...(breaks.length ? { breaks: breaks.sort((a, b) => a.afterRound - b.afterRound) } : {}),
     };
   }
 

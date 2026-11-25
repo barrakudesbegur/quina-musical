@@ -159,7 +159,7 @@ test('a round\'s card type must look like a card-types.json id', () => {
 test('planned breaks: after a round that isn\'t the last, once each, 1–60 minutes; none by default', () => {
   const r = checkGamePlan(good());
   assert.ok(r.ok);
-  assert.deepEqual(r.plan.schedule.breaks, []);
+  assert.equal(r.plan.schedule.breaks, undefined, 'none: absent, so the plan reads back unchanged');
   const p = good();
   (p.schedule as Record<string, unknown>).breaks = [{ afterRound: 1, minutes: 5 }];
   const ok = checkGamePlan(p);
