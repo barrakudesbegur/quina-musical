@@ -116,18 +116,27 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
+1. **From `docs/event.md`** (approved by the user; the Orchestrator's brief of 2026-11-25), in this order:
+   - ~~The Check decides~~ and ~~no prices on the projector~~: done (`ff13a81`). Sound engine adds the `failedCheck` reject reason, plus its console string.
+   - **Fallbacks are requirements.** The tech must be able to drive the whole show from the laptop alone: the console in a window on the laptop's own screen, next to the show page on the projector, with manual advance. The Wii remote is the intended controller and the tablet its plan B. iPad and Android tablets must both work; note any Safari/iPad gaps.
+   - **Throw breaks ("parón", about 5 min between some rounds):** Admin's Schedule plans them, and Horari and the console's expected end include them. Agree the shape with Sound engine (the schedule maths in `packages/rules`).
+   - **Winners:** an optional numbered-slip field in the console's winner form, once Sound engine adds it to the protocol.
+   - **Mention every sponsor:** every sponsor in the plan appears somewhere on the projector during the night (before the start, the intros, the Interval's thanks), and the cheat sheet lists every prize with its sponsor.
+   - **The Desgraciat's shared win:** when the last cards standing all fall on the same song, they share it. Sound engine designs the claim; agree the console and Check shape.
+   - **Wording:** "el tècnic" is the person and "Admin" only the page. The console opens on the tech's phone.
+   - "DEMPEUS!" is NOT approved (the user asked what it means). It's in `docs/open-questions.md`; keep the string until they choose.
+2. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
    - it draws from a song pool (`--pool <name>`, the same `data/pools/<name>.json` as the prep and the relay);
    - `--check` validates without writing;
    - the amounts and the seed are in `src/config.ts`;
    - the default pool still gives exactly the committed `cards.json`.
 
-   Still needed from the user (the Orchestrator is asking): title, paper colour, card types, prices and amounts. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
+   Still needed from the user (the Orchestrator is asking): title, paper colour, card types and amounts. No prices: they aren't printed (docs/event.md). The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
 
    Then the dates: the pool on Tue 1 Dec (86 songs in the draft), cards generated and proofed with the user by Thu 3 Dec, then printed. Don't generate before the playlist is final. The README has the steps.
-2. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
-3. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
-4. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+3. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
+4. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+5. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
@@ -185,6 +194,11 @@ From the repo root, once: `npm install`. Then from `apps/show`:
   - The player adds its own demos (`apps/player/feed/demo-feed.ts` `PLAYER_DEMOS`): `beforeCards`, `live`, `lineDone`, `nearBingo`, `cardFull`, `special`, `checkInvalid`, `offline`, `reconnect`, `notice`, and more.
   - `?demo=list` logs the names. The stage's `?debug` logs every animation moment. Demo mode never saves or sends anything (commands are logged to `window.__quinaDemoLog`).
 - **Test:** `npm run test:ui` (tsc, svelte-check, `node --test "tests/ui/**/*.test.ts"`). `npm test` runs it with the engine tests; run that before pushing.
+- **Test the committed state, not the shared tree,** which holds other sessions' uncommitted work. Use a clean worktree:
+  - `git worktree add --detach <dir> HEAD`;
+  - in `<dir>/node_modules`, symlink each entry of the main `node_modules` one by one, but point `@quina/*` at the worktree's own packages (`../../packages/…`, `../../apps/…`). A plain symlink of the whole `node_modules` resolves `@quina/protocol` to the main checkout's working copy, uncommitted edits included;
+  - symlink `apps/show/node_modules`, then run `npm test` in `<dir>/apps/show`;
+  - remove the worktree with `git worktree remove --force <dir> # cleanup-guard: <reason>` (a hook refuses it otherwise).
 - **End to end:** Backend's headless smoke test is in `tools/e2e/` and reads the `data-testid` hooks. Keep them stable: one element per hook.
 
 ## The design canvas
