@@ -56,6 +56,7 @@ _From event.md › The songs; the decisions doc › Changes; the mixer decisions
 - **They're proposals.** On last year's songs, the top automatic candidate was within a bar of the real hook in only 26 of 77 songs.
 - **The user approves, rejects or nudges each hook** on the audition page, about 2 minutes a song (pending U14, before the first rehearsal). A song can't play until its hook is approved.
 - A song keeps its id when the playlist is reordered (the id follows its Spotify track), so approvals made on the draft carry over to the final pool (D79).
+- **Once a Part is final, its ids are alphabetical (D103):** the user sorts the playlist by hand, leading articles included ("The …" under T, unlike Spotify's sort), and Sound engine checks the order before numbering. Part 1 is 1–70; Part 2 continues from 71 (pending U57).
 - A provisional bulk approval of each song's top hook may stand in for rehearsals, marked as provisional everywhere, with a preflight warning. **Not built yet.**
 
 ## Song preparation

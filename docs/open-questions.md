@@ -36,6 +36,10 @@ Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sou
 About 2 minutes a song is about 7 hours for 210 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 2 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
 **Default:** (a) and (b); (c) if the user wants it.
 
+### U57 · Part 2's song numbers
+D103 numbers a final Part's songs alphabetically, so Part 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
+**Default:** Part 2 continues at 71–140 (and a third Part at 141–210), not 1–70 again.
+
 ### U54 · What to call each set of 70 songs
 The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
 **Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.

@@ -777,7 +777,7 @@ By: the user. Source: open-questions.md › Answered (U21). Lives in: requiremen
 Every card's songs stay public. Anything may be public unless there's a reason to hide it; the code stays simple. Answers U22.
 By: the user. Source: open-questions.md › Answered (U22). Lives in: requirements/operations.md › Privacy.
 
-### D79 · A song keeps its id when the playlist changes · 2026-11-25 · Active
+### D79 · A song keeps its id when the playlist changes · 2026-11-25 · Amended by D103
 A song's id follows its Spotify track, not its playlist position. The draft grew from 86 to 151 songs and 83 moved, so ids by position would have moved every hook approval, cache and download onto another song. Hook approvals made on the draft carry over to the final pool.
 By: the sessions (Sound engine, within its remit). Source: commit fb321f4; Sound engine's report of 2026-11-25. Lives in: requirements/songs-and-cards.md › Hooks.
 
@@ -872,3 +872,7 @@ By: the user. Source: the user's message of 25 Nov. Amends: D99; event.md's "eve
 ### D102 · The normal card is printed on both sides · 2026-11-25 · Active
 Side 1 plays Quines 1–5 (pool 1) and side 2 plays Quines 6–10 (pool 2), with the same card number on both sides. Side 2 has its own design, and each side carries a new mark showing the rounds it's for; the user designs both with Frontend, so nobody changes the card's design before then. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
 By: the user. Source: the user's message of 25 Nov. Lives in: requirements/songs-and-cards.md › The card; event.md › The cards.
+
+### D103 · A final Part's song ids are alphabetical · 2026-11-25 · Active; Part 2's numbering Pending (U57)
+Once a Part is final, the user sorts its Spotify playlist alphabetically by hand (with an online tool), and the song ids follow that order. Leading articles count: "The …" sorts under T, unlike Spotify's own sort, which ignores "The". Sound engine checks the order before using it, and reports any song out of place to the user rather than fixing the playlist. Until a Part is final, ids follow the Spotify track (D79).
+By: the user. Source: the user's message of 25 Nov. Amends: D79. Lives in: requirements/songs-and-cards.md › Hooks.
