@@ -17,6 +17,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - this year's pool: prepared 1–4 Dec, cards made 4–5 Dec (D83); then measure, prune, push, and sync both laptops **before the tech rehearsal** (D82: no fixed date; the user runs it when everything feels ready);
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
+  - the night's settings file and `npm run plan` (queue item 4), once U43 is answered;
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch).
@@ -92,7 +93,11 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that pool's, and fails at once if not (after the 2026 deploy: `QUINA_POOL=2026`);
    - **deploys name their pool** (`--pool 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
    - a preflight check that the cloud's cards.json matches the pool's (FAIL if not).
-4. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+4. **The night's settings file** (D89, D97, D98; **blocked on U43**, which copy wins on the night): `data/nights/2026.json`, tracked in this public repo, prizes included. One file per edition, next to `data/pools/2026.json`, since the night's settings don't depend on which pool plays. It holds the whole GamePlan plus Admin's soundsDefault. Never in it: the sheet's money amounts, people's names, resume codes or Shuffle seeds (sponsors' names and logos pending U48, default yes). To build:
+   - `npm run plan -- check|push|pull` (check: `checkGamePlan`; push: the laptop's relay `PUT /api/plan`, which the link carries to the cloud, newest wins; pull: the cloud's plan read with the laptop's token, written to the file);
+   - a preflight WARN when the laptop's plan differs from the file.
+   My default for U43: the file wins until the doors open; on the night the cloud's newest plan wins, and `plan pull` brings phone edits back into the file.
+5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 ## Waiting on the user
 
