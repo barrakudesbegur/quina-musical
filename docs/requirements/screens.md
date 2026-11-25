@@ -41,7 +41,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
 | After the Game | Thanks and sponsor credits |
 
-- **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). **Not built yet** (the rule is built; the projector doesn't show it yet).
+- **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). The Interval shows the coming round's card in its colour with its price ("Cartró: 10,50 €"), and nothing until a price is set.
 - **The Desgraciat's Celebration** has no title.
 - **It never shows:**
   - the next song, the Queue, the possible winners or the standing cards;
@@ -135,7 +135,7 @@ _From event.md › Prizes and sponsors (the presenters' cheat sheet); the decisi
 
 **Who uses it:** the presenters, printed and on the tablet (the console's "Premis" tab).
 
-- It lists every prize with its sponsor, round by round, money donors included. **Not built yet.**
+- It lists every prize with its sponsor, round by round, three rounds to an A4 page and never splitting a round. A last section, "Altres patrocinadors: agraïu-los també", lists the sponsors that no prize names, such as money donors.
 - The claim rules and the special rounds' rules.
 - The presenters' checklist for the night's running order ([show-and-music.md › The night's running order](show-and-music.md#the-nights-running-order)).
 - The Wii mapping and the laptop's keys, for Plan B.
@@ -149,10 +149,11 @@ _From event.md › The presenters (Their equipment); the decisions doc › Chang
 - It pairs with the show laptop (desktop Chrome only). Its buttons are in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions).
 - Every action rumbles. A deliberate shake pattern starts a Suspense, so dancing doesn't.
 - Its plan B is the tablet: the console can do everything the remote does. Its range is in [operations.md › Fallbacks](operations.md#fallbacks).
+- The console counts the remote's drops over the last 10 minutes and shows them in the "Comandament" dialog. From 2 drops it warns: come closer to the laptop, or keep the tablet at hand.
 - It still has to be tried on real hardware (pending U19).
 
 ## Every sponsor appears
 
 _From event.md › Prizes and sponsors (Mention everyone)._
 
-- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. Every plan sponsor is listed in the before-the-start strip and the closing credits.
+- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. The before-the-start and Interval strip shows them a page of 8 at a time, cycling through every plan sponsor; the closing credits roll the whole list.

@@ -67,7 +67,7 @@ Fallbacks are requirements: new tools are hard to introduce, so every new way of
   - The console runs on the laptop's own screen, with the show page on the projector as a separate display (never mirrored). A USB presenter clicker (→ or PageDown) runs the console's default action. The night runbook's "Without the tablet" has the setup, and `npm run preflight -- --laptop-only` checks it.
   - The show page's own keys work too: → "Següent", ← "Enrere", Space Hold, S Suspense, M Hold music, Esc Panic.
 - **The Wii remote comes first;** the tablet is its plan B and can do everything the remote does.
-- **The Wii remote's Bluetooth range** from the stage to the laptop was at the limit in 2025. It's checked at the venue (pending U19).
+- **The Wii remote's Bluetooth range** from the stage to the laptop was at the limit in 2025. The runbook has a walk test from both ends of the stage at setup and every rehearsal, the console counts the remote's drops, and the venue check is pending U19.
 - **iPad and Android tablets** must both work (pending U19). The tablet's auto-lock is set to never, since the console on the hotspot can't keep the screen awake.
 - **A tablet that can't reach the laptop** on the hotspot uses the cloud console on its own data, or the other phone's hotspot.
 

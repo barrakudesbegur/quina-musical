@@ -121,7 +121,7 @@ _From event.md › The cards (Prices); the user's answer to U5._
 - **A normal card's price drops as rounds are played.** It's the per-round price × the regular rounds still to play, the coming one included. The Desgraciat doesn't count. 2025: 1.50 € a round, so 15 € before round 1 and 1.50 € before the last.
 - **A special card has a fixed price** (2025: 5 €).
 - Both prices come from the setup data, never from code: a price rule per card type in `card-types.json` (per regular round still to play for normal cards, fixed for special cards), read through one shared helper (D64). Prices are never printed on the cards.
-- The projector shows only the coming round's card price ([screens.md › Projector](screens.md#projector)). The rule and its shared helper are built; the screen showing it is **Not built yet.**
+- The projector shows only the coming round's card price ([screens.md › Projector](screens.md#projector)). Until a price is set, it shows none.
 
 ## The printed QR
 
