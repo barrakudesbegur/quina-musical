@@ -838,5 +838,5 @@ On "Consola · comandament Wii", each explanation sits beside its button with a 
 By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v57. Amends: D91, D92. Lives in: requirements/screens.md › Wii remote.
 
 ### D94 · The shake icon · 2026-11-25 · Active
-Option C: a remote with a motion trail, plus "×3" as tall as the remote, with no frame and a remote with small corners. It's used on the console's Suspens strip and in the remote's legend (B + shake → Suspens). On the console's two-level buttons, the hold strips (Pausa, Suspens) keep their label centred, with the remote hint at the strip's right edge. Answers U45. Designs only.
+Option C: a remote with a motion trail plus a smaller, medium-weight "×3" (size and weight option 2 of 1–4 on the options board, until the user says otherwise; canvas v60), with no frame and a remote with small corners. It's used on the console's Suspens strip and in the remote's legend (B + shake → Suspens). On the console's two-level buttons, the hold strips (Pausa, Suspens) keep their label centred, with the remote hint at the strip's right edge. Answers U45. Designs only.
 By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v59. Lives in: requirements/screens.md › Console, Wii remote.
