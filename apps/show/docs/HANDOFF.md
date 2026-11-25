@@ -26,6 +26,7 @@ The single place to resume the sound engine's work from. It was first written wh
   - **U34 (the pool size; about 70 songs recommended by `docs/research/reports/pool-size-2026.md`), not before the user picks:** `SCHEDULE` in `engine/src/config.ts` is fixed for 77 songs: `bingoAtSong` 50, `lineAtSong` 16, `desgraciatAtSong` 24. At 70 songs with about 190 normal cards in play it should be about 46, 14–15 and 21, or the Drift reads late and speeds the Pace for nothing.
     - Proposal: derive these from the round's Queue and its cards in play instead of hard-coding them. The engine knows the seeded Queue at the Shuffle, so it can count the songs to the first possible Line and Bingo (Futur's numbers) or the last card standing. The Drift then aims at the real end, which is fixed for whatever pool size and sales.
     - The constants stay only as the guess before cards are in play. `pace.ts` reads them in two places: `roundSongs` and `songsLeft`.
+    - **Weigh 2025's acceleration** (`docs/research/reports/night-2025-data.md`): Quina 1–5 took 108 min and Quina 6–10 took 74 min for the same number of songs. That's about 18 s a song in Q2 and 11 s in Q9, and the Intervals shrank from 1.6–5.2 min to 0.5–1.5. A flat 14 s after Quina 1 reads late early and early late, so the expected end needs a per-round seconds-per-song, not one Pace.
   - until then, nothing new on sound: transitions stay frozen until U13.
 - **Blocked:** nothing.
 - **Waiting on the user:**
