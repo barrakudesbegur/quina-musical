@@ -3,6 +3,7 @@
 // headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
 // blank prizes and plans, a round's card type, and the schedule's local date-time. Pure: each returns new values and
 // never mutates its input.
+import type { PlannedBreak } from '@quina/protocol';
 import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { defaultCardType, roundCardType, type RoundKind } from '@quina/protocol';
 import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
@@ -234,10 +235,36 @@ export function fromLocalInput(value: string): number | null {
   return date.getTime();
 }
 
-/** When the last round should end: start + rounds × round length + the Intervals between them. */
+/** When the last round should end: start + rounds × round length + the Intervals between them + the planned breaks
+ * (a break after the last round wouldn't count; the plan doesn't allow one). */
 export function plannedEndMs(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number | null {
   const { startAtMs, roundMinutes, intervalMinutes } = plan.schedule;
   if (startAtMs === null || !plan.rounds.length) return null;
   const n = plan.rounds.length;
-  return startAtMs + (n * roundMinutes + (n - 1) * intervalMinutes) * 60_000;
+  const breaks = (plan.schedule.breaks ?? []).filter((b) => b.afterRound >= 1 && b.afterRound < n).reduce((sum, b) => sum + b.minutes, 0);
+  return startAtMs + (n * roundMinutes + (n - 1) * intervalMinutes + breaks) * 60_000;
+}
+
+// ---- planned breaks ("parón": about 5 minutes between some rounds, docs/event.md) -------------------------------
+/** The default length of a planned break, in minutes. */
+export const DEFAULT_BREAK_MINUTES = 5;
+
+/** The rounds a break may follow: every planned round but the last, and not one that already has a break. */
+export function breakSlots(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number[] {
+  const taken = new Set((plan.schedule.breaks ?? []).map((b) => b.afterRound));
+  return plan.rounds.map((r) => r.number).filter((n) => n < plan.rounds.length && !taken.has(n));
+}
+
+/** The breaks with one added after `afterRound` (sorted by round); the same list when that round can't take one. */
+export function withBreak(breaks: readonly PlannedBreak[] | undefined, afterRound: number, minutes = DEFAULT_BREAK_MINUTES): PlannedBreak[] {
+  const list = [...(breaks ?? [])];
+  if (list.some((b) => b.afterRound === afterRound)) return list;
+  return [...list, { afterRound, minutes }].sort((a, b) => a.afterRound - b.afterRound);
+}
+
+/** The breaks without the one after `afterRound`. Undefined when none is left, so a plan without breaks reads back
+ * unchanged (the protocol leaves the field out then). */
+export function withoutBreak(breaks: readonly PlannedBreak[] | undefined, afterRound: number): PlannedBreak[] | undefined {
+  const left = (breaks ?? []).filter((b) => b.afterRound !== afterRound);
+  return left.length ? left : undefined;
 }

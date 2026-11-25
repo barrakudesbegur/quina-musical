@@ -256,6 +256,14 @@ export const S = {
     intervalMinutes: 'Durada de la mitja part (minuts)',
     plannedEnd: (time: string) => `Final previst: ${time}`,
     noStart: "Sense hora d'inici, no hi ha final previst.",
+    breaks: 'Pauses (parón)',
+    noBreaks: 'Cap pausa planificada entre quines.',
+    breakAfter: (n: number) => `Després de la Quina ${n}`,
+    breakMinutes: (n: number) => `Minuts de pausa després de la Quina ${n}`,
+    addBreakAfter: 'Afegir una pausa després de',
+    roundOption: (n: number) => `Quina ${n}`,
+    addBreak: 'Afegir pausa',
+    removeBreak: 'Treure',
   },
 
   rules: {

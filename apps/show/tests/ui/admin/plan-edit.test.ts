@@ -217,3 +217,18 @@ test('the planned end adds the rounds and the Intervals between them', () => {
   assert.equal(plannedEndMs(plan), start + (3 * 25 + 2 * 5) * 60_000);
   assert.equal(plannedEndMs({ ...plan, schedule: { ...plan.schedule, startAtMs: null } }), null);
 });
+
+test('planned breaks ("parón"): after any round but the last, once each; the planned end counts them', async () => {
+  const { breakSlots, withBreak, withoutBreak, plannedEndMs, DEFAULT_BREAK_MINUTES } = await import('../../../../admin/logic/plan-edit.ts');
+  const plan = { rounds: SAMPLE_PLAN.rounds, schedule: { startAtMs: 0, roundMinutes: 20, intervalMinutes: 3 } };
+  const n = plan.rounds.length;
+  assert.deepEqual(breakSlots(plan), Array.from({ length: n - 1 }, (_, i) => i + 1), 'never after the last round');
+  const two = withBreak(withBreak(undefined, 4), 2, 10);
+  assert.deepEqual(two, [{ afterRound: 2, minutes: 10 }, { afterRound: 4, minutes: DEFAULT_BREAK_MINUTES }], 'sorted by round');
+  assert.deepEqual(withBreak(two, 2, 30).map((b) => b.minutes), [10, DEFAULT_BREAK_MINUTES], 'a round keeps its one break');
+  assert.deepEqual(breakSlots({ ...plan, schedule: { ...plan.schedule, breaks: two } }).includes(2), false);
+  assert.deepEqual(withoutBreak(two, 2), [{ afterRound: 4, minutes: DEFAULT_BREAK_MINUTES }]);
+  assert.equal(withoutBreak([{ afterRound: 4, minutes: 5 }], 4), undefined, 'none left: the field goes, so the plan reads back unchanged');
+  const base = plannedEndMs(plan)!;
+  assert.equal(plannedEndMs({ ...plan, schedule: { ...plan.schedule, breaks: two } }), base + (10 + DEFAULT_BREAK_MINUTES) * 60_000);
+});
