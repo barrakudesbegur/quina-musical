@@ -832,3 +832,7 @@ By: the user via canvas (comments of 24 Nov, sent to Claude on 25 Nov). Source: 
 ### D92 · Every remote-triggered control shows its button · 2026-11-25 · Active
 Every console control a Wii button triggers shows that button's hint whenever it's on screen: A on the Check's "Rebutjar" for a failed card, the D-pad arm on the four effects, A on Dempeus' "Comprovar #57". Suspens shows a shaking-remote icon. The menu's rare holds (Pànic, Acabar la nit, Confirmar la línia sense comprovació) keep "Mantén premut" as a tag beside the label; play buttons keep the pressed look (D91). Answers U44. Designs only.
 By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v56. Amends: D91. Lives in: requirements/screens.md › Console, Wii remote.
+
+### D93 · The console's remote board explains each button in place · 2026-11-25 · Active
+On "Consola · comandament Wii", each explanation sits beside its button with a leader line, led by the button's own key icon (raised for a tap, pressed for a hold, the cross arm for each effect). B + shake shows with the shake icon (pending U45). The remote has squarer corners and a softer cross, and B comes out of the main drawing, with no separate side view. Designs only.
+By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v57. Amends: D91, D92. Lives in: requirements/screens.md › Wii remote.
