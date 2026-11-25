@@ -101,16 +101,19 @@ export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, 
 }
 
 /**
- * Which cards a round counts, as the phone words it: the special round's or a normal round's usual rule when it plays
- * its kind's default type, else the printed type by name (card-types.json, knownCardTypes; "Cartró <id>" when it
- * isn't listed).
+ * Which cards a round counts, as the phone words it: the printed type it plays, by name (card-types.json,
+ * knownCardTypes; "Cartró <id>" when it isn't listed). `usual` is a regular round playing the normal cards: the intro
+ * says nothing then, and only the cards list explains why a card rests. Every other round names its type at the intro
+ * too (the Especial's and, since D70, the Desgraciat's special cards).
  */
-export type RoundRule = { kind: 'normal' } | { kind: 'special' } | { kind: 'type'; name: string };
+export interface RoundRule {
+  name: string;
+  usual: boolean;
+}
 
 export function roundRule(round: { kind: RoundKind; cardType?: string }, types: readonly PrintedCardType[]): RoundRule {
   const type = roundCardType(round);
-  if (type !== defaultCardType(round.kind)) return { kind: 'type', name: cardTypeLabel(type, types).name };
-  return { kind: round.kind === 'special' ? 'special' : 'normal' };
+  return { name: cardTypeLabel(type, types).name, usual: round.kind === 'normal' && type === defaultCardType('normal') };
 }
 
 /** Which of the player's cards show a song as marked: songId → the cards' identities (Historial shows their icons). */

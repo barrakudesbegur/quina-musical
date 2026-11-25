@@ -54,10 +54,8 @@ export const S = {
   leaveText: 'El número que has escrit no es desarà.',
   leaveYes: 'Sortir',
   leaveNo: 'Continuar',
-  specialRule: 'A la quina especial només compten els cartrons especials.',
-  normalRule: 'Els cartrons especials només juguen a la quina especial.',
-  /** A round that plays another printed type than its kind's usual one (card-types.json's name). */
-  typeRule: (name: string) => `En aquesta quina només compten els cartrons de tipus «${name}».`,
+  /** Which printed type a round plays (card-types.json's name, "Cartró normal"), so a card that rests is explained. */
+  typeRule: (name: string) => `En aquesta quina només juga el ${name.charAt(0).toLowerCase()}${name.slice(1)}.`,
   unknownCard: 'No trobem aquest cartró.',
   /** The Desgraciat round: a playing card's badge, still standing or seated (sunk by one of its songs). */
   stand: { standing: 'Dempeus', seated: 'Assegut' },

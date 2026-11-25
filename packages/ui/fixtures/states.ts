@@ -135,7 +135,9 @@ const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s
 
 // ---- the Desgraciat round (Quina 5 in SAMPLE_PLAN) ----------------------------------------------------
 // Worked out from apps/cards/dist/cards.json, so every screen agrees: the normal cards 1–210 are the round's valid
-// cards in play (`baseState`'s "1-210, 400-440"), and these landings leave card #57 the last one standing.
+// cards in play (`baseState`'s "1-210, 400-440"), and these landings leave card #57 the last one standing. The states
+// name the normal cards explicitly: SAMPLE_PLAN's Desgraciat plays its kind's default (the special cards since D70), but
+// a plan may pick the normal ones (U26), and these demos exercise the round, not the card type.
 
 /** The Desgraciat round's landings, oldest first: the 22nd leaves only #57 standing. */
 export const DESGRACIAT_LANDED = [59, 10, 30, 11, 45, 56, 41, 19, 52, 55, 72, 68, 17, 35, 40, 57, 50, 65, 38, 27, 43, 1];

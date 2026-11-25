@@ -28,6 +28,7 @@ import {
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { publicPlan } from '../../../../../packages/ui/plan.ts';
 import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
+import { S } from '../../../../player/strings.ts';
 
 const T = 1_000_000;
 const playing = (patch: Partial<PublicState> = {}): PublicState => ({
@@ -216,12 +217,19 @@ test("a round of any card type counts only that type's cards; an older snapshot 
   assert.deepEqual(valid({ ...round, kind: 'special' }), [412], 'no card type: special round, especial cards');
 });
 
-test("which cards a round counts, in the phone's words: the usual rules, else the type by name", () => {
-  const types = [{ type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: null }];
-  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'normal' }, types), { kind: 'normal' });
-  assert.deepEqual(roundRule({ kind: 'special' }, types), { kind: 'special' }, "an older snapshot: the kind's default");
-  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'desgraciat' }, types), { kind: 'type', name: 'Cartró desgraciat' });
-  assert.deepEqual(roundRule({ kind: 'special', cardType: 'daurat' }, []), { kind: 'type', name: 'Cartró daurat' }, 'unlisted: the stand-in name');
+test("which cards a round counts, in the phone's words: the type by name; only a regular round on normal cards is usual", () => {
+  const types = [
+    { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null },
+    { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null },
+    { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: null },
+  ];
+  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'normal' }, types), { name: 'Cartró normal', usual: true });
+  assert.deepEqual(roundRule({ kind: 'special' }, types), { name: 'Cartró especial', usual: false }, "an older snapshot: the kind's default");
+  assert.deepEqual(roundRule({ kind: 'desgraciat', cardType: 'especial' }, types), { name: 'Cartró especial', usual: false }, 'D70: the Desgraciat names its type too');
+  assert.deepEqual(roundRule({ kind: 'normal', cardType: 'desgraciat' }, types), { name: 'Cartró desgraciat', usual: false });
+  assert.deepEqual(roundRule({ kind: 'special', cardType: 'daurat' }, []), { name: 'Cartró daurat', usual: false }, 'unlisted: the stand-in name');
+  assert.equal(S.typeRule('Cartró especial'), 'En aquesta quina només juga el cartró especial.');
+  assert.equal(S.typeRule('Cartró de Nadal'), 'En aquesta quina només juga el cartró de Nadal.', 'only the first letter is lowered');
 });
 
 /** The sample plan as phones get it with rounds 1 to 3 revealed. */

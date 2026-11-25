@@ -3,7 +3,7 @@
 // countdown, and the round's name and prize in the console's other panels.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STANDING_LIST_MAX, type ShowState } from '@quina/protocol';
+import { defaultCardType, STANDING_LIST_MAX, type ShowState } from '@quina/protocol';
 import { FIXTURES, DESGRACIAT_STANDING_23, DESGRACIAT_STANDING_26 } from '../../../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { flowOf, type AnyCommandName, type FlowState } from '../../../../../packages/ui/flow.ts';
@@ -170,7 +170,7 @@ test('Futur in the Desgraciat round: the songs until one card stands, and the co
 });
 
 test('the round named, its intro and resume sending its kind, its one prize', () => {
-  assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: 'normal' });
+  assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat') });
   assert.equal(S.interval.next(5, 8, true), 'Quina Desgraciada');
   assert.equal(S.interval.next(4, 8), 'Quina 4 de 8');
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');

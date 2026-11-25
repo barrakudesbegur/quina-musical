@@ -3,6 +3,7 @@
 // in the cheat sheet, the plan diff, the card types and the winners list.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { defaultCardType } from '@quina/protocol';
 import { checkGamePlan, type GamePlan, type RoundPlan } from '../../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { blankPrize, desgraciatTakenBy, movedLinePrizes, withLineMoved, withRoundKind } from '../../../../admin/logic/plan-edit.ts';
@@ -14,18 +15,20 @@ import { S } from '../../../../admin/strings.ts';
 const prize = (title: string, headline = false) => ({ ...blankPrize(headline), title });
 const normal = (number: number): RoundPlan => ({ number, kind: 'normal', cardType: 'normal', line: [prize('Pernil', true), prize('Tassa')], bingo: [prize('Sopar', true), prize('Clauer')] });
 
-test("a round made the Desgraciat one keeps its Line prizes in its one bundle, and plays the normal cards", () => {
+test("a round made the Desgraciat one keeps its Line prizes in its one bundle, and plays its kind's default cards", () => {
   const round = normal(5);
   assert.equal(movedLinePrizes(round, 'desgraciat'), 2);
   assert.equal(movedLinePrizes(round, 'special'), 0);
   const d = withRoundKind(round, 'desgraciat');
   assert.equal(d.kind, 'desgraciat');
-  assert.equal(d.cardType, 'normal', "its card type defaults to normal (defaultCardType('desgraciat'))");
+  assert.equal(d.cardType, defaultCardType('desgraciat'), 'its card type follows the kind (D70: the special cards)');
   assert.deepEqual(d.line, []);
   assert.deepEqual(d.bingo.map((p) => [p.title, p.headline]), [['Sopar', true], ['Pernil', true], ['Clauer', false], ['Tassa', false]], 'headline prizes first');
   assert.equal(movedLinePrizes(d, 'desgraciat'), 0, 'already Desgraciat: nothing moves');
-  // A special round made Desgraciat: its especial default becomes the normal one.
-  assert.equal(withRoundKind({ ...round, kind: 'special', cardType: 'especial' }, 'desgraciat').cardType, 'normal');
+  // A special round made Desgraciat: its default type becomes the Desgraciat's default.
+  assert.equal(withRoundKind({ ...round, kind: 'special', cardType: 'especial' }, 'desgraciat').cardType, defaultCardType('desgraciat'));
+  // A type picked by hand stays when the kind changes.
+  assert.equal(withRoundKind({ ...round, cardType: 'daurat' }, 'desgraciat').cardType, 'daurat');
   // Back to normal: the prizes stay where they are now.
   assert.deepEqual(withRoundKind(d, 'normal').bingo.length, 4);
   // An imported plan with Line prizes in its Desgraciat round: they can be moved over.

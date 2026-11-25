@@ -22,7 +22,7 @@
   {:else}
     {#if app.round && app.restingViews.length}
       {@const rule = roundRule(app.round, app.cardTypes)}
-      <p class="cards__rule">{rule.kind === 'type' ? S.typeRule(rule.name) : rule.kind === 'special' ? S.specialRule : S.normalRule}</p>
+      <p class="cards__rule">{S.typeRule(rule.name)}</p>
     {/if}
     <ul class="cards__list">
       {#each app.playingViews as view, i (view.saved.id)}
