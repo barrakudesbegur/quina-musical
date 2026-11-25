@@ -10,13 +10,15 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip, which is on origin (`364c916`). The live Desgraciat e2e now plays especial cards 400–429.
   - D69 (2025's prices): a preflight test with 1.50 €/5 €, 15 € before round 1 and 5 € before the Desgraciat (`9c83ebe`). The real check passes once Frontend puts the prices in `apps/cards/src/config.ts`. Today they're `null`, so it WARNs.
 
+  - D86: the user deleted the `quina-api` record (last year's API), and I deleted its Cloudflare Tunnel with the user's OK. U24: the previous session's `ci-head` worktree is removed; everything in it was already on main.
+
   The Worker runs `f1aacdd` (version `87650e0c`) on both quina-dev and the QR name, with this year's prices. The live Desgraciat run passed on it with especial cards.
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
-  - this year's pool from 2 Dec: measure, prune, push, and sync both laptops **before the first rehearsal** (D71; the rehearsal dates are U27);
+  - this year's pool: prepared 1–4 Dec, cards made 4–5 Dec (D83); then measure, prune, push, and sync both laptops **before the tech rehearsal** (D82: no fixed date; the user runs it when everything feels ready);
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
-- **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch); **U24**, housekeeping (the previous session's `ci-head` worktree); **U27**, the rehearsal dates, and **U28**, the print date, which set the pool's deadline.
+- **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch).
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
@@ -28,15 +30,15 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Milestones
 
-The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**. Those are the only dates the user gave. Cards are sold only on the night and print in a few hours (D71). The rehearsal dates (U27) and the print date (U28) are open, so no other dates are set. The whole plan is in [`docs/timeline.md`](../../../docs/timeline.md). Tell the orchestrator early if one of these slips.
+The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**; the user makes the cards on **4–5 Dec** (D83). Cards are sold only on the night and print in a few hours (D71). Rehearsals have no fixed dates (D82): the user runs a tech rehearsal when everything feels ready, and maybe a presenters' rehearsal a day or two before or on the day itself. The whole plan is in [`docs/timeline.md`](../../../docs/timeline.md). Tell the orchestrator early if one of these slips.
 
 | When | Platform's milestone | Depends on |
 |---|---|---|
 | Done (25 Nov) | The cloud side of card type per round and of the Desgraciat round | |
 | Done (25 Nov) | `quina.barrakudesbegur.org` points at the Worker (deploy-plan step 7, D76) | |
-| From Wed 2 Dec | This year's pool measured against R2's 10 GB | the pool prepared |
-| Before the first rehearsal | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared; hooks and stems done |
-| Each rehearsal | The preflight; watch the daily quota (`/api/stats`) | U27 |
+| By Fri 4 Dec | This year's pool measured against R2's 10 GB | the pool prepared (1–4 Dec) |
+| Before the tech rehearsal | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared; hooks and stems done |
+| Each rehearsal | The preflight; watch the daily quota (`/api/stats`). A presenters' rehearsal on the day itself runs laptop-only (no `npm run link`) | D82 |
 | Sun 27 Dec | The night | |
 
 ## Done so far
@@ -78,7 +80,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## The next queue, in priority order
 
 1. **Provisional hooks WARN in the preflight**, once Sound engine sends the field (see item 2).
-2. **This year's pool** (before the first rehearsal): measure it on 2 Dec, then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
+2. **This year's pool** (before the tech rehearsal): measure it once prepared (1–4 Dec), then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
    - **Contingency (option d)**, only if the final pool goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
      - push: the pool's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
      - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
