@@ -858,5 +858,5 @@ Prizes are hidden for the hype, on the players' screens: the projector and phone
 By: the user (to Backend, 25 Nov: "it is part of the model"). Source: Backend's report of 25 Nov. Amends: D78. Lives in: requirements/operations.md › Privacy.
 
 ### D99 · The playlist is down to 80 songs · 2026-11-25 · Active
-The organizers have filtered the playlist down to 80 songs. It's not the final count: about 10 are cut later that day, probably to 70, which the user is discussing with the organizers (U34). Meanwhile Sound engine may download the 80 songs and make temporary cards from them.
+The organizers have filtered the playlist down to 80 songs. It's not the final count: about 10 are cut later that day, probably to 70, which the user is discussing with the organizers (U34). Meanwhile Sound engine may download the 80 songs and make temporary cards from them. When fetched, the playlist held 76 (the organizers may be removing songs), and the user said to go with whatever it holds.
 By: the user. Source: the user's message of 25 Nov. Amends: D80. Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.
