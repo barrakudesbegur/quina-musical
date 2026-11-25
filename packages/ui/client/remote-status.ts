@@ -16,6 +16,8 @@ export interface RemoteSummary {
   lost: boolean;
   /** The connected remote's battery, when known. */
   battery: number | null;
+  /** Drops in the hosts' last 10 minutes (their range; `remote.status.drops`), summed over the hosts. */
+  drops: number;
 }
 
 /** What every host reported, folded into one summary. */
@@ -25,7 +27,7 @@ export class RemoteHosts {
   /** Take one report; true when the summary may have changed. */
   apply(clientId: string, status: RemoteStatus): boolean {
     const before = this.hosts.get(clientId);
-    if (before && before.connected === status.connected && before.battery === status.battery) return false;
+    if (before && before.connected === status.connected && before.battery === status.battery && before.drops === status.drops) return false;
     this.hosts.set(clientId, { ...status, wasConnected: Boolean(before?.wasConnected || before?.connected || status.connected) });
     return true;
   }
@@ -33,6 +35,7 @@ export class RemoteHosts {
   summary(): RemoteSummary {
     const all = [...this.hosts.values()];
     const live = all.find((h) => h.connected);
-    return { connected: Boolean(live), lost: !live && all.some((h) => h.wasConnected), battery: live?.battery ?? null };
+    const drops = all.reduce((sum, h) => sum + (h.drops ?? 0), 0);
+    return { connected: Boolean(live), lost: !live && all.some((h) => h.wasConnected), battery: live?.battery ?? null, drops };
   }
 }

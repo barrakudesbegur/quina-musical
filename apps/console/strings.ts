@@ -487,6 +487,9 @@ export const S = {
     elsewhere: "Connectat a la consola del portàtil.",
     battery: (level: number) => `Bateria ${Math.round(level * 100)} %`,
     batteryLow: 'Queda poca bateria: canvieu les piles a la mitja part.',
+    /** The remote's range (wii/drops.ts): how often it dropped lately. */
+    drops: (n: number) => (n === 1 ? "1 caiguda en els últims 10 minuts" : `${n} caigudes en els últims 10 minuts`),
+    dropsWarn: "S'ha desconnectat sovint: acosteu-vos al portàtil o tingueu la tauleta a mà.",
   },
 
   menu: {

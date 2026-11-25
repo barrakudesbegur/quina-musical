@@ -15,6 +15,7 @@ import type { ConsoleModel } from '../model.svelte.ts';
 import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type WiiRemote } from './driver.ts';
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
+import { dropReport, recentDrops } from './drops.ts';
 
 /** `lost`: a remote that was connected went away (worth a red chip); `disconnected`: none yet (optional, grey). */
 export type WiiStatus = 'unsupported' | 'disconnected' | 'connecting' | 'connected' | 'lost';
@@ -38,7 +39,7 @@ export class WiiController {
   /** The remote's battery (0..1) on this console, when it hosts the remote and the remote has said. */
   battery = $state<number | null>(null);
   /** What the other consoles' remotes report (through the relay). */
-  hosts = $state.raw<RemoteSummary>({ connected: false, lost: false, battery: null });
+  hosts = $state.raw<RemoteSummary>({ connected: false, lost: false, battery: null, drops: 0 });
   /** A remote is connected on this console or on another one. */
   readonly anyConnected = $derived(this.status === 'connected' || this.hosts.connected);
   /** The console shows each control's Wii button while a remote is connected anywhere. */
@@ -47,6 +48,14 @@ export class WiiController {
   readonly linkStatus = $derived<WiiStatus>(
     this.status === 'connected' || this.hosts.connected ? 'connected' : this.status === 'lost' || this.hosts.lost ? 'lost' : this.status,
   );
+  /** When this console's remote dropped without anyone asking (show clock), for `remote.status.drops`. */
+  private dropTimes: number[] = [];
+  /** The presenter pressed "Desconnectar": the next detach isn't a drop. */
+  private leaving = false;
+  /** What this console last published about its own remote's drops (when it hosts the remote). */
+  private ownDrops = $state.raw<{ drops: number; lastDropMs: number | null }>({ drops: 0, lastDropMs: null });
+  /** The drops in the last WII.dropWindowMs: this console's own (when it hosts the remote) and the other hosts' reports. */
+  readonly drops = $derived(this.ownDrops.drops + this.hosts.drops);
   /** The battery of whichever remote is connected. */
   readonly batteryLevel = $derived(this.status === 'connected' ? this.battery : this.hosts.battery);
   private readonly remoteHosts = new RemoteHosts();
@@ -100,7 +109,9 @@ export class WiiController {
   /** Tell the other consoles (through the relay) how this console's remote is. Only a host publishes. */
   private publish(): void {
     if (!this.hosting) return;
-    this.model.show.client.bus.sendRemote(remoteStatusMessage({ connected: this.status === 'connected', battery: this.status === 'connected' ? this.battery : null, sinceMs: this.statusSinceMs }));
+    const report = dropReport(this.dropTimes, this.model.show.client.now(), WII.dropWindowMs);
+    this.ownDrops = report;
+    this.model.show.client.bus.sendRemote(remoteStatusMessage({ connected: this.status === 'connected', battery: this.status === 'connected' ? this.battery : null, sinceMs: this.statusSinceMs, ...report }));
   }
 
   /** The presenter's click: ask Chrome for the remote. */
@@ -111,6 +122,7 @@ export class WiiController {
 
   async disconnect(): Promise<void> {
     const remote = this.remote;
+    this.leaving = true;
     this.detach();
     await remote?.stop();
   }
@@ -140,7 +152,11 @@ export class WiiController {
     remote.rumble(WII.rumble.tap);
     remote.requestStatus();
     this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now())), WII.tickMs);
-    this.batteryTimer = setInterval(() => remote.requestStatus(), WII.batteryEveryMs);
+    // Once a minute: the battery, and the drops count republished as old drops leave the window.
+    this.batteryTimer = setInterval(() => {
+      remote.requestStatus();
+      this.publish();
+    }, WII.batteryEveryMs);
   }
 
   private detach(): void {
@@ -152,6 +168,9 @@ export class WiiController {
     this.remote = null;
     this.pressed = new Set();
     this.mapper.reset();
+    // A connected remote that goes away without "Desconnectar" dropped: out of range, or out of battery.
+    if (this.status === 'connected' && !this.leaving) this.dropTimes = [...recentDrops(this.dropTimes, this.model.show.client.now(), WII.dropWindowMs), this.model.show.client.now()];
+    this.leaving = false;
     if (this.status !== 'unsupported') this.status = this.status === 'connected' ? 'lost' : 'disconnected';
     this.statusSinceMs = this.model.show.client.now();
     this.publish();

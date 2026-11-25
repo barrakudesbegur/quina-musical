@@ -52,6 +52,9 @@
   {#if wii.demo}<p class="note">{S.wii.demo}</p>{/if}
   {#if wii.status !== 'connected' && wii.anyConnected}<p class="note">{S.wii.elsewhere}</p>{:else if wii.status === 'unsupported'}<p class="note">{S.wii.unsupportedNote}</p>{:else if wii.status !== 'connected'}<p class="note">{S.wii.connectNote}</p>{/if}
   {#if wii.batteryLevel !== null && wii.batteryLevel < WII.batteryLow}<p class="note note--warning" role="alert">{S.wii.batteryLow}</p>{/if}
+  {#if wii.drops > 0}
+    <p class="note" class:note--warning={wii.drops >= WII.dropWarnAt} data-testid="wii-drops">{S.wii.drops(wii.drops)}{#if wii.drops >= WII.dropWarnAt}. {S.wii.dropsWarn}{/if}</p>
+  {/if}
 
   <div class="wii-dialog__guide">
     <WiiGuide {items} footer={CA.wii.footer} sideLabel={CA.wii.side} />

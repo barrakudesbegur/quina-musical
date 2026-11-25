@@ -78,6 +78,10 @@ export const WII = Object.freeze({
   tickMs: 50,
   /** How often the battery is asked for, and under which level the dialog warns. */
   batteryEveryMs: 60_000,
+  /** The rolling window the host counts the remote's drops in (its range: wii/drops.ts), and from how many the
+   * console warns. */
+  dropWindowMs: 10 * 60_000,
+  dropWarnAt: 2,
   batteryLow: 0.2,
   /** LED 1 lit: this remote is connected. */
   leds: 0x10,
