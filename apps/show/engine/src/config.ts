@@ -192,11 +192,16 @@ export const PACE = Object.freeze({
 
 export const SCHEDULE = Object.freeze({
   roundsTotal: 5,
-  /** Random-card simulation (77 songs, ~200 cards): first Line around song 16, Bingo around song 50. */
-  lineAtSong: 16,
-  bingoAtSong: 50,
-  /** The Desgraciat round: the last card standing after about 24 songs (tests/support/desgraciat.ts, 150–300 cards). */
-  desgraciatAtSong: 24,
+  /**
+   * A round's songs when its Queue and cards in play aren't known yet (later rounds, or no cards in play): this
+   * year's 70 songs a Part (D100), measured over 1,500 tie-free Shuffles of the draft cards, with 2025's 190 normal
+   * and 151 special cards in play. The first Line at song 14 (10–19), the Bingo at 46 (40–50; special 47), the last
+   * card standing at 21 (17–25). Once the Queue and the cards are known, the round uses its exact count.
+   */
+  lineAtSong: 14,
+  bingoAtSong: 46,
+  desgraciatAtSong: 21,
+  /** With the songs × the round's Pace, these match 2025's twelve rounds within about 2 minutes each (tests/schedule.test.ts). */
   lineCheckSec: 100, // last year 70–134 s
   bingoCheckSec: 150, // check plus finish, last year 85–220 s
   intervalSec: 150, // about 2.5 min

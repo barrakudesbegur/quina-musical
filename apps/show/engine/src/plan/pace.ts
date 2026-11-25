@@ -123,24 +123,29 @@ export function pressAfterHold({ now, pace, phase, nudge = 1 }: PaceArgs & { now
   return now + Math.max(PACE.minAfterHoldSec, (slot - dTarget) / 2);
 }
 
-/** Songs a round of this kind is expected to last: a Desgraciat round ends far sooner, and has no Line to check. */
-const roundSongs = (kind: RoundKind, cfg: ScheduleConfig) => (kind === 'desgraciat' ? cfg.desgraciatAtSong : cfg.bingoAtSong);
+/**
+ * Songs a round of this kind is expected to last: `songs` when its Queue and cards in play are known (the Queue
+ * index of its first Bingo or last card standing, plus one), else the config's typical count (a Desgraciat round
+ * ends far sooner, and has no Line to check).
+ */
+export const roundSongs = (kind: RoundKind, cfg: ScheduleConfig = SCHEDULE, songs: number | null = null): number =>
+  songs ?? (kind === 'desgraciat' ? cfg.desgraciatAtSong : cfg.bingoAtSong);
 const roundChecksSec = (kind: RoundKind, cfg: ScheduleConfig, lineConfirmed = false) =>
   (kind === 'desgraciat' || lineConfirmed ? 0 : cfg.lineCheckSec) + cfg.bingoCheckSec;
 
 /** Expected seconds until the current round ends, from the Queue position (index of the last landed song). */
-export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, kind = 'normal', cfg = SCHEDULE, nudge = 1 }: {
-  position: number; pace: number; phase?: string; lineConfirmed?: boolean; kind?: RoundKind; cfg?: ScheduleConfig; nudge?: number;
+export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, kind = 'normal', songs = null, cfg = SCHEDULE, nudge = 1 }: {
+  position: number; pace: number; phase?: string; lineConfirmed?: boolean; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig; nudge?: number;
 }): number {
   const landed = position + 1;
-  const songsLeft = Math.max(2, roundSongs(kind, cfg) - landed);
+  const songsLeft = Math.max(2, roundSongs(kind, cfg, songs) - landed);
   const slot = slotSec({ pace, phase: 'early', nudge }) * 0.75 + slotSec({ pace, phase, nudge }) * 0.25;
   return songsLeft * slot + roundChecksSec(kind, cfg, lineConfirmed);
 }
 
 /** A whole round from its first song, at a given Pace (the round's target, and later rounds). */
-export function roundLengthSec({ pace, kind = 'normal', cfg = SCHEDULE }: { pace: number; kind?: RoundKind; cfg?: ScheduleConfig }): number {
-  return roundSongs(kind, cfg) * pace + roundChecksSec(kind, cfg);
+export function roundLengthSec({ pace, kind = 'normal', songs = null, cfg = SCHEDULE }: { pace: number; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig }): number {
+  return roundSongs(kind, cfg, songs) * pace + roundChecksSec(kind, cfg);
 }
 
 /** When the round and the game should end (epoch ms), and the Drift in seconds (positive = running late). */
@@ -164,7 +169,8 @@ export interface LaterRounds {
 /** What scheduleEstimate needs. `round.targetEndMs` is fixed when the round starts. */
 export interface ScheduleArgs extends PaceArgs {
   nowMs: number;
-  round: { number: number; kind?: RoundKind; targetEndMs?: number | null };
+  /** `songs`: the round's exact count when its Queue and cards in play are known (roundSongs). */
+  round: { number: number; kind?: RoundKind; targetEndMs?: number | null; songs?: number | null };
   game: { roundsTotal?: number; targetEndMs?: number | null };
   position: number;
   lineConfirmed?: boolean;
@@ -178,11 +184,13 @@ export interface ScheduleArgs extends PaceArgs {
  * Times are epoch ms; `round.targetEndMs` is fixed when the round starts.
  */
 export function scheduleEstimate({ nowMs, round, game, position, pace, phase, lineConfirmed = false, later: plan = null, cfg = SCHEDULE, nudge = 1 }: ScheduleArgs): ScheduleEstimate {
-  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, cfg, nudge });
-  const laterPace = defaultPace(round.number + 1);
-  const later = plan
-    ? plan.kinds.reduce((sec, kind) => sec + plan.intervalSec + roundLengthSec({ pace: laterPace, kind, cfg }), plan.breaksSec)
-    : Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) * (cfg.intervalSec + roundLengthSec({ pace: laterPace, cfg }));
+  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, songs: round.songs, cfg, nudge });
+  // Each later round at the Pace it starts with: a night isn't one flat Pace (2025 went from 18 s a song to 11 s).
+  const kinds = plan ? plan.kinds : Array.from({ length: Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) }, () => 'normal' as const);
+  const later = kinds.reduce(
+    (sec, kind, i) => sec + (plan ? plan.intervalSec : cfg.intervalSec) + roundLengthSec({ pace: defaultPace(round.number + 1 + i), kind, cfg }),
+    plan ? plan.breaksSec : 0,
+  );
   const gameEndMs = roundEndMs + 1000 * later;
   return {
     roundEndMs,
@@ -196,10 +204,10 @@ export function scheduleEstimate({ nowMs, round, game, position, pace, phase, li
  * How much to stretch (>1) or squeeze (<1) the coming slots to recover the Drift over the rest of the
  * round. Only early and mid phases are nudged, and never when the presenters locked the Pace.
  */
-export function driftNudge({ driftSec, position, pace, phase, locked = false, cfg = SCHEDULE }: {
-  driftSec: number; position: number; pace: number; phase: string; locked?: boolean; cfg?: ScheduleConfig;
+export function driftNudge({ driftSec, position, pace, phase, locked = false, kind = 'normal', songs = null, cfg = SCHEDULE }: {
+  driftSec: number; position: number; pace: number; phase: string; locked?: boolean; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig;
 }): number {
   if (locked || !timingOf(phase).nudge || !Number.isFinite(driftSec)) return 1;
-  const songsLeft = Math.max(4, cfg.bingoAtSong - (position + 1));
+  const songsLeft = Math.max(4, roundSongs(kind, cfg, songs) - (position + 1));
   return clamp(1 - driftSec / (songsLeft * pace), PACE.nudgeLimits[0], PACE.nudgeLimits[1]);
 }

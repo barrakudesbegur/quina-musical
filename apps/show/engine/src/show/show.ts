@@ -55,7 +55,7 @@ import type {
   SoundName,
   StandingInfo,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, LOOP } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, LOOP, SCHEDULE } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, fallIndex, firstWinAt, queuePositions, standingCards, standingCourse } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
@@ -66,7 +66,7 @@ import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
 import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
 import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
-import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, PACE_LIMITS } from '../plan/pace.ts';
+import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
 import { firstRepeatAt, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
 import { mixSeed, seededRandom } from '../rng.ts';
@@ -495,6 +495,13 @@ export class Show {
   cardsInPlayText = '';
   cardsInPlay: number[] = [];
   phaseModel: PhaseModel = { kind: 'line', start: 0, seed: 0, valid: [], plan: null };
+  /** The round's songs from its Queue and cards in play (its first Bingo or last card standing), or null. */
+  expectedSongs: number | null = null;
+  /**
+   * Seconds the round's target end moved after it was journaled, because its expected songs changed (cards in play
+   * set mid-round). Not journaled: the Drift adds it, so a different count never reads as time lost.
+   */
+  targetShiftSec = 0;
   readonly catalog: Map<number, SongInfo>;
   fixedQueue: number[] | null;
   status: ShowStatus = 'locked';
@@ -865,7 +872,9 @@ export class Show {
     this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind }), lineConfirmed: false };
     // A secret seed drawn at the Shuffle blurs this round's Phase; it stays with the Queue.
     this.phaseModel = { kind: firstClimb(kind), start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
-    this.rebuildPhase();
+    this.expectedSongs = null;
+    this.targetShiftSec = 0;
+    this.rebuildPhase({ songsMove: 'target' });
     this.journal({
       kind: 'round.started',
       round: number,
@@ -931,7 +940,9 @@ export class Show {
     this.shuffle = null;
     this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind: c.kind }), lineConfirmed: lineFrom != null };
     this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
-    this.rebuildPhase();
+    this.expectedSongs = null;
+    this.targetShiftSec = 0;
+    this.rebuildPhase({ songsMove: 'target' });
     this.updateNudge();
     this.journal({
       kind: 'round.resumed', round: c.round, roundKind: c.kind, cardType, queue: [...this.queue], phaseSeed: this.phaseModel.seed,
@@ -1029,7 +1040,10 @@ export class Show {
     this.phaseModel = { kind: round.climbingTo, start: round.climbFrom, seed: round.phaseSeed, valid: [], plan: null };
     this.shuffleSeed = round.shuffleSeed;
     this.shuffleAttempts = round.shuffleAttempts;
-    this.rebuildPhase();
+    // The journal's target already counts the round's songs as they were when it started.
+    this.expectedSongs = null;
+    this.targetShiftSec = 0;
+    this.rebuildPhase({ songsMove: 'none' });
     this.updateNudge();
     this.restoreFlow(record);
     // The drum keeps the cards not yet played, with the last landing under the pointer.
@@ -1788,12 +1802,26 @@ export class Show {
   }
 
   // ------------------------------------------------------------------------------------ Phase
-  rebuildPhase() {
+  /**
+   * The Phase plan and the round's expected songs from its Queue and valid cards. When the songs change, the
+   * round's target end moves with them, so the Drift measures only time lost, never a different count: the target
+   * itself while the round starts (before it is journaled), else `targetShiftSec`; nothing when resuming from the
+   * journal, whose target already counts them.
+   */
+  rebuildPhase({ songsMove = 'shift' }: { songsMove?: 'target' | 'shift' | 'none' } = {}) {
     const m = this.phaseModel;
     m.valid = validCards(this.allCards, this.cardsInPlay, this.round.cardType);
     if (!m.valid.length) m.plan = null;
     else if (m.kind === 'standing') m.plan = standingPlan({ cards: m.valid, queue: this.queue, startPosition: m.start, seed: m.seed });
     else m.plan = phasePlan({ cards: m.valid, queue: this.queue, kind: m.kind, startPosition: m.start, seed: m.seed, cardsInPlayCount: m.valid.length });
+    const before = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
+    const end = !m.valid.length || !this.queue.length ? null
+      : this.round.kind === 'desgraciat' ? standingCourse(m.valid, this.queue).lastStandingAt
+      : firstWinAt(m.valid, this.queue, 'bingo')?.index ?? null;
+    this.expectedSongs = end == null ? null : end + 1;
+    const moveSec = (roundSongs(this.round.kind, SCHEDULE, this.expectedSongs) - before) * this.game.pace;
+    if (songsMove === 'target' && this.round.targetEndMs) this.round.targetEndMs += 1000 * moveSec;
+    else if (songsMove === 'shift') this.targetShiftSec += moveSec;
   }
 
   // A claimed Line passed its Check: from the next song the Phase climbs again, towards the Bingo.
@@ -2374,7 +2402,7 @@ export class Show {
     const after = plan?.rounds.filter((r) => r.number > this.round.number) ?? [];
     return scheduleEstimate({
       nowMs: this.env.nowMs(),
-      round: this.round,
+      round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs },
       game: { roundsTotal: this.game.roundsTotal },
       position: this.position,
       pace: this.game.pace,
@@ -2392,7 +2420,7 @@ export class Show {
 
   updateNudge() {
     const { roundDriftSec } = this.schedule();
-    this.nudge = driftNudge({ driftSec: roundDriftSec, position: this.position, pace: this.game.pace, phase: this.phaseName(), locked: this.game.paceLocked });
+    this.nudge = driftNudge({ driftSec: roundDriftSec, position: this.position, pace: this.game.pace, phase: this.phaseName(), locked: this.game.paceLocked, kind: this.round.kind, songs: this.expectedSongs });
   }
 
   prefetch() {
