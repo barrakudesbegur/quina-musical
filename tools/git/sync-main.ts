@@ -35,9 +35,15 @@ export interface Replayed {
   subject: string;
 }
 
+/** A commit a push of main would publish. */
+export interface Outgoing {
+  sha: string;
+  subject: string;
+}
+
 export type SyncResult =
   | { kind: 'upToDate' }
-  | { kind: 'ahead'; commits: number }
+  | { kind: 'ahead'; commits: number; publishes: Outgoing[] }
   | {
       kind: 'synced';
       dryRun: boolean;
@@ -49,6 +55,8 @@ export type SyncResult =
       skipped: Replayed[];
       /** Files brought in from origin/main (written, deleted, or already as origin has them). */
       files: string[];
+      /** What a push of main would now publish: every local commit, other sessions' included. */
+      publishes: Outgoing[];
     }
   | { kind: 'refused'; reason: string; files?: string[] };
 
@@ -123,6 +131,14 @@ function indexSha(top: string, file: string): string {
   return stage === '0' ? sha : 'conflict';
 }
 
+/** The commits on `to` that `from` lacks, oldest first. */
+function outgoing(cwd: string, from: string, to: string): Outgoing[] {
+  return git(cwd, ['log', '--reverse', '--format=%H %s', `${from}..${to}`])
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => ({ sha: line.slice(0, 40), subject: line.slice(41) }));
+}
+
 /** The author and exact message of a commit, to replay it as it was. */
 function commitParts(cwd: string, sha: string): { env: NodeJS.ProcessEnv; message: string } {
   const raw = git(cwd, ['cat-file', 'commit', sha]) + '\n';
@@ -161,7 +177,10 @@ export function syncMain({ cwd, fetch = true, dryRun = false }: SyncOptions): Sy
   const upstream = git(top, ['rev-parse', UPSTREAM]);
   if (local === upstream) return { kind: 'upToDate' };
   const base = git(top, ['merge-base', local, upstream]);
-  if (base === upstream) return { kind: 'ahead', commits: Number(git(top, ['rev-list', '--count', `${upstream}..${local}`])) };
+  if (base === upstream) {
+    const publishes = outgoing(top, upstream, local);
+    return { kind: 'ahead', commits: publishes.length, publishes };
+  }
 
   // ---- replay main's local commits onto origin/main, in the object store only ----------------------------
   const replayed: Replayed[] = [];
@@ -205,7 +224,7 @@ export function syncMain({ cwd, fetch = true, dryRun = false }: SyncOptions): Sy
   if (blocked.length > 0) {
     return { kind: 'refused', reason: 'origin/main changes files that have uncommitted work here; nothing was changed. Commit or set that work aside, then run again', files: blocked };
   }
-  const result: SyncResult = { kind: 'synced', dryRun, from: local, to: tip, replayed, skipped, files: plan.map((c) => c.path) };
+  const result: SyncResult = { kind: 'synced', dryRun, from: local, to: tip, replayed, skipped, files: plan.map((c) => c.path), publishes: outgoing(top, upstream, tip) };
   if (dryRun) return result;
 
   // ---- move main (only if nobody committed meanwhile), then write just those files -------------------------
@@ -242,6 +261,13 @@ export function syncMain({ cwd, fetch = true, dryRun = false }: SyncOptions): Sy
 }
 
 // ---- the command ---------------------------------------------------------------------------------------------
+/** What a push would publish: other sessions' commits are in the shared main too, so the tests must cover them all. */
+function printOutgoing(publishes: readonly Outgoing[]): void {
+  if (publishes.length === 0) return;
+  console.log(`A push of main publishes these ${publishes.length} commit(s), other sessions' included. Test them all (npm test on this exact state) before pushing:`);
+  for (const c of publishes) console.log(`  ${c.sha.slice(0, 7)}  ${c.subject}`);
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const unknown = args.filter((a) => a !== '--dry-run' && a !== '--no-fetch');
@@ -256,7 +282,8 @@ function main(): void {
       console.log('main is already origin/main.');
       return;
     case 'ahead':
-      console.log(`main is ${result.commits} commit(s) ahead of origin/main, nothing to bring in. Push once the tests pass.`);
+      console.log(`main is ${result.commits} commit(s) ahead of origin/main, nothing to bring in.`);
+      printOutgoing(result.publishes);
       return;
     case 'refused':
       console.error(`sync-main refused: ${result.reason}.`);
@@ -273,7 +300,7 @@ function main(): void {
       for (const s of result.skipped) console.log(`  ${short(s.from)} left out: origin/main already has it  ${s.subject}`);
       console.log(`Files from origin/main (${verb} update; nothing else touched): ${result.files.length}`);
       for (const f of result.files) console.log(`  ${f}`);
-      if (!result.dryRun && result.replayed.length > 0) console.log('Next: test the committed state, then git push origin main.');
+      printOutgoing(result.publishes);
     }
   }
 }

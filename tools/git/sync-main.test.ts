@@ -87,6 +87,8 @@ test('diverged: local commits are replayed onto origin with their author and mes
   if (result.kind !== 'synced') return;
   assert.equal(result.replayed.length, 1);
   assert.equal(result.replayed[0]?.from, mine);
+  // A push would publish the replayed commit (under its new hash).
+  assert.deepEqual(result.publishes.map((c) => c.subject), ['Card type, step B']);
   const head = git(shared, 'rev-parse', 'main');
   assert.equal(git(shared, 'rev-parse', 'main^'), git(shared, 'rev-parse', 'origin/main'), 'linear on top of origin');
   assert.equal(git(shared, 'log', '-1', '--format=%an <%ae>%n%B', head), git(shared, 'log', '-1', '--format=%an <%ae>%n%B', mine));
@@ -143,8 +145,8 @@ test('a local commit that conflicts with origin: refused, nothing changed', () =
 test('only ahead, or already there: nothing to do', () => {
   const { shared } = setup();
   assert.deepEqual(syncMain({ cwd: shared }), { kind: 'upToDate' });
-  commit(shared, 'mine', { 'a.txt': 'a2\n' });
-  assert.deepEqual(syncMain({ cwd: shared }), { kind: 'ahead', commits: 1 });
+  const mine = commit(shared, 'mine', { 'a.txt': 'a2\n' });
+  assert.deepEqual(syncMain({ cwd: shared }), { kind: 'ahead', commits: 1, publishes: [{ sha: mine, subject: 'mine' }] });
 });
 
 test('a dry run says what it would do and changes nothing', () => {
