@@ -86,7 +86,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
-- **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs go away, with no fallback layout kept in the code. The built version still has three tabs.
+- **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
   - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
   - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
   - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next;

@@ -24,6 +24,20 @@ The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.
 The PDF is A4 portrait, 3 cards a page in cut-stack order, with no bleed or crop marks: the same layout as the 2025 PDFs, now titled "QUINA QUINA! 3".
 **Default:** the same as last year; ask the print shop only if they asked for changes then.
 
+### U36–U40 · How prizes really work
+Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
+- U36: the Line's prize in 2025 and 2026;
+- U37: a hamper's three tiers (the big item, sponsor gifts with logos, the basics uncredited), with a sponsor's units split across rounds;
+- U38: a gift known only by its sponsor;
+- U39: money donors are thanked, never tied to a prize;
+- U40: hampers are grouped in the organizers' spreadsheet, then imported into Admin.
+
+**Default:** the prizes drawer stays on hold until these are answered.
+
+### U41 · A Celebration while a drawer is open
+Drawers sit on top of everything, so an open drawer hides a Celebration, even "La teva línia".
+**Default (Frontend's suggestion):** a Celebration closes Premis, Horari and Ajustos, but not the add-card pad while a number is being typed.
+
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
 **Default:** nothing built for the prizes drawer until the user picks.
