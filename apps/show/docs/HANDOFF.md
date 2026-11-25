@@ -11,7 +11,13 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** nothing; the impact report for D100–D102 went to the orchestrator on 25 Nov and waits for a go.
+- **In progress:** nothing. Done on 25 Nov: the expected end at 70 (D100, `8e6f563`). The side/Part protocol is agreed with Frontend and Backend: step A (my protocol types and checks) waits for U54 and the user's go.
+  - **The agreed plan:**
+    - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
+    - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
+    - the cards.json conversion is one commit run by Frontend; the engine journals `side` only after Backend's step B is deployed;
+    - the default test pool's 77 songs get part "1".
+  - **Waiting on the user:** U51 (round 6's pace), U53 (R2), U55 (preparing Part 1 and the 7.3 GB cache), U56 (hook tools: default (a) quick review + (b) one hook).
   - **The model (D100–D102):**
     - two playlists of 70: playlist 1 (Spotify 0EOwwaDVItDHMRkYoO1m8y, final) plays rounds 1–5 on side 1 of the normal card, playlist 2 (0sWgctjhXP6TS1aB4jfaHb, not filtered yet: don't download) rounds 6–10 on side 2;
     - a third playlist for the especial card, which plays both special rounds (U49, default);
@@ -96,6 +102,7 @@ All of this is on `main`, green when committed.
 | `remote.status` carries the remote's recent `drops` and `lastDropMs` (Frontend's proposal, for the Wii's range) | `df48789` |
 | **The old Decoys experiment retired** (the orchestrator's decision): `DECOYS.enabled`/`chance`, `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1` and the planner's `allowTease` are gone. A Decoy is now only what Suspense teases (`DecoyEvent`, the slimmed `DECOYS` timing) | `fd07f2e` |
 | **D70: the Desgraciat plays especial cards by default** (2025's special card played the Especial and the Desgraciat; U26 pending, default one card for both). `DEFAULT_CARD_TYPE.desgraciat = 'especial'`; the Desgraciat tests and simulated nights put especial cards in play. Frontend and Backend made their tests default-agnostic first (`4bf8d55`, `dafdbcd`, `d8345e9`) | `364c916`, `1ced37a` |
+| **The expected end at 70 songs** (D100). SCHEDULE: Line 14, Bingo 46, last standing 21 (1,500 Shuffles of the draft cards). A round counts its exact songs from its Queue and cards in play; a mid-round change moves an unjournaled offset, so the Drift doesn't jump. Each later round at its own Pace. `tests/schedule.test.ts`: 2025's rounds within about 2 minutes, and a flat 14 s reads Quina 2–5 ten minutes short | `8e6f563` |
 | **Stable song ids** for a changing playlist: `song-ids.json`, downloads named `<Spotify id>.opus`, `pool.py` resolves them through songs.json; README: download with the VPN off | `fb321f4` |
 
 Earlier work, before the move, is summarised in the README and `docs/dj-techniques.md` › Built: the planner, every recipe up to D19, the show state machine, the journal, resumeAt, the Interval and the relay security.
