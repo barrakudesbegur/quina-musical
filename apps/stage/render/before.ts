@@ -12,11 +12,11 @@ import { CountdownChip, MiniCard, SponsorList, sadIcon, starIcon, stickerImage }
 import { QrBlock } from './qr.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
-/** One card type's band: its card and price tag, its name, and the rounds it plays. */
+/** One card type's band: its card (and price tag, when STAGE.showCardPrices), its name, and the rounds it plays. */
 function typeBand(t: NightCardType): HTMLElement {
   const card = new MiniCard('night__card');
   card.set(t.color, t.special);
-  const price = priceLabel(t.priceCents);
+  const price = STAGE.showCardPrices ? priceLabel(t.priceCents) : null;
   const art = h('div', 'night__art', card.root, price ? h('p', 'night__price', price) : null);
   const rounds = t.regularRounds.length
     ? h(

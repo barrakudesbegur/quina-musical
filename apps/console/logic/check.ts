@@ -74,7 +74,16 @@ export function sinkingSong(check: Pick<CheckInfo, 'kind' | 'steps'>): number | 
   return check.steps.find((s) => s.landed)?.songId ?? null;
 }
 
-/** The verdict the engine's finding points to. A presenter still always decides. */
+/** The verdict the engine's finding points to. */
 export function suggestedVerdict(outcome: CheckOutcome): boolean {
   return outcome === 'complete';
+}
+
+/**
+ * The verdicts the presenters may give (docs/event.md: the Check's result decides). A card that passed can still
+ * be rejected, in a strange case, with a long press against the result; a card that failed can never be accepted,
+ * so only "reject" is offered.
+ */
+export function allowedVerdicts(outcome: CheckOutcome): readonly boolean[] {
+  return suggestedVerdict(outcome) ? [false, true] : [false];
 }

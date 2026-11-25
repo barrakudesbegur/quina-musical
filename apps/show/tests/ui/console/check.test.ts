@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
-import { checkProgress, missingSongs, stepState, suggestedVerdict } from '../../../../console/logic/check.ts';
+import { allowedVerdicts, checkProgress, missingSongs, stepState, suggestedVerdict } from '../../../../console/logic/check.ts';
 import { S } from '../../../../console/strings.ts';
 import type { CheckInfo } from '../../../../../packages/ui/flow.ts';
 
@@ -76,4 +76,9 @@ test('the result names the songs that had not landed', () => {
   assert.deepEqual(missingSongs(check()), [20]);
   assert.equal(S.check.resultMissing(['Elefants'], 'line'), 'Resultat: falta Elefants. Aquest cartró no té línia.');
   assert.equal(S.check.resultMissing(['A', 'B', 'C'], 'bingo'), 'Resultat: falta A, B i C. Aquest cartró no té quina.');
+});
+
+test('the Check decides: a passed card may still be rejected, a failed card can never be accepted (docs/event.md)', () => {
+  assert.deepEqual(allowedVerdicts('complete'), [false, true]);
+  for (const failed of ['incomplete', 'unknownCard', 'wrongType', 'fallen'] as const) assert.deepEqual(allowedVerdicts(failed), [false], failed);
 });

@@ -269,7 +269,7 @@ export const S = {
     /** A standing claim for a card that fell (the Desgraciat round), naming the song that sank it. */
     resultFallen: (title: string | null) => (title ? `Resultat: «${title}» ja ha sonat. Aquest cartró ha caigut.` : "Resultat: una de les seves cançons ja ha sonat. Aquest cartró ha caigut."),
     decide: 'Decisió',
-    confirmNote: 'el presentador sempre decideix',
+    confirmNote: 'ha passat la comprovació',
     rejectNote: 'sona la fanfàrria de fallada',
     kind: kindLabel,
     status: { queued: 'A la cua', checking: 'Comprovant…', checked: 'Falta decidir', valid: 'Vàlid', invalid: 'No vàlid' } satisfies Record<ClaimStatus, string>,

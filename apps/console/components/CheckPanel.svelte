@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
-  import { checkProgress, missingSongs, sinkingSong, stepMark, suggestedVerdict } from '../logic/check.ts';
+  import { allowedVerdicts, checkProgress, missingSongs, sinkingSong, stepMark, suggestedVerdict } from '../logic/check.ts';
   import { summarizeClaims } from '../logic/claims.ts';
   import { defaultClaimKind, songTitleOf } from '../logic/show-data.ts';
   import { CA, S } from '../strings.ts';
@@ -51,9 +51,11 @@
     { valid: false, label: S.check.reject, note: S.check.rejectNote, icon: 'cross' },
     { valid: true, label: S.check.confirm, note: S.check.confirmNote, icon: 'check' },
   ] as const;
+  /** A failed card can't be accepted: only reject is offered (allowedVerdicts). */
+  const verdicts = $derived(check ? VERDICTS.filter((v) => allowedVerdicts(check.outcome).includes(v.valid)) : []);
 
   function decide(verdict: boolean): void {
-    if (check) model.act('decide', { claimId: check.claimId, valid: verdict });
+    if (check && allowedVerdicts(check.outcome).includes(verdict)) model.act('decide', { claimId: check.claimId, valid: verdict });
   }
 </script>
 
@@ -118,7 +120,7 @@
 
   <section class="check-board__decide" aria-label={S.check.decide}>
     {#if check}
-      {#each VERDICTS as v (v.valid)}
+      {#each verdicts as v (v.valid)}
         {#if v.valid === valid}
           {@const isDefault = defaultControl === (v.valid ? 'confirm' : 'reject')}
           <button type="button" class="big-button" data-action={v.valid ? 'confirm' : 'reject'} data-anim="press" data-default={isDefault || undefined} disabled={!canDecide} onclick={() => decide(v.valid)}>
