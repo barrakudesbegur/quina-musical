@@ -17,13 +17,13 @@ _From event.md › When and where, What must never fail._
 
 ## Where things run
 
-_From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-game-laptop-owns-playback.md), [ADR 0002](../adr/0002-audio-and-drum-may-run-on-different-devices.md) (Q26)._
+_From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-game-laptop-owns-playback.md), [ADR 0002](../adr/0002-audio-and-drum-may-run-on-different-devices.md) (R2-Q26)._
 
 - **The cloud owns the Game:** the rounds, Queues, every landing, the cards in play, claims, winners, prizes, sponsors and the Schedule. It's one Cloudflare Durable Object, exportable as JSON. Songs and media are in a private R2 bucket.
 - **The show laptop owns playback.**
   - It plays the music and drives the projector from one clock.
   - It journals everything, reports every landing to the cloud, and carries on alone when the internet drops. **The music never depends on the internet.**
-  - It's installed: one setup command pulls the Pool and media from R2, so any prepared laptop can take over. A laptop with nothing installed is not for this year (Q26).
+  - It's installed: one setup command pulls the Pool and media from R2, so any prepared laptop can take over. A laptop with nothing installed is not for this year (R2-Q26).
   - It sits in the first row or at the side of the stage, wired to the PA by cable (never Bluetooth or AirPlay), with the projector on HDMI.
   - It's tethered by USB to a phone, with a second phone on another carrier as a backup hotspot.
 - **The tablet** joins the laptop's phone hotspot and talks to the laptop directly. Away from the hotspot, a console goes through the cloud.

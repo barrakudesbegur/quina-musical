@@ -1,0 +1,722 @@
+# Decision log
+
+Every decision about the Quina Musical, with an ID, a date, a status, what it replaced, and where the rule lives now. The log keeps the history and the reasons; the current rules are in [requirements/](requirements), and [event.md](event.md) is the root they come from.
+
+- **The two interviews are frozen records.** [mixer-design-decisions.md](mixer-design-decisions.md) (23 Nov) and [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) (24 Nov, with its "Changes" section) stay as written. This log is the index over them and over everything decided since.
+- **The big architectural decisions** are the [ADRs](adr). Each has an entry here that links to it.
+- Terms follow [GLOSSARY.md](../GLOSSARY.md).
+
+## IDs
+
+- **R1-Q1 … R1-Q38:** the first interview (23 Nov, the mixer).
+- **R2-Q1 … R2-Q38 and P1 … P15:** the second interview (23–24 Nov, the screens, the player app and hosting). It restarted the Q numbering, so every Q number exists in both interviews. P numbers exist only in the second, so they need no prefix.
+- **Sub-IDs** are kept as asked: R2-Q1a–f, R2-Q2b, R2-Q3b, R2-Q5b, P3b. A question asked again in a revised version keeps its plain ID, and its entry records the final answer (the user asked never to mark revisions with ′ or ″).
+- **D1, D2 …:** decisions made after or outside the interviews, in date order.
+- **ADR-0001 … ADR-0003:** the ADRs.
+- **U1, U2 …** are the open questions in [open-questions.md](open-questions.md), not decisions. When one is answered, its answer gets a D number here.
+- **Bare numbers elsewhere:** "Q12" and "Q26" in other docs mean R2-Q12 and R2-Q26. "Q34" for the Wii remote mapping means its final version, R2-Q38.
+- **The interviews' own "Round 1", "Round 2" headings** are batches of questions inside one interview. They are not the R in these IDs.
+
+## Statuses
+
+- **Active:** in force as recorded.
+- **Amended by X:** in force, with X changing part of it. Read both.
+- **Superseded by X:** replaced. Read X instead.
+- **Pending (Un):** waiting on the user; the default in force is stated.
+- **Retired:** dropped, or a one-off action that is done.
+
+## Adding an entry
+
+1. Take the next free D number. IDs are never reused or renumbered.
+2. Write the heading as `ID · title · date · status`, then one to three sentences, then the trailer line: who decided, the source, what it supersedes, and where it lives in the requirements.
+3. **By** is "the user", "the user via canvas", "the orchestrator", or "the sessions, agreed". Only log real decisions: the user's, or a role's within its remit. An unconfirmed proposal is Pending, or left out.
+4. Update the status of every entry it amends or supersedes.
+5. When a decision answers an open question, name the U number and move the question to "Answered" in open-questions.md.
+6. Dates are the venue's local date; transcript times are UTC (Z). The repo is public: no people's or businesses' names, no emails, no secrets.
+
+---
+
+## The first interview (23 Nov): the mixer
+
+Recorded in [mixer-design-decisions.md](mixer-design-decisions.md). The user answered in four batches: 19:11Z (Q1–Q7), 20:33Z (Q8–Q16), 21:02Z (Q17–Q27), 21:24Z (Q28–Q32) and 21:44Z (Q33–Q38).
+
+### R1-Q1 · The Queue decides, the drum reveals · 2026-11-23 · Active
+A shuffle fixes each round's order at its start; the drum only stages the reveal of the next song in the Queue.
+By: the user. Source: mixer-design-decisions.md › Order and drum; transcript 2026-11-23T19:11Z. ADR: [ADR-0001](#adr-0001--the-queue-decides-the-drum-reveals--2026-11-23--active). Lives in: requirements/show-and-music.md › The Shuffle and the Queue.
+
+### R1-Q2 · Auto-advance · 2026-11-23 · Superseded by R1-Q8
+The user leaned towards songs advancing by themselves, with the presenters setting how fast and holding when they need to talk. It became the Pace model of R1-Q8.
+By: the user. Source: transcript 2026-11-23T19:11Z. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### R1-Q3 · Where the music plays · 2026-11-23 · Superseded by R1-Q14
+Not answered directly: the user described the venue (speakers on stage, projector far away, the Wii remote's range at its limit) to inform R1-Q14.
+By: the user. Source: transcript 2026-11-23T19:11Z. Lives in: requirements/operations.md › Where things run.
+
+### R1-Q4 · Teases of the next song · 2026-11-23 · Active
+Rejected the "low-pass only, last 1–2 bars" rule. Teases are welcome with whatever filtering suits the pair, like a real DJ layering tracks. Recognising a song early is fine. Bluffs come later and must resolve clearly, so nobody thinks a tease counted.
+By: the user. Source: mixer-design-decisions.md › Transitions; transcript 2026-11-23T19:11Z. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### R1-Q5 · Songs land on a Hook · 2026-11-23 · Amended by R2-Q33
+Every song lands on a Hook, never at a random point, and "Hook" is the term. Last year's hand tags are approximate starting points that need adjusting.
+By: the user. Source: mixer-design-decisions.md › Transitions; transcript 2026-11-23T19:11Z. Lives in: requirements/songs-and-cards.md › Hooks.
+
+### R1-Q6 · Transition, Spin, Landing · 2026-11-23 · Active
+The three terms for the moving parts.
+By: the user. Source: transcript 2026-11-23T19:11Z. Lives in: GLOSSARY.md.
+
+### R1-Q7 · Lines matter too · 2026-11-23 · Active
+The proposal to build only towards the full card was turned down: the show builds towards the Line as well, even though Line predictions are less exact. On a claim the songs pause, but the music never stops.
+By: the user. Source: transcript 2026-11-23T19:11Z. Lives in: requirements/show-and-music.md › Phase, Heat and the Final Lap.
+
+### R1-Q8 · Pace and Hold · 2026-11-23 · Active
+Songs auto-advance at a Pace set from the tablet with presets and fine steps; Next skips at once; Hold stops landings and ducks the music. The console also shows when the round and the night will end and the Drift, counting claims and Intervals. Defaults from last year: about 22 s in the first round, about 14 s after.
+By: the user. Source: mixer-design-decisions.md › Pace, auto-advance and schedule; transcript 2026-11-23T20:33Z. Supersedes: R1-Q2. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### R1-Q9 · The Spin overlaps the playing song · 2026-11-23 · Active
+The Spin takes about half the Pace (3–11 s) while the landed song keeps playing, and late fancy transitions may stretch a slot by about 50%. The user added the goal: the night, not only the mixing. The presenters must keep control and get moments like last year's "eh eh eh".
+By: the user. Source: mixer-design-decisions.md › The goal is a great night; transcript 2026-11-23T20:33Z. Lives in: requirements/show-and-music.md › The drum and the Landing.
+
+### R1-Q10 · Round, Line, Bingo · 2026-11-23 · Active
+The internal terms. The user asked for more terms (the set of rounds, the in-between time, a fake tease), answered in R1-Q17.
+By: the user. Source: transcript 2026-11-23T20:33Z. Lives in: GLOSSARY.md.
+
+### R1-Q11 · A claim puts the show in Hold · 2026-11-23 · Active
+On a claim no song lands, the music keeps playing underneath, and the round resumes whatever the result. The user also asked for a public Check, built later as R1-Q24.
+By: the user. Source: transcript 2026-11-23T20:33Z. Lives in: requirements/game-rules.md › Claims.
+
+### R1-Q12 · Phase from the next win · 2026-11-23 · Amended by R1-Q20
+The Phase is computed from the cards in play and the Queue, climbs to the Line, resets once a Line is confirmed valid, then climbs to the Bingo. The Line may reach final too. The user asked for Heat and a "pre-final".
+By: the user. Source: mixer-design-decisions.md › Phase and Heat; transcript 2026-11-23T20:33Z. Lives in: requirements/show-and-music.md › Phase, Heat and the Final Lap.
+
+### R1-Q13 · Real DJ layering · 2026-11-23 · Amended by D7, D13
+Overlaps, stems, tempo matching up to about ±8%, key checks, offline preparation, plus outside sounds, iconic isolated parts and mashups. This replaced the research's "effect bridge, no stretching".
+By: the user. Source: mixer-design-decisions.md › Transitions; transcript 2026-11-23T20:33Z. Lives in: requirements/show-and-music.md › Transitions.
+
+### R1-Q14 · Audio and drum on the laptop, split mode supported · 2026-11-23 · Amended by R2-Q1d
+The laptop plays both by default, and the system must also support audio on a separate device. The "own router" part is gone: there is no router (R2-Q1d).
+By: the user. Source: mixer-design-decisions.md › Devices; transcript 2026-11-23T20:33Z. Supersedes: R1-Q3. ADR: [ADR-0002](#adr-0002--audio-and-drum-may-run-on-different-devices--2026-11-23--active). Lives in: requirements/operations.md › Where things run.
+
+### R1-Q15 · The presenters' tablet · 2026-11-23 · Amended by R1-Q25, D27
+The tablet shows the playing and next songs, Pace, Next, Hold, Claims, round start and end, and effects. The user added a prize cheat sheet with each prize's sponsor, and kept the Wii remote. Prizes in the Interval were later replaced by prize secrecy (D27).
+By: the user. Source: transcript 2026-11-23T20:33Z. Lives in: requirements/screens.md › Console, Cheat sheet.
+
+### R1-Q16 · Record R1-Q1 as an ADR; the order is immutable · 2026-11-23 · Active
+Yes to the ADR. Nobody, not even an admin, may move songs once the order is decided, and a Shuffle animation shows the grid going into the drum.
+By: the user. Source: mixer-design-decisions.md › Order and drum; transcript 2026-11-23T20:33Z. Lives in: requirements/show-and-music.md › The Shuffle and the Queue.
+
+### R1-Q17 · Game, Interval, Decoy · 2026-11-23 · Amended by D42
+Three more terms. A Decoy is now only what a Suspense teases (D42).
+By: the user. Source: transcript 2026-11-23T21:02Z. Lives in: GLOSSARY.md.
+
+### R1-Q18 · Suspense · 2026-11-23 · Amended by D10, R2-Q38
+The presenters hold a transition open while it builds; Release lands on the phrase; it releases by itself after about 30 s and never starts by itself. The user flagged it as experimental.
+By: the user. Source: mixer-design-decisions.md › Presenter-controlled moments; transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### R1-Q19 · Schedule and Drift · 2026-11-23 · Amended by R1-Q30
+The Schedule and the Drift, with claim and Interval times from last year. The user wanted the system to catch up gently by itself, not only suggest a Pace.
+By: the user. Source: transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### R1-Q20 · Phase from the chance of a win · 2026-11-23 · Active
+The Phase comes from a blurred probability, its thresholds scale with the cards in play, late starts 3–8 songs early and sometimes falsely, final covers the last 1–3 songs. This year's pool size may differ; the user is open to the system suggesting it.
+By: the user. Source: mixer-design-decisions.md › Phase and Heat; transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › Phase, Heat and the Final Lap.
+
+### R1-Q21 · Heat on the projector · 2026-11-23 · Active
+Heat follows the Phase with some randomness and never shows how many songs are left. Its design is iterated with the user later.
+By: the user. Source: transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › Phase, Heat and the Final Lap.
+
+### R1-Q22 · Signatures and outside sounds · 2026-11-23 · Amended by R2-Q27, D9
+Signatures, stems and outside sounds can be layered. The user can install tools such as MIDI software or ArtCraft.
+By: the user. Source: mixer-design-decisions.md › Transitions; transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### R1-Q23 · Prizes · 2026-11-23 · Amended by D27, D31
+Each round has Line and Bingo prizes, each item with a Sponsor, reassignable until the round is played, with generated images. Not part of the first build.
+By: the user. Source: transcript 2026-11-23T21:02Z. Lives in: requirements/game-rules.md › Prizes and bundles.
+
+### R1-Q24 · The public Check · 2026-11-23 · Amended by R2-Q11, D49
+The card shows as a grid, its songs play as hook snippets with ✓, or "broken" with ✗. The user adds looping video-game Hold music while the round waits to resume.
+By: the user. Source: mixer-design-decisions.md › Claims, Check and Celebration; transcript 2026-11-23T21:02Z. Lives in: requirements/game-rules.md › The Check; requirements/show-and-music.md › Hold music and the Check's sound.
+
+### R1-Q25 · The Wii remote stays, optional · 2026-11-23 · Amended by R2-Q1f, R2-Q38
+The remote stays, but it is optional: the tablet must do everything it can. The spare stage laptop as a bridge was not needed once the laptop sits near the stage (R2-Q1f).
+By: the user. Source: mixer-design-decisions.md › Devices; transcript 2026-11-23T21:02Z. Lives in: requirements/screens.md › Wii remote.
+
+### R1-Q26 · Interval music is local · 2026-11-23 · Active
+The Interval playlist is downloaded like the songs and played by the same engine.
+By: the user. Source: mixer-design-decisions.md › Interval; transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
+
+### R1-Q27 · The presenters have the final word · 2026-11-23 · Active
+Every automatic behaviour can be overridden live; when the presenters do nothing, the show goes on by itself.
+By: the user. Source: mixer-design-decisions.md › The goal is a great night; transcript 2026-11-23T21:02Z. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### R1-Q28 · No double presses · 2026-11-23 · Active
+Next is ignored while a transition runs. The proposed "Back as Replay" was turned down: Back undoes a landing (R1-Q33). The user also asked that auto-advance stop near a probable win (R1-Q34).
+By: the user. Source: transcript 2026-11-23T21:24Z. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### R1-Q29 · When Hold music plays; the Pool · 2026-11-23 · Active
+Hold music after a Check and on a long Hold; "Pool" names the songs the cards are printed from. The user added the Celebration music choice (R1-Q36) and "the music never stops, unless silence is intended".
+By: the user. Source: transcript 2026-11-23T21:24Z. Lives in: requirements/show-and-music.md › Hold music and the Check's sound.
+
+### R1-Q30 · Catch-up up to ±20% · 2026-11-23 · Active
+The Pace is nudged by up to ±20% to recover Drift, only in the early and mid Phases; the presenters can lock it.
+By: the user. Source: transcript 2026-11-23T21:24Z. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### R1-Q31 · A pool-size report · 2026-11-23 · Active
+Card generation reports the expected songs to the first Line and Bingo, and the round length, for a pool size and a number of cards sold.
+By: the user. Source: mixer-design-decisions.md › Proof-of-concept scope (Later); transcript 2026-11-23T21:24Z. Lives in: requirements/songs-and-cards.md › The pool's size.
+
+### R1-Q32 · The first build's scope · 2026-11-23 · Superseded by R2-Q29, D42
+MIDI and ArtCraft in a later milestone; Decoys as a separate experiment after the main build. Since R2-Q29 nothing is a proof of concept, and D42 retired the Decoys experiment.
+By: the user. Source: mixer-design-decisions.md › Proof-of-concept scope; transcript 2026-11-23T21:24Z. Lives in: (none; history only).
+
+### R1-Q33 · Back undoes a landing · 2026-11-23 · Active
+The last song stops counting and becomes the next song again; the drum turns back one card; the show goes into Hold. It can be pressed several times, and during a Spin it cancels the Spin.
+By: the user. Source: mixer-design-decisions.md › Presenter-controlled moments; transcript 2026-11-23T21:44Z. Lives in: requirements/show-and-music.md › The presenters' actions; requirements/game-rules.md › Ties, late claims and going back.
+
+### R1-Q34 · Manual control at the end · 2026-11-23 · Active
+In the final Phase auto-advance is off by default, with a switch to keep it on; if on, a probable winning landing gets a slot about 50% longer.
+By: the user. Source: mixer-design-decisions.md › Pace, auto-advance and schedule; transcript 2026-11-23T21:44Z. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### R1-Q35 · Possible winners, privately · 2026-11-23 · Superseded by D15
+The tablet privately lists cards that now have a Line or a Bingo, marked "possible". It became the Futur tab.
+By: the user. Source: mixer-design-decisions.md › Claims, Check and Celebration; transcript 2026-11-23T21:44Z. Lives in: requirements/screens.md › Console.
+
+### R1-Q36 · The Celebration · 2026-11-23 · Active
+An impact and a victory lap; the Winning song for a Line and a victory track into the Interval for a Bingo by default. There is no prize ceremony: winners are noted and collect their prizes later.
+By: the user. Source: mixer-design-decisions.md › Claims, Check and Celebration; transcript 2026-11-23T21:44Z. Lives in: requirements/show-and-music.md › The Celebration's music; requirements/game-rules.md › Winners.
+
+### R1-Q37 · Cards in play count per round · 2026-11-23 · Amended by R2-Q36
+The cards in play are entered once, together, and each round counts only the cards valid for it. The single game-wide list was a bug.
+By: the user. Source: mixer-design-decisions.md › Cards in play; transcript 2026-11-23T21:44Z. Lives in: requirements/game-rules.md › Cards in play.
+
+### R1-Q38 · Commit the glossary and ADRs, brief the builder · 2026-11-23 · Retired
+A one-off action, done.
+By: the user. Source: transcript 2026-11-23T21:44Z.
+
+### ADR-0001 · The Queue decides, the drum reveals · 2026-11-23 · Active
+[adr/0001-queue-decides-drum-reveals.md](adr/0001-queue-decides-drum-reveals.md). From R1-Q1 and R1-Q16.
+By: the user. Lives in: requirements/show-and-music.md › The Shuffle and the Queue, The drum and the Landing.
+
+### ADR-0002 · Audio and drum may run on different devices · 2026-11-23 · Active
+[adr/0002-audio-and-drum-may-run-on-different-devices.md](adr/0002-audio-and-drum-may-run-on-different-devices.md). From R1-Q14.
+By: the user. Lives in: requirements/operations.md › Where things run.
+
+---
+
+## The second interview (23–24 Nov): screens, the player app and hosting
+
+Recorded in [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md). The questions were asked from 2026-11-23T22:39Z; the answers came from 23:25Z on 23 Nov to 17:35Z on 24 Nov, all on 24 Nov local time.
+
+### R2-Q1 · A local game store · 2026-11-24 · Superseded by R2-Q1e
+A store on the laptop owning the Game was proposed; the user asked to reconsider it with Cloudflare hosting.
+By: the user. Source: transcript 2026-11-23T23:25Z.
+
+### R2-Q1a · Local first, the laptop as authority · 2026-11-24 · Superseded by R2-Q1e
+Rejected: the user felt too exposed with everything on one laptop, wanted an online server with a laptop Plan B, and ruled out a router.
+By: the user. Source: transcript 2026-11-24T00:47Z.
+
+### R2-Q1b · Cloudflare, free tier first · 2026-11-24 · Active
+Cloudflare for the cloud. Try the free tier and upgrade on the spot only if a limit is hit; a load test of 400 phones before the night, usage checked at the rehearsal, no heavy testing on the day. (Asked twice; the second version was accepted.)
+By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture; transcript 2026-11-24T00:47Z, 01:35Z. Lives in: requirements/operations.md › The free tier.
+
+### R2-Q1c · Game data in SQLite on the laptop · 2026-11-24 · Superseded by R2-Q1e
+The cloud became the source of truth instead, and the laptop keeps a local copy for offline running.
+By: the user. Source: transcript 2026-11-24T00:47Z.
+
+### R2-Q1d · Connectivity in the tent · 2026-11-24 · Active
+No router. The laptop is tethered by USB to a phone, with a second phone on another carrier as a backup hotspot; the tablet uses that hotspot. (Asked twice; the second version was accepted.)
+By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture; transcript 2026-11-24T00:47Z, 01:35Z. Supersedes: R1-Q14's router. Lives in: requirements/operations.md › Where things run.
+
+### R2-Q1e · The cloud owns the Game, the laptop owns playback · 2026-11-24 · Active
+The cloud is the single source of truth; the laptop plays, journals every landing and carries on alone offline; any prepared device resumes from the cloud.
+By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture; transcript 2026-11-24T01:35Z. Supersedes: R2-Q1, R2-Q1a, R2-Q1c. ADR: [ADR-0003](#adr-0003--the-cloud-owns-the-game-the-laptop-owns-playback--2026-11-24--active). Lives in: requirements/operations.md › Where things run.
+
+### R2-Q1f · A simple Plan B when 5G drops · 2026-11-24 · Active
+The laptop sits in the front row or at the side of the stage, so its keys and the Wii remote are in reach, and a console on the laptop's hotspot loads from the laptop and talks to it directly. The user asked to keep it simple. (Asked in three versions; this is the final one.)
+By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture (Plan B); transcript 2026-11-24T01:35Z. Lives in: requirements/operations.md › Plan B and resume codes, Fallbacks.
+
+### R2-Q2 · What the screens are built with · 2026-11-24 · Superseded by R2-Q2b
+The user wanted typed code (never untyped JS), no React, and to confirm the framework.
+By: the user. Source: transcript 2026-11-23T23:25Z.
+
+### R2-Q2b · TypeScript, Vite and Svelte 5 · 2026-11-24 · Active
+TypeScript everywhere with Vite, Svelte 5 for the console, Admin and player app, plain TypeScript for the projector scenes. The engine was converted to `.ts` too. Never React.
+By: the user. Source: show-ui-and-platform-decisions.md › Stack; transcript 2026-11-24T00:24Z. Supersedes: R2-Q2. Lives in: docs/team.md.
+
+### R2-Q3 · "Ronda" and "Partida" on screen · 2026-11-24 · Superseded by R2-Q3b
+Rejected: in the town "quina" means both the round and the game, so new words would confuse people.
+By: the user. Source: transcript 2026-11-23T23:41Z.
+
+### R2-Q3b · The words on screen · 2026-11-24 · Amended by D24
+Rounds are "Quina 3", a Line is "Línia", the full-card win is "Quina!" ("premi de quina"), and the night is just "Quina Musical". The user's "q3d yes" was read as Q3b.
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game; transcript 2026-11-24T01:05Z. Supersedes: R2-Q3. Lives in: requirements/screens.md › Every screen.
+
+### R2-Q4 · One shared tablet · 2026-11-24 · Active
+Not two tablets: the presenters share one.
+By: the user. Source: transcript 2026-11-23T23:41Z. Lives in: requirements/screens.md › Console.
+
+### R2-Q5 · Several winners · 2026-11-24 · Amended by D48
+Winners on the same landing agree on the split; an unclaimed win is lost. "Not registered as sold" is a warning, not a rejection; a card of the wrong type is invalid. The user proposed the tie-free Shuffle (R2-Q5b).
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game; transcript 2026-11-23T23:41Z. Lives in: requirements/game-rules.md › Ties, late claims and going back, The Check.
+
+### R2-Q5b · The tie-free Shuffle · 2026-11-24 · Active
+The Shuffle reshuffles deterministically from the same seed until neither the first Line nor the first Quina is shared by two cards in play. The rule is public.
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game (Shuffle); transcript 2026-11-24T01:05Z. Lives in: requirements/game-rules.md › Ties, late claims and going back.
+
+### R2-Q6 · A 4:3 projector, far away · 2026-11-24 · Active
+Only big elements; ready for 16:9 too.
+By: the user. Source: show-ui-and-platform-decisions.md › Projector; transcript 2026-11-23T23:41Z. Lives in: requirements/screens.md › Projector.
+
+### R2-Q7 · Design before code · 2026-11-24 · Active
+Every screen and animation starts as a mockup artifact for the user's feedback.
+By: the user. Source: show-ui-and-platform-decisions.md › Who builds what; transcript 2026-11-23T23:41Z. Lives in: docs/team.md; requirements/screens.md › Every screen.
+
+### R2-Q8 · The console opens on the tech's phone too · 2026-11-24 · Active
+The same console page opens on the admin phone, and several consoles at once must work. No separate admin version of the controls.
+By: the user. Source: show-ui-and-platform-decisions.md › Console; transcript 2026-11-23T23:41Z. Lives in: requirements/screens.md › Console.
+
+### R2-Q9 · A new player app · 2026-11-24 · Active
+The phone app is built completely new.
+By: the user. Source: transcript 2026-11-23T23:45Z. Lives in: requirements/screens.md › Player app.
+
+### R2-Q10 · Juicy for players, simpler inside · 2026-11-24 · Amended by P8
+The projector and player app get a juicy video-game style; the console and Admin can be simpler, but the console's layout must be planned in advance.
+By: the user. Source: show-ui-and-platform-decisions.md › Style and assets; transcript 2026-11-23T23:45Z. Lives in: requirements/screens.md › Every screen.
+
+### R2-Q11 · Who decides a Check · 2026-11-24 · Amended by D33, D49
+A number outside the printed cards is invalid. "Not sold" is only a private warning. A presenter confirms or invalidates every card, and both are recorded. Forgeries are assumed not to happen.
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game (Validity); transcript 2026-11-24T00:10Z. Lives in: requirements/game-rules.md › The Check.
+
+### R2-Q12 · Late claims · 2026-11-24 · Amended by D50
+The first to claim wins; claims on the same landing share. A late claimer wins if nobody else claimed. The user's own view on the other late cases (the late claimer shouldn't take the prize alone) needed the team's confirmation.
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game (Claims); transcript 2026-11-24T00:10Z. Lives in: requirements/game-rules.md › Ties, late claims and going back.
+
+### R2-Q13 · Several claims at once · 2026-11-24 · Active
+Every claimed card is checked before the round moves on.
+By: the user. Source: transcript 2026-11-24T00:10Z. Lives in: requirements/game-rules.md › Claims.
+
+### R2-Q14 · The Shuffle, with no fairness proof · 2026-11-24 · Active
+The presenters start the round and the Shuffle runs, with an item-box style sound; the covers fly in an order unrelated to the Queue. No fairness code on screen: a code the organizers show proves nothing. Trust comes from familiar animations, and anyone curious can have an AI read the public code. The seeds are kept for debugging. (A revised fairness-code proposal was rejected.)
+By: the user. Source: show-ui-and-platform-decisions.md › Rules of the game (Shuffle); transcript 2026-11-24T00:10Z, 00:35Z. Lives in: requirements/show-and-music.md › The Shuffle and the Queue.
+
+### R2-Q15 · What the Interval shows · 2026-11-24 · Superseded by D27, D32
+Next prizes in rotation and last round's winning card numbers were dropped by prize secrecy and by "no winning card numbers". The countdown, progress and sponsor thanks stay.
+By: the user. Source: transcript 2026-11-24T00:10Z. Lives in: requirements/screens.md › Projector.
+
+### R2-Q16 · Prize and sponsor data · 2026-11-24 · Amended by D31, R2-Q28
+Entered in bulk by an AI agent, and logos need cleaning (many are JPEGs with white backgrounds or padding).
+By: the user. Source: show-ui-and-platform-decisions.md › Admin; transcript 2026-11-24T00:10Z. Lives in: requirements/screens.md › Admin; requirements/game-rules.md › Sponsors.
+
+### R2-Q17 · The cheat sheet, printed too · 2026-11-24 · Active
+The cheat sheet is on the tablet and as a basic printable PDF, loaded from the organizers' spreadsheet by an agent. Little effort on the paper version.
+By: the user. Source: show-ui-and-platform-decisions.md › Who builds what; transcript 2026-11-24T00:10Z. Lives in: requirements/screens.md › Cheat sheet.
+
+### R2-Q18 · "Final Lap!" at late · 2026-11-24 · Active
+The fanfare plays when the Phase first reaches late, once per climb, and is also on the pad, with a console switch to turn it off. Playing it at final would give the ending away.
+By: the user. Source: show-ui-and-platform-decisions.md › Style and assets (Audio); transcript 2026-11-24T00:12Z. Lives in: requirements/show-and-music.md › Phase, Heat and the Final Lap.
+
+### R2-Q19 · Names for the screens · 2026-11-24 · Amended by D14
+Projector, Console, Admin, Player app.
+By: the user. Source: transcript 2026-11-24T01:05Z. Lives in: GLOSSARY.md.
+
+### R2-Q20 · What the console contains · 2026-11-24 · Amended by D15, D34
+The content list by moment, with the user's changes: risky buttons need a long press with an animation, and a tap shows a "hold to confirm" popover; possible winners hidden until asked for; the Celebration music is only a suggested default; a winner-name field plus notes; the Interval countdown is only a guide, because a round never starts by itself.
+By: the user. Source: show-ui-and-platform-decisions.md › Console; transcript 2026-11-24T01:05Z. Lives in: requirements/screens.md › Console.
+
+### R2-Q21 · The console's shape · 2026-11-24 · Active
+Landscape on the tablet, portrait on a phone, with Next, Hold and Claim in the same places in both.
+By: the user. Source: show-ui-and-platform-decisions.md › Console; transcript 2026-11-24T01:05Z. Lives in: requirements/screens.md › Console.
+
+### R2-Q22 · One owner for the whole console · 2026-11-24 · Active
+The UI/UX role builds the whole console, show controls included; the engine role owns the engine and the protocol.
+By: the user. Source: show-ui-and-platform-decisions.md › Who builds what; transcript 2026-11-24T01:14Z. Lives in: docs/team.md.
+
+### R2-Q23 · What Admin contains · 2026-11-24 · Amended by R2-Q36, D22
+Setup (cards in play as ranges, the rounds plan, prizes and sponsors with bulk JSON import and export, the Schedule), the night (start and end, Plan B resume, winners, cards opened on phones), player-app settings and tools.
+By: the user. Source: show-ui-and-platform-decisions.md › Admin; transcript 2026-11-24T01:35Z. Lives in: requirements/screens.md › Admin.
+
+### R2-Q24 · The projector during a round · 2026-11-24 · Amended by D2, D32
+The drum, the current song big, only the last 3 songs, the round name and the Heat; no QR or URL during play. The user asked for the other states too (R2-Q25).
+By: the user. Source: show-ui-and-platform-decisions.md › Projector; transcript 2026-11-24T01:35Z. Lives in: requirements/screens.md › Projector.
+
+### R2-Q25 · The show's states · 2026-11-24 · Amended by D21, D26, D27, D32, D34
+The states table for the projector and phones: before the Game, round start, in play, Hold, Claim and Check, Celebration, Interval, after the Game, technical pause.
+By: the user. Source: show-ui-and-platform-decisions.md › Projector, Player app; transcript 2026-11-24T01:53Z. Lives in: requirements/screens.md › Projector, Player app.
+
+### R2-Q26 · Where the show runs: A+ · 2026-11-24 · Active
+An installed show laptop (repo, Node, the local relay, the cloud link) with its media pulled from the cloud, so any laptop is show-ready with one setup command. The offline hotspot console and the best-quality blends stay. "Nothing installed" is deferred until after this year's event.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T17:35Z. Lives in: requirements/operations.md › Where things run, The spare laptop.
+
+### R2-Q27 · Signatures picked automatically · 2026-11-24 · Amended by D9
+The best candidate above a quality score is used, with a veto per song; no approval of every candidate by hand.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T08:53Z. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### R2-Q28 · A private logo library, in JPEG XL · 2026-11-24 · Active
+Logos are other businesses' artwork: kept privately in the cloud, cleaned in bulk keeping the originals, picked from Admin. Images are JPEG XL with a PNG or JPEG fallback, never WebP.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T08:53Z. Lives in: requirements/screens.md › Every screen, Admin.
+
+### R2-Q29 · The repo layout; not a proof of concept · 2026-11-24 · Active
+apps/, packages/, tools/prep, data/ and legacy/2025. The user: the new code is this year's app, not a POC.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T08:49Z, 08:53Z. Supersedes: R1-Q32. Lives in: docs/team.md.
+
+### R2-Q30 · The Desgraciat round · 2026-11-24 · Amended by D43, D44, D57, D62
+The round the user introduced at 09:25Z: a card is out as soon as any of its songs lands; the last standing wins; the console privately shows the cards still standing and the presenters call the winner; the Shuffle avoids a tie at the end; the Check shows none of its songs landed; Phase and Heat climb as fewer cards stand; phones show "Dempeus" or "Assegut"; one per night, movable. Which card type it uses was left open here.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes (The Desgraciat round); transcript 2026-11-24T09:25Z, 17:15Z. Lives in: requirements/game-rules.md › The Quina del Desgraciat.
+
+### R2-Q31 · The presenters' eight actions · 2026-11-24 · Amended by D34
+Següent, Parlem (Hold, ducked), Aguanta (new: no landing, full volume, from the user's request), Suspens, Enrere (long press), Comprovar cartró, Efectes, Ritme. The user asked to define the Wii mapping (R2-Q38).
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T11:59Z, 12:06Z. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### R2-Q32 · A subtle near-win cue · 2026-11-24 · Active
+The missing song is gently highlighted on that card's grid. No banner, and no win is ever announced.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T12:06Z. Supersedes: P3, P14. Lives in: requirements/screens.md › Player app.
+
+### R2-Q33 · This year's hooks are detected automatically · 2026-11-24 · Amended by D47
+Detected from the song's structure, an energy jump and the vocals coming in, snapped to phrases; the user approves, rejects or nudges each one on the audition page.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T12:06Z. Lives in: requirements/songs-and-cards.md › Hooks.
+
+### R2-Q34 · The Wii mapping, first version · 2026-11-24 · Superseded by R2-Q37
+The user asked to iterate: A only as a hold button, HOME for auto-advance, Claim off the remote.
+By: the user. Source: transcript 2026-11-24T17:15Z.
+
+### R2-Q35 · A round's prizes unlock at its intro · 2026-11-24 · Active
+Not in the Interval, as proposed: a round's bundle appears on the projector and phones at the round's intro, when the presenters present it.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes (Prize secrecy); transcript 2026-11-24T17:15Z. Lives in: requirements/game-rules.md › Prize secrecy.
+
+### R2-Q36 · Card types come from the card generation · 2026-11-24 · Active
+Type, colour, title and price come from the generated cards' files, not from Admin. Admin only chooses which type each round uses.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T17:15Z. Lives in: requirements/songs-and-cards.md › Card types; requirements/game-rules.md › The night's rounds.
+
+### R2-Q37 · The Wii mapping, second version · 2026-11-24 · Superseded by R2-Q38
+The user changed it again: − and + both Parlem, 1 and 2 held for Enrere, B held for Aguanta with a shake into Suspens, A for Següent, and a dialog showing the mapping.
+By: the user. Source: transcript 2026-11-24T17:33Z.
+
+### R2-Q38 · The Wii mapping · 2026-11-24 · Amended by D34, D36
+A Següent; B held Aguanta; B held plus 3 strong shakes becomes Suspens, letting go lands; − or + Parlem; 1 or 2 held 1.5 s Enrere; HOME auto-advance on/off with different rumbles; D-pad 4 effects; Claim on the console only. Every action rumbles. An accidental A is safe, since Parlem and Aguanta cancel a running transition. A "Comandament" dialog shows the mapping.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes (Wii remote mapping); transcript 2026-11-24T17:33Z. Supersedes: R2-Q34, R2-Q37. Lives in: requirements/show-and-music.md › The presenters' actions; requirements/screens.md › Wii remote.
+
+### P1 · Adding cards on the phone · 2026-11-24 · Active
+Scan more QRs or type on a big "Afegir cartró" pad; each card has a colour and an optional name; removing asks first; cards stay on the phone, with no account; special cards show only in the special round.
+By: the user. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › Player app.
+
+### P2 · The latest song is never flagged · 2026-11-24 · Superseded by D17
+Option (a): the phone never marked or flagged the latest song. Gone with the grace rule.
+By: the user. Source: transcript 2026-11-24T00:24Z.
+
+### P3 · The "1 song away" banner · 2026-11-24 · Superseded by R2-Q32
+The user changed the marking rule here: the latest song is marked for a Line, never for a Bingo, and the app never says a Line is complete.
+By: the user. Source: transcript 2026-11-24T00:24Z.
+
+### P3b · The quiet grace rule · 2026-11-24 · Superseded by D17
+The latest song stays unmarked only when it would complete a card, as an unexplained pleasant surprise; the app never says it gets marked later.
+By: the user. Source: transcript 2026-11-24T01:14Z.
+
+### P4 · The phone's five tabs · 2026-11-24 · Superseded by D19
+Accepted for now, to be revisited after seeing the design. The reel stays generic until the landing, because a phone may only learn a song at its landing.
+By: the user. Source: transcript 2026-11-24T00:24Z.
+
+### P5 · Interface sounds, on by default · 2026-11-24 · Active
+Interface sounds only, on by default. Admins can change the default for everyone remotely, but a player's own choice wins.
+By: the user. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › Player app, Admin.
+
+### P6 · Catalan only · 2026-11-24 · Active
+No Spanish option.
+By: the user. Source: transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › Every screen.
+
+### P7 · Grandmother-proof · 2026-11-24 · Active
+No install or account, big targets, high contrast, large text, one thumb, at most 2 taps away, plain words.
+By: the user. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › The grandmother test.
+
+### P8 · One game style everywhere · 2026-11-24 · Active
+One mobile-game, Christmas design system for every screen. Barrakudes colours and the ninos are a starting point the user may drop.
+By: the user. Source: show-ui-and-platform-decisions.md › Style and assets; transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › Every screen.
+
+### P9 · The ninos in the repo · 2026-11-24 · Active
+They may be committed, organised in a better place (now `brand/ninos/`). Only family-friendly ones are used.
+By: the user. Source: show-ui-and-platform-decisions.md › Style and assets; transcript 2026-11-24T00:24Z. Lives in: requirements/screens.md › Every screen.
+
+### P10 · A year-tagged QR · 2026-11-24 · Active
+This year's cards are new, with a new paper colour and title, and their QR uses a link with the year (`/26/123`). Last year's `?c=` links show "Aquest cartró és de l'any passat". (First answered "same format"; the revised question was accepted.)
+By: the user. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T00:35Z, 01:35Z. Lives in: requirements/songs-and-cards.md › The printed QR.
+
+### P11 · Cards opened on phones · 2026-11-24 · Active
+Admin sees which card numbers have been opened on phones, anonymously.
+By: the user. Source: transcript 2026-11-24T00:35Z. Lives in: requirements/screens.md › Admin.
+
+### P12 · Clearing last year's data on phones · 2026-11-24 · Amended by D4
+The new app clears last year's service worker, caches and storage, and has an "Esborrar dades" button. Cards are kept per edition, so a rehearsal or a new Game never wipes them (D4).
+By: the user, who asked that old phone data be cleaned up. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T00:35Z, 01:14Z. Lives in: requirements/game-rules.md › The Game and its edition; requirements/screens.md › Player app.
+
+### P13 · Don't prepare the draft playlist yet · 2026-11-24 · Active
+Work with last year's songs, enough to test everything and especially the effects; prepare the cards and songs once the playlist is final.
+By: the user. Source: transcript 2026-11-24T01:14Z. Lives in: requirements/songs-and-cards.md › The pool.
+
+### P14 · The banner names the missing song · 2026-11-24 · Superseded by R2-Q32
+Option (a), until the banner was dropped.
+By: the user. Source: transcript 2026-11-24T01:35Z.
+
+### P15 · No hints from the screen · 2026-11-24 · Amended by D17, R2-Q32
+A completed Line shows plain marks, with no glow or row highlight. The banner and end-of-round reveal parts no longer apply.
+By: the user. Source: show-ui-and-platform-decisions.md › Player app; transcript 2026-11-24T01:35Z. Lives in: requirements/screens.md › Player app.
+
+### ADR-0003 · The cloud owns the Game, the laptop owns playback · 2026-11-24 · Active
+[adr/0003-cloud-owns-the-game-laptop-owns-playback.md](adr/0003-cloud-owns-the-game-laptop-owns-playback.md). From R2-Q1e, with the free tier of R2-Q1b. Its offline resume uses the round's resume code (D4); R2-Q26 keeps the laptop installed.
+By: the user. Lives in: requirements/operations.md › Where things run, Plan B and resume codes, The free tier.
+
+---
+
+## Later decisions
+
+### D1 · Animations are features · 2026-11-24 · Active
+Every animation is planned and described (trigger, timing, sound, fallback) before it's coded, because animations are features.
+By: the user. Source: transcript 2026-11-24T02:35Z; packages/ui/ANIMATIONS.md. Lives in: requirements/screens.md › Every screen.
+
+### D2 · The first look at the mockups · 2026-11-24 · Active
+The style is approved. The projector's drum goes big from side to side, outside any box, with the last 3 songs in a row under it; the Check uses less padding for a bigger card; the console gets icons on its buttons, the next song's cover, and a light theme (keeping both themes for the console only).
+By: the user. Source: transcript 2026-11-24T02:35Z. Lives in: requirements/screens.md › Projector, Console.
+
+### D3 · Generated song data stays out of git · 2026-11-24 · Active
+What can't go in git goes to the private bucket and the database, so any laptop can run the Quina without files from one person's laptop.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes (Resolved); transcript 2026-11-24T08:49Z. Lives in: requirements/songs-and-cards.md › Song preparation; requirements/operations.md › Privacy.
+
+### D4 · The overnight defaults accepted · 2026-11-24 · Active
+The user approved the rest of the overnight defaults: the visual direction, the default console words (except Hold, see D6), the QR library, the admin login helper, phones keeping cards per edition, rehearsals on another day than the show (they share the free quota), Plan B resume codes, and the overnight screen behaviours.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes (Resolved from the open questions); transcript 2026-11-24T08:49Z. Lives in: requirements/operations.md › Plan B and resume codes, Rehearsals; requirements/game-rules.md › The Game and its edition.
+
+### D5 · An icon per card · 2026-11-24 · Active
+Each followed card gets its own icon and colour, always corn first, and marks its songs with its own icon. Ten in all: corn (yellow), then cyan, red, green, pink (a heart), orange, purple (grapes), white, black (a top hat) and brown (the Tió).
+By: the user, then via canvas. Source: transcript 2026-11-24T08:49Z; canvas 2026-11-24T11:58Z, 13:22Z, 15:30Z. Lives in: requirements/screens.md › Player app.
+
+### D6 · The Hold button reads "Parlem" · 2026-11-24 · Active
+Not "Espera": "Parlem", with a microphone icon.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T08:49Z, 09:36Z. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D7 · Lighter early, impacts rare · 2026-11-24 · Active
+Not every transition should be intense: light, quick, well-made ones at the start of a round, growing with the Phase, always produced DJ moves and never bare fades. The orchestra hit played too often: impacts are rare early, and the orchestra hit only comes late or in final, with a cooldown.
+By: the user. Source: mixer-design-decisions.md › Changes after the first listen; transcript 2026-11-24T09:15Z. Lives in: requirements/show-and-music.md › Transitions.
+
+### D8 · Vocal entries and call and response · 2026-11-24 · Active
+A song whose lyrics start suddenly gets a quick, clean move into the voice. When both songs have vocals, they can feel continuous: a line of one answered by a line of the other.
+By: the user. Source: mixer-design-decisions.md › Changes after the first listen; transcript 2026-11-24T09:15Z. Lives in: requirements/show-and-music.md › Transitions.
+
+### D9 · Signatures are instrumental teases before the landing · 2026-11-24 · Active
+Signatures were often lyrics played after the landing, which felt repetitive. They are instrumental pieces (an intro riff, the part before the chorus) teased before the next song lands.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T09:15Z. Amends: R1-Q22, R2-Q27. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### D10 · Suspense keeps the current song · 2026-11-24 · Active
+The playing song keeps going during a Suspense. The drum hovers over about 3 pending songs while their Decoys tease, then resolves to the real next song.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T09:25Z. Amends: R1-Q18. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D11 · The drum holds only pending songs · 2026-11-24 · Active
+Landed songs leave the drum; Back puts one back.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T09:25Z. Lives in: requirements/show-and-music.md › The drum and the Landing.
+
+### D12 · The round order can change live · 2026-11-24 · Active
+Admin edits upcoming rounds during the event, for example to move the Desgraciat, and the laptop picks the changes up.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T09:25Z. Lives in: requirements/game-rules.md › The night's rounds.
+
+### D13 · Landings on the phrase · 2026-11-24 · Active
+Songs "end at any moment and start at any moment". The playing song leaves at the end of a 4- or 8-bar phrase and the next lands on its downbeat; a presenter's Next waits up to about 11 s for a boundary; over 90% of landings on a phrase.
+By: the user. Source: mixer-design-decisions.md › Changes after the first listen; transcript 2026-11-24T09:29Z. Lives in: requirements/show-and-music.md › Transitions.
+
+### D14 · No device label in the console header · 2026-11-24 · Active
+"Tauleta" in the header adds nothing; the device's name is in the menu.
+By: the user via canvas. Source: canvas 2026-11-24T11:28Z; show-ui-and-platform-decisions.md › Changes. Amends: R2-Q19, R2-Q20. Lives in: requirements/screens.md › Console.
+
+### D15 · The console's crystal ball, "Futur" · 2026-11-24 · Active
+A tab hidden until a presenter taps "Mirar el futur": a chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners. Private: never on phones or the projector.
+By: the user via canvas. Source: canvas 2026-11-24T11:37Z; show-ui-and-platform-decisions.md › Changes. Supersedes: R1-Q35. Lives in: requirements/screens.md › Console.
+
+### D16 · Times in am/pm · 2026-11-24 · Active
+One setting, easy to change back. Where it would wrap, the am/pm can go, since the night is all pm.
+By: the user via canvas. Source: canvas 2026-11-24T11:40Z, 14:06Z. Lives in: requirements/screens.md › Every screen.
+
+### D17 · No grace rule · 2026-11-24 · Active
+The rule not to mark the last song overcomplicated the design. Phones mark every landed song, the latest included, but never announce or celebrate a Line or a Quina: players must claim.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T11:59Z. Supersedes: P2, P3b; amends P15. Lives in: requirements/screens.md › Player app.
+
+### D18 · Only the current round's history · 2026-11-24 · Active
+Players don't see earlier rounds' songs.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T11:59Z. Lives in: requirements/screens.md › Player app.
+
+### D19 · The player app's three tabs · 2026-11-24 · Active (U10 may replace it)
+Ara (the drum on top, then a Historial | Cartrons switch, remembered per device), Premis and Horari, plus a menu screen with the player's cards, sounds, last year's card and "Esborrar dades". The 4-tab alternative was dropped.
+By: the user, then via canvas. Source: transcript 2026-11-24T11:59Z; canvas 2026-11-24T13:28Z; show-ui-and-platform-decisions.md › Changes. Supersedes: P4. Lives in: requirements/screens.md › Player app.
+
+### D20 · Phones offline keep their screens · 2026-11-24 · Active
+Offline, the phone shows its normal screens, visibly marked as offline, rather than a full-screen notice.
+By: the user via canvas. Source: canvas 2026-11-24T13:31Z. Lives in: requirements/screens.md › Player app.
+
+### D21 · The night's preview before the Game · 2026-11-24 · Amended by D61
+Before the Game, the projector and phones show the night's rounds (regular, Desgraciat, Especial) and each card type with its colour, making clear which card is only for the Especial.
+By: the user via canvas. Source: canvas 2026-11-24T13:59Z, 16:12Z. Amends: R2-Q25. Lives in: requirements/screens.md › Projector, Player app.
+
+### D22 · The edition's name is set in Admin · 2026-11-24 · Active
+This year "Quina Quina 3".
+By: the user via canvas. Source: canvas 2026-11-24T14:00Z. Lives in: requirements/game-rules.md › The Game and its edition.
+
+### D23 · Round icons · 2026-11-24 · Active
+The Quina Especial uses a star and the Desgraciat a sad face (eyes and mouth, no circle).
+By: the user via canvas. Source: canvas 2026-11-24T14:05Z. Lives in: requirements/screens.md › Projector.
+
+### D24 · Names on screen · 2026-11-24 · Active
+The special round is "Quina Especial", with no number; numbering appears only as "Quina X de Y". The schedule is "Horari" ("Programa" sounds like software). Card numbers are written "#123".
+By: the user via canvas. Source: canvas 2026-11-24T14:11Z, 14:15Z, 14:23Z. Amends: R2-Q3b, P4. Lives in: requirements/screens.md › Every screen; requirements/game-rules.md › The night's rounds.
+
+### D25 · Horari off schedule · 2026-11-24 · Active
+Real times for what has happened, and "~" predictions for what's next.
+By: the sessions, agreed, answering the user's canvas question. Source: canvas 2026-11-24T14:13Z; show-ui-and-platform-decisions.md › Changes. Lives in: requirements/screens.md › Player app.
+
+### D26 · No how-to-play text · 2026-11-24 · Active
+Not on the projector or phones: the presenters explain the game.
+By: the user via canvas. Source: canvas 2026-11-24T14:33Z, 15:08Z. Amends: R2-Q25. Lives in: requirements/screens.md › Projector, Player app.
+
+### D27 · Prize secrecy · 2026-11-24 · Active
+Prizes stay secret until the presenters disclose them: future rounds show locked, game-style. Round 1's are visible before the night, so a new player sees what the page holds, and an "everything secret" option exists. The cloud enforces it, so locked prizes never reach the public feed. The moment of the reveal is R2-Q35.
+By: the user via canvas. Source: canvas 2026-11-24T14:48Z, 16:06Z; show-ui-and-platform-decisions.md › Changes. Supersedes: R2-Q15's prizes; amends R1-Q15, R1-Q23. Lives in: requirements/game-rules.md › Prize secrecy.
+
+### D28 · Adding a card asks before leaving · 2026-11-24 · Active
+Leaving the add-card pad with a number typed asks first.
+By: the user via canvas. Source: canvas 2026-11-24T14:56Z. Lives in: requirements/screens.md › Player app.
+
+### D29 · The card-stacking scroll · 2026-11-24 · Pending (U11)
+Cards stack on each other as you scroll (the user: "I will need to confirm this"). Default: specced in ANIMATIONS.md, not built.
+By: the user via canvas (proposal). Source: canvas 2026-11-24T15:28Z. Lives in: requirements/screens.md › Player app.
+
+### D30 · The player drawers · 2026-11-24 · Pending (U10)
+The user's proposal: one "now" home screen, two corner buttons (Premis, Horari) opening stacked drawers with native-quality gestures; the user also suggested calling "Ara" "songs". Default: the three tabs (D19).
+By: the user via canvas (proposal). Source: canvas 2026-11-24T13:31Z, 15:48Z, 15:50Z. Lives in: requirements/screens.md › Player app.
+
+### D31 · Prizes come in bundles · 2026-11-24 · Active
+Each Line and Quina has many prizes, usually with one or two headline ones. Screens show the bundle, headline prizes first, never a single prize.
+By: the user via canvas. Source: canvas 2026-11-24T16:40Z; show-ui-and-platform-decisions.md › Changes. Amends: R1-Q23, R2-Q16. Lives in: requirements/game-rules.md › Prizes and bundles.
+
+### D32 · No winning card numbers; no QR in the Interval · 2026-11-24 · Active
+"People don't care who won unless it's them": no winning card numbers on the projector or phones. They aren't secret (the Check shows the card), so the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards. No QR in the Interval: by then everyone has the app open.
+By: the user via canvas. Source: canvas 2026-11-24T16:42Z, 16:53Z. Amends: R2-Q15, R2-Q24, R2-Q25. Lives in: requirements/screens.md › Projector, Player app; requirements/game-rules.md › Winners.
+
+### D33 · A wrong card type fails the Check · 2026-11-24 · Active
+The Check first checks the card's type for the round, and a wrong type fails as its own reason.
+By: the user via canvas. Source: canvas 2026-11-24T16:52Z. Amends: R2-Q11. Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Projector.
+
+### D34 · "Pausa", and two levels per button · 2026-11-24 · Active
+For a very long break mid-round: no song lands, the Interval music plays, and the projector and phones show a pause screen. Holding Parlem on the console enters it, and holding − or + on the Wii. Each button has two levels: Parlem → Pausa, Aguanta → Suspens, shown visually. On the console's bottom row, Enrere takes a quarter to a third, with a very short "hold it" hint inside, and Comprovar cartró the rest.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T17:47Z. Amends: R2-Q31, R2-Q38. Lives in: requirements/show-and-music.md › The presenters' actions; requirements/screens.md › Console.
+
+### D35 · The Efectes pads are icons · 2026-11-24 · Active
+Icons, not words. The word version is kept as a separate board.
+By: the user via canvas. Source: canvas 2026-11-24T17:58Z. Lives in: requirements/screens.md › Console.
+
+### D36 · Wii A follows the default action · 2026-11-24 · Active
+A always means "go ahead with the default action": during a Check, approve when it passed and reject when it failed; elsewhere, the console's primary button. Every console control a Wii button triggers shows a badge for it, and holds are shown as holds.
+By: the user. Source: show-ui-and-platform-decisions.md › Changes; transcript 2026-11-24T18:08Z. Amends: R2-Q38. Lives in: requirements/show-and-music.md › The presenters' actions; requirements/screens.md › Console.
+
+### D37 · Pause reuses the pause state · 2026-11-24 · Active
+Pausa reuses the existing pause command and state; during a pause the engine plays the Interval music instead of Hold music, and the round resumes with a normal transition.
+By: the orchestrator. Source: apps/show/docs/HANDOFF.md › Decided since the pause; commit a11a224. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D38 · The Suspense release lands on the phrase · 2026-11-24 · Pending (U13)
+The release lands on the outgoing song's phrase boundary, up to about 9 s later. The alternative is a 2-bar boundary, about twice as fast. Default: the phrase.
+By: the Sound engine session (default). Source: open-questions.md › U13. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D39 · Signatures stay rare · 2026-11-24 · Pending (U13)
+Instrumental-only Signatures play in about 5% of transitions. Default: keep it, and pick more by hand while reviewing this year's songs.
+By: the Sound engine session (default). Source: open-questions.md › U13. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### D40 · Cards drawn as the printed grid · 2026-11-24 · Pending (U21)
+Each card is the 3×4 printed grid, with titles of about 12–13 px. Default: the grid stays; a "Lletra gran" list view is possible.
+By: the Frontend session (default). Source: open-questions.md › U21. Lives in: requirements/screens.md › Player app.
+
+### D41 · The printed cards' songs are public · 2026-11-24 · Pending (U22)
+Phones need every card's songs, so the cards file is public. A per-card secret in the QR would make adding a card by number much harder. Default: public; the orchestrator agrees.
+By: the Backend session and the orchestrator (default). Source: open-questions.md › U22. Lives in: requirements/operations.md › Privacy.
+
+### D42 · The old Decoys experiment is retired · 2026-11-25 · Active
+The separate Decoys experiment is gone. A Decoy is now only what a Suspense teases.
+By: the orchestrator. Source: apps/show/docs/HANDOFF.md; commit fd07f2e. Supersedes: R1-Q32's Decoys experiment; amends R1-Q17. Lives in: requirements/show-and-music.md › Teases, Signatures and Decoys.
+
+### D43 · The Desgraciat's standing set is the cards in play · 2026-11-25 · Active
+The standing cards are the round's cards in play of its card type, since the ranges can't tell sold from unsold. Its thresholds come from the count alone.
+By: the orchestrator. Source: apps/show/docs/HANDOFF.md › Decided since the pause. Amends: R2-Q30. Lives in: requirements/game-rules.md › The Quina del Desgraciat.
+
+### D44 · The Desgraciat's details · 2026-11-25 · Amended by D62
+Auto-advance stops at one card standing. There's no Line: the only prize is the last standing card's bundle. A standing Check stops at the first landed song (the card has fallen). The Celebration title "DEMPEUS!" was proposed here.
+By: the sessions, agreed. Source: show-ui-and-platform-decisions.md › Changes (The Desgraciat round); packages/ui/HANDOFF.md. Amends: R2-Q30. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### D45 · Two Desgraciat board points · 2026-11-25 · Pending (U7)
+Defaults: the projector shows no standing count (console only, since it includes unsold cards), and a fallen card shows the sitting nino.
+By: the Frontend session (default). Source: open-questions.md › U7. Lives in: requirements/screens.md › Projector.
+
+### D46 · Today's storage format stays · 2026-11-25 · Active
+About 68 MB a song: the draft's 86 songs fit R2's free 10 GB once last year's pool is pruned. A lighter format (about 20 MB a song) is measured and kept as a contingency if the playlist grows past about 100 songs.
+By: the orchestrator, with the Sound engine session. Source: apps/cloud/docs/HANDOFF.md, apps/show/docs/HANDOFF.md; docs/timeline.md › Risks. Lives in: requirements/operations.md › Storage.
+
+### D47 · Provisional bulk hook approval, for tests only · 2026-11-25 · Active
+Each song's top automatic hook can be approved in bulk, marked provisional everywhere with a preflight warning, so a new pool can be rehearsed before the user's approval pass ends. It never replaces that pass.
+By: the orchestrator. Source: apps/show/docs/HANDOFF.md › The next queue. Amends: R2-Q33. Lives in: requirements/songs-and-cards.md › Hooks.
+
+### D48 · Only one Line per round · 2026-11-25 · Active
+By: the user. Source: event.md › One round; transcript 2026-11-25T00:41Z. Amends: R2-Q5. Lives in: requirements/game-rules.md › A regular round.
+
+### D49 · The Check's result decides · 2026-11-25 · Active
+In a strange case the presenters can still reject a card that passed, but they can never accept a card that failed. The console never offers to accept a failed card.
+By: the user (event.md). Source: event.md › Claims and checks; commits ff13a81, 233e3a3. Amends: R2-Q11, R1-Q24. Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
+
+### D50 · Other late claims are decided on the spot · 2026-11-25 · Active
+A late claimer still wins if nobody else claimed. Any other late case is decided by the team on the spot, helped by the console's "complete since song N". No further rule to settle.
+By: the user (event.md). Source: event.md › Claims and checks; show-ui-and-platform-decisions.md › Changes. Amends: R2-Q12. Lives in: requirements/game-rules.md › Ties, late claims and going back.
+
+### D51 · Winners by name or by slip · 2026-11-25 · Active
+A winner is noted by their name, or by a numbered slip handed to them, and collects the prize later with their card or slip.
+By: the user (event.md). Source: event.md › Claims and checks. Lives in: requirements/game-rules.md › Winners.
+
+### D52 · An optional slip number on the winner form · 2026-11-25 · Active
+The console's winner form gets an optional numbered-slip field, next to the name and notes.
+By: the orchestrator. Source: packages/ui/HANDOFF.md › The next queue. Lives in: requirements/game-rules.md › Winners; requirements/screens.md › Console.
+
+### D53 · Throw breaks ("parón") · 2026-11-25 · Active
+Between some rounds, a break of about 5 minutes for throws to the crowd. The Schedule plans them, and the expected ends include them.
+By: the user (event.md). Source: event.md › The night, step by step. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
+
+### D54 · Fallbacks are requirements · 2026-11-25 · Active
+If the presenters reject the tablet, the tech drives the whole show from the laptop and they advance by hand. The Wii remote is the intended controller, with the tablet as its plan B. Both iPad and Android tablets must work.
+By: the user (event.md). Source: event.md › The presenters, What must never fail. Lives in: requirements/operations.md › Fallbacks.
+
+### D55 · "The tech" · 2026-11-25 · Active
+"El tècnic" is the organizer who runs the laptop; "Admin" names only the page.
+By: the user. Source: event.md › Barrakudes and the team; transcript 2026-11-25T00:43Z. Lives in: GLOSSARY.md.
+
+### D56 · Card prices aren't printed, and they drop · 2026-11-25 · Active
+A price list hangs at the bar. A normal card's price drops with each regular round played (2025: 1.50 € per regular round still to play; the Desgraciat doesn't count); a special card has a fixed price.
+By: the user (event.md). Source: event.md › The cards (Prices); transcript 2026-11-25T00:32Z. Lives in: requirements/songs-and-cards.md › Prices.
+
+### D57 · The Desgraciat: a shared win, normal cards · 2026-11-25 · Active
+If the last players standing all sit on the same song, they share the win; "nobody left standing" can't happen while anyone plays. The Desgraciat uses normal cards ("as far as we remember").
+By: the user (event.md). Source: event.md › The special rounds, The cards; transcript 2026-11-25T00:41Z. Amends: R2-Q30. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/songs-and-cards.md › Card types.
+
+### D58 · Every sponsor is mentioned · 2026-11-25 · Active
+Every prize and its sponsor is read out before each round, money donors included, and every sponsor appears somewhere on the projector during the night.
+By: the user (event.md). Source: event.md › Prizes and sponsors (Mention everyone). Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Every sponsor appears.
+
+### D59 · The dates · 2026-11-25 · Active
+The night is Sunday 27 December 2026; the playlist is final on 1 December; rehearsals are on 13 and 19 December, never on the day itself.
+By: the user (event.md). Source: event.md › When and where, The songs, Timing. Lives in: requirements/operations.md › Rehearsals; docs/timeline.md.
+
+### D60 · No card prices on the projector, for now · 2026-11-25 · Superseded by D61
+The default while U5 was open.
+By: the orchestrator. Source: commit ff13a81.
+
+### D61 · Card prices on the projector · 2026-11-25 · Active
+Only the price for the coming round, on that round's Interval screen; the before-the-start screen is round 1's. A normal card is the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat; before the Quina Especial, the special card's fixed price. From setup data, never hard-coded. Answers U5.
+By: the user. Source: open-questions.md › Answered (U5); transcript 2026-11-25T00:56Z. Supersedes: D60; amends D21. Lives in: requirements/songs-and-cards.md › Prices; requirements/screens.md › Projector.
+
+### D62 · The Desgraciat's Celebration has no title · 2026-11-25 · Active
+"DEMPEUS!" is dropped, and so is the phone's "Dempeus fins al final!". The rest of the Celebration stays, and so do the per-card "Dempeus" / "Assegut" labels. Answers U6. Built in 6857f31; the console keeps a presenters-only label, "Últim cartró dempeus".
+By: the user. Source: open-questions.md › Answered (U6); transcript 2026-11-25T00:56Z. Supersedes: D44's "DEMPEUS!" proposal (agreed between the sessions, not by the user). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Player app.
+
+### D63 · Where "the Check decides" is enforced · 2026-11-25 · Active
+The engine refuses to accept a failed Check (reason `failedCheck`), and the console never offers it. The cloud only flags such a decision in the journal and never refuses it, so the show never stalls on a cloud check.
+By: the sessions, agreed. Source: commit 233e3a3; the orchestrator's brief of 2026-11-25. Implements: D49. Lives in: requirements/game-rules.md › The Check.
+
+### D64 · Where the card price rule lives · 2026-11-25 · Active
+Each card type in card-types.json carries a `priceRule` (a per-round price for normal cards, a fixed price for special cards), and the protocol's `roundCardPrice` helper gives the price for the coming round, so every screen computes it the same way.
+By: the sessions, agreed (Sound engine and Frontend). Source: the orchestrator's brief of 2026-11-25. Implements: D61. Lives in: requirements/songs-and-cards.md › Prices.

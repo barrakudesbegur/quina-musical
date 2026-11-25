@@ -106,8 +106,8 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 - **U5 · Card prices on the projector** (2026-11-25): show only the price for the coming round, on that round's Interval screen (the before-the-start screen is round 1's). A normal card costs the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat (2025: 1.50 €, so 15 € before round 1); before the Quina Especial, the special card's fixed price. The prices come from setup data, never hard-coded.
 - **U6 · The Desgraciat's celebration title** (2026-11-25): none. "DEMPEUS!" is dropped; the rest of its Celebration stays. The phones' per-card "Dempeus" / "Assegut" labels stay.
 - **Rehearsal dates:** 13 and 19 December (event.md).
-- **Late claims (Q12):** a late claimer wins if nobody else claimed; any other case is decided on the spot (event.md).
+- **Late claims (R2-Q12):** a late claimer wins if nobody else claimed; any other case is decided on the spot (event.md).
 - **The Desgraciat when the last players fall together:** they share the win (event.md).
 - **The Efectes pads:** icons, with the word version kept as a board (canvas, 24 Nov).
-- **Wii remote mapping (Q34):** decided and built.
-- **Where the show runs (Q26):** A+, an installed laptop with media from R2.
+- **Wii remote mapping (R2-Q38):** decided and built.
+- **Where the show runs (R2-Q26):** A+, an installed laptop with media from R2.

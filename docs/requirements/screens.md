@@ -55,7 +55,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 _From event.md › The presenters (What they can do, What they see privately, Their equipment); the decisions doc › Changes._
 
-**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone to help. Every open console stays in sync. Its theme is light and simpler, with icons, but the layout must be very well thought out.
+**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone to help. Every open console stays in sync. It has a light theme, simpler and with icons, and keeps its dark theme as the alternative (D2). The layout must be very well thought out: "Següent", Hold and the claim stay in the same places in landscape and portrait (R2-Q21).
 
 - **Always visible:** the round, the Phase and the real Heat, the clock, the expected end of the round, the Drift and the connections (cloud or hotspot, phones' feed, Wii remote).
 - **"Ara sona"** is the playing song, with a ring that counts down to the next auto-advance and shows the state (manual, "Parlem", "Aguanta"…).
@@ -143,7 +143,7 @@ _From event.md › Prizes and sponsors (the presenters' cheat sheet); the decisi
 
 ## Wii remote
 
-_From event.md › The presenters (Their equipment); the decisions doc › Changes (Q34)._
+_From event.md › The presenters (Their equipment); the decisions doc › Changes (R2-Q38)._
 
 **Who uses it:** the presenters. It's the intended experience: it's fun, they joke about it, and shaking it to start a Suspense is a show moment of its own.
 

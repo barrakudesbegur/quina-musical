@@ -105,12 +105,12 @@ _From event.md › Claims and checks; the decisions doc › Changes._
 
 ## Ties, late claims and going back
 
-_From event.md › Claims and checks (Q12)._
+_From event.md › Claims and checks (R2-Q12)._
 
 - **The first to claim wins.**
 - **Claims on the same landing share the prize.** The winners agree how to split it.
 - **No ties among the cards in play:** the Shuffle reshuffles, deterministically from the same seed, until neither the first Line nor the first Bingo would be shared by two cards in play. That's a public rule. A tie can still happen through a card that isn't registered as sold.
-- **Late claims (Q12):** a player who completed earlier but claims late still wins if nobody else has claimed. Any other late case is decided by the team on the spot. The console shows when each claimed card became complete ("complete since song 34") to help.
+- **Late claims (R2-Q12):** a player who completed earlier but claims late still wins if nobody else has claimed. Any other late case is decided by the team on the spot. The console shows when each claimed card became complete ("complete since song 34") to help.
 - **An unclaimed win is lost.** Nobody goes looking for winners.
 - **Going back:** if a claim comes after more songs have played, the presenters undo those songs ("Enrere") so they don't count. Players lift the corn seeds off. The Queue's order is untouched.
 

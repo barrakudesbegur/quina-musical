@@ -25,7 +25,7 @@ _From event.md › The songs._
 
 _From event.md › The songs, Timing; 2025's song-count notes; the mixer decisions › Phase and Heat._
 
-The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist.
+The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31).
 
 **2025's planning numbers:**
 
@@ -120,7 +120,7 @@ _From event.md › The cards (Prices); the user's answer to U5._
 - The price isn't printed on the card. A price list hangs at the bar.
 - **A normal card's price drops as rounds are played.** It's the per-round price × the regular rounds still to play, the coming one included. The Desgraciat doesn't count. 2025: 1.50 € a round, so 15 € before round 1 and 1.50 € before the last.
 - **A special card has a fixed price** (2025: 5 €).
-- Both prices come from the setup data, never from code. The card generator needs no prices.
+- Both prices come from the setup data, never from code: a price rule per card type in `card-types.json` (per regular round still to play for normal cards, fixed for special cards), read through one shared helper (D64). Prices are never printed on the cards.
 - The projector shows only the coming round's card price ([screens.md › Projector](screens.md#projector)). **Not built yet.**
 
 ## The printed QR

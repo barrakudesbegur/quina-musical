@@ -72,13 +72,13 @@ _From event.md › One round, Atmosphere and style, Fairness and trust; the mixe
 - **Heat** is how hot the round looks on the projector.
   - It follows the Phase on its own smoothed clock, with some randomness.
   - It never jumps at a landing, it cools visibly after a Line, and it never reveals how many songs are left.
-- **The "Final Lap!" fanfare** plays when the Phase first reaches late, once per climb.
+- **The "Final Lap!" fanfare** plays when the Phase first reaches late, once per climb. A console switch turns the automatic fanfare off (R2-Q18).
 
 ## The presenters' actions
 
-_From event.md › The presenters; the decisions doc › Changes (Wii remote mapping, Q34)._
+_From event.md › The presenters; the decisions doc › Changes (Wii remote mapping, R2-Q38)._
 
-The presenters can do any of these at any time, from the console or the Wii remote.
+The presenters can do any of these at any time, from the console or the Wii remote. Every automatic behaviour can be overridden live (R1-Q27); when the presenters do nothing, the show keeps going by itself.
 
 | On the console | What it does | Wii remote |
 |---|---|---|
