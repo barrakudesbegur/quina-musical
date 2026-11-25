@@ -66,6 +66,9 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   nearBingo: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
   /** Card 123's last song just landed: every song marked, nothing announced (players claim it themselves). */
   cardFull: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55, 66], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
+  /** Live, the your-song look (D74): 69 and 64 are on #123 and #57 (two in a row), 74 only on #412, which doesn't play
+   * a regular round, then 20 is on #57 again. `lineDone` opens on one of your songs already playing (no flash). */
+  yourSong: { fixture: 'play', cards: 'default', live: true, liveFirst: [69, 64, 74, 20] },
   special: { fixture: 'play', cards: 'default', patch: (s) => ({ ...s, round: { ...s.round, kind: 'special' } }) },
   check: { fixture: 'check', cards: 'default' },
   checkValid: { fixture: 'checkValid', cards: 'default', patch: decided('valid') },

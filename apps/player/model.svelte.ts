@@ -31,6 +31,7 @@ import {
 } from './logic/storage.ts';
 import { araViewFor, type AraView, type TabId } from './logic/tabs.ts';
 import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
+import { songsOnCards, yourSongOf } from './logic/your-song.ts';
 import { S } from './strings.ts';
 
 /** The sheet open over the app. A sheet opened from the menu goes back to the menu when it closes. */
@@ -92,6 +93,8 @@ export class PlayerApp {
   cardTypes = $derived(knownCardTypes(this.catalog?.cardTypes));
   playingViews = $derived(this.views.filter((v) => v.valid));
   restingViews = $derived(this.views.filter((v) => !v.valid));
+  /** Every song on the cards that play this round. */
+  playingSongs = $derived(songsOnCards(this.playingViews));
   /** The near-win highlights on the playing cards ("cardId:songId"). */
   near = $derived(nearKeys(this.playingViews.map((v) => ({ cardId: v.saved.id, near: v.near }))));
   araView = $derived(araViewFor({ session: this.araSession, saved: this.data.araView, cardCount: this.data.cards.length }));
@@ -101,6 +104,20 @@ export class PlayerApp {
   offline = $derived(this.banner.banner === 'offline');
   /** The presenters' technical pause: the meditating nino in the drum's place. */
   paused = $derived(pauseOn(this.state));
+  /** The latest landing is on a card that plays this round (not in the Desgraciat round): the gold your-song look
+   * until the next Spin starts (ANIMATIONS.md `your-song`, D74). */
+  yourSong = $derived(
+    yourSongOf({
+      scene: this.scene,
+      paused: this.paused,
+      offline: this.offline,
+      round: this.round,
+      latest: this.latest,
+      spin: this.state?.spin ?? null,
+      songs: this.playingSongs,
+      nowMs: this.cloudNow,
+    }),
+  );
   soundsOn = $derived(soundsOn(this.data, this.state?.soundsDefault ?? true));
   heat = $derived(this.heatSamples.length ? heatAt(this.heatSamples, this.cloudNow, this.heatSamples[0].value) : null);
   /** Root data-state: what the whole screen is in. */

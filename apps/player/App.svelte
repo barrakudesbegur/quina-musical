@@ -19,6 +19,7 @@
   import StatusStrip from './components/StatusStrip.svelte';
   import TabBar from './components/TabBar.svelte';
   import Toast from './components/Toast.svelte';
+  import YourSong from './components/YourSong.svelte';
   import { prizeRounds } from './logic/view.ts';
   import { S } from './strings.ts';
 
@@ -35,7 +36,14 @@
   data-tab={app.tab}
   data-motion={app.reducedMotion ? 'reduced' : 'full'}
   data-hidden={app.hidden ? 'true' : 'false'}
+  data-your-song={app.yourSong ? 'on' : 'off'}
 >
+  <!-- The landed song is on one of the player's cards: gold behind everything until the next Spin (`your-song`). -->
+  {#if app.yourSong}
+    {#key app.yourSong.key}
+      <YourSong song={app.yourSong} nowMs={app.cloudNow} reduced={app.reducedMotion} />
+    {/key}
+  {/if}
   <!-- Test hook: the latest landing, whatever the tab. -->
   <span hidden data-testid="now" data-song-id={app.latest?.songId ?? ''}></span>
   <Heat value={app.heat} off={app.offline} />

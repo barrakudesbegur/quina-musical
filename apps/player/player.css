@@ -17,6 +17,19 @@
   --dur-check-dots: 1.2s;
   --dur-confetti: 1800ms;
   --dur-overlay: 300ms;
+  /* `your-song` (D74): the flash, then the gold, the spotlights and the particles come in; they leave at the next Spin
+     (their out times are the component's: gold 900 ms, spotlights 760 ms, particles 520 ms) */
+  --dur-your-song-flash: 600ms;
+  --delay-your-song-gold: 100ms; /* at the flash's first peak, so the colour change hides in it */
+  --dur-your-song-gold: 70ms;
+  --delay-your-song-beams: 190ms;
+  --dur-your-song-beams: 720ms;
+  --delay-your-song-particles: 400ms; /* after the cards' kernels have dropped in (mark-in), within the phone budget */
+  --dur-your-song-particles: 400ms;
+  --dur-your-song-quiet: 300ms; /* opening the app while your song plays: a fade, no flash */
+  --dur-your-song-sweep-left: 3.4s;
+  --dur-your-song-sweep-right: 2.8s;
+  --dur-your-song-streak: 3.2s;
   --dur-reconnect: 200ms;
   --dur-countdown: 1s;
   --dur-twinkle: 2.4s;
@@ -145,6 +158,8 @@
 
 /* ---- shell: the night sky ------------------------------------------------------------------------------ */
 .player {
+  /* Its own stacking context, so the your-song layers (z-index −1) paint over the night sky and under the content. */
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -3155,6 +3170,197 @@
 .shuffle[data-state='running'] .shuffle__tile {
   animation: player-jiggle var(--dur-shuffle-jiggle) ease-in-out infinite alternate;
   animation-delay: calc(var(--i, 0) * -70ms);
+}
+
+/* ---- your-song: the landed song is on one of your cards (ANIMATIONS.md `your-song`, D74) ------------------------
+   Behind the content: the gold (a layer faded by opacity, never an animated background) and two spotlights (a gradient
+   clipped to a cone, swept by transform). Over the content: option A's particles. Over everything, for 600 ms: the flash. */
+.player {
+  --player-your-song-gold: radial-gradient(120% 80% at 50% 0%, var(--color-gold-light) 0%, #ffb020 40%, #b86a00 100%);
+  --player-your-song-beam: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 80%);
+}
+
+.your-song,
+.your-song__gold,
+.your-song__beams,
+.your-song-particles,
+.your-song-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.your-song {
+  z-index: -1;
+  overflow: hidden;
+}
+
+.your-song__gold {
+  background: var(--player-your-song-gold);
+}
+
+.your-song__beams {
+  transform-origin: 50% 0;
+}
+
+.your-song__beam {
+  position: absolute;
+  top: -5%;
+  width: 36%;
+  height: 110%;
+  transform-origin: 50% 0;
+  background: var(--player-your-song-beam);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+}
+
+.your-song__beam--left {
+  left: 5%;
+  animation: player-your-song-sweep var(--dur-your-song-sweep-left) ease-in-out infinite;
+}
+
+.your-song__beam--right {
+  left: 59%;
+  animation: player-your-song-sweep var(--dur-your-song-sweep-right) ease-in-out infinite;
+}
+
+.your-song-particles {
+  z-index: 1; /* over the content (the board), under the tab bar, the strips and the sheets */
+  overflow: hidden;
+}
+
+.your-song-particles__streak {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 260px;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0), #fff 70%, #fff6b0);
+  box-shadow: 0 0 24px 8px rgb(255 255 255 / 0.7);
+  opacity: 0;
+  animation: player-your-song-streak var(--dur-your-song-streak) ease-in infinite;
+}
+
+.your-song-particles__piece {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  opacity: 0;
+  animation: player-your-song-rise var(--dur) ease-in-out var(--delay) infinite;
+}
+
+.your-song-particles__piece > .card-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The entries: a landing seen live flashes; a later one (opening the app, reconnecting) fades in quietly. */
+.your-song[data-entry='flash'] .your-song__gold {
+  animation: player-fade-in var(--dur-your-song-gold) linear var(--delay-your-song-gold) both;
+}
+
+.your-song[data-entry='flash'] .your-song__beams {
+  animation: player-your-song-beams-in var(--dur-your-song-beams) var(--ease-out) var(--delay-your-song-beams) both;
+}
+
+.your-song-particles[data-entry='flash'] {
+  animation: player-fade-in var(--dur-your-song-particles) var(--ease-out) var(--delay-your-song-particles) both;
+}
+
+.your-song[data-entry='quiet'] :is(.your-song__gold, .your-song__beams),
+.your-song-particles[data-entry='quiet'] {
+  animation: player-fade-in var(--dur-your-song-quiet) var(--ease-out) both;
+}
+
+.your-song-flash {
+  z-index: calc(var(--z-banner) - 1);
+  background: #fff;
+  opacity: 0;
+  animation: player-your-song-flash var(--dur-your-song-flash) linear both;
+}
+
+/* The texts that sit straight on the background turn ink (or white with the ink outline) on gold. */
+.player[data-your-song='on'] :is(.reel__label, .cards__rule, .history__round-title) {
+  color: var(--color-line);
+}
+
+.player[data-your-song='on'] .reel__artist {
+  color: var(--color-text);
+}
+
+/* 0 → 95 % → 15 % → 85 % → 0 over 600 ms: the board's flicker, from option B (without the bolt). */
+@keyframes player-your-song-flash {
+  0% {
+    opacity: 0;
+  }
+  16.7% {
+    opacity: 0.95;
+  }
+  31.7% {
+    opacity: 0.15;
+  }
+  48.3% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes player-your-song-beams-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.15);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes player-your-song-sweep {
+  0%,
+  100% {
+    transform: rotate(-24deg);
+  }
+  50% {
+    transform: rotate(24deg);
+  }
+}
+
+/* Corner to corner, top right to bottom left, then a rest until the next pass. */
+@keyframes player-your-song-streak {
+  0% {
+    opacity: 0;
+    transform: translate(110vw, -30vh) rotate(-35deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-130vw, 45vh) rotate(-35deg);
+  }
+  55%,
+  100% {
+    opacity: 0;
+    transform: translate(-130vw, 45vh) rotate(-35deg);
+  }
+}
+
+@keyframes player-your-song-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-180px) scale(1.1) rotate(25deg);
+  }
 }
 
 /* Never animate while the page is hidden. */
