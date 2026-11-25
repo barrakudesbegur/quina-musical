@@ -6,7 +6,7 @@
 // `extendJournal` share the one reducer every side uses, so they all agree on the result.
 // Live playback (decks, effects, the Spin in flight, a Check's snippets) is deliberately not in here: it
 // restarts fresh. PRIVATE as a whole: it holds the Queues and the Winners' names.
-import { defaultCardType, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
+import { defaultCardType, type CheckOutcome, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
 import type { GameSettings, WinnerInfo } from './events.ts';
 
 /** The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). */
@@ -129,6 +129,9 @@ export interface ClaimDecidedEntry extends EntryBase {
   verdict: 'valid' | 'invalid';
   winningSongId: number | null;
   position: number;
+  /** The Check's result when the presenters decided (absent in an older journal). A `valid` verdict is always a
+   * passing one (isPassingOutcome); the cloud flags any other. */
+  outcome?: CheckOutcome;
 }
 
 /** A Winner's name and notes, as they are now. PRIVATE, like the whole journal. */
@@ -137,6 +140,8 @@ export interface WinnerNotedEntry extends EntryBase {
   claimId: string;
   name: string | null;
   notes: string | null;
+  /** The slip handed to the winner (absent in an older journal). */
+  slip?: string | null;
 }
 
 /**
@@ -378,6 +383,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       if (!winner) throw new JournalError(`entry ${entry.seq}: no winner for claim ${entry.claimId}`);
       winner.name = entry.name;
       winner.notes = entry.notes;
+      winner.slip = entry.slip ?? null;
       return;
     }
     default:

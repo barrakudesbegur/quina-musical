@@ -66,6 +66,7 @@ test('every journal entry keeps the replayed record equal to the show (random co
       },
       () => makeCommand('decide', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, valid: rnd() < 0.7 }),
       () => makeCommand('winnerInfo', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, notes: 'fila 2' }),
+      () => makeCommand('winnerInfo', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, slip: rnd() < 0.8 ? `A${Math.floor(rnd() * 99)}` : '' }),
       () => makeCommand('interval'),
       () => makeCommand('roundIntro'),
       () => makeCommand('pause'),

@@ -52,9 +52,18 @@ export const isShowScene = (value: unknown): value is ShowScene =>
 
 /** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
 export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'valid' | 'invalid';
-/** What the engine found. A presenter still always decides. `fallen`: a 'standing' claim for a card one of whose
- * songs landed (the Check stops on it); a card still standing is `complete`. */
-export type CheckOutcome = 'complete' | 'incomplete' | 'fallen' | 'unknownCard' | 'wrongType';
+/**
+ * What the engine found. The Check's result decides (docs/event.md): presenters may reject a card that passed, never
+ * accept one that failed (isPassingOutcome). A 'standing' claim (the Desgraciat round) is `complete` while none of
+ * the card's songs counted, `fellLast` when its first landed song is the latest landing (it sat down with the song
+ * that just landed: it passes, so the last players standing who all sit on the same song can share the win), and
+ * `fallen` when it fell on an earlier song.
+ */
+export type CheckOutcome = 'complete' | 'incomplete' | 'fellLast' | 'fallen' | 'unknownCard' | 'wrongType';
+export const CHECK_OUTCOMES = ['complete', 'incomplete', 'fellLast', 'fallen', 'unknownCard', 'wrongType'] as const satisfies readonly CheckOutcome[];
+/** Whether a card with this Check result may be accepted: `complete`, or `fellLast` for a 'standing' claim. */
+export const isPassingOutcome = (outcome: CheckOutcome | null | undefined, kind: WinKind): boolean =>
+  outcome === 'complete' || (outcome === 'fellLast' && kind === 'standing');
 /** Only a warning: the card is not among the cards in play. */
 export type ClaimWarning = 'notSold';
 /** The Celebration's music, which the presenters may change: the Winning song's hook looped, the victory

@@ -13,8 +13,10 @@
 //   - A Line plays its completed row (the first to complete, top on a tie), else the row with most landed
 //     songs (top on a tie); the other completed rows are listed. A Bingo plays all 12 songs, row by row.
 //   - 'standing' (the Desgraciat round) proves that none of the card's 12 songs landed: they play in card order
-//     and stop at the first one that landed (`fallen`); a card still standing plays all 12 (`complete`), and is
-//     `completeSince` the landing after which every other valid card in play had fallen.
+//     and stop at the first one that landed; a card still standing plays all 12 (`complete`), and is
+//     `completeSince` the landing after which every other valid card in play had fallen. A card whose first landed
+//     song is the latest landing sat down with it (`fellLast`, which passes: the last players standing who all sit
+//     on the same song share the win; `completeSince` is that landing); one that fell earlier is `fallen`.
 import type { CheckOutcome, ClaimWarning, WinKind } from '@quina/protocol';
 import { cardSongIds, completionIndex, fallIndex, queuePositions, type Card } from './cards.ts';
 
@@ -88,7 +90,10 @@ export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, qu
   if (kind === 'standing') {
     const songs = rows.flat();
     const sank = songs.findIndex((id) => landedAt.has(id));
-    if (sank >= 0) return { outcome: 'fallen', row: null, otherRows: [], steps: steps(songs.slice(0, sank + 1)), completeSince: null, warnings };
+    if (sank >= 0) {
+      const fellLast = fallIndex(card, landedAt) === position;
+      return { outcome: fellLast ? 'fellLast' : 'fallen', row: null, otherRows: [], steps: steps(songs.slice(0, sank + 1)), completeSince: fellLast ? position : null, warnings };
+    }
     // The last one standing since every other valid card in play fell (within the counted landings).
     const others = allCards.filter((c) => c.id !== cardId && c.type === cardType && cardsInPlay.has(c.id)).map((c) => fallIndex(c, landedAt));
     const lastFall = others.length ? Math.max(...others) : -1;

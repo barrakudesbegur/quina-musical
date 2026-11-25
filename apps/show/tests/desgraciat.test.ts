@@ -3,7 +3,7 @@
 // standing), the standing Check, the 'standing' Phase model, and its place in the plan, the journal and resume tokens.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkCommand, checkGamePlan, defaultCardType, formatResumeToken, parseResumeToken, replayJournal, makeCommand, type JournalEntry } from '@quina/protocol';
+import { checkCommand, checkGamePlan, defaultCardType, isPassingOutcome, formatResumeToken, parseResumeToken, replayJournal, makeCommand, type JournalEntry } from '@quina/protocol';
 import { fallIndex, queuePositions, standingCards, standingCourse, validCards, parseCardRanges, type Card } from '../engine/src/game/cards.ts';
 import { computeCheck } from '../engine/src/game/check.ts';
 import { standingPlan, PHASE_RANK, STANDING_MODEL_DEFAULTS } from '../engine/src/game/phase.ts';
@@ -74,18 +74,28 @@ test('the standing Check plays the card\'s songs in card order and stops at the 
   assert.deepEqual(standing.steps.map((s) => s.songId), C.lines.flat(), 'row by row');
   assert.equal(standing.row, null);
   assert.equal(standing.completeSince, 2, 'the last one standing since A fell (index 2)');
-  const fallen = computeCheck({ ...base, cardId: 1, queue, position: 2 });
-  assert.equal(fallen.outcome, 'fallen');
+  const fallen = computeCheck({ ...base, cardId: 1, queue, position: 3 });
+  assert.equal(fallen.outcome, 'fallen', 'one landing later, A fell on an earlier song');
   assert.deepEqual(fallen.steps.map((s) => [s.songId, s.landed]), [[1, false], [2, false], [3, false], [4, false], [5, false], [6, false], [7, true]]);
   assert.equal(fallen.completeSince, null);
   // Still two standing: the claim's Check passes, but it isn't the last one yet.
   const early = computeCheck({ ...base, cardId: 3, queue, position: 0 });
   assert.equal(early.outcome, 'complete');
   assert.equal(early.completeSince, null);
-  // Song 30 lands later: C falls too, on its 6th song.
+  // Song 30 lands later: C falls too, on its 6th song (with that landing, then on an earlier one).
   const late = computeCheck({ ...base, cardId: 3, queue, position: 4 });
-  assert.equal(late.outcome, 'fallen');
+  assert.equal(late.outcome, 'fellLast');
   assert.equal(late.steps.length, 6);
+  assert.equal(computeCheck({ ...base, cardId: 3, queue, position: 5 }).outcome, 'fallen');
+  // On the landing of song 7 (index 2), A sat down with it: it passes as `fellLast` (a shared win if nobody else in
+  // the room stands); B fell earlier, on 13.
+  const sat = computeCheck({ ...base, cardId: 1, queue, position: 2 });
+  assert.equal(sat.outcome, 'fellLast');
+  assert.equal(sat.completeSince, 2);
+  assert.equal(sat.steps.at(-1)?.songId, 7);
+  assert.equal(computeCheck({ ...base, cardId: 2, queue, position: 2 }).outcome, 'fallen');
+  assert.ok(isPassingOutcome('fellLast', 'standing') && isPassingOutcome('complete', 'standing') && isPassingOutcome('complete', 'line'));
+  assert.ok(!isPassingOutcome('fellLast', 'line') && !isPassingOutcome('fallen', 'standing') && !isPassingOutcome(null, 'bingo'));
   assert.equal(computeCheck({ ...base, cardId: 400, queue, position: 2 }).outcome, 'wrongType');
   assert.equal(computeCheck({ ...base, cardId: 999, queue, position: 2 }).outcome, 'unknownCard');
   assert.deepEqual(computeCheck({ ...base, cardId: 3, queue, position: 2, cardsInPlay: new Set([1, 2]) }).warnings, ['notSold']);

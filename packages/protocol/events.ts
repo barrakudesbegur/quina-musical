@@ -122,6 +122,10 @@ export interface StandingInfo {
   count: number;
   /** Sorted; null when more than STANDING_LIST_MAX stand. */
   cardIds: number[] | null;
+  /** The valid cards in play whose first landed song is the latest landing: they sat down with it, and may share the
+   * win if nobody in the room is still standing (their Check is `fellLast`). Sorted; null above STANDING_LIST_MAX.
+   * Optional in the type only (added later in v1). */
+  fellLast?: number[] | null;
 }
 /** The most standing cards `StandingInfo.cardIds` lists. */
 export const STANDING_LIST_MAX = 60;
@@ -276,6 +280,8 @@ export interface WinnerInfo {
   name: string | null;
   /** PRIVATE. */
   notes: string | null;
+  /** PRIVATE: the number of the slip handed to the winner, if one was. Optional in the type only (added later in v1). */
+  slip?: string | null;
 }
 
 export interface IntervalInfo {

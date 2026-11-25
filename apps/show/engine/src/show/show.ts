@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, defaultCardType, formatResumeToken, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, defaultCardType, formatResumeToken, isPassingOutcome, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
@@ -55,7 +55,7 @@ import type {
   StandingInfo,
 } from '@quina/protocol';
 import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, LOOP } from '../config.ts';
-import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse } from '../game/cards.ts';
+import { validCards, possibleWinners, parseCardRanges, cardCounts, fallIndex, firstWinAt, queuePositions, standingCards, standingCourse } from '../game/cards.ts';
 import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
@@ -1984,7 +1984,7 @@ export class Show {
   /** Whether a Claim's card passes its Check from the counted landings now (evaluated if it hasn't run yet). */
   passes(claim: ClaimInfo): boolean {
     if (claim.outcome == null) this.evaluate(claim);
-    return claim.outcome === 'complete';
+    return isPassingOutcome(claim.outcome, claim.kind);
   }
 
   /** The presenters' verdict, journaled either way. A valid Claim makes a Winner; an invalid one gets the Failure fanfare. */
@@ -2000,7 +2000,7 @@ export class Show {
     // A Winner's position is the Winning song's (the card's completion), else the landing it was claimed on.
     const position = valid ? claim.completeSince ?? claim.position : claim.position;
     const winningSongId = valid && position >= 0 ? this.queue[position] ?? null : null;
-    this.journal({ kind: 'claim.decided', round: claim.round, claimId: claim.claimId, verdict, winningSongId, position }, atMs);
+    this.journal({ kind: 'claim.decided', round: claim.round, claimId: claim.claimId, verdict, winningSongId, position, ...(claim.outcome ? { outcome: claim.outcome } : {}) }, atMs);
     if (valid) this.winners.push({ round: claim.round, kind: claim.kind, cardId: claim.cardId, claimId: claim.claimId, winningSongId, position, atMs, name: null, notes: null });
     this.emit({ type: 'claim.decided', claimId: claim.claimId, cardId: claim.cardId, verdict, atMs });
     if (!valid) this.out.push({ type: 'sfx', name: FLOW.failureFanfare });
@@ -2238,12 +2238,13 @@ export class Show {
   }
 
   /** A Winner's name and notes (PRIVATE), set or edited at any time; an empty string clears one. */
-  winnerInfo(reqId: string | null, { claimId, name, notes }: CommandFields['winnerInfo']) {
+  winnerInfo(reqId: string | null, { claimId, name, notes, slip }: CommandFields['winnerInfo']) {
     const winner = this.winners.find((w) => w.claimId === claimId);
     if (!winner) return this.reject(reqId, 'winnerInfo', 'unknownClaim', `no winner for claim ${claimId}`);
     if (name !== undefined) winner.name = name.trim() || null;
     if (notes !== undefined) winner.notes = notes.trim() || null;
-    this.journal({ kind: 'winner.noted', claimId, name: winner.name, notes: winner.notes });
+    winner.slip = slip !== undefined ? slip.trim() || null : winner.slip ?? null;
+    this.journal({ kind: 'winner.noted', claimId, name: winner.name, notes: winner.notes, slip: winner.slip });
   }
 
   // ---------------------------------------------------------------------------------- the phones' Heat
@@ -2331,7 +2332,10 @@ export class Show {
   standing(): StandingInfo | null {
     if (this.phaseModel.kind !== 'standing' || !this.phaseModel.valid.length) return null;
     const ids = this.standingNow().map((c) => c.id);
-    return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids };
+    // The cards that sat down with the latest landing: their Check is `fellLast`, and they may share the win.
+    const counted = queuePositions(this.queue.slice(0, Math.max(0, this.position + 1)));
+    const fell = this.position < 0 ? [] : this.phaseModel.valid.filter((c) => fallIndex(c, counted) === this.position).map((c) => c.id);
+    return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids, fellLast: fell.length > STANDING_LIST_MAX ? null : fell };
   }
 
   spin() {

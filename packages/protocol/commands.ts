@@ -148,6 +148,8 @@ export const COMMANDS = Object.freeze({
     claimId: { type: 'string', maxLength: 40 },
     name: { type: 'string', optional: true, allowEmpty: true, maxLength: 80 },
     notes: { type: 'string', optional: true, allowEmpty: true, maxLength: 500 },
+    /** The number of the slip handed to the winner (PRIVATE), e.g. "12" or "A12". */
+    slip: { type: 'string', optional: true, allowEmpty: true, maxLength: 16 },
   },
   /** Change the Celebration's music without blocking anything. */
   celebrationMusic: { choice: { type: 'string', oneOf: CELEBRATION_MUSIC } },
