@@ -4,14 +4,17 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Now (2026-11-25)
 
-- **In progress:**
-  - My B for Sound engine's 30ef20d (the shared Desgraciat win `fellLast`, the winner's slip, `claim.decided.outcome`): journal-check takes outcomes from `CHECK_OUTCOMES`; the slip stays private, with a test; a valid decision whose outcome fails `isPassingOutcome` is flagged in Admin's Games and the export, never refused.
-  - The whole-show e2e claims real wins on a fixed Queue (`179b1a3`, local), since the Check decides. Being run in a clean worktree, then pushed.
+- **In progress:** nothing half-built. Just done:
+  - the cloud's side of the shared Desgraciat win, the slip and the Check's result (`cf9666c`): `flaggedDecisions`, never refusals;
+  - the preflight's card prices, U5 (`6beadc7`);
+  - the whole-show e2e claiming real wins on a fixed Queue;
+  - sync-main listing what a push publishes.
+
+  quina-dev runs `2e37fc1` (version `81e0d0ad`).
 - **Next:**
   - this year's pool from 2 Dec: measure, prune, push, and sync both laptops by 10 Dec;
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Coming from other sessions** (join when proposed):
-  - **Per-round card prices** (U5, answered): `priceRule` in card-types.json and a pure `roundCardPrice()` in the protocol (Sound engine's proposal, OK'd). Nothing new in the feed. Platform adds preflight checks for each played type's rule and price;
   - **A Wii range signal:** `remote.status` counting disconnects (low priority). Then the preflight's Wii line shows recent drops.
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md): **U15**, the QR domain switch (deploy-plan step 7, by 11 Dec); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android); **U24**, housekeeping (the previous session's `ci-head` worktree).
