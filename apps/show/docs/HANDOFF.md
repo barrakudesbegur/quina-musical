@@ -9,6 +9,13 @@ The single place to resume the sound engine's work from. It was first written wh
 - The dates are in `docs/timeline.md`: the playlist is final on Tue 1 Dec, the night is Sun 27 Dec.
 - The team roles are in `docs/team.md`. Questions only the user can answer go in `docs/open-questions.md`.
 
+## Now (kept current at each milestone)
+
+- **In progress:** the Desgraciat shared win (CheckOutcome `fellLast`), the winner's slip number and `claim.decided.outcome`, proposed to Frontend and Backend on 2026-11-25 and waiting for their OK. Then the planned breaks ("parón") in the Schedule.
+- **Next:** this year's songs, once they can be downloaded: download, prep (with the `quality` step), propose hooks for the whole draft, and tell the orchestrator. Then the provisional bulk hook approval (a test aid).
+- **Blocked:** downloads. YouTube asks for a sign-in, and the cookie-free PO-token plugin was refused by this session's permission check.
+- **Waiting on the user:** the open question "How to download this year's songs"; the listening pass on the new sound (transitions stay frozen until then); hook approvals once the songs are in.
+
 ## Done so far
 
 All of this is on `main`, green when committed.
