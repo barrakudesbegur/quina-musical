@@ -34,6 +34,7 @@ Requirements say what must be true now. They hold no history: why something was 
 
 | File | Holds | Written by |
 |---|---|---|
+| [HANDOFF.md](HANDOFF.md) | The orchestrator's in-flight work, to resume after a clear | The orchestrator |
 | [status.md](status.md) | One screen: each area's state, what's blocked, what waits on the user | The orchestrator, rolled up from each handoff's "Now" block |
 | [open-questions.md](open-questions.md) | The only list of what waits on the user (U1, U2…), with the default in force | The orchestrator, from the sessions' requests |
 | [timeline.md](timeline.md) | The dates and milestones up to the night | The orchestrator |
