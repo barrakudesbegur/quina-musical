@@ -16,7 +16,7 @@ _From event.md › The songs._
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
   - an archive playlist keeps past songs.
-- This year's list is final on **1 December 2026**. The draft has 86 songs.
+- This year's list is final on **1 December 2026**. On 25 Nov it was filtered down to 80 songs, with about 10 more to cut that day (D99).
 - The songs are popular hits from every era and genre, including Catalan, Spanish and Christmas songs.
 - Last year's 77 songs are only test material. Everything that depends on the Pool must run again on a new one: preparation, hooks, cards and storage.
 - **The songs are never published.** Audio stays out of the public repo and off the public internet.
@@ -25,7 +25,7 @@ _From event.md › The songs._
 
 _From event.md › The songs, Timing; 2025's song-count notes; the mixer decisions › Phase and Heat._
 
-The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31). For 2026 a study proposes candidate schedules by pool size; the list will almost surely be under 100 songs (D80). Until the user hands it over, the team works with last year's songs.
+The size is a hard choice, because it shapes the night: more songs mean longer rounds. Each edition decides its own when it finalises the playlist. Card generation reports, for a given pool size and number of cards sold, the expected songs to the first Line and to the Bingo, to help choose (R1-Q31). For 2026 a study proposes candidate schedules by pool size; the list will almost surely be under 100 songs (D80). Since 25 Nov Sound engine downloads the 80-song list and makes temporary cards from it (D99).
 
 **2025's planning numbers:**
 

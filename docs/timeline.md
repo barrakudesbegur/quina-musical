@@ -10,7 +10,7 @@ The playlist → the pool prepared and checked → the cards made → the hooks 
 
 | When | Milestone | Who |
 |---|---|---|
-| Now | Work with last year's songs (D80). The user picks the pool size (U34; the study recommends 70) | User |
+| Now | The playlist is down to 80 (D99): Sound engine downloads it and makes temporary cards. About 10 are cut later on 25 Nov, probably to 70 (U34, with the organizers) | User, Sound engine |
 | **Tue 1 Dec** | **Playlist final** | User |
 | 1 Dec, first | `data/pools/2026.json` created, its cards at `apps/cards/dist/cards.json`; last year's test cards move to `data/pools/default/cards/`, and every test reads cards through its pool | Sound engine, then Frontend and Backend |
 | 1–3 Dec | The pool downloaded, prepared and quality-checked. Unusable songs are flagged at once, so the user can swap them; the user downloads only the leftovers by hand | Sound engine, user |
@@ -34,7 +34,7 @@ The items themselves, with their defaults, are in [open-questions.md](open-quest
 
 ## Risks
 
-- **Song downloads (25 Nov).** YouTube asked for a sign-in because the Mac's traffic went through a VPN. With the VPN off, downloads work (D66); the user downloads only the leftovers. The draft is 151 songs.
+- **Song downloads (25 Nov).** YouTube asked for a sign-in because the Mac's traffic went through a VPN. With the VPN off, downloads work (D66); the user downloads only the leftovers. The list is 80 songs (D99).
 - **Hook approval is on the critical path.** A new pool has no playable song until its hooks are approved: about 2 minutes a song, about 3 hours for 86 songs. Prep then runs again in about 30 minutes.
 - **Storage:** about 68 MB a song, so about 100 songs fit R2's free 10 GB. The final list will almost surely be under 100 (D80).
 

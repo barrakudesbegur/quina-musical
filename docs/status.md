@@ -10,7 +10,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 |---|---|
 | Card type per round, every screen and the cloud | **Done** |
 | The Desgraciat round: engine, cloud and screens | **Done**, including the shared win and no celebration title. Its default card type becomes the special card (D70) |
-| Songs downloaded | **Waits on the playlist (D80):** no work on the draft until the user hands it over; last year's songs meanwhile. A study of the pool size is running |
+| Songs downloaded | **Starting (D99):** the playlist is down to 80; Sound engine downloads it and makes temporary cards. About 10 are cut later on 25 Nov (U34) |
 | The card generator ready | **Ready**, with provisional values (D67, D68) and the PDF's install-script approval still to do (U17) |
 | The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
 | Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
@@ -23,10 +23,10 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
-| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Waiting: no work on this year's songs before 1 Dec (D80) | 1 Dec: `data/pools/2026.json`, then download, prep and quality by 3 Dec; the expected end once U34 is picked | U13, U14, U34 |
+| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Downloading the 80-song list and making temporary cards (D99) | The final cut (about 70); prep and quality by 3 Dec; the expected end once U34 is picked | U13, U14, U34 |
 | **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U46, U47 |
 | **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The settings file (`plan check/push/pull`) after U43 | U16, U19, U43, U48 |
-| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D98 logged on 25 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U34, U36–U39, U43, U48 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D99 logged on 25 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U34, U36–U39, U43, U48 |
 
 ## Recently done (25–26 Nov)
 

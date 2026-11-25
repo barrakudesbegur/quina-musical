@@ -781,7 +781,7 @@ By: the user. Source: open-questions.md › Answered (U22). Lives in: requiremen
 A song's id follows its Spotify track, not its playlist position. The draft grew from 86 to 151 songs and 83 moved, so ids by position would have moved every hook approval, cache and download onto another song. Hook approvals made on the draft carry over to the final pool.
 By: the sessions (Sound engine, within its remit). Source: commit fb321f4; Sound engine's report of 2026-11-25. Lives in: requirements/songs-and-cards.md › Hooks.
 
-### D80 · No work on this year's songs until the playlist is handed over · 2026-11-25 · Active
+### D80 · No work on this year's songs until the playlist is handed over · 2026-11-25 · Amended by D99
 Until the user hands over the playlist, the team works with last year's data: no downloads, prep or uploads of the draft. Files already downloaded stay. The final playlist will almost surely have fewer than 100 songs, so today's format fits R2's free storage. A study proposes the pool size, with candidate schedules to choose from. Answers U32; withdraws U33.
 By: the user. Source: open-questions.md › Answered (U32); the user's answers of 2026-11-25. Amends: D66 (no downloads until then). Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.
 
@@ -856,3 +856,7 @@ By: the user (to Backend, 25 Nov). Source: open-questions.md › Answered (U42).
 ### D98 · Hiding prizes is for the show's hype · 2026-11-25 · Active
 Prizes are hidden for the hype, on the players' screens: the projector and phones show a round's prizes only once it's revealed. Anything only a developer reading the public repo could find, like every prize in the settings file, may be committed: nobody will look, and finding a prize early harms nothing. The user: "we just keep it secret for the show hype". What must stay private is unchanged: people's names (winners, who keeps a prize), resume codes, Shuffle seeds (they'd give away the Queue), tokens and keys, and audio.
 By: the user (to Backend, 25 Nov: "it is part of the model"). Source: Backend's report of 25 Nov. Amends: D78. Lives in: requirements/operations.md › Privacy.
+
+### D99 · The playlist is down to 80 songs · 2026-11-25 · Active
+The organizers have filtered the playlist down to 80 songs. It's not the final count: about 10 are cut later that day, probably to 70, which the user is discussing with the organizers (U34). Meanwhile Sound engine may download the 80 songs and make temporary cards from them.
+By: the user. Source: the user's message of 25 Nov. Amends: D80. Lives in: requirements/songs-and-cards.md › The Pool; docs/timeline.md.

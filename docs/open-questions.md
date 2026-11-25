@@ -18,6 +18,7 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 
 ### U34 · How many songs in the pool
 The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.md)) gives candidate nights from a first song at 18:05: 60 songs (rounds end about 21:16), 65 (21:25), 70 (21:34, bad case 21:46), 77 (21:47, no margin before 22:00), 86, the whole draft (22:04).
+The user leans to 70 and is discussing it with the organizers (25 Nov); the playlist is at 80 for now (D99).
 **Default:** 70, the study's recommendation.
 
 ### U36–U39 · How prizes really work
