@@ -2,26 +2,24 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
-## Now (2026-11-25, late evening)
+## Now (2026-11-25, night)
 
-- **In progress:** nothing running.
+- **In progress:** the U30 proposals are drawn (three boards, see "In progress"). Publishing them to the design canvas waits on the user's OK: this session's permission check stopped the publish.
 - **Next:**
+  - when the user picks (U30): build the drawers. One home screen, the two corner buttons and stacked drawers; the tabs go, with no fallback layout in the code (D73);
   - the presenters' checklist on the cheat sheet (from the 2025 running order: welcome points, every prize and sponsor before each round, the throw breaks, the close);
-  - the player's before-the-Game card types preview (the Mobil-Abans board);
+  - the player's before-the-Game card types preview (the Mobil-Abans board). The special card plays the Especial and the Desgraciat (D70), so nothing says it's "only for the Especial";
   - Admin's Games view shows Backend's `flaggedDecisions` (accepted claims whose Check didn't pass; a safety net);
   - "el tècnic" wording;
   - the player router's `hashchange`.
-- **Blocked:** nothing.
+- **Blocked:** publishing to the design canvas (the user's OK).
+- **On hold:** the theme pass (U12: "not ready yet").
 - **Waiting on the user** (`docs/open-questions.md`):
-  - U2 (the printed card's title and paper colour) and U3 (card types and amounts), both by 30 Nov;
-  - U7 (two Desgraciat board points);
-  - U8 (the prizes corner icon);
-  - U9 (the effect when the landed song is yours);
-  - U10 (the player app's layout);
-  - U11 (the card-stacking scroll);
-  - U12 (the theme pass);
-  - U17 (approving the PDF install script);
-  - U21 (card text size on phones).
+  - U30 (the corner buttons' style and the Horari icon, the drawers' hierarchy, the prizes drawer);
+  - U17 (the PDF install script; until then the committed PDFs keep last year's title);
+  - U26 (one special card for both the Especial and the Desgraciat; the default is yes);
+  - U28 (when the cards are printed);
+  - U29 (how far "no fallbacks" goes).
 
 **What this covers:** every screen and its motion, which is the UI/UX and animation role in `docs/team.md`:
 - the projector stage (`apps/stage`, plain TypeScript);
@@ -41,7 +39,7 @@ Resume the Frontend's work from this file. Keep it current at every milestone, b
 
 ## Done so far
 
-Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11-25).
+Everything here is on `main`, with `npm run test:ui` green (558 tests on 2026-11-25).
 
 **Before the repo move (old paths, `experiments/mixer-poc/ui/…`):**
 
@@ -83,60 +81,27 @@ Everything here is on `main`, with `npm run test:ui` green (447 tests on 2026-11
 | **2026-11-25, the docs audit:** the motion spec; the player app (3 tabs plus the ☰ menu, no winning card numbers, offline keeps the screen, Pausa in the drum's place, the add-card leave guard; "Com es juga" removed, cards written "#123"); the console's Efectes pads with icons; "Quina Especial" and "Comprovar cartró" | `974f95f`, `c1dbb5c`, `66faf9d`, `b47a633` |
 | **2026-11-25:** the Wii Remote's status message comes from `@quina/protocol` | `71e618e` |
 | **2026-11-25, evening:** the Desgraciat's shared win (`fellLast`) and the winner's numbered slip; no title in the Desgraciat Celebration (U6); planned breaks in Admin's Schedule; the Final Lap switch (R2-Q18); card prices by round (U5: `priceRule` in card-types.json, `comingRoundPrice`, the projector's price tag before the Game and in the Interval); the pool-size report (R1-Q31, `npm run report` in apps/cards; the build no longer deletes `dist/`); real-sized prize bundles in SAMPLE_PLAN and every prize view fitting them (the cheat sheet lists every prize and sponsor); the projector's sponsor strip paging (`sponsor-pages`); the Wii range (`remote.status.drops`) | `5152a81`, `6857f31`, `1f0bfef`, `2e37fc1`, `e75d5b3`, `8cc02af`, `527a02c`, `df7e321`, `3436cf8`, `150f213` |
-| **2026-11-25: the Desgraciat round on every screen**, ahead of the 4 Dec milestone. Projector: the name, the intro nino, the standing Check, `check-fallen`, DEMPEUS!, the night preview's sad face. Console: the Dempeus tab (count, chips, the fall, the last card's "Comprovar #57" as the default action), the standing claim pad, "no ha sonat" Check rows, Futur's songs to the last card and its curve, the ring with one card standing. Admin: the Desgraciada kind, one per night, one bundle, Line prizes moved over, never lost. Phones: DEMPEUS/ASSEGUT, the fall and its bloop, "Dempeus fins al final!", the name and sad face. Fixtures: `desgraciatIntro`, `desgraciat`, `desgraciatFew`, `desgraciatLast`, `checkStanding`, `checkFallen`, `checkStandingValid`, `celebrationStanding`, `intervalDesgraciat`; player demos `desgraciatFall` (live), `desgraciatSeated`, `desgraciatMine`, `desgraciatOther` | `f91f80d`, `553b304`, `6b14e76`, `a618730`, `3940353`, `7fc4162` |
+| **2026-11-25: the Desgraciat round on every screen**. Projector: the name, the intro nino, the standing Check, `check-fallen`, DEMPEUS!, the night preview's sad face. Console: the Dempeus tab (count, chips, the fall, the last card's "Comprovar #57" as the default action), the standing claim pad, "no ha sonat" Check rows, Futur's songs to the last card and its curve, the ring with one card standing. Admin: the Desgraciada kind, one per night, one bundle, Line prizes moved over, never lost. Phones: DEMPEUS/ASSEGUT, the fall and its bloop, "Dempeus fins al final!", the name and sad face. Fixtures: `desgraciatIntro`, `desgraciat`, `desgraciatFew`, `desgraciatLast`, `checkStanding`, `checkFallen`, `checkStandingValid`, `celebrationStanding`, `intervalDesgraciat`; player demos `desgraciatFall` (live), `desgraciatSeated`, `desgraciatMine`, `desgraciatOther` | `f91f80d`, `553b304`, `6b14e76`, `a618730`, `3940353`, `7fc4162` |
+| **2026-11-25, night (the user's answers D66–D78):** D70, the Desgraciat plays the special cards by default (Sound engine flipped the protocol's default; phones name the card type a round plays; the UI tests follow the default) | `4bf8d55`, `dafdbcd` |
+| The card generator's provisional values (D67–D69: "QUINA QUINA! 3", 399 normal and 300 especial, 1.50 € a regular round and 5 €); the JSON is written before the PDF step, so a missing `canvas` module no longer loses it | `828a6bd` |
+| Phones: the your-song look (D74: the flash, the gold, the spotlights, option A's particles; gone at the next Spin; demo `yourSong`); ANIMATIONS.md: its spec, the card stack discarded (D75), the Desgraciat's open points closed (D72) | `65a0ac1` |
 
 ## In progress
 
-### 1. Card type per round: step B done (2026-11-25)
+### The player drawers (D73, U30)
 
-`5579442` (473 UI tests, up from 447). Each round names its printed card type, and the screens read names, colours and prices from `card-types.json`:
-- packages/ui:
-  - `data/card-types.ts`: `cardTypeLabel`, `knownCardTypes`, `roundsByCardType`;
-  - `data/catalog.ts` loads `card-types.json` next to `cards.json`;
-  - `plan.ts`: `roundIntroFields`, `prizeBundleOf`.
-- Admin: a type picker per round, with the kind-change rule and the unknown-type warning.
-- Console and Admin's start: `roundIntro` carries `cardType`.
-- Stage: the night preview and the Check badge.
-- Player: validity uses `PublicRound.cardType`, and a round that plays a non-default type shows a one-line rule.
-- apps/cards: checks the type ids and every card's type before writing.
+The user answered U8 and U10 (25 Nov): one home screen, two corner buttons (Premis on the left, Horari on the right) and stacked drawers. The tabs go, and no fallback layout stays in the code. Their words: the drawers' content got "uglier, the visual hierarchy is broken", they don't like the prizes drawer, and the corner icons are "inconsistent and don't look good" (the best so far is option C, the sky-blue box with the pink ribbon, with a taller lid skirt; Horari needs a better icon).
 
-**Step C is in too** (`b717bc6`, `360523f`, on Sound engine's `bd29f4d`):
-- plan version 3, with no card types copy in the plan;
-- `knownCardTypes(printed)` takes card-types.json only, else every type is named "Cartró <id>";
-- `parseCardRanges` now comes from `@quina/protocol`, so the screens no longer import from the engine.
+Proposals first, no code until the user picks. Three boards, under the canvas title "Per triar (U30)", generated by `temp/design-canvas/look/gen/u30_corners.py` and `u30_drawers.py` (the icons are in `u30_icons.py`):
+- `Component-Cantonades-Estils`: three styles where both icons always match. A · Joguina 3D (C with the taller lid, a 3D alarm clock at the same angle), B · Adhesiu (flat, white sticker border, paper buttons), C · Línia gruixuda (two-tone line icons, night buttons with a coloured rim). Plus Horari icon alternatives (alarm clock, hourglass, a clock in a Santa hat) and the lid before and after.
+- `Mobil-Calaixos-Jerarquia`: J1 Paper, J2 Nit tranquil·la, J3 Primer, el que passa ara, each on Horari and the menu. The menu has the reorder grip the user asked for on the canvas.
+- `Mobil-Premis-Propostes`: P1 Aparador (one round at a time, Línia or Quina with the home screen's switch), P2 Llista neta (both bundles, only headline prizes on paper), P3 Tiquets (each bundle a raffle ticket, a whole round on one screen). Each one also shows a round that hasn't started.
 
-### 2. The Desgraciat round (approved; the rules are in the decisions doc › Changes and in the GLOSSARY)
-
-The order is: ANIMATIONS.md entries, then canvas boards for the user, then code against Sound engine's protocol.
-- **Done (2026-11-25):**
-  - the ANIMATIONS.md section "The Desgraciat round" (`4f350ab`, `3690a53`);
-  - the canvas boards, version 50, under the title "Quina Desgraciada · proposta per revisar":
-    - `Mobil-Desgraciat` and `Mobil-Desgraciat-Teva`;
-    - `Mobil-Desgraciat-Cau` (the card falling: 3 frames plus a live loop);
-    - `Projector-Desgraciat-Comprovacio`, `-Caigut` and `-Dempeus`;
-    - `Consola-Dempeus` (the tab at 143, 23 and 1 standing).
-
-    The generator is `temp/design-canvas/look/gen/desgraciat_boards.py`.
-- **The protocol, agreed with Sound engine on 2026-11-25:**
-  - `RoundKind 'desgraciat'`, at most one per plan, with an empty `line` bundle; its `bingo` bundle is the last-standing prize. Resume token head `D`.
-  - `WinKind 'standing'`, and `climbingTo: 'standing'` all round. A valid claim ends the round like a Bingo.
-  - `CheckOutcome 'fallen'`.
-  - Private `ShowState.standing { count, cardIds | null }`; `cardIds` is null above 60. There is no not-in-play flag: inside the in-play ranges, the engine can't tell sold cards from unsold ones.
-  - `FutureInfo.lastStandingAt` and `standingCurve`. In this round `lineAt`, `bingoAt`, `toLine` and `toBingo` are empty, and `possibleWinners` is `{line: [], bingo: []}`.
-  - Claims default to `'standing'` in that round; `'line'` and `'bingo'` are rejected there.
-  - The Check goes over the 12 songs in card order. Each ✓ step is a ~0.6 s tick. It stops at the first landed song, which plays its snippet (~2.5 s) and gives `'fallen'`.
-  - Auto-advance stops once one card stands.
-  - Phones get nothing new on the feed.
-- **Landing:** Sound engine's step A (`caa5662`) and my compile keys (`b47a633`) are in. Their step C makes the engine play the round, and my screens follow after it (due Fri 4 Dec).
-- **Screens to build:**
-  - console: the Dempeus tab;
-  - stage: the round's name, the "no ha sonat ✓" steps, `check-fallen`, "DEMPEUS!";
-  - phones: `stand-up`, `card-fall`, the fall "bloop";
-  - Admin: the round kind, one per night, no Line bundle.
+They're generated into `temp/design-canvas/look/project/` with `canvas.json` updated, but not published: publishing needs the user's OK.
 
 ## The next queue, in priority order
 
-The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
+The user's only dates: the playlist arrives Tue 1 Dec and the night is Sun 27 Dec 2026. The other dates in older notes were invented, and were dropped on 25 Nov.
 
 1. **From `docs/event.md`** (approved by the user; the Orchestrator's brief of 2026-11-25), in this order:
    - ~~The Check decides~~ and ~~no prices on the projector~~: done (`ff13a81`). Sound engine adds the `failedCheck` reject reason, plus its console string.
@@ -155,39 +120,26 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    - **The Desgraciat's shared win:** when the last cards standing all fall on the same song, they share it. Sound engine designs the claim; agree the console and Check shape.
    - **Wording:** "el tècnic" is the person and "Admin" only the page. The console opens on the tech's phone.
    - "DEMPEUS!" is NOT approved (the user asked what it means). It's in `docs/open-questions.md`; keep the string until they choose.
-2. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
+2. **The card generator.** The user's provisional values are in (`828a6bd`; D67–D69; they may change at print time):
    - it draws from a song pool (`--pool <name>`, the same `data/pools/<name>.json` as the prep and the relay);
    - `--check` validates without writing;
    - the amounts and the seed are in `src/config.ts`;
    - the default pool still gives exactly the committed `cards.json`.
 
-   Still needed from the user (the Orchestrator is asking): title, paper colour, card types and amounts. No prices: they aren't printed (docs/event.md). The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
+   Prices aren't printed (docs/event.md); the screens read them from card-types.json. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call, U17: it runs an install script).
 
-   Then the dates: the pool on Tue 1 Dec (86 songs in the draft), cards generated and proofed with the user by Thu 3 Dec, then printed. Don't generate before the playlist is final. The README has the steps.
+   Then: the pool arrives Tue 1 Dec (86 songs in the draft); generate and proof with the user after it, never before the playlist is final. Cards are sold only on the night and print in a few hours (D71); the print date is open (U28). The README has the steps.
 3. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
-4. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+4. When the user picks (U30): the drawers. The theme pass is on hold (U12).
 5. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
-- **The player drawers layout** (the canvas boards from v40): a home screen, two corner buttons (Premis on the left, Horari on the right) and stacked drawers.
-  - **Status:** proposed, not confirmed. The code keeps the current tabs until the user confirms.
-  - **Why it matters:** the user wants it to feel like a base that's always running, with native-quality drawer gestures.
-- **The Desgraciat boards** (canvas v50, under "Quina Desgraciada · proposta per revisar"), and the three open points at the end of ANIMATIONS.md:
-  - a public standing count on the projector (default: no);
-  - the sitting nino on a fallen card;
-  - "DEMPEUS!" as the Celebration title.
-- **The theme pass:** the approved look applied to the basic stage, console and Admin screens. The player already has it (`cd9fa6d`).
-- **Three design choices left open by the previous session (2026-11-24):**
-  1. The prizes corner icon: board "Component · icona de premis", options A–E (A is in use).
-  2. The effect when a landed song is on your card: board "App · quan la cançó és teva", options A–D.
-  3. The player drawers layout (above).
-
-  The Efectes pads were decided (icons): see the queue.
-- **The card stack on phones** (24 Nov, "I will need to confirm this"): specced as `card-stack` in ANIMATIONS.md, not built.
-- **Naming the "Ara" tab** (the user's comment, "I would call this songs"): the Orchestrator raises it with the drawers choice.
-- **Canvas comments:** about 100 plain comments were addressed (versions 40–46) but remain open, because they weren't sent to Claude.
-- **My entries in `docs/open-questions.md`:** card text size on phones, this year's printed card title and colour, and the checks that need real phones, the projector and the tablet.
+- **U30, the drawers and the corner buttons:** three boards to pick from (see "In progress"). Answered on 25 Nov: D73 (drawers, no fallback), D74 (the your-song look: built), D75 (no card stack), D72 (the Desgraciat's board points: as built), D77 (card text size: as it is).
+- **The theme pass (U12):** on hold, "not ready yet".
+- **Naming the "Ara" tab** ("I would call this songs"): moot once the tabs go (D73).
+- **Canvas comments:** the your-song thread and the menu's drag-handle thread were sent to Claude and are addressed but still open; reply and resolve when the user says "address the comments". About 100 plain comments were addressed (versions 40–46) but remain open, because they weren't sent to Claude.
+- **U17, U26, U28, U29** in `docs/open-questions.md`, and U19 (the checks on real phones, the projector and the tablet).
 
 ## Agreements with the other sessions
 
@@ -208,6 +160,7 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
   - covers: `/covers/<id>.jxl` + `.jpg`;
   - logos: `/media/<key>.png|.jpg` + `.jxl`;
   - Admin encodes JXL lazily with @jsquash/jxl. Never WebP.
+- **The Desgraciat protocol** (with Sound engine, 2026-11-25): `RoundKind 'desgraciat'` (one per plan, an empty `line` bundle; `bingo` is the last-standing prize; resume head `D`), `WinKind 'standing'`, `CheckOutcome 'fallen'`, private `ShowState.standing { count, cardIds | null }` (null above 60), `FutureInfo.lastStandingAt` and `standingCurve`; its default card type is the special one (D70). Phones get nothing new on the feed.
 - **Wii status:** `remote.status` goes between paired consoles only (the relay, `35573a0`), never to the show page, the cloud link or phones. The message type lives in `@quina/protocol` (events.ts); `packages/ui/client/remote-status.ts` re-exports it and keeps `RemoteHosts` (`71e618e`).
 
 ## How to run, test and demo
@@ -251,4 +204,4 @@ From the repo root, once: `npm install`. Then from `apps/show`:
 
 - **Never seen live:** the `next-to-now` morph and the Wii Remote on real hardware.
 - **Real devices:** iPhone and Android, the projector at 4:3 and 16:9, and the tablet over the hotspot need the user (see `docs/open-questions.md`).
-- **`cards.json` is public** (the agreed default). Someone determined could work out live which cards are close to winning.
+- **`cards.json` is public** (D78: anything may be public unless there's a reason; the code stays simple).
