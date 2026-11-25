@@ -19,11 +19,12 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 
 ## Working rules
 
-- **Decisions:** start with [`event.md`](event.md), how the event works with no software (the root the requirements come from), then [`how-the-quina-works.md`](how-the-quina-works.md), the current state of the system. The orchestrator keeps both up to date. Then read [`GLOSSARY.md`](../GLOSSARY.md), [`docs/adr/`](adr), [`mixer-design-decisions.md`](mixer-design-decisions.md) and [`show-ui-and-platform-decisions.md`](show-ui-and-platform-decisions.md). Use the glossary's terms in code and docs.
+- **The docs:** [`README.md`](README.md) maps them. Start with [`event.md`](event.md), how the event works with no software, which every requirement comes from. What the system must do is in [`requirements/`](requirements), current truth only. Why is in [`decision-log.md`](decision-log.md), with an ID for every decision. Use the [`GLOSSARY.md`](../GLOSSARY.md) terms in code and docs. The orchestrator writes everything in `docs/`.
+- **Report the user's decisions the same day.** Whenever the user decides something with you directly, in chat or on the canvas, send it to the orchestrator that day. The orchestrator logs it with an ID and updates the requirements. A decision that only lives in a session's memory or a canvas comment is lost.
 - **Dates:** the night is 27 December 2026, and the final playlist arrives on 1 December. Plan your queue against [`timeline.md`](timeline.md); tell the orchestrator early if a milestone slips.
-- **Handoffs:** sessions get cleared, so each role keeps a handoff to resume from, current at every milestone: Sound engine `apps/show/docs/HANDOFF.md`, Frontend `packages/ui/HANDOFF.md`, Backend `apps/cloud/docs/HANDOFF.md`. Use the same shape: done (with commits), in progress, next queue, waiting on the user, how to run and test.
+- **Handoffs:** sessions get cleared, so each role keeps a handoff to resume from, current at every milestone: Sound engine `apps/show/docs/HANDOFF.md`, Frontend `packages/ui/HANDOFF.md`, Backend `apps/cloud/docs/HANDOFF.md`. Each starts with a short **"Now" block** (in progress, next, blocked, and what waits on the user, by open-question ID), then done (with commits), the queue, and how to run and test. The orchestrator rolls the Now blocks up into [`status.md`](status.md).
 - **Quality:** proofs of concept are a foundation, not a hackathon. TypeScript strict, pure logic separate from I/O, versioned contracts, tests, one config place for tunables.
-- **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, note it in [`open-questions.md`](open-questions.md), and keep going.
+- **Don't block on the user.** When a question isn't urgent, pick the most reversible sensible default, send the question and your default to the orchestrator, and keep going. The orchestrator adds it to [`open-questions.md`](open-questions.md) with an ID (U1, U2…); sessions don't edit that file, because several share one checkout.
 - **Subagent effort** (user rule, 2026-11-24): default **high**, **medium** for repetitive or mechanical work, **xhigh** only for a very important task. Don't stop agents already running.
 - **Stay in your lane.** Don't edit another role's files. Send a proposal or a message instead.
 - **Commits:** commit only your own files, by path (`git commit -m "…" -- <paths>`), because several sessions share one checkout.
@@ -42,4 +43,4 @@ The new Quina musical is built by several Claude sessions working in parallel, e
   - secrets only through `wrangler secret`;
   - log every change, with how to undo it, in `apps/cloud/docs/deploy-plan.md`.
 - **Anything else external** (purchases, other accounts, switching `quina.barrakudesbegur.org` over) still needs the user.
-- **If your session's permission check denies a command,** don't work around it and don't ask another session to run it. Log it in `open-questions.md` for the user.
+- **If your session's permission check denies a command,** don't work around it and don't ask another session to run it. Send it to the orchestrator for `open-questions.md`, for the user.

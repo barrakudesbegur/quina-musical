@@ -30,7 +30,7 @@ _Avoid_: Reverse round, elimination round
 A card knocked out of the Desgraciat round: one of its songs has landed. Its player sits down ("Assegut" on phones, against "Dempeus" for a card still standing).
 
 **Last standing**:
-The Desgraciat round's only win: the last card still standing, none of whose songs has landed. If the last players standing all sit on the same song, they share the win. Its prize is the round's bundle ("Premi de l'últim dempeus"). The Celebration's title is still to be confirmed by the user ("DEMPEUS!" is the proposal).
+The Desgraciat round's only win: the last card still standing, none of whose songs has landed. If the last players standing all sit on the same song, they share the win. Its prize is the round's bundle. Its Celebration has no title, unlike a Line's or a Quina's.
 _Avoid_: Survivor, reverse bingo
 
 **Intro**:
@@ -76,7 +76,7 @@ The public verification of a claimed card: its songs are shown and replayed one 
 _Avoid_: Validation, verification
 
 **Winner**:
-A player whose claimed card passed the check. Their name is noted, and they collect the prize later by showing the card to the organizers.
+A player whose claimed card passed the check. They're noted by name or by a numbered slip handed to them, and they collect the prize later by showing the card or the slip to the organizers.
 
 **Celebration**:
 The moment after a successful check, with a big impact, a victory lap of the drum and celebratory music.

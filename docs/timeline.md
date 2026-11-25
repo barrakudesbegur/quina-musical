@@ -28,28 +28,18 @@ The playlist → the printed cards → the QR domain → the cards handed out. A
 
 Rehearsals use the cloud's free daily quota too, so never hold one on the day of the show (see the decisions doc).
 
-## The user's tasks, by date
+## The user's items, by date
 
-- **By 30 Nov:**
-  - the 3 design choices on the canvas (prizes corner icon, the effect when the landed song is on your card, the player drawers);
-  - how many songs the playlist will have (the cloud's free storage holds about 100 in today's format);
-  - a listening pass on the new sound;
-  - the card's title, colour, card types and prices;
-  - upload the logo library in Admin.
+The items themselves, with their defaults, are in [open-questions.md](open-questions.md).
+- **Now, before 2 Dec:** U1 (how to download the songs).
+- **By 30 Nov:** U2 and U3 (the card's title, colour, types and amounts), U17 (the PDF install script), U8, U9, U10 (the canvas choices), U7 (the Desgraciat board points), U13 (the listening pass), U16 (the logo library).
 - **1 Dec:** the final playlist.
-- **2–3 Dec:** swap any unusable songs; proof and send the cards to print.
-- **By 10 Dec:** approve the hooks and Signatures.
-- **By 11 Dec:** give the OK to switch the QR domain.
-- **By 13 Dec:**
-  - the night's plan in Admin (rounds, a card type per round, prize bundles, sponsors);
-  - the real-device checks in `open-questions.md`.
-- **Optional, any time:** more Hold music and victory tracks.
-
-## Assumptions to confirm
-
-- **When the cards are handed out** *(default: from about 12 Dec, sold before the night)*. If they're only handed out at the door on the 27th, printing and the domain switch can move later.
-- **Print lead time** *(default: about a week from 3 Dec)*.
-- **The rehearsal dates** *(default: 13 and 19 Dec)*.
+- **2–3 Dec:** swap any song the quality check flags; proof the cards and send them to print.
+- **By 10 Dec:** U14 (approve the hooks).
+- **By 11 Dec:** U15 (the QR domain switch).
+- **By 13 Dec:** U18 (the night's plan in Admin), U19 (the real-device checks).
+- **Soon:** U4 (when cards are handed out, and the print lead time). The printing and domain dates above assume cards are sold from about 12 Dec, printed in about a week from 3 Dec.
+- **Optional, any time:** U20 (more Hold and victory music).
 
 ## Risks
 

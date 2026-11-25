@@ -1,0 +1,159 @@
+# Screens
+
+What each screen must show, who uses it, and what it must never show: the projector, the console, the player app, Admin, the cheat sheet and the Wii remote.
+
+- Every rule here comes from [event.md](../event.md). Why a rule is the way it is, and what it replaced, is in [decision-log.md](../decision-log.md).
+- "(pending U10)" points to [open-questions.md](../open-questions.md); the rule states the default in force meanwhile.
+- "**Not built yet.**" marks a rule the handoffs list as still to do.
+- Terms follow [GLOSSARY.md](../../GLOSSARY.md). Every animation is specced in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md), with its trigger, timing, sound and fallback, before it's built.
+
+## Every screen
+
+_From event.md › The audience, Atmosphere and style, Fairness and trust._
+
+- **Everything is in Catalan,** in informal, natural language.
+  - A round is "Quina 1"…, the special round "Quina Especial" and the Desgraciat "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".
+  - A Line is "Línia", a full card "Quina!" ("premi de quina"). Card numbers are written "#123". Times use am/pm.
+- **A show, not a meeting:** a festive Christmas look, styled like a mobile game, "juicy" and full of animation. The projector and the player app get the full look; the console and Admin can be simpler. One design system covers all of them.
+- **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
+- Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
+- Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
+- **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
+- The approved look still has to be applied to the projector, the console and Admin (pending U12). The player app already has it.
+
+## Projector
+
+_From event.md › When and where (Projection), The night, step by step, Claims and checks, Fairness and trust; the decisions doc › Projector._
+
+**Who uses it:** the whole audience. It's a 4:3 projector far from the audience, so only big things are readable and there's no small text. It must also work at 16:9. It's silent: the sound comes from the engine on the PA.
+
+| State | What it shows |
+|---|---|
+| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour, making clear which is only for the Especial; the price of a card for round 1; a large "scan your card" QR; the sponsors; a rough countdown |
+| A round's intro | "Quina N" (or "Quina Especial", "Quina Desgraciada") with its prize bundles and sponsors, revealed now as the presenters announce them |
+| The Shuffle | Every cover in a grid, shaken, flying into the drum |
+| In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
+| Hold ("Parlem") | No visible change |
+| Pause | "Tornem de seguida" |
+| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn; the result |
+| A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
+| Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
+| Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
+| After the Game | Thanks and sponsor credits |
+
+- **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). **Not built yet** (today the projector shows no price).
+- **The Desgraciat's Celebration** has no title.
+- **It never shows:**
+  - the next song, the Queue, the possible winners or the standing cards;
+  - a winning card number or a winner's name;
+  - a prize before its round's intro, or any prize in the Interval;
+  - a QR or URL during play or the Interval;
+  - fairness code, how-to-play text or a resume code.
+- Whether it shows how many cards still stand in the Desgraciat is open (pending U7). Default: no, since the count includes unsold cards.
+
+## Console
+
+_From event.md › The presenters (What they can do, What they see privately, Their equipment); the decisions doc › Changes._
+
+**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone to help. Every open console stays in sync. Its theme is light and simpler, with icons, but the layout must be very well thought out.
+
+- **Always visible:** the round, the Phase and the real Heat, the clock, the expected end of the round, the Drift and the connections (cloud or hotspot, phones' feed, Wii remote).
+- **"Ara sona"** is the playing song, with a ring that counts down to the next auto-advance and shows the state (manual, "Parlem", "Aguanta"…).
+- **"Següent"** is the next song, private, with a countdown to its landing so the presenters can name it on the hit.
+- **The buttons:** every action in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions). "Enrere" takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest. Each control a Wii button triggers shows a small badge with that button.
+- **Tabs:**
+  - "Futur": the crystal ball, hidden until someone taps "Mirar el futur". A chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners;
+  - "Premis": the round's prize lines and sponsors, ready to read out;
+  - "Efectes": the sound pad, as icons;
+  - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands.
+- **During a Check:** the queue of claimed cards, progress song by song, the result with any warnings ("not registered as sold"), and the verdict.
+  - After a failed Check only "reject" is offered. After a passed one, the presenters can still reject it with a long press against the result.
+  - Then a Celebration music override, the winner's name and notes.
+  - A numbered slip's number on the winner form. **Not built yet.**
+- **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".
+- **The menu:** start and end the night, the Schedule, Panic, the resume code, and "Comandament", a drawing of the Wii remote's buttons that opens by itself when a remote connects.
+- **On the laptop:** the tech must be able to drive the whole show from the laptop alone: the console on the laptop's own screen, the show page on the projector as a separate display (never mirrored, since the console shows the next song), and a USB presenter clicker (→ or PageDown) running the console's default action. Set up as in the night runbook's "Without the tablet".
+- **It never reaches** the projector or phones: the next song, Futur, the standing cards and the resume code stay on the console.
+- Both iPad and Android tablets must work (pending U19, the check on real devices).
+
+## Player app
+
+_From event.md › Players' phones; the decisions doc › Changes._
+
+**Who uses it:** players who want to, on their own phones. The game works fully with paper and corn; phones are a companion.
+
+- **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
+  - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
+  - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
+  - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
+- **Layout:** three tabs and a menu (pending U10, which proposes one home screen with corner buttons and drawers; the tab "Ara" may be renamed):
+  - "Ara": the drum on top, then a switch between "Historial" (the current round's songs, including the one playing now) and "Cartrons" (the player's cards as grids);
+  - "Premis": the current round's bundle and sponsors, with future rounds locked;
+  - "Horari": the schedule, with real times for what has happened and "~" predictions for what's next;
+  - the menu: the player's cards, sounds, last year's card and "Esborrar dades".
+- **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text.
+- **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
+- **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
+- **Only the current round** shows in "Historial", and only the cards of the round's type count in it (only special cards in the Quina Especial).
+- **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it.
+- **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
+- **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its reel stays generic until then); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
+- **Pending design choices:** the prizes corner icon (U8), the effect when the landed song is on your card (U9), the card-stacking scroll (U11, not built by default), and card text size (U21; default: the printed grid).
+
+## The grandmother test
+
+_From event.md › The audience, Players' phones._
+
+Many people distrust computers and barely use their phones. The player app must pass this test:
+- large, clear and simple, in plain Catalan;
+- big tap targets, high contrast, large text, usable with one thumb;
+- anything at most 2 taps away;
+- sounds that can be muted;
+- the screen stays on;
+- it reconnects by itself.
+
+## Admin
+
+_From event.md › Prizes and sponsors, The cards; the decisions doc › Admin._
+
+**Who uses it:** the organizers, behind their Google login. A simpler design is fine.
+
+- **Setup** (pending U18, the night's plan):
+  - the edition's name and the cards in play, as ranges;
+  - the rounds in order, each with its kind (regular, Desgraciada, Especial) and card type. Only one Desgraciat a night, with a single bundle;
+  - prize bundles, sponsors (money donors too) and their logos, picked from the private logo library (pending U16);
+  - bulk JSON import and export, so an AI agent can load the organizers' spreadsheet. Its private columns are never read;
+  - the Schedule, with the throw breaks. **Not built yet** (the throw breaks);
+  - the card prices: a normal card's per-round price and a special card's price. **Not built yet.**
+- **On the night:** live edits to upcoming rounds (played rounds stay fixed), the Plan B resume, the winners list, and which card numbers have been opened on phones (anonymous).
+- **Player app:** the default for sounds, and a message banner to every phone.
+- **Tools:** the hook audition page, a full JSON export, and the Shuffle seeds.
+- The card types show read-only: they come from the card generation.
+
+## Cheat sheet
+
+_From event.md › Prizes and sponsors (the presenters' cheat sheet); the decisions doc › Console._
+
+**Who uses it:** the presenters, printed and on the tablet (the console's "Premis" tab).
+
+- It lists every prize with its sponsor, round by round, money donors included. **Not built yet** (every sponsor listed).
+- The claim rules and the special rounds' rules.
+- The presenters' checklist for the night's running order ([show-and-music.md › The night's running order](show-and-music.md#the-nights-running-order)).
+- The Wii mapping and the laptop's keys, for Plan B.
+
+## Wii remote
+
+_From event.md › The presenters (Their equipment); the decisions doc › Changes (Q34)._
+
+**Who uses it:** the presenters. It's the intended experience: it's fun, they joke about it, and shaking it to start a Suspense is a show moment of its own.
+
+- It pairs with the show laptop (desktop Chrome only). Its buttons are in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions).
+- Every action rumbles. A deliberate shake pattern starts a Suspense, so dancing doesn't.
+- Its plan B is the tablet: the console can do everything the remote does. Its range is in [operations.md › Fallbacks](operations.md#fallbacks).
+- It still has to be tried on real hardware (pending U19).
+
+## Every sponsor appears
+
+_From event.md › Prizes and sponsors (Mention everyone)._
+
+- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. **Not built yet.**
