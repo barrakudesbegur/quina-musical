@@ -38,10 +38,6 @@ D89 puts the whole night's settings in one git-tracked JSON file. But this repo 
 Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
 **Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
 
-### U45 · The shake icon
-The first shake icon was rejected. Canvas board "Component · icona de sacsejar el comandament (tria)", options A–F.
-**Default:** none until the user picks.
-
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
 **Default:** nothing built for the prizes drawer until the user picks.
@@ -70,6 +66,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U45 · The shake icon** (2026-11-25) → D94: option C with "×3", no frame.
 - **U44 · The menu's rare, risky holds** (2026-11-25) → D92: they keep "Mantén premut", as a tag beside the label.
 - **U41 · A Celebration while a drawer is open** (2026-11-25) → D90: a Celebration closes Premis, Horari and Ajustos, not the pad; the your-song flashes and particles play on top of everything.
 - **U35 · What the print shop needs** (2026-11-25) → D88: the same as last year, just the PDF.

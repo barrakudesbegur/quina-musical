@@ -836,3 +836,7 @@ By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v56. A
 ### D93 · The console's remote board explains each button in place · 2026-11-25 · Active
 On "Consola · comandament Wii", each explanation sits beside its button with a leader line, led by the button's own key icon (raised for a tap, pressed for a hold, the cross arm for each effect). B + shake shows with the shake icon (pending U45). The remote has squarer corners and a softer cross, and B comes out of the main drawing, with no separate side view. Designs only.
 By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v57. Amends: D91, D92. Lives in: requirements/screens.md › Wii remote.
+
+### D94 · The shake icon · 2026-11-25 · Active
+Option C: a remote with a motion trail, plus "×3" as tall as the remote, with no frame and a remote with small corners. It's used on the console's Suspens strip and in the remote's legend (B + shake → Suspens). On the console's two-level buttons, the hold strips (Pausa, Suspens) keep their label centred, with the remote hint at the strip's right edge. Answers U45. Designs only.
+By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v59. Lives in: requirements/screens.md › Console, Wii remote.
