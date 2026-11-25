@@ -32,6 +32,10 @@ Printing takes a few hours and cards are sold only on the night (D71), but event
 For the player app the user said no fallback layout in the code (D73). event.md also asks that anything new has "a simple fallback to the old way", and the code has operational plan Bs (the tablet for the Wii remote, the laptop's keys for the tablet, the laptop for the cloud).
 **Default:** the operational plan Bs stay; no alternative versions of a screen or feature are kept in the code.
 
+### U31 · A new colour each edition?
+event.md says each edition gets a new paper colour and title, so last year's cards are easy to spot. 2026 keeps 2025's colours (D67); the "3" in the title and the faint year stamp tell them apart.
+**Default:** that's enough; the rule becomes "a new title each edition, the colour may stay".
+
 ### U30 · Pick the drawers and corner buttons
 Once Frontend has its proposals (D73): the drawers' content and hierarchy, the prizes drawer, and the corner buttons' style and icons, in one consistent style.
 **Default:** waits on the proposals.
