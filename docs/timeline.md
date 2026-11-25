@@ -53,6 +53,10 @@ Rehearsals use the cloud's free daily quota too, so never hold one on the day of
 
 ## Risks
 
+- **Song downloads are blocked (found 25 Nov).** YouTube answers spotDL/yt-dlp with "Sign in to confirm you're not a bot". This must be solved before 2 Dec. The options are the user's: a newer yt-dlp, browser cookies, running the download themselves, or another source.
+- **Hook approval is on the critical path.** A new pool has no playable song until its hooks are approved: about 2 minutes a song, about 3 hours for 86 songs. Prep then runs again in about 30 minutes.
+- **Storage:** the draft's 86 songs measure about 68 MB each, 5.9–7.9 GB in all, which fits R2's free 10 GB once last year's pool is pruned. A lighter format (about 20 MB a song) is measured and ready if the playlist grows past about 100 songs.
+
 - **Disk space:** the show Mac has about 21 GB free, and a new pool's preparation (audio, analysis, windowed stems) needs several GB. Free space before 1 Dec.
 - **A late playlist change** after 3 Dec means reprinting cards. After 11 Dec it's not possible.
 - **Hooks are proposals:** on last year's songs the automatic top candidate was within a bar of the real hook in only 26 of 77 songs. The user's approval pass is needed, not optional.
