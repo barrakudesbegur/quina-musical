@@ -20,19 +20,23 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 The study ([research/reports/pool-size-2026.md](research/reports/pool-size-2026.md)) gives candidate nights from a first song at 18:05: 60 songs (rounds end about 21:16), 65 (21:25), 70 (21:34, bad case 21:46), 77 (21:47, no margin before 22:00), 86, the whole draft (22:04).
 **Default:** 70, the study's recommendation.
 
-### U35 · What the print shop needs
-The PDF is A4 portrait, 3 cards a page in cut-stack order, with no bleed or crop marks: the same layout as the 2025 PDFs, now titled "QUINA QUINA! 3".
-**Default:** the same as last year; ask the print shop only if they asked for changes then.
-
-### U36–U40 · How prizes really work
+### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
 - U36: the Line's prize in 2025 and 2026;
 - U37: a hamper's three tiers (the big item, sponsor gifts with logos, the basics uncredited), with a sponsor's units split across rounds;
 - U38: a gift known only by its sponsor;
 - U39: money donors are thanked, never tied to a prize;
-- U40: hampers are grouped in the organizers' spreadsheet, then imported into Admin.
+- U40: answered (D89).
 
 **Default:** the prizes drawer stays on hold until these are answered.
+
+### U42 · Where the night's settings file lives
+D89 puts the whole night's settings in one git-tracked JSON file. But this repo is public: anyone could read every prize before its round's intro (prize secrecy) and each sponsor's money amount.
+**Default:** nothing moves until the user answers.
+
+### U43 · Which copy wins on the night
+Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
+**Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
 
 ### U41 · A Celebration while a drawer is open
 Drawers sit on top of everything, so an open drawer hides a Celebration, even "La teva línia".
@@ -66,6 +70,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U35 · What the print shop needs** (2026-11-25) → D88: the same as last year, just the PDF.
+- **U40 · How contributions get into hampers** (2026-11-25) → D89: the organizers use their own spreadsheet; the orchestrator parses it into the plan; the night's settings live in a git-tracked JSON file that agents edit.
 - **U17 · The PDF install script** (2026-11-25): approved by the user; `canvas` is built and loads.
 - **U26 · One special card for both special rounds** (2026-11-25) → D81: yes, one card plays both.
 - **U27 · The rehearsal dates** (2026-11-25) → D82: no fixed dates; a tech rehearsal when ready, maybe a presenters' one a day or two before or on the day.

@@ -812,3 +812,11 @@ By: the user. Source: Backend's report of 2026-11-25. Lives in: apps/cloud/docs/
 ### D87 · The corner buttons' style and the drawers' hierarchy · 2026-11-25 · Active
 Corner-button style B, with its matching icons, and drawer hierarchy J2. The menu drawer's title "Menu" changes to a settings word. The prizes drawer isn't chosen yet: the user needs P1–P3 drawn with real prizes and logos, and P3's dashed circle and left corners fixed (U30 stays open for it).
 By: the user. Source: open-questions.md › U30; the user's answers of 2026-11-25. Implements: D73. Lives in: requirements/screens.md › Player app.
+
+### D88 · The print shop gets the PDF as last year · 2026-11-25 · Active
+They need the same as last year: just the PDF (A4, 3 cards a page, no bleed or crop marks). Answers U35.
+By: the user. Source: open-questions.md › Answered (U35). Lives in: requirements/songs-and-cards.md › Generating and printing.
+
+### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Active; where the file lives Pending (U42)
+The organizers keep their prizes and sponsors in a spreadsheet however they like; the user hands it over, and the orchestrator parses it into the plan. The whole night's settings should live in one JSON file tracked by git, so agents can edit every setting and the laptop uses it too. Admin's UI is only for last-minute edits on a phone, and even those the user would rather make through an agent on the laptop. Answers U40.
+By: the user. Source: open-questions.md › Answered (U40); the user's answers of 2026-11-25. Amends: the requirement that prizes and sponsors are entered in Admin. Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Admin.

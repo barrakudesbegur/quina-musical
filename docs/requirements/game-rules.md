@@ -149,7 +149,7 @@ _From event.md › Prizes and sponsors, Money._
   - Before each round, the presenters read out every prize and its sponsor, money donors included. The cheat sheet lists them.
   - They keep the prizes alive during the round ("a veure qui s'emportarà…").
   - Every sponsor appears somewhere on the projector during the night ([screens.md](screens.md#every-sponsor-appears)).
-- Prizes, bundles and sponsors are entered in Admin, with bulk import and export. Logos come from a private logo library (pending U16).
+- Prizes, bundles and sponsors come from the organizers' own spreadsheet, which the orchestrator parses into the night's settings file (D89). Admin's UI is for last-minute edits. Logos come from a private logo library (pending U16).
 
 ## Prize secrecy
 
