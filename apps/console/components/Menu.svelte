@@ -160,6 +160,8 @@
           <h3 class="menu-group__title" id="{uid}-game"><Icon name="gauge" />{S.menu.game}</h3>
           <Switch label={S.menu.pause} note={S.menu.pauseNote} on={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
           <Switch label={S.pace.autoFinal} on={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
+          <!-- R2-Q18: the presenters can turn off the automatic "Final Lap!" fanfare (the Efectes pad still plays it by hand). -->
+          <Switch label={S.menu.finalLap} note={S.menu.finalLapNote} on={snap.game.finalLapStinger} disabled={!model.can('setGame')} onchange={(finalLapStinger) => model.act('setGame', { finalLapStinger })} />
           <span class="menu-group__field" id="{uid}-phase">{S.menu.phase}</span>
           <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
             <button type="button" class="choice" data-anim="press" aria-pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)}>{S.menu.phaseAuto}</button>

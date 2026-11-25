@@ -514,6 +514,8 @@ export const S = {
     game: 'Joc',
     pause: 'Pausa tècnica',
     pauseNote: 'Projector i mòbils: «Tornem de seguida»',
+    finalLap: "«Última volta» automàtica",
+    finalLapNote: "La fanfàrria sona sola un cop per quina, quan arriba l'última volta. Des d'Efectes es pot tocar igualment.",
     phase: 'Fase',
     phaseAuto: 'Automàtica',
     winners: CA.winners,
