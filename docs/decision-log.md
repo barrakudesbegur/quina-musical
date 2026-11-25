@@ -773,7 +773,7 @@ By: the user. Source: open-questions.md › Answered (U15). Lives in: requiremen
 The card styles in the current design are fine; no "Lletra gran" switch. Answers U21.
 By: the user. Source: open-questions.md › Answered (U21). Lives in: requirements/screens.md › Player app.
 
-### D78 · Public unless there's a reason · 2026-11-25 · Active
+### D78 · Public unless there's a reason · 2026-11-25 · Amended by D98
 Every card's songs stay public. Anything may be public unless there's a reason to hide it; the code stays simple. Answers U22.
 By: the user. Source: open-questions.md › Answered (U22). Lives in: requirements/operations.md › Privacy.
 
@@ -817,7 +817,7 @@ By: the user. Source: open-questions.md › U30; the user's answers of 2026-11-2
 They need the same as last year: just the PDF (A4, 3 cards a page, no bleed or crop marks). Answers U35.
 By: the user. Source: open-questions.md › Answered (U35). Lives in: requirements/songs-and-cards.md › Generating and printing.
 
-### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Active; where the file lives Pending (U42)
+### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Active; where the file lives: D97
 The organizers keep their prizes and sponsors in a spreadsheet however they like; the user hands it over, and the orchestrator parses it into the plan. The whole night's settings should live in one JSON file tracked by git, so agents can edit every setting and the laptop uses it too. Admin's UI is only for last-minute edits on a phone, and even those the user would rather make through an agent on the laptop. Answers U40.
 By: the user. Source: open-questions.md › Answered (U40); the user's answers of 2026-11-25. Amends: the requirement that prizes and sponsors are entered in Admin. Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Admin.
 
@@ -848,3 +848,11 @@ By: the user via canvas (comment #14 on `Mobil-B-J2`, 25 Nov). Source: the "Quin
 ### D96 · Londrina is always in capitals · 2026-11-25 · Active; two exceptions Pending (U46)
 Every text set in Londrina is in capitals, on every screen: titles, buttons, names and numbers, as the design system says. Frontend checked all 59 boards: no place reads better in lowercase, and capitals cause no new overflow. Designs only (canvas v61).
 By: the user via canvas (comment #4 on `Mobil-B-J2`, 25 Nov). Source: the "Quina Musical look" canvas v61. Lives in: requirements/screens.md › Every screen.
+
+### D97 · The night's settings file lives in this public repo · 2026-11-25 · Active
+The settings file (D89) is tracked in this repo, every prize included. There's no private repo and no clone step on the laptops. Answers U42. Which copy wins on the night is still U43; whether sponsors' names may be in it is U48.
+By: the user (to Backend, 25 Nov). Source: open-questions.md › Answered (U42). Amends: D89. Lives in: requirements/operations.md › Privacy.
+
+### D98 · Hiding prizes is for the show's hype · 2026-11-25 · Active
+Prizes are hidden for the hype, on the players' screens: the projector and phones show a round's prizes only once it's revealed. Anything only a developer reading the public repo could find, like every prize in the settings file, may be committed: nobody will look, and finding a prize early harms nothing. The user: "we just keep it secret for the show hype". What must stay private is unchanged: people's names (winners, who keeps a prize), resume codes, Shuffle seeds (they'd give away the Queue), tokens and keys, and audio.
+By: the user (to Backend, 25 Nov: "it is part of the model"). Source: Backend's report of 25 Nov. Amends: D78. Lives in: requirements/operations.md › Privacy.

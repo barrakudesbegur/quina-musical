@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D97**, **U48**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D99**, **U49**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -15,6 +15,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## In flight
 
+- **The Check's redesign (grilling the user in chat, from 25 Nov evening).** The user dislikes today's Check flow and the console's Check screen. The projector's look is fine. Their complaints: it's an awkward, boring moment; the presenters can't build hype or time the fanfare around their voices; the console should show the card as a grid; the queue makes no sense, since it's usually one card; and the Confirmar button goes against the model, since rejecting is only for exceptions. Round 1 asked: Q1 the presenters pace each reveal, plus "Seguides" stopping before the last song; Q2 the console knows the result first, in private; Q3 a pass needs no confirmation and the fanfare fires on the presenters' cue; Q4 the suspense order, deciding song last; Q5 "Algú més?" asked while taking the number. Next round: the cue's form, an exceptional reject, how a fail plays out, the console's grid, the Desgraciat's Check, voices in the Celebration. When understanding is shared: D-entries, then the requirements (game-rules › The Check, screens › Console, show-and-music › the Check's sound), then Sound engine (engine and protocol) and Frontend (a content spec, then boards). No code until the user says "implement".
 - **Frontend's canvas comments are done** (v61, logged as D95 and D96). Two threads on `Mobil-B-J2` stay open for the user: #3 is U47 (the icon picker's style) and #4 is U46 (Londrina's two lowercase exceptions). Frontend's to-do for when the code unfreezes: the corn's shade path in CardMark and pending covers on the drum's decoy tiles; IconPicker, NumberField's QR button, the save button and the corners follow the v61 boards.
 - **71caa9c, keep or revert:** Frontend's handoff says the orchestrator would ask the user. Asked in chat on 25 Nov; no answer yet. Meanwhile it stays, until the user agrees the boards that replace it.
 - **UI code is frozen.** `71caa9c` (the drawers, B + J2) stays as it is. D90's started code is set aside in `temp/patches/d90-player-code.patch`. Build only on the user's explicit "implement", from the canvas boards.
@@ -29,11 +30,11 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   2. Frontend writes a content spec for the prizes drawer, and I check it against the model;
   3. Frontend draws boards from the real 2025 hampers (real names only on boards, never in the repo);
   4. the user picks (U30).
-- **The settings file (D89; U42 and U43 open).** My recommendations:
-  - U42 (a): the public repo, since prize secrecy isn't worth a second repo (D78);
-  - U43: the file wins before the night, the cloud on the night, and an agent pulls the plan back afterwards.
+- **The settings file (D89, D97, D98).** The user answered U42 to Backend: the file lives in this public repo with every prize, and hiding prizes is only for the hype on screens. Still open:
+  - U43: I recommend the file wins before the night, the cloud on the night, and `plan pull` brings the night back into the file;
+  - U48: I recommend sponsors' names and logos in the file, never their money amounts.
 
-  Backend's facts and plan are in its reply of 25 Nov: `npm run plan -- check|push|pull` and a preflight diff, about a day of work. Build it after the user answers. Then the orchestrator parses the organizers' spreadsheet into the file.
+  Backend's plan: `npm run plan -- check|push|pull` and a preflight diff, about a day of work, built after U43. Then the orchestrator parses the organizers' spreadsheet into the file.
 - **The pool size (U34):** the study is in `docs/research/reports/pool-size-2026.md`, and the user's page is https://claude.ai/code/artifact/dd4e4ff9-b838-4402-8f64-d6b02677703b. I recommend 70. When the user picks:
   - tell Sound engine (its expected-end proposal: seconds per song per round, from the seeded Queue);
   - tell Frontend (Admin's default `roundMinutes`, 25 → about 15).

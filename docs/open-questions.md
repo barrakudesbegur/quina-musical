@@ -30,9 +30,9 @@ Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper shee
 
 **Default:** the prizes drawer stays on hold until these are answered.
 
-### U42 · Where the night's settings file lives
-D89 puts the whole night's settings in one git-tracked JSON file. But this repo is public: anyone could read every prize before its round's intro (prize secrecy) and each sponsor's money amount.
-**Default:** nothing moves until the user answers.
+### U48 · Sponsors' names and money in the settings file
+D97 puts every prize in the public repo. The repo's rule so far is no people's or businesses' names in git, but a prize usually names its sponsor, and every sponsor appears on screen on the night anyway.
+**Default:** the file may hold sponsors' names and logos, but never their money amounts (those stay in the organizers' spreadsheet).
 
 ### U43 · Which copy wins on the night
 Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
@@ -77,6 +77,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U42 · Where the night's settings file lives** (2026-11-25) → D97 and D98: in this public repo, every prize included; hiding prizes is only for the hype on the players' screens.
 - **U45 · The shake icon** (2026-11-25) → D94: option C with a smaller, medium "×3" (size option 2 for now), no frame.
 - **U44 · The menu's rare, risky holds** (2026-11-25) → D92: they keep "Mantén premut", as a tag beside the label.
 - **U41 · A Celebration while a drawer is open** (2026-11-25) → D90: a Celebration closes Premis, Horari and Ajustos, not the pad; the your-song flashes and particles play on top of everything.
