@@ -12,8 +12,9 @@ The playlist → the pool prepared and checked → the cards made → the hooks 
 |---|---|---|
 | Now | Work with last year's songs (D80). The user picks the pool size (U34; the study recommends 70) | User |
 | **Tue 1 Dec** | **Playlist final** | User |
+| 1 Dec, first | `data/pools/2026.json` created, its cards at `apps/cards/dist/cards.json`; last year's test cards move to `data/pools/default/cards/`, and every test reads cards through its pool | Sound engine, then Frontend and Backend |
 | 1–3 Dec | The pool downloaded, prepared and quality-checked. Unusable songs are flagged at once, so the user can swap them; the user downloads only the leftovers by hand | Sound engine, user |
-| **4–5 Dec** | **The cards generated, proofed and printed**. No song changes after this | User, Frontend |
+| **4–5 Dec** | **The cards generated (`npm start -- --pool 2026` in apps/cards), proofed and printed**. No song changes after this | User, Frontend |
 | Then | Hooks approved on the audition page (U14), Signatures vetted, stems rendered; the pool in R2 and both laptops synced; the night's plan in Admin (U18); the real-device checks (U19) | User, Sound engine, Backend |
 | When ready (D82) | The tech rehearsal: a whole show with this year's pool, the real plan, the tablet, the Wii remote and real phones | User, everyone |
 | After the tech rehearsal | **Code freeze:** only fixes for what a rehearsal found. Every deploy changes what the printed QR codes open | All sessions |
