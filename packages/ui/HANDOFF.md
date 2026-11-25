@@ -2,26 +2,14 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
-## Now (2026-11-25, late night)
+## Now (2026-11-25, night)
 
-- **In progress:** nothing running.
-- **Done today, late:** the player's home screen, the two corner buttons (style B) and stacked drawers (J2), with the tabs removed (`71caa9c`; D73, D84, D87). See "The player drawers" below.
-- **Next:**
-  - **the cards, before 4 Dec (D83):** the user makes them on 4–5 Dec if the playlist is ready on 1 Dec, and the pool is prepared and checked by 3 Dec. The generator is ready (provisional values D67–D69; no repeated card or line, `65b74ef`; `--check` draws the cards too). The PDF renders end to end (U17 done: canvas approved and built; `fbfe5bb` copies the fonts into the build): both PDFs in about 30 s. Still needed: the 2026 pool file's `cardsJson` (Sound engine; suggested `apps/cards/dist/cards.json`), the user's final values, then generate, proof with the user, commit dist/ and Backend redeploys. A new title each edition; the paper colour may stay (D85);
-  - **after Sound engine's pool commit (1–3 Dec, agreed 25 Nov):** last year's test cards move to `data/pools/default/cards/` (the default pool's `cardsJson`), and `apps/cards/dist` becomes 2026's printed cards (pool `2026`). Then point card-types.test, cards-unique.test and fixtures.test (and the states.ts comment) at `loadPool('default')`; keep checking dist too (valid types, no repeated card or line, no count assumed); fix apps/admin/README's path. Before 4 Dec;
-  - **the Premis drawer's content: ON HOLD** (the Orchestrator, 25 Nov). The user rejected P1–P3, even with real data: "the ui is not aligned with the model". The Orchestrator is checking event.md's prizes section against the organisers' 2024/2025 sources with the user first. Then: a ~15-line content spec to the Orchestrator (what a player needs from it at each moment of the night; current, revealed, past and locked rounds; a bundle's structure, money donors and Barrakudes' own items; what it never shows), and only then a design drawn from real 2025 data (boards only, never the repo). Until then the drawer shows the previous content;
-  - **open point:** drawers are modal dialogs in the top layer, so an open drawer covers a Celebration (even "La teva línia"). Decide whether a Celebration closes Premis, Horari and Ajustos (not the pad while typing);
-  - when the user picks the pool size (U34; the study says 70): Admin's default `roundMinutes` follows it (about 15 at 70 songs). The Orchestrator sends it with the pick;
-  - the presenters' checklist on the cheat sheet (from the 2025 running order: welcome points, every prize and sponsor before each round, the throw breaks, the close);
-  - the player's before-the-Game card types preview (the Mobil-Abans board): one special card plays the Especial and the Desgraciat (D81), as the projector already shows;
-  - Admin's Games view shows Backend's `flaggedDecisions` (accepted claims whose Check didn't pass; a safety net);
-  - "el tècnic" wording;
-  - the player router's `hashchange`.
-- **Blocked:** publishing to the design canvas (the user's OK).
-- **On hold:** the theme pass (U12: "not ready yet").
-- **Waiting on the user** (`docs/open-questions.md`):
-  - U30 (the corner buttons' style and the Horari icon, the drawers' hierarchy, the prizes drawer), and the OK to publish the boards;
-  - U34 (the pool size).
+- **UI CODE IS FROZEN (the user, via the Orchestrator, 25 Nov):** UI work is boards and mockups only, until the user explicitly says to implement a screen. A pick on a board is NOT a go to build. No commits to apps/player or packages/ui code.
+- **`71caa9c`** (home, corner buttons B, drawers J2, tabs removed) was built on the Orchestrator's mistaken "build B + J2 now". It stays as it is while the Orchestrator asks the user whether to keep or revert it.
+- **D90** (a Celebration closes Premis, Horari and Ajustos, but not the pad while a number is typed; the your-song flash and particles over every drawer): specced in ANIMATIONS.md. The code was started and then stopped: it's saved, uncommitted, as `temp/patches/d90-player-code.patch` (7 files, unit-tested; `git apply` it only when the user says to implement). The tree is clean.
+- **On hold:** the Premis drawer's content (the prizes model is being checked with the user first; then a content spec, then boards from real 2025 data); the theme pass (U12).
+- **Waiting on the user:** keep or revert `71caa9c`; U30's prizes drawer; U34 (the pool size); the OK to publish boards to the design canvas.
+- **Next, when allowed:** the cards before 4 Dec (D83; the generator and PDF are ready: see the queue), and the default-pool move with Sound engine on 1 Dec (tests and docs only).
 
 **What this covers:** every screen and its motion, which is the UI/UX and animation role in `docs/team.md`:
 - the projector stage (`apps/stage`, plain TypeScript);
