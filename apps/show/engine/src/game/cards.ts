@@ -26,7 +26,7 @@
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
 // 'bingo' (a CompletionKind: the Desgraciat round's 'standing' has its own functions). Everything derived from cards in play is "possible": the ranges include unsold cards.
 
-import { DEFAULT_CARD_TYPE, isCardTypeId, type RoundKind, type WinKind } from '@quina/protocol';
+import { DEFAULT_CARD_TYPE, isCardTypeId, type WinKind } from '@quina/protocol';
 
 export type { WinKind } from '@quina/protocol';
 /** What a card completes: a Line or its Bingo (the Desgraciat round's 'standing' is the opposite: nothing lands). */
@@ -46,8 +46,6 @@ export interface Card {
   type: string;
   lines: ReadonlyArray<ReadonlyArray<CardSongRef>>;
 }
-/** A normal round, or the special round (special cards only). */
-export type RoundType = RoundKind;
 /** The songs that have landed: a Set, or an array in landing order. */
 export type LandedSongs = ReadonlySet<number> | ReadonlyArray<number>;
 export interface CardStatus {
@@ -77,8 +75,6 @@ export interface FirstWin {
 
 export const ROWS = 3;
 export const COLUMNS = 4;
-/** @deprecated The protocol's DEFAULT_CARD_TYPE (a round's card type is now its own: `RoundInfo.cardType`). */
-export const ROUND_TYPES: Readonly<Record<RoundType, string>> = DEFAULT_CARD_TYPE;
 
 const songIdOf = (song: CardSongRef): number => (typeof song === 'object' && song !== null ? song.id : song);
 
