@@ -59,7 +59,7 @@ The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, c
 
 ```json
 {
-  "v": 2,
+  "v": 3,
   "edition": "26",
   "title": "Quina Quina 3",
   "prizeReveal": "perRound",
@@ -67,30 +67,35 @@ The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, c
     {
       "number": 1,
       "kind": "normal",
+      "cardType": "normal",
       "line": [
-        { "title": "Coca de recapte", "detail": null, "sponsorId": "forn-can-pep", "image": null, "headline": true },
+        { "title": "Coca de recapte", "detail": null, "sponsorId": "forn-del-poble", "image": null, "headline": true },
         { "title": "Samarreta", "detail": null, "sponsorId": "barrakudes", "image": null, "headline": false }
       ],
       "bingo": [
-        { "title": "Sopar per a dos", "detail": "Qualsevol divendres de gener", "sponsorId": "restaurant-el-far", "image": null, "headline": true },
-        { "title": "Lot de productes", "detail": null, "sponsorId": "forn-can-pep", "image": null, "headline": false }
+        { "title": "Sopar per a dos", "detail": "Qualsevol divendres de gener", "sponsorId": "restaurant-de-la-placa", "image": null, "headline": true },
+        { "title": "Lot de productes", "detail": null, "sponsorId": "forn-del-poble", "image": null, "headline": false }
       ]
     },
     {
       "number": 2,
+      "kind": "desgraciat",
+      "cardType": "normal",
+      "line": [],
+      "bingo": [{ "title": "Panera de Nadal", "detail": null, "sponsorId": "barrakudes", "image": null, "headline": true }]
+    },
+    {
+      "number": 3,
       "kind": "special",
+      "cardType": "especial",
       "line": [],
       "bingo": [{ "title": "Pernil", "detail": null, "sponsorId": "barrakudes", "image": null, "headline": true }]
     }
   ],
   "sponsors": [
-    { "id": "forn-can-pep", "name": "Forn Can Pep", "logo": null },
-    { "id": "restaurant-el-far", "name": "Restaurant El Far", "logo": null },
+    { "id": "forn-del-poble", "name": "Forn del poble", "logo": null },
+    { "id": "restaurant-de-la-placa", "name": "Restaurant de la plaça", "logo": null },
     { "id": "barrakudes", "name": "Barrakudes", "logo": null }
-  ],
-  "cardTypes": [
-    { "type": "normal", "name": "Cartró normal", "color": "#cfe8ff", "priceCents": 300, "rounds": ["normal"] },
-    { "type": "especial", "name": "Cartró especial", "color": "#ffd9e8", "priceCents": 500, "rounds": ["special"] }
   ],
   "schedule": { "startAtMs": 1798306200000, "roundMinutes": 25, "intervalMinutes": 3 },
   "cheatSheet": {
@@ -105,12 +110,13 @@ The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, c
 ```
 
 Rules (every key is required, and an unknown key is an error, so a typo can't silently drop a prize):
-- `v`: always `2` (a version 1 plan, with one prize object or `null` per Line and Quina, is still read: each prize becomes a bundle of one headline prize).
+- `v`: always `3`. Version 1 and 2 plans are still read: a version 1 plan's single prize per Line and Quina becomes a bundle of one headline prize, and a version 2 plan's `cardTypes` only picks each round's `cardType`, then is dropped.
 - `edition`: the two-digit year as a string (`"26"`). It must match the cards' QR links (`apps/cards/src/config.ts`).
 - `title`: the edition's name, on every screen (`"Quina Quina 3"`).
 - `prizeReveal`: `"perRound"` (phones see round 1's prizes from the start and each round's as it is introduced) or `"allSecret"` (phones see none until the presenters reveal a round from the console).
-- `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps. `kind` is `"normal"` or `"special"`, and at most one round is special.
-  - `cardType`: the printed card type the round plays, an id from `apps/cards/dist/card-types.json` (`"normal"`, `"especial"`…): only cards of that type count in it. Optional: a round without one plays its kind's default (normal cards in normal rounds, especial cards in the special round). Admin picks it per round and warns when the id isn't in card-types.json.
+- `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps.
+  - `kind`: `"normal"`, `"special"` (the Quina Especial) or `"desgraciat"` (the Quina Desgraciada: the last card standing wins). At most one round is special and at most one is Desgraciat. A Desgraciat round has no Line: its `line` must be `[]`, and its `bingo` bundle is the last-standing prize.
+  - `cardType`: the printed card type the round plays, an id from `apps/cards/dist/card-types.json` (`"normal"`, `"especial"`…): only cards of that type count in it. A round that leaves it out plays its kind's default (normal cards in normal and Desgraciat rounds, especial cards in the special round). Admin picks it per round and warns when the id isn't in card-types.json.
 - `line` and `bingo` (the Quina's prizes): the bundle, a list of up to 40 prizes in the order screens show them, `[]` while there are none. Headline prizes (usually one or two) come first.
   - `title`: what is won, as presenters read it out (1–200 characters).
   - `detail`: extra text, or `null`.
@@ -118,14 +124,9 @@ Rules (every key is required, and an unknown key is an error, so a typo can't si
   - `image`: a picture path, or `null` (screens show it for headline prizes).
   - `headline`: `true` for the prizes shown first and bigger.
 - `sponsors`: up to 200.
-  - `id`: lowercase letters, digits and dashes (`forn-can-pep`), unique. Prizes refer to sponsors by this id.
+  - `id`: lowercase letters, digits and dashes (`forn-del-poble`), unique. Prizes refer to sponsors by this id.
   - `name`: as shown on screen.
   - `logo`: `null`. Logos are added and cleaned up in Admin. Admin's own export also accepts a PNG data URL of up to 200 KB.
-- `cardTypes` (deprecated: names, colours and prices now come from card-types.json, and each round names its `cardType`; plan version 3 drops it, and Admin only passes it through): the printed card types, `"normal"` and `"especial"`, each once.
-  - `name`: as shown on screen (`"Cartró normal"`).
-  - `color`: its pastel colour, `"#rrggbb"`.
-  - `priceCents`: its price in cents, or `null`.
-  - `rounds`: the round kinds it plays in: `["normal"]` for normal cards, `["special"]` for special ones.
 - `schedule`:
   - `startAtMs`: when the first round starts, in epoch milliseconds (the example is 26 Dec 2026, 18:30 in Begur), or `null`.
   - `roundMinutes`: 1–240.
