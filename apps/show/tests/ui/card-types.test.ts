@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { CARD_TYPE_ID_RE } from '@quina/protocol';
+import { CARD_TYPE_ID_RE, defaultCardType } from '@quina/protocol';
 import {
   UNKNOWN_CARD_TYPE_COLOR,
   cardTypeLabel,
@@ -59,13 +59,15 @@ test('which rounds each type plays, from the rounds (a round without a type play
     { number: 2, kind: 'normal' as const, cardType: 'normal' },
     { number: 4, kind: 'special' as const },
     { number: 5, kind: 'normal' as const, cardType: 'especial' },
-    { number: 6, kind: 'desgraciat' as const },
+    { number: 6, kind: 'desgraciat' as const, cardType: 'normal' },
   ];
   assert.deepEqual(roundsByCardType(rounds), [
     { type: 'normal', regularRounds: [1, 2], special: false, desgraciat: true },
     { type: 'desgraciat', regularRounds: [3], special: false, desgraciat: false },
     { type: 'especial', regularRounds: [5], special: true, desgraciat: false },
   ]);
+  // A Desgraciat round without a type plays its kind's default (the special cards since D70).
+  assert.deepEqual(roundsByCardType([{ number: 1, kind: 'desgraciat' }]), [{ type: defaultCardType('desgraciat'), regularRounds: [], special: false, desgraciat: true }]);
 });
 
 // ---- loading: card-types.json next to cards.json, never breaking the screen

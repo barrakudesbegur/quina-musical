@@ -2,6 +2,7 @@
 // each round's card type, names, colours and prices from card-types.json.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { defaultCardType } from '@quina/protocol';
 import { nightCardTypes } from '../../../../stage/model/night.ts';
 import { UNKNOWN_CARD_TYPE_COLOR, knownCardTypes, type PrintedCardType } from '../../../../../packages/ui/data/card-types.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
@@ -23,20 +24,24 @@ test('each card type lists the regular rounds it plays, and whether it plays the
 });
 
 test('the Quina Desgraciada is its own entry (its sad-face pill), not one of the numbered rounds', () => {
-  const rounds = [round(1, 'normal'), round(2, 'desgraciat'), round(3, 'normal'), round(4, 'special')];
-  assert.deepEqual(
-    nightCardTypes({ rounds }, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]),
-    [
-      ['normal', [1, 3], false, true],
-      ['especial', [], true, false],
-    ],
-  );
-  // The sample plan: round 5 is the Desgraciat round, round 7 the Especial.
+  const night = (desgraciatType: string) =>
+    nightCardTypes({ rounds: [round(1, 'normal'), round(2, 'desgraciat', desgraciatType), round(3, 'normal'), round(4, 'special')] }, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]);
+  assert.deepEqual(night('normal'), [
+    ['normal', [1, 3], false, true],
+    ['especial', [], true, false],
+  ]);
+  // D70: the special card plays both the Especial and the Desgraciat (as in 2025), so its band gets both pills.
+  assert.deepEqual(night('especial'), [
+    ['normal', [1, 3], false, false],
+    ['especial', [], true, true],
+  ]);
+  // The sample plan: round 5 is the Desgraciat round (its kind's default type), round 7 the Especial.
+  const d = defaultCardType('desgraciat');
   assert.deepEqual(
     nightCardTypes(SAMPLE_PLAN, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]),
     [
-      ['normal', [1, 2, 3, 4, 6, 8], false, true],
-      ['especial', [], true, false],
+      ['normal', [1, 2, 3, 4, 6, 8], false, d === 'normal'],
+      ['especial', [], true, d === 'especial'],
     ],
   );
 });

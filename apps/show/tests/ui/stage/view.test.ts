@@ -2,6 +2,7 @@
 // scene from the right data (fixtures from ui/fixtures).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { defaultCardType } from '@quina/protocol';
 import { flowOf, type FlowState } from '../../../../../packages/ui/flow.ts';
 import { FIXTURES, FIXTURE_NAMES } from '../../../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
@@ -153,9 +154,10 @@ test('before: start time, the night\'s card types, sponsors and the player app l
   assert.deepEqual(view.body, {
     scene: 'before',
     startAtMs: NOW + 600_000,
+    // SAMPLE_PLAN's Desgraciat (round 5) plays its kind's default type: the special cards since D70.
     cardTypes: [
-      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 6, 8], special: false, desgraciat: true },
-      { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: null, regularRounds: [], special: true, desgraciat: false },
+      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 6, 8], special: false, desgraciat: defaultCardType('desgraciat') === 'normal' },
+      { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: null, regularRounds: [], special: true, desgraciat: defaultCardType('desgraciat') === 'especial' },
     ],
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
     link: { href: 'https://quina.barrakudesbegur.org/26', label: 'quina.barrakudesbegur.org/26' },
