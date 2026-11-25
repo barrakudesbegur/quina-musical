@@ -25,11 +25,19 @@ Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
 ### U53 · Storage past the free 10 GB
-140 songs take about 9.5 GB in R2 and 210 take about 14 GB, at about 68 MB a song (Backend, Cloudflare's prices read on 25 Nov). R2 charges $0.015 per GB-month beyond 10 GB, averaged over the month: 14 GB from 12 to 28 Dec, pruned after the night, costs $0; from 5 Dec, about $0.01; kept a whole month, $0.06. The alternative is storing each song smaller (about 20 MB, 4.2 GB for 210), which is about a day of Backend's work plus Sound engine's.
+140 songs take about 9.5 GB in R2 and 210 take about 14 GB, at about 68 MB a song (Backend, Cloudflare's prices read on 25 Nov). R2 charges $0.015 per GB-month beyond 10 GB, averaged over the month: 14 GB from 12 to 28 Dec, pruned after the night, costs $0; from 5 Dec, about $0.01; kept a whole month, $0.06. The alternative is storing each song smaller: the original download plus compressed stems, about 15–20 MB a song, so 3–4 GB for 210. Each laptop decodes them when it syncs, about 5 minutes for 210. That's about a day of Backend's work plus Sound engine's.
 **Default:** the plain pool, pushed about a week before the night and pruned right after. It needs the user's OK past the "free plan only" rule, and a check that R2 has a payment method in Cloudflare's dashboard.
 
+### U55 · Preparing Part 1 now, and the laptop's disk
+Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 18 GB for three, with 20 GB free today. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
+**Default:** nothing is prepared until the user says go. Last year's cache stays.
+
+### U56 · Cutting the hook approval from 7 hours
+About 2 minutes a song is about 7 hours for 210 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 2 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
+**Default:** (a) and (b); (c) if the user wants it.
+
 ### U54 · What to call each set of 70 songs
-The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
+The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
 **Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
 
 
@@ -39,7 +47,8 @@ The presenters explain the sides in rounds 1 and 6 (D102).
 
 ### U51 · Round 6's pace
 Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). Round 6 starts a new pool, so its songs are all new too.
-**Default:** round 6 plays at round 1's slower pace.
+Sound engine: easy, since the rule becomes "the first round of each pool". That makes the first special round slow too, because its songs are new.
+**Default:** round 6, and the first special round, play at round 1's slower pace.
 
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
@@ -77,7 +86,7 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 ## Tasks only the user can do
 
 ### U14 · Approve this year's hooks · before the first rehearsal
-On the audition page: about 2 minutes a song, so about 3 hours for 90 songs. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
+On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 7 hours for 210 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
