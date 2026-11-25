@@ -31,7 +31,8 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 - **Pushing (allowed for every session, user rule 2026-11-24):** push `main` when your work is ready. Everyone shares one `main`, so a push also publishes the other sessions' local commits. Before pushing:
   - list the whole range the push would publish, with authors (`git log origin/main..main`): it includes the other sessions' local commits;
   - run `npm test` (and the cloud and prep suites if the range touches them) on the committed state of that whole range, not just your own commit;
-  - make sure nothing sensitive is in the range (no audio, secrets, `.env*`, `data/`, `temp/` or local paths).
+  - make sure nothing sensitive is in the range (no audio, secrets, `.env*`, `data/`, `temp/` or local paths);
+  - push the exact sha you tested: `git push origin <sha>:main`. Never push the moving `main`, and never chain a push after `npm run sync-main` or a rejected push: other sessions may have committed in between.
 
   CI runs on every push. If it goes red, the session that broke it fixes it at once.
 
