@@ -247,15 +247,13 @@ test("card prices as in 2025 (D69), the Desgraciat on special cards (D70): 15 �
     { ...special, number: 12 },
   ];
   const plan: GamePlan = { ...PLAN, rounds };
-  const types = [
-    { type: 'normal', name: 'Cartró normal', priceCents: 150, priceRule: 'perRegularRound' as const },
-    { type: 'especial', name: 'Cartró especial', priceCents: 500, priceRule: 'fixed' as const },
-  ];
-  const ok = c.cardPricesCheck(types, plan);
+  const normalCard = { type: 'normal', name: 'Cartró normal', priceCents: 150, priceRule: 'perRegularRound' as const };
+  const specialCard = { type: 'especial', name: 'Cartró especial', priceCents: 500, priceRule: 'fixed' as const };
+  const ok = c.cardPricesCheck([normalCard, specialCard], plan);
   assert.equal(ok?.status, 'pass');
   assert.match(ok?.detail ?? '', /normal 1,50 € a round \(15,00 € before round 1\); especial 5,00 €/);
   // What the projector shows at each Interval (the protocol's roundCardPrice): never the Desgraciat counted.
-  assert.equal(roundCardPrice(plan, 10, types[0]), 150, 'a normal card before round 10: one regular round left');
-  assert.equal(roundCardPrice(plan, 11, types[1]), 500, 'the special card before the Desgraciat');
-  assert.equal(roundCardPrice(plan, 12, types[1]), 500, 'and before the Quina Especial');
+  assert.equal(roundCardPrice(plan, 10, normalCard), 150, 'a normal card before round 10: one regular round left');
+  assert.equal(roundCardPrice(plan, 11, specialCard), 500, 'the special card before the Desgraciat');
+  assert.equal(roundCardPrice(plan, 12, specialCard), 500, 'and before the Quina Especial');
 });
