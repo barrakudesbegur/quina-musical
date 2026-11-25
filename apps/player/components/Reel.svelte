@@ -63,7 +63,7 @@
   });
 </script>
 
-<div class="reel" data-state={reel.phase} data-size={compact ? 'strip' : 'full'}>
+<div class="reel" data-testid="reel" data-state={reel.phase} data-size={compact ? 'strip' : 'full'}>
   {#if reel.phase === 'landed' && latest}
     {#key latest.position}
       <figure class="reel__landed" data-anim="landing">

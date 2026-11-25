@@ -116,8 +116,7 @@ The order is: ANIMATIONS.md entries, then canvas boards for the user, then code 
 
 The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playlist arrives Tue 1 Dec, and the code freezes Mon 21 Dec.
 
-1. **Follow-ups from Backend's live Desgraciat run on quina-dev** (it passed end to end; the screenshots are in `tools/e2e/results/desgraciat-live-…`): ~1 s after a landing, the phone still showed the Spin (a dim title and a card back), and was normal ~3 s later. Backend is logging the phone's clock against the landing's `atMs`. If the landing reaches phones before `atMs`, that's a feed fix (the song would be on the wire early). If the phone's clock offset is off, it's mine (the player's ClockOffset).
-2. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
+1. **The card generator, due Mon 30 Nov.** It's ready except for the user's values (`c20250d`):
    - it draws from a song pool (`--pool <name>`, the same `data/pools/<name>.json` as the prep and the relay);
    - `--check` validates without writing;
    - the amounts and the seed are in `src/config.ts`;
@@ -126,8 +125,8 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    Still needed from the user (the Orchestrator is asking): title, paper colour, card types, prices and amounts. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
 
    Then the dates: the pool on Tue 1 Dec (86 songs in the draft), cards generated and proofed with the user by Thu 3 Dec, then printed. Don't generate before the playlist is final. The README has the steps.
-3. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
-4. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+2. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+3. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
