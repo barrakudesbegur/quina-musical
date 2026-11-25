@@ -18,7 +18,7 @@ The single place to resume the sound engine's work from. It was first written wh
 - **Blocked:** downloads (U1). YouTube asks for a sign-in, and the cookie-free PO-token plugin was refused by this session's permission check.
 - **Waiting on the user:**
   - U1: how to download the songs;
-  - U13: the listening pass (transitions stay frozen until then);
+  - U13: the listening pass (transitions stay frozen until then). The demo for it is rendered, and the orchestrator has sent it: `data/out/listen-demo/listen-demo.m4a` plus `cues.md`, made by `node apps/show/tests/support/listen-demo.ts` (804e35f). A plan is ready (not applied) if call and response feels too frequent: it labels 70% of transitions today, and would become an occasional move at about 15–25%, with a variety bound;
   - U14: hook approval, by 10 Dec.
 - **Rules:** a new question for the user goes to the orchestrator, never into open-questions.md directly. A decision the user gives me directly is reported to the orchestrator the same day.
 
@@ -51,6 +51,8 @@ All of this is on `main`, green when committed.
 | **The Check decides** (docs/event.md): `decide { valid: true }` on a card whose Check failed is refused (`failedCheck`); a passed card may still be rejected | `233e3a3` |
 | **The Desgraciat shared win:** CheckOutcome `fellLast` (the card sat down with the latest landing) passes, so several such cards can share one Celebration; `isPassingOutcome`, `CHECK_OUTCOMES`, `standing.fellLast`, the winner's `slip`, `claim.decided.outcome` | `30ef20d` |
 | **Planned breaks and the Schedule by round kind:** `SchedulePlan.breaks`, the show page passes `relay.plan` to the engine (`setPlan`), the expected end follows each round's kind, the planned Interval and breaks, and the Interval's countdown adds the break; `roundCardPrice` for the Interval screen's price (U5) | `dde6941`, `471b519` |
+| **The listening demo:** the show page records itself (`?record=1`, engine/src/demo-recorder.ts), and `tests/support/listen-demo.ts` plays one round headless (early to final, Aguanta, Count-in, Suspense, the Line and Bingo Checks and Celebrations, the Interval), writing the audio and a cue list under data/out/listen-demo | `804e35f` |
+| `remote.status` carries the remote's recent `drops` and `lastDropMs` (Frontend's proposal, for the Wii's range) | `df48789` |
 | **The old Decoys experiment retired** (the orchestrator's decision): `DECOYS.enabled`/`chance`, `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1` and the planner's `allowTease` are gone. A Decoy is now only what Suspense teases (`DecoyEvent`, the slimmed `DECOYS` timing) | `fd07f2e` |
 
 Earlier work, before the move, is summarised in the README and `docs/dj-techniques.md` › Built: the planner, every recipe up to D19, the show state machine, the journal, resumeAt, the Interval and the relay security.
