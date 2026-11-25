@@ -23,10 +23,10 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
-| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Nothing running; the listening demo is out for U13 | Download this year's draft songs by any method that passes the quality check (D66), prep, propose hooks | U13, U14 |
-| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | Nothing running | Proposals for the drawers' content, the prizes drawer and the corner buttons (D73); the your-song effect's spec (D74); the presenters' checklist; the card-types preview on phones | U12, U30 |
-| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | Nothing running | The QR domain switch now (D76); this year's pool in R2 | U16, U19, U24 |
-| **Orchestrator** | The user's answers of 25 Nov recorded (D66–D86); the pool-size study delivered (U34) | 2025's export aggregates into a doc (U24); the pool size relayed once picked | — |
+| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Waiting: no work on this year's songs before 1 Dec (D80) | 1 Dec: `data/pools/2026.json`, then download, prep and quality by 3 Dec; the expected end once U34 is picked | U13, U14, U34 |
+| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. Fixing the user's 15 comments on `Mobil-B-J2` | The prizes drawer after U36–U39; build only on the user's "implement" | U12, U30 |
+| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The settings file (`plan check/push/pull`) after U42/U43 | U16, U19, U42, U43 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D94 logged on 25 Nov; the pool-size study and the 2025 data delivered | Log Frontend's comment decisions (D95, D96); the prizes model once U36–U39 are answered | U34, U36–U39, U42, U43 |
 
 ## Recently done (25–26 Nov)
 
