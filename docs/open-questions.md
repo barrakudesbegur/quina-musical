@@ -32,9 +32,6 @@ On the audition page: about 2 minutes a song, so about 3 hours for 90 songs. A s
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
 
-### U17 · Approve the install script for printing cards to PDF · before 4 Dec
-Run it yourself: `! cd apps/cards && npm install-scripts approve canvas`
-
 ### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type per round, prize bundles, sponsors (money donors too), the Schedule with throw breaks.
 
@@ -51,6 +48,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U17 · The PDF install script** (2026-11-25): approved by the user; `canvas` is built and loads.
 - **U26 · One special card for both special rounds** (2026-11-25) → D81: yes, one card plays both.
 - **U27 · The rehearsal dates** (2026-11-25) → D82: no fixed dates; a tech rehearsal when ready, maybe a presenters' one a day or two before or on the day.
 - **U28 · When the cards are printed** (2026-11-25) → D83: the user makes them on 4–5 December, if the playlist is ready.
