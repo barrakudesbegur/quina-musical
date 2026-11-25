@@ -53,6 +53,8 @@ apps/admin/
 
 ## The plan's JSON (for an AI agent)
 
+Loading the organizers' sponsor sheet (column by column, what goes into the plan and what never does): [`docs/sponsor-sheet.md`](docs/sponsor-sheet.md).
+
 The import and the export use the `GamePlan` shape from `packages/ui/plan.ts`, checked by `checkGamePlan`. To fill it from the organizers' Google Sheet, produce exactly this:
 
 ```json
