@@ -19,6 +19,7 @@ import { hookLoop } from './plan/hookloop.ts';
 import { SYNTHS } from './audio/synth/fx.ts';
 import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
 import { DrumView, type DrumCard } from './wheel/drum.ts';
+import { DemoRecorder } from './demo-recorder.ts';
 import { Bus } from './net/bus.ts';
 import { LocalJournal, chooseResume, parseJournalLines, type CloudCopy, type KeyValueStorage } from './journal-store.ts';
 import { mountStage } from '../../../stage/stage.ts';
@@ -93,6 +94,8 @@ interface MixerDebug {
 declare global {
   interface Window {
     mixer?: MixerDebug;
+    /** `?record=1`: the listening demo's recorder (demo-recorder.ts; tests/support/listen-demo.ts drives it). */
+    demo?: DemoRecorder;
   }
 }
 
@@ -167,6 +170,9 @@ if (params.get('mute') === '1') {
   graph.limiter.disconnect();
   graph.limiter.connect(silent).connect(ctx.destination);
 }
+// ?record=1: record what the page plays, with a cue per transition and show moment, for the listening demo.
+const recorder = params.get('record') === '1' ? new DemoRecorder(ctx, graph.limiter) : null;
+if (recorder) window.demo = recorder;
 const loader = new SongLoader(ctx);
 const holdMusic = new HoldMusic(graph);
 // The Interval playlist; how far a Game's order has got is kept per pool, so a reload doesn't repeat tracks.
@@ -325,6 +331,7 @@ function apply(effect: Effect): void {
   const now = ctx.currentTime;
   switch (effect.type) {
     case 'emit':
+      recorder?.event(effect.message);
       bus.emit(effect.message);
       if (effect.message.type === 'state') renderState(effect.message);
       return;
@@ -333,6 +340,7 @@ function apply(effect: Effect): void {
     case 'prefetch':
       return prefetch(effect.ids);
     case 'startTransition':
+      recorder?.plan(effect.plan);
       return startTransition(effect);
     case 'landed':
       return landed(effect.plan);
