@@ -212,6 +212,15 @@ test('the Wii remote: optional, so it only warns; connected, battery, and when i
   assert.equal(c.wiiRemoteCheck({ connected: true, battery: 0.1, sinceMs: now }, now).status, 'warn');
   assert.match(c.wiiRemoteCheck({ connected: false, battery: 0.9, sinceMs: now - 3 * 60_000 }, now).detail, /disconnected 3 min ago.*range/);
   assert.equal(c.wiiRemoteCheck({ connected: true, battery: null, sinceMs: now }, now).status, 'pass');
+  // Drops over the host's last 10 minutes (Frontend's 150f213): one is shown, two warn, as the console does.
+  const one = c.wiiRemoteCheck({ connected: true, battery: 0.8, sinceMs: now - 60_000, drops: 1, lastDropMs: now - 4 * 60_000 }, now);
+  assert.equal(one.status, 'pass');
+  assert.match(one.detail, /1 drop in the last 10 min, the latest 4 min ago/);
+  const edge = c.wiiRemoteCheck({ connected: true, battery: 0.8, sinceMs: now - 60_000, drops: 2, lastDropMs: now - 60_000 }, now);
+  assert.equal(edge.status, 'warn');
+  assert.match(edge.detail, /dropped 2 times.*edge of its range/);
+  assert.match(c.wiiRemoteCheck({ connected: true, battery: 0.8, sinceMs: now, drops: 0, lastDropMs: null }, now).detail, /no drops in the last 10 min/);
+  assert.equal(c.wiiRemoteCheck({ connected: true, battery: 0.22, sinceMs: now }, now).status, 'pass', "the console's own low mark is 20 %");
   assert.equal(c.wiiRemoteCheck(null, now).status, 'warn');
 });
 

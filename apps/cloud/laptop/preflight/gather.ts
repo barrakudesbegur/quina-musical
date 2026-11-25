@@ -75,8 +75,13 @@ function relayView(relay: string): Promise<{ clients: { role: string }[]; remote
       clearTimeout(timer);
       clearTimeout(settle);
       ws.terminate();
-      // Several hosts: a connected remote first, else the latest change.
-      const remote = [...remotes].sort((a, b) => Number(b.connected) - Number(a.connected) || b.sinceMs - a.sinceMs)[0] ?? null;
+      // Several hosts: a connected remote first, else the latest change; its drops summed over every host.
+      const chosen = [...remotes].sort((a, b) => Number(b.connected) - Number(a.connected) || b.sinceMs - a.sinceMs)[0] ?? null;
+      const counted = remotes.filter((r) => r.drops !== undefined);
+      const dropTimes = remotes.map((r) => r.lastDropMs).filter((t): t is number => typeof t === 'number');
+      const remote: RemoteStatus | null = chosen && counted.length
+        ? { ...chosen, drops: counted.reduce((sum, r) => sum + (r.drops ?? 0), 0), lastDropMs: dropTimes.length ? Math.max(...dropTimes) : null }
+        : chosen;
       resolve(clients ? { clients, remote } : null);
     };
     const timer = setTimeout(done, 3000);

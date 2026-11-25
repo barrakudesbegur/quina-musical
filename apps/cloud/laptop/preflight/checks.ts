@@ -284,21 +284,26 @@ export function displaysCheck(profile: unknown, laptopOnly: boolean): Check {
   return check('Laptop', 'Projector', 'pass', `${names}, a separate display${main ? ` (main display: ${main._name ?? '?'})` : ''}`);
 }
 
-/** Below this, the Wii remote's batteries should be changed before the night. */
-const WII_BATTERY_LOW = 0.25;
+/** As the console warns (apps/console/config.ts WII): batteries below this, and this many drops in its window. */
+const WII_BATTERY_LOW = 0.2;
+const WII_DROPS_WARN = 2;
 
 /**
  * The Wii remote, as the relay last heard from the console that hosts it (it pairs with this laptop's Chrome).
- * Optional: the console does everything it does, so nothing here fails. Its status has no signal strength, so
- * the range can't be read here: the runbook's walk test covers it.
+ * Optional: the console does everything it does, so nothing here fails. It has no signal strength, but the host
+ * counts its drops over the last 10 minutes (`drops`, summed over hosts): from 2, it's at the edge of its range.
+ * The runbook's walk test is still the range check.
  */
 export function wiiRemoteCheck(status: RemoteStatus | null, nowMs: number): Check {
   if (!status) return check('Network', 'Wii remote', 'warn', 'no Wii remote connected (optional: the console does everything it does). It pairs with the console on this laptop (night runbook, step 7)');
   const minutes = Math.max(0, Math.round((nowMs - status.sinceMs) / 60_000));
   const battery = status.battery === null ? 'battery unknown' : `battery ${Math.round(status.battery * 100)}%`;
-  if (!status.connected) return check('Network', 'Wii remote', 'warn', `disconnected ${minutes} min ago: check its batteries and its range from the stage (night runbook, step 7: the range test)`);
+  const lastDrop = typeof status.lastDropMs === 'number' ? `, the latest ${Math.max(0, Math.round((nowMs - status.lastDropMs) / 60_000))} min ago` : '';
+  const drops = status.drops === undefined ? '' : status.drops === 0 ? ', no drops in the last 10 min' : `, ${status.drops} drop${status.drops === 1 ? '' : 's'} in the last 10 min${lastDrop}`;
+  if (!status.connected) return check('Network', 'Wii remote', 'warn', `disconnected ${minutes} min ago${drops}: check its batteries and its range from the stage (night runbook, step 7: the range test)`);
+  if ((status.drops ?? 0) >= WII_DROPS_WARN) return check('Network', 'Wii remote', 'warn', `connected, but it dropped ${status.drops} times in the last 10 min${lastDrop}: it's at the edge of its range. Move the laptop nearer the stage (night runbook, step 7)`);
   if (status.battery !== null && status.battery < WII_BATTERY_LOW) return check('Network', 'Wii remote', 'warn', `connected, but ${battery}: change the batteries`);
-  return check('Network', 'Wii remote', 'pass', `connected for ${minutes} min, ${battery}. Its range: the night runbook's range test (step 7)`);
+  return check('Network', 'Wii remote', 'pass', `connected for ${minutes} min, ${battery}${drops}. Its range: the night runbook's range test (step 7)`);
 }
 
 export function cloudCheck(cloud: string, answer: { ok: boolean; status?: number; edition?: string; error?: string }, planEdition: string | null): Check {
