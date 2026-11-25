@@ -7,10 +7,10 @@ import { formatClock } from '../../../packages/rules/time.ts';
 import { STAGE } from '../config.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
-import { nextRoundLabel, STAGE_TEXT } from '../strings.ts';
+import { nextRoundLabel, priceLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
-import { CountdownChip, SponsorList, stickerImage } from './parts.ts';
+import { CountdownChip, MiniCard, SponsorList, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -79,13 +79,19 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
   private readonly plate: HTMLElement;
   private readonly ring = new CountdownRing();
   private readonly words = new CountdownChip('back');
-  private readonly sponsors = new SponsorList(null, 'sponsors--strip interval__sponsors');
+  private readonly sponsors = new SponsorList(null, 'sponsors--strip interval__sponsors', true);
+  /** The coming round's card and price (`price-tag`, U5). */
+  private readonly price = new MiniCard('interval__price-card');
+  private readonly priceText: HTMLElement;
+  private readonly priceTag: HTMLElement;
   private body: IntervalView | null = null;
 
   constructor() {
     this.root.dataset.testid = 'interval';
     this.title = h('h1', { class: 'interval__title', data: { anim: 'idle' } }, STAGE_TEXT.intervalTitle);
     this.plate = h('p', 'interval__plate');
+    this.priceText = h('span', 'interval__price-text');
+    this.priceTag = h('p', { class: 'interval__price', hidden: true, data: { testid: 'interval-price' } }, this.price.root, this.priceText);
     this.words.root.classList.add('interval__words');
     this.words.root.setAttribute('role', 'timer');
     const left = stickerImage(STAGE.stickers.intervalLeft, 'nino-meditant', 'interval__nino interval__nino--left');
@@ -94,6 +100,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     this.root.append(
       this.title,
       this.plate,
+      this.priceTag,
       h('div', 'interval__main', left, h('section', 'interval__countdown', this.ring.root, this.words.root), right),
       this.sponsors.root,
     );
@@ -103,6 +110,12 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     this.body = body;
     setText(this.plate, nextRoundLabel(body.nextRound, body.roundsTotal));
     setData(this.plate, 'special', body.nextRound.special ? 'true' : null);
+    setHidden(this.priceTag, body.price === null);
+    if (body.price) {
+      this.price.set(body.price.color, body.nextRound.special);
+      setText(this.priceText, STAGE_TEXT.priceFor(priceLabel(body.price.cents) ?? ''));
+      this.priceTag.setAttribute('aria-label', STAGE_TEXT.priceOf(body.price.label, priceLabel(body.price.cents)));
+    }
     this.sponsors.set(body.sponsors);
   }
 
@@ -112,6 +125,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     const at = roughCountdown(body.guideEndMs, nowMs, STAGE.countdown);
     this.ring.update(at, ringLeft(body.sinceMs, body.guideEndMs, nowMs), formatClock);
     this.words.update(body.guideEndMs, nowMs);
+    this.sponsors.tick(nowMs);
   }
 
   onAnim(detail: AnimDetail): void {

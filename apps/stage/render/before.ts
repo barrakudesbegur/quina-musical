@@ -12,11 +12,11 @@ import { CountdownChip, MiniCard, SponsorList, sadIcon, starIcon, stickerImage }
 import { QrBlock } from './qr.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
-/** One card type's band: its card (and price tag, when STAGE.showCardPrices), its name, and the rounds it plays. */
+/** One card type's band: its card (with the price tag when it plays round 1 and has a price: U5), its name, and the rounds it plays. */
 function typeBand(t: NightCardType): HTMLElement {
   const card = new MiniCard('night__card');
   card.set(t.color, t.special);
-  const price = STAGE.showCardPrices ? priceLabel(t.priceCents) : null;
+  const price = priceLabel(t.priceCents);
   const art = h('div', 'night__art', card.root, price ? h('p', 'night__price', price) : null);
   const rounds = t.regularRounds.length
     ? h(
@@ -44,7 +44,7 @@ export class BeforeScene implements SceneRenderer<BeforeView> {
   private readonly night: HTMLElement;
   private readonly countdown = new CountdownChip('start');
   private readonly qr = new QrBlock('before__qr');
-  private readonly sponsors = new SponsorList(null, 'sponsors--strip before__sponsors');
+  private readonly sponsors = new SponsorList(null, 'sponsors--strip before__sponsors', true);
   private body: BeforeView | null = null;
   private nightKey = '';
 
@@ -76,5 +76,6 @@ export class BeforeScene implements SceneRenderer<BeforeView> {
 
   tick(nowMs: number): void {
     this.countdown.update(this.body?.startAtMs ?? null, nowMs);
+    this.sponsors.tick(nowMs);
   }
 }

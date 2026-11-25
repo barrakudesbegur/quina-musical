@@ -28,6 +28,7 @@ export const ANIM_NAMES = [
   'check-fallen',
   'celebrate',
   'interval-rotate',
+  'sponsor-pages',
   'idle',
   'credits',
   'pause',

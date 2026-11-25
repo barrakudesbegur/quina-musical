@@ -57,11 +57,9 @@ export const STAGE = Object.freeze({
     intervalLeft: new URL('./assets/nino-meditant.svg', import.meta.url).href as string | null,
     intervalRight: new URL('./assets/nino-sardana.svg', import.meta.url).href as string | null,
   }),
-  /**
-   * The before-the-Game preview shows each card type's price. Off by default (docs/event.md): prices aren't printed,
-   * and a normal card's price drops with every regular round played, which is still an open question for the user.
-   */
-  showCardPrices: false,
+  /** The sponsor strip before the Game and in the Interval (`sponsor-pages`): plates per row, and how long a page shows. */
+  sponsorsPerPage: 8,
+  sponsorPageMs: 8000,
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */
     area: Object.freeze({ x: 40, y: 40, width: 1360, height: 1000 }),

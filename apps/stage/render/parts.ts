@@ -7,7 +7,8 @@ import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/tim
 import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { roundName, STAGE_TEXT, type CountdownContext } from '../strings.ts';
-import { CoverArt, h, setData, setHidden, setText, setVar } from './dom.ts';
+import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
+import { sponsorPage } from '../model/sponsors.ts';
 
 /** "Quina 4" (or "Quina Desgraciada": strings.ts roundName), plus the special-round badge. */
 export class RoundTitle {
@@ -69,17 +70,46 @@ export class SponsorList {
   readonly root: HTMLElement;
   private readonly list: HTMLUListElement;
   private key = '';
+  private sponsors: readonly SponsorView[] = [];
+  /** The page shown (`paged` strips), or -1 before the first. */
+  private page = -1;
 
-  constructor(title: string | null, extraClass = '') {
-    this.list = h('ul', 'sponsors__list');
+  /**
+   * `paged`: one row at a time, turning the page every STAGE.sponsorPageMs (`sponsor-pages`: before the Game and in
+   * the Interval); otherwise every sponsor at once (the closing credits, which roll).
+   */
+  private readonly paged: boolean;
+
+  constructor(title: string | null, extraClass = '', paged = false) {
+    this.paged = paged;
+    this.list = h('ul', { class: 'sponsors__list', data: paged ? { anim: 'sponsor-pages' } : {} });
     this.root = h('section', { class: `sponsors ${extraClass}`.trim(), hidden: true }, title ? h('h2', 'sponsors__title', title) : null, this.list);
   }
 
-  set(sponsors: readonly SponsorView[]): void {
+  set(sponsors: readonly SponsorView[], nowMs = 0): void {
     setHidden(this.root, sponsors.length === 0);
     const key = sponsors.map((s) => `${s.label}|${s.logo ?? ''}`).join('\n');
     if (key === this.key) return;
     this.key = key;
+    this.sponsors = sponsors;
+    this.page = -1;
+    if (this.paged) this.tick(nowMs);
+    else this.show(sponsors);
+  }
+
+  /** A paged strip turns its page when the clock says so; the swap fades through the hook's CSS. */
+  tick(nowMs: number): void {
+    if (!this.paged || !this.sponsors.length) return;
+    const page = sponsorPage(this.sponsors, STAGE.sponsorsPerPage, nowMs, STAGE.sponsorPageMs);
+    if (page.index === this.page) return;
+    const first = this.page === -1;
+    this.page = page.index;
+    this.show(page.items);
+    setData(this.list, 'pages', String(page.pages));
+    if (!first) playAnim(this.list, 'sponsor-pages');
+  }
+
+  private show(sponsors: readonly SponsorView[]): void {
     this.list.replaceChildren(
       ...sponsors.map((s) => {
         const logo = s.logo ? logoPicture(s.logo, s.label) : null;

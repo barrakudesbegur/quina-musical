@@ -84,6 +84,8 @@ export const STAGE_TEXT = {
   specialRoundName: 'Quina Especial',
   desgraciatRoundName: CA.desgraciatRound,
   priceOf: (name: string, price: string | null) => (price ? `${name}: ${price}` : name),
+  /** The Interval's price tag (U5): what a card costs for the coming round. */
+  priceFor: (price: string) => `Cartró: ${price}`,
   sponsorsTitle: 'Amb el suport de',
   intervalTitle: CA.scene.interval,
   minutesUnit: 'min',

@@ -22,7 +22,7 @@ const names = (a: AnimDetail[]) => a.map((x) => x.name);
 
 test('the hook names are exactly the ANIMATIONS.md projector hooks', () => {
   assert.deepEqual([...ANIM_NAMES].sort(), [
-    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'suspense',
+    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'sponsor-pages', 'suspense',
   ]);
 });
 

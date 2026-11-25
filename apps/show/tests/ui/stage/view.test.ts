@@ -165,7 +165,7 @@ test('before: start time, the night\'s card types, sponsors and the player app l
   assert.deepEqual(none.body.cardTypes, [], 'no plan: no preview');
 });
 
-test("before: card-types.json's names, colours and prices win over the plan's old copy", () => {
+test("before: card-types.json's names and colours; only round 1's card type shows its price (U5)", () => {
   const state = FIXTURES.before(NOW).state;
   const printed = [
     { type: 'normal', name: 'Cartró blau', color: '#aaccee', title: '', priceCents: 200 },
@@ -173,7 +173,9 @@ test("before: card-types.json's names, colours and prices win over the plan's ol
   ];
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, { ...CATALOG, cardTypes: printed });
   if (view.body.scene !== 'before') return assert.fail('not before');
-  assert.deepEqual(view.body.cardTypes.map((t) => [t.label, t.color, t.priceCents]), [['Cartró blau', '#aaccee', 200], ['Cartró rosa', '#eeaacc', 500]]);
+  // Round 1 plays the normal card at 200 a regular round: × the plan's regular rounds; the especial shows none yet.
+  const regular = SAMPLE_PLAN.rounds.filter((r) => r.kind === 'normal').length;
+  assert.deepEqual(view.body.cardTypes.map((t) => [t.label, t.color, t.priceCents]), [['Cartró blau', '#aaccee', 200 * regular], ['Cartró rosa', '#eeaacc', null]]);
 });
 
 test("check: the badge is named from card-types.json; ✓ or ✗ from the Check's outcome", () => {
@@ -347,7 +349,14 @@ test('interval: the next round, the count and the countdown guide; no winners, n
     sinceMs: NOW - 40_000,
     guideEndMs: NOW + 140_000,
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
+    price: null,
   });
+  // With prices in card-types.json, the coming round's card and its price (U5): round 4 plays the normal card.
+  const priced = { ...CATALOG, cardTypes: [{ type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound' as const }] };
+  const withPrice = stageView(state, flowOf(state), SAMPLE_PLAN, priced);
+  if (withPrice.body.scene !== 'interval') return assert.fail('not interval');
+  const left = SAMPLE_PLAN.rounds.filter((r) => r.kind === 'normal' && r.number >= 4).length;
+  assert.deepEqual(withPrice.body.price, { label: 'Cartró normal', color: '#cfe8ff', cents: 150 * left });
 });
 
 test('after: thanks and the sponsors only', () => {

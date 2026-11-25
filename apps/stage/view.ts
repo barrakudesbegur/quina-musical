@@ -9,7 +9,7 @@ import { winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
 import type { FlowFields, WinKind } from '../../packages/ui/flow.ts';
 import { prizeBundleOf, revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
-import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
+import { comingRoundPrice, knownCardTypes, type ComingRoundPrice } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';
@@ -102,7 +102,18 @@ export interface IntervalView {
   sinceMs: number;
   guideEndMs: number | null;
   sponsors: SponsorView[];
+  /** The coming round's card and its price (ANIMATIONS.md `price-tag`), or null when no price is set. */
+  price: PriceView | null;
 }
+
+/** A card type's price tag: its name and colour, and the price in cents. */
+export interface PriceView {
+  label: string;
+  color: string;
+  cents: number;
+}
+
+const priceView = (p: ComingRoundPrice | null): PriceView | null => (p ? { label: p.label.name, color: p.label.color, cents: p.cents } : null);
 
 /** Thanks and the sponsors' credits; no winning card numbers. */
 export interface AfterView {
@@ -189,8 +200,13 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const open = openRounds(plan, state);
   const play = (): PlayView => ({ scene: 'play', round: roundView(roundNumber, plan, state), motion: motionView(state, notes.spin) });
   switch (scene) {
-    case 'before':
-      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, cardTypes: nightCardTypes(plan, knownCardTypes(catalog?.cardTypes)), sponsors: sponsorsOf(plan), link };
+    case 'before': {
+      // Before the Game counts as round 1's Interval (U5): round 1's card type shows its price, the others none.
+      const types = knownCardTypes(catalog?.cardTypes);
+      const price = comingRoundPrice(plan, 1, types);
+      const cardTypes = nightCardTypes(plan, types).map((t) => ({ ...t, priceCents: price && t.type === price.type ? price.cents : null }));
+      return { scene, startAtMs: plan?.schedule.startAtMs ?? null, cardTypes, sponsors: sponsorsOf(plan), link };
+    }
     case 'roundStart': {
       // The round being introduced (`intro`, set before the Shuffle) names it; then the Shuffle's; then the state's.
       const intro = flow.intro;
@@ -242,6 +258,8 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,
         sponsors: sponsorsOf(plan),
+        // What a card costs for the coming round (U5: a normal card × the regular rounds left; the especial's fixed price).
+        price: priceView(comingRoundPrice(plan, next, knownCardTypes(catalog?.cardTypes))),
       };
     }
     case 'after':
