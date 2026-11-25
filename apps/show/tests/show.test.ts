@@ -93,6 +93,25 @@ test('Next lands the first song of the Queue; a second Next during the Spin is i
   assert.ok(autoAt(h.show) > h.clock.t);
 });
 
+test('a storm of Nexts (double taps, the Wii and the tablet together) lands one song per Spin, each heard for seconds', () => {
+  // In 2025 three songs landed within 10 ms and two 0.3 s apart, counted unheard. Here every landing needs its
+  // own Spin, and a Next during one is refused `busy`.
+  const h = setup({ seed: 5, settings: { autoAdvance: false } });
+  h.send('unlock');
+  const landings: { at: number; position: number }[] = [];
+  let busy = 0;
+  for (let step = 0; step < 120 / 0.05; step++) {
+    for (let press = 0; press < 2; press++) busy += h.send('next').filter((e) => e.type === 'reject' && e.reason === 'busy').length;
+    for (const e of h.advance(0.05)) if (e.type === 'landed') landings.push({ at: h.clock.t, position: h.show.position });
+  }
+  assert.ok(landings.length >= 8, `${landings.length} landings in 2 minutes`);
+  assert.ok(busy > 1000, 'the extra presses were refused');
+  for (let i = 1; i < landings.length; i++) {
+    assert.equal(landings[i].position, landings[i - 1].position + 1, 'no song skipped');
+    assert.ok(landings[i].at - landings[i - 1].at >= 4, `landings ${i - 1} and ${i} only ${(landings[i].at - landings[i - 1].at).toFixed(2)} s apart`);
+  }
+});
+
 test('auto-advance lands on the phrases near the Pace (round 1: 22 s; later rounds 14 s)', () => {
   for (const round of [1, 2]) {
     const h = setup({ seed: 7 + round });
