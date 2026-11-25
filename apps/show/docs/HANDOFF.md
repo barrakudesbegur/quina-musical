@@ -11,21 +11,25 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** downloading the draft playlist (D66 answered U1). It has 151 songs now, up from 86 on 23 Nov. The pool is `data/media/draft/pool.json` (`draft2026`, gitignored). Run it with `--pool data/media/draft/pool.json`.
-  - **The cause of the bot check was the VPN.** All traffic went through ProtonVPN, and YouTube asks VPN addresses to sign in. With the VPN off (the user paused it on 25 Nov) spotDL downloads normally, about 30 s a song.
-  - **Ids are stable** (`fb321f4`): a track keeps its first id (`output/song-ids.json`), and audio is named `<Spotify id>.opus`. So the user's reordering moves no download, cache or hook decision.
+- **In progress:** nothing. **The draft playlist is on hold (the user, 25 Nov):** the playlist isn't ready, and they'll hand it over in a few days. Until then, work on last year's 77 songs, and don't get ahead.
+  - The download was stopped on 25 Nov at 26 of 151 songs: 99 MB of Opus in `data/media/draft/output/songs/`. No prep ran on the draft, and nothing went to R2.
+  - Keep every file already downloaded, the 4-song dry run included. Its pool is `data/media/draft/pool.json` (`draft2026`, gitignored).
+  - **What's ready for the handover:**
+    - **The cause of the bot check was the VPN.** All traffic went through ProtonVPN, and YouTube asks VPN addresses to sign in. With the VPN off, spotDL downloads at about 30 s a song.
+    - **Ids are stable** (`fb321f4`, D79): a track keeps its first id (`output/song-ids.json`), and audio is named `<Spotify id>.opus`. A rerun of the fetcher downloads only the missing songs.
 - **Next:**
-  - prep on the draft (covers, decode, `quality`, analyze, hooks);
-  - one short list for the user of the songs spotDL couldn't get or that `quality` flags, which they download by hand as `<id>.mp3`;
-  - automatic hooks proposed for the whole draft; then tell the orchestrator;
-  - the provisional bulk hook approval (a test aid, marked provisional everywhere; Backend's preflight WARNs).
+  - when the user hands over the playlist:
+    - fetch it, then download the rest with the VPN off;
+    - run prep with `quality`;
+    - give the user one short list of the songs spotDL couldn't get or that `quality` flags; they download those by hand as `<id>.mp3`;
+    - propose automatic hooks, and tell the orchestrator;
+  - until then, nothing new on sound: transitions stay frozen until U13.
 - **Blocked:** nothing.
 - **Waiting on the user:**
+  - the playlist;
   - U13: the listening pass (transitions stay frozen until then). The demo for it is rendered, and the orchestrator has sent it: `data/out/listen-demo/listen-demo.m4a` plus `cues.md`, made by `node apps/show/tests/support/listen-demo.ts` (804e35f). A plan is ready (not applied) if call and response feels too frequent: it labels 70% of transitions today, and would become an occasional move at about 15–25%, with a variety bound;
   - U14: hook approval, before the first rehearsal (U27 sets when that is).
-- **Disk:** 12 GB free on 25 Nov, down from about 21 GB. Decoding 151 songs takes about 4 GB, and the stems guard wants 10 GB free. Two old sets could go, but deleting them is the user's call:
-  - the 4-song dry run, about 273 MB: `data/cache/pools/draft`, `data/out/pools/draft`, `data/media/draft/{overrides,covers,lastyear-audio,prev-fetch,songs4.json}`;
-  - last year's test pool in `data/cache`, about 7 GB, once the draft can replace it.
+- **Size:** the final playlist will have fewer than 100 songs (the user), so today's format (about 68 MB a song) fits R2's free 10 GB, and option (d) isn't needed. Disk: 15 GB free on 25 Nov.
 - **Code rule (D78, U29 pending):** keep code simple, and keep no alternative versions of a feature; the operational plan Bs stay. Two unused, deprecated aliases are gone (`1ced37a`).
 - **Rules:** a new question for the user goes to the orchestrator, never into open-questions.md directly. A decision the user gives me directly is reported to the orchestrator the same day.
 
@@ -97,13 +101,13 @@ Nothing: items 1 and 2 of the old queue and the Decoys retirement are done and p
    - D20 Count-in and the open landing.
 
    Adjust from their notes. One known candidate: **the Suspense release can take up to ~9 s** (B waits for the end of a 4-bar pass plus A's exit in free bars). A faster option would land on the next 2-bar boundary.
-2. **The draft playlist (151 songs on 25 Nov), downloaded and prepared** (see Now):
-   - **Downloads (D66):** spotDL, as last year, with the VPN off; YouTube's own Opus stream copied (`--format opus --bitrate disable`), one song at a time. The bot check came from ProtonVPN's address. The PO-token plugin is not needed (its server was built in `data/cache/tools/bgutil-pot`, gitignored, not running, and can go).
+2. **This year's playlist, once the user hands it over** (on hold, see Now):
+   - **Downloads (D66):** spotDL, as last year, with the VPN off; YouTube's own Opus stream copied (`--format opus --bitrate disable`), one song at a time. The bot check came from ProtonVPN's address. The PO-token plugin is not needed (its server was built in `data/cache/tools/bgutil-pot`, gitignored, not running).
    - **Quality** (the user's condition): prep's `quality` step (`71236b8`) flags low bitrate, a low-pass under 15 kHz, a length more than 5 s off Spotify's, and version words. Songs it flags or spotDL couldn't get go to the user as one short list; they download those by hand.
    - **Timings per song:** decode about 1.5 s, analyse 6 s, stems 21 s. Hook approval is the user's part, about 2 minutes a song.
    - **A pool nobody tagged** is playable only after its automatic hooks are approved and prep runs again; the README's steps say so.
    - **No Spotify features** this year, so the half-time rule also works from librosa alone (`680e4bc`).
-   - **Size per song in R2:** about 68 MB with two approved hooks (mix.flac 28–47 MB, stems 19–30 MB, Signatures and snippet about 1 MB). **At 151 songs that is about 10.3 GB, over R2's free 10 GB.** Option (d) (the original audio plus Opus 256k stems, decoded at sync time) is about 20 MB a song: measured, the mix re-decodes bit-identically, and Opus stems come back at their exact length within 2 samples. Needed if the final playlist stays above about 100 songs (Backend's call with the orchestrator).
+   - **Size per song in R2:** about 68 MB with two approved hooks (mix.flac 28–47 MB, stems 19–30 MB, Signatures and snippet about 1 MB). The final playlist has fewer than 100 songs (the user), so it fits R2's free 10 GB; option (d) (about 20 MB a song, measured) isn't needed.
 3. **Low priority, approved by the orchestrator as a test aid:** a provisional bulk approval of every song's top automatic hook, so a new pool can be synced and rehearsed before the user's approval pass ends. Mark it `provisional` everywhere: the audition page, and a preflight WARN (Backend's, asked).
 4. **The final playlist (Tue 1 Dec, the user's date):**
    - Fetch it again into the draft's folder: stable ids keep every song already downloaded, prepared or approved, and only new songs download. Then `npm run prep -- --pool data/media/draft/pool.json`, and flag unusable songs the same day, so the user can swap them before the cards print (U28).
