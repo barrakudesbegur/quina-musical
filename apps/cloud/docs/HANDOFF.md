@@ -10,9 +10,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip, which is on origin (`364c916`). The live Desgraciat e2e now plays especial cards 400–429.
   - D69 (2025's prices): a preflight test with 1.50 €/5 €, 15 € before round 1 and 5 € before the Desgraciat (`9c83ebe`). The real check passes once Frontend puts the prices in `apps/cards/src/config.ts`. Today they're `null`, so it WARNs.
 
-  quina-dev runs `2e37fc1` (version `81e0d0ad`).
+  The Worker runs `f1aacdd` (version `87650e0c`) on both quina-dev and the QR name, with this year's prices. The live Desgraciat run passed on it with especial cards.
 - **Next:**
-  - redeploy with origin's head (Sound engine's D70 flip `1ced37a`, Frontend's D70 player), then rerun the live Desgraciat e2e on quina-dev. One Worker serves both names, so a deploy also changes what the QR codes open;
+  - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - this year's pool from 2 Dec: measure, prune, push, and sync both laptops **before the first rehearsal** (D71; the rehearsal dates are U27);
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
