@@ -11,7 +11,21 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** nothing. **This year's songs are downloaded, and temporary cards are made (D99, 25 Nov; it amends D80).** The playlist had 76 songs when fetched; the organizers are cutting it to about 70, so work with whatever it holds.
+- **In progress:** nothing; the impact report for D100–D102 went to the orchestrator on 25 Nov and waits for a go.
+  - **The model (D100–D102):**
+    - two playlists of 70: playlist 1 (Spotify 0EOwwaDVItDHMRkYoO1m8y, final) plays rounds 1–5 on side 1 of the normal card, playlist 2 (0sWgctjhXP6TS1aB4jfaHb, not filtered yet: don't download) rounds 6–10 on side 2;
+    - a third playlist for the especial card, which plays both special rounds (U49, default);
+    - a normal card is double-sided with one number;
+    - U34 = 70.
+  - **Proposed in the report, not built:**
+    - one night pool with a `playlist` per song and ids unique across the night;
+    - card-types with sides → playlists, cards with `sides`, `RoundPlan.side`;
+    - the round's songs and lines from its side;
+    - the default Pace keyed to the first round of each playlist (U51);
+    - the expected end from each round's Queue and its own Pace;
+    - a quick-review mode for hooks;
+    - option (d) for R2.
+  - **Playlist 1 at 70:** all downloaded, ids 1–76 with 6 gaps. The temporary cards were remade from the 70, one side only.
   - **The pool `2026-temp`:** `data/pools/2026-temp.json`, untracked, never deployed. Audio is in `data/media/2026/output/songs/<Spotify id>.opus`. The ids are in `output/song-ids.json`, 1–76 in the order of 25 Nov; a cut leaves gaps and moves nothing.
     - Its data, cache and overrides folders are pool `2026`'s (`data/out/pools/2026`, `data/cache/pools/2026`, `data/pools/2026/overrides`), so nothing is redone when it becomes pool 2026.
     - Run it from apps/show: `npm run prep -- --pool 2026-temp --steps decode,quality`.
