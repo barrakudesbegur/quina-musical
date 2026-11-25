@@ -16,6 +16,10 @@ export interface CardTypeSpec {
   color: string;
   title: string;
   priceCents: number | null;
+  /** How the price counts (the user's U5, shown on the projector before each round): 'perRegularRound', the price ×
+   * the regular rounds still to play (a normal card); 'fixed', the price itself (the especial card). Optional:
+   * 'perRegularRound' when absent. The same values as @quina/protocol's CardPriceRule. */
+  priceRule?: 'perRegularRound' | 'fixed';
 }
 
 /** Every problem with the card types (empty when they're fine): ids, duplicates, names, colours, prices. */
@@ -30,6 +34,7 @@ export function cardTypeProblems(types: readonly CardTypeSpec[]): string[] {
     if (!t.name.trim()) problems.push(`card type "${t.type}" has no name`);
     if (!COLOR_RE.test(t.color)) problems.push(`card type "${t.type}": the colour must look like "#cfe8ff"`);
     if (t.priceCents !== null && (!Number.isInteger(t.priceCents) || t.priceCents < 0)) problems.push(`card type "${t.type}": the price must be whole cents, or null`);
+    if (t.priceRule !== undefined && t.priceRule !== 'perRegularRound' && t.priceRule !== 'fixed') problems.push(`card type "${t.type}": the price rule must be "perRegularRound" or "fixed"`);
   }
   return problems;
 }

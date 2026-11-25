@@ -145,3 +145,24 @@ test('the printed cards in apps/cards/dist pass the checks, and the screens read
   assert.ok(read, 'card-types.json reads');
   assert.doesNotThrow(() => assertCardTypes(cards, read));
 });
+
+test("the price before a round (U5): a normal card × the regular rounds left, the especial card its fixed price", async () => {
+  const { comingRoundPrice } = await import('../../../../packages/ui/data/card-types.ts');
+  const printed = readPrintedCardTypes([
+    { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound' },
+    { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 500, priceRule: 'fixed' },
+  ]) ?? [];
+  // SAMPLE_PLAN: 8 rounds, round 5 the Desgraciat (normal cards) and round 7 the Especial; 6 regular rounds.
+  const regular = SAMPLE_PLAN.rounds.filter((r) => r.kind === 'normal').length;
+  assert.equal(comingRoundPrice(SAMPLE_PLAN, 1, printed)?.cents, 150 * regular, 'before the start: every regular round');
+  const especial = SAMPLE_PLAN.rounds.find((r) => r.kind === 'special')!;
+  assert.deepEqual([comingRoundPrice(SAMPLE_PLAN, especial.number, printed)?.cents, comingRoundPrice(SAMPLE_PLAN, especial.number, printed)?.type], [500, 'especial']);
+  const desgraciat = SAMPLE_PLAN.rounds.find((r) => r.kind === 'desgraciat')!;
+  const left = SAMPLE_PLAN.rounds.filter((r) => r.kind === 'normal' && r.number >= desgraciat.number).length;
+  assert.equal(comingRoundPrice(SAMPLE_PLAN, desgraciat.number, printed)?.cents, 150 * left, 'the Desgraciat: normal cards, its own round not counted');
+  assert.equal(comingRoundPrice(SAMPLE_PLAN, 1, readPrintedCardTypes([{ type: 'normal', name: 'N', color: '#cfe8ff', title: '', priceCents: null }]) ?? []), null, 'no price set: nothing shown');
+  assert.equal(comingRoundPrice(null, 1, printed), null);
+  assert.equal(comingRoundPrice(SAMPLE_PLAN, 99, printed), null);
+  assert.equal(readPrintedCardTypes([{ type: 'normal', name: 'N', color: '#cfe8ff', title: '', priceCents: 150 }])?.[0].priceRule, 'perRegularRound', 'absent: per regular round');
+  assert.equal(readPrintedCardTypes([{ type: 'normal', name: 'N', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'weekly' }]), null);
+});

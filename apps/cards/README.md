@@ -16,8 +16,10 @@ and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `c
    `canvas` module built, so also run `npm install-scripts approve canvas` (then `npm rebuild canvas` if it says so).
 2. Set this year's values in [`src/config.ts`](./src/config.ts):
    - `CARD_TITLE` (the big title) and `PAPER_COLOR`;
-   - `CARD_TYPES`: each type's id, name and pastel colour. Leave `priceCents` null: prices aren't printed, and a normal
-     card's price drops with each regular round played (an open question in `docs/open-questions.md`);
+   - `CARD_TYPES`: each type's id, name, pastel colour, price in cents and `priceRule`. Prices aren't printed; the
+     projector shows what a card costs before each round (the user's U5). `perRegularRound` (a normal card) multiplies
+     the price by the regular rounds still to play (1.50 € a round in 2025); `fixed` (the especial card) is the price
+     itself;
    - `CARD_AMOUNTS`: how many cards of each type, each a multiple of 3 (3 cards a page);
    - `EDITION`: the year tag in the QR links (`/26/123`), the same as the Game plan's `edition`;
    - `SEED` (optional): the same seed and pool always give the same cards.

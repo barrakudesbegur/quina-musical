@@ -33,12 +33,13 @@ export const VERSION_STAMP = `20${EDITION}`;
  * The card types, written next to cards.json as card-types.json: the formal list of printed types, which every
  * screen reads (their names, colours and prices) and whose ids the Game plan's rounds name (each round plays one
  * type, picked in Admin). `type` is the id the cards carry in cards.json: lowercase letters and digits
- * (card-types.ts checks it). Price in cents, or null: prices aren't printed (docs/event.md), and the projector hides them
- * until the user decides how a price that drops round by round should show.
+ * (card-types.ts checks it). Price in cents, or null; prices aren't printed (docs/event.md). `priceRule` says how the
+ * projector counts the price it shows before each round (U5): 'perRegularRound' is the price × the regular rounds still
+ * to play (a normal card, 1.50 € a round in 2025), 'fixed' the price itself (the especial card).
  */
 export const CARD_TYPES = [
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: null },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: null },
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: null, priceRule: 'perRegularRound' },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: null, priceRule: 'fixed' },
 ] as const satisfies readonly CardTypeSpec[];
 
 /** A printed type's id, one of CARD_TYPES. */

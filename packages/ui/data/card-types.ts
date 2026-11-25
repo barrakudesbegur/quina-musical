@@ -1,7 +1,7 @@
 // The printed card types come from the cards (apps/cards → card-types.json, next to cards.json): their name,
 // pastel colour, printed title and price. Each planned round names the one it plays (`RoundPlan.cardType`), so
 // screens take names and colours from here and which rounds a type plays from the plan's rounds. Pure.
-import { isCardTypeId, roundCardType, type RoundKind } from '@quina/protocol';
+import { isCardTypeId, roundCardPrice, roundCardType, type CardPriceRule, type GamePlan, type RoundKind } from '@quina/protocol';
 import { CA } from '../i18n/ca.ts';
 
 export interface PrintedCardType {
@@ -11,6 +11,9 @@ export interface PrintedCardType {
   color: string;
   title: string;
   priceCents: number | null;
+  /** How the price counts (U5): 'perRegularRound' (a normal card: × the regular rounds still to play) or 'fixed' (the
+   * especial card). card-types.json may leave it out: then 'perRegularRound', as @quina/protocol roundCardPrice reads it. */
+  priceRule?: CardPriceRule;
 }
 
 /** A type as a screen names it: card-types.json's name and colour, or a plain stand-in when it isn't listed. */
@@ -40,15 +43,13 @@ export function readPrintedCardTypes(json: unknown): PrintedCardType[] | null {
     if (typeof c.name !== 'string' || !c.name.trim() || typeof c.color !== 'string' || !COLOR_RE.test(c.color)) return null;
     const price = c.priceCents ?? null;
     if (price !== null && (typeof price !== 'number' || !Number.isInteger(price) || price < 0)) return null;
-    out.push({ type: c.type, name: c.name.trim(), color: c.color.toLowerCase(), title: typeof c.title === 'string' ? c.title : '', priceCents: price });
+    const rule = c.priceRule ?? 'perRegularRound';
+    if (rule !== 'perRegularRound' && rule !== 'fixed') return null;
+    out.push({ type: c.type, name: c.name.trim(), color: c.color.toLowerCase(), title: typeof c.title === 'string' ? c.title : '', priceCents: price, priceRule: rule });
   }
   return out;
 }
 
-/**
- * The plan's old copy of the card types (`GamePlan.cardTypes`, deprecated), as printed types. Only a fallback for
- * when card-types.json didn't load; plan version 3 drops the field, and then this and its one caller go.
- */
 /**
  * The card types a screen names things with: card-types.json's when it loaded, else none (every type is then named
  * by cardTypeLabel's stand-in, "Cartró <id>"). The plan carries no copy any more (plan version 3).
@@ -88,4 +89,28 @@ export function roundsByCardType(rounds: readonly { number: number; kind: RoundK
     out.set(type, entry);
   }
   return [...out.values()];
+}
+
+/** The card to buy before a round, and what it costs then (the user's U5: the Interval screen, and before the start for
+ * round 1). */
+export interface ComingRoundPrice {
+  round: number;
+  /** The card type that round plays. */
+  type: string;
+  /** Its name and colour, as every screen shows it. */
+  label: CardTypeLabel;
+  /** What a card bought now costs, in cents (@quina/protocol roundCardPrice: a normal card × the regular rounds still to
+   * play, the especial card its fixed price). */
+  cents: number;
+}
+
+/** The price to show before round `roundNumber`, or null when the round isn't planned or its type has no price set. */
+export function comingRoundPrice(plan: Pick<GamePlan, 'rounds'> | null, roundNumber: number, printed: readonly PrintedCardType[]): ComingRoundPrice | null {
+  const round = plan?.rounds.find((r) => r.number === roundNumber);
+  if (!plan || !round) return null;
+  const type = roundCardType(round);
+  const known = printed.find((t) => t.type === type);
+  if (!known) return null;
+  const cents = roundCardPrice(plan, roundNumber, { priceCents: known.priceCents, priceRule: known.priceRule });
+  return cents === null ? null : { round: roundNumber, type, label: cardTypeLabel(type, printed), cents };
 }
