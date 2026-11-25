@@ -18,6 +18,11 @@ The single place to resume the sound engine's work from. It was first written wh
     - **The cause of the bot check was the VPN.** All traffic went through ProtonVPN, and YouTube asks VPN addresses to sign in. With the VPN off, spotDL downloads at about 30 s a song.
     - **Ids are stable** (`fb321f4`, D79): a track keeps its first id (`output/song-ids.json`), and audio is named `<Spotify id>.opus`. A rerun of the fetcher downloads only the missing songs.
 - **Next:**
+  - **1 Dec, first commit (agreed with Frontend and Backend on 25 Nov):** the pool and cards path. Frontend's and Backend's moves go on top the same day; send them the sha.
+    - Create `data/pools/2026.json`, tracked, with `cardsJson` set to `apps/cards/dist/cards.json`. The user makes the cards with `npm start -- --pool 2026` in apps/cards; `--check` validates without writing.
+    - Copy today's `apps/cards/dist/{cards,card-types}.json` to `data/pools/default/cards/`, byte-identical, with 65b74ef's fixes; not legacy's file, which repeats #398's and #492's lines. Point `data/pools/default.json`'s `cardsJson` there. Gitignore `data/pools/*/cards/*.pdf`.
+    - Make my tests read the cards through the default pool (relay/pool.ts `loadPool('default').cardsJson`, pool.py): support/harness.ts, support/data.ts, the cards, phase and shuffle tests, support/desgraciat.ts, support/listen-demo.ts, tools/prep/tests/test_pool.py, the engine/src/game/cards.ts comment.
+    - Frontend: the UI tests check both files, and the fixtures read the default pool's copy. Backend: the e2e reads `loadPool().cardsJson`; the live run checks that quina-dev serves the same cards; deploys name their pool, and the preflight checks the cloud's cards match.
   - **1–3 Dec, if the playlist is ready on 1 Dec (D83):**
     - fetch it, then download the rest with the VPN off;
     - run prep with `quality`;
