@@ -84,9 +84,9 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   desgraciatFall: { fixture: 'desgraciat', cards: 'default', live: true, liveFirst: [11, ...DESGRACIAT_LANDED.slice(2).filter((id) => id !== 11)] },
   /** Both playing cards seated (ASSEGUT), each with the ✗s of its landed songs. */
   desgraciatSeated: { fixture: 'desgraciat', cards: 'default', extraLanded: [30, 11, 45, 60, 56, 41] },
-  /** #57, one of the phone's cards, is the last standing and confirmed: "Dempeus fins al final!". */
+  /** #57, one of the phone's cards, is the last standing and confirmed: its card glowing, the nino, no title. */
   desgraciatMine: { fixture: 'celebrationStanding', cards: 'default' },
-  /** Someone else's card (#57) is the last standing: "DEMPEUS!" and the prize, no card number. */
+  /** Someone else's card (#57) is the last standing: the prize and confetti, no title, no card number. */
   desgraciatOther: { fixture: 'celebrationStanding', cards: [123, 412] },
 };
 

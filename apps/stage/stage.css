@@ -57,7 +57,7 @@
   --stage-plaque-title: 5.25rem;
   --stage-scrim: color-mix(in srgb, var(--color-bg-deep) 72%, transparent);
   --stage-sticker-tilt: -12deg;
-  --stage-standing: var(--color-live); /* the Desgraciat round's DEMPEUS! */
+  --stage-standing: var(--color-live); /* the Desgraciat round's green (its rays, no title: U6) */
   --stage-lift-pop: 1.12; /* check-fallen: the sinking song's tile pops to this, then settles at --stage-lift */
   --stage-lift: 1.06;
   --stage-light: 1.375rem;
@@ -1937,7 +1937,7 @@
   background: var(--color-accent);
 }
 
-/* The Desgraciat round's last card standing: "DEMPEUS!" in green, and the hands-up nino at the bottom left. */
+/* The Desgraciat round's last card standing: no title (the user, U6), and the hands-up nino at the bottom left. */
 .celebration[data-kind='standing'] .shout {
   color: var(--stage-standing);
 }

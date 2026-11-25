@@ -1,6 +1,6 @@
 // The Celebration: "LÍNIA!" or "QUINA!" huge over the drum's victory lap (never the winning card numbers), the
 // round's prize and sponsor, a flash, rays and CSS confetti (ANIMATIONS.md `celebrate`). The Desgraciat round's last
-// card standing gets "DEMPEUS!" at the Bingo's size, the Bingo's gold flash and double confetti, and the hands-up nino
+// card standing gets no title (the user, U6): the Bingo's gold flash, double confetti and prize, and the hands-up nino
 // bouncing in. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
 // scene changes.
 import { STAGE } from '../config.ts';
@@ -46,7 +46,9 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
 
   render(body: CelebrationView): void {
     setData(this.stagePanel, 'kind', body.kind);
-    setText(this.shout, STAGE_TEXT.shout[body.kind]);
+    const shout = STAGE_TEXT.shout[body.kind];
+    setText(this.shout, shout ?? '');
+    setHidden(this.shout, shout === null);
     if (this.standUp) setHidden(this.standUp, body.kind !== 'standing');
     this.prize.set(body.prize);
     if (body.key !== this.key) {

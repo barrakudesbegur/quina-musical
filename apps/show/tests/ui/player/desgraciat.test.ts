@@ -166,15 +166,15 @@ test('Premis: the Desgraciat round has one bundle, the last card standing\'s, an
   assert.equal(S.prize.standing, "Premi de l'últim dempeus");
 });
 
-test("the Celebration for the last card standing: 'DEMPEUS!', or the phone's own card, never a number", () => {
+test("the Celebration for the last card standing: no title (U6), the phone's own card, never a number", () => {
   const winners = [{ round: 3, kind: 'standing' as const, cardIds: [4242] }];
   const others = celebrationOf(state({ scene: 'celebration', winners }), [123, 57]);
   assert.deepEqual(others, { key: 'celebration:3:standing', kind: 'standing', round: 3, ownCardIds: [] });
   assert.ok(!JSON.stringify(others).includes('4242'));
   const mine = celebrationOf(state({ scene: 'celebration', winners: [{ round: 3, kind: 'standing', cardIds: [57] }] }), [123, 57]);
   assert.deepEqual(mine?.ownCardIds, [57]);
-  assert.equal(S.shout.standing, 'DEMPEUS!');
-  assert.equal(S.yourWin.standing, 'Dempeus fins al final!');
+  assert.equal(S.shout.standing, null, 'no word shouted in the Desgraciat round');
+  assert.equal(S.yourWin.standing, null, "not even on the winner's phone");
 });
 
 test('the round is "Quina Desgraciada" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {
