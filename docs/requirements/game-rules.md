@@ -58,7 +58,7 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
   - the presenters call the winner by looking at the room.
 - The Shuffle makes sure the last two cards in play can't fall on the same song. A shared win can still happen when the real last players hold cards that fall together.
 - Its Check shows that none of the card's songs has landed. It stops at the first song that has: the card has fallen.
-- It plays normal cards by default; Admin picks the type like any round's.
+- It plays special cards by default, as in 2025 (D70); Admin picks the type like any round's.
 - It can be moved to any point in the night.
 - It's short, lively and full of interaction with the crowd (2025: 21 songs, about 8 minutes).
 - Its Celebration has no title, unlike a Line's or a Quina's. The console keeps a label for the presenters only ("Últim cartró dempeus").
@@ -71,7 +71,8 @@ _From event.md › The cards (Knowing which cards are sold); the mixer decisions
 - Sellers take cards in order from stacks of 50, so the sold numbers form ranges.
 - The tech updates the ranges during the night. It's reliable but not exact: a range can contain unsold cards.
 - Each round counts only the cards in play of its card type.
-- One normal card serves every regular round, and the Desgraciat. The corn seeds come off easily between rounds.
+- One normal card serves every regular round. The corn seeds come off easily between rounds.
+- A special card plays the Desgraciat and the Quina Especial, as in 2025 (pending U26: whether the same card plays both, or each round needs its own).
 
 ## Claims
 

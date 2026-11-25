@@ -101,7 +101,7 @@ _From the Sound engine and Backend handoffs; timeline.md › Risks._
 
 _From event.md › Timing (Rehearsals)._
 
-- Full-show rehearsals happen on days before the night, never on the day itself: they share the cloud's free daily quota. In 2026: **13 and 19 December**.
+- Full-show rehearsals happen on days before the night, never on the day itself: they share the cloud's free daily quota. The 2026 dates are open (pending U27).
 - They use this year's Pool, the real plan, the tablet, the Wii remote, real phones, and the spare laptop.
 - A rehearsal is its own Game in the same edition, so phones keep their cards.
 
@@ -111,7 +111,7 @@ _From event.md › What must never fail (Privacy), The songs._
 
 - **Winners' names** are never shown on screen or published. They stay in the cloud's Game data, never in git.
 - **Audio is never published:** no songs or generated song data in git or on a public address.
-- Every card's songs are public, because phones need them (pending U22).
+- Every card's songs are public, because phones need them. Anything may be public unless there's a reason to hide it, to keep the code simple (D78).
 - Phones have no account. Admin only sees which card numbers were opened, never who opened them.
 - Admin, the console and the organizers' routes are behind the organizers' Google login. The laptop has its own key, kept only on the show laptops and never sent by chat or email.
 - The console's pairing token and the hotspot password are treated like the resume code: no photos. The hotspot password is the first line of defence, because anyone on the hotspot can reach the laptop's relay; the token then guards the commands.
@@ -126,4 +126,4 @@ _From event.md › Before the night (On the day), The night, step by step._
 - The preflight runs before the doors open, and every failure is fixed first.
 - The sound check: an effect at low volume, then a few seconds of Hold music.
 - The night is started from the console's menu ("Començar la nit").
-- The QR address points at the new app before the cards are handed out (pending U15).
+- The QR address already points at the new app (D76).

@@ -77,8 +77,8 @@ This page explains the event: what happens on the night, who does what, and how 
 - **A card** has 12 songs in 3 lines of 4, a number (written "#123") and a QR code that opens the player's phone page. Three cards print on each page.
 - **Card types:**
   - **normal cards** play the regular rounds;
-  - **special cards** play only the Quina Especial. Its prizes are bigger, so its card is sold separately.
-  - The Quina del Desgraciat uses normal cards too, as far as we remember.
+  - **special cards** play the Quina Especial. Its prizes are bigger, so its card is sold separately.
+  - In 2025 the special card also played the Quina del Desgraciat: the price sheet at the bar listed it for "Quina especial i quina del desgraciat".
   - The types are fixed when the cards are printed, with fewer special cards than normal ones. Each type has its own colour.
 - **Each edition** has a new paper colour and title, so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
@@ -86,12 +86,13 @@ This page explains the event: what happens on the night, who does what, and how 
   - The cards are generated from the final song list, so no two cards or lines are the same.
   - Once they're printed, no song can change.
   - Print well ahead of time. In 2024 we printed the day before, and that mustn't happen again.
+  - Printing itself takes a few hours, at a local print shop.
 - **Prices:**
   - The price isn't printed on the card; a price list hangs at the bar.
   - A normal card's price drops as rounds are played. In 2025 it was 1.50 € for each regular round still to play: 15 € before the first round, 13.50 € after one, down to 1.50 € for the last. The Desgraciat doesn't count.
   - A special card costs a fixed price (2025: 5 €).
 - **Sales:**
-  - Cards are sold at the bar, in cash or by card. There's a long queue at the start.
+  - Cards are sold only on the night, never before: at the bar, in cash or by card. There's a long queue at the start.
   - During the night, members also sell between the tables. In 2024, going round to sell special cards before the Quina Especial worked very well.
 - **Knowing which cards are sold:**
   - Cards are printed in stacks of 50. Sellers take cards in order, from one or two stacks, so the sold numbers form ranges.
@@ -327,7 +328,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - a Line check took 1–2 minutes, and a Bingo check plus the round's end 1.5–3.5 minutes.
   - The plan had been 12–14 minutes a round at about 15 s a song.
 - **2024:** we expected 35 songs a round and got about 60. Nobody knew when the night would end.
-- **Rehearsals:** full-show rehearsals on days before the night, never on the day itself (2026: 13 and 19 December planned).
+- **Rehearsals:** full-show rehearsals on days before the night, never on the day itself.
 
 ## Before the night
 

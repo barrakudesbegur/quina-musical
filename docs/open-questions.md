@@ -8,72 +8,38 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U1 · How to download this year's songs · needed before 2 Dec
-YouTube answers every download with "Sign in to confirm you're not a bot". The cookie-free methods failed: another spotDL provider, a newer yt-dlp, other player clients (only 124 kbps audio). The options:
-- (a) let Sound engine install the PO-token plugin `bgutil-ytdlp-pot-provider` in the playlist fetcher's venv and run its local server (already built in `data/cache/tools/bgutil-pot`). Its permission check needs the user's OK, given in that session;
-- (b) download it yourself with an exported cookies file: `! cd tools/prep/playlist-fetcher && venv/bin/spotdl download <playlist URL> --cookie-file <cookies.txt> --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --format opus --bitrate disable` (keeps YouTube's own audio);
-- (c) another source.
-
-The user's only condition is correct quality. Prep's quality step flags songs under about 128 kbps, with a low-pass under 15 kHz, more than 5 s off Spotify's length, or of a wrong version.
-**Default:** nothing downloaded yet.
-
-### U2 · The printed card's title and paper colour · by 30 Nov
-Configurable in `apps/cards/src/config.ts`. The QR points to `quina.barrakudesbegur.org/26/<card>`.
-**Default:** last year's title ("QUINA QUINA!") and colour.
-
-### U3 · Card types and amounts to print · by 30 Nov
-Normal and especial, as last year? How many of each (2024: 250 of each printed; 2025: 399 normal, 300 special)?
-**Default:** normal and especial, amounts as in 2025.
-
-### U4 · When cards are handed out, and the print lead time · soon
-The printing deadline and the QR domain switch (U15) depend on it.
-**Default:** sold from about 12 Dec; printed in about a week from 3 Dec.
-
-### U7 · Two Desgraciat board points
-On the canvas under "Quina Desgraciada · proposta per revisar":
-- (a) Should the projector show how many cards still stand ("Queden 12 dempeus")? **Default:** no, console only, since the count includes unsold cards.
-- (b) A fallen card shows the sitting nino, or the squashed nino of a failed Check? **Default:** the sitting nino.
-
-### U8 · The prizes corner icon
-Canvas board "Component · icona de premis", options A–E.
-
-### U9 · The effect when the landed song is on your card
-Canvas board "App · quan la cançó és teva", options A–D.
-
-### U10 · The player app's layout
-The 3 tabs (Ara · Premis · Horari, plus the menu) are built. The proposal: one "now" home screen, two corner buttons opening stacked drawers (Premis, Horari), plus drawers for add-card, the menu and last year's card. You also commented that "Ara" could be called "songs". Built so that switching is only a container swap.
-**Default:** the 3 tabs.
-
-### U11 · The phones' card-stacking scroll
-Cards stack as you scroll (your canvas idea, "I will need to confirm this"). Specced as `card-stack` in ANIMATIONS.md, not built.
-**Default:** not built.
-
 ### U12 · The theme pass
-Pending your go on the visual theme pass across the screens.
+Pending your go on the visual theme pass across the screens. Not ready yet (25 Nov).
 
 ### U13 · Listening pass on the new sound
 Not heard yet: phrase landings, the lighter early palette and rare impacts, Signatures before the landing, the new Suspense, Aguanta's loop, vocal entries, Count-in. Two defaults to confirm while listening:
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U20 · More Hold music and victory tracks (optional)
-Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/hold`, `data/media/celebration`).
+### U26 · One special card for both the Desgraciat and the Especial?
+In 2025 the special card (5 €) played the Quina del Desgraciat and the Quina Especial (D70). Does one special card play both rounds, or does each round need its own?
+**Default:** one card plays both; the plan's Desgraciat plays special cards.
 
-### U21 · Card text size on phones
-Each card is the printed 3×4 grid, so titles are about 12–13 px: small for the grandmother test.
-**Default:** the grid stays. Possible addition: a "Lletra gran" switch showing a card as a list.
+### U27 · The rehearsal dates
+The docs said 13 and 19 December, but those were the orchestrator's defaults, not yours. Are there full-show rehearsals before the night, and when?
+**Default:** no dates in the plan until you give them.
 
-### U22 · The printed cards are public
-`cards.json` (every card's songs) is public, because phones need it. Someone determined could work out live which card numbers are close to winning; card numbers are anonymous and the next song stays secret. The alternative, a secret per card in the QR, makes adding a card by number much harder.
-**Default:** public (the orchestrator agrees).
+### U28 · When the cards are printed
+Printing takes a few hours and cards are sold only on the night (D71), but event.md says never the day before.
+**Default:** none set.
+
+### U29 · How far "no fallbacks" goes
+For the player app the user said no fallback layout in the code (D73). event.md also asks that anything new has "a simple fallback to the old way", and the code has operational plan Bs (the tablet for the Wii remote, the laptop's keys for the tablet, the laptop for the cloud).
+**Default:** the operational plan Bs stay; no alternative versions of a screen or feature are kept in the code.
+
+### U30 · Pick the drawers and corner buttons
+Once Frontend has its proposals (D73): the drawers' content and hierarchy, the prizes drawer, and the corner buttons' style and icons, in one consistent style.
+**Default:** waits on the proposals.
 
 ## Tasks only the user can do
 
-### U14 · Approve this year's hooks · from 2 Dec, done by 10 Dec
+### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, about 3 hours for 86. A song can't play until its hook is approved. Start early on draft songs once they're prepared.
-
-### U15 · OK to point quina.barrakudesbegur.org at the new app · by 11 Dec
-The printed QR codes use it. Planned with an undo in `apps/cloud/docs/deploy-plan.md` (step 7).
 
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
@@ -81,7 +47,7 @@ It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cle
 ### U17 · Approve the install script for printing cards to PDF
 Run it yourself: `! cd apps/cards && npm install-scripts approve canvas`
 
-### U18 · The night's plan in Admin · by 13 Dec
+### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type per round, prize bundles, sponsors (money donors too), the Schedule with throw breaks.
 
 ### U19 · Checks on real devices · before the rehearsals
@@ -91,6 +57,9 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 4. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
 5. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console.
 6. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.
+
+### U20 · More Hold music and victory tracks
+Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/hold`, `data/media/celebration`). You'll add more.
 
 ## Housekeeping
 
@@ -103,6 +72,18 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 
 ## Answered
 
+- **U1 · How to download the songs** (2026-11-25) → D66: the method is Sound engine's call, as long as the quality is right and the user does little work; the user downloads only the few leftovers by hand.
+- **U2 · The printed card's title and colours** (2026-11-25) → D67: "QUINA QUINA! 3" with last year's colours, provisionally; may change at print time.
+- **U3 · Card types and amounts** (2026-11-25) → D68: as in 2025, provisionally.
+- **U25 · This year's card prices** (2026-11-25) → D69: as in 2025, 1.50 € a round and 5 € for a special card.
+- **U4 · When cards are handed out** (2026-11-25) → D71: only on the night, at the start and during it; printing takes a few hours.
+- **U7 · Two Desgraciat board points** (2026-11-25) → D72: no standing count on the projector; the sitting nino.
+- **U8 · The prizes corner icon** and **U10 · The player app's layout** (2026-11-25) → D73: drawers and two corner buttons, no fallback; proposals to pick from (U30).
+- **U9 · The effect when the landed song is yours** (2026-11-25) → D74: spotlights and flashes, no bolt drawing, smooth in and out.
+- **U11 · The card-stacking scroll** (2026-11-25) → D75: discarded for now.
+- **U15 · The QR domain switch** (2026-11-25) → D76: now.
+- **U21 · Card text size on phones** (2026-11-25) → D77: the current design is fine.
+- **U22 · The printed cards are public** (2026-11-25) → D78: public, and anything may be public unless there's a reason.
 - **U5 · Card prices on the projector** (2026-11-25): show only the price for the coming round, on that round's Interval screen (the before-the-start screen is round 1's). A normal card costs the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat (2025: 1.50 €, so 15 € before round 1); before the Quina Especial, the special card's fixed price. The prices come from setup data, never hard-coded.
 - **U6 · The Desgraciat's celebration title** (2026-11-25): none. "DEMPEUS!" is dropped; the rest of its Celebration stays. The phones' per-card "Dempeus" / "Assegut" labels stay.
 - **Rehearsal dates:** 13 and 19 December (event.md).

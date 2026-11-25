@@ -3,7 +3,7 @@
 What each screen must show, who uses it, and what it must never show: the projector, the console, the player app, Admin, the cheat sheet and the Wii remote.
 
 - Every rule here comes from [event.md](../event.md). Why a rule is the way it is, and what it replaced, is in [decision-log.md](../decision-log.md).
-- "(pending U10)" points to [open-questions.md](../open-questions.md); the rule states the default in force meanwhile.
+- "(pending U30)" points to [open-questions.md](../open-questions.md); the rule states the default in force meanwhile.
 - "**Not built yet.**" marks a rule the handoffs list as still to do.
 - Terms follow [GLOSSARY.md](../../GLOSSARY.md). Every animation is specced in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md), with its trigger, timing, sound and fallback, before it's built.
 
@@ -19,7 +19,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
-- The approved look still has to be applied to the projector, the console and Admin (pending U12). The player app already has it.
+- The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
 
 ## Projector
 
@@ -49,7 +49,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
   - a prize before its round's intro, or any prize in the Interval;
   - a QR or URL during play or the Interval;
   - fairness code, how-to-play text or a resume code.
-- Whether it shows how many cards still stand in the Desgraciat is open (pending U7). Default: no, since the count includes unsold cards.
+- How many cards still stand in the Desgraciat: the console shows it, the projector doesn't, since the count includes unsold cards (D72).
 
 ## Console
 
@@ -86,11 +86,12 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
-- **Layout:** three tabs and a menu (pending U10, which proposes one home screen with corner buttons and drawers; the tab "Ara" may be renamed):
-  - "Ara": the drum on top, then a switch between "Historial" (the current round's songs, including the one playing now) and "Cartrons" (the player's cards as grids);
-  - "Premis": the current round's bundle and sponsors, with future rounds locked;
-  - "Horari": the schedule, with real times for what has happened and "~" predictions for what's next;
-  - the menu: the player's cards, sounds, last year's card and "Esborrar dades".
+- **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs go away, with no fallback layout kept in the code. The built version still has three tabs.
+  - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
+  - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
+  - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next;
+  - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.
+  - The designer proposes several versions of the drawers' content (its visual hierarchy is broken today), the prizes drawer and the corner buttons' style, and the user picks (pending U30). The two corner icons share one style; the best so far is the sky-blue box with a pink ribbon, with a taller lid skirt.
 - **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text. The card types' preview: **Not built yet** (the phone shows the rounds and prizes).
 - **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
@@ -98,7 +99,9 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it.
 - **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
 - **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its reel stays generic until then); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
-- **Pending design choices:** the prizes corner icon (U8), the effect when the landed song is on your card (U9), the card-stacking scroll (U11, not built by default), and card text size (U21; default: the printed grid).
+- **When the landed song is on your card (D74):** stage spotlights with flashes, without a lightning-bolt drawing. The background colour changes smoothly into it, and it fades out smoothly when the drum starts spinning.
+- **A fallen card** in the Desgraciat shows the sitting nino (D72).
+- **The cards** keep the printed 3×4 grid in the current design's style (D77). No card-stacking scroll (D75).
 
 ## The grandmother test
 

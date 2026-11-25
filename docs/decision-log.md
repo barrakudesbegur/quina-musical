@@ -697,8 +697,8 @@ By: the user (event.md). Source: event.md › The special rounds, The cards; tra
 Every prize and its sponsor is read out before each round, money donors included, and every sponsor appears somewhere on the projector during the night.
 By: the user (event.md). Source: event.md › Prizes and sponsors (Mention everyone). Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Every sponsor appears.
 
-### D59 · The dates · 2026-11-25 · Active
-The night is Sunday 27 December 2026; the playlist is final on 1 December; rehearsals are on 13 and 19 December, never on the day itself.
+### D59 · The dates · 2026-11-25 · Active; the rehearsal dates Pending (U27)
+The night is Sunday 27 December 2026; the playlist is final on 1 December; rehearsals happen before the night, never on the day itself. The rehearsal dates written here (13 and 19 December) were the orchestrator's defaults, which the user doesn't recognise: pending U27.
 By: the user (event.md). Source: event.md › When and where, The songs, Timing. Lives in: requirements/operations.md › Rehearsals; docs/timeline.md.
 
 ### D60 · No card prices on the projector, for now · 2026-11-25 · Superseded by D61
@@ -724,3 +724,55 @@ By: the sessions, agreed (Sound engine and Frontend). Source: the orchestrator's
 ### D65 · A new journal value reaches the deployed cloud first · 2026-11-25 · Active
 A journal entry the cloud refuses stops the laptop's uploads, and with them every phone update for the rest of the night. So a new value in the journal (a round kind, a win kind, a Check outcome) lands in three steps: the protocol change, then the cloud's acceptance and a redeploy, then the engine journaling it. The cloud also accepts what the engine journals and only flags oddities.
 By: the sessions, agreed (Sound engine and Backend). Source: card type per round and the Desgraciat (steps A, B, C); Backend's report of 2026-11-25. Lives in: requirements/operations.md › Where things run.
+
+### D66 · How the songs are downloaded · 2026-11-25 · Active
+The download method is the Sound engine's call: any method that passes the quality check without much work for the user. The user downloads by hand only the few songs it can't get. Last year's spotDL method fetched the 77 test songs on 23 Nov; YouTube's bot check appeared on 25 Nov after a burst of downloads. Answers U1.
+By: the user. Source: open-questions.md › Answered (U1); the user's answers of 2026-11-25. Lives in: requirements/songs-and-cards.md › Preparing the songs.
+
+### D67 · This year's printed card, provisionally · 2026-11-25 · Active
+The title is "QUINA QUINA! 3", with last year's colours. Both may still change at print time; not a blocker. Answers U2.
+By: the user. Source: open-questions.md › Answered (U2). Lives in: requirements/songs-and-cards.md › The card.
+
+### D68 · Card types and amounts, provisionally · 2026-11-25 · Active
+As in 2025: normal and especial, 399 and 300. May change at print time. Answers U3.
+By: the user. Source: open-questions.md › Answered (U3). Lives in: requirements/songs-and-cards.md › Card types, Numbers and amounts.
+
+### D69 · This year's card prices · 2026-11-25 · Active
+The same as 2025: a normal card is 1.50 € for each regular round still to play (15 € before round 1), a special card 5 €. Answers U25.
+By: the user. Source: open-questions.md › Answered (U25); the 2025 price sheet. Implements: D61, D64. Lives in: requirements/songs-and-cards.md › Prices.
+
+### D70 · In 2025 the special card also played the Desgraciat · 2026-11-25 · Active
+The 2025 price sheet lists the special card (5 €) for "Quina especial i quina del desgraciat". It corrects event.md's "the Desgraciat uses normal cards too, as far as we remember". Whether one special card plays both rounds in 2026 is pending U26; meanwhile the plan's Desgraciat plays special cards.
+By: the user (a 2025 fact). Source: the 2025 price sheet (organizers' files); the user's answers of 2026-11-25. Lives in: event.md › The cards; requirements/songs-and-cards.md › Card types; requirements/game-rules.md › The Quina del Desgraciat.
+
+### D71 · Cards are sold on the night · 2026-11-25 · Active
+Cards are sold only on the night: at the start, and during it. Printing takes a few hours at a local print shop. The timeline's "sold from about 12 December, printed in about a week" was the orchestrator's assumption, never the user's. Answers U4; the print date is pending U28.
+By: the user. Source: open-questions.md › Answered (U4). Supersedes: the timeline's default for U4. Lives in: event.md › The cards; requirements/songs-and-cards.md › Generating and printing; docs/timeline.md.
+
+### D72 · The Desgraciat's board points · 2026-11-25 · Active
+The projector doesn't show how many cards still stand (the count includes unsold cards); the console does. A fallen card shows the sitting nino; the squashed nino stays for a failed Check. Answers U7.
+By: the user. Source: open-questions.md › Answered (U7). Lives in: requirements/screens.md › Projector, Player app.
+
+### D73 · The player app is one home screen with two corner buttons and drawers · 2026-11-25 · Active
+The tabs go away, and no fallback layout stays in the code. The drawers' current content breaks the visual hierarchy and the prizes drawer isn't liked: the designer (Frontend) makes several proposals for the drawers' content, the prizes drawer and the corner buttons' style, and the user picks. The corner icons must share one style: the best so far is the sky-blue box with a pink ribbon (option C) with a taller lid skirt, and the Horari button needs a better icon. Answers U10 and U8; the pick is U30.
+By: the user. Source: open-questions.md › Answered (U8, U10). Lives in: requirements/screens.md › Player app.
+
+### D74 · The effect when the landed song is yours · 2026-11-25 · Active
+The stage spotlights with the flashes, without the lightning-bolt drawing. The background colour changes smoothly into it, and the whole effect fades out smoothly when the drum starts spinning. Answers U9.
+By: the user (and a canvas comment). Source: open-questions.md › Answered (U9). Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.
+
+### D75 · No card-stacking scroll · 2026-11-25 · Active
+Discarded for now: the cards keep the previous mockups' look. It may be tried once the UI is built. Answers U11.
+By: the user. Source: open-questions.md › Answered (U11). Lives in: requirements/screens.md › Player app.
+
+### D76 · The QR domain switches now · 2026-11-25 · Active
+`quina.barrakudesbegur.org` can point at the new app now: nobody uses last year's app. Answers U15.
+By: the user. Source: open-questions.md › Answered (U15). Lives in: requirements/songs-and-cards.md › The printed QR; apps/cloud/docs/deploy-plan.md (step 7).
+
+### D77 · Card text size on phones · 2026-11-25 · Active
+The card styles in the current design are fine; no "Lletra gran" switch. Answers U21.
+By: the user. Source: open-questions.md › Answered (U21). Lives in: requirements/screens.md › Player app.
+
+### D78 · Public unless there's a reason · 2026-11-25 · Active
+Every card's songs stay public. Anything may be public unless there's a reason to hide it; the code stays simple. Answers U22.
+By: the user. Source: open-questions.md › Answered (U22). Lives in: requirements/operations.md › Privacy.

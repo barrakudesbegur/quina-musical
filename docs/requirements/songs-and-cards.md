@@ -3,7 +3,7 @@
 What the song pool, the song preparation and the printed cards must be, as it stands now.
 
 - Every rule here comes from [event.md](../event.md). Why a rule is the way it is, and what it replaced, is in [decision-log.md](../decision-log.md).
-- "(pending U3)" points to [open-questions.md](../open-questions.md); the rule states the default in force meanwhile.
+- "(pending U26)" points to [open-questions.md](../open-questions.md); the rule states the default in force meanwhile.
 - "**Not built yet.**" marks a rule the handoffs list as still to do.
 - Dates are in [timeline.md](../timeline.md). Terms follow [GLOSSARY.md](../../GLOSSARY.md).
 
@@ -61,7 +61,7 @@ _From event.md › The songs; the decisions doc › Changes; the mixer decisions
 _From event.md › The songs; the Sound engine handoff._
 
 - The tech prepares every song: download, decode, analysis, snippets, validation, keys, stems, Signatures, hooks and the Interval music. A full run on 86 songs takes about 45 minutes.
-- The download method is open (pending U1). Default: nothing downloaded yet.
+- The download method is the tech's call (D66): whatever gets every song through the quality check below with little work for the user. The user downloads by hand only the few songs it can't get.
 - **The quality check.** Every source must pass, or be flagged for the user to check by ear:
   - a bitrate of about 128 kbps or more;
   - no brick-wall low-pass under 15 kHz;
@@ -76,7 +76,7 @@ _From event.md › The songs; the Sound engine handoff._
 _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
-- Each edition has a new paper colour and title, so last year's cards are easy to spot (pending U2). Default: last year's title ("QUINA QUINA!") and colour.
+- Each edition has a new title, so last year's cards are easy to spot. 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
 - Each card carries a faint year stamp.
 - The price isn't printed.
 
@@ -86,11 +86,11 @@ _From event.md › The cards; the decisions doc › Changes._
 
 - The card types come from the card generation, not from Admin. Each type has an id, a name, a pastel colour and a printed title.
 - There are two:
-  - **normal cards** play the regular rounds and the Desgraciat;
-  - **special cards** ("especial") play only the Quina Especial. Its prizes are bigger, so its card is sold separately.
+  - **normal cards** play the regular rounds;
+  - **special cards** ("especial") play the Quina Especial, whose prizes are bigger, so its card is sold separately. In 2025 they also played the Desgraciat (D70), and the plan does the same by default (pending U26: whether one special card plays both rounds).
 - Fewer special cards are printed than normal ones. Each type has its own colour.
 - Admin only chooses which type each round plays, and shows the types read-only.
-- This year's types and amounts are open (pending U3). Default: normal and especial, in 2025's amounts.
+- 2026, provisionally: normal and especial, 399 and 300, as in 2025 (D68; may change at print time).
 
 ## Numbers and amounts
 
@@ -109,9 +109,9 @@ _From event.md › The cards (Printing); timeline.md._
 - The same seed and Pool always give the same cards, so a reprint matches.
 - The generator checks everything before it writes: duplicate songs, songs without a title, bad type ids, amounts, a Pool of fewer than 12 songs.
 - **Once the cards are printed, no song can change.** A playlist change after the cards go to print means reprinting them; after they're printed, it's not possible.
-- **Print well ahead.** Never the day before. The plan: generated and proofed by 3 December, printed by 11 December. When the cards are handed out, and the print lead time, are open (pending U4). Default: sold from about 12 December, printed in about a week.
+- **Print well ahead.** Never the day before. Printing takes a few hours at a local print shop, and cards are sold only on the night (D71), so the print date is free (pending U28).
 - The PDF needs a native module whose install script the user must approve (pending U17).
-- Every card's songs are public, because phones need them (pending U22). Default: public.
+- Every card's songs are public, because phones need them (D78).
 
 ## Prices
 
@@ -120,6 +120,7 @@ _From event.md › The cards (Prices); the user's answer to U5._
 - The price isn't printed on the card. A price list hangs at the bar.
 - **A normal card's price drops as rounds are played.** It's the per-round price × the regular rounds still to play, the coming one included. The Desgraciat doesn't count. 2025: 1.50 € a round, so 15 € before round 1 and 1.50 € before the last.
 - **A special card has a fixed price** (2025: 5 €).
+- **2026 uses 2025's prices** (D69): 1.50 € a round and 5 €.
 - Both prices come from the setup data, never from code: a price rule per card type in `card-types.json` (per regular round still to play for normal cards, fixed for special cards), read through one shared helper (D64). Prices are never printed on the cards.
 - The projector shows only the coming round's card price ([screens.md › Projector](screens.md#projector)). Until a price is set, it shows none.
 
@@ -131,4 +132,4 @@ _From event.md › The cards, Players' phones; the decisions doc › Player app.
 - The edition tag is the same as the Game plan's edition, so phones keep each year's cards apart.
 - Last year's links show "Aquest cartró és de l'any passat".
 - The QR keeps its own white background, so it scans on any paper colour.
-- The address must point at the new app before the cards are handed out, checked with a printed card (pending U15).
+- The address points at the new app now (D76): nobody uses last year's app. A printed card is checked against it once the cards are printed.
