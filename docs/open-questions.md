@@ -40,6 +40,10 @@ About 2 minutes a song is about 7 hours for 210 songs. Sound engine's options: (
 D103 numbers a final Part's songs alphabetically, so Part 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
 **Default:** Part 2 continues at 71–140 (and a third Part at 141–210), not 1–70 again.
 
+### U58 · The alphabetical convention
+Part 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
+**Default:** word by word, as the playlist is now.
+
 ### U54 · What to call each set of 70 songs
 The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
 **Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
