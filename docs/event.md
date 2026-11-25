@@ -44,7 +44,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Times:**
   - The plan: card sales from 17:30, the first round at 18:00.
   - The rounds last until about 22:00, then a DJ set closes the night.
-  - 2025: the first song played at 18:13 and the last round ended at 21:55; the DJ played until 23:00.
+  - 2025: the Game started at 18:13, the first song landed at 18:19, and the last round ended at 21:55; the DJ played until 23:00.
   - 2024: the start slipped to 18:30 because the lights failed, and the rounds ended at 22:00.
 - **The venue:** a large pop-up tent on a town square (2025: Plaça Esteva i Cruañas).
   - It's cold, so we ask for heaters.
@@ -99,7 +99,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - The tech updates the ranges during the night. It's reliable, but not exact: a range can contain unsold cards.
 - **Amounts:**
   - 2024: 250 of each type printed; 214 normal and 147 special sold.
-  - 2025: about 250 cards in play expected.
+  - 2025: about 250 cards in play expected; about 190 normal (#1 to about #190) and 151 special (#400–550) actually played.
 
 ## The songs
 
@@ -322,7 +322,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The pace catches up gently** when we're late, never during the tense final moments of a round.
 - **The Intervals and checks** count in the plan.
 - **2025 in numbers:**
-  - rounds averaged 16 minutes (11–20) and 48 songs (42–56);
+  - regular rounds averaged 16 minutes (11–20) and 50 songs (42–56); the Desgraciat took 21;
   - the first round was the slowest;
   - Intervals averaged 2.5 minutes (1–5.5);
   - a Line check took 1–2 minutes, and a Bingo check plus the round's end 1.5–3.5 minutes.

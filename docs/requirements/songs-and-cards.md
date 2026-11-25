@@ -40,7 +40,7 @@ The size is a hard choice, because it shapes the night: more songs mean longer r
 | A card's share of the Pool | 12 songs = 15% (16.6% in classic bingo) |
 
 **What happened:**
-- 2025 had 77 songs. Rounds averaged 48 songs (42–56) and 16 minutes (11–20).
+- 2025 had 77 songs. Regular rounds averaged 50 songs (42–56) and 16 minutes (11–20); the Desgraciat took 21. The 2026 study is in [research/reports/pool-size-2026.md](../research/reports/pool-size-2026.md) (pending U34).
 - 2024 had 87 songs, which was too many. We expected 35 songs a round and got about 60.
 - A simulation with 77 songs and about 200 cards in play puts the first Line around song 16 (80% of rounds between songs 11 and 21) and the Bingo around song 50 (45–55).
 
@@ -100,7 +100,7 @@ _From event.md › The cards (Amounts)._
 - Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - Each type's amount is a multiple of 3, to fill whole pages.
 - 2024: 250 of each type printed; 214 normal and 147 special sold.
-- 2025: about 250 cards in play expected.
+- 2025: about 250 cards in play expected; about 190 normal and 151 special actually played.
 
 ## Generating and printing
 
