@@ -31,6 +31,7 @@ _From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-g
 - **Players' phones** use only the cloud, on their own mobile data.
 - By default the laptop plays both the audio and the drum. The audio can also run on a separate device near the mixer, kept in sync by landing times announced in advance.
 - **The engine enforces the rules, never the cloud.** The cloud accepts what the engine journals and only flags oddities for an admin (for example an accepted card whose Check didn't pass). Refusing would freeze phones over a judgement the engine already made.
+- **One deploy serves both addresses:** the test address and the QR address are the same Worker, so every deploy changes what the printed QR codes open. After the code freeze, deploys are only fixes.
 - **The deployed cloud learns a new value before any laptop journals it.** A journal entry the cloud refuses stops the laptop's uploads, and with them every phone update for the rest of the night. So a new round kind, win kind or similar reaches the deployed cloud first: the protocol change, then the cloud's acceptance and a redeploy, then the engine journaling it.
 
 ## The public feed's privacy
@@ -126,4 +127,4 @@ _From event.md › Before the night (On the day), The night, step by step._
 - The preflight runs before the doors open, and every failure is fixed first.
 - The sound check: an effect at low volume, then a few seconds of Hold music.
 - The night is started from the console's menu ("Començar la nit").
-- The QR address already points at the new app (D76).
+- The QR address points at the new app since 25 Nov (D76).

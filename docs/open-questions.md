@@ -57,7 +57,7 @@ Rounds in order, a card type per round, prize bundles, sponsors (money donors to
 ### U19 · Checks on real devices · before the rehearsals
 1. An iPhone with Safari and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap.
 2. An older phone: smooth scrolling with 3–4 cards, usable at the end of a round.
-3. Last year's offline cache: after U15, open the old site on a phone that used it last year, then the new one.
+3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
 5. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console.
 6. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.

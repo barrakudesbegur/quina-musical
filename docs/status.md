@@ -15,7 +15,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 | The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
 | Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
 | This year's pool in R2, laptops synced | Waits on the pool. About 100 songs fit the free tier; above that, U32 |
-| QR domain switched | **Go (D76):** Backend switches it now |
+| QR domain switched | **Done (25 Nov, 14:20 UTC):** the QR address serves this year's player; last year's app moved to its GitHub Pages address |
 | Rehearsals | **Dates open (U27).** Wait on the plan in Admin (U18) and the real-device checks (U19) |
 | Cards printed | **Date open (U28).** Waits on the final pool |
 

@@ -133,4 +133,4 @@ _From event.md › The cards, Players' phones; the decisions doc › Player app.
 - The edition tag is the same as the Game plan's edition, so phones keep each year's cards apart.
 - Last year's links show "Aquest cartró és de l'any passat".
 - The QR keeps its own white background, so it scans on any paper colour.
-- The address points at the new app now (D76): nobody uses last year's app. A printed card is checked against it once the cards are printed.
+- The address points at the new app since 25 Nov (D76); last year's app lives on at its GitHub Pages address. A printed card is checked against it once the cards are printed.
