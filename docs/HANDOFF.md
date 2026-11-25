@@ -30,7 +30,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   2. Frontend writes a content spec for the prizes drawer, and I check it against the model;
   3. Frontend draws boards from the real 2025 hampers (real names only on boards, never in the repo);
   4. the user picks (U30).
-- **The settings file (D89, D97, D98).** The user answered U42 to Backend: the file lives in this public repo with every prize, and hiding prizes is only for the hype on screens. Still open:
+- **The settings file (D89, D97, D98).** The user answered U42 to Backend: the file lives in this public repo with every prize, and hiding prizes is only for the hype on screens. Backend put it at `data/nights/2026.json` (one per edition, beside the pool): the whole GamePlan plus Admin's soundsDefault. Still open:
   - U43: I recommend the file wins before the night, the cloud on the night, and `plan pull` brings the night back into the file;
   - U48: I recommend sponsors' names and logos in the file, never their money amounts.
 
