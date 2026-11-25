@@ -277,6 +277,7 @@ export const S = {
       complete: 'Complet',
       incomplete: 'Incomplet',
       fallen: 'Ha caigut: una de les seves cançons ja ha sonat',
+      fellLast: "Ha caigut amb l'última cançó: comparteix el premi si ningú més queda dempeus",
       unknownCard: 'Aquest número de cartró no existeix',
       wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
     } satisfies Record<CheckOutcome, string>,
