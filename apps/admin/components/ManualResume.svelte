@@ -22,7 +22,9 @@
   let asking = $state(false);
   const parsed = $derived(readResume(draft));
   const summary = $derived(parsed.point ? resumeSummary(parsed.point) : null);
-  const roundName = $derived(summary ? `${CA.round(summary.round)}${summary.special ? ` · ${CA.specialRound}` : ''}` : '');
+  const roundName = $derived(
+    summary ? `${CA.round(summary.round)}${summary.special ? ` · ${CA.specialRound}` : parsed.point?.kind === 'desgraciat' ? ` · ${CA.desgraciatRound}` : ''}` : '',
+  );
   const flow = $derived(show.flow);
   const allowed = $derived(
     sceneAllows('resumeAt', {

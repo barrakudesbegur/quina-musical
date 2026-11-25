@@ -1,6 +1,7 @@
 // Admin's on-screen words, in Catalan. Shared terms ("Quina 3", "Línia", "Premi de quina", the scene names)
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
-import type { ShowStatus } from '@quina/protocol';
+import type { ShowStatus, WinKind } from '@quina/protocol';
+import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { CheatSheet, PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
@@ -71,8 +72,12 @@ export const S = {
     cardPrice: 'Preu (€)',
     cardPriceHelp: 'Buit: sense preu.',
     /** Where a type plays tonight: its regular rounds by number, and the special round. */
-    cardRounds: (regular: readonly number[], special: boolean) => {
-      const parts = [...(regular.length ? [regular.length === 1 ? `la Quina ${regular[0]}` : `les quines ${joinCa(regular)}`] : []), ...(special ? ['la quina especial'] : [])];
+    cardRounds: (regular: readonly number[], special: boolean, desgraciat = false) => {
+      const parts = [
+        ...(regular.length ? [regular.length === 1 ? `la Quina ${regular[0]}` : `les quines ${joinCa(regular)}`] : []),
+        ...(special ? ['la quina especial'] : []),
+        ...(desgraciat ? ['la quina desgraciada'] : []),
+      ];
       return parts.length ? `Juga a ${joinCa(parts)}` : 'No juga a cap quina';
     },
   },
@@ -108,7 +113,7 @@ export const S = {
 
   rounds: {
     title: 'Quines',
-    help: 'Cada quina, normal o especial, amb el tipus de cartró que hi juga i els premis de línia i els de quina. Es numeren soles quan les mous.',
+    help: "Cada quina, normal, especial o desgraciada, amb el tipus de cartró que hi juga i els seus premis: de línia i de quina, o a la desgraciada només el de l'últim dempeus. Es numeren soles quan les mous.",
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
@@ -116,6 +121,15 @@ export const S = {
     kind: 'Tipus',
     normal: 'Normal',
     special: 'Especial',
+    desgraciat: 'Desgraciada',
+    /** The option's name when another round already is the Desgraciat one (it is disabled). */
+    desgraciatTaken: (n: number) => `Desgraciada (ja ho és la Quina ${n})`,
+    oneDesgraciat: (n: number) => `Només hi pot haver una Quina Desgraciada per nit, i ja ho és la Quina ${n}. Canvia'n una a normal.`,
+    desgraciatHelp: "Tothom dempeus: un cartró s'asseu quan sona qualsevol de les seves cançons, i guanya l'últim que queda dempeus. No té línia.",
+    linesMoved: (n: number) =>
+      n === 1 ? "La Quina Desgraciada no té línia: el seu premi de línia ara és un premi de l'últim dempeus." : `La Quina Desgraciada no té línia: els seus ${n} premis de línia ara són premis de l'últim dempeus.`,
+    lineInDesgraciat: "La Quina Desgraciada no té línia: aquests premis no es lliurarien. Passa'ls al premi de l'últim dempeus o treu-los.",
+    moveLine: "Passar-los al premi de l'últim dempeus",
     cardType: 'Cartrons que hi juguen',
     unknownCardType: (id: string) =>
       `El tipus «${id}» no és a card-types.json dels cartrons impresos: cap cartró no comptaria en aquesta quina. Tria'n un de la llista, o genera abans els cartrons d'aquest tipus.`,
@@ -350,6 +364,8 @@ export const S = {
     privacy: 'Els noms són privats: mai surten al projector, als mòbils ni a git. Només es guarden a les dades de la partida.',
     noWinners: 'Encara no hi ha guanyadors.',
     col: { round: 'Quina', kind: 'Premi', card: 'Cartró', song: 'Cançó guanyadora', prize: 'Què guanya', name: 'Nom', notes: 'Notes', action: 'Desar' },
+    /** What a Winner won: "Línia", "Quina", or the Desgraciat round's "Últim dempeus". */
+    kind: { line: CA.line, bingo: CA.bingo, standing: 'Últim dempeus' } satisfies Record<WinKind, string>,
     nameLabel: (card: string) => `Nom del guanyador del ${card.toLowerCase()}`,
     notesLabel: (card: string) => `Notes del ${card.toLowerCase()}`,
     saveWinner: 'Desar',
@@ -389,6 +405,7 @@ export const S = {
     prizes: 'Premis',
     noPrize: 'Sense premi',
     special: 'Especial',
+    desgraciat: 'Desgraciada',
     claimRules: 'Normes per cantar',
     specialRules: 'Quina especial',
     keys: 'Tecles del portàtil (pla B)',

@@ -56,7 +56,9 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     if (prev.kind !== next.kind) kindChanged.push(n);
     if (roundCardType(prev) !== roundCardType(next)) cardTypeChanged.push(n);
     for (const kind of KINDS) {
-      if (!same(bundleKey(prev[kind]), bundleKey(next[kind]))) prizes.push({ round: n, kind, before: bundleSummary(prev[kind]), after: bundleSummary(next[kind]) });
+      // The Desgraciat round's `bingo` bundle is the last card standing's prize.
+      const shown: WinKind = kind === 'bingo' && next.kind === 'desgraciat' ? 'standing' : kind;
+      if (!same(bundleKey(prev[kind]), bundleKey(next[kind]))) prizes.push({ round: n, kind: shown, before: bundleSummary(prev[kind]), after: bundleSummary(next[kind]) });
     }
   }
 

@@ -38,13 +38,16 @@
         </thead>
         <tbody>
           {#each sheet.rounds as round (round.number)}
-            <tr data-kind={round.special ? 'special' : 'normal'}>
+            <tr data-kind={round.special ? 'special' : round.desgraciat ? 'desgraciat' : 'normal'}>
               <th scope="row">
                 {round.label}
                 {#if round.special}<span class="cheat-sheet__special">{S.cheat.special}</span>{/if}
+                {#if round.desgraciat}<span class="cheat-sheet__special">{S.cheat.desgraciat}</span>{/if}
               </th>
               {#each round.prizes as prize (prize.kind)}
-                <td>
+                <!-- The Quina Desgraciada has no Line: its one prize, the last card standing's, spans both columns. -->
+                <td colspan={round.desgraciat ? 2 : undefined}>
+                  {#if round.desgraciat}<span class="cheat-sheet__label">{prize.label}</span>{/if}
                   {#if prize.items.length}
                     <ul class="cheat-sheet__bundle">
                       {#each prize.items as item, j (j)}
@@ -114,6 +117,14 @@
 </article>
 
 <style>
+  /* The Quina Desgraciada's one prize names itself in its cell ("Premi de l'últim dempeus"): it has no Line. */
+  .cheat-sheet__label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
   .cheat-sheet {
     display: grid;
     gap: var(--space-5);

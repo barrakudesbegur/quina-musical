@@ -1,5 +1,6 @@
-<!-- The rounds plan: each round normal or special, the printed card type it plays (card-types.json), with its Line's
-     and Quina's prize bundles. Rounds are added, removed
+<!-- The rounds plan: each round normal, special or the night's one Desgraciat round, the printed card type it plays
+     (card-types.json), with its Line's and Quina's prize bundles (the Desgraciat round: only the last card standing's,
+     its `bingo` bundle; Line prizes it had move there, with a notice). Rounds are added, removed
      and reordered here; they are renumbered 1, 2, 3… every time. During the night the rounds already played and
      the one in play (or being introduced) are fixed; the upcoming ones can be moved and edited live. -->
 <script lang="ts">
@@ -10,7 +11,18 @@
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { roundCardType, type RoundKind } from '@quina/protocol';
   import { cardTypeLabel, knownCardTypes, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
-  import { addRound, cardTypeChoices, isUnknownCardType, lockedRoundCount, moveRound, removeRound, withRoundKind } from '../logic/plan-edit.ts';
+  import {
+    addRound,
+    cardTypeChoices,
+    desgraciatTakenBy,
+    isUnknownCardType,
+    lockedRoundCount,
+    movedLinePrizes,
+    moveRound,
+    removeRound,
+    withLineMoved,
+    withRoundKind,
+  } from '../logic/plan-edit.ts';
   import { errorsAt } from '../logic/plan-check.ts';
   import { S } from '../strings.ts';
   import PrizeFields from './PrizeFields.svelte';
@@ -20,8 +32,15 @@
 
   /** The types to pick from and name: card-types.json's (knownCardTypes). */
   const types = $derived(knownCardTypes(printed));
-  const setKind = (index: number, kind: RoundKind) =>
+  /** Rounds whose Line prizes just moved into their last-card-standing bundle, by index, with how many (a notice). */
+  let moved = $state<Record<number, number>>({});
+  function setKind(index: number, kind: RoundKind) {
+    const round = session.draft.rounds[index];
+    const count = round ? movedLinePrizes(round, kind) : 0;
+    moved = { ...moved, [index]: count };
     session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind) : r)) }));
+  }
+  const moveLine = (index: number) => session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withLineMoved(r) : r)) }));
   const setCardType = (index: number, cardType: string) =>
     session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? { ...r, cardType } : r)) }));
 
@@ -33,13 +52,17 @@
   /** Rounds 1..locked are fixed: played, in play, or being introduced. */
   const locked = $derived(show.state ? lockedRoundCount(show.state.round, flowOf(show.state).intro?.round ?? null) : 0);
 
-  const move = (from: number, to: number) => session.update((p) => ({ ...p, rounds: moveRound(p.rounds, from, to, locked) }));
+  const move = (from: number, to: number) => {
+    moved = {};
+    session.update((p) => ({ ...p, rounds: moveRound(p.rounds, from, to, locked) }));
+  };
   function remove(index: number) {
     if (confirming !== index) {
       confirming = index;
       return;
     }
     confirming = null;
+    moved = {};
     session.update((p) => ({ ...p, rounds: removeRound(p.rounds, index, locked) }));
   }
 </script>
@@ -53,18 +76,21 @@
     {#each session.draft.rounds as round, i (i)}
       {@const fixed = i < locked}
       {@const cardType = roundCardType(round)}
+      {@const taken = desgraciatTakenBy(session.draft.rounds, i)}
       <li class="rounds__item" data-kind={round.kind} data-state={fixed ? (round.number === locked ? 'current' : 'played') : 'upcoming'}>
         <fieldset class="round">
           <legend class="round__name">
-            {CA.round(round.number)}{round.kind === 'special' ? ` · ${CA.specialRound}` : ''}
+            {CA.round(round.number)}{round.kind === 'special' ? ` · ${CA.specialRound}` : round.kind === 'desgraciat' ? ` · ${CA.desgraciatRound}` : ''}
             {#if fixed}<span class="round__badge" title={S.rounds.fixedLabel(round.number)}>{round.number === locked ? S.rounds.inPlay : S.rounds.played}</span>{/if}
           </legend>
           <div class="round__head">
             <label class="field">
               <span class="field__label">{S.rounds.kind}</span>
-              <select value={round.kind} onchange={(e) => setKind(i, e.currentTarget.value as RoundKind)} disabled={fixed}>
+              <select value={round.kind} onchange={(e) => setKind(i, e.currentTarget.value as RoundKind)} disabled={fixed} data-testid="round-kind">
                 <option value="normal">{S.rounds.normal}</option>
                 <option value="special">{S.rounds.special}</option>
+                <!-- One per night: offered while no other round is the Desgraciat one (checkGamePlan refuses a second). -->
+                <option value="desgraciat" disabled={taken !== null && round.kind !== 'desgraciat'}>{taken !== null && round.kind !== 'desgraciat' ? S.rounds.desgraciatTaken(taken) : S.rounds.desgraciat}</option>
               </select>
             </label>
             <label class="field">
@@ -81,12 +107,27 @@
               </button>
             </div>
           </div>
+          {#if round.kind === 'desgraciat'}
+            <p class="panel__help">{S.rounds.desgraciatHelp}</p>
+            {#if taken !== null}<p class="notice notice--warn" role="alert" data-testid="round-desgraciat-twice">{S.rounds.oneDesgraciat(taken)}</p>{/if}
+            {#if moved[i]}<p class="notice" role="status" data-testid="round-lines-moved">{S.rounds.linesMoved(moved[i])}</p>{/if}
+          {/if}
           {#if isUnknownCardType(cardType, printed)}
             <p class="notice notice--warn" role="alert" data-testid="round-card-type-unknown">{S.rounds.unknownCardType(cardType)}</p>
           {/if}
           <div class="round__prizes">
-            <PrizeFields bind:bundle={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
-            <PrizeFields bind:bundle={round.bingo} kind="bingo" sponsors={session.draft.sponsors} idPrefix="round-{i}-bingo" errors={errorsAt(session.errors, `plan.rounds[${i}].bingo`)} />
+            {#if round.kind !== 'desgraciat'}
+              <PrizeFields bind:bundle={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
+            {:else if round.line.length}
+              <!-- Line prizes in a Desgraciat round (an imported plan): shown, so they can be moved or removed. -->
+              <div class="round__stray-line">
+                <p class="notice notice--warn" role="alert">{S.rounds.lineInDesgraciat}</p>
+                <button type="button" onclick={() => moveLine(i)} disabled={fixed} data-testid="round-move-line">{S.rounds.moveLine}</button>
+                <PrizeFields bind:bundle={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
+              </div>
+            {/if}
+            <!-- The Desgraciat round's one bundle (the plan's `bingo`) is the last card standing's prize. -->
+            <PrizeFields bind:bundle={round.bingo} kind={round.kind === 'desgraciat' ? 'standing' : 'bingo'} sponsors={session.draft.sponsors} idPrefix="round-{i}-bingo" errors={errorsAt(session.errors, `plan.rounds[${i}].bingo`)} />
           </div>
           <ul class="error-list">
             {#each errorsAt(session.errors, `plan.rounds[${i}]`).filter((e) => !e.includes('.line') && !e.includes('.bingo')) as error, j (j)}<li>{error}</li>{/each}
@@ -125,8 +166,13 @@
     display: grid;
     gap: var(--space-3);
   }
-  .rounds__item[data-kind='special'] .round {
+  .rounds__item[data-kind='special'] .round,
+  .rounds__item[data-kind='desgraciat'] .round {
     border-color: var(--color-accent);
+  }
+  .round__stray-line {
+    display: grid;
+    gap: var(--space-2);
   }
   .round__name {
     font-size: var(--text-lg);

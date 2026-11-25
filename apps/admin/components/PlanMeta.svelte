@@ -48,7 +48,7 @@
           <span class="plan-meta__swatch" aria-hidden="true"></span>
           <span class="plan-meta__card-name">{cardType.name}</span>
           <span class="plan-meta__card-price">{S.plan.cardPriceLabel(cardType.priceCents)}</span>
-          <span class="field__help">{S.plan.cardRounds(rounds?.regularRounds ?? [], rounds?.special ?? false)}</span>
+          <span class="field__help">{S.plan.cardRounds(rounds?.regularRounds ?? [], rounds?.special ?? false, rounds?.desgraciat ?? false)}</span>
         </li>
       {/each}
     </ul>

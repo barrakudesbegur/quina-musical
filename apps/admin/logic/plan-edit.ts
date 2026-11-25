@@ -16,12 +16,30 @@ export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPla
 
 /**
  * A round switched to another kind. Its card type follows when it was still the old kind's default (a normal round
- * made special now plays the especial cards); a type picked on purpose stays.
+ * made special now plays the especial cards); a type picked on purpose stays. A round made the Desgraciat one keeps
+ * its Line prizes: that round has no Line, so they move into its one bundle, the last card standing's (`bingo`),
+ * never lost (the editor says so: movedLinePrizes).
  */
 export function withRoundKind(round: RoundPlan, kind: RoundKind): RoundPlan {
   if (round.kind === kind) return round;
   const type = roundCardType(round);
-  return { ...round, kind, cardType: type === defaultCardType(round.kind) ? defaultCardType(kind) : type };
+  const next = { ...round, kind, cardType: type === defaultCardType(round.kind) ? defaultCardType(kind) : type };
+  return kind === 'desgraciat' ? withLineMoved(next) : next;
+}
+
+/** How many Line prizes switching this round to `kind` moves into its last-card-standing bundle. */
+export const movedLinePrizes = (round: Pick<RoundPlan, 'kind' | 'line'>, kind: RoundKind): number => (kind === 'desgraciat' && round.kind !== kind ? round.line.length : 0);
+
+/** A round's Line prizes moved after its Quina's (headline prizes first, as the plan requires), its Line left empty. */
+export function withLineMoved(round: RoundPlan): RoundPlan {
+  if (!round.line.length) return round;
+  return { ...round, bingo: sortBundle([...round.bingo, ...round.line]), line: [] };
+}
+
+/** The number of the round, other than the one at `index`, that already is the night's Desgraciat round, or null:
+ * there can be only one (checkGamePlan refuses a second). */
+export function desgraciatTakenBy(rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[], index: number): number | null {
+  return rounds.find((r, i) => i !== index && r.kind === 'desgraciat')?.number ?? null;
 }
 
 /** The card types a round's picker offers: card-types.json's, plus the round's own when the list lacks it (so the

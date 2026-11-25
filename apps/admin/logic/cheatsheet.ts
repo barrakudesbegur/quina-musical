@@ -4,7 +4,8 @@
 // remote reminder, the setup checklist) passed in as copy. Pure, so the console can show the same content
 // (one round's prizes during the Interval) and Admin prints all of it.
 // Proposed for ui/ (rules + words) once the console needs it.
-import { sponsorOf, splitBundle, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
+import { winKindsOf } from '@quina/protocol';
+import { prizeBundleOf, sponsorOf, splitBundle, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import { CA } from '../../../packages/ui/i18n/ca.ts';
 
@@ -43,6 +44,9 @@ export interface CheatRound {
   /** "Quina 3". */
   label: string;
   special: boolean;
+  /** The Quina Desgraciada: one prize, the last card standing's, and no Line. */
+  desgraciat: boolean;
+  /** Line and Quina; for the Desgraciat round only the last card standing's. */
   prizes: CheatPrize[];
 }
 
@@ -58,8 +62,6 @@ export interface CheatSheetModel {
   checklist: readonly string[];
 }
 
-/** The plan's two bundles per round (a Desgraciat round's win reads the `bingo` one). */
-const KINDS = ['line', 'bingo'] as const satisfies readonly WinKind[];
 
 function cheatItem(plan: GamePlan, prize: Prize, headline: boolean): CheatPrizeItem {
   return { title: prize.title, detail: prize.detail || null, sponsor: sponsorOf(plan, prize)?.name ?? null, headline };
@@ -80,7 +82,8 @@ export function cheatRound(plan: GamePlan, round: RoundPlan): CheatRound {
     number: round.number,
     label: CA.round(round.number),
     special: round.kind === 'special',
-    prizes: KINDS.map((kind) => cheatPrize(plan, kind, round[kind])),
+    desgraciat: round.kind === 'desgraciat',
+    prizes: winKindsOf(round.kind).map((kind) => cheatPrize(plan, kind, prizeBundleOf(round, kind))),
   };
 }
 
