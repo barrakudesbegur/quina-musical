@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { isCardTypeId, isPhaseName, isShowScene, ROUND_KINDS, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, ROUND_KINDS, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -92,8 +92,10 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'settings.changed': { settings },
   'scene.changed': { scene, round: integer(0, 99), roundKind, cardType },
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
-  'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999) },
-  'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)) },
+  // `outcome`: the Check's result at the decision (absent in older journals), one of the protocol's CHECK_OUTCOMES.
+  'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)) },
+  // `slip`: the numbered slip handed to the winner instead of a name (absent in older journals). Private, like the name.
+  'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)), slip: optional(nullable(text(16, true))) },
   'prizes.revealed': { round, by: oneOf('presenters', 'intro') },
 };
 

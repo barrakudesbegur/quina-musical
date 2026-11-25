@@ -128,8 +128,15 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.ok(checkJournalEntry({ ...started, roundKind: 'desgraciat' }).ok, 'the Desgraciat round');
   const opened = entries.find((e) => e.kind === 'claim.opened') as JournalEntry;
   assert.ok(checkJournalEntry({ ...opened, winKind: 'standing' }).ok, 'a claim for the last card standing');
+  const decided = entries.find((e) => e.kind === 'claim.decided') as JournalEntry;
+  for (const outcome of ['complete', 'fellLast', 'fallen', 'incomplete']) assert.ok(checkJournalEntry({ ...decided, outcome }).ok, `the Check's outcome ${outcome}`);
+  const noted = entries.find((e) => e.kind === 'winner.noted') as JournalEntry;
+  assert.ok(checkJournalEntry({ ...noted, slip: '17' }).ok, "a winner's slip");
+  assert.ok(checkJournalEntry({ ...noted, slip: null }).ok, 'a slip cleared');
   const bad: [string, unknown][] = [
     ['win kind', { ...opened, winKind: 'quina' }],
+    ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],
+    ['a slip longer than 16', { ...noted, slip: 'x'.repeat(17) }],
     ['verdict fallen (a live Check outcome, never journalled)', { ...entries.find((e) => e.kind === 'claim.decided'), verdict: 'fallen' }],
     ['card type with a dash (the resume code splits on it)', { ...started, cardType: 'cartro-groc' }],
     ['card type in capitals', { ...intro, cardType: 'Especial' }],

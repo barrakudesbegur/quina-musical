@@ -174,7 +174,7 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   // ---- what the phone got: gap-free, nothing private -------------------------------------------------------
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"outcome"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
   expect(errors, 'no page errors').toEqual([]);

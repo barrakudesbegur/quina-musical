@@ -24,7 +24,7 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
 }
 
 /** Keys that must never appear anywhere in what phones get. */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'outcome', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings']);
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -139,6 +139,21 @@ test("round 1's intro is public too, though the engine drew round 1 at boot; a r
   b.land(3).scene('roundStart', 1, 'desgraciat');
   ({ state } = project(b.entries));
   assert.equal(state.intro, null);
+});
+
+test("the Desgraciat round's shared win: one public winner with every card that stood last; no slip, no outcome", () => {
+  const b = new JournalBuilder('g-shared').startRound('desgraciat').land(25);
+  const claims = [b.claim(3, 'standing'), b.claim(7, 'standing')];
+  b.scene('check');
+  for (const id of claims) b.decide(id, 'valid', 'fellLast');
+  b.note(claims[0] as string, null, null, '17').note(claims[1] as string, 'Àvia Rosa', null, '18');
+  b.scene('celebration');
+  const { state } = project(b.entries);
+  assert.deepEqual(state.winners, [{ round: 1, kind: 'standing', cardIds: [3, 7] }]);
+  assert.equal(state.rounds[0]?.ended, true);
+  const all = JSON.stringify(state);
+  assert.ok(!all.includes('Àvia') && !all.includes('"slip"') && !all.includes('fellLast'), 'names, slips and outcomes stay private');
+  assert.deepEqual(forbiddenKeys(state), []);
 });
 
 test("a round's card type is public from its intro: the one it names, else its kind's default", () => {

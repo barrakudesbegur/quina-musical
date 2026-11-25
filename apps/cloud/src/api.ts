@@ -1,6 +1,7 @@
 // What the Worker's HTTP API answers (/api/export, /api/stats). Types only, so Node code (the load test, the
 // tests, a future Admin) can use them without the Workers runtime.
 import type { GamePlan, GameRecord, JournalEntry, ResumeToken } from '@quina/protocol';
+import type { FlaggedDecision } from './domain/flags.ts';
 import type { PublicState } from '@quina/protocol';
 
 /** Counters since the GameRoom last woke (hibernation and restarts reset them). */
@@ -64,6 +65,8 @@ export interface GameSummary {
    * gives the whole Queue; organizers only, never on a screen by default.
    */
   resumePoint: ResumeToken | null;
+  /** Accepted claims whose Check didn't pass: for a person to look at (domain/flags.ts). Usually empty. */
+  flaggedDecisions: FlaggedDecision[];
 }
 
 /** The answer to POST /api/resume. */
@@ -84,6 +87,6 @@ export interface EditionExport {
   edition: string;
   exportedAtMs: number;
   currentGameId: string | null;
-  games: { gameId: string; entries: JournalEntry[]; record: GameRecord | null; error: string | null }[];
+  games: { gameId: string; entries: JournalEntry[]; record: GameRecord | null; error: string | null; flaggedDecisions: FlaggedDecision[] }[];
   publicState: PublicState;
 }

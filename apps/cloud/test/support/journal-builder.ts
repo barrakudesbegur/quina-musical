@@ -1,7 +1,7 @@
 // Builds Game journals for tests, as the show engine writes them: numbered entries for rounds, landings, undos,
 // Lines, scenes, claims and winners. The protocol's own replayJournal checks that what it builds is consistent.
 // Shared by the Node tests, the workerd tests and the load test, so it uses no Node or Workers API.
-import type { JournalEntry, JournalEntryBody, JournalSettings, RoundKind, ShowScene, WinKind } from '@quina/protocol';
+import type { CheckOutcome, JournalEntry, JournalEntryBody, JournalSettings, RoundKind, ShowScene, WinKind } from '@quina/protocol';
 
 export const SETTINGS: JournalSettings = {
   pace: 14,
@@ -180,14 +180,16 @@ export class JournalBuilder {
     return claimId;
   }
 
-  decide(claimId: string, verdict: 'valid' | 'invalid'): this {
+  /** `outcome`: the Check's result, as today's engine journals it (absent, as an older journal). */
+  decide(claimId: string, verdict: 'valid' | 'invalid', outcome?: CheckOutcome): this {
     const winningSongId = verdict === 'valid' ? (this.queue[this.position] ?? null) : null;
-    this.push({ kind: 'claim.decided', round: this.round, claimId, verdict, winningSongId, position: this.position }, 20_000);
+    this.push({ kind: 'claim.decided', round: this.round, claimId, verdict, winningSongId, position: this.position, ...(outcome ? { outcome } : {}) }, 20_000);
     return this;
   }
 
-  note(claimId: string, name: string | null, notes: string | null): this {
-    this.push({ kind: 'winner.noted', claimId, name, notes }, 1_000);
+  /** `slip`: the numbered slip handed over instead of a name (absent, as an older journal). */
+  note(claimId: string, name: string | null, notes: string | null, slip?: string | null): this {
+    this.push({ kind: 'winner.noted', claimId, name, notes, ...(slip !== undefined ? { slip } : {}) }, 1_000);
     return this;
   }
 

@@ -33,6 +33,7 @@ import type { AccessEnv } from './access.ts';
 import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
+import { flaggedDecisions } from './domain/flags.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
 import { UsageCounter, usageReport, type DailyUsage, type UsageReport } from './domain/usage.ts';
 import { ingest } from './domain/ingest.ts';
@@ -482,9 +483,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
     }
     const games = [...byGame].map(([gameId, entries]) => {
       try {
-        return { gameId, entries, record: replayJournal(entries, gameId), error: null };
+        return { gameId, entries, record: replayJournal(entries, gameId), error: null, flaggedDecisions: flaggedDecisions(entries) };
       } catch (error) {
-        return { gameId, entries, record: null, error: String(error) };
+        return { gameId, entries, record: null, error: String(error), flaggedDecisions: flaggedDecisions(entries) };
       }
     });
     return { edition: this.env.EDITION, exportedAtMs: Date.now(), currentGameId: this.room.game?.gameId ?? null, games, publicState: this.room.feed.state };
@@ -642,6 +643,13 @@ export class GameRoom extends DurableObject<RoomEnv> {
        FROM journal GROUP BY game_id ORDER BY last_at DESC`,
     );
     const round = this.room.game?.round ?? null;
+    // Only the claims' entries, to flag accepted ones whose Check didn't pass.
+    const claims = new Map<string, JournalEntry[]>();
+    for (const row of this.rows("SELECT game_id, entry FROM journal WHERE kind IN ('claim.opened', 'claim.decided') ORDER BY game_id, seq")) {
+      const list = claims.get(String(row.game_id)) ?? [];
+      list.push(JSON.parse(String(row.entry)) as JournalEntry);
+      claims.set(String(row.game_id), list);
+    }
     return rows.map((r) => {
       const current = String(r.game_id) === this.room.game?.gameId;
       return {
@@ -652,6 +660,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
         rounds: Number(r.rounds),
         current,
         resumePoint: current && round ? resumeToken(round) : null,
+        flaggedDecisions: flaggedDecisions(claims.get(String(r.game_id)) ?? []),
       };
     });
   }

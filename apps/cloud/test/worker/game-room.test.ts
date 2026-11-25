@@ -534,6 +534,24 @@ describe("a new laptop, and Admin's manual resume", () => {
     expect(await fresh.client.next()).toMatchObject({ type: 'cloud.journal', gameId: 'g-nothing', entries: [], done: true });
   });
 
+  it("an accepted claim whose Check didn't pass is flagged in Admin's Games and the export, never refused", async () => {
+    const b = new JournalBuilder('g-flagged').startRound().land(6);
+    const ok = b.claim(12, 'line');
+    b.decide(ok, 'valid', 'complete');
+    const odd = b.claim(34, 'bingo');
+    b.decide(odd, 'valid', 'incomplete').note(odd, null, null, '17');
+    const { client } = await laptop('g-flagged');
+    const ack = await upload(client, 'g-flagged', b.entries);
+    expect(ack.ackSeq).toBe(b.entries.length); // taken whole: the cloud flags, it doesn't refuse
+    const { games } = await getJson<{ games: { gameId: string; flaggedDecisions: { cardId: number; kind: string; outcome: string }[] }[] }>('/api/games');
+    expect(games.find((g) => g.gameId === 'g-flagged')?.flaggedDecisions).toMatchObject([{ cardId: 34, kind: 'bingo', outcome: 'incomplete' }]);
+    const exported = await getJson<EditionExport>('/api/export');
+    expect(exported.games.find((g) => g.gameId === 'g-flagged')?.flaggedDecisions).toHaveLength(1);
+    // The slip is kept with the winner, and never public.
+    expect(exported.games.find((g) => g.gameId === 'g-flagged')?.record?.winners.find((w) => w.cardId === 34)).toMatchObject({ slip: '17' });
+    expect(JSON.stringify(exported.publicState)).not.toContain('"slip"');
+  });
+
   it('Admin lists the Games and resumes one: it becomes current, and its journal goes to the laptop', async () => {
     const a = JournalBuilder.sampleGame('g-rehearsal');
     const b = new JournalBuilder('g-night').startRound('normal', undefined, 'groc').land(4); // a round of this year's own card type
