@@ -136,16 +136,21 @@ def save_csv(playlist_data: dict, filename: str) -> list:
         cover_sources = item_data.get('albumOfTrack', {}).get('coverArt', {}).get('sources', [])
         cover_url = get_largest_cover_url(cover_sources)
         
+        # Spotify's length and id: tools/prep/quality.py flags a download whose length is off (another version).
+        duration_ms = item_data.get('trackDuration', {}).get('totalMilliseconds')
+        uri = item_data.get('uri', '')
         tracks.append({
             'id': position,
             'title': title,
             'artist': artist,
-            'cover': cover_url
+            'cover': cover_url,
+            'durationMs': duration_ms if isinstance(duration_ms, int) else None,
+            'spotifyId': uri.split(':')[-1] if uri.startswith('spotify:track:') else None,
         })
     
     # Write CSV
     with open(filename, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['id', 'title', 'artist', 'cover'])
+        writer = csv.DictWriter(f, fieldnames=['id', 'title', 'artist', 'cover', 'durationMs', 'spotifyId'])
         writer.writeheader()
         writer.writerows(tracks)
     

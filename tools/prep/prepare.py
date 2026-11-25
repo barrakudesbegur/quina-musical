@@ -6,6 +6,7 @@
 Steps (default: all, always run in this order):
     covers      covers.py      songs.json `cover` URLs → <coversDir>/<id>.jpg
     decode      decode.py      source audio → <cacheDir>/<id>/mix.flac
+    quality     quality.py     each source's bitrate, low-pass and length against Spotify's → <dataDir>/quality.json (flags only)
     analyze     analyze.py     beat grid, tempo, hooks, loudness → <dataDir>/analysis/
     snippets    snippets.py    3 s from each song's best hook, for the Check → <cacheDir>/<id>/snippet.flac, <dataDir>/snippets/
     validate    validate.py    flags and audition queue → <dataDir>/report.md (hard errors stop here)
@@ -53,6 +54,7 @@ class Step:
 STEPS = (
     Step("covers", "covers.py", VENV_PY, True),
     Step("decode", "decode.py", VENV_PY, True),
+    Step("quality", "quality.py", VENV_PY, True),
     Step("analyze", "analyze.py", VENV_PY, True),
     Step("snippets", "snippets.py", VENV_PY, True),
     Step("validate", "validate.py", VENV_PY, False),
@@ -94,6 +96,15 @@ def _sum_analyze(pool: pools.Pool, ids: list[int]) -> str:
     untagged = sum(1 for r in rows if "no_hook_tags" in r.get("flags", []))
     return (f"{len(rows)}/{len(ids)} analysed, {playable} playable"
             + (f", {untagged} without hook tags" if untagged else ""))
+
+
+def _sum_quality(pool: pools.Pool, ids: list[int]) -> str:
+    doc = _load(pool.data_dir / "quality.json")
+    if not doc:
+        return "no quality check"
+    rows = [r for r in doc.get("songs", []) if r["id"] in set(ids)]
+    flagged = [r for r in rows if r.get("flags")]
+    return f"{len(rows)} sources checked, {len(flagged)} to check by ear" + (f" ({pools.display(pool.data_dir / 'quality.json')})" if flagged else "")
 
 
 def _sum_snippets(pool: pools.Pool, ids: list[int]) -> str:
@@ -151,7 +162,7 @@ def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
 
 
 SUMMARIES: dict[str, Callable[[pools.Pool, list[int]], str]] = {
-    "covers": _sum_covers, "decode": _sum_decode, "analyze": _sum_analyze, "snippets": _sum_snippets, "validate": _sum_validate,
+    "covers": _sum_covers, "decode": _sum_decode, "quality": _sum_quality, "analyze": _sum_analyze, "snippets": _sum_snippets, "validate": _sum_validate,
     "keys": _sum_keys, "stems": _sum_stems, "signatures": _sum_signatures, "hooks": _sum_hooks, "interval": _sum_interval,
 }
 

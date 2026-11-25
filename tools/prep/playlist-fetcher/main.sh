@@ -15,6 +15,7 @@ fi
 python3 fetch.py "$playlist_id"
 
 echo "Downloading songs..."
-spotdl --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --bitrate disable "https://open.spotify.com/playlist/$playlist_id"
+# --format opus with --bitrate disable keeps YouTube's own Opus stream (copied, not re-encoded to MP3).
+spotdl --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --format opus --bitrate disable "https://open.spotify.com/playlist/$playlist_id"
 
 echo "✅ Done"
