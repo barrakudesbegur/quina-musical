@@ -2,22 +2,30 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
-## Now (2026-11-25)
+## Now (2026-11-25, evening)
 
 - **In progress:**
-  - realistic prize bundles in the fixtures (17–19-item hampers), to prove the projector, the phones' Premis and the cheat sheet fit them;
-  - the Desgraciat shared win (`fellLast`) and the winner's slip, on top of Sound engine's commit.
+  - realistic prize bundles (17–19-item hampers) in the fixtures, so the projector, phones, console and cheat sheet fit them; a helper agent is on it;
+  - next, the projector's card price on the Interval and before-the-start screens (U5). `comingRoundPrice` is ready (`dfc3cf2`); it waits for the prize work, which edits the same stage files.
 - **Next:**
-  - throw breaks ("parón") in Admin's Schedule, Horari and the console's expected end;
-  - every sponsor mentioned on the projector;
+  - the console switch for the automatic "Final Lap!" (R2-Q18);
+  - the presenters' checklist on the cheat sheet;
+  - the generator's pool-size report (R1-Q31);
+  - the player's before-the-Game card types preview;
+  - Wii range drops in `remote.status` (to agree with Sound engine);
   - "el tècnic" wording;
   - the player router's `hashchange`.
 - **Blocked:** nothing.
-- **Waiting on the user** (IDs once the Orchestrator numbers them in `docs/open-questions.md`):
-  - this year's card values (title, colour, types, amounts) and the `canvas` install-script approval;
-  - the Desgraciat boards' 3 points: the standing count on the projector, the sitting nino, and the win's title ("DEMPEUS!" not approved);
-  - card prices that drop round by round;
-  - the drawers layout, the card stack, the theme pass and the 3 design choices.
+- **Waiting on the user** (`docs/open-questions.md`):
+  - U2 (the printed card's title and paper colour) and U3 (card types and amounts), both by 30 Nov;
+  - U7 (two Desgraciat board points);
+  - U8 (the prizes corner icon);
+  - U9 (the effect when the landed song is yours);
+  - U10 (the player app's layout);
+  - U11 (the card-stacking scroll);
+  - U12 (the theme pass);
+  - U17 (approving the PDF install script);
+  - U21 (card text size on phones).
 
 **What this covers:** every screen and its motion, which is the UI/UX and animation role in `docs/team.md`:
 - the projector stage (`apps/stage`, plain TypeScript);
