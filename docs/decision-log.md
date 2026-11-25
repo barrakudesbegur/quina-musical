@@ -820,3 +820,7 @@ By: the user. Source: open-questions.md › Answered (U35). Lives in: requiremen
 ### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Active; where the file lives Pending (U42)
 The organizers keep their prizes and sponsors in a spreadsheet however they like; the user hands it over, and the orchestrator parses it into the plan. The whole night's settings should live in one JSON file tracked by git, so agents can edit every setting and the laptop uses it too. Admin's UI is only for last-minute edits on a phone, and even those the user would rather make through an agent on the laptop. Answers U40.
 By: the user. Source: open-questions.md › Answered (U40); the user's answers of 2026-11-25. Amends: the requirement that prizes and sponsors are entered in Admin. Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Admin.
+
+### D90 · Effects and Celebrations over open drawers · 2026-11-25 · Active
+A Celebration closes the Premis, Horari and Ajustos drawers, but not the add-card pad while a number is being typed. The flashes and particles of the your-song effect (D74) play on top of everything, so a player inside any drawer still sees them. Answers U41.
+By: the user. Source: open-questions.md › Answered (U41). Amends: D73, D74. Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.

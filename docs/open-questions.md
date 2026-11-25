@@ -38,10 +38,6 @@ D89 puts the whole night's settings in one git-tracked JSON file. But this repo 
 Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
 **Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
 
-### U41 · A Celebration while a drawer is open
-Drawers sit on top of everything, so an open drawer hides a Celebration, even "La teva línia".
-**Default (Frontend's suggestion):** a Celebration closes Premis, Horari and Ajustos, but not the add-card pad while a number is being typed.
-
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
 **Default:** nothing built for the prizes drawer until the user picks.
@@ -70,6 +66,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U41 · A Celebration while a drawer is open** (2026-11-25) → D90: a Celebration closes Premis, Horari and Ajustos, not the pad; the your-song flashes and particles play on top of everything.
 - **U35 · What the print shop needs** (2026-11-25) → D88: the same as last year, just the PDF.
 - **U40 · How contributions get into hampers** (2026-11-25) → D89: the organizers use their own spreadsheet; the orchestrator parses it into the plan; the night's settings live in a git-tracked JSON file that agents edit.
 - **U17 · The PDF install script** (2026-11-25): approved by the user; `canvas` is built and loads.

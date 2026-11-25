@@ -99,7 +99,8 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it.
 - **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
 - **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its reel stays generic until then); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
-- **When the landed song is on your card (D74):** a flash turns the background from dark blue to gold, stage spotlights loop on the gold with option A's particles (a shooting-star streak, rising corn and hearts), and no lightning-bolt drawing. Two in a row play it again. It fades out smoothly when the drum starts spinning, and never plays in the Desgraciat (the card falls instead).
+- **When the landed song is on your card (D74):** a flash turns the background from dark blue to gold, stage spotlights loop on the gold with option A's particles (a shooting-star streak, rising corn and hearts), and no lightning-bolt drawing. Two in a row play it again. It fades out smoothly when the drum starts spinning, and never plays in the Desgraciat (the card falls instead). Its flashes and particles play on top of everything, open drawers included (D90).
+- **A Celebration closes the open drawers** (Premis, Horari, Ajustos), but not the add-card pad while a number is being typed (D90).
 - **A fallen card** in the Desgraciat shows the sitting nino (D72).
 - **The cards** keep the printed 3×4 grid in the current design's style (D77). No card-stacking scroll (D75).
 
