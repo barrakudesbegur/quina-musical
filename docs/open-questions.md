@@ -57,4 +57,4 @@ The last cookie-free method left is a PO-token provider plugin for yt-dlp (`bgut
 - (a) allow it: add a permission rule so the session can install and use the plugin;
 - (b) download the playlist yourself with your browser's cookies, e.g. type `! cd tools/prep/playlist-fetcher && venv/bin/spotdl download <playlist URL> --cookie-file <exported cookies.txt> --output "output/songs/{list-position} {title} - {artist}.{output-ext}" --bitrate disable` in a session (keeps the source audio, no re-encode);
 - (c) another source.
-**Default taken:** nothing downloaded. The pipeline is ready: a 4-song dry run passed on audio from last year's pool. Whatever the source, prep checks each song: the bitrate, the length against Spotify's, and the version (live, cover, karaoke, sped up).
+**Default taken:** nothing downloaded. The pipeline is ready: a 4-song dry run passed on audio from last year's pool. Whatever the source, a quality check (being added to prep) will flag songs under about 128 kbps, more than 5 s off Spotify's length, or of a suspicious version (live, cover, karaoke, sped up), for you to check.
