@@ -72,7 +72,7 @@ _From event.md › One round, Atmosphere and style, Fairness and trust; the mixe
 - **Heat** is how hot the round looks on the projector.
   - It follows the Phase on its own smoothed clock, with some randomness.
   - It never jumps at a landing, it cools visibly after a Line, and it never reveals how many songs are left.
-- **The "Final Lap!" fanfare** plays when the Phase first reaches late, once per climb. A console switch turns the automatic fanfare off (R2-Q18).
+- **The "Final Lap!" fanfare** plays when the Phase first reaches late, once per climb. A console switch turns the automatic fanfare off (R2-Q18). The switch: **Not built yet** (the protocol has it).
 
 ## The presenters' actions
 
@@ -115,7 +115,7 @@ _From event.md › One round, Timing; the mixer decisions › Pace, auto-advance
 - **The final Phase:** auto-advance is off by default, and the presenters advance by hand, with a switch to keep it on. If it stays on, a landing that probably completes a card gets a slot about 50% longer. Late, fancy transitions may stretch a song's slot by up to about 50% too.
 - **In the Desgraciat,** auto-advance stops when one card stands.
 - **The Schedule** is the planned timetable: the start time, each round's and each Interval's length. The estimates include the Intervals and the Checks (2025: a Line Check took 1–2 minutes, a Bingo Check plus the round's end 1.5–3.5 minutes).
-  - It also includes the throw breaks. **Not built yet.**
+  - It also includes the throw breaks, and follows each remaining round's kind (a Desgraciat round is about 24 songs, with no Line).
 
 ## Hold music and the Check's sound
 
@@ -126,7 +126,7 @@ _From event.md › Claims and checks, Atmosphere and style; the decisions doc �
 - **The Check's sound:**
   - the card's songs play in order as 2–3 s hook snippets;
   - a song that has landed gets ✓; one that hasn't plays briefly "broken" (a short warble or bitcrush, never annoying) and gets ✗;
-  - in the Desgraciat each ✓ is a short tick, and the first landed song plays its snippet as proof;
+  - in the Desgraciat each ✓ is a short tick, and the first landed song plays its snippet as proof. If that song is the latest landing, the card fell with the last players: it passes, and shares the win;
   - the Hold music stays ducked far down throughout.
 - **A failed Check:** the Failure fanfare, then the error Hold music until the presenters press "Reprèn".
 - More Hold loops and victory tracks would repeat less (pending U20). Today there are 3 Hold loops and 1 victory track.
@@ -151,7 +151,7 @@ _From event.md › One round, The night, step by step._
   - Organizers throw things to the crowd, such as fuets, sweets or chocolates, so people get up off their chairs and the night doesn't drag.
   - The presenters put on a bit of a show or go round the tables talking to people.
   - A throw break is a longer Interval.
-  - The Schedule plans them. **Not built yet.**
+  - The Schedule plans them, and the Interval's countdown before a break adds its minutes. Admin's editor for them: **Not built yet.**
 
 ## The night's running order
 

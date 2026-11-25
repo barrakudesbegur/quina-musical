@@ -41,7 +41,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
 | After the Game | Thanks and sponsor credits |
 
-- **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). **Not built yet** (today the projector shows no price).
+- **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). **Not built yet** (the rule is built; the projector doesn't show it yet).
 - **The Desgraciat's Celebration** has no title.
 - **It never shows:**
   - the next song, the Queue, the possible winners or the standing cards;
@@ -55,7 +55,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 _From event.md › The presenters (What they can do, What they see privately, Their equipment); the decisions doc › Changes._
 
-**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone to help. Every open console stays in sync. It has a light theme, simpler and with icons, and keeps its dark theme as the alternative (D2). The layout must be very well thought out: "Següent", Hold and the claim stay in the same places in landscape and portrait (R2-Q21).
+**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone to help. Every open console stays in sync. It has a light theme, simpler and with icons, and keeps its dark theme as the alternative (D2). The layout must be very well thought out: "Següent", Hold and the claim stay in the same places in landscape and portrait (R2-Q21): one cluster in the same order, the right column in landscape and fixed at the bottom in portrait. To be checked against R2-Q21 at the theme pass.
 
 - **Always visible:** the round, the Phase and the real Heat, the clock, the expected end of the round, the Drift and the connections (cloud or hotspot, phones' feed, Wii remote).
 - **"Ara sona"** is the playing song, with a ring that counts down to the next auto-advance and shows the state (manual, "Parlem", "Aguanta"…).
@@ -69,7 +69,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **During a Check:** the queue of claimed cards, progress song by song, the result with any warnings ("not registered as sold"), and the verdict.
   - After a failed Check only "reject" is offered. After a passed one, the presenters can still reject it with a long press against the result.
   - Then a Celebration music override, the winner's name and notes.
-  - A numbered slip's number on the winner form. **Not built yet.**
+  - A numbered slip's number on the winner form, optional, next to the name.
 - **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".
 - **The menu:** start and end the night, the Schedule, Panic, the resume code, and "Comandament", a drawing of the Wii remote's buttons that opens by itself when a remote connects.
 - **On the laptop:** the tech must be able to drive the whole show from the laptop alone: the console on the laptop's own screen, the show page on the projector as a separate display (never mirrored, since the console shows the next song), and a USB presenter clicker (→ or PageDown) running the console's default action. Set up as in the night runbook's "Without the tablet".
@@ -91,7 +91,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - "Premis": the current round's bundle and sponsors, with future rounds locked;
   - "Horari": the schedule, with real times for what has happened and "~" predictions for what's next;
   - the menu: the player's cards, sounds, last year's card and "Esborrar dades".
-- **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text.
+- **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text. The card types' preview: **Not built yet** (the phone shows the rounds and prizes).
 - **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
 - **Only the current round** shows in "Historial", and only the cards of the round's type count in it (only special cards in the Quina Especial).
@@ -123,12 +123,11 @@ _From event.md › Prizes and sponsors, The cards; the decisions doc › Admin._
   - the rounds in order, each with its kind (regular, Desgraciada, Especial) and card type. Only one Desgraciat a night, with a single bundle;
   - prize bundles, sponsors (money donors too) and their logos, picked from the private logo library (pending U16);
   - bulk JSON import and export, so an AI agent can load the organizers' spreadsheet. Its private columns are never read;
-  - the Schedule, with the throw breaks. **Not built yet** (the throw breaks);
-  - the card prices: a normal card's per-round price and a special card's price. **Not built yet.**
+  - the Schedule, with the throw breaks (after any round but the last, 5 minutes by default; the planned end counts them).
 - **On the night:** live edits to upcoming rounds (played rounds stay fixed), the Plan B resume, the winners list, and which card numbers have been opened on phones (anonymous).
 - **Player app:** the default for sounds, and a message banner to every phone.
 - **Tools:** the hook audition page, a full JSON export, and the Shuffle seeds.
-- The card types show read-only: they come from the card generation.
+- The card types show read-only: they come from the card generation, with their prices and price rules (`card-types.json`).
 
 ## Cheat sheet
 
@@ -136,7 +135,7 @@ _From event.md › Prizes and sponsors (the presenters' cheat sheet); the decisi
 
 **Who uses it:** the presenters, printed and on the tablet (the console's "Premis" tab).
 
-- It lists every prize with its sponsor, round by round, money donors included. **Not built yet** (every sponsor listed).
+- It lists every prize with its sponsor, round by round, money donors included. **Not built yet.**
 - The claim rules and the special rounds' rules.
 - The presenters' checklist for the night's running order ([show-and-music.md › The night's running order](show-and-music.md#the-nights-running-order)).
 - The Wii mapping and the laptop's keys, for Plan B.
@@ -156,4 +155,4 @@ _From event.md › The presenters (Their equipment); the decisions doc › Chang
 
 _From event.md › Prizes and sponsors (Mention everyone)._
 
-- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. **Not built yet.**
+- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. Every plan sponsor is listed in the before-the-start strip and the closing credits.

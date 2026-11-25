@@ -51,7 +51,7 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
 
 - It's played once a night, in reverse. Everyone with a card stands up.
 - A card is **fallen** as soon as any of its songs lands, and its player sits down. **The last card standing wins.**
-- **A shared win:** if the last players standing all sit on the same song, they share the win. **Not built yet.**
+- **A shared win:** if the last players standing all sit on the same song, they share the win. A card that fell with the latest landing passes its Check, so the presenters may accept several such cards for one shared Celebration; a card that fell earlier never passes.
 - There's no Line. The round's only prize is its bundle.
 - The standing cards are the round's cards in play, so unsold cards inside an entered range count too. The system can't tell which. So it never ends the round itself:
   - auto-advance stops when one card stands;
@@ -119,7 +119,7 @@ _From event.md › Claims and checks (R2-Q12)._
 _From event.md › Claims and checks, Prizes and sponsors, What must never fail; the 2025 running order._
 
 - A winner is noted by their name, or by a numbered slip handed to them at the win. The presenters can add notes.
-  - The slip number on the console's winner form: **Not built yet.** Today the form takes a name and notes.
+  - The console's winner form takes the name or the slip number, and notes.
 - Winners collect their prizes later, when they leave or at the end, by showing their card or slip. There's no prize ceremony on stage.
 - **Privacy:** winners' names stay in the cloud's Game data. They're never shown on a screen, never published and never in git.
 - No winning card number is shown on the projector or phones. Only the winner's own phone celebrates a confirmed win.
