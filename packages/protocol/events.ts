@@ -707,6 +707,11 @@ export interface RemoteStatus {
   battery: number | null;
   /** When `connected` last changed (show clock, epoch ms). */
   sinceMs: number;
+  /** How many times the remote dropped in the host's last 10 minutes (a rolling window; a reconnect doesn't clear it),
+   * so the console and the preflight can warn of a remote at the edge of its range. Absent from an older host. */
+  drops?: number;
+  /** When the latest drop happened (show clock, epoch ms), or null. Absent from an older host. */
+  lastDropMs?: number | null;
 }
 
 export interface RemoteStatusMessage extends RemoteStatus {
@@ -718,13 +723,16 @@ export interface RemoteStatusMessage extends RemoteStatus {
 
 export const remoteStatusMessage = (s: RemoteStatus): RemoteStatusMessage => ({ v: PROTOCOL_VERSION, type: REMOTE_STATUS_TYPE, ...s });
 
-/** A `remote.status` message (untrusted), or null. A battery outside 0..1 reads as unknown. */
+/** A `remote.status` message (untrusted), or null. A battery outside 0..1 reads as unknown; malformed `drops` or
+ * `lastDropMs` are left out. */
 export function readRemoteStatus(message: unknown): (RemoteStatus & { clientId: string }) | null {
   if (!message || typeof message !== 'object') return null;
   const m = message as Record<string, unknown>;
   if (m.v !== PROTOCOL_VERSION || m.type !== REMOTE_STATUS_TYPE || typeof m.connected !== 'boolean' || typeof m.sinceMs !== 'number') return null;
   const battery = typeof m.battery === 'number' && m.battery >= 0 && m.battery <= 1 ? m.battery : null;
-  return { connected: m.connected, battery, sinceMs: m.sinceMs, clientId: typeof m.clientId === 'string' ? m.clientId : '' };
+  const drops = Number.isInteger(m.drops) && (m.drops as number) >= 0 ? { drops: m.drops as number } : {};
+  const lastDrop = m.lastDropMs === null || (typeof m.lastDropMs === 'number' && Number.isFinite(m.lastDropMs)) ? { lastDropMs: m.lastDropMs as number | null } : {};
+  return { connected: m.connected, battery, sinceMs: m.sinceMs, ...drops, ...lastDrop, clientId: typeof m.clientId === 'string' ? m.clientId : '' };
 }
 
 /** What a remote receives: the engine's events plus the relay's client list and the Game plan. */
