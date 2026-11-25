@@ -9,6 +9,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - the sponsor-sheet guide for Admin (`apps/admin/docs/sponsor-sheet.md`, location being agreed with Frontend);
   - Sound engine's A–C (the shared Desgraciat win `fellLast`, the winner's slip, `claim.decided.outcome`). Platform's B goes on top: journal-check, a private slip, flagging (never refusing) a decision against the Check.
 - **Next:** this year's pool from 2 Dec (measure, prune, push and sync both laptops by 10 Dec); the provisional-hooks WARN once Sound engine sends the field.
+- **Coming from other sessions** (join when proposed):
+  - **Per-round card prices** (the user's U5). The projector shows the coming round's price at the Interval. A normal card costs the per-round price × the regular rounds left; the Especial has a fixed price. Sound engine and Frontend design the plan shape. Platform's part: the rule passes `checkGamePlan`, the cloud and the feed (prices are public); check the preflight with it.
+  - **A Wii range signal:** `remote.status` counting disconnects (low priority, the orchestrator suggests it to Frontend and Sound engine). Then the preflight's Wii line shows recent drops.
 - **Blocked:** nothing.
 - **Waiting on the user:** the QR domain switch (deploy-plan step 7, by 11 Dec). Open-question IDs come once the orchestrator numbers them.
 
