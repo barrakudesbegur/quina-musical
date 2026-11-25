@@ -32,7 +32,8 @@ and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `c
    songs, the types and the amounts, draws the cards, and fails on any problem (a duplicate song id, a song without a
    title, a bad type id, an amount that isn't a multiple of 3, fewer than 12 songs, a pool too small to draw every card
    without repeating a card or a line).
-4. Generate: `npm start -- --pool <name>`. Without `--pool` it uses `default` (last year's 77 songs).
+4. Generate: `npm start -- --pool <name>`. Without `--pool` it uses `default` (last year's 77 songs). The build copies
+   `src/assets` (the Londrina fonts the PDF uses) into `build/`; rendering both PDFs takes about 30 s.
 5. Proof the PDFs, then commit `dist/` (the cards are public: the player app needs every card's songs).
 
 **Choosing the playlist's size (R1-Q31):** `npm run report -- --pool <name> --sold 250` simulates rounds against the cards

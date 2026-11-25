@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npx nodemon",
     "start": "npm run build && node build/index.js",
-    "build": "rimraf ./build && tsc",
+    "build": "rimraf ./build && tsc && node -e \"require('fs').cpSync('src/assets', 'build/assets', { recursive: true })\"",
     "report": "ts-node src/pool-report.ts"
   },
   "repository": {
@@ -39,5 +39,8 @@
     "seedrandom": "3.0.5",
     "ts-node": "10.9.2",
     "typescript": "5.7.2"
+  },
+  "allowScripts": {
+    "canvas@3.2.0": true
   }
 }
