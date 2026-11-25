@@ -2,6 +2,23 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
+## Now (2026-11-25)
+
+- **In progress:**
+  - realistic prize bundles in the fixtures (17–19-item hampers), to prove the projector, the phones' Premis and the cheat sheet fit them;
+  - the Desgraciat shared win (`fellLast`) and the winner's slip, on top of Sound engine's commit.
+- **Next:**
+  - throw breaks ("parón") in Admin's Schedule, Horari and the console's expected end;
+  - every sponsor mentioned on the projector;
+  - "el tècnic" wording;
+  - the player router's `hashchange`.
+- **Blocked:** nothing.
+- **Waiting on the user** (IDs once the Orchestrator numbers them in `docs/open-questions.md`):
+  - this year's card values (title, colour, types, amounts) and the `canvas` install-script approval;
+  - the Desgraciat boards' 3 points: the standing count on the projector, the sitting nino, and the win's title ("DEMPEUS!" not approved);
+  - card prices that drop round by round;
+  - the drawers layout, the card stack, the theme pass and the 3 design choices.
+
 **What this covers:** every screen and its motion, which is the UI/UX and animation role in `docs/team.md`:
 - the projector stage (`apps/stage`, plain TypeScript);
 - the presenters' console (`apps/console`, Svelte 5);
@@ -118,7 +135,15 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
 
 1. **From `docs/event.md`** (approved by the user; the Orchestrator's brief of 2026-11-25), in this order:
    - ~~The Check decides~~ and ~~no prices on the projector~~: done (`ff13a81`). Sound engine adds the `failedCheck` reject reason, plus its console string.
-   - **Fallbacks are requirements.** The tech must be able to drive the whole show from the laptop alone: the console in a window on the laptop's own screen, next to the show page on the projector, with manual advance. The Wii remote is the intended controller and the tablet its plan B. iPad and Android tablets must both work; note any Safari/iPad gaps.
+   - ~~Fallbacks are requirements~~: done (`45bc5e1`).
+     - The laptop's own console needs no pairing token.
+     - → or PageDown (a keyboard or a USB presenter clicker) presses the default action, as the Wii's A.
+     - The console holds a screen wake lock where allowed.
+     - **Safari and iPad gaps:**
+       - the console needs iPadOS 15.4 or later (`:has`, `dvh`, `<dialog>`, `structuredClone`);
+       - no WebHID on any tablet, so the Wii remote pairs only with the laptop's Chrome;
+       - Wake Lock needs a secure context, so over the hotspot's http the tablet must be set to Auto-Lock › Never (in Backend's night runbook);
+       - Admin's copy to clipboard falls back on http.
    - **Throw breaks ("parón", about 5 min between some rounds):** Admin's Schedule plans them, and Horari and the console's expected end include them. Agree the shape with Sound engine (the schedule maths in `packages/rules`).
    - **Winners:** an optional numbered-slip field in the console's winner form, once Sound engine adds it to the protocol.
    - **Mention every sponsor:** every sponsor in the plan appears somewhere on the projector during the night (before the start, the intros, the Interval's thanks), and the cheat sheet lists every prize with its sponsor.
