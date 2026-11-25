@@ -24,9 +24,7 @@ export function readResume(raw: string): ResumeDraft {
 export function resumeCommand(point: ResumePoint): CommandFields['resumeAt'] {
   return {
     round: point.round,
-    // resumeAt doesn't accept 'desgraciat' yet (the protocol opens it with the Desgraciat round): the engine refuses
-    // such a code with its own message until then.
-    kind: point.kind as CommandFields['resumeAt']['kind'],
+    kind: point.kind,
     shuffleSeed: point.shuffleSeed,
     position: point.position,
     lineConfirmedFrom: point.lineConfirmedFrom,

@@ -91,3 +91,12 @@ test('modeBadge: auto, off, or off for the final phase', () => {
   assert.equal(modeBadge({ ...s, phase: 'final' }), 'final');
   assert.equal(modeBadge({ ...s, phase: 'final', game: { ...s.game, autoAdvance: false } }), 'autoOff');
 });
+
+test("the Desgraciat's last card standing: the ring points at its Check, not at Següent", () => {
+  const last = ring(fixture('desgraciatLast'));
+  assert.deepEqual([last.state, last.badge, last.cardId], ['lastStanding', 'final', 57]);
+  const many = ring(fixture('desgraciat'));
+  assert.notEqual(many.state, 'lastStanding', 'more than one standing: the usual states');
+  const spin = fixture('desgraciatLast');
+  assert.equal(ring({ ...spin, status: 'hold', hold: { reason: 'claim', sinceMs: NOW, ducked: true, holdMusic: false } as ShowState['hold'] }).state, 'checking', 'a Check wins');
+});

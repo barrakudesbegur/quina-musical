@@ -46,6 +46,8 @@
         return C[ring.state](since);
       case 'checking':
         return C.checking(ring.cardId);
+      case 'lastStanding':
+        return C.lastStanding(ring.cardId);
       default:
         return null;
     }
@@ -71,7 +73,7 @@
       {/if}
       {#if chip}
         <p class="now-playing__chip" data-state={ring.state}>
-          {#if ring.state === 'manual' || ring.state === 'manualFinal'}<Icon name="next" />{/if}<span>{chip}</span>
+          {#if ring.state === 'manual' || ring.state === 'manualFinal'}<Icon name="next" />{:else if ring.state === 'lastStanding'}<Icon name="claim" />{/if}<span>{chip}</span>
         </p>
       {/if}
       {#if model.lastSpin}

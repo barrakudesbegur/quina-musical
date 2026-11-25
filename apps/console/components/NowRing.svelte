@@ -40,10 +40,10 @@
   });
   const BADGE_ICON: Record<NonNullable<RingBadge>, IconName> = { auto: 'auto', autoOff: 'autoOff', final: 'flag', talk: 'hold', stay: 'stay', held: 'pause' };
   const counting = $derived(view.state === 'auto' || view.state === 'autoLast' || view.state === 'suspense');
-  const disc = $derived(view.state === 'manual' || view.state === 'manualFinal' || view.state === 'checking' || view.state === 'checkFailed');
+  const disc = $derived(view.state === 'manual' || view.state === 'manualFinal' || view.state === 'lastStanding' || view.state === 'checking' || view.state === 'checkFailed');
   const paused = $derived(view.state === 'talk' || view.state === 'stay' || view.state === 'paused');
   const anim = $derived(
-    ['countdown-ring', view.state === 'spinning' ? 'ring-spin' : null, view.state === 'autoLast' ? 'ring-last' : null, disc && view.state.startsWith('manual') ? 'ring-manual' : null]
+    ['countdown-ring', view.state === 'spinning' ? 'ring-spin' : null, view.state === 'autoLast' ? 'ring-last' : null, disc && (view.state.startsWith('manual') || view.state === 'lastStanding') ? 'ring-manual' : null]
       .filter(Boolean)
       .join(' '),
   );
@@ -94,6 +94,8 @@
         <span class="now-ring__value now-ring__value--small">{seconds ?? '—'}{#if seconds !== null}<span class="now-ring__unit"> s</span>{/if}</span>
       {:else if view.state === 'manual' || view.state === 'manualFinal'}
         <span class="now-ring__pulse"><Icon name="next" outline /></span>
+      {:else if view.state === 'lastStanding'}
+        <span class="now-ring__pulse"><Icon name="claim" outline /></span>
       {:else if view.state === 'checking'}
         <Icon name="claim" outline />
       {:else if view.state === 'checkFailed'}
