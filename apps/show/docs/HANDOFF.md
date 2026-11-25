@@ -11,10 +11,16 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** the Desgraciat shared win (CheckOutcome `fellLast`), the winner's slip number and `claim.decided.outcome`, proposed to Frontend and Backend on 2026-11-25 and waiting for their OK. Then the planned breaks ("parón") in the Schedule.
-- **Next:** this year's songs, once they can be downloaded: download, prep (with the `quality` step), propose hooks for the whole draft, and tell the orchestrator. Then the provisional bulk hook approval (a test aid).
-- **Blocked:** downloads. YouTube asks for a sign-in, and the cookie-free PO-token plugin was refused by this session's permission check.
-- **Waiting on the user:** the open question "How to download this year's songs"; the listening pass on the new sound (transitions stay frozen until then); hook approvals once the songs are in.
+- **In progress:** nothing of mine waiting on others. Frontend builds the fellLast and slip UI (on 30ef20d), the Admin break editor and `priceRule` (card-types.json). Backend builds journal-check of `outcome`/`slip` and the preflight's price check.
+- **Next:**
+  - when U1 is answered: download this year's songs, run prep (with `quality`), propose hooks for the whole draft, and tell the orchestrator;
+  - the provisional bulk hook approval (a test aid, marked provisional everywhere; Backend's preflight WARNs).
+- **Blocked:** downloads (U1). YouTube asks for a sign-in, and the cookie-free PO-token plugin was refused by this session's permission check.
+- **Waiting on the user:**
+  - U1: how to download the songs;
+  - U13: the listening pass (transitions stay frozen until then);
+  - U14: hook approval, by 10 Dec.
+- **Rules:** a new question for the user goes to the orchestrator, never into open-questions.md directly. A decision the user gives me directly is reported to the orchestrator the same day.
 
 ## Done so far
 
@@ -42,6 +48,9 @@ All of this is on `main`, green when committed.
 | **Card type per round**, step C: plan version 3. `RoundPlan.cardType` is required; `GamePlan.cardTypes`, `PublicPlan.cardTypes`, `CardType` and `DEFAULT_CARD_TYPES` are gone; `checkGamePlan` reads v1 and v2 plans as v3 (a v2 `cardTypes` list only picks each round's type). `parseCardRanges` moved to `@quina/protocol` (`ranges.ts`). Frontend and Backend followed on top | `bd29f4d`; `91b1a43`, `b717bc6`, `360523f` |
 | **`remote.status` in `@quina/protocol`** (`events.ts`): the relay imports it there, and packages/ui re-exports it (Frontend, `71e618e`) | `cccfd82` |
 | **The Desgraciat round** (played in reverse: the last card standing wins). A: `RoundKind 'desgraciat'`, `WinKind 'standing'`, `CheckOutcome 'fallen'`, the console's private `standing` and Futur's `lastStandingAt`/`standingCurve`; the pure parts (`fallIndex`, `standingCourse`, the Shuffle's `lastStanding` rule, the standing Check, the count-based `standingPlan`). C: the engine plays it (commands, standing claims, auto-advance stops at one card, a 0.55 s knock per song not heard yet, the Celebration and Interval like a Bingo). Covered by `desgraciat.test.ts`, `desgraciat-flow.test.ts` (with a fuzz), and a Desgraciat round 7 in every simulated night | A `caa5662`, C `2e359dd`; cloud B `cb35dd1` |
+| **The Check decides** (docs/event.md): `decide { valid: true }` on a card whose Check failed is refused (`failedCheck`); a passed card may still be rejected | `233e3a3` |
+| **The Desgraciat shared win:** CheckOutcome `fellLast` (the card sat down with the latest landing) passes, so several such cards can share one Celebration; `isPassingOutcome`, `CHECK_OUTCOMES`, `standing.fellLast`, the winner's `slip`, `claim.decided.outcome` | `30ef20d` |
+| **Planned breaks and the Schedule by round kind:** `SchedulePlan.breaks`, the show page passes `relay.plan` to the engine (`setPlan`), the expected end follows each round's kind, the planned Interval and breaks, and the Interval's countdown adds the break; `roundCardPrice` for the Interval screen's price (U5) | `dde6941`, `471b519` |
 | **The old Decoys experiment retired** (the orchestrator's decision): `DECOYS.enabled`/`chance`, `plan/decoys.ts`, `docs/decoys.md`, `?decoys=1` and the planner's `allowTease` are gone. A Decoy is now only what Suspense teases (`DecoyEvent`, the slimmed `DECOYS` timing) | `fd07f2e` |
 
 Earlier work, before the move, is summarised in the README and `docs/dj-techniques.md` › Built: the planner, every recipe up to D19, the show state machine, the journal, resumeAt, the Interval and the relay security.
@@ -100,7 +109,7 @@ Nothing: items 1 and 2 of the old queue and the Decoys retirement are done and p
 ## Decided since the pause
 
 - **Q26 = A+:** the show laptop stays installed (the relay, plus Python Rubber Band for the Blend renders) and pulls its media from R2. No WASM or browser time-stretcher; "nothing installed" is deferred until after the event.
-- **The Wii remote mapping** (Q34) is decided and built by Frontend (`357cba4`, `c4632f8`, `b9825f1`); the engine needed nothing new.
+- **The Wii remote mapping** (R2-Q38) is decided and built by Frontend (`357cba4`, `c4632f8`, `b9825f1`); the engine needed nothing new.
 - **Pause plays the Interval music** (orchestrator): Pausa reuses `pause {on}` / `ShowState.pause`; during a pause the engine plays the Interval music instead of Hold music, and the round resumes with a normal transition (`a11a224`, covered by `tests/flow.test.ts`).
 - **The flaky hook-ranking test** (from Backend) is fixed: `section_kinds` fixes each eigenvector's sign, and the test asserts every chorus start in the top four (`a11a224`).
 - **The Desgraciat details** (orchestrator, 2026-11-25): the standing set is the round's cards in play of its card type (the ranges can't tell sold from unsold); thresholds from the count alone; auto-advance stops at one card.
