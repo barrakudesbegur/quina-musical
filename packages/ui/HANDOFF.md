@@ -125,8 +125,9 @@ The dates come from `docs/timeline.md`: the night is Sun 27 Dec 2026, the playli
    Still needed from the user (the Orchestrator is asking): title, paper colour, card types, prices and amounts. The PDF needs the native `canvas` module: `npm install-scripts approve canvas` in `apps/cards`, once (the user's call: it runs an install script).
 
    Then the dates: the pool on Tue 1 Dec (86 songs in the draft), cards generated and proofed with the user by Thu 3 Dec, then printed. Don't generate before the playlist is final. The README has the steps.
-2. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
-3. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
+2. **Small, when next in the player:** the router should also follow `hashchange`. A `#/26/23` link on an already-open page doesn't add the card today. Real QR codes are path links (`/26/23`) and fully load, so only dev and e2e links are affected (Backend, 2026-11-25).
+3. When the user decides: the player drawers layout, the card stack, the theme pass, and the three design choices below.
+4. When the user says "address the comments": every canvas comment sent to Claude (see the workflow below).
 
 ## Waiting on the user
 
