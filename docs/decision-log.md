@@ -1202,3 +1202,11 @@ From Sound engine's measurements of 288 transitions, applying the user's D176 ru
 - **In the last 0.15 s:** nothing can stop the landing. B lands, and since B is held, the new song goes into Aguanta.
 No new command: `suspense { on: true }` during a Spin converts it.
 By: the orchestrator, applying the user's D176 to Sound engine's facts. Source: Sound engine's report of 26 Nov. Amends: D176. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D178 · Each set of 70 songs is a pool · 2026-11-26 · Active
+Each set of 70 songs is its own **pool** (Pool 1, Pool 2), not a "Part". A round plays one pool, and a card's side is printed from one pool, as the glossary already says. The tools still prepare all of the night's songs together, so the code needs another name for that bundle, and the per-song field becomes `pool`. Sound engine and Backend name it. Answers U54 with (b).
+By: the user. Source: open-questions.md › Answered (U54). Amends: D171's wording ("Part"). Lives in: GLOSSARY.md › Pool; requirements/songs-and-cards.md › The pool.
+
+### D179 · "+ Candidat" adds another claimed card · 2026-11-26 · Active
+Answers U153.
+By: the user. Source: open-questions.md › Answered (U153). Amends: D110's "+ Un altre". Lives in: requirements/screens.md › Console.

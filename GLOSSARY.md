@@ -104,7 +104,8 @@ Whoever provides a prize: Barrakudes itself or an outside business.
 ### The music
 
 **Pool**:
-A set of songs one side of the cards is printed from. An edition can have several; each round plays one, and its queue is a shuffle of that whole pool.
+A set of songs one side of the cards is printed from (Pool 1, Pool 2). An edition can have several; each round plays one, and its queue is a shuffle of that whole pool (D178).
+_Avoid_: Part, playlist
 _Avoid_: Song list, catalogue
 
 **Queue**:

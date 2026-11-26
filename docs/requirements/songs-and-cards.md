@@ -12,7 +12,7 @@ What the song pool, the song preparation and the printed cards must be, as it st
 _From event.md › The songs._
 
 - A **Pool** is a curated playlist a side of the cards is printed from. Each round plays one pool, and its Queue is a shuffle of that whole pool.
-- **2026 has two pools of 70 songs** with different songs (D101), provisionally split (D171): Part 1 for Quines 1–4 and the special rounds (the special card is printed from it), Part 2 for Quines 5–10. No third playlist.
+- **2026 has two pools of 70 songs** with different songs (D101, D178), provisionally split (D171): pool 1 for Quines 1–4 and the special rounds (the special card is printed from it), pool 2 for Quines 5–10. No third playlist.
 - The team builds it together:
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
@@ -56,7 +56,7 @@ _From event.md › The songs; the decisions doc › Changes; the mixer decisions
 - **They're proposals.** On last year's songs, the top automatic candidate was within a bar of the real hook in only 26 of 77 songs.
 - **The user approves, rejects or nudges each hook** on the audition page, about 2 minutes a song (pending U14, before the first rehearsal). A song can't play until its hook is approved.
 - A song keeps its id when the playlist is reordered (the id follows its Spotify track), so approvals made on the draft carry over to the final pool (D79).
-- **Once a Part is final, its ids are alphabetical (D103):** the user sorts the playlist by hand, leading articles included ("The …" under T, unlike Spotify's sort), and Sound engine checks the order before numbering. Part 1 is 1–70; Part 2 continues from 71 (pending U57).
+- **Once a pool is final, its ids are alphabetical (D103):** the user sorts the playlist by hand, leading articles included ("The …" under T, unlike Spotify's sort), and Sound engine checks the order before numbering. pool 1 is 1–70; pool 2 continues from 71 (pending U57).
 - A provisional bulk approval of each song's top hook may stand in for rehearsals, marked as provisional everywhere, with a preflight warning. **Not built yet.**
 
 ## Song preparation
@@ -79,7 +79,7 @@ _From event.md › The songs; the Sound engine handoff._
 _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
-- **The normal card is printed on both sides (D102):** side 1 plays Quines 1–4 (Part 1), side 2 Quines 5–10 (Part 2) (D171), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
+- **The normal card is printed on both sides (D102):** side 1 plays Quines 1–4 (pool 1), side 2 Quines 5–10 (pool 2) (D171), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
 - Each edition has a new title, so last year's cards are easy to spot; the paper colour may stay (D85). 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
 - Each card carries a faint year stamp.
 - The price isn't printed.

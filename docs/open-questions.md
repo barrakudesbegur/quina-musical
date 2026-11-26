@@ -32,12 +32,6 @@ A tap stops the throw song, and the next tap resumes it (D138).
 - (a) While it's stopped, the break music comes back up.
 - (b) It stays down until the throw ends.
 
-### U153 · "+ Candidat"
-The canvas assistant renamed "+ Un altre" to "+ Candidat" (it adds another claimed card) during the user's own session, and the user asked on that thread to agree it with the orchestrator. The console's list of claimed cards is "Cartrons cantats", and the glossary's term is Claim.
-- (a) "+ Candidat".
-- (b) "+ Cartró".
-- (c) "+ Un altre", as before.
-
 ### U155 · The finale and the new tabs on canvas v85, for review
 Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Facts about the group ninos (D172): the "castle" (`nino-fent-una-torre`) holds two ninos, not three; the kissing pair exists only as a doodle (`nino-liantse.svg`), coloured on the board; "two dancing" is the sardana nino twice, and the high-five nino could replace it. The boards' proposals:
 1. A pair that falls kisses, a pair that wins dances, three is the castle, and four or more is the castle plus a pair.
@@ -66,10 +60,10 @@ D130 said songs in Parlem and the effects "may start lower". Sound engine set ev
 - (b) Start them lower; give a number.
 
 ### U103 · The throw song is on the cards
-"Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal): Sound engine confirmed it's the same Spotify track as last year's id 24, so the throw song is printed on Part 1's cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
+"Pont aeri" is pool 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal): Sound engine confirmed it's the same Spotify track as last year's id 24, so the throw song is printed on pool 1's cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
 - (a) Keep it as the throw song.
 - (b) Pick a throw song that isn't on the cards.
-- (c) Take it out of Part 1 and keep it for the throws.
+- (c) Take it out of pool 1 and keep it for the throws.
 
 ### U104 · Undoing a landing while a claim is open
 Inside a Check, "Enrere" on the tablet, or a single press of 1 or 2 on the remote, steps back one revealed song (D127). As built (Frontend, ad27fa7), holding 1 or 2 on the remote still undoes the last landing, as today.
@@ -124,14 +118,14 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
 ### U59 · The special card's back
-The special card is printed from Part 1 (D171), on one side.
+The special card is printed from pool 1 (D171), on one side.
 **Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
 
 ### U52 · Duplex printing and the paper
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
-### U55 · Preparing Part 1 now, and the laptop's disk
+### U55 · Preparing pool 1 now, and the laptop's disk
 Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 12 GB for both Parts, with 20 GB free. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
 **Default:** nothing is prepared until the user says go. Last year's cache stays.
 
@@ -139,26 +133,21 @@ Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sou
 About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
 **Default:** (a) and (b); (c) if the user wants it.
 
-### U57 · Part 2's song numbers
-D103 numbers a final Part's songs alphabetically, so Part 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
-**Default:** Part 2 continues at 71–140, not 1–70 again (no third Part since D171).
+### U57 · pool 2's song numbers
+D103 numbers a final Part's songs alphabetically, so pool 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
+**Default:** pool 2 continues at 71–140, not 1–70 again (no third Part since D171).
 
 ### U58 · The alphabetical convention
-Part 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
+pool 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
 **Default:** word by word, as the playlist is now.
 
 ### U61 · A Part's song we can't download
-D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 isn't fetched yet.
+D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). pool 1 has no such song today; pool 2 isn't fetched yet.
 **Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
 
 ### U63 · A credential so agents can edit the cloud's plan
 D116 has the user or an agent upload the edition's JSON to the cloud by hand, saving the old settings first. The upload tool is being proposed by Backend and Sound engine. To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
 **Default:** nothing built until the user says yes.
-
-### U54 · What to call each set of 70 songs
-The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 140 songs (two Parts since D171) with the lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
-**Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2); a round plays one Part, and a card's side is printed from one Part.
-
 
 ### U50 · How the screens point to the right side
 The presenters explain the sides in rounds 1 and 5 (D102, D171).
@@ -212,6 +201,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U54 · What to call each set of 70 songs** (2026-11-26) → D178: each is a pool (Pool 1, Pool 2).
+- **U153 · "+ Candidat"** (2026-11-26) → D179: yes.
 - **U77 · The review screen**, **U130 · the Check boards (v67)** (2026-11-26): reviewed by the user through the canvas (their own edits and 15 comments, v84; D165).
 - **U88 · The remote during a review** (2026-11-26): answered by D128 and D135 (the −/+ hold sends a Check to review; A does nothing in a review).
 - **U112 · "Següent" during Pausa** (2026-11-26): it ends Pausa, and Parlem with it (D142).
@@ -256,7 +247,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 - **U48 · Sponsors' names and money in the settings file** (2026-11-26) → D112: no sponsors, prizes or money in git.
 - **U53 · Storage past the free 10 GB** (2026-11-26) → D113: fine to go past it; upload as soon as the files are ready, prune after the night.
 - **U60 · Two Interval tracks by hand** (2026-11-26) → D106: left out; the Interval plays its 37.
-- **U49 · The special rounds' pool** (2026-11-26) → D105: their own playlist (79G8VcNrkih9GGjIzb47Gt), using Part 1's songs until it's final. The special card's back moved to U59.
+- **U49 · The special rounds' pool** (2026-11-26) → D105: their own playlist (79G8VcNrkih9GGjIzb47Gt), using pool 1's songs until it's final. The special card's back moved to U59.
 - **U34 · How many songs in the pool** (2026-11-25) → D100: 70, final, for each pool.
 - **U42 · Where the night's settings file lives** (2026-11-25) → D97 and D98: in this public repo, every prize included; hiding prizes is only for the hype on the players' screens.
 - **U45 · The shake icon** (2026-11-25) → D94: option C with a smaller, medium "×3" (size option 2 for now), no frame.
