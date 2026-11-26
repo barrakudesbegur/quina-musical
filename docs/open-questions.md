@@ -102,9 +102,9 @@ D130 said songs in Parlem and the effects "may start lower". Sound engine set ev
 - (c) Take it out of Part 1 and keep it for the throws.
 
 ### U104 · Undoing a landing while a claim is open
-Today "Enrere" during a Check undoes the last landing. With D127 it steps back a reveal instead, and never closes the Check. So a wrong landing can't be undone while a claim is open.
-- (a) That's fine: send the Check to review, discard it, then "Enrere".
-- (b) Keep a way to do it from the Check, for example a long press.
+Inside a Check, "Enrere" on the tablet, or a single press of 1 or 2 on the remote, steps back one revealed song (D127). As built (Frontend, ad27fa7), holding 1 or 2 on the remote still undoes the last landing, as today.
+- (a) Keep that: the remote's hold undoes a landing even during a Check.
+- (b) No landing undo during a Check: review, discard, then "Enrere".
 
 ### U105–U114 · Pausa in each situation (D128; Sound engine's check of 26 Nov)
 - **U105 · A Suspense when Pausa starts:** (a) it's cancelled, and the song resumes without it; (b) it's kept and resumes where it was.
@@ -156,7 +156,7 @@ The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json
 Pending your go on the visual theme pass across the screens. Not ready yet (25 Nov).
 
 ### U13 · Listening pass on the new sound
-Not heard yet: phrase landings, the lighter early palette and rare impacts, Signatures before the landing, the new Suspense, Aguanta's loop, vocal entries, Count-in. Things to confirm while listening, including the chaotic moments' loudness (D158):
+Not heard yet: phrase landings, the lighter early palette and rare impacts, Signatures before the landing, the new Suspense, Aguanta's loop, vocal entries, Count-in. Things to confirm while listening, including the chaotic moments' loudness (D158); and when trying the remote, the cancel window (D148) and how long A is held before "Seguides" starts (600 ms for now):
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
