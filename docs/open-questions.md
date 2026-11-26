@@ -13,7 +13,7 @@ A stopped Check gets its own screen on the projector and the tablet; the music k
 - **U76 · The projector while stopped:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
 - **U77 · The tablet while stopped:** the stopped card with its private marks, "Torna a comprovar", "Descarta", and the usual Pausa and Parlem buttons. Anything to add or remove?
 - **U78 · The music's level while stopped:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
-- **U79 · Phones while stopped:** (a) their normal screen, nothing about the stop; (b) a neutral line, like the projector's.
+- **U79 · Phones while stopped:** during a Check, phones show "Comprovant el cartró 123…". On a stop: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
 No default: the user decides.
 
 ### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
