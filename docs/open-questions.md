@@ -8,17 +8,20 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U81 · The internal status name for "under review"
-Today's code statuses are queued, checking, valid, invalid, and the new dropped.
-- (a) `reviewing`, like `checking`: an "-ing" word, so it reads as ongoing;
-- (b) `underReview`;
-- (c) `inReview`.
-The commands and log entries take the same word (for example `checkReview`, `claim.reviewing`).
+### U82 · Where Discard leads
+D121: Discard is "like loose instantly but without the fanfare nor failure song, it just goes to pause ready to resume the round".
+- (a) **Pausa** itself: the Interval music, with "Tornem de seguida" on the projector and phones, until the presenters resume.
+- (b) **The Hold the round was in:** whatever was playing keeps playing, and nothing lands until the presenters resume. Pausa only if they turn it on.
+
+### U83 · `dropped` or `discarded`
+The user calls it "discard", and the tablet's label is "Descartat". The code calls it `dropped`.
+- (a) Rename it `discarded`, to match.
+- (b) Keep `dropped`.
 
 ### U76–U79 · The screens of a Check under review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
 - **U76 · The projector while under review:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
-- **U77 · The tablet while under review:** the card under review with its private marks, "Torna a comprovar", "Descarta", and the usual Pausa and Parlem buttons. Anything to add or remove?
+- **U77 · The tablet while under review:** the card under review with its private marks, the four choices (continue, win by hand, lose by hand, discard, with a warning when a choice goes against the card), and the usual Pausa and Parlem buttons. Anything to add or remove?
 - **U78 · The music's level while under review:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
 - **U79 · Phones while under review:** during a Check, phones show "Comprovant el cartró 123…". On a review: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
 No default: the user decides.
@@ -145,6 +148,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U81 · The internal status name for "under review"** (2026-11-26) → D120: `reviewing`.
 - **U80 · A temporary-sounding name for the stopped Check** (2026-11-26) → D119: "under review", "En revisió" on the tablet, button "Revisió manual".
 - **U62 · The Check's remaining details** (2026-11-26) → D117: a stop goes into Pausa; automatic reveal runs through the fanfare and stops there; the rest stands.
 - **U46 · Londrina's two lowercase exceptions** (2026-11-26) → D114: both, as drawn.

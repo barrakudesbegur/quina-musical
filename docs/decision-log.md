@@ -657,7 +657,7 @@ By: the orchestrator. Source: apps/show/docs/HANDOFF.md › The next queue. Amen
 ### D48 · Only one Line per round · 2026-11-25 · Active
 By: the user. Source: event.md › One round; transcript 2026-11-25T00:41Z. Amends: R2-Q5. Lives in: requirements/game-rules.md › A regular round.
 
-### D49 · The Check's result decides · 2026-11-25 · Amended by D109
+### D49 · The Check's result decides · 2026-11-25 · Amended by D109, D121
 In a strange case the presenters can still reject a card that passed, but they can never accept a card that failed. The console never offers to accept a failed card.
 By: the user (event.md). Source: event.md › Claims and checks; commits ff13a81, 233e3a3. Amends: R2-Q11, R1-Q24. Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
 
@@ -713,7 +713,7 @@ By: the user. Source: open-questions.md › Answered (U5); transcript 2026-11-25
 "DEMPEUS!" is dropped, and so is the phone's "Dempeus fins al final!". The rest of the Celebration stays, and so do the per-card "Dempeus" / "Assegut" labels. Answers U6. Built in 6857f31; the console keeps a presenters-only label, "Últim cartró dempeus".
 By: the user. Source: open-questions.md › Answered (U6); transcript 2026-11-25T00:56Z. Supersedes: D44's "DEMPEUS!" proposal (agreed between the sessions, not by the user). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Player app.
 
-### D63 · Where "the Check decides" is enforced · 2026-11-25 · Active
+### D63 · Where "the Check decides" is enforced · 2026-11-25 · Amended by D121
 The engine refuses to accept a failed Check (reason `failedCheck`), and the console never offers it. The cloud only flags such a decision in the journal and never refuses it, so the show never stalls on a cloud check.
 By: the sessions, agreed. Source: commit 233e3a3; the orchestrator's brief of 2026-11-25. Implements: D49. Lives in: requirements/game-rules.md › The Check.
 
@@ -938,6 +938,20 @@ By: the user. Source: open-questions.md › Answered (U62); the user's message o
 A stopped Check is a state of its own, with a new screen on the projector and on the tablet. Whatever was already playing keeps playing. Pausa happens only if a presenter turns it on, as usual with the remote or the tablet's buttons, which that screen also offers. The user: "during stop we should keep playing whatever was already playing, only put pause if presenter enables it, like he normally does with the remote or buttons in tablet, also in that screen." The rest of D117 stands, including that the round can't move on until the claim is checked again or dropped.
 By: the user. Source: the user's message of 26 Nov. Amends: D117 (the orchestrator had read "back to the quina but in pause" as an automatic Pausa). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console, Projector; requirements/show-and-music.md › the Check's sound.
 
-### D119 · A stopped Check is "under review" · 2026-11-26 · Active; the internal status name Pending (U81)
+### D119 · A stopped Check is "under review" · 2026-11-26 · Active
 "Stopped" sounded like the end, and the user wants a name that feels temporary. A claim whose Check the presenters interrupt is **under review**: on the tablet "En revisió", with the button "Revisió manual". "Dropped" ("Descartat") stays. Answers U80.
 By: the user. Source: open-questions.md › Answered (U80). Amends: D109, D118 (their "stop"). Lives in: GLOSSARY.md › Review; requirements/game-rules.md › The Check; requirements/screens.md › Console.
+
+### D120 · The code calls it `reviewing` · 2026-11-26 · Active
+The Claim status for "under review" is `reviewing`, like `checking`; the commands and log entries use the same word. Answers U81.
+By: the user. Source: open-questions.md › Answered (U81). Lives in: packages/protocol (Sound engine).
+
+### D121 · What the organizers decide after a review · 2026-11-26 · Active; where Discard leads Pending (U82)
+While a claim is under review, the organizers pick one of four:
+- **Continue the Check** from where it was interrupted.
+- **Win, by hand:** the remaining songs are skipped and the fanfare and Celebration play straight away, even if the card doesn't pass. The tablet warns when it doesn't.
+- **Lose, by hand:** the same, with the fail moment. The tablet warns when the card would have passed.
+- **Discard:** like losing, but with no fanfare and no failure music. The round waits, ready to resume.
+
+This replaces checking it again from the start and "drop". A win by hand on a card that doesn't pass is the one exception to "never accept a card that failed", and only a review allows it. The log marks every hand decision.
+By: the user. Source: the user's message of 26 Nov. Amends: D49 and D63 (a review may declare a win by hand), D109 and D118 (the review's outcomes). Lives in: event.md › Claims and checks; requirements/game-rules.md › The Check; requirements/screens.md › Console.

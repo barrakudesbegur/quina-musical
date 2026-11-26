@@ -178,8 +178,8 @@ This page explains the event: what happens on the night, who does what, and how 
 - **A card not registered as sold** only raises a warning. The presenters ask to see the card.
 - **Forged cards:** we assume nobody forges cards. If two cards claim the same win, the fake one is easy to tell apart.
 - **The Check's result decides.**
-  - In a strange case, the presenters can send the Check to review before its result, showing neither a pass nor a fail, and check the card by hand; the music keeps playing unless they pause it. Then they check it again or drop the claim.
-  - They can never accept a card that failed.
+  - In a strange case, the presenters can send the Check to review before its result, showing neither a pass nor a fail, and check the card by hand; the music keeps playing unless they pause it. Then the organizers pick: continue the Check, declare a win or a loss by hand (the remaining songs are skipped, with a warning on the tablet if it goes against the card), or discard the claim without any fanfare.
+  - Outside a review, they can never accept a card that failed.
 - **Ties:**
   - the first to claim wins;
   - claims on the same song share the prize, and the winners agree how to split it;

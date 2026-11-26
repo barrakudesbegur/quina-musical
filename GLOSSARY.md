@@ -80,7 +80,7 @@ The public verification of a claimed card: its songs are shown and replayed one 
 _Avoid_: Validation, verification
 
 **Review**:
-The organizers' manual check of a claimed card, after the presenters interrupt its Check before the result. The claim stays undecided, under review, until it's checked again in public or dropped.
+The organizers' manual check of a claimed card, after the presenters interrupt its Check before the result. The claim stays undecided, under review, until the organizers continue the Check, declare a win or a loss by hand, or discard it.
 _Avoid_: Stopped, paused, on hold
 
 **Winner**:
