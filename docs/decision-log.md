@@ -1053,14 +1053,34 @@ By: the user. Source: the user's messages of 26 Nov. Amends: D133. Supersedes: D
 When the auto-advance is switched off, the console says "Avanç manual", not "Avanç automàtic aturat". "Aturat" was confusing.
 By: the user. Source: the user's message of 26 Nov. Lives in: GLOSSARY.md › Manual advance.
 
-### D144 · Suspens with A on the remote; the shake becomes optional · 2026-11-26 · Active; the landing and the default Pending (U120, U121)
+### D144 · Suspens with A on the remote; the shake becomes optional · 2026-11-26 · Amended by D147, D148
 While B is held (Aguanta), holding A too starts Suspens. It works if A goes down slightly before B, or at any time after B is held. Letting go of A alone, with B still held, cancels the Suspens: the build backs out and fades, and the song is back in Aguanta. The engine can cancel a Suspense already: Pausa does. A toggle in the settings and in the remote's mapping turns the shake gesture on or off, and each shake gives one vibration.
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
 
-### D145 · With manual advance, holding B starts Suspens · 2026-11-26 · Active; the window's length Pending (U122)
+### D145 · With manual advance, holding B starts Suspens · 2026-11-26 · Amended by D148
 With the advance manual, holding B starts a Suspens straight away. Three evenly spaced vibrations follow, and letting go of B before the third cancels it. After the third it can't be undone: a gentler vibration, oscillating or below full power, lasts as long as the Suspens, and letting go of B lands it. With the auto-advance on, B stays Aguanta. Answers U119 with (b).
 By: the user. Source: open-questions.md › Answered (U119). Lives in: requirements/show-and-music.md › The presenters' actions.
 
 ### D146 · No special style for the playing song · 2026-11-26 · Active
 In the phone's Historial, the song playing now has no style of its own: "we dont need a special style for the playing song". Done in the code and on 22 boards (canvas v66).
 By: the user via canvas (26 Nov). Source: the "Quina Musical look" canvas v66; Frontend's report. Lives in: requirements/screens.md › Player app.
+
+### D147 · A Suspens started with B + A works like the manual one · 2026-11-26 · Active
+Letting go of B lands it (U120 (a)). Entering it follows the manual advance's logic (D145): three evenly spaced vibrations follow, and letting go of A before the third cancels it back to Aguanta. After the third it can't be undone: a gentler vibration lasts while it's on, and letting go of B lands it.
+By: the user. Source: open-questions.md › Answered (U120). Amends: D144 (letting go of A cancels only inside the window). Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D148 · The shake stays on; the window is 1.5 s · 2026-11-26 · Active
+The shake gesture is on by default (U121 (a)). The cancel window is about 1.5 s, a vibration every half second (U122 (a)); it may change once the user tries the remote.
+By: the user. Source: open-questions.md › Answered (U121, U122). Amends: D144, D145. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D149 · "Descans" on every screen · 2026-11-26 · Active
+The screens say "Descans" for a break, not "Mitja part". Answers U123.
+By: the user. Source: open-questions.md › Answered (U123). Lives in: GLOSSARY.md › Break; requirements/screens.md.
+
+### D150 · Horari's rows · 2026-11-26 · Active; the first row's name Pending (U131)
+The phone's Horari starts with the card-selling time ("the welcome is actually the ticket buying time"), then the rounds with "Primer descans" and "Segon descans" among them, then "Fi". The plan needs the doors' time. Answers U125 with (b).
+By: the user. Source: open-questions.md › Answered (U125). Lives in: requirements/screens.md › Player app.
+
+### D151 · A button for the corn-seed storm at the end · 2026-11-26 · Active; the song and the button's place Pending (U132)
+After last year's last round, the crowd went wild and threw corn seeds all around, a fun, chaotic moment like the throws. If it happens again, the tech turns on a song by hand, from a hook of its own right at the drop, since nobody controls when the throwing starts.
+By: the user. Source: the user's message of 26 Nov. Lives in: event.md › The night, step by step; requirements/show-and-music.md › Music for each moment.

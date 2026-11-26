@@ -141,6 +141,7 @@ This page explains the event: what happens on the night, who does what, and how 
    - the presenters explain how to collect prizes and give a short closing speech;
    - the sponsors are thanked;
    - there's no DJ set this year (there was one in 2025, until 23:00).
+   - **The corn-seed storm:** in 2025, when the last round ended, the crowd went wild and threw corn seeds all around, a fun, chaotic moment like the throws. If it happens again, the tech starts a song by hand, right from its drop (**new in 2026**).
    - The mood: people get up and leave, or stay around while the organizers take their things down, dancing, talking or helping. The end music is its own set, in a fixed order, so the first song after the close is planned (**new in 2026**). At some point during the take-down, the tech disconnects the laptop from the sound system, and a phone connects for a Spotify Jam where people add songs as they like.
 7. **Take-down,** with everyone.
 

@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D147**, **U131**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D152**, **U133**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -15,7 +15,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## In flight
 
-- **The user is away (26 Nov, evening).** All three sessions were told to keep building what's decided (D132, D140–D145, D141), keep today's behaviour for every open question, list those in their handoffs, and report to me. On the user's return, give them one batched list of the open questions in the plain format, plus what was built. **First on that list: U127** (approve Backend's deploy of the plan-save fix, 2503050; the auto-mode check refused it, and no other session may deploy it instead), **then U124,** the user's OK in Frontend's own session for the console's two labels, which blocks the push of Sound engine's and Backend's range. Frontend's session refuses the edit on a relayed answer, rightly.
+- **The user is away (26 Nov, evening).** All three sessions were told to keep building what's decided (D132, D140–D145, D141), keep today's behaviour for every open question, list those in their handoffs, and report to me. On the user's return, give them one batched list of the open questions in the plain format, plus what was built. **First on that list: U127** (approve Backend's deploy of the plan-save fix, 2503050; the auto-mode check refused it, and no other session may deploy it instead), **U124 the user is handling directly with Frontend,** the user's OK in Frontend's own session for the console's two labels, which blocks the push of Sound engine's and Backend's range. Frontend's session refuses the edit on a relayed answer, rightly.
 - **Two pools and double-sided cards (D100–D102, 25 Nov).** Pool 1 (70, final) plays Quines 1–5 on side 1; pool 2 (being filled, then 70) plays Quines 6–10 on side 2; the special rounds play their own playlist, 79G8VcNrkih9GGjIzb47Gt, empty for now, with Part 1's songs until it's final (D105). Asked on 25 Nov:
   - Sound engine: re-fetch pool 1 and remake the temporary cards; an impact report on several pools (engine, protocol, Shuffle, cards.json with sides, disk, R2, hook time) before building; don't download pool 2 until the user says it's filtered;
   - Backend: the cloud's side (a round's pool, a card's sides on phones, the settings file) and R2 options past 10 GB;

@@ -68,7 +68,7 @@ _Avoid_: Full house, full card, quina (outside the UI)
 Two or more cards completing the same Line or Bingo on the same landing. The shuffle avoids ties among the cards in play.
 
 **Break**:
-The time between two rounds, with its own music playing. The next round's prizes stay hidden until its intro. (The code calls it `interval`, D136.)
+The time between two rounds, with its own music playing. The next round's prizes stay hidden until its intro. The screens say "Descans" (D149); the code calls it `interval` (D136).
 _Avoid_: Interval (the old name), pause
 
 **Throw**:

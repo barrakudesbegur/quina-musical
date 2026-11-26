@@ -91,7 +91,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
   - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
   - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
-  - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next;
+  - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next: the card-selling time first (its name pending U131), then the rounds with "Primer descans" and "Segon descans", then "Fi" (D150). Breaks are "Descans" on every screen (D149);
   - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.
   - The corner buttons use style B, with matching icons, and the drawers use hierarchy J2; the menu drawer is titled with a settings word, not "Menu" (D87). The prizes drawer's design is still to pick (pending U30).
   - **Being built to match the boards (D132)**, the prizes drawer excepted.

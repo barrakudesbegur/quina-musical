@@ -12,11 +12,6 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
 
-### U125 · Horari's welcome and break rows
-The agreed boards show "Benvinguda" and "Mitja part" rows in the phone's Horari, but the plan has no time for the welcome, and its only planned breaks are the throws. The phone's drawers are built and pushed (3e8f8dd) with the rounds plus "Fi" and the expected end.
-- (a) Keep the rounds and "Fi" only.
-- (b) Add the welcome (a time in the plan) and the breaks (named as U123 decides).
-
 ### U130 · The Check boards on canvas v67, for review
 Frontend published the Check, the review draft (U77) and the remote's D143–D145. Its choices to check:
 1. The Check's top row is "Enrere", "Revisió manual" and "+ Un altre". That changes R2-Q21's arrangement (Següent, the Hold and the claim in the same places in landscape and portrait).
@@ -28,6 +23,17 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
+### U131 · The name of Horari's first row
+D150: Horari's first row is the card-selling time, before the welcome.
+- (a) "Venda de cartrons".
+- (b) "Benvinguda", as drawn.
+- (c) "Portes obertes".
+
+### U132 · The corn-seed storm's song and button
+D151.
+- **The song:** (a) "Flying Free", straight from its drop (208.8 s); (b) another song (which?).
+- **The button:** (a) on the tablet after the last round, next to the end music; (b) at any time.
+
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
 - (a) Keep it.
@@ -37,20 +43,6 @@ Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build'
 D130 said songs in Parlem and the effects "may start lower". Sound engine set every slider's 100% to today's tuned level. "Songs in Parlem" starts at 45% (today's −14 dB duck), and the effects at 100%.
 - (a) Keep the effects at 100%.
 - (b) Start them lower; give a number.
-
-### U123 · The screens' word for a break
-No screen says "Interval": the projector's title, the console's buttons and phase name, the phones' heading and Horari's row all say "Mitja part" (half-time). With several breaks a night, "Mitja part" is off. Changing it is strings only.
-- (a) "Descans" on every screen.
-- (b) Keep "Mitja part".
-- (c) Another word.
-
-### U124 · The console's two labels need the user's OK in Frontend's session · blocking
-D140 answered U67, but Frontend's session refuses the edit to `apps/console/strings.ts` under the UI freeze, and only the user's own OK in that session lifts it. Until then, Sound engine's and Backend's tested range can't be pushed. The change: `reviewing: 'En revisió'` and `discarded: 'Descartat'` replace `stopped` and `dropped`, and `S.hold.reasons` gets `discarded: 'Cartró descartat'`. The same OK covers "Avanç manual" (D143) in that file and the Check's console code (D140), which Frontend's session also refuses until the user confirms there.
-
-### U120–U122 · Suspens on the remote (D144, D145)
-- **U120 · Landing a Suspens started with B + A:** (a) letting go of B lands it, as today, and letting go of A alone cancels it; (b) another way.
-- **U121 · The shake gesture's default:** (a) on; (b) off, now that B + A does Suspens.
-- **U122 · The cancel window with manual advance** (three evenly spaced vibrations): (a) about 1.5 s, one every half second; (b) about 3 s, one a second.
 
 ### U103 · The throw song is on the cards
 "Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal): Sound engine confirmed it's the same Spotify track as last year's id 24, so the throw song is printed on Part 1's cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
@@ -215,6 +207,10 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U120–U122 · Suspens on the remote** (2026-11-26) → D147, D148: letting go of B lands; B + A has the same vibrations and cancel window as the manual one; the shake stays on; 1.5 s, to tune on the remote.
+- **U123 · The screens' word for a break** (2026-11-26) → D149: "Descans".
+- **U124 · The console's labels** (2026-11-26): the user tells Frontend directly ("He took the code freeze too seriously").
+- **U125 · Horari's rows** (2026-11-26) → D150: the card-selling time, the rounds with "Primer descans" and "Segon descans", "Fi".
 - **U116–U119** (2026-11-26) → D142: "Següent" ends Parlem after all, so U116 and U118 need no answer; U117 (a), no expirable Aguanta; U119 → D145 (b): with manual advance, holding B starts a cancellable Suspens.
 - **U115 · What the add-card QR button does** (2026-11-26) → D141: it scans inside the app.
 - **U84 · Does "Següent" end Parlem?** (2026-11-26) → D133: no; Aguanta and Suspens disable "Següent"; an expirable Parlem or Aguanta shows a badge. Follow-ups U116–U119.
