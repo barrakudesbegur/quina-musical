@@ -1,14 +1,19 @@
-// The Check: a compact plate "CARTRÓ #57" and the card-type badge (a mini card in the type's colour and its
-// name) over the card's covers, which float on the night background with their titles. The type is the first
-// step: its badge gets ✓ (or ✗ for a card of the wrong type). For a Line, the other rows dim. Each song's
-// cover gets a ring while its snippet plays, then its mark (✓ or ✗). From `endAtMs` the result shows: a valid
-// card's gold plaque; a failed card's huge red ✗ over red light beams with the fallen nino, and no text (the
-// failed song keeps its ✗ in the row). A card of the wrong type shows a big card in its colour under the ✗.
+// The Check, paced by the presenters: a compact plate "CARTRÓ #57" and the card-type badge (a mini card in the type's
+// colour and its name) over the card's covers, which float on the night background with their titles. The type is
+// the first step: its badge gets ✓ (a card of the wrong type has nothing to reveal: its ✗ comes with the result). For
+// a Line, the other rows dim. Each revealed song's cover gets a ring while its snippet plays, then its mark (✓ or ✗);
+// a step back lifts the last mark off, and the snippet before it replays under its equaliser. Under review the
+// slate-blue «Revisió manual» plaque slides down over the top of the card, and the marks stay as the room saw them.
+// From the presenters' cue the result shows: a valid card's gold plaque; a failed card's huge red ✗ over red light
+// beams with the fallen nino, and no text (the failed song keeps its ✗ in the row). A card of the wrong type shows a
+// big card in its colour under the ✗. A Check discarded from its review fades out with the plate.
 // The Desgraciat round's standing Check: a ✓ marks a song that has NOT sounded, and the Check stops on the first one
 // that has (its ✗, grey cover). Fallen (`check-fallen`): the ✗ lands over the half of the card away from that song,
 // whose tile is lifted above the scrim and pops; the sitting nino tumbles in beside the ✗ (the card sat down), and
-// the songs never checked fade to 10 %.
+// the songs never revealed fade to 10 %.
 // Everything is read from the timestamps (`checkReveal`, `typeReveal`) and the pure rules in model/check.ts.
+// Hooks on the Check's root (`data-testid="check"`): `data-revealed` (how many songs are revealed), `data-cue`
+// (`pass` or `fail` once the cue has played), `data-reviewing` (under review), `data-discarded`.
 import { STAGE } from '../config.ts';
 import {
   checkReveal,
@@ -34,14 +39,39 @@ import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 interface CellNodes {
   root: HTMLElement;
+  art: HTMLElement;
   mark: HTMLElement;
   cell: CheckCell;
+  /** The mark it shows ('ok', 'last', 'bad'). */
+  shownMark: string | null;
+  /** The mark a step back just took off, for its lift-off. */
+  liftedMark: string | null;
 }
 
 /** Bars of the "playing" badge (their heights are the theme's). */
 const EQ_BARS = 4;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** The review plaque's magnifier (ink outline under a paper lens, as on the board). */
+function magnifier(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'check-review__icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const [layer, tag, attrs] of [
+    ['lens', 'circle', { cx: '10.5', cy: '10.5', r: '6' }],
+    ['handle', 'path', { d: 'M15 15l5.5 5.5' }],
+    ['shine', 'circle', { cx: '10.5', cy: '10.5', r: '6' }],
+    ['grip', 'path', { d: 'M15 15l5.5 5.5' }],
+  ] as const) {
+    const el = document.createElementNS(SVG_NS, tag);
+    el.setAttribute('class', `check-review__icon-${layer}`);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    svg.append(el);
+  }
+  return svg;
+}
 
 /** The failed Check's big ✗: one stroked cross drawn in layers (drop, ink, dark red, red, gloss); colours from stage.css. */
 function bigCross(): SVGSVGElement {
@@ -69,6 +99,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   private readonly typeName: HTMLElement;
   private readonly typeMark: HTMLElement;
   private readonly grid: HTMLElement;
+  /** «Revisió manual»: the plaque over the top of the card while the Check is under review. */
+  private readonly review: HTMLElement;
   private readonly result: HTMLElement;
   private readonly resultTitle: HTMLElement;
   /** A card of the wrong type: a big card in its colour, under the ✗. */
@@ -81,7 +113,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   private cells: CellNodes[] = [];
   /** Cell nodes by step index. */
   private byStep = new Map<number, CellNodes>();
-  private shown: StepState[] = [];
+  /** What each step index shows now (its state and the result it was drawn with). */
+  private shown: string[] = [];
   private typeShown: TypeState | null = null;
   private resultShown: CheckVerdict | null = null;
   /** `gridKey` of the drawn grid. */
@@ -112,9 +145,10 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       this.fallenSticker,
       this.resultTitle,
     );
+    this.review = h('div', { class: 'check-review', attrs: { role: 'status' } }, magnifier(), h('p', 'check-review__title', STAGE_TEXT.checkReview));
     const beams = h('div', { class: 'check__beams', attrs: { 'aria-hidden': 'true' } }, h('div', 'check__rays'), h('div', 'check__glow'));
     const scrim = h('div', { class: 'check__scrim', attrs: { 'aria-hidden': 'true' } });
-    this.panel = h('div', { class: 'check', data: { testid: 'check' } }, h('header', 'check__head', this.plate, this.type), h('div', 'check__card', beams, this.grid, this.result), scrim);
+    this.panel = h('div', { class: 'check', data: { testid: 'check' } }, h('header', 'check__head', this.plate, this.type), h('div', 'check__card', beams, this.grid, this.review, this.result), scrim);
     this.root.append(this.panel);
   }
 
@@ -123,9 +157,12 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     const sameCheck = check.key === this.check?.key;
     const grid = gridKey(check.cells);
     this.check = check;
+    this.setHooks(check);
     if (sameCheck) {
-      // The same Check, but the catalog may have arrived since: redraw the grid (no entrance replayed).
+      // The same Check: a song revealed without the catalog, or the catalog arrived since: redraw the grid (no
+      // entrance replayed). The type badge may have learnt its mark (a wrong type's, at the cue).
       if (grid !== this.gridShown) this.layOut(check, grid);
+      setData(this.panel, 'wrongType', check.cardType?.ok === false ? 'true' : null);
       return;
     }
     setText(this.heading, STAGE_TEXT.checkPlate(check.cardId));
@@ -135,8 +172,17 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     setData(this.panel, 'result', 'pending');
     setData(this.panel, 'wrongType', check.cardType?.ok === false ? 'true' : null);
     setData(this.plate, 'anim', null);
+    setData(this.review, 'anim', null);
     setHidden(this.result, true);
     this.layOut(check, grid);
+  }
+
+  /** The hooks on the Check's root: how many songs are revealed, the cue, a review, a discard. */
+  private setHooks(check: CheckView): void {
+    setData(this.panel, 'revealed', String(check.steps.length));
+    setData(this.panel, 'cue', check.verdict === null ? null : isFailed(check.verdict) ? 'fail' : 'pass');
+    setData(this.panel, 'reviewing', check.reviewing ? 'true' : null);
+    setData(this.panel, 'discarded', check.discarded ? 'true' : null);
   }
 
   /** The type badge: hidden for an unknown card; its mark comes in `tick`. */
@@ -156,11 +202,9 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   /** The grid and the result's spot; the next tick puts every mark and the result back. */
   private layOut(check: CheckView, grid: string): void {
     const spot = plaqueSpot(check);
-    const x = resultX(check);
     setData(this.panel, 'plaque', spot.over);
-    setData(this.panel, 'side', x < 0.5 ? 'left' : x > 0.5 ? 'right' : null);
     setVar(this.panel, '--plaque-at', String(spot.at));
-    setVar(this.panel, '--plaque-x', String(x));
+    this.placeResult(check);
     this.buildGrid(check);
     this.gridShown = grid;
     this.shown = [];
@@ -186,10 +230,10 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
             : h('span', { class: 'card-grid__eq', attrs: { 'aria-hidden': 'true' } }, ...Array.from({ length: EQ_BARS }, () => h('span', 'card-grid__eq-bar')));
         const art = h('div', 'card-grid__art', cover.root, mark, eq);
         const root = h('figure', { class: 'card-grid__cell', data: { state: cell.step === null ? 'idle' : 'pending' } }, art, h('figcaption', 'card-grid__title', cell.title ?? ''));
-        // A song the Check never plays (one after the song that sank a standing claim): it fades if the card falls.
-        if (cell.step === null) root.classList.add('is-unchecked');
+        // Not revealed (yet): a song after the one that sank a standing claim fades once the card falls.
+        root.classList.add('is-unchecked');
         root.style.setProperty('--deal-index', String(deal++));
-        const nodes = { root, mark, cell };
+        const nodes: CellNodes = { root, art, mark, cell, shownMark: null, liftedMark: null };
         this.cells.push(nodes);
         if (cell.step !== null) this.byStep.set(cell.step, nodes);
         rowEl.append(root);
@@ -212,25 +256,38 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       if (check.cardType) this.type.setAttribute('aria-label', STAGE_TEXT.checkType(check.cardType.label, type === 'pending' || type === null ? null : type === 'ok'));
     }
     const reveal = checkReveal(check, nowMs, STAGE.checkMarkAt);
-    reveal.steps.forEach((state, i) => {
-      if (this.shown[i] === state) return;
-      this.shown[i] = state;
-      const nodes = this.byStep.get(i);
-      if (!nodes) return;
-      // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
-      // happened to the song.
-      const mark = stepMark(check.kind, state, check.verdict);
-      setData(nodes.root, 'state', state);
-      setData(nodes.root, 'mark', mark);
-      setText(nodes.mark, mark ? STAGE_TEXT.mark[mark] : '');
-      nodes.root.setAttribute('aria-label', `${nodes.cell.title ?? ''} ${state === 'landed' ? STAGE_TEXT.markLabel.landed : state === 'missed' ? STAGE_TEXT.markLabel.missed : ''}`.trim());
-    });
+    for (const [i, nodes] of this.byStep) {
+      // A step past the revealed ones (not revealed yet, or taken off by a step back) waits again.
+      const state: StepState = reveal.steps[i] ?? 'pending';
+      const key = `${state}:${reveal.result ?? ''}`;
+      if (this.shown[i] !== key) {
+        this.shown[i] = key;
+        // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
+        // happened to the song.
+        const mark = stepMark(check.kind, state, reveal.result);
+        nodes.liftedMark = mark === null ? nodes.shownMark : null;
+        nodes.shownMark = mark;
+        setData(nodes.root, 'state', state);
+        setData(nodes.root, 'mark', mark);
+        setText(nodes.mark, mark ? STAGE_TEXT.mark[mark] : '');
+        nodes.root.classList.toggle('is-unchecked', i >= reveal.steps.length);
+        nodes.root.setAttribute('aria-label', `${nodes.cell.title ?? ''} ${state === 'landed' ? STAGE_TEXT.markLabel.landed : state === 'missed' ? STAGE_TEXT.markLabel.missed : ''}`.trim());
+      }
+      setData(nodes.root, 'replay', reveal.replaying === i ? 'true' : null);
+    }
     const result = reveal.result;
     if (result !== this.resultShown) {
       this.resultShown = result;
       setData(this.panel, 'result', result ?? 'pending');
       this.showResult(check, result);
     }
+  }
+
+  /** Across the card, where the result lands: away from the song that sank a fallen card, else the middle. */
+  private placeResult(check: CheckView): void {
+    const x = resultX(check);
+    setData(this.panel, 'side', x < 0.5 ? 'left' : x > 0.5 ? 'right' : null);
+    setVar(this.panel, '--plaque-x', String(x));
   }
 
   /**
@@ -240,6 +297,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   private showResult(check: CheckView, result: CheckVerdict | null): void {
     const failed = result !== null && isFailed(result);
     const fallen = result === 'fallen';
+    this.placeResult(check);
     setHidden(this.result, result === null);
     setData(this.panel, 'verdict', result);
     setData(this.result, 'result', result);
@@ -259,8 +317,23 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     this.result.setAttribute('aria-label', detail ? `${title}. ${detail}` : title);
   }
 
+  /** A step back: the mark that was on the cover lifts off (a copy of it, as the cell already waits again). */
+  private liftMark(nodes: CellNodes, mark: string): void {
+    const ghost = h('span', { class: 'card-grid__mark card-grid__mark--lift', data: { mark }, attrs: { 'aria-hidden': 'true' } }, STAGE_TEXT.mark[mark as keyof typeof STAGE_TEXT.mark] ?? '');
+    nodes.art.append(ghost);
+    setTimeout(() => ghost.remove(), STAGE.checkUnrevealMs);
+  }
+
   onAnim(detail: AnimDetail): void {
     if (detail.name === 'check-enter') playAnim(this.panel, 'check-enter');
+    else if (detail.name === 'check-unreveal') {
+      const nodes = this.byStep.get(detail.index);
+      if (nodes) {
+        playAnim(nodes.root, 'check-unreveal');
+        if (nodes.liftedMark) this.liftMark(nodes, nodes.liftedMark);
+        nodes.liftedMark = null;
+      }
+    } else if (detail.name === 'check-review') playAnim(this.review, 'check-review');
     else if (detail.name === 'check-type') playAnim(this.type, 'check-type');
     else if (detail.name === 'check-step' && (detail.state === 'landed' || detail.state === 'missed')) {
       const nodes = this.byStep.get(detail.index);

@@ -45,13 +45,13 @@ test('in a Hold the Hold button resumes', () => {
   assert.equal(c.hold.enabled, true);
 });
 
-test('in a Check: Claim adds another card, Next and Suspense are refused', () => {
+test('in a Check: Claim adds another card, the paced Check commands go, Next and Suspense are refused', () => {
   const c = controlsModel(fixture('check'));
   assert.equal(c.claim.enabled, true);
   assert.equal(c.next.enabled, false);
   assert.equal(c.suspense.enabled, false);
-  assert.equal(canSend('decide', fixture('check')), true);
-  assert.equal(canSend('checkStart', fixture('check')), true);
+  for (const cmd of ['checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'checkStart'] as const) assert.equal(canSend(cmd, fixture('check')), true, cmd);
+  assert.equal(canSend('checkNext', fixture('play')), false, 'only in a Check');
 });
 
 test("a Line's Celebration goes back to play with Next; a Bingo's goes to the Interval", () => {
@@ -94,8 +94,9 @@ test('the technical pause lets only the always-allowed commands through', () => 
   const c = fixture('pause');
   const ctx = sceneContext(c.flow);
   assert.equal(ctx.paused, true);
-  assert.equal(sceneAllows('next', ctx), false);
+  assert.equal(sceneAllows('next', ctx), true, 'Next ends Pausa with its transition (D128)');
   assert.equal(sceneAllows('claim', ctx), false);
+  assert.equal(sceneAllows('checkNext', { ...ctx, scene: 'check' }), false, 'a Check waits during Pausa');
   assert.equal(sceneAllows('pause', ctx), true);
   assert.equal(sceneAllows('panic', ctx), true);
   assert.equal(sceneAllows('sfx', ctx), true);

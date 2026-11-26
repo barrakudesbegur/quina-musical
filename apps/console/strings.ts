@@ -5,7 +5,7 @@
 // every known value has its own text.
 import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import type { AnyCommandName, CelebrationMusic, CheckOutcome, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
+import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
 import type { ChartGap } from './logic/future.ts';
@@ -17,10 +17,10 @@ export { CA };
 
 const seconds = (s: number) => `${s} s`;
 const kindLabel: Record<WinKind, string> = { line: CA.line, bingo: CA.bingo, standing: CA.standing };
-/** "línia" or "quina", inside a sentence. */
-const kindWord: Record<WinKind, string> = { line: 'línia', bingo: 'quina', standing: 'últim dempeus' };
 /** "A, B i C". */
 const listing = (items: readonly string[]) => (items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} i ${items[items.length - 1]}`);
+/** "1a", "2a", "3a": a song's place (cançó is feminine). */
+const ordinal = (n: number) => `${n}a`;
 
 export const S = {
   pageTitle: 'Consola · Quina Musical',
@@ -105,7 +105,7 @@ export const S = {
         auto: (s: number) => `Següent automàtic en ${s} ${s === 1 ? 'segon' : 'segons'}`,
         spinning: (s: number | null) => (s === null ? 'Girant' : `Girant: la cançó nova aterra en ${s} ${s === 1 ? 'segon' : 'segons'}`),
         suspense: (s: number | null) => (s === null ? 'Suspens obert' : `Suspens obert: s'allibera sol en ${s} ${s === 1 ? 'segon' : 'segons'}`),
-        manual: 'Avanç automàtic aturat: prem Següent',
+        manual: 'Avanç manual: prem Següent',
         manualFinal: 'Fase final: sense avanç automàtic. Prem Següent',
         lastStanding: "Només en queda un dempeus: comproveu-lo",
         held: 'En espera: sense avanç automàtic',
@@ -114,7 +114,7 @@ export const S = {
         paused: 'Pausa tècnica',
         waiting: 'Esperant «Següent»',
       },
-      badge: { auto: 'Avança sol', autoOff: 'Avanç automàtic aturat', final: 'Fase final', talk: 'Parlem', stay: 'Aguanta', held: 'En espera' },
+      badge: { auto: 'Avança sol', autoOff: 'Avanç manual', final: 'Fase final', talk: 'Parlem', stay: 'Aguanta', held: 'En espera' },
       chip: {
         spinning: (s: number | null) => (s === null ? 'Girant' : `Girant · aterra en ${s} s`),
         suspense: 'Suspens obert · deixa anar per aterrar',
@@ -125,6 +125,7 @@ export const S = {
         stay: (since: string) => `Aguanta · des de fa ${since}`,
         checking: (cardId: number | null) => (cardId === null ? 'Comprovant un cartró' : `Comprovant el cartró #${cardId}`),
         checkFailed: 'Cap cartró vàlid · prem «Reprèn»',
+        discarded: 'Cartró descartat',
         paused: (since: string) => `Pausa tècnica · des de fa ${since}`,
       },
     },
@@ -239,6 +240,7 @@ export const S = {
       claim: 'Comprovant un cartró',
       checkFailed: "Comprovació fallida: música d'error fins a «Reprèn»",
       discarded: 'Cartró descartat',
+      pause: 'Torna de la pausa: Parlem',
     } satisfies Partial<Record<HoldReason, string>> as Partial<Record<HoldReason, string>>,
     reasonFallback: 'En espera',
     since: (clock: string) => `des de fa ${clock}`,
@@ -258,62 +260,124 @@ export const S = {
     start: 'Pausa tècnica',
   },
 
+  /** The presenter-paced Check (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada). */
   check: {
-    title: (cardId: number) => CA.checking(cardId),
-    none: 'Cap comprovació en marxa',
+    /** "Cartró #57" (Londrina, in capitals by CSS). */
+    card: (cardId: number) => `Cartró #${cardId}`,
+    /** Spoken: the panel with the claimed card. */
+    cardLabel: (cardId: number) => `Comprovació del cartró ${cardId}`,
+    /** The claim's chip: "Línia", "Quina", and the Desgraciat round's "Desgraciada". */
+    kind: { line: CA.line, bingo: CA.bingo, standing: 'Desgraciada' } satisfies Record<WinKind, string>,
+    /** "1 de 2": this card among the claimed ones. */
+    ofCards: (n: number, total: number) => `${n} de ${total}`,
+    verdict: {
+      complete: (kind: WinKind, row: number | null) =>
+        kind === 'line' ? `Té línia: la fila ${(row ?? 0) + 1} és completa` : kind === 'bingo' ? 'Té quina: han sonat totes' : "Dempeus: no n'ha sonat cap",
+      missing: (position: number, title: string) => `Falla a la ${ordinal(position)}: «${title}»`,
+      fallen: (position: number, title: string) => `Ha caigut a la ${ordinal(position)}: «${title}»`,
+      fellLast: (title: string) => `Ha caigut amb l'última: «${title}»`,
+      /** "és un cartró especial, i aquesta quina juga els normals" (the types' short names, lowercase). */
+      wrongType: (cardType: string | null, roundType: string) =>
+        cardType ? `Tipus erroni: és un cartró ${cardType}, i aquesta quina juga els ${roundType}s` : "Tipus erroni: és un cartró d'un altre tipus",
+      unknownCard: 'Aquest número no existeix',
+    },
+    warnings: {
+      notSold: 'No registrat com a venut',
+      completeSince: (n: number, kind: WinKind) => (kind === 'standing' ? `L'únic dempeus des de la cançó ${n}` : `Complet des de la cançó ${n}`),
+    },
+    /** The verdict under the card, on a fail: a big ✗ and the word, beside the song that failed it. */
+    failed: 'Fallada',
+    nextTag: 'Següent',
+    skipped: 'no es destaparà',
+    /** A cell's spoken state. */
+    cellLabel: (title: string, mark: 'ok' | 'bad' | 'last' | null, revealed: boolean, kind: WinKind) =>
+      mark === null
+        ? title
+        : `${title}: ${mark === 'last' ? "ha sonat amb l'última" : (mark === 'ok') === (kind !== 'standing') ? CA.landed.toLowerCase() : CA.notLanded.toLowerCase()}${revealed ? ', destapada' : ''}`,
+    back: 'Enrere',
+    backNote: 'treu una marca',
+    review: 'Revisió manual',
+    reviewNote: 'sense resultat',
+    /** A card claimed too (D110): the claim pad. */
+    add: 'Candidat',
+    /** The next song inside «Destapa»: "ABBA · 2 de 3" (up to where the reveals stop). */
+    nextLine: (artist: string, at: number, of: number) => [artist, `${at} de ${of}`].filter(Boolean).join(' · '),
+    /** Spoken: the next song «Destapa» reveals. */
+    nextLabel: (title: string, at: number, of: number) => `Ara destapes: ${title}, ${at} de ${of}`,
+    /** After «Enrere» (D134): what sounds again, and «Seguides» off for this card. */
+    backDone: (title: string | null, autoOff: boolean) =>
+      `${title ? `Enrere: torna a sonar «${title}».` : "Enrere: torna la música d'abans de la comprovació."}${autoOff ? " «Seguides» s'ha apagat." : ''}`,
+    /** «Seguides» (D107, D117): reveal in a row. */
+    auto: {
+      label: 'Seguides',
+      off: "toca: una rere l'altra",
+      on: 'toca: atura-les',
+      cue: 'toca: fa el senyal sol',
+      none: 'no hi ha res a destapar',
+      yes: 'Sí',
+      no: 'No',
+    },
+    /** The big button (ANIMATIONS.md › check-pace). */
+    big: {
+      reveal: 'Destapa',
+      revealNote: 'toca: la següent cançó',
+      revealing: 'Destapant…',
+      revealingHeld: 'mentre mantens A, fins al senyal',
+      revealingNote: 'fins al senyal · toca: atura-les',
+      /** Its strip: holding A reveals in a row. */
+      strip: 'Mantén: seguides',
+      celebrate: 'Celebrem!',
+      celebrateNote: 'prem quan acabeu de parlar',
+      celebrateFor: (ids: readonly number[]) => `${listing(ids.map((id) => `el #${id}`))} ${ids.length === 1 ? 'ha' : 'han'} guanyat · prem quan acabeu de parlar`,
+      validNext: 'Vàlid · següent',
+      validNextNote: 'sense fanfàrria: la festa, en acabar',
+      fail: 'Fallada',
+      failNote: 'prem quan acabeu de parlar',
+      /** Between two cards: the next one comes on screen by itself. */
+      cuedPass: 'Vàlid',
+      cuedFail: 'Fallat',
+      cuedNote: 'el següent cartró entra sol',
+    },
     claims: 'Cartrons cantats',
-    claimsOf: (kind: WinKind) => `Cartrons cantats · ${kindWord[kind]}`,
-    claimedAt: (song: number) => `cantat a la cançó ${song}`,
-    steps: (cardId: number, what: string) => `${CA.card(cardId)} · ${what} · cançó a cançó`,
-    rowShort: (row: number) => `fila ${row + 1}`,
-    allSongsShort: 'les 12 cançons',
-    resultMissing: (titles: readonly string[], kind: WinKind) => `Resultat: falta ${listing(titles)}. Aquest cartró no té ${kindWord[kind]}.`,
-    resultComplete: (kind: WinKind) =>
-      kind === 'standing' ? "Resultat: no n'ha sonat cap. Aquest cartró és l'últim dempeus!" : `Resultat: han sonat totes. Aquest cartró té ${kindWord[kind]}!`,
-    /** A standing claim for a card that fell (the Desgraciat round), naming the song that sank it. */
-    resultFellLast: (title: string | null) =>
-      `Resultat: ha caigut amb l'última cançó${title ? `, «${title}»` : ''}. Comparteix el premi si ningú més queda dempeus.`,
-    resultFallen: (title: string | null) => (title ? `Resultat: «${title}» ja ha sonat. Aquest cartró ha caigut.` : "Resultat: una de les seves cançons ja ha sonat. Aquest cartró ha caigut."),
-    decide: 'Decisió',
-    confirmNote: 'ha passat la comprovació',
-    rejectNote: 'sona la fanfàrria de fallada',
-    kind: kindLabel,
+    /** The claimed cards' chips. */
     status: {
       queued: 'A la cua',
-      checking: 'Comprovant…',
-      checked: 'Falta decidir',
+      checking: 'Comprovant',
       reviewing: 'En revisió',
       valid: 'Vàlid',
-      invalid: 'No vàlid',
+      invalid: 'Fallat',
       discarded: 'Descartat',
     } satisfies Record<ClaimStatus, string>,
-    outcome: {
-      complete: 'Complet',
-      incomplete: 'Incomplet',
-      fallen: 'Ha caigut: una de les seves cançons ja ha sonat',
-      fellLast: "Ha caigut amb l'última cançó: comparteix el premi si ningú més queda dempeus",
-      unknownCard: 'Aquest número de cartró no existeix',
-      wrongType: "Cartró d'un altre tipus: no val en aquesta quina",
-    } satisfies Record<CheckOutcome, string>,
-    completeSince: (n: number, kind: WinKind = 'line') => (kind === 'standing' ? `l'únic dempeus des de la cançó ${n}` : `complet des de la cançó ${n}`),
-    notSold: 'No registrat com a venut',
-    checkNow: 'Comprova',
-    recheck: 'Tornar a comprovar',
-    addClaim: 'Un altre cartró',
-    waiting: 'Comença en un moment…',
-    progress: (done: number, total: number) => `${done} de ${total} cançons`,
-    otherRows: (rows: readonly number[]) =>
-      rows.length > 1 ? `També té completes les files ${rows.map((r) => r + 1).join(', ')}` : `També té completa la fila ${rows.map((r) => r + 1).join(', ')}`,
-    landed: CA.landed,
-    /** A standing card that sat down with the song that just landed (the shared win): that step passes. */
-    landedLast: "Ha sonat amb l'última",
-    notLanded: CA.notLanded,
-    pending: 'Pendent',
-    playing: 'Sonant',
-    confirm: 'Confirmar',
-    reject: 'Rebutjar',
-    againstResult: 'Va contra el resultat: mantén premut',
-    decideAfterResult: 'Podreu decidir quan surti el resultat.',
+    checkNow: (id: number) => `Comprova el #${id}`,
+    /** No Check on screen (after a Back during a Check, U104): the queued cards wait for a press. */
+    none: 'Cap cartró a la pantalla: trieu quin voleu comprovar.',
+  },
+
+  /** The Review («Revisió manual», D119–D125; board Consola-Comprovacio-Revisio, a draft: U77). */
+  review: {
+    nowPlaying: CA.nowPlaying,
+    chip: (cardId: number) => `En revisió · #${cardId}`,
+    continue: 'Continua la comprovació',
+    continueNote: (title: string | null) => (title ? `torna a destapar on era: la següent és «${title}»` : 'torna a destapar on era'),
+    win: 'Dona-la per bona',
+    winNote: 'a mà: la fanfàrria i la celebració',
+    lose: 'Dona-la per dolenta',
+    loseNote: 'a mà: el moment de fallada',
+    discard: 'Descarta el cartró',
+    discardNote: "sense fanfàrria ni fallada; torna la música d'abans",
+    /** The triangle on a decision against the card. */
+    against: 'va contra el cartró',
+    confirm: {
+      title: { win: 'Dona-la per bona?', lose: 'Dona-la per dolenta?' },
+      warnWin: (missing: string | null) => (missing ? `El cartró no passa: hi falta «${missing}».` : 'El cartró no passa.'),
+      warnLose: (kind: WinKind) => (kind === 'standing' ? "El cartró passaria: no n'ha sonat cap." : 'El cartró passaria: han sonat totes.'),
+      text: {
+        win: 'Les cançons que queden no es destapen: sonen la fanfàrria i la celebració, com si hagués passat. Al registre hi consta com a decisió a mà.',
+        lose: 'Les cançons que queden no es destapen: sona el moment de fallada, com si hagués fallat. Al registre hi consta com a decisió a mà.',
+      },
+      cancel: 'Cancel·la',
+      yes: { win: 'Sí, dona-la per bona', lose: 'Sí, dona-la per dolenta' },
+    },
   },
 
   celebration: {
@@ -370,7 +434,7 @@ export const S = {
     skip: 'Salta la cançó',
     skipNote: 'Canvia al següent compàs, amb una sortida suau.',
     volume: 'Volum',
-    volumeValue: (db: number) => (db === 0 ? '0 dB (màxim)' : `${db} dB`),
+    volumeValue: (percent: number) => `${percent} %`,
   },
 
   roundStart: {
@@ -468,18 +532,27 @@ export const S = {
     } satisfies Partial<Record<SoundName, string>> as Partial<Record<SoundName, string>>,
   },
 
+  /** The claim pad (D110, D126; boards Consola-Comprovacio-Ritme ①, -Casos ⑤). */
   numpad: {
-    title: 'Comprovar cartró',
-    display: 'Número de cartró',
-    empty: '—',
-    back: 'Esborra',
-    clear: 'Esborra-ho tot',
-    clearKey: 'C',
+    label: 'Cantar cartrons',
+    title: 'Qui ha cantat?',
+    same: 'tots els números, el mateix premi',
     kind: 'Què canta?',
     kinds: kindLabel,
-    submit: (n: number | null) => (n === null ? 'Comprova el cartró' : `Comprova el cartró ${n}`),
-    notSold: 'No registrat com a venut (només és un avís)',
-    close: 'Tanca',
+    display: 'Número de cartró',
+    chip: (id: number) => `#${id}`,
+    removeChip: (id: number) => `Treu el #${id}`,
+    unknown: 'Aquest número no existeix',
+    unknownChip: 'no existeix',
+    back: 'Esborra',
+    /** D164: it closes the number entry and goes back to the round's screen. */
+    cancel: 'Torna a la quina',
+    add: 'Candidat',
+    full: (n: number) => `Com a màxim ${n} cartrons alhora`,
+    moreTitle: 'Algú més?',
+    moreText: "Pregunteu-ho mentre aneu cap al cartró. Cada número és un xip; es comproven seguits, en aquest ordre. Si algú crida durant la comprovació, «+ Candidat» encara l'afegeix.",
+    submit: (ids: readonly number[]) => (ids.length === 0 ? 'Comprovar' : ids.length === 1 ? `Comprovar el #${ids[0]}` : `Comprovar ${ids.length} cartrons`),
+    submitNote: (kind: WinKind, ids: readonly number[]) => [kindLabel[kind], ids.length ? listing(ids.map((id) => `#${id}`)) : null].filter(Boolean).join(' · '),
   },
 
   /** The Wii remote (optional, paired with the laptop): the menu's row, the Comandament dialog, the badges. */
@@ -591,7 +664,8 @@ export const S = {
     unknownClaim: 'aquest cartró cantat no existeix',
     cannotResume: 'no es pot recuperar amb aquest codi: revisa la quina, la llavor i la cançó',
     claimOpen: 'hi ha un cartró en revisió: decidiu-lo primer',
-    failedCheck: 'un cartró que no ha passat la comprovació no es pot donar per bo',
+    unknownCard: 'aquest número de cartró no existeix',
+    nextBlocked: 'deixeu anar Aguanta o el Suspens primer',
   } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,
   reasonFallback: "l'ordre no s'ha acceptat",
 
@@ -610,13 +684,18 @@ export const S = {
     roundIntro: 'Començar quina',
     claim: 'Comprovar cartró',
     checkStart: 'Comprovar',
-    decide: 'Decisió',
+    checkNext: 'Destapa',
+    checkBack: 'Enrere',
+    checkAuto: 'Seguides',
+    checkReview: 'Revisió manual',
+    reviewEnd: 'Decisió de la revisió',
     winnerInfo: 'Dades del guanyador',
     celebrationMusic: 'Música de la celebració',
     interval: 'Descans',
     endGame: 'Acabar la nit',
     pause: 'Pausa tècnica',
     intervalSkip: 'Saltar cançó',
+    setVolume: 'Volum',
     resumeAt: 'Recuperar el show',
     revealPrizes: 'Revelar premis',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,

@@ -11,7 +11,7 @@ import { roundIntroFields } from '../../../../../packages/ui/plan.ts';
 import { resumeCommand } from '../../../../../packages/rules/resume.ts';
 import { defaultAction, sendDefault, type DefaultActionInput } from '../../../../console/logic/default-action.ts';
 import { canSend, controlsModel } from '../../../../console/logic/scene.ts';
-import { checkProgress, sinkingSong, stepMark, suggestedVerdict } from '../../../../console/logic/check.ts';
+import { checkCells, checkPress, checkState, checkVerdict, claimOf, stepMark } from '../../../../console/logic/check.ts';
 import { claimKindsOf, defaultClaimKind, roundPrizes } from '../../../../console/logic/show-data.ts';
 import {
   EMPTY_TAB_MEMORY,
@@ -131,28 +131,30 @@ test('the claim pad: no Line/Quina choice in the Desgraciat round, the claim is 
   assert.equal(defaultClaimKind(state('play')), 'line');
 });
 
-test("a standing Check's rows: ✓ when the song hasn't sounded, ✗ for the one that sank the card; its result in words", () => {
-  const fallen = state('checkFallen').check;
+test("a standing Check's songs: ✓ when the song hasn't sounded, ✗ for the one that sank the card; its finding in words", () => {
+  const s = state('checkFallen');
+  const flow = flowOf(s);
+  const fallen = flow.check;
   assert.ok(fallen);
-  const rows = checkProgress(fallen, NOW).steps;
-  assert.deepEqual(rows.map((r) => stepMark(fallen.kind, r.landed)), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'bad']);
-  assert.deepEqual(rows.map((r) => (r.landed ? S.check.landed : S.check.notLanded)).slice(-2), ['No ha sonat', 'Ha sonat']);
-  assert.deepEqual(rows.map((r) => stepMark(fallen.kind, r.landed, 'fellLast')), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'last'], 'fell with the last song: its step passes');
+  const cells = checkCells(fallen, claimOf(flow, fallen), NOW);
+  assert.deepEqual(cells.slice(0, 7).map((c) => c.mark), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'bad'], 'in card order, up to «Limbo»');
+  assert.ok(cells.slice(0, 7).every((c) => c.revealed));
+  assert.ok(cells.slice(7).every((c) => c.skipped), 'the songs after it are never revealed');
+  assert.equal(stepMark('standing', true, 'fellLast'), 'last', 'fell with the last song: its mark passes');
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('bingo', false), 'bad');
-  assert.equal(stepMark('standing', null), null);
-  assert.equal(sinkingSong(fallen), 41);
-  assert.equal(suggestedVerdict('fallen'), false);
-  assert.equal(S.check.resultFallen('Limbo'), 'Resultat: «Limbo» ja ha sonat. Aquest cartró ha caigut.');
-  assert.equal(S.check.resultComplete('standing'), "Resultat: no n'ha sonat cap. Aquest cartró és l'últim dempeus!");
-  assert.equal(S.check.resultComplete('bingo'), 'Resultat: han sonat totes. Aquest cartró té quina!');
-  assert.equal(S.check.completeSince(22, 'standing'), "l'únic dempeus des de la cançó 22");
-  const valid = state('checkStandingValid').check;
-  assert.ok(valid);
-  assert.equal(sinkingSong(valid), null);
-  assert.ok(checkProgress(valid, NOW).steps.every((r) => stepMark(valid.kind, r.landed) === 'ok'));
-  assert.equal(defaultAction(input(state('checkStandingValid')))?.control, 'confirm');
-  assert.equal(defaultAction(input(state('checkFallen')))?.control, 'reject');
+  assert.deepEqual(checkVerdict(fallen, claimOf(flow, fallen)), { kind: 'fallen', position: 7, songId: 41, last: false });
+  assert.equal(S.check.verdict.fallen(7, 'Limbo'), 'Ha caigut a la 7a: «Limbo»');
+  assert.equal(S.check.verdict.complete('standing', null), "Dempeus: no n'ha sonat cap");
+  assert.equal(S.check.warnings.completeSince(22, 'standing'), "L'únic dempeus des de la cançó 22");
+  assert.deepEqual(checkState(flow), { stage: 'cue', pass: false, more: false }, 'at its cue: «Fallada»');
+  const valid = state('checkStandingValid');
+  const vflow = flowOf(valid);
+  assert.ok(vflow.check);
+  assert.ok(checkCells(vflow.check, claimOf(vflow, vflow.check), NOW).every((c) => c.mark === 'ok' && c.revealed));
+  assert.deepEqual(checkState(vflow), { stage: 'cue', pass: true, more: false }, '«Celebrem!»');
+  assert.deepEqual(defaultAction(input(valid))?.command, { cmd: 'checkNext', args: { claimId: 'cl-13', step: 12 } });
+  assert.deepEqual(checkPress(flowOf(state('checkStanding'))), { cmd: 'checkAuto', args: { on: false } }, '«Seguides» on: a press stops it');
 });
 
 test('Futur in the Desgraciat round: the songs until one card stands, and the count after each next song', () => {

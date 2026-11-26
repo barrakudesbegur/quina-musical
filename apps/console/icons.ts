@@ -51,6 +51,12 @@ export const ICONS = {
   backspace: ['M21 5H8l-6 7 6 7h13z', 'M12 9l6 6', 'M18 9l-6 6'],
   check: ['M5 12.5l4.5 4.5L19 7'],
   cross: ['M6 6l12 12', 'M18 6L6 18'],
+  /** «Seguides»: reveal in a row (two play heads). */
+  seguides: ['M4 6l7 6-7 6z', 'M13 6l7 6-7 6z'],
+  /** «Revisió manual»: a magnifier. */
+  search: ['M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13z', 'M15.5 15.5L21 21'],
+  /** «Descarta el cartró»: a bin. */
+  trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13', 'M10 11v6', 'M14 11v6'],
   eye: ['M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z', 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
   eyeOff: ['M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z', 'M3 3l18 18'],
   lock: ['M7 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z', 'M8 11V7a4 4 0 0 1 8 0v4'],

@@ -97,11 +97,19 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   /** Every prize kept secret until the presenters reveal it (GamePlan.prizeReveal 'allSecret'): Premis shows the
    * "Secrets" lock on every round not revealed yet. */
   prizesSecret: { fixture: 'play', cards: 'default', plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } },
-  /** A plan with a start time and a planned break after Quina 3: Horari shows "~" times for what's next. */
+  /**
+   * A plan with the doors' time, a start time and Throws after Quina 2 and Quina 6, set so Quina 3 starts on time:
+   * Horari shows every row, "Venda de cartrons" and the "Primer descans" done, "~" times for what's next, the
+   * "Segon descans" among them, then "Fi".
+   */
   schedule: {
     fixture: 'play',
     cards: 'default',
-    plan: { ...SAMPLE_PLAN, schedule: { startAtMs: (Math.floor(Date.now() / 60_000) - 60) * 60_000, roundMinutes: 22, intervalMinutes: 4, breaks: [{ afterRound: 3, minutes: 6 }] } },
+    plan: (() => {
+      const startAtMs = (Math.floor(Date.now() / 60_000) - 66) * 60_000;
+      const throws = [{ afterRound: 2, minutes: 6 }, { afterRound: 6, minutes: 6 }];
+      return { ...SAMPLE_PLAN, schedule: { doorsAtMs: startAtMs - 30 * 60_000, startAtMs, roundMinutes: 22, intervalMinutes: 4, throws } };
+    })(),
   },
 };
 

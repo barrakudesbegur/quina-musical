@@ -58,6 +58,10 @@
   --stage-scrim: color-mix(in srgb, var(--color-bg-deep) 72%, transparent);
   --stage-sticker-tilt: -12deg;
   --stage-standing: var(--color-live); /* the Desgraciat round's green (its rays, no title: U6) */
+  --stage-review: #8c99d9; /* «Revisió manual»: a neutral slate blue, neither gold nor red (D123) */
+  --stage-review-edge: #6573b8;
+  --stage-review-title: 6.5rem;
+  --stage-review-icon: 6rem;
   --stage-lift-pop: 1.12; /* check-fallen: the sinking song's tile pops to this, then settles at --stage-lift */
   --stage-lift: 1.06;
   --stage-light: 1.375rem;
@@ -103,6 +107,10 @@
   --stage-delay-sticker: 200ms;
   --stage-dur-lift: 500ms; /* check-fallen: the sinking song's tile pops, 150 ms after the ✗; the nino 200 ms later */
   --stage-delay-lift: 150ms;
+  --stage-dur-unreveal: 240ms; /* check-unreveal: a step back's mark lifts off */
+  --stage-dur-review-in: 400ms; /* check-review: the plaque slides down … */
+  --stage-dur-review-out: 300ms; /* … and back up when the Check goes on */
+  --stage-dur-discard: 400ms; /* a Check discarded from its review fades out with the plate */
   --stage-delay-fallen-nino: 350ms;
   --stage-delay-stand-up: 300ms; /* the Desgraciat intro's nino, after the name */
   --stage-dur-flash: 120ms;
@@ -1358,6 +1366,7 @@
 
 .check__type-name {
   font-size: 3.5rem;
+  text-transform: uppercase; /* Londrina in capitals, as on the board */
   -webkit-text-stroke-width: 0.5rem;
   text-shadow: 0 0.375rem 0 var(--color-line);
   white-space: nowrap;
@@ -1933,6 +1942,132 @@
   transition: none;
 }
 
+/* `check-step` again after a step back: the song before the one taken off replays, under its equaliser (its mark
+   stays). */
+.card-grid__cell[data-replay='true'] .card-grid__eq {
+  display: flex;
+}
+
+/* `check-unreveal`: a step back's mark lifts off its cover (1 → 1.25, fading out); the cover waits again. */
+.card-grid__mark--lift {
+  pointer-events: none;
+  animation: stage-mark-lift var(--stage-dur-unreveal) var(--stage-ease-in) both;
+}
+
+.card-grid__mark--lift[data-mark='ok'] {
+  background: var(--color-ok);
+}
+
+.card-grid__mark--lift[data-mark='bad'] {
+  background: var(--color-danger);
+}
+
+.card-grid__mark--lift[data-mark='last'] {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+@keyframes stage-mark-lift {
+  from {
+    scale: 1;
+    opacity: 1;
+  }
+  to {
+    scale: 1.25;
+    opacity: 0;
+  }
+}
+
+/* `check-review`: under review, the slate-blue plaque «Revisió manual» with its magnifier slides down over the top of
+   the card (neither gold nor red: nothing is decided); the marks stay. It slides back up when the Check goes on. */
+.check-review {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 9%;
+  translate: -50% 0;
+  rotate: var(--stage-plaque-tilt);
+  display: flex;
+  align-items: center;
+  gap: 1.625rem;
+  padding: 1.375rem 3.375rem 1.875rem;
+  border: 0.4375rem solid var(--color-line);
+  border-radius: 1.875rem;
+  background: var(--stage-review);
+  box-shadow:
+    inset 0 -0.75rem 0 var(--stage-review-edge),
+    inset 0 0.375rem 0 var(--stage-gloss),
+    0 0.75rem 0 var(--color-shadow);
+  opacity: 0;
+  transform: translateY(-60vh);
+  visibility: hidden;
+  transition:
+    transform var(--stage-dur-review-out) var(--stage-ease-in),
+    opacity var(--stage-dur-review-out) var(--stage-ease-in),
+    visibility 0s linear var(--stage-dur-review-out);
+}
+
+.check[data-reviewing='true'] .check-review {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition:
+    transform var(--stage-dur-review-in) var(--ease-out),
+    opacity var(--stage-dur-review-in) var(--ease-out),
+    visibility 0s;
+}
+
+.check-review__icon {
+  width: var(--stage-review-icon);
+  height: var(--stage-review-icon);
+  flex: none;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.check-review__icon-lens {
+  fill: var(--color-paper);
+  stroke: var(--color-line);
+  stroke-width: 5;
+}
+
+.check-review__icon-handle {
+  stroke: var(--color-line);
+  stroke-width: 6;
+}
+
+.check-review__icon-shine {
+  stroke: #fff;
+  stroke-width: 2.2;
+}
+
+.check-review__icon-grip {
+  stroke: #fff;
+  stroke-width: 2.4;
+}
+
+.check-review__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-review-title);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-text);
+  -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--stage-text-drop) 0 var(--color-line);
+}
+
+/* Under review the playing ring stops (model/check.ts: no step plays), and nothing else moves. */
+
+/* A Check discarded from its review: the card fades out with the plate, and the round goes on. */
+.check[data-discarded='true'] :is(.check__head, .check__card) {
+  opacity: 0;
+  transition: opacity var(--stage-dur-discard) var(--ease-out);
+}
+
 /* ------------------------------------------------------------------------------------- celebration */
 .celebration {
   position: absolute;
@@ -2438,6 +2573,10 @@
     --stage-delay-sticker: 0ms;
     --stage-dur-lift: 0ms;
     --stage-delay-lift: 0ms;
+    --stage-dur-unreveal: 0ms;
+    --stage-dur-review-in: 0ms;
+    --stage-dur-review-out: 0ms;
+    --stage-dur-discard: 0ms;
     --stage-delay-fallen-nino: 0ms;
     --stage-delay-stand-up: 0ms;
     --stage-dur-slam: 0ms;
@@ -2473,6 +2612,11 @@
   .shuffle__tile.is-flying .shuffle__spin,
   .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__prize) {
     transform: none;
+  }
+
+  /* A step back's mark just disappears. */
+  .card-grid__mark--lift {
+    display: none;
   }
 
   /* The Shuffle: the grid fades out as the covers would fly, with a caption; the drum fades in. */

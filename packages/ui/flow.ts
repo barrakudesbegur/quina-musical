@@ -47,6 +47,9 @@ export interface FlowFields {
   intro: IntroInfo | null;
   claims: ClaimInfo[];
   check: CheckInfo | null;
+  /** Every card of the claim had its cue, the last one failed and an earlier one passed: this press starts the shared
+   * Celebration (`checkNext { claimId, step }`, D110). */
+  celebrationNext: { claimId: string; step: number } | null;
   celebration: CelebrationInfo | null;
   interval: IntervalInfo | null;
   winners: WinnerInfo[];
@@ -69,6 +72,7 @@ export function flowOf(state: ShowState | null): FlowFields {
     intro: s?.intro ?? null,
     claims: s?.claims ?? [],
     check: s?.check ?? null,
+    celebrationNext: s?.celebrationNext ?? null,
     celebration: s?.celebration ?? null,
     interval: s?.interval ?? null,
     winners: s?.winners ?? [],
@@ -80,7 +84,11 @@ export const FLOW_COMMANDS = Object.freeze({
   roundIntro: COMMANDS.roundIntro,
   claim: COMMANDS.claim,
   checkStart: COMMANDS.checkStart,
-  decide: COMMANDS.decide,
+  checkNext: COMMANDS.checkNext,
+  checkBack: COMMANDS.checkBack,
+  checkAuto: COMMANDS.checkAuto,
+  checkReview: COMMANDS.checkReview,
+  reviewEnd: COMMANDS.reviewEnd,
   winnerInfo: COMMANDS.winnerInfo,
   celebrationMusic: COMMANDS.celebrationMusic,
   interval: COMMANDS.interval,

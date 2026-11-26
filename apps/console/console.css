@@ -21,7 +21,8 @@
   color: var(--color-text);
 }
 
-.console[data-board='check'] {
+.console[data-board='check'],
+.console[data-board='pad'] {
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas: 'top' 'main';
 }
@@ -64,7 +65,8 @@
     column-gap: var(--space-4);
   }
 
-  .console[data-board='check'] {
+  .console[data-board='check'],
+  .console[data-board='pad'] {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'top' 'main';
   }
@@ -2458,239 +2460,1398 @@
   color: var(--color-on-accent);
 }
 
-/* ---- the Check board (hook check-step) ------------------------------------------------------------------ */
+/* ---- the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada) ------------------- */
+/* The card on the left (with «Cartrons cantats» over it), the controls on the right where the game screen's cluster
+   is, in three rows: Enrere · Revisió manual (2fr/3fr, short); + Candidat · Seguides (medium); the big button. */
 .check-board {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
+  min-height: 0;
 }
 
 @media (orientation: landscape) and (min-width: 48rem) {
   .check-board {
     flex: 1;
-    grid-template-columns: minmax(0, 20.5rem) minmax(0, 1fr) minmax(0, 21rem);
-    min-height: 0;
-  }
-
-  .check-board > * {
-    min-height: 0;
-    overflow-y: auto;
+    grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
+    column-gap: var(--space-4);
   }
 }
 
-.check-board__claims,
-.check-board__steps {
-  gap: 10px;
+.check-board__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
 }
 
-.check-board__spacer {
-  flex: 1;
+.check-board__right {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: auto minmax(8rem, 1fr) minmax(13rem, 1.7fr);
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: 5px;
+}
+
+.check-board__back,
+.check-board__review {
+  min-height: 5.25rem;
+  font-size: calc(var(--text-xl) * 0.85);
+}
+
+.check-board__back {
+  grid-column: span 4;
+}
+
+.check-board__review {
+  grid-column: span 6;
+}
+
+.check-board__add,
+.check-board__auto {
+  grid-column: span 5;
 }
 
 .check-board__add {
-  min-height: calc(var(--tap-min) + var(--space-2));
-  background: var(--color-ok);
-  color: var(--color-on-ok);
+  font-size: var(--text-xl);
 }
 
-.check-board__recheck {
-  align-self: flex-start;
+.check-board__go {
+  grid-column: span 10;
 }
 
-.check-board__decide {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: 2px 2px 6px;
+/* The big sticker buttons of the Check, one colour each (Consola-Comprovacio) */
+.console {
+  --action-review: #b9b2a3;
+  --action-auto: var(--color-ice);
+  --action-auto-on: #3fb4f0;
+  --action-revealing: #e87400;
+  --action-celebrate: var(--color-gold);
+  --action-fail: var(--color-red);
+  --action-fail-ring: #f4a1a4;
 }
 
-.check-board__decide > .big-button,
-.check-board__decide > .long-press-wrap {
-  flex: 1 0 auto;
-  min-height: 7.5rem;
+[data-action='check-back'] {
+  --action-bg: var(--action-back);
+}
+[data-action='review'],
+[data-action='cancel'],
+[data-action='review-discard'] {
+  --action-bg: var(--action-review);
+}
+[data-action='add'],
+[data-action='pad-submit'],
+[data-action='check-valid'] {
+  --action-bg: var(--action-claim);
+}
+[data-action='auto'] {
+  --action-bg: var(--action-auto);
+}
+[data-action='check-reveal'],
+[data-action='review-continue'] {
+  --action-bg: var(--action-next);
+}
+[data-action='check-revealing'] {
+  --action-bg: var(--action-revealing);
+}
+[data-action='check-celebrate'],
+[data-action='review-win'] {
+  --action-bg: var(--action-celebrate);
+}
+[data-action='check-fail'],
+[data-action='review-lose'] {
+  --action-bg: var(--action-fail);
 }
 
-.check-board__decide > .long-press-wrap > .long-press .long-press__content {
-  flex-direction: column;
+/* Londrina is in capitals (D96); the Nunito notes inside keep their case (D114). */
+.check-board .big-button__label,
+.claim-pad .big-button__label,
+.review-panel .big-button__label,
+.review-confirm .big-button__label {
+  text-transform: uppercase;
 }
 
-.check-board__decide .long-press__text {
+/* An icon and the label on one line, a note under them */
+.big-button__row {
+  display: inline-flex;
   align-items: center;
-  text-align: center;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
-.check-board__after {
-  gap: var(--space-3);
+.check-board__back .icon,
+.check-board__add .icon,
+.claim-pad__add .icon {
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
-.claims__list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* The Wii's 1·2 and −/+ sit at the right of their buttons, like the board's discs */
+.check-board__back,
+.check-board__review {
+  padding-right: 2.75rem;
 }
 
-.claims__item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 10px 12px;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-chip);
+.check-board__back > .wii-badge,
+.check-board__review > .wii-badge {
+  top: 50%;
+  bottom: auto;
+  right: 10px;
+  translate: 0 -50%;
 }
 
-/* The claim being checked: on paper, ringed in orange */
-.claims__item[data-current] {
-  background: var(--color-snow);
-  color: var(--color-ink);
-  box-shadow: 0 0 0 4px var(--color-orange);
+
+/* «Seguides»: a tile with an on/off strip along its bottom (pressed while on) */
+.check-board__auto {
+  padding-bottom: 3.25rem;
+  font-size: calc(var(--text-xl) * 0.85);
+  transition: background-color var(--dur-step-mark) var(--ease-out);
 }
 
-.claims__item[data-current] .claims__meta {
-  color: var(--color-ink);
+.check-board__auto .icon {
+  width: 2rem;
+  height: 2rem;
 }
 
-.claims__head {
+.check-board__auto[aria-pressed='true'] {
+  --action-bg: var(--action-auto-on);
+}
+
+.check-board__switch {
+  position: absolute;
+  inset: auto 0 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.claims__card {
-  font-family: var(--font-display);
-  font-size: 2.125rem;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 2.625rem;
+  border-top: var(--line-width-bold) solid var(--color-line);
+  background: var(--color-ice-light);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-strong);
-  line-height: 1;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 
-.claims__status {
+.check-board__auto[aria-pressed='true'] .check-board__switch {
+  background: var(--color-snow);
+}
+
+.check-board__track {
+  position: relative;
+  width: 2.5rem;
+  height: 1.375rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-track, #e4ddcc);
+}
+
+.check-board__thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid var(--color-line);
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform var(--dur-step-mark) var(--ease-out);
+}
+
+.check-board__auto[aria-pressed='true'] .check-board__track {
+  background: var(--color-green);
+}
+
+.check-board__auto[aria-pressed='true'] .check-board__thumb {
+  transform: translateX(1.125rem);
+}
+
+/* The big button: «Destapa» → «Destapant…» → the cue (hook check-pace: colour and label crossfade 150 ms) */
+.check-board__go {
+  font-size: clamp(var(--text-2xl), 4.5vw, 3.125rem);
+  transition: background-color var(--dur-step-mark) var(--ease-out);
+}
+
+.check-board__go .big-button__row,
+.check-board__go .big-button__note {
+  animation: check-pace-in var(--dur-step-mark) var(--ease-out);
+}
+
+.check-board__go .icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.check-board__go:has(.check-board__strip) {
+  padding-bottom: 3.25rem;
+}
+
+.check-board__go[data-action='check-revealing'] {
+  box-shadow: inset 0 8px 0 rgb(0 0 0 / 0.22), 0 1px 0 var(--color-ink);
+  transform: translateY(4px);
+}
+
+/* The cue: «Celebrem!» ringed in gold, «Fallada» in a light red (the board's outline) */
+.check-board__go[data-action='check-celebrate'] {
+  outline: 6px solid var(--action-celebrate);
+  outline-offset: 4px;
+}
+
+.check-board__go[data-action='check-fail'] {
+  outline: 6px solid var(--action-fail-ring);
+  outline-offset: 4px;
+}
+
+/* Its strip: holding A reveals in a row */
+.check-board__strip {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 2.75rem;
+  border-top: var(--line-width-bold) solid var(--color-line);
+  background: #ffd9a6;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.check-board__go[data-action='check-revealing'] .check-board__strip {
+  background: var(--color-snow);
+}
+
+.check-board__strip .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke: var(--color-ink);
+}
+
+@keyframes check-pace-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* «Destapa» carries the next song: its cover, title, and "ABBA · 2 de 3", sliding in from the right as each one is
+   revealed (hook check-pace) */
+.check-board__song {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  text-align: left;
+}
+
+.check-board__song[data-anim~='check-pace'] {
+  animation: check-next-in var(--dur-reveal) var(--ease-out);
+}
+
+@keyframes check-next-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+
+.check-board__song .cover {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.check-board__song-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--color-ink);
+}
+
+.check-board__song-title {
+  overflow: hidden;
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check-board__song-artist {
   font-size: var(--text-md);
   font-weight: var(--font-weight-strong);
 }
 
-.claims__meta {
+/* After «Enrere»: what sounds again, a small pale pill inside the big button */
+.check-board__notice {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line-width-thin) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--ring-chip-error);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* A phone (Mòbil admin): one scrolling column, the card first, then the controls in rows of natural height; the
+   buttons keep their label over their note */
+@media (orientation: portrait), (max-width: 47.99rem) {
+  .check-board,
+  .claim-pad {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .check-board__left,
+  .check-board__right,
+  .review-panel,
+  .claim-pad__actions,
+  .check-board .check-card,
+  .claim-pad__entry {
+    flex: none;
+    min-height: auto;
+  }
+
+  .check-board__right,
+  .review-panel,
+  .claim-pad__actions {
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+
+  .check-board .big-button,
+  .claim-pad .big-button,
+  .review-panel .big-button {
+    flex-direction: column;
+    min-height: 4rem;
+  }
+
+  .check-board__go,
+  .claim-pad__submit {
+    min-height: 7rem;
+  }
+
+  .check-board__auto,
+  .check-board__go:has(.check-board__strip) {
+    padding-bottom: 2.75rem;
+  }
+
+  .check-board__switch,
+  .check-board__strip {
+    height: 2.25rem;
+  }
+
+  .check-board__song .cover {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .check-board__song-title {
+    font-size: var(--text-md);
+  }
+
+  .review-panel__talk,
+  .review-panel__continue {
+    grid-column: span 6;
+  }
+}
+
+/* ---- the claimed card ---------------------------------------------------------------------------------------- */
+.check-card {
+  flex: 1;
+  gap: var(--space-2);
+  min-height: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.check-card--none {
+  justify-content: center;
+  align-items: center;
+}
+
+.check-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.check-card__title {
+  margin: 0 var(--space-1) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.check-card__of {
+  margin-left: auto;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-muted);
+}
+
+/* The chips beside the card number: what it claims (ink), its printed type (its colour) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem 0.625rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--chip-bg, var(--color-chip));
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.chip--ink {
+  background: var(--color-ink);
+  color: #ffffff;
+}
+
+.chip .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: var(--color-gold);
+  stroke: var(--color-ink);
+}
+
+/* The verdict under the card, the presenters' only (D108): on a pass one centred line; on a fail a big ✗ «Fallada»
+   beside the song that failed it */
+.check-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 4.5rem;
+  padding-top: var(--space-2);
+  border-top: var(--line-width-thin) dashed var(--color-text-muted);
+}
+
+.check-verdict__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-ok);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-strong);
+  text-align: center;
+}
+
+.check-verdict__line .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 3.2;
+}
+
+.check-verdict__fail {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.check-verdict__cross {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-red);
+  color: #ffffff;
+}
+
+.check-verdict__cross .icon {
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 3.4;
+}
+
+.check-verdict__word {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  color: var(--color-danger);
+  text-transform: uppercase;
+}
+
+.check-verdict__song {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.check-verdict__song .cover {
+  width: 3.75rem;
+  height: 3.75rem;
+}
+
+.check-verdict__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+
+.check-verdict__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+}
+
+.check-verdict__detail,
+.check-verdict__why {
   font-size: var(--text-sm);
   font-weight: 800;
   color: var(--color-text-muted);
 }
 
-.claims__warning {
+/* A strip on the claim pad: a refused number (red) */
+.private-strip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: var(--text-sm);
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-green);
+  color: #ffffff;
+  font-size: calc(var(--text-md) * 1.1);
   font-weight: var(--font-weight-strong);
-  color: var(--color-danger);
+  line-height: 1.2;
 }
 
-.claims__item[data-current] .claims__warning {
-  color: #a31d27;
+.private-strip--bad {
+  background: var(--color-red);
 }
 
-.claims__warning .icon {
-  width: 1rem;
-  height: 1rem;
+.private-strip > .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 3.2;
 }
 
-.claims__check {
-  align-self: flex-start;
+.private-strip__text {
+  flex: 1;
+  min-width: 0;
 }
 
-.check-steps {
+.private-strip__lock {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: rgb(23 19 43 / 0.28);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.private-strip__lock .icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* The warnings: orange outlined pills */
+.check-card__warnings {
   display: flex;
-  flex-direction: column;
-  gap: 9px;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.check-steps__item {
+.warning-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem 0.625rem;
+  border: var(--line-width) solid var(--color-orange-edge);
+  border-radius: var(--radius-pill);
+  background: var(--color-notice);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+}
+
+.warning-chip .icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* The card's 12 songs, 4 a row */
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-1) 0;
+  list-style: none;
+}
+
+.check-cell {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  text-align: center;
+}
+
+/* A Line's other rows don't count: faded */
+.check-cell:not([data-in]) {
+  opacity: 0.28;
+}
+
+.check-cell__art {
+  position: relative;
+  width: min(100%, 5.75rem);
+  aspect-ratio: 1;
+}
+
+.check-cell .cover {
+  width: 100%;
+  height: 100%;
+  border-width: var(--line-width);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--dur-step-mark) var(--ease-out), filter var(--dur-step-mark) var(--ease-out);
+}
+
+.check-cell__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.15;
+}
+
+/* The mark: dotted while only the presenters know it, full once the room has seen it (hook check-step) */
+.check-cell__mark {
+  position: absolute;
+  top: -0.375rem;
+  right: -0.375rem;
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 2.5px dashed var(--color-green);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--color-green);
+  transition:
+    background-color var(--dur-step-mark) var(--ease-out),
+    transform var(--dur-step-mark) var(--ease-out);
+}
+
+.check-cell[data-mark='bad'] .check-cell__mark {
+  border-color: var(--color-red);
+  color: var(--color-red);
+}
+
+.check-cell[data-mark='last'] .check-cell__mark {
+  border-color: var(--color-gold-edge);
+  color: var(--color-gold-edge);
+}
+
+.check-cell__mark .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke-width: 3.4;
+}
+
+.check-cell[data-revealed] .check-cell__mark {
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 1.625rem;
+  height: 1.625rem;
+  border: var(--line-width) solid var(--color-line);
+  background: var(--color-green);
+  color: #ffffff;
+  transform: rotate(-12deg);
+}
+
+.check-cell[data-revealed][data-mark='bad'] .check-cell__mark {
+  background: var(--color-red);
+}
+
+.check-cell[data-revealed][data-mark='last'] .check-cell__mark {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+.check-cell[data-revealed] .cover {
+  box-shadow: 0 0 0 4px var(--color-green);
+}
+
+.check-cell[data-revealed][data-mark='bad'] .cover {
+  box-shadow: none;
+  filter: grayscale(1) brightness(0.8);
+}
+
+.check-cell[data-revealed][data-mark='last'] .cover {
+  box-shadow: 0 0 0 4px var(--color-gold);
+}
+
+/* Revealed, its snippet playing now: the projector's orange ring, still (the mark turns full when the room sees it) */
+.check-cell[data-playing] .cover {
+  box-shadow: 0 0 0 4px var(--color-orange);
+}
+
+/* The next to reveal: an orange ring and glow, «SEGÜENT» on its bottom edge */
+.check-cell[data-next] .cover {
+  box-shadow: 0 0 0 4px var(--color-orange), 0 0 16px 4px rgb(255 130 0 / 0.55);
+}
+
+.check-cell__next {
+  position: absolute;
+  bottom: -0.7rem;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0.0625rem 0.5rem;
+  border: 2.5px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-orange);
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* After the reveals stop: never revealed */
+.check-cell[data-skipped] .cover {
+  opacity: 0.45;
+}
+
+.check-cell[data-skipped] .check-cell__title {
+  font-style: italic;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+/* Not yet revealed, in the Check: the cover a little faded, its title muted */
+.check-cell[data-in]:not([data-revealed]):not([data-next]):not([data-skipped]) .cover {
+  opacity: 0.6;
+}
+
+.check-cell[data-in]:not([data-revealed]):not([data-next]) .check-cell__title {
+  color: var(--color-text-muted);
+}
+
+/* A card of another type: its type, big, in its colour */
+.check-card__type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  align-self: center;
+  width: min(80%, 22rem);
+  aspect-ratio: 4 / 3;
+  margin-top: var(--space-5);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--chip-bg);
+  box-shadow: 0 6px 0 var(--color-ink);
+  rotate: -3deg;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  text-transform: uppercase;
+}
+
+.check-card__type .icon {
+  width: 3rem;
+  height: 3rem;
+  fill: var(--color-gold);
+  stroke: var(--color-ink);
+}
+
+.check-card__spacer {
+  flex: 1;
+}
+
+
+/* «Cartrons cantats»: a chip per card, the one on screen ringed in orange */
+.claims-strip {
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: 8px 10px;
+  padding: var(--space-2) var(--space-4);
+}
+
+.claims-strip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.claim-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.25rem 0.75rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-weight: var(--font-weight-strong);
+}
+
+.claim-status[data-current] {
+  outline: 4px solid var(--color-orange);
+  outline-offset: 1px;
+}
+
+.claim-status[data-status='valid'] {
+  background: #d3f2df;
+}
+
+.claim-status[data-status='invalid'] {
+  background: #ffd9da;
+}
+
+.claim-status__card {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+}
+
+.claim-status__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.claim-status[data-current] .claim-status__text {
+  color: var(--color-orange-edge);
+}
+
+.claim-status[data-status='valid'] .claim-status__text {
+  color: var(--color-green-edge);
+}
+
+.claim-status[data-status='invalid'] .claim-status__text {
+  color: var(--color-red-edge);
+}
+
+.claim-status > .icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-orange-edge);
+}
+
+.claim-status__start {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+/* ---- the Review (board Consola-Comprovacio-Revisio; hook check-review) --------------------------------------- */
+.review-panel {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: auto minmax(9rem, 1.25fr) minmax(9rem, 1.35fr);
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: 5px;
+  animation: check-review-in var(--dur-reveal) var(--ease-out);
+}
+
+@keyframes check-review-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.review-panel__now {
+  grid-column: span 6;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+}
+
+.review-panel__song {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-panel__title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-panel__artist {
+  font-size: var(--text-md);
+  color: var(--color-title);
+}
+
+.review-panel__chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.25rem 0.75rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: #e6e9ff;
+  color: var(--color-ink);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.review-panel__chip .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.review-panel__talk {
+  grid-column: span 3;
+  display: flex;
+  min-height: 0;
+}
+
+.review-panel__talk > * {
+  flex: 1;
+}
+
+.review-panel__continue {
+  grid-column: span 3;
+  font-size: calc(var(--text-xl) * 0.95);
+}
+
+.review-panel__decision {
+  grid-column: span 2;
+  font-size: calc(var(--text-xl) * 0.85);
+}
+
+.review-panel__decision .big-button__note,
+.review-panel__continue .big-button__note {
+  max-width: 14rem;
+}
+
+/* A decision against the card: a warning triangle in its corner */
+.review-panel__against {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-gold);
+}
+
+.review-panel__against .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke: var(--color-ink);
+  stroke-width: 2.6;
+}
+
+/* Against the card: confirm first (the dialog scales in) */
+.review-confirm {
+  width: min(36rem, calc(100vw - var(--space-4)));
+}
+
+.review-confirm[open] {
+  animation: review-confirm-in var(--dur-reveal) var(--ease-out);
+}
+
+@keyframes review-confirm-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+.review-confirm__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.warning-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: var(--line-width) solid var(--color-orange-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-notice);
+  color: var(--color-orange-edge);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+}
+
+.warning-box .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.warning-box__text {
+  flex: 1;
+}
+
+.warning-box .private-strip__lock {
+  background: rgb(196 90 0 / 0.15);
+}
+
+.review-confirm__text {
+  margin: var(--space-3) 0;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.review-confirm__actions {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: var(--space-3);
+}
+
+.review-confirm__actions .big-button {
+  font-size: var(--text-lg);
+}
+
+/* ---- the claim pad (boards Consola-Comprovacio-Ritme ①, -Casos ⑤; hook claim-chip-add) ------------------------ */
+.claim-pad {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  min-height: 0;
+  outline: none;
+}
+
+@media (orientation: landscape) and (min-width: 48rem) {
+  .claim-pad {
+    flex: 1;
+    grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
+    column-gap: var(--space-4);
+  }
+}
+
+.claim-pad__entry {
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.claim-pad__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.claim-pad__same {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-muted);
+}
+
+/* Línia | Quina */
+.segmented {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
   background: var(--color-chip);
 }
 
-.check-steps__item[data-state='playing'] {
-  box-shadow: 0 0 0 4px var(--color-primary);
-}
-
-.check-steps__item[data-mark='bad'] {
-  box-shadow: 0 0 0 4px var(--color-red);
-}
-
-.check-steps__item[data-mark='bad'] .cover {
-  filter: grayscale(1);
-}
-
-.check-steps__item[data-state='pending'] {
+.segmented__option {
+  min-height: var(--tap-min);
+  border: var(--line-width) solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--color-text-muted);
-}
-
-.check-steps__song {
-  flex: 1;
-  min-width: 0;
-  font-size: 1.125rem;
+  font-size: var(--text-md);
   font-weight: var(--font-weight-strong);
-  overflow-wrap: anywhere;
 }
 
-.check-steps__mark {
+.segmented__option[aria-checked='true'] {
+  border-color: var(--color-line);
+  background: var(--color-gold);
+  color: var(--color-ink);
+  box-shadow: inset 0 -4px 0 var(--color-gold-edge);
+}
+
+.claim-pad__numbers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.claim-pad__chips {
+  display: contents;
+}
+
+.claim-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  font-weight: var(--font-weight-strong);
-  white-space: nowrap;
-}
-
-.check-steps__item[data-landed] .check-steps__mark {
-  animation: fade-in var(--dur-step-mark) var(--ease-out);
-}
-
-.check-steps__item[data-mark='ok'] .check-steps__mark {
-  color: var(--color-ok);
-}
-
-/* The Desgraciat's shared win: the song the card sat down with is the last one to land, so it passes, in gold */
-.check-steps__item[data-mark='last'] .check-steps__mark {
-  color: var(--color-accent-edge);
-}
-
-.check-steps__item[data-mark='bad'] .check-steps__mark {
-  color: var(--color-danger);
-}
-
-.check-result {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: 12px 14px;
+  padding: 0.125rem 0.375rem 0.125rem 0.625rem;
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  background: var(--color-red);
-  color: #ffffff;
+  background: var(--color-surface-private);
+}
+
+.claim-chip[data-anim~='claim-chip-add'] {
+  animation: claim-chip-add 160ms var(--ease-bounce);
+}
+
+@keyframes claim-chip-add {
+  from {
+    transform: scale(0.8);
+  }
+}
+
+.claim-chip[data-unknown] {
+  border-color: var(--color-red);
+  background: #ffd9da;
+}
+
+.claim-chip__number {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+}
+
+.claim-chip__note {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-red-edge);
+}
+
+.claim-chip__remove {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: var(--line-width-thin) solid var(--color-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.claim-chip__remove .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* The number being typed: «# 12|» in a field, red when refused (it shakes once) */
+.claim-pad__display {
+  flex: 1;
+  min-width: 9rem;
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-private);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.claim-pad__display[data-state='refused'] {
+  border-color: var(--color-red);
+  background: #ffe1e1;
+  color: var(--color-red);
+}
+
+.claim-pad__display[data-anim~='claim-chip-refused'] {
+  animation: claim-chip-refused 240ms linear;
+}
+
+@keyframes claim-chip-refused {
+  16%,
+  50%,
+  84% {
+    transform: translateX(-6px);
+  }
+  33%,
+  67% {
+    transform: translateX(6px);
+  }
+}
+
+.claim-pad__hash {
+  margin-right: 0.15em;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.claim-pad__caret {
+  width: 3px;
+  height: 0.9em;
+  margin-left: 2px;
+  background: var(--color-orange);
+  animation: claim-pad-caret 1s steps(1) infinite;
+}
+
+@keyframes claim-pad-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.claim-pad__spacer {
+  flex: 1;
+}
+
+.claim-pad__keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.pad-key {
+  display: grid;
+  place-items: center;
+  min-height: 3.5rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-private);
+  color: var(--color-ink);
+  box-shadow: inset 0 -4px 0 var(--color-snow-edge), 0 4px 0 var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
   font-weight: var(--font-weight-strong);
 }
 
-.check-result[data-outcome='complete'] {
-  background: var(--color-green-edge);
+.pad-key--back {
+  background: var(--color-track, #e4ddcc);
 }
 
-.check-result__title {
-  font-size: 1.1875rem;
+.pad-key .icon {
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
-.check-result__warning {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+.claim-pad__actions {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: auto minmax(9rem, 1.25fr) minmax(9rem, 1.35fr);
+  gap: var(--space-3);
+  min-height: 0;
+  padding-bottom: 5px;
+}
+
+.claim-pad__cancel {
+  grid-column: span 2;
+  min-height: 5.25rem;
+  font-size: var(--text-lg);
+}
+
+.claim-pad__add {
+  grid-column: span 4;
+  min-height: 5.25rem;
+  font-size: var(--text-xl);
+}
+
+.claim-pad__add .big-button__note {
+  color: #ffffff;
+}
+
+.claim-pad__more {
+  grid-column: span 6;
+  justify-content: center;
+}
+
+.claim-pad__more-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  color: var(--color-title);
+  text-transform: uppercase;
+}
+
+.claim-pad__more-text {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.claim-pad__submit {
+  grid-column: span 6;
+  font-size: clamp(var(--text-xl), 3.6vw, 2.5rem);
+}
+
+.claim-pad__submit .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.check-board__add .big-button__note {
+  color: #ffffff;
 }
 
 /* ---- celebration, winners ------------------------------------------------------------------------------- */
@@ -2906,7 +4067,7 @@ kbd {
   color: var(--color-text-muted);
 }
 
-/* ---- dialogs: number pad, menu ----------------------------------------------------------------------- */
+/* ---- dialogs: the menu, the review's confirmation ----------------------------------------------------------------------- */
 .dialog {
   max-width: calc(100vw - var(--space-4));
   max-height: calc(100dvh - var(--space-4));
@@ -2935,61 +4096,6 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-}
-
-.numpad {
-  width: min(26rem, calc(100vw - var(--space-4)));
-}
-
-.numpad__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.numpad__display {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-weight-strong);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.numpad__display[data-state='empty'] {
-  color: var(--color-text-muted);
-}
-
-.numpad__warning {
-  min-height: 1.6em;
-}
-
-.numpad__kind .choice {
-  flex: 1;
-  justify-content: center;
-}
-
-.numpad__keys {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-}
-
-.numpad__key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-big);
-  font-size: var(--text-xl);
-}
-
-.numpad__submit {
-  font-size: var(--text-lg);
 }
 
 .dialog[data-anim~='menu-sheet'][open] {
@@ -3928,8 +5034,24 @@ kbd {
   .standing__last-card,
   .standing__claim,
   .tabs__content,
-  .check-steps__item[data-landed] .check-steps__mark {
+  .check-board__go .big-button__row,
+  .check-board__go .big-button__note,
+  .check-board__song,
+  .review-panel,
+  .review-confirm[open],
+  .claim-chip,
+  .claim-pad__display,
+  .claim-pad__caret {
     animation: none;
+  }
+
+  /* check-step, check-pace: the marks and the big button change at once */
+  .check-cell .cover,
+  .check-cell__mark,
+  .check-board__auto,
+  .check-board__thumb,
+  .check-board__go {
+    transition: none;
   }
 
   /* the ring by Ara sona: still; the colours, numbers and icons keep the information */

@@ -1,149 +1,184 @@
 <!--
-  During a Claim and its Check, the whole body (Consola-Comprovacio board), in three columns that stack on a
-  phone:
-  - the claimed cards, "Un altre cartró", and Back (long press, still allowed in a Check);
-  - the Check song by song (hook check-step), the result once it is due, and the re-check;
-  - the verdict: the one that agrees with the Check is a tap, the one against it a long press; then the
-    Celebration music and the winner's name and notes. Once the result is due, the tap is the default action
-    (data-default, and the Wii's A while a remote is connected).
+  The Check board, over the whole body under the header (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciada; the
+  Review is ReviewPanel, -Revisio). The presenters pace it (D107):
+  - left: «Cartrons cantats» with 2 cards or more, then the claimed card, marked in private from the start (CheckCard);
+  - right, where the game screen's cluster is, in three rows: «Enrere» (one mark off, D127/D134; 1 or 2 pressed once)
+    and «Revisió manual» (−/+ held); «+ Candidat» (the claim pad) and «Seguides» (reveal in a row, D117); and the big
+    button: «Destapa» with the next song inside it, «Destapant…», then the cue «Celebrem!», «Vàlid · següent» or
+    «Fallada», or the shared Celebration's «Celebrem!» (`celebrationNext`). The big button is the default action (A, →
+    or PageDown; hook check-pace). Its strip says that holding A reveals in a row.
+  Hooks for the end-to-end tests: data-testid="check-board" with data-stage, data-revealed and data-cue.
 -->
 <script lang="ts">
-  import { getConsole } from '../context.ts';
-  import { allowedVerdicts, checkProgress, missingSongs, sinkingSong, stepMark, suggestedVerdict } from '../logic/check.ts';
+  import { getConsole, getWii } from '../context.ts';
+  import {
+    batchWinners,
+    canToggleAuto,
+    checkBackCommand,
+    checkPress,
+    checkReviewCommand,
+    checkState,
+    claimOf,
+    nextReveal,
+    replayedAfterBack,
+  } from '../logic/check.ts';
   import { summarizeClaims } from '../logic/claims.ts';
-  import { defaultClaimKind, songTitleOf } from '../logic/show-data.ts';
-  import { CA, S } from '../strings.ts';
-  import CelebrationMusic from './CelebrationMusic.svelte';
-  import ClaimsQueue from './ClaimsQueue.svelte';
+  import { songTitleOf } from '../logic/show-data.ts';
+  import { S } from '../strings.ts';
+  import CheckCard from './CheckCard.svelte';
+  import ClaimsStrip from './ClaimsStrip.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
-  import LongPressButton from './LongPressButton.svelte';
+  import ReviewPanel from './ReviewPanel.svelte';
   import WiiBadge from './WiiBadge.svelte';
-  import WinnerForm from './WinnerForm.svelte';
 
   let { onclaim }: { onclaim: () => void } = $props();
 
   const model = getConsole();
-  const uid = $props.id();
+  const wii = getWii();
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
   const check = $derived(flow.check);
-  const progress = $derived(check ? checkProgress(check, model.show.now) : null);
+  const claim = $derived(claimOf(flow, check));
+  const state = $derived(checkState(flow));
+  const press = $derived(checkPress(flow));
+  const back = $derived(checkBackCommand(check));
+  const review = $derived(checkReviewCommand(check));
   const claims = $derived(summarizeClaims(flow.claims, check));
-  const current = $derived(claims.items.find((c) => c.current) ?? null);
-  const kind = $derived(check?.kind ?? current?.kind ?? defaultClaimKind(snap));
-  const valid = $derived(check ? suggestedVerdict(check.outcome, check.kind) : false);
-  const canDecide = $derived(progress?.stage === 'result' && current !== null && !current.decided && model.can('decide'));
-  const defaultControl = $derived(model.defaultAction?.control ?? null);
-  const winner = $derived(check ? (flow.winners.find((w) => w.claimId === check.claimId) ?? null) : null);
-  const title = (songId: number) => songTitleOf(songId, snap, model.catalog) ?? String(songId);
-  const result = $derived.by(() => {
-    if (!check) return '';
-    if (check.outcome === 'complete') return S.check.resultComplete(check.kind);
-    if (check.outcome === 'incomplete') return S.check.resultMissing(missingSongs(check).map(title), check.kind);
-    if (check.outcome === 'fallen' || check.outcome === 'fellLast') {
-      const sank = sinkingSong(check);
-      const song = sank === null ? null : title(sank);
-      return check.outcome === 'fallen' ? S.check.resultFallen(song) : S.check.resultFellLast(song);
-    }
-    return S.check.outcome[check.outcome];
+  const showClaims = $derived(claims.items.length >= 2 || (check === null && claims.items.length > 0));
+  const startable = $derived(check === null || check.cue !== null);
+  const of = $derived.by(() => {
+    const at = claims.items.findIndex((c) => c.current);
+    return claims.items.length >= 2 && at >= 0 ? { n: at + 1, total: claims.items.length } : null;
   });
-  const VERDICTS = [
-    { valid: false, label: S.check.reject, note: S.check.rejectNote, icon: 'cross' },
-    { valid: true, label: S.check.confirm, note: S.check.confirmNote, icon: 'check' },
-  ] as const;
-  /** A failed card can't be accepted: only reject is offered (allowedVerdicts). */
-  const verdicts = $derived(check ? VERDICTS.filter((v) => allowedVerdicts(check.outcome, check.kind).includes(v.valid)) : []);
+  const next = $derived(check ? nextReveal(check, claim) : null);
+  const isDefault = $derived(model.defaultAction?.control === 'check');
+  const song = (songId: number) => ({ title: songTitleOf(songId, snap, model.catalog) ?? `Cançó ${songId}`, artist: model.catalog?.songs.get(songId)?.artist ?? '' });
+  const title = (songId: number) => song(songId).title;
+  const winners = $derived(batchWinners(flow));
+  /** «Enrere: torna a sonar…», right after a step back on this card (until the next reveal). */
+  const backNotice = $derived.by(() => {
+    const b = model.stepBack;
+    if (!check || !b || b.claimId !== check.claimId || check.revealed.length !== b.index) return null;
+    const replayed = replayedAfterBack(check, claim, b.index);
+    return S.check.backDone(replayed === null ? null : title(replayed), b.autoWasOn);
+  });
 
-  function decide(verdict: boolean): void {
-    if (check && allowedVerdicts(check.outcome, check.kind).includes(verdict)) model.act('decide', { claimId: check.claimId, valid: verdict });
+  /** The big button's look and words, from the Check's stage. */
+  const big = $derived.by(() => {
+    const B = S.check.big;
+    switch (state?.stage) {
+      case 'reveal':
+        return { tone: 'reveal', icon: 'eye', label: B.reveal, note: B.revealNote, strip: true } as const;
+      case 'auto':
+        return { tone: 'revealing', icon: 'seguides', label: B.revealing, note: wii.badges ? B.revealingHeld : B.revealingNote, strip: true } as const;
+      case 'cue':
+        if (!state.pass) return { tone: 'fail', icon: 'cross', label: B.fail, note: B.failNote, strip: false } as const;
+        return state.more
+          ? ({ tone: 'valid', icon: 'check', label: B.validNext, note: B.validNextNote, strip: false } as const)
+          : ({ tone: 'celebrate', icon: 'star', label: B.celebrate, note: B.celebrateNote, strip: false } as const);
+      case 'celebrateNext':
+        return { tone: 'celebrate', icon: 'star', label: B.celebrate, note: B.celebrateFor(winners), strip: false } as const;
+      case 'cued':
+        return { tone: state.pass ? 'valid' : 'fail', icon: state.pass ? 'check' : 'cross', label: state.pass ? B.cuedPass : B.cuedFail, note: B.cuedNote, strip: false } as const;
+      default:
+        return null;
+    }
+  });
+
+  const autoOn = $derived(check?.auto ?? false);
+  const autoNote = $derived(
+    !check || check.total === 0 ? S.check.auto.none : state?.stage === 'cue' ? S.check.auto.cue : autoOn ? S.check.auto.on : S.check.auto.off,
+  );
+
+  function go(): void {
+    const p = press;
+    if (!p) return;
+    if (p.cmd === 'checkNext') model.act('checkNext', p.args);
+    else model.act('checkAuto', p.args);
   }
 </script>
 
-<div class="check-board" data-stage={progress?.stage ?? 'none'}>
-  <section class="panel check-board__claims" aria-labelledby="{uid}-claims">
-    <h2 class="panel__label" id="{uid}-claims">{S.check.claimsOf(kind)}</h2>
-    {#if claims.items.length}<ClaimsQueue items={claims.items} hideCurrent={progress?.stage !== 'result'} />{/if}
-    <span class="check-board__spacer"></span>
-    <button type="button" class="mini check-board__add" data-anim="press" disabled={!model.can('claim')} onclick={onclaim}>
-      <Icon name="plus" /><span>{S.check.addClaim}</span>
-    </button>
-    <LongPressButton label={S.cluster.back} note={S.cluster.backHint} icon="back" tone="danger" disabled={!model.controls.back.enabled} onconfirm={() => model.act('back')}>
-      {#snippet badge()}<WiiBadge button="back" hold size="sm" />{/snippet}
-    </LongPressButton>
-  </section>
-
-  <section class="panel check-board__steps" aria-labelledby="{uid}-steps">
-    <h2 class="panel__label" id="{uid}-steps">
-      {#if check}
-        <span class="visually-hidden">{S.check.title(check.cardId)} </span>{S.check.steps(check.cardId, check.row === null ? S.check.allSongsShort : S.check.rowShort(check.row))}
-      {:else}
-        {S.check.none}
-      {/if}
-    </h2>
-
-    {#if check && progress}
-      {#if progress.total}
-        <ol class="check-steps" aria-label={S.check.progress(progress.doneCount, progress.total)}>
-          {#each progress.steps as step (step.index)}
-            {@const mark = stepMark(check.kind, step.landed, check.outcome)}
-            <li class="check-steps__item" data-state={step.state} data-landed={step.landed === null ? undefined : String(step.landed)} data-mark={mark ?? undefined} data-anim="check-step" aria-current={step.state === 'playing' ? 'step' : undefined}>
-              <Cover songId={step.songId} size="sm" />
-              <span class="check-steps__song">{title(step.songId)}</span>
-              <span class="check-steps__mark">
-                <!-- The icon says whether it's good for the claim (a standing claim: not sounded); the words, what happened. -->
-                {#if step.landed !== null}<Icon name={mark === 'bad' ? 'cross' : 'check'} /><span>{mark === 'last' ? S.check.landedLast : step.landed ? S.check.landed : S.check.notLanded}</span>
-                {:else if step.state === 'playing'}<Icon name="music" /><span>{S.check.playing}</span>
-                {:else}<span>{S.check.pending}</span>{/if}
-              </span>
-            </li>
-          {/each}
-        </ol>
-      {/if}
-
-      {#if progress.stage === 'waiting'}<p class="note">{S.check.waiting}</p>{/if}
-
-      {#if progress.stage === 'result'}
-        <div class="check-result" data-testid="check-result" data-outcome={check.outcome} role="status">
-          <p class="check-result__title">{result}</p>
-          {#if check.otherRows.length}<p>{S.check.otherRows(check.otherRows)}</p>{/if}
-          {#if current?.completeSinceSong}<p>{S.check.completeSince(current.completeSinceSong, current.kind)}</p>{/if}
-          {#if current?.notSold}<p class="check-result__warning"><Icon name="alert" />{S.check.notSold}</p>{/if}
-        </div>
-      {/if}
-
-      <span class="check-board__spacer"></span>
-      <button type="button" class="mini check-board__recheck" data-anim="press" disabled={!model.can('checkStart') || current?.decided !== false} onclick={() => model.act('checkStart', { claimId: check.claimId })}>
-        <Icon name="reload" /><span>{S.check.recheck}</span>
-      </button>
-    {/if}
-  </section>
-
-  <section class="check-board__decide" aria-label={S.check.decide}>
+<div
+  class="check-board"
+  data-testid="check-board"
+  data-stage={state?.stage ?? 'none'}
+  data-revealed={check?.revealed.length ?? 0}
+  data-cue={check?.cue ?? undefined}
+  data-card-id={check?.cardId ?? undefined}
+>
+  <div class="check-board__left">
+    {#if showClaims}<ClaimsStrip items={claims.items} {startable} />{/if}
     {#if check}
-      {#each verdicts as v (v.valid)}
-        {#if v.valid === valid}
-          {@const isDefault = defaultControl === (v.valid ? 'confirm' : 'reject')}
-          <button type="button" class="big-button" data-action={v.valid ? 'confirm' : 'reject'} data-anim="press" data-default={isDefault || undefined} disabled={!canDecide} onclick={() => decide(v.valid)}>
-            <Icon name={v.icon} outline />
-            <span class="big-button__text">
-              <span class="big-button__label">{v.label}</span>
-              <span class="big-button__note">{v.note}</span>
-            </span>
-            {#if isDefault}<WiiBadge button="a" />{/if}
-          </button>
-        {:else}
-          <LongPressButton big action={v.valid ? 'confirm' : 'reject'} label={v.label} note={S.check.againstResult} icon={v.icon} disabled={!canDecide} onconfirm={() => decide(v.valid)} />
-        {/if}
-      {/each}
-      {#if progress?.stage !== 'result'}<p class="note">{S.check.decideAfterResult}</p>{/if}
+      <CheckCard {check} {claim} {of} />
+    {:else}
+      <section class="panel check-card check-card--none"><p class="note">{S.check.none}</p></section>
     {/if}
+  </div>
 
-    <div class="panel check-board__after">
-      <CelebrationMusic {kind} current={snap?.celebrationChoice ?? null} />
-      {#if check}
-        <WinnerForm claimId={check.claimId} name={winner?.name ?? null} slip={winner?.slip ?? null} notes={winner?.notes ?? null} title={CA.card(check.cardId)} />
+  {#if check && state?.stage === 'review'}
+    <ReviewPanel {check} {claim} />
+  {:else}
+    <div class="check-board__right" data-stage={state?.stage ?? 'none'}>
+      <button type="button" class="big-button check-board__back" data-action="check-back" data-anim="press" disabled={!back || !model.can('checkBack')} onclick={() => back && model.act('checkBack', back)}>
+        <span class="big-button__row"><Icon name="back" outline /><span class="big-button__label">{S.check.back}</span></span>
+        <span class="big-button__note">{S.check.backNote}</span>
+        <WiiBadge button="back" size="sm" />
+      </button>
+      <button type="button" class="big-button check-board__review" data-action="review" data-anim="press" disabled={!review || !model.can('checkReview')} onclick={() => review && model.act('checkReview', review)}>
+        <span class="big-button__label">{S.check.review}</span>
+        <span class="big-button__note">{S.check.reviewNote}</span>
+        <WiiBadge button="talk" hold size="sm" />
+      </button>
+      <button type="button" class="big-button check-board__add" data-action="add" data-anim="press" disabled={!model.can('claim')} onclick={onclaim}>
+        <span class="big-button__row"><Icon name="plus" outline /><span class="big-button__label">{S.check.add}</span></span>
+      </button>
+      <button
+        type="button"
+        class="big-button check-board__auto"
+        data-action="auto"
+        data-anim="press"
+        aria-pressed={autoOn}
+        disabled={!canToggleAuto(check) || !model.can('checkAuto')}
+        onclick={() => model.act('checkAuto', { on: !autoOn })}
+      >
+        <Icon name="seguides" outline />
+        <span class="big-button__label">{S.check.auto.label}</span>
+        <span class="big-button__note">{autoNote}</span>
+        <span class="check-board__switch" aria-hidden="true"><span class="check-board__track"><span class="check-board__thumb"></span></span>{autoOn ? S.check.auto.yes : S.check.auto.no}</span>
+      </button>
+
+      {#if big}
+        <button
+          type="button"
+          class="big-button check-board__go"
+          data-action="check-{big.tone}"
+          data-anim="press check-pace"
+          data-default={isDefault || undefined}
+          disabled={!press || !model.can(press.cmd)}
+          onclick={go}
+        >
+          <span class="big-button__row"><Icon name={big.icon} outline /><span class="big-button__label">{big.label}</span></span>
+          {#if big.strip && next}
+            {#key next.songId}
+              <span class="check-board__song" data-anim="check-pace" aria-label={S.check.nextLabel(song(next.songId).title, next.at, next.of)}>
+                <Cover songId={next.songId} size="md" />
+                <span class="check-board__song-text" aria-hidden="true">
+                  <span class="check-board__song-title">{song(next.songId).title}</span>
+                  <span class="check-board__song-artist">{S.check.nextLine(song(next.songId).artist, next.at, next.of)}</span>
+                </span>
+              </span>
+            {/key}
+          {:else}
+            <span class="big-button__note">{big.note}</span>
+          {/if}
+          {#if backNotice}<span class="check-board__notice" role="status">{backNotice}</span>{/if}
+          {#if isDefault}<WiiBadge button="a" />{/if}
+          {#if big.strip}
+            <span class="check-board__strip"><Icon name="seguides" /><span>{S.check.big.strip}</span><WiiBadge button="a" hold place="strip" size="sm" /></span>
+          {/if}
+        </button>
       {/if}
     </div>
-  </section>
+  {/if}
 </div>

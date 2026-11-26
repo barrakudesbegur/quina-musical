@@ -6,6 +6,8 @@ import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { stageView } from '../../../../stage/view.ts';
 import { ANIM_NAMES, diffMoments, momentsOf, type AnimDetail, type MomentInputs, type Moments } from '../../../../stage/model/moments.ts';
+import { NO_CHECK_MEMORY } from '../../../../stage/model/check.ts';
+import type { LiveNotes } from '../../../../stage/view.ts';
 
 const NOW = 1_800_000_000_000;
 const inputs = (nowMs: number, extra: Partial<MomentInputs> = {}): MomentInputs => ({
@@ -17,12 +19,22 @@ const inputs = (nowMs: number, extra: Partial<MomentInputs> = {}): MomentInputs 
   countdown: { clockAboveMin: 90, fineBelowMin: 10, coarseStepMin: 5 },
   ...extra,
 });
-const viewOf = (state: FlowState, notes = { landed: [], spin: null }) => stageView(state, flowOf(state), SAMPLE_PLAN, null, notes);
+const viewOf = (state: FlowState, notes: LiveNotes = { landed: [], spin: null }) => stageView(state, flowOf(state), SAMPLE_PLAN, null, notes);
 const names = (a: AnimDetail[]) => a.map((x) => x.name);
+
+/** #57's Check (a Line, its third row) as the engine's snapshots carry it: `revealed` songs pressed 3 s apart from NOW
+ * (2.5 s snippets; «Elefants», the 4th, a 1.2 s broken record), and the cue once it has played. */
+function paced(revealed: number, patch: { cue?: 'pass' | 'fail'; reviewing?: boolean } = {}): FlowState {
+  const { state } = FIXTURES.checkStarted(NOW);
+  assert.ok(state.check);
+  const songs = [2, 62, 16, 20];
+  const steps = songs.slice(0, revealed).map((songId, i) => ({ songId, landed: songId !== 20, atMs: NOW + i * 3000, durationMs: songId === 20 ? 1200 : 2500 }));
+  return { ...state, check: { ...state.check, startAtMs: NOW - 2000, revealed: steps, cue: patch.cue ?? null, reviewing: patch.reviewing ?? false } };
+}
 
 test('the hook names are exactly the ANIMATIONS.md projector hooks', () => {
   assert.deepEqual([...ANIM_NAMES].sort(), [
-    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-step', 'check-type', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'sponsor-pages', 'suspense',
+    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-review', 'check-step', 'check-type', 'check-unreveal', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'sponsor-pages', 'suspense',
   ]);
 });
 
@@ -78,22 +90,37 @@ test('spin starts at its start time; suspense when it opens', () => {
   assert.deepEqual(diffMoments(idle, momentsOf(viewOf(suspense), inputs(NOW))), [{ name: 'suspense' }]);
 });
 
-test('check steps: playing then marked, each at its time, and the result at the end', () => {
-  const state = FIXTURES.check(NOW).state; // starts +600; steps at +600, +3600, +6600, +9600 (2.5 s each); end +12600
-  const at = (ms: number) => momentsOf(viewOf(state), inputs(NOW + ms));
-  const entered = at(0);
-  // The card type is the first step; here the first snippet starts with the Check, so it's marked then too.
-  assert.deepEqual(diffMoments(entered, at(600)), [
-    { name: 'check-type', ok: true },
-    { name: 'check-step', index: 0, songId: 2, state: 'playing' },
+test('check steps: each press reveals a song, playing then marked at its time; the result only at the cue', () => {
+  const at = (revealed: number, ms: number, patch = {}) => momentsOf(viewOf(paced(revealed, patch)), inputs(NOW + ms));
+  assert.deepEqual(diffMoments(at(0, 0), at(1, 0)), [{ name: 'check-step', index: 0, songId: 2, state: 'playing' }]);
+  assert.deepEqual(diffMoments(at(1, 0), at(1, 2500)), [{ name: 'check-step', index: 0, songId: 2, state: 'landed' }]);
+  assert.deepEqual(diffMoments(at(3, 9000), at(4, 9000)), [{ name: 'check-step', index: 3, songId: 20, state: 'playing' }]);
+  assert.deepEqual(diffMoments(at(4, 9000), at(4, 10200)), [{ name: 'check-step', index: 3, songId: 20, state: 'missed' }]);
+  assert.deepEqual(diffMoments(at(4, 10200), at(4, 60000)), [], 'every song marked: nothing until the cue');
+  assert.deepEqual(diffMoments(at(4, 60000), at(4, 60000, { cue: 'fail' })), [{ name: 'check-result', result: 'incomplete' }]);
+  // A cue pressed during the last snippet: its mark shows with the result.
+  assert.deepEqual(diffMoments(at(4, 9500), at(4, 9500, { cue: 'fail' })), [
+    { name: 'check-step', index: 3, songId: 20, state: 'missed' },
+    { name: 'check-result', result: 'incomplete' },
   ]);
-  assert.deepEqual(diffMoments(at(600), at(3100)), [{ name: 'check-step', index: 0, songId: 2, state: 'landed' }]);
-  assert.deepEqual(diffMoments(at(9600), at(12100)), [{ name: 'check-step', index: 3, songId: 20, state: 'missed' }]);
-  assert.deepEqual(diffMoments(at(12599), at(12600)), [{ name: 'check-result', result: 'incomplete' }]);
+});
+
+test('a step back lifts the last mark off; a review shows its plaque and keeps the marks', () => {
+  // Under review from NOW + 4000 (as the stage heard it), while «Aserejé» (NOW + 3000, 2.5 s) was playing.
+  const check = { ...NO_CHECK_MEMORY, review: { claimId: 'cl-5', atMs: NOW + 4000 } };
+  const at = (revealed: number, ms: number, patch = {}) => momentsOf(viewOf(paced(revealed, patch), { landed: [], spin: null, check }), inputs(NOW + ms));
+  assert.deepEqual(diffMoments(at(3, 9000), at(2, 9000)), [{ name: 'check-unreveal', index: 2, songId: 16 }]);
+  assert.deepEqual(diffMoments(at(2, 9000), at(0, 9000)), [{ name: 'check-unreveal', index: 1, songId: 62 }, { name: 'check-unreveal', index: 0, songId: 2 }], 'the last first');
+  assert.deepEqual(diffMoments(at(2, 4000), at(2, 4000, { reviewing: true })), [{ name: 'check-review', on: true }]);
+  assert.deepEqual(diffMoments(at(2, 4000, { reviewing: true }), at(2, 9000, { reviewing: true })), [], 'nothing moves under review');
+  assert.deepEqual(diffMoments(at(2, 9000, { reviewing: true }), at(2, 9000)), [
+    { name: 'check-step', index: 1, songId: 62, state: 'landed' },
+    { name: 'check-review', on: false },
+  ], 'the Check goes on: the song cut short gets its mark');
 });
 
 test('scene changes: check → celebration → interval', () => {
-  const check = momentsOf(viewOf(FIXTURES.checkValid(NOW).state), inputs(NOW));
+  const check = momentsOf(viewOf(FIXTURES.check(NOW).state), inputs(NOW));
   const celebration = momentsOf(viewOf(FIXTURES.celebration(NOW).state), inputs(NOW));
   assert.deepEqual(diffMoments(check, celebration), [
     { name: 'scene-enter', scene: 'celebration' },
@@ -145,32 +172,42 @@ test('the Interval countdown ticks when what it says changes, once a minute at m
   assert.deepEqual(diffMoments(at(80000), at(200000)), [], 'stays "soon" when overdue');
 });
 
-test('the card type: marked after the lead, before the first snippet; at once (with the result) for a wrong-type card', () => {
-  const { state } = FIXTURES.check(NOW);
-  const early: FlowState = { ...state, check: state.check ? { ...state.check, startAtMs: NOW - 2000 } : null }; // first snippet at +600
-  const at = (ms: number) => momentsOf(viewOf(early), inputs(NOW + ms));
+test('the card type: marked after the lead, before the first reveal; a wrong type only at its cue, with the result', () => {
+  const at = (ms: number) => momentsOf(viewOf(paced(0)), inputs(NOW + ms));
   assert.deepEqual(diffMoments(at(-1101), at(-1100)), [{ name: 'check-type', ok: true }], '900 ms after the start');
-  assert.deepEqual(diffMoments(at(100), at(600)), [{ name: 'check-step', index: 0, songId: 2, state: 'playing' }]);
   const wrong = FIXTURES.checkWrongType(NOW).state;
-  assert.deepEqual(names(diffMoments(at(100), momentsOf(viewOf(wrong), inputs(NOW + 100)))), ['check-enter', 'check-type', 'check-result']);
-  const entered = diffMoments(null, momentsOf(viewOf(wrong), inputs(NOW)));
-  assert.deepEqual(entered.filter((a) => a.name === 'check-type'), [{ name: 'check-type', ok: false }]);
+  assert.ok(wrong.check);
+  const before = momentsOf(viewOf(wrong), inputs(NOW));
+  assert.deepEqual(names(diffMoments(null, before)), ['scene-enter', 'check-enter'], 'nothing told before the cue');
+  assert.deepEqual(diffMoments(before, momentsOf(viewOf(wrong), inputs(NOW + 60000))), []);
+  const cued: FlowState = { ...wrong, check: { ...wrong.check, cue: 'fail' } };
+  assert.deepEqual(diffMoments(before, momentsOf(viewOf(cued), inputs(NOW + 100))), [
+    { name: 'check-type', ok: false },
+    { name: 'check-result', result: 'notValid' },
+  ]);
+  const entered = diffMoments(null, momentsOf(viewOf(cued), inputs(NOW)));
+  assert.deepEqual(entered.filter((a) => a.name === 'check-type'), [{ name: 'check-type', ok: false }], 'joined after the cue');
 });
 
 test("a fallen standing Check ends with `check-fallen` (not `check-result`); a valid one with the plaque's `check-result`", () => {
-  const state = FIXTURES.checkStanding(NOW).state;
+  const state = FIXTURES.checkFallen(NOW).state;
   const check = state.check;
   assert.ok(check);
-  const at = (ms: number) => momentsOf(viewOf(state), inputs(ms));
-  const sank = check.steps.length - 1;
-  const markAt = check.steps[sank].atMs + check.steps[sank].durationMs;
-  assert.deepEqual(diffMoments(at(markAt - 1), at(markAt)), [{ name: 'check-step', index: sank, songId: 41, state: 'landed' }]);
-  assert.deepEqual(diffMoments(at(check.endAtMs - 1), at(check.endAtMs)), [{ name: 'check-fallen', cardId: 23 }]);
+  const at = (s: FlowState, ms: number) => momentsOf(viewOf(s), inputs(ms));
+  const sank = check.revealed.length - 1;
+  const markAt = check.revealed[sank].atMs + check.revealed[sank].durationMs;
+  const playing: FlowState = { ...state, check: { ...check, revealed: check.revealed.map((r) => ({ ...r, atMs: r.atMs + 10_000 })) } };
+  assert.deepEqual(diffMoments(at(playing, markAt + 10_000 - 1), at(playing, markAt + 10_000)), [{ name: 'check-step', index: sank, songId: 41, state: 'landed' }]);
+  const cued: FlowState = { ...state, check: { ...check, cue: 'fail' } };
+  assert.deepEqual(diffMoments(at(state, NOW), at(cued, NOW)), [{ name: 'check-fallen', cardId: 23 }]);
 
   const valid = FIXTURES.checkStandingValid(NOW).state;
-  const entered = momentsOf(viewOf(valid), inputs(NOW));
+  assert.ok(valid.check);
+  const passed: FlowState = { ...valid, check: { ...valid.check, cue: 'pass' } };
+  const entered = momentsOf(viewOf(passed), inputs(NOW));
   assert.equal(entered.check?.result, 'complete');
   assert.deepEqual(names(diffMoments(null, entered)), ['scene-enter', 'check-enter'], 'joining late never replays the result');
+  assert.deepEqual(diffMoments(momentsOf(viewOf(valid), inputs(NOW)), entered), [{ name: 'check-result', result: 'complete' }]);
 });
 
 test('the Desgraciat celebration: `celebrate` with kind standing', () => {

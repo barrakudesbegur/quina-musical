@@ -1,9 +1,9 @@
 // Edits to the Game plan that need more than setting a field: adding, removing and reordering rounds (they
 // are renumbered 1, 2, 3… every time), a Line's or Quina's prize bundle (add, remove, move, mark headline:
 // headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
-// blank prizes and plans, a round's card type, and the schedule's local date-time. Pure: each returns new values and
-// never mutates its input.
-import type { PlannedBreak } from '@quina/protocol';
+// blank prizes and plans, a round's card type, the schedule's local date-time, the doors' time and the planned Throws.
+// Pure: each returns new values and never mutates its input.
+import type { PlannedThrow } from '@quina/protocol';
 import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { defaultCardType, roundCardType, type RoundKind } from '@quina/protocol';
 import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
@@ -235,36 +235,41 @@ export function fromLocalInput(value: string): number | null {
   return date.getTime();
 }
 
-/** When the last round should end: start + rounds × round length + the Intervals between them + the planned breaks
- * (a break after the last round wouldn't count; the plan doesn't allow one). */
+/** The doors open (`doorsAtMs`, D150) after the first round's start: checkGamePlan refuses it, and the field says so. */
+export function doorsAfterStart(schedule: Pick<SchedulePlan, 'doorsAtMs' | 'startAtMs'>): boolean {
+  return schedule.doorsAtMs != null && schedule.startAtMs !== null && schedule.doorsAtMs > schedule.startAtMs;
+}
+
+/** When the last round should end: start + rounds × round length + the Intervals between them + the planned Throws
+ * (a Throw after the last round wouldn't count; the plan doesn't allow one). */
 export function plannedEndMs(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number | null {
   const { startAtMs, roundMinutes, intervalMinutes } = plan.schedule;
   if (startAtMs === null || !plan.rounds.length) return null;
   const n = plan.rounds.length;
-  const breaks = (plan.schedule.breaks ?? []).filter((b) => b.afterRound >= 1 && b.afterRound < n).reduce((sum, b) => sum + b.minutes, 0);
-  return startAtMs + (n * roundMinutes + (n - 1) * intervalMinutes + breaks) * 60_000;
+  const throws = (plan.schedule.throws ?? []).filter((t) => t.afterRound >= 1 && t.afterRound < n).reduce((sum, t) => sum + t.minutes, 0);
+  return startAtMs + (n * roundMinutes + (n - 1) * intervalMinutes + throws) * 60_000;
 }
 
-// ---- planned breaks ("parón": about 5 minutes between some rounds, docs/event.md) -------------------------------
-/** The default length of a planned break, in minutes. */
-export const DEFAULT_BREAK_MINUTES = 5;
+// ---- planned Throws (D136: about 5 minutes on top of the Interval after some rounds, docs/event.md) -------------
+/** The default length of a planned Throw, in minutes. */
+export const DEFAULT_THROW_MINUTES = 5;
 
-/** The rounds a break may follow: every planned round but the last, and not one that already has a break. */
-export function breakSlots(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number[] {
-  const taken = new Set((plan.schedule.breaks ?? []).map((b) => b.afterRound));
+/** The rounds a Throw may follow: every planned round but the last, and not one that already has a Throw. */
+export function throwSlots(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number[] {
+  const taken = new Set((plan.schedule.throws ?? []).map((t) => t.afterRound));
   return plan.rounds.map((r) => r.number).filter((n) => n < plan.rounds.length && !taken.has(n));
 }
 
-/** The breaks with one added after `afterRound` (sorted by round); the same list when that round can't take one. */
-export function withBreak(breaks: readonly PlannedBreak[] | undefined, afterRound: number, minutes = DEFAULT_BREAK_MINUTES): PlannedBreak[] {
-  const list = [...(breaks ?? [])];
-  if (list.some((b) => b.afterRound === afterRound)) return list;
+/** The Throws with one added after `afterRound` (sorted by round); the same list when that round has one already. */
+export function withThrow(throws: readonly PlannedThrow[] | undefined, afterRound: number, minutes = DEFAULT_THROW_MINUTES): PlannedThrow[] {
+  const list = [...(throws ?? [])];
+  if (list.some((t) => t.afterRound === afterRound)) return list;
   return [...list, { afterRound, minutes }].sort((a, b) => a.afterRound - b.afterRound);
 }
 
-/** The breaks without the one after `afterRound`. Undefined when none is left, so a plan without breaks reads back
+/** The Throws without the one after `afterRound`. Undefined when none is left, so a plan without Throws reads back
  * unchanged (the protocol leaves the field out then). */
-export function withoutBreak(breaks: readonly PlannedBreak[] | undefined, afterRound: number): PlannedBreak[] | undefined {
-  const left = (breaks ?? []).filter((b) => b.afterRound !== afterRound);
+export function withoutThrow(throws: readonly PlannedThrow[] | undefined, afterRound: number): PlannedThrow[] | undefined {
+  const left = (throws ?? []).filter((t) => t.afterRound !== afterRound);
   return left.length ? left : undefined;
 }

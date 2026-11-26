@@ -2,8 +2,20 @@
 // The story is "Quina 3": 24 songs in, Boig per tu just landed, card 57 and card 123 are 1 song from a Line.
 // The Desgraciat fixtures play Quina 5, the Quina Desgraciada (see DESGRACIAT_LANDED).
 // Song ids and titles are last year's pool (test material only).
-import { PROTOCOL_VERSION, STANDING_LIST_MAX, type IncomingEvent, type LandingInfo, type ShowState } from '@quina/protocol';
-import type { CheckStep, FlowFields, FlowState } from '../flow.ts';
+import {
+  PROTOCOL_VERSION,
+  STANDING_LIST_MAX,
+  type CheckInfo,
+  type CheckOutcome,
+  type CheckStep,
+  type ClaimInfo,
+  type ClaimWarning,
+  type IncomingEvent,
+  type LandingInfo,
+  type ShowState,
+  type WinKind,
+} from '@quina/protocol';
+import type { FlowFields, FlowState } from '../flow.ts';
 
 /** A snapshot with every show-flow field present (what the merged engine will send). */
 export type FullState = ShowState & FlowFields;
@@ -33,6 +45,24 @@ export const FIXTURE_SONGS: Record<number, [string, string]> = {
   69: ['Tots Som Súpers', 'SX3'],
   74: ['Waka Waka', 'Shakira, Freshlyground'],
   75: ['YMCA', 'Village People'],
+  // The other songs on the cards the Check fixtures claim (FIXTURE_CARDS).
+  4: ['Baby', 'Justin Bieber, Ludacris'],
+  12: ['capaz (merengueton)', 'Alleh, Yorghaki'],
+  24: ['Flying Free', 'Pont Aeri, Marian Dacal'],
+  32: ['La Bomba', 'King Africa'],
+  39: ['La Vaca Lola - Remix', 'Toy Cantando'],
+  46: ['Mi gran noche', 'Raphael'],
+  47: ['MR. MOONDIAL', 'Quevedo, Pitbull'],
+  48: ['Nada Fue Un Error', 'Coti, Andrés Calamaro'],
+  53: ['On The Floor', 'Jennifer Lopez, Pitbull'],
+  54: ['Puedes Contar Conmigo', 'La Oreja de Van Gogh'],
+  58: ['Sense Tu', 'Teràpia de Shock'],
+  61: ['The Best of Both Worlds', 'Hannah Montana'],
+  64: ['Tenía Tanto Que Darte', 'Nena Daconte'],
+  66: ['This Is Me', 'Demi Lovato, Joe Jonas'],
+  71: ['Un Beso Y Una Flor', 'Nino Bravo'],
+  73: ['Vivir Así Es Morir de Amor', 'Camilo Sesto'],
+  77: ['Yo Te Esperaré', 'Cali Y El Dandee'],
   // The Desgraciat fixtures' landings (DESGRACIAT_LANDED).
   10: ['Boys Will Be Boys', 'Paulina Rubio'],
   19: ['Devuélveme a mi chica', 'Hombres G'],
@@ -104,6 +134,8 @@ export function baseState(now: number): FullState {
     landings: landings(now),
     history: [],
     prizes: revealedUpTo(3),
+    throwSong: null,
+    lastRound: false,
   };
   const flow: FlowFields = {
     scene: 'play',
@@ -112,6 +144,7 @@ export function baseState(now: number): FullState {
     intro: null,
     claims: [],
     check: null,
+    celebrationNext: null,
     celebration: null,
     interval: null,
     winners: [
@@ -132,6 +165,174 @@ export interface DemoScript {
 
 const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s, ...patch });
 
+// ---- the presenter-paced Check (D107–D126) -------------------------------------------------------------
+// The engine's Check (game/check.ts) worked out by hand for the printed cards the fixtures claim, so the console's
+// private card, the projector's reveals and the phones' strip agree.
+
+/** The printed cards the Check fixtures claim (apps/cards/dist/cards.json; tests/ui/fixtures.test.ts checks them). */
+export const FIXTURE_CARDS: Readonly<Record<number, { type: string; lines: readonly (readonly number[])[] }>> = {
+  23: { type: 'normal', lines: [[27, 47, 73, 75], [7, 17, 41, 53], [3, 4, 71, 77]] },
+  57: { type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]] },
+  123: { type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
+  204: { type: 'normal', lines: [[32, 45, 50, 58], [38, 46, 61, 69], [24, 52, 54, 56]] },
+  508: { type: 'especial', lines: [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]] },
+};
+
+/** The engine's Check timing (engine config FLOW.check): a landed song's snippet, a ✗'s broken record, a standing ✓'s
+ * knock; and the time between two presses in these fixtures. */
+const PACED = { snippetMs: 2500, missMs: 1200, stillMs: 550, pressGapMs: 900 };
+
+/** What the engine finds on a card (computeCheck): the songs its Check reveals, where the reveals stop, its outcome. */
+interface CardFinding {
+  outcome: CheckOutcome;
+  row: number | null;
+  otherRows: number[];
+  cardType: string;
+  /** The songs the Check reveals, in the card's grid order (a Line: its row). */
+  songs: { songId: number; landed: boolean }[];
+  /** The last index it reveals (the last, or the first ✗); null when it reveals none (wrongType). */
+  revealUntil: number | null;
+  markedCard: { songId: number; landed: boolean }[];
+}
+
+/**
+ * A card's Check from the counted landings: a Line plays its completed row (top first), else the row with most landed
+ * songs (top on a tie); a Bingo all 12; a standing claim its 12 in card order up to the first landed one (`fellLast`
+ * when that is the latest landing). A card of another type than the round's is `wrongType`, with nothing to reveal.
+ */
+export function cardFinding(cardId: number, kind: WinKind, landed: ReadonlySet<number>, roundType = 'normal', latest: number | null = null): CardFinding {
+  const card = FIXTURE_CARDS[cardId];
+  const markedCard = card.lines.flat().map((songId) => ({ songId, landed: landed.has(songId) }));
+  if (card.type !== roundType) return { outcome: 'wrongType', row: null, otherRows: [], cardType: card.type, songs: [], revealUntil: null, markedCard: [] };
+  if (kind === 'standing') {
+    const first = markedCard.findIndex((s) => s.landed);
+    const outcome: CheckOutcome = first < 0 ? 'complete' : markedCard[first].songId === latest ? 'fellLast' : 'fallen';
+    return { outcome, row: null, otherRows: [], cardType: card.type, songs: markedCard, revealUntil: first < 0 ? markedCard.length - 1 : first, markedCard };
+  }
+  let row: number | null = null;
+  let otherRows: number[] = [];
+  let songs = markedCard;
+  if (kind === 'line') {
+    const counts = card.lines.map((line) => line.filter((id) => landed.has(id)).length);
+    const complete = counts.flatMap((n, r) => (n === 4 ? [r] : []));
+    row = complete[0] ?? counts.indexOf(Math.max(...counts));
+    otherRows = complete.filter((r) => r !== row);
+    songs = card.lines[row].map((songId) => ({ songId, landed: landed.has(songId) }));
+  }
+  const miss = songs.findIndex((s) => !s.landed);
+  return { outcome: miss < 0 ? 'complete' : 'incomplete', row, otherRows, cardType: card.type, songs, revealUntil: miss < 0 ? songs.length - 1 : miss, markedCard };
+}
+
+/** A revealed song's sound, as the engine plays it (stepSound): its snippet, the broken record or the knock. */
+const revealMs = (song: { landed: boolean }, kind: WinKind): number => (song.landed ? PACED.snippetMs : kind === 'standing' ? PACED.stillMs : PACED.missMs);
+
+/** One Claim of a Check fixture. */
+interface PacedSpec {
+  claimId: string;
+  cardId: number;
+  kind: WinKind;
+  atMs: number;
+  /** How many of its songs are revealed (on screen), else it isn't on screen. */
+  revealed?: number;
+  /** When the last revealed song's sound started; the earlier ones a press apart before it. */
+  lastAtMs?: number;
+  /** When it came on screen (default: a moment before its first reveal). */
+  startAtMs?: number;
+  auto?: boolean;
+  /** Its cue has played: it passed or failed (the Claim is decided). */
+  cue?: 'pass' | 'fail';
+  reviewing?: boolean;
+  /** Waiting for its Check (default when not on screen). */
+  queued?: boolean;
+  warnings?: ClaimWarning[];
+  completeSince?: number | null;
+}
+
+/** A Claim and, when it's on screen, its Check, as the engine's state carries them. */
+function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>, position: number, latest: number | null): { claim: ClaimInfo; check: CheckInfo | null } {
+  const found = cardFinding(spec.cardId, spec.kind, landed, 'normal', latest);
+  const onScreen = spec.revealed !== undefined && !spec.queued;
+  const shown = found.songs.slice(0, spec.revealed ?? 0);
+  const revealed: CheckStep[] = [];
+  let at = spec.lastAtMs ?? spec.atMs;
+  for (let i = shown.length - 1; i >= 0; i--) {
+    const durationMs = revealMs(shown[i], spec.kind);
+    revealed.unshift({ songId: shown[i].songId, landed: shown[i].landed, atMs: at, durationMs });
+    if (i > 0) at -= PACED.pressGapMs + revealMs(shown[i - 1], spec.kind);
+  }
+  const cue = spec.cue ?? null;
+  const reviewing = spec.reviewing ?? false;
+  const done = found.revealUntil === null || shown.length > found.revealUntil;
+  const status = cue === 'pass' ? 'valid' : cue === 'fail' ? 'invalid' : reviewing ? 'reviewing' : onScreen ? 'checking' : 'queued';
+  const claim: ClaimInfo = {
+    claimId: spec.claimId,
+    round,
+    cardId: spec.cardId,
+    kind: spec.kind,
+    atMs: spec.atMs,
+    position,
+    status,
+    outcome: found.outcome,
+    completeSince: spec.completeSince ?? (found.outcome === 'complete' ? position : null),
+    warnings: spec.warnings ?? [],
+    markedCard: found.markedCard,
+    revealUntil: found.revealUntil,
+    cueNext: onScreen && cue === null && !reviewing && done,
+  };
+  const startAtMs = spec.startAtMs ?? (revealed[0]?.atMs ?? spec.atMs + 2000) - 1500;
+  const check: CheckInfo | null = onScreen
+    ? {
+        claimId: spec.claimId,
+        cardId: spec.cardId,
+        kind: spec.kind,
+        outcome: found.outcome,
+        row: found.row,
+        otherRows: found.otherRows,
+        cardType: found.cardType,
+        startAtMs,
+        total: found.songs.length,
+        revealed,
+        auto: spec.auto ?? false,
+        cue,
+        reviewing,
+      }
+    : null;
+  return { claim, check };
+}
+
+/**
+ * A Check on screen over `s`: the round in its Hold (`claim`: the music from before the Check under Parlem), every
+ * Claim of the batch, the one on screen (the spec with `revealed`), and `celebrationNext` when it's due.
+ */
+function pacedCheck(s: FullState, specs: readonly PacedSpec[], landed: readonly number[], celebrationNext: FullState['celebrationNext'] = null): FullState {
+  const set = new Set(landed);
+  const latest = landed[landed.length - 1] ?? null;
+  const built = specs.map((spec) => pacedClaim(spec, s.round.number, set, s.queue.position, latest));
+  const first = Math.min(...specs.map((c) => c.atMs));
+  return withFlow(s, {
+    scene: 'check',
+    status: 'hold',
+    autoAtMs: null,
+    hold: { sinceMs: first, reason: 'claim', holdMusic: false, holdMusicAtMs: null, ducked: true },
+    claims: built.map((b) => b.claim),
+    // The one on screen: the latest Claim with reveals (an earlier one already had its cue).
+    check: built.filter((b) => b.check).at(-1)?.check ?? null,
+    celebrationNext,
+  });
+}
+
+/** Quina 3 after «Tots Som Súpers» lands too: card 123's top row is complete (its Line). */
+export const FIXTURE_LANDED_LINE = [...FIXTURE_LANDED, 69];
+
+function lineState(now: number): FullState {
+  const s = baseState(now);
+  return withFlow(s, {
+    current: { ...song(69), hookId: 'h1', posSec: 20, endsAtMs: now + 40000 },
+    queue: { ...s.queue, position: FIXTURE_LANDED_LINE.length - 1 },
+    landings: landings(now, FIXTURE_LANDED_LINE, now - 20000),
+  });
+}
+
 
 // ---- the Desgraciat round (Quina 5 in SAMPLE_PLAN) ----------------------------------------------------
 // Worked out from apps/cards/dist/cards.json, so every screen agrees: the normal cards 1–210 are the round's valid
@@ -150,24 +351,6 @@ export const DESGRACIAT_STANDING_23 = DESGRACIAT_STANDING_26.filter((id) => ![90
 export const DESGRACIAT_LAST_CARD = { cardId: 57, songs: [5, 14, 64, 75, 15, 18, 60, 69, 2, 62, 16, 20] };
 /** #23, claimed after 12 landings: its songs in card order up to «Limbo» (row 2, 3rd song), which has landed. */
 export const DESGRACIAT_FALLEN_CARD = { cardId: 23, songs: [27, 47, 73, 75, 7, 17, 41], sankBy: 41 };
-
-/** The engine's standing Check timing (engine config FLOW.check): lead, a ✓ knock, a landed snippet, gap, tail. */
-const STANDING_CHECK = { leadMs: 1500, stillMs: 550, snippetMs: 2500, gapMs: 350, tailMs: 400 };
-
-/** A standing Check's steps from `startAtMs`: a knock per song that hasn't landed, the snippet for the one that has. */
-function standingSteps(songs: readonly number[], landed: ReadonlySet<number>, startAtMs: number): { steps: CheckStep[]; endAtMs: number } {
-  let at = startAtMs + STANDING_CHECK.leadMs;
-  const steps = songs.map((songId) => {
-    const durationMs = landed.has(songId) ? STANDING_CHECK.snippetMs : STANDING_CHECK.stillMs;
-    const step = { songId, landed: landed.has(songId), atMs: at, durationMs };
-    at += durationMs + STANDING_CHECK.gapMs;
-    return step;
-  });
-  return { steps, endAtMs: at - STANDING_CHECK.gapMs + STANDING_CHECK.tailMs };
-}
-
-/** A Check's whole length for these songs (from its start to its result). */
-const standingCheckMs = (songs: readonly number[], landed: ReadonlySet<number>): number => standingSteps(songs, landed, 0).endAtMs;
 
 /**
  * Quina 5, the Desgraciat round, after `landed` songs of DESGRACIAT_LANDED (the newest at `lastAtMs`): the private
@@ -213,38 +396,13 @@ export function desgraciatState(now: number, landed: number, lastAtMs = now): Fu
   });
 }
 
-/** A standing Check's state: claimed in the Desgraciat round after `landed` songs, started at `startAtMs`. */
-function standingCheckState(now: number, landed: number, claim: { claimId: string; cardId: number; songs: readonly number[] }, startAtMs: number): FullState {
-  const s = desgraciatState(now, landed, now - 30000);
-  const landedSet = new Set(DESGRACIAT_LANDED.slice(0, landed));
-  const { steps, endAtMs } = standingSteps(claim.songs, landedSet, startAtMs);
-  const outcome = steps.some((st) => st.landed) ? 'fallen' : 'complete';
-  const over = now >= endAtMs;
-  return withFlow(s, {
-    scene: 'check',
-    status: 'hold',
-    autoAtMs: null,
-    hold: { sinceMs: startAtMs - 3000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
-    claims: [
-      {
-        claimId: claim.claimId,
-        round: 5,
-        cardId: claim.cardId,
-        kind: 'standing',
-        atMs: startAtMs - 3000,
-        position: s.queue.position,
-        status: over ? 'checked' : 'checking',
-        outcome,
-        completeSince: outcome === 'complete' ? s.queue.position : null,
-        warnings: [],
-      },
-    ],
-    check: { claimId: claim.claimId, cardId: claim.cardId, kind: 'standing', outcome, row: null, otherRows: [], cardType: 'normal', steps, startAtMs, endAtMs },
-  });
+/** A standing Check: the Desgraciat round after `landed` songs (the newest 30 s ago), its Claims as `specs`. */
+function standingCheckState(now: number, landed: number, specs: readonly PacedSpec[]): FullState {
+  return pacedCheck(desgraciatState(now, landed, now - 30000), specs, DESGRACIAT_LANDED.slice(0, landed));
 }
 
-const FALLEN_CLAIM = { claimId: 'cl-12', ...DESGRACIAT_FALLEN_CARD };
-const LAST_CLAIM = { claimId: 'cl-13', ...DESGRACIAT_LAST_CARD };
+const FALLEN_CLAIM = { claimId: 'cl-12', cardId: DESGRACIAT_FALLEN_CARD.cardId };
+const LAST_CLAIM = { claimId: 'cl-13', cardId: DESGRACIAT_LAST_CARD.cardId };
 
 /** The Desgraciat round's demos (`?demo=<name>`). */
 const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
@@ -276,12 +434,25 @@ const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
   },
   /** One card standing: #57. Auto-advance has stopped; checking #57 is the default action. */
   desgraciatLast: (now) => ({ state: desgraciatState(now, 22) }),
-  /** #23 claims to be standing after 12 songs; the Check runs live and stops on «Limbo», which has landed. */
-  checkStanding: (now) => ({ state: standingCheckState(now, 12, FALLEN_CLAIM, now + 600) }),
-  /** The same Check, over: #23 fell with «Limbo». */
-  checkFallen: (now) => ({ state: standingCheckState(now, 12, FALLEN_CLAIM, now - 600 - standingCheckMs(FALLEN_CLAIM.songs, new Set(DESGRACIAT_LANDED.slice(0, 12)))) }),
-  /** #57, the last one standing: all 12 songs checked, none landed. */
-  checkStandingValid: (now) => ({ state: standingCheckState(now, 22, LAST_CLAIM, now - 600 - standingCheckMs(LAST_CLAIM.songs, new Set())) }),
+  /** #23 claims to be standing after 12 songs: «Seguides» is revealing its songs in a row, 5 of the 7 up to «Limbo». */
+  checkStanding: (now) => ({
+    state: standingCheckState(now, 12, [{ ...FALLEN_CLAIM, kind: 'standing', atMs: now - 12000, revealed: 5, lastAtMs: now - 200, auto: true }]),
+  }),
+  /** The same Check at its cue: «Limbo», the 7th, has sounded, so the big button is «Fallada». */
+  checkFallen: (now) => ({
+    state: standingCheckState(now, 12, [{ ...FALLEN_CLAIM, kind: 'standing', atMs: now - 16000, revealed: 7, lastAtMs: now - 3000 }]),
+  }),
+  /** Just after that cue: #23 fell with «Limbo», and #57's Check comes on screen in a moment. */
+  checkCueFallen: (now) => ({
+    state: standingCheckState(now, 12, [
+      { ...FALLEN_CLAIM, kind: 'standing', atMs: now - 18000, revealed: 7, lastAtMs: now - 4500, cue: 'fail' },
+      { ...LAST_CLAIM, kind: 'standing', atMs: now - 9000 },
+    ]),
+  }),
+  /** #57, the last one standing: all 12 revealed, none landed; the big button is «Celebrem!». */
+  checkStandingValid: (now) => ({
+    state: standingCheckState(now, 22, [{ ...LAST_CLAIM, kind: 'standing', atMs: now - 30000, revealed: 12, lastAtMs: now - 2500, completeSince: 21 }]),
+  }),
   /** DEMPEUS! #57 wins Quina 5. */
   celebrationStanding: (now) => {
     const s = desgraciatState(now, 22, now - 60000);
@@ -290,7 +461,7 @@ const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
         scene: 'celebration',
         status: 'playing',
         autoAtMs: null,
-        celebration: { kind: 'standing', round: 5, cardIds: [57], winningSongId: 1, sinceMs: now - 1500, music: 'victory' },
+        celebration: { kind: 'standing', round: 5, cardIds: [57], winningSongId: 1, sinceMs: now - 1500, music: 'victory', parlem: false },
         winners: [...s.winners, { round: 5, kind: 'standing', cardId: 57, claimId: LAST_CLAIM.claimId, winningSongId: 1, position: s.queue.position, atMs: now - 1500, name: null, notes: null }],
       }),
     };
@@ -307,12 +478,17 @@ const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
         next: null,
         round: { ...s.round, number: 4 },
         interval: { sinceMs: now - 40000, nextRound: 5, guideEndMs: now + 140000 },
-        intervalMusic: { track: { title: 'Last Christmas', artist: 'Wham!', index: 5, count: 24, sinceMs: now - 25000 } },
+        intervalMusic: { set: 'breaks', track: { title: 'Last Christmas', artist: 'Wham!', index: 5, count: 24, sinceMs: now - 25000 } },
         prizes: revealedUpTo(4),
       }),
     };
   },
 };
+
+/** The Quina 3 Check fixtures' Claims (Lines). */
+const CARD_57 = { claimId: 'cl-5', cardId: 57, kind: 'line' } as const;
+const CARD_123 = { claimId: 'cl-7', cardId: 123, kind: 'line' } as const;
+const CARD_204 = { claimId: 'cl-6', cardId: 204, kind: 'line' } as const;
 
 /** Every demo fixture by name. */
 export const FIXTURES: Record<string, (now: number) => DemoScript> = {
@@ -386,67 +562,49 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
       }),
     };
   },
-  check: (now) => {
-    const s = baseState(now);
-    const steps = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: now + 600 + i * 3000, durationMs: 2500 }));
-    return {
-      state: withFlow(s, {
-        scene: 'check',
-        status: 'hold',
-        autoAtMs: null,
-        hold: { sinceMs: now - 4000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
-        claims: [
-          { claimId: 'cl-5', round: 3, cardId: 57, kind: 'line', atMs: now - 4000, position: s.queue.position, status: 'checking', outcome: 'incomplete', completeSince: null, warnings: [] },
-          { claimId: 'cl-6', round: 3, cardId: 204, kind: 'line', atMs: now - 2000, position: s.queue.position, status: 'queued', outcome: null, completeSince: null, warnings: ['notSold'] },
-        ],
-        check: { claimId: 'cl-5', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, otherRows: [], cardType: 'normal', steps, startAtMs: now + 600, endAtMs: now + 600 + 4 * 3000 },
-      }),
-    };
-  },
-  checkValid: (now) => {
-    const s = baseState(now);
-    // Card 123's top row (All Night, Dancing Queen, Limbo, Tots Som Súpers), as if Tots Som Súpers had just landed.
-    const steps = [2, 17, 41, 69].map((songId, i) => ({ songId, landed: true, atMs: now - 13000 + i * 3000, durationMs: 2500 }));
-    return {
-      state: withFlow(s, {
-        scene: 'check',
-        status: 'hold',
-        autoAtMs: null,
-        hold: { sinceMs: now - 20000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
-        claims: [{ claimId: 'cl-7', round: 3, cardId: 123, kind: 'line', atMs: now - 20000, position: s.queue.position, status: 'checked', outcome: 'complete', completeSince: s.queue.position, warnings: [] }],
-        check: { claimId: 'cl-7', cardId: 123, kind: 'line', outcome: 'complete', row: 0, otherRows: [], cardType: 'normal', steps, startAtMs: now - 13000, endAtMs: now - 1000 },
-      }),
-    };
-  },
-  checkFailed: (now) => {
-    // The same claim as `check`, over: Elefants didn't sound, so card 57 has no Line.
-    const s = baseState(now);
-    const steps = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: now - 13000 + i * 3000, durationMs: 2500 }));
-    return {
-      state: withFlow(s, {
-        scene: 'check',
-        status: 'hold',
-        autoAtMs: null,
-        hold: { sinceMs: now - 16000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
-        claims: [{ claimId: 'cl-5', round: 3, cardId: 57, kind: 'line', atMs: now - 16000, position: s.queue.position, status: 'checked', outcome: 'incomplete', completeSince: null, warnings: [] }],
-        check: { claimId: 'cl-5', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, otherRows: [], cardType: 'normal', steps, startAtMs: now - 14500, endAtMs: now - 1000 },
-      }),
-    };
-  },
-  checkWrongType: (now) => {
-    // A special card claimed in a regular round: its type fails, so no song is played.
-    const s = baseState(now);
-    return {
-      state: withFlow(s, {
-        scene: 'check',
-        status: 'hold',
-        autoAtMs: null,
-        hold: { sinceMs: now - 3000, reason: 'hold', holdMusic: true, holdMusicAtMs: null },
-        claims: [{ claimId: 'cl-8', round: 3, cardId: 508, kind: 'line', atMs: now - 3000, position: s.queue.position, status: 'checked', outcome: 'wrongType', completeSince: null, warnings: [] }],
-        check: { claimId: 'cl-8', cardId: 508, kind: 'line', outcome: 'wrongType', row: null, otherRows: [], cardType: 'especial', steps: [], startAtMs: now + 600, endAtMs: now + 600 },
-      }),
-    };
-  },
+  // The presenter-paced Check (D107–D126), on Quina 3: #57 fails its third row at «Elefants»; #123's top row is complete
+  // once «Tots Som Súpers» lands (lineState); #204 fails at its first song; #508 is a special card.
+  /** #57's Check has just come on screen: nothing revealed; the first press reveals «All Night». */
+  checkStarted: (now) => ({ state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 3000, revealed: 0, startAtMs: now - 1500 }], FIXTURE_LANDED) }),
+  /** #57 halfway: «All Night» revealed, «Aserejé»'s snippet playing; #204 (not registered as sold) waits its turn. */
+  check: (now) => ({
+    state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 9000, revealed: 2, lastAtMs: now - 800 }, { ...CARD_204, atMs: now - 6000, warnings: ['notSold'] }], FIXTURE_LANDED),
+  }),
+  /** «Seguides» on: #57's songs reveal in a row, the third playing now. */
+  checkAuto: (now) => ({ state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 12000, revealed: 3, lastAtMs: now - 600, auto: true }], FIXTURE_LANDED) }),
+  /** #123 at its cue: its top row has all sounded, and the next press is «Celebrem!» (the fanfare and the Celebration). */
+  checkValid: (now) => ({
+    state: pacedCheck(lineState(now), [{ ...CARD_123, atMs: now - 20000, revealed: 4, lastAtMs: now - 3000 }], FIXTURE_LANDED_LINE),
+  }),
+  /** #57 at its cue: «Elefants», the 4th, didn't sound, so the next press is «Fallada» (the fail moment). */
+  checkFailed: (now) => ({ state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 16000, revealed: 4, lastAtMs: now - 1500 }], FIXTURE_LANDED) }),
+  /** #57 under review («Revisió manual») after 3 reveals; «Elefants» is next. Whatever was playing goes on. */
+  checkReview: (now) => ({
+    state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 20000, revealed: 3, lastAtMs: now - 8000, reviewing: true }], FIXTURE_LANDED),
+  }),
+  /** Two cards claimed: #123 at its cue (it passes, but #204 waits: «Vàlid · següent», no fanfare). */
+  checkTwo: (now) => ({
+    state: pacedCheck(lineState(now), [{ ...CARD_123, atMs: now - 20000, revealed: 4, lastAtMs: now - 2500 }, { ...CARD_204, atMs: now - 18000, warnings: ['notSold'] }], FIXTURE_LANDED_LINE),
+  }),
+  /** Just after #123's cue: valid, with its plaque and no fanfare; #204's Check comes on screen in a moment. */
+  checkCuePass: (now) => ({
+    state: pacedCheck(lineState(now), [{ ...CARD_123, atMs: now - 22000, revealed: 4, lastAtMs: now - 4000, cue: 'pass' }, { ...CARD_204, atMs: now - 18000, warnings: ['notSold'] }], FIXTURE_LANDED_LINE),
+  }),
+  /** Just after #57's cue: it failed (the fail moment), and #204's Check comes on screen in a moment. */
+  checkCueFail: (now) => ({
+    state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 20000, revealed: 4, lastAtMs: now - 3500, cue: 'fail' }, { ...CARD_204, atMs: now - 9000, warnings: ['notSold'] }], FIXTURE_LANDED),
+  }),
+  /** The last card (#204) failed after #123 passed: one more press («Celebrem!») starts #123's Celebration. */
+  checkCelebrateNext: (now) => ({
+    state: pacedCheck(
+      lineState(now),
+      [{ ...CARD_123, atMs: now - 30000, revealed: 4, lastAtMs: now - 16000, cue: 'pass' }, { ...CARD_204, atMs: now - 28000, revealed: 1, lastAtMs: now - 2500, cue: 'fail', warnings: ['notSold'] }],
+      FIXTURE_LANDED_LINE,
+      { claimId: CARD_204.claimId, step: 2 },
+    ),
+  }),
+  /** A special card claimed in a regular round: nothing to reveal, and the first press is the cue, «Fallada». */
+  checkWrongType: (now) => ({ state: pacedCheck(baseState(now), [{ claimId: 'cl-8', cardId: 508, kind: 'line', atMs: now - 3000, revealed: 0, warnings: ['notSold'] }], FIXTURE_LANDED) }),
   celebration: (now) => {
     const s = baseState(now);
     return {
@@ -455,7 +613,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         status: 'playing',
         autoAtMs: null,
         round: { ...s.round, lineConfirmed: true },
-        celebration: { kind: 'line', round: 3, cardIds: [123], winningSongId: 69, sinceMs: now - 1500, music: 'winningSong' },
+        celebration: { kind: 'line', round: 3, cardIds: [123], winningSongId: 69, sinceMs: now - 1500, music: 'winningSong', parlem: false },
         winners: [...s.winners, { round: 3, kind: 'line', cardId: 123, claimId: 'cl-7', winningSongId: 69, position: s.queue.position, atMs: now - 1500, name: null, notes: null }],
       }),
     };
@@ -468,7 +626,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         status: 'playing',
         autoAtMs: null,
         round: { ...s.round, lineConfirmed: true },
-        celebration: { kind: 'bingo', round: 3, cardIds: [57, 301], winningSongId: 7, sinceMs: now - 1500, music: 'victory' },
+        celebration: { kind: 'bingo', round: 3, cardIds: [57, 301], winningSongId: 7, sinceMs: now - 1500, music: 'victory', parlem: false },
       }),
     };
   },
@@ -482,7 +640,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         current: null,
         next: null,
         interval: { sinceMs: now - 40000, nextRound: 4, guideEndMs: now + 140000 },
-        intervalMusic: { track: { title: 'Last Christmas', artist: 'Wham!', index: 3, count: 24, sinceMs: now - 25000 } },
+        intervalMusic: { set: 'breaks', track: { title: 'Last Christmas', artist: 'Wham!', index: 3, count: 24, sinceMs: now - 25000 } },
       }),
     };
   },
@@ -492,7 +650,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   },
   pause: (now) => {
     const s = baseState(now);
-    return { state: withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now - 30000 }, hold: { sinceMs: now - 30000, reason: 'music', holdMusic: true, holdMusicAtMs: null } }) };
+    return { state: withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now - 30000, overlay: true }, hold: { sinceMs: now - 30000, reason: 'music', holdMusic: true, holdMusicAtMs: null } }) };
   },
   suspense: (now) => {
     const s = baseState(now);

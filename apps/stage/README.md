@@ -44,7 +44,9 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 ### Failure behaviour
 
 - **Relay lost:** the scene stays. After 3 s a small dot turns red (`link-lost`).
-- **`cards.json` or covers missing:** titles still show, from the snapshot. A Check grid shows only the played songs.
+- **`cards.json` or covers missing:** titles still show, from the snapshot. A Check grid shows only the revealed songs.
+- **An odd Check in a snapshot** (no `revealed`, an older engine): it draws as a Check with nothing revealed, never a crash (the stage runs inside the show page).
+- **The last card's fail:** the engine goes straight back to the round (scene `play`, Hold `checkFailed`) as the cue plays, so the stage keeps that Check on screen, with its fail moment, while that Hold lasts (`model/check.ts` › `shownCheck`). A projector reloaded meanwhile shows the round.
 - **No plan:** the night's preview, the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`. The Check's type badge still names the type (below).
 - **`card-types.json` missing or broken:** card type names, colours and prices fall back to the plan's old copy (`plan.cardTypes`, deprecated) while plans carry one, then to "Cartró <id>" in a neutral colour.
 - **QR can't be drawn:** the short link shows in its place.
@@ -55,14 +57,14 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 A theme targets these hooks without touching any logic:
 - `data-scene` on each scene's `<section>`, plus `data-scene` on the root for the current scene;
 - `data-anim` with the ANIMATIONS.md hook names;
-- `data-state` on Check cells (`pending`, `playing`, `landed`, `missed`, `idle`) and covers (`loading`, `loaded`, `missing`, `empty`);
-- on the Check's `.check` (`data-testid="check"`): `data-result` (`pending`, then the verdict), `data-verdict` (`complete`, `incomplete`, `notValid`) once the result shows, `data-wrong-type` for a card of the wrong type, `data-plaque` (`rows`, `row`, `card`) and `--plaque-at` for where the result (plaque or ✗) sits (`model/check.ts` › `plaqueSpot`); `data-state` (`pending`, `ok`, `wrong`) on the type badge `.check__type`; `data-sticker` on the result when its nino shows;
+- `data-state` on Check cells (`pending`, `playing`, `landed`, `missed`, `idle`), `data-replay` on the cell whose snippet a step back replays, and covers (`loading`, `loaded`, `missing`, `empty`);
+- on the Check's `.check` (`data-testid="check"`): `data-revealed` (how many songs are revealed), `data-cue` (`pass` or `fail`, once the cue has played), `data-reviewing` (under review, «Revisió manual»), `data-discarded` (discarded from its review: it fades out), `data-result` (`pending`, then the verdict), `data-verdict` (`complete`, `incomplete`, `fallen`, `fellLast`, `notValid`) once the result shows, `data-wrong-type` for a card of the wrong type, `data-plaque` (`rows`, `row`, `card`) and `--plaque-at` for where the result (plaque or ✗) sits (`model/check.ts` › `plaqueSpot`); `data-state` (`pending`, `ok`, `wrong`) on the type badge `.check__type`; `data-sticker` on the result when its nino shows;
 - the BEM classes;
 - `data-drum="shown|hidden"`, `data-link` and `data-paused` on the root.
 
 On each hook, the basic theme plays a short CSS transition: the element is held in `.is-entering` for one frame, then transitions in. The root also dispatches `quina:anim` events with `detail.name`, one of:
 - `scene-enter`, `spin`, `landing`, `suspense`, `heat`;
-- `shuffle`, `check-enter`, `check-type`, `check-step`, `check-result`;
+- `shuffle`, `check-enter`, `check-type`, `check-step`, `check-unreveal`, `check-review`, `check-result`, `check-fallen`;
 - `celebrate`, `interval-rotate`, `idle`, `credits`, `pause`, `link-lost`.
 
 Each event fires at the show-clock time from its timestamp, never when the message arrives. A late join enters the scene without replaying past moments. `prefers-reduced-motion` switches to the still fallbacks.
@@ -112,9 +114,10 @@ Each event fires at the show-clock time from its timestamp, never when the messa
    - `suspense.started`;
    - `transition.landed`;
    - `transition.cancelled`;
-   - `landing.undone`.
+   - `landing.undone`;
+   - `check.reviewing` (when a review began, so the marks stay as they were) and `check.unrevealed` (a step back: the snippet before it replays).
 
-   They are all emitted already.
+   They are all emitted already. The Check itself (its reveals, the cue, a review) comes with the state.
 
 ## Checks
 
@@ -122,6 +125,7 @@ Each event fires at the show-clock time from its timestamp, never when the messa
 npx tsc -p tsconfig.ui.json
 node --test "tests/ui/**/*.test.ts"
 node relay/server.ts --port 5192   # then open /stage/?demo=play (or before, roundStart, shuffle, spin, hold,
-                                   # suspense, check, checkValid, checkFailed, checkWrongType, celebration, celebrationBingo,
+                                   # suspense, checkStarted, check, checkAuto, checkValid, checkFailed, checkReview, checkTwo,
+                                   # checkCuePass, checkCueFail, checkCelebrateNext, checkWrongType, celebration, celebrationBingo,
                                    # interval, after, pause)
 ```

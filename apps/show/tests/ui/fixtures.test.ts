@@ -12,6 +12,9 @@ import {
   DESGRACIAT_LAST_CARD,
   DESGRACIAT_STANDING_23,
   DESGRACIAT_STANDING_26,
+  FIXTURE_CARDS,
+  FIXTURE_LANDED,
+  FIXTURE_LANDED_LINE,
   FIXTURES,
 } from '../../../../packages/ui/fixtures/states.ts';
 
@@ -62,13 +65,50 @@ test('the Desgraciat fixtures: the standing list only from 60 down, and the Chec
   assert.equal(fallen.outcome, 'fallen');
   assert.equal(fallen.kind, 'standing');
   assert.equal(fallen.row, null);
-  assert.ok(fallen.endAtMs < NOW, 'over');
-  assert.deepEqual(fallen.steps.map((s) => s.landed), [false, false, false, false, false, false, true], 'it stops at the first landed song');
-  assert.equal(fallen.steps.at(-1)?.durationMs, 2500, 'the landed song plays its snippet');
-  assert.ok(fallen.steps.slice(0, -1).every((s) => s.durationMs === 550), 'a ✓ is a short knock');
+  assert.equal(fallen.total, 12);
+  assert.equal(fallen.cue, null, 'at its cue, not past it');
+  assert.deepEqual(fallen.revealed.map((s) => s.landed), [false, false, false, false, false, false, true], 'it stops at the first landed song');
+  assert.equal(fallen.revealed.at(-1)?.durationMs, 2500, 'the landed song plays its snippet');
+  assert.ok(fallen.revealed.slice(0, -1).every((s) => s.durationMs === 550), 'a ✓ is a short knock');
+  assert.equal(FIXTURES.checkFallen(NOW).state.claims[0].cueNext, true);
   const running = FIXTURES.checkStanding(NOW).state.check;
-  assert.ok(running && running.startAtMs > NOW && running.outcome === 'fallen');
+  assert.ok(running && running.auto && running.revealed.length === 5 && running.outcome === 'fallen');
   const valid = FIXTURES.checkStandingValid(NOW).state.check;
-  assert.ok(valid && valid.outcome === 'complete' && valid.steps.length === 12 && valid.steps.every((s) => !s.landed) && valid.endAtMs < NOW);
+  assert.ok(valid && valid.outcome === 'complete' && valid.revealed.length === 12 && valid.revealed.every((s) => !s.landed));
   assert.equal(FIXTURES.celebrationStanding(NOW).state.celebration?.kind, 'standing');
+});
+
+test('the Check fixtures claim printed cards, and reveal them as the engine does', () => {
+  const { cards } = parseCards(JSON.parse(fs.readFileSync(CARDS_JSON, 'utf8')));
+  for (const [id, card] of Object.entries(FIXTURE_CARDS)) {
+    assert.equal(cards.get(Number(id))?.type, card.type, `#${id}'s type`);
+    assert.deepEqual(cards.get(Number(id))?.lines, card.lines, `#${id}'s songs`);
+  }
+  const line57 = new Set(FIXTURE_LANDED);
+  assert.deepEqual(FIXTURE_CARDS[57].lines[2].map((id) => line57.has(id)), [true, true, true, false], "#57's third row misses «Elefants»");
+  const line123 = new Set(FIXTURE_LANDED_LINE);
+  assert.ok(FIXTURE_CARDS[123].lines[0].every((id) => line123.has(id)), "#123's top row is complete once «Tots Som Súpers» lands");
+});
+
+test('the Check fixtures: nothing revealed, revealing, at the cue, past it, under review', () => {
+  const at = (name: string) => FIXTURES[name](NOW).state;
+  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkTwo', 'checkCuePass', 'checkCueFail', 'checkCelebrateNext', 'checkWrongType', 'checkStanding', 'checkFallen', 'checkCueFallen', 'checkStandingValid']) {
+    const s = at(name);
+    assert.equal(s.scene, 'check', name);
+    const check = s.check;
+    assert.ok(check, name);
+    const claim = s.claims.find((c) => c.claimId === check.claimId);
+    assert.ok(claim, name);
+    assert.ok(check.revealed.length <= check.total, name);
+    assert.ok(claim.revealUntil === null || check.revealed.length <= claim.revealUntil + 1, `${name}: the reveals stop at the first ✗`);
+    assert.equal(check.revealed.every((r, i) => i === 0 || r.atMs > check.revealed[i - 1].atMs), true, `${name}: in order`);
+    assert.equal(claim.status, check.cue === 'pass' ? 'valid' : check.cue === 'fail' ? 'invalid' : check.reviewing ? 'reviewing' : 'checking', name);
+  }
+  assert.equal(at('checkStarted').check?.revealed.length, 0);
+  assert.equal(at('checkValid').claims[0].cueNext, true, 'the next press is the cue');
+  assert.equal(at('checkFailed').check?.revealed.at(-1)?.landed, false, 'the ✗ is the last reveal');
+  assert.equal(at('checkWrongType').check?.total, 0);
+  assert.equal(at('checkWrongType').claims[0].cueNext, true, 'a card of the wrong type: the first press is the cue');
+  assert.deepEqual(at('checkCelebrateNext').celebrationNext, { claimId: 'cl-6', step: 2 });
+  assert.equal(at('checkTwo').claims.length, 2);
 });

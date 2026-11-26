@@ -250,13 +250,13 @@ export function progress(plan: ScheduleOf | null, state: PublicState | null): { 
 
 /**
  * Each planned round's rough start time from the schedule, or null when the schedule has no start: a round and an
- * Interval each, plus the planned breaks ("parón") before it.
+ * Interval each, plus the minutes of the planned Throws before it (D136).
  */
 export function plannedStarts(plan: ScheduleOf | null): Map<number, number> | null {
   if (!plan?.schedule.startAtMs) return null;
-  const { startAtMs, roundMinutes, intervalMinutes, breaks = [] } = plan.schedule;
-  const breakMinutes = (number: number) => breaks.filter((b) => b.afterRound < number).reduce((sum, b) => sum + b.minutes, 0);
-  return new Map(plan.rounds.map((r, i) => [r.number, startAtMs + (i * (roundMinutes + intervalMinutes) + breakMinutes(r.number)) * 60_000] as const));
+  const { startAtMs, roundMinutes, intervalMinutes, throws = [] } = plan.schedule;
+  const throwMinutes = (number: number) => throws.filter((t) => t.afterRound < number).reduce((sum, t) => sum + t.minutes, 0);
+  return new Map(plan.rounds.map((r, i) => [r.number, startAtMs + (i * (roundMinutes + intervalMinutes) + throwMinutes(r.number)) * 60_000] as const));
 }
 
 /**

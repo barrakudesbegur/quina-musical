@@ -24,20 +24,23 @@ test('in play it is Següent; during a Spin Següent stays the default but is di
   assert.equal(of('hold')?.control, 'next');
 });
 
-test('a Check: nothing while it runs, then the verdict its result points to', () => {
-  assert.equal(of('check'), null, 'still running');
-  const check = FIXTURES.check(NOW).state.check;
-  assert.ok(check);
-  assert.deepEqual(of('check', check.endAtMs), { control: 'reject', command: { cmd: 'decide', args: { claimId: 'cl-5', valid: false } }, enabled: true }, 'due: an incomplete card is rejected');
-  assert.deepEqual(of('checkValid'), { control: 'confirm', command: { cmd: 'decide', args: { claimId: 'cl-7', valid: true } }, enabled: true });
-  assert.deepEqual(of('checkFailed')?.command, { cmd: 'decide', args: { claimId: 'cl-5', valid: false } });
-  assert.equal(of('checkWrongType', NOW + 600)?.control, 'reject', 'a card of the wrong type');
+test('a Check: the big button, with the step each press expects; nothing under review or between cards', () => {
+  assert.deepEqual(of('checkStarted'), { control: 'check', command: { cmd: 'checkNext', args: { claimId: 'cl-5', step: 0 } }, enabled: true }, 'the first reveal');
+  assert.deepEqual(of('check')?.command, { cmd: 'checkNext', args: { claimId: 'cl-5', step: 2 } });
+  assert.deepEqual(of('checkValid')?.command, { cmd: 'checkNext', args: { claimId: 'cl-7', step: 4 } }, 'the cue: «Celebrem!»');
+  assert.deepEqual(of('checkFailed')?.command, { cmd: 'checkNext', args: { claimId: 'cl-5', step: 4 } }, 'the cue: «Fallada»');
+  assert.deepEqual(of('checkWrongType')?.command, { cmd: 'checkNext', args: { claimId: 'cl-8', step: 0 } }, 'a card of the wrong type: the first press is the cue');
+  assert.deepEqual(of('checkCelebrateNext')?.command, { cmd: 'checkNext', args: { claimId: 'cl-6', step: 2 } }, 'the shared Celebration');
+  assert.deepEqual(of('checkAuto')?.command, { cmd: 'checkAuto', args: { on: false } }, '«Seguides» on: a press stops it');
+  assert.equal(of('checkReview'), null, 'under review A does nothing (D135)');
+  assert.equal(of('checkCuePass'), null, 'the next card comes on screen by itself');
 });
 
-test('a decided Check offers nothing more', () => {
-  const s = FIXTURES.checkValid(NOW).state;
-  const decided = { ...s, claims: s.claims.map((c) => ({ ...c, status: 'valid' as const })) };
-  assert.equal(defaultAction(input(decided)), null);
+test('the claim pad, while open, takes A: «Comprovar» its numbers, nothing while it has none', () => {
+  const s = FIXTURES.check(NOW).state;
+  const claim = { cardIds: [57, 204], kind: 'line' as const };
+  assert.deepEqual(defaultAction({ ...input(s), pad: { claim } }), { control: 'claimPad', command: { cmd: 'claim', args: claim }, enabled: true });
+  assert.equal(defaultAction({ ...input(s), pad: { claim: null } }), null, 'never the Check underneath');
 });
 
 test('round start: Barreja once introduced, nothing during the Shuffle, then Següent', () => {
@@ -66,7 +69,7 @@ test("the Interval starts the next round, with its kind and card type from the p
 test('Pausa: end it, whatever the scene underneath', () => {
   assert.deepEqual(of('pause'), { control: 'endPause', command: { cmd: 'pause', args: { on: false } }, enabled: true });
   const s = FIXTURES.checkValid(NOW).state;
-  assert.equal(defaultAction(input({ ...s, pause: { sinceMs: NOW - 1000 } }))?.control, 'endPause');
+  assert.equal(defaultAction(input({ ...s, pause: { sinceMs: NOW - 1000, overlay: true } }))?.control, 'endPause');
 });
 
 test('before and after the night, and without a snapshot: nothing', () => {
@@ -79,8 +82,9 @@ test('sendDefault sends exactly the command, and nothing for a disabled or missi
   const sent: unknown[][] = [];
   const act = ((cmd: string, ...args: unknown[]) => (sent.push([cmd, ...args]), 'r1')) as Parameters<typeof sendDefault>[0];
   assert.equal(sendDefault(act, of('checkValid')), 'r1');
+  assert.equal(sendDefault(act, of('checkAuto')), 'r1');
   assert.equal(sendDefault(act, of('play')), 'r1');
   assert.equal(sendDefault(act, of('spin')), null);
   assert.equal(sendDefault(act, null), null);
-  assert.deepEqual(sent, [['decide', { claimId: 'cl-7', valid: true }], ['next']]);
+  assert.deepEqual(sent, [['checkNext', { claimId: 'cl-7', step: 4 }], ['checkAuto', { on: false }], ['next']]);
 });

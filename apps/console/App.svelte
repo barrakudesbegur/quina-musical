@@ -3,7 +3,7 @@
   (console.css):
   - landscape: the header's three panels across the top; the scene's panels in a column on the left, the
     helpers' tabs filling the rest of it; the action cluster on the right. In a Check, the Check board takes
-    the whole body;
+    the whole body, and so does the claim pad while it's open;
   - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
   and data-status hooks for themes, and data-wii while a Wii remote is connected (its badges show).
@@ -32,7 +32,7 @@
   import Menu from './components/Menu.svelte';
   import NextSong from './components/NextSong.svelte';
   import NowPlaying from './components/NowPlaying.svelte';
-  import NumberPad from './components/NumberPad.svelte';
+  import ClaimPad from './components/ClaimPad.svelte';
   import PacePanel from './components/PacePanel.svelte';
   import PausePanel from './components/PausePanel.svelte';
   import RoundStartPanel from './components/RoundStartPanel.svelte';
@@ -64,8 +64,8 @@
   }
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
-  const board = $derived(snap !== null && flow.scene === 'check' ? 'check' : 'play');
-  let padOpen = $state(false);
+  const board = $derived(model.pad ? 'pad' : snap !== null && flow.scene === 'check' ? 'check' : 'play');
+  const openPad = () => model.openPad();
   let menuOpen = $state(false);
   let wiiOpen = $state(false);
 
@@ -96,10 +96,14 @@
     {/if}
   </div>
 
-  {#if board === 'check'}
+  {#if board === 'pad'}
+    <main class="console__board">
+      <ClaimPad />
+    </main>
+  {:else if board === 'check'}
     <main class="console__board">
       <PausePanel />
-      <CheckPanel onclaim={() => (padOpen = true)} />
+      <CheckPanel onclaim={openPad} />
     </main>
   {:else}
     <main class="console__main" data-scene={flow.scene}>
@@ -132,10 +136,9 @@
       {#if snap}<HelperTabs />{/if}
     </main>
 
-    <ThumbCluster onclaim={() => (padOpen = true)} />
+    <ThumbCluster onclaim={openPad} />
   {/if}
 
-  <NumberPad bind:open={padOpen} />
   <Menu bind:open={menuOpen} onwii={() => ((menuOpen = false), (wiiOpen = true))} />
   <WiiDialog bind:open={wiiOpen} />
   <Toasts />

@@ -33,7 +33,7 @@ const SECRET = {
   hook: 'SECRET-HOOK',
 };
 const SECRET_VALUES = new Set<unknown>(Object.values(SECRET));
-const FORBIDDEN_KEYS = ['next', 'to', 'targetId', 'drum', 'queue', 'possibleWinners', 'phase', 'warnings', 'completeSince', 'outcome', 'steps', 'name', 'notes', 'claims', 'history', 'game', 'cards', 'pace', 'hold', 'current'];
+const FORBIDDEN_KEYS = ['next', 'to', 'targetId', 'drum', 'queue', 'possibleWinners', 'phase', 'warnings', 'completeSince', 'outcome', 'steps', 'revealed', 'markedCard', 'revealUntil', 'cueNext', 'total', 'name', 'notes', 'claims', 'history', 'game', 'cards', 'pace', 'hold', 'current'];
 
 /** The play fixture with every private field filled with sentinels. */
 function secretState(): ShowState {
@@ -56,7 +56,21 @@ function secretState(): ShowState {
     history: [{ recipe: 'R7', family: 'cut', exit: null, songId: SECRET.historySong, hookId: SECRET.hook, phase: 'final' }],
     current: { ...s.current!, hookId: SECRET.hook },
     claims: [
-      { claimId: 'cl-9', round: 3, cardId: 57, kind: 'line', atMs: NOW, position, status: 'checked', outcome: 'complete', completeSince: SECRET.completeSince, warnings: ['notSold'] },
+      {
+        claimId: 'cl-9',
+        round: 3,
+        cardId: 57,
+        kind: 'line',
+        atMs: NOW,
+        position,
+        status: 'checking',
+        outcome: 'complete',
+        completeSince: SECRET.completeSince,
+        warnings: ['notSold'],
+        markedCard: [{ songId: SECRET.checkStepSong, landed: true }],
+        revealUntil: 3,
+        cueNext: true,
+      },
     ],
     check: {
       claimId: 'cl-9',
@@ -65,9 +79,13 @@ function secretState(): ShowState {
       outcome: 'complete',
       row: 2,
       otherRows: [],
-      steps: [{ songId: SECRET.checkStepSong, landed: true, atMs: NOW, durationMs: 2500 }],
+      cardType: 'normal',
       startAtMs: NOW,
-      endAtMs: NOW + 12_000,
+      total: 4,
+      revealed: [{ songId: SECRET.checkStepSong, landed: true, atMs: NOW, durationMs: 2500 }],
+      auto: true,
+      cue: null,
+      reviewing: false,
     },
     scene: 'check',
     winners: s.winners.map((w) => ({ ...w, name: SECRET.name, notes: SECRET.notes })),
@@ -154,6 +172,22 @@ test('the Spin carries only its timing; the exact start comes from the Spin even
   assert.deepEqual(out.spin, { startAtMs: NOW, landAtMs: NOW + 5000 });
   const withEvent = projected([{ v: PROTOCOL_VERSION, type: 'suspense.started', id: 'tr-secret', reqId: null, from: 7, to: SECRET.target, position: 17, phase: 'final', spinStartAtMs: NOW - 3000, exitAtMs: NOW, autoReleaseAtMs: NOW + 9000, drum: { removeId: null, targetId: SECRET.drumTarget } } as unknown as IncomingEvent]);
   assert.equal(withEvent.spin?.startAtMs, NOW - 3000);
+});
+
+test("the phones see a Check's result only from its cue: pending while revealing, under review and at the cue", () => {
+  const resultOf = (name: string) => {
+    const p = new PublicProjector(() => 0.5);
+    p.ingest(FIXTURES[name](NOW).state, NOW);
+    return p.project(ctx).check;
+  };
+  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkTwo', 'checkWrongType', 'checkStanding', 'checkFallen']) {
+    assert.equal(resultOf(name)?.result, 'pending', name);
+  }
+  assert.deepEqual(resultOf('check'), { round: 3, cardId: 57, kind: 'line', result: 'pending' });
+  assert.deepEqual(resultOf('checkCuePass'), { round: 3, cardId: 123, kind: 'line', result: 'valid' });
+  assert.deepEqual(resultOf('checkCueFail'), { round: 3, cardId: 57, kind: 'line', result: 'invalid' });
+  assert.equal(resultOf('checkCueFallen')?.result, 'invalid');
+  assert.equal(resultOf('checkCelebrateNext')?.result, 'invalid', "the last card's fail, while one more press starts the Celebration");
 });
 
 test('a Check stays pending until a presenter decides, whatever the engine found', () => {

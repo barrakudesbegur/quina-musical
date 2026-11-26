@@ -6,7 +6,11 @@ import { buttonChanges, parseReport, REPORT } from '../../../../console/wii/repo
 import { ShakeDetector } from '../../../../console/wii/shake.ts';
 import { WiiMapper, type WiiContext, type WiiOutput } from '../../../../console/wii/mapping.ts';
 
-const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false };
+const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false, check: null };
+/** A Check revealing its third song. */
+const revealing: WiiContext = { ...idle, check: { back: { claimId: 'cl-5', step: 1 }, review: { claimId: 'cl-5' }, auto: true } };
+/** A Check under review: no step back, no review, no reveals. */
+const reviewing: WiiContext = { ...idle, check: { back: null, review: null, auto: false } };
 const cmds = (outs: WiiOutput[]) => outs.map((o) => o.command);
 const rest = { x: 0, y: 0, z: 1 };
 const jolt = { x: 3.2, y: 0.4, z: 1 };
@@ -76,21 +80,57 @@ test('B held plus the shake switches to Suspens once; releasing B lands it', () 
 test('1 or 2 held for 1.5 s is Enrere, once per press, with a long rumble; a short press does nothing', () => {
   const m = new WiiMapper(WII);
   m.press('one', 0, idle);
-  assert.deepEqual(m.tick(1000), []);
-  assert.deepEqual(m.tick(1500), [{ command: { cmd: 'back' }, rumble: 'back' }]);
-  assert.deepEqual(m.tick(2500), [], 'still held: only once');
+  assert.deepEqual(m.tick(1000, idle), []);
+  assert.deepEqual(m.tick(1500, idle), [{ command: { cmd: 'back' }, rumble: 'back' }]);
+  assert.deepEqual(m.tick(2500, idle), [], 'still held: only once');
   m.release('one', idle);
   m.press('two', 3000, idle);
-  m.release('two', idle);
-  assert.deepEqual(m.tick(5000), []);
+  assert.deepEqual(m.release('two', idle), []);
+  assert.deepEqual(m.tick(5000, idle), []);
+});
+
+test('in a Check, 1 or 2 pressed once takes the last revealed mark off (D127, D134); held, it is still Enrere', () => {
+  const m = new WiiMapper(WII);
+  m.press('two', 0, revealing);
+  assert.deepEqual(m.tick(200, revealing), []);
+  assert.deepEqual(m.release('two', revealing), [{ command: { cmd: 'checkBack', args: { claimId: 'cl-5', step: 1 } }, rumble: 'tap' }]);
+  m.press('one', 1000, reviewing);
+  assert.deepEqual(m.release('one', reviewing), [], 'not under review, nor after the cue');
+  m.press('one', 2000, revealing);
+  assert.deepEqual(cmds(m.tick(2000 + WII.backHoldMs, revealing)), [{ cmd: 'back' }], 'the hold undoes a landing, as today (U104)');
+  assert.deepEqual(m.release('one', revealing), [], 'and no step back on top');
+});
+
+test('in a Check, A held reveals in a row until it is let go; outside a Check a hold does nothing more', () => {
+  const m = new WiiMapper(WII);
+  assert.deepEqual(cmds(m.press('a', 0, revealing)), [{ cmd: 'default' }], 'the press reveals one at once');
+  assert.deepEqual(m.tick(WII.aHoldMs - 10, revealing), []);
+  assert.deepEqual(m.tick(WII.aHoldMs, revealing), [{ command: { cmd: 'checkAuto', args: { on: true } }, rumble: 'autoOn' }]);
+  assert.deepEqual(m.tick(WII.aHoldMs + 2000, revealing), [], 'once');
+  assert.deepEqual(m.release('a', revealing), [{ command: { cmd: 'checkAuto', args: { on: false } }, rumble: 'autoOff' }]);
+  m.press('a', 5000, idle);
+  assert.deepEqual(m.tick(5000 + WII.aHoldMs, idle), []);
+  assert.deepEqual(m.tick(5000 + WII.aHoldMs + 100, revealing), [], 'a Check coming on meanwhile: still nothing');
+  assert.deepEqual(m.release('a', revealing), []);
+  m.press('a', 9000, reviewing);
+  assert.deepEqual(m.tick(9000 + WII.aHoldMs, reviewing), [], 'under review A does nothing (D135)');
+});
+
+test('in a Check, − or + held is «Revisió manual» (D128); under review it is Pausa again (D135)', () => {
+  const m = new WiiMapper(WII);
+  m.press('minus', 0, revealing);
+  assert.deepEqual(m.tick(WII.pauseHoldMs, revealing), [{ command: { cmd: 'checkReview', args: { claimId: 'cl-5' } }, rumble: 'pause' }]);
+  assert.deepEqual(m.release('minus', revealing), []);
+  m.press('plus', 2000, reviewing);
+  assert.deepEqual(cmds(m.tick(2000 + WII.pauseHoldMs, reviewing)), [{ cmd: 'pause', args: { on: true } }]);
 });
 
 test('− or + held is Pausa (once, its own rumble, nothing on release); a tap in Pausa leaves it', () => {
   const m = new WiiMapper(WII);
   m.press('minus', 0, idle);
-  assert.deepEqual(m.tick(WII.pauseHoldMs - 10), []);
-  assert.deepEqual(m.tick(WII.pauseHoldMs), [{ command: { cmd: 'pause', args: { on: true } }, rumble: 'pause' }]);
-  assert.deepEqual(m.tick(WII.pauseHoldMs + 500), [], 'only once');
+  assert.deepEqual(m.tick(WII.pauseHoldMs - 10, idle), []);
+  assert.deepEqual(m.tick(WII.pauseHoldMs, idle), [{ command: { cmd: 'pause', args: { on: true } }, rumble: 'pause' }]);
+  assert.deepEqual(m.tick(WII.pauseHoldMs + 500, idle), [], 'only once');
   assert.deepEqual(m.release('minus', idle), [], 'the hold already acted');
   m.press('plus', 5000, { ...idle, paused: true });
   assert.deepEqual(cmds(m.release('plus', { ...idle, paused: true })), [{ cmd: 'pause', args: { on: false } }]);

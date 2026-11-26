@@ -36,6 +36,8 @@ export const STAGE = Object.freeze({
    * have dropped in (never after the first snippet starts; the engine leaves 1.5 s before it).
    */
   checkTypeLeadMs: 900,
+  /** `check-unreveal`: how long a step back's lifted mark stays (its lift-off is `--stage-dur-unreveal`, 240 ms). */
+  checkUnrevealMs: 300,
   /**
    * Ninos stickers, by where they show: URLs of the game-style versions (flat colour, sticker border) of
    * `brand/ninos/`, kept in `assets/` and bundled by Vite. A null sticker is left out (its plaque centres its

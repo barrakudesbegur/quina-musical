@@ -6,7 +6,7 @@
 // draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
 // ever comes out.
 import { winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
-import type { FlowFields, WinKind } from '../../packages/ui/flow.ts';
+import type { CheckInfo, FlowFields, WinKind } from '../../packages/ui/flow.ts';
 import { prizeBundleOf, revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { comingRoundPrice, knownCardTypes, type ComingRoundPrice } from '../../packages/ui/data/card-types.ts';
@@ -14,7 +14,7 @@ import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';
 import { motionView, type MotionView, type SpinNote } from './model/motion.ts';
-import { cardTypeBadge, checkCells, verdictOf, type CheckView } from './model/check.ts';
+import { cardTypeBadge, checkCells, checkTypeOk, NO_CHECK_MEMORY, shownCheck, verdictOf, type CheckMemory, type CheckView } from './model/check.ts';
 import { nightCardTypes, type NightCardType } from './model/night.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
@@ -139,9 +139,11 @@ export interface StageView {
 export interface LiveNotes {
   landed: readonly LandedNote[];
   spin: SpinNote | null;
+  /** The Check between snapshots: the last one on screen, a review's start, a step back (model/check.ts). */
+  check?: CheckMemory;
 }
 
-const NO_NOTES: LiveNotes = { landed: [], spin: null };
+const NO_NOTES: LiveNotes = { landed: [], spin: null, check: NO_CHECK_MEMORY };
 
 function prizeView(plan: GamePlan, kind: WinKind, bundle: readonly Prize[]): PrizeView | null {
   const { headline, others } = splitBundle(bundle.filter((p) => p.title));
@@ -193,8 +195,42 @@ function songLookup(state: ShowState | null, catalog: Catalog | null): SongLooku
   return (songId) => fromState.get(songId) ?? catalog?.songs.get(songId) ?? null;
 }
 
+/**
+ * The Check as the projector may draw it. Nothing private comes out: the result (`verdict`) only from the cue, the type
+ * badge's ✗ with it, the grid from the printed card (public) and the revealed songs.
+ */
+function checkView(shown: { check: CheckInfo; discarded: boolean }, plan: GamePlan | null, catalog: Catalog | null, lookup: SongLookup, memory: CheckMemory): CheckView {
+  const c = shown.check;
+  const steps = c.revealed.map((s) => ({ songId: s.songId, landed: s.landed, atMs: s.atMs, durationMs: s.durationMs }));
+  const row = c.kind === 'line' ? c.row : null;
+  const card = catalog?.cards.get(c.cardId) ?? null;
+  const review = memory.review?.claimId === c.claimId ? memory.review.atMs : null;
+  const back = memory.unrevealed;
+  // A step back replays the song before the one it took off: the new last revealed one.
+  const replayed = back && back.claimId === c.claimId && back.index === steps.length && back.index > 0 ? steps[back.index - 1] : null;
+  return {
+    key: `${c.cardId}@${c.startAtMs}`,
+    cardId: c.cardId,
+    kind: c.kind,
+    cardType: cardTypeBadge(c.cardType, checkTypeOk(c), knownCardTypes(catalog?.cardTypes), plan),
+    verdict: verdictOf(c.outcome, c.cue, c.kind),
+    row,
+    total: c.total,
+    // A card of the wrong type has nothing to reveal: no grid, only its type (and, at the cue, its big card).
+    cells: c.total > 0 ? checkCells(card, steps, row, (id) => lookup(id)?.title ?? null) : [],
+    steps,
+    startAtMs: c.startAtMs,
+    reviewing: c.reviewing,
+    reviewSinceMs: c.reviewing ? review : null,
+    replay: replayed && back ? { step: back.index - 1, fromMs: back.atMs, toMs: back.atMs + replayed.durationMs } : null,
+    discarded: shown.discarded,
+  };
+}
+
 function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | null, catalog: Catalog | null, lookup: SongLookup, notes: LiveNotes): SceneView {
-  const scene = stageScene(flow);
+  const memory = notes.check ?? NO_CHECK_MEMORY;
+  const shown = shownCheck(flow, state?.hold?.reason ?? null, memory.last);
+  const scene = shown ? 'check' : stageScene(flow);
   const link = playerAppLink(plan?.edition, STAGE.playerApp);
   const roundNumber = state?.round.number ?? 0;
   const open = openRounds(plan, state);
@@ -220,28 +256,9 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
         tiles: catalog ? [...catalog.songs.keys()].sort((a, b) => a - b) : [],
       };
     }
-    case 'check': {
-      const c = flow.check;
-      if (!c) return play(); // stageScene only returns 'check' with a check present
-      const steps = c.steps.map((s) => ({ songId: s.songId, landed: s.landed, atMs: s.atMs, durationMs: s.durationMs }));
-      const verdict = verdictOf(c.outcome);
-      const card = catalog?.cards.get(c.cardId) ?? null;
-      return {
-        scene,
-        check: {
-          key: `${c.cardId}@${c.startAtMs}`,
-          cardId: c.cardId,
-          kind: c.kind,
-          cardType: cardTypeBadge(c.cardType, c.outcome, knownCardTypes(catalog?.cardTypes), plan),
-          verdict,
-          row: c.kind === 'line' ? c.row : null,
-          cells: verdict === 'notValid' ? [] : checkCells(card, steps, c.row, (id) => lookup(id)?.title ?? null),
-          steps: verdict === 'notValid' ? [] : steps,
-          startAtMs: c.startAtMs,
-          endAtMs: c.endAtMs,
-        },
-      };
-    }
+    case 'check':
+      // stageScene only returns 'check' with a Check present, and so does shownCheck.
+      return shown ? { scene, check: checkView(shown, plan, catalog, lookup, memory) } : play();
     case 'celebration': {
       const c = flow.celebration;
       if (!c) return play();

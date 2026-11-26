@@ -8,7 +8,7 @@ import { FIXTURES, FIXTURE_NAMES } from '../../../../../packages/ui/fixtures/sta
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { parseCards, type Catalog } from '../../../../../packages/ui/data/catalog.ts';
 import { stageView, type StageView } from '../../../../stage/view.ts';
-import { firstMiss, plaqueSpot } from '../../../../stage/model/check.ts';
+import { firstMiss, NO_CHECK_MEMORY, plaqueSpot } from '../../../../stage/model/check.ts';
 
 const NOW = 1_800_000_000_000;
 
@@ -46,6 +46,8 @@ const SECRET = {
   claimId: 'SECRET-CLAIM-ID',
   standingCount: 4545,
   standingCard: 900005,
+  markedSong: 900006,
+  revealUntil: 4848,
 };
 
 /** A fixture with every private field filled with a recognisable secret. */
@@ -73,9 +75,12 @@ function withSecrets(name: string): FlowState {
         atMs: NOW,
         position: 1,
         status: 'queued',
-        outcome: null,
+        outcome: 'complete',
         completeSince: 41,
         warnings: ['notSold'],
+        markedCard: [{ songId: SECRET.markedSong, landed: true }],
+        revealUntil: SECRET.revealUntil,
+        cueNext: true,
       },
     ],
     winners: [
@@ -86,7 +91,7 @@ function withSecrets(name: string): FlowState {
 }
 
 // Winning card numbers aren't secret, but the projector never shows them: no list of winners or cards comes out.
-const FORBIDDEN_KEYS = ['standing', 'lastStandingAt', 'standingCurve', 'winners', 'lastWinners', 'cardIds', 'next', 'queue', 'possibleWinners', 'future', 'lineAt', 'bingoAt', 'toLine', 'toBingo', 'markCounts', 'ducked', 'claims', 'claimId', 'warnings', 'completeSince', 'otherRows', 'winningSongId', 'name', 'notes', 'phase', 'history', 'to', 'targetId', 'pace', 'schedule', 'game', 'cards', 'hold', 'status'];
+const FORBIDDEN_KEYS = ['standing', 'lastStandingAt', 'standingCurve', 'winners', 'lastWinners', 'cardIds', 'next', 'queue', 'possibleWinners', 'future', 'lineAt', 'bingoAt', 'toLine', 'toBingo', 'markCounts', 'ducked', 'claims', 'claimId', 'warnings', 'completeSince', 'otherRows', 'winningSongId', 'name', 'notes', 'phase', 'history', 'to', 'targetId', 'pace', 'schedule', 'game', 'cards', 'hold', 'status', 'outcome', 'markedCard', 'revealUntil', 'cueNext'];
 
 function keysDeep(value: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(value)) for (const v of value) keysDeep(v, out);
@@ -104,7 +109,7 @@ function assertNoSecrets(view: StageView, label: string): void {
   for (const text of [SECRET.nextTitle, SECRET.nextArtist, SECRET.winnerName, SECRET.winnerNotes, SECRET.claimId, 'h-secret', 'notSold']) {
     assert.ok(!json.includes(text), `${label}: "${text}" leaked`);
   }
-  for (const id of [SECRET.nextSongId, SECRET.transitionTo, SECRET.possibleWinnerCard, SECRET.queuedClaimCard, 777, SECRET.standingCount, SECRET.standingCard, 4444, 4646]) {
+  for (const id of [SECRET.nextSongId, SECRET.transitionTo, SECRET.possibleWinnerCard, SECRET.queuedClaimCard, 777, SECRET.standingCount, SECRET.standingCard, 4444, 4646, SECRET.markedSong, SECRET.revealUntil]) {
     assert.ok(!new RegExp(`\\b${id}\\b`).test(json), `${label}: ${id} leaked`);
   }
   const keys = keysDeep(view);
@@ -180,12 +185,51 @@ test("before: card-types.json's names and colours; only round 1's card type show
   assert.deepEqual(view.body.cardTypes.map((t) => [t.label, t.color, t.priceCents]), [['Cartró blau', '#aaccee', 200 * regular], ['Cartró rosa', '#eeaacc', null]]);
 });
 
-test("check: the badge is named from card-types.json; ✓ or ✗ from the Check's outcome", () => {
+/** A fixture's state with its Check's cue played (as the engine's snapshot right after `check.cue`). */
+function cued(name: string, cue: 'pass' | 'fail'): FlowState {
+  const { state } = FIXTURES[name](NOW);
+  assert.ok(state.check, name);
+  return { ...state, check: { ...state.check, cue } };
+}
+
+test("check: the badge is named from card-types.json; a wrong type's ✗ only from its cue", () => {
   const printed = [{ type: 'especial', name: 'Cartró rosa', color: '#eeaacc', title: '', priceCents: null }];
-  const state = FIXTURES.checkWrongType(NOW).state;
-  const view = stageView(state, flowOf(state), SAMPLE_PLAN, { ...CATALOG, cardTypes: printed });
+  const catalog = { ...CATALOG, cardTypes: printed };
+  const before = FIXTURES.checkWrongType(NOW).state;
+  const view = stageView(before, flowOf(before), SAMPLE_PLAN, catalog);
   if (view.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Cartró rosa', color: '#eeaacc', special: true, ok: false });
+  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Cartró rosa', color: '#eeaacc', special: true, ok: null });
+  const after = cued('checkWrongType', 'fail');
+  const failed = stageView(after, flowOf(after), SAMPLE_PLAN, catalog);
+  if (failed.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(failed.body.check.cardType?.ok, false);
+});
+
+test('nothing tells the room the result before the cue: no verdict, no ✗ on the type, no word of it', () => {
+  for (const name of FIXTURE_NAMES) {
+    const state = FIXTURES[name](NOW).state;
+    if (!state.check || state.check.cue !== null) continue;
+    for (const catalog of [CATALOG, null]) {
+      const view = stageView(state, flowOf(state), SAMPLE_PLAN, catalog);
+      if (view.body.scene !== 'check') return assert.fail(`${name}: not check`);
+      assert.equal(view.body.check.verdict, null, name);
+      assert.notEqual(view.body.check.cardType?.ok, false, name);
+      assert.ok(!/"(complete|incomplete|fallen|fellLast|wrongType|notValid)"/.test(JSON.stringify(view)), `${name}: a result word leaked`);
+    }
+  }
+});
+
+test('at the cue: the result as the cue says, its look from the finding', () => {
+  const at = (state: FlowState) => {
+    const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+    return view.body.scene === 'check' ? view.body.check.verdict : 'not check';
+  };
+  assert.equal(at(FIXTURES.checkCuePass(NOW).state), 'complete');
+  assert.equal(at(FIXTURES.checkCueFail(NOW).state), 'incomplete');
+  assert.equal(at(FIXTURES.checkCelebrateNext(NOW).state), 'incomplete', "the last card's ✗, while one more press starts the Celebration");
+  assert.equal(at(FIXTURES.checkCueFallen(NOW).state), 'fallen');
+  assert.equal(at(cued('checkWrongType', 'fail')), 'notValid');
+  assert.equal(at(cued('checkFailed', 'pass')), 'complete', 'won by hand from a review');
 });
 
 test('roundStart: headline prizes with sponsors and how many more; the Shuffle grid by song id, its window from the engine', () => {
@@ -213,29 +257,35 @@ test('a missing plan hides the sponsors', () => {
   assert.equal(view.body.roundsTotal, 8, 'falls back to the engine setting');
 });
 
-test('check: the card grid from the catalog, the Line row, the steps', () => {
+test('check: the card grid from the catalog, the Line row, the songs revealed so far', () => {
   const state = FIXTURES.check(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'check');
   if (view.body.scene !== 'check') return;
   const c = view.body.check;
   assert.equal(c.cardId, 57);
-  assert.equal(c.verdict, 'incomplete');
+  assert.equal(c.verdict, null, 'no result before the cue');
   assert.equal(c.row, 2);
+  assert.equal(c.total, 4);
   assert.equal(c.cells.length, 12);
-  assert.deepEqual(c.cells.filter((cell) => cell.step !== null).map((cell) => cell.row), [2, 2, 2, 2]);
-  assert.deepEqual(c.steps.map((s) => s.landed), [true, true, true, false]);
+  assert.deepEqual(c.cells.filter((cell) => cell.step !== null).map((cell) => [cell.row, cell.step]), [[2, 0], [2, 1], [2, 2], [2, 3]]);
+  assert.deepEqual(c.steps.map((s) => [s.songId, s.landed]), [[2, true], [62, true]]);
+  assert.equal(c.reviewing, false);
 });
 
-test('check without the catalog: only the played songs', () => {
+test('check without the catalog: only the revealed songs', () => {
   const state = FIXTURES.check(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, null);
   if (view.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(view.body.check.cells.map((c) => [c.songId, c.row, c.col]), [[2, 2, 0], [62, 2, 1], [16, 2, 2], [20, 2, 3]]);
+  assert.deepEqual(view.body.check.cells.map((c) => [c.songId, c.row, c.col]), [[2, 2, 0], [62, 2, 1]]);
+  const started = FIXTURES.checkStarted(NOW).state;
+  const empty = stageView(started, flowOf(started), SAMPLE_PLAN, null);
+  if (empty.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(empty.body.check.cells, [], 'nothing revealed yet');
 });
 
 test('a failed check: the first song that didn\'t sound is named from the catalog, its tile is on the Line\'s row', () => {
-  const state = FIXTURES.check(NOW).state;
+  const state = FIXTURES.checkCueFail(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (view.body.scene !== 'check') return assert.fail('not check');
   const c = view.body.check;
@@ -250,13 +300,78 @@ test('a failed check: the first song that didn\'t sound is named from the catalo
   assert.deepEqual(firstMiss(bare.body.check), { step: 3, songId: 20, title: null });
 });
 
-test('check of an unknown or wrong-type card: not valid, no steps, no grid', () => {
-  const { state } = FIXTURES.check(NOW);
-  const bad: FlowState = { ...state, check: state.check ? { ...state.check, outcome: 'unknownCard', steps: [] } : null };
-  const view = stageView(bad, flowOf(bad), SAMPLE_PLAN, CATALOG);
+test('check of a wrong-type card: nothing to reveal, no grid; at its cue, not valid', () => {
+  const state = cued('checkWrongType', 'fail');
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (view.body.scene !== 'check') return assert.fail('not check');
   assert.equal(view.body.check.verdict, 'notValid');
+  assert.equal(view.body.check.total, 0);
   assert.deepEqual(view.body.check.cells, []);
+});
+
+test("the last card's fail stays on the projector through the round's `checkFailed` Hold (the engine is back in play)", () => {
+  const atCue = FIXTURES.checkFailed(NOW).state;
+  assert.ok(atCue.check);
+  // Right after the cue the engine is back in the round, in the Hold with its error music; the Check is gone.
+  const after: FlowState = {
+    ...atCue,
+    scene: 'play',
+    check: null,
+    hold: { sinceMs: NOW, reason: 'checkFailed', holdMusic: true, holdMusicAtMs: null, ducked: true },
+    claims: atCue.claims.map((c) => ({ ...c, status: 'invalid' as const })),
+  };
+  const memory = { ...NO_CHECK_MEMORY, last: atCue.check };
+  const kept = stageView(after, flowOf(after), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: memory });
+  if (kept.body.scene !== 'check') return assert.fail('not kept');
+  assert.equal(kept.body.check.verdict, 'incomplete');
+  assert.equal(kept.body.check.key, `57@${atCue.check.startAtMs}`, 'the same Check: no entrance again');
+  assertNoSecrets(kept, 'kept');
+  // Without the memory (a projector reloaded meanwhile), or once the Hold ends: the round.
+  assert.equal(stageView(after, flowOf(after), SAMPLE_PLAN, CATALOG).body.scene, 'play');
+  const next: FlowState = { ...after, hold: null, status: 'transition' };
+  assert.equal(stageView(next, flowOf(next), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: memory }).body.scene, 'play');
+});
+
+test('under review: the plaque, the marks as they were when it began; a step back replays the song before', () => {
+  const state = FIXTURES.checkReview(NOW).state;
+  assert.ok(state.check);
+  const review = { ...NO_CHECK_MEMORY, review: { claimId: state.check.claimId, atMs: NOW - 9000 } };
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: review });
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(view.body.check.reviewing, true);
+  assert.equal(view.body.check.reviewSinceMs, NOW - 9000);
+  assert.equal(view.body.check.verdict, null);
+  // A step back from 3 revealed songs to 2: the 2nd («Aserejé») replays for its snippet's length.
+  const two = FIXTURES.check(NOW).state;
+  assert.ok(two.check);
+  const back = { ...NO_CHECK_MEMORY, unrevealed: { claimId: two.check.claimId, index: 2, atMs: NOW } };
+  const stepped = stageView(two, flowOf(two), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: back });
+  if (stepped.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(stepped.body.check.replay, { step: 1, fromMs: NOW, toMs: NOW + 2500 });
+  const other = stageView(two, flowOf(two), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: { ...back, unrevealed: { ...back.unrevealed, index: 3 } } });
+  if (other.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(other.body.check.replay, null, 'an older step back');
+});
+
+test('a Check discarded from its review fades out while the next card comes', () => {
+  const state = FIXTURES.checkReview(NOW).state;
+  assert.ok(state.check);
+  const discarded: FlowState = { ...state, check: null, claims: state.claims.map((c) => ({ ...c, status: 'discarded' as const })) };
+  const view = stageView(discarded, flowOf(discarded), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: { ...NO_CHECK_MEMORY, last: state.check } });
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(view.body.check.discarded, true);
+});
+
+test('an odd Check in a snapshot never breaks the projector', () => {
+  const { state } = FIXTURES.check(NOW);
+  for (const check of [{ claimId: 'x', cardId: 57, kind: 'line', outcome: 'incomplete', row: 2, startAtMs: NOW }, { ...state.check, revealed: undefined, steps: [], endAtMs: NOW }]) {
+    const odd = { ...state, check } as unknown as FlowState;
+    for (const catalog of [CATALOG, null]) {
+      const view = stageView(odd, flowOf(odd), SAMPLE_PLAN, catalog);
+      if (view.body.scene !== 'check') return assert.fail('not check');
+      assert.deepEqual(view.body.check.steps, []);
+    }
+  }
 });
 
 test('celebration: the shout kind and the round prize, never the winning card numbers', () => {
@@ -327,12 +442,12 @@ test('a Check carries the card\'s printed type, which is public', () => {
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (view.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(view.body.check.cardType, { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', special: false, ok: true });
-  const unknown: FlowState = { ...state, check: state.check ? { ...state.check, outcome: 'unknownCard', cardType: null, steps: [] } : null };
+  const unknown: FlowState = { ...state, check: state.check ? { ...state.check, cardType: null } : null };
   const none = stageView(unknown, flowOf(unknown), SAMPLE_PLAN, CATALOG);
   if (none.body.scene !== 'check') return assert.fail('not check');
   assert.equal(none.body.check.cardType, null);
-  // A special card claimed in a regular round: its type fails, and nothing is played.
-  const wrong = FIXTURES.checkWrongType(NOW).state;
+  // A special card claimed in a regular round: nothing is played, and its type fails at the cue.
+  const wrong = cued('checkWrongType', 'fail');
   const failed = stageView(wrong, flowOf(wrong), SAMPLE_PLAN, CATALOG);
   if (failed.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', special: true, ok: false });
@@ -430,21 +545,26 @@ test('a standing Check: all 12 songs, no row dimmed; a fallen one names the song
   const view = stageView(running, flowOf(running), SAMPLE_PLAN, null);
   assert.equal(view.body.scene, 'check');
   if (view.body.scene !== 'check') return;
-  const c = view.body.check;
-  assert.equal(c.kind, 'standing');
-  assert.equal(c.row, null, 'no row dims');
-  assert.equal(c.verdict, 'fallen');
-  assert.equal(plaqueSpot(c).over, 'card');
-  // Without the catalog only the played songs: «Limbo», the 7th, sank it.
-  assert.deepEqual(firstMiss(c), { step: 6, songId: 41, title: 'Limbo' });
+  assert.equal(view.body.check.kind, 'standing');
+  assert.equal(view.body.check.row, null, 'no row dims');
+  assert.equal(view.body.check.verdict, null);
+  assert.equal(plaqueSpot(view.body.check).over, 'card');
 
-  const valid = FIXTURES.checkStandingValid(NOW).state;
+  const fallen = FIXTURES.checkCueFallen(NOW).state;
+  const fell = stageView(fallen, flowOf(fallen), SAMPLE_PLAN, null);
+  if (fell.body.scene !== 'check') return assert.fail('not check');
+  assert.equal(fell.body.check.verdict, 'fallen');
+  // Without the catalog only the revealed songs: «Limbo», the 7th, sank it.
+  assert.deepEqual(firstMiss(fell.body.check), { step: 6, songId: 41, title: 'Limbo' });
+
+  const valid = cued('checkStandingValid', 'pass');
   const passed = stageView(valid, flowOf(valid), SAMPLE_PLAN, CATALOG);
   assert.ok(passed.body.scene === 'check');
   if (passed.body.scene !== 'check') return;
   assert.equal(passed.body.check.verdict, 'complete');
   assert.equal(passed.body.check.cells.length, 12);
-  assert.ok(passed.body.check.cells.every((cell) => cell.step !== null), 'every song was checked');
+  assert.ok(passed.body.check.cells.every((cell) => cell.step !== null), 'every song can be revealed');
+  assert.equal(passed.body.check.steps.length, 12);
   assert.equal(firstMiss(passed.body.check), null);
 });
 

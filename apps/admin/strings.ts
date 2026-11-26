@@ -250,20 +250,26 @@ export const S = {
 
   schedule: {
     title: 'Horari',
+    /** The doors open and the cards go on sale (D150, D152): the phones' Horari starts with it. */
+    doors: 'Venda de cartrons',
+    clearDoors: "Treure l'hora",
+    doorsAfterStart: 'La venda de cartrons ha de començar abans de la primera quina.',
     start: 'Inici de la primera quina',
     clearStart: "Treure l'hora",
     roundMinutes: 'Durada de cada quina (minuts)',
     intervalMinutes: 'Durada de cada descans (minuts)',
     plannedEnd: (time: string) => `Final previst: ${time}`,
     noStart: "Sense hora d'inici, no hi ha final previst.",
-    breaks: 'Pauses (parón)',
-    noBreaks: 'Cap pausa planificada entre quines.',
-    breakAfter: (n: number) => `Després de la Quina ${n}`,
-    breakMinutes: (n: number) => `Minuts de pausa després de la Quina ${n}`,
-    addBreakAfter: 'Afegir una pausa després de',
+    /** The planned Throws (D136): each adds its minutes to the break after its round. */
+    throws: 'Llançaments',
+    throwsHelp: "Cada llançament allarga el descans de després d'aquella quina.",
+    noThrows: 'Cap llançament planificat entre quines.',
+    throwAfter: (n: number) => `Després de la Quina ${n}`,
+    throwMinutes: (n: number) => `Minuts del llançament després de la Quina ${n}`,
+    addThrowAfter: 'Afegir un llançament després de',
     roundOption: (n: number) => `Quina ${n}`,
-    addBreak: 'Afegir pausa',
-    removeBreak: 'Treure',
+    addThrow: 'Afegir llançament',
+    removeThrow: 'Treure',
   },
 
   rules: {

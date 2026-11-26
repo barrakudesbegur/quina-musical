@@ -22,6 +22,7 @@ import { activeHeatSample, garlandLook, heatDisplay } from './model/garland.ts';
 import { bandOnScreen, fitBox } from './model/layout.ts';
 import { diffMoments, momentsOf, type AnimDetail, type Moments } from './model/moments.ts';
 import { pruneSpinNote, type SpinNote } from './model/motion.ts';
+import { NO_CHECK_MEMORY, rememberCheck, type CheckMemory } from './model/check.ts';
 import { drumShown } from './model/scene.ts';
 import { shufflePhaseAt } from './model/shuffle.ts';
 import { noteOf, pruneNotes, undoNotes, type LandedNote } from './model/songs.ts';
@@ -108,6 +109,8 @@ class Stage {
   private state: ShowState | null;
   private landed: LandedNote[] = [];
   private spin: SpinNote | null = null;
+  /** The Check between snapshots (the last one on screen, a review's start, a step back). */
+  private checkMemory: CheckMemory = NO_CHECK_MEMORY;
   private plan: GamePlan | null;
   private catalog: Catalog | null = null;
   private view: StageView;
@@ -128,6 +131,7 @@ class Stage {
     this.planStore = options.planStore ?? planStoreForPage();
     this.plan = loadPlanForPage(this.planStore);
     this.state = source.latest();
+    this.checkMemory = rememberCheck(NO_CHECK_MEMORY, this.state?.check);
 
     const env: SceneEnv = { random: this.random, reducedMotion: () => this.reducedMotion };
     this.scenes = {
@@ -196,6 +200,13 @@ class Stage {
         this.state = event.state;
         this.landed = pruneNotes(this.landed, event.state);
         this.spin = pruneSpinNote(this.spin, event.state);
+        this.checkMemory = rememberCheck(this.checkMemory, event.state.check);
+        break;
+      case 'reviewing':
+        this.checkMemory = { ...this.checkMemory, review: { claimId: event.claimId, atMs: event.atMs } };
+        break;
+      case 'unrevealed':
+        this.checkMemory = { ...this.checkMemory, unrevealed: { claimId: event.claimId, index: event.index, atMs: event.atMs } };
         break;
       case 'spin':
         this.spin = { id: event.id, spinStartAtMs: event.spinStartAtMs, landAtMs: event.landAtMs, autoReleaseAtMs: event.autoReleaseAtMs };
@@ -242,7 +253,7 @@ class Stage {
 
   // ------------------------------------------------------------------------------------------ render
   private computeView(): StageView {
-    return stageView(this.state, flowOf(this.state), this.plan, this.catalog, { landed: this.landed, spin: this.spin });
+    return stageView(this.state, flowOf(this.state), this.plan, this.catalog, { landed: this.landed, spin: this.spin, check: this.checkMemory });
   }
 
   /** Recompute the view and draw it, then run one step right away (no frame shows a half-entered scene). */

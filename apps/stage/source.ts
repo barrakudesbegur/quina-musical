@@ -20,7 +20,11 @@ export type StageEvent =
   /** The engine's Heat sample, the same one phones get: the projector and the phones show the same Heat. */
   | { kind: 'heat'; value: number; fromMs: number; toMs: number }
   /** The Game plan the relay pushes (`relay.plan`): public, the same plan phones get. Unchecked here. */
-  | { kind: 'plan'; plan: unknown };
+  | { kind: 'plan'; plan: unknown }
+  /** A Check went under review («Revisió manual»): from then its marks stay as they were. */
+  | { kind: 'reviewing'; claimId: string; atMs: number }
+  /** A step back inside a Check: the mark at `index` went, and the song before it replays. */
+  | { kind: 'unrevealed'; claimId: string; index: number; atMs: number };
 
 /** `online`; `offline`: the relay is gone; `noShow`: the relay is up but the show page isn't on it. */
 export type LinkState = 'online' | 'offline' | 'noShow';
@@ -56,6 +60,10 @@ export function toStageEvent(event: IncomingEvent): StageEvent | null {
       return { kind: 'heat', value: event.value, fromMs: event.fromMs, toMs: event.toMs };
     case 'relay.plan':
       return { kind: 'plan', plan: event.plan };
+    case 'check.reviewing':
+      return { kind: 'reviewing', claimId: event.claimId, atMs: event.atMs };
+    case 'check.unrevealed':
+      return { kind: 'unrevealed', claimId: event.claimId, index: event.index, atMs: event.atMs };
     default:
       return null;
   }

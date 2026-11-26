@@ -65,6 +65,10 @@ test('landings, cancels and undos pass; health, journal and rejections do not', 
   assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'transition.cancelled', id: 'tr-1', reason: 'hold', keptOutgoing: true, atMs: NOW })?.kind, 'cancelled');
   assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'landing.undone', songId: 74, position: 17, atMs: NOW })?.kind, 'undone');
   assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'command.rejected', reqId: null, cmd: 'next', reason: 'busy' }), null);
+  // The Check's review and step back: who and when only (the state carries the rest).
+  assert.deepEqual(toStageEvent({ v: PROTOCOL_VERSION, type: 'check.reviewing', claimId: 'cl-5', atMs: NOW }), { kind: 'reviewing', claimId: 'cl-5', atMs: NOW });
+  assert.deepEqual(toStageEvent({ v: PROTOCOL_VERSION, type: 'check.unrevealed', claimId: 'cl-5', index: 2, atMs: NOW }), { kind: 'unrevealed', claimId: 'cl-5', index: 2, atMs: NOW });
+  assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'check.cue', claimId: 'cl-5', cue: 'fail', atMs: NOW }), null, 'the cue comes with the state');
   assert.equal(toStageEvent({ v: PROTOCOL_VERSION, type: 'relay.clients', clients: [] }), null);
 });
 

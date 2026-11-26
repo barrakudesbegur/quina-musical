@@ -43,11 +43,14 @@ export const CA = {
     keys: { a: 'A', b: 'B', talk: '− +', back: '1 2', home: 'HOME', dpad: '✚' },
     a: {
       title: 'A · acció per defecte',
-      note: 'Fa el que faria el botó marcat amb la A a la consola: Següent mentre sona la música; a la comprovació, aprova el cartró si és bo i el rebutja si no.',
+      note: 'Fa el que faria el botó marcat amb la A a la consola: Següent mentre sona la música; a la comprovació, destapa la cançó següent i després fa el senyal. Mantinguda, les destapa seguides.',
     },
     b: { title: 'B (al darrere) · mantén: Aguanta', note: 'Sense deixar anar B, sacseja fort 3 cops: passa a Suspens. En deixar anar B, aterra.' },
-    talk: { title: '− o + · toca: Parlem · mantén: Pausa', note: 'A la Pausa sona la seva música, i durant una quina les pantalles ho diuen. Toca per sortir-ne.' },
-    back: { title: (seconds: string) => `1 o 2 · mantén ${seconds} s: Enrere`, note: "Desfà l'última cançó." },
+    talk: {
+      title: '− o + · toca: Parlem · mantén: Pausa',
+      note: 'A la Pausa sona la seva música, i durant una quina les pantalles ho diuen. Toca per sortir-ne. A la comprovació, mantenir-los la passa a revisió manual.',
+    },
+    back: { title: (seconds: string) => `1 o 2 · mantén ${seconds} s: Enrere`, note: "Desfà l'última cançó. A la comprovació, un toc treu l'última marca." },
     home: { title: 'HOME · automàtic sí / no', note: "Vibra diferent quan s'activa i quan es desactiva." },
     dpad: {
       title: 'Creu · efectes',

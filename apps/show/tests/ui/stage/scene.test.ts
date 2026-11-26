@@ -13,7 +13,7 @@ test('the scene follows the flow', () => {
 test('a Check or Celebration without its data stays on play (a Hold shows no change)', () => {
   assert.equal(stageScene({ ...base, scene: 'check', check: null }), 'play');
   assert.equal(stageScene({ ...base, scene: 'celebration', celebration: null }), 'play');
-  const check = { claimId: 'c', cardId: 1, kind: 'line' as const, outcome: 'complete' as const, row: 0, otherRows: [], steps: [], startAtMs: 0, endAtMs: 0 };
+  const check = { claimId: 'c', cardId: 1, kind: 'line' as const, outcome: 'complete' as const, row: 0, otherRows: [], startAtMs: 0, total: 4, revealed: [], auto: false, cue: null, reviewing: false };
   assert.equal(stageScene({ ...base, scene: 'check', check }), 'check');
 });
 

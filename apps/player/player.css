@@ -1599,7 +1599,7 @@
   border-radius: var(--radius-pill);
 }
 
-/* The rest of the night between the rounds (a planned break, the end): quiet, in italics, on a dashed dot. */
+/* The rest of the night around the rounds (the doors, a descans, the end): quiet, in italics, on a dashed dot. */
 .schedule__moment {
   padding: 0.3125rem var(--space-2);
 }
@@ -1616,7 +1616,7 @@
   stroke-width: 2.6;
 }
 
-.schedule__moment .icon--flag {
+.schedule__moment :is(.icon--flag, .icon--ticket) {
   width: 1.125rem;
   height: 1.125rem;
 }

@@ -1,12 +1,14 @@
-// The Check on the projector: the claimed card's grid, and which step shows what at a given time. The
-// engine schedules every step in advance (`steps[i].atMs`, `durationMs`, `endAtMs`), so the projector only
-// reads its clock. The card's printed type is checked first (`check-type`: its badge gets ✓, or ✗ for a card
-// of the wrong type), then the playing tile gets a ring for each snippet and its mark (✓ or ✗) stamps on, and
-// the result shows from `endAtMs` (ANIMATIONS.md `check-type`, `check-step`, `check-result`). A failed Check
-// places its big ✗ where it hides nothing that was checked, and names the first song that didn't sound in
-// its accessible label. The Desgraciat round's standing Check reads the other way round: a ✓ is a song that has
-// NOT sounded, it stops on the first one that has, and that card has fallen (`check-fallen`). Pure.
-import type { CheckOutcome, WinKind } from '../../../packages/ui/flow.ts';
+// The Check on the projector, paced by the presenters (D107): the claimed card's grid, the songs revealed so far
+// (each press reveals the next one in the card's grid order, a Line's in its row), and the result, which shows only
+// from the presenters' cue (`check.cue`): nothing on screen says ahead of it whether the card passes. Each revealed
+// song's `atMs`/`durationMs` time its playing ring and its mark (ANIMATIONS.md `check-step`): the projector only reads
+// its clock. The card's printed type is checked first (`check-type`: its badge gets ✓; a card of the wrong type has
+// nothing to reveal and gets its ✗ with the result). A step back (`check.unrevealed`) takes the last mark off; a
+// review («Revisió manual») keeps the marks the room already saw. A failed Check places its big ✗ where it hides
+// nothing that was checked, and names the first song that didn't sound in its accessible label. The Desgraciat
+// round's standing Check reads the other way round: a ✓ is a song that has NOT sounded, it stops on the first one
+// that has, and that card has fallen (`check-fallen`). Pure.
+import type { CheckInfo, CheckOutcome, FlowFields, WinKind } from '../../../packages/ui/flow.ts';
 import type { PlayerCard } from '../../../packages/rules/marks.ts';
 import { defaultCardType } from '@quina/protocol';
 import { roundCardType, type GamePlan } from '../../../packages/ui/plan.ts';
@@ -31,25 +33,36 @@ export interface CardTypeBadge {
   color: string;
   /** It plays the Quina Especial (the mini card gets a star). */
   special: boolean;
-  /** False for a card of the wrong type for the round (`wrongType`): its badge gets the ✗. */
-  ok: boolean;
+  /** Whether the round plays it: ✓, or ✗ for a card of the wrong type. Null while not known yet: a Check with nothing to
+   * reveal (the wrong type, D33) gets its mark only with the result, at the cue. */
+  ok: boolean | null;
 }
 
 /**
  * The badge for a checked card's type: its name and colour from the card types (card-types.json, or what stands in
  * for it: knownCardTypes), its star when the plan's Quina Especial plays it (without a plan: the special round's
- * default type), and ✓ or ✗ from the Check's outcome only. Null for an unknown card, whose type isn't known.
+ * default type), and `ok` as the Check tells it publicly (checkTypeOk). Null for an unknown card, whose type isn't
+ * known.
  */
 export function cardTypeBadge(
   type: string | null | undefined,
-  outcome: CheckOutcome,
+  ok: boolean | null,
   types: readonly PrintedCardType[],
   plan: Pick<GamePlan, 'rounds'> | null,
 ): CardTypeBadge | null {
   if (!type) return null;
   const label = cardTypeLabel(type, types);
   const special = plan ? plan.rounds.some((r) => r.kind === 'special' && roundCardType(r) === type) : type === defaultCardType('special');
-  return { type, label: label.name, color: label.color, special, ok: outcome !== 'wrongType' };
+  return { type, label: label.name, color: label.color, special, ok };
+}
+
+/**
+ * Whether the card's type plays this round, from public facts only: a Check with songs to reveal is of the round's
+ * type; one with none (`total` 0: the wrong type) is known only at its cue, which fails it (a win by hand passes it).
+ */
+export function checkTypeOk(check: Pick<CheckInfo, 'total' | 'cue'>): boolean | null {
+  if (check.total > 0) return true;
+  return check.cue == null ? null : check.cue === 'pass';
 }
 
 /** What the projector says once the Check is over: `fallen` is a standing claim for a card one of whose songs has
@@ -69,29 +82,50 @@ export interface CheckCell {
 }
 
 export interface CheckView {
-  /** Changes when another card's Check starts. */
+  /** Changes when another card's Check comes on screen (or the same one again). */
   key: string;
   cardId: number;
   kind: WinKind;
   /** The card's printed type (public, on the card itself), or null for an unknown card. */
   cardType: CardTypeBadge | null;
-  verdict: CheckVerdict;
-  /** A Line's row (0–2), whose songs play; the other rows dim. Null for a Bingo and a standing Check. */
+  /** The result, from the presenters' cue; null until then. */
+  verdict: CheckVerdict | null;
+  /** A Line's row (0–2), whose songs it reveals; the other rows dim. Null for a Bingo and a standing Check. */
   row: number | null;
-  /** The card's 12 songs (3 × 4), or only the played ones when the card is not in the catalog. */
+  /** How many songs its Check can reveal: 12, a Line's 4, 0 for a card of the wrong type. */
+  total: number;
+  /** The card's 12 songs (3 × 4), or only the revealed ones when the card is not in the catalog. */
   cells: CheckCell[];
+  /** The songs revealed so far, in the order they were revealed. */
   steps: CheckStepView[];
   startAtMs: number;
-  endAtMs: number;
+  /** Under review («Revisió manual», D119–D123): the plaque shows, the marks stay as they were. */
+  reviewing: boolean;
+  /** When the review began, as far as the stage heard it (`check.reviewing`); null when it doesn't know. */
+  reviewSinceMs: number | null;
+  /** A step back replays the snippet of `step` (the new last revealed song), between these times: its equaliser shows. */
+  replay: { step: number; fromMs: number; toMs: number } | null;
+  /** Discarded from its review: the card fades out with the plate (`check-review`). */
+  discarded: boolean;
 }
 
-/** The engine's finding as the projector words it: unknown cards and wrong-type cards are "not valid". */
-export const verdictOf = (outcome: CheckOutcome): CheckVerdict =>
-  outcome === 'complete' || outcome === 'incomplete' || outcome === 'fellLast' || outcome === 'fallen' ? outcome : 'notValid';
+/**
+ * The result as the projector shows it, from the cue only (`cue` null: none yet). The engine's private finding only
+ * shapes its look once the cue has played: a card of the wrong type, a fallen standing card, or any other failure; a
+ * pass is a valid card (a standing card that sat down with the last song keeps its gold tile).
+ */
+export function verdictOf(outcome: CheckOutcome, cue: CheckInfo['cue'] | undefined, kind: WinKind): CheckVerdict | null {
+  if (cue == null) return null;
+  if (cue === 'pass') return outcome === 'fellLast' ? 'fellLast' : 'complete';
+  if (outcome === 'wrongType' || outcome === 'unknownCard') return 'notValid';
+  return kind === 'standing' ? 'fallen' : 'incomplete';
+}
 
 /**
- * The grid for a checked card. With the card in the catalog (and holding every played song): its 3 × 4
- * songs. Otherwise the played songs alone, 4 per row (a Line's on its own row).
+ * The grid for a checked card. With the card in the catalog (holding every revealed song where its Check reveals it):
+ * its 3 × 4 songs, each song the Check can reveal linked to its place in the reveal order (a Line's row left to right;
+ * a Bingo's or a standing claim's 12 in card order), so the grid stays the same as the songs are revealed. Otherwise
+ * the revealed songs alone, 4 per row (a Line's on its own row).
  */
 export function checkCells(
   card: PlayerCard | null,
@@ -99,15 +133,12 @@ export function checkCells(
   row: number | null,
   title: (songId: number) => string | null,
 ): CheckCell[] {
-  const stepOf = new Map<number, number>();
-  steps.forEach((s, i) => {
-    if (!stepOf.has(s.songId)) stepOf.set(s.songId, i);
-  });
-  const cardSongs = new Set(card?.lines.flat() ?? []);
-  if (card && card.lines.length === 3 && steps.every((s) => cardSongs.has(s.songId))) {
-    return card.lines.flatMap((line, r) =>
-      line.map((songId, c) => ({ songId, title: title(songId), row: r, col: c, step: stepOf.get(songId) ?? null })),
-    );
+  if (card && card.lines.length === 3 && card.lines.every((l) => l.length === 4)) {
+    const order = row === null ? card.lines.flat() : (card.lines[row] ?? []);
+    const stepOf = (r: number, c: number): number | null => (row === null ? r * 4 + c : r === row ? c : null);
+    if (steps.every((s, i) => order[i] === s.songId)) {
+      return card.lines.flatMap((line, r) => line.map((songId, c) => ({ songId, title: title(songId), row: r, col: c, step: stepOf(r, c) })));
+    }
   }
   return steps.map((s, i) => ({
     songId: s.songId,
@@ -125,38 +156,45 @@ export function checkCells(
 export const gridKey = (cells: readonly CheckCell[]): string =>
   cells.map((c) => `${c.songId}@${c.row}.${c.col}:${c.step ?? '-'}:${c.title ?? ''}`).join('|');
 
-/** One step at a given time: not yet, its snippet playing, or marked. */
+/** One revealed song at a given time: not marked yet, its snippet playing, or marked. */
 export type StepState = 'pending' | 'playing' | 'landed' | 'missed';
 
 export interface CheckReveal {
   steps: StepState[];
-  /** The step whose snippet is playing, or null. */
+  /** The revealed song whose snippet is playing (its ring), or null. */
   playing: number | null;
-  /** Shown from `endAtMs`; a card that is not valid shows it at once (it has no steps). */
+  /** A step back's replayed snippet (its equaliser only; the mark stays), or null. */
+  replaying: number | null;
+  /** The result, from the cue. */
   result: CheckVerdict | null;
 }
 
 /**
- * Each step's state at `nowMs`. The snippet plays from `atMs` for `durationMs`; the mark shows when the
- * snippet ends (`markAt: 'end'`, ANIMATIONS.md) or as it starts (`'start'`).
+ * Each revealed song's state at `nowMs`. The snippet plays from `atMs` for `durationMs`; the mark shows when the
+ * snippet ends (`markAt: 'end'`, ANIMATIONS.md) or as it starts (`'start'`). Once the cue has played every mark shows.
+ * Under review the marks stay as they were when it began (the song that was playing isn't marked, D123) and no ring
+ * plays.
  */
 export function checkReveal(
-  check: Pick<CheckView, 'steps' | 'endAtMs' | 'verdict'>,
+  check: Pick<CheckView, 'steps' | 'verdict' | 'reviewing' | 'reviewSinceMs' | 'replay'>,
   nowMs: number,
   markAt: 'end' | 'start' = 'end',
 ): CheckReveal {
+  const at = check.reviewing ? Math.min(nowMs, check.reviewSinceMs ?? nowMs) : nowMs;
+  const settled = check.verdict !== null;
   let playing: number | null = null;
   const steps = check.steps.map((s, i): StepState => {
     const markMs = markAt === 'end' ? s.atMs + s.durationMs : s.atMs;
-    if (nowMs >= markMs) return s.landed ? 'landed' : 'missed';
-    if (nowMs >= s.atMs) {
+    if (settled || at >= markMs) return s.landed ? 'landed' : 'missed';
+    if (!check.reviewing && at >= s.atMs) {
       playing = i;
       return 'playing';
     }
     return 'pending';
   });
-  const result = check.verdict === 'notValid' || nowMs >= check.endAtMs ? check.verdict : null;
-  return { steps, playing, result };
+  const r = check.replay;
+  const replaying = r && !check.reviewing && !settled && r.step < steps.length && nowMs >= r.fromMs && nowMs < r.toMs ? r.step : null;
+  return { steps, playing, replaying, result: check.verdict };
 }
 
 /**
@@ -175,21 +213,21 @@ export function stepMark(kind: WinKind, state: StepState, verdict: CheckVerdict 
 export type TypeState = 'pending' | 'ok' | 'wrong';
 
 /**
- * When the type badge gets its mark: `leadMs` after the Check starts (once the plate and badge have dropped
- * in), but never after the first song's snippet starts. A Check with no songs (a card of the wrong type, or
- * unknown) marks it at once, with its result.
+ * When the type badge gets its ✓: `leadMs` after the Check comes on screen (once the plate and badge have dropped in),
+ * but never after its first song is revealed.
  */
 export function typeMarkAt(check: Pick<CheckView, 'startAtMs' | 'steps'>, leadMs: number): number {
+  const at = check.startAtMs + Math.max(0, leadMs);
   const first = check.steps[0];
-  return first ? Math.min(check.startAtMs + Math.max(0, leadMs), first.atMs) : check.startAtMs;
+  return first ? Math.min(at, first.atMs) : at;
 }
 
-/** The type badge's state at `nowMs`; null without a badge (an unknown card). */
+/** The type badge's state at `nowMs`; null without a badge (an unknown card). A badge not known yet stays pending. */
 export function typeReveal(check: Pick<CheckView, 'startAtMs' | 'steps' | 'cardType'>, nowMs: number, leadMs: number): TypeState | null {
   if (!check.cardType) return null;
-  // With no songs (a card of the wrong type), the mark shows at once, like the result.
-  if (check.steps.length > 0 && nowMs < typeMarkAt(check, leadMs)) return 'pending';
-  return check.cardType.ok ? 'ok' : 'wrong';
+  if (check.cardType.ok === null) return 'pending';
+  if (!check.cardType.ok) return 'wrong';
+  return nowMs < typeMarkAt(check, leadMs) ? 'pending' : 'ok';
 }
 
 /** A Check that ends without a prize: the card is incomplete, fallen, or not valid. A card that fell with the last
@@ -259,4 +297,70 @@ export function plaqueSpot(check: Pick<CheckView, 'row' | 'cells'>): PlaqueSpot 
   const covered = others[1] - others[0] === 1 ? others : [others[others.length - 1]];
   const centre = covered.reduce((sum, r) => sum + r + 0.5, 0) / covered.length;
   return { at: centre / CARD_ROWS, over: covered.length > 1 ? 'rows' : 'row' };
+}
+
+// ---- between snapshots: what the stage remembers about the Check -------------------------------------------
+
+/** What the stage remembers about the Check from snapshots and events (Stage keeps it; the view reads it). */
+export interface CheckMemory {
+  /** The last Check a snapshot had on screen. */
+  last: CheckInfo | null;
+  /** When the stage heard a Claim go under review (`check.reviewing`), so the marks stay as they were then. */
+  review: { claimId: string; atMs: number } | null;
+  /** The last step back (`check.unrevealed`): the mark at `index` went, and the song before it replays from `atMs`. */
+  unrevealed: { claimId: string; index: number; atMs: number } | null;
+}
+
+export const NO_CHECK_MEMORY: CheckMemory = { last: null, review: null, unrevealed: null };
+
+/** The memory after a snapshot: its Check, if it has one (a snapshot without one keeps the last). */
+export function rememberCheck(memory: CheckMemory, check: CheckInfo | null | undefined): CheckMemory {
+  return check ? { ...memory, last: check } : memory;
+}
+
+/**
+ * The Check as a snapshot carries it, read defensively: an odd or older snapshot (no `revealed`, no `total`) draws
+ * as a Check with nothing revealed instead of breaking the projector, which runs inside the show page.
+ */
+export function readCheck(check: CheckInfo): CheckInfo {
+  const revealed = Array.isArray(check.revealed) ? check.revealed.filter((s) => s && typeof s.songId === 'number') : [];
+  return {
+    ...check,
+    otherRows: Array.isArray(check.otherRows) ? check.otherRows : [],
+    revealed,
+    total: typeof check.total === 'number' ? check.total : revealed.length,
+    cue: check.cue === 'pass' || check.cue === 'fail' ? check.cue : null,
+    reviewing: check.reviewing === true,
+    auto: check.auto === true,
+  };
+}
+
+/** The Check to draw, and whether it's one that was just discarded (it fades out). */
+export interface ShownCheck {
+  check: CheckInfo;
+  discarded: boolean;
+}
+
+/**
+ * The Check the projector draws: the one on screen, else one that just left that the room should still see.
+ * - The last card's fail: the engine goes straight back to the round (scene `play`, the `checkFailed` Hold) as the
+ *   cue plays, so the projector keeps that card, with its fail moment, until the Hold ends (Next, Back, another
+ *   Claim).
+ * - A Claim discarded from its review while the round waits in its Check for the next card: it fades out (the
+ *   last card's discard goes back to the round, which fades the Check out anyway).
+ */
+export function shownCheck(
+  flow: Pick<FlowFields, 'scene' | 'check' | 'claims'>,
+  holdReason: string | null,
+  last: CheckInfo | null,
+): ShownCheck | null {
+  if (flow.check) return { check: readCheck(flow.check), discarded: false };
+  if (!last) return null;
+  const claim = flow.claims.find((c) => c.claimId === last.claimId);
+  if (!claim) return null;
+  if (flow.scene === 'check' && claim.status === 'discarded') return { check: readCheck(last), discarded: true };
+  if (flow.scene === 'play' && holdReason === 'checkFailed' && claim.status === 'invalid') {
+    return { check: { ...readCheck(last), cue: 'fail', reviewing: false }, discarded: false };
+  }
+  return null;
 }

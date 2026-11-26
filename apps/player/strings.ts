@@ -9,6 +9,8 @@ import type { AraView } from './logic/tabs.ts';
 const card = CA.card;
 /** "de" before a name, elided before a vowel sound ("d’Àvia", "d’Helena"), but not before a semivowel ("de Iaia"). */
 const ofName = (name: string): string => (/^h?[aeiouàáèéíïòóúü]/i.test(name) && !/^h?[iu][aeiouàáèéíòóú]/i.test(name) ? `d’${name}` : `de ${name}`);
+/** "Primer", "Segon"…: the plan's Throws come after a round that isn't the last, so 19 at most (20 rounds). */
+const ORDINALS = ['Primer', 'Segon', 'Tercer', 'Quart', 'Cinquè', 'Sisè', 'Setè', 'Vuitè', 'Novè', 'Desè', 'Onzè', 'Dotzè', 'Tretzè', 'Catorzè', 'Quinzè', 'Setzè', 'Dissetè', 'Divuitè', 'Dinovè'] as const;
 
 export const S = {
   appTitle: CA.gameTitle,
@@ -167,6 +169,10 @@ export const S = {
   // Horari (first called "Programa")
   scheduleTitle: 'Horari',
   notStarted: 'Encara no hem començat.',
+  /** Horari's first row: the doors open and the cards go on sale (D152). */
+  scheduleDoors: 'Venda de cartrons',
+  /** A planned Throw's descans in Horari, by its order in the night (D150): "Primer descans", "Segon descans"… */
+  scheduleThrow: (order: number) => `${ORDINALS[order - 1]} descans`,
   /** The end of the night, with its expected time. */
   scheduleEnd: 'Fi',
   around: (time: string) => `cap a les ${time}`,

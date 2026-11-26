@@ -29,9 +29,10 @@ export const CONSOLE = Object.freeze({
   toastMax: 3,
   /** How many of this console's command ids are remembered, to recognise its own rejections. */
   sentLogSize: 64,
-  /** The Claim number pad: card numbers are 1–9999 (the `claim` command's limits). */
+  /** The Claim number pad: card numbers are 1–9999, and one claim takes at most 10 (the `claim` command's limits). */
   cardDigits: 4,
   cardMax: 9999,
+  claimMaxCards: 10,
   /** How many past landings Now playing lists. */
   recentLandings: 3,
   /** The auto-advance ring's last seconds, drawn in red (logic/now-ring.ts; ANIMATIONS.md › ring-last). */
@@ -52,8 +53,9 @@ export const DEFAULT_THEME: Theme = 'light';
 /** Every command the console sends (its toasts name each one; strings.ts labels them all). */
 export const CONSOLE_COMMANDS = [
   'next', 'back', 'hold', 'holdMusic', 'suspense', 'setPace', 'setGame', 'confirmLine', 'newRound', 'panic', 'sfx',
-  'roundIntro', 'claim', 'checkStart', 'decide', 'winnerInfo', 'celebrationMusic', 'interval', 'endGame', 'pause',
-  'intervalSkip', 'resumeAt', 'revealPrizes',
+  'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
+  'celebrationMusic', 'interval', 'endGame', 'pause',
+  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 
@@ -67,8 +69,10 @@ export const WII = Object.freeze({
   accel: { zero: 128, perG: 26 },
   /** Suspens needs 3 strong jolts inside 1.5 s while B is held (dancing shouldn't do it). */
   shake: { peakG: 2.6, resetG: 1.6, minGapMs: 110, count: 3, windowMs: 1500 },
-  /** 1 or 2 held this long is Enrere. */
+  /** 1 or 2 held this long is Enrere (undo a landing); in a Check a shorter press steps back one reveal (D127, D134). */
   backHoldMs: 1500,
+  /** A held this long, in a Check, reveals in a row («Seguides», D107) until it's let go. */
+  aHoldMs: 600,
   /** − or + held this long is Pausa (a shorter press is Parlem). */
   pauseHoldMs: 800,
   /** The D-pad's four effects. */

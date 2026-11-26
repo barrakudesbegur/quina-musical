@@ -67,6 +67,8 @@ export const STAGE_TEXT = {
   morePrizes: CA.morePrizes,
   /** The Check's plate: "Cartró #57" (shown in capitals). */
   checkPlate: (id: number) => `Cartró #${id}`,
+  /** The plaque while a Check is under review (D123). */
+  checkReview: 'Revisió manual',
   /** The Check's card-type badge, for its accessible label: "Cartró normal: correcte". */
   checkType: (name: string, ok: boolean | null) => (ok === null ? name : `${name}: ${ok ? 'correcte' : 'no val per a aquesta quina'}`),
   checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, fellLast: CA.checkValid, fallen: 'Cartró caigut', notValid: 'Cartró no vàlid' } satisfies Record<CheckVerdict, string>,

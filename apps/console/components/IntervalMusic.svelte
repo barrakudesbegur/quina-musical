@@ -1,9 +1,10 @@
 <!--
   The Interval playlist while it plays (state.intervalMusic): in the Interval, while a round is introduced and
   shuffled, after the Game, and in play until the first Spin. The track playing, Skip (the engine hands over
-  on the next downbeat) and the playlist's volume.
+  on the next downbeat) and the playing set's volume slider (`setVolume`, D139: the breaks', Pausa's or the end's).
 -->
 <script lang="ts">
+  import { VOLUME_DEFAULTS, VOLUME_MAX } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -12,12 +13,13 @@
   const uid = $props.id();
   const music = $derived(model.show.state?.intervalMusic ?? null);
   const track = $derived(music?.track ?? null);
-  const volumeDb = $derived(model.show.state?.game.intervalVolumeDb ?? -6);
+  const key = $derived(music?.set ?? 'breaks');
+  const percent = $derived(model.show.state?.game.volumes?.[key] ?? VOLUME_DEFAULTS[key]);
 
   // Send the volume when the slider is released, not on every step.
   function setVolume(e: Event): void {
-    const db = Number((e.currentTarget as HTMLInputElement).value);
-    if (Number.isFinite(db)) model.act('setGame', { intervalVolumeDb: db });
+    const value = Number((e.currentTarget as HTMLInputElement).value);
+    if (Number.isFinite(value)) model.act('setVolume', { key, percent: value });
   }
 </script>
 
@@ -35,8 +37,8 @@
         <Icon name="next" /><span>{S.intervalMusic.skip}</span>
       </button>
       <label class="field field--inline" for="{uid}-volume">
-        <span class="field__label">{S.intervalMusic.volume}: {S.intervalMusic.volumeValue(volumeDb)}</span>
-        <input id="{uid}-volume" type="range" min="-30" max="0" step="1" value={volumeDb} disabled={!model.can('setGame')} onchange={setVolume} />
+        <span class="field__label">{S.intervalMusic.volume}: {S.intervalMusic.volumeValue(percent)}</span>
+        <input id="{uid}-volume" type="range" min="0" max={VOLUME_MAX[key]} step="1" value={percent} disabled={!model.can('setVolume')} onchange={setVolume} />
       </label>
     </div>
     <p class="note">{S.intervalMusic.skipNote}</p>

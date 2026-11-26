@@ -128,9 +128,11 @@ Rules (every key is required, and an unknown key is an error, so a typo can't si
   - `name`: as shown on screen.
   - `logo`: `null`. Logos are added and cleaned up in Admin. Admin's own export also accepts a PNG data URL of up to 200 KB.
 - `schedule`:
+  - `doorsAtMs` (optional): when the doors open and the cards go on sale, in epoch milliseconds, never after `startAtMs`. The phones' Horari starts with it ("Venda de cartrons"). Leave it out when not known.
   - `startAtMs`: when the first round starts, in epoch milliseconds (the example is 26 Dec 2026, 18:30 in Begur), or `null`.
   - `roundMinutes`: 1–240.
   - `intervalMinutes`: 0–120.
+  - `throws` (optional): the planned Throws, `[{ "afterRound": 3, "minutes": 5 }]`, each after a round that isn't the last, once per round, 1–60 minutes on top of that break. Leave it out when there are none.
 - `cheatSheet`: `claimRules` and `specialRoundRules`, each a list of up to 30 non-empty sentences in Catalan.
 
 Text is trimmed. Errors come back as `path: message` lines, for example `plan.rounds[2].line[0].sponsorId: no sponsor with id "forn"`. An agent can fix them all and paste again.

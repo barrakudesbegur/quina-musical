@@ -1,5 +1,6 @@
 // The projector's animation moments (ANIMATIONS.md, Projector table). `momentsOf` summarises what is on
-// screen at a given time; `diffMoments` compares two summaries and names the moments that just happened. The
+// screen at a given time; `diffMoments` compares two summaries and names the moments that just happened (a Check's
+// reveals, a step back, its review and its cue come from successive snapshots of the same Check). The
 // stage sets `data-anim` and dispatches a `quina:anim` event for each, so a theme script can hook them.
 // Moments are timed by the show's clock (landing times, step times, the Shuffle window), never by when a
 // message arrives, and the first summary after mounting only enters the scene: a late join never replays
@@ -24,6 +25,8 @@ export const ANIM_NAMES = [
   'check-enter',
   'check-type',
   'check-step',
+  'check-unreveal',
+  'check-review',
   'check-result',
   'check-fallen',
   'celebrate',
@@ -47,6 +50,10 @@ export type AnimDetail =
   | { name: 'check-enter'; cardId: number; kind: WinKind }
   | { name: 'check-type'; ok: boolean }
   | { name: 'check-step'; index: number; songId: number; state: StepState }
+  /** A step back inside a Check (D127, D134): the mark at `index`, the last revealed, lifts off. */
+  | { name: 'check-unreveal'; index: number; songId: number }
+  /** The Check went under review («Revisió manual»: the plaque slides down), or the review went on (it slides up). */
+  | { name: 'check-review'; on: boolean }
   | { name: 'check-result'; result: CheckVerdict }
   /** The Desgraciat round: a standing claim's card has fallen (its result, instead of `check-result`). */
   | { name: 'check-fallen'; cardId: number }
@@ -68,7 +75,16 @@ export interface Moments {
   motion: MotionPhase;
   /** The newest song on screen. */
   landing: { songId: number; atMs: number } | null;
-  check: { key: string; cardId: number; kind: WinKind; type: TypeState | null; songIds: number[]; steps: StepState[]; result: CheckVerdict | null } | null;
+  check: {
+    key: string;
+    cardId: number;
+    kind: WinKind;
+    type: TypeState | null;
+    songIds: number[];
+    steps: StepState[];
+    result: CheckVerdict | null;
+    reviewing: boolean;
+  } | null;
   shuffle: { key: string; phase: ShufflePhase } | null;
   celebration: { key: string; kind: WinKind } | null;
   /** The Heat sample that has started (its `fromMs`). */
@@ -126,6 +142,7 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
         songIds: c.steps.map((s) => s.songId),
         steps: reveal.steps,
         result: reveal.result,
+        reviewing: c.reviewing,
       };
       break;
     }
@@ -155,7 +172,7 @@ const resultMoment = (cardId: number, result: CheckVerdict): AnimDetail =>
 function enterScene(next: Moments): AnimDetail[] {
   const out: AnimDetail[] = [{ name: 'scene-enter', scene: next.scene }];
   if (next.check) out.push({ name: 'check-enter', cardId: next.check.cardId, kind: next.check.kind });
-  // A Check with no songs (a card of the wrong type, or unknown) has its type mark and result from the start.
+  // A Check with no songs to reveal (a card of the wrong type) seen after its cue has its type mark and result at once.
   if (next.check && next.check.steps.length === 0) {
     if (next.check.type && next.check.type !== 'pending') out.push({ name: 'check-type', ok: next.check.type === 'ok' });
     if (next.check.result) out.push(resultMoment(next.check.cardId, next.check.result));
@@ -196,9 +213,12 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
   const nc = next.check;
   if (pc && nc && pc.key === nc.key) {
     if (nc.type && nc.type !== 'pending' && nc.type !== pc.type) out.push({ name: 'check-type', ok: nc.type === 'ok' });
+    // A step back: the marks past the new last revealed song lift off, the last one first.
+    for (let index = pc.steps.length - 1; index >= nc.steps.length; index--) out.push({ name: 'check-unreveal', index, songId: pc.songIds[index] });
     nc.steps.forEach((state, index) => {
       if (state !== 'pending' && state !== pc.steps[index]) out.push({ name: 'check-step', index, songId: nc.songIds[index], state });
     });
+    if (nc.reviewing !== pc.reviewing) out.push({ name: 'check-review', on: nc.reviewing });
     if (nc.result && !pc.result) out.push(resultMoment(nc.cardId, nc.result));
   }
 

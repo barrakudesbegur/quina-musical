@@ -1,8 +1,8 @@
 // The console's state, one per page: the engine's view (ShowStore, through ui/client), the Game plan, the
 // printed cards, this device's label, theme and checklist, its helpers' tab and Futur reveal, the round's
-// counted songs gathered from the snapshots (for the Futur tab), and the toasts. It derives what the
-// components need from the pure logic in logic/, and `act` is the one way commands leave the console.
-import type { CommandRejected, ResumePoint, ShowState } from '@quina/protocol';
+// counted songs gathered from the snapshots (for the Futur tab), the claim pad, and the toasts. It derives what
+// the components need from the pure logic in logic/, and `act` is the one way commands leave the console.
+import type { CommandFields, CommandRejected, ResumePoint, ShowState } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
@@ -17,7 +17,10 @@ import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
+import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
+import type { PadKey } from './logic/numpad.ts';
+import { defaultClaimKind, type ClaimKind } from './logic/show-data.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { EMPTY_TAB_MEMORY, fallenBetween, helperTabAfter, type HelperTab, type TabMemory } from './logic/standing.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
@@ -36,6 +39,15 @@ function startingLabel(): string | null {
 
 /** The helpers' tabs (HelperTabs.svelte; logic/standing.ts: Dempeus first in the Desgraciat round). */
 export type { HelperTab } from './logic/standing.ts';
+
+/** The last step back inside a Check (`check.unrevealed`, D134), for «Enrere: torna a sonar…». */
+export interface StepBack {
+  claimId: string;
+  /** The mark that came off: the Check is back to this many revealed. */
+  index: number;
+  /** «Seguides» was on, and the step back turned it off for this card. */
+  autoWasOn: boolean;
+}
 
 /** The last landing that knocked cards out of the Desgraciat round (`standing-fall`), for the Dempeus tab. */
 export interface StandingFall {
@@ -75,6 +87,12 @@ export class ConsoleModel {
   helperTab = $state<HelperTab>('future');
   /** The Desgraciat round's last fall seen on this device (null: none yet this round). */
   standingFall = $state.raw<StandingFall | null>(null);
+  /** The claim pad (logic/claim-pad.ts), while it's open. */
+  pad = $state.raw<ClaimPadState | null>(null);
+  /** The last step back inside a Check. */
+  stepBack = $state.raw<StepBack | null>(null);
+  /** The claim the pad sent last: the engine's `unknownCard` rejection brings it back, its chips marked (D126). */
+  private padSent: { reqId: string; claim: CommandFields['claim'] } | null = null;
   /** What the tab picker last saw (logic/standing.ts helperTabAfter). Not reactive. */
   private tabMemory: TabMemory = EMPTY_TAB_MEMORY;
   /** The standing cards in the previous snapshot, and its round, for `standing-fall`. Not reactive. */
@@ -85,6 +103,13 @@ export class ConsoleModel {
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
   readonly scene = $derived(sceneContext(this.show.flow, this.show.state));
   readonly controls = $derived(controlsModel({ state: this.show.state, flow: this.show.flow, online: this.online }));
+  /** The pad's rules: card numbers, and the printed ones when the catalogue is loaded (else the engine checks). */
+  readonly padRules = $derived.by((): ClaimPadRules => {
+    const cards = this.catalog?.cards ?? null;
+    return { maxDigits: CONSOLE.cardDigits, max: CONSOLE.cardMax, maxCards: CONSOLE.claimMaxCards, known: (id) => (cards ? cards.has(id) : null) };
+  });
+  /** What the pad's «Comprovar» would claim now, or null. */
+  readonly padClaim = $derived(this.pad ? padClaim(this.pad, this.padRules) : null);
   /** "Go ahead" here: the control drawn as primary, and what the Wii's A sends (logic/default-action.ts). */
   readonly defaultAction = $derived(
     defaultAction({
@@ -94,6 +119,7 @@ export class ConsoleModel {
       plan: this.plan,
       nextEnabled: this.controls.next.enabled,
       can: (cmd) => this.can(cmd),
+      pad: this.pad ? { claim: this.padClaim } : null,
     }),
   );
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
@@ -140,6 +166,11 @@ export class ConsoleModel {
       if (event.type === 'state') {
         this.landingLog = recordLandings(this.landingLog, event);
         this.followStanding(event);
+      }
+      // A step back inside a Check: the snapshot before it still says whether «Seguides» was on.
+      if (event.type === 'check.unrevealed') {
+        const check = this.show.state?.check;
+        this.stepBack = { claimId: event.claimId, index: event.index, autoWasOn: check?.claimId === event.claimId && check.auto };
       }
       // next-to-now: at the landing the panels still show the old songs; once Ara sona shows it, fly it in.
       if (event.type === 'transition.landed' && shouldMorph(event.songId, this.show.state?.next?.songId, prefersReducedMotion())) {
@@ -188,8 +219,53 @@ export class ConsoleModel {
     const reqId = this.show.send(cmd, ...args);
     if (reqId === null) this.toast('error', S.toast.notSent(commandText(cmd)));
     else this.sent.remember(reqId);
+    // A claim sent from the pad (its «Comprovar», or A) closes it; a refused number brings it back.
+    if (cmd === 'claim' && reqId !== null && this.pad) {
+      this.padSent = { reqId, claim: args[0] as CommandFields['claim'] };
+      this.pad = null;
+    }
     return reqId;
   };
+
+  /** Open the claim pad: what the round can be won by, as the Phase climbs (Línia or Quina). */
+  openPad(kind: ClaimKind = defaultClaimKind(this.show.state)): void {
+    this.pad = openPad(kind);
+  }
+
+  closePad(): void {
+    this.pad = null;
+  }
+
+  padPress(key: PadKey): void {
+    if (this.pad) this.pad = padKey(this.pad, key, this.padRules);
+  }
+
+  padKind(kind: ClaimKind): void {
+    if (this.pad) this.pad = { ...this.pad, kind };
+  }
+
+  /** «+ Un altre»: the typed number becomes a chip, or is refused (the pad shows why). */
+  padAdd(): AddOutcome | null {
+    if (!this.pad) return null;
+    const { pad, outcome } = addTyped(this.pad, this.padRules);
+    this.pad = pad;
+    return outcome;
+  }
+
+  padRemove(cardId: number): void {
+    if (this.pad) this.pad = removeChip(this.pad, cardId);
+  }
+
+  /** «Comprovar»: claim the pad's numbers. A number no printed card has stays on the pad, marked. */
+  padSubmit(): string | null {
+    if (!this.pad) return null;
+    const claim = this.padClaim;
+    if (!claim) {
+      this.padAdd();
+      return null;
+    }
+    return this.act('claim', claim);
+  }
 
   /** Plan B: resume a round by hand on this laptop (a replacement one, or after a restart). */
   resume(point: ResumePoint): string | null {
@@ -204,6 +280,13 @@ export class ConsoleModel {
   /** A rejection arrived: toast it when it answers one of this console's commands. */
   rejected(rejection: CommandRejected): void {
     if (!isOwnRejection(rejection, this.sent)) return;
+    // A number that isn't a printed card (D126): privately, on the pad, never as a toast.
+    const sent = this.padSent;
+    if (rejection.reason === 'unknownCard' && sent?.reqId === rejection.reqId) {
+      this.padSent = null;
+      this.pad = padAfterUnknown(sent.claim, rejection.detail, defaultClaimKind(this.show.state));
+      return;
+    }
     this.toast('error', S.toast.rejected(commandText(rejection.cmd), reasonText(rejection.reason)), rejection.detail ?? null);
   }
 

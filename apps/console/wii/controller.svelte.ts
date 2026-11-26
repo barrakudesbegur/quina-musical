@@ -9,6 +9,8 @@
 import type { ShowState } from '@quina/protocol';
 import { readRemoteStatus, remoteStatusMessage, RemoteHosts, type RemoteSummary } from '../../../packages/ui/client/remote-status.ts';
 import { WII } from '../config.ts';
+import { flowOf } from '../../../packages/ui/flow.ts';
+import { canToggleAuto, checkBackCommand, checkReviewCommand } from '../logic/check.ts';
 import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
 import type { ConsoleModel } from '../model.svelte.ts';
@@ -27,7 +29,16 @@ function demoRemote(): boolean {
 
 /** What the mapping needs from a snapshot. Pure. */
 export function wiiContext(state: ShowState | null): WiiContext {
-  return { holdMode: activeHoldMode(state), autoAdvance: state?.game.autoAdvance ?? true, paused: Boolean(state?.pause) };
+  const paused = Boolean(state?.pause);
+  const flow = flowOf(state);
+  // During Pausa a Check's commands wait (the engine refuses them): − and + leave Pausa, as anywhere.
+  const check = !paused && flow.scene === 'check' ? flow.check : null;
+  return {
+    holdMode: activeHoldMode(state),
+    autoAdvance: state?.game.autoAdvance ?? true,
+    paused,
+    check: check ? { back: checkBackCommand(check), review: checkReviewCommand(check), auto: canToggleAuto(check) } : null,
+  };
 }
 
 export class WiiController {
@@ -151,7 +162,7 @@ export class WiiController {
     this.publish();
     remote.rumble(WII.rumble.tap);
     remote.requestStatus();
-    this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now())), WII.tickMs);
+    this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now(), wiiContext(this.model.show.state))), WII.tickMs);
     // Once a minute: the battery, and the drops count republished as old drops leave the window.
     this.batteryTimer = setInterval(() => {
       remote.requestStatus();
@@ -202,6 +213,15 @@ export class WiiController {
         return sendDefault(this.model.act, this.model.defaultAction) !== null;
       case 'back':
         this.model.act('back');
+        break;
+      case 'checkBack':
+        this.model.act('checkBack', c.args);
+        break;
+      case 'checkReview':
+        this.model.act('checkReview', c.args);
+        break;
+      case 'checkAuto':
+        this.model.act('checkAuto', c.args);
         break;
       case 'hold':
         this.model.act('hold', c.args);

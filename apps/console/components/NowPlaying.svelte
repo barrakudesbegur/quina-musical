@@ -41,6 +41,8 @@
       case 'checkFailed':
         return C[ring.state];
       case 'talk':
+        // After a Review was discarded the round is back in plain Parlem, and the ring says why (D122, D142).
+        return snap?.hold?.reason === 'discarded' ? C.discarded : C.talk(since);
       case 'stay':
       case 'paused':
         return C[ring.state](since);

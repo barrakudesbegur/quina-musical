@@ -1,7 +1,7 @@
 <script lang="ts" module>
   // Small line icons (inline SVG, currentColor), so the theme recolours them and nothing is downloaded. The
   // stroke width is the theme's (--icon-stroke).
-  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'sad' | 'lock' | 'edit' | 'trash' | 'offline' | 'close' | 'back' | 'chevron' | 'settings' | 'grip' | 'clockBack' | 'flag' | 'tick' | 'plusOutlined';
+  export type IconName = 'now' | 'cards' | 'history' | 'prizes' | 'schedule' | 'sound' | 'mute' | 'menu' | 'plus' | 'star' | 'sad' | 'lock' | 'edit' | 'trash' | 'offline' | 'close' | 'back' | 'chevron' | 'settings' | 'grip' | 'clockBack' | 'flag' | 'tick' | 'plusOutlined' | 'ticket' | 'cup';
 </script>
 
 <script lang="ts">
@@ -82,5 +82,14 @@
     <path d={FLAG} style:stroke="var(--color-line)" stroke-width="1.6" />
   {:else if name === 'lock'}
     <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  {:else if name === 'ticket'}
+    <!-- Horari's "Venda de cartrons": a ticket, notched on both sides, with its tear-off line; tilted, so it reads as
+         a ticket even at a dot's size. -->
+    <g transform="rotate(-20 12 12)">
+      <path d="M4 5h16a1 1 0 0 1 1 1v3.5a2.5 2.5 0 0 0 0 5V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3.5a2.5 2.5 0 0 0 0-5V6a1 1 0 0 1 1-1z" /><path d="M15 8.5v1.5M15 14v1.5" />
+    </g>
+  {:else if name === 'cup'}
+    <!-- Horari's descans: a steaming cup (board Mobil-B-J2's "Mitja part"). -->
+    <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 11h1.5a2.5 2.5 0 0 1 0 5H17M8 3v3M12 3v3" />
   {/if}
 </svg>

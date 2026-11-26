@@ -214,7 +214,11 @@ function projectShuffle(flow: FlowFields): PublicShuffle | null {
   return s ? { round: s.round, startAtMs: s.startAtMs, endAtMs: s.endAtMs } : null;
 }
 
-/** Which card and what for, and the presenters' verdict only: 'pending' until a presenter decides. */
+/**
+ * Which card and what for, and its result only from the presenters' cue (the paced Check, D107: the Claim is decided
+ * at its cue): 'pending' while its songs are revealed, under review (U79: nothing new for phones) and at its cue
+ * before it's pressed. Never its reveals.
+ */
 function projectCheck(flow: FlowFields, round: number): PublicCheck | null {
   const check = flow.check;
   if (!check) return null;
