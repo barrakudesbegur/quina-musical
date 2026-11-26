@@ -6,7 +6,7 @@
 // `extendJournal` share the one reducer every side uses, so they all agree on the result.
 // Live playback (decks, effects, the Spin in flight, a Check's snippets) is deliberately not in here: it
 // restarts fresh. PRIVATE as a whole: it holds the Queues and the Winners' names.
-import { defaultCardType, type CheckOutcome, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
+import { DEFAULT_SIDE, defaultCardType, type CheckOutcome, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
 import type { GameSettings, WinnerInfo } from './events.ts';
 
 /** The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). */
@@ -28,6 +28,8 @@ export interface RoundStartedEntry extends EntryBase {
   roundKind: RoundKind;
   /** The printed card type the round plays; absent in an older journal: defaultCardType(roundKind). */
   cardType?: string;
+  /** The card's side it plays (D178); absent for side 1 (and in an older journal). */
+  side?: number;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -51,6 +53,7 @@ export interface RoundResumedEntry extends EntryBase {
   roundKind: RoundKind;
   /** As in `round.started`. */
   cardType?: string;
+  side?: number;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -107,6 +110,8 @@ export interface SceneChangedEntry extends EntryBase {
   roundKind: RoundKind;
   /** The round's card type (in `roundStart`, the introduced round's); absent in an older journal. */
   cardType?: string;
+  /** The round's side, as `cardType`; absent for side 1. */
+  side?: number;
 }
 
 /** A Claim was made. (`winKind`, because `kind` names the entry.) */
@@ -225,6 +230,8 @@ export interface RecordedRound {
   /** The printed card type it plays. Optional in the type only: the reducer always fills it (defaultCardType(kind)
    * for an older journal), but a record kept from before it may lack it. */
   cardType?: string;
+  /** The card's side it plays (D178). Optional in the type only: the reducer fills it (1 when the entry has none). */
+  side?: number;
   queue: number[];
   phaseSeed: number;
   startedAtMs: number;
@@ -267,7 +274,7 @@ export interface GameRecord {
   scene: ShowScene;
   sceneSinceMs: number;
   /** In `roundStart` before its Shuffle, the round being introduced (`cardType` as for RecordedRound). */
-  intro: { round: number; kind: RoundKind; cardType?: string } | null;
+  intro: { round: number; kind: RoundKind; cardType?: string; side?: number } | null;
   /** The round in progress's Claims, oldest first. */
   claims: RecordedClaim[];
   /** Claims made in the whole Game: claim ids go on from it. */
@@ -350,6 +357,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         number: entry.round,
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
+        side: entry.side ?? DEFAULT_SIDE,
         queue: [...entry.queue],
         phaseSeed: entry.phaseSeed,
         startedAtMs: entry.startedAtMs,
@@ -372,6 +380,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         number: entry.round,
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
+        side: entry.side ?? DEFAULT_SIDE,
         queue: [...entry.queue],
         phaseSeed: entry.phaseSeed,
         startedAtMs: entry.startedAtMs,
@@ -430,7 +439,9 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       record.scene = entry.scene;
       record.sceneSinceMs = entry.atMs;
       // Entering `roundStart` introduces a round; its `round.started` (the Shuffle), or leaving, ends the intro.
-      record.intro = entry.scene === 'roundStart' ? { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind) } : null;
+      record.intro = entry.scene === 'roundStart'
+        ? { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind), side: entry.side ?? DEFAULT_SIDE }
+        : null;
       return;
     case 'claim.opened': {
       currentRound(record, entry);

@@ -53,6 +53,8 @@ export interface PublicRound {
   /** The printed card type it plays: a card counts in it when `card.type === cardType`. Absent from an older cloud:
    * defaultCardType(kind). */
   cardType?: string;
+  /** The card's side it plays (D178): phones mark that side's songs. Absent means 1. */
+  side?: number;
   startedAtMs: number;
   lineConfirmed: boolean;
   /** The round is over (every landed song is already marked on the phones as it lands). */
@@ -119,7 +121,7 @@ export interface PublicState {
   scene: PublicScene;
   /** In `roundStart`, before its Shuffle: the round being introduced (its prizes are announced), and its card type
    * (absent from an older cloud: defaultCardType(kind)). */
-  intro: { round: number; kind: RoundKind; cardType?: string } | null;
+  intro: { round: number; kind: RoundKind; cardType?: string; side?: number } | null;
   /** The Shuffle while it runs. */
   shuffle: PublicShuffle | null;
   /** The presenters' technical pause ("Tornem de seguida"), over the scene. */

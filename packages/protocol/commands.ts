@@ -8,6 +8,7 @@ import {
   SOUND_NAMES,
   CELEBRATION_MUSIC,
   CARD_TYPE_ID_RE,
+  SIDE_MAX,
   ROUND_KINDS,
   WIN_KINDS,
   REVIEW_OUTCOMES,
@@ -107,6 +108,9 @@ export const COMMANDS = Object.freeze({
     /** The printed card type the round plays (the plan round's `cardType`). Default: the introduced round's, else
      * defaultCardType(kind). */
     cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
+    /** The card's side the round plays (the plan round's `side`, D178): its pool is the Queue's songs, its lines count.
+     * Default: the introduced round's, else 1. */
+    side: { type: 'integer', optional: true, min: 1, max: SIDE_MAX },
   },
   /** Silence everything at once. Position is kept and the state becomes `idle`. */
   panic: {},
@@ -138,6 +142,8 @@ export const COMMANDS = Object.freeze({
     shuffleAttempts: { type: 'integer', optional: true, nullable: true, min: 0 },
     /** The round's card type (the token's; default defaultCardType(kind)): the Queue depends on it. */
     cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
+    /** The round's side (the token's `-C<n>`; default 1): the Queue is a Shuffle of its pool. */
+    side: { type: 'integer', optional: true, min: 1, max: SIDE_MAX },
   },
 
   // ---- the show flow (docs/protocol.md › Scenes) ----
@@ -148,6 +154,8 @@ export const COMMANDS = Object.freeze({
     kind: { type: 'string', optional: true, oneOf: ROUND_KINDS },
     /** The printed card type the round plays (the plan round's `cardType`; default defaultCardType(kind)). */
     cardType: { type: 'string', optional: true, maxLength: 24, pattern: CARD_TYPE_ID_RE },
+    /** The card's side the round plays (the plan round's `side`; default 1). */
+    side: { type: 'integer', optional: true, min: 1, max: SIDE_MAX },
   },
   /**
    * The presenters reveal a round's prizes (GamePlan.prizeReveal): phones may show its bundles from now on. With

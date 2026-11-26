@@ -14,7 +14,10 @@
 // organizers' spreadsheet.
 //
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
-import { VOLUME_MAX, defaultCardType, isCardTypeId, isRoundKind, isVolumeKey, type RoundKind, type VolumeKey } from './vocabulary.ts';
+import {
+  DEFAULT_SIDE, SIDE_MAX, VOLUME_MAX, cardTypeSides, defaultCardType, isCardTypeId, isRoundKind, isSide, isVolumeKey, sidePool,
+  type CardTypeSides, type RoundKind, type VolumeKey,
+} from './vocabulary.ts';
 
 /**
  * Version 3: each round names the printed card type it plays (`RoundPlan.cardType`); the card types' names, colours
@@ -54,6 +57,11 @@ export interface RoundPlan {
    * file may leave it out: checkGamePlan fills in defaultCardType(kind).
    */
   cardType: string;
+  /**
+   * The side of the card this round plays (D178, D171: the normal card's side 1 plays Pool 1, side 2 Pool 2): only its
+   * lines count, and its pool (card-types.json) is the Queue's songs. Absent means 1 (roundSide).
+   */
+  side?: number;
   line: PrizeBundle;
   /** The full-card prizes ("premis de quina"); in the Desgraciat round, the last card standing's (its `line` is empty). */
   bingo: PrizeBundle;
@@ -225,17 +233,19 @@ export function checkGamePlan(json: unknown): PlanCheck {
   list(json, 'rounds', 'plan', LIMITS.rounds).forEach((r, i) => {
     const path = `plan.rounds[${i}]`;
     if (!isRec(r)) return err(path, 'must be an object');
-    keys(r, path, v1 ? ['number', 'kind', 'line', 'bingo'] : ['number', 'kind', 'cardType', 'line', 'bingo']);
+    keys(r, path, v1 ? ['number', 'kind', 'line', 'bingo'] : ['number', 'kind', 'cardType', 'side', 'line', 'bingo']);
     const number = num(r, 'number', path, 1, LIMITS.rounds, { integer: true });
     if (number !== null && number !== i + 1) err(`${path}.number`, `must be ${i + 1} (rounds are numbered 1, 2, 3… in order)`);
     const kind = r.kind;
     if (!isRoundKind(kind)) err(`${path}.kind`, 'must be "normal", "special" or "desgraciat"');
     if (r.cardType !== undefined && !isCardTypeId(r.cardType)) err(`${path}.cardType`, 'must be a card type id from card-types.json, such as "normal" or "especial"');
+    if (r.side !== undefined && !isSide(r.side)) err(`${path}.side`, `must be a card side, 1 to ${SIDE_MAX}`);
     rounds.push({
       number: number ?? i + 1,
       kind: isRoundKind(kind) ? kind : 'normal',
       // Filled below when the plan doesn't name one (from a version 2 plan's card types, else the kind's default).
       cardType: isCardTypeId(r.cardType) ? r.cardType : '',
+      ...(isSide(r.side) ? { side: r.side } : {}),
       line: bundle(r, 'line', path),
       bingo: bundle(r, 'bingo', path),
     });
@@ -347,6 +357,8 @@ export interface PublicRoundPlan {
   kind: RoundKind;
   /** The card type it plays (printed on the cards, so never secret). */
   cardType: string;
+  /** The card's side it plays (D178); absent means 1 (roundSide). */
+  side?: number;
   revealed: boolean;
   line?: PrizeBundle;
   bingo?: PrizeBundle;
@@ -369,8 +381,8 @@ export function publicPlan(plan: GamePlan, revealed: readonly number[]): PublicP
   return {
     v: plan.v, edition: plan.edition, title: plan.title, prizeReveal: plan.prizeReveal,
     rounds: plan.rounds.map((r) => (open.has(r.number)
-      ? { number: r.number, kind: r.kind, cardType: roundCardType(r), revealed: true, line: r.line, bingo: r.bingo }
-      : { number: r.number, kind: r.kind, cardType: roundCardType(r), revealed: false })),
+      ? { number: r.number, kind: r.kind, cardType: roundCardType(r), ...(r.side ? { side: r.side } : {}), revealed: true, line: r.line, bingo: r.bingo }
+      : { number: r.number, kind: r.kind, cardType: roundCardType(r), ...(r.side ? { side: r.side } : {}), revealed: false })),
     sponsors: plan.sponsors, schedule: plan.schedule,
   };
 }
@@ -384,6 +396,11 @@ export function sponsorOf(plan: GamePlan, prize: Prize | null): Sponsor | null {
 /** The card type a planned round plays: its own, else its kind's default (a round from before card types per round). */
 export function roundCardType(round: { kind: RoundKind; cardType?: string }): string {
   return round.cardType || defaultCardType(round.kind);
+}
+
+/** The card side a planned round plays: its own, else 1. */
+export function roundSide(round: { side?: number }): number {
+  return round.side ?? DEFAULT_SIDE;
 }
 
 /** How a printed card type is priced (apps/cards card-types.json `priceRule`): by the regular rounds it still plays
@@ -408,6 +425,37 @@ export function roundCardPrice(plan: Pick<GamePlan, 'rounds'>, roundNumber: numb
   if (type.priceRule === 'fixed') return type.priceCents;
   const regular = plan.rounds.filter((r) => r.kind === 'normal' && r.number >= roundNumber).length;
   return type.priceCents * regular;
+}
+
+/** A plan's side problems against the printed card types (Admin and the laptop's preflight show them; none blocks). */
+export interface SideWarning {
+  path: string;
+  message: string;
+}
+
+/**
+ * What doesn't fit between the plan's sides and card-types.json (D178): a round on a side its card type doesn't have, a
+ * side no round plays, or a pool whose songs aren't there. `poolSongs`, when given, counts each pool's songs (the
+ * repertoire's); a pool with none can't be shuffled.
+ */
+export function sideWarnings(plan: Pick<GamePlan, 'rounds'>, cardTypes: readonly CardTypeSides[], poolSongs?: Readonly<Record<string, number>>): SideWarning[] {
+  const out: SideWarning[] = [];
+  plan.rounds.forEach((r, i) => {
+    const type = roundCardType(r);
+    const side = roundSide(r);
+    const pool = sidePool(cardTypes, type, side);
+    if (pool == null) out.push({ path: `plan.rounds[${i}].side`, message: `card type "${type}" has no side ${side} in card-types.json` });
+    else if (poolSongs && !poolSongs[pool]) out.push({ path: `plan.rounds[${i}].side`, message: `side ${side} plays pool ${pool}, which has no songs` });
+  });
+  for (const t of cardTypes) {
+    if (!plan.rounds.some((r) => roundCardType(r) === t.type)) continue;
+    for (const s of cardTypeSides(t)) {
+      if (!plan.rounds.some((r) => roundCardType(r) === t.type && roundSide(r) === s.side)) {
+        out.push({ path: 'plan.rounds', message: `no round plays side ${s.side} of card type "${t.type}"` });
+      }
+    }
+  }
+  return out;
 }
 
 /** The plan of round `number`, if planned. */

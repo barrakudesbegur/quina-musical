@@ -8,7 +8,8 @@
 //   L<index>       where the Bingo climb started, if a Line was confirmed (optional)
 //   A<attempts>    the Shuffle's draw number, when it is not 0 (optional)
 //   T<card type>   the round's card type, when it is not its kind's default (optional; read in lowercase)
-import { defaultCardType, isCardTypeId, type RoundKind } from './vocabulary.ts';
+//   C<side>        the card's side the round plays, when it is not 1 (optional, D178: "cara")
+import { DEFAULT_SIDE, defaultCardType, isCardTypeId, isSide, type RoundKind } from './vocabulary.ts';
 import type { ResumeToken } from './events.ts';
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -42,6 +43,7 @@ export function formatResumeToken(t: ResumePoint): string {
   if (t.lineConfirmedFrom != null) parts.push(`L${t.lineConfirmedFrom}`);
   if (t.shuffleAttempts) parts.push(`A${t.shuffleAttempts}`);
   if (t.cardType && t.cardType !== defaultCardType(t.kind)) parts.push(`T${t.cardType.toUpperCase()}`);
+  if (t.side != null && t.side !== DEFAULT_SIDE) parts.push(`C${t.side}`);
   return parts.join('-');
 }
 
@@ -73,10 +75,13 @@ export function parseResumeToken(text: string): ResumePoint | null {
       point.cardType = type;
       continue;
     }
-    const m = /^([SLA])(\d{1,4})$/.exec(part);
+    const m = /^([SLAC])(\d{1,4})$/.exec(part);
     if (!m) return null;
     const value = Number(m[2]);
-    if (m[1] === 'S') point.lastSongId = value;
+    if (m[1] === 'C') {
+      if (!isSide(value)) return null;
+      point.side = value;
+    } else if (m[1] === 'S') point.lastSongId = value;
     else if (m[1] === 'L') point.lineConfirmedFrom = value;
     else point.shuffleAttempts = value;
   }

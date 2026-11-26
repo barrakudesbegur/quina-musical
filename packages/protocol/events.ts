@@ -62,6 +62,11 @@ export interface RoundInfo {
   /** The printed card type it plays: only cards of this type count (and any other fails its Check as `wrongType`).
    * Optional in the type only (added later in v1): the engine always sends it. */
   cardType?: string;
+  /** The side of the card it plays (D178): only that side's lines count. Optional in the type only (step A): the
+   * engine always sends it; absent means 1. */
+  side?: number;
+  /** The pool its Queue is a Shuffle of: the side's (card-types.json). Optional in the type only, like `side`. */
+  pool?: string;
   startedAtMs: number;
   targetEndMs: number;
   lineConfirmed: boolean;
@@ -276,6 +281,9 @@ export interface CheckInfo {
   /** The card's printed type ('normal', 'especial'), shown as the Check's first step; null for `unknownCard`.
    * `wrongType`: it isn't the round's card type (`RoundInfo.cardType`). */
   cardType?: string | null;
+  /** The side checked: the round's (D163: the label shows the type and side together, sideLabel). Optional in the
+   * type only: absent means 1. */
+  side?: number;
   /** When it came on screen. */
   startAtMs: number;
   /** The most songs the Check can reveal: the card's 12, a Line's 4 (the row played), 0 for `wrongType`. */
@@ -437,6 +445,8 @@ export interface IntroInfo {
   kind: RoundKind;
   /** The card type it will play. Optional in the type only: the engine always sends it. */
   cardType?: string;
+  /** The side it will play. Optional in the type only: the engine always sends it; absent means 1. */
+  side?: number;
   sinceMs: number;
 }
 
@@ -534,6 +544,8 @@ export interface ResumeToken {
   /** The round's card type (the Queue depends on it). Optional in the type only: the engine always sends it; a token
    * without one plays defaultCardType(kind). */
   cardType?: string;
+  /** The round's side (its pool is the Queue's songs). Optional in the type only: absent means 1. */
+  side?: number;
   shuffleSeed: number;
   shuffleAttempts: number;
   /** Queue index of the last counted song (−1 before the first). */

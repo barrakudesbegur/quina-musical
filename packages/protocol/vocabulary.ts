@@ -36,6 +36,55 @@ export const isCardTypeId = (value: unknown): value is string => typeof value ==
 export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.freeze({ normal: 'normal', special: 'especial', desgraciat: 'especial' });
 /** The card type a round of this kind plays unless the plan picks another (an older journal or plan has none). */
 export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[kind] ?? DEFAULT_CARD_TYPE.normal;
+/**
+ * A pool's id (D178): each set of songs a round plays and a card's side is printed from ("1", "2"), as songs.json's
+ * per-song `pool` and card-types.json's sides give it. A song without one is in DEFAULT_POOL.
+ */
+export const POOL_ID_RE = /^[a-z0-9]{1,8}$/;
+export const isPoolId = (value: unknown): value is string => typeof value === 'string' && POOL_ID_RE.test(value);
+export const DEFAULT_POOL = '1';
+/** A card's printed sides are 1, 2…; a round plays one (D101, D102, D171). */
+export const SIDE_MAX = 9;
+export const DEFAULT_SIDE = 1;
+export const isSide = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 1 && (value as number) <= SIDE_MAX;
+
+/**
+ * One printed side of a card type (card-types.json's `sides`, D178): its number, the pool its 12 songs come from, and
+ * how it's named (`label`, "1-4"; `mark`, the printed sign of its rounds).
+ */
+export interface CardTypeSide {
+  side: number;
+  pool: string;
+  label?: string;
+  mark?: string;
+}
+/** A card type as card-types.json gives it, as far as sides go (it has more fields: colour, title, price). */
+export interface CardTypeSides {
+  type: string;
+  name?: string;
+  sides?: readonly CardTypeSide[];
+}
+/** A card type's sides: card-types.json's, else one side 1 on DEFAULT_POOL (a type from before sides). */
+export const cardTypeSides = (t: CardTypeSides | null | undefined): readonly CardTypeSide[] =>
+  t?.sides?.length ? t.sides : [{ side: DEFAULT_SIDE, pool: DEFAULT_POOL }];
+/** The pool a round of this card type and side plays; null when the type is unknown or has no such side. */
+export function sidePool(types: readonly CardTypeSides[], cardType: string, side: number = DEFAULT_SIDE): string | null {
+  const type = types.find((t) => t.type === cardType);
+  if (!type) return types.length ? null : side === DEFAULT_SIDE ? DEFAULT_POOL : null;
+  return cardTypeSides(type).find((s) => s.side === side)?.pool ?? null;
+}
+/**
+ * The card type and side in one label (D163): "Normal 1-4", "Normal 5-10", or just "Especial" for a type with one
+ * side. The type's `name` when it has one, else its id.
+ */
+export function sideLabel(types: readonly CardTypeSides[], cardType: string, side: number = DEFAULT_SIDE): string {
+  const type = types.find((t) => t.type === cardType);
+  const name = type?.name ?? cardType;
+  const sides = cardTypeSides(type);
+  const label = sides.length > 1 ? sides.find((s) => s.side === side)?.label ?? String(side) : null;
+  return label ? `${name} ${label}` : name;
+}
+
 /** What the round's Phase is climbing towards: the Line, then the Bingo; in the Desgraciat round, the last card standing. */
 export type ClimbTarget = 'line' | 'bingo' | 'standing';
 /** What a Claim is for, and what a Winner won: a Line, the Bingo, or (Desgraciat round) being the last card standing. */
