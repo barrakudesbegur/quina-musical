@@ -39,6 +39,17 @@ The single place to resume the sound engine's work from. It was first written wh
     - **The engine** opens one Claim per card already, and refuses checkNext, checkAuto, checkReview and reviewEnd as unknownCommand until step 3.
     - **Step 3 (engine), after the user lifts the UI freeze:** reveals by press, auto, the Review and its outcomes, the multi-card cue order (a passing card that isn't last gets the plaque without a fanfare; the shared Celebration after the last cue; after a fail the next card enters by itself, its first reveal waiting for a press), Next refused (`claimOpen`) while a Claim is under review, and Parlem in the Celebration ducking the victory music. It also removes `decide`, `checked` and the timed steps, and widens checkStart's and hold's scene rules. Tests: flow, desgraciat, fuzz, nights, listen demo. It goes the same day as Backend's e2e.
     - **Open for the user:** U78 (the music's level during a Review) and U79 (whether phones show a Review).
+  - **The new Pausa (D127–D130): checked on 26 Nov, NOT BUILT.** Waits for U84 and U105–U114 (U111: journal Pausa? U114: the Drift's target end).
+    - **The work:** save what was playing at Pausa's start, and resume it at its position when Pausa ends: a song deck (rebasing its timeline), Hold music, the victory track or Celebration loop, an Interval set (re-planning its handovers).
+    - **Settled within my remit (the orchestrator, 26 Nov):**
+      - the timers exclude paused time (Parlem's Hold-music timer, the Celebration's 60 s to the Interval);
+      - Panic clears the saved playback;
+      - Back stays refused during Pausa;
+      - the Shuffle completes under the overlay;
+      - Enrere inside a Check (D127) stays within the current card;
+      - named music sets via interval.py (pausa = today's 0XTlZPUpt7xPoPxk4AUU3O files; breaks and after = pop 0fvoRGCC8zXqDyj5uLhJVg; doors and end later), with a playlist-order option for the end;
+      - the intro track moves from temp/ to data/media.
+    - **Don't download** the new sets until U96–U100 are answered.
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
