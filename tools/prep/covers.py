@@ -2,7 +2,7 @@
 serves at /covers/<id>.jpg for the drum. Existing files are kept (--force fetches again); songs
 without a URL are listed, since the drum shows them without art.
 
-    tools/prep/.venv/bin/python tools/prep/covers.py [--pool NAME|PATH] [--song N ...] [--force]
+    tools/prep/.venv/bin/python tools/prep/covers.py [--repertoire NAME|PATH] [--song N ...] [--force]
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 
 TIMEOUT_SEC = 30
 MAX_BYTES = 10 * 1000**2
@@ -49,14 +49,14 @@ def fetch(url: str, dest: Path) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all")
     ap.add_argument("--force", action="store_true", help="fetch again even when the file exists")
     args = ap.parse_args(argv)
-    pool = pools.from_args(args)
+    repertoire = repertoires.from_args(args)
     try:
-        songs = pool.songs()
-    except pools.PoolError as err:
+        songs = repertoire.songs()
+    except repertoires.RepertoireError as err:
         print(f"covers: {err}", file=sys.stderr)
         return 1
     wanted = set(args.song or [])
@@ -67,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         sid = song["id"]
         if wanted and sid not in wanted:
             continue
-        dest = pool.cover_path(sid)
+        dest = repertoire.cover_path(sid)
         if dest.is_file() and dest.stat().st_size > 0 and not args.force:
             have += 1
             continue
@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{sid:>4} cover {size / 1000:.0f} kB", flush=True)
     if no_url:
         print(f"warning: no cover URL in songs.json for songs {no_url} (the drum shows them without art)")
-    print(f"covers ({pool.name}) in {pools.display(pool.covers_dir, pools.REPO)}: {have} present, {fetched} fetched"
+    print(f"covers ({repertoire.name}) in {repertoires.display(repertoire.covers_dir, repertoires.REPO)}: {have} present, {fetched} fetched"
           + (f", {len(no_url)} without URL" if no_url else "") + (f", {len(failed)} failed" if failed else ""))
     return 1 if failed else 0
 

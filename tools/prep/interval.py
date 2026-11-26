@@ -1,5 +1,5 @@
 """The music sets (D129): the breaks' between rounds, Pausa's, and so on, each a playlist. Global, like Hold music: no
-pool owns them.
+repertoire owns them.
 
 Usage (from the repo root):
     tools/prep/.venv/bin/python tools/prep/interval.py              # every set: each folder of data/media/interval/

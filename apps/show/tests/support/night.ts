@@ -32,7 +32,7 @@ import type { Effect, HoldMood, ShowPlan } from '../../engine/src/show/show.ts';
 import type { LanePart, StemName } from '../../engine/src/plan/events.ts';
 import type { StemBars } from '../../engine/src/plan/moves.ts';
 import type { PhaseName } from '../../engine/src/config.ts';
-import { OUT } from '../../relay/pool.ts';
+import { OUT } from '../../relay/repertoire.ts';
 
 const DATA = OUT;
 const readJson = (file: string): unknown => JSON.parse(fs.readFileSync(file, 'utf8'));

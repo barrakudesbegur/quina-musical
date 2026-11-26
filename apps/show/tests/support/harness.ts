@@ -10,7 +10,7 @@ import type { Effect, Env } from '../../engine/src/show/show.ts';
 import { seededRandom } from '../../engine/src/rng.ts';
 import type { Analysis } from '../../engine/src/analysis.ts';
 import type { Card } from '../../engine/src/game/cards.ts';
-import { OUT, REPO } from '../../relay/pool.ts';
+import { OUT, REPO } from '../../relay/repertoire.ts';
 import { HAS_DATA } from './data.ts';
 
 /** The analysis files hold more than the engine reads; the tests also pick song pairs by tempo stability. */

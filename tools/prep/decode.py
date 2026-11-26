@@ -1,4 +1,4 @@
-"""Decode each song of a pool to the PCM every later step reads: <cacheDir>/<id>/mix.flac.
+"""Decode each song of a repertoire to the PCM every later step reads: <cacheDir>/<id>/mix.flac.
 
 48 kHz 16-bit FLAC, audio stream only (the MP3s embed cover art as a video stream):
     ffmpeg -nostdin -v error -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 <out>
@@ -9,7 +9,7 @@ a song is skipped while its source is unchanged, and decoded again when the sour
 MP3's sha256 or on mix.flac, so it redoes that song. A mix.flac without mix.json (written by the old
 decode_all.sh) is adopted as it is, never re-decoded.
 
-    tools/prep/.venv/bin/python tools/prep/decode.py [--pool NAME|PATH] [--song N ...] [--force]
+    tools/prep/.venv/bin/python tools/prep/decode.py [--repertoire NAME|PATH] [--song N ...] [--force]
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 
 FFMPEG_ARGS = ["-map", "0:a", "-ar", "48000", "-c:a", "flac", "-sample_fmt", "s16"]
 META_VERSION = 1
@@ -57,7 +57,7 @@ class DecodeError(Exception):
 
 def _source_record(source: Path, digest: str | None = None) -> dict:
     st = source.stat()
-    return {"path": pools.display(source, pools.REPO), "size": st.st_size, "mtimeNs": st.st_mtime_ns,
+    return {"path": repertoires.display(source, repertoires.REPO), "size": st.st_size, "mtimeNs": st.st_mtime_ns,
             "sha256": digest or sha256(source)}
 
 
@@ -69,10 +69,10 @@ def _write_meta(path: Path, source: dict, decoder: str, how: str) -> None:
     os.replace(tmp, path)
 
 
-def decode_song(pool: pools.Pool, song_id: int, source: Path, decoder: str, force: bool = False) -> str:
+def decode_song(repertoire: repertoires.Repertoire, song_id: int, source: Path, decoder: str, force: bool = False) -> str:
     """Bring <cacheDir>/<id>/mix.flac up to date with `source`. Returns what happened:
     'skipped', 'adopted', 'decoded' or 'redecoded'."""
-    out = pool.mix_flac(song_id)
+    out = repertoire.mix_flac(song_id)
     meta_path = out.with_name("mix.json")
     status = "decoded"
     if out.is_file() and out.stat().st_size > 0 and not force:
@@ -86,7 +86,7 @@ def decode_song(pool: pools.Pool, song_id: int, source: Path, decoder: str, forc
         prev = meta.get("source", {})
         st = source.stat()
         if (prev.get("path"), prev.get("size"), prev.get("mtimeNs")) == \
-                (pools.display(source, pools.REPO), st.st_size, st.st_mtime_ns):
+                (repertoires.display(source, repertoires.REPO), st.st_size, st.st_mtime_ns):
             return "skipped"
         digest = sha256(source)
         if prev.get("sha256") == digest:  # touched or renamed, same content
@@ -111,15 +111,15 @@ def decode_song(pool: pools.Pool, song_id: int, source: Path, decoder: str, forc
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all")
     ap.add_argument("--force", action="store_true", help="decode again even when up to date")
     args = ap.parse_args(argv)
-    pool = pools.from_args(args)
+    repertoire = repertoires.from_args(args)
     try:
-        songs = pool.songs()
-        audio = pool.audio_files()
-    except pools.PoolError as err:
+        songs = repertoire.songs()
+        audio = repertoire.audio_files()
+    except repertoires.RepertoireError as err:
         print(f"decode: {err}", file=sys.stderr)
         return 1
     decoder = ffmpeg_version()
@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     ids = [s["id"] for s in songs if not wanted or s["id"] in wanted]
     unknown = sorted(wanted - set(ids))
     if unknown:
-        print(f"decode: songs {unknown} are not in {pools.display(pool.songs_json, pools.REPO)}", file=sys.stderr)
+        print(f"decode: songs {unknown} are not in {repertoires.display(repertoire.songs_json, repertoires.REPO)}", file=sys.stderr)
         return 1
     extra = sorted(set(audio) - {s["id"] for s in songs})
     if extra and not wanted:
@@ -140,13 +140,13 @@ def main(argv: list[str] | None = None) -> int:
     for sid in ids:
         source = audio.get(sid)
         if source is None:
-            failed.append(f"song {sid}: no audio file in {pools.display(pool.audio_dir, pools.REPO)} "
+            failed.append(f"song {sid}: no audio file in {repertoires.display(repertoire.audio_dir, repertoires.REPO)} "
                           f"(expected {sid}.mp3 or '{sid} <title> - <artist>.mp3')")
             print("FAILED", failed[-1], flush=True)
             continue
         t0 = time.time()
         try:
-            status = decode_song(pool, sid, source, decoder, args.force)
+            status = decode_song(repertoire, sid, source, decoder, args.force)
         except (DecodeError, OSError) as err:
             failed.append(f"song {sid}: {err}")
             print("FAILED", failed[-1], flush=True)
@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
         if status != "skipped":
             print(f"{sid:>4} {status} {source.name} ({time.time() - t0:.1f}s)", flush=True)
     summary = ", ".join(f"{n} {k}" for k, n in sorted(counts.items())) or "nothing to do"
-    print(f"decode ({pool.name}): {len(ids)} songs: {summary}" + (f", {len(failed)} failed" if failed else ""))
+    print(f"decode ({repertoire.name}): {len(ids)} songs: {summary}" + (f", {len(failed)} failed" if failed else ""))
     return 1 if failed else 0
 
 

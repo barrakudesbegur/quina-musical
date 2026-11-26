@@ -1,6 +1,6 @@
-"""Shared fixtures for the pipeline tests: synthetic audio and throwaway pools in a temp dir.
+"""Shared fixtures for the pipeline tests: synthetic audio and throwaway repertoires in a temp dir.
 
-Nothing here writes under the repo: every pool built by these fixtures keeps its data,
+Nothing here writes under the repo: every repertoire built by these fixtures keeps its data,
 cache, overrides and covers inside pytest's temp dir, which pytest removes.
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ import pytest
 ANALYSIS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ANALYSIS))
 
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 
 VENV_PY = ANALYSIS / ".venv" / "bin" / "python"
 
@@ -64,7 +64,7 @@ def write_manifest(root: Path, name: str = "synth", **fields) -> Path:
     return path
 
 
-def build_synth_pool(root: Path) -> pools.Pool:
+def build_synth_repertoire(root: Path) -> repertoires.Repertoire:
     """Two songs as the playlist-fetcher writes them: song 1 is `1.mp3` with hook tags and a cover URL;
     song 2 uses spotDL's '<position> <title> - <artist>.mp3' name and has no timestamps and no cover.
     No Spotify features."""
@@ -78,9 +78,9 @@ def build_synth_pool(root: Path) -> pools.Pool:
         {"id": 2, "title": "Second Song", "artist": "Test Band", "cover": ""},
     ]
     (root / "input" / "songs.json").write_text(json.dumps(songs, indent=1))
-    return pools.load(write_manifest(root))
+    return repertoires.load(write_manifest(root))
 
 
 def run_script(script: str, *args: str, python: Path = VENV_PY) -> subprocess.CompletedProcess:
-    return subprocess.run([str(python), str(ANALYSIS / script), *args], cwd=pools.REPO,
+    return subprocess.run([str(python), str(ANALYSIS / script), *args], cwd=repertoires.REPO,
                           capture_output=True, text=True, timeout=600, check=False)

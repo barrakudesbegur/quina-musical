@@ -10,15 +10,15 @@ Written audio is windowed by default, to save disk: the intro [0, 30 s] plus
 stem, <cacheDir>/<id>/stems/<stem>.<startSample>.flac (48 kHz, 16-bit stereo), whose first sample is
 sample <startSample> of mix.flac. --full writes one window covering the whole song instead.
 
-Outputs: <dataDir>/stems/<id>.json per song and <dataDir>/stems/index.json (the pool's directories,
-tools/prep/pool.py; the default pool's are cache/ and data/). Songs without a valid hook are skipped:
+Outputs: <dataDir>/stems/<id>.json per song and <dataDir>/stems/index.json (the repertoire's directories,
+tools/prep/repertoire.py; the default repertoire's are cache/ and data/). Songs without a valid hook are skipped:
 the engine never plays them.
 Idempotent: a song is skipped when its JSON matches mix.flac (size + mtime), the model, the mode,
 the downbeats and the windows, and all its files exist. --force redoes it.
-Disk guards: stop (exit 3) before free space would drop under 10 GB, or the pool's stem files
+Disk guards: stop (exit 3) before free space would drop under 10 GB, or the repertoire's stem files
 would pass 4 GB.
 
-Run: tools/prep/.venv-stems/bin/python tools/prep/stems.py [--pool NAME|PATH] [--song N ...] [--force] [--full]
+Run: tools/prep/.venv-stems/bin/python tools/prep/stems.py [--repertoire NAME|PATH] [--song N ...] [--force] [--full]
 """
 from __future__ import annotations
 
@@ -41,14 +41,14 @@ import soundfile as sf  # noqa: E402
 import soxr  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 
 SR = 48000
 KEEP = ("drums", "bass", "vocals")
 ALL = ("drums", "bass", "vocals", "other")
 INTRO_SEC, PRE_SEC, POST_SEC = 30.0, 32.0, 48.0
 MIN_FREE_BYTES = 10 * 1000**3        # keep >= 10 GB free at all times
-MAX_STEM_BYTES = 4 * 1000**3         # all stem files of the pool together <= 4 GB
+MAX_STEM_BYTES = 4 * 1000**3         # all stem files of the repertoire together <= 4 GB
 RESAMPLE_QUALITY = "VHQ"
 SHIFTS, OVERLAP = 1, 0.25
 # Loud masters make Demucs stems peak above full scale (drums up to several dB over), so stems are
@@ -74,13 +74,13 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def stems_bytes(pool: pools.Pool) -> int:
-    return sum(p.stat().st_size for p in pool.cache_dir.glob("*/stems/*.flac"))
+def stems_bytes(repertoire: repertoires.Repertoire) -> int:
+    return sum(p.stat().st_size for p in repertoire.cache_dir.glob("*/stems/*.flac"))
 
 
-def free_bytes(pool: pools.Pool) -> int:
-    """Free space on the volume of the pool's cache (its nearest existing folder)."""
-    path = pool.cache_dir
+def free_bytes(repertoire: repertoires.Repertoire) -> int:
+    """Free space on the volume of the repertoire's cache (its nearest existing folder)."""
+    path = repertoire.cache_dir
     while not path.exists() and path != path.parent:
         path = path.parent
     return shutil.disk_usage(path).free
@@ -108,8 +108,8 @@ def compute_windows(analysis: dict, n: int, full: bool) -> list[dict]:
              "startSec": round(a / SR, 6), "endSec": round(b / SR, 6)} for a, b in merged]
 
 
-def file_for(pool: pools.Pool, song_id: int, stem: str, start: int) -> Path:
-    return pool.stems_cache(song_id) / f"{stem}.{start}.flac"
+def file_for(repertoire: repertoires.Repertoire, song_id: int, stem: str, start: int) -> Path:
+    return repertoire.stems_cache(song_id) / f"{stem}.{start}.flac"
 
 
 # ---------------------------------------------------------------- separation
@@ -259,7 +259,7 @@ def load_json(path: Path):
         return None
 
 
-def is_done(pool: pools.Pool, song_id: int, prev: dict | None, src: dict, model: str, mode: str,
+def is_done(repertoire: repertoires.Repertoire, song_id: int, prev: dict | None, src: dict, model: str, mode: str,
             windows: list[dict], downbeats_sha: str) -> bool:
     if not prev:
         return False
@@ -273,7 +273,7 @@ def is_done(pool: pools.Pool, song_id: int, prev: dict | None, src: dict, model:
         return False
     for w in windows:
         for stem in KEEP:
-            p = file_for(pool, song_id, stem, w["startSample"])
+            p = file_for(repertoire, song_id, stem, w["startSample"])
             if not p.exists():
                 return False
             if sf.info(str(p)).frames != w["lengthSamples"]:
@@ -285,10 +285,10 @@ class DiskStop(Exception):
     pass
 
 
-def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
+def process(repertoire: repertoires.Repertoire, song_id: int, sep_factory, args) -> dict:
     t0 = time.time()
-    mix_path = pool.mix_flac(song_id)
-    analysis = json.loads((pool.analysis_dir / f"{song_id}.json").read_text())
+    mix_path = repertoire.mix_flac(song_id)
+    analysis = json.loads((repertoire.analysis_dir / f"{song_id}.json").read_text())
     st = mix_path.stat()
     info = sf.info(str(mix_path))
     n = int(info.frames)
@@ -296,10 +296,10 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
     windows = compute_windows(analysis, n, args.full)
     downbeats = analysis.get("downbeats", [])
     downbeats_sha = hashlib.sha256(json.dumps(downbeats).encode()).hexdigest()[:16]
-    src = {"path": pools.display(mix_path), "size": st.st_size, "mtimeNs": st.st_mtime_ns}
-    out_json = pool.stems_dir / f"{song_id}.json"
+    src = {"path": repertoires.display(mix_path), "size": st.st_size, "mtimeNs": st.st_mtime_ns}
+    out_json = repertoire.stems_dir / f"{song_id}.json"
     prev = load_json(out_json)
-    if not args.force and is_done(pool, song_id, prev, src, args.model, mode, windows, downbeats_sha):
+    if not args.force and is_done(repertoire, song_id, prev, src, args.model, mode, windows, downbeats_sha):
         return {"id": song_id, "ok": True, "skipped": True, "seconds": prev.get("timing", {}).get("totalSec"),
                 "warning": prev.get("warning"), "bytes": prev.get("bytes")}
 
@@ -309,7 +309,7 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
 
     # Disk guard 1: raw 16-bit size is an upper bound for what this song writes.
     raw_bytes = sum(w["lengthSamples"] for w in windows) * 2 * 2 * len(KEEP)
-    free = free_bytes(pool)
+    free = free_bytes(repertoire)
     if free - raw_bytes < MIN_FREE_BYTES:
         raise DiskStop(f"free {free / 1e9:.2f} GB - {raw_bytes / 1e9:.2f} GB would drop below "
                        f"{MIN_FREE_BYTES / 1e9:.2f} GB")
@@ -336,7 +336,7 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
     diag = vocal_bleed(stems["vocals"], stems["other"])
 
     # Write kept stems window by window, to temp names first.
-    stem_dir = pool.stems_cache(song_id)
+    stem_dir = repertoire.stems_cache(song_id)
     stem_dir.mkdir(parents=True, exist_ok=True)
     clipped, peaks = {}, {}
     quantized = {}
@@ -347,18 +347,18 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
             quantized[stem] = q
             for w in windows:
                 a, L = w["startSample"], w["lengthSamples"]
-                final = file_for(pool, song_id, stem, a)
+                final = file_for(repertoire, song_id, stem, a)
                 tmp = final.with_name(f".{final.name}.tmp")
                 sf.write(str(tmp), q[a:a + L], SR, subtype="PCM_16", format="FLAC",
                          compression_level=args.compression)
                 written.append((tmp, final))
         new_bytes = sum(t.stat().st_size for t, _ in written)
         old_bytes = sum(p.stat().st_size for p in stem_dir.glob("*.flac"))
-        others = stems_bytes(pool) - old_bytes
+        others = stems_bytes(repertoire) - old_bytes
         if others + new_bytes > MAX_STEM_BYTES:
             raise DiskStop(f"stems would total {(others + new_bytes) / 1e9:.2f} GB > "
                            f"{MAX_STEM_BYTES / 1e9:.1f} GB cap")
-        if free_bytes(pool) < MIN_FREE_BYTES:
+        if free_bytes(repertoire) < MIN_FREE_BYTES:
             raise DiskStop("free space below 10 GB after writing")
     except BaseException:
         for t, _ in written:
@@ -398,7 +398,7 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
         "stemGainDb": db(STEM_GAIN),
         "derived": {"other": "mix - (drums + bass + vocals) / stemGain"},
         "mode": mode,
-        "pathTemplate": f"{pools.display(pool.stems_cache(song_id))}/{{stem}}.{{startSample}}.flac",
+        "pathTemplate": f"{repertoires.display(repertoire.stems_cache(song_id))}/{{stem}}.{{startSample}}.flac",
         "windows": windows,
         "createdAt": now_iso(),
         "alignment": {
@@ -418,7 +418,7 @@ def process(pool: pools.Pool, song_id: int, sep_factory, args) -> dict:
                    "postSec": round(t_end - t_post, 2), "totalSec": round(t_end - t0, 2)},
         "warning": "; ".join(warnings) or None,
     }
-    pool.stems_dir.mkdir(parents=True, exist_ok=True)
+    repertoire.stems_dir.mkdir(parents=True, exist_ok=True)
     tmp = out_json.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(rec, indent=1))
     os.replace(tmp, out_json)
@@ -434,13 +434,13 @@ def demucs_version() -> str:
         return "?"
 
 
-def write_index(pool: pools.Pool, results: dict[int, dict], args, free_before: int):
-    pool.stems_dir.mkdir(parents=True, exist_ok=True)
-    path = pool.stems_dir / "index.json"
+def write_index(repertoire: repertoires.Repertoire, results: dict[int, dict], args, free_before: int):
+    repertoire.stems_dir.mkdir(parents=True, exist_ok=True)
+    path = repertoire.stems_dir / "index.json"
     prev = load_json(path) or {}
     songs = {s["id"]: s for s in prev.get("songs", [])}
     songs.update(results)
-    total = stems_bytes(pool)
+    total = stems_bytes(repertoire)
     doc = {
         "schemaVersion": 1,
         "updatedAt": now_iso(),
@@ -448,7 +448,7 @@ def write_index(pool: pools.Pool, results: dict[int, dict], args, free_before: i
         "mode": "full" if args.full else "windowed",
         "stemsBytes": total,
         "freeBytesBeforeRun": free_before,
-        "freeBytesNow": free_bytes(pool),
+        "freeBytesNow": free_bytes(repertoire),
         "songs": [songs[k] for k in sorted(songs)],
     }
     tmp = path.with_suffix(".json.tmp")
@@ -464,14 +464,14 @@ def main():
     ap.add_argument("--model", default="htdemucs", help="htdemucs (default) or htdemucs_ft")
     ap.add_argument("--device", default="auto", help="auto (mps if available), mps or cpu")
     ap.add_argument("--compression", type=float, default=1.0, help="FLAC compression level 0..1")
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     args = ap.parse_args()
-    pool = pools.from_args(args)
+    repertoire = repertoires.from_args(args)
 
-    if not pool.analysis_index.exists():
-        print(f"stems: no {pools.display(pool.analysis_index)}: run the analyze step first", file=sys.stderr)
+    if not repertoire.analysis_index.exists():
+        print(f"stems: no {repertoires.display(repertoire.analysis_index)}: run the analyze step first", file=sys.stderr)
         sys.exit(1)
-    index = json.loads(pool.analysis_index.read_text())["songs"]
+    index = json.loads(repertoire.analysis_index.read_text())["songs"]
     no_hook = [s["id"] for s in index if not any(h.get("valid") for h in s.get("hooks", []))]
     ids = args.song or [s["id"] for s in index if s["id"] not in no_hook]
     sep_holder: dict = {}
@@ -481,8 +481,8 @@ def main():
             sep_holder["sep"] = Separator(args.model, args.device)
         return sep_holder["sep"]
 
-    free_before = free_bytes(pool)
-    print(f"{pool.describe()}: free {free_before / 1e9:.2f} GB, stems {stems_bytes(pool) / 1e9:.3f} GB, "
+    free_before = free_bytes(repertoire)
+    print(f"{repertoire.describe()}: free {free_before / 1e9:.2f} GB, stems {stems_bytes(repertoire) / 1e9:.3f} GB, "
           f"songs {len(ids)}", flush=True)
     if no_hook and not args.song:
         print(f"skipped (no valid hook, not playable): {', '.join(map(str, no_hook))}", flush=True)
@@ -490,7 +490,7 @@ def main():
     code = 0
     for i, sid in enumerate(ids):
         try:
-            r = process(pool, sid, sep_factory, args)
+            r = process(repertoire, sid, sep_factory, args)
         except DiskStop as e:
             print(f"[{i + 1}/{len(ids)}] song {sid}: STOP ({e})", flush=True)
             results[sid] = {"id": sid, "ok": False, "seconds": None, "warning": f"not run: {e}"}
@@ -498,7 +498,7 @@ def main():
                 results[rest] = {"id": rest, "ok": False, "seconds": None,
                                  "warning": f"not run: stopped at song {sid} (disk guard)"}
             code = 3
-            write_index(pool, results, args, free_before)
+            write_index(repertoire, results, args, free_before)
             break
         except Exception as e:  # keep going; re-run failures with --song
             print(f"[{i + 1}/{len(ids)}] song {sid}: FAILED {type(e).__name__}: {e}", flush=True)
@@ -509,8 +509,8 @@ def main():
             tag = "skip" if r.get("skipped") else f"{r['seconds']:.1f}s"
             print(f"[{i + 1}/{len(ids)}] song {sid}: {tag} {(r.get('bytes') or 0) / 1e6:.1f} MB"
                   f"{' WARN ' + r['warning'] if r.get('warning') else ''}", flush=True)
-        write_index(pool, results, args, free_before)
-    print(f"done: stems {stems_bytes(pool) / 1e9:.3f} GB, free {free_bytes(pool) / 1e9:.2f} GB", flush=True)
+        write_index(repertoire, results, args, free_before)
+    print(f"done: stems {stems_bytes(repertoire) / 1e9:.3f} GB, free {free_bytes(repertoire) / 1e9:.2f} GB", flush=True)
     sys.exit(code)
 
 

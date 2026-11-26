@@ -6,7 +6,7 @@ The repo is public, so copyrighted audio stays out of git. Only `fx/` is tracked
 
 | Folder | Purpose (see `GLOSSARY.md`) | Source |
 |---|---|---|
-| `song/<id>.mp3` | The bingo songs of the default pool. `<id>` is the `id` in `data/pools/default/songs.json` | Spotify playlist via spotDL (`tools/prep/playlist-fetcher/`) |
+| `song/<id>.mp3` | The bingo songs of the default repertoire. `<id>` is the `id` in `data/repertoires/default/songs.json` | Spotify playlist via spotDL (`tools/prep/playlist-fetcher/`) |
 | `fx/` | Sound effects the presenters trigger (tracked in git) | Various |
 | `hold/` | Hold music: loops played while waiting, for example after a failed check | `windows-error-remix.mp3`: <https://www.youtube.com/watch?v=dj9KbKKJVVo> · `directed-by-robert-b-weide.mp3`: <https://www.youtube.com/watch?v=X-KwYX2u8e4> · `mkwii-grand-prix-low-place.mp3`: Mario Kart Wii OST, "Grand Prix - Low Place" |
 | `celebration/` | Victory music for the celebration after a successful check | `mkwii-grand-prix-1st-place.mp3`: Mario Kart Wii OST, "Grand Prix - 1st Place" |

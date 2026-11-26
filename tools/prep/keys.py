@@ -3,9 +3,9 @@
     tools/prep/.venv/bin/python tools/prep/keys.py            # detect (cached), evaluate, write <dataDir>/keys/
     tools/prep/.venv/bin/python tools/prep/keys.py eval       # accuracy table only (needs the cache)
     tools/prep/.venv/bin/python tools/prep/keys.py pairs      # tempo-pair and key-compatibility statistics
-    options: --pool NAME|PATH, --song N (repeatable), --force, --json
+    options: --repertoire NAME|PATH, --song N (repeatable), --force, --json
 
-Paths are the pool's (tools/prep/pool.py); the default pool's are data/keys/, cache/keys/ and
+Paths are the repertoire's (tools/prep/repertoire.py); the default repertoire's are data/keys/, cache/keys/ and
 data/spotify_features.json.
 
 Methods (all on the mix, mono):
@@ -15,9 +15,9 @@ Methods (all on the mix, mono):
     frame-normalised and averaged, correlated with the Krumhansl-Kessler, Temperley and
     Albrecht-Shanahan profiles over the 24 keys.
 Global = the whole song; a hook = its downbeat ±8 bars. Every method is scored against Spotify's
-key/mode (the pool's Spotify features, not committed: only aggregate numbers leave this script), and
-the best one is written to <dataDir>/keys/<id>.json and index.json. A pool without Spotify features
-can't score the methods: it uses DEFAULT_METHOD, the one that scored best on the default pool, and
+key/mode (the repertoire's Spotify features, not committed: only aggregate numbers leave this script), and
+the best one is written to <dataDir>/keys/<id>.json and index.json. A repertoire without Spotify features
+can't score the methods: it uses DEFAULT_METHOD, the one that scored best on the default repertoire, and
 index.json says the accuracy is unknown.
 
 Confidence is the method's own strength in [0, 1] (Essentia's key strength; the profile
@@ -38,7 +38,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps.output import write_json_stable, write_text_if_changed  # noqa: E402
 from steps.tempo_match import pair_class  # noqa: E402
 
@@ -59,7 +59,7 @@ PROFILES = {
                  [0.220, 0.006, 0.104, 0.123, 0.019, 0.103, 0.012, 0.214, 0.062, 0.022, 0.061, 0.052]),
 }
 METHODS = [f"essentia-{p}" for p in ESSENTIA_PROFILES] + [f"librosa-{p}" for p in PROFILES]
-# Without a Spotify reference the methods can't be scored: use the best one on the default pool
+# Without a Spotify reference the methods can't be scored: use the best one on the default repertoire
 # (MIREX 0.650 against Spotify over 68 songs, 2026-11).
 DEFAULT_METHOD = "essentia-temperley"
 
@@ -141,18 +141,18 @@ def hook_windows(analysis: dict) -> dict[str, tuple[float, float]]:
     return out
 
 
-def detect_song(pool: pools.Pool, song: int, force: bool = False) -> dict:
+def detect_song(repertoire: repertoires.Repertoire, song: int, force: bool = False) -> dict:
     """All methods for one song (cached)."""
     import librosa
     import soxr
 
-    analysis = json.loads((pool.analysis_dir / f"{song}.json").read_text())
-    mix = pool.mix_flac(song)
+    analysis = json.loads((repertoire.analysis_dir / f"{song}.json").read_text())
+    mix = repertoire.mix_flac(song)
     st = mix.stat()
     windows = hook_windows(analysis)
     fingerprint = {"version": CACHE_VERSION, "mix": f"{st.st_size}:{st.st_mtime_ns}",
                    "hooks": {k: [round(a, 4), round(b, 4)] for k, (a, b) in windows.items()}}
-    cache_path = pool.key_cache_dir / f"{song}.json"
+    cache_path = repertoire.key_cache_dir / f"{song}.json"
     if cache_path.exists() and not force:
         cached = json.loads(cache_path.read_text())
         if cached.get("fingerprint") == fingerprint:
@@ -180,15 +180,15 @@ def detect_song(pool: pools.Pool, song: int, force: bool = False) -> dict:
     result = {"songId": song, "fingerprint": fingerprint, "global": run_all(None, None),
               "hooks": {hid: {"startSec": round(a, 3), "endSec": round(b, 3), **run_all(a, b)}
                         for hid, (a, b) in windows.items()}}
-    pool.key_cache_dir.mkdir(parents=True, exist_ok=True)
+    repertoire.key_cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(result))
     return result
 
 
 # ---------------------------------------------------------------- evaluation
 
-def spotify_keys(pool: pools.Pool) -> dict[int, tuple[int, str]]:
-    songs = pool.spotify()
+def spotify_keys(repertoire: repertoires.Repertoire) -> dict[int, tuple[int, str]]:
+    songs = repertoire.spotify()
     out = {}
     for sid, rec in songs.items():
         feat = rec.get("features") or {}
@@ -253,8 +253,8 @@ def hook_agreement(results: dict[int, dict], method: str) -> dict:
 
 # ---------------------------------------------------------------- output
 
-def write_outputs(pool: pools.Pool, results: dict[int, dict], method: str, accuracy: dict) -> None:
-    out_dir = pool.keys_dir
+def write_outputs(repertoire: repertoires.Repertoire, results: dict[int, dict], method: str, accuracy: dict) -> None:
+    out_dir = repertoire.keys_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     index = []
     for song in sorted(results):
@@ -280,17 +280,17 @@ def write_outputs(pool: pools.Pool, results: dict[int, dict], method: str, accur
     }, lambda doc: json.dumps(doc, indent=1) + "\n", ("createdAt",))
 
 
-def load_cached(pool: pools.Pool, songs: list[int]) -> dict[int, dict]:
+def load_cached(repertoire: repertoires.Repertoire, songs: list[int]) -> dict[int, dict]:
     out = {}
     for s in songs:
-        p = pool.key_cache_dir / f"{s}.json"
+        p = repertoire.key_cache_dir / f"{s}.json"
         if p.exists():
             out[s] = json.loads(p.read_text())
     return out
 
 
-def playable(pool: pools.Pool) -> list[dict]:
-    return [s for s in json.loads(pool.analysis_index.read_text())["songs"] if not s.get("excluded")]
+def playable(repertoire: repertoires.Repertoire) -> list[dict]:
+    return [s for s in json.loads(repertoire.analysis_index.read_text())["songs"] if not s.get("excluded")]
 
 
 def choose_method(table: dict) -> str:
@@ -301,9 +301,9 @@ def choose_method(table: dict) -> str:
 
 # ---------------------------------------------------------------- pairs
 
-def pair_stats(pool: pools.Pool) -> dict:
-    keys_dir = pool.keys_dir
-    songs = playable(pool)
+def pair_stats(repertoire: repertoires.Repertoire) -> dict:
+    keys_dir = repertoire.keys_dir
+    songs = playable(repertoire)
     keys = {}
     for s in songs:
         p = keys_dir / f"{s['id']}.json"
@@ -414,26 +414,26 @@ def main() -> int:
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--method", choices=METHODS, help="write this method instead of the best one")
     ap.add_argument("--json", action="store_true")
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     args = ap.parse_args()
-    pool = pools.from_args(args)
-    if not pool.analysis_index.exists():
-        print(f"keys: no {pools.display(pool.analysis_index)}: run the analyze step first", file=sys.stderr)
+    repertoire = repertoires.from_args(args)
+    if not repertoire.analysis_index.exists():
+        print(f"keys: no {repertoires.display(repertoire.analysis_index)}: run the analyze step first", file=sys.stderr)
         return 1
 
     if args.command == "pairs":
-        stats = pair_stats(pool)
+        stats = pair_stats(repertoire)
         print(json.dumps(stats, indent=1))
         return 0
 
-    ids = args.song or [s["id"] for s in playable(pool)]
+    ids = args.song or [s["id"] for s in playable(repertoire)]
     if args.command == "detect":
         for i, s in enumerate(ids, 1):
-            detect_song(pool, s, args.force)
+            detect_song(repertoire, s, args.force)
             print(f"\r{i}/{len(ids)} songs", end="", file=sys.stderr, flush=True)
         print(file=sys.stderr)
-    results = load_cached(pool, ids)
-    truth = spotify_keys(pool)
+    results = load_cached(repertoire, ids)
+    truth = spotify_keys(repertoire)
     table = evaluate(results, truth)
     method = args.method or choose_method(table)
     agreement = hook_agreement(results, method)
@@ -451,15 +451,15 @@ def main() -> int:
                   f"{num(row['mirex'], '6.3f')}")
         print(f"chosen: {method}; hooks vs global key: {agreement}")
     if not truth:
-        print(f"note: no Spotify keys in {pools.display(pool.spotify_features)}: accuracy unknown, using {method}")
+        print(f"note: no Spotify keys in {repertoires.display(repertoire.spotify_features)}: accuracy unknown, using {method}")
     if args.command == "detect" and not args.song:
         acc = {m: {k: table[m][k] for k in ("n", "exact", "fifth", "relative", "parallel", "other", "exactPct",
                                               "camelotCompatiblePct", "mirex")} for m in METHODS}
         reference = ("Spotify key/mode (aggregate only)" if truth else
-                     f"none: no Spotify features for this pool, so {method} (DEFAULT_METHOD) is unscored")
-        write_outputs(pool, results, method, {"reference": reference, "methods": acc,
+                     f"none: no Spotify features for this repertoire, so {method} (DEFAULT_METHOD) is unscored")
+        write_outputs(repertoire, results, method, {"reference": reference, "methods": acc,
                                               "chosen": method, "hooksVsGlobal": agreement})
-        print(f"wrote {pools.display(pool.keys_dir)}/ ({pool.name}: {len(results)} songs, method {method})")
+        print(f"wrote {repertoires.display(repertoire.keys_dir)}/ ({repertoire.name}: {len(results)} songs, method {method})")
     return 0
 
 

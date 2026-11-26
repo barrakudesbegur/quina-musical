@@ -13,7 +13,7 @@ import type { KeyInfo } from '../engine/src/plan/keys.ts';
 import type { BlendSource, Plan, PlanError, PlanSummary, SignatureSource } from '../engine/src/plan/planner.ts';
 import { PLANNER, SIGNATURES } from '../engine/src/config.ts';
 import type { PlanEvent } from '../engine/src/plan/recipes.ts';
-import { OUT } from '../relay/pool.ts';
+import { OUT } from '../relay/repertoire.ts';
 
 const DIR = path.join(OUT, 'analysis');
 const readJson = (file: string): unknown => JSON.parse(fs.readFileSync(path.join(DIR, file), 'utf8'));

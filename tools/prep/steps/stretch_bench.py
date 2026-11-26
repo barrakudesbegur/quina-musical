@@ -32,7 +32,7 @@ import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 import stretch as S  # noqa: E402
 
 from steps import rubberband as rb  # noqa: E402
@@ -145,16 +145,16 @@ def lsd(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.mean(np.sqrt(np.sum((d * mask) ** 2, axis=0) / np.maximum(1, mask.sum(axis=0)))))
 
 
-def clips(pool: pools.Pool, n_songs: int, seed: int) -> list[dict]:
+def clips(repertoire: repertoires.Repertoire, n_songs: int, seed: int) -> list[dict]:
     """Steady 10 s clips starting on a downbeat 8 bars before a valid best hook."""
-    index = json.loads(pool.analysis_index.read_text())["songs"]
+    index = json.loads(repertoire.analysis_index.read_text())["songs"]
     rng = random.Random(seed)
     rng.shuffle(index)
     out = []
     for song in index:
         if len(out) >= n_songs:
             break
-        a = S.load_analysis(song["id"], pool)
+        a = S.load_analysis(song["id"], repertoire)
         if not a["tempo"].get("isStable"):
             continue
         hooks = [h for h in a["hooks"] if h["valid"] and h["tag"] == "best" and h.get("downbeatIndex", 0) >= 8]
@@ -166,8 +166,8 @@ def clips(pool: pools.Pool, n_songs: int, seed: int) -> list[dict]:
         beats = np.asarray(a["beats"])
         inner = beats[(beats > t0 + 0.25) & (beats < t1 - 0.4)] - t0
         clip = {"song": song["id"], "title": a["title"], "t0": t0, "beats": inner,
-                "mix": S.read_region(pool.mix_flac(song["id"]), int(t0 * SR), int(t1 * SR))}
-        info, _ = S.stems_source(song["id"], int(t0 * SR), int(t1 * SR), pool)
+                "mix": S.read_region(repertoire.mix_flac(song["id"]), int(t0 * SR), int(t1 * SR))}
+        info, _ = S.stems_source(song["id"], int(t0 * SR), int(t1 * SR), repertoire)
         if info:
             clip["drums"] = S.read_region(info["paths"]["drums"], int(t0 * SR), int(t1 * SR),
                                           info["window"]["startSample"]) / info["stemGain"]
@@ -175,9 +175,9 @@ def clips(pool: pools.Pool, n_songs: int, seed: int) -> list[dict]:
     return out
 
 
-def bench_engines(pool: pools.Pool, n_songs: int, seed: int, beat_this: bool) -> dict:
+def bench_engines(repertoire: repertoires.Repertoire, n_songs: int, seed: int, beat_this: bool) -> dict:
     rows = []
-    for clip in clips(pool, n_songs, seed):
+    for clip in clips(repertoire, n_songs, seed):
         for part in ("mix", "drums"):
             if part not in clip:
                 continue
@@ -234,13 +234,13 @@ def summarize(rows: list[dict]) -> dict:
 
 # ---------------------------------------------------------------- sections
 
-def bench_sections(pool: pools.Pool, n_songs: int, seed: int, bars: int, beat_this: bool) -> dict:
-    index = json.loads(pool.analysis_index.read_text())["songs"]
+def bench_sections(repertoire: repertoires.Repertoire, n_songs: int, seed: int, bars: int, beat_this: bool) -> dict:
+    index = json.loads(repertoire.analysis_index.read_text())["songs"]
     rng = random.Random(seed)
     rng.shuffle(index)
     rows = []
     for song in index[:n_songs]:
-        a = S.load_analysis(song["id"], pool)
+        a = S.load_analysis(song["id"], repertoire)
         hooks = [h for h in a["hooks"] if h["valid"] and h.get("downbeatIndex", 0) >= bars]
         if not hooks:
             continue
@@ -250,7 +250,7 @@ def bench_sections(pool: pools.Pool, n_songs: int, seed: int, bars: int, beat_th
         for stems in (False, True):
             try:
                 res = S.render(song["id"], hook["id"], to_bpm, bars=bars, after_bars=1, stems=stems, force=True,
-                               pool=pool)
+                               repertoire=repertoire)
             except S.StretchError as err:
                 print("skip", song["id"], err)
                 break
@@ -258,15 +258,15 @@ def bench_sections(pool: pools.Pool, n_songs: int, seed: int, bars: int, beat_th
                 rows.append({"song": song["id"], "stems": True, "skipped": res["stems"]["reason"]})
                 continue
             if stems:
-                ver = {part: S.verify(res, part=part, beat_this=False, pool=pool)["xcorr"] for part in res["parts"]}
+                ver = {part: S.verify(res, part=part, beat_this=False, repertoire=repertoire)["xcorr"] for part in res["parts"]}
             else:
-                ver = S.verify(res, part="mix", beat_this=beat_this, pool=pool)
+                ver = S.verify(res, part="mix", beat_this=beat_this, repertoire=repertoire)
             row = {"song": song["id"], "hook": hook["id"], "stems": stems, "ratio": res["ratio"],
                    "parts": len(res["parts"]), "seconds": res["timing"]["totalSec"],
                    "stretchSec": res["timing"]["stretchSec"], "stretchCpuSec": res["timing"]["stretchCpuSec"],
                    "audioSec": res["output"]["durationSec"], "verify": ver,
                    "beatDeviationMs": res["output"]["analysisBeatDeviationMs"]}
-            again = S.render(song["id"], hook["id"], to_bpm, bars=bars, after_bars=1, stems=stems, pool=pool)
+            again = S.render(song["id"], hook["id"], to_bpm, bars=bars, after_bars=1, stems=stems, repertoire=repertoire)
             row["cachedSeconds"] = again["seconds"]
             row["cachedHit"] = again["cached"]
             rows.append(row)
@@ -316,16 +316,16 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--bars", type=int, default=4)
     ap.add_argument("--no-beat-this", action="store_true")
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     args = ap.parse_args()
-    pool = pools.from_args(args)
-    bench = pool.stretch_dir / "bench"
+    repertoire = repertoires.from_args(args)
+    bench = repertoire.stretch_dir / "bench"
     bench.mkdir(parents=True, exist_ok=True)
     if args.mode == "engines":
-        res = bench_engines(pool, args.songs, args.seed, not args.no_beat_this)
+        res = bench_engines(repertoire, args.songs, args.seed, not args.no_beat_this)
         print(json.dumps(res["summary"], indent=1))
     else:
-        res = bench_sections(pool, args.songs, args.seed, args.bars, not args.no_beat_this)
+        res = bench_sections(repertoire, args.songs, args.seed, args.bars, not args.no_beat_this)
         print(json.dumps(res["summary"], indent=1))
     (bench / f"{args.mode}.json").write_text(json.dumps(res, indent=1))
     return 0

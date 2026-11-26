@@ -59,13 +59,13 @@ def test_a_low_bitrate_or_another_length_is_flagged(tmp_path):
     mp3 = tmp_path / "1 Song - Artist.mp3"
     subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(wav), "-c:a", "libmp3lame", "-b:a", "64k", str(mp3)], check=True)
 
-    class Pool:
+    class Repertoire:
         def song_cache(self, sid: int) -> Path:
             return tmp_path / "cache" / str(sid)
 
-    row = quality.song_quality(Pool(), {"id": 1, "title": "Song", "durationMs": 40_000}, mp3)
+    row = quality.song_quality(Repertoire(), {"id": 1, "title": "Song", "durationMs": 40_000}, mp3)
     assert row["codec"] == "mp3" and row["bitrateKbps"] == 64
     assert set(row["flags"]) == {"low_bitrate", "duration_off"}
-    ok = quality.song_quality(Pool(), {"id": 1, "title": "Song", "durationMs": 21_000}, mp3)
+    ok = quality.song_quality(Repertoire(), {"id": 1, "title": "Song", "durationMs": 21_000}, mp3)
     assert ok["flags"] == ["low_bitrate"], "within 5 s of Spotify's length"
-    assert quality.song_quality(Pool(), {"id": 2, "title": "Song"}, None)["flags"] == ["no_audio"]
+    assert quality.song_quality(Repertoire(), {"id": 2, "title": "Song"}, None)["flags"] == ["no_audio"]

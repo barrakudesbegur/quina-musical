@@ -1,23 +1,23 @@
 // Relay: the pages, the audio and a dumb WebSocket hub. No game logic lives here; the show page owns the state.
-//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist] [--pool NAME|PATH]
+//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist] [--repertoire NAME|PATH]
 // Pages are a Vite app (vite.config.ts): in development Vite runs here as middleware, so everything shares
 // one origin; with --dist the relay serves the built dist/ instead (`npm run build` first).
 // The build is rooted at apps/ (vite.config.ts): the engine's pages are /show/engine/*, and /show/<page> still works.
-// The pool (--pool, else $QUINA_POOL, else "default"; relay/pool.ts reads data/pools/<name>.json) decides
-// what the song routes serve; the URLs are the same for every pool. <cache> and <data> are its cacheDir and
-// dataDir (data/cache/ and data/out/ for the default pool):
+// The repertoire (--repertoire, else $QUINA_REPERTOIRE, else "default"; relay/repertoire.ts reads data/repertoires/<name>.json) decides
+// what the song routes serve; the URLs are the same for every repertoire. <cache> and <data> are its cacheDir and
+// dataDir (data/cache/ and data/out/ for the default repertoire):
 //   /audio/<id>.flac → <cache>/<id>/mix.flac, /stems/<id>/<stem>.<startSample>.flac → <cache>/<id>/stems/,
 //   /signatures/<id>/<sigId>.flac → <cache>/<id>/signatures/, /snippets/<id>.flac → <cache>/<id>/snippet.flac
 //   (a Check's 3 s from the song's best hook, tools/prep/snippets.py), /stretch/<id>/<render>/<part>.flac →
 //   <cache>/stretch/ (POST /api/stretch renders B's bars before a hook at A's tempo), /analysis/* →
 //   <data>/analysis/, /data/* → <data>/ (stems, keys, signatures, snippets, report.md, ...), /covers/<id>.jpg → its
 //   coversDir, /cards/* → the folder of its cardsJson, GET/POST /api/override/<id> → its overridesDir (the
-//   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/pool → { name }.
-// Not part of a pool: /fx/<name>.mp3 and /stingers/<name>.mp3 (data/media), /holdaudio/<name>.flac (data/cache/hold,
+//   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/repertoire → { name }.
+// Not part of a repertoire: /fx/<name>.mp3 and /stingers/<name>.mp3 (data/media), /holdaudio/<name>.flac (data/cache/hold,
 // Hold music, the intro and the throw song decoded by tools/prep/hold.py) and /data/hold/* (data/out/hold, their loops),
 // /intervalaudio/<set>/<slug>.flac (data/cache/interval/<set>, a music set decoded by tools/prep/interval.py) and
 // /data/interval/<set>/* (data/out/interval/<set>, its tracks), /cloud/* (data/link, the cloud link's folder), /ws.
-// Pool media is revalidated (ETag) instead of cached for a day: the same URL means another file in another pool.
+// Repertoire media is revalidated (ETag) instead of cached for a day: the same URL means another file in another repertoire.
 // The hub forwards commands (@quina/protocol) to the show engine and the engine's events to everyone else.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -32,7 +32,7 @@ import {
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
-import { CACHE, DEFAULT_POOL, LINK, MEDIA, OUT, POOL_ENV, PREP, REPO, SHOW, display, loadPool, type Pool } from './pool.ts';
+import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
 const DIST = path.join(SHOW, 'dist');
 const args = process.argv.slice(2);
@@ -45,12 +45,12 @@ const PORT = Number(argValue('--port', process.env.PORT || '5174'));
 const LAN = args.includes('--lan');
 const HOST = argValue('--host', LAN ? '0.0.0.0' : '127.0.0.1');
 const USE_DIST = args.includes('--dist');
-const POOL: Pool = poolOrExit(argValue('--pool', process.env[POOL_ENV] || DEFAULT_POOL));
-const ANALYSIS_DIR = path.join(POOL.dataDir, 'analysis');
+const REPERTOIRE: Repertoire = repertoireOrExit(argValue('--repertoire', process.env[REPERTOIRE_ENV] || DEFAULT_REPERTOIRE));
+const ANALYSIS_DIR = path.join(REPERTOIRE.dataDir, 'analysis');
 
-function poolOrExit(spec: string): Pool {
+function repertoireOrExit(spec: string): Repertoire {
   try {
-    return loadPool(spec);
+    return loadRepertoire(spec);
   } catch (error) {
     console.error(`relay: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
@@ -77,20 +77,20 @@ const MIME: Record<string, string> = {
 };
 
 const LONG_CACHE = 'public, max-age=86400';
-/** Pool files: the browser asks again every time and gets a 304 while the file (ETag) is the same. */
+/** Repertoire files: the browser asks again every time and gets a 304 while the file (ETag) is the same. */
 const REVALIDATE = 'no-cache';
 
 /** Media and data the pages load at run time, longest prefix first. The pages themselves come from Vite (or dist/). */
 const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
-  ['/covers/', POOL.coversDir, REVALIDATE],
+  ['/covers/', REPERTOIRE.coversDir, REVALIDATE],
   ['/fx/', path.join(MEDIA, 'fx'), 'public, max-age=3600'],
   ['/stingers/', path.join(MEDIA, 'stingers'), 'public, max-age=3600'],
   ['/analysis/', ANALYSIS_DIR, 'no-store'],
   ['/data/hold/', path.join(OUT, 'hold'), 'no-store'],
   ['/data/interval/', path.join(OUT, 'interval'), 'no-store'],
-  ['/data/', POOL.dataDir, 'no-store'],
-  // The whole apps/cards output folder, as before; a pool without cards serves none (the engine falls back).
-  ['/cards/', POOL.cardsJson && path.dirname(POOL.cardsJson), 'no-store'],
+  ['/data/', REPERTOIRE.dataDir, 'no-store'],
+  // The whole apps/cards output folder, as before; a repertoire without cards serves none (the engine falls back).
+  ['/cards/', REPERTOIRE.cardsJson && path.dirname(REPERTOIRE.cardsJson), 'no-store'],
   // The laptop's cloud link folder, read-only (data/link/): the Game plan from Admin (plan.json), the journal
   // copy (current, journal/<gameId>.jsonl) and Admin's manual resume (resume.json). The show page's boot check
   // and the LAN screens read it; only the link writes it.
@@ -123,11 +123,11 @@ function safeDecode(s: string): string {
   }
 }
 
-/** A route of the pool with nothing behind it (no cards): always 404. */
+/** A route of the repertoire with nothing behind it (no cards): always 404. */
 const MISSING: StaticTarget = { file: '', cache: 'no-store' };
 
 function resolveStatic(urlPath: string): StaticTarget | null {
-  const cache = POOL.cacheDir;
+  const cache = REPERTOIRE.cacheDir;
   const audio = urlPath.match(/^\/audio\/(\d+)\.flac$/);
   if (audio) return { file: path.join(cache, audio[1], 'mix.flac'), cache: REVALIDATE };
   const stem = urlPath.match(/^\/stems\/(\d+)\/(drums|bass|vocals)\.(\d+)\.flac$/);
@@ -170,7 +170,7 @@ async function serveFile(req: http.IncomingMessage, res: http.ServerResponse, { 
   } catch {
     return false;
   }
-  // Weak validator: which file (pools share URLs), its size and its mtime.
+  // Weak validator: which file (repertoires share URLs), its size and its mtime.
   const etag = `"${crypto.createHash('sha1').update(file).digest('hex').slice(0, 12)}-${stat.size.toString(36)}-${Math.floor(stat.mtimeMs).toString(36)}"`;
   const headers = {
     'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
@@ -246,10 +246,10 @@ function readBody(req: http.IncomingMessage, limit = 1 << 20): Promise<string> {
 
 const PYTHON = path.join(PREP, '.venv/bin/python');
 
-/** Run an analysis script on this relay's pool. */
+/** Run an analysis script on this relay's repertoire. */
 function runAnalysis(script: string, argv: string[]): Promise<{ code: number | null; output: string }> {
   return new Promise((resolve) => {
-    const child = spawn(PYTHON, [path.join(PREP, script), '--pool', POOL.manifest, ...argv], { cwd: REPO });
+    const child = spawn(PYTHON, [path.join(PREP, script), '--repertoire', REPERTOIRE.manifest, ...argv], { cwd: REPO });
     let output = '';
     child.stdout.on('data', (d) => (output += d));
     child.stderr.on('data', (d) => (output += d));
@@ -281,7 +281,7 @@ let stretchQueue: Promise<unknown> = Promise.resolve();
 function stretchRender({ song, hook, toBpm, bars, afterBars }: StretchRequest): Promise<StretchResult> {
   const run = () =>
     new Promise<StretchResult>((resolve) => {
-      const argv = [path.join(PREP, 'stretch.py'), '--pool', POOL.manifest, '--song', String(song), '--hook', hook,
+      const argv = [path.join(PREP, 'stretch.py'), '--repertoire', REPERTOIRE.manifest, '--song', String(song), '--hook', hook,
         '--to-bpm', String(toBpm), '--bars', String(bars), '--after-bars', String(afterBars), '--stems', '--json'];
       const child = spawn(PYTHON, argv, { cwd: REPO });
       let out = '';
@@ -347,9 +347,9 @@ function hasToken(header: string | undefined): boolean {
 
 async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL): Promise<boolean> {
   const json = (status: number, body: unknown) => res.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify(body));
-  // Which pool this relay serves: song ids only mean something within a pool (e.g. for keys of stored Games).
-  if (url.pathname === '/api/pool' && req.method === 'GET') {
-    json(200, { name: POOL.name });
+  // Which repertoire this relay serves: song ids only mean something within a repertoire (e.g. for keys of stored Games).
+  if (url.pathname === '/api/repertoire' && req.method === 'GET') {
+    json(200, { name: REPERTOIRE.name });
     return true;
   }
   if (url.pathname === '/api/stretch' && req.method === 'POST') {
@@ -365,7 +365,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
   const match = url.pathname.match(/^\/api\/override\/(\d+)$/);
   if (!match) return false;
   const id = Number(match[1]);
-  const file = path.join(POOL.overridesDir, `${id}.json`);
+  const file = path.join(REPERTOIRE.overridesDir, `${id}.json`);
   if (req.method === 'GET') {
     try {
       json(200, JSON.parse(await fsp.readFile(file, 'utf8')));
@@ -380,7 +380,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
       const isEmpty = !body || typeof body !== 'object' || Object.keys(body).length === 0;
       if (isEmpty) await fsp.rm(file, { force: true });
       else {
-        await fsp.mkdir(POOL.overridesDir, { recursive: true });
+        await fsp.mkdir(REPERTOIRE.overridesDir, { recursive: true });
         await fsp.writeFile(file, JSON.stringify(body, null, 2) + '\n');
       }
       const result = await rederive(id);
@@ -580,14 +580,14 @@ function rememberRemote(from: WebSocket | null, clientId: string, status: { conn
   for (const [socket, info] of clients) if (socket !== from && isConsole(info) && socket.readyState === socket.OPEN) socket.send(text);
 }
 
-/** One line about the pool's preparation, for the start-up log. */
-function poolStatus(): string {
+/** One line about the repertoire's preparation, for the start-up log. */
+function repertoireStatus(): string {
   try {
     const index: unknown = JSON.parse(fs.readFileSync(path.join(ANALYSIS_DIR, 'index.json'), 'utf8'));
     const songs = index && typeof index === 'object' && 'songs' in index && Array.isArray(index.songs) ? index.songs : [];
-    return `${songs.length} songs analysed in ${display(ANALYSIS_DIR)}${POOL.cardsJson ? '' : '; no cards (cardsJson)'}`;
+    return `${songs.length} songs analysed in ${display(ANALYSIS_DIR)}${REPERTOIRE.cardsJson ? '' : '; no cards (cardsJson)'}`;
   } catch {
-    return `not prepared yet: no ${display(path.join(ANALYSIS_DIR, 'index.json'))} (npm run prep -- --pool ${POOL.name})`;
+    return `not prepared yet: no ${display(path.join(ANALYSIS_DIR, 'index.json'))} (npm run prep -- --repertoire ${REPERTOIRE.name})`;
   }
 }
 
@@ -615,5 +615,5 @@ server.listen(PORT, HOST, () => {
     console.log(`  (dev test remote: http://${lan}:${PORT}/show/remote/?t=${TOKEN})`);
   }
   else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
-  console.log(`pool ${POOL.name} (${display(POOL.manifest)}): ${poolStatus()}`);
+  console.log(`repertoire ${REPERTOIRE.name} (${display(REPERTOIRE.manifest)}): ${repertoireStatus()}`);
 });

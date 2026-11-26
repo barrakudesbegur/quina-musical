@@ -119,7 +119,7 @@ function checkCards(json: unknown): readonly Card[] {
   return json;
 }
 
-// Browser storage is per song pool (the relay's --pool): ids restart at 1 in every pool. The default pool
+// Browser storage is per repertoire (the relay's --repertoire): ids restart at 1 in every repertoire. The default repertoire
 // keeps the original key names, so what is already stored stays.
 let storagePrefix = 'mixer';
 const cardsKey = () => `${storagePrefix}.cardsInPlay`;
@@ -148,7 +148,7 @@ const browserStorage = (): KeyValueStorage | null => {
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const params = new URLSearchParams(location.search);
 const persistJournal = !params.has('queue') && params.get('journal') !== '0';
-let journal = new LocalJournal(null); // replaced in boot(), once the pool is known
+let journal = new LocalJournal(null); // replaced in boot(), once the repertoire is known
 // What the laptop's cloud link left for this page (relay /cloud/, read-only); anything missing reads as null.
 const cloudCopy: CloudCopy = {
   resume: async () => {
@@ -249,9 +249,9 @@ const drum = new DrumView({
 
 // ---------------------------------------------------------------------------------------------- boot
 async function boot() {
-  const pool = await fetchJson('/api/pool').catch(() => null);
-  const poolName = isRecord(pool) && typeof pool.name === 'string' && /^[a-z0-9-]+$/.test(pool.name) ? pool.name : 'default';
-  if (poolName !== 'default') storagePrefix = `mixer.${poolName}`;
+  const repertoire = await fetchJson('/api/repertoire').catch(() => null);
+  const repertoireName = isRecord(repertoire) && typeof repertoire.name === 'string' && /^[a-z0-9-]+$/.test(repertoire.name) ? repertoire.name : 'default';
+  if (repertoireName !== 'default') storagePrefix = `mixer.${repertoireName}`;
   journal = new LocalJournal(persistJournal ? browserStorage() : null, `${storagePrefix}.journal`);
   const songs = playableSongs(await fetchJson('/analysis/index.json'));
   let cards: readonly Card[] = [];

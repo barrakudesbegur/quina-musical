@@ -9,7 +9,7 @@
   landing on the phrase grid; the audition page asks yes or no, and the tag itself is always kept.
 
 Needs the analysis (downbeats, bar levels) and the mix; the stems' vocal bar levels when there are any.
-Run: tools/prep/.venv/bin/python tools/prep/hooks_auto.py [--pool NAME|PATH] [--song N ...] [--report]
+Run: tools/prep/.venv/bin/python tools/prep/hooks_auto.py [--repertoire NAME|PATH] [--song N ...] [--report]
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps import hook_detect as hd  # noqa: E402
 
 SCHEMA_VERSION = 1
@@ -54,13 +54,13 @@ def bar_features(mix: Path, downbeats: list[float]) -> tuple[np.ndarray, np.ndar
     return feats[:, :12], feats[:, 12:]
 
 
-def song_hooks(pool: pools.Pool, song_id: int) -> dict | None:
-    analysis = load_json(pool.data_dir / "analysis" / f"{song_id}.json")
-    mix = pool.song_cache(song_id) / "mix.flac"
+def song_hooks(repertoire: repertoires.Repertoire, song_id: int) -> dict | None:
+    analysis = load_json(repertoire.data_dir / "analysis" / f"{song_id}.json")
+    mix = repertoire.song_cache(song_id) / "mix.flac"
     if not analysis or not mix.exists() or len(analysis.get("downbeats", [])) < 12:
         return None
     downbeats = analysis["downbeats"]
-    stems = load_json(pool.data_dir / "stems" / f"{song_id}.json")
+    stems = load_json(repertoire.data_dir / "stems" / f"{song_id}.json")
     vocals = np.asarray(stems["bars"]["vocals"], dtype=float) if stems and stems.get("bars", {}).get("vocals") else None
     chroma, mfcc = bar_features(mix, downbeats)
     bar_db = np.asarray(analysis["energy"]["barRmsDb"], dtype=float)
@@ -83,12 +83,12 @@ def song_hooks(pool: pools.Pool, song_id: int) -> dict | None:
     }
 
 
-def report(docs: list[dict], pool: pools.Pool) -> None:
+def report(docs: list[dict], repertoire: repertoires.Repertoire) -> None:
     """How the candidates compare with the hand tags: a tagged hook within a bar of the top candidate, of one of
     the top three, and how many hand tags get a suggested shift."""
     top1 = top3 = total = shifts = tags = 0
     for doc in docs:
-        analysis = load_json(pool.data_dir / "analysis" / f"{doc['songId']}.json")
+        analysis = load_json(repertoire.data_dir / "analysis" / f"{doc['songId']}.json")
         tagged = [h["downbeatIndex"] for h in analysis.get("hooks", []) if h.get("valid") and h.get("downbeatIndex") is not None]
         tags += len(doc["refine"])
         shifts += sum(1 for r in doc["refine"] if r["suggestShiftBars"])
@@ -104,17 +104,17 @@ def report(docs: list[dict], pool: pools.Pool) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all analysed")
     ap.add_argument("--report", action="store_true", help="compare the candidates with the hand tags")
     args = ap.parse_args()
-    pool = pools.from_args(args)
-    out = pool.data_dir / "hooks"
+    repertoire = repertoires.from_args(args)
+    out = repertoire.data_dir / "hooks"
     out.mkdir(parents=True, exist_ok=True)
-    ids = args.song or sorted(int(p.stem) for p in (pool.data_dir / "analysis").glob("*.json") if p.stem.isdigit())
+    ids = args.song or sorted(int(p.stem) for p in (repertoire.data_dir / "analysis").glob("*.json") if p.stem.isdigit())
     docs = []
     for song_id in ids:
-        doc = song_hooks(pool, song_id)
+        doc = song_hooks(repertoire, song_id)
         if not doc:
             print(f"song {song_id}: no analysis or mix")
             continue
@@ -122,7 +122,7 @@ def main() -> int:
         docs.append(doc)
         print(f"song {song_id}: bars {[c['bar'] for c in doc['candidates']]} (phase {doc['phase']})")
     if args.report:
-        report(docs, pool)
+        report(docs, repertoire)
     return 0
 
 

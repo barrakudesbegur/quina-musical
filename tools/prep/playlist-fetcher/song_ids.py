@@ -1,6 +1,6 @@
 """Stable song ids for a playlist that is still changing.
 
-A pool keys everything by song id: the audio, the analysis and caches, the hook approvals (overrides) and, once
+A repertoire keys everything by song id: the audio, the analysis and caches, the hook approvals (overrides) and, once
 printed, the cards. So a Spotify track keeps the id it got the first time it was fetched, whatever its position
 later; a new track gets the next id never used; a removed track's id is never given to another song. The record
 is `song-ids.json` next to songs.json: { "<Spotify id>": id } for every track ever fetched.

@@ -6,7 +6,7 @@ import {
   NOTE_NAMES, pitchClass, toCamelot, parseCamelot, parseKeyName, camelotOf, relation, compatible, compatibleCodes,
 } from '../engine/src/plan/keys.ts';
 import type { KeyInfo, Mode } from '../engine/src/plan/keys.ts';
-import { OUT } from '../relay/pool.ts';
+import { OUT } from '../relay/repertoire.ts';
 
 /** A key as data/keys/index.json stores it. */
 type StoredKey = Required<Pick<KeyInfo, 'key' | 'mode' | 'camelot' | 'confidence'>>;

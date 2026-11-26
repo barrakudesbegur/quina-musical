@@ -1,15 +1,15 @@
 """Offline analysis for the mixer POC: beat/downbeat grid, tempo, hooks, loudness, energy, flags.
 
-Usage (from the repo root; every command takes --pool NAME|PATH, see tools/prep/pool.py):
+Usage (from the repo root; every command takes --repertoire NAME|PATH, see tools/prep/repertoire.py):
     tools/prep/.venv/bin/python tools/prep/analyze.py            # all songs
     tools/prep/.venv/bin/python tools/prep/analyze.py --song 12  # one song
     tools/prep/.venv/bin/python tools/prep/analyze.py --derive-only   # re-apply hooks/overrides, no model
 
-Paths are the pool's (the default pool's in brackets): reads <cacheDir>/<id>/mix.flac [cache/],
+Paths are the repertoire's (the default repertoire's in brackets): reads <cacheDir>/<id>/mix.flac [cache/],
 writes <dataDir>/analysis/<id>.json and index.json [data/out/analysis/]. Expensive results (Beat This!,
 loudness, onset envelope) are cached in <cacheDir>/<id>/raw.json keyed by the source audio's sha256,
 so re-runs only redo the cheap derive step, and a file whose content would not change (apart from
-its createdAt) is left as it is. Overrides in <overridesDir>/<id>.json [data/pools/default/overrides/] are
+its createdAt) is left as it is. Overrides in <overridesDir>/<id>.json [data/repertoires/default/overrides/] are
 merged last.
 
 Optional inputs: without Spotify features the tempo is checked against librosa only (no automatic
@@ -31,7 +31,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps import beats as beats_step  # noqa: E402
 from steps import energy as energy_step  # noqa: E402
 from steps import hooks as hooks_step  # noqa: E402
@@ -71,8 +71,8 @@ def tool_versions() -> dict:
     return out
 
 
-def load_raw(pool: pools.Pool, song_id: int, mp3: Path, flac: Path, signal, sr, force: bool) -> dict:
-    raw_path = pool.song_cache(song_id) / "raw.json"
+def load_raw(repertoire: repertoires.Repertoire, song_id: int, mp3: Path, flac: Path, signal, sr, force: bool) -> dict:
+    raw_path = repertoire.song_cache(song_id) / "raw.json"
     digest = sha256(mp3)
     if raw_path.exists() and not force:
         raw = json.loads(raw_path.read_text())
@@ -85,7 +85,7 @@ def load_raw(pool: pools.Pool, song_id: int, mp3: Path, flac: Path, signal, sr, 
     beats, downbeats = beats_step.run_beat_this(signal, sr)
     t_beats = time.time() - t0
     onset_env = energy_step.onset_envelope(mono, sr)
-    np.save(pool.song_cache(song_id) / "onset.npy", onset_env.astype(np.float32))
+    np.save(repertoire.song_cache(song_id) / "onset.npy", onset_env.astype(np.float32))
     raw = {
         "rawVersion": RAW_VERSION,
         "sha256": digest,
@@ -102,25 +102,25 @@ def load_raw(pool: pools.Pool, song_id: int, mp3: Path, flac: Path, signal, sr, 
     return raw
 
 
-def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, versions: dict, decoder: str,
+def analyze_song(repertoire: repertoires.Repertoire, song: dict, mp3: Path | None, spotify: dict, versions: dict, decoder: str,
                  force: bool, derive_only: bool) -> dict:
     song_id = song["id"]
-    flac = pool.mix_flac(song_id)
+    flac = repertoire.mix_flac(song_id)
     if not flac.exists():
         raise FileNotFoundError(f"{flac} missing: run the decode step first "
-                                f"(tools/prep/prepare.py --pool {pool.name} --steps decode)")
+                                f"(tools/prep/prepare.py --repertoire {repertoire.name} --steps decode)")
     signal, sr = sf.read(flac, dtype="float32", always_2d=True)
-    raw_path = pool.song_cache(song_id) / "raw.json"
+    raw_path = repertoire.song_cache(song_id) / "raw.json"
     if derive_only and raw_path.exists():
         raw = json.loads(raw_path.read_text())
     elif mp3 is None:
-        raise FileNotFoundError(f"song {song_id}: no source audio in {pool.audio_dir}")
+        raise FileNotFoundError(f"song {song_id}: no source audio in {repertoire.audio_dir}")
     else:
-        raw = load_raw(pool, song_id, mp3, flac, signal, sr, force)
+        raw = load_raw(repertoire, song_id, mp3, flac, signal, sr, force)
     mono = signal.mean(axis=1)
     duration = len(signal) / sr
 
-    override_path = pool.override_path(song_id)
+    override_path = repertoire.override_path(song_id)
     override = json.loads(override_path.read_text()) if override_path.exists() else {}
     # Approved automatic hooks (tools/prep/hooks_auto.py, the audition page) count like hand tags.
     song = hooks_step.with_auto_hooks(song, override)
@@ -188,7 +188,7 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
         hook["lufs8s"] = round(hook_lufs, 2) if hook_lufs is not None else None
         hook["gainToTargetDb"] = loud_step.gain_to_target(hook_lufs)
 
-    onset_path = pool.song_cache(song_id) / "onset.npy"
+    onset_path = repertoire.song_cache(song_id) / "onset.npy"
     onset_env = np.load(onset_path) if onset_path.exists() else energy_step.onset_envelope(mono, sr)
     energy = energy_step.per_bar(mono, sr, downbeats, onset_env) if len(downbeats) > 1 else {}
 
@@ -239,8 +239,8 @@ def analyze_song(pool: pools.Pool, song: dict, mp3: Path | None, spotify: dict, 
         "title": song["title"],
         "artist": song["artist"],
         "source": {
-            "mp3": pools.display(mp3, pools.REPO) if mp3 else None,
-            "pcm": pools.display(flac),
+            "mp3": repertoires.display(mp3, repertoires.REPO) if mp3 else None,
+            "pcm": repertoires.display(flac),
             "sampleRate": sr,
             "durationSec": round(duration, 4),
             "sha256": raw["sha256"],
@@ -304,32 +304,32 @@ def dumps_analysis(doc: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    pools.add_argument(parser)
+    repertoires.add_argument(parser)
     parser.add_argument("--song", type=int, action="append")
     parser.add_argument("--force", action="store_true", help="ignore the raw cache")
     parser.add_argument("--derive-only", action="store_true",
                         help="never run the model; reuse <cacheDir>/<id>/raw.json")
     args = parser.parse_args()
-    pool = pools.from_args(args)
+    repertoire = repertoires.from_args(args)
 
     try:
-        songs = pool.songs()
-        spotify = pool.spotify()
-        audio = pool.audio_files() if not args.derive_only or pool.audio_dir.is_dir() else {}
-    except pools.PoolError as err:
+        songs = repertoire.songs()
+        spotify = repertoire.spotify()
+        audio = repertoire.audio_files() if not args.derive_only or repertoire.audio_dir.is_dir() else {}
+    except repertoires.RepertoireError as err:
         print(f"analyze: {err}", file=sys.stderr)
         return 1
-    out = pool.analysis_dir
+    out = repertoire.analysis_dir
     out.mkdir(parents=True, exist_ok=True)
     versions = tool_versions()
     decoder = ffmpeg_version()
     wanted = set(args.song or [])
     unknown = sorted(wanted - {s["id"] for s in songs})
     if unknown:
-        print(f"analyze: songs {unknown} are not in {pools.display(pool.songs_json, pools.REPO)}", file=sys.stderr)
+        print(f"analyze: songs {unknown} are not in {repertoires.display(repertoire.songs_json, repertoires.REPO)}", file=sys.stderr)
         return 1
-    if not pool.has_spotify:
-        print(f"note: no Spotify features ({pools.display(pool.spotify_features)}): tempo is checked against "
+    if not repertoire.has_spotify:
+        print(f"note: no Spotify features ({repertoires.display(repertoire.spotify_features)}): tempo is checked against "
               "librosa only", flush=True)
     failed: dict[int, str] = {}
     for song in songs:
@@ -337,7 +337,7 @@ def main() -> int:
             continue
         t0 = time.time()
         try:
-            result = analyze_song(pool, song, audio.get(song["id"]), spotify, versions, decoder, args.force,
+            result = analyze_song(repertoire, song, audio.get(song["id"]), spotify, versions, decoder, args.force,
                                   args.derive_only)
         except Exception as err:  # keep going; the summary and the exit code report it
             failed[song["id"]] = f"song {song['id']}: {type(err).__name__}: {err}"
@@ -355,7 +355,7 @@ def main() -> int:
             rows.append(index_row(json.loads(path.read_text())))
     write_text_if_changed(out / "index.json",
                           json.dumps({"schemaVersion": 1, "songs": rows}, ensure_ascii=False, indent=1))
-    print(f"index.json ({pool.name}): {len(rows)} songs" + (f"; {len(failed)} failed" if failed else ""))
+    print(f"index.json ({repertoire.name}): {len(rows)} songs" + (f"; {len(failed)} failed" if failed else ""))
     for line in failed.values():
         print("ERROR", line)
     return 1 if failed else 0

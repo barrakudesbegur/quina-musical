@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import nodeTest from 'node:test';
-import { OUT, REPO } from '../../relay/pool.ts';
+import { OUT, REPO } from '../../relay/repertoire.ts';
 
 export const HAS_DATA = fs.existsSync(path.join(OUT, 'analysis', 'index.json')) && fs.existsSync(path.join(REPO, 'apps/cards/dist/cards.json'));
 export const NO_DATA = 'no prepared data (data/out): run npm run prep';

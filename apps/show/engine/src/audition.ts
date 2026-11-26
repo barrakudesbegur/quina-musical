@@ -36,7 +36,7 @@ interface AuditionAnalysis extends Analysis {
   energy?: { barRmsDb?: number[] };
 }
 
-/** data/pools/<pool>/overrides/<id>.json: hand fixes, re-derived by the relay. Unknown fields are kept as they are. */
+/** data/repertoires/<repertoire>/overrides/<id>.json: hand fixes, re-derived by the relay. Unknown fields are kept as they are. */
 interface Override {
   note?: string | null;
   downbeatShiftBeats?: number | null;

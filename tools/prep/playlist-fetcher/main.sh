@@ -15,7 +15,7 @@ fi
 python3 fetch.py "$playlist_id"
 
 echo "Downloading songs..."
-# Files are named by Spotify id (tools/prep/pool.py maps them to playlist positions through songs.json), so a
+# Files are named by Spotify id (tools/prep/repertoire.py maps them to playlist positions through songs.json), so a
 # reordered playlist re-downloads nothing; a rerun fetches only the songs not downloaded yet.
 # --format opus with --bitrate disable keeps YouTube's own Opus stream (copied, not re-encoded to MP3).
 # One song at a time with short pauses. YouTube asks a VPN's address to sign in ("confirm you're not a bot"):

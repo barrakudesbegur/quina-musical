@@ -11,8 +11,8 @@ one through <overridesDir>/<id>.json `signatures: { <sigId>: bool }`, or turns t
 (`signaturesOff: true`); --derive-only re-applies those without touching the audio (the relay runs it after a
 Save). Only approved Signatures play in the show.
 
-Run: tools/prep/.venv/bin/python tools/prep/signatures.py [--pool NAME|PATH] [--song N ...] [--derive-only] [--force]
-(the directories are the pool's: tools/prep/pool.py; the default pool's are data/out/, data/cache/, data/pools/default/overrides/)
+Run: tools/prep/.venv/bin/python tools/prep/signatures.py [--repertoire NAME|PATH] [--song N ...] [--derive-only] [--force]
+(the directories are the repertoire's: tools/prep/repertoire.py; the default repertoire's are data/out/, data/cache/, data/repertoires/default/overrides/)
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps import signatures as sg  # noqa: E402
 
 SCHEMA_VERSION = 1
@@ -46,9 +46,9 @@ class Paths:
 
 
 def resolve_paths(args: argparse.Namespace) -> Paths:
-    """The song pool's directories (--pool, else $QUINA_POOL, else the default pool)."""
-    pool = pools.from_args(args)
-    return Paths(data=pool.data_dir, cache=pool.cache_dir, overrides=pool.overrides_dir)
+    """The song repertoire's directories (--repertoire, else $QUINA_REPERTOIRE, else the default repertoire)."""
+    repertoire = repertoires.from_args(args)
+    return Paths(data=repertoire.data_dir, cache=repertoire.cache_dir, overrides=repertoire.overrides_dir)
 
 
 def load_json(path: Path):
@@ -187,7 +187,7 @@ def apply_decisions(doc: dict, override: dict | None) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all with stems")
     ap.add_argument("--derive-only", action="store_true", help="only re-apply the audition decisions")
     ap.add_argument("--force", action="store_true", help="cut the audio again even if the song has a file")

@@ -17,7 +17,7 @@ import {
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
 import type { Card, CardSong, FirstWin } from '../engine/src/game/cards.ts';
 import type { IndexSong } from '../engine/src/analysis.ts';
-import { OUT, REPO } from '../relay/pool.ts';
+import { OUT, REPO } from '../relay/repertoire.ts';
 
 /** A card as apps/cards/dist/cards.json prints it: songs as objects. */
 interface PrintedCard extends Card {

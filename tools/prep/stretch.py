@@ -16,7 +16,7 @@ Tempo: the speed ratio is target / source. When the direct ratio is outside ±8%
 and half or double time is inside, B is stretched to half or double A's tempo (each B beat then
 spans 2 A beats, or half of one). Outside both, nothing is rendered (exit 2).
 
-Paths are the pool's (--pool, tools/prep/pool.py; the default pool's are cache/ and data/).
+Paths are the repertoire's (--repertoire, tools/prep/repertoire.py; the default repertoire's are cache/ and data/).
 Inputs: <cacheDir>/<B>/mix.flac and <dataDir>/analysis/<B>.json; with --stems, the drums/bass/vocals
 windows from <dataDir>/stems/<B>.json (stored at stemGain 0.5) plus other = mix - (drums + bass +
 vocals). Songs without stems, or whose windows don't cover the section, render the mix only
@@ -30,9 +30,9 @@ requested bars and parts; the result's `request` block says where the requested 
 
 CLI (from the repo root):
     tools/prep/.venv/bin/python tools/prep/stretch.py --song 12 --hook 12-best-0 --to-bpm 126 \
-        [--bars 4] [--after-bars 1] [--stems] [--max-stretch 0.08] [--force] [--verify] [--json] [--pool NAME]
+        [--bars 4] [--after-bars 1] [--stems] [--max-stretch 0.08] [--force] [--verify] [--json] [--repertoire NAME]
 
-Python (every function takes pool=; None means $QUINA_POOL, else the default pool):
+Python (every function takes repertoire=; None means $QUINA_REPERTOIRE, else the default repertoire):
     from stretch import render, verify
     result = render(12, "12-best-0", 126.0, bars=4, after_bars=1, stems=True)
 """
@@ -52,7 +52,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps import rubberband as rb  # noqa: E402
 from steps.tempo_match import MAX_STRETCH, choose_multiple  # noqa: E402
 
@@ -78,14 +78,14 @@ class StretchError(Exception):
     pass
 
 
-def _pool(pool: pools.Pool | None) -> pools.Pool:
-    return pool if pool is not None else pools.load()
+def _repertoire(repertoire: repertoires.Repertoire | None) -> repertoires.Repertoire:
+    return repertoire if repertoire is not None else repertoires.load()
 
 
 # ---------------------------------------------------------------- inputs
 
-def load_analysis(song: int, pool: pools.Pool | None = None) -> dict:
-    path = _pool(pool).analysis_dir / f"{song}.json"
+def load_analysis(song: int, repertoire: repertoires.Repertoire | None = None) -> dict:
+    path = _repertoire(repertoire).analysis_dir / f"{song}.json"
     if not path.exists():
         raise StretchError(f"no analysis for song {song} ({path})")
     return json.loads(path.read_text())
@@ -135,10 +135,10 @@ def analysis_fingerprint(analysis: dict, hook: dict) -> str:
 
 
 def stems_source(song: int, start_sample: int, end_sample: int,
-                 pool: pools.Pool | None = None) -> tuple[dict | None, str]:
+                 repertoire: repertoires.Repertoire | None = None) -> tuple[dict | None, str]:
     """(info, reason): the stems window covering [start, end) samples of mix.flac, or None and why."""
-    pool = _pool(pool)
-    meta_path = pool.stems_dir / f"{song}.json"
+    repertoire = _repertoire(repertoire)
+    meta_path = repertoire.stems_dir / f"{song}.json"
     if not meta_path.exists():
         return None, "no stems json (not separated yet)"
     try:
@@ -146,12 +146,12 @@ def stems_source(song: int, start_sample: int, end_sample: int,
     except (OSError, ValueError) as err:
         return None, f"unreadable stems json: {err}"
     # pathTemplate is relative to the repo root (or absolute, for a cache outside it).
-    template = meta.get("pathTemplate", f"{pools.display(pool.stems_cache(song))}/{{stem}}.{{startSample}}.flac")
+    template = meta.get("pathTemplate", f"{repertoires.display(repertoire.stems_cache(song))}/{{stem}}.{{startSample}}.flac")
     for win in meta.get("windows", []):
         w0 = int(win["startSample"])
         w1 = w0 + int(win["lengthSamples"])
         if w0 <= start_sample and end_sample <= w1:
-            paths = {s: pools.REPO / template.format(stem=s, startSample=w0) for s in STEM_PARTS}
+            paths = {s: repertoires.REPO / template.format(stem=s, startSample=w0) for s in STEM_PARTS}
             missing = [s for s, p in paths.items() if not p.exists()]
             if missing:
                 return None, f"window {w0} is missing {', '.join(missing)}"
@@ -185,10 +185,10 @@ def read_region(path: Path, start: int, stop: int, file_offset: int = 0) -> np.n
 # ---------------------------------------------------------------- planning
 
 def plan(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: int = 1,
-         max_stretch: float = MAX_STRETCH, pool: pools.Pool | None = None) -> dict:
+         max_stretch: float = MAX_STRETCH, repertoire: repertoires.Repertoire | None = None) -> dict:
     """Everything about a render except the audio: tempo choice, span, grid, time map, folder."""
-    pool = _pool(pool)
-    analysis = load_analysis(song, pool)
+    repertoire = _repertoire(repertoire)
+    analysis = load_analysis(song, repertoire)
     hook = find_hook(analysis, hook_id)
     sec = section(analysis, hook, bars, after_bars)
     choice = choose_multiple(sec["localBpm"], to_bpm, max_stretch)
@@ -220,7 +220,7 @@ def plan(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: int 
     grid_beats = out_db[0] + beat_out * np.arange(sec["totalBeats"] + 1)
     mapped_beats = np.interp(sec["beats"], db, out_db)
     nominal = eff_bpm / float(analysis["tempo"]["bpm"])
-    folder = pool.stretch_dir / str(song) / f"{hook_id}@{nominal:.4f}"
+    folder = repertoire.stretch_dir / str(song) / f"{hook_id}@{nominal:.4f}"
     return {
         "analysis": analysis, "hook": hook, "section": sec, "choice": choice,
         "effectiveBpm": eff_bpm, "beatOut": beat_out, "outDownbeats": out_db, "outEnd": out_end,
@@ -231,13 +231,13 @@ def plan(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: int 
 
 # ---------------------------------------------------------------- render
 
-def _key(p: dict, stems_info: dict | None, engine: str, pool: pools.Pool) -> dict:
+def _key(p: dict, stems_info: dict | None, engine: str, repertoire: repertoires.Repertoire) -> dict:
     song = p["analysis"]["songId"]
     return {
         "version": VERSION,
         "engine": f"rubberband-{engine}-sliced-mix-drums",
         "effectiveBpm": round(p["effectiveBpm"], 6),
-        "mix": file_fingerprint(pool.mix_flac(song)),
+        "mix": file_fingerprint(repertoire.mix_flac(song)),
         "analysis": analysis_fingerprint(p["analysis"], p["hook"]),
         "stems": stems_info["fingerprint"] if stems_info else None,
     }
@@ -263,18 +263,18 @@ def _request_block(meta: dict, p: dict, to_bpm: float) -> dict:
 
 def render(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: int = 1, stems: bool = False,
            max_stretch: float = MAX_STRETCH, force: bool = False, engine: str = "auto",
-           pool: pools.Pool | None = None) -> dict:
+           repertoire: repertoires.Repertoire | None = None) -> dict:
     """Render (or reuse) B's section into the hook, stretched to `to_bpm`. Returns meta + `dir`,
     `cached` and `request` (the requested bars' position inside the render)."""
     t_start = time.perf_counter()
-    pool = _pool(pool)
-    p = plan(song, hook_id, to_bpm, bars, after_bars, max_stretch, pool)
+    repertoire = _repertoire(repertoire)
+    p = plan(song, hook_id, to_bpm, bars, after_bars, max_stretch, repertoire)
     start_sample = int(np.floor(p["startSrc"] * SR))
     end_sample = int(np.ceil(p["endSrc"] * SR))
     stems_info, stems_reason = (None, "not requested")
     if stems:
-        stems_info, stems_reason = stems_source(song, start_sample, end_sample, pool)
-    key = _key(p, stems_info, engine, pool)
+        stems_info, stems_reason = stems_source(song, start_sample, end_sample, repertoire)
+    key = _key(p, stems_info, engine, repertoire)
     folder: Path = p["folder"]
     want_parts = list(ALL_PARTS) if stems_info else ["mix"]
     want_bars, want_after = p["section"]["bars"], p["section"]["afterBars"]
@@ -302,21 +302,21 @@ def render(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: in
                 want_bars = max(want_bars, old["bars"])
                 want_after = max(want_after, old["afterBars"])
                 if not stems_info and set(old["parts"]) > {"mix"}:
-                    stems_info, stems_reason = stems_source(song, start_sample, end_sample, pool)
+                    stems_info, stems_reason = stems_source(song, start_sample, end_sample, repertoire)
                     want_parts = list(ALL_PARTS) if stems_info else want_parts
         if (want_bars, want_after) != (p["section"]["bars"], p["section"]["afterBars"]):
-            p = plan(song, hook_id, to_bpm, want_bars, want_after, max_stretch, pool)
+            p = plan(song, hook_id, to_bpm, want_bars, want_after, max_stretch, repertoire)
             start_sample = int(np.floor(p["startSrc"] * SR))
             end_sample = int(np.ceil(p["endSrc"] * SR))
             if stems_info:
-                stems_info, stems_reason = stems_source(song, start_sample, end_sample, pool)
+                stems_info, stems_reason = stems_source(song, start_sample, end_sample, repertoire)
                 want_parts = list(ALL_PARTS) if stems_info else ["mix"]
-            key = _key(p, stems_info, engine, pool)
+            key = _key(p, stems_info, engine, repertoire)
 
     sec = p["section"]
     ctx = int(round(CONTEXT_SEC * SR)) + 1
     a0, a1 = start_sample - ctx, end_sample + ctx
-    mix_path = pool.mix_flac(song)
+    mix_path = repertoire.mix_flac(song)
     if not mix_path.exists():
         raise StretchError(f"missing {mix_path}")
     t_read = time.perf_counter()
@@ -405,7 +405,7 @@ def render(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: in
                    "model": stems_info["model"], "other": "mix - (drums + bass + vocals), before stretching"}
                   if stems_info else {"available": False, "reason": stems_reason}),
         "source": {
-            "pcm": pools.display(mix_path),
+            "pcm": repertoires.display(mix_path),
             "startSec": round(p["startSrc"], 6),
             "endSec": round(p["endSrc"], 6),
             "firstDownbeatSec": float(db[0]),
@@ -446,7 +446,7 @@ def render(song: int, hook_id: str, to_bpm: float, bars: int = 4, after_bars: in
     shutil.rmtree(tmp, ignore_errors=True)
     meta["timing"]["totalSec"] = round(time.perf_counter() - t_start, 4)
     (folder / "meta.json").write_text(json.dumps(meta, indent=1))
-    p_req = plan(song, hook_id, to_bpm, bars, after_bars, max_stretch, pool)
+    p_req = plan(song, hook_id, to_bpm, bars, after_bars, max_stretch, repertoire)
     return {**meta, "dir": str(folder), "cached": False, "request": _request_block(meta, p_req, to_bpm),
             "seconds": meta["timing"]["totalSec"]}
 
@@ -490,7 +490,7 @@ def _stats(ms: np.ndarray) -> dict:
             "p95AbsMs": round(float(np.percentile(np.abs(ms), 95)), 2), "maxAbsMs": round(float(np.max(np.abs(ms))), 2)}
 
 
-def verify(result: dict, part: str | None = None, beat_this: bool = True, pool: pools.Pool | None = None) -> dict:
+def verify(result: dict, part: str | None = None, beat_this: bool = True, repertoire: repertoires.Repertoire | None = None) -> dict:
     """Check the output against the constant grid.
 
     - xcorr: per grid beat, the lag (±40 ms, 1 ms steps) that best aligns the output's spectral flux
@@ -499,7 +499,7 @@ def verify(result: dict, part: str | None = None, beat_this: bool = True, pool: 
       the nearest detected beat. The same run on the source section, mapped through the time map,
       gives the tracker's own scatter on this audio for comparison.
     """
-    pool = _pool(pool)
+    repertoire = _repertoire(repertoire)
     folder = Path(result["dir"])
     part = part or ("drums" if "drums" in result["parts"] else "mix")
     out, _ = sf.read(str(folder / f"{part}.flac"), dtype="float32", always_2d=True)
@@ -508,15 +508,15 @@ def verify(result: dict, part: str | None = None, beat_this: bool = True, pool: 
     src_t0, src_t1 = result["source"]["startSec"], result["source"]["endSec"]
     s0, s1 = int(round(src_t0 * SR)), int(round(src_t1 * SR))
     if part == "mix":
-        src = read_region(pool.mix_flac(song), s0, s1)
+        src = read_region(repertoire.mix_flac(song), s0, s1)
     else:
-        info, _ = stems_source(song, s0, s1, pool)
+        info, _ = stems_source(song, s0, s1, repertoire)
         if info is None:
             raise StretchError("stems for verification are gone")
         stems = {st: read_region(info["paths"][st], s0, s1, info["window"]["startSample"]) / info["stemGain"]
                  for st in STEM_PARTS}
         if part == "other":
-            src = read_region(pool.mix_flac(song), s0, s1) - sum(stems.values())
+            src = read_region(repertoire.mix_flac(song), s0, s1) - sum(stems.values())
         else:
             src = stems[part]
     src_mono = src.mean(axis=0)
@@ -548,7 +548,7 @@ def verify(result: dict, part: str | None = None, beat_this: bool = True, pool: 
         # Beat This! always runs on the mix, like the analysis.
         mix_out, _ = sf.read(str(folder / "mix.flac"), dtype="float32", always_2d=True)
         bt_out = _beat_this(mix_out.mean(axis=1) / PART_GAIN)
-        src_bt = _beat_this(read_region(pool.mix_flac(song), s0, s1).mean(axis=0)) + src_t0
+        src_bt = _beat_this(read_region(repertoire.mix_flac(song), s0, s1).mean(axis=0)) + src_t0
         src_bt_out = np.interp(src_bt, tm[:, 1], tm[:, 0])
         report["beatThis"] = {"output": _stats(_match(bt_out, interior)),
                               "sourceMapped": _stats(_match(src_bt_out, interior))}
@@ -571,17 +571,17 @@ def main(argv: list[str] | None = None) -> int:
                     help="auto (default): R3 short window for mix/drums, R3 for the tonal stems")
     ap.add_argument("--verify", action="store_true", help="measure the output's timing against the grid")
     ap.add_argument("--json", action="store_true", help="print the full result as JSON")
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     args = ap.parse_args(argv)
-    pool = pools.from_args(args)
+    repertoire = repertoires.from_args(args)
     try:
         result = render(args.song, args.hook, args.to_bpm, args.bars, args.after_bars, args.stems,
-                        args.max_stretch, args.force, args.engine, pool)
+                        args.max_stretch, args.force, args.engine, repertoire)
     except StretchError as err:
         print(f"stretch: {err}", file=sys.stderr)
         return 2
     if args.verify:
-        result["verify"] = verify(result, pool=pool)
+        result["verify"] = verify(result, repertoire=repertoire)
     if args.json:
         print(json.dumps(result, indent=1))
     else:

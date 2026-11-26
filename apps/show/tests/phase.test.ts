@@ -19,7 +19,7 @@ import { firstWinAt } from '../engine/src/game/cards.ts';
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
 import type { Card, CompletionKind as WinKind } from '../engine/src/game/cards.ts';
 import type { Phase, PhaseModelOverrides } from '../engine/src/game/phase.ts';
-import { REPO } from '../relay/pool.ts';
+import { REPO } from '../relay/repertoire.ts';
 
 const CARDS: Card[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
 const NORMAL = CARDS.filter((c) => c.type === 'normal');

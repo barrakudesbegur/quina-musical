@@ -10,7 +10,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { frameAligned, laneSources, laneStart, onsetShift, pointsAt, schedulePoints } from '../engine/src/audio/lanes.ts';
 import type { LanePart, StemName } from '../engine/src/plan/events.ts';
-import { CACHE, OUT } from '../relay/pool.ts';
+import { CACHE, OUT } from '../relay/repertoire.ts';
 
 
 const SR = 48000;

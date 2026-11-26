@@ -6,7 +6,7 @@ import numpy as np
 UNSTABLE_BAR_SPREAD_PCT = 3.0
 # Half time (Beat This! counting twice the tempo). With Spotify features: Spotify and librosa both within 3% of half.
 HALF_TIME_TOLERANCE = 0.03
-# Without them (the playlist fetcher doesn't produce them, so this year's pool has none): librosa within 5% of half, and Beat This!
+# Without them (the playlist fetcher doesn't produce them, so this year's repertoire has none): librosa within 5% of half, and Beat This!
 # at least 160 BPM, too fast for this music. On last year's 77 songs this halves exactly the one song Spotify did
 # (Besos: Beat This! 214, librosa 103.4) and no other; the fast songs that really are fast (158–176) keep their tempo.
 HALF_TIME_TOLERANCE_LIBROSA_ONLY = 0.05

@@ -23,7 +23,7 @@ import {
 } from '../engine/src/interval/plan.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { setup, type Harness } from './support/harness.ts';
-import { OUT } from '../relay/pool.ts';
+import { OUT } from '../relay/repertoire.ts';
 
 const find = <T extends EffectType>(effects: readonly Effect[], type: T) => effects.find((e): e is EffectOf<T> => e.type === type);
 const rejected = (effects: readonly Effect[]) => effects.filter((e) => e.type === 'reject').map((e) => e.reason);

@@ -1,4 +1,4 @@
-"""Check each source recording of a pool before anyone listens: flags for the user to check by ear.
+"""Check each source recording of a repertoire before anyone listens: flags for the user to check by ear.
 
     <dataDir>/quality.json   schema 1: { songs: [{ id, codec, bitrateKbps, sampleRate, durationSec, spotifyDurationSec,
                                                    lowpassHz, flags: [...] }], flagged }
@@ -14,7 +14,7 @@ Flags (none is a hard error: a flagged song still plays):
 Spotify's length comes from songs.json `durationMs` (the playlist fetcher writes it). The low-pass is measured on the
 decoded mix (<cacheDir>/<id>/mix.flac), so run it after decode.
 
-    tools/prep/.venv/bin/python tools/prep/quality.py [--pool NAME|PATH] [--song N ...]
+    tools/prep/.venv/bin/python tools/prep/quality.py [--repertoire NAME|PATH] [--song N ...]
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(Path(__file__).parent))
-import pool as pools  # noqa: E402
+import repertoire as repertoires  # noqa: E402
 from steps.output import write_text_if_changed  # noqa: E402
 
 SCHEMA_VERSION = 1
@@ -116,7 +116,7 @@ def lowpass_hz(freqs: np.ndarray, db: np.ndarray) -> float | None:
     return None
 
 
-def song_quality(pool: pools.Pool, song: dict, audio: Path | None) -> dict:
+def song_quality(repertoire: repertoires.Repertoire, song: dict, audio: Path | None) -> dict:
     sid = int(song["id"])
     spotify = round(song["durationMs"] / 1000, 2) if isinstance(song.get("durationMs"), (int, float)) else None
     out: dict = {"id": sid, "spotifyDurationSec": spotify, "flags": []}
@@ -130,7 +130,7 @@ def song_quality(pool: pools.Pool, song: dict, audio: Path | None) -> dict:
         out["flags"].append("low_bitrate")
     if spotify and out.get("durationSec") and abs(out["durationSec"] - spotify) > QUALITY.max_duration_off_sec:
         out["flags"].append("duration_off")
-    mix = pool.song_cache(sid) / "mix.flac"
+    mix = repertoire.song_cache(sid) / "mix.flac"
     if mix.exists():
         cut = lowpass_hz(*spectrum_db(mix))
         out["lowpassHz"] = cut
@@ -141,26 +141,26 @@ def song_quality(pool: pools.Pool, song: dict, audio: Path | None) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    pools.add_argument(ap)
+    repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all")
     args = ap.parse_args()
-    pool = pools.from_args(args)
-    songs = [s for s in pool.songs() if not args.song or int(s["id"]) in args.song]
-    audio = pool.audio_files()
-    rows = [song_quality(pool, s, audio.get(int(s["id"]))) for s in songs]
-    path = pool.data_dir / "quality.json"
+    repertoire = repertoires.from_args(args)
+    songs = [s for s in repertoire.songs() if not args.song or int(s["id"]) in args.song]
+    audio = repertoire.audio_files()
+    rows = [song_quality(repertoire, s, audio.get(int(s["id"]))) for s in songs]
+    path = repertoire.data_dir / "quality.json"
     old = json.loads(path.read_text())["songs"] if path.exists() and args.song else []
     merged = {r["id"]: r for r in old} | {r["id"]: r for r in rows}
     doc = {"schemaVersion": SCHEMA_VERSION, "songs": [merged[k] for k in sorted(merged)]}
     doc["flagged"] = sum(1 for r in doc["songs"] if r["flags"])
-    pool.data_dir.mkdir(parents=True, exist_ok=True)
+    repertoire.data_dir.mkdir(parents=True, exist_ok=True)
     write_text_if_changed(path, json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
     for r in rows:
         if r["flags"]:
             title = next((s.get("title") for s in songs if int(s["id"]) == r["id"]), "")
             detail = f"{r.get('codec')} {r.get('bitrateKbps')} kbps, {r.get('durationSec')} s vs Spotify {r.get('spotifyDurationSec')} s, low-pass {r.get('lowpassHz')}"
             print(f"song {r['id']} {title}: {', '.join(r['flags'])} ({detail})")
-    print(f"quality: {len(rows)} songs checked, {sum(1 for r in rows if r['flags'])} flagged → {pools.display(path)}")
+    print(f"quality: {len(rows)} songs checked, {sum(1 for r in rows if r['flags'])} flagged → {repertoires.display(path)}")
     return 0
 
 

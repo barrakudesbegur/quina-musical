@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { defaultCardType } from '@quina/protocol';
-import { REPO } from '../../relay/pool.ts';
+import { REPO } from '../../relay/repertoire.ts';
 import { seededQueue } from '../../engine/src/game/shuffle.ts';
 import { cardSongIds, type Card } from '../../engine/src/game/cards.ts';
 import { mixSeed, seededRandom } from '../../engine/src/rng.ts';
