@@ -70,6 +70,7 @@ Answered on the canvas (D181–D184): "Salvats!", the faded fallen nino, the edi
 2. The finalists' view lives in the Dempeus tab, once started from the button.
 3. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
 4. The names "Al revés" and "+ Finalista".
+5. Frontend's own details on v95: "Editar" keeps its label while on (rather than "Fet"); "+ Afegir" sits in the panel's header; the × shows only on standing finalists; "Enrere" grows at most from 84 to 100 px.
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
