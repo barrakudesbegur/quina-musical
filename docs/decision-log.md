@@ -1117,11 +1117,11 @@ By: the user (the amount by ear); the starting point by the orchestrator, as a t
 The throws and the corn-seed storm share one volume slider. Answers U135.
 By: the user. Source: open-questions.md › Answered (U135). Lives in: requirements/show-and-music.md › Volumes.
 
-### D161 · The Desgraciat ends on stage · 2026-11-26 · Active; the details Pending (U142–U146)
+### D161 · The Desgraciat ends on stage · 2026-11-26 · Amended by D166–D169
 The user, on the canvas: "In desgraciat we probably dont need to do the check show because the remaining players go up in stage and their card gets checked before going up." When about 5–10 cards still stand, their players come up on stage, and each card is checked privately on the way. The presenters enter every finalist's number. The projector shows one nino per finalist, with its card number inside or under it, in ascending order so the players can line up. As soon as a landed song is on a finalist's card, that nino is marked out, and it fades when the next Spin starts. When one is left, that's the winner, with no public Check. The tablet shows the ninos too, with a toggle that reverses their order (the tablet faces the audience), at the presenters' choice. This changes "the standing cards never reach the projector" for the finalists on stage, and it lets the system end the round, since the finalists are known.
 By: the user via canvas (26 Nov, "Tell the orchestrator and i solve the unknowns with him"). Source: Frontend's report of 26 Nov. Amends: game-rules › The Quina del Desgraciat (its Check; "the presenters call the winner by looking at the room"). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Console.
 
-### D162 · A private song lookup for the presenters · 2026-11-26 · Active; the details Pending (U147, U148)
+### D162 · A private song lookup for the presenters · 2026-11-26 · Amended by D170
 Usable at any time in a round, on the tablet only:
 - the round's played songs, newest first;
 - a fuzzy search by title or artist that accepts typos and highlights the matches ("tetadar" finds "Tenia Tanto Que Darte");
@@ -1142,3 +1142,31 @@ By: the orchestrator and Frontend, at the user's request. Source: the canvas thr
 ### D165 · The user's own canvas edits to the Check · 2026-11-26 · Active
 The user worked with the canvas's own assistant: "Un altre" becomes "+ Candidat", buttons come in three sizes defined in the component, the next song sits inside "Destapa", and there are no "només vosaltres" tags. The canvas has two pages, "Disseny actual" and "Proves i opcions". Answers U140.
 By: the user via canvas (26 Nov). Source: open-questions.md › Answered (U140). Lives in: the "Quina Musical look" canvas.
+
+### D166 · The finale replaces the Desgraciat's public Check · 2026-11-26 · Active
+Answers U142 with (a).
+By: the user. Source: open-questions.md › Answered (U142). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat.
+
+### D167 · The finale's button takes the claim button's place, and grows · 2026-11-26 · Active
+The presenters start the finale by hand (U143 (a)), not from the "Dempeus" tab. In the Desgraciat, the slot of today's "Comprovar" button becomes the finale's button, with its own label and icon. It grows as fewer players stand, because the larger button is the main, recommended action.
+By: the user. Source: open-questions.md › Answered (U143). Amends: D161. Lives in: requirements/screens.md › Console.
+
+### D168 · Entering a finalist shows the card privately · 2026-11-26 · Active
+Entering a finalist's number shows that card privately, like the Check screen, with each song marked ✓ or ✗. A card that has already fallen shows its ✗ and isn't added (U144 (a)). The presenters can remove a finalist, or bring one back, by hand (U145 (a)).
+By: the user. Source: open-questions.md › Answered (U144, U145). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
+
+### D169 · The finale is decided by the song, not the card · 2026-11-26 · Pending (U151)
+The user: "if the last 2 finalist have the same song, we already know they both won. so the moment that we know who wins is dependent on the song, not the individual card. in the projector and tablet they should show together, because they win or get eliminated together." Proposed handling, by the orchestrator at the user's request:
+1. At each landing, the finalists with that song on their card fall together, shown together as one group on the projector and the tablet.
+2. If one finalist is left, they win.
+3. If the landing would take every remaining finalist, nobody is out: they all win together (a shared win, as today's rule; U149 (a)), shown together.
+4. "Enrere" on that landing brings the whole group back.
+5. Removing a finalist by hand that leaves one standing makes that one the winner.
+6. The fanfare waits for the presenters' cue (D109's reason: not over their voices).
+By: the user (the rule); the orchestrator (the handling, to be confirmed). Source: open-questions.md › U146, U149, U151. Amends: D161.
+
+### D170 · The lookup, the game's state and the future, as three tabs · 2026-11-26 · Active; the state tab's name Pending (U152)
+- **The lookup** is a tab of its own, for a quick private check (U147): a song search, and a card check whose "show future" button also tells whether the card can still win.
+- **Today's "Futur" becomes the game's state,** always visible with no button: how close everyone is to winning. The histogram of cards by songs missing moves to its left, since it isn't future information, and the round's song history, scrolling, goes on its right.
+- **A new "Futur" tab:** the possible winners and the songs to the first possible Line and Quina on the left, and the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win (U148 (b)). It stays hidden until "Mirar el futur", so the presenters stay intrigued (event.md). So the song history needs no future button.
+By: the user. Source: open-questions.md › Answered (U147, U148). Amends: D162. Lives in: requirements/screens.md › Console.

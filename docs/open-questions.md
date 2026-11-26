@@ -43,47 +43,26 @@ A tap stops the throw song, and the next tap resumes it (D138).
 - (a) While it's stopped, the break music comes back up.
 - (b) It stays down until the throw ends.
 
-### U142 · The Desgraciat's public Check
-- (a) The finale on stage replaces it: no public Check in the Desgraciat.
-- (b) Keep the public Check available too, as a plan B.
+### U151 · The finale decided by the song (D169)
+After the user's "think deeper", the orchestrator's proposal:
+1. At each landing, the finalists with that song on their card fall together, shown together as one group on the projector and the tablet.
+2. If one finalist is left, they win.
+3. If the landing would take every remaining finalist, nobody is out: they all win together, shown together.
+4. "Enrere" on that landing brings the whole group back.
+5. Removing a finalist by hand that leaves one standing makes that one the winner.
+6. The fanfare waits for the presenters' cue.
+- (a) Yes, all of it.
+- (b) Change some (which?).
 
-### U143 · When the finale on stage starts
-- (a) The presenters start it by hand, from the "Dempeus" tab, when they see about 5–10 standing.
-- (b) The tablet suggests it at a set number of standing cards.
-
-### U144 · A number that has already fallen
-A presenter enters a finalist's card that has already fallen.
-- (a) The tablet refuses it privately ("Aquest cartró ja ha caigut"), like an unknown number (D126).
-- (b) It's added, already marked out.
-
-### U145 · Fixing a mistake on stage
-- (a) The presenters can remove a finalist, or bring one back, by hand.
-- (b) No: the finalists stay as entered.
-
-### U146 · The winner on stage
-When one finalist is left:
-- (a) the fanfare waits for the presenters' cue, as in the Check;
-- (b) it plays at once.
-
-### U149 · Two finalists falling on the same song
-The Shuffle guarantees a single last card among all the cards in play, not among the finalists on stage, so the last two finalists falling together is likelier than before.
-- (a) They share the win, as today's rule.
-- (b) That landing doesn't count for them, and the round goes on.
+### U152 · The name of the game's-state tab
+It shows how close everyone is to winning, and the song history.
+- (a) "Estat de la quina".
+- (b) "Com va".
+- (c) Another name.
 
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
-
-### U147 · The song lookup and Futur
-The tablet already has "Futur", the crystal ball, hidden until "Mirar el futur".
-- (a) One place: the lookup's "view future" joins Futur.
-- (b) Two separate tools.
-
-### U148 · "The songs needed for it to win"
-For each upcoming song, the lookup shows how many songs ahead it is and:
-- (a) which cards it would complete, a Line or a Quina, if it played next;
-- (b) how many more songs until any card can win;
-- (c) something else.
 
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
@@ -255,6 +234,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U142–U149** (2026-11-26) → D166–D170: the finale replaces the Desgraciat's Check; it starts from the claim button's slot, which grows; a finalist's card shows privately and a fallen one isn't added; finalists can be removed or brought back; the song decides (U151 to confirm); the lookup is its own tab, today's Futur becomes the game's state with the song history, and a new Futur holds the possible winners and the upcoming songs.
 - **U140 · The canvas edits** (2026-11-26) → D165: the user's own, with the canvas's assistant.
 - **U127 · The plan-save fix's deploy** (2026-11-26): the user approved it; deployed as 94b395be. Step 1 of the new Check is deployed too (fddfdc1d).
 - **U135 · One slider or two for the chaotic moments** (2026-11-26) → D159: one shared slider.

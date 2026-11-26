@@ -63,8 +63,9 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **"Següent"** is the next song, private, with a countdown to its landing so the presenters can name it on the hit.
 - **The buttons:** every action in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions). "Enrere" takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest. Each control a Wii button triggers shows a small badge with that button.
 - **Tabs:**
-  - **A song lookup (D162):** the round's played songs, newest first, with a fuzzy search by title or artist; the future in order behind "view future", with how far ahead each song is and what it would take to win; and a card preview (type a number, see its played and unplayed songs). Private, at any time in a round (its relation to Futur pending U147);
-  - "Futur": the crystal ball, hidden until someone taps "Mirar el futur". A chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners;
+  - **The lookup (D162, D170):** a private quick check at any time in a round: a fuzzy song search (title or artist, typos accepted, matches highlighted), and a card check whose "show future" also tells whether the card can still win;
+  - **The game's state (D170; its name pending U152):** always visible. On the left, how many cards have each number of songs missing; on the right, the round's song history, scrolling;
+  - "Futur" (D170): hidden until someone taps "Mirar el futur". The possible winners and the songs to the first possible Line and Quina on the left; the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win;
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;
   - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands.
