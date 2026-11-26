@@ -528,6 +528,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
   /** A new plan: the phones (public delta), the laptop (cloud.plan) and the consoles (relay.plan) get it. */
   private adoptPlan(plan: GamePlan, savedAtMs: number): void {
     this.room = { ...this.room, plan, planSavedAtMs: savedAtMs };
+    // Saved now, whatever phones see of it: an edit to a locked round's prizes or the cheat sheet changes nothing
+    // public, so refreshPublicPlan doesn't save it, and it was lost when the GameRoom restarted.
+    this.save();
     this.refreshPublicPlan();
     for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.plan', plan, savedAtMs });
     const text = JSON.stringify(this.planMessage());

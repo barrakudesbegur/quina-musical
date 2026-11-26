@@ -382,6 +382,19 @@ describe('the Game plan and its media (Admin)', () => {
     expect((await put(PLAN)).status).toBe(200); // leave the test plan for the next tests
   });
 
+  it("an edit phones can't see (a locked round's prize, the cheat sheet) is saved too, and survives a restart", async () => {
+    expect((await put(PLAN)).status).toBe(200);
+    const edited: GamePlan = {
+      ...PLAN,
+      rounds: PLAN.rounds.map((r) => (r.number === 2 ? { ...r, bingo: [{ title: 'Una panera', detail: null, sponsorId: 'forn', image: null, headline: true }] } : r)),
+      cheatSheet: { ...PLAN.cheatSheet, claimRules: ['Canteu fort'] },
+    };
+    expect((await put(edited)).status).toBe(200);
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a deploy, or the GameRoom waking up
+    expect((await getJson<{ plan: GamePlan }>('/api/plan')).plan).toEqual(edited);
+    expect((await put(PLAN)).status).toBe(200); // leave the test plan for the next tests
+  });
+
   it("a locked round's prizes never reach the public feed, until the show reveals them", async () => {
     await evictDurableObject(roomOf(env), { webSockets: 'close' });
     const p = await phone();
