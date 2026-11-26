@@ -130,19 +130,27 @@ export interface ClaimDecidedEntry extends EntryBase {
   winningSongId: number | null;
   position: number;
   /** The Check's result when the presenters decided (absent in an older journal). A `valid` verdict is always a
-   * passing one (isPassingOutcome); the cloud flags any other. */
+   * passing one (isPassingOutcome), unless `manual`; the cloud flags any other. */
   outcome?: CheckOutcome;
+  /** Won or lost by hand from a Review (D121), whatever the card shows; absent otherwise. */
+  manual?: true;
 }
 
-/** A Claim's Check was stopped before its cue (D109): no sound, the Claim undecided until it is checked again
- * (its next `claim.decided`) or dropped. */
-export interface ClaimStoppedEntry extends EntryBase {
-  kind: 'claim.stopped';
+/** A Claim's Check was put under review before its cue (D118–D120): undecided until the Review ends. */
+export interface ClaimReviewingEntry extends EntryBase {
+  kind: 'claim.reviewing';
   round: number;
   claimId: string;
 }
 
-/** A stopped or queued Claim was dropped, without a verdict and without any sound (D109). */
+/** A Review ended with `continue` (D121): the Claim's Check goes on from where it was. */
+export interface ClaimContinuedEntry extends EntryBase {
+  kind: 'claim.continued';
+  round: number;
+  claimId: string;
+}
+
+/** A Claim under review was discarded, without a verdict and without any sound (D121). */
 export interface ClaimDroppedEntry extends EntryBase {
   kind: 'claim.dropped';
   round: number;
@@ -180,7 +188,8 @@ export type JournalEntry =
   | SceneChangedEntry
   | ClaimOpenedEntry
   | ClaimDecidedEntry
-  | ClaimStoppedEntry
+  | ClaimReviewingEntry
+  | ClaimContinuedEntry
   | ClaimDroppedEntry
   | WinnerNotedEntry
   | PrizesRevealedEntry;
@@ -227,8 +236,8 @@ export interface RecordedClaim {
   atMs: number;
   /** null while undecided; `dropped` set aside without a verdict (`claim.dropped`). */
   verdict: 'valid' | 'invalid' | 'dropped' | null;
-  /** Its Check was stopped before the cue and it is still undecided (`claim.stopped`); absent otherwise. */
-  stopped?: true;
+  /** Under review (`claim.reviewing`), until the Review ends; absent otherwise. */
+  reviewing?: true;
 }
 
 /** Everything needed to resume the Game: the result of replaying its journal. */
@@ -389,7 +398,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
       if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already decided`);
       claim.verdict = entry.verdict;
-      delete claim.stopped;
+      delete claim.reviewing;
       if (entry.verdict === 'valid') {
         record.winners.push({
           round: entry.round, kind: claim.kind, cardId: claim.cardId, claimId: claim.claimId,
@@ -398,17 +407,21 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       }
       return;
     }
-    case 'claim.stopped':
+    case 'claim.reviewing':
+    case 'claim.continued':
     case 'claim.dropped': {
       currentRound(record, entry);
       const claim = record.claims.find((c) => c.claimId === entry.claimId);
       if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
       if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already ${claim.verdict === 'dropped' ? 'dropped' : 'decided'}`);
-      if (entry.kind === 'claim.stopped') claim.stopped = true;
-      else {
-        claim.verdict = 'dropped';
-        delete claim.stopped;
+      if (entry.kind === 'claim.reviewing') {
+        claim.reviewing = true;
+        return;
       }
+      // A Review ends with these: its Check goes on, or the Claim is discarded.
+      if (!claim.reviewing) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} is not under review`);
+      delete claim.reviewing;
+      if (entry.kind === 'claim.dropped') claim.verdict = 'dropped';
       return;
     }
     case 'winner.noted': {

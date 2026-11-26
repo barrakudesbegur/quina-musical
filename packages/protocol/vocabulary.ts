@@ -52,11 +52,16 @@ export const isShowScene = (value: unknown): value is ShowScene =>
 
 /** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
 /**
- * Where a Claim is. `stopped`: its Check was stopped before the cue (`checkStop`; whatever was playing goes on),
- * undecided until it is checked again (`checkStart`) or dropped. `dropped` (`claimDrop`): set aside without a verdict, no sound. `checked` is the
- * timed Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D109) has none.
+ * Where a Claim is. `reviewing` (the Review, "En revisió"): its Check was put under review before the cue
+ * (`checkReview`; whatever was playing goes on), undecided until a `reviewEnd` continues it, wins or loses it by
+ * hand, or discards it (D119–D121). `dropped`: discarded, without a verdict or a sound. `checked` is the timed
+ * Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D110) has none.
  */
-export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'stopped' | 'valid' | 'invalid' | 'dropped';
+export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'reviewing' | 'valid' | 'invalid' | 'dropped';
+/** How a Review ends (D121): its Check goes on from where it was; won or lost by hand, skipping the reveals left
+ * (the journal marks the verdict `manual`); or discarded, with no fanfare and no failure music. */
+export const REVIEW_OUTCOMES = ['continue', 'win', 'lose', 'discard'] as const;
+export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
 /**
  * What the engine found. The Check's result decides (docs/event.md): presenters may reject a card that passed, never
  * accept one that failed (isPassingOutcome). A 'standing' claim (the Desgraciat round) is `complete` while none of
@@ -70,7 +75,9 @@ export const CHECK_OUTCOMES = ['complete', 'incomplete', 'fellLast', 'fallen', '
 export const isPassingOutcome = (outcome: CheckOutcome | null | undefined, kind: WinKind): boolean =>
   outcome === 'complete' || (outcome === 'fellLast' && kind === 'standing');
 /** Only a warning: the card is not among the cards in play. */
-export type ClaimWarning = 'notSold';
+/** PRIVATE notes on a Claim: its card isn't in the cards in play (`notSold`); a Review won by hand on a card that
+ * doesn't pass (`notPassing`), or lost by hand on one that does (`wouldPass`) (D121). */
+export type ClaimWarning = 'notSold' | 'notPassing' | 'wouldPass';
 /** The Celebration's music, which the presenters may change: the Winning song's hook looped, the victory
  * track, or Hold music. */
 export const CELEBRATION_MUSIC = ['winningSong', 'victory', 'holdMusic'] as const;
@@ -140,7 +147,7 @@ export const isSoundName = (value: unknown): value is SoundName =>
 export const REJECT_REASONS = [
   'invalid', 'locked', 'busy', 'endOfQueue', 'nothingToUndo', 'notHolding', 'notReady', 'decodeFailed', 'planFailed',
   'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume', 'failedCheck',
-  // A stopped Claim keeps the round in its Check until it is checked again or dropped (D118): Next waits.
+  // A Claim under review keeps the round in its Check until the Review ends (D118–D121): Next waits.
   'claimOpen',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];

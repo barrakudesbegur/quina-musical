@@ -62,12 +62,12 @@ const RULES = {
   claim: ['play', 'check', 'celebration'],
   checkStart: ['check'],
   decide: ['check'],
-  // The presenter-paced Check (D107–D110). A stopped Claim waits in its Check scene with whatever was playing (D118),
-  // until it is checked again (checkStart) or dropped; a Pausa there is only by hand, as anywhere.
+  // The presenter-paced Check (D107–D110). A Claim under review waits in its Check scene with whatever was playing
+  // (D118–D121), until reviewEnd; a Pausa there is only by hand, as anywhere.
   checkNext: ['check'],
   checkAuto: ['check'],
-  checkStop: ['check'],
-  claimDrop: ['check'],
+  checkReview: ['check'],
+  reviewEnd: ['check'],
   // In a Check it picks the music the Celebration will start with (`state.celebrationChoice`).
   celebrationMusic: ['celebration', 'check'],
   interval: celebratingBingo,

@@ -706,8 +706,8 @@ export class Show {
       }
       case 'checkNext':
       case 'checkAuto':
-      case 'checkStop':
-      case 'claimDrop':
+      case 'checkReview':
+      case 'reviewEnd':
         // The presenter-paced Check (D107–D110): in the protocol already, played once the engine switches to it.
         this.reject(reqId, c.cmd, 'unknownCommand', 'the presenter-paced Check is not built in the engine yet');
         break;
@@ -1077,7 +1077,7 @@ export class Show {
     const inPlay = new Set(this.cardsInPlay);
     this.claims = record.claims.map((c) => ({
       claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, atMs: c.atMs, position: c.position,
-      status: c.verdict ?? (c.stopped ? 'stopped' : 'queued'), outcome: null, completeSince: null,
+      status: c.verdict ?? (c.reviewing ? 'reviewing' : 'queued'), outcome: null, completeSince: null,
       warnings: this.allCards.some((card) => card.id === c.cardId) && !inPlay.has(c.cardId) ? ['notSold'] : [],
     }));
     if (this.scene === 'check') this.batch = { claimIds: this.claims.filter((c) => c.status === 'queued').map((c) => c.claimId), celebration: null };
@@ -1101,7 +1101,7 @@ export class Show {
       claims: this.claims.map((c): RecordedClaim => ({
         claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, position: c.position, atMs: c.atMs,
         verdict: c.status === 'valid' || c.status === 'invalid' || c.status === 'dropped' ? c.status : null,
-        ...(c.status === 'stopped' ? { stopped: true as const } : {}),
+        ...(c.status === 'reviewing' ? { reviewing: true as const } : {}),
       })),
       claimCount: this.claimCount,
       winners: this.winners.map((w) => ({ ...w })),

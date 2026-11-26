@@ -10,6 +10,7 @@ import {
   CARD_TYPE_ID_RE,
   ROUND_KINDS,
   WIN_KINDS,
+  REVIEW_OUTCOMES,
   isPhaseName,
   type PhaseName,
   type ProtocolVersion,
@@ -144,7 +145,8 @@ export const COMMANDS = Object.freeze({
     cardIds: { type: 'integers', optional: true, min: 1, max: 9999, maxItems: 10 },
     kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
   },
-  /** (Re)start a Claim's Check from the start: a re-check, another order, or a stopped Claim checked again. */
+  /** (Re)start a Claim's Check from the start: a re-check (after Back), or another order. A Claim under review
+   * goes on with `reviewEnd { outcome: 'continue' }` instead, from where it was (D121). */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },
   /**
    * The presenter-paced Check (D107): the tap, or the Wii's A. `step` is the index the press expects, so two consoles
@@ -157,12 +159,17 @@ export const COMMANDS = Object.freeze({
   /** Reveal in a row while on (the Wii's A held, or the tablet's toggle), through the cue (its fanfare or fail
    * moment) and no further (D117). With it off, a press makes the cue. */
   checkAuto: { on: { type: 'boolean' } },
-  /** Stop a Check any time before its cue: no fanfare or effect, and whatever was playing goes on (D118; its level
-   * is U78). The Claim is `stopped`, and the round waits in its Check until it is checked again or dropped. A Pausa
-   * comes only by hand, as usual. */
-  checkStop: { claimId: { type: 'string', maxLength: 40 } },
-  /** Drop a stopped or queued Claim without a verdict, and without any sound. */
-  claimDrop: { claimId: { type: 'string', maxLength: 40 } },
+  /** "Revisió manual": put a queued or running Check under review any time before its cue (D118–D120). No fanfare
+   * or effect, and whatever was playing goes on (its level is U78); the Claim is `reviewing`, and the round waits in
+   * its Check until `reviewEnd`. A Pausa comes only by hand, as usual. */
+  checkReview: { claimId: { type: 'string', maxLength: 40 } },
+  /**
+   * End a Review (D121): `continue` its Check from where it was; `win` or `lose` it by hand, skipping the reveals
+   * left, straight to that cue (the fanfare and Celebration, or the fail moment), even against the card (a PRIVATE
+   * warning says so; the one exception to "the Check decides", and only from a Review); or `discard` it, with no
+   * fanfare and no failure music (where the round goes then is U82).
+   */
+  reviewEnd: { claimId: { type: 'string', maxLength: 40 }, outcome: { type: 'string', oneOf: REVIEW_OUTCOMES } },
   /** The presenters' verdict on a Claim. Both are journaled. The Check's result decides (docs/event.md): a presenter
    * may reject a card that passed, but `valid: true` on a card whose Check failed is refused as `failedCheck`. */
   decide: { claimId: { type: 'string', maxLength: 40 }, valid: { type: 'boolean' } },

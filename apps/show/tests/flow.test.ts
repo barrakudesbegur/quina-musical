@@ -76,7 +76,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound', 'intervalSkip']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound', 'intervalSkip']],
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
-    ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide', 'checkNext', 'checkAuto', 'checkStop', 'claimDrop', 'celebrationMusic']],
+    ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', 'checkStart', 'decide', 'checkNext', 'checkAuto', 'checkReview', 'reviewEnd', 'celebrationMusic']],
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip']],

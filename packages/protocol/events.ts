@@ -636,20 +636,21 @@ export interface CheckRevealed {
   step: CheckStep;
 }
 
-/** The cue: the card passed (the Claim is valid) or failed. */
+/** The cue: the card passed (the Claim is valid) or failed; `manual` when a Review won or lost it by hand (D121). */
 export interface CheckCue {
   v: ProtocolVersion;
   type: 'check.cue';
   claimId: string;
   cue: 'pass' | 'fail';
+  manual?: boolean;
   atMs: number;
 }
 
-/** A Check stopped before its cue (`checkStop`): the Claim `stopped`, whatever was playing goes on (D118). What the
- * projector's stopped screen and the phones show is U76 and U79. */
-export interface CheckStopped {
+/** A Check put under review before its cue (`checkReview`): the Claim `reviewing`, whatever was playing goes on
+ * (D118–D120). What the projector's Review screen and the phones show is U76 and U79. */
+export interface CheckReviewing {
   v: ProtocolVersion;
-  type: 'check.stopped';
+  type: 'check.reviewing';
   claimId: string;
   atMs: number;
 }
@@ -691,7 +692,7 @@ export type ShowEvent =
   | CheckStarted
   | CheckRevealed
   | CheckCue
-  | CheckStopped
+  | CheckReviewing
   | ClaimDecided
   | CelebrationStarted;
 export type ShowEventType = ShowEvent['type'];
@@ -717,7 +718,7 @@ export const EVENT_TYPES = Object.freeze([
   'check.started',
   'check.revealed',
   'check.cue',
-  'check.stopped',
+  'check.reviewing',
   'claim.decided',
   'celebration.started',
 ] as const satisfies readonly ShowEventType[]);

@@ -28,22 +28,22 @@ test('claim takes one card or several (cardIds: 1–10 distinct card numbers), n
   assert.match(errorOf(cmd('claim', { cardIds: '7' }))!, /list/);
 });
 
-test('the paced Check commands: checkNext names its step; checkAuto, checkStop and claimDrop', () => {
+test('the paced Check commands: checkNext names its step; checkAuto; the Review (checkReview, reviewEnd)', () => {
   assert.equal(errorOf(makeCommand('checkNext', { claimId: 'cl-1', step: 0 })), null);
   assert.match(errorOf(cmd('checkNext', { claimId: 'cl-1' }))!, /missing step/);
   assert.match(errorOf(cmd('checkNext', { claimId: 'cl-1', step: -1 }))!, /≥ 0/);
   assert.equal(errorOf(makeCommand('checkAuto', { on: true })), null);
   assert.match(errorOf(cmd('checkAuto', {}))!, /missing on/);
-  assert.equal(errorOf(makeCommand('checkStop', { claimId: 'cl-1' })), null);
-  assert.equal(errorOf(makeCommand('claimDrop', { claimId: 'cl-1' })), null);
-  // Reveals, auto, stop and drop only in a Check: a stopped Claim waits there with whatever was playing (D118); a
-  // Pausa by hand lets none of them through, as with every scene rule.
+  assert.equal(errorOf(makeCommand('checkReview', { claimId: 'cl-1' })), null);
+  for (const outcome of ['continue', 'win', 'lose', 'discard'] as const) assert.equal(errorOf(makeCommand('reviewEnd', { claimId: 'cl-1', outcome })), null);
+  assert.match(errorOf(cmd('reviewEnd', { claimId: 'cl-1', outcome: 'restart' }))!, /must be one of/);
+  // Reveals, auto, the Review and its end only in a Check: a Claim under review waits there with whatever was
+  // playing (D118–D121); a Pausa by hand lets none of them through, as with every scene rule.
   const ctx = (scene: ShowScene, paused = false) => ({ scene, paused, introduced: false, celebrating: null });
-  for (const name of ['checkNext', 'checkAuto', 'checkStop'] as const) {
-    assert.deepEqual((['play', 'check', 'celebration'] as const).filter((s) => sceneAllows(name, ctx(s))), ['check'], name);
+  for (const name of ['checkNext', 'checkAuto', 'checkReview', 'reviewEnd'] as const) {
+    assert.deepEqual((['before', 'play', 'check', 'celebration', 'interval'] as const).filter((s) => sceneAllows(name, ctx(s))), ['check'], name);
+    assert.ok(!sceneAllows(name, ctx('check', true)), `${name} in a Pausa`);
   }
-  assert.deepEqual((['before', 'play', 'check', 'celebration', 'interval'] as const).filter((s) => sceneAllows('claimDrop', ctx(s))), ['check']);
-  for (const name of ['checkNext', 'checkAuto', 'checkStop', 'checkStart', 'claimDrop'] as const) assert.ok(!sceneAllows(name, ctx('check', true)), name);
 });
 
 test('a claim of several cards opens one Claim each, in order; the engine refuses the paced commands until it plays them', () => {
@@ -55,37 +55,53 @@ test('a claim of several cards opens one Claim each, in order; the engine refuse
   assert.equal(h.show.scene, 'check');
   assert.deepEqual(h.show.claims.map((c) => c.cardId), [17, 3, 150]);
   assert.deepEqual(journalOf(h.log).filter((e) => e.kind === 'claim.opened').map((e) => (e.kind === 'claim.opened' ? e.cardId : 0)), [17, 3, 150]);
-  for (const out of [h.send('checkNext', { claimId: 'cl-1', step: 0 }), h.send('checkAuto', { on: true }), h.send('checkStop', { claimId: 'cl-1' }), h.send('claimDrop', { claimId: 'cl-2' })]) {
-    assert.deepEqual(rejected(out), ['unknownCommand']);
-  }
+  const presses = [
+    h.send('checkNext', { claimId: 'cl-1', step: 0 }), h.send('checkAuto', { on: true }),
+    h.send('checkReview', { claimId: 'cl-1' }), h.send('reviewEnd', { claimId: 'cl-2', outcome: 'discard' }),
+  ];
+  for (const out of presses) assert.deepEqual(rejected(out), ['unknownCommand']);
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 
-test('claim.stopped and claim.dropped: replayed, extended and resumed alike; a decided or dropped Claim refuses them', () => {
+test('the Review in the journal: claim.reviewing, then claim.continued or claim.dropped, or a manual verdict', () => {
   const h = setup({ seed: 4, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
   h.send('unlock');
   h.send('next');
   h.until(() => h.show.status === 'playing');
-  h.send('claim', { cardIds: [5, 6, 7] });
+  h.send('claim', { cardIds: [5, 6, 7, 8] });
   const base = journalOf(h.log);
   const last = base.at(-1)!;
   const round = h.show.round.number;
-  const entry = (n: number, body: { kind: 'claim.stopped' | 'claim.dropped'; claimId: string }): JournalEntry =>
-    ({ gameId: last.gameId, seq: last.seq + n, atMs: last.atMs + 1000 * n, round, ...body });
-  const more = [entry(1, { kind: 'claim.stopped', claimId: 'cl-1' }), entry(2, { kind: 'claim.dropped', claimId: 'cl-2' })];
+  let seq = last.seq;
+  type Body = { kind: 'claim.reviewing' | 'claim.continued' | 'claim.dropped'; claimId: string };
+  const entry = (body: Body): JournalEntry => ({ gameId: last.gameId, seq: ++seq, atMs: last.atMs + 1000 * (seq - last.seq), round, ...body });
+  const decided = (claimId: string, verdict: 'valid' | 'invalid'): JournalEntry => (
+    { gameId: last.gameId, seq: ++seq, atMs: last.atMs + 1000 * (seq - last.seq), kind: 'claim.decided', round, claimId, verdict, winningSongId: null, position: 0, outcome: 'incomplete', manual: true });
+  // cl-1 under review; cl-2 reviewed and discarded; cl-3 reviewed and continued; cl-4 reviewed and won by hand.
+  const more = [
+    entry({ kind: 'claim.reviewing', claimId: 'cl-1' }),
+    entry({ kind: 'claim.reviewing', claimId: 'cl-2' }), entry({ kind: 'claim.dropped', claimId: 'cl-2' }),
+    entry({ kind: 'claim.reviewing', claimId: 'cl-3' }), entry({ kind: 'claim.continued', claimId: 'cl-3' }),
+    entry({ kind: 'claim.reviewing', claimId: 'cl-4' }), decided('cl-4', 'valid'),
+  ];
   const record = replayJournal([...base, ...more]);
-  assert.deepEqual(record.claims.map((c) => [c.claimId, c.verdict, c.stopped ?? false]), [['cl-1', null, true], ['cl-2', 'dropped', false], ['cl-3', null, false]]);
+  assert.deepEqual(record.claims.map((c) => [c.claimId, c.verdict, c.reviewing ?? false]), [
+    ['cl-1', null, true], ['cl-2', 'dropped', false], ['cl-3', null, false], ['cl-4', 'valid', false],
+  ]);
+  assert.deepEqual(record.winners.map((w) => w.claimId), ['cl-4'], 'a manual win makes a Winner');
   assert.deepEqual(extendJournal(replayJournal(base), more), record);
 
-  // A show resumed from that record holds the stopped and the dropped Claim as they were.
+  // A show resumed from that record holds each Claim as it was.
   const r = setup({ seed: 9, cards: allCards, restore: record, startSec: 0.5 });
-  assert.deepEqual(r.show.claims.map((c) => c.status), ['stopped', 'dropped', 'queued']);
+  assert.deepEqual(r.show.claims.map((c) => c.status), ['reviewing', 'dropped', 'queued', 'valid']);
   assert.deepEqual(r.show.record(), record);
 
-  // A later verdict clears the stop; nothing may stop or drop a decided or dropped Claim.
-  const decided = extendJournal(record, [{ gameId: last.gameId, seq: last.seq + 3, atMs: last.atMs + 3000, kind: 'claim.decided', round, claimId: 'cl-1', verdict: 'invalid', winningSongId: null, position: 0 }]);
-  assert.deepEqual(decided.claims.map((c) => [c.verdict, c.stopped ?? false]), [['invalid', false], ['dropped', false], [null, false]]);
-  assert.throws(() => extendJournal(decided, [entry(4, { kind: 'claim.stopped', claimId: 'cl-1' })]), JournalError);
-  assert.throws(() => extendJournal(record, [entry(3, { kind: 'claim.dropped', claimId: 'cl-2' })]), (e: unknown) => e instanceof JournalError && /already dropped/.test(e.message));
-  assert.throws(() => extendJournal(record, [entry(3, { kind: 'claim.stopped', claimId: 'cl-9' })]), JournalError);
+  // Only a Claim under review continues or is discarded; nothing reviews a decided or dropped Claim.
+  const refused = (body: Body, message: RegExp) =>
+    assert.throws(() => extendJournal(record, [{ ...entry(body), seq: record.seq + 1 }]), (e: unknown) => e instanceof JournalError && message.test(e.message));
+  refused({ kind: 'claim.continued', claimId: 'cl-3' }, /not under review/);
+  refused({ kind: 'claim.dropped', claimId: 'cl-3' }, /not under review/);
+  refused({ kind: 'claim.reviewing', claimId: 'cl-2' }, /already dropped/);
+  refused({ kind: 'claim.reviewing', claimId: 'cl-4' }, /already decided/);
+  refused({ kind: 'claim.reviewing', claimId: 'cl-9' }, /no claim/);
 });
