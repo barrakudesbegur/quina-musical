@@ -266,6 +266,9 @@ test('Spin timing goes public on the cloud clock, never its song; a landing or a
   const spinning = applyPublic(state, spin);
   const suspense = { v: PROTOCOL_VERSION, type: 'suspense.started', to: 33, spinStartAtMs: 2000 } as unknown as ShowEvent;
   assert.deepEqual(projectEvent(spinning, suspense, ctx), [{ kind: 'spin', spin: { startAtMs: 2000 + OFFSET, landAtMs: null } }]);
+  // The running Spin turned into the Suspense (D177): no cancel comes first; phones keep its start and lose the landing.
+  const fromSpin = { v: PROTOCOL_VERSION, type: 'suspense.started', id: 't1', fromSpin: true, to: 33, spinStartAtMs: 1000 } as unknown as ShowEvent;
+  assert.deepEqual(projectEvent(spinning, fromSpin, ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: null } }]);
   for (const type of ['transition.cancelled', 'transition.landed']) {
     assert.deepEqual(projectEvent(spinning, { v: PROTOCOL_VERSION, type } as unknown as ShowEvent, ctx), [{ kind: 'spin', spin: null }]);
   }
