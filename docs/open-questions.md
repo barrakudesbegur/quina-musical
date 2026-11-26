@@ -32,6 +32,15 @@ A tap stops the throw song, and the next tap resumes it (D138).
 - (a) While it's stopped, the break music comes back up.
 - (b) It stays down until the throw ends.
 
+### U157 · The Celebration's music pick
+The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song looping its chorus after a Line, and a victory track into the break after a Quina or the Desgraciat's win. R2-Q20 (24 Nov) made it "only a suggested default" the presenters can change. Today they pick during the Check, or change it in the Celebration: the Winning song, the victory track, or Hold music. On the canvas the user wants it on the left, styled as a tab whose background slides to the pick, with the song's cover and title instead of "Cançó guanyadora", and icons for the others.
+- (a) Keep the pick: the default plays unless a presenter changes it.
+- (b) Drop it: always the default.
+
+### U158 · The Celebration's music options (if U157 keeps the pick)
+- (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
+- (b) Three, with Hold music too.
+
 ### U155 · The finale and the new tabs on canvas v85, for review
 Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Facts about the group ninos (D172): the "castle" (`nino-fent-una-torre`) holds two ninos, not three; the kissing pair exists only as a doodle (`nino-liantse.svg`), coloured on the board; "two dancing" is the sardana nino twice, and the high-five nino could replace it. The boards' proposals:
 1. A pair that falls kisses, a pair that wins dances, three is the castle, and four or more is the castle plus a pair.
