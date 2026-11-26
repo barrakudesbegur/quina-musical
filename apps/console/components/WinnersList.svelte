@@ -2,7 +2,8 @@
 <script lang="ts">
   import { getConsole } from '../context.ts';
   import { winnersByRound } from '../logic/show-data.ts';
-  import { CA, S } from '../strings.ts';
+  import { roundAt } from '../../../packages/ui/plan.ts';
+  import { S } from '../strings.ts';
   import WinnerForm from './WinnerForm.svelte';
 
   const model = getConsole();
@@ -15,7 +16,7 @@
     <p class="note">{S.winnersList.empty}</p>
   {:else}
     {#each groups as group (group.round)}
-      <h3 class="panel__subtitle">{CA.round(group.round)}</h3>
+      <h3 class="panel__subtitle">{S.round(roundAt(model.plan, group.round), model.plan)}</h3>
       <ul class="winners-list__items">
         {#each group.winners as w (w.claimId)}
           <li class="winners-list__item" data-kind={w.kind}>

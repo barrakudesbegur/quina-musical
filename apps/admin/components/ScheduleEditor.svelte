@@ -7,6 +7,7 @@
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { errorsAt } from '../logic/plan-check.ts';
   import { doorsAfterStart, fromLocalInput, plannedEndMs, throwSlots, toLocalInput, withThrow, withoutThrow } from '../logic/plan-edit.ts';
+  import { roundAt } from '../../../packages/ui/plan.ts';
   import { S } from '../strings.ts';
 
   let { session }: { session: PlanSession } = $props();
@@ -17,6 +18,8 @@
   const errors = $derived(errorsAt(session.errors, 'plan.schedule').filter((e) => !(doorsLate && e.startsWith('plan.schedule.doorsAtMs:'))));
   const throws = $derived(schedule.throws ?? []);
   const slots = $derived(throwSlots(session.draft));
+  /** A Throw's round, which the schedule keeps by its number in the plan. */
+  const roundName = (n: number) => S.round(roundAt(session.draft, n), session.draft);
   let addAfter = $state<number | null>(null);
   const addable = $derived(addAfter !== null && slots.includes(addAfter) ? addAfter : (slots[0] ?? null));
 
@@ -82,9 +85,9 @@
       <ul class="schedule__throw-list">
         {#each throws as t, i (t.afterRound)}
           <li class="schedule__throw">
-            <span>{S.schedule.throwAfter(t.afterRound)}</span>
+            <span>{S.schedule.throwAfter(roundName(t.afterRound))}</span>
             <label class="field field--inline">
-              <span class="visually-hidden">{S.schedule.throwMinutes(t.afterRound)}</span>
+              <span class="visually-hidden">{S.schedule.throwMinutes(roundName(t.afterRound))}</span>
               <input type="number" min="1" max="60" step="1" value={t.minutes} oninput={(e) => setMinutes(i, e.currentTarget.valueAsNumber)} />
               <span aria-hidden="true">min</span>
             </label>
@@ -100,7 +103,7 @@
         <label class="field">
           <span class="field__label">{S.schedule.addThrowAfter}</span>
           <select value={addable} onchange={(e) => (addAfter = Number(e.currentTarget.value))}>
-            {#each slots as n (n)}<option value={n}>{S.schedule.roundOption(n)}</option>{/each}
+            {#each slots as n (n)}<option value={n}>{roundName(n)}</option>{/each}
           </select>
         </label>
         <button type="button" class="schedule__add" onclick={addThrow}>{S.schedule.addThrow}</button>

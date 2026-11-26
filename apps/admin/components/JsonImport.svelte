@@ -3,7 +3,7 @@
      change, and only "Substituir" replaces the current plan. -->
 <script lang="ts">
   import { CA } from '../../../packages/ui/i18n/ca.ts';
-  import type { GamePlan } from '../../../packages/ui/plan.ts';
+  import { roundAt, type GamePlan } from '../../../packages/ui/plan.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import { checkPlanText, type PlanTextCheck } from '../logic/plan-check.ts';
   import { diffPlans } from '../logic/plan-diff.ts';
@@ -18,7 +18,8 @@
   let fileError = $state(false);
   let replaced = $state(false);
 
-  const diff = $derived(result?.ok ? diffPlans(session.current, result.plan) : null);
+  const imported = $derived(result?.ok ? result.plan : null);
+  const diff = $derived(imported ? diffPlans(session.current, imported) : null);
   const list = (numbers: readonly (number | string)[]) => numbers.join(', ');
 
   function check() {
@@ -99,7 +100,7 @@
                 {S.json.prizes(diff.prizes.length)}
                 <ul>
                   {#each diff.prizes as change (`${change.round}-${change.kind}`)}
-                    <li>{S.json.prizeLine(CA.round(change.round), CA.prize[change.kind], change.before, change.after)}</li>
+                    <li>{S.json.prizeLine(S.round(roundAt(imported, change.round), imported), CA.prize[change.kind], change.before, change.after)}</li>
                   {/each}
                 </ul>
               </li>

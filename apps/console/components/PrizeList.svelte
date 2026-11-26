@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
-  import { prizeRuns } from '../../../packages/ui/plan.ts';
+  import { prizeRuns, roundAt } from '../../../packages/ui/plan.ts';
   import { roundPrizes } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -22,7 +22,7 @@
 {#if result.status === 'noPlan'}
   <p class="note note--warning" data-state="no-plan">{S.prizes.noPlan}</p>
 {:else if result.status === 'noRound'}
-  <p class="note note--warning" data-state="no-round">{S.prizes.noRound(result.number)}</p>
+  <p class="note note--warning" data-state="no-round">{S.prizes.noRound(S.round(roundAt(model.plan, result.number), model.plan))}</p>
 {:else}
   {#if result.prizes.kind === 'special'}<p class="badge badge--special">{S.prizes.special}</p>{/if}
   {#if result.prizes.kind === 'desgraciat'}<p class="badge badge--special">{S.prizes.desgraciat}</p>{/if}

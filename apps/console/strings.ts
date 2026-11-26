@@ -5,6 +5,7 @@
 // every known value has its own text.
 import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
+import { roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
@@ -25,6 +26,10 @@ const ordinal = (n: number) => `${n}a`;
 
 export const S = {
   pageTitle: 'Consola · Quina Musical',
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
+  round: roundTitle,
+  /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
+  roundOf: roundTitleOf,
 
   header: {
     label: 'Estat del show',
@@ -40,7 +45,6 @@ export const S = {
     menu: 'Menú: més opcions',
     demo: (name: string) => `Demo: ${name}`,
     noRound: CA.gameTitle,
-    round: (n: number, special: boolean, desgraciat = false) => (desgraciat ? CA.desgraciatRound : special ? `${CA.round(n)} · especial` : CA.round(n)),
     stale: 'Dades antigues',
   },
 
@@ -419,7 +423,6 @@ export const S = {
 
   interval: {
     title: CA.scene.interval,
-    next: (n: number, total: number, desgraciat = false) => (desgraciat ? CA.desgraciatRound : CA.roundOf(n, total)),
     guide: 'Compte enrere orientatiu',
     over: (clock: string) => `+${clock}`,
     start: 'Comença la quina',
@@ -519,7 +522,8 @@ export const S = {
     none: 'Sense premi',
     special: CA.specialRound,
     noPlan: "Encara no hi ha pla de la nit: deseu-lo des de l'Admin.",
-    noRound: (n: number) => `El pla no té la ${CA.round(n)}.`,
+    /** With the round's name (plan.ts roundTitle). */
+    noRound: (name: string) => `El pla no té la ${name}.`,
     secret: 'Secrets: els mòbils encara no els veuen',
     reveal: 'Revelar premis',
     revealed: 'Revelats: els mòbils ja els veuen',
@@ -528,7 +532,8 @@ export const S = {
   tabs: { label: 'Ajudes', standing: 'Dempeus', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
 
   cheatSheet: {
-    prizes: (n: number, desgraciat = false) => `Premis de la ${desgraciat ? CA.desgraciatRound : CA.round(n)}`,
+    /** "Premis de la Quina 4", with the round's name (plan.ts roundTitle). */
+    prizes: (name: string) => `Premis de la ${name}`,
     specialRules: CA.specialRound,
     claimRules: 'Normes per cantar',
     keys: 'Tecles del portàtil (pla B)',
@@ -635,9 +640,8 @@ export const S = {
 
   menu: {
     title: 'Menú',
-    /** Under the title: this device and the round ("Tauleta · Quina 3 de 8"). */
-    subtitle: (label: string | null, round: number | null, total: number) =>
-      [label, round !== null && round >= 1 ? CA.roundOf(round, total) : null].filter(Boolean).join(' · '),
+    /** Under the title: this device and the round ("Tauleta · Quina 3 de 8": S.roundOf). */
+    subtitle: (label: string | null, round: string | null) => [label, round].filter(Boolean).join(' · '),
     close: 'Tanca',
     device: 'Aquest dispositiu',
     labelField: 'Nom del dispositiu',

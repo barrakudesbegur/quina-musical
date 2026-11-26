@@ -49,17 +49,24 @@ test('round on screen: none before the night, the introduced one at round start'
   const before = FIXTURES.before(NOW).state;
   assert.equal(roundOnScreen(before, flowOf(before)), null);
   const play = FIXTURES.play(NOW).state;
-  assert.deepEqual(roundOnScreen(play, flowOf(play)), { number: 3, special: false, desgraciat: false });
+  assert.deepEqual(roundOnScreen(play, flowOf(play)), { number: 3, kind: 'normal' });
   const start = { ...FIXTURES.roundStart(NOW).state, intro: { round: 7, kind: 'special' as const, sinceMs: NOW } };
-  assert.deepEqual(roundOnScreen(start, flowOf(start)), { number: 7, special: true, desgraciat: false });
+  assert.deepEqual(roundOnScreen(start, flowOf(start)), { number: 7, kind: 'special' });
+  // The header names them with no number ("Quina Especial", not "Quina 7 · especial").
+  assert.equal(S.round({ number: 7, kind: 'special' }, SAMPLE_PLAN), 'Quina Especial');
   // The Desgraciat round, at its intro and in play: the header reads "Quina Desgraciada".
   const intro = FIXTURES.desgraciatIntro(NOW).state;
-  assert.deepEqual(roundOnScreen(intro, flowOf(intro)), { number: 5, special: false, desgraciat: true });
+  assert.deepEqual(roundOnScreen(intro, flowOf(intro)), { number: 5, kind: 'desgraciat' });
   const desgraciat = FIXTURES.desgraciat(NOW).state;
   const round = roundOnScreen(desgraciat, flowOf(desgraciat));
   assert.ok(round);
-  assert.equal(S.header.round(round.number, round.special, round.desgraciat), 'Quina Desgraciada');
-  assert.equal(S.header.round(3, false), 'Quina 3');
+  assert.equal(S.round(round, SAMPLE_PLAN), 'Quina Desgraciada');
+  assert.equal(S.round({ number: 3, kind: 'normal' }, SAMPLE_PLAN), 'Quina 3');
+  // After the Desgraciat round 5, round 6 is Quina 5; without a plan, its plan number.
+  assert.equal(S.round({ number: 6, kind: 'normal' }, SAMPLE_PLAN), 'Quina 5');
+  assert.equal(S.round({ number: 6, kind: 'normal' }, null), 'Quina 6');
+  assert.equal(S.menu.subtitle('Tauleta', S.roundOf({ number: 6, kind: 'normal' }, SAMPLE_PLAN, 8)), 'Tauleta · Quina 5 de 8');
+  assert.equal(S.menu.subtitle(null, null), '');
   assert.equal(roundOnScreen(null, flowOf(null)), null);
 });
 

@@ -7,7 +7,7 @@
 // ever comes out.
 import { DEFAULT_SIDE, winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
 import type { CheckInfo, FlowFields, WinKind } from '../../packages/ui/flow.ts';
-import { prizeBundleOf, revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
+import { prizeBundleOf, revealedRounds, roundPlan, roundTitle, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
 import { catalogFace, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { comingRoundPrice, knownCardTypes, type ComingRoundPrice } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
@@ -18,7 +18,7 @@ import { cardTypeBadge, checkCells, checkTypeOk, NO_CHECK_MEMORY, shownCheck, ve
 import { nightCardTypes, type NightCardType } from './model/night.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
-import { STAGE_TEXT, joinCa } from './strings.ts';
+import { STAGE_TEXT, joinCa, nextRoundLabel } from './strings.ts';
 
 /** A Line's or a Quina's prize bundle (the Desgraciat round's: the last card standing's) as the projector shows it:
  * its headline prizes, and how many more. */
@@ -41,10 +41,13 @@ export interface SponsorView {
 }
 
 export interface RoundView {
+  /** Its number in the plan (the engine's), not the one on screen. */
   number: number;
   special: boolean;
-  /** The Desgraciat round: named "Quina Desgraciada" instead of "Quina N". */
   desgraciat: boolean;
+  /** Its name, "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle): `label`, as
+   * everywhere on the stage (`name` is a winner's, which never comes out). */
+  label: string;
 }
 
 export interface LinkView {
@@ -98,7 +101,8 @@ export interface IntervalView {
   scene: 'interval';
   /** The round about to start (named `nextRound`: `next` is the private next song everywhere else). */
   nextRound: RoundView;
-  roundsTotal: number | null;
+  /** "Següent: Quina 4 de 8" (strings.ts nextRoundLabel). */
+  plate: string;
   sinceMs: number;
   guideEndMs: number | null;
   sponsors: SponsorView[];
@@ -177,11 +181,14 @@ function prizesOf(plan: GamePlan | null, round: number, open: ReadonlySet<number
     .filter((p): p is PrizeView => p !== null);
 }
 
-function roundView(number: number | null | undefined, plan: GamePlan | null, state: ShowState | null, known: RoundKind | null = null): RoundView | null {
+/** Round `number` and its kind: the plan's, else `known` (the intro's), else the state's for its current round. */
+function roundOf(number: number | null | undefined, plan: GamePlan | null, state: ShowState | null, known: RoundKind | null = null): { number: number; kind: RoundKind } | null {
   if (!number || number < 1) return null;
-  const planned = roundPlan(plan, number);
-  const kind = planned?.kind ?? known ?? (state?.round.number === number ? state.round.kind : 'normal');
-  return { number, special: kind === 'special', desgraciat: kind === 'desgraciat' };
+  return { number, kind: roundPlan(plan, number)?.kind ?? known ?? (state?.round.number === number ? state.round.kind : 'normal') };
+}
+
+function roundView(round: { number: number; kind: RoundKind }, plan: GamePlan | null): RoundView {
+  return { number: round.number, special: round.kind === 'special', desgraciat: round.kind === 'desgraciat', label: roundTitle(round, plan) };
 }
 
 
@@ -235,7 +242,8 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const link = playerAppLink(plan?.edition, STAGE.playerApp);
   const roundNumber = state?.round.number ?? 0;
   const open = openRounds(plan, state);
-  const play = (): PlayView => ({ scene: 'play', round: roundView(roundNumber, plan, state), motion: motionView(state, notes.spin) });
+  const current = roundOf(roundNumber, plan, state);
+  const play = (): PlayView => ({ scene: 'play', round: current && roundView(current, plan), motion: motionView(state, notes.spin) });
   switch (scene) {
     case 'before': {
       // Before the Game counts as round 1's Interval (U5): round 1's card type shows its price, the others none.
@@ -249,9 +257,10 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       const intro = flow.intro;
       const number = intro?.round ?? flow.shuffle?.round ?? roundNumber;
       const s = flow.shuffle;
+      const round = roundOf(number, plan, state, intro?.round === number ? intro.kind : null);
       return {
         scene,
-        round: roundView(number, plan, state, intro?.round === number ? intro.kind : null),
+        round: round && roundView(round, plan),
         prizes: prizesOf(plan, number, open),
         shuffle: s ? { ...shuffleTimeline(s.startAtMs, s.endAtMs, STAGE.shuffle.split), key: `${s.round}@${s.startAtMs}` } : null,
         tiles: catalog ? [...catalog.songs.keys()].sort((a, b) => a - b) : [],
@@ -268,16 +277,18 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
     }
     case 'interval': {
       const i = flow.interval;
-      const next = i?.nextRound ?? roundNumber + 1;
+      const number = i?.nextRound ?? roundNumber + 1;
+      const next = roundOf(number, plan, state) ?? { number, kind: 'normal' as const };
       return {
         scene,
-        nextRound: roundView(next, plan, state) ?? { number: next, special: false, desgraciat: false },
-        roundsTotal: plan?.rounds.length || state?.game.roundsTotal || null,
+        nextRound: roundView(next, plan),
+        // The plan's round count, else the engine's (what the total counts is pending U163).
+        plate: nextRoundLabel(next, plan, plan?.rounds.length || state?.game.roundsTotal || null),
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,
         sponsors: sponsorsOf(plan),
         // What a card costs for the coming round (U5: a normal card × the regular rounds left; the especial's fixed price).
-        price: priceView(comingRoundPrice(plan, next, knownCardTypes(catalog?.cardTypes))),
+        price: priceView(comingRoundPrice(plan, number, knownCardTypes(catalog?.cardTypes))),
       };
     }
     case 'after':

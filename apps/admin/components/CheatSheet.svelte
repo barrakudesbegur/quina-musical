@@ -46,8 +46,6 @@
             <tr data-kind={round.special ? 'special' : round.desgraciat ? 'desgraciat' : 'normal'}>
               <th scope="row">
                 {round.label}
-                {#if round.special}<span class="cheat-sheet__special">{S.cheat.special}</span>{/if}
-                {#if round.desgraciat}<span class="cheat-sheet__special">{S.cheat.desgraciat}</span>{/if}
               </th>
               {#each round.prizes as prize (prize.kind)}
                 <!-- The Quina Desgraciada has no Line: its one prize, the last card standing's, spans both columns. -->
@@ -213,7 +211,6 @@
   .cheat-sheet__others {
     margin: 0;
   }
-  .cheat-sheet__special,
   .cheat-sheet__detail,
   .cheat-sheet__sponsor {
     display: block;

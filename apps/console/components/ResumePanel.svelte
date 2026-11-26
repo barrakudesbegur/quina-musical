@@ -6,7 +6,6 @@
   and the preview shows only what is already public (the round, how many songs, the last landed song).
 -->
 <script lang="ts">
-  import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { getConsole } from '../context.ts';
   import { readResume, resumeSummary } from '../../../packages/rules/resume.ts';
   import { songTitleOf } from '../logic/show-data.ts';
@@ -23,7 +22,7 @@
   const parsed = $derived(readResume(draft));
   const summary = $derived(parsed.point ? resumeSummary(parsed.point) : null);
   const title = $derived(summary ? songTitleOf(summary.lastSongId, model.show.state, model.catalog) : null);
-  const roundName = $derived(summary ? `${CA.round(summary.round)}${summary.special ? ` · ${CA.specialRound}` : ''}` : '');
+  const roundName = $derived(summary ? S.round({ number: summary.round, kind: summary.kind }, model.plan) : '');
   const allowed = $derived(model.can('resumeAt'));
 </script>
 

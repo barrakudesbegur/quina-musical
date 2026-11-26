@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3", or "Quina Desgraciada"),
+  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3", "Quina Especial", "Quina Desgraciada"),
   // and Ajustos (D87): the player's cards, sounds, last year's card and "Esborrar dades" live in its drawer.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
@@ -13,8 +13,7 @@
     {#if app.scene === 'before' || app.scene === 'after' || app.focusRound === null}
       {app.plan?.title || S.appTitle}
     {:else}
-      <span class="app-header__round" data-kind={app.focusKind}>{S.roundName(app.focusRound, app.focusKind)}</span>
-      {#if app.focusKind === 'special'}<span class="app-header__badge">{S.specialRound}</span>{/if}
+      <span class="app-header__round" data-kind={app.focusKind}>{S.roundName({ number: app.focusRound, kind: app.focusKind }, app.plan)}</span>
     {/if}
   </h1>
   <button type="button" class="icon-button app-header__menu" data-testid="open-settings" aria-label={S.settings} aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })}>

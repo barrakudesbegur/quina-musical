@@ -7,7 +7,7 @@
   import { getConsole } from '../context.ts';
   import { guideCountdown } from '../logic/countdown.ts';
   import { roundIntroArgs } from '../logic/show-data.ts';
-  import { roundPlan } from '../../../packages/ui/plan.ts';
+  import { roundAt } from '../../../packages/ui/plan.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
@@ -16,6 +16,7 @@
   const model = getConsole();
   const uid = $props.id();
   const interval = $derived(model.show.flow.interval);
+  // The engine's round count (what the total counts is pending U163).
   const total = $derived(model.show.state?.game.roundsTotal ?? 0);
   const guide = $derived(guideCountdown(interval, model.show.now));
   const isDefault = $derived(model.defaultAction?.control === 'roundIntro');
@@ -29,7 +30,7 @@
 {#if interval}
   <section class="panel interval-panel" aria-labelledby="{uid}-title">
     <h2 class="panel__title" id="{uid}-title">{S.interval.title}</h2>
-    <p class="interval-panel__next">{S.interval.next(interval.nextRound, total, roundPlan(model.plan, interval.nextRound)?.kind === 'desgraciat')}</p>
+    <p class="interval-panel__next">{S.roundOf(roundAt(model.plan, interval.nextRound), model.plan, total)}</p>
 
     {#if guide}
       <p class="interval-panel__guide" data-state={guide.done ? 'over' : 'running'}>

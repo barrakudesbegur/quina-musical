@@ -7,7 +7,7 @@ import { defaultCardType, STANDING_LIST_MAX, type ShowState } from '@quina/proto
 import { FIXTURES, DESGRACIAT_STANDING_23, DESGRACIAT_STANDING_26 } from '../../../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { flowOf, type AnyCommandName, type FlowState } from '../../../../../packages/ui/flow.ts';
-import { roundIntroFields } from '../../../../../packages/ui/plan.ts';
+import { roundAt, roundIntroFields } from '../../../../../packages/ui/plan.ts';
 import { resumeCommand } from '../../../../../packages/rules/resume.ts';
 import { defaultAction, sendDefault, type DefaultActionInput } from '../../../../console/logic/default-action.ts';
 import { canSend, controlsModel } from '../../../../console/logic/scene.ts';
@@ -171,8 +171,10 @@ test('Futur in the Desgraciat round: the songs until one card stands, and the co
 
 test('the round named, its intro and resume sending its kind, its one prize', () => {
   assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat'), side: 1 });
-  assert.equal(S.interval.next(5, 8, true), 'Quina Desgraciada');
-  assert.equal(S.interval.next(4, 8), 'Quina 4 de 8');
+  // SAMPLE_PLAN: the Desgraciat round is round 5 (no number, no total), so round 6 is Quina 5; the total stays (U163).
+  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN, 8), 'Quina Desgraciada');
+  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN, 8), 'Quina 4 de 8');
+  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 6), SAMPLE_PLAN, 8), 'Quina 5 de 8');
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');
   const prizes = roundPrizes(SAMPLE_PLAN, 5);
   assert.ok(prizes.status === 'ok');
@@ -181,8 +183,9 @@ test('the round named, its intro and resume sending its kind, its one prize', ()
   assert.ok(normal.status === 'ok');
   assert.deepEqual(normal.prizes.bundles.map((b) => b.kind), ['line', 'bingo']);
   assert.equal(S.prizes.ribbon.standing, 'Dempeus');
-  assert.equal(S.cheatSheet.prizes(5, true), 'Premis de la Quina Desgraciada');
-  assert.equal(S.cheatSheet.prizes(4), 'Premis de la Quina 4');
+  assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN)), 'Premis de la Quina Desgraciada');
+  assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN)), 'Premis de la Quina 4');
+  assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 8), SAMPLE_PLAN)), 'Premis de la Quina 6', 'after both special rounds');
 });
 
 test('no shared win (D180): the last card standing is the default; with none left (no cards in play) nothing is claimed', () => {

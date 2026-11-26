@@ -2,7 +2,7 @@
 // the Svelte components stay thin and the rules are tested in node.
 import { cardFace, type Catalog, type CatalogCard } from '../../../packages/ui/data/catalog.ts';
 import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
-import { checkGamePlan, publicPlan, roundCardType, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+import { checkGamePlan, publicPlan, roundCardType, roundTitle, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { standOf, type CardStand } from './desgraciat.ts';
 import { nearSongs } from './near-win.ts';
@@ -28,6 +28,12 @@ export function roundKindOf(number: number | null, state: PublicState | null, pl
   if (number === null) return 'normal';
   if (state?.intro?.round === number) return state.intro.kind;
   return state?.rounds.find((r) => r.number === number)?.kind ?? plan?.rounds.find((r) => r.number === number)?.kind ?? 'normal';
+}
+
+/** A round the phone knows by its number only, by name ("Quina 4", "Quina Especial"…: plan.ts roundTitle), its kind
+ * from roundKindOf. */
+export function roundNameOf(number: number, state: PublicState | null, plan: { rounds: readonly { number: number; kind: RoundKind }[] } | null): string {
+  return roundTitle({ number, kind: roundKindOf(number, state, plan) }, plan);
 }
 
 /** The round's counted landings' song ids, in landing order. */

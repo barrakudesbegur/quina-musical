@@ -2,7 +2,7 @@
 // (`state.resume`, PRIVATE to tablets), for example "Q3N-4K7XM2P-17-S41-L12". The console keeps the latest
 // one on this device, so a replacement laptop can be resumed from the tablet even with the old laptop and
 // the cloud gone. Presenters can also type a code noted on paper. Pure: storage and sending live in the model.
-import { formatResumeToken, parseResumeToken, type CommandFields, type ResumePoint, type ResumeToken } from '@quina/protocol';
+import { formatResumeToken, parseResumeToken, type CommandFields, type ResumePoint, type ResumeToken, type RoundKind } from '@quina/protocol';
 
 export interface ResumeDraft {
   point: ResumePoint | null;
@@ -44,7 +44,8 @@ export function nextSavedCode(saved: string | null, live: ResumeToken | null | u
 /** What the preview shows, in counting terms (songs are numbered from 1 on screen). */
 export interface ResumeSummary {
   round: number;
-  special: boolean;
+  /** Its kind, which names it (ui/plan.ts roundTitle). */
+  kind: RoundKind;
   /** How many songs had counted (0 before the first). */
   counted: number;
   lastSongId: number | null;
@@ -55,7 +56,7 @@ export interface ResumeSummary {
 export function resumeSummary(point: ResumePoint): ResumeSummary {
   return {
     round: point.round,
-    special: point.kind === 'special',
+    kind: point.kind,
     counted: point.position + 1,
     lastSongId: point.lastSongId,
     lineFromSong: point.lineConfirmedFrom === null ? null : point.lineConfirmedFrom + 1,

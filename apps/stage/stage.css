@@ -344,17 +344,6 @@
   display: none;
 }
 
-.round-title__special {
-  display: inline-block;
-  margin-inline-start: var(--space-4);
-  padding: 0 var(--space-4);
-  border-radius: var(--radius-pill);
-  background: var(--color-calm);
-  color: var(--color-text-on-paper);
-  font-size: var(--stage-text-sm);
-  vertical-align: middle;
-}
-
 .prize {
   display: grid;
   gap: var(--space-2);
@@ -1089,10 +1078,6 @@
   font-size: var(--stage-text-sm);
   color: var(--color-accent);
   text-align: start;
-}
-
-.play__round .round-title__special {
-  font-size: var(--text-2xl);
 }
 
 .play__band {

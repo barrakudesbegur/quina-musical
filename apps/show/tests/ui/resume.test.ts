@@ -51,7 +51,7 @@ test('the device keeps the latest code, and a snapshot without one changes nothi
 
 test('the preview counts songs from 1', () => {
   const point = readResume(token.text).point!;
-  assert.deepEqual(resumeSummary(point), { round: 3, special: false, counted: 18, lastSongId: 41, lineFromSong: 13 });
+  assert.deepEqual(resumeSummary(point), { round: 3, kind: 'normal', counted: 18, lastSongId: 41, lineFromSong: 13 });
   const fresh = readResume('Q1E-0000000--1').point!;
-  assert.deepEqual(resumeSummary(fresh), { round: 1, special: true, counted: 0, lastSongId: null, lineFromSong: null });
+  assert.deepEqual(resumeSummary(fresh), { round: 1, kind: 'special', counted: 0, lastSongId: null, lineFromSong: null });
 });

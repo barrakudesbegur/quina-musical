@@ -2,7 +2,7 @@
 // problem with its path, never throws; and the screens' bundle helpers (headline prizes first).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bundleSummary, checkGamePlan, prizeRuns, roundPlan, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
+import { bundleSummary, checkGamePlan, prizeRuns, publicPlan, roundAt, roundPlan, roundTitle, roundTitleOf, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
 
 const prize = (title: string, headline: boolean, sponsorId: string | null = null) => ({ title, detail: null, sponsorId, image: null, headline });
@@ -142,4 +142,42 @@ test('only one special round', () => {
   p.rounds[0].kind = 'special';
   const r = checkGamePlan(p);
   assert.equal(r.ok, false);
+});
+
+test('a round is named by its Quina number; the special rounds have none and do not count (2025\'s order)', () => {
+  const n = (number: number) => ({ number, kind: 'normal' as const });
+  const order2025 = { rounds: [n(1), n(2), n(3), { number: 4, kind: 'desgraciat' as const }, n(5), n(6), { number: 7, kind: 'special' as const }, n(8)] };
+  assert.deepEqual(order2025.rounds.map((r) => roundTitle(r, order2025)), [
+    'Quina 1', 'Quina 2', 'Quina 3', 'Quina Desgraciada', 'Quina 4', 'Quina 5', 'Quina Especial', 'Quina 6',
+  ]);
+});
+
+test('the sample plan: the Desgraciat round 5 and the Especial round 7 have no number; round 8 is Quina 6', () => {
+  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => roundTitle(r, SAMPLE_PLAN)), [
+    'Quina 1', 'Quina 2', 'Quina 3', 'Quina 4', 'Quina Desgraciada', 'Quina 5', 'Quina Especial', 'Quina 6',
+  ]);
+  // The public plan names them the same way (the phones').
+  const shown = publicPlan(SAMPLE_PLAN, []);
+  assert.equal(roundTitle(shown.rounds[5], shown), 'Quina 5');
+  // The total after a normal round's number stays the night's count (pending U163); a special round has neither.
+  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, 8), 'Quina 5 de 8');
+  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[6], SAMPLE_PLAN, 8), 'Quina Especial');
+  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[4], SAMPLE_PLAN, 8), 'Quina Desgraciada');
+  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, null), 'Quina 5', 'no total');
+  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, 0), 'Quina 5', 'an engine that counts none');
+});
+
+test('a round known by its number only takes its kind from the plan', () => {
+  assert.deepEqual(roundAt(SAMPLE_PLAN, 7), { number: 7, kind: 'special' });
+  assert.equal(roundTitle(roundAt(SAMPLE_PLAN, 8), SAMPLE_PLAN), 'Quina 6');
+  assert.deepEqual(roundAt(SAMPLE_PLAN, 12), { number: 12, kind: 'normal' }, 'a round the plan lacks: normal');
+  assert.deepEqual(roundAt(null, 5, 'desgraciat'), { number: 5, kind: 'desgraciat' }, 'unless the screen knows its kind');
+});
+
+test('without the plan, or with one that lacks the round, a normal round keeps its plan number; the specials keep their names', () => {
+  assert.equal(roundTitle({ number: 6, kind: 'normal' }, null), 'Quina 6');
+  assert.equal(roundTitle({ number: 12, kind: 'normal' }, SAMPLE_PLAN), 'Quina 12', 'an old snapshot past the plan');
+  assert.equal(roundTitle({ number: 7, kind: 'special' }, null), 'Quina Especial');
+  assert.equal(roundTitle({ number: 5, kind: 'desgraciat' }, null), 'Quina Desgraciada');
+  assert.equal(roundTitleOf({ number: 6, kind: 'normal' }, null, 8), 'Quina 6 de 8');
 });

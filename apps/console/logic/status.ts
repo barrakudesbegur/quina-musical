@@ -1,6 +1,6 @@
 // What the always-visible header shows: the connections, the console-wide alert, the round on screen, the
 // Heat and the Drift. Pure: everything comes in as arguments.
-import type { ShowState, ShowStatus } from '@quina/protocol';
+import type { RoundKind, ShowState, ShowStatus } from '@quina/protocol';
 import { formatDrift } from '../../../packages/rules/time.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
 import type { WiiStatus } from '../wii/controller.svelte.ts';
@@ -86,11 +86,10 @@ export function heatPercent(heat: number | null | undefined): number | null {
   return Math.round(Math.min(1, Math.max(0, heat)) * 100);
 }
 
+/** A round the header names (S.header.round): its number in the plan and its kind. */
 export interface RoundOnScreen {
   number: number;
-  special: boolean;
-  /** The Desgraciat round: named "Quina Desgraciada". */
-  desgraciat: boolean;
+  kind: RoundKind;
 }
 
 /**
@@ -101,8 +100,8 @@ export interface RoundOnScreen {
 export function roundOnScreen(state: ShowState | null, flow: FlowFields): RoundOnScreen | null {
   if (!state) return null;
   const intro = flow.intro;
-  if (flow.scene === 'roundStart' && intro) return { number: intro.round, special: intro.kind === 'special', desgraciat: intro.kind === 'desgraciat' };
-  const of = (number: number) => ({ number, special: state.round.kind === 'special', desgraciat: state.round.kind === 'desgraciat' });
+  if (flow.scene === 'roundStart' && intro) return { number: intro.round, kind: intro.kind };
+  const of = (number: number) => ({ number, kind: state.round.kind });
   if (flow.scene === 'roundStart' && flow.shuffle) return of(flow.shuffle.round);
   if (flow.scene === 'before' || state.round.number < 1) return null;
   return of(state.round.number);

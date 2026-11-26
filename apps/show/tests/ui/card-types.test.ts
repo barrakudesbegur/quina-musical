@@ -104,10 +104,11 @@ test('which rounds each type plays, from the rounds (a round without a type play
     { number: 5, kind: 'normal' as const, cardType: 'especial' },
     { number: 6, kind: 'desgraciat' as const, cardType: 'normal' },
   ];
+  // By Quina number: round 5 comes after the special round 4, so it is Quina 4.
   assert.deepEqual(roundsByCardType(rounds), [
     { type: 'normal', regularRounds: [1, 2], special: false, desgraciat: true },
     { type: 'desgraciat', regularRounds: [3], special: false, desgraciat: false },
-    { type: 'especial', regularRounds: [5], special: true, desgraciat: false },
+    { type: 'especial', regularRounds: [4], special: true, desgraciat: false },
   ]);
   // A Desgraciat round without a type plays its kind's default (the special cards since D70).
   assert.deepEqual(roundsByCardType([{ number: 1, kind: 'desgraciat' }]), [{ type: defaultCardType('desgraciat'), regularRounds: [], special: false, desgraciat: true }]);

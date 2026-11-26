@@ -1,6 +1,7 @@
 // The projector's words, in Catalan. Shared terms (Quina N, Línia, QUINA!, the check results…) come from
 // ui/i18n/ca.ts; this file holds what only the projector says. Pure, so the formatting is tested.
 import { CA } from '../../packages/ui/i18n/ca.ts';
+import { roundTitleOf, type GamePlan, type RoundPlan } from '../../packages/ui/plan.ts';
 import type { CheckVerdict } from './model/check.ts';
 
 /** Kept on one line (no-break spaces) when the plaque's second line wraps. */
@@ -33,17 +34,10 @@ export function priceLabel(cents: number | null): string | null {
   return rest ? `${whole},${String(rest).padStart(2, '0')} €` : `${whole} €`;
 }
 
-/** A round as the stage names it: "Quina 4", or "Quina Desgraciada" (no number: there's only one). */
-export function roundName(round: { number: number; desgraciat?: boolean }): string {
-  return round.desgraciat ? CA.desgraciatRound : CA.round(round.number);
-}
-
-/** The Interval's plate: "Següent: Quina 4 de 8", "Següent: Quina 4" without a total, "Següent: Quina Especial",
- * "Següent: Quina Desgraciada". */
-export function nextRoundLabel(round: { number: number; special: boolean; desgraciat?: boolean }, total: number | null): string {
-  if (round.special) return `Següent: ${STAGE_TEXT.specialRoundName}`;
-  if (round.desgraciat) return `Següent: ${CA.desgraciatRound}`;
-  return `Següent: ${total ? CA.roundOf(round.number, total) : CA.round(round.number)}`;
+/** The Interval's plate: "Següent: Quina 4 de 8" by its Quina number, "Següent: Quina 4" without a total, "Següent:
+ * Quina Especial", "Següent: Quina Desgraciada" (plan.ts roundTitleOf; what the total counts is pending U163). */
+export function nextRoundLabel(round: Pick<RoundPlan, 'number' | 'kind'>, plan: Pick<GamePlan, 'rounds'> | null, total: number | null): string {
+  return CA.nextRound(roundTitleOf(round, plan, total));
 }
 
 /** What a rough countdown says. `start`: before the Game; `back`: the Interval. */
@@ -51,8 +45,6 @@ export type CountdownContext = 'start' | 'back';
 
 export const STAGE_TEXT = {
   title: CA.gameTitle,
-  round: CA.round,
-  specialRound: CA.specialRound,
   specialRule: 'Només compten els cartrons especials',
   shout: CA.shout,
   prize: CA.prize,
@@ -73,10 +65,10 @@ export const STAGE_TEXT = {
   scanYourCard: CA.scanYourCard,
   thanks: CA.thanks,
   shuffling: 'Barrejant…',
-  /** Before the Game: the night's preview. A regular round's ball reads its number after "Quina". */
+  /** Before the Game: the night's preview. A regular round's ball reads its Quina number after "Quina". */
   roundsWord: 'Quina',
   roundsLabel: (numbers: readonly number[]) => (numbers.length === 1 ? CA.round(numbers[0]) : `Quines ${joinCa(numbers)}`),
-  specialRoundName: 'Quina Especial',
+  specialRoundName: CA.specialRound,
   desgraciatRoundName: CA.desgraciatRound,
   priceOf: (name: string, price: string | null) => (price ? `${name}: ${price}` : name),
   /** The Interval's price tag (U5): what a card costs for the coming round. */

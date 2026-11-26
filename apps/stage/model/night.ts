@@ -14,7 +14,7 @@ export interface NightCardType {
   /** Its pastel colour, "#rrggbb". */
   color: string;
   priceCents: number | null;
-  /** The regular rounds it plays, by their number ("Quina 1"…), in play order. */
+  /** The regular rounds it plays, by their Quina number ("Quina 1"…: the specials don't count), in play order. */
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;

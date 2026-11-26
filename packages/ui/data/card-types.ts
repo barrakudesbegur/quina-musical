@@ -115,7 +115,8 @@ export function typeSideLabel(type: string, side: number, types: readonly Printe
 /** Where a card type plays tonight. */
 export interface CardTypeRounds {
   type: string;
-  /** The regular rounds it plays, by number, in play order (not the Quina Especial or the Quina Desgraciada). */
+  /** The regular rounds it plays, by their Quina number ("Quina 4": plan.ts quinaNumber), in play order (not the Quina
+   * Especial or the Quina Desgraciada, which have none). */
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;
@@ -126,12 +127,14 @@ export interface CardTypeRounds {
 /** Each type the rounds play (in the order a round first plays it), with the rounds it plays. */
 export function roundsByCardType(rounds: readonly { number: number; kind: RoundKind; cardType?: string }[]): CardTypeRounds[] {
   const out = new Map<string, CardTypeRounds>();
+  // In play order, each normal round's Quina number is the count of normal rounds so far (plan.ts quinaNumber).
+  let quina = 0;
   for (const r of [...rounds].sort((a, b) => a.number - b.number)) {
     const type = roundCardType(r);
     const entry = out.get(type) ?? { type, regularRounds: [], special: false, desgraciat: false };
     if (r.kind === 'special') entry.special = true;
     else if (r.kind === 'desgraciat') entry.desgraciat = true;
-    else entry.regularRounds.push(r.number);
+    else entry.regularRounds.push(++quina);
     out.set(type, entry);
   }
   return [...out.values()];

@@ -5,7 +5,8 @@
 <script lang="ts">
   import { getConsole } from '../context.ts';
   import { shuffleCountdown } from '../logic/countdown.ts';
-  import { CA, S } from '../strings.ts';
+  import { roundAt } from '../../../packages/ui/plan.ts';
+  import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
   import WiiBadge from './WiiBadge.svelte';
@@ -14,12 +15,14 @@
   const uid = $props.id();
   const flow = $derived(model.show.flow);
   const round = $derived(flow.intro?.round ?? flow.shuffle?.round ?? model.show.state?.round.number ?? 1);
+  // The intro's kind when the plan lacks the round.
+  const name = $derived(S.round(roundAt(model.plan, round, flow.intro?.round === round ? flow.intro.kind : undefined), model.plan));
   const shuffling = $derived(shuffleCountdown(flow.shuffle, model.show.now));
   const isDefault = $derived(model.defaultAction?.control === 'shuffle');
 </script>
 
 <section class="panel round-start" data-state={model.scene.introduced ? 'introduced' : shuffling ? 'shuffling' : 'shuffled'} aria-labelledby="{uid}-title">
-  <h2 class="panel__title" id="{uid}-title">{CA.round(round)}</h2>
+  <h2 class="panel__title" id="{uid}-title">{name}</h2>
   <h3 class="panel__subtitle">{S.roundStart.announce}</h3>
   <PrizeList {round} />
 

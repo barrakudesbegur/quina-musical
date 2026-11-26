@@ -43,7 +43,8 @@
   const flow = $derived(model.show.flow);
   const links = $derived(linksOf(model.show.connected, model.show.showOnline, wii.linkStatus));
   const THEMES: readonly Theme[] = ['light', 'dark'];
-  const subtitle = $derived(S.menu.subtitle(model.label, snap ? snap.round.number : null, snap?.game.roundsTotal ?? 0));
+  // The engine's round count (what the total counts is pending U163).
+  const subtitle = $derived(S.menu.subtitle(model.label, snap && snap.round.number >= 1 ? S.roundOf(snap.round, model.plan, snap.game.roundsTotal) : null));
   const startable = $derived(flow.scene === 'before' && model.can('roundIntro'));
 
   $effect(() => {

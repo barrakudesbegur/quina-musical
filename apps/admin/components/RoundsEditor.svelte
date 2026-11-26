@@ -7,7 +7,6 @@
      the one in play (or being introduced) are fixed; the upcoming ones can be moved and edited live. -->
 <script lang="ts">
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
-  import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { flowOf } from '../../../packages/ui/flow.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
@@ -16,7 +15,7 @@
   import {
     addRound,
     cardTypeChoices,
-    desgraciatTakenBy,
+    desgraciatTaken,
     isUnknownCardType,
     lockedRoundCount,
     movedLinePrizes,
@@ -85,12 +84,13 @@
       {@const fixed = i < locked}
       {@const cardType = roundCardType(round)}
       {@const side = roundSide(round)}
-      {@const taken = desgraciatTakenBy(session.draft.rounds, i)}
+      {@const taken = desgraciatTaken(session.draft.rounds, i)}
+      {@const name = S.round(round, session.draft)}
       <li class="rounds__item" data-kind={round.kind} data-state={fixed ? (round.number === locked ? 'current' : 'played') : 'upcoming'}>
         <fieldset class="round">
           <legend class="round__name">
-            {CA.round(round.number)}{round.kind === 'special' ? ` · ${CA.specialRound}` : round.kind === 'desgraciat' ? ` · ${CA.desgraciatRound}` : ''}
-            {#if fixed}<span class="round__badge" title={S.rounds.fixedLabel(round.number)}>{round.number === locked ? S.rounds.inPlay : S.rounds.played}</span>{/if}
+            {name}
+            {#if fixed}<span class="round__badge" title={S.rounds.fixedLabel(name)}>{round.number === locked ? S.rounds.inPlay : S.rounds.played}</span>{/if}
           </legend>
           <div class="round__head">
             <label class="field">
@@ -99,7 +99,7 @@
                 <option value="normal">{S.rounds.normal}</option>
                 <option value="special">{S.rounds.special}</option>
                 <!-- One per night: offered while no other round is the Desgraciat one (checkGamePlan refuses a second). -->
-                <option value="desgraciat" disabled={taken !== null && round.kind !== 'desgraciat'}>{taken !== null && round.kind !== 'desgraciat' ? S.rounds.desgraciatTaken(taken) : S.rounds.desgraciat}</option>
+                <option value="desgraciat" disabled={taken && round.kind !== 'desgraciat'}>{taken && round.kind !== 'desgraciat' ? S.rounds.desgraciatTaken : S.rounds.desgraciat}</option>
               </select>
             </label>
             <label class="field">
@@ -115,16 +115,16 @@
               </select>
             </label>
             <div class="round__tools">
-              <button type="button" onclick={() => move(i, i - 1)} disabled={fixed || i <= locked} aria-label={S.rounds.upLabel(round.number)}>↑ {S.rounds.up}</button>
-              <button type="button" onclick={() => move(i, i + 1)} disabled={fixed || i === planTotal - 1} aria-label={S.rounds.downLabel(round.number)}>↓ {S.rounds.down}</button>
-              <button type="button" class={confirming === i ? 'tone-danger' : ''} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(round.number)} disabled={fixed || planTotal === 1}>
+              <button type="button" onclick={() => move(i, i - 1)} disabled={fixed || i <= locked} aria-label={S.rounds.upLabel(name)}>↑ {S.rounds.up}</button>
+              <button type="button" onclick={() => move(i, i + 1)} disabled={fixed || i === planTotal - 1} aria-label={S.rounds.downLabel(name)}>↓ {S.rounds.down}</button>
+              <button type="button" class={confirming === i ? 'tone-danger' : ''} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(name)} disabled={fixed || planTotal === 1}>
                 {confirming === i ? S.rounds.confirmRemove : S.rounds.remove}
               </button>
             </div>
           </div>
           {#if round.kind === 'desgraciat'}
             <p class="panel__help">{S.rounds.desgraciatHelp}</p>
-            {#if taken !== null}<p class="notice notice--warn" role="alert" data-testid="round-desgraciat-twice">{S.rounds.oneDesgraciat(taken)}</p>{/if}
+            {#if taken}<p class="notice notice--warn" role="alert" data-testid="round-desgraciat-twice">{S.rounds.oneDesgraciat}</p>{/if}
             {#if moved[i]}<p class="notice" role="status" data-testid="round-lines-moved">{S.rounds.linesMoved(moved[i])}</p>{/if}
           {/if}
           {#if isUnknownCardType(cardType, printed)}

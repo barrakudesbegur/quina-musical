@@ -2,7 +2,7 @@
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
 import type { ShowStatus, WinKind } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import type { CheatSheet, PrizeReveal } from '../../packages/ui/plan.ts';
+import { roundTitle, roundTitleOf, type CheatSheet, type PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
 
@@ -14,6 +14,10 @@ const joinCa = (items: readonly (string | number)[]): string =>
 export const S = {
   pageTitle: 'Admin · Quina Musical',
   heading: 'Admin',
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
+  round: roundTitle,
+  /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
+  roundOf: roundTitleOf,
 
   nav: {
     label: 'Seccions',
@@ -71,10 +75,10 @@ export const S = {
     cardColor: 'Color',
     cardPrice: 'Preu (€)',
     cardPriceHelp: 'Buit: sense preu.',
-    /** Where a type plays tonight: its regular rounds by number, and the special round. */
+    /** Where a type plays tonight: its regular rounds by Quina number (roundsByCardType), and the special rounds. */
     cardRounds: (regular: readonly number[], special: boolean, desgraciat = false) => {
       const parts = [
-        ...(regular.length ? [regular.length === 1 ? `la Quina ${regular[0]}` : `les quines ${joinCa(regular)}`] : []),
+        ...(regular.length ? [regular.length === 1 ? `la ${CA.round(regular[0])}` : `les quines ${joinCa(regular)}`] : []),
         ...(special ? ['la quina especial'] : []),
         ...(desgraciat ? ['la quina desgraciada'] : []),
       ];
@@ -117,14 +121,16 @@ export const S = {
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
-    fixedLabel: (n: number) => `La Quina ${n} ja ha començat: no es pot moure ni treure`,
+    /** With the round's name (S.round), as the labels below. */
+    fixedLabel: (name: string) => `La ${name} ja ha començat: no es pot moure ni treure`,
     kind: 'Tipus',
     normal: 'Normal',
     special: 'Especial',
     desgraciat: 'Desgraciada',
-    /** The option's name when another round already is the Desgraciat one (it is disabled). */
-    desgraciatTaken: (n: number) => `Desgraciada (ja ho és la Quina ${n})`,
-    oneDesgraciat: (n: number) => `Només hi pot haver una Quina Desgraciada per nit, i ja ho és la Quina ${n}. Canvia'n una a normal.`,
+    /** The option's name when another round already is the Desgraciat one (it is disabled). It has no number to name
+     * it by (S.round), and its row says "Quina Desgraciada". */
+    desgraciatTaken: "Desgraciada (ja n'hi ha una)",
+    oneDesgraciat: "Només hi pot haver una Quina Desgraciada per nit. Canvia'n una a normal.",
     desgraciatHelp: "Tothom dempeus: un cartró s'asseu quan sona qualsevol de les seves cançons, i guanya l'últim que queda dempeus. No té línia.",
     linesMoved: (n: number) =>
       n === 1 ? "La Quina Desgraciada no té línia: el seu premi de línia ara és un premi de l'últim dempeus." : `La Quina Desgraciada no té línia: els seus ${n} premis de línia ara són premis de l'últim dempeus.`,
@@ -140,10 +146,10 @@ export const S = {
       `El tipus «${id}» no és a card-types.json dels cartrons impresos: cap cartró no comptaria en aquesta quina. Tria'n un de la llista, o genera abans els cartrons d'aquest tipus.`,
     up: 'Pujar',
     down: 'Baixar',
-    upLabel: (n: number) => `Pujar la Quina ${n}`,
-    downLabel: (n: number) => `Baixar la Quina ${n}`,
+    upLabel: (name: string) => `Pujar la ${name}`,
+    downLabel: (name: string) => `Baixar la ${name}`,
     remove: 'Treure',
-    removeLabel: (n: number) => `Treure la Quina ${n}`,
+    removeLabel: (name: string) => `Treure la ${name}`,
     confirmRemove: 'Segur? Treure',
     add: 'Afegir una quina',
     engineTotal: (engine: number, plan: number) => `El show compta ${engine} quines i el pla en té ${plan}.`,
@@ -269,10 +275,10 @@ export const S = {
     throws: 'Llançaments',
     throwsHelp: "Cada llançament allarga el descans de després d'aquella quina.",
     noThrows: 'Cap llançament planificat entre quines.',
-    throwAfter: (n: number) => `Després de la Quina ${n}`,
-    throwMinutes: (n: number) => `Minuts del llançament després de la Quina ${n}`,
+    /** With the round's name (S.round). */
+    throwAfter: (name: string) => `Després de la ${name}`,
+    throwMinutes: (name: string) => `Minuts del llançament després de la ${name}`,
     addThrowAfter: 'Afegir un llançament després de',
-    roundOption: (n: number) => `Quina ${n}`,
     addThrow: 'Afegir llançament',
     removeThrow: 'Treure',
   },
@@ -425,8 +431,6 @@ export const S = {
     prizes: 'Premis',
     otherSponsors: 'Altres patrocinadors: agraïu-los també',
     noPrize: 'Sense premi',
-    special: 'Especial',
-    desgraciat: 'Desgraciada',
     claimRules: 'Normes per cantar',
     specialRules: 'Quina especial',
     keys: 'Tecles del portàtil (pla B)',

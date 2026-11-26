@@ -2,7 +2,8 @@
 <script lang="ts">
   import { formatClock } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
-  import { CA, S } from '../strings.ts';
+  import { roundAt } from '../../../packages/ui/plan.ts';
+  import { S } from '../strings.ts';
   import PrizeList from './PrizeList.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
 
@@ -15,7 +16,7 @@
   <h2 class="panel__title" id="{uid}-title">{S.before.title}</h2>
   {#if startAt}<p>{S.before.startAt(formatClock(startAt))}</p>{/if}
   <p class="note">{S.before.howToStart}</p>
-  <h3 class="panel__subtitle">{CA.round(1)}</h3>
+  <h3 class="panel__subtitle">{S.round(roundAt(model.plan, 1), model.plan)}</h3>
   <PrizeList round={1} />
   <SetupChecklist />
 </section>

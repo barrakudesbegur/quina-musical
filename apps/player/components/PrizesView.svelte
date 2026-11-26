@@ -23,8 +23,7 @@
       <li class="prize-round" data-state={round.state} data-kind={round.kind} data-open={!round.lockedUntil || round.lines.some((l) => l.won)}>
         <h3 class="prize-round__title">
           <RoundMark kind={round.kind} />
-          {S.roundName(round.number, round.kind)}
-          {#if round.kind === 'special'}<span class="prize-round__badge">{S.specialRound}</span>{/if}
+          {S.roundName(round, app.plan)}
           {#if S.roundState[round.state]}<span class="prize-round__state">{S.roundState[round.state]}</span>{/if}
         </h3>
         <PrizeLines {round} mine={app.data.cards} />

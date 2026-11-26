@@ -7,7 +7,7 @@ import { formatClock } from '../../../packages/rules/time.ts';
 import { STAGE } from '../config.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
-import { nextRoundLabel, priceLabel, STAGE_TEXT } from '../strings.ts';
+import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorList, stickerImage } from './parts.ts';
@@ -108,7 +108,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
 
   render(body: IntervalView): void {
     this.body = body;
-    setText(this.plate, nextRoundLabel(body.nextRound, body.roundsTotal));
+    setText(this.plate, body.plate);
     setData(this.plate, 'special', body.nextRound.special ? 'true' : null);
     setHidden(this.priceTag, body.price === null);
     if (body.price) {

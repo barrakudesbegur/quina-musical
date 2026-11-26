@@ -81,10 +81,10 @@ export function withLineMoved(round: RoundPlan): RoundPlan {
   return { ...round, bingo: sortBundle([...round.bingo, ...round.line]), line: [] };
 }
 
-/** The number of the round, other than the one at `index`, that already is the night's Desgraciat round, or null:
- * there can be only one (checkGamePlan refuses a second). */
-export function desgraciatTakenBy(rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[], index: number): number | null {
-  return rounds.find((r, i) => i !== index && r.kind === 'desgraciat')?.number ?? null;
+/** Whether a round other than the one at `index` already is the night's Desgraciat round: there can be only one
+ * (checkGamePlan refuses a second). */
+export function desgraciatTaken(rounds: readonly Pick<RoundPlan, 'kind'>[], index: number): boolean {
+  return rounds.some((r, i) => i !== index && r.kind === 'desgraciat');
 }
 
 /** The card types a round's picker offers: card-types.json's, plus the round's own when the list lacks it (so the

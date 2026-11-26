@@ -15,10 +15,10 @@ const TYPES: PrintedCardType[] = [
   { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: 100 },
 ];
 
-test('each card type lists the regular rounds it plays, and whether it plays the Quina Especial', () => {
+test('each card type lists the regular rounds it plays by Quina number (round 5, after the Especial, is Quina 4), and whether it plays the Quina Especial', () => {
   const rounds = [round(1, 'normal', 'normal'), round(2, 'normal', 'normal'), round(3, 'normal', 'normal'), round(4, 'special', 'especial'), round(5, 'normal', 'normal')];
   assert.deepEqual(nightCardTypes({ rounds }, TYPES), [
-    { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: 200, regularRounds: [1, 2, 3, 5], special: false, desgraciat: false },
+    { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: 200, regularRounds: [1, 2, 3, 4], special: false, desgraciat: false },
     { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: 300, regularRounds: [], special: true, desgraciat: false },
   ]);
 });
@@ -27,12 +27,12 @@ test('the Quina Desgraciada is its own entry (its sad-face pill), not one of the
   const night = (desgraciatType: string) =>
     nightCardTypes({ rounds: [round(1, 'normal'), round(2, 'desgraciat', desgraciatType), round(3, 'normal'), round(4, 'special')] }, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]);
   assert.deepEqual(night('normal'), [
-    ['normal', [1, 3], false, true],
+    ['normal', [1, 2], false, true],
     ['especial', [], true, false],
   ]);
   // D70: the special card plays both the Especial and the Desgraciat (as in 2025), so its band gets both pills.
   assert.deepEqual(night('especial'), [
-    ['normal', [1, 3], false, false],
+    ['normal', [1, 2], false, false],
     ['especial', [], true, true],
   ]);
   // The sample plan: round 5 is the Desgraciat round (its kind's default type), round 7 the Especial.
@@ -40,7 +40,7 @@ test('the Quina Desgraciada is its own entry (its sad-face pill), not one of the
   assert.deepEqual(
     nightCardTypes(SAMPLE_PLAN, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]),
     [
-      ['normal', [1, 2, 3, 4, 6, 8], false, d === 'normal'],
+      ['normal', [1, 2, 3, 4, 5, 6], false, d === 'normal'],
       ['especial', [], true, d === 'especial'],
     ],
   );
@@ -50,7 +50,7 @@ test('a type plays the rounds that name it, whatever their kind; listed types ke
   const rounds = [round(1, 'normal', 'desgraciat'), round(2, 'normal'), round(3, 'special', 'especial'), round(4, 'normal', 'especial')];
   assert.deepEqual(
     nightCardTypes({ rounds }, TYPES).map((t) => [t.type, t.regularRounds, t.special]),
-    [['normal', [2], false], ['especial', [4], true], ['desgraciat', [1], false]],
+    [['normal', [2], false], ['especial', [3], true], ['desgraciat', [1], false]],
   );
 });
 

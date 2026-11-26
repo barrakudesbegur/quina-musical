@@ -38,7 +38,8 @@
       <div><dt>{S.night.status}</dt><dd>{S.night.statusNames[snapshot.status]}</dd></div>
       <div>
         <dt>{S.night.round}</dt>
-        <dd>{snapshot.round.number > 0 ? CA.roundOf(snapshot.round.number, snapshot.game.roundsTotal) : '—'}{snapshot.round.kind === 'special' ? ` · ${CA.specialRound}` : snapshot.round.kind === 'desgraciat' ? ` · ${CA.desgraciatRound}` : ''}</dd>
+        <!-- The engine's round count (what the total counts is pending U163). -->
+        <dd>{snapshot.round.number > 0 ? S.roundOf(snapshot.round, plan, snapshot.game.roundsTotal) : '—'}</dd>
       </div>
       {#if show.flow.pause}<div><dt>{CA.pause}</dt><dd>✓</dd></div>{/if}
     </dl>

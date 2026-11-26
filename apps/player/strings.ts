@@ -2,7 +2,8 @@
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
 // COPY RULE: the phone never says "you won" and never announces a Line or a Quina: players claim them.
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import type { PublicWinKind, RoundKind } from './feed/public.ts';
+import { roundTitle } from '../../packages/ui/plan.ts';
+import type { PublicWinKind } from './feed/public.ts';
 import type { HeatLevel } from './logic/view.ts';
 import type { AraView } from './logic/tabs.ts';
 
@@ -14,14 +15,9 @@ const ORDINALS = ['Primer', 'Segon', 'Tercer', 'Quart', 'Cinquè', 'Sisè', 'Set
 
 export const S = {
   appTitle: CA.gameTitle,
-  round: CA.round,
-  roundOf: CA.roundOf,
-  specialRound: CA.specialRound,
-  desgraciatRound: CA.desgraciatRound,
-  /** A round by name where it is named: "Quina 4", but the Desgraciat round is "Quina Desgraciada" (ca.ts). */
-  roundName: (n: number, kind: RoundKind) => (kind === 'desgraciat' ? CA.desgraciatRound : CA.round(n)),
-  /** A round where the night's rounds are listed (Horari, a round's prizes): the special one by its name too. */
-  roundTitle: (n: number, kind: RoundKind) => (kind === 'desgraciat' ? CA.desgraciatRound : kind === 'special' ? CA.specialRound : CA.round(n)),
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle; by
+   * number only: logic/view.ts roundNameOf). */
+  roundName: roundTitle,
   card,
   /** A card's number next to its name: "#123" (the user's decision on names on screen). */
   cardNumber: (id: number) => `#${id}`,
@@ -124,7 +120,7 @@ export const S = {
   // Interval
   interval: CA.scene.interval,
   /** "Següent: Quina 5", with the round's name (S.roundName). */
-  nextRound: (name: string) => `Següent: ${name}`,
+  nextRound: CA.nextRound,
   startsIn: (mmss: string) => `Comença d’aquí a uns ${mmss}`,
   startsSoon: 'Comença ben aviat',
   lastWinners: 'Premis de la quina anterior',

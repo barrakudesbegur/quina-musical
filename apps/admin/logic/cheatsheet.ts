@@ -5,7 +5,7 @@
 // (one round's prizes during the Interval) and Admin prints all of it.
 // Proposed for ui/ (rules + words) once the console needs it.
 import { winKindsOf } from '@quina/protocol';
-import { prizeBundleOf, sponsorOf, splitBundle, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
+import { prizeBundleOf, roundTitle, sponsorOf, splitBundle, type GamePlan, type Prize, type RoundPlan } from '../../../packages/ui/plan.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import { CA } from '../../../packages/ui/i18n/ca.ts';
 
@@ -41,7 +41,7 @@ export interface CheatPrize {
 
 export interface CheatRound {
   number: number;
-  /** "Quina 3". */
+  /** "Quina 3" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
   label: string;
   special: boolean;
   /** The Quina Desgraciada: one prize, the last card standing's, and no Line. */
@@ -82,7 +82,7 @@ function cheatPrize(plan: GamePlan, kind: WinKind, bundle: readonly Prize[]): Ch
 export function cheatRound(plan: GamePlan, round: RoundPlan): CheatRound {
   return {
     number: round.number,
-    label: CA.round(round.number),
+    label: roundTitle(round, plan),
     special: round.kind === 'special',
     desgraciat: round.kind === 'desgraciat',
     prizes: winKindsOf(round.kind).map((kind) => cheatPrize(plan, kind, prizeBundleOf(round, kind))),

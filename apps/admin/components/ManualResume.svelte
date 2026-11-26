@@ -7,7 +7,7 @@
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
-  import { CA } from '../../../packages/ui/i18n/ca.ts';
+  import type { GamePlan } from '../../../packages/ui/plan.ts';
   import { formatClock } from '../../../packages/rules/time.ts';
   import { readResume, resumeCommand, resumeSummary } from '../../../packages/rules/resume.ts';
   import { fetchGames, resumeGame, type CloudGame } from '../data/cloud-games.ts';
@@ -15,16 +15,14 @@
   import { S } from '../strings.ts';
   import CommandStatus from './CommandStatus.svelte';
 
-  let { show, commands, catalog, cloud }: { show: ShowStore; commands: CommandTracker; catalog: Catalog | null; cloud: boolean } = $props();
+  let { show, commands, catalog, plan, cloud }: { show: ShowStore; commands: CommandTracker; catalog: Catalog | null; plan: GamePlan | null; cloud: boolean } = $props();
 
   const uid = $props.id();
   let draft = $state('');
   let asking = $state(false);
   const parsed = $derived(readResume(draft));
   const summary = $derived(parsed.point ? resumeSummary(parsed.point) : null);
-  const roundName = $derived(
-    summary ? `${CA.round(summary.round)}${summary.special ? ` · ${CA.specialRound}` : parsed.point?.kind === 'desgraciat' ? ` · ${CA.desgraciatRound}` : ''}` : '',
-  );
+  const roundName = $derived(summary ? S.round({ number: summary.round, kind: summary.kind }, plan) : '');
   const flow = $derived(show.flow);
   const allowed = $derived(
     sceneAllows('resumeAt', {

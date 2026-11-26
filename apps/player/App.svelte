@@ -22,7 +22,7 @@
   import StatusStrip from './components/StatusStrip.svelte';
   import Toast from './components/Toast.svelte';
   import YourSong from './components/YourSong.svelte';
-  import { prizeRounds, roundKindOf } from './logic/view.ts';
+  import { prizeRounds, roundNameOf } from './logic/view.ts';
   import { S } from './strings.ts';
 
   let { app }: { app: PlayerApp } = $props();
@@ -92,7 +92,7 @@
   {#each app.drawers as drawer, i (`${i}:${drawer.kind}`)}
     <DrawerFrame depth={depthOf(app.drawers, i)} stacked={i > 0} origin={drawerOrigin(drawer, i > 0)} {closeAll}>
       {#if drawer.kind === 'premis'}
-        <Drawer name="premis" title={drawer.round === undefined ? S.prizesTitle : S.roundTitle(drawer.round, roundKindOf(drawer.round, app.state, app.plan))} onclose={closeTop}>
+        <Drawer name="premis" title={drawer.round === undefined ? S.prizesTitle : roundNameOf(drawer.round, app.state, app.plan)} onclose={closeTop}>
           <PrizesView {app} round={drawer.round} />
         </Drawer>
       {:else if drawer.kind === 'horari'}

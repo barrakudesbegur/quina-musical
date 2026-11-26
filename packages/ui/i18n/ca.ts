@@ -8,6 +8,7 @@ const lastVibration = (n: number) => (n === 3 ? 'del tercer' : n === 2 ? 'del se
 
 export const CA = {
   gameTitle: 'Quina Musical',
+  /** A normal round by its Quina number, not the plan's: screens name a round with plan.ts roundTitle. */
   round: (n: number) => `Quina ${n}`,
   roundOf: (n: number, total: number) => `Quina ${n} de ${total}`,
   specialRound: 'Quina Especial',
@@ -37,7 +38,8 @@ export const CA = {
   pause: 'Tornem de seguida',
   offline: 'Connexió perduda, tornem de seguida',
   scanYourCard: 'Escaneja el teu cartró',
-  nextRound: (n: number) => `Següent: Quina ${n}`,
+  /** "Següent: Quina 4", with the round's name (plan.ts roundTitle). */
+  nextRound: (name: string) => `Següent: ${name}`,
   thanks: 'Gràcies per venir!',
   winners: 'Guanyadors',
   /** The Wii remote's guide (the console's Comandament dialog and the printed cheat sheet): wii/legend.ts. */

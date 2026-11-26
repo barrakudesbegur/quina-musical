@@ -5,7 +5,7 @@
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { CA } from '../../../packages/ui/i18n/ca.ts';
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
-  import { roundPlan, type GamePlan } from '../../../packages/ui/plan.ts';
+  import { roundAt, type GamePlan } from '../../../packages/ui/plan.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
   import { editDiffers, editOf, winnerInfoFields, winnerRows, type WinnerEdit } from '../logic/winners.ts';
   import { S } from '../strings.ts';
@@ -70,7 +70,7 @@
             {@const dirty = editDiffers(winner, current)}
             {@const card = CA.card(winner.cardId)}
             <tr class="winners__row" data-kind={winner.kind} class:is-dirty={dirty}>
-              <td>{roundPlan(plan, winner.round)?.kind === 'desgraciat' ? CA.desgraciatRound : CA.round(winner.round)}</td>
+              <td>{S.round(roundAt(plan, winner.round), plan)}</td>
               <td>{S.night.kind[winner.kind]}</td>
               <td class="winners__card">{winner.cardId}</td>
               <td>{songOf(winner.winningSongId)}</td>

@@ -23,7 +23,7 @@ import {
   type CheckStepView,
   type CheckVerdict,
 } from '../../../../stage/model/check.ts';
-import { checkResultDetail, nextRoundLabel, roundName, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { checkResultDetail, nextRoundLabel, STAGE_TEXT } from '../../../../stage/strings.ts';
 import { UNKNOWN_CARD_TYPE_COLOR, knownCardTypes, readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 
@@ -290,11 +290,10 @@ test("a fallen card's ✗ lands over the half of the card away from the song tha
   assert.deepEqual(plaqueSpot({ row: null, cells }), { at: 0.5, over: 'card' });
 });
 
-test('the round names: "Quina Desgraciada", never with a number', () => {
-  assert.equal(roundName({ number: 5, desgraciat: true }), 'Quina Desgraciada');
-  assert.equal(roundName({ number: 5 }), 'Quina 5');
-  assert.equal(nextRoundLabel({ number: 5, special: false, desgraciat: true }, 8), 'Següent: Quina Desgraciada');
-  assert.equal(nextRoundLabel({ number: 5, special: false, desgraciat: false }, 8), 'Següent: Quina 5 de 8');
+test('the round names: "Quina Desgraciada", never with a number; the normal rounds after it count one less', () => {
+  assert.equal(nextRoundLabel({ number: 5, kind: 'desgraciat' }, SAMPLE_PLAN, 8), 'Següent: Quina Desgraciada');
+  assert.equal(nextRoundLabel({ number: 5, kind: 'normal' }, null, 8), 'Següent: Quina 5 de 8', 'no plan: the plan number');
+  assert.equal(nextRoundLabel({ number: 6, kind: 'normal' }, SAMPLE_PLAN, 8), 'Següent: Quina 5 de 8');
 });
 
 // ---- what the stage keeps between snapshots: odd snapshots, the last card's fail, a discard

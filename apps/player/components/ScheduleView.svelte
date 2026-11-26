@@ -9,7 +9,7 @@
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { timelineKey, timelineOf, type TimelineRow } from '../logic/timeline.ts';
-  import { roundKindOf } from '../logic/view.ts';
+  import { roundNameOf } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import Countdown from './Countdown.svelte';
   import Icon, { type IconName } from './Icon.svelte';
@@ -29,7 +29,7 @@
   {#if app.scene === 'before'}<p class="schedule__note">{S.notStarted}</p>{/if}
   {#if app.scene === 'interval' && app.state?.interval}
     <p class="schedule__note">
-      {S.nextRound(S.roundName(app.state.interval.nextRound, roundKindOf(app.state.interval.nextRound, app.state, app.plan)))}:
+      {S.nextRound(roundNameOf(app.state.interval.nextRound, app.state, app.plan))}:
       <Countdown atMs={app.state.interval.guideEndMs} nowMs={app.cloudNow} label={S.startsIn} doneLabel={S.startsSoon} />
     </p>
   {/if}
@@ -37,7 +37,7 @@
     <ol class="schedule__rounds">
       {#each rows as row (timelineKey(row))}
         {#if row.kind === 'round'}
-          {@const name = S.roundTitle(row.number, row.roundKind)}
+          {@const name = S.roundName({ number: row.number, kind: row.roundKind }, app.plan)}
           {@const number = row.number}
           <li class="schedule__round" data-state={row.state} data-kind={row.roundKind}>
             <button type="button" class="schedule__round-button" aria-label={S.prizesOf(name)} onclick={() => onround(number)}>

@@ -1,5 +1,5 @@
 // The Game plan now lives in @quina/protocol (protocol/plan.ts). This file re-exports it so the screens
-// keep one import path, and adds the screens' own small helpers for prize bundles.
+// keep one import path, and adds the screens' own small helpers: round names and prize bundles.
 import {
   headlinePrizes,
   roundCardType,
@@ -9,9 +9,11 @@ import {
   type GamePlan,
   type Prize,
   type PrizeBundle,
+  type RoundKind,
   type RoundPlan,
   type WinKind,
 } from '@quina/protocol';
+import { CA } from './i18n/ca.ts';
 
 export { PLAN_VERSION, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType, roundSide, sideWarnings } from '@quina/protocol';
 export type {
@@ -38,6 +40,40 @@ export type {
 export function quinaNumber(round: Pick<RoundPlan, 'number' | 'kind'>, rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[]): number | null {
   if (round.kind !== 'normal') return null;
   return 1 + rounds.filter((r) => r.kind === 'normal' && r.number < round.number).length;
+}
+
+/** A round as roundTitle names it: its number in the plan and its kind. */
+type RoundRef = Pick<RoundPlan, 'number' | 'kind'>;
+/** What roundTitle needs of a plan (whole or public). */
+type RoundsOf = { readonly rounds: readonly RoundRef[] };
+
+/**
+ * A round's name on every screen (screens.md): "Quina N" for a normal round, N its Quina number (quinaNumber); the
+ * special rounds have no number: "Quina Especial", "Quina Desgraciada". Without the plan, or with one that lacks the
+ * round (a screen before the plan loads, an old snapshot), a normal round falls back to its number in the plan
+ * (`round.number`), which is only right until a special round has played.
+ */
+export function roundTitle(round: RoundRef, plan: RoundsOf | null): string {
+  if (round.kind === 'special') return CA.specialRound;
+  if (round.kind === 'desgraciat') return CA.desgraciatRound;
+  return CA.round(quinaOf(round, plan));
+}
+
+/** roundTitle with the night's total after a normal round's number, "Quina 4 de 8" (what the total counts is pending
+ * U163); a special round keeps its bare name, and no total (null or 0) gives roundTitle's. */
+export function roundTitleOf(round: RoundRef, plan: RoundsOf | null, total: number | null): string {
+  return round.kind === 'normal' && total ? CA.roundOf(quinaOf(round, plan), total) : roundTitle(round, plan);
+}
+
+/** A round a screen knows by its number only, with its kind from the plan (`known` when the plan lacks it: a normal
+ * round unless said). */
+export function roundAt(plan: RoundsOf | null, number: number, known: RoundKind = 'normal'): RoundRef {
+  return { number, kind: plan?.rounds.find((r) => r.number === number)?.kind ?? known };
+}
+
+/** A normal round's Quina number, else its plan number when the plan lacks it (roundTitle). */
+function quinaOf(round: RoundRef, plan: RoundsOf | null): number {
+  return plan?.rounds.some((r) => r.number === round.number) ? (quinaNumber(round, plan.rounds) ?? round.number) : round.number;
 }
 
 /**

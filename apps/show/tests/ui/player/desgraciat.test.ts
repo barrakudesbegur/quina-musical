@@ -13,7 +13,7 @@ import { emptyPublicState, type PublicRound, type PublicState } from '../../../.
 import { FALL_ELEMENTS, budgetMarks, fallStagger, fallenKeys, fellAtLatest, isDesgraciat, standUpPlace, standingIds, standOf } from '../../../../player/logic/desgraciat.ts';
 import { feedbackFor, type FeedbackSnapshot } from '../../../../player/logic/feedback.ts';
 import { addCard, emptyData } from '../../../../player/logic/storage.ts';
-import { cardViews, celebrationOf, markKeys, prizeRounds, roundKindOf } from '../../../../player/logic/view.ts';
+import { cardViews, celebrationOf, markKeys, prizeRounds, roundKindOf, roundNameOf } from '../../../../player/logic/view.ts';
 import { S } from '../../../../player/strings.ts';
 
 const catalog = parseCards([
@@ -191,10 +191,14 @@ test("the Celebration for the last card standing: no title (U6), the phone's own
 });
 
 test('the round is "Quina Desgraciada" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {
-  assert.equal(S.roundName(3, 'desgraciat'), 'Quina Desgraciada');
-  assert.equal(S.roundName(3, 'special'), 'Quina 3');
-  assert.equal(S.prizesOf(S.roundName(3, 'desgraciat')), 'Premis de la Quina Desgraciada');
-  assert.equal(S.nextRound(S.roundName(4, 'normal')), 'Següent: Quina 4');
+  assert.equal(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN), 'Quina Desgraciada');
+  assert.equal(S.roundName({ number: 7, kind: 'special' }, PLAN), 'Quina Especial', 'the Especial has no number either');
+  assert.equal(S.prizesOf(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN)), 'Premis de la Quina Desgraciada');
+  // PLAN's round 3 is the Desgraciat round, so round 4 is Quina 3; by number only, the kind comes from roundKindOf.
+  assert.equal(S.nextRound(roundNameOf(4, state(), PLAN)), 'Següent: Quina 3');
+  assert.equal(roundNameOf(3, state({ rounds: [] }), PLAN), 'Quina Desgraciada');
+  assert.equal(roundNameOf(8, state(), PLAN), 'Quina 5', 'after three special rounds');
+  assert.equal(roundNameOf(4, null, null), 'Quina 4', 'no plan: its plan number');
   assert.equal(roundKindOf(3, state(), null), 'desgraciat');
   assert.equal(roundKindOf(3, state({ rounds: [] }), PLAN), 'desgraciat', 'from the plan before it is played');
   assert.equal(roundKindOf(5, state({ intro: { round: 5, kind: 'desgraciat' } }), null), 'desgraciat', 'its intro');

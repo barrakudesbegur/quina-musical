@@ -149,7 +149,7 @@ test('play: the round and the motion as timestamps, never the incoming song', ()
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'play');
   if (view.body.scene !== 'play') return;
-  assert.deepEqual(view.body.round, { number: 3, special: false, desgraciat: false });
+  assert.deepEqual(view.body.round, { number: 3, special: false, desgraciat: false, label: 'Quina 3' });
   assert.deepEqual(view.body.motion, { kind: 'spin', startAtMs: null, landAtMs: NOW + 5000, sinceMs: null, autoReleaseAtMs: null });
 });
 
@@ -163,7 +163,7 @@ test('before: start time, the night\'s card types, sponsors and the player app l
     startAtMs: NOW + 600_000,
     // SAMPLE_PLAN's Desgraciat (round 5) plays its kind's default type: the special cards since D70.
     cardTypes: [
-      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 6, 8], special: false, desgraciat: defaultCardType('desgraciat') === 'normal' },
+      { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', priceCents: null, regularRounds: [1, 2, 3, 4, 5, 6], special: false, desgraciat: defaultCardType('desgraciat') === 'normal' },
       { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', priceCents: null, regularRounds: [], special: true, desgraciat: defaultCardType('desgraciat') === 'especial' },
     ],
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
@@ -239,7 +239,7 @@ test('roundStart: headline prizes with sponsors and how many more; the Shuffle g
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'roundStart');
   if (view.body.scene !== 'roundStart') return;
-  assert.deepEqual(view.body.round, { number: 4, special: false, desgraciat: false });
+  assert.deepEqual(view.body.round, { number: 4, special: false, desgraciat: false, label: 'Quina 4' });
   assert.deepEqual(view.body.prizes, [
     { kind: 'line', title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 2]', more: 3 },
     { kind: 'bingo', title: "Fregidora d'aire", detail: null, sponsor: '[Patrocinador 2]', more: 17 },
@@ -256,7 +256,7 @@ test('a missing plan hides the sponsors', () => {
   assert.equal(view.body.scene, 'interval');
   if (view.body.scene !== 'interval') return;
   assert.deepEqual(view.body.sponsors, []);
-  assert.equal(view.body.roundsTotal, 8, 'falls back to the engine setting');
+  assert.equal(view.body.plate, 'Següent: Quina 4 de 8', "the total falls back to the engine setting, the number to the plan's");
 });
 
 test('check: the card grid from the catalog, the Line row, the songs revealed so far', () => {
@@ -475,8 +475,8 @@ test('interval: the next round, the count and the countdown guide; no winners, n
   if (view.body.scene !== 'interval') return assert.fail('not interval');
   assert.deepEqual(view.body, {
     scene: 'interval',
-    nextRound: { number: 4, special: false, desgraciat: false },
-    roundsTotal: 8,
+    nextRound: { number: 4, special: false, desgraciat: false, label: 'Quina 4' },
+    plate: 'Següent: Quina 4 de 8',
     sinceMs: NOW - 40_000,
     guideEndMs: NOW + 140_000,
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
@@ -508,10 +508,10 @@ test('the special round is labelled from the plan', () => {
   const special: FlowState = { ...state, intro: { round: 7, kind: 'special', sinceMs: NOW } };
   const view = stageView(special, flowOf(special), SAMPLE_PLAN, null);
   if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(view.body.round, { number: 7, special: true, desgraciat: false });
+  assert.deepEqual(view.body.round, { number: 7, special: true, desgraciat: false, label: 'Quina Especial' }, 'no number');
   const unplanned = stageView(special, flowOf(special), null, null);
   if (unplanned.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(unplanned.body.round, { number: 7, special: true, desgraciat: false }, 'without a plan, the intro\'s kind');
+  assert.deepEqual(unplanned.body.round, { number: 7, special: true, desgraciat: false, label: 'Quina Especial' }, 'without a plan, the intro\'s kind');
 });
 
 test('the round start names the round being introduced, before the Shuffle', () => {
@@ -536,7 +536,7 @@ test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro an
   const play = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), SAMPLE_PLAN, CATALOG);
   assert.equal(play.body.scene, 'play');
   if (play.body.scene !== 'play') return;
-  assert.deepEqual(play.body.round, { number: 5, special: false, desgraciat: true });
+  assert.deepEqual(play.body.round, { number: 5, special: false, desgraciat: true, label: 'Quina Desgraciada' });
   // Without a plan, the state's round kind says it.
   const bare = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), null, null);
   assert.ok(bare.body.scene === 'play' && bare.body.round?.desgraciat);
@@ -552,6 +552,27 @@ test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro an
   const intervalState = FIXTURES.intervalDesgraciat(NOW).state;
   const interval = stageView(intervalState, flowOf(intervalState), SAMPLE_PLAN, CATALOG);
   assert.ok(interval.body.scene === 'interval' && interval.body.nextRound.desgraciat && interval.body.nextRound.number === 5);
+  assert.equal(interval.body.plate, 'Següent: Quina Desgraciada', 'no number, no total');
+});
+
+test('a normal round after a special one is named by its Quina number, everywhere the stage names it', () => {
+  // SAMPLE_PLAN: round 5 is the Desgraciat round and round 7 the Especial, so round 6 is Quina 5 and round 8 Quina 6.
+  const { state } = FIXTURES.roundStart(NOW);
+  const intro: FlowState = { ...state, intro: { round: 6, kind: 'normal', sinceMs: NOW } };
+  const start = stageView(intro, flowOf(intro), SAMPLE_PLAN, null);
+  assert.ok(start.body.scene === 'roundStart' && start.body.round?.label === 'Quina 5');
+  const play = FIXTURES.play(NOW).state;
+  const last: FlowState = { ...play, round: { ...play.round, number: 8 } };
+  const playing = stageView(last, flowOf(last), SAMPLE_PLAN, null);
+  assert.ok(playing.body.scene === 'play' && playing.body.round?.label === 'Quina 6');
+  const interval = FIXTURES.interval(NOW).state;
+  const before8: FlowState = { ...interval, interval: interval.interval && { ...interval.interval, nextRound: 8 } };
+  const next = stageView(before8, flowOf(before8), SAMPLE_PLAN, null);
+  assert.ok(next.body.scene === 'interval');
+  assert.equal(next.body.plate, 'Següent: Quina 6 de 8', 'the total stays the plan\'s round count (pending U163)');
+  // Without the plan the stage can't count the specials: a normal round keeps its plan number.
+  const bare = stageView(last, flowOf(last), null, null);
+  assert.ok(bare.body.scene === 'play' && bare.body.round?.label === 'Quina 8');
 });
 
 test('a standing Check: all 12 songs, no row dimmed; a fallen one names the song that sank it and lands its ✗ away from it', () => {

@@ -6,27 +6,24 @@ import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
 import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
-import { roundName, STAGE_TEXT, type CountdownContext } from '../strings.ts';
+import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { sponsorPage } from '../model/sponsors.ts';
 
-/** "Quina 4" (or "Quina Desgraciada": strings.ts roundName), plus the special-round badge. */
+/** The round's name (RoundView's): "Quina 4", "Quina Especial" or "Quina Desgraciada". */
 export class RoundTitle {
   readonly root: HTMLElement;
   private readonly name: HTMLElement;
-  private readonly badge: HTMLElement;
 
   constructor(tag: 'h1' | 'h2' | 'p', extraClass = '') {
     this.name = h('span', 'round-title__name');
-    this.badge = h('span', { class: 'round-title__special', hidden: true }, STAGE_TEXT.specialRound);
-    this.root = h(tag, `round-title ${extraClass}`.trim(), this.name, this.badge);
+    this.root = h(tag, `round-title ${extraClass}`.trim(), this.name);
   }
 
   set(round: RoundView | null): void {
     setHidden(this.root, round === null);
     if (!round) return;
-    setText(this.name, roundName(round));
-    setHidden(this.badge, !round.special);
+    setText(this.name, round.label);
     setData(this.root, 'special', round.special ? 'true' : null);
     setData(this.root, 'desgraciat', round.desgraciat ? 'true' : null);
   }
