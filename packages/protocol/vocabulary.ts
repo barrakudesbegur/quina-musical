@@ -67,10 +67,10 @@ export const REVIEW_OUTCOMES = ['continue', 'win', 'lose', 'discard'] as const;
 export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
 /**
  * What the engine found. The Check's result decides (docs/event.md): presenters may reject a card that passed, never
- * accept one that failed (isPassingOutcome). A 'standing' claim (the Desgraciat round) is `complete` while none of
- * the card's songs counted, `fellLast` when its first landed song is the latest landing (it sat down with the song
- * that just landed: it passes, so the last players standing who all sit on the same song can share the win), and
- * `fallen` when it fell on an earlier song.
+ * accept one that failed (isPassingOutcome). A 'standing' claim (the Desgraciat round) is `complete` while no counted
+ * landing took the card out (a landing that would take out every card left counts for none of them, D180), and
+ * `fallen` once one did. `fellLast` (sat down with the latest landing, a shared win) is only in journals from before
+ * D180: the engine no longer gives it.
  */
 export type CheckOutcome = 'complete' | 'incomplete' | 'fellLast' | 'fallen' | 'unknownCard' | 'wrongType';
 export const CHECK_OUTCOMES = ['complete', 'incomplete', 'fellLast', 'fallen', 'unknownCard', 'wrongType'] as const satisfies readonly CheckOutcome[];

@@ -129,17 +129,14 @@ export interface PossibleWinners {
 
 /**
  * PRIVATE (console only; never the stage, the feed or phones): the Desgraciat round's cards still standing. They are
- * the round's valid cards in play (its card type within the ranges, sold or not: the ranges can't tell) with none of
- * their songs counted yet.
+ * the round's valid cards in play (its card type within the ranges, sold or not: the ranges can't tell) that no
+ * counted landing took out. A landing that would take out every card left counts for none of them (D180), so at
+ * least one always stands, and there is never a shared win.
  */
 export interface StandingInfo {
   count: number;
   /** Sorted; null when more than STANDING_LIST_MAX stand. */
   cardIds: number[] | null;
-  /** The valid cards in play whose first landed song is the latest landing: they sat down with it, and may share the
-   * win if nobody in the room is still standing (their Check is `fellLast`). Sorted; null above STANDING_LIST_MAX.
-   * Optional in the type only (added later in v1). */
-  fellLast?: number[] | null;
 }
 /** The most standing cards `StandingInfo.cardIds` lists. */
 export const STANDING_LIST_MAX = 60;
@@ -364,14 +361,23 @@ export interface PauseInfo {
   overlay: boolean;
 }
 
-/** Finalists who fell or won together, on one landing (D169: shown together, with the group ninos, D172). */
+/** Finalists who fell together, on one landing (D169: shown together, with the group ninos, D172). */
 export interface FinaleGroup {
   cardIds: number[];
-  /** The landing's Queue index, and its song; for a win by a removal by hand, the last counted landing. */
+  /** The landing's Queue index, and its song. */
   position: number;
   songId: number | null;
   atMs: number;
-  /** A win decided by a removal by hand, not by a song (D169's rule 5). */
+}
+
+/** The finale's one winner (D180: never a shared win). */
+export interface FinaleWinner {
+  cardId: number;
+  /** The landing that left them alone, and its song; for a removal by hand, the last counted landing. */
+  position: number;
+  songId: number | null;
+  atMs: number;
+  /** Decided by a removal by hand, not by a song (D169's rule 5). */
   byHand?: true;
 }
 
@@ -386,10 +392,11 @@ export interface FinaleInfo {
   cardIds: number[];
   /** The finalists still standing. */
   standing: number[];
+  /** Who fell at each landing, in order. A landing that would take out every finalist left counts for none of them
+   * (D180), so the finale goes on until exactly one is left. */
   groups: FinaleGroup[];
-  /** The winners: the last one standing, a group that fell together taking everyone left (a shared win), or the one
-   * left by a removal by hand; null until then. */
-  winners: FinaleGroup | null;
+  /** The last one standing, by the landings or by a removal by hand; null until then. */
+  winner: FinaleWinner | null;
   /** The presenters gave the cue: the Celebration is on. */
   cued: boolean;
 }
