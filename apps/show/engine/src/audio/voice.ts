@@ -53,9 +53,9 @@ export class VoicePlayer {
     return p;
   }
 
-  /** The lead, then the voice, from `at`; the music dips under both. Returns when it ends (audio clock): the runtime then
-   * calls `finish`, which brings the music back up. */
-  async play(cue: VoiceCue, lead: VoiceLead, at: number): Promise<number> {
+  /** The lead, then the voice, from `at`; the music dips under both. Returns when it starts and ends (audio clock): the
+   * runtime calls `finish` at the end, which brings the music back up. */
+  async play(cue: VoiceCue, lead: VoiceLead, at: number): Promise<{ start: number; end: number }> {
     this.stop();
     const [leadBuf, voiceBuf] = await Promise.all([this.buffer(lead), this.buffer(cue)]);
     const { ctx } = this.graph;
@@ -73,7 +73,7 @@ export class VoicePlayer {
     }
     this.duck(true, Math.max(ctx.currentTime, start - VOICE.duckSec));
     this.playing = { cue, end: t };
-    return t;
+    return { start, end: t };
   }
 
   /** Stop the cue playing (skipped, Pausa, Panic): the music comes back up. */

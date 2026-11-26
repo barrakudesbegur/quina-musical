@@ -697,7 +697,7 @@ export class Show {
   /** A throw song (D138, D151): which, where it plays from, since `startedAt` (audio clock) while playing. */
   throwSong: { song: ThrowSong; playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
   /** The voice cue playing (D202–D204): since when, when it ends by itself at the latest, what it leads into. */
-  voice: { cue: VoiceCue; since: number; sinceMs: number; endsBy: number } | null = null;
+  voice: { cue: VoiceCue; since: number; sinceMs: number; endsBy: number; durationMs: number | null } | null = null;
   /** The timed cues already played or dropped this Game (a Descans's by round: `descans-2min@<round>`). */
   voicesDone = new Set<string>();
   /** A timed cue that came due while it wasn't quiet: since when it waits. */
@@ -3078,8 +3078,21 @@ export class Show {
 
   playVoice(cue: VoiceCue, lead: VoiceLead) {
     const at = this.env.now() + VOICE.leadSec;
-    this.voice = { cue, since: at, sinceMs: this.env.toEpochMs(at), endsBy: at + VOICE.maxCueSec };
+    this.voice = { cue, since: at, sinceMs: this.env.toEpochMs(at), endsBy: at + VOICE.maxCueSec, durationMs: null };
     this.out.push({ type: 'voice', action: 'play', cue, lead, at });
+  }
+
+  /** The runtime: the cue started at `at` (audio clock) and lasts `durationSec`, its lead and voice together. */
+  voiceStarted(cue: VoiceCue, at: number, durationSec: number): Effect[] {
+    const v = this.voice;
+    if (v?.cue === cue) {
+      v.since = at;
+      v.sinceMs = this.env.toEpochMs(at);
+      v.durationMs = Math.round(durationSec * 1000);
+      v.endsBy = Math.max(v.endsBy, at + durationSec + 1);
+      this.emitState();
+    }
+    return this.flush();
   }
 
   /** The runtime: the cue played to its end (its file missing included). */
@@ -3680,7 +3693,7 @@ export class Show {
       finale: this.finaleInfo(),
       throwSong: this.throwInfo(),
       throwSongs: { throw: throwTrackInfo('throw'), storm: throwTrackInfo('storm') },
-      voice: this.voice ? { cue: this.voice.cue, sinceMs: this.voice.sinceMs } : null,
+      voice: this.voice ? { cue: this.voice.cue, sinceMs: this.voice.sinceMs, durationMs: this.voice.durationMs } : null,
       voiceNext: this.voiceNext(),
       padHold: this.padHeld ? { effect: this.padHeld.effect, sinceMs: this.padHeld.sinceMs, intensity: this.padHeld.intensity } : null,
     };

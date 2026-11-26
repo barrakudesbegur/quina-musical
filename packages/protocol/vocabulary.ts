@@ -281,6 +281,8 @@ export const isVoiceCue = (value: unknown): value is VoiceCue => typeof value ==
 /** What plays before a cue's voice: the chime (D204), or a fanfare for a round's start (D198). */
 export type VoiceLead = 'chime' | 'fanfare';
 
+/** A held drum roll lands with a hit when let go after this long, else it fades out (D203; tuned by ear, U13). */
+export const DRUMROLL_LAND_AFTER_SEC = 2;
 /** The effects the presenters hold on the remote's D-pad (`padHold`, D203): the drum roll; U178 may add more. */
 export const PAD_HOLD_EFFECTS = ['drumroll'] as const;
 export type PadHoldEffect = (typeof PAD_HOLD_EFFECTS)[number];

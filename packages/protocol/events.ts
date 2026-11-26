@@ -534,9 +534,10 @@ export interface ShowState {
   throwSong: ThrowInfo | null;
   /** Each throw song's track, at all times: the buttons name it while idle. */
   throwSongs: Record<ThrowSong, ThrowTrackInfo>;
-  /** The voice cue playing now (D202–D204), so the console can show it and skip it; null when none. Optional in the
-   * type only (added later in v1): the engine always sends it. */
-  voice?: { cue: VoiceCue; sinceMs: number } | null;
+  /** The voice cue playing now (D202–D204), so the console can show it and skip it; null when none. `durationMs`: the
+   * lead and the voice together, once the runtime has started it (null just before). Optional in the type only (added
+   * later in v1): the engine always sends it. */
+  voice?: { cue: VoiceCue; sinceMs: number; durationMs: number | null } | null;
   /** The next timed voice cue (the doors' countdown, the Descans): when it's due; one that's late waits for a quiet
    * moment (no Parlem, Aguanta, Spin, Suspens, Pausa, Check or throw song) and is dropped after VOICE.maxWaitSec.
    * Optional in the type only, as `voice`. */

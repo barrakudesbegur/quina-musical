@@ -2,7 +2,7 @@
 // here instead of keeping their own constants; tests may pass overrides where a function takes `config`.
 // (Recipe-internal shapes, such as riser frequencies, still live next to each recipe in plan/recipes.ts.)
 // The numbers the remotes share (Pace limits and presets, sound names) come from @quina/protocol.
-import { PACE_DEFAULT_SEC, PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
+import { DRUMROLL_LAND_AFTER_SEC, PACE_DEFAULT_SEC, PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
 import type { PhaseName, SoundName, StingerName, ThrowSong } from '@quina/protocol';
 
 export type { PhaseName } from '@quina/protocol';
@@ -930,7 +930,7 @@ export const VOICE = Object.freeze({
  * louder with the intensity; let go after `landAfterSec` it lands on the next beat with a hit, sooner it fades out.
  */
 export const DRUMROLL = Object.freeze({
-  landAfterSec: 2,
+  landAfterSec: DRUMROLL_LAND_AFTER_SEC,
   defaultBpm: 120,
   /** Hits a beat from intensity 0 to 1. */
   perBeat: [4, 8] as const,

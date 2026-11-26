@@ -491,7 +491,10 @@ function apply(effect: Effect): void {
       if (effect.action === 'stop' || !effect.cue || !effect.lead) return voicePlayer.stop();
       const cue = effect.cue;
       // When it has played out the machine hears so (what it led into follows); a missing file is a silent cue.
-      return void voicePlayer.play(cue, effect.lead, effect.at).then((end) => addTask(end, () => voicePlayer.finish(cue) && run(machine().voiceEnded(cue))));
+      return void voicePlayer.play(cue, effect.lead, effect.at).then(({ start, end }) => {
+        run(machine().voiceStarted(cue, start, end - start));
+        addTask(end, () => voicePlayer.finish(cue) && run(machine().voiceEnded(cue)));
+      });
     }
     case 'padHold':
       if (effect.action === 'start' && effect.grid) return drumRoll.start(effect.at, effect.grid, effect.intensity);

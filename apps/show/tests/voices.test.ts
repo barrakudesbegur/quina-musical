@@ -33,7 +33,10 @@ test("a round's start: its fanfare and voice, by its Quina number, over its intr
   const out = h.send('roundIntro', { number: 7, kind: 'normal' });
   assert.deepEqual(voices(out).map((v) => [v.action, v.cue, v.lead]), [['play', 'round-6', 'fanfare']], 'the plan\'s round 7 is Quina 6');
   assert.ok(out.some((e) => e.type === 'introMusic'), 'the intro music under it (the runtime dips it until the voice ends)');
-  assert.equal(h.show.snapshot().voice?.cue, 'round-6');
+  assert.deepEqual(h.show.snapshot().voice && [h.show.snapshot().voice?.cue, h.show.snapshot().voice?.durationMs], ['round-6', null]);
+  // The runtime tells how long its fanfare and voice last, as it starts them.
+  h.show.voiceStarted('round-6', h.clock.t + 0.25, 3.4);
+  assert.equal(h.show.snapshot().voice?.durationMs, 3400);
   h.show.voiceEnded('round-6');
   assert.equal(h.show.snapshot().voice, null);
   for (const [number, kind, cue] of [[6, 'desgraciat', 'round-desgraciat'], [8, 'special', 'round-especial']] as const) {
