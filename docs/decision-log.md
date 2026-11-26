@@ -922,7 +922,7 @@ By: the user. Source: open-questions.md › Answered (U53). Lives in: requiremen
 Unit symbols next to a number stay lowercase ("9 s", "25 m", "10:14 pm"), and Nunito text inside a Londrina button keeps its normal case. Answers U46.
 By: the user. Source: open-questions.md › Answered (U46). Amends: D96. Lives in: requirements/screens.md › Every screen.
 
-### D115 · The card icon picker is style A · 2026-11-26 · Active
+### D115 · The card icon picker is style A · 2026-11-26 · Superseded by D131
 On "Afegir cartró", the icon picker is framed, with the icons already taken pressed in, as on `Mobil-B-J2`. The QR icon feels too sharp next to the others and gets softened on the boards. Designs only. Answers U47.
 By: the user. Source: open-questions.md › Answered (U47). Lives in: requirements/screens.md › Player app.
 
@@ -996,3 +996,11 @@ By: the user. Source: the user's message of 26 Nov. Amends: D104 (that playlist 
 ### D130 · A volume for each kind of sound · 2026-11-26 · Active; the list and the place Pending (U101–U102)
 A master volume plus one each for the win, the fail, breaks, Pausa, intros, songs, songs in Parlem and effects. All start at 100%, except songs in Parlem and effects, which may start lower.
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › Volumes.
+
+### D131 · The card icon picker mixes B and C · 2026-11-26 · Active
+The picker on "Afegir cartró" takes B's labels and B's background opacity for an icon that's already taken, and C's circular shape, frame and border. The QR icon is softened (D115). Designs only until built (D132).
+By: the user. Source: the user's message of 26 Nov. Supersedes: D115. Lives in: requirements/screens.md › Player app.
+
+### D132 · Build the phone's drawers to match the design · 2026-11-26 · Active
+The user's go to implement: the player app's home, corner buttons and drawers (D73, D87) are built to match the agreed canvas boards (`Mobil-B-J2` and the add-card drawer, v61 onwards), so the work isn't left half done. This lifts the UI freeze for the player app's drawers only. `71caa9c` is already pushed and stays as the starting point. The prizes drawer isn't designed yet (U30), so it's not part of this.
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.

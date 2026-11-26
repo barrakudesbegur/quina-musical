@@ -84,7 +84,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
-  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker is style A: framed, with taken icons pressed in (D115).
+  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker mixes B and C: B's labels and its faded background for a taken icon; C's circular shape, frame and border (D131).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
@@ -93,6 +93,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next;
   - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.
   - The corner buttons use style B, with matching icons, and the drawers use hierarchy J2; the menu drawer is titled with a settings word, not "Menu" (D87). The prizes drawer's design is still to pick (pending U30).
+  - **Being built to match the boards (D132)**, the prizes drawer excepted.
 - **The card's side (D102):** a normal card has two sides with the same number. Pending U50, the phone shows the side of the current or coming round by itself.
 - **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text. The card types' preview: **Not built yet** (the phone shows the rounds and prizes).
 - **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
