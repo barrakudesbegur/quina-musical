@@ -119,7 +119,7 @@ export const S = {
         held: 'En espera: sense avanç automàtic',
         checking: 'En espera: comprovant un cartró',
         checkFailed: "En espera: música d'error fins a Reprèn",
-        paused: 'Pausa tècnica',
+        paused: 'Pausa',
         waiting: 'Esperant «Següent»',
       },
       badge: { auto: 'Avança sol', autoOff: 'Avanç manual', final: 'Fase final', talk: 'Parlem', stay: 'Aguanta', held: 'En espera' },
@@ -134,7 +134,7 @@ export const S = {
         checking: (cardId: number | null) => (cardId === null ? 'Comprovant un cartró' : `Comprovant el cartró #${cardId}`),
         checkFailed: 'Cap cartró vàlid · prem «Reprèn»',
         discarded: 'Cartró descartat',
-        paused: (since: string) => `Pausa tècnica · des de fa ${since}`,
+        paused: (since: string) => `Pausa · des de fa ${since}`,
       },
     },
     lastSpinBy: (device: string | null) => (device ? `Últim gir: ${device}` : 'Últim gir: automàtic'),
@@ -379,7 +379,7 @@ export const S = {
     /** Enrere's note while the last landing's fallen are shown: it undoes the whole landing (D183). */
     backNote: 'els torna a dempeus',
     /** The ring and the next-song panel once the finale has its winner. */
-    ringWinner: (id: number) => `Últim dempeus · #${id}`,
+    ringWinner: (id: number) => `Últim cartró dempeus · #${id}`,
     ringLabel: 'La final té guanyador: no aterra cap més cançó fins que premeu «Celebrem!»',
     nextDone: "Ja no n'aterra cap: la final s'ha acabat.",
   },
@@ -408,11 +408,11 @@ export const S = {
   },
 
   pause: {
-    title: 'Pausa tècnica',
+    title: 'Pausa',
     since: (clock: string) => `des de fa ${clock}`,
     note: 'El projector i els mòbils mostren «Tornem de seguida». Sona la música d\'espera.',
     end: 'Acaba la pausa',
-    start: 'Pausa tècnica',
+    start: 'Pausa',
   },
 
   /** The presenter-paced Check (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada). */
@@ -527,7 +527,7 @@ export const S = {
         win: 'Les cançons que queden no es destapen: sonen la fanfàrria i la celebració, com si hagués passat. Al registre hi consta com a decisió a mà.',
         lose: 'Les cançons que queden no es destapen: sona el moment de fallada, com si hagués fallat. Al registre hi consta com a decisió a mà.',
       },
-      cancel: 'Cancel·la',
+      cancel: 'Torna a la revisió',
       yes: { win: 'Sí, dona-la per bona', lose: 'Sí, dona-la per dolenta' },
     },
   },
@@ -814,7 +814,7 @@ export const S = {
     roundsPlus: 'Una quina més',
     gameEnd: 'Final previst de la nit',
     game: 'Joc',
-    pause: 'Pausa tècnica',
+    pause: 'Pausa',
     pauseNote: 'Projector i mòbils: «Tornem de seguida»',
     finalLap: "«Última volta» automàtica",
     finalLapNote: "La fanfàrria sona sola un cop per quina, quan arriba l'última volta. Des d'Efectes es pot tocar igualment.",
@@ -911,7 +911,7 @@ export const S = {
     celebrationMusic: 'Música de la celebració',
     interval: 'Descans',
     endGame: 'Acabar la nit',
-    pause: 'Pausa tècnica',
+    pause: 'Pausa',
     intervalSkip: 'Saltar cançó',
     setVolume: 'Volum',
     throw: 'Llançament',

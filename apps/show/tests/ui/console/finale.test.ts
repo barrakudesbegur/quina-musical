@@ -152,5 +152,5 @@ test('A stays «Següent» in the finale (D187) and becomes «Celebrem!» once o
   assert.deepEqual(input(at('desgraciatNine'), { finalePad: { command: { cardIds: [57, 81] } } })?.command, { cmd: 'finale', args: { cardIds: [57, 81] } });
   const ring = nowRing({ state: win, flow: flowOf(win), nowMs: NOW, lastSec: 3 });
   assert.deepEqual([ring.state, ring.cardId], ['finaleWinner', 57]);
-  assert.equal(S.finale.ringWinner(57), 'Últim dempeus · #57');
+  assert.equal(S.finale.ringWinner(57), 'Últim cartró dempeus · #57');
 });
