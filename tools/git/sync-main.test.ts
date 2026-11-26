@@ -196,6 +196,25 @@ test('a local commit origin already has (someone pushed the same change) is left
   assert.equal(status(shared), '');
 });
 
+test('a local commit origin has as the same patch, edited again since on origin, is left out, not a conflict', () => {
+  const { shared, pusher } = setup();
+  // The same handoff line committed here, and pushed from elsewhere; then origin edits that line again.
+  commit(shared, 'handoff, here', { 'docs/d.txt': 'd\nstep 1 waits\n' });
+  const mine = commit(shared, 'my own work', { 'b.txt': 'b2\n' });
+  commit(pusher, 'handoff, pushed', { 'docs/d.txt': 'd\nstep 1 waits\n' });
+  commit(pusher, 'handoff, later', { 'docs/d.txt': 'd\nstep 1 is out\n' });
+  git(pusher, 'push', '-q', 'origin', 'main');
+
+  const result = syncMain({ cwd: shared });
+  assert.equal(result.kind, 'synced', result.kind === 'refused' ? result.reason : '');
+  if (result.kind !== 'synced') return;
+  assert.deepEqual(result.skipped.map((c) => c.subject), ['handoff, here']);
+  assert.deepEqual(result.replayed.map((c) => [c.from, c.subject]), [[mine, 'my own work']]);
+  assert.equal(read(shared, 'docs/d.txt'), 'd\nstep 1 is out\n', 'origin\'s later edit stays');
+  assert.equal(read(shared, 'b.txt'), 'b2\n');
+  assert.equal(status(shared), '');
+});
+
 test('not on main, or mid-merge: refused', () => {
   const { shared } = setup();
   git(shared, 'checkout', '-q', '-b', 'other');

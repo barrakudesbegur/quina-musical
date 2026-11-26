@@ -9,7 +9,8 @@
 //   1. fetches origin/main;
 //   2. replays main's local commits (those not on origin yet) onto origin/main in git's object store only:
 //      `git merge-tree --write-tree` plus `git commit-tree` is a cherry-pick that never touches the working
-//      tree or the index. Each replayed commit keeps its author, date and message (its hash changes);
+//      tree or the index. Each replayed commit keeps its author, date and message (its hash changes). One that
+//      origin already has as the same patch (pushed from elsewhere) is left out first, as `git rebase` does;
 //   3. checks every file the incoming commits change: it must be in the working tree and the index as main
 //      has it (nobody's edit), or already exactly as it will be. Otherwise it stops before changing anything
 //      and names the files;
@@ -74,6 +75,12 @@ function run(cwd: string, args: string[], input?: string | Buffer, env?: NodeJS.
   const r = spawnSync('git', args, { cwd, input, env: env ?? process.env, maxBuffer: 256 * 1024 * 1024 });
   if (r.error) throw r.error;
   return { status: r.status ?? 1, out: r.stdout.toString('utf8'), err: r.stderr.toString('utf8') };
+}
+
+/** A commit's change as `git patch-id --stable` names it (whitespace and line numbers aside), or '' for an empty one. */
+function patchId(cwd: string, sha: string): string {
+  const diff = run(cwd, ['show', '--format=', '--no-color', '--no-ext-diff', sha]).out;
+  return diff.trim() ? run(cwd, ['patch-id', '--stable'], diff).out.trim().split(' ')[0] ?? '' : '';
 }
 
 /** Run git and return its trimmed output; throw on failure (an unexpected state, not a refusal). */
@@ -186,11 +193,19 @@ export function syncMain({ cwd, fetch = true, dryRun = false }: SyncOptions): Sy
   const replayed: Replayed[] = [];
   const skipped: Replayed[] = [];
   let tip = upstream;
+  // Origin's own changes since the fork, by patch: a local commit pushed from elsewhere as the same patch is left out
+  // before merging, as `git rebase` does, even when origin has edited the same lines again since.
+  const upstreamPatches = new Set(git(top, ['rev-list', `${base}..${upstream}`]).split('\n').filter(Boolean).map((c) => patchId(top, c)).filter(Boolean));
   const lines = git(top, ['rev-list', '--reverse', '--parents', `${base}..${local}`]).split('\n').filter(Boolean);
   for (const line of lines) {
     const [sha = '', ...parents] = line.split(' ');
     if (parents.length !== 1) return { kind: 'refused', reason: `local commit ${sha.slice(0, 7)} is a merge; replay it by hand` };
     const subject = git(top, ['log', '-1', '--format=%s', sha]);
+    const id = patchId(top, sha);
+    if (id && upstreamPatches.has(id)) {
+      skipped.push({ from: sha, to: tip, subject }); // origin/main already has this very change
+      continue;
+    }
     const merged = run(top, ['merge-tree', '--write-tree', '--name-only', `--merge-base=${parents[0]}`, tip, sha]);
     if (merged.status === 1) {
       const conflicted = merged.out.trim().split('\n').slice(1).filter((l) => l && !l.startsWith('Auto-merging') && !l.startsWith('CONFLICT'));
