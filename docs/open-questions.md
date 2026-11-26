@@ -47,16 +47,14 @@ The user on the canvas: "What is this field? we dont papereta concept. please re
 - (b) Drop slips: the card's number identifies the winner, who shows the card to collect the prize. The glossary and event.md change.
 
 ### U155 · The finale and the new tabs on canvas v85, for review
-Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Facts about the group ninos (D172): the "castle" (`nino-fent-una-torre`) holds two ninos, not three; the kissing pair exists only as a doodle (`nino-liantse.svg`), coloured on the board; "two dancing" is the sardana nino twice, and the high-five nino could replace it. The boards' proposals:
-1. A pair that falls kisses, a pair that wins dances, three is the castle, and four or more is the castle plus a pair.
-2. A falling group gathers centre stage over a dark scrim.
-3. The finale's button: normal above 20 standing, medium from 11 to 20, large at 10 or fewer.
-4. A stays "Següent", so the finale opens from the tablet only.
-5. The finalists' view lives in the Dempeus tab, once started from the button.
-6. Tapping a nino removes it, and tapping a red number brings it back.
-7. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
-8. "Final a l'escenari", "Al revés" and "+ Finalista" are names to confirm.
-- (a) All fine, so Frontend builds them.
+Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Since D180, the finale's group ninos and shared win are gone, so Frontend redraws those frames: several finalists can fall on one landing, each as their own nino, and a landing that would take everyone left doesn't count. The boards' other proposals:
+1. The finale's button: normal above 20 standing, medium from 11 to 20, large at 10 or fewer.
+2. A stays "Següent", so the finale opens from the tablet only.
+3. The finalists' view lives in the Dempeus tab, once started from the button.
+4. Tapping a nino removes it, and tapping a red number brings it back.
+5. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
+6. "Final a l'escenari", "Al revés" and "+ Finalista" are names to confirm.
+- (a) All fine, so Frontend builds them once redrawn.
 - (b) Comment on the canvas where not.
 
 ### U150 · The finalists on the phones
@@ -223,7 +221,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 - **U156 · A slightly before B** (2026-11-26) → D176: no delay; B while A is held turns the starting transition into a Suspens.
 - **U154 · First plays and the night's length** (2026-11-26) → D175: keep 22 s.
 - **U51 · The slower pace** (2026-11-26) → D174: not the first round but a song's first play of the night, longer and from its main hook.
-- **U151 · The finale decided by the song** (2026-11-26) → D172: yes, with the group ninos.
+- **U151 · The finale decided by the song** (2026-11-26) → D172, then superseded by D180: no grouping and no shared win; the songs go on until one is left.
 - **U152 · The game's-state tab** (2026-11-26) → D173: "Estat".
 - **U142–U149** (2026-11-26) → D166–D170: the finale replaces the Desgraciat's Check; it starts from the claim button's slot, which grows; a finalist's card shows privately and a fallen one isn't added; finalists can be removed or brought back; the song decides (U151 to confirm); the lookup is its own tab, today's Futur becomes the game's state with the song history, and a new Futur holds the possible winners and the upcoming songs.
 - **U140 · The canvas edits** (2026-11-26) → D165: the user's own, with the canvas's assistant.

@@ -203,7 +203,7 @@ This page explains the event: what happens on the night, who does what, and how 
 
 - **The Quina del Desgraciat,** once a night:
   - It's played in reverse. Everyone with a card stands up. When a song on your card lands, you sit down.
-  - **The last one standing wins.** If the last players standing all sit on the same song, they share the win.
+  - **The last one standing wins,** always exactly one: if a song would sit down everyone still standing, it doesn't count for them, and the songs go on until one is left, the most unlucky (**new in 2026**; until 2025 they shared the win).
   - There's no Line.
   - Some cards in a sold range may not have been sold, so the presenters call the winner by looking at the room.
   - **The finale on stage** (**new in 2026**): when about 5–10 are still standing, they come up on stage, and their cards are checked on the way up. The screen shows a figure for each, with its card number, in order, so they can line up. As each one's song lands, their figure is marked out, until one is left: the winner, with no need for a public Check.

@@ -52,13 +52,13 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
 
 - It's played once a night, in reverse. Everyone with a card stands up.
 - A card is **fallen** as soon as any of its songs lands, and its player sits down. **The last card standing wins.**
-- **A shared win:** if the last players standing all sit on the same song, they share the win. A card that fell with the latest landing passes its Check, so the presenters may accept several such cards for one shared Celebration; a card that fell earlier never passes.
+- **Always one winner (D180):** a landing can knock out several cards at once, but if it would knock out every card left, it doesn't count for them, and the songs go on until exactly one is left. There's no shared win.
 - There's no Line. The round's only prize is its bundle.
 - The standing cards are the round's cards in play, so unsold cards inside an entered range count too. The system can't tell which. So it never ends the round itself:
   - auto-advance stops when one card stands;
   - the presenters call the winner by looking at the room.
-- The Shuffle makes sure the last two cards in play can't fall on the same song. A shared win can still happen when the real last players hold cards that fall together.
-- **The finale on stage (D161):** when about 5–10 cards stand, their players come up, each card checked privately on the way, and the presenters enter the finalists' numbers. It replaces the Desgraciat's public Check (D166). The presenters start it from the claim button's slot, which grows as fewer stand (D167). Entering a finalist shows the card privately, with ✓ or ✗ per song; a fallen card isn't added, and finalists can be removed or brought back by hand (D168). The song decides, not the card: the finalists hit by one landing fall together; if a landing would take all who remain, they all win together, shown with the ninos that come in groups (D169, D172).
+- The Shuffle makes sure the last two cards in play can't fall on the same song.
+- **The finale on stage (D161):** when about 5–10 cards stand, their players come up, each card checked privately on the way, and the presenters enter the finalists' numbers. It replaces the Desgraciat's public Check (D166). The presenters start it from the claim button's slot, which grows as fewer stand (D167). Entering a finalist shows the card privately, with ✓ or ✗ per song; a fallen card isn't added, and finalists can be removed or brought back by hand (D168). A landing can knock out several finalists at once, each shown as their own nino; if it would knock out every finalist left, it doesn't count for them, and the songs go on until one is left (D180).
 - It plays special cards by default, as in 2025 (D70); Admin picks the type like any round's.
 - It can be moved to any point in the night.
 - It's short, lively and full of interaction with the crowd (2025: 21 songs, about 8 minutes).

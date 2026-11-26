@@ -1155,7 +1155,7 @@ By: the user. Source: open-questions.md › Answered (U143). Amends: D161. Lives
 Entering a finalist's number shows that card privately, like the Check screen, with each song marked ✓ or ✗. A card that has already fallen shows its ✗ and isn't added (U144 (a)). The presenters can remove a finalist, or bring one back, by hand (U145 (a)).
 By: the user. Source: open-questions.md › Answered (U144, U145). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
 
-### D169 · The finale is decided by the song, not the card · 2026-11-26 · Active (confirmed by D172)
+### D169 · The finale is decided by the song, not the card · 2026-11-26 · Superseded by D180
 The user: "if the last 2 finalist have the same song, we already know they both won. so the moment that we know who wins is dependent on the song, not the individual card. in the projector and tablet they should show together, because they win or get eliminated together." Proposed handling, by the orchestrator at the user's request:
 1. At each landing, the finalists with that song on their card fall together, shown together as one group on the projector and the tablet.
 2. If one finalist is left, they win.
@@ -1175,7 +1175,7 @@ By: the user. Source: open-questions.md › Answered (U147, U148). Amends: D162.
 The Especial and the Desgraciat use Part 1's playlist, so Part 1 covers Quines 1–4 and Part 2 covers Quines 5–10, and both play about the same number of rounds (six each). The normal card's side 1 is Quines 1–4 and side 2 is Quines 5–10. The presenters explain the sides in rounds 1 and 5. The special card is printed from Part 1, and no third playlist is needed. The user still has to confirm this with the other organizers and may change it.
 By: the user. Source: the user's message of 26 Nov. Supersedes: D105. Amends: D101, D102. Lives in: event.md › The cards, The songs; requirements/songs-and-cards.md; requirements/game-rules.md › The night's rounds.
 
-### D172 · The finale's groups use the group ninos · 2026-11-26 · Active
+### D172 · The finale's groups use the group ninos · 2026-11-26 · Superseded by D180
 D169's handling is confirmed. Finalists who fall or win together are shown with the ninos that already come in groups: two kissing, two dancing (one flipped horizontally), three stacked as a human castle. Answers U151.
 By: the user. Source: open-questions.md › Answered (U151); the user's message of 26 Nov. Amends: D169. Lives in: requirements/screens.md › Projector, Console.
 
@@ -1210,3 +1210,12 @@ By: the user. Source: open-questions.md › Answered (U54). Amends: D171's wordi
 ### D179 · "+ Candidat" adds another claimed card · 2026-11-26 · Active
 Answers U153.
 By: the user. Source: open-questions.md › Answered (U153). Amends: D110's "+ Un altre". Lives in: requirements/screens.md › Console.
+
+### D180 · The Desgraciat goes on until one card is left · 2026-11-26 · Active
+D169's grouping was wrong, and the orchestrator should have pushed back: each card has its own 12 songs, so two finalists sharing one song don't share a fate. The rule now:
+- A landing can knock out several finalists at once. Each falls on their own card, shown as individual ninos, not merged into a group.
+- If a landing would knock out every finalist left, it doesn't count for them: they all stay in, and the songs go on until exactly one is left. "We're trying to find the most unlucky."
+- So the Desgraciat has no shared win any more, in the finale or before it.
+- No group ninos (D172).
+The user: "when we only have 2 people we alway have to keep playing song until one is eliminated. in case they both have the same song, we should keep going until only one is left".
+By: the user. Source: the user's message of 26 Nov. Supersedes: D169, D172, and the shared win (game-rules › The Quina del Desgraciat; event.md). Lives in: event.md › The special rounds; requirements/game-rules.md › The Quina del Desgraciat; GLOSSARY.md › Last standing.
