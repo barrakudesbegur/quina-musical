@@ -17,6 +17,16 @@ The agreed boards show "Benvinguda" and "Mitja part" rows in the phone's Horari,
 - (a) Keep the rounds and "Fi" only.
 - (b) Add the welcome (a time in the plan) and the breaks (named as U123 decides).
 
+### U128 · The throw song's hook
+Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
+- (a) Keep it.
+- (b) Another point, after listening.
+
+### U129 · The effects' default volume
+D130 said songs in Parlem and the effects "may start lower". Sound engine set every slider's 100% to today's tuned level. "Songs in Parlem" starts at 45% (today's −14 dB duck), and the effects at 100%.
+- (a) Keep the effects at 100%.
+- (b) Start them lower; give a number.
+
 ### U123 · The screens' word for a break
 No screen says "Interval": the projector's title, the console's buttons and phase name, the phones' heading and Horari's row all say "Mitja part" (half-time). With several breaks a night, "Mitja part" is off. Changing it is strings only.
 - (a) "Descans" on every screen.
