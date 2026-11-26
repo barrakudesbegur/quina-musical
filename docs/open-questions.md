@@ -23,11 +23,10 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
-### U134 · The loudness details (D157)
-Every slider now goes to about 150%, which is +7 dB on the audio taper. The internal trim decides how much of that range is clean: above it, the limiter squashes.
-- **The trim:** (a) −6 dB: everything is clean up to about 141%, and the sound system is turned up about 6 dB at the sound check; (b) −3 dB: clean up to about 119%, and squashed beyond.
-- **The chaotic moments' default:** (a) 119% (+3 dB); (b) 141% (+6 dB).
-- **Sliders:** (a) one shared by the throws and the corn-seed storm, as built; (b) one each.
+### U135 · One slider or two for the chaotic moments
+Today the throws and the corn-seed storm share one slider.
+- (a) Keep one shared slider.
+- (b) Give the corn-seed storm a slider of its own.
 
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
@@ -100,7 +99,7 @@ The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json
 Pending your go on the visual theme pass across the screens. Not ready yet (25 Nov).
 
 ### U13 · Listening pass on the new sound
-Not heard yet: phrase landings, the lighter early palette and rare impacts, Signatures before the landing, the new Suspense, Aguanta's loop, vocal entries, Count-in. Two defaults to confirm while listening:
+Not heard yet: phrase landings, the lighter early palette and rare impacts, Signatures before the landing, the new Suspense, Aguanta's loop, vocal entries, Count-in. Things to confirm while listening, including the chaotic moments' loudness (D158):
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
@@ -202,6 +201,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U134 · The loudness details** (2026-11-26) → D158: noticeably louder, set by ear; the starting point is +6 dB with a −6 dB trim, both tunable.
 - **U133 · How the chaotic moments get louder** (2026-11-26) → D157: their slider above 100% with hidden room; every slider 0–150%, default 100%.
 - **U132 · The corn-seed storm** (2026-11-26) → D153, D155: "Flying Free" from its drop for now; the button on the last round's normal screen, inside its Check and on the end screen.
 - **U131 · Horari's first row** (2026-11-26) → D152: "Venda de cartrons".

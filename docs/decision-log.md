@@ -1105,6 +1105,10 @@ By: the user. Source: open-questions.md › Answered (U132). Amends: D151. Lives
 When the orchestrator relays a decision from the user, the sessions take it as the user's own, a lifted freeze included. The user told Frontend so, after Frontend held back the console's labels: "He took the code freeze too seriously." A session's own permission check may still need the user's OK in that session; that's for the user, never worked around.
 By: the user (to Frontend, 26 Nov). Source: Frontend's report of 26 Nov. Lives in: docs/team.md.
 
-### D157 · Every slider goes above 100%, with hidden room · 2026-11-26 · Active; how much louder, the trim and one slider or two Pending (U134)
+### D157 · Every slider goes above 100%, with hidden room · 2026-11-26 · Amended by D158
 The chaotic moments get louder through their slider going above 100%, while the engine plays the whole show lower inside, so the limiter has room (U133 (a)). The user extends it: every slider runs from 0% to about 140–150%, with its default at 100%. The tech turns the sound system up once, at the sound check, by the internal trim.
 By: the user. Source: open-questions.md › Answered (U133). Amends: D139, D154. Lives in: requirements/show-and-music.md › Volumes.
+
+### D158 · Noticeably louder, set by ear · 2026-11-26 · Active
+The chaotic moments must sound noticeably louder than the songs. The amount is set by ear once the user hears it, not decided in advance. Starting point: +6 dB (about 141%), with a −6 dB internal trim so it stays clean, both one-line settings, tuned at the listening pass or the sound check. Answers U134's trim and default.
+By: the user (the amount by ear); the starting point by the orchestrator, as a tunable setting. Source: the user's message of 26 Nov. Amends: D157. Lives in: requirements/show-and-music.md › Volumes.
