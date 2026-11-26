@@ -22,6 +22,9 @@ export interface SceneContext {
    * without it the rules assume one plays in `interval` and `after`, the scenes that start one, and during Pausa.
    */
   intervalMusic?: boolean;
+  /** The night's last round is the one in play (the state's `lastRound`): the corn-seed storm's button shows in it
+   * (D155). Optional: without it the storm is only allowed after the Game. */
+  lastRound?: boolean;
 }
 
 type Rule = 'any' | readonly ShowScene[] | ((ctx: SceneContext) => boolean);
@@ -80,8 +83,8 @@ const RULES = {
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   // Between rounds (D138): at the doors, in a break, after the Game.
   throw: ['before', 'interval', 'after'],
-  // After the last round, next to the end music (D151; U132 (a)).
-  storm: ['after'],
+  // The night's last round, its normal screen and its Check, and after it, on the end screen (D155).
+  storm: (c) => c.scene === 'after' || (c.lastRound === true && (c.scene === 'play' || c.scene === 'check')),
 } satisfies Record<CommandName, Rule>;
 
 export const SCENE_RULES: Readonly<Record<CommandName, Rule>> = Object.freeze(RULES);

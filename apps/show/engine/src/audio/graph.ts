@@ -10,9 +10,12 @@
 //   samples (boom, orchestra-hit) + whoosh → fxBus → [djFx] ┤
 //   the presenters' effects [padFx], the fanfares [win] [fail] [finalLap] ┤
 //   drum ticks → drumBus → [ticks] ┤
-//   the Pausa set → [pausa], the throw song → [throws] ┤→ master → [master] → limiter → destination
+//   the Pausa set → [pausa] ┤
+//   everything above but fx, the Check and Pausa → throwDuck (a throw song's music under it) ┘
+//   the throw song → [throws] ┤→ master → [master] → headroom (MIX.headroomDb) → limiter → destination
 
 import { VOLUME_KEYS, type VolumeKey } from '@quina/protocol';
+import { MIX } from '../config.ts';
 
 /** A shared parameter the plans automate (recipes.ts ParamTarget), plus the master gain and the Hold duck. */
 const GRAPH_PARAMS = ['echo.time', 'echo.feedback', 'echo.hpf', 'echo.return', 'reverb.return', 'reverb.hpf', 'bus.hpf', 'master', 'duck'] as const;
@@ -73,6 +76,10 @@ export class AudioGraph {
   bedDuck: GainNode;
   /** The volume sliders (D139): one gain each, set by `setVolumes`. */
   vol: Record<VolumeNode, GainNode>;
+  /** The scene's music (songs, sets, Hold music, the Celebration's) fades under a throw song (D138, D151). */
+  throwDuck: GainNode;
+  /** The internal trim in front of the limiter (D157: room for sliders above 100%). */
+  headroom: GainNode;
   fxBus: GainNode;
   synthBus: GainNode;
   drumBus: GainNode;
@@ -91,7 +98,11 @@ export class AudioGraph {
     this.limiter.release.value = 0.2;
     // The sliders first, each in front of where its sounds go (wired below).
     this.vol = Object.fromEntries(VOLUME_NODES.map((n) => [n, ctx.createGain()])) as Record<VolumeNode, GainNode>;
-    this.master.connect(this.vol.master).connect(this.limiter).connect(ctx.destination);
+    this.headroom = ctx.createGain();
+    this.headroom.gain.value = 10 ** (MIX.headroomDb / 20);
+    this.master.connect(this.vol.master).connect(this.headroom).connect(this.limiter).connect(ctx.destination);
+    this.throwDuck = ctx.createGain();
+    this.throwDuck.connect(this.master);
     // Chrome's compressor delays its output by a fixed 6 ms pre-delay (measured on test.html).
     this.processingLatencySec = 0.006;
 
@@ -101,10 +112,10 @@ export class AudioGraph {
     this.busHpf.type = 'highpass';
     this.busHpf.frequency.value = 10;
     this.busHpf.Q.value = 0.9;
-    this.busHpf.connect(this.master);
+    this.busHpf.connect(this.throwDuck);
     this.checkDuck = { music: ctx.createGain(), hold: ctx.createGain() };
     this.checkDuck.music.connect(this.busHpf);
-    this.checkDuck.hold.connect(this.master);
+    this.checkDuck.hold.connect(this.throwDuck);
     this.holdDuck = ctx.createGain();
     this.holdDuck.connect(this.checkDuck.music);
     this.musicBus = ctx.createGain();
@@ -223,7 +234,7 @@ export class AudioGraph {
   /** Every slider to its percent (D139), gliding: gain = (percent / 100)², protocol volumeDb. */
   setVolumes(volumes: Readonly<Record<VolumeKey, number>>, seconds = 0.15): void {
     for (const key of VOLUME_KEYS) {
-      const gain = Math.min(1, Math.max(0, volumes[key] / 100)) ** 2;
+      const gain = Math.max(0, volumes[key] / 100) ** 2;
       for (const node of SLIDER_NODES[key]) {
         const p = this.vol[node].gain;
         const now = this.ctx.currentTime;

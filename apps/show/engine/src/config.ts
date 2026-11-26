@@ -897,6 +897,14 @@ export const THROW = Object.freeze({
   endFadeSec: 2,
 });
 
+/**
+ * The mix (D157, D158): the whole show plays lower inside by `headroomDb`, in front of the master limiter, so a slider
+ * above 100% (the throws at +6 dB) stays clean. The tech turns the sound system up by as much, once, at the sound check.
+ */
+export const MIX = Object.freeze({
+  headroomDb: -6,
+});
+
 /** Pausa (D128, D135): what plays is saved and resumes exactly where it was. */
 export const PAUSA = Object.freeze({
   /** What was playing fades out over this long, and the Pausa set fades in. */

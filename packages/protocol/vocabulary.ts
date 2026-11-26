@@ -182,9 +182,10 @@ export const THROW_SONGS = ['throw', 'storm'] as const;
 export type ThrowSong = (typeof THROW_SONGS)[number];
 
 /**
- * The volume sliders (D130, D139), each a percent 0–100 (`setVolume`). 100% is the level the engine is tuned to
- * for that sound, so a fresh Game sounds as before, except `songsParlem`: the song under Parlem as a share of its
- * full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and
+ * The volume sliders (D130, D139), each a percent from 0 to its VOLUME_MAX (`setVolume`). 100% is the level the
+ * engine is tuned to for that sound, so a fresh Game sounds as before; above 100% is louder, with the room the engine
+ * keeps inside (D157: it plays the whole show lower, by its headroom trim, so the limiter stays clean). `songsParlem`
+ * is the song under Parlem as a share of its full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and
  * whooshes; `padFx`: the presenters' effects pad; `check`: the Check's snippets and broken record; `win`: the Clear
  * fanfare, the victory track and the winning song's loop; `fail`: the Failure fanfare and the error Hold music;
  * `finalLap`: the stinger; `intros`, `breaks`, `pausa`, `throws`, `doors`, `end`: those moments' music.
@@ -198,14 +199,20 @@ export type Volumes = Record<VolumeKey, number>;
 export const isVolumeKey = (value: unknown): value is VolumeKey =>
   typeof value === 'string' && (VOLUME_KEYS as readonly string[]).includes(value);
 
-/** Every slider's starting percent. `songsParlem` is today's Parlem duck (−14 dB) on the curve below. */
+/** Every slider's starting percent. `songsParlem` is today's Parlem duck (−14 dB) on the curve below; `throws` (the
+ * throws and the corn-seed storm, one slider: D159) starts noticeably louder than the songs, +6 dB (D158, by ear). */
 export const VOLUME_DEFAULTS: Readonly<Volumes> = Object.freeze({
   master: 100, songs: 100, songsParlem: 45, djFx: 100, padFx: 100, ticks: 100, check: 100, holdMusic: 100, win: 100,
-  fail: 100, finalLap: 100, intros: 100, breaks: 100, pausa: 100, throws: 100, doors: 100, end: 100,
+  fail: 100, finalLap: 100, intros: 100, breaks: 100, pausa: 100, throws: 141, doors: 100, end: 100,
 });
+
+/** Each slider's highest percent (D157: every one to about 150%, +7 dB; the engine's headroom keeps it clean). */
+export const VOLUME_MAX: Readonly<Volumes> = Object.freeze(
+  Object.fromEntries(VOLUME_KEYS.map((key) => [key, 150])) as Volumes,
+);
 
 /**
  * A slider's percent as decibels against its 100%: an audio taper, gain = (percent / 100)², so 50% is −12 dB,
- * 25% −24 dB and 10% −40 dB; 0% is silence (−Infinity).
+ * 25% −24 dB, 10% −40 dB, 119% +3 dB, 141% +6 dB, 150% +7 dB; 0% is silence (−Infinity).
  */
-export const volumeDb = (percent: number): number => (percent <= 0 ? -Infinity : 40 * Math.log10(Math.min(100, percent) / 100));
+export const volumeDb = (percent: number): number => (percent <= 0 ? -Infinity : 40 * Math.log10(percent / 100));

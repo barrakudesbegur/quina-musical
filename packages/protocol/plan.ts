@@ -14,7 +14,7 @@
 // organizers' spreadsheet.
 //
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
-import { defaultCardType, isCardTypeId, isRoundKind, isVolumeKey, type RoundKind, type VolumeKey } from './vocabulary.ts';
+import { VOLUME_MAX, defaultCardType, isCardTypeId, isRoundKind, isVolumeKey, type RoundKind, type VolumeKey } from './vocabulary.ts';
 
 /**
  * Version 3: each round names the printed card type it plays (`RoundPlan.cardType`); the card types' names, colours
@@ -100,7 +100,7 @@ export interface GamePlan {
   sponsors: Sponsor[];
   schedule: SchedulePlan;
   /**
-   * The volume sliders a fresh Game starts with (D139, percent 0–100, vocabulary.ts VOLUME_KEYS): the edition file
+   * The volume sliders a fresh Game starts with (D139, percent 0–VOLUME_MAX, vocabulary.ts VOLUME_KEYS): the edition file
    * holds them, and the cloud folds a Game's slider moves back in. The engine reads them only while the Game has set
    * no volume of its own, never mid-Game. Laptop only: publicPlan leaves them out. Absent: every slider at its default.
    */
@@ -308,7 +308,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
       volumes = {};
       for (const [key, value] of Object.entries(vol)) {
         if (!isVolumeKey(key)) err('plan.volumes', `unknown key "${key}"`);
-        else if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) err(`plan.volumes.${key}`, 'must be a percent, 0–100');
+        else if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > VOLUME_MAX[key]) err(`plan.volumes.${key}`, `must be a percent, 0–${VOLUME_MAX[key]}`);
         else volumes[key] = value;
       }
     }

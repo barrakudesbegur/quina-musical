@@ -89,7 +89,7 @@ export interface GameSettings {
    */
   holdMusicOn?: boolean;
   /**
-   * The volume sliders, percent 0–100 (`setVolume`, vocabulary.ts VOLUME_KEYS and volumeDb). The state always has
+   * The volume sliders, percent 0–VOLUME_MAX (`setVolume`, vocabulary.ts VOLUME_KEYS and volumeDb). The state always has
    * every key. In the journal they are absent until a slider or the plan's `volumes` first set them, so a Game that
    * set none starts from the plan's (D139).
    */
@@ -460,6 +460,9 @@ export interface ShowState {
   celebrationChoice?: CelebrationMusic | null;
   /** A throw song while it's on (D138, D151), else null. */
   throwSong: ThrowInfo | null;
+  /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
+   * button shows in it (D155; SceneContext.lastRound). */
+  lastRound: boolean;
 }
 
 /** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */

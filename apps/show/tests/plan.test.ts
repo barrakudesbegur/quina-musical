@@ -205,7 +205,10 @@ test('the plan\'s volumes (D139): known sliders, percents 0–100, never on phon
   assert.ok(ok.ok);
   assert.deepEqual(ok.plan.volumes, { master: 80, songsParlem: 30 });
   assert.equal('volumes' in publicPlan(ok.plan, [1]), false, 'laptop only');
-  for (const bad of [{ loud: 50 }, { master: 120 }, { master: -1 }, { master: '80' }, 'x']) {
+  const loud = good();
+  (loud as Record<string, unknown>).volumes = { throws: 141 };
+  assert.ok(checkGamePlan(loud).ok, 'above 100% up to VOLUME_MAX (D157)');
+  for (const bad of [{ loud: 50 }, { master: 151 }, { master: -1 }, { master: '80' }, 'x']) {
     const q = good();
     (q as Record<string, unknown>).volumes = bad;
     const c = checkGamePlan(q);

@@ -12,9 +12,11 @@ import {
   WIN_KINDS,
   REVIEW_OUTCOMES,
   VOLUME_KEYS,
+  VOLUME_MAX,
   isPhaseName,
   type PhaseName,
   type ProtocolVersion,
+  type VolumeKey,
 } from './vocabulary.ts';
 
 /** `integers`: a list of integers, each within `min`–`max`, 1 to `maxItems` long, no repeats. */
@@ -87,7 +89,7 @@ export const COMMANDS = Object.freeze({
    * One volume slider (D139), applied at once and kept in the Game's settings (`game.volumes`). The engine journals
    * the volumes in `settings.changed` once the sliders have been still for a second, so a drag is one entry.
    */
-  setVolume: { key: { type: 'string', oneOf: VOLUME_KEYS }, percent: { type: 'number', min: 0, max: 100 } },
+  setVolume: { key: { type: 'string', oneOf: VOLUME_KEYS }, percent: { type: 'number', min: 0, max: Math.max(...Object.values(VOLUME_MAX)) } },
   /** A claimed Line passed its Check: the Phase starts climbing towards the Bingo. A manual override for when
    * no Check was run (a valid Line's cue confirms it by itself); allowed in play and in the Celebration. */
   confirmLine: {},
@@ -215,8 +217,10 @@ export const COMMANDS = Object.freeze({
    */
   throw: { restart: { type: 'boolean', optional: true } },
   /**
-   * The corn-seed storm (D151): its song by hand, right from its drop, at full volume over the end music, which fades
-   * under it and back after. The same taps as `throw` (it replaces a throw song playing). After the Game (U132 (a)).
+   * The corn-seed storm (D151): its song by hand, right from its drop, louder than the songs, over the scene's music,
+   * which fades under it and back after. The same taps as `throw` (it replaces a throw song playing). In the night's
+   * last round (its play, where it also puts the round in a Hold so nothing lands unheard, and its Check) and after
+   * the Game (D155).
    */
   storm: { restart: { type: 'boolean', optional: true } },
   /** The end of the Game (scene `after`). */
@@ -313,6 +317,11 @@ export function checkCommand(message: unknown): CommandCheck {
 /** Rules across a command's fields, which the per-field specs can't say. */
 const REFINE: Partial<Record<CommandName, (message: Record<string, unknown>) => string | null>> = {
   claim: (m) => ((m.cardId === undefined) === (m.cardIds === undefined) ? 'claim needs exactly one of cardId and cardIds' : null),
+  // Each slider's own highest percent (D157).
+  setVolume: (m) => {
+    const max = VOLUME_MAX[m.key as VolumeKey];
+    return typeof m.percent === 'number' && m.percent > max ? `percent must be ≤ ${max} for ${String(m.key)}` : null;
+  },
 };
 
 function fieldError(key: string, field: FieldSpec, value: unknown): string | null {

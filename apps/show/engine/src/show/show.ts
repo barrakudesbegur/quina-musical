@@ -880,6 +880,8 @@ export class Show {
         this.throwTap('throw', c.restart ?? false);
         break;
       case 'storm':
+        // During the last round's play the round holds first (Parlem), so no song lands unheard under the storm (D155).
+        if (this.scene === 'play' && !(this.throwSong?.song === 'storm' && this.throwSong.playing) && this.status !== 'hold') this.holdOn(reqId);
         this.throwTap('storm', c.restart ?? false);
         break;
       case 'endGame':
@@ -2059,6 +2061,7 @@ export class Show {
     return {
       scene: this.scene, celebrating: this.celebration?.kind ?? null, introduced: this.intro != null, paused: this.pause != null,
       intervalMusic: this.pause != null || this.bed === 'interval',
+      lastRound: this.isLastRound(),
     };
   }
 
@@ -2770,6 +2773,11 @@ export class Show {
     return this.flush();
   }
 
+  /** The round in play is the night's last: the plan's last round, else `game.roundsTotal` (D155). */
+  isLastRound(): boolean {
+    return this.round.number >= (this.plan?.rounds.length || this.game.roundsTotal);
+  }
+
   /** The scene changes, or Panic: the throw song stops for good. */
   endThrow(fadeSec: number = THROW.endFadeSec) {
     if (!this.throwSong) return;
@@ -3122,6 +3130,7 @@ export class Show {
         ? { set: 'pausa', track: this.pausaNow ? { ...this.pausaNow } : null }
         : this.bed === 'interval' ? { set: this.bedSet, track: this.intervalNow ? { ...this.intervalNow } : null } : null,
       celebrationChoice: this.celebrationChoice,
+      lastRound: this.isLastRound(),
       throwSong: this.throwSong
         ? { song: this.throwSong.song, title: THROW.songs[this.throwSong.song].title, artist: THROW.songs[this.throwSong.song].artist, playing: this.throwSong.playing, sinceMs: this.throwSong.sinceMs }
         : null,

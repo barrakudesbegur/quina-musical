@@ -72,6 +72,10 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound']],
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
+    // The corn-seed storm in the night's last round too (D155).
+    ['play, the last round', { scene: 'play', lastRound: true }, [...PLAY, 'claim', 'storm']],
+    ['check, the last round', { scene: 'check', lastRound: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'storm']],
+    ['interval after the last round', { scene: 'interval', lastRound: true }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
     ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic']],
     // Parlem in every Celebration (D117).
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
@@ -684,6 +688,24 @@ test('the throw song (D138): a tap starts it from its hook, stops it, resumes it
   assert.equal(h.show.snapshot().throwSong, null);
   assert.deepEqual(rejected(h.send('throw')), ['wrongScene'], 'a round is in play');
   assert.deepEqual(rejected(h.send('storm')), ['wrongScene'], 'the storm only after the Game');
+});
+
+test('the corn-seed storm in the night\'s last round (D155): the round holds first, so nothing lands unheard under it', () => {
+  const h = flow();
+  h.send('setGame', { roundsTotal: 1 });
+  landSongs(h, 2);
+  assert.equal(h.show.snapshot().lastRound, true);
+  const position = h.show.position;
+  const out = h.send('storm');
+  assert.equal(find(out, 'throwSong')?.action, 'play');
+  assert.deepEqual([h.show.status, h.show.hold?.ducked], ['hold', true], 'Parlem under the storm');
+  h.advance(30);
+  assert.equal(h.show.position, position, 'nothing landed');
+  // Not in an earlier round.
+  const e = flow(5);
+  landSongs(e, 1);
+  assert.equal(e.show.snapshot().lastRound, false);
+  assert.deepEqual(rejected(e.send('storm')), ['wrongScene']);
 });
 
 test('the corn-seed storm (D151): after the Game, its song right from the drop over the end music; the same taps; it replaces a throw', () => {

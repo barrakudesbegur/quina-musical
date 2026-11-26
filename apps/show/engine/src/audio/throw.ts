@@ -21,7 +21,7 @@ interface ThrowVoice {
 
 export class ThrowPlayer {
   readonly graph: AudioGraph;
-  /** The break music's level under it (the breaks' and the end's sets, graph.intervalBus). */
+  /** The scene's music under it (graph.throwDuck: the songs, the sets, Hold music, the Celebration's). */
   readonly under: AudioParam;
   /** The song played to its end (not stopped). */
   onEnded: (() => void) | null = null;
@@ -30,7 +30,7 @@ export class ThrowPlayer {
 
   constructor(graph: AudioGraph) {
     this.graph = graph;
-    this.under = graph.intervalBus.gain;
+    this.under = graph.throwDuck.gain;
   }
 
   /** Decode a track once (a slow first tap would start late). Null when it can't be had. */

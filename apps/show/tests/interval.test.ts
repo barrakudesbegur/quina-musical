@@ -367,7 +367,10 @@ test('the volumes (D139): live, every slider in the state, journaled once still;
   const entries = journalOf(still).filter((e) => e.kind === 'settings.changed');
   assert.equal(entries.length, 1, 'one entry for the drag');
   assert.ok(entries[0].kind === 'settings.changed' && entries[0].settings.volumes?.breaks === 35);
-  assert.deepEqual(rejected(h.send('setVolume', { key: 'breaks', percent: 101 })), ['invalid']);
+  assert.deepEqual(rejected(h.send('setVolume', { key: 'doors', percent: 150 })), [], 'every slider goes to 150% (D157)');
+  assert.deepEqual(rejected(h.send('setVolume', { key: 'doors', percent: 151 })), ['invalid']);
+  assert.equal(VOLUME_DEFAULTS.throws, 141, 'the chaotic moments start +6 dB (D158)');
+  assert.ok(Math.abs(volumeDb(141) - 6) < 0.05 && Math.abs(volumeDb(150) - 7.04) < 0.05);
   assert.deepEqual(rejected(h.dispatch({ v: 1, type: 'cmd', cmd: 'setVolume', reqId: 'r', key: 'loud', percent: 50 })), ['invalid']);
   // A plan's volumes now are ignored: this Game set its own.
   const plan = checkGamePlan({ v: 3, edition: '26', title: 'Q', prizeReveal: 'perRound', sponsors: [], rounds: [{ number: 1, kind: 'normal', line: [], bingo: [] }], schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 }, volumes: { breaks: 90 }, cheatSheet: { claimRules: [], specialRoundRules: [] } });
