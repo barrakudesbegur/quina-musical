@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { checkCommand, extendJournal, makeCommand, replayJournal, sceneAllows, JournalError, type JournalEntry, type ShowScene } from '@quina/protocol';
 import type { Effect } from '../engine/src/show/show.ts';
 import { setup, allCards } from './support/harness.ts';
+import { computeCheck } from '../engine/src/game/check.ts';
 
 const journalOf = (effects: readonly Effect[]): JournalEntry[] => effects.flatMap((e) => (e.type === 'journal' ? [e.entry] : []));
 const rejected = (effects: readonly Effect[]) => effects.flatMap((e) => (e.type === 'reject' ? [e.reason] : []));
@@ -103,4 +104,40 @@ test('the Review in the journal: claim.reviewing, then claim.continued or claim.
   refused({ kind: 'claim.reviewing', claimId: 'cl-2' }, /already discarded/);
   refused({ kind: 'claim.reviewing', claimId: 'cl-4' }, /already decided/);
   refused({ kind: 'claim.reviewing', claimId: 'cl-9' }, /no claim/);
+});
+
+test("D121: a Claim under review whose Check left the screen comes back where it was: its marks, no snippet replayed, the next reveal on a press", () => {
+  const h = setup({ seed: 3, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
+  h.send('unlock');
+  for (let i = 0; i < 16; i++) {
+    const p = h.show.position;
+    h.send('next');
+    h.until(() => h.show.position === p + 1 && h.show.status === 'playing');
+  }
+  // A card whose Line Check reveals at least three songs, and another card.
+  const valid = h.show.phaseModel.valid;
+  const target = valid.find((c) => computeCheck({ allCards, cardId: c.id, kind: 'line', cardType: 'normal', cardsInPlay: new Set(h.show.cardsInPlay), queue: h.show.queue, position: h.show.position }).revealUntil! >= 2);
+  assert.ok(target, 'a card with three landed songs at the front of its row');
+  const other = valid.find((c) => c.id !== target.id)!;
+  h.send('claim', { cardIds: [target.id, other.id], kind: 'line' });
+  const [a, b] = h.show.claims.map((c) => c.claimId);
+  h.send('checkNext', { claimId: a, step: 0 });
+  h.send('checkNext', { claimId: a, step: 1 });
+  h.advance(4);
+  assert.equal(h.show.check?.info.revealed.length, 2);
+  h.send('checkReview', { claimId: a });
+  // Meanwhile the other card's Check takes the screen.
+  assert.deepEqual(rejected(h.send('checkStart', { claimId: b })), []);
+  assert.equal(h.show.check?.info.claimId, b);
+  // Continuing the Review brings it back with its two marks, the music far down, and nothing replayed.
+  const out = h.send('reviewEnd', { claimId: a, outcome: 'continue' });
+  const started = out.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.started' ? [e.message.check] : []));
+  assert.deepEqual(started.map((c) => [c.claimId, c.revealed.length]), [[a, 2]]);
+  assert.ok(out.some((e) => e.type === 'checkDuck' && e.on), 'far down, as before it left the screen');
+  assert.ok(!out.some((e) => e.type === 'checkReveal'), 'no snippet replayed');
+  assert.equal(h.show.check?.awaitPress, true);
+  // The next press reveals the third song.
+  const next = h.send('checkNext', { claimId: a, step: 2 });
+  assert.equal(next.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.revealed' ? [e.message.index] : [])).at(0), 2);
+  assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });

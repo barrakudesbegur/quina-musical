@@ -680,6 +680,8 @@ export class Show {
   claimCount = 0;
   /** The Check on screen, paced by the presenters. */
   check: CheckRun | null = null;
+  /** A Claim under review whose Check left the screen for another card's: its marks, so it comes back where it was (D121). */
+  reviewMarks = new Map<string, { revealed: CheckStep[]; autoOff: boolean }>();
   /** `checkAuto`: reveal in a row (the Wii's A held, or the tablet's toggle). */
   checkAutoOn = false;
   /** The Desgraciat's finale (D161, D166–D172): its finalists in order; `byHand`, a removal left one standing. */
@@ -1081,6 +1083,7 @@ export class Show {
     this.landings = [];
     // The round's Claims, Check, Celebration and Interval end with it; the Winners stay with the Game.
     this.claims = [];
+    this.reviewMarks.clear();
     this.finale = null;
     this.finaleCued = false;
     this.celebrationChoice = null;
@@ -1160,6 +1163,7 @@ export class Show {
     const nowMs = this.env.nowMs();
     this.landings = this.queue.slice(0, c.position + 1).map((songId, position) => ({ songId, position, atMs: nowMs, undone: false, T: now }));
     this.claims = [];
+    this.reviewMarks.clear();
     this.finale = null;
     this.finaleCued = false;
     this.celebrationChoice = null;
@@ -2363,7 +2367,15 @@ export class Show {
       cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null, side: this.round.side,
       startAtMs: this.env.nowMs(), total: result.steps.length, revealed: [], auto: false, cue: null, reviewing,
     };
-    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null };
+    // A Claim under review comes back from where it was (D121): its earlier reveals as marks, no snippet replayed, the
+    // next reveal waiting for a press. Only while the card still checks the same way (a Back can change it).
+    const marks = reviewing ? this.reviewMarks.get(claim.claimId) : undefined;
+    this.reviewMarks.delete(claim.claimId);
+    const still = marks && marks.revealed.length <= result.steps.length && marks.revealed.every((m, i) => result.steps[i].songId === m.songId && result.steps[i].landed === m.landed);
+    if (still) info.revealed = marks.revealed.map((m) => ({ ...m }));
+    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: still ? marks.autoOff : false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null };
+    // The music is far down once something is revealed, as it was before the Check left the screen.
+    if (still && info.revealed.length) this.out.push({ type: 'checkDuck', on: true });
     this.emit({ type: 'check.started', check: this.checkInfo()! });
   }
 
@@ -2372,6 +2384,8 @@ export class Show {
     const run = this.check;
     if (!run) return;
     this.check = null;
+    // Under review, its marks wait for it to come back on screen (D121).
+    if (run.info.reviewing && run.info.revealed.length) this.reviewMarks.set(run.info.claimId, { revealed: run.info.revealed.map((m) => ({ ...m })), autoOff: run.autoOff });
     this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
     const claim = this.claims.find((c) => c.claimId === run.info.claimId);
     if (claim?.status === 'checking') claim.status = 'queued';
@@ -2611,6 +2625,7 @@ export class Show {
    * before the Check (D142).
    */
   discard(claim: ClaimInfo) {
+    this.reviewMarks.delete(claim.claimId);
     claim.status = 'discarded';
     claim.cueNext = false;
     this.journal({ kind: 'claim.discarded', round: claim.round, claimId: claim.claimId });
