@@ -137,7 +137,8 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   const base = { gameId: decided.gameId, seq: 99, atMs: 1, round: 1, claimId: 'c1' };
   assert.ok(checkJournalEntry({ ...base, kind: 'claim.reviewing' }).ok, 'a Check put under review');
   assert.ok(checkJournalEntry({ ...base, kind: 'claim.continued' }).ok, 'a Review that goes on with the Check');
-  assert.ok(checkJournalEntry({ ...base, kind: 'claim.dropped' }).ok, 'a claim discarded');
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.discarded' }).ok, 'a claim discarded');
+  assert.equal(checkJournalEntry({ ...base, kind: 'claim.dropped' }).ok, false, "D124's old name isn't a kind");
   assert.equal(checkJournalEntry({ ...base, kind: 'claim.reviewing', claimId: 7 }).ok, false, 'the claim id is text');
   assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, false, "the step-1 name isn't a kind");
   assert.ok(checkJournalEntry({ ...decided, manual: true }).ok, 'a decision by hand');

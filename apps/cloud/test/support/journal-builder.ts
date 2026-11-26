@@ -201,8 +201,8 @@ export class JournalBuilder {
   }
 
   /** The Review ends with "discard" (D121): no verdict, no sound. */
-  drop(claimId: string): this {
-    this.push({ kind: 'claim.dropped', round: this.round, claimId }, 1_000);
+  discard(claimId: string): this {
+    this.push({ kind: 'claim.discarded', round: this.round, claimId }, 1_000);
     return this;
   }
 

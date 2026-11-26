@@ -192,11 +192,11 @@ test('a Check under review stays pending on phones (U76/U79 open); a discard cle
   assert.deepEqual(projectEntry(state, next(), record, ctx), [], 'under review: nothing public yet');
   b.continue(claimId);
   assert.deepEqual(projectEntry(state, next(), record, ctx), [], 'the Check goes on');
-  b.review(claimId).drop(claimId);
+  b.review(claimId).discard(claimId);
   projectEntry(state, b.entries.at(-2) as JournalEntry, (record = extendJournal(record, [b.entries.at(-2) as JournalEntry])), ctx);
-  const dropped = next();
-  assert.deepEqual(projectEntry(state, dropped, record, ctx), [{ kind: 'check', check: null }], 'discarded: the Check goes, with no mark');
-  state = applyPublic(state, projectEntry(state, dropped, record, ctx));
+  const discarded = next();
+  assert.deepEqual(projectEntry(state, discarded, record, ctx), [{ kind: 'check', check: null }], 'discarded: the Check goes, with no mark');
+  state = applyPublic(state, projectEntry(state, discarded, record, ctx));
   assert.deepEqual(state.winners, []);
   assert.deepEqual(project(b.entries).state.winners, [], 'replayed from the start, the same');
 });

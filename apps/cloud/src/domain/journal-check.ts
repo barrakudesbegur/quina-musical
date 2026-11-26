@@ -97,10 +97,10 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)), manual: optional((value) => (value === true ? null : 'true when present')) },
   // The presenter-paced Check's Review (D118–D121): a Check put under review before its cue leaves the claim
   // undecided; the Review ends with the Check going on (continued), a decision by hand (claim.decided with
-  // `manual`), or the claim discarded (dropped).
+  // `manual`), or the claim discarded (D124).
   'claim.reviewing': { round, claimId },
   'claim.continued': { round, claimId },
-  'claim.dropped': { round, claimId },
+  'claim.discarded': { round, claimId },
   // `slip`: the numbered slip handed to the winner instead of a name (absent in older journals). Private, like the name.
   'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)), slip: optional(nullable(text(16, true))) },
   'prizes.revealed': { round, by: oneOf('presenters', 'intro') },

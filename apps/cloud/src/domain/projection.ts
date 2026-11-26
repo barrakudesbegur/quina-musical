@@ -117,7 +117,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
     case 'claim.reviewing':
     case 'claim.continued':
       return [];
-    case 'claim.dropped': {
+    case 'claim.discarded': {
       // Discarded from a Review: the pending Check goes, with no mark and no winner.
       const claim = record.claims.find((c) => c.claimId === entry.claimId);
       const shown = claim && state.check && state.check.cardId === claim.cardId && state.check.result === 'pending';
