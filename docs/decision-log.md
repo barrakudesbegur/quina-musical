@@ -1337,3 +1337,16 @@ By: the orchestrator, applying the user's D195 and D196 to Frontend's questions.
 ### D200 · The phone asks whether to add another card · 2026-11-26 · Active; when it shows Pending (U174)
 After a player adds a card, a banner over the cards list asks whether they want to add another, with "No" and "Sí" ("Vols afegir un altre cartró?"). "Sí" opens the add-card pad. Why: "i worry users dont know they can add more than 1 card", and most people buy several cards and follow their relatives' (event.md › The cards). The pad still has one save button (D95). The choice comes after the save, on the list, instead of D95's removed "Desar i afegir-ne un altre".
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.
+
+### D201 · The design system's points that follow from earlier decisions · 2026-11-26 · Active
+From Frontend's design-system spec (26 Nov), the points that need no new choice:
+- **D189 is about buttons.** Floating buttons stay round: the phone's corner discs and «+ Cartró». So do things that aren't buttons: switch tracks, status chips, the Wii remote's keys, ✓/✗ badges, the icon picker's circles (D131) and the ✕ over a finalist's nino. The non-floating pills become rounded rectangles: «Afegir cartró» in Ajustos and the empty states, «Escriure el número», «+ Afegir el d'enguany», the dialog's «Continuar», the prizes drawer's round chips and ‹ ›, and the ✕ beside typed numbers.
+- **«+ Cartró» everywhere a card is added** (D188), Ajustos included.
+- **The card marks' order follows D5,** corn first; today's picker shows the bauble first.
+- **Labels the log already fixes:**
+  - «Pausa», not «Pausa tècnica» (the glossary's Pause);
+  - the review dialog's «Cancel·la» becomes «Torna a la revisió» (D164 retired «Cancel·la»);
+  - the Desgraciat's chip reads «Últim cartró dempeus» (D186).
+- **The side labels** are written with an en dash, «Normal 1–5» / «Normal 6–10», as in the code.
+The rest is U175.
+By: the orchestrator, applying earlier decisions to Frontend's spec. Source: Frontend's report of 26 Nov (temp/design-canvas/ds/components.md, board-audit.md). Lives in: packages/ui (Frontend); requirements/screens.md.

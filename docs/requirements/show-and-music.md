@@ -128,7 +128,7 @@ _From event.md › Claims and checks, Atmosphere and style; the decisions doc �
 - **The Check's sound:**
   - the card's songs play in the card's order as 2–3 s hook snippets, each when a presenter reveals it (D107);
   - a song that has landed gets ✓; one that hasn't plays briefly "broken" (a short warble or bitcrush, never annoying) and gets ✗;
-  - in the Desgraciat each ✓ is a short tick, and the first landed song plays its snippet as proof. If that song is the latest landing, the card fell with the last players: it passes, and shares the win;
+  - the Desgraciat has no public Check: its finale on stage replaces it (D166), and it has no shared win (D180);
   - the Hold music stays ducked far down throughout.
 - **A failed Check:** the Failure fanfare on the presenters' cue, or at the end of an automatic reveal (D109, D117), then the error Hold music until the presenters press "Reprèn".
 - **A Check under review:** no fanfare or effect; whatever was playing keeps playing, still far down, as during the Check (D191). Pausa only if a presenter turns it on (D118). After a discard, the music from before the Check comes back in Parlem, with the auto-advance suspended until "Següent" (D122; how, pending U84).
