@@ -143,7 +143,14 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, false, "the step-1 name isn't a kind");
   assert.ok(checkJournalEntry({ ...decided, manual: true }).ok, 'a decision by hand');
   assert.equal(checkJournalEntry({ ...decided, manual: false }).ok, false, '`manual` is true or absent');
+  // The volume sliders (D139): percents, absent until set; a slider this cloud doesn't know yet never stalls uploads.
+  const changed = entries.find((e) => e.kind === 'settings.changed') as JournalEntry & { settings: object };
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 80, songsParlem: 45, end: 0 } } }).ok, 'the volumes');
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 100, laterSlider: 300 } } }).ok, 'a slider added later');
   const bad: [string, unknown][] = [
+    ['a volume above 100', { ...changed, settings: { ...changed.settings, volumes: { master: 120 } } }],
+    ['a volume as text', { ...started, settings: { ...changed.settings, volumes: { songs: '80' } } }],
+    ['volumes as a list', { ...changed, settings: { ...changed.settings, volumes: [80] } }],
     ['win kind', { ...opened, winKind: 'quina' }],
     ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],
     ['a slip longer than 16', { ...noted, slip: 'x'.repeat(17) }],

@@ -95,7 +95,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       return changes;
     }
     case 'claim.opened':
-      // The Check is public once it starts (check.scheduled), not when the claim is queued.
+      // The Check is public once it's on screen (check.started), not when the claim is queued.
       return [];
     case 'claim.decided': {
       const claim = record.claims.find((c) => c.claimId === entry.claimId);
@@ -146,8 +146,9 @@ export function projectEvent(state: PublicState, event: ShowEvent, ctx: Projecti
       return spinChange(state, null);
     case 'shuffle.scheduled':
       return [{ kind: 'shuffle', shuffle: { round: event.round, startAtMs: ctx.toCloudMs(event.startAtMs), endAtMs: ctx.toCloudMs(event.endAtMs) } }];
-    case 'check.scheduled': {
-      // Only which card and what for: the steps' ✓/✗ would spoil the result before the projector shows it.
+    case 'check.started': {
+      // Only which card and what for: its reveals and its outcome stay off phones (D107), so nothing public says
+      // ahead of the cue whether the card passes; the result comes from the journal's claim.decided.
       const round = state.rounds.at(-1)?.number ?? 0;
       const { cardId, kind } = event.check;
       if (state.check && state.check.cardId === cardId && state.check.kind === kind && state.check.result === 'pending') return [];
@@ -167,7 +168,8 @@ export function projectEvent(state: PublicState, event: ShowEvent, ctx: Projecti
 function projectState(state: PublicState, show: ShowState, ctx: ProjectionContext): PublicChange[] {
   const changes: PublicChange[] = [];
   if (state.spin && show.transition === null && show.suspense === null) changes.push({ kind: 'spin', spin: null });
-  const pause = show.pause ? { sinceMs: ctx.toCloudMs(show.pause.sinceMs) } : null;
+  // "Tornem de seguida" only where the projector shows it too: in a round, a Check or a Celebration (D135).
+  const pause = show.pause?.overlay ? { sinceMs: ctx.toCloudMs(show.pause.sinceMs) } : null;
   if (pause?.sinceMs !== state.pause?.sinceMs) changes.push({ kind: 'pause', pause });
   const interval = show.interval ? { nextRound: show.interval.nextRound, guideEndMs: ctx.toCloudMs(show.interval.guideEndMs) } : null;
   if (interval?.nextRound !== state.interval?.nextRound || interval?.guideEndMs !== state.interval?.guideEndMs) changes.push({ kind: 'interval', interval });
@@ -192,7 +194,7 @@ export const FORWARDED_EVENT_TYPES = [
   'transition.cancelled',
   'transition.landed',
   'shuffle.scheduled',
-  'check.scheduled',
+  'check.started',
 ] as const satisfies readonly ShowEvent['type'][];
 export type ForwardedEventType = (typeof FORWARDED_EVENT_TYPES)[number];
 export const isForwardedEventType = (type: unknown): type is ForwardedEventType =>

@@ -18,10 +18,11 @@ test('a hello, an upload, a ping and the forwarded events pass', () => {
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'suspense.started', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.landed' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'shuffle.scheduled', round: 2, startAtMs: 1, endAtMs: 2 } },
-    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'bingo' } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.started', check: { cardId: 4, kind: 'bingo' } } },
     // The Desgraciat round's Check, for the last card standing.
-    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'standing' } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.started', check: { cardId: 4, kind: 'standing' } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: { sinceMs: 3, overlay: false }, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'relay.clients', clients: [] } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'claim.opened', claim: {} } },
   ];
@@ -44,7 +45,11 @@ test('anything malformed, an unknown event type, or the journal as an event, is 
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'made.up' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: 5, interval: null, schedule: { gameEndMs: 9 } } },
-    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'house' } } },
+    // Pausa says whether phones show it (D135).
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: { sinceMs: 3 }, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },
+    // The timed Check is gone (step 2).
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.scheduled', check: { cardId: 4, kind: 'bingo' } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'check.started', check: { cardId: 4, kind: 'house' } } },
     { v, type: 'cloud.ack', sentAtMs: 1 },
   ];
   for (const message of bad) assert.equal(checkLinkMessage(message).ok, false, JSON.stringify(message));

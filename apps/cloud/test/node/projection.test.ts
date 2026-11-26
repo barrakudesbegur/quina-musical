@@ -176,12 +176,12 @@ test('a Check under review stays pending on phones (U76/U79 open); a discard cle
   const claimId = b.claim(42, 'line');
   b.scene('check');
   let { state, record } = project(b.entries);
-  const scheduled = {
+  const started = {
     v: PROTOCOL_VERSION,
-    type: 'check.scheduled',
-    check: { claimId, cardId: 42, kind: 'line', outcome: 'incomplete', row: 0, otherRows: [], steps: [], startAtMs: 1, endAtMs: 9 },
+    type: 'check.started',
+    check: { claimId, cardId: 42, kind: 'line', outcome: 'incomplete', row: 0, otherRows: [], startAtMs: 1, total: 4, revealed: [], auto: false, cue: null, reviewing: false },
   } as unknown as ShowEvent;
-  state = applyPublic(state, projectEvent(state, scheduled, ctx));
+  state = applyPublic(state, projectEvent(state, started, ctx));
   assert.equal(state.check?.result, 'pending');
 
   const next = (): JournalEntry => {
@@ -212,7 +212,7 @@ test('a win by hand from a Review shows on phones as any win, with nothing sayin
   assert.equal(JSON.stringify(state).includes('"manual"'), false, 'no `manual` key reaches phones');
 });
 
-test('a Check is public as "pending" from its start, without its steps, and shows its verdict only once decided', () => {
+test('a Check is public as "pending" once on screen, without its reveals, and shows its verdict only once decided', () => {
   const b = new JournalBuilder('g-check');
   b.startRound().land(10);
   const claimId = b.claim(42, 'line');
@@ -220,14 +220,14 @@ test('a Check is public as "pending" from its start, without its steps, and show
   let { state, record } = project(b.entries);
   assert.equal(state.check, null, 'queued claims are not public');
 
-  const scheduled = {
+  const started = {
     v: PROTOCOL_VERSION,
-    type: 'check.scheduled',
-    check: { claimId, cardId: 42, kind: 'line', outcome: 'incomplete', row: 0, otherRows: [], steps: [{ songId: 5, landed: false, atMs: 1, durationMs: 2000 }], startAtMs: 1, endAtMs: 9 },
+    type: 'check.started',
+    check: { claimId, cardId: 42, kind: 'line', outcome: 'incomplete', row: 0, otherRows: [], startAtMs: 1, total: 4, revealed: [], auto: false, cue: null, reviewing: false },
   } as unknown as ShowEvent;
-  const made = projectEvent(state, scheduled, ctx);
+  const made = projectEvent(state, started, ctx);
   assert.deepEqual(made, [{ kind: 'check', check: { round: 1, cardId: 42, kind: 'line', result: 'pending' } }]);
-  assert.deepEqual(projectEvent(applyPublic(state, made), scheduled, ctx), [], 'scheduling it again changes nothing');
+  assert.deepEqual(projectEvent(applyPublic(state, made), started, ctx), [], 'starting it again changes nothing');
   state = applyPublic(state, made);
 
   b.decide(claimId, 'invalid');
@@ -286,7 +286,7 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
     future: { lastStandingAt: 40, standingCurve: [10, 5, 2, 1] },
     phase: 'final',
     heat: 0.93,
-    pause: { sinceMs: 5000 },
+    pause: { sinceMs: 5000, overlay: true },
     interval: { sinceMs: 0, nextRound: 4, guideEndMs: 600_000 },
     schedule: { roundEndMs: 123_456, gameEndMs: 10 * step + 0.4 * step - OFFSET, roundDriftSec: 3, gameDriftSec: 1 },
   } as unknown as ShowState;
@@ -302,10 +302,11 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
 
 test("the paced Check's events and its private claim fields never reach phones (D108, D123; U79)", () => {
   const state = applyPublic(emptyPublicState('26'), [{ kind: 'check', check: { round: 1, cardId: 12, kind: 'line', result: 'pending' } }]);
-  const check = { claimId: 'cl-1', cardId: 12, kind: 'line', outcome: 'complete', row: 0, otherRows: [], steps: [], startAtMs: 0, endAtMs: 0, total: 4, revealed: [], auto: false, cue: null, reviewing: true };
+  const check = { claimId: 'cl-1', cardId: 12, kind: 'line', outcome: 'complete', row: 0, otherRows: [], startAtMs: 0, total: 4, revealed: [{ songId: 7, landed: true, atMs: 10, durationMs: 3000 }], auto: false, cue: null, reviewing: true };
   const events = [
     { v: PROTOCOL_VERSION, type: 'check.started', check },
     { v: PROTOCOL_VERSION, type: 'check.revealed', claimId: 'cl-1', index: 0, step: { songId: 7, landed: true, atMs: 10, durationMs: 3000 } },
+    { v: PROTOCOL_VERSION, type: 'check.unrevealed', claimId: 'cl-1', index: 0, atMs: 15 },
     { v: PROTOCOL_VERSION, type: 'check.reviewing', claimId: 'cl-1', atMs: 20 },
     { v: PROTOCOL_VERSION, type: 'check.cue', claimId: 'cl-1', cue: 'pass', manual: true, atMs: 30 },
     { v: PROTOCOL_VERSION, type: 'celebration.started', celebration: { kind: 'line', round: 1, check } },
@@ -322,11 +323,22 @@ test("the paced Check's events and its private claim fields never reach phones (
     },
   ] as unknown as ShowEvent[];
   for (const event of events) {
+    // check.started on the Check phones already have: nothing new (the first one is in the test above).
     const made = projectEvent(state, event, ctx);
     assert.deepEqual(forbiddenKeys(made), [], event.type);
     if (event.type !== 'state') assert.deepEqual(made, [], `${event.type} changes nothing public`);
     else assert.equal(made.some((c) => c.kind === 'check'), false, "the state's Check stays the console's");
   }
+});
+
+test('phones show Pausa only with its overlay: during a round, a Check or a Celebration, not at the doors, in a break or at the end (D135)', () => {
+  const show = (pause: unknown) => ({ v: PROTOCOL_VERSION, type: 'state', pause, interval: null, schedule: { gameEndMs: 0 }, transition: null, suspense: null }) as unknown as ShowState;
+  const start = applyPublic(emptyPublicState('26'), [{ kind: 'gameEnd', gameEndMs: 0 }]);
+  assert.deepEqual(projectEvent(start, show({ sinceMs: 100, overlay: false }), ctx), [], 'a Pausa in a break: phones stay as they are');
+  const paused = projectEvent(start, show({ sinceMs: 100, overlay: true }), ctx);
+  assert.deepEqual(paused, [{ kind: 'pause', pause: { sinceMs: 100 + OFFSET } }]);
+  // The scene changes under Pausa (a Celebration ends in a break): the overlay goes, and phones with it.
+  assert.deepEqual(projectEvent(applyPublic(start, paused), show({ sinceMs: 100, overlay: false }), ctx), [{ kind: 'pause', pause: null }]);
 });
 
 test("a state with nothing in flight stops the phones' Spin (Panic, a new round)", () => {

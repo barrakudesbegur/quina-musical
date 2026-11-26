@@ -512,6 +512,42 @@ describe('the Game plan and its media (Admin)', () => {
     expect((await SELF.fetch(`${BASE}/media/not-a-hash.png`)).status).toBe(404);
   });
 
+  it("the tablet's sliders fold into the plan's volumes, for the next fresh Game; a plan saved elsewhere, or an older Game, can't undo them (D139)", async () => {
+    expect((await put(PLAN)).status).toBe(200);
+    const { client: link } = await laptop('g-volumes-old');
+    // A rehearsal: the presenters tune two sliders, journalled once still.
+    const old = new JournalBuilder('g-volumes-old', now() - 60_000).settings().startRound().land(2).settings({ volumes: { master: 90 } });
+    const rehearsal = new JournalBuilder('g-volumes', now()).settings().startRound().land(2).settings({ volumes: { master: 80, pausa: 60 } });
+    link.send({ v, type: 'link.journal', gameId: 'g-volumes', entries: rehearsal.entries, sentAtMs: now() });
+    const heard = await link.drain();
+    expect(heard).toContainEqual(expect.objectContaining({ type: 'cloud.ack', ackSeq: rehearsal.entries.length }));
+    expect(heard).toContainEqual(expect.objectContaining({ type: 'cloud.plan', plan: expect.objectContaining({ volumes: { master: 80, pausa: 60 } }) }));
+    expect((await getJson<{ plan: GamePlan }>('/api/plan')).plan.volumes).toEqual({ master: 80, pausa: 60 });
+    const p = await phone();
+    expect(JSON.stringify((await p.view()).state.plan)).not.toContain('volumes'); // phones never get them
+
+    // An older Game's journal, uploaded late (the spare laptop), doesn't undo them.
+    link.send({ v, type: 'link.journal', gameId: 'g-volumes-old', entries: old.entries, sentAtMs: now() });
+    expect(await link.drain()).toContainEqual(expect.objectContaining({ type: 'cloud.ack', ackSeq: old.entries.length }));
+    expect((await getJson<{ plan: GamePlan }>('/api/plan')).plan.volumes).toEqual({ master: 80, pausa: 60 });
+
+    // Admin saves its copy, from before the sliders moved: the volumes stay; the answer says so.
+    const saved = await put({ ...PLAN, title: 'Quina amb volums' });
+    expect(((await saved.json()) as { plan: GamePlan }).plan.volumes).toEqual({ master: 80, pausa: 60 });
+    link.send({ v, type: 'link.plan', plan: { ...PLAN, volumes: { master: 5 } }, savedAtMs: now(), sentAtMs: now() });
+    await link.drain();
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // and they're saved
+    expect((await getJson<{ plan: GamePlan }>('/api/plan')).plan).toMatchObject({ title: PLAN.title, volumes: { master: 80, pausa: 60 } });
+
+    // Leave the test plan as it was for the next tests: without volumes.
+    await runInDurableObject(roomOf(env), (_room: GameRoom, state) => {
+      const body = JSON.parse(String(state.storage.sql.exec('SELECT body FROM snapshot WHERE id = 1').one().body)) as { plan: GamePlan };
+      const { volumes: _volumes, ...plan } = body.plan;
+      state.storage.sql.exec('UPDATE snapshot SET body = ? WHERE id = 1', JSON.stringify({ ...body, plan, volumesAtMs: null }));
+    });
+    await evictDurableObject(roomOf(env), { webSockets: 'close' });
+  });
+
   it('only organizers may change the plan or upload; methods are checked', async () => {
     expect((await put(PLAN, 'https://quina.example/api/plan')).status).toBe(403);
     expect((await SELF.fetch('https://quina.example/api/media', { method: 'POST', body: 'x' })).status).toBe(403);

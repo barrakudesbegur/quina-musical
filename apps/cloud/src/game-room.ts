@@ -34,6 +34,7 @@ import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanS
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { flaggedDecisions } from './domain/flags.ts';
+import { journalledVolumes, keepingVolumes, withVolumes } from './domain/volumes.ts';
 import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
 import { UsageCounter, usageReport, type DailyUsage, type UsageReport } from './domain/usage.ts';
 import { ingest } from './domain/ingest.ts';
@@ -68,6 +69,8 @@ interface RoomSnapshot {
   plan?: GamePlan | null;
   /** When `plan` was saved (cloud clock); absent in snapshots from before it was kept. */
   planSavedAtMs?: number | null;
+  /** When the volumes last folded into the plan were journalled (cloud clock): an older Game's upload can't undo them. */
+  volumesAtMs?: number | null;
 }
 
 interface ShowAttachment {
@@ -327,6 +330,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
       if (changes.length > 0) this.broadcast(this.deltaMessage(changes));
       // A round's prizes revealed (prizes.revealed): phones get that round's bundles now.
       if (result.accepted.some(({ entry }) => entry.kind === 'prizes.revealed')) this.refreshPublicPlan();
+      this.foldVolumes(result.accepted.map(({ entry }) => entry), ctx);
     }
 
     const gameId = upload.gameId;
@@ -508,9 +512,28 @@ export class GameRoom extends DurableObject<RoomEnv> {
     this.counted();
     const check = this.checkPlan(json);
     if (!check.ok) return check;
+    // The volumes stay the cloud's: only the tablet's sliders change them, through the journal (domain/volumes.ts).
+    const plan = keepingVolumes(check.plan, this.room.plan ?? null);
     // Never older than the plan it replaces, so a laptop's copy saved a moment ago can't win over it.
-    this.adoptPlan(check.plan, Math.max(Date.now(), (this.planSavedAtMs() ?? 0) + 1));
-    return { ok: true, plan: check.plan };
+    this.adoptPlan(plan, Math.max(Date.now(), (this.planSavedAtMs() ?? 0) + 1));
+    return { ok: true, plan };
+  }
+
+  /**
+   * The newest slider moves of an upload, folded into the plan's volumes (D139), so the next fresh Game starts with
+   * them. Only when they were journalled after the volumes already folded, so an older Game's late upload can't undo
+   * newer ones. Without a plan there is nothing to fold into.
+   */
+  private foldVolumes(entries: readonly JournalEntry[], ctx: ProjectionContext): void {
+    const found = journalledVolumes(entries);
+    const plan = this.room.plan ?? null;
+    if (!found || !plan) return;
+    const atMs = ctx.toCloudMs(found.atMs);
+    if (atMs <= (this.room.volumesAtMs ?? -Infinity)) return;
+    const next = withVolumes(plan, found.volumes);
+    this.room = { ...this.room, volumesAtMs: atMs };
+    if (next) this.adoptPlan(next, Math.max(Date.now(), (this.planSavedAtMs() ?? 0) + 1));
+    this.save();
   }
 
   /** checkGamePlan, for this edition only. */
@@ -561,11 +584,12 @@ export class GameRoom extends DurableObject<RoomEnv> {
   private onLinkPlan(ws: WebSocket, link: LinkPlan, ctx: ProjectionContext, now: number): void {
     const check = this.checkPlan(link.plan);
     if (!check.ok) return this.refuse(ws, `link.plan: ${check.errors.slice(0, 5).join('; ')}`, null);
+    const plan = keepingVolumes(check.plan, this.room.plan ?? null);
     // On the cloud's clock, and never in the future (a laptop with a wrong clock can't pin its plan forever).
     const savedAtMs = Math.min(ctx.toCloudMs(link.savedAtMs), now);
     const own = this.planSavedAtMs();
-    const same = JSON.stringify(check.plan) === JSON.stringify(this.room.plan ?? null);
-    if (!same && (own === null || savedAtMs > own)) return this.adoptPlan(check.plan, savedAtMs);
+    const same = JSON.stringify(plan) === JSON.stringify(this.room.plan ?? null);
+    if (!same && (own === null || savedAtMs > own)) return this.adoptPlan(plan, savedAtMs);
     this.reply(ws, { type: 'cloud.plan', plan: this.room.plan ?? null, savedAtMs: own });
   }
 

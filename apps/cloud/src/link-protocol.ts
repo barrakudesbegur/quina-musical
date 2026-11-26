@@ -241,7 +241,7 @@ function forwardedEventError(event: unknown): string | null {
   switch (event.type) {
     case 'state': {
       const { pause, interval, schedule } = event;
-      if (pause !== null && !(isRecord(pause) && isTime(pause.sinceMs))) return 'state.pause must be null or {sinceMs}';
+      if (pause !== null && !(isRecord(pause) && isTime(pause.sinceMs) && typeof pause.overlay === 'boolean')) return 'state.pause must be null or {sinceMs, overlay}';
       if (interval !== null && !(isRecord(interval) && isCount(interval.nextRound) && isTime(interval.guideEndMs))) return 'state.interval must be null or {nextRound, guideEndMs}';
       if (!isRecord(schedule) || !isTime(schedule.gameEndMs)) return 'state.schedule.gameEndMs must be a number';
       if (!(event.transition === null || isRecord(event.transition)) || !(event.suspense === null || isRecord(event.suspense))) return 'state.transition and state.suspense must be null or objects';
@@ -253,10 +253,10 @@ function forwardedEventError(event: unknown): string | null {
       return isTime(event.spinStartAtMs) ? null : 'suspense.started needs spinStartAtMs';
     case 'shuffle.scheduled':
       return isCount(event.round) && isTime(event.startAtMs) && isTime(event.endAtMs) ? null : 'shuffle.scheduled needs round, startAtMs and endAtMs';
-    case 'check.scheduled': {
+    case 'check.started': {
       const check = event.check;
       // The protocol's own win kinds (line, bingo, standing), as the journal check takes them.
-      return isRecord(check) && isCount(check.cardId) && (WIN_KINDS as readonly unknown[]).includes(check.kind) ? null : 'check.scheduled needs check.cardId and check.kind';
+      return isRecord(check) && isCount(check.cardId) && (WIN_KINDS as readonly unknown[]).includes(check.kind) ? null : 'check.started needs check.cardId and check.kind';
     }
     case 'relay.clients':
       return Array.isArray(event.clients) ? null : 'relay.clients needs clients';
