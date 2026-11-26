@@ -3,7 +3,7 @@
 // Maps keyed by protocol vocabulary are Partial with a fallback, so a new reason or command from the engine
 // shows something sensible instead of breaking the build; tests/ui/console/strings.test.ts checks that
 // every known value has its own text.
-import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName, ThrowSong, VolumeKey } from '@quina/protocol';
+import type { HoldReason, MusicSet, PhaseName, RejectReason, ShowStatus, SoundName, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import { roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
@@ -573,19 +573,26 @@ export const S = {
     title: CA.scene.interval,
     guide: 'Compte enrere orientatiu',
     over: (clock: string) => `+${clock}`,
+    /** The cluster's big button in a break (D195), A's default. */
     start: 'Comença la quina',
-    startNote: 'Primer anuncieu els premis.',
+    startNote: 'primer anuncieu els premis',
   },
 
+  /** «Ara sona» with the playlist of the breaks, Pausa or the end (IntervalMusic; D196: the left column's top). */
   intervalMusic: {
-    title: 'Música del descans',
-    track: (title: string, artist: string) => (artist ? `${title} · ${artist}` : title),
-    position: (index: number, count: number) => `Cançó ${index} de ${count}`,
+    title: CA.nowPlaying,
+    sets: { breaks: 'Música del descans', pausa: 'Música de la pausa', end: 'Música del final' } satisfies Record<MusicSet, string>,
+    position: (set: string, index: number, count: number) => `${set} · cançó ${index} de ${count}`,
     waiting: 'Encara sona la música anterior; la llista entra tot seguit.',
     skip: 'Salta la cançó',
-    skipNote: 'Canvia al següent compàs, amb una sortida suau.',
-    volume: 'Volum',
-    volumeValue: (percent: number) => `${percent} %`,
+  },
+
+  /** «Ara sona» in one line, over the pads, Cerca and the Check board (NowLine; D196, D199). */
+  nowLine: {
+    label: CA.nowPlaying,
+    low: "baixa, d'abans de la comprovació",
+    /** Spoken, the whole line. */
+    aria: (what: string, low: boolean) => `${CA.nowPlaying}${low ? ', baixa' : ''}: ${what}`,
   },
 
   /**

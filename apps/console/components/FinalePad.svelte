@@ -22,6 +22,7 @@
   import { CA, S } from '../strings.ts';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
+  import NowLine from './NowLine.svelte';
   import PodiumIcon from './PodiumIcon.svelte';
   import WiiBadge from './WiiBadge.svelte';
 
@@ -100,54 +101,57 @@
 
 {#if pad}
   <section class="claim-pad finale-pad" bind:this={root} tabindex="-1" aria-label={F.padLabel} data-testid="finale-pad" data-mode={pad.mode}>
-    <div class="panel claim-pad__entry">
-      <div class="claim-pad__head">
-        <h2 class="panel__label" id="{uid}-title">{F.padTitle}</h2>
-        <p class="claim-pad__same">{F.padHint}</p>
-      </div>
+    <div class="claim-pad__left">
+      <NowLine />
+      <div class="panel claim-pad__entry">
+        <div class="claim-pad__head">
+          <h2 class="panel__label" id="{uid}-title">{F.padTitle}</h2>
+          <p class="claim-pad__same">{F.padHint}</p>
+        </div>
 
-      {#key shakes}
-        <output
-          class="claim-pad__display"
-          aria-live="polite"
-          aria-label={F.display}
-          data-state={pad.refused ? 'refused' : pad.digits ? 'typed' : 'empty'}
-          data-anim={shakes > 0 && pad.refused ? 'claim-chip-refused' : undefined}
-        >
-          <span class="claim-pad__hash" aria-hidden="true">#</span>{pad.digits}<span class="claim-pad__caret" aria-hidden="true"></span>
-        </output>
-      {/key}
-      {#if pad.refused}
-        <p class="private-strip private-strip--bad" role="alert"><Icon name="cross" /><span class="private-strip__text">{F.refusal[pad.refused]}</span></p>
-      {:else if full}
-        <p class="note">{F.full(CONSOLE.finale.maxFinalists)}</p>
-      {/if}
+        {#key shakes}
+          <output
+            class="claim-pad__display"
+            aria-live="polite"
+            aria-label={F.display}
+            data-state={pad.refused ? 'refused' : pad.digits ? 'typed' : 'empty'}
+            data-anim={shakes > 0 && pad.refused ? 'claim-chip-refused' : undefined}
+          >
+            <span class="claim-pad__hash" aria-hidden="true">#</span>{pad.digits}<span class="claim-pad__caret" aria-hidden="true"></span>
+          </output>
+        {/key}
+        {#if pad.refused}
+          <p class="private-strip private-strip--bad" role="alert"><Icon name="cross" /><span class="private-strip__text">{F.refusal[pad.refused]}</span></p>
+        {:else if full}
+          <p class="note">{F.full(CONSOLE.finale.maxFinalists)}</p>
+        {/if}
 
-      <ul class="finale-pad__chips" aria-label={F.row}>
-        {#each chips as id (id)}
-          {@const mine = pad.added.includes(id)}
-          <li class="finale-pad__chip" data-fresh={fresh === id || undefined} data-anim={fresh === id ? 'finale-pad-card' : undefined}>
-            <span class="finale-pad__number">{F.chip(id)}</span>
-            {#if mine}
-              <button type="button" class="claim-chip__remove" aria-label={F.removeChip(id)} onclick={() => model.finalePadRemove(id)}><Icon name="close" /></button>
-            {/if}
-          </li>
-        {/each}
-      </ul>
+        <ul class="finale-pad__chips" aria-label={F.row}>
+          {#each chips as id (id)}
+            {@const mine = pad.added.includes(id)}
+            <li class="finale-pad__chip" data-fresh={fresh === id || undefined} data-anim={fresh === id ? 'finale-pad-card' : undefined}>
+              <span class="finale-pad__number">{F.chip(id)}</span>
+              {#if mine}
+                <button type="button" class="claim-chip__remove" aria-label={F.removeChip(id)} onclick={() => model.finalePadRemove(id)}><Icon name="close" /></button>
+              {/if}
+            </li>
+          {/each}
+        </ul>
 
-      <span class="claim-pad__spacer"></span>
-      <div class="claim-pad__keys">
-        {#each PAD_DIGITS.slice(0, 9) as d (d)}
-          <button type="button" class="pad-key" data-anim="press" onclick={() => press(d)}>{d}</button>
-        {/each}
-        <button type="button" class="pad-key pad-key--back" data-anim="press" onclick={() => press('back')}>
-          <Icon name="backspace" /><span class="visually-hidden">{S.numpad.back}</span>
-        </button>
-        <button type="button" class="pad-key" data-anim="press" onclick={() => press('0')}>0</button>
-        <button type="button" class="pad-key pad-key--enter" data-anim="press" data-testid="finale-enter" disabled={!pad.digits || full} onclick={enter}>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v7a3 3 0 0 1-3 3H6" /><path d="M10 11l-4 4 4 4" /></svg>
-          <span class="visually-hidden">{F.enter}</span>
-        </button>
+        <span class="claim-pad__spacer"></span>
+        <div class="claim-pad__keys">
+          {#each PAD_DIGITS.slice(0, 9) as d (d)}
+            <button type="button" class="pad-key" data-anim="press" onclick={() => press(d)}>{d}</button>
+          {/each}
+          <button type="button" class="pad-key pad-key--back" data-anim="press" onclick={() => press('back')}>
+            <Icon name="backspace" /><span class="visually-hidden">{S.numpad.back}</span>
+          </button>
+          <button type="button" class="pad-key" data-anim="press" onclick={() => press('0')}>0</button>
+          <button type="button" class="pad-key pad-key--enter" data-anim="press" data-testid="finale-enter" disabled={!pad.digits || full} onclick={enter}>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v7a3 3 0 0 1-3 3H6" /><path d="M10 11l-4 4 4 4" /></svg>
+            <span class="visually-hidden">{F.enter}</span>
+          </button>
+        </div>
       </div>
     </div>
 

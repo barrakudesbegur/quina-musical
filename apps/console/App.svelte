@@ -2,8 +2,11 @@
   The console: the presenters' control page (the Consola-Joc and Consola-Comprovacio boards). Layout
   (console.css):
   - landscape: the header's three panels across the top; the scene's panels in a column on the left, the
-    helpers' tabs filling the rest of it; the action cluster on the right. In a Check, the Check board takes
-    the whole body, and so do the claim pad and the finalists' pad (the Desgraciat's finale) while they're open;
+    helpers' tabs filling the rest of it; the action cluster on the right. The playback opens the column on every
+    screen (D196): «Ara sona» (IntervalMusic while the breaks', Pausa's or the end's playlist plays, then NowPlaying),
+    and in one line (NowLine) where the full panel has no room: over Cerca while its box has the focus, and at the top
+    of the Check board and the pads (D199). In a Check, the Check board takes the whole body, and so do the claim pad
+    and the finalists' pad (the Desgraciat's finale) while they're open;
   - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
   and data-status hooks for themes, and data-wii while a Wii remote is connected (its badges show).
@@ -31,6 +34,7 @@
   import IntervalMusic from './components/IntervalMusic.svelte';
   import Menu from './components/Menu.svelte';
   import NextSong from './components/NextSong.svelte';
+  import NowLine from './components/NowLine.svelte';
   import NowPlaying from './components/NowPlaying.svelte';
   import ClaimPad from './components/ClaimPad.svelte';
   import FinalePad from './components/FinalePad.svelte';
@@ -112,12 +116,13 @@
     </main>
   {:else}
     <main class="console__main" data-scene={flow.scene}>
+      {#if snap?.intervalMusic}<IntervalMusic />{/if}
+      {#if snap && (flow.scene === 'before' || flow.scene === 'play' || flow.scene === 'celebration')}<NowPlaying />{/if}
       <PausePanel />
       {#if !snap}
         <p class="console__waiting">{S.alerts.waiting}</p>
       {:else if flow.scene === 'before'}
         <BeforePanel />
-        <NowPlaying />
         <NextSong />
         <PacePanel />
       {:else if flow.scene === 'roundStart'}
@@ -125,20 +130,20 @@
         <NextSong />
       {:else if flow.scene === 'play'}
         {#if snap.status === 'hold'}<HoldPanel />{/if}
-        <NowPlaying />
         <NextSong />
         <PacePanel />
       {:else if flow.scene === 'celebration'}
         <CelebrationPanel />
-        <NowPlaying />
         <NextSong />
       {:else if flow.scene === 'interval'}
         <IntervalPanel />
       {:else if flow.scene === 'after'}
         <AfterPanel />
       {/if}
-      {#if snap?.intervalMusic}<IntervalMusic />{/if}
-      {#if snap}<HelperTabs />{/if}
+      {#if snap}
+        <NowLine />
+        <HelperTabs />
+      {/if}
     </main>
 
     <ThumbCluster onclaim={openPad} />

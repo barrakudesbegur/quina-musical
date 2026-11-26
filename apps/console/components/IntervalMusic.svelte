@@ -1,13 +1,14 @@
 <!--
-  The Interval playlist while it plays (state.intervalMusic): in the Interval, while a round is introduced and
-  shuffled, after the Game, and in play until the first Spin. The track playing, Skip (the engine hands over
-  on the next downbeat) and the playing set's volume slider (`setVolume`, D139: the breaks', Pausa's or the end's).
-  While a throw song plays over it («Llançament» or «Tempesta», D138, D151), the panel says «Ara sona» with that song,
-  and that the music underneath comes back when it ends; stopped by a tap, the music shows again with a word that the
-  song is stopped and where («aturat a 1:05», the Consola-Llancament-Tempesta board).
+  «Ara sona» with the playlist of the breaks, Pausa or the end while it plays (state.intervalMusic): in the Interval,
+  while a round is introduced and shuffled, after the Game, and in play until the first Spin. It opens the left column
+  (D196), drawn like NowPlaying (the Consola-Llancament-Tempesta board): a music tile, the track's title, its artist,
+  which music and which track («Música del descans · cançó 3 de 50»), and «Salta la cançó» (the engine hands over on
+  the next downbeat). The volumes are in the menu (VolumeSliders, D139).
+  While a throw song plays over it («Llançament» or «Tempesta», D138, D151), the panel names that song, with its chip,
+  and says that the music underneath comes back when it ends; stopped by a tap, the music shows again with a word that
+  the song is stopped and where («aturat a 1:05»).
 -->
 <script lang="ts">
-  import { VOLUME_DEFAULTS, VOLUME_MAX } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { throwClock, throwProgress } from '../logic/throw-songs.ts';
   import { S } from '../strings.ts';
@@ -17,56 +18,48 @@
   const uid = $props.id();
   const music = $derived(model.show.state?.intervalMusic ?? null);
   const track = $derived(music?.track ?? null);
-  const key = $derived(music?.set ?? 'breaks');
-  const percent = $derived(model.show.state?.game.volumes?.[key] ?? VOLUME_DEFAULTS[key]);
   const thrown = $derived(model.show.state?.throwSong ?? null);
-
-  // Send the volume when the slider is released, not on every step.
-  function setVolume(e: Event): void {
-    const value = Number((e.currentTarget as HTMLInputElement).value);
-    if (Number.isFinite(value)) model.act('setVolume', { key, percent: value });
-  }
+  const where = $derived(music && track ? S.intervalMusic.position(S.intervalMusic.sets[music.set], track.index, track.count) : null);
 </script>
 
 {#if music}
-  <section class="panel interval-music" aria-labelledby="{uid}-title" data-throw={thrown ? (thrown.playing ? 'playing' : 'stopped') : undefined}>
-    {#if thrown?.playing}
-      <h2 class="panel__subtitle" id="{uid}-title">
-        <Icon name="music" /> {S.throws.nowPlaying}
-        <span class="interval-music__chip" data-song={thrown.song}>{S.throws.names[thrown.song].label}</span>
-      </h2>
-      <p class="interval-music__track">{S.intervalMusic.track(thrown.title, thrown.artist)}</p>
-      <p class="note">{track ? S.throws.under(track.title) : S.throws.underWaiting}</p>
-    {:else}
-      <h2 class="panel__subtitle" id="{uid}-title"><Icon name="music" /> {S.intervalMusic.title}</h2>
-      {#if track}
-        <p class="interval-music__track">{S.intervalMusic.track(track.title, track.artist)}</p>
-        <p class="note">{thrown ? S.throws.names[thrown.song].stopped(S.intervalMusic.position(track.index, track.count), throwClock(throwProgress(thrown, model.show.now).atSec)) : S.intervalMusic.position(track.index, track.count)}</p>
+  <section class="panel now-playing interval-music" aria-labelledby="{uid}-title" data-set={music.set} data-throw={thrown ? (thrown.playing ? 'playing' : 'stopped') : undefined}>
+    <span class="cover cover--md cover--missing interval-music__tile" aria-hidden="true"><Icon name="music" /></span>
+    <div class="now-playing__song">
+      {#if thrown?.playing}
+        <h2 class="panel__label interval-music__label" id="{uid}-title">
+          {S.intervalMusic.title}<span class="interval-music__chip" data-song={thrown.song}>{S.throws.names[thrown.song].label}</span>
+        </h2>
+        <p class="now-playing__name">{thrown.title}</p>
+        {#if thrown.artist}<p class="now-playing__artist">{thrown.artist}</p>{/if}
+        <p class="interval-music__where">{track ? S.throws.under(track.title) : S.throws.underWaiting}</p>
       {:else}
-        <p class="note">{S.intervalMusic.waiting}</p>
+        <h2 class="panel__label" id="{uid}-title">{S.intervalMusic.title}</h2>
+        {#if track}
+          <p class="now-playing__name">{track.title}</p>
+          {#if track.artist}<p class="now-playing__artist">{track.artist}</p>{/if}
+          <p class="interval-music__where">{thrown && where ? S.throws.names[thrown.song].stopped(where, throwClock(throwProgress(thrown, model.show.now).atSec)) : where}</p>
+        {:else}
+          <p class="interval-music__where">{S.intervalMusic.waiting}</p>
+        {/if}
       {/if}
-      <div class="interval-music__controls">
-        <button type="button" class="action" data-anim="press" disabled={!model.can('intervalSkip') || !track} onclick={() => model.act('intervalSkip')}>
-          <Icon name="next" /><span>{S.intervalMusic.skip}</span>
-        </button>
-        <label class="field field--inline" for="{uid}-volume">
-          <span class="field__label">{S.intervalMusic.volume}: {S.intervalMusic.volumeValue(percent)}</span>
-          <input id="{uid}-volume" type="range" min="0" max={VOLUME_MAX[key]} step="1" value={percent} disabled={!model.can('setVolume')} onchange={setVolume} />
-        </label>
-      </div>
-      <p class="note">{S.intervalMusic.skipNote}</p>
+    </div>
+    {#if !thrown?.playing}
+      <button type="button" class="action interval-music__skip" data-anim="press" disabled={!model.can('intervalSkip') || !track} onclick={() => model.act('intervalSkip')}>
+        <Icon name="next" /><span>{S.intervalMusic.skip}</span>
+      </button>
     {/if}
   </section>
 {/if}
 
 <style>
-  .interval-music__track {
-    font-weight: var(--font-weight-strong);
-    font-size: var(--text-lg);
+  .interval-music__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
   }
   .interval-music__chip {
     display: inline-block;
-    margin-left: var(--space-1);
     padding: 0 8px;
     border: var(--line-width-thin) solid var(--color-ink);
     border-radius: var(--radius-pill);
@@ -80,10 +73,13 @@
     background: var(--action-storm);
     color: #fff6e5;
   }
-  .interval-music__controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-4);
+  .interval-music__where {
+    font-size: var(--text-sm);
+    font-weight: 800;
+    color: var(--color-text-muted);
+  }
+  .interval-music__skip {
+    flex: none;
+    align-self: center;
   }
 </style>

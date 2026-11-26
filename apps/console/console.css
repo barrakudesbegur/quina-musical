@@ -714,6 +714,90 @@
 }
 
 /* ---- now playing, next song --------------------------------------------------------------------------- */
+/* «Ara sona» in one line (NowLine; D196, D199; the Consola-Comprovacio-Revisio board's line) */
+.now-line {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-drop);
+}
+
+.now-line__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.now-line__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.now-line__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: var(--line-width-thin) solid var(--color-ink);
+  border-radius: var(--radius-pill);
+  background: var(--action-throw);
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.now-line__chip[data-song='storm'] {
+  background: var(--action-storm);
+  color: #fff6e5;
+}
+
+.now-line__chip--low {
+  background: var(--color-chip);
+  color: var(--color-text);
+}
+
+.now-line__chip--low .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.now-line__song {
+  overflow: hidden;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now-line__artist {
+  margin-left: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: var(--color-title);
+}
+
+.now-line .cover--missing[data-music],
+.interval-music__tile {
+  background: var(--color-night);
+  color: var(--color-ice);
+}
+
+.now-line .cover--missing[data-music='error'] {
+  background: var(--color-red-edge);
+  color: #ffffff;
+}
+
 .now-playing,
 .next-song {
   flex-direction: row;
@@ -1422,9 +1506,19 @@
   min-height: 0;
 }
 
-/* Cerca's search box has the focus: the tab grows over the column, above the tablet's keyboard (board ②). */
-.console__main:has(> .helpers[data-typing]) > :not(.helpers) {
+/* Cerca's search box has the focus: the tab grows over the column, above the tablet's keyboard (board ②). Only
+   «Ara sona» stays, in one line (NowLine, D199); otherwise that line isn't shown in the column. */
+.console__main > .now-line {
   display: none;
+}
+
+.console__main:has(> .helpers[data-typing]) > :not(.helpers, .now-line) {
+  display: none;
+}
+
+.console__main:has(> .helpers[data-typing]) > .now-line {
+  display: flex;
+  order: -1;
 }
 
 /* Two sides, each scrolling its own list: Estat, the Futur */
@@ -2570,6 +2664,32 @@
   grid-area: top;
 }
 
+/* A break (D195): no Enrere or Comprovar; «Llançament» is a slim line along the top and «Comença la quina» the big
+   button */
+.thumb-cluster[data-layout='break'] {
+  grid-template-areas:
+    'line line line line line line'
+    'talk talk talk stay stay stay'
+    'next next next next next next';
+}
+
+.thumb-cluster__slot--line {
+  grid-area: line;
+}
+
+/* The end (D194, D199): no Enrere or Comprovar; «Tempesta» alone in the big place, under Parlem and Aguanta */
+.thumb-cluster[data-layout='end'] {
+  grid-template-areas:
+    'talk talk talk stay stay stay'
+    'next next next next next next';
+}
+
+@media (orientation: landscape) and (min-width: 48rem) {
+  .thumb-cluster[data-layout='end'] {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+}
+
 /* One colour per action */
 [data-action='back'] {
   --action-bg: var(--action-back);
@@ -2586,7 +2706,8 @@
 [data-action='suspense'] {
   --action-bg: var(--action-suspense);
 }
-[data-action='next'] {
+[data-action='next'],
+[data-action='round-intro'] {
   --action-bg: var(--action-next);
 }
 [data-action='reject'] {
@@ -2701,6 +2822,20 @@
 }
 
 .big-button[data-action='next'] .icon {
+  width: 3.75rem;
+  height: 3.75rem;
+}
+
+/* «Comença la quina» in a break (D195): Següent's size, the play icon beside the words and the note under them */
+.big-button[data-action='round-intro'] {
+  font-size: clamp(var(--text-2xl), 5vw, 3.5rem);
+}
+
+.big-button[data-action='round-intro'] .big-button__row {
+  gap: var(--space-4);
+}
+
+.big-button[data-action='round-intro'] .icon {
   width: 3.75rem;
   height: 3.75rem;
 }
@@ -3091,6 +3226,54 @@
 .throw-button[data-state='escalated'] .two-level__fill {
   transform: none;
   background: rgb(255 255 255 / 0.75);
+}
+
+/* A break's slim line along the top (D195): the name and its note on the left, the time on the right while it's on,
+   and a thinner strip under them */
+.throw-button[data-variant='line'] {
+  min-height: 0;
+  font-size: var(--text-2xl);
+}
+
+.throw-button[data-variant='line'] .throw-button__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'name time'
+    'note time';
+  align-items: center;
+  justify-items: start;
+  column-gap: var(--space-4);
+  row-gap: 0;
+  padding: var(--space-1) var(--space-3);
+}
+
+.throw-button[data-variant='line'] .throw-button__name {
+  grid-area: name;
+  gap: var(--space-2);
+}
+
+.throw-button[data-variant='line'] .throw-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.throw-button[data-variant='line'] .big-button__note {
+  grid-area: note;
+  padding-left: calc(2.25rem + var(--space-2));
+}
+
+.throw-button[data-variant='line'] .throw-button__time {
+  grid-area: time;
+  justify-self: end;
+  width: min(100%, 20rem);
+  min-width: 13rem;
+  padding-block: 14px 7px;
+}
+
+.throw-button[data-variant='line'] .throw-button__strip {
+  height: 32px;
+  font-size: var(--text-sm);
 }
 
 /* The top row (the last round): compact, the icon over the name, no strip; the fill sweeps the whole button */
@@ -4503,7 +4686,17 @@
   }
 }
 
+/* The pad's left column: «Ara sona» in one line (D199), then the entry */
+.claim-pad__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+}
+
 .claim-pad__entry {
+  flex: 1;
   gap: var(--space-3);
   min-height: 0;
 }
