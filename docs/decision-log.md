@@ -1380,3 +1380,11 @@ U172 as proposed, with the user's correction to the first rule: "the mic is not 
 - the tablet has a "Veus" slider, a switch to turn the automatic voices off for the night, and a way to skip one while it plays;
 - the doors' countdown follows the plan's start time.
 By: the user. Source: open-questions.md › Answered (U172). Lives in: requirements/show-and-music.md › Music for each moment.
+
+### D205 · Design-system props describe what they produce · 2026-11-27 · Active
+A component's props name the visual result (a colour, a size), not a domain concept. Today the cyan button is `tone='talk'`; it becomes a colour. Consistency between concepts and looks comes from another layer, such as a registry or preset wrappers. Frontend researches how design systems shape props and redoes them.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: packages/ui (Frontend's design-system spec).
+
+### D206 · Interface sounds like Josh Comeau's button sounds · 2026-11-27 · Active; the details Pending (Frontend's spec)
+The user wants small UI sounds on presses, in the style of Josh Comeau's `button-sounds`. Frontend specs them first and sends the open choices. Today only the phones have interface sounds (on by default, D-era screens.md › Player app).
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md (once specified).
