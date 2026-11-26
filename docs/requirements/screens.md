@@ -38,12 +38,12 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | Pause | "Tornem de seguida" |
 | Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-4", "Normal 5-10" or "Especial" (D163, D171), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
-| Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
+| Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
 | After the Game | Thanks and sponsor credits |
 
 - **Card prices:** only the coming round's card price, on that round's Interval screen. The before-the-Game screen counts as round 1's Interval. Before the Quina Especial it's the special card's price. The prices themselves are in [songs-and-cards.md › Prices](songs-and-cards.md#prices). The Interval shows the coming round's card in its colour with its price ("Cartró: 10,50 €"), and nothing until a price is set.
-- **The Desgraciat's Celebration** has no title.
+- **The Desgraciat's Celebration** reads "QUINA POTRA!" (D186).
 - **It never shows:**
   - the next song, the Queue, the possible winners or the standing cards;
   - a winning card number or a winner's name;
@@ -63,12 +63,13 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **"Següent"** is the next song, private, with a countdown to its landing so the presenters can name it on the hit.
 - **The buttons:** every action in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions). "Enrere" takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest. Each control a Wii button triggers shows a small badge with that button.
 - **Tabs:**
-  - **The lookup (D162, D170):** a private quick check at any time in a round: a fuzzy song search (title or artist, typos accepted, matches highlighted), and a card check whose "show future" also tells whether the card can still win;
+  - Their order (D187): "Estat", "Cerca", "Futur", "Premis", "Efectes";
+  - **"Cerca", the lookup (D162, D170, D187):** one tab with a "Cançons / Cartró" switch; a private quick check at any time in a round: a fuzzy song search (title or artist, typos accepted, matches highlighted), and a card check whose "show future" also tells whether the card can still win;
   - **"Estat", the game's state (D170, D173):** always visible. On the left, how many cards have each number of songs missing; on the right, the round's song history, scrolling;
   - "Futur" (D170): hidden until someone taps "Mirar el futur". The possible winners and the songs to the first possible Line and Quina on the left; the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win;
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;
-  - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands.
+  - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands. Once "Començar final" starts the finale, the finalists' view lives in this tab (D187): the ninos, with "Al revés"; "+ Finalista"; and "Editar", whose label stays while on, with "+ Afegir" in the panel's header and an × only on standing finalists (D183). The remote's A stays "Següent", so the finale opens from the tablet only. "Enrere" grows at most from 84 to 100 px (D184).
 - **During a Check (D107–D110, D117):** the card as its 3×4 grid, already marked privately, with any warnings ("not registered as sold"); the next song's title large, to read out; one big button that reveals the next song (the remote's A; held, or with the tablet's toggle, they come in a row); the presenters' cue for the fanfare; a smaller "Revisió manual" button that sends the Check to review with no pass or fail (the claim shows "En revisió"); then the review's four choices: continue, win by hand, lose by hand, discard (D121), with a warning when a choice goes against the card; "+ Candidat" (D179). The list of claimed cards only shows when there are 2 or more. There's no "Confirmar".
   - Then a Celebration music override, the winner's name and notes.
   - A numbered slip's number on the winner form, optional, next to the name.
@@ -103,7 +104,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
 - **Only the current round** shows in "Historial", and only the cards of the round's type count in it (only special cards in the Quina Especial).
-- **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it.
+- **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone shows no title: the glowing card, the nino and the confetti say it (pending U165, now that the projector says "QUINA POTRA!").
 - **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
 - **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its drum shows only songs still to come, blurred while it turns, in an order unrelated to the Queue; the agreed boards, canvas v61 onwards); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
 - **When the landed song is on your card (D74):** a flash turns the background from dark blue to gold, stage spotlights loop on the gold with option A's particles (a shooting-star streak, rising corn and hearts), and no lightning-bolt drawing. Two in a row play it again. It fades out smoothly when the drum starts spinning, and never plays in the Desgraciat (the card falls instead). Its flashes and particles play on top of everything, open drawers included (D90).

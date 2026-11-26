@@ -30,7 +30,7 @@ _Avoid_: Reverse round, elimination round
 A card knocked out of the Desgraciat round: one of its songs has landed. Its player sits down ("Assegut" on phones, against "Dempeus" for a card still standing).
 
 **Last standing**:
-The Desgraciat round's only win: the last card still standing, none of whose songs has landed. There's always exactly one: if a landing would knock out every card left, it doesn't count for them, and the songs go on (D180). Its prize is the round's bundle. Its Celebration has no title, unlike a Line's or a Quina's.
+The Desgraciat round's only win: the last card still standing, none of whose songs has landed. There's always exactly one: if a landing would knock out every card left, it doesn't count for them, and the songs go on (D180). Its prize is the round's bundle. Its Celebration's title is "QUINA POTRA!" (D186).
 _Avoid_: Survivor, reverse bingo
 
 **Intro**:

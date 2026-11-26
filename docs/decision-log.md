@@ -709,7 +709,7 @@ By: the orchestrator. Source: commit ff13a81.
 Only the price for the coming round, on that round's Interval screen; the before-the-start screen is round 1's. A normal card is the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat; before the Quina Especial, the special card's fixed price. From setup data, never hard-coded. Answers U5.
 By: the user. Source: open-questions.md › Answered (U5); transcript 2026-11-25T00:56Z. Supersedes: D60; amends D21. Lives in: requirements/songs-and-cards.md › Prices; requirements/screens.md › Projector.
 
-### D62 · The Desgraciat's Celebration has no title · 2026-11-25 · Active
+### D62 · The Desgraciat's Celebration has no title · 2026-11-25 · Amended by D186
 "DEMPEUS!" is dropped, and so is the phone's "Dempeus fins al final!". The rest of the Celebration stays, and so do the per-card "Dempeus" / "Assegut" labels. Answers U6. Built in 6857f31; the console keeps a presenters-only label, "Últim cartró dempeus".
 By: the user. Source: open-questions.md › Answered (U6); transcript 2026-11-25T00:56Z. Supersedes: D44's "DEMPEUS!" proposal (agreed between the sessions, not by the user). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Player app.
 
@@ -1239,3 +1239,21 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 ### D185 · Confetti falls very slowly · 2026-11-26 · Active
 "the confeti falls too fast, should fall very slow": the phones' confetti is a slow, 6-second paper drift instead of 1.8 s (593fef2). The finale's "Salvats!" and the projector reuse the same particles.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: packages/ui/ANIMATIONS.md.
+
+### D186 · The Desgraciat's Celebration reads "QUINA POTRA!" · 2026-11-26 · Active
+On the canvas the user asked for a title after all: "it is better something related to being lucky or unlucky. in informal funny catalan". From the candidates on canvas v95 they picked "QUINA POTRA!", already drawn on the projector board. The console's presenters-only label "Últim cartró dempeus" stays. The winner's phone is left to U165. Answers U164 with (a).
+By: the user. Source: open-questions.md › Answered (U164). Amends: D62. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector; GLOSSARY.md › Last standing.
+
+### D187 · The finale and the new tabs, as drawn on canvas v95 · 2026-11-26 · Active
+The user confirmed all five points:
+- The remote's A stays "Següent", so the finale opens from the tablet only.
+- Once started, the finalists' view lives in the Dempeus tab.
+- The tabs go Estat, Cerca, Futur, Premis, Efectes. One "Cerca" tab has a "Cançons / Cartró" switch.
+- The names "Al revés" and "+ Finalista" stay. They were placeholders.
+- Frontend's own details are confirmed too:
+  - "Editar" keeps its label while on, rather than "Fet";
+  - "+ Afegir" sits in the panel's header;
+  - the × shows only on standing finalists;
+  - "Enrere" grows at most from 84 to 100 px.
+Answers U155 with (a).
+By: the user. Source: open-questions.md › Answered (U155). Lives in: requirements/screens.md › Console.

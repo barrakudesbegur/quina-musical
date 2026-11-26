@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D186**, **U165**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D188**, **U166**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -39,14 +39,13 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - slow confetti.
 
 **Being built:**
-- **Frontend:** the finale screens and the new tabs (Estat, Cerca, Futur) from the v90+ boards and D181–D184. Those wait on U155's last points.
+- **Frontend:** the finale screens and the new tabs (Estat, Cerca, Futur) from the v95 boards, D181–D184, D186 ("QUINA POTRA!") and D187 (U155 answered: go).
 - **Sound engine and Backend:** follow-ups as they report.
 
 **Waiting on the user:**
 - **The live list:** open-questions.md › Decisions.
 - **Most useful next:**
-  - U155: the finale and tabs;
-  - U164: a title for the Desgraciat's winner, which would change D62;
+  - U165: "Quina potra!" on the winner's phone too;
   - U160: built as (b), so confirm;
   - U163: what the round total counts;
   - U157–U159: the Celebration music pick and the numbered slip;

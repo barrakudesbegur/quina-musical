@@ -64,20 +64,10 @@ The user on the canvas: "What is this field? we dont papereta concept. please re
 - (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
 - (b) Drop slips: the card's number identifies the winner, who shows the card to collect the prize. The glossary and event.md change.
 
-### U155 · The finale and the new tabs, what's left to review
-Answered on the canvas (D181–D184): "Salvats!", the faded fallen nino, the edit mode, "Començar final", the button's growth with "Enrere" small, the ninos growing. Still to confirm:
-1. A stays "Següent", so the finale opens from the tablet only.
-2. The finalists' view lives in the Dempeus tab, once started from the button.
-3. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
-4. The names "Al revés" and "+ Finalista".
-5. Frontend's own details on v95: "Editar" keeps its label while on (rather than "Fet"); "+ Afegir" sits in the panel's header; the × shows only on standing finalists; "Enrere" grows at most from 84 to 100 px.
-- (a) All fine.
-- (b) Comment on the canvas where not.
-
-### U164 · A title for the Desgraciat's winner
-On 25 Nov the user chose no title for the Desgraciat's Celebration (D62, U6: "DEMPEUS!" was dropped). Now, on the canvas: "it is better something related to being lucky or unlucky. in informal funny catalan". Candidates on the canvas (v95): "QUINA POTRA!" (already on the projector board), "QUINA XAMBA!", "POTRA DESGRACIADA!", "QUIN BAMBÚ DE SORT!", "SORT DE LA MALA SORT!", "QUINA SORT MÉS NEGRA!", and the cruder "QUIN CUL!".
-- (a) A title after all: pick one on the canvas (D62 changes).
-- (b) No title, as D62 says.
+### U165 · "QUINA POTRA!" on the winner's phone
+The projector's Desgraciat Celebration now reads "QUINA POTRA!" (D186). D62 also dropped the phone's "Dempeus fins al final!", so the winner's phone shows no title: only the glowing card, the nino and the confetti. A Line's or a Quina's winner phone has its own words ("La teva línia!").
+- (a) The winner's phone says "Quina potra!" too.
+- (b) The phone stays without a title.
 
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
@@ -235,6 +225,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U164 · A title for the Desgraciat's winner** (2026-11-26) → D186: "QUINA POTRA!".
+- **U155 · The finale and the new tabs, what's left to review** (2026-11-26) → D187: all fine, Frontend's v95 details included.
 - **U162 · "Tots dempeus!"** (2026-11-26) → D181: "Salvats!", the light from the text, spotlights and the phones' particles.
 - **U54 · What to call each set of 70 songs** (2026-11-26) → D178: each is a pool (Pool 1, Pool 2).
 - **U153 · "+ Candidat"** (2026-11-26) → D179: yes.
