@@ -152,7 +152,7 @@ _From event.md › The night, step by step; D129._
 - **Each round's intro** has music chosen for it in the plan. For now it's "5-12. Parasail Minigame" (Zelda: Breath of the Wild), looping cleanly, played low.
 - **Each throw** has an energetic song chosen for it. This year: "Flying Free" by Pont Aeri and Marian Dacal (last year's id 24), from a hook of its own a bit before the drop. "Llançament" starts it at full volume; a tap stops it, and the next tap resumes where it was; a long press restarts it from the hook; the break music fades back after (D138).
 - **After the close,** the end music plays until the tech disconnects the laptop for a Spotify Jam (D137).
-- **The corn-seed storm (D151):** if the crowd starts throwing corn seeds at the end, the tech turns on a song by hand, from a hook of its own right at the drop (the song and the button's place pending U132).
+- **The corn-seed storm (D151):** if the crowd starts throwing corn seeds at the end, the tech turns on a song by hand, from a hook of its own right at the drop: "Flying Free" for now (D153; the button's place pending U132). The throws and the storm play louder than the songs (D154; how, pending U133).
 - Still pending: U97 (the doors and the end's playlists) and U99 (the intro music's span).
 
 ## Volumes
