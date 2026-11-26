@@ -101,9 +101,9 @@ _From event.md › Claims and checks; the decisions doc › Changes._
 - **Forged cards:** we assume nobody forges cards. If two cards claim the same win, the fake one is easy to tell apart.
 - **The Check's result decides.**
   - A pass needs no confirmation. Its fanfare and Celebration start on the presenters' cue, or at the end of an automatic reveal, which goes no further (D109, D117).
-  - In a strange case, the presenters stop the Check before the cue: no pass or fail shows, the music keeps playing (Pausa only if a presenter turns it on), and the claim stays undecided until they check it again or drop it. The round can't move on before then (D109, D117, D118).
+  - In a strange case, the presenters send the Check to review ("Revisió manual") before the cue: no pass or fail shows, the music keeps playing (Pausa only if a presenter turns it on), and the claim stays undecided until they check it again or drop it. The round can't move on before then (D109, D117–D119).
   - They can never accept a card that failed.
-  - Every outcome is recorded, a stop and a dropped claim included.
+  - Every outcome is recorded, a review and a dropped claim included.
 - **A failed Check** gets a funny "fail" moment, then the round goes on.
 - **A passed Check** gets a Celebration, and the winner is noted.
 

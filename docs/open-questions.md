@@ -8,20 +8,19 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U80 · A name for the stopped Check that feels temporary
-The user finds "stopped" ("Aturat") misleading: it sounds like the end. The words "Hold", "Pausa", "Suspens" and "En espera" already mean other things, so they're out. Options:
-- (a) **under review**: the claim is "En revisió", and the button is "Revisió manual";
-- (b) **set aside**: the claim is "Apartat", and the button is "Aparta'l";
-- (c) **pending a manual check**: the claim is "Per revisar", and the button is "Revisa'l a mà";
-- (d) another word.
-The code isn't pushed yet, so renaming is cheap now. "Dropped" ("Descartat") stays unless the user says otherwise. U67's labels follow this answer.
+### U81 · The internal status name for "under review"
+Today's code statuses are queued, checking, valid, invalid, and the new dropped.
+- (a) `reviewing`, like `checking`: an "-ing" word, so it reads as ongoing;
+- (b) `underReview`;
+- (c) `inReview`.
+The commands and log entries take the same word (for example `checkReview`, `claim.reviewing`).
 
-### U76–U79 · The stopped Check's screens (D118)
-A stopped Check gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
-- **U76 · The projector while stopped:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
-- **U77 · The tablet while stopped:** the stopped card with its private marks, "Torna a comprovar", "Descarta", and the usual Pausa and Parlem buttons. Anything to add or remove?
-- **U78 · The music's level while stopped:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
-- **U79 · Phones while stopped:** during a Check, phones show "Comprovant el cartró 123…". On a stop: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
+### U76–U79 · The screens of a Check under review (D118, D119)
+A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
+- **U76 · The projector while under review:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
+- **U77 · The tablet while under review:** the card under review with its private marks, "Torna a comprovar", "Descarta", and the usual Pausa and Parlem buttons. Anything to add or remove?
+- **U78 · The music's level while under review:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
+- **U79 · Phones while under review:** during a Check, phones show "Comprovant el cartró 123…". On a review: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
 No default: the user decides.
 
 ### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
@@ -38,7 +37,7 @@ The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json
 **Default:** nothing built until the user answers.
 
 ### U67 · Two status labels despite the UI freeze · blocking
-Sound engine's step 1 for the new Check (unpushed) adds the Claim statuses "stopped" and "dropped". The console doesn't build until `apps/console/strings.ts` has their labels, "Aturat" and "Descartat". Frontend has written them (two lines), but the freeze stops it committing them, so Sound engine is holding its push.
+Sound engine's step 1 for the new Check (unpushed) adds two Claim statuses, under review and dropped. The console doesn't build until `apps/console/strings.ts` has their labels, "En revisió" and "Descartat". Frontend has written them (two lines), but the freeze stops it committing them, so Sound engine is holding its push.
 Options: (a) allow this two-line commit; (b) Sound engine keeps the new statuses out of the shared types until the console is unfrozen, which is more work and a temporary shape.
 **Default:** nothing is pushed until the user answers.
 
@@ -146,6 +145,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U80 · A temporary-sounding name for the stopped Check** (2026-11-26) → D119: "under review", "En revisió" on the tablet, button "Revisió manual".
 - **U62 · The Check's remaining details** (2026-11-26) → D117: a stop goes into Pausa; automatic reveal runs through the fanfare and stops there; the rest stands.
 - **U46 · Londrina's two lowercase exceptions** (2026-11-26) → D114: both, as drawn.
 - **U47 · The card icon picker's style** (2026-11-26) → D115: A; the QR icon is too sharp next to the others.

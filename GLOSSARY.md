@@ -76,8 +76,12 @@ A player shouting Line or Bingo for a card, which then has to be checked.
 _Avoid_: Call, cant
 
 **Check**:
-The public verification of a claimed card: its songs are shown and replayed one by one, at the presenters' pace, each marked as landed or not. A pass needs no confirmation; the presenters can stop a Check before its result, leaving the claim undecided.
+The public verification of a claimed card: its songs are shown and replayed one by one, at the presenters' pace, each marked as landed or not. A pass needs no confirmation; the presenters can send a Check to review before its result, leaving the claim undecided.
 _Avoid_: Validation, verification
+
+**Review**:
+The organizers' manual check of a claimed card, after the presenters interrupt its Check before the result. The claim stays undecided, under review, until it's checked again in public or dropped.
+_Avoid_: Stopped, paused, on hold
 
 **Winner**:
 A player whose claimed card passed the check. They're noted by name or by a numbered slip handed to them, and they collect the prize later by showing the card or the slip to the organizers.
