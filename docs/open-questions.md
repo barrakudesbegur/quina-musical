@@ -41,6 +41,12 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 - (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
 - (b) Three, with Hold music too.
 
+### U160 · The last real players falling together before the finale
+Before the finale the engine only sees the cards in play, unsold ones included (D180 is built: 6eb9624, 21254e1). Say the last two real players in the room fall on one song while an unsold card still stands. The landing counts for them, because it didn't take out every card in play, so they're out and nobody in the room is standing. Today they can't be entered as finalists, since entry needs standing cards (D168).
+- (a) "Enrere", then enter them as finalists, and the same song lands again, now not counting for them (Sound engine's reading; it replays the song).
+- (b) Entry also accepts a card that fell on the latest landing, and the finale applies D180 among the finalists: the landing that took them all doesn't count, and they're back in, with no "Enrere".
+- (c) Nothing: the presenters start the finale earlier (with about 5–10 standing, as the growing button suggests), so it doesn't happen.
+
 ### U159 · The numbered slip for winners
 The user on the canvas: "What is this field? we dont papereta concept. please read glosary. If it is the card, it should be readonly or no field directly". The field was labelled "Papereta", which isn't the glossary's word. The model does have a **numbered slip**: the glossary's Winner is "noted by name or by a numbered slip handed to them", event.md says "their name, or a numbered slip we hand them", and the organizers' 2025 notes say "s'entrega un paper amb un número per a identificar posteriorment a la persona". The card's number is already known from the claim.
 - (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
