@@ -2687,12 +2687,20 @@ export class Show {
     const before = this.finale?.cardIds ?? [];
     if (!before.length && cardIds.length < 2) return this.reject(reqId, 'finale', 'invalid', 'a finale starts with two finalists or more');
     const valid = new Set(this.phaseModel.valid.map((c) => c.id));
-    const standing = new Set(this.standingNow().map((c) => c.id));
     const notValid = cardIds.filter((id) => !valid.has(id));
     if (notValid.length) return this.reject(reqId, 'finale', 'invalid', `not a card of this round: ${notValid.join(',')}`);
-    // D168: a card that has fallen isn't added (one already in the set stays, in its group).
-    const fallen = cardIds.filter((id) => !before.includes(id) && !standing.has(id));
+    // Who stands among these finalists (D180's rule among them): a landing that took out all of them counted for none.
+    const counted = this.queue.slice(0, Math.max(0, this.position + 1));
+    const fallenAmong = (ids: readonly number[]) => standingRun(this.phaseModel.valid.filter((c) => ids.includes(c.id)), counted).fallAt;
+    const now = fallenAmong(cardIds);
+    // D168: a card that has fallen isn't added (one already in the set stays, as fallen).
+    const fallen = cardIds.filter((id) => !before.includes(id) && now.has(id));
     if (fallen.length) return this.reject(reqId, 'finale', 'invalid', `already fallen: ${fallen.join(',')}`);
+    // D183: nothing by hand brings a fallen finalist back, not even a removal that would undo the landing that took them
+    // out (only Enrere undoes a landing).
+    const was = before.length ? fallenAmong(before) : new Map<number, number>();
+    const revived = cardIds.filter((id) => was.has(id) && !now.has(id));
+    if (revived.length) return this.reject(reqId, 'finale', 'invalid', `a fallen finalist can't come back: ${revived.join(',')}`);
     const removal = cardIds.length < before.length && cardIds.every((id) => before.includes(id));
     this.finale = { cardIds: [...cardIds], byHand: false };
     const byHand = removal && this.finaleStanding().length === 1;

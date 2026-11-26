@@ -145,3 +145,39 @@ test('the finale: entering finalists privately checked, removals by hand, and a 
   assert.deepEqual(rejected(n.send('finale', { cardIds: [1, 2] })), ['invalid: a normal round has no finale']);
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
+
+test('D183: a fallen finalist never comes back by hand; a removed one standing can; the last players who fell together can enter', () => {
+  const h = desgraciat(13);
+  land(h, 1);
+  const falls = fallsOf(h);
+  const standing = h.show.standingNow().map((c) => c.id);
+  // Two cards that fall on the same landing p, and two that stand past it.
+  const byFall = new Map<number, number[]>();
+  for (const id of standing) byFall.set(falls.get(id)!, [...(byFall.get(falls.get(id)!) ?? []), id]);
+  const [p, ids] = [...byFall.entries()].filter(([at, list]) => Number.isFinite(at) && list.length >= 2).sort((a, b) => a[0] - b[0])[0];
+  const pair = ids.slice(0, 2);
+  const later = standing.filter((id) => falls.get(id)! > p + 2).slice(0, 2);
+  assert.equal(later.length, 2);
+  const four = [...pair, ...later];
+  h.send('finale', { cardIds: four });
+  land(h, p - h.show.position);
+  assert.deepEqual(h.show.finaleInfo()?.fallen.map((f) => f.cardId).sort(), [...pair].sort(), 'the pair fell: the other two still stood');
+  // Removing the two who stand would make that landing take out everyone left, bringing the pair back: refused.
+  assert.deepEqual(rejected(h.send('finale', { cardIds: pair })), [`invalid: a fallen finalist can't come back: ${pair.join(',')}`]);
+  // Removing a fallen finalist, then adding them back: refused as fallen.
+  assert.deepEqual(rejected(h.send('finale', { cardIds: [pair[1], ...later] })), []);
+  assert.deepEqual(rejected(h.send('finale', { cardIds: four })), [`invalid: already fallen: ${pair[0]}`]);
+  // A finalist removed while standing comes back through the same entry.
+  assert.deepEqual(rejected(h.send('finale', { cardIds: [pair[1], later[0]] })), []);
+  assert.deepEqual(rejected(h.send('finale', { cardIds: [pair[1], ...later] })), []);
+  assert.deepEqual(h.show.finaleInfo()?.standing, later);
+
+  // The room's last two fell on one song while other cards in play still stand: entered as the finalists, that song
+  // took out everyone among them, so it counts for neither (D180), and they play on.
+  const g = desgraciat(13);
+  land(g, p - g.show.position + 1);
+  assert.ok(pair.every((id) => !g.show.standingNow().some((c) => c.id === id)), 'out among the cards in play');
+  assert.deepEqual(rejected(g.send('finale', { cardIds: pair })), []);
+  assert.deepEqual(g.show.finaleInfo()?.standing, pair);
+  assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
+});
