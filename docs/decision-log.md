@@ -1190,3 +1190,7 @@ By: the user. Source: open-questions.md › Answered (U51). Supersedes: the "fir
 ### D175 · A first play keeps 22 s · 2026-11-26 · Active
 The longer slot for a song's first play stays at about 22 s, accepting a night about 12 minutes longer (rounds ending about 9:46 pm, bad case 9:58 pm). Answers U154.
 By: the user. Source: open-questions.md › Answered (U154). Amends: D174. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.
+
+### D176 · A then B turns the starting transition into a Suspens · 2026-11-26 · Active
+There's no delay on "Següent". A down starts the transition straight away, and the Spin takes a few seconds before its landing. If B goes down while A is still held, that transition becomes a Suspens, a transition held open (the glossary's own definition). If that can't be done smoothly, the transition is cancelled and a Suspens starts from the current song. A down and up, then B, is a normal Aguanta, which cancels the transition, as today. The 3-vibration window (D147) counts from the moment both are down. Answers U156, after the user's "think deeper".
+By: the user. Source: open-questions.md › Answered (U156). Amends: D144. Lives in: requirements/show-and-music.md › The presenters' actions.

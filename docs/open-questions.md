@@ -62,11 +62,6 @@ Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Co
 - (a) All fine, so Frontend builds them.
 - (b) Comment on the canvas where not.
 
-### U156 · "A slightly before B" for Suspens
-D144 asked that B + A also work when A goes down slightly before B. A alone is "Següent", so honouring it means delaying every "Següent" press a moment, to see whether B follows. "Següent" exists so the presenters control the exact moment a song changes (the "eh, eh, eh!" moment, event.md).
-- (a) Drop it: B must go down first, and "Següent" stays instant.
-- (b) Keep it: "Següent" waits a short moment (about 150 ms) on every press.
-
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
@@ -235,6 +230,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U156 · A slightly before B** (2026-11-26) → D176: no delay; B while A is held turns the starting transition into a Suspens.
 - **U154 · First plays and the night's length** (2026-11-26) → D175: keep 22 s.
 - **U51 · The slower pace** (2026-11-26) → D174: not the first round but a song's first play of the night, longer and from its main hook.
 - **U151 · The finale decided by the song** (2026-11-26) → D172: yes, with the group ninos.
