@@ -352,7 +352,11 @@ def main() -> int:
     for song in songs:
         path = out / f"{song['id']}.json"
         if path.exists() and song["id"] not in failed:  # a failed song's older file may be stale
-            rows.append(index_row(json.loads(path.read_text())))
+            row = index_row(json.loads(path.read_text()))
+            # Its pool (D178) comes from songs.json as it is now: moving a song to another pool needs no new analysis.
+            if song.get("pool") is not None:
+                row["pool"] = str(song["pool"])
+            rows.append(row)
     write_text_if_changed(out / "index.json",
                           json.dumps({"schemaVersion": 1, "songs": rows}, ensure_ascii=False, indent=1))
     print(f"index.json ({repertoire.name}): {len(rows)} songs" + (f"; {len(failed)} failed" if failed else ""))

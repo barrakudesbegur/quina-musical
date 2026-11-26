@@ -96,14 +96,14 @@ dataTest("the round's target counts its exact first plays, so a round of new son
   assert.ok(Math.abs(target - (roundLengthSec({ pace: 14 }) + firstPlays * 8)) < 1e-6, 'each first play adds 8 s');
   assert.ok(Math.abs(h.show.schedule().roundDriftSec) < 1, `Drift ${h.show.schedule().roundDriftSec.toFixed(2)} s at the start`);
   // The pool's songs nobody will have played by this round's end, for the later rounds' first plays.
-  assert.deepEqual(h.show.poolLeft(), { songs: songs.length, unplayed: songs.length - songsExpected });
+  assert.deepEqual(h.show.poolsLeft(), { 1: { songs: songs.length, unplayed: songs.length - songsExpected } }, 'the test songs are all pool 1');
 });
 
 test("later rounds expect their songs × the pool's share still unplayed as first plays, at the Pace they'll start with", () => {
   const nowMs = 1_000_000;
-  const base = { nowMs, round: { number: 1, kind: 'normal' as const }, game: {}, position: -1, pace: 14, phase: 'early' };
+  const base = { nowMs, round: { number: 1, kind: 'normal' as const, pool: '1' }, game: {}, position: -1, pace: 14, phase: 'early' };
   const later = { kinds: ['normal', 'normal'] as const, intervalSec: 150, throwsSec: 0 };
-  const est = scheduleEstimate({ ...base, later: { ...later, kinds: [...later.kinds] }, pool: { songs: 70, unplayed: 24 } });
+  const est = scheduleEstimate({ ...base, later: { ...later, kinds: [...later.kinds] }, pools: { 1: { songs: 70, unplayed: 24 } } });
   const n = SCHEDULE.bingoAtSong;
   const f1 = (n * 24) / 70;
   const f2 = (n * (24 - f1)) / 70;
@@ -116,4 +116,8 @@ test("later rounds expect their songs × the pool's share still unplayed as firs
   const fastLocked = scheduleEstimate({ ...base, pace: 11, locked: true, later: { ...later, kinds: [...later.kinds] } });
   assert.equal(fast.gameEndMs - fast.roundEndMs, none.gameEndMs - none.roundEndMs);
   assert.ok(fastLocked.gameEndMs - fastLocked.roundEndMs < fast.gameEndMs - fast.roundEndMs);
+  // Per pool (D178): a later round on pool 2 starts on its own unplayed songs, all of them new.
+  const two = scheduleEstimate({ ...base, later: { ...later, kinds: [...later.kinds], pools: ['2', '1'] }, pools: { 1: { songs: 70, unplayed: 24 }, 2: { songs: 70, unplayed: 70 } } });
+  const g1 = n, g2 = (n * 24) / 70;
+  assert.ok(Math.abs((two.gameEndMs - two.roundEndMs) / 1000 - (2 * 150 + roundLengthSec({ pace: 14, firstPlays: g1 }) + roundLengthSec({ pace: 14, firstPlays: g2 }))) < 1e-6);
 });

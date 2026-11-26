@@ -38,6 +38,8 @@ export interface IndexSong {
   id: number;
   title: string;
   artist: string;
+  /** Its pool (D178), from songs.json; absent before pools. */
+  pool?: string;
   excluded: boolean;
   hooks: { id: string; valid: boolean }[];
 }

@@ -89,7 +89,7 @@ test('a restart during the intro keeps the introduced type for the Shuffle', () 
   h.send('unlock');
   h.send('roundIntro', { number: 1, kind: 'normal', cardType: 'especial' });
   const record = replayJournal(journalOf(h.log));
-  assert.deepEqual(record.intro, { round: 1, kind: 'normal', cardType: 'especial' });
+  assert.deepEqual(record.intro, { round: 1, kind: 'normal', cardType: 'especial', side: 1 });
   const r = setup({ seed: 3, cards: allCards, restore: record, startSec: 0.5 });
   r.send('unlock');
   r.send('newRound');

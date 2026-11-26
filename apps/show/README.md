@@ -26,7 +26,7 @@ The Python venvs (never `/usr/bin/python3`, it is 3.9):
 | Field | Default | What |
 |---|---|---|
 | `name` | required | lowercase letters, digits, `-` and `_`; the same as the file name |
-| `songsJson` | required | `[{id, title, artist, cover?, timestamps?: [{time, tag}], ...}]`, as the playlist-fetcher and `data/repertoires/default/songs.json` write it |
+| `songsJson` | required | `[{id, title, artist, pool?, cover?, timestamps?: [{time, tag}], ...}]` (`pool`: the song's pool, D178, default "1"), as the playlist-fetcher and `data/repertoires/default/songs.json` write it |
 | `audioDir` | required | `<id>.mp3`, or spotDL's `<id> <title> - <artist>.mp3` (`.m4a`, `.opus`, `.ogg`, `.flac` and `.wav` too) |
 | `coversDir` | `<cacheDir>/covers` | `<id>.jpg`, served at `/covers/<id>.jpg`; the covers step fetches them from the `cover` URLs |
 | `cardsJson` | none | apps/cards' `cards.json`, served at `/cards/cards.json` (its folder at `/cards/`). Without it the Phase uses its placeholder |

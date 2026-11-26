@@ -33,6 +33,9 @@ import {
   makeCommand,
   makeEvent,
   isPhaseName,
+  isPoolId,
+  isSide,
+  type CardTypeSides,
   type CommandArgs,
   type CommandName,
   type MusicSet,
@@ -44,7 +47,7 @@ import { playableSongs } from './analysis.ts';
 import { ENGINE, FLOW, HOLD, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
 import { secureShuffle, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
-import type { Card } from './game/cards.ts';
+import type { PrintedCard } from './game/cards.ts';
 
 /** A command's fields, which may be left out when it has none that are required. */
 
@@ -110,13 +113,25 @@ const hasMemoryInfo = (p: Performance): p is Performance & { memory: MemoryInfo 
 const errorText = (error: unknown) => (error instanceof Error ? error.message || String(error) : String(error));
 const isArray = (x: unknown): x is readonly unknown[] => Array.isArray(x);
 const isCardSongRef = (x: unknown) => Number.isInteger(x) || (isRecord(x) && Number.isInteger(x.id));
-const isCard = (x: unknown): x is Card =>
-  isRecord(x) && Number.isInteger(x.id) && typeof x.type === 'string' && isArray(x.lines) && x.lines.every((line) => isArray(line) && line.every(isCardSongRef));
+const isLines = (x: unknown) => isArray(x) && x.every((line) => isArray(line) && line.every(isCardSongRef));
+const isCard = (x: unknown): x is PrintedCard =>
+  isRecord(x) && Number.isInteger(x.id) && typeof x.type === 'string' &&
+  (isLines(x.lines) || (isArray(x.sides) && x.sides.length > 0 && x.sides.every((s) => isRecord(s) && isSide(s.side) && isLines(s.lines))));
 
-/** apps/cards' cards.json, checked: card ids, types and song ids (titles are trusted). */
-function checkCards(json: unknown): readonly Card[] {
+/** apps/cards' cards.json, checked: card ids, types, sides and song ids (titles are trusted). */
+function checkCards(json: unknown): readonly PrintedCard[] {
   if (!isArray(json) || !json.every(isCard)) throw new Error('cards.json: not a list of cards');
   return json;
+}
+
+/** apps/cards' card-types.json, as far as sides go (D178): a type without sides has one, side 1 on pool 1. */
+function checkCardTypes(json: unknown): CardTypeSides[] {
+  if (!isArray(json)) throw new Error('card-types.json: not a list');
+  return json.flatMap((t): CardTypeSides[] => {
+    if (!isRecord(t) || typeof t.type !== 'string') return [];
+    const sides = isArray(t.sides) ? t.sides.flatMap((s) => (isRecord(s) && isSide(s.side) && isPoolId(s.pool) ? [{ side: s.side, pool: s.pool, ...(typeof s.label === 'string' ? { label: s.label } : {}) }] : [])) : undefined;
+    return [{ type: t.type, ...(typeof t.name === 'string' ? { name: t.name } : {}), ...(sides?.length ? { sides } : {}) }];
+  });
 }
 
 // Browser storage is per repertoire (the relay's --repertoire): ids restart at 1 in every repertoire. The default repertoire
@@ -254,11 +269,17 @@ async function boot() {
   if (repertoireName !== 'default') storagePrefix = `mixer.${repertoireName}`;
   journal = new LocalJournal(persistJournal ? browserStorage() : null, `${storagePrefix}.journal`);
   const songs = playableSongs(await fetchJson('/analysis/index.json'));
-  let cards: readonly Card[] = [];
+  let cards: readonly PrintedCard[] = [];
   try {
     cards = checkCards(await fetchJson('/cards/cards.json'));
   } catch (error) {
     console.warn('cards.json not available; the Phase falls back to the placeholder', error);
+  }
+  let cardTypes: CardTypeSides[] = [];
+  try {
+    cardTypes = checkCardTypes(await fetchJson('/cards/card-types.json'));
+  } catch (error) {
+    console.warn('card-types.json not available; every card type plays one side, on pool 1', error);
   }
   for (const s of songs) rt.catalog.set(s.id, { id: s.id, title: s.title, artist: s.artist, cover: `/covers/${s.id}.jpg` });
   const fixedQueue = params.get('queue')?.split(',').map(Number).filter(Number.isInteger) ?? null;
@@ -294,8 +315,10 @@ async function boot() {
       plan: plannerWithInputs({ stems, preverbs, blends }),
       random: secureRandom,
     },
-    songs: [...rt.catalog.values()],
+    // Each song with its pool (D178): a round's Queue is a Shuffle of its side's pool.
+    songs: songs.map((s) => ({ id: s.id, title: s.title, artist: s.artist, ...(isPoolId(s.pool) ? { pool: s.pool } : {}) })),
     cards,
+    cardTypes,
     cardsInPlay: params.get('cards') ?? readStored(cardsKey()) ?? '',
     fixedQueue,
     settings,

@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, volumeDb, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
@@ -30,6 +30,7 @@ import type {
   CommandFields,
   GameRecord,
   GamePlan,
+  CardTypeSides,
   IntervalInfo,
   IntervalTrackInfo,
   IntroInfo,
@@ -66,7 +67,7 @@ import type {
   Volumes,
 } from '@quina/protocol';
 import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW } from '../config.ts';
-import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun } from '../game/cards.ts';
+import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun, type PrintedCard } from '../game/cards.ts';
 import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
@@ -518,6 +519,8 @@ export interface SongInfo {
   id: number;
   title: string;
   artist: string;
+  /** Its pool (D178): the songs a round on a side of that pool is shuffled from. Absent: DEFAULT_POOL. */
+  pool?: string;
 }
 
 /** Audio-clock times of the pending automatic Next and of the switch to Hold music. */
@@ -541,7 +544,9 @@ export interface PhaseModel {
 export interface ShowOptions {
   env: Env;
   songs: SongInfo[];
-  cards?: readonly Card[];
+  cards?: readonly PrintedCard[];
+  /** card-types.json: each type's sides and the pool each plays (D178). Without it, every type has one side on pool 1. */
+  cardTypes?: readonly CardTypeSides[];
   cardsInPlay?: string;
   /** A fixed Queue (tests, `?queue=`): it bypasses the tie-free Shuffle (seed 0, attempts 0). */
   fixedQueue?: number[] | null;
@@ -595,8 +600,10 @@ function assignDefined<T, K extends keyof T>(target: T, source: Partial<Pick<T, 
 
 export class Show {
   readonly env: Env;
-  /** Every printed card (cards.json); only the ones in play and valid for the round count. */
-  readonly allCards: readonly Card[];
+  /** Every printed card (cards.json); only the ones in play, of the round's type, count, on the round's side. */
+  readonly allCards: readonly PrintedCard[];
+  /** card-types.json's sides (D178). */
+  readonly cardTypes: readonly CardTypeSides[];
   /** The edition's Game plan (setPlan), or null: only the Schedule and the Interval's countdown read it. */
   plan: GamePlan | null = null;
   cardsInPlayText = '';
@@ -614,7 +621,9 @@ export class Show {
   status: ShowStatus = 'locked';
   unlocked = false;
   game: GameSettings;
-  round: RoundInfo & { cardType: string } = { number: 1, kind: 'normal', cardType: defaultCardType('normal'), startedAtMs: 0, targetEndMs: 0, lineConfirmed: false };
+  round: RoundInfo & { cardType: string; side: number; pool: string } = {
+    number: 1, kind: 'normal', cardType: defaultCardType('normal'), side: DEFAULT_SIDE, pool: DEFAULT_POOL, startedAtMs: 0, targetEndMs: 0, lineConfirmed: false,
+  };
   queue: number[] = [];
   position = -1;
   current: PlayingSong | null = null;
@@ -664,7 +673,7 @@ export class Show {
   throwSong: { song: ThrowSong; playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
   /** The public Shuffle's animation (audio-clock seconds), while it runs. */
   shuffle: { round: number; startAt: number; endAt: number } | null = null;
-  intro: (IntroInfo & { cardType: string }) | null = null;
+  intro: (IntroInfo & { cardType: string; side: number }) | null = null;
   /** This round's Claims, oldest first. */
   claims: ClaimInfo[] = [];
   /** Claims made in the whole Game (claim ids count on from it). */
@@ -706,9 +715,10 @@ export class Show {
   volumesMovedAt: number | null = null;
   out: Effect[] = [];
 
-  constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null }: ShowOptions) {
+  constructor({ env, songs, cards = [], cardTypes = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null }: ShowOptions) {
     this.env = env;
     this.allCards = cards;
+    this.cardTypes = cardTypes;
     this.gameId = restore?.gameId || gameId || newGameId(env);
     this.catalog = new Map(songs.map((s) => [s.id, s]));
     this.fixedQueue = fixedQueue;
@@ -748,7 +758,7 @@ export class Show {
     } catch {}
     // Round 1's Queue is drawn now, without the public Shuffle: the Game is `before` until the first Spin
     // (or until the presenters introduce the round and run its Shuffle).
-    this.startRound(1, 'normal', defaultCardType('normal'), { keepPace: settings.pace != null || restore?.settings != null });
+    this.startRound(1, 'normal', defaultCardType('normal'), DEFAULT_SIDE, { keepPace: settings.pace != null || restore?.settings != null });
   }
 
   // ------------------------------------------------------------------------------------- public API
@@ -847,14 +857,21 @@ export class Show {
         // Default: the introduced round; in `before`, round 1 again (the Game has not started); else the next.
         const number = c.number ?? this.intro?.round ?? (this.scene === 'before' ? this.round.number : this.round.number + 1);
         const kind = c.kind ?? this.intro?.kind ?? 'normal';
-        // The introduced round's card type, when this is that round.
-        const introduced = this.intro && this.intro.round === number && this.intro.kind === kind ? this.intro.cardType : null;
-        this.newRound(number, kind, c.cardType ?? introduced ?? defaultCardType(kind));
+        // The introduced round's card type and side, when this is that round.
+        const introduced = this.intro && this.intro.round === number && this.intro.kind === kind ? this.intro : null;
+        const cardType = c.cardType ?? introduced?.cardType ?? defaultCardType(kind);
+        const side = c.side ?? introduced?.side ?? this.plannedSide(number, kind, cardType);
+        if (this.roundPool(cardType, side) == null) this.reject(reqId, c.cmd, 'invalid', `card type ${cardType} has no side ${side}`);
+        else this.newRound(number, kind, cardType, side);
         break;
       }
       case 'roundIntro': {
         const kind = c.kind ?? 'normal';
-        this.roundIntro(c.number ?? (this.scene === 'before' ? this.round.number : this.round.number + 1), kind, c.cardType ?? defaultCardType(kind));
+        const number = c.number ?? (this.scene === 'before' ? this.round.number : this.round.number + 1);
+        const cardType = c.cardType ?? defaultCardType(kind);
+        const side = c.side ?? this.plannedSide(number, kind, cardType);
+        if (this.roundPool(cardType, side) == null) this.reject(reqId, c.cmd, 'invalid', `card type ${cardType} has no side ${side}`);
+        else this.roundIntro(number, kind, cardType, side);
         break;
       }
       case 'claim': {
@@ -1049,10 +1066,11 @@ export class Show {
    * `shuffle` runs the public Shuffle (`shuffle.scheduled`; the scene becomes `play` when it ends);
    * `keepMusic` lets the Interval music go on under it, so the first Spin builds out of it.
    */
-  startRound(number: number, kind: RoundKind, cardType: string, { stop = false, keepPace = false, shuffle = false, keepMusic = false } = {}) {
+  startRound(number: number, kind: RoundKind, cardType: string, side: number, { stop = false, keepPace = false, shuffle = false, keepMusic = false } = {}) {
     if (stop) this.out.push({ type: 'stopAll', fadeSec: 0.3 });
     this.foldPlayed(number);
-    const drawn = this.drawQueue(cardType, kind);
+    const pool = this.roundPool(cardType, side) ?? DEFAULT_POOL;
+    const drawn = this.drawQueue(cardType, kind, side, pool);
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
@@ -1077,7 +1095,7 @@ export class Show {
     if (!this.game.paceLocked && !keepPace) this.game.pace = PACE.defaultSec;
     const nowMs = this.env.nowMs();
     // The round's target end comes from the Pace it starts with and its first plays; Drift is measured against it.
-    this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(kind), lineConfirmed: false };
+    this.round = { number, kind, cardType, side, pool, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(kind), lineConfirmed: false };
     // A secret seed drawn at the Shuffle blurs this round's Phase; it stays with the Queue.
     this.phaseModel = { kind: firstClimb(kind), start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.expectedSongs = null;
@@ -1088,6 +1106,7 @@ export class Show {
       round: number,
       roundKind: kind,
       cardType,
+      ...(side !== DEFAULT_SIDE ? { side } : {}),
       queue: [...this.queue],
       phaseSeed: this.phaseModel.seed,
       startedAtMs: this.round.startedAtMs,
@@ -1116,8 +1135,11 @@ export class Show {
   resumeAt(c: CommandOf<'resumeAt'>) {
     if (this.transition || this.suspense || this.pending || this.check) return this.reject(c.reqId, c.cmd, 'busy');
     const cardType = c.cardType ?? defaultCardType(c.kind);
-    const cards = validCards(this.allCards, this.cardsInPlay, cardType);
-    const drawn = tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed: c.shuffleSeed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(c.kind) });
+    const side = c.side ?? DEFAULT_SIDE;
+    const pool = this.roundPool(cardType, side);
+    if (pool == null) return this.reject(c.reqId, c.cmd, 'cannotResume', `card type ${cardType} has no side ${side}`);
+    const cards = validCards(this.allCards, this.cardsInPlay, cardType, side);
+    const drawn = tieFreeShuffle({ pool: this.poolSongs(pool), cards, seed: c.shuffleSeed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(c.kind) });
     const lineFrom = c.kind === 'desgraciat' ? null : c.lineConfirmedFrom ?? null;
     const refuse = (detail: string) => this.reject(c.reqId, c.cmd, 'cannotResume', detail);
     if (c.shuffleAttempts != null && drawn.attempts !== c.shuffleAttempts) {
@@ -1149,14 +1171,14 @@ export class Show {
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
-    this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(c.kind), lineConfirmed: lineFrom != null };
+    this.round = { number: c.round, kind: c.kind, cardType, side, pool, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(c.kind), lineConfirmed: lineFrom != null };
     this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.expectedSongs = null;
     this.targetShiftSec = 0;
     this.rebuildPhase({ songsMove: 'target' });
     this.updateNudge();
     this.journal({
-      kind: 'round.resumed', round: c.round, roundKind: c.kind, cardType, queue: [...this.queue], phaseSeed: this.phaseModel.seed,
+      kind: 'round.resumed', round: c.round, roundKind: c.kind, cardType, ...(side !== DEFAULT_SIDE ? { side } : {}), queue: [...this.queue], phaseSeed: this.phaseModel.seed,
       startedAtMs: this.round.startedAtMs, targetEndMs: this.round.targetEndMs, settings: this.journalSettings(),
       shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, position: c.position, lineConfirmedFrom: lineFrom,
     }, nowMs);
@@ -1182,6 +1204,7 @@ export class Show {
       round: this.round.number,
       kind: this.round.kind,
       cardType: this.round.cardType,
+      ...(this.round.side !== DEFAULT_SIDE ? { side: this.round.side } : {}),
       shuffleSeed: this.shuffleSeed,
       shuffleAttempts: this.shuffleAttempts,
       position: this.position,
@@ -1192,15 +1215,44 @@ export class Show {
   }
 
   /**
-   * The round's Queue: the tie-free Shuffle of the Pool (game/shuffle.ts) from a secret seed, checked against
-   * the cards in play valid for a round of this card type. A fixed Queue bypasses it (seed 0, attempts 0).
+   * The round's Queue: the tie-free Shuffle of its pool (game/shuffle.ts) from a secret seed, checked against the cards
+   * in play valid for a round of this card type and side. A fixed Queue bypasses it (seed 0, attempts 0).
    */
-  drawQueue(cardType: string, kind: RoundKind): { queue: number[]; seed: number; attempts: number; tied: boolean } {
+  drawQueue(cardType: string, kind: RoundKind, side: number, pool: string): { queue: number[]; seed: number; attempts: number; tied: boolean } {
     const fixed = this.fixedQueue?.filter((id) => this.catalog.has(id));
     if (fixed?.length) return { queue: fixed, seed: 0, attempts: 0, tied: false };
     const seed = Math.floor(this.env.random() * 2 ** 32) >>> 0;
-    const cards = validCards(this.allCards, this.cardsInPlay, cardType);
-    return tieFreeShuffle({ pool: [...this.catalog.keys()], cards, seed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(kind) });
+    const cards = validCards(this.allCards, this.cardsInPlay, cardType, side);
+    return tieFreeShuffle({ pool: this.poolSongs(pool), cards, seed, maxAttempts: FLOW.shuffleMaxAttempts, rule: tieRule(kind) });
+  }
+
+  // ------------------------------------------------------------------------------------------ pools (D178)
+  /** A song's pool: its own, else DEFAULT_POOL. */
+  poolOf(songId: number): string {
+    return this.catalog.get(songId)?.pool ?? DEFAULT_POOL;
+  }
+
+  /**
+   * A pool's songs, in the catalogue's order (the order is part of the Shuffle's rule). A pool with no songs (a
+   * repertoire not split into pools yet) plays the whole repertoire, with a warning: a round never starts empty.
+   */
+  poolSongs(pool: string): number[] {
+    const ids = [...this.catalog.keys()];
+    const songs = ids.filter((id) => this.poolOf(id) === pool);
+    if (songs.length || !ids.length) return songs;
+    this.out.push({ type: 'log', level: 'warn', message: `pool ${pool} has no songs: the round plays the whole repertoire` });
+    return ids;
+  }
+
+  /** The pool a round of this card type and side plays (card-types.json); null when the type has no such side. */
+  roundPool(cardType: string, side: number): string | null {
+    return sidePool(this.cardTypes, cardType, side);
+  }
+
+  /** The side the plan gives round `number`, when it plans that round as this kind and card type; else 1. */
+  plannedSide(number: number, kind: RoundKind, cardType: string): number {
+    const planned = roundPlan(this.plan, number);
+    return planned && planned.kind === kind && (planned.cardType || defaultCardType(kind)) === cardType ? roundSide(planned) : DEFAULT_SIDE;
   }
 
   /** The public Shuffle is still animating: no song may land yet. */
@@ -1251,7 +1303,12 @@ export class Show {
     const nowMs = this.env.nowMs();
     // Landing times on this page's audio clock (in the past, possibly before it started).
     this.landings = round.landings.map((l) => ({ songId: l.songId, position: l.position, atMs: l.atMs, undone: l.undone, T: now - (nowMs - l.atMs) / 1000 }));
-    this.round = { number: round.number, kind: round.kind, cardType: round.cardType ?? defaultCardType(round.kind), startedAtMs: round.startedAtMs, targetEndMs: round.targetEndMs, lineConfirmed: round.climbingTo === 'bingo' };
+    const cardType = round.cardType ?? defaultCardType(round.kind);
+    const side = round.side ?? DEFAULT_SIDE;
+    this.round = {
+      number: round.number, kind: round.kind, cardType, side, pool: this.roundPool(cardType, side) ?? DEFAULT_POOL,
+      startedAtMs: round.startedAtMs, targetEndMs: round.targetEndMs, lineConfirmed: round.climbingTo === 'bingo',
+    };
     this.phaseModel = { kind: round.climbingTo, start: round.climbFrom, seed: round.phaseSeed, valid: [], plan: null };
     this.shuffleSeed = round.shuffleSeed;
     this.shuffleAttempts = round.shuffleAttempts;
@@ -1280,7 +1337,7 @@ export class Show {
     this.winners = record.winners.map((w) => ({ ...w }));
     this.prizesRevealed = (record.prizesRevealed ?? []).map((r) => ({ ...r }));
     this.intro = record.intro
-      ? { round: record.intro.round, kind: record.intro.kind, cardType: record.intro.cardType ?? defaultCardType(record.intro.kind), sinceMs: record.sceneSinceMs }
+      ? { round: record.intro.round, kind: record.intro.kind, cardType: record.intro.cardType ?? defaultCardType(record.intro.kind), side: record.intro.side ?? DEFAULT_SIDE, sinceMs: record.sceneSinceMs }
       : null;
     const inPlay = new Set(this.cardsInPlay);
     this.claims = record.claims.map((c): ClaimInfo => ({
@@ -1310,7 +1367,7 @@ export class Show {
       settings: this.recordSettings(),
       scene: this.scene,
       sceneSinceMs: this.sceneSinceMs,
-      intro: this.intro ? { round: this.intro.round, kind: this.intro.kind, cardType: this.intro.cardType } : null,
+      intro: this.intro ? { round: this.intro.round, kind: this.intro.kind, cardType: this.intro.cardType, side: this.intro.side } : null,
       claims: this.claims.map((c): RecordedClaim => ({
         claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, position: c.position, atMs: c.atMs,
         verdict: c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded' ? c.status : null,
@@ -1324,6 +1381,7 @@ export class Show {
         number: this.round.number,
         kind: this.round.kind,
         cardType: this.round.cardType,
+        side: this.round.side,
         queue: [...this.queue],
         phaseSeed: this.phaseModel.seed,
         startedAtMs: this.round.startedAtMs,
@@ -2108,7 +2166,7 @@ export class Show {
    */
   rebuildPhase({ songsMove = 'shift' }: { songsMove?: 'target' | 'shift' | 'none' } = {}) {
     const m = this.phaseModel;
-    m.valid = validCards(this.allCards, this.cardsInPlay, this.round.cardType);
+    m.valid = validCards(this.allCards, this.cardsInPlay, this.round.cardType, this.round.side);
     if (!m.valid.length) m.plan = null;
     else if (m.kind === 'standing') m.plan = standingPlan({ cards: m.valid, queue: this.queue, startPosition: m.start, seed: m.seed });
     else m.plan = phasePlan({ cards: m.valid, queue: this.queue, kind: m.kind, startPosition: m.start, seed: m.seed, cardsInPlayCount: m.valid.length });
@@ -2150,7 +2208,7 @@ export class Show {
   }
 
   /** Move to another scene: journaled (a resumed Game comes back in it) and announced to the projector. */
-  setScene(scene: ShowScene, round = this.round.number, roundKind: RoundKind = this.round.kind, cardType: string = this.round.cardType) {
+  setScene(scene: ShowScene, round = this.round.number, roundKind: RoundKind = this.round.kind, cardType: string = this.round.cardType, side: number = this.round.side) {
     if (scene === this.scene) return;
     const previous = this.scene;
     const atMs = this.env.nowMs();
@@ -2159,7 +2217,7 @@ export class Show {
     if (previous === 'celebration') this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
     if (this.pause) this.out.push({ type: 'pauseOverlay', on: this.pauseOverlay() });
     this.sceneSinceMs = atMs;
-    this.journal({ kind: 'scene.changed', scene, round, roundKind, cardType }, atMs);
+    this.journal({ kind: 'scene.changed', scene, round, roundKind, cardType, ...(side !== DEFAULT_SIDE ? { side } : {}) }, atMs);
     this.emit({ type: 'scene.changed', scene, previous, atMs });
   }
 
@@ -2275,7 +2333,7 @@ export class Show {
   /** What the card shows from the counted landings now (game/check.ts); the Claim's PRIVATE view follows it. */
   evaluate(claim: ClaimInfo): CheckResult {
     const result = computeCheck({
-      allCards: this.allCards, cardId: claim.cardId, kind: claim.kind, cardType: this.round.cardType,
+      allCards: this.allCards, cardId: claim.cardId, kind: claim.kind, cardType: this.round.cardType, side: this.round.side,
       cardsInPlay: new Set(this.cardsInPlay), queue: this.queue, position: this.position,
     });
     claim.outcome = result.outcome;
@@ -2302,7 +2360,7 @@ export class Show {
     const info: CheckInfo = {
       claimId: claim.claimId, cardId: claim.cardId, kind: claim.kind, outcome: result.outcome, row: result.row, otherRows: result.otherRows,
       // The printed card's type: the projector shows it as the Check's first step (and a wrongType fails on it).
-      cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null,
+      cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null, side: this.round.side,
       startAtMs: this.env.nowMs(), total: result.steps.length, revealed: [], auto: false, cue: null, reviewing,
     };
     this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null };
@@ -2881,12 +2939,12 @@ export class Show {
   }
 
   /** Introduce a round: its name and prizes on screen while its intro music plays. No Queue yet. */
-  roundIntro(number: number, kind: RoundKind, cardType: string) {
+  roundIntro(number: number, kind: RoundKind, cardType: string, side: number) {
     this.pending = null;
     this.celebration = null;
     this.interval = null;
-    this.intro = { round: number, kind, cardType, sinceMs: this.env.nowMs() };
-    this.setScene('roundStart', number, kind, cardType);
+    this.intro = { round: number, kind, cardType, side, sinceMs: this.env.nowMs() };
+    this.setScene('roundStart', number, kind, cardType, side);
     // Announcing a round reveals its prizes (unless the plan keeps them all secret: plan.ts revealedRounds).
     this.revealPrizes(number, 'intro');
     this.playIntroMusic();
@@ -2900,13 +2958,13 @@ export class Show {
   }
 
   /** Run a round's public Shuffle. The intro's music goes on under it (or the breaks'), and the first Spin builds out of it. */
-  newRound(number: number, kind: RoundKind, cardType: string) {
+  newRound(number: number, kind: RoundKind, cardType: string, side: number) {
     const keepMusic = (this.bed === 'interval' || this.bed === 'intro') && !this.current && !this.transition && !this.suspense;
     this.announceCancel('newRound');
     this.stopCheck();
     // Journaled before `round.started`, which ends the intro in the record too.
-    if (this.scene !== 'roundStart') this.setScene('roundStart', number, kind, cardType);
-    this.startRound(number, kind, cardType, { stop: !keepMusic, shuffle: true, keepMusic });
+    if (this.scene !== 'roundStart') this.setScene('roundStart', number, kind, cardType, side);
+    this.startRound(number, kind, cardType, side, { stop: !keepMusic, shuffle: true, keepMusic });
     if (!keepMusic && this.unlocked) this.playIntroMusic();
   }
 
@@ -3282,13 +3340,17 @@ export class Show {
     return this.firstPlaysIn(this.position, roundSongs(this.round.kind, SCHEDULE, this.expectedSongs) - 1);
   }
 
-  /** The pool's songs no round will have played by this round's expected end, for later rounds' first plays. */
-  poolLeft(): { songs: number; unplayed: number } {
-    const songs = this.queue.length || this.catalog.size;
+  /** Each pool's songs no round will have played by this round's expected end, for later rounds' first plays (D178). */
+  poolsLeft(): Record<string, { songs: number; unplayed: number }> {
     const end = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
     const thisRound = new Set(this.queue.slice(0, end));
-    const pool = this.queue.length ? this.queue : [...this.catalog.keys()];
-    return { songs, unplayed: pool.filter((id) => !this.played.has(id) && !thisRound.has(id)).length };
+    const out: Record<string, { songs: number; unplayed: number }> = {};
+    for (const id of this.catalog.keys()) {
+      const p = (out[this.poolOf(id)] ??= { songs: 0, unplayed: 0 });
+      p.songs++;
+      if (!this.played.has(id) && !thisRound.has(id)) p.unplayed++;
+    }
+    return out;
   }
 
   schedule() {
@@ -3296,17 +3358,18 @@ export class Show {
     const after = plan?.rounds.filter((r) => r.number > this.round.number) ?? [];
     return scheduleEstimate({
       nowMs: this.env.nowMs(),
-      round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft() },
+      round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft(), pool: this.round.pool },
       game: { roundsTotal: this.game.roundsTotal },
       position: this.position,
       pace: this.game.pace,
       phase: this.phaseName(),
       lineConfirmed: this.round.lineConfirmed,
       locked: this.game.paceLocked,
-      pool: this.poolLeft(),
+      pools: this.poolsLeft(),
       later: plan
         ? {
             kinds: after.map((r) => r.kind),
+            pools: after.map((r) => this.roundPool(r.cardType || defaultCardType(r.kind), roundSide(r)) ?? DEFAULT_POOL),
             intervalSec: this.intervalSec(),
             throwsSec: (plan.schedule.throws ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes, 0),
           }

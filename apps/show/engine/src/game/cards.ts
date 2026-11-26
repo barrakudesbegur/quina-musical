@@ -1,14 +1,16 @@
 // Cards in play, Lines and Bingos: pure functions shared by the engine, the tablet and the Node tests.
 // No DOM and no Node-only APIs.
 //
-// A card is `{ id, type: 'normal' | 'especial', lines: [[song × 4] × 3] }`, as in
-// apps/cards/dist/cards.json, where a song is `{ id, title, artist }`. Plain song ids work too
-// (`lines: [[1, 2, 3, 4], …]`), which keeps synthetic cards in tests short. Song ids are the ids of the
-// app's songs.json, the same ids the mixer uses in data/analysis/index.json.
+// A printed card is `{ id, type: 'normal' | 'especial', sides: [{ side: 1, lines: [[song × 4] × 3] }, …] }`, as in
+// apps/cards/dist/cards.json, where a song is `{ id, title, artist }` (D178: each side is printed from one pool; a card
+// from before sides has `lines`, its side 1). A round counts one side (`cardFace`): the functions below take those
+// faces, `{ id, type, lines }`. Plain song ids work too (`lines: [[1, 2, 3, 4], …]`), which keeps synthetic cards in
+// tests short. Song ids are the repertoire's, the same ids the mixer uses in data/analysis/index.json.
 //
 // API
 //   parseCardRanges(text)                       → sorted unique card ids, e.g. "1-180, 200–215 400" (throws on junk)
-//   validCards(allCards, inPlayIds, cardType)  → the cards in play of the round's card type, by id
+//   cardFace(card, side)                        → the side's face { id, type, lines }, or null when it has none
+//   validCards(allCards, inPlayIds, cardType, side) → the faces in play of the round's card type and side, by id
 //   cardSongIds(card)                           → [[id × 4] × 3]
 //   cardStatus(card, landed)                    → { lines: [b, b, b], lineCount, bingo, missing, missingByLine }
 //   possibleWinners(cards, landed, kind)        → [{ cardId, lines, completedBy, card }] by card id
@@ -27,7 +29,7 @@
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
 // 'bingo' (a CompletionKind: the Desgraciat round's 'standing' has its own functions). Everything derived from cards in play is "possible": the ranges include unsold cards.
 
-import { DEFAULT_CARD_TYPE, isCardTypeId, type WinKind } from '@quina/protocol';
+import { DEFAULT_CARD_TYPE, DEFAULT_SIDE, isCardTypeId, type WinKind } from '@quina/protocol';
 
 export type { WinKind } from '@quina/protocol';
 /** What a card completes: a Line or its Bingo (the Desgraciat round's 'standing' is the opposite: nothing lands). */
@@ -41,11 +43,30 @@ export interface CardSong {
 }
 /** A song on a card, or just its id. */
 export type CardSongRef = number | CardSong;
-/** A printed card: `type` is 'normal' or 'especial', `lines` are 3 lines of 4 songs. */
+/** One side of a card as a round counts it: `type` is 'normal' or 'especial', `lines` are 3 lines of 4 songs. */
 export interface Card {
   id: number;
   type: string;
   lines: ReadonlyArray<ReadonlyArray<CardSongRef>>;
+}
+/** A printed side: its number and its lines. */
+export interface CardSide {
+  side: number;
+  lines: ReadonlyArray<ReadonlyArray<CardSongRef>>;
+}
+/** A printed card, as cards.json has it: its sides, or (from before sides) its side 1's `lines`. */
+export interface PrintedCard {
+  id: number;
+  type: string;
+  lines?: ReadonlyArray<ReadonlyArray<CardSongRef>>;
+  sides?: ReadonlyArray<CardSide>;
+}
+
+/** The face a round of side `side` counts: that side's lines (a card from before sides: its `lines` on side 1). */
+export function cardFace(card: PrintedCard, side: number = DEFAULT_SIDE): Card | null {
+  if (!card.sides?.length) return side === DEFAULT_SIDE && card.lines ? (card as Card) : null; // itself: a card from before sides
+  const lines = card.sides.find((s) => s.side === side)?.lines;
+  return lines ? { id: card.id, type: card.type, lines } : null;
 }
 /** The songs that have landed: a Set, or an array in landing order. */
 export type LandedSongs = ReadonlySet<number> | ReadonlyArray<number>;
@@ -98,10 +119,13 @@ export { parseCardRanges } from '@quina/protocol';
  * @returns Sorted by card id.
  * @throws On something that isn't a card type id.
  */
-export function validCards<C extends Card>(allCards: ReadonlyArray<C>, inPlayIds: Iterable<number>, cardType: string = DEFAULT_CARD_TYPE.normal): C[] {
+export function validCards(allCards: ReadonlyArray<PrintedCard>, inPlayIds: Iterable<number>, cardType: string = DEFAULT_CARD_TYPE.normal, side: number = DEFAULT_SIDE): Card[] {
   if (!isCardTypeId(cardType)) throw new Error(`Not a card type: ${cardType}`);
   const inPlay = inPlayIds instanceof Set ? inPlayIds : new Set(inPlayIds);
-  return allCards.filter((card) => card.type === cardType && inPlay.has(card.id)).sort((a, b) => a.id - b.id);
+  return allCards
+    .filter((card) => card.type === cardType && inPlay.has(card.id))
+    .flatMap((card) => cardFace(card, side) ?? [])
+    .sort((a, b) => a.id - b.id);
 }
 
 // ---------------------------------------------------------------------------------- lines and bingo

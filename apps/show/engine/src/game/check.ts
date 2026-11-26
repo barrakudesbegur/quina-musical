@@ -20,15 +20,17 @@
 //     (`fallen`). In a standing Check `landed` means counted against the card: a landing that didn't count shows as
 //     not landed. There is never a shared win.
 import type { CheckOutcome, ClaimWarning, WinKind } from '@quina/protocol';
-import { cardSongIds, completionIndex, queuePositions, standingRun, type Card } from './cards.ts';
+import { cardFace, cardSongIds, completionIndex, queuePositions, standingRun, type PrintedCard } from './cards.ts';
 
 export interface CheckInput {
   /** Every generated card (cards.json), not only the cards in play. */
-  allCards: readonly Card[];
+  allCards: readonly PrintedCard[];
   cardId: number;
   kind: WinKind;
   /** The round's card type (`RoundInfo.cardType`): a card of another type fails as `wrongType`. */
   cardType: string;
+  /** The round's side (D178): its lines are checked; a card without it fails as `wrongType`. Default 1. */
+  side?: number;
   /** The cards in play (ids). */
   cardsInPlay: ReadonlySet<number>;
   /** The round's Queue and the Queue index of the last counted landing: queue[0..position] have landed. */
@@ -74,12 +76,13 @@ export interface TimedStep extends CheckSong {
   sound: StepSound;
 }
 
-export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, queue, position }: CheckInput): CheckResult {
-  const card = allCards.find((c) => c.id === cardId);
+export function computeCheck({ allCards, cardId, kind, cardType, side = 1, cardsInPlay, queue, position }: CheckInput): CheckResult {
+  const printed = allCards.find((c) => c.id === cardId);
   const none = { row: null, otherRows: [], steps: [], revealUntil: null, markedCard: [], completeSince: null };
-  if (!card) return { outcome: 'unknownCard', ...none, warnings: [] };
+  if (!printed) return { outcome: 'unknownCard', ...none, warnings: [] };
   const warnings: ClaimWarning[] = cardsInPlay.has(cardId) ? [] : ['notSold'];
-  if (card.type !== cardType) return { outcome: 'wrongType', ...none, warnings };
+  const card = printed.type === cardType ? cardFace(printed, side) : null;
+  if (!card) return { outcome: 'wrongType', ...none, warnings };
 
   // Only the counted landings: a song later in the Queue has not landed yet.
   const landedAt = queuePositions(queue.slice(0, Math.max(0, position + 1)));
@@ -95,7 +98,7 @@ export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, qu
 
   if (kind === 'standing') {
     const counted = queue.slice(0, Math.max(0, position + 1));
-    const field = allCards.filter((c) => c.type === cardType && (cardsInPlay.has(c.id) || c.id === cardId));
+    const field = allCards.filter((c) => c.type === cardType && (cardsInPlay.has(c.id) || c.id === cardId)).flatMap((c) => cardFace(c, side) ?? []);
     const run = standingRun(field, counted);
     const fellAt = run.fallAt.get(cardId);
     const songs = rows.flat();

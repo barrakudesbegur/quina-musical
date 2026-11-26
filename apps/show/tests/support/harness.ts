@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeCommand } from '@quina/protocol';
-import type { CommandArgs, CommandName, GameRecord, GameSettings } from '@quina/protocol';
+import type { CardTypeSides, CommandArgs, CommandName, GameRecord, GameSettings } from '@quina/protocol';
 import { Show } from '../../engine/src/show/show.ts';
-import type { Effect, Env } from '../../engine/src/show/show.ts';
+import type { Effect, Env, SongInfo } from '../../engine/src/show/show.ts';
 import { seededRandom } from '../../engine/src/rng.ts';
 import type { Analysis } from '../../engine/src/analysis.ts';
-import type { Card } from '../../engine/src/game/cards.ts';
+import type { Card, PrintedCard } from '../../engine/src/game/cards.ts';
 import { OUT, REPO } from '../../relay/repertoire.ts';
 import { HAS_DATA } from './data.ts';
 
@@ -30,7 +30,11 @@ export interface SetupOptions {
   seed?: number;
   decoded?: (songId: number) => boolean;
   settings?: Partial<GameSettings>;
-  cards?: Card[];
+  cards?: PrintedCard[];
+  /** card-types.json's sides (D178). */
+  cardTypes?: CardTypeSides[];
+  /** The repertoire's songs (default: the test songs, all pool 1). */
+  songs?: SongInfo[];
   cardsInPlay?: string;
   /** A fixed Queue (it bypasses the tie-free Shuffle). */
   fixedQueue?: number[] | null;
@@ -44,7 +48,7 @@ export interface SetupOptions {
   env?: Partial<Env>;
 }
 
-export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardsInPlay = '', fixedQueue = null, restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {} }: SetupOptions = {}) {
+export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [], cardTypes = [], songs: catalog = songs, cardsInPlay = '', fixedQueue = null, restore = null, startSec = 10, epochMs = 1_700_000_000_000, env: extra = {} }: SetupOptions = {}) {
   const clock = { t: startSec };
   const env: Env = {
     now: () => clock.t,
@@ -55,7 +59,7 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     random: seededRandom(seed),
     ...extra,
   };
-  const show = new Show({ env, songs, settings, cards, cardsInPlay, fixedQueue, restore });
+  const show = new Show({ env, songs: catalog, settings, cards, cardTypes, cardsInPlay, fixedQueue, restore });
   const log: Effect[] = [...show.flush()];
   // Any message, as a remote might send it.
   const dispatch = (message: unknown) => {
