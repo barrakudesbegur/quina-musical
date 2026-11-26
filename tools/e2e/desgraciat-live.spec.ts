@@ -168,9 +168,10 @@ test('a Desgraciat round on the live cloud, a phone following', async ({ browser
   await remote.command('claim', { cardId: winner, kind: 'standing' });
   const checking = await remote.until('the standing Check', (s) => s.scene === 'check' && s.check?.kind === 'standing');
   await expect.poll(() => phone.view?.state.check, { message: 'the phone sees the Check pending', timeout: 20_000 }).toMatchObject({ cardId: winner, kind: 'standing', result: 'pending' });
-  await remote.until('the Check shown', (s) => s.check !== null && Date.now() >= s.check.endAtMs, 120_000);
   await snap(phonePage, 'phone-check');
-  await remote.command('decide', { claimId: checking.check?.claimId, valid: true });
+  // The presenters' presses (D107): each reveals a song of the card, none landed, then the cue.
+  const done = await remote.checkByPresses(checking.check?.claimId as string);
+  expect(done.claims.find((c) => c.claimId === checking.check?.claimId)?.status, 'the last card standing passes').toBe('valid');
   await remote.until('the last card standing celebrated', (s) => s.scene === 'celebration' && s.celebration?.kind === 'standing');
   await expect.poll(() => phone.view?.state.winners.at(-1), { message: 'the phone sees the winner', timeout: 20_000 }).toEqual({ round: 1, kind: 'standing', cardIds: [winner] });
   await expect.poll(() => phone.view?.state.rounds.at(-1)?.ended, { message: 'the round ended', timeout: 20_000 }).toBe(true);

@@ -82,10 +82,30 @@ export class Remote {
     }
   }
 
+  /**
+   * A Claim's Check as the presenters run it (D107): one press per reveal (`checkNext`, with the step it expects: the
+   * songs revealed so far), then the cue's press, until the Claim has its verdict. With automatic reveal on, the
+   * engine reveals by itself and a press only goes where it waits (a card's first reveal); a press it doesn't expect
+   * is ignored. Returns the state with the verdict.
+   */
+  async checkByPresses(claimId: string, timeoutMs = 120_000): Promise<ShowState> {
+    const deadline = Date.now() + timeoutMs;
+    const left = () => Math.max(1, deadline - Date.now());
+    const decided = (s: ShowState) => ['valid', 'invalid'].includes(s.claims.find((c) => c.claimId === claimId)?.status ?? '');
+    for (let presses = 0; presses <= 20; presses++) {
+      const s = await this.until(`the Check of ${claimId} on screen`, (n) => decided(n) || (n.check?.claimId === claimId && n.check.cue === null), left());
+      if (decided(s)) return s;
+      const step = s.check?.revealed.length ?? 0;
+      await this.command('checkNext', { claimId, step });
+      await this.until(`press ${step} on ${claimId}`, (n) => decided(n) || n.check?.claimId !== claimId || (n.check.revealed.length > step || n.check.cue !== null), left());
+    }
+    throw new Error(`the Check of ${claimId} took more than 20 presses`);
+  }
+
   /** The few fields that say where the show is, for failure messages. */
   summary(): Fields | null {
     const s = this.state;
-    return s && { scene: s.scene, status: s.status, current: s.current?.songId ?? null, hold: s.hold, suspense: Boolean(s.suspense), check: s.check?.outcome ?? null, celebration: s.celebration?.kind ?? null, round: s.round.number, queue: s.queue };
+    return s && { scene: s.scene, status: s.status, current: s.current?.songId ?? null, hold: s.hold, suspense: Boolean(s.suspense), check: s.check ? { claimId: s.check.claimId, revealed: s.check.revealed.length, total: s.check.total, cue: s.check.cue, reviewing: s.check.reviewing } : null, claims: s.claims.map((c) => `${c.cardId}:${c.status}`), celebration: s.celebration?.kind ?? null, round: s.round.number, queue: s.queue };
   }
 
   close(): void {

@@ -3,11 +3,13 @@
 // the cloud serves it), driven through the protocol like the presenters' tablet. Each step waits for the engine's
 // state, then checks every screen through its stable hooks (data-scene, data-testid; agreed with the UI session)
 // and what the phones follow; at the end, that the phones never got anything private:
-//   before → round 1 introduced → Shuffle → three landings → Parlem → Aguanta → Suspense → a Line claimed,
-//   checked and celebrated → back to the round → the Bingo claimed, checked and celebrated → the Interval →
-//   round 2 introduced → Shuffle → its first landing.
+//   before → round 1 introduced → Shuffle → three landings → Parlem → Aguanta → Suspense → a claim put under
+//   review and discarded → a Line claimed, checked press by press and celebrated → back to the round → a Bingo
+//   claimed for two cards, checked with automatic reveal (the first passes, the second fails), celebrated → the
+//   Interval → round 2 introduced → Shuffle → its first landing.
 // The claims are real wins: the Check decides (a card that fails it can't be accepted), so the show runs a fixed
-// Queue (?queue=) that completes a Line of the first card, then all of the second card.
+// Queue (?queue=) that completes a Line of the first card, then all of the second card. The Check is the
+// presenter-paced one (D107–D124): each press reveals a song, then the cue.
 // It needs the default pool prepared on this machine; without it the test is skipped.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -158,20 +160,35 @@ test('one whole show, every screen following', async ({ browser }) => {
   await remote.until('released', (s) => s.status === 'playing');
   await soft(consolePage.getByTestId('hold')).toHaveAttribute('data-mode', 'none');
 
-  // ---- Suspense, resolved by the next landing --------------------------------------------------------------
+  // ---- Suspense, released into its landing (Next can't: D133) ---------------------------------------------
   await remote.command('suspense', { on: true });
   await remote.until('Suspense', (s) => s.suspense !== null);
-  state = await land(playing ?? null);
+  await remote.command('suspense', { on: false });
+  state = await remote.until('the Suspense landed', (s) => s.status === 'playing' && s.current !== null && s.current.songId !== playing && s.transition === null && s.suspense === null, LANDING_MS);
+  if (state.current) landed.add(state.current.songId);
+
+  // ---- a claim put under review, then discarded: no verdict, no winner, back in Parlem (D118–D125) -----------
+  await remote.command('claim', { cardId: CARDS[1], kind: 'line' });
+  const reviewed = await remote.until('the claim to review on screen', (s) => s.scene === 'check' && s.check?.cardId === CARDS[1]);
+  const reviewedId = reviewed.check?.claimId as string;
+  await soft.poll(() => phone.view?.state.check, { message: 'the phone sees the Check pending' }).toMatchObject({ cardId: CARDS[1], result: 'pending' });
+  await remote.command('checkReview', { claimId: reviewedId });
+  await remote.until('under review', (s) => s.claims.find((c) => c.claimId === reviewedId)?.status === 'reviewing' && s.check?.reviewing === true);
+  await soft.poll(() => phone.view?.state.check?.result, { message: 'a review stays pending on phones (U79)' }).toBe('pending');
+  await remote.command('reviewEnd', { claimId: reviewedId, outcome: 'discard' });
+  await remote.until('discarded, back in Parlem', (s) => s.claims.find((c) => c.claimId === reviewedId)?.status === 'discarded' && s.hold?.reason === 'discarded');
+  await soft.poll(() => phone.view?.state.check, { message: 'the discarded Check leaves the phones' }).toBe(null);
+  await soft.poll(() => phone.view?.state.winners.length, { message: 'a discard wins nothing' }).toBe(0);
 
   // ---- a Line: claimed, checked, celebrated, back to the round ---------------------------------------------
   expect(LINE_SONGS.every((id) => landed.has(id)), `card ${CARDS[0]}'s first Line has landed`).toBe(true);
   await remote.command('claim', { cardId: CARDS[0], kind: 'line' });
-  const checking = await remote.until('the Line checked', (s) => s.scene === 'check' && s.check !== null);
+  const checking = await remote.until('the Line on screen', (s) => s.scene === 'check' && s.check?.cardId === CARDS[0]);
+  expect(checking.check?.revealed, 'nothing revealed before the first press').toEqual([]);
   await expectScenes(screens, 'check');
-  await soft(consolePage.getByTestId('claim-row').first()).toHaveAttribute('data-card-id', String(CARDS[0]));
-  await remote.until('the Check shown', (s) => s.check !== null && Date.now() >= s.check.endAtMs, 60_000);
-  await soft(consolePage.getByTestId('check-result')).toHaveAttribute('data-outcome', checking.check?.outcome ?? '');
-  await remote.command('decide', { claimId: checking.check?.claimId, valid: true });
+  const lineId = checking.check?.claimId as string;
+  const lineDone = await remote.checkByPresses(lineId);
+  expect(lineDone.claims.find((c) => c.claimId === lineId)?.status, 'the Line passed its Check').toBe('valid');
   await remote.until('the Line celebrated', (s) => s.scene === 'celebration' && s.celebration?.kind === 'line');
   await expectScenes(screens, 'celebration');
   await soft(show.getByTestId('celebration')).toHaveAttribute('data-kind', 'line');
@@ -182,10 +199,21 @@ test('one whole show, every screen following', async ({ browser }) => {
   // Until all twelve of the second card's songs have landed (the fixed Queue brings them next).
   for (let i = 0; i < BINGO_SONGS.length && !BINGO_SONGS.every((id) => landed.has(id)); i++) state = await land(state.current?.songId ?? null);
   expect(BINGO_SONGS.every((id) => landed.has(id)), `all of card ${CARDS[1]} has landed`).toBe(true);
-  await remote.command('claim', { cardId: CARDS[1], kind: 'bingo' });
-  const bingo = await remote.until('the Bingo checked', (s) => s.scene === 'check' && s.check?.kind === 'bingo');
-  await remote.command('decide', { claimId: bingo.check?.claimId, valid: true });
+  // Two numbers from the claim pad (D110), checked in turn: the second card hasn't its Bingo, so it fails after the
+  // first passed, and one more press starts the shared Celebration. Automatic reveal does the presses between.
+  await remote.command('checkAuto', { on: true });
+  await remote.command('claim', { cardIds: [CARDS[1], CARDS[0]], kind: 'bingo' });
+  const bingo = await remote.until('the Bingo on screen', (s) => s.scene === 'check' && s.check?.kind === 'bingo' && s.check.cardId === CARDS[1]);
+  const [passId, failId] = [CARDS[1], CARDS[0]].map((card) => bingo.claims.find((c) => c.cardId === card && c.status !== 'discarded' && c.status !== 'valid')?.claimId as string);
+  expect((await remote.checkByPresses(passId as string)).claims.find((c) => c.claimId === passId)?.status, 'the full card passes').toBe('valid');
+  const failed = await remote.checkByPresses(failId as string);
+  expect(failed.claims.find((c) => c.claimId === failId)?.status, 'the other card fails').toBe('invalid');
+  // The press the shared Celebration waits for: the engine says which claim and step (D110).
+  const next = await remote.until('the Celebration waits for a press', (s) => s.celebrationNext !== null || s.scene === 'celebration');
+  if (next.celebrationNext) await remote.command('checkNext', next.celebrationNext);
   await remote.until('the Bingo celebrated', (s) => s.scene === 'celebration' && s.celebration?.kind === 'bingo');
+  await remote.command('checkAuto', { on: false });
+  await soft.poll(() => phone.view?.state.winners.at(-1), { message: 'only the card that passed wins' }).toEqual({ round: 1, kind: 'bingo', cardIds: [CARDS[1]] });
   await soft(show.getByTestId('celebration')).toHaveAttribute('data-kind', 'bingo');
   await remote.command('interval');
   await remote.until('the Interval', (s) => s.scene === 'interval');
@@ -210,7 +238,7 @@ test('one whole show, every screen following', async ({ browser }) => {
   // The protocol all along: every step's event came (the engine's own markers), nothing was rejected, and no
   // page threw.
   const seen = new Set(remote.events.map((e) => e.type));
-  for (const type of ['shuffle.scheduled', 'scene.changed', 'transition.scheduled', 'transition.landed', 'suspense.started', 'claim.opened', 'check.scheduled', 'claim.decided', 'celebration.started']) {
+  for (const type of ['shuffle.scheduled', 'scene.changed', 'transition.scheduled', 'transition.landed', 'suspense.started', 'claim.opened', 'check.started', 'check.revealed', 'check.reviewing', 'check.cue', 'claim.decided', 'celebration.started']) {
     expect(seen.has(type as never), `an event ${type}`).toBe(true);
   }
   expect(remote.events.filter((e) => e.type === 'command.rejected')).toEqual([]);
