@@ -1060,3 +1060,7 @@ By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-
 ### D145 · With manual advance, holding B starts Suspens · 2026-11-26 · Active; the window's length Pending (U122)
 With the advance manual, holding B starts a Suspens straight away. Three evenly spaced vibrations follow, and letting go of B before the third cancels it. After the third it can't be undone: a gentler vibration, oscillating or below full power, lasts as long as the Suspens, and letting go of B lands it. With the auto-advance on, B stays Aguanta. Answers U119 with (b).
 By: the user. Source: open-questions.md › Answered (U119). Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D146 · No special style for the playing song · 2026-11-26 · Active
+In the phone's Historial, the song playing now has no style of its own: "we dont need a special style for the playing song". Done in the code and on 22 boards (canvas v66).
+By: the user via canvas (26 Nov). Source: the "Quina Musical look" canvas v66; Frontend's report. Lives in: requirements/screens.md › Player app.

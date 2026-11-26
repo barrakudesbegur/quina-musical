@@ -12,6 +12,11 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
 
+### U125 · Horari's welcome and break rows
+The agreed boards show "Benvinguda" and "Mitja part" rows in the phone's Horari, but the plan has no time for the welcome, and its only planned breaks are the throws. The phone's drawers are built and pushed (3e8f8dd) with the rounds plus "Fi" and the expected end.
+- (a) Keep the rounds and "Fi" only.
+- (b) Add the welcome (a time in the plan) and the breaks (named as U123 decides).
+
 ### U123 · The screens' word for a break
 No screen says "Interval": the projector's title, the console's buttons and phase name, the phones' heading and Horari's row all say "Mitja part" (half-time). With several breaks a night, "Mitja part" is off. Changing it is strings only.
 - (a) "Descans" on every screen.
