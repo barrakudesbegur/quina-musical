@@ -8,6 +8,7 @@ function fakeTransport() {
   const sent: string[] = [];
   let handlers: TransportHandlers | null = null;
   const transport: Transport = {
+    connected: true,
     connect: (h) => {
       handlers = h;
     },
