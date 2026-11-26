@@ -128,7 +128,8 @@ export function audioOutputCheck(profile: unknown): Check {
   if (transport === 'bluetooth' || transport === 'airplay') return check('Laptop', 'Audio output', 'fail', `${name} is ${transport}: its delay breaks the landings on the beat. Use the headphone jack, USB or HDMI`);
   if (transport === 'virtual') return check('Laptop', 'Audio output', 'warn', `${name} is a virtual device: is the PA really fed from it?`);
   if (transport === 'builtin' && /speaker/i.test(name)) return check('Laptop', 'Audio output', 'warn', `${name}: the laptop's own speakers. Plug the PA in (headphone jack, USB or HDMI)`);
-  return check('Laptop', 'Audio output', 'pass', `${name} (${transport || 'unknown'})`);
+  // The engine plays the whole show 6 dB lower inside (D157), so the sound check sets the PA higher than last year's.
+  return check('Laptop', 'Audio output', 'pass', `${name} (${transport || 'unknown'}). At the sound check, turn the PA up about 6 dB: the show plays 6 dB lower inside than last year`);
 }
 
 /** Sleep, from `pmset -g` and `pmset -g assertions`: the laptop and its display must never sleep during the show. */

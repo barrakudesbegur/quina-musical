@@ -126,5 +126,6 @@ const preflight = run('npm', ['run', 'preflight', '-w', '@quina/cloud', '--', '-
 
 console.log(`\n${bold(preflight ? 'This laptop is set up.' : 'Set up, but the preflight found problems (above).')}
 On the night (docs/night-runbook.md): in apps/show, npm start -- --lan; in apps/cloud, npm run link; the show page
-in Chrome; then the full preflight with everything running: npm run preflight -w @quina/cloud.`);
+in Chrome; then the full preflight with everything running: npm run preflight -w @quina/cloud.
+At the sound check: the show plays 6 dB lower inside than last year (D157), so turn the PA up about 6 dB.`);
 process.exit(preflight ? 0 : 1);

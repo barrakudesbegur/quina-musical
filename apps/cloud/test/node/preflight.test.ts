@@ -17,6 +17,7 @@ test('audio output: wireless fails (its delay breaks the landings), the laptop s
   assert.equal(c.audioOutputCheck(device('External Headphones', 'builtin')).status, 'pass');
   assert.equal(c.audioOutputCheck(device('Scarlett 2i2', 'usb')).status, 'pass');
   assert.equal(c.audioOutputCheck(device('LG TV', 'hdmi')).status, 'pass');
+  assert.match(c.audioOutputCheck(device('LG TV', 'hdmi')).detail, /6 dB/, 'the sound check note (D157)');
   assert.equal(c.audioOutputCheck(device('BlackHole', 'virtual')).status, 'warn');
   assert.equal(c.audioOutputCheck({ SPAudioDataType: [] }).status, 'fail');
   assert.equal(c.audioOutputCheck(null).status, 'fail');
