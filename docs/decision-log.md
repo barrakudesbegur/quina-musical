@@ -1186,3 +1186,7 @@ By: the user. Source: open-questions.md › Answered (U152). Amends: D170. Lives
 ### D174 · A song plays longer the first time it's heard · 2026-11-26 · Active
 The slower pace isn't about the first round: "the first time any song plays it plays for longer, no matter the round that happens. and the first time that plays must be a main hook." A song's first play of the night gets the longer slot (about 22 s today) and starts at its main hook; later plays get the usual slot (about 14 s). This covers round 1, Part 2's first rounds, and any song new to the night, and it means the special rounds, which replay Part 1, mostly run at the shorter slot. Answers U51.
 By: the user. Source: open-questions.md › Answered (U51). Supersedes: the "first round of the night" rule (show-and-music › Auto-advance, Pace and Drift). Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift; requirements/songs-and-cards.md › Hooks.
+
+### D175 · A first play keeps 22 s · 2026-11-26 · Active
+The longer slot for a song's first play stays at about 22 s, accepting a night about 12 minutes longer (rounds ending about 9:46 pm, bad case 9:58 pm). Answers U154.
+By: the user. Source: open-questions.md › Answered (U154). Amends: D174. Lives in: requirements/show-and-music.md › Auto-advance, Pace and Drift.

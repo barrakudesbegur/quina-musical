@@ -39,6 +39,7 @@ The items themselves, with their defaults, are in [open-questions.md](open-quest
 - **Storage:** about 68 MB a song, so about 100 songs fit R2's free 10 GB. Two pools are 140 songs (about 9.5 GB) and a third would make 210 (about 14 GB), over the free tier: fine, at a few cents a month. Each set is uploaded as soon as it's ready and pruned after the night (D113).
 - **Hook approval doubles or triples:** about 2 minutes a song is about 4.5 hours for 140 songs and 7 for 210. A quick-review mode and one hook per song would make it about 2 hours (U56).
 
+- **The night's length:** first plays at 22 s (D174, D175) put the rounds' end about 9:46 pm, 9:58 pm in the bad case, against a planned 10:00 pm. Little margin left for a late start.
 - **Disk space:** 20 GB free on 25 Nov (Sound engine's measure); a set of 70 takes about 6 GB fully prepared, about 18 GB for three. Preparing one set at a time fits; freeing last year's 7.3 GB test cache needs the user's OK (U55). Nothing is deleted (D80).
 - **A late playlist change** is possible until the cards are made on 4–5 Dec (D83). The quality check must flag bad songs by 3 Dec, so the swaps fit.
 - **Hooks are proposals:** on last year's songs the automatic top candidate was within a bar of the real hook in only 26 of 77 songs. The user's approval pass is needed, not optional.
