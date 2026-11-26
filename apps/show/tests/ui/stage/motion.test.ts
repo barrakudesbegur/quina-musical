@@ -42,3 +42,16 @@ test('the note lives only while its transition runs', () => {
   assert.equal(pruneSpinNote(spinNote, { transition: null, suspense: null }), null);
   assert.equal(pruneSpinNote(spinNote, { transition: { ...transition, id: 'tr-9' }, suspense: null }), null);
 });
+
+test('a Spin turned into a Suspense (D177, `fromSpin`): same id, no cancel first; the drum never lands at the old time', () => {
+  // The Spin's note (lands at 8000) is replaced by suspense.started's, under the same id and with no landing.
+  const turned: SpinNote = { id: 'tr-1', spinStartAtMs: 4000, landAtMs: null, autoReleaseAtMs: 34000 };
+  const suspense = { id: 'tr-1', sinceMs: 4000, autoReleaseAtMs: 34000 };
+  // The event before its snapshot, and the snapshot that still shows the Spin's id as a Suspense.
+  for (const state of [{ transition: null, suspense: null }, { transition: null, suspense }]) {
+    const m = motionView(state, turned);
+    assert.equal(m?.kind, 'suspense');
+    assert.equal(motionAt(m, 9000), 'suspense', 'still open past the Spin’s landing time');
+  }
+  assert.equal(pruneSpinNote(turned, { transition: null, suspense }), turned, 'the note outlives the snapshot, as the same run');
+});

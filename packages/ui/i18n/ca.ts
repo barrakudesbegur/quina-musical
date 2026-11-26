@@ -49,12 +49,13 @@ export const CA = {
       note: 'Fa el que faria el botó marcat amb la A a la consola: Següent mentre sona la música; a la comprovació, destapa la cançó següent i després fa el senyal. Mantinguda, les destapa seguides.',
     },
     b: { title: 'B (al darrere) · mantén: Aguanta', note: 'B és el gallet de sota. Mantén-lo: la cançó segueix i no avança.' },
-    /** Suspens with B + A (D144, D147): it enters like the manual one, with its vibrations (D148). */
+    /** Suspens with B + A (D144, D147): it enters like the manual one, with its vibrations (D148). A first and B while
+     * A is still down turns the Spin A started into it (D176, D177). */
     bA: {
       key: 'B + A',
       title: 'B + A · Suspens',
       note: (vibrations: number, seconds: string) =>
-        `Amb B premut, mantén A: vibra ${vibrations} cops (~${seconds} s). Deixar anar A abans ${lastVibration(vibrations)} el cancel·la; després, deixar anar B l'aterra.`,
+        `Amb B premut, mantén A: vibra ${vibrations} cops (~${seconds} s). Deixar anar A abans ${lastVibration(vibrations)} el cancel·la; després, deixar anar B l'aterra. També A i, sense deixar-la, B: el gir que comença es fa Suspens.`,
     },
     /** The shake (D144), on by default (D148). */
     shake: {

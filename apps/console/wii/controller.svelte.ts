@@ -14,7 +14,7 @@ import { flowOf } from '../../../packages/ui/flow.ts';
 import { canToggleAuto, checkBackCommand, checkReviewCommand } from '../logic/check.ts';
 import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
-import { controlsModel } from '../logic/scene.ts';
+import { canSend, controlsModel } from '../logic/scene.ts';
 import type { ConsoleModel } from '../model.svelte.ts';
 import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type WiiRemote } from './driver.ts';
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
@@ -30,19 +30,22 @@ function demoRemote(): boolean {
 }
 
 /** What the mapping needs from a snapshot and this console's settings. Pure. */
-export function wiiContext(state: ShowState | null, settings: { shake: boolean }): WiiContext {
+export function wiiContext(state: ShowState | null, settings: { shake: boolean; nextIsDefault: boolean }): WiiContext {
   const paused = Boolean(state?.pause);
   const flow = flowOf(state);
   // During Pausa a Check's commands wait (the engine refuses them): − and + leave Pausa, as anywhere.
   const check = !paused && flow.scene === 'check' ? flow.check : null;
   // The remote sends only while the console is online (as its buttons do), so ask the rules as if it were.
-  const suspense = controlsModel({ state, flow, online: true }).suspense;
+  const input = { state, flow, online: true };
+  const suspense = controlsModel(input).suspense;
   return {
     holdMode: activeHoldMode(state),
     autoAdvance: state?.game.autoAdvance ?? true,
     paused,
     check: check ? { back: checkBackCommand(check), review: checkReviewCommand(check), auto: canToggleAuto(check) } : null,
     canSuspense: suspense.enabled && !suspense.open,
+    canSuspenseInSpin: canSend('suspense', input) && !suspense.open,
+    nextIsDefault: settings.nextIsDefault,
     suspenseOpen: suspense.open,
     shake: settings.shake,
   };
@@ -150,7 +153,8 @@ export class WiiController {
 
   /** What the mapping needs now. */
   private context(): WiiContext {
-    return wiiContext(this.model.show.state, { shake: this.shake });
+    const next = this.model.defaultAction;
+    return wiiContext(this.model.show.state, { shake: this.shake, nextIsDefault: next?.control === 'next' && next.enabled });
   }
 
   /** The presenter's click: ask Chrome for the remote. */

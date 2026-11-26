@@ -7,7 +7,9 @@ import { buttonChanges, parseReport, REPORT } from '../../../../console/wii/repo
 import { ShakeDetector } from '../../../../console/wii/shake.ts';
 import { WiiMapper, type WiiContext, type WiiOutput } from '../../../../console/wii/mapping.ts';
 
-const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false, check: null, canSuspense: true, suspenseOpen: false, shake: true };
+const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false, check: null, canSuspense: true, canSuspenseInSpin: true, nextIsDefault: true, suspenseOpen: false, shake: true };
+/** A Spin running: Següent is off and a plain Suspens can't start, but one asked for turns the Spin into it (D177). */
+const spinning: WiiContext = { ...idle, canSuspense: false, nextIsDefault: false };
 /** In Aguanta (B held), and with a Suspens open. */
 const staying: WiiContext = { ...idle, holdMode: 'stay' };
 const open: WiiContext = { ...idle, suspenseOpen: true, canSuspense: false };
@@ -17,9 +19,9 @@ const { windowMs, pulses } = WII.suspenseWindow;
 const beat = windowMs / pulses;
 const rumbles = (outs: WiiOutput[]) => outs.map((o) => o.rumble);
 /** A Check revealing its third song. */
-const revealing: WiiContext = { ...idle, check: { back: { claimId: 'cl-5', step: 1 }, review: { claimId: 'cl-5' }, auto: true } };
+const revealing: WiiContext = { ...idle, nextIsDefault: false, check: { back: { claimId: 'cl-5', step: 1 }, review: { claimId: 'cl-5' }, auto: true } };
 /** A Check under review: no step back, no review, no reveals. */
-const reviewing: WiiContext = { ...idle, check: { back: null, review: null, auto: false } };
+const reviewing: WiiContext = { ...idle, nextIsDefault: false, check: { back: null, review: null, auto: false } };
 const cmds = (outs: WiiOutput[]) => outs.map((o) => o.command);
 const rest = { x: 0, y: 0, z: 1 };
 const jolt = { x: 3.2, y: 0.4, z: 1 };
@@ -140,6 +142,58 @@ test('A with B held, where a Suspens can\'t start (a Spin, a Check): nothing, no
   m.press('b', 0, idle);
   assert.deepEqual(m.press('a', 100, { ...staying, canSuspense: false }), []);
   assert.deepEqual(m.release('a', staying), []);
+});
+
+test('A (Següent), then B with A still held: the Spin becomes a Suspens, its window from both down; past it, B lands it (D176, D177)', () => {
+  const m = new WiiMapper(WII);
+  assert.deepEqual(cmds(m.press('a', 0, idle)), [{ cmd: 'default' }], 'Següent at once: no delay on A');
+  assert.deepEqual(m.press('b', 300, spinning), [{ command: { cmd: 'suspense', args: { on: true } }, rumble: null }], 'not Aguanta, which would cancel the Spin');
+  assert.deepEqual(m.tick(300 + beat - 10, open), [], 'the window counts from B, not from A');
+  const all = Array.from({ length: 40 }, (_, i) => m.tick(300 + beat + i * 50, open)).flat();
+  assert.deepEqual(rumbles(all), [...Array.from({ length: pulses - 1 }, () => 'suspenseStep'), 'suspenseOn']);
+  assert.deepEqual(m.release('a', open), [], 'too late to cancel');
+  assert.deepEqual(m.release('b', open), [{ command: { cmd: 'suspense', args: { on: false } }, rumble: 'tap' }]);
+});
+
+test('A then B: A let go inside the window cancels the Suspens, and B, still held, is Aguanta until it is let go', () => {
+  const m = new WiiMapper(WII);
+  m.press('a', 0, idle);
+  m.press('b', 100, spinning);
+  assert.deepEqual(rumbles(m.tick(100 + beat, open)), ['suspenseStep']);
+  assert.deepEqual(m.release('a', open), [
+    { command: { cmd: 'suspense', args: { on: false, cancel: true } }, rumble: 'suspenseCancel' },
+    { command: { cmd: 'hold', args: { on: true, duck: false } }, rumble: null },
+  ]);
+  assert.deepEqual(m.tick(100 + windowMs + 100, staying), [], 'cancelled: no last beat');
+  assert.deepEqual(cmds(m.release('b', staying)), [{ cmd: 'hold', args: { on: false } }]);
+});
+
+test('A then B: B let go inside the window cancels it; nothing else to end, and A sends nothing when let go', () => {
+  const m = new WiiMapper(WII);
+  m.press('a', 0, idle);
+  m.press('b', 100, spinning);
+  assert.deepEqual(m.release('b', open), [{ command: { cmd: 'suspense', args: { on: false, cancel: true } }, rumble: 'suspenseCancel' }]);
+  assert.deepEqual(m.release('a', idle), []);
+});
+
+test('A then B, and the Spin lands in its last instant: the engine puts the new song in Aguanta, which ends with B', () => {
+  const m = new WiiMapper(WII);
+  m.press('a', 0, idle);
+  m.press('b', 100, spinning);
+  const all = Array.from({ length: 40 }, (_, i) => m.tick(100 + i * 50, staying)).flat();
+  assert.deepEqual(rumbles(all).at(-1), 'stop', 'no Suspens ever opened: the vibration stops');
+  assert.deepEqual(cmds(m.release('b', staying)), [{ cmd: 'hold', args: { on: false } }]);
+});
+
+test('A pressed and let go, then B: a plain Aguanta, which cancels the Spin as ever; and an A that wasn\'t Següent changes nothing', () => {
+  const m = new WiiMapper(WII);
+  m.press('a', 0, idle);
+  m.release('a', idle);
+  assert.deepEqual(cmds(m.press('b', 300, spinning)), [{ cmd: 'hold', args: { on: true, duck: false } }]);
+  m.release('b', staying);
+  const c = new WiiMapper(WII);
+  c.press('a', 0, revealing);
+  assert.deepEqual(cmds(c.press('b', 100, revealing)), [{ cmd: 'hold', args: { on: true, duck: false } }], 'in a Check A reveals: B is Aguanta');
 });
 
 test('with «Avanç manual», B alone enters Suspens; let go before the last beat it cancels, after it lands (D145, D148)', () => {
@@ -273,5 +327,6 @@ test("the remote's guide (Comandament dialog, printed cheat sheet) has B's Suspe
   const bA = items.find((i) => i.id === 'bA');
   assert.equal(bA?.key, 'B + A');
   assert.match(bA?.note ?? '', /vibra 3 cops \(~1,5 s\).*abans del tercer/);
+  assert.match(bA?.note ?? '', /A i, sense deixar-la, B: el gir que comença es fa Suspens/, 'A then B (D176)');
   assert.equal(items.find((i) => i.id === 'shake')?.shake, true);
 });

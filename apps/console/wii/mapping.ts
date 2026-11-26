@@ -6,7 +6,10 @@
 //   B held: Aguanta, released: back to normal · B held, then A held: Suspens (D144, D147), entered like the manual
 //   one: it starts at once and `suspenseWindow.pulses` vibrations follow over `windowMs`; letting go of A before the
 //   last cancels it (`suspense {on:false, cancel:true}`, back to Aguanta); after it, it can't be undone, a gentler
-//   vibration lasts while it's on, and letting go of B lands it · with «Avanç manual» (auto-advance off) B alone
+//   vibration lasts while it's on, and letting go of B lands it · A, then B while A is still held (A's press sent
+//   Següent): the Spin that A started becomes that same Suspens (D176, D177; the engine converts it), its window
+//   counted from both down; letting go of either inside it cancels, and a B still held is then Aguanta; a press of A
+//   and its release before B is a plain Aguanta, which cancels the Spin, as ever · with «Avanç manual» (auto-advance off) B alone
 //   enters that same Suspens (D145): letting go of B inside the window cancels it · B held plus a deliberate shake
 //   (3 jolts, each one vibrating): Suspens at once, when the shake is switched on (D148, the console's setting) ·
 //   − or + tapped: Parlem on/off (or leaves Pausa), held: Pausa, or in a Check (before its cue) «Revisió manual»
@@ -63,6 +66,11 @@ export interface WiiContext {
   check: WiiCheckContext | null;
   /** A Suspens can start now: the scene allows it and no Spin is running. */
   canSuspense: boolean;
+  /** A Suspens can be asked for even with a Spin running (none open): one asked for during a Spin turns it into the
+   * Suspens (D177). */
+  canSuspenseInSpin: boolean;
+  /** A's press sends Següent (the console's default action is Next, enabled): B after it, A still held, is Suspens. */
+  nextIsDefault: boolean;
   /** A Suspens is open (the state's `suspense`). */
   suspenseOpen: boolean;
   /** The shake gesture is switched on (D148; the console's setting). */
@@ -83,15 +91,15 @@ const out = (command: WiiCommand | null, rumble: RumbleName | null = 'tap'): Wii
 
 /**
  * The Suspens the remote is in, if any:
- * - window: just started by `key` (A after B, or B alone with manual advance); letting go of `key` cancels it until the
- *   last vibration, at `startMs` + windowMs;
+ * - window: just started by `key` (A after B, B alone with manual advance, or `ab`: B after A, A still held); letting
+ *   go of `key` (with `ab`, of either) cancels it until the last vibration, at `startMs` + windowMs;
  * - on: it can't be undone any more; letting go of B lands it. `seenOpen`: the state has shown it open (until then a
  *   closed state is only the snapshot lagging behind);
  * - over: it ended by itself (its auto-release, or the tablet) while B is still held: letting go of B sends nothing.
  */
 type RemoteSuspense =
   | { phase: 'none' }
-  | { phase: 'window'; key: 'a' | 'b'; startMs: number; pulses: number }
+  | { phase: 'window'; key: 'a' | 'b' | 'ab'; startMs: number; pulses: number }
   | { phase: 'on'; seenOpen: boolean }
   | { phase: 'over' };
 
@@ -101,8 +109,8 @@ export class WiiMapper {
   private readonly cfg: WiiMappingConfig;
   private readonly shake: ShakeDetector;
   private bHeld = false;
-  /** What pressing B started: Aguanta (`hold`), or a Suspens (manual advance). */
-  private bStarted: 'stay' | 'suspense' | null = null;
+  /** What pressing B started: Aguanta (`hold`), a Suspens (manual advance), or a Suspens from A's Spin (`spin`). */
+  private bStarted: 'stay' | 'suspense' | 'spin' | null = null;
   private suspense: RemoteSuspense = NO_SUSPENSE;
   /** A went down while B was held: it belongs to the Suspens, so its release is never the default action's. */
   private aWithB = false;
@@ -113,6 +121,9 @@ export class WiiMapper {
   private aSince: number | null = null;
   /** A was held long enough to reveal in a row: letting go stops it. */
   private aAuto = false;
+  /** A is down on its own (not after B), and whether its press sent Següent. */
+  private aHeld = false;
+  private aNext = false;
 
   constructor(cfg: WiiMappingConfig) {
     this.cfg = cfg;
@@ -131,11 +142,21 @@ export class WiiMapper {
         }
         this.aSince = tMs;
         this.aAuto = false;
+        this.aHeld = true;
+        this.aNext = ctx.nextIsDefault;
         return out({ cmd: 'default' });
       case 'b':
         this.bHeld = true;
         this.suspense = NO_SUSPENSE;
         this.shake.reset();
+        // A, then B with A still held: the Spin A just started becomes a Suspens (D176, D177), even if the snapshot
+        // doesn't show it yet (the engine takes Next first). A's release now belongs to the Suspens.
+        if (this.aHeld && this.aNext && ctx.canSuspenseInSpin) {
+          this.bStarted = 'spin';
+          this.aWithB = true;
+          this.aSince = null;
+          return this.enterSuspense('ab', tMs);
+        }
         // «Avanç manual»: B alone is Suspens (D145); otherwise it's Aguanta.
         if (!ctx.autoAdvance && ctx.canSuspense) {
           this.bStarted = 'suspense';
@@ -168,12 +189,19 @@ export class WiiMapper {
   release(button: WiiButton, ctx: WiiContext): WiiOutput[] {
     if (button === 'b' && this.bHeld) return this.releaseB(ctx);
     if (button === 'a') {
+      this.aHeld = false;
+      this.aNext = false;
       if (this.aWithB) {
         this.aWithB = false;
         // Let go inside its window: the Suspens backs out, and the song is back in Aguanta (B still held).
-        if (this.suspense.phase === 'window' && this.suspense.key === 'a') {
+        if (this.suspense.phase === 'window' && (this.suspense.key === 'a' || this.suspense.key === 'ab')) {
+          const fromSpin = this.suspense.key === 'ab';
           this.suspense = NO_SUSPENSE;
-          return out({ cmd: 'suspense', args: { on: false, cancel: true } }, 'suspenseCancel');
+          const cancel = out({ cmd: 'suspense', args: { on: false, cancel: true } }, 'suspenseCancel');
+          if (!fromSpin) return cancel;
+          // From A's Spin no Aguanta was on: B, still held, is Aguanta from now (and ends with B).
+          this.bStarted = 'stay';
+          return [...cancel, ...out({ cmd: 'hold', args: { on: true, duck: false } }, null)];
         }
         return [];
       }
@@ -246,11 +274,13 @@ export class WiiMapper {
     this.talkSince = null;
     this.aSince = null;
     this.aAuto = false;
+    this.aHeld = false;
+    this.aNext = false;
     this.shake.reset();
   }
 
   /** Start a Suspens now, with its window to cancel it in. The press itself stays still: the window's beats follow. */
-  private enterSuspense(key: 'a' | 'b', tMs: number): WiiOutput[] {
+  private enterSuspense(key: 'a' | 'b' | 'ab', tMs: number): WiiOutput[] {
     this.suspense = { phase: 'window', key, startMs: tMs, pulses: 0 };
     return out({ cmd: 'suspense', args: { on: true } }, null);
   }
@@ -268,8 +298,10 @@ export class WiiMapper {
       return started === 'stay' ? [...cancel, ...out({ cmd: 'hold', args: { on: false } }, null)] : cancel;
     }
     // Aguanta ends with B. After a Suspens that ended by itself only an Aguanta still on is let go (one the engine
-    // refused leaves it on; one that landed ended it).
+    // refused leaves it on; one that landed ended it). From A's Spin, an Aguanta is on only if the Spin landed in its
+    // last instant: the engine puts the new song in Aguanta while B is held (D177).
     if (started === 'stay' && (s.phase === 'none' || ctx.holdMode === 'stay')) return out({ cmd: 'hold', args: { on: false } });
+    if (started === 'spin' && ctx.holdMode === 'stay') return out({ cmd: 'hold', args: { on: false } });
     return [];
   }
 
