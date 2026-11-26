@@ -709,7 +709,7 @@ By: the orchestrator. Source: commit ff13a81.
 Only the price for the coming round, on that round's Interval screen; the before-the-start screen is round 1's. A normal card is the per-round price × the regular rounds still to play, the coming one included, not counting the Desgraciat; before the Quina Especial, the special card's fixed price. From setup data, never hard-coded. Answers U5.
 By: the user. Source: open-questions.md › Answered (U5); transcript 2026-11-25T00:56Z. Supersedes: D60; amends D21. Lives in: requirements/songs-and-cards.md › Prices; requirements/screens.md › Projector.
 
-### D62 · The Desgraciat's Celebration has no title · 2026-11-25 · Amended by D186
+### D62 · The Desgraciat's Celebration has no title · 2026-11-25 · Amended by D186, D190
 "DEMPEUS!" is dropped, and so is the phone's "Dempeus fins al final!". The rest of the Celebration stays, and so do the per-card "Dempeus" / "Assegut" labels. Answers U6. Built in 6857f31; the console keeps a presenters-only label, "Últim cartró dempeus".
 By: the user. Source: open-questions.md › Answered (U6); transcript 2026-11-25T00:56Z. Supersedes: D44's "DEMPEUS!" proposal (agreed between the sessions, not by the user). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Player app.
 
@@ -1274,3 +1274,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 ### D189 · Buttons are fully round only when floating · 2026-11-26 · Active
 The user: "buttons should not be fully round unless they are floating". A design-system rule for every screen: pills only for floating buttons, rounded rectangles otherwise. It was made on a phone board and stated generally, so it applies to the phones, the console, the projector and Admin. Frontend lists the boards and components that still have non-floating pills, then fixes the boards and the code after the finale and tab builds.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Every screen.
+
+### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active
+The phone holding the last standing card says "Quina potra!" too, like the projector (D186), with the glowing card, the nino and the confetti. The user: "i dont care. a seems fine". Answers U165 with (a).
+By: the user. Source: open-questions.md › Answered (U165). Amends: D62 (the phone's part). Lives in: requirements/screens.md › Player app.

@@ -64,11 +64,6 @@ The user on the canvas: "What is this field? we dont papereta concept. please re
 - (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
 - (b) Drop slips: the card's number identifies the winner, who shows the card to collect the prize. The glossary and event.md change.
 
-### U165 · "QUINA POTRA!" on the winner's phone
-The projector's Desgraciat Celebration now reads "QUINA POTRA!" (D186). D62 also dropped the phone's "Dempeus fins al final!", so the winner's phone shows no title: only the glowing card, the nino and the confetti. A Line's or a Quina's winner phone has its own words ("La teva línia!").
-- (a) The winner's phone says "Quina potra!" too.
-- (b) The phone stays without a title.
-
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
@@ -225,6 +220,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U165 · "QUINA POTRA!" on the winner's phone** (2026-11-26) → D190: the phone says "Quina potra!" too.
 - **U164 · A title for the Desgraciat's winner** (2026-11-26) → D186: "QUINA POTRA!".
 - **U155 · The finale and the new tabs, what's left to review** (2026-11-26) → D187: all fine, Frontend's v95 details included.
 - **U162 · "Tots dempeus!"** (2026-11-26) → D181: "Salvats!", the light from the text, spotlights and the phones' particles.
