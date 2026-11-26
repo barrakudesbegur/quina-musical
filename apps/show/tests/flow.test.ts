@@ -5,7 +5,7 @@ import { HAS_DATA, NO_CARD, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { COMMAND_NAMES, VOLUME_DEFAULTS, checkGamePlan, replayJournal, volumeDb, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
-import { FLOW } from '../engine/src/config.ts';
+import { FLOW, THROW } from '../engine/src/config.ts';
 import { cardSongIds, type Card } from '../engine/src/game/cards.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { hookLoop, bestHook } from '../engine/src/plan/hookloop.ts';
@@ -656,6 +656,33 @@ test('Pausa saves what plays and resumes it where it was, under Parlem (D128, D1
   const panic = i.send('panic');
   assert.equal(i.show.pause, null);
   assert.equal(find(panic, 'resumePlayback')?.discard, true, 'Panic clears the saved playback');
+});
+
+test('the throw song (D138): a tap starts it from its hook, stops it, resumes it where it stopped; a long press restarts; between rounds only', () => {
+  const h = flow();
+  assert.deepEqual(rejected(h.send('throw')), [], 'at the doors');
+  const first = find(h.log, 'throwSong');
+  assert.deepEqual([first?.action, first?.offsetSec], ['play', THROW.hookSec]);
+  assert.deepEqual(h.show.snapshot().throwSong && [h.show.snapshot().throwSong?.title, h.show.snapshot().throwSong?.playing], [THROW.title, true]);
+  h.advance(5);
+  const stop = find(h.send('throw'), 'throwSong');
+  assert.equal(stop?.action, 'stop');
+  assert.ok(Math.abs((stop?.offsetSec ?? 0) - (THROW.hookSec + 5 - THROW.leadSec)) < 0.05, 'it knows where it stopped');
+  assert.equal(h.show.snapshot().throwSong?.playing, false);
+  h.advance(10);
+  const resume = find(h.send('throw'), 'throwSong');
+  assert.deepEqual([resume?.action, resume?.offsetSec], ['play', stop?.offsetSec], 'it resumes where it stopped');
+  const again = find(h.send('throw', { restart: true }), 'throwSong');
+  assert.deepEqual([again?.action, again?.offsetSec], ['play', THROW.hookSec], 'a long press: from the hook again');
+  // Played to its end: the runtime says so, and it's off.
+  h.show.throwEnded();
+  assert.equal(h.show.snapshot().throwSong, null);
+  // A scene change ends it for good; in a round it's refused.
+  h.send('throw');
+  const end = h.send('next');
+  assert.equal(find(end, 'throwSong')?.action, 'end');
+  assert.equal(h.show.snapshot().throwSong, null);
+  assert.deepEqual(rejected(h.send('throw')), ['wrongScene'], 'a round is in play');
 });
 
 test('endGame ends anywhere: closing music in `after`; a new round can still be introduced', () => {
