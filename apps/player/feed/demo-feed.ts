@@ -97,8 +97,7 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   /** Every prize kept secret until the presenters reveal it (GamePlan.prizeReveal 'allSecret'): Premis shows the
    * "Secrets" lock on every round not revealed yet. */
   prizesSecret: { fixture: 'play', cards: 'default', plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } },
-  /** A plan with a start time and a planned break after Quina 3: Horari shows "~" times for what's next and the
-   * break's "Mitja part" row. */
+  /** A plan with a start time and a planned break after Quina 3: Horari shows "~" times for what's next. */
   schedule: {
     fixture: 'play',
     cards: 'default',

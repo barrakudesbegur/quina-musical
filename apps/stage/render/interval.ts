@@ -1,4 +1,4 @@
-// The Interval: a big "Mitja part", a plate naming the next round ("Següent: Quina 4 de 8"), a large
+// The Interval (a break, "Descans" on screen, D149): a big "Descans", a plate naming the next round ("Següent: Quina 4 de 8"), a large
 // countdown (a ring emptying towards the guide end, the rough minutes inside it and the rough countdown in
 // words under it; a guide only, since rounds start by hand), the meditating and the dancing ninos either
 // side, and the sponsors' logos. No winning card numbers, no QR, and none of the next round's prizes (they

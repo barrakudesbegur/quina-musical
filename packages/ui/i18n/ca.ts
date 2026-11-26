@@ -46,7 +46,7 @@ export const CA = {
       note: 'Fa el que faria el botó marcat amb la A a la consola: Següent mentre sona la música; a la comprovació, aprova el cartró si és bo i el rebutja si no.',
     },
     b: { title: 'B (al darrere) · mantén: Aguanta', note: 'Sense deixar anar B, sacseja fort 3 cops: passa a Suspens. En deixar anar B, aterra.' },
-    talk: { title: '− o + · toca: Parlem · mantén: Pausa', note: 'A la Pausa sona la música de la mitja part i les pantalles ho diuen. Toca per sortir-ne.' },
+    talk: { title: '− o + · toca: Parlem · mantén: Pausa', note: 'A la Pausa sona la seva música, i durant una quina les pantalles ho diuen. Toca per sortir-ne.' },
     back: { title: (seconds: string) => `1 o 2 · mantén ${seconds} s: Enrere`, note: "Desfà l'última cançó." },
     home: { title: 'HOME · automàtic sí / no', note: "Vibra diferent quan s'activa i quan es desactiva." },
     dpad: {
@@ -62,7 +62,7 @@ export const CA = {
     play: 'En joc',
     check: 'Comprovació',
     celebration: 'Celebració',
-    interval: 'Mitja part',
+    interval: 'Descans',
     after: 'Final',
   } satisfies Record<ShowScene, string>,
 } as const;

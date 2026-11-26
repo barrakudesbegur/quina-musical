@@ -317,7 +317,7 @@ export const S = {
     suggested: 'suggerida',
     musicForLater: 'Si el cartró és bo, la celebració començarà amb aquesta música.',
     continueLine: 'Prem «Següent» per continuar la quina.',
-    toInterval: 'Passa a la mitja part',
+    toInterval: 'Passa al descans',
     toIntervalNote: "També hi passa sola al cap d'una estona.",
     lastRound: "Era l'última quina: acabeu la nit des del menú.",
     winnersTitle: 'Guanyadors',
@@ -354,7 +354,7 @@ export const S = {
   },
 
   intervalMusic: {
-    title: 'Música de la mitja part',
+    title: 'Música del descans',
     track: (title: string, artist: string) => (artist ? `${title} · ${artist}` : title),
     position: (index: number, count: number) => `Cançó ${index} de ${count}`,
     waiting: 'Encara sona la música anterior; la llista entra tot seguit.',
@@ -486,7 +486,7 @@ export const S = {
     /** The remote is connected to another console (the laptop's): this one shows it, it can't connect it. */
     elsewhere: "Connectat a la consola del portàtil.",
     battery: (level: number) => `Bateria ${Math.round(level * 100)} %`,
-    batteryLow: 'Queda poca bateria: canvieu les piles a la mitja part.',
+    batteryLow: 'Queda poca bateria: canvieu les piles al descans.',
     /** The remote's range (wii/drops.ts): how often it dropped lately. */
     drops: (n: number) => (n === 1 ? "1 caiguda en els últims 10 minuts" : `${n} caigudes en els últims 10 minuts`),
     dropsWarn: "S'ha desconnectat sovint: acosteu-vos al portàtil o tingueu la tauleta a mà.",
@@ -555,7 +555,7 @@ export const S = {
     lineFrom: (song: number) => `Línia confirmada (la quina comptava des de la cançó ${song}).`,
     send: 'Recuperar el show',
     sendNote: 'Mantén premut. El portàtil reconstrueix la quina i es queda en espera.',
-    notNow: "Només es pot recuperar abans de començar, a la mitja part o al final, i amb el portàtil connectat.",
+    notNow: "Només es pot recuperar abans de començar, en un descans o al final, i amb el portàtil connectat.",
   },
 
   toast: {
@@ -603,7 +603,7 @@ export const S = {
     decide: 'Decisió',
     winnerInfo: 'Dades del guanyador',
     celebrationMusic: 'Música de la celebració',
-    interval: 'Mitja part',
+    interval: 'Descans',
     endGame: 'Acabar la nit',
     pause: 'Pausa tècnica',
     intervalSkip: 'Saltar cançó',
