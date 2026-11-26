@@ -174,6 +174,8 @@ test('one whole show, every screen following', async ({ browser }) => {
   await soft.poll(() => phone.view?.state.check, { message: 'the phone sees the Check pending' }).toMatchObject({ cardId: CARDS[1], result: 'pending' });
   await remote.command('checkReview', { claimId: reviewedId });
   await remote.until('under review', (s) => s.claims.find((c) => c.claimId === reviewedId)?.status === 'reviewing' && s.check?.reviewing === true);
+  await soft(show.getByTestId('check'), 'the projector says "Revisió manual" (D123)').toHaveAttribute('data-reviewing', 'true');
+  await soft(consolePage.getByTestId('review-panel'), "the console's review choices (D121)").toBeVisible();
   await soft.poll(() => phone.view?.state.check?.result, { message: 'a review stays pending on phones (U79)' }).toBe('pending');
   await remote.command('reviewEnd', { claimId: reviewedId, outcome: 'discard' });
   await remote.until('discarded, back in Parlem', (s) => s.claims.find((c) => c.claimId === reviewedId)?.status === 'discarded' && s.hold?.reason === 'discarded');
@@ -186,9 +188,13 @@ test('one whole show, every screen following', async ({ browser }) => {
   const checking = await remote.until('the Line on screen', (s) => s.scene === 'check' && s.check?.cardId === CARDS[0]);
   expect(checking.check?.revealed, 'nothing revealed before the first press').toEqual([]);
   await expectScenes(screens, 'check');
+  // One card claimed: the console shows its board (the claimed-cards strip only from two cards on, D110).
+  await soft(consolePage.getByTestId('check-board')).toHaveAttribute('data-card-id', String(CARDS[0]));
+  await soft(show.getByTestId('check'), 'the projector, nothing revealed yet').toHaveAttribute('data-revealed', '0');
   const lineId = checking.check?.claimId as string;
   const lineDone = await remote.checkByPresses(lineId);
   expect(lineDone.claims.find((c) => c.claimId === lineId)?.status, 'the Line passed its Check').toBe('valid');
+  // A lone pass goes straight to the Celebration: the stage's Check is read only while its scene is `check`.
   await remote.until('the Line celebrated', (s) => s.scene === 'celebration' && s.celebration?.kind === 'line');
   await expectScenes(screens, 'celebration');
   await soft(show.getByTestId('celebration')).toHaveAttribute('data-kind', 'line');
@@ -200,19 +206,20 @@ test('one whole show, every screen following', async ({ browser }) => {
   for (let i = 0; i < BINGO_SONGS.length && !BINGO_SONGS.every((id) => landed.has(id)); i++) state = await land(state.current?.songId ?? null);
   expect(BINGO_SONGS.every((id) => landed.has(id)), `all of card ${CARDS[1]} has landed`).toBe(true);
   // Two numbers from the claim pad (D110), checked in turn: the second card hasn't its Bingo, so it fails after the
-  // first passed, and one more press starts the shared Celebration. Automatic reveal does the presses between.
-  await remote.command('checkAuto', { on: true });
+  // first passed, and one more press starts the shared Celebration. Automatic reveal (only in the Check's scene) does
+  // the presses between.
   await remote.command('claim', { cardIds: [CARDS[1], CARDS[0]], kind: 'bingo' });
   const bingo = await remote.until('the Bingo on screen', (s) => s.scene === 'check' && s.check?.kind === 'bingo' && s.check.cardId === CARDS[1]);
+  await remote.command('checkAuto', { on: true });
   const [passId, failId] = [CARDS[1], CARDS[0]].map((card) => bingo.claims.find((c) => c.cardId === card && c.status !== 'discarded' && c.status !== 'valid')?.claimId as string);
   expect((await remote.checkByPresses(passId as string)).claims.find((c) => c.claimId === passId)?.status, 'the full card passes').toBe('valid');
   const failed = await remote.checkByPresses(failId as string);
   expect(failed.claims.find((c) => c.claimId === failId)?.status, 'the other card fails').toBe('invalid');
   // The press the shared Celebration waits for: the engine says which claim and step (D110).
   const next = await remote.until('the Celebration waits for a press', (s) => s.celebrationNext !== null || s.scene === 'celebration');
+  if (next.scene === 'check') await remote.command('checkAuto', { on: false });
   if (next.celebrationNext) await remote.command('checkNext', next.celebrationNext);
   await remote.until('the Bingo celebrated', (s) => s.scene === 'celebration' && s.celebration?.kind === 'bingo');
-  await remote.command('checkAuto', { on: false });
   await soft.poll(() => phone.view?.state.winners.at(-1), { message: 'only the card that passed wins' }).toEqual({ round: 1, kind: 'bingo', cardIds: [CARDS[1]] });
   await soft(show.getByTestId('celebration')).toHaveAttribute('data-kind', 'bingo');
   await remote.command('interval');
