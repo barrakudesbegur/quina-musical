@@ -159,6 +159,9 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U127 · Approve the deploy of the plan-save fix · urgent
+The fix is pushed on its own (2503050, tested: cloud tests and the e2e). The auto-mode permission check refused Backend's deploy, so the live cloud (79988575) still loses Admin edits to later rounds' prizes and the cheat sheet. Approve Backend's deploy in its session, or run `npm run deploy` in `apps/cloud` at 2503050. Until then, avoid editing those in Admin.
+
 ### U126 · Check for lost Admin edits on quina-dev
 Backend found a bug (fixed in 5fdc2c9): the cloud didn't save a plan edit that phones don't see, like a later round's prizes or the cheat sheet, and the edit was lost when the cloud restarted. If you edited those in Admin on quina-dev, check that the edits are still there.
 
