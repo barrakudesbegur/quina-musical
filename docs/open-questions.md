@@ -49,6 +49,12 @@ The canvas assistant renamed "+ Un altre" to "+ Candidat" (it adds another claim
 - (b) "+ Cartró".
 - (c) "+ Un altre", as before.
 
+### U154 · First plays and the night's length (D174)
+Sound engine's numbers (26 Nov): about 140 of the night's roughly 527 songs are first plays. At 22 s against 14 s, that adds about 18.6 minutes, against about 6 minutes under the old rule (only round 1 slower). So the night is **about 12 minutes longer** at the same pace, mostly in rounds 5 and 6. The pool-size study had the rounds ending about 9:34 pm (bad case 9:46 pm), so this means about 9:46 pm (bad case 9:58 pm), against a planned 10:00 pm.
+- (a) Keep 22 s for a first play.
+- (b) Shorten it to about 18 s: about 3 minutes longer than before.
+- (c) The longer slot only in each Part's first two rounds.
+
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
