@@ -571,8 +571,14 @@ export interface TransitionScheduled {
 export interface SuspenseStarted {
   v: ProtocolVersion;
   type: 'suspense.started';
+  /** A Spin that became this Suspense (D177) keeps its id. */
   id: string;
   reqId: string | null;
+  /**
+   * The running Spin became this Suspense (`suspense` pressed during it, D176, D177): no `transition.cancelled` comes
+   * first, and the drum's Spin carries on into the Suspense. Absent otherwise.
+   */
+  fromSpin?: true;
   from: number | null;
   /** PRIVATE until it lands. */
   to: number;
