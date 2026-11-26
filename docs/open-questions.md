@@ -23,11 +23,6 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
-### U135 · One slider or two for the chaotic moments
-Today the throws and the corn-seed storm share one slider.
-- (a) Keep one shared slider.
-- (b) Give the corn-seed storm a slider of its own.
-
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
 - (a) Keep it.
@@ -201,6 +196,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U135 · One slider or two for the chaotic moments** (2026-11-26) → D159: one shared slider.
 - **U134 · The loudness details** (2026-11-26) → D158: noticeably louder, set by ear; the starting point is +6 dB with a −6 dB trim, both tunable.
 - **U133 · How the chaotic moments get louder** (2026-11-26) → D157: their slider above 100% with hidden room; every slider 0–150%, default 100%.
 - **U132 · The corn-seed storm** (2026-11-26) → D153, D155: "Flying Free" from its drop for now; the button on the last round's normal screen, inside its Check and on the end screen.

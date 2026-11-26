@@ -1112,3 +1112,7 @@ By: the user. Source: open-questions.md › Answered (U133). Amends: D139, D154.
 ### D158 · Noticeably louder, set by ear · 2026-11-26 · Active
 The chaotic moments must sound noticeably louder than the songs. The amount is set by ear once the user hears it, not decided in advance. Starting point: +6 dB (about 141%), with a −6 dB internal trim so it stays clean, both one-line settings, tuned at the listening pass or the sound check. Answers U134's trim and default.
 By: the user (the amount by ear); the starting point by the orchestrator, as a tunable setting. Source: the user's message of 26 Nov. Amends: D157. Lives in: requirements/show-and-music.md › Volumes.
+
+### D159 · One slider for both chaotic moments · 2026-11-26 · Active
+The throws and the corn-seed storm share one volume slider. Answers U135.
+By: the user. Source: open-questions.md › Answered (U135). Lives in: requirements/show-and-music.md › Volumes.
