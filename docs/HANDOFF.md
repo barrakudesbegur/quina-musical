@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D116**, **U65**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D116**, **U66**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -47,7 +47,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   2. Frontend writes a content spec for the prizes drawer, and I check it against the model;
   3. Frontend draws boards from the real 2025 hampers (real names only on boards, never in the repo);
   4. the user picks (U30).
-- **The night's plan: the cloud, always (D111–D113, 26 Nov).** The user doesn't know "the settings file" and wants one rule: the cloud is the source of truth; there are no sponsors, prizes or money in git; development runs on a test plan. Storage can go past 10 GB, uploaded as soon as the songs are ready. Backend dropped `data/nights/2026.json`; its `plan pull|check|push` on a gitignored working copy needs an agent credential (U63, the user's yes and a few clicks). The user checks R2's payment method (U64). Backend is fixing a gap: the Interval music had no sync root of its own for this year's pool. Uploads start once Sound engine has prepared Part 1 (U55). The orchestrator parses the organizers' spreadsheet into the cloud's plan.
+- **The night's plan: the cloud, always (D111–D113, 26 Nov).** The user doesn't know "the settings file" and wants one rule: the cloud is the source of truth; there are no sponsors, prizes or money in git; development runs on a test plan. Storage can go past 10 GB, uploaded as soon as the songs are ready. Backend dropped `data/nights/2026.json`; its `plan pull|check|push` on a gitignored working copy needs an agent credential (U63, the user's yes and a few clicks). The user checks R2's payment method (U64). Backend fixed the Interval music's sync and deployed it (79988575); the new Interval music and this year's card files are in R2. On the way it found the relay's pairing token in the private bucket since 24 Nov, and deleted and excluded it (U65: rotate, optional). Uploads start once Sound engine has prepared Part 1 (U55). The orchestrator parses the organizers' spreadsheet into the cloud's plan.
 - **The pool size is 70 (D100, answering U34).** Told on 25 Nov: Sound engine (its expected-end proposal, seconds per song per round from the seeded Queue) and Frontend (Admin's default `roundMinutes`, 25 → about 15, when the code unfreezes).
 - **The listening pass (U13):** the user is listening. Transitions stay frozen until then.
 

@@ -91,6 +91,10 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U65 · Rotate the relay's pairing token · optional, before the tech rehearsal
+The relay's pairing secret (`data/cache/relay-token`) sat in the private R2 bucket from 24 to 26 Nov, readable only with the laptop's service token. Backend removed it and excluded it from the sync (6397550). To rotate it: delete `data/cache/relay-token` on the show laptop; the relay makes a new one, and the tablet pairs again.
+**Default:** rotate it when the tablet next gets paired anyway.
+
 ### U64 · Check R2's payment method
 D113 lets R2 go past the free 10 GB. Backend can't see billing. In Cloudflare: Manage Account → Billing → Payment info, check a payment method is there.
 
