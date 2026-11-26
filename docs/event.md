@@ -42,7 +42,7 @@ This page explains the event: what happens on the night, who does what, and how 
 
 - **The date:** every year around 27 December. This year it's **Sunday 27 December 2026**.
 - **Times:**
-  - The plan: card sales from 17:30, the first round at 18:00.
+  - The plan for 2026 (D192): card sales from 17:00, the start at 18:00, the end about 22:00.
   - The rounds last until about 22:00, then a DJ set closes the night.
   - 2025: the Game started at 18:13, the first song landed at 18:19, and the last round ended at 21:55; the DJ played until 23:00.
   - 2024: the start slipped to 18:30 because the lights failed, and the rounds ended at 22:00.
@@ -80,7 +80,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - **special cards** play the Quina Especial. Its prizes are bigger, so its card is sold separately.
   - In 2025 the special card also played the Quina del Desgraciat: the price sheet at the bar listed it for "Quina especial i quina del desgraciat".
   - The types are fixed when the cards are printed, with fewer special cards than normal ones. Each type has its own colour.
-- **2026: the normal card is printed on both sides,** with the same number. Side 1 plays Quines 1–4 and side 2 plays Quines 5–10, each with its own songs. Side 2 has its own design, and each side shows which rounds it's for. The presenters explain it in rounds 1 and 5 and keep reminding people during the round.
+- **2026: the normal card is printed on both sides,** with the same number. Side 1 plays Quines 1–5 and side 2 plays Quines 6–10, each with its own songs (D193). Side 2 has its own design, and each side shows which rounds it's for. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
 - **Each edition** has a new title (the paper colour may stay), so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
 - **Printing:**
@@ -107,7 +107,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The pool** is the curated playlist the cards are printed from.
   - Over several weeks, everyone in the team adds songs to a shared Spotify playlist.
   - Then a few members meet and filter it down to the final count.
-  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–4 and the special rounds (the Especial and the Desgraciat), and one for Quines 5–10, so both play about six rounds. The first was final on 25 November; the second is still being filled. This split is provisional until the organizers confirm it.
+  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–5 and one for Quines 6–10, as the organizers decided on 26 November (D193). Which pool the special rounds play is pending U167. The first was final on 25 November; the second is still being filled.
   - An archive playlist keeps past songs.
 - **The size is a hard choice** because it shapes the night: more songs mean longer rounds. 2024 had 87 songs, which was too many. 2025 had 77 (the plan said about 80, and fewer was fine). Each edition decides its own.
 - **The songs:** popular hits from every era and genre, including Catalan, Spanish and Christmas songs.
@@ -122,7 +122,7 @@ This page explains the event: what happens on the night, who does what, and how 
 ## The night, step by step
 
 1. **Set-up:** in the afternoon, with everyone, including a sound check.
-2. **Doors and card sales (from 17:30):**
+2. **Doors and card sales (from 17:00 in 2026):**
    - music plays and the bar opens;
    - the mood: people buy cards, find a seat, wait and talk with friends. The music is its own set for this moment (**new in 2026**);
    - the screen shows the night's rounds, the card types with their colours and prices, the QR code for phones, and the sponsors.
@@ -137,6 +137,7 @@ This page explains the event: what happens on the night, who does what, and how 
    - The presenters put on a bit of a show or go round the tables talking to people.
    - It's a chaotic moment with an energetic song, chosen for each throw (**new in 2026**). This year it's "Flying Free" by Pont Aeri, from a moment a little before its drop, so the presenters can build the hype before the throwing starts.
    - 2025's plan had three throws: fuets, then caramels and melindros, then chocolates.
+   - 2026 plans one throw, in the 10-minute Descans after the Desgraciat (D192).
 6. **The close:**
    - the presenters explain how to collect prizes and give a short closing speech;
    - the sponsors are thanked;
@@ -148,6 +149,7 @@ This page explains the event: what happens on the night, who does what, and how 
 **Rounds per night:**
 - 2024: 10 normal and 2 special. The night felt long.
 - 2025: 10 regular rounds, then the Desgraciat, then the Especial: 12 rounds.
+- 2026 (D192): Quines 1–5, the Desgraciat, a 10-minute Descans with the throw, Quines 6–10, and the Especial last: 12 rounds, from 18:00 to about 22:00.
 - Each edition decides its own. **The order can change during the night**, for example to move the Desgraciat.
 
 ## One round

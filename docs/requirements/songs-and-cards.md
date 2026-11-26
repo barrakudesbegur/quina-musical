@@ -12,7 +12,7 @@ What the song pool, the song preparation and the printed cards must be, as it st
 _From event.md › The songs._
 
 - A **Pool** is a curated playlist a side of the cards is printed from. Each round plays one pool, and its Queue is a shuffle of that whole pool.
-- **2026 has two pools of 70 songs** with different songs (D101, D178), provisionally split (D171): pool 1 for Quines 1–4 and the special rounds (the special card is printed from it), pool 2 for Quines 5–10. No third playlist.
+- **2026 has two pools of 70 songs** with different songs (D101, D178), split by the organizers (D193): pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special rounds' pool is pending U167; until then they play pool 1, and the special card is printed from it (D171).
 - The team builds it together:
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
@@ -79,7 +79,7 @@ _From event.md › The songs; the Sound engine handoff._
 _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
-- **The normal card is printed on both sides (D102):** side 1 plays Quines 1–4 (pool 1), side 2 Quines 5–10 (pool 2) (D171), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
+- **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2) (D193), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
 - Each edition has a new title, so last year's cards are easy to spot; the paper colour may stay (D85). 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
 - Each card carries a faint year stamp.
 - The price isn't printed.

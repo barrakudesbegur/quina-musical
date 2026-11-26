@@ -109,6 +109,26 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U167 · The special rounds' pool, now that the split is 1–5 / 6–10
+D171 put the Desgraciat and the Especial on pool 1 so that "both play about the same number of rounds (six each)": Quines 1–4 plus the two specials, against Quines 5–10. With the organizers' 1–5 / 6–10 (D193), pool 1 would play seven rounds and pool 2 five. One special card plays both special rounds (D81), and the cards are made on 4–5 Dec.
+- (a) Both specials stay on pool 1, as D171 says. Pool 1 plays seven rounds, pool 2 five. Nothing else changes.
+- (b) Each special plays the pool of its half: the Desgraciat pool 1, the Especial pool 2. Six rounds each, as D171 wanted. The special card gets two sides, like the normal one: side 1 for the Desgraciat, side 2 for the Especial. That replaces U59's blank back. The generator already makes two-sided cards.
+- (c) Both specials play their own playlist (79G8VcNrkih9GGjIzb47Gt, D105). Five rounds each pool. The playlist is still empty, and it would need filtering, downloading and hook approval before the cards.
+
+### U168 · Horari's rows from the organizers' schedule
+The organizers' list (D192) has two rows that D150's Horari doesn't: "Començem (6pm)" and "Descans + llançament".
+- (a) Horari follows the list: a "Comencem" row at 6 pm (spelled the Catalan way) after "Venda de cartrons", and the break as "Descans + llançament".
+- (b) Keep D150's rows: no start row, and the break as "Descans".
+
+### U169 · "Tempesta" in the last round's Check
+The user on the canvas: "in this screen we can swap +candidat for tempesta". But a second card can claim during any Check: claims on the same landing share the prize, and late claims count (game-rules › Ties). "+ Candidat" (D179) is the only way to add one during a Check. The last round is now the Especial, a normal round with a Line and a Bingo.
+- (a) Keep "+ Candidat" in that Check, and give "Tempesta" a slimmer slot of its own.
+- (b) Swap them as written. During the last round's Check, a second claim can't be added.
+
+### U170 · The "Llançament" and "Tempesta" icons
+The user: "the tempesta and llancament icons dont match the style of the others. for llancament use 2 swords in a x or a catapult, or a person throwing something and for storm use a cloud raining corn. Make me some other alternatives to decide". Frontend is drawing an options board.
+- (a) Pick on the canvas.
+
 ### U166 · A review before anything was revealed
 D191 keeps the music far down under review, "as during the Check". But a Check only ducks the music from its first reveal. Before that, the music from before the Check plays at the claim's level. So in three cases a review has the music at the claim's level (Sound engine, 26 Nov):
 - the presenters send the Check to review before revealing any song;
@@ -146,7 +166,7 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
 ### U59 · The special card's back
-The special card is printed from pool 1 (D171), on one side.
+The special card is printed from pool 1 (D171), on one side, unless U167 changes it.
 **Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
 
 ### U52 · Duplex printing and the paper
@@ -178,8 +198,8 @@ D116 has the user or an agent upload the edition's JSON to the cloud by hand, sa
 **Default:** nothing built until the user says yes.
 
 ### U50 · How the screens point to the right side
-The presenters explain the sides in rounds 1 and 5 (D102, D171).
-**Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 5; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
+The presenters explain the sides in rounds 1 and 6 (D102, D193).
+**Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 6; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
 
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:

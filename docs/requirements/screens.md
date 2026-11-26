@@ -37,7 +37,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-4", "Normal 5-10" or "Especial" (D163, D171), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
+| Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-5", "Normal 6-10" or "Especial" (D163, D193), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
@@ -75,6 +75,8 @@ _From event.md › The presenters (What they can do, What they see privately, Th
   - Then a Celebration music override, the winner's name and notes.
   - A numbered slip's number on the winner form, optional, next to the name.
 - **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".
+- **At the doors and in a break (D195):** "Comença la quina" is the main action, in the right column's big slot. "Llançament", when available, is a slimmer button. "Enrere" and "Comprovar" aren't shown, since they can't act there. The end screen has "Tempesta" and no "Llançament" (D194).
+- **The layout (D196):** the playback ("Ara sona") is always at the top of the left column, on every console screen. The right column holds only action buttons.
 - **The menu:** start and end the night, the Schedule, Panic, the resume code, and "Comandament", a drawing of the Wii remote's buttons that opens by itself when a remote connects.
 - **On the laptop:** the tech must be able to drive the whole show from the laptop alone: the console on the laptop's own screen, the show page on the projector as a separate display (never mirrored, since the console shows the next song), and a USB presenter clicker (→ or PageDown) running the console's default action. Set up as in the night runbook's "Without the tablet".
 - **It never reaches** the projector or phones: the next song, Futur, the song lookup, the standing cards (except the Desgraciat's finalists on stage, D161) and the resume code stay on the console.
@@ -96,7 +98,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
   - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
   - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
-  - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next: "Venda de cartrons" first (D152), then the rounds with "Primer descans" and "Segon descans", then "Fi" (D150). Breaks are "Descans" on every screen (D149);
+  - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next: "Venda de cartrons" first (D152), then the rounds with the night's one "Descans" among them, then "Fi" (D150, D192; a "Comencem" row and "+ llançament", pending U168). Breaks are "Descans" on every screen (D149);
   - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.
   - The corner buttons use style B, with matching icons, and the drawers use hierarchy J2; the menu drawer is titled with a settings word, not "Menu" (D87). The prizes drawer's design is still to pick (pending U30).
   - **Being built to match the boards (D132)**, the prizes drawer excepted.

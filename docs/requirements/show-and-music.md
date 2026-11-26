@@ -180,7 +180,7 @@ _From event.md › The night, step by step, Prizes and sponsors; 2025's running-
 
 A template. Each edition sets its own rounds and times, and the order can change during the night. The Schedule models the rounds, Intervals and throw breaks. The cheat sheet carries the presenters' checklist for each step below.
 
-1. **Doors and card sales** (from 17:30). Music plays and the bar opens. The projector shows the night's rounds, the card types, the scan-your-card QR and the sponsors.
+1. **Doors and card sales** (from 17:00). Music plays and the bar opens. The projector shows the night's rounds, the card types, the scan-your-card QR and the sponsors.
 2. **The welcome** (before round 1, which starts at 18:00). The presenters explain the game, since there are no written instructions anywhere:
    - how many rounds there are;
    - the Desgraciat, and how it's played;

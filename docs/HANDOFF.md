@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D192**, **U167**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D197**, **U171**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -54,7 +54,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - U161: a spare laptop's music.
 - **The design session:** side 2's design, the rounds mark (D102), U50 and U59 are for the user with Frontend.
 
-**Provisional:** D171's split (pool 1 = Quines 1–4 plus the specials; pool 2 = Quines 5–10) needs the organizers' confirmation. Pool 2 isn't filtered or downloaded yet; download it only when the user says so.
+**The night's order (D192, the organizers', 26 Nov):** card sales 5 pm, start 6 pm, Quines 1–5, the Desgraciat, one 10-minute Descans with the throw, Quines 6–10, the Especial last, the end about 10 pm. The split is 1–5 / 6–10 (D193); the specials' pool is U167. Pool 2 isn't filtered or downloaded yet; download it only when the user says so.
 
 **Other threads:**
 - The playlist covers' canvas: "Portades Spotify", https://claude.ai/code/artifact/a14bdc4a-9b8a-4e63-aaf7-635262b35d62. Outside the product.

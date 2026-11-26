@@ -1077,7 +1077,7 @@ By: the user. Source: open-questions.md › Answered (U121, U122). Amends: D144,
 The screens say "Descans" for a break, not "Mitja part". Answers U123.
 By: the user. Source: open-questions.md › Answered (U123). Lives in: GLOSSARY.md › Break; requirements/screens.md.
 
-### D150 · Horari's rows · 2026-11-26 · Active
+### D150 · Horari's rows · 2026-11-26 · Amended by D192
 The phone's Horari starts with the card-selling time ("the welcome is actually the ticket buying time"), then the rounds with "Primer descans" and "Segon descans" among them, then "Fi". The plan needs the doors' time. Answers U125 with (b).
 By: the user. Source: open-questions.md › Answered (U125). Lives in: requirements/screens.md › Player app.
 
@@ -1171,7 +1171,7 @@ By: the user (the rule); the orchestrator (the handling, to be confirmed). Sourc
 - **A new "Futur" tab:** the possible winners and the songs to the first possible Line and Quina on the left, and the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win (U148 (b)). It stays hidden until "Mirar el futur", so the presenters stay intrigued (event.md). So the song history needs no future button.
 By: the user. Source: open-questions.md › Answered (U147, U148). Amends: D162. Lives in: requirements/screens.md › Console.
 
-### D171 · Part 1 plays Quines 1–4 and the special rounds; Part 2 plays Quines 5–10 · 2026-11-26 · Active, provisional
+### D171 · Part 1 plays Quines 1–4 and the special rounds; Part 2 plays Quines 5–10 · 2026-11-26 · Superseded by D193 (the specials' pool still stands, pending U167)
 The Especial and the Desgraciat use Part 1's playlist, so Part 1 covers Quines 1–4 and Part 2 covers Quines 5–10, and both play about the same number of rounds (six each). The normal card's side 1 is Quines 1–4 and side 2 is Quines 5–10. The presenters explain the sides in rounds 1 and 5. The special card is printed from Part 1, and no third playlist is needed. The user still has to confirm this with the other organizers and may change it.
 By: the user. Source: the user's message of 26 Nov. Supersedes: D105. Amends: D101, D102. Lives in: event.md › The cards, The songs; requirements/songs-and-cards.md; requirements/game-rules.md › The night's rounds.
 
@@ -1282,3 +1282,36 @@ By: the user. Source: open-questions.md › Answered (U165). Amends: D62 (the ph
 ### D191 · Under review, the music stays far down · 2026-11-26 · Active
 While a Check is under review, the music from before the Check keeps playing (D118) at the level it had during the Check, far down. It doesn't come back to the claim's level. The engine already does this: the Check's duck stays during a review. Answers U78 with (a).
 By: the user. Source: open-questions.md › Answered (U78). Lives in: requirements/show-and-music.md › The Check's sound.
+
+### D192 · The 2026 night's order · 2026-11-26 · Active
+Decided by the organizers. The Quina Especial is the last round, not the Desgraciat.
+1. 🎫 Card sales, from 5 pm.
+2. 🎉 The start, at 6 pm.
+3. 1️⃣ Quines 1–5.
+4. ✴️ The Quina Desgraciada.
+5. ☕️ One "Descans" with the throw, 10 minutes.
+6. 2️⃣ Quines 6–10.
+7. ✴️ The Quina Especial.
+8. 🏁 The end, about 10 pm.
+
+So the night has one Descans, not two: Horari's "Primer descans" and "Segon descans" (D150) become one "Descans". It has one planned throw, in that Descans; 2025 had three. The corn-seed storm's "last round" (D155) is now the Especial.
+By: the user and the organizers. Source: the user's message of 26 Nov. Amends: D150. Lives in: event.md › When and where, The night, step by step; requirements/game-rules.md › The night's rounds; requirements/screens.md › Player app.
+
+### D193 · Side 1 plays Quines 1–5, side 2 Quines 6–10 · 2026-11-26 · Active
+The organizers settled the split: pool 1 plays Quines 1–5 and pool 2 Quines 6–10. The normal card's side 1 is for Quines 1–5 and side 2 for Quines 6–10, labelled "Normal 1-5" and "Normal 6-10" (D163). The presenters explain the sides in rounds 1 and 6. D171's split was provisional and is replaced. Its other part, the special rounds playing pool 1, stays until U167: with five normal rounds a pool, it no longer balances the pools at six rounds each, which was D171's reason.
+By: the user and the organizers. Source: the user's message of 26 Nov. Supersedes: D171's split. Lives in: event.md › The cards, The songs; requirements/game-rules.md; requirements/songs-and-cards.md; requirements/screens.md › Projector.
+
+### D194 · No "Llançament" on the end screen · 2026-11-26 · Active
+The user on the canvas: "Why is llancament an option here? we dont have a llancament planned on the quina end". The end screen keeps "Tempesta" (D155) and drops "Llançament". The only planned throw is in the Descans (D192).
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Amends: where the throw button shows (D138; the engine also allowed it after the Game). Lives in: requirements/screens.md › Console.
+
+### D195 · At the doors and in a break, "Comença la quina" is the main action · 2026-11-26 · Active
+"«Comença la quina» is a main action and should be on the right panel. it can be kept as a line when llançament is available. enrere and comprovar can be removed to make room, they are always disabled right?" They are: the engine accepts no claim and no Enrere in a break, and before the night has nothing to undo or claim. So, at the doors and in a break:
+- "Comença la quina" takes the right column's big slot;
+- "Llançament", when available, becomes a slimmer button;
+- "Enrere" and "Comprovar" aren't shown.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov; protocol scenes.ts (claim and back). Amends: D138's layout (Llançament as the big button). Lives in: requirements/screens.md › Console.
+
+### D196 · The console's playback is always at the top of the left column · 2026-11-26 · Active
+The user on the canvas, again: "I told you a thousand times in comments! the song should be up on the left sidepanel!", and on the review board: the right side is only for action buttons. On every console screen, the playback ("Ara sona") sits at the top of the left column, and the right column holds only action buttons. Frontend checks every console board, and the code follows.
+By: the user via canvas (26 Nov). Source: Frontend's reports of 26 Nov. Lives in: requirements/screens.md › Console.

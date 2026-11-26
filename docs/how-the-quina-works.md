@@ -17,7 +17,7 @@ The goal is a great night, not only great mixing. When the presenters do nothing
 ## A night in ten steps
 
 1. **Set-up.** In the afternoon, everyone sets up the tent, the PA, the projector, the laptop and the tablet by the [night runbook](night-runbook.md), runs the preflight, and checks the sound.
-2. **Doors and card sales** (from 17:30). Interval music plays and the bar opens. The projector shows the night's rounds, the card types, a "scan your card" QR and the sponsors. Players add their cards on their phones.
+2. **Doors and card sales** (from 17:00). Interval music plays and the bar opens. The projector shows the night's rounds, the card types, a "scan your card" QR and the sponsors. Players add their cards on their phones.
 3. **The welcome.** The presenters explain the game out loud: there's no how-to-play text anywhere.
 4. **A round's intro.** The presenters press "Comença la quina". The projector and phones reveal the round's prize bundles, and the presenters read out every prize and its sponsor.
 5. **The Shuffle.** "Barreja" decides the round's **Queue** once and in public: every cover flies from a grid into the drum. The organizers note the round's resume code.
