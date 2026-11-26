@@ -85,6 +85,8 @@ export class Bus<Out> {
   readonly clientId: string;
   readonly token: string | null;
   readonly listeners = new Set<BusListener>();
+  /** The errors each listener has thrown, so a screen that fails on every state logs each error once. */
+  private readonly failures = new WeakMap<BusListener, Set<string>>();
   transport: Transport | null = null;
   /** Called on every (re)connection, after the hello. */
   onOpen: (() => void) | null = null;
@@ -104,10 +106,28 @@ export class Bus<Out> {
     return () => this.listeners.delete(listener);
   }
 
-  /** Deliver locally and send through the transport. */
+  /**
+   * Send through the transport, then deliver locally. Remotes come first and each local listener is on its own: one
+   * that throws (a screen on this page that can't draw a message) never keeps the tablets or another listener from it.
+   */
   emit(message: Out): void {
-    for (const listener of this.listeners) listener(message, { local: true });
     this.sendRemote(message);
+    this.deliver(message, { local: true });
+  }
+
+  /** Every listener gets the message, even when one before it throws (logged, once per listener and kind of error). */
+  private deliver(message: unknown, from: Delivery): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(message, from);
+      } catch (error) {
+        const key = `${error instanceof Error ? error.message : String(error)}`;
+        const seen = this.failures.get(listener) ?? new Set<string>();
+        if (!seen.has(key)) console.error('bus listener failed', error);
+        seen.add(key);
+        this.failures.set(listener, seen);
+      }
+    }
   }
 
   /** Send through the transport only. */
@@ -131,7 +151,7 @@ export class Bus<Out> {
         } catch {
           return;
         }
-        for (const listener of this.listeners) listener(message, { local: false });
+        this.deliver(message, { local: false });
       },
       close: () => {},
     });
