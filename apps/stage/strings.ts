@@ -46,7 +46,12 @@ export type CountdownContext = 'start' | 'back';
 export const STAGE_TEXT = {
   title: CA.gameTitle,
   specialRule: 'Només compten els cartrons especials',
-  shout: CA.shout,
+  /** The Desgraciat's Celebration reads «QUINA POTRA!» (D186, amending D62; the winner's phone says it too, D190). */
+  shout: { ...CA.shout, standing: CA.potra.toUpperCase() },
+  /** «Salvats!» (D181): a landing that would take out every finalist left counts for none of them. */
+  saved: 'SALVATS!',
+  /** The finalists' plates: "#57". */
+  finalist: (n: number) => `#${n}`,
   prize: CA.prize,
   sponsoredBy: CA.sponsoredBy,
   morePrizes: CA.morePrizes,

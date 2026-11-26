@@ -37,7 +37,8 @@ The stage holds the full state, but these never reach the view:
 - the Phase;
 - claims (`completeSince` and `warnings` included);
 - winners' names and notes;
-- winning card numbers: not secret, but never shown (the user's review), so no list of winners or `cardIds` comes out. Only the Check names the card being checked.
+- winning card numbers: not secret, but never shown (the user's review), so no list of winners or `cardIds` comes out. Only the Check names the card being checked, and the Desgraciat's finale its finalists (below);
+- the cards' contents: the finale's «Salvats!» is worked out from the printed cards inside `model/finale.ts`, and only its moment comes out.
 
 Songs are named only from landings (the `transition.landed` event, or the snapshot's `landings` and `current`), and only from their landing time. `apps/show/tests/ui/stage/view.test.ts` fills every private field with a secret and checks that none comes out, in every fixture.
 
@@ -52,6 +53,16 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 - **QR can't be drawn:** the short link shows in its place.
 - **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`): `nino-sentat` on the QR before the Game, `nino-meditant` and `nino-sardana` either side of the Interval's countdown, `nino-espatxarrat` beside a failed Check's ✗. A null sticker is left out.
 
+### The Desgraciat's finale
+
+When the presenters start the finale (`state.finale`, D161, D166–D168, D180–D187), the play scene becomes a stage (`model/finale.ts`, `render/finale.ts`; board `Projector-Desgraciat-Final`, ANIMATIONS.md › The finale on stage):
+- the drum's band shrinks to `STAGE.finale.band` (top 70, height 330 in the box), so the show page's drum, which follows `--stage-band-*`, gets smaller too;
+- the last-3 row gives way to a floor with one nino per finalist (their pose and tint from `packages/rules/finale.ts`), their number on a plate, in ascending order; fewer stand bigger (D184);
+- the finalists' numbers and fates are public by design (D161: they're on stage); `view.ts` gives only number, fate, look and timing;
+- a fall shows from its landing time and leaves at the next Spin; «Salvats!» (D181) plays the ribbon, the light, the phones' two spotlights and the slow paper confetti (`packages/ui/motion/paper-confetti.ts`, D185); one left gets the party nino, gold.
+
+The Celebration of that round reads «QUINA POTRA!» (D186).
+
 ## Theming
 
 A theme targets these hooks without touching any logic:
@@ -65,7 +76,8 @@ A theme targets these hooks without touching any logic:
 On each hook, the basic theme plays a short CSS transition: the element is held in `.is-entering` for one frame, then transitions in. The root also dispatches `quina:anim` events with `detail.name`, one of:
 - `scene-enter`, `spin`, `landing`, `suspense`, `heat`;
 - `shuffle`, `check-enter`, `check-type`, `check-step`, `check-unreveal`, `check-review`, `check-result`, `check-fallen`;
-- `celebrate`, `interval-rotate`, `idle`, `credits`, `pause`, `link-lost`.
+- `celebrate`, `interval-rotate`, `idle`, `credits`, `pause`, `link-lost`;
+- `finale-enter`, `finale-fall`, `finale-clear`, `finale-back`, `finale-safe`, `finale-win`.
 
 Each event fires at the show-clock time from its timestamp, never when the message arrives. A late join enters the scene without replaying past moments. `prefers-reduced-motion` switches to the still fallbacks.
 

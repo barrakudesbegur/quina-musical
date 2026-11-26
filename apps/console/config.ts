@@ -10,6 +10,8 @@ export const CONSOLE = Object.freeze({
     checklist: 'quina.console.checklist.v1',
     /** The latest resume code (plan B), kept so a replacement laptop can be resumed from this device. */
     resume: 'quina.console.resume.v1',
+    /** The Dempeus tab's «Al revés» during the finale: this tablet's own way of facing the stage. */
+    finaleReversed: 'quina.console.finale-reversed.v1',
   },
   /** The device label ("Tauleta", "Mòbil admin"), set in the menu: it names who pressed what. */
   labelMaxLength: 24,
@@ -44,6 +46,22 @@ export const CONSOLE = Object.freeze({
    * motion: no hold, no motion.
    */
   standing: Object.freeze({ countMs: 200, countShiftPx: 12, holdMs: 600, outMs: 250, outScale: 0.6, flipMs: 250, staggerMs: 30, maxAnimated: 20 }),
+  /**
+   * The Desgraciat's finale (logic/finale.ts; ANIMATIONS.md › The finale on stage). `sizes`: «Final a l'escenari» grows
+   * from 20 standing down and is the biggest, recommended, from 10 down (the board's thresholds; the count includes
+   * unsold cards). A start needs 2 finalists; the `finale` command takes at most 20. `freshMs`: a number just added stays
+   * gold this long. The motion Svelte runs in script: a nino popping in, a removal or a fallen nino leaving, the stagger.
+   */
+  finale: Object.freeze({
+    sizes: Object.freeze({ medium: 20, large: 10 }),
+    minFinalists: 2,
+    maxFinalists: 20,
+    freshMs: 900,
+    popMs: 300,
+    outMs: 250,
+    flipMs: 250,
+    staggerMs: 60,
+  }),
 });
 
 export type Theme = 'light' | 'dark';
@@ -55,7 +73,7 @@ export const CONSOLE_COMMANDS = [
   'next', 'back', 'hold', 'holdMusic', 'suspense', 'setPace', 'setGame', 'confirmLine', 'newRound', 'panic', 'sfx',
   'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
   'celebrationMusic', 'interval', 'endGame', 'pause',
-  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm',
+  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm', 'finale', 'finaleCue',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 

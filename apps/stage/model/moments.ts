@@ -10,6 +10,7 @@ import type { HeatSample } from '../../../packages/rules/heat.ts';
 import type { StageView } from '../view.ts';
 import { checkReveal, typeReveal, type CheckVerdict, type StepState, type TypeState } from './check.ts';
 import { motionAt, type MotionPhase } from './motion.ts';
+import { fateAt, type NinoFate } from './finale.ts';
 import { shufflePhaseAt, type ShufflePhase } from './shuffle.ts';
 import { visibleSongs } from './songs.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown, type RoughCountdownOptions } from './timing.ts';
@@ -30,6 +31,12 @@ export const ANIM_NAMES = [
   'check-result',
   'check-fallen',
   'celebrate',
+  'finale-enter',
+  'finale-fall',
+  'finale-clear',
+  'finale-back',
+  'finale-safe',
+  'finale-win',
   'interval-rotate',
   'sponsor-pages',
   'idle',
@@ -58,6 +65,14 @@ export type AnimDetail =
   /** The Desgraciat round: a standing claim's card has fallen (its result, instead of `check-result`). */
   | { name: 'check-fallen'; cardId: number }
   | { name: 'celebrate'; kind: WinKind }
+  /** The Desgraciat's finale (D161): finalists come on stage, fall, leave at the next Spin, come back with Enrere, are
+   * saved together («Salvats!», D181), or one is left. Their numbers are public: they're on stage. */
+  | { name: 'finale-enter'; numbers: number[] }
+  | { name: 'finale-fall'; numbers: number[] }
+  | { name: 'finale-clear'; numbers: number[] }
+  | { name: 'finale-back'; numbers: number[] }
+  | { name: 'finale-safe' }
+  | { name: 'finale-win'; number: number }
   | { name: 'interval-rotate' }
   | { name: 'idle'; scene: ShowScene }
   | { name: 'credits' }
@@ -87,6 +102,8 @@ export interface Moments {
   } | null;
   shuffle: { key: string; phase: ShufflePhase } | null;
   celebration: { key: string; kind: WinKind } | null;
+  /** The finale on stage: each finalist's fate as shown now (by number), and the «Salvats!» landing once it has landed. */
+  finale: { key: string; fates: Readonly<Record<number, NinoFate>>; savedAtMs: number | null } | null;
   /** The Heat sample that has started (its `fromMs`). */
   heat: { fromMs: number } | null;
   /** The Interval's rough countdown: it ticks (`interval-rotate`) when what it says changes. */
@@ -119,6 +136,7 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
     check: null,
     shuffle: null,
     celebration: null,
+    finale: null,
     heat: heat ? { fromMs: heat.fromMs } : null,
     countdown: null,
   };
@@ -126,6 +144,14 @@ export function momentsOf(view: StageView, { nowMs, heat, linkLost, checkMarkAt,
     case 'play':
       moments.sceneKey = `play:${body.round?.number ?? ''}`;
       moments.motion = motionAt(body.motion, nowMs);
+      if (body.finale) {
+        const f = body.finale;
+        moments.finale = {
+          key: f.key,
+          fates: Object.fromEntries(f.ninos.map((n) => [n.number, fateAt(n, nowMs)])),
+          savedAtMs: f.savedAtMs !== null && nowMs >= f.savedAtMs ? f.savedAtMs : null,
+        };
+      }
       break;
     case 'roundStart':
       moments.sceneKey = `roundStart:${body.round?.number ?? ''}`;
@@ -226,10 +252,35 @@ export function diffMoments(prev: Moments | null, next: Moments): AnimDetail[] {
   const ns = next.shuffle;
   if (ns && ns.phase !== 'before' && (ps?.key !== ns.key ? ns.phase !== 'done' : ps.phase !== ns.phase)) out.push({ name: 'shuffle', phase: ns.phase });
 
+  out.push(...finaleMoments(prev.finale, next.finale));
+
   if (next.heat && next.heat.fromMs !== prev.heat?.fromMs) out.push({ name: 'heat' });
 
   const pt = prev.countdown;
   const nt = next.countdown;
   if (pt && nt && pt.key === nt.key && pt.at && nt.at && !sameCountdown(pt.at, nt.at)) out.push({ name: 'interval-rotate' });
+  return out;
+}
+
+/** The finale's moments between two summaries of the same scene (a late join enters with none). */
+function finaleMoments(prev: Moments['finale'], next: Moments['finale']): AnimDetail[] {
+  if (!next) return [];
+  const numbers = (f: Moments['finale'], fate?: NinoFate) => Object.entries(f?.fates ?? {}).filter(([, v]) => !fate || v === fate).map(([k]) => Number(k));
+  if (!prev || prev.key !== next.key) return [{ name: 'finale-enter', numbers: numbers(next) }];
+  const out: AnimDetail[] = [];
+  const was = prev.fates;
+  const is = next.fates;
+  const entered = numbers(next).filter((n) => !(n in was));
+  const fell = numbers(next, 'down').filter((n) => was[n] === 'up');
+  const back = numbers(next, 'up').filter((n) => was[n] === 'down');
+  // The fallen leave at the next Spin; a finalist removed by hand leaves the same way.
+  const left = numbers(prev).filter((n) => !(n in is));
+  const won = numbers(next, 'win').find((n) => was[n] !== 'win');
+  if (entered.length) out.push({ name: 'finale-enter', numbers: entered });
+  if (fell.length) out.push({ name: 'finale-fall', numbers: fell });
+  if (left.length) out.push({ name: 'finale-clear', numbers: left });
+  if (back.length) out.push({ name: 'finale-back', numbers: back });
+  if (next.savedAtMs !== null && next.savedAtMs !== prev.savedAtMs) out.push({ name: 'finale-safe' });
+  if (won !== undefined) out.push({ name: 'finale-win', number: won });
   return out;
 }

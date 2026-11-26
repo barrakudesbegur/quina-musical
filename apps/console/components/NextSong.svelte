@@ -20,12 +20,14 @@
   const next = $derived(snap?.next ?? null);
   const landing = $derived(snap ? landingCountdown(snap, model.show.now) : null);
   const suspense = $derived(snap ? suspenseCountdown(snap, model.show.now) : null);
+  /** The finale has its winner: no more songs land (D180), so the next one isn't shown. */
+  const finaleOver = $derived(snap?.finale?.winner != null);
 </script>
 
 <!-- Nothing to show before a round's Queue exists. -->
 {#if snap && (next || snap.queue.length > 0)}
   <section bind:this={root} class="panel panel--private next-song" data-testid="next-song" data-song-id={next?.songId ?? ''} data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
-    {#if next}
+    {#if next && !finaleOver}
       <Cover songId={next.songId} morph="cover" />
       <div class="next-song__song">
         <h2 class="panel__label" id="{uid}-title">{S.nextSong.title}<span class="visually-hidden"> ({S.nextSong.private})</span></h2>
@@ -44,7 +46,7 @@
     {:else}
       <div class="next-song__song">
         <h2 class="panel__label" id="{uid}-title">{S.nextSong.title}</h2>
-        <p class="next-song__none">{S.nextSong.none}</p>
+        <p class="next-song__none">{finaleOver ? S.finale.nextDone : S.nextSong.none}</p>
       </div>
     {/if}
   </section>

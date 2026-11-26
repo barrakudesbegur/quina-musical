@@ -2,7 +2,8 @@
 // holds secrets the audience must never see: the next song (`next`, `transition.to`), the Queue, possible
 // winners, the Phase, claims and their warnings, winners' names and notes. Winning card numbers aren't secret
 // but are never shown either (the user's review: "people don't care who won unless it's them"), so they don't
-// come out: only the Check names the card being checked. `stageView` picks out only what the projector may
+// come out: only the Check names the card being checked, and the Desgraciat's finale its finalists, who are on stage
+// (D161: their numbers and fates, never their cards). `stageView` picks out only what the projector may
 // draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
 // ever comes out.
 import { DEFAULT_SIDE, winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
@@ -14,6 +15,7 @@ import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
 import { revealedSongs, type LandedNote, type SongLookup, type StageSong } from './model/songs.ts';
 import { motionView, type MotionView, type SpinNote } from './model/motion.ts';
+import { finaleView, type FinaleView } from './model/finale.ts';
 import { cardTypeBadge, checkCells, checkTypeOk, NO_CHECK_MEMORY, shownCheck, verdictOf, type CheckMemory, type CheckView } from './model/check.ts';
 import { nightCardTypes, type NightCardType } from './model/night.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
@@ -78,6 +80,8 @@ export interface PlayView {
   round: RoundView | null;
   /** The drum's motion: timestamps only, never the incoming song. */
   motion: MotionView | null;
+  /** The Desgraciat's finale on stage (D161): the finalists' numbers and fates, public by design; their cards never. */
+  finale: FinaleView | null;
 }
 
 export interface CheckSceneView {
@@ -243,7 +247,11 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const roundNumber = state?.round.number ?? 0;
   const open = openRounds(plan, state);
   const current = roundOf(roundNumber, plan, state);
-  const play = (): PlayView => ({ scene: 'play', round: current && roundView(current, plan), motion: motionView(state, notes.spin) });
+  const play = (): PlayView => {
+    const motion = motionView(state, notes.spin);
+    // A Spin (or a Suspens) since the last landing clears the fallen from the stage (`finale-clear`).
+    return { scene: 'play', round: current && roundView(current, plan), motion, finale: state && finaleView(state, catalog, motion !== null) };
+  };
   switch (scene) {
     case 'before': {
       // Before the Game counts as round 1's Interval (U5): round 1's card type shows its price, the others none.

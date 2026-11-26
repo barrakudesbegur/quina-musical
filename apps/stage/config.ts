@@ -48,7 +48,8 @@ export const STAGE = Object.freeze({
    * - `intervalLeft`, `intervalRight`: the meditating and the dancing ninos (`nino-meditant`, `nino-sardana`)
    *   either side of the Interval's countdown.
    * - The Desgraciat round: `standUp`, the hands-up nino (`nino-mans-adalt`, from packages/ui/assets/ninos) beside
-   *   the round's name at its intro and on its Celebration ("everyone stand up"); `checkFallen`, the sitting nino
+   *   the round's name at its intro ("everyone stand up"; its Celebration's ninos are `finale.celebration.stickers`);
+   *   `checkFallen`, the sitting nino
    *   beside a fallen card's big ✗ (`check-fallen`: the card sat down).
    */
   stickers: Object.freeze({
@@ -58,6 +59,41 @@ export const STAGE = Object.freeze({
     before: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
     intervalLeft: new URL('./assets/nino-meditant.svg', import.meta.url).href as string | null,
     intervalRight: new URL('./assets/nino-sardana.svg', import.meta.url).href as string | null,
+  }),
+  /**
+   * The Desgraciat's finale on stage (board Projector-Desgraciat-Final; ANIMATIONS.md › The finale on stage):
+   * - `band`: the drum's band while it's on, smaller and higher so the stage fits under the title (the show page's drum
+   *   follows `--stage-band-*`);
+   * - `ninos`: each finalist's pose (packages/rules/finale.ts `FINALE_POSES`), tinted by its hue; `winner`: the party nino;
+   * - `confetti`: «Salvats!»'s slow paper confetti (D185: about 55 px/s on the 1080 px box), from the ribbon;
+   * - `celebration`: the «QUINA POTRA!» Celebration's paper rain (D186) and its stickers.
+   */
+  finale: Object.freeze({
+    band: Object.freeze({ top: 70, height: 330 }),
+    ninos: Object.freeze({
+      'alt-2': new URL('../../packages/ui/assets/ninos/nino-alt-2.svg', import.meta.url).href,
+      sardana: new URL('../../packages/ui/assets/ninos/nino-sardana.svg', import.meta.url).href,
+      'mans-adalt': new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href,
+    }),
+    winner: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href,
+    confetti: Object.freeze({
+      count: 180,
+      durationMs: 9000,
+      origin: Object.freeze({ x: 0.5, y: 0.56 }),
+      spread: 0.5,
+      fallShare: 0.05,
+      size: Object.freeze({ min: 12, max: 22 }),
+      colors: Object.freeze(['#FFC531', '#3EE07F', '#FF6FB5', '#4FC3FF', '#FFF6E5', '#FF8A1F']),
+      outline: '#17132B',
+    }),
+    celebration: Object.freeze({
+      confetti: Object.freeze({ count: 200, durationMs: 14000, origin: Object.freeze({ x: 0.5, y: 0.3 }), spread: 1 }),
+      stickers: Object.freeze({
+        topLeft: new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href as string | null,
+        topRight: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href as string | null,
+        bottomLeft: new URL('../../packages/ui/assets/ninos/nino-salt-cames-obertes.svg', import.meta.url).href as string | null,
+      }),
+    }),
   }),
   /** The sponsor strip before the Game and in the Interval (`sponsor-pages`): plates per row, and how long a page shows. */
   sponsorsPerPage: 8,

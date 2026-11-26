@@ -3,8 +3,9 @@
   // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize. The
   // player's own confirmed card (a confirmed winner that is one of the phone's cards): "La teva línia!" with
   // that card's grid glowing in its own colour, and the confetti in its colours. The Desgraciat round's last card
-  // standing ('standing') has no title (the user, U6): the prize, or, when it's the phone's own card, the hands-up
-  // nino with that card standing in its green glow, green rays and green confetti. Reduced motion:
+  // standing ('standing'): on other phones no title (the user, U6), only the prize; on the winner's own phone
+  // «Quina potra!» (D190), the hands-up nino with that card standing in its green glow, green rays and green confetti.
+  // Reduced motion:
   // it all appears, with no confetti.
   import type { Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardView, CelebrationView, PrizeRound } from '../logic/view.ts';
@@ -32,7 +33,7 @@
   const own = $derived(views.filter((v) => celebration.ownCardIds.includes(v.saved.id)));
   const NO_FRESH: ReadonlySet<string> = new Set();
   const standing = $derived(celebration.kind === 'standing');
-  /** The shouted title; none in the Desgraciat round (U6). */
+  /** The shouted title; in the Desgraciat round only on the winner's own phone (U6, D190). */
   const title = $derived(own.length ? S.yourWin[celebration.kind] : S.shout[celebration.kind]);
   /** The last card standing's confetti: the standing green, gold, paper and ice. */
   const STANDING_CONFETTI = ['--color-online', '--color-accent', '--color-paper', '--color-calm'];

@@ -21,9 +21,11 @@ export const CA = {
   bingo: 'Quina',
   /** The Desgraciat round's win: the last card standing. */
   standing: 'Dempeus',
-  /** The Celebration's title. The Desgraciat round has none (the user, U6): its win shows the music, the confetti and
-   * the prize, with no word shouted. */
+  /** The Celebration's title for everyone. The Desgraciat round has none here (the user, U6): its win shows the music,
+   * the confetti and the prize, with no word shouted; only the screens below say `potra`. */
   shout: { line: 'LÍNIA!', bingo: 'QUINA!', standing: null } satisfies Record<WinKind, string | null>,
+  /** The Desgraciat winner's title: on the projector (D186) and on the winner's own phone (D190), never anyone else's. */
+  potra: 'Quina potra!',
   prize: { line: 'Premi de línia', bingo: 'Premi de quina', standing: "Premi de l'últim dempeus" } satisfies Record<WinKind, string>,
   sponsoredBy: (name: string) => `Gentilesa de ${name}`,
   /** Under a bundle's headline prizes: how many smaller ones come with them. */

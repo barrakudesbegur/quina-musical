@@ -10,6 +10,7 @@ import { parseCards, type Catalog } from '../../../../../packages/ui/data/catalo
 import { readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import { stageView, type StageView } from '../../../../stage/view.ts';
 import { firstMiss, NO_CHECK_MEMORY, plaqueSpot } from '../../../../stage/model/check.ts';
+import { STAGE_TEXT } from '../../../../stage/strings.ts';
 
 const NOW = 1_800_000_000_000;
 
@@ -611,5 +612,31 @@ test('the last card standing is celebrated with its prize, and no card number', 
   assert.equal(view.body.kind, 'standing');
   assert.equal(view.body.prize?.kind, 'standing');
   assert.equal(view.body.prize?.title, 'Pernil');
+  assert.ok(!/\b57\b/.test(JSON.stringify(view.body)), 'no winning card number');
+});
+
+test("the finale shows its finalists' numbers and fates on stage (D161), never another standing card or a card's songs", () => {
+  // (The secrets are checked in every fixture above; withSecrets also starts a Spin, which would clear the fallen.)
+  const fixture = FIXTURES.finaleFallen(NOW).state;
+  // A card still standing in the round who isn't on stage (#4321) must never show.
+  const state = { ...fixture, standing: { count: 6, cardIds: [...(fixture.standing?.cardIds ?? []), 4321] } };
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  assert.equal(view.body.scene, 'play');
+  if (view.body.scene !== 'play') return;
+  const finale = view.body.finale;
+  assert.ok(finale);
+  assert.deepEqual(finale.ninos.map((n) => [n.number, n.fate]), [[34, 'up'], [56, 'up'], [57, 'up'], [72, 'up'], [81, 'up'], [99, 'down'], [140, 'down'], [184, 'down']]);
+  // Only these facts per finalist: no songs, no card, nothing of the round's other standing cards.
+  assert.ok(finale.ninos.every((n) => Object.keys(n).sort().join() === 'fate,hue,number,pose,sinceMs'));
+  assert.deepEqual(Object.keys(finale).sort(), ['key', 'ninos', 'savedAtMs']);
+  assert.ok(!JSON.stringify(view).includes('4321'), 'a standing card not on stage never shows');
+});
+
+test('the Desgraciat Celebration reads «QUINA POTRA!» on the projector (D186), with no card number', () => {
+  const state = FIXTURES.finaleCelebration(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  assert.equal(view.body.scene, 'celebration');
+  if (view.body.scene !== 'celebration') return;
+  assert.equal(STAGE_TEXT.shout[view.body.kind], 'QUINA POTRA!');
   assert.ok(!/\b57\b/.test(JSON.stringify(view.body)), 'no winning card number');
 });

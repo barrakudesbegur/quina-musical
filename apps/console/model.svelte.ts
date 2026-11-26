@@ -1,6 +1,7 @@
 // The console's state, one per page: the engine's view (ShowStore, through ui/client), the Game plan, the
 // printed cards, this device's label, theme and checklist, its helpers' tab and Futur reveal, the round's
-// counted songs gathered from the snapshots (for the Futur tab), the claim pad, and the toasts. It derives what
+// counted songs gathered from the snapshots (for the Futur tab), the claim pad, the finalists' pad and the Dempeus tab's
+// finale switches, and the toasts. It derives what
 // the components need from the pure logic in logic/, and `act` is the one way commands leave the console.
 import type { CommandFields, CommandRejected, ResumePoint, ShowState } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
@@ -20,6 +21,19 @@ import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundKey, type Landing
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
+import {
+  checkFinalist,
+  finalePadAfterRefusal,
+  finalePadCommand,
+  finalePadEnter,
+  finalePadKey,
+  finalePadRemove,
+  finaleRefusal,
+  openFinalePad,
+  withoutFinalist,
+  type FinaleEnterOutcome,
+  type FinalePadState,
+} from './logic/finale.ts';
 import type { PadKey } from './logic/numpad.ts';
 import { defaultClaimKind, type ClaimKind } from './logic/show-data.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
@@ -90,10 +104,20 @@ export class ConsoleModel {
   standingFall = $state.raw<StandingFall | null>(null);
   /** The claim pad (logic/claim-pad.ts), while it's open. */
   pad = $state.raw<ClaimPadState | null>(null);
+  /** The finalists' pad (logic/finale.ts), while it's open. */
+  finalePad = $state.raw<FinalePadState | null>(null);
+  /** The Dempeus tab's «Al revés» during the finale: this tablet faces the room (kept on this device). */
+  finaleReversed = $state(readStored(CONSOLE.storage.finaleReversed) === '1');
+  /** «Editar» in the finale: an × on each standing finalist (off by default, D183; off again when the finale ends). */
+  finaleEditing = $state(false);
   /** The last step back inside a Check. */
   stepBack = $state.raw<StepBack | null>(null);
   /** The claim the pad sent last: the engine's `unknownCard` rejection brings it back, its chips marked (D126). */
   private padSent: { reqId: string; claim: CommandFields['claim'] } | null = null;
+  /** The finalists' pad as it was sent: a refusal of the set brings it back, the refused numbers in red. */
+  private finaleSent: { reqId: string; pad: FinalePadState } | null = null;
+  /** The finale was on in the last snapshot (the Dempeus tab is selected as it starts). Not reactive. */
+  private finaleSeen = false;
   /** What the tab picker last saw (logic/standing.ts helperTabAfter). Not reactive. */
   private tabMemory: TabMemory = EMPTY_TAB_MEMORY;
   /** The standing cards in the previous snapshot, and its round, for `standing-fall`. Not reactive. */
@@ -113,6 +137,8 @@ export class ConsoleModel {
   });
   /** What the pad's «Comprovar» would claim now, or null. */
   readonly padClaim = $derived(this.pad ? padClaim(this.pad, this.padRules) : null);
+  /** What the finalists' pad's big button would send now, or null. */
+  readonly finaleCommand = $derived(this.finalePad ? finalePadCommand(this.finalePad, CONSOLE.finale.minFinalists) : null);
   /** "Go ahead" here: the control drawn as primary, and what the Wii's A sends (logic/default-action.ts). */
   readonly defaultAction = $derived(
     defaultAction({
@@ -123,6 +149,7 @@ export class ConsoleModel {
       nextEnabled: this.controls.next.enabled,
       can: (cmd) => this.can(cmd),
       pad: this.pad ? { claim: this.padClaim } : null,
+      finalePad: this.finalePad ? { command: this.finaleCommand } : null,
     }),
   );
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
@@ -210,6 +237,11 @@ export class ConsoleModel {
     const picked = helperTabAfter(this.helperTab, this.tabMemory, state);
     this.tabMemory = picked.memory;
     if (picked.tab !== this.helperTab) this.helperTab = picked.tab;
+    // The finale lives in the Dempeus tab (D187): selected as it starts; «Editar» goes off when it ends.
+    const finale = state.finale != null;
+    if (finale && !this.finaleSeen) this.helperTab = 'standing';
+    if (!finale && this.finaleSeen) this.finaleEditing = false;
+    this.finaleSeen = finale;
     const key = roundKey(state.round);
     const ids = state.standing?.cardIds ?? null;
     const sameRound = this.standingSeen.key === key;
@@ -274,6 +306,67 @@ export class ConsoleModel {
     return this.act('claim', claim);
   }
 
+  // ---- the Desgraciat's finale (logic/finale.ts) --------------------------------------------------------------
+  /** Open the finalists' pad: to start the finale, or («+ Finalista») to add to it. */
+  openFinalePad(): void {
+    const finale = this.show.state?.finale;
+    this.pad = null;
+    this.finalePad = finale ? openFinalePad('add', finale.cardIds) : openFinalePad('start');
+  }
+
+  closeFinalePad(): void {
+    this.finalePad = null;
+  }
+
+  finalePadPress(key: PadKey): void {
+    if (this.finalePad) this.finalePad = finalePadKey(this.finalePad, key, this.padRules);
+  }
+
+  /** ↵: the typed number's card shows privately; it's added while it stands (D168). */
+  finalePadEnter(): FinaleEnterOutcome | null {
+    const pad = this.finalePad;
+    const state = this.show.state;
+    if (!pad || !state) return null;
+    const ctx = {
+      cards: this.catalog?.cards ?? null,
+      round: state.round,
+      inPlay: this.inPlay.ids,
+      standing: state.standing?.cardIds ?? null,
+      landed: new Set(this.counted.ids),
+    };
+    const { pad: next, outcome } = finalePadEnter(pad, { ...this.padRules, maxFinalists: CONSOLE.finale.maxFinalists }, (id, set) => checkFinalist(id, set, ctx));
+    this.finalePad = next;
+    return outcome;
+  }
+
+  finalePadRemove(cardId: number): void {
+    if (this.finalePad) this.finalePad = finalePadRemove(this.finalePad, cardId);
+  }
+
+  /** «Començar final» (or «Afegir a la final»): the set goes to the engine, and the pad closes. */
+  finalePadSubmit(): string | null {
+    const pad = this.finalePad;
+    const command = this.finaleCommand;
+    if (!pad || !command) return null;
+    const reqId = this.act('finale', command);
+    if (reqId !== null) {
+      this.finaleSent = { reqId, pad };
+      this.finalePad = null;
+    }
+    return reqId;
+  }
+
+  /** «Editar»'s ×: that finalist leaves the finale at once, with no confirmation (D183). */
+  removeFinalist(cardId: number): string | null {
+    const finale = this.show.state?.finale;
+    return finale ? this.act('finale', { cardIds: withoutFinalist(finale, cardId) }) : null;
+  }
+
+  setFinaleReversed(on: boolean): void {
+    this.finaleReversed = on;
+    writeStored(CONSOLE.storage.finaleReversed, on ? '1' : '0');
+  }
+
   /** Plan B: resume a round by hand on this laptop (a replacement one, or after a restart). */
   resume(point: ResumePoint): string | null {
     return this.act('resumeAt', resumeCommand(point));
@@ -294,7 +387,15 @@ export class ConsoleModel {
       this.pad = padAfterUnknown(sent.claim, rejection.detail, defaultClaimKind(this.show.state));
       return;
     }
-    this.toast('error', S.toast.rejected(commandText(rejection.cmd), reasonText(rejection.reason)), rejection.detail ?? null);
+    // The finalists the pad sent, refused (D168): back on the pad, privately, the refused number in red.
+    const finale = rejection.cmd === 'finale' ? finaleRefusal(rejection.reason, rejection.detail) : null;
+    if (finale && this.finaleSent?.reqId === rejection.reqId) {
+      this.finalePad = finalePadAfterRefusal(this.finaleSent.pad, finale);
+      this.finaleSent = null;
+      return;
+    }
+    const text = finale ? S.finale.refusal[finale.refusal] : reasonText(rejection.reason);
+    this.toast('error', S.toast.rejected(commandText(rejection.cmd), text), rejection.detail ?? null);
   }
 
   toast(tone: ToastTone, text: string, detail: string | null = null): void {

@@ -2,6 +2,7 @@
 // remote follows the screen's default action). The console draws that control as the primary one, and the
 // Wii's A sends exactly it, resolved at the moment of the press. Pure.
 //   - the claim pad, while it's open: «Comprovar» its numbers (nothing while it has none);
+//   - the finalists' pad, while it's open: «Començar final» (or «Afegir a la final») once it can send (D184);
 //   - the technical pause (Pausa): end it (the pause panel's button);
 //   - a Check (D107): the big button. «Destapa» reveals the next song (`checkNext` with the step it expects, so a
 //     press that comes twice reveals once), then the cue («Celebrem!», «Vàlid · següent» or «Fallada»), or the shared
@@ -11,6 +12,8 @@
 //   - round start: Barreja once the round is introduced, nothing while the Shuffle runs, then Següent;
 //   - the Desgraciat round with one card left standing: "Comprovar #57" (`claim` for the last card standing,
 //     ANIMATIONS.md › standing-last); the engine's auto-advance stops there;
+//   - the Desgraciat's finale: Següent while it goes on (D187: A never opens it), then «Celebrem!» (`finaleCue`) once
+//     one finalist is left, with no public Check (D166, D169);
 //   - a Line's Celebration: Següent (back to the round); a Bingo's or the last card standing's: the Interval;
 //   - the Interval: start the next round;
 //   - before the night and after it: nothing. Starting the night stays in the menu, on purpose: an A pressed
@@ -24,7 +27,7 @@ import { roundIntroArgs } from './show-data.ts';
 import { standingSummary } from './standing.ts';
 
 /** The console control that does it (each carries `data-default` when it's the one). */
-export type DefaultControl = 'next' | 'check' | 'claimPad' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause' | 'claimLast';
+export type DefaultControl = 'next' | 'check' | 'claimPad' | 'finalePad' | 'finaleCue' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause' | 'claimLast';
 
 export type DefaultCommand =
   | { cmd: 'next' }
@@ -34,7 +37,9 @@ export type DefaultCommand =
   | { cmd: 'interval' }
   | { cmd: 'roundIntro'; args: CommandFields['roundIntro'] }
   | { cmd: 'pause'; args: CommandFields['pause'] }
-  | { cmd: 'claim'; args: CommandFields['claim'] };
+  | { cmd: 'claim'; args: CommandFields['claim'] }
+  | { cmd: 'finale'; args: CommandFields['finale'] }
+  | { cmd: 'finaleCue' };
 
 export interface DefaultAction {
   control: DefaultControl;
@@ -54,15 +59,18 @@ export interface DefaultActionInput {
   can: (cmd: AnyCommandName) => boolean;
   /** The claim pad is open, with the claim its «Comprovar» would send (null: nothing to claim yet). */
   pad?: { claim: CommandFields['claim'] | null } | null;
+  /** The finalists' pad is open, with what its big button would send (null: not yet). */
+  finalePad?: { command: CommandFields['finale'] | null } | null;
 }
 
 const next = (input: DefaultActionInput): DefaultAction => ({ control: 'next', command: { cmd: 'next' }, enabled: input.nextEnabled });
 
 export function defaultAction(input: DefaultActionInput): DefaultAction | null {
-  const { state, flow, nowMs, plan, can, pad } = input;
+  const { state, flow, nowMs, plan, can, pad, finalePad } = input;
   if (!state) return null;
   // The pad covers the screen: A claims its numbers, never what's underneath (a Check's next reveal).
   if (pad) return pad.claim ? { control: 'claimPad', command: { cmd: 'claim', args: pad.claim }, enabled: can('claim') } : null;
+  if (finalePad) return finalePad.command ? { control: 'finalePad', command: { cmd: 'finale', args: finalePad.command }, enabled: can('finale') } : null;
   if (flow.pause) return { control: 'endPause', command: { cmd: 'pause', args: { on: false } }, enabled: can('pause') };
 
   switch (flow.scene) {
@@ -71,6 +79,8 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
       return press ? { control: 'check', command: press, enabled: can(press.cmd) } : null;
     }
     case 'play': {
+      // The finale has its winner: the cue starts the fanfare and the Celebration (Next is refused until then).
+      if (state.finale) return state.finale.winner && !state.finale.cued ? { control: 'finaleCue', command: { cmd: 'finaleCue' }, enabled: can('finaleCue') } : next(input);
       // The Desgraciat's end: the last card standing (a landing never takes out everyone left, D180).
       const last = lastStanding(state);
       if (last !== null) return { control: 'claimLast', command: { cmd: 'claim', args: { cardId: last, kind: 'standing' } }, enabled: can('claim') };
@@ -123,5 +133,9 @@ export function sendDefault(act: Act, action: DefaultAction | null): string | nu
       return act('pause', c.args);
     case 'claim':
       return act('claim', c.args);
+    case 'finale':
+      return act('finale', c.args);
+    case 'finaleCue':
+      return act('finaleCue');
   }
 }

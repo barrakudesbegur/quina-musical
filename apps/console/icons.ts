@@ -101,6 +101,9 @@ export const ICONS = {
   /** The Desgraciat round: a card still standing, and one that sat down (the Dempeus tab). */
   standing: ['M12 2.3a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z', 'M12 8v6.5', 'M12 14.5l-3 6.5', 'M12 14.5l3 6.5', 'M6.5 10.5L12 9l5.5 1.5'],
   seated: ['M10 2.3a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z', 'M10 8v6h6l1.5 6.5', 'M10 10.5l4.5 1.5', 'M5 12.5V21', 'M5 16.5h5'],
+  /** The finale's Dempeus tab: «Editar» (a pencil) and «Al revés» (two opposite arrows). */
+  edit: ['M4 20h4L19 9l-4-4L4 16z', 'M13.5 6.5l4 4'],
+  swap: ['M4 8h15', 'M16 5l3 3-3 3', 'M20 16H5', 'M8 13l-3 3 3 3'],
   remote: ['M9.5 2h5A2.5 2.5 0 0 1 17 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 19.5v-15A2.5 2.5 0 0 1 9.5 2z', 'M12 4.8v3M10.5 6.3h3', fill('M10.6 11a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0-2.8 0z'), 'M12 15.5v.01M12 18.5v.01'],
 } as const satisfies Record<string, readonly IconPath[]>;
 

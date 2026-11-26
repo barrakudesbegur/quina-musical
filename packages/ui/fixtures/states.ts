@@ -9,6 +9,7 @@ import {
   type CheckOutcome,
   type CheckStep,
   type ClaimInfo,
+  type FinaleInfo,
   type ClaimWarning,
   type IncomingEvent,
   type LandingInfo,
@@ -80,6 +81,8 @@ export const FIXTURE_SONGS: Record<number, [string, string]> = {
   59: ['Shin Chan Dance', 'SX3'],
   65: ["T'Estimo Molt", "Lax'n'Busto"],
   72: ['Viva La Vida', 'Coldplay'],
+  // The finale's «Salvats!» (FINALE_LANDED_SAVED).
+  36: ['La Playa', 'La Oreja de Van Gogh'],
 };
 
 const song = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ?? `Cançó ${songId}`, artist: FIXTURE_SONGS[songId]?.[1] ?? '' });
@@ -364,16 +367,33 @@ export const DESGRACIAT_STANDING_23 = DESGRACIAT_STANDING_26.filter((id) => ![90
 export const DESGRACIAT_LAST_CARD = { cardId: 57, songs: [5, 14, 64, 75, 15, 18, 60, 69, 2, 62, 16, 20] };
 /** #23, claimed after 12 landings: its songs in card order up to «Limbo» (row 2, 3rd song), which has landed. */
 export const DESGRACIAT_FALLEN_CARD = { cardId: 23, songs: [27, 47, 73, 75, 7, 17, 41], sankBy: 41 };
+/** The standing cards after some numbers of DESGRACIAT_LANDED (11 standing and fewer: the finale's are among them). */
+export const DESGRACIAT_STANDING_AFTER: Readonly<Record<number, readonly number[]>> = {
+  11: DESGRACIAT_STANDING_26,
+  12: DESGRACIAT_STANDING_23,
+  18: [22, 34, 51, 55, 56, 57, 72, 81, 99, 140, 184],
+  19: [34, 55, 56, 57, 72, 81, 99, 140, 184],
+  20: [34, 56, 57, 72, 81, 99, 140, 184],
+  21: [34, 56, 57, 72, 81],
+  22: [DESGRACIAT_LAST_CARD.cardId],
+};
 
 /**
  * Quina 5, the Desgraciat round, after `landed` songs of DESGRACIAT_LANDED (the newest at `lastAtMs`): the private
  * `standing` (its card list only from 60 down) and the Futur's `lastStandingAt` and `standingCurve`.
  */
 export function desgraciatState(now: number, landed: number, lastAtMs = now): FullState {
-  const s = baseState(now);
-  const ids = DESGRACIAT_LANDED.slice(0, landed);
   const count = DESGRACIAT_COUNTS[landed - 1] ?? 210;
-  const cardIds = count === 26 ? DESGRACIAT_STANDING_26 : count === 23 ? DESGRACIAT_STANDING_23 : count === 1 ? [DESGRACIAT_LAST_CARD.cardId] : null;
+  return desgraciatAfter(now, DESGRACIAT_LANDED.slice(0, landed), { count, cardIds: DESGRACIAT_STANDING_AFTER[landed] ?? null }, lastAtMs);
+}
+
+/** The Desgraciat round after the landings `ids` (the newest at `lastAtMs`), with `standing` cards left (their list
+ * when known). The Futur counts down to the last card standing of DESGRACIAT_LANDED. */
+function desgraciatAfter(now: number, ids: readonly number[], standing: { count: number; cardIds: readonly number[] | null }, lastAtMs: number): FullState {
+  const s = baseState(now);
+  const landed = ids.length;
+  const { count } = standing;
+  const cardIds = standing.cardIds ? [...standing.cardIds] : null;
   const last = ids[ids.length - 1];
   const lastStandingAt = DESGRACIAT_LANDED.length - 1;
   return withFlow(s, {
@@ -413,6 +433,98 @@ export function desgraciatState(now: number, landed: number, lastAtMs = now): Fu
 function standingCheckState(now: number, landed: number, specs: readonly PacedSpec[]): FullState {
   return pacedCheck(desgraciatState(now, landed, now - 30000), specs, DESGRACIAT_LANDED.slice(0, landed));
 }
+
+// ---- the Desgraciat's finale (D161, D166–D168, D180–D187) ---------------------------------------------
+// The eight cards standing after 20 landings come up on stage. «Love Story» (the 21st) takes out #99, #140 and #184;
+// «All I Want for Christmas Is You» (the 22nd) takes out #34, #56, #72 and #81, so #57 wins. The «Salvats!» story plays
+// «SUPERESTRELLA» 22nd instead (#34, #57 and #72 fall), then «La Playa», on the cards of both #56 and #81: it would take
+// them both, so it counts for neither (D180, D181). tests/ui/fixtures.test.ts checks every fall against cards.json.
+
+/** The finalists, entered in ascending order. */
+export const FINALE_FINALISTS = DESGRACIAT_STANDING_AFTER[20];
+/** The «Salvats!» story's landings. */
+export const FINALE_LANDED_SAVED = [...DESGRACIAT_LANDED.slice(0, 21), 60, 36];
+/** Who falls at which landing (Queue index), in each story. */
+export const FINALE_FALLS: Readonly<Record<'win' | 'saved', Readonly<Record<number, readonly number[]>>>> = {
+  win: { 20: [99, 140, 184], 21: [34, 56, 72, 81] },
+  saved: { 20: [99, 140, 184], 21: [34, 57, 72] },
+};
+
+/**
+ * The engine's `finale` after the landings `ids` (the newest at `lastAtMs`, 14 s apart): the falls of `story` up to the
+ * last landing, the one left standing as the winner.
+ */
+function finaleAfter(ids: readonly number[], story: 'win' | 'saved', lastAtMs: number, cued = false): FinaleInfo {
+  const atOf = (position: number) => lastAtMs - (ids.length - 1 - position) * 14000;
+  const fallen = Object.entries(FINALE_FALLS[story])
+    .map(([p, cards]) => [Number(p), cards] as const)
+    .filter(([p]) => p < ids.length)
+    .flatMap(([position, cards]) => cards.map((cardId) => ({ cardId, position, songId: ids[position], atMs: atOf(position) })));
+  const standing = FINALE_FINALISTS.filter((id) => !fallen.some((f) => f.cardId === id));
+  const lastFall = fallen.at(-1);
+  const winner = standing.length === 1 && lastFall ? { cardId: standing[0], position: lastFall.position, songId: lastFall.songId, atMs: lastFall.atMs } : null;
+  return { cardIds: [...FINALE_FINALISTS], standing, fallen, winner, cued };
+}
+
+/** The Desgraciat round with its finale on, after `landed` songs of DESGRACIAT_LANDED (the newest at `lastAtMs`). Auto-advance stops at a winner. */
+function finaleState(now: number, landed: number, lastAtMs = now - 4000): FullState {
+  const s = desgraciatState(now, landed, lastAtMs);
+  const finale = finaleAfter(DESGRACIAT_LANDED.slice(0, landed), 'win', lastAtMs);
+  return withFlow(s, { finale, autoAtMs: finale.winner ? null : s.autoAtMs });
+}
+
+/** The «Salvats!» story after `landed` of its songs (22 or 23). */
+function savedState(now: number, landed: number, lastAtMs = now - 4000): FullState {
+  const ids = FINALE_LANDED_SAVED.slice(0, landed);
+  const finale = finaleAfter(ids, 'saved', lastAtMs);
+  return withFlow(desgraciatAfter(now, ids, { count: finale.standing.length, cardIds: finale.standing }, lastAtMs), { finale });
+}
+
+/** A later snapshot in a live demo: `state` re-stamped at `atMs`. */
+const later = (state: FullState, seq: number, atMs: number): IncomingEvent => ({ ...state, seq, atMs });
+
+/** The finale's demos (`?demo=<name>`): the button growing, the stage, a fall, «Salvats!», the winner and the cue. */
+const FINALE_FIXTURES: Record<string, (now: number) => DemoScript> = {
+  /** 11 standing: «Final a l'escenari» has grown. */
+  desgraciatEleven: (now) => ({ state: desgraciatState(now, 18) }),
+  /** 9 standing: «Final a l'escenari» is the biggest button, ringed and recommended. */
+  desgraciatNine: (now) => ({ state: desgraciatState(now, 19) }),
+  /** The finale started: the eight standing after 20 songs are on stage; «+ Finalista» takes the claim slot. */
+  finale: (now) => ({ state: finaleState(now, 20) }),
+  /** On stage, 1.5 s in «Love Story» lands and #99, #140 and #184 fall, each at their place; at 6 s the next Spin starts
+   * and they leave. */
+  finaleFall: (now) => {
+    const landsAt = now + 1500;
+    const landed = finaleState(now, 21, landsAt);
+    const spin = withFlow(landed, { status: 'transition', autoAtMs: null, transition: { id: 'tr-22', recipe: 'R7', phase: 'final', to: 1, landAtMs: now + 12000 } });
+    return { state: finaleState(now, 20, now - 12500), events: [{ afterMs: 1500, event: later(landed, 2, landsAt) }, { afterMs: 6000, event: later(spin, 3, now + 6000) }] };
+  },
+  /** Just after that fall: the three fallen ninos faded at their places until the next Spin. */
+  finaleFallen: (now) => ({ state: finaleState(now, 21) }),
+  /** Two left, #56 and #81; 1.5 s in «La Playa» lands, on both their cards: «Salvats!». */
+  finaleSaved: (now) => {
+    const landsAt = now + 1500;
+    return { state: savedState(now, 22, now - 12500), events: [{ afterMs: 1500, event: later(savedState(now, 23, landsAt), 2, landsAt) }] };
+  },
+  /** Five on stage; 1.5 s in the 22nd song takes out four of them and #57 is the last one standing: «Celebrem!» waits. */
+  finaleWin: (now) => {
+    const landsAt = now + 1500;
+    return { state: finaleState(now, 21, now - 12500), events: [{ afterMs: 1500, event: later(finaleState(now, 22, landsAt), 2, landsAt) }] };
+  },
+  /** The presenters' cue: the Desgraciat Celebration, «QUINA POTRA!» on the projector (D186). */
+  finaleCelebration: (now) => {
+    const s = finaleState(now, 22, now - 60000);
+    return {
+      state: withFlow(s, {
+        scene: 'celebration',
+        status: 'playing',
+        finale: finaleAfter(DESGRACIAT_LANDED, 'win', now - 60000, true),
+        celebration: { kind: 'standing', round: 5, cardIds: [DESGRACIAT_LAST_CARD.cardId], winningSongId: 1, sinceMs: now - 1500, music: 'victory', parlem: false },
+        winners: [...s.winners, { round: 5, kind: 'standing', cardId: DESGRACIAT_LAST_CARD.cardId, claimId: 'cl-14', winningSongId: 1, position: s.queue.position, atMs: now - 1500, name: null, notes: null }],
+      }),
+    };
+  },
+};
 
 const FALLEN_CLAIM = { claimId: 'cl-12', cardId: DESGRACIAT_FALLEN_CARD.cardId };
 const LAST_CLAIM = { claimId: 'cl-13', cardId: DESGRACIAT_LAST_CARD.cardId };
@@ -720,6 +832,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     return { state: withFlow(s, { game: { ...s.game, volumes: { master: 92, songs: 100, songsParlem: 38, djFx: 110, padFx: 100, ticks: 70, check: 100, holdMusic: 100, win: 125, fail: 100, finalLap: 100, intros: 85, breaks: 100, pausa: 60, throws: 141, doors: 100, end: 100 } } }) };
   },
   ...DESGRACIAT_FIXTURES,
+  ...FINALE_FIXTURES,
 };
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES);

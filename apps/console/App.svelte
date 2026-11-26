@@ -3,7 +3,7 @@
   (console.css):
   - landscape: the header's three panels across the top; the scene's panels in a column on the left, the
     helpers' tabs filling the rest of it; the action cluster on the right. In a Check, the Check board takes
-    the whole body, and so does the claim pad while it's open;
+    the whole body, and so do the claim pad and the finalists' pad (the Desgraciat's finale) while they're open;
   - portrait (a phone): the header, then one scrolling column, and the cluster fixed at the bottom.
   Everything shown comes from the engine through the ConsoleModel; the root carries data-theme, data-scene
   and data-status hooks for themes, and data-wii while a Wii remote is connected (its badges show).
@@ -33,6 +33,7 @@
   import NextSong from './components/NextSong.svelte';
   import NowPlaying from './components/NowPlaying.svelte';
   import ClaimPad from './components/ClaimPad.svelte';
+  import FinalePad from './components/FinalePad.svelte';
   import PacePanel from './components/PacePanel.svelte';
   import PausePanel from './components/PausePanel.svelte';
   import RoundStartPanel from './components/RoundStartPanel.svelte';
@@ -64,7 +65,7 @@
   }
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
-  const board = $derived(model.pad ? 'pad' : snap !== null && flow.scene === 'check' ? 'check' : 'play');
+  const board = $derived(model.pad ? 'pad' : model.finalePad ? 'finalePad' : snap !== null && flow.scene === 'check' ? 'check' : 'play');
   const openPad = () => model.openPad();
   let menuOpen = $state(false);
   let wiiOpen = $state(false);
@@ -99,6 +100,10 @@
   {#if board === 'pad'}
     <main class="console__board">
       <ClaimPad />
+    </main>
+  {:else if board === 'finalePad'}
+    <main class="console__board">
+      <FinalePad />
     </main>
   {:else if board === 'check'}
     <main class="console__board">

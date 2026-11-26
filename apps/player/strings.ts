@@ -136,9 +136,9 @@ export const S = {
   checkValid: CA.checkValid,
   checkInvalid: CA.checkInvalid,
   shout: CA.shout,
-  /** The Celebration when the confirmed winner is one of the phone's own cards (never anyone else's number). */
-  /** The Desgraciat round has no title, the phone's own win included (the user, U6): its card, nino and confetti say it. */
-  yourWin: { line: 'La teva línia!', bingo: 'La teva quina!', standing: null } satisfies Record<PublicWinKind, string | null>,
+  /** The Celebration when the confirmed winner is one of the phone's own cards (never anyone else's number). The
+   * Desgraciat's says «Quina potra!» there only (D190); other phones get no title in that round (`shout`, U6). */
+  yourWin: { line: 'La teva línia!', bingo: 'La teva quina!', standing: CA.potra } satisfies Record<PublicWinKind, string | null>,
 
   // Pause, offline, reconnecting
   pause: CA.pause,

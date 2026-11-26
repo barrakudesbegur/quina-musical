@@ -9,6 +9,7 @@
     shrink away while the rest close up (hook standing-fall; at most 20 animate).
   - One left: its big gold-ringed number and "Comprovar #57", the default action (hook standing-last), which sends
     `claim {cardId, kind: 'standing'}`.
+  Once the finale is on (D187), the tab is its stage instead (FinaleStage.svelte).
 -->
 <script lang="ts">
   import { flip } from 'svelte/animate';
@@ -19,6 +20,7 @@
   import { songTitleOf } from '../logic/show-data.ts';
   import { standingChips, standingSummary } from '../logic/standing.ts';
   import { S } from '../strings.ts';
+  import FinaleStage from './FinaleStage.svelte';
   import Icon from './Icon.svelte';
   import WiiBadge from './WiiBadge.svelte';
 
@@ -57,6 +59,9 @@
   }
 </script>
 
+{#if snap?.finale}
+  <FinaleStage finale={snap.finale} />
+{:else}
 <section class="standing" data-testid="standing" data-private="true" aria-labelledby="{uid}-count">
   {#if !summary}
     <p class="note">{S.standing.noCards}</p>
@@ -115,3 +120,4 @@
     {/if}
   {/if}
 </section>
+{/if}

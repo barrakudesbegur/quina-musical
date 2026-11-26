@@ -1,6 +1,7 @@
 // In play: the drum owns the screen (its band is the top ~60 %, edge to edge). Under it, the current song's
 // big title, then the last 3 songs in one row. "Quina N" and the Heat garland stay small at the edges.
-// No QR or URL here. A song is named only from its landing time (`visibleSongs`).
+// No QR or URL here. A song is named only from its landing time (`visibleSongs`). In the Desgraciat's finale the drum's
+// band is smaller and the last-3 row gives way to the finalists' stage (render/finale.ts).
 import { STAGE } from '../config.ts';
 import type { GarlandLook } from '../model/garland.ts';
 import type { AnimDetail } from '../model/moments.ts';
@@ -10,6 +11,7 @@ import { STAGE_TEXT } from '../strings.ts';
 import type { PlayView, StageView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { Garland } from './garland.ts';
+import { FinaleStage } from './finale.ts';
 import { RoundTitle, SongTile } from './parts.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
@@ -23,6 +25,7 @@ export class PlayScene implements SceneRenderer<PlayView> {
   private readonly suspense: HTMLElement;
   private readonly recent: HTMLElement;
   private readonly tiles: SongTile[];
+  private readonly finale: FinaleStage;
   /** The drum's band (test hook `drum`, with the landed song's id). */
   private band!: HTMLElement;
   private songs: StageSong[] = [];
@@ -41,13 +44,16 @@ export class PlayScene implements SceneRenderer<PlayView> {
     this.recent = h('ol', 'play__recent', ...this.tiles.map((t) => t.root));
     const band = h('div', { class: 'play__band', data: { testid: 'drum', landedId: '' } }, this.now, this.suspense);
     this.band = band;
-    this.root.append(this.garland.root, this.round.root, band, this.recent);
+    this.finale = new FinaleStage(env);
+    this.root.append(this.finale.root, this.garland.root, this.round.root, band, this.recent);
   }
 
   render(body: PlayView, view: StageView): void {
     this.body = body;
     this.songs = view.songs;
     this.round.set(body.round);
+    setData(this.root, 'finale', body.finale ? 'on' : null);
+    this.finale.render(body.finale);
   }
 
   tick(nowMs: number): void {
@@ -63,6 +69,7 @@ export class PlayScene implements SceneRenderer<PlayView> {
       this.tiles.forEach((tile, i) => tile.set(visible[i] ?? null));
     }
     this.setMotion(motionAt(this.body?.motion ?? null, nowMs), nowMs);
+    this.finale.tick(nowMs);
   }
 
   /** `spin` dims the title; `suspense` swaps it for a breathing "?"; idle brings it back. */
@@ -96,6 +103,8 @@ export class PlayScene implements SceneRenderer<PlayView> {
       playAnim(this.recent, 'landing');
     } else if (detail.name === 'heat') {
       playAnim(this.garland.root, 'heat');
+    } else {
+      this.finale.onAnim(detail);
     }
   }
 }

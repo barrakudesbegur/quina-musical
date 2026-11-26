@@ -34,7 +34,9 @@ function paced(revealed: number, patch: { cue?: 'pass' | 'fail'; reviewing?: boo
 
 test('the hook names are exactly the ANIMATIONS.md projector hooks', () => {
   assert.deepEqual([...ANIM_NAMES].sort(), [
-    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-review', 'check-step', 'check-type', 'check-unreveal', 'credits', 'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'sponsor-pages', 'suspense',
+    'celebrate', 'check-enter', 'check-fallen', 'check-result', 'check-review', 'check-step', 'check-type', 'check-unreveal', 'credits',
+    'finale-back', 'finale-clear', 'finale-enter', 'finale-fall', 'finale-safe', 'finale-win',
+    'heat', 'idle', 'interval-rotate', 'landing', 'link-lost', 'pause', 'scene-enter', 'shuffle', 'spin', 'sponsor-pages', 'suspense',
   ]);
 });
 

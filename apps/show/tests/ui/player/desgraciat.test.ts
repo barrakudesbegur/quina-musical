@@ -7,6 +7,7 @@ import { PROTOCOL_VERSION, type ShowState } from '@quina/protocol';
 import { baseState } from '../../../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { publicPlan } from '../../../../../packages/ui/plan.ts';
+import { CA } from '../../../../../packages/ui/i18n/ca.ts';
 import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
 import { PublicProjector } from '../../../../player/feed/project.ts';
 import { emptyPublicState, type PublicRound, type PublicState } from '../../../../player/feed/public.ts';
@@ -179,15 +180,17 @@ test('Premis: the Desgraciat round has one bundle, the last card standing\'s, an
   assert.equal(S.prize.standing, "Premi de l'últim dempeus");
 });
 
-test("the Celebration for the last card standing: no title (U6), the phone's own card, never a number", () => {
+test("the Celebration for the last card standing: «Quina potra!» on the winner's phone only (D190), never a number", () => {
   const winners = [{ round: 3, kind: 'standing' as const, cardIds: [4242] }];
   const others = celebrationOf(state({ scene: 'celebration', winners }), [123, 57]);
   assert.deepEqual(others, { key: 'celebration:3:standing', kind: 'standing', round: 3, ownCardIds: [] });
   assert.ok(!JSON.stringify(others).includes('4242'));
   const mine = celebrationOf(state({ scene: 'celebration', winners: [{ round: 3, kind: 'standing', cardIds: [57] }] }), [123, 57]);
   assert.deepEqual(mine?.ownCardIds, [57]);
-  assert.equal(S.shout.standing, null, 'no word shouted in the Desgraciat round');
-  assert.equal(S.yourWin.standing, null, "not even on the winner's phone");
+  assert.equal(S.shout.standing, null, "no word shouted on the other phones (U6)");
+  // The component titles it `own ? yourWin : shout`: the winner's own phone says what the projector says (D186, D190).
+  assert.equal(S.yourWin.standing, 'Quina potra!', "the winner's own phone");
+  assert.equal(S.yourWin.standing, CA.potra);
 });
 
 test('the round is "Quina Desgraciada" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {

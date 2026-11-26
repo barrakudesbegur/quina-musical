@@ -17,6 +17,7 @@ export const RING_STATES = [
   'manual',
   'manualFinal',
   'lastStanding',
+  'finaleWinner',
   'talk',
   'stay',
   'checking',
@@ -32,6 +33,7 @@ export const RING_STATES = [
  *   phase stops auto-advance;
  * - lastStanding: a Desgraciat round with one card left standing. Auto-advance never takes it out, and the
  *   presenters' next step is to check that card (the Dempeus tab's "Comprovar #N", the default action), not Següent;
+ * - finaleWinner: the Desgraciat's finale has its winner (D180): no more songs land until the presenters' «Celebrem!»;
  * - talk (Parlem: ducked) and stay (Aguanta: full volume): a Hold;
  * - checking: a Claim is being checked; checkFailed: the last Check found no valid card, error music until Resume;
  * - paused: the technical pause;
@@ -90,8 +92,10 @@ export function nowRing({ state, flow, nowMs, lastSec }: RingInput): RingView {
   if (state.suspense) return { ...base, state: 'suspense', badge, countdown: suspenseCountdown(state, nowMs) };
   if (state.status === 'transition') return { ...base, state: 'spinning', badge, countdown: landingCountdown(state, nowMs) };
 
+  // The finale's winner waits for the cue, like the default action; while the finale is on, its finalists decide.
+  if (state.finale?.winner && !state.finale.cued) return { ...base, state: 'finaleWinner', badge: 'final', cardId: state.finale.winner.cardId };
   // The Desgraciat's last card standing: the ring points at the Check, like the default action does.
-  if (state.round.kind === 'desgraciat' && state.standing?.count === 1) return { ...base, state: 'lastStanding', badge: 'final', cardId: state.standing.cardIds?.[0] ?? null };
+  if (state.round.kind === 'desgraciat' && !state.finale && state.standing?.count === 1) return { ...base, state: 'lastStanding', badge: 'final', cardId: state.standing.cardIds?.[0] ?? null };
 
   const why = autoAdvanceStatus(state);
   if (why === 'running') {

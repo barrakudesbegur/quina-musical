@@ -11,6 +11,7 @@ import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
 import type { ChartGap } from './logic/future.ts';
 import type { VolumeGroup } from './logic/volumes.ts';
+import type { FinalePadMode, FinaleRefusal, FinaleSize, FinaleTabView, FinaleVerdict } from './logic/finale.ts';
 import { STANDING_LIST_MAX } from '@quina/protocol';
 import type { ConsoleCommand, Theme } from './config.ts';
 import type { WiiStatus } from './wii/controller.svelte.ts';
@@ -234,6 +235,69 @@ export const S = {
     lastNote: (id: number) => `Pregunteu qui té el #${id}. Si ningú el té, decidiu vosaltres.`,
     none: 'No en queda cap dempeus: decidiu vosaltres com acaba la quina.',
     noCards: "No hi ha cartrons en joc registrats: no es pot comptar qui queda dempeus.",
+  },
+
+  /** The Desgraciat's finale on stage (D161, D166–D168, D180–D187; the Consola-Desgraciat-Final board). */
+  finale: {
+    /** The claim slot in the Desgraciat round (D167): it opens the finalists' pad. */
+    start: "Final a l'escenari",
+    startNote: { normal: 'quan en quedin 5–10', medium: (n: number) => `en queden ${n}`, large: (n: number) => `en queden ${n}: pugeu-los` } satisfies Record<FinaleSize, unknown>,
+    recommended: 'Recomanat',
+    /** The claim slot once the finale is on: one finalist more («+ Finalista», D187). */
+    add: 'Finalista',
+    addNote: "un número més, si n'hi falta",
+    /** The finalists' pad. */
+    padLabel: 'Entrar els finalistes',
+    padTitle: "Finalistes a l'escenari",
+    padHint: 'el número de cada cartró, en pujar',
+    display: 'Número de cartró',
+    enter: 'Entra el número',
+    close: 'Torna a la quina',
+    closeNote: { start: 'tanca el teclat; la final no comença', add: 'tanca el teclat; no afegeix ningú' } satisfies Record<FinalePadMode, string>,
+    begin: 'Començar final',
+    /** The pad's big button during the finale: the new finalists join it. */
+    join: 'Afegir a la final',
+    count: (n: number) => (n === 1 ? '1 finalista' : `${n} finalistes`),
+    needMore: (min: number) => `Calen com a mínim ${min} finalistes`,
+    full: (max: number) => `Com a màxim ${max} finalistes`,
+    chip: (id: number) => `#${id}`,
+    removeChip: (id: number) => `Treu el #${id}`,
+    card: (id: number) => `Cartró #${id}`,
+    legend: '✓ no ha sonat · ✗ ha sonat',
+    noCard: 'Sense el cartró a la tauleta: el portàtil el comprova en començar.',
+    verdict: {
+      standing: 'Dempeus: cap de les 12 ha sonat. Afegit.',
+      unchecked: 'Afegit. El portàtil el comprova.',
+      duplicate: 'Ja és a la final.',
+    } satisfies Partial<Record<FinaleVerdict, string>>,
+    /** A number that isn't added, in private, and why (D168). */
+    refusal: {
+      fallen: 'Ja ha caigut',
+      unknown: 'Aquest número no existeix',
+      notThisRound: "No és d'aquesta quina",
+      comeBack: 'Un caigut no torna a dempeus: només «Enrere»',
+    } satisfies Record<FinaleRefusal, string>,
+    /** The Dempeus tab as the stage. */
+    word: { onStage: "a l'escenari", standing: 'dempeus' } satisfies Record<FinaleTabView['word'], string>,
+    countLabel: (n: number, word: string) => `${n} ${word}`,
+    row: 'Els finalistes, en ordre',
+    edit: 'Editar',
+    addOne: 'Afegir',
+    reversed: 'Al revés',
+    remove: (id: number) => `Treu el #${id} de la final`,
+    fallen: (id: number) => `#${id} ha caigut`,
+    winner: (id: number) => `#${id} guanya`,
+    saved: 'Salvats!',
+    savedLabel: 'Salvats! La cançó és a tots els cartrons que queden: no compta per a ningú.',
+    /** One left: the big button is the cue (D169: the fanfare waits for it). */
+    celebrate: 'Celebrem!',
+    celebrateNote: (id: number) => `el #${id} guanya · prem quan acabeu de parlar`,
+    /** Enrere's note while the last landing's fallen are shown: it undoes the whole landing (D183). */
+    backNote: 'els torna a dempeus',
+    /** The ring and the next-song panel once the finale has its winner. */
+    ringWinner: (id: number) => `Últim dempeus · #${id}`,
+    ringLabel: 'La final té guanyador: no aterra cap més cançó fins que premeu «Celebrem!»',
+    nextDone: "Ja no n'aterra cap: la final s'ha acabat.",
   },
 
   hold: {
@@ -764,6 +828,8 @@ export const S = {
     storm: 'Tempesta',
     resumeAt: 'Recuperar el show',
     revealPrizes: 'Revelar premis',
+    finale: 'Finalistes',
+    finaleCue: 'Celebrem!',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 

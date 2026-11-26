@@ -34,16 +34,18 @@
       case 'talk':
       case 'stay':
         return L.held;
+      case 'finaleWinner':
+        return S.finale.ringLabel;
       default:
         return L[view.state];
     }
   });
   const BADGE_ICON: Record<NonNullable<RingBadge>, IconName> = { auto: 'auto', autoOff: 'autoOff', final: 'flag', talk: 'hold', stay: 'stay', held: 'pause' };
   const counting = $derived(view.state === 'auto' || view.state === 'autoLast' || view.state === 'suspense');
-  const disc = $derived(view.state === 'manual' || view.state === 'manualFinal' || view.state === 'lastStanding' || view.state === 'checking' || view.state === 'checkFailed');
+  const disc = $derived(view.state === 'manual' || view.state === 'manualFinal' || view.state === 'lastStanding' || view.state === 'finaleWinner' || view.state === 'checking' || view.state === 'checkFailed');
   const paused = $derived(view.state === 'talk' || view.state === 'stay' || view.state === 'paused');
   const anim = $derived(
-    ['countdown-ring', view.state === 'spinning' ? 'ring-spin' : null, view.state === 'autoLast' ? 'ring-last' : null, disc && (view.state.startsWith('manual') || view.state === 'lastStanding') ? 'ring-manual' : null]
+    ['countdown-ring', view.state === 'spinning' ? 'ring-spin' : null, view.state === 'autoLast' ? 'ring-last' : null, disc && (view.state.startsWith('manual') || view.state === 'lastStanding' || view.state === 'finaleWinner') ? 'ring-manual' : null]
       .filter(Boolean)
       .join(' '),
   );
@@ -96,6 +98,8 @@
         <span class="now-ring__pulse"><Icon name="next" outline /></span>
       {:else if view.state === 'lastStanding'}
         <span class="now-ring__pulse"><Icon name="claim" outline /></span>
+      {:else if view.state === 'finaleWinner'}
+        <span class="now-ring__pulse"><Icon name="star" outline /></span>
       {:else if view.state === 'checking'}
         <Icon name="claim" outline />
       {:else if view.state === 'checkFailed'}

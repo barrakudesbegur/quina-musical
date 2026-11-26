@@ -118,6 +118,9 @@ class Stage {
   private moments: Moments | null = null;
   private linkDownSinceMs: number | null = null;
   private lastHeatPaint = Number.NEGATIVE_INFINITY;
+  /** The drum's band in the box: smaller and higher during the Desgraciat's finale (`finale-enter`). */
+  private band: { readonly top: number; readonly height: number } = STAGE.drumBand;
+  private bandTimer: ReturnType<typeof setTimeout> | null = null;
   private leaveMs = 480;
   private frame = 0;
   private destroyed = false;
@@ -157,6 +160,7 @@ class Stage {
     setVar(root, '--box-h', `${STAGE.box.height}px`);
     setVar(root, '--band-top-ref', `${STAGE.drumBand.top}px`);
     setVar(root, '--band-h-ref', `${STAGE.drumBand.height}px`);
+    setVar(root, '--finale-band-end-ref', `${STAGE.finale.band.top + STAGE.finale.band.height}px`);
 
     this.view = this.computeView();
     this.cleanups.push(
@@ -287,6 +291,7 @@ class Stage {
     }
     setData(this.root, 'scene', body.scene);
     setData(this.root, 'paused', this.view.paused ? 'true' : null);
+    this.setBand(body.scene === 'play' && body.finale ? STAGE.finale.band : STAGE.drumBand);
     if (this.view.paused) this.enter(this.pause);
     else if (!this.pause.hidden) this.leave(this.pause, () => !this.view.paused);
     this.step();
@@ -378,12 +383,22 @@ class Stage {
     this.root.dispatchEvent(new CustomEvent<AnimDetail>(ANIM_EVENT, { detail, bubbles: true }));
   }
 
+  /** The finale shrinks the drum's band and back: it glides (`is-band-moving`, 500 ms), then the layout is plain again. */
+  private setBand(band: { readonly top: number; readonly height: number }): void {
+    if (band === this.band) return;
+    this.band = band;
+    this.root.classList.add('is-band-moving');
+    if (this.bandTimer) clearTimeout(this.bandTimer);
+    this.bandTimer = setTimeout(() => this.root.classList.remove('is-band-moving'), 600);
+    this.layout();
+  }
+
   /** Fit the box to the screen and stretch the drum band across it. */
   private layout(): void {
     const width = this.root.clientWidth;
     const height = this.root.clientHeight;
     const fit = fitBox(width, height, STAGE.box.width, STAGE.box.height);
-    const band = bandOnScreen(fit, STAGE.drumBand);
+    const band = bandOnScreen(fit, this.band);
     setVar(this.root, '--box-x', `${fit.x}px`);
     setVar(this.root, '--box-y', `${fit.y}px`);
     setVar(this.root, '--box-scale', String(fit.scale));
@@ -401,6 +416,7 @@ class Stage {
     if (this.destroyed) return;
     this.destroyed = true;
     cancelAnimationFrame(this.frame);
+    if (this.bandTimer) clearTimeout(this.bandTimer);
     for (const off of this.cleanups.splice(0)) off();
     this.source.dispose();
     this.root.replaceChildren();

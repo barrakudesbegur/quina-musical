@@ -12,6 +12,18 @@
  * 1440×1080 box with the scenes · the link dot. JS sets --box-x/-y/-scale and --band-top/-h (screen px).
  */
 
+/* The drum's band (screen px, set by JS) glides when the Desgraciat's finale shrinks it (`finale-enter`). */
+@property --band-top {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+@property --band-h {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 @property --heat-warm {
   syntax: '<number>';
   inherits: true;
@@ -123,6 +135,30 @@
   --stage-dur-sway: 8s;
   --stage-dur-pause: 300ms;
   --stage-dur-link: 200ms;
+  /* The Desgraciat's finale on stage (board Projector-Desgraciat-Final; 1440 px reference sizes) */
+  --stage-finale-floor: 900px; /* the stage's floor line, across the box */
+  --stage-finale-nino: 13.75rem;
+  --stage-finale-plate: 3.875rem;
+  --stage-finale-win: 1.14; /* the winner steps forward: a 250 px party nino and a 76 px plate */
+  --stage-finale-floor-top: #323c86;
+  --stage-finale-floor-bottom: #151b48;
+  --stage-finale-light: rgb(255 240 200 / 0.24);
+  --stage-finale-saved: var(--color-live);
+  --stage-finale-saved-edge: #1e9e55;
+  --stage-dur-finale-band: 500ms;
+  --stage-dur-finale-pop: 400ms;
+  --stage-finale-pop-stagger: 120ms;
+  --stage-dur-finale-room: 250ms;
+  --stage-dur-finale-fade: 350ms;
+  --stage-dur-finale-cone: 200ms;
+  --stage-dur-finale-leave: 600ms;
+  --stage-dur-finale-close: 450ms;
+  --stage-dur-finale-back: 300ms;
+  --stage-dur-finale-hops: 600ms;
+  --stage-dur-finale-ribbon: 1.8s; /* in 120 ms, 1.5 s on screen, out 300 ms */
+  --stage-dur-finale-light: 3.1s;
+  --stage-dur-finale-beams: 3.7s;
+  --stage-dur-finale-win: 600ms;
   /* Reduced-motion fades (they stay when motion is reduced) */
   --stage-dur-reduced-fade: 2s;
 
@@ -245,6 +281,13 @@
   height: var(--box-h, 1080px);
   transform-origin: 0 0;
   transform: translate(var(--box-x), var(--box-y)) scale(var(--box-scale));
+}
+
+/* `finale-enter`: the band glides to its finale size and back (the show page's drum follows --stage-band-*). */
+.stage-root.is-band-moving {
+  transition:
+    --band-top var(--stage-dur-finale-band) var(--ease-out),
+    --band-h var(--stage-dur-finale-band) var(--ease-out);
 }
 
 /* `link-lost`: a small dot in the corner, red after 3 s without the relay. The scene stays. */
@@ -1234,6 +1277,503 @@
   opacity: 0;
 }
 
+/* ---------------------------------------------------------------------- the Desgraciat's finale on stage */
+/* The drum's band is smaller and higher (STAGE.finale.band); the title sits under it, and the stage replaces the
+   last-3 row: a floor, one nino per finalist with its cone and plate, ascending (ANIMATIONS.md › The finale on stage). */
+.scene--play[data-finale] {
+  grid-template-rows: var(--finale-band-end-ref) auto 1fr;
+}
+
+.scene--play[data-finale] .play__recent {
+  display: none;
+}
+
+.scene--play[data-finale] .play__title {
+  font-size: 5.25rem;
+  text-transform: uppercase;
+}
+
+.scene--play[data-finale] .play__artist {
+  font-size: 2.5rem;
+  font-weight: var(--font-weight-strong);
+  color: var(--color-accent);
+}
+
+.finale {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.finale__floor {
+  position: absolute;
+  inset: var(--stage-finale-floor) -40px -40px;
+  background: linear-gradient(var(--stage-finale-floor-top), var(--stage-finale-floor-bottom) 70%);
+  border-top: 0.375rem solid var(--color-line);
+  box-shadow: inset 0 0.4375rem 0 color-mix(in srgb, var(--color-accent) 45%, transparent);
+  animation: stage-finale-floor var(--stage-dur-finale-band) var(--ease-out);
+}
+
+.finale__row {
+  position: absolute;
+  inset: 0;
+  --s: 1;
+}
+
+/* A slot sits at its place on the floor line; its body scales with how few stand (D184). */
+.finale__slot {
+  position: absolute;
+  left: 0;
+  top: var(--stage-finale-floor);
+  width: 0;
+  height: 0;
+  transform: translateX(var(--x));
+  transition: transform var(--stage-dur-finale-room) var(--ease-out);
+}
+
+.finale__body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+  transition: transform var(--stage-dur-finale-room) var(--ease-out);
+}
+
+/* `finale-clear`: the fallen leave first, then the rest close up and grow. */
+.finale__row[data-shift='clear'] :is(.finale__slot, .finale__body) {
+  transition: transform var(--stage-dur-finale-close) var(--ease-out) var(--stage-dur-finale-leave);
+}
+
+.finale__slot.is-leaving {
+  opacity: 0;
+  transform: translateX(var(--x)) translateY(22px) scale(0.86);
+  transition:
+    opacity var(--stage-dur-finale-leave) var(--stage-ease-in-out),
+    transform var(--stage-dur-finale-leave) var(--stage-ease-in-out);
+}
+
+.finale__cone {
+  position: absolute;
+  left: calc(-171px * var(--s));
+  top: -430px;
+  width: calc(342px * var(--s));
+  height: 460px;
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  background: linear-gradient(to bottom, transparent, var(--stage-finale-light));
+  transition: opacity var(--stage-dur-finale-cone) linear;
+}
+
+.finale__pool {
+  position: absolute;
+  left: -110px;
+  top: -18px;
+  width: 220px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 240 200 / 0.45), transparent);
+  transition: opacity var(--stage-dur-finale-cone) linear;
+}
+
+.finale__hop {
+  position: absolute;
+  left: -95px;
+  bottom: -8px;
+  width: 190px;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 8px 0 color-mix(in srgb, var(--color-shadow) 55%, transparent));
+  --tilt: 7deg;
+}
+
+.finale__slot:nth-child(even) .finale__hop {
+  --tilt: -7deg;
+}
+
+.stage-root .finale__nino {
+  height: var(--stage-finale-nino);
+  width: auto;
+  max-width: none;
+  filter: hue-rotate(var(--hue, 0deg));
+  transition:
+    opacity var(--stage-dur-finale-fade) var(--ease-out),
+    filter var(--stage-dur-finale-fade) var(--ease-out);
+}
+
+.finale__label {
+  position: absolute;
+  left: -95px;
+  top: 26px;
+  width: 190px;
+  display: flex;
+  justify-content: center;
+}
+
+.stage-root .finale__plate {
+  padding: 0 18px 6px;
+  border: 0.3125rem solid var(--color-line);
+  border-radius: 1.125rem;
+  background: var(--color-paper);
+  box-shadow: 0 0.4375rem 0 var(--color-shadow);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--stage-finale-plate);
+  line-height: 1.05;
+  color: var(--color-line);
+  white-space: nowrap;
+  transition:
+    background var(--stage-dur-finale-cone) linear,
+    color var(--stage-dur-finale-cone) linear;
+}
+
+/* The ✗ over a fallen finalist's plate: a red cross with an ink outline, tilted like every stamp. */
+.finale__cross {
+  position: absolute;
+  left: 50%;
+  top: -74px;
+  width: 58px;
+  height: 58px;
+  margin-left: 18px;
+  rotate: -12deg;
+  display: none;
+  filter: drop-shadow(0 4px 0 color-mix(in srgb, var(--color-shadow) 50%, transparent));
+}
+
+.finale__cross::before,
+.finale__cross::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 21px;
+  width: 54px;
+  height: 16px;
+  border: 0.25rem solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  rotate: 45deg;
+}
+
+.finale__cross::after {
+  rotate: -45deg;
+}
+
+/* `finale-fall`: faded at its place (D182), its cone out, a red plate and the ✗; nobody moves until the next Spin. */
+.finale__slot[data-fate='down'] .finale__nino {
+  opacity: 0.45;
+  filter: hue-rotate(var(--hue, 0deg)) saturate(0.25);
+}
+
+.finale__slot[data-fate='down'] :is(.finale__cone, .finale__pool) {
+  opacity: 0;
+}
+
+.stage-root .finale__slot[data-fate='down'] .finale__plate {
+  background: var(--color-danger);
+  color: var(--color-paper);
+  -webkit-text-stroke: 0.375rem var(--color-line);
+  paint-order: stroke fill;
+}
+
+.finale__slot[data-fate='down'] .finale__cross {
+  display: block;
+}
+
+.finale__slot[data-anim='finale-fall'] .finale__cross {
+  animation: stage-finale-stamp var(--stage-dur-stamp) var(--ease-bounce);
+}
+
+/* `finale-win`: the party nino steps forward, its plate and cone gold, gold rays turning behind. */
+.finale__rays {
+  position: absolute;
+  left: -494px;
+  top: -656px;
+  width: 988px;
+  height: 988px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--color-accent) 26%, transparent) 0deg 8deg, transparent 8deg 16deg);
+  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
+  display: none;
+  animation: stage-finale-turn var(--stage-dur-rays) linear infinite;
+}
+
+.finale__slot[data-fate='win'] .finale__rays {
+  display: block;
+}
+
+.finale__slot[data-fate='win'] .finale__cone {
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-accent) 50%, transparent));
+}
+
+.finale__slot[data-fate='win'] .finale__pool {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 80%, transparent), transparent);
+}
+
+.stage-root .finale__slot[data-fate='win'] .finale__nino {
+  height: calc(var(--stage-finale-nino) * var(--stage-finale-win));
+  filter: none;
+}
+
+.stage-root .finale__slot[data-fate='win'] .finale__plate {
+  background: var(--color-accent);
+  box-shadow:
+    inset 0 -0.5rem 0 var(--color-accent-edge),
+    0 0.4375rem 0 var(--color-shadow);
+  font-size: calc(var(--stage-finale-plate) * 1.23);
+}
+
+.finale__slot[data-anim='finale-win'] .finale__hop {
+  animation: stage-finale-win var(--stage-dur-finale-win) var(--ease-bounce);
+}
+
+/* `finale-enter`: each nino pops in at its place with its cone, in order. */
+.finale__slot[data-anim='finale-enter'] :is(.finale__hop, .finale__label, .finale__cone) {
+  animation: stage-finale-pop var(--stage-dur-finale-pop) var(--ease-bounce) both;
+  animation-delay: calc(var(--enter-i, 0) * var(--stage-finale-pop-stagger));
+}
+
+/* `finale-back`: Enrere gives the fallen their colour back (the fates' own transitions), with a small pop. */
+.finale__slot[data-anim='finale-back'] .finale__label {
+  animation: stage-finale-pop var(--stage-dur-finale-back) var(--ease-out);
+}
+
+/* `finale-safe`: «Salvats!» (D181). Two jumps, the ribbon, the light born from it, the phones' two spotlights. */
+.finale__light,
+.finale__beams,
+.finale__ribbon {
+  position: absolute;
+  opacity: 0;
+}
+
+.finale__light,
+.finale__beams {
+  inset: 0;
+}
+
+.finale__light-rays {
+  position: absolute;
+  left: -280px;
+  top: -397px;
+  width: 2000px;
+  height: 2000px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--stage-finale-saved) 24%, transparent) 0deg 8deg, transparent 8deg 16deg);
+  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
+}
+
+.finale__glow {
+  position: absolute;
+  left: 230px;
+  top: 113px;
+  width: 980px;
+  height: 980px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 246 200 / 0.42), color-mix(in srgb, var(--stage-finale-saved) 26%, transparent) 45%, transparent);
+}
+
+.finale__beams {
+  transform-origin: 50% 0;
+}
+
+/* The phones' `your-song` spotlights (apps/player/player.css): a gradient clipped to a cone, swept by transform. */
+.finale__beam {
+  position: absolute;
+  top: -5%;
+  width: 36%;
+  height: 110%;
+  transform-origin: 50% 0;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 80%);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+}
+
+.finale__beam--left {
+  left: 5%;
+}
+
+.finale__beam--right {
+  left: 59%;
+}
+
+.finale__ribbon {
+  left: 0;
+  right: 0;
+  top: 558px;
+  display: flex;
+  justify-content: center;
+}
+
+.stage-root .finale__ribbon-text {
+  padding: 2px 26px 9px;
+  border: 0.3125rem solid var(--color-line);
+  border-radius: 1.375rem;
+  background: var(--stage-finale-saved);
+  box-shadow:
+    inset 0 -0.5rem 0 var(--stage-finale-saved-edge),
+    0 0.4375rem 0 var(--color-shadow);
+  rotate: -3deg;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: 3.75rem;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 0.4375rem var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 0.3125rem 0 var(--color-line);
+}
+
+.finale__confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.finale[data-anim='finale-safe'] .finale__hop {
+  animation: stage-finale-hops var(--stage-dur-finale-hops) ease-in-out;
+}
+
+.finale[data-anim='finale-safe'] .finale__ribbon {
+  animation: stage-finale-ribbon var(--stage-dur-finale-ribbon) linear;
+}
+
+.finale[data-anim='finale-safe'] .finale__light {
+  animation: stage-finale-light var(--stage-dur-finale-light) ease-out;
+}
+
+.finale[data-anim='finale-safe'] .finale__light-rays {
+  animation: stage-finale-turn 44s linear;
+}
+
+.finale[data-anim='finale-safe'] .finale__beams {
+  animation: stage-finale-beams var(--stage-dur-finale-beams) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.finale[data-anim='finale-safe'] .finale__beam--left {
+  animation: stage-finale-sweep 3.4s ease-in-out infinite;
+}
+
+.finale[data-anim='finale-safe'] .finale__beam--right {
+  animation: stage-finale-sweep 2.8s ease-in-out infinite reverse;
+}
+
+@keyframes stage-finale-floor {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes stage-finale-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes stage-finale-stamp {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+}
+
+@keyframes stage-finale-win {
+  from {
+    transform: translateY(24px) scale(0.85);
+  }
+}
+
+@keyframes stage-finale-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes stage-finale-hops {
+  0%,
+  50%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateY(-46px) rotate(var(--tilt));
+  }
+  75% {
+    transform: translateY(-34px) rotate(calc(var(--tilt) * -1));
+  }
+}
+
+@keyframes stage-finale-ribbon {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  6.7% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  11%,
+  83% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes stage-finale-light {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  74% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes stage-finale-beams {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.15);
+  }
+  19.5%,
+  78% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes stage-finale-sweep {
+  0%,
+  100% {
+    transform: rotate(-24deg);
+  }
+  50% {
+    transform: rotate(24deg);
+  }
+}
+
+/* Reduced motion: the ribbon stays still for 1.5 s; no jumps, light, spotlights or confetti (ANIMATIONS.md). */
+@keyframes stage-finale-ribbon-still {
+  0%,
+  83% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* ------------------------------------------------------------------------------------------- check */
 /* The Check: a compact plate "CARTRÓ #57" and the card-type badge over the card, whose covers float on the
    night background with their titles, with no box behind them. The result sits where it hides nothing that
@@ -2053,17 +2593,117 @@
   background: var(--color-accent);
 }
 
-/* The Desgraciat round's last card standing: no title (the user, U6), and the hands-up nino at the bottom left. */
+/* The Desgraciat round's last one standing: «QUINA POTRA!» (D186; board Projector-Desgraciat-Dempeus), green and
+   tilted, the orange «Quina Desgraciada» plate under it, the prize on paper, green rays and three ninos around it. */
+.celebration[data-kind='standing'] {
+  display: block;
+}
+
 .celebration[data-kind='standing'] .shout {
+  position: absolute;
+  inset-inline: 0;
+  top: 130px;
+  font-size: 10.625rem;
   color: var(--stage-standing);
+  -webkit-text-stroke: 0.875rem var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 0.75rem 0 var(--color-line);
+  white-space: nowrap;
+  rotate: -5deg;
+}
+
+.celebration__round {
+  position: absolute;
+  left: 50%;
+  top: 420px;
+  translate: -50% 0;
+  rotate: 2deg;
+  padding: 8px 40px 16px;
+  border: 0.375rem solid var(--color-line);
+  border-radius: 1.75rem;
+  background: var(--color-primary);
+  box-shadow:
+    inset 0 -0.75rem 0 var(--color-orange-edge),
+    inset 0 0.375rem 0 rgb(255 255 255 / 0.4),
+    0 0.625rem 0 var(--color-shadow);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: 5.5rem;
+  line-height: 1;
+  color: #fff;
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--stage-text-drop) 0 var(--color-line);
+}
+
+.celebration[data-kind='standing'] .celebration__prize {
+  position: absolute;
+  left: 50%;
+  top: 620px;
+  translate: -50% 0;
+  width: 820px;
+  padding: 28px 36px;
+  border: 0.3125rem solid var(--color-line);
+  border-radius: 1.625rem;
+  background: var(--color-paper);
+  box-shadow: 0 0.5rem 0 var(--color-shadow);
+  color: var(--color-line);
+  text-align: start;
+}
+
+.celebration[data-kind='standing'] :is(.prize__kind, .prize__detail, .prize__more, .prize__sponsor) {
+  color: #4a4270;
+}
+
+.celebration[data-kind='standing'] .prize__title {
+  font-family: var(--font-body);
+  font-weight: 900;
+  font-size: 3.375rem;
+}
+
+.celebration[data-kind='standing'] .prize__kind {
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.celebration[data-kind='standing'] .celebration__rays {
+  top: 260px;
+  background: repeating-conic-gradient(color-mix(in oklab, var(--stage-standing) 24%, transparent) 0 8deg, transparent 8deg 16deg);
+}
+
+.celebration__paper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .celebration__sticker {
   position: absolute;
+  width: auto;
+}
+
+.celebration__sticker--topLeft {
+  left: 2.5rem;
+  top: 5.625rem;
+  height: 14.375rem;
+  rotate: -8deg;
+}
+
+.celebration__sticker--topRight {
+  right: 3.5rem;
+  top: 6.25rem;
+  height: 13.75rem;
+  rotate: 10deg;
+}
+
+.celebration__sticker--bottomLeft {
   left: 4.375rem;
   bottom: 2.5rem;
-  height: 18rem;
-  width: auto;
+  height: 18.125rem;
   rotate: -4deg;
 }
 
@@ -2593,5 +3233,32 @@
 
   .confetti {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The finale on stage: fates, plates and the band change at once; «Salvats!» is the still ribbon for 1.5 s. */
+  .stage-root {
+    --stage-dur-finale-band: 0ms;
+    --stage-dur-finale-room: 0ms;
+    --stage-dur-finale-fade: 0ms;
+    --stage-dur-finale-cone: 0ms;
+    --stage-dur-finale-leave: 0ms;
+    --stage-dur-finale-close: 0ms;
+  }
+
+  .finale__floor,
+  .finale__rays,
+  .finale__slot[data-anim] :is(.finale__hop, .finale__label, .finale__cone, .finale__cross),
+  .finale[data-anim='finale-safe'] :is(.finale__hop, .finale__light, .finale__light-rays, .finale__beams, .finale__beam) {
+    animation: none;
+  }
+
+  .finale__row[data-shift='clear'] :is(.finale__slot, .finale__body) {
+    transition: none;
+  }
+
+  .finale[data-anim='finale-safe'] .finale__ribbon {
+    animation: stage-finale-ribbon-still var(--stage-dur-finale-ribbon) step-end;
   }
 }
