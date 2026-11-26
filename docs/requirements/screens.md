@@ -91,6 +91,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big add-card pad, opened from the "+ Cartró" button (D188). Leaving the pad with a number typed asks first, and each of that question's buttons says what happens ("Descarta els canvis", "Segueix editant").
+  - **"Add another?" (D200):** after a card is added, by the pad or a scan, a banner over the cards list asks "Vols afegir un altre cartró?" with "No" and "Sí". "Sí" opens the add-card pad. Most people play several cards and follow their relatives', and many don't know a phone can hold more than one. When it shows is pending U174.
   - The pad's QR button scans the card inside the app, in the drawer, keeping the name and icon already picked (D141).
   - The pad has one save button: full width, square corners, with a tick icon, and always visible on a small screen (D188); no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker mixes B and C: B's labels and its faded background for a taken icon; C's circular shape, frame and border (D131).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.

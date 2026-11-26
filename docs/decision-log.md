@@ -1333,3 +1333,7 @@ These follow from the user's own reasons. They can change them on the canvas.
 - **D196 is "always":** where a pad or tab covers the left column (the claim pad, the finalists' pad, an open Cerca), a compact "Ara sona" line stays at its top. In play, the presenters need the playing song to name it on the hit.
 - **The Check screens** get the same compact line as the review board ("Ara sona · baixa, d'abans de la comprovació · …"), at the top of the left column, leaving room for the card's grid.
 By: the orchestrator, applying the user's D195 and D196 to Frontend's questions. Source: Frontend's report of 26 Nov (canvas v99). Lives in: requirements/screens.md › Console.
+
+### D200 · The phone asks whether to add another card · 2026-11-26 · Active; when it shows Pending (U174)
+After a player adds a card, a banner over the cards list asks whether they want to add another, with "No" and "Sí" ("Vols afegir un altre cartró?"). "Sí" opens the add-card pad. Why: "i worry users dont know they can add more than 1 card", and most people buy several cards and follow their relatives' (event.md › The cards). The pad still has one save button (D95). The choice comes after the save, on the list, instead of D95's removed "Desar i afegir-ne un altre".
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.

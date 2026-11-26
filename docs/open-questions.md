@@ -109,6 +109,12 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U174 · When "Vols afegir un altre cartró?" shows (D200)
+- (a) After every card added. "No" just closes it.
+- (b) After every card added, until the player taps "No" once; then never again on that phone.
+- (c) Only after the first card.
+In all three, it closes by itself at the next landing if ignored, so it never sits over the cards during play.
+
 ### U173 · Starting the night from the big button at the doors
 D195 puts "Comença la quina" in the big slot in a break. At the doors, what comes next is starting the night, which today is only in the menu ("Començar la nit"). That's on purpose: "an A pressed while testing the remote mustn't start the show". With D198, starting it also plays the kick-off and the voice-over story in front of everyone.
 - (a) The doors' big slot shows "Començar la nit", but only a tap on the tablet starts it; the remote's A does nothing before the night. The menu item goes.
