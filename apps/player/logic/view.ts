@@ -2,7 +2,7 @@
 // the Svelte components stay thin and the rules are tested in node.
 import { cardFace, type Catalog, type CatalogCard } from '../../../packages/ui/data/catalog.ts';
 import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
-import { checkGamePlan, publicPlan, roundCardType, roundTitle, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+import { breakMinutes, checkGamePlan, publicPlan, roundCardType, roundTitle, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { standOf, type CardStand } from './desgraciat.ts';
 import { nearSongs } from './near-win.ts';
@@ -266,14 +266,14 @@ export function progress(plan: ScheduleOf | null, state: PublicState | null): { 
 }
 
 /**
- * Each planned round's rough start time from the schedule, or null when the schedule has no start: a round and an
- * Interval each, plus the minutes of the planned Throws before it (D136).
+ * Each planned round's rough start time from the schedule, or null when the schedule has no start: each round before
+ * it, and each break before it (an Interval, or a planned Throw's break in its place: packages/ui/plan.ts breakMinutes).
  */
 export function plannedStarts(plan: ScheduleOf | null): Map<number, number> | null {
   if (!plan?.schedule.startAtMs) return null;
-  const { startAtMs, roundMinutes, intervalMinutes, throws = [] } = plan.schedule;
-  const throwMinutes = (number: number) => throws.filter((t) => t.afterRound < number).reduce((sum, t) => sum + t.minutes, 0);
-  return new Map(plan.rounds.map((r, i) => [r.number, startAtMs + (i * (roundMinutes + intervalMinutes) + throwMinutes(r.number)) * 60_000] as const));
+  const { startAtMs, roundMinutes } = plan.schedule;
+  const breaks = (i: number) => plan.rounds.slice(0, i).reduce((sum, r) => sum + breakMinutes(plan.schedule, r.number), 0);
+  return new Map(plan.rounds.map((r, i) => [r.number, startAtMs + (i * roundMinutes + breaks(i)) * 60_000] as const));
 }
 
 /**

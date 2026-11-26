@@ -125,11 +125,14 @@ export interface NightShape {
   /** In play order: 'normal', 'special' or 'desgraciat'. */
   kinds: string[];
   intervalMinutes: number;
-  throwMinutes: number;
+  /** Each planned Throw's break, in minutes: the break after that round lasts this long, the throw inside it, in place
+   * of the Interval (not on top of it). */
+  throwBreaks: number[];
 }
 
 /**
- * The whole night in minutes (low, high): every round in order, the Intervals between them and the planned Throws. Each
+ * The whole night in minutes (low, high): every round in order and the breaks between them, an Interval each or a
+ * planned Throw's longer break in its place. Each
  * round's Queue is a fresh Shuffle of the pool, so a round of N songs expects N × (songs not played yet) / pool first
  * plays: all of round 1, about a third of round 2, fewer after.
  */
@@ -146,7 +149,9 @@ export function nightMinutes(r: PoolReport, night: NightShape, t: Timing = DEFAU
     lo += a;
     hi += b;
   }
-  const between = Math.max(0, night.kinds.length - 1) * night.intervalMinutes + night.throwMinutes;
+  const breaks = Math.max(0, night.kinds.length - 1);
+  const throws = night.throwBreaks.slice(0, breaks);
+  const between = (breaks - throws.length) * night.intervalMinutes + throws.reduce((sum, m) => sum + m, 0);
   return [lo + between, hi + between];
 }
 
@@ -165,7 +170,7 @@ export function describeReport(r: PoolReport, night: NightShape | null = null, t
   ];
   if (night) {
     const [lo, hi] = nightMinutes(r, night, t);
-    lines.push(`  the night (${night.kinds.length} rounds, ${night.intervalMinutes}-min Intervals${night.throwMinutes ? `, ${night.throwMinutes} min of Throws` : ''}): about ${hours(lo)} to ${hours(hi)}`);
+    lines.push(`  the night (${night.kinds.length} rounds, ${night.intervalMinutes}-min Intervals${night.throwBreaks.length ? `, ${night.throwBreaks.map((m) => `a ${m}-min break with a Throw`).join(', ')}` : ''}): about ${hours(lo)} to ${hours(hi)}`);
   }
   return lines.join('\n');
 }

@@ -36,11 +36,12 @@ const synthetic = (n: number): RepertoireSong[] => Array.from({ length: n }, (_,
 /** The night's shape from a Game plan file, read loosely (this package can't use the protocol's checker). */
 function nightFrom(file: string | null): NightShape | null {
   if (!file) return null;
-  const plan = JSON.parse(readFileSync(file, 'utf-8')) as { rounds?: { kind?: string }[]; schedule?: { intervalMinutes?: number; throws?: { minutes?: number }[] } };
+  const plan = JSON.parse(readFileSync(file, 'utf-8')) as { rounds?: { kind?: string }[]; schedule?: { intervalMinutes?: number; throws?: { afterRound?: number; minutes?: number }[] } };
   const kinds = (plan.rounds ?? []).map((r) => r.kind ?? 'normal');
   if (!kinds.length) throw new Error(`--plan: ${file} has no rounds`);
-  const throwMinutes = (plan.schedule?.throws ?? []).reduce((sum, b) => sum + (b.minutes ?? 0), 0);
-  return { kinds, intervalMinutes: plan.schedule?.intervalMinutes ?? 3, throwMinutes };
+  // A planned Throw's break replaces the Interval after its round; one after the last round isn't between rounds.
+  const throwBreaks = (plan.schedule?.throws ?? []).filter((b) => (b.afterRound ?? 0) >= 1 && (b.afterRound ?? 0) < kinds.length).map((b) => b.minutes ?? 0);
+  return { kinds, intervalMinutes: plan.schedule?.intervalMinutes ?? 3, throwBreaks };
 }
 const night = nightFrom(opt('plan'));
 

@@ -27,20 +27,20 @@ const state = (patch: Partial<PublicState> = {}): PublicState => ({
 });
 const BEFORE = { scene: 'before', rounds: [], gameEndMs: null } as const;
 
-test("planned starts allow for each planned Throw's minutes before the next round", () => {
+test("planned starts count a planned Throw's break in place of the Interval it replaces (D192)", () => {
   const starts = plannedStarts(TIMED);
   assert.equal(starts?.get(1), T);
-  assert.equal(starts?.get(2), T + 30 * MIN, 'a round, an Interval and the 5-minute Throw after Quina 1');
-  assert.equal(starts?.get(3), T + 55 * MIN, 'two rounds and two Intervals, and that Throw');
-  assert.equal(starts?.get(4), T + 90 * MIN, 'three of each, and both Throws');
-  assert.equal(starts?.get(8), T + 190 * MIN);
+  assert.equal(starts?.get(2), T + 25 * MIN, 'a round and the 5-minute break with the Throw after Quina 1 (no Interval on top)');
+  assert.equal(starts?.get(3), T + 50 * MIN, 'two rounds, that break and an Interval');
+  assert.equal(starts?.get(4), T + 80 * MIN, 'three rounds, and the 10-minute break with the Throw after Quina 3');
+  assert.equal(starts?.get(8), T + 180 * MIN, '7 rounds, 5 Intervals and the two Throws\' breaks');
 });
 
 test('rounds: real times once started, "~" planned times for the rest, done / current / next', () => {
   const rows = timelineOf(TIMED, state());
   const rounds = rows.filter((r) => r.kind === 'round');
   assert.deepEqual(rounds.map((r) => r.state), ['done', 'done', 'current', 'next', 'next', 'next', 'next', 'next']);
-  assert.deepEqual(rounds.slice(0, 4).map((r) => [r.atMs, r.predicted]), [[T + 2 * MIN, false], [T + 30 * MIN, false], [T + 58 * MIN, false], [T + 90 * MIN, true]]);
+  assert.deepEqual(rounds.slice(0, 4).map((r) => [r.atMs, r.predicted]), [[T + 2 * MIN, false], [T + 30 * MIN, false], [T + 58 * MIN, false], [T + 80 * MIN, true]]);
   assert.deepEqual(rounds.map((r) => r.roundKind).slice(4, 7), ['desgraciat', 'normal', 'special'], "the plan's kinds");
 });
 
@@ -50,7 +50,7 @@ test('a descans after each planned Throw\'s round, in order, at that round\'s pl
   const throws = rows.filter((r) => r.kind === 'throw');
   assert.deepEqual(throws, [
     { kind: 'throw', order: 1, afterRound: 1, state: 'done', atMs: T + 20 * MIN, predicted: false },
-    { kind: 'throw', order: 2, afterRound: 3, state: 'next', atMs: T + 75 * MIN, predicted: true },
+    { kind: 'throw', order: 2, afterRound: 3, state: 'next', atMs: T + 70 * MIN, predicted: true },
   ]);
   assert.deepEqual([S.scheduleThrow(1), S.scheduleThrow(2), S.scheduleThrow(3)], ['Primer descans', 'Segon descans', 'Tercer descans']);
   const unsorted = { ...TIMED, schedule: { ...TIMED.schedule, throws: [...THROWS].reverse() } };
@@ -71,7 +71,7 @@ test('"Venda de cartrons" first, only when the plan has the doors\' time: "~" un
 
 test('the end: the cloud\'s expected end, else the plan\'s; gone once the night is over', () => {
   assert.deepEqual(timelineOf(TIMED, state()).at(-1), { kind: 'end', state: 'next', atMs: T + 240 * MIN, predicted: true });
-  assert.equal(timelineOf(TIMED, state({ gameEndMs: null })).at(-1)?.atMs, T + 210 * MIN, "the last round's planned end");
+  assert.equal(timelineOf(TIMED, state({ gameEndMs: null })).at(-1)?.atMs, T + 200 * MIN, "the last round's planned end");
   assert.equal(timelineOf(PLAIN, state({ gameEndMs: null })).at(-1)?.kind, 'round', 'no time anywhere: no end row');
   const after = timelineOf(DOORS, state({ scene: 'after', rounds: SAMPLE_PLAN.rounds.map((r) => round(r.number, T + r.number * 25 * MIN, true)) }));
   assert.equal(after.some((r) => r.kind === 'end'), false);

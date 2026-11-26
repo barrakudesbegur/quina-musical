@@ -4,7 +4,7 @@
 // blank prizes and plans, a round's card type and side, the schedule's local date-time, the doors' time and the
 // planned Throws. Pure: each returns new values and never mutates its input.
 import type { PlannedThrow } from '@quina/protocol';
-import { PLAN_VERSION, quinaNumber, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
+import { PLAN_VERSION, breakMinutes, quinaNumber, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardTypeSides, defaultCardType, roundCardType, roundSide, type RoundKind } from '@quina/protocol';
 import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
@@ -284,19 +284,20 @@ export function doorsAfterStart(schedule: Pick<SchedulePlan, 'doorsAtMs' | 'star
   return schedule.doorsAtMs != null && schedule.startAtMs !== null && schedule.doorsAtMs > schedule.startAtMs;
 }
 
-/** When the last round should end: start + rounds × round length + the Intervals between them + the planned Throws
- * (a Throw after the last round wouldn't count; the plan doesn't allow one). */
+/** When the last round should end: start + rounds × round length + the breaks between them: an Interval each, or a
+ * planned Throw's break in its place (its minutes are the whole break, the throw inside it; a Throw after the last
+ * round wouldn't count, and the plan doesn't allow one). */
 export function plannedEndMs(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number | null {
-  const { startAtMs, roundMinutes, intervalMinutes } = plan.schedule;
+  const { startAtMs, roundMinutes } = plan.schedule;
   if (startAtMs === null || !plan.rounds.length) return null;
   const n = plan.rounds.length;
-  const throws = (plan.schedule.throws ?? []).filter((t) => t.afterRound >= 1 && t.afterRound < n).reduce((sum, t) => sum + t.minutes, 0);
-  return startAtMs + (n * roundMinutes + (n - 1) * intervalMinutes + throws) * 60_000;
+  const breaks = plan.rounds.slice(0, -1).reduce((sum, r) => sum + breakMinutes(plan.schedule, r.number), 0);
+  return startAtMs + (n * roundMinutes + breaks) * 60_000;
 }
 
-// ---- planned Throws (D136: about 5 minutes on top of the Interval after some rounds, docs/event.md) -------------
-/** The default length of a planned Throw, in minutes. */
-export const DEFAULT_THROW_MINUTES = 5;
+// ---- planned Throws (D136; D192: the break after that round lasts its minutes, the throw inside it) -------------
+/** The default length of a planned Throw's break, in minutes: the organizers' «Descans + llançament (10 min)» (D192). */
+export const DEFAULT_THROW_MINUTES = 10;
 
 /** The rounds a Throw may follow: every planned round but the last, and not one that already has a Throw. */
 export function throwSlots(plan: Pick<GamePlan, 'rounds' | 'schedule'>): number[] {

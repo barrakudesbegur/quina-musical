@@ -271,13 +271,13 @@ export const S = {
     intervalMinutes: 'Durada de cada descans (minuts)',
     plannedEnd: (time: string) => `Final previst: ${time}`,
     noStart: "Sense hora d'inici, no hi ha final previst.",
-    /** The planned Throws (D136): each adds its minutes to the break after its round. */
+    /** The planned Throws (D136, D192): the break after that round lasts its minutes, the throw inside it. */
     throws: 'Llançaments',
-    throwsHelp: "Cada llançament allarga el descans de després d'aquella quina.",
+    throwsHelp: "El descans de després d'aquella quina dura els minuts que hi posis, amb el llançament a dins (en lloc del descans normal).",
     noThrows: 'Cap llançament planificat entre quines.',
     /** With the round's name (S.round). */
-    throwAfter: (name: string) => `Després de la ${name}`,
-    throwMinutes: (name: string) => `Minuts del llançament després de la ${name}`,
+    throwAfter: (name: string) => `Descans amb llançament, després de la ${name}`,
+    throwMinutes: (name: string) => `Minuts del descans amb llançament després de la ${name}`,
     addThrowAfter: 'Afegir un llançament després de',
     addThrow: 'Afegir llançament',
     removeThrow: 'Treure',

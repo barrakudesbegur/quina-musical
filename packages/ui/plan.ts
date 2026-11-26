@@ -11,6 +11,7 @@ import {
   type PrizeBundle,
   type RoundKind,
   type RoundPlan,
+  type SchedulePlan,
   type WinKind,
 } from '@quina/protocol';
 import { CA } from './i18n/ca.ts';
@@ -31,6 +32,14 @@ export type {
   PublicRoundPlan,
   SideWarning,
 } from '@quina/protocol';
+
+/**
+ * How long the break after round `afterRound` lasts, in minutes: a planned Throw's minutes when there is one after it
+ * (the whole break, the throw inside it, in place of the Interval), else the Interval.
+ */
+export function breakMinutes(schedule: Pick<SchedulePlan, 'intervalMinutes' | 'throws'>, afterRound: number): number {
+  return schedule.throws?.find((t) => t.afterRound === afterRound)?.minutes ?? schedule.intervalMinutes;
+}
 
 /**
  * A normal round's Quina number, as the screens name it ("Quina N"): its place among the plan's normal rounds. The

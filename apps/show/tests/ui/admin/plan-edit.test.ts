@@ -267,7 +267,7 @@ test('the planned end adds the rounds and the Intervals between them', () => {
   assert.equal(plannedEndMs({ ...plan, schedule: { ...plan.schedule, startAtMs: null } }), null);
 });
 
-test('planned Throws (D136): after any round but the last, once each; the planned end counts them', async () => {
+test('planned Throws (D136): after any round but the last, once each; the planned end counts each one\'s break in place of its Interval (D192)', async () => {
   const { throwSlots, withThrow, withoutThrow, plannedEndMs, DEFAULT_THROW_MINUTES } = await import('../../../../admin/logic/plan-edit.ts');
   const plan = { rounds: SAMPLE_PLAN.rounds, schedule: { startAtMs: 0, roundMinutes: 20, intervalMinutes: 3 } };
   const n = plan.rounds.length;
@@ -279,7 +279,8 @@ test('planned Throws (D136): after any round but the last, once each; the planne
   assert.deepEqual(withoutThrow(two, 2), [{ afterRound: 4, minutes: DEFAULT_THROW_MINUTES }]);
   assert.equal(withoutThrow([{ afterRound: 4, minutes: 5 }], 4), undefined, 'none left: the field goes, so the plan reads back unchanged');
   const base = plannedEndMs(plan)!;
-  assert.equal(plannedEndMs({ ...plan, schedule: { ...plan.schedule, throws: two } }), base + (10 + DEFAULT_THROW_MINUTES) * 60_000);
+  assert.equal(plannedEndMs({ ...plan, schedule: { ...plan.schedule, throws: two } }), base + (10 - 3 + (DEFAULT_THROW_MINUTES - 3)) * 60_000);
+  assert.equal(DEFAULT_THROW_MINUTES, 10, "the organizers' «Descans + llançament (10 min)»");
 });
 
 test("the doors' time (D150): optional, never after the first round's start, as checkGamePlan says", async () => {
