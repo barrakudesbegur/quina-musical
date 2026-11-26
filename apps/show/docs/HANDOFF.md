@@ -11,6 +11,14 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
+- **In progress (26 Nov):**
+  - **The Desgraciat finale (D161, D166–D172) is BUILT, local on the shared main, NOT PUSHED.** My protocol 37cf827 and engine 982318f, then Backend's cloud ee6b135, on origin 0cabdf1. `npm test` fails only on Frontend's packages/ui/fixtures/states.ts, which needs `finale: null`; Frontend was asked for that line on top. Then: test the exact tip in the clean worktree /Users/blue/Projects/barrakudes/quina-test-step2 (gate the push on the exit code), Backend deploys, then push.
+  - **D174, a song's first play slower, is DESIGNED and sent to the Orchestrator, NOT BUILT.**
+    - The Pace is the repeat slot (14 s); a first play gets ×22/14 and lands on the best hook.
+    - `playedBefore` folds into GameRecord at round.started; the current round's target end counts its exact first plays from its Queue; later rounds use the expected first plays per Part (needs step A).
+    - The night gets about 12 min longer (~140 first plays). Open: whether the user accepts that, and whether "main hook" = the best hook.
+    - Build after the finale's push unless they object.
+  - **Step A (side/Part, D163 and D171)** starts when the Orchestrator relays U54.
 - **Done (26 Nov): step 2 (D127–D170) is pushed:** 2d86b7a (deployed as ec6983b0) and the follow-ups b686073 (Parlem in a review, the lone fail ✗'s 3 s, getUpcoming). The media moved to the new layout and the browser smoke run passes with the real sets. Next: the finale (D166–D169) after U151; the side/Part protocol (step A, D163's side) after U54.
   - **Part 1's ids are alphabetical (D103, 26 Nov):** ids 1–70 are the user's title-sorted playlist positions.
     - The decoded audio moved with each song; the 6 cut songs' audio is in `data/cache/pools/2026/_cut/<Spotify id>`. The old id record and song list are kept as `output/*.before-D103.json`.
