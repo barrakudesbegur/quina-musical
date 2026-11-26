@@ -46,12 +46,6 @@ The model numbers only normal rounds ("Quina 1"…; the specials are "Quina Espe
 - (a) Normal rounds only: "Quina 4 de 10".
 - (b) Every round: "Quina 4 de 12", though only 10 rounds carry a number.
 
-### U162 · "Tots dempeus!"
-When a landing would knock out every finalist left, so it counts for none of them (D180), Frontend proposes a moment (canvas v90, marked "proposta"): the finalists' ninos hop twice with green rays and confetti, a tilted green "TOTS DEMPEUS!" ribbon pops in under the title for about 1.5 s, and the song plays on. The tablet shows a small "★ Tots dempeus!" chip. Green keeps it apart from a win's gold. It's text on the projector, shown before any cue.
-- (a) As drawn.
-- (b) Change the wording or the colour (which?).
-- (c) No projector moment, only the tablet's chip.
-
 ### U160 · The last real players falling together before the finale
 Before the finale the engine only sees the cards in play, unsold ones included (D180 is built: 6eb9624, 21254e1). Say the last two real players in the room fall on one song while an unsold card still stands. The landing counts for them, because it didn't take out every card in play, so they're out and nobody in the room is standing. Today they can't be entered as finalists, since entry needs standing cards (D168).
 - (a) "Enrere", then enter them as finalists, and the same song lands again, now not counting for them (Sound engine's reading; it replays the song).
@@ -69,16 +63,19 @@ The user on the canvas: "What is this field? we dont papereta concept. please re
 - (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
 - (b) Drop slips: the card's number identifies the winner, who shows the card to collect the prize. The glossary and event.md change.
 
-### U155 · The finale and the new tabs on canvas v85, for review
-Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Since D180, the finale's group ninos and shared win are gone, so Frontend redraws those frames: several finalists can fall on one landing, each as their own nino, and a landing that would take everyone left doesn't count. The boards' other proposals:
-1. The finale's button: normal above 20 standing, medium from 11 to 20, large at 10 or fewer.
-2. A stays "Següent", so the finale opens from the tablet only.
-3. The finalists' view lives in the Dempeus tab, once started from the button.
-4. Tapping a nino removes it, and tapping a red number brings it back.
-5. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
-6. "Final a l'escenari", "Al revés" and "+ Finalista" are names to confirm.
-- (a) All fine, so Frontend builds them once redrawn.
+### U155 · The finale and the new tabs, what's left to review
+Answered on the canvas (D181–D184): "Salvats!", the faded fallen nino, the edit mode, "Començar final", the button's growth with "Enrere" small, the ninos growing. Still to confirm:
+1. A stays "Següent", so the finale opens from the tablet only.
+2. The finalists' view lives in the Dempeus tab, once started from the button.
+3. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
+4. The names "Al revés" and "+ Finalista".
+- (a) All fine.
 - (b) Comment on the canvas where not.
+
+### U164 · A title for the Desgraciat's winner
+On 25 Nov the user chose no title for the Desgraciat's Celebration (D62, U6: "DEMPEUS!" was dropped). Now, on the canvas: "it is better something related to being lucky or unlucky. in informal funny catalan". Frontend proposes "QUINA POTRA!" with 2–3 alternatives on the board.
+- (a) A title after all: pick one on the canvas (D62 changes).
+- (b) No title, as D62 says.
 
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
@@ -236,6 +233,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U162 · "Tots dempeus!"** (2026-11-26) → D181: "Salvats!", the light from the text, spotlights and the phones' particles.
 - **U54 · What to call each set of 70 songs** (2026-11-26) → D178: each is a pool (Pool 1, Pool 2).
 - **U153 · "+ Candidat"** (2026-11-26) → D179: yes.
 - **U77 · The review screen**, **U130 · the Check boards (v67)** (2026-11-26): reviewed by the user through the canvas (their own edits and 15 comments, v84; D165).

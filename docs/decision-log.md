@@ -1151,7 +1151,7 @@ By: the user. Source: open-questions.md › Answered (U142). Amends: D161. Lives
 The presenters start the finale by hand (U143 (a)), not from the "Dempeus" tab. In the Desgraciat, the slot of today's "Comprovar" button becomes the finale's button, with its own label and icon. It grows as fewer players stand, because the larger button is the main, recommended action.
 By: the user. Source: open-questions.md › Answered (U143). Amends: D161. Lives in: requirements/screens.md › Console.
 
-### D168 · Entering a finalist shows the card privately · 2026-11-26 · Active
+### D168 · Entering a finalist shows the card privately · 2026-11-26 · Amended by D183
 Entering a finalist's number shows that card privately, like the Check screen, with each song marked ✓ or ✗. A card that has already fallen shows its ✗ and isn't added (U144 (a)). The presenters can remove a finalist, or bring one back, by hand (U145 (a)).
 By: the user. Source: open-questions.md › Answered (U144, U145). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
 
@@ -1219,3 +1219,19 @@ D169's grouping was wrong, and the orchestrator should have pushed back: each ca
 - No group ninos (D172).
 The user: "when we only have 2 people we alway have to keep playing song until one is eliminated. in case they both have the same song, we should keep going until only one is left".
 By: the user. Source: the user's message of 26 Nov. Supersedes: D169, D172, and the shared win (game-rules › The Quina del Desgraciat; event.md). Lives in: event.md › The special rounds; requirements/game-rules.md › The Quina del Desgraciat; GLOSSARY.md › Last standing.
+
+### D181 · "Salvats!" · 2026-11-26 · Active
+When a landing would knock out every finalist left, so it counts for none of them (D180), the moment is "Salvats!": they share the song, and the coincidence saves them. The user: "i prefer the concept of «Salvats!» because they got the same song and they are saved because of the coincidence. and the light effect should originate from the text". The light is larger and comes from the text, with the spotlights from the phone's "your song" effect, and confetti from the same particle library the phones use. Answers U162.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Projector.
+
+### D182 · A fallen finalist keeps their own nino, faded · 2026-11-26 · Active
+In the finale, a fallen finalist keeps the nino they had, with less opacity and saturation, plus the ✗, on the projector and the tablet. They don't become the sitting nino. The phones' sitting nino for a fallen card (D72) is unchanged.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Projector, Console.
+
+### D183 · No bringing a finalist back; an edit mode to remove · 2026-11-26 · Active
+A fallen finalist can't be brought back by hand ("No. this would break the rules"); only "Enrere" undoes a landing. Removing a finalist is done in an edit mode, off by default. "Editar" shows an × on each finalist (no confirmation) and an add button that does what "+ Finalista" does.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Amends: D168 (bringing one back by hand). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
+
+### D184 · The finale's button and stage · 2026-11-26 · Active
+The button reads "Començar final", on one line, with its icon on top. It grows as fewer stand, up to a limit, while "Enrere" stays small, aligned at the top. On the stage, the ninos get larger as fewer remain. The outdated board Consola-Dempeus is removed; the finale board's Dempeus tab replaces it.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Console, Projector.
