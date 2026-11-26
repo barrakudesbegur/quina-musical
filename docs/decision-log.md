@@ -1235,3 +1235,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Amends: D
 ### D184 · The finale's button and stage · 2026-11-26 · Active
 The button reads "Començar final", on one line, with its icon on top. It grows as fewer stand, up to a limit, while "Enrere" stays small, aligned at the top. On the stage, the ninos get larger as fewer remain. The outdated board Consola-Dempeus is removed; the finale board's Dempeus tab replaces it.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Console, Projector.
+
+### D185 · Confetti falls very slowly · 2026-11-26 · Active
+"the confeti falls too fast, should fall very slow": the phones' confetti is a slow, 6-second paper drift instead of 1.8 s (593fef2). The finale's "Salvats!" and the projector reuse the same particles.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: packages/ui/ANIMATIONS.md.
