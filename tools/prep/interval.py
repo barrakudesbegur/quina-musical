@@ -379,7 +379,8 @@ def analyze(track: Track, src: Path, out: Path, cache: Path, force: bool, label:
             prev = {}
         if (prev.get("source", {}).get("sha256") == digest and prev.get("deriveVersion") == DERIVE_VERSION
                 and prev.get("schemaVersion") == SCHEMA_VERSION and prev.get("title") == track.title
-                and prev.get("artist") == track.artist and prev.get("position") == track.position):
+                and prev.get("artist") == track.artist and prev.get("position") == track.position
+                and prev.get("pcm") == f"cache/interval/{label}{track.slug}.flac"):
             print(f"{track.position or '-':>3} {track.slug}: up to date")
             return prev
     raw = load_raw(src, flac, cache / f"{track.slug}.raw.json", digest, force)
