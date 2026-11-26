@@ -18,6 +18,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
 - **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (D114).
+- **Buttons are fully round only when floating** (D189). Every other button is a rounded rectangle.
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
 - The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
@@ -87,9 +88,9 @@ _From event.md › Players' phones; the decisions doc › Changes._
 **Who uses it:** players who want to, on their own phones. The game works fully with paper and corn; phones are a companion.
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
-  - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
+  - They add more cards by scanning, or by typing the number on the big add-card pad, opened from the "+ Cartró" button (D188). Leaving the pad with a number typed asks first, and each of that question's buttons says what happens ("Descarta els canvis", "Segueix editant").
   - The pad's QR button scans the card inside the app, in the drawer, keeping the name and icon already picked (D141).
-  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker mixes B and C: B's labels and its faded background for a taken icon; C's circular shape, frame and border (D131).
+  - The pad has one save button: full width, square corners, with a tick icon, and always visible on a small screen (D188); no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker mixes B and C: B's labels and its faded background for a taken icon; C's circular shape, frame and border (D131).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).

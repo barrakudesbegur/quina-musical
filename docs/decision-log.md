@@ -1261,3 +1261,16 @@ The user confirmed all five points:
   - "Enrere" grows at most from 84 to 100 px.
 Answers U155 with (a).
 By: the user. Source: open-questions.md › Answered (U155). Lives in: requirements/screens.md › Console.
+
+### D188 · The phone's add-card pad: "+ Cartró" and clearer buttons · 2026-11-26 · Active
+The user's comments on the canvas board Mobil-Afegir-Estats:
+- **The button:** "Simply + cartró": the home button reads "+ Cartró", not "Afegir cartró".
+- **"Desar":** "this should be sticky, so if screen is small still visible".
+- **Leaving with unsaved changes:** "if question is: Descartar? and answer is: Continuar. I understand that the discarding continues". Each button now says what happens, e.g. "Sortir sense desar?" with "Descarta els canvis" / "Segueix editant".
+- **"Descartar"** "doesnt look like a button": it's redrawn as one.
+The corner buttons on that board were outdated, so they're redrawn.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Player app.
+
+### D189 · Buttons are fully round only when floating · 2026-11-26 · Active
+The user: "buttons should not be fully round unless they are floating". A design-system rule for every screen: pills only for floating buttons, rounded rectangles otherwise. It was made on a phone board and stated generally, so it applies to the phones, the console, the projector and Admin. Frontend lists the boards and components that still have non-floating pills, then fixes the boards and the code after the finale and tab builds.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Every screen.
