@@ -11,15 +11,11 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress (26 Nov):**
-  - **The Desgraciat finale (D161, D166–D172) is PUSHED (7742acb, deployed d963856b).** Frontend's finale screens come later. Backend's e2e runs on it.
-  - **D174 + D175, a song's first play slower, are BUILT, on the shared main (protocol 4f0958a, engine c76a546), NOT PUSHED.** Waiting on Frontend's fixtures on top (sent the list of type errors), then test the range, Backend deploys (the reducer's `playedBefore`), push.
-    - The Pace is a repeat's slot (14 s default, every round); a first play gets the Pace × 22/14 (`firstPlaySec`, PACE_DEFAULT_SEC `{ firstPlay, repeat }`) and lands on its best hook (`hookPhase`); `songPace()` drives the song playing's slot, Spin and auto-advance.
-    - `playedBefore` (GameRecord, `foldPlayed` shared with the reducer) folds the round in progress at round.started / round.resumed of another number.
-    - The target counts exact first plays (`firstPlaysIn(0, songs − 1)`); the Drift, nudge and moved target weigh them; later rounds expect songs × unplayed / pool (`poolLeft`, one pool until step A), at the locked Pace else 14.
-    - Same commit: Frontend's asks: ThrowInfo `startSec/dropSec/durationSec/posSec`, `state.throwSongs`, `setGame { remoteShake }` (D148).
-    - Limit: a plan-B `resumeAt` with no journal counts earlier rounds' songs as first plays. `docs/mixer-design-decisions.md:49` (Orchestrator's) still says 22 s in round 1.
-  - **Step A (side/Part, D163 and D171)** starts when the Orchestrator relays U54.
+- **In progress (26 Nov, evening):**
+  - **Pushed today:** D174 + D175 (5bcf1e3: a song's first play in the Game at the Pace × 22/14, on its best hook; `playedBefore` in the record), then 161c3f6 (deployed c93f219c): D177 (A held, then B, turns the running Spin into a Suspense; `suspense.started { fromSpin }`), the repertoire rename (D178: `data/repertoires/`, `relay/repertoire.ts`, `tools/prep/repertoire.py`, `--repertoire`, `QUINA_REPERTOIRE`, `/api/repertoire`; on-disk outputs moved to `data/out|cache/repertoires/`) and D180 (no shared win in the Desgraciat: a landing that would take out everyone left counts for none of them; `standingRun`; the Shuffle rule `none`; `FinaleInfo.winner`; no `fellLast`).
+  - **On the shared main, NOT pushed (388de86):** step A (e8e10d3 protocol, e1c54ec engine: `pool` per song, card-type `sides`, `cardFace`, `RoundPlan.side`, `side` on the round commands, state, journal (absent for 1), record and token `-C<n>`, `sideWarnings`, D174's first plays per pool) and 388de86 (the finale's `fallen` list, one per finalist, D180). Everything is optional, so nothing breaks; 283 engine, 644 UI, 91 + 32 cloud, pipeline 61 pass. Waiting on Frontend's cards.json/card-types.json conversion and screens, and Backend's step B (journal-check `side`, public `side`); then test the range, push.
+  - **Open with the Orchestrator:** before the finale, if the room's last real players fall on one song while an unsold card stands, that landing counts (it doesn't take out everyone in play); the way through is Enrere, enter them as finalists, play on.
+  - **Throwaways in the worktree (untracked):** `tools/e2e/smoke-step2.ts`, `tools/e2e/smoke-d177.ts` (run after `npx vite build` in apps/show; the console must build).
 - **Done (26 Nov): step 2 (D127–D170) is pushed:** 2d86b7a (deployed as ec6983b0) and the follow-ups b686073 (Parlem in a review, the lone fail ✗'s 3 s, getUpcoming). The media moved to the new layout and the browser smoke run passes with the real sets. Next: the finale (D166–D169) after U151; the side/Part protocol (step A, D163's side) after U54.
   - **Part 1's ids are alphabetical (D103, 26 Nov):** ids 1–70 are the user's title-sorted playlist positions.
     - The decoded audio moved with each song; the 6 cut songs' audio is in `data/cache/pools/2026/_cut/<Spotify id>`. The old id record and song list are kept as `output/*.before-D103.json`.
