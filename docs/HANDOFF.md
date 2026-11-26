@@ -15,6 +15,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## In flight
 
+- **The user is away (26 Nov, evening).** All three sessions were told to keep building what's decided (D132, D140–D145, D141), keep today's behaviour for every open question, list those in their handoffs, and report to me. On the user's return, give them one batched list of the open questions in the plain format, plus what was built.
 - **Two pools and double-sided cards (D100–D102, 25 Nov).** Pool 1 (70, final) plays Quines 1–5 on side 1; pool 2 (being filled, then 70) plays Quines 6–10 on side 2; the special rounds play their own playlist, 79G8VcNrkih9GGjIzb47Gt, empty for now, with Part 1's songs until it's final (D105). Asked on 25 Nov:
   - Sound engine: re-fetch pool 1 and remake the temporary cards; an impact report on several pools (engine, protocol, Shuffle, cards.json with sides, disk, R2, hook time) before building; don't download pool 2 until the user says it's filtered;
   - Backend: the cloud's side (a round's pool, a card's sides on phones, the settings file) and R2 options past 10 GB;
