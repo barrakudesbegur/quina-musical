@@ -94,6 +94,10 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U60 · Two Interval tracks by hand
+The new Interval playlist (D104) has 37 of its 39 tracks prepared. Two have no exact match on YouTube or YouTube Music: #15 "Island Broadcast (From "Animal Crossing: New Horizons") [Cover]" by Masters of Sound (1:29), and #22 "Frappe Snowland (From "Mario Kart 64") - Original" by Game Monsters (2:34). Put each file in `data/media/interval/` as `15 Island Broadcast - Masters of Sound.mp3` (or `22 …`), and Sound engine reruns the Interval step. Or drop them from the playlist, or swap in the game's original track (khinsider).
+**Default:** the Interval plays the other 37.
+
 ### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 7 hours for 210 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
