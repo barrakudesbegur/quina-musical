@@ -23,13 +23,16 @@ import { Remote } from './support/remote.ts';
 /** The player follows these cards (the first two are the ones claimed). */
 const CARDS = [12, 34];
 
-/** The default repertoire's printed cards (apps/cards), each card's songs line by line. */
-function printedCard(id: number): number[][] {
+type PrintedLines = { id: number }[][];
+/** The default repertoire's printed cards (apps/cards): one side's songs line by line, the side the rounds play (D178). */
+function printedCard(id: number, side = 1): number[][] {
   if (!hasPreparedRepertoire()) return [[]];
-  const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; lines: { id: number }[][] }[];
+  const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; sides?: { side: number; lines: PrintedLines }[]; lines?: PrintedLines }[];
   const card = cards.find((c) => c.id === id);
-  if (!card) throw new Error(`card ${id} is not in cards.json`);
-  return card.lines.map((line) => line.map((song) => song.id));
+  // A card from before sides has its side 1 as `lines`, as the engine reads it (cardFace).
+  const lines = card?.sides?.length ? card.sides.find((s) => s.side === side)?.lines : side === 1 ? card?.lines : undefined;
+  if (!lines) throw new Error(`card ${id} has no side ${side} in cards.json`);
+  return lines.map((line) => line.map((song) => song.id));
 }
 /** The first card's first Line, the second card's twelve songs (its Bingo), then the rest of a few other cards. */
 const LINE_SONGS = printedCard(CARDS[0] as number)[0] as number[];

@@ -2,7 +2,7 @@
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
 import {
-  DEFAULT_CARD_TYPE, DEFAULT_POOL, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
+  DEFAULT_CARD_TYPE, DEFAULT_POOL, DEFAULT_SIDE, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
   type CardTypePrice, type CardTypeSides, type RemoteStatus,
 } from '@quina/protocol';
 
@@ -17,18 +17,21 @@ export interface Check {
 
 const check = (group: Check['group'], name: string, status: Status, detail: string): Check => ({ group, name, status, detail });
 
-// ---- the repertoire ---------------------------------------------------------------------------------------
+// ---- the repertoire -------------------------------------------------------------------------------------
+/** A printed card as cards.json has it (D178): its sides, or, from before sides, its side 1's `lines`. */
 export interface CardLike {
   id: number;
   type: string;
-  lines: { id: number }[][];
+  sides?: { side: number; lines: { id: number }[][] }[];
+  lines?: { id: number }[][];
 }
 
-/** card-types.json's type ids (apps/cards writes it beside cards.json), or null when it's missing or malformed. */
-export function cardTypeIds(json: unknown): string[] | null {
+/** card-types.json's types, as far as the cards go: their ids and printed sides. Null when it's missing or malformed. */
+export function printedCardTypes(json: unknown): CardTypeSides[] | null {
   if (!Array.isArray(json) || json.length === 0) return null;
-  const ids: unknown[] = json.map((t: unknown) => (t && typeof t === 'object' ? (t as { type?: unknown }).type : undefined));
-  return ids.every(isCardTypeId) ? ids : null;
+  const types = json.map((t: unknown) => (t && typeof t === 'object' ? (t as { type?: unknown; sides?: unknown }) : {}));
+  if (!types.every((t) => isCardTypeId(t.type))) return null;
+  return types.map((t) => ({ type: t.type as string, ...(Array.isArray(t.sides) ? { sides: t.sides as CardTypeSides['sides'] } : {}) }));
 }
 
 /** How many printed cards there are of each type. */
@@ -39,39 +42,90 @@ export function printedByType(cards: unknown): Map<string, number> | null {
   return counts;
 }
 
+/** Each of the repertoire's songs and its pool (songs.json's per-song `pool`, D178; none: DEFAULT_POOL). */
+export function songPools(songs: unknown): Map<number, string> {
+  const pools = new Map<number, string>();
+  if (!Array.isArray(songs)) return pools;
+  for (const song of songs as { id?: unknown; pool?: unknown }[]) {
+    if (Number.isInteger(song?.id)) pools.set(song.id as number, typeof song.pool === 'string' ? song.pool : DEFAULT_POOL);
+  }
+  return pools;
+}
+
+/** How many of the repertoire's songs each pool has. */
+export function poolSongCounts(songs: unknown): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const pool of songPools(songs).values()) counts[pool] = (counts[pool] ?? 0) + 1;
+  return counts;
+}
+
 /**
- * The printed cards against the repertoire: every card 3 lines of 4 songs, ids unique, every song in the repertoire, and
- * every song on a card PLAYABLE (analysed, with a valid hook), or that card could never be completed. Every card's
- * type must be one of card-types.json's (`types`), or no round could ever play it; without that file, the
- * default types stand in and it warns, since screens can't name the types.
+ * The printed cards against the repertoire (D178): every card has each side its type prints (card-types.json's
+ * `sides`) and no other, each side 3 lines of 4, ids unique; every song on a side is in the repertoire, in that side's
+ * pool (a round of that side shuffles only that pool) and PLAYABLE (analysed, with a valid hook), or that card could
+ * never be completed. Every card's type must be one of card-types.json's (`types`), or no round could ever play it.
+ * Without that file, the default types stand in, sides and pools go unchecked, and it warns, since screens can't name
+ * the types. A side whose pool has no songs here was drawn from the whole repertoire (apps/cards does that for test
+ * cards): it warns.
  */
-export function cardsCheck(cards: unknown, types: readonly string[] | null, songIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
+export function cardsCheck(cards: unknown, types: readonly CardTypeSides[] | null, pools: ReadonlyMap<number, string>, playableIds: ReadonlySet<number>): Check {
   if (!Array.isArray(cards) || cards.length === 0) return check('Repertoire', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
-  const known = types ?? [...new Set(Object.values(DEFAULT_CARD_TYPE))];
+  const known = types ?? [...new Set(Object.values(DEFAULT_CARD_TYPE))].map((type) => ({ type }));
+  const poolsHere = new Set(pools.values());
   const problems: string[] = [];
   const seen = new Set<number>();
   const unplayable = new Set<number>();
+  const unpooled = new Set<string>();
   for (const raw of cards as CardLike[]) {
-    if (!raw || !Number.isInteger(raw.id) || !Array.isArray(raw.lines)) {
-      problems.push('a card without an id or lines');
+    if (!raw || !Number.isInteger(raw.id)) {
+      problems.push('a card without an id');
       continue;
     }
     if (seen.has(raw.id)) problems.push(`card ${raw.id} twice`);
     seen.add(raw.id);
-    if (!known.includes(raw.type)) problems.push(`card ${raw.id} has type ${JSON.stringify(raw.type)}, not in card-types.json (${known.join(', ')})`);
-    const songs = raw.lines.flat();
-    if (raw.lines.length !== 3 || raw.lines.some((l) => !Array.isArray(l) || l.length !== 4)) problems.push(`card ${raw.id} is not 3 lines of 4`);
-    for (const song of songs) {
-      if (!songIds.has(song?.id)) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the repertoire`);
-      else if (!playableIds.has(song.id)) unplayable.add(song.id);
+    const type = known.find((t) => t.type === raw.type);
+    if (!type) problems.push(`card ${raw.id} has type ${JSON.stringify(raw.type)}, not in card-types.json (${known.map((t) => t.type).join(', ')})`);
+    const printed = raw.sides?.length ? raw.sides : raw.lines ? [{ side: DEFAULT_SIDE, lines: raw.lines }] : null;
+    if (!printed) {
+      problems.push(`card ${raw.id} has no sides`);
+      continue;
+    }
+    // Sides and pools only against a card-types.json: without one there's nothing to say what a type prints.
+    const expected = types && type ? cardTypeSides(type) : null;
+    for (const want of expected ?? []) if (!printed.some((s) => s.side === want.side)) problems.push(`card ${raw.id} has no side ${want.side}`);
+    for (const face of printed) {
+      const want = expected?.find((e) => e.side === face.side);
+      if (expected && !want) {
+        problems.push(`card ${raw.id} has a side ${face.side}, which its type doesn't print`);
+        continue;
+      }
+      if (!Array.isArray(face.lines) || face.lines.length !== 3 || face.lines.some((l) => !Array.isArray(l) || l.length !== 4)) {
+        problems.push(`card ${raw.id} side ${face.side} is not 3 lines of 4`);
+        continue;
+      }
+      for (const song of face.lines.flat()) {
+        const pool = pools.get(song?.id);
+        if (pool === undefined) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the repertoire`);
+        else {
+          if (want && pool !== want.pool) {
+            if (poolsHere.has(want.pool)) problems.push(`card ${raw.id} side ${face.side} has song ${song.id} from pool ${pool}, not pool ${want.pool}`);
+            else unpooled.add(want.pool);
+          }
+          if (!playableIds.has(song.id)) unplayable.add(song.id);
+        }
+      }
     }
   }
   if (unplayable.size > 0) problems.push(`songs on cards that can't play (no analysis or hook): ${[...unplayable].sort((a, b) => a - b).join(', ')}`);
   if (problems.length > 0) return check('Repertoire', 'Cards', 'fail', `${problems.slice(0, 4).join('; ')}${problems.length > 4 ? ` (+${problems.length - 4} more)` : ''}`);
-  const byType = [...(printedByType(cards) ?? [])].map(([type, n]) => `${n} ${type}`).join(', ');
+  const byType = [...(printedByType(cards) ?? [])].map(([t, n]) => `${n} ${t}`).join(', ');
   const detail = `${cards.length} cards (${byType}), every song on them playable`;
   if (!types) return check('Repertoire', 'Cards', 'warn', `${detail}; no card-types.json beside cards.json (apps/cards writes it): screens and phones can't name the card types`);
-  return check('Repertoire', 'Cards', 'pass', detail);
+  if (unpooled.size > 0) {
+    const list = [...unpooled].sort().map((p) => `pool ${p}`).join(', ');
+    return check('Repertoire', 'Cards', 'warn', `${detail}; ${list} has no songs here, so those sides were drawn from the whole repertoire (test cards): a round of that side can't be played`);
+  }
+  return check('Repertoire', 'Cards', 'pass', `${detail}, each side from its pool`);
 }
 
 /** The songs: how many the repertoire has, and how many are ready to play. */
@@ -415,17 +469,6 @@ export function cardPricesCheck(types: unknown, plan: unknown): Check | null {
   }
   if (missing.length) return check('Cloud', 'Card prices', 'warn', `no price in card-types.json for ${missing.join(', ')}: the projector shows none before its rounds${priced.length ? `; ${priced.join('; ')}` : ''}`);
   return check('Cloud', 'Card prices', 'pass', priced.join('; '));
-}
-
-/** How many of the repertoire's songs each pool has (songs.json's per-song `pool`, D178; none: DEFAULT_POOL). */
-export function poolSongCounts(songs: unknown): Record<string, number> {
-  const counts: Record<string, number> = {};
-  if (!Array.isArray(songs)) return counts;
-  for (const song of songs as { pool?: unknown }[]) {
-    const pool = typeof song?.pool === 'string' ? song.pool : DEFAULT_POOL;
-    counts[pool] = (counts[pool] ?? 0) + 1;
-  }
-  return counts;
 }
 
 /**

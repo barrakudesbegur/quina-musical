@@ -126,7 +126,8 @@ function printedCards(repertoire: Repertoire): { cards: unknown; types: unknown 
 async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   const songs = readJson(repertoire.songsJson);
-  const songIds = new Set(Array.isArray(songs) ? songs.map((s: { id: number }) => s.id) : []);
+  const pools = checks.songPools(songs);
+  const songIds = new Set(pools.keys());
   let playable: number[] = [];
   try {
     playable = playableSongs(readJson(path.join(repertoire.dataDir, 'analysis', 'index.json'))).map((s) => s.id);
@@ -136,7 +137,7 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   const missingAudio = playable.filter((id) => !fs.existsSync(path.join(repertoire.cacheDir, String(id), 'mix.flac')));
   out.push(checks.songsCheck(songIds, new Set(playable), missingAudio));
   const printed = printedCards(repertoire);
-  out.push(checks.cardsCheck(printed.cards, checks.cardTypeIds(printed.types), songIds, new Set(playable)));
+  out.push(checks.cardsCheck(printed.cards, checks.printedCardTypes(printed.types), pools, new Set(playable)));
 
   const missingSounds = [
     ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'stingers', `${n}.mp3`))),

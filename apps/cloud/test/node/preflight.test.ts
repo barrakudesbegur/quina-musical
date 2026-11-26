@@ -52,35 +52,67 @@ test('power, disk and the browser', () => {
   assert.equal(c.browserCheck(['/usr/bin/zsh']).status, 'warn');
 });
 
+const line = (...ids: number[]) => ids.map((id) => ({ id }));
+const lines = (ids: number[]) => [line(...ids.slice(0, 4)), line(...ids.slice(4, 8)), line(...ids.slice(8, 12))];
+const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+
 test('cards: every song on a card must be in the repertoire and playable, or that card can never be completed', () => {
-  const line = (...ids: number[]) => ids.map((id) => ({ id }));
-  const card = (id: number, ids: number[], type = 'normal') => ({ id, type, lines: [line(...ids.slice(0, 4)), line(...ids.slice(4, 8)), line(...ids.slice(8, 12))] });
-  const songs = new Set(Array.from({ length: 20 }, (_, i) => i + 1));
-  const ids = Array.from({ length: 12 }, (_, i) => i + 1);
-  const types = ['normal', 'especial'];
-  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], types, songs, songs);
+  const card = (id: number, ids: number[], type = 'normal') => ({ id, type, sides: [{ side: 1, lines: lines(ids) }] });
+  const songs = new Map(range(1, 20).map((id) => [id, '1']));
+  const playable = new Set(songs.keys());
+  const ids = range(1, 12);
+  const types = [{ type: 'normal' }, { type: 'especial' }];
+  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], types, songs, playable);
   assert.equal(both.status, 'pass');
   assert.match(both.detail, /2 cards \(1 normal, 1 especial\)/);
   // A type card-types.json doesn't list (here the round kind's spelling, not the printed one) could never play.
-  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], types, songs, songs).detail, /card 2 has type "special", not in card-types.json \(normal, especial\)/);
+  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], types, songs, playable).detail, /card 2 has type "special", not in card-types.json \(normal, especial\)/);
   // This year's types are whatever apps/cards prints.
-  assert.equal(c.cardsCheck([card(1, ids, 'groc')], ['groc'], songs, songs).status, 'pass');
+  assert.equal(c.cardsCheck([card(1, ids, 'groc')], [{ type: 'groc' }], songs, playable).status, 'pass');
   // Without card-types.json: the default types stand in, and it warns (screens can't name them).
-  const untyped = c.cardsCheck([card(1, ids)], null, songs, songs);
+  const untyped = c.cardsCheck([card(1, ids)], null, songs, playable);
   assert.equal(untyped.status, 'warn');
   assert.match(untyped.detail, /no card-types.json/);
-  assert.match(c.cardsCheck([card(1, ids)], types, songs, new Set([...songs].filter((id) => id !== 5))).detail, /can't play.*5/);
-  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], types, songs, songs).detail, /99, not in the repertoire/);
-  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], types, songs, songs).detail, /twice/);
-  assert.match(c.cardsCheck([{ id: 3, type: 'normal', lines: [line(1, 2, 3)] }], types, songs, songs).detail, /3 lines of 4/);
-  assert.equal(c.cardsCheck([], types, songs, songs).status, 'fail');
+  assert.match(c.cardsCheck([card(1, ids)], types, songs, new Set([...playable].filter((id) => id !== 5))).detail, /can't play.*5/);
+  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], types, songs, playable).detail, /99, not in the repertoire/);
+  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], types, songs, playable).detail, /twice/);
+  assert.match(c.cardsCheck([{ id: 3, type: 'normal', sides: [{ side: 1, lines: [line(1, 2, 3)] }] }], types, songs, playable).detail, /card 3 side 1 is not 3 lines of 4/);
+  assert.equal(c.cardsCheck([], types, songs, playable).status, 'fail');
 });
 
-test("card-types.json's ids, and the printed cards by type", () => {
-  assert.deepEqual(c.cardTypeIds([{ type: 'normal', name: 'Cartró normal' }, { type: 'especial' }]), ['normal', 'especial']);
-  assert.equal(c.cardTypeIds(null), null);
-  assert.equal(c.cardTypeIds([]), null);
-  assert.equal(c.cardTypeIds([{ type: 'Not-An-Id' }]), null);
+test("cards in sides (D178): each side its type prints and no other, each side's songs from its pool; a card from before sides is its side 1", () => {
+  const pools = new Map([...range(1, 12).map((id) => [id, '1'] as const), ...range(13, 24).map((id) => [id, '2'] as const)]);
+  const playable = new Set(pools.keys());
+  const types = [
+    { type: 'normal', sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+    { type: 'especial', sides: [{ side: 1, pool: '1' }] },
+  ];
+  const normal = (id: number, side1: number[], side2: number[]) => ({ id, type: 'normal', sides: [{ side: 1, lines: lines(side1) }, { side: 2, lines: lines(side2) }] });
+  const especial = (id: number) => ({ id, type: 'especial', sides: [{ side: 1, lines: lines(range(1, 12)) }] });
+  const ok = c.cardsCheck([normal(1, range(1, 12), range(13, 24)), especial(2)], types, pools, playable);
+  assert.equal(ok.status, 'pass');
+  assert.match(ok.detail, /each side from its pool/);
+  const check = (card: unknown) => c.cardsCheck([card], types, pools, playable);
+  assert.match(check({ id: 3, type: 'normal', sides: [{ side: 1, lines: lines(range(1, 12)) }] }).detail, /card 3 has no side 2/);
+  assert.match(check({ ...especial(4), sides: [...especial(4).sides, { side: 2, lines: lines(range(13, 24)) }] }).detail, /card 4 has a side 2, which its type doesn't print/);
+  // Side 2's round shuffles only pool 2: a pool 1 song there would never land.
+  assert.match(check(normal(5, range(1, 12), range(1, 12))).detail, /card 5 side 2 has song 1 from pool 1, not pool 2/);
+  // A card from before sides: its lines are side 1, as the engine reads it.
+  assert.equal(check({ id: 6, type: 'especial', lines: lines(range(1, 12)) }).status, 'pass');
+  assert.match(check({ id: 7, type: 'normal', lines: lines(range(1, 12)) }).detail, /card 7 has no side 2/);
+  // Today's test repertoire has no pool 2: apps/cards draws side 2 from the whole repertoire, and it warns.
+  const onePool = new Map(range(1, 24).map((id) => [id, '1']));
+  const test = c.cardsCheck([normal(8, range(1, 12), range(13, 24))], types, onePool, playable);
+  assert.equal(test.status, 'warn');
+  assert.match(test.detail, /pool 2 has no songs here/);
+});
+
+test("card-types.json's types and sides, the songs' pools, and the printed cards by type", () => {
+  assert.deepEqual(c.printedCardTypes([{ type: 'normal', name: 'Cartró normal', sides: [{ side: 1, pool: '1' }] }, { type: 'especial' }]), [{ type: 'normal', sides: [{ side: 1, pool: '1' }] }, { type: 'especial' }]);
+  assert.equal(c.printedCardTypes(null), null);
+  assert.equal(c.printedCardTypes([]), null);
+  assert.equal(c.printedCardTypes([{ type: 'Not-An-Id' }]), null);
+  assert.deepEqual([...c.songPools([{ id: 1 }, { id: 2, pool: '2' }, { title: 'no id' }])], [[1, '1'], [2, '2']]);
   assert.deepEqual([...(c.printedByType([{ type: 'normal' }, { type: 'normal' }, { type: 'especial' }]) ?? [])], [['normal', 2], ['especial', 1]]);
 });
 
