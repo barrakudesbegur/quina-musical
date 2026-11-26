@@ -26,8 +26,31 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U100 · The throw song:** which "Pont aeri" (a Spotify link)? It's played (a) from its hook at full volume when the presenters start the throw (a "Llançament" button), until they end it and the break music fades back in; (b) another way.
 
 ### U101–U102 · Volumes (D130)
-- **U101 · More sliders:** the engine has other sounds too. Add (a) the doors, the end, the throws, the Hold music and the Check's sounds (snippets, the broken record, knocks), with the fanfares counting as win and fail and the transitions' risers, whooshes and impacts as songs; (b) only the user's list; (c) others.
+- **U101 · The sliders** (Sound engine's full list of the engine's sounds, 26 Nov): a master volume; songs; songs in Parlem; the DJ moves' effects (risers, snare rolls, impacts, the Spin's whoosh, echoes), separate from the presenters' pad, with teases and Signatures riding the songs; the presenters' effects (the pad); the drum's ticks; the Check's sounds (snippets, the broken record, knocks); Hold music; win (the Clear fanfare, the victory track, the winning song's loop); fail (the Failure fanfare, the error Hold music); the final-lap stinger; intros; breaks; Pausa; throws; the doors; the end. (a) All of these; (b) only the user's list; (c) another grouping.
 - **U102 · Where they live:** (a) the tablet's settings, saved in the cloud and the edition file; (b) Admin only; (c) the laptop only.
+
+### U103 · The throw song is on the cards
+"Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal), so it's printed on cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
+- (a) Keep it as the throw song.
+- (b) Pick a throw song that isn't on the cards.
+- (c) Take it out of Part 1 and keep it for the throws.
+
+### U104 · Undoing a landing while a claim is open
+Today "Enrere" during a Check undoes the last landing. With D127 it steps back a reveal instead, and never closes the Check. So a wrong landing can't be undone while a claim is open.
+- (a) That's fine: send the Check to review, discard it, then "Enrere".
+- (b) Keep a way to do it from the Check, for example a long press.
+
+### U105–U114 · Pausa in each situation (D128; Sound engine's check of 26 Nov)
+- **U105 · A Suspense when Pausa starts:** (a) it's cancelled, and the song resumes without it; (b) it's kept and resumes where it was.
+- **U106 · Aguanta when Pausa ends:** (a) Aguanta comes back, the song looping at full volume; (b) Parlem, as D128 says.
+- **U107 · Pausa during a Check:** (a) not available: the remote's hold and the tablet's button both mean "Revisió manual"; (b) the tablet's button still pauses the Check.
+- **U108 · A Celebration after Pausa:** "Parlem still on" means (a) the victory music ducked, as Parlem in a Celebration (D117); (b) something else.
+- **U109 · Where Parlem doesn't exist today** (the Interval, the intro, the doors, the end): when Pausa ends there, (a) the music resumes at its own level; (b) Parlem becomes possible there too, and resumes on.
+- **U110 · The Interval's countdown during Pausa:** (a) it freezes; (b) it keeps running.
+- **U111 · A restart during Pausa:** (a) Pausa is recorded in the night's log, so a restart comes back paused, with the saved playback; (b) not recorded: a restart comes back unpaused, in the Hold.
+- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; Parlem afterwards follows U84.
+- **U113 · Short sounds when Pausa starts** (fanfares, effects, snippets, a transition's tail): (a) they ring out under the Pausa music; (b) they're cut at once.
+- **U114 · Paused time and the night's end:** (a) the round's target end moves by the paused time, so the show doesn't rush afterwards; (b) it counts as time lost, and the Pace speeds up to catch up, as today.
 
 ### U85 · The music under a Check, between reveals
 Today the song or Hold music drops very low (−32 dB) for the whole Check, under the snippets. With the presenters pacing it, they'll talk between presses.
