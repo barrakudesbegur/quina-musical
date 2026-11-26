@@ -42,6 +42,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **U64**, a glance at Cloudflare's billing for R2's payment method;
   - **U79** and **U150**: whether phones show a Review, and the finale;
   - **U126**, whether any Admin edits on quina-dev were lost to the plan-save bug;
+  - **U161**, the spare laptop's music until December: (a) push only the shared music sets now (needs a `--shared-only` push first, about 1.7 GB), (b) push the default repertoire again (about 8 GB), or (c) wait for this year's push;
   - the permission rules for deploys and R2 pushes (`/permissions`), which only the user can add.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
