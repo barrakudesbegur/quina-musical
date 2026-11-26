@@ -109,6 +109,12 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U173 · Starting the night from the big button at the doors
+D195 puts "Comença la quina" in the big slot in a break. At the doors, what comes next is starting the night, which today is only in the menu ("Començar la nit"). That's on purpose: "an A pressed while testing the remote mustn't start the show". With D198, starting it also plays the kick-off and the voice-over story in front of everyone.
+- (a) The doors' big slot shows "Començar la nit", but only a tap on the tablet starts it; the remote's A does nothing before the night. The menu item goes.
+- (b) The big slot is the A button there too: A starts the night.
+- (c) It stays in the menu only.
+
 ### U171 · More moments for automatic sounds and voices (D198)
 The orchestrator's proposals, beyond the user's three. Yes or no for each:
 1. **Each doors line carries one useful tip,** still five voices: at 1 hour "Benvinguts! … els cartrons ja són a la venda"; at 30 minutes, the phones' QR; at 15, the bar; at 5, "aneu seient!".

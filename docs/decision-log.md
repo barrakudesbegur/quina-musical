@@ -1326,3 +1326,10 @@ New in 2026: short sound effects and voice-overs that play by themselves at chos
 - **The doors' countdown:** a chime, then "La Quina Musical començarà en …", at 1 hour, 45, 30, 15 and 5 minutes before the start.
 - **The start:** music or a fanfare to kick off the show, and maybe a voice-over with a funny story that ends with the presenters coming on stage doing something funny, then carrying on from there.
 By: the user. Source: the user's message of 26 Nov. Lives in: event.md › The night, step by step; requirements/show-and-music.md › Music for each moment.
+
+### D199 · D195 and D196 on the other screens · 2026-11-26 · Active
+These follow from the user's own reasons. They can change them on the canvas.
+- **The end screen:** "Enrere" and "Comprovar" go there too, since nothing can act there (the engine takes no claim and no Enrere after the night). "Tempesta" gets the room.
+- **D196 is "always":** where a pad or tab covers the left column (the claim pad, the finalists' pad, an open Cerca), a compact "Ara sona" line stays at its top. In play, the presenters need the playing song to name it on the hit.
+- **The Check screens** get the same compact line as the review board ("Ara sona · baixa, d'abans de la comprovació · …"), at the top of the left column, leaving room for the card's grid.
+By: the orchestrator, applying the user's D195 and D196 to Frontend's questions. Source: Frontend's report of 26 Nov (canvas v99). Lives in: requirements/screens.md › Console.
