@@ -96,10 +96,12 @@ export const S = {
   nameLabel: 'Nom (opcional)',
   namePlaceholder: 'Per exemple: Àvia',
   save: 'Desar',
-  cancel: 'Cancel·lar',
+  /** The rename sheet's way out: it closes without saving the new name (D164, D188, D201). */
+  renameDiscard: 'Descarta els canvis',
   removeTitle: (id: number) => `Treure el ${card(id).toLowerCase()}?`,
   removeText: 'Deixaràs de veure’l en aquest mòbil. El pots tornar a afegir quan vulguis.',
   removeYes: 'Sí, treure’l',
+  removeNo: 'Mantén el cartró',
   cell: (title: string, marked: boolean) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}`,
   markLabel: (mark: string) =>
     (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', bauble: 'Bola de Nadal', tree: 'Arbre de Nadal', heart: 'Cor', crown: 'Corona de rei', grapes: "Raïm de Cap d'Any", snowflake: 'Floc de neu', topHat: 'Barret de copa', poop: 'Caca del Tió' }) as Record<string, string>)[mark] ?? mark,
@@ -204,5 +206,6 @@ export const S = {
   wipeTitle: 'Esborrar totes les dades?',
   wipeText: 'Es trauran tots els teus cartrons i noms d’aquest mòbil.',
   wipeYes: 'Sí, esborrar-ho tot',
+  wipeNo: 'Mantén les dades',
   wiped: 'Dades esborrades',
 } as const;

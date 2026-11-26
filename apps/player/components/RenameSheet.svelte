@@ -47,7 +47,7 @@
     />
     <div class="rename__actions">
       <button type="submit" class="big-button tone-primary">{S.save}</button>
-      <button type="button" class="big-button" onclick={onclose}>{S.cancel}</button>
+      <button type="button" class="big-button" onclick={onclose}>{S.renameDiscard}</button>
     </div>
   </form>
 </Drawer>

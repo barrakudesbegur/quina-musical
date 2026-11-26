@@ -1,7 +1,6 @@
 <script lang="ts">
   // A confirmation for something that can't be undone with one tap (removing a card, wiping the data). `danger`
-  // paints the yes in red; `no` names the way back.
-  import { S } from '../strings.ts';
+  // paints the yes in red; `no` names what it keeps («Mantén el cartró»: D201, never «Cancel·lar»).
   import Drawer from './Drawer.svelte';
 
   let {
@@ -9,11 +8,11 @@
     title,
     text,
     yes,
-    no = S.cancel,
+    no,
     danger = true,
     onyes,
     onclose,
-  }: { name: string; title: string; text?: string; yes: string; no?: string; danger?: boolean; onyes: () => void; onclose: () => void } = $props();
+  }: { name: string; title: string; text?: string; yes: string; no: string; danger?: boolean; onyes: () => void; onclose: () => void } = $props();
 </script>
 
 <Drawer {name} {title} {onclose}>

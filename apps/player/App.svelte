@@ -136,11 +136,12 @@
           title={S.removeTitle(cardId)}
           text={`${card?.name ? `${card.name}. ` : ''}${S.removeText}`}
           yes={S.removeYes}
+          no={S.removeNo}
           onyes={() => app.removeCard(cardId)}
           onclose={closeTop}
         />
       {:else if drawer.kind === 'wipe'}
-        <ConfirmSheet name="wipe" title={S.wipeTitle} text={S.wipeText} yes={S.wipeYes} onyes={() => app.wipeData()} onclose={closeTop} />
+        <ConfirmSheet name="wipe" title={S.wipeTitle} text={S.wipeText} yes={S.wipeYes} no={S.wipeNo} onyes={() => app.wipeData()} onclose={closeTop} />
       {/if}
     </DrawerFrame>
   {/each}
