@@ -865,7 +865,7 @@ By: the user. Source: the user's message of 25 Nov. Amends: D80. Lives in: requi
 Each pool has 70 songs. Playlist 1 is filtered to its final 70; playlist 2 is being filled and will be filtered to 70 too (D101). Answers U34.
 By: the user. Source: open-questions.md › Answered (U34); the user's message of 25 Nov. Amends: D99. Lives in: requirements/songs-and-cards.md › The pool's size.
 
-### D101 · Two pools of 70, one for each half of the regular rounds · 2026-11-25 · Active; the special rounds' pool Pending (U49)
+### D101 · Two pools of 70, one for each half of the regular rounds · 2026-11-25 · Amended by D105
 The night has two playlists of 70 songs each, with different songs: Quines 1–5 play pool 1 and Quines 6–10 play pool 2. Pool 1 is final; the organizers are adding songs to pool 2 before filtering it to 70. Which pool the Quina Especial and the Desgraciat play isn't decided; assume a third one (U49).
 By: the user. Source: the user's message of 25 Nov. Amends: D99; event.md's "every round plays a shuffle of the whole pool" (now: of its own pool). Lives in: requirements/songs-and-cards.md › The pool; requirements/game-rules.md › The night's rounds.
 
@@ -876,3 +876,11 @@ By: the user. Source: the user's message of 25 Nov. Lives in: requirements/songs
 ### D103 · A final Part's song ids are alphabetical · 2026-11-25 · Active; Part 2's numbering Pending (U57)
 Once a Part is final, the user sorts its Spotify playlist alphabetically by hand (with an online tool), and the song ids follow that order. Leading articles count: "The …" sorts under T, unlike Spotify's own sort, which ignores "The". Sound engine checks the order before using it, and reports any song out of place to the user rather than fixing the playlist. Until a Part is final, ids follow the Spotify track (D79).
 By: the user. Source: the user's message of 25 Nov. Amends: D79. Lives in: requirements/songs-and-cards.md › Hooks.
+
+### D104 · The Interval music comes from a new playlist · 2026-11-26 · Active
+The Interval's music, which Pausa plays too, now comes from the Spotify playlist 0XTlZPUpt7xPoPxk4AUU3O, which has more songs. It replaces 0SsuXelEzN8gsS7WufySOg. The old files stay (D80).
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
+
+### D105 · The special rounds play their own playlist · 2026-11-26 · Active; the special card's back Pending (U59)
+The Quina Especial and the Desgraciat both play a third set of songs, the Spotify playlist 79G8VcNrkih9GGjIzb47Gt, on the special card (D81). It's empty for now, so until it's final the special card uses Part 1's songs. Once final, it's sorted and numbered like the others (D103). Answers U49's pool question.
+By: the user. Source: open-questions.md › Answered (U49); the user's message of 26 Nov. Amends: D101. Lives in: requirements/songs-and-cards.md › The pool.

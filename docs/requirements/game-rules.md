@@ -22,7 +22,7 @@ _From event.md › The night, step by step, One round, The special rounds._
 
 - Each edition decides how many rounds it plays and in what order. The night's plan in Admin holds them (pending U18). 2025 played 10 regular rounds, then the Desgraciat, then the Especial: 12 rounds. 2024's 12 rounds felt long.
 - Each round plays one card type, chosen in Admin. Only cards of that type are valid in it.
-- Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026: Quines 1–5 play pool 1 (side 1), Quines 6–10 pool 2 (side 2); the special rounds pending U49. The presenters explain the sides in rounds 1 and 6.
+- Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026: Quines 1–5 play pool 1 (side 1), Quines 6–10 pool 2 (side 2); the Especial and the Desgraciat a third set on the special card, Part 1's songs until it's final (D105). The presenters explain the sides in rounds 1 and 6.
 - **The order can change during the night.** Upcoming rounds can be reordered and edited live, for example to move the Desgraciat. Rounds already played stay fixed.
 - A round never starts by itself. The presenters start it when they've announced its prizes.
 - On screen a round is "Quina 1", "Quina 2"…. The special round is "Quina Especial", with no number, and the Desgraciat is "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".

@@ -16,9 +16,9 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U49 · The special rounds' pool
-D101 gives Quines 1–5 and 6–10 a pool each. The Quina Especial and the Desgraciat may play a third.
-**Default:** a third pool of 70 for the special card, which plays both special rounds (D81), printed on one side with a blank back. The back could carry something instead (house rules, sponsors); that needs deciding before print.
+### U59 · The special card's back
+The special card plays the special rounds' own playlist (D105) on one side.
+**Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
 
 ### U52 · Duplex printing and the paper
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
@@ -116,6 +116,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U49 · The special rounds' pool** (2026-11-26) → D105: their own playlist (79G8VcNrkih9GGjIzb47Gt), using Part 1's songs until it's final. The special card's back moved to U59.
 - **U34 · How many songs in the pool** (2026-11-25) → D100: 70, final, for each pool.
 - **U42 · Where the night's settings file lives** (2026-11-25) → D97 and D98: in this public repo, every prize included; hiding prizes is only for the hype on the players' screens.
 - **U45 · The shake icon** (2026-11-25) → D94: option C with a smaller, medium "×3" (size option 2 for now), no frame.

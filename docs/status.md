@@ -10,7 +10,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 |---|---|
 | Card type per round, every screen and the cloud | **Done** |
 | The Desgraciat round: engine, cloud and screens | **Done**, including the shared win and no celebration title. Its default card type becomes the special card (D70) |
-| Songs downloaded | **Two pools of 70 (D100, D101).** Pool 1 is final: the 76 were downloaded and checked, and the temporary cards are remade from its 70. Pool 2 is still being filled; the special rounds' pool is pending U49. Storage, disk and hook time for 140–210 songs are being checked |
+| Songs downloaded | **Two pools of 70 (D100, D101).** Pool 1 is final: the 76 were downloaded and checked, and the temporary cards are remade from its 70. Pool 2 is still being filled; the special rounds play their own playlist, Part 1's songs until it's final (D105). The Interval music has a new playlist (D104). Storage, disk and hook time for 140–210 songs are being checked |
 | The card generator ready | **Ready**, with provisional values (D67, D68) and the PDF's install-script approval still to do (U17) |
 | The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
 | Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
@@ -23,10 +23,10 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
-| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Temporary cards from Part 1's 70; the expected end at 70 done (8e6f563: Line ~14, Bingo ~46, last standing ~21 songs; 2025's night reproduced within 2 min a round); the side/Part protocol agreed | Pool 2 when filtered; prep by 3 Dec; the expected end for 70 songs | U13, U14, U49, U51, U55–U58 |
+| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Temporary cards from Part 1's 70; the expected end at 70 done (8e6f563: Line ~14, Bingo ~46, last standing ~21 songs; 2025's night reproduced within 2 min a round); the side/Part protocol agreed | Pool 2 when filtered; prep by 3 Dec; the expected end for 70 songs | U13, U14, U51, U55–U58 |
 | **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The double-sided card with the user (D102); the prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U46, U47, U50 |
 | **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The settings file (`plan check/push/pull`) after U43 | U16, U19, U43, U48 |
-| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D102 logged on 25 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U36–U39, U43, U48, U49, U52–U56 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D105 logged on 25–26 Nov; the pool-size study and the 2025 data delivered | The Check's redesign with the user (in chat); the prizes model once U36–U39 are answered | U36–U39, U43, U48, U52–U54, U59 |
 
 ## Recently done (25–26 Nov)
 

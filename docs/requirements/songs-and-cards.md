@@ -12,7 +12,7 @@ What the song pool, the song preparation and the printed cards must be, as it st
 _From event.md › The songs._
 
 - A **Pool** is a curated playlist a side of the cards is printed from. Each round plays one pool, and its Queue is a shuffle of that whole pool.
-- **2026 has two pools of 70 songs** with different songs (D101): pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special rounds' pool is pending U49 (default: a third pool of 70).
+- **2026 has two pools of 70 songs** with different songs (D101): pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special rounds play a third set, the playlist 79G8VcNrkih9GGjIzb47Gt, on the special card (D105). It's empty for now, so the special card uses Part 1's songs until it's final.
 - The team builds it together:
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
