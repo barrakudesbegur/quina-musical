@@ -66,6 +66,12 @@ export const ICONS = {
   gauge: ['M12 13l4-4', 'M3.5 17a9 9 0 1 1 17 0'],
   /** Futur: a crystal ball on its stand. */
   crystal: ['M12 3a7 7 0 1 0 0 14a7 7 0 1 0 0-14z', 'M7 20h10', 'M9 17l-1 3', 'M15 17l1 3', 'M9.5 8a3 3 0 0 1 3-2'],
+  /** Estat: a bar chart on its axis (the Consola-Pestanyes-Noves board). */
+  chart: ['M4 4v16h16', 'M8 16v-5', 'M12 16V8', 'M16 16v-3'],
+  /** Cerca › Cartró: a card's grid. */
+  grid: ['M4 5h16v14H4z', 'M4 9.7h16', 'M4 14.3h16', 'M8 5v14', 'M12 5v14', 'M16 5v14'],
+  /** ↵ on a keypad: show what was typed. */
+  enter: ['M19 5v7a3 3 0 0 1-3 3H6', 'M10 11l-4 4 4 4'],
   /** Premis: a gift. */
   gift: [
     'M5.5 9h13a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z',

@@ -34,10 +34,11 @@ function input(s: FlowState | null): DefaultActionInput {
   return { state: s, flow, nowMs: NOW, plan: SAMPLE_PLAN, nextEnabled: controlsModel(controls).next.enabled, can: (cmd: AnyCommandName) => canSend(cmd, controls) };
 }
 
-test('the Dempeus tab comes first in the Desgraciat round only', () => {
-  assert.deepEqual(helperTabsFor('desgraciat'), ['standing', 'future', 'prizes', 'effects']);
-  assert.deepEqual(helperTabsFor('normal'), ['future', 'prizes', 'effects']);
-  assert.deepEqual(helperTabsFor(undefined), ['future', 'prizes', 'effects']);
+test('the tabs: Estat, Cerca, Futur, Premis, Efectes (D187); Dempeus takes Estat\'s place in the Desgraciat round', () => {
+  assert.deepEqual(helperTabsFor('normal'), ['state', 'search', 'future', 'prizes', 'effects']);
+  assert.deepEqual(helperTabsFor('special'), ['state', 'search', 'future', 'prizes', 'effects']);
+  assert.deepEqual(helperTabsFor(undefined), ['state', 'search', 'future', 'prizes', 'effects']);
+  assert.deepEqual(helperTabsFor('desgraciat'), ['standing', 'search', 'future', 'prizes', 'effects']);
 });
 
 test('Dempeus is selected as the round starts and when one card is left; otherwise the device keeps its choice', () => {
@@ -55,10 +56,13 @@ test('Dempeus is selected as the round starts and when one card is left; otherwi
   assert.equal(step.tab, 'standing');
   step = helperTabAfter('future', step.memory, last);
   assert.equal(step.tab, 'future');
-  // Another round: Dempeus doesn't exist there, so Futur; a regular tab is kept.
-  assert.equal(helperTabAfter('standing', step.memory, play).tab, 'future');
+  // Another round: Dempeus doesn't exist there, so Estat, in its place; a regular tab is kept.
+  assert.equal(helperTabAfter('standing', step.memory, play).tab, 'state');
   assert.equal(helperTabAfter('prizes', step.memory, play).tab, 'prizes');
+  assert.equal(helperTabAfter('search', step.memory, play).tab, 'search');
   assert.equal(helperTabAfter('prizes', EMPTY_TAB_MEMORY, null).tab, 'prizes');
+  // Estat doesn't exist in the Desgraciat round: Dempeus, in its place (here the round starts anyway).
+  assert.equal(helperTabAfter('state', helperTabAfter('state', EMPTY_TAB_MEMORY, many).memory, many).tab, 'standing');
 });
 
 test('the count "N dempeus de M cartrons": the bar above 60, the sorted cards from 60 down, gold from 3 down', () => {

@@ -1,6 +1,7 @@
-// Small lookups the panels share: a song's title, a round's prize bundles from the Game plan and whether phones
-// may see them yet, the Winners of a Celebration, and the Winners grouped by round. Pure.
-import { winKindsOf, type CommandFields, type RoundKind, type ShowState } from '@quina/protocol';
+// Small lookups the panels share: a song's title (or every song's title and artist, for the tabs' lists), a round's
+// prize bundles from the Game plan and whether phones may see them yet, the Winners of a Celebration, and the Winners
+// grouped by round. Pure.
+import { winKindsOf, type CommandFields, type RoundKind, type ShowState, type SongRef } from '@quina/protocol';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 import type { CelebrationInfo, WinKind, WinnerInfo } from '../../../packages/ui/flow.ts';
 import { prizeBundleOf, revealedRounds, roundIntroFields, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../../packages/ui/plan.ts';
@@ -13,6 +14,15 @@ export function songTitleOf(songId: number | null | undefined, state: ShowState 
   const landing = state?.landings.find((l) => l.songId === songId);
   if (landing) return landing.title;
   return catalog?.songs.get(songId)?.title ?? null;
+}
+
+/** Every song's title and artist the console knows, for the song lists: the printed cards', then the songs to come
+ * (the engine's `upcoming`), then the snapshot's (current, next, landings), the later ones winning. */
+export function songIndex(catalog: Catalog | null, state: ShowState | null, upcoming: readonly SongRef[] | null): Map<number, SongRef> {
+  const index = new Map<number, SongRef>();
+  for (const s of catalog?.songs.values() ?? []) index.set(s.id, { songId: s.id, title: s.title, artist: s.artist });
+  for (const s of [...(upcoming ?? []), ...(state?.landings ?? []), state?.next, state?.current]) if (s) index.set(s.songId, { songId: s.songId, title: s.title, artist: s.artist });
+  return index;
 }
 
 export interface PrizeView {

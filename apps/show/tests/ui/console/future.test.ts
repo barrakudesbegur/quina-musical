@@ -1,18 +1,22 @@
-// The Futur tab: the round's counted songs gathered from snapshots, the marks chart, the lower bound on the
-// first Line and Quina, and what shows "—" when the console can't know.
+// The Estat and Futur tabs: the round's counted songs gathered from snapshots, Estat's chart of cards by songs
+// missing, the Futur's songs to the first Line and Quina (exact from the engine, else a lower bound), and what shows
+// "—" when the console can't know.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { LandingInfo, PossibleWinners, RoundInfo } from '@quina/protocol';
 import { cardFace, type CatalogCard } from '../../../../../packages/ui/data/catalog.ts';
 import {
   EMPTY_LANDING_LOG,
+  chartView,
   countedSongs,
   fewestMissing,
   futureView,
-  markBars,
-  markHistogram,
+  missingBars,
+  missingCounts,
   recordLandings,
+  roundCards,
   validCards,
+  type ChartInput,
   type FutureInput,
 } from '../../../../console/logic/future.ts';
 import { cardsInPlay } from '../../../../console/logic/possible-winners.ts';
@@ -65,7 +69,9 @@ test('counted songs: the Queue up to its position, complete only when every inde
   assert.equal(countedSongs(late, { round: ROUND, queue: queue(16) }).complete, false);
 });
 
-test("valid cards: in play, of the round's card type, on the round's side", () => {
+test("the round's cards: every printed card of its type on its side; valid ones are also in play", () => {
+  assert.deepEqual(roundCards(PRINTED, 'normal', 1).map((c) => c.id), [1, 2], 'sold or not');
+  assert.deepEqual(roundCards(PRINTED, 'especial', 2), [], 'the especial card has no side 2');
   assert.deepEqual(validCards(PRINTED, new Set([1, 3]), 'normal', 1).map((c) => c.id), [1]);
   assert.deepEqual(validCards(PRINTED, new Set([1, 2, 3]), 'especial', 1).map((c) => c.id), [3]);
   assert.deepEqual(validCards(PRINTED, new Set([1, 2]), 'normal', 2).map((c) => c.lines[0]), [[41, 42, 43, 44], [53, 54, 55, 56]], "side 2's songs");
@@ -74,18 +80,16 @@ test("valid cards: in play, of the round's card type, on the round's side", () =
 
 const side1 = (id: number) => cardFace(PRINTED.get(id)!, 1)!;
 
-test('the marks chart: cards per number of marked songs, most marked first', () => {
+test("Estat's chart: cards by songs missing for a Line or the Quina, rows 0 to 4+", () => {
   const cards = [side1(1), side1(2)];
-  const histogram = markHistogram(cards, [1, 2, 3, 13]);
-  assert.equal(histogram.length, 13, '0 to 12 marked songs');
-  assert.equal(histogram[3], 1);
-  assert.equal(histogram[1], 1);
-  assert.deepEqual(markBars(histogram), [
-    { marked: 3, cards: 1 },
-    { marked: 2, cards: 0 },
-    { marked: 1, cards: 1 },
-  ]);
-  assert.deepEqual(markBars(new Array<number>(13).fill(0)), []);
+  assert.deepEqual(missingCounts(cards, [1, 2, 3, 13], 'line'), [0, 1, 0, 1], 'card 1 misses 1 (row 1), card 2 misses 3');
+  assert.deepEqual(missingCounts(cards, [1, 2, 3, 13], 'bingo'), [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1]);
+  assert.deepEqual(
+    missingBars([3, 12, 44, 91, 40, 20, 3]).map((b) => [b.missing, b.orMore, b.cards]),
+    [[0, false, 3], [1, false, 12], [2, false, 44], [3, false, 91], [4, true, 63]],
+    'the last row adds up every card missing 4 or more',
+  );
+  assert.deepEqual(missingBars([]).map((b) => b.cards), [0, 0, 0, 0, 0], 'every row drawn, even empty');
 });
 
 test('the fewest songs any card misses: a lower bound on the first Line and Quina', () => {
@@ -94,6 +98,41 @@ test('the fewest songs any card misses: a lower bound on the first Line and Quin
   assert.equal(fewestMissing(cards, [1, 2, 3], 'bingo'), 9);
   assert.equal(fewestMissing(cards, [], 'line'), 4);
   assert.equal(fewestMissing([], [1], 'line'), null);
+});
+
+const chartInput = (over: Partial<ChartInput>): ChartInput => ({
+  printed: PRINTED,
+  inPlay: cardsInPlay('1-2'),
+  cardType: 'normal',
+  side: 1,
+  counted: { ids: [1, 2, 3, 13], complete: true },
+  lineConfirmed: false,
+  ...over,
+});
+
+test('the chart counted here: towards the Line, then the Quina once the Line is confirmed', () => {
+  const v = chartView(chartInput({}));
+  assert.deepEqual([v.kind, v.gap, v.validCount], ['line', null, 2]);
+  assert.deepEqual(v.bars?.map((b) => b.cards), [0, 1, 0, 1, 0]);
+  const bingo = chartView(chartInput({ lineConfirmed: true }));
+  assert.equal(bingo.kind, 'bingo');
+  assert.deepEqual(bingo.bars?.map((b) => b.cards), [0, 0, 0, 0, 2], 'both cards miss 9 or more');
+  // A side-2 round counts side 2's songs: the same landings mark nothing there.
+  assert.deepEqual(chartView(chartInput({ side: 2 })).bars?.map((b) => b.cards), [0, 0, 0, 0, 2]);
+});
+
+test('the chart: what the console can’t count shows as a gap, never a guess', () => {
+  assert.deepEqual(chartView(chartInput({ printed: null })), { kind: 'line', bars: null, gap: 'cards', validCount: null });
+  assert.equal(chartView(chartInput({ inPlay: cardsInPlay('') })).gap, 'inPlay');
+  assert.equal(chartView(chartInput({ counted: { ids: [13], complete: false } })).gap, 'landings');
+});
+
+test("the chart from the engine's future: the whole round, even on a console opened late", () => {
+  const engine = { lineAt: 23, bingoAt: null, toLine: [0, 2, 1, 0, 3, 1], toBingo: [0, 0, 0, 0, 0, 0, 0, 0, 0, 7], markCounts: [] };
+  const v = chartView(chartInput({ engine, printed: null, counted: { ids: [], complete: false } }));
+  assert.deepEqual([v.gap, v.validCount], [null, 7]);
+  assert.deepEqual(v.bars?.map((b) => b.cards), [0, 2, 1, 0, 4]);
+  assert.deepEqual(chartView(chartInput({ engine, lineConfirmed: true })).bars?.map((b) => b.cards), [0, 0, 0, 0, 7]);
 });
 
 const input = (over: Partial<FutureInput>): FutureInput => ({
@@ -107,21 +146,16 @@ const input = (over: Partial<FutureInput>): FutureInput => ({
   ...over,
 });
 
-test('the view: chart and lower bounds when everything is known', () => {
+test('the Futur without the engine: lower bounds when every counted song is known', () => {
   const v = futureView(input({}));
-  assert.equal(v.gap, null);
-  assert.equal(v.validCount, 2);
-  assert.deepEqual(v.bars?.map((b) => b.marked), [3, 2, 1]);
   assert.deepEqual(v.line, { state: 'unknown', atLeast: 1 });
   assert.deepEqual(v.bingo, { state: 'unknown', atLeast: 9 });
   // A side-2 round counts side 2's songs: the same landings mark nothing there.
-  const two = futureView(input({ side: 2 }));
-  assert.deepEqual(two.bars?.map((b) => b.marked), [0], 'no card has a marked song');
-  assert.deepEqual(two.line, { state: 'unknown', atLeast: 4 });
+  assert.deepEqual(futureView(input({ side: 2 })).line, { state: 'unknown', atLeast: 4 });
   assert.deepEqual(futureView(input({ side: 2, counted: { ids: [41, 42, 43], complete: true } })).line, { state: 'unknown', atLeast: 1 });
 });
 
-test('the view: a listed possible winner is "now"; a confirmed Line is "done"', () => {
+test('the Futur: a listed possible winner is "now"; a confirmed Line is "done"', () => {
   const pw: PossibleWinners = { line: [{ cardId: 1, lines: [0], completedBy: 4 }], bingo: [] };
   const v = futureView(input({ possibleWinners: pw }));
   assert.deepEqual(v.line, { state: 'now' });
@@ -129,26 +163,29 @@ test('the view: a listed possible winner is "now"; a confirmed Line is "done"', 
   assert.deepEqual(futureView(input({ lineConfirmed: true })).line, { state: 'done' });
 });
 
-test('the view: what the console can’t know shows as a gap, never a guess', () => {
-  const noCards = futureView(input({ printed: null }));
-  assert.equal(noCards.gap, 'cards');
-  assert.equal(noCards.bars, null);
-  assert.deepEqual(noCards.line, { state: 'unknown', atLeast: null });
-  assert.equal(futureView(input({ inPlay: cardsInPlay('') })).gap, 'inPlay');
-  const partial = futureView(input({ counted: { ids: [13], complete: false } }));
-  assert.equal(partial.gap, 'landings');
-  assert.equal(partial.validCount, null);
-  assert.deepEqual(partial.bingo, { state: 'unknown', atLeast: null });
+test('the Futur without the engine: no bound it can’t count', () => {
+  assert.deepEqual(futureView(input({ printed: null })).line, { state: 'unknown', atLeast: null });
+  assert.deepEqual(futureView(input({ inPlay: cardsInPlay('') })).line, { state: 'unknown', atLeast: null });
+  assert.deepEqual(futureView(input({ counted: { ids: [13], complete: false } })).bingo, { state: 'unknown', atLeast: null });
 });
 
-test("the view: the engine's future gives exact songs ahead and the whole round's chart, even opened late", () => {
+test("the Futur from the engine's future: exact songs ahead, even opened late", () => {
   const engine = { lineAt: 23, bingoAt: null, toLine: [0, 2, 1], toBingo: [], markCounts: [0, 1, 0, 2] };
   const v = futureView(input({ engine, position: 20, printed: null, counted: { ids: [], complete: false } }));
-  assert.equal(v.gap, null, 'no gap: the engine counted every song');
-  assert.equal(v.validCount, 3);
-  assert.deepEqual(v.bars?.map((b) => [b.marked, b.cards]), [[3, 2], [2, 0], [1, 1]]);
   assert.deepEqual(v.line, { state: 'in', songs: 3 });
   assert.deepEqual(v.bingo, { state: 'never' });
   assert.deepEqual(futureView(input({ engine, position: 22 })).line, { state: 'in', songs: 1 }, 'the next song');
   assert.deepEqual(futureView(input({ engine, lineConfirmed: true })).line, { state: 'done' });
+});
+
+test("the Futur from the console's own forecast (the engine's order, no engine future): exact too", () => {
+  const win = (kind: 'line' | 'bingo', n: number) => ({ kind, n, winners: [] });
+  assert.deepEqual(futureView(input({ forecast: { line: win('line', 4), bingo: win('bingo', 31) } })), {
+    line: { state: 'in', songs: 4 },
+    bingo: { state: 'in', songs: 31 },
+    winners: { line: [], bingo: [], total: 0 },
+  });
+  assert.deepEqual(futureView(input({ forecast: { line: win('line', 0), bingo: null } })).line, { state: 'now' });
+  assert.deepEqual(futureView(input({ forecast: { line: win('line', 0), bingo: null } })).bingo, { state: 'never' });
+  assert.deepEqual(futureView(input({ lineConfirmed: true, forecast: { line: null, bingo: null } })).line, { state: 'done' });
 });

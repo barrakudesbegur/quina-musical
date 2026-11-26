@@ -73,7 +73,7 @@ export const CONSOLE_COMMANDS = [
   'next', 'back', 'hold', 'holdMusic', 'suspense', 'setPace', 'setGame', 'confirmLine', 'newRound', 'panic', 'sfx',
   'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
   'celebrationMusic', 'interval', 'endGame', 'pause',
-  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm', 'finale', 'finaleCue',
+  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm', 'finale', 'finaleCue', 'getUpcoming',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 

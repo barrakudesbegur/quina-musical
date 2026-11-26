@@ -1,19 +1,20 @@
-// The Futur tab, the console's crystal ball (PRIVATE: presenters only, never the public feed, the projector or
-// the phones). It shows what the console can know from what it is given:
-// - how many cards have each number of marked songs: the printed cards (cards.json), the cards in play
-//   valid this round, and the round's counted songs;
-// - the songs left until the first possible Line and Quina: "now" when the engine already lists a possible
-//   winner; otherwise the exact number needs the Queue's order, which the engine keeps to itself, so the
-//   console only gives a lower bound (the fewest songs any card still misses);
-// - the engine's possible winners.
+// What the console knows about the round's wins (PRIVATE: presenters only, never the public feed, the projector or
+// the phones), for the Estat and Futur tabs:
+// - Estat: how many cards miss each number of songs for a Line (a Quina once the Line is confirmed), from the
+//   engine's `future.toLine`/`toBingo`, or counted here from the printed cards (cards.json), the cards in play and
+//   the round's counted songs;
+// - Futur: the songs left until the first possible Line and Quina, exact from the engine's `future` (the Queue is
+//   the engine's) or from the console's own forecast once the engine sent the order (`upcoming.ts`); else "now"
+//   when the engine lists a possible winner, or only a lower bound (the fewest songs any card still misses); and
+//   the engine's possible winners.
 // The snapshot carries only the round's last 10 landings, so the console gathers the counted songs from the
 // snapshots it sees (`recordLandings`): a console opened mid-round knows them all only after a short round.
 // Pure.
 import type { FutureInfo, PossibleWinners, RoundInfo, ShowState } from '@quina/protocol';
-import { cardMarks, cardsForRound, type PlayerCard } from '../../../packages/rules/marks.ts';
+import { cardsForRound, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { cardFace, type CatalogCard } from '../../../packages/ui/data/catalog.ts';
-import type { WinKind } from '../../../packages/ui/flow.ts';
 import { possibleWinnersOf, possibleWinnersView, type CardsInPlay, type PossibleWinnersView } from './possible-winners.ts';
+import type { WinForecast } from './upcoming.ts';
 
 // ---- the round's counted songs -------------------------------------------------------------------------
 /** The songs seen at each Queue index this round. The Queue never changes after the Shuffle, so an index
@@ -66,52 +67,107 @@ export function countedSongs(log: LandingLog, state: Pick<ShowState, 'round' | '
 }
 
 // ---- the cards ---------------------------------------------------------------------------------------------
-/** The printed cards that count this round, on its side: in play, of the round's card type (roundCardType), and their
- * face on the round's side (roundSide). */
+/** Every printed card of the round's card type (roundCardType), sold or not, by its face on the round's side
+ * (roundSide). */
+export function roundCards(printed: ReadonlyMap<number, CatalogCard>, cardType: string, side: number): PlayerCard[] {
+  return cardsForRound([...printed.values()], cardType).flatMap((c) => cardFace(c, side) ?? []);
+}
+
+/** The printed cards that count this round: of its type and side (roundCards), and in play. */
 export function validCards(printed: ReadonlyMap<number, CatalogCard>, inPlay: ReadonlySet<number>, cardType: string, side: number): PlayerCard[] {
-  return cardsForRound([...printed.values()].filter((c) => inPlay.has(c.id)), cardType).flatMap((c) => cardFace(c, side) ?? []);
+  return roundCards(printed, cardType, side).filter((c) => inPlay.has(c.id));
 }
 
-/** How many cards have each number of marked songs: index n holds the cards with n songs landed. */
-export function markHistogram(cards: readonly PlayerCard[], landed: readonly number[]): number[] {
-  const size = cards.reduce((max, c) => Math.max(max, c.lines.reduce((n, line) => n + line.length, 0)), 0);
-  const counts = new Array<number>(size + 1).fill(0);
-  for (const card of cards) counts[cardMarks(card, landed).count]++;
+/** The songs a card still misses for its closest Line, or for its Quina (a full card). */
+export function missingOf(card: PlayerCard, landed: ReadonlySet<number>, kind: 'line' | 'bingo'): number {
+  const missing = (ids: readonly number[]) => ids.filter((id) => !landed.has(id)).length;
+  return kind === 'line' ? Math.min(...card.lines.map(missing)) : missing(card.lines.flat());
+}
+
+/** How many cards miss each number of songs (index = songs missing, 0 = it has it): the engine's `toLine`/`toBingo`,
+ * counted here. */
+export function missingCounts(cards: readonly PlayerCard[], landed: readonly number[], kind: 'line' | 'bingo'): number[] {
+  const set = new Set(landed);
+  const counts: number[] = [];
+  for (const card of cards) {
+    const m = missingOf(card, set, kind);
+    while (counts.length <= m) counts.push(0);
+    counts[m]++;
+  }
   return counts;
-}
-
-export interface MarkBar {
-  /** Songs marked. */
-  marked: number;
-  /** Cards with that many. */
-  cards: number;
-}
-
-/** The chart's bars: from the most marked songs down to the fewest that any card has (empty rows inside kept). */
-export function markBars(histogram: readonly number[]): MarkBar[] {
-  const used = histogram.flatMap((n, marked) => (n > 0 ? [marked] : []));
-  if (!used.length) return [];
-  const bars: MarkBar[] = [];
-  for (let marked = Math.max(...used); marked >= Math.min(...used); marked--) bars.push({ marked, cards: histogram[marked] });
-  return bars;
 }
 
 /**
  * The fewest songs any card still misses for a Line (its closest line) or its Bingo: at least that many songs
  * must land before the first one can come. Null without cards.
  */
-export function fewestMissing(cards: readonly PlayerCard[], landed: readonly number[], kind: WinKind): number | null {
-  const set = new Set(landed);
-  const missing = (ids: readonly number[]) => ids.filter((id) => !set.has(id)).length;
-  let best: number | null = null;
-  for (const card of cards) {
-    const m = kind === 'line' ? Math.min(...card.lines.map(missing)) : missing(card.lines.flat());
-    if (best === null || m < best) best = m;
-  }
-  return best;
+export function fewestMissing(cards: readonly PlayerCard[], landed: readonly number[], kind: 'line' | 'bingo'): number | null {
+  const first = missingCounts(cards, landed, kind).findIndex((n) => n > 0);
+  return first < 0 ? null : first;
 }
 
-// ---- the tab -----------------------------------------------------------------------------------------------
+// ---- Estat: the chart ----------------------------------------------------------------------------------------
+/** The chart's rows go up to "4+": further than that, the exact number tells the presenters nothing. */
+export const MISSING_ROWS = 4;
+
+export interface MissingBar {
+  /** Songs missing (0: they already have it). */
+  missing: number;
+  /** The last row, which also counts every card missing more ("Falten 4+"). */
+  orMore: boolean;
+  cards: number;
+}
+
+/** The chart's rows: 0, 1, 2, 3 and 4+ songs missing, every row drawn even when empty. */
+export function missingBars(counts: readonly number[], rows: number = MISSING_ROWS): MissingBar[] {
+  return Array.from({ length: rows + 1 }, (_, missing) => ({
+    missing,
+    orMore: missing === rows,
+    cards: missing === rows ? counts.slice(rows).reduce((a, b) => a + b, 0) : (counts[missing] ?? 0),
+  }));
+}
+
+/** Why the chart can't be drawn: no printed cards (cards.json), no cards in play, or not every counted song seen. */
+export type ChartGap = 'cards' | 'inPlay' | 'landings';
+
+export interface ChartInput {
+  /** The engine's private future (ShowState.future): absent from an older engine, null without cards in play; the
+   * console then counts what it can itself. */
+  engine?: FutureInfo | null;
+  /** The printed cards, or null until cards.json loads. */
+  printed: ReadonlyMap<number, CatalogCard> | null;
+  inPlay: CardsInPlay;
+  /** The printed card type the round plays (roundCardType(state.round)). */
+  cardType: string;
+  /** The card side the round plays (roundSide(state.round)). */
+  side: number;
+  counted: CountedSongs;
+  lineConfirmed: boolean;
+}
+
+export interface ChartView {
+  /** What the cards are counted towards: the Line, then the Quina once the Line is confirmed. */
+  kind: 'line' | 'bingo';
+  /** Null when it can't be drawn (`gap` says why). */
+  bars: MissingBar[] | null;
+  gap: ChartGap | null;
+  /** The cards counted this round, when known. */
+  validCount: number | null;
+}
+
+export function chartView({ engine, printed, inPlay, cardType, side, counted, lineConfirmed }: ChartInput): ChartView {
+  const kind = lineConfirmed ? 'bingo' : 'line';
+  if (engine) {
+    const counts = kind === 'line' ? engine.toLine : engine.toBingo;
+    return { kind, bars: missingBars(counts), gap: null, validCount: counts.reduce((a, b) => a + b, 0) };
+  }
+  const gap: ChartGap | null = !printed || printed.size === 0 ? 'cards' : !inPlay.ids ? 'inPlay' : !counted.complete ? 'landings' : null;
+  if (gap !== null || !printed || !inPlay.ids) return { kind, bars: null, gap, validCount: null };
+  const cards = validCards(printed, inPlay.ids, cardType, side);
+  return { kind, bars: missingBars(missingCounts(cards, counted.ids, kind)), gap: null, validCount: cards.length };
+}
+
+// ---- Futur: the songs to the first wins ------------------------------------------------------------------------
 /**
  * How far the first possible Line or Quina is: a card already has it (`now`), the Line was confirmed this
  * round (`done`), or not known exactly (`unknown`, with a lower bound when the console can count one).
@@ -125,65 +181,49 @@ export type SongsAhead =
   | { state: 'never' }
   | { state: 'unknown'; atLeast: number | null };
 
-/** Why the chart can't be drawn: no printed cards (cards.json), no cards in play, or not every counted song seen. */
-export type ChartGap = 'cards' | 'inPlay' | 'landings';
-
 export interface FutureInput {
-  /** The engine's private future (ShowState.future): exact, from the Queue. Absent from an older engine, null
-   * without cards in play; the console then counts what it can itself. */
+  /** The engine's private future (ShowState.future): exact, from the Queue. */
   engine?: FutureInfo | null;
   /** The Queue index of the last counted landing (`queue.position`). */
   position?: number;
-  /** The printed cards, or null until cards.json loads. */
   printed: ReadonlyMap<number, CatalogCard> | null;
   inPlay: CardsInPlay;
-  /** The printed card type the round plays (roundCardType(state.round)). */
   cardType: string;
-  /** The card side the round plays (roundSide(state.round)). */
   side: number;
   counted: CountedSongs;
   possibleWinners: PossibleWinners;
   lineConfirmed: boolean;
+  /** The console's forecast from the songs to come (forecastWins): exact too, when the engine sends no `future`. */
+  forecast?: { line: WinForecast | null; bingo: WinForecast | null } | null;
 }
 
 export interface FutureView {
-  /** Most marked first; null when it can't be drawn (`gap` says why). */
-  bars: MarkBar[] | null;
-  gap: ChartGap | null;
-  /** The cards counted this round, when known. */
-  validCount: number | null;
   line: SongsAhead;
   bingo: SongsAhead;
+  /** The engine's possible winners: the cards that have a win now. */
   winners: PossibleWinnersView;
 }
 
-export function futureView({ engine, position = -1, printed, inPlay, cardType, side, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
-  const settled = (kind: WinKind): SongsAhead | null =>
+export function futureView({ engine, position = -1, printed, inPlay, cardType, side, counted, possibleWinners, lineConfirmed, forecast }: FutureInput): FutureView {
+  const settled = (kind: 'line' | 'bingo'): SongsAhead | null =>
     kind === 'line' && lineConfirmed ? { state: 'done' } : possibleWinnersOf(possibleWinners, kind).length > 0 ? { state: 'now' } : null;
+  const winners = possibleWinnersView(possibleWinners, inPlay);
   if (engine) {
-    // The engine's numbers: the whole round's marks and the exact songs ahead, even on a console opened late.
-    const at = (kind: WinKind): SongsAhead => {
+    // The engine's numbers: exact, even on a console opened late.
+    const at = (kind: 'line' | 'bingo'): SongsAhead => {
       const index = kind === 'line' ? engine.lineAt : engine.bingoAt;
       return settled(kind) ?? (index === null ? { state: 'never' } : { state: 'in', songs: Math.max(1, index - position) });
     };
-    return {
-      bars: markBars(engine.markCounts),
-      gap: null,
-      validCount: engine.markCounts.reduce((a, b) => a + b, 0),
-      line: at('line'),
-      bingo: at('bingo'),
-      winners: possibleWinnersView(possibleWinners, inPlay),
-    };
+    return { line: at('line'), bingo: at('bingo'), winners };
   }
-  const gap: ChartGap | null = !printed || printed.size === 0 ? 'cards' : !inPlay.ids ? 'inPlay' : !counted.complete ? 'landings' : null;
-  const cards = gap === null && printed && inPlay.ids ? validCards(printed, inPlay.ids, cardType, side) : null;
-  const ahead = (kind: WinKind): SongsAhead => settled(kind) ?? { state: 'unknown', atLeast: cards ? fewestMissing(cards, counted.ids, kind) : null };
-  return {
-    bars: cards ? markBars(markHistogram(cards, counted.ids)) : null,
-    gap,
-    validCount: cards ? cards.length : null,
-    line: ahead('line'),
-    bingo: ahead('bingo'),
-    winners: possibleWinnersView(possibleWinners, inPlay),
-  };
+  if (forecast) {
+    const at = (kind: 'line' | 'bingo'): SongsAhead => {
+      const win = forecast[kind];
+      return settled(kind) ?? (!win ? { state: 'never' } : win.n === 0 ? { state: 'now' } : { state: 'in', songs: win.n });
+    };
+    return { line: at('line'), bingo: at('bingo'), winners };
+  }
+  const cards = printed && printed.size > 0 && inPlay.ids && counted.complete ? validCards(printed, inPlay.ids, cardType, side) : null;
+  const ahead = (kind: 'line' | 'bingo'): SongsAhead => settled(kind) ?? { state: 'unknown', atLeast: cards ? fewestMissing(cards, counted.ids, kind) : null };
+  return { line: ahead('line'), bingo: ahead('bingo'), winners };
 }

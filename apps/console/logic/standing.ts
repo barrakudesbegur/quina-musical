@@ -6,12 +6,13 @@
 import { STANDING_LIST_MAX, type FutureInfo, type RoundInfo, type ShowState, type StandingInfo } from '@quina/protocol';
 import { roundKey, type SongsAhead } from './future.ts';
 
-/** The helpers' tabs (HelperTabs.svelte): Dempeus comes first, in the Desgraciat round only. */
-export type HelperTab = 'standing' | 'future' | 'prizes' | 'effects';
+/** The helpers' tabs (HelperTabs.svelte; D170, D187): Estat, Cerca, Futur, Premis, Efectes. In the Desgraciat
+ * round Dempeus takes Estat's place (the Consola-Pestanyes-Noves and Consola-Desgraciat-Final boards). */
+export type HelperTab = 'state' | 'standing' | 'search' | 'future' | 'prizes' | 'effects';
 
 /** The helpers' tabs for a round of this kind, in order. */
 export function helperTabsFor(kind: RoundInfo['kind'] | null | undefined): HelperTab[] {
-  return kind === 'desgraciat' ? ['standing', 'future', 'prizes', 'effects'] : ['future', 'prizes', 'effects'];
+  return [kind === 'desgraciat' ? 'standing' : 'state', 'search', 'future', 'prizes', 'effects'];
 }
 
 /** What the tab picker remembers: the round it last saw (`roundKey`) and whether one card stood then. */
@@ -25,8 +26,8 @@ export const EMPTY_TAB_MEMORY: TabMemory = Object.freeze({ key: null, last: fals
 /**
  * The helpers' tab after a snapshot. A Desgraciat round selects Dempeus when it starts (a new round key, or the first
  * snapshot this device sees of it), and again when one card is left standing, so the default action's "Comprovar #57"
- * is on screen. Any other moment keeps this device's choice, unless the tab doesn't exist in this round (Dempeus
- * outside the Desgraciat round): then Futur.
+ * is on screen. Any other moment keeps this device's choice, unless the tab doesn't exist in this round: then the
+ * first one, Estat (or Dempeus in the Desgraciat round).
  */
 export function helperTabAfter(tab: HelperTab, memory: TabMemory, state: Pick<ShowState, 'round' | 'standing'> | null): { tab: HelperTab; memory: TabMemory } {
   if (!state) return { tab, memory };
@@ -35,7 +36,8 @@ export function helperTabAfter(tab: HelperTab, memory: TabMemory, state: Pick<Sh
   const last = desgraciat && state.standing?.count === 1;
   const next: TabMemory = { key, last };
   if (desgraciat && (key !== memory.key || (last && !memory.last))) return { tab: 'standing', memory: next };
-  if (!helperTabsFor(state.round.kind).includes(tab)) return { tab: 'future', memory: next };
+  const tabs = helperTabsFor(state.round.kind);
+  if (!tabs.includes(tab)) return { tab: tabs[0], memory: next };
   return { tab, memory: next };
 }
 

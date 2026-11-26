@@ -1,9 +1,10 @@
 // The console's state, one per page: the engine's view (ShowStore, through ui/client), the Game plan, the
 // printed cards, this device's label, theme and checklist, its helpers' tab and Futur reveal, the round's
-// counted songs gathered from the snapshots (for the Futur tab), the claim pad, the finalists' pad and the Dempeus tab's
-// finale switches, and the toasts. It derives what
-// the components need from the pure logic in logic/, and `act` is the one way commands leave the console.
-import type { CommandFields, CommandRejected, ResumePoint, ShowState } from '@quina/protocol';
+// counted songs gathered from the snapshots (Estat, Futur) and the songs to come when a tab needs them (Cerca,
+// Futur), the Cerca tab's search, the claim pad, the finalists' pad and the Dempeus tab's finale switches, and the
+// toasts. It derives what the components need from the pure logic in logic/, and `act` is the one way commands leave
+// the console.
+import { roundCardType, roundSide, type CommandFields, type CommandRejected, type ResumePoint, type ShowState } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
@@ -17,7 +18,7 @@ import type { AnyCommandArgs, AnyCommandName } from '../../packages/ui/flow.ts';
 import type { GamePlan } from '../../packages/ui/plan.ts';
 import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
-import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundKey, type LandingLog } from './logic/future.ts';
+import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundCards, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
@@ -35,7 +36,8 @@ import {
   type FinalePadState,
 } from './logic/finale.ts';
 import type { PadKey } from './logic/numpad.ts';
-import { defaultClaimKind, type ClaimKind } from './logic/show-data.ts';
+import { defaultClaimKind, songIndex, type ClaimKind } from './logic/show-data.ts';
+import { acceptUpcoming, forecastWins, freshUpcoming, roundSongs, shouldAskUpcoming, upcomingMoment, wantsUpcoming, type UpcomingSongs } from './logic/upcoming.ts';
 import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { EMPTY_TAB_MEMORY, fallenBetween, helperTabAfter, type HelperTab, type TabMemory } from './logic/standing.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
@@ -54,6 +56,21 @@ function startingLabel(): string | null {
 
 /** The helpers' tabs (HelperTabs.svelte; logic/standing.ts: Dempeus first in the Desgraciat round). */
 export type { HelperTab } from './logic/standing.ts';
+
+/** The Cerca tab on this device (kept here so it survives a tab switch or a Check). */
+export interface SearchState {
+  /** «Cançons / Cartró». */
+  mode: 'songs' | 'card';
+  query: string;
+  /** The card number being typed on the tab's keypad. */
+  digits: string;
+  /** The card shown, once ↵ is pressed. */
+  cardId: number | null;
+  /** «Mostra el futur» on the card shown (apart from the Futur tab's reveal). */
+  cardFuture: boolean;
+  /** The search box has the focus: the tab grows over the column while the tablet's keyboard is up. */
+  typing: boolean;
+}
 
 /** The last step back inside a Check (`check.unrevealed`, D134), for «Enrere: torna a sonar…». */
 export interface StepBack {
@@ -99,7 +116,12 @@ export class ConsoleModel {
   /** The round (`roundKey`) whose future this device chose to see; it hides again for a new round. */
   futureRevealedFor = $state<string | null>(null);
   /** The helpers' tab on this device. */
-  helperTab = $state<HelperTab>('future');
+  helperTab = $state<HelperTab>('state');
+  /** The engine's last `upcoming` answer (PRIVATE: the songs to come), kept while it matches the round on screen. */
+  upcoming = $state.raw<UpcomingSongs | null>(null);
+  search = $state<SearchState>({ mode: 'songs', query: '', digits: '', cardId: null, cardFuture: false, typing: false });
+  /** Where each long list was scrolled (by its name), so a list keeps its place across tab switches. Not reactive. */
+  readonly scrolls = new Map<string, number>();
   /** The Desgraciat round's last fall seen on this device (null: none yet this round). */
   standingFall = $state.raw<StandingFall | null>(null);
   /** The claim pad (logic/claim-pad.ts), while it's open. */
@@ -118,6 +140,8 @@ export class ConsoleModel {
   private finaleSent: { reqId: string; pad: FinalePadState } | null = null;
   /** The finale was on in the last snapshot (the Dempeus tab is selected as it starts). Not reactive. */
   private finaleSeen = false;
+  /** The moment (`upcomingMoment`) the songs to come were last asked for. Not reactive. */
+  private upcomingAsked: string | null = null;
   /** What the tab picker last saw (logic/standing.ts helperTabAfter). Not reactive. */
   private tabMemory: TabMemory = EMPTY_TAB_MEMORY;
   /** The standing cards in the previous snapshot, and its round, for `standing-fall`. Not reactive. */
@@ -155,6 +179,23 @@ export class ConsoleModel {
   readonly inPlay = $derived(cardsInPlay(this.show.state?.cards.inPlay));
   readonly counted = $derived(this.show.state ? countedSongs(this.landingLog, this.show.state) : { ids: [], complete: false });
   readonly futureRevealed = $derived(this.show.state !== null && this.futureRevealedFor === roundKey(this.show.state.round));
+  /** The songs to come, while the engine's answer is about the moment on screen. */
+  readonly upcomingSongs = $derived(freshUpcoming(this.upcoming, this.show.state));
+  /** Where the round's songs stand (logic/upcoming.ts). */
+  readonly roundSongs = $derived(this.show.state ? roundSongs(this.landingLog, this.show.state, this.upcomingSongs) : null);
+  /** Every song's title and artist this console knows. */
+  readonly songInfo = $derived(songIndex(this.catalog, this.show.state, this.upcomingSongs));
+  /** The round's printed cards (its card type, on its side), sold or not; empty until cards.json loads. */
+  readonly roundCards = $derived.by(() => {
+    const state = this.show.state;
+    const printed = this.catalog?.cards;
+    return state && printed ? roundCards(printed, roundCardType(state.round), roundSide(state.round)) : [];
+  });
+  /** The round's first Line and Quina, and who gets them, once the cards and the songs to come are known (Futur,
+   * Cerca's card). */
+  readonly forecast = $derived(
+    this.show.state && this.roundSongs && this.roundCards.length ? forecastWins(this.roundCards, this.inPlay, this.roundSongs, this.show.state.round.lineConfirmed) : null,
+  );
   readonly alert = $derived(
     consoleAlert({
       connected: this.show.connected,
@@ -193,6 +234,10 @@ export class ConsoleModel {
     // Who started each Spin: the reqId starts with the sender's device label (null: auto-advance).
     this.show.client.on((event) => {
       if (event.type === 'transition.scheduled' || event.type === 'suspense.started') this.lastSpin = lastSpinOf(event);
+      if (event.type === 'upcoming') {
+        const kept = acceptUpcoming(event, this.show.state);
+        if (kept) this.upcoming = kept;
+      }
       if (event.type === 'state') {
         this.landingLog = recordLandings(this.landingLog, event);
         this.followStanding(event);
@@ -417,6 +462,16 @@ export class ConsoleModel {
   setTheme(theme: Theme): void {
     this.theme = theme;
     writeStored(CONSOLE.storage.theme, theme);
+  }
+
+  /**
+   * Ask the engine for the songs to come when the open tab needs them and the last answer is out of date (a landing,
+   * Back, a new round). Called from an effect, so it runs again as those change. Quietly: no toast when offline.
+   */
+  askUpcoming(): void {
+    const state = this.show.state;
+    if (!state || !shouldAskUpcoming(wantsUpcoming(this.helperTab, this.futureRevealed), state, this.upcoming, this.upcomingAsked)) return;
+    if (this.show.send('getUpcoming') !== null) this.upcomingAsked = upcomingMoment(state);
   }
 
   /** Show or hide the Futur tab's contents (this device only, for the current round). */

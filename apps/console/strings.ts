@@ -176,37 +176,40 @@ export const S = {
         : `Anem avançats: cada cançó dura ${s > 0 ? `${s} s` : 'una mica'} més.`,
   },
 
+  /** The Futur tab (D170): hidden until «Mirar el futur»; then the first wins and the songs to come. */
   future: {
-    hiddenNote: 'Què passarà a les properes cançons. Amagat perquè també us agafi per sorpresa.',
+    hiddenNote: 'Qui pot guanyar i les cançons que vindran, en ordre. Amagat perquè també us agafi per sorpresa.',
     show: 'Mirar el futur',
     hide: 'Amagar',
-    chart: 'Cartrons segons les cançons marcades',
-    bar: (marked: number) => (marked === 1 ? '1 marcada' : `${marked} marcades`),
-    barLabel: (marked: number, cards: number) => `${cards} ${cards === 1 ? 'cartró' : 'cartrons'} amb ${marked} ${marked === 1 ? 'cançó marcada' : 'cançons marcades'}`,
-    validCount: (n: number) => `${n} cartrons en joc en aquesta quina`,
-    gaps: {
-      cards: 'Falten els cartrons impresos (cards.json).',
-      inPlay: 'No hi ha cartrons en joc registrats.',
-      landings: "Aquesta consola no ha vist totes les cançons d'aquesta quina.",
-    } satisfies Record<ChartGap, string>,
     unknown: '—',
     firstLine: 'Primera línia',
     bingo: 'Quina',
     now: 'Ja hi és',
     done: 'Confirmada',
     atLeast: (n: number) => `com a mínim d'aquí a ${n}`,
-    inSongs: (n: number) => (n === 1 ? 'La següent cançó' : `D'aquí a ${n} cançons`),
+    inSongs: (n: number) => (n === 1 ? 'La següent' : `D'aquí a ${n}`),
     never: 'Cap en aquesta quina',
-    exactPending: "El número exacte necessita l'ordre de la cua, i el motor encara no l'envia a la consola.",
     winners: 'Possibles guanyadors',
     none: 'Encara cap',
     kind: kindLabel,
-    rows: (rows: readonly number[]) => (rows.length === 1 ? `fila ${rows[0]}` : `files ${rows.join(', ')}`),
+    rows: (rows: readonly number[]) => (rows.length === 1 ? `fila ${rows[0]}` : `files ${listing(rows.map(String))}`),
     completedBy: (title: string) => `amb «${title}»`,
+    /** How far a possible winner's win is: "ara" (it has it), "+4". */
+    at: (n: number) => (n === 0 ? 'ara' : `+${n}`),
+    winnerLabel: (cardId: number, kind: string, n: number) => `#${cardId}, ${kind}, ${n === 0 ? 'ja la té' : `d'aquí a ${n} cançons`}`,
     notSold: 'No venut',
     notSoldLong: 'No registrat com a venut',
     noCardsInPlay: "No hi ha cartrons en joc registrats: no es pot avisar dels que no s'han venut.",
     inPlayError: 'Els cartrons en joc no es poden llegir.',
+    /** The upcoming songs (D170): each one's distance, and what it brings. */
+    upcoming: 'Les properes, en ordre',
+    waiting: "Demanant l'ordre de les cançons…",
+    noneLeft: 'No en queden més en aquesta quina.',
+    offset: (n: number) => `+${n}`,
+    /** The songs left until the next win: "falten 3" for the Line (or the last card standing), "quina: falten 26". */
+    count: (toward: WinKind, left: number) => `${toward === 'bingo' ? 'quina: ' : ''}${left === 1 ? 'falta 1' : `falten ${left}`}`,
+    /** The win a song completes: "Línia · #112 #204"; the Desgraciat round's "L'últim dempeus". */
+    win: (kind: WinKind, cardIds: readonly number[]) => (kind === 'standing' ? "L'últim dempeus" : [kindLabel[kind], cardIds.map((id) => `#${id}`).join(' ')].filter(Boolean).join(' · ')),
     /** The Desgraciat round: the songs until one card stands, and the count's curve. */
     untilLast: "Fins a l'últim dempeus",
     lastNow: 'Ja només en queda un',
@@ -215,6 +218,87 @@ export const S = {
     curveFirst: 'la següent',
     curveLast: (song: number) => `d'aquí a ${song}`,
     noWinnersHere: 'En aquesta quina no hi ha possibles guanyadors: la pestanya Dempeus diu qui queda.',
+  },
+
+  /** The Estat tab (D170, D173): how close everyone is, and the round's songs so far. Nothing of the future. */
+  estat: {
+    chart: (kind: 'line' | 'bingo') => `Cartrons segons quantes cançons els falten per a ${kind === 'line' ? 'línia' : 'quina'}`,
+    row: (missing: number, orMore: boolean) => (missing === 0 ? 'Ja en tenen' : orMore ? `Falten ${missing}+` : missing === 1 ? 'Falta 1' : `Falten ${missing}`),
+    rowLabel: (missing: number, orMore: boolean, cards: number) =>
+      `${cards} ${cards === 1 ? 'cartró' : 'cartrons'}: ${missing === 0 ? 'ja en tenen' : `en falten ${missing}${orMore ? ' o més' : ''}`}`,
+    validCount: (n: number) => `${n} cartrons en joc en aquesta quina`,
+    unknown: '—',
+    gaps: {
+      cards: 'Falten els cartrons impresos (cards.json).',
+      inPlay: 'No hi ha cartrons en joc registrats.',
+      landings: "Aquesta consola no ha vist totes les cançons d'aquesta quina.",
+    } satisfies Record<ChartGap, string>,
+  },
+
+  /** The round's played songs, newest first (Estat, and Cerca before anything is typed). */
+  played: {
+    title: (n: number) => `Han sonat · ${n}`,
+    newest: 'la més nova a dalt',
+    newestInOrder: "la més nova a dalt, en l'ordre en què han sonat",
+    none: 'Encara no ha sonat cap cançó en aquesta quina.',
+    partial: "Aquesta consola no ha vist les primeres cançons d'aquesta quina.",
+    /** A song's place in the round: "23a". */
+    place: ordinal,
+    now: 'ara sona',
+    ago: (n: number) => (n === 0 ? "l'última" : `fa ${n}`),
+  },
+
+  /** The Cerca tab (D162, D170, D187): a song, or a card's private preview. */
+  cerca: {
+    modes: { songs: 'Cançons', card: 'Cartró' },
+    modeLabel: 'Què cerques',
+    placeholder: 'Cerca per títol o artista',
+    searchLabel: 'Cerca una cançó de la quina per títol o artista',
+    clear: 'Esborra la cerca',
+    count: (n: number) => (n === 1 ? '1 cançó' : `${n} cançons`),
+    ofRound: (total: number) => `de les ${total} de la quina`,
+    noMatch: (query: string) => `Cap cançó de la quina s'assembla a «${query}».`,
+    /** Where a found song stands. Never when it will play: that's the Futur's. */
+    status: {
+      now: 'Ara sona',
+      played: (place: number, ago: number) => `Ha sonat: la ${ordinal(place)}, ${ago === 0 ? "l'última" : `fa ${ago}`}`,
+      earlier: 'Ha sonat',
+      notYet: 'Encara no ha sonat',
+      unknown: "No se sap: aquesta consola no ha vist totes les cançons d'aquesta quina",
+    },
+    /** The card's number, typed on the tab's own keypad (so the tablet's keyboard never covers the card). */
+    number: 'Número del cartró',
+    keypad: 'Teclat del número del cartró',
+    erase: 'Esborra una xifra',
+    enter: 'Mostra el cartró',
+    clearCard: 'Un altre cartró',
+    hint: 'El número del cartró. ↵ el mostra: les cançons que han sonat i les que no, només aquí.',
+    showFuture: 'Mostra el futur',
+    hideFuture: 'Amaga el futur',
+    notSold: 'No venut',
+    noCards: 'Falten els cartrons impresos (cards.json): no es pot mirar cap cartró.',
+    unknownCard: (id: number) => `No hi ha cap cartró #${id}.`,
+    otherRound: (id: number, type: string) => `El #${id} és un cartró ${type}: no juga aquesta quina.`,
+    playedOf: (n: number, total: number) => `${n} de ${total} han sonat`,
+    rows: (rows: readonly number[]) => (rows.length === 1 ? `fila ${rows[0]}` : `files ${listing(rows.map(String))}`),
+    lineMissing: (missing: number, rows: string) => (missing === 0 ? `Línia: ja la té (${rows})` : `Línia: en ${missing === 1 ? 'falta 1' : `falten ${missing}`} (${rows})`),
+    bingoMissing: (missing: number) => (missing === 0 ? 'Quina: la té' : `Quina: en ${missing === 1 ? 'falta 1' : `falten ${missing}`}`),
+    cellLabel: (title: string, played: boolean, ahead: number | null) => `${title}: ${played ? 'ha sonat' : ahead !== null ? `no ha sonat, sonarà d'aquí a ${ahead}` : 'no ha sonat'}`,
+    waiting: "Demanant l'ordre de les cançons…",
+    canWin: 'Pot guanyar',
+    cannotWin: 'Ja no pot guanyar',
+    winLine: (rows: string, n: number, title: string) => (n === 0 ? `Ja té línia, a la ${rows}.` : `La línia, a la ${rows}, a +${n} amb «${title}»: és la primera.`),
+    winBingo: (n: number, title: string) => (n === 0 ? 'Ja té quina.' : `La quina, a +${n} amb «${title}»: és la primera.`),
+    lostLine: (missing: number, at: number | null, first: number) =>
+      at === null
+        ? 'La línia no li arriba en aquesta quina.'
+        : `${missing === 1 ? "Li'n falta 1" : `Li'n falten ${missing}`}, però la línia li arriba a +${at} i la primera ${first === 0 ? 'ja hi és' : `és a +${first}`}.`,
+    lostBingo: (at: number | null, end: number | null) => (at === null ? 'La quina no li arriba.' : end === null ? `La quina, a +${at}.` : `La quina, a +${at}: s'acaba a +${end}.`),
+    /** The Desgraciat round. */
+    standing: 'Dempeus',
+    fallen: 'Ha caigut',
+    fallsAt: (n: number, title: string) => `Cau a +${n} amb «${title}».`,
+    neverFalls: 'Cap de les seves cançons no sona en aquesta quina.',
   },
 
   /** The Desgraciat round's Dempeus tab: who is still standing (PRIVATE, like the Futur). */
@@ -593,7 +677,7 @@ export const S = {
     revealed: 'Revelats: els mòbils ja els veuen',
   },
 
-  tabs: { label: 'Ajudes', standing: 'Dempeus', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
+  tabs: { label: 'Ajudes', state: 'Estat', standing: 'Dempeus', search: 'Cerca', future: 'Futur', prizes: 'Premis', effects: 'Efectes' },
 
   cheatSheet: {
     /** "Premis de la Quina 4", with the round's name (plan.ts roundTitle). */
@@ -830,6 +914,7 @@ export const S = {
     revealPrizes: 'Revelar premis',
     finale: 'Finalistes',
     finaleCue: 'Celebrem!',
+    getUpcoming: 'Les properes cançons',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 
