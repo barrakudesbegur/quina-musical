@@ -62,7 +62,7 @@
     <WiiGuide {items} footer={CA.wii.footer} sideLabel={CA.wii.side}>
       {#snippet extra(item)}
         {#if item.id === 'shake'}
-          <span class="wii-dialog__switch"><Switch label={S.wii.shake} note={S.wii.shakeDefault} on={wii.shake} onchange={(on) => wii.setShake(on)} /></span>
+          <span class="wii-dialog__switch"><Switch label={S.wii.shake} note={S.wii.shakeDefault} on={wii.shake} disabled={!wii.canSetShake} onchange={(on) => wii.setShake(on)} /></span>
         {/if}
       {/snippet}
     </WiiGuide>

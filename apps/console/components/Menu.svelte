@@ -122,8 +122,7 @@
           <button type="button" class="mini" data-anim="press" onclick={onwii}>{S.wii.open}</button>
         </p>
         <p class="note">{S.menu.wiiNote}</p>
-        <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} on={wii.shake} onchange={(on) => wii.setShake(on)} />
-        {#if wii.status !== 'connected'}<p class="note">{S.wii.shakeHere}</p>{/if}
+        <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} on={wii.shake} disabled={!wii.canSetShake} onchange={(on) => wii.setShake(on)} />
       </section>
 
       <section class="menu-group" aria-labelledby="{uid}-lan">

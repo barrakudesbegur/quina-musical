@@ -3,7 +3,9 @@
   stops it while it plays and resumes it; holding it past CONSOLE.escalateHoldMs plays it again from its hook, with the
   same gesture as Parlem's and Aguanta's second level (logic/two-level.ts): the «Des del principi» strip along its
   bottom fills while the finger is down (hook throw-hold). While its song plays the button shows pressed and its
-  stripes drift (hook throw-on); the song's name shows inside the big one.
+  stripes drift (hook throw-on). Idle, the big one names its song (with where it starts when it has the whole row,
+  `wide`); while it's on, the big and side ones show its time from the hook instead: ♪ bars or ‖, the time, a bar with
+  the drop's mark («Llançament» only: «Tempesta» starts at the drop) and its length (logic/throw-songs.ts throwProgress).
   `variant`: big (Següent's place), side (the end screen's smaller «Llançament» beside «Tempesta»), top (the last
   round's top row, between «Enrere» and «Comprovar»: no strip, the fill sweeps the whole button, as on «Enrere»).
   Only on the tablet: no Wii badge, and A never plays it. Hooks: data-testid="throw-button" or "storm-button".
@@ -13,7 +15,7 @@
   import { onDestroy } from 'svelte';
   import { CONSOLE } from '../config.ts';
   import { getConsole } from '../context.ts';
-  import { throwButtonState, throwCommand } from '../logic/throw-songs.ts';
+  import { throwButtonState, throwClock, throwCommand, throwProgress } from '../logic/throw-songs.ts';
   import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../logic/two-level.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -22,9 +24,11 @@
   interface Props {
     song: ThrowSong;
     variant?: 'big' | 'side' | 'top';
+    /** The big one has the whole row (nothing beside it): its song's chip also says where it starts. */
+    wide?: boolean;
   }
 
-  let { song, variant = 'big' }: Props = $props();
+  let { song, variant = 'big', wide = false }: Props = $props();
 
   const model = getConsole();
   const uid = $props.id();
@@ -33,6 +37,10 @@
   const songState = $derived(throwButtonState(info, song));
   const enabled = $derived(model.can(song));
   const note = $derived(songState === 'playing' ? S.throws.stop : songState === 'stopped' ? S.throws.resume : songState === 'other' ? t.replace : t.start);
+  // Its track while idle (the chip), and its time while it's on (the bar), on the show's clock.
+  const track = $derived(model.show.state?.throwSongs?.[song] ?? null);
+  const time = $derived(info && info.song === song ? throwProgress(info, model.show.now) : null);
+  const clock = $derived(time ? S.throws.time(throwClock(time.atSec), throwClock(Math.round(time.totalSec))) : null);
 
   let press = $state<TwoLevelState>(TWO_LEVEL_IDLE);
   let progress = $state(0);
@@ -128,8 +136,22 @@
       </span>
     </span>
     {#if variant !== 'top'}<span class="big-button__note">{note}</span>{/if}
-    {#if variant === 'big' && info?.song === song}
-      <span class="throw-button__song"><Icon name="music" /><span>{S.throws.song(info.title, info.artist)}</span></span>
+    {#if time && variant !== 'top'}
+      <span class="throw-button__time" aria-hidden="true">
+        {#if songState === 'playing'}
+          <svg class="throw-button__eq" viewBox="0 0 24 24"><rect x="3" y="11" width="4" height="10" rx="1.5" /><rect x="10" y="4" width="4" height="17" rx="1.5" /><rect x="17" y="14" width="4" height="7" rx="1.5" /></svg>
+        {:else}
+          <svg class="throw-button__paused" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
+        {/if}
+        <span class="throw-button__clock">{throwClock(time.atSec)}</span>
+        <span class="throw-button__bar" data-anim="throw-on">
+          <span class="throw-button__bar-fill" style:--at={time.fraction}></span>
+          {#if time.dropAt !== null}<span class="throw-button__drop" style:--drop={time.dropAt}><span>{S.throws.drop}</span></span>{/if}
+        </span>
+        <span class="throw-button__total">{throwClock(Math.round(time.totalSec))}</span>
+      </span>
+    {:else if variant === 'big' && track}
+      <span class="throw-button__song"><Icon name="music" /><span>{S.throws.song(track.title, track.artist)}</span>{#if wide}<span class="throw-button__from">· {t.from}</span>{/if}</span>
     {/if}
     {#if variant === 'top'}<span class="throw-button__percent" aria-hidden="true">{Math.round(progress * 100)} %</span>{/if}
   </span>
@@ -144,4 +166,4 @@
     </span>
   {/if}
 </button>
-<span class="visually-hidden" id="{uid}-how">{S.throws.howTo(note)}</span>
+<span class="visually-hidden" id="{uid}-how">{#if clock}{clock}. {/if}{S.throws.howTo(note)}</span>

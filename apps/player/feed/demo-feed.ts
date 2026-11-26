@@ -177,7 +177,7 @@ export class DemoFeed implements PlayerFeed {
     const full = storyLandings(state, this.demo.extraLanded ?? [], now);
     if (full) {
       const latest = full[full.length - 1].songId;
-      state = { ...state, landings: full, queue: { ...state.queue, position: full.length - 1 }, current: { ...songRef(latest), hookId: 'h1', posSec: 6, endsAtMs: now + 60_000 } };
+      state = { ...state, landings: full, queue: { ...state.queue, position: full.length - 1 }, current: { ...songRef(latest), hookId: 'h1', firstPlay: false, posSec: 6, endsAtMs: now + 60_000 } };
     }
     if (this.demo.patch) state = this.demo.patch(state, now);
     this.engine = state;
@@ -276,7 +276,7 @@ export class DemoFeed implements PlayerFeed {
       status: 'playing',
       transition: null,
       queue: { ...this.engine.queue, position },
-      current: { ...songRef(songId), hookId: 'h1', posSec: 0, endsAtMs: atMs + 60_000 },
+      current: { ...songRef(songId), hookId: 'h1', firstPlay: true, posSec: 0, endsAtMs: atMs + 60_000 },
       landings: [...this.engine.landings, { ...songRef(songId), position, atMs, undone: false }],
       heat: Math.min(1, (this.engine.heat ?? 0.5) + 0.04),
     };

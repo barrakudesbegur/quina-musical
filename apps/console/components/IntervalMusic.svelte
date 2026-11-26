@@ -4,11 +4,12 @@
   on the next downbeat) and the playing set's volume slider (`setVolume`, D139: the breaks', Pausa's or the end's).
   While a throw song plays over it («Llançament» or «Tempesta», D138, D151), the panel says «Ara sona» with that song,
   and that the music underneath comes back when it ends; stopped by a tap, the music shows again with a word that the
-  song is stopped (the Consola-Llancament-Tempesta board).
+  song is stopped and where («aturat a 1:05», the Consola-Llancament-Tempesta board).
 -->
 <script lang="ts">
   import { VOLUME_DEFAULTS, VOLUME_MAX } from '@quina/protocol';
   import { getConsole } from '../context.ts';
+  import { throwClock, throwProgress } from '../logic/throw-songs.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 
@@ -40,7 +41,7 @@
       <h2 class="panel__subtitle" id="{uid}-title"><Icon name="music" /> {S.intervalMusic.title}</h2>
       {#if track}
         <p class="interval-music__track">{S.intervalMusic.track(track.title, track.artist)}</p>
-        <p class="note">{thrown ? S.throws.names[thrown.song].stopped(S.intervalMusic.position(track.index, track.count)) : S.intervalMusic.position(track.index, track.count)}</p>
+        <p class="note">{thrown ? S.throws.names[thrown.song].stopped(S.intervalMusic.position(track.index, track.count), throwClock(throwProgress(thrown, model.show.now).atSec)) : S.intervalMusic.position(track.index, track.count)}</p>
       {:else}
         <p class="note">{S.intervalMusic.waiting}</p>
       {/if}

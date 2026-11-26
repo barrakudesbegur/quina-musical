@@ -446,9 +446,9 @@ export const S = {
    */
   throws: {
     names: {
-      throw: { label: 'Llançament', sub: null, start: 'toca: sona el llançament', replace: 'toca: canvia al llançament', stopped: (where: string) => `${where} · el llançament, aturat` },
-      storm: { label: 'Tempesta', sub: 'de blat de moro', start: 'toca: sona la tempesta', replace: 'toca: canvia a la tempesta', stopped: (where: string) => `${where} · la tempesta, aturada` },
-    } satisfies Record<ThrowSong, { label: string; sub: string | null; start: string; replace: string; stopped: (where: string) => string }>,
+      throw: { label: 'Llançament', sub: null, start: 'toca: sona el llançament', replace: 'toca: canvia al llançament', from: "des d'una mica abans del drop", stopped: (where: string, at: string) => `${where} · el llançament, aturat a ${at}` },
+      storm: { label: 'Tempesta', sub: 'de blat de moro', start: 'toca: sona la tempesta', replace: 'toca: canvia a la tempesta', from: 'des del drop', stopped: (where: string, at: string) => `${where} · la tempesta, aturada a ${at}` },
+    } satisfies Record<ThrowSong, { label: string; sub: string | null; start: string; replace: string; from: string; stopped: (where: string, at: string) => string }>,
     /** A tap while it plays, and while a tap has stopped it. */
     stop: 'toca: atura',
     resume: 'toca: continua',
@@ -457,6 +457,9 @@ export const S = {
     /** Spoken: what each gesture does. */
     howTo: (tap: string) => `${tap}; mantén per tornar a començar des del principi`,
     song: (title: string, artist: string) => (artist ? `${title} · ${artist}` : title),
+    /** While it's on: its time from the hook, and its length (the button's bar). */
+    time: (at: string, total: string) => `${at} de ${total}`,
+    drop: 'Drop',
     /** The music panel while a throw song plays over the set's music. */
     nowPlaying: CA.nowPlaying,
     under: (title: string) => `A sota, «${title}»: torna a pujar quan s'acabi.`,
@@ -631,8 +634,6 @@ export const S = {
     shake: CA.wii.shake.switchLabel,
     shakeNote: CA.wii.shake.switchNote,
     shakeDefault: CA.wii.shake.switchDefault,
-    /** Under the switch on a console the remote isn't connected to. */
-    shakeHere: 'Es desa en cada consola: fa efecte a la del portàtil, on es connecta el comandament.',
   },
 
   menu: {

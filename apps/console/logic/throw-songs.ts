@@ -7,8 +7,9 @@
 //     there); on the end screen «Tempesta» takes the big place with a smaller «Llançament» beside it; in the night's
 //     last round «Tempesta» sits in the top row, between «Enrere» and «Comprovar» on the play screen, and between
 //     «Enrere» and «Revisió manual» in its Check. Not in the last round's Celebration (U138: today's behaviour);
-//   - what each button says now, from the state's `throwSong`.
-import type { ShowScene, ShowState, ThrowSong } from '@quina/protocol';
+//   - what each button says now, from the state's `throwSong`;
+//   - its time while it's on (the board's bar), from `throwSong.posSec` at `sinceMs` and the show's clock.
+import type { ShowScene, ShowState, ThrowInfo, ThrowSong } from '@quina/protocol';
 import type { TwoLevelAction } from './two-level.ts';
 
 export type { ThrowSong } from '@quina/protocol';
@@ -61,4 +62,37 @@ export function throwCommand(song: ThrowSong, action: TwoLevelAction): ThrowComm
   if (action === 'tap') return { cmd: song, args: {} };
   if (action === 'escalate') return { cmd: song, args: { restart: true } };
   return null;
+}
+
+/** A throw song's time on its button (the board's bar), counted from its hook: a tap starts it there. */
+export interface ThrowProgress {
+  /** Seconds since its hook, now. */
+  atSec: number;
+  /** From its hook to its end. */
+  totalSec: number;
+  /** How much of it has played (0..1). */
+  fraction: number;
+  /** Where its drop is (0..1), or null when it starts at its drop (the storm) or the drop isn't ahead of its hook. */
+  dropAt: number | null;
+}
+
+/** Where the song on now is at `nowMs` (the show's clock): playing, it moves on from `posSec` at `sinceMs`; stopped, it
+ * waits there. Kept inside its length. */
+export function throwProgress(info: ThrowInfo, nowMs: number): ThrowProgress {
+  const totalSec = Math.max(0, info.durationSec - info.startSec);
+  const posSec = info.playing ? info.posSec + Math.max(0, nowMs - info.sinceMs) / 1000 : info.posSec;
+  const atSec = Math.min(totalSec, Math.max(0, posSec - info.startSec));
+  const drop = info.dropSec - info.startSec;
+  return {
+    atSec,
+    totalSec,
+    fraction: totalSec > 0 ? atSec / totalSec : 0,
+    dropAt: drop > 0 && drop < totalSec ? drop / totalSec : null,
+  };
+}
+
+/** A time on the button, as on a player: 0:42, 3:33 (whole seconds, rounded down so it never runs ahead). */
+export function throwClock(sec: number): string {
+  const whole = Math.max(0, Math.floor(sec));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }

@@ -10,7 +10,7 @@
 <script lang="ts">
   import { PACE_FINE_STEP_SEC, PACE_PRESETS_SEC } from '@quina/protocol';
   import { getConsole } from '../context.ts';
-  import { defaultPaceFor } from '../logic/engine-rules.ts';
+  import { DEFAULT_PACE_SEC } from '../logic/engine-rules.ts';
   import { recommendedPreset, recoveryNotice } from '../logic/pace-panel.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -22,7 +22,7 @@
   const paceOk = $derived(model.can('setPace'));
   const gameOk = $derived(model.can('setGame'));
   // The snapshot's default Pace when the engine reports it, else the shared rule.
-  const recommended = $derived(snap ? recommendedPreset(snap.round.number, PACE_PRESETS_SEC, (round) => snap.pace.defaultSec ?? defaultPaceFor(round)) : null);
+  const recommended = $derived(snap ? recommendedPreset(snap.pace.defaultSec ?? DEFAULT_PACE_SEC, PACE_PRESETS_SEC) : null);
   const notice = $derived(snap ? recoveryNotice(snap.pace) : null);
   const onPreset = $derived(snap ? (PACE_PRESETS_SEC as readonly number[]).includes(snap.pace.sec) : false);
   const presets = PACE_PRESETS_SEC.map((sec) => ({ sec, name: S.pace.names[sec] ?? null }));

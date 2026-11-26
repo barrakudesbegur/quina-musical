@@ -5,18 +5,17 @@
 // console draws as primary; when there is none, or it's disabled, A sends nothing and doesn't rumble.
 // The console that hosts the remote publishes its status (remote.status) through the relay; every console,
 // the tablet included, shows the badges and the chip when any console has a remote connected.
-// The shake gesture's switch (D148) is this console's setting, kept on this device: it acts where the remote connects.
+// The shake gesture's switch (D148) is the Game's setting (`game.remoteShake`): every console shows and changes the same one.
 // Development only: `?wii=demo` fakes a connected remote, so the badges and the dialog can be reviewed.
 import type { ShowState } from '@quina/protocol';
 import { readRemoteStatus, remoteStatusMessage, RemoteHosts, type RemoteSummary } from '../../../packages/ui/client/remote-status.ts';
-import { CONSOLE, WII } from '../config.ts';
+import { WII } from '../config.ts';
 import { flowOf } from '../../../packages/ui/flow.ts';
 import { canToggleAuto, checkBackCommand, checkReviewCommand } from '../logic/check.ts';
 import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
 import { controlsModel } from '../logic/scene.ts';
 import type { ConsoleModel } from '../model.svelte.ts';
-import { readStored, writeStored } from '../storage.ts';
 import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type WiiRemote } from './driver.ts';
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
@@ -49,9 +48,6 @@ export function wiiContext(state: ShowState | null, settings: { shake: boolean }
   };
 }
 
-/** The shake gesture's stored switch: on unless this device turned it off. */
-const readShakeSetting = (stored: string | null): boolean => (stored === null ? WII.shakeOn : stored === 'on');
-
 export class WiiController {
   /** A fake remote (`?wii=demo`, development only): shows as connected, sends nothing. */
   readonly demo = demoRemote();
@@ -60,8 +56,6 @@ export class WiiController {
   justConnected = $state(false);
   /** The remote's battery (0..1) on this console, when it hosts the remote and the remote has said. */
   battery = $state<number | null>(null);
-  /** The shake gesture (B + 3 shakes = Suspens) is on, on this console (D148). */
-  shake = $state(readShakeSetting(readStored(CONSOLE.storage.wiiShake)));
   /** What the other consoles' remotes report (through the relay). */
   hosts = $state.raw<RemoteSummary>({ connected: false, lost: false, battery: null, drops: 0 });
   /** A remote is connected on this console or on another one. */
@@ -138,10 +132,20 @@ export class WiiController {
     this.model.show.client.bus.sendRemote(remoteStatusMessage({ connected: this.status === 'connected', battery: this.status === 'connected' ? this.battery : null, sinceMs: this.statusSinceMs, ...report }));
   }
 
-  /** The menu's and the Comandament dialog's switch. */
+  /** The shake gesture (B + 3 shakes = Suspens) is on (D148): the Game's setting, the same on every console; on until
+   * someone turns it off (an older journal lacks it). */
+  get shake(): boolean {
+    return this.model.show.state?.game.remoteShake ?? WII.shakeOn;
+  }
+
+  /** The switch can change it now (the engine takes `setGame`). */
+  get canSetShake(): boolean {
+    return this.model.can('setGame');
+  }
+
+  /** The menu's and the Comandament dialog's switch: asks the engine, and shows what the state then says. */
   setShake(on: boolean): void {
-    this.shake = on;
-    writeStored(CONSOLE.storage.wiiShake, on ? 'on' : 'off');
+    this.model.act('setGame', { remoteShake: on });
   }
 
   /** What the mapping needs now. */

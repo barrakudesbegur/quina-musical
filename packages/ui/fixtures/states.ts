@@ -83,6 +83,13 @@ export const FIXTURE_SONGS: Record<number, [string, string]> = {
 
 const song = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ?? `Cançó ${songId}`, artist: FIXTURE_SONGS[songId]?.[1] ?? '' });
 
+/** The throw songs' track (D138, D151): «Flying Free», from its hook 15.6 s before the drop, or from the drop (the storm). */
+const FLYING_FREE = { title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', dropSec: 208.76, durationSec: 406.4 };
+export const FIXTURE_THROW_SONGS: ShowState['throwSongs'] = {
+  throw: { ...FLYING_FREE, startSec: 193.18 },
+  storm: { ...FLYING_FREE, startSec: 208.76 },
+};
+
 /** The round's landings so far, oldest first (the last is the current song). */
 export const FIXTURE_LANDED = [25, 2, 17, 41, 15, 31, 3, 68, 5, 75, 60, 62, 1, 16, 45, 35, 7];
 
@@ -106,7 +113,7 @@ export function baseState(now: number): FullState {
     pending: null,
     hold: null,
     holdMusic: false,
-    current: { ...song(7), hookId: 'h1', posSec: 6, endsAtMs: now + 60000 },
+    current: { ...song(7), hookId: 'h1', firstPlay: false, posSec: 6, endsAtMs: now + 60000 },
     next: song(74),
     queue: { position, length: 77 },
     round: { number: 3, kind: 'normal', cardType: 'normal', startedAtMs: now - 8 * 60000, targetEndMs: now + 18 * 60000, lineConfirmed: false },
@@ -126,7 +133,7 @@ export function baseState(now: number): FullState {
     heat: 0.71,
     cards: { inPlay: '1-210, 400-440', inPlayCount: 251, validCount: 210, phaseSource: 'cards', climbingTo: 'line' },
     possibleWinners: { line: [], bingo: [] },
-    pace: { sec: 14, locked: false, nudge: 1.05, slotSec: 14.7, spinSec: 7 },
+    pace: { sec: 14, firstPlaySec: 22, locked: false, nudge: 1.05, slotSec: 14.7, spinSec: 7 },
     schedule: { roundEndMs: now + 27 * 60000, gameEndMs: now + 140 * 60000, roundDriftSec: 120, gameDriftSec: 300 },
     autoAtMs: now + 9000,
     transition: null,
@@ -135,6 +142,7 @@ export function baseState(now: number): FullState {
     history: [],
     prizes: revealedUpTo(3),
     throwSong: null,
+    throwSongs: FIXTURE_THROW_SONGS,
     lastRound: false,
     finale: null,
   };
@@ -328,7 +336,7 @@ export const FIXTURE_LANDED_LINE = [...FIXTURE_LANDED, 69];
 function lineState(now: number): FullState {
   const s = baseState(now);
   return withFlow(s, {
-    current: { ...song(69), hookId: 'h1', posSec: 20, endsAtMs: now + 40000 },
+    current: { ...song(69), hookId: 'h1', firstPlay: false, posSec: 20, endsAtMs: now + 40000 },
     queue: { ...s.queue, position: FIXTURE_LANDED_LINE.length - 1 },
     landings: landings(now, FIXTURE_LANDED_LINE, now - 20000),
   });
@@ -365,7 +373,7 @@ export function desgraciatState(now: number, landed: number, lastAtMs = now): Fu
   const last = ids[ids.length - 1];
   const lastStandingAt = DESGRACIAT_LANDED.length - 1;
   return withFlow(s, {
-    current: last ? { ...song(last), hookId: 'h1', posSec: Math.max(0, (now - lastAtMs) / 1000), endsAtMs: lastAtMs + 60000 } : null,
+    current: last ? { ...song(last), hookId: 'h1', firstPlay: false, posSec: Math.max(0, (now - lastAtMs) / 1000), endsAtMs: lastAtMs + 60000 } : null,
     next: count > 1 ? song(DESGRACIAT_LANDED[landed] ?? 74) : song(74),
     queue: { position: landed - 1, length: 77 },
     round: { number: 5, kind: 'desgraciat', cardType: 'normal', startedAtMs: now - 6 * 60000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
@@ -669,15 +677,17 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const back = withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now + 5500, reason: 'pause', holdMusic: false, holdMusicAtMs: null, ducked: true } });
     return { state: s, events: [{ afterMs: 1500, event: { ...paused, seq: 2 } }, { afterMs: 5500, event: { ...back, seq: 3 } }] };
   },
-  /** A break with «Llançament» playing over the break music (D138), 42 s in. */
+  /** A break with «Llançament» playing over the break music (D138), 42 s in: started at its hook 42 s ago. */
   intervalThrow: (now) => {
     const s = FIXTURES.interval(now).state as FullState;
-    return { state: { ...s, throwSong: { song: 'throw', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: true, sinceMs: now - 42000 } } };
+    const track = FIXTURE_THROW_SONGS.throw;
+    return { state: { ...s, throwSong: { ...track, song: 'throw', playing: true, sinceMs: now - 42000, posSec: track.startSec } } };
   },
-  /** A break with «Llançament» stopped by a tap: the next tap resumes it; the break music is back up. */
+  /** A break with «Llançament» stopped by a tap at 1:05 from its hook: the next tap resumes it; the break music is back up. */
   intervalThrowStopped: (now) => {
     const s = FIXTURES.interval(now).state as FullState;
-    return { state: { ...s, throwSong: { song: 'throw', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: false, sinceMs: now - 65000 } } };
+    const track = FIXTURE_THROW_SONGS.throw;
+    return { state: { ...s, throwSong: { ...track, song: 'throw', playing: false, sinceMs: now - 5000, posSec: track.startSec + 65 } } };
   },
   /** The night's last round in play (Quina 8 of 8): «Tempesta» joins the top row (D155). */
   lastRound: (now) => {
@@ -697,7 +707,8 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   /** The end screen with «Tempesta» playing from its drop (D151, D153). */
   afterStorm: (now) => {
     const s = FIXTURES.afterMusic(now).state as FullState;
-    return { state: { ...s, throwSong: { song: 'storm', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: true, sinceMs: now - 20000 } } };
+    const track = FIXTURE_THROW_SONGS.storm;
+    return { state: { ...s, throwSong: { ...track, song: 'storm', playing: true, sinceMs: now - 20000, posSec: track.startSec } } };
   },
   /** Some volume sliders moved at the sound check (D139, D157): the menu shows them against their defaults. */
   volumes: (now) => {

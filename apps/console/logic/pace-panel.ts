@@ -1,15 +1,13 @@
 // The Pace panel: the preset it recommends, and the notice while the engine bends the Pace to recover the
-// Schedule. Pure: the engine's default Pace comes in as a function (engine-rules.ts defaultPaceFor).
+// Schedule. Pure: the engine's default Pace comes in (the snapshot's, else engine-rules.ts DEFAULT_PACE_SEC).
 import type { PaceInfo } from '@quina/protocol';
 
 /**
- * The preset recommended for a round: the Pace the engine starts that round with (last year's medians: about
- * 22 s in the first round, 14 s after), when it is one of the presets; else null. Before the first round
- * (round 0) it is the first round's.
+ * The preset recommended: the Pace the engine starts every round with (a repeat's slot, 14 s: a song's first play
+ * gets 22/14 of it, D174), when it is one of the presets; else null.
  */
-export function recommendedPreset(roundNumber: number, presets: readonly number[], defaultPaceFor: (round: number) => number): number | null {
-  const pace = defaultPaceFor(Math.max(1, Math.floor(roundNumber)));
-  return presets.includes(pace) ? pace : null;
+export function recommendedPreset(defaultPace: number, presets: readonly number[]): number | null {
+  return presets.includes(defaultPace) ? defaultPace : null;
 }
 
 /** The Schedule recovery in words: songs get shorter to catch up (faster) or longer when ahead (slower). */

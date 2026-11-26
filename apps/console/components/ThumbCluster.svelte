@@ -77,7 +77,7 @@
         {#if nextIsDefault}<WiiBadge button="a" />{/if}
       </button>
     {:else}
-      <ThrowButton song={layout.big} />
+      <ThrowButton song={layout.big} wide={layout.beside === null} />
     {/if}
   </div>
 </section>

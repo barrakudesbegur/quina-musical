@@ -2437,6 +2437,105 @@
   stroke-width: 2.6;
 }
 
+/* Where it starts, after the song's name, when the big one has the whole row */
+.throw-button__from {
+  flex: none;
+  font-weight: 800;
+  color: #5a5480;
+}
+
+/* While it's on: its time from the hook, a bar with the drop's mark, and its length (hook throw-on). Paper and ink,
+   as the chip; the fill in the button's colour. The fill steps with the show's clock (250 ms) and glides between. */
+.throw-button__time {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 86%;
+  padding: 18px 14px 9px;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: 14px;
+  background: #fff6e5;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: 900;
+  line-height: 1;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.throw-button__eq,
+.throw-button__paused {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  stroke: var(--color-ink);
+}
+
+.throw-button__eq rect {
+  fill: var(--action-bg);
+  stroke-width: 1.8;
+}
+
+.throw-button__paused rect {
+  fill: #fff;
+  stroke-width: 2;
+}
+
+.throw-button__total {
+  color: #5a5480;
+}
+
+.throw-button__bar {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2.5px solid var(--color-ink);
+  border-radius: 7px;
+  background: #e4ddcc;
+}
+
+.throw-button__bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--at, 0) * 100%);
+  border-radius: 5px 0 0 5px;
+  background: var(--action-bg);
+  transition: width 250ms linear;
+}
+
+.throw-button__drop {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: calc(var(--drop) * 100%);
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--color-ink);
+}
+
+.throw-button__drop > span {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .throw-button__bar-fill {
+    transition: none;
+  }
+}
+
 .throw-button__strip {
   position: relative;
   display: flex;
@@ -2540,6 +2639,18 @@
 
 .throw-button[data-variant='side'] .big-button__note {
   font-size: var(--text-xs);
+}
+
+.throw-button[data-variant='side'] .throw-button__time {
+  width: 92%;
+  gap: 6px;
+  padding: 16px 8px 7px;
+  font-size: var(--text-xs);
+}
+
+.throw-button[data-variant='side'] :is(.throw-button__eq, .throw-button__paused) {
+  width: 16px;
+  height: 16px;
 }
 
 .throw-button[data-variant='side'] .throw-button__strip {

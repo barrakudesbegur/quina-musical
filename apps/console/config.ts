@@ -10,8 +10,6 @@ export const CONSOLE = Object.freeze({
     checklist: 'quina.console.checklist.v1',
     /** The latest resume code (plan B), kept so a replacement laptop can be resumed from this device. */
     resume: 'quina.console.resume.v1',
-    /** The Wii remote's shake gesture on or off (D148), on the console the remote connects to. */
-    wiiShake: 'quina.console.wiiShake.v1',
   },
   /** The device label ("Tauleta", "Mòbil admin"), set in the menu: it names who pressed what. */
   labelMaxLength: 24,
@@ -71,7 +69,7 @@ export const WII = Object.freeze({
   accel: { zero: 128, perG: 26 },
   /** Suspens needs 3 strong jolts inside 1.5 s while B is held (dancing shouldn't do it). Each jolt vibrates (D144). */
   shake: { peakG: 2.6, resetG: 1.6, minGapMs: 110, count: 3, windowMs: 1500 },
-  /** The shake gesture starts on (D148); the menu and the Comandament dialog switch it on this console. */
+  /** The shake gesture is on until someone turns it off (D148): the Game's `remoteShake`, the same on every console. */
   shakeOn: true,
   /**
    * Entering Suspens from the remote (D144–D148): B held then A held, or B alone with «Avanç manual», starts it at once;

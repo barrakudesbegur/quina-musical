@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PACE_PRESETS_SEC, type PaceInfo, type ShowState } from '@quina/protocol';
-import { HEAT_BANDS, defaultPaceFor } from '../../../../console/logic/engine-rules.ts';
+import { DEFAULT_PACE_SEC, HEAT_BANDS } from '../../../../console/logic/engine-rules.ts';
 import { activeHoldMode, holdPress } from '../../../../console/logic/hold-modes.ts';
 import { recommendedPreset, recoveryNotice } from '../../../../console/logic/pace-panel.ts';
 import { phaseZones, zoneColumns, zoneMarks } from '../../../../console/logic/phase-zones.ts';
@@ -34,14 +34,12 @@ test('bands that don’t climb with the Phase give no zones (the bar then names 
   assert.ok(phaseZones({ ...ok, late: [0.6, 0.8] }), 'a gap between bands is fine');
 });
 
-test('the recommended preset is the engine’s default Pace for the round', () => {
-  assert.equal(recommendedPreset(1, PACE_PRESETS_SEC, defaultPaceFor), 22);
-  assert.equal(recommendedPreset(3, PACE_PRESETS_SEC, defaultPaceFor), 14);
-  assert.equal(recommendedPreset(0, PACE_PRESETS_SEC, defaultPaceFor), 22, 'before the night: the first round’s');
-  assert.equal(recommendedPreset(2, [11, 18], defaultPaceFor), null, 'not a preset: no badge');
+test('the recommended preset is the engine’s default Pace, the same in every round (a repeat’s slot, D174)', () => {
+  assert.equal(recommendedPreset(DEFAULT_PACE_SEC, PACE_PRESETS_SEC), 14);
+  assert.equal(recommendedPreset(DEFAULT_PACE_SEC, [11, 18]), null, 'not a preset: no badge');
 });
 
-const pace = (over: Partial<PaceInfo>): PaceInfo => ({ sec: 14, locked: false, nudge: 1, slotSec: 14, spinSec: 7, ...over });
+const pace = (over: Partial<PaceInfo>): PaceInfo => ({ sec: 14, firstPlaySec: 22, locked: false, nudge: 1, slotSec: 14, spinSec: 7, ...over });
 
 test('the recovery notice: how much shorter or longer each song is, from the nudge', () => {
   // Running late: nudge 0.93 squeezes a 14 s slot to 13.02 s, about 1 s less per song.
