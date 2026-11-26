@@ -1,4 +1,4 @@
-// The Interval playlist's JSON contract (written by tools/prep/interval.py, schema v1): data/interval/index.json
+// A music set's JSON contract (written by tools/prep/interval.py, schema v1): data/interval/<set>/index.json
 // lists the tracks in playlist order (a recording once), data/interval/<slug>.json holds each one's beat grid,
 // loudness and edges. Every time is in the decoded FLAC's timeline (/intervalaudio/<slug>.flac). The engine
 // checks every file as it loads; a track whose file fails the check is left out of the playlist. Pure.
@@ -40,9 +40,9 @@ function sortedNumbers(x: unknown): x is number[] {
   return true;
 }
 
-/** @returns the slugs data/interval/index.json lists, in playlist order (an unreadable entry is skipped) */
+/** @returns the slugs a set's index.json lists, in playlist order (an unreadable entry is skipped) */
 export function intervalSlugs(index: unknown): string[] {
-  if (!isRecord(index) || !Array.isArray(index.tracks)) throw new Error('data/interval/index.json: no tracks');
+  if (!isRecord(index) || !Array.isArray(index.tracks)) throw new Error('data/interval/<set>/index.json: no tracks');
   const slugs = index.tracks.flatMap((t: unknown) => (isRecord(t) && typeof t.slug === 'string' && SLUG.test(t.slug) ? [t.slug] : []));
   return [...new Set(slugs)];
 }

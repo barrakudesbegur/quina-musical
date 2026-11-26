@@ -452,11 +452,13 @@ export function holdMusicPicks(music: readonly NightMusic[]): HoldPick[] {
 }
 
 /**
- * The Interval tracks a night plays (audio/interval.ts): the Game's shuffled order (interval/plan.ts trackAt),
- * each track until its natural handover near its end, through every Interval's music.
+ * The Interval tracks a night plays (audio/interval.ts): the breaks' set (D129) in the Game's shuffled order
+ * (interval/plan.ts trackAt), each track until its natural handover near its end, through every Interval's music.
  */
 export function intervalPicks(log: NightLog): string[] {
-  const index = readJson(path.join(DATA, 'interval', 'index.json'));
+  const file = path.join(DATA, 'interval', 'breaks', 'index.json');
+  if (!fs.existsSync(file)) return [];
+  const index = readJson(file);
   if (!isRecord(index) || !Array.isArray(index.tracks)) return [];
   const tracks = index.tracks.flatMap((t) => (isRecord(t) && typeof t.slug === 'string' && typeof t.durationSec === 'number' ? [{ slug: t.slug, sec: t.durationSec }] : []));
   if (!tracks.length) return [];
