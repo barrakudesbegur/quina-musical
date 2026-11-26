@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-5", "Normal 6-10" or "Especial" (D163), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
+| Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-4", "Normal 5-10" or "Especial" (D163, D171), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
@@ -64,7 +64,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **The buttons:** every action in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions). "Enrere" takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest. Each control a Wii button triggers shows a small badge with that button.
 - **Tabs:**
   - **The lookup (D162, D170):** a private quick check at any time in a round: a fuzzy song search (title or artist, typos accepted, matches highlighted), and a card check whose "show future" also tells whether the card can still win;
-  - **The game's state (D170; its name pending U152):** always visible. On the left, how many cards have each number of songs missing; on the right, the round's song history, scrolling;
+  - **"Estat", the game's state (D170, D173):** always visible. On the left, how many cards have each number of songs missing; on the right, the round's song history, scrolling;
   - "Futur" (D170): hidden until someone taps "Mirar el futur". The possible winners and the songs to the first possible Line and Quina on the left; the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win;
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;

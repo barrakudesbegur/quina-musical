@@ -22,7 +22,7 @@ _From event.md › The night, step by step, One round, The special rounds._
 
 - Each edition decides how many rounds it plays and in what order. The night's plan in Admin holds them (pending U18). 2025 played 10 regular rounds, then the Desgraciat, then the Especial: 12 rounds. 2024's 12 rounds felt long.
 - Each round plays one card type, chosen in Admin. Only cards of that type are valid in it.
-- Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026: Quines 1–5 play pool 1 (side 1), Quines 6–10 pool 2 (side 2); the Especial and the Desgraciat a third set on the special card, Part 1's songs until it's final (D105). The presenters explain the sides in rounds 1 and 6.
+- Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026, provisionally (D171): Quines 1–4 play Part 1 (side 1) and Quines 5–10 Part 2 (side 2); the Especial and the Desgraciat play Part 1 on the special card. The presenters explain the sides in rounds 1 and 5.
 - **The order can change during the night.** Upcoming rounds can be reordered and edited live, for example to move the Desgraciat. Rounds already played stay fixed.
 - A round never starts by itself. The presenters start it when they've announced its prizes.
 - On screen a round is "Quina 1", "Quina 2"…. The special round is "Quina Especial", with no number, and the Desgraciat is "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".
@@ -58,7 +58,7 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
   - auto-advance stops when one card stands;
   - the presenters call the winner by looking at the room.
 - The Shuffle makes sure the last two cards in play can't fall on the same song. A shared win can still happen when the real last players hold cards that fall together.
-- **The finale on stage (D161):** when about 5–10 cards stand, their players come up, each card checked privately on the way, and the presenters enter the finalists' numbers. It replaces the Desgraciat's public Check (D166). The presenters start it from the claim button's slot, which grows as fewer stand (D167). Entering a finalist shows the card privately, with ✓ or ✗ per song; a fallen card isn't added, and finalists can be removed or brought back by hand (D168). The song decides, not the card: the finalists hit by one landing fall together; if a landing would take all who remain, they all win together (D169, pending U151).
+- **The finale on stage (D161):** when about 5–10 cards stand, their players come up, each card checked privately on the way, and the presenters enter the finalists' numbers. It replaces the Desgraciat's public Check (D166). The presenters start it from the claim button's slot, which grows as fewer stand (D167). Entering a finalist shows the card privately, with ✓ or ✗ per song; a fallen card isn't added, and finalists can be removed or brought back by hand (D168). The song decides, not the card: the finalists hit by one landing fall together; if a landing would take all who remain, they all win together, shown with the ninos that come in groups (D169, D172).
 - It plays special cards by default, as in 2025 (D70); Admin picks the type like any round's.
 - It can be moved to any point in the night.
 - It's short, lively and full of interaction with the crowd (2025: 21 songs, about 8 minutes).
@@ -72,7 +72,7 @@ _From event.md › The cards (Knowing which cards are sold); the mixer decisions
 - Sellers take cards in order from stacks of 50, so the sold numbers form ranges.
 - The tech updates the ranges during the night. It's reliable but not exact: a range can contain unsold cards.
 - Each round counts only the cards in play of its card type.
-- One normal card serves every regular round: side 1 in Quines 1–5, side 2 in Quines 6–10 (D102). The corn seeds come off easily between rounds.
+- One normal card serves every regular round: side 1 in Quines 1–4, side 2 in Quines 5–10 (D102, D171). The corn seeds come off easily between rounds.
 - One special card plays both the Desgraciat and the Quina Especial, as in 2025 (D81).
 
 ## Claims

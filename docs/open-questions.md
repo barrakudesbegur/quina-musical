@@ -43,23 +43,6 @@ A tap stops the throw song, and the next tap resumes it (D138).
 - (a) While it's stopped, the break music comes back up.
 - (b) It stays down until the throw ends.
 
-### U151 · The finale decided by the song (D169)
-After the user's "think deeper", the orchestrator's proposal:
-1. At each landing, the finalists with that song on their card fall together, shown together as one group on the projector and the tablet.
-2. If one finalist is left, they win.
-3. If the landing would take every remaining finalist, nobody is out: they all win together, shown together.
-4. "Enrere" on that landing brings the whole group back.
-5. Removing a finalist by hand that leaves one standing makes that one the winner.
-6. The fanfare waits for the presenters' cue.
-- (a) Yes, all of it.
-- (b) Change some (which?).
-
-### U152 · The name of the game's-state tab
-It shows how close everyone is to winning, and the song history.
-- (a) "Estat de la quina".
-- (b) "Com va".
-- (c) Another name.
-
 ### U153 · "+ Candidat"
 The canvas assistant renamed "+ Un altre" to "+ Candidat" (it adds another claimed card) during the user's own session, and the user asked on that thread to agree it with the orchestrator. The console's list of claimed cards is "Cartrons cantats", and the glossary's term is Claim.
 - (a) "+ Candidat".
@@ -183,14 +166,14 @@ The model now calls each set a "pool" (D101). Every tool, though, prepares and d
 
 
 ### U50 · How the screens point to the right side
-The presenters explain the sides in rounds 1 and 6 (D102).
-**Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 6; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
+The presenters explain the sides in rounds 1 and 5 (D102, D171).
+**Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 5; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
 
-### U51 · Round 6's pace
-Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). Round 6 starts a new pool, so its songs are all new too.
-Sound engine: easy, since the rule becomes "the first round of each pool". That makes the first special round slow too, because its songs are new.
-Related: in 2025 the night sped up (about 18 s a song early, 11 s late). The expected end is now worked out from each round's own Pace, so a faster default Pace for later rounds is also the user's call.
-**Default:** round 6, and the first special round, play at round 1's slower pace (about 22 s); every other round stays at about 14 s.
+### U51 · The pace of Part 2's first round
+Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). With D171, round 5 starts Part 2, so its songs are all new too. The special rounds replay Part 1, so they're not new.
+- (a) Round 5 plays at round 1's slower pace; every other round at about 14 s.
+- (b) Only round 1 plays slower.
+In 2025 the night sped up (about 18 s a song early, 11 s late); the expected end follows each round's own Pace.
 
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
@@ -240,6 +223,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U151 · The finale decided by the song** (2026-11-26) → D172: yes, with the group ninos.
+- **U152 · The game's-state tab** (2026-11-26) → D173: "Estat".
 - **U142–U149** (2026-11-26) → D166–D170: the finale replaces the Desgraciat's Check; it starts from the claim button's slot, which grows; a finalist's card shows privately and a fallen one isn't added; finalists can be removed or brought back; the song decides (U151 to confirm); the lookup is its own tab, today's Futur becomes the game's state with the song history, and a new Futur holds the possible winners and the upcoming songs.
 - **U140 · The canvas edits** (2026-11-26) → D165: the user's own, with the canvas's assistant.
 - **U127 · The plan-save fix's deploy** (2026-11-26): the user approved it; deployed as 94b395be. Step 1 of the new Check is deployed too (fddfdc1d).

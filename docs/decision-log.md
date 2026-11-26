@@ -865,11 +865,11 @@ By: the user. Source: the user's message of 25 Nov. Amends: D80. Lives in: requi
 Each pool has 70 songs. Playlist 1 is filtered to its final 70; playlist 2 is being filled and will be filtered to 70 too (D101). Answers U34.
 By: the user. Source: open-questions.md › Answered (U34); the user's message of 25 Nov. Amends: D99. Lives in: requirements/songs-and-cards.md › The pool's size.
 
-### D101 · Two pools of 70, one for each half of the regular rounds · 2026-11-25 · Amended by D105
+### D101 · Two pools of 70, one for each half of the regular rounds · 2026-11-25 · Amended by D105, D171
 The night has two playlists of 70 songs each, with different songs: Quines 1–5 play pool 1 and Quines 6–10 play pool 2. Pool 1 is final; the organizers are adding songs to pool 2 before filtering it to 70. Which pool the Quina Especial and the Desgraciat play isn't decided; assume a third one (U49).
 By: the user. Source: the user's message of 25 Nov. Amends: D99; event.md's "every round plays a shuffle of the whole pool" (now: of its own pool). Lives in: requirements/songs-and-cards.md › The pool; requirements/game-rules.md › The night's rounds.
 
-### D102 · The normal card is printed on both sides · 2026-11-25 · Active
+### D102 · The normal card is printed on both sides · 2026-11-25 · Amended by D171
 Side 1 plays Quines 1–5 (pool 1) and side 2 plays Quines 6–10 (pool 2), with the same card number on both sides. Side 2 has its own design, and each side carries a new mark showing the rounds it's for; the user designs both with Frontend, so nobody changes the card's design before then. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
 By: the user. Source: the user's message of 25 Nov. Lives in: requirements/songs-and-cards.md › The card; event.md › The cards.
 
@@ -881,7 +881,7 @@ By: the user. Source: the user's message of 25 Nov. Amends: D79. Lives in: requi
 The Interval's music, which Pausa plays too, now comes from the Spotify playlist 0XTlZPUpt7xPoPxk4AUU3O, which has more songs. It replaces 0SsuXelEzN8gsS7WufySOg. The old files stay (D80).
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
 
-### D105 · The special rounds play their own playlist · 2026-11-26 · Active; the special card's back Pending (U59)
+### D105 · The special rounds play their own playlist · 2026-11-26 · Superseded by D171 (the special card's back still Pending, U59)
 The Quina Especial and the Desgraciat both play a third set of songs, the Spotify playlist 79G8VcNrkih9GGjIzb47Gt, on the special card (D81). It's empty for now, so until it's final the special card uses Part 1's songs. Once final, it's sorted and numbered like the others (D103). Answers U49's pool question.
 By: the user. Source: open-questions.md › Answered (U49); the user's message of 26 Nov. Amends: D101. Lives in: requirements/songs-and-cards.md › The pool.
 
@@ -1155,7 +1155,7 @@ By: the user. Source: open-questions.md › Answered (U143). Amends: D161. Lives
 Entering a finalist's number shows that card privately, like the Check screen, with each song marked ✓ or ✗. A card that has already fallen shows its ✗ and isn't added (U144 (a)). The presenters can remove a finalist, or bring one back, by hand (U145 (a)).
 By: the user. Source: open-questions.md › Answered (U144, U145). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
 
-### D169 · The finale is decided by the song, not the card · 2026-11-26 · Pending (U151)
+### D169 · The finale is decided by the song, not the card · 2026-11-26 · Active (confirmed by D172)
 The user: "if the last 2 finalist have the same song, we already know they both won. so the moment that we know who wins is dependent on the song, not the individual card. in the projector and tablet they should show together, because they win or get eliminated together." Proposed handling, by the orchestrator at the user's request:
 1. At each landing, the finalists with that song on their card fall together, shown together as one group on the projector and the tablet.
 2. If one finalist is left, they win.
@@ -1165,8 +1165,20 @@ The user: "if the last 2 finalist have the same song, we already know they both 
 6. The fanfare waits for the presenters' cue (D109's reason: not over their voices).
 By: the user (the rule); the orchestrator (the handling, to be confirmed). Source: open-questions.md › U146, U149, U151. Amends: D161.
 
-### D170 · The lookup, the game's state and the future, as three tabs · 2026-11-26 · Active; the state tab's name Pending (U152)
+### D170 · The lookup, the game's state and the future, as three tabs · 2026-11-26 · Active
 - **The lookup** is a tab of its own, for a quick private check (U147): a song search, and a card check whose "show future" button also tells whether the card can still win.
 - **Today's "Futur" becomes the game's state,** always visible with no button: how close everyone is to winning. The histogram of cards by songs missing moves to its left, since it isn't future information, and the round's song history, scrolling, goes on its right.
 - **A new "Futur" tab:** the possible winners and the songs to the first possible Line and Quina on the left, and the upcoming songs on the right, each with how far ahead it is and how many more songs until any card can win (U148 (b)). It stays hidden until "Mirar el futur", so the presenters stay intrigued (event.md). So the song history needs no future button.
 By: the user. Source: open-questions.md › Answered (U147, U148). Amends: D162. Lives in: requirements/screens.md › Console.
+
+### D171 · Part 1 plays Quines 1–4 and the special rounds; Part 2 plays Quines 5–10 · 2026-11-26 · Active, provisional
+The Especial and the Desgraciat use Part 1's playlist, so Part 1 covers Quines 1–4 and Part 2 covers Quines 5–10, and both play about the same number of rounds (six each). The normal card's side 1 is Quines 1–4 and side 2 is Quines 5–10. The presenters explain the sides in rounds 1 and 5. The special card is printed from Part 1, and no third playlist is needed. The user still has to confirm this with the other organizers and may change it.
+By: the user. Source: the user's message of 26 Nov. Supersedes: D105. Amends: D101, D102. Lives in: event.md › The cards, The songs; requirements/songs-and-cards.md; requirements/game-rules.md › The night's rounds.
+
+### D172 · The finale's groups use the group ninos · 2026-11-26 · Active
+D169's handling is confirmed. Finalists who fall or win together are shown with the ninos that already come in groups: two kissing, two dancing (one flipped horizontally), three stacked as a human castle. Answers U151.
+By: the user. Source: open-questions.md › Answered (U151); the user's message of 26 Nov. Amends: D169. Lives in: requirements/screens.md › Projector, Console.
+
+### D173 · The game's-state tab is "Estat" · 2026-11-26 · Active
+"Something like 'Estat de la quina' but shorter." Answers U152.
+By: the user. Source: open-questions.md › Answered (U152). Amends: D170. Lives in: requirements/screens.md › Console.
