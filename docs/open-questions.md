@@ -49,9 +49,9 @@ Before the finale the engine only sees the cards in play, unsold ones included (
 
 ### U161 · A spare laptop's music until December
 Since the repertoire rename (D178, deployed c93f219c), R2 keeps each repertoire under `repertoires/<name>/`. The ~8 GB pushed before (last year's songs, plus today's Hold, Pausa and break music) stays under `pools/`, where the tools can't reach it. So until this year's repertoire is pushed in December, a spare laptop can't pull those music sets; they're all on the main laptop.
-- (a) Re-push only the music sets now (small), so a spare works for music.
-- (b) Re-push everything now (about 8 GB, a few cents).
-- (c) Wait for December's push.
+- (a) Re-push only the music sets now (about 1.7 GB, 20–30 minutes), so a spare works for music. It needs a small tool change first (a `--shared-only` flag, tested and deployed).
+- (b) Re-push everything now with today's tool (about 8 GB and an hour, last year's 77 songs included, a few cents).
+- (c) Wait for December's push; nothing needed.
 
 ### U159 · The numbered slip for winners
 The user on the canvas: "What is this field? we dont papereta concept. please read glosary. If it is the card, it should be readonly or no field directly". The field was labelled "Papereta", which isn't the glossary's word. The model does have a **numbered slip**: the glossary's Winner is "noted by name or by a numbered slip handed to them", event.md says "their name, or a numbered slip we hand them", and the organizers' 2025 notes say "s'entrega un paper amb un número per a identificar posteriorment a la persona". The card's number is already known from the claim.
