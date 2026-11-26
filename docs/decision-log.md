@@ -1350,3 +1350,32 @@ From Frontend's design-system spec (26 Nov), the points that need no new choice:
 - **The side labels** are written with an en dash, «Normal 1–5» / «Normal 6–10», as in the code.
 The rest is U175.
 By: the orchestrator, applying earlier decisions to Frontend's spec. Source: Frontend's report of 26 Nov (temp/design-canvas/ds/components.md, board-audit.md). Lives in: packages/ui (Frontend); requirements/screens.md.
+
+### D202 · The automatic cues' moments · 2026-11-26 · Active; the 3-minute line Pending (U176)
+The user's answers to U171:
+1. **Each doors line carries one tip**, still at 1 hour, 45, 30, 15 and 5 minutes: the cards on sale, the phones' QR, the bar, "aneu seient!". The user also said "repeat we're selling tickets at 3min" (U176).
+2. **The round fanfare says the round's name**, like a ring announcer ("Quina… tres!"), with lines of their own for the Desgraciat and the Especial.
+3. **"Tornem en dos minuts" in the Descans**, 2 minutes before its planned end, calling people back from the bar, with the reminder to turn the card over for the second half (D193).
+4. **A goodbye at the end** leads into the end music's first song. The user: "i may end up not doing at the end if we want to give presenters the last word".
+5. **No voice lines on the presenters' pad.** Instead, a drum roll on the remote's D-pad (D203).
+By: the user. Source: open-questions.md › Answered (U171). Amends: D198. Lives in: requirements/show-and-music.md › Music for each moment.
+
+### D203 · A drum roll on the remote's D-pad · 2026-11-26 · Active; the vibration Pending (U177)
+One of the D-pad's four effects becomes a drum roll with depth:
+- **It plays as long as the direction is held.**
+- **It follows the beat** of whatever music is playing.
+- **Shaking the remote while holding** makes it a more intense roll. While a D-pad direction is held, shakes go to the effect and never count as Suspens's shake gesture.
+- **Held longer than a threshold,** letting go lands it with a hit. Shorter, it stops smoothly. The threshold starts at about 2 seconds, tuned by ear (U13).
+- **The remote marks the threshold,** with one vibration or the 3 vibrations of the other holds (U177).
+- **The tablet stays the remote's plan B:** holding the effect's icon does the same, and sliding the finger up while holding stands in for the shake.
+The user asked for more D-pad effects with this kind of depth (U178).
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D204 · The automatic voices' rules · 2026-11-26 · Active
+U172 as proposed, with the user's correction to the first rule: "the mic is not conected to the computer, it goes directly to the mixing table, so we cannot know when they speak. what we should do is simply only play when it is unlikely they are speaking. and sentences are short, so if they have to stop for a second is fine altough not ideal". So:
+- automatic voices play only when the presenters are unlikely to be talking: at the doors, in the Descans, and on a presenter's own press, before they speak;
+- a chime comes first, and the music dips under the voice;
+- each is one or two sentences;
+- the tablet has a "Veus" slider, a switch to turn the automatic voices off for the night, and a way to skip one while it plays;
+- the doors' countdown follows the plan's start time.
+By: the user. Source: open-questions.md › Answered (U172). Lives in: requirements/show-and-music.md › Music for each moment.

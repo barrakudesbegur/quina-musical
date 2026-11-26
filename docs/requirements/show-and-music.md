@@ -89,7 +89,7 @@ The presenters can do any of these at any time, from the console or the Wii remo
 | "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself. "Següent" is disabled while it's on (D133) | B held plus A held (A first works too: B while A is still held turns the starting transition into a Suspens, D176), or (if the shake gesture is on) 3 strong shakes; 3 vibrations, and letting go of A before the third cancels it back to Aguanta; after it, letting go of B lands it (D144, D147). The shake is on by default, and the window is about 1.5 s (D148). With manual advance, holding B starts it at once: 3 vibrations, and letting go before the third cancels it, after it lands it (D145) |
 | "Enrere" (long press) | **Back:** during a Check, a single press steps back one revealed song, down to none, and never closes the Check. The projector removes that mark, the previous song's snippet replays, and that Check's automatic reveal turns off. Only while revealing: not in a review or after the cue (D127, D134). Otherwise it undoes the last landing. That song stops counting, phones unmark it, and it becomes the next song again; the Queue is untouched. The drum turns back one card and the show goes into Hold. It can be pressed several times, and during a Spin it cancels the Spin | 1 or 2 (hold 1.5 s) |
 | "Comprovar cartró" | A Claim: a number pad for the card, then the Check | Console only |
-| "Efectes" | Sound effects and fanfares, such as a horn, shown as icons | D-pad (4 effects) |
+| "Efectes" | Sound effects and fanfares, such as a horn, shown as icons. One of the D-pad's is the drum roll (D203): it plays while held, on the beat, louder when the remote is shaken, and lands if held long enough | D-pad (4 effects; the other three pending U178) |
 | "Ritme" | The Pace: presets, −/+ and a lock | none |
 | Auto-advance | On, or off ("Avanç manual", D143) | HOME (a different rumble for each) |
 
@@ -155,10 +155,13 @@ _From event.md › The night, step by step; D129._
 - **The corn-seed storm (D151):** if the crowd starts throwing corn seeds at the end, the tech turns on a song by hand, from a hook of its own right at the drop: "Flying Free" for now (D153). The button shows on the tablet during the last round, inside its Check, and on the end screen (D155). The throws and the storm play louder than the songs (D154; how, pending U133).
 - Still pending: U97 (the doors and the end's playlists) and U99 (the intro music's span).
 - **Automatic cues and voices (D198, new in 2026):** short sounds and voice-overs ("veu en off") that play by themselves at chosen moments, without being annoying. The user makes the voices with ElevenLabs. So far:
-  - a short fanfare when a break ends, so the presenters don't start talking suddenly;
-  - at the doors, a chime and "La Quina Musical començarà en …" at 1 hour, 45, 30, 15 and 5 minutes before the start;
-  - at the start, music or a fanfare that kicks off the show, maybe with a funny voice-over story that ends with the presenters coming on stage doing something funny.
-  - More moments and the rules that keep them from being annoying: pending U171.
+  - **Each round's start:** when a presenter presses "Comença la quina", a short fanfare where a ring-announcer voice says the round's name ("Quina… tres!"), with lines of their own for the Desgraciat and the Especial, so the presenters don't start talking suddenly (D198, D202).
+  - **The doors:** a chime and "La Quina Musical començarà en …" at 1 hour, 45, 30, 15 and 5 minutes before the start. Each line carries one tip: the cards on sale, the phones' QR, the bar, "aneu seient!" (D202; a line at 3 minutes, pending U176).
+  - **The start:** music or a fanfare that kicks off the show, maybe with a funny voice-over story that ends with the presenters coming on stage doing something funny.
+  - **The Descans:** "Tornem en dos minuts" 2 minutes before its planned end, calling people back from the bar, with a reminder to turn the card over for the second half (D202).
+  - **The end:** when the presenters end the night, a short goodbye ("Gràcies per venir i bones festes!") leads into the end music's first song. It may be dropped to give the presenters the last word (D202).
+  - **Not used:** voice lines on the presenters' pad (D202); voices during play, a Check or a Celebration; the short breaks between normal rounds; the sponsors; Pausa.
+  - **The rules (D204):** the microphones go straight to the mixing desk, so the laptop can't hear when the presenters talk. Automatic voices play only when they're unlikely to be talking: at the doors, in the Descans, and on a presenter's own press, before they speak. The lines are short, so a presenter who has to wait a second loses little. A chime comes first, and the music dips under the voice and comes back. The tablet has a "Veus" volume slider, a switch to turn the automatic voices off for the night, and a way to skip one while it plays. The doors' countdown follows the plan's start time.
 
 ## Volumes
 

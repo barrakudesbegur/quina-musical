@@ -109,6 +109,24 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U176 · "repeat we're selling tickets at 3min"
+The user's words in U171's first point. The reading: one more doors line, 3 minutes before the start, saying cards are still on sale ("Últims minuts per comprar cartrons!"). Every 3 minutes would mean about 20 announcements in an hour.
+- (a) Yes, one more line at 3 minutes before the start.
+- (b) Something else (say what).
+
+### U177 · How the remote marks the drum roll's threshold (D203)
+- (a) The 3 vibrations, like the other holds: letting go before the third stops the roll smoothly, and after it, the roll lands.
+- (b) One vibration when the threshold passes.
+
+### U178 · The D-pad's other three effects
+Today they're taps: up «tada», right an orchestra hit, down a sad trombone, left Among Us. The same depth as the drum roll for each (held, on the beat, shake for more, a landing past the threshold). Yes or no for each:
+1. **Up: the drum roll**, whose landing is today's «tada».
+2. **Right: orchestra hits on the beat.** A tap is one hit on the next beat; held, a hit on every beat; shaking doubles the speed; past the threshold, letting go ends on a big hit with a long tail. For hype and punchlines ("Quina… TRES!").
+3. **Down: the sad trombone.** A tap is the "wah-wah-wah"; held, its last note holds, and shaking wobbles it; letting go, the note falls off. The music sags a little under it and comes back. For jokes and near misses.
+4. **Left: the crowd.** Held, applause swells; shaking adds cheers and whistles; letting go fades it, and past the threshold it ends in an ovation. It cues the tent to clap: the presenters' entrance, the sponsors, a winner. Among Us moves to the tablet's pad.
+
+Left out on purpose: anything that changes the song's speed or pitch, like a tape stop or a scratch, because the landings follow the song's timing.
+
 ### U175 · The design system's open choices (Frontend's spec, canvas page «Sistema de disseny»)
 Frontend's spec and audit cover 43 components and the tokens (temp/design-canvas/ds/components.md, board-audit.md). The canvas draws each recommendation marked «pendent · tria N». Already settled from earlier decisions (D201): what counts as a button under D189, «+ Cartró» everywhere, the marks' order, and the labels the glossary or the log already fix. The recommendations:
 2. **Desar's corners:** D95 said "square corners"; Frontend reads that as "not a pill", with the 14 px radius of every phone button.
@@ -139,31 +157,6 @@ D195 puts "Comença la quina" in the big slot in a break. At the doors, what com
 - (a) The doors' big slot shows "Començar la nit", but only a tap on the tablet starts it; the remote's A does nothing before the night. The menu item goes.
 - (b) The big slot is the A button there too: A starts the night.
 - (c) It stays in the menu only.
-
-### U171 · More moments for automatic sounds and voices (D198)
-The orchestrator's proposals, beyond the user's three. Yes or no for each:
-1. **Each doors line carries one useful tip,** still five voices: at 1 hour "Benvinguts! … els cartrons ja són a la venda"; at 30 minutes, the phones' QR; at 15, the bar; at 5, "aneu seient!".
-2. **The round fanfare says the round's name,** like a ring announcer: "Quina… tres!", with lines of their own for the Desgraciat and the Especial. 12 lines.
-3. **"Tornem en dos minuts"** in the Descans, 2 minutes before its planned end. It calls people back from the bar and reminds them to turn the card over for the second half (D193).
-4. **A goodbye at the end:** when the presenters end the night, a short voice ("Gràcies per venir i bones festes!") leads into the end music's first song, mirroring the kick-off.
-5. **Voice lines on the presenters' "Efectes" pad,** which only they fire: "Tothom dempeus!" for the Desgraciat, "Silenci, si us plau!", a drum roll with "I el cartró guanyador és…".
-
-Left out on purpose:
-- voices during play, a Check or a Celebration, because they'd talk over the presenters or the songs;
-- the short breaks between normal rounds, because one about every 15 minutes is too often;
-- reading out the sponsors, because there are about 55;
-- Pausa, because the presenters start it, often to say something themselves.
-
-### U172 · The rules that keep the voices from being annoying (D198)
-- Automatic voices play only when nobody is on the microphone: at the doors and in the Descans. The ones at the start, a round's start and the end play on a presenter's own press, before they talk.
-- A chime comes first, and the music dips under the voice and comes back.
-- Each is one or two sentences.
-- The tablet gets a "Veus" volume slider, a switch to turn the automatic ones off for the night, and a way to skip one while it plays.
-- The doors' countdown follows the plan's start time.
-
-The choice:
-- (a) As proposed.
-- (b) Change some of them.
 
 ### U167 · The special rounds' pool, now that the split is 1–5 / 6–10
 D171 put the Desgraciat and the Especial on pool 1 so that "both play about the same number of rounds (six each)": Quines 1–4 plus the two specials, against Quines 5–10. With the organizers' 1–5 / 6–10 (D193), pool 1 would play seven rounds and pool 2 five. One special card plays both special rounds (D81), and the cards are made on 4–5 Dec.
@@ -305,6 +298,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U171 · More moments for automatic sounds and voices** (2026-11-26) → D202: 1–4 yes (the 4th may be dropped), 5 no; a drum roll instead (D203).
+- **U172 · The voices' rules** (2026-11-26) → D204: as proposed, played only when the presenters are unlikely to be talking.
 - **U78 · The music's level while under review** (2026-11-26) → D191: still far down, as during the Check.
 - **U165 · "QUINA POTRA!" on the winner's phone** (2026-11-26) → D190: the phone says "Quina potra!" too.
 - **U164 · A title for the Desgraciat's winner** (2026-11-26) → D186: "QUINA POTRA!".
