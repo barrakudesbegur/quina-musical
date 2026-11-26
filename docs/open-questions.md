@@ -109,6 +109,14 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U166 · A review before anything was revealed
+D191 keeps the music far down under review, "as during the Check". But a Check only ducks the music from its first reveal. Before that, the music from before the Check plays at the claim's level. So in three cases a review has the music at the claim's level (Sound engine, 26 Nov):
+- the presenters send the Check to review before revealing any song;
+- they "Enrere" back to no reveals, then send it to review;
+- another card's Check comes on screen meanwhile, and the duck goes with it.
+- (a) Far down for the whole review: the duck goes on as the review starts, whatever was revealed, and stays through another card's Check until the review ends. After "continue" with nothing revealed, the music comes back to the claim's level, like any Check before its first press.
+- (b) As the Check had it: far down only once something was revealed; otherwise at the claim's level.
+
 ### U79 · Phones while under review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, far down (D191), and Pausa is only by hand. During a Check, phones show "Comprovant el cartró 123…". On a review:
 - (a) that line just closes, with no mark (what Backend built for now, a one-line change);
