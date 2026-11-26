@@ -116,15 +116,10 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that repertoire's, and fails at once if not (after the 2026 deploy: `QUINA_REPERTOIRE=2026`);
    - **deploys name their repertoire** (`--repertoire 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
    - a preflight check that the cloud's cards.json matches the repertoire's (FAIL if not).
-4. **Card sides and pools, step B** (D100–D102, D178; agreed with Sound engine on 25 Nov; waits on Sound engine's step A model). One repertoire holds the night's pools. Each song has a `pool`; card-types.json's `sides: [{side, pool}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
-   - journal-check accepts `side`;
-   - the projection's PublicRound.side and intro.side, 1 when absent;
-   - Admin's resume point carries side (`-C<n>`);
-   - the preflight's cards check reads `sides` (each side 3×4, its songs in its pool), and every round's pool is prepared;
-   - the "side exists for that card type" check, and the protocol's `sideWarnings(plan, cardTypes)` (side 2 never played, a side's rounds not contiguous), in the preflight;
-   - the cards.json conversion to `sides` is one commit by Frontend, which includes my two readers (the preflight's cards check, show.spec.ts), with no dual-shape reader (D84). Send Frontend that diff once step A's types exist; Frontend sends the hash before pushing;
+4. **Card sides and pools, step B** (D100–D102, D178; Sound engine's step A is `e8e10d3`/`e1c54ec`). **Done in `3cf30a6`:** journal-check takes `side` (1–9, absent for side 1); PublicRound.side and the public intro's side, only when not 1; Admin's resume point carries it (`-C<n>`); the preflight's Card sides check (the protocol's `sideWarnings`, pools counted from songs.json: FAIL for a round on an unprinted side or an empty pool, WARN for a printed side no round plays). **Deploy it before the first side-2 round is journalled** (nothing journals one until the plan says so). **Left, with Frontend's cards.json conversion to `sides: [{side, lines}]`** (waits on the user's go, D102): one Frontend commit with my two readers in it, no dual-shape reader (D84):
+   - the preflight's cards check reads `sides` (each side 3×4, its songs in its side's pool);
    - show.spec.ts reads lines through the round's side; the plan fixtures.
-   The default test repertoire: all songs in pool 1, both card types one side on pool 1.
+   Send Frontend that diff once their conversion is ready; Frontend sends the hash before pushing. The default test repertoire: all songs in pool 1, both card types one side on pool 1.
 5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 6. **The presenter-paced Check, step 2** (D107–D110; agreed with Sound engine, 26 Nov; after Sound engine's protocol step 1):
