@@ -5,7 +5,7 @@
 //   npx ts-node src/pool-report.ts --sizes 60,70,80,90 --sold 250       hypothetical pools of those sizes
 //
 // Options: --runs N (simulated rounds, default 2000); --plan <file> (a Game plan JSON, e.g. Admin's export: adds a
-// whole-night estimate from its rounds, Intervals and breaks). Minutes use the Pace (22 s a song in round 1, 14 s after)
+// whole-night estimate from its rounds, Intervals and Throws). Minutes use the Pace (22 s a song in round 1, 14 s after)
 // plus the Checks (report.ts DEFAULT_TIMING).
 import { readFileSync } from 'fs';
 import { generateCardsJson } from './generate-cards-json';
@@ -34,11 +34,11 @@ const synthetic = (n: number): PoolSong[] => Array.from({ length: n }, (_, i) =>
 /** The night's shape from a Game plan file, read loosely (this package can't use the protocol's checker). */
 function nightFrom(file: string | null): NightShape | null {
   if (!file) return null;
-  const plan = JSON.parse(readFileSync(file, 'utf-8')) as { rounds?: { kind?: string }[]; schedule?: { intervalMinutes?: number; breaks?: { minutes?: number }[] } };
+  const plan = JSON.parse(readFileSync(file, 'utf-8')) as { rounds?: { kind?: string }[]; schedule?: { intervalMinutes?: number; throws?: { minutes?: number }[] } };
   const kinds = (plan.rounds ?? []).map((r) => r.kind ?? 'normal');
   if (!kinds.length) throw new Error(`--plan: ${file} has no rounds`);
-  const breakMinutes = (plan.schedule?.breaks ?? []).reduce((sum, b) => sum + (b.minutes ?? 0), 0);
-  return { kinds, intervalMinutes: plan.schedule?.intervalMinutes ?? 3, breakMinutes };
+  const throwMinutes = (plan.schedule?.throws ?? []).reduce((sum, b) => sum + (b.minutes ?? 0), 0);
+  return { kinds, intervalMinutes: plan.schedule?.intervalMinutes ?? 3, throwMinutes };
 }
 const night = nightFrom(opt('plan'));
 

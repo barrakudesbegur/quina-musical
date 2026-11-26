@@ -5,8 +5,8 @@ import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { replayJournal, sceneAllows, type JournalEntry, type SceneContext } from '@quina/protocol';
-import { INTERVAL } from '../engine/src/config.ts';
+import { VOLUME_DEFAULTS, checkGamePlan, replayJournal, sceneAllows, volumeDb, type JournalEntry, type SceneContext } from '@quina/protocol';
+import { FLOW, INTERVAL, INTRO } from '../engine/src/config.ts';
 import { checkIntervalTrack, intervalSlugs, intervalTrackProblems, type IntervalTrack } from '../engine/src/interval/tracks.ts';
 import {
   gameSeed,
@@ -143,9 +143,13 @@ test('a track hands over on a downbeat 8–12 s before its sound ends, preferrin
   assert.ok(short.downbeats.includes(z) && z >= short.edges.startSec + INTERVAL.minPlaySec && z <= 25, `short: ${z}`);
 });
 
-test('the real playlist (data/interval, when analysed): every natural handover is on a downbeat in its window', (t) => {
-  const dir = path.join(OUT, 'interval');
-  if (!fs.existsSync(path.join(dir, 'index.json'))) return t.skip('no data/interval (run npm run prep -- --steps interval)');
+test('the real sets (data/interval/<set>, when analysed): every natural handover is on a downbeat in its window', (t) => {
+  const sets = ['breaks', 'pausa'].map((set) => path.join(OUT, 'interval', set)).filter((dir) => fs.existsSync(path.join(dir, 'index.json')));
+  if (!sets.length) return t.skip('no data/interval/<set> (run npm run prep -- --steps interval)');
+  for (const dir of sets) checkSet(dir);
+});
+
+function checkSet(dir: string) {
   const slugs = intervalSlugs(JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')));
   assert.ok(slugs.length > 0);
   const tracks = slugs.map((slug) => checkIntervalTrack(JSON.parse(fs.readFileSync(path.join(dir, `${slug}.json`), 'utf8')), 48000));
@@ -168,7 +172,7 @@ test('the real playlist (data/interval, when analysed): every natural handover i
       assert.ok(b.downbeats.includes(h.incoming.anchorSec) || h.incoming.anchorSec === b.edges.firstDownbeatSec, `${b.slug}: anchored on a downbeat`);
     }
   }
-});
+}
 
 // ---------------------------------------------------------------------------------------------- handovers
 test('tempos matched: the next track rises under the outgoing one for two of its bars, its downbeat on the one', () => {
@@ -294,72 +298,110 @@ test('the track contract: a written track passes, a broken one names its problem
 // ---------------------------------------------------------------------------------------------- the show
 const skipRejected = (h: Harness) => rejected(h.send('intervalSkip'));
 
-test('the show: the Interval music plays at its volume, carries its track in the state, and the skip goes through only while it plays', () => {
+test('the show: each moment\'s music (D129), the intro track, the breaks\' and the end\'s sets, their track in the state, the skip only while a set plays', () => {
   const h = setup({ seed: 4, settings: { autoAdvance: false } });
   h.send('unlock');
   assert.equal(h.show.snapshot().intervalMusic, null);
-  assert.deepEqual(skipRejected(h), ['wrongScene'], 'no Interval music before the Game');
+  assert.deepEqual(skipRejected(h), ['wrongScene'], 'no set before the Game');
 
+  // A round's intro plays its intro track, low as if in Parlem, not a set.
   const intro = h.send('roundIntro');
-  assert.equal(find(intro, 'intervalMusic')?.levelDb, INTERVAL.volumeDb);
-  assert.deepEqual(h.show.snapshot().intervalMusic, { track: null }, 'loading: the music before it goes on');
-  const skip = h.send('intervalSkip');
-  assert.deepEqual(rejected(skip), []);
-  assert.ok(find(skip, 'intervalSkip'));
-  assert.ok(!skip.some((e) => e.type === 'emit'), 'nothing changes until the next track takes over');
-
-  // The runtime reports the track on its handover's downbeat.
-  const at = h.clock.t + 0.4;
-  const reported = h.show.intervalTrack({ title: 'cupcake.', artist: 'Carpe', index: 3, count: 17 }, at);
-  assert.deepEqual(h.show.snapshot().intervalMusic, { track: { title: 'cupcake.', artist: 'Carpe', index: 3, count: 17, sinceMs: Math.round(h.env.toEpochMs(at)) } });
-  assert.ok(reported.some((e) => e.type === 'emit' && e.message.type === 'state'));
-
-  // The volume: live, journaled with the settings.
-  const volume = h.send('setGame', { intervalVolumeDb: -14 });
-  assert.deepEqual(find(volume, 'intervalVolume'), { type: 'intervalVolume', db: -14, seconds: INTERVAL.volumeGlideSec });
-  assert.equal(journalOf(volume).find((e) => e.kind === 'settings.changed' && e.settings.intervalVolumeDb === -14)?.kind, 'settings.changed');
-  assert.deepEqual(rejected(h.send('setGame', { intervalVolumeDb: -31 })), ['invalid']);
-  assert.ok(!find(h.send('setGame', { autoAdvance: false }), 'intervalVolume'), 'other settings leave it');
-
-  // The Shuffle runs over it; once it has run (scene play) the music still plays until the first Spin.
-  h.send('newRound');
-  assert.deepEqual(skipRejected(h), []);
-  h.advance(9);
-  assert.equal(h.show.scene, 'play');
-  assert.deepEqual(skipRejected(h), [], 'the music still plays in play, before the first Spin');
-  const spin = h.send('next');
-  assert.ok(find(spin, 'startTransition')?.fromHoldMusic, 'the first Spin builds out of it');
+  assert.equal(find(intro, 'introMusic')?.levelDb, INTRO.levelDb);
+  assert.ok(!find(intro, 'intervalMusic'));
   assert.equal(h.show.snapshot().intervalMusic, null);
   assert.deepEqual(skipRejected(h), ['wrongScene']);
-  h.show.intervalTrack({ title: 'late', artist: '', index: 4, count: 17 });
-  assert.equal(h.show.snapshot().intervalMusic, null, 'a late report is ignored');
 
-  // The end of the Game: the playlist again, at the volume set, with no stale track.
+  // The Shuffle runs over it; once it has run (scene play) it still plays until the first Spin, which builds out of it.
+  const shuffle = h.send('newRound');
+  assert.ok(!find(shuffle, 'stopAll') && !find(shuffle, 'introMusic'), 'the intro track goes on under the Shuffle');
+  h.advance(9);
+  assert.equal(h.show.scene, 'play');
+  assert.equal(h.show.bed, 'intro');
+  const spin = h.send('next');
+  assert.ok(find(spin, 'startTransition')?.fromHoldMusic, 'the first Spin builds out of it');
+  assert.equal(h.show.bed, null);
+
+  // The end of the Game: the end's set (D129, D137), which the skip and the reports follow.
   h.until(() => h.show.status === 'playing');
   const end = h.send('endGame');
-  assert.equal(find(end, 'intervalMusic')?.levelDb, -14);
-  assert.deepEqual(h.show.snapshot().intervalMusic, { track: null });
-  assert.deepEqual(skipRejected(h), [], 'after the Game too');
-  // A new round from the round in play stops everything: no Interval music under that Shuffle.
+  const music = find(end, 'intervalMusic');
+  assert.deepEqual([music?.set, music?.levelDb], ['end', INTERVAL.volumeDb]);
+  assert.deepEqual(h.show.snapshot().intervalMusic, { set: 'end', track: null }, 'loading: the music before it goes on');
+  const skip = h.send('intervalSkip');
+  assert.deepEqual(rejected(skip), []);
+  assert.deepEqual(find(skip, 'intervalSkip'), { type: 'intervalSkip', set: 'end' });
+  assert.ok(!skip.some((e) => e.type === 'emit'), 'nothing changes until the next track takes over');
+  const at = h.clock.t + 0.4;
+  const reported = h.show.intervalTrack({ title: 'cupcake.', artist: 'Carpe', index: 3, count: 17 }, at, 'end');
+  assert.deepEqual(h.show.snapshot().intervalMusic, { set: 'end', track: { title: 'cupcake.', artist: 'Carpe', index: 3, count: 17, sinceMs: Math.round(h.env.toEpochMs(at)) } });
+  assert.ok(reported.some((e) => e.type === 'emit' && e.message.type === 'state'));
+  h.show.intervalTrack({ title: 'stale', artist: '', index: 1, count: 9 }, at, 'breaks');
+  assert.equal(h.show.snapshot().intervalMusic?.track?.title, 'cupcake.', 'another set\'s report is ignored');
+
+  // A new round from the round in play stops everything; its intro track comes in under that Shuffle.
   h.send('roundIntro');
   h.send('newRound');
   h.until(() => h.show.scene === 'play');
   h.send('next');
   h.until(() => h.show.status === 'playing');
-  h.send('newRound');
+  const again = h.send('newRound');
+  assert.ok(find(again, 'stopAll') && find(again, 'introMusic'));
   assert.equal(h.show.scene, 'roundStart');
   assert.equal(h.show.snapshot().intervalMusic, null);
   assert.deepEqual(skipRejected(h), ['wrongScene']);
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 
-test('the scene rules: the skip whenever the Interval music plays, and the console’s fallback without the flag', () => {
+test('the volumes (D139): live, every slider in the state, journaled once still; the plan\'s only for a Game that set none', () => {
+  const h = setup({ seed: 4, settings: { autoAdvance: false } });
+  h.send('unlock');
+  assert.deepEqual(h.show.snapshot().game.volumes, VOLUME_DEFAULTS);
+  assert.equal(h.show.journalSettings().volumes, undefined, 'absent from the journal until set');
+  const volume = h.send('setVolume', { key: 'breaks', percent: 40 });
+  assert.deepEqual(find(volume, 'volumes')?.volumes, { ...VOLUME_DEFAULTS, breaks: 40 });
+  assert.equal(h.show.snapshot().game.volumes?.breaks, 40);
+  assert.equal(journalOf(volume).length, 0, 'not on every move');
+  h.advance(0.3);
+  h.send('setVolume', { key: 'breaks', percent: 35 });
+  const still = h.advance(FLOW.volumesJournalSec + 0.1);
+  const entries = journalOf(still).filter((e) => e.kind === 'settings.changed');
+  assert.equal(entries.length, 1, 'one entry for the drag');
+  assert.ok(entries[0].kind === 'settings.changed' && entries[0].settings.volumes?.breaks === 35);
+  assert.deepEqual(rejected(h.send('setVolume', { key: 'breaks', percent: 101 })), ['invalid']);
+  assert.deepEqual(rejected(h.dispatch({ v: 1, type: 'cmd', cmd: 'setVolume', reqId: 'r', key: 'loud', percent: 50 })), ['invalid']);
+  // A plan's volumes now are ignored: this Game set its own.
+  const plan = checkGamePlan({ v: 3, edition: '26', title: 'Q', prizeReveal: 'perRound', sponsors: [], rounds: [{ number: 1, kind: 'normal', line: [], bingo: [] }], schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 }, volumes: { breaks: 90 }, cheatSheet: { claimRules: [], specialRoundRules: [] } });
+  assert.ok(plan.ok);
+  h.show.setPlan(plan.plan);
+  assert.equal(h.show.volumes.breaks, 35);
+  // A fresh Game takes them, once, and journals them; the journal brings them back after a restart.
+  const f = setup({ seed: 5 });
+  const applied = f.show.setPlan(plan.plan);
+  assert.equal(f.show.volumes.breaks, 90);
+  assert.ok(applied.some((e) => e.type === 'volumes'));
+  assert.ok(journalOf(applied).some((e) => e.kind === 'settings.changed' && e.settings.volumes?.breaks === 90));
+  const record = replayJournal(journalOf([...f.log, ...applied]));
+  const r = setup({ seed: 6, restore: record });
+  assert.equal(r.show.volumes.breaks, 90);
+  assert.equal(r.show.volumesSet, true);
+  // Songs in Parlem: the Parlem duck itself, live.
+  h.send('roundIntro');
+  h.send('newRound');
+  h.advance(9);
+  h.send('next');
+  h.until(() => h.show.status === 'playing');
+  assert.equal(find(h.send('hold'), 'duck')?.db, volumeDb(VOLUME_DEFAULTS.songsParlem));
+  assert.deepEqual(find(h.send('setVolume', { key: 'songsParlem', percent: 20 }), 'duck')?.db, volumeDb(20));
+  assert.ok(Math.abs(volumeDb(VOLUME_DEFAULTS.songsParlem) - -14) < 0.2, 'the default is the tuned Parlem duck (−14 dB)');
+});
+
+test('the scene rules: the skip whenever a set plays, and the console’s fallback without the flag', () => {
   const ctx = (scene: SceneContext['scene'], extra: Partial<SceneContext> = {}): SceneContext => ({ scene, celebrating: null, introduced: false, paused: false, ...extra });
-  for (const scene of ['interval', 'roundStart', 'after'] as const) assert.ok(sceneAllows('intervalSkip', ctx(scene)), scene);
-  for (const scene of ['before', 'play', 'check', 'celebration'] as const) assert.ok(!sceneAllows('intervalSkip', ctx(scene)), scene);
+  for (const scene of ['interval', 'after'] as const) assert.ok(sceneAllows('intervalSkip', ctx(scene)), scene);
+  for (const scene of ['before', 'roundStart', 'play', 'check', 'celebration'] as const) assert.ok(!sceneAllows('intervalSkip', ctx(scene)), scene);
   assert.ok(sceneAllows('intervalSkip', ctx('play', { intervalMusic: true })));
-  assert.ok(!sceneAllows('intervalSkip', ctx('roundStart', { intervalMusic: false })));
-  assert.ok(!sceneAllows('intervalSkip', ctx('interval', { intervalMusic: true, paused: true })), 'not during the pause');
+  assert.ok(!sceneAllows('intervalSkip', ctx('interval', { intervalMusic: false })));
+  assert.ok(sceneAllows('intervalSkip', ctx('check', { paused: true })), 'during Pausa: the Pausa set');
 });
 
 test('Hold music off: a Hold keeps the song ducked; switched back on, Hold music takes over; silence is still covered', () => {
@@ -385,13 +427,13 @@ test('Hold music off: a Hold keeps the song ducked; switched back on, Hold music
   const back = h.send('back');
   assert.equal(find(back, 'holdMusic')?.mood, 'error', 'Back still covers with Hold music');
   assert.ok(h.show.holdMusic);
-  // A fresh Game and an older journal without the new settings: the defaults.
+  // A fresh Game and an older journal without the newer settings: the defaults.
   const fresh = setup({ seed: 6 });
   assert.equal(fresh.show.game.holdMusicOn, true);
-  assert.equal(fresh.show.game.intervalVolumeDb, INTERVAL.volumeDb);
+  assert.deepEqual(fresh.show.snapshot().game.volumes, VOLUME_DEFAULTS);
   const record = replayJournal(journalOf(fresh.log));
-  const { holdMusicOn: _on, intervalVolumeDb: _db, ...older } = record.settings ?? fresh.show.journalSettings();
+  const { holdMusicOn: _on, ...older } = record.settings ?? fresh.show.journalSettings();
   const resumed = setup({ seed: 6, restore: { ...record, settings: older } });
   assert.equal(resumed.show.game.holdMusicOn, true);
-  assert.equal(resumed.show.game.intervalVolumeDb, INTERVAL.volumeDb);
+  assert.deepEqual(resumed.show.snapshot().game.volumes, VOLUME_DEFAULTS);
 });

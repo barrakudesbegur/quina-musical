@@ -156,22 +156,42 @@ test('a round\'s card type must look like a card-types.json id', () => {
   }
 });
 
-test('planned breaks: after a round that isn\'t the last, once each, 1–60 minutes; none by default', () => {
+test('planned Throws ("parón"): after a round that isn\'t the last, once each, 1–60 minutes; none by default', () => {
   const r = checkGamePlan(good());
   assert.ok(r.ok);
-  assert.equal(r.plan.schedule.breaks, undefined, 'none: absent, so the plan reads back unchanged');
+  assert.equal(r.plan.schedule.throws, undefined, 'none: absent, so the plan reads back unchanged');
   const p = good();
-  (p.schedule as Record<string, unknown>).breaks = [{ afterRound: 1, minutes: 5 }];
+  (p.schedule as Record<string, unknown>).throws = [{ afterRound: 1, minutes: 5 }];
   const ok = checkGamePlan(p);
   assert.ok(ok.ok);
-  assert.deepEqual(ok.plan.schedule.breaks, [{ afterRound: 1, minutes: 5 }]);
-  assert.deepEqual(publicPlan(ok.plan, [1]).schedule.breaks, [{ afterRound: 1, minutes: 5 }], 'public: phones show it in Horari');
+  assert.deepEqual(ok.plan.schedule.throws, [{ afterRound: 1, minutes: 5 }]);
+  assert.deepEqual(publicPlan(ok.plan, [1]).schedule.throws, [{ afterRound: 1, minutes: 5 }], 'public: phones show it in Horari');
   for (const bad of [[{ afterRound: 2, minutes: 5 }], [{ afterRound: 1, minutes: 0 }], [{ afterRound: 1, minutes: 5 }, { afterRound: 1, minutes: 3 }], [{ afterRound: 1 }], 'x']) {
     const q = good();
-    (q.schedule as Record<string, unknown>).breaks = bad;
+    (q.schedule as Record<string, unknown>).throws = bad;
     const c = checkGamePlan(q);
     assert.equal(c.ok, false, JSON.stringify(bad));
-    if (!c.ok) assert.match(c.errors.join('\n'), /plan\.schedule\.breaks/);
+    if (!c.ok) assert.match(c.errors.join('\n'), /plan\.schedule\.throws/);
+  }
+  // The old name is refused, like any unknown key (D136).
+  const old = good();
+  (old.schedule as Record<string, unknown>).breaks = [{ afterRound: 1, minutes: 5 }];
+  assert.equal(checkGamePlan(old).ok, false);
+});
+
+test('the plan\'s volumes (D139): known sliders, percents 0–100, never on phones', () => {
+  const p = good();
+  (p as Record<string, unknown>).volumes = { master: 80, songsParlem: 30 };
+  const ok = checkGamePlan(p);
+  assert.ok(ok.ok);
+  assert.deepEqual(ok.plan.volumes, { master: 80, songsParlem: 30 });
+  assert.equal('volumes' in publicPlan(ok.plan, [1]), false, 'laptop only');
+  for (const bad of [{ loud: 50 }, { master: 120 }, { master: -1 }, { master: '80' }, 'x']) {
+    const q = good();
+    (q as Record<string, unknown>).volumes = bad;
+    const c = checkGamePlan(q);
+    assert.equal(c.ok, false, JSON.stringify(bad));
+    if (!c.ok) assert.match(c.errors.join('\n'), /plan\.volumes/);
   }
 });
 

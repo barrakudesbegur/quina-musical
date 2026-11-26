@@ -208,8 +208,7 @@ export const SCHEDULE = Object.freeze({
 });
 
 export const HOLD = Object.freeze({
-  /** Songs under the presenters' voices during a Hold. */
-  duckDb: -14,
+  /** A Hold's duck glides over this long; how deep is the songsParlem slider (D139: its default is −14 dB). */
   duckSec: 0.5,
   releaseSec: 1,
   /** A long Hold switches to Hold music after this many seconds. */
@@ -253,6 +252,8 @@ export const STEMS = Object.freeze({
 /** Beat-matched layering (the Blend recipe, R8): B's bars before its hook, stretched to A's tempo. */
 /** Suspense: a transition the presenters hold open (plan/suspense.ts). */
 export const SUSPENSE = Object.freeze({
+  /** A cancelled Suspense (D144, D145): its build backs out and fades over this long, the song coming back up. */
+  backOutSec: 1.2,
   /** It releases by itself after this long (it is never started automatically). */
   autoReleaseSec: 30,
   /** The loop reaches full intensity after this long. */
@@ -724,19 +725,21 @@ export const FLOW = Object.freeze({
   shuffleSec: 8,
   /** The tie-free Shuffle reshuffles at most this many times; then it keeps the last Queue and warns. */
   shuffleMaxAttempts: 500,
+  /** A volume slider's move is journaled once the sliders have been still this long (a drag is one entry). */
+  volumesJournalSec: 1,
   check: Object.freeze({
-    /** From the Check's start to its first snippet: the projector shows the card first. */
-    leadSec: 1.5,
-    /** A ✓ step: the landed song's hook snippet (tools/prep/snippets.py cuts 3 s). */
+    /** A press's reveal sounds this far ahead, so the sound and every screen meet (ADR 0002). */
+    revealLeadSec: 0.08,
+    /** A ✓ reveal: the landed song's hook snippet (tools/prep/snippets.py cuts 3 s). */
     stepSec: 2.5,
-    /** A ✗ step: the short "broken record" sound. */
+    /** A ✗ reveal: the short "broken record" sound. */
     missSec: 1.2,
     /** A standing Check's ✓ (the Desgraciat round: the song hasn't landed): a short knock. 12 of them take ~11 s. */
     stillSec: 0.55,
-    /** Silence between steps. */
+    /** Automatic reveal (checkAuto): the silence between one reveal's sound and the next. */
     gapSec: 0.35,
-    /** After the last step, the result shows. */
-    tailSec: 0.4,
+    /** After a cue, the next queued card's Check comes on screen by itself this long after (its cue shows meanwhile). */
+    nextCardSec: 3,
     /** The song or Hold music under the Check, far down. */
     duckDb: -32,
     duckFadeSec: 0.4,
@@ -776,7 +779,7 @@ export const FLOW = Object.freeze({
  * downbeat while the next one swells or opens up into that same downbeat (engine/src/interval/plan.ts).
  */
 export const INTERVAL = Object.freeze({
-  /** Its level by default (`setGame intervalVolumeDb`, −30..0): under the presenters' talk. */
+  /** A set's level at its slider's 100% (`setVolume` breaks, pausa, end): under the presenters' talk. */
   volumeDb: -6,
   /** A volume change glides over this long. */
   volumeGlideSec: 0.3,
@@ -849,3 +852,43 @@ export const ENGINE = Object.freeze({
 
 /** True for a stinger (loaded from /stingers/), false for any other sound (/fx/). */
 export { isStingerName } from '@quina/protocol';
+
+/** A round's intro track (D129): data/media/intro/, decoded and looped by tools/prep/hold.py (category "intro"). */
+export const INTRO = Object.freeze({
+  /** Low, as if in Parlem (the songsParlem default, −14 dB), at its slider's 100% (`intros`). */
+  levelDb: -14,
+  fadeInSec: 2,
+});
+
+/**
+ * The throw song (D138): "Flying Free" (Pont Aeri, Marian Dacal; last year's id 24), data/media/throw/, decoded by
+ * tools/prep/hold.py (category "throw", name `name`). It plays from its throw hook, a bit before the drop, so the
+ * presenters can build the hype before the throwing starts, at full volume (its slider's 100%, `throws`).
+ */
+export const THROW = Object.freeze({
+  name: 'flying-free',
+  title: 'Flying Free',
+  artist: 'Pont Aeri, Marian Dacal',
+  /** Seconds into the decoded track: the build's phrase start (its analysed hook 24-main-0), 10 bars (~16 s) before the
+   * drop at 208.8 s (its best hook), after the breakdown at 175–181 s. */
+  hookSec: 193.18,
+  /** A tap sounds this far ahead. */
+  leadSec: 0.05,
+  /** It starts and stops with a short fade; the break music fades out under it, and back after. */
+  fadeSec: 0.15,
+  breakFadeOutSec: 1.5,
+  breakFadeInSec: 3,
+  /** Ended by a scene change. */
+  endFadeSec: 2,
+});
+
+/** Pausa (D128, D135): what plays is saved and resumes exactly where it was. */
+export const PAUSA = Object.freeze({
+  /** What was playing fades out over this long, and the Pausa set fades in. */
+  fadeOutSec: 1.2,
+  musicFadeInSec: 1.5,
+  /** Ending it: what it saved resumes this far ahead (time to schedule), fading in (D135), while the Pausa set fades out. */
+  resumeLeadSec: 0.1,
+  fadeInSec: 1.5,
+  musicFadeOutSec: 1.5,
+});

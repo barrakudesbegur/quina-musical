@@ -124,11 +124,11 @@ export interface NightShape {
   /** In play order: 'normal', 'special' or 'desgraciat'. */
   kinds: string[];
   intervalMinutes: number;
-  breakMinutes: number;
+  throwMinutes: number;
 }
 
 /** The whole night in minutes (low, high): every round in order (the first at round 1's Pace), the Intervals between
- * them and the planned breaks. */
+ * them and the planned Throws. */
 export function nightMinutes(r: PoolReport, night: NightShape, t: Timing = DEFAULT_TIMING): [number, number] {
   let lo = 0;
   let hi = 0;
@@ -138,7 +138,7 @@ export function nightMinutes(r: PoolReport, night: NightShape, t: Timing = DEFAU
     lo += a;
     hi += b;
   });
-  const between = Math.max(0, night.kinds.length - 1) * night.intervalMinutes + night.breakMinutes;
+  const between = Math.max(0, night.kinds.length - 1) * night.intervalMinutes + night.throwMinutes;
   return [lo + between, hi + between];
 }
 
@@ -157,7 +157,7 @@ export function describeReport(r: PoolReport, night: NightShape | null = null, t
   ];
   if (night) {
     const [lo, hi] = nightMinutes(r, night, t);
-    lines.push(`  the night (${night.kinds.length} rounds, ${night.intervalMinutes}-min Intervals${night.breakMinutes ? `, ${night.breakMinutes} min of breaks` : ''}): about ${hours(lo)} to ${hours(hi)}`);
+    lines.push(`  the night (${night.kinds.length} rounds, ${night.intervalMinutes}-min Intervals${night.throwMinutes ? `, ${night.throwMinutes} min of Throws` : ''}): about ${hours(lo)} to ${hours(hi)}`);
   }
   return lines.join('\n');
 }

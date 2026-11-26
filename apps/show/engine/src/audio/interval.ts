@@ -1,6 +1,8 @@
-// The Interval playlist on the audio graph: the break music between rounds, on its own bus under the music
-// (graph.intervalBus, so the Hold duck, a Check and a build's high-pass treat it like the songs). It plays the
-// Game's shuffled order (interval/plan.ts) and carries out every handover the plan describes:
+// A music set on the audio graph (D129): the breaks' between rounds and the end's after the Game, on their sliders
+// into graph.intervalBus (under the music, so the Hold duck, a Check and a build's high-pass treat it like the
+// songs), and Pausa's on its own slider. Each set is a folder of tools/prep/interval.py's output. It plays the
+// Game's shuffled order (interval/plan.ts), or the playlist's order for the end, and carries out every handover the
+// plan describes:
 //   - from the music playing when it starts (the victory track, Hold music, the Winning song's loop: a Handoff),
 //     which echoes out on its own downbeat while the first track comes in on that downbeat, so the end of a round
 //     flows into the Interval without a gap; from silence, the first track fades in;
@@ -25,6 +27,7 @@ import {
   type OutgoingMusic,
 } from '../interval/plan.ts';
 import type { AudioGraph } from './graph.ts';
+import type { MusicSet } from '@quina/protocol';
 
 /**
  * Music handed over to the playlist (HoldMusic.handoff, WinningLoop.handoff): it has left its player and is
@@ -89,6 +92,21 @@ interface Pending {
 
 const dbToGain = (db: number) => 10 ** (db / 20);
 
+/** Which set a player plays: its folder under data/interval/ (and /intervalaudio/), and whether in the playlist's order. */
+export interface IntervalSet {
+  set: MusicSet;
+  folder: string;
+  ordered: boolean;
+}
+
+/** The track Pausa took off (D128): it comes back from `posSec`. */
+export interface SuspendedInterval {
+  track: IntervalTrack;
+  cursor: number;
+  buffer: AudioBuffer;
+  posSec: number;
+}
+
 export class IntervalPlayer {
   readonly graph: AudioGraph;
   readonly ctx: BaseAudioContext;
@@ -115,24 +133,29 @@ export class IntervalPlayer {
   private styleTurn = 0;
   private readonly dying: { voice: Voice; at: number }[] = [];
 
-  constructor(graph: AudioGraph, { storage = null, storageKey = () => 'mixer.interval' }: { storage?: CursorStorage | null; storageKey?: () => string } = {}) {
+  readonly source: IntervalSet;
+
+  /** `out`: the set's slider (graph.vol.breaks, .end, .pausa). */
+  constructor(graph: AudioGraph, { source, out, storage = null, storageKey = () => `mixer.interval.${source.set}` }: { source: IntervalSet; out: AudioNode; storage?: CursorStorage | null; storageKey?: () => string }) {
     this.graph = graph;
     this.ctx = graph.ctx;
+    this.source = source;
     this.level = this.ctx.createGain();
     this.level.gain.value = dbToGain(INTERVAL.volumeDb);
-    this.level.connect(graph.intervalBus);
+    this.level.connect(out);
     this.storage = storage;
     this.storageKey = storageKey;
   }
 
-  /** Read data/interval/index.json and every track's JSON (tools/prep/interval.py); a track that fails its check is left out. */
+  /** Read the set's index.json and every track's JSON (tools/prep/interval.py); a track that fails its check is left out. */
   prepare(): Promise<void> {
     this.ready ??= (async () => {
+      const folder = encodeURIComponent(this.source.folder);
       try {
-        const index: unknown = await (await fetch('/data/interval/index.json', { cache: 'no-store' })).json();
+        const index: unknown = await (await fetch(`/data/interval/${folder}/index.json`, { cache: 'no-store' })).json();
         for (const slug of intervalSlugs(index)) {
           try {
-            const json: unknown = await (await fetch(`/data/interval/${slug}.json`, { cache: 'no-store' })).json();
+            const json: unknown = await (await fetch(`/data/interval/${folder}/${slug}.json`, { cache: 'no-store' })).json();
             this.tracks.push(checkIntervalTrack(json, this.ctx.sampleRate));
           } catch (error) {
             console.warn('interval track', slug, error);
@@ -210,6 +233,42 @@ export class IntervalPlayer {
     this.keepDecoded();
   }
 
+  /**
+   * Pausa (D128): the playing track fades out from `at` and stops; what comes back is where it was then (a handover
+   * under way is dropped, the incoming track if it had come in). Null when no track plays.
+   */
+  suspend({ at = this.ctx.currentTime, fadeSec = 1.2 }: { at?: number; fadeSec?: number } = {}): SuspendedInterval | null {
+    if (!this.active) return null;
+    const t = Math.max(at, this.ctx.currentTime);
+    const p = this.pending;
+    const voice = p && p.handover.at <= t ? p.incoming : this.current;
+    const buffer = voice?.track ? this.decoded.get(voice.track.slug) : undefined;
+    const saved = voice?.track && buffer ? { track: voice.track, cursor: voice.cursor, buffer, posSec: voice.offsetSec + Math.max(0, t - voice.startAt) } : null;
+    this.stop({ at: t, fadeSec });
+    if (saved) this.cursor = saved.cursor + 1;
+    return saved;
+  }
+
+  /** After Pausa: the saved track plays on from where it was, fading in from `at` (D135); handovers go on from it. */
+  resume(saved: SuspendedInterval, { at = this.ctx.currentTime, fadeSec = 1.5, levelDb = INTERVAL.volumeDb }: { at?: number; fadeSec?: number; levelDb?: number } = {}): void {
+    if (this.active) this.stop({ fadeSec: 0.3 });
+    this.active = true;
+    this.skipWanted = false;
+    this.generation++;
+    const when = Math.max(at, this.ctx.currentTime + 0.02);
+    this.level.gain.cancelScheduledValues(when);
+    this.level.gain.setValueAtTime(dbToGain(levelDb), when);
+    this.decoded.set(saved.track.slug, saved.buffer);
+    this.buffers.set(saved.track.slug, Promise.resolve(saved.buffer));
+    const voice = this.trackVoice(saved.track, saved.cursor, saved.buffer, when, saved.posSec);
+    voice.fader.gain.setValueAtTime(0, when);
+    voice.fader.gain.linearRampToValueAtTime(1, when + Math.max(0.05, fadeSec));
+    this.current = voice;
+    this.cursor = saved.cursor + 1;
+    this.announce(voice, when);
+    this.keepDecoded();
+  }
+
   /** Panic: silence at once. */
   kill(): void {
     this.stop({ fadeSec: 0.03 });
@@ -278,7 +337,8 @@ export class IntervalPlayer {
     const count = this.tracks.length;
     for (let k = 0; k < count; k++) {
       const cursor = this.cursor + k;
-      const track = this.tracks[trackAt(count, this.seed, cursor)];
+      // The end's set plays the playlist's order, so the first song after the close is the planned one (D129).
+      const track = this.tracks[this.source.ordered ? cursor % count : trackAt(count, this.seed, cursor)];
       if (!this.failed.has(track.slug)) {
         this.cursor = cursor; // the failed ones count as played
         return { track, cursor };
@@ -454,7 +514,7 @@ export class IntervalPlayer {
     let promise = this.buffers.get(track.slug);
     if (!promise) {
       promise = (async () => {
-        const response = await fetch(`/intervalaudio/${encodeURIComponent(track.slug)}.flac`);
+        const response = await fetch(`/intervalaudio/${encodeURIComponent(this.source.folder)}/${encodeURIComponent(track.slug)}.flac`);
         if (!response.ok) throw new Error(`interval audio ${track.slug}: HTTP ${response.status}`);
         const buffer = await this.ctx.decodeAudioData(await response.arrayBuffer());
         this.decoded.set(track.slug, buffer);

@@ -7,7 +7,10 @@ import { AudioGraph } from './audio/graph.ts';
 import { Deck } from './audio/deck.ts';
 import { applyPlan } from './audio/scheduler.ts';
 import { HoldMusic } from './audio/holdmusic.ts';
-import { IntervalPlayer } from './audio/interval.ts';
+import { IntervalPlayer, type SuspendedInterval } from './audio/interval.ts';
+import { ThrowPlayer } from './audio/throw.ts';
+import type { SuspendedHold } from './audio/holdmusic.ts';
+import type { SuspendedLoop } from './audio/celebration.ts';
 import { StemStore } from './audio/stems.ts';
 import { SignatureStore } from './audio/signatures.ts';
 import { BlendStore } from './audio/blend.ts';
@@ -32,12 +35,13 @@ import {
   isPhaseName,
   type CommandArgs,
   type CommandName,
+  type MusicSet,
   type ShowEvent,
   type ShowState,
   type SoundName,
 } from '@quina/protocol';
 import { playableSongs } from './analysis.ts';
-import { ENGINE, FLOW, HOLD, LOOP, PACE, SUSPENSE, isStingerName } from './config.ts';
+import { ENGINE, FLOW, HOLD, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
 import { secureShuffle, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
 import type { Card } from './game/cards.ts';
@@ -85,6 +89,8 @@ interface MixerDebug {
   drum: DrumView;
   holdMusic: HoldMusic;
   intervalPlayer: IntervalPlayer;
+  sets: Record<MusicSet, IntervalPlayer>;
+  throwPlayer: ThrowPlayer;
   send: typeof send;
   bus: Bus<ShowEvent>;
   checkPlayer: CheckPlayer;
@@ -175,9 +181,24 @@ const recorder = params.get('record') === '1' ? new DemoRecorder(ctx, graph.limi
 if (recorder) window.demo = recorder;
 const loader = new SongLoader(ctx);
 const holdMusic = new HoldMusic(graph);
-// The Interval playlist; how far a Game's order has got is kept per pool, so a reload doesn't repeat tracks.
-const intervalPlayer = new IntervalPlayer(graph, { storage: browserStorage(), storageKey: () => `${storagePrefix}.interval` });
-intervalPlayer.onTrack = (track, at) => show && run(show.intervalTrack(track, at));
+// The music sets (D129), each on its own player and slider; how far a Game's order has got is kept per pool and set,
+// so a reload doesn't repeat tracks. The end's set is the breaks' tracks in their playlist order for now (U97).
+const setPlayer = (set: MusicSet, folder: string, ordered: boolean) => {
+  const player = new IntervalPlayer(graph, { source: { set, folder, ordered }, out: graph.vol[set], storage: browserStorage(), storageKey: () => `${storagePrefix}.interval.${set}` });
+  player.onTrack = (track, at) => show && run(show.intervalTrack(track, at, set));
+  return player;
+};
+const sets: Record<MusicSet, IntervalPlayer> = { breaks: setPlayer('breaks', 'breaks', false), pausa: setPlayer('pausa', 'pausa', false), end: setPlayer('end', 'breaks', true) };
+const intervalPlayer = sets.breaks;
+const allSets = () => Object.values(sets);
+/** The sets give way (to a Spin's build, Hold music, the Celebration's music). */
+const stopSets = (options: { at?: number; fadeSec?: number }) => {
+  for (const player of allSets()) player.stop(options);
+};
+const throwPlayer = new ThrowPlayer(graph);
+throwPlayer.onEnded = () => show && run(show.throwEnded());
+/** What Pausa saved (D128): the song deck and every bed, each where it was. */
+let paused: { deck: Deck | null; hold: SuspendedHold | null; loop: SuspendedLoop | null; sets: Partial<Record<MusicSet, SuspendedInterval>>; throwPos: number | null } | null = null;
 const stems = new StemStore(ctx);
 const signatures = new SignatureStore(ctx);
 const blends = new BlendStore(ctx);
@@ -300,7 +321,8 @@ async function boot() {
   blends.loadKeys();
   graph.loadSamples(ENGINE.stingers, '/stingers/');
   holdMusic.prepare().catch((error) => console.warn('hold music', error));
-  void intervalPlayer.prepare();
+  for (const player of allSets()) void player.prepare();
+  void throwPlayer.load();
   void snippets.loadIndex();
   setInterval(tick, ENGINE.taskIntervalMs);
   setInterval(emitHealth, ENGINE.healthIntervalMs);
@@ -355,9 +377,9 @@ function apply(effect: Effect): void {
     case 'holdMusic': {
       const start = { at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: effect.mood };
       if (!effect.switch) return void holdMusic.start(start).catch((e) => console.error('hold music', e));
-      // Other music gives way: the Celebration's loop, the Interval playlist, or Hold music of another mood.
+      // Other music gives way: the Celebration's loop, a set, or Hold music of another mood.
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
-      intervalPlayer.stop({ at: effect.at, fadeSec: effect.fadeSec });
+      stopSets({ at: effect.at, fadeSec: effect.fadeSec });
       return void holdMusic.switchTo(start).catch((e) => console.error('hold music', e));
     }
     case 'songToHoldMusic':
@@ -385,7 +407,7 @@ function apply(effect: Effect): void {
     case 'stopAll':
       return stopAll(effect.fadeSec);
     case 'sfx':
-      return void playSfx(effect.name, effect.at);
+      return void playSfx(effect.name, effect.at, graph.vol[effect.volume]);
     case 'journal':
       return journal.append(effect.entry);
     case 'journalRequest':
@@ -403,27 +425,48 @@ function apply(effect: Effect): void {
     case 'prepareBlend':
       blends.retain([effect.aSongId]);
       return void blends.prepare(effect);
-    case 'checkSnippets':
-      return checkPlayer.play(effect);
+    case 'checkReveal':
+      return checkPlayer.reveal(effect.claimId, effect.step);
+    case 'checkDuck':
+      return checkPlayer.duck(effect.on);
     case 'cancelCheck':
-      if (checkPlayer.claimId === effect.claimId) checkPlayer.cancel();
-      return;
+      return checkPlayer.cancel();
     case 'celebrationMusic':
       return void celebrationMusic(effect);
     case 'intervalMusic': {
       dropCurrentSong(effect.fadeSec);
-      // The music playing (the victory track, Hold music, the Winning song's loop) hands over on its downbeat.
+      // The music playing (the victory track, Hold music, the Winning song's loop, the intro) hands over on its downbeat.
       const from = holdMusic.handoff() ?? winningLoop.handoff();
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
       holdMusic.stop({ at: effect.at, fadeSec: effect.fadeSec });
       void holdMusic.starting?.then(() => holdMusic.stop({ fadeSec: effect.fadeSec })); // one still loading gives way too
-      return intervalPlayer.start({ levelDb: effect.levelDb, gameId: machine().gameId, from });
+      // Another scene's set (the breaks' as the end's begins) fades out under it.
+      for (const set of ['breaks', 'end'] as const) if (set !== effect.set) sets[set].stop({ at: effect.at, fadeSec: effect.fadeSec });
+      return sets[effect.set].start({ levelDb: effect.levelDb, gameId: machine().gameId, from });
     }
     case 'intervalSkip':
-      if (!intervalPlayer.skip()) console.info('interval: nothing to skip yet');
+      if (!sets[effect.set].skip()) console.info(`${effect.set}: nothing to skip yet`);
       return;
-    case 'intervalVolume':
-      return intervalPlayer.setVolume(effect.db, effect.seconds);
+    case 'introMusic':
+      // A round's intro track (D129) on the Hold music player; whatever plays gives way.
+      dropCurrentSong(effect.fadeSec);
+      winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
+      stopSets({ at: effect.at, fadeSec: effect.fadeSec });
+      return void holdMusic.switchTo({ at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: 'intro' }).catch((e) => console.error('intro music', e));
+    case 'throwSong':
+      if (effect.action === 'play') return void throwPlayer.play(effect.at, effect.offsetSec);
+      return throwPlayer.stop(effect.at, effect.fadeSec ?? THROW.fadeSec);
+    case 'volumes':
+      return graph.setVolumes(effect.volumes);
+    case 'bedDuck':
+      return graph.glide(graph.bedDuck.gain, effect.db, effect.seconds);
+    case 'pausePlayback':
+      return pausePlayback(effect.at, effect.fadeSec);
+    case 'resumePlayback':
+      return resumePlayback(effect);
+    case 'pausaMusic':
+      if (effect.on) return sets.pausa.start({ levelDb: effect.levelDb, gameId: machine().gameId });
+      return sets.pausa.stop({ at: effect.at, fadeSec: effect.fadeSec });
     case 'pauseOverlay':
       // With the stage mounted it shows "Tornem de seguida" itself.
       $('pause-overlay').hidden = stageMounted || !effect.on;
@@ -460,7 +503,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
   if (fromHoldMusic) {
     holdMusic.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
     winningLoop.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
-    intervalPlayer.stop({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
+    stopSets({ at: plan.spinStart + 0.2, fadeSec: 1.6 });
   }
   rt.incoming = deck;
   rt.outgoing = outgoing;
@@ -528,7 +571,7 @@ function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSusp
   if (fromHoldMusic) {
     holdMusic.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
     winningLoop.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
-    intervalPlayer.stop({ at: open.spinStart + 0.2, fadeSec: 1.6 });
+    stopSets({ at: open.spinStart + 0.2, fadeSec: 1.6 });
   }
   rt.incoming = null;
   rt.outgoing = outgoing;
@@ -560,20 +603,23 @@ function landed(plan: ShowPlan): void {
   if (outgoing) addTask(Math.max(plan.a?.stopAt ?? plan.T, plan.T) + 3, () => outgoing.dispose());
 }
 
-function cancelTransition({ keepOutgoing, drum: wheel }: EffectOf<'cancelTransition'>): void {
+// A cancelled Spin: the build stops at once. A cancelled Suspense (`backOut`, D144) backs out instead: the build's
+// layers, echoes and high-pass fade away over SUSPENSE.backOutSec while the song comes back up, under a long fall.
+function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: EffectOf<'cancelTransition'>): void {
   const now = ctx.currentTime;
-  graph.resetTransient(0.08);
-  rt.incoming?.fadeOut(0.06);
+  const fade = backOut ? SUSPENSE.backOutSec : 0.08;
+  graph.resetTransient(fade);
+  rt.incoming?.fadeOut(backOut ? fade : 0.06);
   rt.incoming = null;
   if (keepOutgoing && rt.outgoing) {
-    rt.outgoing.restore(0.3);
+    rt.outgoing.restore(backOut ? fade : 0.3);
     rt.current = rt.outgoing;
   } else {
     rt.outgoing?.fadeOut(0.25);
     rt.current = null;
   }
   rt.outgoing = null;
-  SYNTHS.downlifter(ctx, graph.synthBus, { t0: now, t1: now + 0.9, peakDb: -14 });
+  SYNTHS.downlifter(ctx, graph.synthBus, { t0: now, t1: now + (backOut ? fade + 0.8 : 0.9), peakDb: backOut ? -18 : -14 });
   drum.cancelSpin({ audible: clock.audible(), card: cardFor(wheel.insertId), select: wheel.selectId != null });
   if (wheel.selectId == null) showStatusLine('');
 }
@@ -610,7 +656,7 @@ function dropCurrentSong(fadeSec: number): void {
 // The song still playing (ducked under the Check) washes out. Without a usable Winning song, the victory track.
 async function celebrationMusic({ choice, songId, hookId, at, fadeSec, levelDb }: EffectOf<'celebrationMusic'>): Promise<void> {
   dropCurrentSong(Math.min(2, fadeSec + 0.5));
-  intervalPlayer.stop({ at, fadeSec });
+  stopSets({ at, fadeSec });
   if (choice === 'winningSong' && songId != null) {
     try {
       const entry = loader.get(songId) ?? (await loader.ensure(songId));
@@ -638,10 +684,13 @@ function stopAll(fadeSec: number): void {
   rt.current = rt.incoming = rt.outgoing = null;
   checkPlayer.cancel();
   winningLoop.stop({ fadeSec });
+  throwPlayer.stop(now, fadeSec);
+  if (paused?.deck) decks.push(paused.deck);
+  paused = null;
   setTimeout(() => {
     for (const deck of decks) deck?.dispose();
     holdMusic.kill();
-    intervalPlayer.kill();
+    for (const player of allSets()) player.kill();
     graph.resetTransient();
     graph.holdDuck.gain.cancelScheduledValues(ctx.currentTime);
     graph.holdDuck.gain.setValueAtTime(1, ctx.currentTime);
@@ -678,15 +727,57 @@ function prefetch(ids: readonly number[]): void {
   }
 }
 
-async function playSfx(name: SoundName, at = ctx.currentTime + 0.01): Promise<void> {
+async function playSfx(name: SoundName, at = ctx.currentTime + 0.01, out: AudioNode = graph.vol.padFx): Promise<void> {
   if (!graph.samples.has(name)) await graph.loadSamples([name], isStingerName(name) ? '/stingers/' : '/fx/');
-  graph.playSample(name, Math.max(at, ctx.currentTime + 0.01), -4);
+  graph.playSample(name, Math.max(at, ctx.currentTime + 0.01), -4, out);
+}
+
+// Pausa (D128): the song deck and every bed fade out where they are and wait; effects and snippets ring out (U113).
+function pausePlayback(at: number, fadeSec: number): void {
+  const deck = rt.current;
+  rt.current = null;
+  deck?.suspend(at, fadeSec);
+  const saved: NonNullable<typeof paused> = {
+    deck,
+    hold: holdMusic.suspend({ at, fadeSec }),
+    loop: winningLoop.suspend({ at, fadeSec }),
+    sets: {},
+    throwPos: throwPlayer.suspend(at, fadeSec),
+  };
+  for (const set of ['breaks', 'end'] as const) {
+    const s = sets[set].suspend({ at, fadeSec });
+    if (s) saved.sets[set] = s;
+  }
+  paused = saved;
+}
+
+// Pausa ends: what it saved plays on from where it was, fading in (D135); the song from where the machine says. Or,
+// when Next ended it (or Panic, the end), it's dropped.
+function resumePlayback({ at, fadeSec, song, discard }: EffectOf<'resumePlayback'>): void {
+  const saved = paused;
+  paused = null;
+  if (!saved) return;
+  if (discard) {
+    if (saved.deck) addTask(at + 1, () => saved.deck?.dispose());
+    return;
+  }
+  if (saved.deck && song && saved.deck.songId === song.songId) {
+    saved.deck.resume(at, song.offset, song.rate, fadeSec);
+    rt.current = saved.deck;
+  } else if (saved.deck) addTask(at + 1, () => saved.deck?.dispose());
+  if (saved.hold) holdMusic.resume(saved.hold, { at, fadeSec });
+  if (saved.loop) winningLoop.resume(saved.loop, { at, fadeSec });
+  for (const set of ['breaks', 'end'] as const) {
+    const s = saved.sets[set];
+    if (s) sets[set].resume(s, { at, fadeSec });
+  }
+  if (saved.throwPos != null) void throwPlayer.play(at, saved.throwPos);
 }
 
 // The music never stops by accident: whatever went wrong, Hold music covers silence the machine did not ask for.
 function ensureMusic(): void {
   if (!show || ['locked', 'idle'].includes(show.status)) return;
-  if (rt.current || rt.incoming || holdMusic.playing || winningLoop.playing || intervalPlayer.playing) return;
+  if (rt.current || rt.incoming || holdMusic.playing || winningLoop.playing || allSets().some((p) => p.playing) || throwPlayer.playing) return;
   console.warn('watchdog: no music while', show.status, '— starting Hold music');
   holdMusic.start({ levelDb: HOLD.holdMusicLevelDb, fadeSec: 1 }).catch((e) => console.error('hold music', e));
 }
@@ -695,7 +786,7 @@ function ensureMusic(): void {
 let silentChecks = 0;
 function watchdog(): void {
   if (ctx.state !== 'running' || !show || ['locked', 'idle'].includes(show.status)) return;
-  const silent = !rt.current && !rt.incoming && !holdMusic.playing && !winningLoop.playing && !intervalPlayer.playing;
+  const silent = !rt.current && !rt.incoming && !holdMusic.playing && !winningLoop.playing && !allSets().some((p) => p.playing) && !throwPlayer.playing;
   silentChecks = silent ? silentChecks + 1 : 0;
   if (silentChecks >= 2) {
     silentChecks = 0;
@@ -712,7 +803,7 @@ function tick(): void {
   if (ctx.state !== 'running' || !show) return;
   const now = ctx.currentTime;
   drum.scheduleTicks(now);
-  intervalPlayer.tick();
+  for (const player of allSets()) player.tick();
   const due = rt.tasks.filter((task) => task.at <= now);
   if (due.length) {
     rt.tasks = rt.tasks.filter((task) => task.at > now);
@@ -916,7 +1007,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Exposed for tests and debugging.
-window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, intervalPlayer, send, bus, checkPlayer, winningLoop };
+window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, intervalPlayer, sets, throwPlayer, send, bus, checkPlayer, winningLoop };
 boot().catch((error: unknown) => {
   console.error(error);
   showStatusLine(`Failed to start: ${errorText(error)}`);

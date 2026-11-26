@@ -279,7 +279,16 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200,400-499', tic
       if (stop()) return true;
     }
     return false;
+  };  // The presenter-paced Check (D107): a press about every snippet, as the presenter names each song, then the cue.
+  const pressThrough = (claimId: string) => {
+    for (let n = 0; n < 20; n++) {
+      const check = show.check;
+      if (!check || check.info.claimId !== claimId || check.info.cue != null) return;
+      run(between(2.4, 3.6));
+      send('checkNext', { claimId, step: check.info.revealed.length });
+    }
   };
+
   const landed = () => log.transitions.length;
 
   send('unlock');
@@ -316,9 +325,7 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200,400-499', tic
           send('claim', { cardId: standing.cardIds[0] });
           const claim = show.claims.at(-1);
           if (!claim) throw new Error('no claim');
-          run(90, () => show.claims.find((c) => c.claimId === claim.claimId)?.status === 'checked');
-          run(between(1, 4));
-          send('decide', { claimId: claim.claimId, valid: true });
+          pressThrough(claim.claimId);
           bingo = true;
           run(70, () => show.scene === 'interval');
           continue;
@@ -340,9 +347,7 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200,400-499', tic
         send('claim', { cardId, kind: lineDone ? 'bingo' : 'line' });
         const claim = show.claims.at(-1);
         if (!claim) throw new Error('no claim');
-        run(90, () => show.claims.find((c) => c.claimId === claim.claimId)?.status === 'checked');
-        run(between(1, 4));
-        send('decide', { claimId: claim.claimId, valid: true });
+        pressThrough(claim.claimId);
         if (lineDone) {
           bingo = true;
           // The Celebration flows into the Interval by itself.
@@ -361,8 +366,7 @@ export function runNight({ seed, rounds = 12, cardsInPlay = '1-200,400-499', tic
           send('claim', { cardId: card.id, kind: lineDone ? 'bingo' : 'line' });
           const claim = show.claims.at(-1);
           if (claim) {
-            run(90, () => show.claims.find((c) => c.claimId === claim.claimId)?.status === 'checked');
-            send('decide', { claimId: claim.claimId, valid: false });
+            pressThrough(claim.claimId);
             run(between(6, 15));
             send('hold', { on: false });
           }

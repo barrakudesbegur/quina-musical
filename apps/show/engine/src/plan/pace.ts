@@ -158,12 +158,12 @@ export interface ScheduleEstimate {
 
 /**
  * The rest of the night as the Game plan has it: the rounds after the current one (in order, by kind), the planned
- * Interval, and the planned breaks still to come (the one after the current round included).
+ * Interval, and the planned Throws still to come (the one after the current round included).
  */
 export interface LaterRounds {
   kinds: readonly RoundKind[];
   intervalSec: number;
-  breaksSec: number;
+  throwsSec: number;
 }
 
 /** What scheduleEstimate needs. `round.targetEndMs` is fixed when the round starts. */
@@ -174,7 +174,7 @@ export interface ScheduleArgs extends PaceArgs {
   game: { roundsTotal?: number; targetEndMs?: number | null };
   position: number;
   lineConfirmed?: boolean;
-  /** From the Game plan; without one, `game.roundsTotal` normal rounds with the default Interval and no breaks. */
+  /** From the Game plan; without one, `game.roundsTotal` normal rounds with the default Interval and no Throws. */
   later?: LaterRounds | null;
   cfg?: ScheduleConfig;
 }
@@ -189,7 +189,7 @@ export function scheduleEstimate({ nowMs, round, game, position, pace, phase, li
   const kinds = plan ? plan.kinds : Array.from({ length: Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) }, () => 'normal' as const);
   const later = kinds.reduce(
     (sec, kind, i) => sec + (plan ? plan.intervalSec : cfg.intervalSec) + roundLengthSec({ pace: defaultPace(round.number + 1 + i), kind, cfg }),
-    plan ? plan.breaksSec : 0,
+    plan ? plan.throwsSec : 0,
   );
   const gameEndMs = roundEndMs + 1000 * later;
   return {

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { Show } from '../engine/src/show/show.ts';
 import { planTransition, type PlanRequest, type SignatureSource } from '../engine/src/plan/planner.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
-import { makeCommand } from '@quina/protocol';
+import { VOLUME_DEFAULTS, makeCommand, volumeDb } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
 import { HOLD, ENGINE, FLOW, PACE, LOOP } from '../engine/src/config.ts';
 import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
@@ -141,7 +141,7 @@ test('Hold ducks the song, a long Hold hands over to Hold music, and releasing m
   startAndLand(h);
   const out = h.send('hold');
   assert.equal(h.show.status, 'hold');
-  assert.deepEqual(find(out, 'duck'), { type: 'duck', db: HOLD.duckDb, seconds: HOLD.duckSec });
+  assert.deepEqual(find(out, 'duck'), { type: 'duck', db: volumeDb(VOLUME_DEFAULTS.songsParlem), seconds: HOLD.duckSec }, 'the songsParlem slider');
   assert.equal(h.show.timers.autoAt, null);
   const later = h.advance(h.show.game.holdMusicAfterSec + 0.1);
   assert.equal(get(later, 'songToHoldMusic').mood, 'hold');
@@ -531,7 +531,7 @@ test('Aguanta (hold without ducking): the song stays at full volume, nothing adv
   assert.equal(h.show.timers.holdMusicAt, null, 'no timed switch to Hold music');
   // Parlem in place: ducked, and Hold music may take over after its delay.
   const talk = h.send('hold', { duck: true });
-  assert.equal(get(talk, 'duck').db, HOLD.duckDb);
+  assert.equal(get(talk, 'duck').db, volumeDb(VOLUME_DEFAULTS.songsParlem));
   assert.equal(h.show.snapshot().hold?.ducked, true);
   assert.ok(h.show.timers.holdMusicAt != null);
   // Back to Aguanta: full volume again, the timer gone.

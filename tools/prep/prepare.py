@@ -14,7 +14,7 @@ Steps (default: all, always run in this order):
     stems       stems.py       Demucs stems (in tools/prep/.venv-stems) → <cacheDir>/<id>/stems/, <dataDir>/stems/
     signatures  signatures.py  Signature candidates from the stems → <dataDir>/signatures/
     hooks       hooks_auto.py  automatic hook candidates and hand-tag refinements → <dataDir>/hooks/ (approved on the audition page)
-    interval    interval.py    the Interval playlist, global (no pool owns it) → cache/interval/, data/interval/
+    interval    interval.py    the music sets, global (no pool owns them) → cache/interval/<set>/, data/interval/<set>/
 
 --song limits covers, decode, analyze, snippets, stems, signatures and hooks to those songs; validate and keys always
 cover the whole pool (their cached work is skipped); interval is the same for every pool. Each step is its own process, given the
@@ -153,12 +153,17 @@ def _sum_hooks(pool: pools.Pool, ids: list[int]) -> str:
 
 
 def _sum_interval(pool: pools.Pool, ids: list[int]) -> str:
-    index = _load(pools.OUT / "interval" / "index.json")
-    if not index:
-        return "no Interval playlist"
-    dropped, missing = len(index.get("dropped", [])), len(index.get("missing", []))
-    return (f"{len(index['tracks'])} Interval tracks (global)" + (f", {dropped} duplicates dropped" if dropped else "")
-            + (f", {missing} missing" if missing else ""))
+    root = pools.OUT / "interval"
+    sets = sorted(d for d in root.iterdir() if (d / "index.json").exists()) if root.is_dir() else []
+    if not sets:
+        return "no music sets"
+
+    def one(d: Path) -> str:
+        index = _load(d / "index.json")
+        dropped, missing = len(index.get("dropped", [])), len(index.get("missing", []))
+        return (f"{d.name} {len(index['tracks'])} tracks" + (f", {dropped} duplicates dropped" if dropped else "")
+                + (f", {missing} missing" if missing else ""))
+    return "music sets (global): " + "; ".join(one(d) for d in sets)
 
 
 SUMMARIES: dict[str, Callable[[pools.Pool, list[int]], str]] = {

@@ -218,6 +218,36 @@ export class Deck {
     }
   }
 
+  /** Pausa (D128): the song fades out from `at` and stops there; `resume` plays it on from where the machine says. */
+  suspend(at: number, fadeSec: number): void {
+    const gain = this.sourceGain;
+    const t = Math.max(at, this.ctx.currentTime);
+    if (gain) {
+      gain.gain.cancelScheduledValues(t);
+      gain.gain.setValueAtTime(gain.gain.value, t);
+      gain.gain.linearRampToValueAtTime(0, t + fadeSec);
+    }
+    try {
+      this.source?.stop(t + fadeSec + 0.02);
+    } catch {}
+    for (const src of this.extraSources) {
+      try {
+        src.stop(t + fadeSec);
+      } catch {}
+    }
+    this.extraSources = [];
+  }
+
+  /** After Pausa: position `offset` plays at `at`, at `rate`, fading in over `fadeSec` (D135). */
+  resume(at: number, offset: number, rate: number, fadeSec: number): void {
+    this.start(at, offset, rate);
+    const gain = this.sourceGain;
+    if (gain) {
+      gain.gain.setValueAtTime(0, at);
+      gain.gain.linearRampToValueAtTime(1, at + Math.max(0.02, fadeSec));
+    }
+  }
+
   stop(when: number): void {
     this.stopAt = when;
     try {

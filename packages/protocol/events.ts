@@ -292,6 +292,8 @@ export interface CelebrationInfo {
   sinceMs: number;
   /** Default: Line → 'winningSong', Bingo and standing → 'victory'. */
   music: CelebrationMusic;
+  /** Parlem is on (D117): its music is ducked under the presenters' voices (`hold`). */
+  parlem: boolean;
 }
 
 /** A Claim the presenters decided valid. */
@@ -430,10 +432,10 @@ export interface ShowState {
   claims: ClaimInfo[];
   /** The Check on screen (running, or showing its result until it is decided), else null. */
   check: CheckInfo | null;
-  /** The presenter-paced Check (D110): every card of the claim has had its cue, the last one failed but an earlier
-   * one passed, and the next press (`checkNext` on the last Claim, `step` = its revealed count + 1) starts the shared
-   * Celebration. */
-  celebrationNext: boolean;
+  /** The presenter-paced Check (D110): every card of the claim had its cue (or was discarded), the last one didn't pass
+   * but an earlier one did, and this press (`checkNext { claimId, step }`) starts the shared Celebration; else null.
+   * After a cued fail it's that Claim with its revealed count + 1; after a discard, that Claim with step 0. */
+  celebrationNext: { claimId: string; step: number } | null;
   celebration: CelebrationInfo | null;
   interval: IntervalInfo | null;
   /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
@@ -539,7 +541,8 @@ export interface TransitionCancelled {
   type: 'transition.cancelled';
   id: string;
   /** 'panic' and 'newRound' stop it with everything else (nothing lands; remotes stop their Spin). */
-  reason: 'back' | 'hold' | 'panic' | 'newRound';
+  /** `cancel`: a Suspense cancelled (`suspense { on: false, cancel: true }`, D144, D145), its build backing out. */
+  reason: 'back' | 'hold' | 'cancel' | 'panic' | 'newRound';
   keptOutgoing: boolean;
   atMs: number;
 }

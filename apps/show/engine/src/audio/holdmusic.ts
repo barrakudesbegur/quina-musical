@@ -13,7 +13,8 @@ import type { AudioGraph } from './graph.ts';
 import type { Handoff } from './interval.ts';
 
 /** Moods come from the folder: hold/ is fail music ('error'), celebration/ is victory music; 'hold' is an ordinary Hold. */
-export type HoldMusicMood = 'hold' | 'error' | 'celebration';
+/** `intro`: a round's intro track (D129), played by this player too: one looping bed at a time. */
+export type HoldMusicMood = 'hold' | 'error' | 'celebration' | 'intro';
 
 /**
  * One loop in data/hold/<name>.json (tools/prep/hold.py), the fields read here: whole bars ('bars') or the
@@ -107,6 +108,33 @@ interface HoldVoice {
   mood: HoldMusicMood;
   /** The loop's downbeats on the audio clock (null without whole bars): the Interval hands over on one. */
   grid: OutgoingMusic | null;
+  /** Where it is in its buffer at a time (Pausa saves it, D128): it started at `startAt` from `offsetSec`. */
+  startAt: number;
+  offsetSec: number;
+  bars: number | null;
+  beatsPerBar: number;
+}
+
+/** A voice Pausa took off (D128): it comes back from where it was. */
+export interface SuspendedHold {
+  buffer: AudioBuffer;
+  posSec: number;
+  loopStartSec: number;
+  loopEndSec: number;
+  title: string;
+  trackGain: number;
+  levelDb: number;
+  mood: HoldMusicMood;
+  bars: number | null;
+  beatsPerBar: number;
+}
+
+/** Where a looping source is in its buffer `elapsed` seconds after it started at `offsetSec`. */
+export function loopPosition(offsetSec: number, elapsed: number, loopStartSec: number, loopEndSec: number): number {
+  const pos = offsetSec + Math.max(0, elapsed);
+  const span = loopEndSec - loopStartSec;
+  if (pos < loopEndSec || span <= 0) return pos;
+  return loopStartSec + ((pos - loopEndSec) % span);
 }
 
 export interface HoldMusicStart {
@@ -330,12 +358,14 @@ export class HoldMusic {
         const loops = (Array.isArray(meta.loops) ? meta.loops : []).filter(isHoldLoopMeta);
         if (!loops.length || meta.sampleRate !== this.ctx.sampleRate) continue;
         const { category } = meta;
+        // The throw song (D138) isn't a loop: audio/throw.ts plays it.
+        if (category === 'throw') continue;
         // The composer's loop body (analysis `preferred`) plays first; bar loops are fallbacks.
         const ordered = [...loops].sort((a, b) => Number(Boolean(b.preferred)) - Number(Boolean(a.preferred)));
         this.tracks.push({
           title: name,
           name,
-          mood: category === 'error' || category === 'celebration' ? category : 'hold',
+          mood: category === 'error' || category === 'celebration' || category === 'intro' ? category : 'hold',
           preferred: ordered[0]?.preferred ? 1 : 0,
           loops: ordered.map((l) => ({ startSample: l.startSample, endSample: l.endSample, gainDb: l.gainToTargetDb ?? 0, bpm: l.bpm,
             kind: l.kind ?? 'bars', withIntro: Boolean(l.kind === 'body' && l.preferred && l.afterIntro !== false),
@@ -443,10 +473,56 @@ export class HoldMusic {
     const trackGain = 10 ** (loop.gainDb / 20);
     gain.gain.setValueAtTime(0, when);
     gain.gain.linearRampToValueAtTime(trackGain * 10 ** (levelDb / 20), when + fadeSec);
-    source.connect(lpf).connect(gain).connect(this.graph.holdBus);
+    source.connect(lpf).connect(gain).connect(this.out(asked));
     source.start(when);
     const grid = loop.bars ? loopGrid({ startAt: when, offsetSec: 0, loopStartSec: source.loopStart, loopEndSec: source.loopEnd, bars: loop.bars, beatsPerBar: loop.beatsPerBar }) : null;
-    this.voice = { source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb, mood: asked, grid };
+    this.voice = {
+      source, gain, lpf, title: `${track.title}${track.loops.length > 1 ? ` · loop ${(track.next - 1) % track.loops.length + 1}` : ''}`, trackGain, levelDb, mood: asked, grid,
+      startAt: when, offsetSec: 0, bars: loop.bars, beatsPerBar: loop.beatsPerBar,
+    };
+  }
+
+  /** A mood's slider (D139): Hold music, the fail's, the win's (the victory track), the intros'. */
+  out(mood: HoldMusicMood): AudioNode {
+    const vol = this.graph.vol;
+    return mood === 'error' ? vol.fail : mood === 'celebration' ? vol.win : mood === 'intro' ? vol.intros : vol.holdMusic;
+  }
+
+  /** Pausa (D128): the voice fades out from `at` and stops; what comes back is where it was then. Null when none plays. */
+  suspend({ at = this.ctx.currentTime, fadeSec = 1.2 }: { at?: number; fadeSec?: number } = {}): SuspendedHold | null {
+    const voice = this.voice;
+    const buffer = voice?.source.buffer;
+    if (!voice || !buffer) return null;
+    const t = Math.max(at, this.ctx.currentTime);
+    const posSec = loopPosition(voice.offsetSec, t - voice.startAt, voice.source.loopStart, voice.source.loopEnd);
+    const saved: SuspendedHold = {
+      buffer, posSec, loopStartSec: voice.source.loopStart, loopEndSec: voice.source.loopEnd, title: voice.title, trackGain: voice.trackGain,
+      levelDb: voice.levelDb, mood: voice.mood, bars: voice.bars, beatsPerBar: voice.beatsPerBar,
+    };
+    this.stop({ at: t, fadeSec });
+    return saved;
+  }
+
+  /** After Pausa: the voice it saved plays on from where it was, fading in from `at` (D135). */
+  resume(saved: SuspendedHold, { at = this.ctx.currentTime, fadeSec = 1.5 }: { at?: number; fadeSec?: number } = {}): void {
+    if (this.voice) this.stop({ fadeSec: 0.3 });
+    const { ctx } = this;
+    const when = Math.max(at, ctx.currentTime + 0.02);
+    const source = ctx.createBufferSource();
+    source.buffer = saved.buffer;
+    source.loop = true;
+    source.loopStart = saved.loopStartSec;
+    source.loopEnd = saved.loopEndSec;
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 22000;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(saved.trackGain * 10 ** (saved.levelDb / 20), when + Math.max(0.05, fadeSec));
+    source.connect(lpf).connect(gain).connect(this.out(saved.mood));
+    source.start(when, saved.posSec);
+    const grid = saved.bars ? loopGrid({ startAt: when, offsetSec: saved.posSec, loopStartSec: saved.loopStartSec, loopEndSec: saved.loopEndSec, bars: saved.bars, beatsPerBar: saved.beatsPerBar }) : null;
+    this.voice = { source, gain, lpf, title: saved.title, trackGain: saved.trackGain, levelDb: saved.levelDb, mood: saved.mood, grid, startAt: when, offsetSec: saved.posSec, bars: saved.bars, beatsPerBar: saved.beatsPerBar };
   }
 
   /**
@@ -462,7 +538,7 @@ export class HoldMusic {
       title: voice.title,
       grid: voice.grid,
       output: voice.gain,
-      bus: this.graph.holdBus,
+      bus: this.out(voice.mood),
       release: (at) => {
         try {
           voice.source.stop(Math.max(at, this.ctx.currentTime));

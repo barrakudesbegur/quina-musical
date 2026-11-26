@@ -1,6 +1,5 @@
-// The presenter-paced Check (D107–D110), step 1: the protocol's commands, scene rules and journal entries, and
-// the engine taking a claim of several cards. The engine plays the Check by presses in a later step; until then
-// it refuses checkNext, checkAuto, checkStop and claimDrop clearly.
+// The presenter-paced Check (D107–D110): the protocol's commands, scene rules and journal entries, a claim of
+// several cards, and the Review in the journal. tests/flow.test.ts plays the Check itself, press by press.
 import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { checkCommand, extendJournal, makeCommand, replayJournal, sceneAllows, JournalError, type JournalEntry, type ShowScene } from '@quina/protocol';
@@ -40,13 +39,15 @@ test('the paced Check commands: checkNext names its step; checkAuto; the Review 
   // Reveals, auto, the Review and its end only in a Check: a Claim under review waits there with whatever was
   // playing (D118–D121); a Pausa by hand lets none of them through, as with every scene rule.
   const ctx = (scene: ShowScene, paused = false) => ({ scene, paused, introduced: false, celebrating: null });
-  for (const name of ['checkNext', 'checkAuto', 'checkReview', 'reviewEnd'] as const) {
+  assert.equal(errorOf(makeCommand('checkBack', { claimId: 'cl-1', step: 2 })), null);
+  assert.match(errorOf(cmd('checkBack', { claimId: 'cl-1' }))!, /missing step/);
+  for (const name of ['checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd'] as const) {
     assert.deepEqual((['before', 'play', 'check', 'celebration', 'interval'] as const).filter((s) => sceneAllows(name, ctx(s))), ['check'], name);
     assert.ok(!sceneAllows(name, ctx('check', true)), `${name} in a Pausa`);
   }
 });
 
-test('a claim of several cards opens one Claim each, in order; the engine refuses the paced commands until it plays them', () => {
+test('a claim of several cards opens one Claim each, in order; the first one\'s Check on screen, the others queued', () => {
   const h = setup({ seed: 3, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
   h.send('unlock');
   h.send('next');
@@ -55,11 +56,9 @@ test('a claim of several cards opens one Claim each, in order; the engine refuse
   assert.equal(h.show.scene, 'check');
   assert.deepEqual(h.show.claims.map((c) => c.cardId), [17, 3, 150]);
   assert.deepEqual(journalOf(h.log).filter((e) => e.kind === 'claim.opened').map((e) => (e.kind === 'claim.opened' ? e.cardId : 0)), [17, 3, 150]);
-  const presses = [
-    h.send('checkNext', { claimId: 'cl-1', step: 0 }), h.send('checkAuto', { on: true }),
-    h.send('checkReview', { claimId: 'cl-1' }), h.send('reviewEnd', { claimId: 'cl-2', outcome: 'discard' }),
-  ];
-  for (const out of presses) assert.deepEqual(rejected(out), ['unknownCommand']);
+  assert.deepEqual(h.show.claims.map((c) => c.status), ['checking', 'queued', 'queued']);
+  assert.equal(h.show.check?.info.claimId, 'cl-1');
+  assert.deepEqual(rejected(h.send('reviewEnd', { claimId: 'cl-2', outcome: 'discard' })), ['invalid'], 'only a Claim under review');
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 

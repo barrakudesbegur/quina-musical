@@ -1,28 +1,30 @@
-"""The Interval playlist: the music of the break between rounds. Global, like Hold music: no pool owns it.
+"""The music sets (D129): the breaks' between rounds, Pausa's, and so on, each a playlist. Global, like Hold music: no
+pool owns them.
 
 Usage (from the repo root):
-    tools/prep/.venv/bin/python tools/prep/interval.py             # every track in data/media/interval/
-    tools/prep/.venv/bin/python tools/prep/interval.py --force     # re-decode, re-run Beat This!, re-derive
-    npm run prep -- --steps interval                           # the same, as a prepare step
+    tools/prep/.venv/bin/python tools/prep/interval.py              # every set: each folder of data/media/interval/
+    tools/prep/.venv/bin/python tools/prep/interval.py --set breaks # one set
+    tools/prep/.venv/bin/python tools/prep/interval.py --force      # re-decode, re-run Beat This!, re-derive
+    npm run prep -- --steps interval                            # the same, as a prepare step
 
-Source: data/media/interval/ (gitignored), spotDL's `NN Title - Artist.mp3` files plus its
+Source: data/media/interval/<set>/ (gitignored), spotDL's `NN Title - Artist.mp3` files plus its
 playlist.spotdl (a JSON list of the playlist's entries; `list_position` is the file's NN). Title and artist come
 from the playlist entry; a file without one falls back to its own name.
 
   1. Match every file to its playlist entry by NN. An entry without a file is listed as missing.
   2. Play a recording once: a file whose normalized title, primary artist and duration (±1.5 s) repeat an earlier
      file's is dropped as its duplicate (the playlist has "New Look" twice, #04 and #16).
-  3. Decode each kept track to cache/interval/<slug>.flac (48 kHz, stereo, 16-bit, audio stream only), the PCM the
-     engine plays from /intervalaudio/<slug>.flac: every time below is in this file's timeline.
-  4. Beat This! (cached in cache/interval/<slug>.raw.json, keyed by the source's sha256), the sub-frame beat
+  3. Decode each kept track to cache/interval/<set>/<slug>.flac (48 kHz, stereo, 16-bit, audio stream only), the PCM
+     the engine plays from /intervalaudio/<set>/<slug>.flac: every time below is in this file's timeline.
+  4. Beat This! (cached in cache/interval/<set>/<slug>.raw.json, keyed by the source's sha256), the sub-frame beat
      refinement and the regularized downbeats of analyze.py, and the tempo.
   5. Loudness (integrated LUFS, true peak, the gain to -14 LUFS) and the edges: where the sound starts and ends,
      where the closing fade starts, and the first downbeat.
   6. Two kept tracks whose loudness envelopes are the same (and durations within 1.5 s) are one recording under
      two names: the later one is dropped too.
 
-Writes data/interval/<slug>.json and data/interval/index.json (playlist order). Copyrighted audio and anything
-decoded from it stays in cache/ (gitignored); data/interval/ holds only metadata and beat grids.
+Writes data/interval/<set>/<slug>.json and data/interval/<set>/index.json (playlist order). Copyrighted audio and
+anything decoded from it stays in cache/ (gitignored); data/interval/ holds only metadata and beat grids.
 """
 from __future__ import annotations
 
@@ -363,7 +365,7 @@ def write_if_changed(path: Path, doc: dict) -> bool:
     return True
 
 
-def analyze(track: Track, src: Path, out: Path, cache: Path, force: bool) -> dict:
+def analyze(track: Track, src: Path, out: Path, cache: Path, force: bool, label: str = "") -> dict:
     """Decode, analyse and write one kept track (skipped while its source, decode and derivation are current)."""
     import soundfile as sf
 
@@ -392,7 +394,7 @@ def analyze(track: Track, src: Path, out: Path, cache: Path, force: bool) -> dic
         "position": track.position,
         "spotifyId": track.spotify_id,
         "source": {"file": track.file, "sha256": digest, "decoder": raw.get("decoder")},
-        "pcm": f"cache/interval/{track.slug}.flac",
+        "pcm": f"cache/interval/{label}{track.slug}.flac",
         "sampleRate": sr,
         **derive(track, raw, signal, sr),
         "createdAt": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -414,15 +416,33 @@ def envelope(flac: Path) -> np.ndarray:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--source", type=Path, default=SOURCE, help="the folder of the playlist's files and playlist.spotdl")
-    ap.add_argument("--out", type=Path, default=OUT, help="where the JSON goes (default data/interval)")
-    ap.add_argument("--cache", type=Path, default=CACHE, help="where the decoded audio goes (default cache/interval)")
+    ap.add_argument("--set", action="append", help="a set's folder under data/media/interval/ (default: every one)")
+    ap.add_argument("--source", type=Path, help="one set's folder of files and playlist.spotdl (with --out and --cache)")
+    ap.add_argument("--out", type=Path, help="where its JSON goes (default data/interval/<set>)")
+    ap.add_argument("--cache", type=Path, help="where its decoded audio goes (default cache/interval/<set>)")
     ap.add_argument("--force", action="store_true", help="re-decode, re-run Beat This!, re-derive")
     args = ap.parse_args(argv)
-    source, out, cache = args.source.resolve(), args.out.resolve(), args.cache.resolve()
+    if args.source:
+        return run_set(args.source.resolve(), (args.out or OUT).resolve(), (args.cache or CACHE).resolve(), args.force, args.set[0] if args.set else "")
+    if not SOURCE.is_dir():
+        print(f"interval: {SOURCE} does not exist; nothing to do")
+        return 0
+    has_audio = lambda d: any(p.suffix.lower() in EXTENSIONS for p in d.iterdir())  # noqa: E731
+    sets = args.set or [d.name for d in sorted(SOURCE.iterdir()) if d.is_dir() and not d.name.startswith(".") and has_audio(d)]
+    for name in sets:
+        print(f"set {name}:")
+        code = run_set(SOURCE / name, OUT / name, CACHE / name, args.force, name)
+        if code:
+            return code
+    return 0
+
+
+def run_set(source: Path, out: Path, cache: Path, force: bool, name: str) -> int:
+    """One set: its folder of files and playlist.spotdl → out/<slug>.json, out/index.json and cache/<slug>.flac."""
     if not source.is_dir():
         print(f"interval: {source} does not exist; nothing to do")
         return 0
+    label = f"{name}/" if name else ""
     playlist_path = source / PLAYLIST
     playlist = read_playlist(playlist_path.read_text()) if playlist_path.exists() else {}
     files = sorted(p.name for p in source.iterdir() if p.suffix.lower() in EXTENSIONS and not p.name.startswith("."))
@@ -445,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
         return envelopes[slug]
 
     for track in kept:
-        doc = analyze(track, source / track.file, out, cache, args.force)
+        doc = analyze(track, source / track.file, out, cache, force, label)
         # One recording under two names: a later track that sounds the same as a kept one (durations close) is
         # dropped too. Envelopes are read only for such pairs.
         twin = next((d for d in docs if abs(d["durationSec"] - doc["durationSec"]) <= DUPLICATE_MAX_SEC
@@ -465,7 +485,7 @@ def main(argv: list[str] | None = None) -> int:
         "tracks": [{
             "slug": d["slug"], "title": d["title"], "artist": d["artist"], "position": d["position"],
             "durationSec": d["durationSec"], "bpm": d["tempo"]["bpm"], "flags": d["flags"],
-            "json": f"data/interval/{d['slug']}.json",
+            "json": f"data/interval/{label}{d['slug']}.json",
         } for d in docs],
         "dropped": [{"file": t.file, "position": t.position, "title": t.title, "artist": t.artist,
                      "duplicateOf": t.duplicate_of, "reason": t.duplicate_reason} for t in dropped],

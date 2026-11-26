@@ -14,7 +14,7 @@ const CARDS = '400-459';
 const journalOf = (effects: readonly Effect[]): JournalEntry[] => effects.flatMap((e) => (e.type === 'journal' ? [e.entry] : []));
 const rejected = (effects: readonly Effect[]) => effects.flatMap((e) => (e.type === 'reject' ? [e.reason] : []));
 const checksIn = (effects: readonly Effect[]) =>
-  effects.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.scheduled' ? [(e.message as ShowEvent as EventOf<'check.scheduled'>).check] : []));
+  effects.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.started' ? [(e.message as ShowEvent as EventOf<'check.started'>).check] : []));
 
 /** A Game whose round 4 is the Desgraciat, introduced and shuffled, ready to play. */
 function desgraciat({ seed = 11, autoAdvance = false } = {}): Harness {
@@ -98,21 +98,21 @@ test('standing claims: the last card passes all 12, a fallen one stops on the so
   assert.equal(first.kind, 'standing');
   assert.equal(first.outcome, 'fallen');
   assert.equal(first.row, null);
-  assert.equal(first.steps.at(-1)?.landed, true);
-  assert.ok(first.steps.slice(0, -1).every((s) => !s.landed));
-  const snippets = h.log.filter((e) => e.type === 'checkSnippets').at(-1);
-  assert.ok(snippets?.type === 'checkSnippets');
-  assert.deepEqual(snippets.steps.map((s) => s.sound), [...first.steps.slice(0, -1).map(() => 'still'), 'snippet']);
-  assert.ok(snippets.steps.slice(0, -1).every((s) => s.durationSec === FLOW.check.stillSec), 'a quick knock for each song still not heard');
+  // Its reveals: a knock for each song still not heard, then the one that sank it, its snippet as the proof.
+  const out = h.pressCue(h.show.claims[0].claimId);
+  const reveals = out.flatMap((e) => (e.type === 'checkReveal' ? [e.step] : []));
+  assert.equal(reveals.length, first.total);
+  assert.equal(reveals.at(-1)?.landed, true);
+  assert.deepEqual(reveals.map((s) => s.sound), [...reveals.slice(0, -1).map(() => 'still'), 'snippet']);
+  assert.ok(reveals.slice(0, -1).every((s) => !s.landed && s.durationSec === FLOW.check.stillSec), 'a quick knock for each song still not heard');
+  assert.equal(h.show.claims[0].status, 'invalid', 'its cue: the fail moment');
 
-  h.until(() => h.show.claims[0].status === 'checked');
-  const second = checksIn(h.send('decide', { claimId: h.show.claims[0].claimId, valid: false }))[0] ?? checksIn(h.send('claim', { cardId: course.lastCardId! }))[0];
+  const second = checksIn(h.send('claim', { cardId: course.lastCardId! }))[0];
   assert.ok(second);
   assert.equal(second.outcome, 'complete');
-  assert.equal(second.steps.length, 12);
+  assert.equal(second.total, 12);
   assert.equal(h.show.claims.at(-1)?.completeSince, course.lastStandingAt);
-  h.until(() => h.show.claims.at(-1)?.status === 'checked');
-  h.send('decide', { claimId: h.show.claims.at(-1)!.claimId, valid: true });
+  h.pressCue(h.show.claims.at(-1)!.claimId);
   const state = h.show.snapshot();
   assert.equal(state.scene, 'celebration');
   assert.equal(state.celebration?.kind, 'standing');
@@ -148,9 +148,9 @@ test('the last players standing who sit on the same song share the win; a card t
   const before = h.show.position;
   for (const cardId of fell.slice(0, 2)) {
     h.send('claim', { cardId });
-    h.until(() => h.show.claims.at(-1)?.status === 'checked');
     assert.equal(h.show.claims.at(-1)?.outcome, 'fellLast');
-    assert.deepEqual(rejected(h.send('decide', { claimId: h.show.claims.at(-1)!.claimId, valid: true })), []);
+    assert.deepEqual(rejected(h.pressCue(h.show.claims.at(-1)!.claimId)), []);
+    assert.equal(h.show.claims.at(-1)?.status, 'valid', 'fellLast passes');
   }
   const state = h.show.snapshot();
   assert.equal(state.scene, 'celebration');
@@ -158,11 +158,11 @@ test('the last players standing who sit on the same song share the win; a card t
   assert.ok(state.winners.every((w) => w.kind === 'standing' && w.position === before && w.winningSongId === h.show.queue[before]));
   const decided = journalOf(h.log).filter((e) => e.kind === 'claim.decided');
   assert.ok(decided.every((e) => e.kind === 'claim.decided' && e.outcome === 'fellLast'), 'the journal records how they passed');
-  // A card that fell on an earlier song is `fallen`: it can't be accepted.
+  // A card that fell on an earlier song is `fallen`: its cue fails it.
   h.send('claim', { cardId: earlier.id });
-  h.until(() => h.show.claims.at(-1)?.status === 'checked');
   assert.equal(h.show.claims.at(-1)?.outcome, 'fallen');
-  assert.deepEqual(rejected(h.send('decide', { claimId: h.show.claims.at(-1)!.claimId, valid: true })), ['failedCheck']);
+  h.pressCue(h.show.claims.at(-1)!.claimId);
+  assert.equal(h.show.claims.at(-1)?.status, 'invalid');
 });
 
 test('a standing claim in a normal round is invalid; resume by hand rebuilds a Desgraciat round', () => {
@@ -195,18 +195,25 @@ test('fuzz: random commands through Desgraciat rounds never break the invariants
     let rnd = seed * 7919;
     const pick = <T>(list: readonly T[]): T => list[(rnd = (rnd * 48271) % 2147483647) % list.length];
     // Mostly an undecided Claim, so Checks get decided and the round moves on.
-    const open = () => h.show.claims.filter((c) => c.status !== 'valid' && c.status !== 'invalid').map((c) => c.claimId);
+    const open = () => h.show.claims.filter((c) => c.status !== 'valid' && c.status !== 'invalid' && c.status !== 'discarded').map((c) => c.claimId);
     const claimId = () => pick([...open(), ...open(), ...open(), ...h.show.claims.map((c) => c.claimId), 'cl-99']);
     const standingCard = () => h.show.snapshot().standing?.cardIds?.[0] ?? 400;
     // Songs land far more often than anyone claims, as on the night.
     const next = () => h.send('next');
+    // A presenter pressing the Check on screen through to its cue (a standing card has 12 reveals), and the shared
+    // Celebration's press.
+    const press = () => {
+      const cn = h.show.celebrationNext;
+      if (cn) return h.send('checkNext', cn);
+      return h.show.check ? h.pressCue() : next();
+    };
     const commands = [
       next, next, next, next, next, next, next, next, () => h.send('back'), () => h.send('hold'), () => h.send('hold', { on: false }),
       () => h.send('suspense'), () => h.send('pause'),
       () => h.send('claim', { cardId: standingCard() }),
       () => h.send('claim', { cardId: pick([400, 407, 430, 9999, 10]), kind: pick([undefined, 'line', 'bingo', 'standing'] as const) }),
-      () => h.send('checkStart', { claimId: claimId() }), () => h.send('decide', { claimId: claimId(), valid: pick([true, false]) }),
-      () => h.send('decide', { claimId: claimId(), valid: true }), () => h.send('decide', { claimId: claimId(), valid: false }),
+      () => h.send('checkStart', { claimId: claimId() }), press, press, press,
+      () => h.send('checkReview', { claimId: claimId() }), () => h.send('reviewEnd', { claimId: claimId(), outcome: pick(['continue', 'lose', 'discard'] as const) }),
       () => h.send('confirmLine'), () => h.send('interval'), () => h.send('roundIntro', { kind: 'desgraciat' }),
       () => h.send('newRound', { kind: 'desgraciat' }),
     ];
@@ -215,7 +222,7 @@ test('fuzz: random commands through Desgraciat rounds never break the invariants
       h.advance((rnd % 1000) / 100);
       const s = h.show;
       const where = `seed ${seed} step ${step}: ${s.scene} ${s.status}`;
-      if (s.status === 'hold') assert.ok(s.current || s.holdMusic || s.bed, `${where}: hold in silence`);
+      if (s.status === 'hold' && !s.pause) assert.ok(s.current || s.holdMusic || s.bed, `${where}: hold in silence`);
       assert.equal(s.phaseModel.kind, 'standing', where);
       assert.equal(s.round.lineConfirmed, false, where);
       assert.equal(s.snapshot().standing?.count, s.standingNow().length, where);

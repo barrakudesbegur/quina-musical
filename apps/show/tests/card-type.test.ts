@@ -14,7 +14,7 @@ const CARDS = '1-150, 400-500';
 const journalOf = (effects: readonly Effect[]): JournalEntry[] => effects.flatMap((e) => (e.type === 'journal' ? [e.entry] : []));
 const rejected = (effects: readonly Effect[]) => effects.flatMap((e) => (e.type === 'reject' ? [e.reason] : []));
 const checks = (effects: readonly Effect[]) =>
-  effects.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.scheduled' ? [(e.message as ShowEvent as EventOf<'check.scheduled'>).check] : []));
+  effects.flatMap((e) => (e.type === 'emit' && e.message.type === 'check.started' ? [(e.message as ShowEvent as EventOf<'check.started'>).check] : []));
 
 /** A Game whose first round is introduced as a normal round that plays especial cards, then shuffled and started. */
 function especialRound(seed = 4): Harness {
@@ -51,7 +51,10 @@ test('a round plays the card type it was introduced with: only those cards count
   const first = checks(h.send('claim', { cardId: normalCard.id }))[0];
   assert.equal(first?.outcome, 'wrongType');
   assert.equal(first?.cardType, 'normal', 'the Check shows the card\'s own printed type');
-  const second = checks(h.send('decide', { claimId: 'cl-1', valid: false }))[0] ?? checks(h.send('claim', { cardId: especialCard.id }))[0];
+  // Its cue, the first press (nothing to reveal), fails it; then an especial card.
+  h.send('checkNext', { claimId: 'cl-1', step: 0 });
+  assert.equal(h.show.claims[0].status, 'invalid');
+  const second = checks(h.send('claim', { cardId: especialCard.id }))[0];
   assert.ok(second);
   assert.notEqual(second.outcome, 'wrongType');
   assert.equal(second.cardType, 'especial');

@@ -251,7 +251,9 @@ test('the show: Suspense starts the next song\'s transition, schedules the loop 
   assert.ok(h.log.some((e) => e.type === 'cue' && e.songId === aId), 'A\'s phrase repeats');
   const hovers = h.log.filter((e) => e.type === 'suspenseHover');
   assert.ok(hovers.length >= 1 && hovers.every((e) => e.type === 'suspenseHover' && s.hover.includes(e.cardId)), 'the drum hovers over the teased songs');
-  const release = h.send('next');
+  // Next never lands it (D133): letting go of B does.
+  assert.deepEqual(h.send('next').filter((e) => e.type === 'reject').map((e) => e.type === 'reject' && e.reason), ['nextBlocked']);
+  const release = h.send('suspense', { on: false });
   const start = release.find((e) => e.type === 'startTransition');
   assert.ok(start && start.type === 'startTransition' && start.drum.brake);
   assert.equal(start.plan.recipe, 'SUSPENSE');
@@ -305,6 +307,33 @@ test('the show: Back during a Suspense cancels it like a Spin; suspense off with
   assert.ok(id);
   h.send('suspense', { on: true });
   assert.equal(open()?.id, id);
-  assert.deepEqual(h.send('next').filter((e) => e.type === 'reject'), []);
+  assert.deepEqual(h.send('suspense', { on: false }).filter((e) => e.type === 'reject'), []);
   h.until(() => h.show.position === position + 1);
+});
+
+test('the show: a cancelled Suspense backs out to where it started, Aguanta (D144) or the song playing (D145); nothing lands', () => {
+  const h = setup({ seed: 6, settings: { autoAdvance: false } });
+  h.send('unlock');
+  h.send('next');
+  h.until(() => h.show.status === 'playing');
+  const position = h.show.position;
+  const songId = h.show.current?.songId;
+  // From Aguanta (B held, then A): the build backs out, and the song is back in Aguanta.
+  h.send('hold', { on: true, duck: false });
+  h.send('suspense');
+  h.advance(3);
+  const out = h.send('suspense', { on: false, cancel: true });
+  const cancel = out.find((e) => e.type === 'cancelTransition');
+  assert.ok(cancel?.type === 'cancelTransition' && cancel.backOut === true && cancel.keepOutgoing, 'the build backs out, A goes on');
+  assert.deepEqual(out.flatMap((e) => (e.type === 'emit' && e.message.type === 'transition.cancelled' ? [e.message.reason] : [])), ['cancel']);
+  assert.equal(h.show.suspense, null);
+  assert.deepEqual([h.show.status, h.show.hold?.ducked, h.show.current?.songId, h.show.position], ['hold', false, songId, position], 'Aguanta again');
+  assert.deepEqual(h.send('next').filter((e) => e.type === 'reject').map((e) => e.type === 'reject' && e.reason), ['nextBlocked'], 'Next waits while B is held');
+  // From the song playing (manual advance): back to it playing, nothing held.
+  h.send('hold', { on: false });
+  h.send('suspense');
+  h.advance(3);
+  h.send('suspense', { on: false, cancel: true });
+  assert.deepEqual([h.show.status, h.show.hold, h.show.position], ['playing', null, position]);
+  assert.equal(h.show.timers.autoAt, null, 'the advance is manual: nothing lands by itself');
 });

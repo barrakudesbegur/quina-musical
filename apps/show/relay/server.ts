@@ -14,9 +14,9 @@
 //   coversDir, /cards/* → the folder of its cardsJson, GET/POST /api/override/<id> → its overridesDir (the
 //   audition page saves there, then analyze.py and signatures.py re-derive the song), GET /api/pool → { name }.
 // Not part of a pool: /fx/<name>.mp3 and /stingers/<name>.mp3 (data/media), /holdaudio/<name>.flac (data/cache/hold,
-// Hold music decoded by tools/prep/hold.py) and /data/hold/* (data/out/hold, its loops), /intervalaudio/<slug>.flac
-// (data/cache/interval, the Interval playlist decoded by tools/prep/interval.py) and /data/interval/*
-// (data/out/interval, its tracks), /cloud/* (data/link, the cloud link's folder), /ws (WebSocket).
+// Hold music, the intro and the throw song decoded by tools/prep/hold.py) and /data/hold/* (data/out/hold, their loops),
+// /intervalaudio/<set>/<slug>.flac (data/cache/interval/<set>, a music set decoded by tools/prep/interval.py) and
+// /data/interval/<set>/* (data/out/interval/<set>, its tracks), /cloud/* (data/link, the cloud link's folder), /ws.
 // Pool media is revalidated (ETag) instead of cached for a day: the same URL means another file in another pool.
 // The hub forwards commands (@quina/protocol) to the show engine and the engine's events to everyone else.
 import crypto from 'node:crypto';
@@ -140,8 +140,8 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   if (stretched) return { file: path.join(cache, 'stretch', stretched[1], stretched[2], `${stretched[3]}.flac`), cache: REVALIDATE };
   const hold = urlPath.match(/^\/holdaudio\/([A-Za-z0-9._-]+)\.flac$/);
   if (hold) return { file: path.join(CACHE, 'hold', `${hold[1]}.flac`), cache: LONG_CACHE };
-  const interval = urlPath.match(/^\/intervalaudio\/([a-z0-9][a-z0-9-]*)\.flac$/);
-  if (interval) return { file: path.join(CACHE, 'interval', `${interval[1]}.flac`), cache: REVALIDATE };
+  const interval = urlPath.match(/^\/intervalaudio\/([a-z][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.flac$/);
+  if (interval) return { file: path.join(CACHE, 'interval', interval[1], `${interval[2]}.flac`), cache: REVALIDATE };
   if (urlPath === '/data/hold-report.md') return { file: path.join(OUT, 'hold-report.md'), cache: 'no-store' };
   const media = urlPath.match(/^\/media\/([0-9a-f]{32})\.(png|jpg|webp|jxl)$/);
   if (media) return mediaTarget(media[1] as string, media[2] as string);

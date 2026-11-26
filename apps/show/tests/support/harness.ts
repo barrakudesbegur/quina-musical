@@ -85,6 +85,36 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     assert.ok(predicate(), 'condition never met');
     return out;
   };
-  return { show, clock, env, send, dispatch, advance, until, log };
+  /** The presenter-paced Check (D107) on screen pressed through: each reveal, then its cue. */
+  const pressCue = (claimId = show.check?.info.claimId) => {
+    const out: Effect[] = [];
+    for (let n = 0; n < 30; n++) {
+      const run = show.check;
+      if (!claimId || !run || run.info.claimId !== claimId || run.info.cue != null || run.info.reviewing) break;
+      out.push(...send('checkNext', { claimId, step: run.info.revealed.length }));
+    }
+    return out;
+  };
+  /** Every Check of the claim pressed through, card after card, and the shared Celebration's press, until the scene
+   * leaves `check` (or nothing more can be pressed). */
+  const checkAll = () => {
+    const out: Effect[] = [];
+    for (let n = 0; n < 40 && show.scene === 'check'; n++) {
+      const cn = show.celebrationNext;
+      if (cn) {
+        out.push(...send('checkNext', cn));
+        continue;
+      }
+      const run = show.check;
+      if (run && run.info.cue == null && !run.info.reviewing) {
+        out.push(...pressCue(run.info.claimId));
+        continue;
+      }
+      if (!show.claims.some((c) => c.status === 'queued')) break;
+      out.push(...until(() => show.check != null && show.check.info.cue == null, 20));
+    }
+    return out;
+  };
+  return { show, clock, env, send, dispatch, advance, until, log, pressCue, checkAll };
 }
 export type Harness = ReturnType<typeof setup>;

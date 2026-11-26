@@ -5,8 +5,10 @@ Usage (from the repo root):
     tools/prep/.venv/bin/python tools/prep/hold.py --file windows-error-remix.mp3
     tools/prep/.venv/bin/python tools/prep/hold.py --force              # re-decode, re-run Beat This!, re-derive
 
-Sources: data/media/hold/ (category "error": the fail music after a failed Check or Back) and
-data/media/celebration/ (category "celebration"). Loops always run between two points inside the
+Sources: data/media/hold/ (category "error": the fail music after a failed Check or Back),
+data/media/celebration/ (category "celebration"), data/media/intro/ (category "intro": a round's intro track, D129)
+and data/media/throw/ (category "throw": the throw song, D138, which plays straight through from its hook, so the
+engine uses only its decoded audio; its loops are found like any other's). Loops always run between two points inside the
 track, never from its very start or to its very end.
 
 For each track:
@@ -50,7 +52,7 @@ from steps import loudness as loud_step  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent.parent  # the repo: the paths stored in index.json are relative to it
 AUDIO_DIR = ROOT / "data/media"
 # Folder under AUDIO_DIR → category of every file in it.
-SOURCES = (("hold", "error"), ("celebration", "celebration"))
+SOURCES = (("hold", "error"), ("celebration", "celebration"), ("intro", "intro"), ("throw", "throw"))
 CACHE = ROOT / "data/cache/hold"
 AUDITION = CACHE / "audition"
 OUT = ROOT / "data/out/hold"

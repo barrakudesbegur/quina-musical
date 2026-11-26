@@ -14,13 +14,14 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, defaultCardType, formatResumeToken, isPassingOutcome, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, formatResumeToken, isPassingOutcome, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
   CelebrationInfo,
   CelebrationMusic,
   CheckInfo,
+  CheckStep,
   ClaimInfo,
   ClimbTarget,
   CommandFields,
@@ -29,7 +30,6 @@ import type {
   IntervalInfo,
   IntervalTrackInfo,
   IntroInfo,
-  PauseInfo,
   RecordedClaim,
   ShowScene,
   WinKind,
@@ -45,6 +45,7 @@ import type {
   PossibleWinners,
   FutureInfo,
   RejectReason,
+  ReviewOutcome,
   RoundInfo,
   RoundKind,
   ShowEvent,
@@ -54,10 +55,13 @@ import type {
   SongRef,
   SoundName,
   StandingInfo,
+  MusicSet,
+  VolumeKey,
+  Volumes,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, LOOP, SCHEDULE } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, fallIndex, firstWinAt, queuePositions, standingCards, standingCourse } from '../game/cards.ts';
-import { computeCheck, timeCheck, type CheckResult, type TimedStep } from '../game/check.ts';
+import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan, standingPlan } from '../game/phase.ts';
@@ -78,8 +82,9 @@ import type { PlanEvent, StemName } from '../plan/recipes.ts';
 
 /** Which Hold music fits: 'error' after Back and a failed Check, 'hold' otherwise. */
 export type HoldMood = 'hold' | 'error';
-/** Scene music that is not Hold music: the Celebration's ('winningSong', 'victory') or the Interval's. */
-export type Bed = 'winningSong' | 'victory' | 'interval';
+/** Scene music that is not Hold music: the Celebration's ('winningSong', 'victory'), a music set's ('interval', the
+ * set in `bedSet`), a round's intro track, or the Pausa set a Next builds out of as Pausa ends. */
+export type Bed = 'winningSong' | 'victory' | 'interval' | 'intro' | 'pausa';
 
 /** The playing song repeating one of its phrases (plan/loop.ts): `nextAt` is the next repeat's start, `until` the
  * last moment a repeat may start (a Suspense's landing), or null to loop until it is stopped. */
@@ -142,6 +147,8 @@ export interface SuspenseState {
   hover: number[];
   /** Teases played so far (the next one is of `hover[teases % hover.length]`). */
   teases: number;
+  /** It started from Aguanta (B held, then A: D144): a cancel goes back to Aguanta, else back to playing. */
+  fromStay: boolean;
 }
 
 export interface Landing {
@@ -232,6 +239,8 @@ export interface CancelTransitionEffect {
   planId: string;
   keepOutgoing: boolean;
   drum: { insertId: number | null; selectId: number | null };
+  /** A cancelled Suspense (D144): its build backs out and fades instead of stopping at once. */
+  backOut?: boolean;
 }
 export interface DuckEffect {
   type: 'duck';
@@ -280,6 +289,8 @@ export interface SfxEffect {
   type: 'sfx';
   name: SoundName;
   at?: number;
+  /** Its slider (D139): the presenters' pad, the win's or the fail's fanfares, the final-lap stinger. */
+  volume: 'padFx' | 'winFx' | 'failFx' | 'finalLap';
 }
 /** Render B's bars before `hookId` stretched to A's tempo, for a Blend (runtime BlendStore). */
 export interface PrepareBlendEffect {
@@ -292,17 +303,17 @@ export interface PrepareBlendEffect {
   beatsPerBar: number;
   tight: boolean;
 }
-/**
- * A Check's steps, timed in advance: everything else (the song or Hold music) ducks to `duckDb` from `startAt`
- * to `endAt`; each ✓ step plays the song's hook snippet (/snippets/<id>.flac), each ✗ the "broken record".
- */
-export interface CheckSnippetsEffect {
-  type: 'checkSnippets';
+/** One revealed song of a Check at `step.at`: its hook snippet (/snippets/<id>.flac), the "broken record" or the knock.
+ * A sound still playing from the reveal before stops. */
+export interface CheckRevealEffect {
+  type: 'checkReveal';
   claimId: string;
-  steps: TimedStep[];
-  startAt: number;
-  endAt: number;
-  duckDb: number;
+  step: TimedStep;
+}
+/** The music under a Check (the song or Hold music) goes far down (`FLOW.check.duckDb`) or comes back up. */
+export interface CheckDuckEffect {
+  type: 'checkDuck';
+  on: boolean;
 }
 /** Answer `getJournal` with a `journal.entries` event from the local journal (the runtime keeps the entries). */
 export interface JournalRequestEffect {
@@ -310,7 +321,7 @@ export interface JournalRequestEffect {
   reqId: string;
   fromSeq: number;
 }
-/** Stop a Check's snippets now and bring the music back up. */
+/** Stop a Check's sounds now and bring the music back up. */
 export interface CancelCheckEffect {
   type: 'cancelCheck';
   claimId: string;
@@ -330,26 +341,73 @@ export interface CelebrationMusicEffect {
   levelDb: number;
 }
 /**
- * The Interval playlist (audio/interval.ts) at `levelDb`: the music playing (the victory track, Hold music, the
- * Winning song's loop) hands over to its first track on its own downbeat; from silence the track fades in.
+ * A music set (audio/interval.ts) at `levelDb`: the music playing (the victory track, Hold music, the Winning song's
+ * loop, the intro) hands over to its first track on its own downbeat; from silence the track fades in.
  */
 export interface IntervalMusicEffect {
   type: 'intervalMusic';
+  set: MusicSet;
   at: number;
   fadeSec: number;
   levelDb: number;
 }
-/** The Interval playlist moves on to its next track on the playing track's next downbeat. */
+/** A set moves on to its next track on the playing track's next downbeat. */
 export interface IntervalSkipEffect {
   type: 'intervalSkip';
+  set: MusicSet;
 }
-/** The Interval playlist's level, gliding over `seconds`. */
-export interface IntervalVolumeEffect {
-  type: 'intervalVolume';
+/** A round's intro track (D129), looping from `at` at `levelDb`; whatever plays gives way to it. */
+export interface IntroMusicEffect {
+  type: 'introMusic';
+  at: number;
+  fadeSec: number;
+  levelDb: number;
+}
+/** Parlem in a Celebration (D117): the Hold music bus (its victory track or loop) ducks to `db`, or comes back (0). */
+export interface BedDuckEffect {
+  type: 'bedDuck';
   db: number;
   seconds: number;
 }
-/** The technical pause's "Tornem de seguida" on the show page (its Hold music comes as a holdMusic effect). */
+/** The throw song (D138): play from `offsetSec` at `at` (the break music fades out under it), stop there (it fades
+ * back), or end for good. */
+export interface ThrowSongEffect {
+  type: 'throwSong';
+  action: 'play' | 'stop' | 'end';
+  at: number;
+  offsetSec: number;
+  fadeSec?: number;
+}
+/** Pausa starts (D128): everything playing fades out and is saved where it is (the song deck, Hold music, the
+ * Celebration's music, a set, the intro, the throw song). Effects and snippets ring out (U113). */
+export interface PausePlaybackEffect {
+  type: 'pausePlayback';
+  at: number;
+  fadeSec: number;
+}
+/** Pausa ends: what it saved resumes from `at`, fading in (D135), the song from `song.offset`; `discard` drops it
+ * instead (Next out of Pausa, Panic, the end of the Game). */
+export interface ResumePlaybackEffect {
+  type: 'resumePlayback';
+  at: number;
+  fadeSec: number;
+  song: { songId: number; offset: number; rate: number } | null;
+  discard: boolean;
+}
+/** The Pausa set on its own player, in or out. */
+export interface PausaMusicEffect {
+  type: 'pausaMusic';
+  on: boolean;
+  at: number;
+  fadeSec: number;
+  levelDb: number;
+}
+/** Every volume slider (D139, percent; vocabulary.ts volumeDb), gliding to its new level. */
+export interface VolumesEffect {
+  type: 'volumes';
+  volumes: Volumes;
+}
+/** Pausa's "Tornem de seguida" on the show page (only during a round, a Check or a Celebration, D135). */
 export interface PauseOverlayEffect {
   type: 'pauseOverlay';
   on: boolean;
@@ -383,17 +441,43 @@ export type Effect =
   | StartSuspenseEffect
   | SuspenseBarEffect
   | SuspenseHoverEffect
-  | CheckSnippetsEffect
+  | CheckRevealEffect
+  | CheckDuckEffect
   | CancelCheckEffect
   | CelebrationMusicEffect
   | IntervalMusicEffect
   | IntervalSkipEffect
-  | IntervalVolumeEffect
+  | IntroMusicEffect
+  | ThrowSongEffect
+  | BedDuckEffect
+  | PausePlaybackEffect
+  | ResumePlaybackEffect
+  | PausaMusicEffect
+  | VolumesEffect
   | PauseOverlayEffect
   | LogEffect;
 export type EffectType = Effect['type'];
 /** One effect by type, for example `EffectOf<'startTransition'>`. */
 export type EffectOf<T extends EffectType> = Extract<Effect, { type: T }>;
+
+/** The Check on screen (D107): the presenters pace its reveals, and auto reveals in a row. Audio-clock times. */
+export interface CheckRun {
+  info: CheckInfo;
+  /** The songs it may reveal, in order. */
+  songs: CheckSong[];
+  /** The index of the last song it reveals (the last, or the first ✗), or null: none, the first press is the cue. */
+  until: number | null;
+  /** A step back turned auto off for this Check (D134); asking for auto again turns it back on. */
+  autoOff: boolean;
+  /** Auto waits for a press: nothing revealed yet, or a Review continued. */
+  awaitPress: boolean;
+  /** Auto's next reveal or cue, or null. */
+  autoAt: number | null;
+  /** When the last reveal's sound ends, or null. */
+  soundEndAt: number | null;
+  /** After its cue, when the next queued card's Check comes on screen by itself, or null. */
+  nextAt: number | null;
+}
 
 /** Everything the machine needs from the outside world. Times: `now` audio-clock seconds, `nowMs` epoch ms. */
 export interface Env {
@@ -473,6 +557,9 @@ const tieRule = (kind: RoundKind): TieRule => (kind === 'desgraciat' ? 'lastStan
 /** What a round's Phase climbs towards from its first song: the Line, or the Desgraciat round's last card standing. */
 const firstClimb = (kind: RoundKind): ClimbTarget => (kind === 'desgraciat' ? 'standing' : 'line');
 const PHASE_RANK: Record<PhaseName, number> = { early: 0, mid: 1, late: 2, final: 3 };
+/** A Claim with a verdict, or set aside: nothing more happens to it. */
+const settled = (c: ClaimInfo) => c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded';
+const copyClaim = (c: ClaimInfo): ClaimInfo => ({ ...c, warnings: [...c.warnings], markedCard: c.markedCard.map((s) => ({ ...s })) });
 
 /** Copy one field when the source sets it. The call compiles only if the source's field fits the target's. */
 /** A Game id from the clock (no random draw, so seeded shows stay as they were), e.g. `g-2026-11-24-mhv2k1x0`. */
@@ -546,7 +633,12 @@ export class Show {
   scene: ShowScene = 'before';
   /** The journal time of the last scene change (0: none yet). */
   sceneSinceMs = 0;
-  pause: PauseInfo | null = null;
+  /** Pausa, and when it started (audio clock). */
+  pause: { sinceMs: number; since: number } | null = null;
+  /** The Pausa set's track playing, while Pausa is on. */
+  pausaNow: IntervalTrackInfo | null = null;
+  /** The throw song (D138): where it plays from, since `startedAt` (audio clock) while playing. */
+  throwSong: { playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
   /** The public Shuffle's animation (audio-clock seconds), while it runs. */
   shuffle: { round: number; startAt: number; endAt: number } | null = null;
   intro: (IntroInfo & { cardType: string }) | null = null;
@@ -554,8 +646,12 @@ export class Show {
   claims: ClaimInfo[] = [];
   /** Claims made in the whole Game (claim ids count on from it). */
   claimCount = 0;
-  /** The Check on screen; `endAt` (audio clock) is when its result shows. */
-  check: { info: CheckInfo; endAt: number } | null = null;
+  /** The Check on screen, paced by the presenters. */
+  check: CheckRun | null = null;
+  /** `checkAuto`: reveal in a row (the Wii's A held, or the tablet's toggle). */
+  checkAutoOn = false;
+  /** Every card of the claim had its cue, an earlier one passed: the press that starts the shared Celebration. */
+  celebrationNext: { claimId: string; step: number } | null = null;
   /** The Claims of the Check in progress, and the Celebration it interrupted (it comes back if none is valid). */
   batch: { claimIds: string[]; celebration: CelebrationInfo | null } | null = null;
   /** Start the next queued Claim's Check as soon as nothing is in the way. */
@@ -569,9 +665,18 @@ export class Show {
   winners: WinnerInfo[] = [];
   /** Scene music playing instead of a song or Hold music. */
   bed: Bed | null = null;
+  /** With `bed` 'interval': which set plays. */
+  bedSet: MusicSet = 'breaks';
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
   heatSample: { at: number; value: number } | null = null;
   holdMusicMood: HoldMood = 'hold';
+  /** The volume sliders (D139). `volumesSet`: this Game set them (a slider, or the plan's while it had none). */
+  volumes: Volumes = { ...VOLUME_DEFAULTS };
+  volumesSet = false;
+  /** The volumes as last journaled (null: none yet): the record shows them, so it always equals the journal's replay. */
+  journaledVolumes: Volumes | null = null;
+  /** A slider moved: journal the volumes once they have been still for `FLOW.volumesJournalSec`. */
+  volumesMovedAt: number | null = null;
   out: Effect[] = [];
 
   constructor({ env, songs, cards = [], cardsInPlay = '', fixedQueue = null, settings = {}, gameId, restore = null }: ShowOptions) {
@@ -592,16 +697,19 @@ export class Show {
       nextRecipe: null,
       finalLapStinger: true,
       holdMusicOn: true,
-      intervalVolumeDb: INTERVAL.volumeDb,
       ...settings,
     };
+    this.takeVolumes(this.game);
     // Its effects wait for the runtime's first flush().
     if (restore?.round) {
       this.restore(restore, restore.round);
       return;
     }
     if (restore) this.journalSeq = restore.seq; // a journal without a round yet: keep numbering it
-    if (restore?.settings) this.game = { ...this.game, ...restore.settings };
+    if (restore?.settings) {
+      this.game = { ...this.game, ...restore.settings };
+      this.takeVolumes(this.game);
+    }
     const ranges = restore?.cardsInPlay || cardsInPlay;
     try {
       this.setCards(ranges);
@@ -640,12 +748,22 @@ export class Show {
         }
         break;
       case 'next':
-        this.next(reqId);
+        // Nothing lands while B is held (D133): Aguanta, or a Suspense (let go of B, or `suspense {on: false}`).
+        if (this.suspense) this.reject(reqId, c.cmd, 'nextBlocked', 'Suspens is on: it lands when B is let go');
+        else if (this.status === 'hold' && this.hold?.ducked === false) this.reject(reqId, c.cmd, 'nextBlocked', 'Aguanta is on');
+        else {
+          if (this.pause) this.endPause({ forNext: true });
+          this.next(reqId);
+        }
         break;
       case 'back':
         this.back(reqId);
         break;
       case 'hold': {
+        if (this.scene === 'celebration') {
+          this.celebrationHold(reqId, c.on);
+          break;
+        }
         const on = c.on;
         const holding = this.status === 'hold';
         // While holding, `duck` switches between Parlem and Aguanta in place.
@@ -659,14 +777,19 @@ export class Show {
         break;
       case 'suspense':
         if (c.on ?? !this.suspense) this.startSuspense(reqId);
-        else if (this.suspense) this.releaseSuspense(reqId);
-        else this.reject(reqId, c.cmd, 'noSuspense');
+        else if (!this.suspense) this.reject(reqId, c.cmd, 'noSuspense');
+        // Cancelled (D144, D145): nothing lands, the build backs out, back to where the Suspense started.
+        else if (c.cancel) this.cancelSuspense(this.suspense, 'cancel');
+        else this.releaseSuspense(reqId);
         break;
       case 'setPace':
         this.setPace(c);
         break;
       case 'setGame':
         this.setGame(c);
+        break;
+      case 'setVolume':
+        this.setVolume(c.key, c.percent);
         break;
       case 'confirmLine':
         if (this.round.kind === 'desgraciat') this.reject(reqId, c.cmd, 'invalid', 'the Desgraciat round has no Line');
@@ -699,29 +822,40 @@ export class Show {
       }
       case 'claim': {
         const kind = c.kind ?? this.phaseModel.kind;
-        if (!winKindsOf(this.round.kind).includes(kind)) this.reject(reqId, c.cmd, 'invalid', `a ${this.round.kind} round isn't won by a ${kind}`);
         // Several numbers from the claim pad: one Claim each, checked in turn (D110). checkCommand lets exactly one of the two through.
-        else for (const cardId of c.cardIds ?? (c.cardId != null ? [c.cardId] : [])) this.claim(cardId, kind);
+        const cardIds = c.cardIds ?? (c.cardId != null ? [c.cardId] : []);
+        const unknown = this.unknownCards(cardIds);
+        if (!winKindsOf(this.round.kind).includes(kind)) this.reject(reqId, c.cmd, 'invalid', `a ${this.round.kind} round isn't won by a ${kind}`);
+        // A number that isn't printed refuses the whole claim, privately (D126): the presenter retypes it.
+        // `detail`: the unknown numbers, comma-separated, so the claim pad marks the wrong chip and keeps the others.
+        else if (unknown.length) this.reject(reqId, c.cmd, 'unknownCard', unknown.join(','));
+        else for (const cardId of cardIds) this.claim(cardId, kind);
         break;
       }
       case 'checkNext':
-      case 'checkAuto':
-      case 'checkReview':
-      case 'reviewEnd':
-        // The presenter-paced Check (D107–D110): in the protocol already, played once the engine switches to it.
-        this.reject(reqId, c.cmd, 'unknownCommand', 'the presenter-paced Check is not built in the engine yet');
+        this.checkNext(c.claimId, c.step);
         break;
-      case 'checkStart': {
+      case 'checkBack':
+        this.checkBack(c.claimId, c.step);
+        break;
+      case 'checkAuto':
+        this.setCheckAuto(c.on);
+        break;
+      case 'checkReview': {
         const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
-        if (claim) this.runCheck(claim);
+        if (claim) this.checkReview(reqId, claim);
         break;
       }
-      case 'decide': {
+      case 'reviewEnd': {
+        const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
+        if (claim) this.reviewEnd(reqId, claim, c.outcome);
+        break;
+      }
+      case 'checkStart': {
         const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
         if (!claim) break;
-        // The Check's result decides (docs/event.md): a passed card may still be rejected, a failed one never accepted.
-        if (c.valid && !this.passes(claim)) this.reject(reqId, c.cmd, 'failedCheck', `claim ${claim.claimId}: card ${claim.cardId} ${claim.outcome}`);
-        else this.decide(claim, c.valid);
+        if (claim.status === 'reviewing') this.reject(reqId, c.cmd, 'invalid', `claim ${claim.claimId} is under review: reviewEnd continues it`);
+        else this.showCheck(claim);
         break;
       }
       case 'winnerInfo':
@@ -736,16 +870,21 @@ export class Show {
         this.startInterval();
         break;
       case 'intervalSkip':
-        // The scene rules let it through only while the Interval music plays; the runtime picks the downbeat.
-        this.out.push({ type: 'intervalSkip' });
+        // The scene rules let it through only while a set plays; the runtime picks the downbeat.
+        this.out.push({ type: 'intervalSkip', set: this.pause ? 'pausa' : this.bedSet });
         return this.flush(); // the state changes when the next track takes over (intervalTrack)
+      case 'throw':
+        this.throwTap(c.restart ?? false);
+        break;
       case 'endGame':
         // Within 0.15 s of a landing a Spin can no longer be cancelled: press again.
         if (this.transition && this.transition.T - this.env.now() < HOLD.cancelMinSec) this.reject(reqId, c.cmd, 'busy');
+        // A Claim under review holds the round in its Check (D118).
+        else if (this.claims.some((cl) => cl.status === 'reviewing')) this.reject(reqId, c.cmd, 'claimOpen', 'a claim is under review');
         else this.endGame();
         break;
       case 'pause':
-        this.setPause(c.on ?? !this.pause);
+        this.setPause(c.on ?? !this.pause, reqId);
         break;
       case 'panic':
         this.panic();
@@ -753,7 +892,7 @@ export class Show {
       case 'sfx': {
         // The protocol only lets known sound names through; the engine still plays only the sounds it has.
         const known: readonly string[] = [...ENGINE.sfx, ...ENGINE.stingers];
-        if (known.includes(c.name)) this.out.push({ type: 'sfx', name: c.name });
+        if (known.includes(c.name)) this.out.push({ type: 'sfx', name: c.name, volume: 'padFx' });
         else this.reject(reqId, c.cmd, 'unknownSfx');
         return this.flush(); // no state change worth broadcasting
       }
@@ -784,8 +923,14 @@ export class Show {
   /** Called every few tens of milliseconds by the runtime. */
   tick(): Effect[] {
     const now = this.env.now();
+    if (this.volumesMovedAt != null && now >= this.volumesMovedAt + FLOW.volumesJournalSec) {
+      this.volumesMovedAt = null;
+      this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
+    }
     if (this.unlocked) this.tickFlow(now);
     if (this.status !== 'transition' && this.status !== 'locked') this.prepareNext();
+    // Pausa froze what plays: no timer runs, no loop repeats, nothing lands (endPause moves them all on).
+    if (this.pause) return this.flush();
     const t = this.transition;
     if (t && now >= t.T) this.land(t);
     // After any landing in this tick, which replaces a sample not yet sent: never one at a landing.
@@ -1033,7 +1178,10 @@ export class Show {
   restore(record: GameRecord, round: RecordedRound) {
     this.gameId = record.gameId;
     this.journalSeq = record.seq;
-    if (record.settings) this.game = { ...this.game, ...record.settings, nextRecipe: null };
+    if (record.settings) {
+      this.game = { ...this.game, ...record.settings, nextRecipe: null };
+      this.takeVolumes(this.game);
+    }
     try {
       this.setCards(record.cardsInPlay);
     } catch {} // ranges were checked when they were entered
@@ -1075,12 +1223,15 @@ export class Show {
       ? { round: record.intro.round, kind: record.intro.kind, cardType: record.intro.cardType ?? defaultCardType(record.intro.kind), sinceMs: record.sceneSinceMs }
       : null;
     const inPlay = new Set(this.cardsInPlay);
-    this.claims = record.claims.map((c) => ({
+    this.claims = record.claims.map((c): ClaimInfo => ({
       claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, atMs: c.atMs, position: c.position,
       status: c.verdict ?? (c.reviewing ? 'reviewing' : 'queued'), outcome: null, completeSince: null,
       warnings: this.allCards.some((card) => card.id === c.cardId) && !inPlay.has(c.cardId) ? ['notSold'] : [],
+      markedCard: [], revealUntil: null, cueNext: false,
     }));
-    if (this.scene === 'check') this.batch = { claimIds: this.claims.filter((c) => c.status === 'queued').map((c) => c.claimId), celebration: null };
+    for (const c of this.claims) if (!settled(c)) this.evaluate(c);
+    // The Check under way: the Claims made since it began (an earlier card's pass still counts for its Celebration).
+    if (this.scene === 'check') this.batch = { claimIds: this.claims.filter((c) => c.atMs >= this.sceneSinceMs).map((c) => c.claimId), celebration: null };
     if (this.scene === 'celebration') {
       const kind = roundWin(this.claims.filter((c) => c.status === 'valid').map((c) => c.kind));
       this.celebration = this.celebrationOf(kind, this.sceneSinceMs, kind === 'line' ? 'winningSong' : 'victory');
@@ -1094,7 +1245,7 @@ export class Show {
       gameId: this.gameId,
       seq: this.journalSeq,
       cardsInPlay: this.cardsInPlayText,
-      settings: this.journalSettings(),
+      settings: this.recordSettings(),
       scene: this.scene,
       sceneSinceMs: this.sceneSinceMs,
       intro: this.intro ? { round: this.intro.round, kind: this.intro.kind, cardType: this.intro.cardType } : null,
@@ -1125,13 +1276,49 @@ export class Show {
   }
 
   journalSettings(): JournalSettings {
-    const { nextRecipe: _testOnly, ...settings } = this.game;
-    return settings;
+    const { nextRecipe: _testOnly, volumes: _kept, ...settings } = this.game;
+    // Absent until this Game set them, so a fresh Game still takes the plan's (D139).
+    return this.volumesSet ? { ...settings, volumes: { ...this.volumes } } : settings;
+  }
+
+  /** The settings as the journal has them: the volumes as last journaled (a slider still moving isn't yet). */
+  recordSettings(): JournalSettings {
+    const { volumes: _live, ...settings } = this.journalSettings();
+    return this.journaledVolumes ? { ...settings, volumes: { ...this.journaledVolumes } } : settings;
+  }
+
+  /** Settings that carry volumes (the constructor's, a journal's): the sliders take them, the settings drop them. */
+  takeVolumes(settings: GameSettings) {
+    const given = settings.volumes;
+    delete settings.volumes;
+    if (!given) return;
+    this.volumes = { ...VOLUME_DEFAULTS, ...given };
+    this.volumesSet = true;
+    this.journaledVolumes = { ...this.volumes };
+    this.out.push({ type: 'volumes', volumes: { ...this.volumes } });
+  }
+
+  /** One slider (D139): applied at once, journaled once the sliders are still. */
+  setVolume(key: VolumeKey, percent: number) {
+    this.volumes[key] = percent;
+    this.volumesSet = true;
+    this.volumesMovedAt = this.env.now();
+    this.out.push({ type: 'volumes', volumes: { ...this.volumes } });
+    // The song under Parlem follows its slider at once.
+    if (key === 'songsParlem' && this.status === 'hold' && this.hold?.ducked && this.current && !this.holdMusic) {
+      this.out.push({ type: 'duck', db: this.parlemDb(), seconds: INTERVAL.volumeGlideSec });
+    }
+  }
+
+  /** How far Parlem ducks the song: its slider (D139; the default is the tuned −14 dB). */
+  parlemDb(): number {
+    return Math.max(-80, volumeDb(this.volumes.songsParlem));
   }
 
   /** Append an entry to the Game journal: the runtime keeps it, remotes may keep a copy. */
   journal(body: JournalEntryBody, atMs = this.env.nowMs()) {
     const entry: JournalEntry = { ...body, gameId: this.gameId, seq: ++this.journalSeq, atMs };
+    if ('settings' in body && body.settings?.volumes) this.journaledVolumes = { ...VOLUME_DEFAULTS, ...body.settings.volumes };
     this.out.push({ type: 'journal', entry });
     this.emit({ type: 'journal.entry', entry });
   }
@@ -1226,7 +1413,7 @@ export class Show {
     const reached = PHASE_RANK[plan.phase] >= PHASE_RANK[ENGINE.finalLapStingerPhase];
     if (this.game.finalLapStinger && reached && !this.stingerClimbs.has(climb)) {
       this.stingerClimbs.add(climb);
-      this.out.push({ type: 'sfx', name: ENGINE.finalLapStinger, at: plan.spinStart + 0.05 });
+      this.out.push({ type: 'sfx', name: ENGINE.finalLapStinger, at: plan.spinStart + 0.05, volume: 'finalLap' });
     }
     this.holdMusic = false;
     this.emit({
@@ -1262,6 +1449,7 @@ export class Show {
     const songId = this.queue[targetPos];
     const analysis = this.env.analysis(songId);
     if (!analysis) return this.reject(reqId, 'suspense', 'notReady');
+    const fromStay = this.status === 'hold' && this.hold?.ducked === false && this.current != null && !this.holdMusic;
     if (this.status === 'hold') this.leaveHold(0.4);
     const now = this.env.now();
     const phase = PHASES[this.phaseName()];
@@ -1283,7 +1471,7 @@ export class Show {
     const hover = open.loop ? this.hoverSongs(songId, seed) : [];
     this.suspense = {
       id, reqId, songId, targetPos, open, seed, startedAt: now, autoReleaseAt: now + SUSPENSE.autoReleaseSec, nextBar: 0,
-      fromSongId: A ? A.songId : null, fromHoldMusic, hover, teases: 0,
+      fromSongId: A ? A.songId : null, fromHoldMusic, hover, teases: 0, fromStay,
     };
     if (open.loop && cur) {
       // A keeps playing: its phrase repeats from its end until the release lands B on it.
@@ -1419,9 +1607,12 @@ export class Show {
     });
   }
 
-  // Back or Hold during an open Suspense: like a cancelled Spin, nothing lands. A stays if its exit had
-  // not started; otherwise Hold music takes over.
-  cancelSuspense(s: SuspenseState, reason: 'back' | 'hold') {
+  /**
+   * Back, Hold or a cancel during an open Suspense: like a cancelled Spin, nothing lands. A stays if its exit had not
+   * started (over A's loop it never left); otherwise Hold music takes over. A cancel (D144, D145) backs the build out
+   * (it fades away rather than stops) and goes back to where the Suspense started: Aguanta, or the song playing on.
+   */
+  cancelSuspense(s: SuspenseState, reason: 'back' | 'hold' | 'cancel') {
     const now = this.env.now();
     // Over A's loop A never left: it plays on from the phrase it is in.
     const overLoop = s.open.loop != null && this.current?.songId === s.open.loop.songId;
@@ -1430,9 +1621,15 @@ export class Show {
     if (this.loop?.purpose === 'suspense') this.loop = null;
     this.suspense = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
-    this.out.push({ type: 'cancelTransition', planId: s.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId } });
+    const backOut = reason === 'cancel';
+    this.out.push({ type: 'cancelTransition', planId: s.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId }, ...(backOut ? { backOut } : {}) });
     this.emit({ type: 'transition.cancelled', id: s.id, reason, keptOutgoing: keepOutgoing, atMs: this.env.toEpochMs(now) });
-    this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing });
+    if (!backOut || !keepOutgoing) return this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing });
+    if (s.fromStay) return this.enterHold('hold', { music: false, duck: false });
+    // The song plays on, as it did before the Suspense (with the auto-advance off, D145, nothing lands by itself).
+    this.status = 'playing';
+    this.hold = null;
+    this.timers.autoAt = this.autoAdvanceAllowed() ? this.pressAfterRelease(now) : null;
   }
 
   land(t: Transition) {
@@ -1531,7 +1728,7 @@ export class Show {
     const hold = this.hold;
     if (!hold || hold.ducked === duck || !this.current || this.holdMusic) return;
     hold.ducked = duck;
-    this.out.push({ type: 'duck', db: duck ? HOLD.duckDb : 0, seconds: duck ? HOLD.duckSec : HOLD.releaseSec });
+    this.out.push({ type: 'duck', db: duck ? this.parlemDb() : 0, seconds: duck ? HOLD.duckSec : HOLD.releaseSec });
     this.timers.holdMusicAt = duck && this.game.holdMusicOn !== false ? Math.max(this.env.now() + 1, hold.since + this.game.holdMusicAfterSec) : null;
   }
 
@@ -1570,7 +1767,7 @@ export class Show {
       this.hold.ducked = false;
       this.timers.holdMusicAt = null;
     } else {
-      this.out.push({ type: 'duck', db: HOLD.duckDb, seconds: HOLD.duckSec });
+      this.out.push({ type: 'duck', db: this.parlemDb(), seconds: HOLD.duckSec });
       // With Hold music off the ducked song stays (it still hands over if it runs out).
       this.timers.holdMusicAt = this.game.holdMusicOn === false ? null : now + this.game.holdMusicAfterSec;
     }
@@ -1739,7 +1936,6 @@ export class Show {
     for (const key of SET_GAME_FIELDS) assignDefined(this.game, fields, key);
     this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     this.rescheduleAuto();
-    if (fields.intervalVolumeDb != null) this.out.push({ type: 'intervalVolume', db: fields.intervalVolumeDb, seconds: INTERVAL.volumeGlideSec });
     // Hold music switched on or off in a Hold with the song ducked: its timed switch goes or comes back.
     if (fields.holdMusicOn != null && this.status === 'hold' && this.hold && this.current && !this.holdMusic) {
       this.timers.holdMusicAt = fields.holdMusicOn ? Math.max(this.env.now() + 1, this.hold.since + this.game.holdMusicAfterSec) : null;
@@ -1759,6 +1955,8 @@ export class Show {
 
   panic() {
     this.announceCancel('panic');
+    this.dropPause(); // nothing saved comes back
+    this.endThrow(0.3);
     this.out.push({ type: 'stopAll', fadeSec: 0.3 });
     this.stopCheck(); // a running Check goes back to the queue
     this.current = null;
@@ -1854,7 +2052,7 @@ export class Show {
   sceneContext(): SceneContext {
     return {
       scene: this.scene, celebrating: this.celebration?.kind ?? null, introduced: this.intro != null, paused: this.pause != null,
-      intervalMusic: this.bed === 'interval',
+      intervalMusic: this.pause != null || this.bed === 'interval',
     };
   }
 
@@ -1864,6 +2062,9 @@ export class Show {
     const previous = this.scene;
     const atMs = this.env.nowMs();
     this.scene = scene;
+    this.endThrow();
+    if (previous === 'celebration') this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
+    if (this.pause) this.out.push({ type: 'pauseOverlay', on: this.pauseOverlay() });
     this.sceneSinceMs = atMs;
     this.journal({ kind: 'scene.changed', scene, round, roundKind, cardType }, atMs);
     this.emit({ type: 'scene.changed', scene, previous, atMs });
@@ -1895,15 +2096,7 @@ export class Show {
       this.beginTransition(p.reqId, p.songId, p.targetPos);
       changed = true;
     }
-    // The Check's last step is over: its result shows until the presenters decide.
-    const check = this.check;
-    if (check && now >= check.endAt) {
-      const claim = this.claims.find((c) => c.claimId === check.info.claimId);
-      if (claim?.status === 'checking') {
-        claim.status = 'checked';
-        changed = true;
-      }
-    }
+    if (this.tickCheck(now)) changed = true;
     if (this.maybeAutoCheck()) changed = true;
     // A Bingo's (or the last card standing's) Celebration flows into the Interval by itself, so the show never stalls.
     const c = this.celebration;
@@ -1915,22 +2108,29 @@ export class Show {
   }
 
   // ---------------------------------------------------------------------------------- Claims and the Check
-  /** A Claim: the round stops like a Hold, the Claim queues, and its Check starts when nothing is in the way. */
+  /**
+   * A Claim: the round stops like a Hold, the Claim queues, and its Check comes on screen when nothing is in the way
+   * (nothing revealed: the first reveal waits for a press, D107).
+   */
   claim(cardId: number, kind: WinKind) {
     const from = this.scene;
     // A Spin in flight is cancelled like Hold does ('hold'); too close to its landing, the Hold comes right after.
     this.holdOn(null);
     if (this.transition?.afterLanding === 'hold') this.transition.afterLanding = 'claim';
+    // A claim in Aguanta: the song ducks under the presenters, as in Parlem.
+    if (this.hold && !this.hold.ducked) this.holdMode(true);
     if (this.hold) this.hold.reason = 'claim';
     const atMs = this.env.nowMs();
     const known = this.allCards.some((c) => c.id === cardId);
     const claim: ClaimInfo = {
       claimId: `cl-${++this.claimCount}`, round: this.round.number, cardId, kind, atMs, position: this.position,
       status: 'queued', outcome: null, completeSince: null, warnings: known && !this.cardsInPlay.includes(cardId) ? ['notSold'] : [],
+      markedCard: [], revealUntil: null, cueNext: false,
     };
+    this.evaluate(claim); // the console sees the whole card marked from the claim on (D108)
     this.claims.push(claim);
     this.journal({ kind: 'claim.opened', round: claim.round, claimId: claim.claimId, cardId, winKind: kind, position: claim.position }, atMs);
-    this.emit({ type: 'claim.opened', claim: { ...claim, warnings: [...claim.warnings] } });
+    this.emit({ type: 'claim.opened', claim: copyClaim(claim) });
     if (from !== 'check') {
       // A Claim during a Celebration (a late one): the Celebration comes back if no Claim of this Check is valid.
       this.batch = { claimIds: [], celebration: from === 'celebration' ? this.celebration : null };
@@ -1938,7 +2138,15 @@ export class Show {
       this.setScene('check');
     }
     (this.batch ??= { claimIds: [], celebration: null }).claimIds.push(claim.claimId);
+    // A new card to check: the Celebration waits for it.
+    this.celebrationNext = null;
     this.autoCheck = true;
+  }
+
+  /** A claim's card numbers that aren't printed cards (D126); none when no cards are loaded (nothing to check against). */
+  unknownCards(cardIds: readonly number[]): number[] {
+    if (!this.allCards.length) return [];
+    return cardIds.filter((id) => !this.allCards.some((c) => c.id === id));
   }
 
   /** The Claim `claimId` if it is this round's and still undecided; otherwise reject the command. */
@@ -1948,24 +2156,30 @@ export class Show {
       this.reject(reqId, cmd, 'unknownClaim', `no claim ${claimId} in round ${this.round.number}`);
       return null;
     }
-    if (claim.status === 'valid' || claim.status === 'invalid' || claim.status === 'discarded') {
+    if (settled(claim)) {
       this.reject(reqId, cmd, 'unknownClaim', `claim ${claimId} is already decided`);
       return null;
     }
     return claim;
   }
 
-  /** Start the next queued Claim's Check when one is due and nothing is in the way. */
+  /**
+   * Put the next Claim's Check on screen when one is due and nothing is in the way: none on screen still undecided, a
+   * cued one's moment over. A Claim under review comes first (a resumed Game shows it again), then the queue.
+   */
   maybeAutoCheck(): boolean {
-    if (!this.autoCheck || this.scene !== 'check' || this.pause || this.check || this.transition || this.suspense) return false;
+    if (!this.autoCheck || this.scene !== 'check' || this.pause || this.transition || this.suspense) return false;
+    const run = this.check;
+    if (run && run.info.cue == null) return false;
+    if (run?.nextAt != null && this.env.now() < run.nextAt) return false;
+    const next = this.claims.find((c) => c.status === 'reviewing') ?? this.claims.find((c) => c.status === 'queued');
     this.autoCheck = false;
-    const next = this.claims.find((c) => c.status === 'queued');
     if (!next) return false;
-    this.runCheck(next);
+    this.showCheck(next);
     return true;
   }
 
-  /** What the card shows from the counted landings now (game/check.ts). */
+  /** What the card shows from the counted landings now (game/check.ts); the Claim's PRIVATE view follows it. */
   evaluate(claim: ClaimInfo): CheckResult {
     const result = computeCheck({
       allCards: this.allCards, cardId: claim.cardId, kind: claim.kind, cardType: this.round.cardType,
@@ -1973,51 +2187,55 @@ export class Show {
     });
     claim.outcome = result.outcome;
     claim.completeSince = result.completeSince;
-    claim.warnings = result.warnings;
+    // A decision by hand keeps its warning (notPassing, wouldPass).
+    claim.warnings = [...result.warnings, ...claim.warnings.filter((w) => w === 'notPassing' || w === 'wouldPass')];
+    claim.markedCard = result.markedCard.map((s) => ({ ...s }));
+    claim.revealUntil = result.revealUntil;
+    claim.cueNext = false;
     return result;
   }
 
-  /** (Re)start a Claim's Check from the counted landings now; its steps are timed in advance. */
-  runCheck(claim: ClaimInfo) {
+  /**
+   * A Claim's Check on screen from the counted landings now, nothing revealed (D107): its first reveal waits for a
+   * press, and the music from before the Check plays on at the Claim's level until then. A Claim under review comes
+   * back under review.
+   */
+  showCheck(claim: ClaimInfo) {
     this.stopCheck();
     const result = this.evaluate(claim);
-    const now = this.env.now();
-    const timed = timeCheck(result.steps, now, FLOW.check, claim.kind);
-    const ms = (t: number) => this.env.toEpochMs(t);
+    const reviewing = claim.status === 'reviewing';
+    if (!reviewing) claim.status = 'checking';
+    claim.cueNext = result.revealUntil == null; // nothing to reveal (wrongType): the first press is the cue
     const info: CheckInfo = {
       claimId: claim.claimId, cardId: claim.cardId, kind: claim.kind, outcome: result.outcome, row: result.row, otherRows: result.otherRows,
       // The printed card's type: the projector shows it as the Check's first step (and a wrongType fails on it).
       cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null,
-      steps: timed.steps.map((s) => ({ songId: s.songId, landed: s.landed, atMs: ms(s.at), durationMs: Math.round(s.durationSec * 1000) })),
-      startAtMs: ms(timed.startAt),
-      endAtMs: ms(timed.endAt),
+      startAtMs: this.env.nowMs(), total: result.steps.length, revealed: [], auto: false, cue: null, reviewing,
     };
-    claim.status = timed.endAt > now ? 'checking' : 'checked';
-    this.check = { info, endAt: timed.endAt };
-    if (timed.steps.length) this.out.push({ type: 'checkSnippets', claimId: claim.claimId, steps: timed.steps, startAt: timed.startAt, endAt: timed.endAt, duckDb: FLOW.check.duckDb });
-    this.emit({ type: 'check.scheduled', check: info });
+    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null };
+    this.emit({ type: 'check.started', check: this.checkInfo()! });
   }
 
-  /** Take the Check off screen; a running one stops, and its Claim goes back to the queue. */
+  /** Take the Check off screen: its sounds stop and the music comes back up; one still revealing goes back to the queue. */
   stopCheck() {
-    const check = this.check;
-    if (!check) return;
+    const run = this.check;
+    if (!run) return;
     this.check = null;
-    const claim = this.claims.find((c) => c.claimId === check.info.claimId);
-    if (claim?.status !== 'checking') return;
-    claim.status = 'queued';
-    if (check.info.steps.length) this.out.push({ type: 'cancelCheck', claimId: claim.claimId });
+    this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
+    const claim = this.claims.find((c) => c.claimId === run.info.claimId);
+    if (claim?.status === 'checking') claim.status = 'queued';
+    if (claim) claim.cueNext = false;
   }
 
-  /** After a Back: the undecided Claims' Checks are out of date; they wait to be run again. */
+  /** After a Back: the undecided Claims' Checks are out of date; they wait to be run again (one under review stays so). */
   requeueClaims() {
     this.stopCheck();
     for (const c of this.claims) {
-      if (c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded') continue;
-      c.status = 'queued';
-      c.outcome = null;
-      c.completeSince = null;
+      if (settled(c)) continue;
+      if (c.status === 'checking') c.status = 'queued';
+      this.evaluate(c);
     }
+    this.celebrationNext = null;
     this.autoCheck = false;
   }
 
@@ -2027,52 +2245,264 @@ export class Show {
     return isPassingOutcome(claim.outcome, claim.kind);
   }
 
-  /** The presenters' verdict, journaled either way. A valid Claim makes a Winner; an invalid one gets the Failure fanfare. */
-  decide(claim: ClaimInfo, valid: boolean) {
-    if (this.check?.info.claimId === claim.claimId) {
-      if (claim.status === 'checking' && this.check.info.steps.length) this.out.push({ type: 'cancelCheck', claimId: claim.claimId });
-      this.check = null;
+  /** Auto reveals on this Check now (D117, D134): on, not turned off for it, after its first press, before its cue. */
+  autoRevealing(run: CheckRun): boolean {
+    return this.checkAutoOn && !run.autoOff && !run.awaitPress && !run.info.reviewing && run.info.cue == null && !this.pause;
+  }
+
+  /**
+   * `checkNext` (D107): the press that expects `step`. The next song's index reveals it; once the reveals stop, the
+   * revealed count is the cue; with `celebrationNext`, its step starts the shared Celebration. Anything else is a
+   * press that came late or twice: ignored, silently.
+   */
+  checkNext(claimId: string, step: number) {
+    const cn = this.celebrationNext;
+    if (cn) {
+      if (cn.claimId === claimId && cn.step === step) {
+        this.celebrationNext = null;
+        this.finishBatch(true);
+      }
+      return;
     }
-    if (claim.outcome == null) this.evaluate(claim); // decided without a Check: still note when it completed
+    const run = this.check;
+    if (!run || run.info.claimId !== claimId || run.info.reviewing || run.info.cue != null) return;
+    if (step !== run.info.revealed.length) return;
+    const claim = this.claims.find((c) => c.claimId === claimId);
+    if (!claim) return;
+    if (claim.cueNext) this.cue(run, claim, this.passes(claim));
+    else this.reveal(run, claim);
+  }
+
+  /** Reveal the Check's next song (its snippet, the broken record or the knock), just ahead so sound and screens meet. */
+  reveal(run: CheckRun, claim: ClaimInfo) {
+    const k = run.info.revealed.length;
+    const song = run.songs[k];
+    if (!song) return;
+    const at = this.env.now() + FLOW.check.revealLeadSec;
+    const { sound, durationSec } = stepSound(song, claim.kind, FLOW.check);
+    // From the first reveal the music goes far down under the sounds (U85: as before, for now).
+    if (k === 0) this.out.push({ type: 'checkDuck', on: true });
+    this.out.push({ type: 'checkReveal', claimId: claim.claimId, step: { ...song, at, durationSec, sound } });
+    const step: CheckStep = { songId: song.songId, landed: song.landed, atMs: this.env.toEpochMs(at), durationMs: Math.round(durationSec * 1000) };
+    run.info.revealed.push(step);
+    run.awaitPress = false;
+    run.soundEndAt = at + durationSec;
+    claim.cueNext = run.until == null || k >= run.until;
+    run.autoAt = this.autoRevealing(run) ? run.soundEndAt + FLOW.check.gapSec : null;
+    this.emit({ type: 'check.revealed', claimId: claim.claimId, index: k, step: { ...step } });
+  }
+
+  /**
+   * "Enrere" inside a Check (D127, D134): the mark at `step`, the last revealed, goes, and that cell is next again; the
+   * previous song's snippet replays, or at none the music from before the Check comes back up. Auto turns off for this
+   * Check. Only while revealing: a press that doesn't match is ignored, silently.
+   */
+  checkBack(claimId: string, step: number) {
+    const run = this.check;
+    if (!run || run.info.claimId !== claimId || run.info.reviewing || run.info.cue != null) return;
+    const revealed = run.info.revealed;
+    if (!revealed.length || step !== revealed.length - 1) return;
+    const claim = this.claims.find((c) => c.claimId === claimId);
+    if (!claim) return;
+    revealed.pop();
+    run.autoOff = true;
+    run.autoAt = null;
+    claim.cueNext = false;
+    const now = this.env.now();
+    this.emit({ type: 'check.unrevealed', claimId, index: step, atMs: this.env.toEpochMs(now) });
+    const prev = run.songs[step - 1];
+    if (!prev) {
+      run.soundEndAt = null;
+      this.out.push({ type: 'checkDuck', on: false });
+      return;
+    }
+    const at = now + FLOW.check.revealLeadSec;
+    const { sound, durationSec } = stepSound(prev, claim.kind, FLOW.check);
+    this.out.push({ type: 'checkReveal', claimId, step: { ...prev, at, durationSec, sound } });
+    run.soundEndAt = at + durationSec;
+  }
+
+  /** `checkAuto` (D117): reveal in a row while on. Turning it on reveals at once a Check waiting for its first press. */
+  setCheckAuto(on: boolean) {
+    this.checkAutoOn = on;
+    const run = this.check;
+    if (!run) return;
+    if (!on) {
+      run.autoAt = null;
+      return;
+    }
+    run.autoOff = false; // asked for again by hand: this Check reveals by itself after all
+    if (run.info.reviewing || run.info.cue != null) return;
+    run.awaitPress = false;
+    const now = this.env.now();
+    run.autoAt = Math.max(now, (run.soundEndAt ?? now) + (run.soundEndAt != null ? FLOW.check.gapSec : 0));
+    // Due now (nothing sounding): the reveal comes with this press of the toggle.
+    if (run.autoAt <= now) this.tickCheck(now);
+  }
+
+  /** The automatic reveals and the next card's turn, as the clock passes them. */
+  tickCheck(now: number): boolean {
+    const run = this.check;
+    if (!run) return false;
+    if (run.autoAt != null && now >= run.autoAt) {
+      run.autoAt = null;
+      if (!this.autoRevealing(run)) return false;
+      const claim = this.claims.find((c) => c.claimId === run.info.claimId);
+      if (!claim) return false;
+      if (claim.cueNext) this.cue(run, claim, this.passes(claim));
+      else this.reveal(run, claim);
+      return true;
+    }
+    if (run.nextAt != null && now >= run.nextAt && this.autoCheck) return this.maybeAutoCheck();
+    return false;
+  }
+
+  /**
+   * The cue (D109, D110): the card passed (valid) or failed, by its reveals or a Review's decision by hand. A pass that
+   * isn't the batch's last card shows its plaque with no fanfare; a fail plays the fail moment. Then the next card's
+   * Check comes on screen by itself after a moment, or (none left) the batch ends.
+   */
+  cue(run: CheckRun, claim: ClaimInfo, pass: boolean, manual = false) {
+    const atMs = this.env.nowMs();
+    run.autoAt = null;
+    run.awaitPress = false;
+    run.info.cue = pass ? 'pass' : 'fail';
+    run.info.reviewing = false;
+    claim.cueNext = false;
+    this.out.push({ type: 'cancelCheck', claimId: claim.claimId });
+    this.decide(claim, pass, manual);
+    this.emit({ type: 'check.cue', claimId: claim.claimId, cue: run.info.cue, ...(manual ? { manual: true } : {}), atMs });
+    const more = this.claims.some((c) => c.status === 'queued' || c.status === 'reviewing');
+    if (!pass) this.out.push({ type: 'sfx', name: FLOW.failureFanfare, volume: 'failFx' });
+    if (more) {
+      run.nextAt = this.env.now() + FLOW.check.nextCardSec;
+      this.autoCheck = true;
+      return;
+    }
+    if (pass) return this.finishBatch(true);
+    // The last card failed: the Celebration of an earlier one waits for one more press; else the fail moment's Hold.
+    if (this.batchWinners().length) this.celebrationNext = { claimId: claim.claimId, step: run.info.revealed.length + 1 };
+    else this.finishBatch(false);
+  }
+
+  /** A Claim decided by its cue (or by hand from a Review), journaled. A valid Claim makes a Winner. */
+  decide(claim: ClaimInfo, valid: boolean, manual = false) {
+    if (claim.outcome == null) this.evaluate(claim); // still note when it completed
     const verdict = valid ? 'valid' : 'invalid';
     claim.status = verdict;
     const atMs = this.env.nowMs();
     // A Winner's position is the Winning song's (the card's completion), else the landing it was claimed on.
     const position = valid ? claim.completeSince ?? claim.position : claim.position;
     const winningSongId = valid && position >= 0 ? this.queue[position] ?? null : null;
-    this.journal({ kind: 'claim.decided', round: claim.round, claimId: claim.claimId, verdict, winningSongId, position, ...(claim.outcome ? { outcome: claim.outcome } : {}) }, atMs);
+    this.journal({
+      kind: 'claim.decided', round: claim.round, claimId: claim.claimId, verdict, winningSongId, position,
+      ...(claim.outcome ? { outcome: claim.outcome } : {}), ...(manual ? { manual: true as const } : {}),
+    }, atMs);
     if (valid) this.winners.push({ round: claim.round, kind: claim.kind, cardId: claim.cardId, claimId: claim.claimId, winningSongId, position, atMs, name: null, notes: null });
     this.emit({ type: 'claim.decided', claimId: claim.claimId, cardId: claim.cardId, verdict, atMs });
-    if (!valid) this.out.push({ type: 'sfx', name: FLOW.failureFanfare });
-    this.autoCheck = true;
-    this.afterDecision();
   }
 
-  /** After a verdict: the next queued Claim's Check, or (all decided) the Celebration, or back to the round. */
-  afterDecision() {
-    if (this.claims.some((c) => c.status === 'queued' || c.status === 'checking' || c.status === 'checked')) return;
+  /** "Revisió manual" (D119, D120): a Check put under review before its cue; whatever was playing goes on (D118). */
+  checkReview(reqId: string | null, claim: ClaimInfo) {
+    if (claim.status === 'reviewing') return;
+    const run = this.check?.info.claimId === claim.claimId ? this.check : null;
+    if (run?.info.cue != null) return this.reject(reqId, 'checkReview', 'invalid', `claim ${claim.claimId} already had its cue`);
+    const atMs = this.env.nowMs();
+    claim.status = 'reviewing';
+    claim.cueNext = false;
+    this.journal({ kind: 'claim.reviewing', round: claim.round, claimId: claim.claimId }, atMs);
+    if (run) {
+      run.info.reviewing = true;
+      run.autoAt = null;
+    }
+    this.celebrationNext = null;
+    this.emit({ type: 'check.reviewing', claimId: claim.claimId, atMs });
+  }
+
+  /**
+   * The Review's end (D121): continue the Check from where it was (the next reveal waits for a press); win or lose it
+   * by hand, straight to that cue (a PRIVATE warning when it goes against the card); or discard it, silently.
+   */
+  reviewEnd(reqId: string | null, claim: ClaimInfo, outcome: ReviewOutcome) {
+    if (claim.status !== 'reviewing') return this.reject(reqId, 'reviewEnd', 'invalid', `claim ${claim.claimId} is not under review`);
+    if (outcome === 'discard') return this.discard(claim);
+    // The Claim under review comes back on screen if another took its place meanwhile.
+    if (this.check?.info.claimId !== claim.claimId) this.showCheck(claim);
+    const run = this.check!;
+    if (outcome === 'continue') {
+      claim.status = 'checking';
+      run.info.reviewing = false;
+      run.awaitPress = true;
+      claim.cueNext = run.until == null || (run.info.revealed.length > 0 && run.info.revealed.length > run.until);
+      this.journal({ kind: 'claim.continued', round: claim.round, claimId: claim.claimId });
+      return;
+    }
+    const win = outcome === 'win';
+    const passes = this.passes(claim);
+    if (win !== passes) claim.warnings = [...claim.warnings.filter((w) => w !== 'notPassing' && w !== 'wouldPass'), win ? 'notPassing' : 'wouldPass'];
+    this.cue(run, claim, win, true);
+  }
+
+  /**
+   * A Review discarded (D121, D124): no verdict, no fanfare, no failure music. The next card's Check, or the batch's
+   * end: an earlier pass's Celebration waits for a press; else the round is back in plain Parlem over the music from
+   * before the Check (D142).
+   */
+  discard(claim: ClaimInfo) {
+    claim.status = 'discarded';
+    claim.cueNext = false;
+    this.journal({ kind: 'claim.discarded', round: claim.round, claimId: claim.claimId });
+    if (this.check?.info.claimId === claim.claimId) this.stopCheck();
+    if (this.claims.some((c) => c.status === 'queued' || c.status === 'reviewing')) {
+      this.autoCheck = true;
+      return;
+    }
+    if (this.batchWinners().length) {
+      this.celebrationNext = { claimId: claim.claimId, step: 0 };
+      return;
+    }
+    this.finishBatch(false, 'discarded');
+  }
+
+  /** This Check's valid Claims (the batch's). */
+  batchWinners(): ClaimInfo[] {
+    const ids = this.batch?.claimIds ?? [];
+    return this.claims.filter((c) => c.status === 'valid' && ids.includes(c.claimId));
+  }
+
+  /**
+   * Every card of the claim had its cue: the shared Celebration if one passed; else the Celebration this Check
+   * interrupted comes back, or the round goes back to a Hold: the fail moment's error Hold music, or after a discard
+   * plain Parlem over the music from before the Check.
+   */
+  finishBatch(celebrate: boolean, reason: 'checkFailed' | 'discarded' = 'checkFailed') {
     const batch = this.batch;
+    const won = this.batchWinners();
     this.batch = null;
     this.autoCheck = false;
-    const won = this.claims.filter((c) => c.status === 'valid' && (batch?.claimIds.includes(c.claimId) ?? false));
-    if (won.length) return this.celebrate(roundWin(won.map((c) => c.kind)), batch?.celebration ?? null);
+    this.celebrationNext = null;
+    this.check = null;
+    if (celebrate && won.length) return this.celebrate(roundWin(won.map((c) => c.kind)), batch?.celebration ?? null);
     if (batch?.celebration) {
       // A late Claim during a Celebration was not valid: the Celebration goes on.
       this.celebration = { ...batch.celebration, sinceMs: this.env.nowMs() };
       this.setScene('celebration');
       return;
     }
-    this.checkFailed();
-  }
-
-  /** Every Claim of the Check was invalid: back to the round, in a Hold with the error Hold music until Resume. */
-  checkFailed() {
     this.celebrationChoice = null; // it was for a Celebration that didn't come
     this.setScene('play');
     this.status = 'hold';
-    this.hold = { since: this.env.now(), reason: 'checkFailed', ducked: true };
+    this.hold = { since: this.hold?.since ?? this.env.now(), reason, ducked: true };
     this.timers.autoAt = null;
-    this.switchToHoldMusic('error');
+    if (reason === 'checkFailed') this.switchToHoldMusic('error');
+  }
+
+  /** The Check on screen as the state and events show it (auto as it applies to this Check). */
+  checkInfo(): CheckInfo | null {
+    const run = this.check;
+    if (!run) return null;
+    const i = run.info;
+    return { ...i, otherRows: [...i.otherRows], revealed: i.revealed.map((s) => ({ ...s })), auto: this.checkAutoOn && !run.autoOff };
   }
 
   // ---------------------------------------------------------------------------------- Celebration
@@ -2093,10 +2523,31 @@ export class Show {
     this.flowHold('claim');
     this.timers.holdMusicAt = null;
     const now = this.env.now();
-    this.out.push({ type: 'sfx', name: FLOW.celebration.fanfare, at: now + 0.05 });
-    this.out.push({ type: 'sfx', name: FLOW.celebration.impact, at: now + 0.05 });
+    this.out.push({ type: 'sfx', name: FLOW.celebration.fanfare, at: now + 0.05, volume: 'winFx' });
+    this.out.push({ type: 'sfx', name: FLOW.celebration.impact, at: now + 0.05, volume: 'winFx' });
     if (!same) this.startCelebrationMusic(music, now + FLOW.celebration.musicDelaySec);
     this.emit({ type: 'celebration.started', celebration: { ...celebration, cardIds: [...celebration.cardIds] } });
+  }
+
+  /**
+   * Parlem in a Celebration (D117): its music ducks under the voices, and comes back. Releasing a Line's Celebration
+   * with no Parlem on goes back to the round, like Next.
+   */
+  celebrationHold(reqId: string | null, on: boolean | undefined) {
+    const c = this.celebration;
+    if (!c) return;
+    if (on ?? !c.parlem) {
+      if (c.parlem) return;
+      c.parlem = true;
+      this.out.push({ type: 'bedDuck', db: this.parlemDb(), seconds: HOLD.duckSec });
+      return;
+    }
+    if (c.parlem) {
+      c.parlem = false;
+      this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
+      return;
+    }
+    if (c.kind === 'line') this.release(reqId);
   }
 
   /** The round's Celebration of `kind`: every valid Claim of that kind shares it; the earliest Winning song leads. */
@@ -2104,7 +2555,7 @@ export class Show {
     const ids = new Set(this.claims.filter((c) => c.status === 'valid' && c.kind === kind).map((c) => c.claimId));
     const won = this.winners.filter((w) => ids.has(w.claimId));
     const first = won.filter((w) => w.winningSongId != null).sort((a, b) => a.position - b.position)[0];
-    return { kind, round: this.round.number, cardIds: [...new Set(won.map((w) => w.cardId))], winningSongId: first?.winningSongId ?? null, sinceMs, music };
+    return { kind, round: this.round.number, cardIds: [...new Set(won.map((w) => w.cardId))], winningSongId: first?.winningSongId ?? null, sinceMs, music, parlem: false };
   }
 
   /** The hook a song landed on this round (its Celebration loops it), if known. */
@@ -2144,12 +2595,12 @@ export class Show {
     this.celebration = null;
     this.interval = this.intervalFrom(this.env.nowMs());
     this.setScene('interval');
-    this.playIntervalMusic();
+    this.playIntervalMusic('breaks');
   }
 
-  /** The Interval after this round: its countdown guide is the plan's Interval plus any break planned after it. */
+  /** The Interval after this round: its countdown guide is the plan's Interval plus any Throw planned after it. */
   intervalFrom(sinceMs: number): IntervalInfo {
-    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + 1000 * (this.intervalSec() + this.breakSecAfter(this.round.number)) };
+    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + 1000 * (this.intervalSec() + this.throwSecAfter(this.round.number)) };
   }
 
   /** The planned Interval (the plan's intervalMinutes), else the default guide. */
@@ -2157,18 +2608,25 @@ export class Show {
     return this.plan ? this.plan.schedule.intervalMinutes * 60 : FLOW.intervalGuideSec;
   }
 
-  /** The break planned after round `number` ("parón"), in seconds. */
-  breakSecAfter(number: number): number {
-    return 60 * (this.plan?.schedule.breaks?.find((b) => b.afterRound === number)?.minutes ?? 0);
+  /** The Throw planned after round `number` ("parón"), in seconds on top of that Interval. */
+  throwSecAfter(number: number): number {
+    return 60 * (this.plan?.schedule.throws?.find((b) => b.afterRound === number)?.minutes ?? 0);
   }
 
   /**
    * The edition's Game plan, as the relay pushes it (`relay.plan`, checked by the runtime): the Schedule then follows
-   * the planned rounds' kinds, the planned Interval and breaks. Not part of the Game (not journaled): it is the
-   * edition's setup, and a restarted page gets it again from the relay.
+   * the planned rounds' kinds, the planned Interval and Throws. Not part of the Game (not journaled): it is the
+   * edition's setup, and a restarted page gets it again from the relay. Its volumes are the exception (D139).
    */
   setPlan(plan: GamePlan | null): Effect[] {
     this.plan = plan;
+    // A Game that set no volume yet starts from the edition's (D139), never one mid-Game.
+    if (plan?.volumes && !this.volumesSet) {
+      this.volumes = { ...VOLUME_DEFAULTS, ...plan.volumes };
+      this.volumesSet = true;
+      this.out.push({ type: 'volumes', volumes: { ...this.volumes } });
+      this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
+    }
     if (this.interval) this.interval = this.intervalFrom(this.interval.sinceMs);
     this.updateNudge();
     this.emitState();
@@ -2176,32 +2634,54 @@ export class Show {
   }
 
   /**
-   * The Interval playlist (also while a round is introduced, and after the Game): the music playing, such as the
-   * victory track, hands over to it on its own downbeat, so the end of a round flows into the Interval.
+   * A music set (D129): the breaks' in the Interval, the end's after the Game. The music playing, such as the victory
+   * track, hands over to it on its own downbeat, so the end of a round flows into the Interval.
    */
-  playIntervalMusic() {
+  playIntervalMusic(set: MusicSet) {
     this.flowHold('music');
     this.timers.holdMusicAt = null;
-    if (this.bed === 'interval') return;
-    this.out.push({ type: 'intervalMusic', at: this.env.now(), fadeSec: INTERVAL.fadeInSec, levelDb: this.game.intervalVolumeDb ?? INTERVAL.volumeDb });
+    if (this.bed === 'interval' && this.bedSet === set) return;
+    this.out.push({ type: 'intervalMusic', set, at: this.env.now(), fadeSec: INTERVAL.fadeInSec, levelDb: INTERVAL.volumeDb });
     this.current = null;
     this.holdMusic = false;
     this.bed = 'interval';
+    this.bedSet = set;
     this.intervalNow = null;
   }
 
   /**
-   * The runtime: an Interval track took over at `at` (audio clock). Shown in the state while the Interval music
-   * plays; a report that comes after the music gave way is ignored.
+   * A round's intro music (D129): for now one track for every round, looping low as if in Parlem, from the intro
+   * through its Shuffle until the first Spin builds out of it (U99).
    */
-  intervalTrack(track: Omit<IntervalTrackInfo, 'sinceMs'>, at = this.env.now()): Effect[] {
-    if (this.bed !== 'interval') return this.flush();
-    this.intervalNow = { title: track.title, artist: track.artist, index: track.index, count: track.count, sinceMs: Math.round(this.env.toEpochMs(at)) };
+  playIntroMusic() {
+    this.flowHold('music');
+    this.timers.holdMusicAt = null;
+    if (this.bed === 'intro') return;
+    this.out.push({ type: 'introMusic', at: this.env.now(), fadeSec: INTRO.fadeInSec, levelDb: INTRO.levelDb });
+    this.current = null;
+    this.holdMusic = false;
+    this.bed = 'intro';
+    this.intervalNow = null;
+  }
+
+  /**
+   * The runtime: a set's track took over at `at` (audio clock). Shown in the state while that set plays; a report that
+   * comes after the music gave way is ignored. Pausa's set (D129) has its own.
+   */
+  intervalTrack(track: Omit<IntervalTrackInfo, 'sinceMs'>, at = this.env.now(), set: MusicSet = this.bedSet): Effect[] {
+    const info = { title: track.title, artist: track.artist, index: track.index, count: track.count, sinceMs: Math.round(this.env.toEpochMs(at)) };
+    if (set === 'pausa') {
+      if (!this.pause) return this.flush();
+      this.pausaNow = info;
+    } else {
+      if (this.bed !== 'interval' || this.bedSet !== set) return this.flush();
+      this.intervalNow = info;
+    }
     this.emitState();
     return this.flush();
   }
 
-  /** Introduce a round: its name and prizes on screen while the Interval music plays. No Queue yet. */
+  /** Introduce a round: its name and prizes on screen while its intro music plays. No Queue yet. */
   roundIntro(number: number, kind: RoundKind, cardType: string) {
     this.pending = null;
     this.celebration = null;
@@ -2210,7 +2690,7 @@ export class Show {
     this.setScene('roundStart', number, kind, cardType);
     // Announcing a round reveals its prizes (unless the plan keeps them all secret: plan.ts revealedRounds).
     this.revealPrizes(number, 'intro');
-    this.playIntervalMusic();
+    this.playIntroMusic();
   }
 
   /** A round's prizes revealed, once per way (the journal's `prizes.revealed`). */
@@ -2220,62 +2700,188 @@ export class Show {
     this.journal({ kind: 'prizes.revealed', round, by });
   }
 
-  /** Run a round's public Shuffle. The Interval's music goes on under it, and the first Spin builds out of it. */
+  /** Run a round's public Shuffle. The intro's music goes on under it (or the breaks'), and the first Spin builds out of it. */
   newRound(number: number, kind: RoundKind, cardType: string) {
-    const keepMusic = this.bed === 'interval' && !this.current && !this.transition && !this.suspense;
+    const keepMusic = (this.bed === 'interval' || this.bed === 'intro') && !this.current && !this.transition && !this.suspense;
     this.announceCancel('newRound');
     this.stopCheck();
     // Journaled before `round.started`, which ends the intro in the record too.
     if (this.scene !== 'roundStart') this.setScene('roundStart', number, kind, cardType);
     this.startRound(number, kind, cardType, { stop: !keepMusic, shuffle: true, keepMusic });
+    if (!keepMusic && this.unlocked) this.playIntroMusic();
   }
 
-  /** The end of the Game: closing music until Panic. */
+  /** The end of the Game: the end's music plays until the laptop is disconnected (D137). */
   endGame() {
     if (this.transition) this.cancel(this.transition, 'hold');
     if (this.suspense) this.cancelSuspense(this.suspense, 'hold');
     this.pending = null;
     this.stopCheck();
-    if (this.pause) {
-      this.pause = null;
-      this.out.push({ type: 'pauseOverlay', on: false });
-    }
+    if (this.pause) this.dropPause();
     this.batch = null;
     this.autoCheck = false;
+    this.celebrationNext = null;
     this.celebration = null;
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
     this.setScene('after');
-    this.playIntervalMusic();
+    this.playIntervalMusic('end');
   }
 
-  // ---------------------------------------------------------------------------------- the technical pause
-  /** "Tornem de seguida": nothing lands, a running Check stops (its Claim is queued again), Hold music plays. */
-  setPause(on: boolean) {
-    if (on === (this.pause != null)) return;
-    if (!on) {
-      this.pause = null;
-      this.out.push({ type: 'pauseOverlay', on: false });
-      this.resumeSceneMusic();
+  // ---------------------------------------------------------------------------------- the throw song
+  /**
+   * "Llançament" (D138): the throw song at full volume over the break music, which fades out under it. A tap starts
+   * it from its throw hook, stops it while it plays, and resumes it where it stopped; `restart` plays it again from
+   * the hook. Not journaled: it's music, like a set's track.
+   */
+  throwTap(restart: boolean) {
+    const now = this.env.now();
+    const t = this.throwSong;
+    if (!t || restart) return this.playThrow(THROW.hookSec);
+    if (t.playing) {
+      t.offsetSec += Math.max(0, now - t.startedAt);
+      t.playing = false;
+      this.out.push({ type: 'throwSong', action: 'stop', at: now, offsetSec: t.offsetSec });
       return;
     }
-    if (this.transition) this.cancel(this.transition, 'hold'); // too close to its landing: it lands, then holds
+    this.playThrow(t.offsetSec);
+  }
+
+  playThrow(offsetSec: number) {
+    const at = this.env.now() + THROW.leadSec;
+    this.throwSong = { playing: true, offsetSec, startedAt: at, sinceMs: this.env.toEpochMs(at) };
+    this.out.push({ type: 'throwSong', action: 'play', at, offsetSec });
+  }
+
+  /** The runtime: the throw song played to its end (the break music is back). */
+  throwEnded(): Effect[] {
+    if (this.throwSong?.playing) {
+      this.throwSong = null;
+      this.emitState();
+    }
+    return this.flush();
+  }
+
+  /** The scene changes, or Panic: the throw song stops for good. */
+  endThrow(fadeSec: number = THROW.endFadeSec) {
+    if (!this.throwSong) return;
+    this.throwSong = null;
+    this.out.push({ type: 'throwSong', action: 'end', at: this.env.now(), offsetSec: 0, fadeSec });
+  }
+
+  // ---------------------------------------------------------------------------------- Pausa
+  /**
+   * Pausa (D128, D135), at any time: nothing lands (a Spin or Suspense in flight is cancelled, U105), the playback in
+   * progress is saved and fades out, and the Pausa set plays. The scene stays underneath; a Check keeps its marks.
+   */
+  setPause(on: boolean, reqId: string | null = null) {
+    if (on === (this.pause != null)) return;
+    if (!on) return this.endPause();
+    // Within 0.15 s of a landing a Spin can no longer be cancelled: press again.
+    if (this.transition && this.transition.T - this.env.now() < HOLD.cancelMinSec) return this.reject(reqId, 'pause', 'busy');
+    if (this.transition) this.cancel(this.transition, 'hold');
     if (this.suspense) this.cancelSuspense(this.suspense, 'hold');
     this.pending = null;
-    this.stopCheck();
-    this.pause = { sinceMs: this.env.nowMs() };
-    this.out.push({ type: 'pauseOverlay', on: true });
-    if (this.status === 'transition') return;
-    // A pause (Pausa, the second level of Parlem) plays the Interval music rather than Hold music; after it the
-    // round goes on with a normal transition out of that music.
-    this.flowHold(this.hold?.reason ?? 'music');
-    this.playIntervalMusic();
+    const now = this.env.now();
+    const run = this.check;
+    if (run) {
+      // Its marks stay; auto and the reveal's sound stop, and the next reveal waits for a press (U107).
+      run.autoAt = null;
+      run.awaitPress = true;
+      run.soundEndAt = null;
+      this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
+    }
+    const t = this.throwSong;
+    if (t?.playing) t.offsetSec += Math.max(0, now - t.startedAt);
+    this.pause = { sinceMs: this.env.nowMs(), since: now };
+    this.pausaNow = null;
+    this.out.push({ type: 'pausePlayback', at: now, fadeSec: PAUSA.fadeOutSec });
+    this.out.push({ type: 'pausaMusic', on: true, at: now, fadeSec: PAUSA.musicFadeInSec, levelDb: INTERVAL.volumeDb });
+    this.out.push({ type: 'pauseOverlay', on: this.pauseOverlay() });
+  }
+
+  /** "Tornem de seguida" on the projector and phones: only during a round, a Check or a Celebration (D135). */
+  pauseOverlay(): boolean {
+    return this.pause != null && (this.scene === 'play' || this.scene === 'check' || this.scene === 'celebration');
   }
 
   /**
-   * The scene's own music, after the technical pause or when a resumed Game is unlocked. In `play` (and
-   * `before`) the Hold and its Hold music stay until Resume.
+   * Pausa ends: what it saved resumes exactly where it was, fading in (D135), under Parlem where the round has Parlem
+   * (D128); every timer moves on by the paused time. `forNext`: Next ended it, so the saved playback is dropped and the
+   * Spin builds out of the Pausa music instead.
+   */
+  endPause({ forNext = false }: { forNext?: boolean } = {}) {
+    const pause = this.pause;
+    if (!pause) return;
+    this.pause = null;
+    this.pausaNow = null;
+    const now = this.env.now();
+    const at = now + PAUSA.resumeLeadSec;
+    this.out.push({ type: 'pauseOverlay', on: false });
+    // The song plays on from where Pausa found it.
+    const cur = this.current;
+    if (cur) {
+      const pos = cur.offset + (pause.since - cur.startCtx) * cur.rate;
+      cur.endCtx += at - pause.since;
+      cur.startCtx = at;
+      cur.offset = pos;
+    }
+    this.shiftClock(at - pause.since, { song: false });
+    const run = this.check;
+    if (forNext) {
+      // The Pausa music is the bed the Spin builds out of; nothing saved comes back.
+      this.out.push({ type: 'resumePlayback', at, fadeSec: 0, song: null, discard: true });
+      this.current = null;
+      this.loop = null;
+      this.holdMusic = false;
+      this.bed = 'pausa';
+      if (this.throwSong) this.endThrow(0);
+      return;
+    }
+    this.out.push({ type: 'pausaMusic', on: false, at, fadeSec: PAUSA.musicFadeOutSec, levelDb: INTERVAL.volumeDb });
+    this.out.push({ type: 'resumePlayback', at, fadeSec: PAUSA.fadeInSec, song: cur ? { songId: cur.songId, offset: cur.offset, rate: cur.rate } : null, discard: false });
+    const t = this.throwSong;
+    if (t?.playing) t.startedAt = at;
+    // In a round, Parlem comes back on over what resumes (D128).
+    if (this.scene === 'play' || this.scene === 'before') {
+      if (this.status === 'playing' && cur) this.enterHold('pause', { music: false });
+      else if (this.status === 'hold' && this.hold && !this.hold.ducked) this.holdMode(true);
+    }
+    if (run && run.info.revealed.length && run.info.cue == null) this.out.push({ type: 'checkDuck', on: true });
+  }
+
+  /**
+   * Move every audio-clock time of what Pausa froze on by `d` seconds: the playing song's timeline and its loop, the
+   * Hold's timers, the Celebration's way to the Interval. The Interval's countdown is only a guide and runs on (U110).
+   */
+  shiftClock(d: number, { song = true }: { song?: boolean } = {}) {
+    const cur = this.current;
+    if (cur && song) {
+      cur.startCtx += d;
+      cur.endCtx += d;
+    }
+    if (this.loop) this.loop.nextAt += d;
+    if (this.hold) this.hold.since += d;
+    if (this.timers.holdMusicAt != null) this.timers.holdMusicAt += d;
+    if (this.timers.autoAt != null) this.timers.autoAt += d;
+    if (this.heatSample) this.heatSample.at += d;
+    if (this.celebration) this.celebration.sinceMs += d * 1000;
+  }
+
+  /** Panic or the end of the Game during Pausa: it ends with nothing saved to resume. */
+  dropPause() {
+    if (!this.pause) return;
+    this.pause = null;
+    this.pausaNow = null;
+    this.out.push({ type: 'pauseOverlay', on: false });
+    this.out.push({ type: 'pausaMusic', on: false, at: this.env.now(), fadeSec: 0.3, levelDb: INTERVAL.volumeDb });
+    this.out.push({ type: 'resumePlayback', at: this.env.now(), fadeSec: 0, song: null, discard: true });
+  }
+
+  /**
+   * The scene's own music when a resumed Game is unlocked. In `play` (and `before`) the Hold and its Hold music stay
+   * until Next.
    */
   resumeSceneMusic() {
     switch (this.scene) {
@@ -2284,13 +2890,14 @@ export class Show {
         this.flowHold('claim');
         return this.startCelebrationMusic(this.celebration.music, this.env.now());
       case 'interval':
+        return this.playIntervalMusic('breaks');
       case 'after':
+        return this.playIntervalMusic('end');
       case 'roundStart':
-        return this.playIntervalMusic();
+        return this.playIntroMusic();
       case 'check':
-        // The Checks go on (a running one was queued again), with Hold music under them (not the pause's music).
+        // The Checks go on (a running one was queued again), with Hold music under them.
         if (this.status !== 'hold') this.enterHold('claim', { music: true });
-        else if (this.bed === 'interval') this.switchToHoldMusic('hold');
         this.autoCheck = true;
         return;
       case 'before':
@@ -2421,7 +3028,7 @@ export class Show {
         ? {
             kinds: after.map((r) => r.kind),
             intervalSec: this.intervalSec(),
-            breaksSec: (plan.schedule.breaks ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes, 0),
+            throwsSec: (plan.schedule.throws ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes, 0),
           }
         : null,
     });
@@ -2468,7 +3075,7 @@ export class Show {
       next: this.songInfo(this.queue[this.position + 1]),
       queue: { position: this.position, length: this.queue.length },
       round: { ...this.round },
-      game: { ...this.game },
+      game: { ...this.game, volumes: { ...this.volumes } },
       phase: this.phaseName(),
       heat: this.phaseStep(this.position + 1)?.heat ?? null,
       cards: {
@@ -2494,17 +3101,21 @@ export class Show {
       landings: this.landings.slice(-10).map((l) => ({ ...this.songRef(l.songId), position: l.position, atMs: l.atMs, undone: l.undone })),
       history: this.history.slice(-8).map(({ recipe, family, exit, songId, hookId, phase }) => ({ recipe, family, exit, songId, hookId, phase })),
       scene: this.scene,
-      pause: this.pause ? { ...this.pause } : null,
+      pause: this.pause ? { sinceMs: this.pause.sinceMs, overlay: this.pauseOverlay() } : null,
       shuffle: this.shuffle ? { round: this.shuffle.round, startAtMs: this.env.toEpochMs(this.shuffle.startAt), endAtMs: this.env.toEpochMs(this.shuffle.endAt) } : null,
       intro: this.intro ? { ...this.intro } : null,
-      claims: this.claims.map((c) => ({ ...c, warnings: [...c.warnings] })),
-      check: this.check ? { ...this.check.info, otherRows: [...this.check.info.otherRows], steps: this.check.info.steps.map((s) => ({ ...s })) } : null,
+      claims: this.claims.map(copyClaim),
+      check: this.checkInfo(),
+      celebrationNext: this.celebrationNext ? { ...this.celebrationNext } : null,
       celebration: this.celebration ? { ...this.celebration, cardIds: [...this.celebration.cardIds] } : null,
       interval: this.interval ? { ...this.interval } : null,
       winners: this.winners.map((w) => ({ ...w })),
       resume: this.resumeToken(),
-      intervalMusic: this.bed === 'interval' ? { track: this.intervalNow ? { ...this.intervalNow } : null } : null,
+      intervalMusic: this.pause
+        ? { set: 'pausa', track: this.pausaNow ? { ...this.pausaNow } : null }
+        : this.bed === 'interval' ? { set: this.bedSet, track: this.intervalNow ? { ...this.intervalNow } : null } : null,
       celebrationChoice: this.celebrationChoice,
+      throwSong: this.throwSong ? { title: THROW.title, artist: THROW.artist, playing: this.throwSong.playing, sinceMs: this.throwSong.sinceMs } : null,
     };
   }
 

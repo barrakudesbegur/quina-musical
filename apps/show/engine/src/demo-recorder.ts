@@ -50,8 +50,8 @@ export function describeEvent(event: ShowEvent): string | null {
       return 'Suspense: the song loops its phrase, the build grows, the drum hovers';
     case 'claim.opened':
       return `Claim: card #${event.claim.cardId} (${event.claim.kind})`;
-    case 'check.scheduled':
-      return `Check of #${event.check.cardId}: ${event.check.steps.length} steps (${event.check.outcome})`;
+    case 'check.started':
+      return `Check of #${event.check.cardId}: up to ${event.check.total} reveals (${event.check.outcome})`;
     case 'celebration.started':
       return `Celebration (${event.celebration.kind}), music: ${event.celebration.music}`;
     case 'scene.changed':

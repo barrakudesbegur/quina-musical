@@ -36,7 +36,7 @@ test('every journal entry keeps the replayed record equal to the show (random co
     const first = h.show.possibleWinners().line[0];
     assert.ok(first, `seed ${seed}: a Line within 60 songs`);
     h.send('claim', { cardId: first.cardId });
-    h.send('decide', { claimId: h.show.claims.at(-1)!.claimId, valid: true });
+    h.pressCue(h.show.claims.at(-1)!.claimId);
     const rnd = seededRandom(seed * 7);
     const commands: (() => Command)[] = [
       () => makeCommand('next'),
@@ -53,18 +53,22 @@ test('every journal entry keeps the replayed record equal to the show (random co
       () => makeCommand('setCardsInPlay', { ranges: rnd() < 0.5 ? '1-80' : '1-200, 400-450' }),
       // The show flow: Claims and verdicts by number (claim ids are cl-1, cl-2… in the Game), Winners, scenes.
       () => makeCommand('claim', { cardId: 1 + Math.floor(rnd() * 130) }),
-      // A presenter deciding the Check on screen by its result (a failed card can't be accepted).
-      () => {
-        const c = h.show.claims.find((x) => x.status === 'checking' || x.status === 'checked');
-        return c ? makeCommand('decide', { claimId: c.claimId, valid: c.outcome === 'complete' }) : makeCommand('next');
-      },
+      // A presenter pressing the Check on screen: a reveal, or its cue (and the shared Celebration's press).
+      ...Array.from({ length: 3 }, () => () => {
+        const cn = h.show.celebrationNext;
+        if (cn) return makeCommand('checkNext', cn);
+        const run = h.show.check;
+        return run ? makeCommand('checkNext', { claimId: run.info.claimId, step: run.info.revealed.length }) : makeCommand('next');
+      }),
       // A card that really completed (only those can be accepted: the Check's result decides).
       () => {
         const winners = h.show.possibleWinners();
         const ids = [...winners.line, ...winners.bingo].map((w) => w.cardId);
         return makeCommand('claim', { cardId: ids.length ? ids[Math.floor(rnd() * ids.length)] : 1 });
       },
-      () => makeCommand('decide', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, valid: rnd() < 0.7 }),
+      () => makeCommand('checkReview', { claimId: `cl-${1 + Math.floor(rnd() * 4)}` }),
+      () => makeCommand('reviewEnd', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, outcome: (['continue', 'win', 'lose', 'discard'] as const)[Math.floor(rnd() * 4)] }),
+      () => makeCommand('setVolume', { key: 'songs', percent: Math.round(rnd() * 100) }),
       () => makeCommand('winnerInfo', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, notes: 'fila 2' }),
       () => makeCommand('winnerInfo', { claimId: `cl-${1 + Math.floor(rnd() * 4)}`, slip: rnd() < 0.8 ? `A${Math.floor(rnd() * 99)}` : '' }),
       () => makeCommand('interval'),
@@ -84,7 +88,7 @@ test('every journal entry keeps the replayed record equal to the show (random co
     for (const entry of journalOf(h.log)) seen.add(entry.kind);
   }
   assert.deepEqual([...seen].sort(), [
-    'cards.set', 'claim.decided', 'claim.opened', 'landing.undone', 'line.confirmed', 'prizes.revealed', 'round.started', 'scene.changed', 'settings.changed', 'song.landed', 'winner.noted',
+    'cards.set', 'claim.continued', 'claim.decided', 'claim.opened', 'claim.reviewing', 'landing.undone', 'line.confirmed', 'prizes.revealed', 'round.started', 'scene.changed', 'settings.changed', 'song.landed', 'winner.noted',
   ]);
 });
 
@@ -224,7 +228,7 @@ function gameWithLine(then: (h: Harness) => void = () => {}) {
   h.send('unlock');
   landSongs(h, 4);
   h.send('claim', { cardId: card.id });
-  h.send('decide', { claimId: 'cl-1', valid: true });
+  h.pressCue('cl-1');
   h.send('winnerInfo', { claimId: 'cl-1', name: 'Joana', notes: 'taula 4' });
   then(h);
   const record = replayJournal(journalOf(h.log));
@@ -261,7 +265,7 @@ function replayable(): JournalEntry[] {
   h.send('unlock');
   landSongs(h, 4);
   h.send('claim', { cardId: card.id });
-  h.send('decide', { claimId: 'cl-1', valid: true });
+  h.pressCue('cl-1');
   h.send('winnerInfo', { claimId: 'cl-1', name: 'Joana' });
   return journalOf(h.log);
 }
@@ -291,10 +295,10 @@ test('a resumed Game comes back in a Check: undecided Claims queued, the Check s
   assert.equal(r.show.scene, 'check');
   assert.deepEqual(r.show.claims.map((c) => c.status), ['valid', 'queued']);
   const out = r.send('unlock');
-  assert.ok(out.some((e) => e.type === 'checkSnippets'));
+  assert.ok(out.some((e) => e.type === 'emit' && e.message.type === 'check.started'), 'its Check on screen again, nothing revealed');
   assert.equal(r.show.claims[1].status, 'checking');
   assert.ok(r.show.holdMusic, 'Hold music under it');
-  r.send('decide', { claimId: 'cl-2', valid: false });
+  r.pressCue('cl-2');
   assert.equal(r.show.scene, 'play');
   assert.equal(r.show.hold?.reason, 'checkFailed');
 });
@@ -305,7 +309,7 @@ test('a resumed Game comes back in the Interval, or in a round being introduced,
     h.until(() => h.show.status === 'playing');
     landSongs(h, 7);
     h.send('claim', { cardId: card.id });
-    h.send('decide', { claimId: 'cl-2', valid: true });
+    h.pressCue('cl-2');
     h.send('interval');
   });
   const r = interval.r;
@@ -321,7 +325,7 @@ test('a resumed Game comes back in the Interval, or in a round being introduced,
     h.until(() => h.show.status === 'playing');
     landSongs(h, 7);
     h.send('claim', { cardId: card.id });
-    h.send('decide', { claimId: 'cl-2', valid: true });
+    h.pressCue('cl-2');
     h.send('roundIntro', { number: 3, kind: 'special' });
   });
   assert.equal(intro.r.show.scene, 'roundStart');

@@ -150,7 +150,8 @@ export const COMMANDS = Object.freeze({
    * (`kind` defaults to what the Phase is climbing towards; a kind the round can't be won by is `invalid`).
    * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and puts its Check on screen when none is,
    * nothing revealed (the first reveal waits for a press). A card number that isn't printed refuses the whole claim
-   * as `unknownCard` (D126), privately: nothing is journaled. */
+   * as `unknownCard` (D126), privately: nothing is journaled; the rejection's `detail` lists the unknown numbers,
+   * comma-separated ("999,1204"). */
   claim: {
     /** One card. Exactly one of `cardId` and `cardIds`. */
     cardId: { type: 'integer', optional: true, min: 1, max: 9999 },
@@ -165,7 +166,7 @@ export const COMMANDS = Object.freeze({
    * The presenter-paced Check (D107): the tap, or the Wii's A. `step` is the index the press expects, so two consoles
    * and the Wii pressing at once reveal once: `step` = the next song's index reveals it (in the card's grid order,
    * its snippet or the broken record); once the reveals stop (the last song, or the first ✗), `step` = the revealed
-   * count is the cue (a pass: valid; a fail: the fail moment); with `celebrationNext`, `step` = that count + 1
+   * count is the cue (a pass: valid; a fail: the fail moment); with `celebrationNext`, its own `{ claimId, step }`
    * starts the shared Celebration. Any other press is ignored, silently.
    */
   checkNext: { claimId: { type: 'string', maxLength: 40 }, step: { type: 'integer', min: 0, max: 20 } },

@@ -1,13 +1,18 @@
-// The show's Web Audio graph:
-//   decks (trim → HPF → LPF → fader) → musicBus → holdDuck → checkDuck.music → busHPF ┐
-//   the Interval playlist (tracks, their echo-outs) → intervalBus → holdDuck ┘ (under the music)
-//   Hold music, the victory track, the Celebration's loop → holdBus → checkDuck.hold ┤
-//   a Check's snippets and "broken record" sounds → checkBus ┤
-//   deck fader → echo send → echo (delay ⟲ HPF · feedback) → echo return ┤
-//   deck fader → reverb send → convolver → HPF → reverb return ┤
-//   synth layers (riser, snare roll, swell, impact) → synthBus ┤
-//   samples (boom, orchestra-hit) + whoosh → fxBus ┤
-//   drum ticks → drumBus ┤→ master → limiter → destination
+// The show's Web Audio graph (each [slider] is a volume of D139, `vol`):
+//   decks (trim → HPF → LPF → fader) → musicBus → [songs] → holdDuck → checkDuck.music → busHPF ┐
+//   the breaks' and the end's sets (tracks, their echo-outs) → [breaks] [end] → intervalBus → holdDuck ┘ (under the music)
+//   Hold music → [holdMusic], the error Hold music → [fail], the victory track and the Celebration's loop → [win],
+//     the intro track → [intros] → holdBus → bedDuck (Parlem in a Celebration) → checkDuck.hold ┤
+//   a Check's snippets and "broken record" sounds → checkBus → [check] ┤
+//   deck fader → echo send → echo (delay ⟲ HPF · feedback) → echo return → [djFx] ┤
+//   deck fader → reverb send → convolver → HPF → reverb return → [djFx] ┤
+//   synth layers (riser, snare roll, swell, impact) → synthBus → [djFx] ┤
+//   samples (boom, orchestra-hit) + whoosh → fxBus → [djFx] ┤
+//   the presenters' effects [padFx], the fanfares [win] [fail] [finalLap] ┤
+//   drum ticks → drumBus → [ticks] ┤
+//   the Pausa set → [pausa], the throw song → [throws] ┤→ master → [master] → limiter → destination
+
+import { VOLUME_KEYS, type VolumeKey } from '@quina/protocol';
 
 /** A shared parameter the plans automate (recipes.ts ParamTarget), plus the master gain and the Hold duck. */
 const GRAPH_PARAMS = ['echo.time', 'echo.feedback', 'echo.hpf', 'echo.return', 'reverb.return', 'reverb.hpf', 'bus.hpf', 'master', 'duck'] as const;
@@ -31,6 +36,17 @@ export interface ReverbBus {
   ret: GainNode;
 }
 
+/** A slider's node: one per key, and a second for the ones that reach two places (win, fail: music and fanfares). */
+export type VolumeNode = VolumeKey | 'winFx' | 'failFx';
+const VOLUME_NODES: readonly VolumeNode[] = [...VOLUME_KEYS, 'winFx', 'failFx'];
+/** Which nodes each slider moves. `songsParlem` is the engine's Parlem duck (show.ts parlemDb), not a node here. */
+const SLIDER_NODES: Readonly<Record<VolumeKey, readonly VolumeNode[]>> = Object.freeze({
+  ...Object.fromEntries(VOLUME_KEYS.map((k) => [k, [k]])) as Record<VolumeKey, VolumeNode[]>,
+  songsParlem: [],
+  win: ['win', 'winFx'],
+  fail: ['fail', 'failFx'],
+});
+
 /** A loaded sound effect and the gain that peak-normalizes it. */
 export interface FxSample {
   buffer: AudioBuffer;
@@ -53,6 +69,10 @@ export class AudioGraph {
   holdBus: GainNode;
   /** A Check's snippets: never ducked. */
   checkBus: GainNode;
+  /** Parlem in a Celebration (D117): the Hold music bus (its victory track or loop) ducks under the voices. */
+  bedDuck: GainNode;
+  /** The volume sliders (D139): one gain each, set by `setVolumes`. */
+  vol: Record<VolumeNode, GainNode>;
   fxBus: GainNode;
   synthBus: GainNode;
   drumBus: GainNode;
@@ -69,7 +89,9 @@ export class AudioGraph {
     this.limiter.ratio.value = 20;
     this.limiter.attack.value = 0.003;
     this.limiter.release.value = 0.2;
-    this.master.connect(this.limiter).connect(ctx.destination);
+    // The sliders first, each in front of where its sounds go (wired below).
+    this.vol = Object.fromEntries(VOLUME_NODES.map((n) => [n, ctx.createGain()])) as Record<VolumeNode, GainNode>;
+    this.master.connect(this.vol.master).connect(this.limiter).connect(ctx.destination);
     // Chrome's compressor delays its output by a fixed 6 ms pre-delay (measured on test.html).
     this.processingLatencySec = 0.006;
 
@@ -86,18 +108,23 @@ export class AudioGraph {
     this.holdDuck = ctx.createGain();
     this.holdDuck.connect(this.checkDuck.music);
     this.musicBus = ctx.createGain();
-    this.musicBus.connect(this.holdDuck);
+    this.musicBus.connect(this.vol.songs).connect(this.holdDuck);
     this.intervalBus = ctx.createGain();
     this.intervalBus.connect(this.holdDuck);
+    this.vol.breaks.connect(this.intervalBus);
+    this.vol.end.connect(this.intervalBus);
     // Hold music has its own bus: it is never ducked by the Hold, it is set to its own level.
     this.holdBus = ctx.createGain();
-    this.holdBus.connect(this.checkDuck.hold);
+    this.bedDuck = ctx.createGain();
+    this.holdBus.connect(this.bedDuck).connect(this.checkDuck.hold);
+    for (const n of ['holdMusic', 'fail', 'win', 'intros'] as const) this.vol[n].connect(this.holdBus);
     this.checkBus = ctx.createGain();
-    this.checkBus.connect(this.master);
+    this.checkBus.connect(this.vol.check).connect(this.master);
+    for (const n of ['djFx', 'padFx', 'winFx', 'failFx', 'finalLap', 'ticks', 'pausa', 'throws', 'doors'] as const) this.vol[n].connect(this.master);
 
-    this.fxBus = this.bus(-2);
-    this.synthBus = this.bus(-3);
-    this.drumBus = this.bus(-6);
+    this.fxBus = this.bus(-2, this.vol.djFx);
+    this.synthBus = this.bus(-3, this.vol.djFx);
+    this.drumBus = this.bus(-6, this.vol.ticks);
 
     // Tempo-synced echo shared by all decks (one transition at a time).
     const echo: EchoBus = {
@@ -115,7 +142,7 @@ export class AudioGraph {
     echo.input.connect(echo.delay);
     echo.delay.connect(echo.hpf);
     echo.hpf.connect(echo.feedback).connect(echo.delay);
-    echo.hpf.connect(echo.ret).connect(this.master);
+    echo.hpf.connect(echo.ret).connect(this.vol.djFx);
     this.echo = echo;
 
     // Reverb wash: stereo noise impulse response with an exponential decay (RT60 ≈ 2.5 s).
@@ -129,7 +156,7 @@ export class AudioGraph {
     reverb.hpf.type = 'highpass';
     reverb.hpf.frequency.value = 400;
     reverb.ret.gain.value = 1;
-    reverb.input.connect(reverb.convolver).connect(reverb.hpf).connect(reverb.ret).connect(this.master);
+    reverb.input.connect(reverb.convolver).connect(reverb.hpf).connect(reverb.ret).connect(this.vol.djFx);
     this.reverb = reverb;
     this.samples = new Map();
   }
@@ -152,7 +179,7 @@ export class AudioGraph {
   // swapping the buses. The old buses fade over `fadeSec` so a cancel does not click.
   resetTransient(fadeSec = 0): void {
     const now = this.ctx.currentTime;
-    for (const name of ['fxBus', 'synthBus', 'drumBus'] as const) {
+    for (const [name, out] of [['fxBus', this.vol.djFx], ['synthBus', this.vol.djFx], ['drumBus', this.vol.ticks]] as const) {
       const old = this[name];
       const gain = old.gain.value;
       if (fadeSec > 0) {
@@ -161,7 +188,7 @@ export class AudioGraph {
         old.gain.linearRampToValueAtTime(0, now + fadeSec);
         setTimeout(() => old.disconnect(), fadeSec * 1000 + 100);
       } else old.disconnect();
-      this[name] = this.bus(20 * Math.log10(gain));
+      this[name] = this.bus(20 * Math.log10(gain), out);
     }
     for (const p of [this.echo.ret.gain, this.echo.delay.delayTime, this.echo.hpf.frequency, this.echo.feedback.gain, this.reverb.ret.gain, this.busHpf.frequency]) {
       p.cancelScheduledValues(now);
@@ -186,11 +213,25 @@ export class AudioGraph {
     param.linearRampToValueAtTime(10 ** (db / 20), t + Math.max(0.01, seconds));
   }
 
-  bus(db: number): GainNode {
+  bus(db: number, out: AudioNode = this.master): GainNode {
     const gain = this.ctx.createGain();
     gain.gain.value = 10 ** (db / 20);
-    gain.connect(this.master);
+    gain.connect(out);
     return gain;
+  }
+
+  /** Every slider to its percent (D139), gliding: gain = (percent / 100)², protocol volumeDb. */
+  setVolumes(volumes: Readonly<Record<VolumeKey, number>>, seconds = 0.15): void {
+    for (const key of VOLUME_KEYS) {
+      const gain = Math.min(1, Math.max(0, volumes[key] / 100)) ** 2;
+      for (const node of SLIDER_NODES[key]) {
+        const p = this.vol[node].gain;
+        const now = this.ctx.currentTime;
+        p.cancelScheduledValues(now);
+        p.setValueAtTime(p.value, now);
+        p.linearRampToValueAtTime(gain, now + seconds);
+      }
+    }
   }
 
   param(target: GraphParam): AudioParam | null {
@@ -239,14 +280,15 @@ export class AudioGraph {
     );
   }
 
-  playSample(name: string, when: number, gainDb = 0): AudioBufferSourceNode | null {
+  /** `out`: where it plays (the DJ moves' samples default to fxBus; the presenters' and the fanfares pass their slider). */
+  playSample(name: string, when: number, gainDb = 0, out: AudioNode = this.fxBus): AudioBufferSourceNode | null {
     const sample = this.samples.get(name);
     if (!sample) return null;
     const source = this.ctx.createBufferSource();
     source.buffer = sample.buffer;
     const gain = this.ctx.createGain();
     gain.gain.value = sample.normGain * 10 ** (gainDb / 20);
-    source.connect(gain).connect(this.fxBus);
+    source.connect(gain).connect(out);
     source.start(Math.max(when, this.ctx.currentTime));
     return source;
   }

@@ -1,8 +1,9 @@
-// A Check's sound (show.ts CheckSnippetsEffect): each landed song's hook snippet (tools/prep/snippets.py cuts
-// 3 s from its best hook's pickup, /snippets/<id>.flac, its loudness trim in data/snippets/index.json), or
-// the "broken record" for a song that has not landed (in a standing Check, where not landing is the point, a
-// short knock instead), at the step times the machine scheduled. Everything
-// else (the songs, Hold music, the Celebration's loop) is ducked far down from the Check's start to its end.
+// A Check's sound, paced by the presenters (D107; show.ts CheckRevealEffect, CheckDuckEffect): each revealed landed
+// song's hook snippet (tools/prep/snippets.py cuts 3 s from its best hook's pickup, /snippets/<id>.flac, its
+// loudness trim in data/snippets/index.json), or the "broken record" for a song that has not landed (in a standing
+// Check, where not landing is the point, a short knock instead), at the time the machine set for each press. A
+// press during a sound cuts it short. Everything else (the songs, Hold music, the Celebration's loop) is ducked far
+// down from the first reveal until the cue, or a step back to none.
 import { brokenRecord } from './synth/broken.ts';
 import { stillKnock } from './synth/still.ts';
 import type { AudioGraph } from './graph.ts';
@@ -63,15 +64,8 @@ export class SnippetStore {
   }
 }
 
-export interface CheckSound {
-  claimId: string;
-  steps: readonly TimedStep[];
-  startAt: number;
-  endAt: number;
-  duckDb: number;
-}
-
 export interface CheckLevels {
+  duckDb: number;
   snippetDb: number;
   snippetFadeSec: number;
   brokenDb: number;
@@ -79,11 +73,12 @@ export interface CheckLevels {
   duckFadeSec: number;
 }
 
-/** Plays one Check at a time; a new one, or cancel(), stops the one before. */
+/** Plays one Check's reveals; a new reveal cuts the one before, and cancel() stops them all. */
 export class CheckPlayer {
   readonly graph: AudioGraph;
   readonly snippets: SnippetStore;
   readonly levels: CheckLevels;
+  /** The reveal sounding now: its own gain, so the next press can cut it. */
   private out: GainNode | null = null;
   private sources: AudioBufferSourceNode[] = [];
   claimId: string | null = null;
@@ -94,32 +89,29 @@ export class CheckPlayer {
     this.levels = levels;
   }
 
-  play({ claimId, steps, startAt, endAt, duckDb }: CheckSound): void {
-    this.cancel();
+  /** The music under the Check goes far down (from the first reveal), or comes back up. */
+  duck(on: boolean): void {
+    for (const node of [this.graph.checkDuck.music, this.graph.checkDuck.hold]) this.graph.glide(node.gain, on ? this.levels.duckDb : 0, this.levels.duckFadeSec);
+  }
+
+  /** One revealed song at `step.at`: its snippet, the broken record or the knock. The sound before it stops. */
+  reveal(claimId: string, step: TimedStep): void {
+    this.stopSounds(Math.max(this.graph.ctx.currentTime, step.at - 0.02));
     const { ctx } = this.graph;
     const out = ctx.createGain();
     out.connect(this.graph.checkBus);
     this.out = out;
     this.claimId = claimId;
-    const fade = this.levels.duckFadeSec;
-    const firstAt = steps[0]?.at ?? startAt;
-    for (const node of [this.graph.checkDuck.music, this.graph.checkDuck.hold]) {
-      this.graph.glide(node.gain, duckDb, fade, Math.max(startAt, firstAt - fade));
-      node.gain.setValueAtTime(10 ** (duckDb / 20), Math.max(endAt - fade, firstAt));
-      node.gain.linearRampToValueAtTime(1, endAt + fade);
-    }
     void this.snippets.loadIndex();
-    for (const step of steps) {
-      if (step.sound === 'snippet') void this.playSnippet(out, step);
-      else if (step.sound === 'still') stillKnock(ctx, out, { t0: step.at, levelDb: this.levels.stillDb });
-      else brokenRecord(ctx, out, { t0: step.at, durationSec: step.durationSec, levelDb: this.levels.brokenDb });
-    }
+    if (step.sound === 'snippet') void this.playSnippet(out, step);
+    else if (step.sound === 'still') stillKnock(ctx, out, { t0: step.at, levelDb: this.levels.stillDb });
+    else brokenRecord(ctx, out, { t0: step.at, durationSec: step.durationSec, levelDb: this.levels.brokenDb });
   }
 
   private async playSnippet(out: GainNode, { songId, at, durationSec }: TimedStep): Promise<void> {
     const [buffer] = await Promise.all([this.snippets.get(songId), this.snippets.loadIndex()]);
     const { ctx } = this.graph;
-    // Too late (a slow decode) or cancelled meanwhile: the projector still reveals the mark.
+    // Too late (a slow decode) or cut meanwhile: the projector still reveals the mark.
     if (!buffer || this.out !== out || ctx.currentTime > at + durationSec * 0.5) return;
     const start = Math.max(at, ctx.currentTime + 0.01);
     const offset = start - at;
@@ -139,23 +131,27 @@ export class CheckPlayer {
     this.sources.push(source);
   }
 
-  /** Stop the Check's sounds now and bring everything else back up. */
-  cancel(): void {
+  /** The reveal sounding now fades out quickly from `at`. */
+  private stopSounds(at: number): void {
     const out = this.out;
     if (!out) return;
-    const { ctx } = this.graph;
-    const now = ctx.currentTime;
-    out.gain.setValueAtTime(out.gain.value, now);
-    out.gain.linearRampToValueAtTime(0, now + 0.08);
+    out.gain.cancelScheduledValues(at);
+    out.gain.setValueAtTime(out.gain.value, at);
+    out.gain.linearRampToValueAtTime(0, at + 0.06);
     for (const s of this.sources) {
       try {
-        s.stop(now + 0.1);
+        s.stop(at + 0.08);
       } catch {}
     }
-    setTimeout(() => out.disconnect(), 400);
-    for (const node of [this.graph.checkDuck.music, this.graph.checkDuck.hold]) this.graph.glide(node.gain, 0, this.levels.duckFadeSec);
+    setTimeout(() => out.disconnect(), Math.max(0, at - this.graph.ctx.currentTime) * 1000 + 400);
     this.out = null;
     this.sources = [];
+  }
+
+  /** Stop the Check's sounds now and bring everything else back up. */
+  cancel(): void {
+    this.stopSounds(this.graph.ctx.currentTime);
+    this.duck(false);
     this.claimId = null;
   }
 }

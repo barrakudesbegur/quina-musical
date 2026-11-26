@@ -86,9 +86,15 @@ async function main(): Promise<void> {
     };
     const check = async (kind: 'line' | 'bingo') => {
       await remote.command('claim', { cardId: CARD, kind });
-      const checking = await remote.until(`the ${kind} checked`, (s) => s.scene === 'check' && s.check !== null);
-      await remote.until('the Check shown', (s) => s.check !== null && Date.now() >= s.check.endAtMs + 1500, 90_000);
-      await remote.command('decide', { claimId: checking.check?.claimId, valid: true });
+      const checking = await remote.until(`the ${kind} on screen`, (s) => s.scene === 'check' && s.check !== null);
+      const claimId = checking.check?.claimId ?? '';
+      // The presenter-paced Check (D107): a press as each song is named, then the cue.
+      for (let step = 0; step <= (checking.check?.total ?? 0); step++) {
+        await sleep(2800);
+        await remote.command('checkNext', { claimId, step });
+        const now = await remote.until(`press ${step}`, () => true);
+        if (now.check?.cue != null || now.scene !== 'check') break;
+      }
       await remote.until(`the ${kind} celebrated`, (s) => s.scene === 'celebration');
       log(`${kind} celebrated`);
     };
