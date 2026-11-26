@@ -47,12 +47,12 @@ Do this at home, the day before or earlier, with good internet: it downloads abo
 3. Get `apps/cloud/.env.link`, the show laptop's key, from the organizers' password manager (the secure note "quina .env.link"), or AirDrop it from the main show laptop. **Never send it by chat or email**: anyone who has it can act as the show laptop.
 4. Run `npm run setup:laptop`.
    - It says exactly what's missing and how to install it, then installs everything.
-   - It pulls the pool's media from the cloud, fetches the Game plan and its logos, and finishes with the preflight.
+   - It pulls the repertoire's media from the cloud, fetches the Game plan and its logos, and finishes with the preflight.
    - If anything stops it, fix that and run it again: finished steps are skipped, and an interrupted download resumes where it stopped.
    - It never connects as the show laptop, so it's safe to run while the main laptop is playing.
 5. It's ready when it says **This laptop is set up** and the preflight says **READY**. Warnings about the speakers and Chrome are expected until the night's setup.
 
-After any change to the prepared pool (new songs, approved hooks, overrides), the main laptop runs `npm run media -- push` in `apps/cloud`, so spares pull the same files.
+After any change to the prepared repertoire (new songs, approved hooks, overrides), the main laptop runs `npm run media -- push --repertoire <name>` in `apps/cloud`, so spares pull the same files.
 
 **To swap laptops on the night,** follow steps 3–8 of "Setting up" on the spare (the Wii remote pairs with the spare too). Its link takes over from the main laptop's when it connects.
 

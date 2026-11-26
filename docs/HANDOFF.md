@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D181**, **U161**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D181**, **U162**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -56,4 +56,4 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 - **The design canvas:** "Quina Musical look", https://claude.ai/artifact/Rs66YhT4XyRe8zQ84YUPSv (= code/artifact/c959a819…). Frontend owns it. Comments are addressed when the user asks; nobody watches it.
 - **The 2025 night in data:** `docs/research/reports/night-2025-data.md`.
-- **On 1 Dec:** Sound engine creates `data/pools/2026.json`, with its cards at `apps/cards/dist/cards.json`; the tests move to `data/pools/default/cards/`. The cards are made on 4–5 Dec with `npm start -- --pool 2026`.
+- **Cards:** made on 4–5 Dec with `npm start -- --repertoire 2026` in apps/cards (D178 renamed pools to repertoires: `data/repertoires/`, R2 `repertoires/<name>/`).
