@@ -12,6 +12,15 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
 
+### U123 · The screens' word for a break
+No screen says "Interval": the projector's title, the console's buttons and phase name, the phones' heading and Horari's row all say "Mitja part" (half-time). With several breaks a night, "Mitja part" is off. Changing it is strings only.
+- (a) "Descans" on every screen.
+- (b) Keep "Mitja part".
+- (c) Another word.
+
+### U124 · The console's two labels need the user's OK in Frontend's session · blocking
+D140 answered U67, but Frontend's session refuses the edit to `apps/console/strings.ts` under the UI freeze, and only the user's own OK in that session lifts it. Until then, Sound engine's and Backend's tested range can't be pushed. The change: `reviewing: 'En revisió'` and `discarded: 'Descartat'` replace `stopped` and `dropped`, and `S.hold.reasons` gets `discarded: 'Cartró descartat'`.
+
 ### U120–U122 · Suspens on the remote (D144, D145)
 - **U120 · Landing a Suspens started with B + A:** (a) letting go of B lands it, as today, and letting go of A alone cancels it; (b) another way.
 - **U121 · The shake gesture's default:** (a) on; (b) off, now that B + A does Suspens.
