@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D118**, **U68**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D118**, **U76**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -47,7 +47,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   2. Frontend writes a content spec for the prizes drawer, and I check it against the model;
   3. Frontend draws boards from the real 2025 hampers (real names only on boards, never in the repo);
   4. the user picks (U30).
-- **The edition's JSON (D116, 26 Nov).** I had misread the user, so D111 and D112 dropped a git file the user wants. Now there's one JSON per edition in git with everything (plan, prizes, businesses' names, songs, cards). Local seeding uses it, the user or an agent uploads it by hand to configure or reset the cloud, and an upload always saves the old settings first. Git isn't read at runtime, and logos stay in the bucket. Backend and Sound engine are asked for a joint proposal (shape, path, upload and backup, seeding). Bring every open point to the user as a question, not a default. U63 (the agent credential) applies to the upload.
+- **The edition's JSON (D116, 26 Nov).** I had misread the user, so D111 and D112 dropped a git file the user wants. Now there's one JSON per edition in git with everything (plan, prizes, businesses' names, songs, cards). Local seeding uses it, the user or an agent uploads it by hand to configure or reset the cloud, and an upload always saves the old settings first. Git isn't read at runtime, and logos stay in the bucket. Their joint proposal arrived on 26 Nov: U68–U75 (plus U54); nothing is built until the user answers. Bring every open point to the user as a question, not a default. U63 (the agent credential) applies to the upload.
 - **The pool size is 70 (D100, answering U34).** Told on 25 Nov: Sound engine (its expected-end proposal, seconds per song per round from the seeded Queue) and Frontend (Admin's default `roundMinutes`, 25 → about 15, when the code unfreezes).
 - **The listening pass (U13):** the user is listening. Transitions stay frozen until then.
 

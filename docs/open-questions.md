@@ -8,6 +8,19 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
+The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json` (the plan with rounds, prizes, sponsors' names, schedule and cheat sheet; the songs per Part; card types and cards; the pool it came from), checking that it all fits. It never holds audio, covers, hooks, Games, winners' names, resume codes, seeds or money. `npm run edition -- upload <file> [--reset]` validates, saves the cloud's current state, then replaces it. Local seeding is the same upload against the local Worker, plus the plan for the relay. Facts: logos and prize pictures are in the cloud's own database today, not in the bucket; cards and card types are static files deployed with the Worker.
+- **U68 · Cards:** (a) uploaded data, so one upload configures everything; (b) static files deployed with the Worker, as today. Proposed: (a).
+- **U69 · Where the old settings are saved:** (a) the cloud keeps every replaced version, restorable by number; (b) a timestamped local backup, gitignored since Games hold winners' names; (c) both. Proposed: (c).
+- **U70 · What a rehearsal reset clears:** (a) the plan and settings, plus a fresh Game, with old Games kept; (b) also deletes the rehearsal Games, after backing them up. Phones keep their saved cards either way. Proposed: (a).
+- **U71 · Logos:** (a) move to the R2 bucket; (b) stay in the cloud's database. The file only names them. Proposed: (a).
+- **U72 · The path:** (a) `data/editions/2026.json`, like the pools; (b) `data/editions/26.json`. Proposed: (a).
+- **U73 · Tests and development:** (a) a test edition file built from the default pool replaces the hand-written test plans; (b) keep both. Proposed: (a).
+- **U74 · After an upload, if Admin edits the plan:** (a) `npm run edition -- pull` writes the cloud's plan back into the file before each commit; (b) Admin can't edit what the file holds; (c) the file is only a starting point, and Admin wins afterwards. Proposed: (a).
+- **U75 · One file or split:** (a) one assembled file, as the user said; its cards (about 1 MB two-sided) change with every song swap; (b) the plan by hand in one file, with songs and cards referenced from the pool. Two files can drift. Proposed: (a).
+- Their Q9 (one edition = one night pool with three Parts) is U54.
+**Default:** nothing built until the user answers.
+
 ### U67 · Two status labels despite the UI freeze · blocking
 Sound engine's step 1 for the new Check (unpushed) adds the Claim statuses "stopped" and "dropped". The console doesn't build until `apps/console/strings.ts` has their labels, "Aturat" and "Descartat". Frontend has written them (two lines), but the freeze stops it committing them, so Sound engine is holding its push.
 Options: (a) allow this two-line commit; (b) Sound engine keeps the new statuses out of the shared types until the console is unfrozen, which is more work and a temporary shape.
