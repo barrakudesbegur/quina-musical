@@ -206,6 +206,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - **The last one standing wins.** If the last players standing all sit on the same song, they share the win.
   - There's no Line.
   - Some cards in a sold range may not have been sold, so the presenters call the winner by looking at the room.
+  - **The finale on stage** (**new in 2026**): when about 5–10 are still standing, they come up on stage, and their cards are checked on the way up. The screen shows a figure for each, with its card number, in order, so they can line up. As each one's song lands, their figure is marked out, until one is left: the winner, with no need for a public Check.
   - It's short (2025: 21 songs, about 8 minutes), lively and full of interaction with the crowd.
 - **The Quina Especial,** usually the last round:
   - only special cards play;

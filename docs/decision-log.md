@@ -1116,3 +1116,29 @@ By: the user (the amount by ear); the starting point by the orchestrator, as a t
 ### D159 · One slider for both chaotic moments · 2026-11-26 · Active
 The throws and the corn-seed storm share one volume slider. Answers U135.
 By: the user. Source: open-questions.md › Answered (U135). Lives in: requirements/show-and-music.md › Volumes.
+
+### D161 · The Desgraciat ends on stage · 2026-11-26 · Active; the details Pending (U142–U146)
+The user, on the canvas: "In desgraciat we probably dont need to do the check show because the remaining players go up in stage and their card gets checked before going up." When about 5–10 cards still stand, their players come up on stage, and each card is checked privately on the way. The presenters enter every finalist's number. The projector shows one nino per finalist, with its card number inside or under it, in ascending order so the players can line up. As soon as a landed song is on a finalist's card, that nino is marked out, and it fades when the next Spin starts. When one is left, that's the winner, with no public Check. The tablet shows the ninos too, with a toggle that reverses their order (the tablet faces the audience), at the presenters' choice. This changes "the standing cards never reach the projector" for the finalists on stage, and it lets the system end the round, since the finalists are known.
+By: the user via canvas (26 Nov, "Tell the orchestrator and i solve the unknowns with him"). Source: Frontend's report of 26 Nov. Amends: game-rules › The Quina del Desgraciat (its Check; "the presenters call the winner by looking at the room"). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector, Console.
+
+### D162 · A private song lookup for the presenters · 2026-11-26 · Active; the details Pending (U147, U148)
+Usable at any time in a round, on the tablet only:
+- the round's played songs, newest first;
+- a fuzzy search by title or artist that accepts typos and highlights the matches ("tetadar" finds "Tenia Tanto Que Darte");
+- a button that also shows the future: every upcoming song in order, keeping the scroll, plus a toggle for how many songs ahead each one is and what it would take to win. All hidden until a presenter presses "view future", like Futur;
+- a card preview: type a card number to see which of its songs have played and which haven't, as a private quick check.
+
+Maybe a tab at the bottom left, as a list or a grid; Frontend draws the options.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Console.
+
+### D163 · The Check shows the card's type and side in one label · 2026-11-26 · Active
+The Check's projector screen and the tablet show one label for the card's type and side: "Normal 1-5", "Normal 6-10" or "Especial", not two separate pills. So a player can see that the side checked is the round's side.
+By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Projector, Console.
+
+### D164 · The claim pad's close button is "Torna a la quina" · 2026-11-26 · Active
+"Cancel·la" scared the presenters and sounded like it cancelled something else. The button only closes the number pad and goes back to the round's normal screen, so it's "Torna a la quina", the pad's larger button. Agreed by the orchestrator and Frontend, as the user asked ("Talk to orchestrator to agree on a term").
+By: the orchestrator and Frontend, at the user's request. Source: the canvas thread on `Consola-Comprovacio-Ritme`. Lives in: requirements/screens.md › Console.
+
+### D165 · The user's own canvas edits to the Check · 2026-11-26 · Active
+The user worked with the canvas's own assistant: "Un altre" becomes "+ Candidat", buttons come in three sizes defined in the component, the next song sits inside "Destapa", and there are no "només vosaltres" tags. The canvas has two pages, "Disseny actual" and "Proves i opcions". Answers U140.
+By: the user via canvas (26 Nov). Source: open-questions.md › Answered (U140). Lives in: the "Quina Musical look" canvas.

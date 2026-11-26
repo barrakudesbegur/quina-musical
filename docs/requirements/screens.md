@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
+| Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1-5", "Normal 6-10" or "Especial" (D163), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
@@ -63,6 +63,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **"Següent"** is the next song, private, with a countdown to its landing so the presenters can name it on the hit.
 - **The buttons:** every action in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions). "Enrere" takes a quarter to a third of the bottom row, and "Comprovar cartró" the rest. Each control a Wii button triggers shows a small badge with that button.
 - **Tabs:**
+  - **A song lookup (D162):** the round's played songs, newest first, with a fuzzy search by title or artist; the future in order behind "view future", with how far ahead each song is and what it would take to win; and a card preview (type a number, see its played and unplayed songs). Private, at any time in a round (its relation to Futur pending U147);
   - "Futur": the crystal ball, hidden until someone taps "Mirar el futur". A chart of how many cards have each number of marked songs, the songs left to the first possible Line and Quina, and the possible winners;
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;
@@ -73,7 +74,8 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".
 - **The menu:** start and end the night, the Schedule, Panic, the resume code, and "Comandament", a drawing of the Wii remote's buttons that opens by itself when a remote connects.
 - **On the laptop:** the tech must be able to drive the whole show from the laptop alone: the console on the laptop's own screen, the show page on the projector as a separate display (never mirrored, since the console shows the next song), and a USB presenter clicker (→ or PageDown) running the console's default action. Set up as in the night runbook's "Without the tablet".
-- **It never reaches** the projector or phones: the next song, Futur, the standing cards and the resume code stay on the console.
+- **It never reaches** the projector or phones: the next song, Futur, the song lookup, the standing cards (except the Desgraciat's finalists on stage, D161) and the resume code stay on the console.
+- **The claim pad** closes with "Torna a la quina", its larger button (D164).
 - Both iPad and Android tablets must work (pending U19, the check on real devices).
 
 ## Player app

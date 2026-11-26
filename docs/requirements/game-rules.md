@@ -58,7 +58,7 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
   - auto-advance stops when one card stands;
   - the presenters call the winner by looking at the room.
 - The Shuffle makes sure the last two cards in play can't fall on the same song. A shared win can still happen when the real last players hold cards that fall together.
-- Its Check shows that none of the card's songs has landed. It stops at the first song that has: the card has fallen.
+- **The finale on stage (D161):** when about 5–10 cards stand, their players come up, each card checked privately on the way, and the presenters enter the finalists' numbers. Each finalist falls as a song on their card lands, and the last one left wins, with no public Check (details pending U142–U146). Its old Check showed that none of the card's songs had landed, stopping at the first that had.
 - It plays special cards by default, as in 2025 (D70); Admin picks the type like any round's.
 - It can be moved to any point in the night.
 - It's short, lively and full of interaction with the crowd (2025: 21 songs, about 8 minutes).

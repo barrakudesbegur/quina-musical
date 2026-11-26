@@ -43,10 +43,38 @@ A tap stops the throw song, and the next tap resumes it (D138).
 - (a) While it's stopped, the break music comes back up.
 - (b) It stays down until the throw ends.
 
-### U140 · Edits on the design canvas that weren't Frontend's
-The canvas now has two pages, "Disseny actual" and "Proves i opcions". Three Check boards were edited (Casos, Desgraciada, Revisió): bigger buttons, and the "només vosaltres" tags removed.
-- (a) They're the user's, so Frontend brings its generator in line.
-- (b) They're not, so Frontend restores them.
+### U142 · The Desgraciat's public Check
+- (a) The finale on stage replaces it: no public Check in the Desgraciat.
+- (b) Keep the public Check available too, as a plan B.
+
+### U143 · When the finale on stage starts
+- (a) The presenters start it by hand, from the "Dempeus" tab, when they see about 5–10 standing.
+- (b) The tablet suggests it at a set number of standing cards.
+
+### U144 · A number that has already fallen
+A presenter enters a finalist's card that has already fallen.
+- (a) The tablet refuses it privately ("Aquest cartró ja ha caigut"), like an unknown number (D126).
+- (b) It's added, already marked out.
+
+### U145 · Fixing a mistake on stage
+- (a) The presenters can remove a finalist, or bring one back, by hand.
+- (b) No: the finalists stay as entered.
+
+### U146 · The winner on stage
+When one finalist is left (if the last ones all fall on the same song, they share the win, as today):
+- (a) the fanfare waits for the presenters' cue, as in the Check;
+- (b) it plays at once.
+
+### U147 · The song lookup and Futur
+The tablet already has "Futur", the crystal ball, hidden until "Mirar el futur".
+- (a) One place: the lookup's "view future" joins Futur.
+- (b) Two separate tools.
+
+### U148 · "The songs needed for it to win"
+For each upcoming song, the lookup shows how many songs ahead it is and:
+- (a) which cards it would complete, a Line or a Quina, if it played next;
+- (b) how many more songs until any card can win;
+- (c) something else.
 
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
@@ -218,6 +246,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U140 · The canvas edits** (2026-11-26) → D165: the user's own, with the canvas's assistant.
 - **U127 · The plan-save fix's deploy** (2026-11-26): the user approved it; deployed as 94b395be. Step 1 of the new Check is deployed too (fddfdc1d).
 - **U135 · One slider or two for the chaotic moments** (2026-11-26) → D159: one shared slider.
 - **U134 · The loudness details** (2026-11-26) → D158: noticeably louder, set by ear; the starting point is +6 dB with a −6 dB trim, both tunable.
