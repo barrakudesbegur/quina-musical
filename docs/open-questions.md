@@ -169,12 +169,6 @@ The model now calls each set a "pool" (D101). Every tool, though, prepares and d
 The presenters explain the sides in rounds 1 and 5 (D102, D171).
 **Default:** the phone shows the side of the current or coming round by itself; the console reminds the presenters at the intros of rounds 1 and 5; the projector shows the side's mark at each regular round's intro and Interval, matching the printed one. Designs only, with Frontend.
 
-### U51 · The pace of Part 2's first round
-Songs come slower in the night's first round, when every song is new (about 22 s, then about 14 s). With D171, round 5 starts Part 2, so its songs are all new too. The special rounds replay Part 1, so they're not new.
-- (a) Round 5 plays at round 1's slower pace; every other round at about 14 s.
-- (b) Only round 1 plays slower.
-In 2025 the night sped up (about 18 s a song early, 11 s late); the expected end follows each round's own Pace.
-
 ### U36–U39 · How prizes really work
 Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper sheet and the 2026 sponsors sheet:
 - U36: the Line's prize in 2025 and 2026;
@@ -223,6 +217,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U51 · The slower pace** (2026-11-26) → D174: not the first round but a song's first play of the night, longer and from its main hook.
 - **U151 · The finale decided by the song** (2026-11-26) → D172: yes, with the group ninos.
 - **U152 · The game's-state tab** (2026-11-26) → D173: "Estat".
 - **U142–U149** (2026-11-26) → D166–D170: the finale replaces the Desgraciat's Check; it starts from the claim button's slot, which grows; a finalist's card shows privately and a fallen one isn't added; finalists can be removed or brought back; the song decides (U151 to confirm); the lookup is its own tab, today's Futur becomes the game's state with the song history, and a new Futur holds the possible winners and the upcoming songs.

@@ -162,7 +162,7 @@ This page explains the event: what happens on the night, who does what, and how 
    - **The drum:** a reel of album covers spins on the screen and stops on the next song exactly as its hook hits. That moment is the **landing**, and from then the song counts.
    - **The music:** it's mixed like a real DJ set. Transitions are quick and light early in a round, and grow bigger and more suspenseful as a win gets closer.
    - **The pace:**
-     - songs come slower in the first round of the night, when every song is new (about 22 s each), and faster afterwards (about 14 s);
+     - a song plays longer the first time it's heard in the night (about 22 s), from its main hook, whatever the round, and shorter after that (about 14 s);
      - by default the songs advance by themselves, and the presenters can take over at any time;
      - near the end of a round the presenters advance by hand.
 4. **The Line:** the first card with a complete line of 4 wins the Line prize. There's only one Line per round. The round goes on.

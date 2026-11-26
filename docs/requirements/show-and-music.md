@@ -109,8 +109,8 @@ The presenters can do any of these at any time, from the console or the Wii remo
 _From event.md › One round, Timing; the mixer decisions › Pace, auto-advance and schedule._
 
 - **By default the songs advance by themselves** at a **Pace**, the target time from one landing to the next:
-  - about 22 s in the first round of the night, when every song is new;
-  - about 14 s after that.
+  - about 22 s for a song's first play of the night, whatever the round, always from its main hook (D174);
+  - about 14 s for every later play of it.
 - Each gap snaps to the playing song's phrases, so the Pace holds on average, not for every song.
 - The presenters can take over at any time: change the Pace, lock it, or switch auto-advance off.
 - **Drift:** the console shows when the round and the Game should end, and how far ahead or behind they are. To recover Drift, the system nudges the Pace by up to ±20%, only in the early and mid Phases. The lock stops it. It never catches up during a round's tense final moments.

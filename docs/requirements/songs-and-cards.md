@@ -51,7 +51,7 @@ The storage limit also caps the size: about 100 songs fit in today's format ([op
 
 _From event.md › The songs; the decisions doc › Changes; the mixer decisions › Transitions._
 
-- **Every song lands on a Hook:** a moment where its most recognizable part starts on a downbeat, usually a chorus. A song can have more than one.
+- **Every song lands on a Hook:** a moment where its most recognizable part starts on a downbeat, usually a chorus. A song can have more than one. Its first play of the night always starts at its main hook (D174).
 - This year's hooks are detected automatically: the chorus start, an energy jump and the vocals coming in, snapped to phrases.
 - **They're proposals.** On last year's songs, the top automatic candidate was within a bar of the real hook in only 26 of 77 songs.
 - **The user approves, rejects or nudges each hook** on the audition page, about 2 minutes a song (pending U14, before the first rehearsal). A song can't play until its hook is approved.
