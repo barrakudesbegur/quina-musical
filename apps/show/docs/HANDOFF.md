@@ -13,11 +13,12 @@ The single place to resume the sound engine's work from. It was first written wh
 
 - **In progress (26 Nov):**
   - **The Desgraciat finale (D161, D166–D172) is PUSHED (7742acb, deployed d963856b).** Frontend's finale screens come later. Backend's e2e runs on it.
-  - **D174, a song's first play slower, is DESIGNED and sent to the Orchestrator, NOT BUILT.**
-    - The Pace is the repeat slot (14 s); a first play gets ×22/14 and lands on the best hook.
-    - `playedBefore` folds into GameRecord at round.started; the current round's target end counts its exact first plays from its Queue; later rounds use the expected first plays per Part (needs step A).
-    - The night gets about 12 min longer (~140 first plays). Open: whether the user accepts that, and whether "main hook" = the best hook.
-    - Approved; the first play is 22 s (D175, U154 (a)). BUILD IT NEXT.
+  - **D174 + D175, a song's first play slower, are BUILT, on the shared main (protocol 4f0958a, engine c76a546), NOT PUSHED.** Waiting on Frontend's fixtures on top (sent the list of type errors), then test the range, Backend deploys (the reducer's `playedBefore`), push.
+    - The Pace is a repeat's slot (14 s default, every round); a first play gets the Pace × 22/14 (`firstPlaySec`, PACE_DEFAULT_SEC `{ firstPlay, repeat }`) and lands on its best hook (`hookPhase`); `songPace()` drives the song playing's slot, Spin and auto-advance.
+    - `playedBefore` (GameRecord, `foldPlayed` shared with the reducer) folds the round in progress at round.started / round.resumed of another number.
+    - The target counts exact first plays (`firstPlaysIn(0, songs − 1)`); the Drift, nudge and moved target weigh them; later rounds expect songs × unplayed / pool (`poolLeft`, one pool until step A), at the locked Pace else 14.
+    - Same commit: Frontend's asks: ThrowInfo `startSec/dropSec/durationSec/posSec`, `state.throwSongs`, `setGame { remoteShake }` (D148).
+    - Limit: a plan-B `resumeAt` with no journal counts earlier rounds' songs as first plays. `docs/mixer-design-decisions.md:49` (Orchestrator's) still says 22 s in round 1.
   - **Step A (side/Part, D163 and D171)** starts when the Orchestrator relays U54.
 - **Done (26 Nov): step 2 (D127–D170) is pushed:** 2d86b7a (deployed as ec6983b0) and the follow-ups b686073 (Parlem in a review, the lone fail ✗'s 3 s, getUpcoming). The media moved to the new layout and the browser smoke run passes with the real sets. Next: the finale (D166–D169) after U151; the side/Part protocol (step A, D163's side) after U54.
   - **Part 1's ids are alphabetical (D103, 26 Nov):** ids 1–70 are the user's title-sorted playlist positions.
