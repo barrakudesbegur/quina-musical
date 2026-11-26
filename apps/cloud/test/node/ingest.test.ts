@@ -145,10 +145,10 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.equal(checkJournalEntry({ ...decided, manual: false }).ok, false, '`manual` is true or absent');
   // The volume sliders (D139): percents, absent until set; a slider this cloud doesn't know yet never stalls uploads.
   const changed = entries.find((e) => e.kind === 'settings.changed') as JournalEntry & { settings: object };
-  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 80, songsParlem: 45, end: 0 } } }).ok, 'the volumes');
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 80, songsParlem: 45, end: 0, throws: 150 } } }).ok, 'the volumes, up to 150% (D157)');
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 100, laterSlider: 300 } } }).ok, 'a slider added later');
   const bad: [string, unknown][] = [
-    ['a volume above 100', { ...changed, settings: { ...changed.settings, volumes: { master: 120 } } }],
+    ['a volume above its most (150%)', { ...changed, settings: { ...changed.settings, volumes: { master: 151 } } }],
     ['a volume as text', { ...started, settings: { ...changed.settings, volumes: { songs: '80' } } }],
     ['volumes as a list', { ...changed, settings: { ...changed.settings, volumes: [80] } }],
     ['win kind', { ...opened, winKind: 'quina' }],

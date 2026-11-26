@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, isVolumeKey, ROUND_KINDS, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, isVolumeKey, ROUND_KINDS, VOLUME_MAX, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -31,14 +31,15 @@ const phase: FieldCheck = (value) => (isPhaseName(value) ? null : 'a phase name'
 const scene: FieldCheck = (value) => (isShowScene(value) ? null : 'a scene name');
 
 /**
- * The volume sliders (D139), percent 0–100. Absent until a slider or the plan first sets them. A key this cloud doesn't
+ * The volume sliders (D139), percent from 0 to each one's VOLUME_MAX (150, D157). Absent until a slider or the plan
+ * first sets them. A key this cloud doesn't
  * know is let through, like any extra field, so a new slider doesn't stall uploads; it's only never folded into the
  * plan (domain/volumes.ts).
  */
 const volumes: FieldCheck = (value) => {
   if (!isRecord(value)) return 'an object of percents';
   for (const [key, percent] of Object.entries(value)) {
-    if (isVolumeKey(key) && !(typeof percent === 'number' && Number.isFinite(percent) && percent >= 0 && percent <= 100)) return `a percent from 0 to 100 for ${key}`;
+    if (isVolumeKey(key) && !(typeof percent === 'number' && Number.isFinite(percent) && percent >= 0 && percent <= VOLUME_MAX[key])) return `a percent from 0 to ${VOLUME_MAX[key]} for ${key}`;
   }
   return null;
 };
