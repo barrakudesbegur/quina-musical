@@ -38,6 +38,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - round names: "Quina N" for normal rounds only;
 - slow confetti;
 - the finale screens, the new tabs (Estat, Cerca, Futur), D121's resumed Check, D193's 1–5 / 6–10, D194, D197 (c612e95, deployed 0948f16b).
+- the console layout (D195, D196, D199; deployed e86ecb72); D188, D201 and the projector's slow confetti; the labels with no «Cancel·la»; the clock check (1dfc1ea, deployed e1fb7821);
+- the voice cues' and drum roll's engine side, with placeholder voices, and the «Veus» slider (92f531e, deployed d2155f8a). The voice sync root in R2 isn't started (Backend, paused).
 
 **Being built:**
 - **Frontend:** D195, D196, D199 (the console layout), D188 (the phone's add pad), D189 (the round-buttons pass), the D200 banner on the canvas first; U169 and U170 on the canvas; the design-system spec (U175+).
