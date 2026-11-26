@@ -20,14 +20,25 @@ The single place to resume the sound engine's work from. It was first written wh
     - 37 of its 39 tracks are prepared: `data/out/interval/index.json`, 121–175 kbps, no quality flag. The old set is kept in `data/media/interval-old-0SsuXelEzN8gsS7WufySOg/`.
     - #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters) aren't on YouTube. The user said on 26 Nov that it's fine if some can't be downloaded, so the Interval plays without them.
   - **Part 3** (Especial and Desgraciat, `79G8VcNrkih9GGjIzb47Gt`, D105) is empty. The especial card's side plays Part 1 until it's final; then it gets ids 141–210 (U57), alphabetical (D103). Don't fetch it before then.
-  - **The presenter-paced Check (D107–D110), agreed on 26 Nov with Frontend and Backend; waits for the orchestrator's go:**
-    - commands: `claim { cardIds[] }`, `checkNext { claimId, step }` (idempotent; the press after the reveals stop is the cue), `checkAuto { on }` (never past the cue), `checkStop`, `checkStart`, `claimDrop`; `decide` goes away;
-    - private ClaimInfo `markedCard`, `cueNext`, `revealUntil`; public CheckInfo only revealed steps plus `cue`;
-    - journal `claim.stopped` and `claim.dropped`;
-    - a passing card that isn't last gets its plaque without a fanfare; the shared Celebration comes after the last cue;
-    - Parlem in the Celebration ducks the victory music;
-    - order: my additive protocol, then Backend's cloud and Frontend's console, then my engine switch (removing decide, `checked` and the timed steps);
-    - U62 open: is Següent refused while a claim is stopped; does the next card's Check enter by itself after a fail cue?
+  - **The presenter-paced Check (D107–D125): step 1, the additive protocol, is built, COMMITTED LOCALLY, NOT PUSHED.**
+    - **The range on the shared main:** 1f51e38, d52246a (Backend), f42e0d8, d12d3d4 and e2bf6e9 (Frontend's handoffs), 1a82804, b80e299, 0003150 (Backend), aa96ad6, 0c33a9c (Backend), f73b339, plus this handoff.
+    - **Blocked on:** Frontend's two console labels in apps/console/strings.ts (`reviewing` «En revisió», `discarded` «Descartat», plus the HoldReason `discarded` «Cartró descartat»). They're written but uncommitted, because the UI freeze needs the user's OK in Frontend's session. Without them the console doesn't compile.
+    - **Once they're on top:** test the whole range in a clean worktree (`npm test`), push its top sha, and tell Backend to deploy the cloud.
+    - **Do not** commit Frontend's file yourself, and never amend: peers commit on top.
+    - **The protocol now has:**
+      - `claim { cardId | cardIds[] }`;
+      - `checkNext { claimId, step }` (idempotent; after the reveals stop, the press is the cue);
+      - `checkAuto { on }` (through the cue, D117);
+      - `checkReview { claimId }` ("Revisió manual", status `reviewing`, D119/D120; whatever was playing goes on, no automatic Pausa, D118);
+      - `reviewEnd { claimId, outcome: continue|win|lose|discard }` (D121): continue writes `claim.continued`; win and lose write claim.decided `manual`, with the PRIVATE warning notPassing or wouldPass; discard writes `claim.discarded` (D124) and Parlem over the pre-Check music, HoldReason `discarded` (D122/D125: the Hold suspends auto-advance, Next ends it, the setting is untouched);
+      - ClaimInfo PRIVATE `markedCard`, `revealUntil`, `cueNext`;
+      - CheckInfo `total`, `revealed`, `auto`, `cue`, and the public `reviewing` (the projector, D123);
+      - `celebrationNext`;
+      - events check.started, check.revealed, check.cue (`manual?`), check.reviewing;
+      - RejectReason `claimOpen`.
+    - **The engine** opens one Claim per card already, and refuses checkNext, checkAuto, checkReview and reviewEnd as unknownCommand until step 3.
+    - **Step 3 (engine), after the user lifts the UI freeze:** reveals by press, auto, the Review and its outcomes, the multi-card cue order (a passing card that isn't last gets the plaque without a fanfare; the shared Celebration after the last cue; after a fail the next card enters by itself, its first reveal waiting for a press), Next refused (`claimOpen`) while a Claim is under review, and Parlem in the Celebration ducking the victory music. It also removes `decide`, `checked` and the timed steps, and widens checkStart's and hold's scene rules. Tests: flow, desgraciat, fuzz, nights, listen demo. It goes the same day as Backend's e2e.
+    - **Open for the user:** U78 (the music's level during a Review) and U79 (whether phones show a Review).
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
