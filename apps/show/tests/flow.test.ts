@@ -709,6 +709,14 @@ test('the throw song (D138): a tap starts it from its hook, stops it, resumes it
   assert.equal(stop?.action, 'stop');
   assert.ok(Math.abs((stop?.offsetSec ?? 0) - (THROW.songs.throw.hookSec + 5 - THROW.leadSec)) < 0.05, 'it knows where it stopped');
   assert.equal(h.show.snapshot().throwSong?.playing, false);
+  // The buttons' time bar: where it stopped and since when, its drop and its length; each song's track while idle too.
+  const shown = h.show.snapshot().throwSong;
+  assert.deepEqual(shown && [shown.posSec, shown.sinceMs, shown.startSec, shown.dropSec, shown.durationSec], [
+    Math.round((stop?.offsetSec ?? 0) * 100) / 100, h.env.toEpochMs(h.clock.t), THROW.songs.throw.hookSec, THROW.songs.throw.dropSec, THROW.songs.throw.durationSec,
+  ]);
+  assert.deepEqual(h.show.snapshot().throwSongs.storm, {
+    title: THROW.songs.storm.title, artist: THROW.songs.storm.artist, startSec: THROW.songs.storm.hookSec, dropSec: THROW.songs.storm.dropSec, durationSec: THROW.songs.storm.durationSec,
+  });
   h.advance(10);
   const resume = find(h.send('throw'), 'throwSong');
   assert.deepEqual([resume?.action, resume?.offsetSec], ['play', stop?.offsetSec], 'it resumes where it stopped');

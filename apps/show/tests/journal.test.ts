@@ -149,7 +149,7 @@ test('a journal without its round, or out of order, or for another Game is refus
   assert.deepEqual(replayJournal([]), emptyRecord(''));
   assert.deepEqual(emptyRecord('g'), {
     gameId: 'g', seq: 0, cardsInPlay: '', settings: null, round: null,
-    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [],
+    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [], playedBefore: [],
   });
 });
 
@@ -358,4 +358,17 @@ test('the relay\'s own messages are events a remote accepts: the client list and
   assert.ok(isEvent({ v: 1, type: 'relay.plan', plan: null, savedAtMs: null }));
   assert.equal(isEvent({ v: 2, type: 'relay.plan', plan: null, savedAtMs: null }), false, 'another protocol version');
   assert.equal(isEvent({ v: 1, type: 'relay.secrets' }), false);
+});
+
+test("the remote's shake switch (D148) is a Game setting: true by default, journaled, the same after a replay", () => {
+  const h = setup({ seed: 2 });
+  h.send('unlock');
+  assert.equal(h.show.snapshot().game.remoteShake, true);
+  h.send('setGame', { remoteShake: false });
+  assert.equal(h.show.snapshot().game.remoteShake, false);
+  const entries = h.log.flatMap((e) => (e.type === 'journal' ? [e.entry as JournalEntry] : []));
+  const last = entries.at(-1);
+  assert.ok(last?.kind === 'settings.changed');
+  assert.equal(last.settings.remoteShake, false);
+  assert.deepEqual(replayJournal(entries), h.show.record());
 });

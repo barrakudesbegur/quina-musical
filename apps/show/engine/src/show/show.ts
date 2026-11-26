@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, formatResumeToken, isPassingOutcome, volumeDb, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, COMMANDS, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
@@ -59,6 +59,8 @@ import type {
   StandingInfo,
   MusicSet,
   ThrowSong,
+  ThrowInfo,
+  ThrowTrackInfo,
   VolumeKey,
   Volumes,
 } from '@quina/protocol';
@@ -73,7 +75,7 @@ import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
 import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
 import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
-import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, defaultPace, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, PACE_LIMITS } from '../plan/pace.ts';
+import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
 import { firstRepeatAt, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
 import { mixSeed, seededRandom } from '../rng.ts';
@@ -557,6 +559,11 @@ type SetGameField = keyof CommandFields['setGame'];
 const SET_GAME_FIELDS = Object.keys(COMMANDS.setGame) as SetGameField[]; // Object.keys only knows string[]
 
 const round2 = (x: number) => Math.round(x * 100) / 100;
+/** A throw song's track, as its buttons show it (ThrowTrackInfo). */
+const throwTrackInfo = (song: ThrowSong): ThrowTrackInfo => {
+  const t = THROW.songs[song];
+  return { title: t.title, artist: t.artist, startSec: t.hookSec, dropSec: t.dropSec, durationSec: t.durationSec };
+};
 /** The Celebration a set of valid Claims makes: the round's end (a Bingo, the last card standing) over a Line. */
 const roundWin = (kinds: readonly WinKind[]): WinKind => (kinds.includes('standing') ? 'standing' : kinds.includes('bingo') ? 'bingo' : 'line');
 /** The Shuffle's Tie rule for a round: one last card standing in the Desgraciat round, else no shared first win. */
@@ -628,6 +635,9 @@ export class Show {
   suspense: SuspenseState | null = null;
   /** The next song's hook, chosen early so its Blend render can be prepared. */
   nextHook: { songId: number; hook: Hook } | null = null;
+  /** The songs counted in this Game's earlier rounds (GameRecord.playedBefore, D174); `played` looks them up. */
+  playedBefore: number[] = [];
+  played = new Set<number>();
   blendRequested = '';
   /** The Game this show belongs to, and the last journal entry's number. */
   gameId: string;
@@ -697,10 +707,11 @@ export class Show {
     this.catalog = new Map(songs.map((s) => [s.id, s]));
     this.fixedQueue = fixedQueue;
     this.game = {
-      pace: defaultPace(1),
+      pace: PACE.defaultSec,
       paceLocked: false,
       autoAdvance: true,
       autoAdvanceFinal: false,
+      remoteShake: true,
       songsUntilWinner: 20,
       phaseOverride: null,
       roundsTotal: 5,
@@ -716,7 +727,10 @@ export class Show {
       this.restore(restore, restore.round);
       return;
     }
-    if (restore) this.journalSeq = restore.seq; // a journal without a round yet: keep numbering it
+    if (restore) {
+      this.journalSeq = restore.seq; // a journal without a round yet: keep numbering it
+      this.setPlayed(restore.playedBefore ?? []);
+    }
     if (restore?.settings) {
       this.game = { ...this.game, ...restore.settings };
       this.takeVolumes(this.game);
@@ -1031,6 +1045,7 @@ export class Show {
    */
   startRound(number: number, kind: RoundKind, cardType: string, { stop = false, keepPace = false, shuffle = false, keepMusic = false } = {}) {
     if (stop) this.out.push({ type: 'stopAll', fadeSec: 0.3 });
+    this.foldPlayed(number);
     const drawn = this.drawQueue(cardType, kind);
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
@@ -1053,10 +1068,10 @@ export class Show {
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
-    if (!this.game.paceLocked && !keepPace) this.game.pace = defaultPace(number);
+    if (!this.game.paceLocked && !keepPace) this.game.pace = PACE.defaultSec;
     const nowMs = this.env.nowMs();
-    // The round's target end comes from the Pace it starts with; Drift is measured against it.
-    this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind }), lineConfirmed: false };
+    // The round's target end comes from the Pace it starts with and its first plays; Drift is measured against it.
+    this.round = { number, kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(kind), lineConfirmed: false };
     // A secret seed drawn at the Shuffle blurs this round's Phase; it stays with the Queue.
     this.phaseModel = { kind: firstClimb(kind), start: 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.expectedSongs = null;
@@ -1108,6 +1123,7 @@ export class Show {
     }
     if (lineFrom != null && lineFrom > c.position + 1) return refuse(`the Line cannot be confirmed from position ${lineFrom}, after the last counted song`);
     this.resetLive();
+    this.foldPlayed(c.round);
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
@@ -1127,7 +1143,7 @@ export class Show {
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
-    this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * roundLengthSec({ pace: this.game.pace, kind: c.kind }), lineConfirmed: lineFrom != null };
+    this.round = { number: c.round, kind: c.kind, cardType, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(c.kind), lineConfirmed: lineFrom != null };
     this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.expectedSongs = null;
     this.targetShiftSec = 0;
@@ -1223,6 +1239,7 @@ export class Show {
     } catch {} // ranges were checked when they were entered
     this.queue = [...round.queue];
     this.position = Math.min(round.position, this.queue.length - 1);
+    this.setPlayed(record.playedBefore ?? []);
     this.resetLive();
     const now = this.env.now();
     const nowMs = this.env.nowMs();
@@ -1296,6 +1313,7 @@ export class Show {
       claimCount: this.claimCount,
       winners: this.winners.map((w) => ({ ...w })),
       prizesRevealed: this.prizesRevealed.map((r) => ({ ...r })),
+      playedBefore: [...this.playedBefore],
       round: {
         number: this.round.number,
         kind: this.round.kind,
@@ -1412,7 +1430,7 @@ export class Show {
       A,
       B: { songId, analysis, stems: this.env.stems?.(songId) ?? null, blend, signatures: this.env.signatures?.(songId) ?? null },
       hookOverride: chosen,
-      phase,
+      phase: this.hookPhase(phase, songId),
       spin,
       history: this.history,
       rng: seededRandom(seed),
@@ -1502,7 +1520,7 @@ export class Show {
     const chosen = this.nextHook?.songId === songId ? this.nextHook.hook : null;
     this.nextHook = null;
     this.blendRequested = '';
-    const open = openSuspense({ now, A, B: { songId, analysis }, phase, rng: seededRandom(seed), history: this.history, hookOverride: chosen });
+    const open = openSuspense({ now, A, B: { songId, analysis }, phase: this.hookPhase(phase, songId), rng: seededRandom(seed), history: this.history, hookOverride: chosen });
     if ('error' in open) return this.reject(reqId, 'suspense', 'planFailed', open.error);
     this.startPlaying();
     const id = `tr-${++this.transitionCount}`;
@@ -1715,7 +1733,7 @@ export class Show {
    * boundary nearest the slot (pace.ts alignedPress), else one slot after the landing. Never before `earliest`.
    */
   autoPressAfter(landedAt: number, completes: number, earliest: number): number {
-    const timing = { pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge, minStretch: completes > 0 ? PACE.completionStretch : 1 };
+    const timing = { pace: this.songPace(), phase: this.phaseName(), nudge: this.nudge, minStretch: completes > 0 ? PACE.completionStretch : 1 };
     const slot = slotSec(timing);
     // A slot stretched for a Claim is a minimum: the landing never comes sooner.
     const aligned = this.phrasePress(landedAt + slot, slot, Math.max(earliest, landedAt + PACE.minSoloSec), completes > 0 ? 1 : undefined);
@@ -1790,7 +1808,7 @@ export class Show {
 
   /** After a Hold is released with the song still playing: let it breathe, then land on one of its phrases. */
   pressAfterRelease(now: number): number {
-    const timing = { pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge };
+    const timing = { pace: this.songPace(), phase: this.phaseName(), nudge: this.nudge };
     const press = pressAfterHold({ now, ...timing });
     const { slot, dTarget } = spinWindow(timing);
     return this.phrasePress(press + LOOKAHEAD_SEC + dTarget, slot, now + PACE.minAfterHoldSec) ?? press;
@@ -2032,7 +2050,7 @@ export class Show {
     if (this.nextHook?.songId !== nextId) {
       const spin = this.spin();
       const rng = seededRandom(Math.floor(this.env.random() * 2 ** 32) >>> 0);
-      const hook = pickHook(analysis, PHASES[this.phaseName()], this.history, rng, { minTailSec: Math.min(12, spin.slot + 2) });
+      const hook = pickHook(analysis, this.hookPhase(PHASES[this.phaseName()], nextId), this.history, rng, { minTailSec: Math.min(12, spin.slot + 2) });
       this.nextHook = hook ? { songId: nextId, hook } : null;
       this.blendRequested = '';
     }
@@ -2064,12 +2082,12 @@ export class Show {
     if (!m.valid.length) m.plan = null;
     else if (m.kind === 'standing') m.plan = standingPlan({ cards: m.valid, queue: this.queue, startPosition: m.start, seed: m.seed });
     else m.plan = phasePlan({ cards: m.valid, queue: this.queue, kind: m.kind, startPosition: m.start, seed: m.seed, cardsInPlayCount: m.valid.length });
-    const before = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
+    const before = this.roundSlots();
     const end = !m.valid.length || !this.queue.length ? null
       : this.round.kind === 'desgraciat' ? standingCourse(m.valid, this.queue).lastStandingAt
       : firstWinAt(m.valid, this.queue, 'bingo')?.index ?? null;
     this.expectedSongs = end == null ? null : end + 1;
-    const moveSec = (roundSongs(this.round.kind, SCHEDULE, this.expectedSongs) - before) * this.game.pace;
+    const moveSec = (this.roundSlots() - before) * this.game.pace;
     if (songsMove === 'target' && this.round.targetEndMs) this.round.targetEndMs += 1000 * moveSec;
     else if (songsMove === 'shift') this.targetShiftSec += moveSec;
   }
@@ -2906,6 +2924,7 @@ export class Show {
     if (t.playing) {
       t.offsetSec += Math.max(0, now - t.startedAt);
       t.playing = false;
+      t.sinceMs = this.env.toEpochMs(now);
       this.out.push({ type: 'throwSong', action: 'stop', at: now, offsetSec: t.offsetSec });
       return;
     }
@@ -2917,6 +2936,12 @@ export class Show {
     this.throwSong = { song, playing: true, offsetSec, startedAt: at, sinceMs: this.env.toEpochMs(at) };
     const { name, trimDb } = THROW.songs[song];
     this.out.push({ type: 'throwSong', action: 'play', at, offsetSec, track: { name, trimDb } });
+  }
+
+  /** The throw song on, as the buttons show it: where it is at `sinceMs`. */
+  throwInfo(): ThrowInfo | null {
+    const t = this.throwSong;
+    return t ? { ...throwTrackInfo(t.song), song: t.song, playing: t.playing, sinceMs: t.sinceMs, posSec: round2(t.offsetSec) } : null;
   }
 
   /** The runtime: the throw song played to its end (the break music is back). */
@@ -2963,7 +2988,10 @@ export class Show {
       this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
     }
     const t = this.throwSong;
-    if (t?.playing) t.offsetSec += Math.max(0, now - t.startedAt);
+    if (t?.playing) {
+      t.offsetSec += Math.max(0, now - t.startedAt);
+      t.sinceMs = this.env.nowMs();
+    }
     this.pause = { sinceMs: this.env.nowMs(), since: now };
     this.pausaNow = null;
     this.out.push({ type: 'pausePlayback', at: now, fadeSec: PAUSA.fadeOutSec });
@@ -3012,7 +3040,10 @@ export class Show {
     this.out.push({ type: 'pausaMusic', on: false, at, fadeSec: PAUSA.musicFadeOutSec, levelDb: INTERVAL.volumeDb });
     this.out.push({ type: 'resumePlayback', at, fadeSec: PAUSA.fadeInSec, song: cur ? { songId: cur.songId, offset: cur.offset, rate: cur.rate } : null, discard: false });
     const t = this.throwSong;
-    if (t?.playing) t.startedAt = at;
+    if (t?.playing) {
+      t.startedAt = at;
+      t.sinceMs = this.env.toEpochMs(at);
+    }
     // In a round, Parlem comes back on over what resumes (D128).
     if (this.scene === 'play' || this.scene === 'before') {
       if (this.status === 'playing' && cur) this.enterHold('pause', { music: false });
@@ -3179,8 +3210,71 @@ export class Show {
     return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids, fellLast: fell.length > STANDING_LIST_MAX ? null : fell };
   }
 
+  /** The Spin out of the song playing, from its own slot (a first play's is longer). */
   spin() {
-    return spinWindow({ pace: this.game.pace, phase: this.phaseName(), nudge: this.nudge });
+    return spinWindow({ pace: this.songPace(), phase: this.phaseName(), nudge: this.nudge });
+  }
+
+  // ------------------------------------------------------------------------------- first plays (D174, D175)
+  /** A song not counted in this Game's earlier rounds: its play gets the longer slot, on its best hook. */
+  isFirstPlay(songId: number): boolean {
+    return !this.played.has(songId);
+  }
+
+  /** The Pace for the song playing's slot: a first play's is the Pace × 22/14 (firstPlaySec). */
+  songPace(): number {
+    const cur = this.current;
+    return cur && this.isFirstPlay(cur.songId) ? firstPlaySec(this.game.pace) : this.game.pace;
+  }
+
+  /** The Phase as the hook choice sees it: a first play always lands on its best hook (D174). */
+  hookPhase<T extends { readonly hookTags?: readonly string[] }>(phase: T, songId: number): T {
+    return this.isFirstPlay(songId) ? { ...phase, hookTags: ['best'] } : phase;
+  }
+
+  setPlayed(list: readonly number[]) {
+    this.playedBefore = [...list];
+    this.played = new Set(list);
+  }
+
+  /** Round `next` starts or is resumed: the round in progress's counted songs join `playedBefore` (as the journal's replay). */
+  foldPlayed(next: number) {
+    this.setPlayed(foldPlayed(this.playedBefore, { number: this.round.number, queue: this.queue, position: this.position }, next));
+  }
+
+  /** First plays among the Queue's indexes from `from` to before `to`. */
+  firstPlaysIn(from: number, to: number): number {
+    let n = 0;
+    for (let i = Math.max(0, from); i < Math.min(to, this.queue.length); i++) if (this.isFirstPlay(this.queue[i])) n++;
+    return n;
+  }
+
+  /**
+   * The round's songs in slots (pace.ts slotSongs): its expected songs, with the first plays among those whose slots
+   * count towards its end (all but the last, whose landing ends it).
+   */
+  roundSlots(): number {
+    const songs = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
+    return slotSongs(songs, this.firstPlaysIn(0, songs - 1));
+  }
+
+  /** A round's length from its start, as its target: the Queue just drawn and the songs played before it. */
+  roundTargetSec(kind: RoundKind): number {
+    return roundLengthSec({ pace: this.game.pace, kind, firstPlays: this.firstPlaysIn(0, roundSongs(kind, SCHEDULE) - 1) });
+  }
+
+  /** First plays among the songs whose slots are still to come: the one playing to the second-to-last expected. */
+  firstPlaysLeft(): number {
+    return this.firstPlaysIn(this.position, roundSongs(this.round.kind, SCHEDULE, this.expectedSongs) - 1);
+  }
+
+  /** The pool's songs no round will have played by this round's expected end, for later rounds' first plays. */
+  poolLeft(): { songs: number; unplayed: number } {
+    const songs = this.queue.length || this.catalog.size;
+    const end = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
+    const thisRound = new Set(this.queue.slice(0, end));
+    const pool = this.queue.length ? this.queue : [...this.catalog.keys()];
+    return { songs, unplayed: pool.filter((id) => !this.played.has(id) && !thisRound.has(id)).length };
   }
 
   schedule() {
@@ -3188,12 +3282,14 @@ export class Show {
     const after = plan?.rounds.filter((r) => r.number > this.round.number) ?? [];
     return scheduleEstimate({
       nowMs: this.env.nowMs(),
-      round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs },
+      round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft() },
       game: { roundsTotal: this.game.roundsTotal },
       position: this.position,
       pace: this.game.pace,
       phase: this.phaseName(),
       lineConfirmed: this.round.lineConfirmed,
+      locked: this.game.paceLocked,
+      pool: this.poolLeft(),
       later: plan
         ? {
             kinds: after.map((r) => r.kind),
@@ -3206,7 +3302,7 @@ export class Show {
 
   updateNudge() {
     const { roundDriftSec } = this.schedule();
-    this.nudge = driftNudge({ driftSec: roundDriftSec, position: this.position, pace: this.game.pace, phase: this.phaseName(), locked: this.game.paceLocked, kind: this.round.kind, songs: this.expectedSongs });
+    this.nudge = driftNudge({ driftSec: roundDriftSec, position: this.position, pace: this.game.pace, phase: this.phaseName(), locked: this.game.paceLocked, kind: this.round.kind, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft() });
   }
 
   prefetch() {
@@ -3241,7 +3337,7 @@ export class Show {
       pending: this.pending ? 'next' : null,
       hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, holdMusicAtMs: toMs(this.timers.holdMusicAt), ducked: this.hold.ducked } : null,
       holdMusic: this.holdMusic,
-      current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
+      current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, firstPlay: this.isFirstPlay(cur.songId), posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
       next: this.songInfo(this.queue[this.position + 1]),
       queue: { position: this.position, length: this.queue.length },
       round: { ...this.round },
@@ -3259,7 +3355,7 @@ export class Show {
       future: this.future(),
       standing: this.standing(),
       prizes: { revealed: this.prizesRevealed.map((r) => ({ ...r })) },
-      pace: { sec: this.game.pace, defaultSec: defaultPace(this.round.number), locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
+      pace: { sec: this.game.pace, firstPlaySec: round2(firstPlaySec(this.game.pace)), defaultSec: PACE.defaultSec, locked: this.game.paceLocked, nudge: round2(this.nudge), slotSec: round2(spin.slot), spinSec: round2(spin.dTarget) },
       schedule: { ...schedule, roundDriftSec: Math.round(schedule.roundDriftSec), gameDriftSec: schedule.gameDriftSec == null ? null : Math.round(schedule.gameDriftSec) },
       autoAtMs: toMs(this.timers.autoAt),
       transition: this.transition
@@ -3287,9 +3383,8 @@ export class Show {
       celebrationChoice: this.celebrationChoice,
       lastRound: this.isLastRound(),
       finale: this.finaleInfo(),
-      throwSong: this.throwSong
-        ? { song: this.throwSong.song, title: THROW.songs[this.throwSong.song].title, artist: THROW.songs[this.throwSong.song].artist, playing: this.throwSong.playing, sinceMs: this.throwSong.sinceMs }
-        : null,
+      throwSong: this.throwInfo(),
+      throwSongs: { throw: throwTrackInfo('throw'), storm: throwTrackInfo('storm') },
     };
   }
 

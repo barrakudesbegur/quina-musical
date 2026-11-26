@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { Show } from '../engine/src/show/show.ts';
 import { planTransition, type PlanRequest, type SignatureSource } from '../engine/src/plan/planner.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
-import { VOLUME_DEFAULTS, makeCommand, volumeDb } from '@quina/protocol';
+import { VOLUME_DEFAULTS, firstPlaySec, makeCommand, volumeDb } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
 import { HOLD, ENGINE, FLOW, PACE, LOOP } from '../engine/src/config.ts';
 import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
@@ -112,28 +112,37 @@ test('a storm of Nexts (double taps, the Wii and the tablet together) lands one 
   }
 });
 
-test('auto-advance lands on the phrases near the Pace (round 1: 22 s; later rounds 14 s)', () => {
-  for (const round of [1, 2]) {
-    const h = setup({ seed: 7 + round });
-    h.send('unlock');
-    if (round === 2) {
-      h.send('newRound', { number: 2 });
-      h.advance(FLOW.shuffleSec + 0.1); // the Shuffle's animation: nothing lands before it ends
-    }
-    assert.equal(h.show.game.pace, round === 1 ? 22 : 14);
-    startAndLand(h);
-    for (let k = 1; k <= 6; k++) h.until(() => h.show.position === k && h.show.status === 'playing', 80);
-    const plans = h.log.flatMap((e) => (e.type === 'landed' ? [e.plan] : []));
-    const Ts = plans.map((p) => p.T);
-    const gaps = Ts.slice(1).map((t, i) => t - Ts[i]);
-    const pace = h.show.game.pace;
-    // Each landing goes on the outgoing song's phrase boundary nearest its slot (×0.75–1.4, a little wider
-    // when a slow song's 4 bars straddle it), so a gap is a whole number of phrases rather than the Pace.
-    for (const g of gaps) assert.ok(g > PACE.phraseSlotRangeWide[0] * pace && g < PACE.phraseSlotRangeWide[1] * pace, `gap ${g.toFixed(2)} vs pace ${pace}`);
+test("auto-advance lands on the phrases near each song's own slot: a first play 22 s, a repeat the Pace, 14 s (D174, D175)", () => {
+  // The same Queue every round: round 2 starts with round 1's seven songs, then new ones.
+  const h = setup({ seed: 8, fixedQueue: songs.map((s) => s.id) });
+  h.send('unlock');
+  assert.equal(h.show.game.pace, PACE.defaultSec);
+  const roundGaps = (from: number, to: number) => {
+    h.send('next');
+    for (let k = 1; k <= to; k++) h.until(() => h.show.position === k && h.show.status === 'playing', 80);
+    const plans = h.log.flatMap((e) => (e.type === 'landed' ? [e.plan] : [])).slice(from);
     for (const p of plans.slice(1)) assert.notEqual(p.phraseClass, 'bar', `${p.id} lands mid-phrase`);
+    return plans.slice(1).map((p, i) => p.T - plans[i].T);
+  };
+  // Each landing goes on the outgoing song's phrase boundary nearest its slot (×0.75–1.4, a little wider when a slow
+  // song's 4 bars straddle it), so a gap is a whole number of phrases rather than the slot itself.
+  const near = (gaps: number[], slot: number, what: string) => {
+    for (const g of gaps) assert.ok(g > PACE.phraseSlotRangeWide[0] * slot && g < PACE.phraseSlotRangeWide[1] * slot, `${what}: gap ${g.toFixed(2)} vs slot ${slot}`);
     const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-    assert.ok(Math.abs(mean - pace) < 0.15 * pace, `mean gap ${mean.toFixed(2)} vs pace ${pace}`);
-  }
+    assert.ok(Math.abs(mean - slot) < 0.15 * slot, `${what}: mean gap ${mean.toFixed(2)} vs slot ${slot}`);
+  };
+  const first = firstPlaySec(PACE.defaultSec);
+  assert.equal(first, 22);
+  near(roundGaps(0, 6), first, 'round 1, every song new');
+  assert.equal(h.show.snapshot().current?.firstPlay, true);
+  assert.deepEqual(h.show.snapshot().pace.firstPlaySec, 22);
+  h.send('newRound', { number: 2 });
+  h.advance(FLOW.shuffleSec + 0.1); // the Shuffle's animation: nothing lands before it ends
+  assert.deepEqual(h.show.playedBefore, h.show.queue.slice(0, 7), "round 1's counted songs");
+  const gaps = roundGaps(7, 10);
+  assert.equal(h.show.snapshot().current?.firstPlay, true, 'song 11 is new');
+  near(gaps.slice(0, 7), PACE.defaultSec, 'round 2, the repeats');
+  near(gaps.slice(7), first, 'round 2, the new songs');
 });
 
 test('Hold ducks the song, a long Hold hands over to Hold music, and releasing moves on', () => {
@@ -264,8 +273,9 @@ test('final phase: auto-advance is off by default; a song running out hands over
   // boundary near it.
   const k = setup({ seed: 5, settings: { songsUntilWinner: 1, autoAdvanceFinal: true, pace: 14 } });
   startAndLand(k);
+  // A first play: 22 s, stretched ×1.25.
   const { offset, phrase } = autoLanding(k.show, lastLandedAt(k.log));
-  assert.ok(offset >= PACE.phraseSlotRange[0] * 17.5 && offset <= PACE.phraseSlotRange[1] * 17.5, `lands ${offset.toFixed(2)} s after`);
+  assert.ok(offset >= PACE.phraseSlotRange[0] * 27.5 && offset <= PACE.phraseSlotRange[1] * 27.5, `lands ${offset.toFixed(2)} s after`);
   assert.notEqual(phrase, 'bar');
 });
 
@@ -287,9 +297,10 @@ test('cards in play drive the Phase; the landing that completes a card stretches
   assert.ok(step.completes > 0);
   const winners = h.show.snapshot().possibleWinners.line;
   assert.ok(winners.length >= step.completes && winners.every((w) => w.completedBy === h.show.queue[winAt]));
-  // The stretched slot is a minimum: the landing goes on the first phrase boundary at or after it that fits.
+  // The stretched slot is a minimum: the landing goes on the first phrase boundary at or after it that fits (a first
+  // play's 22 s × 1.5).
   const { offset, phrase } = autoLanding(h.show, lastLandedAt(h.log));
-  assert.ok(offset >= 21 - 1e-6 && offset <= PACE.phraseSlotRangeWide[1] * 21, `slot ${offset.toFixed(2)}`);
+  assert.ok(offset >= 33 - 1e-6 && offset <= PACE.phraseSlotRangeWide[1] * 33, `slot ${offset.toFixed(2)}`);
   assert.notEqual(phrase, 'bar');
   // The presenters check the claim and confirm the Line: the Phase starts again towards the Bingo.
   h.send('hold');

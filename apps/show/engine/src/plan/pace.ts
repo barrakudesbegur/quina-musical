@@ -1,7 +1,8 @@
 // Pace, Spin length, auto-advance timing, and a basic Schedule estimate with Drift. Pure functions, tested
 // in Node. Terms follow GLOSSARY.md: the Pace is the target time from one landing to the next; the Spin
-// takes about half of it (3–11 s); late phases may stretch a song's slot by up to about 50%.
-import { isPhaseName, type RoundKind } from '@quina/protocol';
+// takes about half of it (3–11 s); late phases may stretch a song's slot by up to about 50%. The Pace is a
+// repeat's slot: a song's first play in the Game gets FIRST_PLAY_FACTOR times it (D174, D175).
+import { firstPlaySec, isPhaseName, type RoundKind } from '@quina/protocol';
 import { PACE, SCHEDULE } from '../config.ts';
 import type { PhaseTiming } from '../config.ts';
 import type { Timeline } from './timeline.ts';
@@ -13,8 +14,13 @@ export const SPIN_LIMITS = PACE.spinLimits;
 export const PACE_PRESETS = PACE.presets;
 export const PACE_LIMITS = PACE.limits;
 export const SCHEDULE_DEFAULTS = SCHEDULE;
-/** @param roundNumber 1-based */
-export const defaultPace = (roundNumber: number): number => (roundNumber <= 1 ? PACE.firstRoundSec : PACE.laterRoundsSec);
+/** A first play's slot over a repeat's (22/14, D175). */
+export const FIRST_PLAY_FACTOR = firstPlaySec(1);
+/**
+ * Songs counted in slots: each first play is FIRST_PLAY_FACTOR repeats long. `firstPlays` are those among the `songs`
+ * whose slots are still to come.
+ */
+export const slotSongs = (songs: number, firstPlays: number): number => songs + Math.min(Math.max(0, firstPlays), songs) * (FIRST_PLAY_FACTOR - 1);
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 /** An unknown phase name times like early. */
 const timingOf = (phase: string): PhaseTiming => (isPhaseName(phase) ? PACE.timing[phase] : PACE.timing.early);
@@ -133,19 +139,35 @@ export const roundSongs = (kind: RoundKind, cfg: ScheduleConfig = SCHEDULE, song
 const roundChecksSec = (kind: RoundKind, cfg: ScheduleConfig, lineConfirmed = false) =>
   (kind === 'desgraciat' || lineConfirmed ? 0 : cfg.lineCheckSec) + cfg.bingoCheckSec;
 
-/** Expected seconds until the current round ends, from the Queue position (index of the last landed song). */
-export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, kind = 'normal', songs = null, cfg = SCHEDULE, nudge = 1 }: {
-  position: number; pace: number; phase?: string; lineConfirmed?: boolean; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig; nudge?: number;
+/**
+ * Expected seconds until the current round ends, from the Queue position (index of the last landed song).
+ * `firstPlays`: first plays among the songs whose slots are still to come (the one playing to the second-to-last).
+ */
+export function roundRemainingSec({ position, pace, phase = 'early', lineConfirmed = false, kind = 'normal', songs = null, firstPlays = 0, cfg = SCHEDULE, nudge = 1 }: {
+  position: number; pace: number; phase?: string; lineConfirmed?: boolean; kind?: RoundKind; songs?: number | null; firstPlays?: number; cfg?: ScheduleConfig; nudge?: number;
 }): number {
   const landed = position + 1;
   const songsLeft = Math.max(2, roundSongs(kind, cfg, songs) - landed);
   const slot = slotSec({ pace, phase: 'early', nudge }) * 0.75 + slotSec({ pace, phase, nudge }) * 0.25;
-  return songsLeft * slot + roundChecksSec(kind, cfg, lineConfirmed);
+  return slotSongs(songsLeft, firstPlays) * slot + roundChecksSec(kind, cfg, lineConfirmed);
 }
 
-/** A whole round from its first song, at a given Pace (the round's target, and later rounds). */
-export function roundLengthSec({ pace, kind = 'normal', songs = null, cfg = SCHEDULE }: { pace: number; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig }): number {
-  return roundSongs(kind, cfg, songs) * pace + roundChecksSec(kind, cfg);
+/**
+ * A whole round from its first song, at a given Pace (the round's target, and later rounds). `firstPlays`: its songs
+ * that are first plays in the Game (D174), each with the longer slot.
+ */
+export function roundLengthSec({ pace, kind = 'normal', songs = null, firstPlays = 0, cfg = SCHEDULE }: { pace: number; kind?: RoundKind; songs?: number | null; firstPlays?: number; cfg?: ScheduleConfig }): number {
+  return slotSongs(roundSongs(kind, cfg, songs), firstPlays) * pace + roundChecksSec(kind, cfg);
+}
+
+/**
+ * The songs left to a Game for later rounds' first plays: the pool's size, and how many of it no round has played by
+ * the current round's expected end. Each later round's Queue is a fresh Shuffle of the pool, so a round of N songs
+ * expects N × unplayed / songs first plays (about 70 × (24/70)^m left after m rounds of 46).
+ */
+export interface PoolLeft {
+  songs: number;
+  unplayed: number;
 }
 
 /** When the round and the game should end (epoch ms), and the Drift in seconds (positive = running late). */
@@ -169,13 +191,20 @@ export interface LaterRounds {
 /** What scheduleEstimate needs. `round.targetEndMs` is fixed when the round starts. */
 export interface ScheduleArgs extends PaceArgs {
   nowMs: number;
-  /** `songs`: the round's exact count when its Queue and cards in play are known (roundSongs). */
-  round: { number: number; kind?: RoundKind; targetEndMs?: number | null; songs?: number | null };
+  /**
+   * `songs`: the round's exact count when its Queue and cards in play are known (roundSongs). `firstPlays`: first plays
+   * among the songs whose slots are still to come (roundRemainingSec).
+   */
+  round: { number: number; kind?: RoundKind; targetEndMs?: number | null; songs?: number | null; firstPlays?: number };
   game: { roundsTotal?: number; targetEndMs?: number | null };
   position: number;
   lineConfirmed?: boolean;
+  /** The presenters locked the Pace: later rounds keep it, else they start at the default (PACE.defaultSec). */
+  locked?: boolean;
   /** From the Game plan; without one, `game.roundsTotal` normal rounds with the default Interval and no Throws. */
   later?: LaterRounds | null;
+  /** For later rounds' expected first plays; without it they count none. */
+  pool?: PoolLeft | null;
   cfg?: ScheduleConfig;
 }
 
@@ -183,14 +212,19 @@ export interface ScheduleArgs extends PaceArgs {
  * Basic Schedule: when the round and the game should end, and the Drift (positive = running late).
  * Times are epoch ms; `round.targetEndMs` is fixed when the round starts.
  */
-export function scheduleEstimate({ nowMs, round, game, position, pace, phase, lineConfirmed = false, later: plan = null, cfg = SCHEDULE, nudge = 1 }: ScheduleArgs): ScheduleEstimate {
-  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, songs: round.songs, cfg, nudge });
-  // Each later round at the Pace it starts with: a night isn't one flat Pace (2025 went from 18 s a song to 11 s).
+export function scheduleEstimate({ nowMs, round, game, position, pace, phase, lineConfirmed = false, locked = false, later: plan = null, pool = null, cfg = SCHEDULE, nudge = 1 }: ScheduleArgs): ScheduleEstimate {
+  const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, songs: round.songs, firstPlays: round.firstPlays, cfg, nudge });
+  // Each later round at the Pace it starts with, its first plays drawn from what no round has played yet: rounds of
+  // new songs are slower (D174).
   const kinds = plan ? plan.kinds : Array.from({ length: Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) }, () => 'normal' as const);
-  const later = kinds.reduce(
-    (sec, kind, i) => sec + (plan ? plan.intervalSec : cfg.intervalSec) + roundLengthSec({ pace: defaultPace(round.number + 1 + i), kind, cfg }),
-    plan ? plan.throwsSec : 0,
-  );
+  const laterPace = locked ? pace : PACE.defaultSec;
+  let unplayed = pool ? Math.max(0, Math.min(pool.unplayed, pool.songs)) : 0;
+  const later = kinds.reduce((sec, kind) => {
+    const songs = roundSongs(kind, cfg);
+    const firstPlays = pool && pool.songs > 0 ? (Math.min(songs, pool.songs) * unplayed) / pool.songs : 0;
+    unplayed -= firstPlays;
+    return sec + (plan ? plan.intervalSec : cfg.intervalSec) + roundLengthSec({ pace: laterPace, kind, firstPlays, cfg });
+  }, plan ? plan.throwsSec : 0);
   const gameEndMs = roundEndMs + 1000 * later;
   return {
     roundEndMs,
@@ -204,10 +238,10 @@ export function scheduleEstimate({ nowMs, round, game, position, pace, phase, li
  * How much to stretch (>1) or squeeze (<1) the coming slots to recover the Drift over the rest of the
  * round. Only early and mid phases are nudged, and never when the presenters locked the Pace.
  */
-export function driftNudge({ driftSec, position, pace, phase, locked = false, kind = 'normal', songs = null, cfg = SCHEDULE }: {
-  driftSec: number; position: number; pace: number; phase: string; locked?: boolean; kind?: RoundKind; songs?: number | null; cfg?: ScheduleConfig;
+export function driftNudge({ driftSec, position, pace, phase, locked = false, kind = 'normal', songs = null, firstPlays = 0, cfg = SCHEDULE }: {
+  driftSec: number; position: number; pace: number; phase: string; locked?: boolean; kind?: RoundKind; songs?: number | null; firstPlays?: number; cfg?: ScheduleConfig;
 }): number {
   if (locked || !timingOf(phase).nudge || !Number.isFinite(driftSec)) return 1;
   const songsLeft = Math.max(4, roundSongs(kind, cfg, songs) - (position + 1));
-  return clamp(1 - driftSec / (songsLeft * pace), PACE.nudgeLimits[0], PACE.nudgeLimits[1]);
+  return clamp(1 - driftSec / (slotSongs(songsLeft, firstPlays) * pace), PACE.nudgeLimits[0], PACE.nudgeLimits[1]);
 }

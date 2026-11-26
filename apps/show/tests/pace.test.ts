@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spinWindow, slotSec, autoPressAt, alignedPress, driftNudge, scheduleEstimate, defaultPace, SPIN_LIMITS, PACE_PRESETS, roundLengthSec } from '../engine/src/plan/pace.ts';
+import { spinWindow, slotSec, autoPressAt, alignedPress, driftNudge, scheduleEstimate, SPIN_LIMITS, PACE_PRESETS, roundLengthSec } from '../engine/src/plan/pace.ts';
+import { PACE } from '../engine/src/config.ts';
 import type { PhraseGrid } from '../engine/src/plan/pace.ts';
 
 /** A steady song that landed on its hook at 0: a downbeat every `bar` seconds, phrases counted from it. */
@@ -55,7 +56,7 @@ test('Drift nudges stay within ±20%, only early/mid, never when locked', () => 
 
 test('schedule: a round started on its target has no Drift, and later rounds add up', () => {
   const nowMs = 1_000_000;
-  const pace = defaultPace(1);
+  const pace = PACE.defaultSec;
   const round = { number: 1, targetEndMs: nowMs + 1000 * roundLengthSec({ pace }) };
   const est = scheduleEstimate({ nowMs, round, game: { roundsTotal: 3 }, position: -1, pace, phase: 'early', lineConfirmed: false });
   assert.ok(Math.abs(est.roundDriftSec) < 0.05 * roundLengthSec({ pace }), `drift ${est.roundDriftSec}`);

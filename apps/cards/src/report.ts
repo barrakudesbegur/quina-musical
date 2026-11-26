@@ -98,23 +98,24 @@ export function poolReport(songIds: readonly number[], cards: readonly ReportCar
 
 /**
  * How long the songs take, and the Checks on top (docs/requirements/show-and-music.md). The Pace is a copy of
- * @quina/protocol PACE_DEFAULT_SEC (22 s a song in round 1, 14 s after), which this package can't import (it builds on
- * its own); keep the two the same. 2025's real rounds averaged 16 minutes for about 48 songs.
+ * @quina/protocol PACE_DEFAULT_SEC (a song's first play in the night 22 s, a repeat 14 s: D174, D175), which this
+ * package can't import (it builds on its own); keep the two the same. 2025's real rounds averaged 16 minutes for about
+ * 48 songs.
  */
 export interface Timing {
-  firstRoundSec: number;
-  laterRoundsSec: number;
+  firstPlaySec: number;
+  repeatSec: number;
   /** A Line's Check, in minutes (low, high). */
   lineCheckMin: readonly [number, number];
   /** The Quina's (or the last card standing's) Check and the round's end, in minutes (low, high). */
   endCheckMin: readonly [number, number];
 }
 
-export const DEFAULT_TIMING: Timing = Object.freeze({ firstRoundSec: 22, laterRoundsSec: 14, lineCheckMin: [1, 2] as const, endCheckMin: [1.5, 3.5] as const });
+export const DEFAULT_TIMING: Timing = Object.freeze({ firstPlaySec: 22, repeatSec: 14, lineCheckMin: [1, 2] as const, endCheckMin: [1.5, 3.5] as const });
 
-/** A round's length in minutes (low, high): its median songs at the Pace, plus the Checks. */
-export function roundMinutes(songs: number, kind: 'regular' | 'desgraciat', first: boolean, t: Timing = DEFAULT_TIMING): [number, number] {
-  const play = (songs * (first ? t.firstRoundSec : t.laterRoundsSec)) / 60;
+/** A round's length in minutes (low, high): its median songs at the Pace (`firstPlays` of them new tonight), plus the Checks. */
+export function roundMinutes(songs: number, kind: 'regular' | 'desgraciat', firstPlays: number, t: Timing = DEFAULT_TIMING): [number, number] {
+  const play = (firstPlays * t.firstPlaySec + (songs - firstPlays) * t.repeatSec) / 60;
   const line = kind === 'regular' ? t.lineCheckMin : ([0, 0] as const);
   return [play + line[0] + t.endCheckMin[0], play + line[1] + t.endCheckMin[1]];
 }
@@ -127,17 +128,24 @@ export interface NightShape {
   throwMinutes: number;
 }
 
-/** The whole night in minutes (low, high): every round in order (the first at round 1's Pace), the Intervals between
- * them and the planned Throws. */
+/**
+ * The whole night in minutes (low, high): every round in order, the Intervals between them and the planned Throws. Each
+ * round's Queue is a fresh Shuffle of the pool, so a round of N songs expects N × (songs not played yet) / pool first
+ * plays: all of round 1, about a third of round 2, fewer after.
+ */
 export function nightMinutes(r: PoolReport, night: NightShape, t: Timing = DEFAULT_TIMING): [number, number] {
   let lo = 0;
   let hi = 0;
-  night.kinds.forEach((kind, i) => {
+  let unplayed = r.songs;
+  for (const kind of night.kinds) {
     const desgraciat = kind === 'desgraciat';
-    const [a, b] = roundMinutes(desgraciat ? r.lastStanding.median : r.bingo.median, desgraciat ? 'desgraciat' : 'regular', i === 0, t);
+    const songs = desgraciat ? r.lastStanding.median : r.bingo.median;
+    const firstPlays = r.songs > 0 ? (Math.min(songs, r.songs) * unplayed) / r.songs : 0;
+    unplayed -= firstPlays;
+    const [a, b] = roundMinutes(songs, desgraciat ? 'desgraciat' : 'regular', firstPlays, t);
     lo += a;
     hi += b;
-  });
+  }
   const between = Math.max(0, night.kinds.length - 1) * night.intervalMinutes + night.throwMinutes;
   return [lo + between, hi + between];
 }
@@ -153,7 +161,7 @@ export function describeReport(r: PoolReport, night: NightShape | null = null, t
     `  first Line after ${s(r.firstLine)} songs`,
     `  Quina after ${s(r.bingo)} songs`,
     `  the Desgraciat's last card standing after ${s(r.lastStanding)} songs`,
-    `  a regular round takes about ${range(roundMinutes(r.bingo.median, 'regular', false, t))} (round 1: ${range(roundMinutes(r.bingo.median, 'regular', true, t))}); the Desgraciat about ${range(roundMinutes(r.lastStanding.median, 'desgraciat', false, t))}`,
+    `  a regular round of songs already played takes about ${range(roundMinutes(r.bingo.median, 'regular', 0, t))} (of new songs, as round 1: ${range(roundMinutes(r.bingo.median, 'regular', r.bingo.median, t))}); the Desgraciat about ${range(roundMinutes(r.lastStanding.median, 'desgraciat', 0, t))}`,
   ];
   if (night) {
     const [lo, hi] = nightMinutes(r, night, t);

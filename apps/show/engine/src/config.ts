@@ -150,10 +150,10 @@ export const PHASES: Readonly<Record<PhaseName, PhaseEffects>> = Object.freeze({
 export const PHASE_PLACEHOLDER = Object.freeze({ midAt: 8, lateAt: 3, finalAt: 1 });
 
 export const PACE = Object.freeze({
-  /** Last year's medians: about 22 s in the first round and about 14 s after (fastest about 11 s); shared
-   * with the console, which recommends them. */
-  firstRoundSec: PACE_DEFAULT_SEC.firstRound,
-  laterRoundsSec: PACE_DEFAULT_SEC.laterRounds,
+  /** The Pace each round starts with: a repeat's slot, last year's median after round 1 (fastest about 11 s). A song's
+   * first play in the Game gets 22/14 of the Pace (@quina/protocol firstPlaySec, D174, D175). Shared with the console,
+   * which recommends it. */
+  defaultSec: PACE_DEFAULT_SEC.repeat,
   presets: PACE_PRESETS_SEC,
   limits: PACE_LIMITS_SEC,
   fineStepSec: PACE_FINE_STEP_SEC,
@@ -869,10 +869,16 @@ export interface ThrowTrack {
   hookSec: number;
   /** Its loudness trim to the songs' −14 LUFS, so "full volume" is a song's level, not louder. */
   trimDb: number;
+  /** Where its drop is, and its length (data/out/hold/index.json): the buttons' time bar (ThrowTrackInfo). */
+  dropSec: number;
+  durationSec: number;
 }
 
-/** "Flying Free" (Pont Aeri, Marian Dacal; last year's id 24): its trim is data/out/analysis/24.json's `gainToTargetDb`. */
-const FLYING_FREE = { name: 'flying-free', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', trimDb: -2.84 } as const;
+/**
+ * "Flying Free" (Pont Aeri, Marian Dacal; last year's id 24): its trim is data/out/analysis/24.json's `gainToTargetDb`, its
+ * drop that analysis's best hook.
+ */
+const FLYING_FREE = { name: 'flying-free', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', trimDb: -2.84, dropSec: 208.76, durationSec: 406.4 } as const;
 
 /**
  * The songs played by hand for throws (protocol THROW_SONGS), each a setting: the planned Throws' "Llançament" (D138)

@@ -53,11 +53,12 @@ test("one flat 14 s after round 1 reads 2025's first half short and its second h
   assert.ok(own.every((m) => Math.abs(m) < 2), `own: ${own.map((m) => m.toFixed(1)).join(', ')} min`);
 });
 
-test('the expected end: later rounds each at their own Pace, with their Intervals and Throws', () => {
+test('the expected end: later rounds each at the Pace they start with, with their Intervals and Throws', () => {
   const nowMs = 1_000_000;
   const later = { kinds: ['normal', 'normal', 'desgraciat'] as RoundKind[], intervalSec: 150, throwsSec: 300 };
+  // Without the pool, later rounds count no first plays (tests/first-play.test.ts counts them).
   const est = scheduleEstimate({ nowMs, round: { number: 1, kind: 'normal' }, game: {}, position: -1, pace: 22, phase: 'early', later });
-  const laterSec = 300 + [2, 3, 4].reduce((s, n, i) => s + 150 + roundLengthSec({ pace: n <= 1 ? 22 : 14, kind: later.kinds[i] }), 0);
+  const laterSec = 300 + later.kinds.reduce((s, kind) => s + 150 + roundLengthSec({ pace: 14, kind }), 0);
   assert.ok(Math.abs((est.gameEndMs - est.roundEndMs) / 1000 - laterSec) < 1e-6);
   // At 70 songs a Part (D100): about 46 songs to the Bingo, 21 to the last card standing.
   assert.equal(roundSongs('normal'), SCHEDULE.bingoAtSong);
