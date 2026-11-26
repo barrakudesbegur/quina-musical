@@ -6,7 +6,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built.
 - **Just done (26 Nov):**
-  - **Nine deploys** (deploy-plan.md), each tested on its sha first:
+  - **Ten deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -15,7 +15,8 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `c93f219c` (`161c3f6`): the repertoire (D178), D177 and D180. The media sync keeps each repertoire under `repertoires/<name>/` (v2 manifest); `fellLast` stays readable in older journals;
     - `228d23ab` (`f4185fd`): the cloud's step B of card sides (queue item 4);
     - `5a57015e` (`ec4912c`): cards in sides, with my two readers (`5ff17b7`);
-    - `f63790a9` (`593fef2`): screens only (round names, the phones' confetti).
+    - `f63790a9` (`593fef2`): screens only (round names, the phones' confetti);
+    - `0948f16b` (`c612e95`): screens and card-types.json only (the finale's screens, D193's labels, D192's Throw, D194).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
