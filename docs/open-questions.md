@@ -17,6 +17,17 @@ The agreed boards show "Benvinguda" and "Mitja part" rows in the phone's Horari,
 - (a) Keep the rounds and "Fi" only.
 - (b) Add the welcome (a time in the plan) and the breaks (named as U123 decides).
 
+### U130 · The Check boards on canvas v67, for review
+Frontend published the Check, the review draft (U77) and the remote's D143–D145. Its choices to check:
+1. The Check's top row is "Enrere", "Revisió manual" and "+ Un altre". That changes R2-Q21's arrangement (Següent, the Hold and the claim in the same places in landscape and portrait).
+2. "Enrere" still works while the screen waits for the cue press. "Not after the cue" was read as "not after the press".
+3. The review screen has no "Enrere" and no "+ Un altre". A choice that goes against the card gets a warning triangle.
+4. Parlem in the Celebration gets the Pausa strip (Pausa at any time, D128).
+5. On the remote board, Parlem's legend moved right to make room for B's four rows.
+6. The Suspens strip shows B + A at its right edge and the shake (×3) at its left, while U121 is open.
+- (a) All fine.
+- (b) Comment on the canvas where not.
+
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
 - (a) Keep it.
@@ -34,7 +45,7 @@ No screen says "Interval": the projector's title, the console's buttons and phas
 - (c) Another word.
 
 ### U124 · The console's two labels need the user's OK in Frontend's session · blocking
-D140 answered U67, but Frontend's session refuses the edit to `apps/console/strings.ts` under the UI freeze, and only the user's own OK in that session lifts it. Until then, Sound engine's and Backend's tested range can't be pushed. The change: `reviewing: 'En revisió'` and `discarded: 'Descartat'` replace `stopped` and `dropped`, and `S.hold.reasons` gets `discarded: 'Cartró descartat'`.
+D140 answered U67, but Frontend's session refuses the edit to `apps/console/strings.ts` under the UI freeze, and only the user's own OK in that session lifts it. Until then, Sound engine's and Backend's tested range can't be pushed. The change: `reviewing: 'En revisió'` and `discarded: 'Descartat'` replace `stopped` and `dropped`, and `S.hold.reasons` gets `discarded: 'Cartró descartat'`. The same OK covers "Avanç manual" (D143) in that file and the Check's console code (D140), which Frontend's session also refuses until the user confirms there.
 
 ### U120–U122 · Suspens on the remote (D144, D145)
 - **U120 · Landing a Suspens started with B + A:** (a) letting go of B lands it, as today, and letting go of A alone cancels it; (b) another way.
