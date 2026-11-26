@@ -14,7 +14,8 @@ export function poolRoots(pool: Pool): RootDir[] {
     { root: 'data', dir: pool.dataDir, exclude: (rel) => /^(pools|hold|interval|listen-demo)\//.test(rel) || rel === 'spotify_features.json' },
     { root: 'covers', dir: pool.coversDir },
     { root: 'overrides', dir: pool.overridesDir },
-    { root: 'hold-cache', dir: path.join(CACHE, 'hold') },
+    // Not hold.py's audition renders (each loop three times, to hear its seam): listening checks, not playback.
+    { root: 'hold-cache', dir: path.join(CACHE, 'hold'), exclude: (rel) => rel.startsWith('audition/') },
     { root: 'hold-data', dir: path.join(OUT, 'hold') },
     // The Interval playlist, shared by every pool like the Hold music (the relay serves it from these folders).
     { root: 'interval-cache', dir: path.join(CACHE, 'interval') },

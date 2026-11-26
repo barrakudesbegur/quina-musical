@@ -38,7 +38,7 @@ test("the default pool's data and cache roots leave the shared music to its own 
   assert.equal(cache?.exclude?.('1/mix.flac'), false, "a song's own files stay");
 });
 
-test('never synced: the relay\'s pairing token, the download tools, the listening demo, the Spotify features', () => {
+test('never synced: the relay\'s pairing token, the download tools, the listening demo, the Spotify features, the Hold auditions', () => {
   const roots = poolRoots(pool('default', OUT, CACHE));
   const cache = roots.find((r) => r.root === 'cache');
   const data = roots.find((r) => r.root === 'data');
@@ -47,6 +47,9 @@ test('never synced: the relay\'s pairing token, the download tools, the listenin
   assert.equal(data?.exclude?.('listen-demo/listen-demo.webm'), true);
   assert.equal(data?.exclude?.('spotify_features.json'), true);
   assert.equal(data?.exclude?.('keys/index.json'), false, 'the keys are playback data');
+  const hold = roots.find((r) => r.root === 'hold-cache');
+  assert.equal(hold?.exclude?.('audition/flying-free-1.flac'), true, "hold.py's audition renders: listening checks");
+  assert.equal(hold?.exclude?.('flying-free.flac'), false, 'the Hold tracks themselves (the intro and the throw song too)');
 });
 
 test('the cloud accepts the shared roots in sync paths', () => {

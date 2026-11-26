@@ -2,32 +2,31 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-26)
+## Now (2026-11-26, evening)
 
-- **In progress:** nothing half-built. D140 (the user's go to build the new things): the Check's cloud side is built; the music sets and the volumes wait for Sound engine's answer to my proposal (below).
+- **In progress:** step 2 of the presenter-paced Check (D127–D159), on the shared main as local commits, waiting for Frontend's side. Then Sound engine tests the whole range in a clean worktree, I deploy, and they push.
+  - **My commits there:** `61a0dc5` (the cloud side), `b147c8c` (the e2e by presses), `004e846` (volumes up to VOLUME_MAX, 150%), `529ab51` (the sound check's +6 dB in the preflight and the laptop setup).
+  - **The cloud side:**
+    - `check.started` replaces `check.scheduled`, and the reveals stay off phones;
+    - phones get Pausa only while `state.pause.overlay` (D135);
+    - journal-check takes `settings.volumes` (unknown keys pass, known ones up to VOLUME_MAX);
+    - the GameRoom folds the journal's newest volumes into `plan.volumes` (newest atMs wins, `volumesAtMs` in the snapshot), and a plan saved from Admin or the laptop keeps the cloud's (`domain/volumes.ts`).
+  - **The e2e by presses** runs through a claim reviewed then discarded, a Line by presses, and a two-card Bingo with automatic reveal (the second card fails, then the press for the Celebration). Suspense is released with `suspense {on:false}`: Next no longer releases it (D133).
+    - Today it stops at the first Check: the stage (Frontend's) still reads the timed `check.steps`.
+    - Sound engine's `5edb5b1` makes the engine's bus send to the relay before any page listener, so a screen's crash no longer freezes the tablets.
 - **Just done (26 Nov):**
-  - **The paced Check's cloud side,** local in the unpushed range (Sound engine tests and pushes its top, then I deploy):
-    - `bad46b7`, `f5b4b9d`, `087bafa`: the journal takes `claim.reviewing`, `claim.continued`, `claim.discarded` and `claim.decided { manual: true }`. A discard clears the phones' pending Check; a review or a continue changes nothing public. flaggedDecisions flags `notPassing` (a win by hand) and `notSold`.
-    - `22cc44b`: the phone-feed scans (projection test, both e2e specs) forbid `markedCard`, `revealUntil`, `cueNext`, `reviewing` and `manual`; every paced-Check event goes through the projection with nothing public changing.
-    - **Deploy before the engine journals them:** a refused kind stops the link's uploads.
-  - **The Interval music syncs with every pool** (`447d9d7`): two shared roots (`interval-cache`, `interval-data`). The Worker accepts them: version `79988575`, deployed from `a1e9b17`.
-  - **Never synced** (`6397550`): `cache/relay-token` (that object is deleted from R2), `cache/tools`, `data/listen-demo`.
-  - **The new Interval music is in R2** (D113): 115 files, 361.9 MB.
-- **Proposed to Sound engine, 26 Nov, waiting for the answer:**
-  - **The music sets (D129, D138):** in subfolders of `data/{cache,out}/interval/` they sync with no change (D136 keeps `interval`). A new top folder needs a cloud root, deployed before the laptop pushes. I asked where the intro track and the throw song's hook will live.
-  - **The volumes (D139):**
-    - `GameSettings.volumes`, a closed key list, journalled on slider release, so a resume restores them.
-    - A fresh Game starts from `plan.volumes`, so the edition file holds them. The engine reads them only when no volumes are journalled.
-    - When the cloud ingests a change, it patches only `plan.volumes` (newest wins, the rest of the plan untouched), so a rehearsal's tuning carries to the night's `&fresh=1` Game. `edition -- pull` writes it back to the file.
-    - My side: journal-check by key and range, `volumes` in checkGamePlan, left out of publicPlan, and the fold on ingest.
+  - **Deployed** `94b395be` (`2503050`, the plan-save fix, on its own), then `fddfdc1d` (`a89826f`, step 1 of the paced Check). See deploy-plan.md.
+  - **The plan-save bug** (`2503050`): adoptPlan saved only when the public plan changed, so an edit to a locked round's prizes or the cheat sheet was lost when the GameRoom restarted. U126 asks the user to check quina-dev.
+  - **R2:** the breaks set, the intro and the throw song are pushed (165 files, 1.3 GB). Hold's `audition/` went too by mistake and is now excluded.
+  - **The music sets** live in subfolders of the Interval roots (`breaks/`, later `pausa/`), and the intro and throw tracks in the Hold folders: no new sync root, no cloud change.
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
-  - deploy the range once it's on origin; log it in deploy-plan.md;
-  - the Check's e2e by presses (`checkNext`, `checkAuto`, a review then discard, two cards), once Sound engine's step 3 is in;
-  - push each new music set and Part 1 to R2 as soon as it's prepared (U55, D113). Prune last year's pool after the night;
+  - when Frontend's stage is on top: run the e2e on the whole range, then deploy step 2's cloud before Sound engine pushes;
+  - Pausa's set (today's top-level Interval files move into `pausa/`) once step 2 is on main: push it, then prune the old top-level keys;
+  - Part 1 to R2 as soon as it's prepared (U55, D113). Prune last year's pool after the night;
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
   - the provisional-hooks WARN, once Sound engine sends the field.
-- **Not building:** Pausa in the journal (U111 open).
+- **Not building:** Pausa in the journal (U111), the edition file and its upload (U68–U75, U63).
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md):
   - optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4);
@@ -37,7 +36,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **U55** (Sound engine's), preparing Part 1;
   - **U63**, **U68–U75**: the plan tool, its `quina-agent` token, and the edition file;
   - **U64**, a glance at Cloudflare's billing for R2's payment method;
-  - **U79**, whether phones show a Review (the public `reviewing`).
+  - **U79**, whether phones show a Review;
+  - **U126**, whether any Admin edits on quina-dev were lost to the plan-save bug;
+  - the permission rules for deploys and R2 pushes (`/permissions`), which only the user can add.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
