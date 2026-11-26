@@ -19,13 +19,6 @@ The glossary's words: **Hold** is "Parlem" (the music ducks under the voices); *
 - **U118 · After a discard, in the glossary's words:** (a) an expirable Parlem: the music from before the Check, ducked, nothing lands by itself, and the next "Següent" ends it; (b) Aguanta; (c) the auto-advance switched off ("aturat") as well. D125 assumed "aturat" was Aguanta.
 - **U119 · The remote's B with the auto-advance off:** B held is Aguanta, which keeps the song looping at full volume so it doesn't run out, and B held plus three shakes is Suspens. So B isn't useless with the auto-advance off, though its Aguanta adds less then. (a) Leave B as it is; (b) give B's tap another job when the auto-advance is off (which?); (c) leave it unassigned on purpose.
 
-### U115 · What the add-card QR button does
-The agreed board draws "Escanejar el QR del cartró" on the add-card drawer, but nothing says what it does, and no board shows a camera view.
-- (a) **Scan inside the app:** it opens the camera in the drawer and reads the card's QR. The number is filled in, and the name and icon already picked are kept. It needs a board for the camera view, a camera permission prompt, and a small QR-reading library, since iPhones' Safari can't read QR codes on its own.
-- (b) **A tip only:** "Escaneja el QR del cartró amb la càmera del mòbil". The phone's own camera already opens the app with the card added; that works today.
-- (c) Remove the button.
-Frontend builds everything else meanwhile, and leaves the button out until the answer.
-
 ### U103 · The throw song is on the cards
 "Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal), so it's printed on cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
 - (a) Keep it as the throw song.
@@ -183,6 +176,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U115 · What the add-card QR button does** (2026-11-26) → D141: it scans inside the app.
 - **U84 · Does "Següent" end Parlem?** (2026-11-26) → D133: no; Aguanta and Suspens disable "Següent"; an expirable Parlem or Aguanta shows a badge. Follow-ups U116–U119.
 - **U90–U92 · "Enrere" inside a Check** (2026-11-26) → D134: the projector removes the mark; the previous snippet replays and that Check's automatic reveal turns off; only while revealing.
 - **U93–U95 · Pausa** (2026-11-26) → D135: "Tornem de seguida" only in a round, a Check or a Celebration; it resumes exactly where it was; during a review the hold is Pausa and A does nothing.

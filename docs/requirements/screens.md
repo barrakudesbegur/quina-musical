@@ -84,6 +84,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
+  - The pad's QR button scans the card inside the app, in the drawer, keeping the name and icon already picked (D141).
   - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker mixes B and C: B's labels and its faded background for a taken icon; C's circular shape, frame and border (D131).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".

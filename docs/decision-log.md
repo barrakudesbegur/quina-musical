@@ -1036,3 +1036,7 @@ By: the user. Source: open-questions.md › Answered (U101, U102). Amends: D130.
 ### D140 · Start designing and building the new things · 2026-11-26 · Active
 The user's go: "you can ask the sessions to start designing and implementing the new things, most of it is sorted out". The sessions design and build what's decided: the presenter-paced Check and its review (D107–D126), "Enrere" inside a Check (D127, D134), Pausa (D128, D135), the Hold rules (D133), the music for each moment and the throws (D129, D138), and the volumes (D139). This lifts the UI freeze for those parts of the console, the projector and the phones. It also covers the console's two labels (U67 (a)) and publishing the Check boards (U66). Parts still open with the user stay out until answered.
 By: the user. Source: the user's message of 26 Nov. Lives in: docs/status.md.
+
+### D141 · The add-card QR button scans inside the app · 2026-11-26 · Active
+"Escanejar el QR del cartró" opens the camera in the drawer and reads the card's QR. The number is filled in, and the name and icon already picked are kept. It needs a board for the camera view first, a camera permission prompt, and a small QR-reading library, since iPhones' Safari can't read QR codes on its own. Answers U115.
+By: the user. Source: open-questions.md › Answered (U115). Lives in: requirements/screens.md › Player app.
