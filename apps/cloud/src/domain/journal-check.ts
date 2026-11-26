@@ -58,6 +58,7 @@ const settings: FieldCheck = (value) => {
     holdMusicAfterSec: finite,
     finalLapStinger: boolean,
     volumes: optional(volumes),
+    remoteShake: optional(boolean),
   });
 };
 

@@ -156,10 +156,13 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   const changed = entries.find((e) => e.kind === 'settings.changed') as JournalEntry & { settings: object };
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 80, songsParlem: 45, end: 0, throws: 150 } } }).ok, 'the volumes, up to 150% (D157)');
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 100, laterSlider: 300 } } }).ok, 'a slider added later');
+  // The remote's shake switch (D148): a boolean, absent in an older journal.
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, remoteShake: false } }).ok, 'the shake switch off');
   const bad: [string, unknown][] = [
     ['a volume above its most (150%)', { ...changed, settings: { ...changed.settings, volumes: { master: 151 } } }],
     ['a volume as text', { ...started, settings: { ...changed.settings, volumes: { songs: '80' } } }],
     ['volumes as a list', { ...changed, settings: { ...changed.settings, volumes: [80] } }],
+    ['the shake switch as text', { ...changed, settings: { ...changed.settings, remoteShake: 'on' } }],
     ['win kind', { ...opened, winKind: 'quina' }],
     ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],
     ['a slip longer than 16', { ...noted, slip: 'x'.repeat(17) }],
