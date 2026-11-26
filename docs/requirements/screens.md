@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A stopped Check fades out with no mark and no text, into the Pausa screen (D109, D117) |
+| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A stopped Check has its own screen, with no pass or fail (D118; its content pending U76) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |

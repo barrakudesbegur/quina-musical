@@ -8,6 +8,14 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U76–U79 · The stopped Check's screens (D118)
+A stopped Check gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
+- **U76 · The projector while stopped:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
+- **U77 · The tablet while stopped:** the stopped card with its private marks, "Torna a comprovar", "Descarta", and the usual Pausa and Parlem buttons. Anything to add or remove?
+- **U78 · The music's level while stopped:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
+- **U79 · Phones while stopped:** (a) their normal screen, nothing about the stop; (b) a neutral line, like the projector's.
+No default: the user decides.
+
 ### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
 The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json` (the plan with rounds, prizes, sponsors' names, schedule and cheat sheet; the songs per Part; card types and cards; the pool it came from), checking that it all fits. It never holds audio, covers, hooks, Games, winners' names, resume codes, seeds or money. `npm run edition -- upload <file> [--reset]` validates, saves the cloud's current state, then replaces it. Local seeding is the same upload against the local Worker, plus the plan for the relay. Facts: logos and prize pictures are in the cloud's own database today, not in the bucket; cards and card types are static files deployed with the Worker.
 - **U68 · Cards:** (a) uploaded data, so one upload configures everything; (b) static files deployed with the Worker, as today. Proposed: (a).
