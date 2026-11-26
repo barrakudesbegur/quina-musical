@@ -117,11 +117,11 @@ _From event.md › What must never fail (Privacy), The songs._
 - **Audio is never published:** no songs or generated song data in git or on a public address.
 - Every card's songs are public, because phones need them. Anything may be public unless there's a reason to hide it, to keep the code simple (D78).
 - **Hiding prizes is for the show's hype (D98):** the projector and phones show a round's prizes only once it's revealed.
-- **The cloud's plan is always the source of truth (D111).** Prizes, sponsors and businesses' names are never in git, since they change every year, and money amounts live only in the organizers' spreadsheet (D112). Development runs on a test plan.
+- **One JSON per edition, in git (D116):** the plan, prizes and sponsors (businesses' names included), the songs and the cards. Local seeding uses it; the user or an agent uploads it to the cloud by hand, on the day or for a rehearsal, and an upload always saves the old settings first. Git isn't read at runtime: the cloud is the source of truth while running (D111). Logos stay in the bucket; money amounts only in the organizers' spreadsheet (D112).
 - Phones have no account. Admin only sees which card numbers were opened, never who opened them.
 - Admin, the console and the organizers' routes are behind the organizers' Google login. The laptop has its own key, kept only on the show laptops and never sent by chat or email.
 - The console's pairing token and the hotspot password are treated like the resume code: no photos. The hotspot password is the first line of defence, because anyone on the hotspot can reach the laptop's relay; the token then guards the commands.
-- The repo is public: no people's or businesses' names, no emails, secrets or personal data.
+- The repo is public: no people's names, no emails, secrets or personal data. Businesses' names in the edition's JSON are fine (D116).
 
 ## The day itself
 

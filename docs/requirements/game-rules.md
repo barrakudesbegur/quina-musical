@@ -100,8 +100,8 @@ _From event.md › Claims and checks; the decisions doc › Changes._
   - a card not registered as sold only raises a private warning on the console. The presenters ask to see the card.
 - **Forged cards:** we assume nobody forges cards. If two cards claim the same win, the fake one is easy to tell apart.
 - **The Check's result decides.**
-  - A pass needs no confirmation. Its fanfare and Celebration start only on the presenters' cue (D109; the cue's form pending U62).
-  - In a strange case, the presenters stop the Check before the cue: no pass or fail shows, and the claim stays undecided until they check it again or drop it (D109).
+  - A pass needs no confirmation. Its fanfare and Celebration start on the presenters' cue, or at the end of an automatic reveal, which goes no further (D109, D117).
+  - In a strange case, the presenters stop the Check before the cue: no pass or fail shows, the round goes into Pausa, and the claim stays undecided until they check it again or drop it. The round can't move on before then (D109, D117).
   - They can never accept a card that failed.
   - Every outcome is recorded, a stop and a dropped claim included.
 - **A failed Check** gets a funny "fail" moment, then the round goes on.
@@ -152,7 +152,7 @@ _From event.md › Prizes and sponsors, Money._
   - Before each round, the presenters read out every prize and its sponsor, money donors included. The cheat sheet lists them.
   - They keep the prizes alive during the round ("a veure qui s'emportarà…").
   - Every sponsor appears somewhere on the projector during the night ([screens.md](screens.md#every-sponsor-appears)).
-- Prizes, bundles and sponsors come from the organizers' own spreadsheet, which the orchestrator parses into the cloud's plan (D89, D111). The cloud's plan is always the source of truth; none of it is in git (D112). Admin's UI is for last-minute edits. Logos come from a private logo library (pending U16).
+- Prizes, bundles and sponsors come from the organizers' own spreadsheet, which the orchestrator parses into the cloud's plan (D89, D111). The edition's JSON in git holds it all, businesses' names included, and is uploaded to the cloud by hand; the cloud is the source of truth while running (D116). Admin's UI is for last-minute edits. Logos come from a private logo library (pending U16).
 
 ## Prize secrecy
 

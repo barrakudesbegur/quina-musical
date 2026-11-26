@@ -44,20 +44,8 @@ Part 1's playlist is in title order with no song out of place (Sound engine, 25 
 D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 and the special rounds' playlist aren't fetched yet.
 **Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
 
-### U62 · The Check's remaining details
-D107–D110 settle the Check's shape. The details below are the orchestrator's proposal, in force unless the user objects:
-- **The cue:** revealing stops after the last song, or at the first ✗. The next press of the big button or A plays the fanfare: "Celebrem!" on a pass, the fail moment on a fail. Holding A and the auto toggle never go past that point.
-- **A fail:** the reveal stops at the first ✗, since the rest isn't needed. On the cue: the Failure fanfare, the red ✗, then the error Hold music until "Reprèn", as now.
-- **Several cards:** each is checked in turn, all of the same kind (Line or Quina). A failed one gets its fail moment on its own cue, then the next card appears by itself, and its first reveal waits for a press. A passing card that isn't the last gets a quiet cue (its "correct" plaque, no fanfare). The passing cards share one Celebration on the last card's cue. If that last card fails, the Celebration gets a cue of its own after the fail moment.
-- **A stopped claim holds the round:** "Següent" waits until the claim is checked again or dropped, since every claimed card is checked before the round moves on.
-- **The Desgraciat:** the same controls; holding A runs its 12 knocks quickly.
-- **Automatic reveal's speed:** each song for its snippet's length, today's Check timing (about 2.5 s a landed song).
-- **Voices in the Celebration:** "Parlem" works during it, ducking the victory music for the winner's moment.
-- **The tablet's Check screen:** the card as its 3×4 grid with the private marks, the next song's title large so a presenter can read it out, the warnings, one big reveal button (hold for automatic), the auto toggle, the cue, the smaller stop button and "+ Un altre". Frontend writes the content spec first; boards come after.
-**Default:** as above.
-
 ### U63 · A credential so agents can edit the cloud's plan
-D111 makes the cloud the only source, and D89 wants agents to edit the plan (the orchestrator parses the organizers' spreadsheet into it). Backend's tool: `plan pull` (a gitignored working copy), `plan check`, `plan push` (shows the diff, and refuses if a phone changed the plan since the pull). To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
+D116 has the user or an agent upload the edition's JSON to the cloud by hand, saving the old settings first. The upload tool is being proposed by Backend and Sound engine. To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
 **Default:** nothing built until the user says yes.
 
 ### U54 · What to call each set of 70 songs
@@ -120,6 +108,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U62 · The Check's remaining details** (2026-11-26) → D117: a stop goes into Pausa; automatic reveal runs through the fanfare and stops there; the rest stands.
 - **U46 · Londrina's two lowercase exceptions** (2026-11-26) → D114: both, as drawn.
 - **U47 · The card icon picker's style** (2026-11-26) → D115: A; the QR icon is too sharp next to the others.
 - **U43 · Which copy wins on the night** (2026-11-26) → D111: the cloud, always; no git-tracked settings file; development runs on a test plan.

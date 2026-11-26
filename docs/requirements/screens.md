@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A stopped Check fades out with no mark and no text (D109) |
+| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A stopped Check fades out with no mark and no text, into the Pausa screen (D109, D117) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
@@ -67,7 +67,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;
   - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands.
-- **During a Check (D107–D110; the layout pending U62):** the card as its 3×4 grid, already marked privately, with any warnings ("not registered as sold"); the next song's title large, to read out; one big button that reveals the next song (the remote's A; held, or with the tablet's toggle, they come in a row); the presenters' cue for the fanfare; a smaller button that stops the Check with no pass or fail; "+ Un altre". The list of claimed cards only shows when there are 2 or more. There's no "Confirmar".
+- **During a Check (D107–D110, D117):** the card as its 3×4 grid, already marked privately, with any warnings ("not registered as sold"); the next song's title large, to read out; one big button that reveals the next song (the remote's A; held, or with the tablet's toggle, they come in a row); the presenters' cue for the fanfare; a smaller button that stops the Check with no pass or fail; "+ Un altre". The list of claimed cards only shows when there are 2 or more. There's no "Confirmar".
   - Then a Celebration music override, the winner's name and notes.
   - A numbered slip's number on the winner form, optional, next to the name.
 - **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".

@@ -897,7 +897,7 @@ By: the user. Source: the Check's redesign in chat, 26 Nov. Amends: the Check's 
 As soon as the number is in, the tablet shows the whole card already marked, privately, with its warnings ("not registered as sold", "complete since song 34"). The projector reveals it one song at a time. Answers the Check's Q2.
 By: the user. Source: the Check's redesign in chat, 26 Nov. Lives in: requirements/screens.md › Console.
 
-### D109 · A pass needs no confirmation; a quiet way to stop the Check · 2026-11-26 · Active; the cue and the fail Pending (U62)
+### D109 · A pass needs no confirmation; a quiet way to stop the Check · 2026-11-26 · Amended by D117
 A card that passes is valid by itself: there's no "Confirmar". The fanfare and the Celebration start only on the presenters' cue, never by themselves, so they don't land over the presenters' voices. A smaller button stops the Check at any time before that cue, showing neither a pass nor a fail, for when the organizers suspect something and want to check the card by hand. Answers the Check's Q3.
 What a stop does (the orchestrator, as the user asked): the claim stays undecided, kept in the console's list as stopped. The round goes back to the Hold it was in before the Check ("Parlem", the music under the voices); no fanfare or effect plays. The projector's card fades out with no mark and no text, back to the round's screen; phones show nothing about it. Afterwards the presenters either check the card again (publicly, from the start; its result decides as usual) or drop the claim, and the round goes on. This replaces rejecting a card that passed.
 By: the user; the stop's details by the orchestrator at the user's request. Source: the Check's redesign in chat, 26 Nov. Amends: D49 (rejecting a passed card becomes stopping the Check). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console, Projector.
@@ -906,11 +906,11 @@ By: the user; the stop's details by the orchestrator at the user's request. Sour
 A presenter asks for other cards while walking to the player. The claim pad takes one number or several ("+ Un altre") before checking. The list of claimed cards only appears when there are 2 or more, and someone who shouts during a Check can still be added. Answers the Check's Q5.
 By: the user. Source: the Check's redesign in chat, 26 Nov. Lives in: requirements/game-rules.md › Claims; requirements/screens.md › Console.
 
-### D111 · The cloud is always the source of truth for the night's plan · 2026-11-26 · Active
+### D111 · The cloud is always the source of truth for the night's plan · 2026-11-26 · Amended by D116
 One rule, whatever the date: the cloud's plan wins. There's no git-tracked settings file and no prizes or sponsors in git. A local copy an agent edits is only a working copy, pushed back to the cloud. Development has no cloud, so it runs on a test plan. Answers U43.
 By: the user. Source: open-questions.md › Answered (U43); the user's message of 26 Nov. Supersedes: D97. Amends: D89 (the organizers' spreadsheet is parsed into the cloud's plan, not into a git file). Lives in: requirements/operations.md › Privacy; requirements/game-rules.md › Sponsors.
 
-### D112 · No sponsors, prizes or money in git · 2026-11-26 · Active
+### D112 · No sponsors, prizes or money in git · 2026-11-26 · Amended by D116
 Businesses' names and prizes change every year, so they don't belong in git. Money amounts live only in the organizers' spreadsheet. Answers U48.
 By: the user. Source: open-questions.md › Answered (U48). Lives in: requirements/operations.md › Privacy.
 
@@ -925,3 +925,11 @@ By: the user. Source: open-questions.md › Answered (U46). Amends: D96. Lives i
 ### D115 · The card icon picker is style A · 2026-11-26 · Active
 On "Afegir cartró", the icon picker is framed, with the icons already taken pressed in, as on `Mobil-B-J2`. The QR icon feels too sharp next to the others and gets softened on the boards. Designs only. Answers U47.
 By: the user. Source: open-questions.md › Answered (U47). Lives in: requirements/screens.md › Player app.
+
+### D116 · One JSON per edition, in git, sent to the cloud by hand · 2026-11-26 · Active; the details Pending (Backend's and Sound engine's proposal)
+Each edition keeps one JSON in git with all the info it needs: the plan and its rounds, prizes and sponsors (businesses' names included), the songs and the cards. Local seeding uses it. On the day, or for a rehearsal, the user or an agent uploads it by hand to configure everything or reset all data, and an upload always saves the old settings first, so nothing is lost. Git isn't read at runtime: the cloud stays the source of truth while running (D111). Logos stay separate, in the bucket. Money amounts stay in the organizers' spreadsheet (D112). The user: "you assumed that being in git meant also being used at runtime in production, no, i (or an agent) would send it to prod manually."
+By: the user. Source: the user's message of 26 Nov. Amends: D111 (it read "no git file" into the user's answer), D112 (names and prizes in git are fine). Lives in: requirements/operations.md › Privacy; requirements/game-rules.md › Sponsors.
+
+### D117 · The Check's details · 2026-11-26 · Active
+Stopping a Check puts the round into Pausa (the Interval music; the projector and phones show "Tornem de seguida"), not back into Parlem. Automatic reveal (holding A, or the toggle) runs through the cue too, the fanfare or the fail moment, and goes no further. The rest of U62 stands: the reveals stop at the first ✗; several cards are checked in turn; a stopped claim holds the round until it's checked again or dropped; the Desgraciat has the same controls; Parlem works in the Celebration. Answers U62.
+By: the user. Source: open-questions.md › Answered (U62); the user's message of 26 Nov. Amends: D109 (the stop's Parlem, and the cue only by hand). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console; requirements/show-and-music.md › the Check's sound.
