@@ -67,9 +67,13 @@ _Avoid_: Full house, full card, quina (outside the UI)
 **Tie**:
 Two or more cards completing the same Line or Bingo on the same landing. The shuffle avoids ties among the cards in play.
 
-**Interval**:
-The time between two rounds, with music playing. The next round's prizes stay hidden until its intro.
-_Avoid_: Break, descans, pause
+**Break**:
+The time between two rounds, with its own music playing. The next round's prizes stay hidden until its intro. (The code may still call it "interval", D136.)
+_Avoid_: Interval (the old name), pause
+
+**Throw**:
+A chaotic moment when the organizers throw fuets or sweets to the crowd, so people get up from their chairs, with its own energetic song. It's independent of the breaks, though it usually happens in one.
+_Avoid_: Throw break, parón
 
 **Claim**:
 A player shouting Line or Bingo for a card, which then has to be checked.

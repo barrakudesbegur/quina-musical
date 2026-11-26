@@ -135,13 +135,13 @@ This page explains the event: what happens on the night, who does what, and how 
 5. **The throws:** between some rounds, a break of about 5 minutes ("parón").
    - Organizers throw things to the crowd, such as fuets, sweets or chocolates, so people get up off their chairs and the night doesn't drag.
    - The presenters put on a bit of a show or go round the tables talking to people.
-   - It's a chaotic moment with an energetic song, chosen for each throw (**new in 2026**; for now "Pont aeri" in both).
+   - It's a chaotic moment with an energetic song, chosen for each throw (**new in 2026**). This year it's "Flying Free" by Pont Aeri, from a moment a little before its drop, so the presenters can build the hype before the throwing starts.
    - 2025's plan had three throws: fuets, then caramels and melindros, then chocolates.
 6. **The close:**
    - the presenters explain how to collect prizes and give a short closing speech;
    - the sponsors are thanked;
-   - a DJ set follows.
-   - The mood: people get up and leave, or stay around while the organizers take their things down, dancing, talking or helping. The end music is its own set, in a fixed order, so the first song after the close is planned (**new in 2026**).
+   - there's no DJ set this year (there was one in 2025, until 23:00).
+   - The mood: people get up and leave, or stay around while the organizers take their things down, dancing, talking or helping. The end music is its own set, in a fixed order, so the first song after the close is planned (**new in 2026**). At some point during the take-down, the tech disconnects the laptop from the sound system, and a phone connects for a Spotify Jam where people add songs as they like.
 7. **Take-down,** with everyone.
 
 **Rounds per night:**
@@ -186,6 +186,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The Check's result decides.**
   - In a strange case, the presenters can send the Check to review before its result, showing neither a pass nor a fail, and check the card by hand; the music keeps playing unless they pause it. Then the organizers pick: continue the Check, declare a win or a loss by hand (the remaining songs are skipped, with a warning on the tablet if it goes against the card), or discard the claim without any fanfare.
   - Outside a review, they can never accept a card that failed.
+  - **The review is a plan B:** if the system has an error, or something must be done by hand, the organizers can decide a win or a loss themselves, so the night is never blocked. A discarded claim leaves the round where it was, on the same song.
 - **Ties:**
   - the first to claim wins;
   - claims on the same song share the prize, and the winners agree how to split it;

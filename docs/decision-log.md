@@ -968,7 +968,7 @@ By: the user. Source: open-questions.md › Answered (U76). Lives in: requiremen
 The status for a discarded claim is `discarded`, matching the user's word and the label "Descartat". Answers U83.
 By: the user. Source: open-questions.md › Answered (U83). Lives in: packages/protocol (Sound engine).
 
-### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Pending (U84)
+### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Pending (U118)
 After a discard, the round uses the console's existing "aturat" mode ("Avanç automàtic aturat: prem Següent"), the override of the auto-advance, instead of switching the auto-advance setting off and remembering it. The music from before the Check still comes back in Parlem. On "Següent", Parlem goes away and the auto-advance is back to whatever it was. The user: "you should have told me that we already have the aturat mode wich is a override of the auto-advance, and more suitable for this."
 Sound engine's facts (26 Nov): in today's code "Avanç automàtic aturat" is the auto-advance setting itself switched off, and "Següent" doesn't clear it. The override is the Hold: Parlem already suspends the auto-advance, and "Següent" ends it with the auto-advance as set. Which one the user means is U84.
 By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requirements/show-and-music.md › the Check's sound.
@@ -977,11 +977,11 @@ By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requ
 The claim pad refuses a number that doesn't exist ("Aquest número no existeix"), so the presenter retypes it and nothing goes public. A real card of the wrong type still fails publicly (D33). Answers U86.
 By: the user. Source: open-questions.md › Answered (U86). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
 
-### D127 · "Enrere" inside a Check · 2026-11-26 · Active; its details Pending (U90–U92)
+### D127 · "Enrere" inside a Check · 2026-11-26 · Amended by D134
 A claim is an instant, so before a Check "Enrere" is the normal Back. If a presenter undoes a song there, the Check may fail; they press "Següent" again, and no extra logic is needed. During a Check, a single press (no 1+2 hold) steps back one revealed song, down to none. At none, the song that was playing before the Check plays again, while the card stays on the Check screen; "Enrere" never closes the Check. The button hints sit on the right buttons. Answers U87.
 By: the user. Source: open-questions.md › Answered (U87); the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
 
-### D128 · Pausa resumes what was playing · 2026-11-26 · Active; its details Pending (U93–U95, and Sound engine's check that nothing breaks)
+### D128 · Pausa resumes what was playing · 2026-11-26 · Amended by D135; more details Pending (U105–U114)
 Pausa is available at any time, and the playback in progress is saved when it starts. While it's on, the remote's A turns Pausa off (its hint glides to the new place), and the tablet's "Següent" still plays the transition into the next song. Parlem shows as on and can't be turned off: the Pausa music plays low, as if in Parlem. When Pausa ends, whatever was playing before resumes, with Parlem still on: a round's song, the win or fail music, or any other. Then A goes back to normal. During a Check, the −/+ hold sends the Check to review instead of pausing; the hints move, and A's action changes once the screen shows the review.
 By: the user. Source: the user's message of 26 Nov. Amends: "the round resumes with a normal transition" (show-and-music › The presenters' actions). Lives in: requirements/show-and-music.md › The presenters' actions.
 
@@ -1004,3 +1004,35 @@ By: the user. Source: the user's message of 26 Nov. Supersedes: D115. Lives in: 
 ### D132 · Build the phone's drawers to match the design · 2026-11-26 · Active
 The user's go to implement: the player app's home, corner buttons and drawers (D73, D87) are built to match the agreed canvas boards (`Mobil-B-J2` and the add-card drawer, v61 onwards), so the work isn't left half done. This lifts the UI freeze for the player app's drawers only. `71caa9c` is already pushed and stays as the starting point. The prizes drawer isn't designed yet (U30), so it's not part of this.
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.
+
+### D133 · "Següent" doesn't end Parlem; Aguanta and Suspens block it · 2026-11-26 · Active; the details Pending (U116–U118)
+"Següent" no longer ends Parlem in general (today's code ends it). While Aguanta or Suspens is on, "Següent" is disabled: holding B and pressing A plays no next song. A Parlem or an Aguanta that will end at the next "Següent" (an "expirable" one, as after a discard) shows a discreet badge on its button, with no text or very short text. Every Hold mode shows that it's on (today the Parlem and Aguanta buttons show pressed, and the "Ara sona" ring shows a "Parlem" badge and a "Parlem · des de fa…" chip). Answers U84 with (b).
+By: the user. Source: open-questions.md › Answered (U84); the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D134 · "Enrere" inside a Check, the details · 2026-11-26 · Active
+On the projector the last revealed mark disappears, and that cell is next again (U90). A step back replays the previous song's snippet, and it turns off that Check's automatic reveal if it was on, for that Check only (U91). It works only while songs are being revealed: not in a review, and not after the cue (U92).
+By: the user. Source: open-questions.md › Answered (U90–U92). Amends: D127. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D135 · Pausa, the screens, the resume and a review · 2026-11-26 · Active
+"Tornem de seguida" shows on the projector and phones only during a round, a Check or a Celebration; at the doors, in a break and at the end, the screens stay as they are (U93). The playback resumes exactly where it was, fading in (U94). During a review, the −/+ hold is Pausa as usual, and A does nothing: the review's four choices are tablet-only (U95).
+By: the user. Source: open-questions.md › Answered (U93–U95). Amends: D128. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D136 · "Break" for the time between rounds; "Throw" on its own · 2026-11-26 · Active; the code's word Pending (Sound engine and Frontend)
+The user prefers "break" to "Interval" for the time between two rounds; if "interval" is too embedded in the code, it can stay there. "Throw break" is a poor name, since a throw is independent of the break: it's just a **Throw**. Answers U96 (by "break" the user meant every Interval).
+By: the user. Source: open-questions.md › Answered (U96). Lives in: GLOSSARY.md.
+
+### D137 · No DJ after the quina; a Spotify Jam while taking down · 2026-11-26 · Active
+There's no DJ set after the quina this year. After the close the end music plays from the laptop. At some point during the take-down, the tech disconnects the laptop from the sound system, and a phone connects for a Spotify Jam, where people add songs as they like, so the laptop can be packed. Answers U98.
+By: the user. Source: open-questions.md › Answered (U98). Lives in: event.md › The night, step by step.
+
+### D138 · The throw song and its "Llançament" button · 2026-11-26 · Active; whether it can stay on the cards Pending (U103)
+The throw song is "Flying Free" by Pont Aeri and Marian Dacal, the one in last year's playlist (id 24 in the default pool, Spotify 1cpIInDCM09St4ajfPvPPZ), already downloaded with hooks. It gets a hook of its own for throws, a bit before the drop, so the presenters can build the hype before the throwing starts. The "Llançament" button starts it from that hook at full volume, and the break music fades back in when it ends. A tap stops it, and a later tap resumes where it stopped; a long press plays it again from the hook. Answers U100.
+By: the user. Source: open-questions.md › Answered (U100). Lives in: requirements/show-and-music.md › Music for each moment.
+
+### D139 · Every slider, on the tablet · 2026-11-26 · Active
+All the sliders Sound engine listed (U101 (a)), in the tablet's settings, saved in the cloud and the edition file (U102 (a)).
+By: the user. Source: open-questions.md › Answered (U101, U102). Amends: D130. Lives in: requirements/show-and-music.md › Volumes.
+
+### D140 · Start designing and building the new things · 2026-11-26 · Active
+The user's go: "you can ask the sessions to start designing and implementing the new things, most of it is sorted out". The sessions design and build what's decided: the presenter-paced Check and its review (D107–D126), "Enrere" inside a Check (D127, D134), Pausa (D128, D135), the Hold rules (D133), the music for each moment and the throws (D129, D138), and the volumes (D139). This lifts the UI freeze for those parts of the console, the projector and the phones. It also covers the console's two labels (U67 (a)) and publishing the Check boards (U66). Parts still open with the user stay out until answered.
+By: the user. Source: the user's message of 26 Nov. Lives in: docs/status.md.

@@ -83,17 +83,19 @@ The presenters can do any of these at any time, from the console or the Wii remo
 | On the console | What it does | Wii remote |
 |---|---|---|
 | "Següent" | The next song now. Ignored while a transition is running, so a double press does nothing | A |
-| "Parlem" | **Hold:** no song lands, and the music ducks under the presenters' voices. A long Hold switches to Hold music | − or + (tap) |
+| "Parlem" | **Hold:** nothing lands by itself, and the music ducks under the presenters' voices. A long Hold switches to Hold music. "Següent" doesn't end it (D133; how "Següent" works in it, pending U116) | − or + (tap) |
 | "Pausa" (hold "Parlem") | **Pause:** available at any time. No song lands, the Pausa music plays, and the projector and phones show "Tornem de seguida". The playback in progress is saved; when Pausa ends it resumes, with Parlem still on (D128). While it's on, A turns it off, and the tablet's "Següent" plays the transition into the next song. During a Check, this hold sends the Check to review instead | − or + (hold) |
-| "Aguanta" | **Stay:** no song lands, and the current song keeps playing at full volume, looping a phrase, for dancing and crowd moments | B (hold) |
-| "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself | B held, plus 3 strong shakes; let go of B to land |
-| "Enrere" (long press) | **Back:** during a Check, a single press steps back one revealed song, down to none, and never closes the Check (D127). Otherwise it undoes the last landing. That song stops counting, phones unmark it, and it becomes the next song again; the Queue is untouched. The drum turns back one card and the show goes into Hold. It can be pressed several times, and during a Spin it cancels the Spin | 1 or 2 (hold 1.5 s) |
+| "Aguanta" | **Stay:** no song lands, and the current song keeps playing at full volume, looping a phrase, for dancing and crowd moments. "Següent" is disabled while it's on (D133) | B (hold) |
+| "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself. "Següent" is disabled while it's on (D133) | B held, plus 3 strong shakes; let go of B to land |
+| "Enrere" (long press) | **Back:** during a Check, a single press steps back one revealed song, down to none, and never closes the Check. The projector removes that mark, the previous song's snippet replays, and that Check's automatic reveal turns off. Only while revealing: not in a review or after the cue (D127, D134). Otherwise it undoes the last landing. That song stops counting, phones unmark it, and it becomes the next song again; the Queue is untouched. The drum turns back one card and the show goes into Hold. It can be pressed several times, and during a Spin it cancels the Spin | 1 or 2 (hold 1.5 s) |
 | "Comprovar cartró" | A Claim: a number pad for the card, then the Check | Console only |
 | "Efectes" | Sound effects and fanfares, such as a horn, shown as icons | D-pad (4 effects) |
 | "Ritme" | The Pace: presets, −/+ and a lock | none |
 | Auto-advance | On or off | HOME (a different rumble for each) |
 
 - **Two levels per button:** "Parlem" → "Pausa", and "Aguanta" → "Suspens". The console shows each pair visually.
+- **Every Hold mode shows that it's on** (D133). A Parlem or Aguanta that will end at the next "Següent" shows a discreet badge on its button.
+- **Pausa (D128, D135):** "Tornem de seguida" only during a round, a Check or a Celebration; it resumes exactly where it was, fading in; during a review the −/+ hold is Pausa and A does nothing.
 - **The Suspense release** lands on the outgoing song's phrase boundary, up to about 9 s after letting go (pending U13). Default: the phrase.
 - **The moment to keep:** the presenters control the exact moment a song changes, to get the crowd chanting before it. Suspense is the first tool for that.
 - **Safe by design:**
@@ -148,14 +150,15 @@ _From event.md › The night, step by step; D129._
 - **The doors, the breaks and the end** each have their own set. For now the breaks and the end use the pop playlist 0fvoRGCC8zXqDyj5uLhJVg. The end plays in a fixed order.
 - **Pausa** plays the lofi and silly-core playlist 0XTlZPUpt7xPoPxk4AUU3O, low, as if in Parlem.
 - **Each round's intro** has music chosen for it in the plan. For now it's "5-12. Parasail Minigame" (Zelda: Breath of the Wild), looping cleanly, played low.
-- **Each throw** has an energetic song chosen for it, from a hook chosen in advance. For now it's "Pont aeri" in both.
-- The details are pending U96–U100.
+- **Each throw** has an energetic song chosen for it. This year: "Flying Free" by Pont Aeri and Marian Dacal (last year's id 24), from a hook of its own a bit before the drop. "Llançament" starts it at full volume; a tap stops it, and the next tap resumes where it was; a long press restarts it from the hook; the break music fades back after (D138).
+- **After the close,** the end music plays until the tech disconnects the laptop for a Spotify Jam (D137).
+- Still pending: U97 (the doors and the end's playlists) and U99 (the intro music's span).
 
 ## Volumes
 
 _D130._
 
-- A master volume, plus one each for the win, the fail, breaks, Pausa, intros, songs, songs in Parlem and effects. All start at 100%, except songs in Parlem and effects, which start lower. The full list and where they live are pending U101–U102.
+- On the tablet's settings, saved in the cloud and the edition file (D139). A master volume, plus one each for songs, songs in Parlem, the DJ moves' effects, the presenters' effects, the drum's ticks, the Check's sounds, Hold music, the win, the fail, the final-lap stinger, intros, breaks, Pausa, throws, the doors and the end. All start at 100%, except songs in Parlem and effects, which start lower.
 
 ## The Interval and the throw breaks
 

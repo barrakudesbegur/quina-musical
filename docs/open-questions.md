@@ -8,26 +8,16 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U90–U92 · "Enrere" inside a Check (D127)
-- **U90 · On the projector:** (a) the last revealed mark disappears, and that cell is next again; (b) the projector keeps its marks, and only the tablet steps back.
-- **U91 · The sound of a step back:** (a) silent, and the next press replays that song's snippet; (b) the step back replays the previous song's snippet. At none, the song from before the Check plays (D127).
-- **U92 · When it works:** (a) only while songs are being revealed: not in a review, not after the cue; (b) also after the cue, undoing the fanfare.
-
-### U93–U95 · Pausa everywhere (D128)
-- **U93 · The screens:** (a) "Tornem de seguida" on the projector and phones in every scene; (b) only in a round (a song, a Check, a Celebration); at the doors, in a break and at the end, the screens stay as they are.
-- **U94 · Where it resumes:** (a) exactly where it was, fading in; (b) from the start of the phrase it was in.
-- **U95 · During a review:** the −/+ hold is (a) Pausa, as usual, or (b) nothing. And A is (a) "continue the Check", or (b) nothing, with the four choices tablet-only.
-
-### U96–U100 · Music for each moment (D129)
-- **U96 · "Break":** the glossary calls the time between rounds an Interval, and a longer one with a throw a throw break. By "break" do you mean (a) every Interval, throw breaks included (the throw itself has its song); (b) only the throw breaks; (c) something else?
+### U97, U99 · Music for each moment (D129)
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
-- **U98 · The end music and the DJ:** (a) it plays after the close until the tech stops it for the DJ set; (b) a set number of songs, then it stops.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
-- **U100 · The throw song:** which "Pont aeri" (a Spotify link)? It's played (a) from its hook at full volume when the presenters start the throw (a "Llançament" button), until they end it and the break music fades back in; (b) another way.
 
-### U101–U102 · Volumes (D130)
-- **U101 · The sliders** (Sound engine's full list of the engine's sounds, 26 Nov): a master volume; songs; songs in Parlem; the DJ moves' effects (risers, snare rolls, impacts, the Spin's whoosh, echoes), separate from the presenters' pad, with teases and Signatures riding the songs; the presenters' effects (the pad); the drum's ticks; the Check's sounds (snippets, the broken record, knocks); Hold music; win (the Clear fanfare, the victory track, the winning song's loop); fail (the Failure fanfare, the error Hold music); the final-lap stinger; intros; breaks; Pausa; throws; the doors; the end. (a) All of these; (b) only the user's list; (c) another grouping.
-- **U102 · Where they live:** (a) the tablet's settings, saved in the cloud and the edition file; (b) Admin only; (c) the laptop only.
+### U116–U119 · Parlem, Aguanta and "Següent" (D133)
+The glossary's words: **Hold** is "Parlem" (the music ducks under the voices); **Stay** is "Aguanta" (the song keeps playing at full volume, looping a phrase). Both are one Hold with two modes, so only one can be on. **"Avanç automàtic aturat"** isn't Aguanta: it's the console's label for the auto-advance switched off, a setting that stays across songs.
+- **U116 · "Següent" during Parlem:** "Següent" no longer ends Parlem (D133). So: (a) it lands the next song and Parlem stays on, with the new song ducked until a presenter turns Parlem off; (b) it's disabled during Parlem, like Aguanta. With (a), the chant before a song becomes two presses: Parlem off, then "Següent", or "Següent", then Parlem off.
+- **U117 · An Aguanta that ends at the next "Següent":** "Següent" is disabled while Aguanta is on (D133), so an expirable Aguanta can't end on "Següent". When does one happen, and what ends it? (a) There's no expirable Aguanta, only an expirable Parlem; (b) after a Pausa that interrupted an Aguanta, it comes back and ends when B is let go; (c) something else.
+- **U118 · After a discard, in the glossary's words:** (a) an expirable Parlem: the music from before the Check, ducked, nothing lands by itself, and the next "Següent" ends it; (b) Aguanta; (c) the auto-advance switched off ("aturat") as well. D125 assumed "aturat" was Aguanta.
+- **U119 · The remote's B with the auto-advance off:** B held is Aguanta, which keeps the song looping at full volume so it doesn't run out, and B held plus three shakes is Suspens. So B isn't useless with the auto-advance off, though its Aguanta adds less then. (a) Leave B as it is; (b) give B's tap another job when the auto-advance is off (which?); (c) leave it unassigned on purpose.
 
 ### U115 · What the add-card QR button does
 The agreed board draws "Escanejar el QR del cartró" on the add-card drawer, but nothing says what it does, and no board shows a camera view.
@@ -55,7 +45,7 @@ Today "Enrere" during a Check undoes the last landing. With D127 it steps back a
 - **U109 · Where Parlem doesn't exist today** (the Interval, the intro, the doors, the end): when Pausa ends there, (a) the music resumes at its own level; (b) Parlem becomes possible there too, and resumes on.
 - **U110 · The Interval's countdown during Pausa:** (a) it freezes; (b) it keeps running.
 - **U111 · A restart during Pausa:** (a) Pausa is recorded in the night's log, so a restart comes back paused, with the saved playback; (b) not recorded: a restart comes back unpaused, in the Hold.
-- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; Parlem afterwards follows U84.
+- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; whether Parlem stays on afterwards follows U116.
 - **U113 · Short sounds when Pausa starts** (fanfares, effects, snippets, a transition's tail): (a) they ring out under the Pausa music; (b) they're cut at once.
 - **U114 · Paused time and the night's end:** (a) the round's target end moves by the paused time, so the show doesn't rush afterwards; (b) it counts as time lost, and the Pace speeds up to catch up, as today.
 
@@ -72,11 +62,6 @@ A is the reveal and the cue.
 ### U89 · When the card appears on the projector
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
-
-### U84 · Does "Següent" end Parlem?
-The user's model: Parlem and "aturat" don't end by themselves on "Següent", so resuming a round on its last song after a discard is a special state. Today's code (checked in the engine, `next()` → `leaveHold`): "Següent" **does** end Parlem, and Aguanta, and lands the next song with the auto-advance as it was set. Only "aturat", the auto-advance setting itself, stays off across songs.
-- (a) **Keep today's rule:** "Següent" ends Parlem. A discard (and the end of a Pausa) just leaves Parlem on, and "Següent" ends it; no new state.
-- (b) **Change the rule:** Parlem stays on across "Següent" until a presenter turns it off. Then resuming after a discard or a Pausa is a special state, where "Següent" does end it.
 
 ### U77–U79 · The tablet, music and phones during a review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
@@ -97,15 +82,6 @@ The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json
 - **U75 · One file or split:** (a) one assembled file, as the user said; its cards (about 1 MB two-sided) change with every song swap; (b) the plan by hand in one file, with songs and cards referenced from the pool. Two files can drift. Proposed: (a).
 - Their Q9 (one edition = one night pool with three Parts) is U54.
 **Default:** nothing built until the user answers.
-
-### U67 · Two status labels despite the UI freeze · blocking
-Sound engine's step 1 for the new Check (unpushed) adds two Claim statuses, under review and dropped. The console doesn't build until `apps/console/strings.ts` has their labels, "En revisió" and "Descartat". Frontend has written them (two lines), but the freeze stops it committing them, so Sound engine is holding its push.
-Options: (a) allow this two-line commit; (b) Sound engine keeps the new statuses out of the shared types until the console is unfrozen, which is more work and a temporary shape.
-**Default:** nothing is pushed until the user answers.
-
-### U66 · Publishing the Check boards
-Frontend has drawn the new Check locally: the console's pad, a card mid-Check, automatic reveal, the two cues, the Celebration panel, several cards, a stopped Check, a wrong card, the Desgraciat, and the projector's stop fade.
-**Default:** they stay local until the user says to publish them on the design canvas.
 
 ### U12 · The theme pass
 Pending your go on the visual theme pass across the screens. Not ready yet (25 Nov).
@@ -207,6 +183,14 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U84 · Does "Següent" end Parlem?** (2026-11-26) → D133: no; Aguanta and Suspens disable "Següent"; an expirable Parlem or Aguanta shows a badge. Follow-ups U116–U119.
+- **U90–U92 · "Enrere" inside a Check** (2026-11-26) → D134: the projector removes the mark; the previous snippet replays and that Check's automatic reveal turns off; only while revealing.
+- **U93–U95 · Pausa** (2026-11-26) → D135: "Tornem de seguida" only in a round, a Check or a Celebration; it resumes exactly where it was; during a review the hold is Pausa and A does nothing.
+- **U96 · "Break"** (2026-11-26) → D136: every Interval; the user prefers "break"; a throw is just a "Throw".
+- **U98 · The end and the DJ** (2026-11-26) → D137: no DJ; a Spotify Jam from a phone during the take-down.
+- **U100 · The throw song** (2026-11-26) → D138: last year's "Flying Free" (Pont Aeri), its own hook before the drop; "Llançament" taps stop and resume, and a long press restarts it.
+- **U101–U102 · Volumes** (2026-11-26) → D139: every slider listed, on the tablet, saved in the cloud and the edition file.
+- **U66 · Publishing the Check boards** and **U67 · The console's two labels** (2026-11-26) → D140: the user's go to design and build the new things.
 - **U86 · A card number that doesn't exist** (2026-11-26) → D126: refused privately on the pad.
 - **U87 · "Enrere" during a claim and a Check** (2026-11-26) → D127: the normal Back before a Check; inside a Check, one press steps back one song, and it never closes the Check.
 - **U82 · Where Discard leads** (2026-11-26) → D122: back to the music from before the Check, in Parlem with the auto-advance off, until "Següent".
