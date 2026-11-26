@@ -16,6 +16,10 @@ The single place to resume the sound engine's work from. It was first written wh
     - The decoded audio moved with each song; the 6 cut songs' audio is in `data/cache/pools/2026/_cut/<Spotify id>`. The old id record and song list are kept as `output/*.before-D103.json`.
     - The temporary cards were remade with these ids.
     - Part 2 (U57, default ids 71–140): the same once the user says it's filtered and sorted.
+  - **The Interval music is the new playlist (D104, 26 Nov):** Spotify `0XTlZPUpt7xPoPxk4AUU3O`; Pausa plays it too.
+    - 37 of its 39 tracks are prepared: `data/out/interval/index.json`, 121–175 kbps, no quality flag. The old set is kept in `data/media/interval-old-0SsuXelEzN8gsS7WufySOg/`.
+    - Not on YouTube or YouTube Music, for the user to get by hand: #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters). The file goes in `data/media/interval/` as `NN Title - Artist.mp3`; then run `tools/prep/interval.py`.
+  - **Part 3** (Especial and Desgraciat, `79G8VcNrkih9GGjIzb47Gt`, D105) is empty. The especial card's side plays Part 1 until it's final; then it gets ids 141–210 (U57), alphabetical (D103). Don't fetch it before then.
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
