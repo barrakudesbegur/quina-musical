@@ -26,7 +26,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
   - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
-  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2), so the bundle the tools prepare needs another name. I proposed **repertoire** to Sound engine (the Orchestrator's word; "library" is the logo library's; not agreed yet). Mine follows its rename: the media sync's `--pool`, the manifest's field, the R2 prefix `pools/` → `repertoires/` (no copy: the next push lands there; the old keys go at the post-night prune), and a deploy before any laptop pushes under it;
+  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2), so the bundle the tools prepare needs another name. the bundle is the **repertoire** (agreed with Sound engine; "library" is the logo library's), renamed in Sound engine's step A. Mine follows its rename: the media sync's `--pool`, the manifest's field, the R2 prefix `pools/` → `repertoires/` (no copy: the next push lands there; the old keys go at the post-night prune), and a deploy before any laptop pushes under it;
   - this year's songs to R2 as soon as they're prepared (U55, D113). Prune last year's after the night;
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
   - the provisional-hooks WARN, once Sound engine sends the field.
