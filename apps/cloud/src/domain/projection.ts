@@ -6,7 +6,7 @@
 // steps before its verdict, a claim's details, or winners' names.
 // Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
 import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
-import { defaultCardType, roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
+import { DEFAULT_SIDE, defaultCardType, roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
 
 export interface ProjectionContext {
   /** A laptop-clock epoch ms on the cloud's clock. */
@@ -27,6 +27,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
         number: entry.round,
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
+        ...sideOf(entry),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: false,
         ended: false,
@@ -49,6 +50,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
         number: entry.round,
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
+        ...sideOf(entry),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: entry.lineConfirmedFrom !== null,
         ended: false,
@@ -85,7 +87,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       // engine draws its Queue at boot (round.started, no Shuffle) so the first Spin can come without one.
       const inPlay = state.rounds.some((r) => r.number === entry.round && (r.landings.length > 0 || r.ended));
       if (entry.scene === 'roundStart' && !inPlay) {
-        changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind) } });
+        changes.push({ kind: 'intro', intro: { round: entry.round, kind: entry.roundKind, cardType: entry.cardType ?? defaultCardType(entry.roundKind), ...sideOf(entry) } });
       } else if (state.intro) {
         changes.push({ kind: 'intro', intro: null });
       }
@@ -177,6 +179,11 @@ function projectState(state: PublicState, show: ShowState, ctx: ProjectionContex
   const gameEndMs = roundGameEnd(ctx.toCloudMs(show.schedule.gameEndMs));
   if (gameEndMs !== state.gameEndMs) changes.push({ kind: 'gameEnd', gameEndMs });
   return changes;
+}
+
+/** The card's side a round plays (D178), for phones to mark that face: only when it isn't 1, as the journal has it. */
+function sideOf(entry: { side?: number }): { side?: number } {
+  return entry.side && entry.side !== DEFAULT_SIDE ? { side: entry.side } : {};
 }
 
 function spinChange(state: PublicState, spin: PublicSpin | null): PublicChange[] {

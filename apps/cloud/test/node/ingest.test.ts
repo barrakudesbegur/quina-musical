@@ -126,6 +126,9 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   const intro = entries.find((e) => e.kind === 'scene.changed') as JournalEntry;
   assert.ok(checkJournalEntry({ ...intro, cardType: 'groc' }).ok, 'an intro naming its card type');
   assert.ok(checkJournalEntry({ ...started, roundKind: 'desgraciat' }).ok, 'the Desgraciat round');
+  // The card's side a round plays (D178): absent for side 1, else 2 to 9.
+  assert.ok(checkJournalEntry({ ...started, side: 2 }).ok, 'a round on side 2');
+  assert.ok(checkJournalEntry({ ...intro, side: 2 }).ok, 'an intro on side 2');
   const opened = entries.find((e) => e.kind === 'claim.opened') as JournalEntry;
   assert.ok(checkJournalEntry({ ...opened, winKind: 'standing' }).ok, 'a claim for the last card standing');
   const decided = entries.find((e) => e.kind === 'claim.decided') as JournalEntry;
@@ -170,6 +173,9 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
     ['card type with a dash (the resume code splits on it)', { ...started, cardType: 'cartro-groc' }],
     ['card type in capitals', { ...intro, cardType: 'Especial' }],
     ['card type as a number', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, cardType: 2 }],
+    ['side 0', { ...started, side: 0 }],
+    ['side 10 (sides are 1 to 9)', { ...intro, side: 10 }],
+    ['side as text', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, side: '2' }],
     ['queue with a repeat', { ...started, queue: [1, 2, 2] }],
     ['queue of strings', { ...started, queue: ['1'] }],
     ['settings missing a field', { ...started, settings: { pace: 14 } }],

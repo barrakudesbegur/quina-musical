@@ -240,6 +240,25 @@ test('card prices (U5): every card type a round plays has a price and a known ru
   assert.equal(c.cardPricesCheck(types, null), null, 'no plan: the plan check speaks');
 });
 
+test('card sides (D178): each round plays a printed side whose pool has songs; a printed side no round plays only warns', () => {
+  assert.deepEqual(c.poolSongCounts([{ id: 1 }, { id: 2, pool: '2' }, { id: 3, pool: '2' }]), { '1': 1, '2': 2 }, 'a song without a pool is in pool 1');
+  const oneSide = [{ type: 'normal' }, { type: 'especial' }];
+  const twoSides = [{ type: 'normal', sides: [{ side: 1, pool: '1' }, { side: 2, pool: '2' }] }, { type: 'especial' }];
+  assert.equal(c.sidesCheck(PLAN, oneSide, { '1': 70 })?.status, 'pass', 'a type from before sides: one side 1 on pool 1');
+  const unplayed = c.sidesCheck(PLAN, twoSides, { '1': 70, '2': 70 });
+  assert.equal(unplayed?.status, 'warn');
+  assert.match(unplayed?.detail ?? '', /no round plays side 2 of card type "normal"/);
+  const onSide2 = { ...PLAN, rounds: PLAN.rounds.map((r) => (r.number === 1 ? { ...r, side: 2 } : r)) };
+  const unprinted = c.sidesCheck(onSide2, oneSide, { '1': 70 });
+  assert.equal(unprinted?.status, 'fail');
+  assert.match(unprinted?.detail ?? '', /round 1: card type "normal" has no side 2/);
+  const noSongs = c.sidesCheck(onSide2, twoSides, { '1': 70 });
+  assert.equal(noSongs?.status, 'fail');
+  assert.match(noSongs?.detail ?? '', /round 1: side 2 plays pool 2, which has no songs/);
+  assert.equal(c.sidesCheck(null, oneSide, {}), null, 'no plan: the plan check speaks');
+  assert.equal(c.sidesCheck(PLAN, null, {}), null, 'no card-types.json: the cards check speaks');
+});
+
 test("card prices as in 2025 (D69), the Desgraciat on special cards (D70): 15 € before round 1, the special card's 5 € before the Desgraciat", () => {
   const [normal, special] = PLAN.rounds as [GamePlan['rounds'][number], GamePlan['rounds'][number]];
   const rounds = [

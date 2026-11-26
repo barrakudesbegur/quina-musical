@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, isVolumeKey, ROUND_KINDS, VOLUME_MAX, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, isSide, isVolumeKey, ROUND_KINDS, SIDE_MAX, VOLUME_MAX, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -75,6 +75,8 @@ const position = integer(0, 4999);
 const roundKind = oneOf(...ROUND_KINDS);
 /** A card-types.json id. Older journals lack it: the round plays its kind's default type. */
 const cardType = optional((value) => (isCardTypeId(value) ? null : 'a card type id (a-z, 0-9, at most 24)'));
+/** The card's side a round plays (D178): absent for side 1, as in every journal from before it. */
+const side = optional((value) => (isSide(value) ? null : `a card side, 1 to ${SIDE_MAX}`));
 const winKind = oneOf(...WIN_KINDS);
 const claimId = text(40);
 
@@ -91,6 +93,7 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
     shuffleSeed: optional(finite),
     shuffleAttempts: optional(integer(0)),
     cardType,
+    side,
   },
   'round.resumed': {
     round,
@@ -105,13 +108,14 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
     position: integer(-1, 4999),
     lineConfirmedFrom: nullable(integer(-1, 4999)),
     cardType,
+    side,
   },
   'song.landed': { round, position, songId: integer(0) },
   'landing.undone': { round, position, songId: integer(0) },
   'line.confirmed': { round, fromPosition: integer(-1, 4999) },
   'cards.set': { ranges: text(2000, true) },
   'settings.changed': { settings },
-  'scene.changed': { scene, round: integer(0, 99), roundKind, cardType },
+  'scene.changed': { scene, round: integer(0, 99), roundKind, cardType, side },
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   // `outcome`: the Check's result at the decision (absent in older journals), one of the protocol's CHECK_OUTCOMES.
   // `manual`: won or lost by hand, whatever the card shows: from a Review (D121), or the Desgraciat's finale when a

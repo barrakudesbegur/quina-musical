@@ -75,16 +75,16 @@ export class JournalBuilder {
     return this;
   }
 
-  /** `cardType` as the engine journals it with a round's intro (absent: the kind's default). */
-  scene(scene: ShowScene, round = Math.max(this.round, 1), roundKind: RoundKind = this.roundKind, cardType?: string): this {
-    this.push({ kind: 'scene.changed', scene, round, roundKind, ...(cardType ? { cardType } : {}) }, 2_000);
+  /** `cardType` and `side` as the engine journals them with a round's intro (absent: the kind's default, side 1). */
+  scene(scene: ShowScene, round = Math.max(this.round, 1), roundKind: RoundKind = this.roundKind, cardType?: string, side?: number): this {
+    this.push({ kind: 'scene.changed', scene, round, roundKind, ...(cardType ? { cardType } : {}), ...(side ? { side } : {}) }, 2_000);
     return this;
   }
 
-  /** Introduce the next round, Shuffle it and start it, then go to play. `cardType`: absent, the kind's default. */
-  startRound(kind: RoundKind = 'normal', queue = shuffledQueue(this.round + 1), cardType?: string): this {
-    this.scene('roundStart', this.round + 1, kind, cardType);
-    this.drawRound(kind, queue, cardType);
+  /** Introduce the next round, Shuffle it and start it, then go to play. `cardType`: absent, the kind's default; `side`: absent, 1. */
+  startRound(kind: RoundKind = 'normal', queue = shuffledQueue(this.round + 1), cardType?: string, side?: number): this {
+    this.scene('roundStart', this.round + 1, kind, cardType, side);
+    this.drawRound(kind, queue, cardType, side);
     return this.scene('play');
   }
 
@@ -101,7 +101,7 @@ export class JournalBuilder {
   }
 
   /** The next round's round.started (its Queue), as the engine journals it. */
-  private drawRound(kind: RoundKind, queue: number[], cardType?: string): this {
+  private drawRound(kind: RoundKind, queue: number[], cardType?: string, side?: number): this {
     this.round += 1;
     this.roundKind = kind;
     this.queue = queue;
@@ -112,6 +112,7 @@ export class JournalBuilder {
         round: this.round,
         roundKind: kind,
         ...(cardType ? { cardType } : {}),
+        ...(side ? { side } : {}),
         queue,
         phaseSeed: 1234 + this.round,
         startedAtMs: this.clock ? this.clock() : this.nowMs + 5_000,
@@ -126,7 +127,7 @@ export class JournalBuilder {
   }
 
   /** A manual resume (plan B): round `round` again from `queue`, with songs 0..position counted. */
-  resume(round: number, position: number, { kind = 'normal' as RoundKind, queue = shuffledQueue(round), lineConfirmedFrom = null as number | null } = {}): this {
+  resume(round: number, position: number, { kind = 'normal' as RoundKind, queue = shuffledQueue(round), lineConfirmedFrom = null as number | null, side = undefined as number | undefined } = {}): this {
     this.round = round;
     this.roundKind = kind;
     this.queue = queue;
@@ -145,6 +146,7 @@ export class JournalBuilder {
         shuffleAttempts: 0,
         position,
         lineConfirmedFrom,
+        ...(side ? { side } : {}),
       },
       5_000,
     );

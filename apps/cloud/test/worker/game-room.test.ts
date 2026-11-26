@@ -603,7 +603,7 @@ describe("a new laptop, and Admin's manual resume", () => {
 
   it('Admin lists the Games and resumes one: it becomes current, and its journal goes to the laptop', async () => {
     const a = JournalBuilder.sampleGame('g-rehearsal');
-    const b = new JournalBuilder('g-night').startRound('normal', undefined, 'groc').land(4); // a round of this year's own card type
+    const b = new JournalBuilder('g-night').startRound('normal', undefined, 'groc', 2).land(4); // this year's own card type, its side 2 (D178)
     const { client } = await laptop('g-rehearsal');
     await upload(client, 'g-rehearsal', a.entries);
     await upload(client, 'g-night', b.entries);
@@ -612,11 +612,11 @@ describe("a new laptop, and Admin's manual resume", () => {
       seq: b.entries.length,
       rounds: 1,
       current: true,
-      resumePoint: { round: 1, kind: 'normal', cardType: 'groc', shuffleSeed: 100, shuffleAttempts: 0, position: 3, lastSongId: b.queue[3], lineConfirmedFrom: null },
+      resumePoint: { round: 1, kind: 'normal', cardType: 'groc', side: 2, shuffleSeed: 100, shuffleAttempts: 0, position: 3, lastSongId: b.queue[3], lineConfirmedFrom: null },
     });
     const night = games.find((g) => g.gameId === 'g-night') as unknown as { resumePoint: { text: string } };
-    // The code carries the card type, since the round's valid cards (and so its Queue) depend on it.
-    expect(parseResumeToken(night.resumePoint.text)).toMatchObject({ round: 1, cardType: 'groc', position: 3, shuffleSeed: 100, lastSongId: b.queue[3] });
+    // The code carries the card type and the side, since the round's valid cards and its Queue depend on them.
+    expect(parseResumeToken(night.resumePoint.text)).toMatchObject({ round: 1, cardType: 'groc', side: 2, position: 3, shuffleSeed: 100, lastSongId: b.queue[3] });
     expect(games.find((g) => g.gameId === 'g-rehearsal')).toMatchObject({ seq: a.entries.length, rounds: 2, current: false, resumePoint: null });
 
     const p = await phone();

@@ -1,7 +1,10 @@
 // The preflight's checks: pure functions from facts (gathered by gather.ts) to a verdict, so each rule is tested
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
-import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, type CardTypePrice, type RemoteStatus } from '@quina/protocol';
+import {
+  DEFAULT_CARD_TYPE, DEFAULT_POOL, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
+  type CardTypePrice, type CardTypeSides, type RemoteStatus,
+} from '@quina/protocol';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -412,6 +415,38 @@ export function cardPricesCheck(types: unknown, plan: unknown): Check | null {
   }
   if (missing.length) return check('Cloud', 'Card prices', 'warn', `no price in card-types.json for ${missing.join(', ')}: the projector shows none before its rounds${priced.length ? `; ${priced.join('; ')}` : ''}`);
   return check('Cloud', 'Card prices', 'pass', priced.join('; '));
+}
+
+/** How many of the repertoire's songs each pool has (songs.json's per-song `pool`, D178; none: DEFAULT_POOL). */
+export function poolSongCounts(songs: unknown): Record<string, number> {
+  const counts: Record<string, number> = {};
+  if (!Array.isArray(songs)) return counts;
+  for (const song of songs as { pool?: unknown }[]) {
+    const pool = typeof song?.pool === 'string' ? song.pool : DEFAULT_POOL;
+    counts[pool] = (counts[pool] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/**
+ * The plan's card sides against card-types.json (D178), by the protocol's sideWarnings: a round on a side its card
+ * type hasn't printed, or whose pool has no songs here, FAILs (that round can't be played); a printed side that no
+ * round plays only WARNs. Null when there's no valid plan or no card-types.json (their own checks say why).
+ */
+export function sidesCheck(plan: unknown, types: unknown, poolSongs: Readonly<Record<string, number>>): Check | null {
+  const read = plan ? checkGamePlan(plan) : null;
+  if (!read?.ok || !Array.isArray(types) || types.length === 0) return null;
+  const warnings = sideWarnings(read.plan, types as CardTypeSides[], poolSongs).map((w) => {
+    const index = /^plan\.rounds\[(\d+)\]/.exec(w.path)?.[1];
+    const round = index === undefined ? null : read.plan.rounds[Number(index)];
+    return { blocking: round !== null, message: round ? `round ${round.number}: ${w.message}` : w.message };
+  });
+  const list = (ws: typeof warnings) => `${ws.slice(0, 3).map((w) => w.message).join('; ')}${ws.length > 3 ? ` (+${ws.length - 3} more)` : ''}`;
+  const blocking = warnings.filter((w) => w.blocking);
+  if (blocking.length) return check('Cloud', 'Card sides', 'fail', list(blocking));
+  if (warnings.length) return check('Cloud', 'Card sides', 'warn', list(warnings));
+  const pools = Object.entries(poolSongs).sort(([a], [b]) => a.localeCompare(b)).map(([pool, n]) => `pool ${pool}: ${n} songs`).join(', ');
+  return check('Cloud', 'Card sides', 'pass', `every round's side is printed, and every printed side is played${pools ? ` (${pools})` : ''}`);
 }
 
 /** Exit status: 1 when anything failed. */

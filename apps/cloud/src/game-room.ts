@@ -11,6 +11,7 @@
 // the snapshot only; it reads a Game's history back only to switch to another Game or to export.
 import { DurableObject } from 'cloudflare:workers';
 import {
+  DEFAULT_SIDE,
   PROTOCOL_VERSION,
   checkCommand,
   checkGamePlan,
@@ -862,6 +863,8 @@ function resumeToken(round: NonNullable<GameRecord['round']>): ResumeToken {
     // The round's valid cards, and so its Queue, depend on its card type (formatResumeToken writes it only when
     // it isn't the kind's default).
     cardType: round.cardType,
+    // And on its side (D178): the side's pool is the Queue's songs (the code's C<n>, written only when it isn't 1).
+    ...(round.side && round.side !== DEFAULT_SIDE ? { side: round.side } : {}),
     shuffleSeed: round.shuffleSeed,
     shuffleAttempts: round.shuffleAttempts,
     position: round.position,

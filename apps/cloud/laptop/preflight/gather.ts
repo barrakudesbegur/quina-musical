@@ -226,5 +226,7 @@ async function cloudChecks(o: PreflightOptions, repertoire: Repertoire): Promise
   out.push(checks.planCheck(plan, checks.printedByType(printedCards(repertoire).cards)));
   const prices = checks.cardPricesCheck(printedCards(repertoire).types, plan);
   if (prices) out.push(prices);
+  const sides = checks.sidesCheck(plan, printedCards(repertoire).types, checks.poolSongCounts(readJson(repertoire.songsJson)));
+  if (sides) out.push(sides);
   return out;
 }

@@ -157,6 +157,18 @@ test("a journal from before D180 replays its Desgraciat shared win: one public w
   assert.deepEqual(forbiddenKeys(state), []);
 });
 
+test("a round's card side is public from its intro, only when it isn't 1, so phones mark that face (D178)", () => {
+  const b = new JournalBuilder('g-sides');
+  b.scene('roundStart', 1, 'normal', undefined, 2);
+  assert.deepEqual(project(b.entries).state.intro, { round: 1, kind: 'normal', cardType: 'normal', side: 2 });
+  b.startRound('normal', undefined, undefined, 2);
+  assert.equal(project(b.entries).state.rounds.at(-1)?.side, 2);
+  b.startRound('normal');
+  assert.equal('side' in (project(b.entries).state.rounds.at(-1) ?? {}), false, 'side 1: absent, as in the journal');
+  const r = new JournalBuilder('g-sides-resume').resume(3, 4, { side: 2 });
+  assert.equal(project(r.entries).state.rounds.at(-1)?.side, 2, 'a manual resume carries it too');
+});
+
 test("a round's card type is public from its intro: the one it names, else its kind's default", () => {
   const b = new JournalBuilder('g-types');
   b.scene('roundStart', 1, 'normal', 'groc');
