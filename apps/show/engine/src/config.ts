@@ -872,6 +872,9 @@ export const THROW = Object.freeze({
   /** Seconds into the decoded track: the build's phrase start (its analysed hook 24-main-0), 10 bars (~16 s) before the
    * drop at 208.8 s (its best hook), after the breakdown at 175–181 s. */
   hookSec: 193.18,
+  /** Its loudness trim to the songs' −14 LUFS (data/out/analysis/24.json `loudness.gainToTargetDb`), so "full volume"
+   * is a song's level, not louder. */
+  trimDb: -2.84,
   /** A tap sounds this far ahead. */
   leadSec: 0.05,
   /** It starts and stops with a short fade; the break music fades out under it, and back after. */

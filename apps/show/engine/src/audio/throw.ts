@@ -53,7 +53,7 @@ export class ThrowPlayer {
     source.buffer = buffer;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, when);
-    gain.gain.linearRampToValueAtTime(1, when + THROW.fadeSec);
+    gain.gain.linearRampToValueAtTime(10 ** (THROW.trimDb / 20), when + THROW.fadeSec);
     source.connect(gain).connect(this.graph.vol.throws);
     source.start(when, offset);
     const voice: ThrowVoice = { source, gain, startAt: when, offsetSec: offset };
