@@ -1233,7 +1233,11 @@ A fallen finalist can't be brought back by hand ("No. this would break the rules
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Amends: D168 (bringing one back by hand). Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Console.
 
 ### D184 · The finale's button and stage · 2026-11-26 · Active
-The button reads "Començar final", on one line, with its icon on top. It grows as fewer stand, up to a limit, while "Enrere" stays small, aligned at the top. On the stage, the ninos get larger as fewer remain. The outdated board Consola-Dempeus is removed; the finale board's Dempeus tab replaces it.
+Two buttons (corrected the same day from Frontend's report: the first wording merged them):
+- The claim slot's "Final a l'escenari" opens the finalists' pad. It grows as fewer stand, up to a limit, while "Enrere" stays small, aligned at the top. Its name stays as drawn on the boards until the user says otherwise.
+- Inside the pad, "Començar final" starts the finale once there are at least 2 finalists. It was renamed from "Comença la final", on one line, with its icon on top.
+
+On the stage, the ninos get larger as fewer remain. The outdated board Consola-Dempeus is removed; the finale board's Dempeus tab replaces it.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Console, Projector.
 
 ### D185 · Confetti falls very slowly · 2026-11-26 · Active
