@@ -15,7 +15,7 @@
   --dur-mark-in: var(--dur-base);
   --dur-near-win: 2.4s; /* one slow breath of a highlighted song */
   --dur-check-dots: 1.2s;
-  --dur-confetti: 1800ms;
+  --dur-confetti: 6000ms;
   --dur-overlay: 300ms;
   /* `your-song` (D74): the flash, then the gold, the spotlights and the particles come in; they leave at the next Spin
      (their out times are the component's: gold 900 ms, spotlights 760 ms, particles 520 ms) */
