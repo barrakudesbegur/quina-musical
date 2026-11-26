@@ -1017,8 +1017,8 @@ By: the user. Source: open-questions.md › Answered (U90–U92). Amends: D127. 
 "Tornem de seguida" shows on the projector and phones only during a round, a Check or a Celebration; at the doors, in a break and at the end, the screens stay as they are (U93). The playback resumes exactly where it was, fading in (U94). During a review, the −/+ hold is Pausa as usual, and A does nothing: the review's four choices are tablet-only (U95).
 By: the user. Source: open-questions.md › Answered (U93–U95). Amends: D128. Lives in: requirements/show-and-music.md › The presenters' actions.
 
-### D136 · "Break" for the time between rounds; "Throw" on its own · 2026-11-26 · Active; the code's word Pending (Sound engine and Frontend)
-The user prefers "break" to "Interval" for the time between two rounds; if "interval" is too embedded in the code, it can stay there. "Throw break" is a poor name, since a throw is independent of the break: it's just a **Throw**. Answers U96 (by "break" the user meant every Interval).
+### D136 · "Break" for the time between rounds; "Throw" on its own · 2026-11-26 · Active
+The user prefers "break" to "Interval" for the time between two rounds; if "interval" is too embedded in the code, it can stay there. "Throw break" is a poor name, since a throw is independent of the break: it's just a **Throw**. Answers U96 (by "break" the user meant every Interval). The code keeps `interval`, per the user's condition. Sound engine counted about 700 lines in 90 files, and the word is stored in data: every night's log, the cloud's database, the plan's `schedule.intervalMinutes`, and the commands. New throw code is called `throw`.
 By: the user. Source: open-questions.md › Answered (U96). Lives in: GLOSSARY.md.
 
 ### D137 · No DJ after the quina; a Spotify Jam while taking down · 2026-11-26 · Active

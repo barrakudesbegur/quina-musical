@@ -20,7 +20,7 @@ The glossary's words: **Hold** is "Parlem" (the music ducks under the voices); *
 - **U119 · The remote's B with the auto-advance off:** B held is Aguanta, which keeps the song looping at full volume so it doesn't run out, and B held plus three shakes is Suspens. So B isn't useless with the auto-advance off, though its Aguanta adds less then. (a) Leave B as it is; (b) give B's tap another job when the auto-advance is off (which?); (c) leave it unassigned on purpose.
 
 ### U103 · The throw song is on the cards
-"Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal), so it's printed on cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
+"Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal): Sound engine confirmed it's the same Spotify track as last year's id 24, so the throw song is printed on Part 1's cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
 - (a) Keep it as the throw song.
 - (b) Pick a throw song that isn't on the cards.
 - (c) Take it out of Part 1 and keep it for the throws.
