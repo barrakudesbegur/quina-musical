@@ -63,7 +63,7 @@ test('a claim of several cards opens one Claim each, in order; the engine refuse
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 
-test('the Review in the journal: claim.reviewing, then claim.continued or claim.dropped, or a manual verdict', () => {
+test('the Review in the journal: claim.reviewing, then claim.continued or claim.discarded, or a manual verdict', () => {
   const h = setup({ seed: 4, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
   h.send('unlock');
   h.send('next');
@@ -73,35 +73,35 @@ test('the Review in the journal: claim.reviewing, then claim.continued or claim.
   const last = base.at(-1)!;
   const round = h.show.round.number;
   let seq = last.seq;
-  type Body = { kind: 'claim.reviewing' | 'claim.continued' | 'claim.dropped'; claimId: string };
+  type Body = { kind: 'claim.reviewing' | 'claim.continued' | 'claim.discarded'; claimId: string };
   const entry = (body: Body): JournalEntry => ({ gameId: last.gameId, seq: ++seq, atMs: last.atMs + 1000 * (seq - last.seq), round, ...body });
   const decided = (claimId: string, verdict: 'valid' | 'invalid'): JournalEntry => (
     { gameId: last.gameId, seq: ++seq, atMs: last.atMs + 1000 * (seq - last.seq), kind: 'claim.decided', round, claimId, verdict, winningSongId: null, position: 0, outcome: 'incomplete', manual: true });
   // cl-1 under review; cl-2 reviewed and discarded; cl-3 reviewed and continued; cl-4 reviewed and won by hand.
   const more = [
     entry({ kind: 'claim.reviewing', claimId: 'cl-1' }),
-    entry({ kind: 'claim.reviewing', claimId: 'cl-2' }), entry({ kind: 'claim.dropped', claimId: 'cl-2' }),
+    entry({ kind: 'claim.reviewing', claimId: 'cl-2' }), entry({ kind: 'claim.discarded', claimId: 'cl-2' }),
     entry({ kind: 'claim.reviewing', claimId: 'cl-3' }), entry({ kind: 'claim.continued', claimId: 'cl-3' }),
     entry({ kind: 'claim.reviewing', claimId: 'cl-4' }), decided('cl-4', 'valid'),
   ];
   const record = replayJournal([...base, ...more]);
   assert.deepEqual(record.claims.map((c) => [c.claimId, c.verdict, c.reviewing ?? false]), [
-    ['cl-1', null, true], ['cl-2', 'dropped', false], ['cl-3', null, false], ['cl-4', 'valid', false],
+    ['cl-1', null, true], ['cl-2', 'discarded', false], ['cl-3', null, false], ['cl-4', 'valid', false],
   ]);
   assert.deepEqual(record.winners.map((w) => w.claimId), ['cl-4'], 'a manual win makes a Winner');
   assert.deepEqual(extendJournal(replayJournal(base), more), record);
 
   // A show resumed from that record holds each Claim as it was.
   const r = setup({ seed: 9, cards: allCards, restore: record, startSec: 0.5 });
-  assert.deepEqual(r.show.claims.map((c) => c.status), ['reviewing', 'dropped', 'queued', 'valid']);
+  assert.deepEqual(r.show.claims.map((c) => c.status), ['reviewing', 'discarded', 'queued', 'valid']);
   assert.deepEqual(r.show.record(), record);
 
-  // Only a Claim under review continues or is discarded; nothing reviews a decided or dropped Claim.
+  // Only a Claim under review continues or is discarded; nothing reviews a decided or discarded Claim.
   const refused = (body: Body, message: RegExp) =>
     assert.throws(() => extendJournal(record, [{ ...entry(body), seq: record.seq + 1 }]), (e: unknown) => e instanceof JournalError && message.test(e.message));
   refused({ kind: 'claim.continued', claimId: 'cl-3' }, /not under review/);
-  refused({ kind: 'claim.dropped', claimId: 'cl-3' }, /not under review/);
-  refused({ kind: 'claim.reviewing', claimId: 'cl-2' }, /already dropped/);
+  refused({ kind: 'claim.discarded', claimId: 'cl-3' }, /not under review/);
+  refused({ kind: 'claim.reviewing', claimId: 'cl-2' }, /already discarded/);
   refused({ kind: 'claim.reviewing', claimId: 'cl-4' }, /already decided/);
   refused({ kind: 'claim.reviewing', claimId: 'cl-9' }, /no claim/);
 });

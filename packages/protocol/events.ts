@@ -274,6 +274,9 @@ export interface CheckInfo {
   auto?: boolean;
   /** The cue, once it has played: the card passed (valid) or failed. */
   cue?: 'pass' | 'fail' | null;
+  /** Under review ("Revisió manual"): the projector stays on the Check and says so (D123). Whether phones see it
+   * is U79. */
+  reviewing?: boolean;
 }
 
 export interface CelebrationInfo {

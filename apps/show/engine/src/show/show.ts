@@ -1100,7 +1100,7 @@ export class Show {
       intro: this.intro ? { round: this.intro.round, kind: this.intro.kind, cardType: this.intro.cardType } : null,
       claims: this.claims.map((c): RecordedClaim => ({
         claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, position: c.position, atMs: c.atMs,
-        verdict: c.status === 'valid' || c.status === 'invalid' || c.status === 'dropped' ? c.status : null,
+        verdict: c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded' ? c.status : null,
         ...(c.status === 'reviewing' ? { reviewing: true as const } : {}),
       })),
       claimCount: this.claimCount,
@@ -1948,7 +1948,7 @@ export class Show {
       this.reject(reqId, cmd, 'unknownClaim', `no claim ${claimId} in round ${this.round.number}`);
       return null;
     }
-    if (claim.status === 'valid' || claim.status === 'invalid' || claim.status === 'dropped') {
+    if (claim.status === 'valid' || claim.status === 'invalid' || claim.status === 'discarded') {
       this.reject(reqId, cmd, 'unknownClaim', `claim ${claimId} is already decided`);
       return null;
     }
@@ -2013,7 +2013,7 @@ export class Show {
   requeueClaims() {
     this.stopCheck();
     for (const c of this.claims) {
-      if (c.status === 'valid' || c.status === 'invalid' || c.status === 'dropped') continue;
+      if (c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded') continue;
       c.status = 'queued';
       c.outcome = null;
       c.completeSince = null;

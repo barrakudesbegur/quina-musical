@@ -16,7 +16,9 @@ export const isPhaseName = (value: unknown): value is PhaseName =>
 export type ShowStatus = 'locked' | 'idle' | 'playing' | 'transition' | 'hold';
 /** Why the show is in a Hold. `claim`: a Claim is being checked (also through the Celebration);
  * `checkFailed`: every claim of the last Check was invalid (error Hold music until Resume). */
-export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed';
+/** Why the round holds. `discarded`: a Review was discarded, so the music from before its Check plays under Parlem,
+ * with auto-advance off until the presenters press Next, which ends Parlem and restores auto-advance (D122). */
+export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed' | 'discarded';
 /** A normal round, the special round, or the Desgraciat round (played in reverse: the last card standing wins). */
 export type RoundKind = 'normal' | 'special' | 'desgraciat';
 export const ROUND_KINDS = ['normal', 'special', 'desgraciat'] as const satisfies readonly RoundKind[];
@@ -54,10 +56,10 @@ export const isShowScene = (value: unknown): value is ShowScene =>
 /**
  * Where a Claim is. `reviewing` (the Review, "En revisió"): its Check was put under review before the cue
  * (`checkReview`; whatever was playing goes on), undecided until a `reviewEnd` continues it, wins or loses it by
- * hand, or discards it (D119–D121). `dropped`: discarded, without a verdict or a sound. `checked` is the timed
+ * hand, or discards it (D119–D121). `discarded`: set aside without a verdict or a sound (D124). `checked` is the timed
  * Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D110) has none.
  */
-export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'reviewing' | 'valid' | 'invalid' | 'dropped';
+export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'reviewing' | 'valid' | 'invalid' | 'discarded';
 /** How a Review ends (D121): its Check goes on from where it was; won or lost by hand, skipping the reveals left
  * (the journal marks the verdict `manual`); or discarded, with no fanfare and no failure music. */
 export const REVIEW_OUTCOMES = ['continue', 'win', 'lose', 'discard'] as const;

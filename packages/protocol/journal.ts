@@ -151,8 +151,8 @@ export interface ClaimContinuedEntry extends EntryBase {
 }
 
 /** A Claim under review was discarded, without a verdict and without any sound (D121). */
-export interface ClaimDroppedEntry extends EntryBase {
-  kind: 'claim.dropped';
+export interface ClaimDiscardedEntry extends EntryBase {
+  kind: 'claim.discarded';
   round: number;
   claimId: string;
 }
@@ -190,7 +190,7 @@ export type JournalEntry =
   | ClaimDecidedEntry
   | ClaimReviewingEntry
   | ClaimContinuedEntry
-  | ClaimDroppedEntry
+  | ClaimDiscardedEntry
   | WinnerNotedEntry
   | PrizesRevealedEntry;
 export type JournalEntryKind = JournalEntry['kind'];
@@ -234,8 +234,8 @@ export interface RecordedClaim {
   kind: WinKind;
   position: number;
   atMs: number;
-  /** null while undecided; `dropped` set aside without a verdict (`claim.dropped`). */
-  verdict: 'valid' | 'invalid' | 'dropped' | null;
+  /** null while undecided; `discarded` set aside without a verdict (`claim.discarded`, D124). */
+  verdict: 'valid' | 'invalid' | 'discarded' | null;
   /** Under review (`claim.reviewing`), until the Review ends; absent otherwise. */
   reviewing?: true;
 }
@@ -409,11 +409,11 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
     }
     case 'claim.reviewing':
     case 'claim.continued':
-    case 'claim.dropped': {
+    case 'claim.discarded': {
       currentRound(record, entry);
       const claim = record.claims.find((c) => c.claimId === entry.claimId);
       if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
-      if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already ${claim.verdict === 'dropped' ? 'dropped' : 'decided'}`);
+      if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already ${claim.verdict === 'discarded' ? 'discarded' : 'decided'}`);
       if (entry.kind === 'claim.reviewing') {
         claim.reviewing = true;
         return;
@@ -421,7 +421,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       // A Review ends with these: its Check goes on, or the Claim is discarded.
       if (!claim.reviewing) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} is not under review`);
       delete claim.reviewing;
-      if (entry.kind === 'claim.dropped') claim.verdict = 'dropped';
+      if (entry.kind === 'claim.discarded') claim.verdict = 'discarded';
       return;
     }
     case 'winner.noted': {
