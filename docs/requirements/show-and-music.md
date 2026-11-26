@@ -159,7 +159,7 @@ _From event.md › The night, step by step; D129._
 
 _D130._
 
-- On the tablet's settings, saved in the cloud and the edition file (D139). A master volume, plus one each for songs, songs in Parlem, the DJ moves' effects, the presenters' effects, the drum's ticks, the Check's sounds, Hold music, the win, the fail, the final-lap stinger, intros, breaks, Pausa, throws, the doors and the end. All start at 100%, except songs in Parlem and effects, which start lower.
+- On the tablet's settings, saved in the cloud and the edition file (D139). A master volume, plus one each for songs, songs in Parlem, the DJ moves' effects, the presenters' effects, the drum's ticks, the Check's sounds, Hold music, the win, the fail, the final-lap stinger, intros, breaks, Pausa, throws, the doors and the end. Every slider runs from 0% to about 150%, with its default at 100%, today's tuned level. The engine plays the whole show lower inside, so going above 100% stays clean, and the sound system is turned up to match at the sound check (D157; the trim and the chaotic moments' default pending U134).
 
 ## The Interval and the throw breaks
 

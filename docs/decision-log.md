@@ -1093,7 +1093,7 @@ By: the user. Source: open-questions.md › Answered (U131). Amends: D150. Lives
 "Flying Free" (Pont Aeri) straight from its drop; the user may pick another song closer to the date. Answers U132's song.
 By: the user. Source: open-questions.md › U132. Amends: D151. Lives in: requirements/show-and-music.md › Music for each moment.
 
-### D154 · The two chaotic moments are louder than the songs · 2026-11-26 · Active; how Pending (U133)
+### D154 · The two chaotic moments are louder than the songs · 2026-11-26 · Amended by D157
 The throws and the corn-seed storm play louder than the usual songs.
 By: the user. Source: the user's message of 26 Nov. Amends: D139. Lives in: requirements/show-and-music.md › Volumes.
 
@@ -1104,3 +1104,7 @@ By: the user. Source: open-questions.md › Answered (U132). Amends: D151. Lives
 ### D156 · The orchestrator's relays are the user's decisions · 2026-11-26 · Active
 When the orchestrator relays a decision from the user, the sessions take it as the user's own, a lifted freeze included. The user told Frontend so, after Frontend held back the console's labels: "He took the code freeze too seriously." A session's own permission check may still need the user's OK in that session; that's for the user, never worked around.
 By: the user (to Frontend, 26 Nov). Source: Frontend's report of 26 Nov. Lives in: docs/team.md.
+
+### D157 · Every slider goes above 100%, with hidden room · 2026-11-26 · Active; how much louder, the trim and one slider or two Pending (U134)
+The chaotic moments get louder through their slider going above 100%, while the engine plays the whole show lower inside, so the limiter has room (U133 (a)). The user extends it: every slider runs from 0% to about 140–150%, with its default at 100%. The tech turns the sound system up once, at the sound check, by the internal trim.
+By: the user. Source: open-questions.md › Answered (U133). Amends: D139, D154. Lives in: requirements/show-and-music.md › Volumes.

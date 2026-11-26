@@ -23,13 +23,11 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
-### U133 · How the chaotic moments get louder (D154)
-Sound engine's facts (26 Nov): songs are trimmed to −14 LUFS, and most of their peaks already reach the master limiter, which squashes everything above −6 dBFS. So turning a song up without room above it makes it denser, not much louder: +3 dB raises its body by 3 dB but its peaks by only about 0.2 dB. The sliders use an audio taper: about 119% is +3 dB, about 141% is +6 dB, about 84% is −3 dB, and 70% is about −6 dB.
-- **How much louder:** (a) +3 dB; (b) +6 dB.
-- **How:**
-  - (a) **These sliders above 100%:** 119% (or 141%), with the whole show played 3 (or 6) dB lower inside, so the limiter has room. Normal songs get squashed less than today. The tech turns the sound system up by the same amount, once, at the sound check. Every other slider still reads 100%.
-  - (b) **Lower every other default** to 84% (or 70%), so the chaotic moments sit at 100%. The same sound, but every number changes.
-- **Sliders:** (a) one shared by the throws and the corn-seed storm (as built); (b) one each.
+### U134 · The loudness details (D157)
+Every slider now goes to about 150%, which is +7 dB on the audio taper. The internal trim decides how much of that range is clean: above it, the limiter squashes.
+- **The trim:** (a) −6 dB: everything is clean up to about 141%, and the sound system is turned up about 6 dB at the sound check; (b) −3 dB: clean up to about 119%, and squashed beyond.
+- **The chaotic moments' default:** (a) 119% (+3 dB); (b) 141% (+6 dB).
+- **Sliders:** (a) one shared by the throws and the corn-seed storm, as built; (b) one each.
 
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
@@ -204,6 +202,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U133 · How the chaotic moments get louder** (2026-11-26) → D157: their slider above 100% with hidden room; every slider 0–150%, default 100%.
 - **U132 · The corn-seed storm** (2026-11-26) → D153, D155: "Flying Free" from its drop for now; the button on the last round's normal screen, inside its Check and on the end screen.
 - **U131 · Horari's first row** (2026-11-26) → D152: "Venda de cartrons".
 - **U120–U122 · Suspens on the remote** (2026-11-26) → D147, D148: letting go of B lands; B + A has the same vibrations and cancel window as the manual one; the shake stays on; 1.5 s, to tune on the remote.
