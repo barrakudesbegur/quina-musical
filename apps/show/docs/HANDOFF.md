@@ -20,6 +20,14 @@ The single place to resume the sound engine's work from. It was first written wh
     - 37 of its 39 tracks are prepared: `data/out/interval/index.json`, 121–175 kbps, no quality flag. The old set is kept in `data/media/interval-old-0SsuXelEzN8gsS7WufySOg/`.
     - #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters) aren't on YouTube. The user said on 26 Nov that it's fine if some can't be downloaded, so the Interval plays without them.
   - **Part 3** (Especial and Desgraciat, `79G8VcNrkih9GGjIzb47Gt`, D105) is empty. The especial card's side plays Part 1 until it's final; then it gets ids 141–210 (U57), alphabetical (D103). Don't fetch it before then.
+  - **The presenter-paced Check (D107–D110), agreed on 26 Nov with Frontend and Backend; waits for the orchestrator's go:**
+    - commands: `claim { cardIds[] }`, `checkNext { claimId, step }` (idempotent; the press after the reveals stop is the cue), `checkAuto { on }` (never past the cue), `checkStop`, `checkStart`, `claimDrop`; `decide` goes away;
+    - private ClaimInfo `markedCard`, `cueNext`, `revealUntil`; public CheckInfo only revealed steps plus `cue`;
+    - journal `claim.stopped` and `claim.dropped`;
+    - a passing card that isn't last gets its plaque without a fanfare; the shared Celebration comes after the last cue;
+    - Parlem in the Celebration ducks the victory music;
+    - order: my additive protocol, then Backend's cloud and Frontend's console, then my engine switch (removing decide, `checked` and the timed steps);
+    - U62 open: is Següent refused while a claim is stopped; does the next card's Check enter by itself after a fail cue?
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
