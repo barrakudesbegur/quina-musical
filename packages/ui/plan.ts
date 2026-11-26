@@ -31,6 +31,16 @@ export type {
 } from '@quina/protocol';
 
 /**
+ * A normal round's Quina number, as the screens name it ("Quina N"): its place among the plan's normal rounds. The
+ * special rounds have no number ("Quina Especial", "Quina Desgraciada"), so they don't count, wherever they sit in the
+ * plan (screens.md; the card's printed mark reads "QUINES 1–4" / "QUINES 5–10", D171). Null for a special round.
+ */
+export function quinaNumber(round: Pick<RoundPlan, 'number' | 'kind'>, rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[]): number | null {
+  if (round.kind !== 'normal') return null;
+  return 1 + rounds.filter((r) => r.kind === 'normal' && r.number < round.number).length;
+}
+
+/**
  * The `roundIntro` that introduces round `number` (the console's and Admin's): with its kind (the Desgraciat round's
  * too), printed card type and card side from the plan when the plan has that round (a plan from before card types per
  * round plays its kind's default; one from before sides, side 1). The engine keeps them for the round's `newRound`.

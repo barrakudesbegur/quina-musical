@@ -42,11 +42,11 @@
     const round = session.draft.rounds[index];
     const count = round ? movedLinePrizes(round, kind) : 0;
     moved = { ...moved, [index]: count };
-    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind, types) : r)) }));
+    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind, types, p.rounds) : r)) }));
   }
   const moveLine = (index: number) => session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withLineMoved(r) : r)) }));
   const setCardType = (index: number, cardType: string) =>
-    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withCardType(r, cardType, types) : r)) }));
+    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withCardType(r, cardType, types, p.rounds) : r)) }));
   const setSide = (index: number, side: number) => session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? { ...r, side } : r)) }));
   /** What doesn't fit between the rounds' sides and the printed cards; unknowable without card-types.json. */
   const warnings = $derived(printed ? sideWarnings(session.draft, printed) : []);
