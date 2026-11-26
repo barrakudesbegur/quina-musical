@@ -20,8 +20,9 @@ const of = (name: string, nowMs = NOW) => defaultAction(input(FIXTURES[name](NOW
 test('in play it is Següent; during a Spin Següent stays the default but is disabled', () => {
   assert.deepEqual(of('play'), { control: 'next', command: { cmd: 'next' }, enabled: true });
   assert.deepEqual(of('spin'), { control: 'next', command: { cmd: 'next' }, enabled: false });
-  assert.deepEqual(of('suspense'), { control: 'next', command: { cmd: 'next' }, enabled: true }, 'Següent releases an open Suspens');
-  assert.equal(of('hold')?.control, 'next');
+  assert.deepEqual(of('suspense'), { control: 'next', command: { cmd: 'next' }, enabled: false }, 'nothing lands while a Suspens is on (D133)');
+  assert.deepEqual(of('stay'), { control: 'next', command: { cmd: 'next' }, enabled: false }, 'nor during Aguanta');
+  assert.deepEqual(of('hold'), { control: 'next', command: { cmd: 'next' }, enabled: true }, 'Següent ends Parlem (D142)');
 });
 
 test('a Check: the big button, with the step each press expects; nothing under review or between cards', () => {

@@ -1,5 +1,5 @@
 // The remote's guide as this console maps it: the shared legend (packages/ui/wii/legend.ts) with the D-pad's
-// effects and the Enrere hold from the console's config. The Comandament dialog and Admin's printed cheat
+// effects, the Enrere hold and the Suspens window from the console's config. The Comandament dialog and Admin's printed cheat
 // sheet both read it, so the sheet always matches the remote. Pure.
 import { wiiLegend, type WiiDpad, type WiiLegendItem } from '../../../packages/ui/wii/legend.ts';
 import type { SoundName } from '@quina/protocol';
@@ -10,7 +10,7 @@ const DPAD: readonly WiiDpad[] = ['up', 'right', 'down', 'left'];
 
 export function consoleWiiLegend(): WiiLegendItem[] {
   const dpad = Object.fromEntries(DPAD.map((d) => [d, soundText(WII.dpad[d])])) as Record<WiiDpad, string>;
-  return wiiLegend({ dpad, backHoldMs: WII.backHoldMs });
+  return wiiLegend({ dpad, backHoldMs: WII.backHoldMs, suspenseWindow: WII.suspenseWindow });
 }
 
 /** The D-pad direction that plays a sound, if any (its pad on the SoundPad shows that arrow). */

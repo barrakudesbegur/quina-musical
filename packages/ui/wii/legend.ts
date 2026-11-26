@@ -1,7 +1,8 @@
 // The Wii remote's guide: what each button group does, in the order the drawing reads (top to bottom, then
-// B on the side), and each group's colour. The console's Comandament dialog, its badges and the printed
-// cheat sheet all use it, so they say and colour the same thing. The mapping itself is the console's
-// (apps/console/wii/mapping.ts); the D-pad's effects and the Enrere hold come in from its config. Pure.
+// B on the side, with its Suspens rows), and each group's colour. The console's Comandament dialog, its badges and the
+// printed cheat sheet all use it, so they say and colour the same thing. The mapping itself is the console's
+// (apps/console/wii/mapping.ts); the D-pad's effects, the Enrere hold and the Suspens window come in from its config.
+// Pure.
 import { CA } from '../i18n/ca.ts';
 
 export const WII_GROUPS = ['a', 'b', 'talk', 'back', 'home', 'dpad'] as const;
@@ -19,7 +20,12 @@ export const WII_COLOURS: Readonly<Record<WiiGroup, string>> = {
   dpad: 'var(--color-lilac, #b57bff)',
 };
 
+/** One row of the guide. B has several (D144–D148): Aguanta, Suspens with A, the shake, and Suspens with manual advance. */
+export type WiiLegendId = WiiGroup | 'bA' | 'shake' | 'bManual';
+
 export interface WiiLegendItem {
+  /** Unique per row. */
+  id: WiiLegendId;
   group: WiiGroup;
   /** The button's own label, drawn in its coloured dot ("A", "− +"). */
   key: string;
@@ -34,20 +40,26 @@ export interface WiiLegendInput {
   dpad: Readonly<Record<WiiDpad, string>>;
   /** How long 1 or 2 must be held for Enrere. */
   backHoldMs: number;
+  /** Entering Suspens: how many vibrations, over how long (the console's WII.suspenseWindow). */
+  suspenseWindow: { windowMs: number; pulses: number };
 }
 
 /** "1,5": seconds with a decimal comma, without trailing zeros. */
 export const secondsText = (ms: number): string => String(Math.round(ms / 100) / 10).replace('.', ',');
 
-export function wiiLegend({ dpad, backHoldMs }: WiiLegendInput): WiiLegendItem[] {
+export function wiiLegend({ dpad, backHoldMs, suspenseWindow }: WiiLegendInput): WiiLegendItem[] {
   const t = CA.wii;
-  const item = (group: WiiGroup, title: string, note: string, shake = false): WiiLegendItem => ({ group, key: t.keys[group], title, note, shake });
+  const item = (id: WiiLegendId, group: WiiGroup, title: string, note: string, shake = false, key: string = t.keys[group]): WiiLegendItem => ({ id, group, key, title, note, shake });
+  const window = secondsText(suspenseWindow.windowMs);
   return [
-    item('a', t.a.title, t.a.note),
-    item('b', t.b.title, t.b.note, true),
-    item('talk', t.talk.title, t.talk.note),
-    item('back', t.back.title(secondsText(backHoldMs)), t.back.note),
-    item('home', t.home.title, t.home.note),
-    item('dpad', t.dpad.title, t.dpad.note(dpad)),
+    item('a', 'a', t.a.title, t.a.note),
+    item('b', 'b', t.b.title, t.b.note),
+    item('bA', 'b', t.bA.title, t.bA.note(suspenseWindow.pulses, window), false, t.bA.key),
+    item('shake', 'b', t.shake.title, t.shake.note, true),
+    item('bManual', 'b', t.bManual.title, t.bManual.note(suspenseWindow.pulses, window)),
+    item('talk', 'talk', t.talk.title, t.talk.note),
+    item('back', 'back', t.back.title(secondsText(backHoldMs)), t.back.note),
+    item('home', 'home', t.home.title, t.home.note),
+    item('dpad', 'dpad', t.dpad.title, t.dpad.note(dpad)),
   ];
 }

@@ -3,12 +3,13 @@
 // Maps keyed by protocol vocabulary are Partial with a fallback, so a new reason or command from the engine
 // shows something sensible instead of breaking the build; tests/ui/console/strings.test.ts checks that
 // every known value has its own text.
-import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName } from '@quina/protocol';
+import type { HoldReason, PhaseName, RejectReason, ShowStatus, SoundName, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
 import type { ChartGap } from './logic/future.ts';
+import type { VolumeGroup } from './logic/volumes.ts';
 import { STANDING_LIST_MAX } from '@quina/protocol';
 import type { ConsoleCommand, Theme } from './config.ts';
 import type { WiiStatus } from './wii/controller.svelte.ts';
@@ -82,6 +83,8 @@ export const S = {
     holdForLong: (level: string) => `Mantén premut per passar a ${level}`,
     /** The second level is on: a tap leaves it. */
     pauseOn: 'en pausa · toca per tornar',
+    /** Spoken, on Parlem's lock during Pausa: Parlem stays on until Pausa ends (D128). */
+    talkLocked: 'Parlem queda posat mentre dura la pausa',
     suspenseOpen: 'deixa anar per aterrar',
     suspenseTap: 'toca per aterrar',
     suspenseAutoRelease: (s: number) => `s'allibera sol en ${s} s`,
@@ -437,6 +440,58 @@ export const S = {
     volumeValue: (percent: number) => `${percent} %`,
   },
 
+  /**
+   * «Llançament» and «Tempesta» (logic/throw-songs.ts; the Consola-Llancament-Tempesta board). The storm's name is
+   * provisional (U137).
+   */
+  throws: {
+    names: {
+      throw: { label: 'Llançament', sub: null, start: 'toca: sona el llançament', replace: 'toca: canvia al llançament', stopped: (where: string) => `${where} · el llançament, aturat` },
+      storm: { label: 'Tempesta', sub: 'de blat de moro', start: 'toca: sona la tempesta', replace: 'toca: canvia a la tempesta', stopped: (where: string) => `${where} · la tempesta, aturada` },
+    } satisfies Record<ThrowSong, { label: string; sub: string | null; start: string; replace: string; stopped: (where: string) => string }>,
+    /** A tap while it plays, and while a tap has stopped it. */
+    stop: 'toca: atura',
+    resume: 'toca: continua',
+    /** The hold, on its strip (or over the whole button in the top row). */
+    restart: 'Des del principi',
+    /** Spoken: what each gesture does. */
+    howTo: (tap: string) => `${tap}; mantén per tornar a començar des del principi`,
+    song: (title: string, artist: string) => (artist ? `${title} · ${artist}` : title),
+    /** The music panel while a throw song plays over the set's music. */
+    nowPlaying: CA.nowPlaying,
+    under: (title: string) => `A sota, «${title}»: torna a pujar quan s'acabi.`,
+    underWaiting: "A sota, la música: torna a pujar quan s'acabi.",
+  },
+
+  /** The volume sliders, in the menu (logic/volumes.ts; D139, D157–D159). */
+  volumes: {
+    title: 'Volums',
+    note: 'Del 0 al 150 %. La marca de cada barra és on comença. Es desen per a tota la nit.',
+    groups: { general: 'General', songs: 'Cançons', music: 'Música de cada moment', moments: 'Moments forts', effects: 'Efectes' } satisfies Record<VolumeGroup, string>,
+    keys: {
+      master: { label: 'General', note: 'Tot el so alhora' },
+      songs: { label: 'Cançons', note: 'Les cançons de la quina' },
+      songsParlem: { label: 'Cançons amb Parlem', note: 'La cançó baixa mentre parleu' },
+      check: { label: 'Comprovació', note: 'Els trossos de cançó i el disc ratllat' },
+      doors: { label: "Música d'entrada", note: 'Mentre es venen els cartrons' },
+      intros: { label: 'Presentació de cada quina', note: null },
+      breaks: { label: 'Música del descans', note: null },
+      pausa: { label: 'Música de la pausa', note: null },
+      holdMusic: { label: "Música d'espera", note: "Quan Parlem s'allarga" },
+      end: { label: 'Música del final', note: null },
+      throws: { label: 'Llançament i tempesta', note: 'Un sol control per als dos; més forts que les cançons' },
+      win: { label: 'Victòria', note: 'La fanfàrria, la música de victòria i la cançó guanyadora' },
+      fail: { label: 'Fallada', note: "La fanfàrria i la música d'error" },
+      finalLap: { label: '«Última volta»', note: 'La fanfàrria' },
+      djFx: { label: 'Efectes de DJ', note: 'Pujades, cops i xiulets de les transicions' },
+      padFx: { label: 'Efectes', note: 'La pestanya Efectes' },
+      ticks: { label: 'Bombo', note: 'Els tics mentre gira' },
+    } satisfies Record<VolumeKey, { label: string; note: string | null }>,
+    value: (percent: number) => `${percent} %`,
+    /** Spoken with each slider, and on its default's mark. */
+    defaultValue: (percent: number) => `Per defecte: ${percent} %`,
+  },
+
   roundStart: {
     announce: 'Premis per anunciar',
     shuffle: 'Barreja',
@@ -482,7 +537,7 @@ export const S = {
 
   /** The laptop's Plan B keys, from the mixer README's "Show keys". */
   showKeys: [
-    { keys: '→ / Retorn', action: 'Següent (també allibera el suspens)' },
+    { keys: '→ / Retorn', action: 'Següent (no durant Aguanta ni el suspens)' },
     { keys: '←', action: 'Enrere' },
     { keys: 'Espai', action: 'Parlem / Reprèn' },
     { keys: 'S', action: 'Suspens' },
@@ -572,6 +627,12 @@ export const S = {
     /** The remote's range (wii/drops.ts): how often it dropped lately. */
     drops: (n: number) => (n === 1 ? "1 caiguda en els últims 10 minuts" : `${n} caigudes en els últims 10 minuts`),
     dropsWarn: "S'ha desconnectat sovint: acosteu-vos al portàtil o tingueu la tauleta a mà.",
+    /** The shake gesture's switch (D144, D148), in the menu and on the dialog's shake row. */
+    shake: CA.wii.shake.switchLabel,
+    shakeNote: CA.wii.shake.switchNote,
+    shakeDefault: CA.wii.shake.switchDefault,
+    /** Under the switch on a console the remote isn't connected to. */
+    shakeHere: 'Es desa en cada consola: fa efecte a la del portàtil, on es connecta el comandament.',
   },
 
   menu: {
@@ -697,6 +758,8 @@ export const S = {
     pause: 'Pausa tècnica',
     intervalSkip: 'Saltar cançó',
     setVolume: 'Volum',
+    throw: 'Llançament',
+    storm: 'Tempesta',
     resumeAt: 'Recuperar el show',
     revealPrizes: 'Revelar premis',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,

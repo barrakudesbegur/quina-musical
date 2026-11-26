@@ -6,7 +6,8 @@
     and «Revisió manual» (−/+ held); «+ Candidat» (the claim pad) and «Seguides» (reveal in a row, D117); and the big
     button: «Destapa» with the next song inside it, «Destapant…», then the cue «Celebrem!», «Vàlid · següent» or
     «Fallada», or the shared Celebration's «Celebrem!» (`celebrationNext`). The big button is the default action (A, →
-    or PageDown; hook check-pace). Its strip says that holding A reveals in a row.
+    or PageDown; hook check-pace). Its strip says that holding A reveals in a row. In the night's last round «Tempesta»
+    (the corn-seed storm, D155) sits in the top row between «Enrere» and «Revisió manual», far from the big button.
   Hooks for the end-to-end tests: data-testid="check-board" with data-stage, data-revealed and data-cue.
 -->
 <script lang="ts">
@@ -30,7 +31,9 @@
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
   import ReviewPanel from './ReviewPanel.svelte';
+  import ThrowButton from './ThrowButton.svelte';
   import WiiBadge from './WiiBadge.svelte';
+  import { throwLayout } from '../logic/throw-songs.ts';
 
   let { onclaim }: { onclaim: () => void } = $props();
 
@@ -53,6 +56,7 @@
   });
   const next = $derived(check ? nextReveal(check, claim) : null);
   const isDefault = $derived(model.defaultAction?.control === 'check');
+  const storm = $derived(throwLayout(flow.scene, snap?.lastRound === true).top);
   const song = (songId: number) => ({ title: songTitleOf(songId, snap, model.catalog) ?? `Cançó ${songId}`, artist: model.catalog?.songs.get(songId)?.artist ?? '' });
   const title = (songId: number) => song(songId).title;
   const winners = $derived(batchWinners(flow));
@@ -119,12 +123,13 @@
   {#if check && state?.stage === 'review'}
     <ReviewPanel {check} {claim} />
   {:else}
-    <div class="check-board__right" data-stage={state?.stage ?? 'none'}>
+    <div class="check-board__right" data-stage={state?.stage ?? 'none'} data-top={storm ?? undefined}>
       <button type="button" class="big-button check-board__back" data-action="check-back" data-anim="press" disabled={!back || !model.can('checkBack')} onclick={() => back && model.act('checkBack', back)}>
         <span class="big-button__row"><Icon name="back" outline /><span class="big-button__label">{S.check.back}</span></span>
         <span class="big-button__note">{S.check.backNote}</span>
         <WiiBadge button="back" size="sm" />
       </button>
+      {#if storm}<div class="check-board__storm"><ThrowButton song={storm} variant="top" /></div>{/if}
       <button type="button" class="big-button check-board__review" data-action="review" data-anim="press" disabled={!review || !model.can('checkReview')} onclick={() => review && model.act('checkReview', review)}>
         <span class="big-button__label">{S.check.review}</span>
         <span class="big-button__note">{S.check.reviewNote}</span>

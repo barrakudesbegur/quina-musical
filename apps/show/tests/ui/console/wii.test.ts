@@ -1,4 +1,5 @@
-// The Wii Remote: report parsing, the deliberate shake, and the button mapping (pure).
+// The Wii Remote: report parsing, the deliberate shake, and the button mapping (pure), with Suspens from B + A, from B
+// alone with manual advance, and from the shake (D144–D148).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WII } from '../../../../console/config.ts';
@@ -6,7 +7,15 @@ import { buttonChanges, parseReport, REPORT } from '../../../../console/wii/repo
 import { ShakeDetector } from '../../../../console/wii/shake.ts';
 import { WiiMapper, type WiiContext, type WiiOutput } from '../../../../console/wii/mapping.ts';
 
-const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false, check: null };
+const idle: WiiContext = { holdMode: null, autoAdvance: true, paused: false, check: null, canSuspense: true, suspenseOpen: false, shake: true };
+/** In Aguanta (B held), and with a Suspens open. */
+const staying: WiiContext = { ...idle, holdMode: 'stay' };
+const open: WiiContext = { ...idle, suspenseOpen: true, canSuspense: false };
+const manual: WiiContext = { ...idle, autoAdvance: false };
+const manualOpen: WiiContext = { ...open, autoAdvance: false };
+const { windowMs, pulses } = WII.suspenseWindow;
+const beat = windowMs / pulses;
+const rumbles = (outs: WiiOutput[]) => outs.map((o) => o.rumble);
 /** A Check revealing its third song. */
 const revealing: WiiContext = { ...idle, check: { back: { claimId: 'cl-5', step: 1 }, review: { claimId: 'cl-5' }, auto: true } };
 /** A Check under review: no step back, no review, no reveals. */
@@ -28,19 +37,19 @@ test('reports: buttons from the first two bytes, the accelerometer in g from 0x3
 test('the shake: three strong jolts inside the window, each one counted once', () => {
   const s = new ShakeDetector(WII.shake);
   // One long swing over the threshold is one jolt, however many samples it lasts.
-  assert.equal(s.push(0, 3), false);
-  assert.equal(s.push(10, 3.4), false);
-  assert.equal(s.push(20, 1), false);
-  assert.equal(s.push(200, 3), false);
-  assert.equal(s.push(220, 1), false);
-  assert.equal(s.push(400, 2.9), true, 'the third jolt');
+  assert.equal(s.push(0, 3), 'jolt');
+  assert.equal(s.push(10, 3.4), 'none');
+  assert.equal(s.push(20, 1), 'none');
+  assert.equal(s.push(200, 3), 'jolt');
+  assert.equal(s.push(220, 1), 'none');
+  assert.equal(s.push(400, 2.9), 'shake', 'the third jolt');
   // Too slow: jolts 800 ms apart never make three within 1.5 s.
   const slow = new ShakeDetector(WII.shake);
   const fired = [0, 800, 1600, 2400].map((t) => [slow.push(t, 3), slow.push(t + 50, 1)][0]);
-  assert.deepEqual(fired, [false, false, false, false]);
+  assert.deepEqual(fired, ['jolt', 'jolt', 'jolt', 'jolt']);
   // Dancing: lots of movement under the threshold.
   const dance = new ShakeDetector(WII.shake);
-  assert.ok(Array.from({ length: 200 }, (_, i) => dance.push(i * 10, 1 + Math.abs(Math.sin(i / 3)) * 1.4)).every((f) => !f));
+  assert.ok(Array.from({ length: 200 }, (_, i) => dance.push(i * 10, 1 + Math.abs(Math.sin(i / 3)) * 1.4)).every((f) => f === 'none'));
 });
 
 test('A is the default action; − and + toggle Parlem; HOME toggles auto with different rumbles; the D-pad plays effects', () => {
@@ -62,19 +71,114 @@ test('A is the default action; − and + toggle Parlem; HOME toggles auto with d
 test('B held is Aguanta; releasing it goes back to normal', () => {
   const m = new WiiMapper(WII);
   assert.deepEqual(cmds(m.press('b', 0, idle)), [{ cmd: 'hold', args: { on: true, duck: false } }]);
-  assert.deepEqual(cmds(m.motion(100, rest)), []);
+  assert.deepEqual(cmds(m.motion(100, rest, idle)), []);
   assert.deepEqual(cmds(m.release('b', idle)), [{ cmd: 'hold', args: { on: false } }]);
 });
 
-test('B held plus the shake switches to Suspens once; releasing B lands it', () => {
+test('B held plus the shake: each jolt vibrates, the third opens Suspens at once; releasing B lands it', () => {
   const m = new WiiMapper(WII);
   m.press('b', 0, idle);
   const samples = [jolt, rest, jolt, rest, jolt, rest, jolt];
-  const outs = samples.flatMap((a, i) => m.motion(100 + i * 120, a));
-  assert.deepEqual(outs, [{ command: { cmd: 'suspense', args: { on: true } }, rumble: 'suspense' }], 'once, with its own rumble');
-  assert.deepEqual(cmds(m.release('b', idle)), [{ cmd: 'suspense', args: { on: false } }]);
+  const outs = samples.flatMap((a, i) => m.motion(100 + i * 120, a, staying));
+  assert.deepEqual(outs, [
+    { command: null, rumble: 'jolt' },
+    { command: null, rumble: 'jolt' },
+    { command: { cmd: 'suspense', args: { on: true } }, rumble: 'suspenseOn' },
+  ], 'one buzz per jolt, then Suspens with its lasting vibration, once');
+  assert.deepEqual(m.tick(900, open), [], 'on: nothing more while it stays open');
+  assert.deepEqual(m.release('b', open), [{ command: { cmd: 'suspense', args: { on: false } }, rumble: 'tap' }]);
   // Shaking without B does nothing.
-  assert.deepEqual(samples.flatMap((a, i) => m.motion(2000 + i * 120, a)), []);
+  assert.deepEqual(samples.flatMap((a, i) => m.motion(2000 + i * 120, a, idle)), []);
+});
+
+test('the shake switched off (D148): shaking with B held does nothing, B stays Aguanta', () => {
+  const m = new WiiMapper(WII);
+  const off = { ...staying, shake: false };
+  m.press('b', 0, idle);
+  assert.deepEqual([jolt, rest, jolt, rest, jolt].flatMap((a, i) => m.motion(100 + i * 120, a, off)), []);
+  assert.deepEqual(cmds(m.release('b', off)), [{ cmd: 'hold', args: { on: false } }]);
+});
+
+test('B then A held: Suspens at once, silently; its window beats; letting go of A inside it backs out to Aguanta (D144, D147)', () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, idle);
+  assert.deepEqual(m.press('a', 1000, staying), [{ command: { cmd: 'suspense', args: { on: true } }, rumble: null }], 'not the default action');
+  assert.deepEqual(m.tick(1000 + beat - 10, open), []);
+  assert.deepEqual(m.tick(1000 + beat, open), [{ command: null, rumble: 'suspenseStep' }]);
+  assert.deepEqual(m.tick(1000 + beat + 50, open), [], 'each beat once');
+  assert.deepEqual(rumbles(m.tick(1000 + 2 * beat, open)), pulses > 2 ? ['suspenseStep'] : ['suspenseOn']);
+  assert.deepEqual(m.release('a', open), [{ command: { cmd: 'suspense', args: { on: false, cancel: true } }, rumble: 'suspenseCancel' }]);
+  assert.deepEqual(m.tick(1000 + windowMs + 100, staying), [], 'cancelled: no last beat');
+  assert.deepEqual(cmds(m.release('b', staying)), [{ cmd: 'hold', args: { on: false } }], 'Aguanta ends with B');
+});
+
+test('B then A held past the window: it can no longer be undone; A let go does nothing, B let go lands it', () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, idle);
+  m.press('a', 200, staying);
+  const all = Array.from({ length: 40 }, (_, i) => m.tick(200 + i * 50, open)).flat();
+  assert.deepEqual(rumbles(all), [...Array.from({ length: pulses - 1 }, () => 'suspenseStep'), 'suspenseOn'], `${pulses} evenly spaced beats, the last one final`);
+  assert.deepEqual(m.release('a', open), [], 'too late to cancel');
+  assert.deepEqual(m.release('b', open), [{ command: { cmd: 'suspense', args: { on: false } }, rumble: 'tap' }]);
+  assert.deepEqual(m.release('a', idle), [], 'and A never fires the default afterwards');
+});
+
+test('B let go while A\'s window runs: the Suspens backs out and Aguanta ends', () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, idle);
+  m.press('a', 100, staying);
+  assert.deepEqual(m.release('b', open), [
+    { command: { cmd: 'suspense', args: { on: false, cancel: true } }, rumble: 'suspenseCancel' },
+    { command: { cmd: 'hold', args: { on: false } }, rumble: null },
+  ]);
+  assert.deepEqual(m.release('a', idle), [], 'A belongs to that Suspens: no default on release');
+  assert.deepEqual(m.tick(100 + windowMs, idle), []);
+});
+
+test('A with B held, where a Suspens can\'t start (a Spin, a Check): nothing, not the default action', () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, idle);
+  assert.deepEqual(m.press('a', 100, { ...staying, canSuspense: false }), []);
+  assert.deepEqual(m.release('a', staying), []);
+});
+
+test('with «Avanç manual», B alone enters Suspens; let go before the last beat it cancels, after it lands (D145, D148)', () => {
+  const m = new WiiMapper(WII);
+  assert.deepEqual(m.press('b', 0, manual), [{ command: { cmd: 'suspense', args: { on: true } }, rumble: null }]);
+  assert.deepEqual(rumbles(m.tick(beat, manualOpen)), ['suspenseStep']);
+  assert.deepEqual(m.press('a', beat + 10, manualOpen), [], 'A does nothing meanwhile');
+  assert.deepEqual(m.release('b', manualOpen), [{ command: { cmd: 'suspense', args: { on: false, cancel: true } }, rumble: 'suspenseCancel' }], 'back to playing, no Aguanta to end');
+  m.release('a', manual);
+
+  m.press('b', 5000, manual);
+  const all = Array.from({ length: 40 }, (_, i) => m.tick(5000 + i * 50, manualOpen)).flat();
+  assert.equal(all.at(-1)?.rumble, 'suspenseOn');
+  assert.deepEqual(m.release('b', manualOpen), [{ command: { cmd: 'suspense', args: { on: false } }, rumble: 'tap' }]);
+  // Where a Suspens can't start (a Celebration), B is Aguanta as ever.
+  assert.deepEqual(cmds(m.press('b', 9000, { ...manual, canSuspense: false })), [{ cmd: 'hold', args: { on: true, duck: false } }]);
+});
+
+test('a Suspens that ends by itself while B is held stops the gentle vibration, and B let go sends nothing', () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, manual);
+  Array.from({ length: 40 }, (_, i) => m.tick(i * 50, manualOpen));
+  assert.deepEqual(m.tick(25_000, manual), [{ command: null, rumble: 'stop' }], 'its auto-release');
+  assert.deepEqual(m.tick(25_100, manual), [], 'once');
+  assert.deepEqual(m.release('b', manual), []);
+  // From Aguanta: once it has landed, nothing to release either; Aguanta still on (it never opened): let it go.
+  m.press('b', 30_000, idle);
+  m.press('a', 30_100, staying);
+  assert.deepEqual(m.tick(30_100 + windowMs, staying), [{ command: null, rumble: 'stop' }], 'the engine never opened it');
+  assert.deepEqual(cmds(m.release('b', staying)), [{ cmd: 'hold', args: { on: false } }]);
+});
+
+test("a shake's Suspens stays on until the snapshot has shown it open (the state lags a moment)", () => {
+  const m = new WiiMapper(WII);
+  m.press('b', 0, idle);
+  [jolt, rest, jolt, rest, jolt].forEach((a, i) => m.motion(100 + i * 120, a, staying));
+  assert.deepEqual(m.tick(600, staying), [], 'not open yet: not "ended"');
+  assert.deepEqual(m.tick(700, open), []);
+  assert.deepEqual(m.tick(800, idle), [{ command: null, rumble: 'stop' }], 'shown open, then closed: it ended');
 });
 
 test('1 or 2 held for 1.5 s is Enrere, once per press, with a long rumble; a short press does nothing', () => {
@@ -159,4 +263,15 @@ test('the status report: the battery byte as 0..1', async () => {
   assert.deepEqual(parseStatus(new Uint8Array([0, 0, 0x10, 0, 0, 0x64])), { battery: 0.5 });
   assert.deepEqual(parseStatus(new Uint8Array([0, 0, 0, 0, 0, 0xff])), { battery: 1 });
   assert.equal(parseStatus(new Uint8Array([0, 0])), null);
+});
+
+test("the remote's guide (Comandament dialog, printed cheat sheet) has B's Suspens rows, with the window from the config", async () => {
+  const { consoleWiiLegend } = await import('../../../../console/wii/guide.ts');
+  const items = consoleWiiLegend();
+  assert.equal(new Set(items.map((i) => i.id)).size, items.length, 'one row per id');
+  assert.deepEqual(items.filter((i) => i.group === 'b').map((i) => i.id), ['b', 'bA', 'shake', 'bManual']);
+  const bA = items.find((i) => i.id === 'bA');
+  assert.equal(bA?.key, 'B + A');
+  assert.match(bA?.note ?? '', /vibra 3 cops \(~1,5 s\).*abans del tercer/);
+  assert.equal(items.find((i) => i.id === 'shake')?.shake, true);
 });

@@ -8,6 +8,8 @@
     confirmed without a Check);
   - the Game's Winners, plan B resume, and the Plan B cheat sheet (the laptop's keys and the setup
     checklist) behind a disclosure.
+  The remote's card also has the shake gesture's switch (D144, D148; the Consola-Menu board). Under the three columns,
+  across them, the volume sliders (VolumeSliders; D139).
   Panic and "Acabar la nit" sit apart at the bottom, in a danger zone under a hazard stripe.
   The sheet slides in (hook menu-sheet).
 -->
@@ -25,6 +27,7 @@
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
   import Switch from './Switch.svelte';
+  import VolumeSliders from './VolumeSliders.svelte';
   import WinnersList from './WinnersList.svelte';
 
   /** `onwii`: open the Comandament dialog (the menu closes). */
@@ -119,6 +122,8 @@
           <button type="button" class="mini" data-anim="press" onclick={onwii}>{S.wii.open}</button>
         </p>
         <p class="note">{S.menu.wiiNote}</p>
+        <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} on={wii.shake} onchange={(on) => wii.setShake(on)} />
+        {#if wii.status !== 'connected'}<p class="note">{S.wii.shakeHere}</p>{/if}
       </section>
 
       <section class="menu-group" aria-labelledby="{uid}-lan">
@@ -206,6 +211,8 @@
         </div>
       </section>
     </div>
+
+    {#if snap}<VolumeSliders />{/if}
   </div>
 
   <section class="menu-danger" aria-label={S.menu.danger}>

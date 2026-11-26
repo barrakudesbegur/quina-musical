@@ -8,6 +8,7 @@ import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
 import { tick } from 'svelte';
 import { capture, play, type Captured } from './morph.ts';
+import { captureA } from './a-glide.ts';
 import { shouldMorph } from './logic/next-to-now.ts';
 
 const prefersReducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -98,6 +99,8 @@ export class ConsoleModel {
   /** The standing cards in the previous snapshot, and its round, for `standing-fall`. Not reactive. */
   private standingSeen: { key: string; ids: readonly number[] | null } = { key: '', ids: null };
   private fallSeq = 0;
+  /** Pausa was on in the last snapshot (for `a-glide`). Not reactive. */
+  private pausedSeen = false;
 
   /** Commands can reach the engine (relay connected, show page on it). */
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
@@ -166,6 +169,10 @@ export class ConsoleModel {
       if (event.type === 'state') {
         this.landingLog = recordLandings(this.landingLog, event);
         this.followStanding(event);
+        // a-glide: Pausa turns on or off, so A's badge moves: note where it is before the screen changes (D128).
+        const paused = event.pause != null;
+        if (paused !== this.pausedSeen) captureA();
+        this.pausedSeen = paused;
       }
       // A step back inside a Check: the snapshot before it still says whether «Seguides» was on.
       if (event.type === 'check.unrevealed') {

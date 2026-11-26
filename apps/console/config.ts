@@ -10,6 +10,8 @@ export const CONSOLE = Object.freeze({
     checklist: 'quina.console.checklist.v1',
     /** The latest resume code (plan B), kept so a replacement laptop can be resumed from this device. */
     resume: 'quina.console.resume.v1',
+    /** The Wii remote's shake gesture on or off (D148), on the console the remote connects to. */
+    wiiShake: 'quina.console.wiiShake.v1',
   },
   /** The device label ("Tauleta", "Mòbil admin"), set in the menu: it names who pressed what. */
   labelMaxLength: 24,
@@ -55,7 +57,7 @@ export const CONSOLE_COMMANDS = [
   'next', 'back', 'hold', 'holdMusic', 'suspense', 'setPace', 'setGame', 'confirmLine', 'newRound', 'panic', 'sfx',
   'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
   'celebrationMusic', 'interval', 'endGame', 'pause',
-  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume',
+  'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 
@@ -67,8 +69,17 @@ export const WII = Object.freeze({
   vendorId: 0x057e,
   /** Raw accelerometer value at 0 g, and counts per g (the remotes' usual calibration). */
   accel: { zero: 128, perG: 26 },
-  /** Suspens needs 3 strong jolts inside 1.5 s while B is held (dancing shouldn't do it). */
+  /** Suspens needs 3 strong jolts inside 1.5 s while B is held (dancing shouldn't do it). Each jolt vibrates (D144). */
   shake: { peakG: 2.6, resetG: 1.6, minGapMs: 110, count: 3, windowMs: 1500 },
+  /** The shake gesture starts on (D148); the menu and the Comandament dialog switch it on this console. */
+  shakeOn: true,
+  /**
+   * Entering Suspens from the remote (D144–D148): B held then A held, or B alone with «Avanç manual», starts it at once;
+   * `pulses` vibrations follow, evenly spaced, the last at the end of `windowMs`. Letting go of A (or of B, with manual
+   * advance) before then cancels it; after it, it can't be undone. 1.5 s, a vibration every half second (D148; it may
+   * change once the user tries the remote).
+   */
+  suspenseWindow: { windowMs: 1500, pulses: 3 },
   /** 1 or 2 held this long is Enrere (undo a landing); in a Check a shorter press steps back one reveal (D127, D134). */
   backHoldMs: 1500,
   /** A held this long, in a Check, reveals in a row («Seguides», D107) until it's let go. */
@@ -77,7 +88,26 @@ export const WII = Object.freeze({
   pauseHoldMs: 800,
   /** The D-pad's four effects. */
   dpad: { up: 'tada', right: 'orchestra-hit', down: 'sad-trombone', left: 'among-us' },
-  rumble: { tap: [70], suspense: [90, 70, 90, 70, 260], pause: [250, 120, 250], back: [600], autoOn: [80, 80, 80], autoOff: [420] },
+  /**
+   * `suspenseStep`: one of the window's vibrations before the last; `suspenseOn`: the last one, as the Suspens can no
+   * longer be undone (or the shake's third jolt), followed by `rumbleLoop.suspenseOn` for as long as it's on;
+   * `suspenseCancel`: a Suspens let go inside its window; `jolt`: one shake counted; `stop`: the motor off.
+   */
+  rumble: {
+    tap: [70],
+    pause: [250, 120, 250],
+    back: [600],
+    autoOn: [80, 80, 80],
+    autoOff: [420],
+    suspenseStep: [90],
+    suspenseOn: [180],
+    suspenseCancel: [40, 90, 40],
+    jolt: [60],
+    stop: [],
+  },
+  /** A gentler vibration after a rumble, repeated until the next one (D145: "oscillating or below full power"): the
+   * motor is only on or off, so short pulses with long gaps feel softer. */
+  rumbleLoop: { suspenseOn: [35, 165] },
   /** How often held buttons are checked (Enrere's long press). */
   tickMs: 50,
   /** How often the battery is asked for, and under which level the dialog warns. */

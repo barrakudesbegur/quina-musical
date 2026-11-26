@@ -3,7 +3,8 @@
   one is connected. It opens by itself when a remote connects (WiiController.justConnected), and from the
   menu. Without a remote it offers "Connectar" (WebHID needs the presenter's click); where the browser can't
   talk to a remote at all (a tablet) it says where it connects instead. The drawing and legend are shared with
-  Admin's printed cheat sheet (packages/ui/wii). It opens with the hook wii-dialog.
+  Admin's printed cheat sheet (packages/ui/wii). The shake's row carries its switch (D144, D148; the
+  Consola-Comandament board), the same setting as the menu's. It opens with the hook wii-dialog.
 -->
 <script lang="ts">
   import { WII } from '../config.ts';
@@ -13,6 +14,7 @@
   import { S, CA } from '../strings.ts';
   import { consoleWiiLegend } from '../wii/guide.ts';
   import Icon from './Icon.svelte';
+  import Switch from './Switch.svelte';
 
   let { open = $bindable(false) }: { open: boolean } = $props();
 
@@ -57,6 +59,12 @@
   {/if}
 
   <div class="wii-dialog__guide">
-    <WiiGuide {items} footer={CA.wii.footer} sideLabel={CA.wii.side} />
+    <WiiGuide {items} footer={CA.wii.footer} sideLabel={CA.wii.side}>
+      {#snippet extra(item)}
+        {#if item.id === 'shake'}
+          <span class="wii-dialog__switch"><Switch label={S.wii.shake} note={S.wii.shakeDefault} on={wii.shake} onchange={(on) => wii.setShake(on)} /></span>
+        {/if}
+      {/snippet}
+    </WiiGuide>
   </div>
 </dialog>

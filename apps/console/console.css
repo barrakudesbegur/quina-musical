@@ -1986,6 +1986,30 @@
   grid-area: next;
 }
 
+/* The night's last round: «Tempesta» joins the top row; Enrere keeps its third, Comprovar narrows (D155) */
+.thumb-cluster[data-top] {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    'back back back back top top top claim claim claim claim claim'
+    'talk talk talk talk talk talk stay stay stay stay stay stay'
+    'next next next next next next next next next next next next';
+}
+
+/* The end screen: «Tempesta» in Següent's place, a smaller «Llançament» beside it */
+.thumb-cluster[data-beside] {
+  grid-template-areas:
+    'back back claim claim claim claim'
+    'talk talk talk stay stay stay'
+    'beside beside next next next next';
+}
+
+.thumb-cluster__slot--top {
+  grid-area: top;
+}
+.thumb-cluster__slot--beside {
+  grid-area: beside;
+}
+
 /* One colour per action */
 [data-action='back'] {
   --action-bg: var(--action-back);
@@ -2266,6 +2290,263 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Parlem during Pausa: on and locked (D128), a small lock on its corner */
+.two-level__main {
+  position: relative;
+}
+
+.two-level__lock {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-paper);
+}
+
+.big-button .two-level__lock .icon {
+  width: 16px;
+  height: 16px;
+  stroke: var(--color-ink);
+  stroke-width: 2.6;
+}
+
+/* «Llançament» and «Tempesta» (the Consola-Llancament-Tempesta board; hooks throw-hold, throw-on): a striped sticker,
+   the name with its sticker icon, the tap's note, the song's chip while it's on, and the «Des del principi» strip that
+   fills while held (in the top row there's no strip: the light sweeps the whole button) */
+[data-action='throw'] {
+  --action-bg: var(--action-throw);
+  --throw-pale: var(--action-throw-pale);
+}
+
+[data-action='storm'] {
+  --action-bg: var(--action-storm);
+  --throw-pale: var(--action-storm-pale);
+  --action-note: #fff6e5;
+}
+
+.throw-button {
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 0;
+  padding: 0;
+  touch-action: none;
+  font-size: clamp(var(--text-2xl), 4.2vw, 3.125rem);
+  --throw-stripe: 45.25px; /* one period of the 32 px stripes, measured along the row */
+}
+
+/* The stripes, pressed or not (the pressed look resets the background) */
+.big-button.throw-button,
+.big-button.throw-button[aria-pressed='true'] {
+  background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.13) 0 16px, transparent 16px 32px);
+  background-size: var(--throw-stripe) var(--throw-stripe);
+}
+
+/* Playing: pressed (the shared aria-pressed look), and the stripes drift */
+.throw-button[data-anim~='throw-on'] {
+  animation: throw-stripes var(--dur-throw-stripes) linear infinite;
+}
+
+@keyframes throw-stripes {
+  to {
+    background-position: var(--throw-stripe) 0;
+  }
+}
+
+.throw-button__main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+.throw-button__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.throw-button__words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 0.95;
+}
+
+/* Londrina is in capitals (D96), across the whole cluster the throw songs join; the Nunito words keep their case
+   (D114) */
+.thumb-cluster .big-button__label,
+.thumb-cluster .big-button .long-press__label,
+.throw-button .big-button__label {
+  text-transform: uppercase;
+}
+
+.throw-button__sub {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff6e5;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.throw-button .big-button__note {
+  font-size: 0.9375rem;
+}
+
+.throw-button__song {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 92%;
+  padding: 5px 12px;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  background: #fff6e5;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.2;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+.throw-button__song > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.big-button .throw-button__song .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  stroke: var(--color-ink);
+  stroke-width: 2.6;
+}
+
+.throw-button__strip {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  overflow: hidden;
+  border-top: var(--line-width-bold) solid var(--color-line);
+  background: var(--throw-pale);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: var(--font-weight-strong);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.big-button .throw-button__strip .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-width: 2.6;
+}
+
+.throw-button[data-state='pressing'] .two-level__fill,
+.throw-button[data-state='pressing'] .throw-button__fill {
+  transition: none;
+}
+
+/* The hold reached the restart: the strip stays lit until the finger lifts */
+.throw-button[data-state='escalated'] .two-level__fill {
+  transform: none;
+  background: rgb(255 255 255 / 0.75);
+}
+
+/* The top row (the last round): compact, the icon over the name, no strip; the fill sweeps the whole button */
+.throw-button[data-variant='top'] {
+  min-height: calc(var(--tap-big) + var(--space-2));
+  font-size: var(--text-lg);
+}
+
+.throw-button[data-variant='top'] .throw-button__main {
+  gap: 0;
+  padding: var(--space-1);
+}
+
+.throw-button[data-variant='top'] .throw-button__name {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.throw-button[data-variant='top'] .throw-button__words {
+  align-items: center;
+}
+
+.throw-button[data-variant='top'] .throw-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.throw-button[data-variant='top'] .throw-button__sub {
+  font-size: 0.6875rem;
+}
+
+.throw-button__fill {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 255 255 / 0.3);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform var(--dur-drain) var(--ease-out);
+}
+
+.throw-button__percent {
+  display: none;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* Beside the big one on the end screen: narrow, the icon over the name */
+.throw-button[data-variant='side'] {
+  font-size: var(--text-lg);
+}
+
+.throw-button[data-variant='side'] .throw-button__name {
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.throw-button[data-variant='side'] .throw-button__words {
+  align-items: center;
+}
+
+.throw-button[data-variant='side'] .throw-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.throw-button[data-variant='side'] .big-button__note {
+  font-size: var(--text-xs);
+}
+
+.throw-button[data-variant='side'] .throw-button__strip {
+  height: 38px;
+  font-size: var(--text-sm);
+}
+
 /* An open Suspens pulses on Aguanta's strip, faster towards its auto-release */
 .two-level[data-anim~='suspense-hold'] .two-level__fill {
   animation: suspense-pulse calc(var(--dur-pulse-slow) - (var(--dur-pulse-slow) - var(--dur-pulse-fast)) * var(--suspense-progress, 0)) ease-in-out infinite;
@@ -2436,6 +2717,56 @@
     width: 2rem;
     height: 2rem;
   }
+
+  /* The throw songs keep their strip under them, edge to edge */
+  .throw-button {
+    flex-direction: column;
+    padding: 0;
+    font-size: var(--text-xl);
+  }
+
+  .throw-button .throw-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .throw-button__main {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .throw-button__strip {
+    height: 2.125rem;
+    font-size: var(--text-sm);
+  }
+
+  /* Narrow slots: the last round's top row and the end screen's side button keep to their names */
+  .throw-button[data-variant='top'] {
+    font-size: var(--text-md);
+  }
+
+  .throw-button[data-variant='side'] .big-button__note {
+    display: none;
+  }
+
+  .throw-button[data-variant='side'] .throw-button__strip {
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .big-button.throw-button[data-variant='side'] .throw-button__strip .icon {
+    display: none;
+  }
+
+  .thumb-cluster[data-top] .big-button[data-action='claim'] .icon {
+    display: none;
+  }
+
+  .thumb-cluster[data-top] .big-button[data-action='claim'] {
+    font-size: var(--text-md);
+  }
 }
 
 /* ---- hold and pause ----------------------------------------------------------------------------------- */
@@ -2521,6 +2852,22 @@
 
 .check-board__go {
   grid-column: span 10;
+}
+
+/* The night's last round: «Tempesta» between Enrere and Revisió manual (D155) */
+.check-board__right[data-top] .check-board__review {
+  grid-column: span 3;
+}
+
+.check-board__storm {
+  display: flex;
+  grid-column: span 3;
+  min-width: 0;
+}
+
+.check-board__storm > .throw-button {
+  flex: 1;
+  min-height: 5.25rem;
 }
 
 /* The big sticker buttons of the Check, one colour each (Consola-Comprovacio) */
@@ -4288,6 +4635,149 @@ kbd {
   box-shadow: none;
 }
 
+/* The volume sliders (D139, D157): across the three columns, the groups side by side; each slider with its value and
+   a ▼ over its default */
+.menu-volumes {
+  grid-column: 1 / -1;
+}
+
+.menu-volumes__groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-3) var(--space-5);
+}
+
+@media (max-width: 52rem) {
+  .menu-volumes__groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 34rem) {
+  .menu-volumes__groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.menu-volumes__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.volume {
+  display: grid;
+  gap: 1px;
+  --thumb: 26px;
+}
+
+.volume__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+}
+
+.volume__value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.volume[data-at-default] .volume__value {
+  color: var(--color-text-muted);
+}
+
+.volume__note {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+
+.volume__track {
+  position: relative;
+  display: block;
+  padding-top: 7px;
+}
+
+/* The default's mark: over the track, where the thumb's centre sits at the default */
+.volume__mark {
+  position: absolute;
+  top: 0;
+  left: calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--default-at));
+  width: 12px;
+  height: 8px;
+  background: var(--color-ink);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.volume input[type='range'] {
+  display: block;
+  width: 100%;
+  height: 30px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  touch-action: pan-y;
+}
+
+.volume input[type='range']::-webkit-slider-runnable-track {
+  height: 12px;
+  border: var(--line-width-thin) solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-track);
+}
+
+.volume input[type='range']::-moz-range-track {
+  height: 12px;
+  border: var(--line-width-thin) solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-track);
+}
+
+.volume input[type='range']::-webkit-slider-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((12px - 2 * var(--line-width-thin) - var(--thumb)) / 2);
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-orange);
+  box-shadow: 0 2px 0 var(--color-ink);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.volume input[type='range']::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-orange);
+  box-shadow: 0 2px 0 var(--color-ink);
+}
+
+.volume input[type='range']:disabled {
+  opacity: 0.5;
+}
+
+/* The shake's switch on the Comandament dialog's row */
+.wii-dialog__switch {
+  display: block;
+  max-width: 22rem;
+  margin-top: var(--space-1);
+}
+
 /* The night's expected end, with its drift */
 .menu-end {
   display: flex;
@@ -5015,6 +5505,21 @@ kbd {
     display: inline;
   }
 
+  /* throw-hold: the same percentage; throw-on: still stripes */
+  .throw-button[data-state='pressing'] .two-level__fill,
+  .throw-button[data-state='pressing'] .throw-button__fill {
+    display: none;
+  }
+
+  .throw-button[data-state='pressing'] .two-level__percent,
+  .throw-button[data-state='pressing'] .throw-button__percent {
+    display: inline;
+  }
+
+  .throw-button[data-anim~='throw-on'] {
+    animation: none;
+  }
+
   .two-level[data-state='pressing'] .two-level__how {
     display: none;
   }
@@ -5189,24 +5694,42 @@ kbd {
   translate: 0 -50%;
 }
 
-.wii-badge__shake {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  margin-left: 4px;
-  padding: 2px 5px;
-  border: 2px solid var(--color-ink);
-  border-radius: 999px;
-  background: #ffffff;
+.wii-badge__plus {
+  font-size: 0.9375rem;
 }
 
-.wii-badge__shake svg {
-  width: 15px;
-  height: 11px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3;
-  stroke-linecap: round;
+/* B + A: the second key, a little apart */
+.wii-badge__plus + .wii-badge__key {
+  margin-left: -1px;
+}
+
+/* The shake: the remote shaken three times, "×3" (the Consola-Joc board's glyph) */
+.wii-badge__shake {
+  width: 40px;
+  height: 26px;
+  overflow: visible;
+}
+
+.wii-badge__remote {
+  fill: #ffffff;
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+
+.wii-badge__remote-a {
+  fill: var(--color-ink);
+}
+
+.wii-badge__times {
+  fill: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* A's badge gliding to where Pausa moved it (ANIMATIONS.md › a-glide): no pop on top */
+.wii-badge[data-glide] {
+  animation: none;
 }
 
 @keyframes wii-badge-in {
@@ -5232,14 +5755,29 @@ kbd {
 }
 
 .two-level__second:has(> .wii-badge[data-wii='b']) {
-  padding-right: 92px;
+  padding-right: 76px;
 }
 
-.wii-badge[data-place='strip'] .wii-badge__shake {
-  margin-left: 6px;
-  padding: 1px 4px;
-  border-width: 1.5px;
-  font-size: 0.6875rem;
+/* A held key on a strip stays centred on it (its ring inside the strip) */
+.wii-badge[data-place='strip'][data-hold] {
+  top: 50%;
+}
+
+/* Suspens's shake ×3 at the strip's left end, while the shake is on (the Consola-Joc board) */
+.wii-badge[data-place='strip-start'] {
+  top: 50%;
+  right: auto;
+  left: 9px;
+  translate: 0 -50%;
+}
+
+.two-level__second:has(> .wii-badge[data-wii='shake']) {
+  padding-left: 52px;
+}
+
+/* With B + A (and the shake) on the strip, the strip just names Suspens, as the board draws it */
+.two-level__second:has(> .wii-badge[data-wii='b']) .two-level__how {
+  display: none;
 }
 
 /* A phone or a narrow window (the compact cluster): every badge small and centred on its right edge; the
@@ -5274,6 +5812,10 @@ kbd {
   .two-level__second:has(> .wii-badge[data-wii='talk']),
   .two-level__second:has(> .wii-badge[data-wii='b']) {
     padding-right: 0;
+  }
+
+  .two-level__second:has(> .wii-badge[data-wii='shake']) {
+    padding-left: 0;
   }
 }
 

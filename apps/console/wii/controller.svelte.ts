@@ -5,15 +5,18 @@
 // console draws as primary; when there is none, or it's disabled, A sends nothing and doesn't rumble.
 // The console that hosts the remote publishes its status (remote.status) through the relay; every console,
 // the tablet included, shows the badges and the chip when any console has a remote connected.
+// The shake gesture's switch (D148) is this console's setting, kept on this device: it acts where the remote connects.
 // Development only: `?wii=demo` fakes a connected remote, so the badges and the dialog can be reviewed.
 import type { ShowState } from '@quina/protocol';
 import { readRemoteStatus, remoteStatusMessage, RemoteHosts, type RemoteSummary } from '../../../packages/ui/client/remote-status.ts';
-import { WII } from '../config.ts';
+import { CONSOLE, WII } from '../config.ts';
 import { flowOf } from '../../../packages/ui/flow.ts';
 import { canToggleAuto, checkBackCommand, checkReviewCommand } from '../logic/check.ts';
 import { sendDefault } from '../logic/default-action.ts';
 import { activeHoldMode } from '../logic/hold-modes.ts';
+import { controlsModel } from '../logic/scene.ts';
 import type { ConsoleModel } from '../model.svelte.ts';
+import { readStored, writeStored } from '../storage.ts';
 import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type WiiRemote } from './driver.ts';
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
@@ -27,19 +30,27 @@ function demoRemote(): boolean {
   return import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).get('wii') === 'demo';
 }
 
-/** What the mapping needs from a snapshot. Pure. */
-export function wiiContext(state: ShowState | null): WiiContext {
+/** What the mapping needs from a snapshot and this console's settings. Pure. */
+export function wiiContext(state: ShowState | null, settings: { shake: boolean }): WiiContext {
   const paused = Boolean(state?.pause);
   const flow = flowOf(state);
   // During Pausa a Check's commands wait (the engine refuses them): − and + leave Pausa, as anywhere.
   const check = !paused && flow.scene === 'check' ? flow.check : null;
+  // The remote sends only while the console is online (as its buttons do), so ask the rules as if it were.
+  const suspense = controlsModel({ state, flow, online: true }).suspense;
   return {
     holdMode: activeHoldMode(state),
     autoAdvance: state?.game.autoAdvance ?? true,
     paused,
     check: check ? { back: checkBackCommand(check), review: checkReviewCommand(check), auto: canToggleAuto(check) } : null,
+    canSuspense: suspense.enabled && !suspense.open,
+    suspenseOpen: suspense.open,
+    shake: settings.shake,
   };
 }
+
+/** The shake gesture's stored switch: on unless this device turned it off. */
+const readShakeSetting = (stored: string | null): boolean => (stored === null ? WII.shakeOn : stored === 'on');
 
 export class WiiController {
   /** A fake remote (`?wii=demo`, development only): shows as connected, sends nothing. */
@@ -49,6 +60,8 @@ export class WiiController {
   justConnected = $state(false);
   /** The remote's battery (0..1) on this console, when it hosts the remote and the remote has said. */
   battery = $state<number | null>(null);
+  /** The shake gesture (B + 3 shakes = Suspens) is on, on this console (D148). */
+  shake = $state(readShakeSetting(readStored(CONSOLE.storage.wiiShake)));
   /** What the other consoles' remotes report (through the relay). */
   hosts = $state.raw<RemoteSummary>({ connected: false, lost: false, battery: null, drops: 0 });
   /** A remote is connected on this console or on another one. */
@@ -125,6 +138,17 @@ export class WiiController {
     this.model.show.client.bus.sendRemote(remoteStatusMessage({ connected: this.status === 'connected', battery: this.status === 'connected' ? this.battery : null, sinceMs: this.statusSinceMs, ...report }));
   }
 
+  /** The menu's and the Comandament dialog's switch. */
+  setShake(on: boolean): void {
+    this.shake = on;
+    writeStored(CONSOLE.storage.wiiShake, on ? 'on' : 'off');
+  }
+
+  /** What the mapping needs now. */
+  private context(): WiiContext {
+    return wiiContext(this.model.show.state, { shake: this.shake });
+  }
+
   /** The presenter's click: ask Chrome for the remote. */
   async connect(): Promise<void> {
     const remote = await requestWiiRemote();
@@ -162,7 +186,7 @@ export class WiiController {
     this.publish();
     remote.rumble(WII.rumble.tap);
     remote.requestStatus();
-    this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now(), wiiContext(this.model.show.state))), WII.tickMs);
+    this.ticker = setInterval(() => this.apply(this.mapper.tick(Date.now(), this.context())), WII.tickMs);
     // Once a minute: the battery, and the drops count republished as old drops leave the window.
     this.batteryTimer = setInterval(() => {
       remote.requestStatus();
@@ -189,19 +213,19 @@ export class WiiController {
 
   private onReport(report: WiiReport): void {
     const now = Date.now();
-    const ctx = wiiContext(this.model.show.state);
+    const ctx = this.context();
     const { down, up } = buttonChanges(this.pressed, report.pressed);
     this.pressed = report.pressed;
     for (const b of down) this.apply(this.mapper.press(b, now, ctx));
     for (const b of up) this.apply(this.mapper.release(b, ctx));
-    if (report.accel) this.apply(this.mapper.motion(now, report.accel));
+    if (report.accel) this.apply(this.mapper.motion(now, report.accel, ctx));
   }
 
   private apply(outputs: readonly WiiOutput[]): void {
     for (const o of outputs) {
       // Only what was sent rumbles: an A with nothing to do stays still, so the presenter feels the difference.
       const sent = o.command ? this.send(o.command) : true;
-      if (sent) this.remote?.rumble(WII.rumble[o.rumble]);
+      if (sent && o.rumble) this.remote?.rumble(WII.rumble[o.rumble], o.rumble === 'suspenseOn' ? WII.rumbleLoop.suspenseOn : []);
     }
   }
 

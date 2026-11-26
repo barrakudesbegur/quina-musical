@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES, baseState } from '../../../../../packages/ui/fixtures/states.ts';
 import { flowOf, type FlowState } from '../../../../../packages/ui/flow.ts';
-import { canSend, controlsModel, sceneAllows, sceneContext } from '../../../../console/logic/scene.ts';
+import { canSend, controlsModel, nextBlocked, sceneAllows, sceneContext } from '../../../../console/logic/scene.ts';
 
 const NOW = 1_800_000_000_000;
 const input = (state: FlowState, online = true) => ({ state, flow: flowOf(state), online });
@@ -32,11 +32,37 @@ test('during a Spin, Next and Suspense wait; Back cancels; Hold works', () => {
   assert.equal(c.hold.enabled, true);
 });
 
-test('an open Suspense: Next and Suspense release it', () => {
+test('an open Suspense: Suspense lands it; Next waits (D133)', () => {
   const c = controlsModel(fixture('suspense'));
   assert.equal(c.suspense.open, true);
-  assert.equal(c.next.enabled, true);
+  assert.equal(c.next.enabled, false);
   assert.equal(c.suspense.enabled, true);
+});
+
+test('Aguanta blocks Next; Parlem does not, since Next ends it (D133, D142)', () => {
+  assert.equal(nextBlocked(FIXTURES.stay(NOW).state), true);
+  assert.equal(controlsModel(fixture('stay')).next.enabled, false);
+  assert.equal(nextBlocked(FIXTURES.hold(NOW).state), false);
+  assert.equal(controlsModel(fixture('hold')).next.enabled, true);
+  assert.equal(nextBlocked(FIXTURES.suspense(NOW).state), true);
+  assert.equal(nextBlocked(FIXTURES.play(NOW).state), false);
+  assert.equal(nextBlocked(null), false);
+});
+
+test("the night's last round reaches the scene rules: the corn-seed storm in its play and its Check (D155)", () => {
+  const last = FIXTURES.lastRound(NOW).state;
+  assert.equal(sceneContext(flowOf(last), last).lastRound, true);
+  assert.equal(sceneContext(flowOf(FIXTURES.play(NOW).state), FIXTURES.play(NOW).state).lastRound, false);
+  assert.equal(canSend('storm', fixture('lastRound')), true);
+  assert.equal(canSend('storm', fixture('checkLastRound')), true);
+  assert.equal(canSend('storm', fixture('play')), false);
+  assert.equal(canSend('storm', fixture('check')), false);
+  assert.equal(canSend('storm', fixture('after')), true);
+  assert.equal(canSend('throw', fixture('interval')), true);
+  assert.equal(canSend('throw', fixture('before')), true);
+  assert.equal(canSend('throw', fixture('after')), true);
+  assert.equal(canSend('throw', fixture('play')), false);
+  assert.equal(canSend('throw', input({ ...FIXTURES.interval(NOW).state, pause: { sinceMs: NOW, overlay: false } })), false, 'not during Pausa');
 });
 
 test('in a Hold the Hold button resumes', () => {

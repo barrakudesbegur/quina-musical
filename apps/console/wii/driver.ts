@@ -61,15 +61,23 @@ export class WiiRemote {
     void this.send(OUT.status, [0x00]);
   }
 
-  /** Play a pattern: on/off durations in ms, starting with on. A new pattern cuts the previous one. */
-  rumble(pattern: readonly number[]): void {
+  /**
+   * Play a pattern: on/off durations in ms, starting with on; then `loop`, over and over, when there is one (a gentle
+   * vibration that lasts). A new pattern cuts the previous one, its loop included; an empty one stops the motor.
+   */
+  rumble(pattern: readonly number[], loop: readonly number[] = []): void {
     if (this.rumbleTimer) clearTimeout(this.rumbleTimer);
-    const step = (i: number) => {
-      if (i >= pattern.length) return void this.send(OUT.leds, [WII.leds]);
+    this.rumbleTimer = null;
+    const repeat = loop.reduce((sum, ms) => sum + ms, 0) > 0;
+    const step = (steps: readonly number[], i: number): void => {
+      if (i >= steps.length) {
+        if (repeat) return step(loop, 0);
+        return void this.send(OUT.leds, [WII.leds]);
+      }
       void this.send(OUT.leds, [WII.leds | (i % 2 === 0 ? 0x01 : 0x00)]);
-      this.rumbleTimer = setTimeout(() => step(i + 1), pattern[i]);
+      this.rumbleTimer = setTimeout(() => step(steps, i + 1), steps[i]);
     };
-    step(0);
+    step(pattern, 0);
   }
 
   async stop(): Promise<void> {

@@ -8,7 +8,8 @@
  * Contrast (WCAG 2.1), checked for both themes:
  * - text on bg / surface: light 15.6 / 18.0, dark 14.6 / 11.8; muted text: light 6.0 / 7.0, dark 8.8 / 7.1;
  * - small ink notes on the action buttons: red (#ff5a60) 5.9, ice 9.6, lilac 6.2, gold 11.4, orange 7.3,
- *   green 5.7; the big labels are white with a thick ink outline, so they read on every colour;
+ *   green 5.7, the throw song's pink 5.9; the storm's notes are #fff6e5 on its deep blue, 10.0; the big labels are
+ *   white with a thick ink outline, so they read on every colour;
  * - the recovery notice: ink on #ffe3c2 14.6;
  * - focus ring on bg: light (night) 13.6, dark (gold) 9.9.
  *
@@ -38,6 +39,11 @@
   --action-claim: var(--color-green);
   --action-suspense: var(--color-gold);
   --action-next: var(--color-orange);
+  /* The throw songs (Consola-Llancament-Tempesta): «Llançament» pink, «Tempesta» deep blue; their strips pale */
+  --action-throw: #ff4fa3;
+  --action-throw-pale: #ffd0e6;
+  --action-storm: #2c3878;
+  --action-storm-pale: #c9d3ff;
   --action-reject: #ff5a60;
   --action-confirm: var(--color-green);
   --action-label: #ffffff; /* big labels: white with an ink outline */
@@ -75,6 +81,9 @@
   --dur-default-ring: 200ms;
   --dur-wii-badge: 240ms;
   --dur-wii-dialog: 200ms;
+  --dur-a-glide: 320ms; /* a-glide: A's badge follows Pausa (D128) */
+  /* throw-on: a playing throw song's stripes drift */
+  --dur-throw-stripes: 1.6s;
   --dur-standing-last: 300ms; /* standing-last: the last card grows (--ease-bounce) */
   --dur-standing-button: 200ms; /* standing-last: "Comprovar #57" slides up */
   /* The default action's ring: A's orange (the dark theme's), its darker edge on the light background */
@@ -158,5 +167,6 @@
     --dur-default-ring: 0ms;
     --dur-wii-badge: 0ms;
     --dur-wii-dialog: 0ms;
+    --dur-a-glide: 0ms;
   }
 }

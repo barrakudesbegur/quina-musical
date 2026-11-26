@@ -15,6 +15,8 @@ export function sceneContext(flow: FlowFields, state: ShowState | null = null): 
     paused: flow.pause !== null,
     // The Interval playlist is playing: exactly the engine's own test for `intervalSkip`.
     ...(state && 'intervalMusic' in state ? { intervalMusic: state.intervalMusic != null } : {}),
+    // The night's last round is in play: the corn-seed storm's button shows (D155).
+    ...(state ? { lastRound: state.lastRound === true } : {}),
   };
 }
 
@@ -42,16 +44,25 @@ export function canSend(cmd: AnyCommandName, { state, flow, online }: ControlsIn
   return sceneAllows(cmd, sceneContext(flow, state));
 }
 
+/**
+ * Nothing lands while B is held (D133, D142): Next is refused (`nextBlocked`) during Aguanta and while a Suspens is on.
+ * Parlem doesn't block it: Next ends Parlem.
+ */
+export function nextBlocked(state: Pick<ShowState, 'status' | 'hold' | 'suspense'> | null): boolean {
+  if (!state) return false;
+  return state.suspense != null || (state.status === 'hold' && state.hold?.ducked === false);
+}
+
 export function controlsModel(input: ControlsInput): ControlsModel {
   const { state } = input;
   const live = input.online && state !== null && state.status !== 'locked';
   const suspenseOpen = state?.suspense != null;
-  // A normal Spin is running: Next would be refused as `busy` (a Suspense is released by Next instead).
+  // A normal Spin is running: Next would be refused as `busy`.
   const spinning = state?.status === 'transition' && !suspenseOpen;
   const somethingToUndo = state !== null && (state.queue.position >= 0 || state.transition !== null || suspenseOpen);
   return {
     live,
-    next: { enabled: canSend('next', input) && !spinning },
+    next: { enabled: canSend('next', input) && !spinning && !nextBlocked(state) },
     hold: { enabled: canSend('hold', input), holding: state?.status === 'hold' },
     suspense: { enabled: canSend('suspense', input) && !spinning, open: suspenseOpen },
     back: { enabled: canSend('back', input) && somethingToUndo },

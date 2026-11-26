@@ -1,19 +1,25 @@
-// What each Wii Remote button does (the user's mapping, docs/show-ui-and-platform-decisions.md). Pure: button
-// edges, accelerometer samples and clock ticks in; commands and rumbles out. The caller sends the commands
-// exactly as the console's own buttons would.
+// What each Wii Remote button does (the user's mapping, docs/show-ui-and-platform-decisions.md; the
+// Consola-Comandament board). Pure: button edges, accelerometer samples and clock ticks in; commands and rumbles out.
+// The caller sends the commands exactly as the console's own buttons would.
 //   A: the default action (logic/default-action.ts: Següent in play, a Check's next reveal or its cue…), resolved by
 //   the caller at the moment of the press; in a Check, A held reveals in a row («Seguides», D107) until it's let go ·
-//   B held: Aguanta, released: back to normal · B held + a deliberate shake: Suspens, and releasing B lands it ·
+//   B held: Aguanta, released: back to normal · B held, then A held: Suspens (D144, D147), entered like the manual
+//   one: it starts at once and `suspenseWindow.pulses` vibrations follow over `windowMs`; letting go of A before the
+//   last cancels it (`suspense {on:false, cancel:true}`, back to Aguanta); after it, it can't be undone, a gentler
+//   vibration lasts while it's on, and letting go of B lands it · with «Avanç manual» (auto-advance off) B alone
+//   enters that same Suspens (D145): letting go of B inside the window cancels it · B held plus a deliberate shake
+//   (3 jolts, each one vibrating): Suspens at once, when the shake is switched on (D148, the console's setting) ·
 //   − or + tapped: Parlem on/off (or leaves Pausa), held: Pausa, or in a Check (before its cue) «Revisió manual»
 //   (D128; under review it's Pausa again, D135) · 1 or 2 held 1.5 s: Enrere; in a Check, a shorter press takes the
 //   last revealed mark off (D127, D134) · HOME: auto-advance on/off (different rumbles) · D-pad: four effects.
+//   While B is held, A only ever enters Suspens: Next is refused during Aguanta and Suspens anyway (D133).
 //   Claims are typed on the tablet; A sends the claim pad's «Comprovar» only as its default action.
 import type { CommandFields, SoundName } from '@quina/protocol';
 import { holdPress, type HoldMode } from '../logic/hold-modes.ts';
 import { magnitude, type Accel, type WiiButton } from './report.ts';
 import { ShakeDetector, type ShakeConfig } from './shake.ts';
 
-export type RumbleName = 'tap' | 'suspense' | 'pause' | 'back' | 'autoOn' | 'autoOff';
+export type RumbleName = 'tap' | 'pause' | 'back' | 'autoOn' | 'autoOff' | 'suspenseStep' | 'suspenseOn' | 'suspenseCancel' | 'jolt' | 'stop';
 export type DpadButton = 'up' | 'right' | 'down' | 'left';
 
 export type WiiCommand =
@@ -31,7 +37,8 @@ export type WiiCommand =
 
 export interface WiiOutput {
   command: WiiCommand | null;
-  rumble: RumbleName;
+  /** Null: no vibration (the press that starts a Suspens: its window's vibrations follow). */
+  rumble: RumbleName | null;
 }
 
 export interface WiiMappingConfig {
@@ -41,6 +48,8 @@ export interface WiiMappingConfig {
   pauseHoldMs: number;
   /** A held this long in a Check reveals in a row. */
   aHoldMs: number;
+  /** Entering Suspens: the window to cancel it in, and how many vibrations mark it (the last at its end). */
+  suspenseWindow: { windowMs: number; pulses: number };
   dpad: Readonly<Record<DpadButton, SoundName>>;
 }
 
@@ -52,6 +61,12 @@ export interface WiiContext {
   paused: boolean;
   /** A Check on screen (logic/check.ts), else null. */
   check: WiiCheckContext | null;
+  /** A Suspens can start now: the scene allows it and no Spin is running. */
+  canSuspense: boolean;
+  /** A Suspens is open (the state's `suspense`). */
+  suspenseOpen: boolean;
+  /** The shake gesture is switched on (D148; the console's setting). */
+  shake: boolean;
 }
 
 /** What the remote can do in the Check on screen. */
@@ -64,13 +79,33 @@ export interface WiiCheckContext {
   auto: boolean;
 }
 
-const out = (command: WiiCommand | null, rumble: RumbleName = 'tap'): WiiOutput[] => [{ command, rumble }];
+const out = (command: WiiCommand | null, rumble: RumbleName | null = 'tap'): WiiOutput[] => [{ command, rumble }];
+
+/**
+ * The Suspens the remote is in, if any:
+ * - window: just started by `key` (A after B, or B alone with manual advance); letting go of `key` cancels it until the
+ *   last vibration, at `startMs` + windowMs;
+ * - on: it can't be undone any more; letting go of B lands it. `seenOpen`: the state has shown it open (until then a
+ *   closed state is only the snapshot lagging behind);
+ * - over: it ended by itself (its auto-release, or the tablet) while B is still held: letting go of B sends nothing.
+ */
+type RemoteSuspense =
+  | { phase: 'none' }
+  | { phase: 'window'; key: 'a' | 'b'; startMs: number; pulses: number }
+  | { phase: 'on'; seenOpen: boolean }
+  | { phase: 'over' };
+
+const NO_SUSPENSE: RemoteSuspense = { phase: 'none' };
 
 export class WiiMapper {
   private readonly cfg: WiiMappingConfig;
   private readonly shake: ShakeDetector;
   private bHeld = false;
-  private suspenseOn = false;
+  /** What pressing B started: Aguanta (`hold`), or a Suspens (manual advance). */
+  private bStarted: 'stay' | 'suspense' | null = null;
+  private suspense: RemoteSuspense = NO_SUSPENSE;
+  /** A went down while B was held: it belongs to the Suspens, so its release is never the default action's. */
+  private aWithB = false;
   private backSince: number | null = null;
   private backFired = false;
   private talkSince: number | null = null;
@@ -87,13 +122,26 @@ export class WiiMapper {
   press(button: WiiButton, tMs: number, ctx: WiiContext): WiiOutput[] {
     switch (button) {
       case 'a':
+        if (this.bHeld) {
+          this.aWithB = true;
+          this.aSince = null;
+          // B + A: Suspens from Aguanta, once per B press (a Suspens already on stays as it is).
+          if (this.suspense.phase !== 'none' || !ctx.canSuspense) return [];
+          return this.enterSuspense('a', tMs);
+        }
         this.aSince = tMs;
         this.aAuto = false;
         return out({ cmd: 'default' });
       case 'b':
         this.bHeld = true;
-        this.suspenseOn = false;
+        this.suspense = NO_SUSPENSE;
         this.shake.reset();
+        // «Avanç manual»: B alone is Suspens (D145); otherwise it's Aguanta.
+        if (!ctx.autoAdvance && ctx.canSuspense) {
+          this.bStarted = 'suspense';
+          return this.enterSuspense('b', tMs);
+        }
+        this.bStarted = 'stay';
         return out({ cmd: 'hold', args: { on: true, duck: false } });
       case 'minus':
       case 'plus':
@@ -118,13 +166,17 @@ export class WiiMapper {
   }
 
   release(button: WiiButton, ctx: WiiContext): WiiOutput[] {
-    if (button === 'b' && this.bHeld) {
-      this.bHeld = false;
-      const landing = this.suspenseOn;
-      this.suspenseOn = false;
-      return out(landing ? { cmd: 'suspense', args: { on: false } } : { cmd: 'hold', args: { on: false } });
-    }
+    if (button === 'b' && this.bHeld) return this.releaseB(ctx);
     if (button === 'a') {
+      if (this.aWithB) {
+        this.aWithB = false;
+        // Let go inside its window: the Suspens backs out, and the song is back in Aguanta (B still held).
+        if (this.suspense.phase === 'window' && this.suspense.key === 'a') {
+          this.suspense = NO_SUSPENSE;
+          return out({ cmd: 'suspense', args: { on: false, cancel: true } }, 'suspenseCancel');
+        }
+        return [];
+      }
       const auto = this.aAuto;
       this.aSince = null;
       this.aAuto = false;
@@ -144,20 +196,26 @@ export class WiiMapper {
     return [];
   }
 
-  /** An accelerometer sample. Only a shake while B is held (and not yet in Suspens) does anything. */
-  motion(tMs: number, accel: Accel): WiiOutput[] {
-    if (!this.bHeld || this.suspenseOn) return [];
-    if (!this.shake.push(tMs, magnitude(accel))) return [];
-    this.suspenseOn = true;
-    return out({ cmd: 'suspense', args: { on: true } }, 'suspense');
+  /**
+   * An accelerometer sample. Only a shake while B is held, the shake is on and no Suspens is under way does anything:
+   * each jolt vibrates, and the last one opens Suspens at once (no window: the shake is the deliberate gesture).
+   */
+  motion(tMs: number, accel: Accel, ctx: WiiContext): WiiOutput[] {
+    if (!this.bHeld || this.suspense.phase !== 'none' || !ctx.shake || !ctx.canSuspense) return [];
+    const step = this.shake.push(tMs, magnitude(accel));
+    if (step === 'none') return [];
+    if (step === 'jolt') return out(null, 'jolt');
+    this.suspense = { phase: 'on', seenOpen: false };
+    return out({ cmd: 'suspense', args: { on: true } }, 'suspenseOn');
   }
 
   /**
    * The clock (once per press): 1 or 2 held long enough is Enrere; − or + held long enough is Pausa, or in a Check
-   * «Revisió manual»; A held long enough in a Check reveals in a row.
+   * «Revisió manual»; A held long enough in a Check reveals in a row. A Suspens being entered vibrates on its window's
+   * beats, and becomes final at the last one; one that ended by itself stops the remote's gentle vibration.
    */
   tick(tMs: number, ctx: WiiContext): WiiOutput[] {
-    const outs: WiiOutput[] = [];
+    const outs: WiiOutput[] = [...this.suspenseTick(tMs, ctx)];
     if (this.talkSince !== null && !this.talkFired && tMs - this.talkSince >= this.cfg.pauseHoldMs) {
       this.talkFired = true;
       const review = ctx.check?.review;
@@ -181,11 +239,66 @@ export class WiiMapper {
   /** The remote went away: forget held buttons (the caller releases a hold it started if it wants). */
   reset(): void {
     this.bHeld = false;
-    this.suspenseOn = false;
+    this.bStarted = null;
+    this.suspense = NO_SUSPENSE;
+    this.aWithB = false;
     this.backSince = null;
     this.talkSince = null;
     this.aSince = null;
     this.aAuto = false;
     this.shake.reset();
+  }
+
+  /** Start a Suspens now, with its window to cancel it in. The press itself stays still: the window's beats follow. */
+  private enterSuspense(key: 'a' | 'b', tMs: number): WiiOutput[] {
+    this.suspense = { phase: 'window', key, startMs: tMs, pulses: 0 };
+    return out({ cmd: 'suspense', args: { on: true } }, null);
+  }
+
+  private releaseB(ctx: WiiContext): WiiOutput[] {
+    const started = this.bStarted;
+    const s = this.suspense;
+    this.bHeld = false;
+    this.bStarted = null;
+    this.suspense = NO_SUSPENSE;
+    if (s.phase === 'on') return out({ cmd: 'suspense', args: { on: false } });
+    if (s.phase === 'window') {
+      const cancel = out({ cmd: 'suspense', args: { on: false, cancel: true } }, 'suspenseCancel');
+      // B let go while A's window ran: the Suspens backs out to Aguanta, and Aguanta ends with B.
+      return started === 'stay' ? [...cancel, ...out({ cmd: 'hold', args: { on: false } }, null)] : cancel;
+    }
+    // Aguanta ends with B. After a Suspens that ended by itself only an Aguanta still on is let go (one the engine
+    // refused leaves it on; one that landed ended it).
+    if (started === 'stay' && (s.phase === 'none' || ctx.holdMode === 'stay')) return out({ cmd: 'hold', args: { on: false } });
+    return [];
+  }
+
+  private suspenseTick(tMs: number, ctx: WiiContext): WiiOutput[] {
+    const s = this.suspense;
+    if (s.phase === 'on') {
+      if (ctx.suspenseOpen) {
+        if (!s.seenOpen) this.suspense = { phase: 'on', seenOpen: true };
+        return [];
+      }
+      if (!s.seenOpen) return [];
+      // Released by itself (or from the tablet) while B is still held: the gentle vibration stops.
+      this.suspense = { phase: 'over' };
+      return out(null, 'stop');
+    }
+    if (s.phase !== 'window') return [];
+    const { windowMs, pulses } = this.cfg.suspenseWindow;
+    const due = Math.min(pulses, Math.floor(((tMs - s.startMs) * pulses) / windowMs));
+    if (due <= s.pulses) return [];
+    if (due < pulses) {
+      this.suspense = { ...s, pulses: due };
+      return out(null, 'suspenseStep');
+    }
+    // The last beat: from now on it can't be undone. A Suspens the engine never opened (refused) is simply over.
+    if (!ctx.suspenseOpen) {
+      this.suspense = { phase: 'over' };
+      return out(null, 'stop');
+    }
+    this.suspense = { phase: 'on', seenOpen: true };
+    return out(null, 'suspenseOn');
   }
 }

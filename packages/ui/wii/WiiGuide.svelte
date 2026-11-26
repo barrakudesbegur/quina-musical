@@ -2,9 +2,11 @@
   The Wii remote's guide: the drawing (WiiRemote) next to the legend, one row per button group with a dot in
   the group's colour that carries the button's own label, so it reads in black and white too (the printed
   cheat sheet). Used by the console's Comandament dialog and Admin's cheat sheet. Sizes come from the
-  container: `--wii-height` for the drawing, and the text inherits the page's font size.
+  container: `--wii-height` for the drawing, and the text inherits the page's font size. `extra`: something drawn in
+  a row, after its note (the console's switch on the shake's row).
 -->
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { WII_COLOURS, type WiiLegendItem } from './legend.ts';
   import WiiRemote from './WiiRemote.svelte';
 
@@ -14,17 +16,18 @@
     footer?: string | null;
     /** Under the side view ("de costat"). */
     sideLabel?: string | null;
+    extra?: Snippet<[WiiLegendItem]>;
   }
 
-  let { items, footer = null, sideLabel = null }: Props = $props();
+  let { items, footer = null, sideLabel = null, extra }: Props = $props();
 </script>
 
 <div class="wii-guide">
   <WiiRemote {sideLabel} />
   <div class="wii-guide__text">
     <ul class="wii-guide__legend">
-      {#each items as item (item.group)}
-        <li class="wii-guide__item" data-group={item.group}>
+      {#each items as item (item.id)}
+        <li class="wii-guide__item" data-group={item.group} data-item={item.id}>
           <span class="wii-guide__dot" style:--wii-colour={WII_COLOURS[item.group]} aria-hidden="true">
             {#if item.group === 'dpad'}
               <svg viewBox="0 0 24 24" focusable="false"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" /></svg>
@@ -40,6 +43,7 @@
                 <svg class="wii-guide__shake" viewBox="0 0 28 20" aria-hidden="true" focusable="false"><path d="M2 10c3-6 5-6 8 0s5 6 8 0 5-6 8 0" /></svg>
               {/if}
             </span>
+            {@render extra?.(item)}
           </span>
         </li>
       {/each}

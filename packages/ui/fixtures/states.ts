@@ -657,6 +657,53 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const s = baseState(now);
     return { state: withFlow(s, { status: 'transition', autoAtMs: null, suspense: { id: 'tr-25', sinceMs: now - 8000, autoReleaseAtMs: now + 22000 } }) };
   },
+  /** Aguanta (B held): the song plays on at full volume, nothing lands, and Següent waits (D133). */
+  stay: (now) => {
+    const s = baseState(now);
+    return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 6000, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ducked: false } }) };
+  },
+  /** In play; 1.5 s in, Pausa starts (A's badge glides to «Acaba la pausa», D128), and 4 s later it ends. */
+  pauseStart: (now) => {
+    const s = baseState(now);
+    const paused = withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now + 1500, overlay: true }, hold: { sinceMs: now + 1500, reason: 'pause', holdMusic: true, holdMusicAtMs: null, ducked: true } });
+    const back = withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now + 5500, reason: 'pause', holdMusic: false, holdMusicAtMs: null, ducked: true } });
+    return { state: s, events: [{ afterMs: 1500, event: { ...paused, seq: 2 } }, { afterMs: 5500, event: { ...back, seq: 3 } }] };
+  },
+  /** A break with «Llançament» playing over the break music (D138), 42 s in. */
+  intervalThrow: (now) => {
+    const s = FIXTURES.interval(now).state as FullState;
+    return { state: { ...s, throwSong: { song: 'throw', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: true, sinceMs: now - 42000 } } };
+  },
+  /** A break with «Llançament» stopped by a tap: the next tap resumes it; the break music is back up. */
+  intervalThrowStopped: (now) => {
+    const s = FIXTURES.interval(now).state as FullState;
+    return { state: { ...s, throwSong: { song: 'throw', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: false, sinceMs: now - 65000 } } };
+  },
+  /** The night's last round in play (Quina 8 of 8): «Tempesta» joins the top row (D155). */
+  lastRound: (now) => {
+    const s = baseState(now);
+    return { state: withFlow(s, { lastRound: true, phase: 'final', round: { ...s.round, number: 8 } }) };
+  },
+  /** The last round's Check: «Tempesta» between «Enrere» and «Revisió manual». */
+  checkLastRound: (now) => {
+    const s = FIXTURES.check(now).state as FullState;
+    return { state: { ...s, lastRound: true, round: { ...s.round, number: 8 } } };
+  },
+  /** The end screen with the end music: «Tempesta» in Següent's place, «Llançament» beside it. */
+  afterMusic: (now) => {
+    const s = FIXTURES.after(now).state as FullState;
+    return { state: { ...s, intervalMusic: { set: 'end', track: { title: 'Feliz Navidad', artist: 'José Feliciano', index: 1, count: 50, sinceMs: now - 20000 } } } };
+  },
+  /** The end screen with «Tempesta» playing from its drop (D151, D153). */
+  afterStorm: (now) => {
+    const s = FIXTURES.afterMusic(now).state as FullState;
+    return { state: { ...s, throwSong: { song: 'storm', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', playing: true, sinceMs: now - 20000 } } };
+  },
+  /** Some volume sliders moved at the sound check (D139, D157): the menu shows them against their defaults. */
+  volumes: (now) => {
+    const s = baseState(now);
+    return { state: withFlow(s, { game: { ...s.game, volumes: { master: 92, songs: 100, songsParlem: 38, djFx: 110, padFx: 100, ticks: 70, check: 100, holdMusic: 100, win: 125, fail: 100, finalLap: 100, intros: 85, breaks: 100, pausa: 60, throws: 141, doors: 100, end: 100 } } }) };
+  },
   ...DESGRACIAT_FIXTURES,
 };
 
