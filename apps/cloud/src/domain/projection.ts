@@ -113,8 +113,12 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       }
       return changes;
     }
-    case 'claim.stopped': // the Check fades out with no mark (D109): phones learn nothing about the card
+    // A Review (D118–D121): what phones see of it is open (U76, U79), so for now the Check stays as it was, pending.
+    case 'claim.reviewing':
+    case 'claim.continued':
+      return [];
     case 'claim.dropped': {
+      // Discarded from a Review: the pending Check goes, with no mark and no winner.
       const claim = record.claims.find((c) => c.claimId === entry.claimId);
       const shown = claim && state.check && state.check.cardId === claim.cardId && state.check.result === 'pending';
       return shown ? [{ kind: 'check', check: null }] : [];

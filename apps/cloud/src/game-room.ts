@@ -646,9 +646,9 @@ export class GameRoom extends DurableObject<RoomEnv> {
        FROM journal GROUP BY game_id ORDER BY last_at DESC`,
     );
     const round = this.room.game?.round ?? null;
-    // Only the claims' entries, to flag accepted ones whose Check didn't pass.
+    // Only the claims' entries and the cards in play, to flag accepted ones that didn't pass or weren't sold.
     const claims = new Map<string, JournalEntry[]>();
-    for (const row of this.rows("SELECT game_id, entry FROM journal WHERE kind IN ('claim.opened', 'claim.decided') ORDER BY game_id, seq")) {
+    for (const row of this.rows("SELECT game_id, entry FROM journal WHERE kind IN ('cards.set', 'claim.opened', 'claim.decided') ORDER BY game_id, seq")) {
       const list = claims.get(String(row.game_id)) ?? [];
       list.push(JSON.parse(String(row.entry)) as JournalEntry);
       claims.set(String(row.game_id), list);

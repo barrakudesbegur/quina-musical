@@ -93,10 +93,13 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'scene.changed': { scene, round: integer(0, 99), roundKind, cardType },
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   // `outcome`: the Check's result at the decision (absent in older journals), one of the protocol's CHECK_OUTCOMES.
-  'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)) },
-  // The presenter-paced Check (D109): a Check stopped before its cue leaves the claim undecided; a stopped or
-  // queued claim may be dropped with no verdict.
-  'claim.stopped': { round, claimId },
+  // `manual`: won or lost by hand from a Review (D121), whatever the card shows; absent otherwise.
+  'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)), manual: optional((value) => (value === true ? null : 'true when present')) },
+  // The presenter-paced Check's Review (D118–D121): a Check put under review before its cue leaves the claim
+  // undecided; the Review ends with the Check going on (continued), a decision by hand (claim.decided with
+  // `manual`), or the claim discarded (dropped).
+  'claim.reviewing': { round, claimId },
+  'claim.continued': { round, claimId },
   'claim.dropped': { round, claimId },
   // `slip`: the numbered slip handed to the winner instead of a name (absent in older journals). Private, like the name.
   'winner.noted': { claimId, name: nullable(text(80, true)), notes: nullable(text(500, true)), slip: optional(nullable(text(16, true))) },

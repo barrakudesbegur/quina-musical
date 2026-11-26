@@ -133,11 +133,15 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   const noted = entries.find((e) => e.kind === 'winner.noted') as JournalEntry;
   assert.ok(checkJournalEntry({ ...noted, slip: '17' }).ok, "a winner's slip");
   assert.ok(checkJournalEntry({ ...noted, slip: null }).ok, 'a slip cleared');
-  // The presenter-paced Check (D109): a stopped Check, a dropped claim.
+  // The presenter-paced Check's Review (D118–D121): under review, continued, discarded, or decided by hand.
   const base = { gameId: decided.gameId, seq: 99, atMs: 1, round: 1, claimId: 'c1' };
-  assert.ok(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, 'a Check stopped before its cue');
-  assert.ok(checkJournalEntry({ ...base, kind: 'claim.dropped' }).ok, 'a claim dropped');
-  assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped', claimId: 7 }).ok, false, 'the claim id is text');
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.reviewing' }).ok, 'a Check put under review');
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.continued' }).ok, 'a Review that goes on with the Check');
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.dropped' }).ok, 'a claim discarded');
+  assert.equal(checkJournalEntry({ ...base, kind: 'claim.reviewing', claimId: 7 }).ok, false, 'the claim id is text');
+  assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, false, "the step-1 name isn't a kind");
+  assert.ok(checkJournalEntry({ ...decided, manual: true }).ok, 'a decision by hand');
+  assert.equal(checkJournalEntry({ ...decided, manual: false }).ok, false, '`manual` is true or absent');
   const bad: [string, unknown][] = [
     ['win kind', { ...opened, winKind: 'quina' }],
     ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],

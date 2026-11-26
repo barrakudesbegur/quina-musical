@@ -1,4 +1,5 @@
-// The decisions flagged for a person: accepted claims whose Check didn't pass. Never refused (D65), only listed.
+// The decisions flagged for a person: accepted claims whose Check didn't pass, or whose card wasn't sold. Never
+// refused (D65), only listed.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { flaggedDecisions } from '../../src/domain/flags.ts';
@@ -32,4 +33,36 @@ test("the Desgraciat round: 'fellLast' passes a standing claim (the shared win);
   const odd = line.claim(4, 'line');
   line.decide(odd, 'valid', 'fellLast');
   assert.equal(flaggedDecisions(line.entries).length, 1);
+});
+
+test('a win by hand from a Review (D121) on a card that does not pass is flagged, and says it was by hand', () => {
+  const b = new JournalBuilder('g-flags-manual').startRound().land(10);
+  const byHand = b.claim(21, 'bingo');
+  b.review(byHand).decide(byHand, 'valid', 'incomplete', true);
+  const lostByHand = b.claim(22, 'bingo');
+  b.review(lostByHand).decide(lostByHand, 'invalid', 'complete', true); // a loss is never flagged
+  assert.deepEqual(
+    flaggedDecisions(b.entries).map((f) => [f.cardId, f.manual, f.reasons]),
+    [[21, true, ['notPassing']]],
+  );
+});
+
+test('a valid card that is not among the cards in play is flagged as not sold, from the cards set before it', () => {
+  const b = new JournalBuilder('g-flags-sold').startRound().land(10);
+  const early = b.claim(5, 'line');
+  b.decide(early, 'valid', 'complete'); // no cards in play journalled yet: nothing to judge
+  b.cards('1-100');
+  const sold = b.claim(50, 'line');
+  b.decide(sold, 'valid', 'complete');
+  const unsold = b.claim(150, 'bingo');
+  b.decide(unsold, 'valid', 'complete');
+  const both = b.claim(160, 'bingo');
+  b.review(both).decide(both, 'valid', 'incomplete', true);
+  assert.deepEqual(
+    flaggedDecisions(b.entries).map((f) => [f.cardId, f.reasons]),
+    [
+      [150, ['notSold']],
+      [160, ['notPassing', 'notSold']],
+    ],
+  );
 });

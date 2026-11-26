@@ -169,8 +169,8 @@ test("a round's card type is public from its intro: the one it names, else its k
   assert.equal(project(r.entries).state.rounds.at(-1)?.cardType, 'especial');
 });
 
-test('a stopped Check fades out on phones with no verdict, and a dropped claim changes nothing public (D109)', () => {
-  const b = new JournalBuilder('g-stop');
+test('a Check under review stays pending on phones (U76/U79 open); a discard clears it with no mark (D118–D121)', () => {
+  const b = new JournalBuilder('g-review');
   b.startRound().land(10);
   const claimId = b.claim(42, 'line');
   b.scene('check');
@@ -183,19 +183,32 @@ test('a stopped Check fades out on phones with no verdict, and a dropped claim c
   state = applyPublic(state, projectEvent(state, scheduled, ctx));
   assert.equal(state.check?.result, 'pending');
 
-  b.stop(claimId);
-  const stopped = b.entries.at(-1) as JournalEntry;
-  record = extendJournal(record, [stopped]);
-  assert.deepEqual(projectEntry(state, stopped, record, ctx), [{ kind: 'check', check: null }], 'the Check goes, with no mark');
-  state = applyPublic(state, projectEntry(state, stopped, record, ctx));
+  const next = (): JournalEntry => {
+    const entry = b.entries.at(-1) as JournalEntry;
+    record = extendJournal(record, [entry]);
+    return entry;
+  };
+  b.review(claimId);
+  assert.deepEqual(projectEntry(state, next(), record, ctx), [], 'under review: nothing public yet');
+  b.continue(claimId);
+  assert.deepEqual(projectEntry(state, next(), record, ctx), [], 'the Check goes on');
+  b.review(claimId).drop(claimId);
+  projectEntry(state, b.entries.at(-2) as JournalEntry, (record = extendJournal(record, [b.entries.at(-2) as JournalEntry])), ctx);
+  const dropped = next();
+  assert.deepEqual(projectEntry(state, dropped, record, ctx), [{ kind: 'check', check: null }], 'discarded: the Check goes, with no mark');
+  state = applyPublic(state, projectEntry(state, dropped, record, ctx));
   assert.deepEqual(state.winners, []);
-
-  b.drop(claimId);
-  const dropped = b.entries.at(-1) as JournalEntry;
-  record = extendJournal(record, [dropped]);
-  assert.deepEqual(projectEntry(state, dropped, record, ctx), [], 'nothing public');
   assert.deepEqual(project(b.entries).state.winners, [], 'replayed from the start, the same');
-  assert.equal(project(b.entries).state.check, null);
+});
+
+test('a win by hand from a Review shows on phones as any win, with nothing saying it was by hand', () => {
+  const b = new JournalBuilder('g-by-hand');
+  b.startRound().land(10);
+  const claimId = b.claim(42, 'bingo');
+  b.review(claimId).decide(claimId, 'valid', 'incomplete', true);
+  const { state } = project(b.entries);
+  assert.deepEqual(state.winners, [{ round: 1, kind: 'bingo', cardIds: [42] }]);
+  assert.equal(JSON.stringify(state).includes('"manual"'), false, 'no `manual` key reaches phones');
 });
 
 test('a Check is public as "pending" from its start, without its steps, and shows its verdict only once decided', () => {

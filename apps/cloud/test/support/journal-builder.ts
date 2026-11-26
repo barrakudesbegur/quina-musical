@@ -181,19 +181,26 @@ export class JournalBuilder {
   }
 
   /** `outcome`: the Check's result, as today's engine journals it (absent, as an older journal). */
-  decide(claimId: string, verdict: 'valid' | 'invalid', outcome?: CheckOutcome): this {
+  /** `manual`: decided by hand from a Review (D121), whatever the card shows. */
+  decide(claimId: string, verdict: 'valid' | 'invalid', outcome?: CheckOutcome, manual = false): this {
     const winningSongId = verdict === 'valid' ? (this.queue[this.position] ?? null) : null;
-    this.push({ kind: 'claim.decided', round: this.round, claimId, verdict, winningSongId, position: this.position, ...(outcome ? { outcome } : {}) }, 20_000);
+    this.push({ kind: 'claim.decided', round: this.round, claimId, verdict, winningSongId, position: this.position, ...(outcome ? { outcome } : {}), ...(manual ? { manual: true as const } : {}) }, 20_000);
     return this;
   }
 
-  /** The Check stopped before its cue (D109): the claim stays undecided. */
-  stop(claimId: string): this {
-    this.push({ kind: 'claim.stopped', round: this.round, claimId }, 2_000);
+  /** The Check put under review before its cue (D118–D120): the claim stays undecided until the Review ends. */
+  review(claimId: string): this {
+    this.push({ kind: 'claim.reviewing', round: this.round, claimId }, 2_000);
     return this;
   }
 
-  /** A stopped or queued claim set aside, with no verdict (D109). */
+  /** The Review ends with "continue" (D121): the Check goes on. */
+  continue(claimId: string): this {
+    this.push({ kind: 'claim.continued', round: this.round, claimId }, 1_000);
+    return this;
+  }
+
+  /** The Review ends with "discard" (D121): no verdict, no sound. */
   drop(claimId: string): this {
     this.push({ kind: 'claim.dropped', round: this.round, claimId }, 1_000);
     return this;
