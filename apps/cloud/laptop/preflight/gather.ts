@@ -8,16 +8,16 @@ import { promisify } from 'node:util';
 import WebSocket from 'ws';
 import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES, readRemoteStatus, type RemoteStatus } from '@quina/protocol';
 import { playableSongs } from '../../../show/engine/src/analysis.ts';
-import { DATA, loadPool, MEDIA, OUT, REPO } from '../../../show/relay/pool.ts';
+import { DATA, loadRepertoire, MEDIA, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
 import { CLOUD_PLAN_FILE } from '../../../show/relay/plan.ts';
 import { referenceFile, scan } from '../media-sync.ts';
-import { poolRoots } from '../pool-roots.ts';
+import { repertoireRoots } from '../repertoire-roots.ts';
 import * as checks from './checks.ts';
 
 const run = promisify(execFile);
 
 export interface PreflightOptions {
-  pool?: string;
+  repertoire?: string;
   /** The relay, for example http://127.0.0.1:5174. */
   relay: string;
   /** The cloud's https origin, or null when none is configured. */
@@ -108,35 +108,35 @@ function lanAddress(): string | null {
 
 export async function runPreflight(o: PreflightOptions): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
-  const pool = loadPool(o.pool);
+  const repertoire = loadRepertoire(o.repertoire);
   const want = (group: checks.Check['group']) => !o.only || o.only.includes(group);
-  if (want('Pool')) out.push(...(await poolChecks(o, pool)));
+  if (want('Repertoire')) out.push(...(await repertoireChecks(o, repertoire)));
   if (want('Laptop')) out.push(...(await laptopChecks(o)));
-  if (want('Network')) out.push(...(await networkChecks(o, pool.name)));
-  if (want('Cloud')) out.push(...(await cloudChecks(o, pool)));
+  if (want('Network')) out.push(...(await networkChecks(o, repertoire.name)));
+  if (want('Cloud')) out.push(...(await cloudChecks(o, repertoire)));
   return out;
 }
 
-/** The pool's printed cards (cards.json) and their types (card-types.json beside it), as apps/cards writes them. */
-function printedCards(pool: ReturnType<typeof loadPool>): { cards: unknown; types: unknown } {
-  if (!pool.cardsJson) return { cards: null, types: null };
-  return { cards: readJson(pool.cardsJson), types: readJson(path.join(path.dirname(pool.cardsJson), 'card-types.json')) };
+/** The repertoire's printed cards (cards.json) and their types (card-types.json beside it), as apps/cards writes them. */
+function printedCards(repertoire: Repertoire): { cards: unknown; types: unknown } {
+  if (!repertoire.cardsJson) return { cards: null, types: null };
+  return { cards: readJson(repertoire.cardsJson), types: readJson(path.join(path.dirname(repertoire.cardsJson), 'card-types.json')) };
 }
 
-async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>): Promise<checks.Check[]> {
+async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
-  const songs = readJson(pool.songsJson);
-  const poolSongIds = new Set(Array.isArray(songs) ? songs.map((s: { id: number }) => s.id) : []);
+  const songs = readJson(repertoire.songsJson);
+  const songIds = new Set(Array.isArray(songs) ? songs.map((s: { id: number }) => s.id) : []);
   let playable: number[] = [];
   try {
-    playable = playableSongs(readJson(path.join(pool.dataDir, 'analysis', 'index.json'))).map((s) => s.id);
+    playable = playableSongs(readJson(path.join(repertoire.dataDir, 'analysis', 'index.json'))).map((s) => s.id);
   } catch {
     // no index: no playable song
   }
-  const missingAudio = playable.filter((id) => !fs.existsSync(path.join(pool.cacheDir, String(id), 'mix.flac')));
-  out.push(checks.songsCheck(poolSongIds, new Set(playable), missingAudio));
-  const printed = printedCards(pool);
-  out.push(checks.cardsCheck(printed.cards, checks.cardTypeIds(printed.types), poolSongIds, new Set(playable)));
+  const missingAudio = playable.filter((id) => !fs.existsSync(path.join(repertoire.cacheDir, String(id), 'mix.flac')));
+  out.push(checks.songsCheck(songIds, new Set(playable), missingAudio));
+  const printed = printedCards(repertoire);
+  out.push(checks.cardsCheck(printed.cards, checks.cardTypeIds(printed.types), songIds, new Set(playable)));
 
   const missingSounds = [
     ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'stingers', `${n}.mp3`))),
@@ -148,17 +148,17 @@ async function poolChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>
 
   let reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null = null;
   if (o.cloud) {
-    const remote = await getJson(`${o.cloud}/api/sync/${pool.name}/manifest`, o.headers);
+    const remote = await getJson(`${o.cloud}/api/sync/${repertoire.name}/manifest`, o.headers);
     const files = (remote.body as { files?: Record<string, { size: number; sha256: string }> } | undefined)?.files;
     if (remote.ok && files && Object.keys(files).length > 0) reference = { files, source: "the cloud's manifest" };
   }
   if (!reference) {
-    const local = readJson(referenceFile(o.dataDir, pool.name)) as { files?: Record<string, { size: number; sha256: string }> } | null;
+    const local = readJson(referenceFile(o.dataDir, repertoire.name)) as { files?: Record<string, { size: number; sha256: string }> } | null;
     if (local?.files) reference = { files: local.files, source: 'the last push or pull on this laptop' };
   }
   // Re-hashing reads every byte (about 8 s for 6 GB); --fast trusts the index kept by size and mtime.
   const indexDir = o.fast ? o.dataDir : fs.mkdtempSync(path.join(os.tmpdir(), 'quina-preflight-'));
-  const local = await scan(poolRoots(pool), indexDir);
+  const local = await scan(repertoireRoots(repertoire), indexDir);
   out.push(checks.mediaCheck(reference, local, !o.fast));
   return out;
 }
@@ -181,10 +181,10 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
   return out;
 }
 
-async function networkChecks(o: PreflightOptions, poolName: string): Promise<checks.Check[]> {
+async function networkChecks(o: PreflightOptions, repertoireName: string): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
-  const relayAnswer = await getJson(`${o.relay}/api/pool`, {}, 3000);
-  out.push(checks.relayCheck(poolName, { ok: relayAnswer.ok, name: (relayAnswer.body as { name?: string } | undefined)?.name, error: relayAnswer.error }));
+  const relayAnswer = await getJson(`${o.relay}/api/repertoire`, {}, 3000);
+  out.push(checks.relayCheck(repertoireName, { ok: relayAnswer.ok, name: (relayAnswer.body as { name?: string } | undefined)?.name, error: relayAnswer.error }));
   const view = relayAnswer.ok ? await relayView(o.relay) : null;
   out.push(checks.showPageCheck(view?.clients ?? null));
   out.push(checks.consoleCheck(view?.clients ?? null, o.laptopOnly === true));
@@ -197,7 +197,7 @@ async function networkChecks(o: PreflightOptions, poolName: string): Promise<che
   return out;
 }
 
-async function cloudChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool>): Promise<checks.Check[]> {
+async function cloudChecks(o: PreflightOptions, repertoire: Repertoire): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   // The cloud's plan as the link keeps it ({ savedAtMs, plan }); the relay serves the newest to the screens.
   const plan = (readJson(path.join(o.dataDir, CLOUD_PLAN_FILE)) as { plan?: unknown } | null)?.plan ?? null;
@@ -223,8 +223,8 @@ async function cloudChecks(o: PreflightOptions, pool: ReturnType<typeof loadPool
   }
   out.push(checks.linkCheck(link, Date.now()));
   out.push(checks.gameCheck(link, cloudCurrent, edition));
-  out.push(checks.planCheck(plan, checks.printedByType(printedCards(pool).cards)));
-  const prices = checks.cardPricesCheck(printedCards(pool).types, plan);
+  out.push(checks.planCheck(plan, checks.printedByType(printedCards(repertoire).cards)));
+  const prices = checks.cardPricesCheck(printedCards(repertoire).types, plan);
   if (prices) out.push(prices);
   return out;
 }

@@ -34,7 +34,7 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/feed", "/ws/*", "/api/*", "/media/*"]
   },
-  // R2 for the pool's media (C3, laptop sync): the private bucket quina-media (docs/deploy-plan.md step 4). Without
+  // R2 for the repertoire's media (C3, laptop sync): the private bucket quina-media (docs/deploy-plan.md step 4). Without
   // the binding /api/sync answers 503 and everything else works (most tests run that way: loadtest/dev-server.ts).
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "quina-media" }],
   "observability": { "enabled": true }

@@ -9,8 +9,8 @@ import path from 'node:path';
 export const REPO = path.resolve(import.meta.dirname, '../../..');
 export const SHOW = path.join(REPO, 'apps', 'show');
 
-/** The default pool is prepared on this machine (its analysis and decoded audio exist). */
-export function hasPreparedPool(): boolean {
+/** The default repertoire is prepared on this machine (its analysis and decoded audio exist). */
+export function hasPreparedRepertoire(): boolean {
   return fs.existsSync(path.join(REPO, 'data', 'out', 'analysis', 'index.json')) && fs.existsSync(path.join(REPO, 'data', 'cache'));
 }
 
@@ -48,7 +48,7 @@ export async function startRelay(): Promise<Relay> {
   const url = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 100; i++) {
     try {
-      if ((await fetch(`${url}/api/pool`)).ok) {
+      if ((await fetch(`${url}/api/repertoire`)).ok) {
         return {
           url,
           ws: `ws://127.0.0.1:${port}/ws`,

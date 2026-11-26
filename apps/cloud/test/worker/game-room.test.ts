@@ -652,7 +652,7 @@ describe('the media sync (R2)', () => {
     expect((await SELF.fetch(`${BASE}/api/sync/default/file?path=cache/13/mix.flac`)).status).toBe(404);
   });
 
-  it('refuses odd paths, odd pools and anyone but the laptop', async () => {
+  it('refuses odd paths, odd repertoire names and anyone but the laptop', async () => {
     const bytes = new Uint8Array([1]);
     const digest = await sha(bytes);
     for (const path of ['cache/../secrets', 'nowhere/x', 'cache/.hidden', 'cache', '../x']) expect((await put(path, bytes, digest)).status).toBe(400);
@@ -660,13 +660,13 @@ describe('the media sync (R2)', () => {
     expect((await SELF.fetch('https://quina.example/api/sync/default/manifest')).status).toBe(403);
   });
 
-  it('keeps one manifest per pool, checked', async () => {
-    expect(await getJson('/api/sync/2026/manifest')).toEqual({ v: 1, pool: '2026', files: {}, updatedAtMs: 0 });
-    const manifest = { v: 1, pool: '2026', files: { 'covers/1.jpg': { size: 3, sha256: 'a'.repeat(64) } }, updatedAtMs: 5 };
+  it('keeps one manifest per repertoire, checked', async () => {
+    expect(await getJson('/api/sync/2026/manifest')).toEqual({ v: 2, repertoire: '2026', files: {}, updatedAtMs: 0 });
+    const manifest = { v: 2, repertoire: '2026', files: { 'covers/1.jpg': { size: 3, sha256: 'a'.repeat(64) } }, updatedAtMs: 5 };
     const save = (body: unknown) => SELF.fetch(`${BASE}/api/sync/2026/manifest`, { method: 'PUT', body: JSON.stringify(body) });
     expect((await save(manifest)).status).toBe(200);
     expect(await getJson('/api/sync/2026/manifest')).toEqual(manifest);
-    expect((await save({ ...manifest, pool: 'default' })).status).toBe(400);
+    expect((await save({ ...manifest, repertoire: 'default' })).status).toBe(400);
     expect((await save({ ...manifest, files: { '../x': { size: 1, sha256: 'a'.repeat(64) } } })).status).toBe(400);
   });
 });

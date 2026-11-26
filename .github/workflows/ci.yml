@@ -1,6 +1,6 @@
 # Every test suite on each push to main and each pull request. No deploy, no secrets.
 # The generated data (data/out, data/cache) and the songs are not in the repo: the suites that need them skip
-# themselves; the rest runs on what is committed (the pool manifests, the cards, synthetic songs in pytest).
+# themselves; the rest runs on what is committed (the repertoire manifests, the cards, synthetic songs in pytest).
 # Last year's site has its own workflow (deploy.yml).
 name: CI
 

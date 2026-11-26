@@ -15,7 +15,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 import type { ShowState } from '@quina/protocol';
 import type { DemoRecording } from '../../engine/src/demo-recorder.ts';
-import { REPO, SHOW, hasPreparedPool, startRelay } from '../../../../tools/e2e/support/relay.ts';
+import { REPO, SHOW, hasPreparedRepertoire, startRelay } from '../../../../tools/e2e/support/relay.ts';
 import { Remote } from '../../../../tools/e2e/support/remote.ts';
 
 const args = process.argv.slice(2);
@@ -41,7 +41,7 @@ interface DemoWindow {
 const log = (text: string) => console.log(`[${new Date().toISOString().slice(11, 19)}] ${text}`);
 
 async function main(): Promise<void> {
-  if (!hasPreparedPool()) throw new Error('the default pool is not prepared (npm run prep in apps/show)');
+  if (!hasPreparedRepertoire()) throw new Error('the default pool is not prepared (npm run prep in apps/show)');
   if (rows.flat().length !== 12) throw new Error(`card ${CARD} not found in cards.json`);
   if (!args.includes('--no-build')) execFileSync('npm', ['run', 'build'], { cwd: SHOW, stdio: 'inherit' });
   fs.mkdirSync(OUT, { recursive: true });

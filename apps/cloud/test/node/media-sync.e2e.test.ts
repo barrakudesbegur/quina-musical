@@ -1,4 +1,4 @@
-// The media sync end to end: a laptop pushes its pool's files to the cloud's R2 (local, under wrangler dev), a
+// The media sync end to end: a laptop pushes its repertoire's files to the cloud's R2 (local, under wrangler dev), a
 // takeover laptop pulls them; only changed files move, and nothing local is ever deleted.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,7 +30,7 @@ test('push, then pull on another laptop: the same files; only changes move; noth
       'cache/stretch/12/x.flac': 'a Blend render, made on demand',
       'covers/12.jpg': 'cover',
     });
-    const cloud = { cloud: server.http, headers: {}, pool: 'default', log: () => {} };
+    const cloud = { cloud: server.http, headers: {}, repertoire: 'default', log: () => {} };
     const first = await push({ ...cloud, roots: main.roots, dataDir: main.dataDir });
     assert.equal(first.moved, 3, 'not the stretch render');
 
@@ -58,36 +58,36 @@ test('without the R2 bucket, the sync says so and changes nothing', async () => 
   const server = await startDevServer();
   try {
     const main = laptop({ 'covers/1.jpg': 'x' });
-    await assert.rejects(push({ cloud: server.http, headers: {}, pool: 'default', roots: main.roots, dataDir: main.dataDir, log: () => {} }), /503/);
+    await assert.rejects(push({ cloud: server.http, headers: {}, repertoire: 'default', roots: main.roots, dataDir: main.dataDir, log: () => {} }), /503/);
   } finally {
     await server.stop();
   }
 });
 
-test('the bucket lists its pools with their sizes, and a whole pool can be deleted, only when named twice', async () => {
+test('the bucket lists its repertoires with their sizes, and a whole repertoire can be deleted, only when named twice', async () => {
   const server = await startDevServer({ media: true });
   try {
     const cloud = { cloud: server.http, headers: {}, log: () => {} };
     const old = laptop({ 'cache/1/mix.flac': 'last year, song one', 'covers/1.jpg': 'cover one' });
     const fresh = laptop({ 'cache/1/mix.flac': 'this year, song one' });
-    await push({ ...cloud, pool: 'default', roots: old.roots, dataDir: old.dataDir });
-    await push({ ...cloud, pool: '2026', roots: fresh.roots, dataDir: fresh.dataDir });
-    const list = async () => (await (await fetch(`${server.http}/api/sync`)).json()) as { pools: { name: string; files: number; bytes: number }[]; totalBytes: number; freeTierBytes: number };
+    await push({ ...cloud, repertoire: 'default', roots: old.roots, dataDir: old.dataDir });
+    await push({ ...cloud, repertoire: '2026', roots: fresh.roots, dataDir: fresh.dataDir });
+    const list = async () => (await (await fetch(`${server.http}/api/sync`)).json()) as { repertoires: { name: string; files: number; bytes: number }[]; totalBytes: number; freeTierBytes: number };
     const before = await list();
-    assert.deepEqual(before.pools.map((p) => [p.name, p.files]).sort(), [['2026', 1], ['default', 2]]);
+    assert.deepEqual(before.repertoires.map((p) => [p.name, p.files]).sort(), [['2026', 1], ['default', 2]]);
     assert.equal(before.totalBytes, 'last year, song one'.length + 'cover one'.length + 'this year, song one'.length);
     assert.equal(before.freeTierBytes, 10e9);
 
-    // Deleting needs the pool's name again in a header; a file alone can't be deleted.
+    // Deleting needs the repertoire's name again in a header; a file alone can't be deleted.
     assert.equal((await fetch(`${server.http}/api/sync/default/manifest`, { method: 'DELETE' })).status, 400);
-    assert.equal((await fetch(`${server.http}/api/sync/default/manifest`, { method: 'DELETE', headers: { 'x-confirm-pool': '2026' } })).status, 400);
+    assert.equal((await fetch(`${server.http}/api/sync/default/manifest`, { method: 'DELETE', headers: { 'x-confirm-repertoire': '2026' } })).status, 400);
     assert.equal((await fetch(`${server.http}/api/sync/default/file?path=covers/1.jpg`, { method: 'DELETE' })).status, 405);
-    const deleted = await fetch(`${server.http}/api/sync/default/manifest`, { method: 'DELETE', headers: { 'x-confirm-pool': 'default' } });
+    const deleted = await fetch(`${server.http}/api/sync/default/manifest`, { method: 'DELETE', headers: { 'x-confirm-repertoire': 'default' } });
     assert.equal(deleted.status, 200);
     assert.deepEqual(await deleted.json(), { ok: true, deleted: 2 });
 
     const after = await list();
-    assert.deepEqual(after.pools.map((p) => p.name), ['2026'], 'the other pool stays');
+    assert.deepEqual(after.repertoires.map((p) => p.name), ['2026'], 'the other repertoire stays');
     assert.equal((await fetch(`${server.http}/api/sync/default/file?path=cache/1/mix.flac`)).status, 404);
     assert.ok(fs.existsSync(path.join(old.base, 'cache/1/mix.flac')), 'laptops keep their copies');
   } finally {

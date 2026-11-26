@@ -16,7 +16,7 @@ import { parseEnv } from 'node:util';
 import { defaultCardType, type ShowState } from '@quina/protocol';
 import { CloudLink } from '../../apps/cloud/laptop/link.ts';
 import { Phone } from './support/cloud.ts';
-import { REPO, hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
+import { REPO, hasPreparedRepertoire, startRelay, type Relay } from './support/relay.ts';
 import { Remote } from './support/remote.ts';
 
 const LIVE = process.env.QUINA_LIVE_CLOUD?.replace(/\/+$/, '') ?? null;
@@ -35,11 +35,11 @@ test.skip(!LIVE, 'opt-in: set QUINA_LIVE_CLOUD to a deployed cloud (it gets a re
 // No trace: minutes of a show page streaming audio make one so big that saving it after a failure outlasted the
 // hook timeout. The screenshots and the attachments say what happened.
 test.use({ trace: 'off' });
-test.skip(!hasPreparedPool(), 'the default pool is not prepared here (npm run prep in apps/show)');
+test.skip(!hasPreparedRepertoire(), 'the default repertoire is not prepared here (npm run prep in apps/show)');
 test.skip(!fs.existsSync(ENV_LINK), 'no apps/cloud/.env.link: the laptop service token is needed');
 test.skip(PLAYED.length < 30, `fewer than 30 ${CARD_TYPE} cards in apps/cards/dist/cards.json (npm run build in apps/cards)`);
 
-/** The printed cards of one type, by number (the default pool's cards, as the relay serves them). */
+/** The printed cards of one type, by number (the default repertoire's cards, as the relay serves them). */
 function cardIdsOfType(type: string): number[] {
   const file = path.join(REPO, 'apps/cards/dist/cards.json');
   if (!fs.existsSync(file)) return [];

@@ -65,7 +65,7 @@ const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg|jxl)$/;
 export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: PEOPLE, methods: ['PUT'] });
 const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
 
-/** The pool's media in R2 (C3): `/api/sync/<pool>/manifest` and `/api/sync/<pool>/file?path=…`. The laptops only. */
+/** The repertoire's media in R2 (C3): `/api/sync/<repertoire>/manifest` and `/api/sync/<repertoire>/file?path=…`. The laptops only. */
 export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT', 'DELETE'] });
 const SYNC_PATH = /^\/api\/sync\/([a-z0-9_-]{1,40})\/(manifest|file)$/;
 
@@ -76,10 +76,10 @@ export function findRoute(pathname: string): Route | null {
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
 }
 
-/** The pool and the resource of a sync path, or null. */
-export function syncTarget(pathname: string): { pool: string; resource: 'manifest' | 'file' } | null {
+/** The repertoire and the resource of a sync path, or null. */
+export function syncTarget(pathname: string): { repertoire: string; resource: 'manifest' | 'file' } | null {
   const match = SYNC_PATH.exec(pathname);
-  return match ? { pool: match[1] as string, resource: match[2] as 'manifest' | 'file' } : null;
+  return match ? { repertoire: match[1] as string, resource: match[2] as 'manifest' | 'file' } : null;
 }
 
 /** The media id in a /media/ path, or null. */

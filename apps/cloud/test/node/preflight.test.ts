@@ -1,4 +1,4 @@
-// The preflight's verdicts, from facts shaped like the real ones (macOS tools, the pool's files, the link's status).
+// The preflight's verdicts, from facts shaped like the real ones (macOS tools, the repertoire's files, the link's status).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as c from '../../laptop/preflight/checks.ts';
@@ -52,28 +52,28 @@ test('power, disk and the browser', () => {
   assert.equal(c.browserCheck(['/usr/bin/zsh']).status, 'warn');
 });
 
-test('cards: every song on a card must be in the pool and playable, or that card can never be completed', () => {
+test('cards: every song on a card must be in the repertoire and playable, or that card can never be completed', () => {
   const line = (...ids: number[]) => ids.map((id) => ({ id }));
   const card = (id: number, ids: number[], type = 'normal') => ({ id, type, lines: [line(...ids.slice(0, 4)), line(...ids.slice(4, 8)), line(...ids.slice(8, 12))] });
-  const pool = new Set(Array.from({ length: 20 }, (_, i) => i + 1));
+  const songs = new Set(Array.from({ length: 20 }, (_, i) => i + 1));
   const ids = Array.from({ length: 12 }, (_, i) => i + 1);
   const types = ['normal', 'especial'];
-  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], types, pool, pool);
+  const both = c.cardsCheck([card(1, ids), card(2, ids, 'especial')], types, songs, songs);
   assert.equal(both.status, 'pass');
   assert.match(both.detail, /2 cards \(1 normal, 1 especial\)/);
   // A type card-types.json doesn't list (here the round kind's spelling, not the printed one) could never play.
-  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], types, pool, pool).detail, /card 2 has type "special", not in card-types.json \(normal, especial\)/);
+  assert.match(c.cardsCheck([card(1, ids), card(2, ids, 'special')], types, songs, songs).detail, /card 2 has type "special", not in card-types.json \(normal, especial\)/);
   // This year's types are whatever apps/cards prints.
-  assert.equal(c.cardsCheck([card(1, ids, 'groc')], ['groc'], pool, pool).status, 'pass');
+  assert.equal(c.cardsCheck([card(1, ids, 'groc')], ['groc'], songs, songs).status, 'pass');
   // Without card-types.json: the default types stand in, and it warns (screens can't name them).
-  const untyped = c.cardsCheck([card(1, ids)], null, pool, pool);
+  const untyped = c.cardsCheck([card(1, ids)], null, songs, songs);
   assert.equal(untyped.status, 'warn');
   assert.match(untyped.detail, /no card-types.json/);
-  assert.match(c.cardsCheck([card(1, ids)], types, pool, new Set([...pool].filter((id) => id !== 5))).detail, /can't play.*5/);
-  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], types, pool, pool).detail, /99, not in the pool/);
-  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], types, pool, pool).detail, /twice/);
-  assert.match(c.cardsCheck([{ id: 3, type: 'normal', lines: [line(1, 2, 3)] }], types, pool, pool).detail, /3 lines of 4/);
-  assert.equal(c.cardsCheck([], types, pool, pool).status, 'fail');
+  assert.match(c.cardsCheck([card(1, ids)], types, songs, new Set([...songs].filter((id) => id !== 5))).detail, /can't play.*5/);
+  assert.match(c.cardsCheck([card(1, [...ids.slice(0, 11), 99])], types, songs, songs).detail, /99, not in the repertoire/);
+  assert.match(c.cardsCheck([card(1, ids), card(1, ids)], types, songs, songs).detail, /twice/);
+  assert.match(c.cardsCheck([{ id: 3, type: 'normal', lines: [line(1, 2, 3)] }], types, songs, songs).detail, /3 lines of 4/);
+  assert.equal(c.cardsCheck([], types, songs, songs).status, 'fail');
 });
 
 test("card-types.json's ids, and the printed cards by type", () => {
@@ -105,11 +105,11 @@ test("the Game plan: it must pass the protocol's check, and every round's card t
 });
 
 test('songs, sounds and media files', () => {
-  const pool = new Set([1, 2, 3]);
-  assert.equal(c.songsCheck(pool, pool, []).status, 'pass');
-  assert.equal(c.songsCheck(pool, new Set([1, 2]), []).status, 'warn');
-  assert.equal(c.songsCheck(pool, pool, [2]).status, 'fail');
-  assert.equal(c.songsCheck(pool, new Set(), []).status, 'fail');
+  const songs = new Set([1, 2, 3]);
+  assert.equal(c.songsCheck(songs, songs, []).status, 'pass');
+  assert.equal(c.songsCheck(songs, new Set([1, 2]), []).status, 'warn');
+  assert.equal(c.songsCheck(songs, songs, [2]).status, 'fail');
+  assert.equal(c.songsCheck(songs, new Set(), []).status, 'fail');
   assert.deepEqual(c.soundsCheck([], 4, []).map((x) => x.status), ['pass', 'pass']);
   assert.deepEqual(c.soundsCheck(['mkwii-mission-clear'], 4, ['windows-error-remix']).map((x) => x.status), ['fail', 'fail']);
   const reference = { source: 'the cloud', files: { 'cache/1/mix.flac': { size: 3, sha256: 'a'.repeat(64) }, 'covers/1.jpg': { size: 1, sha256: 'b'.repeat(64) } } };
@@ -122,7 +122,7 @@ test('songs, sounds and media files', () => {
 
 test('the relay, the LAN and the cloud', () => {
   assert.equal(c.relayCheck('default', { ok: true, name: 'default' }).status, 'pass');
-  assert.equal(c.relayCheck('2026', { ok: true, name: 'default' }).status, 'fail', 'the wrong pool');
+  assert.equal(c.relayCheck('2026', { ok: true, name: 'default' }).status, 'fail', 'the wrong repertoire');
   assert.equal(c.relayCheck('default', { ok: false, error: 'ECONNREFUSED' }).status, 'fail');
   assert.equal(c.showPageCheck([{ role: 'show' }, { role: 'tablet' }]).status, 'pass');
   assert.equal(c.showPageCheck([{ role: 'tablet' }]).status, 'warn');
@@ -147,8 +147,8 @@ test('the cloud link and the Game', () => {
   assert.equal(c.gameCheck(status, { gameId: 'g1', seq: 40 }, '26').status, 'pass');
   assert.equal(c.gameCheck(status, { gameId: 'rehearsal', seq: 300 }, '26').status, 'warn');
   assert.equal(c.gameCheck(status, null, null).status, 'warn');
-  assert.equal(c.exitCode([{ group: 'Pool', name: 'x', status: 'warn', detail: '' }]), 0);
-  assert.equal(c.exitCode([{ group: 'Pool', name: 'x', status: 'fail', detail: '' }]), 1);
+  assert.equal(c.exitCode([{ group: 'Repertoire', name: 'x', status: 'warn', detail: '' }]), 0);
+  assert.equal(c.exitCode([{ group: 'Repertoire', name: 'x', status: 'fail', detail: '' }]), 1);
 });
 
 test('the daily usage: WARN from 60 %, FAIL from 85 %, with the reset time in Catalonia', () => {

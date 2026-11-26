@@ -1,10 +1,10 @@
-// Media sync (C3): the show laptop pushes its prepared pool (decoded songs, stems, Signatures, analysis, covers,
+// Media sync (C3): the show laptop pushes its prepared repertoire (decoded songs, stems, Signatures, analysis, covers,
 // Hold and Interval music, effects) to a private R2 bucket, and a takeover laptop pulls it, so playback never depends on the
 // internet on the night and a second laptop doesn't re-run the 30-minute pipeline. Pure rules shared by the
 // Worker and the laptop: which folders, which paths, the manifest. Copyrighted audio only ever goes to the
 // private bucket, through the laptop's Access service token; never to git, never public.
 
-/** The folders synced, by name (laptop/media-sync.ts maps them to the pool's folders on disk). */
+/** The folders synced, by name (laptop/media-sync.ts maps them to the repertoire's folders on disk). */
 export const SYNC_ROOTS = ['cache', 'data', 'covers', 'overrides', 'cards', 'hold-cache', 'hold-data', 'interval-cache', 'interval-data', 'fx', 'stingers'] as const;
 export type SyncRoot = (typeof SYNC_ROOTS)[number];
 
@@ -15,10 +15,10 @@ export interface ManifestFile {
   sha256: string;
 }
 
-/** What a pool's media is, in the bucket: `pools/<pool>/manifest.json`. */
+/** What a repertoire's media is, in the bucket: `repertoires/<repertoire>/manifest.json`. */
 export interface MediaManifest {
-  v: 1;
-  pool: string;
+  v: 2;
+  repertoire: string;
   /** By sync path (`<root>/<relative path>`). */
   files: Record<string, ManifestFile>;
   updatedAtMs: number;
@@ -28,9 +28,6 @@ export interface MediaManifest {
 export const MAX_SYNC_FILE_BYTES = 100 * 1000 * 1000;
 
 const SEGMENT = /^[A-Za-z0-9._@+ -]{1,120}$/;
-
-/** A pool name, as relay/pool.ts allows it. */
-export const isPoolName = (value: unknown): value is string => typeof value === 'string' && /^[a-z0-9_-]{1,40}$/.test(value);
 
 /** A sync path: `<root>/<segments>`, a known root, no `.`/`..` segments, plain file names only. */
 export function isSyncPath(value: unknown): value is string {
@@ -43,10 +40,10 @@ export function isSyncPath(value: unknown): value is string {
 export const isSha256 = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
 
 /** Check a manifest as it arrives. Never throws. */
-export function checkManifest(value: unknown, pool: string): MediaManifest | null {
+export function checkManifest(value: unknown, repertoire: string): MediaManifest | null {
   if (!value || typeof value !== 'object') return null;
   const m = value as Record<string, unknown>;
-  if (m.v !== 1 || m.pool !== pool || typeof m.updatedAtMs !== 'number' || !m.files || typeof m.files !== 'object') return null;
+  if (m.v !== 2 || m.repertoire !== repertoire || typeof m.updatedAtMs !== 'number' || !m.files || typeof m.files !== 'object') return null;
   const files = m.files as Record<string, unknown>;
   for (const [path, file] of Object.entries(files)) {
     const f = file as Partial<ManifestFile> | null;
@@ -55,8 +52,10 @@ export function checkManifest(value: unknown, pool: string): MediaManifest | nul
   return value as MediaManifest;
 }
 
-export const manifestKey = (pool: string): string => `pools/${pool}/manifest.json`;
-export const fileKey = (pool: string, path: string): string => `pools/${pool}/files/${path}`;
+/** Each repertoire's folder in the bucket (D178: before, `pools/`, whose keys stay until deploy-plan step 6). */
+export const REPERTOIRES_PREFIX = 'repertoires/';
+export const manifestKey = (repertoire: string): string => `${REPERTOIRES_PREFIX}${repertoire}/manifest.json`;
+export const fileKey = (repertoire: string, path: string): string => `${REPERTOIRES_PREFIX}${repertoire}/files/${path}`;
 
 /** What has to move: files whose content differs, by sync path. */
 export function changedFiles(from: MediaManifest['files'], to: MediaManifest['files']): string[] {

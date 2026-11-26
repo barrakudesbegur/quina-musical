@@ -1,15 +1,15 @@
-// Which folders the media sync takes from a pool: the shared Hold and Interval music go under their own roots, for
-// every pool, and never twice (the default pool's data and cache folders are the shared folders' parents).
+// Which folders the media sync takes from a repertoire: the shared Hold and Interval music go under their own roots,
+// for every repertoire, and never twice (the default repertoire's data and cache folders are the shared folders' parents).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { CACHE, OUT, type Pool } from '../../../show/relay/pool.ts';
-import { poolRoots } from '../../laptop/pool-roots.ts';
+import { CACHE, OUT, type Repertoire } from '../../../show/relay/repertoire.ts';
+import { repertoireRoots } from '../../laptop/repertoire-roots.ts';
 import { isSyncPath } from '../../src/domain/media-sync.ts';
 
-const pool = (name: string, dataDir: string, cacheDir: string): Pool => ({
+const repertoire = (name: string, dataDir: string, cacheDir: string): Repertoire => ({
   name,
-  manifest: `/pools/${name}.json`,
+  manifest: `/repertoires/${name}.json`,
   songsJson: '/songs.json',
   audioDir: '/audio',
   coversDir: '/covers',
@@ -20,26 +20,28 @@ const pool = (name: string, dataDir: string, cacheDir: string): Pool => ({
   overridesDir: '/overrides',
 });
 
-test("the Interval music syncs with every pool, under its own roots, like the Hold music", () => {
-  for (const p of [pool('default', OUT, CACHE), pool('2026', path.join(OUT, 'pools', '2026'), path.join(CACHE, 'pools', '2026'))]) {
-    const roots = poolRoots(p);
+test("the Interval music syncs with every repertoire, under its own roots, like the Hold music", () => {
+  for (const p of [repertoire('default', OUT, CACHE), repertoire('2026', path.join(OUT, 'repertoires', '2026'), path.join(CACHE, 'repertoires', '2026'))]) {
+    const roots = repertoireRoots(p);
     assert.deepEqual(roots.find((r) => r.root === 'interval-cache')?.dir, path.join(CACHE, 'interval'), p.name);
     assert.deepEqual(roots.find((r) => r.root === 'interval-data')?.dir, path.join(OUT, 'interval'), p.name);
     assert.deepEqual(roots.find((r) => r.root === 'hold-cache')?.dir, path.join(CACHE, 'hold'), p.name);
   }
 });
 
-test("the default pool's data and cache roots leave the shared music to its own roots (no file synced twice)", () => {
-  const roots = poolRoots(pool('default', OUT, CACHE));
+test("the default repertoire's data and cache roots leave the shared music to its own roots (no file synced twice)", () => {
+  const roots = repertoireRoots(repertoire('default', OUT, CACHE));
   const cache = roots.find((r) => r.root === 'cache');
   const data = roots.find((r) => r.root === 'data');
   for (const shared of ['interval/some-track.flac', 'hold/loop.flac']) assert.equal(cache?.exclude?.(shared), true, shared);
   for (const shared of ['interval/index.json', 'hold/index.json']) assert.equal(data?.exclude?.(shared), true, shared);
   assert.equal(cache?.exclude?.('1/mix.flac'), false, "a song's own files stay");
+  assert.equal(cache?.exclude?.('repertoires/2026/1/mix.flac'), true, "another repertoire's files: its own push");
+  assert.equal(data?.exclude?.('repertoires/2026/analysis/index.json'), true);
 });
 
 test('never synced: the relay\'s pairing token, the download tools, the listening demo, the Spotify features, the Hold auditions', () => {
-  const roots = poolRoots(pool('default', OUT, CACHE));
+  const roots = repertoireRoots(repertoire('default', OUT, CACHE));
   const cache = roots.find((r) => r.root === 'cache');
   const data = roots.find((r) => r.root === 'data');
   assert.equal(cache?.exclude?.('relay-token'), true, 'a secret: each laptop makes its own');

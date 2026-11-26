@@ -1,12 +1,12 @@
 // Assemble the static files the Worker serves (wrangler.jsonc `assets.directory` = dist/), at deploy time:
-//   npm run assets -- [--quick] [--pool default] [--ui ../show/dist] [--out dist]
+//   npm run assets -- [--quick] [--repertoire default] [--ui ../show/dist] [--out dist]
 // It copies static/ (committed: the kill switch for last year's service worker, _headers, a placeholder page).
 // Unless --quick, it then adds, as agreed with the UI session:
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
 //     /26/123), console/, admin/, assets/; never stage/ (the projector runs on the laptop);
-//   - the pool's printed cards: cards/cards.json, and card-types.json from the same folder (each type's name,
+//   - the repertoire's printed cards: cards/cards.json, and card-types.json from the same folder (each type's name,
 //     colour, title and price; rounds name the type they play);
-//   - the pool's covers, small, as JPEG XL with a JPEG fallback (the user's choice: JXL, never WebP):
+//   - the repertoire's covers, small, as JPEG XL with a JPEG fallback (the user's choice: JXL, never WebP):
 //     covers/<songId>.jxl and covers/<songId>.jpg, both at most 256 px a side (sips, then cjxl; cached in
 //     .assets-cache/). Pages use <picture><source type="image/jxl" srcset=".jxl"><img src=".jpg"></picture>.
 // dist/ and .assets-cache/ are gitignored: the built UI and the album covers never go into the public repo.
@@ -14,7 +14,7 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadPool } from '../../show/relay/pool.ts';
+import { loadRepertoire } from '../../show/relay/repertoire.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -59,26 +59,26 @@ if (!quick) {
     lines.push(`${path.relative(ROOT, source)} → dist/${to}`);
   }
 
-  // ---- the pool: cards and covers ----------------------------------------------------------------------------
-  const pool = loadPool(flag('--pool'));
-  if (pool.cardsJson && fs.existsSync(pool.cardsJson)) {
+  // ---- the repertoire: cards and covers ----------------------------------------------------------------------
+  const repertoire = loadRepertoire(flag('--repertoire'));
+  if (repertoire.cardsJson && fs.existsSync(repertoire.cardsJson)) {
     fs.mkdirSync(path.join(OUT, 'cards'), { recursive: true });
-    fs.copyFileSync(pool.cardsJson, path.join(OUT, 'cards', 'cards.json'));
-    lines.push(`cards (pool ${pool.name}) → dist/cards/cards.json`);
+    fs.copyFileSync(repertoire.cardsJson, path.join(OUT, 'cards', 'cards.json'));
+    lines.push(`cards (repertoire ${repertoire.name}) → dist/cards/cards.json`);
     // Beside cards.json, as apps/cards writes it and the relay serves it (/cards/ is that folder).
-    const types = path.join(path.dirname(pool.cardsJson), 'card-types.json');
+    const types = path.join(path.dirname(repertoire.cardsJson), 'card-types.json');
     if (fs.existsSync(types)) {
       fs.copyFileSync(types, path.join(OUT, 'cards', 'card-types.json'));
       lines.push('dist/cards/card-types.json');
     } else {
-      warnings.push(`pool ${pool.name} has no card-types.json beside its cards.json: phones show no card type names`);
+      warnings.push(`repertoire ${repertoire.name} has no card-types.json beside its cards.json: phones show no card type names`);
     }
   } else {
-    warnings.push(`pool ${pool.name} has no cards.json yet`);
+    warnings.push(`repertoire ${repertoire.name} has no cards.json yet`);
   }
 
-  const covers = fs.existsSync(pool.coversDir) ? fs.readdirSync(pool.coversDir).filter((f) => /^\d+\.(jpe?g|png|webp)$/i.test(f)) : [];
-  if (covers.length === 0) warnings.push(`pool ${pool.name} has no covers in ${pool.coversDir}`);
+  const covers = fs.existsSync(repertoire.coversDir) ? fs.readdirSync(repertoire.coversDir).filter((f) => /^\d+\.(jpe?g|png|webp)$/i.test(f)) : [];
+  if (covers.length === 0) warnings.push(`repertoire ${repertoire.name} has no covers in ${repertoire.coversDir}`);
   else {
     for (const tool of ['sips', 'cjxl']) {
       try {
@@ -92,11 +92,11 @@ if (!quick) {
     let encoded = 0;
     const settings = `${COVER.sizePx}px-q${COVER.jpegQuality}-d${COVER.jxlDistance}e${COVER.jxlEffort}`;
     for (const file of covers) {
-      const source = path.join(pool.coversDir, file);
+      const source = path.join(repertoire.coversDir, file);
       const id = file.split('.')[0] as string;
       const stat = fs.statSync(source);
       // The cache key is the source's size and time and the settings, so a changed cover is encoded again.
-      const key = path.join(CACHE, `${pool.name}-${id}-${stat.size}-${Math.floor(stat.mtimeMs)}-${settings}`);
+      const key = path.join(CACHE, `${repertoire.name}-${id}-${stat.size}-${Math.floor(stat.mtimeMs)}-${settings}`);
       if (!fs.existsSync(`${key}.jxl`) || !fs.existsSync(`${key}.jpg`)) {
         const size = String(COVER.sizePx);
         // One resize to a lossless PNG, then each format from it (the JXL never re-encodes a JPEG).
@@ -112,7 +112,7 @@ if (!quick) {
       fs.copyFileSync(`${key}.jpg`, path.join(OUT, 'covers', `${id}.jpg`));
     }
     const ofType = (ext: string) => fs.readdirSync(path.join(OUT, 'covers')).filter((f) => f.endsWith(ext)).reduce((sum, f) => sum + fs.statSync(path.join(OUT, 'covers', f)).size, 0);
-    lines.push(`${covers.length} covers (pool ${pool.name}, ${encoded} encoded now) → dist/covers/<id>.jxl (${kb(ofType('.jxl'))}) and .jpg (${kb(ofType('.jpg'))}), from ${kb(sizeOf(pool.coversDir))}`);
+    lines.push(`${covers.length} covers (repertoire ${repertoire.name}, ${encoded} encoded now) → dist/covers/<id>.jxl (${kb(ofType('.jxl'))}) and .jpg (${kb(ofType('.jpg'))}), from ${kb(sizeOf(repertoire.coversDir))}`);
   }
 }
 

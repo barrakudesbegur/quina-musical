@@ -6,7 +6,7 @@ import { DEFAULT_CARD_TYPE, checkGamePlan, defaultCardType, isCardTypeId, roundC
 export type Status = 'pass' | 'warn' | 'fail';
 
 export interface Check {
-  group: 'Pool' | 'Laptop' | 'Network' | 'Cloud';
+  group: 'Repertoire' | 'Laptop' | 'Network' | 'Cloud';
   name: string;
   status: Status;
   detail: string;
@@ -14,7 +14,7 @@ export interface Check {
 
 const check = (group: Check['group'], name: string, status: Status, detail: string): Check => ({ group, name, status, detail });
 
-// ---- the pool ---------------------------------------------------------------------------------------------
+// ---- the repertoire ---------------------------------------------------------------------------------------
 export interface CardLike {
   id: number;
   type: string;
@@ -37,13 +37,13 @@ export function printedByType(cards: unknown): Map<string, number> | null {
 }
 
 /**
- * The printed cards against the pool: every card 3 lines of 4 songs, ids unique, every song in the pool, and
+ * The printed cards against the repertoire: every card 3 lines of 4 songs, ids unique, every song in the repertoire, and
  * every song on a card PLAYABLE (analysed, with a valid hook), or that card could never be completed. Every card's
  * type must be one of card-types.json's (`types`), or no round could ever play it; without that file, the
  * default types stand in and it warns, since screens can't name the types.
  */
-export function cardsCheck(cards: unknown, types: readonly string[] | null, poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
-  if (!Array.isArray(cards) || cards.length === 0) return check('Pool', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
+export function cardsCheck(cards: unknown, types: readonly string[] | null, songIds: ReadonlySet<number>, playableIds: ReadonlySet<number>): Check {
+  if (!Array.isArray(cards) || cards.length === 0) return check('Repertoire', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
   const known = types ?? [...new Set(Object.values(DEFAULT_CARD_TYPE))];
   const problems: string[] = [];
   const seen = new Set<number>();
@@ -59,42 +59,42 @@ export function cardsCheck(cards: unknown, types: readonly string[] | null, pool
     const songs = raw.lines.flat();
     if (raw.lines.length !== 3 || raw.lines.some((l) => !Array.isArray(l) || l.length !== 4)) problems.push(`card ${raw.id} is not 3 lines of 4`);
     for (const song of songs) {
-      if (!poolSongIds.has(song?.id)) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the pool`);
+      if (!songIds.has(song?.id)) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the repertoire`);
       else if (!playableIds.has(song.id)) unplayable.add(song.id);
     }
   }
   if (unplayable.size > 0) problems.push(`songs on cards that can't play (no analysis or hook): ${[...unplayable].sort((a, b) => a - b).join(', ')}`);
-  if (problems.length > 0) return check('Pool', 'Cards', 'fail', `${problems.slice(0, 4).join('; ')}${problems.length > 4 ? ` (+${problems.length - 4} more)` : ''}`);
+  if (problems.length > 0) return check('Repertoire', 'Cards', 'fail', `${problems.slice(0, 4).join('; ')}${problems.length > 4 ? ` (+${problems.length - 4} more)` : ''}`);
   const byType = [...(printedByType(cards) ?? [])].map(([type, n]) => `${n} ${type}`).join(', ');
   const detail = `${cards.length} cards (${byType}), every song on them playable`;
-  if (!types) return check('Pool', 'Cards', 'warn', `${detail}; no card-types.json beside cards.json (apps/cards writes it): screens and phones can't name the card types`);
-  return check('Pool', 'Cards', 'pass', detail);
+  if (!types) return check('Repertoire', 'Cards', 'warn', `${detail}; no card-types.json beside cards.json (apps/cards writes it): screens and phones can't name the card types`);
+  return check('Repertoire', 'Cards', 'pass', detail);
 }
 
-/** The songs: how many the pool has, and how many are ready to play. */
-export function songsCheck(poolSongIds: ReadonlySet<number>, playableIds: ReadonlySet<number>, missingAudio: readonly number[]): Check {
-  if (playableIds.size === 0) return check('Pool', 'Songs', 'fail', 'no playable song: pull the prepared media (npm run media -- pull, or npm run setup:laptop), or prepare the pool (npm run prep in apps/show)');
-  if (missingAudio.length > 0) return check('Pool', 'Songs', 'fail', `playable songs without their decoded audio: ${missingAudio.slice(0, 10).join(', ')}${missingAudio.length > 10 ? '…' : ''}`);
-  const notReady = [...poolSongIds].filter((id) => !playableIds.has(id));
-  if (notReady.length > 0) return check('Pool', 'Songs', 'warn', `${playableIds.size} of ${poolSongIds.size} playable; not ready: ${notReady.slice(0, 10).join(', ')}${notReady.length > 10 ? '…' : ''}`);
-  return check('Pool', 'Songs', 'pass', `all ${playableIds.size} songs analysed, with their audio`);
+/** The songs: how many the repertoire has, and how many are ready to play. */
+export function songsCheck(songIds: ReadonlySet<number>, playableIds: ReadonlySet<number>, missingAudio: readonly number[]): Check {
+  if (playableIds.size === 0) return check('Repertoire', 'Songs', 'fail', 'no playable song: pull the prepared media (npm run media -- pull, or npm run setup:laptop), or prepare the repertoire (npm run prep in apps/show)');
+  if (missingAudio.length > 0) return check('Repertoire', 'Songs', 'fail', `playable songs without their decoded audio: ${missingAudio.slice(0, 10).join(', ')}${missingAudio.length > 10 ? '…' : ''}`);
+  const notReady = [...songIds].filter((id) => !playableIds.has(id));
+  if (notReady.length > 0) return check('Repertoire', 'Songs', 'warn', `${playableIds.size} of ${songIds.size} playable; not ready: ${notReady.slice(0, 10).join(', ')}${notReady.length > 10 ? '…' : ''}`);
+  return check('Repertoire', 'Songs', 'pass', `all ${playableIds.size} songs analysed, with their audio`);
 }
 
 /** Every fanfare and effect the console can play, and the Hold music, on disk. */
 export function soundsCheck(missingSounds: readonly string[], holdCount: number, missingHold: readonly string[]): Check[] {
   return [
     missingSounds.length > 0
-      ? check('Pool', 'Fanfares and effects', 'fail', `missing: ${missingSounds.join(', ')}`)
-      : check('Pool', 'Fanfares and effects', 'pass', 'every sound the console can play is there'),
+      ? check('Repertoire', 'Fanfares and effects', 'fail', `missing: ${missingSounds.join(', ')}`)
+      : check('Repertoire', 'Fanfares and effects', 'pass', 'every sound the console can play is there'),
     holdCount === 0 || missingHold.length > 0
-      ? check('Pool', 'Hold music', 'fail', holdCount === 0 ? 'no Hold music prepared (tools/prep/hold.py)' : `missing decoded files: ${missingHold.join(', ')}`)
-      : check('Pool', 'Hold music', 'pass', `${holdCount} tracks`),
+      ? check('Repertoire', 'Hold music', 'fail', holdCount === 0 ? 'no Hold music prepared (tools/prep/hold.py)' : `missing decoded files: ${missingHold.join(', ')}`)
+      : check('Repertoire', 'Hold music', 'pass', `${holdCount} tracks`),
   ];
 }
 
 /** The files against the reference manifest (the cloud's, or the last push/pull here): present and same SHA-256. */
 export function mediaCheck(reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null, local: ReadonlyMap<string, { size: number; sha256: string }>, rehashed: boolean): Check {
-  if (!reference) return check('Pool', 'Media files', 'warn', `${local.size} files here, no reference to compare with: run "npm run media -- push" once`);
+  if (!reference) return check('Repertoire', 'Media files', 'warn', `${local.size} files here, no reference to compare with: run "npm run media -- push" once`);
   const missing: string[] = [];
   const changed: string[] = [];
   for (const [path, file] of Object.entries(reference.files)) {
@@ -105,9 +105,9 @@ export function mediaCheck(reference: { files: Record<string, { size: number; sh
   const how = rehashed ? 'every file re-hashed' : 'hashes from the index (--fast)';
   if (missing.length > 0 || changed.length > 0) {
     const list = [...missing.map((p) => `missing ${p}`), ...changed.map((p) => `different ${p}`)];
-    return check('Pool', 'Media files', 'fail', `${list.slice(0, 3).join('; ')}${list.length > 3 ? ` (+${list.length - 3} more)` : ''}; against ${reference.source}`);
+    return check('Repertoire', 'Media files', 'fail', `${list.slice(0, 3).join('; ')}${list.length > 3 ? ` (+${list.length - 3} more)` : ''}; against ${reference.source}`);
   }
-  return check('Pool', 'Media files', 'pass', `${Object.keys(reference.files).length} files match ${reference.source} (${how})`);
+  return check('Repertoire', 'Media files', 'pass', `${Object.keys(reference.files).length} files match ${reference.source} (${how})`);
 }
 
 // ---- the laptop -------------------------------------------------------------------------------------------
@@ -221,10 +221,10 @@ export function usageCheck(stats: CloudStats | null, nowMs: number): Check {
   return check('Cloud', 'Daily usage', 'pass', detail);
 }
 
-export function relayCheck(pool: string, answer: { ok: boolean; name?: string; error?: string }): Check {
+export function relayCheck(repertoire: string, answer: { ok: boolean; name?: string; error?: string }): Check {
   if (!answer.ok) return check('Network', 'Relay', 'fail', `not running (${answer.error ?? 'no answer'}): start it with "npm start" in apps/show`);
-  if (answer.name !== pool) return check('Network', 'Relay', 'fail', `it serves pool "${answer.name}", not "${pool}": restart it with --pool ${pool}`);
-  return check('Network', 'Relay', 'pass', `up, pool ${pool}`);
+  if (answer.name !== repertoire) return check('Network', 'Relay', 'fail', `it serves repertoire "${answer.name}", not "${repertoire}": restart it with --repertoire ${repertoire}`);
+  return check('Network', 'Relay', 'pass', `up, repertoire ${repertoire}`);
 }
 
 export function showPageCheck(clients: readonly { role: string }[] | null): Check {

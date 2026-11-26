@@ -3,12 +3,12 @@
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
 import { findRoute, jxlUploadKey, mediaId, syncTarget, wantsJxl } from './domain/routes.ts';
-import { checkManifest, fileKey, isSha256, isSyncPath, manifestKey, MAX_SYNC_FILE_BYTES } from './domain/media-sync.ts';
+import { checkManifest, fileKey, isSha256, isSyncPath, manifestKey, MAX_SYNC_FILE_BYTES, REPERTOIRES_PREFIX } from './domain/media-sync.ts';
 import { GameRoom, IDENTITY_HEADER } from './game-room.ts';
 
 export { GameRoom };
 
-/** The R2 bucket for the pool's media: optional, absent until the user creates it (wrangler.jsonc). */
+/** The R2 bucket for the repertoire's media: optional, absent until the user creates it (wrangler.jsonc). */
 interface MediaEnv {
   MEDIA?: R2Bucket;
 }
@@ -137,62 +137,62 @@ async function media(request: Request, env: Env, ctx: ExecutionContext, id: stri
 }
 
 /**
- * The pool's media in R2, for the laptops (Access service token). The manifest says what the pool's files are;
+ * A repertoire's media in R2, for the laptops (Access service token). The manifest says what its files are;
  * a file is stored under its sync path, and R2 itself checks the SHA-256 the laptop sends with it.
  */
 async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response> {
   const bucket = env.MEDIA;
   if (!bucket) return text(503, 'media sync is not configured: create the R2 bucket (docs/deploy-plan.md, step 4)');
-  // GET /api/sync: every pool in the bucket, from its manifest (for `media prune`: the free tier is 10 GB).
+  // GET /api/sync: every repertoire in the bucket, from its manifest (for `media prune`: the free tier is 10 GB).
   if (url.pathname === '/api/sync') {
     if (request.method !== 'GET') return text(405, 'only GET');
-    const listed = await bucket.list({ prefix: 'pools/', delimiter: '/' });
-    const pools = [];
+    const listed = await bucket.list({ prefix: REPERTOIRES_PREFIX, delimiter: '/' });
+    const repertoires = [];
     for (const prefix of listed.delimitedPrefixes) {
-      const name = prefix.slice('pools/'.length, -1);
+      const name = prefix.slice(REPERTOIRES_PREFIX.length, -1);
       const object = await bucket.get(manifestKey(name));
       const manifest = object ? (checkManifest(await object.json(), name) ?? null) : null;
       const files = manifest ? Object.values(manifest.files) : [];
-      pools.push({ name, files: files.length, bytes: files.reduce((sum, f) => sum + f.size, 0), updatedAtMs: manifest?.updatedAtMs ?? 0 });
+      repertoires.push({ name, files: files.length, bytes: files.reduce((sum, f) => sum + f.size, 0), updatedAtMs: manifest?.updatedAtMs ?? 0 });
     }
-    return json({ pools, totalBytes: pools.reduce((sum, p) => sum + p.bytes, 0), freeTierBytes: 10e9 });
+    return json({ repertoires, totalBytes: repertoires.reduce((sum, r) => sum + r.bytes, 0), freeTierBytes: 10e9 });
   }
-  const target = syncTarget(url.pathname) as { pool: string; resource: 'manifest' | 'file' };
+  const target = syncTarget(url.pathname) as { repertoire: string; resource: 'manifest' | 'file' };
   if (target.resource === 'manifest') {
-    // DELETE: the whole pool goes (every file, then its manifest); x-confirm-pool must name it, against slips.
+    // DELETE: the whole repertoire goes (every file, then its manifest); x-confirm-repertoire must name it, against slips.
     if (request.method === 'DELETE') {
-      if (request.headers.get('x-confirm-pool') !== target.pool) return text(400, `send x-confirm-pool: ${target.pool} to delete that pool`);
+      if (request.headers.get('x-confirm-repertoire') !== target.repertoire) return text(400, `send x-confirm-repertoire: ${target.repertoire} to delete that repertoire`);
       let deleted = 0;
       let cursor: string | undefined;
       do {
-        const page = await bucket.list({ prefix: `pools/${target.pool}/files/`, cursor, limit: 1000 });
+        const page = await bucket.list({ prefix: `${REPERTOIRES_PREFIX}${target.repertoire}/files/`, cursor, limit: 1000 });
         const keys = page.objects.map((o) => o.key);
         if (keys.length) await bucket.delete(keys);
         deleted += keys.length;
         cursor = page.truncated ? page.cursor : undefined;
       } while (cursor);
-      await bucket.delete(manifestKey(target.pool));
+      await bucket.delete(manifestKey(target.repertoire));
       return json({ ok: true, deleted });
     }
     if (request.method === 'GET') {
-      const object = await bucket.get(manifestKey(target.pool));
-      return object ? new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }) : json({ v: 1, pool: target.pool, files: {}, updatedAtMs: 0 });
+      const object = await bucket.get(manifestKey(target.repertoire));
+      return object ? new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }) : json({ v: 2, repertoire: target.repertoire, files: {}, updatedAtMs: 0 });
     }
     const body = await readBody(request, 4 << 20);
     let manifest = null;
     try {
-      manifest = body ? checkManifest(JSON.parse(new TextDecoder().decode(body)), target.pool) : null;
+      manifest = body ? checkManifest(JSON.parse(new TextDecoder().decode(body)), target.repertoire) : null;
     } catch {
       // answered below
     }
-    if (!manifest) return text(400, 'not a manifest for this pool');
-    await bucket.put(manifestKey(target.pool), JSON.stringify(manifest), { httpMetadata: { contentType: 'application/json' } });
+    if (!manifest) return text(400, 'not a manifest for this repertoire');
+    await bucket.put(manifestKey(target.repertoire), JSON.stringify(manifest), { httpMetadata: { contentType: 'application/json' } });
     return json({ ok: true, files: Object.keys(manifest.files).length });
   }
   const path = url.searchParams.get('path');
   if (!isSyncPath(path)) return text(400, 'path must be <root>/<file>, a known root and plain names');
-  const key = fileKey(target.pool, path);
-  if (request.method === 'DELETE') return text(405, 'delete a whole pool: DELETE /api/sync/<pool>/manifest');
+  const key = fileKey(target.repertoire, path);
+  if (request.method === 'DELETE') return text(405, 'delete a whole repertoire: DELETE /api/sync/<repertoire>/manifest');
   if (request.method === 'GET') {
     const object = await bucket.get(key);
     if (!object) return text(404, 'not found');

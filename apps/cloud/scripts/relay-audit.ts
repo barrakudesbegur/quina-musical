@@ -36,7 +36,7 @@ async function relay(port: number, flags: string[]): Promise<ChildProcess> {
   child.stderr?.on('data', (d) => (output += d));
   for (let i = 0; i < 100; i++) {
     try {
-      if ((await fetch(`http://127.0.0.1:${port}/api/pool`)).ok) return child;
+      if ((await fetch(`http://127.0.0.1:${port}/api/repertoire`)).ok) return child;
     } catch {
       // not up yet
     }
@@ -132,7 +132,7 @@ try {
       return String(error);
     }
   };
-  for (const p of ['/api/pool', '/api/override/1', '/cloud/current', '/cloud/journal/g.jsonl', '/cloud/resume.json']) {
+  for (const p of ['/api/repertoire', '/api/override/1', '/cloud/current', '/cloud/journal/g.jsonl', '/cloud/resume.json']) {
     const s = await status(p);
     expect(`LAN GET ${p} is refused`, s === 403, String(s));
   }
@@ -227,7 +227,7 @@ const closed = await relay(port2, []);
 try {
   let answered = 'no answer';
   try {
-    answered = String((await fetch(`http://${lan}:${port2}/api/pool`, { signal: AbortSignal.timeout(2000) })).status);
+    answered = String((await fetch(`http://${lan}:${port2}/api/repertoire`, { signal: AbortSignal.timeout(2000) })).status);
   } catch {
     // refused: right
   }

@@ -1,4 +1,4 @@
-// The laptop's side of the media sync (src/domain/media-sync.ts): push this laptop's prepared pool to the cloud's
+// The laptop's side of the media sync (src/domain/media-sync.ts): push this laptop's prepared repertoire to the cloud's
 // private R2 bucket, or pull it onto a takeover laptop. Only changed files move (by SHA-256; hashes are cached
 // by size and mtime in <dataDir>/media-index.json, so 6 GB isn't hashed again every time). A pull writes each
 // file to `<file>.part`, checks its size and SHA-256, then renames it, so a cut-off download never leaves a
@@ -23,7 +23,7 @@ export interface SyncOptions {
   cloud: string;
   /** The Access service token headers (none for wrangler dev). */
   headers: Record<string, string>;
-  pool: string;
+  repertoire: string;
   roots: RootDir[];
   /** Where the hash index lives (the link's data folder). */
   dataDir: string;
@@ -98,7 +98,7 @@ async function hashFile(file: string): Promise<string> {
 const manifestFiles = (files: Map<string, LocalFile>): MediaManifest['files'] => Object.fromEntries([...files].map(([p, f]) => [p, { size: f.size, sha256: f.sha256 }]));
 
 async function remoteManifest(o: SyncOptions): Promise<MediaManifest> {
-  const response = await fetch(`${o.cloud}/api/sync/${o.pool}/manifest`, { headers: o.headers });
+  const response = await fetch(`${o.cloud}/api/sync/${o.repertoire}/manifest`, { headers: o.headers });
   if (!response.ok) throw new Error(`the cloud's manifest: HTTP ${response.status} ${await response.text()}`);
   return (await response.json()) as MediaManifest;
 }
@@ -114,10 +114,10 @@ async function inParallel<T>(items: readonly T[], limit: number, work: (item: T)
 }
 
 /** The manifest this laptop last pushed or pulled: what the preflight checks the files against offline. */
-export const referenceFile = (dataDir: string, pool: string): string => path.join(dataDir, `media-manifest-${pool}.json`);
+export const referenceFile = (dataDir: string, repertoire: string): string => path.join(dataDir, `media-manifest-${repertoire}.json`);
 
 function writeReference(o: SyncOptions, manifest: MediaManifest): void {
-  fs.writeFileSync(referenceFile(o.dataDir, o.pool), JSON.stringify(manifest));
+  fs.writeFileSync(referenceFile(o.dataDir, o.repertoire), JSON.stringify(manifest));
 }
 
 /** Upload what changed, then the manifest (last, so a pull never sees files that aren't there yet). */
@@ -147,7 +147,7 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
   const moved = progress('uploaded', todo.length, todo.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0), log);
   await inParallel(todo, o.concurrency ?? 4, async (syncPath) => {
     const file = local.get(syncPath) as LocalFile;
-    const response = await fetch(`${o.cloud}/api/sync/${o.pool}/file?path=${encodeURIComponent(syncPath)}`, {
+    const response = await fetch(`${o.cloud}/api/sync/${o.repertoire}/file?path=${encodeURIComponent(syncPath)}`, {
       method: 'PUT',
       headers: { ...o.headers, 'x-sha256': file.sha256, 'content-length': String(file.size), 'content-type': 'application/octet-stream' },
       body: Readable.toWeb(fs.createReadStream(file.abs)) as ReadableStream,
@@ -157,8 +157,8 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
     bytes += file.size;
     moved(file.size);
   });
-  const manifest: MediaManifest = { v: 1, pool: o.pool, files: manifestFiles(local), updatedAtMs: Date.now() };
-  const saved = await fetch(`${o.cloud}/api/sync/${o.pool}/manifest`, { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) });
+  const manifest: MediaManifest = { v: 2, repertoire: o.repertoire, files: manifestFiles(local), updatedAtMs: Date.now() };
+  const saved = await fetch(`${o.cloud}/api/sync/${o.repertoire}/manifest`, { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) });
   if (!saved.ok) throw new Error(`the manifest: HTTP ${saved.status} ${await saved.text()}`);
   writeReference(o, manifest);
   for (const line of skipped) log(`  skipped ${line}`);
@@ -187,7 +187,7 @@ export async function pull(o: SyncOptions): Promise<SyncReport> {
     }
     const target = path.join(dir, ...rest);
     if (!target.startsWith(path.resolve(dir) + path.sep)) throw new Error(`refusing to write outside ${dir}: ${syncPath}`);
-    const response = await fetch(`${o.cloud}/api/sync/${o.pool}/file?path=${encodeURIComponent(syncPath)}`, { headers: o.headers });
+    const response = await fetch(`${o.cloud}/api/sync/${o.repertoire}/file?path=${encodeURIComponent(syncPath)}`, { headers: o.headers });
     if (!response.ok || !response.body) throw new Error(`download ${syncPath}: HTTP ${response.status}`);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     const part = `${target}.part`;

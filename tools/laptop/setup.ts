@@ -1,13 +1,13 @@
 // Set up a show laptop (the main one, or a spare), from a clone of the repo:
-//   npm run setup:laptop [-- --pool default] [--skip-media]
+//   npm run setup:laptop [-- --repertoire default] [--skip-media]
 // Safe to run again: each step checks first and does only what is missing. In order:
 //   1. the prerequisites (Node, macOS, uv, Rubber Band, Google Chrome, disk space), with the exact install hints;
 //   2. npm ci (only when package-lock.json changed since the last setup);
 //   3. the Python venv for what the relay runs during the show (tools/prep/requirements-show.txt: the Blend renders);
 //   4. the cloud link's pairing: apps/cloud/.env.link with the laptop's service token (never sent by chat or email);
-//   5. the pool's prepared media, pulled from the cloud's private R2 (resumable: run it again after a cut);
+//   5. the repertoire's prepared media, pulled from the cloud's private R2 (resumable: run it again after a cut);
 //   6. the Game plan and its images, fetched with the laptop's token (no takeover of the laptop playing);
-//   7. the preflight's Pool and Laptop checks.
+//   7. the preflight's Repertoire and Laptop checks.
 // It only uses Node's own modules, so it runs before npm ci.
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -21,7 +21,7 @@ const flag = (name: string): string | undefined => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const POOL = flag('--pool') ?? 'default';
+const REPERTOIRE = flag('--repertoire') ?? 'default';
 const SKIP_MEDIA = args.includes('--skip-media');
 const MIN_FREE_GB = 10;
 
@@ -63,8 +63,8 @@ else missing.push('Google Chrome, for the show page in kiosk mode: https://www.g
 const free = fs.statfsSync(REPO);
 const freeGb = (free.bavail * free.bsize) / 1e9;
 if (freeGb >= MIN_FREE_GB) ok(`${freeGb.toFixed(0)} GB free`);
-else missing.push(`at least ${MIN_FREE_GB} GB free for the pool's media (${freeGb.toFixed(1)} GB now)`);
-console.log('   (ffmpeg and the full Python requirements are only for preparing a pool, not for the show.)');
+else missing.push(`at least ${MIN_FREE_GB} GB free for the repertoire's media (${freeGb.toFixed(1)} GB now)`);
+console.log('   (ffmpeg and the full Python requirements are only for preparing a repertoire, not for the show.)');
 if (missing.length) {
   for (const m of missing) todo(m);
   stop('install what is missing.');
@@ -111,18 +111,18 @@ const env = Object.fromEntries(
 for (const key of ['QUINA_CLOUD_URL', 'CF_ACCESS_CLIENT_ID', 'CF_ACCESS_CLIENT_SECRET']) if (!env[key]) stop(`.env.link has no ${key}.`);
 ok(`paired with ${env.QUINA_CLOUD_URL}`);
 
-// ---- 5. the pool's media ---------------------------------------------------------------------------------
-step(5, `The pool's media (pool ${POOL}), from the cloud's private R2`);
+// ---- 5. the repertoire's media ---------------------------------------------------------------------------
+step(5, `The repertoire's media (${REPERTOIRE}), from the cloud's private R2`);
 if (SKIP_MEDIA) ok('skipped (--skip-media)');
-else if (!run('npm', ['run', 'media', '-w', '@quina/cloud', '--', 'pull', '--pool', POOL])) stop('the media pull failed; run setup again to resume it.');
+else if (!run('npm', ['run', 'media', '-w', '@quina/cloud', '--', 'pull', '--repertoire', REPERTOIRE])) stop('the media pull failed; run setup again to resume it.');
 
 // ---- 6. the Game plan ------------------------------------------------------------------------------------
 step(6, 'The Game plan and its images');
 if (!run('npm', ['run', 'media', '-w', '@quina/cloud', '--', 'plan'])) stop('could not fetch the Game plan.');
 
 // ---- 7. preflight ----------------------------------------------------------------------------------------
-step(7, 'Preflight: the pool and this laptop');
-const preflight = run('npm', ['run', 'preflight', '-w', '@quina/cloud', '--', '--only', 'Pool,Laptop', '--pool', POOL, '--fast']);
+step(7, 'Preflight: the repertoire and this laptop');
+const preflight = run('npm', ['run', 'preflight', '-w', '@quina/cloud', '--', '--only', 'Repertoire,Laptop', '--repertoire', REPERTOIRE, '--fast']);
 
 console.log(`\n${bold(preflight ? 'This laptop is set up.' : 'Set up, but the preflight found problems (above).')}
 On the night (docs/night-runbook.md): in apps/show, npm start -- --lan; in apps/cloud, npm run link; the show page

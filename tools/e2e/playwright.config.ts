@@ -1,5 +1,5 @@
-// One whole show, headless (show.spec.ts). It needs the default pool prepared (data/out, data/cache: npm run prep
-// in apps/show) and builds the pages first; without the prepared pool it skips. Locally it drives the installed
+// One whole show, headless (show.spec.ts). It needs the default repertoire prepared (data/out, data/cache: npm run prep
+// in apps/show) and builds the pages first; without the prepared repertoire it skips. Locally it drives the installed
 // Chrome; on CI (PLAYWRIGHT_BROWSERS=bundled) Playwright's own Chromium.
 import { defineConfig } from '@playwright/test';
 

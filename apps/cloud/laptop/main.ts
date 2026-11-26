@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { LINK } from '../../show/relay/pool.ts';
+import { LINK } from '../../show/relay/repertoire.ts';
 import { CloudLink } from './link.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');

@@ -10,22 +10,22 @@
 // The claims are real wins: the Check decides (a card that fails it can't be accepted), so the show runs a fixed
 // Queue (?queue=) that completes a Line of the first card, then all of the second card. The Check is the
 // presenter-paced one (D107–D124): each press reveals a song, then the cue.
-// It needs the default pool prepared on this machine; without it the test is skipped.
+// It needs the default repertoire prepared on this machine; without it the test is skipped.
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { ShowState } from '@quina/protocol';
 import { PLAN, SECRET_PRIZE } from '../../apps/cloud/test/support/plan.ts';
 import { Phone, startCloud, type Cloud } from './support/cloud.ts';
-import { REPO, hasPreparedPool, startRelay, type Relay } from './support/relay.ts';
+import { REPO, hasPreparedRepertoire, startRelay, type Relay } from './support/relay.ts';
 import { Remote } from './support/remote.ts';
 
 /** The player follows these cards (the first two are the ones claimed). */
 const CARDS = [12, 34];
 
-/** The default pool's printed cards (apps/cards), each card's songs line by line. */
+/** The default repertoire's printed cards (apps/cards), each card's songs line by line. */
 function printedCard(id: number): number[][] {
-  if (!hasPreparedPool()) return [[]];
+  if (!hasPreparedRepertoire()) return [[]];
   const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; lines: { id: number }[][] }[];
   const card = cards.find((c) => c.id === id);
   if (!card) throw new Error(`card ${id} is not in cards.json`);
@@ -39,7 +39,7 @@ const LANDING_MS = 90_000;
 /** The screens' checks: soft, so one run lists them all. */
 const soft = expect.configure({ soft: true });
 
-test.skip(!hasPreparedPool(), 'the default pool is not prepared here (npm run prep in apps/show)');
+test.skip(!hasPreparedRepertoire(), 'the default repertoire is not prepared here (npm run prep in apps/show)');
 
 let relay: Relay;
 let remote: Remote;
