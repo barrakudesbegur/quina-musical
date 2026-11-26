@@ -54,6 +54,10 @@ D107–D110 settle the Check's shape. The details below are the orchestrator's p
 - **The tablet's Check screen:** the card as its 3×4 grid with the private marks, the next song's title large so a presenter can read it out, the warnings, one big reveal button (hold for automatic), the auto toggle, the cue, the smaller stop button and "+ Un altre". Frontend writes the content spec first; boards come after.
 **Default:** as above.
 
+### U63 · A credential so agents can edit the cloud's plan
+D111 makes the cloud the only source, and D89 wants agents to edit the plan (the orchestrator parses the organizers' spreadsheet into it). Backend's tool: `plan pull` (a gitignored working copy), `plan check`, `plan push` (shows the diff, and refuses if a phone changed the plan since the pull). To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
+**Default:** nothing built until the user says yes.
+
 ### U54 · What to call each set of 70 songs
 The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
 **Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
@@ -84,6 +88,9 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 **Default:** nothing built for the prizes drawer until the user picks.
 
 ## Tasks only the user can do
+
+### U64 · Check R2's payment method
+D113 lets R2 go past the free 10 GB. Backend can't see billing. In Cloudflare: Manage Account → Billing → Payment info, check a payment method is there.
 
 ### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 7 hours for 210 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).

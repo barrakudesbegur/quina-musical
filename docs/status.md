@@ -25,7 +25,7 @@ One screen: where each area stands, what's blocked, and what waits on the user. 
 |---|---|---|---|
 | **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Temporary cards from Part 1's 70; the expected end at 70 done (8e6f563: Line ~14, Bingo ~46, last standing ~21 songs; 2025's night reproduced within 2 min a round); the side/Part protocol agreed | Pool 2 when filtered; prep by 3 Dec; the expected end for 70 songs | U13, U14, U51, U55–U58, U61 |
 | **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **UI code frozen;** designs on the canvas only. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The double-sided card with the user (D102); the prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U50, U62 |
-| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The cloud's plan as the only source (D111); uploads as soon as the songs are ready (D113) | U16, U19 |
+| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | The cloud's plan as the only source (D111); uploads as soon as the songs are ready (D113) | U16, U19, U63, U64 |
 | **Orchestrator** ([handoff](HANDOFF.md)) | D66–D115 logged on 25–26 Nov; the pool-size study and the 2025 data delivered | The Check's redesign: D107–D110, details in U62; the prizes model once U36–U39 are answered | U36–U39, U52, U54, U59, U62 |
 
 ## Recently done (25–26 Nov)
