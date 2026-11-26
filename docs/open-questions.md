@@ -60,6 +60,12 @@ It shows how close everyone is to winning, and the song history.
 - (b) "Com va".
 - (c) Another name.
 
+### U153 · "+ Candidat"
+The canvas assistant renamed "+ Un altre" to "+ Candidat" (it adds another claimed card) during the user's own session, and the user asked on that thread to agree it with the orchestrator. The console's list of claimed cards is "Cartrons cantats", and the glossary's term is Claim.
+- (a) "+ Candidat".
+- (b) "+ Cartró".
+- (c) "+ Un altre", as before.
+
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
