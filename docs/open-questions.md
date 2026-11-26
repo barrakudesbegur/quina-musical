@@ -49,6 +49,19 @@ The canvas assistant renamed "+ Un altre" to "+ Candidat" (it adds another claim
 - (b) "+ Cartró".
 - (c) "+ Un altre", as before.
 
+### U155 · The finale and the new tabs on canvas v85, for review
+Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Facts about the group ninos (D172): the "castle" (`nino-fent-una-torre`) holds two ninos, not three; the kissing pair exists only as a doodle (`nino-liantse.svg`), coloured on the board; "two dancing" is the sardana nino twice, and the high-five nino could replace it. The boards' proposals:
+1. A pair that falls kisses, a pair that wins dances, three is the castle, and four or more is the castle plus a pair.
+2. A falling group gathers centre stage over a dark scrim.
+3. The finale's button: normal above 20 standing, medium from 11 to 20, large at 10 or fewer.
+4. A stays "Següent", so the finale opens from the tablet only.
+5. The finalists' view lives in the Dempeus tab, once started from the button.
+6. Tapping a nino removes it, and tapping a red number brings it back.
+7. Tab order: Estat, Cerca, Futur, Premis, Efectes; one "Cerca" tab with a "Cançons / Cartró" switch.
+8. "Final a l'escenari", "Al revés" and "+ Finalista" are names to confirm.
+- (a) All fine, so Frontend builds them.
+- (b) Comment on the canvas where not.
+
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
