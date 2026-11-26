@@ -6,12 +6,13 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built.
 - **Just done (26 Nov):**
-  - **Five deploys** (deploy-plan.md), each tested on its sha first:
+  - **Six deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
     - `d963856b` (`ba17a40`): the Desgraciat's finale (D166–D172);
     - `18f816f5` (`fd9feaa`): a song's first play slower (D174, D175). The shared reducer folds `playedBefore`; the settings check takes `remoteShake` (D148). The new state fields stay off phones (the projection copies named fields only).
+    - `c93f219c` (`161c3f6`): the repertoire (D178), D177 and D180. The media sync keeps each repertoire under `repertoires/<name>/` (v2 manifest); `fellLast` stays readable in older journals.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
@@ -26,7 +27,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
   - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
-  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2); what the tools prepare together is the **repertoire** (agreed with Sound engine and the Orchestrator; "library" is the logo library's). My side is `02d8dd5`: `--repertoire` everywhere, R2 under `repertoires/<name>/` (manifest v2), the preflight's Repertoire group. Deploy it before any laptop pushes. The old `pools/` keys stay, unreachable by the tool, until deploy-plan step 6.5 expires them (after this year's push: until then they're R2's only copy of the Hold and Interval music);
+  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2); what the tools prepare together is the **repertoire** (agreed with Sound engine and the Orchestrator; "library" is the logo library's). My side is `40e3df1` (deployed as `c93f219c`): `--repertoire` everywhere, R2 under `repertoires/<name>/` (manifest v2), the preflight's Repertoire group. The old `pools/` keys stay, unreachable by the tool, until deploy-plan step 6.5 expires them (after this year's push: until then they're R2's only copy of the Hold and Interval music);
   - this year's songs to R2 as soon as they're prepared (U55, D113). Prune last year's after the night;
   - 1–3 Dec: the cards move into the repertoires (queue item 3), and deploys name their repertoire;
   - the provisional-hooks WARN, once Sound engine sends the field.
