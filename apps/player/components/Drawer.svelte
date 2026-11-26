@@ -30,8 +30,17 @@
     name,
     onclose,
     canClose,
+    onback,
     children,
-  }: { title: string; name: string; onclose: () => void; canClose?: (proceed: () => void) => boolean; children: Snippet } = $props();
+  }: {
+    title: string;
+    name: string;
+    onclose: () => void;
+    canClose?: (proceed: () => void) => boolean;
+    /** A step inside the drawer to go back from (the pad's camera, D141): "‹", Esc and the back gesture do this instead. */
+    onback?: () => void;
+    children: Snippet;
+  } = $props();
 
   const outer = getContext<DrawerPlace | undefined>(DRAWER_PLACE);
   const place: DrawerPlace = outer ?? { depth: 0, stacked: false, origin: 'bottom', closeAll: null };
@@ -118,7 +127,8 @@
   data-anim={closing ? 'drawer-close' : dragging ? 'drawer-drag' : 'drawer-open'}
   oncancel={(e) => {
     e.preventDefault();
-    requestClose('top');
+    if (onback) onback();
+    else requestClose('top');
   }}
   onclick={onClick}
   onanimationend={onAnimationEnd}
@@ -127,7 +137,9 @@
   <div class="drawer__top" role="presentation" onpointerdown={onPointerDown} onpointermove={onPointerMove} onpointerup={onPointerUp} onpointercancel={onPointerUp}>
     <span class="drawer__grab" aria-hidden="true"></span>
     <header class="drawer__header">
-      {#if place.stacked}
+      {#if onback}
+        <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={onback}><Icon name="back" /></button>
+      {:else if place.stacked}
         <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={() => requestClose('top')}><Icon name="back" /></button>
       {/if}
       <h2 class="drawer__title" id="drawer-title-{name}">{title}</h2>

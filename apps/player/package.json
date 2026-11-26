@@ -3,5 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "description": "The players' phone app (Svelte), built by apps/show and served by the cloud.",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "jsqr": "1.4.0"
+  }
 }

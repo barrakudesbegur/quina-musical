@@ -43,6 +43,18 @@ export const S = {
   padDelete: 'Esborrar l’última xifra',
   /** The name field's placeholder: the name is optional. */
   padName: 'Nom',
+  /** The add-card QR scan (D141, board Mobil-Afegir-QR). */
+  qrButton: 'Escanejar el QR del cartró',
+  qrTitle: 'Escaneja el QR',
+  qrCamera: 'La càmera',
+  qrAsk: 'Per llegir el QR, permet que la Quina faci servir la càmera',
+  qrPoint: 'Apunta al QR del cartró',
+  qrKeepLooking: 'Segueix buscant: apunta al QR del cartró',
+  qrOther: 'Aquest QR no és d’un cartró de la Quina d’enguany',
+  qrOffTitle: 'Sense càmera',
+  qrDenied: 'No tenim permís per fer servir la càmera. Pots donar-l’hi a la configuració del navegador i tornar a tocar el QR, o escriure el número.',
+  qrFailed: 'No s’ha pogut obrir la càmera. Pots escriure el número.',
+  qrWrite: 'Escriure el número',
   /** The number typed is already one of the player's cards: whose it is, by its name ("d’Àvia", "de Pere"). */
   alreadyYours: (name: string | null) => (name ? `Ja el tens: és el cartró ${ofName(name)}` : 'Ja el tens: és un dels teus cartrons'),
   /** Closes the pad and shows that card on the home screen. */

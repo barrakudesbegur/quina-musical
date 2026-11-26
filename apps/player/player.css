@@ -2270,6 +2270,271 @@ html:has(.drawer[open]) {
   background: var(--color-primary);
 }
 
+/* The QR button (D141): just the softened QR code at the field's right end, no frame. */
+.number-pad__qr {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-left: auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--color-line);
+  cursor: pointer;
+}
+
+.number-pad__qr svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* A QR filled the number in (`qr-found`): a green ring that fades out. */
+.number-pad__field[data-anim='qr-found'] {
+  animation: player-qr-found 900ms var(--ease-out) both;
+}
+
+@keyframes player-qr-found {
+  from {
+    box-shadow:
+      0 0 0 4px var(--color-green),
+      inset 0 4px 0 rgb(23 19 43 / 0.12);
+  }
+  to {
+    box-shadow:
+      0 0 0 4px rgb(35 165 90 / 0),
+      inset 0 4px 0 rgb(23 19 43 / 0.12);
+  }
+}
+
+/* The camera, in the drawer's body (board Mobil-Afegir-QR): dimmed outside the gold viewfinder; a line sweeps in it. */
+.qr-scan {
+  position: relative;
+  height: min(29.375rem, calc(100dvh - 15rem));
+  margin: 0 var(--space-4);
+  overflow: hidden;
+  background: #0a0e26;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-piece);
+  animation: player-fade-in 200ms var(--ease-out) both;
+}
+
+.qr-scan__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-scan__asking {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 4rem;
+  height: 4rem;
+  transform: translate(-50%, -50%);
+  color: #3a4a99;
+}
+
+.qr-scan__finder {
+  --finder: 14rem;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--finder);
+  height: var(--finder);
+  transform: translate(-50%, -50%);
+  border-radius: 1.125rem;
+  box-shadow: 0 0 0 999px rgb(10 14 38 / 0.6);
+  --corner: var(--color-accent);
+}
+
+.qr-scan[data-other] .qr-scan__finder {
+  --corner: var(--color-primary);
+}
+
+.qr-scan__corner {
+  position: absolute;
+  width: 2.375rem;
+  height: 2.375rem;
+  box-sizing: border-box;
+  border: 0 solid var(--corner);
+  filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.6));
+  transition: border-color 160ms var(--ease-out);
+}
+
+.qr-scan__corner--tl {
+  left: -4px;
+  top: -4px;
+  border-width: 7px 0 0 7px;
+  border-top-left-radius: 1.125rem;
+}
+
+.qr-scan__corner--tr {
+  right: -4px;
+  top: -4px;
+  border-width: 7px 7px 0 0;
+  border-top-right-radius: 1.125rem;
+}
+
+.qr-scan__corner--bl {
+  left: -4px;
+  bottom: -4px;
+  border-width: 0 0 7px 7px;
+  border-bottom-left-radius: 1.125rem;
+}
+
+.qr-scan__corner--br {
+  right: -4px;
+  bottom: -4px;
+  border-width: 0 7px 7px 0;
+  border-bottom-right-radius: 1.125rem;
+}
+
+.qr-scan__line {
+  position: absolute;
+  left: 0.625rem;
+  right: 0.625rem;
+  top: 50%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 14px 4px rgb(255 197 49 / 0.65);
+  animation: player-qr-sweep 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes player-qr-sweep {
+  from {
+    transform: translateY(-5.5rem);
+  }
+  to {
+    transform: translateY(5.5rem);
+  }
+}
+
+.player[data-motion='reduced'] .qr-scan__line {
+  animation: none;
+}
+
+.qr-scan__note {
+  position: absolute;
+  left: 1.125rem;
+  right: 1.125rem;
+  top: 1.125rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  color: var(--color-text-on-paper);
+  background: var(--color-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 0.875rem;
+  box-shadow: 0 4px 0 #0a0e26;
+  font-weight: var(--font-weight-strong);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  animation: player-qr-note 200ms var(--ease-out) both;
+}
+
+@keyframes player-qr-note {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.qr-scan__note-mark {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-line);
+  color: #fff;
+  font-size: 1.125rem;
+}
+
+.qr-scan__hint {
+  position: absolute;
+  left: 0.875rem;
+  right: 0.875rem;
+  bottom: 0.875rem;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: 1rem;
+  background: rgb(10 14 38 / 0.78);
+  color: var(--color-text);
+  font-weight: var(--font-weight-strong);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* No camera (refused, or none): it says so, and offers to type the number. */
+.qr-scan__off {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.qr-scan__off-icon {
+  width: 5.75rem;
+  height: 5.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: var(--line-width) solid var(--color-line);
+  color: #ff8c91;
+  box-shadow: 0 4px 0 #0a0e26;
+}
+
+.qr-scan__off-icon svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.qr-scan__off-title {
+  margin: 0.375rem 0 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  font-size: 1.75rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--color-text);
+  -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop-sm);
+  letter-spacing: var(--title-tracking-sm);
+}
+
+.qr-scan__write {
+  white-space: nowrap;
+  font-size: 1.375rem;
+  padding-inline: 1.25rem;
+}
+
+.qr-scan__off-text {
+  margin: 0;
+  font-weight: var(--font-weight-strong);
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  color: var(--color-text-soft);
+}
+
 /* "Ja el tens: és el cartró d'Àvia" with that card's icon and "Veure'l"; the rare error (the phone is full) too. */
 .number-pad__note {
   display: flex;

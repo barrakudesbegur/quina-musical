@@ -14,6 +14,11 @@ export const PLAYER_CONFIG = Object.freeze({
   cardColors: 10,
   /** A card's optional name ("Àvia"). */
   maxNameLength: 20,
+  /** The add-card QR scan (D141): how often the camera's picture is read at most (no work every frame), the side
+   * of the picture jsQR reads (smaller is faster), and how long the "not this year's card" note stays. */
+  qrReadEveryMs: 200,
+  qrReadSize: 480,
+  qrOtherNoteMs: 3000,
 
   /** Where the dev pages serve the app (production serves it at the domain's root). */
   devBase: '/player/',
