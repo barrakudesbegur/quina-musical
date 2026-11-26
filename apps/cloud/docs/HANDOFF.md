@@ -2,25 +2,29 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-25, afternoon)
+## Now (2026-11-26)
 
 - **In progress:** nothing half-built.
-- **Just done:**
-  - **`quina.barrakudesbegur.org` serves this year's player** (deploy-plan step 7, D76; 14:20 UTC on 25 Nov). The user deleted the old CNAME, `wrangler triggers deploy` attached the name, and the GitHub Pages custom domain was removed. Checked live: `/26/123` adds the card; `?c=123` shows last year's notice; `/sw.js` is the kill switch; `/api/*` refuses (no Access destinations on the name yet; optional, see step 7).
-  - D70 (the Desgraciat plays special cards). My tests follow the protocol's default card type (`9f4f005`). The order agreed with Frontend: Frontend's tests, then mine, then Sound engine's flip, which is on origin (`364c916`). The live Desgraciat e2e now plays especial cards 400–429.
-  - D69 (2025's prices): a preflight test with 1.50 €/5 €, 15 € before round 1 and 5 € before the Desgraciat (`9c83ebe`). The real check passes once Frontend puts the prices in `apps/cards/src/config.ts`. Today they're `null`, so it WARNs.
-
-  - D86: the user deleted the `quina-api` record (last year's API), and I deleted its Cloudflare Tunnel with the user's OK. U24: the previous session's `ci-head` worktree is removed; everything in it was already on main.
-
-  The Worker runs `f1aacdd` (version `87650e0c`) on both quina-dev and the QR name, with this year's prices. The live Desgraciat run passed on it with especial cards.
+- **Just done (26 Nov):**
+  - **The Interval music syncs with every pool** (`447d9d7`). It lives in the shared data/out/interval and data/cache/interval like the Hold music, but the sync only took it inside the default pool's folders. It now has two shared roots (`interval-cache`, `interval-data`). The Worker accepts them: version `79988575`, deployed from `a1e9b17` (the same code).
+  - **Never synced** (`6397550`): `cache/relay-token` (the relay's pairing secret, in the private bucket since 24 Nov; that object is deleted), `cache/tools` (the downloader's tooling: about 9,000 files, a request each) and `data/listen-demo`.
+  - **The new Interval music is in R2** (D113): `npm run media -- push` on the default pool, 115 files, 361.9 MB, including the card files with this year's prices.
+  - Agreed with Sound engine and Frontend, nothing built: card sides and Parts (queue item 4, waits on U54), and the presenter-paced Check (queue item 6).
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
-  - this year's pool: prepared 1–4 Dec, cards made 4–5 Dec (D83); then measure, prune, push, and sync both laptops **before the tech rehearsal** (D82: no fixed date; the user runs it when everything feels ready);
+  - push Part 1 to R2 as soon as Sound engine has prepared it (U55), then each Part as it's ready (D113). Prune last year's pool after the night;
+  - the Check's step 2 once Sound engine's protocol is on main (queue item 6);
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
-  - the night's settings file and `npm run plan` (queue item 4), once U43 is answered;
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Blocked:** nothing.
-- **Waiting on the user** (docs/open-questions.md): optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4; the dashboard, or a short-lived token); **U16**, the logo library upload (needs an organizer's Google login); **U19**, real devices (the Wii remote's range at the venue; iPad and Android; last year's offline cache after the switch); **U43**, which copy of the night's settings file wins on the night (blocks `npm run plan`); **U48**, sponsors' names and logos in the file (default yes); **U53**, R2 storage for about 210 songs (default: the plain pool, pushed about a week before the night and pruned right after, which keeps it within the free GB-month average, plus a check that R2 has a payment method; option d is the alternative); **U54**, naming: one Pool with three Parts of 70 (Part 1 for side 1, Part 2 for side 2, Especial), the default, against three pools. Build nothing on either shape until U54 is answered. The cloud must accept the round's `part`/`side` and be deployed before the engine journals it.
+- **Waiting on the user** (docs/open-questions.md):
+  - optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4);
+  - **U16**, the logo library upload;
+  - **U19**, real devices;
+  - **U54**, one Pool with three Parts (blocks the sides work);
+  - **U55** (Sound engine's), preparing Part 1;
+  - **U63**, the plan tool and its `quina-agent` token (queue item 7);
+  - **U64**, a glance at Cloudflare's billing for R2's payment method.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
@@ -82,7 +86,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## The next queue, in priority order
 
 1. **Provisional hooks WARN in the preflight**, once Sound engine sends the field (see item 2).
-2. **This year's pool** (before the tech rehearsal): measure it once prepared (1–4 Dec), then deploy-plan step 6. **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
+2. **This year's pool** (D113: each Part goes to R2 as soon as it's prepared; going past 10 GB is fine): measure it, push it, and sync both laptops before the tech rehearsal; prune last year's pool and this year's after the night (deploy-plan step 6). **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
    - **Contingency (option d)**, only if the final pool goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
      - push: the pool's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
      - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
@@ -93,11 +97,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that pool's, and fails at once if not (after the 2026 deploy: `QUINA_POOL=2026`);
    - **deploys name their pool** (`--pool 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
    - a preflight check that the cloud's cards.json matches the pool's (FAIL if not).
-4. **The night's settings file** (D89, D97, D98; **blocked on U43**, which copy wins on the night): `data/nights/2026.json`, tracked in this public repo, prizes included. One file per edition, next to `data/pools/2026.json`, since the night's settings don't depend on which pool plays. It holds the whole GamePlan plus Admin's soundsDefault. Never in it: the sheet's money amounts, people's names, resume codes or Shuffle seeds (sponsors' names and logos pending U48, default yes). To build:
-   - `npm run plan -- check|push|pull` (check: `checkGamePlan`; push: the laptop's relay `PUT /api/plan`, which the link carries to the cloud, newest wins; pull: the cloud's plan read with the laptop's token, written to the file);
-   - a preflight WARN when the laptop's plan differs from the file.
-   My default for U43: the file wins until the doors open; on the night the cloud's newest plan wins, and `plan pull` brings phone edits back into the file.
-5. **Card sides and Parts, step B** (D100–D102; agreed with Sound engine on 25 Nov; waits on U54 and Sound engine's step A). One night pool. Each song has a `part`; card-types.json's `sides: [{side, part}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
+4. **Card sides and Parts, step B** (D100–D102; agreed with Sound engine on 25 Nov; waits on U54 and Sound engine's step A). One night pool. Each song has a `part`; card-types.json's `sides: [{side, part}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
    - journal-check accepts `side`;
    - the projection's PublicRound.side and intro.side, 1 when absent;
    - Admin's resume point carries side (`-C<n>`);
@@ -106,7 +106,16 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - the cards.json conversion to `sides` is one commit by Frontend, which includes my two readers (the preflight's cards check, show.spec.ts), with no dual-shape reader (D84). Send Frontend that diff once step A's types exist; Frontend sends the hash before pushing;
    - show.spec.ts reads lines through the round's side; the plan fixtures.
    The default test pool: all songs in Part "1", both card types one side on Part "1".
-6. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
+
+6. **The presenter-paced Check, step 2** (D107–D110; agreed with Sound engine, 26 Nov; after Sound engine's protocol step 1):
+   - journal-check and the projection accept `claim.stopped` and `claim.dropped`;
+   - the public CheckInfo (total, revealed[], auto, cue) never says in advance whether the card passes;
+   - the projection strips ClaimInfo's private `markedCard`, `cueNext` and `revealUntil`; the e2e's forbidden keys include them;
+   - flaggedDecisions is reduced to a valid card with `notSold`;
+   - Admin's Games and the export show stopped and dropped claims.
+   Deploy it before Sound engine's step 3 journals them. That same day, the e2e moves from `decide` to `checkNext {claimId, step}` presses: one claim by presses, one with checkAuto, one stopped then dropped, and a two-number claim. The live Desgraciat run uses presses.
+7. **The plan tool (U63; D111: the cloud is always the source of truth, no settings file in git).** Proposed: `npm run plan -- pull|check|push` on a gitignored working copy (data/link/plan-edit.json). Push shows the diff and refuses if the cloud's plan changed since the pull, so a phone edit is never overwritten. It uses a separate Access service token `quina-agent` that may only GET/PUT /api/plan (apps/cloud/.env.agent, never on the show laptops). Build nothing until U63.
 
 ## Waiting on the user
 
