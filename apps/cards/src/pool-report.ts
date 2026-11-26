@@ -1,7 +1,7 @@
 // The pool-size report on the command line (R1-Q31): how long rounds would run for a pool and the cards sold, to help
 // choose the playlist's size before the cards are printed. Nothing is written.
 //
-//   npx ts-node src/pool-report.ts --pool <name> --sold 250             this pool, the first 250 normal cards drawn
+//   npx ts-node src/pool-report.ts --repertoire <name> --sold 250       its songs as one pool, the first 250 normal cards drawn
 //   npx ts-node src/pool-report.ts --sizes 60,70,80,90 --sold 250       hypothetical pools of those sizes
 //
 // Options: --runs N (simulated rounds, default 2000); --plan <file> (a Game plan JSON, e.g. Admin's export: adds a
@@ -10,7 +10,7 @@
 import { readFileSync } from 'fs';
 import { generateCardsJson } from './generate-cards-json';
 import { CARD_AMOUNTS, SEED } from './config';
-import { loadPool, poolNameFrom, type PoolSong } from './pool';
+import { loadRepertoire, repertoireNameFrom, type RepertoireSong } from './repertoire';
 import { describeReport, poolReport, type NightShape } from './report';
 
 const argv = process.argv.slice(2);
@@ -29,7 +29,7 @@ const num = (name: string, fallback: number): number => {
 const sold = num('sold', 250);
 const runs = num('runs', 2000);
 const normal = CARD_AMOUNTS.find((a) => a.type === 'normal')?.amount ?? sold;
-const synthetic = (n: number): PoolSong[] => Array.from({ length: n }, (_, i) => ({ id: i + 1, title: `Song ${i + 1}`, artist: '', cover: '', spotifyId: '' }));
+const synthetic = (n: number): RepertoireSong[] => Array.from({ length: n }, (_, i) => ({ id: i + 1, title: `Song ${i + 1}`, artist: '', cover: '', spotifyId: '' }));
 
 /** The night's shape from a Game plan file, read loosely (this package can't use the protocol's checker). */
 function nightFrom(file: string | null): NightShape | null {
@@ -42,7 +42,7 @@ function nightFrom(file: string | null): NightShape | null {
 }
 const night = nightFrom(opt('plan'));
 
-function reportFor(songs: PoolSong[]): string {
+function reportFor(songs: RepertoireSong[]): string {
   // The cards drawn from this pool the way the generator draws them; the first `sold` stand for the ones sold.
   const cards = generateCardsJson('normal', 1, Math.max(sold, Math.min(normal, sold * 2)), songs, SEED).slice(0, sold);
   return describeReport(poolReport(songs.map((s) => s.id), cards.map((c) => ({ lines: c.lines.map((l) => l.map((s) => s.id)) })), runs), night);
@@ -55,8 +55,8 @@ if (sizes) {
     console.log(reportFor(synthetic(n)));
   }
 } else {
-  const pool = loadPool(poolNameFrom(argv));
-  console.log(`Pool "${pool.name}":`);
-  console.log(reportFor(JSON.parse(readFileSync(pool.songsJson, 'utf-8')) as PoolSong[]));
+  const repertoire = loadRepertoire(repertoireNameFrom(argv));
+  console.log(`Repertoire "${repertoire.name}":`);
+  console.log(reportFor(JSON.parse(readFileSync(repertoire.songsJson, 'utf-8')) as RepertoireSong[]));
 }
 console.log(`(${runs} simulated rounds each; songs as the median and the 10th–90th percentile; minutes at the Pace, 22 s a song in round 1 and 14 s after, plus the Checks)`);

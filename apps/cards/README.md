@@ -13,7 +13,7 @@ D69); the committed PDFs still show last year's title, and the old cards #398 an
 The JSON files are written before the PDF renderer loads, so `cards.json` and `card-types.json` are written even when
 the native `canvas` module is missing (the run then fails at the PDF step).
 
-The cards are drawn from a **song pool**, `data/pools/<name>.json`: the same file the song preparation (`tools/prep`)
+The cards are drawn from a **repertoire** (the edition's prepared songs, D178), `data/repertoires/<name>.json`: the same file the song preparation (`tools/prep`)
 and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `cards.json` goes, with
 `card-types.json` and the PDFs beside it (the folder the relay serves at `/cards/`).
 
@@ -27,17 +27,17 @@ and the relay read. Its `songsJson` is the playlist; its `cardsJson` is where `c
      itself;
    - `CARD_AMOUNTS`: how many cards of each type, each a multiple of 3 (3 cards a page);
    - `EDITION`: the year tag in the QR links (`/26/123`), the same as the Game plan's `edition`;
-   - `SEED` (optional): the same seed and pool always give the same cards.
-3. Check without writing anything: `npm run build && node build/index.js --pool <name> --check`. It reports the pool's
+   - `SEED` (optional): the same seed and repertoire always give the same cards.
+3. Check without writing anything: `npm run build && node build/index.js --repertoire <name> --check`. It reports the repertoire's
    songs, the types and the amounts, draws the cards, and fails on any problem (a duplicate song id, a song without a
-   title, a bad type id, an amount that isn't a multiple of 3, fewer than 12 songs, a pool too small to draw every card
+   title, a bad type id, an amount that isn't a multiple of 3, fewer than 12 songs, a repertoire too small to draw every card
    without repeating a card or a line).
-4. Generate: `npm start -- --pool <name>`. Without `--pool` it uses `default` (last year's 77 songs). The build copies
+4. Generate: `npm start -- --repertoire <name>`. Without `--repertoire` it uses `default` (last year's 77 songs). The build copies
    `src/assets` (the Londrina fonts the PDF uses) into `build/`; rendering both PDFs takes about 30 s.
 5. Proof the PDFs, then commit `dist/` (the cards are public: the player app needs every card's songs).
 
-**Choosing the playlist's size (R1-Q31):** `npm run report -- --pool <name> --sold 250` simulates rounds against the cards
-drawn from that pool and prints how many songs it takes to the first Line, the Quina and the Desgraciat's last card (the
+**Choosing the playlist's size (R1-Q31):** `npm run report -- --repertoire <name> --sold 250` simulates rounds against the cards
+drawn from its songs, played as one pool, and prints how many songs it takes to the first Line, the Quina and the Desgraciat's last card (the
 median and the 10th–90th percentile), then how long a round takes: the songs at the Pace (22 s a song in round 1, 14 s
 after) plus the Checks. `--sizes 60,80,100` does the same for pools of those sizes, before the playlist exists, and
 `--plan <file>` (Admin's plan export) adds the whole night with its Intervals and breaks. With last year's 77 songs and
@@ -48,7 +48,7 @@ about 25.
 
 No two printed cards and no two printed lines are the same ([`src/uniqueness.ts`](./src/uniqueness.ts)). Each new card is
 checked against every card and every line drawn so far, across all the types in one run, and drawn again (the next
-seed) until it fits. The run fails, writing nothing, if a card can't be drawn in 200 tries (the pool is too small for
+seed) until it fits. The run fails, writing nothing, if a card can't be drawn in 200 tries (the repertoire is too small for
 that many cards). The finished set is checked once more before anything is written. A card's first draw keeps the seed it
 always had, so a regenerated set differs only in the cards that used to repeat a line: with last year's 77 songs, #398
 (it repeated a line of #186) and #492 (a line of #158).

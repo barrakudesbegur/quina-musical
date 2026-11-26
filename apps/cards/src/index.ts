@@ -1,8 +1,8 @@
 // Generates the printed cards: cards.json (every card's songs, which the screens read), card-types.json (the
-// printed types) and one PDF per type, from a song pool's playlist.
+// printed types) and one PDF per type, from a repertoire's playlist (D178).
 //
-//   npm start -- --pool <name>           write them next to the pool's cardsJson (default pool: "default")
-//   npm start -- --pool <name> --check   check the pool, the types, the amounts and that the cards repeat no card or
+//   npm start -- --repertoire <name>           write them next to the repertoire's cardsJson (default: "default")
+//   npm start -- --repertoire <name> --check   check the repertoire, the types, the amounts and that the cards repeat no card or
 //                                        line; write nothing
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -11,13 +11,13 @@ import { generateCardsJson } from './generate-cards-json';
 import { CARD_AMOUNTS, CARD_TYPES, SEED } from './config';
 import { assertCardTypes, cardTypeProblems } from './card-types';
 import { Drawn, repeatedCards, repeatedLines } from './uniqueness';
-import { loadPool, poolNameFrom, songProblems, type PoolSong } from './pool';
+import { loadRepertoire, repertoireNameFrom, songProblems, type RepertoireSong } from './repertoire';
 import { saveJsonToFile } from './utils/files';
 
 const SONGS_PER_CARD = 12;
 const argv = process.argv.slice(2);
-const pool = loadPool(poolNameFrom(argv));
-const songsJson: unknown = JSON.parse(readFileSync(pool.songsJson, 'utf-8'));
+const repertoire = loadRepertoire(repertoireNameFrom(argv));
+const songsJson: unknown = JSON.parse(readFileSync(repertoire.songsJson, 'utf-8'));
 
 // Everything that would only show up on the night is checked before anything is written.
 const problems = [
@@ -28,13 +28,13 @@ const problems = [
   ),
 ];
 if (problems.length) {
-  console.error(`❌ Pool "${pool.name}" can't make cards:\n- ${problems.join('\n- ')}`);
+  console.error(`❌ Repertoire "${repertoire.name}" can't make cards:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
-const songs = songsJson as PoolSong[];
-const outDir = path.dirname(pool.cardsJson);
+const songs = songsJson as RepertoireSong[];
+const outDir = path.dirname(repertoire.cardsJson);
 const total = sumBy(CARD_AMOUNTS, 'amount');
-console.log(`Pool "${pool.name}": ${songs.length} songs → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${path.relative(process.cwd(), outDir) || '.'}`);
+console.log(`Repertoire "${repertoire.name}": ${songs.length} songs → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${path.relative(process.cwd(), outDir) || '.'}`);
 // One record of what's drawn for every type: no line is printed twice in the whole run (requirements › songs-and-cards).
 const drawn = new Drawn();
 const cardsByType = CARD_AMOUNTS.map((cardAmount, index) => {
@@ -57,8 +57,8 @@ if (argv.includes('--check')) {
 }
 // The JSON is written (awaited) before the PDF renderer loads: it needs the native canvas module, which a --check run
 // can do without, and a renderer that fails to load must not lose the JSON the screens read.
-Promise.all([saveJsonToFile(allCards, pool.cardsJson), saveJsonToFile(CARD_TYPES, path.join(outDir, 'card-types.json'))])
-  .then(() => console.log(`✅ ${path.relative(process.cwd(), pool.cardsJson)} and card-types.json written.`))
+Promise.all([saveJsonToFile(allCards, repertoire.cardsJson), saveJsonToFile(CARD_TYPES, path.join(outDir, 'card-types.json'))])
+  .then(() => console.log(`✅ ${path.relative(process.cwd(), repertoire.cardsJson)} and card-types.json written.`))
   .then(() => import('./generate-cards-pdf'))
   .then(({ generateCardsPDF }) =>
     Promise.all(cardsByType.map((cardAmount) => generateCardsPDF(cardAmount.cards, path.join(outDir, `cards-${cardAmount.type}.pdf`)))),
