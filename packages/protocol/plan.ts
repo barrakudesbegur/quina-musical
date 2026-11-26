@@ -81,12 +81,16 @@ export interface SchedulePlan {
   roundMinutes: number;
   /** Planned length of an Interval, in minutes (the countdown guide). */
   intervalMinutes: number;
-  /** The planned Throws ("parón") after some rounds, on top of the Interval: the Schedule and the countdown allow for
-   * them. Absent when there are none (a plan without Throws reads back unchanged); read it as `throws ?? []`. */
+  /** The planned Throws ("parón") after some rounds: each sets that break's length in place of `intervalMinutes`, and the
+   * Schedule and the countdown follow it. Absent when there are none (a plan without Throws reads back unchanged); read
+   * it as `throws ?? []`. */
   throws?: PlannedThrow[];
 }
 
-/** A planned Throw after round `afterRound` (never the last), lengthening that Interval by `minutes`. */
+/**
+ * A planned Throw after round `afterRound` (never the last): the break after that round lasts `minutes` and has the throw
+ * in it ("Descans + llançament (10 min)"): it is that Interval's length, not time on top of it.
+ */
 export interface PlannedThrow {
   afterRound: number;
   minutes: number;

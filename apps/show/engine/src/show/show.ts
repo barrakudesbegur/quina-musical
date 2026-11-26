@@ -2879,7 +2879,7 @@ export class Show {
 
   /** The Interval after this round: its countdown guide is the plan's Interval plus any Throw planned after it. */
   intervalFrom(sinceMs: number): IntervalInfo {
-    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + 1000 * (this.intervalSec() + this.throwSecAfter(this.round.number)) };
+    return { sinceMs, nextRound: this.round.number + 1, guideEndMs: sinceMs + 1000 * this.breakSecAfter(this.round.number) };
   }
 
   /** The planned Interval (the plan's intervalMinutes), else the default guide. */
@@ -2887,9 +2887,10 @@ export class Show {
     return this.plan ? this.plan.schedule.intervalMinutes * 60 : FLOW.intervalGuideSec;
   }
 
-  /** The Throw planned after round `number` ("parón"), in seconds on top of that Interval. */
-  throwSecAfter(number: number): number {
-    return 60 * (this.plan?.schedule.throws?.find((b) => b.afterRound === number)?.minutes ?? 0);
+  /** The break after round `number`: a Throw planned there sets its length (the throw is inside it), else the Interval. */
+  breakSecAfter(number: number): number {
+    const planned = this.plan?.schedule.throws?.find((b) => b.afterRound === number);
+    return planned ? 60 * planned.minutes : this.intervalSec();
   }
 
   /**
@@ -3393,7 +3394,8 @@ export class Show {
             kinds: after.map((r) => r.kind),
             pools: after.map((r) => this.roundPool(r.cardType || defaultCardType(r.kind), roundSide(r)) ?? DEFAULT_POOL),
             intervalSec: this.intervalSec(),
-            throwsSec: (plan.schedule.throws ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes, 0),
+            // What the planned breaks with a Throw add to (or take from) their Intervals: each one is its break's length.
+            throwsSec: (plan.schedule.throws ?? []).filter((b) => b.afterRound >= this.round.number && b.afterRound < (after.at(-1)?.number ?? 0)).reduce((s, b) => s + 60 * b.minutes - this.intervalSec(), 0),
           }
         : null,
     });

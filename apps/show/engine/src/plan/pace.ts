@@ -180,7 +180,8 @@ export interface ScheduleEstimate {
 
 /**
  * The rest of the night as the Game plan has it: the rounds after the current one (in order, by kind), the planned
- * Interval, and the planned Throws still to come (the one after the current round included).
+ * Interval, and `throwsSec`, what the breaks still to come with a planned Throw (the one after the current round
+ * included) add to their Intervals: a Throw sets its break's length.
  */
 export interface LaterRounds {
   kinds: readonly RoundKind[];

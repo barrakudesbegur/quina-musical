@@ -587,11 +587,11 @@ test('the Celebration music changes without blocking anything; Hold music in the
   assert.equal(h.show.scene, 'play');
 });
 
-test('with the plan, the expected end allows for each round\'s kind and the planned Throws; the countdown too', () => {
+test('with the plan, the expected end allows for each round\'s kind and the planned Throws, each its break\'s length; the countdown too', () => {
   const plan = checkGamePlan({
     v: 3, edition: '26', title: 'Quina Quina 3', prizeReveal: 'perRound', sponsors: [],
     rounds: [1, 2, 3].map((number) => ({ number, kind: number === 2 ? 'desgraciat' : 'normal', line: [], bingo: [] })),
-    schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 4, throws: [{ afterRound: 1, minutes: 5 }] },
+    schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 4, throws: [{ afterRound: 1, minutes: 10 }] },
     cheatSheet: { claimRules: [], specialRoundRules: [] },
   });
   assert.ok(plan.ok);
@@ -602,17 +602,17 @@ test('with the plan, the expected end allows for each round\'s kind and the plan
   const withPlan = h.show.schedule().gameEndMs;
   const noThrow = { ...plan.plan, schedule: { ...plan.plan.schedule, throws: [] } };
   h.show.setPlan(noThrow);
-  assert.equal(withPlan - h.show.schedule().gameEndMs, 5 * 60_000, 'the 5-minute Throw after round 1');
+  assert.equal(withPlan - h.show.schedule().gameEndMs, (10 - 4) * 60_000, 'the break after round 1 lasts its Throw\'s 10 minutes, not the 4-minute Interval');
   assert.ok(h.show.schedule().gameEndMs !== without, 'the plan\'s rounds and Interval, not the defaults');
   h.show.setPlan(plan.plan);
-  // Round 1's Bingo, then its Interval: the countdown is the planned Interval plus the Throw after round 1.
+  // Round 1's Bingo, then its break: the countdown is the Throw's 10 minutes ("Descans + llançament (10 min)").
   landSongs(h, 12);
   h.send('claim', { cardId: card.id, kind: 'bingo' });
   h.pressCue(lastClaimId(h));
   h.send('interval');
   const interval = h.show.snapshot().interval;
   assert.ok(interval);
-  assert.equal(interval.guideEndMs - interval.sinceMs, (4 + 5) * 60_000);
+  assert.equal(interval.guideEndMs - interval.sinceMs, 10 * 60_000);
   h.show.setPlan(null);
   assert.equal(h.show.snapshot().interval?.guideEndMs, interval.sinceMs + FLOW.intervalGuideSec * 1000, 'without a plan: the default guide');
 });
