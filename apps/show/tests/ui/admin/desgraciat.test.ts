@@ -70,7 +70,7 @@ test('the plan diff, the card types and the winners name the round and the win',
   assert.deepEqual(diff.rounds.kindChanged, [5]);
   assert.deepEqual(diff.prizes.filter((p) => p.round === 5).map((p) => p.kind).sort(), ['line', 'standing']);
   assert.equal(S.plan.cardRounds([1, 2, 3, 4, 5, 6], false, true), 'Juga a les quines 1, 2, 3, 4, 5 i 6 i la quina desgraciada');
-  assert.deepEqual(S.night.kind, { line: 'Línia', bingo: 'Quina', standing: 'Últim dempeus' });
+  assert.deepEqual(S.night.kind, { line: 'Línia', bingo: 'Quina', standing: 'Últim cartró dempeus' });
   const rows = winnerRows([{ round: 5, kind: 'standing', cardId: 57, claimId: 'cl-13', winningSongId: 1, position: 21, atMs: 1, name: null, notes: null }], SAMPLE_PLAN);
   assert.equal(rows[0].prize, 'Pernil +18');
 });

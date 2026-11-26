@@ -230,7 +230,8 @@ export const S = {
     pick: (name: string) => `Afegir ${name}`,
     addCount: (n: number) => (n === 1 ? 'Afegir 1 patrocinador' : `Afegir ${n} patrocinadors`),
     added: (n: number) => (n === 1 ? "S'ha afegit 1 patrocinador. Recorda desar." : `S'han afegit ${n} patrocinadors. Recorda desar.`),
-    cancel: 'Cancel·lar',
+    /** Throws the loaded list away (D164, D188: a button says what happens). */
+    cancel: 'Descarta els canvis',
   },
 
   logo: {
@@ -369,7 +370,8 @@ export const S = {
     resumeLineFrom: (song: number) => `Línia confirmada (la quina comptava des de la cançó ${song}).`,
     resume: 'Recuperar al portàtil',
     resumeConfirm: 'Sí, recuperar-lo',
-    resumeCancel: 'Cancel·la',
+    /** Closes the question; nothing is recovered (D164, D188). */
+    resumeCancel: 'Tanca',
     resumeAsk: 'El portàtil reconstruirà la quina i es quedarà en espera. Segur?',
     resumeNotNow: 'Només es pot fer abans de començar, en un descans o al final.',
     cloudTitle: 'Partides al núvol',
@@ -390,8 +392,8 @@ export const S = {
     privacy: 'Els noms són privats: mai surten al projector, als mòbils ni a git. Només es guarden a les dades de la partida.',
     noWinners: 'Encara no hi ha guanyadors.',
     col: { round: 'Quina', kind: 'Premi', card: 'Cartró', song: 'Cançó guanyadora', prize: 'Què guanya', name: 'Nom', notes: 'Notes', action: 'Desar' },
-    /** What a Winner won: "Línia", "Quina", or the Desgraciat round's "Últim dempeus". */
-    kind: { line: CA.line, bingo: CA.bingo, standing: 'Últim dempeus' } satisfies Record<WinKind, string>,
+    /** What a Winner won: "Línia", "Quina", or the Desgraciat round's "Últim cartró dempeus" (D186). */
+    kind: { line: CA.line, bingo: CA.bingo, standing: 'Últim cartró dempeus' } satisfies Record<WinKind, string>,
     nameLabel: (card: string) => `Nom del guanyador del ${card.toLowerCase()}`,
     notesLabel: (card: string) => `Notes del ${card.toLowerCase()}`,
     saveWinner: 'Desar',

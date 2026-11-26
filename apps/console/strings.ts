@@ -128,7 +128,7 @@ export const S = {
         suspense: 'Suspens obert · deixa anar per aterrar',
         manual: 'Manual · prem «Següent»',
         manualFinal: 'Fase final · prem «Següent»',
-        lastStanding: (cardId: number | null) => (cardId === null ? "Últim dempeus · comprova'l" : `Últim dempeus · comprova el #${cardId}`),
+        lastStanding: (cardId: number | null) => (cardId === null ? "Últim cartró dempeus · comprova'l" : `Últim cartró dempeus · comprova el #${cardId}`),
         talk: (since: string) => `Parlem · des de fa ${since}`,
         stay: (since: string) => `Aguanta · des de fa ${since}`,
         checking: (cardId: number | null) => (cardId === null ? 'Comprovant un cartró' : `Comprovant el cartró #${cardId}`),
