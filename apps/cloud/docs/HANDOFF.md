@@ -6,11 +6,12 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built.
 - **Just done (26 Nov):**
-  - **Four deploys** (deploy-plan.md), each tested on its sha first:
+  - **Five deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
-    - `d963856b` (`ba17a40`): the Desgraciat's finale (D166–D172).
+    - `d963856b` (`ba17a40`): the Desgraciat's finale (D166–D172);
+    - `18f816f5` (`fd9feaa`): a song's first play slower (D174, D175). The shared reducer folds `playedBefore`; the settings check takes `remoteShake` (D148). The new state fields stay off phones (the projection copies named fields only).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
