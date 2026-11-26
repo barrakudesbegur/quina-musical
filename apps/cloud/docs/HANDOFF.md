@@ -4,18 +4,30 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Now (2026-11-26)
 
-- **In progress:** nothing half-built.
+- **In progress:** nothing half-built. D140 (the user's go to build the new things): the Check's cloud side is built; the music sets and the volumes wait for Sound engine's answer to my proposal (below).
 - **Just done (26 Nov):**
-  - **The Interval music syncs with every pool** (`447d9d7`). It lives in the shared data/out/interval and data/cache/interval like the Hold music, but the sync only took it inside the default pool's folders. It now has two shared roots (`interval-cache`, `interval-data`). The Worker accepts them: version `79988575`, deployed from `a1e9b17` (the same code).
-  - **Never synced** (`6397550`): `cache/relay-token` (the relay's pairing secret, in the private bucket since 24 Nov; that object is deleted), `cache/tools` (the downloader's tooling: about 9,000 files, a request each) and `data/listen-demo`.
-  - **The new Interval music is in R2** (D113): `npm run media -- push` on the default pool, 115 files, 361.9 MB, including the card files with this year's prices.
-  - Agreed with Sound engine and Frontend, nothing built: card sides and Parts (queue item 4, waits on U54), and the presenter-paced Check (queue item 6).
+  - **The paced Check's cloud side,** local in the unpushed range (Sound engine tests and pushes its top, then I deploy):
+    - `bad46b7`, `f5b4b9d`, `087bafa`: the journal takes `claim.reviewing`, `claim.continued`, `claim.discarded` and `claim.decided { manual: true }`. A discard clears the phones' pending Check; a review or a continue changes nothing public. flaggedDecisions flags `notPassing` (a win by hand) and `notSold`.
+    - `22cc44b`: the phone-feed scans (projection test, both e2e specs) forbid `markedCard`, `revealUntil`, `cueNext`, `reviewing` and `manual`; every paced-Check event goes through the projection with nothing public changing.
+    - **Deploy before the engine journals them:** a refused kind stops the link's uploads.
+  - **The Interval music syncs with every pool** (`447d9d7`): two shared roots (`interval-cache`, `interval-data`). The Worker accepts them: version `79988575`, deployed from `a1e9b17`.
+  - **Never synced** (`6397550`): `cache/relay-token` (that object is deleted from R2), `cache/tools`, `data/listen-demo`.
+  - **The new Interval music is in R2** (D113): 115 files, 361.9 MB.
+- **Proposed to Sound engine, 26 Nov, waiting for the answer:**
+  - **The music sets (D129, D138):** in subfolders of `data/{cache,out}/interval/` they sync with no change (D136 keeps `interval`). A new top folder needs a cloud root, deployed before the laptop pushes. I asked where the intro track and the throw song's hook will live.
+  - **The volumes (D139):**
+    - `GameSettings.volumes`, a closed key list, journalled on slider release, so a resume restores them.
+    - A fresh Game starts from `plan.volumes`, so the edition file holds them. The engine reads them only when no volumes are journalled.
+    - When the cloud ingests a change, it patches only `plan.volumes` (newest wins, the rest of the plan untouched), so a rehearsal's tuning carries to the night's `&fresh=1` Game. `edition -- pull` writes it back to the file.
+    - My side: journal-check by key and range, `volumes` in checkGamePlan, left out of publicPlan, and the fold on ingest.
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
-  - push Part 1 to R2 as soon as Sound engine has prepared it (U55), then each Part as it's ready (D113). Prune last year's pool after the night;
-  - the Check's step 2 once Sound engine's protocol is on main (queue item 6);
+  - deploy the range once it's on origin; log it in deploy-plan.md;
+  - the Check's e2e by presses (`checkNext`, `checkAuto`, a review then discard, two cards), once Sound engine's step 3 is in;
+  - push each new music set and Part 1 to R2 as soon as it's prepared (U55, D113). Prune last year's pool after the night;
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
   - the provisional-hooks WARN, once Sound engine sends the field.
+- **Not building:** Pausa in the journal (U111 open).
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md):
   - optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4);
@@ -23,8 +35,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **U19**, real devices;
   - **U54**, one Pool with three Parts (blocks the sides work);
   - **U55** (Sound engine's), preparing Part 1;
-  - **U63**, the plan tool and its `quina-agent` token (queue item 7);
-  - **U64**, a glance at Cloudflare's billing for R2's payment method.
+  - **U63**, **U68–U75**: the plan tool, its `quina-agent` token, and the edition file;
+  - **U64**, a glance at Cloudflare's billing for R2's payment method;
+  - **U79**, whether phones show a Review (the public `reviewing`).
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
 
