@@ -6,13 +6,14 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built.
 - **Just done (26 Nov):**
-  - **Six deploys** (deploy-plan.md), each tested on its sha first:
+  - **Seven deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
     - `d963856b` (`ba17a40`): the Desgraciat's finale (D166–D172);
     - `18f816f5` (`fd9feaa`): a song's first play slower (D174, D175). The shared reducer folds `playedBefore`; the settings check takes `remoteShake` (D148). The new state fields stay off phones (the projection copies named fields only).
-    - `c93f219c` (`161c3f6`): the repertoire (D178), D177 and D180. The media sync keeps each repertoire under `repertoires/<name>/` (v2 manifest); `fellLast` stays readable in older journals.
+    - `c93f219c` (`161c3f6`): the repertoire (D178), D177 and D180. The media sync keeps each repertoire under `repertoires/<name>/` (v2 manifest); `fellLast` stays readable in older journals;
+    - `228d23ab` (`f4185fd`): the cloud's step B of card sides (queue item 4).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
@@ -116,7 +117,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that repertoire's, and fails at once if not (after the 2026 deploy: `QUINA_REPERTOIRE=2026`);
    - **deploys name their repertoire** (`--repertoire 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
    - a preflight check that the cloud's cards.json matches the repertoire's (FAIL if not).
-4. **Card sides and pools, step B** (D100–D102, D178; Sound engine's step A is `e8e10d3`/`e1c54ec`). **Done in `3cf30a6`:** journal-check takes `side` (1–9, absent for side 1); PublicRound.side and the public intro's side, only when not 1; Admin's resume point carries it (`-C<n>`); the preflight's Card sides check (the protocol's `sideWarnings`, pools counted from songs.json: FAIL for a round on an unprinted side or an empty pool, WARN for a printed side no round plays). **Deploy it before the first side-2 round is journalled** (nothing journals one until the plan says so). **Left, with Frontend's cards.json conversion to `sides: [{side, lines}]`** (waits on the user's go, D102): one Frontend commit with my two readers in it, no dual-shape reader (D84):
+4. **Card sides and pools, step B** (D100–D102, D178; Sound engine's step A is `e8e10d3`/`e1c54ec`). **Done in `3cf30a6`:** journal-check takes `side` (1–9, absent for side 1); PublicRound.side and the public intro's side, only when not 1; Admin's resume point carries it (`-C<n>`); the preflight's Card sides check (the protocol's `sideWarnings`, pools counted from songs.json: FAIL for a round on an unprinted side or an empty pool, WARN for a printed side no round plays). Deployed as `228d23ab`, before any side-2 round. **Left, with Frontend's cards.json conversion to `sides: [{side, lines}]`** (waits on the user's go, D102): one Frontend commit with my two readers in it, no dual-shape reader (D84):
    - the preflight's cards check reads `sides` (each side 3×4, its songs in its side's pool);
    - show.spec.ts reads lines through the round's side; the plan fixtures.
    Send Frontend that diff once their conversion is ready; Frontend sends the hash before pushing. The default test repertoire: all songs in pool 1, both card types one side on pool 1.
