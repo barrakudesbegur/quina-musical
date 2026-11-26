@@ -60,7 +60,7 @@ test("the night's last round reaches the scene rules: the corn-seed storm in its
   assert.equal(canSend('storm', fixture('after')), true);
   assert.equal(canSend('throw', fixture('interval')), true);
   assert.equal(canSend('throw', fixture('before')), true);
-  assert.equal(canSend('throw', fixture('after')), true);
+  assert.equal(canSend('throw', fixture('after')), false, 'no Throw at the end (D194)');
   assert.equal(canSend('throw', fixture('play')), false);
   assert.equal(canSend('throw', input({ ...FIXTURES.interval(NOW).state, pause: { sinceMs: NOW, overlay: false } })), false, 'not during Pausa');
 });

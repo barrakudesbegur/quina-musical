@@ -7,8 +7,8 @@
     [ Següent (full width, the biggest)         ]
   Enrere, a long press, is narrow (a third of its row) with a small "mantén" under its name; Comprovar
   takes the rest. The throw songs (logic/throw-songs.ts; the Consola-Llancament-Tempesta board): «Llançament» takes
-  Següent's place before the night and in a break, where Següent isn't used; on the end screen «Tempesta» takes it,
-  with a smaller «Llançament» beside it; in the night's last round «Tempesta» joins the top row, between Enrere (which
+  Següent's place before the night and in a break, where Següent isn't used; on the end screen «Tempesta» takes it
+  (D194: no Throw there); in the night's last round «Tempesta» joins the top row, between Enrere (which
   doesn't move) and a narrower Comprovar. Parlem and Aguanta are one pair (logic/hold-modes.ts): a tap on the active one releases
   it, a tap on the other switches (`hold { on, duck }`). Each has a second level on a strip along its
   bottom, reached by holding it (TwoLevelButton): Parlem → Pausa (`pause`), Aguanta → Suspens (`suspense`,
@@ -51,7 +51,7 @@
   const backBrings = $derived(snap && finale ? finaleTabView(finale, snap, null, false).fallenShown : false);
 </script>
 
-<section class="thumb-cluster" aria-label={S.cluster.label} data-live={c.live} data-top={layout.top ?? undefined} data-beside={layout.beside ?? undefined} data-finale={slot?.kind === 'start' ? slot.size : undefined}>
+<section class="thumb-cluster" aria-label={S.cluster.label} data-live={c.live} data-top={layout.top ?? undefined} data-finale={slot?.kind === 'start' ? slot.size : undefined}>
   <span hidden data-testid="hold" data-mode={active ?? 'none'}></span>
   <div class="thumb-cluster__slot thumb-cluster__slot--back">
     <LongPressButton big action="back" label={S.cluster.back} note={backBrings ? S.finale.backNote : S.cluster.backHint} icon="back" tone="danger" disabled={!c.back.enabled} onconfirm={() => model.act('back')}>
@@ -100,12 +100,6 @@
     </div>
   {/each}
 
-  {#if layout.beside}
-    <div class="thumb-cluster__slot thumb-cluster__slot--beside">
-      <ThrowButton song={layout.beside} variant="side" />
-    </div>
-  {/if}
-
   <div class="thumb-cluster__slot thumb-cluster__slot--next">
     {#if cue !== null && layout.big === 'next'}
       <button type="button" class="big-button finale-cue" data-action="finale-cue" data-anim="press finale-win" data-default={cueIsDefault || undefined} data-testid="finale-cue" disabled={!model.can('finaleCue')} onclick={() => model.act('finaleCue')}>
@@ -120,7 +114,7 @@
         {#if nextIsDefault}<WiiBadge button="a" />{/if}
       </button>
     {:else}
-      <ThrowButton song={layout.big} wide={layout.beside === null} />
+      <ThrowButton song={layout.big} />
     {/if}
   </div>
 </section>

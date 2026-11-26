@@ -2566,19 +2566,8 @@
     'next next next next next next next next next next next next';
 }
 
-/* The end screen: «Tempesta» in Següent's place, a smaller «Llançament» beside it */
-.thumb-cluster[data-beside] {
-  grid-template-areas:
-    'back back claim claim claim claim'
-    'talk talk talk stay stay stay'
-    'beside beside next next next next';
-}
-
 .thumb-cluster__slot--top {
   grid-area: top;
-}
-.thumb-cluster__slot--beside {
-  grid-area: beside;
 }
 
 /* One colour per action */
@@ -2976,45 +2965,6 @@
   font-size: 0.9375rem;
 }
 
-.throw-button__song {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: 92%;
-  padding: 5px 12px;
-  border: var(--line-width) solid var(--color-ink);
-  border-radius: var(--radius-md);
-  background: #fff6e5;
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 900;
-  line-height: 1.2;
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  white-space: nowrap;
-}
-
-.throw-button__song > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.big-button .throw-button__song .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  flex: none;
-  stroke: var(--color-ink);
-  stroke-width: 2.6;
-}
-
-/* Where it starts, after the song's name, when the big one has the whole row */
-.throw-button__from {
-  flex: none;
-  font-weight: 800;
-  color: #5a5480;
-}
-
 /* While it's on: its time from the hook, a bar with the drop's mark, and its length (hook throw-on). Paper and ink,
    as the chip; the fill in the button's colour. The fill steps with the show's clock (250 ms) and glides between. */
 .throw-button__time {
@@ -3187,46 +3137,6 @@
   font-size: var(--text-xs);
   -webkit-text-stroke: 0;
   text-shadow: none;
-}
-
-/* Beside the big one on the end screen: narrow, the icon over the name */
-.throw-button[data-variant='side'] {
-  font-size: var(--text-lg);
-}
-
-.throw-button[data-variant='side'] .throw-button__name {
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.throw-button[data-variant='side'] .throw-button__words {
-  align-items: center;
-}
-
-.throw-button[data-variant='side'] .throw-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
-.throw-button[data-variant='side'] .big-button__note {
-  font-size: var(--text-xs);
-}
-
-.throw-button[data-variant='side'] .throw-button__time {
-  width: 92%;
-  gap: 6px;
-  padding: 16px 8px 7px;
-  font-size: var(--text-xs);
-}
-
-.throw-button[data-variant='side'] :is(.throw-button__eq, .throw-button__paused) {
-  width: 16px;
-  height: 16px;
-}
-
-.throw-button[data-variant='side'] .throw-button__strip {
-  height: 38px;
-  font-size: var(--text-sm);
 }
 
 /* An open Suspens pulses on Aguanta's strip, faster towards its auto-release */
@@ -3429,19 +3339,6 @@
     font-size: var(--text-md);
   }
 
-  .throw-button[data-variant='side'] .big-button__note {
-    display: none;
-  }
-
-  .throw-button[data-variant='side'] .throw-button__strip {
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-
-  .big-button.throw-button[data-variant='side'] .throw-button__strip .icon {
-    display: none;
-  }
-
   .thumb-cluster[data-top] .big-button[data-action='claim'] .icon {
     display: none;
   }
@@ -3631,7 +3528,6 @@
   right: 10px;
   translate: 0 -50%;
 }
-
 
 /* «Seguides»: a tile with an on/off strip along its bottom (pressed while on) */
 .check-board__auto {
@@ -4327,7 +4223,6 @@
 .check-card__spacer {
   flex: 1;
 }
-
 
 /* «Cartrons cantats»: a chip per card, the one on screen ringed in orange */
 .claims-strip {

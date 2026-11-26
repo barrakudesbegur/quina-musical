@@ -3,11 +3,11 @@
   stops it while it plays and resumes it; holding it past CONSOLE.escalateHoldMs plays it again from its hook, with the
   same gesture as Parlem's and Aguanta's second level (logic/two-level.ts): the «Des del principi» strip along its
   bottom fills while the finger is down (hook throw-hold). While its song plays the button shows pressed and its
-  stripes drift (hook throw-on). Idle, the big one names its song (with where it starts when it has the whole row,
-  `wide`); while it's on, the big and side ones show its time from the hook instead: ♪ bars or ‖, the time, a bar with
-  the drop's mark («Llançament» only: «Tempesta» starts at the drop) and its length (logic/throw-songs.ts throwProgress).
-  `variant`: big (Següent's place), side (the end screen's smaller «Llançament» beside «Tempesta»), top (the last
-  round's top row, between «Enrere» and «Comprovar»: no strip, the fill sweeps the whole button, as on «Enrere»).
+  stripes drift (hook throw-on). While it's on, the big one shows its time from the hook: ♪ bars or ‖, the time, a bar
+  with the drop's mark («Llançament» only: «Tempesta» starts at the drop) and its length (logic/throw-songs.ts
+  throwProgress); idle, no song name (the user: the banner was unnecessary).
+  `variant`: big (Següent's place) or top (the last round's top row, between «Enrere» and «Comprovar»: no strip, the
+  fill sweeps the whole button, as on «Enrere»).
   Only on the tablet: no Wii badge, and A never plays it. Hooks: data-testid="throw-button" or "storm-button".
 -->
 <script lang="ts">
@@ -23,12 +23,10 @@
 
   interface Props {
     song: ThrowSong;
-    variant?: 'big' | 'side' | 'top';
-    /** The big one has the whole row (nothing beside it): its song's chip also says where it starts. */
-    wide?: boolean;
+    variant?: 'big' | 'top';
   }
 
-  let { song, variant = 'big', wide = false }: Props = $props();
+  let { song, variant = 'big' }: Props = $props();
 
   const model = getConsole();
   const uid = $props.id();
@@ -37,8 +35,7 @@
   const songState = $derived(throwButtonState(info, song));
   const enabled = $derived(model.can(song));
   const note = $derived(songState === 'playing' ? S.throws.stop : songState === 'stopped' ? S.throws.resume : songState === 'other' ? t.replace : t.start);
-  // Its track while idle (the chip), and its time while it's on (the bar), on the show's clock.
-  const track = $derived(model.show.state?.throwSongs?.[song] ?? null);
+  // Its time while it's on (the bar), on the show's clock.
   const time = $derived(info && info.song === song ? throwProgress(info, model.show.now) : null);
   const clock = $derived(time ? S.throws.time(throwClock(time.atSec), throwClock(Math.round(time.totalSec))) : null);
 
@@ -150,8 +147,6 @@
         </span>
         <span class="throw-button__total">{throwClock(Math.round(time.totalSec))}</span>
       </span>
-    {:else if variant === 'big' && track}
-      <span class="throw-button__song"><Icon name="music" /><span>{S.throws.song(track.title, track.artist)}</span>{#if wide}<span class="throw-button__from">· {t.from}</span>{/if}</span>
     {/if}
     {#if variant === 'top'}<span class="throw-button__percent" aria-hidden="true">{Math.round(progress * 100)} %</span>{/if}
   </span>

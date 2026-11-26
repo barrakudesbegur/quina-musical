@@ -11,19 +11,19 @@ import { S } from '../../../../console/strings.ts';
 const NOW = 1_800_000_000_000;
 const flying = (song: ThrowInfo['song'], playing: boolean): ThrowInfo => ({ song, title: 'Flying Free', artist: 'Pont Aeri', startSec: 193.18, dropSec: 208.76, durationSec: 406.4, playing, sinceMs: NOW, posSec: 193.18 });
 
-test('«Llançament» takes Següent\'s place before the night and in a break; the end screen has both, «Tempesta» big', () => {
-  assert.deepEqual(throwLayout('before', false), { big: 'throw', beside: null, top: null });
-  assert.deepEqual(throwLayout('interval', false), { big: 'throw', beside: null, top: null });
-  assert.deepEqual(throwLayout('after', false), { big: 'storm', beside: 'throw', top: null });
-  assert.deepEqual(throwLayout('after', true), { big: 'storm', beside: 'throw', top: null });
+test('«Llançament» takes Següent\'s place before the night and in a break; the end screen has «Tempesta» alone (D194)', () => {
+  assert.deepEqual(throwLayout('before', false), { big: 'throw', top: null });
+  assert.deepEqual(throwLayout('interval', false), { big: 'throw', top: null });
+  assert.deepEqual(throwLayout('after', false), { big: 'storm', top: null }, 'no Throw at the end (D194)');
+  assert.deepEqual(throwLayout('after', true), { big: 'storm', top: null });
 });
 
 test("«Tempesta» joins the top row in the night's last round, in play and in its Check; never in a Celebration (U138)", () => {
-  assert.deepEqual(throwLayout('play', true), { big: 'next', beside: null, top: 'storm' });
-  assert.deepEqual(throwLayout('check', true), { big: 'next', beside: null, top: 'storm' });
-  assert.deepEqual(throwLayout('play', false), { big: 'next', beside: null, top: null });
-  assert.deepEqual(throwLayout('check', false), { big: 'next', beside: null, top: null });
-  for (const scene of ['roundStart', 'celebration'] as const) assert.deepEqual(throwLayout(scene, true), { big: 'next', beside: null, top: null }, scene);
+  assert.deepEqual(throwLayout('play', true), { big: 'next', top: 'storm' });
+  assert.deepEqual(throwLayout('check', true), { big: 'next', top: 'storm' });
+  assert.deepEqual(throwLayout('play', false), { big: 'next', top: null });
+  assert.deepEqual(throwLayout('check', false), { big: 'next', top: null });
+  for (const scene of ['roundStart', 'celebration'] as const) assert.deepEqual(throwLayout(scene, true), { big: 'next', top: null }, scene);
 });
 
 test('every button shown is one the scene rules allow (the engine has the same table)', () => {
@@ -33,7 +33,7 @@ test('every button shown is one the scene rules allow (the engine has the same t
     const flow = flowOf(state);
     assert.equal(flow.scene, scene, name);
     const layout = throwLayout(flow.scene, state.lastRound);
-    const shown = [layout.big, layout.beside, layout.top].filter((b): b is 'throw' | 'storm' => b === 'throw' || b === 'storm');
+    const shown = [layout.big, layout.top].filter((b): b is 'throw' | 'storm' => b === 'throw' || b === 'storm');
     for (const song of shown) assert.equal(canSend(song, { state, flow, online: true }), true, `${name}: ${song}`);
     for (const song of ['throw', 'storm'] as const) if (!shown.includes(song)) assert.equal(canSend(song, { state, flow, online: true }), false, `${name}: no ${song}`);
   }

@@ -4,7 +4,7 @@
 // two-level strip's gesture, logic/two-level.ts) plays it again from its hook. A tap on one while the other is on
 // replaces it. Only on the tablet: no Wii button, and A never plays them. Pure.
 //   - where they show: «Llançament» in Següent's big place before the night and in a break (Següent isn't used
-//     there); on the end screen «Tempesta» takes the big place with a smaller «Llançament» beside it; in the night's
+//     there); on the end screen «Tempesta» alone takes the big place (no Throw there, D194); in the night's
 //     last round «Tempesta» sits in the top row, between «Enrere» and «Comprovar» on the play screen, and between
 //     «Enrere» and «Revisió manual» in its Check. Not in the last round's Celebration (U138: today's behaviour);
 //   - what each button says now, from the state's `throwSong`;
@@ -18,8 +18,6 @@ export type { ThrowSong } from '@quina/protocol';
 export interface ThrowLayout {
   /** The thumb cluster's big bottom place: Següent, or a throw song's button. */
   big: 'next' | ThrowSong;
-  /** A smaller button beside the big one (the end screen's «Llançament»), or null. */
-  beside: ThrowSong | null;
   /** «Tempesta» in the top row, between «Enrere» and «Comprovar» (or «Revisió manual» in a Check), or null. */
   top: ThrowSong | null;
 }
@@ -28,14 +26,14 @@ export function throwLayout(scene: ShowScene, lastRound: boolean): ThrowLayout {
   switch (scene) {
     case 'before':
     case 'interval':
-      return { big: 'throw', beside: null, top: null };
+      return { big: 'throw', top: null };
     case 'after':
-      return { big: 'storm', beside: 'throw', top: null };
+      return { big: 'storm', top: null };
     case 'play':
     case 'check':
-      return { big: 'next', beside: null, top: lastRound ? 'storm' : null };
+      return { big: 'next', top: lastRound ? 'storm' : null };
     default:
-      return { big: 'next', beside: null, top: null };
+      return { big: 'next', top: null };
   }
 }
 
