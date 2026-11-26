@@ -74,7 +74,7 @@ Answered on the canvas (D181–D184): "Salvats!", the faded fallen nino, the edi
 - (b) Comment on the canvas where not.
 
 ### U164 · A title for the Desgraciat's winner
-On 25 Nov the user chose no title for the Desgraciat's Celebration (D62, U6: "DEMPEUS!" was dropped). Now, on the canvas: "it is better something related to being lucky or unlucky. in informal funny catalan". Frontend proposes "QUINA POTRA!" with 2–3 alternatives on the board.
+On 25 Nov the user chose no title for the Desgraciat's Celebration (D62, U6: "DEMPEUS!" was dropped). Now, on the canvas: "it is better something related to being lucky or unlucky. in informal funny catalan". Candidates on the canvas (v95): "QUINA POTRA!" (already on the projector board), "QUINA XAMBA!", "POTRA DESGRACIADA!", "QUIN BAMBÚ DE SORT!", "SORT DE LA MALA SORT!", "QUINA SORT MÉS NEGRA!", and the cruder "QUIN CUL!".
 - (a) A title after all: pick one on the canvas (D62 changes).
 - (b) No title, as D62 says.
 
