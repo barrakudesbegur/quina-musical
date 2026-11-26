@@ -5,7 +5,7 @@
   // picked while a free one is left. The chosen one wears the gold ring and pops as it gets it (ANIMATIONS.md
   // `icon-pick`). A radio group, so it works with a screen reader and the keyboard; each cell is a full touch target.
   import { PLAYER_CONFIG } from '../config.ts';
-  import { identityOf, markName, PICKER_ORDER } from '../logic/marks-identity.ts';
+  import { CARD_MARKS, identityOf, markName } from '../logic/marks-identity.ts';
   import { identityFree, type SavedCard } from '../logic/storage.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
@@ -23,7 +23,7 @@
     legend?: boolean;
   } = $props();
   const options = $derived(
-    PICKER_ORDER.map(identityOf).filter((identity) => identity <= PLAYER_CONFIG.cardColors).map((identity) => {
+    CARD_MARKS.map(identityOf).filter((identity) => identity <= PLAYER_CONFIG.cardColors).map((identity) => {
       const owner = others.find((c) => c.color === identity);
       const free = identityFree(others, identity);
       return { identity, label: S.markLabel(markName(identity)), free, owner: !free && owner ? (owner.name ?? S.cardNumber(owner.id)) : null };

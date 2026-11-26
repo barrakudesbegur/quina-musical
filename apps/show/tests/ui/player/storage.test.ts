@@ -1,7 +1,7 @@
 // The player's own data: cards with their identities (icon and colour) and names, the edition wipe, the gameId
 // reset, sounds.
 import { test } from 'node:test';
-import { CARD_MARKS, identityOf, markName, PICKER_ORDER } from '../../../../player/logic/marks-identity.ts';
+import { CARD_MARKS, identityOf, markName } from '../../../../player/logic/marks-identity.ts';
 import assert from 'node:assert/strict';
 import {
   MemoryStorage,
@@ -178,9 +178,8 @@ test("the player's sound choice wins over Admin's default", () => {
   assert.equal(soundsOn(setSounds(data, false), true), false);
 });
 
-test('the icon picker shows every icon once, chromatically, with white and black closing the rows', () => {
-  assert.equal(PICKER_ORDER.length, CARD_MARKS.length);
-  assert.deepEqual([...PICKER_ORDER].sort(), [...CARD_MARKS].sort());
-  assert.deepEqual([PICKER_ORDER[4], PICKER_ORDER[9]], ['snowflake', 'topHat']);
+test("the card marks go corn first, in D5's order, which the icon picker shows too (D201)", () => {
+  assert.deepEqual(CARD_MARKS, ['corn', 'shootingStar', 'bauble', 'tree', 'heart', 'crown', 'grapes', 'snowflake', 'topHat', 'poop']);
+  assert.equal(markName(1), 'corn');
   assert.equal(markName(identityOf('poop')), 'poop');
 });
