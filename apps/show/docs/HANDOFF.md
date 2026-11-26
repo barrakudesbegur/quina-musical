@@ -11,7 +11,7 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **In progress:** nothing. Done on 25 Nov: the expected end at 70 (D100, `8e6f563`). The side/Part protocol is agreed with Frontend and Backend: step A (my protocol types and checks) waits for U54 and the user's go.
+- **In progress (26 Nov): step 2, D127–D145, BUILT AND TESTED on the local branch `sound/step2` (worktree `/Users/blue/Projects/barrakudes/quina-step2`), NOT ON MAIN.** The side/Part protocol (step A) still waits for U54.
   - **Part 1's ids are alphabetical (D103, 26 Nov):** ids 1–70 are the user's title-sorted playlist positions.
     - The decoded audio moved with each song; the 6 cut songs' audio is in `data/cache/pools/2026/_cut/<Spotify id>`. The old id record and song list are kept as `output/*.before-D103.json`.
     - The temporary cards were remade with these ids.
@@ -20,36 +20,21 @@ The single place to resume the sound engine's work from. It was first written wh
     - 37 of its 39 tracks are prepared: `data/out/interval/index.json`, 121–175 kbps, no quality flag. The old set is kept in `data/media/interval-old-0SsuXelEzN8gsS7WufySOg/`.
     - #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters) aren't on YouTube. The user said on 26 Nov that it's fine if some can't be downloaded, so the Interval plays without them.
   - **Part 3** (Especial and Desgraciat, `79G8VcNrkih9GGjIzb47Gt`, D105) is empty. The especial card's side plays Part 1 until it's final; then it gets ids 141–210 (U57), alphabetical (D103). Don't fetch it before then.
-  - **The presenter-paced Check (D107–D125): step 1, the additive protocol, is built, COMMITTED LOCALLY, NOT PUSHED.**
-    - **The range on the shared main:** 1f51e38, d52246a (Backend), f42e0d8, d12d3d4 and e2bf6e9 (Frontend's handoffs), 1a82804, b80e299, 0003150 (Backend), aa96ad6, 0c33a9c (Backend), f73b339, plus this handoff.
-    - **Blocked on:** Frontend's two console labels in apps/console/strings.ts (`reviewing` «En revisió», `discarded` «Descartat», plus the HoldReason `discarded` «Cartró descartat»). They're written but uncommitted, because the UI freeze needs the user's OK in Frontend's session. Without them the console doesn't compile.
-    - **Once they're on top:** test the whole range in a clean worktree (`npm test`), push its top sha, and tell Backend to deploy the cloud.
-    - **Do not** commit Frontend's file yourself, and never amend: peers commit on top.
-    - **The protocol now has:**
-      - `claim { cardId | cardIds[] }`;
-      - `checkNext { claimId, step }` (idempotent; after the reveals stop, the press is the cue);
-      - `checkAuto { on }` (through the cue, D117);
-      - `checkReview { claimId }` ("Revisió manual", status `reviewing`, D119/D120; whatever was playing goes on, no automatic Pausa, D118);
-      - `reviewEnd { claimId, outcome: continue|win|lose|discard }` (D121): continue writes `claim.continued`; win and lose write claim.decided `manual`, with the PRIVATE warning notPassing or wouldPass; discard writes `claim.discarded` (D124) and Parlem over the pre-Check music, HoldReason `discarded` (D122/D125: the Hold suspends auto-advance, Next ends it, the setting is untouched);
-      - ClaimInfo PRIVATE `markedCard`, `revealUntil`, `cueNext`;
-      - CheckInfo `total`, `revealed`, `auto`, `cue`, and the public `reviewing` (the projector, D123);
-      - `celebrationNext`;
-      - events check.started, check.revealed, check.cue (`manual?`), check.reviewing;
-      - RejectReason `claimOpen`.
-    - **The engine** opens one Claim per card already, and refuses checkNext, checkAuto, checkReview and reviewEnd as unknownCommand until step 3.
-    - **Step 3 (engine), after the user lifts the UI freeze:** reveals by press, auto, the Review and its outcomes, the multi-card cue order (a passing card that isn't last gets the plaque without a fanfare; the shared Celebration after the last cue; after a fail the next card enters by itself, its first reveal waiting for a press), Next refused (`claimOpen`) while a Claim is under review, and Parlem in the Celebration ducking the victory music. It also removes `decide`, `checked` and the timed steps, and widens checkStart's and hold's scene rules. Tests: flow, desgraciat, fuzz, nights, listen demo. It goes the same day as Backend's e2e.
-    - **Open for the user:** U78 (the music's level during a Review) and U79 (whether phones show a Review).
-  - **The new Pausa (D127–D130): checked on 26 Nov, NOT BUILT.** Waits for U84 and U105–U114 (U111: journal Pausa? U114: the Drift's target end).
-    - **The work:** save what was playing at Pausa's start, and resume it at its position when Pausa ends: a song deck (rebasing its timeline), Hold music, the victory track or Celebration loop, an Interval set (re-planning its handovers).
-    - **Settled within my remit (the orchestrator, 26 Nov):**
-      - the timers exclude paused time (Parlem's Hold-music timer, the Celebration's 60 s to the Interval);
-      - Panic clears the saved playback;
-      - Back stays refused during Pausa;
-      - the Shuffle completes under the overlay;
-      - Enrere inside a Check (D127) stays within the current card;
-      - named music sets via interval.py (pausa = today's 0XTlZPUpt7xPoPxk4AUU3O files; breaks and after = pop 0fvoRGCC8zXqDyj5uLhJVg; doors and end later), with a playlist-order option for the end;
-      - the intro track moves from temp/ to data/media.
-    - **Don't download** the new sets until U96–U100 are answered.
+  - **The order (keep it):** step 1's range on main (local, unpushed) → Frontend's labels commit on top (blocked: U124, the user's OK in Frontend's session) → test the range in a clean worktree, push its top sha, Backend deploys → rebase `sound/step2` onto main, put it on main as local commits, send Frontend and Backend the hash → they commit their sides on top (Backend's `backend/step2` follows mine) → test the whole range, push, Backend deploys first. Never push a range that breaks the console build; never commit Frontend's files.
+  - **Step 1 (main, local):** the additive protocol of the paced Check (3fb4236 … 0e0dd28, handoffs 1832260 and b385cd4, Backend's b6f56f6 and c0c1c02). Unchanged since.
+  - **Step 2 (`sound/step2`: cd6cdf3 protocol, 5931979 engine, on c0c1c02):** 253 engine tests and the prep tests pass; the only type errors left are Frontend's (packages/ui fixtures and flow, console logic/check, default-action, config, strings, stage/view).
+    - **The Check (D107–D126):** on screen with nothing revealed; `checkNext { claimId, step }` reveals one song (grid order, a Line's row), stopping at the first ✗; the cue decides (a pass that isn't the batch's last: plaque, no fanfare; the last: the Celebration; a failed last after an earlier pass: `celebrationNext { claimId, step }`); the next card on screen by itself 3 s after a cue, its first reveal waiting for a press; `checkAuto` through the cue, never a self-entered card's first reveal; `checkReview` / `reviewEnd` (continue; win or lose by hand, warned notPassing / wouldPass, journal `manual`; discard into HoldReason `discarded`, plain Parlem); `unknownCard` (detail: the numbers, comma-separated); `endGame` refused `claimOpen` during a Review. `decide`, `checked`, `failedCheck`, `check.scheduled` and the timed steps are gone. The runtime's CheckPlayer plays one reveal at a time; the music ducks (−32 dB) from the first reveal to the cue, or back to none.
+    - **`checkBack` (D127, D134):** one mark back, the previous snippet again, at none the music back up; auto off for that Check only. The long-press `back` is today's (U104).
+    - **Pausa (D128, D135):** `pausePlayback` suspends the song deck (Deck.suspend), Hold music (also the intro), the Celebration loop, the breaks and end sets and the throw song, each where it is; `resumePlayback` brings them back there, fading in; the engine moves the song's timeline and every timer on by the paused time and comes back under Parlem (HoldReason `pause` when no Hold was on). Next ends Pausa out of the Pausa set (bed `pausa`); Panic and endGame drop what was saved. `pause.overlay` only in play, check, celebration. A Spin within 0.15 s of landing refuses Pausa as `busy`.
+    - **Holds (D133, D142, D144, D145, D117):** Next refused `nextBlocked` in Aguanta and Suspens; Next ends Parlem as before; `suspense { on: false, cancel: true }` backs the build out over `SUSPENSE.backOutSec` (1.2 s) to Aguanta (if it started there) or the song playing; a claim in Aguanta ducks to Parlem; Parlem in a Celebration ducks its music (`bedDuck`, `CelebrationInfo.parlem`).
+    - **Music (D129, D137, D138):** three IntervalPlayers (breaks; pausa; end = the breaks' folder in playlist order, U97); `/intervalaudio/<set>/<slug>.flac` and `/data/interval/<set>/`; interval.py takes `--set` and does every folder by default. The intro track (`INTRO`, −14 dB) on HoldMusic's new `intro` mood, from roundIntro through the Shuffle to the first Spin (U99). The throw: `throw { restart? }`, ThrowPlayer on `/holdaudio/flying-free.flac` from `THROW.hookSec` 193.18 (my pick: the build's phrase start, 16 s before the drop at 208.8), the break music (intervalBus) fading under it; it ends on any scene change.
+    - **Volumes (D139):** `setVolume { key, percent }`, VOLUME_KEYS / VOLUME_DEFAULTS / volumeDb (gain = (p/100)²) in the protocol; graph.vol has one gain per slider (win and fail reach both their music and their fanfares); `songsParlem` is the Parlem duck itself (default 45% ≈ −14 dB, HOLD.duckDb is gone); journaled 1 s after the sliders are still; the record shows the volumes as last journaled; `plan.volumes` only for a Game that set none. `intervalVolumeDb` is gone.
+    - **The plan:** `schedule.breaks` → `schedule.throws` (PlannedThrow), also in the Schedule, the countdown and apps/cards' reports.
+    - **Defaults while open (as today, easy to change):** U85/U78 (the −32 dB duck), U88/U89, U97 (end = breaks in order), U99 (the intro's span), U104, U105 (Suspense cancelled at Pausa), U106 (Parlem), U107 (Pausa allowed in a Check, marks kept), U108/U109 (own level), U110 (the countdown runs on), U111 (not journaled), U113 (short sounds ring out), U114 (paused time counts as lost), U120 (letting go of B lands).
+  - **Media (waits for step 2 on main, so today's main isn't confused):**
+    - the pop breaks set downloads into `data/media/interval/breaks/` (spotDL, VPN off); prepare it with `interval.py --set breaks` from the worktree's code (`--source/--out/--cache` to the main checkout's data) and tell Backend it's prepared, for R2;
+    - move today's top-level `data/media/interval/*`, `data/cache/interval/*` and `data/out/interval/*` into `pausa/` (moving, not deleting), then run interval.py for `pausa` (decode and Beat This! are cached by sha);
+    - copy `temp/5-12. Parasail Minigame.mp3` to `data/media/intro/parasail-minigame.mp3` and `data/media/song/24.mp3` to `data/media/throw/flying-free.mp3`, then run hold.py (categories `intro` and `throw`); main's HoldMusic would treat them as plain Hold music, hence the wait.
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
     - checkGamePlan fills side 1, and the `sideWarnings(plan, cardTypes)` helper is for Admin and the preflight;
