@@ -62,6 +62,11 @@ Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Co
 - (a) All fine, so Frontend builds them.
 - (b) Comment on the canvas where not.
 
+### U156 · "A slightly before B" for Suspens
+D144 asked that B + A also work when A goes down slightly before B. A alone is "Següent", so honouring it means delaying every "Següent" press a moment, to see whether B follows. "Següent" exists so the presenters control the exact moment a song changes (the "eh, eh, eh!" moment, event.md).
+- (a) Drop it: B must go down first, and "Següent" stays instant.
+- (b) Keep it: "Següent" waits a short moment (about 150 ms) on every press.
+
 ### U150 · The finalists on the phones
 - (a) The phones show the finalists' figures too.
 - (b) Only the projector and the tablet show them.
