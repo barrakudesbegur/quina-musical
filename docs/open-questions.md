@@ -23,6 +23,11 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
+### U136 · The corn-seed storm during the last round's play
+D155 allows the storm button during the last round, not only after it. If it's pressed while songs are still landing:
+- (a) the round goes into Parlem first, so no song lands unheard under the storm, and "Següent" resumes (what Sound engine built);
+- (b) the round carries on underneath, and songs keep landing.
+
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
 - (a) Keep it.

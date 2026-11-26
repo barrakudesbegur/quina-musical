@@ -130,6 +130,6 @@ _From event.md › Before the night (On the day), The night, step by step._
 - Everyone comes to set up in the afternoon, and the whole day is kept free.
 - The laptop, phones, PA, projector and tablet are set up by the [night runbook](../night-runbook.md).
 - The preflight runs before the doors open, and every failure is fixed first.
-- The sound check: an effect at low volume, then a few seconds of Hold music.
+- The sound check: an effect at low volume, then a few seconds of Hold music. Since D157–D158 the laptop plays about 6 dB quieter inside, to leave room for the chaotic moments, so the sound system is turned up about 6 dB compared with 2025. The cheat sheet and the laptop's setup notes say so.
 - The night is started from the console's menu ("Començar la nit").
 - The QR address points at the new app since 25 Nov (D76).
