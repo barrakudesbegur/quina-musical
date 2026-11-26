@@ -6,7 +6,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built. **Paused by the user (27 Nov: the focus is the Frontend):** the voice cues' media sync and preflight check (D198, D202–D204), not started. Agreed with Sound engine: the protocol's `VOICE_CUES` plus `chime` and `fanfare`; `tools/prep/voices.py` prepares them into `data/cache/voice/<name>.flac` and `data/out/voice/index.json` (`{ schemaVersion: 1, voices: [{ name, durationSec, placeholder }] }`); placeholders never go in `data/media/voice/` (the user's recordings only, ignored by git). Mine, when resumed: sync roots `voice-cache` and `voice-data` (like the hold music; `voice/` left out of the default repertoire's `cache` and `data` roots), deployed before any laptop pushes them; a preflight check from the index: FAIL for a missing name or file, WARN while any is a placeholder. Meanwhile, keep pushing and deploying Frontend's tested commits.
 - **Just done (26 Nov):**
-  - **Twelve deploys** (deploy-plan.md), each tested on its sha first:
+  - **Thirteen deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -18,7 +18,8 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `f63790a9` (`593fef2`): screens only (round names, the phones' confetti);
     - `0948f16b` (`c612e95`): screens and card-types.json only (the finale's screens, D193's labels, D192's Throw, D194);
     - `e86ecb72` (`2fe0ace`): the console only (D195, D196, D199);
-    - `e1fb7821` (`1dfc1ea`, 27 Nov): Frontend's labels and the phone's add-card drawer, and the preflight's clock check (`8c884a8`: time.apple.com from the Laptop group, WARN past 2 s, FAIL past 60 s, since the doors cues count down by it).
+    - `e1fb7821` (`1dfc1ea`, 27 Nov): Frontend's labels and the phone's add-card drawer, and the preflight's clock check (`8c884a8`: time.apple.com from the Laptop group, WARN past 2 s, FAIL past 60 s, since the doors cues count down by it);
+    - `d2155f8a` (`92f531e`): the voice cues' engine side and the drum roll, and the «Veus» slider.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
