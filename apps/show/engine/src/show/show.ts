@@ -700,9 +700,17 @@ export class Show {
       case 'claim': {
         const kind = c.kind ?? this.phaseModel.kind;
         if (!winKindsOf(this.round.kind).includes(kind)) this.reject(reqId, c.cmd, 'invalid', `a ${this.round.kind} round isn't won by a ${kind}`);
-        else this.claim(c.cardId, kind);
+        // Several numbers from the claim pad: one Claim each, checked in turn (D110). checkCommand lets exactly one of the two through.
+        else for (const cardId of c.cardIds ?? (c.cardId != null ? [c.cardId] : [])) this.claim(cardId, kind);
         break;
       }
+      case 'checkNext':
+      case 'checkAuto':
+      case 'checkStop':
+      case 'claimDrop':
+        // The presenter-paced Check (D107–D110): in the protocol already, played once the engine switches to it.
+        this.reject(reqId, c.cmd, 'unknownCommand', 'the presenter-paced Check is not built in the engine yet');
+        break;
       case 'checkStart': {
         const claim = this.undecidedClaim(reqId, c.cmd, c.claimId);
         if (claim) this.runCheck(claim);
@@ -1069,7 +1077,7 @@ export class Show {
     const inPlay = new Set(this.cardsInPlay);
     this.claims = record.claims.map((c) => ({
       claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, atMs: c.atMs, position: c.position,
-      status: c.verdict ?? 'queued', outcome: null, completeSince: null,
+      status: c.verdict ?? (c.stopped ? 'stopped' : 'queued'), outcome: null, completeSince: null,
       warnings: this.allCards.some((card) => card.id === c.cardId) && !inPlay.has(c.cardId) ? ['notSold'] : [],
     }));
     if (this.scene === 'check') this.batch = { claimIds: this.claims.filter((c) => c.status === 'queued').map((c) => c.claimId), celebration: null };
@@ -1092,7 +1100,8 @@ export class Show {
       intro: this.intro ? { round: this.intro.round, kind: this.intro.kind, cardType: this.intro.cardType } : null,
       claims: this.claims.map((c): RecordedClaim => ({
         claimId: c.claimId, round: c.round, cardId: c.cardId, kind: c.kind, position: c.position, atMs: c.atMs,
-        verdict: c.status === 'valid' || c.status === 'invalid' ? c.status : null,
+        verdict: c.status === 'valid' || c.status === 'invalid' || c.status === 'dropped' ? c.status : null,
+        ...(c.status === 'stopped' ? { stopped: true as const } : {}),
       })),
       claimCount: this.claimCount,
       winners: this.winners.map((w) => ({ ...w })),
@@ -1939,7 +1948,7 @@ export class Show {
       this.reject(reqId, cmd, 'unknownClaim', `no claim ${claimId} in round ${this.round.number}`);
       return null;
     }
-    if (claim.status === 'valid' || claim.status === 'invalid') {
+    if (claim.status === 'valid' || claim.status === 'invalid' || claim.status === 'dropped') {
       this.reject(reqId, cmd, 'unknownClaim', `claim ${claimId} is already decided`);
       return null;
     }
@@ -2004,7 +2013,7 @@ export class Show {
   requeueClaims() {
     this.stopCheck();
     for (const c of this.claims) {
-      if (c.status === 'valid' || c.status === 'invalid') continue;
+      if (c.status === 'valid' || c.status === 'invalid' || c.status === 'dropped') continue;
       c.status = 'queued';
       c.outcome = null;
       c.completeSince = null;

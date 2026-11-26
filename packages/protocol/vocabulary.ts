@@ -51,7 +51,12 @@ export const isShowScene = (value: unknown): value is ShowScene =>
   typeof value === 'string' && (SHOW_SCENES as readonly string[]).includes(value);
 
 /** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
-export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'valid' | 'invalid';
+/**
+ * Where a Claim is. `stopped`: its Check was stopped before the cue (`checkStop`), undecided until it is checked
+ * again (`checkStart`) or dropped. `dropped` (`claimDrop`): set aside without a verdict, no sound. `checked` is the
+ * timed Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D109) has none.
+ */
+export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'stopped' | 'valid' | 'invalid' | 'dropped';
 /**
  * What the engine found. The Check's result decides (docs/event.md): presenters may reject a card that passed, never
  * accept one that failed (isPassingOutcome). A 'standing' claim (the Desgraciat round) is `complete` while none of
@@ -135,6 +140,8 @@ export const isSoundName = (value: unknown): value is SoundName =>
 export const REJECT_REASONS = [
   'invalid', 'locked', 'busy', 'endOfQueue', 'nothingToUndo', 'notHolding', 'notReady', 'decodeFailed', 'planFailed',
   'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume', 'failedCheck',
+  // The round can't move on while a Claim is stopped and undecided: check it again or drop it (U62).
+  'claimOpen',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];
 

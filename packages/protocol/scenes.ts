@@ -62,6 +62,12 @@ const RULES = {
   claim: ['play', 'check', 'celebration'],
   checkStart: ['check'],
   decide: ['check'],
+  // The presenter-paced Check (D107–D110). A stopped Claim waits in the round's Hold, so it may be dropped from
+  // `play` too; checking it again from `play` (checkStart) comes with the engine's switch.
+  checkNext: ['check'],
+  checkAuto: ['check'],
+  checkStop: ['check'],
+  claimDrop: ['play', 'check'],
   // In a Check it picks the music the Celebration will start with (`state.celebrationChoice`).
   celebrationMusic: ['celebration', 'check'],
   interval: celebratingBingo,

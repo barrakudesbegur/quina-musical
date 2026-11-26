@@ -223,6 +223,15 @@ export interface ClaimInfo {
   completeSince: number | null;
   /** PRIVATE (console only). */
   warnings: ClaimWarning[];
+  /**
+   * PRIVATE (console only), the presenter-paced Check (D108): the whole card in its grid order, each song marked
+   * landed or not, as soon as the Claim is in. Absent until the engine switches to that Check.
+   */
+  markedCard?: { songId: number; landed: boolean }[];
+  /** PRIVATE: the index of the last song its Check reveals (the last, or the first ✗); null when none is revealed. */
+  revealUntil?: number | null;
+  /** PRIVATE: the next press on its Check is the cue (pass or fail). */
+  cueNext?: boolean;
 }
 
 /** One song of a Check: its snippet (✓) or the "broken record" sound (✗), revealed at `atMs`. */
@@ -234,7 +243,11 @@ export interface CheckStep {
   durationMs: number;
 }
 
-/** A Check, scheduled in advance: the projector reveals each step at its `atMs`. */
+/**
+ * A Check. Today's is scheduled in advance (`steps`, `startAtMs`, `endAtMs`): the projector reveals each step at its
+ * `atMs`. The presenter-paced Check (D107) fills `total`, `revealed`, `auto` and `cue` instead, and nothing public
+ * says ahead of the cue whether the card passes; the timed fields go once the engine switches to it.
+ */
 export interface CheckInfo {
   claimId: string;
   cardId: number;
@@ -253,6 +266,14 @@ export interface CheckInfo {
   startAtMs: number;
   /** The result shows from here. */
   endAtMs: number;
+  /** The most songs the Check can reveal: the card's 12, a Line's 4, 0 for `unknownCard` and `wrongType`. */
+  total?: number;
+  /** The songs revealed so far, in the card's grid order; each `atMs` is set just ahead, so sound and screens meet. */
+  revealed?: CheckStep[];
+  /** Revealing in a row (`checkAuto`). */
+  auto?: boolean;
+  /** The cue, once it has played: the card passed (valid) or failed. */
+  cue?: 'pass' | 'fail' | null;
 }
 
 export interface CelebrationInfo {
@@ -385,6 +406,9 @@ export interface ShowState {
   claims: ClaimInfo[];
   /** The Check on screen (running, or showing its result until it is decided), else null. */
   check: CheckInfo | null;
+  /** The presenter-paced Check (D110): every card of the claim has had its cue, one passed, and the next press
+   * (`checkNext` on the last Claim, `step` = its revealed count + 1) starts the shared Celebration. */
+  celebrationNext?: boolean;
   celebration: CelebrationInfo | null;
   interval: IntervalInfo | null;
   /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
@@ -596,6 +620,39 @@ export interface CheckScheduled {
   check: CheckInfo;
 }
 
+/** The presenter-paced Check (D107): a Claim's Check is on screen, nothing revealed yet. */
+export interface CheckStarted {
+  v: ProtocolVersion;
+  type: 'check.started';
+  check: CheckInfo;
+}
+
+/** A press revealed the Check's song at `index` (its snippet, or the broken record, from `step.atMs`). */
+export interface CheckRevealed {
+  v: ProtocolVersion;
+  type: 'check.revealed';
+  claimId: string;
+  index: number;
+  step: CheckStep;
+}
+
+/** The cue: the card passed (the Claim is valid) or failed. */
+export interface CheckCue {
+  v: ProtocolVersion;
+  type: 'check.cue';
+  claimId: string;
+  cue: 'pass' | 'fail';
+  atMs: number;
+}
+
+/** A Check stopped before its cue (`checkStop`): back to the Hold, the Claim `stopped`. */
+export interface CheckStopped {
+  v: ProtocolVersion;
+  type: 'check.stopped';
+  claimId: string;
+  atMs: number;
+}
+
 /** The presenters decided a Claim. */
 export interface ClaimDecided {
   v: ProtocolVersion;
@@ -630,6 +687,10 @@ export type ShowEvent =
   | ShuffleScheduled
   | ClaimOpened
   | CheckScheduled
+  | CheckStarted
+  | CheckRevealed
+  | CheckCue
+  | CheckStopped
   | ClaimDecided
   | CelebrationStarted;
 export type ShowEventType = ShowEvent['type'];
@@ -652,6 +713,10 @@ export const EVENT_TYPES = Object.freeze([
   'shuffle.scheduled',
   'claim.opened',
   'check.scheduled',
+  'check.started',
+  'check.revealed',
+  'check.cue',
+  'check.stopped',
   'claim.decided',
   'celebration.started',
 ] as const satisfies readonly ShowEventType[]);

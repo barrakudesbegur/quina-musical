@@ -15,7 +15,8 @@ import {
   type ProtocolVersion,
 } from './vocabulary.ts';
 
-export type FieldType = 'string' | 'number' | 'boolean' | 'phase' | 'integer';
+/** `integers`: a list of integers, each within `min`–`max`, 1 to `maxItems` long, no repeats. */
+export type FieldType = 'string' | 'number' | 'boolean' | 'phase' | 'integer' | 'integers';
 export interface FieldSpec {
   readonly type: FieldType;
   readonly optional?: boolean;
@@ -27,6 +28,8 @@ export interface FieldSpec {
   readonly oneOf?: readonly string[];
   /** A string must match it. */
   readonly pattern?: RegExp;
+  /** The longest list an `integers` field takes. */
+  readonly maxItems?: number;
 }
 
 export const COMMANDS = Object.freeze({
@@ -135,11 +138,28 @@ export const COMMANDS = Object.freeze({
    * (`kind` defaults to what the Phase is climbing towards; a kind the round can't be won by is `invalid`).
    * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
   claim: {
-    cardId: { type: 'integer', min: 1, max: 9999 },
+    /** One card. Exactly one of `cardId` and `cardIds`; `cardId` goes once the presenter-paced Check is built. */
+    cardId: { type: 'integer', optional: true, min: 1, max: 9999 },
+    /** Several cards from the claim pad (D110): one Claim each, checked in turn in this order. */
+    cardIds: { type: 'integers', optional: true, min: 1, max: 9999, maxItems: 10 },
     kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
   },
-  /** (Re)start a Claim's Check: a re-check, or another order. */
+  /** (Re)start a Claim's Check from the start: a re-check, another order, or a stopped Claim checked again. */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },
+  /**
+   * The presenter-paced Check (D107): the tap, or the Wii's A. `step` is the index the press expects, so two consoles
+   * and the Wii pressing at once reveal once: `step` = the next song's index reveals it (in the card's grid order,
+   * its snippet or the broken record); once the reveals stop (the last song, or the first ✗), `step` = the revealed
+   * count is the cue (a pass: valid; a fail: the fail moment); with `celebrationNext`, `step` = that count + 1
+   * starts the shared Celebration. Any other press is ignored, silently.
+   */
+  checkNext: { claimId: { type: 'string', maxLength: 40 }, step: { type: 'integer', min: 0, max: 20 } },
+  /** Reveal in a row while on (the Wii's A held, or the tablet's toggle); it never makes the cue. */
+  checkAuto: { on: { type: 'boolean' } },
+  /** Stop a Check any time before its cue: no sound, back to the Hold the round was in; the Claim is `stopped`. */
+  checkStop: { claimId: { type: 'string', maxLength: 40 } },
+  /** Drop a stopped or queued Claim without a verdict, and without any sound. */
+  claimDrop: { claimId: { type: 'string', maxLength: 40 } },
   /** The presenters' verdict on a Claim. Both are journaled. The Check's result decides (docs/event.md): a presenter
    * may reject a card that passed, but `valid: true` on a card whose Check failed is refused as `failedCheck`. */
   decide: { claimId: { type: 'string', maxLength: 40 }, valid: { type: 'boolean' } },
@@ -171,6 +191,8 @@ export const COMMAND_NAMES = Object.keys(COMMANDS) as CommandName[];
 // ---- types derived from the specs ------------------------------------------------------------------
 type ValueOf<F extends FieldSpec> = F extends { oneOf: readonly (infer O)[] }
   ? O
+  : F['type'] extends 'integers'
+    ? number[]
   : F['type'] extends 'boolean'
     ? boolean
     : F['type'] extends 'number' | 'integer'
@@ -237,8 +259,15 @@ export function checkCommand(message: unknown): CommandCheck {
     const error = fieldError(key, field, value);
     if (error) return fail(error);
   }
+  const error = REFINE[cmd as CommandName]?.(message);
+  if (error) return fail(error);
   return { ok: true, command: message as Command };
 }
+
+/** Rules across a command's fields, which the per-field specs can't say. */
+const REFINE: Partial<Record<CommandName, (message: Record<string, unknown>) => string | null>> = {
+  claim: (m) => ((m.cardId === undefined) === (m.cardIds === undefined) ? 'claim needs exactly one of cardId and cardIds' : null),
+};
 
 function fieldError(key: string, field: FieldSpec, value: unknown): string | null {
   switch (field.type) {
@@ -251,6 +280,15 @@ function fieldError(key: string, field: FieldSpec, value: unknown): string | nul
       return field.oneOf && !field.oneOf.includes(value) ? `${key} must be one of ${field.oneOf.join(', ')}` : null;
     case 'phase':
       return isPhaseName(value) ? null : `${key} must be a phase name`;
+    case 'integers': {
+      if (!Array.isArray(value) || !value.length) return `${key} must be a non-empty list of integers`;
+      if (field.maxItems != null && value.length > field.maxItems) return `${key} has more than ${field.maxItems} items`;
+      for (const item of value) {
+        const error = fieldError(`${key} item`, { ...field, type: 'integer' }, item);
+        if (error) return error;
+      }
+      return new Set(value).size === value.length ? null : `${key} repeats an item`;
+    }
     case 'number':
     case 'integer': {
       if (typeof value !== 'number' || !Number.isFinite(value)) return `${key} must be a number`;

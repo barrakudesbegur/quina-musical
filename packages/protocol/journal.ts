@@ -134,6 +134,21 @@ export interface ClaimDecidedEntry extends EntryBase {
   outcome?: CheckOutcome;
 }
 
+/** A Claim's Check was stopped before its cue (D109): no sound, the Claim undecided until it is checked again
+ * (its next `claim.decided`) or dropped. */
+export interface ClaimStoppedEntry extends EntryBase {
+  kind: 'claim.stopped';
+  round: number;
+  claimId: string;
+}
+
+/** A stopped or queued Claim was dropped, without a verdict and without any sound (D109). */
+export interface ClaimDroppedEntry extends EntryBase {
+  kind: 'claim.dropped';
+  round: number;
+  claimId: string;
+}
+
 /** A Winner's name and notes, as they are now. PRIVATE, like the whole journal. */
 export interface WinnerNotedEntry extends EntryBase {
   kind: 'winner.noted';
@@ -165,6 +180,8 @@ export type JournalEntry =
   | SceneChangedEntry
   | ClaimOpenedEntry
   | ClaimDecidedEntry
+  | ClaimStoppedEntry
+  | ClaimDroppedEntry
   | WinnerNotedEntry
   | PrizesRevealedEntry;
 export type JournalEntryKind = JournalEntry['kind'];
@@ -208,8 +225,10 @@ export interface RecordedClaim {
   kind: WinKind;
   position: number;
   atMs: number;
-  /** null while undecided. */
-  verdict: 'valid' | 'invalid' | null;
+  /** null while undecided; `dropped` set aside without a verdict (`claim.dropped`). */
+  verdict: 'valid' | 'invalid' | 'dropped' | null;
+  /** Its Check was stopped before the cue and it is still undecided (`claim.stopped`); absent otherwise. */
+  stopped?: true;
 }
 
 /** Everything needed to resume the Game: the result of replaying its journal. */
@@ -370,11 +389,25 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
       if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already decided`);
       claim.verdict = entry.verdict;
+      delete claim.stopped;
       if (entry.verdict === 'valid') {
         record.winners.push({
           round: entry.round, kind: claim.kind, cardId: claim.cardId, claimId: claim.claimId,
           winningSongId: entry.winningSongId, position: entry.position, atMs: entry.atMs, name: null, notes: null,
         });
+      }
+      return;
+    }
+    case 'claim.stopped':
+    case 'claim.dropped': {
+      currentRound(record, entry);
+      const claim = record.claims.find((c) => c.claimId === entry.claimId);
+      if (!claim) throw new JournalError(`entry ${entry.seq}: no claim ${entry.claimId} in round ${entry.round}`);
+      if (claim.verdict) throw new JournalError(`entry ${entry.seq}: claim ${entry.claimId} was already ${claim.verdict === 'dropped' ? 'dropped' : 'decided'}`);
+      if (entry.kind === 'claim.stopped') claim.stopped = true;
+      else {
+        claim.verdict = 'dropped';
+        delete claim.stopped;
       }
       return;
     }
