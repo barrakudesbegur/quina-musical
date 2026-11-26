@@ -97,7 +97,7 @@ A Check under review gets its own screen on the projector and the tablet; the mu
 No default: the user decides.
 
 ### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
-The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json` (the plan with rounds, prizes, sponsors' names, schedule and cheat sheet; the songs per Part; card types and cards; the pool it came from), checking that it all fits. It never holds audio, covers, hooks, Games, winners' names, resume codes, seeds or money. `npm run edition -- upload <file> [--reset]` validates, saves the cloud's current state, then replaces it. Local seeding is the same upload against the local Worker, plus the plan for the relay. Facts: logos and prize pictures are in the cloud's own database today, not in the bucket; cards and card types are static files deployed with the Worker.
+The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json` (the plan with rounds, prizes, sponsors' names, schedule and cheat sheet; the songs per pool; card types and cards; the pool it came from), checking that it all fits. It never holds audio, covers, hooks, Games, winners' names, resume codes, seeds or money. `npm run edition -- upload <file> [--reset]` validates, saves the cloud's current state, then replaces it. Local seeding is the same upload against the local Worker, plus the plan for the relay. Facts: logos and prize pictures are in the cloud's own database today, not in the bucket; cards and card types are static files deployed with the Worker.
 - **U68 · Cards:** (a) uploaded data, so one upload configures everything; (b) static files deployed with the Worker, as today. Proposed: (a).
 - **U69 · Where the old settings are saved:** (a) the cloud keeps every replaced version, restorable by number; (b) a timestamped local backup, gitignored since Games hold winners' names; (c) both. Proposed: (c).
 - **U70 · What a rehearsal reset clears:** (a) the plan and settings, plus a fresh Game, with old Games kept; (b) also deletes the rehearsal Games, after backing them up. Phones keep their saved cards either way. Proposed: (a).
@@ -106,7 +106,7 @@ The proposal: `npm run edition -- build 2026` assembles `data/editions/2026.json
 - **U73 · Tests and development:** (a) a test edition file built from the default pool replaces the hand-written test plans; (b) keep both. Proposed: (a).
 - **U74 · After an upload, if Admin edits the plan:** (a) `npm run edition -- pull` writes the cloud's plan back into the file before each commit; (b) Admin can't edit what the file holds; (c) the file is only a starting point, and Admin wins afterwards. Proposed: (a).
 - **U75 · One file or split:** (a) one assembled file, as the user said; its cards (about 1 MB two-sided) change with every song swap; (b) the plan by hand in one file, with songs and cards referenced from the pool. Two files can drift. Proposed: (a).
-- Their Q9 (one edition = one night pool with three Parts) is U54.
+- Their Q9 (one edition = one night bundle) became U54, answered by D178: each set of 70 is a pool.
 **Default:** nothing built until the user answers.
 
 ### U12 · The theme pass
@@ -126,7 +126,7 @@ Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
 ### U55 · Preparing pool 1 now, and the laptop's disk
-Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 12 GB for both Parts, with 20 GB free. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
+Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 12 GB for both pools, with 20 GB free. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
 **Default:** nothing is prepared until the user says go. Last year's cache stays.
 
 ### U56 · Cutting the hook approval from 7 hours
@@ -134,16 +134,16 @@ About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options:
 **Default:** (a) and (b); (c) if the user wants it.
 
 ### U57 · pool 2's song numbers
-D103 numbers a final Part's songs alphabetically, so pool 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
-**Default:** pool 2 continues at 71–140, not 1–70 again (no third Part since D171).
+D103 numbers a final pool's songs alphabetically, so pool 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
+**Default:** Pool 2 continues at 71–140, not 1–70 again (no third pool since D171).
 
 ### U58 · The alphabetical convention
 pool 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
 **Default:** word by word, as the playlist is now.
 
-### U61 · A Part's song we can't download
-D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). pool 1 has no such song today; pool 2 isn't fetched yet.
-**Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
+### U61 · A pool's song we can't download
+D106 lets the Interval leave out a track nobody can get. A pool's songs are printed on the cards, and 70 is the count (D100). Pool 1 has no such song today; pool 2 isn't fetched yet.
+**Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the pool keeps 70.
 
 ### U63 · A credential so agents can edit the cloud's plan
 D116 has the user or an agent upload the edition's JSON to the cloud by hand, saving the old settings first. The upload tool is being proposed by Backend and Sound engine. To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
