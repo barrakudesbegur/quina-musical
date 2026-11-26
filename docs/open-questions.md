@@ -51,6 +51,7 @@ Before the finale the engine only sees the cards in play, unsold ones included (
 - (a) "Enrere", then enter them as finalists, and the same song lands again, now not counting for them (Sound engine's reading; it replays the song).
 - (b) Entry also accepts a card that fell on the latest landing, and the finale applies D180 among the finalists: the landing that took them all doesn't count, and they're back in, with no "Enrere".
 - (c) Nothing: the presenters start the finale earlier (with about 5–10 standing, as the growing button suggests), so it doesn't happen.
+Built as (b) (Sound engine, 593fef2), as a reading of D180 applied among the finalists being entered. It's easy to change if the user picks otherwise.
 
 ### U161 · A spare laptop's music until December
 Since the repertoire rename (D178, deployed c93f219c), R2 keeps each repertoire under `repertoires/<name>/`. The ~8 GB pushed before (last year's songs, plus today's Hold, Pausa and break music) stays under `pools/`, where the tools can't reach it. So until this year's repertoire is pushed in December, a spare laptop can't pull those music sets; they're all on the main laptop.
