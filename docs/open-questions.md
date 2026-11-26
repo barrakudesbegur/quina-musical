@@ -24,10 +24,12 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (b) Comment on the canvas where not.
 
 ### U133 · How the chaotic moments get louder (D154)
-Every slider's 100% is today's tuned level for that sound, and the songs are already near the loudest a file can play cleanly. Anything louder needs room above them:
-- (a) **Above 100% for these only:** the throws (and the corn-seed storm) default to about 140% (+3 dB). The engine keeps hidden room by playing everything about 3 dB lower inside, with a safety limiter on the master, so nothing distorts. The tech turns the sound system up by the same amount at the sound check. Every other slider still reads 100%.
-- (b) **Lower all the other defaults** (songs and the rest at about 70%), so the chaotic moments sit at 100%. The same sound, but every number changes and the scale reads oddly.
-And: (a) one slider shared by the throws and the corn-seed storm; (b) a slider each.
+Sound engine's facts (26 Nov): songs are trimmed to −14 LUFS, and most of their peaks already reach the master limiter, which squashes everything above −6 dBFS. So turning a song up without room above it makes it denser, not much louder: +3 dB raises its body by 3 dB but its peaks by only about 0.2 dB. The sliders use an audio taper: about 119% is +3 dB, about 141% is +6 dB, about 84% is −3 dB, and 70% is about −6 dB.
+- **How much louder:** (a) +3 dB; (b) +6 dB.
+- **How:**
+  - (a) **These sliders above 100%:** 119% (or 141%), with the whole show played 3 (or 6) dB lower inside, so the limiter has room. Normal songs get squashed less than today. The tech turns the sound system up by the same amount, once, at the sound check. Every other slider still reads 100%.
+  - (b) **Lower every other default** to 84% (or 70%), so the chaotic moments sit at 100%. The same sound, but every number changes.
+- **Sliders:** (a) one shared by the throws and the corn-seed storm (as built); (b) one each.
 
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
