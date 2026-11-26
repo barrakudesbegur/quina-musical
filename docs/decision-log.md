@@ -1194,3 +1194,11 @@ By: the user. Source: open-questions.md › Answered (U154). Amends: D174. Lives
 ### D176 · A then B turns the starting transition into a Suspens · 2026-11-26 · Active
 There's no delay on "Següent". A down starts the transition straight away, and the Spin takes a few seconds before its landing. If B goes down while A is still held, that transition becomes a Suspens, a transition held open (the glossary's own definition). If that can't be done smoothly, the transition is cancelled and a Suspens starts from the current song. A down and up, then B, is a normal Aguanta, which cancels the transition, as today. The 3-vibration window (D147) counts from the moment both are down. Answers U156, after the user's "think deeper".
 By: the user. Source: open-questions.md › Answered (U156). Amends: D144. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D177 · How a Spin becomes a Suspens, at each moment · 2026-11-26 · Active
+From Sound engine's measurements of 288 transitions, applying the user's D176 rule ("smoothly, else cancel and start a Suspens"):
+- **Before A's exit move starts** (about the first 65% of the Spin): the build fades, and A's phrase loops as in any Suspens. This covers almost every A-then-B press.
+- **After A's exit has started:** A's exit plays out, and the rest becomes a Suspens on B's grid without A, which is smooth at every point. Cancelling into Hold music would be audible, so it isn't used.
+- **In the last 0.15 s:** nothing can stop the landing. B lands, and since B is held, the new song goes into Aguanta.
+No new command: `suspense { on: true }` during a Spin converts it.
+By: the orchestrator, applying the user's D176 to Sound engine's facts. Source: Sound engine's report of 26 Nov. Amends: D176. Lives in: requirements/show-and-music.md › The presenters' actions.
