@@ -1,17 +1,16 @@
 <!--
-  The Interval: the next round and its prizes to announce, the guide countdown (rounds always start by
-  hand) and Start round. The Interval music has its own panel (IntervalMusic), shown wherever it plays.
+  The Interval: the next round and its prizes to announce, and the guide countdown (rounds always start by hand). The
+  round starts from the cluster's big «Comença la quina» (ThumbCluster, D195); the Interval music has its own panel at
+  the column's top (IntervalMusic, D196).
 -->
 <script lang="ts">
   import { formatCountdown } from '../../../packages/rules/time.ts';
   import { getConsole } from '../context.ts';
   import { guideCountdown } from '../logic/countdown.ts';
-  import { roundIntroArgs } from '../logic/show-data.ts';
   import { roundAt } from '../../../packages/ui/plan.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import PrizeList from './PrizeList.svelte';
-  import WiiBadge from './WiiBadge.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -19,12 +18,6 @@
   // The engine's round count (what the total counts is pending U163).
   const total = $derived(model.show.state?.game.roundsTotal ?? 0);
   const guide = $derived(guideCountdown(interval, model.show.now));
-  const isDefault = $derived(model.defaultAction?.control === 'roundIntro');
-
-  function start(): void {
-    if (!interval) return;
-    model.act('roundIntro', roundIntroArgs(model.plan, interval.nextRound));
-  }
 </script>
 
 {#if interval}
@@ -42,12 +35,5 @@
 
     <h3 class="panel__subtitle">{S.roundStart.announce}</h3>
     <PrizeList round={interval.nextRound} />
-
-
-    <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('roundIntro')} onclick={start}>
-      <Icon name="play" /><span>{S.interval.start}</span>
-      {#if isDefault}<WiiBadge button="a" />{/if}
-    </button>
-    <p class="note">{S.interval.startNote}</p>
   </section>
 {/if}

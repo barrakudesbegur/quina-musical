@@ -822,7 +822,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const s = FIXTURES.check(now).state as FullState;
     return { state: { ...s, lastRound: true, round: { ...s.round, number: 8 } } };
   },
-  /** The end screen with the end music: «Tempesta» in Següent's place, «Llançament» beside it. */
+  /** The end screen with the end music: «Tempesta» alone in the big place, no «Enrere» or «Comprovar» (D194, D199). */
   afterMusic: (now) => {
     const s = FIXTURES.after(now).state as FullState;
     return { state: { ...s, intervalMusic: { set: 'end', track: { title: 'Feliz Navidad', artist: 'José Feliciano', index: 1, count: 50, sinceMs: now - 20000 } } } };

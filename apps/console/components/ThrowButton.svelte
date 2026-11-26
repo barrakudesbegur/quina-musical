@@ -6,8 +6,9 @@
   stripes drift (hook throw-on). While it's on, the big one shows its time from the hook: ♪ bars or ‖, the time, a bar
   with the drop's mark («Llançament» only: «Tempesta» starts at the drop) and its length (logic/throw-songs.ts
   throwProgress); idle, no song name (the user: the banner was unnecessary).
-  `variant`: big (Següent's place) or top (the last round's top row, between «Enrere» and «Comprovar»: no strip, the
-  fill sweeps the whole button, as on «Enrere»).
+  `variant`: big (the big bottom place), line (a break's slim line along the top, D195: the name and its note on the
+  left, the time on the right, the strip under them) or top (the last round's top row, between «Enrere» and
+  «Comprovar»: no strip, the fill sweeps the whole button, as on «Enrere»).
   Only on the tablet: no Wii badge, and A never plays it. Hooks: data-testid="throw-button" or "storm-button".
 -->
 <script lang="ts">
@@ -23,7 +24,7 @@
 
   interface Props {
     song: ThrowSong;
-    variant?: 'big' | 'top';
+    variant?: 'big' | 'line' | 'top';
   }
 
   let { song, variant = 'big' }: Props = $props();

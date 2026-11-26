@@ -1,7 +1,8 @@
 <!--
   The Check board, over the whole body under the header (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciada; the
   Review is ReviewPanel, -Revisio). The presenters pace it (D107):
-  - left: «Cartrons cantats» with 2 cards or more, then the claimed card, marked in private from the start (CheckCard);
+  - left: «Ara sona» in one line (NowLine: the music from before the Check, far down; D196, D199), «Cartrons cantats»
+    with 2 cards or more, then the claimed card, marked in private from the start (CheckCard);
   - right, where the game screen's cluster is, in three rows: «Enrere» (one mark off, D127/D134; 1 or 2 pressed once)
     and «Revisió manual» (−/+ held); «+ Candidat» (the claim pad) and «Seguides» (reveal in a row, D117); and the big
     button: «Destapa» with the next song inside it, «Destapant…», then the cue «Celebrem!», «Vàlid · següent» or
@@ -31,10 +32,11 @@
   import ClaimsStrip from './ClaimsStrip.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
+  import NowLine from './NowLine.svelte';
   import ReviewPanel from './ReviewPanel.svelte';
   import ThrowButton from './ThrowButton.svelte';
   import WiiBadge from './WiiBadge.svelte';
-  import { throwLayout } from '../logic/throw-songs.ts';
+  import { clusterLayout } from '../logic/cluster-layout.ts';
 
   let { onclaim }: { onclaim: () => void } = $props();
 
@@ -57,7 +59,7 @@
   });
   const next = $derived(check ? nextReveal(check, claim) : null);
   const isDefault = $derived(model.defaultAction?.control === 'check');
-  const storm = $derived(throwLayout(flow.scene, snap?.lastRound === true).top);
+  const storm = $derived(clusterLayout(flow.scene, snap?.lastRound === true).top);
   const song = (songId: number) => ({ title: songTitleOf(songId, snap, model.catalog) ?? `Cançó ${songId}`, artist: model.catalog?.songs.get(songId)?.artist ?? '' });
   const title = (songId: number) => song(songId).title;
   const winners = $derived(batchWinners(flow));
@@ -113,6 +115,7 @@
   data-card-id={check?.cardId ?? undefined}
 >
   <div class="check-board__left">
+    <NowLine />
     {#if showClaims}<ClaimsStrip items={claims.items} {startable} />{/if}
     {#if check}
       <CheckCard {check} {claim} {of} />
