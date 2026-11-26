@@ -8,6 +8,14 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U80 · A name for the stopped Check that feels temporary
+The user finds "stopped" ("Aturat") misleading: it sounds like the end. The words "Hold", "Pausa", "Suspens" and "En espera" already mean other things, so they're out. Options:
+- (a) **under review**: the claim is "En revisió", and the button is "Revisió manual";
+- (b) **set aside**: the claim is "Apartat", and the button is "Aparta'l";
+- (c) **pending a manual check**: the claim is "Per revisar", and the button is "Revisa'l a mà";
+- (d) another word.
+The code isn't pushed yet, so renaming is cheap now. "Dropped" ("Descartat") stays unless the user says otherwise. U67's labels follow this answer.
+
 ### U76–U79 · The stopped Check's screens (D118)
 A stopped Check gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
 - **U76 · The projector while stopped:** (a) the card stays as far as it got, with no pass or fail and a neutral line such as "Un moment…"; (b) the card goes away for a neutral screen (the round's plate and "Un moment…"); (c) something else.
