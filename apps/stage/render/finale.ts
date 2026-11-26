@@ -160,11 +160,12 @@ export class FinaleStage {
     this.stop();
     if (this.env.reducedMotion()) return;
     const c = STAGE.finale.confetti;
+    const paper = STAGE.paper;
     this.stopConfetti = runPaperConfetti(
       this.canvas,
-      { count: c.count, colors: c.colors, origin: c.origin, spread: c.spread, fallShare: c.fallShare, size: c.size, random: this.env.random },
+      { count: c.count, colors: paper.colors, origin: c.origin, spread: c.spread, fallShare: paper.fallShare, size: paper.size, random: this.env.random },
       c.durationMs,
-      c.outline,
+      paper.outline,
     );
   }
 

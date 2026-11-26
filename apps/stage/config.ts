@@ -65,8 +65,8 @@ export const STAGE = Object.freeze({
    * - `band`: the drum's band while it's on, smaller and higher so the stage fits under the title (the show page's drum
    *   follows `--stage-band-*`);
    * - `ninos`: each finalist's pose (packages/rules/finale.ts `FINALE_POSES`), tinted by its hue; `winner`: the party nino;
-   * - `confetti`: «Salvats!»'s slow paper confetti (D185: about 55 px/s on the 1080 px box), from the ribbon;
-   * - `celebration`: the «QUINA POTRA!» Celebration's paper rain (D186) and its stickers.
+   * - `confetti`: «Salvats!»'s slow paper confetti (D185), from the ribbon, in the look of `STAGE.paper`;
+   * - `celebration`: the «QUINA POTRA!» Celebration's stickers.
    */
   finale: Object.freeze({
     band: Object.freeze({ top: 70, height: 330 }),
@@ -76,18 +76,8 @@ export const STAGE = Object.freeze({
       'mans-adalt': new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href,
     }),
     winner: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href,
-    confetti: Object.freeze({
-      count: 180,
-      durationMs: 9000,
-      origin: Object.freeze({ x: 0.5, y: 0.56 }),
-      spread: 0.5,
-      fallShare: 0.05,
-      size: Object.freeze({ min: 12, max: 22 }),
-      colors: Object.freeze(['#FFC531', '#3EE07F', '#FF6FB5', '#4FC3FF', '#FFF6E5', '#FF8A1F']),
-      outline: '#17132B',
-    }),
+    confetti: Object.freeze({ count: 180, durationMs: 9000, origin: Object.freeze({ x: 0.5, y: 0.56 }), spread: 0.5 }),
     celebration: Object.freeze({
-      confetti: Object.freeze({ count: 200, durationMs: 14000, origin: Object.freeze({ x: 0.5, y: 0.3 }), spread: 1 }),
       stickers: Object.freeze({
         topLeft: new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href as string | null,
         topRight: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href as string | null,
@@ -108,12 +98,22 @@ export const STAGE = Object.freeze({
     /** Blank tiles to shuffle when the catalog (cards.json) is missing. */
     fallbackTiles: 60,
   }),
+  /**
+   * The projector's paper confetti (D185: the phones' particles, packages/ui/motion/paper-confetti.ts), on one canvas:
+   * a slow fall of about 55 px/s on the 1080 px box, bigger pieces than the phones', the finale's colours with an ink
+   * outline. «Salvats!» (`finale.confetti`) and every Celebration's rain (`confetti`) share it.
+   */
+  paper: Object.freeze({
+    fallShare: 0.05,
+    size: Object.freeze({ min: 12, max: 22 }),
+    colors: Object.freeze(['#FFC531', '#3EE07F', '#FF6FB5', '#4FC3FF', '#FFF6E5', '#FF8A1F']),
+    outline: '#17132B',
+  }),
+  /** Each Celebration's paper rain (ANIMATIONS.md `celebrate`): from a little above the middle, across the whole width. */
   confetti: Object.freeze({
-    /** Pieces per burst; a Bingo gets two bursts, one after the other (at most 150 animated at once). */
-    line: Object.freeze([120]),
-    bingo: Object.freeze([100, 100]),
-    /** Colour tones a piece may take (stage.css maps them to palette tokens). */
-    tones: 5,
+    line: Object.freeze({ count: 120, durationMs: 14000, origin: Object.freeze({ x: 0.5, y: 0.3 }), spread: 1 }),
+    bingo: Object.freeze({ count: 200, durationMs: 14000, origin: Object.freeze({ x: 0.5, y: 0.3 }), spread: 1 }),
+    standing: Object.freeze({ count: 200, durationMs: 14000, origin: Object.freeze({ x: 0.5, y: 0.3 }), spread: 1 }),
   }),
   /** `credits`: the after-the-Game roll's speed. */
   creditsPxPerSec: 40,

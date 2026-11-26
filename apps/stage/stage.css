@@ -93,7 +93,6 @@
   --stage-cross-row: 17.5rem;
   --stage-logo: 6rem;
   --stage-tile-cover: 11.25rem;
-  --stage-confetti: 1.125rem;
   --stage-float: 6px;
   --stage-rise: 24px;
   --stage-title-drop: 40px;
@@ -129,7 +128,6 @@
   --stage-dur-slam: 600ms;
   --stage-delay-prize: 600ms;
   --stage-dur-rays: 20s;
-  --stage-dur-confetti: 2400ms;
   --stage-dur-rotate: 400ms;
   --stage-dur-idle: 8s;
   --stage-dur-sway: 8s;
@@ -2779,46 +2777,6 @@
   transition: none;
 }
 
-.confetti {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.confetti__piece {
-  --piece-color: var(--color-accent);
-  position: absolute;
-  top: -5%;
-  left: calc(var(--x) * 100%);
-  width: calc(var(--stage-confetti) * (0.6 + var(--size) * 0.8));
-  height: calc(var(--stage-confetti) * 0.45);
-  background: var(--piece-color);
-  opacity: 0;
-}
-
-.confetti__piece[data-tone='1'] {
-  --piece-color: var(--color-primary);
-}
-.confetti__piece[data-tone='2'] {
-  --piece-color: var(--color-ok);
-}
-.confetti__piece[data-tone='3'] {
-  --piece-color: var(--color-calm);
-}
-.confetti__piece[data-tone='4'] {
-  --piece-color: var(--color-danger);
-}
-
-.celebration[data-anim='celebrate'] .confetti__piece {
-  animation: stage-confetti-fall var(--stage-dur-confetti) var(--stage-ease-in) both;
-  animation-delay: calc(var(--delay) * var(--stage-dur-confetti) * 0.4);
-}
-
-/* A Bingo's second burst starts as the first has fallen (≤ 150 animated pieces at once). */
-.celebration[data-anim='celebrate'] .confetti__piece[data-burst='1'] {
-  animation-delay: calc(var(--stage-dur-confetti) + var(--delay) * var(--stage-dur-confetti) * 0.4);
-}
-
 /* -------------------------------------------------------------------------------------- interval */
 /* A big "Mitja part", the next round's plate, the card's price for that round (`price-tag`, U5), a large countdown ring
    between the two ninos, the logos. */
@@ -3133,17 +3091,6 @@
   }
 }
 
-@keyframes stage-confetti-fall {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotate(0turn);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(calc(var(--drift) * 10rem), calc(var(--box-h, 1080px) * 1.1), 0) rotate(calc(var(--turn) * 3turn));
-  }
-}
-
 @keyframes stage-credits {
   from {
     transform: translateY(var(--credits-from));
@@ -3229,10 +3176,6 @@
 
   .shuffle__caption {
     display: block;
-  }
-
-  .confetti {
-    display: none;
   }
 }
 

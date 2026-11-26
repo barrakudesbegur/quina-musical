@@ -1,9 +1,8 @@
-// Small pure pieces of the stage: the QR path, the player app link, confetti, Catalan formatting.
+// Small pure pieces of the stage: the QR path, the player app link, Catalan formatting.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import QRCode from 'qrcode';
 import { playerAppLink, qrPathData } from '../../../../stage/model/qr.ts';
-import { confettiPieces } from '../../../../stage/model/confetti.ts';
 import { joinCa, nextRoundLabel, priceLabel, STAGE_TEXT } from '../../../../stage/strings.ts';
 
 test('the QR path draws one run per row of dark modules, inside a quiet zone', () => {
@@ -29,13 +28,6 @@ test('the player app link carries the edition', () => {
   assert.deepEqual(playerAppLink('26', app), { href: 'https://quina.barrakudesbegur.org/26', label: 'quina.barrakudesbegur.org/26' });
   assert.deepEqual(playerAppLink(null, app), { href: app.origin, label: app.label });
   assert.deepEqual(playerAppLink('../x', app), { href: app.origin, label: app.label });
-});
-
-test('confetti: the bursts, tones in range, from the injected source', () => {
-  const pieces = confettiPieces([100, 100], 5, () => 0.5);
-  assert.equal(pieces.length, 200);
-  assert.deepEqual([...new Set(pieces.map((p) => p.burst))], [0, 1]);
-  assert.ok(confettiPieces([50], 5, () => 1).every((p) => p.tone === 4 && p.x < 1));
 });
 
 test('Catalan lists and labels', () => {
