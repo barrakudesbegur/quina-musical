@@ -85,6 +85,8 @@ export const COMMANDS = Object.freeze({
     /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
      * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
     holdMusicOn: { type: 'boolean', optional: true },
+    /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
+    remoteShake: { type: 'boolean', optional: true },
   },
   /**
    * One volume slider (D139), applied at once and kept in the Game's settings (`game.volumes`). The engine journals

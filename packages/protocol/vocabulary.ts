@@ -116,10 +116,14 @@ export const PACE_LIMITS_SEC = [8, 60] as const;
 export const PACE_PRESETS_SEC = [11, 14, 18, 22, 30] as const;
 /** The remotes' −/+ step. */
 export const PACE_FINE_STEP_SEC = 1;
-/** The Pace a round starts with, unless the presenters locked theirs: last year's medians. */
-export const PACE_DEFAULT_SEC = Object.freeze({ firstRound: 22, laterRounds: 14 });
-/** The Pace a round starts with (1-based round number). */
-export const defaultPaceSec = (round: number): number => (round <= 1 ? PACE_DEFAULT_SEC.firstRound : PACE_DEFAULT_SEC.laterRounds);
+/**
+ * The Pace is a repeat's slot: a song already played in this Game's earlier rounds. A song's first play in the Game, in
+ * any round, gets `firstPlay / repeat` times it (D174, D175), and lands on its best hook. `repeat` is the Pace each round
+ * starts with, unless the presenters locked theirs.
+ */
+export const PACE_DEFAULT_SEC = Object.freeze({ firstPlay: 22, repeat: 14 });
+/** A first play's slot from the Pace: the Pace × 22/14, so changing or locking the Pace scales both. */
+export const firstPlaySec = (pace: number): number => (pace * PACE_DEFAULT_SEC.firstPlay) / PACE_DEFAULT_SEC.repeat;
 
 /** Per Phase, the [low, high] range of the Heat (0..1) the engine draws for it: a Phase starts where its band does. */
 export const HEAT_BANDS: Readonly<Record<PhaseName, readonly [number, number]>> = Object.freeze({

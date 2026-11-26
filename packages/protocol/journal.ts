@@ -276,6 +276,12 @@ export interface GameRecord {
   winners: WinnerInfo[];
   /** The rounds whose prizes were revealed, and how (plan.ts revealedRounds turns them into what phones see). */
   prizesRevealed: { round: number; by: 'presenters' | 'intro' }[];
+  /**
+   * The songs counted in this Game's earlier rounds, each once, in the order they first played (D174): a song not in it
+   * is a first play, with a longer slot. Folded from each round as the next one starts (foldPlayed). Optional in the type
+   * only: a record kept from before it lacks it, and reads as none.
+   */
+  playedBefore?: number[];
 }
 
 export class JournalError extends Error {
@@ -286,8 +292,26 @@ export class JournalError extends Error {
 export function emptyRecord(gameId: string): GameRecord {
   return {
     gameId, seq: 0, cardsInPlay: '', settings: null, round: null,
-    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [],
+    scene: 'before', sceneSinceMs: 0, intro: null, claims: [], claimCount: 0, winners: [], prizesRevealed: [], playedBefore: [],
   };
+}
+
+/**
+ * `playedBefore` as round `next` starts (or is resumed): the round in progress's counted songs (its Queue up to its last
+ * counted landing) join it, unless `next` is that same round again (a restart or a resume replaces it). Shared by the
+ * journal's replay and the engine, so the two always agree.
+ */
+export function foldPlayed(playedBefore: readonly number[], round: { number: number; queue: readonly number[]; position: number } | null, next: number): number[] {
+  const played = [...playedBefore];
+  if (!round || round.number === next) return played;
+  const seen = new Set(played);
+  for (const songId of round.queue.slice(0, round.position + 1)) {
+    if (!seen.has(songId)) {
+      seen.add(songId);
+      played.push(songId);
+    }
+  }
+  return played;
 }
 
 /**
@@ -307,6 +331,7 @@ export function replayJournal(entries: readonly JournalEntry[], gameId = entries
 export function extendJournal(record: GameRecord, entries: readonly JournalEntry[]): GameRecord {
   const next = structuredClone(record);
   next.prizesRevealed ??= []; // a record kept from before prize reveals
+  next.playedBefore ??= []; // a record kept from before first plays (D174)
   for (const entry of entries) {
     if (entry.gameId !== next.gameId) throw new JournalError(`entry ${entry.seq} belongs to game ${entry.gameId}, not ${next.gameId}`);
     if (entry.seq !== next.seq + 1) throw new JournalError(`entry ${entry.seq} follows ${next.seq}: missing or repeated entries`);
@@ -319,6 +344,7 @@ export function extendJournal(record: GameRecord, entries: readonly JournalEntry
 function applyEntry(record: GameRecord, entry: JournalEntry): void {
   switch (entry.kind) {
     case 'round.started':
+      record.playedBefore = foldPlayed(record.playedBefore ?? [], record.round, entry.round);
       record.settings = { ...entry.settings };
       record.round = {
         number: entry.round,
@@ -340,6 +366,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
       record.claims = [];
       return;
     case 'round.resumed':
+      record.playedBefore = foldPlayed(record.playedBefore ?? [], record.round, entry.round);
       record.settings = { ...entry.settings };
       record.round = {
         number: entry.round,

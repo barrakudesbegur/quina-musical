@@ -49,6 +49,8 @@ export interface HoldInfo {
 
 export interface CurrentSong extends SongRef {
   hookId: string;
+  /** The song's first play in this Game (D174): its slot is `pace.firstPlaySec`, and it landed on its best hook. */
+  firstPlay: boolean;
   /** Position in the song, in seconds, at the snapshot's `atMs`. */
   posSec: number;
   endsAtMs: number | null;
@@ -74,6 +76,11 @@ export interface GameSettings {
   autoAdvance: boolean;
   /** Keep auto-advance on in the final phase. */
   autoAdvanceFinal: boolean;
+  /**
+   * The remote's shake gesture (D148): the console paired with the remote turns it on or off; every console shows the
+   * switch. The engine only keeps it. Default true. Optional in the type only: an older journal lacks it.
+   */
+  remoteShake?: boolean;
   /** Phase placeholder when no cards are in play. */
   songsUntilWinner: number;
   phaseOverride: PhaseName | null;
@@ -161,8 +168,11 @@ export interface FutureInfo {
 }
 
 export interface PaceInfo {
+  /** The Pace: a repeat's slot (a song played in an earlier round of this Game). */
   sec: number;
-  /** The Pace this round starts with (PACE_DEFAULT_SEC), which the console recommends. */
+  /** A song's first play in the Game gets this slot instead: `sec` × 22/14 (vocabulary.ts firstPlaySec, D174). */
+  firstPlaySec: number;
+  /** The Pace each round starts with (PACE_DEFAULT_SEC.repeat), which the console recommends. */
   defaultSec?: number;
   locked: boolean;
   /** The Drift catch-up factor (1 = none). */
@@ -384,16 +394,27 @@ export interface FinaleInfo {
   cued: boolean;
 }
 
-/** A throw song (D138, D151), from its button until it ends or the scene changes. */
-export interface ThrowInfo {
-  /** Which: a planned Throw's, or the corn-seed storm's. */
-  song: ThrowSong;
+/** A throw song's track, as its button shows it before and while it plays (seconds into the file). */
+export interface ThrowTrackInfo {
   title: string;
   artist: string;
+  /** Where a tap starts it (its hook). */
+  startSec: number;
+  /** Where its drop is. */
+  dropSec: number;
+  durationSec: number;
+}
+
+/** A throw song (D138, D151), from its button until it ends or the scene changes. */
+export interface ThrowInfo extends ThrowTrackInfo {
+  /** Which: a planned Throw's, or the corn-seed storm's. */
+  song: ThrowSong;
   /** Playing now; false while a tap has stopped it (the next tap resumes it where it stopped). */
   playing: boolean;
-  /** When it last started or resumed. */
+  /** When it last started, resumed or stopped. */
   sinceMs: number;
+  /** Its position at `sinceMs`: playing, it moves on in real time from there; stopped, it waits there. */
+  posSec: number;
 }
 
 /** The round's public Shuffle (the projector animates it; it never reveals the Queue). */
@@ -490,6 +511,8 @@ export interface ShowState {
   celebrationChoice?: CelebrationMusic | null;
   /** A throw song while it's on (D138, D151), else null. */
   throwSong: ThrowInfo | null;
+  /** Each throw song's track, at all times: the buttons name it while idle. */
+  throwSongs: Record<ThrowSong, ThrowTrackInfo>;
   /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
    * button shows in it (D155; SceneContext.lastRound). */
   lastRound: boolean;
