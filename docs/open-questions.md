@@ -8,6 +8,32 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U85 · The music under a Check, between reveals
+Today the song or Hold music drops very low (−32 dB) for the whole Check, under the snippets. With the presenters pacing it, they'll talk between presses.
+- (a) Very low for the whole Check, as now.
+- (b) At the claim's level, under the presenters' voices, dipping further only while a snippet plays.
+
+### U86 · A card number that doesn't exist
+A presenter typing on the pad may make a typo. Today an unknown number fails the Check publicly.
+- (a) The pad refuses it privately ("Aquest número no existeix"), so the presenter retypes and nothing goes public.
+- (b) A public fail, as now.
+A real card of the wrong type for the round still fails publicly (D33).
+
+### U87 · "Enrere" during a claim and a Check
+"Enrere" undoes the last song, for a claim that comes after more songs have played. Today's Check screen has it as a long press.
+- (a) Keep it as a long press on the claim pad and the Check screen, as today.
+- (b) Only before the Check starts, on the claim pad.
+- (c) Only outside claims.
+
+### U88 · The Wii remote during a review
+A is the reveal and the cue.
+- (a) The review ("Revisió manual") and its four outcomes are tablet-only, since they're rare and deliberate.
+- (b) A remote button sends the Check to review too; the outcomes stay on the tablet.
+
+### U89 · When the card appears on the projector
+- (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
+- (b) Only on the presenters' first press.
+
 ### U84 · After a discard: Parlem alone, or the "aturat" setting
 Sound engine's facts: "Avanç automàtic aturat" on the console isn't an override. It's the auto-advance setting itself switched off; it stays off across songs and rounds, and "Següent" doesn't bring it back. The override is the Hold: Parlem (like Aguanta and a claim) already suspends the auto-advance, and "Següent" ends the Hold, with the auto-advance as it was set.
 - (a) **Parlem alone:** after a discard the music from before the Check comes back in Parlem. "Següent" ends it, and the auto-advance carries on as set. Nothing to remember or restore.
