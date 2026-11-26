@@ -11,6 +11,7 @@ import {
   ROUND_KINDS,
   WIN_KINDS,
   REVIEW_OUTCOMES,
+  VOLUME_KEYS,
   isPhaseName,
   type PhaseName,
   type ProtocolVersion,
@@ -36,7 +37,11 @@ export interface FieldSpec {
 export const COMMANDS = Object.freeze({
   /** The show page's first click (browsers need a gesture to start audio). */
   unlock: {},
-  /** Ask for the next song. Rejected `busy` while a transition is running. Releases a Hold. */
+  /**
+   * Ask for the next song. Rejected `busy` while a transition is running, and `nextBlocked` while Aguanta or a
+   * Suspense is on (D133). Ends Parlem and the other Holds (D142). During Pausa it ends Pausa with that song's
+   * transition (D128).
+   */
   next: {},
   /** Undo the last landing, or cancel the running Spin. Always ends in Hold. */
   back: {},
@@ -44,7 +49,8 @@ export const COMMANDS = Object.freeze({
    * Enter (`on: true`), leave (`on: false`) or toggle (no `on`) the Hold. `duck` (default true) is Parlem: the
    * song ducks under the presenters' voices, and Hold music may take over. `duck: false` is Aguanta (Stay): the
    * song keeps playing at full volume, nothing lands and nothing advances, and near its end it loops its last
-   * phrase. Sent while holding, `duck` switches between the two in place; `on: false` or `next` releases.
+   * phrase. Sent while holding, `duck` switches between the two in place; `on: false` releases, and so does `next`
+   * from Parlem (Next is refused during Aguanta, D133). In a Celebration, Parlem ducks its music (D117).
    */
   hold: { on: { type: 'boolean', optional: true }, duck: { type: 'boolean', optional: true } },
   /** Switch to Hold music now (enters Hold if needed). */
@@ -52,10 +58,12 @@ export const COMMANDS = Object.freeze({
   /**
    * Suspense: start the next song's transition and hold it open (`on: true`, or no `on` when none is open):
    * the playing song repeats its phrase while the build intensifies over it, and the drum hovers over a few
-   * pending songs as each is teased. Release it (`on: false`, no `on`, or `next`) and the
-   * song lands on the next bar; it releases by itself after about 30 s. Never started automatically.
+   * pending songs as each is teased. Release it (`on: false`, or no `on`) and the song lands on the next bar; it
+   * releases by itself after about 30 s. Never started automatically. Next doesn't release it (D133).
+   * `cancel: true` with `on: false` lands nothing: the build backs out and fades, and the song is back where the
+   * Suspense started, in Aguanta (B still held, A let go: D144) or playing (manual advance, B let go early: D145).
    */
-  suspense: { on: { type: 'boolean', optional: true } },
+  suspense: { on: { type: 'boolean', optional: true }, cancel: { type: 'boolean', optional: true } },
   /** Set the Pace in seconds (the engine clamps it to PACE_LIMITS_SEC), nudge it by `delta`, and/or lock it
    * against Drift nudges. */
   setPace: {
@@ -74,11 +82,14 @@ export const COMMANDS = Object.freeze({
     /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
      * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
     holdMusicOn: { type: 'boolean', optional: true },
-    /** The Interval playlist's level in dB (0 = the tracks at the songs' loudness), applied at once. */
-    intervalVolumeDb: { type: 'number', optional: true, min: -30, max: 0 },
   },
+  /**
+   * One volume slider (D139), applied at once and kept in the Game's settings (`game.volumes`). The engine journals
+   * the volumes in `settings.changed` once the sliders have been still for a second, so a drag is one entry.
+   */
+  setVolume: { key: { type: 'string', oneOf: VOLUME_KEYS }, percent: { type: 'number', min: 0, max: 100 } },
   /** A claimed Line passed its Check: the Phase starts climbing towards the Bingo. A manual override for when
-   * no Check was run (a valid `decide` confirms the Line by itself); allowed in play and in the Celebration. */
+   * no Check was run (a valid Line's cue confirms it by itself); allowed in play and in the Celebration. */
   confirmLine: {},
   /** Cards in play for the whole game, as ranges ("1-180, 200-215, 400-460"); empty clears them. */
   setCardsInPlay: { ranges: { type: 'string', allowEmpty: true, maxLength: 2000 } },
@@ -137,16 +148,18 @@ export const COMMANDS = Object.freeze({
   revealPrizes: { round: { type: 'integer', min: 1, max: 20 } },
   /** A player claims a Line or the Bingo for a card, or in the Desgraciat round to be the last card standing
    * (`kind` defaults to what the Phase is climbing towards; a kind the round can't be won by is `invalid`).
-   * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and starts its Check when none is running. */
+   * Enters the Hold (cancelling a Spin like Hold does), queues the Claim and puts its Check on screen when none is,
+   * nothing revealed (the first reveal waits for a press). A card number that isn't printed refuses the whole claim
+   * as `unknownCard` (D126), privately: nothing is journaled. */
   claim: {
-    /** One card. Exactly one of `cardId` and `cardIds`; `cardId` goes once the presenter-paced Check is built. */
+    /** One card. Exactly one of `cardId` and `cardIds`. */
     cardId: { type: 'integer', optional: true, min: 1, max: 9999 },
     /** Several cards from the claim pad (D110): one Claim each, checked in turn in this order. */
     cardIds: { type: 'integers', optional: true, min: 1, max: 9999, maxItems: 10 },
     kind: { type: 'string', optional: true, oneOf: WIN_KINDS },
   },
-  /** (Re)start a Claim's Check from the start: a re-check (after Back), or another order. A Claim under review
-   * goes on with `reviewEnd { outcome: 'continue' }` instead, from where it was (D121). */
+  /** (Re)start a queued Claim's Check from the start, nothing revealed: a re-check after Back, or another order. A
+   * Claim under review goes on with `reviewEnd { outcome: 'continue' }` instead, from where it was (D121). */
   checkStart: { claimId: { type: 'string', maxLength: 40 } },
   /**
    * The presenter-paced Check (D107): the tap, or the Wii's A. `step` is the index the press expects, so two consoles
@@ -156,8 +169,17 @@ export const COMMANDS = Object.freeze({
    * starts the shared Celebration. Any other press is ignored, silently.
    */
   checkNext: { claimId: { type: 'string', maxLength: 40 }, step: { type: 'integer', min: 0, max: 20 } },
+  /**
+   * "Enrere" inside a Check (D127, D134): a single press steps back one revealed song. `step` is the index of the last
+   * revealed song, the mark it removes (any other value is ignored, silently, as with `checkNext`). The previous
+   * song's snippet replays (at none, the music from before the Check comes back up), and that Check's automatic
+   * reveal turns off, for that Check only. Only while revealing: not under review, not after the cue. It never
+   * closes the Check.
+   */
+  checkBack: { claimId: { type: 'string', maxLength: 40 }, step: { type: 'integer', min: 0, max: 20 } },
   /** Reveal in a row while on (the Wii's A held, or the tablet's toggle), through the cue (its fanfare or fail
-   * moment) and no further (D117). With it off, a press makes the cue. */
+   * moment) and no further (D117). It never makes a card's first reveal once the card entered by itself (after an
+   * earlier card's cue): that one waits for a press. With it off, each press reveals one song, then the cue. */
   checkAuto: { on: { type: 'boolean' } },
   /** "Revisió manual": put a queued or running Check under review any time before its cue (D118–D120). No fanfare
    * or effect, and whatever was playing goes on (its level is U78); the Claim is `reviewing`, and the round waits in
@@ -167,12 +189,9 @@ export const COMMANDS = Object.freeze({
    * End a Review (D121): `continue` its Check from where it was; `win` or `lose` it by hand, skipping the reveals
    * left, straight to that cue (the fanfare and Celebration, or the fail moment), even against the card (a PRIVATE
    * warning says so; the one exception to "the Check decides", and only from a Review); or `discard` it, with no
-   * fanfare and no failure music (where the round goes then is U82).
+   * fanfare and no failure music: the next Claim's Check, else the round in Parlem (Hold reason `discarded`).
    */
   reviewEnd: { claimId: { type: 'string', maxLength: 40 }, outcome: { type: 'string', oneOf: REVIEW_OUTCOMES } },
-  /** The presenters' verdict on a Claim. Both are journaled. The Check's result decides (docs/event.md): a presenter
-   * may reject a card that passed, but `valid: true` on a card whose Check failed is refused as `failedCheck`. */
-  decide: { claimId: { type: 'string', maxLength: 40 }, valid: { type: 'boolean' } },
   /** Set or edit a Winner's name and notes (PRIVATE), at any time. An empty string clears one. */
   winnerInfo: {
     claimId: { type: 'string', maxLength: 40 },
@@ -185,12 +204,23 @@ export const COMMANDS = Object.freeze({
   celebrationMusic: { choice: { type: 'string', oneOf: CELEBRATION_MUSIC } },
   /** After a Bingo's Celebration: the Interval (it also starts by itself after a while). */
   interval: {},
-  /** The Interval playlist moves on to its next track, with its usual transition on the playing track's next
-   * downbeat. Only while the Interval music plays (state `intervalMusic`). */
+  /** The playing music set (breaks, Pausa, end) moves on to its next track, with its usual transition on the
+   * playing track's next downbeat. Only while one plays (state `intervalMusic`). */
   intervalSkip: {},
+  /**
+   * "Llançament", the throw song (D138), at full volume while the break music fades out. A tap (no `restart`)
+   * starts it from its throw hook, stops it while it plays, and resumes it where it stopped; `restart: true` (a long
+   * press) plays it again from the hook. The break music fades back when it ends or stops. Between rounds only.
+   */
+  throw: { restart: { type: 'boolean', optional: true } },
   /** The end of the Game (scene `after`). */
   endGame: {},
-  /** The technical pause ("Tornem de seguida"): on, off, or toggle (no `on`). Hold music plays meanwhile. */
+  /**
+   * Pausa: on, off, or toggle (no `on`). Available at any time (D128). It saves the playback in progress and plays
+   * the Pausa music; "Tornem de seguida" shows on the projector and phones only during a round, a Check or a
+   * Celebration (D135, `pause.overlay`). Off: what was playing resumes exactly where it was, fading in, under Parlem
+   * where the scene has Parlem (Hold reason `pause`). Next during Pausa ends it with a transition instead.
+   */
   pause: { on: { type: 'boolean', optional: true } },
 } as const satisfies Record<string, Record<string, FieldSpec>>);
 

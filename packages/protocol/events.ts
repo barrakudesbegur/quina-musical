@@ -21,6 +21,8 @@ import {
   type RoundKind,
   type ShowScene,
   type ShowStatus,
+  type MusicSet,
+  type VolumeKey,
   type WinKind,
 } from './vocabulary.ts';
 import type { JournalEntry } from './journal.ts';
@@ -85,8 +87,12 @@ export interface GameSettings {
    * Optional in the type only (added later in v1): the engine always sends it, and an older journal lacks it.
    */
   holdMusicOn?: boolean;
-  /** The Interval playlist's level in dB, −30..0 (default −6). Optional in the type only, like `holdMusicOn`. */
-  intervalVolumeDb?: number;
+  /**
+   * The volume sliders, percent 0–100 (`setVolume`, vocabulary.ts VOLUME_KEYS and volumeDb). The state always has
+   * every key. In the journal they are absent until a slider or the plan's `volumes` first set them, so a Game that
+   * set none starts from the plan's (D139).
+   */
+  volumes?: Partial<Record<VolumeKey, number>>;
 }
 
 export interface CardsInfo {
@@ -216,7 +222,7 @@ export interface ClaimInfo {
   /** The Queue index of the last counted landing when the claim was made. */
   position: number;
   status: ClaimStatus;
-  /** Set when its Check is scheduled (or the claim is decided without one). */
+  /** What its card shows from the counted landings, set when its Check comes on screen. PRIVATE before the cue. */
   outcome: CheckOutcome | null;
   /** PRIVATE (console only): the Queue index at which the card first completed this kind, or null. The
    * console shows "complete since song 34" (index + 1). */
@@ -224,34 +230,35 @@ export interface ClaimInfo {
   /** PRIVATE (console only). */
   warnings: ClaimWarning[];
   /**
-   * PRIVATE (console only), the presenter-paced Check (D108): the whole card in its grid order, each song marked
-   * landed or not, as soon as the Claim is in. Absent until the engine switches to that Check.
+   * PRIVATE (console only, D108): the whole card in its grid order, each song marked landed or not, from the claim
+   * on (updated if a Back changes the landings). Empty for a card of the wrong type.
    */
-  markedCard?: { songId: number; landed: boolean }[];
-  /** PRIVATE: the index of the last song its Check reveals (the last, or the first ✗); null when none is revealed. */
-  revealUntil?: number | null;
-  /** PRIVATE: the next press on its Check is the cue (pass or fail). */
-  cueNext?: boolean;
+  markedCard: { songId: number; landed: boolean }[];
+  /** PRIVATE: the index of the last song its Check reveals (the last, or the first ✗), or null when it reveals none
+   * (`wrongType`: the cue comes at once). */
+  revealUntil: number | null;
+  /** PRIVATE: every song its Check reveals is revealed, so the next press on it is the cue (pass or fail). */
+  cueNext: boolean;
 }
 
-/** One song of a Check: its snippet (✓) or the "broken record" sound (✗), revealed at `atMs`. */
+/** One revealed song of a Check: its snippet (✓) or the "broken record" sound (✗). */
 export interface CheckStep {
   songId: number;
   landed: boolean;
-  /** When the snippet starts, scheduled in advance (ADR 0002). */
+  /** When its sound starts, set just ahead of the press so sound and screens meet (ADR 0002). */
   atMs: number;
   durationMs: number;
 }
 
 /**
- * A Check. Today's is scheduled in advance (`steps`, `startAtMs`, `endAtMs`): the projector reveals each step at its
- * `atMs`. The presenter-paced Check (D107) fills `total`, `revealed`, `auto` and `cue` instead, and nothing public
- * says ahead of the cue whether the card passes; the timed fields go once the engine switches to it.
+ * The Check on screen, paced by the presenters (D107): each press reveals one song (`revealed`), then the cue. Nothing
+ * public says ahead of the cue whether the card passes: `outcome` is PRIVATE until `cue` is set.
  */
 export interface CheckInfo {
   claimId: string;
   cardId: number;
   kind: WinKind;
+  /** PRIVATE until the cue: what the card shows (screens learn the result from `cue`, never ahead of it). */
   outcome: CheckOutcome;
   /** Line: the row played (the completed row, else the row with most landed songs, top row on a tie).
    * Bingo and standing: null (all 12 songs, card order; a standing Check stops on the first landed one). */
@@ -261,22 +268,19 @@ export interface CheckInfo {
   /** The card's printed type ('normal', 'especial'), shown as the Check's first step; null for `unknownCard`.
    * `wrongType`: it isn't the round's card type (`RoundInfo.cardType`). */
   cardType?: string | null;
-  /** Empty for `unknownCard` and `wrongType`. */
-  steps: CheckStep[];
+  /** When it came on screen. */
   startAtMs: number;
-  /** The result shows from here. */
-  endAtMs: number;
-  /** The most songs the Check can reveal: the card's 12, a Line's 4, 0 for `unknownCard` and `wrongType`. */
-  total?: number;
-  /** The songs revealed so far, in the card's grid order; each `atMs` is set just ahead, so sound and screens meet. */
-  revealed?: CheckStep[];
-  /** Revealing in a row (`checkAuto`). */
-  auto?: boolean;
+  /** The most songs the Check can reveal: the card's 12, a Line's 4 (the row played), 0 for `wrongType`. */
+  total: number;
+  /** The songs revealed so far, in the card's grid order (a Line's: its row's). */
+  revealed: CheckStep[];
+  /** Revealing in a row (`checkAuto` on, and not turned off for this Check by a step back, D134). */
+  auto: boolean;
   /** The cue, once it has played: the card passed (valid) or failed. */
-  cue?: 'pass' | 'fail' | null;
+  cue: 'pass' | 'fail' | null;
   /** Under review ("Revisió manual"): the projector stays on the Check and says so (D123). Whether phones see it
    * is U79. */
-  reviewing?: boolean;
+  reviewing: boolean;
 }
 
 export interface CelebrationInfo {
@@ -331,12 +335,29 @@ export interface IntervalTrackInfo {
  * (`roundStart`, and `play` until the first Spin builds out of it), and in `after`. Null otherwise.
  */
 export interface IntervalMusicInfo {
+  /** Which playlist plays (D129): the breaks', Pausa's or the end's. */
+  set: MusicSet;
   /** The track playing; null until the first one takes over (the music before it, such as the victory track, goes on). */
   track: IntervalTrackInfo | null;
 }
 
-/** The technical pause ("Tornem de seguida"), over whatever scene is underneath. */
+/**
+ * Pausa (D128, D135), over whatever scene is underneath: the playback in progress is saved, and resumes where it was
+ * when Pausa ends.
+ */
 export interface PauseInfo {
+  sinceMs: number;
+  /** "Tornem de seguida" shows on the projector and phones: only during a round, a Check or a Celebration (D135). */
+  overlay: boolean;
+}
+
+/** The throw song (D138), from "Llançament" until it ends or the scene changes. */
+export interface ThrowInfo {
+  title: string;
+  artist: string;
+  /** Playing now; false while a tap has stopped it (the next tap resumes it where it stopped). */
+  playing: boolean;
+  /** When it last started or resumed. */
   sinceMs: number;
 }
 
@@ -409,9 +430,10 @@ export interface ShowState {
   claims: ClaimInfo[];
   /** The Check on screen (running, or showing its result until it is decided), else null. */
   check: CheckInfo | null;
-  /** The presenter-paced Check (D110): every card of the claim has had its cue, one passed, and the next press
-   * (`checkNext` on the last Claim, `step` = its revealed count + 1) starts the shared Celebration. */
-  celebrationNext?: boolean;
+  /** The presenter-paced Check (D110): every card of the claim has had its cue, the last one failed but an earlier
+   * one passed, and the next press (`checkNext` on the last Claim, `step` = its revealed count + 1) starts the shared
+   * Celebration. */
+  celebrationNext: boolean;
   celebration: CelebrationInfo | null;
   interval: IntervalInfo | null;
   /** The whole Game's Winners (`name` and `notes` are PRIVATE). */
@@ -431,6 +453,8 @@ export interface ShowState {
    * null for the default (Line: the winning song; Bingo: the victory track). Optional in the type only.
    */
   celebrationChoice?: CelebrationMusic | null;
+  /** The throw song while it's on (D138), else null. */
+  throwSong: ThrowInfo | null;
 }
 
 /** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */
@@ -616,14 +640,7 @@ export interface ClaimOpened {
   claim: ClaimInfo;
 }
 
-/** A Check starts: its steps are timed in advance. */
-export interface CheckScheduled {
-  v: ProtocolVersion;
-  type: 'check.scheduled';
-  check: CheckInfo;
-}
-
-/** The presenter-paced Check (D107): a Claim's Check is on screen, nothing revealed yet. */
+/** A Claim's Check is on screen, nothing revealed yet (D107): the first reveal waits for a press. */
 export interface CheckStarted {
   v: ProtocolVersion;
   type: 'check.started';
@@ -637,6 +654,15 @@ export interface CheckRevealed {
   claimId: string;
   index: number;
   step: CheckStep;
+}
+
+/** "Enrere" inside a Check (D127, D134): the mark at `index`, the last revealed, is removed; that cell is next again. */
+export interface CheckUnrevealed {
+  v: ProtocolVersion;
+  type: 'check.unrevealed';
+  claimId: string;
+  index: number;
+  atMs: number;
 }
 
 /** The cue: the card passed (the Claim is valid) or failed; `manual` when a Review won or lost it by hand (D121). */
@@ -691,9 +717,9 @@ export type ShowEvent =
   | SceneChanged
   | ShuffleScheduled
   | ClaimOpened
-  | CheckScheduled
   | CheckStarted
   | CheckRevealed
+  | CheckUnrevealed
   | CheckCue
   | CheckReviewing
   | ClaimDecided
@@ -717,9 +743,9 @@ export const EVENT_TYPES = Object.freeze([
   'scene.changed',
   'shuffle.scheduled',
   'claim.opened',
-  'check.scheduled',
   'check.started',
   'check.revealed',
+  'check.unrevealed',
   'check.cue',
   'check.reviewing',
   'claim.decided',

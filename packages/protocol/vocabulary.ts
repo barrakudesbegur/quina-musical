@@ -14,12 +14,13 @@ export const isPhaseName = (value: unknown): value is PhaseName =>
 
 /** The show engine's status. */
 export type ShowStatus = 'locked' | 'idle' | 'playing' | 'transition' | 'hold';
-/** Why the show is in a Hold. `claim`: a Claim is being checked (also through the Celebration);
- * `checkFailed`: every claim of the last Check was invalid (error Hold music until Resume). */
-/** Why the round holds. `discarded`: a Review was discarded, so the music from before its Check plays under Parlem
- * (D122, D125). Like every Hold, it suspends auto-advance without touching its setting; Next ends it, and auto-advance
- * goes on as set. */
-export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed' | 'discarded';
+/**
+ * Why the round holds. `claim`: a Claim is being checked (also through the Celebration); `checkFailed`: every Claim of
+ * the last Check failed (error Hold music until Next); `discarded`: a Review was discarded, so the music from before its
+ * Check plays under Parlem (D122, D125); `pause`: Pausa ended, and what it saved plays again under Parlem (D128). Like
+ * every Hold, it suspends auto-advance without touching its setting; Next ends it, and auto-advance goes on as set.
+ */
+export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed' | 'discarded' | 'pause';
 /** A normal round, the special round, or the Desgraciat round (played in reverse: the last card standing wins). */
 export type RoundKind = 'normal' | 'special' | 'desgraciat';
 export const ROUND_KINDS = ['normal', 'special', 'desgraciat'] as const satisfies readonly RoundKind[];
@@ -53,14 +54,13 @@ export type ShowScene = (typeof SHOW_SCENES)[number];
 export const isShowScene = (value: unknown): value is ShowScene =>
   typeof value === 'string' && (SHOW_SCENES as readonly string[]).includes(value);
 
-/** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
 /**
- * Where a Claim is. `reviewing` (the Review, "En revisió"): its Check was put under review before the cue
- * (`checkReview`; whatever was playing goes on), undecided until a `reviewEnd` continues it, wins or loses it by
- * hand, or discards it (D119–D121). `discarded`: set aside without a verdict or a sound (D124). `checked` is the timed
- * Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D110) has none.
+ * Where a Claim is: `queued` (waiting for its Check), `checking` (its Check on screen, paced by the presenters,
+ * D107), `reviewing` (the Review, "En revisió": put under review before its cue with `checkReview`; whatever was
+ * playing goes on), then `valid` or `invalid` (its cue, or a Review won or lost by hand) or `discarded` (a Review set
+ * aside without a verdict or a sound, D124).
  */
-export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'reviewing' | 'valid' | 'invalid' | 'discarded';
+export type ClaimStatus = 'queued' | 'checking' | 'reviewing' | 'valid' | 'invalid' | 'discarded';
 /** How a Review ends (D121): its Check goes on from where it was; won or lost by hand, skipping the reveals left
  * (the journal marks the verdict `manual`); or discarded, with no fanfare and no failure music. */
 export const REVIEW_OUTCOMES = ['continue', 'win', 'lose', 'discard'] as const;
@@ -149,9 +149,13 @@ export const isSoundName = (value: unknown): value is SoundName =>
 /** Reasons a command may be rejected (`command.rejected.reason`). */
 export const REJECT_REASONS = [
   'invalid', 'locked', 'busy', 'endOfQueue', 'nothingToUndo', 'notHolding', 'notReady', 'decodeFailed', 'planFailed',
-  'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume', 'failedCheck',
-  // A Claim under review keeps the round in its Check until the Review ends (D118–D121): Next waits.
+  'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume',
+  // A Claim under review keeps the round in its Check until the Review ends (D118–D121).
   'claimOpen',
+  // A claim naming a card number that isn't printed (D126): refused privately, so the presenter retypes it.
+  'unknownCard',
+  // Next while Aguanta (Stay) or a Suspense is on (D133): nothing lands; let go of B (or Aguanta) first.
+  'nextBlocked',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];
 
@@ -159,3 +163,41 @@ export type RejectReason = (typeof REJECT_REASONS)[number];
  * a remote that keeps a copy of the Game journal and uploads it to the cloud. */
 export const ROLES = ['show', 'admin', 'tablet', 'drum', 'cloud'] as const;
 export type Role = (typeof ROLES)[number];
+
+// ---- music and volumes (D129, D138, D139) ---------------------------------------------------------------
+/**
+ * The playlists the engine plays between songs (tools/prep/interval.py, one folder each): `breaks` between rounds
+ * (the Interval; pop, shuffled), `pausa` during Pausa (lofi and silly-core, shuffled), `end` after the Game (for now
+ * the breaks' tracks in their playlist order, U97). The code keeps the word "interval" for a break (D136).
+ */
+export const MUSIC_SETS = ['breaks', 'pausa', 'end'] as const;
+export type MusicSet = (typeof MUSIC_SETS)[number];
+
+/**
+ * The volume sliders (D130, D139), each a percent 0–100 (`setVolume`). 100% is the level the engine is tuned to
+ * for that sound, so a fresh Game sounds as before, except `songsParlem`: the song under Parlem as a share of its
+ * full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and
+ * whooshes; `padFx`: the presenters' effects pad; `check`: the Check's snippets and broken record; `win`: the Clear
+ * fanfare, the victory track and the winning song's loop; `fail`: the Failure fanfare and the error Hold music;
+ * `finalLap`: the stinger; `intros`, `breaks`, `pausa`, `throws`, `doors`, `end`: those moments' music.
+ */
+export const VOLUME_KEYS = [
+  'master', 'songs', 'songsParlem', 'djFx', 'padFx', 'ticks', 'check', 'holdMusic', 'win', 'fail', 'finalLap',
+  'intros', 'breaks', 'pausa', 'throws', 'doors', 'end',
+] as const;
+export type VolumeKey = (typeof VOLUME_KEYS)[number];
+export type Volumes = Record<VolumeKey, number>;
+export const isVolumeKey = (value: unknown): value is VolumeKey =>
+  typeof value === 'string' && (VOLUME_KEYS as readonly string[]).includes(value);
+
+/** Every slider's starting percent. `songsParlem` is today's Parlem duck (−14 dB) on the curve below. */
+export const VOLUME_DEFAULTS: Readonly<Volumes> = Object.freeze({
+  master: 100, songs: 100, songsParlem: 45, djFx: 100, padFx: 100, ticks: 100, check: 100, holdMusic: 100, win: 100,
+  fail: 100, finalLap: 100, intros: 100, breaks: 100, pausa: 100, throws: 100, doors: 100, end: 100,
+});
+
+/**
+ * A slider's percent as decibels against its 100%: an audio taper, gain = (percent / 100)², so 50% is −12 dB,
+ * 25% −24 dB and 10% −40 dB; 0% is silence (−Infinity).
+ */
+export const volumeDb = (percent: number): number => (percent <= 0 ? -Infinity : 40 * Math.log10(Math.min(100, percent) / 100));

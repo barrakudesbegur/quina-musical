@@ -6,14 +6,15 @@
 // - when the prizes are revealed (round by round as the presenters announce them, or all kept secret);
 // - each round's printed card type (its name, colour and price are apps/cards' card-types.json);
 // - the sponsors;
-// - the schedule;
+// - the schedule, with the planned Throws;
+// - the volumes a fresh Game starts with (D139; the laptop only, never phones);
 // - the cheat sheet's rules (presenters only).
 // Phones see it through publicPlan: locked rounds keep only their skeleton, and the cheat sheet stays out.
 // Admin's bulk JSON import and export use exactly this shape, so an AI agent can fill it from the
 // organizers' spreadsheet.
 //
 // Part of @quina/protocol (written by the UI session). It must not import engine code.
-import { defaultCardType, isCardTypeId, isRoundKind, type RoundKind } from './vocabulary.ts';
+import { defaultCardType, isCardTypeId, isRoundKind, isVolumeKey, type RoundKind, type VolumeKey } from './vocabulary.ts';
 
 /**
  * Version 3: each round names the printed card type it plays (`RoundPlan.cardType`); the card types' names, colours
@@ -69,13 +70,13 @@ export interface SchedulePlan {
   roundMinutes: number;
   /** Planned length of an Interval, in minutes (the countdown guide). */
   intervalMinutes: number;
-  /** Planned breaks ("parón") after some rounds, on top of the Interval: the Schedule and the countdown allow for
-   * them. Absent when there are none (a plan without breaks reads back unchanged); read it as `breaks ?? []`. */
-  breaks?: PlannedBreak[];
+  /** The planned Throws ("parón") after some rounds, on top of the Interval: the Schedule and the countdown allow for
+   * them. Absent when there are none (a plan without Throws reads back unchanged); read it as `throws ?? []`. */
+  throws?: PlannedThrow[];
 }
 
-/** A planned break after round `afterRound` (never the last), of `minutes`. */
-export interface PlannedBreak {
+/** A planned Throw after round `afterRound` (never the last), lengthening that Interval by `minutes`. */
+export interface PlannedThrow {
   afterRound: number;
   minutes: number;
 }
@@ -95,6 +96,12 @@ export interface GamePlan {
   rounds: RoundPlan[];
   sponsors: Sponsor[];
   schedule: SchedulePlan;
+  /**
+   * The volume sliders a fresh Game starts with (D139, percent 0–100, vocabulary.ts VOLUME_KEYS): the edition file
+   * holds them, and the cloud folds a Game's slider moves back in. The engine reads them only while the Game has set
+   * no volume of its own, never mid-Game. Laptop only: publicPlan leaves them out. Absent: every slider at its default.
+   */
+  volumes?: Partial<Record<VolumeKey, number>>;
   cheatSheet: CheatSheet;
 }
 
@@ -159,7 +166,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
   const v2 = json.v === 2;
   keys(json, 'plan', v1
     ? ['v', 'edition', 'title', 'rounds', 'sponsors', 'schedule', 'cheatSheet']
-    : ['v', 'edition', 'title', 'prizeReveal', 'rounds', 'sponsors', ...(v2 ? ['cardTypes'] : []), 'schedule', 'cheatSheet']);
+    : ['v', 'edition', 'title', 'prizeReveal', 'rounds', 'sponsors', ...(v2 ? ['cardTypes'] : []), 'schedule', 'volumes', 'cheatSheet']);
   if (json.v !== PLAN_VERSION && !v1 && !v2) err('plan.v', `must be ${PLAN_VERSION}`);
   const prizeReveal: PrizeReveal = v1 ? 'perRound' : json.prizeReveal === 'allSecret' ? 'allSecret' : 'perRound';
   if (!v1 && json.prizeReveal !== 'perRound' && json.prizeReveal !== 'allSecret') err('plan.prizeReveal', 'must be "perRound" or "allSecret"');
@@ -250,25 +257,25 @@ export function checkGamePlan(json: unknown): PlanCheck {
   const sch = json.schedule;
   if (!isRec(sch)) err('plan.schedule', 'must be an object');
   else {
-    keys(sch, 'plan.schedule', ['startAtMs', 'roundMinutes', 'intervalMinutes', 'breaks']);
-    const breaks: PlannedBreak[] = [];
-    if (sch.breaks !== undefined) {
-      list(sch, 'breaks', 'plan.schedule', LIMITS.rounds).forEach((b, i) => {
-        const path = `plan.schedule.breaks[${i}]`;
+    keys(sch, 'plan.schedule', ['startAtMs', 'roundMinutes', 'intervalMinutes', 'throws']);
+    const throws: PlannedThrow[] = [];
+    if (sch.throws !== undefined) {
+      list(sch, 'throws', 'plan.schedule', LIMITS.rounds).forEach((b, i) => {
+        const path = `plan.schedule.throws[${i}]`;
         if (!isRec(b)) return err(path, 'must be an object');
         keys(b, path, ['afterRound', 'minutes']);
         const afterRound = num(b, 'afterRound', path, 1, LIMITS.rounds, { integer: true });
         const minutes = num(b, 'minutes', path, 1, 60);
         if (afterRound !== null && rounds.length && afterRound >= rounds.length) err(`${path}.afterRound`, `must be a round before the last (1–${rounds.length - 1})`);
-        if (afterRound !== null && breaks.some((o) => o.afterRound === afterRound)) err(`${path}.afterRound`, `repeats round ${afterRound}`);
-        if (afterRound !== null && minutes !== null) breaks.push({ afterRound, minutes });
+        if (afterRound !== null && throws.some((o) => o.afterRound === afterRound)) err(`${path}.afterRound`, `repeats round ${afterRound}`);
+        if (afterRound !== null && minutes !== null) throws.push({ afterRound, minutes });
       });
     }
     schedule = {
       startAtMs: num(sch, 'startAtMs', 'plan.schedule', 0, 8.64e15, { nullable: true, integer: true }),
       roundMinutes: num(sch, 'roundMinutes', 'plan.schedule', 1, 240) ?? schedule.roundMinutes,
       intervalMinutes: num(sch, 'intervalMinutes', 'plan.schedule', 0, 120) ?? schedule.intervalMinutes,
-      ...(breaks.length ? { breaks: breaks.sort((a, b) => a.afterRound - b.afterRound) } : {}),
+      ...(throws.length ? { throws: throws.sort((a, b) => a.afterRound - b.afterRound) } : {}),
     };
   }
 
@@ -288,8 +295,22 @@ export function checkGamePlan(json: unknown): PlanCheck {
     cheatSheet = { claimRules: lines('claimRules'), specialRoundRules: lines('specialRoundRules') };
   }
 
+  let volumes: Partial<Record<VolumeKey, number>> | undefined;
+  if (json.volumes !== undefined) {
+    const vol = json.volumes;
+    if (!isRec(vol)) err('plan.volumes', 'must be an object');
+    else {
+      volumes = {};
+      for (const [key, value] of Object.entries(vol)) {
+        if (!isVolumeKey(key)) err('plan.volumes', `unknown key "${key}"`);
+        else if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) err(`plan.volumes.${key}`, 'must be a percent, 0–100');
+        else volumes[key] = value;
+      }
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
-  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', prizeReveal, rounds, sponsors, schedule, cheatSheet } };
+  return { ok: true, plan: { v: PLAN_VERSION, edition: edition ?? '', title: title ?? '', prizeReveal, rounds, sponsors, schedule, ...(volumes ? { volumes } : {}), cheatSheet } };
 }
 
 /** A bundle's headline prizes (the first ones), or its first prize when none is marked. */
