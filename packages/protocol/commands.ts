@@ -8,6 +8,7 @@ import {
   SOUND_NAMES,
   CELEBRATION_MUSIC,
   CARD_TYPE_ID_RE,
+  PAD_HOLD_EFFECTS,
   SIDE_MAX,
   ROUND_KINDS,
   WIN_KINDS,
@@ -88,6 +89,20 @@ export const COMMANDS = Object.freeze({
     holdMusicOn: { type: 'boolean', optional: true },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
+    /** The automatic voice cues on or off for the night (D204). */
+    voicesOn: { type: 'boolean', optional: true },
+  },
+  /** Stop the voice cue playing now (D204): the music under it comes back up. */
+  voiceSkip: {},
+  /**
+   * An effect held on the remote's D-pad (D203), or the tablet's plan B: `on: true` starts it (or updates its
+   * `intensity`, 0–1, from the shakes while held), `on: false` lets go. The drum roll plays on the music's beat while
+   * held; let go after DRUMROLL.landAfterSec it lands with a hit on the next beat, sooner it stops smoothly.
+   */
+  padHold: {
+    effect: { type: 'string', oneOf: PAD_HOLD_EFFECTS },
+    on: { type: 'boolean' },
+    intensity: { type: 'number', optional: true, min: 0, max: 1 },
   },
   /**
    * One volume slider (D139), applied at once and kept in the Game's settings (`game.volumes`). The engine journals

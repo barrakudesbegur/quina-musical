@@ -86,6 +86,10 @@ const RULES = {
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   // Between rounds (D138): at the doors, in a break; not on the end screen (D194), where the storm is.
   throw: ['before', 'interval'],
+  // A voice cue can be stopped whenever one plays (D204).
+  voiceSkip: 'any',
+  // Held effects (D203): in any scene, never during Pausa (not 'any', so the paused rule applies).
+  padHold: () => true,
   // The Desgraciat's finale, in its round (D167); the engine refuses it in another kind of round.
   finale: ['play'],
   finaleCue: ['play'],

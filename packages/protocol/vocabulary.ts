@@ -243,11 +243,12 @@ export type ThrowSong = (typeof THROW_SONGS)[number];
  * is the song under Parlem as a share of its full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and
  * whooshes; `padFx`: the presenters' effects pad; `check`: the Check's snippets and broken record; `win`: the Clear
  * fanfare, the victory track and the winning song's loop; `fail`: the Failure fanfare and the error Hold music;
- * `finalLap`: the stinger; `intros`, `breaks`, `pausa`, `throws`, `doors`, `end`: those moments' music.
+ * `finalLap`: the stinger; `intros`, `breaks`, `pausa`, `throws`, `doors`, `end`: those moments' music; `voices`: the
+ * automatic voice cues ("Veus", D204).
  */
 export const VOLUME_KEYS = [
   'master', 'songs', 'songsParlem', 'djFx', 'padFx', 'ticks', 'check', 'holdMusic', 'win', 'fail', 'finalLap',
-  'intros', 'breaks', 'pausa', 'throws', 'doors', 'end',
+  'intros', 'breaks', 'pausa', 'throws', 'doors', 'end', 'voices',
 ] as const;
 export type VolumeKey = (typeof VOLUME_KEYS)[number];
 export type Volumes = Record<VolumeKey, number>;
@@ -258,8 +259,31 @@ export const isVolumeKey = (value: unknown): value is VolumeKey =>
  * throws and the corn-seed storm, one slider: D159) starts noticeably louder than the songs, +6 dB (D158, by ear). */
 export const VOLUME_DEFAULTS: Readonly<Volumes> = Object.freeze({
   master: 100, songs: 100, songsParlem: 45, djFx: 100, padFx: 100, ticks: 100, check: 100, holdMusic: 100, win: 100,
-  fail: 100, finalLap: 100, intros: 100, breaks: 100, pausa: 100, throws: 141, doors: 100, end: 100,
+  fail: 100, finalLap: 100, intros: 100, breaks: 100, pausa: 100, throws: 141, doors: 100, end: 100, voices: 100,
 });
+
+/**
+ * The automatic voice cues (D198, D202–D204): a lead sound (a chime; a fanfare for a round's start), then a voice line,
+ * with the music dipping under it. One file each, data/media/voice/<cue> (placeholders until the user's recordings).
+ * - `round-1`…`round-10`, `round-desgraciat`, `round-especial`: a round's start, on `roundIntro` (a normal round by its
+ *   Quina number), before its intro music;
+ * - `doors-60` … `doors-3`: minutes before the plan's start, while the doors are open (U176: `doors-3` may go);
+ * - `start`: the night's start (U173); `descans-2min`: "Tornem en dos minuts", 2 minutes before a Descans ends;
+ * - `goodbye`: on ending the night, before the end set.
+ */
+export const VOICE_CUES = [
+  'round-1', 'round-2', 'round-3', 'round-4', 'round-5', 'round-6', 'round-7', 'round-8', 'round-9', 'round-10',
+  'round-desgraciat', 'round-especial', 'doors-60', 'doors-45', 'doors-30', 'doors-15', 'doors-5', 'doors-3', 'start',
+  'descans-2min', 'goodbye',
+] as const;
+export type VoiceCue = (typeof VOICE_CUES)[number];
+export const isVoiceCue = (value: unknown): value is VoiceCue => typeof value === 'string' && (VOICE_CUES as readonly string[]).includes(value);
+/** What plays before a cue's voice: the chime (D204), or a fanfare for a round's start (D198). */
+export type VoiceLead = 'chime' | 'fanfare';
+
+/** The effects the presenters hold on the remote's D-pad (`padHold`, D203): the drum roll; U178 may add more. */
+export const PAD_HOLD_EFFECTS = ['drumroll'] as const;
+export type PadHoldEffect = (typeof PAD_HOLD_EFFECTS)[number];
 
 /** Each slider's highest percent (D157: every one to about 150%, +7 dB; the engine's headroom keeps it clean). */
 export const VOLUME_MAX: Readonly<Volumes> = Object.freeze(

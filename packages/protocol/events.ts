@@ -23,6 +23,8 @@ import {
   type ShowStatus,
   type MusicSet,
   type ThrowSong,
+  type VoiceCue,
+  type PadHoldEffect,
   type VolumeKey,
   type WinKind,
 } from './vocabulary.ts';
@@ -86,6 +88,8 @@ export interface GameSettings {
    * switch. The engine only keeps it. Default true. Optional in the type only: an older journal lacks it.
    */
   remoteShake?: boolean;
+  /** The automatic voice cues for the night (D204). Default true. Optional in the type only: an older journal lacks it. */
+  voicesOn?: boolean;
   /** Phase placeholder when no cards are in play. */
   songsUntilWinner: number;
   phaseOverride: PhaseName | null;
@@ -530,6 +534,15 @@ export interface ShowState {
   throwSong: ThrowInfo | null;
   /** Each throw song's track, at all times: the buttons name it while idle. */
   throwSongs: Record<ThrowSong, ThrowTrackInfo>;
+  /** The voice cue playing now (D202–D204), so the console can show it and skip it; null when none. Optional in the
+   * type only (added later in v1): the engine always sends it. */
+  voice?: { cue: VoiceCue; sinceMs: number } | null;
+  /** The next timed voice cue (the doors' countdown, the Descans): when it's due; one that's late waits for a quiet
+   * moment (no Parlem, Aguanta, Spin, Suspens, Pausa, Check or throw song) and is dropped after VOICE.maxWaitSec.
+   * Optional in the type only, as `voice`. */
+  voiceNext?: { cue: VoiceCue; atMs: number } | null;
+  /** An effect held on the D-pad (D203), while held. Optional in the type only, as `voice`. */
+  padHold?: { effect: PadHoldEffect; sinceMs: number; intensity: number } | null;
   /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
    * button shows in it (D155; SceneContext.lastRound). */
   lastRound: boolean;
