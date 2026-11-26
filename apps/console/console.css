@@ -1338,9 +1338,10 @@
   display: flex;
   flex: none;
   align-items: flex-end;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
-  padding-inline: var(--radius-lg);
+  /* Five tabs, «Dempeus» among them, fit the tablet's left column (about 588 px at 1180) with labels and icons whole */
+  padding-inline: var(--space-2);
   overflow-x: auto;
 }
 
@@ -1352,7 +1353,7 @@
   height: var(--tap-min);
   min-height: var(--tap-min);
   margin: 0;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
   border: var(--line-width-bold) solid var(--color-line);
   border-bottom: 0;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
