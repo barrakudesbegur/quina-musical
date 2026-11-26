@@ -248,11 +248,15 @@ export function progress(plan: ScheduleOf | null, state: PublicState | null): { 
   return total && current ? { current, total } : null;
 }
 
-/** Each planned round's rough start time from the schedule, or null when the schedule has no start. */
+/**
+ * Each planned round's rough start time from the schedule, or null when the schedule has no start: a round and an
+ * Interval each, plus the planned breaks ("parón") before it.
+ */
 export function plannedStarts(plan: ScheduleOf | null): Map<number, number> | null {
   if (!plan?.schedule.startAtMs) return null;
-  const step = (plan.schedule.roundMinutes + plan.schedule.intervalMinutes) * 60_000;
-  return new Map(plan.rounds.map((r, i) => [r.number, plan.schedule.startAtMs! + i * step] as const));
+  const { startAtMs, roundMinutes, intervalMinutes, breaks = [] } = plan.schedule;
+  const breakMinutes = (number: number) => breaks.filter((b) => b.afterRound < number).reduce((sum, b) => sum + b.minutes, 0);
+  return new Map(plan.rounds.map((r, i) => [r.number, startAtMs + (i * (roundMinutes + intervalMinutes) + breakMinutes(r.number)) * 60_000] as const));
 }
 
 /**
@@ -288,16 +292,4 @@ export function heatLevel(value: number): HeatLevel {
   if (value < 0.5) return 'warm';
   if (value < 0.75) return 'hot';
   return 'fire';
-}
-
-/** Leaving "Afegir cartró" (close or back) asks first when a number has been typed; with nothing typed it just closes. */
-export const leaveNeedsConfirm = (typed: string): boolean => typed.length > 0;
-
-/** A number typed on the pad: digits only, at most 4. */
-export function padValue(current: string, key: string): string {
-  if (key === 'back') return current.slice(0, -1);
-  if (key === 'clear') return '';
-  if (!/^\d$/.test(key)) return current;
-  const next = (current + key).replace(/^0+/, '');
-  return next.length > 4 ? current : next;
 }

@@ -1,14 +1,15 @@
 <script lang="ts">
-  // The Ajustos drawer (D87; it was "Menú"; the J2 look): the player's cards, each with its grip to reorder it
-  // (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon, name and number, and its edit
-  // and remove buttons; "Afegir cartró"; the settings (sounds, last year's card); privacy; "Esborrar dades".
+  // The Ajustos drawer (D87; it was "Menú"; the J2 look, board Mobil-B-J2): the player's cards as plain rows, each
+  // with its grip to reorder it (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon,
+  // name and number, and its edit and remove buttons; "Afegir cartró"; the settings panel (the Sons switch,
+  // ANIMATIONS.md `switch-toggle`; last year's card); "Esborrar les dades d'aquest mòbil".
   // A card's drawers open over this one, and closing them comes back here.
   import { PLAYER_CONFIG } from '../config.ts';
   import { markName } from '../logic/marks-identity.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
+  import CardMark from './CardMark.svelte';
   import Icon from './Icon.svelte';
-  import Swatch from './Swatch.svelte';
 
   let { app }: { app: PlayerApp } = $props();
 
@@ -73,7 +74,7 @@
             >
               <Icon name="grip" />
             </button>
-            <Swatch color={card.color} />
+            <span class="menu__card-mark"><CardMark identity={card.color} decorative /></span>
             <span class="menu__card-name">{who}</span>
             <span class="menu__card-number">{S.cardNumber(card.id)}</span>
             <button type="button" class="menu__card-edit" aria-label={S.editLabel(who)} onclick={() => app.open({ kind: 'rename', cardId: card.id })}>
@@ -89,27 +90,27 @@
       <p class="menu__empty">{S.noCards}</p>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary menu__add" onclick={() => app.open({ kind: 'pad' })}><Icon name="plus" /> {S.addCard}</button>
+      <button type="button" class="big-button tone-primary menu__add" onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
     {/if}
   </section>
 
   <ul class="menu__settings">
     <li class="menu__row">
       <Icon name={app.soundsOn ? 'sound' : 'mute'} />
-      <span class="menu__label" id="menu-sounds">{S.soundsLabel}</span>
-      <button type="button" class="menu__toggle" role="switch" aria-labelledby="menu-sounds" aria-checked={app.soundsOn} onclick={() => app.toggleSounds()}>
-        <span class="menu__toggle-text">{app.soundsOn ? S.on : S.off}</span>
+      <!-- The label toggles the switch too, so the whole row is a target. -->
+      <label class="menu__label" id="menu-sounds-label" for="menu-sounds">{S.soundsLabel}</label>
+      <button type="button" class="menu__switch" id="menu-sounds" role="switch" aria-labelledby="menu-sounds-label" aria-checked={app.soundsOn} data-anim="switch-toggle" onclick={() => app.toggleSounds()}>
+        <span class="menu__switch-knob"></span>
       </button>
     </li>
     <li class="menu__row">
       <button type="button" class="menu__row-button" onclick={() => app.open({ kind: 'anyPassat' })}>
-        <Icon name="history" />
+        <Icon name="clockBack" />
         <span class="menu__label">{S.legacyMenuTitle}</span>
-        <Icon name="chevron" />
+        <span class="menu__chevron"><Icon name="chevron" /></span>
       </button>
     </li>
   </ul>
 
-  <p class="menu__note">{S.privacy}</p>
   <button type="button" class="menu__wipe" onclick={() => app.open({ kind: 'wipe' })}>{S.wipeData}</button>
 </div>

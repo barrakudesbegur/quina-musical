@@ -11,7 +11,15 @@
     others,
     onsave,
     onclose,
-  }: { card: SavedCard; others: readonly SavedCard[]; onsave: (name: string, identity: number) => void; onclose: () => void } = $props();
+    onpick,
+  }: {
+    card: SavedCard;
+    others: readonly SavedCard[];
+    onsave: (name: string, identity: number) => void;
+    onclose: () => void;
+    /** An icon picked: the tap blip (ANIMATIONS.md `icon-pick`). */
+    onpick?: () => void;
+  } = $props();
   // The sheet edits a copy of the name and icon it opened with.
   // svelte-ignore state_referenced_locally
   let value = $state(card.name ?? '');
@@ -29,7 +37,14 @@
   >
     <label class="rename__label" for="card-name">{S.nameLabel}</label>
     <input id="card-name" class="rename__input" bind:value maxlength={PLAYER_CONFIG.maxNameLength} placeholder={S.namePlaceholder} autocomplete="off" enterkeyhint="done" />
-    <IconPicker {others} selected={identity} onselect={(n) => (identity = n)} />
+    <IconPicker
+      {others}
+      selected={identity}
+      onselect={(n) => {
+        onpick?.();
+        identity = n;
+      }}
+    />
     <div class="rename__actions">
       <button type="submit" class="big-button tone-primary">{S.save}</button>
       <button type="button" class="big-button" onclick={onclose}>{S.cancel}</button>

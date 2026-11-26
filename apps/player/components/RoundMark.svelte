@@ -1,6 +1,6 @@
 <script lang="ts">
-  // A round's icon where rounds are listed (decided: a gold star for the Quina Especial, a sad face for the Quina
-  // Desgraciada; a normal round has none). Decorative: the round's name says it in words.
+  // A round's icon where rounds are listed (decided: a soft gold star with no outline for the Quina Especial, a sad
+  // face for the Quina Desgraciada; a normal round has none). Decorative: the round's name says it in words.
   import type { RoundKind } from '../feed/public.ts';
   import Icon from './Icon.svelte';
 

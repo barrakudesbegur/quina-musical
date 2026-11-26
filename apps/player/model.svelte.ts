@@ -46,6 +46,12 @@ export interface PlayerAppOptions {
   edition?: string;
 }
 
+/** A toast: its words, and the identity of the card it is about (its icon), if any. */
+export interface ToastNote {
+  text: string;
+  identity: number | null;
+}
+
 const HEAT_KEEP = 6;
 
 export class PlayerApp {
@@ -69,7 +75,10 @@ export class PlayerApp {
   padTyping = $state(false);
   /** Last year's link (or another edition's) that opened the app, until dismissed. */
   legacy = $state.raw<Extract<Route, { kind: 'legacy' | 'otherEdition' }> | null>(null);
-  toast = $state<string | null>(null);
+  /** A short notice over the screen. About a card (one just added), it carries that card's identity: its icon. */
+  toast = $state.raw<ToastNote | null>(null);
+  /** The card the cards view points at (one just added, or the pad's "Veure'l"): ringed in gold for a moment. */
+  highlightCard = $state<number | null>(null);
   reducedMotion = $state(false);
   hidden = $state(false);
   /** Kernels that just dropped in ("cardId:songId"): the mark-in animation (a ✗ stamping, in the Desgraciat round). */
@@ -136,6 +145,7 @@ export class PlayerApp {
   private lastCelebration: string | null = null;
   private stops: (() => void)[] = [];
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
   private freshTimer: ReturnType<typeof setTimeout> | null = null;
   private standUpTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -193,7 +203,7 @@ export class PlayerApp {
   openRoute(route: Route): void {
     if (route.kind === 'card') {
       const error = this.addCard(route.cardId, false);
-      if (error === S.addError.duplicate(route.cardId)) this.showCards();
+      if (error === S.addError.duplicate(route.cardId)) this.seeCard(route.cardId);
       else if (error) this.showToast(error);
     } else if (route.kind === 'legacy' || route.kind === 'otherEdition') {
       this.legacy = route;
@@ -235,19 +245,29 @@ export class PlayerApp {
   }
 
   /**
-   * Add a card by number. With `checkCatalog`, a number that isn't a printed card is refused (the pad);
-   * a scanned link is trusted. Returns the error to show, or null.
+   * Add a card by number, with the icon and the name the pad gave it. With `checkCatalog`, a number that isn't a
+   * printed card is refused (the pad); a scanned link is trusted. Returns the error to show, or null.
    */
-  addCard(id: number, checkCatalog = true, identity?: number): string | null {
+  addCard(id: number, checkCatalog = true, identity?: number, name = ''): string | null {
     if (checkCatalog && this.catalog && !this.catalog.cards.has(id)) return S.addError.unknown(id);
     const result = addCard(this.data, id, Date.now(), identity);
     if (!result.ok) return result.reason === 'duplicate' ? S.addError.duplicate(id) : result.reason === 'full' ? S.addError.full(PLAYER_CONFIG.maxCards) : S.addError.invalid;
-    this.saveData(result.data);
-    this.showToast(S.added(id));
-    // Added: straight to the cards, never back to the drawers it was opened from.
+    this.saveData(name ? renameCard(result.data, id, name) : result.data);
+    // Added (board "afegir cartró: casos especials", the third frame): straight to the cards, never back to the
+    // drawers it was opened from, with the new card ringed and a green toast with its icon.
+    this.showToast(S.added(id), result.card.color);
+    this.seeCard(id);
+    return null;
+  }
+
+  /** One of the player's cards on the home screen ("Veure'l" in the pad): every drawer closes, the cards view
+   * shows, and that card is ringed for a moment. */
+  seeCard(id: number): void {
     this.drawers = [];
     this.showCards();
-    return null;
+    this.highlightCard = id;
+    if (this.highlightTimer) clearTimeout(this.highlightTimer);
+    this.highlightTimer = setTimeout(() => (this.highlightCard = null), PLAYER_CONFIG.toastMs);
   }
 
   removeCard(id: number): void {
@@ -402,8 +422,8 @@ export class PlayerApp {
     }
   }
 
-  private showToast(text: string): void {
-    this.toast = text;
+  private showToast(text: string, identity: number | null = null): void {
+    this.toast = { text, identity };
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => (this.toast = null), PLAYER_CONFIG.toastMs);
   }

@@ -29,6 +29,8 @@
   {#if kind === 'corn'}
     <path class="card-mark__fill" d="M12 2.5c4.5 0 8 3.2 7.6 8.5-.4 5.4-3.8 11-7.6 11s-7.2-5.6-7.6-11C4 5.7 7.5 2.5 12 2.5z" />
     <path class="card-mark__shine" d="M8.6 7.6c.8-1.6 2.2-2.4 3.8-2.4" />
+    <!-- The dark shade at the bottom, as on the design system's corn (the user, 25 Nov). -->
+    <path class="card-mark__shade" d="M12 18.6c-1.3 0-2.1-1.3-2.1-2.6" />
   {:else if kind === 'shootingStar'}
     <path class="card-mark__fill" d={TAIL} />
     <path class="card-mark__fill" d={STAR} />
@@ -106,6 +108,12 @@
     fill: none;
     stroke: var(--color-paper);
     stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .card-mark__shade {
+    fill: none;
+    stroke: #c98a00;
+    stroke-width: 1.6;
     stroke-linecap: round;
   }
   .card-mark__shine--thin {

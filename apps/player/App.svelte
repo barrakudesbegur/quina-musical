@@ -110,7 +110,9 @@
       {:else if drawer.kind === 'pad'}
         <NumberPad
           cards={app.data.cards}
-          onadd={(id, identity) => app.addCard(id, true, identity)}
+          printed={app.catalog?.cards ?? null}
+          onadd={(id, identity, name) => app.addCard(id, true, identity, name)}
+          onsee={(id) => app.seeCard(id)}
           onclose={closeTop}
           onkey={() => app.blip('tap')}
           ontyping={(typing) => app.setPadTyping(typing)}
@@ -122,6 +124,7 @@
             {card}
             others={app.data.cards.filter((c) => c.id !== card.id)}
             onsave={(name, identity) => app.editCard(card.id, name, identity)}
+            onpick={() => app.blip('tap')}
             onclose={closeTop}
           />
         {/if}
@@ -142,5 +145,5 @@
     </DrawerFrame>
   {/each}
 
-  <Toast text={app.toast} />
+  <Toast toast={app.toast} />
 </div>

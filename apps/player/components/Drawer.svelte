@@ -18,7 +18,8 @@
   // and the home screen are inert, and Esc or the phone's back gesture ask it to close. The motion is
   // ANIMATIONS.md `drawer-open`, `drawer-drag`, `drawer-close` and `drawer-stack`: it opens from its corner or the
   // bottom edge, follows the finger when its handle or title bar is dragged down, and slides away when it closes.
-  // `canClose` lets the content hold it open first (the pad asks before leaving with a number typed).
+  // `canClose` lets the content hold it open first (the pad asks before leaving with a number typed); it gets the
+  // way to go on closing (the same "‹" or ✕), for when the player confirms.
   import { getContext, setContext, type Snippet } from 'svelte';
   import { dragCloses } from '../logic/drawers.ts';
   import { S } from '../strings.ts';
@@ -30,7 +31,7 @@
     onclose,
     canClose,
     children,
-  }: { title: string; name: string; onclose: () => void; canClose?: () => boolean; children: Snippet } = $props();
+  }: { title: string; name: string; onclose: () => void; canClose?: (proceed: () => void) => boolean; children: Snippet } = $props();
 
   const outer = getContext<DrawerPlace | undefined>(DRAWER_PLACE);
   const place: DrawerPlace = outer ?? { depth: 0, stacked: false, origin: 'bottom', closeAll: null };
@@ -50,10 +51,15 @@
   /** Close (the top one, or every drawer): asks the content first, then slides away, then tells the app. */
   function requestClose(which: 'top' | 'all'): void {
     if (closing) return;
-    if (canClose && !canClose()) {
+    if (canClose && !canClose(() => slideAway(which))) {
       dragY = 0;
       return;
     }
+    slideAway(which);
+  }
+
+  function slideAway(which: 'top' | 'all'): void {
+    if (closing) return;
     closing = which;
     // No animation to wait for (reduced motion): close at once.
     if (!dialog || getComputedStyle(dialog).animationName === 'none') finish();

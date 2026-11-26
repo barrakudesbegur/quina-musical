@@ -1,6 +1,6 @@
 // The pure rules behind the screens: the connection strip (offline, reconnecting, connected) and the pause, the reel
-// synced to the Spin, the feedback cues (one at a time), the near-win highlight, the add-card leave rule, and the
-// derived views (no winning card numbers anywhere).
+// synced to the Spin, the feedback cues (one at a time), the near-win highlight, and the derived views (no winning
+// card numbers anywhere). The add-card pad's rules are in pad.test.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
@@ -15,10 +15,8 @@ import {
   heatLevel,
   historyOf,
   kernelTilt,
-  leaveNeedsConfirm,
   markKeys,
   markedIdentities,
-  padValue,
   plannedStarts,
   planOf,
   prizeRounds,
@@ -102,13 +100,6 @@ test('the technical pause is on with the presenters\' Pausa; the offline strip c
   assert.equal(pauseOn(null), false);
   const both = playing({ pause: { sinceMs: T }, link: { online: false, sinceMs: 0 } });
   assert.equal(connectionProblem(at({ state: both })), 'offline');
-});
-
-test('adding a card by number asks before leaving only when a number has been typed', () => {
-  assert.equal(leaveNeedsConfirm(''), false);
-  assert.equal(leaveNeedsConfirm('1'), true);
-  assert.equal(leaveNeedsConfirm(padValue('12', 'back')), true);
-  assert.equal(leaveNeedsConfirm(padValue('1', 'back')), false, 'typed and deleted again: nothing to lose');
 });
 
 // ---- reel -------------------------------------------------------------------------------------------------
@@ -331,14 +322,9 @@ test('no winning card numbers on phones: the Celebration and the prize lists nam
   assert.deepEqual(lines.filter((l) => l.won).length, 2);
 });
 
-test('small helpers: Heat levels, kernel tilt, the number pad', () => {
+test('small helpers: Heat levels, kernel tilt', () => {
   assert.deepEqual([0, 0.3, 0.6, 0.9].map(heatLevel), ['cold', 'warm', 'hot', 'fire']);
   const tilt = kernelTilt(123, 17);
   assert.equal(kernelTilt(123, 17), tilt, 'stable');
   assert.ok(tilt >= -15 && tilt <= 15);
-  assert.equal(padValue('', '0'), '');
-  assert.equal(padValue('12', '3'), '123');
-  assert.equal(padValue('1234', '5'), '1234');
-  assert.equal(padValue('123', 'back'), '12');
-  assert.equal(padValue('12', 'x'), '12');
 });

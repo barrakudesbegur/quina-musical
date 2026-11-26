@@ -1,6 +1,6 @@
 <script lang="ts">
-  // A confirmation for something that can't be undone with one tap (removing a card, wiping the data, leaving
-  // "Afegir cartró" with a number typed). `danger` paints the yes in red; `no` names the way back.
+  // A confirmation for something that can't be undone with one tap (removing a card, wiping the data). `danger`
+  // paints the yes in red; `no` names the way back.
   import { S } from '../strings.ts';
   import Drawer from './Drawer.svelte';
 

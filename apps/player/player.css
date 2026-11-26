@@ -28,6 +28,12 @@
   --dur-corner-press: 90ms;
   --dur-corner-back: 260ms;
   --dur-card-shift: 160ms; /* card-reorder, rows making room */
+  --dur-pad-dip: 80ms; /* pad-keys: a pressed key dips 3 px */
+  --dur-pad-keys: 120ms; /* pad-keys: keys fade to (or back from) their disabled look; "Desar" lights up */
+  --dur-icon-pick: 180ms; /* icon-pick: the chosen chip pops 1.08 → 1 */
+  --dur-pad-leave: 200ms; /* pad-leave: the dialog pops in */
+  --dur-pad-leave-backdrop: 160ms;
+  --dur-switch-toggle: 160ms; /* switch-toggle, the Sons knob sliding */
   --dur-your-song-flash: 600ms;
   --delay-your-song-gold: 100ms; /* at the flash's first peak, so the colour change hides in it */
   --dur-your-song-gold: 70ms;
@@ -183,7 +189,8 @@
 }
 
 /* Outlined titles (".gt" on the boards): Londrina in white over a thick ink stroke and a hard ink shadow. Small
-   ones get a thinner stroke and more letter-spacing, so they stay easy to read. */
+   ones get a thinner stroke and more letter-spacing, so they stay easy to read. Londrina is always in capitals
+   (D96); a unit next to a number stays lowercase (`.unit`, D114), and so does Nunito inside a Londrina button. */
 :where(.player) h2,
 .app-header__title,
 .reel__title,
@@ -200,6 +207,7 @@
 .big-button {
   font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
+  text-transform: uppercase;
   letter-spacing: var(--title-tracking);
   -webkit-text-stroke: var(--title-stroke) var(--color-line);
   paint-order: stroke fill;
@@ -220,6 +228,11 @@
   -webkit-text-stroke-width: var(--title-stroke-sm);
   letter-spacing: var(--title-tracking-sm);
   text-shadow: var(--title-drop-sm);
+}
+
+.unit,
+.big-button .nunito {
+  text-transform: none;
 }
 
 :where(.player) h2 {
@@ -397,7 +410,7 @@
   gap: var(--space-2);
   font-size: var(--text-xl);
   line-height: 1;
-  color: var(--color-accent);
+  color: var(--color-text);
 }
 
 /* Before the Game and as a round starts, the home screen's big heading already says it: the header keeps its title
@@ -412,17 +425,20 @@
   white-space: nowrap;
 }
 
-/* "Quina 3" on a gold plate. */
+/* "QUINA 3": the outlined title on the night, no plate (board Mobil-B-J2). */
 .app-header__round {
-  padding: 0.125rem 0.875rem 0.375rem;
-  color: var(--color-text);
-  background: var(--color-accent);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-md);
-  box-shadow:
-    inset 0 -6px 0 var(--color-accent-edge),
-    var(--shadow-piece-sm);
   white-space: nowrap;
+}
+
+/* Ajustos: the plain cog on a rounded square, not a circle (the user, 25 Nov). */
+.app-header__menu {
+  border-radius: 14px;
+}
+
+.app-header__menu .icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
 }
 
 .app-header__badge,
@@ -534,20 +550,6 @@
   overflow: visible;
   filter: drop-shadow(0 2px 0 var(--color-line));
 }
-
-/* Small actions: paper chips with ink words. */
-.menu__toggle {
-  min-height: var(--tap-min);
-  padding: 0 var(--space-3) 0.1875rem;
-  font-size: var(--text-sm);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border-radius: var(--radius-md);
-  box-shadow:
-    inset 0 -4px 0 var(--color-paper-edge),
-    var(--shadow-piece-sm);
-}
-
 
 /* ---- status strips ------------------------------------------------------------------------------------- */
 .player__alerts {
@@ -796,130 +798,128 @@
   color: var(--color-text-soft);
 }
 
-/* The drum: the song in a gold-ringed window, with generic card backs turning away on each side (only
-   decoration: the phone never knows the songs to come). */
+/* The drum (board Mobil-B-J2): ten cover tiles on a ring in 3D, the front one in the gold window, the sides turned
+   away and darker. The ring turns (`--turn`, in tiles, ANIMATIONS.md `reel-spin`); the covers are blurred until a
+   landing is public: a static blur set once, one of the two exceptions to the phones' budget. */
 .reel {
+  --tile: 7.5rem;
+  --drum-r: calc(var(--tile) * 1.75);
   position: relative;
   display: grid;
   justify-items: center;
-  gap: var(--space-3);
-  padding-top: var(--space-4);
+  gap: var(--space-2);
+  padding-top: var(--space-2);
   text-align: center;
 }
 
-.reel > * {
+.drum {
   position: relative;
-  z-index: 1;
+  width: 100%;
+  height: calc(var(--tile) * 1.25);
+  perspective: 800px;
+  overflow: hidden;
 }
 
-.reel::before,
-.reel::after {
+/* The sides fade into the night, as the tiles turn away from the window. */
+.drum::after {
   content: '';
   position: absolute;
-  z-index: 0;
-  top: calc(var(--space-4) + var(--reel-size) * (1 - var(--player-reel-flank)) / 2);
-  width: calc(var(--reel-size) * var(--player-reel-flank));
-  aspect-ratio: 1;
-  background: var(--player-back-green);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-md);
-  /* the card behind it, further round the drum: a darker back drawn as an inked shadow */
-  box-shadow:
-    inset 0 0 0 4px var(--color-paper),
-    inset 0 0 0 999px rgb(10 14 38 / 0.25),
-    calc(var(--reel-size) * -0.34) 0 0 -10px var(--color-surface-sunk),
-    calc(var(--reel-size) * -0.34) 0 0 -6px var(--color-line);
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to right, rgb(24 32 74 / 0.7), rgb(24 32 74 / 0) 34%, rgb(24 32 74 / 0) 66%, rgb(24 32 74 / 0.7));
+  pointer-events: none;
 }
 
-.reel::before {
-  right: calc(50% + var(--reel-size) * 0.42);
-  transform: perspective(36rem) rotateY(42deg);
-  transform-origin: 100% 50%;
-}
-
-.reel::after {
-  left: calc(50% + var(--reel-size) * 0.42);
-  background: var(--player-back-red);
-  box-shadow:
-    inset 0 0 0 4px var(--color-paper),
-    inset 0 0 0 999px rgb(10 14 38 / 0.25),
-    calc(var(--reel-size) * 0.34) 0 0 -10px var(--color-surface-sunk),
-    calc(var(--reel-size) * 0.34) 0 0 -6px var(--color-line);
-  transform: perspective(36rem) rotateY(-42deg);
-  transform-origin: 0 50%;
-}
-
-.reel[data-state='spinning'] > .reel__still,
-.reel[data-state='coasting'] > .reel__still {
-  display: grid;
-  place-items: center;
-  width: var(--reel-size);
-  aspect-ratio: 1;
-  padding: var(--space-3);
-  background: var(--color-surface);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-md);
-}
-
-.reel__window {
-  width: var(--reel-size);
-  aspect-ratio: 1;
-  overflow: hidden;
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-line);
-}
-
-.reel__window .reel__back {
-  border-width: 0 0 var(--line-width-bold);
-  border-radius: 0;
-}
-
-.reel__window,
-.reel__landed .cover,
-.reel__still {
-  outline: var(--line-width-bold) solid var(--color-accent);
-  outline-offset: 0.4375rem;
-  box-shadow: 0 0 1.75rem 0.625rem rgb(255 197 49 / 0.45);
-}
-
-.reel__strip {
-  height: 500%;
-  display: grid;
-  grid-template-rows: repeat(5, 1fr);
+.drum__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--drum-r) * -1)) rotateY(calc(var(--turn, 0) * -36deg));
   will-change: transform;
 }
 
-.reel__landed {
-  margin: 0;
-  display: grid;
-  justify-items: center;
-  gap: var(--space-5);
-  perspective: 600px;
+/* Still: a stop between two tiles settles onto the nearer one. */
+.drum__ring:not([data-turning]) {
+  transition: transform 300ms var(--ease-out);
+}
+
+.drum__tile {
+  position: absolute;
+  left: calc(var(--tile) / -2);
+  top: calc(var(--tile) / -2);
+  width: var(--tile);
+  height: var(--tile);
+  box-sizing: border-box;
+  overflow: hidden;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-paper);
+  backface-visibility: hidden;
+  transform: rotateY(calc(var(--i) * 36deg)) translateZ(var(--drum-r));
+}
+
+.drum__landed {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.drum__tile .cover,
+.drum__tile .reel__back {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.reel[data-blur] .drum__tile .cover__img {
+  filter: blur(2px);
+  transform: scale(1.08);
+}
+
+.drum__window {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--tile) + 0.75rem);
+  height: calc(var(--tile) + 0.75rem);
+  transform: translate(-50%, -50%);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 4px var(--color-accent),
+    0 0 1.5rem 0.375rem rgb(255 197 49 / 0.6);
+  pointer-events: none;
 }
 
 .reel__caption {
+  margin: 0;
   display: grid;
   gap: var(--space-1);
 }
 
+/* "Ara sona" is for screen readers: the window says it. */
 .reel__label {
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-strong);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .reel__title {
-  font-size: var(--player-text-hero);
+  font-size: 2.25rem;
   line-height: 1;
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
 .reel__artist {
-  font-size: 1.375rem;
+  font-size: 1.1875rem;
   font-weight: var(--font-weight-strong);
   color: var(--color-accent);
   text-shadow: 0 3px 0 var(--color-line);
@@ -927,6 +927,7 @@
 
 .reel__still,
 .reel__waiting {
+  margin: 0;
   font-size: var(--text-lg);
   font-weight: var(--font-weight-strong);
   color: var(--color-text-soft);
@@ -948,7 +949,7 @@
   align-items: center;
   gap: var(--space-3);
   min-height: var(--tap-min);
-  padding: 3px var(--space-3) 3px 3px;
+  padding: 3px 0.5rem 3px 3px;
   background: var(--color-paper);
   color: var(--color-text-on-paper);
   border: var(--line-width) solid var(--color-line);
@@ -979,16 +980,18 @@
 }
 
 .song-list__marks {
-  display: inline-flex;
-  gap: var(--space-1);
+  position: relative;
+  display: block;
   flex: none;
+  height: 50px;
 }
 
 .song-list__mark {
+  position: absolute;
   display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-  filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.35));
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.45));
 }
 
 /* Before the Game: the welcome and the start time on a gold plate (no how-to-play: the presenters explain). */
@@ -1093,6 +1096,7 @@
 
 .shuffle__label {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.75rem;
   letter-spacing: var(--title-tracking-sm);
   -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
@@ -1417,8 +1421,13 @@
   font-size: var(--text-xs);
 }
 
-/* ---- Horari (the J2 look, D87): plain rows on the night, the current round on paper ------------------------ */
+/* ---- Horari (the J2 look, D87; board Mobil-B-J2): plain rows on a line of dots, the current round on paper ---- */
 .schedule {
+  /* the board's muted text and its line on the drawer's night */
+  --schedule-muted: #8c99d9;
+  --schedule-line: #2c3878;
+  /* wide enough for "~10:58 pm" */
+  --schedule-time: 4.875rem;
   display: grid;
   gap: var(--space-3);
 }
@@ -1433,21 +1442,22 @@
 .drawer .schedule__rounds {
   position: relative;
   list-style: none;
-  margin: 0;
+  margin: 0.375rem -0.25rem 0;
   padding: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.125rem;
 }
 
-/* The line through the dots. */
+/* The line through the dots: under every row's dot centre (8 px in, the time, 12 px, half a dot). */
 .schedule__rounds::before {
   content: '';
   position: absolute;
-  left: calc(4rem + var(--space-3) + 0.8125rem - 2px);
+  left: calc(var(--schedule-time) + 2.0625rem - 1px);
   top: 1rem;
   bottom: 1rem;
   width: 3px;
-  background: var(--color-divider);
+  background: var(--schedule-line);
   border-radius: 2px;
 }
 
@@ -1457,16 +1467,20 @@
   box-shadow: none;
 }
 
-.schedule__round-button {
+.schedule__round-button,
+.schedule__moment {
   position: relative;
-  width: 100%;
-  min-height: var(--tap-min);
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-1) var(--space-2);
+}
+
+.player .schedule__round-button {
+  width: 100%;
+  min-height: 0;
+  padding: 0.375rem var(--space-2);
   background: none;
-  border: var(--line-width-bold) solid transparent;
+  border: 0;
   border-radius: var(--radius-md);
   color: var(--color-text);
   font: inherit;
@@ -1475,16 +1489,18 @@
 }
 
 .schedule__round-time {
-  width: 4rem;
+  width: var(--schedule-time);
   flex: none;
   text-align: right;
+  white-space: nowrap;
   font-weight: var(--font-weight-strong);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
 
-/* Each round's dot: gold once done (a tick), orange now, empty still to come; its kind's mark inside. */
+/* Each round's dot: gold and ticked once done, orange now, night blue with a paper outline still to come (a dark
+   dot on the dark drawer vanished, the user, 25 Nov); its kind's mark inside. */
 .schedule__dot {
   position: relative;
   z-index: 1;
@@ -1494,35 +1510,45 @@
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  background: var(--color-surface-raised);
-  border: var(--line-width-bold) solid var(--color-line);
+  background: var(--schedule-line);
+  border: var(--line-width) solid var(--color-paper);
   border-radius: 50%;
   color: var(--color-text);
 }
 
 .schedule__round[data-state='done'] .schedule__dot {
   background: var(--color-accent);
+  border-color: var(--color-line);
   color: var(--color-text-on-paper);
-}
-
-.schedule__round[data-state='done']:not([data-kind='special'], [data-kind='desgraciat']) .schedule__dot::after {
-  content: '';
-  width: 0.5rem;
-  height: 0.3rem;
-  margin-top: -0.15rem;
-  border: solid var(--color-line);
-  border-width: 0 0 3px 3px;
-  transform: rotate(-45deg);
 }
 
 .schedule__round[data-state='current'] .schedule__dot {
   background: var(--color-primary);
+  border-color: var(--color-line);
+  color: var(--color-text-on-paper);
 }
 
-.schedule__dot .round-mark {
+.schedule__dot .icon--tick {
   width: 1rem;
   height: 1rem;
-  font-size: 0.75rem;
+  stroke-width: 3.4;
+  color: var(--color-line);
+}
+
+.schedule__dot .round-mark[data-kind='desgraciat'] .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke-width: 3;
+}
+
+.schedule__dot .round-mark[data-kind='special'] .icon {
+  width: 1.3125rem;
+  height: 1.3125rem;
+}
+
+/* On a done round's gold dot, the marks are ink (a gold star would vanish into it). */
+.schedule__round[data-state='done'] .round-mark .icon {
+  color: var(--color-line);
 }
 
 .schedule__round-name {
@@ -1532,44 +1558,75 @@
   font-size: var(--text-md);
 }
 
-.schedule__round[data-state='done'] :is(.schedule__round-name, .schedule__round-time) {
-  color: var(--color-text-muted);
+.schedule__round[data-state='done'] :is(.schedule__round-name, .schedule__round-time),
+.schedule__moment[data-state='done'] .schedule__round-time {
+  color: var(--schedule-muted);
 }
 
 .schedule__chevron {
   display: flex;
-  color: var(--color-text-muted);
+  color: var(--schedule-muted);
 }
 
 .schedule__chevron .icon {
   width: 1.125rem;
   height: 1.125rem;
+  stroke-width: 3;
 }
 
 /* Only the current round is paper, ringed in orange, with "Ara". */
-.schedule__round[data-state='current'] .schedule__round-button {
+.player .schedule__round[data-state='current'] .schedule__round-button {
   background: var(--color-paper);
   color: var(--color-text-on-paper);
-  border-color: var(--color-line);
-  box-shadow: 0 0 0 3px var(--color-primary), var(--shadow-piece-sm);
+  border: var(--line-width) solid var(--color-line);
+  box-shadow: 0 0 0 3px var(--color-primary);
 }
 
-.schedule__round[data-state='current'] :is(.schedule__round-time, .schedule__chevron) {
+.schedule__round[data-state='current'] .schedule__round-time {
   color: var(--color-text-on-paper);
 }
 
 .schedule__round-state {
-  padding: 0.0625rem 0.5rem;
-  font-size: var(--text-xs);
+  padding: 0.125rem var(--space-2);
+  font-size: 0.75rem;
   font-weight: var(--font-weight-strong);
+  line-height: normal;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text);
+  color: #fff;
   background: var(--color-primary);
   border: 2px solid var(--color-line);
   border-radius: var(--radius-pill);
 }
 
+/* The rest of the night between the rounds (a planned break, the end): quiet, in italics, on a dashed dot. */
+.schedule__moment {
+  padding: 0.3125rem var(--space-2);
+}
+
+.schedule__moment .schedule__dot {
+  background: var(--drawer-bg, var(--color-panel));
+  border: 2px dashed var(--schedule-muted);
+  color: var(--schedule-muted);
+}
+
+.schedule__moment .icon {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2.6;
+}
+
+.schedule__moment .icon--flag {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.schedule__moment-name {
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 800;
+  color: var(--schedule-muted);
+}
 
 .countdown {
   display: inline-block;
@@ -1597,8 +1654,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  gap: 0.625rem;
+  padding: 0.4375rem 0.75rem 0.4375rem 0.625rem;
   background: var(--card-color);
   border-bottom: var(--line-width-bold) solid var(--color-line);
 }
@@ -1625,22 +1682,25 @@
 }
 
 .player-card__name {
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   line-height: 1;
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
-/* "#123" on a paper tag: readable on every card colour, and not as small as a caption. */
+/* "#123" at the head's right end, outlined like the name (board Mobil-B-J2). */
 .player-card__number {
-  padding: 0 0.5rem 0.0625rem;
-  font-size: var(--text-md);
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
   font-weight: var(--font-weight-strong);
+  line-height: 1;
   white-space: nowrap;
-  color: var(--color-text-on-paper);
-  background: var(--color-paper);
-  border: 2px solid var(--color-line);
-  border-radius: var(--radius-pill);
+  color: var(--color-paper);
+  -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop-sm);
+  letter-spacing: var(--title-tracking-sm);
 }
 
 .player-card__missing,
@@ -1870,7 +1930,8 @@
   transform-origin: 30% 100%;
 }
 
-/* Round marks where rounds are listed: a gold star for the Quina Especial, a sad face for the Quina Desgraciada. */
+/* Round marks where rounds are listed: a soft gold star with no outline for the Quina Especial (the user, 25 Nov), a
+   sad face for the Quina Desgraciada. */
 .round-mark {
   display: inline-grid;
   place-items: center;
@@ -1884,8 +1945,6 @@
 
 .round-mark[data-kind='special'] .icon {
   color: var(--color-accent);
-  stroke: var(--color-line);
-  stroke-width: 2;
 }
 
 .round-mark[data-kind='desgraciat'] .icon {
@@ -1980,7 +2039,8 @@ html:has(.drawer[open]) {
 }
 
 .drawer {
-  --drawer-bg: var(--color-panel);
+  /* the boards' sheet: a shade darker than the panels, so the settings panel stands out on it */
+  --drawer-bg: #1f2a60;
   width: 100%;
   max-width: 32rem;
   max-height: calc(100dvh - var(--player-drawer-top));
@@ -1993,7 +2053,7 @@ html:has(.drawer[open]) {
   font-weight: var(--player-weight-body);
   border: var(--line-width-bold) solid var(--color-line);
   border-bottom: 0;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: 1.875rem 1.875rem 0 0;
   box-shadow: 0 -6px 0 rgb(10 14 38 / 0.5);
   overflow: hidden;
   transform: translateY(var(--drag-y, 0px));
@@ -2006,8 +2066,9 @@ html:has(.drawer[open]) {
   flex-direction: column;
 }
 
-/* The tall drawers reach up to the title; the questions (remove, wipe, leave) stay as tall as their words. */
-.drawer:is(.drawer--premis, .drawer--horari, .drawer--ajustos, .drawer--pad) {
+/* The tall drawers reach up to the title (the pad is a little shorter: its own rule); the questions (remove, wipe)
+   stay as tall as their words. */
+.drawer:is(.drawer--premis, .drawer--horari, .drawer--ajustos) {
   height: calc(100dvh - var(--player-drawer-top));
 }
 
@@ -2028,29 +2089,33 @@ html:has(.drawer[open]) {
   height: 0.375rem;
   margin: 0.5625rem auto 0;
   border-radius: 3px;
-  background: var(--color-mist);
+  background: #8c99d9;
 }
 
+/* The title row starts 24 px from the drawer's top edge (the handle above it takes 15). */
 .drawer__header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4) var(--space-2);
+  gap: 0.625rem;
+  padding: 0.5625rem var(--space-4) 0.625rem;
 }
 
 .drawer__title {
   flex: 1;
   min-width: 0;
   margin: 0;
-  font-size: var(--text-2xl);
-  line-height: 1.05;
-  color: var(--color-text);
+  font-size: 2rem;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke-width: 5px;
+  letter-spacing: 0.03em;
 }
 
 .player .drawer__button,
 .drawer .drawer__button {
   width: 2.75rem;
   height: 2.75rem;
+  min-height: 0;
   flex: none;
   display: grid;
   place-items: center;
@@ -2058,10 +2123,21 @@ html:has(.drawer[open]) {
   box-sizing: border-box;
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  background: var(--color-surface-raised);
+  background: #2c3878;
   color: var(--color-text);
   box-shadow: 0 3px 0 var(--color-night-shadow);
   cursor: pointer;
+}
+
+.drawer__button .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 3;
+}
+
+.drawer__back .icon {
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .drawer__body {
@@ -2073,7 +2149,12 @@ html:has(.drawer[open]) {
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--space-4);
-  padding: var(--space-1) var(--space-4) var(--space-5);
+  padding: 0 var(--space-4) var(--space-5);
+}
+
+/* Premis isn't designed yet (U30): it keeps its old room under the title, for its tiles' ribbons. */
+.drawer--premis .drawer__body {
+  padding-top: var(--space-1);
 }
 
 .drawer__body > p,
@@ -2137,101 +2218,320 @@ html:has(.drawer[open]) {
   }
 }
 
-/* The number pad: the card's icon and the number on a paper plate, then paper keys. */
-.number-pad__entry {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 5.5rem;
-  padding: 0 var(--space-4) 0 var(--space-3);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-piece);
-}
-
-.number-pad__mark {
-  width: 3.25rem;
-  height: 3.25rem;
-  flex: none;
-  filter: drop-shadow(0 3px 0 rgb(23 19 43 / 0.35));
-}
-
-.number-pad__display {
-  flex: 1;
-  display: block;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-on-paper);
-}
-
-.number-pad__display[data-state='typed'] {
-  font-family: var(--font-display);
-  font-size: 3.5rem;
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.number-pad__display[data-state='empty'] {
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-strong);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-on-paper-muted);
+/* ---- "Afegir cartró" (boards "App · calaix per afegir un cartró", "afegir cartró: casos especials"): the number on a
+   paper field, the name, the icons, the smart keypad and "Desar", 10 px apart. The drawer is a little shorter than
+   the other tall ones (the board's starts 150 px down on an 844 px phone). ----------------------------------------- */
+.drawer.drawer--pad {
+  height: min(calc(100dvh - var(--player-drawer-top)), 43.375rem);
 }
 
 .number-pad {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2) 0.625rem;
+  gap: 0.625rem;
 }
 
-.number-pad__key {
-  min-height: var(--player-key-height);
-  padding: 0 0 0.25rem;
-  font-family: var(--font-display);
-  font-size: 2rem;
-  line-height: 1;
+.number-pad__field {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 4.5rem;
+  padding: 0 0.5rem 0 var(--space-4);
   color: var(--color-text-on-paper);
   background: var(--color-paper);
-  border-width: var(--line-width-bold);
-  border-radius: var(--radius-lg);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 1.125rem;
+  box-shadow: inset 0 4px 0 rgb(23 19 43 / 0.12);
+}
+
+.number-pad__hash,
+.number-pad__digits {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.number-pad__hash {
+  font-size: 2.75rem;
+  color: #a79fc4;
+}
+
+.number-pad__digits {
+  font-size: 3rem;
+  letter-spacing: 0.04em;
+}
+
+/* A still caret after the digits (no blink: nothing else moves on the pad). */
+.number-pad__caret {
+  width: 3px;
+  height: 2.5rem;
+  flex: none;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+/* "Ja el tens: és el cartró d'Àvia" with that card's icon and "Veure'l"; the rare error (the phone is full) too. */
+.number-pad__note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.25;
+  color: var(--color-text);
+  background: #2c3878;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 0.75rem;
+}
+
+.number-pad__note-mark {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+}
+
+.number-pad__note-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A link's look, with a taller touch target than its words. */
+.player .number-pad__see {
+  min-height: 0;
+  margin: -0.625rem -0.25rem;
+  padding: 0.625rem 0.25rem;
+  font: inherit;
+  color: var(--color-accent);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.player .number-pad__see:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.drawer .number-pad__name {
+  min-height: 0;
+  height: 3.125rem;
+  padding: 0 0.875rem;
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-on-paper);
+  background: var(--color-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.drawer .number-pad__name::placeholder {
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: #9a93b8;
+  opacity: 1;
+}
+
+/* The smart keypad (ANIMATIONS.md `pad-keys`): paper keys with a 3D edge; a key that can't lead to a card number
+   is dark and dashed, its digit dimmed. That look is a layer over the key, faded by its opacity. */
+.number-pad__keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4375rem;
 }
 
 .drawer .number-pad__key {
-  box-shadow:
-    inset 0 -7px 0 var(--color-paper-edge),
-    var(--shadow-piece-sm);
-}
-
-.drawer .number-pad__key--back {
-  color: var(--color-text);
-  background: var(--color-surface);
-  box-shadow:
-    inset 0 -7px 0 var(--color-line),
-    var(--shadow-piece-sm);
-}
-
-.drawer .number-pad__key--ok {
+  position: relative;
+  min-height: 0;
+  height: 3.125rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
   font-size: 1.75rem;
-  color: var(--color-text);
-  -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
-  letter-spacing: var(--title-tracking-sm);
-  text-shadow: var(--title-drop-sm);
-  background: var(--color-ok);
-  box-shadow:
-    inset 0 -7px 0 var(--color-green-edge),
-    inset 0 4px 0 rgb(255 255 255 / 0.3),
-    var(--shadow-piece-sm);
-}
-
-.number-pad__error {
-  padding: var(--space-2) var(--space-3);
   font-weight: var(--font-weight-strong);
+  line-height: 1;
   color: var(--color-text-on-paper);
-  background: var(--color-accent);
+  background: var(--color-paper);
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 -5px 0 #e4d6bc,
+    0 3px 0 var(--color-shadow);
+  transition: transform var(--dur-pad-dip) var(--ease-out);
+}
+
+.drawer .number-pad__key::after {
+  content: attr(data-key);
+  position: absolute;
+  inset: calc(-1 * var(--line-width));
+  display: grid;
+  place-items: center;
+  color: #46518f;
+  background: var(--color-slate-deep-edge);
+  border: var(--line-width) dashed var(--color-line);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--dur-pad-keys) var(--ease-out);
+  pointer-events: none;
+}
+
+.drawer .number-pad__key:disabled {
+  opacity: 1;
+  cursor: default;
+  box-shadow: none;
+}
+
+.drawer .number-pad__key:disabled::after {
+  opacity: 1;
+}
+
+.drawer .number-pad__key:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: inset 0 -5px 0 #e4d6bc;
+}
+
+.drawer .number-pad__key--delete {
+  color: var(--color-text);
+  background: #2c3878;
+  box-shadow: 0 3px 0 var(--color-shadow);
+}
+
+.drawer .number-pad__key--delete:active:not(:disabled) {
+  box-shadow: none;
+}
+
+.drawer .number-pad__key--delete::after {
+  background: var(--color-slate-deep-edge)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2346518F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5h11v14H9l-6-7z'/%3E%3Cpath d='M12.5 9.5l5 5M17.5 9.5l-5 5'/%3E%3C/svg%3E")
+    center / 1.75rem no-repeat;
+}
+
+.number-pad__key--delete svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* "Desar": the whole width, square-ish corners, the tick; greyed until the number is a card it can save, then it
+   lights up. */
+.player .number-pad__save {
+  min-height: 0;
+  height: 3.625rem;
+  padding: 0;
+  gap: 0.625rem;
+  font-size: 1.6875rem;
+  border-radius: 1rem;
+  box-shadow:
+    inset 0 -7px 0 rgb(0 0 0 / 0.22),
+    inset 0 4px 0 rgb(255 255 255 / 0.35),
+    0 5px 0 var(--color-shadow);
+  transition:
+    opacity var(--dur-pad-keys) var(--ease-out),
+    transform var(--dur-pad-dip) var(--ease-out);
+}
+
+.player .number-pad__save:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+
+.number-pad__save svg {
+  width: 1.625rem;
+  height: 1.625rem;
+  flex: none;
+  overflow: visible;
+}
+
+/* Leaving the pad with a number typed (ANIMATIONS.md `pad-leave`): a small paper dialog in the middle, over a dark
+   backdrop; it pops in (scale 0.92 → 1, fading in). */
+.pad-leave {
+  width: min(20rem, calc(100% - 2 * var(--space-4)));
+  max-width: none;
+  margin: auto;
+  padding: 1.25rem 1.125rem 1.125rem;
+  color: var(--color-text-on-paper);
+  text-align: center;
+  background: var(--color-paper);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 0 var(--color-shadow);
+  animation: player-dialog-pop var(--dur-pad-leave) var(--ease-out);
+}
+
+.pad-leave::backdrop {
+  background: rgb(8 10 30 / 0.6);
+  animation: player-fade-in var(--dur-pad-leave-backdrop) var(--ease-out);
+}
+
+.pad-leave__title {
+  font-size: 1.75rem;
+  line-height: 1.05;
+  color: var(--color-text);
+  -webkit-text-stroke-width: var(--title-stroke-sm);
+  letter-spacing: 0.04em;
+  text-shadow: var(--title-drop-sm);
+}
+
+.pad-leave__text {
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-on-paper-muted);
+}
+
+.pad-leave__actions {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.player .pad-leave__discard {
+  flex: 1;
+  min-height: 0;
+  height: 3.125rem;
+  padding: 0;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-on-paper);
+  background: #e4ddcc;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.player .pad-leave__discard:active {
+  box-shadow: none;
+}
+
+.player .pad-leave__continue {
+  flex: 1;
+  width: auto;
+  min-height: 0;
+  height: 3.125rem;
+  padding: 0;
+  font-size: 1.3125rem;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 -7px 0 rgb(0 0 0 / 0.22),
+    inset 0 4px 0 rgb(255 255 255 / 0.35),
+    0 5px 0 var(--color-shadow);
+}
+
+@keyframes player-dialog-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+/* The still fallbacks at the end of this file reach ::before and ::after, not a backdrop: it stops here. */
+@media (prefers-reduced-motion: reduce) {
+  .pad-leave::backdrop {
+    animation: none;
+  }
+}
+
+.player[data-motion='reduced'] .pad-leave::backdrop {
+  animation: none;
 }
 
 /* ---- the card icon picker ------------------------------------------------------------------------------ */
@@ -2262,36 +2562,59 @@ html:has(.drawer[open]) {
   color: var(--color-text-soft);
 }
 
+/* D131 (style "D" on board "Component-Icona-Opcions"): round paper chips with an ink border and a drop, five a row. */
 .icon-picker__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-3) var(--space-2);
+  gap: 0.875rem 0.4375rem;
 }
 
 .icon-picker__option {
   position: relative;
-  min-height: 3.125rem;
-  display: grid;
-  place-items: center;
-  background: var(--color-surface);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-piece-sm);
+  display: flex;
+  justify-content: center;
   cursor: pointer;
 }
 
-/* The chosen icon: a lighter chip with a ring in the icon's colour (paper for the black one, --card-line-N). */
-.icon-picker__option.is-selected {
-  background: var(--color-surface-raised);
-  box-shadow:
-    0 0 0 3px var(--color-bg-deep),
-    0 0 0 7px var(--card-ring),
-    0 4px 0 7px var(--color-shadow);
+.icon-picker__chip {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  display: grid;
+  place-items: center;
+  background: var(--color-paper);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 50%;
+  box-shadow: 0 3px 0 var(--color-shadow);
+  pointer-events: none;
 }
 
-.icon-picker__option:has(.icon-picker__input:focus-visible) {
+/* The chosen icon wears the gold ring, and pops as it gets it (ANIMATIONS.md `icon-pick`). */
+.icon-picker__option.is-selected .icon-picker__chip {
+  box-shadow:
+    0 0 0 3px var(--color-accent),
+    0 3px 0 3px var(--color-shadow);
+}
+
+.icon-picker__chip[data-anim='icon-pick'] {
+  animation: player-chip-pop var(--dur-icon-pick) var(--ease-bounce);
+}
+
+@keyframes player-chip-pop {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+/* An icon another card has: faded paper, the icon still in full colour, whose it is on the bottom edge. */
+.icon-picker__option.is-taken .icon-picker__chip {
+  background: rgb(255 246 229 / 0.18);
+  box-shadow: none;
+}
+
+.icon-picker__option:has(.icon-picker__input:focus-visible) .icon-picker__chip {
   outline: 3px solid var(--color-focus);
-  outline-offset: 9px;
+  outline-offset: 6px;
 }
 
 .icon-picker__input {
@@ -2309,32 +2632,27 @@ html:has(.drawer[open]) {
 }
 
 .icon-picker__mark {
-  width: 2.125rem;
-  height: 2.125rem;
-  pointer-events: none;
-}
-
-.icon-picker__option.is-taken .icon-picker__mark {
-  opacity: 0.35;
+  width: 2rem;
+  height: 2rem;
 }
 
 .icon-picker__owner {
   position: absolute;
-  right: -0.25rem;
-  bottom: -0.5rem;
-  max-width: 100%;
-  padding: 0 0.375rem 0.0625rem;
+  left: 50%;
+  bottom: -0.5625rem;
+  max-width: calc(100% + 6px);
+  padding: 1px 6px 2px;
+  transform: translateX(-50%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.6875rem;
+  font-family: var(--font-body);
+  font-size: 0.71875rem;
   font-weight: var(--font-weight-strong);
-  line-height: 0.9375rem;
-  color: var(--color-text-soft);
-  background: var(--color-bg-deep);
-  border: 2px solid var(--color-line);
+  line-height: 1.15;
+  color: var(--color-paper);
+  background: var(--color-line);
   border-radius: var(--radius-pill);
-  pointer-events: none;
 }
 
 .rename {
@@ -2371,8 +2689,10 @@ html:has(.drawer[open]) {
   gap: var(--space-4);
 }
 
-/* The views' own headings repeat the switch's words: kept for screen readers only. */
+/* The views' own headings repeat the switch's words, and the board shows no round line over the songs: kept for
+   screen readers only. */
 .ara .history__heading,
+.ara .history__round-title,
 .ara .cards__heading {
   position: absolute;
   width: 1px;
@@ -2425,73 +2745,59 @@ html:has(.drawer[open]) {
   height: 1.25rem;
 }
 
-/* The drum shrunk to a strip (Ara with the cards): the window on the left between two small card backs, the
-   song's title and artist beside it, on a panel. */
+/* The drum drawn small (Ara with the cards; board Mobil-B-J2): the same ring in a 112 px box at the left of a panel,
+   the song's title and artist beside it. */
 .reel[data-size='strip'] {
-  --reel-size: var(--player-drum-strip);
+  --tile: 3.875rem;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-height: calc(var(--reel-size) + var(--space-4));
-  padding: var(--space-2) var(--space-3);
+  gap: 0.75rem;
+  min-height: 4.875rem;
+  box-sizing: border-box;
+  padding: 0.375rem 0.75rem 0.375rem 0.5rem;
   text-align: left;
   background: var(--color-surface);
   border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    var(--shine-panel),
-    var(--shadow-piece);
+  border-radius: 1.125rem;
+  box-shadow: var(--shadow-piece);
 }
 
-.reel[data-size='strip']::before,
-.reel[data-size='strip']::after {
-  top: calc(50% - var(--reel-size) * var(--player-reel-flank) / 2);
-  right: auto;
-  box-shadow:
-    inset 0 0 0 3px var(--color-paper),
-    inset 0 0 0 999px rgb(10 14 38 / 0.3);
-}
-
-.reel[data-size='strip']::before {
-  left: var(--space-3);
-}
-
-.reel[data-size='strip']::after {
-  left: calc(var(--space-3) + var(--reel-size) * 1.28);
-}
-
-.reel[data-size='strip'] > .reel__window,
-.reel[data-size='strip'] .reel__landed .cover {
+.reel[data-size='strip'] .drum {
   flex: none;
-  margin-inline: calc(var(--reel-size) * 0.42);
-  outline-width: var(--line-width);
-  outline-offset: 0.25rem;
-  box-shadow: 0 0 0.875rem 0.25rem rgb(255 197 49 / 0.45);
+  width: 7rem;
+  height: var(--tile);
+  perspective: 400px;
+  overflow: visible;
+  clip-path: inset(-0.5rem 0);
 }
 
-.reel[data-size='strip'] > .reel__landed {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+.reel[data-size='strip'] .drum::after {
+  background: linear-gradient(to right, rgb(35 46 102 / 0.55), rgb(35 46 102 / 0) 30%, rgb(35 46 102 / 0) 70%, rgb(35 46 102 / 0.55));
+}
+
+.reel[data-size='strip'] .drum__tile {
+  border-width: var(--line-width);
+  border-radius: 0.6875rem;
+}
+
+.reel[data-size='strip'] .drum__window {
+  width: calc(var(--tile) + 0.375rem);
+  height: calc(var(--tile) + 0.375rem);
+  border-radius: 0.8125rem;
+  box-shadow:
+    0 0 0 3px var(--color-accent),
+    0 0 0.875rem 0.1875rem rgb(255 197 49 / 0.55);
 }
 
 .reel[data-size='strip'] .reel__caption {
+  flex: 1;
   min-width: 0;
-  gap: 0;
-}
-
-.reel[data-size='strip'] .reel__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+  gap: 1px;
 }
 
 .reel[data-size='strip'] .reel__title {
-  font-size: 1.5rem;
+  font-size: 1.5625rem;
+  line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2499,7 +2805,8 @@ html:has(.drawer[open]) {
 }
 
 .reel[data-size='strip'] .reel__artist {
-  font-size: var(--text-md);
+  font-size: 0.9375rem;
+  text-shadow: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2510,17 +2817,6 @@ html:has(.drawer[open]) {
   flex: 1;
   min-width: 0;
   font-size: var(--text-md);
-}
-
-.reel[data-size='strip'] > .reel__still {
-  width: auto;
-  aspect-ratio: auto;
-  padding: 0;
-  display: block;
-  background: none;
-  border: 0;
-  outline: 0;
-  box-shadow: none;
 }
 
 /* The technical pause, in the drum's place: the meditating nino over "Tornem de seguida" (board "App · pausa
@@ -2569,36 +2865,10 @@ html:has(.drawer[open]) {
   font-size: 1.75rem;
 }
 
-/* Historial: the song playing now comes first, on a gold-ringed strip with a note badge on its cover. */
+/* Historial: a row's cover. */
 .song-list__cover {
   position: relative;
   display: block;
-}
-
-.song-list__item.is-now {
-  background: var(--color-highlight);
-  box-shadow:
-    0 0 0 var(--line-width) var(--color-accent),
-    var(--shadow-piece-sm);
-}
-
-.song-list__now {
-  position: absolute;
-  right: -0.4375rem;
-  bottom: -0.4375rem;
-  width: 1.625rem;
-  height: 1.625rem;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--color-line);
-  color: var(--color-accent);
-}
-
-.song-list__now .icon {
-  width: 1rem;
-  height: 1rem;
-  stroke-width: 3;
 }
 
 /* ---- offline: the strip across the top, and the veil that greys the screen under it ------------------------ */
@@ -2653,26 +2923,28 @@ html:has(.drawer[open]) {
   visibility: visible;
 }
 
-/* ---- Ajustos (D87; the J2 look): the cards as plain rows with a grip, the settings in one group -------------- */
+/* ---- Ajustos (D87; the J2 look, board Mobil-B-J2): the cards as plain rows with a grip, the settings in one panel - */
 .menu {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  --menu-line: #2c3878;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .menu__cards {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .menu__heading {
   margin: 0;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-strong);
+  line-height: normal;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-text-soft);
+  color: var(--color-text-muted);
 }
 
 .menu__card-list {
@@ -2686,9 +2958,9 @@ html:has(.drawer[open]) {
 .menu__card {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 3.5rem;
-  border-bottom: 2px solid var(--color-divider);
+  gap: 0.625rem;
+  padding: var(--space-2) 2px;
+  border-bottom: 2px solid var(--menu-line);
   background: var(--drawer-bg, var(--color-panel));
   transform: translateY(var(--shift, 0px));
 }
@@ -2705,10 +2977,12 @@ html:has(.drawer[open]) {
   box-shadow: 0 8px 0 var(--color-night-shadow);
 }
 
-.player .menu__grip,
-.drawer .menu__grip {
-  width: 2.25rem;
-  height: var(--tap-min);
+/* The grip: 16 px wide in the row, as drawn, with a wider target around it. */
+.player .menu__grip {
+  width: 1.5rem;
+  height: 2.5rem;
+  min-height: 0;
+  margin-inline: -0.25rem;
   flex: none;
   display: grid;
   place-items: center;
@@ -2720,9 +2994,11 @@ html:has(.drawer[open]) {
   touch-action: none;
 }
 
-.menu__card .swatch {
+.menu__card-mark {
   width: 2rem;
   height: 2rem;
+  flex: none;
+  filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.4));
 }
 
 .menu__card-name {
@@ -2730,50 +3006,84 @@ html:has(.drawer[open]) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* room for the ink drop, which the ellipsis' overflow would cut */
+  padding-block: 0.125rem 0.25rem;
   font-size: 1.4375rem;
-  line-height: 1.1;
-  color: var(--color-text);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: #fff;
 }
 
 .menu__card-number {
   flex: 1;
   font-weight: var(--font-weight-strong);
-  font-size: var(--text-md);
-  color: var(--color-text-soft);
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
 }
 
-.player :is(.menu__card-edit, .menu__card-remove),
-.drawer :is(.menu__card-edit, .menu__card-remove) {
-  width: var(--tap-min);
-  height: var(--tap-min);
+.player :is(.menu__card-edit, .menu__card-remove) {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-height: 0;
   flex: none;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--color-text-soft);
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
-.player .menu__card-remove,
-.drawer .menu__card-remove {
-  color: var(--color-danger-on-night);
+.player .menu__card-remove {
+  color: var(--color-danger);
 }
 
-.menu__add.big-button {
-  justify-self: center;
+.menu__card .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 2.6;
+}
+
+.menu__card .menu__grip .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* "+ Afegir cartró": the orange pill. */
+.player .menu__add.big-button {
+  align-self: center;
   width: auto;
-  margin-top: var(--space-2);
+  height: 3.375rem;
+  min-height: 0;
+  margin-top: var(--space-1);
+  padding: 0 1.375rem;
+  gap: 0.625rem;
+  font-size: 1.375rem;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  color: #fff;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 -7px 0 rgb(0 0 0 / 0.22),
+    inset 0 4px 0 rgb(255 255 255 / 0.35),
+    0 5px 0 var(--color-shadow);
+}
+
+.player .menu__add.big-button .icon {
+  width: 1.625rem;
+  height: 1.625rem;
+  filter: none;
 }
 
 .menu__settings {
   list-style: none;
-  margin: 0;
+  margin: 1.125rem 0 0;
   padding: 0;
   background: var(--color-surface);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 1rem;
   overflow: hidden;
 }
 
@@ -2781,22 +3091,23 @@ html:has(.drawer[open]) {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 3.25rem;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-3) 0.875rem;
+  border-bottom: 2px solid var(--menu-line);
 }
 
-.menu__row + .menu__row {
-  border-top: 2px solid var(--color-divider);
+.menu__row:has(> .menu__row-button) {
+  padding: 0;
 }
 
-.menu__row-button {
+.player .menu__row-button {
   flex: 1;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--tap-min);
-  padding: 0;
+  min-height: 0;
+  padding: var(--space-3) 0.875rem;
   border: 0;
+  border-radius: 0;
   background: none;
   color: var(--color-text);
   font: inherit;
@@ -2804,21 +3115,65 @@ html:has(.drawer[open]) {
   cursor: pointer;
 }
 
+.menu__row .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  stroke-width: 2.6;
+}
+
 .menu__label {
   flex: 1;
+  font-size: var(--text-md);
   font-weight: var(--font-weight-strong);
-}
-
-.menu__toggle {
-  min-width: 4.5rem;
-}
-
-.menu__toggle[aria-checked='true'] {
-  background: var(--color-ok);
   color: var(--color-text);
-  box-shadow:
-    inset 0 -4px 0 var(--color-green-edge),
-    var(--shadow-piece-sm);
+}
+
+.menu__chevron {
+  display: flex;
+  color: var(--color-text-muted);
+}
+
+.menu__row .menu__chevron .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke-width: 3;
+}
+
+/* Sons: a real switch (ANIMATIONS.md `switch-toggle`): green with the knob right when on, slate with it left when
+   off; only the knob moves. */
+.player .menu__switch {
+  position: relative;
+  width: 3.5rem;
+  height: 2rem;
+  min-height: 0;
+  flex: none;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--color-slate);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+}
+
+.player .menu__switch[aria-checked='true'] {
+  background: var(--color-ok);
+}
+
+.menu__switch-knob {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 1.375rem;
+  height: 1.375rem;
+  box-sizing: border-box;
+  background: var(--color-paper);
+  border: 2px solid var(--color-line);
+  border-radius: 50%;
+  transition: transform var(--dur-switch-toggle) var(--ease-out);
+}
+
+.menu__switch[aria-checked='true'] .menu__switch-knob {
+  transform: translateX(1.5rem);
 }
 
 .menu__note,
@@ -2827,18 +3182,28 @@ html:has(.drawer[open]) {
   color: var(--color-text-soft);
 }
 
-.player .menu__wipe,
-.drawer .menu__wipe {
-  justify-self: center;
+/* "Esborrar les dades d'aquest mòbil": a red underlined link; its tap target is taller than the words. */
+.player .menu__wipe {
+  align-self: center;
   min-height: var(--tap-min);
   padding: 0 var(--space-3);
   border: 0;
   background: none;
   font: inherit;
+  font-size: var(--text-sm);
   font-weight: var(--font-weight-strong);
-  color: var(--color-danger-on-night);
+  color: var(--color-danger);
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Flat controls stay flat when pressed: no 3D edge appears on them (Horari's current round keeps its orange ring). */
+.player :is(.menu__grip, .menu__card-edit, .menu__card-remove, .menu__row-button, .menu__wipe, .menu__switch, .schedule__round:not([data-state='current']) .schedule__round-button):active:not(:disabled) {
+  box-shadow: none;
+}
+
+.player .menu__switch:active:not(:disabled) {
+  transform: none;
 }
 
 /* The header's Ajustos button stays on the right, even when the title is visually hidden (before the Game). */
@@ -2868,7 +3233,11 @@ html:has(.drawer[open]) {
   box-sizing: border-box;
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: 50%;
-  background: var(--color-paper);
+  /* B2 (the user, 25 Nov): the same paper disc on both corners, no tinted ring, a little see-through with the home
+     screen blurred behind it. A static backdrop blur: one of the two exceptions to the phones' budget (ANIMATIONS.md). */
+  background: rgb(255 246 229 / 0.8);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: var(--color-text-on-paper);
   cursor: pointer;
   transition: transform var(--dur-corner-back) var(--ease-bounce);
@@ -2877,16 +3246,14 @@ html:has(.drawer[open]) {
 .player .corner--left {
   left: calc(var(--player-corner) / -2);
   box-shadow:
-    inset -10px 10px 0 rgb(255 255 255 / 0.6),
-    inset 0 0 0 5px var(--color-gold),
+    inset -10px 10px 0 rgb(255 255 255 / 0.45),
     0 -2px 0 4px rgb(10 14 38 / 0.35);
 }
 
 .player .corner--right {
   right: calc(var(--player-corner) / -2);
   box-shadow:
-    inset 10px 10px 0 rgb(255 255 255 / 0.6),
-    inset 0 0 0 5px var(--color-ice),
+    inset 10px 10px 0 rgb(255 255 255 / 0.45),
     0 -2px 0 4px rgb(10 14 38 / 0.35);
 }
 
@@ -3183,6 +3550,16 @@ html:has(.drawer[open]) {
     var(--shadow-piece);
 }
 
+/* The card just added (or the pad's "Veure'l"): a gold ring and glow for a moment, still (board "afegir cartró:
+   casos especials", the third frame). */
+.cards__item[data-highlight] .player-card,
+.cards__resting-item[data-highlight] {
+  box-shadow:
+    0 0 0 var(--line-width-bold) var(--color-accent),
+    0 0 1.75rem 0.5rem rgb(255 197 49 / 0.7),
+    0 6px 0 var(--line-width-bold) var(--color-shadow);
+}
+
 .confetti {
   position: absolute;
   inset: 0;
@@ -3191,11 +3568,12 @@ html:has(.drawer[open]) {
   pointer-events: none;
 }
 
+/* Under the header, where the board "afegir cartró: casos especials" puts "Cartró #88 afegit" (118 px down). */
 .toast {
   position: fixed;
-  left: var(--space-4);
-  right: var(--space-4);
-  bottom: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
+  left: 1.5rem;
+  right: 1.5rem;
+  top: calc(env(safe-area-inset-top, 0px) + 7.375rem);
   z-index: var(--z-toast);
   display: grid;
   justify-items: center;
@@ -3210,6 +3588,25 @@ html:has(.drawer[open]) {
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-pill);
   box-shadow: var(--shadow-piece-sm);
+}
+
+/* About a card (one just added): green, the whole width, with the card's icon. */
+.toast__text[data-tone='card'] {
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  font-size: var(--text-md);
+  color: var(--color-text);
+  background: var(--color-ok);
+  border-radius: 1rem;
+}
+
+.toast__mark {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
 }
 
 /* ---- animation hooks (ui/ANIMATIONS.md, Player). Transform and opacity only. --------------------------- */
@@ -3312,11 +3709,11 @@ html:has(.drawer[open]) {
   animation: player-fade-in var(--dur-tab-switch) var(--ease-out) both;
 }
 
-.reel__landed[data-anim='landing'] .cover {
+.drum__landed[data-anim='landing'] {
   animation: player-flip-in var(--dur-player-landing) var(--ease-bounce) both;
 }
 
-.reel__landed[data-anim='landing'] .reel__caption,
+.reel__caption[data-anim='landing'],
 .song-list__item[data-anim='landing'] {
   animation: player-rise-in var(--dur-player-landing) var(--ease-out) both;
 }
@@ -3612,8 +4009,10 @@ html:has(.drawer[open]) {
   color: var(--color-line);
 }
 
+/* The artist's gold would vanish on the gold: it turns ink (the user, 25 Nov). */
 .player[data-your-song='on'] .reel__artist {
-  color: var(--color-text);
+  color: var(--color-line);
+  text-shadow: none;
 }
 
 /* 0 → 95 % → 15 % → 85 % → 0 over 600 ms: the board's flicker, from option B (without the bolt). */

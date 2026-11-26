@@ -7,6 +7,8 @@ import type { HeatLevel } from './logic/view.ts';
 import type { AraView } from './logic/tabs.ts';
 
 const card = CA.card;
+/** "de" before a name, elided before a vowel sound ("d’Àvia", "d’Helena"), but not before a semivowel ("de Iaia"). */
+const ofName = (name: string): string => (/^h?[aeiouàáèéíïòóúü]/i.test(name) && !/^h?[iu][aeiouàáèéíòóú]/i.test(name) ? `d’${name}` : `de ${name}`);
 
 export const S = {
   appTitle: CA.gameTitle,
@@ -35,11 +37,21 @@ export const S = {
 
   // Adding cards
   addCard: 'Afegir cartró',
-  padTitle: 'Afegir un cartró',
-  padHint: 'Escriu el número que surt al teu cartró.',
-  padEmpty: 'Número del cartró',
+  padTitle: 'Afegir cartró',
+  /** The number field's name for screen readers (the field shows only "#" and the digits). */
+  padNumber: 'Número del cartró',
   padDelete: 'Esborrar l’última xifra',
-  padAdd: 'Afegir',
+  /** The name field's placeholder: the name is optional. */
+  padName: 'Nom',
+  /** The number typed is already one of the player's cards: whose it is, by its name ("d’Àvia", "de Pere"). */
+  alreadyYours: (name: string | null) => (name ? `Ja el tens: és el cartró ${ofName(name)}` : 'Ja el tens: és un dels teus cartrons'),
+  /** Closes the pad and shows that card on the home screen. */
+  seeCard: 'Veure’l',
+  /** Leaving the pad with a number typed (`pad-leave`). */
+  discardTitle: (id: number) => `Descartar el #${id}?`,
+  discardText: 'Encara no l’has desat.',
+  discardYes: 'Descartar',
+  discardNo: 'Continuar',
   close: 'Tancar',
   addError: {
     invalid: 'Aquest número no és vàlid.',
@@ -47,18 +59,13 @@ export const S = {
     full: (max: number) => `Ja tens ${max} cartrons, que és el màxim.`,
     unknown: (id: number) => `No hi ha cap cartró amb el número ${id}.`,
   },
-  added: (id: number) => `${card(id)} afegit`,
+  added: (id: number) => `Cartró #${id} afegit`,
 
   // Cards
   cardsTitle: 'Els teus cartrons',
   noCards: 'Encara no tens cap cartró.',
   noCardsHint: 'Escaneja el codi QR del teu cartró amb la càmera del mòbil, o escriu-ne el número.',
   notPlaying: 'No juguen en aquesta quina',
-  /** The leave-confirmation of "Afegir cartró", when a number has been typed. */
-  leaveTitle: 'Vols sortir sense afegir el cartró?',
-  leaveText: 'El número que has escrit no es desarà.',
-  leaveYes: 'Sortir',
-  leaveNo: 'Continuar',
   /** Which printed type a round plays (card-types.json's name, "Cartró normal"), so a card that rests is explained. */
   typeRule: (name: string) => `En aquesta quina només juga el ${name.charAt(0).toLowerCase()}${name.slice(1)}.`,
   unknownCard: 'No trobem aquest cartró.',
@@ -148,7 +155,8 @@ export const S = {
   // Horari (first called "Programa")
   scheduleTitle: 'Horari',
   notStarted: 'Encara no hem començat.',
-  endsAround: (time: string) => `Acabarem cap a les ${time}`,
+  /** The end of the night, with its expected time. */
+  scheduleEnd: 'Fi',
   around: (time: string) => `cap a les ${time}`,
   roundsPlanned: (n: number) => `${n} quines`,
 
@@ -172,12 +180,9 @@ export const S = {
   /** A card's grip in Ajustos: drag it, or ↑ and ↓. */
   moveLabel: (who: string) => `Moure ${who}: arrossega, o fes servir les fletxes amunt i avall`,
   soundsLabel: 'Sons',
-  on: 'Sí',
-  off: 'No',
-  legacyMenuTitle: 'Cartrons de l’any passat',
+  legacyMenuTitle: 'El cartró de l’any passat',
   legacyMenuText: 'Els cartrons de l’any passat ja no juguen. Els d’enguany porten un codi QR nou: escaneja’l, o afegeix-lo pel número.',
-  privacy: 'Els teus cartrons només es guarden en aquest mòbil. No cal cap compte.',
-  wipeData: 'Esborrar dades',
+  wipeData: 'Esborrar les dades d’aquest mòbil',
   wipeTitle: 'Esborrar totes les dades?',
   wipeText: 'Es trauran tots els teus cartrons i noms d’aquest mòbil.',
   wipeYes: 'Sí, esborrar-ho tot',

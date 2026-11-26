@@ -5,7 +5,8 @@
   // screen: App.svelte.)
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { plannedStarts, prizeRounds, roundKindOf, roundRule } from '../logic/view.ts';
+  import { historyOf, plannedStarts, prizeRounds, roundKindOf, roundRule } from '../logic/view.ts';
+  import { drumSongs } from '../logic/reel.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
@@ -26,6 +27,9 @@
   const introduced = $derived(app.state?.intro ?? app.round);
   const rule = $derived(introduced ? roundRule(introduced, app.cardTypes) : null);
   const HOUR = 60 * 60_000;
+  // The drum's tiles: this round's songs still to come, never a landed one (logic/reel.ts drumSongs).
+  const history = $derived(historyOf(app.state));
+  const drum = $derived(drumSongs(app.catalog?.songs.keys() ?? [], new Set(history?.landings.map((l) => l.songId) ?? []), history?.round ?? 0));
   const nextNumber = $derived(app.state?.interval?.nextRound ?? null);
   const nextName = $derived(nextNumber === null ? '' : S.roundName(nextNumber, roundKindOf(nextNumber, app.state, app.plan)));
 </script>
@@ -84,6 +88,7 @@
       spin={app.state?.spin ?? null}
       latest={app.latest}
       catalog={app.catalog}
+      songs={drum}
       nowMs={app.cloudNow}
       clockOffsetMs={app.cloudNow - app.localNow}
       reduced={app.reducedMotion}

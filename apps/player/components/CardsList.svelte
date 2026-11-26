@@ -13,9 +13,14 @@
   import Swatch from './Swatch.svelte';
 
   let { app }: { app: PlayerApp } = $props();
+  // The card just added (or the pad's "Veure'l") is ringed in gold, and scrolled to at once (no motion).
+  let section: HTMLElement | undefined = $state();
+  $effect(() => {
+    if (app.highlightCard !== null) section?.querySelector('[data-highlight]')?.scrollIntoView({ block: 'center' });
+  });
 </script>
 
-<section class="cards">
+<section class="cards" bind:this={section}>
   <h2 class="cards__heading">{S.cardsTitle}</h2>
   {#if !app.data.cards.length}
     <AddCardPrompt onadd={() => app.open({ kind: 'pad' })} />
@@ -26,7 +31,7 @@
     {/if}
     <ul class="cards__list">
       {#each app.playingViews as view, i (view.saved.id)}
-        <li class="cards__item">
+        <li class="cards__item" data-highlight={app.highlightCard === view.saved.id ? 'true' : undefined}>
           <CardPanel
             {view}
             catalog={app.catalog}
@@ -44,7 +49,7 @@
         <h3 class="cards__subheading">{S.notPlaying}</h3>
         <ul class="cards__resting-list">
           {#each app.restingViews as view (view.saved.id)}
-            <li class="cards__resting-item" style:--card-color="var(--card-color-{view.saved.color})">
+            <li class="cards__resting-item" data-highlight={app.highlightCard === view.saved.id ? 'true' : undefined} style:--card-color="var(--card-color-{view.saved.color})">
               <Swatch color={view.saved.color} />
               <span class="cards__resting-label">{view.saved.name ? `${view.saved.name} · ` : ''}{S.cardNumber(view.saved.id)}</span>
             </li>
