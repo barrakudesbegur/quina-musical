@@ -254,8 +254,8 @@ This page explains the event: what happens on the night, who does what, and how 
   - The new show must keep that control and create moments like it.
 - **What they can do at any time** (**new in 2026**):
   - **"Següent":** the next song now;
-  - **"Parlem":** talk over the music. No new song lands, and the music goes down;
-  - **"Pausa":** a long break mid-round. No song lands, the relaxed music plays, and the screen and phones show "Tornem de seguida";
+  - **"Parlem":** for something important. The presenters normally talk over the music at full volume, so Parlem is a tool to get the crowd's attention and make the message easy to hear, not something to switch for every remark. The music goes down, and the game doesn't move on while it's on; "Següent" ends it;
+  - **"Pausa":** the next level, a break for a while. The sudden change of mood gets even more attention and shows the normal flow has stopped. Soft music plays, because silence would feel like an error; the screen and phones show "Tornem de seguida", and what was playing resumes after;
   - **"Aguanta":** keep the current song at full volume, for dancing or a crowd moment;
   - **"Suspens":** the current song keeps playing while the tension builds, and the drum hovers over a few songs. On release, the real next song lands;
   - **"Enrere":** undo the last song, so it doesn't count;

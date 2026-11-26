@@ -178,6 +178,10 @@ The setup and fixes page for organizers: cards in play, rounds, prizes, sponsors
 The app players open on their phones from the QR code on their card, following their own cards.
 _Avoid_: Mobile view, PWA (in conversation)
 
+**Manual advance**:
+The auto-advance switched off, so a song lands only when a presenter presses "Següent" (labelled "Avanç manual" on the console). It's a setting that lasts across songs.
+_Avoid_: Aturat, stopped
+
 **Pace**:
 The target average time from one landing to the next, set by the presenters and gently adjusted by the system to keep to the schedule. Each gap snaps to the playing song's phrases, so the pace holds on average, not for every song.
 _Avoid_: Speed, tempo, song duration
@@ -199,7 +203,7 @@ Undoing the last landing: that song stops counting and becomes the next song aga
 _Avoid_: Previous, undo, replay, anterior (outside the UI)
 
 **Hold**:
-A state in which no new song can land and the music ducks under the presenters' voices, used for claims and whenever the presenters want to talk (labelled "Parlem" on the console). The music never stops unless silence is intended.
+A state in which no new song lands by itself and the music ducks under the presenters' voices (labelled "Parlem" on the console). It's for claims and for something important: the presenters normally talk over full-volume music, and Parlem gets the crowd's attention. "Següent" ends it. The music never stops unless silence is intended.
 _Avoid_: Pause, low volume
 
 **Stay**:
@@ -207,7 +211,7 @@ A state in which no new song can land and the current song keeps playing at full
 _Avoid_: Freeze, loop mode
 
 **Pause**:
-A break the presenters can start at any time: no song lands, the Pausa music plays instead of what was playing, and the projector and phones show a pause screen. When it ends, what was playing resumes. It's the second level of Hold (labelled "Pausa").
+A break the presenters can start at any time: no song lands, the Pausa music plays instead of what was playing, and the projector and phones show a pause screen. When it ends, what was playing resumes. It's the second level of Hold (labelled "Pausa"): the sudden change of mood makes it clear the flow has stopped for a while, and soft music, not silence, shows it's on purpose.
 _Avoid_: Break, interval (for this)
 
 **Hold music**:

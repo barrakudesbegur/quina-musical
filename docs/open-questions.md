@@ -12,12 +12,10 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
 
-### U116–U119 · Parlem, Aguanta and "Següent" (D133)
-The glossary's words: **Hold** is "Parlem" (the music ducks under the voices); **Stay** is "Aguanta" (the song keeps playing at full volume, looping a phrase). Both are one Hold with two modes, so only one can be on. **"Avanç automàtic aturat"** isn't Aguanta: it's the console's label for the auto-advance switched off, a setting that stays across songs.
-- **U116 · "Següent" during Parlem:** "Següent" no longer ends Parlem (D133). So: (a) it lands the next song and Parlem stays on, with the new song ducked until a presenter turns Parlem off; (b) it's disabled during Parlem, like Aguanta. With (a), the chant before a song becomes two presses: Parlem off, then "Següent", or "Següent", then Parlem off.
-- **U117 · An Aguanta that ends at the next "Següent":** "Següent" is disabled while Aguanta is on (D133), so an expirable Aguanta can't end on "Següent". When does one happen, and what ends it? (a) There's no expirable Aguanta, only an expirable Parlem; (b) after a Pausa that interrupted an Aguanta, it comes back and ends when B is let go; (c) something else.
-- **U118 · After a discard, in the glossary's words:** (a) an expirable Parlem: the music from before the Check, ducked, nothing lands by itself, and the next "Següent" ends it; (b) Aguanta; (c) the auto-advance switched off ("aturat") as well. D125 assumed "aturat" was Aguanta.
-- **U119 · The remote's B with the auto-advance off:** B held is Aguanta, which keeps the song looping at full volume so it doesn't run out, and B held plus three shakes is Suspens. So B isn't useless with the auto-advance off, though its Aguanta adds less then. (a) Leave B as it is; (b) give B's tap another job when the auto-advance is off (which?); (c) leave it unassigned on purpose.
+### U120–U122 · Suspens on the remote (D144, D145)
+- **U120 · Landing a Suspens started with B + A:** (a) letting go of B lands it, as today, and letting go of A alone cancels it; (b) another way.
+- **U121 · The shake gesture's default:** (a) on; (b) off, now that B + A does Suspens.
+- **U122 · The cancel window with manual advance** (three evenly spaced vibrations): (a) about 1.5 s, one every half second; (b) about 3 s, one a second.
 
 ### U103 · The throw song is on the cards
 "Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal): Sound engine confirmed it's the same Spotify track as last year's id 24, so the throw song is printed on Part 1's cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
@@ -38,7 +36,7 @@ Today "Enrere" during a Check undoes the last landing. With D127 it steps back a
 - **U109 · Where Parlem doesn't exist today** (the Interval, the intro, the doors, the end): when Pausa ends there, (a) the music resumes at its own level; (b) Parlem becomes possible there too, and resumes on.
 - **U110 · The Interval's countdown during Pausa:** (a) it freezes; (b) it keeps running.
 - **U111 · A restart during Pausa:** (a) Pausa is recorded in the night's log, so a restart comes back paused, with the saved playback; (b) not recorded: a restart comes back unpaused, in the Hold.
-- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; whether Parlem stays on afterwards follows U116.
+- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; Parlem ends with it too (D142).
 - **U113 · Short sounds when Pausa starts** (fanfares, effects, snippets, a transition's tail): (a) they ring out under the Pausa music; (b) they're cut at once.
 - **U114 · Paused time and the night's end:** (a) the round's target end moves by the paused time, so the show doesn't rush afterwards; (b) it counts as time lost, and the Pace speeds up to catch up, as today.
 
@@ -176,6 +174,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U116–U119** (2026-11-26) → D142: "Següent" ends Parlem after all, so U116 and U118 need no answer; U117 (a), no expirable Aguanta; U119 → D145 (b): with manual advance, holding B starts a cancellable Suspens.
 - **U115 · What the add-card QR button does** (2026-11-26) → D141: it scans inside the app.
 - **U84 · Does "Següent" end Parlem?** (2026-11-26) → D133: no; Aguanta and Suspens disable "Següent"; an expirable Parlem or Aguanta shows a badge. Follow-ups U116–U119.
 - **U90–U92 · "Enrere" inside a Check** (2026-11-26) → D134: the projector removes the mark; the previous snippet replays and that Check's automatic reveal turns off; only while revealing.

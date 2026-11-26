@@ -83,18 +83,18 @@ The presenters can do any of these at any time, from the console or the Wii remo
 | On the console | What it does | Wii remote |
 |---|---|---|
 | "Següent" | The next song now. Ignored while a transition is running, so a double press does nothing | A |
-| "Parlem" | **Hold:** nothing lands by itself, and the music ducks under the presenters' voices. A long Hold switches to Hold music. "Següent" doesn't end it (D133; how "Següent" works in it, pending U116) | − or + (tap) |
+| "Parlem" | **Hold:** nothing lands by itself, even with the auto-advance on, and the music ducks under the presenters' voices: for something important, not every remark (D142). A long Hold switches to Hold music. "Següent" ends it | − or + (tap) |
 | "Pausa" (hold "Parlem") | **Pause:** available at any time. No song lands, the Pausa music plays, and the projector and phones show "Tornem de seguida". The playback in progress is saved; when Pausa ends it resumes, with Parlem still on (D128). While it's on, A turns it off, and the tablet's "Següent" plays the transition into the next song. During a Check, this hold sends the Check to review instead | − or + (hold) |
 | "Aguanta" | **Stay:** no song lands, and the current song keeps playing at full volume, looping a phrase, for dancing and crowd moments. "Següent" is disabled while it's on (D133) | B (hold) |
-| "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself. "Següent" is disabled while it's on (D133) | B held, plus 3 strong shakes; let go of B to land |
+| "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself. "Següent" is disabled while it's on (D133) | B held plus A held, or (if the shake gesture is on) 3 strong shakes; letting go of A alone cancels it back to Aguanta (D144). With manual advance, holding B starts it at once: 3 vibrations, and letting go before the third cancels it, after it lands it (D145) |
 | "Enrere" (long press) | **Back:** during a Check, a single press steps back one revealed song, down to none, and never closes the Check. The projector removes that mark, the previous song's snippet replays, and that Check's automatic reveal turns off. Only while revealing: not in a review or after the cue (D127, D134). Otherwise it undoes the last landing. That song stops counting, phones unmark it, and it becomes the next song again; the Queue is untouched. The drum turns back one card and the show goes into Hold. It can be pressed several times, and during a Spin it cancels the Spin | 1 or 2 (hold 1.5 s) |
 | "Comprovar cartró" | A Claim: a number pad for the card, then the Check | Console only |
 | "Efectes" | Sound effects and fanfares, such as a horn, shown as icons | D-pad (4 effects) |
 | "Ritme" | The Pace: presets, −/+ and a lock | none |
-| Auto-advance | On or off | HOME (a different rumble for each) |
+| Auto-advance | On, or off ("Avanç manual", D143) | HOME (a different rumble for each) |
 
 - **Two levels per button:** "Parlem" → "Pausa", and "Aguanta" → "Suspens". The console shows each pair visually.
-- **Every Hold mode shows that it's on** (D133). A Parlem or Aguanta that will end at the next "Següent" shows a discreet badge on its button.
+- **Every Hold mode shows that it's on** (D133): the pressed button and the ring's badge.
 - **Pausa (D128, D135):** "Tornem de seguida" only during a round, a Check or a Celebration; it resumes exactly where it was, fading in; during a review the −/+ hold is Pausa and A does nothing.
 - **The Suspense release** lands on the outgoing song's phrase boundary, up to about 9 s after letting go (pending U13). Default: the phrase.
 - **The moment to keep:** the presenters control the exact moment a song changes, to get the crowd chanting before it. Suspense is the first tool for that.

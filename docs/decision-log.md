@@ -968,7 +968,7 @@ By: the user. Source: open-questions.md › Answered (U76). Lives in: requiremen
 The status for a discarded claim is `discarded`, matching the user's word and the label "Descartat". Answers U83.
 By: the user. Source: open-questions.md › Answered (U83). Lives in: packages/protocol (Sound engine).
 
-### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Pending (U118)
+### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Superseded by D142
 After a discard, the round uses the console's existing "aturat" mode ("Avanç automàtic aturat: prem Següent"), the override of the auto-advance, instead of switching the auto-advance setting off and remembering it. The music from before the Check still comes back in Parlem. On "Següent", Parlem goes away and the auto-advance is back to whatever it was. The user: "you should have told me that we already have the aturat mode wich is a override of the auto-advance, and more suitable for this."
 Sound engine's facts (26 Nov): in today's code "Avanç automàtic aturat" is the auto-advance setting itself switched off, and "Següent" doesn't clear it. The override is the Hold: Parlem already suspends the auto-advance, and "Següent" ends it with the auto-advance as set. Which one the user means is U84.
 By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requirements/show-and-music.md › the Check's sound.
@@ -1005,7 +1005,7 @@ By: the user. Source: the user's message of 26 Nov. Supersedes: D115. Lives in: 
 The user's go to implement: the player app's home, corner buttons and drawers (D73, D87) are built to match the agreed canvas boards (`Mobil-B-J2` and the add-card drawer, v61 onwards), so the work isn't left half done. This lifts the UI freeze for the player app's drawers only. `71caa9c` is already pushed and stays as the starting point. The prizes drawer isn't designed yet (U30), so it's not part of this.
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.
 
-### D133 · "Següent" doesn't end Parlem; Aguanta and Suspens block it · 2026-11-26 · Active; the details Pending (U116–U118)
+### D133 · "Següent" doesn't end Parlem; Aguanta and Suspens block it · 2026-11-26 · Amended by D142
 "Següent" no longer ends Parlem in general (today's code ends it). While Aguanta or Suspens is on, "Següent" is disabled: holding B and pressing A plays no next song. A Parlem or an Aguanta that will end at the next "Següent" (an "expirable" one, as after a discard) shows a discreet badge on its button, with no text or very short text. Every Hold mode shows that it's on (today the Parlem and Aguanta buttons show pressed, and the "Ara sona" ring shows a "Parlem" badge and a "Parlem · des de fa…" chip). Answers U84 with (b).
 By: the user. Source: open-questions.md › Answered (U84); the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
 
@@ -1040,3 +1040,23 @@ By: the user. Source: the user's message of 26 Nov. Lives in: docs/status.md.
 ### D141 · The add-card QR button scans inside the app · 2026-11-26 · Active
 "Escanejar el QR del cartró" opens the camera in the drawer and reads the card's QR. The number is filled in, and the name and icon already picked are kept. It needs a board for the camera view first, a camera permission prompt, and a small QR-reading library, since iPhones' Safari can't read QR codes on its own. Answers U115.
 By: the user. Source: open-questions.md › Answered (U115). Lives in: requirements/screens.md › Player app.
+
+### D142 · What Parlem and Pausa are for; "Següent" ends Parlem · 2026-11-26 · Active
+The user's reasons, recorded so they aren't lost again:
+- **Parlem:** the presenters normally talk over the music at full volume. Parlem is for when something important needs saying: it gets the crowd's attention and makes the message easier to hear. It isn't meant to be switched on and off for every remark. While it's on the game doesn't move on (nothing lands by itself, even with the auto-advance on), and "Següent" ends it, because while saying something important they never want the game to carry on in the background.
+- **Pausa:** the next level. The sudden change of mood gets even more attention and makes it clear the normal flow has stopped for a while. Soft music plays, because complete silence would feel like an error or a bug.
+
+So "Següent" ends Parlem, as today (D133 reversed on this point; U116 needs no answer). There's no "expirable" Parlem or Aguanta badge: every Parlem ends at "Següent", and "Següent" is disabled during Aguanta (U117 (a)). After a discard it's just Parlem (U118 needs no answer).
+By: the user. Source: the user's messages of 26 Nov. Amends: D133. Supersedes: D125. Lives in: event.md › The presenters; GLOSSARY.md › Hold, Pause.
+
+### D143 · "Avanç manual" instead of "aturat" · 2026-11-26 · Active
+When the auto-advance is switched off, the console says "Avanç manual", not "Avanç automàtic aturat". "Aturat" was confusing.
+By: the user. Source: the user's message of 26 Nov. Lives in: GLOSSARY.md › Manual advance.
+
+### D144 · Suspens with A on the remote; the shake becomes optional · 2026-11-26 · Active; the landing and the default Pending (U120, U121)
+While B is held (Aguanta), holding A too starts Suspens. It works if A goes down slightly before B, or at any time after B is held. Letting go of A alone, with B still held, cancels the Suspens: the build backs out and fades, and the song is back in Aguanta. The engine can cancel a Suspense already: Pausa does. A toggle in the settings and in the remote's mapping turns the shake gesture on or off, and each shake gives one vibration.
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D145 · With manual advance, holding B starts Suspens · 2026-11-26 · Active; the window's length Pending (U122)
+With the advance manual, holding B starts a Suspens straight away. Three evenly spaced vibrations follow, and letting go of B before the third cancels it. After the third it can't be undone: a gentler vibration, oscillating or below full power, lasts as long as the Suspens, and letting go of B lands it. With the auto-advance on, B stays Aguanta. Answers U119 with (b).
+By: the user. Source: open-questions.md › Answered (U119). Lives in: requirements/show-and-music.md › The presenters' actions.
