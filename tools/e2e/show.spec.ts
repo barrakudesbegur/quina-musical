@@ -256,7 +256,7 @@ test('one whole show, every screen following', async ({ browser }) => {
   // outcome before the verdict, no seeds or resume codes, no cheat sheet, no Wii status.
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
 });

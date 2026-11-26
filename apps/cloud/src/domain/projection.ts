@@ -127,6 +127,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
     case 'winner.noted': // names and notes are private
     case 'cards.set': // the cards in play are the organizers' business
     case 'settings.changed': // Pace, auto-advance and the Phase placeholder would hint at the Phase
+    case 'finale.set': // the Desgraciat's finalists: whether phones see the finale is U150; its wins come as claims
       return [];
     default:
       entry satisfies never;

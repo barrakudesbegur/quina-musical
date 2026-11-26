@@ -25,7 +25,7 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
 
 /** Keys that must never appear anywhere in what phones get. The paced Check's (D108–D123): the whole marked card,
  * how far its Check will reveal, whether the next press is the cue, a Review (U79) and a decision by hand (D121). */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual']);
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual', 'finale', 'byHand']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -200,6 +200,22 @@ test('a Check under review stays pending on phones (U76/U79 open); a discard cle
   state = applyPublic(state, projectEntry(state, discarded, record, ctx));
   assert.deepEqual(state.winners, []);
   assert.deepEqual(project(b.entries).state.winners, [], 'replayed from the start, the same');
+});
+
+test("the Desgraciat's finale: its finalists stay off phones (U150); its winners show as the round's winners", () => {
+  const b = new JournalBuilder('g-finale').startRound('desgraciat').land(30);
+  const before = project(b.entries).state;
+  b.finale([7, 12, 40]);
+  const { state, changes } = project(b.entries);
+  assert.deepEqual(state, before, 'setting the finalists changes nothing public');
+  assert.deepEqual(forbiddenKeys(changes), []);
+  // A removal left one: it wins by hand; the phones see a standing win like any other.
+  b.finale([12], true);
+  const won = b.claim(12, 'standing');
+  b.decide(won, 'valid', 'complete', true);
+  const after = project(b.entries).state;
+  assert.deepEqual(after.winners, [{ round: 1, kind: 'standing', cardIds: [12] }]);
+  assert.equal(JSON.stringify(after).includes('byHand'), false);
 });
 
 test('a win by hand from a Review shows on phones as any win, with nothing saying it was by hand', () => {

@@ -62,6 +62,11 @@ const settings: FieldCheck = (value) => {
 };
 
 const round = integer(1, 99);
+/** The finale's card numbers (as a claim's): distinct, at most 20 (none: the finale is off). */
+const finalists: FieldCheck = (value) =>
+  Array.isArray(value) && value.length <= 20 && value.every((id) => Number.isInteger(id) && id >= 0 && id <= 99_999) && new Set(value).size === value.length
+    ? null
+    : 'at most 20 distinct card numbers';
 const position = integer(0, 4999);
 // The protocol's own lists (normal, special, desgraciat; line, bingo, standing). A value outside them is refused,
 // and a refused entry stops the link's uploads: so a new kind reaches the cloud (deployed) before any engine
@@ -108,8 +113,12 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'scene.changed': { scene, round: integer(0, 99), roundKind, cardType },
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   // `outcome`: the Check's result at the decision (absent in older journals), one of the protocol's CHECK_OUTCOMES.
-  // `manual`: won or lost by hand from a Review (D121), whatever the card shows; absent otherwise.
+  // `manual`: won or lost by hand, whatever the card shows: from a Review (D121), or the Desgraciat's finale when a
+  // removal left one standing (D169); absent otherwise.
   'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)), manual: optional((value) => (value === true ? null : 'true when present')) },
+  // The Desgraciat's finalists (D161, D166–D172): the whole set each time, empty when the finale is called off; `byHand`
+  // when a removal left one standing, who wins. The reducer refuses it outside a Desgraciat round.
+  'finale.set': { round, cardIds: finalists, byHand: optional((value) => (value === true ? null : 'true when present')) },
   // The presenter-paced Check's Review (D118–D121): a Check put under review before its cue leaves the claim
   // undecided; the Review ends with the Check going on (continued), a decision by hand (claim.decided with
   // `manual`), or the claim discarded (D124).

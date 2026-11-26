@@ -143,6 +143,15 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, false, "the step-1 name isn't a kind");
   assert.ok(checkJournalEntry({ ...decided, manual: true }).ok, 'a decision by hand');
   assert.equal(checkJournalEntry({ ...decided, manual: false }).ok, false, '`manual` is true or absent');
+  // The Desgraciat's finale (D166–D172): its finalists, set whole each time; empty calls it off.
+  const finale = { ...base, kind: 'finale.set', cardIds: [7, 12, 40] };
+  assert.ok(checkJournalEntry(finale).ok, 'the finalists');
+  assert.ok(checkJournalEntry({ ...finale, cardIds: [] }).ok, 'the finale called off');
+  assert.ok(checkJournalEntry({ ...finale, cardIds: [7], byHand: true }).ok, 'a removal that left one: won by hand');
+  assert.equal(checkJournalEntry({ ...finale, cardIds: [7, 7] }).ok, false, 'a finalist twice');
+  assert.equal(checkJournalEntry({ ...finale, cardIds: Array.from({ length: 21 }, (_, i) => i + 1) }).ok, false, 'more than 20');
+  assert.equal(checkJournalEntry({ ...finale, cardIds: ['7'] }).ok, false, 'card numbers, not text');
+  assert.equal(checkJournalEntry({ ...finale, byHand: false }).ok, false, '`byHand` is true or absent');
   // The volume sliders (D139): percents, absent until set; a slider this cloud doesn't know yet never stalls uploads.
   const changed = entries.find((e) => e.kind === 'settings.changed') as JournalEntry & { settings: object };
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 80, songsParlem: 45, end: 0, throws: 150 } } }).ok, 'the volumes, up to 150% (D157)');

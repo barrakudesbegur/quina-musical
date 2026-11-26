@@ -206,6 +206,12 @@ export class JournalBuilder {
     return this;
   }
 
+  /** The Desgraciat's finalists, the whole set (D161, D168): empty calls the finale off; `byHand` when a removal left one. */
+  finale(cardIds: number[], byHand = false): this {
+    this.push({ kind: 'finale.set', round: this.round, cardIds, ...(byHand ? { byHand: true as const } : {}) }, 2_000);
+    return this;
+  }
+
   /** `slip`: the numbered slip handed over instead of a name (absent, as an older journal). */
   note(claimId: string, name: string | null, notes: string | null, slip?: string | null): this {
     this.push({ kind: 'winner.noted', claimId, name, notes, ...(slip !== undefined ? { slip } : {}) }, 1_000);
