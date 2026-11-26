@@ -129,7 +129,7 @@ _From event.md › Claims and checks, Atmosphere and style; the decisions doc �
   - in the Desgraciat each ✓ is a short tick, and the first landed song plays its snippet as proof. If that song is the latest landing, the card fell with the last players: it passes, and shares the win;
   - the Hold music stays ducked far down throughout.
 - **A failed Check:** the Failure fanfare on the presenters' cue, or at the end of an automatic reveal (D109, D117), then the error Hold music until the presenters press "Reprèn".
-- **A Check under review:** no fanfare or effect; whatever was playing keeps playing (its level pending U78). Pausa only if a presenter turns it on (D118).
+- **A Check under review:** no fanfare or effect; whatever was playing keeps playing (its level pending U78). Pausa only if a presenter turns it on (D118). After a discard, the music from before the Check comes back in Parlem, with the auto-advance off until "Següent" (D122).
 - More Hold loops and victory tracks would repeat less (pending U20). Today there are 3 Hold loops and 1 victory track.
 
 ## The Celebration's music
