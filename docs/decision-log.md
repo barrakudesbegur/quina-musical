@@ -1386,5 +1386,5 @@ A component's props name the visual result (a colour, a size), not a domain conc
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: packages/ui (Frontend's design-system spec).
 
 ### D206 · Interface sounds like Josh Comeau's button sounds · 2026-11-27 · Active; the details Pending (Frontend's spec)
-The user wants small UI sounds on presses, in the style of Josh Comeau's `button-sounds`. Frontend specs them first and sends the open choices. Today only the phones have interface sounds (on by default, D-era screens.md › Player app).
+The user wants small UI sounds on presses, in the style of Josh Comeau's `button-sounds`. Frontend specs them first and sends the open choices. Today only the phones have interface sounds, on by default (screens.md › Player app).
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md (once specified).
