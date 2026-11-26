@@ -645,7 +645,7 @@ export interface CheckCue {
   atMs: number;
 }
 
-/** A Check stopped before its cue (`checkStop`): back to the Hold, the Claim `stopped`. */
+/** A Check stopped before its cue (`checkStop`): the round in Pausa, the Claim `stopped` (D117). */
 export interface CheckStopped {
   v: ProtocolVersion;
   type: 'check.stopped';

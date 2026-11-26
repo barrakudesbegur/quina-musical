@@ -154,9 +154,11 @@ export const COMMANDS = Object.freeze({
    * starts the shared Celebration. Any other press is ignored, silently.
    */
   checkNext: { claimId: { type: 'string', maxLength: 40 }, step: { type: 'integer', min: 0, max: 20 } },
-  /** Reveal in a row while on (the Wii's A held, or the tablet's toggle); it never makes the cue. */
+  /** Reveal in a row while on (the Wii's A held, or the tablet's toggle), through the cue (its fanfare or fail
+   * moment) and no further (D117). With it off, a press makes the cue. */
   checkAuto: { on: { type: 'boolean' } },
-  /** Stop a Check any time before its cue: no sound, back to the Hold the round was in; the Claim is `stopped`. */
+  /** Stop a Check any time before its cue: no fanfare or effect; the round goes into Pausa (the Interval music,
+   * "Tornem de seguida") and stays there until the Claim, now `stopped`, is checked again or dropped (D117). */
   checkStop: { claimId: { type: 'string', maxLength: 40 } },
   /** Drop a stopped or queued Claim without a verdict, and without any sound. */
   claimDrop: { claimId: { type: 'string', maxLength: 40 } },

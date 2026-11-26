@@ -4,7 +4,7 @@
 //   - `before` (a fresh Game) accepts everything `play` does; the first Spin moves it to `play`.
 //   - `newRound` stays the manual override it was: allowed anywhere but in a Check.
 //   - `roundIntro` and `newRound` are allowed in `after`, so an `endGame` by mistake can be undone.
-// During the technical pause only the commands allowed in every scene go through.
+// During the technical pause only the commands allowed in every scene go through, and PAUSED_OK's in their scenes.
 import type { CommandName } from './commands.ts';
 import type { ShowScene, WinKind } from './vocabulary.ts';
 
@@ -62,12 +62,12 @@ const RULES = {
   claim: ['play', 'check', 'celebration'],
   checkStart: ['check'],
   decide: ['check'],
-  // The presenter-paced Check (D107–D110). A stopped Claim waits in the round's Hold, so it may be dropped from
-  // `play` too; checking it again from `play` (checkStart) comes with the engine's switch.
+  // The presenter-paced Check (D107–D110, D117). A stopped Claim waits in Pausa over its Check, so it may be dropped
+  // during the pause (PAUSED_OK); checking it again from there (checkStart) comes with the engine's switch.
   checkNext: ['check'],
   checkAuto: ['check'],
   checkStop: ['check'],
-  claimDrop: ['play', 'check'],
+  claimDrop: ['check'],
   // In a Check it picks the music the Celebration will start with (`state.celebrationChoice`).
   celebrationMusic: ['celebration', 'check'],
   interval: celebratingBingo,
@@ -76,11 +76,13 @@ const RULES = {
 } satisfies Record<CommandName, Rule>;
 
 export const SCENE_RULES: Readonly<Record<CommandName, Rule>> = Object.freeze(RULES);
+/** Commands that also go through during the technical pause, in the scenes their rule allows. */
+export const PAUSED_OK: ReadonlySet<CommandName> = new Set<CommandName>(['claimDrop']);
 
 /** Whether `cmd` may run now. */
 export function sceneAllows(cmd: CommandName, ctx: SceneContext): boolean {
   const rule = SCENE_RULES[cmd];
   if (rule === 'any') return true;
-  if (ctx.paused) return false;
+  if (ctx.paused && !PAUSED_OK.has(cmd)) return false;
   return typeof rule === 'function' ? rule(ctx) : rule.includes(ctx.scene);
 }

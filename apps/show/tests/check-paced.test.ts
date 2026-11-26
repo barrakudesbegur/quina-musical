@@ -36,12 +36,16 @@ test('the paced Check commands: checkNext names its step; checkAuto, checkStop a
   assert.match(errorOf(cmd('checkAuto', {}))!, /missing on/);
   assert.equal(errorOf(makeCommand('checkStop', { claimId: 'cl-1' })), null);
   assert.equal(errorOf(makeCommand('claimDrop', { claimId: 'cl-1' })), null);
-  // Reveals, auto and stop only in a Check; a stopped Claim waits in the round's Hold, so it may be dropped from play.
-  const ctx = (scene: ShowScene) => ({ scene, paused: false, introduced: false, celebrating: null });
+  // Reveals, auto and stop only in a Check; a stopped Claim waits in Pausa over its Check (D117), so it may be
+  // dropped during the pause, and nothing else of the Check goes through there.
+  const ctx = (scene: ShowScene, paused = false) => ({ scene, paused, introduced: false, celebrating: null });
   for (const name of ['checkNext', 'checkAuto', 'checkStop'] as const) {
     assert.deepEqual((['play', 'check', 'celebration'] as const).filter((s) => sceneAllows(name, ctx(s))), ['check'], name);
   }
-  assert.deepEqual((['before', 'play', 'check', 'celebration', 'interval'] as const).filter((s) => sceneAllows('claimDrop', ctx(s))), ['play', 'check']);
+  assert.deepEqual((['before', 'play', 'check', 'celebration', 'interval'] as const).filter((s) => sceneAllows('claimDrop', ctx(s))), ['check']);
+  assert.ok(sceneAllows('claimDrop', ctx('check', true)));
+  for (const name of ['checkNext', 'checkAuto', 'checkStop', 'checkStart', 'decide'] as const) assert.ok(!sceneAllows(name, ctx('check', true)), name);
+  assert.ok(!sceneAllows('claimDrop', ctx('play', true)));
 });
 
 test('a claim of several cards opens one Claim each, in order; the engine refuses the paced commands until it plays them', () => {
