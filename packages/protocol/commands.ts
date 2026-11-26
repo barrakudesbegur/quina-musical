@@ -214,6 +214,11 @@ export const COMMANDS = Object.freeze({
    * press) plays it again from the hook. The break music fades back when it ends or stops. Between rounds only.
    */
   throw: { restart: { type: 'boolean', optional: true } },
+  /**
+   * The corn-seed storm (D151): its song by hand, right from its drop, at full volume over the end music, which fades
+   * under it and back after. The same taps as `throw` (it replaces a throw song playing). After the Game (U132 (a)).
+   */
+  storm: { restart: { type: 'boolean', optional: true } },
   /** The end of the Game (scene `after`). */
   endGame: {},
   /**

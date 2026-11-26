@@ -3,7 +3,7 @@
 // (Recipe-internal shapes, such as riser frequencies, still live next to each recipe in plan/recipes.ts.)
 // The numbers the remotes share (Pace limits and presets, sound names) come from @quina/protocol.
 import { PACE_DEFAULT_SEC, PACE_FINE_STEP_SEC, PACE_LIMITS_SEC, PACE_PRESETS_SEC, SFX_NAMES, STINGER_NAMES } from '@quina/protocol';
-import type { PhaseName, SoundName, StingerName } from '@quina/protocol';
+import type { PhaseName, SoundName, StingerName, ThrowSong } from '@quina/protocol';
 
 export type { PhaseName } from '@quina/protocol';
 
@@ -860,24 +860,36 @@ export const INTRO = Object.freeze({
   fadeInSec: 2,
 });
 
+/** A throw song's track: decoded by tools/prep/hold.py (data/media/throw/, category "throw", /holdaudio/<name>.flac). */
+export interface ThrowTrack {
+  name: string;
+  title: string;
+  artist: string;
+  /** Where its button starts it, in seconds into the decoded track. */
+  hookSec: number;
+  /** Its loudness trim to the songs' −14 LUFS, so "full volume" is a song's level, not louder. */
+  trimDb: number;
+}
+
+/** "Flying Free" (Pont Aeri, Marian Dacal; last year's id 24): its trim is data/out/analysis/24.json's `gainToTargetDb`. */
+const FLYING_FREE = { name: 'flying-free', title: 'Flying Free', artist: 'Pont Aeri, Marian Dacal', trimDb: -2.84 } as const;
+
 /**
- * The throw song (D138): "Flying Free" (Pont Aeri, Marian Dacal; last year's id 24), data/media/throw/, decoded by
- * tools/prep/hold.py (category "throw", name `name`). It plays from its throw hook, a bit before the drop, so the
- * presenters can build the hype before the throwing starts, at full volume (its slider's 100%, `throws`).
+ * The songs played by hand for throws (protocol THROW_SONGS), each a setting: the planned Throws' "Llançament" (D138)
+ * and the corn-seed storm after the last round (D151). They play at full volume (the `throws` slider's 100%) over the
+ * scene's music, which fades out under them and back after.
  */
 export const THROW = Object.freeze({
-  name: 'flying-free',
-  title: 'Flying Free',
-  artist: 'Pont Aeri, Marian Dacal',
-  /** Seconds into the decoded track: the build's phrase start (its analysed hook 24-main-0), 10 bars (~16 s) before the
-   * drop at 208.8 s (its best hook), after the breakdown at 175–181 s. */
-  hookSec: 193.18,
-  /** Its loudness trim to the songs' −14 LUFS (data/out/analysis/24.json `loudness.gainToTargetDb`), so "full volume"
-   * is a song's level, not louder. */
-  trimDb: -2.84,
+  songs: Object.freeze({
+    /** From the build's phrase start (its analysed hook 24-main-0), 10 bars (~16 s) before the drop at 208.8 s, after
+     * the breakdown at 175–181 s, so the presenters can build the hype first (U128). */
+    throw: Object.freeze({ ...FLYING_FREE, hookSec: 193.18 }),
+    /** Right at its drop (its analysed best hook): nobody controls when the throwing starts (U132 (a)). */
+    storm: Object.freeze({ ...FLYING_FREE, hookSec: 208.76 }),
+  }) satisfies Readonly<Record<ThrowSong, ThrowTrack>>,
   /** A tap sounds this far ahead. */
   leadSec: 0.05,
-  /** It starts and stops with a short fade; the break music fades out under it, and back after. */
+  /** It starts and stops with a short fade; the scene's music fades out under it, and back after. */
   fadeSec: 0.15,
   breakFadeOutSec: 1.5,
   breakFadeInSec: 3,

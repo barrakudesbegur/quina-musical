@@ -77,7 +77,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['hold', 'confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
-    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
+    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw', 'storm']],
     ['roundStart with a set still on', { scene: 'roundStart', intervalMusic: true }, ['next', 'newRound', 'intervalSkip']],
     ['play with the breaks\' set still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'intervalSkip']],
     // Pausa (D128): Next ends it with a transition; the Pausa set can be skipped.
@@ -662,18 +662,18 @@ test('the throw song (D138): a tap starts it from its hook, stops it, resumes it
   const h = flow();
   assert.deepEqual(rejected(h.send('throw')), [], 'at the doors');
   const first = find(h.log, 'throwSong');
-  assert.deepEqual([first?.action, first?.offsetSec], ['play', THROW.hookSec]);
-  assert.deepEqual(h.show.snapshot().throwSong && [h.show.snapshot().throwSong?.title, h.show.snapshot().throwSong?.playing], [THROW.title, true]);
+  assert.deepEqual([first?.action, first?.offsetSec], ['play', THROW.songs.throw.hookSec]);
+  assert.deepEqual(h.show.snapshot().throwSong && [h.show.snapshot().throwSong?.song, h.show.snapshot().throwSong?.title, h.show.snapshot().throwSong?.playing], ['throw', THROW.songs.throw.title, true]);
   h.advance(5);
   const stop = find(h.send('throw'), 'throwSong');
   assert.equal(stop?.action, 'stop');
-  assert.ok(Math.abs((stop?.offsetSec ?? 0) - (THROW.hookSec + 5 - THROW.leadSec)) < 0.05, 'it knows where it stopped');
+  assert.ok(Math.abs((stop?.offsetSec ?? 0) - (THROW.songs.throw.hookSec + 5 - THROW.leadSec)) < 0.05, 'it knows where it stopped');
   assert.equal(h.show.snapshot().throwSong?.playing, false);
   h.advance(10);
   const resume = find(h.send('throw'), 'throwSong');
   assert.deepEqual([resume?.action, resume?.offsetSec], ['play', stop?.offsetSec], 'it resumes where it stopped');
   const again = find(h.send('throw', { restart: true }), 'throwSong');
-  assert.deepEqual([again?.action, again?.offsetSec], ['play', THROW.hookSec], 'a long press: from the hook again');
+  assert.deepEqual([again?.action, again?.offsetSec], ['play', THROW.songs.throw.hookSec], 'a long press: from the hook again');
   // Played to its end: the runtime says so, and it's off.
   h.show.throwEnded();
   assert.equal(h.show.snapshot().throwSong, null);
@@ -683,6 +683,22 @@ test('the throw song (D138): a tap starts it from its hook, stops it, resumes it
   assert.equal(find(end, 'throwSong')?.action, 'end');
   assert.equal(h.show.snapshot().throwSong, null);
   assert.deepEqual(rejected(h.send('throw')), ['wrongScene'], 'a round is in play');
+  assert.deepEqual(rejected(h.send('storm')), ['wrongScene'], 'the storm only after the Game');
+});
+
+test('the corn-seed storm (D151): after the Game, its song right from the drop over the end music; the same taps; it replaces a throw', () => {
+  const h = flow();
+  landSongs(h, 1);
+  h.send('endGame');
+  h.send('throw');
+  const storm = find(h.send('storm'), 'throwSong');
+  assert.deepEqual([storm?.action, storm?.offsetSec, storm?.track?.name], ['play', THROW.songs.storm.hookSec, THROW.songs.storm.name], 'from its own hook, replacing the throw');
+  assert.equal(THROW.songs.storm.hookSec, 208.76, 'U132 (a): Flying Free from its drop');
+  assert.equal(h.show.snapshot().throwSong?.song, 'storm');
+  h.advance(3);
+  assert.equal(find(h.send('storm'), 'throwSong')?.action, 'stop');
+  assert.equal(find(h.send('storm', { restart: true }), 'throwSong')?.offsetSec, THROW.songs.storm.hookSec);
+  assert.equal(h.show.scene, 'after');
 });
 
 test('endGame ends anywhere: closing music in `after`; a new round can still be introduced', () => {

@@ -22,6 +22,7 @@ import {
   type ShowScene,
   type ShowStatus,
   type MusicSet,
+  type ThrowSong,
   type VolumeKey,
   type WinKind,
 } from './vocabulary.ts';
@@ -353,8 +354,10 @@ export interface PauseInfo {
   overlay: boolean;
 }
 
-/** The throw song (D138), from "Llançament" until it ends or the scene changes. */
+/** A throw song (D138, D151), from its button until it ends or the scene changes. */
 export interface ThrowInfo {
+  /** Which: a planned Throw's, or the corn-seed storm's. */
+  song: ThrowSong;
   title: string;
   artist: string;
   /** Playing now; false while a tap has stopped it (the next tap resumes it where it stopped). */
@@ -455,7 +458,7 @@ export interface ShowState {
    * null for the default (Line: the winning song; Bingo: the victory track). Optional in the type only.
    */
   celebrationChoice?: CelebrationMusic | null;
-  /** The throw song while it's on (D138), else null. */
+  /** A throw song while it's on (D138, D151), else null. */
   throwSong: ThrowInfo | null;
 }
 

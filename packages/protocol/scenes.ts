@@ -80,6 +80,8 @@ const RULES = {
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   // Between rounds (D138): at the doors, in a break, after the Game.
   throw: ['before', 'interval', 'after'],
+  // After the last round, next to the end music (D151; U132 (a)).
+  storm: ['after'],
 } satisfies Record<CommandName, Rule>;
 
 export const SCENE_RULES: Readonly<Record<CommandName, Rule>> = Object.freeze(RULES);

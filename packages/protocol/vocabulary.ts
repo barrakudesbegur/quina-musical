@@ -174,6 +174,14 @@ export const MUSIC_SETS = ['breaks', 'pausa', 'end'] as const;
 export type MusicSet = (typeof MUSIC_SETS)[number];
 
 /**
+ * The songs played by hand for things thrown to and by the crowd: `throw` for a planned Throw (D138, "Llançament"),
+ * `storm` for the corn-seed storm after the last round (D151). Each is the engine's setting (config.ts THROW.songs):
+ * a track and the hook it starts from.
+ */
+export const THROW_SONGS = ['throw', 'storm'] as const;
+export type ThrowSong = (typeof THROW_SONGS)[number];
+
+/**
  * The volume sliders (D130, D139), each a percent 0–100 (`setVolume`). 100% is the level the engine is tuned to
  * for that sound, so a fresh Game sounds as before, except `songsParlem`: the song under Parlem as a share of its
  * full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and

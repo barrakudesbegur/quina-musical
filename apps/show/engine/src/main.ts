@@ -198,7 +198,7 @@ const stopSets = (options: { at?: number; fadeSec?: number }) => {
 const throwPlayer = new ThrowPlayer(graph);
 throwPlayer.onEnded = () => show && run(show.throwEnded());
 /** What Pausa saved (D128): the song deck and every bed, each where it was. */
-let paused: { deck: Deck | null; hold: SuspendedHold | null; loop: SuspendedLoop | null; sets: Partial<Record<MusicSet, SuspendedInterval>>; throwPos: number | null } | null = null;
+let paused: { deck: Deck | null; hold: SuspendedHold | null; loop: SuspendedLoop | null; sets: Partial<Record<MusicSet, SuspendedInterval>>; throwAt: ReturnType<ThrowPlayer['suspend']> } | null = null;
 const stems = new StemStore(ctx);
 const signatures = new SignatureStore(ctx);
 const blends = new BlendStore(ctx);
@@ -322,7 +322,7 @@ async function boot() {
   graph.loadSamples(ENGINE.stingers, '/stingers/');
   holdMusic.prepare().catch((error) => console.warn('hold music', error));
   for (const player of allSets()) void player.prepare();
-  void throwPlayer.load();
+  for (const song of Object.values(THROW.songs)) void throwPlayer.load(song.name);
   void snippets.loadIndex();
   setInterval(tick, ENGINE.taskIntervalMs);
   setInterval(emitHealth, ENGINE.healthIntervalMs);
@@ -454,7 +454,7 @@ function apply(effect: Effect): void {
       stopSets({ at: effect.at, fadeSec: effect.fadeSec });
       return void holdMusic.switchTo({ at: effect.at, levelDb: effect.levelDb, fadeSec: effect.fadeSec, mood: 'intro' }).catch((e) => console.error('intro music', e));
     case 'throwSong':
-      if (effect.action === 'play') return void throwPlayer.play(effect.at, effect.offsetSec);
+      if (effect.action === 'play' && effect.track) return void throwPlayer.play(effect.at, effect.offsetSec, effect.track);
       return throwPlayer.stop(effect.at, effect.fadeSec ?? THROW.fadeSec);
     case 'volumes':
       return graph.setVolumes(effect.volumes);
@@ -742,7 +742,7 @@ function pausePlayback(at: number, fadeSec: number): void {
     hold: holdMusic.suspend({ at, fadeSec }),
     loop: winningLoop.suspend({ at, fadeSec }),
     sets: {},
-    throwPos: throwPlayer.suspend(at, fadeSec),
+    throwAt: throwPlayer.suspend(at, fadeSec),
   };
   for (const set of ['breaks', 'end'] as const) {
     const s = sets[set].suspend({ at, fadeSec });
@@ -771,7 +771,7 @@ function resumePlayback({ at, fadeSec, song, discard }: EffectOf<'resumePlayback
     const s = saved.sets[set];
     if (s) sets[set].resume(s, { at, fadeSec });
   }
-  if (saved.throwPos != null) void throwPlayer.play(at, saved.throwPos);
+  if (saved.throwAt) void throwPlayer.play(at, saved.throwAt.posSec, saved.throwAt.track);
 }
 
 // The music never stops by accident: whatever went wrong, Hold music covers silence the machine did not ask for.

@@ -179,6 +179,25 @@ test('planned Throws ("parón"): after a round that isn\'t the last, once each, 
   assert.equal(checkGamePlan(old).ok, false);
 });
 
+test('the doors\' time (D150): Horari\'s first row, optional, never after the first round\'s start', () => {
+  const r = checkGamePlan(good());
+  assert.ok(r.ok);
+  assert.equal(r.plan.schedule.doorsAtMs, undefined, 'none: absent, so the plan reads back unchanged');
+  const p = good();
+  Object.assign(p.schedule as Record<string, unknown>, { doorsAtMs: 1_798_394_400_000, startAtMs: 1_798_398_000_000 });
+  const ok = checkGamePlan(p);
+  assert.ok(ok.ok);
+  assert.equal(ok.plan.schedule.doorsAtMs, 1_798_394_400_000);
+  assert.equal(publicPlan(ok.plan, [1]).schedule.doorsAtMs, 1_798_394_400_000, 'phones show it in Horari');
+  for (const bad of [{ doorsAtMs: 1_798_398_000_001, startAtMs: 1_798_398_000_000 }, { doorsAtMs: 'x' }, { doorsAtMs: 1.5 }, { doorsAtMs: null }]) {
+    const q = good();
+    Object.assign(q.schedule as Record<string, unknown>, bad);
+    const c = checkGamePlan(q);
+    assert.equal(c.ok, false, JSON.stringify(bad));
+    if (!c.ok) assert.match(c.errors.join('\n'), /plan\.schedule\.doorsAtMs/);
+  }
+});
+
 test('the plan\'s volumes (D139): known sliders, percents 0–100, never on phones', () => {
   const p = good();
   (p as Record<string, unknown>).volumes = { master: 80, songsParlem: 30 };

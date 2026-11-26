@@ -56,6 +56,7 @@ import type {
   SoundName,
   StandingInfo,
   MusicSet,
+  ThrowSong,
   VolumeKey,
   Volumes,
 } from '@quina/protocol';
@@ -377,6 +378,8 @@ export interface ThrowSongEffect {
   at: number;
   offsetSec: number;
   fadeSec?: number;
+  /** With `play`: the track (THROW.songs) and its loudness trim. */
+  track?: { name: string; trimDb: number };
 }
 /** Pausa starts (D128): everything playing fades out and is saved where it is (the song deck, Hold music, the
  * Celebration's music, a set, the intro, the throw song). Effects and snippets ring out (U113). */
@@ -637,8 +640,8 @@ export class Show {
   pause: { sinceMs: number; since: number } | null = null;
   /** The Pausa set's track playing, while Pausa is on. */
   pausaNow: IntervalTrackInfo | null = null;
-  /** The throw song (D138): where it plays from, since `startedAt` (audio clock) while playing. */
-  throwSong: { playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
+  /** A throw song (D138, D151): which, where it plays from, since `startedAt` (audio clock) while playing. */
+  throwSong: { song: ThrowSong; playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
   /** The public Shuffle's animation (audio-clock seconds), while it runs. */
   shuffle: { round: number; startAt: number; endAt: number } | null = null;
   intro: (IntroInfo & { cardType: string }) | null = null;
@@ -874,7 +877,10 @@ export class Show {
         this.out.push({ type: 'intervalSkip', set: this.pause ? 'pausa' : this.bedSet });
         return this.flush(); // the state changes when the next track takes over (intervalTrack)
       case 'throw':
-        this.throwTap(c.restart ?? false);
+        this.throwTap('throw', c.restart ?? false);
+        break;
+      case 'storm':
+        this.throwTap('storm', c.restart ?? false);
         break;
       case 'endGame':
         // Within 0.15 s of a landing a Spin can no longer be cancelled: press again.
@@ -2729,29 +2735,30 @@ export class Show {
     this.playIntervalMusic('end');
   }
 
-  // ---------------------------------------------------------------------------------- the throw song
+  // ---------------------------------------------------------------------------------- the throw songs
   /**
-   * "Llançament" (D138): the throw song at full volume over the break music, which fades out under it. A tap starts
-   * it from its throw hook, stops it while it plays, and resumes it where it stopped; `restart` plays it again from
-   * the hook. Not journaled: it's music, like a set's track.
+   * "Llançament" (D138), or the corn-seed storm's button (D151): its song at full volume over the scene's music, which
+   * fades out under it. A tap starts it from its hook, stops it while it plays, and resumes it where it stopped;
+   * `restart` plays it again from the hook; the other song's button replaces it. Not journaled: it's music.
    */
-  throwTap(restart: boolean) {
+  throwTap(song: ThrowSong, restart: boolean) {
     const now = this.env.now();
     const t = this.throwSong;
-    if (!t || restart) return this.playThrow(THROW.hookSec);
+    if (!t || restart || t.song !== song) return this.playThrow(song, THROW.songs[song].hookSec);
     if (t.playing) {
       t.offsetSec += Math.max(0, now - t.startedAt);
       t.playing = false;
       this.out.push({ type: 'throwSong', action: 'stop', at: now, offsetSec: t.offsetSec });
       return;
     }
-    this.playThrow(t.offsetSec);
+    this.playThrow(song, t.offsetSec);
   }
 
-  playThrow(offsetSec: number) {
+  playThrow(song: ThrowSong, offsetSec: number) {
     const at = this.env.now() + THROW.leadSec;
-    this.throwSong = { playing: true, offsetSec, startedAt: at, sinceMs: this.env.toEpochMs(at) };
-    this.out.push({ type: 'throwSong', action: 'play', at, offsetSec });
+    this.throwSong = { song, playing: true, offsetSec, startedAt: at, sinceMs: this.env.toEpochMs(at) };
+    const { name, trimDb } = THROW.songs[song];
+    this.out.push({ type: 'throwSong', action: 'play', at, offsetSec, track: { name, trimDb } });
   }
 
   /** The runtime: the throw song played to its end (the break music is back). */
@@ -3115,7 +3122,9 @@ export class Show {
         ? { set: 'pausa', track: this.pausaNow ? { ...this.pausaNow } : null }
         : this.bed === 'interval' ? { set: this.bedSet, track: this.intervalNow ? { ...this.intervalNow } : null } : null,
       celebrationChoice: this.celebrationChoice,
-      throwSong: this.throwSong ? { title: THROW.title, artist: THROW.artist, playing: this.throwSong.playing, sinceMs: this.throwSong.sinceMs } : null,
+      throwSong: this.throwSong
+        ? { song: this.throwSong.song, title: THROW.songs[this.throwSong.song].title, artist: THROW.songs[this.throwSong.song].artist, playing: this.throwSong.playing, sinceMs: this.throwSong.sinceMs }
+        : null,
     };
   }
 

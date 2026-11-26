@@ -64,6 +64,9 @@ export interface RoundPlan {
 export type PrizeReveal = 'perRound' | 'allSecret';
 
 export interface SchedulePlan {
+  /** When the doors open and the cards go on sale (epoch ms), Horari's first row (D150). Absent when not set (a plan
+   * without it reads back unchanged); never after `startAtMs`. */
+  doorsAtMs?: number;
   /** When the first round should start (epoch ms), or null when not set. */
   startAtMs: number | null;
   /** Planned length of a round, in minutes. */
@@ -257,7 +260,7 @@ export function checkGamePlan(json: unknown): PlanCheck {
   const sch = json.schedule;
   if (!isRec(sch)) err('plan.schedule', 'must be an object');
   else {
-    keys(sch, 'plan.schedule', ['startAtMs', 'roundMinutes', 'intervalMinutes', 'throws']);
+    keys(sch, 'plan.schedule', ['doorsAtMs', 'startAtMs', 'roundMinutes', 'intervalMinutes', 'throws']);
     const throws: PlannedThrow[] = [];
     if (sch.throws !== undefined) {
       list(sch, 'throws', 'plan.schedule', LIMITS.rounds).forEach((b, i) => {
@@ -272,11 +275,13 @@ export function checkGamePlan(json: unknown): PlanCheck {
       });
     }
     schedule = {
+      ...(sch.doorsAtMs !== undefined ? { doorsAtMs: num(sch, 'doorsAtMs', 'plan.schedule', 0, 8.64e15, { integer: true }) ?? 0 } : {}),
       startAtMs: num(sch, 'startAtMs', 'plan.schedule', 0, 8.64e15, { nullable: true, integer: true }),
       roundMinutes: num(sch, 'roundMinutes', 'plan.schedule', 1, 240) ?? schedule.roundMinutes,
       intervalMinutes: num(sch, 'intervalMinutes', 'plan.schedule', 0, 120) ?? schedule.intervalMinutes,
       ...(throws.length ? { throws: throws.sort((a, b) => a.afterRound - b.afterRound) } : {}),
     };
+    if (schedule.doorsAtMs != null && schedule.startAtMs != null && schedule.doorsAtMs > schedule.startAtMs) err('plan.schedule.doorsAtMs', 'must not be after startAtMs (the doors open before the first round)');
   }
 
   let cheatSheet: CheatSheet = { claimRules: [], specialRoundRules: [] };
