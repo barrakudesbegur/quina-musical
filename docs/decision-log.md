@@ -1278,3 +1278,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 ### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active
 The phone holding the last standing card says "Quina potra!" too, like the projector (D186), with the glowing card, the nino and the confetti. The user: "i dont care. a seems fine". Answers U165 with (a).
 By: the user. Source: open-questions.md › Answered (U165). Amends: D62 (the phone's part). Lives in: requirements/screens.md › Player app.
+
+### D191 · Under review, the music stays far down · 2026-11-26 · Active
+While a Check is under review, the music from before the Check keeps playing (D118) at the level it had during the Check, far down. It doesn't come back to the claim's level. The engine already does this: the Check's duck stays during a review. Answers U78 with (a).
+By: the user. Source: open-questions.md › Answered (U78). Lives in: requirements/show-and-music.md › The Check's sound.

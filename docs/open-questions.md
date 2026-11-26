@@ -109,10 +109,11 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
-### U78–U79 · The music and phones during a review (D118, D119)
-A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
-- **U78 · The music's level while under review:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
-- **U79 · Phones while under review:** during a Check, phones show "Comprovant el cartró 123…". On a review: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
+### U79 · Phones while under review (D118, D119)
+A Check under review gets its own screen on the projector and the tablet; the music keeps playing, far down (D191), and Pausa is only by hand. During a Check, phones show "Comprovant el cartró 123…". On a review:
+- (a) that line just closes, with no mark (what Backend built for now, a one-line change);
+- (b) it stays, still pending, until the card is checked again or dropped;
+- (c) it changes to a neutral line, like the projector's.
 No default: the user decides.
 
 ### U68–U75 · The edition file (D116): Backend's and Sound engine's joint proposal, 26 Nov
@@ -220,6 +221,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U78 · The music's level while under review** (2026-11-26) → D191: still far down, as during the Check.
 - **U165 · "QUINA POTRA!" on the winner's phone** (2026-11-26) → D190: the phone says "Quina potra!" too.
 - **U164 · A title for the Desgraciat's winner** (2026-11-26) → D186: "QUINA POTRA!".
 - **U155 · The finale and the new tabs, what's left to review** (2026-11-26) → D187: all fine, Frontend's v95 details included.
