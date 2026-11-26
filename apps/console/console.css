@@ -1828,7 +1828,7 @@
   border: var(--line-width) solid var(--color-line);
   min-height: 0;
   padding: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: var(--color-track);
   color: var(--color-ink);
 }
@@ -4793,6 +4793,7 @@
   color: var(--color-red-edge);
 }
 
+/* A typed number's ✕: a small rounded square, not a disc (D189: only floating buttons are round). */
 .claim-chip__remove {
   display: grid;
   place-items: center;
@@ -4800,7 +4801,7 @@
   height: 2rem;
   padding: 0;
   border: var(--line-width-thin) solid var(--color-line);
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-ink);
 }
