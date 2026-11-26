@@ -109,6 +109,11 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U179 · A volume slider on the break's music panel
+screens.md lists "the music's skip and volume" for the break. Frontend's redraw of that panel (D196) has no slider, as on the agreed board. The menu's sliders (D139) still set the break music's level.
+- (a) Only the menu's sliders.
+- (b) A quick slider on the break's panel too, since the level is set by ear on the night.
+
 ### U176 · "repeat we're selling tickets at 3min"
 The user's words in U171's first point. The reading: one more doors line, 3 minutes before the start, saying cards are still on sale ("Últims minuts per comprar cartrons!"). Every 3 minutes would mean about 20 announcements in an hour.
 - (a) Yes, one more line at 3 minutes before the start.
