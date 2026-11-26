@@ -645,7 +645,8 @@ export interface CheckCue {
   atMs: number;
 }
 
-/** A Check stopped before its cue (`checkStop`): the round in Pausa, the Claim `stopped` (D117). */
+/** A Check stopped before its cue (`checkStop`): the Claim `stopped`, whatever was playing goes on (D118). What the
+ * projector's stopped screen and the phones show is U76 and U79. */
 export interface CheckStopped {
   v: ProtocolVersion;
   type: 'check.stopped';

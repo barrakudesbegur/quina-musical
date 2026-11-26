@@ -157,8 +157,9 @@ export const COMMANDS = Object.freeze({
   /** Reveal in a row while on (the Wii's A held, or the tablet's toggle), through the cue (its fanfare or fail
    * moment) and no further (D117). With it off, a press makes the cue. */
   checkAuto: { on: { type: 'boolean' } },
-  /** Stop a Check any time before its cue: no fanfare or effect; the round goes into Pausa (the Interval music,
-   * "Tornem de seguida") and stays there until the Claim, now `stopped`, is checked again or dropped (D117). */
+  /** Stop a Check any time before its cue: no fanfare or effect, and whatever was playing goes on (D118; its level
+   * is U78). The Claim is `stopped`, and the round waits in its Check until it is checked again or dropped. A Pausa
+   * comes only by hand, as usual. */
   checkStop: { claimId: { type: 'string', maxLength: 40 } },
   /** Drop a stopped or queued Claim without a verdict, and without any sound. */
   claimDrop: { claimId: { type: 'string', maxLength: 40 } },

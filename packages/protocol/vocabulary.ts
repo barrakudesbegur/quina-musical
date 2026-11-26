@@ -52,8 +52,8 @@ export const isShowScene = (value: unknown): value is ShowScene =>
 
 /** A Claim's progress: waiting, its Check running, checked (awaiting the presenters), then their verdict. */
 /**
- * Where a Claim is. `stopped`: its Check was stopped before the cue (`checkStop`; the round is in Pausa), undecided
- * until it is checked again (`checkStart`) or dropped. `dropped` (`claimDrop`): set aside without a verdict, no sound. `checked` is the
+ * Where a Claim is. `stopped`: its Check was stopped before the cue (`checkStop`; whatever was playing goes on),
+ * undecided until it is checked again (`checkStart`) or dropped. `dropped` (`claimDrop`): set aside without a verdict, no sound. `checked` is the
  * timed Check's (all steps shown, waiting for `decide`); the presenter-paced Check (D107–D109) has none.
  */
 export type ClaimStatus = 'queued' | 'checking' | 'checked' | 'stopped' | 'valid' | 'invalid' | 'dropped';
@@ -140,7 +140,7 @@ export const isSoundName = (value: unknown): value is SoundName =>
 export const REJECT_REASONS = [
   'invalid', 'locked', 'busy', 'endOfQueue', 'nothingToUndo', 'notHolding', 'notReady', 'decodeFailed', 'planFailed',
   'unknownSfx', 'unknownCommand', 'noSuspense', 'wrongScene', 'unknownClaim', 'cannotResume', 'failedCheck',
-  // A stopped Claim keeps the round in Pausa until it is checked again or dropped (D117): Next and ending the pause wait.
+  // A stopped Claim keeps the round in its Check until it is checked again or dropped (D118): Next waits.
   'claimOpen',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];

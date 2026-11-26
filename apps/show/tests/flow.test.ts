@@ -84,8 +84,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['roundStart without Interval music', { scene: 'roundStart', intervalMusic: false }, ['next', 'newRound']],
     ['play with the Interval music still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'intervalSkip']],
     ['paused in play', { scene: 'play', paused: true }, []],
-    // A stopped Claim waits in Pausa over its Check (D117): it may be dropped there.
-    ['paused in a Check', { scene: 'check', paused: true }, ['claimDrop']],
+    ['paused in a Check', { scene: 'check', paused: true }, []],
   ];
   for (const [name, partial, extra] of cases) {
     const ctx: SceneContext = { celebrating: null, introduced: false, paused: false, ...partial };
