@@ -18,7 +18,7 @@ The single place to resume the sound engine's work from. It was first written wh
     - Part 2 (U57, default ids 71–140): the same once the user says it's filtered and sorted.
   - **The Interval music is the new playlist (D104, 26 Nov):** Spotify `0XTlZPUpt7xPoPxk4AUU3O`; Pausa plays it too.
     - 37 of its 39 tracks are prepared: `data/out/interval/index.json`, 121–175 kbps, no quality flag. The old set is kept in `data/media/interval-old-0SsuXelEzN8gsS7WufySOg/`.
-    - Not on YouTube or YouTube Music, for the user to get by hand: #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters). The file goes in `data/media/interval/` as `NN Title - Artist.mp3`; then run `tools/prep/interval.py`.
+    - #15 "Island Broadcast" (Masters of Sound's cover) and #22 "Frappe Snowland – Original" (Game Monsters) aren't on YouTube. The user said on 26 Nov that it's fine if some can't be downloaded, so the Interval plays without them.
   - **Part 3** (Especial and Desgraciat, `79G8VcNrkih9GGjIzb47Gt`, D105) is empty. The especial card's side plays Part 1 until it's final; then it gets ids 141–210 (U57), alphabetical (D103). Don't fetch it before then.
   - **The agreed plan:**
     - one night pool with `part` per song, card-type sides `{ side, part, label?, mark? }`, cards with `sides`, and `side` on the plan, commands, journal and ResumePoint (token `-C<n>`);
