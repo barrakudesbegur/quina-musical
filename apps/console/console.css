@@ -1189,6 +1189,24 @@
   stroke-width: 2.6;
 }
 
+/* A new song's slot (D174), at the title row's end: plain words, the value in the text colour */
+.pace__first {
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pace__first b {
+  font-weight: 900;
+  color: var(--color-text);
+}
+
 /* The current Pace, named only when it isn't a preset (else the pressed preset says it) */
 .pace__value {
   margin-left: var(--space-1);

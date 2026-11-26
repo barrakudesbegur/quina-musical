@@ -3,7 +3,8 @@
   narrow column on the right. The presets are named by speed ("Ràpid") with their seconds small and faded
   underneath (a preset without a name in strings.ts shows only its seconds); −/+ by PACE_FINE_STEP_SEC sit at
   the ends. The round's recommended preset is drawn with a dashed border (title "Recomanat"), whatever is
-  selected. The current value is named next to the label only when it isn't a preset. While the engine bends
+  selected. The current value is named next to the label only when it isn't a preset. At the title row's end,
+  «Cançons noves: 22 s»: a song's first play in the Game gets the Pace × 22/14 (D174). While the engine bends
   the Pace to recover the Schedule, an orange notice says how much each song changes. Auto-advance in the
   final phase is in the menu.
 -->
@@ -35,6 +36,7 @@
         <h2 class="panel__label pace__title" id="{uid}-title">
           <Icon name="gauge" />{S.pace.title}
           <output class="pace__value" class:visually-hidden={onPreset} aria-live="polite">{S.pace.value(snap.pace.sec)}</output>
+          <span class="pace__first" title={S.pace.firstPlayNote} data-testid="pace-first-play">{S.pace.firstPlay} <b>{S.pace.value(Math.round(snap.pace.firstPlaySec))}</b></span>
         </h2>
         <div class="pace__row" role="group" aria-label={S.pace.presets}>
           <button type="button" class="mini pace__step" data-anim="press" disabled={!paceOk} aria-label={S.pace.minusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: -PACE_FINE_STEP_SEC })}>

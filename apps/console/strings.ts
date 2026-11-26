@@ -160,6 +160,9 @@ export const S = {
     /** Each preset's name, keyed by its seconds; a preset without one shows only its seconds. */
     names: { 11: 'Molt ràpid', 14: 'Ràpid', 18: 'Normal', 22: 'Tranquil' } as Readonly<Partial<Record<number, string>>>,
     recommended: 'Recomanat',
+    /** At the end of the title row: a song's first play in the Game gets the Pace × 22/14 (D174; pace.firstPlaySec). */
+    firstPlay: 'Cançons noves:',
+    firstPlayNote: 'Una cançó que encara no ha sonat aquesta nit dura més: el ritme × 22/14',
     /** A preset button's accessible name ("Ràpid, 14 s, recomanat"). */
     presetLabel: (name: string | null, s: number, recommended: boolean) => [name, `${s} s`, recommended ? 'recomanat' : null].filter(Boolean).join(', '),
     recovery: ({ direction, seconds: s }: RecoveryNotice) =>
