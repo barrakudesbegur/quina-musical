@@ -28,6 +28,26 @@ D155 allows the storm button during the last round, not only after it. If it's p
 - (a) the round goes into Parlem first, so no song lands unheard under the storm, and "Següent" resumes (what Sound engine built);
 - (b) the round carries on underneath, and songs keep landing.
 
+### U137 · The corn-seed storm's name on the tablet
+Frontend's board (canvas v83) calls it "Tempesta de blat de moro", marked provisional.
+- (a) Keep "Tempesta de blat de moro".
+- (b) Another name.
+
+### U138 · The storm button in the last round's Celebration
+D155 lists the last round's normal screen, its Check and the end screen. The corn may fly during the Celebration itself.
+- (a) Show it in the last round's Celebration too.
+- (b) Only where D155 says.
+
+### U139 · The break music while a throw is stopped
+A tap stops the throw song, and the next tap resumes it (D138).
+- (a) While it's stopped, the break music comes back up.
+- (b) It stays down until the throw ends.
+
+### U140 · Edits on the design canvas that weren't Frontend's
+The canvas now has two pages, "Disseny actual" and "Proves i opcions". Three Check boards were edited (Casos, Desgraciada, Revisió): bigger buttons, and the "només vosaltres" tags removed.
+- (a) They're the user's, so Frontend brings its generator in line.
+- (b) They're not, so Frontend restores them.
+
 ### U128 · The throw song's hook
 Sound engine set the throw hook (D138) at 193.2 s into "Flying Free": the build's phrase start, 16 s before the drop at 208.8 s, after the breakdown at 175–181 s.
 - (a) Keep it.
