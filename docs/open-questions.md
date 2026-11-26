@@ -50,6 +50,7 @@ D107–D110 settle the Check's shape. The details below are the orchestrator's p
 - **A fail:** the reveal stops at the first ✗, since the rest isn't needed. On the cue: the Failure fanfare, the red ✗, then the error Hold music until "Reprèn", as now.
 - **Several cards:** each is checked in turn. A failed one gets its fail moment on its own cue; passing ones share one Celebration after the last card, as now.
 - **The Desgraciat:** the same controls; holding A runs its 12 knocks quickly.
+- **Automatic reveal's speed:** each song for its snippet's length, today's Check timing (about 2.5 s a landed song).
 - **Voices in the Celebration:** "Parlem" works during it, ducking the victory music for the winner's moment.
 - **The tablet's Check screen:** the card as its 3×4 grid with the private marks, the next song's title large so a presenter can read it out, the warnings, one big reveal button (hold for automatic), the auto toggle, the cue, the smaller stop button and "+ Un altre". Frontend writes the content spec first; boards come after.
 **Default:** as above.
