@@ -919,6 +919,10 @@ export class Show {
       case 'getJournal':
         this.out.push({ type: 'journalRequest', reqId, fromSeq: c.fromSeq ?? 1 });
         return this.flush(); // nothing changed
+      case 'getUpcoming':
+        // PRIVATE, only when asked (D170): the order never rides on the state.
+        this.emit({ type: 'upcoming', reqId, round: this.round.number, position: this.position, songs: this.queue.slice(this.position + 1).map((id) => this.songRef(id)) });
+        return this.flush();
       case 'resumeAt':
         this.resumeAt(c);
         break;

@@ -117,6 +117,9 @@ export const COMMANDS = Object.freeze({
   /** Ask for the current Game's journal from entry `fromSeq` on (all of it without `fromSeq`); answered by a
    * `journal.entries` event. The cloud link uses it to fill in entries it missed. */
   getJournal: { fromSeq: { type: 'integer', optional: true, min: 1 } },
+  /** PRIVATE: the round's songs still to come, in the Queue's order, for the tablet's "Futur" tab behind "Mirar el
+   * futur" (D162, D170). Answered by an `upcoming` event; never in the state, so the order travels only when asked. */
+  getUpcoming: {},
   /**
    * Plan B: resume a round by hand on a show page with no journal (a replacement laptop, offline). The seeded
    * Shuffle rebuilds the round's Queue from its seed; the fields are the state's `resume` token. With

@@ -63,7 +63,7 @@ const lastClaimId = (h: Harness) => {
 
 // ---------------------------------------------------------------------------------------- the scene rules
 test('the scene rules: what each scene accepts (the agreed table, plus `before` acting as `play`)', () => {
-  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'setPace', 'setGame', 'setVolume', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes'];
+  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'getUpcoming', 'setPace', 'setGame', 'setVolume', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes'];
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const CHECK: CommandName[] = ['checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [
@@ -439,6 +439,17 @@ test('the last card fails after an earlier one passed: the shared Celebration wa
   assert.equal(h.show.scene, 'celebration');
   assert.deepEqual(sfxNames(go), [FLOW.celebration.fanfare, FLOW.celebration.impact]);
   assert.deepEqual(h.show.celebration?.cardIds, [card.id]);
+});
+
+test('the songs still to come (D162, D170): only when the tablet asks, in the Queue\'s order, never in the state', () => {
+  const h = flow();
+  landSongs(h, 3);
+  const [answer] = emitted(h.send('getUpcoming'), 'upcoming');
+  assert.ok(answer);
+  assert.deepEqual([answer.round, answer.position], [1, 2]);
+  assert.deepEqual(answer.songs.map((s) => s.songId), QUEUE.slice(3), 'the Queue after the last landing');
+  assert.ok(answer.songs.every((s) => typeof s.title === 'string'));
+  assert.ok(!JSON.stringify(h.show.snapshot()).includes(JSON.stringify(QUEUE.slice(3, 8))), 'the order is not in the state');
 });
 
 test('Parlem on a review\'s screen (D118): the duck in place, the round still in its Check, nothing lands', () => {

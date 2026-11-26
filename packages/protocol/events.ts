@@ -610,6 +610,20 @@ export interface JournalEntries {
 }
 
 /**
+ * PRIVATE (tablets only, never a public screen): the answer to `getUpcoming` (D162, D170), the round's songs still to
+ * come in the Queue's order. `songs[k]` lands `k + 1` songs from now (Queue index `position + 1 + k`).
+ */
+export interface Upcoming {
+  v: ProtocolVersion;
+  type: 'upcoming';
+  reqId: string | null;
+  round: number;
+  /** The Queue index of the last counted landing (−1 before the first). */
+  position: number;
+  songs: SongRef[];
+}
+
+/**
  * The phones' public Heat: ease towards `value` (0..1) between `fromMs` and `toMs`. Sent a random 4–15 s after a
  * landing, never at it, so the Heat never marks the landing that changed it; `toMs` is when the next sample is
  * due (the Spin in flight's), else `fromMs` + 15 s. Only with cards in play. Public (a blurred display value).
@@ -722,6 +736,7 @@ export type ShowEvent =
   | EngineHealth
   | JournalAppended
   | JournalEntries
+  | Upcoming
   | HeatSample
   | SceneChanged
   | ShuffleScheduled
@@ -748,6 +763,7 @@ export const EVENT_TYPES = Object.freeze([
   'engine.health',
   'journal.entry',
   'journal.entries',
+  'upcoming',
   'heat.sample',
   'scene.changed',
   'shuffle.scheduled',
