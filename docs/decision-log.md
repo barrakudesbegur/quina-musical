@@ -1348,6 +1348,7 @@ From Frontend's design-system spec (26 Nov), the points that need no new choice:
   - the review dialog's «Cancel·la» becomes «Torna a la revisió» (D164 retired «Cancel·la»);
   - the Desgraciat's chip reads «Últim cartró dempeus» (D186).
 - **The side labels** are written with an en dash, «Normal 1–5» / «Normal 6–10», as in the code.
+- **No «Cancel·la» / «Cancel·lar» anywhere** (D164, D188: a button says what happens). One that only closes says «Tanca». One that throws edits away says «Descarta els canvis». A confirm sheet's «no» names what it keeps, e.g. «Mantén el cartró».
 The rest is U175.
 By: the orchestrator, applying earlier decisions to Frontend's spec. Source: Frontend's report of 26 Nov (temp/design-canvas/ds/components.md, board-audit.md). Lives in: packages/ui (Frontend); requirements/screens.md.
 
