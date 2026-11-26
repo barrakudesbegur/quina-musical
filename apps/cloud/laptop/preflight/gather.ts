@@ -173,6 +173,7 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
     out.push(checks.displaysCheck(displays ? JSON.parse(displays) : null, o.laptopOnly === true));
     out.push(...checks.sleepChecks((await shell('pmset', ['-g'])) ?? '', (await shell('pmset', ['-g', 'assertions'])) ?? ''));
     out.push(checks.powerCheck((await shell('pmset', ['-g', 'batt'])) ?? ''));
+    out.push(checks.clockCheck(await shell('sntp', ['-t', '3', 'time.apple.com'])));
   } else {
     out.push({ group: 'Laptop', name: 'macOS settings', status: 'warn', detail: `not macOS (${process.platform}): check the audio output and sleep by hand` });
   }

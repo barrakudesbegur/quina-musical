@@ -165,6 +165,14 @@ test('the relay, the LAN and the cloud', () => {
   assert.equal(c.cloudAuthCheck({ ok: false, status: 403 }).status, 'fail');
   assert.equal(c.cloudAuthCheck({ ok: true, rttMs: 80, offsetMs: 40 }).status, 'pass');
   assert.equal(c.cloudAuthCheck({ ok: true, rttMs: 80, offsetMs: -3500 }).status, 'warn', 'the laptop clock is off');
+  assert.equal(c.cloudAuthCheck({ ok: true, rttMs: 80, offsetMs: 90_000 }).status, 'fail', 'a minute and a half: the doors cues would play at the wrong time (D203)');
+  // The clock against time.apple.com, with or without the cloud (sntp's output: the offset to apply, ± the error).
+  assert.equal(c.clockCheck('+0.001106 +/- 0.061031 time.apple.com 17.253.14.45\n').status, 'pass');
+  assert.match(c.clockCheck('-3.5 +/- 0.05 time.apple.com 17.253.14.45').detail, /ahead time.apple.com by 3500 ms/);
+  assert.equal(c.clockCheck('-3.5 +/- 0.05 time.apple.com 17.253.14.45').status, 'warn');
+  assert.equal(c.clockCheck('+125.2 +/- 0.05 time.apple.com 17.253.14.45').status, 'fail');
+  assert.equal(c.clockCheck(null).status, 'warn', 'no internet: compare it with a phone');
+  assert.equal(c.clockCheck('sntp: Exchange failed: Timeout').status, 'warn');
 });
 
 test('the cloud link and the Game', () => {

@@ -215,6 +215,27 @@ export function powerCheck(batt: string): Check {
   return check('Laptop', 'Power', 'warn', `on battery${percent ? ` (${percent}%)` : ''}: plug the laptop in`);
 }
 
+/** The laptop clock's offset that's worth a look, and the one that would play the doors cues at the wrong time (D203). */
+const CLOCK_WARN_MS = 2000;
+const CLOCK_FAIL_MS = 60_000;
+const CLOCK_FIX = 'the doors cues follow the plan\'s start time by this clock: set it automatically (System Settings → General → Date & Time)';
+
+/**
+ * The laptop clock against Apple's time server (`sntp -t 3 time.apple.com`), with or without the cloud: the voice's
+ * doors cues count down to the plan's start by this clock (D203). FAIL past a minute; WARN past 2 s, or when there's
+ * no internet to check it (compare it with a phone). Reading macOS's "set automatically" switch needs admin rights.
+ */
+export function clockCheck(sntpOutput: string | null): Check {
+  const match = sntpOutput ? /^\s*([+-]?\d+(?:\.\d+)?)\s+\+\/-/m.exec(sntpOutput) : null;
+  if (!match) return check('Laptop', 'Clock', 'warn', 'could not ask time.apple.com (no internet?): compare the laptop clock with a phone, to the second');
+  const offsetMs = Math.round(Number(match[1]) * 1000);
+  // sntp's offset is what the clock must move: positive, the laptop is behind.
+  const detail = `${offsetMs >= 0 ? 'behind' : 'ahead'} time.apple.com by ${Math.abs(offsetMs)} ms`;
+  if (Math.abs(offsetMs) > CLOCK_FAIL_MS) return check('Laptop', 'Clock', 'fail', `${detail}: ${CLOCK_FIX}`);
+  if (Math.abs(offsetMs) > CLOCK_WARN_MS) return check('Laptop', 'Clock', 'warn', `${detail}: ${CLOCK_FIX}`);
+  return check('Laptop', 'Clock', 'pass', detail);
+}
+
 /** Free disk space where the show writes (the journal, the Blend renders). */
 export function diskCheck(freeBytes: number): Check {
   const gb = freeBytes / 1e9;
@@ -379,7 +400,8 @@ export function cloudAuthCheck(answer: { ok: boolean; status?: number; rttMs?: n
   const rtt = Math.round(answer.rttMs ?? 0);
   const offset = Math.round(answer.offsetMs ?? 0);
   const detail = `round trip ${rtt} ms, laptop clock ${offset >= 0 ? 'behind' : 'ahead'} by ${Math.abs(offset)} ms`;
-  if (Math.abs(offset) > 2000) return check('Cloud', 'Laptop sign-in', 'warn', `${detail}: set the clock automatically (System Settings → General → Date & Time)`);
+  if (Math.abs(offset) > CLOCK_FAIL_MS) return check('Cloud', 'Laptop sign-in', 'fail', `${detail}: ${CLOCK_FIX}`);
+  if (Math.abs(offset) > CLOCK_WARN_MS) return check('Cloud', 'Laptop sign-in', 'warn', `${detail}: ${CLOCK_FIX}`);
   if (rtt > 1500) return check('Cloud', 'Laptop sign-in', 'warn', `${detail}: a slow connection`);
   return check('Cloud', 'Laptop sign-in', 'pass', detail);
 }
