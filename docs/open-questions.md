@@ -44,6 +44,10 @@ D103 numbers a final Part's songs alphabetically, so Part 1 is 1–70. Every ses
 Part 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
 **Default:** word by word, as the playlist is now.
 
+### U61 · A Part's song we can't download
+D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 and the special rounds' playlist aren't fetched yet.
+**Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
+
 ### U54 · What to call each set of 70 songs
 The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
 **Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
@@ -94,10 +98,6 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
-### U60 · Two Interval tracks by hand
-The new Interval playlist (D104) has 37 of its 39 tracks prepared. Two have no exact match on YouTube or YouTube Music: #15 "Island Broadcast (From "Animal Crossing: New Horizons") [Cover]" by Masters of Sound (1:29), and #22 "Frappe Snowland (From "Mario Kart 64") - Original" by Game Monsters (2:34). Put each file in `data/media/interval/` as `15 Island Broadcast - Masters of Sound.mp3` (or `22 …`), and Sound engine reruns the Interval step. Or drop them from the playlist, or swap in the game's original track (khinsider).
-**Default:** the Interval plays the other 37.
-
 ### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 7 hours for 210 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
@@ -120,6 +120,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U60 · Two Interval tracks by hand** (2026-11-26) → D106: left out; the Interval plays its 37.
 - **U49 · The special rounds' pool** (2026-11-26) → D105: their own playlist (79G8VcNrkih9GGjIzb47Gt), using Part 1's songs until it's final. The special card's back moved to U59.
 - **U34 · How many songs in the pool** (2026-11-25) → D100: 70, final, for each pool.
 - **U42 · Where the night's settings file lives** (2026-11-25) → D97 and D98: in this public repo, every prize included; hiding prizes is only for the hype on the players' screens.

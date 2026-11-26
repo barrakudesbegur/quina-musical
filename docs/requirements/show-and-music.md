@@ -145,7 +145,7 @@ _From event.md › Claims and checks; the mixer decisions › Claims, Check and 
 _From event.md › One round, The night, step by step._
 
 - **The Interval** is the time between rounds: relaxed music while the organizers note the winners and reset.
-  - Its music is a local playlist, played by the same engine with simple transitions and no drum, so a round flows into it with no silence. Since 26 Nov its source is the Spotify playlist 0XTlZPUpt7xPoPxk4AUU3O (D104). Pausa plays it too.
+  - Its music is a local playlist, played by the same engine with simple transitions and no drum, so a round flows into it with no silence. Since 26 Nov its source is the Spotify playlist 0XTlZPUpt7xPoPxk4AUU3O (D104). Pausa plays it too. A track we can't download is left out (D106).
   - The next round starts only when the presenters press "Comença la quina" (its intro). The Interval's countdown is only a guide.
 - **The throw breaks ("parón"):** between some rounds, a break of about 5 minutes.
   - Organizers throw things to the crowd, such as fuets, sweets or chocolates, so people get up off their chairs and the night doesn't drag.

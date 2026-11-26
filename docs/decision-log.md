@@ -884,3 +884,7 @@ By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-
 ### D105 · The special rounds play their own playlist · 2026-11-26 · Active; the special card's back Pending (U59)
 The Quina Especial and the Desgraciat both play a third set of songs, the Spotify playlist 79G8VcNrkih9GGjIzb47Gt, on the special card (D81). It's empty for now, so until it's final the special card uses Part 1's songs. Once final, it's sorted and numbered like the others (D103). Answers U49's pool question.
 By: the user. Source: open-questions.md › Answered (U49); the user's message of 26 Nov. Amends: D101. Lives in: requirements/songs-and-cards.md › The pool.
+
+### D106 · An Interval track we can't get is left out · 2026-11-26 · Active
+"It is fine if some songs can't be downloaded": the Interval plays the 37 tracks it has, without #15 and #22, and nobody downloads them by hand. Answers U60. Whether this also covers a Part's songs, which are printed on the cards, is U61.
+By: the user (to Sound engine, 26 Nov). Source: open-questions.md › Answered (U60). Amends: D66, for the Interval. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
