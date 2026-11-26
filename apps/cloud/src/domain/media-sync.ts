@@ -1,11 +1,11 @@
 // Media sync (C3): the show laptop pushes its prepared pool (decoded songs, stems, Signatures, analysis, covers,
-// Hold music, effects) to a private R2 bucket, and a takeover laptop pulls it, so playback never depends on the
+// Hold and Interval music, effects) to a private R2 bucket, and a takeover laptop pulls it, so playback never depends on the
 // internet on the night and a second laptop doesn't re-run the 30-minute pipeline. Pure rules shared by the
 // Worker and the laptop: which folders, which paths, the manifest. Copyrighted audio only ever goes to the
 // private bucket, through the laptop's Access service token; never to git, never public.
 
 /** The folders synced, by name (laptop/media-sync.ts maps them to the pool's folders on disk). */
-export const SYNC_ROOTS = ['cache', 'data', 'covers', 'overrides', 'cards', 'hold-cache', 'hold-data', 'fx', 'stingers'] as const;
+export const SYNC_ROOTS = ['cache', 'data', 'covers', 'overrides', 'cards', 'hold-cache', 'hold-data', 'interval-cache', 'interval-data', 'fx', 'stingers'] as const;
 export type SyncRoot = (typeof SYNC_ROOTS)[number];
 
 /** One file as the manifest lists it. */
