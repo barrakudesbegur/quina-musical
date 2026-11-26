@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { LandingInfo, PossibleWinners, RoundInfo } from '@quina/protocol';
-import type { PlayerCard } from '../../../../../packages/rules/marks.ts';
+import { cardFace, type CatalogCard } from '../../../../../packages/ui/data/catalog.ts';
 import {
   EMPTY_LANDING_LOG,
   countedSongs,
@@ -22,13 +22,16 @@ const landing = (position: number, songId: number, undone = false): LandingInfo 
 const snapshot = (landings: LandingInfo[], round: RoundInfo = ROUND) => ({ round, landings });
 const queue = (position: number) => ({ position, length: 77 });
 
-/** 3 lines of 4: card 1 has songs 1–12, card 2 songs 13–24, card 3 (special) songs 1–12. */
-const card = (id: number, first: number, type = 'normal'): PlayerCard => ({
+/** 3 lines of 4 from song `first` on. */
+const lines = (first: number) => [0, 1, 2].map((l) => [0, 1, 2, 3].map((s) => first + l * 4 + s));
+/** Card 1 has songs 1–12 on side 1, card 2 songs 13–24, card 3 (special, one side) songs 1–12; a normal card's side 2
+ * has the songs 40 on. */
+const card = (id: number, first: number, type = 'normal'): CatalogCard => ({
   id,
   type,
-  lines: [0, 1, 2].map((l) => [0, 1, 2, 3].map((s) => first + l * 4 + s)),
+  sides: [{ side: 1, lines: lines(first) }, ...(type === 'normal' ? [{ side: 2, lines: lines(first + 40) }] : [])],
 });
-const PRINTED = new Map<number, PlayerCard>([
+const PRINTED = new Map<number, CatalogCard>([
   [1, card(1, 1)],
   [2, card(2, 13)],
   [3, card(3, 1, 'especial')],
@@ -62,13 +65,17 @@ test('counted songs: the Queue up to its position, complete only when every inde
   assert.equal(countedSongs(late, { round: ROUND, queue: queue(16) }).complete, false);
 });
 
-test("valid cards: in play and of the round's card type", () => {
-  assert.deepEqual(validCards(PRINTED, new Set([1, 3]), 'normal').map((c) => c.id), [1]);
-  assert.deepEqual(validCards(PRINTED, new Set([1, 2, 3]), 'especial').map((c) => c.id), [3]);
+test("valid cards: in play, of the round's card type, on the round's side", () => {
+  assert.deepEqual(validCards(PRINTED, new Set([1, 3]), 'normal', 1).map((c) => c.id), [1]);
+  assert.deepEqual(validCards(PRINTED, new Set([1, 2, 3]), 'especial', 1).map((c) => c.id), [3]);
+  assert.deepEqual(validCards(PRINTED, new Set([1, 2]), 'normal', 2).map((c) => c.lines[0]), [[41, 42, 43, 44], [53, 54, 55, 56]], "side 2's songs");
+  assert.deepEqual(validCards(PRINTED, new Set([3]), 'especial', 2), [], 'the especial card has no side 2');
 });
 
+const side1 = (id: number) => cardFace(PRINTED.get(id)!, 1)!;
+
 test('the marks chart: cards per number of marked songs, most marked first', () => {
-  const cards = [PRINTED.get(1)!, PRINTED.get(2)!];
+  const cards = [side1(1), side1(2)];
   const histogram = markHistogram(cards, [1, 2, 3, 13]);
   assert.equal(histogram.length, 13, '0 to 12 marked songs');
   assert.equal(histogram[3], 1);
@@ -82,7 +89,7 @@ test('the marks chart: cards per number of marked songs, most marked first', () 
 });
 
 test('the fewest songs any card misses: a lower bound on the first Line and Quina', () => {
-  const cards = [PRINTED.get(1)!, PRINTED.get(2)!];
+  const cards = [side1(1), side1(2)];
   assert.equal(fewestMissing(cards, [1, 2, 3], 'line'), 1);
   assert.equal(fewestMissing(cards, [1, 2, 3], 'bingo'), 9);
   assert.equal(fewestMissing(cards, [], 'line'), 4);
@@ -93,6 +100,7 @@ const input = (over: Partial<FutureInput>): FutureInput => ({
   printed: PRINTED,
   inPlay: cardsInPlay('1-2'),
   cardType: 'normal',
+  side: 1,
   counted: { ids: [1, 2, 3, 13], complete: true },
   possibleWinners: NO_WINNERS,
   lineConfirmed: false,
@@ -106,6 +114,11 @@ test('the view: chart and lower bounds when everything is known', () => {
   assert.deepEqual(v.bars?.map((b) => b.marked), [3, 2, 1]);
   assert.deepEqual(v.line, { state: 'unknown', atLeast: 1 });
   assert.deepEqual(v.bingo, { state: 'unknown', atLeast: 9 });
+  // A side-2 round counts side 2's songs: the same landings mark nothing there.
+  const two = futureView(input({ side: 2 }));
+  assert.deepEqual(two.bars?.map((b) => b.marked), [0], 'no card has a marked song');
+  assert.deepEqual(two.line, { state: 'unknown', atLeast: 4 });
+  assert.deepEqual(futureView(input({ side: 2, counted: { ids: [41, 42, 43], complete: true } })).line, { state: 'unknown', atLeast: 1 });
 });
 
 test('the view: a listed possible winner is "now"; a confirmed Line is "done"', () => {

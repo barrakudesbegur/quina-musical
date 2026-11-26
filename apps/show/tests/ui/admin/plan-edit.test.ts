@@ -11,7 +11,10 @@ import {
   blankPlan,
   blankRound,
   cardTypeChoices,
+  defaultSide,
   isUnknownCardType,
+  sideChoices,
+  withCardType,
   withRoundKind,
   blankPrize,
   fromLocalInput,
@@ -100,6 +103,42 @@ test("a new round plays its kind's default card type", () => {
   assert.equal(blankRound(2, 'special').cardType, 'especial');
   assert.equal(addRound([], 'special')[0].cardType, 'especial');
   assert.equal(checkGamePlan(blankPlan('26', 'Quina Musical', SAMPLE_PLAN.cheatSheet)).ok, true);
+});
+
+// ---- a round's side (D101, D102, D171)
+
+const SIDED = readPrintedCardTypes([
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1' }] },
+]) ?? [];
+
+test('the side a round plays by default (D171): Quina 1–4 side 1, a later normal round side 2, the Desgraciat and the Especial side 1', () => {
+  const sides = (rounds: { number: number; kind: 'normal' | 'special' | 'desgraciat' }[], types = SIDED) => rounds.map((r) => defaultSide(r, types));
+  const n = (number: number) => ({ number, kind: 'normal' as const });
+  assert.deepEqual(sides([1, 2, 3, 4, 5, 6, 10, 12].map(n)), [1, 1, 1, 1, 2, 2, 2, 2]);
+  // A round is "Quina N" by its place in the plan, so the sample plan's Desgraciat (5) and Especial (7) take numbers.
+  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => defaultSide(r, SIDED)), [1, 1, 1, 1, 1, 2, 1, 2]);
+  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => r.side), [1, 1, 1, 1, 1, 2, 1, 2], 'and it follows them');
+  assert.deepEqual(sides([{ number: 6, kind: 'special' }, { number: 11, kind: 'desgraciat' }]), [1, 1]);
+  assert.equal(defaultSide({ number: 6, kind: 'normal', cardType: 'especial' }, SIDED), 1, 'a one-sided type plays its side');
+  assert.equal(defaultSide(n(6), []), 2, "without card-types.json: D171's side");
+  assert.deepEqual(addRound(addRound(addRound(addRound(addRound([], 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED).map((r) => r.side), [1, 1, 1, 1, 2]);
+  assert.equal(blankRound(6, 'desgraciat', SIDED).side, 1);
+});
+
+test("the side picker offers the type's sides; a new type keeps the side when it has it; a new kind moves a default side along", () => {
+  assert.deepEqual(sideChoices(SIDED, 'normal', 1), [{ side: 1, label: '1–4' }, { side: 2, label: '5–10' }]);
+  assert.deepEqual(sideChoices(SIDED, 'especial', 2), [{ side: 1, label: null }, { side: 2, label: null }], "the plan's side stays shown, next to its warning");
+  assert.deepEqual(sideChoices([], 'normal', 1), [{ side: 1, label: null }], 'without card-types.json');
+  const six = blankRound(6, 'normal', SIDED);
+  assert.equal(six.side, 2);
+  assert.equal(withCardType(six, 'especial', SIDED).side, 1, 'the especial card has no side 2');
+  assert.equal(withCardType({ ...six, side: 1 }, 'normal', SIDED).side, 1, 'a side the type has stays');
+  assert.equal(withRoundKind(six, 'special', SIDED).side, 1, 'side 2 was the default: the Especial plays side 1');
+  assert.equal(withRoundKind(withRoundKind(six, 'special', SIDED), 'normal', SIDED).side, 2, 'and back');
+  assert.equal(withRoundKind({ ...blankRound(3, 'normal', SIDED), side: 2, cardType: 'normal' }, 'special', SIDED).side, 1, 'the Especial on the especial card: side 1, whatever was picked');
+  const picked = { ...blankRound(7, 'special', SIDED), cardType: 'normal', side: 2 };
+  assert.equal(withRoundKind(picked, 'desgraciat', SIDED).side, 2, 'a side picked on purpose stays while its card type has it');
 });
 
 test("changing a round's kind moves its card type along only while it is the old kind's default", () => {

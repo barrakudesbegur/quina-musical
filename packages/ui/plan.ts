@@ -4,6 +4,7 @@ import {
   headlinePrizes,
   roundCardType,
   roundPlan,
+  roundSide,
   type CommandFields,
   type GamePlan,
   type Prize,
@@ -12,7 +13,7 @@ import {
   type WinKind,
 } from '@quina/protocol';
 
-export { PLAN_VERSION, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType } from '@quina/protocol';
+export { PLAN_VERSION, checkGamePlan, headlinePrizes, publicPlan, revealedRounds, sponsorOf, roundPlan, roundCardType, roundSide, sideWarnings } from '@quina/protocol';
 export type {
   GamePlan,
   Sponsor,
@@ -26,17 +27,18 @@ export type {
   PlanCheck,
   PublicPlan,
   PublicRoundPlan,
+  SideWarning,
 } from '@quina/protocol';
 
 /**
  * The `roundIntro` that introduces round `number` (the console's and Admin's): with its kind (the Desgraciat round's
- * too) and printed card type from the plan when the plan has that round (a plan from before card types per round
- * plays its kind's default). The engine keeps both for the round's `newRound`.
+ * too), printed card type and card side from the plan when the plan has that round (a plan from before card types per
+ * round plays its kind's default; one from before sides, side 1). The engine keeps them for the round's `newRound`.
  */
 export function roundIntroFields(plan: GamePlan | null, number: number): CommandFields['roundIntro'] {
   const planned = roundPlan(plan, number);
   if (!planned) return { number };
-  return { number, kind: planned.kind, cardType: roundCardType(planned) };
+  return { number, kind: planned.kind, cardType: roundCardType(planned), side: roundSide(planned) };
 }
 
 /** A round's prize bundle for a win: the Line's, else the Quina's (the Desgraciat round's last card standing wins its

@@ -14,11 +14,17 @@ import { Orientation, Style } from '@react-pdf/types';
 import { chunk } from 'lodash';
 import { join } from 'path';
 import React from 'react';
-import { Card } from './generate-cards-json';
+import { Card, CardSong } from './generate-cards-json';
 import { CARD_TITLE, PAPER_COLOR, VERSION_STAMP } from './config';
 import { generateQRCodeDataUri } from './utils/qr';
 
 type CardWithQR = Card & { qrCodeDataUri: string };
+
+/**
+ * Side 2's design isn't decided (D102: the user designs it with Frontend). Until then it prints in side 1's layout,
+ * stamped across every card so a proof can never go to the print shop by mistake.
+ */
+const PLACEHOLDER_STAMP = 'CARA 2 PROVISIONAL · NO IMPRIMIR';
 
 ////////////////////////////////////////////////////////////////////////////////
 // 1) Register Fonts
@@ -217,6 +223,18 @@ const styles = StyleSheet.create({
     color: '#e8e8e8',
     textAlign: 'center',
   },
+
+  placeholderStamp: {
+    position: 'absolute',
+    top: '45%',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 30,
+    color: '#d0021b',
+    opacity: 0.85,
+    transform: 'rotate(-6deg)',
+  },
 } as const);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,10 +243,13 @@ const styles = StyleSheet.create({
 
 const CardComponent: React.FC<{
   card: CardWithQR;
+  /** The side printed: its lines, and whether it's the temporary side 2. */
+  lines: CardSong[][];
+  placeholder: boolean;
   style?: Style;
   version: string;
   title: string;
-}> = ({ card, version, title, style }) => {
+}> = ({ card, lines, placeholder, version, title, style }) => {
   return (
     <View style={style ? [styles.cardContainer, style] : styles.cardContainer}>
       <Svg viewBox="0 0 1024 1024" fill="#000" style={styles.logoStamp}>
@@ -271,7 +292,7 @@ const CardComponent: React.FC<{
       </View>
 
       <View style={styles.table}>
-        {card.lines.map((row) => (
+        {lines.map((row) => (
           <View style={styles.tableRow} key={row.map((s) => s.id).join('-')}>
             {row.map((song) => (
               <View style={styles.tableCell} key={song.id}>
@@ -282,6 +303,8 @@ const CardComponent: React.FC<{
           </View>
         ))}
       </View>
+
+      {placeholder && <Text style={styles.placeholderStamp}>{PLACEHOLDER_STAMP}</Text>}
     </View>
   );
 };
@@ -325,9 +348,15 @@ const AllCardsDocument: React.FC<{
     pageRows * pageColumns
   );
 
+  // Each sheet prints side 1, then (a type with two sides) side 2 on the next page, the same cards in the same places:
+  // printed double-sided, long-edge flip, each card's side 2 lands behind it.
+  const sheets = chunkedCards.flatMap((cardsInPage) =>
+    cardsInPage[0].sides.map(({ side }) => ({ cardsInPage, side }))
+  );
+
   return (
     <Document>
-      {chunkedCards.map((cardsInPage) => {
+      {sheets.map(({ cardsInPage, side }) => {
         const cols = chunk(cardsInPage, pageColumns);
 
         return (
@@ -335,7 +364,7 @@ const AllCardsDocument: React.FC<{
             size="A4"
             orientation={pageOrientation}
             style={styles.page}
-            key={cardsInPage.map((c) => c.id).join('-')}
+            key={`${cardsInPage.map((c) => c.id).join('-')}-side${side}`}
           >
             {cols.map((col, colIndex) => (
               <View
@@ -355,6 +384,8 @@ const AllCardsDocument: React.FC<{
                   return (
                     <CardComponent
                       card={card}
+                      lines={card.sides.find((s) => s.side === side)?.lines ?? []}
+                      placeholder={side !== 1}
                       style={{
                         borderRight: isLast ? undefined : '1px dashed #f0f0f0',
                         width: `${100 / pageColumns}%`,

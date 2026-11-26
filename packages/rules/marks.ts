@@ -6,7 +6,7 @@
 // - The "1 song away" list names the card and the missing song; the player app only highlights that song on
 //   the card's grid. For a Line it only counts until someone's Line is confirmed.
 
-/** A card as the player app knows it: 3 lines of 4 song ids. */
+/** A card as a round plays it: one side's 3 lines of 4 song ids (packages/ui/data/catalog.ts cardFace). */
 export interface PlayerCard {
   id: number;
   /** Its printed type's id ('normal', 'especial'…), as in apps/cards' cards.json. */
@@ -83,6 +83,6 @@ export function nearWins(card: PlayerCard, marks: CardMarks, { lineConfirmed, ro
  * The cards that count in a round: those of the printed type it plays (the round's `cardType`; read it with
  * @quina/protocol's roundCardType, which falls back to its kind's default for an older snapshot).
  */
-export function cardsForRound<C extends PlayerCard>(cards: readonly C[], cardType: string): C[] {
+export function cardsForRound<C extends Pick<PlayerCard, 'type'>>(cards: readonly C[], cardType: string): C[] {
   return cards.filter((c) => c.type === cardType);
 }

@@ -8,7 +8,7 @@
   no possible winners (the Dempeus tab says who is left).
 -->
 <script lang="ts">
-  import { roundCardType } from '@quina/protocol';
+  import { roundCardType, roundSide } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { futureView, type SongsAhead } from '../logic/future.ts';
   import { standingFuture } from '../logic/standing.ts';
@@ -27,6 +27,7 @@
           printed: model.catalog?.cards ?? null,
           inPlay: model.inPlay,
           cardType: roundCardType(snap.round),
+          side: roundSide(snap.round),
           counted: model.counted,
           possibleWinners: snap.possibleWinners,
           lineConfirmed: snap.round.lineConfirmed,

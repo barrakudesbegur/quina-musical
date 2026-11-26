@@ -1,6 +1,6 @@
 <!--
   The claimed card on the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciada): «Cartró #57» with its
-  chips (what it claims, its printed type: D163's side isn't in the protocol yet, so the type alone), the warnings,
+  chips (what it claims; its printed type and the side checked in one label, D163: «Normal 1–4»), the warnings,
   then the card's 12 songs. Each song the Check plays carries its mark from the start (D108), dotted while only the
   presenters know it and full once the room has seen it (hook check-step); the next one says «Següent»; the songs after
   the reveals stop say «no es destaparà». A Line's other rows fade. A card of another type has no songs to reveal: its
@@ -23,7 +23,7 @@
   const model = getConsole();
   const snap = $derived(model.show.state);
   const types = $derived(knownCardTypes(model.catalog?.cardTypes));
-  const type = $derived(typeChip(check.cardType, types, model.plan));
+  const type = $derived(typeChip(check.cardType, types, model.plan, check.side));
   const roundType = $derived(typeChip(snap?.round.cardType, types, model.plan));
   const cells = $derived(checkCells(check, claim, model.show.now));
   const verdict = $derived(checkVerdict(check, claim));
@@ -53,7 +53,7 @@
   <header class="check-card__head">
     <h2 class="check-card__title">{S.check.card(check.cardId)}</h2>
     <span class="chip chip--ink">{S.check.kind[check.kind]}</span>
-    {#if type}<span class="chip chip--type">{#if type.special}<Icon name="star" />{/if}{type.name}</span>{/if}
+    {#if type}<span class="chip chip--type">{#if type.special}<Icon name="star" />{/if}{type.label}</span>{/if}
     {#if of}<span class="check-card__of">{S.check.ofCards(of.n, of.total)}</span>{/if}
   </header>
 

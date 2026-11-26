@@ -31,7 +31,7 @@ import {
   type TypeState,
 } from '../model/check.ts';
 import type { AnimDetail } from '../model/moments.ts';
-import { checkResultDetail, shortTypeName, STAGE_TEXT } from '../strings.ts';
+import { checkResultDetail, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { MiniCard, stickerImage } from './parts.ts';
@@ -195,7 +195,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     if (!t) return;
     this.typeCard.set(t.color, t.special);
     this.bigCard.set(t.color, t.special);
-    setText(this.typeName, shortTypeName(t.label));
+    setText(this.typeName, t.label);
     this.type.setAttribute('aria-label', STAGE_TEXT.checkType(t.label, null));
   }
 

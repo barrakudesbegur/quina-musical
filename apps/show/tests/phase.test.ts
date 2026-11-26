@@ -17,11 +17,12 @@ import {
 } from '../engine/src/game/phase.ts';
 import { firstWinAt } from '../engine/src/game/cards.ts';
 import { seededRandom, secureShuffle } from '../engine/src/rng.ts';
-import type { Card, CompletionKind as WinKind } from '../engine/src/game/cards.ts';
+import { cardFace, type Card, type CompletionKind as WinKind, type PrintedCard } from '../engine/src/game/cards.ts';
 import type { Phase, PhaseModelOverrides } from '../engine/src/game/phase.ts';
 import { REPO } from '../relay/repertoire.ts';
 
-const CARDS: Card[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
+// The printed cards' side 1 (D178).
+const CARDS: Card[] = (JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as PrintedCard[]).flatMap((c) => cardFace(c, 1) ?? []);
 const NORMAL = CARDS.filter((c) => c.type === 'normal');
 const POOL = Array.from({ length: 77 }, (_, i) => i + 1);
 const ROUNDS = Number(process.env.PHASE_SIM_ROUNDS || 400);

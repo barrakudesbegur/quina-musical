@@ -92,6 +92,7 @@
               {#if diff.rounds.removed.length}· {S.json.roundsRemoved(list(diff.rounds.removed))}{/if}
               {#if diff.rounds.kindChanged.length}· {S.json.roundsKind(list(diff.rounds.kindChanged))}{/if}
               {#if diff.rounds.cardTypeChanged.length}· {S.json.roundsCardType(list(diff.rounds.cardTypeChanged))}{/if}
+              {#if diff.rounds.sideChanged.length}· {S.json.roundsSide(list(diff.rounds.sideChanged))}{/if}
             </li>
             {#if diff.prizes.length}
               <li>

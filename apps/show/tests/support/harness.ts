@@ -9,7 +9,7 @@ import { Show } from '../../engine/src/show/show.ts';
 import type { Effect, Env, SongInfo } from '../../engine/src/show/show.ts';
 import { seededRandom } from '../../engine/src/rng.ts';
 import type { Analysis } from '../../engine/src/analysis.ts';
-import type { Card, PrintedCard } from '../../engine/src/game/cards.ts';
+import { cardFace, type Card, type PrintedCard } from '../../engine/src/game/cards.ts';
 import { OUT, REPO } from '../../relay/repertoire.ts';
 import { HAS_DATA } from './data.ts';
 
@@ -24,7 +24,8 @@ const readJson = <T>(file: string): T => JSON.parse(fs.readFileSync(file, 'utf8'
 const index = HAS_DATA ? readJson<{ songs: IndexEntry[] }>(path.join(DIR, 'index.json')).songs.filter((s) => !s.excluded) : [];
 export const analyses = new Map(index.map((s) => [s.id, readJson<SongAnalysis>(path.join(DIR, `${s.id}.json`))]));
 export const songs = index.map((s) => ({ id: s.id, title: s.title, artist: s.artist }));
-export const allCards = HAS_DATA ? readJson<Card[]>(path.join(REPO, 'apps/cards/dist/cards.json')) : [];
+/** The printed cards' side 1 (D178), as cards from before sides: what these tests' rounds play. */
+export const allCards: Card[] = HAS_DATA ? readJson<PrintedCard[]>(path.join(REPO, 'apps/cards/dist/cards.json')).flatMap((c) => cardFace(c, 1) ?? []) : [];
 
 export interface SetupOptions {
   seed?: number;

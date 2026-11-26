@@ -10,7 +10,7 @@ One view per URL hash:
 
 | Hash | View | What it does |
 |---|---|---|
-| `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the printed card types (read-only, from card-types.json), cards in play (sent with `setCardsInPlay`), rounds with their card type and prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
+| `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the printed card types (read-only, from card-types.json), cards in play (sent with `setCardsInPlay`), rounds with their card type, card side and prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
 | `#json` | Import and export | Bulk import of a whole plan (paste or file) with every error and a diff, then "Substituir". Export as a download or a copy |
 | `#nit` | On the night | Show status, start (`roundIntro`) and end (`endGame`) the Game, the Winners' names and notes (`winnerInfo`), plus stubs for Plan B resume, cards open on phones and player-app settings |
 | `#eines` | Tools | The hook audition page, a full JSON export (the plan plus the night's data), and Shuffle seeds (stub) |
@@ -117,6 +117,7 @@ Rules (every key is required, and an unknown key is an error, so a typo can't si
 - `rounds`: 1 to 20 rounds in play order, numbered `1, 2, 3…` with no gaps.
   - `kind`: `"normal"`, `"special"` (the Quina Especial) or `"desgraciat"` (the Quina Desgraciada: the last card standing wins). At most one round is special and at most one is Desgraciat. A Desgraciat round has no Line: its `line` must be `[]`, and its `bingo` bundle is the last-standing prize.
   - `cardType`: the printed card type the round plays, an id from `apps/cards/dist/card-types.json` (`"normal"`, `"especial"`…): only cards of that type count in it. A round that leaves it out plays its kind's default (normal cards in normal and Desgraciat rounds, especial cards in the special round). Admin picks it per round and warns when the id isn't in card-types.json.
+  - `side` (optional): the side of the card the round plays (D178): only that side's songs count, and its pool (card-types.json's `sides`) is the round's songs. Absent means 1. Admin sets it on every new round by D171 (provisional): a normal round numbered 1–4 plays side 1 ("1–4"), a later one side 2 ("5–10"), the Desgraciat and the Especial side 1 (a round's number is its place in the plan, as "Quina N" on screen). It can be changed per round; Admin warns (`sideWarnings`) when a round names a side its card type doesn't have, or when no round plays a side of a type the plan uses. The warnings don't stop saving.
 - `line` and `bingo` (the Quina's prizes): the bundle, a list of up to 40 prizes in the order screens show them, `[]` while there are none. Headline prizes (usually one or two) come first.
   - `title`: what is won, as presenters read it out (1–200 characters).
   - `detail`: extra text, or `null`.

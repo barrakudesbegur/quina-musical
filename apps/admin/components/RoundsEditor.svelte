@@ -1,5 +1,7 @@
 <!-- The rounds plan: each round normal, special or the night's one Desgraciat round, the printed card type it plays
-     (card-types.json), with its Line's and Quina's prize bundles (the Desgraciat round: only the last card standing's,
+     (card-types.json) and its side (D171's default: Quina 1–4 side 1, later normal rounds side 2, the Desgraciat and
+     the Especial side 1; sideWarnings says what doesn't fit the printed cards), with its Line's and Quina's prize
+     bundles (the Desgraciat round: only the last card standing's,
      its `bingo` bundle; Line prizes it had move there, with a notice). Rounds are added, removed
      and reordered here; they are renumbered 1, 2, 3… every time. During the night the rounds already played and
      the one in play (or being introduced) are fixed; the upcoming ones can be moved and edited live. -->
@@ -9,7 +11,7 @@
   import { flowOf } from '../../../packages/ui/flow.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
   import type { CommandTracker } from '../state/commands.svelte.ts';
-  import { roundCardType, type RoundKind } from '@quina/protocol';
+  import { roundCardType, roundSide, sideWarnings, type RoundKind } from '@quina/protocol';
   import { cardTypeLabel, knownCardTypes, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
   import {
     addRound,
@@ -20,6 +22,8 @@
     movedLinePrizes,
     moveRound,
     removeRound,
+    sideChoices,
+    withCardType,
     withLineMoved,
     withRoundKind,
   } from '../logic/plan-edit.ts';
@@ -38,11 +42,15 @@
     const round = session.draft.rounds[index];
     const count = round ? movedLinePrizes(round, kind) : 0;
     moved = { ...moved, [index]: count };
-    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind) : r)) }));
+    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withRoundKind(r, kind, types) : r)) }));
   }
   const moveLine = (index: number) => session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withLineMoved(r) : r)) }));
   const setCardType = (index: number, cardType: string) =>
-    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? { ...r, cardType } : r)) }));
+    session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? withCardType(r, cardType, types) : r)) }));
+  const setSide = (index: number, side: number) => session.update((p) => ({ ...p, rounds: p.rounds.map((r, i) => (i === index ? { ...r, side } : r)) }));
+  /** What doesn't fit between the rounds' sides and the printed cards; unknowable without card-types.json. */
+  const warnings = $derived(printed ? sideWarnings(session.draft, printed) : []);
+  const planWarnings = $derived(warnings.filter((w) => w.path === 'plan.rounds'));
 
   /** The round whose "Treure" was pressed once, awaiting the second press. */
   let confirming = $state<number | null>(null);
@@ -76,6 +84,7 @@
     {#each session.draft.rounds as round, i (i)}
       {@const fixed = i < locked}
       {@const cardType = roundCardType(round)}
+      {@const side = roundSide(round)}
       {@const taken = desgraciatTakenBy(session.draft.rounds, i)}
       <li class="rounds__item" data-kind={round.kind} data-state={fixed ? (round.number === locked ? 'current' : 'played') : 'upcoming'}>
         <fieldset class="round">
@@ -99,6 +108,12 @@
                 {#each cardTypeChoices(types, cardType) as type (type)}<option value={type}>{cardTypeLabel(type, types).name}</option>{/each}
               </select>
             </label>
+            <label class="field">
+              <span class="field__label">{S.rounds.side}</span>
+              <select value={side} onchange={(e) => setSide(i, Number(e.currentTarget.value))} disabled={fixed} data-testid="round-side">
+                {#each sideChoices(types, cardType, side) as choice (choice.side)}<option value={choice.side}>{S.rounds.sideOption(choice.side, choice.label)}</option>{/each}
+              </select>
+            </label>
             <div class="round__tools">
               <button type="button" onclick={() => move(i, i - 1)} disabled={fixed || i <= locked} aria-label={S.rounds.upLabel(round.number)}>↑ {S.rounds.up}</button>
               <button type="button" onclick={() => move(i, i + 1)} disabled={fixed || i === planTotal - 1} aria-label={S.rounds.downLabel(round.number)}>↓ {S.rounds.down}</button>
@@ -115,6 +130,9 @@
           {#if isUnknownCardType(cardType, printed)}
             <p class="notice notice--warn" role="alert" data-testid="round-card-type-unknown">{S.rounds.unknownCardType(cardType)}</p>
           {/if}
+          {#each warnings.filter((w) => w.path === `plan.rounds[${i}].side`) as warning, j (j)}
+            <p class="notice notice--warn" role="alert" data-testid="round-side-warning">{warning.message}</p>
+          {/each}
           <div class="round__prizes">
             {#if round.kind !== 'desgraciat'}
               <PrizeFields bind:bundle={round.line} kind="line" sponsors={session.draft.sponsors} idPrefix="round-{i}-line" errors={errorsAt(session.errors, `plan.rounds[${i}].line`)} />
@@ -140,9 +158,17 @@
   <ul class="error-list">
     {#each listErrors as error, i (i)}<li>{error}</li>{/each}
   </ul>
+  {#if planWarnings.length}
+    <div class="notice notice--warn" role="status" data-testid="side-warnings">
+      <p>{S.rounds.sideWarnings}</p>
+      <ul>
+        {#each planWarnings as warning, i (i)}<li>{warning.message}</li>{/each}
+      </ul>
+    </div>
+  {/if}
 
   <div class="panel__actions">
-    <button type="button" onclick={() => session.update((p) => ({ ...p, rounds: addRound(p.rounds) }))}>+ {S.rounds.add}</button>
+    <button type="button" onclick={() => session.update((p) => ({ ...p, rounds: addRound(p.rounds, 'normal', types) }))}>+ {S.rounds.add}</button>
   </div>
 
   {#if engineTotal !== null && engineTotal !== planTotal}

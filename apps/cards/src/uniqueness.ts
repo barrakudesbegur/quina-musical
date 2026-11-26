@@ -1,8 +1,10 @@
 // No two printed cards and no two printed lines are the same (requirements › songs-and-cards, docs/event.md): every
-// new card is checked against every card and every line drawn so far, across all card types (one `Drawn` for the
-// whole print run). Self-contained (no imports), so the tests run it as it is.
+// new card is checked against every card and every line drawn so far, across all card types. Since cards have sides
+// (D178), that holds per pool: a side is checked against every side drawn from the same pool in the whole print run
+// (`DrawnByPool`), since a round plays one pool and only those sides ever meet. Self-contained (no imports), so the
+// tests run it as it is.
 
-/** A card as far as uniqueness goes: its lines of songs, by id. */
+/** A card (one of its sides) as far as uniqueness goes: its lines of songs, by id. */
 export interface LinedCard {
   id: number;
   lines: readonly (readonly { id: number }[])[];
@@ -60,6 +62,23 @@ export function drawUnique<C extends LinedCard>(make: (attempt: number) => C, dr
   }
   const id = make(0).id;
   throw new Error(`card #${id}: ${attempts} draws all repeat a card or a line already drawn. Use more songs or fewer cards.`);
+}
+
+/** One record of what's drawn for each pool, for the whole print run. */
+export class DrawnByPool {
+  private readonly pools = new Map<string, Drawn>();
+
+  /** The record of one pool's sides. */
+  of(pool: string): Drawn {
+    let drawn = this.pools.get(pool);
+    if (!drawn) this.pools.set(pool, (drawn = new Drawn()));
+    return drawn;
+  }
+
+  /** drawUnique against the pool's record. */
+  draw<C extends LinedCard>(pool: string, make: (attempt: number) => C, attempts = DRAW_ATTEMPTS): C {
+    return drawUnique(make, this.of(pool), attempts);
+  }
 }
 
 /** Every line printed more than once: its songs, and the cards and lines that repeat it. Empty when all are unique. */

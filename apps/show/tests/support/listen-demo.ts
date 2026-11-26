@@ -24,8 +24,9 @@ const PACE = 14;
 
 /** Card 144: every song playable, 11 of its 12 with an approved Signature. Three other songs open the round. */
 const CARD = 144;
-const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; lines: { id: number }[][] }[];
-const rows = (cards.find((c) => c.id === CARD)?.lines ?? []).map((line) => line.map((s) => s.id));
+const cards = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; sides: { side: number; lines: { id: number }[][] }[] }[];
+// The round plays side 1 (D178).
+const rows = (cards.find((c) => c.id === CARD)?.sides.find((s) => s.side === 1)?.lines ?? []).map((line) => line.map((s) => s.id));
 const OPENERS = [8, 37, 71].filter((id) => !rows.flat().includes(id));
 /** Landing 3 + 4 completes the card's first row (its Line); landing 3 + 12 the whole card (its Bingo). */
 const QUEUE = [...OPENERS, ...rows.flat()];

@@ -5,10 +5,10 @@
 // come out: only the Check names the card being checked. `stageView` picks out only what the projector may
 // draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
 // ever comes out.
-import { winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
+import { DEFAULT_SIDE, winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
 import type { CheckInfo, FlowFields, WinKind } from '../../packages/ui/flow.ts';
 import { prizeBundleOf, revealedRounds, roundPlan, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
-import type { Catalog } from '../../packages/ui/data/catalog.ts';
+import { catalogFace, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { comingRoundPrice, knownCardTypes, type ComingRoundPrice } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
 import { stageScene } from './model/scene.ts';
@@ -203,7 +203,8 @@ function checkView(shown: { check: CheckInfo; discarded: boolean }, plan: GamePl
   const c = shown.check;
   const steps = c.revealed.map((s) => ({ songId: s.songId, landed: s.landed, atMs: s.atMs, durationMs: s.durationMs }));
   const row = c.kind === 'line' ? c.row : null;
-  const card = catalog?.cards.get(c.cardId) ?? null;
+  // The side checked: the round's (an older engine sends none: side 1).
+  const card = catalogFace(catalog, c.cardId, c.side ?? DEFAULT_SIDE);
   const review = memory.review?.claimId === c.claimId ? memory.review.atMs : null;
   const back = memory.unrevealed;
   // A step back replays the song before the one it took off: the new last revealed one.
@@ -212,7 +213,7 @@ function checkView(shown: { check: CheckInfo; discarded: boolean }, plan: GamePl
     key: `${c.cardId}@${c.startAtMs}`,
     cardId: c.cardId,
     kind: c.kind,
-    cardType: cardTypeBadge(c.cardType, checkTypeOk(c), knownCardTypes(catalog?.cardTypes), plan),
+    cardType: cardTypeBadge(c.cardType, c.side ?? DEFAULT_SIDE, checkTypeOk(c), knownCardTypes(catalog?.cardTypes), plan),
     verdict: verdictOf(c.outcome, c.cue, c.kind),
     row,
     total: c.total,

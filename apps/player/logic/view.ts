@@ -1,12 +1,12 @@
 // What the screens show, derived from the public state, the player's cards and the printed catalogue. Pure, so
 // the Svelte components stay thin and the rules are tested in node.
-import type { Catalog } from '../../../packages/ui/data/catalog.ts';
+import { cardFace, type Catalog, type CatalogCard } from '../../../packages/ui/data/catalog.ts';
 import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 import { checkGamePlan, publicPlan, roundCardType, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { standOf, type CardStand } from './desgraciat.ts';
 import { nearSongs } from './near-win.ts';
-import { defaultCardType, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
+import { defaultCardType, roundSide, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
 
 /** The round being played or last played: the last of `rounds`. */
@@ -63,6 +63,7 @@ export function planOf(state: PublicState | null): PublicPlan | null {
             kind: r.kind,
             // Only when sent: an older cloud's plan has none (checkGamePlan then fills the kind's default).
             ...(r.cardType !== undefined ? { cardType: r.cardType } : {}),
+            ...(r.side !== undefined ? { side: r.side } : {}),
             line: r.revealed === true ? r.line : [],
             bingo: r.revealed === true ? r.bingo : [],
           }
@@ -77,9 +78,10 @@ export function planOf(state: PublicState | null): PublicPlan | null {
 
 export interface CardView {
   saved: SavedCard;
-  /** null while the catalogue loads, or for a number that isn't a printed card. */
+  /** The side the phone shows (its songs, `{ id, type, lines }`): the round's (shownFace). null while the catalogue
+   * loads, or for a number that isn't a printed card. */
   card: PlayerCard | null;
-  /** Counts in the current round: the card is of the printed type the round plays. */
+  /** Counts in the current round: the card is of the printed type the round plays, and has its side. */
   valid: boolean;
   marks: CardMarks | null;
   /** The songs gently highlighted on this card's grid: each one is all the card is missing for a Line or the Quina. */
@@ -88,13 +90,22 @@ export interface CardView {
   stand: CardStand | null;
 }
 
-/** Each saved card with its marks for the round. Before any round every card shows, unmarked. */
+/**
+ * The side a phone shows of a printed card in a round of side `side` (D178): that side; a card without it (an especial
+ * card while the normal cards play side 2) shows its first side, and doesn't count.
+ */
+export const shownFace = (card: CatalogCard, side: number): PlayerCard | null => cardFace(card, side) ?? cardFace(card, card.sides[0]?.side);
+
+/** Each saved card with its marks for the round, on the round's side. Before any round every card shows its side 1,
+ * unmarked. */
 export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, round: PublicRound | null): CardView[] {
   const landed = landedIds(round);
+  const side = roundSide(round ?? {});
   return saved.map((s) => {
-    const card = catalog?.cards.get(s.id) ?? null;
-    // An older snapshot's round has no card type: it plays its kind's default (roundCardType).
-    const valid = !card || !round ? true : cardsForRound([card], roundCardType(round)).length === 1;
+    const printed = catalog?.cards.get(s.id) ?? null;
+    const card = printed && shownFace(printed, side);
+    // An older snapshot's round has no card type: it plays its kind's default (roundCardType); nor a side: side 1.
+    const valid = !printed || !round ? true : cardsForRound([printed], roundCardType(round)).length === 1 && cardFace(printed, side) !== null;
     const marks = card && round && valid ? cardMarks(card, landed) : null;
     return { saved: s, card, valid, marks, near: nearSongs(card, marks, round), stand: standOf(card, valid, round) };
   });

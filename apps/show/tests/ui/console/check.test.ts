@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { flowOf } from '../../../../../packages/ui/flow.ts';
+import { readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import {
   batchWinners,
   canToggleAuto,
@@ -125,16 +126,18 @@ test('the shared Celebration names the cards that passed; a decision by hand aga
   assert.equal(reviewNeedsConfirm('win', passing), false);
 });
 
-test("marks mean «good for the claim»; the type chip names the printed type", () => {
+test("marks mean «good for the claim»; the type chip names the printed type and the side checked (D163)", () => {
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('line', false), 'bad');
   assert.equal(stepMark('standing', false), 'ok');
   assert.equal(stepMark('standing', true), 'bad');
-  const types = [
-    { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, priceRule: null },
-    { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, priceRule: null },
-  ] as unknown as Parameters<typeof typeChip>[1];
-  assert.deepEqual(typeChip('especial', types, null), { name: 'Especial', color: '#ffd9e8', special: true });
-  assert.deepEqual(typeChip('normal', types, null), { name: 'Normal', color: '#cfe8ff', special: false });
+  const types = readPrintedCardTypes([
+    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1' }] },
+  ]) ?? [];
+  assert.deepEqual(typeChip('especial', types, null), { name: 'Especial', label: 'Especial', color: '#ffd9e8', special: true });
+  assert.deepEqual(typeChip('normal', types, null, 1), { name: 'Normal', label: 'Normal 1–4', color: '#cfe8ff', special: false });
+  assert.equal(typeChip('normal', types, null, 2)?.label, 'Normal 5–10');
+  assert.equal(typeChip('especial', types, null, 2)?.label, 'Especial', 'one side: just its name');
   assert.equal(typeChip(null, types, null), null);
 });

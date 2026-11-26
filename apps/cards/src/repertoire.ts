@@ -26,6 +26,8 @@ export interface RepertoireSong {
   artist: string;
   cover: string;
   spotifyId: string;
+  /** The pool it is in ("1", "2", D178); none is pool 1. Each side of a card is drawn from one pool (sides.ts). */
+  pool?: string;
 }
 
 export const DEFAULT_REPERTOIRE = 'default';

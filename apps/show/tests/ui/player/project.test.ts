@@ -159,7 +159,7 @@ test('the public state has exactly the contract keys', () => {
     'check', 'edition', 'gameEndMs', 'gameId', 'heat', 'interval', 'intro', 'link', 'notice', 'pause', 'plan', 'rounds', 'scene', 'shuffle', 'soundsDefault', 'spin', 'winners',
   ].sort());
   for (const r of out.rounds) {
-    assert.deepEqual(Object.keys(r).sort(), ['cardType', 'ended', 'kind', 'landings', 'lineConfirmed', 'number', 'startedAtMs']);
+    assert.deepEqual(Object.keys(r).sort(), ['cardType', 'ended', 'kind', 'landings', 'lineConfirmed', 'number', 'side', 'startedAtMs']);
     for (const l of r.landings) assert.deepEqual(Object.keys(l).sort(), ['atMs', 'position', 'songId']);
   }
   for (const w of out.winners) assert.deepEqual(Object.keys(w).sort(), ['cardIds', 'kind', 'round']);
@@ -261,7 +261,7 @@ test('the plan goes out as the public plan: locked rounds without prizes, never 
   assert.deepEqual(out.plan.rounds.map((r) => r.revealed), [true, true, true, false, false, false, false, false]);
   assert.equal(out.plan.rounds[2].bingo?.[0].title, 'Pernil');
   assert.equal(out.plan.rounds[2].bingo?.length, SAMPLE_PLAN.rounds[2].bingo.length, 'the whole hamper');
-  assert.deepEqual(Object.keys(out.plan.rounds[3]).sort(), ['cardType', 'kind', 'number', 'revealed'], 'a locked round: only its skeleton (its card type is printed, never secret)');
+  assert.deepEqual(Object.keys(out.plan.rounds[3]).sort(), ['cardType', 'kind', 'number', 'revealed', 'side'], 'a locked round: only its skeleton (its card type and side are printed, never secret)');
   const json = JSON.stringify(out);
   assert.ok(!json.includes('cheatSheet') && !json.includes(SAMPLE_PLAN.cheatSheet.claimRules[0]));
   assert.ok(!json.includes("Fregidora d'aire") && !json.includes('Trencaclosques'), "a locked round's prizes never leave (round 4's headline and a gift only it has)");
@@ -273,17 +273,19 @@ test('the plan goes out as the public plan: locked rounds without prizes, never 
   assert.deepEqual(revealed.project({ ...ctx, plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } }).plan?.rounds.filter((r) => r.revealed).map((r) => r.number), [5]);
 });
 
-test("the projection carries each round's card type, and its intro's (public: printed on the cards)", () => {
+test("the projection carries each round's card type and side, and its intro's (public: printed on the cards)", () => {
   const projector = new PublicProjector(() => 0.5);
   const base = FIXTURES.play(NOW).state as unknown as ShowState;
-  projector.ingest({ ...base, round: { ...base.round, cardType: 'desgraciat' } } as ShowState, NOW);
+  projector.ingest({ ...base, round: { ...base.round, cardType: 'desgraciat', side: 2 } } as ShowState, NOW);
   assert.equal(projector.project(ctx).rounds.at(-1)?.cardType, 'desgraciat');
-  const introducing = { ...base, seq: 9, scene: 'roundStart', intro: { round: 4, kind: 'special', cardType: 'daurat', sinceMs: NOW } } as unknown as ShowState;
+  assert.equal(projector.project(ctx).rounds.at(-1)?.side, 2);
+  const introducing = { ...base, seq: 9, scene: 'roundStart', intro: { round: 4, kind: 'special', cardType: 'daurat', side: 2, sinceMs: NOW } } as unknown as ShowState;
   projector.ingest(introducing, NOW);
-  assert.deepEqual(projector.project(ctx).intro, { round: 4, kind: 'special', cardType: 'daurat' });
-  const older = { ...base, seq: 10, round: { ...base.round, cardType: undefined } } as unknown as ShowState;
+  assert.deepEqual(projector.project(ctx).intro, { round: 4, kind: 'special', cardType: 'daurat', side: 2 });
+  const older = { ...base, seq: 10, round: { ...base.round, cardType: undefined, side: undefined } } as unknown as ShowState;
   projector.ingest(older, NOW);
   assert.equal(projector.project(ctx).rounds.at(-1)?.cardType, 'normal', "an older engine: the kind's default");
+  assert.equal(projector.project(ctx).rounds.at(-1)?.side, 1, 'and side 1');
 });
 
 test('the dev feed follows the engine through every scene: before → roundStart → play after a landing', () => {
@@ -299,7 +301,7 @@ test('the dev feed follows the engine through every scene: before → roundStart
   core.projector.ingest(intro, NOW);
   publish();
   assert.equal(core.follower.state?.scene, 'roundStart');
-  assert.deepEqual(core.follower.state?.intro, { round: 1, kind: 'normal', cardType: 'normal' }, "an engine without card types: the kind's default");
+  assert.deepEqual(core.follower.state?.intro, { round: 1, kind: 'normal', cardType: 'normal', side: 1 }, "an engine without card types or sides: the kind's default, side 1");
 
   const playing = { ...intro, seq: 3, scene: 'play', intro: null, round: { ...intro.round, startedAtMs: NOW }, queue: { position: 0, length: 77 }, landings: [{ songId: 25, title: 'Gasolina', artist: 'Daddy Yankee', position: 0, atMs: NOW, undone: false }] } as unknown as ShowState;
   core.projector.ingest(playing, NOW);

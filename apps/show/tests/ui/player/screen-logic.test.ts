@@ -27,6 +27,7 @@ import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { publicPlan } from '../../../../../packages/ui/plan.ts';
 import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
 import { S } from '../../../../player/strings.ts';
+import { songsOnCards } from '../../../../player/logic/your-song.ts';
 
 const T = 1_000_000;
 const playing = (patch: Partial<PublicState> = {}): PublicState => ({
@@ -192,6 +193,25 @@ test('card views: only the right kind plays; every landed song is marked; unknow
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
 });
 
+test("a side-2 round (D171: Quines 5–10): the phone shows and marks each normal card's side 2", () => {
+  const sided = parseCards([
+    { id: 123, type: 'normal', sides: [{ side: 1, lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] }, { side: 2, lines: [[71, 72, 73, 74], [75, 76, 77, 78], [79, 80, 81, 82]] }] },
+    { id: 412, type: 'especial', sides: [{ side: 1, lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] }] },
+  ]);
+  const round = { number: 6, kind: 'normal' as const, cardType: 'normal', side: 2, startedAtMs: 0, lineConfirmed: false, ended: false, landings: [71, 72, 73, 2].map((songId, position) => ({ position, songId, atMs: 0 })) };
+  const views = cardViews(saved, sided, round);
+  assert.deepEqual(views[0].card?.lines[0], [71, 72, 73, 74], "card 123 shows its side 2's songs");
+  assert.equal(views[0].marks?.count, 3, "only side 2's songs mark: «2» is on side 1");
+  assert.deepEqual([...views[0].near], [74], "1 song from side 2's first Line");
+  assert.deepEqual(songsOnCards(views.filter((v) => v.valid)), new Set([71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]), "the your-song look: side 2's songs");
+  assert.deepEqual(views.map((v) => [v.saved.id, v.valid]), [[123, true], [412, false], [999, true]]);
+  assert.deepEqual(views[1].card?.lines[0], [1, 2, 3, 4], 'the especial card, resting, shows its one side');
+  const one = cardViews(saved, sided, { ...round, number: 3, side: 1 });
+  assert.deepEqual(one[0].card?.lines[0], [2, 17, 41, 69], 'a side-1 round: side 1');
+  assert.deepEqual(cardViews(saved, sided, { ...round, side: undefined })[0].card?.lines[0], [2, 17, 41, 69], 'an older cloud sends no side: side 1');
+  assert.deepEqual(cardViews(saved, sided, null)[0].card?.lines[0], [2, 17, 41, 69], 'before any round: side 1');
+});
+
 test("a round of any card type counts only that type's cards; an older snapshot plays its kind's default", () => {
   const typed = parseCards([
     { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
@@ -274,6 +294,7 @@ test('the feed\'s plan is checked as a public plan: locked rounds stay locked, j
   assert.equal(planOf(playing({ plan: { nonsense: true } as never })), null);
   assert.equal(planOf(playing({ plan: { ...PUBLIC, rounds: PUBLIC.rounds.map((r) => (r.number === 1 ? { ...r, line: [{ title: '' }] } : r)) } as never })), null);
   assert.equal(planOf(playing()), null);
+  assert.deepEqual(plan.rounds.map((r) => r.side ?? 1), SAMPLE_PLAN.rounds.map((r) => r.side ?? 1), "each round's side comes through (D178)");
 });
 
 test("the feed's plan keeps each round's card type; an older cloud's rounds get their kind's default", () => {

@@ -11,6 +11,7 @@
 // Pure.
 import type { FutureInfo, PossibleWinners, RoundInfo, ShowState } from '@quina/protocol';
 import { cardMarks, cardsForRound, type PlayerCard } from '../../../packages/rules/marks.ts';
+import { cardFace, type CatalogCard } from '../../../packages/ui/data/catalog.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import { possibleWinnersOf, possibleWinnersView, type CardsInPlay, type PossibleWinnersView } from './possible-winners.ts';
 
@@ -65,9 +66,10 @@ export function countedSongs(log: LandingLog, state: Pick<ShowState, 'round' | '
 }
 
 // ---- the cards ---------------------------------------------------------------------------------------------
-/** The printed cards that count this round: in play, and of the round's card type (roundCardType). */
-export function validCards(printed: ReadonlyMap<number, PlayerCard>, inPlay: ReadonlySet<number>, cardType: string): PlayerCard[] {
-  return cardsForRound([...printed.values()].filter((c) => inPlay.has(c.id)), cardType);
+/** The printed cards that count this round, on its side: in play, of the round's card type (roundCardType), and their
+ * face on the round's side (roundSide). */
+export function validCards(printed: ReadonlyMap<number, CatalogCard>, inPlay: ReadonlySet<number>, cardType: string, side: number): PlayerCard[] {
+  return cardsForRound([...printed.values()].filter((c) => inPlay.has(c.id)), cardType).flatMap((c) => cardFace(c, side) ?? []);
 }
 
 /** How many cards have each number of marked songs: index n holds the cards with n songs landed. */
@@ -133,10 +135,12 @@ export interface FutureInput {
   /** The Queue index of the last counted landing (`queue.position`). */
   position?: number;
   /** The printed cards, or null until cards.json loads. */
-  printed: ReadonlyMap<number, PlayerCard> | null;
+  printed: ReadonlyMap<number, CatalogCard> | null;
   inPlay: CardsInPlay;
   /** The printed card type the round plays (roundCardType(state.round)). */
   cardType: string;
+  /** The card side the round plays (roundSide(state.round)). */
+  side: number;
   counted: CountedSongs;
   possibleWinners: PossibleWinners;
   lineConfirmed: boolean;
@@ -153,7 +157,7 @@ export interface FutureView {
   winners: PossibleWinnersView;
 }
 
-export function futureView({ engine, position = -1, printed, inPlay, cardType, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
+export function futureView({ engine, position = -1, printed, inPlay, cardType, side, counted, possibleWinners, lineConfirmed }: FutureInput): FutureView {
   const settled = (kind: WinKind): SongsAhead | null =>
     kind === 'line' && lineConfirmed ? { state: 'done' } : possibleWinnersOf(possibleWinners, kind).length > 0 ? { state: 'now' } : null;
   if (engine) {
@@ -172,7 +176,7 @@ export function futureView({ engine, position = -1, printed, inPlay, cardType, c
     };
   }
   const gap: ChartGap | null = !printed || printed.size === 0 ? 'cards' : !inPlay.ids ? 'inPlay' : !counted.complete ? 'landings' : null;
-  const cards = gap === null && printed && inPlay.ids ? validCards(printed, inPlay.ids, cardType) : null;
+  const cards = gap === null && printed && inPlay.ids ? validCards(printed, inPlay.ids, cardType, side) : null;
   const ahead = (kind: WinKind): SongsAhead => settled(kind) ?? { state: 'unknown', atLeast: cards ? fewestMissing(cards, counted.ids, kind) : null };
   return {
     bars: cards ? markBars(markHistogram(cards, counted.ids)) : null,

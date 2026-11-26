@@ -23,7 +23,7 @@ import {
   type CheckStepView,
   type CheckVerdict,
 } from '../../../../stage/model/check.ts';
-import { checkResultDetail, nextRoundLabel, roundName, shortTypeName, STAGE_TEXT } from '../../../../stage/strings.ts';
+import { checkResultDetail, nextRoundLabel, roundName, STAGE_TEXT } from '../../../../stage/strings.ts';
 import { UNKNOWN_CARD_TYPE_COLOR, knownCardTypes, readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 
@@ -174,19 +174,21 @@ test('the plate names the card being checked; the result plaque\'s words', () =>
 // ---- the card-type step: the badge, and when it gets its mark
 
 const TYPES = readPrintedCardTypes([
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 200 },
+  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
   { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 300 },
   { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: 100 },
 ]) ?? [];
 
-test("the type badge takes the type's name and colour from card-types.json; its mark as the Check tells it", () => {
-  assert.deepEqual(cardTypeBadge('normal', true, TYPES, SAMPLE_PLAN), { type: 'normal', label: 'Cartró normal', color: '#cfe8ff', special: false, ok: true });
-  assert.deepEqual(cardTypeBadge('especial', false, TYPES, SAMPLE_PLAN), { type: 'especial', label: 'Cartró especial', color: '#ffd9e8', special: true, ok: false });
-  assert.equal(cardTypeBadge(null, null, TYPES, SAMPLE_PLAN), null, 'an unknown card has no type');
+test("the type badge: the type and the side checked in one label (D163), its colour from card-types.json, its mark as the Check tells it", () => {
+  assert.deepEqual(cardTypeBadge('normal', 1, true, TYPES, SAMPLE_PLAN), { type: 'normal', label: 'Normal 1–4', color: '#cfe8ff', special: false, ok: true });
+  assert.equal(cardTypeBadge('normal', 2, true, TYPES, SAMPLE_PLAN)?.label, 'Normal 5–10');
+  assert.deepEqual(cardTypeBadge('especial', 1, false, TYPES, SAMPLE_PLAN), { type: 'especial', label: 'Especial', color: '#ffd9e8', special: true, ok: false });
+  assert.equal(cardTypeBadge('especial', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Especial', 'a one-sided type: no side in its label');
+  assert.equal(cardTypeBadge(null, 1, null, TYPES, SAMPLE_PLAN), null, 'an unknown card has no type');
   // The star follows the plan's Quina Especial: here it plays the desgraciat cards.
   const plan = { rounds: SAMPLE_PLAN.rounds.map((r) => (r.kind === 'special' ? { ...r, cardType: 'desgraciat' } : r)) };
-  assert.equal(cardTypeBadge('desgraciat', true, TYPES, plan)?.special, true);
-  assert.equal(cardTypeBadge('especial', false, TYPES, plan)?.special, false);
+  assert.equal(cardTypeBadge('desgraciat', 1, true, TYPES, plan)?.special, true);
+  assert.equal(cardTypeBadge('especial', 1, false, TYPES, plan)?.special, false);
 });
 
 test("the type's mark from public facts: a Check with songs to reveal is of the round's type; one with none, at its cue", () => {
@@ -197,17 +199,14 @@ test("the type's mark from public facts: a Check with songs to reveal is of the 
   assert.equal(checkTypeOk({ total: 0, cue: 'pass' }), true, 'won by hand from a review');
 });
 
-test('the type badge without card-types.json: "Cartró <id>" in a neutral colour', () => {
-  const bare = cardTypeBadge('especial', true, knownCardTypes(null), null);
-  assert.deepEqual(bare, { type: 'especial', label: 'Cartró especial', color: UNKNOWN_CARD_TYPE_COLOR, special: true, ok: true }, "no plan: the special round's default type gets the star");
-  assert.equal(cardTypeBadge('rara', true, TYPES, SAMPLE_PLAN)?.label, 'Cartró rara', 'a type nobody lists still shows');
-  assert.equal(shortTypeName('Cartró normal'), 'Normal');
-  assert.equal(shortTypeName('Cartró especial'), 'Especial');
-  assert.equal(shortTypeName('Especial'), 'Especial');
+test('the type badge without card-types.json: its id as a name, in a neutral colour', () => {
+  const bare = cardTypeBadge('especial', 1, true, knownCardTypes(null), null);
+  assert.deepEqual(bare, { type: 'especial', label: 'Especial', color: UNKNOWN_CARD_TYPE_COLOR, special: true, ok: true }, "no plan: the special round's default type gets the star");
+  assert.equal(cardTypeBadge('rara', 2, true, TYPES, SAMPLE_PLAN)?.label, 'Rara', 'a type nobody lists still shows');
 });
 
 test('the type is the first step: marked after the lead, never after the first song is revealed', () => {
-  const cardType = cardTypeBadge('normal', true, TYPES, null);
+  const cardType = cardTypeBadge('normal', 1, true, TYPES, null);
   const check = { startAtMs: 0, steps, cardType };
   assert.equal(typeMarkAt(check, 900), 900);
   assert.equal(typeMarkAt(check, 5000), steps[0].atMs, 'clamped to the first reveal');
@@ -218,9 +217,9 @@ test('the type is the first step: marked after the lead, never after the first s
 });
 
 test('a wrong-type card has no songs: its type fails at its cue, with the result, and not before', () => {
-  const before = { startAtMs: 0, steps: [], cardType: cardTypeBadge('especial', checkTypeOk({ total: 0, cue: null }), TYPES, null) };
+  const before = { startAtMs: 0, steps: [], cardType: cardTypeBadge('especial', 1, checkTypeOk({ total: 0, cue: null }), TYPES, null) };
   assert.equal(typeReveal(before, 99999, 900), 'pending');
-  const cued = { ...before, cardType: cardTypeBadge('especial', checkTypeOk({ total: 0, cue: 'fail' }), TYPES, null) };
+  const cued = { ...before, cardType: cardTypeBadge('especial', 1, checkTypeOk({ total: 0, cue: 'fail' }), TYPES, null) };
   assert.equal(typeReveal(cued, 0, 900), 'wrong');
   assert.equal(checkReveal(revealOf([], verdictOf('wrongType', 'fail', 'line')), 0).result, 'notValid');
 });

@@ -1,7 +1,7 @@
 // What an import would change, shown before "Substituir" replaces the plan: rounds added, removed,
 // switched between normal and special or to another card type, prize bundles changed, sponsors added, removed or changed, and whether
 // the schedule, the cheat-sheet rules, the title, the edition, the prize reveal or the card types changed. Pure.
-import { bundleSummary, roundCardType, type GamePlan, type Prize, type RoundPlan, type Sponsor } from '../../../packages/ui/plan.ts';
+import { bundleSummary, roundCardType, roundSide, type GamePlan, type Prize, type RoundPlan, type Sponsor } from '../../../packages/ui/plan.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 
 export interface PrizeChange {
@@ -26,6 +26,8 @@ export interface PlanDiff {
     kindChanged: number[];
     /** Rounds that play another card type (a plan without one plays its kind's default). */
     cardTypeChanged: number[];
+    /** Rounds that play another side of the card (a plan without one plays side 1). */
+    sideChanged: number[];
   };
   /** Bundles that differ in any prize, field or order, in rounds that exist before and after. */
   prizes: PrizeChange[];
@@ -49,12 +51,14 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
   const removed = [...oldRounds.keys()].filter((n) => !newRounds.has(n));
   const kindChanged: number[] = [];
   const cardTypeChanged: number[] = [];
+  const sideChanged: number[] = [];
   const prizes: PrizeChange[] = [];
   for (const [n, next] of newRounds) {
     const prev = oldRounds.get(n);
     if (!prev) continue;
     if (prev.kind !== next.kind) kindChanged.push(n);
     if (roundCardType(prev) !== roundCardType(next)) cardTypeChanged.push(n);
+    if (roundSide(prev) !== roundSide(next)) sideChanged.push(n);
     for (const kind of KINDS) {
       // The Desgraciat round's `bingo` bundle is the last card standing's prize.
       const shown: WinKind = kind === 'bingo' && next.kind === 'desgraciat' ? 'standing' : kind;
@@ -77,7 +81,7 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     same: false,
     title: before?.title !== after.title,
     edition: before?.edition !== after.edition,
-    rounds: { before: before?.rounds.length ?? 0, after: after.rounds.length, added, removed, kindChanged, cardTypeChanged },
+    rounds: { before: before?.rounds.length ?? 0, after: after.rounds.length, added, removed, kindChanged, cardTypeChanged, sideChanged },
     prizes,
     sponsors,
     schedule: !same(before?.schedule ?? null, after.schedule),
@@ -91,6 +95,7 @@ export function diffPlans(before: GamePlan | null, after: GamePlan): PlanDiff {
     !removed.length &&
     !kindChanged.length &&
     !cardTypeChanged.length &&
+    !sideChanged.length &&
     !prizes.length &&
     !sponsors.added.length &&
     !sponsors.removed.length &&

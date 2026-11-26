@@ -170,7 +170,7 @@ test('Futur in the Desgraciat round: the songs until one card stands, and the co
 });
 
 test('the round named, its intro and resume sending its kind, its one prize', () => {
-  assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat') });
+  assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat'), side: 1 });
   assert.equal(S.interval.next(5, 8, true), 'Quina Desgraciada');
   assert.equal(S.interval.next(4, 8), 'Quina 4 de 8');
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');

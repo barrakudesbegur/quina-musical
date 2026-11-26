@@ -9,12 +9,13 @@ import path from 'node:path';
 import { defaultCardType } from '@quina/protocol';
 import { REPO } from '../../relay/repertoire.ts';
 import { seededQueue } from '../../engine/src/game/shuffle.ts';
-import { cardSongIds, type Card } from '../../engine/src/game/cards.ts';
+import { cardFace, cardSongIds, type Card, type PrintedCard } from '../../engine/src/game/cards.ts';
 import { mixSeed, seededRandom } from '../../engine/src/rng.ts';
 
 const ROUNDS = Number(process.argv[2] ?? 2000);
 const TYPE = process.argv[3] ?? defaultCardType('desgraciat');
-const all: Card[] = JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8'));
+// The printed cards' side 1 (D178).
+const all: Card[] = (JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as PrintedCard[]).flatMap((c) => cardFace(c, 1) ?? []);
 const ofType = all.filter((c) => c.type === TYPE);
 const pool = [...new Set(all.flatMap((c) => cardSongIds(c).flat()))].sort((a, b) => a - b);
 const THRESHOLDS = (process.env.T ?? "30,15,10,8,6,5,4,3,2").split(",").map(Number);

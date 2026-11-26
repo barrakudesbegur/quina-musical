@@ -30,8 +30,9 @@ export function resumeCommand(point: ResumePoint): CommandFields['resumeAt'] {
     lineConfirmedFrom: point.lineConfirmedFrom,
     lastSongId: point.lastSongId,
     shuffleAttempts: point.shuffleAttempts,
-    // The Queue depends on the round's card type too; a code without one plays its kind's default.
+    // The Queue depends on the round's card type and side too; a code without them plays its kind's default, side 1.
     ...(point.cardType ? { cardType: point.cardType } : {}),
+    ...(point.side ? { side: point.side } : {}),
   };
 }
 

@@ -1,31 +1,74 @@
 // Edits to the Game plan that need more than setting a field: adding, removing and reordering rounds (they
 // are renumbered 1, 2, 3… every time), a Line's or Quina's prize bundle (add, remove, move, mark headline:
 // headline prizes always come first), sponsor ids that follow their name and keep prizes pointing at them,
-// blank prizes and plans, a round's card type, the schedule's local date-time, the doors' time and the planned Throws.
-// Pure: each returns new values and never mutates its input.
+// blank prizes and plans, a round's card type and side, the schedule's local date-time, the doors' time and the
+// planned Throws. Pure: each returns new values and never mutates its input.
 import type { PlannedThrow } from '@quina/protocol';
 import { PLAN_VERSION, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
-import { defaultCardType, roundCardType, type RoundKind } from '@quina/protocol';
+import { cardTypeSides, defaultCardType, roundCardType, roundSide, type RoundKind } from '@quina/protocol';
 import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
 export const blankPrize = (headline = false): Prize => ({ title: '', detail: null, sponsorId: null, image: null, headline });
 
-/** A new round: its kind's card type, and no prizes yet (empty bundles are valid; screens say the prizes are still to come). */
-export const blankRound = (number: number, kind: RoundKind = 'normal'): RoundPlan => ({ number, kind, cardType: defaultCardType(kind), line: [], bingo: [] });
+/** A new round: its kind's card type, its default side (defaultSide), and no prizes yet (empty bundles are valid;
+ * screens say the prizes are still to come). */
+export function blankRound(number: number, kind: RoundKind = 'normal', types: readonly PrintedCardType[] = []): RoundPlan {
+  const round = { number, kind, cardType: defaultCardType(kind), line: [], bingo: [] };
+  return { ...round, side: defaultSide(round, types) };
+}
 
-// ---- a round's card type ---------------------------------------------------------------------------------
+// ---- a round's card type and side ------------------------------------------------------------------------
+
+/**
+ * The last Quina whose normal rounds play the normal card's side 1 (D171, provisional): Quines 1–4 play side 1, from
+ * pool 1, and Quines 5–10 side 2, from pool 2, as printed on each side ("1–4", "5–10").
+ */
+export const SIDE_1_LAST_QUINA = 4;
+
+/**
+ * The side a round plays unless set otherwise (D171). A normal round is "Quina N" on every screen, N its number in the
+ * plan (the Desgraciat's and the Especial's numbers count too), so Quina 1–4 plays side 1 and Quina 5 on side 2, as the
+ * card's sides say; the Desgraciat and the Especial play side 1 (pool 1). A card type that doesn't have that side (one
+ * printed on one side) plays its first. Without card-types.json, D171's side.
+ */
+export function defaultSide(round: Pick<RoundPlan, 'number' | 'kind'> & { cardType?: string }, types: readonly PrintedCardType[]): number {
+  const wanted = round.kind === 'normal' && round.number > SIDE_1_LAST_QUINA ? 2 : 1;
+  const sides = types.find((t) => t.type === roundCardType(round))?.sides;
+  if (!sides) return wanted;
+  return sides.some((s) => s.side === wanted) ? wanted : (sides[0]?.side ?? 1);
+}
+
+/** The sides a round's picker offers: its card type's (card-types.json), plus the round's own when the type lacks it
+ * (so the picker still shows what the plan says, next to its warning). */
+export function sideChoices(types: readonly PrintedCardType[], cardType: string, current: number): { side: number; label: string | null }[] {
+  const sides = cardTypeSides(types.find((t) => t.type === cardType)).map((s) => ({ side: s.side, label: s.label ?? null }));
+  return sides.some((s) => s.side === current) ? sides : [...sides, { side: current, label: null }];
+}
+
+/** The type has that side (or nobody knows: no card-types.json, an unlisted type). */
+const hasSide = (types: readonly PrintedCardType[], cardType: string, side: number): boolean =>
+  types.find((t) => t.type === cardType)?.sides.some((s) => s.side === side) ?? true;
+
+/** A round given another card type: its side stays when the new type has it, else it takes its default. */
+export function withCardType(round: RoundPlan, cardType: string, types: readonly PrintedCardType[]): RoundPlan {
+  const next = { ...round, cardType };
+  return hasSide(types, cardType, roundSide(round)) ? next : { ...next, side: defaultSide(next, types) };
+}
 
 /**
  * A round switched to another kind. Its card type follows when it was still the old kind's default (a normal round
- * made special now plays the especial cards); a type picked on purpose stays. A round made the Desgraciat one keeps
- * its Line prizes: that round has no Line, so they move into its one bundle, the last card standing's (`bingo`),
- * never lost (the editor says so: movedLinePrizes).
+ * made special now plays the especial cards); a type picked on purpose stays. Its side likewise: the new default when it
+ * was the old one, else the side picked while its card type has it. A round made the Desgraciat one keeps its Line prizes: that round has no Line,
+ * so they move into its one bundle, the last card standing's (`bingo`), never lost (the editor says so:
+ * movedLinePrizes).
  */
-export function withRoundKind(round: RoundPlan, kind: RoundKind): RoundPlan {
+export function withRoundKind(round: RoundPlan, kind: RoundKind, types: readonly PrintedCardType[] = []): RoundPlan {
   if (round.kind === kind) return round;
   const type = roundCardType(round);
   const next = { ...round, kind, cardType: type === defaultCardType(round.kind) ? defaultCardType(kind) : type };
-  return kind === 'desgraciat' ? withLineMoved(next) : next;
+  const side = roundSide(round) === defaultSide(round, types) ? defaultSide(next, types) : roundSide(round);
+  const withSide = { ...next, side: hasSide(types, next.cardType, side) ? side : defaultSide(next, types) };
+  return kind === 'desgraciat' ? withLineMoved(withSide) : withSide;
 }
 
 /** How many Line prizes switching this round to `kind` moves into its last-card-standing bundle. */
@@ -75,8 +118,8 @@ export function renumber(rounds: readonly RoundPlan[]): RoundPlan[] {
   return rounds.map((r, i) => (r.number === i + 1 ? r : { ...r, number: i + 1 }));
 }
 
-export function addRound(rounds: readonly RoundPlan[], kind: RoundKind = 'normal'): RoundPlan[] {
-  return [...rounds, blankRound(rounds.length + 1, kind)];
+export function addRound(rounds: readonly RoundPlan[], kind: RoundKind = 'normal', types: readonly PrintedCardType[] = []): RoundPlan[] {
+  return [...rounds, blankRound(rounds.length + 1, kind, types)];
 }
 
 /**

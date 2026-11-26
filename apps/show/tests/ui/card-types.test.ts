@@ -4,17 +4,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { CARD_TYPE_ID_RE, defaultCardType } from '@quina/protocol';
+import { CARD_TYPE_ID_RE, DEFAULT_POOL, POOL_ID_RE, SIDE_MAX, defaultCardType } from '@quina/protocol';
 import {
   UNKNOWN_CARD_TYPE_COLOR,
   cardTypeLabel,
   knownCardTypes,
   readPrintedCardTypes,
   roundsByCardType,
+  typeSideLabel,
 } from '../../../../packages/ui/data/card-types.ts';
 import { cardTypesUrlFor, loadCardTypes, loadCatalog } from '../../../../packages/ui/data/catalog.ts';
 import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
-import { CARD_TYPE_ID_RE as CARDS_ID_RE, assertCardTypes, cardTypeProblems, unlistedCardTypes } from '../../../cards/src/card-types.ts';
+import {
+  CARD_TYPE_ID_RE as CARDS_ID_RE,
+  POOL_ID_RE as CARDS_POOL_ID_RE,
+  SIDE_MAX as CARDS_SIDE_MAX,
+  assertCardTypes,
+  cardTypeProblems,
+  unlistedCardTypes,
+} from '../../../cards/src/card-types.ts';
+import { DEFAULT_POOL as CARDS_DEFAULT_POOL } from '../../../cards/src/sides.ts';
 
 const PRINTED = [
   { type: 'normal', name: 'Cartró normal', color: '#CFE8FF', title: 'QUINA QUINA!', priceCents: 200 },
@@ -40,9 +49,43 @@ test('any type id isCardTypeId accepts is read, and nothing else', () => {
 
 test('a type is named from the list; one nobody lists is "Cartró <id>" in a neutral colour', () => {
   const types = readPrintedCardTypes(PRINTED) ?? [];
-  assert.deepEqual(cardTypeLabel('normal', types), { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', priceCents: 200, known: true });
-  assert.deepEqual(cardTypeLabel('daurat', types), { type: 'daurat', name: 'Cartró daurat', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, known: false });
+  assert.deepEqual(cardTypeLabel('normal', types), { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', priceCents: 200, known: true });
+  assert.deepEqual(cardTypeLabel('daurat', types), { type: 'daurat', name: 'Cartró daurat', shortName: 'Daurat', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, known: false });
   assert.equal(cardTypeLabel('especial', []).name, 'Cartró especial', 'with no list at all, the default ids still read well');
+});
+
+// ---- sides (D101, D102, D171, D178) and the Check's label (D163)
+
+const SIDED = [
+  { ...PRINTED[0], shortName: 'Normal', sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+  { ...PRINTED[1], shortName: 'Especial', sides: [{ side: 1, pool: '1' }] },
+];
+
+test("card-types.json's sides and short names are read; a file from before them reads as one side 1 on pool 1", () => {
+  const read = readPrintedCardTypes(SIDED);
+  assert.deepEqual(read?.map((t) => [t.shortName, t.sides]), [
+    ['Normal', [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }]],
+    ['Especial', [{ side: 1, pool: '1' }]],
+  ]);
+  assert.deepEqual(readPrintedCardTypes(PRINTED)?.map((t) => [t.shortName, t.sides]), [
+    ['Normal', [{ side: 1, pool: '1' }]],
+    ['Especial', [{ side: 1, pool: '1' }]],
+  ], 'no short name: the name without "Cartró"');
+  const bad = (sides: unknown) => readPrintedCardTypes([{ ...PRINTED[0], sides }]);
+  for (const sides of [[], [{ side: 0, pool: '1' }], [{ side: 1, pool: 'Pool 1' }], [{ side: 1, pool: '1' }, { side: 1, pool: '2' }], [{ side: 1, pool: '1', label: 4 }], 'both']) {
+    assert.equal(bad(sides), null, JSON.stringify(sides));
+  }
+  assert.equal(readPrintedCardTypes([{ ...PRINTED[0], shortName: ' ' }]), null);
+});
+
+test("the Check's label (D163): the type and its side in one, «Normal 1–4», «Normal 5–10», «Especial»", () => {
+  const types = readPrintedCardTypes(SIDED) ?? [];
+  assert.equal(typeSideLabel('normal', 1, types), 'Normal 1–4');
+  assert.equal(typeSideLabel('normal', 2, types), 'Normal 5–10');
+  assert.equal(typeSideLabel('especial', 1, types), 'Especial', 'one side: no side in the label');
+  assert.equal(typeSideLabel('normal', 1, readPrintedCardTypes(PRINTED) ?? []), 'Normal', 'a card-types.json from before sides');
+  assert.equal(typeSideLabel('daurat', 2, types), 'Daurat', 'a type nobody lists: its stand-in');
+  assert.equal(typeSideLabel('normal', 1, []), 'Normal', 'without card-types.json');
 });
 
 test('the types to name things with: card-types.json, else none (the plan carries no copy since version 3)', () => {
@@ -128,6 +171,23 @@ test('a missing or broken card-types.json never breaks the screen: the types rea
 test("the generator's id rule is the protocol's", () => {
   assert.equal(CARDS_ID_RE.source, CARD_TYPE_ID_RE.source);
   assert.equal(CARDS_ID_RE.flags, CARD_TYPE_ID_RE.flags);
+});
+
+test("the generator checks each type's sides: numbered 1, 2… in order, on a pool, labelled when there are several", () => {
+  const [normal, especial] = readPrintedCardTypes(SIDED) ?? [];
+  assert.deepEqual(cardTypeProblems([normal, especial]), []);
+  const sides = (s: typeof normal.sides) => cardTypeProblems([{ ...normal, sides: s }]);
+  assert.match(sides([]).join(), /has no sides/);
+  assert.match(sides([{ side: 2, pool: '2', label: '5–10' }]).join(), /numbered 1, 2… in order/);
+  assert.match(sides([{ side: 1, pool: 'P1', label: '1–4' }]).join(), /the pool must be/);
+  assert.match(sides([{ side: 1, pool: '1' }, { side: 2, pool: '2', label: '5–10' }]).join(), /side 1: a type with several sides needs a label/);
+  assert.match(cardTypeProblems([{ ...normal, shortName: '' }]).join(), /no short name/);
+});
+
+test("the generator's pool and side rules are the protocol's (copies, since apps/cards builds on its own)", () => {
+  assert.equal(CARDS_POOL_ID_RE.source, POOL_ID_RE.source);
+  assert.equal(CARDS_SIDE_MAX, SIDE_MAX);
+  assert.equal(CARDS_DEFAULT_POOL, DEFAULT_POOL);
 });
 
 test('the generator refuses bad type ids and cards of an unlisted type', () => {

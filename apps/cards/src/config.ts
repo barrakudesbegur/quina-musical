@@ -8,8 +8,8 @@
 // This year's values are provisional (the user, 25 Nov: D67, D68, D69) and may change at print time: the title
 // "QUINA QUINA! 3" with last year's colours, last year's types and amounts (399 normal, 300 especial) and last year's
 // prices (1.50 € a regular round for a normal card, 5 € for the especial card). Cards are sold only on the night and
-// print in a few hours (D71); the print date is open (U28). The songs come from a pool (pool.ts), chosen on the
-// command line.
+// print in a few hours (D71); the print date is open (U28). The songs come from a repertoire (repertoire.ts), chosen on
+// the command line; each side of a card is drawn from its own pool of it (sides.ts).
 import type { CardTypeSpec } from './card-types';
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
@@ -39,10 +39,21 @@ export const VERSION_STAMP = `20${EDITION}`;
  * (card-types.ts checks it). Price in cents, or null; prices aren't printed (docs/event.md). `priceRule` says how the
  * projector counts the price it shows before each round (U5): 'perRegularRound' is the price × the regular rounds still
  * to play (a normal card, 1.50 € a round in 2025), 'fixed' the price itself (the especial card).
+ *
+ * `sides` (D101, D102, D171, provisional): the normal card's side 1 plays Quines 1–4 from pool 1 and its side 2
+ * Quines 5–10 from pool 2, under the same number and QR; the especial card has one side, from pool 1. The labels are
+ * what the Check shows after `shortName` (D163: "Normal 1–4", "Normal 5–10", "Especial"), with an en dash as on the
+ * design boards.
  */
 export const CARD_TYPES = [
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: 150, priceRule: 'perRegularRound' },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: 500, priceRule: 'fixed' },
+  {
+    type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: 150, priceRule: 'perRegularRound',
+    sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }],
+  },
+  {
+    type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: 500, priceRule: 'fixed',
+    sides: [{ side: 1, pool: '1' }],
+  },
 ] as const satisfies readonly CardTypeSpec[];
 
 /** A printed type's id, one of CARD_TYPES. */

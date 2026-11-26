@@ -19,12 +19,14 @@ import type { Card, CardSong, FirstWin } from '../engine/src/game/cards.ts';
 import type { IndexSong } from '../engine/src/analysis.ts';
 import { OUT, REPO } from '../relay/repertoire.ts';
 
-/** A card as apps/cards/dist/cards.json prints it: songs as objects. */
-interface PrintedCard extends Card {
+/** A card's side 1 as apps/cards/dist/cards.json prints it (D178): songs as objects. */
+interface PrintedFace extends Card {
   lines: CardSong[][];
 }
 
-const CARDS: PrintedCard[] = HAS_DATA ? JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) : [];
+const CARDS: PrintedFace[] = HAS_DATA
+  ? (JSON.parse(fs.readFileSync(path.join(REPO, 'apps/cards/dist/cards.json'), 'utf8')) as { id: number; type: string; sides: { side: number; lines: CardSong[][] }[] }[]).map((c) => ({ id: c.id, type: c.type, lines: c.sides.find((s) => s.side === 1)?.lines ?? [] }))
+  : [];
 const INDEX: IndexSong[] = HAS_DATA ? JSON.parse(fs.readFileSync(path.join(OUT, 'analysis/index.json'), 'utf8')).songs : [];
 const NORMAL = CARDS.filter((c) => c.type === 'normal');
 const POOL = Array.from({ length: 77 }, (_, i) => i + 1);

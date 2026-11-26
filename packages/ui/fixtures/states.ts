@@ -16,6 +16,7 @@ import {
   type WinKind,
 } from '@quina/protocol';
 import type { FlowFields, FlowState } from '../flow.ts';
+import { cardFace, type CatalogCard } from '../data/catalog.ts';
 
 /** A snapshot with every show-flow field present (what the merged engine will send). */
 export type FullState = ShowState & FlowFields;
@@ -116,7 +117,7 @@ export function baseState(now: number): FullState {
     current: { ...song(7), hookId: 'h1', firstPlay: false, posSec: 6, endsAtMs: now + 60000 },
     next: song(74),
     queue: { position, length: 77 },
-    round: { number: 3, kind: 'normal', cardType: 'normal', startedAtMs: now - 8 * 60000, targetEndMs: now + 18 * 60000, lineConfirmed: false },
+    round: { number: 3, kind: 'normal', cardType: 'normal', side: 1, pool: '1', startedAtMs: now - 8 * 60000, targetEndMs: now + 18 * 60000, lineConfirmed: false },
     game: {
       pace: 14,
       paceLocked: false,
@@ -178,13 +179,15 @@ const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s
 // The engine's Check (game/check.ts) worked out by hand for the printed cards the fixtures claim, so the console's
 // private card, the projector's reveals and the phones' strip agree.
 
-/** The printed cards the Check fixtures claim (apps/cards/dist/cards.json; tests/ui/fixtures.test.ts checks them). */
-export const FIXTURE_CARDS: Readonly<Record<number, { type: string; lines: readonly (readonly number[])[] }>> = {
-  23: { type: 'normal', lines: [[27, 47, 73, 75], [7, 17, 41, 53], [3, 4, 71, 77]] },
-  57: { type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]] },
-  123: { type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] },
-  204: { type: 'normal', lines: [[32, 45, 50, 58], [38, 46, 61, 69], [24, 52, 54, 56]] },
-  508: { type: 'especial', lines: [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]] },
+/** The printed cards the Check fixtures claim (apps/cards/dist/cards.json; tests/ui/fixtures.test.ts checks them): the
+ * normal cards' two sides, the especial card's one. The fixtures' rounds play side 1. */
+const fixtureCard = (id: number, type: string, ...sides: (readonly (readonly number[])[])[]): CatalogCard => ({ id, type, sides: sides.map((lines, i) => ({ side: i + 1, lines })) });
+export const FIXTURE_CARDS: Readonly<Record<number, CatalogCard>> = {
+  23: fixtureCard(23, 'normal', [[27, 47, 73, 75], [7, 17, 41, 53], [3, 4, 71, 77]], [[62, 11, 52, 75], [23, 38, 57, 72], [26, 29, 61, 73]]),
+  57: fixtureCard(57, 'normal', [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]], [[1, 6, 27, 38], [9, 21, 59, 75], [2, 39, 67, 77]]),
+  123: fixtureCard(123, 'normal', [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]], [[35, 34, 72, 74], [31, 50, 54, 57], [18, 22, 53, 70]]),
+  204: fixtureCard(204, 'normal', [[32, 45, 50, 58], [38, 46, 61, 69], [24, 52, 54, 56]], [[7, 38, 50, 68], [14, 27, 33, 54], [26, 71, 73, 75]]),
+  508: fixtureCard(508, 'especial', [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]]),
 };
 
 /** The engine's Check timing (engine config FLOW.check): a landed song's snippet, a ✗'s broken record, a standing ✓'s
@@ -205,14 +208,15 @@ interface CardFinding {
 }
 
 /**
- * A card's Check from the counted landings: a Line plays its completed row (top first), else the row with most landed
- * songs (top on a tie); a Bingo all 12; a standing claim its 12 in card order up to the first landed one (never a
- * shared win, D180). A card of another type than the round's is `wrongType`, with nothing to reveal.
+ * A card's Check from the counted landings, on the round's side: a Line plays its completed row (top first), else the
+ * row with most landed songs (top on a tie); a Bingo all 12; a standing claim its 12 in card order up to the first
+ * landed one (never a shared win, D180). A card of another type than the round's is `wrongType`, with nothing to reveal.
  */
-export function cardFinding(cardId: number, kind: WinKind, landed: ReadonlySet<number>, roundType = 'normal'): CardFinding {
-  const card = FIXTURE_CARDS[cardId];
+export function cardFinding(cardId: number, kind: WinKind, landed: ReadonlySet<number>, roundType = 'normal', side = 1): CardFinding {
+  const printed = FIXTURE_CARDS[cardId];
+  const card = cardFace(printed, side);
+  if (printed.type !== roundType || !card) return { outcome: 'wrongType', row: null, otherRows: [], cardType: printed.type, songs: [], revealUntil: null, markedCard: [] };
   const markedCard = card.lines.flat().map((songId) => ({ songId, landed: landed.has(songId) }));
-  if (card.type !== roundType) return { outcome: 'wrongType', row: null, otherRows: [], cardType: card.type, songs: [], revealUntil: null, markedCard: [] };
   if (kind === 'standing') {
     const first = markedCard.findIndex((s) => s.landed);
     const outcome: CheckOutcome = first < 0 ? 'complete' : 'fallen';
@@ -259,7 +263,7 @@ interface PacedSpec {
 
 /** A Claim and, when it's on screen, its Check, as the engine's state carries them. */
 function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>, position: number): { claim: ClaimInfo; check: CheckInfo | null } {
-  const found = cardFinding(spec.cardId, spec.kind, landed, 'normal');
+  const found = cardFinding(spec.cardId, spec.kind, landed, 'normal', 1);
   const onScreen = spec.revealed !== undefined && !spec.queued;
   const shown = found.songs.slice(0, spec.revealed ?? 0);
   const revealed: CheckStep[] = [];
@@ -298,6 +302,7 @@ function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>,
         row: found.row,
         otherRows: found.otherRows,
         cardType: found.cardType,
+        side: 1,
         startAtMs,
         total: found.songs.length,
         revealed,
@@ -375,7 +380,7 @@ export function desgraciatState(now: number, landed: number, lastAtMs = now): Fu
     current: last ? { ...song(last), hookId: 'h1', firstPlay: false, posSec: Math.max(0, (now - lastAtMs) / 1000), endsAtMs: lastAtMs + 60000 } : null,
     next: count > 1 ? song(DESGRACIAT_LANDED[landed] ?? 74) : song(74),
     queue: { position: landed - 1, length: 77 },
-    round: { number: 5, kind: 'desgraciat', cardType: 'normal', startedAtMs: now - 6 * 60000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
+    round: { number: 5, kind: 'desgraciat', cardType: 'normal', side: 1, pool: '1', startedAtMs: now - 6 * 60000, targetEndMs: now + 12 * 60000, lineConfirmed: false },
     phase: count > 100 ? 'early' : count > 30 ? 'mid' : count > 5 ? 'late' : 'final',
     heat: count > 100 ? 0.3 : count > 30 ? 0.52 : count > 5 ? 0.74 : 0.92,
     cards: { ...s.cards, climbingTo: 'standing' },
@@ -428,7 +433,7 @@ const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
         autoAtMs: null,
         round: { ...s.round, number: 5, kind: 'desgraciat' },
         cards: { ...s.cards, climbingTo: 'standing' },
-        intro: { round: 5, kind: 'desgraciat', cardType: 'normal', sinceMs: now - 20000 },
+        intro: { round: 5, kind: 'desgraciat', cardType: 'normal', side: 1, sinceMs: now - 20000 },
         prizes: revealedUpTo(5),
       }),
     };
@@ -521,7 +526,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   roundStart: (now) => {
     const s = baseState(now);
     return {
-      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', cardType: 'normal', sinceMs: now - 20000 }, prizes: revealedUpTo(4) }),
+      state: withFlow(s, { scene: 'roundStart', status: 'idle', current: null, next: null, queue: { position: -1, length: 77 }, landings: [], autoAtMs: null, round: { ...s.round, number: 4 }, intro: { round: 4, kind: 'normal', cardType: 'normal', side: 1, sinceMs: now - 20000 }, prizes: revealedUpTo(4) }),
     };
   },
   shuffle: (now) => {

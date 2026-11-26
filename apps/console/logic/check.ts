@@ -3,8 +3,8 @@
 // the reveals stop (`revealUntil`), the verdict and the warnings. The room sees a song only when a press reveals it,
 // and the result only on the cue. Each press says which step it expects (`checkNext { claimId, step }`), so two
 // presses at once reveal once. Everything here is derived from the engine's snapshot. Pure.
-import { defaultCardType, isPassingOutcome, type CommandFields } from '@quina/protocol';
-import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
+import { DEFAULT_SIDE, defaultCardType, isPassingOutcome, type CommandFields } from '@quina/protocol';
+import { cardTypeLabel, typeSideLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 import type { CheckInfo, ClaimInfo, FlowFields, WinKind } from '../../../packages/ui/flow.ts';
 import { roundCardType, type GamePlan } from '../../../packages/ui/plan.ts';
 
@@ -222,19 +222,21 @@ export function batchWinners(flow: Pick<FlowFields, 'check' | 'claims'>): number
 export const reviewNeedsConfirm = (outcome: 'win' | 'lose', check: Pick<CheckInfo, 'outcome' | 'kind'>): boolean =>
   (outcome === 'win') !== checkPasses(check);
 
-/** The claimed card's printed type as its chip shows it ("Normal", "Especial" with a star), from card-types.json. */
+/** The claimed card's printed type as its chip shows it ("Normal 1–4", "Especial" with a star), from card-types.json. */
 export interface TypeChip {
-  /** The short name ("Normal"), the type's name without "Cartró". */
+  /** The short name ("Normal"): a wrong type's verdict and its big type name. */
   name: string;
+  /** The type and the side checked in one label (D163): "Normal 1–4", "Normal 5–10", "Especial". */
+  label: string;
   color: string;
   /** It plays the Quina Especial. */
   special: boolean;
 }
 
-export function typeChip(type: string | null | undefined, types: readonly PrintedCardType[], plan: Pick<GamePlan, 'rounds'> | null): TypeChip | null {
+/** A type's chip; `side` is the side checked (the Check's, which is the round's). */
+export function typeChip(type: string | null | undefined, types: readonly PrintedCardType[], plan: Pick<GamePlan, 'rounds'> | null, side: number = DEFAULT_SIDE): TypeChip | null {
   if (!type) return null;
-  const label = cardTypeLabel(type, types);
-  const short = label.name.trim().replace(/^cartr[óo]\s+/i, '');
+  const known = cardTypeLabel(type, types);
   const special = plan ? plan.rounds.some((r) => r.kind === 'special' && roundCardType(r) === type) : type === defaultCardType('special');
-  return { name: short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : label.name, color: label.color, special };
+  return { name: known.shortName, label: typeSideLabel(type, side, types), color: known.color, special };
 }

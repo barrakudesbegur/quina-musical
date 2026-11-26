@@ -58,13 +58,13 @@ test('Celebration: Següent after a Line, the Interval after a Bingo', () => {
   assert.deepEqual(of('celebrationBingo'), { control: 'interval', command: { cmd: 'interval' }, enabled: true });
 });
 
-test("the Interval starts the next round, with its kind and card type from the plan when there is one", () => {
+test("the Interval starts the next round, with its kind, card type and side from the plan when there is one", () => {
   assert.deepEqual(of('interval'), { control: 'roundIntro', command: { cmd: 'roundIntro', args: { number: 4 } }, enabled: true });
   const plan = { rounds: [1, 2, 3, 4].map((number) => ({ number, kind: number === 4 ? 'special' : 'normal', line: [], bingo: [] })) } as unknown as GamePlan;
   const withPlan = defaultAction(input(FIXTURES.interval(NOW).state, NOW, plan));
-  assert.deepEqual(withPlan?.command, { cmd: 'roundIntro', args: { number: 4, kind: 'special', cardType: 'especial' } }, "a plan without card types: the kind's default");
-  plan.rounds[3] = { ...plan.rounds[3], kind: 'normal', cardType: 'desgraciat' };
-  assert.deepEqual(defaultAction(input(FIXTURES.interval(NOW).state, NOW, plan))?.command, { cmd: 'roundIntro', args: { number: 4, kind: 'normal', cardType: 'desgraciat' } });
+  assert.deepEqual(withPlan?.command, { cmd: 'roundIntro', args: { number: 4, kind: 'special', cardType: 'especial', side: 1 } }, "a plan without card types or sides: the kind's default, side 1");
+  plan.rounds[3] = { ...plan.rounds[3], kind: 'normal', cardType: 'desgraciat', side: 2 };
+  assert.deepEqual(defaultAction(input(FIXTURES.interval(NOW).state, NOW, plan))?.command, { cmd: 'roundIntro', args: { number: 4, kind: 'normal', cardType: 'desgraciat', side: 2 } });
 });
 
 test('Pausa: end it, whatever the scene underneath', () => {

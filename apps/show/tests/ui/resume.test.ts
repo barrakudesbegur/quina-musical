@@ -31,6 +31,13 @@ test("a code carries the round's card type to resumeAt", () => {
   assert.equal(resumeCommand(readResume(formatResumeToken({ ...token, kind: 'special' })).point!).cardType, 'especial', "no T part: the kind's default");
 });
 
+test("a code carries the round's card side to resumeAt (D178: its pool is the Queue's songs)", () => {
+  const text = formatResumeToken({ ...token, side: 2 });
+  assert.match(text, /-C2$/);
+  assert.equal(resumeCommand(readResume(text).point!).side, 2);
+  assert.equal(resumeCommand(readResume(token.text).point!).side, undefined, 'no C part: side 1, which the engine takes by default');
+});
+
 test('empty and malformed codes are told apart', () => {
   assert.equal(readResume('   ').error, 'empty');
   assert.equal(readResume('Q3N-NOPE').error, 'invalid');

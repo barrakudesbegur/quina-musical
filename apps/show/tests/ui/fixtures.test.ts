@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { STANDING_LIST_MAX } from '@quina/protocol';
-import { parseCards } from '../../../../packages/ui/data/catalog.ts';
+import { cardFace, parseCards } from '../../../../packages/ui/data/catalog.ts';
 import {
   DESGRACIAT_COUNTS,
   DESGRACIAT_FALLEN_CARD,
@@ -23,7 +23,8 @@ const NOW = 1_800_000_000_000;
 
 test('the Desgraciat fixtures follow the printed cards: #57 is the last of the normal cards 1–210 standing', () => {
   const { cards } = parseCards(JSON.parse(fs.readFileSync(CARDS_JSON, 'utf8')));
-  const valid = [...cards.values()].filter((c) => c.type === 'normal' && c.id >= 1 && c.id <= 210);
+  // The fixtures' Desgraciat round plays side 1.
+  const valid = [...cards.values()].filter((c) => c.type === 'normal' && c.id >= 1 && c.id <= 210).flatMap((c) => cardFace(c, 1) ?? []);
   assert.equal(valid.length, 210);
   const standingAfter = (k: number) => {
     const landed = new Set(DESGRACIAT_LANDED.slice(0, k));
@@ -33,9 +34,10 @@ test('the Desgraciat fixtures follow the printed cards: #57 is the last of the n
   assert.deepEqual(standingAfter(11), DESGRACIAT_STANDING_26);
   assert.deepEqual(standingAfter(12), DESGRACIAT_STANDING_23);
   assert.deepEqual(standingAfter(DESGRACIAT_LANDED.length), [DESGRACIAT_LAST_CARD.cardId]);
-  assert.deepEqual(cards.get(DESGRACIAT_LAST_CARD.cardId)?.lines.flat(), DESGRACIAT_LAST_CARD.songs);
+  const face = (id: number) => valid.find((c) => c.id === id)?.lines.flat() ?? [];
+  assert.deepEqual(face(DESGRACIAT_LAST_CARD.cardId), DESGRACIAT_LAST_CARD.songs);
   // #23's songs in card order, up to the first one that landed in the first 12.
-  const fallen = cards.get(DESGRACIAT_FALLEN_CARD.cardId)?.lines.flat() ?? [];
+  const fallen = face(DESGRACIAT_FALLEN_CARD.cardId);
   const landed12 = new Set(DESGRACIAT_LANDED.slice(0, 12));
   const sank = fallen.findIndex((id) => landed12.has(id));
   assert.deepEqual(fallen.slice(0, sank + 1), DESGRACIAT_FALLEN_CARD.songs);
@@ -81,13 +83,13 @@ test('the Desgraciat fixtures: the standing list only from 60 down, and the Chec
 test('the Check fixtures claim printed cards, and reveal them as the engine does', () => {
   const { cards } = parseCards(JSON.parse(fs.readFileSync(CARDS_JSON, 'utf8')));
   for (const [id, card] of Object.entries(FIXTURE_CARDS)) {
-    assert.equal(cards.get(Number(id))?.type, card.type, `#${id}'s type`);
-    assert.deepEqual(cards.get(Number(id))?.lines, card.lines, `#${id}'s songs`);
+    assert.deepEqual(cards.get(Number(id)), card, `#${id}: its type and both sides' songs`);
   }
+  const side1 = (id: number) => cardFace(FIXTURE_CARDS[id], 1)?.lines ?? [];
   const line57 = new Set(FIXTURE_LANDED);
-  assert.deepEqual(FIXTURE_CARDS[57].lines[2].map((id) => line57.has(id)), [true, true, true, false], "#57's third row misses «Elefants»");
+  assert.deepEqual(side1(57)[2].map((id) => line57.has(id)), [true, true, true, false], "#57's third row misses «Elefants»");
   const line123 = new Set(FIXTURE_LANDED_LINE);
-  assert.ok(FIXTURE_CARDS[123].lines[0].every((id) => line123.has(id)), "#123's top row is complete once «Tots Som Súpers» lands");
+  assert.ok(side1(123)[0].every((id) => line123.has(id)), "#123's top row is complete once «Tots Som Súpers» lands");
 });
 
 test('the Check fixtures: nothing revealed, revealing, at the cue, past it, under review', () => {

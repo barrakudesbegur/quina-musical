@@ -1,6 +1,6 @@
 import seedrandom from 'seedrandom';
 
-export function shuffleArrayWithSeed<T>(array: T[], seed: string): T[] {
+export function shuffleArrayWithSeed<T>(array: readonly T[], seed: string): T[] {
   const rng = seedrandom(seed); // Create a seeded random generator
   const shuffledArray = [...array]; // Create a shallow copy to avoid mutating the original array
   for (let i = shuffledArray.length - 1; i > 0; i--) {

@@ -113,7 +113,7 @@ export const S = {
 
   rounds: {
     title: 'Quines',
-    help: "Cada quina, normal, especial o desgraciada, amb el tipus de cartró que hi juga i els seus premis: de línia i de quina, o a la desgraciada només el de l'últim dempeus. Es numeren soles quan les mous.",
+    help: "Cada quina, normal, especial o desgraciada, amb el tipus de cartró i la cara que hi juguen, i els seus premis: de línia i de quina, o a la desgraciada només el de l'últim dempeus. Es numeren soles quan les mous.",
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
@@ -131,6 +131,11 @@ export const S = {
     lineInDesgraciat: "La Quina Desgraciada no té línia: aquests premis no es lliurarien. Passa'ls al premi de l'últim dempeus o treu-los.",
     moveLine: "Passar-los al premi de l'últim dempeus",
     cardType: 'Cartrons que hi juguen',
+    side: 'Cara',
+    /** A side in the picker, with its label from card-types.json (the Quines it's printed for, D171). */
+    sideOption: (side: number, label: string | null) => (label ? `Cara ${side} · Quines ${label}` : `Cara ${side}`),
+    /** The plan's side problems against the printed cards (sideWarnings): they don't stop saving. */
+    sideWarnings: 'Cares dels cartrons',
     unknownCardType: (id: string) =>
       `El tipus «${id}» no és a card-types.json dels cartrons impresos: cap cartró no comptaria en aquesta quina. Tria'n un de la llista, o genera abans els cartrons d'aquest tipus.`,
     up: 'Pujar',
@@ -298,6 +303,7 @@ export const S = {
     roundsRemoved: (list: string) => `tretes: ${list}`,
     roundsKind: (list: string) => `canvien de tipus: ${list}`,
     roundsCardType: (list: string) => `canvien de cartrons: ${list}`,
+    roundsSide: (list: string) => `canvien de cara: ${list}`,
     prizes: (n: number) => plural(n, 'premi canvia', 'premis canvien'),
     prizeLine: (round: string, label: string, before: string | null, after: string | null) => `${round}, ${label.toLowerCase()}: ${before ?? '(cap)'} → ${after ?? '(cap)'}`,
     sponsorsAdded: (list: string) => `Patrocinadors nous: ${list}`,

@@ -1,5 +1,6 @@
-// Generates the printed cards: cards.json (every card's songs, which the screens read), card-types.json (the
-// printed types) and one PDF per type, from a repertoire's playlist (D178).
+// Generates the printed cards: cards.json (every card's sides and their songs, which the screens read),
+// card-types.json (the printed types and their sides) and one PDF per type, from a repertoire's playlist (D178). Each
+// side is drawn from its pool's songs (sides.ts); a pool with none is drawn from the whole repertoire, with a warning.
 //
 //   npm start -- --repertoire <name>           write them next to the repertoire's cardsJson (default: "default")
 //   npm start -- --repertoire <name> --check   check the repertoire, the types, the amounts and that the cards repeat no card or
@@ -10,8 +11,9 @@ import { sumBy } from 'lodash';
 import { generateCardsJson } from './generate-cards-json';
 import { CARD_AMOUNTS, CARD_TYPES, SEED } from './config';
 import { assertCardTypes, cardTypeProblems } from './card-types';
-import { Drawn, repeatedCards, repeatedLines } from './uniqueness';
+import { DrawnByPool, repeatedCards, repeatedLines } from './uniqueness';
 import { loadRepertoire, repertoireNameFrom, songProblems, type RepertoireSong } from './repertoire';
+import { poolProblems, sideSources, sidesByPool, songPool, sourceWarnings } from './sides';
 import { saveJsonToFile } from './utils/files';
 
 const SONGS_PER_CARD = 12;
@@ -22,6 +24,7 @@ const songsJson: unknown = JSON.parse(readFileSync(repertoire.songsJson, 'utf-8'
 // Everything that would only show up on the night is checked before anything is written.
 const problems = [
   ...songProblems(songsJson, SONGS_PER_CARD),
+  ...poolProblems(songsJson, CARD_TYPES, SONGS_PER_CARD),
   ...cardTypeProblems(CARD_TYPES),
   ...CARD_AMOUNTS.filter((a) => !Number.isInteger(a.amount) || a.amount <= 0 || a.amount % 3 !== 0).map(
     (a) => `the amount of "${a.type}" cards must be a positive multiple of 3 (got ${a.amount})`,
@@ -34,19 +37,28 @@ if (problems.length) {
 const songs = songsJson as RepertoireSong[];
 const outDir = path.dirname(repertoire.cardsJson);
 const total = sumBy(CARD_AMOUNTS, 'amount');
-console.log(`Repertoire "${repertoire.name}": ${songs.length} songs → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${path.relative(process.cwd(), outDir) || '.'}`);
-// One record of what's drawn for every type: no line is printed twice in the whole run (requirements › songs-and-cards).
-const drawn = new Drawn();
+const pools = [...new Set(songs.map(songPool))].sort().map((pool) => `pool ${pool}: ${songs.filter((s) => songPool(s) === pool).length}`);
+console.log(`Repertoire "${repertoire.name}": ${songs.length} songs (${pools.join(', ')}) → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${path.relative(process.cwd(), outDir) || '.'}`);
+// Each type's sides with the songs they're drawn from; a side drawn from the whole repertoire is said out loud.
+const sourcesByType = new Map(CARD_TYPES.map((t) => [t.type, sideSources(t.sides, songs)]));
+for (const [type, sources] of sourcesByType) for (const warning of sourceWarnings(type, sources)) console.warn(`⚠️  ${warning}`);
+// One record of what's drawn for each pool, across every type: no line is printed twice from a pool in the whole run
+// (requirements › songs-and-cards).
+const drawn = new DrawnByPool();
 const cardsByType = CARD_AMOUNTS.map((cardAmount, index) => {
   const startId = sumBy(CARD_AMOUNTS.slice(0, index), 'amount') + 1;
-  return { type: cardAmount.type, cards: generateCardsJson(cardAmount.type, startId, cardAmount.amount, songs, SEED, drawn) };
+  const sources = sourcesByType.get(cardAmount.type) ?? [];
+  return { type: cardAmount.type, cards: generateCardsJson(cardAmount.type, startId, cardAmount.amount, sources, SEED, drawn) };
 });
 
 const allCards = cardsByType.flatMap((cardAmount) => cardAmount.cards);
 // Before writing anything: valid type ids, no card of a type card-types.json doesn't list, and (checked once more on
-// the finished set) no repeated card or line.
+// the finished set, pool by pool) no repeated card or line.
 assertCardTypes(allCards, CARD_TYPES);
-const repeats = [...repeatedLines(allCards).map((r) => `line ${r.songs}: ${r.first} and ${r.repeat}`), ...repeatedCards(allCards).map(([a, b]) => `cards #${a} and #${b}`)];
+const repeats = [...sidesByPool(allCards, CARD_TYPES)].flatMap(([pool, sides]) => [
+  ...repeatedLines(sides).map((r) => `pool ${pool}, line ${r.songs}: ${r.first} and ${r.repeat}`),
+  ...repeatedCards(sides).map(([a, b]) => `pool ${pool}: cards #${a} and #${b}`),
+]);
 if (repeats.length) {
   console.error(`❌ Repeated on the cards, nothing written:\n- ${repeats.join('\n- ')}`);
   process.exit(1);

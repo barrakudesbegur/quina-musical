@@ -67,6 +67,17 @@ test("a round that plays another card type; a plan without card types plays its 
   assert.deepEqual(diffPlans(bare, SAMPLE_PLAN).rounds.cardTypeChanged, [], 'the defaults, spelt out or not');
 });
 
+test("a round that plays another side of the card; a plan without sides plays side 1", () => {
+  const next = clone(SAMPLE_PLAN);
+  next.rounds[5].side = 1;
+  const d = diffPlans(SAMPLE_PLAN, next);
+  assert.deepEqual(d.rounds.sideChanged, [6]);
+  assert.equal(d.same, false);
+  const bare = clone(SAMPLE_PLAN);
+  for (const r of bare.rounds) if (r.side === 1) delete r.side;
+  assert.deepEqual(diffPlans(bare, SAMPLE_PLAN).rounds.sideChanged, [], 'side 1, spelt out or not');
+});
+
 test('sponsors added, removed and changed (name or logo)', () => {
   const next = clone(SAMPLE_PLAN);
   next.sponsors = next.sponsors.filter((s) => s.id !== 'patrocinador-2').map((s) => (s.id === 'barrakudes' ? { ...s, logo: 'data:image/png;base64,AAAA' } : s));

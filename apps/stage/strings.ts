@@ -33,12 +33,6 @@ export function priceLabel(cents: number | null): string | null {
   return rest ? `${whole},${String(rest).padStart(2, '0')} €` : `${whole} €`;
 }
 
-/** A card type's short name for the Check's badge: "Cartró normal" → "Normal", "Cartró especial" → "Especial". */
-export function shortTypeName(name: string): string {
-  const short = name.trim().replace(/^cartr[óo]\s+/i, '');
-  return short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : name;
-}
-
 /** A round as the stage names it: "Quina 4", or "Quina Desgraciada" (no number: there's only one). */
 export function roundName(round: { number: number; desgraciat?: boolean }): string {
   return round.desgraciat ? CA.desgraciatRound : CA.round(round.number);
