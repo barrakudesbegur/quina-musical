@@ -159,6 +159,9 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U126 · Check for lost Admin edits on quina-dev
+Backend found a bug (fixed in 5fdc2c9): the cloud didn't save a plan edit that phones don't see, like a later round's prizes or the cheat sheet, and the edit was lost when the cloud restarted. If you edited those in Admin on quina-dev, check that the edits are still there.
+
 ### U65 · Rotate the relay's pairing token · optional, before the tech rehearsal
 The relay's pairing secret (`data/cache/relay-token`) sat in the private R2 bucket from 24 to 26 Nov, readable only with the laptop's service token. Backend removed it and excluded it from the sync (6397550). To rotate it: delete `data/cache/relay-token` on the show laptop; the relay makes a new one, and the tablet pairs again.
 **Default:** rotate it when the tablet next gets paired anyway.
