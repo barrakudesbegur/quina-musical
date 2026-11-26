@@ -61,9 +61,18 @@ A presenter enters a finalist's card that has already fallen.
 - (b) No: the finalists stay as entered.
 
 ### U146 · The winner on stage
-When one finalist is left (if the last ones all fall on the same song, they share the win, as today):
+When one finalist is left:
 - (a) the fanfare waits for the presenters' cue, as in the Check;
 - (b) it plays at once.
+
+### U149 · Two finalists falling on the same song
+The Shuffle guarantees a single last card among all the cards in play, not among the finalists on stage, so the last two finalists falling together is likelier than before.
+- (a) They share the win, as today's rule.
+- (b) That landing doesn't count for them, and the round goes on.
+
+### U150 · The finalists on the phones
+- (a) The phones show the finalists' figures too.
+- (b) Only the projector and the tablet show them.
 
 ### U147 · The song lookup and Futur
 The tablet already has "Futur", the crystal ball, hidden until "Mirar el futur".
