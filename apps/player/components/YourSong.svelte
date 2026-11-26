@@ -4,14 +4,39 @@
   // A's particles (small and sparse, as on the board); over everything, for 600 ms, the flash that hides the colour
   // change. The parent keys it per landing and removes it at the next Spin: each layer then leaves with its own out
   // transition (`|global`, so they play when the parent block goes). The entry is read once, at mount: a landing seen
-  // live flashes, a later one (opening the app) fades in.
+  // live flashes, a later one (opening the app) fades in. The flash and the particles are over everything, open drawers
+  // included (D90): a manual popover puts them in the top layer, shown again whenever a drawer opens (`layer` changes),
+  // since the newest top-layer element is drawn on top. Where the browser has no popovers, they stay over the home.
   import { untrack } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { yourSongEntry, type YourSong } from '../logic/your-song.ts';
   import CardMark from './CardMark.svelte';
 
-  let { song, nowMs, reduced }: { song: YourSong; nowMs: number; reduced: boolean } = $props();
+  let { song, nowMs, reduced, layer = 0 }: { song: YourSong; nowMs: number; reduced: boolean; layer?: number } = $props();
   const entry = untrack(() => yourSongEntry(song, nowMs, reduced));
+  /** The flash plays once, then goes, so showing the layer again never replays it. */
+  const FLASH_MS = 600;
+  let flashing = $state(entry === 'flash');
+  /** Once the particles have come in, showing the layer again doesn't fade them in again. */
+  let settled = $state(false);
+  let top: HTMLDivElement | undefined = $state();
+
+  $effect(() => {
+    const done = setTimeout(() => (flashing = false), FLASH_MS + 50);
+    const calm = setTimeout(() => (settled = true), 1000);
+    return () => {
+      clearTimeout(done);
+      clearTimeout(calm);
+    };
+  });
+
+  $effect(() => {
+    void layer;
+    const el = top;
+    if (!el || typeof el.showPopover !== 'function') return;
+    if (el.matches(':popover-open')) el.hidePopover();
+    el.showPopover();
+  });
 
   // The out transitions (ms): the gold fades back to night blue, the spotlights lift and fade, the particles fade.
   const OUT = { gold: 900, beams: 760, particles: 520 } as const;
@@ -45,15 +70,17 @@
   </div>
 </div>
 {#if entry !== 'still'}
-  <div class="your-song-particles" data-entry={entry} aria-hidden="true" out:fadeOut|global={{ duration: OUT.particles }}>
-    <span class="your-song-particles__streak"></span>
-    {#each PARTICLES as p, i (i)}
-      <span class="your-song-particles__piece" style:left="{p.x}%" style:top="{p.y}%" style:--size="{p.size}px" style:--dur="{p.dur}s" style:--delay="{p.delay}s">
-        <CardMark identity={p.mark} decorative />
-      </span>
-    {/each}
+  <div class="your-song-top" popover="manual" bind:this={top} aria-hidden="true">
+    <div class="your-song-particles" data-entry={settled ? 'settled' : entry} out:fadeOut|global={{ duration: OUT.particles }}>
+      <span class="your-song-particles__streak"></span>
+      {#each PARTICLES as p, i (i)}
+        <span class="your-song-particles__piece" style:left="{p.x}%" style:top="{p.y}%" style:--size="{p.size}px" style:--dur="{p.dur}s" style:--delay="{p.delay}s">
+          <CardMark identity={p.mark} decorative />
+        </span>
+      {/each}
+    </div>
+    {#if flashing}
+      <div class="your-song-flash" data-anim="your-song-flash"></div>
+    {/if}
   </div>
-{/if}
-{#if entry === 'flash'}
-  <div class="your-song-flash" data-anim="your-song-flash" aria-hidden="true"></div>
 {/if}

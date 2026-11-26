@@ -2,7 +2,7 @@
 // one, and moving a card in Ajustos.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { OPENABLE, depthOf, dragCloses, drawerOrigin, isOpenable, popDrawer, pushDrawer, type Drawer } from '../../../../player/logic/drawers.ts';
+import { OPENABLE, depthOf, dragCloses, drawerOrigin, drawersOnCelebration, isOpenable, popDrawer, pushDrawer, type Drawer } from '../../../../player/logic/drawers.ts';
 import { addCard, emptyData, moveCard } from '../../../../player/logic/storage.ts';
 
 test('drawers stack: a round\'s prizes over Horari, back to Horari, then home', () => {
@@ -53,4 +53,12 @@ test('moving a card in Ajustos changes the order the home screen shows', () => {
   assert.equal(moveCard(data, 57, 1), data, 'already there: unchanged');
   assert.equal(moveCard(data, 999, 0), data, 'not a saved card');
   assert.deepEqual(moveCard(data, 412, 0).cards.find((c) => c.id === 412)?.color, data.cards[2].color, 'its icon stays');
+});
+
+test('a Celebration closes Premis, Horari and Ajustos, but not the add-card pad while a number is typed (D90)', () => {
+  assert.deepEqual(drawersOnCelebration([{ kind: 'horari' }, { kind: 'premis', round: 2 }], false), [], 'a round\'s prizes over Horari');
+  assert.deepEqual(drawersOnCelebration([{ kind: 'ajustos' }, { kind: 'rename', cardId: 123 }], true), [], 'not typing in the pad: everything closes');
+  assert.deepEqual(drawersOnCelebration([{ kind: 'pad' }], false), [], 'the pad with nothing typed');
+  assert.deepEqual(drawersOnCelebration([{ kind: 'ajustos' }, { kind: 'pad' }], true), [{ kind: 'ajustos' }, { kind: 'pad' }], 'typing: the pad stays, with what is under it');
+  assert.deepEqual(drawersOnCelebration([], true), []);
 });

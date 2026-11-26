@@ -44,7 +44,7 @@
   <!-- The landed song is on one of the player's cards: gold behind everything until the next Spin (`your-song`). -->
   {#if app.yourSong}
     {#key app.yourSong.key}
-      <YourSong song={app.yourSong} nowMs={app.cloudNow} reduced={app.reducedMotion} />
+      <YourSong song={app.yourSong} nowMs={app.cloudNow} reduced={app.reducedMotion} layer={app.drawers.length} />
     {/key}
   {/if}
   <!-- Test hook: the latest landing, whatever drawer is open. -->
@@ -108,7 +108,13 @@
           <p class="drawer__note">{S.legacyMenuText}</p>
         </Drawer>
       {:else if drawer.kind === 'pad'}
-        <NumberPad cards={app.data.cards} onadd={(id, identity) => app.addCard(id, true, identity)} onclose={closeTop} onkey={() => app.blip('tap')} />
+        <NumberPad
+          cards={app.data.cards}
+          onadd={(id, identity) => app.addCard(id, true, identity)}
+          onclose={closeTop}
+          onkey={() => app.blip('tap')}
+          ontyping={(typing) => app.setPadTyping(typing)}
+        />
       {:else if drawer.kind === 'rename'}
         {@const card = named(drawer.cardId)}
         {#if card}

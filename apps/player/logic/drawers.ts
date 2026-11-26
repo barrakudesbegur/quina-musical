@@ -53,3 +53,11 @@ export const depthOf = (stack: readonly Drawer[], index: number): number => stac
 export function dragCloses(dy: number, height: number, velocity: number, threshold = 0.3, flick = 0.5): boolean {
   return dy > 0 && (dy > height * threshold || velocity > flick);
 }
+
+/**
+ * A Celebration starts (the user, D90): Premis, Horari and Ajustos close, with whatever is stacked on them, so the
+ * phone shows it. The add-card pad stays open while a number is typed in it, and the drawers under it with it.
+ */
+export function drawersOnCelebration(stack: readonly Drawer[], padTyping: boolean): Drawer[] {
+  return padTyping && stack.some((d) => d.kind === 'pad') ? [...stack] : [];
+}

@@ -12,7 +12,7 @@ import type { PublicHeat, PublicState } from './feed/public.ts';
 import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
 import { nearKeys } from './logic/near-win.ts';
 import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
-import { popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
+import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
 import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
 import {
@@ -65,6 +65,8 @@ export class PlayerApp {
   araSession = $state<AraView | null>(null);
   /** The open drawers, bottom first (logic/drawers.ts); empty: the home screen. */
   drawers = $state.raw<Drawer[]>([]);
+  /** The add-card pad has a number typed in it: a Celebration leaves it open (D90). */
+  padTyping = $state(false);
   /** Last year's link (or another edition's) that opened the app, until dismissed. */
   legacy = $state.raw<Extract<Route, { kind: 'legacy' | 'otherEdition' }> | null>(null);
   toast = $state<string | null>(null);
@@ -130,6 +132,8 @@ export class PlayerApp {
   private readonly sounds: Sounds;
   private readonly loadCatalog: () => Promise<Catalog>;
   private lastFeedback: FeedbackSnapshot | null = null;
+  /** The last Celebration that closed the drawers (D90), so each one does it once. */
+  private lastCelebration: string | null = null;
   private stops: (() => void)[] = [];
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private freshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -213,6 +217,10 @@ export class PlayerApp {
   /** Close the top drawer ("‹", the back gesture, a swipe down): the one under it comes back. */
   closeTop(): void {
     this.drawers = popDrawer(this.drawers);
+  }
+
+  setPadTyping(typing: boolean): void {
+    this.padTyping = typing;
   }
 
   /** Close every drawer (✕ on a stacked drawer): back to the home screen. */
@@ -310,8 +318,17 @@ export class PlayerApp {
       this.state = state;
       if (state) this.noteState(state);
       this.react();
+      this.celebrationClosesDrawers();
     }
     this.stepBanner();
+  }
+
+  /** A new Celebration closes Premis, Horari and Ajustos (D90; logic/drawers.ts drawersOnCelebration). */
+  private celebrationClosesDrawers(): void {
+    const c = this.celebration;
+    if (!this.celebrationOpen || !c || c.key === this.lastCelebration) return;
+    this.lastCelebration = c.key;
+    this.drawers = drawersOnCelebration(this.drawers, this.padTyping);
   }
 
   /** Edition, Game and Heat bookkeeping for a new public state. */

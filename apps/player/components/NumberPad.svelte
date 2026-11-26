@@ -14,7 +14,15 @@
     onadd,
     onclose,
     onkey,
-  }: { cards: readonly SavedCard[]; onadd: (id: number, identity: number) => string | null; onclose: () => void; onkey?: () => void } = $props();
+    ontyping,
+  }: {
+    cards: readonly SavedCard[];
+    onadd: (id: number, identity: number) => string | null;
+    onclose: () => void;
+    onkey?: () => void;
+    /** Whether a number is typed (a Celebration leaves the pad open then: D90). */
+    ontyping?: (typing: boolean) => void;
+  } = $props();
   // The pick starts at the first free icon of the cards the sheet opened with.
   // svelte-ignore state_referenced_locally
   let identity = $state(nextColor(cards));
@@ -28,6 +36,10 @@
     leaving = true;
     return false;
   }
+  $effect(() => {
+    ontyping?.(value !== '');
+  });
+  $effect(() => () => ontyping?.(false));
   const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'] as const;
 
   function press(key: (typeof KEYS)[number]) {
