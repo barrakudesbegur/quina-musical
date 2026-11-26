@@ -25,6 +25,8 @@ export interface SceneContext {
   /** The night's last round is the one in play (the state's `lastRound`): the corn-seed storm's button shows in it
    * (D155). Optional: without it the storm is only allowed after the Game. */
   lastRound?: boolean;
+  /** The Check on screen is under review (the state's `check.reviewing`): its screen offers Parlem (D118). */
+  reviewing?: boolean;
 }
 
 type Rule = 'any' | readonly ShowScene[] | ((ctx: SceneContext) => boolean);
@@ -59,9 +61,9 @@ const RULES = {
   // Celebration, back to the round.
   next: (c) => PLAY.includes(c.scene) || (c.scene === 'roundStart' && !c.introduced) || celebratingLine(c),
   back: ['before', 'play', 'check'],
-  // Not in a Check: releasing its Hold would bring the song back up mid-Check. In any Celebration Parlem ducks its
-  // music (D117).
-  hold: (c) => PLAY.includes(c.scene) || c.scene === 'celebration',
+  // In any Celebration Parlem ducks its music (D117). In a Check only during a review (D118): there it switches the
+  // duck in place and never leaves the Check's Hold; during the reveals the −/+ hold means "Revisió manual".
+  hold: (c) => PLAY.includes(c.scene) || c.scene === 'celebration' || (c.scene === 'check' && c.reviewing === true),
   holdMusic: ['before', 'play', 'check'],
   suspense: PLAY,
   confirmLine: ['before', 'play', 'celebration'],

@@ -52,7 +52,8 @@ export const COMMANDS = Object.freeze({
    * song ducks under the presenters' voices, and Hold music may take over. `duck: false` is Aguanta (Stay): the
    * song keeps playing at full volume, nothing lands and nothing advances, and near its end it loops its last
    * phrase. Sent while holding, `duck` switches between the two in place; `on: false` releases, and so does `next`
-   * from Parlem (Next is refused during Aguanta, D133). In a Celebration, Parlem ducks its music (D117).
+   * from Parlem (Next is refused during Aguanta, D133). In a Celebration, Parlem ducks its music (D117). In a Check
+   * under review (D118) it switches Parlem on or off in place: the round stays in the Check's Hold, nothing lands.
    */
   hold: { on: { type: 'boolean', optional: true }, duck: { type: 'boolean', optional: true } },
   /** Switch to Hold music now (enters Hold if needed). */

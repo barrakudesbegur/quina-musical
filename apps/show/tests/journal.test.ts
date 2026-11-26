@@ -299,6 +299,7 @@ test('a resumed Game comes back in a Check: undecided Claims queued, the Check s
   assert.equal(r.show.claims[1].status, 'checking');
   assert.ok(r.show.holdMusic, 'Hold music under it');
   r.pressCue('cl-2');
+  r.advance(FLOW.check.nextCardSec + 0.1);
   assert.equal(r.show.scene, 'play');
   assert.equal(r.show.hold?.reason, 'checkFailed');
 });

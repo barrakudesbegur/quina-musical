@@ -480,6 +480,8 @@ export interface CheckRun {
   soundEndAt: number | null;
   /** After its cue, when the next queued card's Check comes on screen by itself, or null. */
   nextAt: number | null;
+  /** After the last card's fail cue with nothing valid: when the round goes back to the fail moment's Hold. */
+  failAt: number | null;
 }
 
 /** Everything the machine needs from the outside world. Times: `now` audio-clock seconds, `nowMs` epoch ms. */
@@ -765,6 +767,11 @@ export class Show {
       case 'hold': {
         if (this.scene === 'celebration') {
           this.celebrationHold(reqId, c.on);
+          break;
+        }
+        // A review's Parlem (D118): the duck in place; the round never leaves the Check's Hold.
+        if (this.scene === 'check') {
+          this.holdMode(c.on ?? !(this.hold?.ducked ?? true));
           break;
         }
         const on = c.on;
@@ -2062,6 +2069,7 @@ export class Show {
       scene: this.scene, celebrating: this.celebration?.kind ?? null, introduced: this.intro != null, paused: this.pause != null,
       intervalMusic: this.pause != null || this.bed === 'interval',
       lastRound: this.isLastRound(),
+      reviewing: this.check?.info.reviewing === true,
     };
   }
 
@@ -2221,7 +2229,7 @@ export class Show {
       cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null,
       startAtMs: this.env.nowMs(), total: result.steps.length, revealed: [], auto: false, cue: null, reviewing,
     };
-    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null };
+    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null };
     this.emit({ type: 'check.started', check: this.checkInfo()! });
   }
 
@@ -2363,6 +2371,16 @@ export class Show {
       return true;
     }
     if (run.nextAt != null && now >= run.nextAt && this.autoCheck) return this.maybeAutoCheck();
+    if (run.failAt != null && now >= run.failAt) {
+      run.failAt = null;
+      // A claim that came in meanwhile is checked first.
+      if (this.claims.some((c) => c.status === 'queued' || c.status === 'reviewing')) {
+        this.autoCheck = true;
+        return this.maybeAutoCheck();
+      }
+      this.finishBatch(false);
+      return true;
+    }
     return false;
   }
 
@@ -2389,9 +2407,10 @@ export class Show {
       return;
     }
     if (pass) return this.finishBatch(true);
-    // The last card failed: the Celebration of an earlier one waits for one more press; else the fail moment's Hold.
+    // The last card failed: the Celebration of an earlier one waits for one more press; else its ✗ shows for a moment,
+    // as between two cards, and the round goes back to the fail moment's Hold.
     if (this.batchWinners().length) this.celebrationNext = { claimId: claim.claimId, step: run.info.revealed.length + 1 };
-    else this.finishBatch(false);
+    else run.failAt = this.env.now() + FLOW.check.nextCardSec;
   }
 
   /** A Claim decided by its cue (or by hand from a Review), journaled. A valid Claim makes a Winner. */

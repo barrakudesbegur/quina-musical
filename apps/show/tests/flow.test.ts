@@ -74,6 +74,8 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['play', { scene: 'play' }, [...PLAY, 'claim']],
     // The corn-seed storm in the night's last round too (D155).
     ['play, the last round', { scene: 'play', lastRound: true }, [...PLAY, 'claim', 'storm']],
+    // Parlem on a review's screen (D118); during the reveals the −/+ hold means review.
+    ['check, under review', { scene: 'check', reviewing: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'hold']],
     ['check, the last round', { scene: 'check', lastRound: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'storm']],
     ['interval after the last round', { scene: 'interval', lastRound: true }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
     ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic']],
@@ -247,10 +249,13 @@ test('an invalid Claim: its reveals stop at the first ✗, its cue is the fail m
   assert.deepEqual(emitted(out, 'check.cue').map((e) => e.cue), ['fail']);
   assert.deepEqual(sfxNames(out), [FLOW.failureFanfare]);
   assert.equal(all(out, 'sfx')[0]?.volume, 'failFx');
+  assert.equal(h.show.scene, 'check', 'its ✗ shows for a moment, as between two cards');
+  assert.equal(h.show.check?.info.cue, 'fail');
+  const back = h.advance(FLOW.check.nextCardSec + 0.1);
   assert.equal(h.show.scene, 'play');
   assert.equal(h.show.status, 'hold');
   assert.equal(h.show.hold?.reason, 'checkFailed');
-  assert.equal(find(out, 'songToHoldMusic')?.mood, 'error', 'the ducked song washes out into the error Hold music');
+  assert.equal(find(back, 'songToHoldMusic')?.mood, 'error', 'the ducked song washes out into the error Hold music');
   assert.equal(h.show.winners.length, 0);
   assert.deepEqual(journalOf(out).filter((e) => e.kind === 'claim.decided').map((e) => e.kind === 'claim.decided' && [e.verdict, e.winningSongId, e.position, e.manual ?? false]), [['invalid', null, 2, false]]);
   // Resume: the next song builds out of the Hold music.
@@ -280,6 +285,7 @@ test('the Check decides: the cue makes a pass valid and a fail invalid; only a R
   assert.equal(h.show.claims.length, 2);
   assert.equal(h.show.journalSeq, seq);
   // Complete after 4 landings, but lost by hand from a Review: the PRIVATE warning says it would have passed.
+  h.advance(FLOW.check.nextCardSec + 0.1);
   landSongs(h, 2);
   h.send('claim', { cardId: card.id });
   const id = lastClaimId(h);
@@ -326,6 +332,7 @@ test('several cards in one claim: each in turn, the next on screen by itself aft
   h.send('checkAuto', { on: true });
   h.send('checkAuto', { on: false });
   h.pressCue('cl-2');
+  h.advance(FLOW.check.nextCardSec + 0.1);
   assert.equal(h.show.scene, 'play');
   assert.equal(h.show.hold?.reason, 'checkFailed');
   assert.deepEqual(rejected(h.send('claim', { cardId: 1, kind: 'line' })), [], 'claims go on');
@@ -405,7 +412,7 @@ test('several Claims: queued in order, re-ordered by checkStart, sharing the pri
   assert.equal(h.show.scene, 'check');
   assert.equal(h.show.celebration, null);
   assert.ok(!find(late, 'celebrationMusic'));
-  const out = h.pressCue(lastClaimId(h));
+  const out = [...h.pressCue(lastClaimId(h)), ...h.advance(FLOW.check.nextCardSec + 0.1)];
   assert.equal(h.show.scene, 'celebration');
   assert.deepEqual(live(h).celebration?.cardIds, before?.cardIds);
   assert.ok(!find(out, 'celebrationMusic') && !find(out, 'holdMusic'));
@@ -432,6 +439,24 @@ test('the last card fails after an earlier one passed: the shared Celebration wa
   assert.equal(h.show.scene, 'celebration');
   assert.deepEqual(sfxNames(go), [FLOW.celebration.fanfare, FLOW.celebration.impact]);
   assert.deepEqual(h.show.celebration?.cardIds, [card.id]);
+});
+
+test('Parlem on a review\'s screen (D118): the duck in place, the round still in its Check, nothing lands', () => {
+  const h = flow();
+  landSongs(h, 4);
+  h.send('claim', { cardId: card.id });
+  assert.deepEqual(rejected(h.send('hold', { on: false })), ['wrongScene'], 'not while revealing');
+  h.send('checkReview', { claimId: 'cl-1' });
+  assert.equal(h.show.sceneContext().reviewing, true);
+  const off = h.send('hold', { on: false });
+  assert.deepEqual(rejected(off), []);
+  assert.equal(find(off, 'duck')?.db, 0, 'Parlem off: the song comes back up');
+  assert.deepEqual([h.show.scene, h.show.status, h.show.hold?.ducked], ['check', 'hold', false]);
+  const position = h.show.position;
+  h.advance(30);
+  assert.equal(h.show.position, position, 'nothing lands during a review');
+  assert.ok((find(h.send('hold', { on: true }), 'duck')?.db ?? 0) < 0, 'and Parlem on again');
+  assert.equal(h.show.hold?.ducked, true);
 });
 
 test('a discarded Review: no sound, the next card, or the round back in plain Parlem over the music from before the Check', () => {
@@ -861,6 +886,7 @@ test('the Celebration music can be picked during the Check; the pick is in the s
   g.send('claim', { cardId: card.id });
   g.send('celebrationMusic', { choice: 'holdMusic' });
   g.pressCue('cl-1');
+  g.advance(FLOW.check.nextCardSec + 0.1);
   assert.equal(g.show.snapshot().celebrationChoice, null);
 });
 
