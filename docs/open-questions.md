@@ -29,6 +29,13 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U101 · The sliders** (Sound engine's full list of the engine's sounds, 26 Nov): a master volume; songs; songs in Parlem; the DJ moves' effects (risers, snare rolls, impacts, the Spin's whoosh, echoes), separate from the presenters' pad, with teases and Signatures riding the songs; the presenters' effects (the pad); the drum's ticks; the Check's sounds (snippets, the broken record, knocks); Hold music; win (the Clear fanfare, the victory track, the winning song's loop); fail (the Failure fanfare, the error Hold music); the final-lap stinger; intros; breaks; Pausa; throws; the doors; the end. (a) All of these; (b) only the user's list; (c) another grouping.
 - **U102 · Where they live:** (a) the tablet's settings, saved in the cloud and the edition file; (b) Admin only; (c) the laptop only.
 
+### U115 · What the add-card QR button does
+The agreed board draws "Escanejar el QR del cartró" on the add-card drawer, but nothing says what it does, and no board shows a camera view.
+- (a) **Scan inside the app:** it opens the camera in the drawer and reads the card's QR. The number is filled in, and the name and icon already picked are kept. It needs a board for the camera view, a camera permission prompt, and a small QR-reading library, since iPhones' Safari can't read QR codes on its own.
+- (b) **A tip only:** "Escaneja el QR del cartró amb la càmera del mòbil". The phone's own camera already opens the app with the card added; that works today.
+- (c) Remove the button.
+Frontend builds everything else meanwhile, and leaves the button out until the answer.
+
 ### U103 · The throw song is on the cards
 "Pont aeri" is Part 1's #29, "Flying Free – Original Mix" (Pont Aeri, Marian Dacal), so it's printed on cards. A throw happens between rounds, when no card is in play, so it can't be marked by mistake.
 - (a) Keep it as the throw song.
