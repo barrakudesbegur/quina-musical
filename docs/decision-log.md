@@ -956,7 +956,7 @@ While a claim is under review, the organizers pick one of four:
 This replaces checking it again from the start and "drop". A win by hand on a card that doesn't pass is the one exception to "never accept a card that failed", and only a review allows it. The log marks every hand decision. Why: it's a plan B. If the system has an error, or something has to be done by hand, the night is never blocked.
 By: the user. Source: the user's message of 26 Nov. Amends: D49 and D63 (a review may declare a win by hand), D109 and D118 (the review's outcomes). Lives in: event.md › Claims and checks; requirements/game-rules.md › The Check; requirements/screens.md › Console.
 
-### D122 · After a discard, the round is back in Parlem · 2026-11-26 · Active
+### D122 · After a discard, the round is back in Parlem · 2026-11-26 · Amended by D125
 A discard doesn't show "Tornem de seguida", since everyone is already there and the presenters are probably explaining what happened. The music that was playing before the Check comes back, with Parlem on and the auto-advance off. As soon as a presenter presses "Següent", Parlem goes away and the auto-advance returns to whatever it was. Answers U82.
 By: the user. Source: open-questions.md › Answered (U82). Amends: D121. Lives in: requirements/game-rules.md › The Check; requirements/show-and-music.md › the Check's sound.
 
@@ -967,3 +967,7 @@ By: the user. Source: open-questions.md › Answered (U76). Lives in: requiremen
 ### D124 · The code calls it `discarded` · 2026-11-26 · Active
 The status for a discarded claim is `discarded`, matching the user's word and the label "Descartat". Answers U83.
 By: the user. Source: open-questions.md › Answered (U83). Lives in: packages/protocol (Sound engine).
+
+### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Active
+After a discard, the round uses the console's existing "aturat" mode ("Avanç automàtic aturat: prem Següent"), the override of the auto-advance, instead of switching the auto-advance setting off and remembering it. The music from before the Check still comes back in Parlem. On "Següent", Parlem goes away and the auto-advance is back to whatever it was. The user: "you should have told me that we already have the aturat mode wich is a override of the auto-advance, and more suitable for this."
+By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requirements/show-and-music.md › the Check's sound.
