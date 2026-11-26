@@ -133,6 +133,11 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   const noted = entries.find((e) => e.kind === 'winner.noted') as JournalEntry;
   assert.ok(checkJournalEntry({ ...noted, slip: '17' }).ok, "a winner's slip");
   assert.ok(checkJournalEntry({ ...noted, slip: null }).ok, 'a slip cleared');
+  // The presenter-paced Check (D109): a stopped Check, a dropped claim.
+  const base = { gameId: decided.gameId, seq: 99, atMs: 1, round: 1, claimId: 'c1' };
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.stopped' }).ok, 'a Check stopped before its cue');
+  assert.ok(checkJournalEntry({ ...base, kind: 'claim.dropped' }).ok, 'a claim dropped');
+  assert.equal(checkJournalEntry({ ...base, kind: 'claim.stopped', claimId: 7 }).ok, false, 'the claim id is text');
   const bad: [string, unknown][] = [
     ['win kind', { ...opened, winKind: 'quina' }],
     ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],

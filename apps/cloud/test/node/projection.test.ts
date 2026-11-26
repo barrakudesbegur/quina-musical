@@ -169,6 +169,35 @@ test("a round's card type is public from its intro: the one it names, else its k
   assert.equal(project(r.entries).state.rounds.at(-1)?.cardType, 'especial');
 });
 
+test('a stopped Check fades out on phones with no verdict, and a dropped claim changes nothing public (D109)', () => {
+  const b = new JournalBuilder('g-stop');
+  b.startRound().land(10);
+  const claimId = b.claim(42, 'line');
+  b.scene('check');
+  let { state, record } = project(b.entries);
+  const scheduled = {
+    v: PROTOCOL_VERSION,
+    type: 'check.scheduled',
+    check: { claimId, cardId: 42, kind: 'line', outcome: 'incomplete', row: 0, otherRows: [], steps: [], startAtMs: 1, endAtMs: 9 },
+  } as unknown as ShowEvent;
+  state = applyPublic(state, projectEvent(state, scheduled, ctx));
+  assert.equal(state.check?.result, 'pending');
+
+  b.stop(claimId);
+  const stopped = b.entries.at(-1) as JournalEntry;
+  record = extendJournal(record, [stopped]);
+  assert.deepEqual(projectEntry(state, stopped, record, ctx), [{ kind: 'check', check: null }], 'the Check goes, with no mark');
+  state = applyPublic(state, projectEntry(state, stopped, record, ctx));
+  assert.deepEqual(state.winners, []);
+
+  b.drop(claimId);
+  const dropped = b.entries.at(-1) as JournalEntry;
+  record = extendJournal(record, [dropped]);
+  assert.deepEqual(projectEntry(state, dropped, record, ctx), [], 'nothing public');
+  assert.deepEqual(project(b.entries).state.winners, [], 'replayed from the start, the same');
+  assert.equal(project(b.entries).state.check, null);
+});
+
 test('a Check is public as "pending" from its start, without its steps, and shows its verdict only once decided', () => {
   const b = new JournalBuilder('g-check');
   b.startRound().land(10);

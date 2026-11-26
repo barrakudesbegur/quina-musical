@@ -113,6 +113,12 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       }
       return changes;
     }
+    case 'claim.stopped': // the Check fades out with no mark (D109): phones learn nothing about the card
+    case 'claim.dropped': {
+      const claim = record.claims.find((c) => c.claimId === entry.claimId);
+      const shown = claim && state.check && state.check.cardId === claim.cardId && state.check.result === 'pending';
+      return shown ? [{ kind: 'check', check: null }] : [];
+    }
     case 'prizes.revealed': // the GameRoom publishes the plan again, with this round's prizes (it holds the full plan)
     case 'winner.noted': // names and notes are private
     case 'cards.set': // the cards in play are the organizers' business

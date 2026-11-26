@@ -187,6 +187,18 @@ export class JournalBuilder {
     return this;
   }
 
+  /** The Check stopped before its cue (D109): the claim stays undecided. */
+  stop(claimId: string): this {
+    this.push({ kind: 'claim.stopped', round: this.round, claimId }, 2_000);
+    return this;
+  }
+
+  /** A stopped or queued claim set aside, with no verdict (D109). */
+  drop(claimId: string): this {
+    this.push({ kind: 'claim.dropped', round: this.round, claimId }, 1_000);
+    return this;
+  }
+
   /** `slip`: the numbered slip handed over instead of a name (absent, as an older journal). */
   note(claimId: string, name: string | null, notes: string | null, slip?: string | null): this {
     this.push({ kind: 'winner.noted', claimId, name, notes, ...(slip !== undefined ? { slip } : {}) }, 1_000);
