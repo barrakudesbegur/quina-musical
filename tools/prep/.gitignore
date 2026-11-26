@@ -1,4 +1,4 @@
 # The Python environments (see requirements*.txt) and caches.
-.venv*/
+.venv*
 __pycache__/
 .ruff_cache/
