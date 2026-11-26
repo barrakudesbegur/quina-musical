@@ -71,9 +71,9 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     // A round's intro plays its intro track, not a set (D129).
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound']],
-    ['play', { scene: 'play' }, [...PLAY, 'claim']],
+    ['play', { scene: 'play' }, [...PLAY, 'claim', 'finale', 'finaleCue']],
     // The corn-seed storm in the night's last round too (D155).
-    ['play, the last round', { scene: 'play', lastRound: true }, [...PLAY, 'claim', 'storm']],
+    ['play, the last round', { scene: 'play', lastRound: true }, [...PLAY, 'claim', 'finale', 'finaleCue', 'storm']],
     // Parlem on a review's screen (D118); during the reveals the −/+ hold means review.
     ['check, under review', { scene: 'check', reviewing: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'hold']],
     ['check, the last round', { scene: 'check', lastRound: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'storm']],
@@ -85,7 +85,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
     ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw', 'storm']],
     ['roundStart with a set still on', { scene: 'roundStart', intervalMusic: true }, ['next', 'newRound', 'intervalSkip']],
-    ['play with the breaks\' set still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'intervalSkip']],
+    ['play with the breaks\' set still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'finale', 'finaleCue', 'intervalSkip']],
     // Pausa (D128): Next ends it with a transition; the Pausa set can be skipped.
     ['paused in play', { scene: 'play', paused: true }, ['next', 'intervalSkip']],
     ['paused in a Check', { scene: 'check', paused: true }, ['intervalSkip']],
