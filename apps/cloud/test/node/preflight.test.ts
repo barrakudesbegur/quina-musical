@@ -84,7 +84,7 @@ test("cards in sides (D178): each side its type prints and no other, each side's
   const pools = new Map([...range(1, 12).map((id) => [id, '1'] as const), ...range(13, 24).map((id) => [id, '2'] as const)]);
   const playable = new Set(pools.keys());
   const types = [
-    { type: 'normal', sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+    { type: 'normal', sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
     { type: 'especial', sides: [{ side: 1, pool: '1' }] },
   ];
   const normal = (id: number, side1: number[], side2: number[]) => ({ id, type: 'normal', sides: [{ side: 1, lines: lines(side1) }, { side: 2, lines: lines(side2) }] });
