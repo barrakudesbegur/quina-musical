@@ -25,6 +25,7 @@ import type {
   ClaimInfo,
   FinaleGroup,
   FinaleInfo,
+  FinaleWinner,
   ClimbTarget,
   CommandFields,
   GameRecord,
@@ -65,7 +66,7 @@ import type {
   Volumes,
 } from '@quina/protocol';
 import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW } from '../config.ts';
-import { validCards, possibleWinners, parseCardRanges, cardCounts, fallIndex, firstWinAt, queuePositions, standingCards, standingCourse } from '../game/cards.ts';
+import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun } from '../game/cards.ts';
 import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
@@ -572,7 +573,7 @@ const throwTrackInfo = (song: ThrowSong): ThrowTrackInfo => {
 /** The Celebration a set of valid Claims makes: the round's end (a Bingo, the last card standing) over a Line. */
 const roundWin = (kinds: readonly WinKind[]): WinKind => (kinds.includes('standing') ? 'standing' : kinds.includes('bingo') ? 'bingo' : 'line');
 /** The Shuffle's Tie rule for a round: one last card standing in the Desgraciat round, else no shared first win. */
-const tieRule = (kind: RoundKind): TieRule => (kind === 'desgraciat' ? 'lastStanding' : 'firstWins');
+const tieRule = (kind: RoundKind): TieRule => (kind === 'desgraciat' ? 'none' : 'firstWins');
 /** What a round's Phase climbs towards from its first song: the Line, or the Desgraciat round's last card standing. */
 const firstClimb = (kind: RoundKind): ClimbTarget => (kind === 'desgraciat' ? 'standing' : 'line');
 const PHASE_RANK: Record<PhaseName, number> = { early: 0, mid: 1, late: 2, final: 3 };
@@ -781,7 +782,7 @@ export class Show {
         // Nothing lands while B is held (D133): Aguanta, or a Suspense (let go of B, or `suspense {on: false}`).
         if (this.suspense) this.reject(reqId, c.cmd, 'nextBlocked', 'Suspens is on: it lands when B is let go');
         else if (this.status === 'hold' && this.hold?.ducked === false) this.reject(reqId, c.cmd, 'nextBlocked', 'Aguanta is on');
-        else if (this.finaleInfo()?.winners && !this.finaleCued) this.reject(reqId, c.cmd, 'finaleDecided', 'the finale has its winners: the cue comes first');
+        else if (this.finaleInfo()?.winner && !this.finaleCued) this.reject(reqId, c.cmd, 'finaleDecided', 'the finale has its winner: the cue comes first');
         else {
           if (this.pause) this.endPause({ forNext: true });
           this.next(reqId);
@@ -1788,9 +1789,9 @@ export class Show {
     if (this.position + 1 >= this.queue.length) return false;
     // The Desgraciat round: never take out the last card standing by itself.
     if (this.phaseModel.kind === 'standing' && this.phaseModel.valid.length && this.standingNow().length <= 1) return false;
-    // The finale: never past its winners, nor past its last finalist standing (D169).
+    // The finale: never past its winner, nor past its last finalist standing (D169).
     const finale = this.finaleInfo();
-    if (finale && (finale.winners || finale.standing.length <= 1)) return false;
+    if (finale && (finale.winner || finale.standing.length <= 1)) return false;
     const phase = this.phaseName();
     return phase === 'final' ? this.game.autoAdvanceFinal : this.game.autoAdvance;
   }
@@ -2616,7 +2617,7 @@ export class Show {
    */
   setFinale(reqId: string | null, cardIds: readonly number[] | undefined) {
     if (this.round.kind !== 'desgraciat') return this.reject(reqId, 'finale', 'invalid', `a ${this.round.kind} round has no finale`);
-    if (this.finale && this.finaleInfo()?.winners && this.finaleCued) return this.reject(reqId, 'finale', 'invalid', 'the finale is over');
+    if (this.finale && this.finaleInfo()?.winner && this.finaleCued) return this.reject(reqId, 'finale', 'invalid', 'the finale is over');
     if (!cardIds?.length) {
       if (!this.finale) return;
       this.finale = null;
@@ -2655,63 +2656,50 @@ export class Show {
   finaleInfo(): FinaleInfo | null {
     const f = this.finale;
     if (!f) return null;
-    const counted = queuePositions(this.queue.slice(0, Math.max(0, this.position + 1)));
-    const cards = new Map(this.phaseModel.valid.map((c) => [c.id, c]));
-    const fallAt = new Map(f.cardIds.map((id) => [id, (() => {
-      const card = cards.get(id);
-      return card ? fallIndex(card, counted) : Infinity;
-    })()]));
+    // The finalists among themselves along the counted landings (D180): a landing takes out each finalist with that
+    // song, unless it would take out all of them; then it counts for none, and the finale goes on to exactly one.
+    const finalists = this.phaseModel.valid.filter((c) => f.cardIds.includes(c.id));
+    const run = standingRun(finalists, this.queue.slice(0, Math.max(0, this.position + 1)));
     const atMsOf = (p: number) => this.landings.findLast((l) => !l.undone && l.position === p)?.atMs ?? this.env.nowMs();
-    let standing = [...f.cardIds];
-    const groups: FinaleGroup[] = [];
-    let winners: FinaleGroup | null = null;
-    const positions = [...new Set([...fallAt.values()].filter(Number.isFinite))].sort((a, b) => a - b);
-    for (const p of positions) {
-      const group = standing.filter((id) => fallAt.get(id) === p);
-      if (!group.length) continue;
-      const songId = this.queue[p] ?? null;
-      if (group.length === standing.length) {
-        winners = { cardIds: group, position: p, songId, atMs: atMsOf(p) }; // a shared win: nobody is out
-        break;
-      }
-      standing = standing.filter((id) => !group.includes(id));
-      groups.push({ cardIds: group, position: p, songId, atMs: atMsOf(p) });
-      if (standing.length === 1) {
-        winners = { cardIds: standing, position: p, songId, atMs: atMsOf(p) };
-        break;
-      }
+    const positions = [...new Set(run.fallAt.values())].sort((a, b) => a - b);
+    const groups: FinaleGroup[] = positions.map((p) => ({
+      cardIds: f.cardIds.filter((id) => run.fallAt.get(id) === p), position: p, songId: this.queue[p] ?? null, atMs: atMsOf(p),
+    }));
+    // A finalist entered but not among the valid cards stands (setFinale only takes valid ones).
+    const standing = f.cardIds.filter((id) => !run.fallAt.has(id));
+    let winner: FinaleWinner | null = null;
+    if (standing.length === 1) {
+      const lastFall = positions.at(-1);
+      // Left alone by a landing, or by a removal by hand (D169's rule 5).
+      winner = f.byHand || lastFall == null
+        ? { cardId: standing[0], position: this.position, songId: this.position >= 0 ? this.queue[this.position] ?? null : null, atMs: this.env.nowMs(), byHand: true }
+        : { cardId: standing[0], position: lastFall, songId: this.queue[lastFall] ?? null, atMs: atMsOf(lastFall) };
     }
-    if (!winners && f.byHand && standing.length === 1) {
-      const p = this.position;
-      winners = { cardIds: standing, position: p, songId: p >= 0 ? this.queue[p] ?? null : null, atMs: this.env.nowMs(), byHand: true };
-    }
-    return { cardIds: [...f.cardIds], standing, groups, winners, cued: this.finaleCued };
+    return { cardIds: [...f.cardIds], standing, groups, winner, cued: this.finaleCued };
   }
 
   /**
-   * The presenters' cue once the finale has its winners (D169): each winner's Claim is opened and decided valid (the
+   * The presenters' cue once the finale has its winner (D169, D180): the winner's Claim is opened and decided valid (the
    * journal's claim.opened and claim.decided, `manual` when a removal by hand decided it), and the Celebration starts
    * with its fanfare.
    */
   finaleCue(reqId: string | null) {
     const info = this.finaleInfo();
-    if (!info?.winners) return this.reject(reqId, 'finaleCue', 'invalid', 'the finale has no winner yet');
+    if (!info?.winner) return this.reject(reqId, 'finaleCue', 'invalid', 'the finale has no winner yet');
     if (this.finaleCued) return;
     this.finaleCued = true;
-    const w = info.winners;
+    const w = info.winner;
     const atMs = this.env.nowMs();
-    for (const cardId of w.cardIds) {
-      const claim: ClaimInfo = {
-        claimId: `cl-${++this.claimCount}`, round: this.round.number, cardId, kind: 'standing', atMs, position: this.position,
-        status: 'queued', outcome: null, completeSince: null, warnings: [], markedCard: [], revealUntil: null, cueNext: false,
-      };
-      this.evaluate(claim);
-      claim.completeSince = w.position;
-      this.claims.push(claim);
-      this.journal({ kind: 'claim.opened', round: claim.round, claimId: claim.claimId, cardId, winKind: 'standing', position: claim.position }, atMs);
-      this.emit({ type: 'claim.opened', claim: copyClaim(claim) });
-      this.decide(claim, true, w.byHand === true);
-    }
+    const claim: ClaimInfo = {
+      claimId: `cl-${++this.claimCount}`, round: this.round.number, cardId: w.cardId, kind: 'standing', atMs, position: this.position,
+      status: 'queued', outcome: null, completeSince: null, warnings: [], markedCard: [], revealUntil: null, cueNext: false,
+    };
+    this.evaluate(claim);
+    claim.completeSince = w.position;
+    this.claims.push(claim);
+    this.journal({ kind: 'claim.opened', round: claim.round, claimId: claim.claimId, cardId: w.cardId, winKind: 'standing', position: claim.position }, atMs);
+    this.emit({ type: 'claim.opened', claim: copyClaim(claim) });
+    this.decide(claim, true, w.byHand === true);
     this.timers.autoAt = null;
     this.celebrate('standing', null);
   }
@@ -3224,19 +3212,16 @@ export class Show {
     };
   }
 
-  /** The Desgraciat round's valid cards still standing after the counted landings. */
+  /** The Desgraciat round's valid cards still standing after the counted landings (D180: never none). */
   standingNow() {
-    return standingCards(this.phaseModel.valid, this.landings.filter((l) => !l.undone).map((l) => l.songId));
+    return standingCards(this.phaseModel.valid, this.queue.slice(0, Math.max(0, this.position + 1)));
   }
 
   /** PRIVATE, for the console: the Desgraciat round's cards still standing; null in other rounds or without cards. */
   standing(): StandingInfo | null {
     if (this.phaseModel.kind !== 'standing' || !this.phaseModel.valid.length) return null;
     const ids = this.standingNow().map((c) => c.id);
-    // The cards that sat down with the latest landing: their Check is `fellLast`, and they may share the win.
-    const counted = queuePositions(this.queue.slice(0, Math.max(0, this.position + 1)));
-    const fell = this.position < 0 ? [] : this.phaseModel.valid.filter((c) => fallIndex(c, counted) === this.position).map((c) => c.id);
-    return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids, fellLast: fell.length > STANDING_LIST_MAX ? null : fell };
+    return { count: ids.length, cardIds: ids.length > STANDING_LIST_MAX ? null : ids };
   }
 
   /** The Spin out of the song playing, from its own slot (a first play's is longer). */

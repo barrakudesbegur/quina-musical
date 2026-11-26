@@ -1,11 +1,12 @@
-// The Desgraciat's finale (D161, D166–D172): the presenters enter the finalists; at each landing those with that song
-// fall together as one group; one left wins; a landing that would take everyone left makes them all winners; Enrere
-// brings a group back; a removal by hand that leaves one makes that one the winner; the fanfare waits for the cue.
+// The Desgraciat's finale (D161, D166–D172, D180): the presenters enter the finalists; at each landing those with that
+// song fall together as one group; a landing that would take out everyone left counts for none of them, so the finale
+// goes on until exactly one is left, the winner (never a shared win); Enrere brings a group back; a removal by hand that
+// leaves one makes that one the winner; the fanfare waits for the cue.
 import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { replayJournal, type JournalEntry } from '@quina/protocol';
 import { FLOW } from '../engine/src/config.ts';
-import { fallIndex, queuePositions, type Card } from '../engine/src/game/cards.ts';
+import { standingRun } from '../engine/src/game/cards.ts';
 import type { Effect } from '../engine/src/show/show.ts';
 import { setup, allCards, type Harness } from './support/harness.ts';
 
@@ -29,10 +30,10 @@ function land(h: Harness, count: number) {
   }
 }
 
-/** Where each of the round's valid cards falls on the whole Queue. */
+/** Where each of the round's valid cards falls on the whole Queue (the last one standing never does: Infinity). */
 function fallsOf(h: Harness): Map<number, number> {
-  const all = queuePositions(h.show.queue);
-  return new Map(h.show.phaseModel.valid.map((c: Card) => [c.id, fallIndex(c, all)]));
+  const run = standingRun(h.show.phaseModel.valid, h.show.queue);
+  return new Map(h.show.phaseModel.valid.map((c) => [c.id, run.fallAt.get(c.id) ?? Infinity]));
 }
 
 test('the finale: groups fall together, the last one standing wins; Enrere brings a group back; the cue starts the Celebration', () => {
@@ -40,14 +41,14 @@ test('the finale: groups fall together, the last one standing wins; Enrere bring
   land(h, 2);
   const falls = fallsOf(h);
   // Four standing cards that fall on three different later landings, the last two apart.
-  const standing = h.show.standingNow().map((c) => c.id).sort((a, b) => (falls.get(a) ?? 0) - (falls.get(b) ?? 0));
+  const standing = h.show.standingNow().map((c) => c.id).sort((a, b) => falls.get(a)! - falls.get(b)!);
   const distinct = standing.filter((id, i) => i === 0 || falls.get(id) !== falls.get(standing[i - 1]));
   const finalists = distinct.slice(-4);
   assert.equal(finalists.length, 4);
   const setOut = h.send('finale', { cardIds: finalists });
   assert.deepEqual(rejected(setOut), []);
   assert.deepEqual(journalOf(setOut).map((e) => e.kind === 'finale.set' && e.cardIds), [finalists]);
-  assert.deepEqual(h.show.snapshot().finale && [h.show.snapshot().finale?.standing, h.show.snapshot().finale?.groups, h.show.snapshot().finale?.winners], [finalists, [], null]);
+  assert.deepEqual(h.show.snapshot().finale && [h.show.snapshot().finale?.standing, h.show.snapshot().finale?.groups, h.show.snapshot().finale?.winner], [finalists, [], null]);
   // Land to the first finalist's fall: it goes out, as a group of one.
   const firstFall = falls.get(finalists[0])!;
   land(h, firstFall - h.show.position);
@@ -62,10 +63,11 @@ test('the finale: groups fall together, the last one standing wins; Enrere bring
   // On to the third finalist's fall: one is left, and wins; nothing advances by itself; Next waits for the cue.
   land(h, falls.get(finalists[2])! - h.show.position);
   const won = h.show.finaleInfo()!;
-  assert.deepEqual(won.winners?.cardIds, [finalists[3]]);
+  assert.equal(won.winner?.cardId, finalists[3]);
+  assert.deepEqual([won.winner?.position, won.winner?.byHand], [falls.get(finalists[2]), undefined]);
   assert.equal(won.standing.length, 1);
   assert.equal(h.show.autoAdvanceAllowed(), false);
-  assert.deepEqual(rejected(h.send('next')), ['finaleDecided: the finale has its winners: the cue comes first']);
+  assert.deepEqual(rejected(h.send('next')), ['finaleDecided: the finale has its winner: the cue comes first']);
   assert.equal(h.show.scene, 'play', 'no fanfare before the cue');
   const cue = h.send('finaleCue');
   assert.equal(h.show.scene, 'celebration');
@@ -82,7 +84,7 @@ test('the finale: groups fall together, the last one standing wins; Enrere bring
   assert.equal(r.show.finaleInfo()?.cued, true);
 });
 
-test('the finale: a landing that would take everyone left takes nobody, and they all win together', () => {
+test('D180: a landing that would take out every finalist left counts for none of them; the finale goes on to exactly one', () => {
   const h = desgraciat(13);
   land(h, 1);
   const falls = fallsOf(h);
@@ -93,13 +95,22 @@ test('the finale: a landing that would take everyone left takes nobody, and they
   const pair = [...byFall.entries()].filter(([p, ids]) => Number.isFinite(p) && ids.length >= 2).sort((a, b) => a[0] - b[0])[0];
   assert.ok(pair, 'two cards that fall together');
   const [p, ids] = pair;
-  h.send('finale', { cardIds: ids.slice(0, 2) });
+  const two = ids.slice(0, 2);
+  h.send('finale', { cardIds: two });
   land(h, p - h.show.position);
-  const info = h.show.finaleInfo()!;
-  assert.deepEqual(info.groups, [], 'nobody is out');
-  assert.deepEqual([...(info.winners?.cardIds ?? [])].sort(), ids.slice(0, 2).sort(), 'they win together');
+  const both = h.show.finaleInfo()!;
+  assert.deepEqual([both.groups, both.standing, both.winner], [[], two, null], 'both stay in: no shared win');
+  // The finale goes on until a landing takes out one of them alone; the other wins.
+  const run = standingRun(h.show.phaseModel.valid.filter((c) => two.includes(c.id)), h.show.queue);
+  const [outId, outAt] = [...run.fallAt.entries()][0];
+  assert.ok(outAt > p);
+  land(h, outAt - h.show.position);
+  const won = h.show.finaleInfo()!;
+  assert.deepEqual(won.groups.map((g) => [g.cardIds, g.position]), [[[outId], outAt]]);
+  assert.equal(won.winner?.cardId, two.find((id) => id !== outId));
   h.send('finaleCue');
-  assert.deepEqual([...(h.show.celebration?.cardIds ?? [])].sort(), ids.slice(0, 2).sort(), 'one Celebration, shared');
+  assert.deepEqual(h.show.celebration?.cardIds, [won.winner?.cardId], 'one winner');
+  assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 
 test('the finale: entering finalists privately checked, removals by hand, and a removal that leaves one makes the winner', () => {
@@ -119,12 +130,12 @@ test('the finale: entering finalists privately checked, removals by hand, and a 
   h.send('finale', { cardIds: three.slice(0, 2) });
   assert.deepEqual(h.show.finaleInfo()?.standing, three.slice(0, 2));
   h.send('finale', { cardIds: three });
-  assert.equal(h.show.finaleInfo()?.winners, null);
+  assert.equal(h.show.finaleInfo()?.winner, null);
   // A removal that leaves one: that one wins, by hand.
   const out = h.send('finale', { cardIds: [three[1]] });
   assert.ok(journalOf(out).some((e) => e.kind === 'finale.set' && e.byHand === true));
-  const winners = h.show.finaleInfo()?.winners;
-  assert.deepEqual([winners?.cardIds, winners?.byHand], [[three[1]], true]);
+  const winner = h.show.finaleInfo()?.winner;
+  assert.deepEqual([winner?.cardId, winner?.byHand], [three[1], true]);
   const cue = h.send('finaleCue');
   assert.ok(journalOf(cue).some((e) => e.kind === 'claim.decided' && e.manual === true), 'a decision by hand, flagged');
   // Calling a finale off, and none in a normal round.

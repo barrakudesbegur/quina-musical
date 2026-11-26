@@ -51,7 +51,7 @@ test('the Desgraciat round: cards fall as their songs land, the console sees who
   assert.equal(state.standing?.count, 60);
   assert.equal(state.standing?.cardIds?.length, 60, 'listed up to STANDING_LIST_MAX');
   const course = standingCourse(h.show.phaseModel.valid, h.show.queue);
-  assert.equal(course.tied, false, 'the Shuffle left one card last');
+  assert.ok(course.lastStandingAt != null, 'one card is always left last (D180)');
   assert.equal(state.future?.lastStandingAt, course.lastStandingAt);
   assert.equal(state.future?.standingCurve?.at(-1), 1);
   assert.deepEqual(state.possibleWinners, { line: [], bingo: [] });
@@ -66,8 +66,7 @@ test('the Desgraciat round: cards fall as their songs land, the console sees who
   }
   const last = toLastStanding(h);
   const s = h.show.snapshot();
-  assert.deepEqual({ count: s.standing?.count, cardIds: s.standing?.cardIds }, { count: 1, cardIds: [last.lastCardId] });
-  assert.ok(s.standing?.fellLast?.length, 'the card that fell with the latest song is listed');
+  assert.deepEqual(s.standing, { count: 1, cardIds: [last.lastCardId] });
   assert.equal(s.future?.lastStandingAt, null, 'already reached');
   phases.push(s.phase);
   assert.equal(phases.at(-1), 'final');
@@ -132,37 +131,36 @@ test('standing claims: the last card passes all 12, a fallen one stops on the so
   assert.equal(r.show.snapshot().standing?.count, 1);
 });
 
-test('the last players standing who sit on the same song share the win; a card that fell earlier never wins', () => {
-  const h = desgraciat({ seed: 14 });
-  // A landing where at least two cards sit down together (early on, several do).
-  // A landing (not the first) where at least two cards sit down together, with others fallen before.
-  let fell: number[] = [];
-  const fellBefore = () => h.show.phaseModel.valid.find((c) => !fell.includes(c.id) && !h.show.standingNow().includes(c));
-  for (let k = 0; k < 20 && (fell.length < 2 || !fellBefore()); k++) {
-    land(h, 1);
-    fell = h.show.snapshot().standing?.fellLast ?? [];
+test('D180: a landing that would take out the last cards together counts for none of them; the round goes on to one', () => {
+  // Two especial cards that share a song, alone in play, and a Queue that plays that song first.
+  const especial = allCards.filter((c) => c.type === 'especial');
+  const ids = (c: (typeof allCards)[number]) => c.lines.flat().map((x) => (typeof x === 'number' ? x : x.id));
+  let pair: [number, number, number] | null = null;
+  for (const a of especial) {
+    const b = especial.find((c) => c.id > a.id && ids(c).some((id) => ids(a).includes(id)));
+    if (b) {
+      pair = [a.id, b.id, ids(b).find((id) => ids(a).includes(id))!];
+      break;
+    }
   }
-  assert.ok(fell.length >= 2, `two cards fell together (${fell})`);
-  const earlier = fellBefore();
-  assert.ok(earlier);
-  const before = h.show.position;
-  for (const cardId of fell.slice(0, 2)) {
-    h.send('claim', { cardId });
-    assert.equal(h.show.claims.at(-1)?.outcome, 'fellLast');
-    assert.deepEqual(rejected(h.pressCue(h.show.claims.at(-1)!.claimId)), []);
-    assert.equal(h.show.claims.at(-1)?.status, 'valid', 'fellLast passes');
-  }
-  const state = h.show.snapshot();
-  assert.equal(state.scene, 'celebration');
-  assert.deepEqual([...(state.celebration?.cardIds ?? [])].sort(), fell.slice(0, 2).sort(), 'one Celebration, shared');
-  assert.ok(state.winners.every((w) => w.kind === 'standing' && w.position === before && w.winningSongId === h.show.queue[before]));
-  const decided = journalOf(h.log).filter((e) => e.kind === 'claim.decided');
-  assert.ok(decided.every((e) => e.kind === 'claim.decided' && e.outcome === 'fellLast'), 'the journal records how they passed');
-  // A card that fell on an earlier song is `fallen`: its cue fails it.
-  h.send('claim', { cardId: earlier.id });
-  assert.equal(h.show.claims.at(-1)?.outcome, 'fallen');
-  h.pressCue(h.show.claims.at(-1)!.claimId);
-  assert.equal(h.show.claims.at(-1)?.status, 'invalid');
+  assert.ok(pair, 'two especial cards share a song');
+  const [a, b, shared] = pair;
+  const others = [...new Set(allCards.flatMap(ids))].filter((id) => id !== shared).sort((x, y) => x - y);
+  const h = setup({ seed: 14, cards: allCards, cardsInPlay: `${a}, ${b}`, fixedQueue: [shared, ...others], settings: { autoAdvance: false } });
+  h.send('unlock');
+  h.send('roundIntro', { number: 4, kind: 'desgraciat' });
+  h.send('newRound');
+  h.advance(FLOW.shuffleSec + 0.1);
+  land(h, 1);
+  assert.deepEqual(h.show.snapshot().standing, { count: 2, cardIds: [a, b] }, 'both still stand: no shared win');
+  h.send('claim', { cardId: a });
+  assert.equal(h.show.claims.at(-1)?.outcome, 'complete', 'the song that would have taken both out counts for neither');
+  assert.equal(h.show.claims.at(-1)?.completeSince, null, 'not the last one yet');
+  // The round goes on until one of them goes alone.
+  const course = standingCourse(h.show.phaseModel.valid, h.show.queue);
+  assert.ok(course.lastStandingAt != null && course.lastStandingAt > 0);
+  assert.equal(course.standingAfter[0], 2);
+  assert.equal(course.standingAfter[course.lastStandingAt], 1);
 });
 
 test('a standing claim in a normal round is invalid; resume by hand rebuilds a Desgraciat round', () => {

@@ -17,10 +17,11 @@
 //   firstWinAt(cards, queue, kind, from = 0)    → { index, songId, cardIds } or null
 //   cardCounts(cards, landed)                   → { toLine, toBingo, marked }: histograms of the cards by songs
 //
-// The Desgraciat round (played in reverse: a card falls as soon as any of its songs lands, the last one standing wins):
-//   fallIndex(card, queuePos)                   → queue index of the card's first song to land (Infinity if none does)
-//   standingCards(cards, landed)                → the cards none of whose songs has landed, by card id
-//   standingCourse(cards, queue)                → { lastStandingAt, lastCardId, tied, standingAfter }
+// The Desgraciat round (played in reverse: a card falls when one of its songs lands, the last one standing wins; a
+// landing that would take every card left out counts for none of them, so exactly one is always left, D180):
+//   standingRun(cards, songs)                   → { fallAt, standing, standingAfter, lastStandingAt, lastCardId } along songs
+//   standingCards(cards, landed)                → the cards still standing after the landings (in order), by card id
+//   standingCourse(cards, queue)                → { lastStandingAt, lastCardId, standingAfter }
 //
 // `landed` is the songs that have landed: a Set or an array (in landing order, which lets
 // possibleWinners report the Winning song). `queue` is the round's song ids in order. `kind` is 'line' or
@@ -228,46 +229,65 @@ export function cardCounts(cards: ReadonlyArray<Card>, landed: LandedSongs): Car
 // ------------------------------------------------------------------------------ the Desgraciat round
 
 /**
- * The queue index at which a card falls in the Desgraciat round: its first song to land.
- * @param queuePos  From queuePositions(queue). A song missing from the queue never lands.
- * @returns Infinity if none of its songs ever lands.
+ * The Desgraciat round along `songs` (landings in order, or the known Queue): a card falls at the first landing of one
+ * of its songs, unless that landing would take every card still standing out; then it counts for none of them, and they
+ * all stay in (D180: there is never a shared win, the round goes on until exactly one is left).
  */
-export function fallIndex(card: Card, queuePos: ReadonlyMap<number, number>): number {
-  let first = Infinity;
-  for (const line of cardSongIds(card)) for (const id of line) first = Math.min(first, queuePos.get(id) ?? Infinity);
-  return first;
+export interface StandingRun {
+  /** Each card that fell, by id: the index into `songs` of the landing that took it out. */
+  fallAt: Map<number, number>;
+  /** The cards still standing after every song, by card id. */
+  standing: number[];
+  /** standingAfter[i]: how many cards are still standing once songs[i] has landed. */
+  standingAfter: number[];
+  /** The index whose landing left exactly one card standing; −1 when only one card plays; null when more than one is
+   * still standing at the end (or there are no cards). */
+  lastStandingAt: number | null;
+  /** The card left, once one is. */
+  lastCardId: number | null;
 }
 
-/** The cards still standing: none of their songs has landed. Sorted by card id. */
-export function standingCards<C extends Card>(cards: ReadonlyArray<C>, landed: LandedSongs): C[] {
-  const set = asSet(landed);
-  return cards.filter((card) => cardSongIds(card).every((line) => line.every((id) => !set.has(id)))).sort((a, b) => a.id - b.id);
+export function standingRun(cards: ReadonlyArray<Card>, songs: ReadonlyArray<number>): StandingRun {
+  const bySong = new Map<number, number[]>();
+  for (const card of cards) for (const line of cardSongIds(card)) for (const id of line) (bySong.get(id) ?? bySong.set(id, []).get(id)!).push(card.id);
+  const standing = new Set(cards.map((c) => c.id));
+  const fallAt = new Map<number, number>();
+  const standingAfter: number[] = [];
+  let lastStandingAt: number | null = standing.size === 1 ? -1 : null;
+  songs.forEach((songId, i) => {
+    const hit = (bySong.get(songId) ?? []).filter((id) => standing.has(id));
+    // A landing that would take everyone left out doesn't count for them.
+    if (hit.length && hit.length < standing.size) {
+      for (const id of hit) {
+        standing.delete(id);
+        fallAt.set(id, i);
+      }
+      if (standing.size === 1) lastStandingAt = i;
+    }
+    standingAfter.push(standing.size);
+  });
+  const left = [...standing].sort((a, b) => a - b);
+  return { fallAt, standing: left, standingAfter, lastStandingAt: left.length === 1 ? lastStandingAt : null, lastCardId: left.length === 1 ? left[0] : null };
+}
+
+/** The cards still standing after `landed`, the landings in order (standingRun). Sorted by card id. */
+export function standingCards<C extends Card>(cards: ReadonlyArray<C>, landed: ReadonlyArray<number>): C[] {
+  const standing = new Set(standingRun(cards, landed).standing);
+  return cards.filter((card) => standing.has(card.id)).sort((a, b) => a.id - b.id);
 }
 
 /** How a Desgraciat round unfolds along its known Queue (standingCourse). */
 export interface StandingCourse {
-  /** The queue index whose landing leaves exactly one card standing; −1 when only one card plays; null when the
-   * count never reaches exactly one (no cards, or the last cards fall together: a Tie). */
+  /** The queue index whose landing leaves exactly one card standing; −1 when only one card plays; null without cards. */
   lastStandingAt: number | null;
   /** That card. */
   lastCardId: number | null;
-  /** The last cards fall on the same song, so no single card is ever the last standing. */
-  tied: boolean;
   /** standingAfter[i]: the cards still standing once queue[i] has landed. */
   standingAfter: number[];
 }
 
 /** The Desgraciat round along the known Queue: when one card is left standing, which, and the count after each song. */
 export function standingCourse(cards: ReadonlyArray<Card>, queue: ReadonlyArray<number>): StandingCourse {
-  const pos = queuePositions(queue);
-  const falls = cards.map((card) => ({ id: card.id, at: fallIndex(card, pos) })).sort((a, b) => a.at - b.at || a.id - b.id);
-  const fallsAt = new Array<number>(queue.length).fill(0);
-  for (const f of falls) if (Number.isFinite(f.at)) fallsAt[f.at]++;
-  let standing = cards.length;
-  const standingAfter = fallsAt.map((n) => (standing -= n));
-  const last = falls.at(-1);
-  const runnerUp = falls.at(-2);
-  if (!last) return { lastStandingAt: null, lastCardId: null, tied: false, standingAfter };
-  if (runnerUp && runnerUp.at === last.at) return { lastStandingAt: null, lastCardId: null, tied: true, standingAfter };
-  return { lastStandingAt: runnerUp ? runnerUp.at : -1, lastCardId: last.id, tied: false, standingAfter };
+  const run = standingRun(cards, queue);
+  return { lastStandingAt: run.lastStandingAt, lastCardId: run.lastCardId, standingAfter: run.standingAfter };
 }

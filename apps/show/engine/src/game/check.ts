@@ -13,13 +13,14 @@
 //   - A Line plays its completed row (the first to complete, top on a tie), else the row with most landed
 //     songs (top on a tie); the other completed rows are listed. A Bingo plays all 12 songs, row by row.
 //   - The reveals stop at the first ✗ (D117): a Line's or Bingo's first song that hasn't landed (`revealUntil`).
-//   - 'standing' (the Desgraciat round) proves that none of the card's 12 songs landed: they play in card order
-//     and stop at the first one that landed; a card still standing plays all 12 (`complete`), and is
-//     `completeSince` the landing after which every other valid card in play had fallen. A card whose first landed
-//     song is the latest landing sat down with it (`fellLast`, which passes: the last players standing who all sit
-//     on the same song share the win; `completeSince` is that landing); one that fell earlier is `fallen`.
+//   - 'standing' (the Desgraciat round) proves that no counted landing took the card out (standingRun over the
+//     round's valid cards in play, the claimed one with them: a landing that would take out every card left counts
+//     for none of them, D180). Its songs play in card order: a card still standing plays all 12 (`complete`), and is
+//     `completeSince` the landing that left it the last one; a card taken out stops at the song that did it
+//     (`fallen`). In a standing Check `landed` means counted against the card: a landing that didn't count shows as
+//     not landed. There is never a shared win.
 import type { CheckOutcome, ClaimWarning, WinKind } from '@quina/protocol';
-import { cardSongIds, completionIndex, fallIndex, queuePositions, type Card } from './cards.ts';
+import { cardSongIds, completionIndex, queuePositions, standingRun, type Card } from './cards.ts';
 
 export interface CheckInput {
   /** Every generated card (cards.json), not only the cards in play. */
@@ -93,18 +94,20 @@ export function computeCheck({ allCards, cardId, kind, cardType, cardsInPlay, qu
   };
 
   if (kind === 'standing') {
+    const counted = queue.slice(0, Math.max(0, position + 1));
+    const field = allCards.filter((c) => c.type === cardType && (cardsInPlay.has(c.id) || c.id === cardId));
+    const run = standingRun(field, counted);
+    const fellAt = run.fallAt.get(cardId);
     const songs = rows.flat();
-    const sank = songs.findIndex((id) => landedAt.has(id));
-    if (sank >= 0) {
-      const fellLast = fallIndex(card, landedAt) === position;
-      const shown = steps(songs.slice(0, sank + 1));
-      return { outcome: fellLast ? 'fellLast' : 'fallen', row: null, otherRows: [], steps: shown, revealUntil: until(shown, false), markedCard, completeSince: fellLast ? position : null, warnings };
+    const against = (list: number[]) => list.map((songId) => ({ songId, landed: fellAt != null && counted[fellAt] === songId }));
+    const marked = against(songs);
+    if (fellAt != null) {
+      const shown = against(songs.slice(0, songs.indexOf(counted[fellAt]) + 1));
+      return { outcome: 'fallen', row: null, otherRows: [], steps: shown, revealUntil: until(shown, false), markedCard: marked, completeSince: null, warnings };
     }
-    // The last one standing since every other valid card in play fell (within the counted landings).
-    const others = allCards.filter((c) => c.id !== cardId && c.type === cardType && cardsInPlay.has(c.id)).map((c) => fallIndex(c, landedAt));
-    const lastFall = others.length ? Math.max(...others) : -1;
-    const shown = steps(songs);
-    return { outcome: 'complete', row: null, otherRows: [], steps: shown, revealUntil: until(shown, false), markedCard, completeSince: Number.isFinite(lastFall) ? lastFall : null, warnings };
+    const shown = against(songs);
+    const last = run.lastCardId === cardId ? run.lastStandingAt : null;
+    return { outcome: 'complete', row: null, otherRows: [], steps: shown, revealUntil: until(shown, false), markedCard: marked, completeSince: last, warnings };
   }
   const rowEnd = (row: number[]) => Math.max(...row.map((id) => landedAt.get(id) ?? Infinity));
   const ends = rows.map(rowEnd);

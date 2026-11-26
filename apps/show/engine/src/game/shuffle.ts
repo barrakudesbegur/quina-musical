@@ -1,7 +1,7 @@
 // The tie-free Shuffle (GLOSSARY: Shuffle, Tie). The rule is public: the round's Queue is drawn
 // deterministically from a secret seed, and redrawn (draw 1, 2, …) until neither the first Line nor the first
-// Bingo is a Tie among the cards in play valid for the round. A Desgraciat round (rule 'lastStanding') is
-// redrawn instead until exactly one card is the last standing: the last two never fall on the same song.
+// Bingo is a Tie among the cards in play valid for the round. A Desgraciat round (rule 'none') keeps its first draw:
+// it can't tie, since a landing that would take every card left out counts for none of them (D180).
 // Pure: the seed comes from the caller (the show draws it from its secure generator), so a seed and the
 // Pool always give back the same Queue.
 //
@@ -9,7 +9,7 @@
 //
 // With no cards in play there is nothing to check and draw 0 is kept. If every draw up to `maxAttempts` ties,
 // the last one is kept with `tied: true`; the show never blocks on it.
-import { firstWinAt, standingCourse, type Card, type FirstWin } from './cards.ts';
+import { firstWinAt, type Card, type FirstWin } from './cards.ts';
 import { mixSeed, secureShuffle, seededRandom } from '../rng.ts';
 
 export interface TieFreeOptions {
@@ -20,12 +20,12 @@ export interface TieFreeOptions {
   /** An unsigned 32-bit secret seed. */
   seed: number;
   maxAttempts: number;
-  /** What a Tie is: the first Line or Bingo shared (default), or the Desgraciat round's last cards falling together. */
+  /** What a Tie is: the first Line or Bingo shared (default); none in the Desgraciat round. */
   rule?: TieRule;
 }
 
-/** 'firstWins': no Tie on the first Line nor the first Bingo. 'lastStanding': one card is the last standing. */
-export type TieRule = 'firstWins' | 'lastStanding';
+/** 'firstWins': no Tie on the first Line nor the first Bingo. 'none': nothing to check (the Desgraciat round). */
+export type TieRule = 'firstWins' | 'none';
 
 export interface TieFreeShuffle {
   queue: number[];
@@ -49,15 +49,11 @@ export function hasTie(cards: readonly Card[], queue: readonly number[]): boolea
   return isTie(firstWinAt(cards, queue, 'line')) || isTie(firstWinAt(cards, queue, 'bingo'));
 }
 
-/** Whether the last cards standing of a Desgraciat round fall on the same song (or never fall), so none wins alone. */
-export const hasStandingTie = (cards: readonly Card[], queue: readonly number[]): boolean => standingCourse(cards, queue).tied;
-
 export function tieFreeShuffle({ pool, cards, seed, maxAttempts, rule = 'firstWins' }: TieFreeOptions): TieFreeShuffle {
   const last = Math.max(1, Math.floor(maxAttempts)) - 1;
-  const tied = rule === 'lastStanding' ? hasStandingTie : hasTie;
   for (let attempt = 0; ; attempt++) {
     const queue = seededQueue(pool, seed, attempt);
-    if (!cards.length || !tied(cards, queue)) return { queue, seed, attempts: attempt, tied: false };
+    if (rule === 'none' || !cards.length || !hasTie(cards, queue)) return { queue, seed, attempts: attempt, tied: false };
     if (attempt >= last) return { queue, seed, attempts: attempt, tied: true };
   }
 }
