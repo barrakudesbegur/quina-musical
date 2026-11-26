@@ -17,7 +17,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - **A show, not a meeting:** a festive Christmas look, styled like a mobile game, "juicy" and full of animation. The projector and the player app get the full look; the console and Admin can be simpler. One design system covers all of them.
 - **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
-- **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (pending U46).
+- **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (D114).
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
 - The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
 | Pause | "Tornem de seguida" |
-| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn; the result |
+| Claim and Check | "CARTRÓ #123" and the card type first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A stopped Check fades out with no mark and no text (D109) |
 | A failed Check | A huge red ✗ with red light beams, and no text. In the Desgraciat, the song that sank the card is lifted out so the whole tent sees it |
 | Celebration | "LÍNIA!" or "QUINA!" huge (the Desgraciat's has no title), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
@@ -67,8 +67,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
   - "Premis": the round's prize lines and sponsors, ready to read out;
   - "Efectes": the sound pad, as icons;
   - in the Desgraciat, "Dempeus" comes first: the count of standing cards, each standing card's number from 60 down, and "Comprovar #57" as the default action when one card stands.
-- **During a Check:** the queue of claimed cards, progress song by song, the result with any warnings ("not registered as sold"), and the verdict.
-  - After a failed Check only "reject" is offered. After a passed one, the presenters can still reject it with a long press against the result.
+- **During a Check (D107–D110; the layout pending U62):** the card as its 3×4 grid, already marked privately, with any warnings ("not registered as sold"); the next song's title large, to read out; one big button that reveals the next song (the remote's A; held, or with the tablet's toggle, they come in a row); the presenters' cue for the fanfare; a smaller button that stops the Check with no pass or fail; "+ Un altre". The list of claimed cards only shows when there are 2 or more. There's no "Confirmar".
   - Then a Celebration music override, the winner's name and notes.
   - A numbered slip's number on the winner form, optional, next to the name.
 - **During the Interval:** the next round and its prizes to announce, the guide countdown ("Compte enrere orientatiu"), the music's skip and volume, and "Comença la quina".
@@ -85,7 +84,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big "Afegir cartró" pad. Leaving the pad with a number typed asks first.
-  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker's style is still to pick (pending U47).
+  - The pad has one save button: full width, square corners, with a tick icon; no "Desar i afegir-ne un altre" (D95). **Not built yet:** the board's name field, QR button and smart keypad. The icon picker is style A: framed, with taken icons pressed in (D115).
   - They can name each card ("Àvia"). Each card gets its own icon and colour, always corn first, then nine more (among them a heart, grapes, a top hat and the Tió). Removing a card asks first.
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).

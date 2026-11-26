@@ -116,11 +116,12 @@ _From event.md › What must never fail (Privacy), The songs._
 - **Winners' names** are never shown on screen or published. They stay in the cloud's Game data, never in git.
 - **Audio is never published:** no songs or generated song data in git or on a public address.
 - Every card's songs are public, because phones need them. Anything may be public unless there's a reason to hide it, to keep the code simple (D78).
-- **Hiding prizes is for the show's hype (D98):** the projector and phones show a round's prizes only once it's revealed. The night's settings file (`data/nights/2026.json`) holds every prize and is committed to this repo (D97), since only a developer would look.
+- **Hiding prizes is for the show's hype (D98):** the projector and phones show a round's prizes only once it's revealed.
+- **The cloud's plan is always the source of truth (D111).** Prizes, sponsors and businesses' names are never in git, since they change every year, and money amounts live only in the organizers' spreadsheet (D112). Development runs on a test plan.
 - Phones have no account. Admin only sees which card numbers were opened, never who opened them.
 - Admin, the console and the organizers' routes are behind the organizers' Google login. The laptop has its own key, kept only on the show laptops and never sent by chat or email.
 - The console's pairing token and the hotspot password are treated like the resume code: no photos. The hotspot password is the first line of defence, because anyone on the hotspot can reach the laptop's relay; the token then guards the commands.
-- The repo is public: no people's names, no emails, secrets or personal data. Sponsors' names and logos in the settings file, never their money amounts (pending U48).
+- The repo is public: no people's or businesses' names, no emails, secrets or personal data.
 
 ## The day itself
 

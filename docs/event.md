@@ -171,13 +171,14 @@ This page explains the event: what happens on the night, who does what, and how 
   - they take the card number.
 - **The Check is public** (**new in 2026**).
   - The card appears on the screen, and its songs are checked one by one as landed or not.
+  - **The presenters pace it** (new in 2026): each press reveals the next song in the card's order, holding the remote's button reveals them in a row, and they see the result privately first. A pass needs no confirmation; the fanfare waits for their cue, so it never lands over their voices.
   - A Line check shows the line; a Bingo check shows all 12 songs.
   - Until 2025, one presenter read the songs out while the other pretended to check, and the tech really checked the number on the laptop. Some people felt it wasn't fair.
 - **A card is invalid** when its number doesn't exist, or when it's the wrong type for the round.
 - **A card not registered as sold** only raises a warning. The presenters ask to see the card.
 - **Forged cards:** we assume nobody forges cards. If two cards claim the same win, the fake one is easy to tell apart.
 - **The Check's result decides.**
-  - In a strange case, the presenters can still reject a card that passed.
+  - In a strange case, the presenters can stop the Check before its result, showing neither a pass nor a fail, and check the card by hand. Then they check it again or drop the claim.
   - They can never accept a card that failed.
 - **Ties:**
   - the first to claim wins;
@@ -186,7 +187,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Late claims:** a player who completed earlier but claims late still wins if nobody else has claimed. Any other late case is decided by the team on the spot.
 - **An unclaimed win is lost.** Nobody goes looking for winners.
 - **Going back:** if a claim comes after more songs have played, the presenters can undo those songs so they don't count. Players simply lift the corn seeds off.
-- **Several claims at once:** each card is checked before the round moves on.
+- **Several claims at once:** each card is checked before the round moves on. A presenter asks "Algú més?" while taking the number.
 - **A failed check** gets a funny "fail" moment, with video-game music while the presenters sort it out. Then the round goes on.
 - **A passed check** gets a Celebration with festive music. The winner is noted: their name, or a numbered slip we hand them. They collect the prize later.
 

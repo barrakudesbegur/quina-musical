@@ -657,7 +657,7 @@ By: the orchestrator. Source: apps/show/docs/HANDOFF.md › The next queue. Amen
 ### D48 · Only one Line per round · 2026-11-25 · Active
 By: the user. Source: event.md › One round; transcript 2026-11-25T00:41Z. Amends: R2-Q5. Lives in: requirements/game-rules.md › A regular round.
 
-### D49 · The Check's result decides · 2026-11-25 · Active
+### D49 · The Check's result decides · 2026-11-25 · Amended by D109
 In a strange case the presenters can still reject a card that passed, but they can never accept a card that failed. The console never offers to accept a failed card.
 By: the user (event.md). Source: event.md › Claims and checks; commits ff13a81, 233e3a3. Amends: R2-Q11, R1-Q24. Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
 
@@ -817,7 +817,7 @@ By: the user. Source: open-questions.md › U30; the user's answers of 2026-11-2
 They need the same as last year: just the PDF (A4, 3 cards a page, no bleed or crop marks). Answers U35.
 By: the user. Source: open-questions.md › Answered (U35). Lives in: requirements/songs-and-cards.md › Generating and printing.
 
-### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Active; where the file lives: D97
+### D89 · The night's settings live in a file that agents edit · 2026-11-25 · Amended by D111
 The organizers keep their prizes and sponsors in a spreadsheet however they like; the user hands it over, and the orchestrator parses it into the plan. The whole night's settings should live in one JSON file tracked by git, so agents can edit every setting and the laptop uses it too. Admin's UI is only for last-minute edits on a phone, and even those the user would rather make through an agent on the laptop. Answers U40.
 By: the user. Source: open-questions.md › Answered (U40); the user's answers of 2026-11-25. Amends: the requirement that prizes and sponsors are entered in Admin. Lives in: requirements/game-rules.md › Sponsors; requirements/screens.md › Admin.
 
@@ -845,15 +845,15 @@ By: the user via canvas (25 Nov). Source: the "Quina Musical look" canvas v59. L
 The add-card drawer has one save button: full width, square corners, with a tick icon. "Desar i afegir-ne un altre" is removed. Designs only (canvas v61); the built pad still has the old buttons.
 By: the user via canvas (comment #14 on `Mobil-B-J2`, 25 Nov). Source: the "Quina Musical look" canvas v61. Lives in: requirements/screens.md › Player app.
 
-### D96 · Londrina is always in capitals · 2026-11-25 · Active; two exceptions Pending (U46)
+### D96 · Londrina is always in capitals · 2026-11-25 · Amended by D114
 Every text set in Londrina is in capitals, on every screen: titles, buttons, names and numbers, as the design system says. Frontend checked all 59 boards: no place reads better in lowercase, and capitals cause no new overflow. Designs only (canvas v61).
 By: the user via canvas (comment #4 on `Mobil-B-J2`, 25 Nov). Source: the "Quina Musical look" canvas v61. Lives in: requirements/screens.md › Every screen.
 
-### D97 · The night's settings file lives in this public repo · 2026-11-25 · Active
+### D97 · The night's settings file lives in this public repo · 2026-11-25 · Superseded by D111
 The settings file (D89) is tracked in this repo, every prize included. There's no private repo and no clone step on the laptops. Answers U42. Which copy wins on the night is still U43; whether sponsors' names may be in it is U48.
 By: the user (to Backend, 25 Nov). Source: open-questions.md › Answered (U42). Amends: D89. Lives in: requirements/operations.md › Privacy.
 
-### D98 · Hiding prizes is for the show's hype · 2026-11-25 · Active
+### D98 · Hiding prizes is for the show's hype · 2026-11-25 · Amended by D112
 Prizes are hidden for the hype, on the players' screens: the projector and phones show a round's prizes only once it's revealed. Anything only a developer reading the public repo could find, like every prize in the settings file, may be committed: nobody will look, and finding a prize early harms nothing. The user: "we just keep it secret for the show hype". What must stay private is unchanged: people's names (winners, who keeps a prize), resume codes, Shuffle seeds (they'd give away the Queue), tokens and keys, and audio.
 By: the user (to Backend, 25 Nov: "it is part of the model"). Source: Backend's report of 25 Nov. Amends: D78. Lives in: requirements/operations.md › Privacy.
 
@@ -888,3 +888,40 @@ By: the user. Source: open-questions.md › Answered (U49); the user's message o
 ### D106 · An Interval track we can't get is left out · 2026-11-26 · Active
 "It is fine if some songs can't be downloaded": the Interval plays the 37 tracks it has, without #15 and #22, and nobody downloads them by hand. Answers U60. Whether this also covers a Part's songs, which are printed on the cards, is U61.
 By: the user (to Sound engine, 26 Nov). Source: open-questions.md › Answered (U60). Amends: D66, for the Interval. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
+
+### D107 · The presenters pace the Check · 2026-11-26 · Active
+A presenter reveals each of the card's songs with a tap, or the Wii remote's A. Holding A reveals them one after another for as long as it's held. On the tablet, a toggle does the same, like "Parlem" or the auto-advance. The songs are revealed in the card's grid order, so a mistake shows early, and the presenter can name the next song before pressing. Answers the Check's Q1 and Q4 (chat, 25–26 Nov).
+By: the user. Source: the Check's redesign in chat, 26 Nov. Amends: the Check's self-running steps (show-and-music › the Check's sound). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
+
+### D108 · The presenters see the Check's result first · 2026-11-26 · Active
+As soon as the number is in, the tablet shows the whole card already marked, privately, with its warnings ("not registered as sold", "complete since song 34"). The projector reveals it one song at a time. Answers the Check's Q2.
+By: the user. Source: the Check's redesign in chat, 26 Nov. Lives in: requirements/screens.md › Console.
+
+### D109 · A pass needs no confirmation; a quiet way to stop the Check · 2026-11-26 · Active; the cue and the fail Pending (U62)
+A card that passes is valid by itself: there's no "Confirmar". The fanfare and the Celebration start only on the presenters' cue, never by themselves, so they don't land over the presenters' voices. A smaller button stops the Check at any time before that cue, showing neither a pass nor a fail, for when the organizers suspect something and want to check the card by hand. Answers the Check's Q3.
+What a stop does (the orchestrator, as the user asked): the claim stays undecided, kept in the console's list as stopped. The round goes back to the Hold it was in before the Check ("Parlem", the music under the voices); no fanfare or effect plays. The projector's card fades out with no mark and no text, back to the round's screen; phones show nothing about it. Afterwards the presenters either check the card again (publicly, from the start; its result decides as usual) or drop the claim, and the round goes on. This replaces rejecting a card that passed.
+By: the user; the stop's details by the orchestrator at the user's request. Source: the Check's redesign in chat, 26 Nov. Amends: D49 (rejecting a passed card becomes stopping the Check). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console, Projector.
+
+### D110 · "Algú més?" is asked while taking the number · 2026-11-26 · Active
+A presenter asks for other cards while walking to the player. The claim pad takes one number or several ("+ Un altre") before checking. The list of claimed cards only appears when there are 2 or more, and someone who shouts during a Check can still be added. Answers the Check's Q5.
+By: the user. Source: the Check's redesign in chat, 26 Nov. Lives in: requirements/game-rules.md › Claims; requirements/screens.md › Console.
+
+### D111 · The cloud is always the source of truth for the night's plan · 2026-11-26 · Active
+One rule, whatever the date: the cloud's plan wins. There's no git-tracked settings file and no prizes or sponsors in git. A local copy an agent edits is only a working copy, pushed back to the cloud. Development has no cloud, so it runs on a test plan. Answers U43.
+By: the user. Source: open-questions.md › Answered (U43); the user's message of 26 Nov. Supersedes: D97. Amends: D89 (the organizers' spreadsheet is parsed into the cloud's plan, not into a git file). Lives in: requirements/operations.md › Privacy; requirements/game-rules.md › Sponsors.
+
+### D112 · No sponsors, prizes or money in git · 2026-11-26 · Active
+Businesses' names and prizes change every year, so they don't belong in git. Money amounts live only in the organizers' spreadsheet. Answers U48.
+By: the user. Source: open-questions.md › Answered (U48). Lives in: requirements/operations.md › Privacy.
+
+### D113 · Songs go to R2 as soon as they're ready · 2026-11-26 · Active
+R2 storage may go past the free 10 GB, at a few cents a month. Each set of songs is uploaded as soon as its files are ready, not a week before the night, and pruned after the night. Answers U53.
+By: the user. Source: open-questions.md › Answered (U53). Lives in: requirements/operations.md; docs/timeline.md › Risks.
+
+### D114 · Londrina's two lowercase exceptions · 2026-11-26 · Active
+Unit symbols next to a number stay lowercase ("9 s", "25 m", "10:14 pm"), and Nunito text inside a Londrina button keeps its normal case. Answers U46.
+By: the user. Source: open-questions.md › Answered (U46). Amends: D96. Lives in: requirements/screens.md › Every screen.
+
+### D115 · The card icon picker is style A · 2026-11-26 · Active
+On "Afegir cartró", the icon picker is framed, with the icons already taken pressed in, as on `Mobil-B-J2`. The QR icon feels too sharp next to the others and gets softened on the boards. Designs only. Answers U47.
+By: the user. Source: open-questions.md › Answered (U47). Lives in: requirements/screens.md › Player app.

@@ -76,7 +76,7 @@ A player shouting Line or Bingo for a card, which then has to be checked.
 _Avoid_: Call, cant
 
 **Check**:
-The public verification of a claimed card: its songs are shown and replayed one by one, each marked as landed or not.
+The public verification of a claimed card: its songs are shown and replayed one by one, at the presenters' pace, each marked as landed or not. A pass needs no confirmation; the presenters can stop a Check before its result, leaving the claim undecided.
 _Avoid_: Validation, verification
 
 **Winner**:

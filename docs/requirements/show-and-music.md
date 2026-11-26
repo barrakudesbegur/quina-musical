@@ -124,11 +124,12 @@ _From event.md › Claims and checks, Atmosphere and style; the decisions doc �
 - **The music never stops,** unless the silence is intended: during claims, pauses and Intervals too.
 - **Hold music** is looping background tracks, such as a video-game waiting tune. It takes over during a long Hold.
 - **The Check's sound:**
-  - the card's songs play in order as 2–3 s hook snippets;
+  - the card's songs play in the card's order as 2–3 s hook snippets, each when a presenter reveals it (D107);
   - a song that has landed gets ✓; one that hasn't plays briefly "broken" (a short warble or bitcrush, never annoying) and gets ✗;
   - in the Desgraciat each ✓ is a short tick, and the first landed song plays its snippet as proof. If that song is the latest landing, the card fell with the last players: it passes, and shares the win;
   - the Hold music stays ducked far down throughout.
-- **A failed Check:** the Failure fanfare, then the error Hold music until the presenters press "Reprèn".
+- **A failed Check:** the Failure fanfare on the presenters' cue (D109), then the error Hold music until the presenters press "Reprèn".
+- **A stopped Check:** no fanfare or effect; the Hold the round was in comes back (D109).
 - More Hold loops and victory tracks would repeat less (pending U20). Today there are 3 Hold loops and 1 victory track.
 
 ## The Celebration's music

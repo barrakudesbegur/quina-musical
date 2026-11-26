@@ -24,10 +24,6 @@ The special card plays the special rounds' own playlist (D105) on one side.
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
-### U53 · Storage past the free 10 GB
-140 songs take about 9.5 GB in R2 and 210 take about 14 GB, at about 68 MB a song (Backend, Cloudflare's prices read on 25 Nov). R2 charges $0.015 per GB-month beyond 10 GB, averaged over the month: 14 GB from 12 to 28 Dec, pruned after the night, costs $0; from 5 Dec, about $0.01; kept a whole month, $0.06. The alternative is storing each song smaller: the original download plus compressed stems, about 15–20 MB a song, so 3–4 GB for 210. Each laptop decodes them when it syncs, about 5 minutes for 210. That's about a day of Backend's work plus Sound engine's.
-**Default:** the plain pool, pushed about a week before the night and pruned right after. It needs the user's OK past the "free plan only" rule, and a check that R2 has a payment method in Cloudflare's dashboard.
-
 ### U55 · Preparing Part 1 now, and the laptop's disk
 Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 18 GB for three, with 20 GB free today. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
 **Default:** nothing is prepared until the user says go. Last year's cache stays.
@@ -47,6 +43,16 @@ Part 1's playlist is in title order with no song out of place (Sound engine, 25 
 ### U61 · A Part's song we can't download
 D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 and the special rounds' playlist aren't fetched yet.
 **Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
+
+### U62 · The Check's remaining details
+D107–D110 settle the Check's shape. The details below are the orchestrator's proposal, in force unless the user objects:
+- **The cue:** revealing stops after the last song, or at the first ✗. The next press of the big button or A plays the fanfare: "Celebrem!" on a pass, the fail moment on a fail. Holding A and the auto toggle never go past that point.
+- **A fail:** the reveal stops at the first ✗, since the rest isn't needed. On the cue: the Failure fanfare, the red ✗, then the error Hold music until "Reprèn", as now.
+- **Several cards:** each is checked in turn. A failed one gets its fail moment on its own cue; passing ones share one Celebration after the last card, as now.
+- **The Desgraciat:** the same controls; holding A runs its 12 knocks quickly.
+- **Voices in the Celebration:** "Parlem" works during it, ducking the victory music for the winner's moment.
+- **The tablet's Check screen:** the card as its 3×4 grid with the private marks, the next song's title large so a presenter can read it out, the warnings, one big reveal button (hold for automatic), the auto toggle, the cue, the smaller stop button and "+ Un altre". Frontend writes the content spec first; boards come after.
+**Default:** as above.
 
 ### U54 · What to call each set of 70 songs
 The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
@@ -72,25 +78,6 @@ Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper shee
 - U40: answered (D89).
 
 **Default:** the prizes drawer stays on hold until these are answered.
-
-### U48 · Sponsors' names and money in the settings file
-D97 puts every prize in the public repo. The repo's rule so far is no people's or businesses' names in git, but a prize usually names its sponsor, and every sponsor appears on screen on the night anyway.
-**Default:** the file may hold sponsors' names and logos, but never their money amounts (those stay in the organizers' spreadsheet).
-
-### U43 · Which copy wins on the night
-Before the night the file is the source and is pushed to the cloud. On the night, a last-minute edit from a phone changes the cloud.
-**Default:** after the night (or after any phone edit) an agent pulls the cloud's plan back into the file, so git records what really happened.
-
-### U46 · Londrina's two lowercase exceptions
-D96 puts every Londrina text in capitals. Frontend proposes two exceptions (canvas comment #4 on `Mobil-B-J2`, still open):
-- unit symbols next to a number stay lowercase ("9 s", "25 m", "10:14 pm"), because "S" and "PM" read as other things;
-- Nunito text inside a Londrina button keeps its normal case.
-
-**Default:** both exceptions, as drawn on canvas v61.
-
-### U47 · The card icon picker's style
-On "Afegir cartró", the icon picker has light buttons, every icon in full colour, and owner names in a dark tag on the bottom edge. Three styles on the board "Component · icona del cartró a «Afegir cartró» (tria)": A framed (icons already taken are pressed in), B frameless, C round with the name below (canvas comment #3, still open).
-**Default:** A, which `Mobil-B-J2` uses.
 
 ### U30 · Pick the prizes drawer
 Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
@@ -120,6 +107,11 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U46 · Londrina's two lowercase exceptions** (2026-11-26) → D114: both, as drawn.
+- **U47 · The card icon picker's style** (2026-11-26) → D115: A; the QR icon is too sharp next to the others.
+- **U43 · Which copy wins on the night** (2026-11-26) → D111: the cloud, always; no git-tracked settings file; development runs on a test plan.
+- **U48 · Sponsors' names and money in the settings file** (2026-11-26) → D112: no sponsors, prizes or money in git.
+- **U53 · Storage past the free 10 GB** (2026-11-26) → D113: fine to go past it; upload as soon as the files are ready, prune after the night.
 - **U60 · Two Interval tracks by hand** (2026-11-26) → D106: left out; the Interval plays its 37.
 - **U49 · The special rounds' pool** (2026-11-26) → D105: their own playlist (79G8VcNrkih9GGjIzb47Gt), using Part 1's songs until it's final. The special card's back moved to U59.
 - **U34 · How many songs in the pool** (2026-11-25) → D100: 70, final, for each pool.

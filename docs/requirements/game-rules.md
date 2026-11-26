@@ -84,14 +84,15 @@ _From event.md › Claims and checks._
   - the presenters stop new songs ("Parlem"), and the music keeps going quietly underneath;
   - a presenter goes to the player with the microphone, or the player comes forward;
   - they take the card number and open the Check ("Comprovar cartró").
-- Several claims at once queue up. Every claimed card is checked before the round moves on.
+- Several claims at once queue up. Every claimed card is checked before the round moves on. A presenter asks "Algú més?" while taking the number, and the claim pad takes several numbers (D110).
 - In the Desgraciat, a claim takes only the card number: there's no Line or Quina to choose.
 
 ## The Check
 
 _From event.md › Claims and checks; the decisions doc › Changes._
 
-- **The Check is public.** The card appears on the projector, and its songs are checked one by one as landed or not. The steps are in [screens.md › Projector](screens.md#projector), and their sound in [show-and-music.md](show-and-music.md#hold-music-and-the-checks-sound).
+- **The Check is public.** The card appears on the projector, and its songs are checked one by one as landed or not.
+- **The presenters pace it (D107):** a tap or the remote's A reveals the next song, in the card's grid order; holding A, or the tablet's toggle, reveals them in a row. The tablet shows the whole result privately first (D108). The steps are in [screens.md › Projector](screens.md#projector), and their sound in [show-and-music.md](show-and-music.md#hold-music-and-the-checks-sound).
 - A Line Check shows the completed row, or the row with the most landed songs (the top one on a tie). A Bingo Check shows all 12 songs.
 - **Validity:**
   - a card number outside the printed cards is invalid;
@@ -99,9 +100,10 @@ _From event.md › Claims and checks; the decisions doc › Changes._
   - a card not registered as sold only raises a private warning on the console. The presenters ask to see the card.
 - **Forged cards:** we assume nobody forges cards. If two cards claim the same win, the fake one is easy to tell apart.
 - **The Check's result decides.**
-  - In a strange case, the presenters can still reject a card that passed.
+  - A pass needs no confirmation. Its fanfare and Celebration start only on the presenters' cue (D109; the cue's form pending U62).
+  - In a strange case, the presenters stop the Check before the cue: no pass or fail shows, and the claim stays undecided until they check it again or drop it (D109).
   - They can never accept a card that failed.
-  - Both outcomes are recorded.
+  - Every outcome is recorded, a stop and a dropped claim included.
 - **A failed Check** gets a funny "fail" moment, then the round goes on.
 - **A passed Check** gets a Celebration, and the winner is noted.
 
@@ -150,7 +152,7 @@ _From event.md › Prizes and sponsors, Money._
   - Before each round, the presenters read out every prize and its sponsor, money donors included. The cheat sheet lists them.
   - They keep the prizes alive during the round ("a veure qui s'emportarà…").
   - Every sponsor appears somewhere on the projector during the night ([screens.md](screens.md#every-sponsor-appears)).
-- Prizes, bundles and sponsors come from the organizers' own spreadsheet, which the orchestrator parses into the night's settings file (D89). Admin's UI is for last-minute edits. Logos come from a private logo library (pending U16).
+- Prizes, bundles and sponsors come from the organizers' own spreadsheet, which the orchestrator parses into the cloud's plan (D89, D111). The cloud's plan is always the source of truth; none of it is in git (D112). Admin's UI is for last-minute edits. Logos come from a private logo library (pending U16).
 
 ## Prize secrecy
 
