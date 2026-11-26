@@ -229,9 +229,6 @@ export const S = {
     claimLast: (id: number) => `Comprovar #${id}`,
     lastNote: (id: number) => `Pregunteu qui té el #${id}. Si ningú el té, decidiu vosaltres.`,
     none: 'No en queda cap dempeus: decidiu vosaltres com acaba la quina.',
-    /** The shared win: the cards that sat down with the last song (CheckOutcome 'fellLast'). */
-    fellLast: (song: string | null) => (song ? `Han caigut amb l'última («${song}»)` : "Han caigut amb l'última cançó"),
-    fellLastNote: "Si ningú de la sala queda dempeus, els que han caigut amb l'última es reparteixen el premi: comproveu cada cartró.",
     noCards: "No hi ha cartrons en joc registrats: no es pot comptar qui queda dempeus.",
   },
 
@@ -281,7 +278,6 @@ export const S = {
         kind === 'line' ? `Té línia: la fila ${(row ?? 0) + 1} és completa` : kind === 'bingo' ? 'Té quina: han sonat totes' : "Dempeus: no n'ha sonat cap",
       missing: (position: number, title: string) => `Falla a la ${ordinal(position)}: «${title}»`,
       fallen: (position: number, title: string) => `Ha caigut a la ${ordinal(position)}: «${title}»`,
-      fellLast: (title: string) => `Ha caigut amb l'última: «${title}»`,
       /** "és un cartró especial, i aquesta quina juga els normals" (the types' short names, lowercase). */
       wrongType: (cardType: string | null, roundType: string) =>
         cardType ? `Tipus erroni: és un cartró ${cardType}, i aquesta quina juga els ${roundType}s` : "Tipus erroni: és un cartró d'un altre tipus",
@@ -296,10 +292,8 @@ export const S = {
     nextTag: 'Següent',
     skipped: 'no es destaparà',
     /** A cell's spoken state. */
-    cellLabel: (title: string, mark: 'ok' | 'bad' | 'last' | null, revealed: boolean, kind: WinKind) =>
-      mark === null
-        ? title
-        : `${title}: ${mark === 'last' ? "ha sonat amb l'última" : (mark === 'ok') === (kind !== 'standing') ? CA.landed.toLowerCase() : CA.notLanded.toLowerCase()}${revealed ? ', destapada' : ''}`,
+    cellLabel: (title: string, mark: 'ok' | 'bad' | null, revealed: boolean, kind: WinKind) =>
+      mark === null ? title : `${title}: ${(mark === 'ok') === (kind !== 'standing') ? CA.landed.toLowerCase() : CA.notLanded.toLowerCase()}${revealed ? ', destapada' : ''}`,
     back: 'Enrere',
     backNote: 'treu una marca',
     review: 'Revisió manual',

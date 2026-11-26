@@ -81,7 +81,6 @@ test('the result comes from the cue only; the finding just shapes its look', () 
   assert.equal(verdictOf('wrongType', 'fail', 'line'), 'notValid');
   assert.equal(verdictOf('unknownCard', 'fail', 'bingo'), 'notValid');
   assert.equal(verdictOf('fallen', 'fail', 'standing'), 'fallen');
-  assert.equal(verdictOf('fellLast', 'pass', 'standing'), 'fellLast');
   // A Review decided by hand, against the card (D121): the cue is what shows.
   assert.equal(verdictOf('incomplete', 'pass', 'line'), 'complete', 'won by hand');
   assert.equal(verdictOf('complete', 'fail', 'bingo'), 'incomplete', 'lost by hand');
@@ -250,13 +249,10 @@ test("a standing Check's marks mean good for the claim: ✓ for a song that hasn
   assert.equal(stepMark('line', 'missed'), 'bad');
   assert.equal(stepMark('standing', 'playing'), null);
   assert.equal(stepMark('line', 'pending'), null);
-  assert.deepEqual(STAGE_TEXT.mark, { ok: '✓', last: '✓', bad: '✗' });
-  // The shared win: a standing card that sat down with the last song; that song's tile passes, in gold.
-  assert.equal(stepMark('standing', 'landed', 'fellLast'), 'last');
-  assert.equal(stepMark('standing', 'missed', 'fellLast'), 'ok');
-  assert.equal(stepMark('standing', 'landed', 'fallen'), 'bad');
-  assert.equal(verdictOf('fellLast', 'pass', 'standing'), 'fellLast');
-  assert.equal(isFailed('fellLast'), false, 'it passes');
+  assert.deepEqual(STAGE_TEXT.mark, { ok: '✓', bad: '✗' });
+  // No shared win (D180): a standing card's landed song is its ✗; only a pass is a valid card.
+  assert.equal(verdictOf('fallen', 'pass', 'standing'), 'complete', 'won by hand');
+  assert.equal(isFailed('fallen'), true);
   // The tile's words say what happened to the song, the same in every round.
   assert.deepEqual(STAGE_TEXT.markLabel, { landed: 'Ha sonat', missed: 'No ha sonat' });
 });

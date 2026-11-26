@@ -5,19 +5,18 @@
 // presses at once reveal once. Everything here is derived from the engine's snapshot. Pure.
 import { defaultCardType, isPassingOutcome, type CommandFields } from '@quina/protocol';
 import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
-import type { CheckInfo, CheckOutcome, ClaimInfo, FlowFields, WinKind } from '../../../packages/ui/flow.ts';
+import type { CheckInfo, ClaimInfo, FlowFields, WinKind } from '../../../packages/ui/flow.ts';
 import { roundCardType, type GamePlan } from '../../../packages/ui/plan.ts';
 
-/** A song's mark, which always means "good for the claim": ✓ (`ok`), ✗ (`bad`), or the shared win's gold ✓ (`last`). */
-export type Mark = 'ok' | 'bad' | 'last';
+/** A song's mark, which always means "good for the claim": ✓ (`ok`) or ✗ (`bad`). */
+export type Mark = 'ok' | 'bad';
 
 /**
  * A song's mark from whether it landed. For a Line or a Bingo a landed song is ✓; in a standing Check (the Desgraciat
- * round) a song that has NOT landed is, and the landed one is the ✗ that sank the card, unless the card sat down with
- * the latest landing (`fellLast`): that song passes, in gold.
+ * round) a song that has NOT landed is, and the landed one is the ✗ that sank the card. There, "landed" means counted
+ * against the card: a landing that would have taken out everyone left counts for none of them (D180).
  */
-export function stepMark(kind: WinKind, landed: boolean, outcome: CheckOutcome | null = null): Mark {
-  if (kind === 'standing' && landed && outcome === 'fellLast') return 'last';
+export function stepMark(kind: WinKind, landed: boolean): Mark {
   return landed !== (kind === 'standing') ? 'ok' : 'bad';
 }
 
@@ -73,7 +72,7 @@ export function checkCells(check: CheckInfo, claim: ClaimInfo | null, nowMs: num
       row: Math.floor(index / COLS),
       col: index % COLS,
       inCheck: at !== null,
-      mark: at === null ? null : stepMark(check.kind, s.landed, check.outcome),
+      mark: at === null ? null : stepMark(check.kind, s.landed),
       revealed: heard,
       playing: step !== undefined && !heard,
       next: at !== null && at === revealed && stillRevealing,
@@ -87,8 +86,8 @@ export type Verdict =
   | { kind: 'complete'; win: WinKind; row: number | null }
   /** A Line or Bingo song that didn't sound: the reveals stop there (`position`, 1-based in the reveal order). */
   | { kind: 'missing'; win: WinKind; position: number; songId: number }
-  /** A standing card fell on that song; `last`: it sat down with the latest landing, so it passes (the shared win). */
-  | { kind: 'fallen'; position: number; songId: number; last: boolean }
+  /** A standing card fell on that song. */
+  | { kind: 'fallen'; position: number; songId: number }
   | { kind: 'wrongType'; cardType: string | null }
   | { kind: 'unknownCard' };
 
@@ -101,10 +100,11 @@ export function checkVerdict(check: CheckInfo, claim: ClaimInfo | null): Verdict
       return { kind: 'unknownCard' };
     case 'complete':
       return { kind: 'complete', win: check.kind, row: check.row };
+    // `fellLast` only in a journal from before D180, which can't give a shared win any more.
     case 'fallen':
     case 'fellLast': {
       const at = Math.max(0, songs.findIndex((s) => s.landed));
-      return { kind: 'fallen', position: at + 1, songId: songs[at]?.songId ?? 0, last: check.outcome === 'fellLast' };
+      return { kind: 'fallen', position: at + 1, songId: songs[at]?.songId ?? 0 };
     }
     case 'incomplete': {
       const at = Math.max(0, songs.findIndex((s) => !s.landed));
@@ -113,7 +113,7 @@ export function checkVerdict(check: CheckInfo, claim: ClaimInfo | null): Verdict
   }
 }
 
-/** The card passes its Check (the cue will be «Celebrem!»): complete, or a standing card that sat down with the last song. */
+/** The card passes its Check (the cue will be «Celebrem!»): complete. */
 export const checkPasses = (check: Pick<CheckInfo, 'outcome' | 'kind'>): boolean => isPassingOutcome(check.outcome, check.kind);
 
 /** Where the Check is, as the tablet's right column follows it. */

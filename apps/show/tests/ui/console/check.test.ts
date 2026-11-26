@@ -129,8 +129,7 @@ test("marks mean «good for the claim»; the type chip names the printed type", 
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('line', false), 'bad');
   assert.equal(stepMark('standing', false), 'ok');
-  assert.equal(stepMark('standing', true, 'fallen'), 'bad');
-  assert.equal(stepMark('standing', true, 'fellLast'), 'last');
+  assert.equal(stepMark('standing', true), 'bad');
   const types = [
     { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, priceRule: null },
     { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, priceRule: null },

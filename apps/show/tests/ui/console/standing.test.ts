@@ -20,7 +20,6 @@ import {
   helperTabAfter,
   helperTabsFor,
   standingChips,
-  nextFellLast,
   standingFuture,
   standingSummary,
 } from '../../../../console/logic/standing.ts';
@@ -64,7 +63,7 @@ test('Dempeus is selected as the round starts and when one card is left; otherwi
 
 test('the count "N dempeus de M cartrons": the bar above 60, the sorted cards from 60 down, gold from 3 down', () => {
   const many = standingSummary(state('desgraciat').standing, 210);
-  assert.deepEqual(many, { count: 143, total: 210, seated: 67, share: 143 / 210, ids: null, last: null, gold: false, fellLast: [] });
+  assert.deepEqual(many, { count: 143, total: 210, seated: 67, share: 143 / 210, ids: null, last: null, gold: false });
   assert.equal(S.standing.countLabel(143, 210), '143 dempeus de 210 cartrons');
   assert.equal(S.standing.seated(67), '67 asseguts');
   assert.equal(S.standing.listLater, `Quan en quedin ${STANDING_LIST_MAX} o menys, hi veuràs els números.`);
@@ -140,10 +139,9 @@ test("a standing Check's songs: ✓ when the song hasn't sounded, ✗ for the on
   assert.deepEqual(cells.slice(0, 7).map((c) => c.mark), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'bad'], 'in card order, up to «Limbo»');
   assert.ok(cells.slice(0, 7).every((c) => c.revealed));
   assert.ok(cells.slice(7).every((c) => c.skipped), 'the songs after it are never revealed');
-  assert.equal(stepMark('standing', true, 'fellLast'), 'last', 'fell with the last song: its mark passes');
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('bingo', false), 'bad');
-  assert.deepEqual(checkVerdict(fallen, claimOf(flow, fallen)), { kind: 'fallen', position: 7, songId: 41, last: false });
+  assert.deepEqual(checkVerdict(fallen, claimOf(flow, fallen)), { kind: 'fallen', position: 7, songId: 41 });
   assert.equal(S.check.verdict.fallen(7, 'Limbo'), 'Ha caigut a la 7a: «Limbo»');
   assert.equal(S.check.verdict.complete('standing', null), "Dempeus: no n'ha sonat cap");
   assert.equal(S.check.warnings.completeSince(22, 'standing'), "L'únic dempeus des de la cançó 22");
@@ -187,18 +185,10 @@ test('the round named, its intro and resume sending its kind, its one prize', ()
   assert.equal(S.cheatSheet.prizes(4), 'Premis de la Quina 4');
 });
 
-test("the shared win: the cards that sat with the last song show once one card or none stands, and get checked in turn", () => {
+test('no shared win (D180): the last card standing is the default; with none left (no cards in play) nothing is claimed', () => {
   const last = state('desgraciatLast');
-  const withFell = { ...last.standing!, fellLast: [90, 12] };
-  assert.deepEqual(standingSummary(withFell, 210)?.fellLast, [12, 90], 'one card standing: the group shows, sorted');
-  assert.deepEqual(standingSummary({ count: 5, cardIds: [1, 2, 3, 4, 5], fellLast: [6] }, 210)?.fellLast, [], 'more standing: not yet');
-  assert.deepEqual(standingSummary({ count: 1, cardIds: [57] }, 210)?.fellLast, [], 'an older engine without the field');
-  const claims = [{ cardId: 12, round: 5 }, { cardId: 90, round: 4 }];
-  assert.equal(nextFellLast([12, 90], claims, 5), 90, 'card 12 was already claimed this round');
-  assert.equal(nextFellLast([12], claims, 5), null);
-  // Nobody standing: the default action checks the next card that sat with the last song.
-  const none = { ...last, standing: { count: 0, cardIds: [], fellLast: [12, 90] } } as ShowState;
-  assert.deepEqual(defaultAction(input(none))?.command, { cmd: 'claim', args: { cardId: 12, kind: 'standing' } });
-  // One card still standing in the engine (maybe unsold): it stays the default; the group is there to choose from.
-  assert.deepEqual(defaultAction(input({ ...last, standing: withFell } as ShowState))?.command, { cmd: 'claim', args: { cardId: 57, kind: 'standing' } });
+  assert.deepEqual(defaultAction(input(last))?.command, { cmd: 'claim', args: { cardId: 57, kind: 'standing' } });
+  const none = { ...last, standing: { count: 0, cardIds: [] } } as ShowState;
+  assert.equal(standingSummary(none.standing, 210)?.last, null);
+  assert.notEqual(defaultAction(input(none))?.control, 'claimLast');
 });

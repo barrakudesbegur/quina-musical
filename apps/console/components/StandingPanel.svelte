@@ -87,7 +87,7 @@
           <p class="note">{S.standing.lastNote(last)}</p>
         </div>
       </div>
-    {:else if summary.count === 0 && summary.fellLast.length === 0}
+    {:else if summary.count === 0}
       <p class="note note--warning">{S.standing.none}</p>
     {:else if summary.ids}
       <ul class="standing__chips" data-testid="standing-chips" aria-label={S.standing.list}>
@@ -112,26 +112,6 @@
       {/if}
       {#if summary.seated !== null}<p class="standing__seated"><Icon name="seated" />{S.standing.seated(summary.seated)}</p>{/if}
       <p class="note standing__later">{S.standing.listLater}</p>
-    {/if}
-    {#if summary.fellLast.length}
-      <!-- The shared win: the cards that sat down with the song that just landed. When nobody in the room is left
-           standing, each one checked and accepted shares the prize (CheckOutcome 'fellLast'). -->
-      <div class="standing__fell-last" data-testid="standing-fell-last">
-        <p class="panel__label">{S.standing.fellLast(fall ? songTitleOf(fall.songId, snap, model.catalog) : null)}</p>
-        <ul class="standing__fell-list">
-          {#each summary.fellLast as cardId (cardId)}
-            {@const tried = model.show.flow.claims.some((c) => c.cardId === cardId && c.round === snap?.round.number)}
-            {@const isNext = isDefault && model.defaultAction?.command.cmd === 'claim' && model.defaultAction.command.args.cardId === cardId}
-            <li>
-              <button type="button" class="mini standing__fell-claim" data-card-id={cardId} data-anim="press" data-default={isNext || undefined} disabled={tried || !model.can('claim')} onclick={() => claimLast(cardId)}>
-                <Icon name="claim" /><span>{S.standing.claimLast(cardId)}</span>
-                {#if isNext}<WiiBadge button="a" />{/if}
-              </button>
-            </li>
-          {/each}
-        </ul>
-        <p class="note">{S.standing.fellLastNote}</p>
-      </div>
     {/if}
   {/if}
 </section>

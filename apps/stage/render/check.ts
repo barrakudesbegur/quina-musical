@@ -42,7 +42,7 @@ interface CellNodes {
   art: HTMLElement;
   mark: HTMLElement;
   cell: CheckCell;
-  /** The mark it shows ('ok', 'last', 'bad'). */
+  /** The mark it shows ('ok', 'bad'). */
   shownMark: string | null;
   /** The mark a step back just took off, for its lift-off. */
   liftedMark: string | null;
@@ -264,7 +264,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
         this.shown[i] = key;
         // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
         // happened to the song.
-        const mark = stepMark(check.kind, state, reveal.result);
+        const mark = stepMark(check.kind, state);
         nodes.liftedMark = mark === null ? nodes.shownMark : null;
         nodes.shownMark = mark;
         setData(nodes.root, 'state', state);

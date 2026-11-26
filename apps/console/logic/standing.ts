@@ -54,9 +54,6 @@ export interface StandingSummary {
   last: number | null;
   /** From this few down, the number turns gold. */
   gold: boolean;
-  /** The cards that sat down with the song that just landed (`standing.fellLast`), sorted: the Desgraciat's shared
-   * win when nobody in the room is left standing. Shown (each with its "Comprovar #N") once one card or none stands. */
-  fellLast: number[];
 }
 
 /** The count turns gold from this many cards down (`standing-count`). */
@@ -75,17 +72,7 @@ export function standingSummary(standing: StandingInfo | null | undefined, valid
     ids,
     last: count === 1 && ids?.length === 1 ? ids[0] : null,
     gold: count >= 1 && count <= STANDING_GOLD_FROM,
-    fellLast: count <= 1 && standing.fellLast ? [...standing.fellLast].sort((a, b) => a - b) : [],
   };
-}
-
-/**
- * The next card to check in the shared win: the first of `fellLast` with no claim yet in this round (a claim that was
- * rejected counts as tried). Null when none is left.
- */
-export function nextFellLast(fellLast: readonly number[], claims: readonly { cardId: number; round: number }[], round: number): number | null {
-  const tried = new Set(claims.filter((c) => c.round === round).map((c) => c.cardId));
-  return fellLast.find((id) => !tried.has(id)) ?? null;
 }
 
 /**

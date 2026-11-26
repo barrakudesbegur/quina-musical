@@ -14,7 +14,6 @@ const GAME_GOES_ON = 'El\u00a0joc\u00a0continua!';
  */
 export function checkResultDetail(verdict: CheckVerdict, songTitle: string | null): string | null {
   if (verdict === 'complete') return null;
-  if (verdict === 'fellLast') return songTitle ? `Ha caigut amb l'última cançó, «${songTitle}».` : "Ha caigut amb l'última cançó.";
   if (verdict === 'fallen' && songTitle) return `«${songTitle}» ja ha sonat. ${GAME_GOES_ON}`;
   return verdict === 'incomplete' && songTitle ? `Falta «${songTitle}». ${GAME_GOES_ON}` : GAME_GOES_ON;
 }
@@ -71,9 +70,9 @@ export const STAGE_TEXT = {
   checkReview: 'Revisió manual',
   /** The Check's card-type badge, for its accessible label: "Cartró normal: correcte". */
   checkType: (name: string, ok: boolean | null) => (ok === null ? name : `${name}: ${ok ? 'correcte' : 'no val per a aquesta quina'}`),
-  checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, fellLast: CA.checkValid, fallen: 'Cartró caigut', notValid: 'Cartró no vàlid' } satisfies Record<CheckVerdict, string>,
+  checkResult: { complete: CA.checkValid, incomplete: CA.checkInvalid, fallen: 'Cartró caigut', notValid: 'Cartró no vàlid' } satisfies Record<CheckVerdict, string>,
   /** A Check's marks mean "good for the claim": ✓, else ✗ (model/check.ts stepMark). */
-  mark: { ok: '✓', last: '✓', bad: '✗' },
+  mark: { ok: '✓', bad: '✗' },
   /** What a checked song's tile says, by what happened to the song (the same in every round). */
   markLabel: { landed: CA.landed, missed: CA.notLanded },
   pause: CA.pause,

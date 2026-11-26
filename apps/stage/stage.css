@@ -1646,23 +1646,6 @@
   animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
 }
 
-/* The Desgraciat's shared win: the song the card sat down with is the last one to land, so it passes, in gold
-   (ANIMATIONS.md `check-step` (standing)). */
-.card-grid__cell[data-mark='last'] .card-grid__cover {
-  box-shadow:
-    0 0 0 var(--stage-check-ring) var(--color-accent),
-    0 var(--stage-drop) 0 var(--stage-check-ring) var(--color-shadow);
-}
-
-.card-grid__cell[data-mark='last'] .card-grid__mark {
-  background: var(--color-accent);
-  color: var(--color-ink);
-}
-
-.card-grid__cell[data-anim='check-step'][data-mark='last'] {
-  animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
-}
-
 .card-grid__cell[data-anim='check-step'][data-mark='bad'] {
   animation: stage-shake var(--stage-dur-shake) linear;
 }
@@ -1960,11 +1943,6 @@
 
 .card-grid__mark--lift[data-mark='bad'] {
   background: var(--color-danger);
-}
-
-.card-grid__mark--lift[data-mark='last'] {
-  background: var(--color-accent);
-  color: var(--color-ink);
 }
 
 @keyframes stage-mark-lift {

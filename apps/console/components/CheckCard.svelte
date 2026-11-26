@@ -28,7 +28,7 @@
   const cells = $derived(checkCells(check, claim, model.show.now));
   const verdict = $derived(checkVerdict(check, claim));
   const title = (songId: number) => songTitleOf(songId, snap, model.catalog) ?? `Cançó ${songId}`;
-  const pass = $derived(verdict.kind === 'complete' || (verdict.kind === 'fallen' && verdict.last));
+  const pass = $derived(verdict.kind === 'complete');
   const text = $derived.by(() => {
     switch (verdict.kind) {
       case 'complete':
@@ -36,7 +36,7 @@
       case 'missing':
         return S.check.verdict.missing(verdict.position, title(verdict.songId));
       case 'fallen':
-        return verdict.last ? S.check.verdict.fellLast(title(verdict.songId)) : S.check.verdict.fallen(verdict.position, title(verdict.songId));
+        return S.check.verdict.fallen(verdict.position, title(verdict.songId));
       case 'wrongType':
         return S.check.verdict.wrongType(type?.name.toLowerCase() ?? null, roundType?.name.toLowerCase() ?? '');
       case 'unknownCard':

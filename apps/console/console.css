@@ -3657,11 +3657,6 @@
   color: var(--color-red);
 }
 
-.check-cell[data-mark='last'] .check-cell__mark {
-  border-color: var(--color-gold-edge);
-  color: var(--color-gold-edge);
-}
-
 .check-cell__mark .icon {
   width: 0.875rem;
   height: 0.875rem;
@@ -3683,11 +3678,6 @@
   background: var(--color-red);
 }
 
-.check-cell[data-revealed][data-mark='last'] .check-cell__mark {
-  background: var(--color-gold);
-  color: var(--color-ink);
-}
-
 .check-cell[data-revealed] .cover {
   box-shadow: 0 0 0 4px var(--color-green);
 }
@@ -3695,10 +3685,6 @@
 .check-cell[data-revealed][data-mark='bad'] .cover {
   box-shadow: none;
   filter: grayscale(1) brightness(0.8);
-}
-
-.check-cell[data-revealed][data-mark='last'] .cover {
-  box-shadow: 0 0 0 4px var(--color-gold);
 }
 
 /* Revealed, its snippet playing now: the projector's orange ring, still (the mark turns full when the room sees it) */
@@ -6069,21 +6055,3 @@ kbd {
   }
 }
 
-/* The Desgraciat's shared win (StandingPanel): the cards that sat down with the last song, each with its check */
-.standing__fell-last {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: var(--line-width-thin) dashed var(--color-line);
-}
-
-.standing__fell-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}

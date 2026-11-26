@@ -206,16 +206,16 @@ interface CardFinding {
 
 /**
  * A card's Check from the counted landings: a Line plays its completed row (top first), else the row with most landed
- * songs (top on a tie); a Bingo all 12; a standing claim its 12 in card order up to the first landed one (`fellLast`
- * when that is the latest landing). A card of another type than the round's is `wrongType`, with nothing to reveal.
+ * songs (top on a tie); a Bingo all 12; a standing claim its 12 in card order up to the first landed one (never a
+ * shared win, D180). A card of another type than the round's is `wrongType`, with nothing to reveal.
  */
-export function cardFinding(cardId: number, kind: WinKind, landed: ReadonlySet<number>, roundType = 'normal', latest: number | null = null): CardFinding {
+export function cardFinding(cardId: number, kind: WinKind, landed: ReadonlySet<number>, roundType = 'normal'): CardFinding {
   const card = FIXTURE_CARDS[cardId];
   const markedCard = card.lines.flat().map((songId) => ({ songId, landed: landed.has(songId) }));
   if (card.type !== roundType) return { outcome: 'wrongType', row: null, otherRows: [], cardType: card.type, songs: [], revealUntil: null, markedCard: [] };
   if (kind === 'standing') {
     const first = markedCard.findIndex((s) => s.landed);
-    const outcome: CheckOutcome = first < 0 ? 'complete' : markedCard[first].songId === latest ? 'fellLast' : 'fallen';
+    const outcome: CheckOutcome = first < 0 ? 'complete' : 'fallen';
     return { outcome, row: null, otherRows: [], cardType: card.type, songs: markedCard, revealUntil: first < 0 ? markedCard.length - 1 : first, markedCard };
   }
   let row: number | null = null;
@@ -258,8 +258,8 @@ interface PacedSpec {
 }
 
 /** A Claim and, when it's on screen, its Check, as the engine's state carries them. */
-function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>, position: number, latest: number | null): { claim: ClaimInfo; check: CheckInfo | null } {
-  const found = cardFinding(spec.cardId, spec.kind, landed, 'normal', latest);
+function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>, position: number): { claim: ClaimInfo; check: CheckInfo | null } {
+  const found = cardFinding(spec.cardId, spec.kind, landed, 'normal');
   const onScreen = spec.revealed !== undefined && !spec.queued;
   const shown = found.songs.slice(0, spec.revealed ?? 0);
   const revealed: CheckStep[] = [];
@@ -315,8 +315,7 @@ function pacedClaim(spec: PacedSpec, round: number, landed: ReadonlySet<number>,
  */
 function pacedCheck(s: FullState, specs: readonly PacedSpec[], landed: readonly number[], celebrationNext: FullState['celebrationNext'] = null): FullState {
   const set = new Set(landed);
-  const latest = landed[landed.length - 1] ?? null;
-  const built = specs.map((spec) => pacedClaim(spec, s.round.number, set, s.queue.position, latest));
+  const built = specs.map((spec) => pacedClaim(spec, s.round.number, set, s.queue.position));
   const first = Math.min(...specs.map((c) => c.atMs));
   return withFlow(s, {
     scene: 'check',

@@ -21,7 +21,7 @@ import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { checkPress } from './check.ts';
 import { shuffleCountdown } from './countdown.ts';
 import { roundIntroArgs } from './show-data.ts';
-import { nextFellLast, standingSummary } from './standing.ts';
+import { standingSummary } from './standing.ts';
 
 /** The console control that does it (each carries `data-default` when it's the one). */
 export type DefaultControl = 'next' | 'check' | 'claimPad' | 'shuffle' | 'interval' | 'roundIntro' | 'endPause' | 'claimLast';
@@ -71,8 +71,8 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
       return press ? { control: 'check', command: press, enabled: can(press.cmd) } : null;
     }
     case 'play': {
-      // The Desgraciat's end: the last card standing; with none left, the next card that sat with the last song.
-      const last = lastStanding(state) ?? fellLastToClaim(state, flow.claims);
+      // The Desgraciat's end: the last card standing (a landing never takes out everyone left, D180).
+      const last = lastStanding(state);
       if (last !== null) return { control: 'claimLast', command: { cmd: 'claim', args: { cardId: last, kind: 'standing' } }, enabled: can('claim') };
       return next(input);
     }
@@ -91,13 +91,6 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
     case 'after':
       return null;
   }
-}
-
-/** With nobody left standing, the next card that sat down with the last song and has no claim yet (the shared win). */
-function fellLastToClaim(state: ShowState, claims: readonly { cardId: number; round: number }[]): number | null {
-  const summary = standingSummary(state.standing, state.cards.validCount);
-  if (!summary || summary.count !== 0) return null;
-  return nextFellLast(summary.fellLast, claims, state.round.number);
 }
 
 /** The Desgraciat round's last card standing, when exactly one is left (its number, from the private `standing`). */
