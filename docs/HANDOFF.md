@@ -36,10 +36,11 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - the repertoire rename (D178);
 - two-sided cards end to end (Admin defaults count normal rounds only);
 - round names: "Quina N" for normal rounds only;
-- slow confetti.
+- slow confetti;
+- the finale screens, the new tabs (Estat, Cerca, Futur), D121's resumed Check, D193's 1–5 / 6–10, D194, D197 (c612e95, deployed 0948f16b).
 
 **Being built:**
-- **Frontend:** the finale screens and the new tabs (Estat, Cerca, Futur) from the v95 boards, D181–D184, D186 ("QUINA POTRA!") and D187 (U155 answered: go).
+- **Frontend:** D195, D196, D199 (the console layout), D188 (the phone's add pad), D189 (the round-buttons pass), the D200 banner on the canvas first; U169 and U170 on the canvas; the design-system spec (U175+).
 - **Sound engine and Backend:** follow-ups as they report.
 
 **Waiting on the user:**
