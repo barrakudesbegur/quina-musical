@@ -12,7 +12,8 @@
 //   drum ticks → drumBus → [ticks] ┤
 //   the Pausa set → [pausa] ┤
 //   everything above but fx, the Check and Pausa → throwDuck (a throw song's music under it) ┘
-//   the throw song → [throws] ┤→ master → [master] → headroom (MIX.headroomDb) → limiter → destination
+//   throwDuck, the throw song [throws], the doors' music [doors], the Pausa set [pausa] → voiceDuck (the music under a voice cue) ┤
+//   the voice cues (chime, fanfare, voice) → [voices] ┤→ master → [master] → headroom (MIX.headroomDb) → limiter → destination
 
 import { VOLUME_KEYS, type VolumeKey } from '@quina/protocol';
 import { MIX } from '../config.ts';
@@ -78,6 +79,8 @@ export class AudioGraph {
   vol: Record<VolumeNode, GainNode>;
   /** The scene's music (songs, sets, Hold music, the Celebration's) fades under a throw song (D138, D151). */
   throwDuck: GainNode;
+  /** The music under a voice cue (D204): everything a cue's voice must be heard over. */
+  voiceDuck: GainNode;
   /** The internal trim in front of the limiter (D157: room for sliders above 100%). */
   headroom: GainNode;
   fxBus: GainNode;
@@ -101,8 +104,10 @@ export class AudioGraph {
     this.headroom = ctx.createGain();
     this.headroom.gain.value = 10 ** (MIX.headroomDb / 20);
     this.master.connect(this.vol.master).connect(this.headroom).connect(this.limiter).connect(ctx.destination);
+    this.voiceDuck = ctx.createGain();
+    this.voiceDuck.connect(this.master);
     this.throwDuck = ctx.createGain();
-    this.throwDuck.connect(this.master);
+    this.throwDuck.connect(this.voiceDuck);
     // Chrome's compressor delays its output by a fixed 6 ms pre-delay (measured on test.html).
     this.processingLatencySec = 0.006;
 
@@ -131,7 +136,8 @@ export class AudioGraph {
     for (const n of ['holdMusic', 'fail', 'win', 'intros'] as const) this.vol[n].connect(this.holdBus);
     this.checkBus = ctx.createGain();
     this.checkBus.connect(this.vol.check).connect(this.master);
-    for (const n of ['djFx', 'padFx', 'winFx', 'failFx', 'finalLap', 'ticks', 'pausa', 'throws', 'doors'] as const) this.vol[n].connect(this.master);
+    for (const n of ['djFx', 'padFx', 'winFx', 'failFx', 'finalLap', 'ticks', 'voices'] as const) this.vol[n].connect(this.master);
+    for (const n of ['pausa', 'throws', 'doors'] as const) this.vol[n].connect(this.voiceDuck);
 
     this.fxBus = this.bus(-2, this.vol.djFx);
     this.synthBus = this.bus(-3, this.vol.djFx);

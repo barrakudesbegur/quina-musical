@@ -904,6 +904,45 @@ export const THROW = Object.freeze({
 });
 
 /**
+ * The automatic voice cues (D198, D202–D204): a chime (a round's fanfare) and a voice line, the music dipping under them.
+ * A presenter's press (roundIntro, endGame) plays its cue at once; the timed ones (the doors, the Descans) wait for a
+ * quiet moment and are dropped after `maxWaitSec`, since a late one would be wrong.
+ */
+export const VOICE = Object.freeze({
+  /** The music dips this far under a cue, over `duckSec`, and comes back over `releaseSec` after it. */
+  duckDb: -14,
+  duckSec: 0.4,
+  releaseSec: 1.2,
+  /** A cue starts this far ahead, so the duck is under way. */
+  leadSec: 0.25,
+  /** A timed cue waits at most this long for a quiet moment. */
+  maxWaitSec: 60,
+  /** A cue the runtime never reports ended (a missing file) ends by itself after this long. */
+  maxCueSec: 20,
+  /** The doors' countdown: minutes before the plan's start (U176: the 3 may go). */
+  doorsMinutes: [60, 45, 30, 15, 5, 3] as const,
+  /** "Tornem en dos minuts": this long before a Descans's planned end (D197). */
+  descansWarnSec: 120,
+});
+
+/**
+ * The drum roll held on the remote's D-pad (D203): snare hits on the music's beat (DEFAULT_BPM without one), denser and
+ * louder with the intensity; let go after `landAfterSec` it lands on the next beat with a hit, sooner it fades out.
+ */
+export const DRUMROLL = Object.freeze({
+  landAfterSec: 2,
+  defaultBpm: 120,
+  /** Hits a beat from intensity 0 to 1. */
+  perBeat: [4, 8] as const,
+  /** The roll's level from intensity 0 to 1, and the landing hit's. */
+  levelDb: [-18, -6] as const,
+  hitDb: -3,
+  fadeSec: 0.35,
+  /** The landing's sample (data/media/fx). */
+  hit: 'orchestra-hit',
+});
+
+/**
  * The mix (D157, D158): the whole show plays lower inside by `headroomDb`, in front of the master limiter, so a slider
  * above 100% (the throws at +6 dB) stays clean. The tech turns the sound system up by as much, once, at the sound check.
  */

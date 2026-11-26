@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, isVoiceCue, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   CommandOf,
   ResumeToken,
@@ -61,12 +61,15 @@ import type {
   StandingInfo,
   MusicSet,
   ThrowSong,
+  VoiceCue,
+  VoiceLead,
+  PadHoldEffect,
   ThrowInfo,
   ThrowTrackInfo,
   VolumeKey,
   Volumes,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW, VOICE, DRUMROLL } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun, type PrintedCard } from '../game/cards.ts';
 import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
@@ -392,6 +395,26 @@ export interface ThrowSongEffect {
   /** With `play`: the track (THROW.songs) and its loudness trim. */
   track?: { name: string; trimDb: number };
 }
+/** A voice cue (D202–D204): its lead (a chime, a round's fanfare) and voice at `at`, the music dipping under them; or
+ * stop the one playing. The runtime reports its end (Show.voiceEnded). */
+export interface VoiceEffect {
+  type: 'voice';
+  action: 'play' | 'stop';
+  cue: VoiceCue | null;
+  lead: VoiceLead | null;
+  at: number;
+}
+/** The drum roll held on the D-pad (D203): start it on `grid` (a beat at `t0`, `beatSec` apart), change its intensity,
+ * or let it go: `land` with a hit at `at` (a beat), else it fades out from `at`. */
+export interface PadHoldEffectMsg {
+  type: 'padHold';
+  action: 'start' | 'intensity' | 'release';
+  effect: PadHoldEffect;
+  at: number;
+  intensity: number;
+  grid?: { t0: number; beatSec: number };
+  land?: boolean;
+}
 /** Pausa starts (D128): everything playing fades out and is saved where it is (the song deck, Hold music, the
  * Celebration's music, a set, the intro, the throw song). Effects and snippets ring out (U113). */
 export interface PausePlaybackEffect {
@@ -463,6 +486,8 @@ export type Effect =
   | IntervalSkipEffect
   | IntroMusicEffect
   | ThrowSongEffect
+  | VoiceEffect
+  | PadHoldEffectMsg
   | BedDuckEffect
   | PausePlaybackEffect
   | ResumePlaybackEffect
@@ -671,6 +696,14 @@ export class Show {
   pausaNow: IntervalTrackInfo | null = null;
   /** A throw song (D138, D151): which, where it plays from, since `startedAt` (audio clock) while playing. */
   throwSong: { song: ThrowSong; playing: boolean; offsetSec: number; startedAt: number; sinceMs: number } | null = null;
+  /** The voice cue playing (D202–D204): since when, when it ends by itself at the latest, what it leads into. */
+  voice: { cue: VoiceCue; since: number; sinceMs: number; endsBy: number } | null = null;
+  /** The timed cues already played or dropped this Game (a Descans's by round: `descans-2min@<round>`). */
+  voicesDone = new Set<string>();
+  /** A timed cue that came due while it wasn't quiet: since when it waits. */
+  voiceWaiting: { key: string; cue: VoiceCue; since: number } | null = null;
+  /** The effect held on the D-pad (D203), while held. */
+  padHeld: { effect: PadHoldEffect; since: number; sinceMs: number; intensity: number; grid: { t0: number; beatSec: number } } | null = null;
   /** The public Shuffle's animation (audio-clock seconds), while it runs. */
   shuffle: { round: number; startAt: number; endAt: number } | null = null;
   intro: (IntroInfo & { cardType: string; side: number }) | null = null;
@@ -730,6 +763,7 @@ export class Show {
       autoAdvance: true,
       autoAdvanceFinal: false,
       remoteShake: true,
+      voicesOn: true,
       songsUntilWinner: 20,
       phaseOverride: null,
       roundsTotal: 5,
@@ -932,6 +966,12 @@ export class Show {
       case 'throw':
         this.throwTap('throw', c.restart ?? false);
         break;
+      case 'voiceSkip':
+        this.cutVoice();
+        break;
+      case 'padHold':
+        this.padHold(c.effect, c.on, c.intensity);
+        break;
       case 'finale':
         this.setFinale(reqId, c.cardIds);
         break;
@@ -999,6 +1039,7 @@ export class Show {
       this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     }
     if (this.unlocked) this.tickFlow(now);
+    if (this.unlocked) this.tickVoice(now);
     if (this.status !== 'transition' && this.status !== 'locked') this.prepareNext();
     // Pausa froze what plays: no timer runs, no loop repeats, nothing lands (endPause moves them all on).
     if (this.pause) return this.flush();
@@ -2108,6 +2149,8 @@ export class Show {
 
   panic() {
     this.announceCancel('panic');
+    this.cutVoice();
+    this.releasePad({ land: false });
     this.dropPause(); // nothing saved comes back
     this.endThrow(0.3);
     this.out.push({ type: 'stopAll', fadeSec: 0.3 });
@@ -2970,7 +3013,9 @@ export class Show {
     this.setScene('roundStart', number, kind, cardType, side);
     // Announcing a round reveals its prizes (unless the plan keeps them all secret: plan.ts revealedRounds).
     this.revealPrizes(number, 'intro');
+    // Its fanfare and the voice naming it over the intro music, which comes up as the voice ends (D198).
     this.playIntroMusic();
+    this.pressCue(this.roundCue(number, kind));
   }
 
   /** A round's prizes revealed, once per way (the journal's `prizes.revealed`). */
@@ -3006,7 +3051,153 @@ export class Show {
     this.intro = null;
     this.shuffle = null;
     this.setScene('after');
+    // The goodbye over the end set's first song, which comes up as it ends (D202).
     this.playIntervalMusic('end');
+    this.pressCue('goodbye');
+  }
+
+  // ------------------------------------------------------------------------------- voice cues (D198, D202–D204)
+  /** A round's voice cue: a normal round by its Quina number (its place among the plan's normal rounds). */
+  roundCue(number: number, kind: RoundKind): VoiceCue | null {
+    if (kind === 'desgraciat') return 'round-desgraciat';
+    if (kind === 'special') return 'round-especial';
+    const quina = this.plan ? this.plan.rounds.filter((r) => r.number <= number && r.kind === 'normal').length : number;
+    const cue = `round-${quina}`;
+    return isVoiceCue(cue) ? cue : null;
+  }
+
+  /**
+   * A presenter's press plays its cue at once (D204's waiting is for the timed cues): a timed one playing gives way. The
+   * music it leads into starts under it, dipped, and comes up as the voice ends.
+   */
+  pressCue(cue: VoiceCue | null) {
+    if (!cue || this.game.voicesOn === false) return;
+    this.cutVoice();
+    this.playVoice(cue, cue.startsWith('round-') ? 'fanfare' : 'chime');
+  }
+
+  playVoice(cue: VoiceCue, lead: VoiceLead) {
+    const at = this.env.now() + VOICE.leadSec;
+    this.voice = { cue, since: at, sinceMs: this.env.toEpochMs(at), endsBy: at + VOICE.maxCueSec };
+    this.out.push({ type: 'voice', action: 'play', cue, lead, at });
+  }
+
+  /** The runtime: the cue played to its end (its file missing included). */
+  voiceEnded(cue: VoiceCue): Effect[] {
+    if (this.voice?.cue === cue) {
+      this.voice = null;
+      this.emitState();
+    }
+    return this.flush();
+  }
+
+  /** Stop the cue playing (`voiceSkip`, Pausa, Panic): the music comes back up. */
+  cutVoice() {
+    const v = this.voice;
+    if (!v) return;
+    this.voice = null;
+    this.out.push({ type: 'voice', action: 'stop', cue: v.cue, lead: null, at: this.env.now() });
+  }
+
+  /**
+   * The timed cue due now: the doors' countdown in `before` (from the plan's start, never before the doors open), or
+   * "Tornem en dos minuts" in a Descans (the break after a round with a planned Throw, D197). The latest one due wins.
+   */
+  timedCues(): { key: string; cue: VoiceCue; dueMs: number }[] {
+    const sch = this.plan?.schedule;
+    if (this.scene === 'before' && sch?.startAtMs != null) {
+      const start = sch.startAtMs;
+      return VOICE.doorsMinutes
+        .map((m) => ({ key: `doors-${m}`, cue: `doors-${m}` as VoiceCue, dueMs: start - m * 60_000 }))
+        .filter((c) => sch.doorsAtMs == null || c.dueMs >= sch.doorsAtMs);
+    }
+    const interval = this.interval;
+    if (this.scene === 'interval' && interval && this.plan?.schedule.throws?.some((t) => t.afterRound === interval.nextRound - 1)) {
+      return [{ key: `descans-2min@${interval.nextRound - 1}`, cue: 'descans-2min', dueMs: interval.guideEndMs - VOICE.descansWarnSec * 1000 }];
+    }
+    return [];
+  }
+
+  /** Quiet enough for a timed cue (D204): the presenters are unlikely to be talking, nothing else is going on. */
+  voiceQuiet(): boolean {
+    const talking = this.hold != null && (this.hold.reason === 'hold' || this.hold.reason === 'pause' || this.hold.reason === 'claim');
+    return !this.voice && !this.pause && !this.transition && !this.suspense && !talking && this.scene !== 'check' && !this.throwSong?.playing && !this.padHeld;
+  }
+
+  tickVoice(now: number) {
+    if (this.voice && now >= this.voice.endsBy) {
+      this.voice = null;
+      this.emitState();
+    }
+    const nowMs = this.env.nowMs();
+    const due = this.timedCues().filter((c) => c.dueMs <= nowMs && !this.voicesDone.has(c.key));
+    if (!due.length) return;
+    // An earlier one never comes after a later one: only the latest due may still play.
+    const last = due.reduce((a, b) => (b.dueMs > a.dueMs ? b : a));
+    for (const c of due) if (c !== last) this.voicesDone.add(c.key);
+    const late = (nowMs - last.dueMs) / 1000 > VOICE.maxWaitSec;
+    if (late || this.game.voicesOn === false) {
+      this.voicesDone.add(last.key);
+      return this.emitState();
+    }
+    if (!this.voiceQuiet()) return;
+    this.voicesDone.add(last.key);
+    this.playVoice(last.cue, 'chime');
+    this.emitState();
+  }
+
+  /** The next timed cue, for the console: the one waiting, else the next due. */
+  voiceNext(): { cue: VoiceCue; atMs: number } | null {
+    if (this.game.voicesOn === false) return null;
+    const nowMs = this.env.nowMs();
+    const open = this.timedCues().filter((c) => !this.voicesDone.has(c.key) && nowMs - c.dueMs <= VOICE.maxWaitSec * 1000);
+    const waiting = open.filter((c) => c.dueMs <= nowMs).sort((a, b) => b.dueMs - a.dueMs)[0];
+    const next = waiting ?? open.filter((c) => c.dueMs > nowMs).sort((a, b) => a.dueMs - b.dueMs)[0];
+    return next ? { cue: next.cue, atMs: next.dueMs } : null;
+  }
+
+  // ---------------------------------------------------------------------------------- the drum roll (D203)
+  /** An effect held on the D-pad: start, intensity, or let go (landing on the next beat once held long enough). */
+  padHold(effect: PadHoldEffect, on: boolean, intensity?: number) {
+    const now = this.env.now();
+    const held = this.padHeld;
+    if (on) {
+      const value = Math.min(1, Math.max(0, intensity ?? held?.intensity ?? 0));
+      if (held) {
+        held.intensity = value;
+        this.out.push({ type: 'padHold', action: 'intensity', effect: held.effect, at: now, intensity: value });
+        return;
+      }
+      const grid = this.beatGrid(now);
+      this.padHeld = { effect, since: now, sinceMs: this.env.nowMs(), intensity: value, grid };
+      this.out.push({ type: 'padHold', action: 'start', effect, at: now + 0.02, intensity: value, grid });
+      return;
+    }
+    this.releasePad({ land: true });
+  }
+
+  /** Let the held effect go: it lands on the next beat when held long enough (and `land`), else it fades out now. */
+  releasePad({ land }: { land: boolean }) {
+    const held = this.padHeld;
+    if (!held) return;
+    this.padHeld = null;
+    const now = this.env.now();
+    const lands = land && now - held.since >= DRUMROLL.landAfterSec;
+    const { t0, beatSec } = held.grid;
+    const at = lands ? t0 + Math.ceil((now + 0.05 - t0) / beatSec) * beatSec : now;
+    this.out.push({ type: 'padHold', action: 'release', effect: held.effect, at, intensity: held.intensity, land: lands });
+  }
+
+  /** The beat to play on: the song playing's (a downbeat and its beat length), else DRUMROLL.defaultBpm from now. */
+  beatGrid(now: number): { t0: number; beatSec: number } {
+    const cur = this.current;
+    const analysis = cur ? this.env.analysis(cur.songId) : null;
+    if (cur && analysis) {
+      const tl = deckTimeline(analysis, cur, cur.landedDownbeatIndex);
+      const near = tl.downbeatsBetween(now - 8, now + 8).reduce<{ ctxTime: number; index: number } | null>((b, d) => (!b || Math.abs(d.ctxTime - now) < Math.abs(b.ctxTime - now) ? d : b), null);
+      if (near) return { t0: near.ctxTime, beatSec: tl.beatAt(near.index) };
+    }
+    return { t0: now, beatSec: 60 / DRUMROLL.defaultBpm };
   }
 
   // ---------------------------------------------------------------------------------- the throw songs
@@ -3076,6 +3267,9 @@ export class Show {
     if (this.transition) this.cancel(this.transition, 'hold');
     if (this.suspense) this.cancelSuspense(this.suspense, 'hold');
     this.pending = null;
+    // A voice cue stops; a held effect stops without landing.
+    this.cutVoice();
+    this.releasePad({ land: false });
     const now = this.env.now();
     const run = this.check;
     if (run) {
@@ -3486,6 +3680,9 @@ export class Show {
       finale: this.finaleInfo(),
       throwSong: this.throwInfo(),
       throwSongs: { throw: throwTrackInfo('throw'), storm: throwTrackInfo('storm') },
+      voice: this.voice ? { cue: this.voice.cue, sinceMs: this.voice.sinceMs } : null,
+      voiceNext: this.voiceNext(),
+      padHold: this.padHeld ? { effect: this.padHeld.effect, sinceMs: this.padHeld.sinceMs, intensity: this.padHeld.intensity } : null,
     };
   }
 

@@ -16,7 +16,8 @@
 // Not part of a repertoire: /fx/<name>.mp3 and /stingers/<name>.mp3 (data/media), /holdaudio/<name>.flac (data/cache/hold,
 // Hold music, the intro and the throw song decoded by tools/prep/hold.py) and /data/hold/* (data/out/hold, their loops),
 // /intervalaudio/<set>/<slug>.flac (data/cache/interval/<set>, a music set decoded by tools/prep/interval.py) and
-// /data/interval/<set>/* (data/out/interval/<set>, its tracks), /cloud/* (data/link, the cloud link's folder), /ws.
+// /data/interval/<set>/* (data/out/interval/<set>, its tracks), /voiceaudio/<name>.flac (data/cache/voice, the voice cues
+// tools/prep/voices.py prepares) and /data/voice/* (data/out/voice, their index), /cloud/* (data/link), /ws.
 // Repertoire media is revalidated (ETag) instead of cached for a day: the same URL means another file in another repertoire.
 // The hub forwards commands (@quina/protocol) to the show engine and the engine's events to everyone else.
 import crypto from 'node:crypto';
@@ -88,6 +89,7 @@ const MOUNTS: [prefix: string, dir: string | null, cache: string][] = [
   ['/analysis/', ANALYSIS_DIR, 'no-store'],
   ['/data/hold/', path.join(OUT, 'hold'), 'no-store'],
   ['/data/interval/', path.join(OUT, 'interval'), 'no-store'],
+  ['/data/voice/', path.join(OUT, 'voice'), 'no-store'],
   ['/data/', REPERTOIRE.dataDir, 'no-store'],
   // The whole apps/cards output folder, as before; a repertoire without cards serves none (the engine falls back).
   ['/cards/', REPERTOIRE.cardsJson && path.dirname(REPERTOIRE.cardsJson), 'no-store'],
@@ -140,6 +142,8 @@ function resolveStatic(urlPath: string): StaticTarget | null {
   if (stretched) return { file: path.join(cache, 'stretch', stretched[1], stretched[2], `${stretched[3]}.flac`), cache: REVALIDATE };
   const hold = urlPath.match(/^\/holdaudio\/([A-Za-z0-9._-]+)\.flac$/);
   if (hold) return { file: path.join(CACHE, 'hold', `${hold[1]}.flac`), cache: LONG_CACHE };
+  const voice = urlPath.match(/^\/voiceaudio\/([a-z][a-z0-9-]*)\.flac$/);
+  if (voice) return { file: path.join(CACHE, 'voice', `${voice[1]}.flac`), cache: REVALIDATE };
   const interval = urlPath.match(/^\/intervalaudio\/([a-z][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.flac$/);
   if (interval) return { file: path.join(CACHE, 'interval', interval[1], `${interval[2]}.flac`), cache: REVALIDATE };
   if (urlPath === '/data/hold-report.md') return { file: path.join(OUT, 'hold-report.md'), cache: 'no-store' };

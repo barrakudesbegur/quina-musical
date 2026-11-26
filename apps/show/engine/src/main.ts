@@ -9,6 +9,8 @@ import { applyPlan } from './audio/scheduler.ts';
 import { HoldMusic } from './audio/holdmusic.ts';
 import { IntervalPlayer, type SuspendedInterval } from './audio/interval.ts';
 import { ThrowPlayer } from './audio/throw.ts';
+import { VoicePlayer } from './audio/voice.ts';
+import { DrumRoll } from './audio/padhold.ts';
 import type { SuspendedHold } from './audio/holdmusic.ts';
 import type { SuspendedLoop } from './audio/celebration.ts';
 import { StemStore } from './audio/stems.ts';
@@ -94,6 +96,8 @@ interface MixerDebug {
   intervalPlayer: IntervalPlayer;
   sets: Record<MusicSet, IntervalPlayer>;
   throwPlayer: ThrowPlayer;
+  voicePlayer: VoicePlayer;
+  drumRoll: DrumRoll;
   send: typeof send;
   bus: Bus<ShowEvent>;
   checkPlayer: CheckPlayer;
@@ -211,6 +215,8 @@ const stopSets = (options: { at?: number; fadeSec?: number }) => {
   for (const player of allSets()) player.stop(options);
 };
 const throwPlayer = new ThrowPlayer(graph);
+const voicePlayer = new VoicePlayer(graph);
+const drumRoll = new DrumRoll(graph);
 throwPlayer.onEnded = () => show && run(show.throwEnded());
 /** What Pausa saved (D128): the song deck and every bed, each where it was. */
 let paused: { deck: Deck | null; hold: SuspendedHold | null; loop: SuspendedLoop | null; sets: Partial<Record<MusicSet, SuspendedInterval>>; throwAt: ReturnType<ThrowPlayer['suspend']> } | null = null;
@@ -348,6 +354,7 @@ async function boot() {
   holdMusic.prepare().catch((error) => console.warn('hold music', error));
   for (const player of allSets()) void player.prepare();
   for (const song of Object.values(THROW.songs)) void throwPlayer.load(song.name);
+  void voicePlayer.load();
   void snippets.loadIndex();
   setInterval(tick, ENGINE.taskIntervalMs);
   setInterval(emitHealth, ENGINE.healthIntervalMs);
@@ -480,6 +487,16 @@ function apply(effect: Effect): void {
     case 'throwSong':
       if (effect.action === 'play' && effect.track) return void throwPlayer.play(effect.at, effect.offsetSec, effect.track);
       return throwPlayer.stop(effect.at, effect.fadeSec ?? THROW.fadeSec);
+    case 'voice': {
+      if (effect.action === 'stop' || !effect.cue || !effect.lead) return voicePlayer.stop();
+      const cue = effect.cue;
+      // When it has played out the machine hears so (what it led into follows); a missing file is a silent cue.
+      return void voicePlayer.play(cue, effect.lead, effect.at).then((end) => addTask(end, () => voicePlayer.finish(cue) && run(machine().voiceEnded(cue))));
+    }
+    case 'padHold':
+      if (effect.action === 'start' && effect.grid) return drumRoll.start(effect.at, effect.grid, effect.intensity);
+      if (effect.action === 'intensity') return drumRoll.setIntensity(effect.intensity);
+      return drumRoll.release(effect.at, effect.land === true);
     case 'volumes':
       return graph.setVolumes(effect.volumes);
     case 'bedDuck':
@@ -754,6 +771,8 @@ function stopAll(fadeSec: number): void {
   checkPlayer.cancel();
   winningLoop.stop({ fadeSec });
   throwPlayer.stop(now, fadeSec);
+  voicePlayer.stop();
+  drumRoll.stopNow();
   if (paused?.deck) decks.push(paused.deck);
   paused = null;
   setTimeout(() => {
@@ -872,6 +891,7 @@ function tick(): void {
   if (ctx.state !== 'running' || !show) return;
   const now = ctx.currentTime;
   drum.scheduleTicks(now);
+  drumRoll.tick(now);
   for (const player of allSets()) player.tick();
   const due = rt.tasks.filter((task) => task.at <= now);
   if (due.length) {
@@ -1076,7 +1096,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Exposed for tests and debugging.
-window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, intervalPlayer, sets, throwPlayer, send, bus, checkPlayer, winningLoop };
+window.mixer = { get show() { return show; }, rt, ctx, clock, graph, loader, drum, holdMusic, intervalPlayer, sets, throwPlayer, voicePlayer, drumRoll, send, bus, checkPlayer, winningLoop };
 boot().catch((error: unknown) => {
   console.error(error);
   showStatusLine(`Failed to start: ${errorText(error)}`);

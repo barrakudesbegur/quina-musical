@@ -66,6 +66,7 @@ STEPS = (
     Step("signatures", "signatures.py", VENV_PY, True),
     Step("hooks", "hooks_auto.py", VENV_PY, True),
     Step("interval", "interval.py", VENV_PY, False, takes_repertoire=False),
+    Step("voices", "voices.py", VENV_PY, False, takes_repertoire=False),
 )
 STEP_NAMES = tuple(s.name for s in STEPS)
 

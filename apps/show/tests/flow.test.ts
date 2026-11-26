@@ -93,7 +93,8 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
   for (const [name, partial, extra] of cases) {
     const ctx: SceneContext = { celebrating: null, introduced: false, paused: false, ...partial };
     const allowed = COMMAND_NAMES.filter((cmd) => sceneAllows(cmd, ctx)).sort();
-    assert.deepEqual(allowed, [...ANY, ...extra].sort(), name);
+    // voiceSkip anywhere; padHold (the drum roll, D203) anywhere but Pausa.
+    assert.deepEqual(allowed, [...ANY, 'voiceSkip', ...(ctx.paused ? [] : ['padHold' as const]), ...extra].sort(), name);
   }
 });
 
