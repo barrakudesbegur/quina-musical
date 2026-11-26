@@ -1315,3 +1315,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov; protocol 
 ### D196 · The console's playback is always at the top of the left column · 2026-11-26 · Active
 The user on the canvas, again: "I told you a thousand times in comments! the song should be up on the left sidepanel!", and on the review board: the right side is only for action buttons. On every console screen, the playback ("Ara sona") sits at the top of the left column, and the right column holds only action buttons. Frontend checks every console board, and the code follows.
 By: the user via canvas (26 Nov). Source: Frontend's reports of 26 Nov. Lives in: requirements/screens.md › Console.
+
+### D197 · A planned throw's minutes are its break's length · 2026-11-26 · Active
+The plan's throw entry (`schedule.throws: [{ afterRound, minutes }]`) means: "the break after that round lasts `minutes`, with a throw in it". It isn't time added on top of the usual break. The organizers wrote "Descans + llançament (10min)", the break's total, so Admin takes 10 for 2026. The engine's estimate and the countdown follow it, and so does Admin's label (e.g. "Descans de N min, amb llançament"). It agrees with the glossary: a Break is the time between two rounds, and a Throw usually happens inside one. With it, the night ends about 9:45 pm.
+By: the orchestrator, applying the user's D192 to Sound engine's facts. Source: Sound engine's report of 26 Nov. Lives in: packages/protocol plan.ts (Sound engine); Admin (Frontend).
