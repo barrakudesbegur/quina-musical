@@ -53,7 +53,7 @@
   <header class="check-card__head">
     <h2 class="check-card__title">{S.check.card(check.cardId)}</h2>
     <span class="chip chip--ink">{S.check.kind[check.kind]}</span>
-    {#if type}<span class="chip chip--type" style:--chip-bg={type.color}>{#if type.special}<Icon name="star" />{/if}{type.name}</span>{/if}
+    {#if type}<span class="chip chip--type">{#if type.special}<Icon name="star" />{/if}{type.name}</span>{/if}
     {#if of}<span class="check-card__of">{S.check.ofCards(of.n, of.total)}</span>{/if}
   </header>
 
