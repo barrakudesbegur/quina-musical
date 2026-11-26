@@ -68,7 +68,7 @@
     <!-- Last year's card: a clock with a circular arrow going back (the user, 25 Nov). -->
     <path d="M4.6 13.4A7.6 7.6 0 1 0 6.3 6.8" /><path d="M3.6 3.8v4.4H8" /><path d="M12 8v4.4l3 1.8" />
   {:else if name === 'plusOutlined'}
-    <!-- The orange pills' plus ("+ Afegir cartró"): the colour over a thick ink outline. -->
+    <!-- The orange buttons' plus («+ Cartró»): the colour over a thick ink outline. -->
     <path d="M12 4v16M4 12h16" style:stroke="var(--color-line)" stroke-width="6.5" /><path d="M12 4v16M4 12h16" stroke-width="3" />
   {:else if name === 'tick'}
     <path d="M5 12.5l4.5 4.5L19 7.5" />

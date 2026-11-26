@@ -90,7 +90,7 @@
       <p class="menu__empty">{S.noCards}</p>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary menu__add" onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
+      <button type="button" class="big-button tone-primary menu__add" aria-label={S.addCardLabel} onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
     {/if}
   </section>
 

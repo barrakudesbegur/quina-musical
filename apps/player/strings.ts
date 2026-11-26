@@ -34,7 +34,11 @@ export const S = {
   back: 'Enrere',
 
   // Adding cards
-  addCard: 'Afegir cartró',
+  /** Every button that adds a card, after its plus: «+ Cartró» (D188, D201). */
+  addCard: 'Cartró',
+  /** Those buttons' name for screen readers. */
+  addCardLabel: 'Afegir un cartró',
+  /** The add-card drawer's title (board Mobil-Afegir-Estats). */
   padTitle: 'Afegir cartró',
   /** The number field's name for screen readers (the field shows only "#" and the digits). */
   padNumber: 'Número del cartró',

@@ -9,5 +9,5 @@
 <div class="add-prompt">
   <p class="add-prompt__text">{S.noCards}</p>
   <p class="add-prompt__hint">{S.noCardsHint}</p>
-  <button type="button" class="big-button tone-primary add-prompt__button" onclick={onadd}><Icon name="plus" /> {S.addCard}</button>
+  <button type="button" class="big-button tone-primary add-prompt__button" aria-label={S.addCardLabel} onclick={onadd}><Icon name="plus" /> {S.addCard}</button>
 </div>
