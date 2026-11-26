@@ -203,7 +203,7 @@ A state in which no new song can land and the current song keeps playing at full
 _Avoid_: Freeze, loop mode
 
 **Pause**:
-A long break in the middle of a round: no song lands, the interval music plays instead of the current song, and the projector and phones show a pause screen. It is the second level of Hold (labelled "Pausa").
+A break the presenters can start at any time: no song lands, the Pausa music plays instead of what was playing, and the projector and phones show a pause screen. When it ends, what was playing resumes. It's the second level of Hold (labelled "Pausa").
 _Avoid_: Break, interval (for this)
 
 **Hold music**:

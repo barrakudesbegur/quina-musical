@@ -8,22 +8,31 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U90–U92 · "Enrere" inside a Check (D127)
+- **U90 · On the projector:** (a) the last revealed mark disappears, and that cell is next again; (b) the projector keeps its marks, and only the tablet steps back.
+- **U91 · The sound of a step back:** (a) silent, and the next press replays that song's snippet; (b) the step back replays the previous song's snippet. At none, the song from before the Check plays (D127).
+- **U92 · When it works:** (a) only while songs are being revealed: not in a review, not after the cue; (b) also after the cue, undoing the fanfare.
+
+### U93–U95 · Pausa everywhere (D128)
+- **U93 · The screens:** (a) "Tornem de seguida" on the projector and phones in every scene; (b) only in a round (a song, a Check, a Celebration); at the doors, in a break and at the end, the screens stay as they are.
+- **U94 · Where it resumes:** (a) exactly where it was, fading in; (b) from the start of the phrase it was in.
+- **U95 · During a review:** the −/+ hold is (a) Pausa, as usual, or (b) nothing. And A is (a) "continue the Check", or (b) nothing, with the four choices tablet-only.
+
+### U96–U100 · Music for each moment (D129)
+- **U96 · "Break":** the glossary calls the time between rounds an Interval, and a longer one with a throw a throw break. By "break" do you mean (a) every Interval, throw breaks included (the throw itself has its song); (b) only the throw breaks; (c) something else?
+- **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
+- **U98 · The end music and the DJ:** (a) it plays after the close until the tech stops it for the DJ set; (b) a set number of songs, then it stops.
+- **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
+- **U100 · The throw song:** which "Pont aeri" (a Spotify link)? It's played (a) from its hook at full volume when the presenters start the throw (a "Llançament" button), until they end it and the break music fades back in; (b) another way.
+
+### U101–U102 · Volumes (D130)
+- **U101 · More sliders:** the engine has other sounds too. Add (a) the doors, the end, the throws, the Hold music and the Check's sounds (snippets, the broken record, knocks), with the fanfares counting as win and fail and the transitions' risers, whooshes and impacts as songs; (b) only the user's list; (c) others.
+- **U102 · Where they live:** (a) the tablet's settings, saved in the cloud and the edition file; (b) Admin only; (c) the laptop only.
+
 ### U85 · The music under a Check, between reveals
 Today the song or Hold music drops very low (−32 dB) for the whole Check, under the snippets. With the presenters pacing it, they'll talk between presses.
 - (a) Very low for the whole Check, as now.
 - (b) At the claim's level, under the presenters' voices, dipping further only while a snippet plays.
-
-### U86 · A card number that doesn't exist
-A presenter typing on the pad may make a typo. Today an unknown number fails the Check publicly.
-- (a) The pad refuses it privately ("Aquest número no existeix"), so the presenter retypes and nothing goes public.
-- (b) A public fail, as now.
-A real card of the wrong type for the round still fails publicly (D33).
-
-### U87 · "Enrere" during a claim and a Check
-"Enrere" undoes the last song, for a claim that comes after more songs have played. Today's Check screen has it as a long press.
-- (a) Keep it as a long press on the claim pad and the Check screen, as today.
-- (b) Only before the Check starts, on the claim pad.
-- (c) Only outside claims.
 
 ### U88 · The Wii remote during a review
 A is the reveal and the cue.
@@ -34,10 +43,10 @@ A is the reveal and the cue.
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
-### U84 · After a discard: Parlem alone, or the "aturat" setting
-Sound engine's facts: "Avanç automàtic aturat" on the console isn't an override. It's the auto-advance setting itself switched off; it stays off across songs and rounds, and "Següent" doesn't bring it back. The override is the Hold: Parlem (like Aguanta and a claim) already suspends the auto-advance, and "Següent" ends the Hold, with the auto-advance as it was set.
-- (a) **Parlem alone:** after a discard the music from before the Check comes back in Parlem. "Següent" ends it, and the auto-advance carries on as set. Nothing to remember or restore.
-- (b) **The "aturat" setting:** the auto-advance is switched off too. After "Següent" it stays off until a presenter turns it back on.
+### U84 · Does "Següent" end Parlem?
+The user's model: Parlem and "aturat" don't end by themselves on "Següent", so resuming a round on its last song after a discard is a special state. Today's code (checked in the engine, `next()` → `leaveHold`): "Següent" **does** end Parlem, and Aguanta, and lands the next song with the auto-advance as it was set. Only "aturat", the auto-advance setting itself, stays off across songs.
+- (a) **Keep today's rule:** "Següent" ends Parlem. A discard (and the end of a Pausa) just leaves Parlem on, and "Següent" ends it; no new state.
+- (b) **Change the rule:** Parlem stays on across "Següent" until a presenter turns it off. Then resuming after a discard or a Pausa is a special state, where "Següent" does end it.
 
 ### U77–U79 · The tablet, music and phones during a review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
@@ -168,6 +177,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U86 · A card number that doesn't exist** (2026-11-26) → D126: refused privately on the pad.
+- **U87 · "Enrere" during a claim and a Check** (2026-11-26) → D127: the normal Back before a Check; inside a Check, one press steps back one song, and it never closes the Check.
 - **U82 · Where Discard leads** (2026-11-26) → D122: back to the music from before the Check, in Parlem with the auto-advance off, until "Següent".
 - **U76 · The projector during a review** (2026-11-26) → D123: the Check screen, showing "Revisió manual".
 - **U83 · `dropped` or `discarded`** (2026-11-26) → D124: `discarded`.

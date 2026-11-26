@@ -124,18 +124,24 @@ This page explains the event: what happens on the night, who does what, and how 
 1. **Set-up:** in the afternoon, with everyone, including a sound check.
 2. **Doors and card sales (from 17:30):**
    - music plays and the bar opens;
+   - the mood: people buy cards, find a seat, wait and talk with friends. The music is its own set for this moment (**new in 2026**);
    - the screen shows the night's rounds, the card types with their colours and prices, the QR code for phones, and the sponsors.
 3. **The welcome:** the presenters explain the game.
    - They cover the number of rounds, the Desgraciat, which round is the Especial, the throws, and how winners are identified and collect their prizes. They remind everyone about the bar.
    - There are no written instructions anywhere.
 4. **The rounds** (see below), with an Interval between each two.
+   - Each round's intro has its own music, played low under the presenters, chosen for each round (**new in 2026**).
+   - The breaks' mood: people go to the bar or the toilet, or rest in their seat and talk with friends. Pop music, its own set (**new in 2026**).
 5. **The throws:** between some rounds, a break of about 5 minutes ("parón").
    - Organizers throw things to the crowd, such as fuets, sweets or chocolates, so people get up off their chairs and the night doesn't drag.
    - The presenters put on a bit of a show or go round the tables talking to people.
+   - It's a chaotic moment with an energetic song, chosen for each throw (**new in 2026**; for now "Pont aeri" in both).
+   - 2025's plan had three throws: fuets, then caramels and melindros, then chocolates.
 6. **The close:**
    - the presenters explain how to collect prizes and give a short closing speech;
    - the sponsors are thanked;
    - a DJ set follows.
+   - The mood: people get up and leave, or stay around while the organizers take their things down, dancing, talking or helping. The end music is its own set, in a fixed order, so the first song after the close is planned (**new in 2026**).
 7. **Take-down,** with everyone.
 
 **Rounds per night:**
@@ -307,6 +313,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - never robotic, repetitive or a plain volume fade.
 - **Intensity grows** towards each Line and Bingo, and drops back after a Line.
 - **The music never stops,** unless the silence is intended: during claims, pauses and Intervals too.
+- **Each moment has its own music** (**new in 2026**): the doors, the round intros, the breaks, the throws, Pausa (lofi and silly) and the end.
 - **Fun sounds:**
   - a game-style shuffle sound;
   - video-game music while a failed check is sorted out;

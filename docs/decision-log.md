@@ -877,7 +877,7 @@ By: the user. Source: the user's message of 25 Nov. Lives in: requirements/songs
 Once a Part is final, the user sorts its Spotify playlist alphabetically by hand (with an online tool), and the song ids follow that order. Leading articles count: "The …" sorts under T, unlike Spotify's own sort, which ignores "The". Sound engine checks the order before using it, and reports any song out of place to the user rather than fixing the playlist. Until a Part is final, ids follow the Spotify track (D79).
 By: the user. Source: the user's message of 25 Nov. Amends: D79. Lives in: requirements/songs-and-cards.md › Hooks.
 
-### D104 · The Interval music comes from a new playlist · 2026-11-26 · Active
+### D104 · The Interval music comes from a new playlist · 2026-11-26 · Amended by D129
 The Interval's music, which Pausa plays too, now comes from the Spotify playlist 0XTlZPUpt7xPoPxk4AUU3O, which has more songs. It replaces 0SsuXelEzN8gsS7WufySOg. The old files stay (D80).
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The Interval and the throw breaks.
 
@@ -972,3 +972,27 @@ By: the user. Source: open-questions.md › Answered (U83). Lives in: packages/p
 After a discard, the round uses the console's existing "aturat" mode ("Avanç automàtic aturat: prem Següent"), the override of the auto-advance, instead of switching the auto-advance setting off and remembering it. The music from before the Check still comes back in Parlem. On "Següent", Parlem goes away and the auto-advance is back to whatever it was. The user: "you should have told me that we already have the aturat mode wich is a override of the auto-advance, and more suitable for this."
 Sound engine's facts (26 Nov): in today's code "Avanç automàtic aturat" is the auto-advance setting itself switched off, and "Següent" doesn't clear it. The override is the Hold: Parlem already suspends the auto-advance, and "Següent" ends it with the auto-advance as set. Which one the user means is U84.
 By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requirements/show-and-music.md › the Check's sound.
+
+### D126 · An unknown card number is refused privately · 2026-11-26 · Active
+The claim pad refuses a number that doesn't exist ("Aquest número no existeix"), so the presenter retypes it and nothing goes public. A real card of the wrong type still fails publicly (D33). Answers U86.
+By: the user. Source: open-questions.md › Answered (U86). Lives in: requirements/game-rules.md › The Check; requirements/screens.md › Console.
+
+### D127 · "Enrere" inside a Check · 2026-11-26 · Active; its details Pending (U90–U92)
+A claim is an instant, so before a Check "Enrere" is the normal Back. If a presenter undoes a song there, the Check may fail; they press "Següent" again, and no extra logic is needed. During a Check, a single press (no 1+2 hold) steps back one revealed song, down to none. At none, the song that was playing before the Check plays again, while the card stays on the Check screen; "Enrere" never closes the Check. The button hints sit on the right buttons. Answers U87.
+By: the user. Source: open-questions.md › Answered (U87); the user's message of 26 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D128 · Pausa resumes what was playing · 2026-11-26 · Active; its details Pending (U93–U95, and Sound engine's check that nothing breaks)
+Pausa is available at any time, and the playback in progress is saved when it starts. While it's on, the remote's A turns Pausa off (its hint glides to the new place), and the tablet's "Següent" still plays the transition into the next song. Parlem shows as on and can't be turned off: the Pausa music plays low, as if in Parlem. When Pausa ends, whatever was playing before resumes, with Parlem still on: a round's song, the win or fail music, or any other. Then A goes back to normal. During a Check, the −/+ hold sends the Check to review instead of pausing; the hints move, and A's action changes once the screen shows the review.
+By: the user. Source: the user's message of 26 Nov. Amends: "the round resumes with a normal transition" (show-and-music › The presenters' actions). Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D129 · Music for each moment · 2026-11-26 · Active; the details Pending (U96–U100)
+- **Pausa:** the lofi and silly-core playlist (0XTlZPUpt7xPoPxk4AUU3O).
+- **Breaks and after the game:** pop, from the playlist 0fvoRGCC8zXqDyj5uLhJVg.
+- **Separate moods:** the beginning, each break and the end each get their own music. The end's songs play in a fixed order, so the first song after the close is planned.
+- **Round intros:** the user picks each round's intro music. For now it's "5-12. Parasail Minigame" (Zelda: Breath of the Wild), looping cleanly, played low as if in Parlem.
+- **Throws:** each throw gets an energetic song of the user's choosing. For now both play "Pont aeri", from a hook chosen in advance.
+By: the user. Source: the user's message of 26 Nov. Amends: D104 (that playlist is now Pausa's, not the Interval's). Lives in: requirements/show-and-music.md › Music for each moment; event.md › The night, step by step.
+
+### D130 · A volume for each kind of sound · 2026-11-26 · Active; the list and the place Pending (U101–U102)
+A master volume plus one each for the win, the fail, breaks, Pausa, intros, songs, songs in Parlem and effects. All start at 100%, except songs in Parlem and effects, which may start lower.
+By: the user. Source: the user's message of 26 Nov. Lives in: requirements/show-and-music.md › Volumes.
