@@ -41,6 +41,11 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 - (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
 - (b) Three, with Hold music too.
 
+### U159 · The numbered slip for winners
+The user on the canvas: "What is this field? we dont papereta concept. please read glosary. If it is the card, it should be readonly or no field directly". The field was labelled "Papereta", which isn't the glossary's word. The model does have a **numbered slip**: the glossary's Winner is "noted by name or by a numbered slip handed to them", event.md says "their name, or a numbered slip we hand them", and the organizers' 2025 notes say "s'entrega un paper amb un número per a identificar posteriorment a la persona". The card's number is already known from the claim.
+- (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
+- (b) Drop slips: the card's number identifies the winner, who shows the card to collect the prize. The glossary and event.md change.
+
 ### U155 · The finale and the new tabs on canvas v85, for review
 Frontend's boards: `Consola-Desgraciat-Final`, `Projector-Desgraciat-Final`, `Consola-Pestanyes-Noves`. Facts about the group ninos (D172): the "castle" (`nino-fent-una-torre`) holds two ninos, not three; the kissing pair exists only as a doodle (`nino-liantse.svg`), coloured on the board; "two dancing" is the sardana nino twice, and the high-five nino could replace it. The boards' proposals:
 1. A pair that falls kisses, a pair that wins dances, three is the castle, and four or more is the castle plus a pair.
