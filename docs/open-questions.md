@@ -41,6 +41,11 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 - (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
 - (b) Three, with Hold music too.
 
+### U163 · The round total in "Quina 4 de N"
+The model numbers only normal rounds ("Quina 1"…; the specials are "Quina Especial" and "Quina Desgraciada", with no number). Today every screen shows the plan's position instead, specials included, so with a special earlier in the night a normal round's number is one too high. Frontend is fixing that. Left open: what the total "de N" counts. In 2026 that's 10 normal rounds plus 2 specials.
+- (a) Normal rounds only: "Quina 4 de 10".
+- (b) Every round: "Quina 4 de 12", though only 10 rounds carry a number.
+
 ### U162 · "Tots dempeus!"
 When a landing would knock out every finalist left, so it counts for none of them (D180), Frontend proposes a moment (canvas v90, marked "proposta"): the finalists' ninos hop twice with green rays and confetti, a tilted green "TOTS DEMPEUS!" ribbon pops in under the title for about 1.5 s, and the song plays on. The tablet shows a small "★ Tots dempeus!" chip. Green keeps it apart from a win's gold. It's text on the projector, shown before any cue.
 - (a) As drawn.
