@@ -10,7 +10,7 @@ export type VolumeGroup = 'general' | 'songs' | 'music' | 'moments' | 'effects';
 export const VOLUME_GROUPS: readonly { group: VolumeGroup; keys: readonly VolumeKey[] }[] = [
   { group: 'general', keys: ['master'] },
   { group: 'songs', keys: ['songs', 'songsParlem', 'check'] },
-  { group: 'music', keys: ['doors', 'intros', 'breaks', 'pausa', 'holdMusic', 'end'] },
+  { group: 'music', keys: ['doors', 'intros', 'breaks', 'pausa', 'holdMusic', 'end', 'voices'] },
   { group: 'moments', keys: ['throws', 'win', 'fail', 'finalLap'] },
   { group: 'effects', keys: ['djFx', 'padFx', 'ticks'] },
 ];

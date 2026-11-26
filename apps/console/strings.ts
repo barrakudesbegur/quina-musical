@@ -636,6 +636,7 @@ export const S = {
       pausa: { label: 'Música de la pausa', note: null },
       holdMusic: { label: "Música d'espera", note: "Quan Parlem s'allarga" },
       end: { label: 'Música del final', note: null },
+      voices: { label: 'Veus', note: "El nom de cada quina, el compte enrere de les portes i l'avís del descans" },
       throws: { label: 'Llançament i tempesta', note: 'Un sol control per als dos; més forts que les cançons' },
       win: { label: 'Victòria', note: 'La fanfàrria, la música de victòria i la cançó guanyadora' },
       fail: { label: 'Fallada', note: "La fanfàrria i la música d'error" },
