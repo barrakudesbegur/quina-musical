@@ -109,6 +109,11 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U180 · Building the phone's home as the boards draw it
+The boards draw the phone's home with the corner buttons and a floating «+ Cartró» (D188, D189). The code still has «+ Cartró» at the end of the cards list and the older corner buttons. The home layout was held as boards until the user confirms it (the drawers proposal).
+- (a) Build the phone's home as the boards draw it now.
+- (b) Wait; the user reviews the phone boards first.
+
 ### U179 · A volume slider on the break's music panel
 screens.md lists "the music's skip and volume" for the break. Frontend's redraw of that panel (D196) has no slider, as on the agreed board. The menu's sliders (D139) still set the break music's level.
 - (a) Only the menu's sliders.
