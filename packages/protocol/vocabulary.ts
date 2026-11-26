@@ -16,8 +16,9 @@ export const isPhaseName = (value: unknown): value is PhaseName =>
 export type ShowStatus = 'locked' | 'idle' | 'playing' | 'transition' | 'hold';
 /** Why the show is in a Hold. `claim`: a Claim is being checked (also through the Celebration);
  * `checkFailed`: every claim of the last Check was invalid (error Hold music until Resume). */
-/** Why the round holds. `discarded`: a Review was discarded, so the music from before its Check plays under Parlem,
- * with auto-advance off until the presenters press Next, which ends Parlem and restores auto-advance (D122). */
+/** Why the round holds. `discarded`: a Review was discarded, so the music from before its Check plays under Parlem
+ * (D122, D125). Like every Hold, it suspends auto-advance without touching its setting; Next ends it, and auto-advance
+ * goes on as set. */
 export type HoldReason = 'hold' | 'back' | 'cancel' | 'end' | 'music' | 'claim' | 'checkFailed' | 'discarded';
 /** A normal round, the special round, or the Desgraciat round (played in reverse: the last card standing wins). */
 export type RoundKind = 'normal' | 'special' | 'desgraciat';
