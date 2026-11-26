@@ -8,6 +8,11 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U84 · After a discard: Parlem alone, or the "aturat" setting
+Sound engine's facts: "Avanç automàtic aturat" on the console isn't an override. It's the auto-advance setting itself switched off; it stays off across songs and rounds, and "Següent" doesn't bring it back. The override is the Hold: Parlem (like Aguanta and a claim) already suspends the auto-advance, and "Següent" ends the Hold, with the auto-advance as it was set.
+- (a) **Parlem alone:** after a discard the music from before the Check comes back in Parlem. "Següent" ends it, and the auto-advance carries on as set. Nothing to remember or restore.
+- (b) **The "aturat" setting:** the auto-advance is switched off too. After "Següent" it stays off until a presenter turns it back on.
+
 ### U77–U79 · The tablet, music and phones during a review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
 - **U77 · The tablet while under review:** the card under review with its private marks, the four choices (continue, win by hand, lose by hand, discard, with a warning when a choice goes against the card), and the usual Pausa and Parlem buttons. Anything to add or remove?

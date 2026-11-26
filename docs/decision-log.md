@@ -968,6 +968,7 @@ By: the user. Source: open-questions.md › Answered (U76). Lives in: requiremen
 The status for a discarded claim is `discarded`, matching the user's word and the label "Descartat". Answers U83.
 By: the user. Source: open-questions.md › Answered (U83). Lives in: packages/protocol (Sound engine).
 
-### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Active
+### D125 · After a discard, the "aturat" mode, not the auto-advance off · 2026-11-26 · Pending (U84)
 After a discard, the round uses the console's existing "aturat" mode ("Avanç automàtic aturat: prem Següent"), the override of the auto-advance, instead of switching the auto-advance setting off and remembering it. The music from before the Check still comes back in Parlem. On "Següent", Parlem goes away and the auto-advance is back to whatever it was. The user: "you should have told me that we already have the aturat mode wich is a override of the auto-advance, and more suitable for this."
+Sound engine's facts (26 Nov): in today's code "Avanç automàtic aturat" is the auto-advance setting itself switched off, and "Següent" doesn't clear it. The override is the Hold: Parlem already suspends the auto-advance, and "Següent" ends it with the auto-advance as set. Which one the user means is U84.
 By: the user. Source: the user's message of 26 Nov. Amends: D122. Lives in: requirements/show-and-music.md › the Check's sound.
