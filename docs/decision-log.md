@@ -1388,3 +1388,12 @@ By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: packa
 ### D206 · Interface sounds like Josh Comeau's button sounds · 2026-11-27 · Active; the details Pending (Frontend's spec)
 The user wants small UI sounds on presses, in the style of Josh Comeau's `button-sounds`. Frontend specs them first and sends the open choices. Today only the phones have interface sounds, on by default (screens.md › Player app).
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md (once specified).
+
+### D207 · The interface sounds' settled parts · 2026-11-27 · Active
+From Frontend's spec for D206 (temp/design-canvas/ds/ui-sounds.md), the parts that need no new choice:
+- **The phones** keep their synthesised game sounds. Recorded clicks replace only the "tap blip". They stay on by default, Admin sets the default for everyone, and a player's own choice wins (screens.md › Player app).
+- **The show laptop is always silent,** since its output is the PA.
+- **Our own small Web Audio player** plays them, not the `button-sounds` package with howler: the package loads from a CDN at version 0.0.0 by default, uses howler's private internals, and names files inconsistently. The sounds are MIT, and the notice stays next to our trimmed copies. About 350–400 KB for the phone, served by the relay and the cloud.
+- **Their level** starts at a gain of 0.3 on normalised samples, tuned by ear at the rehearsal (U13).
+The rest is U182–U186.
+By: the orchestrator, applying screens.md and D206 to Frontend's spec. Source: Frontend's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md (once applied); requirements/screens.md › Player app.

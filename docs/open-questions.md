@@ -109,6 +109,31 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U182 · Interface sounds on the tablet (D206)
+The tablet sits on stage, near the presenters' microphones, so its clicks could reach the PA. That's why ANIMATIONS.md keeps it silent today (principle 4).
+- (a) Silent, as today.
+- (b) Off by default, with a switch next to the volume sliders.
+
+### U183 · Interface sounds in Admin (D206)
+Never on the show laptop, whose output is the PA.
+- (a) Off by default, with a «Sons» switch in Admin's header.
+- (b) No sounds in Admin.
+
+### U184 · The phone's sound switches (D206)
+The phones already play game sounds (the your-song effect, the drum), on by default, with the player's own choice winning (screens.md › Player app).
+- (a) One «Sons» switch for both the touch sounds and the game sounds.
+- (b) Two switches.
+
+### U185 · A tap on something that can't be used (D206)
+For example a faded key, «Desar» before the number is valid, or an icon that's taken.
+- (a) A dull thud, with a small "no" motion.
+- (b) Silent, as today.
+
+### U186 · Which sounds (D206)
+Frontend's table in temp/design-canvas/ds/ui-sounds.md gives one sound per kind of touch, from Josh Comeau's set: big and small buttons, switches, keypad, «Desar», drawers, tabs, chips, a finished hold, refusals, the corner buttons, «+ Cartró», the icon picker. Each has one or two alternates. They can be heard at https://buttons.joshwcomeau.com.
+- (a) Start with the table, and swap any by ear at the listening pass (U13).
+- (b) The user picks each one after listening first.
+
 ### U181 · What the «Veus automàtiques» switch turns off (D204)
 Frontend's board (v104) has the switch on by default: «Apagat: cap veu més en tota la nit». Voices that fall due while it's off are dropped, not saved for later, since a late "15 minuts" would be wrong (D204's 60 s).
 - (a) Every voice, the round's name on «Comença la quina» included. The round fanfare's music still plays, so the presenters keep their cue before talking (D198).
