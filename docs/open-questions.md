@@ -48,7 +48,8 @@ D106 lets the Interval leave out a track nobody can get. A Part's songs are prin
 D107–D110 settle the Check's shape. The details below are the orchestrator's proposal, in force unless the user objects:
 - **The cue:** revealing stops after the last song, or at the first ✗. The next press of the big button or A plays the fanfare: "Celebrem!" on a pass, the fail moment on a fail. Holding A and the auto toggle never go past that point.
 - **A fail:** the reveal stops at the first ✗, since the rest isn't needed. On the cue: the Failure fanfare, the red ✗, then the error Hold music until "Reprèn", as now.
-- **Several cards:** each is checked in turn. A failed one gets its fail moment on its own cue; passing ones share one Celebration after the last card, as now.
+- **Several cards:** each is checked in turn, all of the same kind (Line or Quina). A failed one gets its fail moment on its own cue, then the next card appears by itself, and its first reveal waits for a press. A passing card that isn't the last gets a quiet cue (its "correct" plaque, no fanfare). The passing cards share one Celebration on the last card's cue. If that last card fails, the Celebration gets a cue of its own after the fail moment.
+- **A stopped claim holds the round:** "Següent" waits until the claim is checked again or dropped, since every claimed card is checked before the round moves on.
 - **The Desgraciat:** the same controls; holding A runs its 12 knocks quickly.
 - **Automatic reveal's speed:** each song for its snippet's length, today's Check timing (about 2.5 s a landed song).
 - **Voices in the Celebration:** "Parlem" works during it, ducking the victory music for the winner's moment.
