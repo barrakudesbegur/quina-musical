@@ -136,6 +136,7 @@ export function baseState(now: number): FullState {
     prizes: revealedUpTo(3),
     throwSong: null,
     lastRound: false,
+    finale: null,
   };
   const flow: FlowFields = {
     scene: 'play',

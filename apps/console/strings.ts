@@ -666,6 +666,7 @@ export const S = {
     claimOpen: 'hi ha un cartró en revisió: decidiu-lo primer',
     unknownCard: 'aquest número de cartró no existeix',
     nextBlocked: 'deixeu anar Aguanta o el Suspens primer',
+    finaleDecided: 'la final ja té guanyador: feu el senyal',
   } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,
   reasonFallback: "l'ordre no s'ha acceptat",
 
