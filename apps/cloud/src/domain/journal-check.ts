@@ -115,9 +115,9 @@ const KINDS: Record<JournalEntryKind, Record<string, FieldCheck>> = {
   'claim.opened': { round, claimId, cardId: integer(0, 99_999), winKind, position: integer(-1, 4999) },
   // `outcome`: the Check's result at the decision (absent in older journals), one of the protocol's CHECK_OUTCOMES.
   // `manual`: won or lost by hand, whatever the card shows: from a Review (D121), or the Desgraciat's finale when a
-  // removal left one standing (D169); absent otherwise.
+  // removal left one card; absent otherwise. `fellLast` (a shared win) is only in journals from before D180.
   'claim.decided': { round, claimId, verdict: oneOf('valid', 'invalid'), winningSongId: nullable(integer(0)), position: integer(-1, 4999), outcome: optional(oneOf(...CHECK_OUTCOMES)), manual: optional((value) => (value === true ? null : 'true when present')) },
-  // The Desgraciat's finalists (D161, D166–D172): the whole set each time, empty when the finale is called off; `byHand`
+  // The Desgraciat's finalists (D161, D166–D172 as D180 amends them): the whole set each time, empty when the finale is called off; `byHand`
   // when a removal left one standing, who wins. The reducer refuses it outside a Desgraciat round.
   'finale.set': { round, cardIds: finalists, byHand: optional((value) => (value === true ? null : 'true when present')) },
   // The presenter-paced Check's Review (D118–D121): a Check put under review before its cue leaves the claim

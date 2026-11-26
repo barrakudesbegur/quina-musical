@@ -26,9 +26,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
   - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
-  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2), so the bundle the tools prepare is now the **repertoire** (agreed with Sound engine; "library" is the logo library's), renamed in Sound engine's step A. Mine follows its rename: the media sync's `--pool`, the manifest's field, the R2 prefix `pools/` → `repertoires/` (no copy: the next push lands there; the old keys go at the post-night prune), and a deploy before any laptop pushes under it;
+  - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2); what the tools prepare together is the **repertoire** (agreed with Sound engine and the Orchestrator; "library" is the logo library's). My side is `02d8dd5`: `--repertoire` everywhere, R2 under `repertoires/<name>/` (manifest v2), the preflight's Repertoire group. Deploy it before any laptop pushes. The old `pools/` keys stay, unreachable by the tool, until deploy-plan step 6.5 expires them (after this year's push: until then they're R2's only copy of the Hold and Interval music);
   - this year's songs to R2 as soon as they're prepared (U55, D113). Prune last year's after the night;
-  - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
+  - 1–3 Dec: the cards move into the repertoires (queue item 3), and deploys name their repertoire;
   - the provisional-hooks WARN, once Sound engine sends the field.
 - **Not building:** Pausa in the journal (U111), the edition file and its upload (U68–U75, U63).
 - **Blocked:** nothing.
@@ -36,8 +36,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4);
   - **U16**, the logo library upload;
   - **U19**, real devices;
-  - **U54**, one Pool with three Parts (blocks the sides work);
-  - **U55** (Sound engine's), preparing Part 1;
+  - **U55** (Sound engine's), preparing Pool 1;
   - **U63**, **U68–U75**: the plan tool, its `quina-agent` token, and the edition file;
   - **U64**, a glance at Cloudflare's billing for R2's payment method;
   - **U79** and **U150**: whether phones show a Review, and the finale;
@@ -60,8 +59,8 @@ The night is **Sun 27 Dec 2026**; the final playlist arrives **Tue 1 Dec**; the 
 |---|---|---|
 | Done (25 Nov) | The cloud side of card type per round and of the Desgraciat round | |
 | Done (25 Nov) | `quina.barrakudesbegur.org` points at the Worker (deploy-plan step 7, D76) | |
-| By Fri 4 Dec | This year's pool measured against R2's 10 GB | the pool prepared (1–4 Dec) |
-| Before the tech rehearsal | Last year's pool pruned from R2, this year's pushed; the show laptop and the spare synced (deploy-plan step 6) | the pool prepared; hooks and stems done |
+| By Fri 4 Dec | This year's repertoire measured in R2 | the repertoire prepared (1–4 Dec) |
+| Before the tech rehearsal | This year's repertoire pushed, the old copies pruned from R2; the show laptop and the spare synced (deploy-plan step 6) | the repertoire prepared; hooks and stems done |
 | Each rehearsal | The preflight; watch the daily quota (`/api/stats`). A presenters' rehearsal on the day itself runs laptop-only (no `npm run link`) | D82 |
 | Sun 27 Dec | The night | |
 
@@ -104,26 +103,26 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 ## The next queue, in priority order
 
 1. **Provisional hooks WARN in the preflight**, once Sound engine sends the field (see item 2).
-2. **This year's pool** (D113: each Part goes to R2 as soon as it's prepared; going past 10 GB is fine): measure it, push it, and sync both laptops before the tech rehearsal; prune last year's pool and this year's after the night (deploy-plan step 6). **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which fits in R2's 10 GB once last year's pool is pruned.
-   - **Contingency (option d)**, only if the final pool goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
-     - push: the pool's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
+2. **This year's repertoire** (D113: each pool goes to R2 as soon as it's prepared; going past 10 GB is fine): measure it, push it, and sync both laptops before the tech rehearsal; prune last year's songs, and this year's after the night (deploy-plan step 6). **Today's format stays** (orchestrator and Sound engine, 2026-11-25). The draft playlist has 86 songs at about 68 MB each (2 approved hooks a song): 5.9–7.9 GB, which would fit in R2's 10 GB on its own.
+   - **Contingency (option d)**, only if the final repertoire goes past about 100 songs, or the user approves many hooks a song. It needs about 20 MB a song and ffmpeg with libopus on both laptops. Sound engine measured these commands:
+     - push: the repertoire's source audio as it is (`audioDir`, about 3.5 MB) plus `cache/<id>/mix.json`; each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.flac -c:a libopus -b:a 256k <part>.<window>.opus` (0.55× the FLAC); the rest (signatures/, snippet.flac, onset.npy, raw.json, data/) as today;
      - pull: `ffmpeg -nostdin -v error -y -i <source> -map 0:a -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/mix.flac` (bit-identical PCM with the same ffmpeg), and each stem `ffmpeg -nostdin -v error -y -i <part>.<window>.opus -ar 48000 -c:a flac -sample_fmt s16 cache/<id>/stems/<part>.<window>.flac` (exact length, within 2 samples);
      - the manifest then lists the .opus and source files. The decoded FLACs stay local, so the preflight's hash check must skip them.
-   - **Provisional hooks** (Sound engine, coming): a bulk approval of each song's top automatic hook, marked `provisional: true`, so a new pool can be rehearsed before the user's approval pass. The preflight should WARN when a playable song's best hook is provisional. Sound engine sends the exact field.
-3. **The cards move (1–3 Dec, agreed with Sound engine and Frontend; nothing before 1 Dec, D80).** The 2026 pool (`data/pools/2026.json`, Sound engine's) uses `apps/cards/dist/cards.json`, which becomes this year's cards on 4–5 Dec. Last year's test cards move to `data/pools/default/cards/`. Sound engine commits first; then mine, on top:
-   - `tools/e2e/show.spec.ts` and `desgraciat-live.spec.ts` read the cards through `loadPool().cardsJson` ($QUINA_POOL, else default), as the e2e's relay does;
-   - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that pool's, and fails at once if not (after the 2026 deploy: `QUINA_POOL=2026`);
-   - **deploys name their pool** (`--pool 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
-   - a preflight check that the cloud's cards.json matches the pool's (FAIL if not).
-4. **Card sides and Parts, step B** (D100–D102; agreed with Sound engine on 25 Nov; waits on U54 and Sound engine's step A). One night pool. Each song has a `part`; card-types.json's `sides: [{side, part}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
+   - **Provisional hooks** (Sound engine, coming): a bulk approval of each song's top automatic hook, marked `provisional: true`, so a new repertoire can be rehearsed before the user's approval pass. The preflight should WARN when a playable song's best hook is provisional. Sound engine sends the exact field.
+3. **The cards move (1–3 Dec, agreed with Sound engine and Frontend; nothing before 1 Dec, D80).** The 2026 repertoire (`data/repertoires/2026.json`, Sound engine's) uses `apps/cards/dist/cards.json`, which becomes this year's cards on 4–5 Dec. Last year's test cards move to `data/repertoires/default/cards/`. Sound engine commits first; then mine, on top:
+   - `tools/e2e/show.spec.ts` and `desgraciat-live.spec.ts` read the cards through `loadRepertoire().cardsJson` ($QUINA_REPERTOIRE, else default), as the e2e's relay does;
+   - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that repertoire's, and fails at once if not (after the 2026 deploy: `QUINA_REPERTOIRE=2026`);
+   - **deploys name their repertoire** (`--repertoire 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
+   - a preflight check that the cloud's cards.json matches the repertoire's (FAIL if not).
+4. **Card sides and pools, step B** (D100–D102, D178; agreed with Sound engine on 25 Nov; waits on Sound engine's step A model). One repertoire holds the night's pools. Each song has a `pool`; card-types.json's `sides: [{side, pool}]`; cards.json's `sides: [{side, lines}]`; `RoundPlan.side`. Mine, deployed before the engine journals `side`:
    - journal-check accepts `side`;
    - the projection's PublicRound.side and intro.side, 1 when absent;
    - Admin's resume point carries side (`-C<n>`);
-   - the preflight's cards check reads `sides` (each side 3×4, its songs in its Part), and every round's Part is prepared;
+   - the preflight's cards check reads `sides` (each side 3×4, its songs in its pool), and every round's pool is prepared;
    - the "side exists for that card type" check, and the protocol's `sideWarnings(plan, cardTypes)` (side 2 never played, a side's rounds not contiguous), in the preflight;
    - the cards.json conversion to `sides` is one commit by Frontend, which includes my two readers (the preflight's cards check, show.spec.ts), with no dual-shape reader (D84). Send Frontend that diff once step A's types exist; Frontend sends the hash before pushing;
    - show.spec.ts reads lines through the round's side; the plan fixtures.
-   The default test pool: all songs in Part "1", both card types one side on Part "1".
+   The default test repertoire: all songs in pool 1, both card types one side on pool 1.
 5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
 
 6. **The presenter-paced Check, step 2** (D107–D110; agreed with Sound engine, 26 Nov; after Sound engine's protocol step 1):
@@ -137,16 +136,16 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 
 ## Waiting on the user
 
-- **deploy-plan step 6:** this year's pool (the playlist isn't final). Don't start.
+- **deploy-plan step 6:** this year's repertoire (the playlist isn't final). Don't start.
 - **deploy-plan step 7.4 (optional):** Access destinations for `quina.barrakudesbegur.org`. Until then, organizers and the laptop use quina-dev.
 - **Open questions** in `docs/open-questions.md`: the player checked on desktop only (U19). The printed cards being public is answered (D78: public unless there's a reason).
 - **The logo library** isn't uploaded yet. Admin's upload needs a person's Google login. The user offered to sign in and let Platform drive their Chrome, but that was called off. Only start it if the user asks directly.
 
 ## Known issues and risks
 
-- **Prepared data.** The e2e and the media sync need the default pool prepared on this machine (`data/out`, `data/cache`); without it the e2e skips. CI has no prepared pool, so CI doesn't run the e2e.
+- **Prepared data.** The e2e and the media sync need the default repertoire prepared on this machine (`data/out`, `data/cache`); without it the e2e skips. CI has no prepared repertoire, so CI doesn't run the e2e.
 - **Free plan.** A pessimistic night is about half the daily request quota; rehearsals the same UTC day share it (deploy-plan step 5).
-- **R2 is 10 GB free;** last year's pool takes 6.6 GB, so it goes before this year's is pushed (step 6). **This year's pool may not fit.** Each song is about 92 MB in the bucket (the decoded `mix.flac` about 45 MB, plus `stems/` about 47 MB). With the shared Hold and Interval music, that's room for about **100 songs**. If the playlist is bigger, the options are: R2 storage beyond 10 GB (a few cents a month, but it needs the user's OK because the rule is free plan only); leaving the stems out of the bucket and rendering them on the spare laptop; or copying the overflow laptop to laptop on a USB disk. Measure it once the pool is prepared (2 Dec): `npm run media -- prune` shows the bucket against 10 GB.
+- **R2 is 10 GB free, and going past it is fine (D113).** Last year's songs take 6.6 GB. For size: Each song is about 92 MB in the bucket (the decoded `mix.flac` about 45 MB, plus `stems/` about 47 MB). With the shared Hold and Interval music, that's room for about **100 songs**. Past that, R2 just costs a few cents a month (D113); option d above shrinks it if needed. Measure it once the repertoire is prepared (2 Dec): `npm run media -- prune` shows the bucket against 10 GB.
 - **The shared tree.** Other sessions' uncommitted edits sit in the same checkout: commit by path, and test the committed state in a detached worktree of HEAD (node_modules symlinked, `QUINA_OUT_DIR` pointing at the real `data/out`). Never `rm` inside a copy whose node_modules is a symlink. When main and origin have diverged, use `npm run sync-main`, never `pull --rebase --autostash`. For the e2e in a worktree, also link `data/out`, `data/cache`, the untracked `data/media/*` folders and `tools/prep/.venv` (the relay renders Blends with it; without it the relay crashes at the first Check).
 - **The live Desgraciat run** (`QUINA_LIVE_CLOUD=https://quina-dev.barrakudesbegur.org npx playwright test desgraciat-live` in tools/e2e) leaves a rehearsal Game as quina-dev's current Game. Its phone screenshots go to `tools/e2e/results/`. Run it again after any change to the feed or the player's Desgraciat screens.
 - **Don't commit** `legacy/2025/last-year-data/` (last year's app database export: personal data) or anything from `legacy/2025` that isn't Platform's.
@@ -158,7 +157,7 @@ From the repo root, once: `npm install` (workspaces). Then:
 
 **Test:**
 - `npm test` (repo root): the show's suites, then the cloud's (`apps/cloud`: typecheck, Node tests, the Worker in workerd).
-- `npm run test:e2e` (repo root): one whole show, headless, with the phones' production path. It builds apps/show first and needs the prepared default pool. About 4 minutes.
+- `npm run test:e2e` (repo root): one whole show, headless, with the phones' production path. It builds apps/show first and needs the prepared default repertoire. About 4 minutes.
 - `npm run relay-audit` in apps/cloud (on a build): the relay lockdown checks.
 - `npm run loadtest -- --report reports/loadtest-$(date +%F).md` in apps/cloud: 400 phones.
 

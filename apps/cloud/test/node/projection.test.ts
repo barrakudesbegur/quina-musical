@@ -142,7 +142,7 @@ test("round 1's intro is public too, though the engine drew round 1 at boot; a r
   assert.equal(state.intro, null);
 });
 
-test("the Desgraciat round's shared win: one public winner with every card that stood last; no slip, no outcome", () => {
+test("a journal from before D180 replays its Desgraciat shared win: one public winner with every card that stood last; no slip, no outcome", () => {
   const b = new JournalBuilder('g-shared').startRound('desgraciat').land(25);
   const claims = [b.claim(3, 'standing'), b.claim(7, 'standing')];
   b.scene('check');

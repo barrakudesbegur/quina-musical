@@ -21,7 +21,7 @@ test('an accepted claim is flagged only when its Check did not pass', () => {
   );
 });
 
-test("the Desgraciat round: 'fellLast' passes a standing claim (the shared win); 'fallen' never does", () => {
+test("the Desgraciat round: 'fallen' never passes; a journal from before D180 keeps its shared win ('fellLast' passed a standing claim)", () => {
   const b = new JournalBuilder('g-flags-standing').startRound('desgraciat').land(20);
   const shared = [b.claim(3, 'standing'), b.claim(7, 'standing')];
   for (const id of shared) b.decide(id, 'valid', 'fellLast');

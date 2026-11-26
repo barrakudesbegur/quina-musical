@@ -130,14 +130,14 @@ npx wrangler secret put CF_ACCESS_SERVICE_TOKENS   # the service token's Client 
 
 Undo: delete the two Access applications and the service token, and `npx wrangler secret delete <NAME>`.
 
-### 4. R2 for the pool's media (milestone C3, for a takeover laptop): DONE (2026-11-24, see the log)
+### 4. R2 for the repertoire's media (milestone C3, for a takeover laptop): DONE (2026-11-24, see the log)
 
 - One private bucket: `npx wrangler r2 bucket create quina-media --location weur`.
 - Switch the binding on in wrangler.jsonc: uncomment `"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "quina-media" }]`, then `npm run deploy`. Without it, `/api/sync` answers 503 and nothing else changes. With it and no bucket, a deploy fails.
 - No public `r2.dev` access and no custom domain on the bucket. Files only go in and out through the Worker, with the laptop's service token.
 - If the dashboard asks to enable R2, or to add a payment method first, that's the user's call. Copyrighted audio goes to the private bucket only, never to git.
-- Then, the day before the show, on the show laptop: `npm run media -- push`. On a takeover laptop: `npm run media -- pull` (it needs the same pool manifest in `data/pools/`).
-- Size: last year's pool is 6 GB in 1,085 files (1,086 requests to push; R2's free tier is 10 GB). Two pools don't fit, so delete last year's test pool from the bucket (`pools/default/`) before pushing this year's.
+- Then, on the show laptop: `npm run media -- push --repertoire <name>`. On a takeover laptop: `npm run media -- pull --repertoire <name>` (it needs the same repertoire manifest in `data/repertoires/`). Each repertoire lives under `repertoires/<name>/` in the bucket (before D178, under `pools/<name>/`: see step 6).
+- Size: last year's songs are 6 GB in 1,085 files (1,086 requests to push). R2's free tier is 10 GB; going past it is fine (D113: a few cents a month).
 - Undo: `npx wrangler r2 bucket delete quina-media` (empty it first).
 
 ### 5. If a free limit is hit on the night
@@ -147,17 +147,17 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 - If it happens anyway: phones and remote consoles stop getting updates, and the show itself goes on, because the laptop never needs the cloud (ADR 0003). Upgrade on the spot: Dashboard → Workers & Pages → Plans → **Workers Paid** (5 USD a month minimum, usage-based beyond what's included). It takes effect at once.
 - Watch it live: Workers & Pages → quina-cloud → Metrics, plus Durable Objects → GameRoom, and `/api/stats` (admins).
 
-### 6. This year's pool, once the playlist is final
+### 6. This year's repertoire, once it's prepared
 
-The R2 free tier is 10 GB and last year's test pool takes 6.6 GB, so the old pool goes before the new one is pushed. Laptops keep their own copies; only the bucket's copy goes.
+Going past R2's 10 GB is fine (D113), so this year's repertoire goes up as soon as it's prepared, and the old copies go after. Laptops keep their own copies; only the bucket's copy goes.
 
-1. On the main laptop, prepare the new pool (apps/show README › Pools): fetch the playlist (`tools/prep/playlist-fetcher`), write `data/pools/2026.json`, tag the hooks, `npm run prep -- --pool 2026` in `apps/show`, and set `cardsJson` once the cards are generated.
-2. In `apps/cloud`, see what's in the bucket: `npm run media -- prune` (every pool, its files and size, against the 10 GB).
-3. Free the room: `npm run media -- prune --pool default` is a dry run (what it would free); `npm run media -- prune --pool default --yes` deletes the pool's files and manifest from the bucket.
-4. Push the new pool: `npm run media -- push --pool 2026` (progress every few seconds; about an hour for 6–7 GB at home upload speeds). Do it at least the day before the show.
-5. Use it everywhere: the relay `npm start -- --pool 2026 --lan`, the preflight `npm run preflight -- --pool 2026`, and each spare laptop `npm run setup:laptop -- --pool 2026` (it pulls the new pool; its finished steps are skipped).
+1. On the main laptop, prepare the new repertoire (apps/show README › Repertoires): fetch the playlist (`tools/prep/playlist-fetcher`), write `data/repertoires/2026.json`, tag the hooks, `npm run prep -- --repertoire 2026` in `apps/show`, and set `cardsJson` once the cards are generated.
+2. In `apps/cloud`, push it: `npm run media -- push --repertoire 2026` (progress every few seconds; about an hour for 6–7 GB at home upload speeds). Do it at least the day before the show. The Hold and Interval music goes with it, as with every repertoire.
+3. Use it everywhere: the relay `npm start -- --repertoire 2026 --lan`, the preflight `npm run preflight -- --repertoire 2026`, and each spare laptop `npm run setup:laptop -- --repertoire 2026` (it pulls the new repertoire; its finished steps are skipped).
+4. See what's in the bucket: `npm run media -- prune` (every repertoire, its files and size). A repertoire pushed since D178 goes with `npm run media -- prune --repertoire <name>` (a dry run: what it would free), then the same with `--yes`.
+5. The keys from before D178, under `pools/` (last year's songs, and the first push of the Hold and Interval music), belong to no repertoire, so the tool doesn't list them. Only after step 2 (until then, they're R2's only copy of the music), let R2 expire them: `npx wrangler r2 bucket lifecycle add quina-media pools-before-d178 pools/ --expire-days 1`. A day or two later, once the dashboard shows `pools/` empty, remove the rule: `npx wrangler r2 bucket lifecycle remove quina-media --name pools-before-d178`.
 
-Undo: push the old pool again from a laptop that still has it (`npm run media -- push --pool default`).
+Undo: push again from a laptop that still has the repertoire (`npm run media -- push --repertoire <name>`). The expired `pools/` keys can't come back, but every file in them is on the main laptop, under the default repertoire and the Hold and Interval folders.
 
 ### 7. Point quina.barrakudesbegur.org at the Worker: DONE (2026-11-25, see the log), Access destinations left
 
