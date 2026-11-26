@@ -83,7 +83,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['hold', 'confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
-    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw', 'storm']],
+    ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'storm']],
     ['roundStart with a set still on', { scene: 'roundStart', intervalMusic: true }, ['next', 'newRound', 'intervalSkip']],
     ['play with the breaks\' set still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'finale', 'finaleCue', 'intervalSkip']],
     // Pausa (D128): Next ends it with a transition; the Pausa set can be skipped.
@@ -752,13 +752,13 @@ test('the corn-seed storm in the night\'s last round (D155): the round holds fir
   assert.deepEqual(rejected(e.send('storm')), ['wrongScene']);
 });
 
-test('the corn-seed storm (D151): after the Game, its song right from the drop over the end music; the same taps; it replaces a throw', () => {
+test('the corn-seed storm (D151): after the Game, its song right from the drop over the end music; the same taps; no throw there (D194)', () => {
   const h = flow();
   landSongs(h, 1);
   h.send('endGame');
-  h.send('throw');
+  assert.deepEqual(rejected(h.send('throw')), ['wrongScene'], 'no "Llançament" on the end screen');
   const storm = find(h.send('storm'), 'throwSong');
-  assert.deepEqual([storm?.action, storm?.offsetSec, storm?.track?.name], ['play', THROW.songs.storm.hookSec, THROW.songs.storm.name], 'from its own hook, replacing the throw');
+  assert.deepEqual([storm?.action, storm?.offsetSec, storm?.track?.name], ['play', THROW.songs.storm.hookSec, THROW.songs.storm.name], 'from its own hook');
   assert.equal(THROW.songs.storm.hookSec, 208.76, 'U132 (a): Flying Free from its drop');
   assert.equal(h.show.snapshot().throwSong?.song, 'storm');
   h.advance(3);

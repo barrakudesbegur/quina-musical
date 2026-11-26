@@ -1,4 +1,4 @@
-// The Desgraciat's finale (D161, D166–D171, D180): the presenters enter the finalists; at each landing those with that
+// The Desgraciat's finale (D161, D166–D170, D180, D183): the presenters enter the finalists; at each landing those with that
 // song fall, each on their own card; a landing that would take out everyone left counts for none of them, so the finale
 // goes on until exactly one is left, the winner (never a shared win); Enrere brings a fall back; a removal by hand that
 // leaves one makes that one the winner; the fanfare waits for the cue.

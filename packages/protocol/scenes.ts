@@ -84,8 +84,8 @@ const RULES = {
   interval: celebratingBingo,
   // Whenever a music set plays: the Interval, `after`, Pausa.
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
-  // Between rounds (D138): at the doors, in a break, after the Game.
-  throw: ['before', 'interval', 'after'],
+  // Between rounds (D138): at the doors, in a break; not on the end screen (D194), where the storm is.
+  throw: ['before', 'interval'],
   // The Desgraciat's finale, in its round (D167); the engine refuses it in another kind of round.
   finale: ['play'],
   finaleCue: ['play'],

@@ -43,14 +43,14 @@ export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[ki
 export const POOL_ID_RE = /^[a-z0-9]{1,8}$/;
 export const isPoolId = (value: unknown): value is string => typeof value === 'string' && POOL_ID_RE.test(value);
 export const DEFAULT_POOL = '1';
-/** A card's printed sides are 1, 2…; a round plays one (D101, D102, D171). */
+/** A card's printed sides are 1, 2…; a round plays one (D101, D102, D193). */
 export const SIDE_MAX = 9;
 export const DEFAULT_SIDE = 1;
 export const isSide = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 1 && (value as number) <= SIDE_MAX;
 
 /**
  * One printed side of a card type (card-types.json's `sides`, D178): its number, the pool its 12 songs come from, and
- * how it's named (`label`, "1-4"; `mark`, the printed sign of its rounds).
+ * how it's named (`label`, "1-5"; `mark`, the printed sign of its rounds).
  */
 export interface CardTypeSide {
   side: number;
@@ -74,7 +74,7 @@ export function sidePool(types: readonly CardTypeSides[], cardType: string, side
   return cardTypeSides(type).find((s) => s.side === side)?.pool ?? null;
 }
 /**
- * The card type and side in one label (D163): "Normal 1-4", "Normal 5-10", or just "Especial" for a type with one
+ * The card type and side in one label (D163): "Normal 1-5", "Normal 6-10", or just "Especial" for a type with one
  * side. The type's `name` when it has one, else its id.
  */
 export function sideLabel(types: readonly CardTypeSides[], cardType: string, side: number = DEFAULT_SIDE): string {

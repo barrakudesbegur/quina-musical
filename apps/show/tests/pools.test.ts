@@ -1,4 +1,4 @@
-// Pools and card sides (step A, D178, D171): a repertoire's songs each belong to a pool; a card type's sides each play
+// Pools and card sides (step A, D178, D193): a repertoire's songs each belong to a pool; a card type's sides each play
 // a pool (card-types.json); a round plays one side, so its Queue is a Shuffle of that side's pool and only that side's
 // lines count. The plan, the commands, the journal, the record and the resume token carry the side.
 import test from 'node:test';
@@ -14,7 +14,7 @@ import { dataTest } from './support/data.ts';
 import { setup, songs, type Harness } from './support/harness.ts';
 
 const TYPES: CardTypeSides[] = [
-  { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1-4' }, { side: 2, pool: '2', label: '5-10' }] },
+  { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1-5' }, { side: 2, pool: '2', label: '6-10' }] },
   { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1' }] },
 ];
 
@@ -26,7 +26,7 @@ test('a card type\'s sides and pools, and the label the Check shows (D163)', () 
   assert.equal(sidePool(TYPES, 'nope', 1), null, 'an unknown type');
   assert.equal(sidePool([], 'normal', 1), '1', 'without card-types.json: side 1 on pool 1');
   assert.equal(sidePool([], 'normal', 2), null);
-  assert.deepEqual([sideLabel(TYPES, 'normal', 1), sideLabel(TYPES, 'normal', 2), sideLabel(TYPES, 'especial', 1)], ['Normal 1-4', 'Normal 5-10', 'Especial']);
+  assert.deepEqual([sideLabel(TYPES, 'normal', 1), sideLabel(TYPES, 'normal', 2), sideLabel(TYPES, 'especial', 1)], ['Normal 1-5', 'Normal 6-10', 'Especial']);
   assert.ok(isPoolId('1') && isPoolId('2') && !isPoolId('') && !isPoolId('Pool 1'));
 });
 
@@ -88,7 +88,7 @@ function twoPools(seed = 3): { repertoire: typeof songs; cards: PrintedCard[]; p
 
 function sideTwo(h: Harness) {
   h.send('unlock');
-  h.send('roundIntro', { number: 5, kind: 'normal', cardType: 'normal', side: 2 });
+  h.send('roundIntro', { number: 6, kind: 'normal', cardType: 'normal', side: 2 });
   h.send('newRound');
   h.advance(FLOW.shuffleSec + 0.1);
 }
@@ -100,11 +100,11 @@ dataTest("a round on side 2 shuffles only pool 2, counts side 2's lines, and jou
   const h = setup({ seed: 9, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-40', settings: { autoAdvance: false } });
   sideTwo(h);
   const state = h.show.snapshot();
-  assert.deepEqual([state.round.number, state.round.side, state.round.pool], [5, 2, '2']);
+  assert.deepEqual([state.round.number, state.round.side, state.round.pool], [6, 2, '2']);
   assert.equal(h.show.queue.length, pool2.size);
   assert.ok(h.show.queue.every((id) => pool2.has(id)), 'the Queue is a Shuffle of pool 2 only');
   assert.ok(h.show.phaseModel.valid.every((c) => c.lines.flat().every((id) => pool2.has(id as number))), "side 2's lines count");
-  const started = journalOf(h.log).find((e) => e.kind === 'round.started' && e.round === 5);
+  const started = journalOf(h.log).find((e) => e.kind === 'round.started' && e.round === 6);
   assert.equal(started?.kind === 'round.started' && started.side, 2);
   // A claim's Check reads side 2.
   h.send('next');
