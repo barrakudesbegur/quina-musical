@@ -8,6 +8,15 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U67 · Two status labels despite the UI freeze · blocking
+Sound engine's step 1 for the new Check (unpushed) adds the Claim statuses "stopped" and "dropped". The console doesn't build until `apps/console/strings.ts` has their labels, "Aturat" and "Descartat". Frontend has written them (two lines), but the freeze stops it committing them, so Sound engine is holding its push.
+Options: (a) allow this two-line commit; (b) Sound engine keeps the new statuses out of the shared types until the console is unfrozen, which is more work and a temporary shape.
+**Default:** nothing is pushed until the user answers.
+
+### U66 · Publishing the Check boards
+Frontend has drawn the new Check locally: the console's pad, a card mid-Check, automatic reveal, the two cues, the Celebration panel, several cards, a stopped Check, a wrong card, the Desgraciat, and the projector's stop fade.
+**Default:** they stay local until the user says to publish them on the design canvas.
+
 ### U12 · The theme pass
 Pending your go on the visual theme pass across the screens. Not ready yet (25 Nov).
 
