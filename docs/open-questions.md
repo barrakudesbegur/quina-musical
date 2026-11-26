@@ -12,17 +12,6 @@ The only list of what waits on the user: decisions with the default in force mea
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
 
-### U130 · The Check boards on canvas v67, for review
-Frontend published the Check, the review draft (U77) and the remote's D143–D145. Its choices to check:
-1. The Check's top row is "Enrere", "Revisió manual" and "+ Un altre". That changes R2-Q21's arrangement (Següent, the Hold and the claim in the same places in landscape and portrait).
-2. "Enrere" still works while the screen waits for the cue press. "Not after the cue" was read as "not after the press".
-3. The review screen has no "Enrere" and no "+ Un altre". A choice that goes against the card gets a warning triangle.
-4. Parlem in the Celebration gets the Pausa strip (Pausa at any time, D128).
-5. On the remote board, Parlem's legend moved right to make room for B's four rows.
-6. The Suspens strip shows B + A at its right edge and the shake (×3) at its left, while U121 is open.
-- (a) All fine.
-- (b) Comment on the canvas where not.
-
 ### U136 · The corn-seed storm during the last round's play
 D155 allows the storm button during the last round, not only after it. If it's pressed while songs are still landing:
 - (a) the round goes into Parlem first, so no song lands unheard under the storm, and "Següent" resumes (what Sound engine built);
@@ -95,7 +84,6 @@ Inside a Check, "Enrere" on the tablet, or a single press of 1 or 2 on the remot
 - **U109 · Where Parlem doesn't exist today** (the Interval, the intro, the doors, the end): when Pausa ends there, (a) the music resumes at its own level; (b) Parlem becomes possible there too, and resumes on.
 - **U110 · The Interval's countdown during Pausa:** (a) it freezes; (b) it keeps running.
 - **U111 · A restart during Pausa:** (a) Pausa is recorded in the night's log, so a restart comes back paused, with the saved playback; (b) not recorded: a restart comes back unpaused, in the Hold.
-- **U112 · "Següent" during Pausa:** it ends Pausa with that landing; Parlem ends with it too (D142).
 - **U113 · Short sounds when Pausa starts** (fanfares, effects, snippets, a transition's tail): (a) they ring out under the Pausa music; (b) they're cut at once.
 - **U114 · Paused time and the night's end:** (a) the round's target end moves by the paused time, so the show doesn't rush afterwards; (b) it counts as time lost, and the Pace speeds up to catch up, as today.
 
@@ -104,18 +92,12 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) Very low for the whole Check, as now.
 - (b) At the claim's level, under the presenters' voices, dipping further only while a snippet plays.
 
-### U88 · The Wii remote during a review
-A is the reveal and the cue.
-- (a) The review ("Revisió manual") and its four outcomes are tablet-only, since they're rare and deliberate.
-- (b) A remote button sends the Check to review too; the outcomes stay on the tablet.
-
 ### U89 · When the card appears on the projector
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
-### U77–U79 · The tablet, music and phones during a review (D118, D119)
+### U78–U79 · The music and phones during a review (D118, D119)
 A Check under review gets its own screen on the projector and the tablet; the music keeps playing, and Pausa is only by hand. To decide:
-- **U77 · The tablet while under review:** the card under review with its private marks, the four choices (continue, win by hand, lose by hand, discard, with a warning when a choice goes against the card), and the usual Pausa and Parlem buttons. Anything to add or remove?
 - **U78 · The music's level while under review:** (a) still far down, as during the Check; (b) back to the claim's level, under the presenters' voices, as before the Check; (c) full volume.
 - **U79 · Phones while under review:** during a Check, phones show "Comprovant el cartró 123…". On a review: (a) that line just closes, with no mark (what Backend built for now, a one-line change); (b) it stays, still pending, until the card is checked again or dropped; (c) it changes to a neutral line, like the projector's.
 No default: the user decides.
@@ -142,7 +124,7 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
 ### U59 · The special card's back
-The special card plays the special rounds' own playlist (D105) on one side.
+The special card is printed from Part 1 (D171), on one side.
 **Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
 
 ### U52 · Duplex printing and the paper
@@ -150,23 +132,23 @@ Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
 ### U55 · Preparing Part 1 now, and the laptop's disk
-Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 18 GB for three, with 20 GB free today. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
+Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 12 GB for both Parts, with 20 GB free. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
 **Default:** nothing is prepared until the user says go. Last year's cache stays.
 
 ### U56 · Cutting the hook approval from 7 hours
-About 2 minutes a song is about 7 hours for 210 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 2 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
+About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
 **Default:** (a) and (b); (c) if the user wants it.
 
 ### U57 · Part 2's song numbers
 D103 numbers a final Part's songs alphabetically, so Part 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
-**Default:** Part 2 continues at 71–140 (and a third Part at 141–210), not 1–70 again.
+**Default:** Part 2 continues at 71–140, not 1–70 again (no third Part since D171).
 
 ### U58 · The alphabetical convention
 Part 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
 **Default:** word by word, as the playlist is now.
 
 ### U61 · A Part's song we can't download
-D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 and the special rounds' playlist aren't fetched yet.
+D106 lets the Interval leave out a track nobody can get. A Part's songs are printed on the cards, and 70 is the count (D100). Part 1 has no such song today; Part 2 isn't fetched yet.
 **Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the Part keeps 70.
 
 ### U63 · A credential so agents can edit the cloud's plan
@@ -174,8 +156,8 @@ D116 has the user or an agent upload the edition's JSON to the cloud by hand, sa
 **Default:** nothing built until the user says yes.
 
 ### U54 · What to call each set of 70 songs
-The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 210 songs with three lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
-**Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2, Especial); a round plays one Part, and a card's side is printed from one Part.
+The model now calls each set a "pool" (D101). Every tool, though, prepares and deploys one pool, so Backend proposes one prepared pool of 140 songs (two Parts since D171) with the lists inside. Sound engine proposes the same single pool, with each song marked by its playlist and ids unique across the night. The user's own words are "playlist 1, playlist 2" and, for the covers, "part 1, part 2, especial".
+**Default:** "Pool" stays the edition's whole set of songs, prepared together; each set of 70 is a "Part" (Part 1, Part 2); a round plays one Part, and a card's side is printed from one Part.
 
 
 ### U50 · How the screens point to the right side
@@ -209,13 +191,13 @@ The relay's pairing secret (`data/cache/relay-token`) sat in the private R2 buck
 D113 lets R2 go past the free 10 GB. Backend can't see billing. In Cloudflare: Manage Account → Billing → Payment info, check a payment method is there.
 
 ### U14 · Approve this year's hooks · before the first rehearsal
-On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 7 hours for 210 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
+On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 4.7 hours for 140 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
 
 ### U18 · The night's plan in Admin · before the first rehearsal
-Rounds in order, a card type per round, prize bundles, sponsors (money donors too), the Schedule with throw breaks.
+Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
 
 ### U19 · Checks on real devices · before the rehearsals
 1. An iPhone with Safari and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap.
@@ -230,6 +212,9 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U77 · The review screen**, **U130 · the Check boards (v67)** (2026-11-26): reviewed by the user through the canvas (their own edits and 15 comments, v84; D165).
+- **U88 · The remote during a review** (2026-11-26): answered by D128 and D135 (the −/+ hold sends a Check to review; A does nothing in a review).
+- **U112 · "Següent" during Pausa** (2026-11-26): it ends Pausa, and Parlem with it (D142).
 - **U156 · A slightly before B** (2026-11-26) → D176: no delay; B while A is held turns the starting transition into a Suspens.
 - **U154 · First plays and the night's length** (2026-11-26) → D175: keep 22 s.
 - **U51 · The slower pace** (2026-11-26) → D174: not the first round but a song's first play of the night, longer and from its main hook.
