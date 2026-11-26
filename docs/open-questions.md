@@ -109,6 +109,12 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U181 · What the «Veus automàtiques» switch turns off (D204)
+Frontend's board (v104) has the switch on by default: «Apagat: cap veu més en tota la nit». Voices that fall due while it's off are dropped, not saved for later, since a late "15 minuts" would be wrong (D204's 60 s).
+- (a) Every voice, the round's name on «Comença la quina» included. The round fanfare's music still plays, so the presenters keep their cue before talking (D198).
+- (b) Only the timed voices: the doors and the Descans. The round's name and the goodbye still play.
+- (c) Every voice and the round fanfare too.
+
 ### U180 · Building the phone's home as the boards draw it
 The boards draw the phone's home with the corner buttons and a floating «+ Cartró» (D188, D189). The code still has «+ Cartró» at the end of the cards list and the older corner buttons. The home layout was held as boards until the user confirms it (the drawers proposal).
 - (a) Build the phone's home as the boards draw it now.
@@ -130,7 +136,7 @@ The user's words in U171's first point. The reading: one more doors line, 3 minu
 
 ### U178 · The D-pad's other three effects
 Today they're taps: up «tada», right an orchestra hit, down a sad trombone, left Among Us. The same depth as the drum roll for each (held, on the beat, shake for more, a landing past the threshold). Yes or no for each:
-1. **Up: the drum roll**, whose landing is today's «tada».
+1. **Up: the drum roll**, whose landing is today's «tada». A quick tap still plays a plain «Tatxan!», so nothing is lost; holding starts the roll.
 2. **Right: orchestra hits on the beat.** A tap is one hit on the next beat; held, a hit on every beat; shaking doubles the speed; past the threshold, letting go ends on a big hit with a long tail. For hype and punchlines ("Quina… TRES!").
 3. **Down: the sad trombone.** A tap is the "wah-wah-wah"; held, its last note holds, and shaking wobbles it; letting go, the note falls off. The music sags a little under it and comes back. For jokes and near misses.
 4. **Left: the crowd.** Held, applause swells; shaking adds cheers and whistles; letting go fades it, and past the threshold it ends in an ovation. It cues the tent to clap: the presenters' entrance, the sponsors, a winner. Among Us moves to the tablet's pad.
