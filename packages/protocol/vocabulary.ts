@@ -156,6 +156,8 @@ export const REJECT_REASONS = [
   'unknownCard',
   // Next while Aguanta (Stay) or a Suspense is on (D133): nothing lands; let go of B (or Aguanta) first.
   'nextBlocked',
+  // Next once the Desgraciat's finale has its winners: the presenters' cue (`finaleCue`) comes first (D169).
+  'finaleDecided',
 ] as const;
 export type RejectReason = (typeof REJECT_REASONS)[number];
 

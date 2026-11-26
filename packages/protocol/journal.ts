@@ -177,6 +177,18 @@ export interface PrizesRevealedEntry extends EntryBase {
   by: 'presenters' | 'intro';
 }
 
+/**
+ * The Desgraciat's finalists, as the presenters set them (D161, D168): the whole set each time, in order; empty when
+ * the finale was called off. `byHand`: this removal left one standing, who wins (D169's rule 5). Who fell, in which
+ * group, follows from the landings.
+ */
+export interface FinaleSetEntry extends EntryBase {
+  kind: 'finale.set';
+  round: number;
+  cardIds: number[];
+  byHand?: true;
+}
+
 export type JournalEntry =
   | RoundStartedEntry
   | RoundResumedEntry
@@ -192,7 +204,8 @@ export type JournalEntry =
   | ClaimContinuedEntry
   | ClaimDiscardedEntry
   | WinnerNotedEntry
-  | PrizesRevealedEntry;
+  | PrizesRevealedEntry
+  | FinaleSetEntry;
 export type JournalEntryKind = JournalEntry['kind'];
 type WithoutBase<E> = E extends unknown ? Omit<E, keyof EntryBase> : never;
 /** An entry as the engine builds it, before the journal stamps `gameId`, `seq` and `atMs`. */
@@ -224,6 +237,8 @@ export interface RecordedRound {
   landings: RecordedLanding[];
   shuffleSeed: number;
   shuffleAttempts: number;
+  /** The Desgraciat's finalists, while its finale is on (`finale.set`); absent otherwise. */
+  finale?: { cardIds: number[]; byHand?: true };
 }
 
 /** A Claim of the round in progress, as the journal knows it (its Check is live playback: not kept). */
@@ -374,6 +389,13 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
     case 'prizes.revealed':
       if (!record.prizesRevealed.some((r) => r.round === entry.round && r.by === entry.by)) record.prizesRevealed.push({ round: entry.round, by: entry.by });
       return;
+    case 'finale.set': {
+      const round = currentRound(record, entry);
+      if (round.kind !== 'desgraciat') throw new JournalError(`entry ${entry.seq}: a finale in a ${round.kind} round`);
+      if (entry.cardIds.length) round.finale = { cardIds: [...entry.cardIds], ...(entry.byHand ? { byHand: true as const } : {}) };
+      else delete round.finale;
+      return;
+    }
     case 'settings.changed':
       record.settings = { ...entry.settings };
       return;

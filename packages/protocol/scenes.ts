@@ -86,6 +86,9 @@ const RULES = {
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   // Between rounds (D138): at the doors, in a break, after the Game.
   throw: ['before', 'interval', 'after'],
+  // The Desgraciat's finale, in its round (D167); the engine refuses it in another kind of round.
+  finale: ['play'],
+  finaleCue: ['play'],
   // The night's last round, its normal screen and its Check, and after it, on the end screen (D155).
   storm: (c) => c.scene === 'after' || (c.lastRound === true && (c.scene === 'play' || c.scene === 'check')),
 } satisfies Record<CommandName, Rule>;

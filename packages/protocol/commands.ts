@@ -227,6 +227,16 @@ export const COMMANDS = Object.freeze({
    * the Game (D155).
    */
   storm: { restart: { type: 'boolean', optional: true } },
+  /**
+   * The Desgraciat's finale (D161, D166–D172), in place of its public Check: the finalists the presenters entered, in
+   * order, as the whole set (2–20 to start it; then a removal or a card brought back sends the set again). A number
+   * that isn't printed is `unknownCard`; a card of another type, or one not in the set yet that has already fallen,
+   * is `invalid` (D168: the console shows it privately first). Without `cardIds` the finale is called off. A removal
+   * that leaves one standing makes that one the winner. Only in a Desgraciat round's `play`.
+   */
+  finale: { cardIds: { type: 'integers', optional: true, min: 1, max: 9999, maxItems: 20 } },
+  /** The presenters' cue once the finale has its winners (D169: the fanfare waits for it): the Celebration starts. */
+  finaleCue: {},
   /** The end of the Game (scene `after`). */
   endGame: {},
   /**

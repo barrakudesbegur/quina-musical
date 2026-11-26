@@ -354,6 +354,36 @@ export interface PauseInfo {
   overlay: boolean;
 }
 
+/** Finalists who fell or won together, on one landing (D169: shown together, with the group ninos, D172). */
+export interface FinaleGroup {
+  cardIds: number[];
+  /** The landing's Queue index, and its song; for a win by a removal by hand, the last counted landing. */
+  position: number;
+  songId: number | null;
+  atMs: number;
+  /** A win decided by a removal by hand, not by a song (D169's rule 5). */
+  byHand?: true;
+}
+
+/**
+ * The Desgraciat's finale (D161, D166–D172): the finalists entered, the groups that fell, in order (a finalist is out
+ * at the landing of a song on their card; the projector fades the group at the next Spin), and the winners once
+ * known. Everything follows from the counted landings, so Enrere brings a group back. Public on the projector; the
+ * phones' view is U150.
+ */
+export interface FinaleInfo {
+  /** The finalists, in the order entered. */
+  cardIds: number[];
+  /** The finalists still standing. */
+  standing: number[];
+  groups: FinaleGroup[];
+  /** The winners: the last one standing, a group that fell together taking everyone left (a shared win), or the one
+   * left by a removal by hand; null until then. */
+  winners: FinaleGroup | null;
+  /** The presenters gave the cue: the Celebration is on. */
+  cued: boolean;
+}
+
 /** A throw song (D138, D151), from its button until it ends or the scene changes. */
 export interface ThrowInfo {
   /** Which: a planned Throw's, or the corn-seed storm's. */
@@ -463,6 +493,8 @@ export interface ShowState {
   /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
    * button shows in it (D155; SceneContext.lastRound). */
   lastRound: boolean;
+  /** The Desgraciat's finale while it's on, else null (D161, D166–D172). */
+  finale: FinaleInfo | null;
 }
 
 /** What `resumeAt` needs, plus `text`, the same as a short code to note on paper (protocol/resume.ts). */
