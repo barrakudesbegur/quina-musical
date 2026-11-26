@@ -1081,7 +1081,7 @@ By: the user. Source: open-questions.md › Answered (U123). Lives in: GLOSSARY.
 The phone's Horari starts with the card-selling time ("the welcome is actually the ticket buying time"), then the rounds with "Primer descans" and "Segon descans" among them, then "Fi". The plan needs the doors' time. Answers U125 with (b).
 By: the user. Source: open-questions.md › Answered (U125). Lives in: requirements/screens.md › Player app.
 
-### D151 · A button for the corn-seed storm at the end · 2026-11-26 · Active; the button's place Pending (U132)
+### D151 · A button for the corn-seed storm at the end · 2026-11-26 · Amended by D153, D155
 After last year's last round, the crowd went wild and threw corn seeds all around, a fun, chaotic moment like the throws. If it happens again, the tech turns on a song by hand, from a hook of its own right at the drop, since nobody controls when the throwing starts.
 By: the user. Source: the user's message of 26 Nov. Lives in: event.md › The night, step by step; requirements/show-and-music.md › Music for each moment.
 
@@ -1096,3 +1096,11 @@ By: the user. Source: open-questions.md › U132. Amends: D151. Lives in: requir
 ### D154 · The two chaotic moments are louder than the songs · 2026-11-26 · Active; how Pending (U133)
 The throws and the corn-seed storm play louder than the usual songs.
 By: the user. Source: the user's message of 26 Nov. Amends: D139. Lives in: requirements/show-and-music.md › Volumes.
+
+### D155 · Where the corn-seed storm's button appears · 2026-11-26 · Active
+In more places than after the last round, but not everywhere: on the tablet's normal screen during the night's last round, inside its Check, and after it, on the end screen. Answers U132.
+By: the user. Source: open-questions.md › Answered (U132). Amends: D151. Lives in: requirements/screens.md › Console.
+
+### D156 · The orchestrator's relays are the user's decisions · 2026-11-26 · Active
+When the orchestrator relays a decision from the user, the sessions take it as the user's own, a lifted freeze included. The user told Frontend so, after Frontend held back the console's labels: "He took the code freeze too seriously." A session's own permission check may still need the user's OK in that session; that's for the user, never worked around.
+By: the user (to Frontend, 26 Nov). Source: Frontend's report of 26 Nov. Lives in: docs/team.md.

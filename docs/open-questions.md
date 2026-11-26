@@ -23,11 +23,6 @@ Frontend published the Check, the review draft (U77) and the remote's D143–D14
 - (a) All fine.
 - (b) Comment on the canvas where not.
 
-### U132 · The corn-seed storm's song and button
-D151.
-- **The song:** "Flying Free" from its drop, for now (D153).
-- **The button:** (a) on the tablet after the last round, next to the end music; (b) at any time.
-
 ### U133 · How the chaotic moments get louder (D154)
 Every slider's 100% is today's tuned level for that sound, and the songs are already near the loudest a file can play cleanly. Anything louder needs room above them:
 - (a) **Above 100% for these only:** the throws (and the corn-seed storm) default to about 140% (+3 dB). The engine keeps hidden room by playing everything about 3 dB lower inside, with a safety limiter on the master, so nothing distorts. The tech turns the sound system up by the same amount at the sound check. Every other slider still reads 100%.
@@ -207,6 +202,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U132 · The corn-seed storm** (2026-11-26) → D153, D155: "Flying Free" from its drop for now; the button on the last round's normal screen, inside its Check and on the end screen.
 - **U131 · Horari's first row** (2026-11-26) → D152: "Venda de cartrons".
 - **U120–U122 · Suspens on the remote** (2026-11-26) → D147, D148: letting go of B lands; B + A has the same vibrations and cancel window as the manual one; the shake stays on; 1.5 s, to tune on the remote.
 - **U123 · The screens' word for a break** (2026-11-26) → D149: "Descans".
