@@ -23,7 +23,7 @@ import type {
   CheckInfo,
   CheckStep,
   ClaimInfo,
-  FinaleGroup,
+  FinaleFall,
   FinaleInfo,
   FinaleWinner,
   ClimbTarget,
@@ -2720,9 +2720,8 @@ export class Show {
     const run = standingRun(finalists, this.queue.slice(0, Math.max(0, this.position + 1)));
     const atMsOf = (p: number) => this.landings.findLast((l) => !l.undone && l.position === p)?.atMs ?? this.env.nowMs();
     const positions = [...new Set(run.fallAt.values())].sort((a, b) => a - b);
-    const groups: FinaleGroup[] = positions.map((p) => ({
-      cardIds: f.cardIds.filter((id) => run.fallAt.get(id) === p), position: p, songId: this.queue[p] ?? null, atMs: atMsOf(p),
-    }));
+    const fallen: FinaleFall[] = positions.flatMap((p) =>
+      f.cardIds.filter((id) => run.fallAt.get(id) === p).map((cardId) => ({ cardId, position: p, songId: this.queue[p] ?? null, atMs: atMsOf(p) })));
     // A finalist entered but not among the valid cards stands (setFinale only takes valid ones).
     const standing = f.cardIds.filter((id) => !run.fallAt.has(id));
     let winner: FinaleWinner | null = null;
@@ -2733,7 +2732,7 @@ export class Show {
         ? { cardId: standing[0], position: this.position, songId: this.position >= 0 ? this.queue[this.position] ?? null : null, atMs: this.env.nowMs(), byHand: true }
         : { cardId: standing[0], position: lastFall, songId: this.queue[lastFall] ?? null, atMs: atMsOf(lastFall) };
     }
-    return { cardIds: [...f.cardIds], standing, groups, winner, cued: this.finaleCued };
+    return { cardIds: [...f.cardIds], standing, fallen, winner, cued: this.finaleCued };
   }
 
   /**

@@ -369,10 +369,10 @@ export interface PauseInfo {
   overlay: boolean;
 }
 
-/** Finalists who fell together, on one landing (D169: shown together, with the group ninos, D172). */
-export interface FinaleGroup {
-  cardIds: number[];
-  /** The landing's Queue index, and its song. */
+/** A finalist who fell (D180: each on their own card, shown as their own nino, never merged with others). */
+export interface FinaleFall {
+  cardId: number;
+  /** The landing's Queue index, and its song. Several finalists can fall on one landing. */
   position: number;
   songId: number | null;
   atMs: number;
@@ -400,9 +400,9 @@ export interface FinaleInfo {
   cardIds: number[];
   /** The finalists still standing. */
   standing: number[];
-  /** Who fell at each landing, in order. A landing that would take out every finalist left counts for none of them
-   * (D180), so the finale goes on until exactly one is left. */
-  groups: FinaleGroup[];
+  /** The finalists who fell, in the order they did (several on one landing in the order entered). A landing that would
+   * take out every finalist left counts for none of them (D180), so the finale goes on until exactly one is left. */
+  fallen: FinaleFall[];
   /** The last one standing, by the landings or by a removal by hand; null until then. */
   winner: FinaleWinner | null;
   /** The presenters gave the cue: the Celebration is on. */

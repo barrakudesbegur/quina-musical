@@ -1,6 +1,6 @@
-// The Desgraciat's finale (D161, D166–D172, D180): the presenters enter the finalists; at each landing those with that
-// song fall together as one group; a landing that would take out everyone left counts for none of them, so the finale
-// goes on until exactly one is left, the winner (never a shared win); Enrere brings a group back; a removal by hand that
+// The Desgraciat's finale (D161, D166–D171, D180): the presenters enter the finalists; at each landing those with that
+// song fall, each on their own card; a landing that would take out everyone left counts for none of them, so the finale
+// goes on until exactly one is left, the winner (never a shared win); Enrere brings a fall back; a removal by hand that
 // leaves one makes that one the winner; the fanfare waits for the cue.
 import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
@@ -36,7 +36,7 @@ function fallsOf(h: Harness): Map<number, number> {
   return new Map(h.show.phaseModel.valid.map((c) => [c.id, run.fallAt.get(c.id) ?? Infinity]));
 }
 
-test('the finale: groups fall together, the last one standing wins; Enrere brings a group back; the cue starts the Celebration', () => {
+test('the finale: finalists fall one by one, the last one standing wins; Enrere brings a fall back; the cue starts the Celebration', () => {
   const h = desgraciat();
   land(h, 2);
   const falls = fallsOf(h);
@@ -48,16 +48,16 @@ test('the finale: groups fall together, the last one standing wins; Enrere bring
   const setOut = h.send('finale', { cardIds: finalists });
   assert.deepEqual(rejected(setOut), []);
   assert.deepEqual(journalOf(setOut).map((e) => e.kind === 'finale.set' && e.cardIds), [finalists]);
-  assert.deepEqual(h.show.snapshot().finale && [h.show.snapshot().finale?.standing, h.show.snapshot().finale?.groups, h.show.snapshot().finale?.winner], [finalists, [], null]);
+  assert.deepEqual(h.show.snapshot().finale && [h.show.snapshot().finale?.standing, h.show.snapshot().finale?.fallen, h.show.snapshot().finale?.winner], [finalists, [], null]);
   // Land to the first finalist's fall: it goes out, as a group of one.
   const firstFall = falls.get(finalists[0])!;
   land(h, firstFall - h.show.position);
   const after1 = h.show.finaleInfo()!;
-  assert.deepEqual(after1.groups.map((g) => [g.cardIds, g.position]), [[[finalists[0]], firstFall]]);
-  assert.equal(after1.groups[0].songId, h.show.queue[firstFall]);
+  assert.deepEqual(after1.fallen.map((f) => [f.cardId, f.position]), [[finalists[0], firstFall]]);
+  assert.equal(after1.fallen[0].songId, h.show.queue[firstFall]);
   // Enrere brings it back.
   h.send('back');
-  assert.deepEqual(h.show.finaleInfo()?.groups, []);
+  assert.deepEqual(h.show.finaleInfo()?.fallen, []);
   h.send('next');
   h.until(() => h.show.position === firstFall && h.show.status === 'playing');
   // On to the third finalist's fall: one is left, and wins; nothing advances by itself; Next waits for the cue.
@@ -99,14 +99,14 @@ test('D180: a landing that would take out every finalist left counts for none of
   h.send('finale', { cardIds: two });
   land(h, p - h.show.position);
   const both = h.show.finaleInfo()!;
-  assert.deepEqual([both.groups, both.standing, both.winner], [[], two, null], 'both stay in: no shared win');
+  assert.deepEqual([both.fallen, both.standing, both.winner], [[], two, null], 'both stay in: no shared win');
   // The finale goes on until a landing takes out one of them alone; the other wins.
   const run = standingRun(h.show.phaseModel.valid.filter((c) => two.includes(c.id)), h.show.queue);
   const [outId, outAt] = [...run.fallAt.entries()][0];
   assert.ok(outAt > p);
   land(h, outAt - h.show.position);
   const won = h.show.finaleInfo()!;
-  assert.deepEqual(won.groups.map((g) => [g.cardIds, g.position]), [[[outId], outAt]]);
+  assert.deepEqual(won.fallen.map((f) => [f.cardId, f.position]), [[outId, outAt]]);
   assert.equal(won.winner?.cardId, two.find((id) => id !== outId));
   h.send('finaleCue');
   assert.deepEqual(h.show.celebration?.cardIds, [won.winner?.cardId], 'one winner');
