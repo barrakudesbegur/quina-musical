@@ -2,27 +2,29 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-26, evening)
+## Now (2026-11-26, night)
 
-- **In progress:** step 2 of the presenter-paced Check (D127–D159), on the shared main as local commits, waiting for Frontend's side. Then Sound engine tests the whole range in a clean worktree, I deploy, and they push.
-  - **My commits there:** `61a0dc5` (the cloud side), `b147c8c` (the e2e by presses), `004e846` (volumes up to VOLUME_MAX, 150%), `529ab51` (the sound check's +6 dB in the preflight and the laptop setup).
-  - **The cloud side:**
-    - `check.started` replaces `check.scheduled`, and the reveals stay off phones;
-    - phones get Pausa only while `state.pause.overlay` (D135);
-    - journal-check takes `settings.volumes` (unknown keys pass, known ones up to VOLUME_MAX);
-    - the GameRoom folds the journal's newest volumes into `plan.volumes` (newest atMs wins, `volumesAtMs` in the snapshot), and a plan saved from Admin or the laptop keeps the cloud's (`domain/volumes.ts`).
-  - **The e2e by presses** runs through a claim reviewed then discarded, a Line by presses, and a two-card Bingo with automatic reveal (the second card fails, then the press for the Celebration). Suspense is released with `suspense {on:false}`: Next no longer releases it (D133).
-    - Today it stops at the first Check: the stage (Frontend's) still reads the timed `check.steps`.
-    - Sound engine's `5edb5b1` makes the engine's bus send to the relay before any page listener, so a screen's crash no longer freezes the tablets.
+- **In progress:** nothing half-built.
 - **Just done (26 Nov):**
-  - **Deployed** `94b395be` (`2503050`, the plan-save fix, on its own), then `fddfdc1d` (`a89826f`, step 1 of the paced Check). See deploy-plan.md.
-  - **The plan-save bug** (`2503050`): adoptPlan saved only when the public plan changed, so an edit to a locked round's prizes or the cheat sheet was lost when the GameRoom restarted. U126 asks the user to check quina-dev.
-  - **R2:** the breaks set, the intro and the throw song are pushed (165 files, 1.3 GB). Hold's `audition/` went too by mistake and is now excluded.
-  - **The music sets** live in subfolders of the Interval roots (`breaks/`, later `pausa/`), and the intro and throw tracks in the Hold folders: no new sync root, no cloud change.
+  - **Four deploys** (deploy-plan.md), each tested on its sha first:
+    - `94b395be` (`2503050`): the plan-save fix;
+    - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
+    - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
+    - `d963856b` (`ba17a40`): the Desgraciat's finale (D166–D172).
+  - **The cloud side of step 2:**
+    - `check.started` replaces `check.scheduled`; reveals stay off phones;
+    - Pausa reaches phones only with its overlay (D135);
+    - `settings.volumes` is checked up to VOLUME_MAX;
+    - the GameRoom folds the journal's newest volumes into `plan.volumes` (domain/volumes.ts), and a plan saved from Admin or the laptop keeps the cloud's.
+  - **The finale:** `finale.set` is checked and publishes nothing (U150). Its wins are standing claims (`manual: true` when a removal decided it).
+  - **The e2e** runs the presenter-paced Check (`0cabdf1`): a claim reviewed then discarded, a Line by presses, and a two-card Bingo with automatic reveal (the second card fails, then the press for the Celebration). Green on step 2 and on the finale.
+    - **Frontend's rule:** read the stage's `check` only while its scene is `check`. A lone pass goes straight to the Celebration.
+  - **R2:** the breaks set, the intro, the throw song and Pausa's set (in `pausa/`) are pushed. The old top-level `interval-*` keys left the manifest and wait for the post-night prune (agreed with Sound engine: under a cent a month). Hold's `audition/` is excluded.
+  - **The plan-save bug** (`2503050`): edits that change nothing public were lost when the GameRoom restarted. U126 asks the user to check quina-dev.
 - **Next:**
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
-  - when Frontend's stage is on top: run the e2e on the whole range, then deploy step 2's cloud before Sound engine pushes;
-  - Pausa's set (today's top-level Interval files move into `pausa/`) once step 2 is on main: push it, then prune the old top-level keys;
+  - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
+  - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
   - Part 1 to R2 as soon as it's prepared (U55, D113). Prune last year's pool after the night;
   - 1–3 Dec: the cards move to the pools (queue item 3), and deploys name their pool;
   - the provisional-hooks WARN, once Sound engine sends the field.
@@ -36,7 +38,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **U55** (Sound engine's), preparing Part 1;
   - **U63**, **U68–U75**: the plan tool, its `quina-agent` token, and the edition file;
   - **U64**, a glance at Cloudflare's billing for R2's payment method;
-  - **U79**, whether phones show a Review;
+  - **U79** and **U150**: whether phones show a Review, and the finale;
   - **U126**, whether any Admin edits on quina-dev were lost to the plan-save bug;
   - the permission rules for deploys and R2 pushes (`/permissions`), which only the user can add.
 
