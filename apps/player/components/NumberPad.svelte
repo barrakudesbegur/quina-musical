@@ -2,7 +2,8 @@
   // "Afegir cartró" (boards "App · calaix per afegir un cartró" and "afegir cartró: casos especials"): the card's
   // number on a paper field, an optional name, its icon (the first free one preselected), the smart keypad and one
   // "Desar". A digit key works only while the number can still become a printed card's (logic/pad.ts); "Desar" lights
-  // up once it is one the player doesn't have (ANIMATIONS.md `pad-keys`). A number the player already has says whose
+  // up once it is one the player doesn't have (ANIMATIONS.md `pad-keys`); it stays pinned to the drawer's bottom while
+  // the rest scrolls above it, so a small phone still shows it (D188). A number the player already has says whose
   // it is, with "Veure'l". Leaving with a number typed asks first (PadLeave, `pad-leave`). The QR button opens the
   // camera in this same drawer (D141, QrScan): a card's QR fills the number in, keeping the name and icon picked.
   import { PLAYER_CONFIG } from '../config.ts';
@@ -171,13 +172,15 @@
           {/if}
         {/each}
       </div>
-      <button type="button" class="big-button tone-ok number-pad__save" disabled={!rules.canSave} onclick={save}>
-        <!-- The board's tick (CHECK_SVG): white over a thick ink stroke, like the outlined words. -->
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 12.5l4.5 4.5L19 7.5" stroke="var(--color-line)" stroke-width="7" /><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" />
-        </svg>
-        {S.save}
-      </button>
+      <div class="number-pad__footer">
+        <button type="button" class="big-button tone-ok number-pad__save" disabled={!rules.canSave} onclick={save}>
+          <!-- The board's tick (CHECK_SVG): white over a thick ink stroke, like the outlined words. -->
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5" stroke="var(--color-line)" stroke-width="7" /><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" />
+          </svg>
+          {S.save}
+        </button>
+      </div>
     </div>
   {/if}
 </Drawer>

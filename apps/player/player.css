@@ -2207,8 +2207,34 @@ html:has(.drawer[open]) {
 }
 
 .number-pad {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.625rem;
+}
+
+/* «Desar» is sticky (D188): pinned to the drawer's bottom on its own strip, the fields scrolling above it, so a small
+   phone still shows it (board "afegir cartró: casos especials", the third frame). The pad fills the body, and the
+   body's bottom padding moves into the strip, so the strip sits flush on the drawer's edge. */
+.drawer__body:has(> .number-pad) {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.drawer__body > .number-pad {
+  flex: 1 0 auto;
+}
+
+.number-pad__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: auto;
+  margin-inline: calc(-1 * var(--space-4));
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  background: var(--drawer-bg);
+  border-top: 2px solid #2c3878;
+  box-shadow: 0 -14px 16px -10px rgb(8 10 30 / 0.9);
 }
 
 .number-pad__field {
