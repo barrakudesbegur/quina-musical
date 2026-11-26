@@ -7,10 +7,11 @@ import type { RootDir } from './media-sync.ts';
 /** The pool's playback files on this laptop, by sync root (the relay serves them from these folders). */
 export function poolRoots(pool: Pool): RootDir[] {
   const roots: RootDir[] = [
-    // Not the Blend renders (made on demand), other pools' folders, or what has its own root.
-    { root: 'cache', dir: pool.cacheDir, exclude: (rel) => /^(stretch|pools|hold|interval)\//.test(rel) },
-    // Not the Spotify features: they stay on the machine that fetched them.
-    { root: 'data', dir: pool.dataDir, exclude: (rel) => /^(pools|hold|interval)\//.test(rel) || rel === 'spotify_features.json' },
+    // Not the Blend renders (made on demand), other pools' folders, what has its own root, the download tools
+    // (tools/), or the relay's pairing token (a secret: each laptop makes its own).
+    { root: 'cache', dir: pool.cacheDir, exclude: (rel) => /^(stretch|pools|hold|interval|tools)\//.test(rel) || rel === 'relay-token' },
+    // Not the Spotify features (they stay on the machine that fetched them), or the listening demo (not playback).
+    { root: 'data', dir: pool.dataDir, exclude: (rel) => /^(pools|hold|interval|listen-demo)\//.test(rel) || rel === 'spotify_features.json' },
     { root: 'covers', dir: pool.coversDir },
     { root: 'overrides', dir: pool.overridesDir },
     { root: 'hold-cache', dir: path.join(CACHE, 'hold') },

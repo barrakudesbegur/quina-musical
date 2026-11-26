@@ -38,6 +38,17 @@ test("the default pool's data and cache roots leave the shared music to its own 
   assert.equal(cache?.exclude?.('1/mix.flac'), false, "a song's own files stay");
 });
 
+test('never synced: the relay\'s pairing token, the download tools, the listening demo, the Spotify features', () => {
+  const roots = poolRoots(pool('default', OUT, CACHE));
+  const cache = roots.find((r) => r.root === 'cache');
+  const data = roots.find((r) => r.root === 'data');
+  assert.equal(cache?.exclude?.('relay-token'), true, 'a secret: each laptop makes its own');
+  assert.equal(cache?.exclude?.('tools/bgutil-pot/node_modules/x/index.js'), true, 'download tooling, thousands of files');
+  assert.equal(data?.exclude?.('listen-demo/listen-demo.webm'), true);
+  assert.equal(data?.exclude?.('spotify_features.json'), true);
+  assert.equal(data?.exclude?.('keys/index.json'), false, 'the keys are playback data');
+});
+
 test('the cloud accepts the shared roots in sync paths', () => {
   assert.equal(isSyncPath('interval-cache/some-track.flac'), true);
   assert.equal(isSyncPath('interval-data/index.json'), true);
