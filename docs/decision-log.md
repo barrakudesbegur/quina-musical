@@ -1204,7 +1204,7 @@ No new command: `suspense { on: true }` during a Spin converts it.
 By: the orchestrator, applying the user's D176 to Sound engine's facts. Source: Sound engine's report of 26 Nov. Amends: D176. Lives in: requirements/show-and-music.md › The presenters' actions.
 
 ### D178 · Each set of 70 songs is a pool · 2026-11-26 · Active
-Each set of 70 songs is its own **pool** (Pool 1, Pool 2), not a "Part". A round plays one pool, and a card's side is printed from one pool, as the glossary already says. The tools still prepare all of the night's songs together, so the code needs another name for that bundle, and the per-song field becomes `pool`. Sound engine and Backend name it. Answers U54 with (b).
+Each set of 70 songs is its own **pool** (Pool 1, Pool 2), not a "Part". A round plays one pool, and a card's side is printed from one pool, as the glossary already says. The tools still prepare all of the night's songs together, as a **repertoire** (named by Sound engine and Backend, 26 Nov: `Repertoire`, `data/repertoires/`, `repertoires/<name>/` in R2), and the per-song field becomes `pool`. Answers U54 with (b).
 By: the user. Source: open-questions.md › Answered (U54). Amends: D171's wording ("Part"). Lives in: GLOSSARY.md › Pool; requirements/songs-and-cards.md › The pool.
 
 ### D179 · "+ Candidat" adds another claimed card · 2026-11-26 · Active

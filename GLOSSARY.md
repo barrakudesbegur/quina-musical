@@ -108,6 +108,10 @@ A set of songs one side of the cards is printed from (Pool 1, Pool 2). An editio
 _Avoid_: Part, playlist
 _Avoid_: Song list, catalogue
 
+**Repertoire**:
+All of an edition's prepared songs together, its pools included (2026: Pool 1 and Pool 2). The tools prepare, sync and deploy a repertoire as one; a round still plays one pool (D178).
+_Avoid_: Library (that's the logo library), bundle (that's a round's prizes), catalogue
+
 **Queue**:
 The order in which a round's songs will play. Decided once at the shuffle and never changed afterwards.
 _Avoid_: Playlist
