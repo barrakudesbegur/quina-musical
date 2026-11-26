@@ -41,6 +41,12 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 - (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
 - (b) Three, with Hold music too.
 
+### U162 · "Tots dempeus!"
+When a landing would knock out every finalist left, so it counts for none of them (D180), Frontend proposes a moment (canvas v90, marked "proposta"): the finalists' ninos hop twice with green rays and confetti, a tilted green "TOTS DEMPEUS!" ribbon pops in under the title for about 1.5 s, and the song plays on. The tablet shows a small "★ Tots dempeus!" chip. Green keeps it apart from a win's gold. It's text on the projector, shown before any cue.
+- (a) As drawn.
+- (b) Change the wording or the colour (which?).
+- (c) No projector moment, only the tablet's chip.
+
 ### U160 · The last real players falling together before the finale
 Before the finale the engine only sees the cards in play, unsold ones included (D180 is built: 6eb9624, 21254e1). Say the last two real players in the room fall on one song while an unsold card still stands. The landing counts for them, because it didn't take out every card in play, so they're out and nobody in the room is standing. Today they can't be entered as finalists, since entry needs standing cards (D168).
 - (a) "Enrere", then enter them as finalists, and the same song lands again, now not counting for them (Sound engine's reading; it replays the song).
