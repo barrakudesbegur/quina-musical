@@ -172,10 +172,11 @@ export interface CheckReveal {
  * Each revealed song's state at `nowMs`. The snippet plays from `atMs` for `durationMs`; the mark shows when the
  * snippet ends (`markAt: 'end'`, ANIMATIONS.md) or as it starts (`'start'`). Once the cue has played every mark shows.
  * Under review the marks stay as they were when it began (the song that was playing isn't marked, D123) and no ring
- * plays.
+ * plays. A step revealed before this Check came on screen (`startAtMs`: a review resumed after another card's Check,
+ * D121) is marked from the start: its snippet isn't replayed, so it never plays or stamps again.
  */
 export function checkReveal(
-  check: Pick<CheckView, 'steps' | 'verdict' | 'reviewing' | 'reviewSinceMs' | 'replay'>,
+  check: Pick<CheckView, 'steps' | 'verdict' | 'reviewing' | 'reviewSinceMs' | 'replay' | 'startAtMs'>,
   nowMs: number,
   markAt: 'end' | 'start' = 'end',
 ): CheckReveal {
@@ -184,7 +185,7 @@ export function checkReveal(
   let playing: number | null = null;
   const steps = check.steps.map((s, i): StepState => {
     const markMs = markAt === 'end' ? s.atMs + s.durationMs : s.atMs;
-    if (settled || at >= markMs) return s.landed ? 'landed' : 'missed';
+    if (settled || at >= markMs || s.atMs < check.startAtMs) return s.landed ? 'landed' : 'missed';
     if (!check.reviewing && at >= s.atMs) {
       playing = i;
       return 'playing';

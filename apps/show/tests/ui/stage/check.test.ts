@@ -31,7 +31,7 @@ const card = { id: 57, type: 'normal', lines: [[5, 14, 64, 75], [15, 18, 60, 69]
 const steps: CheckStepView[] = [2, 62, 16, 20].map((songId, i) => ({ songId, landed: songId !== 20, atMs: 1000 + i * 3000, durationMs: 2500 }));
 const title = (id: number) => `T${id}`;
 /** What checkReveal reads, revealing `steps` (not under review, no step back) with the result `verdict`. */
-const revealOf = (revealed: CheckStepView[], verdict: CheckVerdict | null = null) => ({ steps: revealed, verdict, reviewing: false, reviewSinceMs: null, replay: null });
+const revealOf = (revealed: CheckStepView[], verdict: CheckVerdict | null = null) => ({ steps: revealed, verdict, reviewing: false, reviewSinceMs: null, replay: null, startAtMs: 0 });
 
 test('the grid is the card, 3 × 4, each song of the row linked to its place in the reveal order', () => {
   for (const revealed of [steps, steps.slice(0, 2), []]) {
@@ -214,6 +214,23 @@ test('the type is the first step: marked after the lead, never after the first s
   assert.equal(typeReveal(check, 899, 900), 'pending');
   assert.equal(typeReveal(check, 900, 900), 'ok');
   assert.equal(typeReveal({ ...check, cardType: null }, 900, 900), null, 'no badge for an unknown card');
+});
+
+test('D121: a Check that comes back with reveals done shows them marked from the start; only a later reveal plays', () => {
+  // Back on screen at 10000 with 3 reveals from before: the last one's snippet (9000–11500) would still be playing by the
+  // clock, but no snippet replays it.
+  const before = steps.slice(0, 3).map((s, i) => ({ ...s, atMs: 3000 + i * 3000 }));
+  const back = { ...revealOf(before), startAtMs: 10000 };
+  assert.deepEqual(checkReveal(back, 10000), { steps: ['landed', 'landed', 'landed'], playing: null, replaying: null, result: null });
+  // Under review again as it comes back (its review began at 8500, while the 3rd was playing): still marked.
+  assert.deepEqual(checkReveal({ ...back, reviewing: true, reviewSinceMs: 8500 }, 10000).steps, ['landed', 'landed', 'landed']);
+  // The type badge is past its pending state at once.
+  assert.equal(typeReveal({ ...back, cardType: cardTypeBadge('normal', 1, true, TYPES, null) }, 10000, 900), 'ok');
+  // The next press, after it came on screen, plays and then stamps as usual.
+  const next = { ...back, steps: [...before, { ...steps[3], atMs: 12000 }] };
+  assert.equal(checkReveal(next, 12500).playing, 3);
+  assert.deepEqual(checkReveal(next, 12500).steps, ['landed', 'landed', 'landed', 'playing']);
+  assert.equal(checkReveal(next, 14500).steps[3], 'missed');
 });
 
 test('a wrong-type card has no songs: its type fails at its cue, with the result, and not before', () => {

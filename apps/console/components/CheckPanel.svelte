@@ -22,6 +22,7 @@
     claimOf,
     nextReveal,
     replayedAfterBack,
+    stepBackOnScreen,
   } from '../logic/check.ts';
   import { summarizeClaims } from '../logic/claims.ts';
   import { songTitleOf } from '../logic/show-data.ts';
@@ -63,7 +64,7 @@
   /** «Enrere: torna a sonar…», right after a step back on this card (until the next reveal). */
   const backNotice = $derived.by(() => {
     const b = model.stepBack;
-    if (!check || !b || b.claimId !== check.claimId || check.revealed.length !== b.index) return null;
+    if (!check || !b || !stepBackOnScreen(check, b)) return null;
     const replayed = replayedAfterBack(check, claim, b.index);
     return S.check.backDone(replayed === null ? null : title(replayed), b.autoWasOn);
   });

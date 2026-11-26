@@ -18,6 +18,7 @@ import {
   nextReveal,
   replayedAfterBack,
   reviewNeedsConfirm,
+  stepBackOnScreen,
   stepMark,
   typeChip,
 } from '../../../../console/logic/check.ts';
@@ -50,6 +51,26 @@ test("the card in private: every song's mark from the start, full once revealed,
   assert.deepEqual(cells204.map((c) => c.skipped), [false, true, true, true], "#204 fails at its first song: the rest won't be revealed");
   assert.ok(cells204.every((c) => !c.next), 'after the cue nothing is next');
   assert.deepEqual(checkCells(onScreen('checkWrongType').check, onScreen('checkWrongType').claim, NOW), [], 'a card of another type: no songs');
+});
+
+test("D121: a review back on screen after another card's Check: its earlier reveals full marks, none «playing»", () => {
+  const { check, claim } = onScreen('checkResumed');
+  const row = () => checkCells(check, claim, NOW).filter((c) => c.inCheck);
+  assert.deepEqual(row().map((c) => c.revealed), [true, true, true, false]);
+  assert.deepEqual(row().map((c) => c.playing), [false, false, false, false]);
+  assert.deepEqual(row().map((c) => c.next), [false, false, false, true], '«Elefants» is next');
+  // Even when the last one was revealed a second before the Check came back, its snippet "still playing" by the clock.
+  const recent = { ...check, revealed: check.revealed.map((r, i, all) => ({ ...r, atMs: check.startAtMs - 1000 - (all.length - 1 - i) * 3400 })) };
+  const cells = checkCells(recent, claim, check.startAtMs).filter((c) => c.inCheck);
+  assert.deepEqual(cells.map((c) => [c.revealed, c.playing]), [[true, false], [true, false], [true, false], [false, false]]);
+  assert.deepEqual(checkPress(flowAt('checkResumed')), { cmd: 'checkNext', args: { claimId: 'cl-5', step: 3 } }, 'the next press reveals the 4th');
+  // A reveal after it came back plays as usual.
+  const pressed = { ...check, revealed: [...check.revealed, { songId: 20, landed: false, atMs: NOW + 100, durationMs: 1200 }] };
+  assert.deepEqual(checkCells(pressed, claim, NOW + 500).filter((c) => c.inCheck).map((c) => c.playing), [false, false, false, true]);
+  // A step back from before its review: no «Enrere: torna a sonar…» now; one made since it came back does show.
+  assert.equal(stepBackOnScreen(check, { claimId: 'cl-5', index: 3, atMs: check.startAtMs - 60_000 }), false);
+  assert.equal(stepBackOnScreen(check, { claimId: 'cl-5', index: 3, atMs: check.startAtMs + 1 }), true);
+  assert.equal(stepBackOnScreen(check, { claimId: 'cl-6', index: 3, atMs: check.startAtMs + 1 }), false, 'another card');
 });
 
 test('the verdict, in private: complete, the song that fails it (its place in the reveals), the wrong type', () => {

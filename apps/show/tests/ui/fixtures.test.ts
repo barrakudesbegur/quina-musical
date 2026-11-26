@@ -94,7 +94,7 @@ test('the Check fixtures claim printed cards, and reveal them as the engine does
 
 test('the Check fixtures: nothing revealed, revealing, at the cue, past it, under review', () => {
   const at = (name: string) => FIXTURES[name](NOW).state;
-  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkTwo', 'checkCuePass', 'checkCueFail', 'checkCelebrateNext', 'checkWrongType', 'checkStanding', 'checkFallen', 'checkCueFallen', 'checkStandingValid']) {
+  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkResumed', 'checkTwo', 'checkCuePass', 'checkCueFail', 'checkCelebrateNext', 'checkWrongType', 'checkStanding', 'checkFallen', 'checkCueFallen', 'checkStandingValid']) {
     const s = at(name);
     assert.equal(s.scene, 'check', name);
     const check = s.check;
@@ -113,4 +113,7 @@ test('the Check fixtures: nothing revealed, revealing, at the cue, past it, unde
   assert.equal(at('checkWrongType').claims[0].cueNext, true, 'a card of the wrong type: the first press is the cue');
   assert.deepEqual(at('checkCelebrateNext').celebrationNext, { claimId: 'cl-6', step: 2 });
   assert.equal(at('checkTwo').claims.length, 2);
+  const resumed = at('checkResumed').check!;
+  assert.ok(resumed.revealed.length === 3 && resumed.revealed.every((r) => r.atMs + r.durationMs < resumed.startAtMs), 'D121: back with 3 reveals from before it came on screen');
+  assert.equal(at('checkResumed').claims[0].cueNext, false, '«Elefants» waits for a press');
 });

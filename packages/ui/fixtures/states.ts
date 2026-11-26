@@ -707,6 +707,13 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   checkReview: (now) => ({
     state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 20000, revealed: 3, lastAtMs: now - 8000, reviewing: true }], FIXTURE_LANDED),
   }),
+  /**
+   * #57's review went on (`reviewEnd continue`) after #204's Check took the screen meanwhile (D121): #57 is back with its
+   * 3 earlier reveals, minutes old, already marked (no snippet replays them); «Elefants» waits for a press.
+   */
+  checkResumed: (now) => ({
+    state: pacedCheck(baseState(now), [{ ...CARD_57, atMs: now - 300_000, revealed: 3, lastAtMs: now - 240_000, startAtMs: now - 200 }, { ...CARD_204, atMs: now - 290_000, warnings: ['notSold'] }], FIXTURE_LANDED),
+  }),
   /** Two cards claimed: #123 at its cue (it passes, but #204 waits: «Vàlid · següent», no fanfare). */
   checkTwo: (now) => ({
     state: pacedCheck(lineState(now), [{ ...CARD_123, atMs: now - 20000, revealed: 4, lastAtMs: now - 2500 }, { ...CARD_204, atMs: now - 18000, warnings: ['notSold'] }], FIXTURE_LANDED_LINE),

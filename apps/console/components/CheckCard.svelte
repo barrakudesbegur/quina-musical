@@ -45,6 +45,9 @@
   });
   const notSold = $derived(claim?.warnings.includes('notSold') ?? false);
   const completeSince = $derived(claim?.completeSince != null ? claim.completeSince + 1 : null);
+  /** Each Check draws its cells afresh (D121): a review back on screen with its marks shows them at once, with no 150 ms
+   * check-step transition from the previous card's cells. */
+  const drawn = $derived(`${check.claimId}@${check.startAtMs}`);
   /** The song that failed the card (its first ✗, or the one that sank a standing card). */
   const failedSong = $derived(!pass && (verdict.kind === 'missing' || verdict.kind === 'fallen') ? verdict.songId : null);
 </script>
@@ -66,7 +69,7 @@
 
   {#if cells.length}
     <ol class="check-grid" data-kind={check.kind}>
-      {#each cells as cell, i (i)}
+      {#each cells as cell, i (`${drawn}:${i}`)}
         <li
           class="check-cell"
           data-in={cell.inCheck || undefined}

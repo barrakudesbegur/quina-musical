@@ -121,6 +121,34 @@ test('a step back lifts the last mark off; a review shows its plaque and keeps t
   ], 'the Check goes on: the song cut short gets its mark');
 });
 
+test("D121: a review that comes back after another card's Check enters with its marks settled; only later reveals animate", () => {
+  const resumed = FIXTURES.checkResumed(NOW).state;
+  assert.ok(resumed.check);
+  const other: FlowState = { ...resumed, check: { ...resumed.check, cardId: 204, startAtMs: NOW - 60_000, revealed: [] } };
+  const review = { ...NO_CHECK_MEMORY, review: { claimId: resumed.check.claimId, atMs: NOW - 230_000 } };
+  const at = (s: FlowState, ms: number) => momentsOf(viewOf(s, { landed: [], spin: null, check: review }), inputs(NOW + ms));
+  // Its steps are marked from the first summary: entering it is the only moment, then nothing as the clock runs.
+  const entered = at(resumed, 0);
+  assert.deepEqual(entered.check?.steps, ['landed', 'landed', 'landed']);
+  assert.equal(entered.check?.type, 'ok', 'the type badge already past pending');
+  assert.deepEqual(diffMoments(at(other, 0), entered), [{ name: 'check-enter', cardId: 57, kind: 'line' }]);
+  assert.deepEqual(diffMoments(entered, at(resumed, 3000)), []);
+  // Recent reveals too: the last one 1 s before it came back, its snippet "still playing" by the clock.
+  const recent: FlowState = {
+    ...resumed,
+    check: { ...resumed.check, startAtMs: NOW, revealed: resumed.check.revealed.map((r, i, all) => ({ ...r, atMs: NOW - 1000 - (all.length - 1 - i) * 3400 })) },
+  };
+  assert.deepEqual(at(recent, 0).check?.steps, ['landed', 'landed', 'landed']);
+  assert.deepEqual(diffMoments(at(recent, 0), at(recent, 2000)), []);
+  // Coming back still under review for a snapshot, then going on: the plaque goes, no mark stamps again.
+  const underReview: FlowState = { ...resumed, check: { ...resumed.check, reviewing: true } };
+  assert.deepEqual(diffMoments(at(underReview, 0), at(resumed, 0)), [{ name: 'check-review', on: false }]);
+  // The next press («Elefants», after it came back) animates as usual.
+  const pressed: FlowState = { ...resumed, check: { ...resumed.check, revealed: [...resumed.check.revealed, { songId: 20, landed: false, atMs: NOW + 1000, durationMs: 1200 }] } };
+  assert.deepEqual(diffMoments(at(resumed, 1000), at(pressed, 1000)), [{ name: 'check-step', index: 3, songId: 20, state: 'playing' }]);
+  assert.deepEqual(diffMoments(at(pressed, 1000), at(pressed, 2200)), [{ name: 'check-step', index: 3, songId: 20, state: 'missed' }]);
+});
+
 test('scene changes: check → celebration → interval', () => {
   const check = momentsOf(viewOf(FIXTURES.check(NOW).state), inputs(NOW));
   const celebration = momentsOf(viewOf(FIXTURES.celebration(NOW).state), inputs(NOW));

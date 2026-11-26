@@ -218,8 +218,9 @@ function checkView(shown: { check: CheckInfo; discarded: boolean }, plan: GamePl
   const card = catalogFace(catalog, c.cardId, c.side ?? DEFAULT_SIDE);
   const review = memory.review?.claimId === c.claimId ? memory.review.atMs : null;
   const back = memory.unrevealed;
-  // A step back replays the song before the one it took off: the new last revealed one.
-  const replayed = back && back.claimId === c.claimId && back.index === steps.length && back.index > 0 ? steps[back.index - 1] : null;
+  // A step back replays the song before the one it took off: the new last revealed one. Only one made since this Check
+  // came on screen: one from before a review that left the screen (D121) replays nothing when the Check comes back.
+  const replayed = back && back.claimId === c.claimId && back.atMs >= c.startAtMs && back.index === steps.length && back.index > 0 ? steps[back.index - 1] : null;
   return {
     key: `${c.cardId}@${c.startAtMs}`,
     cardId: c.cardId,

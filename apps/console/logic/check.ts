@@ -66,7 +66,9 @@ export function checkCells(check: CheckInfo, claim: ClaimInfo | null, nowMs: num
   return card.map((s, index) => {
     const at = order.get(index) ?? null;
     const step = at === null ? undefined : check.revealed[at];
-    const heard = step !== undefined && nowMs >= step.atMs + step.durationMs;
+    // A reveal from before this Check came on screen (a review resumed after another card's Check, D121) was heard
+    // then: no snippet replays it, so it is never «playing» again.
+    const heard = step !== undefined && (nowMs >= step.atMs + step.durationMs || step.atMs < check.startAtMs);
     return {
       songId: s.songId,
       row: Math.floor(index / COLS),
@@ -207,6 +209,14 @@ export function nextReveal(check: CheckInfo, claim: ClaimInfo | null): NextRevea
   if (!song || at >= of) return null;
   return { songId: song.songId, at: at + 1, of };
 }
+
+/**
+ * Whether the last step back (`check.unrevealed`) is this Check's, still showing «Enrere: torna a sonar…»: on this
+ * card, nothing revealed since, and made since it came on screen. One from before a review that left the screen
+ * doesn't count when the Check comes back with its marks (D121): no snippet replays then.
+ */
+export const stepBackOnScreen = (check: Pick<CheckInfo, 'claimId' | 'revealed' | 'startAtMs'>, back: { claimId: string; index: number; atMs: number } | null): boolean =>
+  back !== null && back.claimId === check.claimId && check.revealed.length === back.index && back.atMs >= check.startAtMs;
 
 /** The song a step back replays: the one before the mark that came off, or null at none (the music from before comes back). */
 export const replayedAfterBack = (check: CheckInfo, claim: ClaimInfo | null, removedIndex: number): number | null =>

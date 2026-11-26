@@ -9,7 +9,7 @@ import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { parseCards, type Catalog } from '../../../../../packages/ui/data/catalog.ts';
 import { readPrintedCardTypes } from '../../../../../packages/ui/data/card-types.ts';
 import { stageView, type StageView } from '../../../../stage/view.ts';
-import { firstMiss, NO_CHECK_MEMORY, plaqueSpot } from '../../../../stage/model/check.ts';
+import { checkReveal, firstMiss, NO_CHECK_MEMORY, plaqueSpot, typeReveal } from '../../../../stage/model/check.ts';
 import { STAGE_TEXT } from '../../../../stage/strings.ts';
 
 const NOW = 1_800_000_000_000;
@@ -354,6 +354,21 @@ test('under review: the plaque, the marks as they were when it began; a step bac
   const other = stageView(two, flowOf(two), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: { ...back, unrevealed: { ...back.unrevealed, index: 3 } } });
   if (other.body.scene !== 'check') return assert.fail('not check');
   assert.equal(other.body.check.replay, null, 'an older step back');
+});
+
+test("D121: a review back on screen after another card's Check: its earlier reveals settled, no step back from before replayed", () => {
+  const state = FIXTURES.checkResumed(NOW).state;
+  assert.ok(state.check);
+  // #57 had a step back (4 → 3) before its review; #204's Check came and went; #57 is back with the same 3 marks.
+  const memory = { ...NO_CHECK_MEMORY, unrevealed: { claimId: state.check.claimId, index: 3, atMs: state.check.startAtMs - 1 } };
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: memory });
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  const check = view.body.check;
+  assert.equal(check.steps.length, 3);
+  assert.equal(check.replay, null, 'no equaliser: the engine replays no snippet');
+  assert.deepEqual(checkReveal(check, NOW), { steps: ['landed', 'landed', 'landed'], playing: null, replaying: null, result: null });
+  assert.equal(typeReveal(check, NOW, 900), 'ok');
+  assert.deepEqual(check.cells.filter((c) => c.step !== null).map((c) => c.step), [0, 1, 2, 3], 'the whole row, «Elefants» still to reveal');
 });
 
 test('a Check discarded from its review fades out while the next card comes', () => {

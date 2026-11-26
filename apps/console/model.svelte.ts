@@ -79,6 +79,8 @@ export interface StepBack {
   index: number;
   /** «Seguides» was on, and the step back turned it off for this card. */
   autoWasOn: boolean;
+  /** When it happened (logic/check.ts stepBackOnScreen: only one made since the Check came on screen counts). */
+  atMs: number;
 }
 
 /** The last landing that knocked cards out of the Desgraciat round (`standing-fall`), for the Dempeus tab. */
@@ -249,7 +251,7 @@ export class ConsoleModel {
       // A step back inside a Check: the snapshot before it still says whether «Seguides» was on.
       if (event.type === 'check.unrevealed') {
         const check = this.show.state?.check;
-        this.stepBack = { claimId: event.claimId, index: event.index, autoWasOn: check?.claimId === event.claimId && check.auto };
+        this.stepBack = { claimId: event.claimId, index: event.index, autoWasOn: check?.claimId === event.claimId && check.auto, atMs: event.atMs };
       }
       // next-to-now: at the landing the panels still show the old songs; once Ara sona shows it, fly it in.
       if (event.type === 'transition.landed' && shouldMorph(event.songId, this.show.state?.next?.songId, prefersReducedMotion())) {

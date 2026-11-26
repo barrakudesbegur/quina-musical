@@ -180,7 +180,7 @@ test("the phones see a Check's result only from its cue: pending while revealing
     p.ingest(FIXTURES[name](NOW).state, NOW);
     return p.project(ctx).check;
   };
-  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkTwo', 'checkWrongType', 'checkStanding', 'checkFallen']) {
+  for (const name of ['checkStarted', 'check', 'checkAuto', 'checkValid', 'checkFailed', 'checkReview', 'checkResumed', 'checkTwo', 'checkWrongType', 'checkStanding', 'checkFallen']) {
     assert.equal(resultOf(name)?.result, 'pending', name);
   }
   assert.deepEqual(resultOf('check'), { round: 3, cardId: 57, kind: 'line', result: 'pending' });
@@ -188,6 +188,23 @@ test("the phones see a Check's result only from its cue: pending while revealing
   assert.deepEqual(resultOf('checkCueFail'), { round: 3, cardId: 57, kind: 'line', result: 'invalid' });
   assert.equal(resultOf('checkCueFallen')?.result, 'invalid');
   assert.equal(resultOf('checkCelebrateNext')?.result, 'invalid', "the last card's fail, while one more press starts the Celebration");
+});
+
+test("D121: a review back on screen after another card's Check projects as that card's Check again, with no reveals to replay", () => {
+  const p = new PublicProjector(() => 0.5);
+  const resumed = FIXTURES.checkResumed(NOW).state;
+  assert.ok(resumed.check);
+  // #204's Check had the screen meanwhile; then #57 comes back with its 3 earlier reveals.
+  p.ingest({ ...resumed, check: { ...resumed.check, claimId: 'cl-6', cardId: 204, revealed: [] } } as ShowState, NOW - 1000);
+  assert.equal(p.project(ctx).check?.cardId, 204);
+  p.ingest(resumed, NOW);
+  const out = p.project(ctx);
+  assert.deepEqual(out.check, { round: 3, cardId: 57, kind: 'line', result: 'pending' }, 'phones get no reveals: nothing to animate');
+  const { keys } = walk(out);
+  assert.ok(!keys.has('revealed') && !keys.has('steps'));
+  // A reveal after it came back changes nothing on phones either.
+  p.ingest({ ...resumed, check: { ...resumed.check, revealed: [...resumed.check.revealed, { songId: 20, landed: false, atMs: NOW + 100, durationMs: 1200 }] } }, NOW + 200);
+  assert.deepEqual(p.project(ctx).check, out.check);
 });
 
 test('a Check stays pending until a presenter decides, whatever the engine found', () => {
