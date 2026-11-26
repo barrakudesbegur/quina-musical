@@ -186,9 +186,6 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
-### U127 · Approve the deploy of the plan-save fix · urgent
-The fix is pushed on its own (2503050, tested: cloud tests and the e2e). The auto-mode permission check refused Backend's deploy, so the live cloud (79988575) still loses Admin edits to later rounds' prizes and the cheat sheet. Approve Backend's deploy in its session, or run `npm run deploy` in `apps/cloud` at 2503050. Until then, avoid editing those in Admin.
-
 ### U126 · Check for lost Admin edits on quina-dev
 Backend found a bug (fixed in 5fdc2c9): the cloud didn't save a plan edit that phones don't see, like a later round's prizes or the cheat sheet, and the edit was lost when the cloud restarted. If you edited those in Admin on quina-dev, check that the edits are still there.
 
@@ -221,6 +218,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U127 · The plan-save fix's deploy** (2026-11-26): the user approved it; deployed as 94b395be. Step 1 of the new Check is deployed too (fddfdc1d).
 - **U135 · One slider or two for the chaotic moments** (2026-11-26) → D159: one shared slider.
 - **U134 · The loudness details** (2026-11-26) → D158: noticeably louder, set by ear; the starting point is +6 dB with a −6 dB trim, both tunable.
 - **U133 · How the chaotic moments get louder** (2026-11-26) → D157: their slider above 100% with hidden room; every slider 0–150%, default 100%.
