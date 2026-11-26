@@ -13,6 +13,7 @@ import { PLANNER, SUSPENSE } from '../engine/src/config.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import type { PlanEvent } from '../engine/src/plan/recipes.ts';
 import { setup, analyses } from './support/harness.ts';
+import type { Effect } from '../engine/src/show/show.ts';
 
 const ids = [...analyses.keys()];
 const analysisOf = (id: number) => {
@@ -336,4 +337,74 @@ test('the show: a cancelled Suspense backs out to where it started, Aguanta (D14
   h.send('suspense', { on: false, cancel: true });
   assert.deepEqual([h.show.status, h.show.hold, h.show.position], ['playing', null, position]);
   assert.equal(h.show.timers.autoAt, null, 'the advance is manual: nothing lands by itself');
+});
+
+/** A Spin out of a playing song, with A's exit still ahead (seeded); the harness and the Spin. */
+function spinning(seed: number) {
+  const h = setup({ seed, settings: { autoAdvance: false } });
+  h.send('unlock');
+  h.send('next');
+  h.until(() => h.show.status === 'playing');
+  h.advance(3);
+  h.send('next');
+  const t = h.show.transition;
+  assert.ok(t && t.fromSongId != null && t.aExitStart != null, 'a Spin out of A');
+  return { h, t, position: h.show.position, aId: t.fromSongId };
+}
+const emitted = (out: readonly Effect[], type: string) =>
+  out.flatMap((e) => (e.type === 'emit' && e.message.type === type ? [e.message as unknown as Record<string, unknown>] : []));
+
+test('the show (D177): B pressed while a Spin runs, before A exits: the Spin becomes a Suspense over A\'s phrase, same id, song and hook', () => {
+  const { h, t, position, aId } = spinning(4);
+  h.advance(0.3);
+  assert.ok(t.aExitStart! > h.clock.t + 0.1, 'A has not started its exit');
+  const out = h.send('suspense', { on: true });
+  const start = out.find((e) => e.type === 'startSuspense');
+  assert.ok(start?.type === 'startSuspense');
+  assert.deepEqual(start.fromSpin, { keepA: true, cutAt: h.clock.t }, 'the Spin stops at once, A comes back up');
+  assert.equal(start.drum.removeId, null, 'the Spin already took A off the drum');
+  assert.ok(!start.open.events.some((e) => e.kind === 'sfx' && e.name === 'whoosh'), 'the Spin had its whoosh');
+  assert.deepEqual(emitted(out, 'transition.cancelled'), [], 'no cancel: the Spin carries on as the Suspense');
+  const started = emitted(out, 'suspense.started')[0];
+  assert.deepEqual([started?.id, started?.fromSpin, started?.from, started?.to], [t.id, true, aId, t.songId]);
+  const s = h.show.suspense;
+  assert.ok(s && s.open.loop?.songId === aId, "over A's own phrase");
+  assert.equal(s.open.hook.id, t.plan.hook.id, 'the same hook');
+  assert.deepEqual([h.show.transition, h.show.current?.songId, h.show.status], [null, aId, 'transition']);
+  // Letting go lands the Spin's song with the Suspense's release, under the same id.
+  h.advance(2);
+  const release = h.send('suspense', { on: false });
+  assert.equal(emitted(release, 'transition.scheduled')[0]?.id, t.id);
+  h.until(() => h.show.position === position + 1);
+  assert.equal(h.show.current?.songId, t.songId);
+});
+
+test("the show (D177): after A's exit started, A leaves as planned and the build runs on B's grid from where its move ends; a cancel goes to Hold music", () => {
+  const { h, t } = spinning(4);
+  const at = t.aExitStart! + 0.2;
+  assert.ok(t.T - at > 0.3, 'time left before the landing');
+  h.advance(at - h.clock.t);
+  const out = h.send('suspense', { on: true });
+  const start = out.find((e) => e.type === 'startSuspense');
+  assert.ok(start?.type === 'startSuspense');
+  assert.equal(start.open.loop, null, 'no A to loop');
+  assert.ok(Math.abs(start.open.loopStart - Math.max(t.plan.exitAt, h.clock.t + 0.08)) < 0.1, `the build starts where A's move ends (${start.open.loopStart.toFixed(2)} vs ${t.plan.exitAt.toFixed(2)})`);
+  assert.deepEqual(start.fromSpin, { keepA: false, cutAt: start.open.loopStart }, "the rest of the Spin is cut where A's exit ends");
+  assert.deepEqual(start.open.events, [], "nothing new before then: A's exit is the Spin's");
+  assert.equal(h.show.current, null);
+  assert.deepEqual(emitted(out, 'suspense.started').map((e) => [e.id, e.fromSpin]), [[t.id, true]]);
+  h.advance(2);
+  assert.ok(h.log.some((e) => e.type === 'suspenseBar'), 'the build runs');
+  const cancel = h.send('suspense', { on: false, cancel: true });
+  assert.deepEqual(emitted(cancel, 'transition.cancelled').map((e) => [e.id, e.reason, e.keptOutgoing]), [[t.id, 'cancel', false]]);
+  assert.equal(h.show.holdMusic, true, 'nothing to back out to: Hold music');
+});
+
+test("the show (D177): in the Spin's last 0.15 s B lands, then goes into Aguanta (B is held)", () => {
+  const { h, t, position } = spinning(4);
+  h.advance(t.T - 0.1 - h.clock.t);
+  const out = h.send('suspense', { on: true });
+  assert.deepEqual(out.filter((e) => e.type === 'reject' || e.type === 'startSuspense'), [], 'neither refused nor a Suspense');
+  h.until(() => h.show.position === position + 1);
+  assert.deepEqual([h.show.status, h.show.hold?.reason, h.show.hold?.ducked, h.show.current?.songId], ['hold', 'hold', false, t.songId]);
 });

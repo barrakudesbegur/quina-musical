@@ -72,7 +72,7 @@ import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan, standingPlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
 import { planTransition, summarize, LOOKAHEAD_SEC } from '../plan/planner.ts';
-import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
+import { barSpan, openSuspense, releaseSuspense, suspenseBar, suspenseFromExit, suspenseTease, type SuspenseOpen } from '../plan/suspense.ts';
 import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
@@ -131,7 +131,7 @@ export interface Transition {
   fromSongId: number | null;
   aExitStart: number | null;
   fromHoldMusic: boolean;
-  afterLanding: null | 'back' | 'hold' | 'claim';
+  afterLanding: null | 'back' | 'hold' | 'claim' | 'stay';
 }
 
 /** An open Suspense: its loop runs bar by bar until it is released (or releases itself). */
@@ -227,6 +227,11 @@ export interface StartSuspenseEffect {
   open: SuspenseOpen;
   fromHoldMusic: boolean;
   drum: { removeId: number | null; targetId: number };
+  /**
+   * The running Spin becomes this Suspense (D177): its build and B's part stop at `cutAt` (audio clock). `keepA`: A is
+   * still itself, so it comes back up at once and its phrase loops; else A's exit plays out and the build starts there.
+   */
+  fromSpin?: { keepA: boolean; cutAt: number };
 }
 /** The next bar of an open Suspense's loop (graph and synth events only). */
 export interface SuspenseBarEffect {
@@ -1499,32 +1504,50 @@ export class Show {
   // ---------------------------------------------------------------------------------- Suspense
   // The presenters hold the next transition open: A exits, a loop on B's grid builds bar by bar and the drum
   // coasts, until Next (or `suspense` off) releases it onto the next free bar line. Never automatic.
+  /**
+   * A Suspense from the song playing (or from Hold music). During a Spin (D176, D177: A held, then B) the Spin becomes
+   * the Suspense, with its own id, song and hook: while A's exit hasn't started, over A's phrase (A comes back up); after
+   * it, A's exit plays out and the build runs on B's grid; in the Spin's last moment B lands, into Aguanta (B is held).
+   */
   startSuspense(reqId: string | null) {
     if (this.suspense) return;
-    if (this.transition || this.pending) return this.reject(reqId, 'suspense', 'busy');
-    const targetPos = this.position + 1;
+    if (this.pending) return this.reject(reqId, 'suspense', 'busy');
+    const spin = this.transition;
+    const now = this.env.now();
+    if (spin && spin.T - now < HOLD.cancelMinSec) {
+      spin.afterLanding = 'stay';
+      return;
+    }
+    const targetPos = spin ? spin.targetPos : this.position + 1;
     if (targetPos >= this.queue.length) return this.reject(reqId, 'suspense', 'endOfQueue');
-    const songId = this.queue[targetPos];
+    const songId = spin ? spin.songId : this.queue[targetPos];
     const analysis = this.env.analysis(songId);
     if (!analysis) return this.reject(reqId, 'suspense', 'notReady');
-    const fromStay = this.status === 'hold' && this.hold?.ducked === false && this.current != null && !this.holdMusic;
-    if (this.status === 'hold') this.leaveHold(0.4);
-    const now = this.env.now();
+    const fromStay = !spin && this.status === 'hold' && this.hold?.ducked === false && this.current != null && !this.holdMusic;
+    if (!spin && this.status === 'hold') this.leaveHold(0.4);
     const phase = PHASES[this.phaseName()];
     const cur = this.current;
-    const aAnalysis = cur ? this.env.analysis(cur.songId) : null;
+    // A Spin keeps A while A's exit hasn't started; after it, A leaves as the Spin planned.
+    const keepA = !spin || (spin.fromSongId != null && spin.aExitStart != null && spin.aExitStart > now + 0.05 && cur?.songId === spin.fromSongId);
+    const aAnalysis = cur && keepA ? this.env.analysis(cur.songId) : null;
     const A = cur && aAnalysis && cur.endCtx > now + ENGINE.minOutgoingTailSec
       ? { songId: cur.songId, analysis: aAnalysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex }
       : null;
-    const seed = Math.floor(this.env.random() * 2 ** 32) >>> 0;
-    const chosen = this.nextHook?.songId === songId ? this.nextHook.hook : null;
+    const seed = spin ? spin.plan.seed : Math.floor(this.env.random() * 2 ** 32) >>> 0;
+    const chosen = spin ? analysis.hooks.find((h) => h.id === spin.plan.hook.id) ?? null : this.nextHook?.songId === songId ? this.nextHook.hook : null;
     this.nextHook = null;
     this.blendRequested = '';
-    const open = openSuspense({ now, A, B: { songId, analysis }, phase: this.hookPhase(phase, songId), rng: seededRandom(seed), history: this.history, hookOverride: chosen });
+    const B = { songId, analysis };
+    const open = spin && !keepA && spin.fromSongId != null
+      ? suspenseFromExit({ now, plan: spin.plan, B, phase }) ?? { error: 'noHook' as const }
+      : openSuspense({ now, A, B, phase: this.hookPhase(phase, songId), rng: seededRandom(seed), history: this.history, hookOverride: chosen });
     if ('error' in open) return this.reject(reqId, 'suspense', 'planFailed', open.error);
+    // The Spin had its whoosh.
+    if (spin) open.events = open.events.filter((e) => !(e.kind === 'sfx' && e.name === 'whoosh'));
     this.startPlaying();
-    const id = `tr-${++this.transitionCount}`;
-    const fromHoldMusic = this.holdMusic || this.bed != null;
+    const id = spin ? spin.id : `tr-${++this.transitionCount}`;
+    const fromHoldMusic = spin ? spin.fromHoldMusic : this.holdMusic || this.bed != null;
+    this.transition = null;
     // Over A's loop the drum hovers over a few pending songs, the real next one among them, teased in turn.
     const hover = open.loop ? this.hoverSongs(songId, seed) : [];
     this.suspense = {
@@ -1539,15 +1562,19 @@ export class Show {
     this.status = 'transition';
     this.hold = null;
     this.timers = { autoAt: null, holdMusicAt: null };
-    const removeId = this.position >= 0 ? this.queue[this.position] : null;
-    this.out.push({ type: 'startSuspense', open, fromHoldMusic, drum: { removeId, targetId: songId } });
+    // A Spin already took the last song off the drum and stopped what played before it.
+    const removeId = !spin && this.position >= 0 ? this.queue[this.position] : null;
+    // The Spin's build and B's part stop where the Suspense takes over: at once over A, else where A's exit ends.
+    const fromSpin = spin ? { keepA: A != null, cutAt: A ? now : open.loopStart } : undefined;
+    this.out.push({ type: 'startSuspense', open, fromHoldMusic: !spin && fromHoldMusic, drum: { removeId, targetId: songId }, ...(fromSpin ? { fromSpin } : {}) });
     this.bed = null;
     this.holdMusic = false;
     this.emit({
       type: 'suspense.started',
       id,
       reqId,
-      from: A ? A.songId : null,
+      ...(spin ? { fromSpin: true as const } : {}),
+      from: spin ? spin.fromSongId : A ? A.songId : null,
       to: songId,
       position: targetPos,
       phase: phase.name,
@@ -1718,6 +1745,8 @@ export class Show {
     this.updateNudge();
     if (t.afterLanding === 'back') this.undo();
     else if (t.afterLanding === 'hold' || t.afterLanding === 'claim') this.enterHold(t.afterLanding, { music: false });
+    // A Suspense pressed in the Spin's last moment (D177): B is held, so the new song goes into Aguanta.
+    else if (t.afterLanding === 'stay') this.enterHold('hold', { music: false, duck: false });
     else this.scheduleAuto(t.T, completes);
     this.prefetch();
     this.emitState();

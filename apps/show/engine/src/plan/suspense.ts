@@ -125,6 +125,21 @@ export function openSuspense({ now, A, B, phase, rng, history = [], hookOverride
   return { phase, spinStart, loopStart: spinStart + 0.3, ...grid, hook, exit: null, exitIndex: null, events, a: null, loop: null };
 }
 
+/**
+ * A Spin turned into a Suspense after A's exit had started (D177): A can't come back, so its exit plays out as the Spin
+ * planned it, and the build runs on B's grid from where A's move ends (S2: where the bridge would start), without B.
+ * Nothing new is scheduled before then: the runtime cuts the rest of the Spin there (`fromSpin.cutAt`).
+ * @returns null when the Spin's hook isn't B's (it always is)
+ */
+export function suspenseFromExit({ now, plan, B, phase }: { now: number; plan: Pick<Plan, 'spinStart' | 'exitAt' | 'exit' | 'exitIndex' | 'a' | 'hook'>; B: IncomingSong; phase: PhaseEffects }): SuspenseOpen | null {
+  const hook = B.analysis.hooks.find((h) => h.id === plan.hook.id);
+  if (!hook) return null;
+  return {
+    phase, spinStart: plan.spinStart, loopStart: Math.max(plan.exitAt, now + LOOKAHEAD_SEC), ...hookGrid(B.analysis, hook), hook,
+    exit: plan.exit, exitIndex: plan.exitIndex, a: plan.a, events: [], loop: null,
+  };
+}
+
 /** How intense bar `k` of the loop is: 0 at the start, 1 after SUSPENSE.rampSec. */
 export function suspenseIntensity(open: SuspenseOpen, k: number): number {
   return clamp((k * open.bar) / SUSPENSE.rampSec, 0, 1);

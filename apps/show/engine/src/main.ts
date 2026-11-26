@@ -223,6 +223,8 @@ if (stageEl && stageMounted) {
 
 // Audio objects for what the machine calls current / incoming / outgoing.
 const rt: Runtime = { current: null, incoming: null, outgoing: null, tasks: [], lastState: null, catalog: new Map() };
+/** A Spin turned into a Suspense after A's exit started (D177): its build's bars wait here until the Spin is cut. */
+let spinCut: { bars: EffectOf<'suspenseBar'>[]; incoming: Deck | null } | null = null;
 let show: Show | null = null;
 // Solve stats per plan, for the HUD (the plan itself belongs to the machine).
 const spinStats = new WeakMap<ShowPlan, SpinStats>();
@@ -416,9 +418,8 @@ function apply(effect: Effect): void {
     case 'startSuspense':
       return startSuspense(effect);
     case 'suspenseBar':
-      // Over A's loop a bar also thins A out and may tease a hovered song.
-      applyPlan({ events: effect.events }, { graph, decks: { A: rt.outgoing }, decoy: playDecoy });
-      return;
+      if (spinCut) return void spinCut.bars.push(effect);
+      return suspenseBar(effect);
     case 'suspenseHover':
       drum.hoverTo({ audible: clock.audible(), targetId: effect.cardId, arriveAt: effect.at, until: effect.until });
       return;
@@ -483,6 +484,7 @@ function apply(effect: Effect): void {
 }
 
 function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTransition'>): void {
+  finishSpinCut(); // a Suspense released before its Spin was cut
   const entry = loader.get(plan.b.songId);
   if (!entry) throw new Error(`song ${plan.b.songId} is not decoded`);
   // Audio: B is scheduled sample-exactly so its hook downbeat sounds at T (with a tape start, its rate climbs to
@@ -561,7 +563,49 @@ function playDecoy({ songId, at, offset, cutAt, cutSec, gainDb, lpfHz }: DecoyEv
 }
 
 // Suspense opens: A ducks and exits on its downbeat, the loop's bars follow (suspenseBar effects), the drum coasts.
-function startSuspense({ open, fromHoldMusic, drum: wheel }: EffectOf<'startSuspense'>): void {
+// Over A's loop a bar also thins A out and may tease a hovered song.
+function suspenseBar(effect: EffectOf<'suspenseBar'>): void {
+  applyPlan({ events: effect.events }, { graph, decks: { A: rt.outgoing }, decoy: playDecoy });
+}
+
+/**
+ * The running Spin becomes a Suspense (D177). While A is still itself, the Spin's build and B's part stop now and A comes
+ * back up (its phrase then loops). After A's exit started, the exit plays out: the rest of the Spin (B, the build, the
+ * landing's impact) is cut where it ends, and the Suspense's bars start there, on fresh buses.
+ */
+function spinIntoSuspense({ keepA, cutAt }: NonNullable<EffectOf<'startSuspense'>['fromSpin']>): void {
+  const incoming = rt.incoming;
+  rt.incoming = null;
+  if (keepA) {
+    graph.resetTransient(0.3);
+    incoming?.fadeOut(0.3);
+    if (rt.outgoing) {
+      rt.outgoing.restore(0.3);
+      rt.current = rt.outgoing;
+    }
+    rt.outgoing = null;
+    return;
+  }
+  rt.current = rt.outgoing;
+  rt.outgoing = null;
+  const cut = { bars: [] as EffectOf<'suspenseBar'>[], incoming };
+  spinCut = cut;
+  addTask(cutAt - 0.06, () => spinCut === cut && finishSpinCut());
+  if (incoming) addTask(cutAt + 3, () => incoming.dispose());
+}
+
+/** The pending cut of a Spin turned Suspense, now: before its time when the Suspense is released, cancelled or stopped. */
+function finishSpinCut(): void {
+  const cut = spinCut;
+  if (!cut) return;
+  spinCut = null;
+  graph.resetTransient(0.05);
+  cut.incoming?.fadeOut(0.05);
+  for (const bar of cut.bars) suspenseBar(bar);
+}
+
+function startSuspense({ open, fromHoldMusic, drum: wheel, fromSpin }: EffectOf<'startSuspense'>): void {
+  if (fromSpin) spinIntoSuspense(fromSpin);
   // Over A's loop A keeps playing (its phrase repeats by `cue` effects); otherwise it exits, or fades if it can't.
   const keepsA = open.loop != null && rt.current?.songId === open.loop.songId;
   const outgoing = open.a || keepsA ? rt.current : null;
@@ -606,6 +650,7 @@ function landed(plan: ShowPlan): void {
 // A cancelled Spin: the build stops at once. A cancelled Suspense (`backOut`, D144) backs out instead: the build's
 // layers, echoes and high-pass fade away over SUSPENSE.backOutSec while the song comes back up, under a long fall.
 function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: EffectOf<'cancelTransition'>): void {
+  finishSpinCut();
   const now = ctx.currentTime;
   const fade = backOut ? SUSPENSE.backOutSec : 0.08;
   graph.resetTransient(fade);
@@ -677,6 +722,7 @@ async function celebrationMusic({ choice, songId, hookId, at, fadeSec, levelDb }
 }
 
 function stopAll(fadeSec: number): void {
+  finishSpinCut();
   const now = ctx.currentTime;
   graph.glide(graph.master.gain, -80, fadeSec);
   drum.freeze(clock.audible());
