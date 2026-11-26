@@ -20,14 +20,14 @@ export function blankRound(number: number, kind: RoundKind = 'normal', types: re
 // ---- a round's card type and side ------------------------------------------------------------------------
 
 /**
- * The last Quina whose normal rounds play the normal card's side 1 (D171, provisional): Quines 1–4 play side 1, from
- * pool 1, and Quines 5–10 side 2, from pool 2, as printed on each side ("1–4", "5–10").
+ * The last Quina whose normal rounds play the normal card's side 1 (D193): Quines 1–5 play side 1, from pool 1, and
+ * Quines 6–10 side 2, from pool 2, as printed on each side ("1–5", "6–10").
  */
-export const SIDE_1_LAST_QUINA = 4;
+export const SIDE_1_LAST_QUINA = 5;
 
 /**
  * The side a round plays unless set otherwise (D171). The normal rounds count on their own, as the screens and the
- * card's mark do (quinaNumber): the first four play side 1 and the rest side 2, wherever the specials sit in the plan
+ * card's mark do (quinaNumber): the first five play side 1 and the rest side 2, wherever the specials sit in the plan
  * (`rounds`); the Desgraciat and the Especial play side 1 (pool 1). A card type that doesn't have that side (one printed
  * on one side) plays its first. Without card-types.json, D171's side.
  */

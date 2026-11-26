@@ -32,7 +32,7 @@ const CATALOG: Catalog = {
   ]),
   // card-types.json, as apps/cards writes it: the only source of the types' names, colours and sides.
   cardTypes: readPrintedCardTypes([
-    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
     { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1' }] },
   ]),
 };
@@ -444,7 +444,7 @@ test('a Check carries the card\'s printed type, which is public', () => {
   const state = FIXTURES.check(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (view.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(view.body.check.cardType, { type: 'normal', label: 'Normal 1–4', color: '#cfe8ff', special: false, ok: true }, 'the type and side checked (D163)');
+  assert.deepEqual(view.body.check.cardType, { type: 'normal', label: 'Normal 1–5', color: '#cfe8ff', special: false, ok: true }, 'the type and side checked (D163)');
   const unknown: FlowState = { ...state, check: state.check ? { ...state.check, cardType: null } : null };
   const none = stageView(unknown, flowOf(unknown), SAMPLE_PLAN, CATALOG);
   if (none.body.scene !== 'check') return assert.fail('not check');
@@ -467,7 +467,7 @@ test("a side-2 round's Check draws the card's side 2 (CheckInfo.side), and its b
   const two = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (two.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(two.body.check.cells.map((c) => c.songId), SIDE_2_OF_57.flat(), "side 2's 12 songs");
-  assert.equal(two.body.check.cardType?.label, 'Normal 5–10');
+  assert.equal(two.body.check.cardType?.label, 'Normal 6–10');
 });
 
 test('interval: the next round, the count and the countdown guide; no winners, no QR, no prizes', () => {

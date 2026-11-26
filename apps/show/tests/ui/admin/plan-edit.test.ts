@@ -108,32 +108,32 @@ test("a new round plays its kind's default card type", () => {
 // ---- a round's side (D101, D102, D171)
 
 const SIDED = readPrintedCardTypes([
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
   { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1' }] },
 ]) ?? [];
 
-test('the side a round plays by default (D171): the first four normal rounds side 1, the rest side 2, the Desgraciat and the Especial side 1', () => {
+test('the side a round plays by default (D193): the first five normal rounds side 1, the rest side 2, the Desgraciat and the Especial side 1', () => {
   type R = { number: number; kind: 'normal' | 'special' | 'desgraciat' };
   const sides = (rounds: R[], types = SIDED) => rounds.map((r) => defaultSide(r, rounds, types));
   const n = (number: number) => ({ number, kind: 'normal' as const });
-  assert.deepEqual(sides([1, 2, 3, 4, 5, 6, 7, 8].map(n)), [1, 1, 1, 1, 2, 2, 2, 2]);
-  // The specials have no Quina number, so they don't count: 2025's order put the Desgraciat fourth, and the next normal
-  // round is still Quina 4, on side 1.
+  assert.deepEqual(sides([1, 2, 3, 4, 5, 6, 7, 8].map(n)), [1, 1, 1, 1, 1, 2, 2, 2]);
+  // The specials have no Quina number, so they don't count: 2025's order put the Desgraciat fourth, so plan round 6 is
+  // Quina 5, still on side 1, and plan round 8 is Quina 6, on side 2.
   const order2025: R[] = [n(1), n(2), n(3), { number: 4, kind: 'desgraciat' }, n(5), n(6), { number: 7, kind: 'special' }, n(8)];
-  assert.deepEqual(sides(order2025), [1, 1, 1, 1, 1, 2, 1, 2]);
+  assert.deepEqual(sides(order2025), [1, 1, 1, 1, 1, 1, 1, 2]);
   assert.deepEqual(order2025.map((r) => quinaNumber(r, order2025)), [1, 2, 3, null, 4, 5, null, 6]);
-  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => defaultSide(r, SAMPLE_PLAN.rounds, SIDED)), [1, 1, 1, 1, 1, 2, 1, 2]);
-  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => r.side), [1, 1, 1, 1, 1, 2, 1, 2], 'and it follows them');
+  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => defaultSide(r, SAMPLE_PLAN.rounds, SIDED)), [1, 1, 1, 1, 1, 1, 1, 2]);
+  assert.deepEqual(SAMPLE_PLAN.rounds.map((r) => r.side), [1, 1, 1, 1, 1, 1, 1, 2], 'and it follows them');
   assert.deepEqual(sides([{ number: 6, kind: 'special' }, { number: 11, kind: 'desgraciat' }]), [1, 1]);
   const five = [1, 2, 3, 4, 5, 6].map(n);
   assert.equal(defaultSide({ number: 6, kind: 'normal', cardType: 'especial' }, five, SIDED), 1, 'a one-sided type plays its side');
   assert.equal(defaultSide(n(6), five, []), 2, "without card-types.json: D171's side");
-  assert.deepEqual(addRound(addRound(addRound(addRound(addRound([], 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED).map((r) => r.side), [1, 1, 1, 1, 2]);
+  assert.deepEqual(addRound(addRound(addRound(addRound(addRound([], 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED), 'normal', SIDED).map((r) => r.side), [1, 1, 1, 1, 1]);
   assert.equal(blankRound(6, 'desgraciat', SIDED).side, 1);
 });
 
 test("the side picker offers the type's sides; a new type keeps the side when it has it; a new kind moves a default side along", () => {
-  assert.deepEqual(sideChoices(SIDED, 'normal', 1), [{ side: 1, label: '1–4' }, { side: 2, label: '5–10' }]);
+  assert.deepEqual(sideChoices(SIDED, 'normal', 1), [{ side: 1, label: '1–5' }, { side: 2, label: '6–10' }]);
   assert.deepEqual(sideChoices(SIDED, 'especial', 2), [{ side: 1, label: null }, { side: 2, label: null }], "the plan's side stays shown, next to its warning");
   assert.deepEqual(sideChoices([], 'normal', 1), [{ side: 1, label: null }], 'without card-types.json');
   // Five normal rounds before it: the sixth is Quina 6, on side 2.

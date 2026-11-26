@@ -80,7 +80,7 @@ test('the reports name every repeat: its songs, the first card and line, and the
 
 /** A repertoire's song: pool 1 is 1–30, pool 2 is 31–60. */
 const pooled = (id: number) => ({ id, ...(id > 30 ? { pool: '2' } : {}) });
-const NORMAL_SIDES = [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }];
+const NORMAL_SIDES = [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }];
 /** The generator's draw, simplified: the first 12 of a seeded shuffle, in 3 lines of 4. */
 const lines = (songs: readonly { id: number }[], seed: string) => {
   const rnd = seededRandom([...seed].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7));

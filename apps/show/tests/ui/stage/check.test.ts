@@ -174,14 +174,14 @@ test('the plate names the card being checked; the result plaque\'s words', () =>
 // ---- the card-type step: the badge, and when it gets its mark
 
 const TYPES = readPrintedCardTypes([
-  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
   { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 300 },
   { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: 100 },
 ]) ?? [];
 
 test("the type badge: the type and the side checked in one label (D163), its colour from card-types.json, its mark as the Check tells it", () => {
-  assert.deepEqual(cardTypeBadge('normal', 1, true, TYPES, SAMPLE_PLAN), { type: 'normal', label: 'Normal 1–4', color: '#cfe8ff', special: false, ok: true });
-  assert.equal(cardTypeBadge('normal', 2, true, TYPES, SAMPLE_PLAN)?.label, 'Normal 5–10');
+  assert.deepEqual(cardTypeBadge('normal', 1, true, TYPES, SAMPLE_PLAN), { type: 'normal', label: 'Normal 1–5', color: '#cfe8ff', special: false, ok: true });
+  assert.equal(cardTypeBadge('normal', 2, true, TYPES, SAMPLE_PLAN)?.label, 'Normal 6–10');
   assert.deepEqual(cardTypeBadge('especial', 1, false, TYPES, SAMPLE_PLAN), { type: 'especial', label: 'Especial', color: '#ffd9e8', special: true, ok: false });
   assert.equal(cardTypeBadge('especial', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Especial', 'a one-sided type: no side in its label');
   assert.equal(cardTypeBadge(null, 1, null, TYPES, SAMPLE_PLAN), null, 'an unknown card has no type');

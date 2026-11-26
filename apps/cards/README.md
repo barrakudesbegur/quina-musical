@@ -23,13 +23,13 @@ A card has **sides** (D101, D102, D178), each printed from one **pool** of the r
 songs.json (`"1"`, `"2"`; a song without one is in pool `"1"`). `CARD_TYPES` in [`src/config.ts`](./src/config.ts)
 says which pool each side of a type is printed from (D171, provisional):
 
-- the normal card: side 1 plays Quines 1–4, from pool 1 (`label: "1–4"`); side 2 plays Quines 5–10, from pool 2
-  (`label: "5–10"`). The same number and QR on both;
+- the normal card: side 1 plays Quines 1–5, from pool 1 (`label: "1–5"`); side 2 plays Quines 6–10, from pool 2
+  (`label: "6–10"`, D193). The same number and QR on both;
 - the especial card: one side, from pool 1 (the Desgraciat and the Especial play pool 1).
 
 `cards.json` holds each card as `{ id, type, sides: [{ side, lines: [[{ id, title, artist } × 4] × 3] }] }`, and
 `card-types.json` each type's `sides: [{ side, pool, label? }]` and its `shortName` ("Normal"): the Check shows the
-type and side in one label, "Normal 1–4", "Normal 5–10", "Especial" (D163). Readers take a card from before sides
+type and side in one label, "Normal 1–5", "Normal 6–10", "Especial" (D163). Readers take a card from before sides
 (`lines` and no `sides`) as its side 1.
 
 **A pool with no songs** (a repertoire not split into pools yet, like `default`): that side is drawn from the whole

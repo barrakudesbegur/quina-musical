@@ -132,12 +132,12 @@ test("marks mean «good for the claim»; the type chip names the printed type an
   assert.equal(stepMark('standing', false), 'ok');
   assert.equal(stepMark('standing', true), 'bad');
   const types = readPrintedCardTypes([
-    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }] },
+    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
     { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1' }] },
   ]) ?? [];
   assert.deepEqual(typeChip('especial', types, null), { name: 'Especial', label: 'Especial', color: '#ffd9e8', special: true });
-  assert.deepEqual(typeChip('normal', types, null, 1), { name: 'Normal', label: 'Normal 1–4', color: '#cfe8ff', special: false });
-  assert.equal(typeChip('normal', types, null, 2)?.label, 'Normal 5–10');
+  assert.deepEqual(typeChip('normal', types, null, 1), { name: 'Normal', label: 'Normal 1–5', color: '#cfe8ff', special: false });
+  assert.equal(typeChip('normal', types, null, 2)?.label, 'Normal 6–10');
   assert.equal(typeChip('especial', types, null, 2)?.label, 'Especial', 'one side: just its name');
   assert.equal(typeChip(null, types, null), null);
 });

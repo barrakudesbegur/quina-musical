@@ -193,7 +193,7 @@ test('card views: only the right kind plays; every landed song is marked; unknow
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
 });
 
-test("a side-2 round (D171: Quines 5–10): the phone shows and marks each normal card's side 2", () => {
+test("a side-2 round (D193: Quines 6–10): the phone shows and marks each normal card's side 2", () => {
   const sided = parseCards([
     { id: 123, type: 'normal', sides: [{ side: 1, lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] }, { side: 2, lines: [[71, 72, 73, 74], [75, 76, 77, 78], [79, 80, 81, 82]] }] },
     { id: 412, type: 'especial', sides: [{ side: 1, lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] }] },

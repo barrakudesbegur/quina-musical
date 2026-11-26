@@ -35,7 +35,7 @@ export type {
 /**
  * A normal round's Quina number, as the screens name it ("Quina N"): its place among the plan's normal rounds. The
  * special rounds have no number ("Quina Especial", "Quina Desgraciada"), so they don't count, wherever they sit in the
- * plan (screens.md; the card's printed mark reads "QUINES 1–4" / "QUINES 5–10", D171). Null for a special round.
+ * plan (screens.md; the card's printed mark reads "QUINES 1–5" / "QUINES 6–10", D171, D193). Null for a special round.
  */
 export function quinaNumber(round: Pick<RoundPlan, 'number' | 'kind'>, rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[]): number | null {
   if (round.kind !== 'normal') return null;

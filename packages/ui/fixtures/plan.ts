@@ -5,8 +5,8 @@
 //   TV, and the last Quina has two), 12 Christmas staples the club buys, and 4–6 sponsors' vouchers or products.
 // - Each Line wins something small: a bottle of white wine, a fuet, neules and a small sponsor's prize.
 // - Round 5 is the Quina Desgraciada (one hamper, the last card standing's, and no Line); round 7 the Quina Especial.
-// - The sides (D171, as Admin's defaults): Quines 1–4 play the normal card's side 1, Quines 6 and 8 its side 2; the
-//   Desgraciat and the Especial play the especial card's one side.
+// - The sides (D193, as Admin's defaults): the first five normal rounds (Quines 1–5: plan rounds 1–4 and 6) play the
+//   normal card's side 1, Quina 6 (plan round 8) its side 2; the Desgraciat and the Especial play side 1.
 import { defaultCardType, type RoundKind } from '@quina/protocol';
 import type { GamePlan, Prize, Sponsor } from '../plan.ts';
 
@@ -122,7 +122,9 @@ export const SAMPLE_PLAN: GamePlan = {
     const kind = KINDS[number] ?? 'normal';
     const hamper = [...HEADLINES[number], ...staples(number % 2 === 1), ...gifts(GIFT_COUNTS[number], giftsFrom(number))];
     // The Desgraciat round has no Line: its one bundle (`bingo`) is the last card standing's prize.
-    const side = kind === 'normal' && number > 4 ? 2 : 1;
+    // Its Quina number: the normal rounds count on their own (the specials have none).
+    const quina = Array.from({ length: number }, (_, j) => KINDS[j + 1] ?? 'normal').filter((k) => k === 'normal').length;
+    const side = kind === 'normal' && quina > 5 ? 2 : 1;
     return { number, kind, cardType: defaultCardType(kind), side, line: kind === 'desgraciat' ? [] : line(i), bingo: hamper };
   }),
   schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 },

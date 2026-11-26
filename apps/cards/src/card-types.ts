@@ -16,8 +16,8 @@ export const SIDE_MAX = 9;
 
 /**
  * One printed side of a type (D101, D102, D178): its number (1, 2…), the pool its 12 songs are drawn from (sides.ts),
- * and its label ("1–4", the Quines it plays: D171), which the Check shows after the type's short name (D163,
- * "Normal 1–4"). The same shape as the protocol's CardTypeSide.
+ * and its label ("1–5", the Quines it plays: D171, D193), which the Check shows after the type's short name (D163,
+ * "Normal 1–5"). The same shape as the protocol's CardTypeSide.
  */
 export interface CardTypeSideSpec {
   side: number;
@@ -29,7 +29,7 @@ export interface CardTypeSpec {
   type: string;
   /** Its full name ("Cartró normal"). */
   name: string;
-  /** Its name in a label with its side (D163: "Normal 1–4", "Especial"). */
+  /** Its name in a label with its side (D163: "Normal 1–5", "Especial"). */
   shortName: string;
   color: string;
   title: string;
@@ -71,7 +71,7 @@ function sideProblems(t: CardTypeSpec): string[] {
   t.sides.forEach((s, i) => {
     if (s.side !== i + 1) problems.push(`${where}: its sides must be numbered 1, 2… in order (side ${i + 1} is ${s.side})`);
     if (!POOL_ID_RE.test(s.pool)) problems.push(`${where}, side ${s.side}: the pool must be lowercase letters and digits, at most 8 ("1", "2")`);
-    if (t.sides.length > 1 && !s.label?.trim()) problems.push(`${where}, side ${s.side}: a type with several sides needs a label on each ("1–4")`);
+    if (t.sides.length > 1 && !s.label?.trim()) problems.push(`${where}, side ${s.side}: a type with several sides needs a label on each ("1–5")`);
   });
   return problems;
 }

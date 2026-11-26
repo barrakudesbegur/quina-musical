@@ -3,7 +3,7 @@
 // its title and artist, so the song index is built from the cards themselves and needs no other file. The
 // card types' names, colours, prices and sides come from card-types.json next to it.
 //
-// A card has sides (D101, D102, D178): the normal card's side 1 plays Quines 1–4 and its side 2 Quines 5–10, under one
+// A card has sides (D101, D102, D178): the normal card's side 1 plays Quines 1–5 and its side 2 Quines 6–10 (D193), under one
 // number. A round plays one side (its `side`), so a screen reads a card's songs only through cardFace(card, side).
 import { DEFAULT_SIDE, isSide } from '@quina/protocol';
 import type { PlayerCard } from '../../rules/marks.ts';

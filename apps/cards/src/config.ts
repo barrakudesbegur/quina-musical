@@ -40,15 +40,15 @@ export const VERSION_STAMP = `20${EDITION}`;
  * projector counts the price it shows before each round (U5): 'perRegularRound' is the price × the regular rounds still
  * to play (a normal card, 1.50 € a round in 2025), 'fixed' the price itself (the especial card).
  *
- * `sides` (D101, D102, D171, provisional): the normal card's side 1 plays Quines 1–4 from pool 1 and its side 2
- * Quines 5–10 from pool 2, under the same number and QR; the especial card has one side, from pool 1. The labels are
- * what the Check shows after `shortName` (D163: "Normal 1–4", "Normal 5–10", "Especial"), with an en dash as on the
+ * `sides` (D101, D102, D171, D193): the normal card's side 1 plays Quines 1–5 from pool 1 and its side 2
+ * Quines 6–10 from pool 2, under the same number and QR; the especial card has one side, from pool 1. The labels are
+ * what the Check shows after `shortName` (D163: "Normal 1–5", "Normal 6–10", "Especial"), with an en dash as on the
  * design boards.
  */
 export const CARD_TYPES = [
   {
     type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: CARD_TITLE, priceCents: 150, priceRule: 'perRegularRound',
-    sides: [{ side: 1, pool: '1', label: '1–4' }, { side: 2, pool: '2', label: '5–10' }],
+    sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }],
   },
   {
     type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: 500, priceRule: 'fixed',

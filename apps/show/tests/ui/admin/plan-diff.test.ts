@@ -69,9 +69,9 @@ test("a round that plays another card type; a plan without card types plays its 
 
 test("a round that plays another side of the card; a plan without sides plays side 1", () => {
   const next = clone(SAMPLE_PLAN);
-  next.rounds[5].side = 1;
+  next.rounds[7].side = 1;
   const d = diffPlans(SAMPLE_PLAN, next);
-  assert.deepEqual(d.rounds.sideChanged, [6]);
+  assert.deepEqual(d.rounds.sideChanged, [8]);
   assert.equal(d.same, false);
   const bare = clone(SAMPLE_PLAN);
   for (const r of bare.rounds) if (r.side === 1) delete r.side;
