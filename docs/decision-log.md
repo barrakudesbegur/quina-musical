@@ -1319,3 +1319,10 @@ By: the user via canvas (26 Nov). Source: Frontend's reports of 26 Nov. Lives in
 ### D197 · A planned throw's minutes are its break's length · 2026-11-26 · Active
 The plan's throw entry (`schedule.throws: [{ afterRound, minutes }]`) means: "the break after that round lasts `minutes`, with a throw in it". It isn't time added on top of the usual break. The organizers wrote "Descans + llançament (10min)", the break's total, so Admin takes 10 for 2026. The engine's estimate and the countdown follow it, and so does Admin's label (e.g. "Descans de N min, amb llançament"). It agrees with the glossary: a Break is the time between two rounds, and a Throw usually happens inside one. With it, the night ends about 9:45 pm.
 By: the orchestrator, applying the user's D192 to Sound engine's facts. Source: Sound engine's report of 26 Nov. Lives in: packages/protocol plan.ts (Sound engine); Admin (Frontend).
+
+### D198 · Automatic cues and voice-overs · 2026-11-26 · Active; more moments Pending (U171)
+New in 2026: short sound effects and voice-overs that play by themselves at chosen moments, "without being anoying". The user makes the voices with ElevenLabs. The ones the user named:
+- **A short fanfare when a break ends,** "so the presenters dont start talking suddenly". A round never starts by itself, so it plays when a presenter presses "Comença la quina".
+- **The doors' countdown:** a chime, then "La Quina Musical començarà en …", at 1 hour, 45, 30, 15 and 5 minutes before the start.
+- **The start:** music or a fanfare to kick off the show, and maybe a voice-over with a funny story that ends with the presenters coming on stage doing something funny, then carrying on from there.
+By: the user. Source: the user's message of 26 Nov. Lives in: event.md › The night, step by step; requirements/show-and-music.md › Music for each moment.

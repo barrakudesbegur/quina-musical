@@ -126,7 +126,9 @@ This page explains the event: what happens on the night, who does what, and how 
    - music plays and the bar opens;
    - the mood: people buy cards, find a seat, wait and talk with friends. The music is its own set for this moment (**new in 2026**);
    - the screen shows the night's rounds, the card types with their colours and prices, the QR code for phones, and the sponsors.
+   - a chime and a voice-over count down to the start: "La Quina Musical començarà en …" at 1 hour, 45, 30, 15 and 5 minutes (**new in 2026**).
 3. **The welcome:** the presenters explain the game.
+   - It opens with music or a fanfare that kicks off the show, maybe with a funny voice-over story that ends with the presenters coming on stage doing something funny (**new in 2026**).
    - They cover the number of rounds, the Desgraciat, which round is the Especial, the throws, and how winners are identified and collect their prizes. They remind everyone about the bar.
    - There are no written instructions anywhere.
 4. **The rounds** (see below), with an Interval between each two.

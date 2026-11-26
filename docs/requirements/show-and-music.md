@@ -154,6 +154,11 @@ _From event.md › The night, step by step; D129._
 - **After the close,** the end music plays until the tech disconnects the laptop for a Spotify Jam (D137).
 - **The corn-seed storm (D151):** if the crowd starts throwing corn seeds at the end, the tech turns on a song by hand, from a hook of its own right at the drop: "Flying Free" for now (D153). The button shows on the tablet during the last round, inside its Check, and on the end screen (D155). The throws and the storm play louder than the songs (D154; how, pending U133).
 - Still pending: U97 (the doors and the end's playlists) and U99 (the intro music's span).
+- **Automatic cues and voices (D198, new in 2026):** short sounds and voice-overs ("veu en off") that play by themselves at chosen moments, without being annoying. The user makes the voices with ElevenLabs. So far:
+  - a short fanfare when a break ends, so the presenters don't start talking suddenly;
+  - at the doors, a chime and "La Quina Musical començarà en …" at 1 hour, 45, 30, 15 and 5 minutes before the start;
+  - at the start, music or a fanfare that kicks off the show, maybe with a funny voice-over story that ends with the presenters coming on stage doing something funny.
+  - More moments and the rules that keep them from being annoying: pending U171.
 
 ## Volumes
 
