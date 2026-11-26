@@ -65,7 +65,7 @@ export interface GameSummary {
    * gives the whole Queue; organizers only, never on a screen by default.
    */
   resumePoint: ResumeToken | null;
-  /** Accepted claims whose Check didn't pass: for a person to look at (domain/flags.ts). Usually empty. */
+  /** Accepted claims to look at: their Check didn't pass (a win by hand, D121) or their card wasn't sold (domain/flags.ts). Usually empty. */
   flaggedDecisions: FlaggedDecision[];
 }
 

@@ -23,8 +23,9 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
   return { record, state, changes };
 }
 
-/** Keys that must never appear anywhere in what phones get. */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings']);
+/** Keys that must never appear anywhere in what phones get. The paced Check's (D108–D123): the whole marked card,
+ * how far its Check will reveal, whether the next press is the cue, a Review (U79) and a decision by hand (D121). */
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -297,6 +298,35 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
   ]);
   assert.deepEqual(projectEvent(applyPublic(state, made), show, ctx), [], 'the same state again changes nothing');
   assert.deepEqual(forbiddenKeys(made), []);
+});
+
+test("the paced Check's events and its private claim fields never reach phones (D108, D123; U79)", () => {
+  const state = applyPublic(emptyPublicState('26'), [{ kind: 'check', check: { round: 1, cardId: 12, kind: 'line', result: 'pending' } }]);
+  const check = { claimId: 'cl-1', cardId: 12, kind: 'line', outcome: 'complete', row: 0, otherRows: [], steps: [], startAtMs: 0, endAtMs: 0, total: 4, revealed: [], auto: false, cue: null, reviewing: true };
+  const events = [
+    { v: PROTOCOL_VERSION, type: 'check.started', check },
+    { v: PROTOCOL_VERSION, type: 'check.revealed', claimId: 'cl-1', index: 0, step: { songId: 7, landed: true, atMs: 10, durationMs: 3000 } },
+    { v: PROTOCOL_VERSION, type: 'check.reviewing', claimId: 'cl-1', atMs: 20 },
+    { v: PROTOCOL_VERSION, type: 'check.cue', claimId: 'cl-1', cue: 'pass', manual: true, atMs: 30 },
+    { v: PROTOCOL_VERSION, type: 'celebration.started', celebration: { kind: 'line', round: 1, check } },
+    {
+      v: PROTOCOL_VERSION,
+      type: 'state',
+      pause: null,
+      interval: null,
+      schedule: { gameEndMs: 0 },
+      transition: null,
+      suspense: null,
+      check,
+      claims: [{ claimId: 'cl-1', cardId: 12, markedCard: [{ songId: 7, landed: true }], revealUntil: 3, cueNext: true, warnings: ['notSold'] }],
+    },
+  ] as unknown as ShowEvent[];
+  for (const event of events) {
+    const made = projectEvent(state, event, ctx);
+    assert.deepEqual(forbiddenKeys(made), [], event.type);
+    if (event.type !== 'state') assert.deepEqual(made, [], `${event.type} changes nothing public`);
+    else assert.equal(made.some((c) => c.kind === 'check'), false, "the state's Check stays the console's");
+  }
 });
 
 test("a state with nothing in flight stops the phones' Spin (Panic, a new round)", () => {
