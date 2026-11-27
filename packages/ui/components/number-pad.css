@@ -66,7 +66,10 @@
   gap: var(--numpad-gap);
 }
 
-.numpad__face {
+/* Two classes, so the key's own fill (⌫ navy on the phone) wins over the press resource's `.ds-piece` fill whatever
+   order the stylesheets load in: production loads them in another order than dev, and ⌫ showed the paper fill there
+   (§8 Y3, «the delete key's broken white background»). */
+.numpad__key > .numpad__face {
   display: grid;
   place-items: center;
   min-height: var(--key-height);
