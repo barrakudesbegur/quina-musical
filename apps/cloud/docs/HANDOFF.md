@@ -8,7 +8,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 - **Ready for the player's PWA (27 Nov, D221–D222, Frontend's work, within the pause).** Agreed with Frontend: the worker `/player-sw.js` (scope `/`, `updateViaCache: 'none'`; never `/sw.js`, which stays last year's kill switch), caches prefixed `quina-player-`, `/player.webmanifest`, fixed icons under `/icons/` (`player-192`, `player-512`, `player-maskable-512`, `player-badge-96`, `apple-touch-icon-180`, all `.png`), from the UI build's public folder at `apps/show/dist/`. The worker never answers `/console/`, `/admin/`, `/api/`, `/ws/`, `/media/`, `/sw.js`, non-GET or cross-origin requests (Access's 302 must never be cached). Done: scripts/assets.ts copies the three into dist/ (and warns while the UI build lacks them); static/_headers gives them `no-cache` (the manifest `application/manifest+json`) and hashed `/assets/*` a year, immutable; test/node/static.e2e.test.ts checks it; live since `650d9089`. When Frontend's files land: check them live after that deploy (the deploy's PWA warning goes).
   - **For Sound engine when the pause lifts:** the relay's `--dist` serving (apps/show/relay/server.ts `serveFile`, one `cache` per target) needs the same `no-cache` for `/player-sw.js` and the manifest, and a MIME type for `.webmanifest`. Service workers need a secure context, so on the venue LAN over plain http (not localhost) the worker won't register at all; the relay part matters only for localhost.
 - **Just done (26 Nov):**
-  - **Twenty-four deploys** (deploy-plan.md), each tested on its sha first:
+  - **Twenty-five deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -33,6 +33,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `650d9089` (`1cd2bb9`): mine, the serving of the player's PWA (no-cache for its worker, manifest and icons; hashed assets a year, immutable). Checked live on both names.
     - `7497175b` (`13e7c19`): screens only (the ninos, the sponsors redone D216, the QR panel, the card and song components D1–D6).
     - `7bb3cc92` (`de04d5e`): screens only (the panels family: native dialogs and sheets, the drawer fixes, tickets and prize cards).
+    - `133446fd` (`c7e9058`): screens only (the buttons family: the hold buttons, the SoundPad grid, the "on" stripes, the pressed look).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
