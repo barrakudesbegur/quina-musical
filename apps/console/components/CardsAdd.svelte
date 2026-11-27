@@ -2,18 +2,21 @@
   «Cartrons venuts» in the menu (D234, part 1; logic/cards-add.ts): the presenters add the cards sold on the night to
   the cards in play, a range («400-450») or single numbers («452, 460»). The TextField (B9) previews what «Afegeix»
   would add in its hint; why it can't (a typo, a number that isn't a printed card, all in play already) shows in red
-  once the typing is over (the field left, or «Afegeix» pressed), never while a range is half typed. The
-  engine's one command for it replaces the whole list (`setCardsInPlay { ranges }`), so «Afegeix» sends the cards in
-  play now with the new ones. Once the engine's `cards.inPlay` holds them, the field empties and a green Notice (E4,
-  NOTICES.accepted) confirms it (ANIMATIONS.md › cards-added); a refusal is the console's usual toast, and the typed
-  numbers stay. In the menu's second column, under «La nit». Hooks: data-testid="cards-add".
+  once the typing is over (the field left, or «Afegeix» pressed), never while a range is half typed. «Afegeix» sends
+  the typed cards (`addCardsInPlay { ranges }`); the engine merges them, so two consoles adding at once keep both.
+  Its answer (`outcome`, the model's: `cards.lastAdd` for this console's reqId) empties the field and shows a green
+  Notice (E4, NOTICES.accepted) with what joined and what was in already (ANIMATIONS.md › cards-added); a refusal of
+  numbers that aren't printed (`invalid`, the numbers in its detail) leaves the typed numbers and names them in the
+  hint, in red. Either stays until the field is typed in again. Any other refusal is the console's usual toast. In the
+  menu's second column, under «La nit». Hooks: data-testid="cards-add".
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
   import Notice from '../../../packages/ui/components/Notice.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
   import { MINI, NOTICES } from '../actions.ts';
-  import { allInPlay, cardsToAdd, type CardsAddError, type CardsAddRules } from '../logic/cards-add.ts';
+  import { cardsToAdd, type CardsAddError, type CardsAddOutcome, type CardsAddRules } from '../logic/cards-add.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 
@@ -23,24 +26,26 @@
     count: number;
     rules: CardsAddRules;
     disabled?: boolean;
-    /** Send the cards in play with the new ones; false when the command couldn't leave this device. */
+    /** The engine's answer to this console's last add (ConsoleModel.cardsAddOutcome), or null. */
+    outcome?: CardsAddOutcome | null;
+    /** What's typed (bindable: a parent may start it). */
+    value?: string;
+    /** Send the typed cards (as ranges); false when the command couldn't leave this device. */
     onadd: (ranges: string) => boolean;
   }
 
-  let { inPlay, count, rules, disabled = false, onadd }: Props = $props();
+  let { inPlay, count, rules, disabled = false, outcome = null, value = $bindable(''), onadd }: Props = $props();
   const uid = $props.id();
 
-  let text = $state('');
-  /** Sent, until the engine's list holds them. */
-  let sent = $state.raw<{ added: number[]; addedRanges: string } | null>(null);
-  /** The engine took them: the Notice's words. */
-  let done = $state<string | null>(null);
   /** The typing is over (the field left, or «Afegeix» pressed): only then a problem shows, in red (modern-web-guidance
    *  validate-input-after-interaction: «400-» is on its way to a range, not a mistake). */
   let committed = $state(false);
+  /** The answer the field was typed in again after (it no longer shows). */
+  let dismissed = $state.raw<CardsAddOutcome | null>(null);
 
-  const preview = $derived(cardsToAdd(inPlay, text, rules));
-  const shownError = $derived(committed && !preview.empty ? preview.error : null);
+  const shown = $derived(outcome !== dismissed ? outcome : null);
+  const preview = $derived(cardsToAdd(inPlay, value, rules));
+  const shownError = $derived(shown?.kind === 'refused' ? shown.error : committed && !preview.empty ? preview.error : null);
   const hint = $derived(
     shownError
       ? errorText(shownError)
@@ -48,13 +53,19 @@
         ? S.cardsAdd.hint
         : S.cardsAdd.preview(preview.added.length, preview.addedRanges, preview.already),
   );
+  const done = $derived(
+    shown?.kind === 'added'
+      ? S.cardsAdd.done({ count: shown.addedCount, ranges: shown.added }, { count: shown.alreadyCount, ranges: shown.alreadyIn }, count)
+      : null,
+  );
 
-  // The engine's echo: every sent card is in play now.
+  // The engine took them: the field empties.
   $effect(() => {
-    if (!sent || !allInPlay(inPlay, sent.added)) return;
-    done = S.cardsAdd.done(sent.added.length, sent.addedRanges, count);
-    sent = null;
-    text = '';
+    if (shown?.kind !== 'added') return;
+    untrack(() => {
+      value = '';
+      committed = false;
+    });
   });
 
   function errorText(error: CardsAddError): string {
@@ -69,18 +80,18 @@
         return S.cardsAdd.error.already;
       case 'tooLong':
         return S.cardsAdd.error.tooLong;
-      case 'inPlay':
-        return S.cardsAdd.error.inPlay;
+      case 'refused':
+        return S.cardsAdd.error.refused;
     }
   }
 
   function submit(e: SubmitEvent): void {
     e.preventDefault();
     committed = true;
-    const { ranges, added, addedRanges } = preview;
-    if (disabled || !ranges) return;
-    // Taken before sending: an echo that arrives at once would change the preview.
-    if (onadd(ranges)) sent = { added, addedRanges };
+    // A new try: the last answer gives way to this one's.
+    dismissed = outcome;
+    if (disabled || !preview.ranges) return;
+    onadd(preview.ranges);
   }
 </script>
 
@@ -102,9 +113,9 @@
       enterkeyhint="done"
       {hint}
       invalid={shownError !== null}
-      bind:value={text}
-      oninput={() => ((done = null), (committed = false))}
-      onblur={() => (committed = text.trim() !== '')}
+      bind:value
+      oninput={() => ((dismissed = outcome), (committed = false))}
+      onblur={() => (committed = value.trim() !== '')}
     />
     <MiniButton {...MINI.cardsAdd} type="submit" disabled={disabled || preview.empty} />
   </form>
