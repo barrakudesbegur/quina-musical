@@ -11,6 +11,7 @@
   import { LONG_PRESS_IDLE, longPress, longPressProgress, parseCssDurationMs, type LongPressEvent, type LongPressState } from '../logic/long-press.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import { holdSounds } from '../../../packages/ui/sounds/touch.ts';
 
   interface Props {
     label: string;
@@ -40,11 +41,18 @@
     hintMs: CONSOLE.holdHintMs,
   });
 
+  // Its sounds (ANIMATIONS.md › Console sounds): the press, `holdDone` as it fires, and the matching release.
+  const hold = holdSounds(() => (big ? 'big' : 'small'));
+
   function feed(event: LongPressEvent): void {
     const cfg = config();
     const step = longPress(press, event, cfg);
     press = step.state;
     progress = longPressProgress(press, event.atMs, cfg);
+    if (event.type === 'down') hold.down();
+    if (step.fire) hold.done();
+    if (event.type === 'up') hold.up();
+    if (event.type === 'cancel') hold.cancel();
     if (step.fire) onconfirm();
     cancelAnimationFrame(frame);
     clearTimeout(hintTimer);

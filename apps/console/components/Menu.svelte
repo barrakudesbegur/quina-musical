@@ -28,6 +28,8 @@
   import SetupChecklist from './SetupChecklist.svelte';
   import Switch from './Switch.svelte';
   import VolumeSliders from './VolumeSliders.svelte';
+  import { getConsoleSounds } from '../context.ts';
+  import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
   import WinnersList from './WinnersList.svelte';
 
   /** `onwii`: open the Comandament dialog (the menu closes). */
@@ -35,6 +37,7 @@
 
   const model = getConsole();
   const wii = getWii();
+  const sounds = getConsoleSounds();
   const uid = $props.id();
   let dialog: HTMLDialogElement | undefined = $state();
   let labelDraft = $state('');
@@ -53,6 +56,8 @@
       labelDraft = model.label ?? '';
       planBOpen = false;
       dialog.showModal();
+      // `menu-sheet`'s sound: ☰ played its press, its release gives way to this.
+      touchRelease('drawerOpen');
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -71,11 +76,14 @@
   const setPhase = (phaseOverride: PhaseName | null) => model.act('setGame', { phaseOverride });
 </script>
 
-<dialog bind:this={dialog} class="dialog menu-sheet" data-anim="menu-sheet" aria-labelledby="{uid}-title" onclose={() => (open = false)}>
+<dialog bind:this={dialog} class="dialog menu-sheet" data-anim="menu-sheet" aria-labelledby="{uid}-title" onclose={() => {
+    open = false;
+    touchPress('drawerClose');
+  }}>
   <header class="menu-sheet__head">
     <h2 class="menu-sheet__title" id="{uid}-title">{S.menu.title}</h2>
     {#if subtitle}<span class="menu-sheet__subtitle">{subtitle}</span>{/if}
-    <button type="button" class="mini menu-sheet__close" data-anim="press" onclick={() => (open = false)}><Icon name="close" /><span>{S.menu.close}</span></button>
+    <button type="button" class="mini menu-sheet__close" data-anim="press" data-touch-release="none" onclick={() => (open = false)}><Icon name="close" /><span>{S.menu.close}</span></button>
   </header>
 
   <div class="menu-sheet__body">
@@ -212,6 +220,15 @@
       </section>
     </div>
 
+    <section class="menu-group menu-ui-sounds" aria-label={S.menu.uiSounds}>
+      <Switch
+        label={S.menu.uiSounds}
+        note={sounds.showLaptop ? S.menu.uiSoundsLaptop : S.menu.uiSoundsNote}
+        on={model.uiSounds && !sounds.showLaptop}
+        disabled={sounds.showLaptop}
+        onchange={(on) => model.setUiSounds(on)}
+      />
+    </section>
     {#if snap}<VolumeSliders />{/if}
   </div>
 

@@ -25,6 +25,7 @@
   import NowLine from './NowLine.svelte';
   import PodiumIcon from './PodiumIcon.svelte';
   import WiiBadge from './WiiBadge.svelte';
+  import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
 
   const model = getConsole();
   const uid = $props.id();
@@ -70,8 +71,13 @@
   function enter(): void {
     const typed = pad?.digits ?? '';
     const outcome = model.finalePadEnter();
-    if (outcome === 'refused') shakes++;
+    // The chip's sound (`finale-pad-card`): it pops in, or the number is refused.
+    if (outcome === 'refused') {
+      shakes++;
+      touchPress('refused');
+    }
     if (outcome === 'added') {
+      touchTap('chipAdd');
       fresh = Number(typed);
       clearTimeout(freshTimer);
       freshTimer = setTimeout(() => (fresh = null), CONSOLE.finale.freshMs);
@@ -93,6 +99,8 @@
     const key = padKeyFromKeyboard(e.key);
     if (key === null) return;
     e.preventDefault();
+    // A physical key sounds like the pad's own.
+    touchTap(key === 'back' || key === 'clear' ? 'backspace' : 'digit');
     press(key);
   }
 </script>

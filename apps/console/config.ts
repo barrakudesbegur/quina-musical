@@ -12,6 +12,8 @@ export const CONSOLE = Object.freeze({
     resume: 'quina.console.resume.v1',
     /** The Dempeus tab's «Al revés» during the finale: this tablet's own way of facing the stage. */
     finaleReversed: 'quina.console.finale-reversed.v1',
+    /** The menu's «Sons de la tauleta» (U182): this device's touch sounds, on unless switched off. */
+    uiSounds: 'quina.console.ui-sounds.v1',
   },
   /** The device label ("Tauleta", "Mòbil admin"), set in the menu: it names who pressed what. */
   labelMaxLength: 24,

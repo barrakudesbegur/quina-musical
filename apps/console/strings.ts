@@ -718,6 +718,7 @@ export const S = {
     { id: 'autolock', text: 'Bloqueig automàtic de la tauleta: mai' },
     { id: 'reach', text: "Portàtil i tauleta provats al punt d'accés de debò" },
     { id: 'resumeCode', text: 'A cada barreja, codi de recuperació apuntat (menú › Recuperar el show)' },
+    { id: 'tabletClicks', text: 'Prova de so: els clics de la tauleta no se senten pels micròfons oberts (si se senten, menú › Sons de la tauleta)' },
   ] as const,
 
   sounds: {
@@ -804,6 +805,10 @@ export const S = {
     labelNote: 'Les ordres porten el nom nou quan es torna a carregar la pàgina. El nom diu qui ha premut cada botó.',
     theme: 'Tema',
     themes: { light: 'Clar', dark: 'Fosc' } satisfies Record<Theme, string>,
+    /** This tablet's touch sounds (U182), beside the volume sliders. */
+    uiSounds: 'Sons de la tauleta',
+    uiSoundsNote: 'Clics suaus en tocar els botons, només en aquesta tauleta. La música no canvia.',
+    uiSoundsLaptop: 'Al portàtil del show, sempre en silenci: el seu so va als altaveus.',
     night: 'La nit',
     start: 'Començar la nit',
     startNote: 'Presenta la Quina 1 al projector.',

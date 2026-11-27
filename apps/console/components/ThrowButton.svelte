@@ -21,6 +21,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import ThrowIcon from './ThrowIcon.svelte';
+  import { holdSounds } from '../../../packages/ui/sounds/touch.ts';
 
   interface Props {
     song: ThrowSong;
@@ -46,11 +47,18 @@
 
   const config = () => ({ holdMs: CONSOLE.escalateHoldMs, canEscalate: enabled });
 
+  // Its sounds (ANIMATIONS.md › Console sounds): the press, `holdDone` as the song restarts, the matching release.
+  const hold = holdSounds('big');
+
   function feed(event: TwoLevelEvent): void {
     const cfg = config();
     const result = twoLevel(press, event, cfg);
     press = result.state;
     progress = twoLevelProgress(press, event.atMs, cfg);
+    if (event.type === 'down') hold.down();
+    if (result.actions.includes('escalate')) hold.done();
+    if (event.type === 'up') hold.up();
+    if (event.type === 'cancel') hold.cancel();
     for (const action of result.actions) {
       const command = throwCommand(song, action);
       if (!command || !enabled) continue;

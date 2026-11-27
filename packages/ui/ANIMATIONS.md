@@ -148,7 +148,7 @@ Soft, crisp touch sounds for this tablet's own taps (`packages/ui/sounds/`, the 
 | `finale-pad-card` | As `claim-chip-add` |
 | `finale-edit` | A finalist's ×: `raddy-low` |
 | `menu-sheet` | ☰'s press, then `kvm-switch`'s release as the sheet opens; `kvm-switch`'s press as it closes |
-| `wii-dialog` | None when it opens by itself; ✕ or a tap outside: `kvm-switch`'s press |
+| `wii-dialog` | None of its own (it may open by itself); its buttons sound as buttons («Tanca» `raddy-medium`) |
 
 ## The Desgraciat round (Quina Desgraciada)
 

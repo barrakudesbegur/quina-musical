@@ -45,6 +45,7 @@ import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
 import { SentLog, dismissToast, holdToasts, isOwnRejection, pushToast, releaseToasts, shownToasts, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';
 import { readStored, writeStored } from './storage.ts';
+import { storedSoundsOn, storedSoundsValue } from '../../packages/ui/sounds/logic.ts';
 
 /** This device's label: `?label=` (then stored) or the stored one. */
 function startingLabel(): string | null {
@@ -138,6 +139,8 @@ export class ConsoleModel {
   finalePad = $state.raw<FinalePadState | null>(null);
   /** The Dempeus tab's «Al revés» during the finale: this tablet faces the room (kept on this device). */
   finaleReversed = $state(readStored(CONSOLE.storage.finaleReversed) === '1');
+  /** The menu's «Sons de la tauleta» (U182): this device's touch sounds (ui-sounds.ts), on by default. */
+  uiSounds = $state(storedSoundsOn(readStored(CONSOLE.storage.uiSounds)));
   /** «Editar» in the finale: an × on each standing finalist (off by default, D183; off again when the finale ends). */
   finaleEditing = $state(false);
   /** The last step back inside a Check. */
@@ -481,6 +484,11 @@ export class ConsoleModel {
   setLabel(raw: string): void {
     this.label = normalizeLabel(raw, CONSOLE.labelMaxLength);
     writeStored(CONSOLE.storage.label, this.label);
+  }
+
+  setUiSounds(on: boolean): void {
+    this.uiSounds = on;
+    writeStored(CONSOLE.storage.uiSounds, storedSoundsValue(on));
   }
 
   setTheme(theme: Theme): void {

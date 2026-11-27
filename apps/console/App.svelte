@@ -16,7 +16,11 @@
 -->
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { setConsole, setWii } from './context.ts';
+  import { setConsole, setConsoleSounds, setWii } from './context.ts';
+  import { CONSOLE_TOUCH } from './touch-rules.ts';
+  import { ConsoleSounds } from './ui-sounds.ts';
+  import { wireTouchSounds } from '../../packages/ui/sounds/delegate.ts';
+  import { registerTouchSounds } from '../../packages/ui/sounds/touch.ts';
   import { ConsoleModel } from './model.svelte.ts';
   import { WiiController } from './wii/controller.svelte.ts';
   import { keyCommand } from './logic/keys.ts';
@@ -47,6 +51,18 @@
 
   const model = setConsole(new ConsoleModel());
   const wii = setWii(new WiiController(model));
+  // The tablet's touch sounds (U182): this device's taps only, never on the show laptop.
+  const sounds = setConsoleSounds(new ConsoleSounds(() => model.uiSounds));
+  onMount(() => {
+    registerTouchSounds(sounds);
+    const unwire = wireTouchSounds(document, CONSOLE_TOUCH);
+    const stop = sounds.start();
+    return () => {
+      stop();
+      unwire();
+      registerTouchSounds(null);
+    };
+  });
   onMount(() => wii.start());
   onMount(() => keepScreenOn());
 

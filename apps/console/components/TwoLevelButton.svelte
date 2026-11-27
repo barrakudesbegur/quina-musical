@@ -20,6 +20,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import WiiBadge from './WiiBadge.svelte';
+  import { holdSounds } from '../../../packages/ui/sounds/touch.ts';
 
   interface Props {
     mode: HoldMode;
@@ -65,11 +66,18 @@
 
   const config = () => ({ holdMs: CONSOLE.escalateHoldMs, canEscalate: level2.canEnter });
 
+  // Its sounds (ANIMATIONS.md › Console sounds): the press, `holdDone` as the second level goes, the matching release.
+  const hold = holdSounds('big');
+
   function feed(event: TwoLevelEvent): void {
     const cfg = config();
     const result = twoLevel(press, event, cfg);
     press = result.state;
     progress = twoLevelProgress(press, event.atMs, cfg);
+    if (event.type === 'down') hold.down();
+    if (result.actions.includes('escalate')) hold.done();
+    if (event.type === 'up') hold.up();
+    if (event.type === 'cancel') hold.cancel();
     for (const action of result.actions) {
       // Read the current state for each action: a tap acts on what is on now.
       const command = modeCommand(mode, action, active, level2);

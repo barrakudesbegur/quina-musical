@@ -19,6 +19,7 @@
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import WiiBadge from './WiiBadge.svelte';
+  import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
 
   const model = getConsole();
   const uid = $props.id();
@@ -44,14 +45,24 @@
   function add(): void {
     const before = pad?.digits ?? '';
     const outcome = model.padAdd();
-    if (outcome === 'unknown') shakes++;
-    if (outcome === 'added') added = Number(before);
+    // The chip's sound (`claim-chip-add`): it pops in, or the number is refused.
+    if (outcome === 'unknown') {
+      shakes++;
+      touchPress('refused');
+    }
+    if (outcome === 'added') {
+      added = Number(before);
+      touchTap('chipAdd');
+    }
   }
 
   function submit(): void {
     const before = pad?.refused;
     model.padSubmit();
-    if (model.pad?.refused && !before) shakes++;
+    if (model.pad?.refused && !before) {
+      shakes++;
+      touchPress('refused');
+    }
   }
 
   function onkeydown(e: KeyboardEvent): void {
@@ -74,6 +85,8 @@
     const key = padKeyFromKeyboard(e.key);
     if (key === null) return;
     e.preventDefault();
+    // A physical key sounds like the pad's own.
+    touchTap(key === 'back' || key === 'clear' ? 'backspace' : 'digit');
     press(key);
   }
 </script>

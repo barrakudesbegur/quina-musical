@@ -64,7 +64,7 @@
       {/each}
     </ul>
     {#if model.show.demo}<span class="header__demo">{S.header.demo(model.show.demo)}</span>{/if}
-    <button type="button" class="header__menu" data-anim="press" aria-label={S.header.menu} onclick={onmenu}>
+    <button type="button" class="header__menu" data-anim="press" aria-haspopup="dialog" aria-label={S.header.menu} onclick={onmenu}>
       <Icon name="menu" />
     </button>
   </div>
