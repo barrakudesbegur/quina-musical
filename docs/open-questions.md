@@ -191,7 +191,7 @@ Both final playlists have 70 songs and no repeats inside each (D230). But 4 of p
 
 ### U198 · The special card's side labels on the screens
 The Check shows one label for a card's type and side (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The printed special card now says «DESGRACIAT» and «ESPECIAL» (D252).
-- (a) Like the printed card: «Especial · Desgraciat» and «Especial · Especial»… or just «Desgraciat» and «Especial».
+- (a) The printed titles: «Desgraciat» and «Especial», so the label matches what the player sees on the card.
 - (b) By pool, like the normal card: «Especial 1» and «Especial 2».
 
 ### U193 · Where the install button goes on the phone's home (D221)
