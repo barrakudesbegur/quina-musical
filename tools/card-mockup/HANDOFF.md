@@ -5,13 +5,16 @@ on 27 Nov 2026 for this task only. The design is final (two options), and this s
 itself (the user, 27 Nov), before the cards are made on 4–5 Dec (D83). The Orchestrator keeps the decision log: report every user decision to it
 the same day.
 
-## Now (27 Nov 2026, late night)
+## Now (28 Nov 2026, night)
 
-- **The design is final, in two options** (the canvas's "Final (both options)" page; `node mockup.cjs
-  a3-6-gomet-nino-between 3x1-h-bw`):
-  - **A**, covers in colour, A3 · 6, header C: the working default;
-  - **B**, no covers, black and white, 3 per A4.
-  The organizers haven't picked (U212); the user: "assume we do a. and you can code both so i decide the final later".
+- **Two options for the organizers (U212):** «Quadrat amb portades» (A3 · 6, 17 mm covers, the default) and «Apaïsat
+  sense portades» (21 × 9.9 cm, black and white). «Apaïsat amb portades» (the mockup's `3x1-h`) was shown, then
+  dropped (the user, Q21). The organizers got an image of card #1 in both on blue paper, made with
+  scratchpad `tools/share.swift` (each card multiplied onto the paper colour, the same scale), plus a short message in
+  Catalan.
+- **Since the first push:** the square card's covers are 17 mm (acd8f1a9). «2026» sits on the stamp exactly as last
+  year's code put it, and the stamp is drawn over the songs so a cover never hides it (4e4c0fe2). Summercat prints
+  «Billie The Vision» (sent to Sound engine).
 - **The generator is built and pushed (7092e216):** both layouts behind `CARD_LAYOUT` (`'a3-6'` now, `--layout a4-3`
   proofs B), print names, `pools`, «MOSTRA» samples, `checkLabel` + `heading` per side, tests in
   `apps/show/tests/ui/cards-print.test.ts`. Frontend has apps/cards back and switches the screens to `checkLabel`.
