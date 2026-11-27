@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-labelledby="setup-title setup-desc">
+<title id="setup-title">The Quina Musical's setup on the night</title>
+<desc id="setup-desc">The show laptop at the venue runs the relay, the show page (the engine, on the projector over HDMI, with all the audio by cable to the mixing desk and the PA) and the cloud link; it runs the show alone if the internet fails. The tablet's console talks to the relay over phone A's hotspot, the Wii remote pairs with the laptop by Bluetooth, and phone A's USB tethering gives the laptop its internet. In Cloudflare, the Worker quina-cloud and its GameRoom keep the Game, feed the players' phones read-only over /feed, and serve Admin and the cloud console behind Access; R2 holds the media, synced before the night.</desc>
+<style>
+svg { color-scheme: light dark;
+  --bg: #f6f8fa; --panel: #ffffff; --box: #ffffff; --laptop: #eef4fc; --inner: #ffffff;
+  --cloud: #fff6ee; --text: #1f2328; --muted: #4f5964; --line: #59636e; --border: #6e7781;
+  --laptop-border: #0a5fc4; --cloud-border: #b34700; --accent-text: #0a55b0; --cloud-text: #9a3d00; }
+@media (prefers-color-scheme: dark) {
+  svg { --bg: #0d1117; --panel: #121820; --box: #1a212b; --laptop: #14243a; --inner: #1a2a42;
+    --cloud: #261a10; --text: #e6edf3; --muted: #aab4bf; --line: #8f99a4; --border: #8f99a4;
+    --laptop-border: #5a9cf8; --cloud-border: #f0883e; --accent-text: #8ec0ff; --cloud-text: #ffb27a; }
+}
+text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text); font-size: 14px; }
+.bg { fill: var(--bg); }
+.panel { fill: var(--panel); stroke: var(--border); stroke-width: 1.5; }
+.box { fill: var(--box); stroke: var(--border); stroke-width: 1.5; }
+.inner { fill: var(--inner); stroke: var(--border); stroke-width: 1.5; }
+.laptop { fill: var(--laptop); stroke: var(--laptop-border); stroke-width: 2.5; }
+.cloud { fill: var(--cloud); stroke: var(--cloud-border); stroke-width: 2.5; }
+.opt { stroke-dasharray: 8 6; }
+.title { font-size: 26px; font-weight: 700; }
+.h { font-size: 18px; font-weight: 700; }
+.h.laptop-h { fill: var(--accent-text); }
+.h.cloud-h { fill: var(--cloud-text); }
+.t { font-size: 15px; font-weight: 700; }
+.b { font-size: 14px; }
+.s { font-size: 13px; }
+.m { fill: var(--muted); font-size: 13px; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+.strong { font-weight: 700; }
+.lbl { font-size: 13px; fill: var(--muted); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.lbl.on-panel { stroke: var(--panel); }
+.lbl.on-cloud { stroke: var(--cloud); }
+.lbl.on-laptop { stroke: var(--laptop); }
+.wire { fill: none; stroke: var(--line); stroke-width: 2; }
+.wire.opt { stroke-dasharray: 8 6; }
+.arrow { fill: var(--line); }
+</style>
+<defs><marker id="a-end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="arrow" d="M0 0 L10 5 L0 10 z"/></marker><marker id="a-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="arrow" d="M10 0 L0 5 L10 10 z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="1200" height="900"/>
+<text class="title" x="24" y="44">The Quina Musical's setup on the night</text>
+<rect class="panel" x="12" y="66" width="676" height="664" rx="14"/>
+<text class="h" x="28" y="96">At the venue (the tent)</text>
+<rect class="box" x="24" y="152" width="128" height="76" rx="10"/>
+<text class="t" x="36" y="174">Projector</text>
+<text class="s" x="36" y="194">its own display,</text>
+<text class="s" x="36" y="212">never mirrored</text>
+<rect class="box" x="24" y="238" width="128" height="56" rx="10"/>
+<text class="t" x="36" y="260">Mixing desk</text>
+<text class="s" x="36" y="280">no sound team</text>
+<rect class="box" x="24" y="322" width="128" height="56" rx="10"/>
+<text class="t" x="36" y="344">PA speakers</text>
+<text class="s" x="36" y="364">on stage</text>
+<rect class="box" x="24" y="456" width="128" height="80" rx="10"/>
+<text class="t" x="36" y="478">Wii remote</text>
+<text class="s" x="36" y="498">optional; the</text>
+<text class="s" x="36" y="516">presenters' clicker</text>
+<rect class="laptop" x="212" y="112" width="252" height="498" rx="10"/>
+<text class="h laptop-h" x="226" y="138">Show laptop (macOS)</text>
+<text class="s strong" x="226" y="158">Runs the show alone if the</text>
+<text class="s strong" x="226" y="175">internet fails.</text>
+<rect class="inner" x="226" y="188" width="224" height="96" rx="10"/>
+<text class="t" x="238" y="210">Show page</text>
+<text class="s" x="238" y="230">the engine, in Chrome (kiosk)</text>
+<text class="s" x="238" y="248">plays all the audio</text>
+<text class="s" x="238" y="266">shows the drum</text>
+<rect class="inner" x="226" y="306" width="224" height="126" rx="10"/>
+<text class="t" x="238" y="328">Relay</text>
+<text class="s" x="238" y="348">apps/show, port 5174</text>
+<text class="code" x="238" y="366">npm start -- --lan</text>
+<text class="s" x="238" y="384">serves the show page, the</text>
+<text class="s" x="238" y="402">console and Admin; relays</text>
+<text class="s" x="238" y="420">commands and events</text>
+<rect class="inner" x="226" y="450" width="106" height="92" rx="10"/>
+<text class="t" x="238" y="472">Console</text>
+<text class="s" x="238" y="492">window; hosts</text>
+<text class="s" x="238" y="510">the Wii remote</text>
+<rect class="inner" x="344" y="450" width="106" height="92" rx="10"/>
+<text class="t" x="356" y="472">Cloud link</text>
+<text class="s" x="356" y="492">npm run link</text>
+<text class="s" x="356" y="510">optional for</text>
+<text class="s" x="356" y="528">the show</text>
+<rect class="inner" x="226" y="554" width="224" height="46" rx="10"/>
+<text class="s" x="238" y="574">Repertoire's media on disk</text>
+<text class="m" x="238" y="592">songs, stems, hooks, covers</text>
+<path class="wire" d="M338 284 V306"/>
+<path class="wire" d="M279 432 V450"/>
+<path class="wire" d="M397 432 V450"/>
+<rect class="box" x="530" y="112" width="144" height="96" rx="10"/>
+<text class="t" x="542" y="134">Admin</text>
+<text class="s" x="542" y="154">organizers' browser:</text>
+<text class="s" x="542" y="172">the plan, start/end,</text>
+<text class="s" x="542" y="190">Winners, Plan B</text>
+<rect class="box" x="530" y="236" width="144" height="116" rx="10"/>
+<text class="t" x="542" y="258">Tablet</text>
+<text class="s" x="542" y="278">the presenters'</text>
+<text class="s" x="542" y="296">console, paired</text>
+<text class="s" x="542" y="314">with a token</text>
+<text class="m" x="542" y="332">(in-game admin:</text>
+<text class="m" x="542" y="350">coming)</text>
+<rect class="box" x="530" y="448" width="144" height="96" rx="10"/>
+<text class="t" x="542" y="470">Phone A (main)</text>
+<text class="s" x="542" y="490">gives the laptop</text>
+<text class="s" x="542" y="508">its internet; its</text>
+<text class="s" x="542" y="526">hotspot is the LAN</text>
+<rect class="box" x="530" y="556" width="144" height="64" rx="10"/>
+<text class="t" x="542" y="578">Phone B</text>
+<text class="s" x="542" y="598">backup hotspot,</text>
+<text class="s" x="542" y="616">another carrier</text>
+<rect class="box" x="530" y="630" width="144" height="84" rx="10"/>
+<text class="t" x="542" y="652">Players' phones</text>
+<text class="s" x="542" y="672">the player app,</text>
+<text class="s" x="542" y="690">from the card's QR</text>
+<text class="s" x="542" y="708">read-only</text>
+<path class="wire" d="M226 216 H152" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="182" y="209" text-anchor="middle">HDMI</text>
+<path class="wire" d="M226 266 H152" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="182" y="259" text-anchor="middle">cable</text>
+<path class="wire" d="M88 294 V322" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="98" y="313" text-anchor="start">cable</text>
+<path class="wire" d="M152 496 H226" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="182" y="489" text-anchor="middle">Bluetooth</text>
+<path class="wire" d="M450 340 H530" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="497" y="333" text-anchor="middle">LAN</text>
+<text class="lbl on-panel" x="497" y="356" text-anchor="middle">(hotspot)</text>
+<path class="wire" d="M450 496 H530" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl on-panel" x="497" y="489" text-anchor="middle">USB</text>
+<text class="lbl on-panel" x="497" y="512" text-anchor="middle">tethering</text>
+<rect class="cloud" x="764" y="66" width="424" height="762" rx="10"/>
+<text class="h cloud-h" x="780" y="96">The cloud (Cloudflare, free plan)</text>
+<rect class="box" x="780" y="112" width="120" height="486" rx="10"/>
+<text class="t" x="792" y="134">Cloudflare</text>
+<text class="t" x="792" y="154">Access</text>
+<text class="s" x="792" y="182">Google sign-in</text>
+<text class="s" x="792" y="200">for organizers,</text>
+<text class="s" x="792" y="218">a service token</text>
+<text class="s" x="792" y="236">for the laptop</text>
+<text class="m" x="792" y="262">in front of</text>
+<text class="m" x="792" y="280">/api, /ws/show,</text>
+<text class="m" x="792" y="298">/ws/console,</text>
+<text class="m" x="792" y="316">/console/ and</text>
+<text class="m" x="792" y="334">/admin/ on</text>
+<text class="m" x="792" y="352">quina-dev</text>
+<rect class="box" x="916" y="112" width="256" height="600" rx="10"/>
+<text class="t" x="928" y="134">Worker quina-cloud</text>
+<text class="code" x="928" y="154">quina-dev.barrakudesbegur.org</text>
+<text class="m" x="928" y="172">organizers and the laptop</text>
+<text class="code" x="928" y="190">quina.barrakudesbegur.org</text>
+<text class="m" x="928" y="208">the players' QR domain</text>
+<text class="s" x="928" y="234">static files: the player app,</text>
+<text class="s" x="928" y="252">console, Admin, cards, covers;</text>
+<text class="s" x="928" y="270">the /api routes</text>
+<rect class="inner" x="930" y="318" width="228" height="380" rx="10"/>
+<text class="t" x="942" y="340">GameRoom</text>
+<text class="t" x="942" y="360">Durable Object</text>
+<text class="s" x="942" y="380">SQLite, one per edition</text>
+<text class="s" x="942" y="406">owns the Game: its journal,</text>
+<text class="s" x="942" y="424">the plan, the logos and</text>
+<text class="s" x="942" y="442">prize pictures, and the</text>
+<text class="s" x="942" y="460">public feed</text>
+<text class="m" x="942" y="486">from the laptop: the journal</text>
+<text class="m" x="942" y="504">to the laptop: the plan and</text>
+<text class="m" x="942" y="522">remote consoles' commands</text>
+<rect class="box" x="916" y="744" width="256" height="68" rx="10"/>
+<text class="t" x="928" y="766">R2 · quina-media</text>
+<text class="s" x="928" y="786">private: the repertoire's media</text>
+<path class="wire" d="M900 160 H916"/>
+<path class="wire" d="M900 262 H916"/>
+<path class="wire" d="M900 496 H916"/>
+<path class="wire" d="M674 160 H780" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl " x="719" y="153" text-anchor="middle">Google</text>
+<text class="lbl " x="719" y="176" text-anchor="middle">sign-in</text>
+<path class="wire" d="M674 262 H780" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl " x="719" y="255" text-anchor="middle">cloud</text>
+<text class="lbl " x="719" y="278" text-anchor="middle">console</text>
+<path class="wire" d="M674 496 H780" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl " x="719" y="489" text-anchor="middle">internet</text>
+<text class="lbl " x="719" y="512" text-anchor="middle">(5G)</text>
+<path class="wire" d="M930 672 H674" marker-end="url(#a-end)"/>
+<text class="lbl " x="719" y="665" text-anchor="middle">WebSocket</text>
+<text class="lbl " x="719" y="688" text-anchor="middle">/feed</text>
+<path class="wire" d="M1044 712 V744" marker-start="url(#a-start)" marker-end="url(#a-end)"/>
+<text class="lbl on-cloud" x="1054" y="732" text-anchor="start">/api/sync</text>
+<path class="wire opt" d="M338 600 V776 H916" marker-end="url(#a-end)"/>
+<text class="lbl " x="560" y="769" text-anchor="middle">media push, after any change to the repertoire</text>
+<rect class="box opt" x="470" y="806" width="290" height="80" rx="10"/>
+<text class="t" x="482" y="828">Spare laptop (optional)</text>
+<text class="s" x="482" y="848">pulls the media the day before;</text>
+<text class="s" x="482" y="866">can take over the Game from the cloud</text>
+<path class="wire opt" d="M1044 812 V846 H760" marker-end="url(#a-end)"/>
+<text class="lbl " x="900" y="866" text-anchor="middle">media pull</text>
+<text class="t" x="28" y="768">Legend</text>
+<path class="wire" d="M28 792 H88"/>
+<text class="s" x="98" y="797">on the night</text>
+<path class="wire opt" d="M28 818 H88"/>
+<text class="s" x="98" y="823">optional, or before the night</text>
+<path class="wire" d="M28 844 H88" marker-end="url(#a-end)"/>
+<text class="s" x="98" y="849">which way the data goes</text>
+</svg>

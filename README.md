@@ -19,13 +19,56 @@ This year's app (2026) and last year's (2025) live side by side:
 | `packages/protocol/`, `packages/rules/`, `packages/ui/` | `@quina/protocol`, `@quina/rules` and `@quina/ui`, shared by the apps |
 | `tools/prep/` | The Python pipeline that prepares a song pool (analysis, stems, Hold music…), and the playlist fetcher |
 | `tools/e2e/` | One whole show, headless (Playwright): the relay, the show page, the console, the stage and a player, plus the phones' production path (the Worker in wrangler dev, the cloud link, a phone on `/feed`), driven through the protocol (`npm run test:e2e`; needs the prepared pool, so it is not in CI) |
+| `tools/edition/` | `npm run edition`: check an edition's plan against its repertoire's cards, and upload it to the cloud after saving the cloud's current one (D116) |
 | `tools/git/` | `npm run sync-main`: bring the shared checkout's `main` up to `origin/main` without touching anyone's uncommitted work (replays local commits onto origin in git's object store, updates only the files origin changed, refuses if one of them is being edited) |
 | `tools/logos/` | The sponsors' logo cleanup: transparent background, trimmed, PNG + JPEG XL, with a contact sheet (`clean.py`) |
-| `data/` | Pool manifests (`data/pools/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
+| `data/` | Repertoire manifests (`data/repertoires/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
 | `docs/`, `brand/` | Decisions, research and the runbook; the brand assets |
 | `legacy/2025/` | Last year's app (`client/`, `server/`), unchanged and runnable on its own; everything below is about it |
 
 Install once at the root (`npm install`, npm workspaces); every app's scripts run from its own folder.
+
+## How to run the night
+
+![The night's setup: the show laptop drives the projector and the PA, the tablet and the Wii remote control it, and the cloud feeds the players' phones](docs/setup.svg)
+
+The show runs on the **show laptop**. The cloud only feeds the players' phones and the remote consoles, so if the internet fails, the show goes on. The [night runbook](docs/night-runbook.md) has every step, in order, and what to do when something fails. [How the Quina works](docs/how-the-quina-works.md) explains what happens during a night.
+
+| Device | What runs on it | How to start it |
+|---|---|---|
+| **Show laptop** | The relay, the cloud link, and the show page (the engine, which plays all the audio) | `cd apps/show && npm start -- --lan` (it builds the show first), then `cd apps/cloud && npm run link`, each in its own terminal. Then open the show page in Chrome with the runbook's command, and run `npm run preflight` in `apps/cloud` |
+| **Projector** | The show page, on its own display (never mirrored) | HDMI from the laptop, set as the main display |
+| **Mixing desk and speakers** | The PA | A cable from the laptop, never Bluetooth |
+| **Tablet** | The presenters' **console** | On phone A's hotspot: the address and token the relay prints (`http://<laptop IP>:5174/console/?t=…`). Elsewhere: the cloud console at `https://quina-dev.barrakudesbegur.org/console/` |
+| **Wii remote** (optional) | Next, Back and the effects, paired with the **laptop** | Bluetooth on the laptop, then the console on the laptop: menu → **Comandament** → **Connectar** |
+| **Phone A** (and phone B, the backup) | The laptop's internet (USB tethering) and the tablet's network (hotspot) | Before everything else |
+| **Players' phones** | The **player app**, following their cards | They scan the QR on their card (`https://quina.barrakudesbegur.org/26/<card>`). Nothing to install |
+| **Spare laptop** | Ready to take over | `npm run setup:laptop` the day before ([runbook](docs/night-runbook.md#prepare-a-spare-laptop)) |
+
+To develop, run `npm run dev` at the root: the relay, with Vite serving the show page and the screens. `npm test` runs the tests, and `npm run test:e2e` plays one whole show headless.
+
+## Admin and production
+
+**Production** is one Cloudflare Worker, `quina-cloud` ([apps/cloud](apps/cloud/README.md)), on two names:
+- `quina-dev.barrakudesbegur.org`, for the organizers and the show laptop;
+- `quina.barrakudesbegur.org`, the players' QR domain.
+
+Organizers sign in with Google through Cloudflare Access. The show laptop uses its own service token. Each deploy is tested on its commit first, and every deploy and its undo are logged in [deploy-plan.md](apps/cloud/docs/deploy-plan.md).
+
+**Admin** is the organizers' page for setup and fixes. In production it's at `https://quina-dev.barrakudesbegur.org/admin/`. On the laptop it's at `http://localhost:5174/admin/`, which edits the laptop's copy, and the link sends it up when the internet is back. On the QR domain, Admin's page loads, but the cloud refuses its requests until Access covers that name too.
+
+- **Editing the plan** (**Preparació**): the rounds with their card type and side, the prizes, the sponsors and their logos, the schedule, and the cheat sheet. Changes are checked and saved to the cloud as you type. A plan that fails the check is kept as a draft, with every error listed. **Importar i exportar** replaces the whole plan from JSON. The [plan's JSON](apps/admin/README.md#the-plans-json-for-an-ai-agent) is documented for agents too.
+- **Starting the night** (**La nit**): **Començar la Quina Musical** introduces round 1. The show page must be open on the laptop, and the link connected when Admin is used from the cloud. **Acabar la Quina Musical** ends the Game; it can't be undone, so it asks for the word ACABAR. The Winners' names and notes are noted there too. They're private: never in git or on a screen.
+- **Resetting a game:** there's no reset button. A new Game starts on the show laptop, by opening the show page with `&fresh=1` (runbook step 5). The old Games stay in the cloud, so a rehearsal never erases the night.
+- **Coming: the night's admin on the console** (D234). The presenters' console will add sold cards to the cards in play, and do the other in-game admin, without opening Admin. Every console will stay in sync, so the tech can follow on the laptop.
+- **Plan B:** **Recuperar el show (pla B)** resumes a Game on this laptop or a spare one, from the cloud or from a noted resume code. See the runbook's "When something goes wrong".
+- **The message banner on every phone** (**Missatge per a tots els mòbils**, at most 200 characters), and the phones' default for interface sounds: Admin sends both to every phone through the cloud.
+- **Exporting the night:** **Eines** → **Exportació completa** has the plan, the cards in play and the Winners, as the show has them now. The Winners' names make it private.
+- **Uploading the edition file** (D116): one JSON per edition, kept in git. Today it holds the plan, `data/editions/2026.plan.json`; the songs and the cards join it once U68–U75 are answered. `npm run edition -- upload data/editions/2026.plan.json --repertoire 2026` checks it against the repertoire's cards and shows what would change. With `--yes`, it saves the cloud's current plan to `data/link/backups/` (never committed), then replaces it. `--start "2026-12-27 18:00"` moves the start (Begur's time) and the doors for a test, without changing the file. To undo, upload the saved backup the same way.
+
+## Last year's app (2025)
+
+Everything below is about last year's app in `legacy/2025/`, kept unchanged and runnable on its own.
 
 Features:
 
@@ -45,9 +88,9 @@ Features:
 - 🎮 WiiMote support.
 - 🎛️ Timestamp editor for configuring song start points.
 
-## Deployment
+### Deployment
 
-### Frontend
+#### Frontend
 
 Deployed on **GitHub Pages**.
 
@@ -59,7 +102,7 @@ npm run build:client
 # Deploy the legacy/2025/client/dist folder to GitHub Pages
 ```
 
-### Backend
+#### Backend
 
 Hosted on a **VPS** (own server).
 
@@ -71,17 +114,17 @@ npm run start
 
 Point the `VITE_API_URL` environment variable in the client to your VPS URL.
 
-### Songs
+#### Songs
 
 Audio files are stored in an **S3 bucket**.
 
-## Develop
+### Develop
 
-### Database
+#### Database
 
 The database are simple `json` files in the folder [`/legacy/2025/server/db/local`](/legacy/2025/server/db/local).
 
-### Commands
+#### Commands
 
 In `legacy/2025/`, you can use `dev`, `build`, and `start`. Used as-is, they run both client and server, but you can also specify with one to run by adding `:client` or `:server`, for example: `npm run build:server`
 
@@ -110,16 +153,16 @@ You can rename all songs name to just numbers with:
 for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).mp3"; done
 ```
 
-## Roadmap
+### Roadmap
 
-### To do for next version
+#### To do for next version
 
 - [General] Treure reordenar cançons. Un cop es barregen, no es pot alterar l'ordre.
 - [Tablet] Intentar que el mando de la wii es conecti a la tablet.
 - [General] Per comprovar cartró, ens diuen el número i surt al projector i fan la comprovació. El presentador va apretant la A i va marcant-se per ordre si la canço ha sonat o no. Si s'equivoca i es correcte fa una animació.
 - [Presentador] El mando vibra per indicar quantes cançons falten. Així el presentador té una idea de quant 
 
-#### From last year
+##### From last year
 
 - [Tablet] Tablet al terra/ma/tripodeLlibres pels presentadors: n cancons, hora fi, nom canco. quan guanya, cartro guanyador
 - [Tablet] Que els presentadors puguin canviar de quina facilment. i posar guanyadors linea/quina.
@@ -141,7 +184,7 @@ for f in *.mp3; do n=$(echo "$f" | grep -o '^[0-9]\+'); mv -- "$f" "$((10#$n)).m
 - [Cartrons] No cal que siguin de cartolina.
 - [Cartrons] Indicar quins son especials i normals, no nomes amb el color.
 
-### Ideas
+#### Ideas
 
 - [Mobil] Posar imatges album
 - [Projector] Quan un cartró guanya, fer una animacio on apareix el cartro i es van marcant (i sonant?) les cancons que han sonat. Tb posar confeti? Evolucionar el popup de comprovar cartro a aixo.
