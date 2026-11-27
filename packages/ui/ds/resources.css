@@ -9,10 +9,11 @@
  * Resources (and the hooks a component uses for each):
  *   R1 rings        data-ring="orange|gold|red" on an element whose box holds the whole control (its shadow too:
  *                   the press structure's does; a control whose shadow hangs outside its box sets --ring-drop)
- *   R2 3D edge      --edge-3d / --edge-3d-sunk (palette.css), in the fill's own --palette-edge
+ *   R2 3D edge      the piece's edge layers (R4 below), in the fill's own --palette-edge (or --ds-edge-color)
  *   R3 on pattern   <span class="ds-pattern" data-pattern="stripes|dots"> inside the piece, rendered only while on
- *   R4 press        .ds-pushable (static: the hit area, the shadow, the rings) > .ds-piece (moves); haptics in
- *                   sounds/delegate.ts
+ *   R4 press        .ds-pushable (static: the hit area, the shadow, the rings) > .ds-piece (moves, its edge shrinking
+ *                   and its face darkening); held down by :active, aria-pressed="true", aria-busy="true" or data-sunk
+ *                   (a hold held by a key); haptics in sounds/delegate.ts. --ds-edge: 0px for a control with no edge
  *   R5 focus        :focus-visible only (base.css; tests/ui/ds/focus-lint.test.ts fails on a bare :focus)
  *   R6 text-wrap    balance on headings and titles, pretty on body text (base.css, .ds-title / .ds-prose)
  *   R7 corners      .ds-corner: the same inset from both sides, centred when the control is too short
@@ -80,7 +81,10 @@
 /* ---- R4: the press --------------------------------------------------------------------------------------------
    .ds-pushable is the static part: the hit area, the hard shadow (::before, a copy of the piece's shape one drop
    lower) and the rings. .ds-piece is what moves: it sinks onto its shadow by `translate`, never by an animated
-   box-shadow, and springs back. Reduced motion: no travel, the sunk shade only. */
+   box-shadow, and springs back. It looks pressed, not just moved (the user's phone test, 27 Nov): its 3D edge (R2)
+   shrinks to about a third and its face darkens a little. The edge is two still layers inside the piece, the full one
+   (::before) and the thin one with the veil (::after), crossfading by opacity, so the curve of the piece's inner
+   corners is kept. Reduced motion: no travel; the pressed look still fades in. */
 .ds-pushable {
   --press-travel: calc(var(--ds-drop) - 1px);
   position: relative;
@@ -128,11 +132,50 @@
 
 .ds-piece {
   position: relative;
+  isolation: isolate;
   min-width: 0;
   border: var(--ds-border) solid var(--color-line);
   border-radius: var(--ds-radius);
   background: var(--palette-solid, var(--color-surface));
-  box-shadow: var(--edge-3d, none);
+  /* the shine along the top (the 3D edge is the layers below) */
+  box-shadow: inset 0 var(--ds-shine, 5px) 0 rgb(255 255 255 / 0.35);
+}
+
+/* The 3D edge in the fill's own shade (R2): full at rest (::before); while pressed a third of it, under a 7 % ink
+   veil (::after). Both sit under the piece's content. */
+.ds-piece::before,
+.ds-piece::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: calc(var(--ds-radius) - var(--ds-border));
+  pointer-events: none;
+  transition: opacity var(--dur-press-up) var(--ease-out);
+}
+
+.ds-piece::before {
+  box-shadow: inset 0 calc(-1 * var(--ds-edge, 8px)) 0 var(--ds-edge-color, var(--palette-edge, rgb(0 0 0 / 0.22)));
+}
+
+.ds-piece::after {
+  opacity: 0;
+  background: rgb(23 19 43 / 0.07);
+  box-shadow: inset 0 calc(-0.35 * var(--ds-edge, 8px)) 0 var(--ds-edge-color, var(--palette-edge, rgb(0 0 0 / 0.22)));
+}
+
+:is(.ds-pushable:active:not(:disabled), .ds-pushable[aria-pressed='true'], .ds-pushable[aria-busy='true'], .ds-pushable[data-sunk]) > .ds-piece {
+  box-shadow: inset 0 var(--ds-shine, 5px) 0 rgb(255 255 255 / 0.12);
+}
+
+:is(.ds-pushable:active:not(:disabled), .ds-pushable[aria-pressed='true'], .ds-pushable[aria-busy='true'], .ds-pushable[data-sunk]) > .ds-piece::before {
+  opacity: 0;
+  transition-duration: var(--dur-press);
+}
+
+:is(.ds-pushable:active:not(:disabled), .ds-pushable[aria-pressed='true'], .ds-pushable[aria-busy='true'], .ds-pushable[data-sunk]) > .ds-piece::after {
+  opacity: 1;
+  transition-duration: var(--dur-press);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -140,20 +183,13 @@
     transition: translate var(--dur-press-up) var(--ease-bounce);
   }
 
-  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable:active:not(:disabled) > .ds-piece,
-  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable[aria-pressed='true'] > .ds-piece,
-  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable[aria-busy='true'] > .ds-piece {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full'])
+    :is(.ds-pushable:active:not(:disabled), .ds-pushable[aria-pressed='true'], .ds-pushable[aria-busy='true'], .ds-pushable[data-sunk])
+    > .ds-piece {
     translate: 0 var(--press-travel);
     transition-duration: var(--dur-press);
     transition-timing-function: var(--ease-out);
   }
-}
-
-/* The sunk shade: the pressed colour, with or without the travel. */
-.ds-pushable:active:not(:disabled) > .ds-piece,
-.ds-pushable[aria-pressed='true'] > .ds-piece,
-.ds-pushable[aria-busy='true'] > .ds-piece {
-  box-shadow: var(--edge-3d-sunk, none);
 }
 
 .ds-pushable:disabled {

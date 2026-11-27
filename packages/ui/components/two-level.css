@@ -25,19 +25,6 @@
   isolation: isolate;
 }
 
-/* The escalation held by a key (Space, Enter) keeps the piece sunk too (R4). */
-.two-level:is([data-state='pressing'], [data-state='escalated']) > .ds-piece {
-  box-shadow: var(--edge-3d-sunk, none);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .two-level:is([data-state='pressing'], [data-state='escalated']) > .ds-piece {
-    translate: 0 var(--press-travel);
-    transition-duration: var(--dur-press);
-    transition-timing-function: var(--ease-out);
-  }
-}
-
 /* ---- the words: the label with its second line, the sticker art ------------------------------------------------- */
 .two-level__words {
   display: flex;

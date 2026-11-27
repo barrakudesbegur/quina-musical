@@ -149,6 +149,7 @@
   data-ring={ring ?? undefined}
   data-touch="none"
   data-state={hold.state.phase}
+  data-sunk={hold.state.phase !== 'idle' || undefined}
   data-strip={level2 ? (level2On ? 'on' : 'idle') : undefined}
   data-anim="press {level2 ? 'escalate-hold' : 'long-press-confirm'}{level2On && pulse !== null ? ' suspense-hold' : ''}"
   style="--progress: {hold.progress}; --pulse-progress: {pulse ?? 0}"

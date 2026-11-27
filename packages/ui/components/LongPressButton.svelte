@@ -94,6 +94,7 @@
     sound={null}
     data-layout={layout}
     data-state={hold.state.phase}
+    data-sunk={hold.state.phase === 'pressing' || hold.state.phase === 'confirmed' || undefined}
     data-anim="long-press-confirm"
     style="--progress: {hold.progress}"
     aria-describedby="{uid}-how"

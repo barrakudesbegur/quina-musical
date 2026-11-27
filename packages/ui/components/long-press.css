@@ -29,20 +29,6 @@
   position: static;
 }
 
-/* Held by a key too (Space or Enter held down): the piece stays sunk while the hold runs (R4). */
-.long-press__button[data-state='pressing'] > .ds-piece,
-.long-press__button[data-state='confirmed'] > .ds-piece {
-  box-shadow: var(--edge-3d-sunk, none);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .long-press__button:is([data-state='pressing'], [data-state='confirmed']) > .ds-piece {
-    translate: 0 var(--press-travel);
-    transition-duration: var(--dur-press);
-    transition-timing-function: var(--ease-out);
-  }
-}
-
 /* ---- the fill (long-press-confirm): light sweeping left to right, clipped to the piece's inner corners (#14) ---- */
 :where(.long-press__button) {
   --hold-fill: rgb(255 255 255 / 0.28);

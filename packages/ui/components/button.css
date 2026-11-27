@@ -190,6 +190,11 @@
   --ds-drop: 4px;
 }
 
+/* soft and plain have no 3D edge of their own: only the press's veil and travel (R4) */
+:where(.button:is([data-variant='soft'], [data-variant='plain'])) {
+  --ds-edge: 0px;
+}
+
 .button[data-variant='soft'] > .button__piece {
   background: var(--palette-subtle, var(--color-chip, var(--color-surface)));
   box-shadow: none;
