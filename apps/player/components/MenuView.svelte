@@ -77,10 +77,10 @@
             <span class="menu__card-mark"><CardMark identity={card.color} decorative /></span>
             <span class="menu__card-name">{who}</span>
             <span class="menu__card-number">{S.cardNumber(card.id)}</span>
-            <button type="button" class="menu__card-edit" aria-label={S.editLabel(who)} onclick={() => app.open({ kind: 'rename', cardId: card.id })}>
+            <button type="button" class="menu__card-edit" aria-label={S.editLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'rename', cardId: card.id })}>
               <Icon name="edit" />
             </button>
-            <button type="button" class="menu__card-remove" aria-label={S.removeLabel(who)} onclick={() => app.open({ kind: 'remove', cardId: card.id })}>
+            <button type="button" class="menu__card-remove" aria-label={S.removeLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'remove', cardId: card.id })}>
               <Icon name="trash" />
             </button>
           </li>
@@ -90,7 +90,7 @@
       <p class="menu__empty">{S.noCards}</p>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary menu__add" aria-label={S.addCardLabel} onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
+      <button type="button" class="big-button tone-primary menu__add" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
     {/if}
   </section>
 
@@ -104,7 +104,7 @@
       </button>
     </li>
     <li class="menu__row">
-      <button type="button" class="menu__row-button" onclick={() => app.open({ kind: 'anyPassat' })}>
+      <button type="button" class="menu__row-button" aria-haspopup="dialog" onclick={() => app.open({ kind: 'anyPassat' })}>
         <Icon name="clockBack" />
         <span class="menu__label">{S.legacyMenuTitle}</span>
         <span class="menu__chevron"><Icon name="chevron" /></span>
@@ -112,5 +112,5 @@
     </li>
   </ul>
 
-  <button type="button" class="menu__wipe" onclick={() => app.open({ kind: 'wipe' })}>{S.wipeData}</button>
+  <button type="button" class="menu__wipe" aria-haspopup="dialog" onclick={() => app.open({ kind: 'wipe' })}>{S.wipeData}</button>
 </div>

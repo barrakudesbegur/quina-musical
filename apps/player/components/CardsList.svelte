@@ -58,7 +58,7 @@
       </section>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary cards__add" aria-label={S.addCardLabel} onclick={() => app.open({ kind: 'pad' })}><Icon name="plus" /> {S.addCard}</button>
+      <button type="button" class="big-button tone-primary cards__add" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })}><Icon name="plus" /> {S.addCard}</button>
     {/if}
   {/if}
 </section>

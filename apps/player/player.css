@@ -4498,6 +4498,25 @@ html:has(.drawer[open]) {
   animation-play-state: paused !important;
 }
 
+/* refused-tap (U185): a tap on something that can't be used now (a faded key, «Desar» before the number is a card,
+   an icon another card has) shakes it sideways once, like a head saying no. `translate`, so it adds to a key's own
+   transform. The thud is packages/ui/sounds/ (the delegate sets the hook). A shake moves, so it's opt-in (D209):
+   reduced motion and Data Saver keep the control still. */
+@keyframes refused-tap {
+  0% { translate: 0; }
+  20% { translate: -5px 0; }
+  40% { translate: 4px 0; }
+  60% { translate: -3px 0; }
+  80% { translate: 2px 0; }
+  100% { translate: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .player:where([data-motion='full']) [data-anim='refused-tap'] {
+    animation: refused-tap 280ms var(--ease-out);
+  }
+}
+
 /* Reduced motion and Data Saver (`data-motion='reduced'`, set from both): the moving and looping animations are declared
    only for `data-motion='full'` under `prefers-reduced-motion: no-preference`, next to their rule; the colour and
    opacity fades run either way (D209). The still fallbacks that show something else: */

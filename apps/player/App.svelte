@@ -114,7 +114,6 @@
           onadd={(id, identity, name) => app.addCard(id, true, identity, name)}
           onsee={(id) => app.seeCard(id)}
           onclose={closeTop}
-          onkey={() => app.blip('tap')}
           ontyping={(typing) => app.setPadTyping(typing)}
         />
       {:else if drawer.kind === 'rename'}
@@ -124,7 +123,6 @@
             {card}
             others={app.data.cards.filter((c) => c.id !== card.id)}
             onsave={(name, identity) => app.editCard(card.id, name, identity)}
-            onpick={() => app.blip('tap')}
             onclose={closeTop}
           />
         {/if}

@@ -22,7 +22,6 @@
     onadd,
     onsee,
     onclose,
-    onkey,
     ontyping,
   }: {
     cards: readonly SavedCard[];
@@ -32,7 +31,6 @@
     /** "Veure'l": show that card on the home screen. */
     onsee: (id: number) => void;
     onclose: () => void;
-    onkey?: () => void;
     /** Whether a number is typed (a Celebration leaves the pad open then: D90). */
     ontyping?: (typing: boolean) => void;
   } = $props();
@@ -77,13 +75,11 @@
   ] as const;
 
   function press(key: string): void {
-    onkey?.();
     value = padValue(value, key);
     error = null;
   }
 
   function scanned(cardId: number): void {
-    onkey?.();
     value = String(cardId);
     error = null;
     scanning = false;
@@ -92,7 +88,6 @@
 
   function save(): void {
     if (!rules.canSave) return;
-    onkey?.();
     // Saved: the app closes every drawer and shows the new card; an error (the phone is full) stays here.
     error = onadd(Number(value), identity, name);
   }
@@ -113,7 +108,6 @@
             class="number-pad__qr"
             aria-label={S.qrButton}
             onclick={() => {
-              onkey?.();
               scanning = true;
             }}
           >
@@ -152,10 +146,7 @@
         others={cards}
         selected={identity}
         legend={false}
-        onselect={(n) => {
-          onkey?.();
-          identity = n;
-        }}
+        onselect={(n) => (identity = n)}
       />
       <div class="number-pad__keys" data-anim="pad-keys">
         {#each KEYS as key, i (i)}

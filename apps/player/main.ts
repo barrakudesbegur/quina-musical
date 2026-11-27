@@ -10,6 +10,9 @@ import { PlayerApp } from './model.svelte.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { keepScreenOn, watchReducedMotion } from './device/screen.ts';
 import { Sounds } from './device/sounds.ts';
+import { PLAYER_TOUCH } from './device/touch-rules.ts';
+import { wireTouchSounds } from '../../packages/ui/sounds/delegate.ts';
+import { registerTouchSounds } from '../../packages/ui/sounds/touch.ts';
 import { CloudFeed, defaultFeedBase } from './feed/cloud-feed.ts';
 import { chooseFeed, type FeedChoice, type PlayerFeed } from './feed/feed.ts';
 import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/cleanup.ts';
@@ -56,6 +59,12 @@ async function demoStorage(name: string, hints: DevHints): Promise<PlayerStorage
   return storage;
 }
 
+/** Run when the page is idle after its first paint (Safari has no requestIdleCallback: a short timeout). */
+function whenIdle(run: () => void): void {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 1500);
+}
+
 function themeColor(): void {
   const meta = document.querySelector('meta[name="theme-color"]');
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim();
@@ -69,6 +78,8 @@ async function main(): Promise<void> {
   const storage = choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore());
   const feed = await createFeed(choice);
   const sounds = new Sounds();
+  registerTouchSounds(sounds);
+  wireTouchSounds(document, PLAYER_TOUCH);
   const app = new PlayerApp({ feed, storage, sounds, edition, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
 
   app.openRoute(route);
@@ -85,6 +96,8 @@ async function main(): Promise<void> {
   app.start();
   keepScreenOn();
   themeColor();
+  // The touch sounds' file, once the first screen is up (it decodes at the first tap).
+  whenIdle(() => sounds.prefetch());
   // Last year's service worker, caches and keys: once per edition, never in a demo.
   if (choice.kind !== 'demo') void cleanupLegacy(browserCleanupEnv(), { ...DEFAULT_CLEANUP, edition });
 }

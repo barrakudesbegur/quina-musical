@@ -21,6 +21,7 @@
   // `canClose` lets the content hold it open first (the pad asks before leaving with a number typed); it gets the
   // way to go on closing (the same "‹" or ✕), for when the player confirms.
   import { getContext, setContext, type Snippet } from 'svelte';
+  import { touchPress } from '../../../packages/ui/sounds/touch.ts';
   import { dragCloses } from '../logic/drawers.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
@@ -70,6 +71,9 @@
   function slideAway(which: 'top' | 'all'): void {
     if (closing) return;
     closing = which;
+    // The player closed it (✕, ‹, Esc, the backdrop, a drag): its sound as it starts to slide. The app's own closes
+    // (after «Desar», a Celebration) don't come through here, so they stay silent.
+    touchPress('drawerClose');
     // No animation to wait for (reduced motion): close at once.
     if (!dialog || getComputedStyle(dialog).animationName === 'none') finish();
   }
@@ -140,10 +144,10 @@
       {#if onback}
         <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={onback}><Icon name="back" /></button>
       {:else if place.stacked}
-        <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={() => requestClose('top')}><Icon name="back" /></button>
+        <button type="button" class="drawer__button drawer__back" aria-label={S.back} data-touch-release="none" onclick={() => requestClose('top')}><Icon name="back" /></button>
       {/if}
       <h2 class="drawer__title" id="drawer-title-{name}">{title}</h2>
-      <button type="button" class="drawer__button drawer__close" aria-label={S.close} onclick={() => requestClose(place.stacked && place.closeAll ? 'all' : 'top')}><Icon name="close" /></button>
+      <button type="button" class="drawer__button drawer__close" aria-label={S.close} data-touch-release="none" onclick={() => requestClose(place.stacked && place.closeAll ? 'all' : 'top')}><Icon name="close" /></button>
     </header>
   </div>
   <div class="drawer__body">

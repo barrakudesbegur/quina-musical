@@ -1,22 +1,32 @@
-// Interface sounds, synthesised in WebAudio: no files to download. Per the sound map (ui/ANIMATIONS.md):
-// - short blips (under 200 ms; the celebration blip 0.8 s), quiet (−24 dBFS peak);
-// - never more than one at a time, never while the page is hidden;
-// - ON by default (Admin may change the default; the player's own choice wins).
-// Browsers start audio only after a user gesture, so `unlock()` runs on the first tap.
+// The phone's sounds, two kinds sharing one audio context and one switch (ANIMATIONS.md › Sound map; U184):
+// - **game cues**, synthesised in WebAudio, for what the show does: short blips (under 200 ms; the celebration blip
+//   0.8 s), quiet (−24 dBFS peak), never more than one at a time;
+// - **touch sounds** (D206-D208), recorded clicks for this phone's own taps, from the trimmed sprite in
+//   packages/ui/sounds/ (packages/ui/sounds/sprite-player.ts). A cue always wins: touches are skipped while one plays.
+// Neither plays while the page is hidden, nor on the show laptop (D207: its output is the PA). ON by default (Admin
+// may change the default; the player's own choice wins). Browsers start audio only after a user gesture, so
+// `unlock()` runs on the first tap; that tap may be silent.
 import { PLAYER_CONFIG } from '../config.ts';
 import type { Cue } from '../logic/feedback.ts';
+import { isShowLaptop, mayPlay } from '../../../packages/ui/sounds/logic.ts';
+import { SpritePlayer, useAmbientAudioSession } from '../../../packages/ui/sounds/sprite-player.ts';
+import { SPRITES } from '../../../packages/ui/sounds/sprites.ts';
+import type { TouchSounds } from '../../../packages/ui/sounds/touch.ts';
+import type { TouchClass, TouchVariant } from '../../../packages/ui/sounds/types.ts';
+import spriteUrl from '../../../packages/ui/sounds/player.mp3?url';
 
-export type Blip = Cue | 'tap' | 'tick';
+/** The game cues ("cue" is the Shuffle's and the stand-up's blip; "tick" the reel's). */
+export type Blip = Cue | 'cue' | 'tick';
 
 /** A note: frequency (Hz), start and length (s) within the blip, waveform, and the pitch it slides to (a glide). */
 type Note = [freq: number, at: number, len: number, wave?: OscillatorType, glideTo?: number];
 
-const TAP: Note[] = [[880, 0, 0.04]];
+const CUE: Note[] = [[880, 0, 0.04]];
 
 const BLIPS: Record<Blip, Note[]> = {
-  tap: TAP,
-  /** The Desgraciat round stands everyone up: the tap blip, once. */
-  standUp: TAP,
+  cue: CUE,
+  /** The Desgraciat round stands everyone up: the cue blip, once. */
+  standUp: CUE,
   tick: [[1400, 0, 0.012, 'square']],
   landing: [
     [520, 0, 0.05],
@@ -42,35 +52,71 @@ const BLIPS: Record<Blip, Note[]> = {
 
 type AudioContextCtor = new () => AudioContext;
 
-export class Sounds {
+export class Sounds implements TouchSounds {
   enabled = true;
   private ctx: AudioContext | null = null;
   private busyUntil = 0;
   private readonly Ctor: AudioContextCtor | null;
+  private readonly laptop: boolean;
+  private readonly touch: SpritePlayer;
 
   constructor() {
     const legacy = typeof window === 'undefined' ? undefined : (window as Window & { webkitAudioContext?: AudioContextCtor }).webkitAudioContext;
     this.Ctor = typeof AudioContext !== 'undefined' ? AudioContext : (legacy ?? null);
+    this.laptop = typeof location !== 'undefined' && isShowLaptop(location.hostname);
+    this.touch = new SpritePlayer({
+      url: spriteUrl,
+      map: SPRITES.player,
+      gate: () =>
+        mayPlay({
+          enabled: this.enabled,
+          hidden: typeof document !== 'undefined' && document.hidden,
+          showLaptop: this.laptop,
+          ready: this.touch.ready,
+          cueBusy: this.ctx !== null && this.ctx.currentTime < this.busyUntil,
+        }),
+    });
   }
 
   get supported(): boolean {
     return this.Ctor !== null;
   }
 
-  /** Create or resume the audio context. Call from a user gesture (a tap). */
+  /** Fetch the touch sounds' file once the page is idle (never on the show laptop, where nothing plays). */
+  prefetch(): void {
+    if (!this.laptop && this.Ctor) this.touch.prefetch();
+  }
+
+  /** Create or resume the audio context, and decode the touch sounds into it. Call from a user gesture (a tap). */
   unlock(): void {
-    if (!this.Ctor) return;
+    if (!this.Ctor || this.laptop) return;
     try {
-      this.ctx ??= new this.Ctor();
+      if (!this.ctx) {
+        useAmbientAudioSession();
+        this.ctx = new this.Ctor();
+        void this.touch.attach(this.ctx);
+      }
       if (this.ctx.state === 'suspended') void this.ctx.resume();
     } catch {
       this.ctx = null;
     }
   }
 
-  play(blip: Blip): void {
+  /** A touch sound (packages/ui/sounds/touch.ts calls this for the delegate and the components). */
+  play(cls: TouchClass, variant: TouchVariant): void;
+  /** A game cue. */
+  play(blip: Blip): void;
+  play(what: TouchClass | Blip, variant?: TouchVariant): void {
+    if (variant) {
+      this.touch.play(this.ctx, what as TouchClass, variant);
+      return;
+    }
+    this.cue(what as Blip);
+  }
+
+  private cue(blip: Blip): void {
     const ctx = this.ctx;
-    if (!this.enabled || !ctx || ctx.state !== 'running') return;
+    if (!this.enabled || this.laptop || !ctx || ctx.state !== 'running') return;
     if (typeof document !== 'undefined' && document.hidden) return;
     const now = ctx.currentTime;
     // One at a time: a tick may be dropped, anything else waits for nothing and is simply skipped.

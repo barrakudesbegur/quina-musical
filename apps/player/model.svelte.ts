@@ -4,6 +4,7 @@
 import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
 import { heatAt } from '../../packages/rules/heat.ts';
+import { touchRelease, touchTap } from '../../packages/ui/sounds/touch.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';
@@ -213,14 +214,14 @@ export class PlayerApp {
   // ---- actions (components call these) ------------------------------------------------------------------
   /** Ara's Historial | Cartrons switch: remembered on this device. */
   selectAraView(view: AraView): void {
-    if (view !== this.araView) this.blip('tap');
     this.araSession = null;
     this.saveData(setAraView(this.data, view), false);
   }
 
   /** Open a drawer over whatever is open (ANIMATIONS.md `drawer-open`, `drawer-stack`). */
   open(drawer: Drawer): void {
-    this.blip('tap');
+    // The trigger played its press (its release gives way): the drawer's own sound as it starts to move.
+    touchRelease('drawerOpen');
     this.drawers = pushDrawer(this.drawers, drawer);
   }
 
@@ -286,7 +287,7 @@ export class PlayerApp {
     this.sounds.unlock();
     this.saveData(setSounds(this.data, on));
     this.sounds.enabled = on;
-    if (on) this.sounds.play('tap');
+    if (on) touchTap('switchOn');
   }
 
   /** "Esborrar dades": everything of this app on this phone goes; the app starts fresh. */
@@ -313,7 +314,7 @@ export class PlayerApp {
     this.reducedMotion = reduced;
   }
 
-  /** A tap's blip (components call it for their own buttons). */
+  /** A game cue's blip (the reel's ticks). Touch sounds come from packages/ui/sounds/ (delegate.ts). */
   blip(kind: Blip): void {
     this.sounds.play(kind);
   }

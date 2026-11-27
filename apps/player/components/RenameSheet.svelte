@@ -11,14 +11,11 @@
     others,
     onsave,
     onclose,
-    onpick,
   }: {
     card: SavedCard;
     others: readonly SavedCard[];
     onsave: (name: string, identity: number) => void;
     onclose: () => void;
-    /** An icon picked: the tap blip (ANIMATIONS.md `icon-pick`). */
-    onpick?: () => void;
   } = $props();
   // The sheet edits a copy of the name and icon it opened with.
   // svelte-ignore state_referenced_locally
@@ -40,10 +37,7 @@
     <IconPicker
       {others}
       selected={identity}
-      onselect={(n) => {
-        onpick?.();
-        identity = n;
-      }}
+      onselect={(n) => (identity = n)}
     />
     <div class="rename__actions">
       <button type="submit" class="big-button tone-primary">{S.save}</button>

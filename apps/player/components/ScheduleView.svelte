@@ -40,7 +40,7 @@
           {@const name = S.roundName({ number: row.number, kind: row.roundKind }, app.plan)}
           {@const number = row.number}
           <li class="schedule__round" data-state={row.state} data-kind={row.roundKind}>
-            <button type="button" class="schedule__round-button" aria-label={S.prizesOf(name)} onclick={() => onround(number)}>
+            <button type="button" class="schedule__round-button" aria-label={S.prizesOf(name)} aria-haspopup="dialog" onclick={() => onround(number)}>
               <span class="schedule__round-time">{timeOf(row)}</span>
               <span class="schedule__dot">
                 {#if row.roundKind !== 'normal'}<RoundMark kind={row.roundKind} />{:else if row.state === 'done'}<Icon name="tick" />{/if}
