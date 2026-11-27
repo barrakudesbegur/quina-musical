@@ -106,11 +106,6 @@ export const COMMANDS = Object.freeze({
   /** Stop the voice cue playing now (D204): the music under it comes back up. */
   voiceSkip: {},
   /**
-   * An effect held on the remote's D-pad (D203), or the tablet's plan B: `on: true` starts it (or updates its
-   * `intensity`, 0–1, from the shakes while held), `on: false` lets go. The drum roll plays on the music's beat while
-   * held; let go after DRUMROLL.landAfterSec it lands with a hit on the next beat, sooner it stops smoothly.
-   */
-  /**
    * A two-level button held on a console (D234): `on: true` on its press, `on: false` on its release (a Wii's held B or
    * −/+ counts as its console's). The engine keeps one holder in the state (`twoLevelHeld`), so the other consoles show
    * that button locked until it's let go; another console's press meanwhile is refused `busy`, and its release ignored.
@@ -118,6 +113,11 @@ export const COMMANDS = Object.freeze({
    * journaled.
    */
   twoLevelHold: { button: { type: 'string', oneOf: TWO_LEVEL_BUTTONS }, on: { type: 'boolean' } },
+  /**
+   * An effect held on the remote's D-pad (D203), or the tablet's plan B: `on: true` starts it (or updates its
+   * `intensity`, 0–1, from the shakes while held), `on: false` lets go. The drum roll plays on the music's beat while
+   * held; let go after DRUMROLL.landAfterSec it lands with a hit on the next beat, sooner it stops smoothly.
+   */
   padHold: {
     effect: { type: 'string', oneOf: PAD_HOLD_EFFECTS },
     on: { type: 'boolean' },
