@@ -383,11 +383,24 @@ export function checkCommand(message: unknown): CommandCheck {
   return { ok: true, command: message as Command };
 }
 
+/** The prefix of a console's id through the cloud: the cloud stamps `cloud:<that console's hello clientId>`. */
+export const CLOUD_FROM_PREFIX = 'cloud:';
+const PLAIN_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** Whether `value` is a cloud console's id: `cloud:` and a plain id (1–64 of `[A-Za-z0-9_-]`). */
+export function isCloudConsoleId(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith(CLOUD_FROM_PREFIX) && PLAIN_ID_RE.test(value.slice(CLOUD_FROM_PREFIX.length));
+}
+
 /**
  * The relay's stamp on a command it forwards to the show (D234): `from` becomes the sender's clientId, replacing one the
- * sender set, so a console can't speak for another; a sender without a usable clientId leaves none.
+ * sender set, so a console can't speak for another; a sender without a usable clientId leaves none. The one exception
+ * (`viaCloud`: the command came on the cloud link's socket): a `from` the cloud stamped, `cloud:` and a plain id
+ * (`isCloudConsoleId`), is kept, so each console through the cloud is its own sender. Any other `from` there is replaced by
+ * the link's clientId, and on every other socket even a `cloud:` one is replaced, so no LAN console can pose as a cloud one.
  */
-export function stampCommandFrom(message: Record<string, unknown>, clientId: string): void {
+export function stampCommandFrom(message: Record<string, unknown>, clientId: string, options: { viaCloud?: boolean } = {}): void {
+  if (options.viaCloud && isCloudConsoleId(message.from)) return;
   delete message.from;
   if (clientId && clientId.length <= COMMAND_FROM_MAX_LENGTH) message.from = clientId;
 }

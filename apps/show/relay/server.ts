@@ -30,7 +30,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import {
-  PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readRemoteStatus, remoteStatusMessage, revealedRounds, stampCommandFrom,
+  CLOUD_CONSOLES_TYPE, PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readCloudConsoles, readRemoteStatus, remoteStatusMessage, revealedRounds, stampCommandFrom, withCloudConsoles,
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
 import { distProblem } from './build-stamp.ts';
@@ -490,9 +490,12 @@ function isEnginePath(pathname: string): boolean {
 // - Events come only from the show socket. The Game journal (journal.entry, journal.entries: the Queue, seeds,
 //   names) goes to the cloud link only; every other event goes to the paired remotes and the link.
 // - Commands come only from paired remotes and the link, and go to the show; `getJournal` only from the link.
+// - The cloud's consoles (`cloud.consoles`) come only from the link, and go out folded into `relay.clients`.
 interface Client {
   role: Role | 'unknown';
   clientId: string;
+  /** The link's latest `cloud.consoles` (only on the `cloud` socket): they leave with its socket. */
+  cloudConsoles: string[];
 }
 const clients = new Map<WebSocket, Client>();
 /** The laptop's Game plan (cloud-plan.json or local-plan.json in the link folder, the newest), pushed on change. */
@@ -517,7 +520,7 @@ server.on('upgrade', (req, socket, head) => {
 
 wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
   const local = isThisMachine(req.socket.remoteAddress);
-  const self: Client = { role: 'unknown', clientId: '' };
+  const self: Client = { role: 'unknown', clientId: '', cloudConsoles: [] };
   clients.set(socket, self);
   socket.on('message', (data) => {
     let message: Record<string, unknown>;
@@ -549,6 +552,15 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       rememberRemote(socket, self.clientId, { connected: status.connected, battery: status.battery, sinceMs: status.sinceMs });
       return;
     }
+    // The consoles connected to the cloud (D234's lock through it): kept per link socket, sent out in relay.clients.
+    if (message.type === CLOUD_CONSOLES_TYPE) {
+      if (self.role !== 'cloud') return;
+      const ids = readCloudConsoles(message);
+      if (!ids) return;
+      self.cloudConsoles = ids;
+      broadcast(clientList());
+      return;
+    }
     const isCommand = message.type === 'cmd';
     if (isCommand) {
       if (self.role === 'unknown' || !COMMANDERS.includes(self.role)) return;
@@ -556,8 +568,9 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
     } else if (self.role !== 'show') return;
     if (message.type === 'state') lastState = message as unknown as ShowState;
     // Who sent a command (D234's lock mirror): the relay's word, overwriting any a console set, so none can speak for
-    // another. Commands through the cloud carry the link's; a client without a clientId sends none.
-    if (isCommand) stampCommandFrom(message, self.clientId);
+    // another. On the link's socket a `cloud:<id>` the cloud stamped is kept (each cloud console is its own sender),
+    // else they carry the link's; a client without a clientId sends none.
+    if (isCommand) stampCommandFrom(message, self.clientId, { viaCloud: self.role === 'cloud' });
     const text = JSON.stringify(message);
     for (const [other, info] of clients) {
       if (other === socket || other.readyState !== other.OPEN) continue;
@@ -606,8 +619,11 @@ function repertoireStatus(): string {
   }
 }
 
+/** Who is connected: every socket, plus the consoles each cloud link reports (role `console`, `cloud:<id>`). */
 function clientList(): RelayClients {
-  return { v: PROTOCOL_VERSION, type: 'relay.clients', clients: [...clients.values()].map(({ role, clientId }) => ({ role, clientId })) };
+  const all = [...clients.values()];
+  const own = all.map(({ role, clientId }) => ({ role, clientId }));
+  return { v: PROTOCOL_VERSION, type: 'relay.clients', clients: withCloudConsoles(own, all.flatMap((c) => (c.role === 'cloud' ? c.cloudConsoles : []))) };
 }
 
 /** The Game plan for the screens (protocol RelayPlan): on hello and whenever the laptop's newest copy changes. */

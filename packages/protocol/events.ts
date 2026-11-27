@@ -31,6 +31,7 @@ import {
   type VolumeKey,
   type WinKind,
 } from './vocabulary.ts';
+import { isCloudConsoleId } from './commands.ts';
 import type { JournalEntry } from './journal.ts';
 import type { GamePlan } from './plan.ts';
 
@@ -915,7 +916,8 @@ export interface RelayHello {
 export interface RelayClients {
   v: ProtocolVersion;
   type: 'relay.clients';
-  clients: { role: Role | 'unknown'; clientId: string }[];
+  /** `console`: a console through the cloud (`cloud.consoles`), its clientId `cloud:<id>`. */
+  clients: { role: Role | 'unknown' | 'console'; clientId: string }[];
 }
 
 /**
@@ -973,6 +975,39 @@ export function readRemoteStatus(message: unknown): (RemoteStatus & { clientId: 
   const drops = Number.isInteger(m.drops) && (m.drops as number) >= 0 ? { drops: m.drops as number } : {};
   const lastDrop = m.lastDropMs === null || (typeof m.lastDropMs === 'number' && Number.isFinite(m.lastDropMs)) ? { lastDropMs: m.lastDropMs as number | null } : {};
   return { connected: m.connected, battery, sinceMs: m.sinceMs, ...drops, ...lastDrop, clientId: typeof m.clientId === 'string' ? m.clientId : '' };
+}
+
+/**
+ * The consoles connected to the cloud (D234's lock through the cloud), from the cloud's GameRoom to the laptop's cloud link,
+ * which forwards it to the relay on its socket: whenever the list changes and on every (re)connect. Each id is
+ * `cloud:<the console's hello clientId>` (`isCloudConsoleId`), the `from` the cloud stamps on that console's commands.
+ * The relay accepts it only from the `cloud` socket, keeps the latest, and folds the ids into `relay.clients` (role
+ * `console`), so the engine lets go of a two-level button held by a cloud console that has gone; they all go when the
+ * link's socket closes. Never forwarded as such.
+ */
+export const CLOUD_CONSOLES_TYPE = 'cloud.consoles';
+/** The most ids a `cloud.consoles` may carry; a longer list is ignored. */
+export const CLOUD_CONSOLES_MAX = 64;
+
+export interface CloudConsoles {
+  v: ProtocolVersion;
+  type: typeof CLOUD_CONSOLES_TYPE;
+  ids: string[];
+}
+
+export const cloudConsolesMessage = (ids: readonly string[]): CloudConsoles => ({ v: PROTOCOL_VERSION, type: CLOUD_CONSOLES_TYPE, ids: [...ids] });
+
+/** A `cloud.consoles` message's ids (untrusted), or null when anything is off: at most CLOUD_CONSOLES_MAX, each a cloud console's id. */
+export function readCloudConsoles(message: unknown): string[] | null {
+  if (!message || typeof message !== 'object') return null;
+  const m = message as Record<string, unknown>;
+  if (m.v !== PROTOCOL_VERSION || m.type !== CLOUD_CONSOLES_TYPE || !Array.isArray(m.ids) || m.ids.length > CLOUD_CONSOLES_MAX) return null;
+  return m.ids.every(isCloudConsoleId) ? [...new Set(m.ids as string[])] : null;
+}
+
+/** The relay's client list with the cloud's consoles folded in, each as role `console` with its `cloud:` id. */
+export function withCloudConsoles(clients: RelayClients['clients'], cloudIds: readonly string[]): RelayClients['clients'] {
+  return [...clients, ...cloudIds.map((clientId) => ({ role: 'console' as const, clientId }))];
 }
 
 /** What a remote receives: the engine's events plus the relay's client list and the Game plan. */
