@@ -34,6 +34,10 @@
 
 .song-tile__cover {
   width: var(--tile-cover);
+}
+
+/* In a frame (row, tile, result), the cover's corners are concentric with the frame's. */
+.song-tile:is([data-layout='row'], [data-layout='tile'], [data-layout='result']) .song-tile__cover {
   border-radius: max(var(--radius-xs, 6px), calc(var(--tile-radius) - var(--tile-border) - var(--tile-pad)));
 }
 

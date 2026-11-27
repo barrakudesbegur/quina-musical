@@ -8,7 +8,7 @@
   import { landingCountdown, suspenseCountdown } from '../logic/countdown.ts';
   import { S } from '../strings.ts';
   import { registerMorphRoot } from '../morph.ts';
-  import Cover from './Cover.svelte';
+  import SongTile from '../../../packages/ui/components/SongTile.svelte';
 
   const model = getConsole();
   let root = $state<HTMLElement | null>(null);
@@ -29,21 +29,21 @@
 {#if snap && (next || snap.queue.length > 0)}
   <Panel bind:element={root} fill="snow" border="dashed" shadow={false} class="next-song" data-testid="next-song" data-song-id={next?.songId ?? ''} data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
     {#if next && !finaleOver}
-      <Cover songId={next.songId} morph="cover" />
-      <div class="next-song__song">
-        <h2 class="panel__label" id="{uid}-title">{S.nextSong.title}<span class="visually-hidden"> ({S.nextSong.private})</span></h2>
-        <p class="next-song__name" data-morph="title">{next.title}</p>
-        <p class="next-song__artist" data-morph="artist">{next.artist}</p>
-        {#if snap.pending === 'next'}<p class="next-song__pending">{S.nextSong.decoding}</p>{/if}
-      </div>
-      {#if landing}
-        <p class="next-song__landing" role="timer" aria-label={S.nextSong.landsIn(landing.secondsLeft)}>
-          <span class="next-song__seconds" aria-hidden="true">{S.nextSong.seconds(landing.secondsLeft)}</span>
-          <span class="next-song__to-land" aria-hidden="true">{S.nextSong.toLand}</span>
-        </p>
-      {:else if suspense}
-        <p class="next-song__landing next-song__landing--suspense">{S.nextSong.suspenseOpen}</p>
-      {/if}
+      <!-- The design system's SongTile, `compact` (D5): one line for a long title (#81). -->
+      <SongTile layout="compact" class="next-song__tile" songId={next.songId} title={next.title} artist={next.artist} morph>
+        {#snippet head()}<h2 class="panel__label" id="{uid}-title">{S.nextSong.title}<span class="visually-hidden"> ({S.nextSong.private})</span></h2>{/snippet}
+        {#snippet meta()}{#if snap.pending === 'next'}<p class="next-song__pending">{S.nextSong.decoding}</p>{/if}{/snippet}
+        {#snippet trailing()}
+          {#if landing}
+            <p class="next-song__landing" role="timer" aria-label={S.nextSong.landsIn(landing.secondsLeft)}>
+              <span class="next-song__seconds" aria-hidden="true">{S.nextSong.seconds(landing.secondsLeft)}</span>
+              <span class="next-song__to-land" aria-hidden="true">{S.nextSong.toLand}</span>
+            </p>
+          {:else if suspense}
+            <p class="next-song__landing next-song__landing--suspense">{S.nextSong.suspenseOpen}</p>
+          {/if}
+        {/snippet}
+      </SongTile>
     {:else}
       <div class="next-song__song">
         <h2 class="panel__label" id="{uid}-title">{S.nextSong.title}</h2>

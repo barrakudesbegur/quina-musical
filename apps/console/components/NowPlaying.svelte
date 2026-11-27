@@ -12,7 +12,7 @@
   import { elapsedSec } from '../logic/countdown.ts';
   import { nowRing } from '../logic/now-ring.ts';
   import { S } from '../strings.ts';
-  import Cover from './Cover.svelte';
+  import SongTile from '../../../packages/ui/components/SongTile.svelte';
   import Icon from './Icon.svelte';
   import NowRing from './NowRing.svelte';
   import { registerMorphRoot } from '../morph.ts';
@@ -59,33 +59,35 @@
 </script>
 
 {#if snap && ring}
+  {@const name = music ? (music === 'error' ? S.nowPlaying.errorMusic : S.nowPlaying.holdMusic) : (snap.current?.title ?? S.nowPlaying.nothing)}
   <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring-state={ring.state} aria-labelledby="{uid}-title">
-    {#if music}
-      <span class="cover cover--lg cover--missing now-playing__music" data-music={music} aria-hidden="true"><Icon name="music" alone /></span>
-    {:else}
-      <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
-    {/if}
-    <div class="now-playing__song">
-      <h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>
-      {#if music}
-        <p class="now-playing__name">{music === 'error' ? S.nowPlaying.errorMusic : S.nowPlaying.holdMusic}</p>
-      {:else if snap.current}
-        <p class="now-playing__name" data-morph="title">{snap.current.title}</p>
-        <p class="now-playing__artist" data-morph="artist">{snap.current.artist}</p>
-      {:else}
-        <p class="now-playing__name">{S.nowPlaying.nothing}</p>
-      {/if}
-      {#if chip}
-        <p class="now-playing__chip" data-state={ring.state}>
-          {#if ring.state === 'manual' || ring.state === 'manualFinal'}<Icon name="next" />{:else if ring.state === 'lastStanding'}<Icon name="claim" />{:else if ring.state === 'finaleWinner'}<Icon name="star" />{/if}<span>{chip}</span>
-        </p>
-      {/if}
-      {#if model.lastSpin}
-        <p class="now-playing__by" data-by={model.lastSpin.by ?? 'auto'}>{S.nowPlaying.lastSpinBy(model.lastSpin.by)}</p>
-      {/if}
-    </div>
-    <div class="now-playing__ring">
-      <NowRing view={ring} />
-    </div>
+    <!-- The design system's SongTile, `feature` (D5): a long title stops at two lines (#81). Hold or error music shows
+         the note on its tile instead of a cover. -->
+    <SongTile
+      layout="feature"
+      class="now-playing__tile"
+      songId={music ? null : (snap.current?.songId ?? null)}
+      title={name}
+      artist={music ? null : (snap.current?.artist ?? null)}
+      morph={!music && snap.current !== null}
+      data-music={music ?? undefined}
+    >
+      {#snippet head()}<h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>{/snippet}
+      {#snippet meta()}
+        {#if chip}
+          <p class="now-playing__chip" data-state={ring.state}>
+            {#if ring.state === 'manual' || ring.state === 'manualFinal'}<Icon name="next" />{:else if ring.state === 'lastStanding'}<Icon name="claim" />{:else if ring.state === 'finaleWinner'}<Icon name="star" />{/if}<span>{chip}</span>
+          </p>
+        {/if}
+        {#if model.lastSpin}
+          <p class="now-playing__by" data-by={model.lastSpin.by ?? 'auto'}>{S.nowPlaying.lastSpinBy(model.lastSpin.by)}</p>
+        {/if}
+      {/snippet}
+      {#snippet trailing()}
+        <div class="now-playing__ring">
+          <NowRing view={ring} />
+        </div>
+      {/snippet}
+    </SongTile>
   </section>
 {/if}

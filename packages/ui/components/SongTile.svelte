@@ -7,9 +7,11 @@
   last resort. A cover inside a rounded frame keeps its corners concentric: its radius is the frame's minus the space
   between them (song-tile.css).
 
-  Slots: `leading` (data: an index, «+1»), the cover (data: `songId`), `kicker` (data), `title` and `artist` (data),
-  `meta` (a snippet under the artist: a chip or a tag), `trailing` (a snippet at the end: the ring, the card marks, a
-  countdown). Native attributes and `class` pass through; `as` picks the element (`li` in a list).
+  Slots: `leading` (data: an index, «+1»), the cover (data: `songId`), `kicker` (data) or `head` (a snippet in its
+  place: a panel's heading), `title` and `artist` (data), `meta` (a snippet under the artist: a chip or a tag),
+  `trailing` (a snippet at the end: the ring, the card marks, a countdown). `morph` marks the cover, title and artist
+  for the console's next-to-now morph (`data-morph`). Native attributes and `class` pass through; `as` picks the
+  element (`li` in a list).
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
@@ -28,7 +30,9 @@
     lang?: string;
     as?: 'div' | 'li';
     coverFallback?: 'note' | 'empty';
+    morph?: boolean;
     class?: string;
+    head?: Snippet;
     meta?: Snippet;
     trailing?: Snippet;
     [key: `data-${string}`]: string | undefined;
@@ -44,7 +48,9 @@
     lang,
     as = 'div',
     coverFallback = 'note',
+    morph = false,
     class: className = '',
+    head,
     meta,
     trailing,
     ...rest
@@ -53,11 +59,11 @@
 
 <svelte:element this={as} {...rest} class="song-tile {className}" data-layout={layout}>
   {#if leading}<span class="song-tile__leading" aria-hidden="true">{leading}</span>{/if}
-  {#if layout !== 'headline'}<Cover {songId} fallback={coverFallback} class="song-tile__cover" />{/if}
+  {#if layout !== 'headline'}<Cover {songId} fallback={coverFallback} class="song-tile__cover" morph={morph ? 'cover' : null} />{/if}
   <span class="song-tile__text">
-    {#if kicker}<span class="song-tile__kicker">{kicker}</span>{/if}
-    <span class="song-tile__title" {lang}>{title}</span>
-    {#if artist}<span class="song-tile__artist">{artist}</span>{/if}
+    {#if head}{@render head()}{:else if kicker}<span class="song-tile__kicker">{kicker}</span>{/if}
+    <span class="song-tile__title" {lang} data-morph={morph ? 'title' : undefined}>{title}</span>
+    {#if artist}<span class="song-tile__artist" data-morph={morph ? 'artist' : undefined}>{artist}</span>{/if}
     {@render meta?.()}
   </span>
   {@render trailing?.()}

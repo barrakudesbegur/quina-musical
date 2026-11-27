@@ -826,18 +826,50 @@
 }
 
 /* Hold music (navy, a blue note), the pause's (a gold note) or a failed Check's error music (red) */
-.now-playing__music {
+/* «Ara sona» and «Següent» are the design system's SongTile (`feature`, `compact`; packages/ui/components/
+   song-tile.css): the console sizes them here. Hold, pause or error music shows the note on its tile. */
+.now-playing__tile,
+.next-song__tile {
+  flex: 1;
+  min-width: 0;
+  column-gap: var(--space-4);
+}
+
+.now-playing__tile {
+  --tile-cover: calc(var(--tap-big) * 1.5);
+  --tile-title: var(--text-xl);
+  --tile-artist: 1.1875rem;
+}
+
+.next-song__tile {
+  --tile-cover: var(--tap-big);
+  --tile-title: 1.5rem;
+  --tile-artist: var(--text-md);
+}
+
+.next-song .next-song__tile .song-tile__artist {
+  color: var(--color-text-muted);
+}
+
+.now-playing__tile .song-tile__text {
+  gap: 3px;
+  justify-items: start;
+}
+
+.now-playing .now-playing__tile[data-music] .song-tile__cover {
   background: var(--color-night);
-  color: var(--color-cyan);
 }
 
-.now-playing__music[data-music='pause'] {
-  color: var(--color-gold);
+.now-playing .now-playing__tile[data-music='pause'] .song-tile__cover .cover__note {
+  stroke: var(--color-gold);
 }
 
-.now-playing__music[data-music='error'] {
+.now-playing .now-playing__tile[data-music='error'] .song-tile__cover {
   background: var(--color-red-edge);
-  color: #ffffff;
+}
+
+.now-playing .now-playing__tile[data-music='error'] .song-tile__cover .cover__note {
+  stroke: #ffffff;
 }
 
 .now-playing__ring {
@@ -4437,9 +4469,8 @@ kbd {
     gap: var(--space-3);
   }
 
-  .now-playing .cover--lg {
-    width: var(--tap-big);
-    height: var(--tap-big);
+  .now-playing__tile {
+    --tile-cover: var(--tap-big);
   }
 
   .now-playing__ring {
