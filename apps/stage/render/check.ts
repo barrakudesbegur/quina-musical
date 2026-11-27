@@ -137,7 +137,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       if (e.target === this.plate) setData(this.plate, 'anim', null);
     });
     this.typeName = h('p', 'check__type-name');
-    this.typeMark = h('span', { class: 'check__type-mark', attrs: { 'aria-hidden': 'true' } });
+    this.typeMark = h('span', { class: 'check__type-mark', hidden: true, attrs: { 'aria-hidden': 'true' } });
     this.type = h('div', { class: 'check__type', data: { state: 'pending' } }, this.typeCard.root, this.typeName, this.typeMark);
     this.grid = h('div', 'card-grid');
     this.resultTitle = h('p', 'check-result__title');
@@ -200,7 +200,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     setHidden(this.type, t === null);
     this.typeShown = null;
     setData(this.type, 'state', 'pending');
-    setText(this.typeMark, '');
+    this.setTypeMark(null);
     if (!t) return;
     this.typeCard.set(t.color, t.special);
     this.bigCard.set(t.color, t.special);
@@ -259,7 +259,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     if (type !== this.typeShown) {
       this.typeShown = type;
       setData(this.type, 'state', type ?? 'pending');
-      setText(this.typeMark, type === 'ok' ? STAGE_TEXT.mark.ok : type === 'wrong' ? STAGE_TEXT.mark.bad : '');
+      this.setTypeMark(type === 'ok' || type === 'wrong' ? type : null);
       if (check.cardType) this.type.setAttribute('aria-label', STAGE_TEXT.checkType(check.cardType.label, type === 'pending' || type === null ? null : type === 'ok'));
     }
     const reveal = checkReveal(check, nowMs, STAGE.checkMarkAt);
@@ -289,6 +289,14 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       setData(this.panel, 'result', result ?? 'pending');
       this.showResult(check, result);
     }
+  }
+
+  /** The type badge's ✓ / ✗: the icon family's check or cross, as the songs' badges (D3). */
+  private setTypeMark(mark: 'ok' | 'wrong' | null): void {
+    setHidden(this.typeMark, mark === null);
+    if (mark === null) return void this.typeMark.replaceChildren();
+    if (this.typeMark.dataset.mark !== mark) this.typeMark.replaceChildren(iconElement(mark === 'ok' ? 'check' : 'close'));
+    this.typeMark.dataset.mark = mark;
   }
 
   /** Across the card, where the result lands: away from the song that sank a fallen card, else the middle. */
