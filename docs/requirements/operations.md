@@ -93,10 +93,9 @@ _From [ADR 0003](../adr/0003-cloud-owns-the-game-laptop-owns-playback.md); the d
 
 _From the Sound engine and Backend handoffs; timeline.md › Risks._
 
-- R2's free storage is 10 GB.
-- A song is about 68 MB in today's format, with two approved hooks (up to about 92 MB with more). About 100 songs fit once last year's pool is pruned; the draft's 151 would take about 10.3 GB.
-- The final playlist will almost surely be under 100 songs (D80), so today's format stays.
-- Storage beyond 10 GB would cost money, so it needs the user's OK.
+- R2's free storage is 10 GB; a little beyond it costs cents a month and is fine (D113).
+- **2026:** 136 songs, about 47 MB each, plus the shared Hold, break, voice and effect sounds: about 8.2 GB in all (27 Nov). Last year's files are deleted (D246, D247), and nothing expires by date.
+- **Each file is stored once, by its content (D248):** R2 keys a file by its SHA-256, and each repertoire's private manifest maps its readable paths to those fingerprints. A push uploads only what's missing, a pull rebuilds the laptop's readable folders and checks every hash, and prune deletes only fingerprints no manifest names, after a dry run.
 
 ## Rehearsals
 
