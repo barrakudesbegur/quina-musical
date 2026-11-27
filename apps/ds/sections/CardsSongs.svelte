@@ -17,6 +17,8 @@
   import { FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
   import CardMark from '../../player/components/CardMark.svelte';
   import Reel from '../../player/components/Reel.svelte';
+  import { roundOrder } from '../../player/logic/drum.ts';
+  import type { PublicLanding, PublicSpin } from '../../player/feed/public.ts';
   import './cards-songs.css';
 
   let { phone, cell }: { phone: boolean; cell: Snippet<[string, Snippet]> } = $props();
@@ -30,7 +32,6 @@
   /** A card's 12 songs, long titles included. */
   const CARD = [2, 17, 60, 16, 11, 15, 31, 1, 3, 5, 14, 20];
   const marked = new Set([2, 17, 15, 31, 3]);
-  const near = 16;
   const playingSong = 15;
   const crossed = new Set([17, 31]);
   const catalog: Catalog = {
@@ -39,6 +40,38 @@
     cardTypes: null,
   };
   const now = Date.now();
+
+  /** The drum: the fixtures' songs in a round's order (its public seed), and landings on it. */
+  const ORDER = roundOrder(Object.keys(FIXTURE_SONGS).map(Number), 2026, 3);
+  const LANDED: PublicLanding = { position: 4, songId: 7, atMs: now - 5000 };
+  const LONG_LANDED: PublicLanding = { position: 4, songId: 1, atMs: now - 5000 };
+  const FEW = ORDER.slice(0, 4);
+  const FEW_LANDED: PublicLanding = { position: 40, songId: FEW[1] as number, atMs: now - 5000 };
+  /** The live drum: a Spin every 12 s, 7 s long, landing on the next song of a fixed story. */
+  let live = $state<{ spin: PublicSpin | null; landings: PublicLanding[]; latest: PublicLanding | null; now: number }>({ spin: null, landings: [LANDED], latest: LANDED, now });
+  $effect(() => {
+    let n = 0;
+    const cycle = () => {
+      const t = Date.now();
+      const spin: PublicSpin = { startAtMs: t + 1000, landAtMs: t + 8000, spinSeed: (n * 2654435761) >>> 0 };
+      live = { ...live, spin, now: t };
+      const landAt = setTimeout(() => {
+        const songId = ORDER[(n * 17 + 23) % ORDER.length] as number;
+        const landing: PublicLanding = { position: 5 + n, songId, atMs: spin.landAtMs ?? Date.now() };
+        live = { spin: null, landings: [landing], latest: landing, now: Date.now() };
+        n += 1;
+      }, 8300);
+      return landAt;
+    };
+    let pending = cycle();
+    const every = setInterval(() => (pending = cycle()), 12_000);
+    const clock = setInterval(() => (live = { ...live, now: Date.now() }), 250);
+    return () => {
+      clearTimeout(pending);
+      clearInterval(every);
+      clearInterval(clock);
+    };
+  });
 
   /** The console's Check example, in the user's order (#77): ok, fail, playing, future ok, no hint. */
   const CHECK_ORDER: { state: CellState; ahead?: number; caption: string }[] = [
@@ -57,7 +90,7 @@
   const label = (id: number, state: string) => `${title(id)}: ${state}`;
 </script>
 
-{#snippet grid(identity: number, crosses = false)}
+{#snippet grid(identity: number, crosses = false, holds = true)}
   <ul class="card-grid">
     {#each CARD as id (id)}
       {@const isMarked = crosses ? crossed.has(id) : marked.has(id)}
@@ -67,7 +100,7 @@
         title={title(id)}
         label={label(id, isMarked ? 'ha sonat' : 'no ha sonat')}
         coverFallback="empty"
-        {...cellLook(isMarked ? (crosses ? 'crossed' : 'marked') : !crosses && id === near ? 'near' : 'empty', { playing: !crosses && id === playingSong })}
+        {...cellLook(isMarked ? (crosses ? 'crossed' : 'marked') : 'empty', { playing: holds && !crosses && id === playingSong })}
       >
         {#if isMarked && crosses}
           <span class="card-grid__cross" aria-hidden="true"><svg class="cross" viewBox="0 0 24 24"><path class="cross__edge" d="M6 6l12 12M18 6L6 18" /><path class="cross__mark" d="M6 6l12 12M18 6L6 18" /></svg></span>
@@ -91,21 +124,22 @@
     <p class="ds-gallery__note">
       Played songs fade a little so the ones to come stand out (#70); titles hyphenate and stop at two lines (#71). The count pill
       shows only where songs are counted (<code>showRemaining</code>, #72), a rosette at 0; DEMPEUS / ASSEGUT take the same place,
-      compact too (#73). The song playing now is marked and its dashed orange ring runs (#74; here «Cuídate»). The dashed ink
-      outline on a tinted cell is the near-win cue (the one song a card is missing), not «playing».
+      compact too (#73). The song playing now (#74; here «Cuídate») is marked very clearly (§8 Y1): its cover at full strength,
+      no veil, the design system's 4 px running orange ring, slightly see-through (85 %), with its glow, uncut. A card holding it
+      keeps its count, in an orange pill ringed by the same running dashes (card-playing). No near-win marking any more (§8 Y1).
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--cards">
       {#snippet c1()}
-        <PlayerCard identity={1} name="Àvia" number="#123" showRemaining remaining={1} remainingLabel="En falta 1">
+        <PlayerCard identity={1} name="Àvia" number="#123" showRemaining remaining={1} remainingLabel="En falta 1" countColor="orange" countRing="running">
           {#snippet mark()}<span class="swatch"><CardMark identity={1} decorative /></span>{/snippet}
           {@render grid(1)}
         </PlayerCard>
       {/snippet}
-      {@render cell('counting (showRemaining): 1 to go; played faded, near tinted, playing running', c1)}
+      {@render cell('holding the song playing now: the count in orange, ringed by running dashes; played faded, playing very clear', c1)}
       {#snippet c2()}
         <PlayerCard identity={2} name="Superestrella de la Quina Quina" number="#57" glow="gold" showRemaining remaining={0} remainingLabel="No en falta cap">
           {#snippet mark()}<span class="swatch"><CardMark identity={2} decorative /></span>{/snippet}
-          {@render grid(2)}
+          {@render grid(2, false, false)}
         </PlayerCard>
       {/snippet}
       {@render cell('glow (a win): ringed in the card’s own colour; 0 to go: the rosette; a long name', c2)}
@@ -129,17 +163,17 @@
       {#snippet c5()}
         <PlayerCard identity={8} name="Neu" number="#312" showRemaining remaining={3} remainingLabel="En falten 3">
           {#snippet mark()}<span class="swatch"><CardMark identity={8} decorative /></span>{/snippet}
-          {@render grid(8)}
+          {@render grid(8, false, false)}
         </PlayerCard>
       {/snippet}
-      {@render cell('the white card (identity 8, R10)', c5)}
+      {@render cell('the white card (identity 8, R10); counting, not holding the song playing now: the paper pill', c5)}
       {#snippet c6()}
-        <PlayerCard identity={9} name="Barret" number="#404" showRemaining remaining={2} remainingLabel="En falten 2">
+        <PlayerCard identity={9} name="Barret" number="#404" showRemaining remaining={2} remainingLabel="En falten 2" countColor="orange" countRing="running">
           {#snippet mark()}<span class="swatch"><CardMark identity={9} decorative /></span>{/snippet}
           {@render grid(9)}
         </PlayerCard>
       {/snippet}
-      {@render cell('the black card (identity 9, R10): its mark outlined in paper', c6)}
+      {@render cell('the black card (identity 9, R10): its mark outlined in paper; holding the song playing now', c6)}
     </div>
     <h4>Long names (R9): the name field's 20 letters, a mark's own name</h4>
     <div class="ds-gallery__grid ds-gallery__grid--cards">
@@ -192,7 +226,7 @@
       {/each}
     </ul>
   {:else}
-    <p class="ds-gallery__note">The phone's states: empty, marked (played, #70), near (tinted, dashed ink), marked and playing (the running ring), crossed.</p>
+    <p class="ds-gallery__note">The phone's states: empty, marked (played, #70), marked and playing (very clear: the running ring, see-through, with its glow), crossed. (No near: §8 Y1.)</p>
   {/if}
   <h4>Long titles (R9)</h4>
   <ul class="ds-gallery__cells {phone ? 'card-grid' : 'check-grid'}">
@@ -260,30 +294,38 @@
   <h3>D6 · Drum</h3>
   {#if phone}
     <p class="ds-gallery__note">
-      A real cylinder (#82, #83): one transform per tile round one axis, the radius from the tile count with a gap, back faces
-      hidden. Drag it sideways: a stiff wobble of at most 4° that springs back (drum-tug). It morphs from the full look to the strip
-      by <code>--reel-collapse</code> (0 → 1, transforms and opacity only: drum-collapse), which the phone home drives from its scroll
-      and its swipe; <code>compact</code> pins it to the strip.
+      The projector's drum (§8 Y1, D237): every tile of the round's ring, the songs still to come plus the last landing, in the
+      projector's order (<code>drumOrder</code> from the round's public seed), on the projector's cylinder (the radius from the tile
+      count, a perspective of five tiles). A Spin turns by the projector's solver with the Spin's public seed and is blurred sideways
+      by its speed, as the projector's; it never rests before the landing is public (it creeps on, blurred), then glides to the
+      landed tile, which comes forward while the others fade (the projector's selection). The gold window sits outside the drum's
+      clip, so its glow is never cut. Drag it sideways: a stiff wobble of at most 14 px that springs back and never brings a tile
+      into view (drum-tug). It morphs from the full look to the strip by <code>--reel-collapse</code> (drum-collapse);
+      <code>compact</code> pins it to the strip. Silent (§8 Y4).
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--wide">
-      {#snippet d1()}<Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
-      {@render cell('full, landed', d1)}
-      {#snippet d2()}<Reel spin={null} latest={{ position: 4, songId: 1, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact />{/snippet}
+      {#snippet d9()}<Reel spin={live.spin} latest={live.latest} {catalog} order={ORDER} landings={live.landings} nowMs={live.now} clockOffsetMs={0} reduced={false} />{/snippet}
+      {@render cell('live: a Spin every 12 s (its seed changes each time): the solver’s curve and motion blur, the creep, the glide and the selection', d9)}
+      {#snippet d1()}<Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
+      {@render cell('full, landed: the landed tile forward, the others at 35 %', d1)}
+      {#snippet d2()}<Reel spin={null} latest={LONG_LANDED} {catalog} order={ORDER} landings={[LONG_LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} compact />{/snippet}
       {@render cell('compact (the strip), a long title', d2)}
-      {#snippet d5()}<Reel spin={{ startAtMs: now - 1000, landAtMs: null }} latest={{ position: 4, songId: 7, atMs: now - 9000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={true} />{/snippet}
-      {@render cell('turning: the previous song stays, faded, never «?» (§8 Y2; held still here)', d5)}
-      {#snippet d6()}<Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1, 5, 9]} />{/snippet}
-      {@render cell('compact, with the marks of the cards holding the song (§8 Y2)', d6)}
-      {#snippet d7()}<div class="ds-gallery__gold"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
+      {#snippet d5()}<Reel spin={{ startAtMs: now - 1000, landAtMs: null }} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={true} />{/snippet}
+      {@render cell('turning, reduced motion: still on the start tile, blurred 3 px; the previous song stays, faded (§8 Y2)', d5)}
+      {#snippet d6()}<Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1, 5, 9]} />{/snippet}
+      {@render cell('compact, with the marks of the cards holding the song (§8 Y2); the window’s glow uncut', d6)}
+      {#snippet d7()}<div class="ds-gallery__gold"><Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
       {@render cell('on the your-song gold: the sides fade by a mask, into the gold (§8 Y1)', d7)}
-      {#snippet d8()}<div class="ds-gallery__gold"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1]} /></div>{/snippet}
+      {#snippet d8()}<div class="ds-gallery__gold"><Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1]} /></div>{/snippet}
       {@render cell('the strip on the gold: its own night panel, the night’s words', d8)}
-      {#snippet d4()}<div style:--reel-collapse="0.5"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
+      {#snippet d4()}<div style:--reel-collapse="0.5"><Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
       {@render cell('halfway through the collapse (--reel-collapse 0.5)', d4)}
-      {#snippet d3()}<Reel spin={null} latest={null} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
-      {@render cell('idle: blurred, nothing landed yet', d3)}
+      {#snippet d10()}<Reel spin={null} latest={FEW_LANDED} {catalog} order={FEW} landings={[FEW_LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
+      {@render cell('the end of a round: three tiles left, a small cylinder', d10)}
+      {#snippet d3()}<Reel spin={null} latest={null} {catalog} order={ORDER} landings={[]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
+      {@render cell('idle: nothing landed yet, on the first tile, sharp (as the projector)', d3)}
     </div>
   {:else}
-    <p class="ds-gallery__note">The phone's drum is on <a href="?density=phone">the phone page</a>; the projector's is the show page's (apps/show/engine › wheel/drum.ts), already one transform per card round a radius from the card count.</p>
+    <p class="ds-gallery__note">The phone's drum is on <a href="?density=phone">the phone page</a>; the projector's is the show page's (apps/show/engine › wheel/drum.ts). Both turn by packages/rules/drum-solver.ts.</p>
   {/if}
 </section>

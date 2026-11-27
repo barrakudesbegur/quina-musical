@@ -10,6 +10,10 @@
 //   phase, the raw Heat, claims' outcome/warnings/completeSince, a Check's steps, winners' names and notes,
 //   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
 //   the cloud's).
+// The drum's public seeds (D237), as the cloud projects them: a Spin's `spinSeed` from its `transition.scheduled` (never
+// while a Suspense is held), and a round's `drumSeed` where this projector is given it (`seedRound`, `setDrumSeed`: the
+// demos). The relay sends the engine's journal (where `drumSeed` lives) to the cloud link only, and the engine's state
+// doesn't carry it, so a relay feed has no drumSeed: the phone then orders the drum by the round's number (logic/drum.ts).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { DEFAULT_SIDE, PROTOCOL_VERSION, defaultCardType, isRoundKind, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
@@ -42,6 +46,8 @@ interface RoundLog {
   lineConfirmed: boolean;
   /** position → landing, counted landings only. */
   landings: Map<number, PublicLanding>;
+  /** The drum's public order seed, when known (D237). */
+  drumSeed?: number;
 }
 
 /** The round being introduced, as newer engines send it (`state.intro`); older ones don't. */
@@ -55,6 +61,8 @@ export class PublicProjector {
   private state: ShowState | null = null;
   private readonly rounds = new Map<number, RoundLog>();
   private readonly spinStarts = new Map<string, number>();
+  /** Each Spin's public seed (D237), from its `transition.scheduled`. */
+  private readonly spinSeeds = new Map<string, number>();
   private readonly heat: HeatSmoother;
 
   constructor(random: () => number = Math.random) {
@@ -68,8 +76,11 @@ export class PublicProjector {
         this.ingestState(event, nowMs);
         break;
       case 'transition.scheduled':
+        // Only the Spin's public timing and seed; never `to` or `drum`.
+        this.noteSpin(event.id, event.spinStartAtMs);
+        if (Number.isInteger(event.spinSeed)) this.spinSeeds.set(event.id, event.spinSeed);
+        break;
       case 'suspense.started':
-        // Only the Spin's public timing; never `to` or `drum`.
         this.noteSpin(event.id, event.spinStartAtMs);
         break;
       case 'transition.landed':
@@ -87,10 +98,16 @@ export class PublicProjector {
    * Seed an earlier round the projector never saw (the demo's history). Live feeds don't need it: they log
    * every round from the moment they connect.
    */
-  seedRound(number: number, kind: RoundKind, startedAtMs: number, lineConfirmed: boolean, landings: readonly PublicLanding[], cardType = defaultCardType(kind), side = DEFAULT_SIDE): void {
-    const log: RoundLog = { number, kind, cardType, side, startedAtMs, lineConfirmed, landings: new Map() };
+  seedRound(number: number, kind: RoundKind, startedAtMs: number, lineConfirmed: boolean, landings: readonly PublicLanding[], cardType = defaultCardType(kind), side = DEFAULT_SIDE, drumSeed?: number): void {
+    const log: RoundLog = { number, kind, cardType, side, startedAtMs, lineConfirmed, landings: new Map(), ...(drumSeed !== undefined ? { drumSeed } : {}) };
     for (const l of landings) log.landings.set(l.position, landing(l.position, l.songId, l.atMs));
     this.rounds.set(number, log);
+  }
+
+  /** A round's public drum seed (D237), as the engine journals it with `round.started` (the demos give it here). */
+  setDrumSeed(round: number, drumSeed: number): void {
+    const log = this.rounds.get(round);
+    if (log) log.drumSeed = drumSeed;
   }
 
   /** The public state for now. */
@@ -179,12 +196,16 @@ export class PublicProjector {
     if (!exact && this.spinStarts.has(id)) return;
     this.spinStarts.set(id, atMs);
     while (this.spinStarts.size > SPIN_MEMORY) this.spinStarts.delete(this.spinStarts.keys().next().value as string);
+    while (this.spinSeeds.size > SPIN_MEMORY) this.spinSeeds.delete(this.spinSeeds.keys().next().value as string);
   }
 
   private projectSpin(s: ShowState | null, nowMs: number): PublicSpin | null {
     if (!s) return null;
     if (s.suspense) return { startAtMs: this.spinStarts.get(s.suspense.id) ?? nowMs, landAtMs: null };
-    if (s.transition) return { startAtMs: this.spinStarts.get(s.transition.id) ?? nowMs, landAtMs: s.transition.landAtMs };
+    if (s.transition) {
+      const spinSeed = this.spinSeeds.get(s.transition.id);
+      return { startAtMs: this.spinStarts.get(s.transition.id) ?? nowMs, landAtMs: s.transition.landAtMs, ...(spinSeed !== undefined ? { spinSeed } : {}) };
+    }
     return null;
   }
 
@@ -206,6 +227,7 @@ function projectRound(log: RoundLog, currentNumber: number | null, flow: FlowFie
     kind: log.kind,
     cardType: log.cardType,
     side: log.side,
+    ...(log.drumSeed !== undefined ? { drumSeed: log.drumSeed } : {}),
     startedAtMs: log.startedAtMs,
     lineConfirmed: log.lineConfirmed || won('line') || won('bingo'),
     ended,

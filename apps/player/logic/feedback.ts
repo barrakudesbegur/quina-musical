@@ -1,13 +1,13 @@
 // Interface feedback from one public update to the next: which blip to play, which kernels drop in, which cards
 // fall or stand up. Pure. Sound map (packages/ui/ANIMATIONS.md): landing pop, mark "tock" (once, not per card),
-// a soft near-win chime (only when a card first gets a highlighted song, after none), the Desgraciat's fall
+// the Desgraciat's fall
 // "bloop" (once per landing however many cards fall), the tap blip as the Desgraciat round stands everyone up,
 // celebration blip; never more than one at a time, so the most important cue wins.
 
-export type Cue = 'celebrate' | 'nearWin' | 'fall' | 'mark' | 'standUp' | 'landing';
+export type Cue = 'celebrate' | 'fall' | 'mark' | 'standUp' | 'landing';
 
 /** Most important first: only the first cue of an update plays. */
-export const CUE_PRIORITY: readonly Cue[] = ['celebrate', 'nearWin', 'fall', 'mark', 'standUp', 'landing'];
+export const CUE_PRIORITY: readonly Cue[] = ['celebrate', 'fall', 'mark', 'standUp', 'landing'];
 
 export interface FeedbackSnapshot {
   /** The current round's number (a new round starts quiet). */
@@ -16,8 +16,6 @@ export interface FeedbackSnapshot {
   landings: number;
   /** "cardId:songId" of every marked cell. */
   marks: readonly string[];
-  /** The near-win highlights ("cardId:songId"). */
-  near: readonly string[];
   /** The Celebration on screen, or null. */
   celebration: string | null;
   /** The current round is the Desgraciat one. */
@@ -62,7 +60,6 @@ export function feedbackFor(prev: FeedbackSnapshot | null, next: FeedbackSnapsho
     .map(([cardId]) => cardId);
   const cues = new Set<Cue>();
   if (next.celebration && next.celebration !== prev.celebration) cues.add('celebrate');
-  if (prev.near.length === 0 && next.near.length > 0) cues.add('nearWin');
   if (freshFalls.length) cues.add('fall');
   // In the Desgraciat round a ✗ on a card that already sat down makes no sound: that card already fell.
   if (freshMarks.length && !next.desgraciat) cues.add('mark');
@@ -70,13 +67,11 @@ export function feedbackFor(prev: FeedbackSnapshot | null, next: FeedbackSnapsho
   return { cue: CUE_PRIORITY.find((c) => cues.has(c)) ?? null, freshMarks, freshFalls, standUp: false };
 }
 
-/** The phone's vibration for an update (Android only; nothing depends on it): a fall or a near-win keep their own
- *  pattern; otherwise a landing that marks one of the phone's cards buzzes as your song lands (§8 Y1). Never in the
+/** The phone's vibration for an update (Android only; nothing depends on it): a fall keeps its own pattern; otherwise a landing that marks one of the phone's cards buzzes as your song lands (§8 Y1). Never in the
  *  Desgraciat round's ✗s (the fall already says it). */
-export type Buzz = 'fall' | 'nearWin' | 'yourSong';
+export type Buzz = 'fall' | 'yourSong';
 
 export function buzzFor(f: Pick<Feedback, 'cue' | 'freshMarks'>, desgraciat: boolean): Buzz | null {
   if (f.cue === 'fall') return 'fall';
-  if (f.cue === 'nearWin') return 'nearWin';
   return f.freshMarks.length && !desgraciat ? 'yourSong' : null;
 }

@@ -79,11 +79,10 @@ test('each comet falls from above the top to below the bottom, at a random place
   }
 });
 
-test('the phone vibrates as your song lands (§8 Y1); a fall or a near-win keep their own pattern', async () => {
+test('the phone vibrates as your song lands (§8 Y1); a fall keeps its own pattern', async () => {
   const { buzzFor } = await import('../../../../player/logic/feedback.ts');
   assert.equal(buzzFor({ cue: 'mark', freshMarks: ['57:12'] }, false), 'yourSong');
   assert.equal(buzzFor({ cue: 'landing', freshMarks: [] }, false), null, 'a song that is not yours: still');
-  assert.equal(buzzFor({ cue: 'nearWin', freshMarks: ['57:12'] }, false), 'nearWin');
   assert.equal(buzzFor({ cue: 'fall', freshMarks: ['57:12'] }, true), 'fall');
   assert.equal(buzzFor({ cue: null, freshMarks: ['57:12'] }, true), null, 'a ✗ on a seated card in the Desgraciat round');
   assert.equal(buzzFor({ cue: null, freshMarks: [] }, false), null, 'opening the app: quiet');

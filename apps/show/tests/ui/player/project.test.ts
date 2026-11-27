@@ -174,6 +174,31 @@ test('the Spin carries only its timing; the exact start comes from the Spin even
   assert.equal(withEvent.spin?.startAtMs, NOW - 3000);
 });
 
+test("the drum's public seeds (D237), as the cloud projects them: a Spin's spinSeed from its scheduling, a round's drumSeed", () => {
+  const scheduled = (spinSeed: number | undefined) => ({
+    v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 'tr-secret', reqId: null, from: 7, to: SECRET.target, position: 17, phase: 'final',
+    recipe: 'R7', recipeName: 'x', exit: null, shape: 'S1', spinStartAtMs: NOW - 2000, exitAtMs: NOW, landAtMs: NOW + 5000, durationMs: 7000,
+    hookId: 'h', bpm: 120, drum: { removeId: null, targetId: SECRET.drumTarget, minLaps: 1 }, ...(spinSeed !== undefined ? { spinSeed } : {}),
+  }) as unknown as IncomingEvent;
+  assert.deepEqual(projected([scheduled(4_294_967_295)]).spin, { startAtMs: NOW - 2000, landAtMs: NOW + 5000, spinSeed: 4_294_967_295 });
+  assert.deepEqual(projected([scheduled(0)]).spin?.spinSeed, 0);
+  assert.ok(!('spinSeed' in (projected([scheduled(undefined)]).spin ?? {})), 'an older engine: none');
+  // A held Suspense has no landing, so no seed.
+  const p = new PublicProjector(() => 0.5);
+  p.ingest(scheduled(9), NOW);
+  p.ingest({ ...secretState(), transition: null, suspense: { id: 'tr-secret' } } as unknown as ShowState, NOW);
+  assert.ok(!('spinSeed' in (p.project(ctx).spin ?? {})));
+  // drumSeed: where the projector is given it (the demos); the relay's engine state has none.
+  const q = new PublicProjector(() => 0.5);
+  q.seedRound(1, 'normal', NOW - 60_000, false, [], 'normal', 1, 77);
+  q.ingest(secretState(), NOW);
+  const n = secretState().round.number;
+  assert.equal(q.project(ctx).rounds.find((r) => r.number === 1)?.drumSeed, 77);
+  assert.ok(!('drumSeed' in (q.project(ctx).rounds.find((r) => r.number === n) ?? {})));
+  q.setDrumSeed(n, 5);
+  assert.equal(q.project(ctx).rounds.find((r) => r.number === n)?.drumSeed, 5);
+});
+
 test("the phones see a Check's result only from its cue: pending while revealing, under review and at the cue", () => {
   const resultOf = (name: string) => {
     const p = new PublicProjector(() => 0.5);

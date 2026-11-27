@@ -19,7 +19,7 @@
 }
 
 :where([data-density='phone'] .card-cell) {
-  --cell-ring-w: 3px;
+  /* the ring keeps the design system's 4 px (27 Nov, §8 Y1: the playing song's ring as in the design system) */
   --cell-radius: calc(var(--radius-md) - 3px); /* the cover, concentric with the cell */
   --cell-line: 2.5px;
 }
@@ -76,22 +76,33 @@
   --palette-solid: var(--color-danger);
 }
 
-/* ---- the ring: one rect round the cover, dashes divided evenly (pathLength 100) -------------------------------- */
+/* ---- the ring: one rect round the cover, dashes divided evenly (pathLength 100) --------------------------------
+   The svg's box holds the whole stroke (27 Nov, §8 Y1): a stroke centred on the box's edge lost its outer half to the
+   box at the top and left on the phone. */
 .card-cell__ring {
   position: absolute;
   z-index: 1;
-  inset: calc(-0.5 * var(--cell-ring-w) - var(--cell-ring-gap));
-  width: calc(100% + var(--cell-ring-w) + 2 * var(--cell-ring-gap));
-  height: calc(100% + var(--cell-ring-w) + 2 * var(--cell-ring-gap));
+  inset: calc(-1 * var(--cell-ring-w) - var(--cell-ring-gap));
+  width: calc(100% + 2 * var(--cell-ring-w) + 2 * var(--cell-ring-gap));
+  height: calc(100% + 2 * var(--cell-ring-w) + 2 * var(--cell-ring-gap));
   overflow: visible;
   pointer-events: none;
 }
 
 .card-cell__ring rect {
+  x: calc(var(--cell-ring-w) / 2);
+  y: calc(var(--cell-ring-w) / 2);
+  width: calc(100% - var(--cell-ring-w));
+  height: calc(100% - var(--cell-ring-w));
   fill: none;
   stroke: var(--palette-solid);
   stroke-width: var(--cell-ring-w);
   rx: calc(var(--cell-radius) + var(--cell-ring-gap) + var(--cell-ring-w) / 2);
+}
+
+/* Slightly see-through (the phone's song playing now). */
+.card-cell[data-ring-translucent] .card-cell__ring {
+  opacity: 0.85;
 }
 
 .card-cell:not([data-ring-style]) .card-cell__ring {
@@ -207,17 +218,3 @@
   transition: opacity var(--dur-stamp, 300ms) var(--ease-out);
 }
 
-/* ---- the near-win tint (the phone, R2-Q32): the card's colour washed over the cell, a dashed ink outline ------- */
-.card-cell[data-tint] {
-  outline: var(--line-width) dashed var(--color-line);
-  outline-offset: -1px;
-}
-
-.card-cell[data-tint]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--card-color) 42%, transparent);
-  opacity: 0.55;
-}

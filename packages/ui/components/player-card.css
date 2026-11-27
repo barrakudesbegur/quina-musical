@@ -33,6 +33,52 @@
   background: var(--color-gold);
 }
 
+/* The attention look (27 Nov, §8 Y1; ANIMATIONS.md \`card-playing\`): the card holds the song playing now. The count
+   keeps its number, in an orange pill with white figures, ringed by CardCell's dashes (3 px, one gap out), running. */
+.player-card__count[data-color] {
+  position: relative;
+  background: var(--palette-solid);
+  color: var(--color-white);
+  -webkit-text-stroke: var(--title-stroke-sm, 0) var(--color-line);
+  paint-order: stroke fill;
+}
+
+.player-card__count-ring {
+  --count-ring-w: 3px;
+  --count-ring-gap: 3px;
+  position: absolute;
+  inset: calc(-1 * (var(--line-width) + var(--count-ring-gap) + var(--count-ring-w)));
+  width: calc(100% + 2 * (var(--line-width) + var(--count-ring-gap) + var(--count-ring-w)));
+  height: calc(100% + 2 * (var(--line-width) + var(--count-ring-gap) + var(--count-ring-w)));
+  overflow: visible;
+  pointer-events: none;
+}
+
+.player-card__count-ring rect {
+  x: calc(var(--count-ring-w) / 2);
+  y: calc(var(--count-ring-w) / 2);
+  width: calc(100% - var(--count-ring-w));
+  height: calc(100% - var(--count-ring-w));
+  rx: calc(1rem + var(--line-width) + var(--count-ring-gap) + var(--count-ring-w) / 2);
+  fill: none;
+  stroke: var(--palette-solid, var(--color-orange));
+  stroke-width: var(--count-ring-w);
+  stroke-dasharray: 6 4;
+}
+
+/* In step with the cell's ring (\`cell-playing\`: one dash period per 1.6 s); still under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-motion='full']) .player-card__count-ring[data-ring-style='running'] rect {
+    animation: player-card-count-run var(--dur-cell-run, 1.6s) linear infinite;
+  }
+}
+
+@keyframes player-card-count-run {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
 .player-card__count .icon {
   width: 1.5rem;
   height: 1.5rem;

@@ -1,8 +1,8 @@
 <!--
   D2 · CardCell: one of a card's songs as a list item, the cover with its title (components-v2.md § 5). Its look is
   generic (card-cell.ts › CellLook, named by what it draws): how the cover shows, a ring round it (`running`: the
-  playing song's dashes go round), a centred badge (✓, ✗, play: #75, #76), a tag on its bottom edge («SEGÜENT», «+2»),
-  the card colour's tint. A state's look comes from CardGrid's looks table (card-looks.ts), spread in:
+  playing song's dashes go round; its glow; slightly see-through), a centred badge (✓, ✗, play: #75, #76), a tag on its
+  bottom edge («SEGÜENT», «+2»). A state's look comes from CardGrid's looks table (card-looks.ts), spread in:
   `<CardCell {songId} {title} {...cellLook('landed')} />`. The projector builds the same parts (CellParts).
 
   Slots: the cover (data: `songId`), `title` (data; R9: two lines, hyphenated in `lang`), and `children`: a mark drawn
@@ -40,18 +40,18 @@
     ring = null,
     ringStyle,
     glow,
+    ringTranslucent,
     badge = null,
     badgeColor = 'green',
     badgeStyle = 'solid',
     tag = null,
     tagColor = 'orange',
-    tint,
     class: className = '',
     children,
     ...rest
   }: Props = $props();
 
-  const data = $derived(cellData({ cover, ring, ringStyle, glow, tint }));
+  const data = $derived(cellData({ cover, ring, ringStyle, glow, ringTranslucent }));
 </script>
 
 <li
@@ -60,7 +60,7 @@
   data-cover={data.cover}
   data-ring-style={data.ringStyle}
   data-glow={data.glow}
-  data-tint={data.tint}
+  data-ring-translucent={data.ringTranslucent}
   aria-label={label}
 >
   <span class="card-cell__art">

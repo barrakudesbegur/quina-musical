@@ -8,7 +8,9 @@
   `name`, `number`, `showNumber`, `compact` (the header band alone, a resting row), `glow` (gold: your song, a win or
   a card just saved; green: a card standing), `sunk` (the seated look: lowered, tilted, veiled), and the header's count
   pill: `showRemaining` with `remaining` (the songs the card still needs; at 0 a rosette, «complete: claim it», #72)
-  and `remainingLabel` (its accessible words). Slots: `mark` (the card's mark, data drawn by the app), `status` (the
+  and `remainingLabel` (its accessible words), `countColor` (the pill's fill: paper, or orange with white figures) and
+  `countRing` (`running`: CardCell's dashes run round the pill; 27 Nov, §8 Y1: the card holding the song playing now
+  keeps its count and gets attention). Slots: `mark` (the card's mark, data drawn by the app), `status` (the
   header's DEMPEUS / ASSEGUT pill, modelled like the count: #73, compact too), `perched` (the sitting nino on the
   header), `children` (the grid). Native attributes pass through to the root (the app's motion hooks).
 -->
@@ -30,6 +32,10 @@
     showRemaining?: boolean;
     remaining?: number | null;
     remainingLabel?: string;
+    /** The count pill's fill. */
+    countColor?: 'paper' | 'orange';
+    /** A ring round the count pill: `running`, CardCell's orange dashes going round. */
+    countRing?: 'running' | null;
     /** The header's title element (h3 in a list of cards). */
     headingLevel?: 2 | 3 | 4;
     class?: string;
@@ -50,6 +56,8 @@
     showRemaining = false,
     remaining = null,
     remainingLabel,
+    countColor = 'paper',
+    countRing = null,
     headingLevel = 3,
     class: className = '',
     mark,
@@ -77,9 +85,10 @@
         <span
           class="player-card__count"
           data-done={remaining === 0 || undefined}
+          data-color={countColor === 'paper' ? undefined : countColor}
           role="img"
           aria-label={remainingLabel ?? String(remaining)}
-        >{#if remaining === 0}<Icon name="rosette" alone />{:else}{remaining}{/if}</span>
+        >{#if remaining === 0}<Icon name="rosette" alone />{:else}{remaining}{/if}{#if countRing}<svg class="player-card__count-ring" data-ring-style={countRing} aria-hidden="true" focusable="false"><rect x="0" y="0" width="100%" height="100%" pathLength="100" /></svg>{/if}</span>
       {/if}
     </header>
     {#if !compact}{@render children?.()}{/if}

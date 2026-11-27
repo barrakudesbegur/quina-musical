@@ -68,7 +68,7 @@
   margin-bottom: max(0px, calc(var(--ara-full) - var(--reel-strip-height, 5.125rem)));
 }
 
-.ara[data-drum] > .ara__top .drum,
+.ara[data-drum] > .ara__top .drum-box,
 .ara[data-drum] > .ara__top .reel::before {
   pointer-events: auto;
 }

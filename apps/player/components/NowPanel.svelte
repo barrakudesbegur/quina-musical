@@ -3,10 +3,11 @@
   // now (Historial, right under it, lists the rest). `compact` shrinks the drum to a strip, so the player's cards
   // get the room; `stopped` freezes it while the phone is offline. (The Heat garland hangs across the top of every
   // screen: App.svelte.)
+  import { DEFAULT_SIDE, defaultCardType } from '../feed/public.ts';
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { historyOf, plannedStarts, prizeRounds, roundNameOf } from '../logic/view.ts';
-  import { drumSongs } from '../logic/reel.ts';
+  import { plannedStarts, prizeRounds, roundNameOf } from '../logic/view.ts';
+  import { roundOrder, roundSongs } from '../logic/drum.ts';
   import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
   import { ninoUrl } from '../../../packages/ui/ninos.ts';
   import SponsorList from '../../../packages/ui/components/SponsorList.svelte';
@@ -44,9 +45,11 @@
   const shuffle = $derived(app.state?.shuffle ?? null);
   const shuffling = $derived(shuffle !== null && app.cloudNow < shuffle.endAtMs);
   const HOUR = 60 * 60_000;
-  // The drum's tiles: this round's songs still to come, never a landed one (logic/reel.ts drumSongs).
-  const history = $derived(historyOf(app.state));
-  const drum = $derived(drumSongs(app.catalog?.songs.keys() ?? [], new Set(history?.landings.map((l) => l.songId) ?? []), history?.round ?? 0));
+  // The drum (§8 Y1, D237): the projector's tiles in the projector's order, the round's songs (those printed on its card
+  // type's side) in drumOrder from its public drumSeed (logic/drum.ts).
+  const round = $derived(app.round);
+  const songs = $derived(round ? roundSongs(app.catalog, round.cardType ?? defaultCardType(round.kind), round.side ?? DEFAULT_SIDE) : []);
+  const order = $derived(round ? roundOrder(songs, round.drumSeed, round.number) : []);
   const sponsors = $derived((app.plan?.sponsors ?? []).map((s) => ({ name: s.name, logo: s.logo })));
   const nextNumber = $derived(app.state?.interval?.nextRound ?? null);
   const nextName = $derived(nextNumber === null ? '' : roundNameOf(nextNumber, app.state, app.plan));
@@ -123,7 +126,8 @@
       spin={app.state?.spin ?? null}
       latest={app.latest}
       catalog={app.catalog}
-      songs={drum}
+      {order}
+      landings={round?.landings ?? []}
       nowMs={app.cloudNow}
       clockOffsetMs={app.cloudNow - app.localNow}
       reduced={app.reducedMotion}
@@ -131,7 +135,6 @@
       {stopped}
       {marks}
       {onpick}
-      ontick={() => app.blip('tick')}
     />
   {/if}
 </section>

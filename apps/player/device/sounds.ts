@@ -15,8 +15,9 @@ import type { TouchSounds } from '../../../packages/ui/sounds/touch.ts';
 import type { TouchClass, TouchVariant } from '../../../packages/ui/sounds/types.ts';
 import spriteUrl from '../../../packages/ui/sounds/player.mp3?url';
 
-/** The game cues ("cue" is the Shuffle's and the stand-up's blip; "tick" the reel's; "added" a card saved on the pad). */
-export type Blip = Cue | 'cue' | 'tick' | 'added';
+/** The game cues ("cue" is the Shuffle's and the stand-up's blip; "added" a card saved on the pad). The drum is silent
+ * (§8 Y4: the PA plays its clicks). */
+export type Blip = Cue | 'cue' | 'added';
 
 /** A note: frequency (Hz), start and length (s) within the blip, waveform, and the pitch it slides to (a glide). */
 type Note = [freq: number, at: number, len: number, wave?: OscillatorType, glideTo?: number];
@@ -27,7 +28,6 @@ const BLIPS: Record<Blip, Note[]> = {
   cue: CUE,
   /** The Desgraciat round stands everyone up: the cue blip, once. */
   standUp: CUE,
-  tick: [[1400, 0, 0.012, 'square']],
   landing: [
     [520, 0, 0.05],
     [780, 0.04, 0.08],
@@ -37,10 +37,6 @@ const BLIPS: Record<Blip, Note[]> = {
   added: [
     [784, 0, 0.07],
     [1175, 0.07, 0.11],
-  ],
-  nearWin: [
-    [660, 0, 0.08],
-    [990, 0.09, 0.1],
   ],
   /** The Desgraciat's fall: a short descending two-note "bloop", each note sagging a little (180 ms in all). */
   fall: [
@@ -124,7 +120,7 @@ export class Sounds implements TouchSounds {
     if (!this.enabled || this.laptop || !ctx || ctx.state !== 'running') return;
     if (typeof document !== 'undefined' && document.hidden) return;
     const now = ctx.currentTime;
-    // One at a time: a tick may be dropped, anything else waits for nothing and is simply skipped.
+    // One at a time: a cue that comes while one plays is simply skipped.
     if (now < this.busyUntil) return;
     const notes = BLIPS[blip];
     let end = now;

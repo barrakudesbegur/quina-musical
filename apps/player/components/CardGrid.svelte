@@ -1,9 +1,9 @@
 <script lang="ts">
   // A card as printed: 3 lines of 4 songs, with the card's own mark on each marked song (corn for the first card).
   // A completed Line shows only plain marks (no glow, no row highlight). A marked song's cover and title fade a little,
-  // so the songs still to come stand out (#70). The near-win cue: a song that is all the card is missing for a Line or
-  // the Quina is gently highlighted in the card's colour (ANIMATIONS.md `near-win`). The song playing now, when it's on
-  // the card, is marked as the player's and its dashed orange ring runs round it (`cell-playing`, #74).
+  // so the songs still to come stand out (#70). The song playing now, when it's on the card, is marked as the player's,
+  // very clearly (§8 Y1): its cover at full strength with no veil, the design system's running orange ring, slightly
+  // see-through, and its glow (`cell-playing`, #74). (The near-win highlight is gone: §8 Y1.)
   // In the Desgraciat round (`crosses`) a landed song gets a red ✗ over a red-tinted cover instead of a mark: on
   // every screen a ✗ marks the song that sank the card. A fresh one stamps on (scale 2 → 1 at −12°).
   // Each cell is the design system's CardCell; its look comes from CardGrid's looks table (card-looks.ts).
@@ -21,7 +21,6 @@
     marks,
     catalog,
     fresh,
-    near = new Set(),
     stagger = 0,
     crosses = false,
     playing = null,
@@ -31,7 +30,6 @@
     marks: CardMarks | null;
     catalog: Catalog | null;
     fresh: ReadonlySet<string>;
-    near?: ReadonlySet<number>;
     stagger?: number;
     /** The Desgraciat round: landed songs get a ✗, not the card's mark. */
     crosses?: boolean;
@@ -45,21 +43,19 @@
     {#each line as songId, si (songId)}
       {@const marked = Boolean(marks?.marked[li]?.[si])}
       {@const title = songTitle(catalog, songId)}
-      {@const isNear = !marked && near.has(songId)}
       {@const isPlaying = marked && playing === songId}
       <CardCell
-        class="card-grid__cell{marked ? ' is-marked' : ''}{marked && crosses ? ' is-crossed' : ''}{isNear ? ' is-near' : ''}"
+        class="card-grid__cell{marked ? ' is-marked' : ''}{marked && crosses ? ' is-crossed' : ''}"
         {songId}
         {title}
         label={S.cell(title, marked, isPlaying)}
         coverFallback="empty"
-        {...cellLook(marked ? (crosses ? 'crossed' : 'marked') : isNear ? 'near' : 'empty', { playing: isPlaying })}
+        {...cellLook(marked ? (crosses ? 'crossed' : 'marked') : 'empty', { playing: isPlaying })}
         data-testid="card-cell"
         data-song-id={songId}
         data-marked={marked ? 'true' : 'false'}
-        data-state={marked ? 'marked' : isNear ? 'near' : 'empty'}
+        data-state={marked ? 'marked' : 'empty'}
         data-playing={isPlaying ? 'true' : undefined}
-        data-anim={isNear ? 'near-win' : undefined}
         data-line={li}
       >
         {#if marked && crosses}

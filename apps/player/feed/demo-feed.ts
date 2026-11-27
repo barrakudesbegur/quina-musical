@@ -3,7 +3,7 @@
 // the show page, the relay or the cloud. A player demo picks a fixture and may add landings, patch the engine
 // state, cut the laptop link, drop the feed, post Admin's notice, keep landing songs (`live`) or publish another plan.
 // Fixture names that aren't player demos run as they are; unknown names fall back to `play`.
-import { PROTOCOL_VERSION, type LandingInfo, type ShowState } from '@quina/protocol';
+import { PROTOCOL_VERSION, type EventOf, type LandingInfo, type ShowState } from '@quina/protocol';
 import { DESGRACIAT_LANDED, FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN } from '../../../packages/ui/fixtures/plan.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
@@ -133,6 +133,18 @@ const SPIN_MS = 6000;
 const BETWEEN_MS = 4000;
 const SLOT_MS = 14_000;
 
+/** A demo round's public drum seed (D237), as the engine would journal it: fixed per round, so a demo replays. */
+const demoDrumSeed = (round: number): number => Math.imul(0x9e3779b9, round + 1) >>> 0;
+
+/** A Spin as the engine schedules it, for its public timing and seed (the projection keeps only those). */
+function scheduled(id: string, to: number, position: number, spinStartAtMs: number, landAtMs: number, phase: ShowState['phase']): EventOf<'transition.scheduled'> {
+  return {
+    v: PROTOCOL_VERSION, type: 'transition.scheduled', id, reqId: null, from: null, to, position, phase, recipe: 'R1', recipeName: 'demo',
+    exit: null, shape: 'S1', spinStartAtMs, exitAtMs: landAtMs, landAtMs, durationMs: landAtMs - spinStartAtMs, hookId: 'h1', bpm: null,
+    drum: { removeId: null, targetId: to, minLaps: 1 }, spinSeed: Math.imul(0x85ebca6b, position + 7) >>> 0,
+  };
+}
+
 const songRef = (songId: number) => ({ songId, title: FIXTURE_SONGS[songId]?.[0] ?? `Cançó ${songId}`, artist: FIXTURE_SONGS[songId]?.[1] ?? '' });
 
 /** The fixtures' stories: Quina 3's, and the Desgraciat round's (Quina 5). */
@@ -196,14 +208,19 @@ export class DemoFeed implements PlayerFeed {
     const n = state.round.number;
     for (let r = 1; r < n; r++) {
       const count = 49 + ((r * 3) % 7);
-      this.core.projector.seedRound(r, 'normal', now - (n - r + 1) * 30 * 60_000, true, pastRound(r, count, now - (n - r) * 30 * 60_000));
+      this.core.projector.seedRound(r, 'normal', now - (n - r + 1) * 30 * 60_000, true, pastRound(r, count, now - (n - r) * 30 * 60_000), undefined, undefined, demoDrumSeed(r));
     }
     const landed = new Set([...state.landings.map((l) => l.songId), ...(state.transition ? [state.transition.to] : [])]);
     this.upcoming = [...(this.demo.liveFirst ?? LIVE_FIRST), ...Array.from({ length: 77 }, (_, i) => i + 1)].filter((id, i, all) => !landed.has(id) && all.indexOf(id) === i);
     this.later(50, () => {
       this.online = true;
       this.core.setOnline(true);
+      // The fixture's running Spin, scheduled as it is first seen (its public seed).
+      const t = this.engine?.transition;
+      if (t && this.engine) this.core.projector.ingest(scheduled(t.id, t.to, this.engine.queue.position + 1, Date.now(), t.landAtMs, this.engine.phase), Date.now());
       this.ingestState();
+      if (this.engine) this.core.projector.setDrumSeed(this.engine.round.number, demoDrumSeed(this.engine.round.number));
+      this.publish();
       if (this.demo.live) this.continueLive();
     });
     const drop = this.demo.dropFeed;
@@ -273,6 +290,7 @@ export class DemoFeed implements PlayerFeed {
     const landAtMs = Date.now() + SPIN_MS;
     // The target sits in the engine's private field, as in a real show; the projection never reads it.
     this.engine = { ...this.engine, status: 'transition', autoAtMs: null, transition: { id, recipe: 'R1', phase: this.engine.phase, to: songId, landAtMs } };
+    this.core.projector.ingest(scheduled(id, songId, this.engine.queue.position + 1, Date.now(), landAtMs, this.engine.phase), Date.now());
     this.ingestState();
     this.later(SPIN_MS, () => this.land(songId, id));
   }

@@ -9,11 +9,10 @@ import { buzz } from '../../packages/ui/sounds/delegate.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { InstallState } from './device/install.svelte.ts';
 import { vibrate } from './device/screen.ts';
-import type { Blip, Sounds } from './device/sounds.ts';
+import type { Sounds } from './device/sounds.ts';
 import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
 import type { PublicHeat, PublicState } from './feed/public.ts';
 import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
-import { nearKeys } from './logic/near-win.ts';
 import { buzzFor, feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
 import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
 import type { Route } from './logic/router.ts';
@@ -122,8 +121,6 @@ export class PlayerApp {
   restingViews = $derived(this.views.filter((v) => !v.valid));
   /** Every song on the cards that play this round. */
   playingSongs = $derived(songsOnCards(this.playingViews));
-  /** The near-win highlights on the playing cards ("cardId:songId"). */
-  near = $derived(nearKeys(this.playingViews.map((v) => ({ cardId: v.saved.id, near: v.near }))));
   araView = $derived(araViewFor({ session: this.araSession, saved: this.data.araView, cardCount: this.data.cards.length }));
   celebration = $derived(celebrationOf(this.state, this.data.cards.map((c) => c.id)));
   celebrationOpen = $derived(this.celebration !== null && !this.data.dismissed.includes(this.celebration.key));
@@ -363,11 +360,6 @@ export class PlayerApp {
     this.reducedMotion = reduced;
   }
 
-  /** A game cue's blip (the reel's ticks). Touch sounds come from packages/ui/sounds/ (delegate.ts). */
-  blip(kind: Blip): void {
-    this.sounds.play(kind);
-  }
-
   // ---- internals ----------------------------------------------------------------------------------------
   /** A card was just added (or its link opened): the home screen with the cards, for this visit only. */
   private showCards(): void {
@@ -440,7 +432,7 @@ export class PlayerApp {
       this.standUpTimer = setTimeout(() => (this.standUp = false), PLAYER_CONFIG.freshMs);
     }
     const buzz = buzzFor({ cue, freshMarks }, next.desgraciat);
-    if (buzz) vibrate(buzz === 'fall' ? PLAYER_CONFIG.vibrateFall : buzz === 'nearWin' ? PLAYER_CONFIG.vibrateNearWin : PLAYER_CONFIG.vibrateYourSong);
+    if (buzz) vibrate(buzz === 'fall' ? PLAYER_CONFIG.vibrateFall : PLAYER_CONFIG.vibrateYourSong);
     if (!cue) return;
     this.sounds.play(cue);
   }
@@ -451,7 +443,6 @@ export class PlayerApp {
       round: this.round?.number ?? null,
       landings: this.round?.landings.length ?? 0,
       marks: markKeys(this.views),
-      near: this.near,
       celebration: this.celebration?.key ?? null,
       desgraciat: this.desgraciat,
       standing: standingIds(stands),

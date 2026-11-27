@@ -1,11 +1,10 @@
-// The pure rules behind the screens: the connection strip (offline, reconnecting, connected) and the pause, the reel
-// synced to the Spin, the feedback cues (one at a time), the near-win highlight, and the derived views (no winning
-// card numbers anywhere). The add-card pad's rules are in pad.test.ts.
+// The pure rules behind the screens: the connection strip (offline, reconnecting, connected) and the pause, the
+// feedback cues (one at a time), and the derived views (no winning card numbers anywhere). The add-card pad's rules are
+// in pad.test.ts; the drum's in drum.test.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
 import { feedbackFor, type FeedbackSnapshot } from '../../../../player/logic/feedback.ts';
-import { reelOffset, reelState } from '../../../../player/logic/reel.ts';
 import { NO_BANNER, connectionProblem, nextBanner, pauseOn, type BannerState, type StatusInput } from '../../../../player/logic/status.ts';
 import { addCard, emptyData } from '../../../../player/logic/storage.ts';
 import {
@@ -111,41 +110,11 @@ test('the technical pause is on with the presenters\' Pausa; the offline strip c
   assert.equal(connectionProblem(at({ state: both })), 'offline');
 });
 
-// ---- reel -------------------------------------------------------------------------------------------------
-test('the reel speeds up, slows down and stops exactly at landAtMs', () => {
-  const total = 6000;
-  const end = reelOffset(total, total);
-  assert.ok(reelOffset(100, total) < reelOffset(1000, total));
-  assert.ok(Math.abs(reelOffset(total - 1, total) - end) < 0.001, 'zero speed at the landing');
-  assert.equal(reelOffset(total + 5000, total), end);
-  // Monotone: it never runs backwards.
-  let prev = -1;
-  for (let t = 0; t <= total; t += 50) {
-    const o = reelOffset(t, total);
-    assert.ok(o >= prev);
-    prev = o;
-  }
-});
-
-test('reel phases: generic until the landing is public, never the song in advance', () => {
-  const spin = { startAtMs: T, landAtMs: T + 6000 };
-  const earlier = { position: 4, songId: 7, atMs: T - 10_000 };
-  assert.equal(reelState(null, null, T).phase, 'idle');
-  assert.equal(reelState(null, earlier, T).phase, 'landed');
-  assert.equal(reelState(spin, earlier, T + 1000).phase, 'spinning', 'the previous song is not shown while spinning');
-  assert.equal(reelState(spin, earlier, T + 6500).phase, 'stopped', 'stopped, waiting for the public landing');
-  assert.equal(reelState(spin, { position: 5, songId: 9, atMs: T + 6000 }, T + 6500).phase, 'landed');
-  const suspense = reelState({ startAtMs: T, landAtMs: null }, earlier, T + 2000);
-  assert.equal(suspense.phase, 'coasting');
-  assert.ok(suspense.offset > 0);
-});
-
 // ---- feedback ---------------------------------------------------------------------------------------------
 const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({
   round: 3,
   landings: 5,
   marks: [],
-  near: [],
   celebration: null,
   desgraciat: false,
   standing: [],
@@ -160,15 +129,10 @@ test('the first update and a new round are quiet', () => {
   assert.deepEqual(feedbackFor(snap(), snap({ round: 4, landings: 1, marks: ['1:2'] })), quiet);
 });
 
-test('one cue at a time, the most important: celebrate > near-win > mark > landing', () => {
+test('one cue at a time, the most important: celebrate > mark > landing', () => {
   assert.equal(feedbackFor(snap(), snap({ landings: 6 })).cue, 'landing');
   assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { ...quiet, cue: 'mark', freshMarks: ['1:3', '4:3'] });
-  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], near: ['1:9'] })).cue, 'nearWin');
-  assert.equal(feedbackFor(snap(), snap({ near: ['1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
-});
-
-test('the near-win chime only when a card first gets a highlighted song', () => {
-  assert.equal(feedbackFor(snap({ near: ['1:9'] }), snap({ near: ['1:9', '2:4'] })).cue, null);
+  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], celebration: 'celebration:3:line' })).cue, 'celebrate');
 });
 
 // ---- views ------------------------------------------------------------------------------------------------
@@ -194,8 +158,7 @@ test('card views: only the right kind plays; every landed song is marked; unknow
   assert.equal(views[2].card, null);
   assert.deepEqual(markKeys(views), ['123:2', '123:17', '123:41']);
   assert.deepEqual(markedIdentities(views).get(17), [1]);
-  assert.deepEqual([...views[0].near], [69], 'card 123 is 1 song from its first Line: that song is highlighted');
-  assert.deepEqual([...cardViews(saved, catalog, { ...round, lineConfirmed: true })[0].near], [], 'no Line highlight once a Line is confirmed');
+  assert.ok(!('near' in views[0]), 'no near-win highlight (§8 Y1)');
   const special = cardViews(saved, catalog, { ...round, kind: 'special' });
   assert.deepEqual(special.filter((v) => v.valid && v.card).map((v) => v.saved.id), [412]);
   assert.ok(cardViews(saved, catalog, null).every((v) => v.valid && v.marks === null), 'before any round: all shown, unmarked');
@@ -210,7 +173,6 @@ test("a side-2 round (D193: Quines 6–10): the phone shows and marks each norma
   const views = cardViews(saved, sided, round);
   assert.deepEqual(views[0].card?.lines[0], [71, 72, 73, 74], "card 123 shows its side 2's songs");
   assert.equal(views[0].marks?.count, 3, "only side 2's songs mark: «2» is on side 1");
-  assert.deepEqual([...views[0].near], [74], "1 song from side 2's first Line");
   assert.deepEqual(songsOnCards(views.filter((v) => v.valid)), new Set([71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]), "the your-song look: side 2's songs");
   assert.deepEqual(views.map((v) => [v.saved.id, v.valid]), [[123, true], [412, false], [999, true]]);
   assert.deepEqual(views[1].card?.lines[0], [1, 2, 3, 4], 'a one-sided card, resting, shows its one side');

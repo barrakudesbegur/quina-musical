@@ -6,8 +6,8 @@ import type { CellLook } from './card-cell.ts';
 
 /**
  * A song's state on a card.
- * - The phone: `empty`, `marked` (it landed: the card's mark, the cover and title a little faded, #70), `near` (all the
- *   card is missing for a Line or the Quina), `crossed` (the Desgraciat round: the landing that sank the card).
+ * - The phone: `empty`, `marked` (it landed: the card's mark, the cover and title a little faded, #70), `crossed` (the
+ *   Desgraciat round: the landing that sank the card). (No `near` any more: 27 Nov, §8 Y1.)
  * - The Check (console and projector): `idle` (a Line's other rows), `pending` (no hint: still to reveal, as the room
  *   sees it), `upcomingOk` / `upcomingFail` (the console only: still to reveal, its private mark known, D108),
  *   `playing` (its snippet plays now), `landed` ✓, `missed` ✗, `skipped` (after the reveals stop).
@@ -15,7 +15,6 @@ import type { CellLook } from './card-cell.ts';
 export type CellState =
   | 'empty'
   | 'marked'
-  | 'near'
   | 'crossed'
   | 'idle'
   | 'pending'
@@ -29,7 +28,6 @@ export type CellState =
 export const CELL_LOOKS = {
   empty: {},
   marked: { cover: 'played' },
-  near: { tint: true },
   crossed: { cover: 'played' },
   // The surface fades the whole cell or row that doesn't count (the console's cell, the projector's row): nothing more.
   idle: {},
@@ -45,9 +43,10 @@ export const CELL_LOOKS = {
   skipped: { cover: 'faded' },
 } as const satisfies Record<CellState, CellLook>;
 
-/** What changes on top of a state while the cell's song is playing on the phone: the running ring, and the cover at
- * full strength (it's the song of the moment). The card's mark keeps the centre, so there is no play badge. */
-const PLAYING_ON_CARD: CellLook = { cover: 'plain', ring: 'orange', ringStyle: 'running' };
+/** What changes on top of a state while the cell's song is playing on the phone (27 Nov, §8 Y1: very clearly): the
+ * running ring as in the design system, slightly see-through, with its orange glow, and the cover at full strength
+ * (it's the song of the moment). The card's mark keeps the centre, so there is no play badge. */
+const PLAYING_ON_CARD: CellLook = { cover: 'plain', ring: 'orange', ringStyle: 'running', glow: true, ringTranslucent: true };
 
 /** The next cell to reveal on the console: the orange ring and its glow, the «SEGÜENT» tag. */
 const NEXT: CellLook = { ring: 'orange', ringStyle: 'solid', glow: true, tagColor: 'orange' };

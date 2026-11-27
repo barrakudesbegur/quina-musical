@@ -25,16 +25,16 @@ export interface CellLook {
   cover?: CellCover;
   ring?: CellRingColor | null;
   ringStyle?: CellRingStyle;
-  /** A soft glow in the ring's colour (the next cell to reveal). */
+  /** A soft glow in the ring's colour (the next cell to reveal; the phone's song playing now). */
   glow?: boolean;
+  /** The ring drawn slightly see-through (85 %): the phone's song playing now (27 Nov, §8 Y1). */
+  ringTranslucent?: boolean;
   badge?: CellBadge | null;
   badgeColor?: CellBadgeColor;
   badgeStyle?: CellBadgeStyle;
   /** A short tag on the cover's bottom edge: «SEGÜENT», «+2». */
   tag?: string | null;
   tagColor?: 'orange' | 'grey';
-  /** The card's own colour washed over the cell (the phone's near-win, R2-Q32). */
-  tint?: boolean;
 }
 
 /** The data attributes a look sets on the cell's root (CardCell.svelte renders the same). */
@@ -43,7 +43,7 @@ export function cellData(look: CellLook): Record<string, string | undefined> {
     cover: look.cover && look.cover !== 'plain' ? look.cover : undefined,
     ringStyle: look.ring ? (look.ringStyle ?? 'solid') : undefined,
     glow: look.ring && look.glow ? 'true' : undefined,
-    tint: look.tint ? 'true' : undefined,
+    ringTranslucent: look.ring && look.ringTranslucent ? 'true' : undefined,
   };
 }
 

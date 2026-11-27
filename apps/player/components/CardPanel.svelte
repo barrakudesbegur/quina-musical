@@ -46,6 +46,8 @@
   const standing = $derived(Boolean(stand && !seated));
   const anim = $derived(falling ? 'card-fall' : standing && standUp !== null ? 'stand-up' : undefined);
   const fallDelay = $derived(falling ? (fall ?? 0) * PLAYER_CONFIG.fallStaggerMs : 0);
+  /** The card holds the song playing now: its count gets attention (§8 Y1, `card-playing`). */
+  const holdsPlaying = $derived(playing !== null && Boolean(view.card?.lines.some((line) => line.includes(playing))));
 </script>
 
 <PlayerCard
@@ -57,6 +59,9 @@
   showRemaining={view.remaining !== null}
   remaining={view.remaining}
   remainingLabel={view.remaining !== null ? S.remaining(view.remaining) : undefined}
+  countColor={holdsPlaying ? 'orange' : 'paper'}
+  countRing={holdsPlaying ? 'running' : null}
+  data-playing={holdsPlaying || undefined}
   data-stand={stand ? (seated ? 'seated' : 'standing') : undefined}
   data-fell-on={stand?.fall?.songId}
   data-anim={anim}
@@ -87,7 +92,6 @@
       card={view.card}
       identity={view.saved.color}
       marks={view.marks}
-      near={view.near}
       crosses={stand !== null}
       {catalog}
       {fresh}

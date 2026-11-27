@@ -1,22 +1,23 @@
 <script lang="ts">
-  // The Ara drum (board Mobil-B-J2), synced to the projector's Spin on the cloud's clock: a ring of ten cover tiles in
-  // 3D, the front one in the gold window. The tiles show songs still to come (`songs`, logic/reel.ts drumSongs), in an
-  // order with nothing to do with the Queue, blurred until a landing is public; then the landed song flips in on the
-  // front tile. The ring turns tile by tile and stops on a whole one (ANIMATIONS.md `reel-spin`, `landing`). Reduced
-  // motion: the ring stays still, with "Sona la ruleta…". It has two looks, full and the compact strip, and morphs
-  // between them by `--reel-collapse` (0 → 1, `drum-collapse`): a parent drives it (the home scrolls it and swipes it);
-  // `compact` pins it to the strip (`data-size="strip"`). `stopped` holds it still while the phone is offline.
-  // The ring is a real cylinder (D-s, #82, #83): one transform per tile round the shared axis, the radius from the tile
-  // count (player.css). While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff
-  // wobble that never turns a hidden cover into view, logic/drum-tug.ts); a vertical drag scrolls the page.
+  // The Ara drum (board Mobil-B-J2): the projector's drum on the phone (D237; §8 Y1, the user's second production
+  // test: "make sure the drum uses the same effects as the projector"). The same tiles in the same order (`order`, the
+  // round's drumOrder; logic/drum.ts), on a ring with the projector's geometry, turned by the projector's solver with the
+  // Spin's public seed, blurred sideways by its speed as the projector's is; it never rests before the landing is
+  // public, then glides to the landed tile and selects it (the others fade, it comes forward) (ANIMATIONS.md `reel-spin`,
+  // `landing`). Silent (§8 Y4). Reduced motion: the ring jumps, never turns. It has two looks, full and the compact
+  // strip, and morphs between them by `--reel-collapse` (0 → 1, `drum-collapse`): a parent drives it (the home scrolls
+  // it and swipes it); `compact` pins it to the strip (`data-size="strip"`). `stopped` holds it still while the phone is
+  // offline. While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff wobble that
+  // never brings a tile into view, logic/drum-tug.ts); a vertical drag scrolls the page.
   // While it turns, the words never say «?»: the previous song stays under it, faded (`reel-spin`, §8 Y2), so nothing
   // changes size as a Spin starts, turns or stops. `marks`: the identities of the phone's cards holding the song, shown
   // in the strip (§8 Y2). `onpick`: a tap on the drum (never a tug) goes to the first of those cards (`drum-pick`). The
   // sides fade into whatever is behind by a mask (§8 Y1: on the gold too), never a gradient painted in night blue.
+  import { untrack } from 'svelte';
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
-  import { tugAngle, tugAxis } from '../logic/drum-tug.ts';
-  import { DRUM_TILES, drumTurn, reelOffset, reelState } from '../logic/reel.ts';
+  import { DRUM, PhoneDrum, type DrumFrame } from '../logic/drum.ts';
+  import { tugAxis, tugTurn, type DrumGeometry } from '../logic/drum-tug.ts';
   import { S } from '../strings.ts';
   import Cover from '../../../packages/ui/components/Cover.svelte';
   import CardMark from './CardMark.svelte';
@@ -25,7 +26,8 @@
     spin,
     latest,
     catalog,
-    songs,
+    order,
+    landings,
     nowMs,
     clockOffsetMs,
     reduced,
@@ -33,13 +35,14 @@
     stopped = false,
     marks = [],
     onpick,
-    ontick,
   }: {
     spin: PublicSpin | null;
     latest: PublicLanding | null;
     catalog: Catalog | null;
-    /** The song on each tile (drumSongs): songs still to come, `null` for a card back. */
-    songs: readonly (number | null)[];
+    /** The round's drum order (logic/drum.ts roundOrder): every song of the round, in the projector's order. */
+    order: readonly number[];
+    /** The round's public landings. */
+    landings: readonly PublicLanding[];
     /** The app's ticking cloud clock (4 per second). */
     nowMs: number;
     /** cloud − local, for the animation frames' own clock. */
@@ -47,42 +50,45 @@
     reduced: boolean;
     compact?: boolean;
     stopped?: boolean;
-    /** The phone's cards holding the song (their identities), drawn in the strip. */
+    /** The phone's cards holding the song, drawn in the strip. */
     marks?: readonly number[];
     /** A tap on the drum: go to the card holding the song. */
     onpick?: () => void;
-    ontick?: () => void;
   } = $props();
 
-  let frameNow = $state(0);
-  const moving = $derived(reelState(spin, latest, reduced ? nowMs : Math.max(frameNow, nowMs)));
-  // Offline, a spin in progress freezes where it is: nothing moves until the link is back.
-  const reel = $derived(stopped && (moving.phase === 'spinning' || moving.phase === 'coasting') ? { phase: 'stopped' as const, offset: moving.offset } : moving);
-  const turning = $derived(reel.phase === 'spinning' || reel.phase === 'coasting' || reel.phase === 'stopped');
-  const song = $derived(latest ? catalog?.songs.get(latest.songId) : undefined);
-  /** The tiles a Spin ends after, so the ring stops on a whole tile. */
-  const final = $derived(spin && spin.landAtMs !== null ? reelOffset(spin.landAtMs - spin.startAtMs, spin.landAtMs - spin.startAtMs) : null);
-
-  // Where the ring stands when still (whole tiles); while it turns, it moves on from there.
-  let rest = $state(0);
-  let lastTurn = 0;
-  let wasTurning = false;
-  // Offline it holds where it was (`stopped`); reduced motion keeps it still.
-  const turn = $derived(turning && !reduced ? (stopped ? lastTurn : rest + drumTurn(reel.offset, final)) : rest);
+  const uid = $props.id();
+  /** With no songs yet (no catalogue), a ring of card backs. */
+  const BACKS = 10;
+  const drum = new PhoneDrum();
+  let frame: DrumFrame = $state.raw({ ring: [], position: 0, velocity: 0, phase: 'idle', selectedId: null, blurPx: 0 });
+  const step = (now: number) => (frame = drum.frame({ order, landings, spin, nowMs: now, reduced }));
+  // Every change of the inputs (and the app's clock), unless offline: then it holds where it is.
   $effect(() => {
-    if (turning) {
-      lastTurn = turn;
-      wasTurning = true;
-    } else if (wasTurning) {
-      wasTurning = false;
-      rest = Math.round(lastTurn);
-    }
+    if (stopped) return;
+    const now = Math.max(nowMs, Date.now() + clockOffsetMs);
+    untrack(() => step(now));
   });
-  const front = $derived(((rest % DRUM_TILES) + DRUM_TILES) % DRUM_TILES);
-  const landed = $derived(reel.phase === 'landed' && latest ? latest : null);
+  const moving = $derived(frame.phase === 'spinning' || frame.phase === 'waiting' || frame.phase === 'gliding');
+  // While it moves, a frame each animation frame (transform and the blur's width only).
+  $effect(() => {
+    if (!moving || stopped) return;
+    let raf = 0;
+    const loop = () => {
+      step(Date.now() + clockOffsetMs);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  });
 
-  // The tug (drum-tug): only while still, never with reduced motion. `tug` is the ring's extra turn in degrees.
-  const canTug = $derived(!reduced && (reel.phase === 'idle' || reel.phase === 'landed'));
+  const turning = $derived(frame.phase === 'spinning' || frame.phase === 'waiting');
+  const tiles = $derived(frame.ring.length ? frame.ring : Array.from({ length: BACKS }, (_, i) => -1 - i));
+  const song = $derived(latest ? catalog?.songs.get(latest.songId) : undefined);
+
+  // The tug (drum-tug): only while still, never with reduced motion. `tug` is the ring's extra turn, in tiles.
+  let width = $state(0);
+  const geometry: DrumGeometry = $derived({ tiles: tiles.length, tilePx: DRUM.tilePx, gap: DRUM.gap, perspectiveTiles: DRUM.perspectiveTiles, widthPx: width || 390 });
+  const canTug = $derived(!reduced && (frame.phase === 'idle' || frame.phase === 'landed'));
   let tug = $state(0);
   let tugging = $state(false);
   let springing = $state(false);
@@ -108,7 +114,7 @@
       }
     }
     if (drag?.axis === 'x') {
-      tug = tugAngle(dx);
+      tug = tugTurn(dx, geometry);
       tugged = true;
     }
   }
@@ -140,75 +146,58 @@
       tug = 0;
     }
   });
-
-  // While the drum turns, draw it every frame (transform only). Ticks as tiles pass the window, at most 10 per second.
-  $effect(() => {
-    if (reduced || stopped || !spin) return;
-    let raf = 0;
-    let lastTile = -1;
-    let lastTickAt = 0;
-    const loop = () => {
-      frameNow = Date.now() + clockOffsetMs;
-      const now = reelState(spin, latest, frameNow);
-      const tile = Math.floor(drumTurn(now.offset, final));
-      if (lastTile >= 0 && tile !== lastTile && performance.now() - lastTickAt >= 100) {
-        lastTickAt = performance.now();
-        ontick?.();
-      }
-      lastTile = tile;
-      if (now.phase === 'spinning' || now.phase === 'coasting') raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  });
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div
   class="reel"
   data-testid="reel"
-  data-state={reel.phase}
+  data-state={frame.phase}
   data-size={compact ? 'strip' : 'full'}
-  data-blur={landed ? undefined : 'true'}
   data-stale={turning ? 'true' : undefined}
   data-pick={onpick ? 'true' : undefined}
   onclick={onpick ? pick : undefined}
   onpointerdown={() => (tugged = false)}
 >
+  <!-- The projector's motion blur (wheel/drum.ts): sideways only, its width from the drum's speed. -->
+  <svg class="reel__filters" aria-hidden="true" focusable="false">
+    <filter id="{uid}-blur" x="-5%" y="0" width="110%" height="100%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="{frame.blurPx} 0" />
+    </filter>
+  </svg>
   <!-- The tug is decorative play (aria-hidden, no action). -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="drum"
+    class="drum-box"
     aria-hidden="true"
+    bind:clientWidth={width}
     data-tug={canTug ? 'on' : undefined}
     onpointerdown={tugStart}
     onpointermove={tugMove}
     onpointerup={tugEnd}
     onpointercancel={tugEnd}
   >
-    <div
-      class="drum__ring"
-      data-anim="reel-spin"
-      data-turning={turning && !reduced ? 'true' : undefined}
-      data-tugging={tugging || undefined}
-      data-spring={springing || undefined}
-      style:--turn={turn}
-      style:--tug={tug}
-      ontransitionend={() => (springing = false)}
-    >
-      {#each songs as tileSong, i (i)}
-        <span class="drum__tile" style:--i={i}>
-          {#if landed && i === front}
-            {#key landed.position}
-              <span class="drum__landed" data-anim="landing"><Cover songId={landed.songId} class="cover--lg" fallback="empty" /></span>
-            {/key}
-          {:else if tileSong !== null}
-            <Cover songId={tileSong} class="cover--lg" fallback="empty" />
-          {:else}
-            <span class="reel__back reel__back--{i % 3}"></span>
-          {/if}
-        </span>
-      {/each}
+    <div class="drum" data-blur={frame.blurPx > 0 ? frame.blurPx : undefined} style:filter={frame.blurPx > 0 ? `url(#${uid}-blur)` : undefined}>
+      <div
+        class="drum__ring"
+        class:has-selection={frame.selectedId !== null}
+        data-anim="reel-spin"
+        data-turning={moving && !reduced ? 'true' : undefined}
+        data-tugging={tugging || undefined}
+        data-spring={springing || undefined}
+        style:--drum-n={tiles.length}
+        style:--turn={frame.position + tug}
+      >
+        {#each tiles as tileSong, i (tileSong)}
+          <span class="drum__tile" style:--i={i} data-song-id={tileSong >= 0 ? tileSong : undefined} data-selected={tileSong === frame.selectedId || undefined}>
+            {#if tileSong >= 0}
+              <Cover songId={tileSong} class="cover--lg" fallback="empty" />
+            {:else}
+              <span class="reel__back reel__back--{i % 3}"></span>
+            {/if}
+          </span>
+        {/each}
+      </div>
     </div>
     <span class="drum__window"></span>
   </div>
@@ -237,7 +226,7 @@
     {/key}
   {:else}
     <p class="reel__waiting">
-      {reel.phase === 'stopped' ? S.reelWaiting : S.noSongYet}
+      {frame.phase === 'waiting' ? S.reelWaiting : S.noSongYet}
       {#if spoken && turning}<span class="reel__label">{S.reelSpinning}</span>{/if}
     </p>
   {/if}

@@ -70,13 +70,10 @@ test('one special card plays the Desgraciat and then the Especial (D81): its fal
   const especial = cardViews(saved, catalog, round([45, 7], { number: 7, kind: 'special', cardType: 'especial' }));
   assert.deepEqual(especial.map((v) => [v.saved.id, v.valid, v.stand]), [[123, false, null], [57, false, null], [412, true, null]]);
   assert.equal(especial[2].marks?.count, 1, '45 only; the Desgraciat round\'s 31 is not carried over');
-  assert.deepEqual([...especial[2].near], [], 'nothing near a win yet');
 });
 
-test('outside the Desgraciat round no card has a stand; the near-win highlight never runs in it', () => {
+test('outside the Desgraciat round no card has a stand', () => {
   assert.ok(cardViews(saved, catalog, round([2, 17, 41], { kind: 'normal' })).every((v) => v.stand === null));
-  assert.deepEqual([...cardViews(saved, catalog, round([2, 17, 41], { kind: 'normal' }))[0].near], [69], 'a normal round: 1 song from a Line');
-  assert.ok(cardViews(saved, catalog, round([2, 17, 41])).every((v) => v.near.size === 0), 'the Desgraciat round: nothing highlighted');
   assert.equal(standOf(null, true, round([])), null);
   assert.equal(isDesgraciat(null), false);
 });
@@ -98,7 +95,6 @@ const snapOf = (r: PublicRound | null, patch: Partial<FeedbackSnapshot> = {}): F
     round: r?.number ?? null,
     landings: r?.landings.length ?? 0,
     marks: markKeys(views),
-    near: [],
     celebration: null,
     desgraciat: isDesgraciat(r),
     standing: standingIds(stands),

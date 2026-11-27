@@ -5,7 +5,7 @@ import { cardTypeLabel, type PrintedCardType } from '../../../packages/ui/data/c
 import { breakMinutes, checkGamePlan, publicPlan, roundCardType, roundTitle, splitBundle, type Prize, type PublicPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import { standOf, type CardStand } from './desgraciat.ts';
-import { nearSongs, remainingSongs } from './near-win.ts';
+import { remainingSongs } from './remaining.ts';
 import { defaultCardType, roundSide, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
 import type { SavedCard } from './storage.ts';
 
@@ -90,8 +90,6 @@ export interface CardView {
   /** Counts in the current round: the card is of the printed type the round plays, and has its side. */
   valid: boolean;
   marks: CardMarks | null;
-  /** The songs gently highlighted on this card's grid: each one is all the card is missing for a Line or the Quina. */
-  near: ReadonlySet<number>;
   /** In the Desgraciat round, a playing card's state (standing, or the landing that sank it); else null. */
   stand: CardStand | null;
   /** The songs it still needs for a Line (or the Quina, once a Line is confirmed); null where nothing is counted. */
@@ -116,7 +114,7 @@ export function cardViews(saved: readonly SavedCard[], catalog: Catalog | null, 
     // An older snapshot's round has no card type: it plays its kind's default (roundCardType); nor a side: side 1.
     const valid = !printed || !round ? true : cardsForRound([printed], roundCardType(round)).length === 1 && cardFace(printed, side) !== null;
     const marks = card && round && valid ? cardMarks(card, landed) : null;
-    return { saved: s, card, valid, marks, near: nearSongs(card, marks, round), stand: standOf(card, valid, round), remaining: remainingSongs(card, marks, round) };
+    return { saved: s, card, valid, marks, stand: standOf(card, valid, round), remaining: remainingSongs(card, marks, round) };
   });
 }
 
