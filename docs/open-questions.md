@@ -152,11 +152,12 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U212 · Ask the organizers: covers in colour, or no covers in black and white
-The user: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". The card design session made an A3 sheet with last year's card and one card of each option at real size.
-- (a) Covers in colour: the A3 card, 149 × 140 mm, six a sheet (D256), header C (D259).
-- (b) No covers, black and white on coloured paper: the 21 × 9.9 cm card shown to them before, three to an A4 page, with «QUINA QUINA!» / «BARRAKUDES · 2026» and last year's 16 pt titles.
-The cards are made on 4–5 Dec, and the build takes about 2 days plus a proof round, so the answer is needed in the next few days. U211's amount follows the layout.
+### U212 · Ask the organizers: which card
+The user (28 Nov): "the options are: flat without albums, square with albums, flat with albums". The card design session made the organizers an image of card #1 in all three, on blue paper, and a short message in Catalan with the pros and cons.
+- (a) «Quadrat amb portades»: the A3 card, 149 × 140 mm, six a sheet, header C, 17 mm covers (D256, D259, D271). The working default (D262).
+- (b) «Apaïsat sense portades»: the 21 × 9.9 cm card, three to an A4 page, in black and white, with last year's 16 pt titles.
+- (c) «Apaïsat amb portades»: the same 21 × 9.9 cm card with 16 mm covers beside the titles. It's only in the mockup (`3x1-h`), not in the generator yet.
+The cards are made on 4–5 Dec, and the build and proof round take about 2 days.
 
 ### U202 · What admin the console does during the night (D234)
 Admin isn't at hand on stage. The proposal for the console:

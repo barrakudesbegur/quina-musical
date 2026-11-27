@@ -1781,3 +1781,9 @@ By: the user (via the card design session). Source: Sound engine's report of 28 
 ### D270 · #117's print names and cover · 2026-11-28 · Active
 Spotify has #117's title and artist swapped. Title «Els Segadors Remix» ("it is the correct song, a makina remix of the catalonia athem"), artist «Pont Aeri-Chasis» ("q20 yes"). Its «?» disc is the record's real 1996 art, and it stays. Answers U213. #100's nearly white cover goes on the proof sheet's checklist. The card generator with both layouts, the print names, the pools and the «MOSTRA» samples is on main as 7092e216, and apps/cards is Frontend's again.
 By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D271 · Three card options for the organizers; smaller covers; #60's artist · 2026-11-28 · Active
+- **The organizers choose among three (U212):** "the options are: flat without albums, square with albums, flat with albums". The third, the 21 × 9.9 cm card with 16 mm covers beside the titles, is only in the mockup (`3x1-h`), not in the generator yet. The card design session made the organizers an image and a short message in Catalan.
+- **The square card's covers are 17 mm** (from 18.6 mm): "make the cover a little smaller on the square version". The titles now fit at 11–16 pt (acd8f1a9).
+- **#60 Summercat prints «Billie The Vision»:** "summercat has a very long artist name" (Spotify has «Billie The Vision & The Dancers»). Sound engine adds it to print-names.json.
+By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov. Lives in: requirements/songs-and-cards.md › The card.
