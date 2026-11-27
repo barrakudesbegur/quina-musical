@@ -21,6 +21,8 @@ export const PLAYER = {
   typeNumber: { color: 'orange', size: 's', label: S.qrWrite },
   /** «Continuar» when leaving the pad with a number typed (D188). */
   keepEditing: { color: 'green', size: 's', icon: 'pencil', label: S.discardNo },
+  /** «Descartar» there: the destructive one, a soft red Button with the bin (C4, D188). */
+  discardChanges: { color: 'red', variant: 'soft', size: 's', icon: 'trash', label: S.discardYes },
   close: { color: 'navy', size: 'l', label: S.close },
   ok: { color: 'navy', size: 'l', label: S.ok },
 } as const satisfies Record<string, PlayerPreset>;

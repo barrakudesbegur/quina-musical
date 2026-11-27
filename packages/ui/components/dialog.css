@@ -1,0 +1,209 @@
+/*
+ * C4 · Dialog (components-v2.md § 4; Dialog.svelte): a card in the middle over a dark backdrop, on the native modal
+ * <dialog>. Motion: ANIMATIONS.md `pad-leave` (the phone), `check-review` and `wii-dialog` (the console). It pops in
+ * from @starting-style; it leaves by a transition while still open (`data-state="closing"`), then close();
+ * `display` and `overlay` are transitioned too, so a close the browser makes by itself still fades
+ * (modern-web-guidance: animate-to-from-top-layer). Every size is a custom property in :where().
+ */
+
+/* ---- the phone's scale, the default: a small paper card (M13 ②) ---------------------------------------------- */
+:where(.dialog) {
+  --dialog-width: 20rem;
+  --dialog-pad: 1.25rem 1.125rem 1.125rem;
+  --dialog-bg: var(--color-surface);
+  --dialog-fg: var(--color-text);
+  --dialog-muted: var(--color-text-muted);
+  --dialog-radius: 1.5rem;
+  --dialog-scrim: rgb(8 10 30 / 0.6);
+  --dialog-scrim-opacity: 1;
+  --dialog-title-size: 1.75rem;
+  --dialog-title-color: var(--color-text);
+  --dialog-title-stroke: var(--title-stroke-sm, 3px);
+  --dialog-title-drop: var(--title-drop-sm, none);
+  --dialog-title-tracking: 0.04em;
+  --dialog-align: center;
+  --dialog-head-gap: var(--space-2);
+  --dialog-body-gap: var(--space-4);
+  --dialog-from: 0.92;
+  --dialog-in: var(--dur-pad-leave, 200ms);
+  --dialog-backdrop-in: var(--dur-pad-leave-backdrop, 160ms);
+  --dialog-out: 150ms;
+}
+
+/* ---- the console's: the theme's surface, a left-aligned title in ink, actions side by side ---------------------- */
+:where([data-density='console'] .dialog) {
+  --dialog-pad: var(--space-4);
+  --dialog-radius: var(--radius-lg);
+  --dialog-scrim: var(--color-bg-deep, #0f1433);
+  --dialog-scrim-opacity: 0.85;
+  --dialog-title-size: var(--text-2xl);
+  --dialog-title-color: var(--color-text);
+  --dialog-title-stroke: 0;
+  --dialog-title-drop: none;
+  --dialog-title-tracking: normal;
+  --dialog-align: start;
+  --dialog-head-gap: var(--space-3);
+  --dialog-body-gap: var(--space-3);
+  --dialog-in: var(--dur-reveal, 200ms);
+  --dialog-backdrop-in: var(--dur-reveal, 200ms);
+}
+
+:where([data-density='console'] .dialog[data-size='m']) {
+  --dialog-width: 36rem;
+}
+
+/* fill='paper': the paper card (M13 ②), its text in the paper's ink; Dialog.svelte sets data-ground="paper" too, so
+   a coloured control's text takes the paper value (palette.css). */
+:where(.dialog[data-fill='paper']) {
+  --dialog-bg: var(--color-paper);
+  --dialog-fg: var(--color-text-on-paper);
+  --dialog-muted: var(--color-text-on-paper-muted);
+}
+
+/* A panel («Comandament»): opens more gently. */
+:where(.dialog[data-size='l']) {
+  --dialog-width: 62rem;
+  --dialog-from: 0.96;
+  --dialog-in: var(--dur-wii-dialog, 200ms);
+}
+
+/* ---- the box ------------------------------------------------------------------------------------------------- */
+.dialog {
+  box-sizing: border-box;
+  width: min(var(--dialog-width), calc(100vw - 2 * var(--space-4)));
+  max-width: none;
+  max-height: calc(100dvh - 2 * var(--space-4));
+  margin: auto;
+  padding: var(--dialog-pad);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--dialog-radius);
+  background: var(--dialog-bg);
+  color: var(--dialog-fg);
+  box-shadow: var(--shadow-piece);
+  text-align: var(--dialog-align);
+  opacity: 0;
+  transition-property: opacity, scale, display, overlay;
+  transition-duration: var(--dialog-out);
+  transition-timing-function: var(--ease-in, ease-in);
+  transition-behavior: allow-discrete;
+}
+
+.dialog[open]:not([data-state='closing']) {
+  opacity: 1;
+  transition-duration: var(--dialog-in);
+  transition-timing-function: var(--ease-out);
+}
+
+.dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--dialog-scrim);
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: var(--dialog-out);
+  transition-behavior: allow-discrete;
+}
+
+.dialog[open]:not([data-state='closing'])::backdrop {
+  opacity: var(--dialog-scrim-opacity);
+  transition-duration: var(--dialog-backdrop-in);
+}
+
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+  }
+
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* It scales in and out only with motion allowed (D209; the phone also needs data-motion="full"); it fades either way. */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .dialog {
+    scale: 0.96;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .dialog[open]:not([data-state='closing']) {
+    scale: 1;
+  }
+
+  @starting-style {
+    :where([data-density='console'], [data-density='projector'], [data-motion='full']) .dialog[open] {
+      scale: var(--dialog-from);
+    }
+  }
+}
+
+/* ---- the parts ------------------------------------------------------------------------------------------------ */
+.dialog__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: var(--dialog-align);
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--dialog-head-gap);
+}
+
+/* Londrina in capitals (D96), balanced (R6); on the phone the outlined title look over the paper. */
+.dialog__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--dialog-title-color);
+  font-family: var(--font-display);
+  font-size: var(--dialog-title-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.05;
+  letter-spacing: var(--dialog-title-tracking);
+  text-transform: uppercase;
+  text-wrap: balance;
+  -webkit-text-stroke: var(--dialog-title-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--dialog-title-drop);
+}
+
+.dialog__title .icon {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.dialog__body {
+  margin: var(--space-3) 0 var(--dialog-body-gap);
+  color: var(--dialog-muted);
+  font-size: 1rem;
+  font-weight: 800;
+  text-wrap: pretty;
+}
+
+.dialog__head + .dialog__body {
+  margin-top: 0;
+}
+
+/* Phone: stacked, the safe action first (D28). Console: a row, the chosen one wider (1 / 1.7). */
+.dialog__actions {
+  display: grid;
+  gap: 0.625rem;
+}
+
+:where([data-density='console']) .dialog__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+:where([data-density='console']) .dialog__actions > * {
+  flex: 1;
+}
+
+:where([data-density='console']) .dialog__actions > :last-child:not(:first-child) {
+  flex: 1.7;
+}
+
+:where([data-density='console'] .dialog__actions .button) {
+  --button-label-size: var(--text-lg);
+}

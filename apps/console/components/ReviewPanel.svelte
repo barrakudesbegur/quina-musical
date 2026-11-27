@@ -4,7 +4,8 @@
   (D118) with «En revisió · #88»; Parlem and Pausa as on the game screen (−/+ held is Pausa, D135; Parlem in a Check is
   still refused by the engine, U78); «Continua la comprovació»; and the three decisions by hand (D121): «Dona-la per
   bona», «Dona-la per dolenta», «Descarta el cartró». A decision against the card has a triangle, and asks first
-  (hook check-review: the dialog scales in). A does nothing here: the decisions are the tablet's only.
+  (hook check-review: the design system's Dialog scales in, and out as it closes; Esc keeps the review). A does
+  nothing here: the decisions are the tablet's only.
 -->
 <script lang="ts">
   import type { CheckInfo, ClaimInfo } from '../../../packages/ui/flow.ts';
@@ -14,6 +15,7 @@
   import { S } from '../strings.ts';
   import Cover from './Cover.svelte';
   import Button from '../../../packages/ui/components/Button.svelte';
+  import Dialog from '../../../packages/ui/components/Dialog.svelte';
   import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
   import TwoLevelButton from './TwoLevelButton.svelte';
@@ -28,14 +30,14 @@
   const verdict = $derived(checkVerdict(check, claim));
   const passes = $derived(checkPasses(check));
   const canEnd = $derived(model.can('reviewEnd'));
-  let dialog: HTMLDialogElement | undefined = $state();
-  /** The decision against the card waiting for its confirmation. */
+  /** The decision against the card waiting for its confirmation (kept while the dialog leaves, so its words stay). */
   let asking = $state<'win' | 'lose' | null>(null);
+  let confirming = $state(false);
 
   function decide(outcome: 'continue' | 'win' | 'lose' | 'discard'): void {
     if ((outcome === 'win' || outcome === 'lose') && reviewNeedsConfirm(outcome, check)) {
       asking = outcome;
-      dialog?.showModal();
+      confirming = true;
       return;
     }
     model.act('reviewEnd', { claimId: check.claimId, outcome });
@@ -43,11 +45,11 @@
 
   function confirm(): void {
     const outcome = asking;
-    dialog?.close();
+    confirming = false;
     if (outcome) model.act('reviewEnd', { claimId: check.claimId, outcome });
   }
 
-  const warning = $derived(
+  const warningText = $derived(
     asking === 'win' ? S.review.confirm.warnWin(verdict.kind === 'missing' ? title(verdict.songId) : null) : asking === 'lose' ? S.review.confirm.warnLose(check.kind) : '',
   );
 </script>
@@ -79,14 +81,12 @@
   {/each}
 </div>
 
-<dialog bind:this={dialog} class="dialog review-confirm" aria-labelledby="{uid}-confirm" onclose={() => (asking = null)}>
-  {#if asking}
-    <h2 class="review-confirm__title" id="{uid}-confirm">{S.review.confirm.title[asking]}</h2>
-    <p class="warning-box"><Icon name="alert" /><span class="warning-box__text">{warning}</span></p>
-    <p class="review-confirm__text">{S.review.confirm.text[asking]}</p>
-    <div class="review-confirm__actions">
-      <Button {...ACTIONS.reviewConfirmBack} onclick={() => dialog?.close()} />
+{#if asking}
+  <Dialog bind:open={confirming} class="review-confirm" size="m" title={S.review.confirm.title[asking]} body={S.review.confirm.text[asking]} onclose={() => (asking = null)}>
+    {#snippet warning()}<p class="warning-box"><Icon name="alert" /><span class="warning-box__text">{warningText}</span></p>{/snippet}
+    {#snippet actions()}
+      <Button {...ACTIONS.reviewConfirmBack} autofocus onclick={() => (confirming = false)} />
       <Button {...(asking === 'win' ? ACTIONS.reviewConfirmWin : ACTIONS.reviewConfirmLose)} onclick={confirm} />
-    </div>
-  {/if}
-</dialog>
+    {/snippet}
+  </Dialog>
+{/if}
