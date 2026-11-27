@@ -12,6 +12,7 @@
   import Panel from '../../packages/ui/components/Panel.svelte';
   import PaperCard from '../../packages/ui/components/PaperCard.svelte';
   import Sheet, { type SheetOrigin } from '../../packages/ui/components/Sheet.svelte';
+  import TextField from '../../packages/ui/components/TextField.svelte';
   import PrizeCard from '../../packages/ui/recipes/PrizeCard.svelte';
   import Ticket from '../../packages/ui/recipes/Ticket.svelte';
 
@@ -36,6 +37,9 @@
   let sheet = $state<SheetOrigin | null>(null);
   let stacked = $state(false);
   let withFooter = $state(false);
+  /** A sheet holding a form (§8 Y3): `drag="stiff"`; its rows have a grip that owns its own gesture. */
+  let stiff = $state(false);
+  let formName = $state('');
   let dialog = $state<'s' | 'paper' | 'm' | 'l' | null>(null);
   const ROWS = Array.from({ length: 24 }, (_, i) => `Quina ${i + 1}`);
 </script>
@@ -119,7 +123,11 @@
     The native modal <code>&lt;dialog&gt;</code> (D-n, #67): Esc and the back gesture close it, and a tap outside on the phone. It
     rises out of its <code>origin</code> (@starting-style), follows the finger on its title bar or on its content pulled down from
     the top (the scroll hands over at the top, the axis locks), closes on a flick or past 30 %, and springs back otherwise. ✕ and ‹
-    sit as far from the side as from the top; the grab handle floats over them (R7, #68).
+    sit as far from the side as from the top; the grab handle floats over them (R7, #68). <strong>(27 Nov, §8 Y3)</strong>
+    <code>drag="stiff"</code> for a sheet that holds a form («Afegir cartró», «Editar»): a rubber band downwards too (40 % of the
+    finger, never past 30 % of its height) and a close only after the finger travels half its height, whatever the flick; the app
+    asks before losing what was typed. A touch that starts in <code>[data-own-gesture]</code> (a list’s grip) is never the sheet’s
+    drag. A sheet opened from another sheet’s content (the QR camera) closes only itself, every way, and shows no ‹.
   </p>
   <div class="ds-gallery__grid">
     {#if phone}
@@ -129,6 +137,8 @@
       {/each}
       {#snippet s4()}<Button color="navy" size="s" label="Obre amb peu" onclick={() => ((withFooter = true), (sheet = 'bottom'))} />{/snippet}
       {@render cell('with a sticky footer (D188)', s4)}
+      {#snippet s6()}<Button color="navy" size="s" label="Obre un formulari" onclick={() => ((stiff = true), (withFooter = true), (sheet = 'bottom'))} />{/snippet}
+      {@render cell('drag="stiff": a form (pull it: it resists, and closes only past half its height)', s6)}
     {:else}
       {#snippet s5()}<Button color="grey" size="s" label="Obre el menú" onclick={() => (sheet = 'side-right')} />{/snippet}
       {@render cell('origin side-right: the console’s menu (✕ with its label; Esc; no drag, no tap outside: U188)', s5)}
@@ -138,7 +148,7 @@
 
 {#if sheet}
   <Sheet
-    title={sheet === 'side-right' ? 'Menú' : 'Horari'}
+    title={sheet === 'side-right' ? 'Menú' : stiff ? 'Afegir cartró' : 'Horari'}
     subtitle={sheet === 'side-right' ? 'Tauleta · Quina 3 de 8' : null}
     origin={sheet}
     depth={stacked ? 'under' : 'top'}
@@ -147,9 +157,15 @@
     closeText={sheet === 'side-right'}
     class={phone ? 'drawer' : undefined}
     footer={withFooter ? saveBar : undefined}
-    onclose={() => ((sheet = null), (withFooter = false))}
+    drag={stiff ? 'stiff' : 'free'}
+    onclose={() => ((sheet = null), (withFooter = false), (stiff = false))}
   >
-    <p class="ds-prose">Arrossega la barra del títol, o el contingut des de dalt.</p>
+    {#if stiff}
+      <TextField label="Nom (opcional)" placeholder="Per exemple: Àvia" bind:value={formName} />
+      <p class="ds-prose">Estira’l avall: es resisteix, i només es tanca si l’estires més de mig full.</p>
+    {:else}
+      <p class="ds-prose">Arrossega la barra del títol, o el contingut des de dalt.</p>
+    {/if}
     {#if phone}<Button color="orange" size="s" label="Apila’n un altre" onclick={() => (stacked = true)} />{/if}
     <ol class="ds-gallery__rows">
       {#each ROWS as row (row)}<li>{row}</li>{/each}
