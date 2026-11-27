@@ -1,0 +1,42 @@
+/* The gallery's buttons family (sections/Buttons.svelte): only the specimens' frames. */
+.ds-buttons__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: var(--space-3);
+}
+
+/* A two-level button fills its slot in the apps; here it gets a slot's height */
+.ds-buttons__tall .ds-gallery__stage > .two-level {
+  min-height: 12rem;
+}
+
+/* The corner discs are fixed to their page's corners: this frame is their page (contain makes it the containing
+   block of a fixed child). */
+.ds-buttons__corners {
+  position: relative;
+  contain: layout paint;
+  max-width: 24rem;
+  height: 9rem;
+  border: var(--line-width-thin) dashed var(--color-text-muted);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.ds-buttons__pads {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.3fr) minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 40rem) {
+  .ds-buttons__pads {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The small controls keep their own width in a cell */
+.ds-buttons .ds-gallery__stage > :is(.mini-button, .icon-button, .text-link) {
+  justify-self: start;
+}

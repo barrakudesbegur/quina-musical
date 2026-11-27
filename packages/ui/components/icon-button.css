@@ -40,6 +40,8 @@
 
 .icon-button {
   flex: none;
+  /* its frame's size, never stretched by a grid or a column round it */
+  inline-size: max-content;
   min-width: 0;
   min-height: 0;
 }

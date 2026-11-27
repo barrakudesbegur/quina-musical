@@ -64,7 +64,8 @@
   position: absolute;
   inset: auto 0 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* the words centred, unless the keys at the right need more than their half: then the words move left */
+  grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
   height: var(--two-level-strip);
   overflow: hidden;
