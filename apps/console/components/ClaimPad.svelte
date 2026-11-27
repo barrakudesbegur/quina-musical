@@ -23,7 +23,6 @@
   import NumberField from '../../../packages/ui/components/NumberField.svelte';
   import NumberPad from '../../../packages/ui/components/NumberPad.svelte';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
-  import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
 
