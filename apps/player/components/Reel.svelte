@@ -69,9 +69,10 @@
     untrack(() => step(now));
   });
   const moving = $derived(frame.phase === 'spinning' || frame.phase === 'waiting' || frame.phase === 'gliding');
-  // While it moves, a frame each animation frame (transform and the blur's width only).
+  // While it moves, a frame each animation frame (transform and the blur's width only). With reduced motion the ring
+  // never turns, so there is nothing to draw between the clock's ticks.
   $effect(() => {
-    if (!moving || stopped) return;
+    if (!moving || stopped || reduced) return;
     let raf = 0;
     const loop = () => {
       step(Date.now() + clockOffsetMs);
@@ -186,7 +187,7 @@
         data-tugging={tugging || undefined}
         data-spring={springing || undefined}
         style:--drum-n={tiles.length}
-        style:--turn={frame.position + tug}
+        style:--drum-turn={frame.position + tug}
       >
         {#each tiles as tileSong, i (tileSong)}
           <span class="drum__tile" style:--i={i} data-song-id={tileSong >= 0 ? tileSong : undefined} data-selected={tileSong === frame.selectedId || undefined}>

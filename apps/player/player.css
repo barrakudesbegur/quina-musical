@@ -842,7 +842,7 @@
 /* The drum (board Mobil-B-J2; §8 Y1, D237: the projector's drum): every tile of the round's ring on a cylinder in 3D, the
    front one in the gold window. The projector's geometry (wheel/drum.ts, drum.css): one transform per tile round the
    one shared axis, the radius from the tile count (`--drum-n`) with an 8 % gap, back faces hidden, a perspective of
-   five tiles. The ring turns by `--turn` (tiles, ANIMATIONS.md `reel-spin`; the tug's few hundredths of a tile
+   five tiles. The ring turns by `--drum-turn` (tiles, ANIMATIONS.md `reel-spin`; the tug's few hundredths of a tile
    included, `drum-tug`), and the drum is blurred sideways by its speed (Reel.svelte's SVG filter, the projector's). */
 .reel {
   --tile: 7.5rem;
@@ -896,6 +896,15 @@
   height: 0;
 }
 
+/* The ring's turn changes every frame while it moves: registered as not inherited, so a new value restyles the ring
+   alone, never its tiles and their covers (unregistered, it reached every tile: about 12 ms of style per frame on a
+   phone-speed CPU). */
+@property --drum-turn {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 .drum__ring {
   /* The projector's radius: max(tile, tile × (1 + gap) / (2 tan(180° / n))); the step between two tiles. */
   --drum-step: calc(360deg / var(--drum-n, 10));
@@ -906,7 +915,7 @@
   width: 0;
   height: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--drum-r) * -1)) rotateY(calc(var(--turn, 0) * -1 * var(--drum-step)));
+  transform: translateZ(calc(var(--drum-r) * -1)) rotateY(calc(var(--drum-turn) * -1 * var(--drum-step)));
   will-change: transform;
 }
 
