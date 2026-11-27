@@ -109,6 +109,16 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U194 · Push notifications for 2026
+The research (docs/research/reports/push-notifications.md, 27 Nov) recommends skipping them. Everyone they could reach is already in the tent with the app open, the voice cues and the Admin banner already say the same things, iPhones need a Home Screen install that starts with no cards, and few would allow them (about 20–40% of Android players asked). Effort for the smallest version: about 3–5 days across Backend and Frontend.
+- (a) Skip push for 2026, and use what we have.
+- (b) Build the minimal Android-first version: an opt-in switch in Horari, at most two messages a night (mainly "El Descans s'acaba en 2 minuts" for people outside the tent), every subscription deleted the next morning.
+
+### U195 · Do winners ever leave without collecting their prize?
+If they do, a reminder to an uncollected winner is the one push message with real value (U194), and Admin's winners list would need a "collected" mark.
+- (a) No, or very rarely.
+- (b) Yes, it happens.
+
 ### U193 · Where the install button goes on the phone's home (D221)
 The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
 - (a) Yes, that.
