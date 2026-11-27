@@ -152,13 +152,6 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U209 · The normal card's heading (D250)
-The user is trying four layouts on the card design canvas, "this is a test. if i like it i will do it in the design. keep those choices as open questions":
-- (a) «QUINES 1–5» / «QUINES 6–10» as the title.
-- (b) «QUINES» with the numbers 1 2 3 4 5.
-- (c) «PRIMERA PART» / «SEGONA PART» over a «QUINES 1–5» box.
-- (d) The event's name where «BARRAKUDES» is, with «BARRAKUDES» under it.
-
 ### U201 · Which sides get the sticker circle and the name space (D231)
 The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
 - (a) Both sides, so the card is recognisable whichever side is up.
@@ -365,6 +358,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U209 · The normal card's heading** (2026-11-27) → D254: «QUINES 1–5» / «QUINES 6–10» as the title; «QUINA QUINA!» with «BARRAKUDES · 2026» in the branding.
 - **U200 · The word in the sticker circle** (2026-11-27) → D253: «GOMET».
 - **U161 · A spare laptop's music** (2026-11-27): moot. Repertoire 2026 is in R2 with the Hold, Interval and voice music, so a spare can pull it (ca3c0a3d).
 - **U30 · The prizes drawer** (2026-11-27) → D244: P1's round selector with P2's content; «Premis sorpresa» for locked rounds.

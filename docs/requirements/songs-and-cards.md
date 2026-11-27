@@ -80,10 +80,11 @@ _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
 - **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2) (D193), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
-- **Last year's cards stay easy to spot** (D85): 2026's carry the faint «2026» stamp, the covers and the new side labels. There's no event name on the card (D250).
+- **Last year's cards stay easy to spot** (D85): 2026's carry the year in the branding, the covers and the new side labels.
+- **The branding (D254):** beside the logo, «QUINA QUINA!» (no «3»), with «BARRAKUDES · 2026» under it.
 - **The style is last year's printed card** (apps/cards/dist/cards-normal.pdf), with covers added: it's a printed document, not the app's look, so no web components (D250).
-- **Each side names its rounds:** the normal card's «1a PART» with «QUINES 1-5» and «2a PART» with «QUINES 6-10» (D250; the heading's layout pending U209). The special card has no parts: «DESGRACIAT» on side 1 and «ESPECIAL» on side 2 (D252).
-- Each card carries a faint year stamp.
+- **Each side's title, centred on the card's width (D254):** the normal card's «QUINES 1–5» on side 1 and «QUINES 6–10» on side 2, white on black. The special card's «DESGRACIAT» and «ESPECIAL» (D252).
+- The faint background stamp is the logo only; the year is in the branding (D254).
 - **A sticker circle (D231, D253):** a dotted circle of about 15 mm with «GOMET» centred in it, for a coloured shape sticker matching the card's mark on the phone (D5) (sides pending U201). No name field (D250).
 - **One short line:** «MARCA NOMÉS AMB BLAT DE MORO», with no corn icon (D232, D250).
 - **The number** has a faded «#» before it (D250).

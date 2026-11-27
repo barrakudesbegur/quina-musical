@@ -1697,3 +1697,12 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 ### D253 · «GOMET», in a circle of about 15 mm · 2026-11-27 · Active
 U200 answered (a): «GOMET». The circle is "less than 20mm, 15mm for example", with the word centred in it (D231 said about 19 mm).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D231. Lives in: requirements/songs-and-cards.md › The card.
+
+### D254 · The cards' titles and branding · 2026-11-27 · Active
+The user's picks from the card design session's tests (Proposal 5 on its canvas):
+1. **Titles:** "i want the proposal 4 titles, quina 1-5 and withour quina on the especials". The normal card says «QUINES 1–5» on side 1 and «QUINES 6–10» on side 2, white on black. The special card says «DESGRACIAT» and «ESPECIAL» (D252).
+2. **Branding:** "i want the option with event name in the brandign, but just put "QUINA QUINA!" without the 3. and in barrakudes put . 2026 after it". Beside the logo, «QUINA QUINA!», with «BARRAKUDES · 2026» under it, replacing «BARRAKUDES / JOVES • BEGUR».
+3. **The stamp:** "we can remove the 2026 from the bg stamp". The faint background stamp keeps only the logo, and the year lives in the branding line.
+4. **Centring:** "the title should be centered to the page", on the card's width, not in the space between the side blocks.
+Answers U209. Amends D67 (no «3» in the printed name) and D250 (the event name is back, in the branding).
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
