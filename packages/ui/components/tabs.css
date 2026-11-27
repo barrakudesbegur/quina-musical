@@ -92,6 +92,7 @@
 
 .tabs__tab:active:not(:disabled) {
   transform: none;
+  box-shadow: none;
 }
 
 /* R4 (tab-press): an idle tab dips under the finger; the selected one is already down in the panel. */

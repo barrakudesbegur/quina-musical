@@ -147,9 +147,12 @@
   }
 }
 
-/* The static row never moves: the press is the knob's (R4), not a 2 px dip of the whole line of words. */
+/* The static row never moves or darkens: the press is the knob's (R4), not a 2 px dip of the whole line of words, nor
+   an app's generic pressed look (the phone's veil and dark bottom line read as a black outline on «Sons», §8 Y3). */
 .switch:active:not(:disabled) {
   transform: none;
+  box-shadow: none;
+  background: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {

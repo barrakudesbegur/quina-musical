@@ -514,7 +514,9 @@
 }
 
 /* ---- buttons ------------------------------------------------------------------------------------------- */
-:where(.player) button {
+/* The app's own buttons, not the design system's: every component's button carries `data-touch` and draws its own
+   look and press, so these never reach it (§8 Y3: this press veil on the «Sons» switch read as a black outline). */
+:where(.player) button:where(:not([data-touch])) {
   box-shadow:
     var(--edge-piece-sm),
     var(--shadow-piece-sm);
@@ -522,7 +524,7 @@
 
 /* The controls not on the press resource yet look pressed too, not just moved (R4, the user's phone test): the edge
    thins, the face darkens a little, the shadow is covered. */
-:where(.player) button:active:not(:disabled) {
+:where(.player) button:where(:not([data-touch])):active:not(:disabled) {
   transform: translateY(3px);
   box-shadow:
     inset 0 -2px 0 rgb(0 0 0 / 0.22),

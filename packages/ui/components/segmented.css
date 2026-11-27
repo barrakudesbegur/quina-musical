@@ -147,6 +147,7 @@
 /* The base button's dip and pressed fill belong to other buttons: the thumb is the chosen look. */
 .segmented__option:active:not(:disabled) {
   transform: none;
+  box-shadow: none;
 }
 
 .segmented__option[aria-pressed='true'],
