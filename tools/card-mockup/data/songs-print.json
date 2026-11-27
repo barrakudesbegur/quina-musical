@@ -19,7 +19,7 @@
   "spotifyId": "6LD1tYOKReFqZh5ZdCdxIz",
   "pool": "1",
   "printTitle": "AL GOLPITO",
-  "printArtist": "Quevedo, Nueva Línea"
+  "printArtist": "Quevedo"
  },
  {
   "id": 3,
@@ -62,7 +62,7 @@
   "durationMs": 180453,
   "spotifyId": "6sHBvzRsuGunQTfCk18KXi",
   "pool": "1",
-  "printTitle": "Bailando por Ahi",
+  "printTitle": "Bailando por Ahí",
   "printArtist": "Juan Magán"
  },
  {
@@ -96,7 +96,7 @@
   "spotifyId": "6QFCMUUq1T2Vf5sFUXcuQ7",
   "pool": "1",
   "printTitle": "Beauty And A Beat",
-  "printArtist": "Justin Bieber, Nicki Minaj"
+  "printArtist": "Justin Bieber"
  },
  {
   "id": 10,
@@ -129,7 +129,7 @@
   "spotifyId": "2yAVzRiEQooPEJ9SYx11L3",
   "pool": "1",
   "printTitle": "Blue (Da Ba Dee)",
-  "printArtist": "Eiffel 65, Gabry Ponte"
+  "printArtist": "Eiffel 65"
  },
  {
   "id": 13,
@@ -162,7 +162,7 @@
   "spotifyId": "0kosUz0jePvjiz4ctmR6wL",
   "pool": "1",
   "printTitle": "Dai Dai",
-  "printArtist": "Shakira, Burna Boy"
+  "printArtist": "Shakira"
  },
  {
   "id": 16,
@@ -173,7 +173,7 @@
   "spotifyId": "2xnoPV3NLescauc0ZJ1MDZ",
   "pool": "1",
   "printTitle": "Dance Again",
-  "printArtist": "Jennifer Lopez, Pitbull"
+  "printArtist": "Jennifer Lopez"
  },
  {
   "id": 17,
@@ -206,7 +206,7 @@
   "spotifyId": "6U2NuJILEOEpW2tVCuqKHb",
   "pool": "1",
   "printTitle": "Dura",
-  "printArtist": "Daddy Yankee, NATTI NATASHA"
+  "printArtist": "Daddy Yankee"
  },
  {
   "id": 20,
@@ -238,7 +238,7 @@
   "durationMs": 204733,
   "spotifyId": "4uofaK0hnyZQFDAepvPNl6",
   "pool": "1",
-  "printTitle": "El Ultimo Vals",
+  "printTitle": "El Último Vals",
   "printArtist": "La Oreja de Van Gogh"
  },
  {
@@ -260,8 +260,8 @@
   "durationMs": 225786,
   "spotifyId": "6EKUSdzaD9zRaaR5Yg0SoC",
   "pool": "1",
-  "printTitle": "Fashion Girl pt.2",
-  "printArtist": "Bad Gyal, Jadiel el Incomparable"
+  "printTitle": "Fashion Girl",
+  "printArtist": "Bad Gyal"
  },
  {
   "id": 25,
@@ -305,7 +305,7 @@
   "spotifyId": "1cpIInDCM09St4ajfPvPPZ",
   "pool": "1",
   "printTitle": "Flying Free",
-  "printArtist": "Pont Aeri, Marian Dacal"
+  "printArtist": "Pont Aeri"
  },
  {
   "id": 29,
@@ -327,7 +327,7 @@
   "spotifyId": "4QNpBfC0zvjKqPJcyqBy9W",
   "pool": "1",
   "printTitle": "Give Me Everything",
-  "printArtist": "Pitbull, AFROJACK"
+  "printArtist": "Pitbull"
  },
  {
   "id": 31,
@@ -360,7 +360,7 @@
   "spotifyId": "3d0WouFnFmr0K3kjeza3fF",
   "pool": "1",
   "printTitle": "Hips Don't Lie",
-  "printArtist": "Shakira, Wyclef Jean"
+  "printArtist": "Shakira"
  },
  {
   "id": 34,
@@ -382,7 +382,7 @@
   "spotifyId": "0OMRAvrtLWE2TvcXorRiB9",
   "pool": "1",
   "printTitle": "La Gozadera",
-  "printArtist": "Gente De Zona, Marc Anthony"
+  "printArtist": "Gente De Zona"
  },
  {
   "id": 36,
@@ -393,7 +393,7 @@
   "spotifyId": "0b3Bkp0UfCkNqquAUmoP5m",
   "pool": "1",
   "printTitle": "LA GRACIOSA",
-  "printArtist": "Quevedo, Elvis Crespo"
+  "printArtist": "Quevedo"
  },
  {
   "id": 37,
@@ -404,7 +404,7 @@
   "spotifyId": "4oVO4fGNRRvEn0CRuFO4qv",
   "pool": "1",
   "printTitle": "La Perla",
-  "printArtist": "ROSALÍA, Yahritza Y Su Esencia"
+  "printArtist": "ROSALÍA"
  },
  {
   "id": 38,
@@ -459,7 +459,7 @@
   "spotifyId": "0CAfXk7DXMnon4gLudAp7J",
   "pool": "1",
   "printTitle": "Low",
-  "printArtist": "Flo Rida, T-Pain"
+  "printArtist": "Flo Rida"
  },
  {
   "id": 43,
@@ -525,7 +525,7 @@
   "spotifyId": "3C0nOe05EIt1390bVABLyN",
   "pool": "1",
   "printTitle": "On The Floor",
-  "printArtist": "Jennifer Lopez, Pitbull"
+  "printArtist": "Jennifer Lopez"
  },
  {
   "id": 49,
@@ -547,7 +547,7 @@
   "spotifyId": "5RZTA3NhiHR2408da3HMNz",
   "pool": "1",
   "printTitle": "Pasado pisado",
-  "printArtist": "Comando Tiburon, Mach and Daddy"
+  "printArtist": "Comando Tiburón"
  },
  {
   "id": 51,
@@ -602,7 +602,7 @@
   "spotifyId": "4wDk9P2WSvHOsRW6SDYE7L",
   "pool": "1",
   "printTitle": "Que Te Quería",
-  "printArtist": "La Quinta Estacion"
+  "printArtist": "La Quinta Estación"
  },
  {
   "id": 56,
@@ -701,7 +701,7 @@
   "spotifyId": "2USlegnFJLrVLpoVfPimKB",
   "pool": "1",
   "printTitle": "Thunder",
-  "printArtist": "Gabry Ponte, LUM!X"
+  "printArtist": "Gabry Ponte"
  },
  {
   "id": 65,
@@ -723,7 +723,7 @@
   "spotifyId": "0TDLuuLlV54CkRRUOahJb4",
   "pool": "1",
   "printTitle": "Titanium",
-  "printArtist": "David Guetta, Sia"
+  "printArtist": "David Guetta"
  },
  {
   "id": 67,
@@ -833,7 +833,7 @@
   "spotifyId": "3QKdve5GUYcjkkN1RjKuwM",
   "pool": "2",
   "printTitle": "Baila Morena",
-  "printArtist": "Zucchero, Maná"
+  "printArtist": "Zucchero"
  },
  {
   "id": 77,
@@ -866,7 +866,7 @@
   "spotifyId": "12KUFSHFgT0XCoiSlvdQi4",
   "pool": "2",
   "printTitle": "Break Free",
-  "printArtist": "Ariana Grande, Zedd"
+  "printArtist": "Ariana Grande"
  },
  {
   "id": 80,
@@ -910,7 +910,7 @@
   "spotifyId": "7vFoFDWqTX0mHzLfrF1Cfy",
   "pool": "2",
   "printTitle": "Cheerleader",
-  "printArtist": "OMI, felix jaehn"
+  "printArtist": "OMI"
  },
  {
   "id": 84,
@@ -1019,7 +1019,7 @@
   "durationMs": 231653,
   "spotifyId": "3vb3xZADNMONqL7aRQLVPJ",
   "pool": "2",
-  "printTitle": "Hay Quel Venir al Sur",
+  "printTitle": "Hay Que Venir al Sur",
   "printArtist": "Raffaella Carrà"
  },
  {
@@ -1042,7 +1042,7 @@
   "spotifyId": "1TewcrGBlkDAMhehfn0eHh",
   "pool": "2",
   "printTitle": "JA DORMIRÉ",
-  "printArtist": "La Fúmiga, Figa Flawas"
+  "printArtist": "La Fúmiga"
  },
  {
   "id": 96,
@@ -1086,7 +1086,7 @@
   "spotifyId": "6iOndD4OFo7GkaDypWQIou",
   "pool": "2",
   "printTitle": "La Plena",
-  "printArtist": "W Sound, Beéle"
+  "printArtist": "W Sound"
  },
  {
   "id": 100,
@@ -1163,7 +1163,7 @@
   "spotifyId": "3ri9fLG89OdSpjxheYxU7S",
   "pool": "2",
   "printTitle": "Me Muero",
-  "printArtist": "La Quinta Estacion"
+  "printArtist": "La Quinta Estación"
  },
  {
   "id": 107,
@@ -1218,7 +1218,7 @@
   "spotifyId": "5NOVfpl0Xm8D6vIl0sKJeL",
   "pool": "2",
   "printTitle": "NO LE DIGO QUE NO",
-  "printArtist": "Los Buyer, Pikeras"
+  "printArtist": "Los Buyer"
  },
  {
   "id": 112,
@@ -1328,7 +1328,7 @@
   "spotifyId": "2cZrrQMjB63c0iIugYH9zS",
   "pool": "2",
   "printTitle": "Rain Over Me",
-  "printArtist": "Pitbull, Marc Anthony"
+  "printArtist": "Pitbull"
  },
  {
   "id": 122,
@@ -1404,7 +1404,7 @@
   "durationMs": 213973,
   "spotifyId": "6UEfyhyfhYQsyipxOd95Ie",
   "pool": "2",
-  "printTitle": "The Ketchup Song (Aserejé)",
+  "printTitle": "Aserejé",
   "printArtist": "Las Ketchup"
  },
  {
