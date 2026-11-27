@@ -65,6 +65,8 @@ export interface WiiKeySpec {
   /** Held together with A (Suspens: B + A). */
   readonly withA?: boolean;
   readonly size?: 'md' | 'sm';
+  /** Another way to do the same, drawn after these keys with «/» between (D-j: «×3 / B+A»). */
+  readonly or?: WiiKeySpec;
 }
 
 export type ButtonColor = 'orange' | 'red' | 'green' | 'gold' | 'cyan' | 'purple' | 'pink' | 'navy' | 'grey';
@@ -147,4 +149,25 @@ export interface RingBadgeLook {
   readonly icon: IconName;
   readonly color: Extract<PaletteColor, 'green' | 'periwinkle' | 'red' | 'cyan' | 'purple' | 'ink'>;
   readonly label: string;
+}
+
+/** TwoLevelButton's second level (A3): the strip at its foot, in the body's own palette (D-k). */
+export interface Level2 {
+  label: string;
+  icon?: IconName | null;
+  /** The remote's keys for it, at the strip's right end (D94). */
+  wii?: WiiKeySpec | null;
+}
+
+/** A time bar drawn inside a TwoLevelButton's body (a Throw song's position): its fill, the two times, a mark. */
+export interface Meter {
+  /** How far, 0..1. */
+  fraction: number;
+  /** The time so far, and the length («0:44», «3:33»). */
+  start: string;
+  end: string;
+  /** A mark on the bar (the drop), at 0..1, with its word over it. */
+  marker?: { at: number; label: string } | null;
+  /** The state's icon before the time (music notes while it plays, the pause bars while stopped). */
+  icon?: IconName | null;
 }

@@ -13,10 +13,10 @@
   the night's last round «Tempesta» joins the top row, between Enrere (which doesn't move) and a narrower Comprovar.
   The throw songs' taps are logic/throw-songs.ts. Parlem and Aguanta are one pair (logic/hold-modes.ts): a tap on the active one releases
   it, a tap on the other switches (`hold { on, duck }`). Each has a second level on a strip along its
-  bottom, reached by holding it (TwoLevelButton): Parlem → Pausa (`pause`), Aguanta → Suspens (`suspense`,
+  bottom, reached by holding it (HoldModeButton, on the generic TwoLevelButton): Parlem → Pausa (`pause`), Aguanta → Suspens (`suspense`,
   landing when let go). Següent stays at the bottom, under the thumbs.
   While a Wii remote is connected each button shows its Wii button (WiiBadge): 1·2 held on Enrere, −+ and B on
-  Parlem and Aguanta (TwoLevelButton), and A on Següent or «Comença la quina» when it's the default action (data-default).
+  Parlem and Aguanta (their presets), and A on Següent or «Comença la quina» when it's the default action (data-default).
   The Desgraciat's finale (logic/finale.ts; the Consola-Desgraciat-Final board): in that round the claim slot is «Final
   a l'escenari» (podium icon), which grows as fewer stand (`data-finale`: the top row widens, Enrere stays small at its
   top) and opens the finalists' pad; once the finale is on it is «+ Finalista». With one finalist left, Següent's place
@@ -30,13 +30,12 @@
   import { clusterLayout } from '../logic/cluster-layout.ts';
   import { roundIntroArgs } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
-  import { ACTIONS, WII, asDefault } from '../actions.ts';
+  import { ACTIONS, asDefault } from '../actions.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
-  import LongPressButton from './LongPressButton.svelte';
+  import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
   import PodiumIcon from './PodiumIcon.svelte';
   import ThrowButton from './ThrowButton.svelte';
-  import TwoLevelButton from './TwoLevelButton.svelte';
-  import WiiBadge from './WiiBadge.svelte';
+  import HoldModeButton from './HoldModeButton.svelte';
 
   let { onclaim }: { onclaim: () => void } = $props();
 
@@ -69,9 +68,7 @@
 
   {#if layout.backAndClaim}
   <div class="thumb-cluster__slot thumb-cluster__slot--back">
-    <LongPressButton big color={ACTIONS.back.color} label={ACTIONS.back.label} note={backBrings ? S.finale.backNote : S.cluster.backHint} icon={ACTIONS.back.icon} disabled={!c.back.enabled} onconfirm={() => model.act('back')}>
-      {#snippet badge()}<WiiBadge button="back" hold={WII.back.hold} size={WII.back.size} />{/snippet}
-    </LongPressButton>
+    <LongPressButton {...ACTIONS.back} note={backBrings ? S.finale.backNote : ACTIONS.back.note} disabled={!c.back.enabled} onconfirm={() => model.act('back')} />
   </div>
   {/if}
 
@@ -109,7 +106,7 @@
 
   {#each ['talk', 'stay'] as const as mode (mode)}
     <div class="thumb-cluster__slot thumb-cluster__slot--{mode}">
-      <TwoLevelButton {mode} {active} enabled={c.hold.enabled} />
+      <HoldModeButton {mode} {active} enabled={c.hold.enabled} />
     </div>
   {/each}
 

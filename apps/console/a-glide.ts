@@ -4,7 +4,7 @@
 // `glideA()` and flies in from there (transforms only; logic/next-to-now.ts has the maths). Every other move of the
 // default keeps the badge's pop (`wii-badge`). Never throws; with reduced motion, or without the Web Animations API, the
 // badge just appears.
-import { parseCssDurationMs } from './logic/long-press.ts';
+import { parseCssDurationMs } from '../../packages/ui/components/hold/long-press.ts';
 import { invert, type Box } from './logic/next-to-now.ts';
 
 /** A capture older than this is stale: the badge that mounts later isn't the one Pausa moved. */

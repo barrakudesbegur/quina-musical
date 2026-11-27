@@ -1,0 +1,357 @@
+/*
+ * A3 · TwoLevelButton (components-v2.md § 2; TwoLevelButton.svelte), on Button's parts (button.css): the body is a
+ * Button's, the strip at its foot is level 2. Motion: ANIMATIONS.md › escalate-hold, suspense-hold, throw-hold,
+ * throw-on, pattern-pan. Every size is a custom property in :where(), so an app's context (the console's cluster,
+ * its break line, its top row) tunes it by variables.
+ */
+:where(.two-level) {
+  --two-level-strip: 46px;
+  --two-level-strip-size: 1.0625rem;
+  --two-level-strip-icon: 1.5rem;
+  --two-level-sub-size: 1.25rem;
+  --button-pad-bottom: calc(var(--two-level-strip) + var(--button-pad-block));
+}
+
+:where(.two-level:not([data-strip])) {
+  --button-pad-bottom: var(--button-pad-block);
+}
+
+/* The whole button is the hold's surface: no scrolling or text selection starts from it. */
+.two-level {
+  touch-action: none;
+}
+
+.two-level > .button__piece {
+  isolation: isolate;
+}
+
+/* The escalation held by a key (Space, Enter) keeps the piece sunk too (R4). */
+.two-level:is([data-state='pressing'], [data-state='escalated']) > .ds-piece {
+  box-shadow: var(--edge-3d-sunk, none);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .two-level:is([data-state='pressing'], [data-state='escalated']) > .ds-piece {
+    translate: 0 var(--press-travel);
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+/* ---- the words: the label with its second line, the sticker art ------------------------------------------------- */
+.two-level__words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.two-level:has(.two-level__sub) .two-level__words {
+  align-items: flex-start;
+  line-height: 0.95;
+}
+
+.two-level__sub {
+  color: var(--color-snow);
+  font-family: var(--font-body);
+  font-size: var(--two-level-sub-size);
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: none;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.two-level__art {
+  display: inline-flex;
+}
+
+/* over the art's own scoped size */
+.two-level .two-level__art > svg {
+  width: calc(var(--button-icon-size) * 1.18);
+  height: calc(var(--button-icon-size) * 1.18);
+}
+
+/* ---- the strip (level 2) ------------------------------------------------------------------------------------------ */
+.two-level__strip {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  height: var(--two-level-strip);
+  overflow: hidden;
+  border-top: var(--ds-border) solid var(--color-line);
+  border-radius: 0 0 calc(var(--ds-radius) - var(--ds-border)) calc(var(--ds-radius) - var(--ds-border));
+  background: var(--palette-pale, var(--color-snow));
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--two-level-strip-size);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* On (or just reached, the finger still down): the button's own dark shade (D-k), white words, the dots panning (R3). */
+.two-level__strip[data-on] {
+  background: var(--palette-edge);
+  color: var(--color-white);
+}
+
+.two-level__strip-words {
+  position: relative;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 var(--space-2);
+  white-space: nowrap;
+}
+
+.two-level__strip-words .icon {
+  width: var(--two-level-strip-icon);
+  height: var(--two-level-strip-icon);
+}
+
+.two-level__lead {
+  font-weight: 800;
+}
+
+.two-level__timer {
+  padding: 0 7px;
+  border: var(--line-width-thin, 2px) solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The keys at the strip's right end (D94), the words staying centred */
+.two-level__strip-wii {
+  position: relative;
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline-end: 9px;
+}
+
+/* ---- the hold's fill: the strip's, or the whole body's when there's no strip; clipped (#14) -------------------- */
+.two-level__fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.two-level__fill--body {
+  z-index: -1;
+  border-radius: calc(var(--ds-radius) - var(--ds-border));
+}
+
+.two-level__fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(255 255 255 / 0.55);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+}
+
+.two-level__fill--body::before {
+  background: rgb(255 255 255 / 0.3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .two-level__fill::before {
+    transition: transform var(--dur-drain) var(--ease-out);
+  }
+}
+
+.two-level[data-state='pressing'] .two-level__fill::before {
+  transition: none;
+}
+
+.two-level__strip[data-on] > .two-level__fill::before {
+  display: none;
+}
+
+/* The top row's restart reached: the whole body stays lit until the finger lifts */
+.two-level[data-state='escalated'] .two-level__fill--body::before {
+  transform: none;
+  background: rgb(255 255 255 / 0.5);
+}
+
+/* The dots on the strip: the strip's own corners, not the piece's */
+.two-level__strip .ds-pattern {
+  border-radius: 0;
+}
+
+/* An open Suspens pulses on the strip, faster towards its auto-release (suspense-hold) */
+@media (prefers-reduced-motion: no-preference) {
+  .two-level[data-anim~='suspense-hold'] .two-level__strip[data-on] > .two-level__fill {
+    animation: two-level-pulse calc(var(--dur-pulse-slow, 1.2s) - (var(--dur-pulse-slow, 1.2s) - var(--dur-pulse-fast, 0.5s)) * var(--pulse-progress, 0)) ease-in-out infinite;
+  }
+}
+
+@keyframes two-level-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Reduced motion: a percentage instead of the sweep (a level that is on stays lit) */
+.two-level__percent {
+  display: none;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .two-level[data-state='pressing'] .two-level__fill:not(:has(.ds-pattern)) {
+    display: none;
+  }
+
+  .two-level[data-state='pressing'] .two-level__percent {
+    display: inline;
+  }
+
+  .two-level[data-state='pressing'] .two-level__lead {
+    display: none;
+  }
+
+  .two-level:not([data-strip])[data-state='pressing'] .two-level__percent {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+  }
+}
+
+/* ---- the badge: a paper disc in the top-left corner (the padlock while locked on, D128) ------------------------ */
+.two-level__badge {
+  --corner-size: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-paper, var(--color-snow));
+  color: var(--color-ink);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.two-level__badge .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- the meter: a time bar in the body (a Throw song's position; hook throw-on) -------------------------------- */
+:where(.two-level__meter) {
+  --meter-width: 86%;
+  --meter-pad: 23px 14px 9px;
+}
+
+/* The body takes the piece's width, so the meter's width is a share of the button's */
+.two-level .button__body:has(> .two-level__meter) {
+  align-self: stretch;
+}
+
+.two-level__meter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: var(--meter-width);
+  /* #16: the mark's word over the bar stays clear of the box's top border */
+  padding: var(--meter-pad);
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  background: var(--color-snow);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: none;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.two-level__meter-icon {
+  display: contents;
+}
+
+.two-level__meter-icon .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-ink);
+}
+
+.two-level__meter-total {
+  color: #5a5480;
+}
+
+.two-level__bar {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2.5px solid var(--color-ink);
+  border-radius: 7px;
+  background: #e4ddcc;
+}
+
+/* The fill scales from the left (on the compositor) inside a clip with its own rounded ends. */
+.two-level__bar-fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.two-level__bar-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--palette-solid);
+  transform: scaleX(var(--at, 0));
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .two-level__bar-fill::before {
+    transition: transform 250ms linear;
+  }
+}
+
+.two-level__mark {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: calc(var(--mark) * 100%);
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--color-ink);
+}
+
+.two-level__mark > span {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}

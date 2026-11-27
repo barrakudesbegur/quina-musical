@@ -109,6 +109,13 @@ export const CA = {
     footer: 'Cada acció fa vibrar el comandament. Els cartrons cantats es comproven a la consola, no amb el comandament.',
     side: 'de costat',
   },
+  /** The generic controls' own words (packages/ui/components): a long press's hint and its reduced-motion percent. */
+  controls: {
+    holdHint: 'Mantén premut per confirmar',
+    percent: (p: number) => `${p} %`,
+    /** A two-level button's hold, for screen readers. */
+    holdFor: (level: string) => `Mantén premut per passar a ${level}`,
+  },
   scene: {
     before: 'Abans de començar',
     roundStart: 'Comença la quina',

@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { modeCommand, secondLevel } from '../../../../console/logic/hold-modes.ts';
-import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../../../../console/logic/two-level.ts';
+import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../../../../../packages/ui/components/hold/two-level.ts';
 
 const CFG = { holdMs: 800, canEscalate: true };
 

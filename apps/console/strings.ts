@@ -85,7 +85,7 @@ export const S = {
     /** On the second-level strip: hold the button to get there. */
     holdFor: 'mantén',
     /** Spoken: what holding the button does. */
-    holdForLong: (level: string) => `Mantén premut per passar a ${level}`,
+    holdForLong: CA.controls.holdFor,
     /** The second level is on: a tap leaves it. */
     pauseOn: 'en pausa · toca per tornar',
     /** Spoken, on Parlem's lock during Pausa: Parlem stays on until Pausa ends (D128). */
@@ -99,7 +99,7 @@ export const S = {
     claim: CA.concepts.claim,
   },
 
-  longPress: { hint: 'Mantén premut per confirmar', percent: (p: number) => `${p} %` },
+  longPress: { hint: CA.controls.holdHint, percent: CA.controls.percent },
 
   nowPlaying: {
     title: CA.nowPlaying,

@@ -3,11 +3,11 @@
 // - Aguanta, the Stay: the song keeps playing at full volume.
 // Pressing the active one again releases it; pressing the other one switches mode in place (`hold { duck }`
 // while holding never releases). The active one shows pressed, from the engine's private `hold.ducked`.
-// Each button has a second level, reached by holding it (logic/two-level.ts): Parlem → Pausa (the Pause),
+// Each button has a second level, reached by holding it (packages/ui/components/hold/two-level.ts): Parlem → Pausa (the Pause),
 // Aguanta → Suspens. A tap while the second level is on leaves it.
 // Pure.
 import type { CommandFields, ShowState } from '@quina/protocol';
-import type { TwoLevelAction } from './two-level.ts';
+import type { TwoLevelAction } from '../../../packages/ui/components/hold/two-level.ts';
 
 export type HoldMode = 'talk' | 'stay';
 

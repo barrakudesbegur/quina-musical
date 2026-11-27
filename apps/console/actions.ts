@@ -14,7 +14,9 @@ import { S } from './strings.ts';
 export type ConsolePreset = Omit<ButtonPreset, 'color'> & {
   readonly color: ButtonColor;
   /** A TwoLevelButton's second level, on the strip at its foot, in the same palette as the top (D-k). */
-  readonly level2?: { readonly label: string; readonly icon: LineIconName };
+  readonly level2?: { readonly label: string; readonly icon: LineIconName; readonly wii?: WiiKeySpec };
+  /** A LongPressButton's layout: a Button (the default) or the menu's row (A2). */
+  readonly layout?: 'button' | 'row';
 };
 
 /** The remote's keys on the console's controls, as wii/mapping.ts assigns them. */
@@ -23,6 +25,12 @@ export const WII = {
   a: { keys: ['a'] },
   /** Enrere: 1 or 2 held. */
   back: { keys: ['one', 'two'], hold: true, size: 'sm' },
+  /** Parlem: − or + (a tap); Pausa: − or + held, on its strip. */
+  hold: { keys: ['minus', 'plus'] },
+  pause: { keys: ['minus', 'plus'], hold: true, size: 'sm' },
+  /** Aguanta: B held; Suspens: B + A held, on its strip (D144, D147). */
+  stay: { keys: ['b'], hold: true },
+  suspense: { keys: ['b'], hold: true, withA: true, size: 'sm' },
   /** Enrere inside a Check: a single press takes the last mark off (D127, D134). */
   checkBack: { keys: ['one', 'two'], size: 'sm' },
   /** − or + held in a Check: «Revisió manual» (D128). */
@@ -36,22 +44,24 @@ function colorOf(id: 'back' | 'next' | 'claim' | 'checkReveal' | 'review' | 'cel
 
 export const ACTIONS = {
   // ---- the cluster (ThumbCluster) ----
-  back: { color: colorOf('back'), icon: 'undo', label: S.cluster.back },
+  back: { color: colorOf('back'), icon: 'undo', label: S.cluster.back, note: S.cluster.backHint, wii: WII.back },
   claim: { color: colorOf('claim'), icon: 'rosette', label: S.cluster.claim },
-  hold: { color: colorOf('hold'), icon: 'mic', label: S.cluster.talk, note: S.cluster.talkNote, level2: { label: S.cluster.pauseLevel, icon: 'pause' } },
-  stay: { color: colorOf('stay'), icon: 'hand', label: S.cluster.stay, note: S.cluster.stayNote, level2: { label: S.cluster.suspense, icon: 'drum' } },
+  // R3: on (level 1) pans the stripes; level 2's strip pans the dots (TwoLevelButton draws them).
+  hold: { color: colorOf('hold'), pattern: 'stripes', icon: 'mic', label: S.cluster.talk, note: S.cluster.talkNote, wii: WII.hold, level2: { label: S.cluster.pauseLevel, icon: 'pause', wii: WII.pause } },
+  stay: { color: colorOf('stay'), pattern: 'stripes', icon: 'hand', label: S.cluster.stay, note: S.cluster.stayNote, wii: WII.stay, level2: { label: S.cluster.suspense, icon: 'drum', wii: WII.suspense } },
   next: { color: colorOf('next'), size: 'l', icon: 'skip', label: S.cluster.next },
   roundIntro: { color: colorOf('next'), size: 'l', icon: 'play', label: S.interval.start, note: S.interval.startNote },
-  throw: { color: colorOf('throw'), pattern: 'stripes', icon: null, label: CONCEPTS.throw.label },
-  storm: { color: colorOf('storm'), pattern: 'stripes', icon: null, label: CONCEPTS.storm.label },
+  // Stripes only while the song plays (R3, #20); the strip restarts it from its hook (D138).
+  throw: { color: colorOf('throw'), pattern: 'stripes', icon: null, label: CONCEPTS.throw.label, level2: { label: S.throws.restart, icon: 'restart' } },
+  storm: { color: colorOf('storm'), pattern: 'stripes', icon: null, label: CONCEPTS.storm.label, level2: { label: S.throws.restart, icon: 'restart' } },
   finaleAdd: { color: colorOf('claim'), size: 's', icon: 'plus', label: S.finale.add, note: S.finale.addNote },
   finaleCue: { color: colorOf('celebration'), icon: 'star', label: S.finale.celebrate, ring: 'gold' },
 
   // ---- the menu's long presses (Menu, ResumePanel: LongPressButton rows) ----
-  confirmLine: { color: colorOf('claim'), icon: 'check', label: S.menu.confirmLine, note: S.menu.confirmLineNote },
-  panic: { color: colorOf('back'), icon: 'warning', label: S.menu.panic, note: S.menu.panicNote },
-  endNight: { color: colorOf('back'), variant: 'plain', icon: 'power', label: S.menu.end, note: S.menu.endNote },
-  resume: { color: colorOf('celebration'), icon: 'play', label: S.resume.send, note: S.resume.sendNote },
+  confirmLine: { color: colorOf('claim'), layout: 'row', icon: 'check', label: S.menu.confirmLine, note: S.menu.confirmLineNote },
+  panic: { color: colorOf('back'), layout: 'row', icon: 'warning', label: S.menu.panic, note: S.menu.panicNote },
+  endNight: { color: colorOf('back'), layout: 'row', variant: 'plain', icon: 'power', label: S.menu.end, note: S.menu.endNote },
+  resume: { color: colorOf('celebration'), layout: 'row', icon: 'play', label: S.resume.send, note: S.resume.sendNote },
 
   // ---- the Check (CheckPanel) ----
   checkBack: { color: colorOf('back'), icon: 'undo', label: S.check.back, note: S.check.backNote, wii: WII.checkBack },

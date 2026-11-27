@@ -26,7 +26,7 @@
   import Icon from './Icon.svelte';
   import LanQr from './LanQr.svelte';
   import { ACTIONS } from '../actions.ts';
-  import LongPressButton from './LongPressButton.svelte';
+  import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
   import Switch from './Switch.svelte';

@@ -7,7 +7,7 @@
 //   - what each button says now, from the state's `throwSong`;
 //   - its time while it's on (the board's bar), from `throwSong.posSec` at `sinceMs` and the show's clock.
 import type { ShowState, ThrowInfo, ThrowSong } from '@quina/protocol';
-import type { TwoLevelAction } from './two-level.ts';
+import type { TwoLevelAction } from '../../../packages/ui/components/hold/two-level.ts';
 
 export type { ThrowSong } from '@quina/protocol';
 

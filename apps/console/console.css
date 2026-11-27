@@ -2308,8 +2308,7 @@
   hyphens: manual;
 }
 
-.big-button__note,
-.long-press__note {
+.big-button__note {
   display: block;
   font-family: var(--font-body);
   font-size: var(--text-sm);
@@ -2337,393 +2336,52 @@
   --button-label-size: clamp(var(--text-2xl), 5vw, 3.5rem);
 }
 
-/* Enrere: a long row, icon and text from the left */
-/* Enrere: narrow (a third of its row): the icon and the word on one line, a small "mantén" under them */
-.thumb-cluster__slot--back .big-button {
-  min-height: calc(var(--tap-big) + var(--space-2));
-  padding-inline: var(--space-2);
-  font-size: var(--text-xl);
+/* Enrere (A2, LongPressButton): narrow (a third of its row), the icon and the word on one line, a small "mantén" under
+   them; its keys in the bottom corner, clear of the word */
+.thumb-cluster__slot--back .button {
+  --button-min-height: calc(var(--tap-big) + var(--space-2));
+  --button-pad-inline: var(--space-2);
+  --button-label-size: var(--text-xl);
+  --button-icon-size: 2rem;
 }
 
-.thumb-cluster__slot--back .big-button .long-press__content {
-  flex-wrap: wrap;
-  column-gap: var(--space-2);
-  row-gap: 0;
-  width: 100%;
-}
-
-.thumb-cluster__slot--back .big-button .long-press__text {
-  display: contents;
-}
-
-.thumb-cluster__slot--back .big-button .long-press__note {
-  flex-basis: 100%;
+.thumb-cluster__slot--back .button__note {
   margin-top: -2px;
   color: #ffffff;
   font-weight: var(--font-weight-strong);
-  text-align: center;
   opacity: 0.95;
 }
 
-.thumb-cluster__slot--back .big-button .icon {
-  width: 2rem;
-  height: 2rem;
+.thumb-cluster__slot--back .button__wii {
+  top: auto;
+  bottom: var(--corner-inset);
 }
 
-/* Parlem and Aguanta with their second level (hooks escalate-hold, suspense-hold): a pale strip along the
-   bottom reads "mantén ‖ Pausa" or "mantén ◉ Suspens"; holding the button sweeps a light fill across it,
-   and it turns the second level's colour while that level is on. */
-.two-level {
-  align-items: stretch;
-  justify-content: stretch;
-  gap: 0;
-  padding: 0;
-  touch-action: none;
-}
-
-/* D-k (27 Nov): the strip uses its own button's palette, pale while idle and its dark edge while the level is on */
-.two-level {
-  --level2-pale: var(--palette-pale);
-  --level2-bg: var(--palette-edge);
-  --level2-ink: #ffffff;
-}
-
-.two-level__main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  min-height: 0;
-  padding: var(--space-2) var(--space-3);
-}
-
-.two-level__second {
-  position: relative;
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  height: 46px;
-  overflow: hidden;
-  border-top: var(--line-width-bold) solid var(--color-line);
-  background: var(--level2-pale);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  font-weight: var(--font-weight-strong);
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-}
-
-.two-level__fill {
-  position: absolute;
-  inset: 0;
-  background: rgb(255 255 255 / 0.55);
-  transform: scaleX(var(--progress, 0));
-  transform-origin: left;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .two-level__fill {
-    transition: transform var(--dur-drain) var(--ease-out);
-  }
-}
-
-.two-level[data-state='pressing'] .two-level__fill {
-  transition: none;
-}
-
-/* On (or just reached): the strip filled with the second level's own colour */
-.two-level[data-state='escalated'] .two-level__second,
-.two-level__second[data-on] {
-  color: var(--level2-ink);
-}
-
-.two-level[data-state='escalated'] .two-level__fill,
-.two-level__second[data-on] .two-level__fill {
-  transform: none;
-  background: var(--level2-bg);
-}
-
-.two-level__second-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 var(--space-2);
-}
-
-.big-button .two-level__second .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  stroke: currentColor;
-}
-
-.two-level__count {
-  padding: 0 7px;
-  border: var(--line-width-thin) solid currentColor;
-  border-radius: var(--radius-pill);
-  font-size: 0.75rem;
-  line-height: 1.4;
-  font-variant-numeric: tabular-nums;
-}
-
-.two-level__percent {
-  display: none;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Parlem during Pausa: on and locked (D128), a small lock on its corner */
-.two-level__main {
-  position: relative;
-}
-
-.two-level__lock {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: var(--line-width) solid var(--color-ink);
-  border-radius: 50%;
-  background: var(--color-paper);
-}
-
-.big-button .two-level__lock .icon {
-  width: 16px;
-  height: 16px;
-  stroke: var(--color-ink);
-}
-
-/* «Llançament» and «Tempesta» (the Consola-Llancament-Tempesta board; hooks throw-hold, throw-on): a striped sticker,
-   the name with its sticker icon, the tap's note, the song's chip while it's on, and the «Des del principi» strip that
-   fills while held (in the top row there's no strip: the light sweeps the whole button) */
+/* Parlem and Aguanta (HoldModeButton) and the Throw's two buttons (ThrowButton) are the generic TwoLevelButton
+   (packages/ui/components/two-level.css); the cluster only sizes them. «Llançament» and «Tempesta» (the
+   Consola-Llancament-Tempesta board): the name with its sticker art and its second line, the tap's note, the song's
+   time while it's on, the «Des del principi» strip. */
 .throw-button {
-  align-items: stretch;
-  justify-content: stretch;
-  gap: 0;
-  padding: 0;
-  touch-action: none;
-  font-size: clamp(var(--text-2xl), 4.2vw, 3.125rem);
-  --throw-pale: var(--palette-pale);
-  --throw-stripe: 45.25px; /* one period of the 32 px stripes, measured along the row */
-}
-
-/* The stripes, pressed or not: a layer one period wider than the button (it starts a period to the left, so the
-   pattern lines up as the button's own background would), under the content and clipped by the button. Moving it
-   by `translate` keeps the drift on the compositor. */
-.throw-button::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 0 calc(var(--throw-stripe) * -1);
-  background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.13) 0 16px, transparent 16px 32px);
-  background-size: var(--throw-stripe) var(--throw-stripe);
-  pointer-events: none;
-}
-
-/* Playing: pressed (the shared aria-pressed look), and the stripes drift one period per loop */
-@media (prefers-reduced-motion: no-preference) {
-  .throw-button[data-anim~='throw-on']::before {
-    animation: throw-stripes var(--dur-throw-stripes) linear infinite;
-  }
-}
-
-@keyframes throw-stripes {
-  to {
-    translate: var(--throw-stripe) 0;
-  }
-}
-
-.throw-button__main {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 0;
-  padding: var(--space-2) var(--space-3);
-}
-
-.throw-button__name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.throw-button__words {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 0.95;
-}
-
-/* Londrina is in capitals (D96), across the whole cluster the throw songs join; the Nunito words keep their case
-   (D114) */
-.thumb-cluster .big-button__label,
-.thumb-cluster .big-button .long-press__label,
-.throw-button .big-button__label {
-  text-transform: uppercase;
-}
-
-.throw-button__sub {
-  font-family: var(--font-body);
-  font-size: 1.25rem;
-  font-weight: 900;
-  line-height: 1.1;
-  color: #fff6e5;
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-}
-
-.throw-button .big-button__note {
-  font-size: 0.9375rem;
-}
-
-/* While it's on: its time from the hook, a bar with the drop's mark, and its length (hook throw-on). Paper and ink,
-   as the chip; the fill in the button's colour. The fill steps with the show's clock (250 ms) and glides between. */
-.throw-button__time {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-sizing: border-box;
-  width: 86%;
-  /* #16: the «DROP» mark over the bar stays clear of the box's top border */
-  padding: 23px 14px 9px;
-  border: var(--line-width) solid var(--color-ink);
-  border-radius: 14px;
-  background: #fff6e5;
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  font-weight: 900;
-  line-height: 1;
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Playing: music notes; paused: the pause bars. Ink line icons like the others (#15) */
-.throw-button__state {
-  display: contents;
-}
-
-.big-button .throw-button__state .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  stroke: var(--color-ink);
-}
-
-.throw-button__total {
-  color: #5a5480;
-}
-
-.throw-button__bar {
-  position: relative;
-  flex: 1;
-  height: 14px;
-  box-sizing: border-box;
-  border: 2.5px solid var(--color-ink);
-  border-radius: 7px;
-  background: #e4ddcc;
-}
-
-/* The fill: a bar the track's full width, scaled from the left (`scaleX`, on the compositor), inside a clip with the
-   fill's old 5 px corners, so its rounded left end never squashes. */
-.throw-button__bar-fill {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 5px;
-}
-
-.throw-button__bar-fill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--palette-solid);
-  transform: scaleX(var(--at, 0));
-  transform-origin: left;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .throw-button__bar-fill::before {
-    transition: transform 250ms linear;
-  }
-}
-
-.throw-button__drop {
-  position: absolute;
-  top: -6px;
-  bottom: -6px;
-  left: calc(var(--drop) * 100%);
-  width: 3px;
-  margin-left: -1.5px;
-  border-radius: 2px;
-  background: var(--color-ink);
-}
-
-.throw-button__drop > span {
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.throw-button__strip {
-  position: relative;
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  height: 46px;
-  overflow: hidden;
-  border-top: var(--line-width-bold) solid var(--color-line);
-  background: var(--throw-pale);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  font-weight: var(--font-weight-strong);
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-}
-
-.big-button .throw-button__strip .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  stroke: currentColor;
-}
-
-.throw-button[data-state='pressing'] .two-level__fill,
-.throw-button[data-state='pressing'] .throw-button__fill {
-  transition: none;
-}
-
-/* The hold reached the restart: the strip stays lit until the finger lifts */
-.throw-button[data-state='escalated'] .two-level__fill {
-  transform: none;
-  background: rgb(255 255 255 / 0.75);
+  --button-label-size: clamp(var(--text-2xl), 4.2vw, 3.125rem);
+  --button-label-line: 0.95;
+  --button-note-size: 0.9375rem;
+  --button-head-gap: var(--space-3);
 }
 
 /* A break's slim line along the top (D195): the name and its note on the left, the time on the right while it's on,
    and a thinner strip under them */
-.throw-button[data-variant='line'] {
-  min-height: 0;
-  font-size: var(--text-2xl);
+.throw-button[data-layout='line'] {
+  --button-min-height: 0;
+  --button-pad-block: var(--space-1);
+  --button-label-size: var(--text-2xl);
+  --button-icon-size: 1.9rem;
+  --button-head-gap: var(--space-2);
+  --two-level-strip: 32px;
+  --two-level-strip-size: var(--text-sm);
+  --two-level-strip-icon: 1.25rem;
 }
 
-.throw-button[data-variant='line'] .throw-button__main {
+.throw-button[data-layout='line'] .button__body {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:
@@ -2733,197 +2391,48 @@
   justify-items: start;
   column-gap: var(--space-4);
   row-gap: 0;
-  padding: var(--space-1) var(--space-3);
+  width: 100%;
 }
 
-.throw-button[data-variant='line'] .throw-button__name {
+.throw-button[data-layout='line'] .button__head {
   grid-area: name;
-  gap: var(--space-2);
 }
 
-.throw-button[data-variant='line'] .throw-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
-.throw-button[data-variant='line'] .big-button__note {
+.throw-button[data-layout='line'] .button__note {
   grid-area: note;
   padding-left: calc(2.25rem + var(--space-2));
 }
 
-.throw-button[data-variant='line'] .throw-button__time {
+.throw-button[data-layout='line'] .two-level__meter {
+  --meter-width: min(100%, 20rem);
+  --meter-pad: 14px 14px 7px;
   grid-area: time;
   justify-self: end;
-  width: min(100%, 20rem);
   min-width: 13rem;
-  padding-block: 14px 7px;
 }
 
-.throw-button[data-variant='line'] .throw-button__strip {
-  height: 32px;
-  font-size: var(--text-sm);
+/* The top row (the last round): compact, the art over the name, no strip; the fill sweeps the whole button */
+.throw-button[data-layout='top'] {
+  --button-min-height: calc(var(--tap-big) + var(--space-2));
+  --button-pad-block: var(--space-1);
+  --button-pad-inline: var(--space-1);
+  --button-label-size: var(--text-lg);
+  --button-icon-size: 1.5rem;
+  --two-level-sub-size: 0.6875rem;
 }
 
-/* The top row (the last round): compact, the icon over the name, no strip; the fill sweeps the whole button */
-.throw-button[data-variant='top'] {
-  min-height: calc(var(--tap-big) + var(--space-2));
-  font-size: var(--text-lg);
-}
-
-.throw-button[data-variant='top'] .throw-button__main {
-  gap: 0;
-  padding: var(--space-1);
-}
-
-.throw-button[data-variant='top'] .throw-button__name {
+.throw-button[data-layout='top'] .button__head {
   flex-direction: column;
   gap: 2px;
 }
 
-.throw-button[data-variant='top'] .throw-button__words {
+.throw-button[data-layout='top'] .two-level__words {
   align-items: center;
 }
 
-.throw-button[data-variant='top'] .throw-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-.throw-button[data-variant='top'] .throw-button__sub {
-  font-size: 0.6875rem;
-}
-
-.throw-button__fill {
-  position: absolute;
-  inset: 0;
-  background: rgb(255 255 255 / 0.3);
-  transform: scaleX(var(--progress, 0));
-  transform-origin: left;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .throw-button__fill {
-    transition: transform var(--dur-drain) var(--ease-out);
-  }
-}
-
-.throw-button__percent {
-  display: none;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-}
-
-/* An open Suspens pulses on Aguanta's strip, faster towards its auto-release */
-@media (prefers-reduced-motion: no-preference) {
-  .two-level[data-anim~='suspense-hold'] .two-level__fill {
-    animation: suspense-pulse calc(var(--dur-pulse-slow) - (var(--dur-pulse-slow) - var(--dur-pulse-fast)) * var(--suspense-progress, 0)) ease-in-out infinite;
-  }
-}
-
-/* Long press (hooks long-press-confirm, hold-hint) */
-.long-press-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.long-press-wrap > .long-press {
-  flex: 1;
-}
-
-.long-press {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.long-press__fill {
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0.28;
-  transform: scaleX(var(--progress, 0));
-  transform-origin: left;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .long-press__fill {
-    transition: transform var(--dur-drain) var(--ease-out);
-  }
-}
-
-.long-press[data-state='pressing'] .long-press__fill {
-  transition: none;
-}
-
-.long-press[data-state='confirmed'] .long-press__fill {
-  opacity: 0.5;
-}
-
-.long-press__content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.long-press__text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.long-press:not(.big-button) .long-press__note {
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-body);
-  color: inherit;
-}
-
-.long-press__percent {
-  display: none;
-  font-variant-numeric: tabular-nums;
-}
-
-.hold-hint {
-  position: absolute;
-  bottom: calc(100% + var(--space-1));
-  left: 50%;
-  z-index: var(--z-toast);
-  padding: var(--space-1) var(--space-3);
-  border: var(--line-width-thin) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateX(-50%);
-  transition: opacity var(--dur-hint-out) var(--ease-out);
-}
-
-.hold-hint[data-state='shown'] {
-  opacity: 1;
-  transition-duration: var(--dur-hint-in);
-}
-
-.hold-hint:empty {
-  padding: 0;
-  border: 0;
-}
-
-@keyframes suspense-pulse {
-  50% {
-    opacity: 0.6;
-  }
+/* Londrina is in capitals (D96) across the whole cluster; the Nunito words keep their case (D114) */
+.thumb-cluster .big-button__label {
+  text-transform: uppercase;
 }
 
 /* Portrait (a phone): a compact cluster, so the scene keeps room above it */
@@ -2948,8 +2457,7 @@
     text-align: left;
   }
 
-  .big-button__note,
-  .long-press__note {
+  .big-button__note {
     font-size: 0.75rem;
   }
 
@@ -2965,34 +2473,44 @@
     --button-label-drop: 0 2px 0 var(--color-ink);
   }
 
-  .thumb-cluster__slot--back .big-button {
-    min-height: 3.25rem;
-    font-size: var(--text-md);
+  .thumb-cluster__slot--back .button {
+    --button-min-height: 3.25rem;
+    --button-label-size: var(--text-md);
+    --button-icon-size: 1.75rem;
   }
 
   .thumb-cluster__slot--claim .button {
     --button-label-size: var(--text-lg);
   }
 
+  /* The two-level buttons: the icon beside the words, a thinner strip */
   .two-level {
-    flex-direction: column;
-    padding: 0;
+    --two-level-strip: 2.125rem;
+    --two-level-strip-size: var(--text-sm);
+    --two-level-strip-icon: 1.25rem;
   }
 
-  .two-level__main {
-    flex-direction: row;
-    gap: var(--space-2);
-    padding: var(--space-1) var(--space-2);
+  .thumb-cluster .two-level[data-icon-placement='top'] .button__body {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    column-gap: var(--space-2);
+    row-gap: 0;
   }
 
-  .two-level__second {
-    height: 2.125rem;
-    font-size: var(--text-sm);
+  .thumb-cluster .two-level[data-icon-placement='top'] .button__head {
+    display: contents;
   }
 
-  .thumb-cluster__slot--back .big-button .icon {
-    width: 1.75rem;
-    height: 1.75rem;
+  .thumb-cluster .two-level[data-icon-placement='top'] .button__icon {
+    grid-row: 1 / span 2;
+  }
+
+  .thumb-cluster .two-level[data-icon-placement='top'] :is(.two-level__words, .button__note) {
+    grid-column: 2;
+    justify-self: start;
+    align-items: flex-start;
+    text-align: start;
   }
 
   .thumb-cluster__slot--next .button {
@@ -3003,31 +2521,14 @@
 
   /* The throw songs keep their strip under them, edge to edge */
   .throw-button {
-    flex-direction: column;
-    padding: 0;
-    font-size: var(--text-xl);
-  }
-
-  .throw-button .throw-icon {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .throw-button__main {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
-    padding: var(--space-1) var(--space-2);
-  }
-
-  .throw-button__strip {
-    height: 2.125rem;
-    font-size: var(--text-sm);
+    --button-label-size: var(--text-xl);
+    --button-icon-size: 1.7rem;
+    --button-head-gap: var(--space-2);
   }
 
   /* Narrow slots: the last round's top row and the end screen's side button keep to their names */
-  .throw-button[data-variant='top'] {
-    font-size: var(--text-md);
+  .throw-button[data-layout='top'] {
+    --button-label-size: var(--text-md);
   }
 
   .thumb-cluster[data-top] .thumb-cluster__slot--claim .button__icon {
@@ -4884,41 +4385,13 @@ kbd {
   background: repeating-linear-gradient(-45deg, var(--color-gold) 0 8px, var(--color-ink) 8px 16px);
 }
 
-.menu-danger .long-press {
-  min-height: 3.5rem;
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.18), var(--shadow-drop);
+/* Pànic (A2's row, solid): the deeper red of the danger band, with white words */
+.menu-danger .long-press__button[data-variant='solid'] {
+  --long-press-ink: #ffffff;
 }
 
-.menu-danger .long-press__content {
-  justify-content: flex-start;
-  gap: 10px;
-}
-
-.menu-danger .long-press .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.menu-danger .long-press__label {
-  font-size: var(--text-md);
-}
-
-.menu-danger .long-press:not(.big-button) .long-press__note {
-  font-weight: 800;
-}
-
-/* Pànic: the deeper red of the danger band, with white words (until LongPressButton moves onto the components) */
-.menu-danger .long-press[data-variant='solid'] {
+.menu-danger .long-press__button[data-variant='solid'] > .button__piece {
   background: var(--color-red);
-  color: #ffffff;
-}
-
-/* A plain long-press row (Acabar la nit): on the panel's colour, in the palette's text colour */
-.long-press:not(.big-button)[data-variant='plain'] {
-  background: var(--color-surface);
-  color: var(--palette-fg);
 }
 
 @media (max-width: 34rem) {
@@ -5448,40 +4921,6 @@ kbd {
     transform: none;
     filter: brightness(0.9);
   }
-
-  /* long-press-confirm: a percentage instead of the sweep */
-  .long-press__fill {
-    display: none;
-  }
-
-  /* escalate-hold: a percentage instead of the sweep (a second level that is on stays lit) */
-  .two-level[data-state='pressing'] .two-level__fill {
-    display: none;
-  }
-
-  .two-level[data-state='pressing'] .two-level__percent {
-    display: inline;
-  }
-
-  /* throw-hold: the same percentage */
-  .throw-button[data-state='pressing'] .two-level__fill,
-  .throw-button[data-state='pressing'] .throw-button__fill {
-    display: none;
-  }
-
-  .throw-button[data-state='pressing'] .two-level__percent,
-  .throw-button[data-state='pressing'] .throw-button__percent {
-    display: inline;
-  }
-
-  .two-level[data-state='pressing'] .two-level__how {
-    display: none;
-  }
-
-  .long-press[data-state='pressing'] .long-press__percent,
-  .long-press[data-state='confirmed'] .long-press__percent {
-    display: inline;
-  }
 }
 
 /* ---- the Wii remote: the default action, the badges, the Comandament dialog ----------------------------- */
@@ -5672,23 +5111,9 @@ kbd {
   }
 }
 
-/* Enrere is narrow: its badge sits in the bottom corner, clear of the label */
-.thumb-cluster__slot--back .big-button > .wii-badge {
-  top: auto;
-  bottom: 9px;
-}
-
-/* The strips: the badge at the right end, the strip's words moved left to make room for it */
+/* The «Seguides» strip (CheckPanel): the badge at the right end */
 .wii-badge[data-place='strip'] {
   right: 9px;
-}
-
-.two-level__second:has(> .wii-badge[data-wii='talk']) {
-  padding-right: 40px;
-}
-
-.two-level__second:has(> .wii-badge[data-wii='b']) {
-  padding-right: 76px;
 }
 
 /* A held key on a strip stays centred on it (its ring inside the strip) */
@@ -5696,21 +5121,22 @@ kbd {
   top: 50%;
 }
 
-/* Suspens's shake ×3 at the strip's left end, while the shake is on (the Consola-Joc board) */
-.wii-badge[data-place='strip-start'] {
-  top: 50%;
-  right: auto;
-  left: 9px;
-  translate: 0 -50%;
-}
-
-.two-level__second:has(> .wii-badge[data-wii='shake']) {
-  padding-left: 56px;
-}
-
-/* With B + A (and the shake) on the strip, the strip just names Suspens, as the board draws it */
-.two-level__second:has(> .wii-badge[data-wii='b']) .two-level__how {
+/* A two-level button's strip (TwoLevelButton places them at its right end, D94): with B + A or the shake there, the
+   strip just names Suspens, as the board draws it. Between two ways to do it, «/» (D-j: «×3 / B+A»). */
+.two-level__strip:has(.two-level__strip-wii .wii-badge:is([data-wii='b'], [data-wii='shake'])) .two-level__lead {
   display: none;
+}
+
+.wii-or {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.two-level__strip[data-on] .wii-or {
+  color: var(--color-white);
 }
 
 /* A phone or a narrow window (the compact cluster): every badge small and centred on its right edge; the
@@ -5737,18 +5163,9 @@ kbd {
     inset: -6px;
   }
 
-  .two-level__second .wii-badge,
-  .thumb-cluster__slot--back .big-button > .wii-badge {
+  .two-level__strip-wii,
+  .thumb-cluster__slot--back .button__wii {
     display: none;
-  }
-
-  .two-level__second:has(> .wii-badge[data-wii='talk']),
-  .two-level__second:has(> .wii-badge[data-wii='b']) {
-    padding-right: 0;
-  }
-
-  .two-level__second:has(> .wii-badge[data-wii='shake']) {
-    padding-left: 0;
   }
 }
 
@@ -6366,7 +5783,7 @@ kbd {
 
 /* The Wii keys inside a Button: the button places them (R7: the same inset from the top and the side, centred when
    the button is short), so the badge itself stays in its box. After the badge's own corner rules, to win over them. */
-.button__wii > .wii-badge[data-size] {
+:is(.button__wii, .two-level__strip-wii) > .wii-badge[data-size] {
   position: relative;
   inset: auto;
   translate: none;

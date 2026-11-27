@@ -18,7 +18,7 @@
   import Dialog from '../../../packages/ui/components/Dialog.svelte';
   import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
-  import TwoLevelButton from './TwoLevelButton.svelte';
+  import HoldModeButton from './HoldModeButton.svelte';
 
   let { check, claim }: { check: CheckInfo; claim: ClaimInfo | null } = $props();
 
@@ -69,7 +69,7 @@
   <div class="review-panel__talk">
     <!-- Parlem's own level in a review is U78 (the engine refuses `hold` in a Check, so a tap does nothing); holding
          it is Pausa, as on the game screen (D135). Drawn unpressed, as on the board. -->
-    <TwoLevelButton mode="talk" active={null} enabled={model.controls.hold.enabled} />
+    <HoldModeButton mode="talk" active={null} enabled={model.controls.hold.enabled} />
   </div>
 
   <Button {...ACTIONS.reviewContinue} class="review-panel__continue" note={S.review.continueNote(next ? title(next.songId) : null)} disabled={!canEnd} onclick={() => decide('continue')} />

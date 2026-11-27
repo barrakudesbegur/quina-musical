@@ -12,7 +12,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import { ACTIONS } from '../actions.ts';
-  import LongPressButton from './LongPressButton.svelte';
+  import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
 
   const model = getConsole();
   const uid = $props.id();

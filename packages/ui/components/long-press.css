@@ -1,0 +1,249 @@
+/*
+ * A2 · LongPressButton (components-v2.md § 2; LongPressButton.svelte): a Button (button.css) plus the hold's fill, its
+ * percentage, the hint and the menu's row layout. The hold's motion is ANIMATIONS.md › long-press-confirm and
+ * hold-hint. Every size is a custom property in :where(), so an app's context tunes it without restyling the parts.
+ */
+
+.long-press {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.long-press > .long-press__button {
+  flex: 1;
+}
+
+/* The whole button is the hold's surface: no scrolling or text selection starts from it. */
+.long-press__button {
+  touch-action: none;
+}
+
+/* The fill and the percentage sit on the piece, not the words' box; the fill paints under the words. */
+.long-press__button > .button__piece {
+  isolation: isolate;
+}
+
+.long-press__button .button__body {
+  position: static;
+}
+
+/* Held by a key too (Space or Enter held down): the piece stays sunk while the hold runs (R4). */
+.long-press__button[data-state='pressing'] > .ds-piece,
+.long-press__button[data-state='confirmed'] > .ds-piece {
+  box-shadow: var(--edge-3d-sunk, none);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .long-press__button:is([data-state='pressing'], [data-state='confirmed']) > .ds-piece {
+    translate: 0 var(--press-travel);
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+/* ---- the fill (long-press-confirm): light sweeping left to right, clipped to the piece's inner corners (#14) ---- */
+:where(.long-press__button) {
+  --hold-fill: rgb(255 255 255 / 0.28);
+  --hold-fill-done: rgb(255 255 255 / 0.5);
+}
+
+:where(.long-press__button:is([data-variant='plain'], [data-variant='soft'])) {
+  --hold-fill: color-mix(in oklab, var(--palette-fg, currentColor) 20%, transparent);
+  --hold-fill-done: color-mix(in oklab, var(--palette-fg, currentColor) 34%, transparent);
+}
+
+.long-press__fill {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--ds-radius) - var(--ds-border));
+  pointer-events: none;
+}
+
+.long-press__fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--hold-fill);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .long-press__fill::before {
+    transition: transform var(--dur-drain) var(--ease-out);
+  }
+}
+
+.long-press__button[data-state='pressing'] .long-press__fill::before {
+  transition: none;
+}
+
+.long-press__button[data-state='confirmed'] .long-press__fill::before {
+  background: var(--hold-fill-done);
+}
+
+/* Reduced motion: a percentage instead of the sweep, at the piece's end. */
+.long-press__percent {
+  position: absolute;
+  inset-inline-end: var(--corner-inset);
+  top: 50%;
+  translate: 0 -50%;
+  display: none;
+  padding: 0 0.4em;
+  border-radius: var(--radius-pill);
+  background: var(--color-snow);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 900;
+  line-height: 1.5;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .long-press__fill {
+    display: none;
+  }
+
+  .long-press__button:is([data-state='pressing'], [data-state='confirmed']) .long-press__percent {
+    display: block;
+  }
+}
+
+/* ---- the hint (hold-hint): a paper label above the button after a short tap ------------------------------------- */
+.long-press__hint {
+  position: absolute;
+  bottom: calc(100% + var(--space-1));
+  left: 50%;
+  z-index: var(--z-toast);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line-width-thin, 2px) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+  color: var(--color-text-on-paper);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  translate: -50% 0;
+  transition: opacity var(--dur-hint-out, 300ms) var(--ease-out);
+}
+
+.long-press__hint[data-state='shown'] {
+  opacity: 1;
+  transition-duration: var(--dur-hint-in, 150ms);
+}
+
+.long-press__hint:empty {
+  padding: 0;
+  border: 0;
+}
+
+/* ---- the menu's row: the icon at the start, the label and its note beside it, in Nunito ------------------------- */
+:where(.long-press__button[data-layout='row']) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 4px;
+  --ds-edge: 5px;
+  --ds-shine: 0px;
+  --button-min-height: 3.5rem;
+  --button-pad-block: 6px;
+  --button-pad-inline: 14px;
+  --button-icon-size: 1.5rem;
+  --button-row-label-size: var(--text-md);
+  --button-row-note-size: var(--text-xs);
+}
+
+.long-press__button[data-layout='row'] > .button__piece {
+  align-items: stretch;
+  text-align: start;
+}
+
+.long-press__button[data-layout='row'] .button__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 0;
+}
+
+.long-press__button[data-layout='row'] .button__head {
+  display: contents;
+}
+
+.long-press__button[data-layout='row'] .button__icon {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  color: inherit;
+  font-size: var(--button-row-label-size);
+}
+
+.long-press__button[data-layout='row'] .button__label {
+  grid-column: 2;
+  color: var(--long-press-ink);
+  font-family: var(--font-body);
+  font-size: var(--button-row-label-size);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+  text-wrap: balance;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.long-press__button[data-layout='row'] .button__note {
+  grid-column: 2;
+  color: var(--long-press-ink);
+  font-size: var(--button-row-note-size);
+  font-weight: 800;
+  text-wrap: pretty;
+}
+
+.long-press__button[data-layout='row'] .button__icon {
+  color: var(--long-press-ink);
+}
+
+/* A row's icon is a plain line in the words' colour, as beside any Nunito text (no sticker outline). */
+.long-press__button[data-layout='row'] .icon__under {
+  display: none;
+}
+
+.long-press__button[data-layout='row'] .icon--outline {
+  --icon-ink: 0.155em;
+}
+
+/* The words' colour: the fill's contrast (ink on most), the palette's text colour on plain and soft. */
+:where(.long-press__button[data-layout='row']) {
+  --long-press-ink: var(--palette-contrast);
+}
+
+:where(.long-press__button[data-layout='row']:is([data-variant='plain'], [data-variant='soft'])) {
+  --long-press-ink: var(--palette-fg, var(--color-text));
+}
+
+/* The menu's «Mantén premut» chip (D92): a small ink pill at the row's end. */
+.long-press__tag {
+  grid-row: 1 / span 2;
+  grid-column: 3;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
