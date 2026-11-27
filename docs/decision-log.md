@@ -1397,3 +1397,12 @@ From Frontend's spec for D206 (temp/design-canvas/ds/ui-sounds.md), the parts th
 - **Their level** starts at a gain of 0.3 on normalised samples, tuned by ear at the rehearsal (U13).
 The rest is U182–U186.
 By: the orchestrator, applying screens.md and D206 to Frontend's spec. Source: Frontend's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md (once applied); requirements/screens.md › Player app.
+
+### D208 · The interface sounds' choices · 2026-11-27 · Active
+The user's answers to U182–U186:
+- **The tablet:** on by default, with a switch in the settings. That's against ANIMATIONS.md's principle 4 (the tablet is near the presenters' microphones), so the sound check confirms the mics don't pick the clicks up.
+- **Admin:** no sounds.
+- **The phones:** one «Sons» switch for the touch sounds and the game sounds.
+- **A tap on something that can't be used:** a dull thud, with a small "no" motion.
+- **The sounds:** "you can pick for me, if i dont like i will ask changing. i like wobly and bouncy sounds for the app". Frontend picks them from Josh Comeau's set, leaning wobbly and bouncy for the player app.
+By: the user. Source: open-questions.md › Answered (U182–U186). Amends: ANIMATIONS.md principle 4 (the tablet's silence). Lives in: requirements/screens.md › Console, Player app, Admin.

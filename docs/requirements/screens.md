@@ -81,6 +81,7 @@ _From event.md › The presenters (What they can do, What they see privately, Th
 - **On the laptop:** the tech must be able to drive the whole show from the laptop alone: the console on the laptop's own screen, the show page on the projector as a separate display (never mirrored, since the console shows the next song), and a USB presenter clicker (→ or PageDown) running the console's default action. Set up as in the night runbook's "Without the tablet".
 - **It never reaches** the projector or phones: the next song, Futur, the song lookup, the standing cards (except the Desgraciat's finalists on stage, D161) and the resume code stay on the console.
 - **The claim pad** closes with "Torna a la quina", its larger button (D164).
+- **Interface sounds (D208):** on by default, with a switch in the settings. The sound check confirms the presenters' microphones don't pick them up. The show laptop stays silent.
 - Both iPad and Android tablets must work (pending U19, the check on real devices).
 
 ## Player app
@@ -109,7 +110,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
 - **Only the current round** shows in "Historial", and only the cards of the round's type count in it (only special cards in the Quina Especial).
 - **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone says "Quina potra!", like the projector, with the glowing card, the nino and the confetti (D190).
-- **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
+- **Behaviour:** interface sounds only, on by default (Admin sets the default for everyone, and a player's own choice wins). One «Sons» switch covers the touch sounds and the game sounds. Touch sounds are recorded clicks, wobbly and bouncy, and a tap on something that can't be used gives a dull thud with a small "no" motion (D206–D208); the screen stays awake; vibration is only a bonus, because iPhones have none; it reconnects by itself, and offline it keeps its normal screens, visibly marked as offline.
 - **It never shows:** "you won" or any win announcement; the next song or the Queue, before a landing (its drum shows only songs still to come, blurred while it turns, in an order unrelated to the Queue; the agreed boards, canvas v61 onwards); earlier rounds' songs; a prize before its round's intro; other players' cards or the standing count.
 - **When the landed song is on your card (D74):** a flash turns the background from dark blue to gold, stage spotlights loop on the gold with option A's particles (a shooting-star streak, rising corn and hearts), and no lightning-bolt drawing. Two in a row play it again. It fades out smoothly when the drum starts spinning, and never plays in the Desgraciat (the card falls instead). Its flashes and particles play on top of everything, open drawers included (D90).
 - **A Celebration closes the open drawers** (Premis, Horari, Ajustos), but not the add-card pad while a number is being typed (D90).
@@ -132,7 +133,7 @@ Many people distrust computers and barely use their phones. The player app must 
 
 _From event.md › Prizes and sponsors, The cards; the decisions doc › Admin._
 
-**Who uses it:** the organizers, behind their Google login. A simpler design is fine.
+**Who uses it:** the organizers, behind their Google login. A simpler design is fine. It has no interface sounds (D208).
 
 - **Setup** (pending U18, the night's plan):
   - the edition's name and the cards in play, as ranges;
