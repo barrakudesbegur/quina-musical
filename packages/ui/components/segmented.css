@@ -88,6 +88,27 @@
   }
 }
 
+/* Following a parent's `progress` (a swipe, home-swipe): the thumb sits on the first column and moves by translate only,
+   with no slide of its own; the option it's nearest to reads ink. */
+.segmented[data-follow]::after {
+  position-anchor: auto;
+  top: var(--segment-pad);
+  bottom: var(--segment-pad);
+  left: var(--segment-pad);
+  right: auto;
+  width: calc((100% - 2 * var(--segment-pad) - (var(--segment-count) - 1) * var(--segment-gap)) / var(--segment-count));
+  translate: calc(var(--segment-progress) * (100% + var(--segment-gap))) 0;
+  transition: none;
+}
+
+.segmented[data-follow] > .segmented__option {
+  color: var(--segment-text);
+}
+
+.segmented[data-follow] > .segmented__option[data-lit] {
+  color: var(--color-ink);
+}
+
 .segmented[aria-disabled='true']::after {
   opacity: 0.45;
 }

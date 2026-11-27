@@ -10,6 +10,9 @@
   Either way, one Tab stop (a roving tabindex) and the arrow keys, Home and End move and choose, skipping disabled
   options. The parent owns the value (`bind:value`, or `value` + `onchange`).
   Sizes: `s` (44 px, the console's floor), `m` (48 px), `l` (64 px); the surface's scale comes from `data-density`.
+  `progress` (27 Nov, the phone home's swipe): a position from 0 (the first option) to the last option's index that the
+  thumb follows instead of sliding to the chosen option on its own, so a parent can drive it with a gesture
+  (ANIMATIONS.md › home-swipe); the option nearest to it reads ink on gold. Equal columns only.
 -->
 <script lang="ts" generics="T extends string">
   import Icon from '../icons/Icon.svelte';
@@ -33,6 +36,8 @@
     idPrefix?: string;
     disabled?: boolean;
     sound?: UiSound | null;
+    /** The thumb's place, driven by the parent (0 … options − 1); null: it slides to the chosen option itself. */
+    progress?: number | null;
     onchange?: (id: T) => void;
     class?: string;
     'data-testid'?: string;
@@ -49,6 +54,7 @@
     idPrefix,
     disabled = false,
     sound = 'tab',
+    progress = null,
     onchange,
     class: className = '',
     'data-testid': testid,
@@ -60,6 +66,7 @@
   const tabs = $derived(semantics === 'tabs');
   const columns = $derived(weights ? weights.map((w) => `minmax(0, ${w}fr)`).join(' ') : undefined);
   /** The one Tab stop: the chosen option, or the first usable one. */
+  const lit = $derived(progress === null ? null : Math.round(Math.min(options.length - 1, Math.max(0, progress))));
   const stop = $derived(options.some((o) => o.id === value && !o.disabled) ? value : options.find((o) => !o.disabled)?.id);
 
   function choose(id: T): void {
@@ -87,6 +94,9 @@
   data-testid={testid}
   style:grid-template-columns={columns}
   style:--segment-anchor="--segment-{uid}"
+  style:--segment-progress={progress}
+  style:--segment-count={progress === null ? undefined : options.length}
+  data-follow={progress === null ? undefined : 'true'}
 >
   {#each options as option, i (option.id)}
     {@const chosen = option.id === value}
@@ -102,6 +112,7 @@
       disabled={disabled || option.disabled}
       data-touch={sound ?? 'none'}
       data-chosen={chosen || undefined}
+      data-lit={lit === null ? undefined : lit === i || undefined}
       onclick={() => choose(option.id)}
       onkeydown={(e) => onkeydown(e, i)}
     >

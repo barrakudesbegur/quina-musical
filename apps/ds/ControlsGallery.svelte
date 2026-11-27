@@ -26,6 +26,8 @@
   let two = $state<'a' | 'b'>('a');
   let three = $state<'x' | 'y' | 'z'>('x');
   let view = $state<'list' | 'grid'>('grid');
+  /** The phone home's swipe drives the thumb (`progress`): a slider stands in for the finger here. */
+  let swipe = $state(0.4);
 
   // Neutral tabs (#42: the gallery shows the component, never a screen's story).
   type TabId = 'one' | 'two' | 'three' | 'four' | 'five';
@@ -106,8 +108,9 @@
   <p class="ds-prose">
     One of a few options in place: <code>options</code> (<code>id</code>, <code>label</code>, <code>icon</code>, <code>note</code>,
     <code>disabled</code>), <code>value</code>, <code>size</code> (s | m | l), <code>weights</code>, <code>semantics</code> (radio | tabs),
-    <code>disabled</code>, <code>sound</code>. The gold thumb slides to the chosen option (segment-slide: anchor positioning); one Tab
-    stop, the arrows, Home and End choose.
+    <code>disabled</code>, <code>sound</code>, <code>progress</code>. The gold thumb slides to the chosen option (segment-slide: anchor
+    positioning); one Tab stop, the arrows, Home and End choose. With <code>progress</code> (0 … options − 1) a parent drives the thumb
+    instead, with no slide of its own, and the nearest option reads ink: the phone home's swipe (home-swipe).
   </p>
   <div class="ds-gallery__grid ds-gallery__grid--wide">
     {#snippet g1()}<SegmentedControl label="Tipus" options={[{ id: 'a', label: 'Línia' }, { id: 'b', label: 'Quina' }]} bind:value={two} />{/snippet}
@@ -124,6 +127,11 @@
     {@render cell('disabled', g6)}
     {#snippet g7()}<SegmentedControl label="Tria" options={[{ id: 'a', label: 'All I Want for Christmas Is You' }, { id: 'b', label: 'SUPERESTRELLA' }]} bind:value={two} />{/snippet}
     {@render cell('long labels: one line, an ellipsis (R9)', g7)}
+    {#snippet g8()}
+      <SegmentedControl label="Vista" semantics="tabs" options={[{ id: 'list', label: 'Historial', icon: 'clock' }, { id: 'grid', label: 'Cartrons', icon: 'grid-rounded' }]} value={swipe < 0.5 ? 'list' : 'grid'} progress={swipe} />
+      <input class="ds-gallery__range" type="range" min="0" max="1" step="0.01" bind:value={swipe} aria-label="Swipe progress" />
+    {/snippet}
+    {@render cell(`tabs · progress ${swipe.toFixed(2)}: the thumb follows a swipe (drag the slider)`, g8)}
   </div>
 </section>
 
