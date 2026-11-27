@@ -1436,3 +1436,42 @@ By: the user (to Frontend). Source: Frontend's report of 27 Nov. Amends: D210 (t
 ### D212 · The player app on desktops and tablets · 2026-11-27 · Active
 The player app must look decent on a desktop or a tablet. It's not a responsive redesign, just a maximum width, so the screen doesn't stretch.
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D213 · U175's items the canvas comments changed · 2026-11-27 · Active
+From the user's comments on the Design system page (read by Frontend, 27 Nov). Everything else in U175 stands as recommended.
+- **Item 5:** "recommended" and "suggested" are design resources, not a component. RecommendedMark is dropped, and components take `ring`, `ribbon` and `dashed` props. The dashed "suggested" look gets a dashed 3D edge too (it had a solid bottom).
+- **Item 14:** use many more ninos from brand/ninos/figures (49), preferring the newer set. Never nino-sexe, and think twice about the drinking ones.
+By: the user via canvas. Source: Frontend's report of 27 Nov (temp/design-canvas/ds/comments-27nov.md). Amends: D211 (U175). Lives in: packages/ui.
+
+### D214 · Design-system details the user left to Frontend · 2026-11-27 · Active
+The user said "take a decision" on these, and Frontend decided:
+- FloatingButton becomes a `floating` prop on Button.
+- No `hidden` prop: parents use `{#if}`, and the native attribute passes through.
+- Inputs have no `state` prop; they derive their look from value, validity and disabled. IconPicker options are generic `{icon, disabled, tag}`, so "owned" is the player app's preset.
+- Chip: a `color`, plus a separate `glow` prop.
+- Text inside an input is never highlighted; match highlighting is only for result rows.
+- Tabs: when narrow, inactive tabs collapse to icons, and the active one shows its icon, label and extra control (the user's own pick of two options).
+- A compact `xs` size for small buttons.
+- Alternatives on the remote are joined by «/» (shake ×3 / B+A).
+- SoundPad becomes a grid component.
+- The Slider gets −/+ buttons (1 % steps), full keyboard control, and «80%» with no space.
+- Sheet and Dialog are native `<dialog>`, with a native-feeling drag.
+- The ticket's side holes are drawn with a CSS mask.
+By: Frontend, delegated by the user. Source: Frontend's report of 27 Nov. Lives in: packages/ui.
+
+### D215 · Project-wide UI rules · 2026-11-27 · Active
+Stated by the user on the canvas, for every app, Admin included:
+- **Focus:** never `:focus`, only `:focus-visible`. A test fails on a bare `:focus`.
+- **Text wrap:** headings use `balance` and body text `pretty`. This answers U189 with (a).
+- **Presses:** every interactive element gets a satisfying press, with travel, sound and haptics. Haptics is `navigator.vibrate` on Android phones; iPhones and iPads have no Vibration API, so they get sound and motion. Admin's presses are silent (D208). This is separate from the remote's vibrations (U177).
+- **"On":** a temporary active state is always animated panning stripes and never on by default. A locked state is never striped.
+- **Corners:** a control in a corner sits at equal distance from both edges. The user had to repeat it "a thousand times".
+- **Rings:** one even gap all round, the 3D edge included.
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: docs/team.md; requirements/screens.md › Every screen.
+
+### D216 · The sponsors, redone · 2026-11-27 · Active
+- **Projector:** much bigger logos, in a strip that pans slowly so every sponsor shows, starting at a random point so it isn't always the same ones first. It replaces the page of 8 at a time.
+- **Phone:** big logos in a scrolling list; a tap opens a logo larger in a dialog.
+- **The QR panel:** pure white, with more padding.
+UI only; the sponsor data doesn't change.
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Every sponsor appears, Projector, Player app.

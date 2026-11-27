@@ -115,11 +115,6 @@ The phone's drawers already close on a tap outside. On the console only ✕ and 
 - (b) Both close on a tap outside.
 - (c) Neither, as today.
 
-### U189 · Balanced line breaks on titles
-Two-line titles, like the drawers' and the Check's, would break into lines of even length, and paragraphs would avoid a lone last word. It changes line breaks on screens the user has already seen.
-- (a) Yes.
-- (b) No.
-
 ### U187 · The oldest iOS / iPadOS the screens support
 Today the code supports iOS and iPadOS 15.4. Some modern features need 16 or later: the console's layout per orientation (container queries) and the drawers' and dialogs' exit animations. Each has an older fallback, at some cost. Nothing crashes on iOS 15 today (Frontend checked, 27 Nov). The crowd brings old phones (the grandmother test), and nobody knows yet which tablet the presenters will use (U19).
 - (a) Keep 15.4 on the phones and the tablet, with the fallbacks.
@@ -312,6 +307,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U189 · Balanced line breaks on titles** (2026-11-27) → D215: yes, as a project-wide rule (headings balance, body text pretty).
 - **U175 · The design system's open choices** (2026-11-27) → D211: answered on the canvas. The user commented on the Design system page and then called it "correct"; Frontend applies the comments and reports any item they changed.
 - **U190 · The design system's props rework** (2026-11-27) → D210: all as recommended.
 - **U182–U186 · The interface sounds** (2026-11-27) → D208: the tablet on by default with a switch; none in Admin; one switch on phones; a thud on a refused tap; the sounds picked for the user, wobbly and bouncy.

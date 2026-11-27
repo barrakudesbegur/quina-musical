@@ -19,6 +19,9 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
 - **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (D114).
 - **Buttons are fully round only when floating** (D189). Every other button is a rounded rectangle.
+- **Every press feels good (D215):** each interactive element travels when pressed, with its sound (except in Admin, D208) and, on Android phones, a short vibration. iPhones and iPads have no vibration, so they get the sound and the motion.
+- **"On" is animated (D215):** a temporary active state, such as a Hold mode, shows panning stripes. Nothing is on by default, and a locked state is never striped.
+- **Placement (D215):** a control in a corner sits at the same distance from both edges. A ring keeps one even gap all round, its 3D edge included. Headings wrap balanced and body text wraps "pretty".
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
 - The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
@@ -31,7 +34,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 | State | What it shows |
 |---|---|
-| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the special card: the Desgraciat and the Especial); the price of a card for round 1; a large "scan your card" QR; the sponsors; a rough countdown |
+| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the special card: the Desgraciat and the Especial); the price of a card for round 1; a large "scan your card" QR on a pure white panel with generous padding (D216); the sponsors; a rough countdown |
 | A round's intro | "Quina N" (or "Quina Especial", "Quina Desgraciada") with its prize bundles and sponsors, revealed now as the presenters announce them |
 | The Shuffle | Every cover in a grid, shaken, flying into the drum |
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
@@ -102,6 +105,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
   - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
   - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
+  - the sponsors show as big logos in a scrolling list, and a tap opens a logo larger in a dialog (D216);
   - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next: "Venda de cartrons" first (D152), then the rounds with the night's one "Descans" among them, then "Fi" (D150, D192; a "Comencem" row and "+ llançament", pending U168). Breaks are "Descans" on every screen (D149);
   - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.
   - The corner buttons use style B, with matching icons, and the drawers use hierarchy J2; the menu drawer is titled with a settings word, not "Menu" (D87). The prizes drawer's design is still to pick (pending U30).
@@ -175,4 +179,4 @@ _From event.md › The presenters (Their equipment); the decisions doc › Chang
 
 _From event.md › Prizes and sponsors (Mention everyone)._
 
-- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. The before-the-start and Interval strip shows them a page of 8 at a time, cycling through every plan sponsor; the closing credits roll the whole list.
+- Every sponsor in the plan appears somewhere on the projector during the night: before the start, in a round's intro, in the Interval's thanks or in the closing credits. Money donors are thanked too, without a prize. Before the start and in the Interval, a strip of much bigger logos pans slowly so all of them show, starting at a random point so it isn't always the same ones first (D216). The closing credits roll the whole list.
