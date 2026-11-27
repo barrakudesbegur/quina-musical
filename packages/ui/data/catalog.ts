@@ -36,7 +36,7 @@ export interface Catalog {
 }
 
 /** What a round of side `side` plays of a card: that side's lines, as `{ id, type, lines }`; null when the card has
- * no such side (an especial card in a side-2 round). */
+ * no such side (a card printed on one side, in a side-2 round). */
 export function cardFace(card: CatalogCard, side: number = DEFAULT_SIDE): PlayerCard | null {
   const lines = card.sides.find((s) => s.side === side)?.lines;
   return lines ? { id: card.id, type: card.type, lines } : null;

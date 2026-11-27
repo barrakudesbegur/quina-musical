@@ -204,7 +204,7 @@ test('card views: only the right kind plays; every landed song is marked; unknow
 test("a side-2 round (D193: Quines 6–10): the phone shows and marks each normal card's side 2", () => {
   const sided = parseCards([
     { id: 123, type: 'normal', sides: [{ side: 1, lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] }, { side: 2, lines: [[71, 72, 73, 74], [75, 76, 77, 78], [79, 80, 81, 82]] }] },
-    { id: 412, type: 'especial', sides: [{ side: 1, lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] }] },
+    { id: 412, type: 'daurat', sides: [{ side: 1, lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]] }] },
   ]);
   const round = { number: 6, kind: 'normal' as const, cardType: 'normal', side: 2, startedAtMs: 0, lineConfirmed: false, ended: false, landings: [71, 72, 73, 2].map((songId, position) => ({ position, songId, atMs: 0 })) };
   const views = cardViews(saved, sided, round);
@@ -213,11 +213,34 @@ test("a side-2 round (D193: Quines 6–10): the phone shows and marks each norma
   assert.deepEqual([...views[0].near], [74], "1 song from side 2's first Line");
   assert.deepEqual(songsOnCards(views.filter((v) => v.valid)), new Set([71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82]), "the your-song look: side 2's songs");
   assert.deepEqual(views.map((v) => [v.saved.id, v.valid]), [[123, true], [412, false], [999, true]]);
-  assert.deepEqual(views[1].card?.lines[0], [1, 2, 3, 4], 'the especial card, resting, shows its one side');
+  assert.deepEqual(views[1].card?.lines[0], [1, 2, 3, 4], 'a one-sided card, resting, shows its one side');
   const one = cardViews(saved, sided, { ...round, number: 3, side: 1 });
   assert.deepEqual(one[0].card?.lines[0], [2, 17, 41, 69], 'a side-1 round: side 1');
   assert.deepEqual(cardViews(saved, sided, { ...round, side: undefined })[0].card?.lines[0], [2, 17, 41, 69], 'an older cloud sends no side: side 1');
   assert.deepEqual(cardViews(saved, sided, null)[0].card?.lines[0], [2, 17, 41, 69], 'before any round: side 1');
+});
+
+test("the especial card's two sides (D226): the Desgraciat round shows and counts side 1, the Especial round side 2", () => {
+  const SIDE_1 = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 12, 13]];
+  const SIDE_2 = [[41, 42, 43, 44], [45, 46, 47, 48], [49, 50, 51, 52]];
+  const sided = parseCards([
+    { id: 123, type: 'normal', sides: [{ side: 1, lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] }, { side: 2, lines: [[71, 72, 73, 74], [75, 76, 77, 78], [79, 80, 81, 82]] }] },
+    { id: 412, type: 'especial', sides: [{ side: 1, lines: SIDE_1 }, { side: 2, lines: SIDE_2 }] },
+  ]);
+  const landings = (ids: number[]) => ids.map((songId, position) => ({ position, songId, atMs: 0 }));
+  const desgraciat = { number: 6, kind: 'desgraciat' as const, cardType: 'especial', side: 1, startedAtMs: 0, lineConfirmed: false, ended: false, landings: landings([41, 13]) };
+  const d = cardViews(saved, sided, desgraciat);
+  assert.deepEqual(d.map((v) => [v.saved.id, v.valid]), [[123, false], [412, true], [999, true]]);
+  assert.deepEqual(d[1].card?.lines, SIDE_1, "side 1's songs");
+  assert.deepEqual(d[1].stand, { fall: { songId: 13, position: 1 } }, 'side 1 counts: «41» (side 2) passes it by, «13» sinks it');
+  const especial = { number: 11, kind: 'special' as const, cardType: 'especial', side: 2, startedAtMs: 0, lineConfirmed: false, ended: false, landings: landings([41, 42, 1]) };
+  const e = cardViews(saved, sided, especial);
+  assert.deepEqual(e.map((v) => [v.saved.id, v.valid]), [[123, false], [412, true], [999, true]]);
+  assert.deepEqual(e[1].card?.lines, SIDE_2, "side 2's songs");
+  assert.equal(e[1].marks?.count, 2, "only side 2's songs mark: «1» is on side 1");
+  assert.deepEqual(songsOnCards(e.filter((v) => v.valid)), new Set(SIDE_2.flat()), "the your-song look: side 2's songs");
+  const quina1 = cardViews(saved, sided, { ...especial, number: 1, kind: 'normal', cardType: 'normal', side: 1 });
+  assert.deepEqual([quina1[1].valid, quina1[1].card?.lines], [false, SIDE_1], 'resting in a side-1 normal round: its side 1');
 });
 
 test("a round of any card type counts only that type's cards; an older snapshot plays its kind's default", () => {

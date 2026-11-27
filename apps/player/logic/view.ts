@@ -99,8 +99,9 @@ export interface CardView {
 }
 
 /**
- * The side a phone shows of a printed card in a round of side `side` (D178): that side; a card without it (an especial
- * card while the normal cards play side 2) shows its first side, and doesn't count.
+ * The side a phone shows of a printed card in a round of side `side` (D178): that side, whichever type plays (the
+ * especial card's side 1 in the Desgraciat round, its side 2 in the Especial round: D226); a card without it (one
+ * printed on one side, while the round plays side 2) shows its first side, and doesn't count.
  */
 export const shownFace = (card: CatalogCard, side: number): PlayerCard | null => cardFace(card, side) ?? cardFace(card, card.sides[0]?.side);
 

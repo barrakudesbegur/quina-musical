@@ -70,7 +70,7 @@ export type CardPeek =
   | { status: 'noCards' }
   /** No printed card has this number. */
   | { status: 'unknown'; cardId: number }
-  /** A card of another type, or without the round's side (an especial card in a side-2 round). */
+  /** A card of another type, or without the round's side (a card printed on one side, in a side-2 round). */
   | { status: 'otherRound'; cardId: number; type: string }
   | {
       status: 'ok';
