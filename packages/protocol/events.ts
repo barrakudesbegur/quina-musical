@@ -127,6 +127,13 @@ export interface CardsInfo {
   validCount: number;
   phaseSource: PhaseSource;
   climbingTo: ClimbTarget;
+  /**
+   * The last `addCardsInPlay` the engine took (D234), so the console that sent it (its `reqId`) can say what happened:
+   * `added`, the numbers that joined the cards in play, and `alreadyIn`, those that were in play already (a second
+   * console may have added them a moment before), each as ranges ("" for none). Null until one; not journaled, so a
+   * restart forgets it. Optional in the type only.
+   */
+  lastAdd?: { reqId: string; added: string; alreadyIn: string } | null;
 }
 
 export interface PossibleWinner {

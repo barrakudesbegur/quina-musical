@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, isVoiceCue, autoSoundsOf, drumOrder, AUTO_SOUNDS, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, isVoiceCue, autoSoundsOf, drumOrder, formatCardRanges, AUTO_SOUNDS, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   AutoSound,
   AutoSounds,
@@ -652,6 +652,8 @@ export class Show {
   plan: GamePlan | null = null;
   cardsInPlayText = '';
   cardsInPlay: number[] = [];
+  /** The last `addCardsInPlay` taken (D234): the state's `cards.lastAdd`. Not journaled. */
+  cardsLastAdd: { reqId: string; added: string; alreadyIn: string } | null = null;
   phaseModel: PhaseModel = { kind: 'line', start: 0, seed: 0, valid: [], plan: null };
   /** The round's songs from its Queue and cards in play (its first Bingo or last card standing), or null. */
   expectedSongs: number | null = null;
@@ -925,6 +927,9 @@ export class Show {
         }
         break;
       }
+      case 'addCardsInPlay':
+        this.addCards(reqId, c.ranges);
+        break;
       case 'newRound': {
         // Default: the introduced round; in `before`, round 1 again (the Game has not started); else the next.
         const number = c.number ?? this.intro?.round ?? (this.scene === 'before' ? this.round.number : this.round.number + 1);
@@ -1574,6 +1579,36 @@ export class Show {
     if ('settings' in body && body.settings?.volumes) this.journaledVolumes = { ...VOLUME_DEFAULTS, ...body.settings.volumes };
     this.out.push({ type: 'journal', entry });
     this.emit({ type: 'journal.entry', entry });
+  }
+
+  /**
+   * Merge cards into the cards in play (D234's «Cartrons venuts»): two consoles adding at once keep both. Refused whole
+   * when a number isn't printed (`detail`: those numbers, as ranges), or when the merged list would no longer fit in a
+   * `cards.set` (setCardsInPlay's limit, which the cloud's journal check keeps too). Journaled as `cards.set` with the
+   * merged list, only when something joined.
+   */
+  addCards(reqId: string, ranges: string) {
+    let ids: number[];
+    try {
+      ids = parseCardRanges(ranges);
+    } catch (error) {
+      return this.reject(reqId, 'addCardsInPlay', 'invalid', error instanceof Error ? error.message : String(error));
+    }
+    if (!ids.length) return this.reject(reqId, 'addCardsInPlay', 'invalid', 'no card numbers');
+    const unknown = this.unknownCards(ids);
+    if (unknown.length) return this.reject(reqId, 'addCardsInPlay', 'invalid', formatCardRanges(unknown));
+    const have = new Set(this.cardsInPlay);
+    const added = ids.filter((id) => !have.has(id));
+    const merged = formatCardRanges([...this.cardsInPlay, ...added].sort((a, b) => a - b));
+    if (added.length && merged.length > COMMANDS.setCardsInPlay.ranges.maxLength) {
+      return this.reject(reqId, 'addCardsInPlay', 'invalid', `the cards in play would no longer fit in ${COMMANDS.setCardsInPlay.ranges.maxLength} characters`);
+    }
+    this.cardsLastAdd = { reqId, added: formatCardRanges(added), alreadyIn: formatCardRanges(ids.filter((id) => have.has(id))) };
+    if (!added.length) return;
+    this.setCards(merged);
+    this.journal({ kind: 'cards.set', ranges: merged });
+    this.rebuildPhase();
+    this.rescheduleAuto();
   }
 
   /** Set the cards in play from their ranges; throws on bad ranges and leaves them as they were. */
@@ -3767,6 +3802,7 @@ export class Show {
         validCount: this.phaseModel.valid.length,
         phaseSource: this.game.phaseOverride ? 'override' : this.phaseModel.plan ? 'cards' : 'placeholder',
         climbingTo: this.phaseModel.kind,
+        lastAdd: this.cardsLastAdd ? { ...this.cardsLastAdd } : null,
       },
       possibleWinners: this.possibleWinners(),
       future: this.future(),

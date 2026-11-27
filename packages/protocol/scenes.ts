@@ -52,6 +52,7 @@ const RULES = {
   setAutoSound: 'any',
   setVolume: 'any',
   setCardsInPlay: 'any',
+  addCardsInPlay: 'any',
   sfx: 'any',
   overrideNextRecipe: 'any',
   panic: 'any',

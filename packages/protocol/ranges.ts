@@ -29,3 +29,15 @@ export function parseCardRanges(text: string | null | undefined): number[] {
   return [...ids].sort((x, y) => x - y);
 }
 
+/** [1, 2, 3, 7, 9, 10] → "1-3, 7, 9-10": card ids written back as ranges (`addCardsInPlay` merges into these). Expects
+ * sorted unique ids (parseCardRanges gives those). */
+export function formatCardRanges(ids: readonly number[]): string {
+  const runs: [number, number][] = [];
+  for (const id of ids) {
+    const last = runs.at(-1);
+    if (last && id === last[1] + 1) last[1] = id;
+    else runs.push([id, id]);
+  }
+  return runs.map(([a, b]) => (a === b ? String(a) : `${a}-${b}`)).join(', ');
+}
+

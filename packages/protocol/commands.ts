@@ -124,6 +124,13 @@ export const COMMANDS = Object.freeze({
   confirmLine: {},
   /** Cards in play for the whole game, as ranges ("1-180, 200-215, 400-460"); empty clears them. */
   setCardsInPlay: { ranges: { type: 'string', allowEmpty: true, maxLength: 2000 } },
+  /**
+   * Add cards to the cards in play (D234's «Cartrons venuts»), as ranges like `setCardsInPlay`'s: the engine merges
+   * them, so two consoles adding at once keep both. A number that isn't printed refuses the whole add as `invalid`
+   * (`detail`: those numbers, as ranges); numbers already in play are fine, and the state's `cards.lastAdd` says which
+   * they were. Journaled as `cards.set` with the merged list.
+   */
+  addCardsInPlay: { ranges: { type: 'string', maxLength: 2000 } },
   /** Run the round's public, tie-free Shuffle (scene `roundStart`, `shuffle.scheduled`); the scene becomes
    * `play` when it ends, and the first Next waits for it. Without `number`/`kind`: the introduced round's
    * (`roundIntro`), else the next one. */
