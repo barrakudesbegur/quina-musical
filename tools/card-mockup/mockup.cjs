@@ -209,9 +209,9 @@ const BrandFooter = () =>
     h(Svg, { viewBox: '0 0 512 683', style: { height: 12, width: 9 } }, h(Path, { d: ICON_D, fill: '#000000' })),
     h(Text, { style: { fontSize: 9, fontWeight: 'light', letterSpacing: 0.8, lineHeight: 1 } }, `${BRAND[0]} · ${BRAND[1]}`));
 
-const NumberAndQr = ({ num, qr, qrSize }) =>
-  h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } },
-    h(View, { style: st.numberBox },
+const NumberAndQr = ({ num, qr, qrSize, width = 62, gap = 8 }) =>
+  h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap } },
+    h(View, { style: [st.numberBox, { width }] },
       h(Text, { style: st.numberLabel }, 'CARTRÓ'),
       h(Text, { style: st.numberValue }, h(Text, { style: { color: '#bdbdbd' } }, '#'), String(num))),
     h(Image, { src: qr, style: { width: qrSize, height: qrSize } }));
@@ -229,7 +229,12 @@ function geometry(layout) {
   // 'oneRow' (compact branding, heading, GOMET, number, QR), 'band' (branding + GOMET + number + QR, then the heading in
   // a band on the grid), 'footer' (heading, GOMET, number, QR; the branding in a line under the grid).
   const style = layout.header || (single ? 'single' : 'twoRows');
-  const qrSize = style === 'single' ? 45 : style === 'twoRows' ? 42 : 40;
+  const qrSize = style === 'single' ? 45 : style === 'twoRows' ? 42 : style === 'gometNino' ? 35 : 40;
+  // The GOMET + figure header keeps the heading at 38 pt, centred on the card (the user: "dont make the text smaller"):
+  // its right side is slimmer (a 35 pt QR, the number box as wide as «#500», 6 pt gaps) and the black box's padding 4 pt.
+  const NINO_NUMBER_W = 54; // «#500», the widest number, is 52.8 pt
+  const NINO_GAP = 6;
+  const headingPad = style === 'gometNino' ? 4 : 10;
   const rightW = GOMET.diameter + 8 + 62 + 8 + qrSize; // GOMET, number, QR
   const ROW = 46;
   const BAND_SIZE = 22;
@@ -242,10 +247,10 @@ function geometry(layout) {
     footer: { headerH: ROW, room: innerW - rightW - 8, max: 34, footerH: 6 + FOOTER_H },
     gometLeft: { headerH: ROW, room: innerW - rightW - 16, max: 38, footerH: 0 },
     // The heading centred on the card: it may reach as far as the nearer side block allows.
-    gometNino: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + 8 + NINO_W) - 8, innerW / 2 - (62 + 8 + qrSize) - 8), max: 38, footerH: 0 },
+    gometNino: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + 8 + NINO_W) - NINO_GAP, innerW / 2 - (NINO_NUMBER_W + NINO_GAP + qrSize) - NINO_GAP), max: 38, footerH: 0 },
   }[style];
   const headerH = spec.headerH;
-  const widest = Math.max(...[...HEADINGS.normal, ...HEADINGS.especial].map((t) => headingWidth(t, 38, true)));
+  const widest = Math.max(...[...HEADINGS.normal, ...HEADINGS.especial].map((t) => textWidth(REGULAR, t, 38) + 2 * headingPad));
   const headingSize = Math.min(spec.max, Math.floor((38 * spec.room) / widest));
   const gridH = innerH - headerH - 7 - spec.footerH;
   const cellW = (innerW - 4) / 4;
@@ -253,12 +258,12 @@ function geometry(layout) {
   const top = layout.cellMode ? layout.cellMode === 'above' : cellH / cellW >= 0.7; // tall cells: the cover above the title
   const cover = layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
   const text = top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
-  return { page, W, H, innerW, single, style, qrSize, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
+  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: style === 'gometNino' ? NINO_NUMBER_W : 62, numberGap: style === 'gometNino' ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
 }
 
 function Header({ g, kind, side, num, qr }) {
   const filled = side === 2;
-  const heading = h(CapText, { text: HEADINGS[kind][side - 1], size: g.headingSize, filled, padX: filled ? 10 : 0, padY: filled ? 7 : 0 });
+  const heading = h(CapText, { text: HEADINGS[kind][side - 1], size: g.headingSize, filled, padX: filled ? g.headingPad : 0, padY: filled ? 7 : 0 });
   const centred = (child) => h(View, { style: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, child);
   const right = h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } }, h(Gomet), h(NumberAndQr, { num, qr, qrSize: g.qrSize }));
   const row = (children, extra = {}) => h(View, { style: [{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 46 }, extra] }, ...children);
@@ -278,7 +283,7 @@ function Header({ g, kind, side, num, qr }) {
     return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
       h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } }, h(Gomet), h(Nino)),
       centred(heading),
-      h(NumberAndQr, { num, qr, qrSize: g.qrSize }));
+      h(NumberAndQr, { num, qr, qrSize: g.qrSize, width: g.numberW, gap: g.numberGap }));
   }
   if (g.style === 'gometLeft') {
     // No branding: the GOMET circle on the left, the heading centred between it and the number.
@@ -364,7 +369,7 @@ async function build(key) {
   const ts = stats.map((s) => s.ts).sort((a, b) => a - b);
   const mm = (pt) => (pt / 2.8346).toFixed(0);
   const sheets = Math.ceil(amounts.normal / perPage) + Math.ceil(amounts.especial / perPage);
-  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage} a ${layout.sheet} (${sheets} sheets for ${amounts.normal}+${amounts.especial}), cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
+  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage} a ${layout.sheet} (${sheets} sheets for ${amounts.normal}+${amounts.especial}), cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, heading ${g.headingSize} pt, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
 }
 
 (async () => {
