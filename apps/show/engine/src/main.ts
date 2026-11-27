@@ -347,6 +347,10 @@ async function boot() {
   }
   bus.on((message, { local }) => {
     if (!local && isRecord(message) && message.type === 'cmd') run(created.command(message));
+    // Who is connected: a two-level button held on a console that left is let go (D234).
+    if (!local && isRecord(message) && message.type === 'relay.clients' && Array.isArray(message.clients)) {
+      run(created.clientsChanged(message.clients.flatMap((c: unknown) => (isRecord(c) && typeof c.clientId === 'string' ? [c.clientId] : []))));
+    }
     // The edition's plan, pushed by the relay: the Schedule and the Interval's countdown follow it.
     if (!local && isRecord(message) && message.type === 'relay.plan') {
       const check = message.plan == null ? null : checkGamePlan(message.plan);

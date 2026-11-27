@@ -1,9 +1,11 @@
 // Several consoles at once (D234): the presenters' tablet, the tech's laptop, a Wii's console. Adding sold cards
-// merges, so two consoles adding at the same moment keep both.
+// merges, so two consoles adding at the same moment keep both; a two-level button held on one shows locked on the
+// others (the lock mirror), the relay saying which console sent each command.
 import nodeTest from 'node:test';
 import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
-import { formatCardRanges, makeCommand, parseCardRanges, replayJournal, type JournalEntry } from '@quina/protocol';
+import { checkCommand, formatCardRanges, makeCommand, parseCardRanges, replayJournal, stampCommandFrom, type CommandFields, type JournalEntry } from '@quina/protocol';
+import { TWO_LEVEL, SUSPENSE } from '../engine/src/config.ts';
 import type { Effect } from '../engine/src/show/show.ts';
 import { allCards, setup } from './support/harness.ts';
 
@@ -72,4 +74,97 @@ test('D234: addCardsInPlay is journaled as cards.set with the merged list, as se
   const record = replayJournal(journalOf(h.log));
   assert.equal(record.cardsInPlay, '1-100, 400-450, 460');
   assert.equal(setup({ seed: 4, cards: allCards, restore: record }).show.snapshot().cards.inPlay, '1-100, 400-450, 460');
+});
+
+// ---- the lock mirror ------------------------------------------------------------------------------------------
+const TABLET = 'tauleta-a1b2c';
+const LAPTOP = 'portatil-x9y8z';
+/** A two-level press or release from a console, as the relay forwards it (its `from`). */
+const twoLevel = (h: ReturnType<typeof setup>, from: string | null, fields: CommandFields['twoLevelHold']) =>
+  h.dispatch({ ...makeCommand('twoLevelHold', fields), ...(from ? { from } : {}) });
+const heldOf = (h: ReturnType<typeof setup>) => h.show.snapshot().twoLevelHeld;
+
+test('D234: a console holds a two-level button and lets it go; the state says which and who; not journaled', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  assert.equal(heldOf(h), null);
+  const press = twoLevel(h, TABLET, { button: 'hold', on: true });
+  assert.deepEqual(heldOf(h), { button: 'hold', clientId: TABLET, label: TABLET, sinceMs: h.env.nowMs() });
+  assert.ok(press.some((e) => e.type === 'emit' && e.message.type === 'state'), 'the consoles hear it');
+  const release = twoLevel(h, TABLET, { button: 'hold', on: false });
+  assert.equal(heldOf(h), null);
+  assert.deepEqual([...journalOf(press), ...journalOf(release)], []);
+  // Aguanta's, the same.
+  twoLevel(h, LAPTOP, { button: 'stay', on: true });
+  assert.equal(heldOf(h)?.button, 'stay');
+});
+
+test('D234: while one console holds, another’s press is refused busy and its release ignored; the first keeps it', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  assert.deepEqual(rejected(twoLevel(h, LAPTOP, { button: 'stay', on: true })), ['busy']);
+  assert.deepEqual(rejected(twoLevel(h, LAPTOP, { button: 'hold', on: true })), ['busy']);
+  assert.equal(heldOf(h)?.clientId, TABLET);
+  assert.deepEqual(rejected(twoLevel(h, LAPTOP, { button: 'hold', on: false })), [], 'ignored, silently');
+  assert.equal(heldOf(h)?.clientId, TABLET);
+  twoLevel(h, TABLET, { button: 'stay', on: false });
+  assert.equal(heldOf(h)?.button, 'hold', 'the release of the other button is not this one’s');
+  twoLevel(h, TABLET, { button: 'hold', on: false });
+  assert.equal(heldOf(h), null);
+  assert.deepEqual(rejected(twoLevel(h, LAPTOP, { button: 'hold', on: true })), [], 'free again');
+});
+
+test('D234: the holder disconnecting lets the button go; another console leaving does not', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'stay', on: true });
+  h.show.clientsChanged(['show-1', TABLET]);
+  assert.equal(heldOf(h)?.clientId, TABLET, 'still connected');
+  const gone = h.show.clientsChanged(['show-1', LAPTOP]);
+  assert.equal(heldOf(h), null);
+  assert.ok(gone.some((e) => e.type === 'emit' && e.message.type === 'state'));
+  // The show page's own command (no `from`) is never in the relay's list: only the timeout or its release clear it.
+  twoLevel(h, null, { button: 'hold', on: true });
+  h.show.clientsChanged(['show-1']);
+  assert.equal(heldOf(h)?.clientId, 'local');
+});
+
+test('D234: a lost release clears by itself after the timeout; Aguanta’s outlasts the Suspense it may escalate to', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  h.advance(TWO_LEVEL.timeoutSec.hold - 0.5);
+  assert.equal(heldOf(h)?.clientId, TABLET);
+  const out = h.advance(1);
+  assert.equal(heldOf(h), null);
+  assert.ok(out.some((e) => e.type === 'emit' && e.message.type === 'state' && e.message.twoLevelHeld === null));
+  twoLevel(h, TABLET, { button: 'stay', on: true });
+  h.advance(SUSPENSE.autoReleaseSec + 1);
+  assert.equal(heldOf(h)?.button, 'stay', 'held through a whole Suspens');
+  h.advance(TWO_LEVEL.timeoutSec.stay - SUSPENSE.autoReleaseSec);
+  assert.equal(heldOf(h), null);
+});
+
+test('D234: the release goes through in any scene, Pausa included (Parlem’s press escalates to it)', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  h.send('pause', { on: true });
+  assert.deepEqual(rejected(twoLevel(h, TABLET, { button: 'hold', on: false })), []);
+  assert.equal(heldOf(h), null);
+});
+
+nodeTest('D234: the relay stamps the sender on every command, over any `from` the sender set; the engine checks it', () => {
+  const forged: Record<string, unknown> = { ...makeCommand('twoLevelHold', { button: 'hold', on: true }), from: LAPTOP };
+  stampCommandFrom(forged, TABLET);
+  assert.equal(forged.from, TABLET);
+  const anonymous: Record<string, unknown> = { ...makeCommand('next'), from: LAPTOP };
+  stampCommandFrom(anonymous, '');
+  assert.equal('from' in anonymous, false, 'no clientId: none');
+  assert.ok(checkCommand(forged).ok);
+  assert.ok(checkCommand(anonymous).ok);
+  assert.equal(checkCommand({ ...makeCommand('next'), from: 7 }).ok, false);
+  assert.equal(checkCommand({ ...makeCommand('next'), from: '' }).ok, false);
+  assert.equal(checkCommand({ ...makeCommand('twoLevelHold', { button: 'hold', on: true }), button: 'next' }).ok, false);
 });

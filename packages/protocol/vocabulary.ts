@@ -321,6 +321,11 @@ export const DRUMROLL_LAND_AFTER_SEC = 2;
 export const PAD_HOLD_EFFECTS = ['drumroll'] as const;
 export type PadHoldEffect = (typeof PAD_HOLD_EFFECTS)[number];
 
+/** The two-level buttons a console holds (`twoLevelHold`, D234): Parlem's press that escalates to Pausa (`hold`) and
+ * Aguanta's that escalates to Suspens (`stay`). */
+export const TWO_LEVEL_BUTTONS = ['hold', 'stay'] as const;
+export type TwoLevelButton = (typeof TWO_LEVEL_BUTTONS)[number];
+
 /** Each slider's highest percent (D157: every one to about 150%, +7 dB; the engine's headroom keeps it clean). */
 export const VOLUME_MAX: Readonly<Volumes> = Object.freeze(
   Object.fromEntries(VOLUME_KEYS.map((key) => [key, 150])) as Volumes,

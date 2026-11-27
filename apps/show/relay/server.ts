@@ -30,7 +30,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import {
-  PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readRemoteStatus, remoteStatusMessage, revealedRounds,
+  PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readRemoteStatus, remoteStatusMessage, revealedRounds, stampCommandFrom,
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
 import { distProblem } from './build-stamp.ts';
@@ -555,6 +555,9 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       if (message.cmd === 'getJournal' && self.role !== 'cloud') return;
     } else if (self.role !== 'show') return;
     if (message.type === 'state') lastState = message as unknown as ShowState;
+    // Who sent a command (D234's lock mirror): the relay's word, overwriting any a console set, so none can speak for
+    // another. Commands through the cloud carry the link's; a client without a clientId sends none.
+    if (isCommand) stampCommandFrom(message, self.clientId);
     const text = JSON.stringify(message);
     for (const [other, info] of clients) {
       if (other === socket || other.readyState !== other.OPEN) continue;

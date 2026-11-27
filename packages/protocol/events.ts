@@ -27,6 +27,7 @@ import {
   type ThrowSong,
   type VoiceCue,
   type PadHoldEffect,
+  type TwoLevelButton,
   type VolumeKey,
   type WinKind,
 } from './vocabulary.ts';
@@ -560,6 +561,13 @@ export interface ShowState {
   voiceNext?: { cue: VoiceCue; atMs: number } | null;
   /** An effect held on the D-pad (D203), while held. Optional in the type only, as `voice`. */
   padHold?: { effect: PadHoldEffect; sinceMs: number; intensity: number } | null;
+  /**
+   * A two-level button held on a console (D234, `twoLevelHold`), else null: the other consoles show that button locked
+   * («La manté <label>») until it's let go. `clientId`: the holder console's (the relay's `from`; the console whose own
+   * it is shows it as usual). `label`: the holder's name for the screen; the engine knows no display name, so it is
+   * the clientId, which starts with the device's label. Optional in the type only, as `voice`.
+   */
+  twoLevelHeld?: { button: TwoLevelButton; clientId: string; label: string; sinceMs: number } | null;
   /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
    * button shows in it (D155; SceneContext.lastRound). */
   lastRound: boolean;

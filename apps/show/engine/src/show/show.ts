@@ -67,12 +67,13 @@ import type {
   VoiceCue,
   VoiceLead,
   PadHoldEffect,
+  TwoLevelButton,
   ThrowInfo,
   ThrowTrackInfo,
   VolumeKey,
   Volumes,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW, VOICE, DRUMROLL } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW, VOICE, DRUMROLL, TWO_LEVEL } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun, type PrintedCard } from '../game/cards.ts';
 import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
 import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
@@ -630,6 +631,9 @@ const PHASE_RANK: Record<PhaseName, number> = { early: 0, mid: 1, late: 2, final
 const settled = (c: ClaimInfo) => c.status === 'valid' || c.status === 'invalid' || c.status === 'discarded';
 const copyClaim = (c: ClaimInfo): ClaimInfo => ({ ...c, warnings: [...c.warnings], markedCard: c.markedCard.map((s) => ({ ...s })) });
 
+/** Who a command without the relay's `from` came from: the show page itself (never in the relay's client list). */
+const OWN_PAGE = 'local';
+
 /** Copy one field when the source sets it. The call compiles only if the source's field fits the target's. */
 /** A Game id from the clock (no random draw, so seeded shows stay as they were), e.g. `g-2026-11-24-mhv2k1x0`. */
 function newGameId(env: Env): string {
@@ -763,6 +767,9 @@ export class Show {
   drumSeed = 0;
   /** The sound test playing (D229), else null. */
   soundTest: { kind: SoundTestKind; sinceMs: number } | null = null;
+  /** A two-level button held on a console (D234), the state's `twoLevelHeld`; `until`: when it clears by itself (audio
+   * clock). Not journaled. */
+  twoLevelHeld: { button: TwoLevelButton; clientId: string; sinceMs: number; until: number } | null = null;
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
   heatSample: { at: number; value: number } | null = null;
   holdMusicMood: HoldMood = 'hold';
@@ -1017,6 +1024,9 @@ export class Show {
       case 'padHold':
         this.padHold(c.effect, c.on, c.intensity);
         break;
+      case 'twoLevelHold':
+        this.twoLevelHold(reqId, c.button, c.on, c.from ?? OWN_PAGE);
+        break;
       case 'finale':
         this.setFinale(reqId, c.cardIds);
         break;
@@ -1083,6 +1093,10 @@ export class Show {
       this.volumesMovedAt = null;
       this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     }
+    if (this.twoLevelHeld && now >= this.twoLevelHeld.until) {
+      this.twoLevelHeld = null; // a lost release never locks the other consoles (D234)
+      this.emitState();
+    }
     if (this.unlocked) this.tickFlow(now);
     if (this.unlocked) this.tickVoice(now);
     if (this.status !== 'transition' && this.status !== 'locked') this.prepareNext();
@@ -1121,6 +1135,19 @@ export class Show {
         this.toHoldMusic();
         this.emitState();
       }
+    }
+    return this.flush();
+  }
+
+  /**
+   * The relay's client list (`relay.clients`): a two-level button held on a console that has left is let go (D234), so
+   * a dropped link never locks the others.
+   */
+  clientsChanged(clientIds: readonly string[]): Effect[] {
+    const held = this.twoLevelHeld;
+    if (held && held.clientId !== OWN_PAGE && !clientIds.includes(held.clientId)) {
+      this.twoLevelHeld = null;
+      this.emitState();
     }
     return this.flush();
   }
@@ -1537,6 +1564,19 @@ export class Show {
     const shown = new Set([...(last == null ? [] : [last]), ...this.queue.slice(position + 1)]);
     const ids = drumOrder(this.queue, this.drumSeed).filter((id) => shown.has(id));
     return last == null ? { type: 'drumReset', ids } : { type: 'drumReset', ids, selectId: last };
+  }
+
+  /**
+   * The lock mirror (D234): one console at a time holds a two-level button. Another console's press meanwhile is refused
+   * `busy` (the first holder keeps it), and a release that isn't the holder's, of that button, is ignored. The holder's
+   * own press again (the other button) takes over. It clears by itself after TWO_LEVEL.timeoutSec.
+   */
+  twoLevelHold(reqId: string, button: TwoLevelButton, on: boolean, clientId: string) {
+    const held = this.twoLevelHeld;
+    if (on) {
+      if (held && held.clientId !== clientId) return this.reject(reqId, 'twoLevelHold', 'busy', `held by ${held.clientId}`);
+      this.twoLevelHeld = { button, clientId, sinceMs: this.env.nowMs(), until: this.env.now() + TWO_LEVEL.timeoutSec[button] };
+    } else if (held?.clientId === clientId && held.button === button) this.twoLevelHeld = null;
   }
 
   /** The sound test (D229): one kind at a time; the runtime plays it at its slider's level. */
@@ -3840,6 +3880,9 @@ export class Show {
       throwSongs: { throw: throwTrackInfo('throw'), storm: throwTrackInfo('storm') },
       voice: this.voice ? { cue: this.voice.cue, sinceMs: this.voice.sinceMs, durationMs: this.voice.durationMs } : null,
       soundTest: this.soundTest ? { ...this.soundTest } : null,
+      twoLevelHeld: this.twoLevelHeld
+        ? { button: this.twoLevelHeld.button, clientId: this.twoLevelHeld.clientId, label: this.twoLevelHeld.clientId, sinceMs: this.twoLevelHeld.sinceMs }
+        : null,
       voiceNext: this.voiceNext(),
       padHold: this.padHeld ? { effect: this.padHeld.effect, sinceMs: this.padHeld.sinceMs, intensity: this.padHeld.intensity } : null,
     };

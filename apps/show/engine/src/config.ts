@@ -943,6 +943,16 @@ export const DRUMROLL = Object.freeze({
 });
 
 /**
+ * The lock mirror of a two-level button held on a console (D234, `twoLevelHold`). The lock clears by itself this long
+ * after the press, so a lost release never locks the other consoles: 10 s past the escalation (the console's
+ * `escalateHoldMs` and the Wii's hold, 0.8 s); Aguanta's escalates to Suspens, which is held with the finger down until it
+ * releases by itself (SUSPENSE.autoReleaseSec), so its lock waits that long too.
+ */
+export const TWO_LEVEL = Object.freeze({
+  timeoutSec: Object.freeze({ hold: 0.8 + 10, stay: 0.8 + SUSPENSE.autoReleaseSec + 10 }),
+});
+
+/**
  * The mix (D157, D158): the whole show plays lower inside by `headroomDb`, in front of the master limiter, so a slider
  * above 100% (the throws at +6 dB) stays clean. The tech turns the sound system up by as much, once, at the sound check.
  */

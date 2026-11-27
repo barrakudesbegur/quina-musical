@@ -94,6 +94,8 @@ const RULES = {
   voiceSkip: 'any',
   // Held effects (D203): in any scene, never during Pausa (not 'any', so the paused rule applies).
   padHold: () => true,
+  // The lock mirror (D234): a press's release may come in any scene, Pausa included (Parlem's press escalates to it).
+  twoLevelHold: 'any',
   // The Desgraciat's finale, in its round (D167); the engine refuses it in another kind of round.
   finale: ['play'],
   finaleCue: ['play'],

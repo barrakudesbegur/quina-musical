@@ -12,6 +12,7 @@ import {
   SOUND_TEST_KINDS,
   CARD_TYPE_ID_RE,
   PAD_HOLD_EFFECTS,
+  TWO_LEVEL_BUTTONS,
   SIDE_MAX,
   ROUND_KINDS,
   WIN_KINDS,
@@ -109,6 +110,14 @@ export const COMMANDS = Object.freeze({
    * `intensity`, 0–1, from the shakes while held), `on: false` lets go. The drum roll plays on the music's beat while
    * held; let go after DRUMROLL.landAfterSec it lands with a hit on the next beat, sooner it stops smoothly.
    */
+  /**
+   * A two-level button held on a console (D234): `on: true` on its press, `on: false` on its release (a Wii's held B or
+   * −/+ counts as its console's). The engine keeps one holder in the state (`twoLevelHeld`), so the other consoles show
+   * that button locked until it's let go; another console's press meanwhile is refused `busy`, and its release ignored.
+   * The holder is the relay's `from`. It also clears when the holder disconnects, and after TWO_LEVEL.timeoutSec. Not
+   * journaled.
+   */
+  twoLevelHold: { button: { type: 'string', oneOf: TWO_LEVEL_BUTTONS }, on: { type: 'boolean' } },
   padHold: {
     effect: { type: 'string', oneOf: PAD_HOLD_EFFECTS },
     on: { type: 'boolean' },
@@ -327,6 +336,9 @@ export interface CommandEnvelope<C extends CommandName = CommandName> {
   cmd: C;
   /** Any unique string; a rejection quotes it back. */
   reqId: string;
+  /** The sender's clientId, stamped by the relay on every command it forwards (it overwrites one a console sets, so a
+   * console can't speak for another); absent on the show page's own commands. */
+  from?: string;
 }
 
 /** A checked command, as a discriminated union on `cmd`: `switch (command.cmd)` narrows its fields. */
@@ -338,7 +350,9 @@ export type CommandCheck =
   | { ok: true; command: Command }
   | { ok: false; error: string; reqId: string | null; cmd: string | null };
 
-const ENVELOPE_KEYS = new Set(['v', 'type', 'cmd', 'reqId']);
+const ENVELOPE_KEYS = new Set(['v', 'type', 'cmd', 'reqId', 'from']);
+/** The longest `from` (a clientId) a command may carry. */
+export const COMMAND_FROM_MAX_LENGTH = 200;
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value) && typeof value === 'object';
 
 /** Check a command as it arrives: right version, known command, known fields of the right type. Never throws. */
@@ -350,6 +364,7 @@ export function checkCommand(message: unknown): CommandCheck {
   if (message.v !== PROTOCOL_VERSION) return fail(`protocol version ${String(message.v)} (expected ${PROTOCOL_VERSION})`);
   if (message.type !== 'cmd') return fail('type must be "cmd"');
   if (!reqId) return fail('missing reqId');
+  if (message.from !== undefined && (typeof message.from !== 'string' || !message.from || message.from.length > COMMAND_FROM_MAX_LENGTH)) return fail('from must be a clientId');
   if (!cmd || !Object.hasOwn(COMMANDS, cmd)) return fail(`unknown command ${String(cmd)}`);
   const spec: Readonly<Record<string, FieldSpec>> = COMMANDS[cmd as CommandName];
   for (const key of Object.keys(message)) {
@@ -371,6 +386,15 @@ export function checkCommand(message: unknown): CommandCheck {
   const error = REFINE[cmd as CommandName]?.(message);
   if (error) return fail(error);
   return { ok: true, command: message as Command };
+}
+
+/**
+ * The relay's stamp on a command it forwards to the show (D234): `from` becomes the sender's clientId, replacing one the
+ * sender set, so a console can't speak for another; a sender without a usable clientId leaves none.
+ */
+export function stampCommandFrom(message: Record<string, unknown>, clientId: string): void {
+  delete message.from;
+  if (clientId && clientId.length <= COMMAND_FROM_MAX_LENGTH) message.from = clientId;
 }
 
 /** Rules across a command's fields, which the per-field specs can't say. */
