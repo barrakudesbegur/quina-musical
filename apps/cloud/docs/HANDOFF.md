@@ -5,8 +5,10 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 ## Now (2026-11-27)
 
 - **In progress:** nothing half-built. **Paused by the user (27 Nov: the focus is the Frontend):** the voice cues' media sync and preflight check (D198, D202–D204), not started. Agreed with Sound engine: the protocol's `VOICE_CUES` plus `chime` and `fanfare`; `tools/prep/voices.py` prepares them into `data/cache/voice/<name>.flac` and `data/out/voice/index.json` (`{ schemaVersion: 1, voices: [{ name, durationSec, placeholder }] }`); placeholders never go in `data/media/voice/` (the user's recordings only, ignored by git). Mine, when resumed: sync roots `voice-cache` and `voice-data` (like the hold music; `voice/` left out of the default repertoire's `cache` and `data` roots), deployed before any laptop pushes them; a preflight check from the index: FAIL for a missing name or file, WARN while any is a placeholder. Meanwhile, keep pushing and deploying Frontend's tested commits.
+- **In progress (27 Nov): serving the player's PWA (D221–D222, Frontend's work, within the pause).** Names already reserved in code: the worker `/player-sw.js` (scope `/`; never `/sw.js`, which stays last year's kill switch), caches prefixed `quina-player-` (apps/player/config.ts `LEGACY`). Mine, once Frontend confirms the manifest's name and where the build puts the files: scripts/assets.ts copies the worker, the manifest and the icons into dist/ (today it copies only `player/index.html`, `console`, `admin`, `assets`); static/_headers gives the worker and the manifest `Cache-Control: no-cache` (the manifest also `application/manifest+json`), and `/assets/*` (all hashed) `public, max-age=31536000, immutable`; test/node/static.e2e.test.ts checks them.
+  - **For Sound engine when the pause lifts:** the relay's `--dist` serving (apps/show/relay/server.ts `serveFile`, one `cache` per target) needs the same `no-cache` for `/player-sw.js` and the manifest, and a MIME type for `.webmanifest`. Service workers need a secure context, so on the venue LAN over plain http (not localhost) the worker won't register at all; the relay part matters only for localhost.
 - **Just done (26 Nov):**
-  - **Nineteen deploys** (deploy-plan.md), each tested on its sha first:
+  - **Twenty deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -26,6 +28,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `3cb67cbf` (`9a168b6`): screens only («Aquest cartró no existeix», the garland's lights, the falling comet, beams to the edge).
     - `c7289263` (`a843dff`): screens only (the icon family, H1, R8).
     - `9ca2350b` (`81ba3e0`): screens only (the design system's foundation, D210, D211; the 15.4 fallbacks go, D219). The gallery (`apps/ds`) stays out of the build.
+    - `1da4c336` (`cca19f4`): screens only (the player's fixes from the user's Android test: no tap highlight, no pull-to-refresh, full-height layers).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
