@@ -116,3 +116,35 @@ export type PlateColor = Extract<PaletteColor, 'gold' | 'orange' | 'slate' | 'pe
 
 /** G1 · StickerTitle's ramp (projector px: hero 280, hero-2 170, xl 150, l 112, m 76, s 60, xs 48). */
 export type StickerTitleSize = 'hero' | 'hero-2' | 'xl' | 'l' | 'm' | 's' | 'xs';
+
+/** E1 · Ring: what it draws (components-v2.md § 6; Ring.svelte). The console's show states map onto these in
+ *  apps/console/ring-looks.ts; the generic never names a state. */
+export type RingColor = Extract<PaletteColor, 'orange' | 'red' | 'gold' | 'cyan' | 'purple' | 'green' | 'periwinkle' | 'slate'>;
+
+export interface RingLook {
+  /** progress: the arc empties with `progress`; full: a whole ring; segments: 12 turning dashes; none: the track. */
+  readonly arc: 'progress' | 'full' | 'segments' | 'none';
+  readonly color: RingColor;
+  /** The gold-and-ink striped ring (the Pause). */
+  readonly pattern?: 'hazard' | null;
+  /** The faint outer halo (the last seconds). */
+  readonly halo?: boolean;
+  /** The centre: the value and unit; an icon (with the value small under it, if any); a coloured disc with an icon;
+   *  the spinning record; the two pause bars. */
+  readonly face: 'number' | 'icon' | 'disc' | 'record' | 'bars';
+  readonly icon?: IconName | null;
+  /** The centre breathes (ring-manual). */
+  readonly pulse?: boolean;
+  /** A new value ticks in (ring-last). */
+  readonly tick?: boolean;
+  /** A thicker arc (the Suspense's 9 against 8). */
+  readonly bold?: boolean;
+  /** The centre's icon one step bigger (the Check's rosette). */
+  readonly iconLarge?: boolean;
+}
+
+export interface RingBadgeLook {
+  readonly icon: IconName;
+  readonly color: Extract<PaletteColor, 'green' | 'periwinkle' | 'red' | 'cyan' | 'purple' | 'ink'>;
+  readonly label: string;
+}

@@ -1,0 +1,268 @@
+/*
+ * E1 · Ring (components-v2.md § 6; Ring.svelte): the plate (the track's ink disc), the arc in the palette's solid
+ * (`data-color`), the centre, a corner badge in its own palette. Moved from the console's .now-ring (27 Nov) onto the
+ * palette slots; the console's NowRing is now its looks table (apps/console/ring-looks.ts). Durations: the console's
+ * --dur-ring-* (theme.css), with defaults here so the ring works anywhere.
+ */
+:where(.ring) {
+  --ring-step: var(--dur-ring-step, 250ms);
+  --ring-spin: var(--dur-ring-spin, 1.2s);
+  --ring-record: var(--dur-ring-record, 1.8s);
+  --ring-breathe: var(--dur-ring-breathe, 1.6s);
+  --ring-tick: var(--dur-ring-tick, 300ms);
+  --ring-state: var(--dur-ring-state, 150ms);
+  --ring-value-size: calc(var(--text-2xl) * 0.85);
+  --ring-icon: 30px;
+}
+
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.ring__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ring__track {
+  fill: var(--color-chip, var(--color-surface));
+  stroke: var(--color-line, var(--color-ink));
+  stroke-width: 14;
+}
+
+.ring__fill,
+.ring__segments,
+.ring__full {
+  fill: none;
+  stroke: var(--palette-solid);
+  stroke-width: 8;
+}
+
+.ring__fill,
+.ring__segments {
+  stroke-linecap: round;
+}
+
+.ring[data-bold] .ring__fill {
+  stroke-width: 9;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ring__fill {
+    transition: stroke-dashoffset var(--ring-step) linear;
+  }
+}
+
+/* ring-last: a faint halo in the arc's colour */
+.ring__halo {
+  fill: none;
+  stroke: var(--palette-solid);
+  stroke-width: 3;
+  opacity: 0.45;
+}
+
+/* ring-spin: twelve dashes turn round a spinning record */
+.ring__spin,
+.ring__record,
+.ring__disc {
+  transform-box: view-box;
+  transform-origin: 56px 56px;
+}
+
+.ring__record-disc {
+  fill: var(--color-ink);
+}
+
+.ring__record-groove {
+  fill: none;
+  stroke: #3a3360;
+  stroke-width: 2;
+}
+
+.ring__record-label {
+  fill: var(--palette-solid);
+}
+
+.ring__record-hole {
+  fill: var(--color-chip, var(--color-surface));
+}
+
+.ring__record-shine {
+  fill: none;
+  stroke: var(--color-white);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ring[data-arc='segments'] .ring__spin {
+    animation: ds-ring-turn var(--ring-spin) linear infinite;
+  }
+
+  .ring[data-face='record'] .ring__record {
+    animation: ds-ring-turn var(--ring-record) linear infinite;
+  }
+}
+
+@keyframes ds-ring-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The pause bars (a Hold, the Pause) and the hazard stripes */
+.ring__bar {
+  fill: var(--color-text);
+}
+
+.ring__hazard-a {
+  fill: var(--color-gold);
+}
+
+.ring__hazard-b {
+  fill: var(--color-ink);
+}
+
+/* A disc in the palette with a white icon («press Següent», a Check, a failed Check) */
+.ring__disc {
+  fill: var(--palette-solid);
+  stroke: var(--color-line, var(--color-ink));
+  stroke-width: 4;
+}
+
+/* ring-manual: the disc and its icon breathe */
+@media (prefers-reduced-motion: no-preference) {
+  .ring[data-pulse] .ring__disc,
+  .ring[data-pulse] .ring__pulse {
+    animation: ds-ring-breathe var(--ring-breathe) ease-in-out infinite;
+  }
+}
+
+@keyframes ds-ring-breathe {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* ring-state: the centre fades in when the state changes (a colour change is at once) */
+.ring__centre {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: ds-ring-state-in var(--ring-state) ease-out;
+}
+
+@keyframes ds-ring-state-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.ring__pulse {
+  display: grid;
+  place-items: center;
+}
+
+.ring__centre .icon {
+  width: var(--ring-icon);
+  height: var(--ring-icon);
+}
+
+.ring[data-face='disc'] .ring__centre .icon {
+  stroke: var(--color-white);
+}
+
+.ring[data-face='disc'] .ring__centre .icon__fill {
+  fill: var(--color-white);
+}
+
+.ring[data-face='disc'] .ring__centre .icon__under {
+  fill: none;
+  stroke: var(--color-ink);
+}
+
+/* the skip triangle's optical centre */
+.ring[data-face='disc'] .ring__centre .icon--skip {
+  margin-left: 3px;
+}
+
+.ring[data-icon-large] {
+  --ring-icon: 40px;
+}
+
+.ring[data-face='icon'] {
+  --ring-icon: 34px;
+}
+
+.ring[data-face='icon'] .ring__centre .icon {
+  stroke: var(--color-text);
+}
+
+.ring__value {
+  font-family: var(--font-display);
+  font-size: var(--ring-value-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ring__value--small {
+  margin-top: 2px;
+  font-size: 1.0625rem;
+}
+
+/* ring-last: a ticking number takes the arc's colour, a little bigger, ticking in each second */
+.ring[data-tick] .ring__value {
+  color: var(--palette-solid);
+  font-size: calc(var(--text-2xl) * 0.95);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ring__value[data-tick] {
+    animation: ds-ring-tick var(--ring-tick) var(--ease-out);
+  }
+}
+
+@keyframes ds-ring-tick {
+  from {
+    transform: scale(1.15);
+  }
+}
+
+.ring__unit {
+  font-size: 0.6em;
+}
+
+/* The corner badge (the mode), in its own palette */
+.ring__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: var(--line-width) solid var(--color-line, var(--color-ink));
+  border-radius: 50%;
+  background: var(--palette-solid);
+  color: var(--color-white);
+}
+
+.ring__badge[data-color='cyan'] {
+  color: var(--color-ink);
+}
+
+.ring__badge .icon {
+  width: 18px;
+  height: 18px;
+}
