@@ -1487,3 +1487,26 @@ By: the user. Source: open-questions.md › Answered (U180). Lives in: requireme
 ### D219 · The latest browsers only · 2026-11-27 · Active
 "dont care for backwards compatibility in tablet nor admin, i use latest. and for the player app they most likely have chrome latest and ios latest, so compatibility is not a concern". The screens target the latest Chrome and Safari, with no fallbacks for older versions: container queries, `@starting-style` and the like can be used freely. The game works fully with paper, so a phone that can't update loses only the companion. Answers U187, beyond its options.
 By: the user. Source: open-questions.md › Answered (U187). Supersedes: the 15.4 floor in packages/ui/HANDOFF.md. Lives in: requirements/screens.md › Every screen.
+
+### D220 · The player app after the user's Android test · 2026-11-27 · Active
+The user tried the production player on their Android phone and asked for:
+- **It feels like an app:**
+  - no blue tap highlight and no pull-to-refresh. `overscroll-behavior: none` is on every app, so the console can't reload from a stray swipe mid-show either;
+  - no text selection outside the text fields;
+  - the offline and your-song layers sized to the large viewport, so no bright strip shows while Android's URL bar hides;
+  - typing with the phone's keyboard plays the keypad's sounds.
+- **Drawers:**
+  - one can be dragged closed from any point once its content is at the top, not only by the handle;
+  - the glitch when a second drawer closes over Ajustos is fixed;
+  - the QR scanner opens as its own stacked drawer.
+- **Pressed buttons:** the 3D edge shrinks as the face sinks.
+- **Editing a card:** the title is just «Editar», the number is the usual field with the QR button, and «Desar» is green.
+- **«+ Cartró» floats** (D218), with less contrast, in a colour closer to the background.
+- **The drum:** while idle it can be tugged sideways. It's very stiff and springs back on release, with no interaction while it spins.
+- **The history's covers** get radii concentric with their card.
+- **The home:**
+  - Historial and Cartrons also switch by a horizontal swipe, one axis at a time; the indicator follows the swipe, each tab keeps its scroll, and the switch is always animated;
+  - the drum morphs between tabs only when its look differs;
+  - scrolling down collapses the drum into the compact look, stuck to the top on both tabs, while the tab switch doesn't stick;
+  - Historial's rows shrink and fade very slightly at the bottom edge, where the corner buttons are.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov; the quick ones in cca19f4. Lives in: requirements/screens.md › Player app.

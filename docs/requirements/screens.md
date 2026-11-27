@@ -95,6 +95,9 @@ _From event.md › Players' phones; the decisions doc › Changes._
 **Who uses it:** players who want to, on their own phones. The game works fully with paper and corn; phones are a companion.
 
 - **On a desktop or a tablet** it looks decent: the phone layout with a maximum width, so the screen doesn't stretch. It isn't a separate responsive design (D212).
+- **It feels like an app (D220):** no tap highlight, no pull-to-refresh (on every app, so the console can't reload from a stray swipe mid-show), no text selection outside text fields, and full-screen layers sized to the large viewport so no strip shows while the URL bar hides.
+- **The home (D220):** Historial and Cartrons switch by a tap or a horizontal swipe, one axis at a time, with the coloured indicator following the finger, each tab keeping its scroll, and always animated. Scrolling down collapses the drum into its compact look, stuck to the top on both tabs. Historial's rows shrink and fade slightly at the bottom edge, behind the corner buttons. While idle, the drum can be tugged sideways: very stiff, springing back on release, and never while it spins.
+- **Drawers (D220):** one can be dragged closed from any point once its content is scrolled to the top. The QR scanner opens as its own stacked drawer. Editing a card is titled «Editar», with the number as the usual field and its QR button, and a green «Desar».
 
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big add-card pad, opened from the "+ Cartró" button (D188). Leaving the pad with a number typed asks first, and each of that question's buttons says what happens ("Descarta els canvis", "Segueix editant").
