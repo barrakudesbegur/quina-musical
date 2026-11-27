@@ -194,6 +194,22 @@ interface Motion {
 }
 
 /**
+ * The landing the drum's words show (ANIMATIONS.md `landing`, §13): the latest once the drum rests on its tile, else the
+ * one they showed, so the title changes as the drum comes to rest, never while it still turns or glides to the landed
+ * tile (a Back or a cancelled Spin the same). With reduced motion the drum rests on the tile at once. No landing: none.
+ */
+export function wordsLanding(frame: Pick<DrumFrame, 'phase' | 'selectedId'>, latest: PublicLanding | null, shown: PublicLanding | null): PublicLanding | null {
+  if (!latest) return null;
+  const resting = frame.phase === 'landed' || frame.phase === 'idle';
+  return resting && (frame.selectedId === null || frame.selectedId === latest.songId) ? latest : shown;
+}
+
+/** The words are the drum's last ones, faded, while it turns or glides (`reel-spin`, `landing`). */
+export function wordsStale(phase: DrumPhase): boolean {
+  return phase === 'spinning' || phase === 'waiting' || phase === 'gliding';
+}
+
+/**
  * Solves a Spin's stand-in (spinSolution), or answers null while its solution is still being worked out elsewhere
  * (the app solves off the main thread: device/drum-solver.ts); the drum asks again on its next frame.
  */

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { PublicLanding, PublicSpin } from '../../../../player/feed/public.ts';
-import { DRUM, PhoneDrum, creepStart, glideSec, lastLanding, motionBlurPx, ringOf, roundOrder, spinSolution, spinStart, standInMotion, type DrumFrame } from '../../../../player/logic/drum.ts';
+import { DRUM, PhoneDrum, creepStart, glideSec, lastLanding, motionBlurPx, ringOf, roundOrder, spinSolution, spinStart, standInMotion, wordsLanding, wordsStale, type DrumFrame } from '../../../../player/logic/drum.ts';
 import { markerLayout } from '../../../../player/logic/markers.ts';
 
 const SONGS = Array.from({ length: 70 }, (_, i) => i + 1);
@@ -150,6 +150,55 @@ test('reduced motion: the ring never turns; it rests on the start tile, blurred,
   const g = drum.frame({ order: ORDER, landings: [landing(0, ORDER[50]!, T + 7000)], spin: null, nowMs: T + 7200, reduced: true });
   assert.equal(g.phase, 'landed');
   assert.equal(under(g), ORDER[50]);
+});
+
+test('the words wait for the drum (§13): the last ones, faded, while it turns and glides; the new title as it comes to rest', () => {
+  const drum = new PhoneDrum();
+  const first = landing(0, ORDER[0]!, T - 20_000);
+  const spin: PublicSpin = { startAtMs: T, landAtMs: T + 7000, spinSeed: 5 };
+  // What the drum's words show, frame by frame, as Reel.svelte keeps it.
+  let shown: PublicLanding | null = null;
+  const show = (f: DrumFrame, latest: PublicLanding | null) => (shown = wordsLanding(f, latest, shown));
+  let f = drum.frame({ order: ORDER, landings: [first], spin: null, nowMs: T - 1000, reduced: false });
+  assert.equal(show(f, first), first);
+  for (let ms = T; ms <= T + 7400; ms += 16) {
+    f = drum.frame({ order: ORDER, landings: [first], spin, nowMs: ms, reduced: false });
+    assert.equal(show(f, first), first, 'the last song while it turns');
+    assert.ok(wordsStale(f.phase), 'faded');
+  }
+  const next = landing(1, ORDER[40]!, T + 7000);
+  // The landing is public before the drum's next frame: still the last words.
+  assert.equal(show(f, next), first);
+  let rested = 0;
+  for (let ms = T + 7416; ms <= T + 7416 + glideSec(35) * 1000 + 100; ms += 16) {
+    f = drum.frame({ order: ORDER, landings: [first, next], spin: null, nowMs: ms, reduced: false });
+    const words = show(f, next);
+    if (f.phase === 'gliding') {
+      assert.equal(words, first, 'the last song while it glides');
+      assert.ok(wordsStale(f.phase));
+    } else {
+      assert.equal(words, next, 'the new song as it rests on its tile');
+      assert.ok(!wordsStale(f.phase));
+      rested++;
+    }
+  }
+  assert.ok(rested > 0);
+  // A Back: the words go back when the drum rests on the last landing's tile again.
+  let back = 0;
+  for (let ms = T + 10_000; ms <= T + 12_000; ms += 16) {
+    f = drum.frame({ order: ORDER, landings: [first], spin: null, nowMs: ms, reduced: false });
+    const words = show(f, first);
+    if (f.phase === 'gliding') assert.equal(words, next);
+    else (assert.equal(words, first), back++);
+  }
+  assert.ok(back > 0);
+  // Reduced motion: the drum rests on the tile at once, and the words change with it.
+  const still = new PhoneDrum();
+  shown = null;
+  still.frame({ order: ORDER, landings: [first], spin, nowMs: T + 3000, reduced: true });
+  assert.equal(show(still.frame({ order: ORDER, landings: [first, next], spin: null, nowMs: T + 7100, reduced: true }), next), next);
+  // A new round: no landing, no words (the waiting line).
+  assert.equal(show(f, null), null);
 });
 
 test("a song row's card icons pack zig-zag: one, a pair, a triangle, a rhombus", () => {

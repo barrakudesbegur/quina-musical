@@ -10,15 +10,16 @@
   // offline. While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff wobble that
   // never brings a tile into view, logic/drum-tug.ts); a vertical drag scrolls the page.
   // While it turns, the words never say «?»: the previous song stays under it, faded (`reel-spin`, §8 Y2), so nothing
-  // changes size as a Spin starts, turns or stops. `marks`: the identities of the phone's cards holding the song, shown
-  // in the strip (§8 Y2). `onpick`: a tap on the drum (never a tug) goes to the first of those cards (`drum-pick`). The
-  // sides fade into whatever is behind by a mask (§8 Y1: on the gold too), never a gradient painted in night blue.
+  // changes size as a Spin starts, turns or stops; they change as it comes to rest on the landed tile (`landing`, §13).
+  // `marks`: the identities of the phone's cards holding the song, shown in the strip (§8 Y2). `onpick`: a tap on the
+  // drum (never a tug) goes to the first of those cards (`drum-pick`). The sides fade into whatever is behind by a mask
+  // (§8 Y1: on the gold too), never a gradient painted in night blue.
   // Its phase is `data-phase`, not `data-state`: the covers' rules (`.cover[data-state…]`) made every change of a
   // `data-state` on the drum restyle each tile's cover.
   import { untrack } from 'svelte';
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
-  import { DRUM, PhoneDrum, type DrumFrame } from '../logic/drum.ts';
+  import { DRUM, PhoneDrum, wordsLanding, wordsStale, type DrumFrame } from '../logic/drum.ts';
   import { prepareSpinSolver, solveSpinOffThread } from '../device/drum-solver.ts';
   import { tugAxis, tugTurn, type DrumGeometry } from '../logic/drum-tug.ts';
   import { S } from '../strings.ts';
@@ -87,9 +88,12 @@
     return () => cancelAnimationFrame(raf);
   });
 
-  const turning = $derived(frame.phase === 'spinning' || frame.phase === 'waiting');
   const tiles = $derived(frame.ring.length ? frame.ring : Array.from({ length: BACKS }, (_, i) => -1 - i));
-  const song = $derived(latest ? catalog?.songs.get(latest.songId) : undefined);
+  // The words wait for the drum (`landing`): the latest landing's once it rests on its tile, until then the last ones.
+  let shownWords: PublicLanding | null = null;
+  const titled = $derived((shownWords = wordsLanding(frame, latest, shownWords)));
+  const stale = $derived(wordsStale(frame.phase));
+  const song = $derived(titled ? catalog?.songs.get(titled.songId) : undefined);
 
   // The tug (drum-tug): only while still, never with reduced motion. `tug` is the ring's extra turn, in tiles.
   let width = $state(0);
@@ -160,7 +164,7 @@
   data-testid="reel"
   data-phase={frame.phase}
   data-size={compact ? 'strip' : 'full'}
-  data-stale={turning ? 'true' : undefined}
+  data-stale={stale ? 'true' : undefined}
   data-pick={onpick ? 'true' : undefined}
   onclick={onpick ? pick : undefined}
   onpointerdown={() => (tugged = false)}
@@ -228,18 +232,18 @@
 </div>
 
 {#snippet words(spoken: boolean)}
-  {#if latest}
-    {#key latest.position}
+  {#if titled}
+    {#key titled.position}
       <p class="reel__caption" data-anim="landing">
-        {#if spoken}<span class="reel__label">{turning ? S.reelSpinning : S.nowPlaying}</span>{/if}
-        <strong class="reel__title">{songTitle(catalog, latest.songId)}</strong>
+        {#if spoken}<span class="reel__label">{stale ? S.reelSpinning : S.nowPlaying}</span>{/if}
+        <strong class="reel__title">{songTitle(catalog, titled.songId)}</strong>
         {#if song?.artist}<span class="reel__artist">{song.artist}</span>{/if}
       </p>
     {/key}
   {:else}
     <p class="reel__waiting">
       {frame.phase === 'waiting' ? S.reelWaiting : S.noSongYet}
-      {#if spoken && turning}<span class="reel__label">{S.reelSpinning}</span>{/if}
+      {#if spoken && stale}<span class="reel__label">{S.reelSpinning}</span>{/if}
     </p>
   {/if}
 {/snippet}
