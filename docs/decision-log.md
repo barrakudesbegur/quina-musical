@@ -1475,3 +1475,15 @@ By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: docs/tea
 - **The QR panel:** pure white, with more padding.
 UI only; the sponsor data doesn't change.
 By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Every sponsor appears, Projector, Player app.
+
+### D217 · The special card stays one-sided, from pool 1, for now · 2026-11-27 · Active
+What the team agreed so far: the special card has one side, with pool 1's songs, and both special rounds play it. The user likes U167's two-sided card (the Desgraciat on pool 1, the Especial on pool 2) and will ask the team (U192). Until then the agreement is built. Answers U167 for now with (a).
+By: the user and the team. Source: open-questions.md › Answered (U167). Lives in: requirements/songs-and-cards.md; requirements/game-rules.md; event.md › The songs.
+
+### D218 · Build the phone's home as the canvas draws it · 2026-11-27 · Active
+The corner buttons and the floating «+ Cartró», built now. The user's caution: "some pages in the artifact dont use the latest components from the design system". So the build follows the design system's components, and a board's outdated parts don't win. Answers U180 with (a).
+By: the user. Source: open-questions.md › Answered (U180). Lives in: requirements/screens.md › Player app.
+
+### D219 · The latest browsers only · 2026-11-27 · Active
+"dont care for backwards compatibility in tablet nor admin, i use latest. and for the player app they most likely have chrome latest and ios latest, so compatibility is not a concern". The screens target the latest Chrome and Safari, with no fallbacks for older versions: container queries, `@starting-style` and the like can be used freely. The game works fully with paper, so a phone that can't update loses only the companion. Answers U187, beyond its options.
+By: the user. Source: open-questions.md › Answered (U187). Supersedes: the 15.4 floor in packages/ui/HANDOFF.md. Lives in: requirements/screens.md › Every screen.

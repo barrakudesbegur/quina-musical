@@ -115,22 +115,11 @@ The phone's drawers already close on a tap outside. On the console only ✕ and 
 - (b) Both close on a tap outside.
 - (c) Neither, as today.
 
-### U187 · The oldest iOS / iPadOS the screens support
-Today the code supports iOS and iPadOS 15.4. Some modern features need 16 or later: the console's layout per orientation (container queries) and the drawers' and dialogs' exit animations. Each has an older fallback, at some cost. Nothing crashes on iOS 15 today (Frontend checked, 27 Nov). The crowd brings old phones (the grandmother test), and nobody knows yet which tablet the presenters will use (U19).
-- (a) Keep 15.4 on the phones and the tablet, with the fallbacks.
-- (b) Raise everything to 16.
-- (c) Keep 15.4 on the phones, and raise only the tablet to 16. Its model and iOS version need checking.
-
 ### U181 · What the «Veus automàtiques» switch turns off (D204)
 Frontend's board (v104) has the switch on by default: «Apagat: cap veu més en tota la nit». Voices that fall due while it's off are dropped, not saved for later, since a late "15 minuts" would be wrong (D204's 60 s).
 - (a) Every voice, the round's name on «Comença la quina» included. The round fanfare's music still plays, so the presenters keep their cue before talking (D198).
 - (b) Only the timed voices: the doors and the Descans. The round's name and the goodbye still play.
 - (c) Every voice and the round fanfare too.
-
-### U180 · Building the phone's home as the boards draw it
-The boards draw the phone's home with the corner buttons and a floating «+ Cartró» (D188, D189). The code still has «+ Cartró» at the end of the cards list and the older corner buttons. The home layout was held as boards until the user confirms it (the drawers proposal).
-- (a) Build the phone's home as the boards draw it now.
-- (b) Wait; the user reviews the phone boards first.
 
 ### U179 · A volume slider on the break's music panel
 screens.md lists "the music's skip and volume" for the break. Frontend's redraw of that panel (D196) has no slider, as on the agreed board. The menu's sliders (D139) still set the break music's level.
@@ -166,12 +155,6 @@ D195 puts "Comença la quina" in the big slot in a break. At the doors, what com
 - (a) The doors' big slot shows "Començar la nit", but only a tap on the tablet starts it; the remote's A does nothing before the night. The menu item goes.
 - (b) The big slot is the A button there too: A starts the night.
 - (c) It stays in the menu only.
-
-### U167 · The special rounds' pool, now that the split is 1–5 / 6–10
-D171 put the Desgraciat and the Especial on pool 1 so that "both play about the same number of rounds (six each)": Quines 1–4 plus the two specials, against Quines 5–10. With the organizers' 1–5 / 6–10 (D193), pool 1 would play seven rounds and pool 2 five. One special card plays both special rounds (D81), and the cards are made on 4–5 Dec.
-- (a) Both specials stay on pool 1, as D171 says. Pool 1 plays seven rounds, pool 2 five. Nothing else changes.
-- (b) Each special plays the pool of its half: the Desgraciat pool 1, the Especial pool 2. Six rounds each, as D171 wanted. The special card gets two sides, like the normal one: side 1 for the Desgraciat, side 2 for the Especial. That replaces U59's blank back. The generator already makes two-sided cards.
-- (c) Both specials play their own playlist (79G8VcNrkih9GGjIzb47Gt, D105). Five rounds each pool. The playlist is still empty, and it would need filtering, downloading and hook approval before the cards.
 
 ### U168 · Horari's rows from the organizers' schedule
 The organizers' list (D192) has two rows that D150's Horari doesn't: "Començem (6pm)" and "Descans + llançament".
@@ -224,7 +207,7 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
 ### U59 · The special card's back
-The special card is printed from pool 1 (D171), on one side, unless U167 changes it.
+The special card is printed from pool 1, on one side (D217), unless the team agrees to two sides (U192).
 **Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
 
 ### U52 · Duplex printing and the paper
@@ -275,6 +258,9 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U192 · Ask the team about a two-sided special card
+Today's agreement (D217): the special card has one side, from pool 1, and both special rounds play it. The user likes U167's (b): the Desgraciat on side 1 (pool 1) and the Especial on side 2 (pool 2), six rounds per pool. It needs the team's OK before the cards are made on 4–5 Dec.
+
 ### U191 · Ask the presenters about a notebook on the tablet
 The idea is in [ideas.md](ideas.md): their own colour-coded notes, imported and shown as a draggable notebook over half the console. First, do they want it at all, or do they prefer paper?
 
@@ -310,6 +296,9 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U187 · The oldest iOS** (2026-11-27) → D219: the latest browsers only; no backwards compatibility.
+- **U180 · The phone's home as drawn** (2026-11-27) → D218: build it now, from the design system's components.
+- **U167 · The special rounds' pool** (2026-11-27) → D217: for now, one side from pool 1, as the team agreed; the two-sided card is the user's task U192.
 - **U189 · Balanced line breaks on titles** (2026-11-27) → D215: yes, as a project-wide rule (headings balance, body text pretty).
 - **U175 · The design system's open choices** (2026-11-27) → D211: answered on the canvas. The user commented on the Design system page and then called it "correct"; Frontend applies the comments and reports any item they changed.
 - **U190 · The design system's props rework** (2026-11-27) → D210: all as recommended.
