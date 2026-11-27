@@ -97,3 +97,37 @@ def test_approved_candidates_become_hooks_after_the_hand_tags():
     hooks = hooks_step.snap_hooks(merged, downbeats, downbeats, np.arange(len(downbeats)), 120.0, {}, 2.0, 4)
     assert [h["id"] for h in hooks] == ["7-best-0", "7-main-0", "7-main-1"], "the hand tag keeps its id"
     assert hooks[1]["auto"] == "7-auto-0" and hooks[1]["downbeatSec"] == 62.0
+
+
+def test_a_provisional_best_is_the_top_undecided_candidate_and_never_overrides_a_decision():
+    import hooks_auto
+    doc = {"candidates": [{"id": "7-auto-0", "downbeatSec": 60.0}, {"id": "7-auto-1", "downbeatSec": 90.0}]}
+    song = {"id": 7}
+    assert hooks_auto.provisional_override(song, {}, doc) == {
+        "autoHooks": {"7-auto-0": {"tag": "best", "downbeatSec": 60.0, "provisional": True}}}
+    rejected = {"autoHooksRejected": ["7-auto-0"]}
+    assert hooks_auto.provisional_override(song, rejected, doc)["autoHooks"] == {
+        "7-auto-1": {"tag": "best", "downbeatSec": 90.0, "provisional": True}}, "a rejected candidate is skipped"
+    main = {"autoHooks": {"7-auto-0": {"tag": "main", "downbeatSec": 60.0}}}
+    assert hooks_auto.provisional_override(song, main, doc)["autoHooks"]["7-auto-1"]["tag"] == "best", "kept as main"
+    assert hooks_auto.provisional_override(song, {"autoHooks": {"7-auto-1": {"tag": "best", "downbeatSec": 90.0}}}, doc) is None
+    already = hooks_auto.provisional_override(song, {}, doc)
+    assert hooks_auto.provisional_override(song, already, doc) is None, "a rerun changes nothing"
+    assert hooks_auto.provisional_override({"id": 7, "timestamps": [{"tag": "best", "time": 30.0}]}, {}, doc) is None
+    assert hooks_auto.provisional_override(song, {"autoHooksRejected": ["7-auto-0", "7-auto-1"]}, doc) is None
+    assert hooks_auto.provisional_override(song, {}, None) is None
+
+
+def test_the_provisional_flag_rides_into_the_hook_and_the_index():
+    import analyze
+    song = {"id": 7}
+    override = {"autoHooks": {"7-auto-0": {"tag": "best", "downbeatSec": 62.0, "provisional": True},
+                              "7-auto-2": {"tag": "main", "downbeatSec": 90.0}}}
+    merged = hooks_step.with_auto_hooks(song, override)
+    assert [s.get("provisional") for s in merged["timestamps"]] == [True, None]
+    downbeats = np.arange(0, 120, 2.0)
+    hooks = hooks_step.snap_hooks(merged, downbeats, downbeats, np.arange(len(downbeats)), 120.0, {}, 2.0, 4)
+    assert [h.get("provisional") for h in hooks] == [True, None]
+    a = {"songId": 7, "title": "T", "artist": "A", "source": {"durationSec": 120.0}, "tempo": {"bpm": 120.0, "beatsPerBar": 4, "barSecMedian": 2.0,
+         "isStable": True}, "key": None, "loudness": {"gainToTargetDb": 0.0}, "flags": [], "hooks": hooks}
+    assert [h.get("provisional") for h in analyze.index_row(a)["hooks"]] == [True, None]

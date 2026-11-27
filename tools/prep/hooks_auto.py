@@ -5,11 +5,17 @@
 - candidates: where a chorus lands, best first (a bar, its downbeat, a score and the evidence: chorus, energy
   jump, vocal onset), for songs nobody tagged (this year's playlist); the audition page approves, rejects or nudges
   each, and only approved ones become hooks (the override's `autoHooks`, applied by analyze.py).
+- provisional (`--provisional`, D227): the top candidate of each song without a best hook, approved as its best and
+  marked `provisional: true`, so a new repertoire plays before the user's approval pass (U14). The flag rides along
+  into the analysis (each hook's `provisional`) for the audition page and the laptop's preflight WARN; any decision
+  on the audition page replaces it.
 - refine: for each hand-tagged hook, a suggested shift of one bar when the bar next to it is clearly the better
   landing on the phrase grid; the audition page asks yes or no, and the tag itself is always kept.
 
 Needs the analysis (downbeats, bar levels) and the mix; the stems' vocal bar levels when there are any.
 Run: tools/prep/.venv/bin/python tools/prep/hooks_auto.py [--repertoire NAME|PATH] [--song N ...] [--report]
+     tools/prep/.venv/bin/python tools/prep/hooks_auto.py [--repertoire NAME|PATH] [--song N ...] --provisional
+     (then analyze again: npm run prep -- --repertoire NAME --steps analyze,snippets,validate,stems,signatures)
 """
 from __future__ import annotations
 
@@ -83,6 +89,41 @@ def song_hooks(repertoire: repertoires.Repertoire, song_id: int) -> dict | None:
     }
 
 
+def provisional_override(song: dict, override: dict, doc: dict | None) -> dict | None:
+    """The override with the song's top automatic candidate approved as its best hook, marked provisional; None when
+    the song already has a best hook (a hand tag, or any approved candidate, provisional or not) or no candidate is
+    left that the page hasn't decided on."""
+    if any(stamp.get("tag") == "best" for stamp in song.get("timestamps") or []):
+        return None
+    approved = override.get("autoHooks") or {}
+    if any(v.get("tag") == "best" for v in approved.values()):
+        return None
+    rejected = set(override.get("autoHooksRejected") or [])
+    for c in (doc or {}).get("candidates", []):
+        if c["id"] not in rejected and c["id"] not in approved:
+            best = {"tag": "best", "downbeatSec": c["downbeatSec"], "provisional": True}
+            return {**override, "autoHooks": {**approved, c["id"]: best}}
+    return None
+
+
+def approve_provisional(repertoire: repertoires.Repertoire, ids: list[int]) -> int:
+    songs = {s["id"]: s for s in repertoire.songs()}
+    done, kept, none = [], [], []
+    for song_id in ids:
+        path = repertoire.override_path(song_id)
+        override = load_json(path) or {}
+        new = provisional_override(songs.get(song_id, {}), override, load_json(repertoire.data_dir / "hooks" / f"{song_id}.json"))
+        if new is None:
+            (kept if (override.get("autoHooks") or songs.get(song_id, {}).get("timestamps")) else none).append(song_id)
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(new, indent=2, ensure_ascii=False) + "\n")  # as the relay writes overrides
+        done.append(song_id)
+    print(f"provisional best hooks: {len(done)} approved, {len(kept)} already had a best hook or a decision, "
+          f"{len(none)} with no candidate left" + (f" ({', '.join(map(str, none))})" if none else ""))
+    return 0
+
+
 def report(docs: list[dict], repertoire: repertoires.Repertoire) -> None:
     """How the candidates compare with the hand tags: a tagged hook within a bar of the top candidate, of one of
     the top three, and how many hand tags get a suggested shift."""
@@ -107,8 +148,13 @@ def main() -> int:
     repertoires.add_argument(ap)
     ap.add_argument("--song", type=int, action="append", help="song id (repeatable); default all analysed")
     ap.add_argument("--report", action="store_true", help="compare the candidates with the hand tags")
+    ap.add_argument("--provisional", action="store_true",
+                    help="approve each song's top candidate as its best hook, marked provisional (no detection)")
     args = ap.parse_args()
     repertoire = repertoires.from_args(args)
+    if args.provisional:
+        ids = args.song or sorted(int(p.stem) for p in (repertoire.data_dir / "hooks").glob("*.json") if p.stem.isdigit())
+        return approve_provisional(repertoire, ids)
     out = repertoire.data_dir / "hooks"
     out.mkdir(parents=True, exist_ok=True)
     ids = args.song or sorted(int(p.stem) for p in (repertoire.data_dir / "analysis").glob("*.json") if p.stem.isdigit())

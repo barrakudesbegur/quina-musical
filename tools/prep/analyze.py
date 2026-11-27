@@ -202,6 +202,8 @@ def analyze_song(repertoire: repertoires.Repertoire, song: dict, mp3: Path | Non
     best = next((h for h in hooks if h["tag"] == "best"), None)
     if best and "snap_ambiguous" in best.get("issues", []):
         flags.append("best_hook_ambiguous")
+    if best and best.get("provisional"):
+        flags.append("provisional_best_hook")  # hooks_auto.py --provisional (D227), until the user's approval pass
     if not song.get("timestamps"):
         flags.append("no_hook_tags")  # nothing to snap yet: no hooks, so the engine leaves the song out
     else:
@@ -292,7 +294,8 @@ def index_row(a: dict) -> dict:
         "excluded": bool((a.get("override") or {}).get("exclude")),
         "hooks": [
             {"id": h["id"], "tag": h["tag"], "downbeatSec": h.get("downbeatSec"), "valid": h.get("valid"),
-             "gainToTargetDb": h.get("gainToTargetDb"), "energyDb": h.get("energyDb")}
+             "gainToTargetDb": h.get("gainToTargetDb"), "energyDb": h.get("energyDb"),
+             **({"provisional": True} if h.get("provisional") else {})}
             for h in a["hooks"]
         ],
     }

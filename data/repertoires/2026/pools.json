@@ -1,0 +1,6 @@
+{
+  "pools": [
+    { "pool": "1", "songsJson": "data/media/2026/pool1/output/songs.json", "ids": "order", "firstId": 1 },
+    { "pool": "2", "songsJson": "data/media/2026/pool2/output/songs.json", "ids": "order", "firstId": 71 }
+  ]
+}

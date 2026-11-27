@@ -61,6 +61,8 @@ interface Override {
 interface AutoHookDecision {
   tag: string;
   downbeatSec: number;
+  /** Bulk-approved by hooks_auto.py --provisional (D227) until the user decides here; any decision on it drops this. */
+  provisional?: boolean;
 }
 
 /** data/hooks/<id>.json (tools/prep/hooks_auto.py). */
@@ -529,7 +531,7 @@ function suggestionCell(hookId: string, i: number): string {
 /** A candidate's decision as the page stands: approved (its tag), rejected, or undecided. */
 function autoStatus(id: string): string | null {
   const approved = override.autoHooks?.[id];
-  if (approved) return approved.tag;
+  if (approved) return approved.provisional ? `${approved.tag} (provisional)` : approved.tag;
   return override.autoHooksRejected?.includes(id) ? 'rejected' : null;
 }
 
@@ -579,6 +581,8 @@ function autoHookAction(act: string | undefined, id: string | undefined) {
     return;
   }
   if (act === 'best' || act === 'main') {
+    // A best picked by hand replaces the provisional one (D227), so a song never keeps both.
+    if (act === 'best') for (const [id, d] of Object.entries(approved)) if (d.provisional && id !== c.id) delete approved[id];
     approved[c.id] = { tag: act, downbeatSec: approved[c.id]?.downbeatSec ?? c.downbeatSec };
     rejected.delete(c.id);
   } else if (act === 'reject') {
@@ -590,7 +594,7 @@ function autoHookAction(act: string | undefined, id: string | undefined) {
   } else if ((act === 'earlier' || act === 'later') && approved[c.id]) {
     const at = approved[c.id].downbeatSec;
     const d = a.downbeats.findIndex((x) => Math.abs(x - at) < 1e-3) + (act === 'earlier' ? -1 : 1);
-    if (d >= 0 && d < a.downbeats.length) approved[c.id] = { ...approved[c.id], downbeatSec: a.downbeats[d] };
+    if (d >= 0 && d < a.downbeats.length) approved[c.id] = { tag: approved[c.id].tag, downbeatSec: a.downbeats[d] };
   }
   override.autoHooks = Object.keys(approved).length ? approved : null;
   override.autoHooksRejected = rejected.size ? [...rejected] : null;

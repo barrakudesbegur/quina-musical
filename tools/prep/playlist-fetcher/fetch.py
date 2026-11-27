@@ -152,6 +152,17 @@ def save_csv(playlist_data: dict, filename: str) -> list:
             'spotifyId': uri.split(':')[-1],
         })
 
+    # A track listed twice keeps its first place, with a warning: the playlist still needs fixing, but the fetch goes on.
+    seen = set()
+    unique = []
+    for position, track in enumerate(tracks, start=1):
+        if track['spotifyId'] in seen:
+            print(f"⚠️  playlist position {position} repeats \"{track['title']}\" ({track['artist']}): kept once", file=sys.stderr)
+            continue
+        seen.add(track['spotifyId'])
+        unique.append(track)
+    tracks = unique
+
     # Stable ids: a track keeps the id it got when first fetched, so a reordered playlist moves no hook decision,
     # cache or download onto another song (song_ids.py).
     record_path = Path(filename).parent / 'song-ids.json'
