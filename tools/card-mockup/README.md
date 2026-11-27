@@ -34,7 +34,27 @@ each row, so every card's side 2 lands behind its side 1; cut lines are on the f
 change: [print-titles.py](print-titles.py) writes [data/songs-print.json](data/songs-print.json). If agreed, the field
 and its hand fixes become Sound engine's data, shown the same on paper and screens.
 
-## Layouts being tested
+## Decided: A3, 6 cards a sheet (the user, 27 Nov)
+
+The card is 149 × 140 mm, six to an A3 portrait sheet (`a3-6`), printed «dúplex, vora llarga». Amounts must fill whole
+sheets, so 402 normal (not 399) and 300 special: 117 A3 sheets. Each back row is mirrored, and front and back line up:
+held up to the light, the back's grid falls exactly on the front's (the canvas's "Headers" page shows it).
+
+**The header, being chosen.** The card is too narrow for last year's one-row header, so the songs lose height to it:
+
+| Proposal | Header | Cell | Cover | Titles (median, smallest) |
+|---|---|---|---|---|
+| `a3-6` two rows | branding + number + QR, then the heading + GOMET | 34 × 31 mm | 16 mm | 13.5 pt, 7 pt (5 too long) |
+| `a3-6-one-row` one row | compact branding, heading, GOMET, number, QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+| `a3-6-band` heading band | branding + GOMET + number + QR, then the heading in a band as wide as the grid | 34 × 32 mm | 17 mm | 13.5 pt, 7 pt (3 too long) |
+| `a3-6-footer` branding at the foot | a big heading, GOMET, number, QR; the branding in a line under the grid | 34 × 34 mm | 18 mm | 13.5 pt, 7 pt (3 too long) |
+| `a3-6-gomet-left` no branding | the GOMET circle, the heading, number, QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+
+One more try the user asked for: 2×2 on A4 with that last header and every cover above its title
+(`2x2-v-gomet-left`: 23 × 39 mm cells, 20 mm covers, 13 pt titles, 13 of 192 too long; `2x2-h-gomet-left`:
+34 × 25 mm cells, 12 mm covers, 39 of 192 too long, or 25 with the cover beside).
+
+## Layouts compared
 
 The user asked to compare layouts, and the copy shop prints colour on A4, A3 and SRA3 (32 × 45 cm, the digital
 presses' sheet, common in Catalan copy shops). A bigger sheet only fits more cards per print; what it adds is card sizes
@@ -68,7 +88,7 @@ A4 can't cut. Page 1 of each layout is on the canvas's "Layouts" page.
 - U201: the GOMET circle on both sides.
 - U198: the special card's label on screens during the Check (proposed: «Desgraciat», «Especial», as printed).
 - U52: the paper (proposed: last year's coloured paper, a proof sheet first).
-- The print titles (above), and the layout.
+- The print titles (above), the header (above), and 402 or 396 normal cards.
 - A final design by 1 Dec, so Frontend can build it (about 2 days) and proof it before 4–5 Dec.
 
 ## Drawing the mockups

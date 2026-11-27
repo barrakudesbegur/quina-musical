@@ -63,6 +63,16 @@ const LAYOUTS = {
   'sra3-4': { name: 'SRA3 · 4 a sheet', sheet: 'SRA3', landscape: true, cols: 2, rows: 2, titleMax: 16 },
   'a3-3': { name: 'A3 · 3 a sheet', sheet: 'A3', landscape: false, cols: 1, rows: 3, titleMax: 18 },
   'a3-6': { name: 'A3 · 6 a sheet', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16 },
+  // The A3 · 6 card is decided (the user, 27 Nov); its header proposals:
+  'a3-6-one-row': { name: 'A3 · 6, header in one row', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'oneRow' },
+  'a3-6-band': { name: 'A3 · 6, heading band', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'band' },
+  'a3-6-footer': { name: 'A3 · 6, branding at the foot', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'footer' },
+  'a3-6-gomet-left': { name: 'A3 · 6, GOMET left, no branding', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
+  // One more try (the user, 27 Nov): 2×2 on A4 with a one-line header (no branding, the GOMET circle on the left), so
+  // the grid is taller, and every song's cover above its title.
+  '2x2-h-gomet-left': { name: '2×2 horizontal, GOMET left', sheet: 'A4', landscape: true, cols: 2, rows: 2, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
+  '2x2-h-gomet-left-beside': { name: '2×2 horizontal, GOMET left, cover beside', sheet: 'A4', landscape: true, cols: 2, rows: 2, titleMax: 16, header: 'gometLeft', cellMode: 'beside' },
+  '2x2-v-gomet-left': { name: '2×2 vertical, GOMET left', sheet: 'A4', landscape: false, cols: 2, rows: 2, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
 };
 // Each type's amount fills whole sheets: last year's 399 normal and 300 special, rounded up.
 const AMOUNTS = (perPage) => ({ normal: Math.ceil(399 / perPage) * perPage, especial: Math.ceil(300 / perPage) * perPage });
@@ -127,12 +137,12 @@ function fitSong(song, boxW, boxH, titleMax) {
 
 // Capitals drawn in a box exactly their cap height tall, so a heading centres on its letters and a filled box never
 // clips them.
-function CapText({ text, size, filled = false, padX = 0, padY = 0 }) {
+function CapText({ text, size, filled = false, padX = 0, padY = 0, color }) {
   const W = textWidth(REGULAR, text, size) + 2 * padX;
   const H = CAP * size + 2 * padY;
   return h(Svg, { viewBox: `0 0 ${W} ${H}`, style: { width: W, height: H } },
     filled ? h(Rect, { x: 0, y: 0, width: W, height: H, fill: '#000000' }) : null,
-    h(Text, { x: W / 2, y: padY + CAP * size, textAnchor: 'middle', fill: filled ? '#ffffff' : '#000000', style: { fontFamily: 'LondrinaSolid', fontSize: size } }, text));
+    h(Text, { x: W / 2, y: padY + CAP * size, textAnchor: 'middle', fill: color || (filled ? '#ffffff' : '#000000'), style: { fontFamily: 'LondrinaSolid', fontSize: size } }, text));
 }
 const headingWidth = (text, size, filled) => textWidth(REGULAR, text, size) + (filled ? 20 : 0);
 
@@ -177,6 +187,22 @@ const Brand = () =>
       h(Text, { style: st.brandTop }, BRAND[0]),
       h(Text, { style: st.brandBottom }, BRAND[1])));
 
+const BRAND_COMPACT = { icon: 0.04, top: 13, bottom: 8 };
+const BrandCompact = () =>
+  h(View, { style: [st.brand, { gap: 5 }] },
+    h(Svg, { viewBox: '0 0 512 683', style: { height: 683 * BRAND_COMPACT.icon, width: 512 * BRAND_COMPACT.icon } }, h(Path, { d: ICON_D, fill: '#000000' })),
+    h(View, { style: [st.brandText, { gap: 6 }] },
+      h(Text, { style: [st.brandTop, { fontSize: BRAND_COMPACT.top, letterSpacing: 0.8 }] }, BRAND[0]),
+      h(Text, { style: [st.brandBottom, { fontSize: BRAND_COMPACT.bottom, letterSpacing: 0.8 }] }, BRAND[1])));
+const brandCompactWidth = 512 * BRAND_COMPACT.icon + 5 + Math.max(
+  textWidth(LIGHT, BRAND[0], BRAND_COMPACT.top) + 0.8 * BRAND[0].length,
+  textWidth(LIGHT, BRAND[1], BRAND_COMPACT.bottom) + 0.8 * BRAND[1].length);
+const FOOTER_H = 12;
+const BrandFooter = () =>
+  h(View, { style: { display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, height: FOOTER_H } },
+    h(Svg, { viewBox: '0 0 512 683', style: { height: 12, width: 9 } }, h(Path, { d: ICON_D, fill: '#000000' })),
+    h(Text, { style: { fontSize: 9, fontWeight: 'light', letterSpacing: 0.8, lineHeight: 1 } }, `${BRAND[0]} · ${BRAND[1]}`));
+
 const NumberAndQr = ({ num, qr, qrSize }) =>
   h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } },
     h(View, { style: st.numberBox },
@@ -192,29 +218,63 @@ function geometry(layout) {
   const H = page.h / layout.rows;
   const innerW = W - 30;
   const innerH = H - 30;
-  const single = innerW >= 500; // one header row (wide cards), or two rows (narrow cards)
-  const headerH = single ? 54 : 45 + 6 + GOMET.diameter;
-  const headingRoom = single ? innerW - 2 * 170 : innerW - 2 * (GOMET.diameter + 8);
+  const single = innerW >= 500; // wide cards: one header row
+  // Header styles: 'single' (wide cards), 'twoRows' (narrow cards: branding + number + QR, then heading + GOMET),
+  // 'oneRow' (compact branding, heading, GOMET, number, QR), 'band' (branding + GOMET + number + QR, then the heading in
+  // a band on the grid), 'footer' (heading, GOMET, number, QR; the branding in a line under the grid).
+  const style = layout.header || (single ? 'single' : 'twoRows');
+  const qrSize = style === 'single' ? 45 : style === 'twoRows' ? 42 : 40;
+  const rightW = GOMET.diameter + 8 + 62 + 8 + qrSize; // GOMET, number, QR
+  const ROW = 46;
+  const BAND_SIZE = 22;
+  const bandH = CAP * BAND_SIZE + 12;
+  const spec = {
+    single: { headerH: 54, room: innerW - 2 * 170, max: 38, footerH: 0 },
+    twoRows: { headerH: 45 + 6 + GOMET.diameter, room: innerW - 2 * (GOMET.diameter + 8), max: 38, footerH: 0 },
+    oneRow: { headerH: ROW, room: innerW - brandCompactWidth - rightW - 16, max: 38, footerH: 0 },
+    band: { headerH: ROW + 6 + bandH, room: innerW - 20, max: BAND_SIZE, footerH: 0 },
+    footer: { headerH: ROW, room: innerW - rightW - 8, max: 34, footerH: 6 + FOOTER_H },
+    gometLeft: { headerH: ROW, room: innerW - rightW - 16, max: 38, footerH: 0 },
+  }[style];
+  const headerH = spec.headerH;
   const widest = Math.max(...[...HEADINGS.normal, ...HEADINGS.especial].map((t) => headingWidth(t, 38, true)));
-  const headingSize = Math.min(38, Math.floor((38 * headingRoom) / widest));
-  const gridH = innerH - headerH - 7;
+  const headingSize = Math.min(spec.max, Math.floor((38 * spec.room) / widest));
+  const gridH = innerH - headerH - 7 - spec.footerH;
   const cellW = (innerW - 4) / 4;
   const cellH = (gridH - 4) / 3;
-  const top = cellH / cellW >= 0.7; // tall cells: the cover above the title
+  const top = layout.cellMode ? layout.cellMode === 'above' : cellH / cellW >= 0.7; // tall cells: the cover above the title
   const cover = layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
   const text = top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
-  return { page, W, H, innerW, single, headerH, headingSize, gridH, cellW, cellH, top, cover, text };
+  return { page, W, H, innerW, single, style, qrSize, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
 }
 
 function Header({ g, kind, side, num, qr }) {
   const filled = side === 2;
   const heading = h(CapText, { text: HEADINGS[kind][side - 1], size: g.headingSize, filled, padX: filled ? 10 : 0, padY: filled ? 7 : 0 });
   const centred = (child) => h(View, { style: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, child);
-  if (g.single) {
+  const right = h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } }, h(Gomet), h(NumberAndQr, { num, qr, qrSize: g.qrSize }));
+  const row = (children, extra = {}) => h(View, { style: [{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 46 }, extra] }, ...children);
+  if (g.style === 'single') {
     return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
       h(View, { style: { width: 170 } }, h(Brand)),
       centred(heading),
-      h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } }, h(Gomet), h(NumberAndQr, { num, qr, qrSize: 45 })));
+      right);
+  }
+  if (g.style === 'oneRow') {
+    return row([h(BrandCompact), h(View, { style: { flex: 1, display: 'flex', alignItems: 'center' } }, heading), right], { gap: 8 });
+  }
+  if (g.style === 'footer') {
+    return row([heading, right]);
+  }
+  if (g.style === 'gometLeft') {
+    // No branding: the GOMET circle on the left, the heading centred between it and the number.
+    return row([h(Gomet), h(View, { style: { flex: 1, display: 'flex', alignItems: 'center' } }, heading), h(NumberAndQr, { num, qr, qrSize: g.qrSize })], { gap: 8 });
+  }
+  if (g.style === 'band') {
+    // The heading in a band as wide as the grid: outlined on side 1, black on side 2.
+    const band = h(View, { style: { height: g.bandH, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5 solid black', backgroundColor: filled ? '#000000' : '#ffffff' } },
+      h(CapText, { text: HEADINGS[kind][side - 1], size: g.headingSize, color: filled ? '#ffffff' : '#000000' }));
+    return h(View, { style: { display: 'flex', flexDirection: 'column', gap: 6, height: g.headerH } }, row([h(Brand), right]), band);
   }
   return h(View, { style: { display: 'flex', flexDirection: 'column', gap: 6, height: g.headerH } },
     h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 45 } },
@@ -252,7 +312,8 @@ function Card({ g, layout, kind, side, num, position, qr, stats, cut }) {
     h(View, { style: [st.table, { height: g.gridH }] },
       [0, 1, 2].map((r) =>
         h(View, { key: r, style: st.row },
-          ids.slice(r * 4, r * 4 + 4).map((id) => h(Cell, { key: id, g, id, titleMax: layout.titleMax, stats }))))));
+          ids.slice(r * 4, r * 4 + 4).map((id) => h(Cell, { key: id, g, id, titleMax: layout.titleMax, stats }))))),
+    g.style === 'footer' ? h(BrandFooter) : null);
 }
 
 async function build(key) {
