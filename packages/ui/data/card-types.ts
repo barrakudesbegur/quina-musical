@@ -3,7 +3,7 @@
 // its side (`RoundPlan.side`), so screens take names and colours from here and which rounds a type plays from the
 // plan's rounds. Pure.
 import {
-  cardTypeSides, isCardTypeId, isPoolId, isSide, roundCardPrice, roundCardType, sideLabel,
+  cardTypeSides, isCardTypeId, isPoolId, isSide, roundCardPrice, roundCardType,
   type CardPriceRule, type CardTypeSide, type GamePlan, type RoundKind,
 } from '@quina/protocol';
 import { CA } from '../i18n/ca.ts';
@@ -21,8 +21,9 @@ export interface PrintedCardType {
   /** How the price counts (U5): 'perRegularRound' (a normal card: × the regular rounds still to play) or 'fixed' (the
    * especial card). card-types.json may leave it out: then 'perRegularRound', as @quina/protocol roundCardPrice reads it. */
   priceRule?: CardPriceRule;
-  /** Its printed sides (D178): the normal card's 1 (pool 1, "1–4") and 2 (pool 2, "5–10"). A card-types.json from
-   * before sides gives one, side 1 on pool 1 (@quina/protocol cardTypeSides). */
+  /** Its printed sides (D178, D226): the normal card's 1 (pool 1, "1–5") and 2 (pool 2, "6–10"), the especial card's 1
+   * (pool 1, "Desgraciada") and 2 (pool 2, "Quina Especial"). A card-types.json from before sides gives one, side 1 on
+   * pool 1 (@quina/protocol cardTypeSides). */
   sides: readonly CardTypeSide[];
 }
 
@@ -104,12 +105,18 @@ export function cardTypeLabel(type: string, types: readonly PrintedCardType[]): 
 
 /**
  * The Check's one label for a card type and the side checked (D163): the short name, then the side's label when the
- * type has several sides ("Normal 1–4", "Normal 5–10"), or the short name alone ("Especial"). A type nobody lists is
- * its stand-in short name.
+ * type has several sides, or the short name alone. A label that is a range (it starts with a digit) joins with a
+ * space ("Normal 1–5", "Normal 6–10"); a round's name joins with « · » ("Especial · Desgraciada", "Especial · Quina
+ * Especial": D226, U198's option (a) until the user picks). A side with no label is its number. A type nobody lists
+ * is its stand-in short name. (@quina/protocol sideLabel joins every label with a space.)
  */
 export function typeSideLabel(type: string, side: number, types: readonly PrintedCardType[]): string {
-  if (!types.some((t) => t.type === type)) return cardTypeLabel(type, types).shortName;
-  return sideLabel(types.map((t) => ({ type: t.type, name: t.shortName, sides: t.sides })), type, side);
+  const known = types.find((t) => t.type === type);
+  if (!known) return cardTypeLabel(type, types).shortName;
+  const sides = cardTypeSides(known);
+  if (sides.length < 2) return known.shortName;
+  const label = sides.find((s) => s.side === side)?.label ?? String(side);
+  return `${known.shortName}${/^\d/.test(label) ? ' ' : ' · '}${label}`;
 }
 
 /** Where a card type plays tonight. */

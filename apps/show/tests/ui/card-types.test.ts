@@ -54,18 +54,20 @@ test('a type is named from the list; one nobody lists is "Cartró <id>" in a neu
   assert.equal(cardTypeLabel('especial', []).name, 'Cartró especial', 'with no list at all, the default ids still read well');
 });
 
-// ---- sides (D101, D102, D171, D178) and the Check's label (D163)
+// ---- sides (D101, D102, D171, D178, D226) and the Check's label (D163)
 
 const SIDED = [
   { ...PRINTED[0], shortName: 'Normal', sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-  { ...PRINTED[1], shortName: 'Especial', sides: [{ side: 1, pool: '1' }] },
+  { ...PRINTED[1], shortName: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
 ];
+/** A type printed on one side only. */
+const ONE_SIDED = { type: 'daurat', name: 'Cartró daurat', shortName: 'Daurat', color: '#f5d77a', title: '', priceCents: 500, sides: [{ side: 1, pool: '1' }] };
 
 test("card-types.json's sides and short names are read; a file from before them reads as one side 1 on pool 1", () => {
   const read = readPrintedCardTypes(SIDED);
   assert.deepEqual(read?.map((t) => [t.shortName, t.sides]), [
     ['Normal', [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }]],
-    ['Especial', [{ side: 1, pool: '1' }]],
+    ['Especial', [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }]],
   ]);
   assert.deepEqual(readPrintedCardTypes(PRINTED)?.map((t) => [t.shortName, t.sides]), [
     ['Normal', [{ side: 1, pool: '1' }]],
@@ -78,13 +80,17 @@ test("card-types.json's sides and short names are read; a file from before them 
   assert.equal(readPrintedCardTypes([{ ...PRINTED[0], shortName: ' ' }]), null);
 });
 
-test("the Check's label (D163): the type and its side in one, «Normal 1–5», «Normal 6–10», «Especial»", () => {
-  const types = readPrintedCardTypes(SIDED) ?? [];
-  assert.equal(typeSideLabel('normal', 1, types), 'Normal 1–5');
+test("the Check's label (D163): the type and its side in one, «Normal 1–5», «Especial · Desgraciada»", () => {
+  const types = readPrintedCardTypes([...SIDED, ONE_SIDED]) ?? [];
+  assert.equal(typeSideLabel('normal', 1, types), 'Normal 1–5', 'a range joins with a space');
   assert.equal(typeSideLabel('normal', 2, types), 'Normal 6–10');
-  assert.equal(typeSideLabel('especial', 1, types), 'Especial', 'one side: no side in the label');
+  assert.equal(typeSideLabel('especial', 1, types), 'Especial · Desgraciada', "D226, U198's (a): a round's name joins with « · »");
+  assert.equal(typeSideLabel('especial', 2, types), 'Especial · Quina Especial');
+  assert.equal(typeSideLabel('daurat', 1, types), 'Daurat', 'one side: no side in the label');
+  assert.equal(typeSideLabel('normal', 1, readPrintedCardTypes([{ ...SIDED[0], sides: [{ side: 1, pool: '1', label: 'A' }, { side: 2, pool: '2' }] }]) ?? []), 'Normal · A');
+  assert.equal(typeSideLabel('normal', 2, readPrintedCardTypes([{ ...SIDED[0], sides: [{ side: 1, pool: '1', label: 'A' }, { side: 2, pool: '2' }] }]) ?? []), 'Normal 2', 'a side with no label: its number');
   assert.equal(typeSideLabel('normal', 1, readPrintedCardTypes(PRINTED) ?? []), 'Normal', 'a card-types.json from before sides');
-  assert.equal(typeSideLabel('daurat', 2, types), 'Daurat', 'a type nobody lists: its stand-in');
+  assert.equal(typeSideLabel('plata', 2, types), 'Plata', 'a type nobody lists: its stand-in');
   assert.equal(typeSideLabel('normal', 1, []), 'Normal', 'without card-types.json');
 });
 
