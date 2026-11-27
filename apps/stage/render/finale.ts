@@ -9,6 +9,7 @@ import { fateAt, finaleLayout, type FinaleNino, type FinaleView } from '../model
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
 import { ninoUrl } from '../../../packages/ui/ninos.ts';
+import '../../../packages/ui/components/particles.css';
 import { STAGE_TEXT } from '../strings.ts';
 import { h, playAnim, setData, setHidden, setVar } from './dom.ts';
 import type { SceneEnv } from './scene.ts';
@@ -31,7 +32,7 @@ class NinoSlot {
       h('div', 'finale__hop', this.img),
       h('div', 'finale__label', this.plate, h('span', { class: 'finale__cross', attrs: { 'aria-hidden': 'true' } })),
     );
-    this.root = h('li', { class: 'finale__slot', data: { number: String(number), fate: 'up' } }, h('div', 'finale__rays'), h('div', 'finale__cone'), this.body);
+    this.root = h('li', { class: 'finale__slot', data: { number: String(number), fate: 'up' } }, h('div', { class: 'ds-rays finale__rays', data: { color: 'gold' } }), h('div', 'finale__cone'), this.body);
   }
 
   set(nino: FinaleNino, x: number, index: number): void {
@@ -70,7 +71,7 @@ export class FinaleStage {
     this.root = h(
       'div',
       { class: 'finale', hidden: true, data: { testid: 'finale' } },
-      h('div', { class: 'finale__light', attrs: { 'aria-hidden': 'true' } }, h('div', 'finale__light-rays'), h('div', 'finale__glow')),
+      h('div', { class: 'finale__light', attrs: { 'aria-hidden': 'true' } }, h('div', { class: 'ds-rays finale__light-rays', data: { color: 'live' } }), h('div', 'finale__glow')),
       h('div', { class: 'finale__beams', attrs: { 'aria-hidden': 'true' } }, beam('left'), beam('right')),
       h('div', { class: 'finale__floor', attrs: { 'aria-hidden': 'true' } }),
       this.row,

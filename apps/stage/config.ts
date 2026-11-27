@@ -105,7 +105,9 @@ export const STAGE = Object.freeze({
   paper: Object.freeze({
     fallShare: 0.05,
     size: Object.freeze({ min: 12, max: 22 }),
-    colors: Object.freeze(['#FFC531', '#3EE07F', '#FF6FB5', '#4FC3FF', '#FFF6E5', '#FF8A1F']),
+    // The palette's fills (G3: one palette, tokens.css): gold, live, pink, cyan, snow, orange. Were the near-misses
+    // #FF6FB5, #4FC3FF and #FF8A1F (27 Nov).
+    colors: Object.freeze(['#FFC531', '#3EE07F', '#FF4FA3', '#5CC8FF', '#FFF6E5', '#FF8200']),
     outline: '#17132B',
   }),
   /** Each Celebration's paper rain (ANIMATIONS.md `celebrate`): from a little above the middle, across the whole width. */

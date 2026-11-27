@@ -191,3 +191,10 @@ export const NOTICES = {
   refused: { layout: 'note', color: 'red', fill: 'solid', icon: 'close', live: 'assertive' },
   accepted: { layout: 'note', color: 'green', fill: 'solid', icon: 'check' },
 } as const satisfies Record<string, NoticePreset>;
+
+/** E5 · Verdict (a recipe, components-v2.md § 6 and § 11): the Check's result on the console's card, by outcome. The
+ *  bar's words take the palette's text shade, the fail's ✗ disc its fill. */
+export const VERDICT_LOOKS = {
+  pass: { color: CONCEPTS.claim.color },
+  fail: { color: CONCEPTS.checkFail.color },
+} as const satisfies Record<'pass' | 'fail', { readonly color: ButtonColor }>;

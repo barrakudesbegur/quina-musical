@@ -13,6 +13,7 @@ import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorStrip, stickerImage } from './parts.ts';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import '../../../packages/ui/components/sticker.css';
+import '../../../packages/ui/components/price-tag.css';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { RingElement } from '../../../packages/ui/components/ring-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
@@ -70,7 +71,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     this.title = h('h1', { class: 'interval__title', data: { anim: 'idle' } }, STAGE_TEXT.intervalTitle);
     this.plate = h('p', { class: 'plate interval__plate', data: { color: 'gold' } });
     this.priceText = h('span', 'interval__price-text');
-    this.priceTag = h('p', { class: 'interval__price', hidden: true, data: { testid: 'interval-price' } }, this.price.root, this.priceText);
+    this.priceTag = h('p', { class: 'price-tag interval__price', hidden: true, data: { testid: 'interval-price', variant: 'line', color: 'gold' } }, this.price.root, this.priceText);
     this.words.root.classList.add('interval__words');
     this.words.root.setAttribute('role', 'timer');
     const left = stickerImage(STAGE.stickers.interval, 'interval__nino interval__nino--left');

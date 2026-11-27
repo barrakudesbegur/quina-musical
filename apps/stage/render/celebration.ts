@@ -15,6 +15,7 @@ import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { Garland } from './garland.ts';
 import { PrizeBlock, stickerImage } from './parts.ts';
 import '../../../packages/ui/components/sticker.css';
+import '../../../packages/ui/components/particles.css';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
@@ -35,6 +36,8 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   /** The paper rain (D185), on one canvas. */
   private readonly paper: HTMLCanvasElement;
   private stopPaper: (() => void) | null = null;
+  /** G3's rays: gold, the Desgraciat's last one standing in live green. */
+  private readonly rays = h('div', { class: 'ds-rays celebration__rays', data: { color: 'gold' }, attrs: { 'aria-hidden': 'true' } });
   private readonly shout: HTMLElement;
   /** «Quina Desgraciada», under «QUINA POTRA!». */
   private readonly roundPlate: HTMLElement;
@@ -60,7 +63,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       'div',
       'celebration',
       h('div', { class: 'celebration__flash', attrs: { 'aria-hidden': 'true' } }),
-      h('div', { class: 'celebration__rays', attrs: { 'aria-hidden': 'true' } }),
+      this.rays,
       this.paper,
       this.shout,
       this.roundPlate,
@@ -74,6 +77,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   render(body: CelebrationView): void {
     const standing = body.kind === 'standing';
     setData(this.stagePanel, 'kind', body.kind);
+    setData(this.rays, 'color', body.kind === 'standing' ? 'live' : 'gold');
     const shout = STAGE_TEXT.shout[body.kind];
     setText(this.shout, shout ?? '');
     setHidden(this.shout, shout === null);

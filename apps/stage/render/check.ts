@@ -38,6 +38,7 @@ import { cellLook } from '../../../packages/ui/components/card-looks.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { MiniCard, pickSticker, stickerImage } from './parts.ts';
 import '../../../packages/ui/components/sticker.css';
+import '../../../packages/ui/components/particles.css';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 interface CellNodes {
@@ -155,7 +156,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       this.resultTitle,
     );
     this.review = h('div', { class: 'check-review', attrs: { role: 'status' } }, magnifier(), h('p', 'check-review__title', STAGE_TEXT.checkReview));
-    const beams = h('div', { class: 'check__beams', attrs: { 'aria-hidden': 'true' } }, h('div', 'check__rays'), h('div', 'check__glow'));
+    const beams = h('div', { class: 'check__beams', attrs: { 'aria-hidden': 'true' } }, h('div', { class: 'ds-rays check__rays', data: { color: 'red' } }), h('div', 'check__glow'));
     const scrim = h('div', { class: 'check__scrim', attrs: { 'aria-hidden': 'true' } });
     this.panel = h('div', { class: 'check', data: { testid: 'check' } }, h('header', 'check__head', this.plate, this.type), h('div', 'check__card', beams, this.grid, this.review, this.result), scrim);
     this.root.append(this.panel);

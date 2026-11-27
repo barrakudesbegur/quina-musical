@@ -10,6 +10,7 @@ import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import { h, setData, setHidden, setText } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorStrip, sadIcon, starIcon, stickerImage } from './parts.ts';
 import { QrBlock } from './qr.ts';
+import '../../../packages/ui/components/price-tag.css';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 /** One card type's band: its card (with the price tag when it plays round 1 and has a price: U5), its name, and the rounds it plays. */
@@ -17,7 +18,7 @@ function typeBand(t: NightCardType): HTMLElement {
   const card = new MiniCard('night__card');
   card.set(t.color, t.special);
   const price = priceLabel(t.priceCents);
-  const art = h('div', 'night__art', card.root, price ? h('p', 'night__price', price) : null);
+  const art = h('div', 'night__art', card.root, price ? h('p', { class: 'price-tag night__price', data: { variant: 'tag', color: 'gold' } }, price) : null);
   const rounds = t.regularRounds.length
     ? h(
         'div',

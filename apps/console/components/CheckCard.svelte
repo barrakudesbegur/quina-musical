@@ -16,6 +16,7 @@
   import { checkCells, checkVerdict, typeChip, type CheckCell } from '../logic/check.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
+  import { VERDICT_LOOKS } from '../actions.ts';
   import CardCell from '../../../packages/ui/components/CardCell.svelte';
   import { cellLook, type CellState } from '../../../packages/ui/components/card-looks.ts';
   import Cover from './Cover.svelte';
@@ -106,7 +107,7 @@
   {/if}
 
   <span class="check-card__spacer"></span>
-  <div class="check-verdict" data-pass={pass} data-testid="check-result" data-outcome={check.outcome} aria-label={text}>
+  <div class="check-verdict" data-pass={pass} data-color={VERDICT_LOOKS[pass ? 'pass' : 'fail'].color} data-testid="check-result" data-outcome={check.outcome} aria-label={text}>
     {#if pass}
       <p class="check-verdict__line"><Icon name="check" /><span>{text}</span></p>
     {:else}

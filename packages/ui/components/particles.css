@@ -1,0 +1,21 @@
+/*
+ * G3 · Particles (components-v2.md § 8): the light effects' shared looks. Rays: a conic of alternating wedges in the
+ * palette's fill (`data-color`), mixed in oklab at a strength, masked to a soft disc; one resource for every Celebration,
+ * the failed Check's red beams and the finale's lights (the mask was repeated five times). Its place, size and motion
+ * are the scene's. Variables in :where().
+ */
+:where(.ds-rays) {
+  --rays-strength: 26%;
+  --rays-step: 8deg;
+  --rays-inner: 18%;
+  --rays-outer: 62%;
+}
+
+.ds-rays {
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    color-mix(in oklab, var(--palette-solid) var(--rays-strength), transparent) 0 var(--rays-step),
+    transparent var(--rays-step) calc(2 * var(--rays-step))
+  );
+  mask-image: radial-gradient(circle, #000 var(--rays-inner), transparent var(--rays-outer));
+}

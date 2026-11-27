@@ -1,0 +1,67 @@
+/*
+ * E6 · PriceTag (components-v2.md § 6; PriceTag.svelte; the projector writes the same <p> in before.ts and interval.ts): the card price, only for the coming round
+ * (D61). `tag`: a sticker tag in the palette (gold), its own dark edge (R2), a top highlight, a drop, a punched hole in
+ * the ground's colour, tilted 7°, the amount in outlined Londrina. `line`: the amount alone in the palette's colour (the
+ * Break's «Cartró: 4,50 €», beside a MiniCard). The unit keeps its case (D114). Variables in :where().
+ */
+:where(.price-tag) {
+  --price-size: 4.5rem;
+  --price-stroke: var(--stage-text-stroke, 0.5625rem);
+  --price-drop: var(--stage-text-drop, 0.4375rem);
+  --price-border: 0.375rem;
+  --price-radius: 1.375rem;
+  --price-edge: 0.625rem;
+  --price-gloss: 0.3125rem;
+  --price-shadow: 0.5rem;
+  --price-tilt: 7deg;
+  --price-pad: 0 1.25rem 0.5rem 1.875rem;
+  --price-hole: 0.75rem;
+}
+
+.price-tag {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--price-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: var(--price-stroke) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--price-drop) 0 var(--color-ink);
+}
+
+.price-tag[data-variant='tag'] {
+  position: relative;
+  padding: var(--price-pad);
+  border: var(--price-border) solid var(--color-ink);
+  border-radius: var(--price-radius);
+  background: var(--palette-solid);
+  box-shadow:
+    inset 0 calc(-1 * var(--price-edge)) 0 var(--palette-edge),
+    inset 0 var(--price-gloss) 0 rgb(255 255 255 / 0.3),
+    0 var(--price-shadow) 0 var(--color-shadow, var(--color-night-shadow));
+  color: var(--color-text, var(--color-white));
+  rotate: var(--price-tilt);
+}
+
+/* the punched hole, in the ground's colour */
+.price-tag[data-variant='tag']::before {
+  content: '';
+  position: absolute;
+  left: 0.5625rem;
+  top: 50%;
+  width: var(--price-hole);
+  height: var(--price-hole);
+  margin-top: -0.625rem;
+  border: 0.1875rem solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-bg, var(--color-night));
+}
+
+.price-tag[data-variant='line'] {
+  color: var(--palette-solid);
+}
+
+.price-tag :where(.unit) {
+  text-transform: none;
+}

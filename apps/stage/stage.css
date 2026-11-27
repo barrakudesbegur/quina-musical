@@ -96,7 +96,6 @@
   --stage-logo-tile: #fff; /* logos and QR on white: many logos are drawn for white paper */
   --stage-ring-size: 24.375rem;
   --stage-fail-dim-opacity: 0.1;
-  --stage-fail-beam: color-mix(in srgb, var(--color-danger) 34%, transparent);
   --stage-fail-glow: color-mix(in srgb, var(--color-danger) 50%, transparent);
   --stage-cross: 36.25rem;
   --stage-cross-row: 17.5rem;
@@ -449,7 +448,6 @@
 .interval__title,
 .interval__plate,
 .night__name,
-.night__price,
 .before__countdown,
 .interval__words,
 .check__type-name {
@@ -625,34 +623,11 @@
 }
 
 /* The price tag: gold, tilted, pinned on the card's corner. */
-.night__price {
+/* The price is E6's tag (packages/ui/components/price-tag.css), gold, on the card's corner. */
+.night__art .price-tag.night__price {
   position: absolute;
   right: 0;
   bottom: 0;
-  padding: 0 1.25rem 0.5rem 1.875rem;
-  border: 0.375rem solid var(--color-line);
-  border-radius: 1.375rem;
-  background: var(--color-accent);
-  box-shadow:
-    inset 0 -0.625rem 0 var(--color-accent-edge),
-    inset 0 0.3125rem 0 var(--stage-gloss),
-    0 0.5rem 0 var(--color-shadow);
-  font-size: 4.5rem;
-  white-space: nowrap;
-  rotate: 7deg;
-}
-
-.night__price::before {
-  content: '';
-  position: absolute;
-  left: 0.5625rem;
-  top: 50%;
-  width: 0.75rem;
-  height: 0.75rem;
-  margin-top: -0.625rem;
-  border: 0.1875rem solid var(--color-line);
-  border-radius: 50%;
-  background: var(--color-bg);
 }
 
 .night__info {
@@ -1582,14 +1557,12 @@
 
 /* `finale-win`: the party nino steps forward, its plate and cone gold, gold rays turning behind. */
 .finale__rays {
+  --rays-strength: 26%;
   position: absolute;
   left: -494px;
   top: -656px;
   width: 988px;
   height: 988px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(color-mix(in srgb, var(--color-accent) 26%, transparent) 0deg 8deg, transparent 8deg 16deg);
-  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
   display: none;
 }
 
@@ -1662,14 +1635,12 @@
 }
 
 .finale__light-rays {
+  --rays-strength: 24%;
   position: absolute;
   left: -280px;
   top: -397px;
   width: 2000px;
   height: 2000px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(color-mix(in srgb, var(--stage-finale-saved) 24%, transparent) 0deg 8deg, transparent 8deg 16deg);
-  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
 }
 
 .finale__glow {
@@ -2256,9 +2227,8 @@
 }
 
 .check__rays {
+  --rays-strength: 34%;
   width: 112.5rem;
-  background: repeating-conic-gradient(var(--stage-fail-beam) 0 8deg, transparent 8deg 16deg);
-  mask-image: radial-gradient(circle, #000 18%, transparent 62%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2740,8 +2710,9 @@
 }
 
 .celebration[data-kind='standing'] .celebration__rays {
+  --rays-strength: 24%;
+  --rays-step: 8deg;
   top: 260px;
-  background: repeating-conic-gradient(color-mix(in oklab, var(--stage-standing) 24%, transparent) 0 8deg, transparent 8deg 16deg);
 }
 
 .celebration__paper {
@@ -2796,14 +2767,15 @@
 }
 
 .celebration__rays {
+  --rays-strength: 22%;
+  --rays-step: 10deg;
+  --rays-inner: 20%;
+  --rays-outer: 65%;
   position: absolute;
   left: 50%;
   top: calc(var(--band-h-ref) / 2);
   width: 110rem;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: repeating-conic-gradient(color-mix(in oklab, var(--color-accent) 22%, transparent) 0 10deg, transparent 10deg 20deg);
-  mask-image: radial-gradient(circle, #000 20%, transparent 65%);
   transform: translate(-50%, -50%);
 }
 
@@ -2972,19 +2944,13 @@
 }
 
 /* `price-tag` (U5): the coming round's card in its colour, and what it costs now. A value, not an event: no motion. */
-.interval__price {
+.price-tag.interval__price {
+  --price-size: 3.25rem;
+  --price-drop: 0.3125rem;
   display: flex;
   align-items: center;
   gap: 1.25rem;
   margin: -0.75rem 0 0;
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-strong);
-  font-size: 3.25rem;
-  line-height: 1;
-  color: var(--color-accent);
-  -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
-  paint-order: stroke fill;
-  text-shadow: 0 0.3125rem 0 var(--color-line);
 }
 
 .interval__price-card {
