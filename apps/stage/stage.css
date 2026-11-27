@@ -588,13 +588,15 @@
   display: grid;
   justify-items: start;
   align-content: start;
-  gap: 1.25rem;
+  gap: 0.875rem;
 }
 
+/* The bands and the start countdown close up a little (27 Nov evening): with this year's ten rounds (two rows of balls)
+   and a start time the countdown no longer reaches the sponsor strip. */
 .night {
   width: 100%;
   display: grid;
-  gap: 1.625rem;
+  gap: 1rem;
 }
 
 /* One card type: its band in its pastel colour, with a darker bottom edge in the same colour. */
