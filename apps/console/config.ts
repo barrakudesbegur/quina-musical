@@ -25,11 +25,13 @@ export const CONSOLE = Object.freeze({
   escalateHoldMs: 800,
   /**
    * The lock mirror (D234, logic/two-level-lock.ts): Parlem or Aguanta held on another console shows locked here once
-   * the press has lasted `afterMs` (a tap elsewhere never flashes it; well under `escalateHoldMs`). After this console
-   * lets go of one, a lock of it that started before stays its own for `echoMs`, while the engine's release is on its
-   * way (through the cloud every console shares the link's clientId, so only the timing tells them apart).
+   * the press has lasted `afterMs` (a tap elsewhere never flashes it; well under `escalateHoldMs`). Through the cloud
+   * every console shares the link's clientId, so only the timing tells this console's hold from another's: one that
+   * started more than `raceMs` before this console's own press of the button is another's (the lock shows, and the
+   * press drops); after this console lets go, a lock that started before stays its own for `echoMs`, while the
+   * engine's release is on its way.
    */
-  lock: Object.freeze({ afterMs: 300, echoMs: 1500 }),
+  lock: Object.freeze({ afterMs: 300, raceMs: 250, echoMs: 1500 }),
   /** An «Efectes» cell's light runs this long after its tap (ANIMATIONS.md › pad-playing): the snapshot has no playing
    *  effect yet; to replace with the engine's when Sound engine sends one. */
   padPlayingMs: 2000,

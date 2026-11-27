@@ -451,7 +451,7 @@ export class ConsoleModel {
    * a command that can't leave nor a refusal toasts (`busy`: another console holds it, and its lock says so).
    */
   twoLevelPress(button: TwoLevelButton, source: LockSource): void {
-    const command = this.lockPresses.press(button, source);
+    const command = this.lockPresses.press(button, source, this.show.client.now());
     this.ownPresses = this.lockPresses.presses;
     if (command) this.show.send('twoLevelHold', command);
   }

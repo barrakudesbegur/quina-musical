@@ -24,17 +24,21 @@ export type LockSource = 'touch' | `wii-${WiiButton}`;
 
 /** This console's own presses, as the lock needs them. */
 export interface OwnPresses {
-  /** The buttons a finger (or a Wii key) is on now. */
-  holding: ReadonlySet<TwoLevelButton>;
+  /** The buttons a finger (or a Wii key) is on now, and when that press started (the show's clock, ms). */
+  holding: ReadonlyMap<TwoLevelButton, number>;
   /** When each button was last let go here (the show's clock, ms). */
   releasedAtMs: Readonly<Partial<Record<TwoLevelButton, number>>>;
 }
 
-export const NO_PRESSES: OwnPresses = Object.freeze({ holding: new Set<TwoLevelButton>(), releasedAtMs: Object.freeze({}) });
+export const NO_PRESSES: OwnPresses = Object.freeze({ holding: new Map<TwoLevelButton, number>(), releasedAtMs: Object.freeze({}) });
 
 export interface LockRules {
   /** A press elsewhere shows as a lock only once it has lasted this long (a tap never flashes it). */
   afterMs: number;
+  /** A hold that started this long before this console's own press of the button is another console's, which this
+   * press can't take (the engine refused it `busy`): the lock shows, and the press is dropped. A later or nearer one is
+   * this press's own echo (through the cloud the clientIds can't tell them apart; the clocks differ by a little). */
+  raceMs: number;
   /** After this console lets go of a button, a lock of it that started before stays its own this long: the engine's
    * release is on its way (through the cloud, where every console shares the link's clientId, it can't be told apart
    * otherwise). */
@@ -43,8 +47,8 @@ export interface LockRules {
 
 /**
  * Who holds `button` on another console, by its `label`, or null when it isn't locked here: not held, held by this
- * console (its clientId; or, through the cloud, this console is pressing it or just let go of it), or held only for a
- * moment so far.
+ * console (its clientId; or, through the cloud, this console is pressing it, from about when the hold started, or just
+ * let go of it), or held only for a moment so far.
  */
 export function lockedBy(
   held: ShowState['twoLevelHeld'],
@@ -54,7 +58,8 @@ export function lockedBy(
   rules: LockRules,
 ): string | null {
   if (!held || held.button !== button || held.clientId === own.clientId) return null;
-  if (own.presses.holding.has(button)) return null;
+  const pressedAt = own.presses.holding.get(button);
+  if (pressedAt !== undefined && held.sinceMs >= pressedAt - rules.raceMs) return null;
   const released = own.presses.releasedAtMs[button];
   if (released !== undefined && held.sinceMs <= released && nowMs - released < rules.echoMs) return null;
   if (nowMs - held.sinceMs < rules.afterMs) return null;
@@ -83,14 +88,16 @@ export function holderName(label: string, presets: readonly string[]): string | 
  */
 export class LockPresses {
   #sources = new Map<TwoLevelButton, Set<LockSource>>();
+  #pressedAtMs = new Map<TwoLevelButton, number>();
   #releasedAtMs: Partial<Record<TwoLevelButton, number>> = {};
 
-  /** A source pressed `button`: the command to send, if this is its first. */
-  press(button: TwoLevelButton, source: LockSource): { button: TwoLevelButton; on: true } | null {
+  /** A source pressed `button` at `atMs` (the show's clock): the command to send, if this is its first. */
+  press(button: TwoLevelButton, source: LockSource, atMs: number): { button: TwoLevelButton; on: true } | null {
     const sources = this.#sources.get(button) ?? new Set<LockSource>();
     const first = sources.size === 0;
     sources.add(source);
     this.#sources.set(button, sources);
+    if (first) this.#pressedAtMs.set(button, atMs);
     return first ? { button, on: true } : null;
   }
 
@@ -99,6 +106,7 @@ export class LockPresses {
     const sources = this.#sources.get(button);
     if (!sources?.delete(source) || sources.size > 0) return null;
     this.#sources.delete(button);
+    this.#pressedAtMs.delete(button);
     this.#releasedAtMs = { ...this.#releasedAtMs, [button]: atMs };
     return { button, on: false };
   }
@@ -110,6 +118,6 @@ export class LockPresses {
 
   /** The presses now, for `lockedBy`. */
   get presses(): OwnPresses {
-    return { holding: new Set(this.#sources.keys()), releasedAtMs: this.#releasedAtMs };
+    return { holding: new Map(this.#pressedAtMs), releasedAtMs: this.#releasedAtMs };
   }
 }
