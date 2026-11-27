@@ -7,6 +7,14 @@
     <meta name="description" content="Segueix els teus cartrons de la Quina Musical." />
     <meta name="format-detection" content="telephone=no" />
     <title>Quina Musical</title>
+    <!-- The installable app (D221): the manifest leaves start_url unset, so an app added to an iPhone's Home Screen
+         opens the page it was added from. The files sit at the site's root (apps/player/public/). -->
+    <link rel="manifest" href="/player.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/player-192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+    <meta name="apple-mobile-web-app-title" content="Quina Musical" />
+    <!-- Installed on an iPhone, the night sky runs under the status bar (the header keeps clear of it: safe-area). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   </head>
   <body>
     <div id="app">

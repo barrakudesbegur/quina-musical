@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Quina Musical",
+  "short_name": "Quina Musical",
+  "description": "Segueix els teus cartrons de la Quina Musical.",
+  "lang": "ca",
+  "dir": "ltr",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#18204a",
+  "background_color": "#18204a",
+  "icons": [
+    { "src": "/icons/player-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/player-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/player-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "related_applications": [{ "platform": "webapp", "url": "/player.webmanifest" }],
+  "prefer_related_applications": false
+}
