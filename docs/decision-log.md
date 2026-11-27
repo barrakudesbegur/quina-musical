@@ -1787,3 +1787,8 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 - **The square card's covers are 17 mm** (from 18.6 mm): "make the cover a little smaller on the square version". The titles now fit at 11–16 pt (acd8f1a9).
 - **#60 Summercat prints «Billie The Vision»:** "summercat has a very long artist name" (Spotify has «Billie The Vision & The Dancers»). Sound engine adds it to print-names.json.
 By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D272 · Two card options again; the year stamp exactly as last year's · 2026-11-28 · Active
+- "third option is discarded. keep square for now as default, but that i can also generate the pdf for the other." The organizers choose between «Quadrat amb portades» (the A3 card, the default) and «Apaïsat sense portades» (21 × 9.9 cm, black and white). The generator makes both: `CARD_LAYOUT` 'a3-6', or `--layout a4-3`. «Apaïsat amb portades» is dropped. Amends D271.
+- "the year in the stamp is broken! you had to bring the exact old code." The port had centred «2026» 4 pt lower than last year's code. It's now exactly as last year's: flush with the stamp's top, 5 pt in from its right, 18 pt. The stamp is drawn over the songs at 9 % ink, so the square card's corner cover never hides it (4e4c0fe2).
+By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov.

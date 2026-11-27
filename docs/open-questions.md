@@ -153,10 +153,9 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
 ### U212 · Ask the organizers: which card
-The user (28 Nov): "the options are: flat without albums, square with albums, flat with albums". The card design session made the organizers an image of card #1 in all three, on blue paper, and a short message in Catalan with the pros and cons.
+The user (28 Nov): "third option is discarded. keep square for now as default, but that i can also generate the pdf for the other". The generator does both: `CARD_LAYOUT` 'a3-6' by default, and `--layout a4-3` for the other. The card design session made the organizers an image of card #1 in all three, on blue paper, and a short message in Catalan with the pros and cons.
 - (a) «Quadrat amb portades»: the A3 card, 149 × 140 mm, six a sheet, header C, 17 mm covers (D256, D259, D271). The working default (D262).
 - (b) «Apaïsat sense portades»: the 21 × 9.9 cm card, three to an A4 page, in black and white, with last year's 16 pt titles.
-- (c) «Apaïsat amb portades»: the same 21 × 9.9 cm card with 16 mm covers beside the titles. It's only in the mockup (`3x1-h`), not in the generator yet.
 The cards are made on 4–5 Dec, and the build and proof round take about 2 days.
 
 ### U202 · What admin the console does during the night (D234)
