@@ -17,8 +17,12 @@ export const STAGE = Object.freeze({
   drumBand: Object.freeze({ top: 0, height: 640 }),
   /** How many songs the play scene shows (the brief: only the last 3). */
   recentSongs: 3,
-  /** Lights in the Heat garland. All are always on; only their colour and glow follow the Heat. */
-  garlandLights: 22,
+  /**
+   * The Heat garland across the top (the S2 board on Projector-Joc: 1440 × 120, 4 swags, 34 bulbs, hung 26 px above
+   * the box's top edge, so the hooks are off screen). Its lights play the patterns of packages/ui/motion/garland.ts,
+   * with a flame behind every `flameEvery`-th bulb when very hot (17).
+   */
+  garland: Object.freeze({ width: 1440, height: 120, swags: 4, bulbs: 34, top: -14, sag: 62, flameEvery: 2 }),
   /** How often the garland repaints. Heat eases over ~20 s, so 4 Hz is plenty. */
   heatRepaintMs: 250,
   /** No optional DOM writes this close before a landing (ANIMATIONS.md budget). */

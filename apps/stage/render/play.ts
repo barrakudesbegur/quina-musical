@@ -35,7 +35,7 @@ export class PlayScene implements SceneRenderer<PlayView> {
   private breathMs = 0;
 
   constructor(env: SceneEnv) {
-    this.garland = new Garland(STAGE.garlandLights, env.random);
+    this.garland = new Garland(STAGE.garland, env.random);
     this.title = h('p', 'play__title');
     this.artist = h('p', 'play__artist');
     this.now = h('div', { class: 'play__now', attrs: { 'aria-live': 'polite' } }, this.title, this.artist);

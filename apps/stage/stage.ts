@@ -343,7 +343,10 @@ class Stage {
     const landAtMs = body.scene === 'play' ? (body.motion?.landAtMs ?? null) : null;
     if (now - this.lastHeatPaint >= STAGE.heatRepaintMs && !nearLanding(landAtMs, now, STAGE.quietBeforeLandingMs)) {
       this.lastHeatPaint = now;
-      this.scenes.play.paintHeat(garlandLook(heatDisplay(this.heatSamples, now, this.reducedMotion)));
+      const heat = heatDisplay(this.heatSamples, now, this.reducedMotion);
+      // Only the scene on screen: a hidden scene's garland neither shows nor runs.
+      if (this.active === 'celebration') this.scenes.celebration.paintHeat(garlandLook(heat, 'win'));
+      else this.scenes.play.paintHeat(garlandLook(heat));
     }
 
     const next = momentsOf(this.view, {

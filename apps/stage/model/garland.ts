@@ -1,9 +1,11 @@
-// The Heat garland's look (ANIMATIONS.md `heat`): a string of lights that are all always on. Only their
-// colour, glow and twinkle speed follow the Heat: cool white-blue with a slow twinkle, warm gold and orange,
-// hot red with a faster chase. Never a bar that fills, so it can't be read as progress. The display value
-// comes from packages/rules/heat.ts, which already delays and eases every change away from landings. Pure.
+// The Heat garland's look (ANIMATIONS.md `heat` and "The garland's lights", D-t): a string of bulbs whose colour and
+// glow follow the Heat, and whose lights play a pattern for its level (packages/ui/motion/garland.ts, shared with the
+// phones): breathing when cool, a wave when warm, a chase when hot, flames when very hot, and the party colours in a
+// Celebration (`win`). Never a bar that fills, so it can't be read as progress. The display value comes from
+// packages/rules/heat.ts, which already delays and eases every change away from landings. Pure.
 import { STAGE } from '../config.ts';
 import { heatAt, type HeatSample } from '../../../packages/rules/heat.ts';
+import { garlandLights, type GarlandLights } from '../../../packages/ui/motion/garland.ts';
 
 export interface GarlandLook {
   /** 0..1: cool → gold (first half of the Heat). */
@@ -12,24 +14,21 @@ export interface GarlandLook {
   hot: number;
   /** 0..1: glow and brightness. */
   glow: number;
-  /** Twinkle period in ms: slow when cool, quick when hot. Quantised so the CSS animation is rarely restarted. */
-  twinkleMs: number;
-  /** 0..1: how much the twinkle becomes a chase along the string (lights blinking in sequence). */
-  chase: number;
+  /** The pattern, its period, the palette and the flames. */
+  lights: GarlandLights;
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const round3 = (v: number) => Math.round(v * 1000) / 1000;
 
-export function garlandLook(heat: number | null, { slowMs = 3200, fastMs = 1000, steps = 4 } = {}): GarlandLook {
+/** The look for a Heat (null: before any sample, a calm glow) in play (`live`) or a Celebration (`win`). */
+export function garlandLook(heat: number | null, mood: 'live' | 'win' = 'live'): GarlandLook {
   const h = clamp01(heat ?? 0);
-  const step = Math.round(h * steps) / steps;
   return {
     warm: round3(clamp01(h / 0.5)),
     hot: round3(clamp01((h - 0.5) / 0.5)),
     glow: round3(h),
-    twinkleMs: Math.round(slowMs + (fastMs - slowMs) * step),
-    chase: step >= 0.75 ? 1 : 0,
+    lights: garlandLights(h, mood),
   };
 }
 

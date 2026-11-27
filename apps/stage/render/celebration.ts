@@ -3,13 +3,16 @@
 // Desgraciat round's last one standing gets «QUINA POTRA!» (D186, amending D62; board Projector-Desgraciat-Dempeus):
 // the green title tilted, the orange «Quina Desgraciada» plate under it, the prize on paper, green rays and three ninos
 // around it. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's scene
-// changes.
+// changes. The Heat garland comes along across the top in the `win` pattern: the party colours, a burst of light
+// running along the string, flames when very hot (#84, D-t; ANIMATIONS.md `celebrate` ⑦).
 import { STAGE } from '../config.ts';
+import type { GarlandLook } from '../model/garland.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
 import { STAGE_TEXT } from '../strings.ts';
 import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText } from './dom.ts';
+import { Garland } from './garland.ts';
 import { PrizeBlock, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
@@ -18,6 +21,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   private readonly env: SceneEnv;
   /** Carries the `celebrate` hook (the scene root carries `scene-enter`). */
   private readonly stagePanel: HTMLElement;
+  private readonly garland: Garland;
   /** The paper rain (D185), on one canvas. */
   private readonly paper: HTMLCanvasElement;
   private stopPaper: (() => void) | null = null;
@@ -31,6 +35,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
 
   constructor(env: SceneEnv) {
     this.env = env;
+    this.garland = new Garland(STAGE.garland, env.random);
     this.paper = h('canvas', { class: 'celebration__paper', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
     this.roundPlate = h('p', { class: 'celebration__round', hidden: true }, STAGE_TEXT.desgraciatRoundName);
@@ -52,7 +57,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       ...this.stickers,
     );
     this.stagePanel.dataset.testid = 'celebration';
-    this.root.append(this.stagePanel);
+    this.root.append(this.stagePanel, this.garland.root);
   }
 
   render(body: CelebrationView): void {
@@ -83,6 +88,11 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   }
 
   tick(): void {}
+
+  /** The Heat's look in the `win` pattern (the controller paints it with the Heat, `garlandLook(…, 'win')`). */
+  paintHeat(look: GarlandLook): void {
+    this.garland.paint(look);
+  }
 
   onAnim(detail: AnimDetail): void {
     if (detail.name === 'celebrate') playAnim(this.stagePanel, 'celebrate');

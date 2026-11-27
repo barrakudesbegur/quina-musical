@@ -77,7 +77,20 @@
   --stage-lift-pop: 1.12; /* check-fallen: the sinking song's tile pops to this, then settles at --stage-lift */
   --stage-lift: 1.06;
   --stage-light: 1.375rem;
-  --stage-light-cool: color-mix(in oklab, var(--color-calm) 55%, var(--color-paper));
+  /* the Heat garland (S2 on Projector-Joc: 1440 × 120, hung 26 px above the top; the phones' bulbs) */
+  --stage-garland-top: -26px;
+  --stage-garland-h: 120px;
+  --stage-garland-wire: 5px;
+  --stage-bulb-w: 18px;
+  --stage-bulb-h: 25px;
+  --stage-bulb-cap-w: 10px;
+  --stage-bulb-cap-h: 9px;
+  --stage-bulb-border: 3px;
+  --stage-bulb-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  --stage-bulb-halo: 56px;
+  --stage-flame-w: 32px;
+  --stage-flame-h: 60px;
+  --stage-flame-size: 24px;
   --stage-ring: 0.5rem;
   --stage-qr: 18.75rem;
   --stage-qr-box: 34.25rem;
@@ -158,6 +171,7 @@
   --stage-dur-finale-ribbon-pop: 200ms; /* its pop, 0.4 → 1 on --ease-bounce */
   --stage-dur-finale-light: 3.1s;
   --stage-dur-finale-beams: 3.7s;
+  --stage-dur-garland-flame: 0.9s; /* a flame's flicker, plus up to 0.4 s by its seed; the patterns' periods come from garland.ts */
   --stage-dur-finale-win: 600ms;
   /* Reduced-motion fades (they stay when motion is reduced) */
   --stage-dur-reduced-fade: 2s;
@@ -1106,57 +1120,224 @@
   grid-template-rows: var(--band-h-ref) auto 1fr;
 }
 
+/* `heat` (ANIMATIONS.md `heat` and "The garland's lights", D-t): the garland across the top, the phones' bulbs on a wire
+   in 4 swags (the S2 board on Projector-Joc). Colour and glow follow the Heat; the lights play its level's pattern.
+   Each bulb's pieces are in layers, bottom first: flame, glass, lamp (in its third's group), outline with the cap. */
 .garland {
   position: absolute;
-  top: var(--space-3);
-  inset-inline: var(--stage-pad);
-  display: flex;
-  justify-content: space-between;
+  z-index: 1;
+  left: 0;
+  top: var(--stage-garland-top);
+  width: 100%;
+  height: var(--stage-garland-h);
+  pointer-events: none;
   --heat-warm: 0;
   --heat-hot: 0;
   --heat-glow: 0;
-  --twinkle-ms: 3200ms;
-  --chase: 0;
+  --period: 3200ms;
   transition:
     --heat-warm var(--stage-dur-heat) linear,
     --heat-hot var(--stage-dur-heat) linear,
     --heat-glow var(--stage-dur-heat) linear;
 }
 
-/* `heat`: all lights always on; colour, glow and twinkle follow the Heat. Never a bar that fills. */
-.garland__light {
-  --light-warm: var(--color-accent);
-  --light-hot: var(--color-danger);
-  --light-color: color-mix(
-    in oklab,
-    color-mix(in oklab, var(--stage-light-cool), var(--light-warm) calc(var(--heat-warm) * 100%)),
-    var(--light-hot) calc(var(--heat-hot) * 100%)
+.garland__wire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.garland__wire path {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: var(--stage-garland-wire);
+  stroke-linecap: round;
+}
+
+.garland__layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Three tones along the string, mixed cool → warm → hot by the Heat (the phones' and S2's). */
+.garland [data-tone='0'] {
+  --bulb-cool: var(--color-ice-pale);
+  --bulb-warm: var(--color-gold);
+  --bulb-hot: var(--color-red);
+}
+
+.garland [data-tone='1'] {
+  --bulb-cool: var(--color-ice);
+  --bulb-warm: var(--color-orange);
+  --bulb-hot: var(--color-orange);
+}
+
+.garland [data-tone='2'] {
+  --bulb-cool: var(--color-ice-light);
+  --bulb-warm: var(--color-gold-light);
+  --bulb-hot: var(--color-gold);
+}
+
+/* The party colours (`win`), in order along the string. */
+.garland [data-party='red'] {
+  --bulb-party: var(--color-red);
+}
+
+.garland [data-party='orange'] {
+  --bulb-party: var(--color-orange);
+}
+
+.garland [data-party='gold'] {
+  --bulb-party: var(--color-gold);
+}
+
+.garland [data-party='green'] {
+  --bulb-party: var(--color-green);
+}
+
+.garland [data-party='ice'] {
+  --bulb-party: var(--color-ice);
+}
+
+.garland [data-party='lilac'] {
+  --bulb-party: var(--color-lilac);
+}
+
+.garland__piece {
+  --bulb: color-mix(in oklab, color-mix(in oklab, var(--bulb-cool), var(--bulb-warm) calc(var(--heat-warm) * 100%)), var(--bulb-hot) calc(var(--heat-hot) * 100%));
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) + var(--stage-bulb-cap-h));
+  width: var(--stage-bulb-w);
+  height: var(--stage-bulb-h);
+  margin-left: calc(var(--stage-bulb-w) / -2);
+  border-radius: var(--stage-bulb-radius);
+  transform: rotate(var(--tilt, 0deg));
+  transform-origin: 50% calc(var(--stage-bulb-cap-h) * -1);
+}
+
+.garland[data-palette='party'] .garland__piece {
+  --bulb: var(--bulb-party);
+}
+
+/* Unlit: the bulb's own colour deep in ink. A dim lamp lets it show; a lamp at 0 is a bulb switched off. */
+.garland__glass {
+  background: color-mix(in oklab, var(--bulb) 32%, var(--color-line));
+}
+
+/* The halo (S2: 4 + 22 × Heat), under the light. It doesn't move on its own. */
+.garland__lamp::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--stage-bulb-halo);
+  height: var(--stage-bulb-halo);
+  margin: calc(var(--stage-bulb-halo) / -2) 0 0 calc(var(--stage-bulb-halo) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, color-mix(in srgb, var(--bulb) 80%, transparent), transparent);
+  opacity: calc(0.35 + var(--heat-glow) * 0.65);
+  transform: scale(calc(0.55 + var(--heat-glow) * 0.75));
+}
+
+.garland__lamp::after {
+  content: '';
+  position: absolute;
+  inset: var(--stage-bulb-border);
+  border-radius: var(--stage-bulb-radius);
+  background: radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.6) 0 12%, transparent 32%), var(--bulb);
+}
+
+.garland__shell {
+  border: var(--stage-bulb-border) solid var(--color-line);
+}
+
+.garland__shell::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc((var(--stage-bulb-cap-h) + var(--stage-bulb-border)) * -1);
+  width: var(--stage-bulb-cap-w);
+  height: var(--stage-bulb-cap-h);
+  margin-left: calc(var(--stage-bulb-cap-w) / -2);
+  border-radius: 3px;
+  background: var(--color-line);
+}
+
+/* Very hot: a flame behind every other bulb, from its foot past the wire, upright. The ::before is the drawn flame
+   (a teardrop: a square with one sharp corner, turned point-up and stretched), gold at its core out to red. */
+.garland__flame {
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) + var(--stage-bulb-cap-h) + var(--stage-bulb-h) + 6px - var(--stage-flame-h));
+  width: var(--stage-flame-w);
+  height: var(--stage-flame-h);
+  margin-left: calc(var(--stage-flame-w) / -2);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.garland__flame::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: var(--stage-flame-size);
+  width: var(--stage-flame-size);
+  height: var(--stage-flame-size);
+  margin-left: calc(var(--stage-flame-size) / -2);
+  border-radius: 0 50% 50% 50%;
+  background: radial-gradient(
+    circle at 62% 62%,
+    var(--color-gold-light) 0 14%,
+    var(--color-gold) 30%,
+    var(--color-orange) 52%,
+    color-mix(in srgb, var(--color-red) 85%, transparent) 72%,
+    color-mix(in srgb, var(--color-red) 0%, transparent) 100%
   );
-  width: var(--stage-light);
-  height: var(--stage-light);
-  border-radius: var(--radius-pill);
-  background: var(--light-color);
-  box-shadow: 0 0 calc(var(--stage-light) * (0.4 + var(--heat-glow))) calc(var(--stage-light) * 0.2 * var(--heat-glow)) var(--light-color);
-  filter: brightness(calc(0.85 + var(--heat-glow) * 0.4));
-  animation-delay: calc(var(--twinkle-ms) * -1 * (var(--light-seed) * (1 - var(--chase)) + var(--light-i) * var(--chase)));
+  transform: translateY(50%) scaleY(1.7) rotate(45deg);
 }
 
+.garland[data-fire='on'] .garland__flame {
+  opacity: 1;
+}
+
+/* Reduced motion: when cool, every 4th bulb rests dimmer (S2's still look); the patterns animate over it otherwise. */
+.garland[data-pattern='breathe'] .garland__lamp[data-dim] {
+  opacity: 0.6;
+}
+
+/* The patterns: opacity of each lamp (or of each group, `party`), flames by transform. Opt-in motion (D209). */
 @media (prefers-reduced-motion: no-preference) {
-  .garland__light {
-    animation: stage-twinkle var(--twinkle-ms) var(--stage-ease-in-out) infinite alternate;
+  .garland[data-pattern='breathe'] .garland__lamp {
+    animation: stage-garland-breathe var(--period) var(--stage-ease-in-out) calc(var(--seed) * var(--period) * -1) infinite alternate;
   }
-}
 
-.garland__light:nth-child(even) {
-  --light-warm: var(--color-primary);
-}
+  .garland[data-pattern='wave'] .garland__lamp {
+    animation: stage-garland-wave var(--period) var(--stage-ease-in-out) calc(var(--period) * (var(--i) / var(--n) - 1)) infinite;
+  }
 
-.garland__light:nth-child(3n) {
-  --light-hot: var(--color-primary);
-}
+  .garland[data-pattern='chase'] .garland__lamp {
+    animation: stage-garland-chase var(--period) linear calc(var(--period) * (var(--step) - 3) / 3) infinite;
+  }
 
-.garland__light:nth-child(5n) {
-  --light-hot: var(--color-accent);
+  .garland[data-pattern='fire'] .garland__lamp {
+    animation: stage-garland-flicker calc(var(--period) * (0.75 + var(--seed) * 0.5)) linear calc(var(--seed) * var(--period) * -1) infinite;
+  }
+
+  .garland[data-fire='on'] .garland__flame {
+    animation: stage-garland-flame calc(var(--stage-dur-garland-flame) + var(--seed) * 0.4s) var(--stage-ease-in-out) calc(var(--seed) * -1.3s) infinite alternate;
+  }
+
+  .garland[data-pattern='party'] .garland__group {
+    animation: stage-garland-party var(--period) linear calc(var(--period) * (var(--step) - 3) / 3) infinite;
+  }
+
+  .garland[data-pattern='win'] .garland__lamp {
+    animation: stage-garland-win var(--period) ease-out calc(var(--period) * (var(--i) / var(--n) - 1)) infinite;
+  }
 }
 
 .play__round {
@@ -1690,23 +1871,32 @@
   transform-origin: 50% 0;
 }
 
-/* The phones' `your-song` spotlights (apps/player/player.css): a gradient clipped to a cone, swept by transform. */
+/* The phones' `your-song` spotlights (apps/player/player.css): a gradient clipped to a cone, swept by transform. Long
+   enough to pass the bottom edge at any angle of the sweep, the light eased down to about 10 % there, so a beam never
+   ends inside the screen (#94). */
 .finale__beam {
   position: absolute;
   top: -5%;
-  width: 36%;
-  height: 110%;
+  width: 47.5%;
+  height: 145%;
   transform-origin: 50% 0;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 80%);
-  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.55),
+    rgb(255 255 255 / 0.32) 28%,
+    rgb(255 255 255 / 0.18) 52%,
+    rgb(255 255 255 / 0.1) 70%,
+    rgb(255 255 255 / 0.05) 100%
+  );
+  clip-path: polygon(42.4% 0, 57.6% 0, 100% 100%, 0 100%);
 }
 
 .finale__beam--left {
-  left: 5%;
+  left: -0.75%;
 }
 
 .finale__beam--right {
-  left: 59%;
+  left: 53.25%;
 }
 
 .finale__ribbon {
@@ -3234,12 +3424,109 @@
   }
 }
 
-@keyframes stage-twinkle {
+@keyframes stage-garland-breathe {
   from {
     opacity: 1;
   }
   to {
     opacity: 0.55;
+  }
+}
+
+@keyframes stage-garland-wave {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-garland-chase {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  36%,
+  94% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-garland-flicker {
+  0% {
+    opacity: 1;
+  }
+  11% {
+    opacity: 0.72;
+  }
+  19% {
+    opacity: 0.96;
+  }
+  33% {
+    opacity: 0.58;
+  }
+  44% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.8;
+  }
+  71% {
+    opacity: 0.5;
+  }
+  83% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-garland-flame {
+  0% {
+    transform: scale(0.9, 0.8) skewX(3deg);
+    opacity: 0.85;
+  }
+  35% {
+    transform: scale(1.04, 1.08) skewX(-4deg);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.95, 0.94) skewX(2deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.02, 1.15) skewX(-2deg);
+    opacity: 1;
+  }
+}
+
+@keyframes stage-garland-party {
+  0%,
+  54% {
+    opacity: 1;
+  }
+  60%,
+  94% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-garland-win {
+  0% {
+    opacity: 1;
+  }
+  22%,
+  100% {
+    opacity: 0.5;
   }
 }
 

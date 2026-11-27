@@ -178,6 +178,12 @@ export interface DemoScript {
 
 const withFlow = (s: FullState, patch: Partial<FullState>): FullState => ({ ...s, ...patch });
 
+/** A state at this Heat, with the engine's sample for it already arrived (the projector eases through samples). */
+const withHeat = (s: FullState, value: number, now: number): DemoScript => ({
+  state: { ...s, heat: value },
+  events: [{ afterMs: 100, event: { v: PROTOCOL_VERSION, type: 'heat.sample', value, fromMs: now - 40_000, toMs: now - 20_000 } }],
+});
+
 // ---- the presenter-paced Check (D107–D126) -------------------------------------------------------------
 // The engine's Check (game/check.ts) worked out by hand for the printed cards the fixtures claim, so the console's
 // private card, the projector's reveals and the phones' strip agree.
@@ -659,6 +665,12 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     };
   },
   play: (now) => ({ state: baseState(now) }),
+  // The garland at each Heat level (ANIMATIONS.md "The garland's lights"): the engine's Heat, and a sample that has
+  // already arrived, so the projector shows it at once.
+  playCold: (now) => withHeat(baseState(now), 0.1, now),
+  playWarm: (now) => withHeat(baseState(now), 0.4, now),
+  playHot: (now) => withHeat(baseState(now), 0.65, now),
+  playFire: (now) => withHeat(baseState(now), 0.92, now),
   spin: (now) => {
     const s = baseState(now);
     return {
@@ -749,6 +761,11 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         winners: [...s.winners, { round: 3, kind: 'line', cardId: 123, claimId: 'cl-7', winningSongId: 69, position: s.queue.position, atMs: now - 1500, name: null, notes: null }],
       }),
     };
+  },
+  /** A Line's Celebration with the Heat very hot: the garland's `win` with flames. */
+  celebrationFire: (now) => {
+    const script = FIXTURES.celebration(now);
+    return withHeat(script.state as FullState, 0.92, now);
   },
   celebrationBingo: (now) => {
     const s = baseState(now);

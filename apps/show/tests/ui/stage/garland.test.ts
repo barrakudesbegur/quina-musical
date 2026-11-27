@@ -1,22 +1,31 @@
-// The Heat garland: every light on, only colour/glow/twinkle follow the Heat; reduced motion steps.
+// The Heat garland: colour and glow follow the Heat, the lights play its level's pattern; reduced motion steps.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { activeHeatSample, garlandLook, heatDisplay } from '../../../../stage/model/garland.ts';
 import { STAGE } from '../../../../stage/config.ts';
 
-test('cool, warm and hot looks', () => {
-  assert.deepEqual(garlandLook(0), { warm: 0, hot: 0, glow: 0, twinkleMs: 3200, chase: 0 });
+test('cool, warm and hot looks, each with its pattern', () => {
+  const cool = garlandLook(0);
+  assert.deepEqual([cool.warm, cool.hot, cool.glow, cool.lights.pattern, cool.lights.fire], [0, 0, 0, 'breathe', false]);
   const warm = garlandLook(0.5);
-  assert.equal(warm.warm, 1);
-  assert.equal(warm.hot, 0);
+  assert.deepEqual([warm.warm, warm.hot, warm.lights.pattern], [1, 0, 'chase']);
+  assert.equal(garlandLook(0.3).lights.pattern, 'wave');
   const hot = garlandLook(1);
-  assert.deepEqual([hot.warm, hot.hot, hot.glow, hot.twinkleMs, hot.chase], [1, 1, 1, 1000, 1]);
+  assert.deepEqual([hot.warm, hot.hot, hot.glow, hot.lights.pattern, hot.lights.fire], [1, 1, 1, 'fire', true]);
   assert.deepEqual(garlandLook(null), garlandLook(0));
   assert.deepEqual(garlandLook(7), garlandLook(1));
 });
 
-test('the twinkle speed is quantised, so small Heat changes never restart the animation', () => {
-  assert.equal(garlandLook(0.51).twinkleMs, garlandLook(0.55).twinkleMs);
+test('the pattern only changes when the Heat crosses a level, so the CSS animation is rarely restarted', () => {
+  assert.deepEqual(garlandLook(0.51).lights, garlandLook(0.7).lights);
+  assert.notDeepEqual(garlandLook(0.74).lights, garlandLook(0.76).lights);
+});
+
+test('a Celebration plays the win: the party colours, with flames when very hot', () => {
+  const win = garlandLook(0.9, 'win');
+  assert.deepEqual([win.lights.pattern, win.lights.palette, win.lights.fire], ['win', 'party', true]);
+  assert.equal(win.glow, 0.9, 'the glow still says the Heat');
+  assert.equal(garlandLook(0.2, 'win').lights.fire, false);
 });
 
 test('the displayed Heat eases, or steps under reduced motion', () => {
