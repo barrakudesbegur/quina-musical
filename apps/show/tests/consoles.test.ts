@@ -168,3 +168,88 @@ nodeTest('D234: the relay stamps the sender on every command, over any `from` th
   assert.equal(checkCommand({ ...makeCommand('next'), from: '' }).ok, false);
   assert.equal(checkCommand({ ...makeCommand('twoLevelHold', { button: 'hold', on: true }), button: 'next' }).ok, false);
 });
+
+/** Any command from a console, as the relay forwards it (its `from`); `null`: the show page's own. */
+const from = <C extends keyof CommandFields>(h: ReturnType<typeof setup>, sender: string | null, cmd: C, fields: CommandFields[C]) =>
+  h.dispatch({ ...makeCommand(cmd, fields), ...(sender ? { from: sender } : {}) });
+/** The lock's commands, on and off: Parlem, Aguanta, Suspens (and its cancel), Pausa. */
+const locked = [
+  ['hold', { on: true }],
+  ['hold', { on: true, duck: false }],
+  ['hold', { on: false }],
+  ['hold', {}],
+  ['suspense', { on: true }],
+  ['suspense', { on: false }],
+  ['suspense', { on: false, cancel: true }],
+  ['pause', { on: true }],
+  ['pause', { on: false }],
+] as const;
+const lockedBy = (h: ReturnType<typeof setup>, sender: string | null) =>
+  locked.map(([cmd, fields]) => rejection(from(h, sender, cmd, fields as never)));
+
+test('D234: while a console holds, another’s hold, suspense and pause are refused busy, held by the holder; nothing changes', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  const before = h.show.status;
+  for (const r of lockedBy(h, LAPTOP)) {
+    assert.ok(r?.type === 'reject');
+    assert.equal(r.reason, 'busy');
+    assert.equal(r.detail, `held by ${TABLET}`);
+  }
+  assert.equal(h.show.status, before);
+  assert.equal(h.show.pause, null);
+  assert.equal(heldOf(h)?.clientId, TABLET);
+  // The show page's own commands (no `from`) are another sender's too.
+  for (const r of lockedBy(h, null)) assert.ok(r?.type === 'reject' && r.reason === 'busy');
+  // Other commands are not the lock's.
+  assert.deepEqual(rejected(from(h, LAPTOP, 'setVolume', { key: 'master', percent: 80 })), []);
+});
+
+test('D234: the holder’s own hold, suspense and pause act; consoles sharing a clientId are one sender', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  assert.deepEqual(rejected(from(h, TABLET, 'hold', { on: true })), []);
+  assert.equal(h.show.status, 'hold');
+  assert.deepEqual(rejected(from(h, TABLET, 'pause', { on: true })), []);
+  assert.ok(h.show.pause);
+  assert.deepEqual(rejected(from(h, TABLET, 'pause', { on: false })), []);
+  // Two consoles through the cloud share the link's clientId: whichever sends, it is the holder.
+  for (const r of lockedBy(h, TABLET)) assert.notEqual(r?.reason, 'busy');
+  // The show page holding: its own commands pass, a console's are refused.
+  const p = setup({ seed: 3 });
+  p.send('unlock');
+  twoLevel(p, null, { button: 'stay', on: true });
+  assert.deepEqual(rejected(p.send('hold', { on: true, duck: false })), []);
+  assert.equal(rejection(from(p, LAPTOP, 'pause', { on: true }))?.detail, 'held by local');
+});
+
+test('D234: after the release, or once the holder disconnects, everyone’s commands act again', () => {
+  const h = setup({ seed: 3 });
+  h.send('unlock');
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  assert.deepEqual(rejected(from(h, LAPTOP, 'hold', { on: true })), ['busy']);
+  twoLevel(h, TABLET, { button: 'hold', on: false });
+  for (const sender of [LAPTOP, null, TABLET]) for (const r of lockedBy(h, sender)) assert.notEqual(r?.reason, 'busy');
+  twoLevel(h, TABLET, { button: 'stay', on: true });
+  assert.deepEqual(rejected(from(h, LAPTOP, 'pause', { on: true })), ['busy']);
+  h.show.clientsChanged(['show-1', LAPTOP]);
+  assert.equal(heldOf(h), null);
+  for (const sender of [LAPTOP, null]) for (const r of lockedBy(h, sender)) assert.notEqual(r?.reason, 'busy');
+});
+
+test('D234: checkReview (the touch «Revisió manual») is never refused by the lock', () => {
+  const h = setup({ seed: 3, cards: allCards, cardsInPlay: '1-200', settings: { autoAdvance: false } });
+  h.send('unlock');
+  for (let i = 0; i < 4; i++) {
+    const p = h.show.position;
+    h.send('next');
+    h.until(() => h.show.position === p + 1 && h.show.status === 'playing');
+  }
+  h.send('claim', { cardId: 1, kind: 'line' });
+  const claimId = h.show.claims.at(-1)!.claimId;
+  twoLevel(h, TABLET, { button: 'hold', on: true });
+  assert.deepEqual(rejected(from(h, LAPTOP, 'checkReview', { claimId })), []);
+  assert.equal(h.show.claims.at(-1)?.status, 'reviewing');
+});

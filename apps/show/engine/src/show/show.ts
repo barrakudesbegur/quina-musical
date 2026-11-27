@@ -852,6 +852,14 @@ export class Show {
       this.reject(reqId, c.cmd, 'wrongScene', this.pause ? `paused (scene ${this.scene})` : `scene ${this.scene}`);
       return this.flush();
     }
+    // D234's lock, enforced: while a console holds a two-level button, only that sender's Aguanta, Parlem, Suspens
+    // and Pausa act. Each console locks itself from its last snapshot, so two presses within the network latency
+    // could both act; the first `twoLevelHold on` wins here. Consoles sharing a clientId are one sender.
+    const held = this.twoLevelHeld;
+    if (held && (c.cmd === 'hold' || c.cmd === 'pause' || c.cmd === 'suspense') && (c.from ?? OWN_PAGE) !== held.clientId) {
+      this.reject(reqId, c.cmd, 'busy', `held by ${held.clientId}`);
+      return this.flush();
+    }
     switch (c.cmd) {
       case 'unlock':
         this.unlocked = true;
