@@ -13,6 +13,8 @@
   // changes size as a Spin starts, turns or stops. `marks`: the identities of the phone's cards holding the song, shown
   // in the strip (§8 Y2). `onpick`: a tap on the drum (never a tug) goes to the first of those cards (`drum-pick`). The
   // sides fade into whatever is behind by a mask (§8 Y1: on the gold too), never a gradient painted in night blue.
+  // Its phase is `data-phase`, not `data-state`: the covers' rules (`.cover[data-state…]`) made every change of a
+  // `data-state` on the drum restyle each tile's cover.
   import { untrack } from 'svelte';
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
@@ -156,7 +158,7 @@
 <div
   class="reel"
   data-testid="reel"
-  data-state={frame.phase}
+  data-phase={frame.phase}
   data-size={compact ? 'strip' : 'full'}
   data-stale={turning ? 'true' : undefined}
   data-pick={onpick ? 'true' : undefined}
@@ -181,6 +183,9 @@
     onpointerup={tugEnd}
     onpointercancel={tugEnd}
   >
+    <!-- What a finger or the mouse meets over the drum (the drum itself lets them through): the tug's touch-action and
+         cursor (player.css). -->
+    <span class="drum-box__grip"></span>
     <div class="drum" data-blur={frame.blurPx > 0 ? frame.blurPx : undefined} style:filter={frame.blurPx > 0 ? `url(#${uid}-blur)` : undefined}>
       <div
         class="drum__ring"
@@ -192,15 +197,18 @@
         style:--drum-n={tiles.length}
         style:--drum-turn={frame.position + tug}
       >
-        {#each tiles as tileSong, i (tileSong)}
-          <span class="drum__tile" style:--i={i} data-song-id={tileSong >= 0 ? tileSong : undefined} data-selected={tileSong === frame.selectedId || undefined}>
-            {#if tileSong >= 0}
-              <Cover songId={tileSong} class="cover--lg" fallback="empty" />
-            {:else}
-              <span class="reel__back reel__back--{i % 3}"></span>
-            {/if}
-          </span>
-        {/each}
+        <!-- The tiles' own box, still while the ring turns: the tiles take the ring's tile count from it (player.css). -->
+        <div class="drum__tiles">
+          {#each tiles as tileSong, i (tileSong)}
+            <span class="drum__tile" style:--drum-i={i} data-song-id={tileSong >= 0 ? tileSong : undefined} data-selected={tileSong === frame.selectedId || undefined}>
+              {#if tileSong >= 0}
+                <Cover songId={tileSong} class="cover--lg" fallback="empty" />
+              {:else}
+                <span class="reel__back reel__back--{i % 3}"></span>
+              {/if}
+            </span>
+          {/each}
+        </div>
       </div>
     </div>
     <span class="drum__window"></span>

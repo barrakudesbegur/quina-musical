@@ -106,7 +106,7 @@ async function land(previous: number | null): Promise<ShowState> {
 }
 
 /** The phone's reel (the player's Ara reel, also its strip above the cards). */
-const reelState = (page: Page) => page.getByTestId('reel').getAttribute('data-state');
+const reelState = (page: Page) => page.getByTestId('reel').getAttribute('data-phase');
 
 /** A screenshot once the landing's 400 ms flip-in is over (earlier ones catch it half-way). */
 async function snap(page: Page, name: string): Promise<void> {

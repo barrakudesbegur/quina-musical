@@ -875,8 +875,30 @@
   overflow: hidden;
 }
 
-/* While still, the drum can be tugged sideways; a vertical drag stays the page's scroll. */
-.drum-box[data-tug] {
+/* While still, the drum can be tugged sideways; a vertical drag stays the page's scroll. Both sit on an empty box
+   under the drum (`.drum-box__grip`; the drum lets the pointer through to it), never on the drum's box: `touch-action`
+   and `cursor` reach every element inside the one that has them, so set on the box, each landing and each Spin's start
+   restyled the whole drum (about 300 elements). For the same reason the box keeps its own cursor, so the drum's
+   (`.reel[data-pick]`, drum-pick) stops there: over the drum the grip shows it, as the box did. The grip is under the
+   drum, not over it: over it, it changed how the turned tiles are drawn. */
+.drum-box {
+  cursor: auto;
+}
+
+.drum-box__grip {
+  position: absolute;
+  inset: 0;
+}
+
+.drum-box > .drum {
+  pointer-events: none;
+}
+
+.reel[data-pick] .drum-box__grip {
+  cursor: pointer;
+}
+
+.reel .drum-box[data-tug] > .drum-box__grip {
   touch-action: pan-y;
   cursor: grab;
 }
@@ -908,18 +930,45 @@
   initial-value: 0;
 }
 
+/* The ring's tile count changes at each Spin's start (the last landing leaves the ring), and each tile's place in it
+   (`--drum-i`) shifts by one after that landing: registered as not inherited too, so they restyle the ring and its
+   tiles, never the covers inside the tiles (as inherited properties, the count and the step and radius it gives
+   restyled every element in the ring at a Spin's start: about 350). The tiles take the count by `inherit` from their
+   own box (`.drum__tiles`), which stays still while the ring turns: taken from the turning ring, every frame of a turn
+   would restyle every tile. The step and the radius are written out where they're used, from the count (as registered
+   properties of their own they'd be rounded to six digits on the way, moving the turned tiles by a pixel). */
+@property --drum-n {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 10;
+}
+
+@property --drum-i {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 .drum__ring {
-  /* The projector's radius: max(tile, tile × (1 + gap) / (2 tan(180° / n))); the step between two tiles. */
-  --drum-step: calc(360deg / var(--drum-n, 10));
-  --drum-r: max(var(--tile), calc(var(--tile) * (1 + var(--drum-gap)) / (2 * tan(180deg / max(3, var(--drum-n, 10))))));
+  /* The projector's radius, max(tile, tile × (1 + gap) / (2 tan(180° / n))), and the step between two tiles, 360° / n
+     (here and on each tile, from `--drum-n`). */
   position: absolute;
   left: 50%;
   top: 50%;
   width: 0;
   height: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--drum-r) * -1)) rotateY(calc(var(--drum-turn) * -1 * var(--drum-step)));
+  transform: translateZ(calc(max(var(--tile), calc(var(--tile) * (1 + var(--drum-gap)) / (2 * tan(180deg / max(3, var(--drum-n, 10)))))) * -1))
+    rotateY(calc(var(--drum-turn) * -1 * calc(360deg / var(--drum-n, 10))));
   will-change: transform;
+}
+
+/* The tiles' box: the ring's 3D space, unmoved (its turn is the ring's). */
+.drum__tiles {
+  --drum-n: inherit;
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
 }
 
 /* The spring back from a tug: very elastic (`--ease-wobble`). */
@@ -941,7 +990,9 @@
   border-radius: 0.75rem;
   background: var(--color-paper);
   backface-visibility: hidden;
-  transform: rotateY(calc(var(--i) * var(--drum-step))) translateZ(calc(var(--drum-r) + var(--drum-pop)));
+  --drum-n: inherit;
+  transform: rotateY(calc(var(--drum-i) * calc(360deg / var(--drum-n, 10))))
+    translateZ(calc(max(var(--tile), calc(var(--tile) * (1 + var(--drum-gap)) / (2 * tan(180deg / max(3, var(--drum-n, 10)))))) + var(--drum-pop)));
 }
 
 /* The landing (ANIMATIONS.md `landing`): the projector's selection. The other tiles fade to 35 %; the landed one comes
@@ -2486,12 +2537,14 @@
   mask-size: calc(100% - var(--reel-c) * (100% - 7rem / var(--reel-strip-scale))) 100%;
 }
 
-/* While it turns, the previous song's words stay, faded (reel-spin, §8 Y2): an opacity fade, with motion or not. */
+/* While it turns, the previous song's words stay, faded (reel-spin, §8 Y2): an opacity fade, with motion or not. The
+   faded rule names the words' parts (`:where()`, so its weight is unchanged): with `*` last, every change of
+   `data-stale` restyled the whole drum, each tile's cover included. */
 .reel__words > * {
   transition: opacity 300ms var(--ease-out);
 }
 
-.reel[data-stale] .reel__words > * {
+.reel[data-stale] .reel__words > :where(.reel__caption, .reel__waiting, .reel__marks) {
   opacity: 0.45;
 }
 
