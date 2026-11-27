@@ -34,8 +34,8 @@
 
   /* One colour per action (Consola-Joc): Back, Parlem, Aguanta, Claim, Suspense, Next; Check: reject, confirm */
   --action-back: #ff5a60;
-  --action-talk: var(--color-calm);
-  --action-stay: var(--color-stay);
+  --action-talk: var(--color-cyan);
+  --action-stay: var(--color-purple);
   --action-claim: var(--color-green);
   --action-suspense: var(--color-gold);
   --action-next: var(--color-orange);
@@ -50,7 +50,7 @@
   --action-note: var(--color-ink);
 
   /* The Heat bar: cold to hot */
-  --heat-gradient: linear-gradient(90deg, var(--color-ice), var(--color-gold) 45%, var(--color-orange) 70%, var(--color-red));
+  --heat-gradient: linear-gradient(90deg, var(--color-cyan), var(--color-gold) 45%, var(--color-orange) 70%, var(--color-red));
 
   /* ANIMATIONS.md › Console: press 80 ms, long-press drain 200 ms, hold-hint 150 ms in / 300 ms out,
      suspense-hold pulse 1.2 s → 0.5 s, check-step 150 ms, reveal 200 ms (bars 300 ms, 40 ms stagger),
@@ -140,7 +140,6 @@
   --color-danger: #c8232b;
   --color-ok: var(--color-green-edge);
   --color-accent: var(--color-gold);
-  --color-calm: var(--color-ice);
   --color-focus: var(--color-night);
   --color-on-danger: #ffffff;
   --color-on-ok: #ffffff;

@@ -507,7 +507,7 @@
 }
 
 .header__drift[data-tone='early'] {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-on-calm);
 }
 
@@ -729,7 +729,7 @@
 }
 
 .alert-banner[data-state='waiting'] {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-on-calm);
 }
 
@@ -810,7 +810,7 @@
 .now-line .cover--missing[data-music],
 .interval-music__tile {
   background: var(--color-night);
-  color: var(--color-ice);
+  color: var(--color-cyan);
 }
 
 .now-line .cover--missing[data-music='error'] {
@@ -913,7 +913,7 @@
 /* Hold music (navy, a blue note), the pause's (a gold note) or a failed Check's error music (red) */
 .now-playing__music {
   background: var(--color-night);
-  color: var(--color-ice);
+  color: var(--color-cyan);
 }
 
 .now-playing__music[data-music='pause'] {
@@ -1092,12 +1092,12 @@
 /* A Hold or the pause: a full ring in the mode's colour, and a pause sign */
 .now-ring__full {
   fill: none;
-  stroke: var(--ring-colour, var(--color-ice));
+  stroke: var(--ring-colour, var(--color-cyan));
   stroke-width: 8;
 }
 
 .now-ring[data-state='stay'] {
-  --ring-colour: var(--color-lilac);
+  --ring-colour: var(--color-purple);
 }
 
 .now-ring__bar {
@@ -1255,12 +1255,12 @@
 }
 
 .now-ring__badge[data-badge='talk'] {
-  --badge-bg: var(--color-ice);
+  --badge-bg: var(--color-cyan);
   --badge-ink: var(--color-ink);
 }
 
 .now-ring__badge[data-badge='stay'] {
-  --badge-bg: var(--color-lilac);
+  --badge-bg: var(--color-purple);
 }
 
 .now-ring__badge[data-badge='held'] {
@@ -1634,7 +1634,7 @@
   background: var(--color-gold);
 }
 .miss-bars__row[data-missing='more'] .miss-bars__fill {
-  background: var(--color-ice);
+  background: var(--color-cyan);
 }
 
 @keyframes bar-grow {
@@ -2021,7 +2021,7 @@
 }
 
 .chip--side {
-  --chip-bg: var(--color-ice-pale);
+  --chip-bg: var(--color-cyan-faint);
 }
 
 .card-peek__headline {
@@ -2597,7 +2597,7 @@
   left: 6px;
   width: 6px;
   border-radius: 3px;
-  background: var(--led, var(--color-ice));
+  background: var(--led, var(--color-cyan));
 }
 
 .pad--stinger {
@@ -2624,9 +2624,9 @@
 .pad[data-led='orange'], .sound-icon__fill-orange { --led: var(--color-orange); fill: var(--color-orange); }
 .pad[data-led='red'], .sound-icon__fill-red { --led: var(--color-red); fill: var(--color-red); }
 .pad[data-led='green'], .sound-icon__fill-green { --led: var(--color-green); fill: var(--color-green); }
-.pad[data-led='ice'], .sound-icon__fill-ice { --led: var(--color-ice); fill: var(--color-ice); }
-.pad[data-led='iceLight'], .sound-icon__fill-iceLight { --led: var(--color-ice-light); fill: var(--color-ice-light); }
-.pad[data-led='lilac'], .sound-icon__fill-lilac { --led: var(--color-lilac); fill: var(--color-lilac); }
+.pad[data-led='ice'], .sound-icon__fill-ice { --led: var(--color-cyan); fill: var(--color-cyan); }
+.pad[data-led='iceLight'], .sound-icon__fill-iceLight { --led: var(--color-cyan-light); fill: var(--color-cyan-light); }
+.pad[data-led='lilac'], .sound-icon__fill-lilac { --led: var(--color-purple); fill: var(--color-purple); }
 .pad[data-led='pink'], .sound-icon__fill-pink { --led: var(--card-color-5); fill: var(--card-color-5); }
 .pad[data-led='purple'], .sound-icon__fill-purple { --led: var(--card-color-7); fill: var(--card-color-7); }
 .pad[data-led='slate'], .sound-icon__fill-slate { --led: var(--color-slate); fill: var(--color-slate); }
@@ -2637,7 +2637,7 @@
 .sound-icon__stroke-paper { stroke: var(--color-paper); }
 .sound-icon__stroke-gold { stroke: var(--color-gold); }
 .sound-icon__stroke-red { stroke: var(--color-red); }
-.sound-icon__stroke-ice { stroke: var(--color-ice); }
+.sound-icon__stroke-ice { stroke: var(--color-cyan); }
 
 /* ---- the action cluster (big sticker buttons) ------------------------------------------------------------ */
 .thumb-cluster {
@@ -3687,7 +3687,7 @@
 /* The big sticker buttons of the Check, one colour each (Consola-Comprovacio) */
 .console {
   --action-review: #b9b2a3;
-  --action-auto: var(--color-ice);
+  --action-auto: var(--color-cyan);
   --action-auto-on: #3fb4f0;
   --action-revealing: #e87400;
   --action-celebrate: var(--color-gold);
@@ -3789,7 +3789,7 @@
   gap: var(--space-2);
   height: 2.625rem;
   border-top: var(--line-width-bold) solid var(--color-line);
-  background: var(--color-ice-light);
+  background: var(--color-cyan-light);
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-sm);
@@ -5660,7 +5660,7 @@ kbd {
 }
 
 .menu-end__drift[data-tone='early'] {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-on-calm);
 }
 

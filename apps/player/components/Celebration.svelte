@@ -36,7 +36,7 @@
   /** The shouted title; in the Desgraciat round only on the winner's own phone (U6, D190). */
   const title = $derived(own.length ? S.yourWin[celebration.kind] : S.shout[celebration.kind]);
   /** The last card standing's confetti: the standing green, gold, paper and ice. */
-  const STANDING_CONFETTI = ['--color-online', '--color-accent', '--color-paper', '--color-calm'];
+  const STANDING_CONFETTI = ['--color-online', '--color-accent', '--color-paper', '--color-cyan'];
   const palette = $derived(standing ? STANDING_CONFETTI : undefined);
 </script>
 

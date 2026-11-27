@@ -277,19 +277,19 @@
 
 /* Each light's colour: three tones along the string, mixed from cool to warm to hot as the Heat rises. */
 [data-tone='0'] {
-  --bulb-cool: var(--color-ice-pale);
+  --bulb-cool: var(--color-cyan-faint);
   --bulb-warm: var(--color-gold);
   --bulb-hot: var(--color-red);
 }
 
 [data-tone='1'] {
-  --bulb-cool: var(--color-ice);
+  --bulb-cool: var(--color-cyan);
   --bulb-warm: var(--color-orange);
   --bulb-hot: var(--color-orange);
 }
 
 [data-tone='2'] {
-  --bulb-cool: var(--color-ice-light);
+  --bulb-cool: var(--color-cyan-light);
   --bulb-warm: var(--color-gold-light);
   --bulb-hot: var(--color-gold);
 }
@@ -311,12 +311,12 @@
   --bulb-party: var(--color-green);
 }
 
-[data-party='ice'] {
-  --bulb-party: var(--color-ice);
+[data-party='cyan'] {
+  --bulb-party: var(--color-cyan);
 }
 
-[data-party='lilac'] {
-  --bulb-party: var(--color-lilac);
+[data-party='purple'] {
+  --bulb-party: var(--color-purple);
 }
 
 /* A bulb's body, hanging from the wire at (x, y) under its cap, tilted around the hook: the glass, the lamp and the
@@ -3734,12 +3734,12 @@ html:has(.drawer[open]) {
 }
 
 .corner-icon__box {
-  fill: var(--color-ice);
+  fill: var(--color-cyan);
   stroke: none;
 }
 
 .corner-icon__shade {
-  fill: var(--color-ice-edge);
+  fill: var(--color-cyan-edge);
   stroke: none;
 }
 
@@ -3748,7 +3748,7 @@ html:has(.drawer[open]) {
 }
 
 .corner-icon__lid {
-  fill: var(--color-ice-light);
+  fill: var(--color-cyan-light);
 }
 
 .corner-icon__ribbon,
@@ -3757,7 +3757,7 @@ html:has(.drawer[open]) {
 }
 
 .corner-icon__bell {
-  fill: var(--color-ice);
+  fill: var(--color-cyan);
 }
 
 .corner-icon__face {

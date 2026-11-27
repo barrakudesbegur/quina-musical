@@ -1,0 +1,149 @@
+/*
+ * The palette slots (components-v2.md § 1.1; D210). A component renders `data-color="<palette>"` on its root and
+ * reads only the fixed slots below, never a palette token or a game concept:
+ *   --palette-solid     the fill
+ *   --palette-edge      the 3D edge: the fill's own dark shade (R2), never ink black
+ *   --palette-pale      a level-2 strip (TwoLevelButton)
+ *   --palette-subtle    a chip, a note, a soft button
+ *   --palette-fg        coloured text on the ground: the paper value, or the night value under data-ground="night"
+ *   --palette-contrast  text and notes on the fill
+ * Children inherit the slots. :where() keeps every selector at zero specificity, so a component's own rules win.
+ * A slot no component uses with that colour yet is left unset (`initial`, so it never leaks in from an outer colour);
+ * when one is needed it gets a board-picked token in tokens.css, never a generated tint. Translucent rings mix in
+ * oklab (resources.css).
+ * Also here: --edge-3d and --edge-3d-sunk, the coloured piece's 3D edge (R2) and its pressed shade, built from the
+ * slot on the same element. Depths come from the component: --ds-edge (default 8 px) and --ds-shine (5 px).
+ */
+:where([data-color]) {
+  --palette-solid: initial;
+  --palette-edge: initial;
+  --palette-pale: initial;
+  --palette-subtle: initial;
+  --palette-fg-paper: initial;
+  --palette-fg-night: initial;
+  --palette-contrast: var(--color-ink);
+}
+
+:where([data-color='orange']) {
+  --palette-solid: var(--color-orange);
+  --palette-edge: var(--color-orange-edge);
+  --palette-pale: var(--color-orange-pale);
+  --palette-subtle: var(--color-orange-subtle);
+  --palette-fg-paper: var(--color-orange-edge);
+  --palette-fg-night: var(--color-orange);
+}
+
+:where([data-color='red']) {
+  --palette-solid: var(--color-red-bright);
+  --palette-edge: var(--color-red-edge);
+  --palette-subtle: var(--color-red-subtle);
+  --palette-fg-paper: var(--color-red-text);
+  --palette-fg-night: var(--color-red-light);
+}
+
+:where([data-color='green']) {
+  --palette-solid: var(--color-green);
+  --palette-edge: var(--color-green-edge);
+  --palette-subtle: var(--color-green-subtle);
+  --palette-fg-paper: var(--color-green-edge);
+  --palette-fg-night: var(--color-live);
+}
+
+:where([data-color='gold']) {
+  --palette-solid: var(--color-gold);
+  --palette-edge: var(--color-gold-edge);
+  --palette-pale: var(--color-gold-light);
+  --palette-subtle: var(--color-gold-subtle);
+  --palette-fg-paper: var(--color-gold-edge);
+  --palette-fg-night: var(--color-gold);
+}
+
+:where([data-color='cyan']) {
+  --palette-solid: var(--color-cyan);
+  --palette-edge: var(--color-cyan-edge);
+  --palette-pale: var(--color-cyan-pale);
+  --palette-subtle: var(--color-cyan-subtle);
+  --palette-fg-paper: var(--color-cyan-edge);
+  --palette-fg-night: var(--color-cyan);
+}
+
+:where([data-color='purple']) {
+  --palette-solid: var(--color-purple);
+  --palette-edge: var(--color-purple-edge);
+  --palette-pale: var(--color-purple-pale);
+  --palette-subtle: var(--color-purple-subtle);
+  --palette-fg-paper: var(--color-purple-edge);
+  --palette-fg-night: var(--color-purple);
+}
+
+:where([data-color='pink']) {
+  --palette-solid: var(--color-pink);
+  --palette-edge: var(--color-pink-edge);
+  --palette-pale: var(--color-pink-pale);
+}
+
+:where([data-color='navy']) {
+  --palette-solid: var(--color-navy);
+  --palette-edge: var(--color-navy-edge);
+  --palette-pale: var(--color-mist);
+  --palette-contrast: var(--color-snow);
+}
+
+:where([data-color='grey']) {
+  --palette-solid: var(--color-grey);
+  --palette-edge: var(--color-grey-edge);
+  --palette-subtle: var(--color-chip, #f3eee2);
+  --palette-fg-paper: var(--color-ink);
+  --palette-fg-night: var(--color-ink);
+}
+
+:where([data-color='slate']) {
+  --palette-solid: var(--color-slate);
+  --palette-edge: var(--color-slate-edge);
+  --palette-contrast: var(--color-mist);
+}
+
+:where([data-color='periwinkle']) {
+  --palette-solid: var(--color-periwinkle);
+  --palette-edge: var(--color-periwinkle-edge);
+}
+
+:where([data-color='live']) {
+  --palette-solid: var(--color-live);
+  --palette-edge: var(--color-live-edge);
+}
+
+:where([data-color='snow']) {
+  --palette-solid: var(--color-snow);
+  --palette-edge: var(--color-snow-edge);
+}
+
+:where([data-color='ink']) {
+  --palette-solid: var(--color-ink);
+  --palette-contrast: var(--color-white);
+}
+
+:where([data-color='white']) {
+  --palette-solid: var(--color-white);
+}
+
+/* The fg pair follows the ground: paper by default, night under data-ground="night" (the phone, the projector, the
+   console's dark theme), and paper again on a paper piece inside a night ground (one level of nesting). */
+:where([data-color]) {
+  --palette-fg: var(--palette-fg-paper);
+}
+
+:where([data-ground='night'] [data-color], [data-ground='night'][data-color]) {
+  --palette-fg: var(--palette-fg-night);
+}
+
+:where([data-ground='night'] [data-ground='paper'] [data-color], [data-ground='night'] [data-ground='paper'][data-color]) {
+  --palette-fg: var(--palette-fg-paper);
+}
+
+/* R2: the coloured piece's 3D edge in its own dark shade, and the same edge sunk to the top while pressed. A colour
+   with no edge slot falls back to the old 22 % shade, so nothing turns ink black. */
+:where([data-color]) {
+  --edge-3d: inset 0 calc(-1 * var(--ds-edge, 8px)) 0 var(--palette-edge, rgb(0 0 0 / 0.22)), inset 0 var(--ds-shine, 5px) 0 rgb(255 255 255 / 0.35);
+  --edge-3d-sunk: inset 0 0 0 4px rgb(255 255 255 / 0.7), inset 0 var(--ds-edge, 8px) 0 var(--palette-edge, rgb(0 0 0 / 0.25));
+}

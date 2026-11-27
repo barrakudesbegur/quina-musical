@@ -14,10 +14,10 @@ export type WiiDpad = 'up' | 'right' | 'down' | 'left';
 export const WII_COLOURS: Readonly<Record<WiiGroup, string>> = {
   a: 'var(--color-orange, #ff8200)',
   b: 'var(--color-gold, #ffc531)',
-  talk: 'var(--color-ice, #5cc8ff)',
+  talk: 'var(--color-cyan, #5cc8ff)',
   back: 'var(--color-red, #e8363d)',
   home: 'var(--color-green, #23a55a)',
-  dpad: 'var(--color-lilac, #b57bff)',
+  dpad: 'var(--color-purple, #b57bff)',
 };
 
 /** One row of the guide. B has several (D144–D148): Aguanta, Suspens with A, the shake, and Suspens with manual advance. */

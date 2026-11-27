@@ -182,7 +182,7 @@ a {
 
 .notice--pending,
 .notice--private {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-text-on-paper);
 }
 
@@ -211,7 +211,7 @@ a {
 }
 
 .badge[data-status='calm'] {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-text-on-paper);
 }
 

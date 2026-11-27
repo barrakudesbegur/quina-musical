@@ -5,26 +5,53 @@
  * palette so the move to the full look is small.
  */
 @import './fonts.css';
+@import './ds/palette.css';
 
 :root {
-  /* Palette (names from the mockups) */
+  /* Palette, named by colour (D210: a `color` prop, its token and the word people say are one word). Each colour a
+     component's `color` prop can name has its fixed slots: the fill, the 3D edge (the fill's own dark shade, R2),
+     the level-2 pale and the subtle chip/note tint; packages/ui/ds/palette.css maps them onto --palette-* through
+     `data-color`. */
   --color-night: #18204a;
   --color-night-deep: #0f1433;
   --color-panel: #232e66;
   --color-snow: #fff6e5;
   --color-ink: #17132b;
+  --color-white: #ffffff;
   --color-orange: #ff8200;
   --color-orange-edge: #c45a00;
+  --color-orange-pale: #ffd199;
+  --color-orange-subtle: #ffe3c2;
   --color-red: #e8363d;
   --color-red-edge: #a31d27;
+  --color-red-bright: #ff5a60; /* the red buttons' fill: ink notes on it read at 5.9:1 (on #e8363d only about 4:1) */
+  --color-red-subtle: #ffe1de;
+  --color-red-text: #c4252c; /* red words on paper */
   --color-green: #23a55a;
   --color-green-edge: #157140;
+  --color-green-subtle: #d3f2df;
   --color-gold: #ffc531;
   --color-gold-edge: #c98a00;
-  --color-ice: #5cc8ff;
-  --color-ice-edge: #2d8fc4;
-  --color-lilac: #b57bff;
-  --color-lilac-edge: #7d4bc4;
+  --color-gold-subtle: #fff0b8;
+  --color-cyan: #5cc8ff;
+  --color-cyan-edge: #2d8fc4;
+  --color-cyan-pale: #bde6ff;
+  --color-cyan-subtle: #d6f1ff;
+  --color-cyan-light: #9fe0ff;
+  --color-cyan-faint: #e6f7ff;
+  --color-purple: #b57bff;
+  --color-purple-edge: #7d4bc4;
+  --color-purple-pale: #dcc4ff; /* picked 27 Nov for D-k (the Stay's level-2 strip in its own palette) */
+  --color-purple-subtle: #ebddff;
+  --color-pink: #ff4fa3;
+  --color-pink-edge: #c42f7a; /* picked 27 Nov for R2 (the fill's own dark shade); no board draws it yet */
+  --color-pink-pale: #ffd0e6;
+  --color-navy: #2c3878;
+  --color-navy-edge: #1b2456;
+  --color-grey: #b9b2a3;
+  --color-grey-edge: #8a8478; /* picked 27 Nov for R2, as pink's */
+  --color-periwinkle: #8c99d9;
+  --color-periwinkle-edge: #6573b8;
   --color-muted: #afc0ff;
   --color-slate: #5a6390;
   --color-slate-edge: #3b4370;
@@ -34,14 +61,13 @@
   --color-night-shadow: #0a0e26;
   --color-snow-edge: #e8d9bc; /* the 3D bottom edge of a paper piece */
   --color-ink-soft: #4a4270; /* small print on paper */
-  --color-gold-light: #ffe08a;
+  --color-gold-light: #ffe08a; /* also gold's level-2 pale */
   --color-gold-pale: #ffe3a3;
   --color-panel-sunk: #1c2556;
   --color-panel-raised: #3a4a9a;
   --color-night-line: #4a5ba8; /* dashed rules on the night sky */
   --color-live: #3ee07f;
-  --color-ice-pale: #e6f7ff;
-  --color-ice-light: #9fe0ff;
+  --color-live-edge: #1e9e55;
   --color-red-light: #ff8a80;
 
   /* Roles: components use these, never the palette directly */
@@ -57,8 +83,6 @@
   --color-danger: var(--color-red); /* Back, invalid, errors */
   --color-ok: var(--color-green); /* landed, valid, Claim */
   --color-accent: var(--color-gold); /* titles, prizes, banners */
-  --color-calm: var(--color-ice); /* Hold, waiting */
-  --color-stay: var(--color-lilac); /* Stay ("Aguanta"): no landing, the song keeps playing */
   --color-focus: var(--color-gold);
   --color-marked: var(--color-gold); /* the corn kernel */
   --color-primary-edge: var(--color-orange-edge); /* the darker edge and tails of a primary piece */
@@ -161,11 +185,24 @@
   --dur-check-step: 400ms;
   --dur-celebrate: 1200ms;
   --dur-hold-confirm: 900ms; /* long press to confirm a risky action */
+  /* The design resources' motion (ANIMATIONS.md › Design resources): press, pattern-pan, ring-in */
+  --dur-press: 80ms; /* the piece goes down */
+  --dur-press-up: 240ms; /* and springs back up (--ease-bounce) */
+  --dur-pattern-pan: 3.2s; /* one period of the on pattern (R3) */
+  --dur-default-ring: 200ms; /* a ring fades in (ring-in) */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* A spring (ANIMATIONS.md › Easing): fast start, overshoot to 1.11 at 35 %, one swing back to 0.99, settled at 100 %. */
   --ease-bounce: linear(0, 0.06 1.7%, 0.142 3.6%, 0.242 5.6%, 0.497 10.4%, 0.614 12.7%, 0.73 15.2%, 0.824 17.5%, 0.917 20.2%, 0.99 22.9%, 1.045 25.7%, 1.084 28.6%, 1.1 30.6%, 1.11 32.7%, 1.113 35%, 1.11 37.5%, 1.093 41.8%, 1.019 56.1%, 1.002 61.3%, 0.992 66.7%, 0.988 76%, 1);
   /* The same spring let go with a push: past the end to 1.66 at 17 %, one dip to 0.93, settled (corner-press). */
   --ease-kick: linear(0, 0.212 1%, 0.39 1.9%, 0.554 2.8%, 0.706 3.7%, 0.845 4.6%, 0.984 5.6%, 1.097 6.5%, 1.208 7.5%, 1.305 8.5%, 1.389 9.5%, 1.46 10.5%, 1.518 11.5%, 1.57 12.6%, 1.609 13.7%, 1.636 14.8%, 1.654 16%, 1.661 17.3%, 1.655 18.7%, 1.639 20.1%, 1.61 21.7%, 1.528 24.8%, 1.249 33.4%, 1.12 38%, 1.062 40.6%, 1.018 43.1%, 0.982 45.7%, 0.956 48.4%, 0.934 52.6%, 0.93 57.3%, 0.999 82%, 1.008 93.6%, 1);
+
+  /* The design resources (packages/ui/ds/resources.css; the user's rules R1–R11 of 27 Nov) */
+  --ring-gap: 4px; /* R1: the even gap between a control (3D edge and shadow included) and its ring */
+  --ring-width: 4px; /* the default action's ring */
+  --ring-width-bold: 6px; /* «Recomanat», the celebrate and fail cues */
+  --default-ring: var(--color-orange); /* a theme role: the console's light theme darkens it */
+  --corner-inset: 8px; /* R7: a corner control's distance from both sides */
+  --shadow-floating: 0 10px 22px rgb(10 14 38 / 0.35); /* a floating button's soft lift, under its hard shadow */
 
   /* Layers */
   --z-overlay: 50;

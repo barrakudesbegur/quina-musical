@@ -882,7 +882,7 @@
 
 /* The Quina Desgraciada's sad face: ink features on an ice-blue disc. */
 .sad-icon__face {
-  fill: var(--color-calm);
+  fill: var(--color-cyan);
   stroke: var(--color-line);
   stroke-width: 2;
 }
@@ -1170,19 +1170,19 @@
 
 /* Three tones along the string, mixed cool → warm → hot by the Heat (the phones' and S2's). */
 .garland [data-tone='0'] {
-  --bulb-cool: var(--color-ice-pale);
+  --bulb-cool: var(--color-cyan-faint);
   --bulb-warm: var(--color-gold);
   --bulb-hot: var(--color-red);
 }
 
 .garland [data-tone='1'] {
-  --bulb-cool: var(--color-ice);
+  --bulb-cool: var(--color-cyan);
   --bulb-warm: var(--color-orange);
   --bulb-hot: var(--color-orange);
 }
 
 .garland [data-tone='2'] {
-  --bulb-cool: var(--color-ice-light);
+  --bulb-cool: var(--color-cyan-light);
   --bulb-warm: var(--color-gold-light);
   --bulb-hot: var(--color-gold);
 }
@@ -1204,12 +1204,12 @@
   --bulb-party: var(--color-green);
 }
 
-.garland [data-party='ice'] {
-  --bulb-party: var(--color-ice);
+.garland [data-party='cyan'] {
+  --bulb-party: var(--color-cyan);
 }
 
-.garland [data-party='lilac'] {
-  --bulb-party: var(--color-lilac);
+.garland [data-party='purple'] {
+  --bulb-party: var(--color-purple);
 }
 
 .garland__piece {
@@ -3300,7 +3300,7 @@
 
 .ring__fill {
   fill: none;
-  stroke: var(--color-calm);
+  stroke: var(--color-cyan);
   stroke-width: 18;
   stroke-linecap: round;
   stroke-dasharray: var(--ring-left, 1) 1;

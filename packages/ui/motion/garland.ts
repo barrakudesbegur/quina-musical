@@ -121,7 +121,7 @@ export function garlandLights(heat: number, mood: GarlandMood): GarlandLights {
 }
 
 /** The party colours, in order along the string (packages/ui/tokens.css colour names). */
-export const PARTY_COLORS = Object.freeze(['red', 'orange', 'gold', 'green', 'ice', 'lilac'] as const);
+export const PARTY_COLORS = Object.freeze(['red', 'orange', 'gold', 'green', 'cyan', 'purple'] as const);
 export type PartyColor = (typeof PARTY_COLORS)[number];
 
 export interface GarlandBulb {
