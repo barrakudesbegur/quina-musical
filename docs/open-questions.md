@@ -109,6 +109,11 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U193 · Where the install button goes on the phone's home (D221)
+The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
+- (a) Yes, that.
+- (b) Something else (say what).
+
 ### U188 · A tap outside the console's menu or Wii dialog
 The phone's drawers already close on a tap outside. On the console only ✕ and Esc close them.
 - (a) The menu closes on a tap outside; the Wii dialog doesn't, because it may be mid-pairing.

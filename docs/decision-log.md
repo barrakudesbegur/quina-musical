@@ -1510,3 +1510,21 @@ The user tried the production player on their Android phone and asked for:
   - scrolling down collapses the drum into the compact look, stuck to the top on both tabs, while the tab switch doesn't stick;
   - Historial's rows shrink and fade very slightly at the bottom edge, where the corner buttons are.
 By: the user (to Frontend). Source: Frontend's report of 27 Nov; the quick ones in cca19f4. Lives in: requirements/screens.md › Player app.
+
+### D221 · The player app is an installable PWA · 2026-11-27 · Active; the button's place Pending (U193)
+- **The home:** where the cards list shows the add-card button when a player has no cards, an install button can show instead. It appears only when the browser can install the app and the add-card button isn't showing there (U193 confirms the reading).
+- **Ajustos** also offers the install, or says the app is already installed.
+- **iPhones:** no install button on the home, only the one in Ajustos, which opens a drawer explaining how to install it. "If iOS has a way to trigger the install on one click, we can show the button, but I think apple hasn't done that yet" (research, 27 Nov).
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D222 · The service worker is network-first and updates aggressively · 2026-11-27 · Active
+"If you make a service worker make sure that it always uses network first and has a very aggressive auto update policy. I don't want issues of users having a old version." Last year's app was a PWA whose worker kept serving an old cached app at the same address; this year's app already removes it (apps/player/logic/cleanup.ts), and must recognise the new worker as its own. The cache is only the offline fallback: offline, the app keeps its normal screens, marked as offline.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D223 · The app icons from the afro nino · 2026-11-27 · Active
+A maskable app icon and a monochrome badge icon (for Android's notifications in the status bar), from brand/ninos/figures/nino-afro.svg: only his head and hand, simple and funny. Frontend makes them.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D224 · The QR opens the right platform flow directly · 2026-11-27 · Active; how Pending (research)
+The printed QR must take each player straight into the right flow for their phone, grandma-proof. The QR's URL is fixed when the cards are printed on 4–5 Dec (`/26/<number>`), so the routing works with it as it is. Research on 27 Nov covers iPhones (a one-tap install, an App Clip) and Android (a TWA on Play, the install prompt), and separately whether push notifications are worth it.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Player app; docs/research/reports/ (ios-install-and-app-clip.md, android-twa-and-install.md, push-notifications.md).
