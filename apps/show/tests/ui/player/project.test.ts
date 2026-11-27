@@ -188,7 +188,7 @@ test("the drum's public seeds (D237), as the cloud projects them: a Spin's spinS
   p.ingest(scheduled(9), NOW);
   p.ingest({ ...secretState(), transition: null, suspense: { id: 'tr-secret' } } as unknown as ShowState, NOW);
   assert.ok(!('spinSeed' in (p.project(ctx).spin ?? {})));
-  // drumSeed: where the projector is given it (the demos); the relay's engine state has none.
+  // drumSeed: where the projector is given it (the demos), or from the engine's state.
   const q = new PublicProjector(() => 0.5);
   q.seedRound(1, 'normal', NOW - 60_000, false, [], 'normal', 1, 77);
   q.ingest(secretState(), NOW);
@@ -197,6 +197,11 @@ test("the drum's public seeds (D237), as the cloud projects them: a Spin's spinS
   assert.ok(!('drumSeed' in (q.project(ctx).rounds.find((r) => r.number === n) ?? {})));
   q.setDrumSeed(n, 5);
   assert.equal(q.project(ctx).rounds.find((r) => r.number === n)?.drumSeed, 5);
+  // The engine's state carries it (aa865883): the relay's feed projects it too.
+  const r = new PublicProjector(() => 0.5);
+  const st = secretState();
+  r.ingest({ ...st, round: { ...st.round, drumSeed: 4_294_967_295 } } as ShowState, NOW);
+  assert.equal(r.project(ctx).rounds.find((x) => x.number === n)?.drumSeed, 4_294_967_295);
 });
 
 test("the phones see a Check's result only from its cue: pending while revealing, under review and at the cue", () => {

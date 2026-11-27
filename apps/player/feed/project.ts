@@ -11,9 +11,9 @@
 //   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
 //   the cloud's).
 // The drum's public seeds (D237), as the cloud projects them: a Spin's `spinSeed` from its `transition.scheduled` (never
-// while a Suspense is held), and a round's `drumSeed` where this projector is given it (`seedRound`, `setDrumSeed`: the
-// demos). The relay sends the engine's journal (where `drumSeed` lives) to the cloud link only, and the engine's state
-// doesn't carry it, so a relay feed has no drumSeed: the phone then orders the drum by the round's number (logic/drum.ts).
+// while a Suspense is held), and a round's `drumSeed` from the engine's state (`state.round.drumSeed`, the same value
+// the journal has on `round.started`) or where this projector is given it (`seedRound`, `setDrumSeed`: the demos). Only an
+// older engine's state has none: the phone then orders the drum by the round's number (logic/drum.ts).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { DEFAULT_SIDE, PROTOCOL_VERSION, defaultCardType, isRoundKind, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
@@ -173,6 +173,7 @@ export class PublicProjector {
       log.side = s.round.side ?? DEFAULT_SIDE;
       log.startedAtMs = s.round.startedAtMs || log.startedAtMs;
       log.lineConfirmed = s.round.lineConfirmed;
+      if (s.round.drumSeed !== undefined) log.drumSeed = s.round.drumSeed;
       const last = s.queue.position;
       for (const l of s.landings) {
         if (l.undone || l.position > last) log.landings.delete(l.position);
