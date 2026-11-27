@@ -1,40 +1,84 @@
-<!-- Player-app settings for every phone: interface sounds on by default, and a message banner. Kept on this
-     device only until the cloud can send them to the phones. -->
+<!-- Player-app settings for every phone (D227): interface sounds on by default, and a message banner with its on/off.
+     Admin served from the cloud sends them to the phones (PUT /api/sounds and /api/notice); served by the laptop, they
+     are only kept on this device. This device always keeps the last ones, so the form starts from them. Design system
+     components, all silent (Admin has no UI sounds, D208). -->
+<script module lang="ts">
+  import type { NoticePreset } from '../../../packages/ui/components/types.ts';
+
+  /** Each send state's look. They sit in one polite region that is always there (a region added with its message is
+   * often not read); «sending» is only shown, never read (an interstitial state: the button is busy meanwhile); a
+   * failure interrupts (an alert). */
+  const LOOKS = {
+    sending: { layout: 'note', color: 'navy', fill: 'subtle', icon: null, live: 'off' },
+    sent: { layout: 'note', color: 'green', fill: 'solid', icon: 'check', live: 'off' },
+    failed: { layout: 'note', color: 'red', fill: 'solid', icon: 'close', live: 'assertive' },
+    notCloud: { layout: 'note', color: 'orange', fill: 'subtle', icon: 'warning', live: 'off' },
+  } as const satisfies Record<string, NoticePreset>;
+</script>
+
 <script lang="ts">
-  import { BANNER_MAX_LENGTH } from '../logic/player-settings.ts';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
+  import type { FetchLike } from '../../../packages/ui/data/cloud-plan.ts';
+  import { sendPlayerSettings } from '../data/cloud-player-settings.ts';
   import { loadPlayerSettings, savePlayerSettings } from '../data/player-settings-store.ts';
+  import { BANNER_MAX_LENGTH, type PlayerSettings, type SendState } from '../logic/player-settings.ts';
   import { S } from '../strings.ts';
 
+  let { cloud }: { cloud: boolean } = $props();
+
+  const fetchImpl: FetchLike = (input, init) => fetch(input, { ...init, credentials: 'same-origin' });
   const initial = loadPlayerSettings();
   let sounds = $state(initial.soundsOnByDefault);
   let banner = $state(initial.banner);
-  let saved = $state<boolean | null>(null);
+  let bannerOn = $state(initial.bannerOn);
+  let send = $state<SendState>({ kind: 'idle' });
+  let savedHere = $state<boolean | null>(null);
 
-  function save(event: SubmitEvent) {
+  const settings = (): PlayerSettings => ({ soundsOnByDefault: sounds, banner: banner.trim(), bannerOn });
+  /** An edit after a send or a save: what was said no longer holds. */
+  function edited(): void {
+    if (send.kind !== 'sending') send = { kind: 'idle' };
+    savedHere = null;
+  }
+
+  async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    saved = savePlayerSettings({ soundsOnByDefault: sounds, banner: banner.trim() });
+    if (send.kind === 'sending') return;
+    const now = settings();
+    savedHere = savePlayerSettings(now);
+    if (!cloud) return;
+    send = { kind: 'sending' };
+    send = await sendPlayerSettings(fetchImpl, now);
   }
 </script>
 
 <section class="panel surface player-settings" aria-labelledby="player-settings-title">
   <h2 class="panel__title" id="player-settings-title">{S.night.playerTitle}</h2>
-  <p class="notice notice--pending">{S.night.playerPending}</p>
-  <form class="player-settings__form" onsubmit={save}>
-    <label class="field field--inline">
-      <input type="checkbox" bind:checked={sounds} oninput={() => (saved = null)} />
-      <span>{S.night.sounds}</span>
-    </label>
-    <p class="field__help">{S.night.soundsHelp}</p>
-    <label class="field">
-      <span class="field__label">{S.night.banner}</span>
-      <textarea rows="2" maxlength={BANNER_MAX_LENGTH} bind:value={banner} oninput={() => (saved = null)}></textarea>
-      <span class="field__help">{S.night.bannerHelp(BANNER_MAX_LENGTH)}</span>
-    </label>
+  {#if cloud}
+    <p class="panel__help">{S.night.playerHelp}</p>
+  {:else}
+    <Notice {...LOOKS.notCloud} text={S.night.playerNotCloud} />
+  {/if}
+  <form class="player-settings__form" onsubmit={submit}>
+    <Switch layout="row" sound={null} checked={sounds} label={S.night.sounds} note={S.night.soundsHelp} onchange={(on) => ((sounds = on), edited())} />
+    <TextField label={S.night.banner} rows={2} maxlength={BANNER_MAX_LENGTH} hint={S.night.bannerHelp(BANNER_MAX_LENGTH)} bind:value={banner} oninput={edited} />
+    <Switch layout="row" sound={null} checked={bannerOn} disabled={!banner.trim()} label={S.night.bannerOn} note={S.night.bannerOnHelp} onchange={(on) => ((bannerOn = on), edited())} />
     <div class="panel__actions">
-      <button type="submit">{S.night.saveLocal}</button>
-      <span role="status" class="panel__help">
-        {#if saved === true}{S.night.savedLocal}{:else if saved === false}{S.night.saveLocalFailed}{/if}
-      </span>
+      <Button type="submit" color="gold" sound={null} busy={send.kind === 'sending'} disabled={send.kind === 'sending'} label={cloud ? S.night.send : S.night.saveLocal} />
+    </div>
+    <div class="player-settings__status" aria-live="polite">
+    {#if send.kind === 'sending'}
+      <Notice {...LOOKS.sending} progress="dots" text={S.night.sending} />
+    {:else if send.kind === 'sent'}
+      <Notice {...LOOKS.sent} text={S.night.sent} />
+    {:else if send.kind === 'failed'}
+      <Notice {...LOOKS.failed} text={S.night.sendFailed(send.status)} />
+    {:else if !cloud && savedHere !== null}
+      <Notice {...(savedHere ? LOOKS.sent : LOOKS.failed)} text={savedHere ? S.night.savedLocal : S.night.saveLocalFailed} />
+    {/if}
     </div>
   </form>
 </section>

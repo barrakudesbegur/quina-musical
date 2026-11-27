@@ -12,7 +12,7 @@ One view per URL hash:
 |---|---|---|
 | `#preparacio` | Setup | The edition's name and year, when prizes are revealed, the printed card types (read-only, from card-types.json), cards in play (sent with `setCardsInPlay`), rounds with their card type, card side and prize bundles (add, remove, move, "Destacat"), sponsors and logos, the schedule, and the cheat-sheet rules |
 | `#json` | Import and export | Bulk import of a whole plan (paste or file) with every error and a diff, then "Substituir". Export as a download or a copy |
-| `#nit` | On the night | Show status, start (`roundIntro`) and end (`endGame`) the Game, the Winners' names and notes (`winnerInfo`), plus stubs for Plan B resume, cards open on phones and player-app settings |
+| `#nit` | On the night | Show status, start (`roundIntro`) and end (`endGame`) the Game, the Winners' names and notes (`winnerInfo`), Plan B resume, the player-app settings (sent to the phones from the cloud's Admin, D227), plus a stub for cards open on phones |
 | `#eines` | Tools | The hook audition page, a full JSON export (the plan plus the night's data), and Shuffle seeds (stub) |
 | `#xuleta` | Cheat sheet | Printable on one A4 page ("Imprimir") |
 
@@ -144,7 +144,7 @@ Text is trimmed. Errors come back as `path: message` lines, for example `plan.ro
 
 - **Plan B manual resume:** a disabled form. There is no command to resume at a given round and song yet; it needs the engine's and the Platform's restore path.
 - **Cards opened on phones:** needs the Platform session's public feed.
-- **Player-app settings** (default interface sounds, a banner for every phone): kept on this device only, until the feed can carry them.
+- **Player-app settings** (D227: default interface sounds, a banner for every phone with its on/off): «Enviar als mòbils» saves them on this device and, when Admin is served from the cloud, sends them with `PUT /api/sounds` `{ soundsDefault }` and `PUT /api/notice` `{ notice }` (null when the banner is off or empty; Admin allows 140 characters, the cloud 200). The cloud puts both in the public feed, so every phone gets them, a phone that connects later too; a player's own sound choice wins. The cloud has no GET for them, so the form starts from what this device last sent. Served by the laptop, they're only kept here (the relay doesn't serve these routes).
 - **Shuffle seeds:** the journal's `round.started` keeps them, but Admin has no way to read the journal yet.
 - **Logos in R2:** the Platform session will store logos as files. Until then they are data URLs, as above.
 

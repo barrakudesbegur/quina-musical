@@ -1,5 +1,5 @@
-// Player-app settings, kept only on this device until the Platform session's public feed can carry them
-// to the phones. Never throws.
+// Player-app settings as this device last had them (the cloud has no GET for them): the form starts from these.
+// Sending them to the phones is data/cloud-player-settings.ts. Never throws.
 import { MANAGE_CONFIG } from '../config.ts';
 import { DEFAULT_PLAYER_SETTINGS, readPlayerSettings, type PlayerSettings } from '../logic/player-settings.ts';
 

@@ -61,6 +61,8 @@ test('the full export carries the plan and the night, and is marked private', ()
 
 test('player settings fall back to the defaults field by field', () => {
   assert.deepEqual(readPlayerSettings(null), DEFAULT_PLAYER_SETTINGS);
-  assert.deepEqual(readPlayerSettings({ soundsOnByDefault: false, banner: 7 }), { soundsOnByDefault: false, banner: '' });
+  assert.deepEqual(readPlayerSettings({ soundsOnByDefault: false, banner: 7 }), { soundsOnByDefault: false, banner: '', bannerOn: false });
+  assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: true }).bannerOn, true);
+  assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: 'yes' }).bannerOn, false, 'settings from before the switch: off');
   assert.equal(readPlayerSettings({ banner: 'x'.repeat(500) }).banner.length, 140);
 });

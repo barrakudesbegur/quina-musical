@@ -102,7 +102,7 @@
       <WinnersList {show} {commands} plan={session.current} {catalog} />
       <ManualResume {show} {commands} {catalog} plan={session.current} cloud={session.store.kind === 'cloud'} />
       <PhoneCards />
-      <PlayerSettings />
+      <PlayerSettings cloud={session.store.kind === 'cloud'} />
     {:else if route === 'eines'}
       <ToolsPanel {show} {session} />
     {:else}
