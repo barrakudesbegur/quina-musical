@@ -3,9 +3,9 @@
   import PrizeCard from '../../../packages/ui/recipes/PrizeCard.svelte';
   import { PLAYER } from '../actions.ts';
   // The Celebration (ANIMATIONS.md `celebrate`). No winning card numbers, ever: people only care when it's them.
-  // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize. The
-  // player's own confirmed card (a confirmed winner that is one of the phone's cards): "La teva línia!" with
-  // that card's grid glowing in its own colour, and the confetti in its colours. The Desgraciat round's last card
+  // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize (not a Line's
+  // for now, D242). The player's own confirmed card (a confirmed winner that is one of the phone's cards): "La teva
+  // línia!" with that card's grid glowing in its own colour, and the confetti in its colours. The Desgraciat round's last card
   // standing ('standing'): on other phones no title (the user, U6), only the prize; on the winner's own phone
   // «Quina potra!» (D190), the hands-up nino with that card standing in its green glow, green rays and green confetti.
   // Reduced motion:
@@ -32,7 +32,8 @@
     reduced: boolean;
     onclose: () => void;
   } = $props();
-  const prize = $derived(round?.lines.find((l) => l.kind === celebration.kind) ?? null);
+  // A Line's Celebration shows no prize for now (D242): only a Quina's and the last card standing's.
+  const prize = $derived(celebration.kind === 'line' ? null : (round?.lines.find((l) => l.kind === celebration.kind) ?? null));
   const own = $derived(views.filter((v) => celebration.ownCardIds.includes(v.saved.id)));
   const NO_FRESH: ReadonlySet<string> = new Set();
   const standing = $derived(celebration.kind === 'standing');
