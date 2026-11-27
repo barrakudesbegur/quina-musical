@@ -23,7 +23,7 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
      - otherwise the presenters use the tablet: it does everything the remote does.
    - The preflight shows whether the remote is connected, its battery, and how often it dropped in the last 10 minutes. It warns from 2 drops, like the console. A remote at the edge of its range drops, but only this walk test shows the range before it does.
 8. **Run the checks**: `cd apps/cloud && npm run preflight`. **Fix every FAIL** before the doors open; read the WARNs.
-9. **Sound check**: play an effect from the console at low volume, then a few seconds of Hold music.
+9. **Sound check**: play an effect from the console at low volume, then a few seconds of Hold music. Tap a few tablet buttons near the microphones: if the PA carries the clicks, switch the tablet's sounds off in its settings (D208).
 
 At each Shuffle, note the round's **resume code** (console → **Codi de recuperació de la quina** → **Mostra el codi**). Keep it like the box of cards: never on a screen, never in a photo.
 
