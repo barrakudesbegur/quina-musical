@@ -17,5 +17,6 @@
       <span class="app-header__round" data-kind={app.focusKind}>{S.roundName({ number: app.focusRound, kind: app.focusKind }, app.plan)}</span>
     {/if}
   </h1>
-  <IconButton {...PLAYER_ICONS.settings} class="app-header__menu" data-testid="open-settings" aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })} />
+  <!-- On the your-song gold the cog sits on paper, as the corners do (§8 Y1). -->
+  <IconButton {...PLAYER_ICONS.settings} color={app.yourSong ? 'snow' : undefined} class="app-header__menu" data-testid="open-settings" aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })} />
 </header>

@@ -69,3 +69,14 @@ export function feedbackFor(prev: FeedbackSnapshot | null, next: FeedbackSnapsho
   if (next.landings > prev.landings) cues.add('landing');
   return { cue: CUE_PRIORITY.find((c) => cues.has(c)) ?? null, freshMarks, freshFalls, standUp: false };
 }
+
+/** The phone's vibration for an update (Android only; nothing depends on it): a fall or a near-win keep their own
+ *  pattern; otherwise a landing that marks one of the phone's cards buzzes as your song lands (§8 Y1). Never in the
+ *  Desgraciat round's ✗s (the fall already says it). */
+export type Buzz = 'fall' | 'nearWin' | 'yourSong';
+
+export function buzzFor(f: Pick<Feedback, 'cue' | 'freshMarks'>, desgraciat: boolean): Buzz | null {
+  if (f.cue === 'fall') return 'fall';
+  if (f.cue === 'nearWin') return 'nearWin';
+  return f.freshMarks.length && !desgraciat ? 'yourSong' : null;
+}

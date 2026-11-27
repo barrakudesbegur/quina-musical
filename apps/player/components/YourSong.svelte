@@ -9,12 +9,29 @@
   // live flashes, a later one (opening the app) fades in. The flash and the particles are over everything, open drawers
   // included (D90): a manual popover puts them in the top layer, shown again whenever a drawer opens (`layer` changes),
   // since the newest top-layer element is drawn on top. Where the browser has no popovers, they stay over the home.
+  // The particles are the marks of the phone's cards that hold the song (`marks`, §8 Y1), in turn; while the look shows,
+  // the browser's bar (`theme-color`) is gold too, and back to the night when it goes.
   import { untrack } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { COMET, cometPass, yourSongEntry, type YourSong } from '../logic/your-song.ts';
   import CardMark from './CardMark.svelte';
 
-  let { song, nowMs, reduced, layer = 0 }: { song: YourSong; nowMs: number; reduced: boolean; layer?: number } = $props();
+  let {
+    song,
+    nowMs,
+    reduced,
+    layer = 0,
+    marks = [],
+  }: { song: YourSong; nowMs: number; reduced: boolean; layer?: number; /** The identities of the cards holding the song. */ marks?: readonly number[] } = $props();
+
+  $effect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    const root = getComputedStyle(document.documentElement);
+    const gold = root.getPropertyValue('--color-gold-light').trim();
+    if (gold) meta.setAttribute('content', gold);
+    return () => meta.setAttribute('content', root.getPropertyValue('--color-bg').trim());
+  });
   const entry = untrack(() => yourSongEntry(song, nowMs, reduced));
   /** The flash plays once, then goes, so showing the layer again never replays it. */
   const FLASH_MS = 600;
@@ -52,7 +69,7 @@
     css: (t: number) => `opacity: ${t}; transform: scaleY(${0.15 + 0.85 * t})`,
   });
 
-  // Option A's particles, placed as on the board (% of the screen); corn is identity 1, the heart identity 5.
+  // Option A's particles, placed as on the board (% of the screen); `mark` (corn 1, heart 5) only when no card is known.
   const PARTICLES: readonly { x: number; y: number; size: number; dur: number; delay: number; mark: number }[] = [
     { x: 34, y: 86, size: 34, dur: 3.47, delay: 1.11, mark: 1 },
     { x: 85, y: 85, size: 34, dur: 2.7, delay: 0.04, mark: 5 },
@@ -90,7 +107,7 @@
       {/key}
       {#each PARTICLES as p, i (i)}
         <span class="your-song-particles__piece" style:left="{p.x}%" style:top="{p.y}%" style:--size="{p.size}px" style:--dur="{p.dur}s" style:--delay="{p.delay}s">
-          <CardMark identity={p.mark} decorative />
+          <CardMark identity={marks.length ? marks[i % marks.length] : p.mark} decorative />
         </span>
       {/each}
     </div>

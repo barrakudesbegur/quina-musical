@@ -13,7 +13,7 @@ import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
 import type { PublicHeat, PublicState } from './feed/public.ts';
 import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
 import { nearKeys } from './logic/near-win.ts';
-import { feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
+import { buzzFor, feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
 import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
 import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
@@ -426,10 +426,10 @@ export class PlayerApp {
       if (this.standUpTimer) clearTimeout(this.standUpTimer);
       this.standUpTimer = setTimeout(() => (this.standUp = false), PLAYER_CONFIG.freshMs);
     }
+    const buzz = buzzFor({ cue, freshMarks }, next.desgraciat);
+    if (buzz) vibrate(buzz === 'fall' ? PLAYER_CONFIG.vibrateFall : buzz === 'nearWin' ? PLAYER_CONFIG.vibrateNearWin : PLAYER_CONFIG.vibrateYourSong);
     if (!cue) return;
     this.sounds.play(cue);
-    if (cue === 'nearWin') vibrate(PLAYER_CONFIG.vibrateNearWin);
-    if (cue === 'fall') vibrate(PLAYER_CONFIG.vibrateFall);
   }
 
   private feedbackSnapshot(): FeedbackSnapshot {

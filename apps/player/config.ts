@@ -71,6 +71,8 @@ export const PLAYER_CONFIG = Object.freeze({
   vibrateNearWin: [30, 40, 30] as readonly number[],
   /** The Desgraciat round: one of the player's cards sat down (Android only; nothing depends on it). */
   vibrateFall: [60] as readonly number[],
+  /** A song lands on one of the phone's cards (§8 Y1): a da-dum, longer than a touch's 10 ms. */
+  vibrateYourSong: [70, 50, 70] as readonly number[],
 
   /** Storage keys (localStorage, this origin). */
   storageKey: 'quina.player.v1',
