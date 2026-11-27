@@ -1,0 +1,190 @@
+/* The design system gallery's own frame (development only). Its specimens use the apps' real stylesheets; this only
+   lays them out. The root also carries the app's class (.console or .player) for its tokens: its page layout is undone. */
+.ds-gallery:is(.console, .player) {
+  display: block;
+  height: auto;
+  min-height: 100dvh;
+  padding: var(--space-5) clamp(var(--space-4), 4vw, var(--space-7)) var(--space-7);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.ds-gallery__header {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 60rem;
+  margin-bottom: var(--space-6);
+}
+
+.ds-gallery__header h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  text-transform: uppercase;
+}
+
+.ds-gallery__header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ds-gallery__header a {
+  padding: var(--space-1) var(--space-3);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--font-weight-strong);
+  text-decoration: none;
+}
+
+.ds-gallery__header a[aria-current='page'] {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+.ds-gallery__section {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-7);
+}
+
+.ds-gallery__section h2 {
+  font-size: var(--text-xl);
+}
+
+.ds-gallery__section h3 {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-lg);
+}
+
+.ds-gallery__section > p,
+.ds-gallery__note {
+  max-width: 60rem;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.ds-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-6) var(--space-5);
+  align-items: start;
+}
+
+.ds-gallery__grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+}
+
+.ds-gallery__cell {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+/* Room for the rings (R1) and the shadow below */
+.ds-gallery__stage {
+  display: grid;
+  padding: var(--space-3);
+}
+
+.ds-gallery__cell figcaption {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-wrap: pretty;
+}
+
+.ds-gallery__table-wrap {
+  overflow-x: auto;
+}
+
+.ds-gallery__palette {
+  border-collapse: separate;
+  border-spacing: var(--space-2) var(--space-1);
+}
+
+.ds-gallery__palette th {
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.ds-gallery__swatch {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 2.25rem;
+  border: var(--line-width-thin) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  font-weight: 900;
+}
+
+.ds-gallery__swatch[data-slot='solid'] {
+  background: var(--palette-solid, transparent);
+  box-shadow: var(--edge-3d, none);
+}
+
+.ds-gallery__swatch[data-slot='edge'] {
+  background: var(--palette-edge, transparent);
+}
+
+.ds-gallery__swatch[data-slot='pale'] {
+  background: var(--palette-pale, transparent);
+}
+
+.ds-gallery__swatch[data-slot='subtle'] {
+  background: var(--palette-subtle, transparent);
+}
+
+.ds-gallery__swatch[data-slot='fg'] {
+  background: var(--color-surface);
+  color: var(--palette-fg, transparent);
+}
+
+.ds-gallery__swatch[data-slot='contrast'] {
+  background: var(--palette-solid, transparent);
+  color: var(--palette-contrast, transparent);
+}
+
+.ds-gallery__song {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 800;
+  text-align: left;
+}
+
+.ds-gallery__cover {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: var(--radius-sm);
+  background: var(--color-snow);
+}
+
+.ds-gallery__narrow {
+  max-width: 14rem;
+  margin: 0;
+}
+
+.ds-gallery__title {
+  width: 8rem;
+  margin: 0;
+  padding: var(--space-2);
+  border: var(--line-width-thin) dashed var(--color-text-muted);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.ds-gallery__card {
+  display: grid;
+  padding: var(--space-5);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--palette-solid);
+}

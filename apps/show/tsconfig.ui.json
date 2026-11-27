@@ -3,5 +3,5 @@
   // rules are the same (strict, erasable TypeScript only). Run: npx tsc -p tsconfig.ui.json and
   // npx svelte-check --tsconfig ./tsconfig.ui.json --threshold error
   "extends": "./tsconfig.json",
-  "include": ["../../packages/ui", "../../packages/rules", "../console", "../stage", "../player", "../admin", "../../packages/protocol", "engine/src/net"]
+  "include": ["../../packages/ui", "../../packages/rules", "../console", "../stage", "../player", "../admin", "../ds", "../../packages/protocol", "engine/src/net"]
 }

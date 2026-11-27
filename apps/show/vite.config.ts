@@ -22,8 +22,9 @@ const SHOW_PAGES: Record<string, string> = {
   test: 'show/engine/test.html',
   remote: 'show/remote/index.html',
 };
-/** Apps that are not pages of this build. */
-const NOT_PAGES = new Set(['show', 'cloud', 'cards', 'node_modules', 'dist']);
+/** Apps that are not pages of this build. `ds`, the design system's gallery, is development only: the dev server
+ *  serves /ds/, the build leaves it out, so no phone ever downloads it. */
+const NOT_PAGES = new Set(['show', 'cloud', 'cards', 'ds', 'node_modules', 'dist']);
 const appPages = Object.fromEntries(
   fs.readdirSync(root, { withFileTypes: true })
     .filter((d) => d.isDirectory() && !d.name.startsWith('.') && !NOT_PAGES.has(d.name) && fs.existsSync(path.join(root, d.name, 'index.html')))
