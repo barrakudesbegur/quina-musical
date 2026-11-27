@@ -3526,7 +3526,7 @@ html:has(.drawer[open]) {
   backdrop-filter: blur(10px);
   color: var(--color-text-on-paper);
   cursor: pointer;
-  transition: transform var(--dur-corner-back) var(--ease-bounce);
+  transition: transform var(--dur-corner-back) var(--ease-kick);
 }
 
 .player .corner--left {
@@ -3546,6 +3546,7 @@ html:has(.drawer[open]) {
 .player .corner:active {
   transform: scale(0.94);
   transition-duration: var(--dur-corner-press);
+  transition-timing-function: var(--ease-out);
 }
 
 .corner--left:active {

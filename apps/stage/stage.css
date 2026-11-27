@@ -153,6 +153,7 @@
   --stage-dur-finale-close: 450ms;
   --stage-dur-finale-back: 300ms;
   --stage-dur-finale-hops: 600ms;
+  --stage-dur-finale-cross: 400ms; /* finale-fall: the plate's ✗ stamps on */
   --stage-dur-finale-ribbon: 1.8s; /* in 120 ms, 1.5 s on screen, out 300 ms */
   --stage-dur-finale-ribbon-pop: 200ms; /* its pop, 0.4 → 1 on --ease-bounce */
   --stage-dur-finale-light: 3.1s;
@@ -1479,7 +1480,7 @@
 }
 
 .finale__slot[data-anim='finale-fall'] .finale__cross {
-  animation: stage-finale-stamp var(--stage-dur-stamp) var(--ease-bounce);
+  animation: stage-finale-stamp var(--stage-dur-finale-cross) var(--ease-bounce);
 }
 
 /* `finale-win`: the party nino steps forward, its plate and cone gold, gold rays turning behind. */
