@@ -6,7 +6,7 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
 
 1. **Phone A** (main): plug it into the laptop by USB and turn on **USB tethering** and its **personal hotspot**. The hotspot must have a **password**. **Phone B** (another carrier): charged, hotspot ready as the backup.
 2. **Laptop**: plug in the power. Plug the **PA in with a cable** (headphone jack, USB or HDMI), never Bluetooth or AirPlay. Connect the **projector** by HDMI.
-3. **Keep the laptop awake**: in a terminal, run `caffeinate -dis` and leave it open.
+3. **Keep the laptop awake**: in a terminal, run `caffeinate -dis` and leave it open. If the projector runs from a second computer, keep that one awake with its own system setting too. Over the hotspot's plain `http`, pages can't keep a screen awake by themselves.
 4. **Start the show** (each in its own terminal, and leave them open):
    - the relay: `cd apps/show && npm start -- --lan --repertoire 2026`. It builds the show first, then serves it, and refuses to start an out-of-date build (since 27 Nov, f89d972; that day's test ran a build two days old, with no Pausa). Without `--lan` it only listens on the laptop and the tablet can't reach it. At start it prints the tablet's pairing address with its **token** (`?t=…`);
    - the cloud link: `cd apps/cloud && npm run link`. It should say `cloud: connected`.

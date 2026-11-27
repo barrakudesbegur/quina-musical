@@ -184,6 +184,7 @@ _From event.md › The presenters (Their equipment); the decisions doc › Chang
 
 - It pairs with the show laptop (desktop Chrome only). Its buttons are in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions).
 - Every action rumbles. A deliberate shake pattern starts a Suspense, so dancing doesn't.
+- **The two-level lock covers the remote too (D234):** while another device holds Parlem → Pausa or Aguanta → Suspens, the remote's press on that button is refused, with a short "no" rumble.
 - Its plan B is the tablet: the console can do everything the remote does. Its range is in [operations.md › Fallbacks](operations.md#fallbacks).
 - The console counts the remote's drops over the last 10 minutes and shows them in the "Comandament" dialog. From 2 drops it warns: come closer to the laptop, or keep the tablet at hand.
 - It still has to be tried on real hardware (pending U19).
