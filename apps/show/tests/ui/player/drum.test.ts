@@ -83,6 +83,27 @@ test('a landing: from the creep, a glide to the landed tile by the shortest way,
   assert.ok(glideSec(0) >= DRUM.glideMinSec && glideSec(1000) === DRUM.glideMaxSec);
 });
 
+test('a Spin is solved once; while its solution is on its way (off the main thread) the ring waits on its start tile, veiled, then follows the same curve', () => {
+  const before = [landing(0, ORDER[0]!, T - 20_000)];
+  const spin: PublicSpin = { startAtMs: T, landAtMs: T + 7000, spinSeed: 31 };
+  const input = (nowMs: number) => ({ order: ORDER, landings: before, spin, nowMs, reduced: false });
+  const asked: number[] = [];
+  let ready = false;
+  const drum = new PhoneDrum((inputs) => {
+    asked.push(inputs.spinSeed);
+    return ready ? spinSolution(inputs) : null;
+  });
+  const now = new PhoneDrum();
+  const { fromIndex } = spinStart(ORDER, before);
+  for (let ms = T; ms < T + 120; ms += 16) {
+    const f = drum.frame(input(ms));
+    assert.deepEqual([f.phase, f.position, f.velocity, f.selectedId, f.blurPx], ['spinning', fromIndex, 0, null, DRUM.veilPx], 'waiting for the solution: still on the start tile, veiled');
+  }
+  ready = true;
+  for (let ms = T + 120; ms <= T + 9000; ms += 16) assert.deepEqual(drum.frame(input(ms)), now.frame(input(ms)), `the same frame at ${ms - T} ms`);
+  assert.deepEqual(asked, [31, 31, 31, 31, 31, 31, 31, 31, 31], 'asked on each frame until it came, then never again');
+});
+
 test('a Spin opened late (the page loads mid-Spin) starts mid-curve; opened after the landing, the drum is simply there', () => {
   const spin: PublicSpin = { startAtMs: T, landAtMs: T + 7000, spinSeed: 9 };
   const mid = new PhoneDrum().frame({ order: ORDER, landings: [], spin, nowMs: T + 3000, reduced: false });

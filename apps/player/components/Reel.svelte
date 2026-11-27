@@ -17,6 +17,7 @@
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
   import { DRUM, PhoneDrum, type DrumFrame } from '../logic/drum.ts';
+  import { prepareSpinSolver, solveSpinOffThread } from '../device/drum-solver.ts';
   import { tugAxis, tugTurn, type DrumGeometry } from '../logic/drum-tug.ts';
   import { S } from '../strings.ts';
   import Cover from '../../../packages/ui/components/Cover.svelte';
@@ -59,7 +60,9 @@
   const uid = $props.id();
   /** With no songs yet (no catalogue), a ring of card backs. */
   const BACKS = 10;
-  const drum = new PhoneDrum();
+  // Each Spin is solved once, off the main thread (device/drum-solver.ts); the frames only sample its curve.
+  const drum = new PhoneDrum(solveSpinOffThread);
+  prepareSpinSolver();
   let frame: DrumFrame = $state.raw({ ring: [], position: 0, velocity: 0, phase: 'idle', selectedId: null, blurPx: 0 });
   const step = (now: number) => (frame = drum.frame({ order, landings, spin, nowMs: now, reduced }));
   // Every change of the inputs (and the app's clock), unless offline: then it holds where it is.

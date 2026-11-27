@@ -194,12 +194,25 @@ interface Motion {
 }
 
 /**
+ * Solves a Spin's stand-in (spinSolution), or answers null while its solution is still being worked out elsewhere
+ * (the app solves off the main thread: device/drum-solver.ts); the drum asks again on its next frame.
+ */
+export type SpinSolver = (inputs: SpinInputs) => Solution | null;
+
+/**
  * The drum's motion over time. Stateful only in what the phone has seen: the motion running (a Spin's stand-in curve
  * or coast, a glide) and the last frame, so a landing, a Back or a cancelled Spin glides on from where the drum is.
+ * A Spin is solved once (`solve`, spinSolution here and now by default); every frame only samples the solved curve.
+ * Until the solution is there, the ring waits on its start tile, veiled, as a Spin's first instant looks anyway.
  */
 export class PhoneDrum {
   private motion: Motion | null = null;
   private last: DrumFrame | null = null;
+  private readonly solve: SpinSolver;
+
+  constructor(solve: SpinSolver = (inputs) => spinSolution(inputs)) {
+    this.solve = solve;
+  }
 
   frame(input: DrumInput): DrumFrame {
     const frame = this.compute(input);
@@ -250,7 +263,11 @@ export class PhoneDrum {
       if (spin.landAtMs === null) {
         this.motion = { kind: 'coast', key, ring, solution: coastSolution(ring.length, fromIndex, spin.startAtMs), startMs: spin.startAtMs, creepAt: Infinity };
       } else {
-        const solution = spinSolution({ cardCount: ring.length, fromIndex, durationSec: Math.max(0.5, (spin.landAtMs - spin.startAtMs) / 1000), spinSeed: spin.spinSeed ?? spin.startAtMs >>> 0 });
+        const solution = this.solve({ cardCount: ring.length, fromIndex, durationSec: Math.max(0.5, (spin.landAtMs - spin.startAtMs) / 1000), spinSeed: spin.spinSeed ?? spin.startAtMs >>> 0 });
+        if (!solution) {
+          this.motion = null;
+          return still;
+        }
         this.motion = { kind: 'spin', key, ring, solution, startMs: spin.startAtMs, creepAt: creepStart(solution) };
       }
     }
