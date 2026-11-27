@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
-import { chromium, type Browser } from '@playwright/test';
+import { chromium, type Browser, type BrowserContext } from '@playwright/test';
 import { PAGES, type CheckPage } from './pages.ts';
 import { PROPS, comparePages, dumpPage, formatComparison, type PageSnapshot } from './snapshot.ts';
 
@@ -110,8 +110,7 @@ function buildGalleryInto(outDir: string): void {
   if (r.status !== 0) throw new Error('vite build (gallery) failed');
 }
 
-async function snapshot(browser: Browser, base: string, page: CheckPage, shot?: string): Promise<PageSnapshot> {
-  const context = await browser.newContext({ viewport: { width: page.width, height: page.height }, serviceWorkers: 'block' });
+async function snapshot(context: BrowserContext, base: string, page: CheckPage, shot?: string): Promise<PageSnapshot> {
   const tab = await context.newPage();
   try {
     await tab.clock.install({ time: CLOCK_START });
@@ -145,14 +144,32 @@ async function snapshot(browser: Browser, base: string, page: CheckPage, shot?: 
     if (shot) await tab.screenshot({ path: shot, animations: 'disabled' });
     return { name: page.name, url: page.path, ...dump };
   } finally {
-    await context.close();
+    await tab.close().catch(() => undefined);
   }
 }
+
+/** A screen that takes longer than this to settle is reported, not waited for (a page too heavy to step through). */
+const PAGE_TIMEOUT_MS = 90_000;
+/** The screens that timed out, on either side: each one fails the check. */
+const timedOut = new Set<string>();
 
 async function snapshotAll(browser: Browser, base: string, pages: readonly CheckPage[], shots?: { dir: string; label: string }): Promise<PageSnapshot[]> {
   const out: PageSnapshot[] = [];
   for (const page of pages) {
-    out.push(await snapshot(browser, base, page, shots ? path.join(shots.dir, `${page.name}.${shots.label}.png`) : undefined));
+    const context = await browser.newContext({ viewport: { width: page.width, height: page.height }, serviceWorkers: 'block' });
+    let timer: NodeJS.Timeout | undefined;
+    const late = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${page.name}: no snapshot within ${PAGE_TIMEOUT_MS / 1000} s (the page is too heavy to step through)`)), PAGE_TIMEOUT_MS);
+    });
+    try {
+      out.push(await Promise.race([snapshot(context, base, page, shots ? path.join(shots.dir, `${page.name}.${shots.label}.png`) : undefined), late]));
+    } catch (error) {
+      timedOut.add(page.name);
+      console.log(`\n! ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      clearTimeout(timer);
+      await context.close().catch(() => undefined);
+    }
     process.stdout.write('.');
   }
   process.stdout.write('\n');
@@ -162,6 +179,12 @@ async function snapshotAll(browser: Browser, base: string, pages: readonly Check
 /** Compares two sides page by page; prints the differences and returns how many pages differ. */
 function report(a: PageSnapshot[], b: PageSnapshot[], labels: [string, string]): number {
   let failing = 0;
+  for (const pb of b) {
+    if (!a.some((p) => p.name === pb.name)) {
+      console.log(`✗ ${pb.name}: not in ${labels[0]}`);
+      failing++;
+    }
+  }
   for (const pa of a) {
     const pb = b.find((p) => p.name === pa.name);
     if (!pb) {
@@ -243,7 +266,8 @@ async function main(): Promise<number> {
       fs.writeFileSync(path.join(save, 'dev.json'), JSON.stringify(devSnaps));
       fs.writeFileSync(path.join(save, 'build.json'), JSON.stringify(buildSnaps));
     }
-    const failing = report(devSnaps, buildSnaps, ['dev', 'build']);
+    const failing = report(devSnaps.filter((p) => !timedOut.has(p.name)), buildSnaps.filter((p) => !timedOut.has(p.name)), ['dev', 'build']) + timedOut.size;
+    for (const name of timedOut) console.log(`✗ ${name}: timed out, not compared`);
     console.log(`${devSnaps.length} screens, ${failing} differ (${Math.round((Date.now() - started) / 1000)} s)`);
     return failing ? 1 : 0;
   } finally {
