@@ -21,10 +21,10 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - the UI code rules (D215);
   - web UI work loads modern-web-guidance first.
 
-## In flight (27 Nov, evening)
+## In flight (28 Nov, early)
 
 **The sessions:**
-- **Sound engine:** important tasks only (the user, 27 Nov). It's idle apart from replies.
+- **Sound engine:** important tasks only (the user, 27 Nov). Idle; D268 is complete (d6bb94ae, membership is `pools` only).
 - **Frontend:** at most two agents in parallel. It's working through the user's comment list (temp/design-canvas/ds/comments-27nov.md §8, §11), the projector's end screen (board Projector-Final, waiting for the user's OK), and the Celebration-prize proposals (D242).
 - **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. The generator with both layouts is on main (7092e216, acd8f1a9, 4e4c0fe2), and apps/cards is Frontend's again. Decisions D250–D272.
@@ -32,7 +32,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Live (last deploy b488bafa, 28 Nov: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
 - the 2026 cards (699 temporary, both cards two-sided) and covers on the QR domain;
-- repertoire 2026 in R2's content-addressed layout (D248: manifests/2026.json, 2,785 blobs, 8.09 GB), with the final playlists (D230), provisional hooks and placeholder voices;
+- repertoire 2026 in R2's content-addressed layout (D248: manifests/2026.json, 2,772 blobs, 8.04 GB), with the final playlists (D230, D269: 135 songs, 5 shared), clean print names (D260, D270, D271), provisional hooks and placeholder voices;
 - the installable player (D221–D223);
 - the drum matching on the phone (D237, D249);
 - the console items: D228, D229, D234's sold cards and the two-level lock (engine-enforced, cloud consoles told apart), D237's switches;
