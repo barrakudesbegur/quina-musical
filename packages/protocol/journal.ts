@@ -41,6 +41,9 @@ export interface RoundStartedEntry extends EntryBase {
   /** How many times the Shuffle reshuffled to avoid a Tie: the Queue is draw number `shuffleAttempts` from
    * `shuffleSeed` (0: the first draw was kept). */
   shuffleAttempts: number;
+  /** The drum's tile order (drumOrder, D237): PUBLIC, drawn on its own so it tells nothing about the Queue. Absent in an
+   * older journal. */
+  drumSeed?: number;
 }
 
 /**
@@ -63,6 +66,8 @@ export interface RoundResumedEntry extends EntryBase {
   shuffleAttempts: number;
   position: number;
   lineConfirmedFrom: number | null;
+  /** As in `round.started`: a resumed round draws a new one. */
+  drumSeed?: number;
 }
 
 /** A song landed and counts from now. */
@@ -244,6 +249,8 @@ export interface RecordedRound {
   landings: RecordedLanding[];
   shuffleSeed: number;
   shuffleAttempts: number;
+  /** The drum's tile order (D237); absent in an older journal. */
+  drumSeed?: number;
   /** The Desgraciat's finalists, while its finale is on (`finale.set`); absent otherwise. */
   finale?: { cardIds: number[]; byHand?: true };
 }
@@ -369,6 +376,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         // A journal from before the tie-free Shuffle has neither.
         shuffleSeed: entry.shuffleSeed ?? 0,
         shuffleAttempts: entry.shuffleAttempts ?? 0,
+        ...(entry.drumSeed != null ? { drumSeed: entry.drumSeed } : {}),
       };
       record.intro = null; // the introduced round has started
       record.claims = [];
@@ -391,6 +399,7 @@ function applyEntry(record: GameRecord, entry: JournalEntry): void {
         landings: entry.queue.slice(0, entry.position + 1).map((songId, position) => ({ position, songId, atMs: entry.atMs, undone: false })),
         shuffleSeed: entry.shuffleSeed,
         shuffleAttempts: entry.shuffleAttempts,
+        ...(entry.drumSeed != null ? { drumSeed: entry.drumSeed } : {}),
       };
       record.intro = null;
       record.claims = [];

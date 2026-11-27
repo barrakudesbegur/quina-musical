@@ -604,6 +604,9 @@ export interface TransitionScheduled {
   bpm: number | null;
   /** PRIVATE before `landAtMs` (targetId is the incoming song). */
   drum: { removeId: number | null; targetId: number; minLaps: number };
+  /** PUBLIC (D237): the drum solver's seed. With the drum's order (drumOrder), spinStartAtMs, landAtMs, `drum.minLaps`
+   * and the landing, solveSpin gives the projector's very trajectory. */
+  spinSeed: number;
 }
 
 /**

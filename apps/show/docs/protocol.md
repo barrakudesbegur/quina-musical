@@ -283,6 +283,10 @@ On a show page with no journal (a replacement laptop, offline), the presenters r
 - **The plan's check:** `sideWarnings(plan, cardTypes, poolSongs?)` lists a round on a side its type lacks, a side no round plays, and a pool without songs, for Admin and the preflight.
 - **First plays (D174):** later rounds expect their first plays from their own pool's songs still unplayed.
 
+## The drum's order and Spins (D237)
+
+The phones lay out and spin the same drum as the projector. A round's tiles are its Queue's songs (its pool's, which are public) in `drumOrder(songIds, drumSeed)` (packages/protocol/drum.ts: sorted by id, then a seeded Fisher–Yates), the ones still to play plus the last landing. `drumSeed` is PUBLIC, journaled on `round.started` and `round.resumed` (drawn on its own, so it tells nothing about the Queue; the record keeps it, and a restart keeps the order). Each Spin's `transition.scheduled` carries a PUBLIC `spinSeed`: with `spinStartAtMs`, `landAtMs`, `drum.minLaps` and the landing tile, `solveSpin` (apps/show/engine/src/wheel/solver.ts, pure) gives the projector's very trajectory. The landing tile stays private until `landAtMs` (U206). Backend projects both seeds for the phones.
+
 ## The edition file (D116)
 
 `packages/protocol/edition.ts`: `EditionFile` is `{ v: 1, repertoire, plan, songs: [{ id, title, artist, pool }], cardTypes?, cards? }`, one JSON per edition kept in git and uploaded by hand (tools/edition). `checkEdition(doc)` is the check every reader shares: the plan as `checkGamePlan` reads it; unique song ids, each with a title, an artist and a pool; when present, each card's type in `cardTypes`, each side one its type prints, 3 lines of 4 songs from that side's pool; a round on a side its type lacks is an error, a side no round plays or a pool without songs a warning (`sideWarnings`). The cards stay optional until U68 and U75. `tools/edition/songs.ts` (`editionSongs`) reads the songs from a repertoire's songs.json.

@@ -11,3 +11,4 @@ export * from './plan.ts';
 export * from './public.ts';
 export * from './ranges.ts';
 export * from './edition.ts';
+export * from './drum.ts';

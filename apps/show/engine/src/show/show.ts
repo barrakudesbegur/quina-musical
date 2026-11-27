@@ -14,7 +14,7 @@
 // The show flow sits on top (docs/protocol.md › Scenes): the scene (before, roundStart, play, check,
 // celebration, interval, after), the public tie-free Shuffle, Claims and their Checks, the Celebration, the
 // Interval, the Winners and the technical pause. show/flow.ts says which command each scene accepts.
-import { checkCommand, makeEvent, isVoiceCue, autoSoundsOf, AUTO_SOUNDS, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
+import { checkCommand, makeEvent, isVoiceCue, autoSoundsOf, drumOrder, AUTO_SOUNDS, COMMANDS, DEFAULT_POOL, DEFAULT_SIDE, RECIPE_IDS, STANDING_LIST_MAX, VOLUME_DEFAULTS, defaultCardType, firstPlaySec, foldPlayed, formatResumeToken, isPassingOutcome, roundPlan, roundSide, sidePool, volumeDb, winKindsOf } from '@quina/protocol';
 import type {
   AutoSound,
   AutoSounds,
@@ -86,7 +86,12 @@ import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
 import { firstRepeatAt, lastBarsLoop, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
-import { mixSeed, seededRandom } from '../rng.ts';
+import { mixSeed, secureRandom, seededRandom } from '../rng.ts';
+
+/** A Spin's public drum seed (D237), from its private plan seed through one more mix, so the plan seed stays unsaid. */
+const drumSpinSeed = (seed: number): number => Math.floor(seededRandom(seed ^ 0x27d4eb2d)() * 2 ** 32) >>> 0;
+/** A fresh public seed for a round's drum order, drawn apart from the Game's seeded stream (D237). */
+const freshDrumSeed = (): number => Math.floor(secureRandom() * 2 ** 32) >>> 0;
 import type { Analysis, Hook } from '../analysis.ts';
 import type { Card } from '../game/cards.ts';
 import type { PhaseStep } from '../game/phase.ts';
@@ -227,7 +232,7 @@ export interface StartTransitionEffect {
   plan: ShowPlan;
   fromHoldMusic: boolean;
   /** `brake`: the drum is already coasting (a released Suspense) and brakes onto the card at T. */
-  drum: { removeId: number | null; targetId: number; minLaps: number; brake?: boolean };
+  drum: { removeId: number | null; targetId: number; minLaps: number; brake?: boolean; seed: number };
 }
 /** A Suspense opens: A's duck and exit, the drum starts coasting (after removing the last song's card). */
 export interface StartSuspenseEffect {
@@ -752,6 +757,8 @@ export class Show {
   bed: Bed | null = null;
   /** With `bed` 'interval': which set plays. */
   bedSet: MusicSet = 'breaks';
+  /** The round's drum order (D237, drumOrder): public, drawn on its own at each round start or resume. */
+  drumSeed = 0;
   /** The sound test playing (D229), else null. */
   soundTest: { kind: SoundTestKind; sinceMs: number } | null = null;
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
@@ -1150,6 +1157,7 @@ export class Show {
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
+    this.drumSeed = freshDrumSeed();
     // The seed is a secret (with the cards it gives the Queue): never in a log.
     if (drawn.tied) this.out.push({ type: 'log', level: 'warn', message: `round ${number}: every Shuffle up to ${FLOW.shuffleMaxAttempts} had a Tie; kept the last` });
     this.position = -1;
@@ -1191,6 +1199,7 @@ export class Show {
       settings: this.journalSettings(),
       shuffleSeed: this.shuffleSeed,
       shuffleAttempts: this.shuffleAttempts,
+      drumSeed: this.drumSeed,
     });
     if (shuffle) {
       const now = this.env.now();
@@ -1200,7 +1209,7 @@ export class Show {
         startAtMs: this.env.toEpochMs(now), endAtMs: this.env.toEpochMs(this.shuffle.endAt),
       });
     }
-    this.out.push({ type: 'drumReset', ids: [...this.queue] });
+    this.out.push({ type: 'drumReset', ids: drumOrder(this.queue, this.drumSeed) });
     this.prefetch();
   }
 
@@ -1232,6 +1241,7 @@ export class Show {
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
+    this.drumSeed = freshDrumSeed();
     this.position = c.position;
     const now = this.env.now();
     const nowMs = this.env.nowMs();
@@ -1258,7 +1268,7 @@ export class Show {
     this.journal({
       kind: 'round.resumed', round: c.round, roundKind: c.kind, cardType, ...(side !== DEFAULT_SIDE ? { side } : {}), queue: [...this.queue], phaseSeed: this.phaseModel.seed,
       startedAtMs: this.round.startedAtMs, targetEndMs: this.round.targetEndMs, settings: this.journalSettings(),
-      shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, position: c.position, lineConfirmedFrom: lineFrom,
+      shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, drumSeed: this.drumSeed, position: c.position, lineConfirmedFrom: lineFrom,
     }, nowMs);
     // The journal entry already puts the Game in `play`; the projector still hears about the scene.
     if (this.scene !== 'play') {
@@ -1267,9 +1277,7 @@ export class Show {
       this.sceneSinceMs = nowMs;
       this.emit({ type: 'scene.changed', scene: 'play', previous, atMs: nowMs });
     }
-    const last = c.position >= 0 ? this.queue[c.position] : undefined;
-    const remaining = this.queue.slice(c.position + 1);
-    this.out.push(last == null ? { type: 'drumReset', ids: remaining } : { type: 'drumReset', ids: [last, ...remaining], selectId: last });
+    this.out.push(this.drumResetEffect(c.position));
     this.prefetch();
     // The music never stops by accident: Hold music until the presenters press Next.
     if (this.unlocked) this.enterHold('music', { music: true });
@@ -1391,6 +1399,8 @@ export class Show {
     this.phaseModel = { kind: round.climbingTo, start: round.climbFrom, seed: round.phaseSeed, valid: [], plan: null };
     this.shuffleSeed = round.shuffleSeed;
     this.shuffleAttempts = round.shuffleAttempts;
+    // A journal from before the drum's order has none: a fresh one (the drum only needs one per round).
+    this.drumSeed = round.drumSeed ?? freshDrumSeed();
     this.finale = round.finale ? { cardIds: [...round.finale.cardIds], byHand: round.finale.byHand === true } : null;
     // The journal's target already counts the round's songs as they were when it started.
     this.expectedSongs = null;
@@ -1399,9 +1409,7 @@ export class Show {
     this.updateNudge();
     this.restoreFlow(record);
     // The drum keeps the cards not yet played, with the last landing under the pointer.
-    const last = this.position >= 0 ? this.queue[this.position] : undefined;
-    const remaining = this.queue.slice(this.position + 1);
-    this.out.push(last == null ? { type: 'drumReset', ids: remaining } : { type: 'drumReset', ids: [last, ...remaining], selectId: last });
+    this.out.push(this.drumResetEffect(this.position));
     this.prefetch();
   }
 
@@ -1471,6 +1479,7 @@ export class Show {
         landings: this.landings.map(({ position, songId, atMs, undone }) => ({ position, songId, atMs, undone })),
         shuffleSeed: this.shuffleSeed,
         shuffleAttempts: this.shuffleAttempts,
+        drumSeed: this.drumSeed,
         ...(this.finale ? { finale: { cardIds: [...this.finale.cardIds], ...(this.finale.byHand ? { byHand: true as const } : {}) } } : {}),
       },
     };
@@ -1514,6 +1523,15 @@ export class Show {
     this.game.autoSounds = sounds;
     this.game.finalLapStinger = sounds.finalLap;
     this.game.voicesOn = sounds.voices;
+  }
+
+  /** The drum after a resume: the songs not yet played and the last landing (under the pointer), in the round's
+   * drum order (D237). */
+  drumResetEffect(position: number): DrumResetEffect {
+    const last = position >= 0 ? this.queue[position] : undefined;
+    const shown = new Set([...(last == null ? [] : [last]), ...this.queue.slice(position + 1)]);
+    const ids = drumOrder(this.queue, this.drumSeed).filter((id) => shown.has(id));
+    return last == null ? { type: 'drumReset', ids } : { type: 'drumReset', ids, selectId: last };
   }
 
   /** The sound test (D229): one kind at a time; the runtime plays it at its slider's level. */
@@ -1642,7 +1660,8 @@ export class Show {
     this.timers = { autoAt: null, holdMusicAt: null };
     const removeId = this.position >= 0 ? this.queue[this.position] : null;
     // Hold music, or the Interval's or Celebration's music, gives way to the build.
-    this.out.push({ type: 'startTransition', plan, fromHoldMusic: this.holdMusic || this.bed != null, drum: { removeId, targetId: songId, minLaps: 1 } });
+    const spinSeed = drumSpinSeed(seed);
+    this.out.push({ type: 'startTransition', plan, fromHoldMusic: this.holdMusic || this.bed != null, drum: { removeId, targetId: songId, minLaps: 1, seed: spinSeed } });
     this.bed = null;
     // A "final lap" fanfare as the drum starts, once per climb (towards the Line, then the Bingo), the
     // first time the Phase reaches ENGINE.finalLapStingerPhase.
@@ -1672,6 +1691,7 @@ export class Show {
       hookId: plan.hook.id,
       bpm: plan.b.bpm ?? null,
       drum: { removeId, targetId: songId, minLaps: 1 },
+      spinSeed,
     });
   }
 
@@ -1843,7 +1863,8 @@ export class Show {
       fromHoldMusic: s.fromHoldMusic,
       afterLanding: null,
     };
-    this.out.push({ type: 'startTransition', plan, fromHoldMusic: false, drum: { removeId: null, targetId: s.songId, minLaps: 0, brake: true } });
+    const spinSeed = drumSpinSeed(s.seed);
+    this.out.push({ type: 'startTransition', plan, fromHoldMusic: false, drum: { removeId: null, targetId: s.songId, minLaps: 0, brake: true, seed: spinSeed } });
     this.emit({
       type: 'transition.scheduled',
       id: s.id,
@@ -1863,6 +1884,7 @@ export class Show {
       hookId: plan.hook.id,
       bpm: plan.b.bpm ?? null,
       drum: { removeId: null, targetId: s.songId, minLaps: 0 },
+      spinSeed,
     });
   }
 

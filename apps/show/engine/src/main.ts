@@ -50,7 +50,7 @@ import {
 import { playableSongs } from './analysis.ts';
 import { ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
 import { drumTick } from './audio/synth/clicks.ts';
-import { secureShuffle, secureRandom } from './rng.ts';
+import { seededRandom, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
 import type { PrintedCard } from './game/cards.ts';
 
@@ -431,12 +431,11 @@ function apply(effect: Effect): void {
     case 'drumReset':
       drum.spin = null;
       // A restored Game's last landing stays under the pointer; otherwise any card may be.
-      drum.setCards(
-        (effect.selectId == null ? secureShuffle(effect.ids) : [effect.selectId, ...secureShuffle(effect.ids.filter((id) => id !== effect.selectId))])
-          .map(cardFor)
-          .filter((card) => card !== null),
-        0,
-      );
+      // The engine's order (drumOrder from the round's public drumSeed, D237), so the phones lay out the same drum.
+      {
+        const cards = effect.ids.map(cardFor).filter((card) => card !== null);
+        drum.setCards(cards, Math.max(0, cards.findIndex((card) => card.id === effect.selectId)));
+      }
       showStatusLine(show?.status === 'locked' ? 'Loading…' : 'Press Next to start');
       return;
     case 'stopAll':
@@ -578,6 +577,7 @@ function startTransition({ plan, fromHoldMusic, drum: wheel }: EffectOf<'startTr
     durationSec: plan.D,
     isCalm: reducedMotion,
     minLaps: drum.cards.length < 3 ? 0 : wheel.minLaps,
+    random: seededRandom(wheel.seed), // the public spinSeed (D237): a phone's solver replays this very Spin
   });
   spinStats.set(plan, { method: solution.method, scale: solution.scale, laps: Math.abs(solution.traveled) / drum.cards.length, solveMs: performance.now() - t0, cards: drum.cards.length });
   drum.startSpin({ solution, startCtx: plan.spinStart, landAt: plan.T, targetId: wheel.targetId });
