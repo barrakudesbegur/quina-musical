@@ -2,6 +2,7 @@
 // many of each printed type, which numbers are not among the generated cards, and the compact ranges that will
 // be sent. Pure: the generated cards' types come in as a map (from cards.json).
 import { COMMANDS, parseCardRanges } from '@quina/protocol';
+import { formatCardRanges } from '../../../packages/ui/data/card-ranges.ts';
 
 /** `setCardsInPlay.ranges` may not be longer than this (the protocol's limit). */
 export const RANGES_MAX_LENGTH: number = COMMANDS.setCardsInPlay.ranges.maxLength;
@@ -37,18 +38,8 @@ export interface CardsPreview {
   } | null;
 }
 
-/** [1, 2, 3, 7, 9, 10] → "1-3, 7, 9-10". Expects sorted unique ids (parseCardRanges gives those). */
-export function formatRanges(ids: readonly number[]): string {
-  const parts: string[] = [];
-  let i = 0;
-  while (i < ids.length) {
-    let j = i;
-    while (j + 1 < ids.length && ids[j + 1] === ids[j] + 1) j++;
-    parts.push(i === j ? String(ids[i]) : `${ids[i]}-${ids[j]}`);
-    i = j + 1;
-  }
-  return parts.join(', ');
-}
+/** [1, 2, 3, 7, 9, 10] → "1-3, 7, 9-10" (shared with the console's «Afegeix cartrons venuts»). */
+export const formatRanges = formatCardRanges;
 
 /** parseCardRanges' thrown message, as a typed error (it quotes the bad piece). */
 function rangesError(e: unknown): RangesError {
