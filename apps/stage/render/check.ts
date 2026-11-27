@@ -33,6 +33,8 @@ import {
 import type { AnimDetail } from '../model/moments.ts';
 import { checkResultDetail, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
+import { CellParts, iconElement, type CellLook } from '../../../packages/ui/components/card-cell.ts';
+import { cellLook } from '../../../packages/ui/components/card-looks.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { MiniCard, pickSticker, stickerImage } from './parts.ts';
 import '../../../packages/ui/components/sticker.css';
@@ -41,7 +43,8 @@ import { sceneRoot, type SceneRenderer } from './scene.ts';
 interface CellNodes {
   root: HTMLElement;
   art: HTMLElement;
-  mark: HTMLElement;
+  /** The design system's cell parts (the ring, the centred badge: CardGrid's looks, D2); the badge is the mark. */
+  parts: CellParts;
   cell: CheckCell;
   /** The mark it shows ('ok', 'bad'). */
   shownMark: string | null;
@@ -49,8 +52,13 @@ interface CellNodes {
   liftedMark: string | null;
 }
 
-/** Bars of the "playing" badge (their heights are the theme's). */
-const EQ_BARS = 4;
+/** A step's look from CardGrid's looks table (D2): its mark as the room sees it (✓ green, ✗ red and grey, centred:
+ * #75), the playing song's running ring and play disc (#74, #76); a song replaying after a step back keeps its mark
+ * under the running ring. */
+function stepLook(state: StepState, mark: 'ok' | 'bad' | null, replay: boolean): CellLook {
+  const look: CellLook = state === 'playing' ? cellLook('playing') : mark ? cellLook(mark === 'ok' ? 'landed' : 'missed') : cellLook('pending');
+  return replay ? { ...look, ring: 'orange', ringStyle: 'running' } : look;
+}
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -224,17 +232,15 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
       for (const cell of cells) {
         const cover = new CoverArt('card-grid__cover');
         cover.set(cell.songId);
-        const mark = h('span', { class: 'card-grid__mark', attrs: { 'aria-hidden': 'true' } });
-        const eq =
-          cell.step === null
-            ? null
-            : h('span', { class: 'card-grid__eq', attrs: { 'aria-hidden': 'true' } }, ...Array.from({ length: EQ_BARS }, () => h('span', 'card-grid__eq-bar')));
-        const art = h('div', 'card-grid__art', cover.root, mark, eq);
-        const root = h('figure', { class: 'card-grid__cell', data: { state: cell.step === null ? 'idle' : 'pending' } }, art, h('figcaption', 'card-grid__title', cell.title ?? ''));
+        const art = h('div', 'card-grid__art', cover.root);
+        const parts = new CellParts(art);
+        parts.badge.classList.add('card-grid__mark');
+        const root = h('figure', { class: 'card-grid__cell', data: { state: cell.step === null ? 'idle' : 'pending' } }, art, h('figcaption', 'card-grid__title card-cell__title', cell.title ?? ''));
+        parts.set(root, stepLook('pending', null, false));
         // Not revealed (yet): a song after the one that sank a standing claim fades once the card falls.
         root.classList.add('is-unchecked');
         root.style.setProperty('--deal-index', String(deal++));
-        const nodes: CellNodes = { root, art, mark, cell, shownMark: null, liftedMark: null };
+        const nodes: CellNodes = { root, art, parts, cell, shownMark: null, liftedMark: null };
         this.cells.push(nodes);
         if (cell.step !== null) this.byStep.set(cell.step, nodes);
         rowEl.append(root);
@@ -260,7 +266,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     for (const [i, nodes] of this.byStep) {
       // A step past the revealed ones (not revealed yet, or taken off by a step back) waits again.
       const state: StepState = reveal.steps[i] ?? 'pending';
-      const key = `${state}:${reveal.result ?? ''}`;
+      const replay = reveal.replaying === i;
+      const key = `${state}:${reveal.result ?? ''}:${replay}`;
       if (this.shown[i] !== key) {
         this.shown[i] = key;
         // The mark means "good for the claim" (in a standing Check, a song that hasn't sounded); the label says what
@@ -270,11 +277,11 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
         nodes.shownMark = mark;
         setData(nodes.root, 'state', state);
         setData(nodes.root, 'mark', mark);
-        setText(nodes.mark, mark ? STAGE_TEXT.mark[mark] : '');
+        nodes.parts.set(nodes.root, stepLook(state, mark, replay));
         nodes.root.classList.toggle('is-unchecked', i >= reveal.steps.length);
         nodes.root.setAttribute('aria-label', `${nodes.cell.title ?? ''} ${state === 'landed' ? STAGE_TEXT.markLabel.landed : state === 'missed' ? STAGE_TEXT.markLabel.missed : ''}`.trim());
       }
-      setData(nodes.root, 'replay', reveal.replaying === i ? 'true' : null);
+      setData(nodes.root, 'replay', replay ? 'true' : null);
     }
     const result = reveal.result;
     if (result !== this.resultShown) {
@@ -324,7 +331,12 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
 
   /** A step back: the mark that was on the cover lifts off (a copy of it, as the cell already waits again). */
   private liftMark(nodes: CellNodes, mark: string): void {
-    const ghost = h('span', { class: 'card-grid__mark card-grid__mark--lift', data: { mark }, attrs: { 'aria-hidden': 'true' } }, STAGE_TEXT.mark[mark as keyof typeof STAGE_TEXT.mark] ?? '');
+    const ok = mark === 'ok';
+    const ghost = h(
+      'span',
+      { class: 'card-cell__badge card-grid__mark card-grid__mark--lift', data: { mark, color: ok ? 'green' : 'red', style: 'solid', icon: ok ? 'check' : 'close' }, attrs: { 'aria-hidden': 'true' } },
+      iconElement(ok ? 'check' : 'close'),
+    );
     nodes.art.append(ghost);
     setTimeout(() => ghost.remove(), STAGE.checkUnrevealMs);
   }
