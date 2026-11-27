@@ -9,6 +9,7 @@ import {
   CELEBRATION_MUSIC,
   AUTO_SOUNDS,
   BREAK_SETS,
+  SOUND_TEST_KINDS,
   CARD_TYPE_ID_RE,
   PAD_HOLD_EFFECTS,
   SIDE_MAX,
@@ -96,6 +97,9 @@ export const COMMANDS = Object.freeze({
      * `setAutoSound` (D237): sets `autoSounds.voices`. */
     voicesOn: { type: 'boolean', optional: true },
   },
+  /** The sound test (D229): plays `kind` on a loop at its slider's level (`setVolume` moves it live); null ends it.
+   * Only before the first round's intro (scene `before`), with nothing playing; any scene change ends it. Not journaled. */
+  soundTest: { kind: { type: 'string', oneOf: SOUND_TEST_KINDS, nullable: true } },
   /** One of the sounds the engine plays by itself on or off (D237, AUTO_SOUNDS); journaled with the settings. */
   setAutoSound: { key: { type: 'string', oneOf: AUTO_SOUNDS }, on: { type: 'boolean' } },
   /** Stop the voice cue playing now (D204): the music under it comes back up. */

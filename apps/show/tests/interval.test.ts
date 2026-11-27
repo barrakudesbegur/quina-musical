@@ -485,3 +485,24 @@ test('D237: each automatic sound on or off; the runtime mutes its node; journale
   assert.deepEqual(r.show.snapshot().game.autoSounds, { ...AUTO_SOUNDS_DEFAULT, drumTicks: false, voices: false, finalLap: false });
   assert.deepEqual(autoSoundsOf({ finalLapStinger: false }), { ...AUTO_SOUNDS_DEFAULT, finalLap: false });
 });
+
+test('D229: the sound test plays one kind at a time before the Game, stops on null, a scene change or Panic, and refuses while music plays', () => {
+  const h = setup({ seed: 4 });
+  h.send('unlock');
+  const on = h.send('soundTest', { kind: 'songs' });
+  const effect = find(on, 'soundTest');
+  assert.equal(effect?.kind, 'songs');
+  assert.ok(effect && effect.songIds.length > 0, 'songs whose snippets stand in');
+  assert.equal(h.show.snapshot().soundTest?.kind, 'songs');
+  assert.equal(find(h.send('soundTest', { kind: 'songs' }), 'soundTest'), undefined, 'already playing it');
+  assert.equal(find(h.send('soundTest', { kind: 'breaks' }), 'soundTest')?.kind, 'breaks', 'the next kind');
+  assert.equal(find(h.send('soundTest', { kind: null }), 'soundTest')?.kind, null);
+  assert.equal(h.show.snapshot().soundTest, null);
+  assert.deepEqual(rejected(h.dispatch({ v: 1, type: 'cmd', cmd: 'soundTest', reqId: 'r', kind: 'master' })), ['invalid'], 'no sound of its own');
+  h.send('soundTest', { kind: 'win' });
+  assert.equal(find(h.send('panic'), 'soundTest')?.kind, null, 'Panic ends it');
+  // A round's intro (a scene change) ends it; once the Game has a round, it's refused.
+  h.send('soundTest', { kind: 'ticks' });
+  assert.equal(find(h.send('roundIntro'), 'soundTest')?.kind, null);
+  assert.deepEqual(rejected(h.send('soundTest', { kind: 'ticks' })), ['wrongScene']);
+});

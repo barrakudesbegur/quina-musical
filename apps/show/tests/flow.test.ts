@@ -67,7 +67,7 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const CHECK: CommandName[] = ['checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [
-    ['before', { scene: 'before' }, [...PLAY, 'roundIntro', 'resumeAt', 'throw']],
+    ['before', { scene: 'before' }, [...PLAY, 'roundIntro', 'resumeAt', 'throw', 'soundTest']],
     // A round's intro plays its intro track, not a set (D129).
     ['roundStart, introduced', { scene: 'roundStart', introduced: true }, ['newRound']],
     ['roundStart, shuffled', { scene: 'roundStart' }, ['next', 'newRound']],

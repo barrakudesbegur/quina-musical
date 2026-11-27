@@ -4,6 +4,7 @@
 import {
   PROTOCOL_VERSION,
   type AutoSounds,
+  type SoundTestKind,
   type CelebrationMusic,
   type CheckOutcome,
   type ClaimStatus,
@@ -544,6 +545,8 @@ export interface ShowState {
    * lead and the voice together, once the runtime has started it (null just before). Optional in the type only (added
    * later in v1): the engine always sends it. */
   voice?: { cue: VoiceCue; sinceMs: number; durationMs: number | null } | null;
+  /** The sound test playing (D229, `soundTest`), else null. Optional in the type only. */
+  soundTest?: { kind: SoundTestKind; sinceMs: number } | null;
   /** The next timed voice cue (the doors' countdown, the Descans): when it's due; one that's late waits for a quiet
    * moment (no Parlem, Aguanta, Spin, Suspens, Pausa, Check or throw song) and is dropped after VOICE.maxWaitSec.
    * Optional in the type only, as `voice`. */

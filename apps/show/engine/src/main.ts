@@ -41,13 +41,15 @@ import {
   type CommandArgs,
   type CommandName,
   MUSIC_SETS,
+  SFX_NAMES,
   type MusicSet,
   type ShowEvent,
   type ShowState,
   type SoundName,
 } from '@quina/protocol';
 import { playableSongs } from './analysis.ts';
-import { ENGINE, FLOW, HOLD, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
+import { ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
+import { drumTick } from './audio/synth/clicks.ts';
 import { secureShuffle, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
 import type { PrintedCard } from './game/cards.ts';
@@ -516,6 +518,8 @@ function apply(effect: Effect): void {
       // With the stage mounted it shows "Tornem de seguida" itself.
       $('pause-overlay').hidden = stageMounted || !effect.on;
       return;
+    case 'soundTest':
+      return soundTest(effect);
     case 'log':
       if (effect.level === 'warn') console.warn(effect.message);
       else console.info(effect.message);
@@ -822,6 +826,93 @@ function prefetch(ids: readonly number[]): void {
 async function playSfx(name: SoundName, at = ctx.currentTime + 0.01, out: AudioNode = graph.vol.padFx): Promise<void> {
   if (!graph.samples.has(name)) await graph.loadSamples([name], isStingerName(name) ? '/stingers/' : '/fx/');
   graph.playSample(name, Math.max(at, ctx.currentTime + 0.01), -4, out);
+}
+
+// The sound test (D229): one kind at a time, on a loop, through that slider's node, so the tech sets the PA on the
+// day with the real levels. Songs and the Check play their 3 s hook snippets (trimmed as in a Check); the music
+// kinds play their own player; the short sounds repeat every few seconds. A new kind, or null, stops the last one.
+let soundTestStop: (() => void) | null = null;
+const testSnippets = new SnippetStore(ctx);
+function soundTest(effect: EffectOf<'soundTest'>): void {
+  soundTestStop?.();
+  soundTestStop = null;
+  const kind = effect.kind;
+  if (!kind) return;
+  const fade = 0.4;
+  let alive = true;
+  const stops: (() => void)[] = [() => (alive = false)];
+  soundTestStop = () => stops.forEach((stop) => stop());
+  /** `play(t)` now and every `sec` after, until stopped. */
+  const every = (sec: number, play: (t: number, k: number) => void) => {
+    const tick = (t: number, k: number) => {
+      if (!alive) return;
+      play(t, k);
+      addTask(t + sec - 0.2, () => tick(t + sec, k + 1));
+    };
+    tick(ctx.currentTime + 0.1, 0);
+  };
+  const snippets = (out: AudioNode, gainDb = 0) => {
+    void testSnippets.loadIndex();
+    every(3.5, (t, k) => {
+      const id = effect.songIds[k % Math.max(1, effect.songIds.length)];
+      if (id == null) return;
+      void testSnippets.get(id).then((buffer) => {
+        if (!buffer || !alive) return;
+        const source = ctx.createBufferSource();
+        const level = ctx.createGain();
+        level.gain.value = 10 ** (((testSnippets.gains.get(id) ?? 0) + gainDb) / 20);
+        source.buffer = buffer;
+        source.connect(level).connect(out);
+        source.start(Math.max(t, ctx.currentTime + 0.02));
+      });
+    });
+  };
+  switch (kind) {
+    case 'songs':
+      return snippets(graph.musicBus);
+    case 'songsParlem':
+      return snippets(graph.musicBus, effect.parlemDb);
+    case 'check':
+      return snippets(graph.vol.check);
+    case 'djFx':
+      return every(4, (t) => {
+        SYNTHS.riser(ctx, graph.synthBus, { t0: t, t1: t + 2, fromHz: 700, toHz: 9500, fromDb: -36, toDb: -12 });
+        SYNTHS.impact(ctx, graph.synthBus, { at: t + 2, level: 1 });
+      });
+    case 'padFx':
+      return every(3, (t, k) => void playSfx(SFX_NAMES[k % SFX_NAMES.length], t, graph.vol.padFx));
+    case 'finalLap':
+      return every(6, (t) => void playSfx('mkwii-final-lap', t, graph.vol.finalLap));
+    case 'ticks':
+      return every(2, (t) => {
+        for (let i = 0; i < 12; i++) drumTick(ctx, graph.drumBus, t + i * 0.09, 11);
+      });
+    case 'holdMusic':
+    case 'win':
+    case 'fail':
+    case 'intros': {
+      const mood = kind === 'holdMusic' ? 'hold' : kind === 'win' ? 'celebration' : kind === 'fail' ? 'error' : 'intro';
+      void holdMusic.switchTo({ at: ctx.currentTime + 0.05, levelDb: kind === 'intros' ? INTRO.levelDb : HOLD.holdMusicLevelDb, fadeSec: fade, mood });
+      stops.push(() => holdMusic.stop({ fadeSec: fade }));
+      return;
+    }
+    case 'breaks':
+    case 'pausa':
+    case 'end':
+      sets[kind].start({ levelDb: INTERVAL.volumeDb, gameId: machine().gameId });
+      stops.push(() => sets[kind].stop({ fadeSec: fade }));
+      return;
+    case 'throws': {
+      const { name, trimDb, hookSec } = THROW.songs.throw;
+      throwPlayer.play(ctx.currentTime + 0.1, hookSec, { name, trimDb });
+      stops.push(() => throwPlayer.stop(ctx.currentTime, fade));
+      return;
+    }
+    case 'voices':
+      every(8, (t) => void voicePlayer.play('doors-15', 'chime', t));
+      stops.push(() => voicePlayer.stop());
+      return;
+  }
 }
 
 // Pausa (D128): the song deck and every bed fade out where they are and wait; effects and snippets ring out (U113).

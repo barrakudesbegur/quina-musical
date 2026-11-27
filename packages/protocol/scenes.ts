@@ -86,6 +86,7 @@ const RULES = {
   // Whenever a music set plays: the Interval, `after`, Pausa.
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   intervalSet: ['interval'],
+  soundTest: ['before'],
   // Between rounds (D138): at the doors, in a break; not on the end screen (D194), where the storm is.
   throw: ['before', 'interval'],
   // A voice cue can be stopped whenever one plays (D204).

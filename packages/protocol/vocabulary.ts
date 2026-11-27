@@ -248,6 +248,16 @@ export function autoSoundsOf(settings: { autoSounds?: Partial<AutoSounds> | null
   return { ...AUTO_SOUNDS_DEFAULT, ...Object.fromEntries(Object.entries(own).filter(([k, v]) => isAutoSound(k) && typeof v === 'boolean')) };
 }
 
+/**
+ * The sound test's kinds (D229): one per volume slider that has a sound of its own, played in turn at that slider's
+ * level so the tech sets the PA on the day. `master` scales them all and `doors` has no sound yet, so neither is a kind.
+ */
+export const SOUND_TEST_KINDS = [
+  'songs', 'songsParlem', 'djFx', 'padFx', 'ticks', 'check', 'holdMusic', 'win', 'fail', 'finalLap', 'intros', 'breaks',
+  'pausa', 'throws', 'end', 'voices',
+] as const satisfies readonly VolumeKey[];
+export type SoundTestKind = (typeof SOUND_TEST_KINDS)[number];
+
 /** The sets a break can play (D228: in the Descans the presenters pick the breaks' or Pausa's); each break starts on the first. */
 export const BREAK_SETS = ['breaks', 'pausa'] as const satisfies readonly MusicSet[];
 export type BreakSet = (typeof BREAK_SETS)[number];

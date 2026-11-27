@@ -18,6 +18,7 @@ import { checkCommand, makeEvent, isVoiceCue, autoSoundsOf, AUTO_SOUNDS, COMMAND
 import type {
   AutoSound,
   AutoSounds,
+  SoundTestKind,
   CommandOf,
   ResumeToken,
   CelebrationInfo,
@@ -442,6 +443,14 @@ export interface PausaMusicEffect {
   levelDb: number;
 }
 /** Every volume slider (D139, percent; vocabulary.ts volumeDb), gliding to its new level. */
+/** The sound test (D229): `kind` on a loop at its slider's level, or null to stop. `songIds`: songs whose snippets
+ * stand in for the songs and the Check; `parlemDb`: the Parlem duck, for songsParlem. */
+export interface SoundTestEffect {
+  type: 'soundTest';
+  kind: SoundTestKind | null;
+  songIds: number[];
+  parlemDb: number;
+}
 export interface VolumesEffect {
   type: 'volumes';
   volumes: Volumes;
@@ -461,6 +470,7 @@ export interface LogEffect {
 }
 /** What the runtime must do, as a discriminated union on `type`: `switch (effect.type)` narrows it. */
 export type Effect =
+  | SoundTestEffect
   | EmitEffect
   | RejectEffect
   | PrefetchEffect
@@ -742,6 +752,8 @@ export class Show {
   bed: Bed | null = null;
   /** With `bed` 'interval': which set plays. */
   bedSet: MusicSet = 'breaks';
+  /** The sound test playing (D229), else null. */
+  soundTest: { kind: SoundTestKind; sinceMs: number } | null = null;
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
   heatSample: { at: number; value: number } | null = null;
   holdMusicMood: HoldMood = 'hold';
@@ -880,6 +892,13 @@ export class Show {
         break;
       case 'setAutoSound':
         this.setAutoSound(c.key, c.on);
+        break;
+      case 'soundTest':
+        if (c.kind && (this.current || this.transition || this.holdMusic || this.bed)) {
+          this.reject(c.reqId, 'soundTest', 'busy');
+          return this.flush();
+        }
+        this.setSoundTest(c.kind ?? null);
         break;
       case 'setVolume':
         this.setVolume(c.key, c.percent);
@@ -1495,6 +1514,14 @@ export class Show {
     this.game.autoSounds = sounds;
     this.game.finalLapStinger = sounds.finalLap;
     this.game.voicesOn = sounds.voices;
+  }
+
+  /** The sound test (D229): one kind at a time; the runtime plays it at its slider's level. */
+  setSoundTest(kind: SoundTestKind | null) {
+    if ((this.soundTest?.kind ?? null) === kind) return;
+    const songIds = kind ? [...this.catalog.keys()].slice(0, 8) : [];
+    this.out.push({ type: 'soundTest', kind, songIds, parlemDb: this.parlemDb() });
+    this.soundTest = kind ? { kind, sinceMs: this.env.nowMs() } : null;
   }
 
   /** One automatic sound on or off (D237): applied at once, journaled with the settings. */
@@ -2204,6 +2231,7 @@ export class Show {
 
   panic() {
     this.announceCancel('panic');
+    this.setSoundTest(null);
     this.cutVoice();
     this.releasePad({ land: false });
     this.dropPause(); // nothing saved comes back
@@ -2312,6 +2340,7 @@ export class Show {
   /** Move to another scene: journaled (a resumed Game comes back in it) and announced to the projector. */
   setScene(scene: ShowScene, round = this.round.number, roundKind: RoundKind = this.round.kind, cardType: string = this.round.cardType, side: number = this.round.side) {
     if (scene === this.scene) return;
+    this.setSoundTest(null); // a scene change ends the sound test (D229)
     const previous = this.scene;
     const atMs = this.env.nowMs();
     this.scene = scene;
@@ -3752,6 +3781,7 @@ export class Show {
       throwSong: this.throwInfo(),
       throwSongs: { throw: throwTrackInfo('throw'), storm: throwTrackInfo('storm') },
       voice: this.voice ? { cue: this.voice.cue, sinceMs: this.voice.sinceMs, durationMs: this.voice.durationMs } : null,
+      soundTest: this.soundTest ? { ...this.soundTest } : null,
       voiceNext: this.voiceNext(),
       padHold: this.padHeld ? { effect: this.padHeld.effect, sinceMs: this.padHeld.sinceMs, intensity: this.padHeld.intensity } : null,
     };
