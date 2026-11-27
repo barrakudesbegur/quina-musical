@@ -1,0 +1,158 @@
+/*
+ * B8 · IconPicker (components-v2.md § 3; IconPicker.svelte). Round paper swatches with an ink line and a drop, five a
+ * row (D131: selection tokens, not buttons, so they stay round). The chosen one wears the gold ring of the ring
+ * resource (R1, ../ds/resources.css): one even gap all round, the drop included (--ring-drop), never a box-shadow ring
+ * that merges with the drop at the bottom (#55, #56). A disabled swatch is faded paper with no drop; its tag (the
+ * owner's name) overlaps its foot (#54). Every size is a custom property in :where().
+ */
+
+:where(.icon-picker) {
+  --picker-columns: 5;
+  --picker-chip: 3.25rem;
+  --picker-mark: 2rem;
+  --picker-drop: 3px;
+  --picker-gap: 0.875rem 0.4375rem;
+  --picker-hint: var(--color-text-muted);
+}
+
+:where([data-density='phone'] .icon-picker) {
+  --picker-hint: var(--color-text-soft);
+}
+
+.icon-picker {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.icon-picker__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: var(--font-weight-strong);
+}
+
+.icon-picker__hint {
+  color: var(--picker-hint);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.icon-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(var(--picker-columns), 1fr);
+  gap: var(--picker-gap);
+}
+
+.icon-picker__option {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-picker__chip {
+  --ds-radius: 50%;
+  --ring-drop: var(--picker-drop);
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--picker-chip);
+  height: var(--picker-chip);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 var(--picker-drop) 0 var(--color-shadow);
+  pointer-events: none;
+}
+
+/* The chosen swatch: the ring resource's gold, at the board's 3 px (D131) */
+.icon-picker__chip[data-ring] {
+  --ring-w: var(--line-width);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-motion='full']) .icon-picker__chip[data-anim='icon-pick'] {
+    animation: icon-picker-pop var(--dur-icon-pick, 180ms) var(--ease-bounce);
+  }
+}
+
+@keyframes icon-picker-pop {
+  from {
+    scale: 1.08;
+  }
+}
+
+/* Disabled (another card's, in the player app): faded paper, the mark still in full colour, no drop */
+.icon-picker__option[data-disabled] {
+  cursor: not-allowed;
+}
+
+.icon-picker__option[data-disabled] .icon-picker__chip {
+  --ring-drop: 0px;
+  background: rgb(255 246 229 / 0.18);
+  box-shadow: none;
+}
+
+/* R5: a keyboard's focus outside the swatch (and outside its ring, at the same gap) */
+.icon-picker__option:has(.icon-picker__input:focus-visible) .icon-picker__chip {
+  outline: 3px solid var(--color-focus);
+  outline-offset: var(--ring-gap, 4px);
+}
+
+.icon-picker__option:has(.icon-picker__input:focus-visible) .icon-picker__chip[data-ring] {
+  outline-offset: calc(var(--ring-gap, 4px) * 2 + var(--line-width));
+}
+
+.icon-picker__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.icon-picker__mark {
+  display: grid;
+  place-items: center;
+  width: var(--picker-mark);
+  height: var(--picker-mark);
+}
+
+.icon-picker__mark > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* The tag (#54): over the swatch's foot, overlapping it, so it reads as that swatch's and takes no row of its own */
+.icon-picker__tag {
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--picker-chip) - 0.8rem);
+  left: 50%;
+  max-width: calc(var(--picker-chip) + 0.5rem);
+  padding: 1px 6px 2px;
+  translate: -50% 0;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-line);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+  font-size: 0.71875rem;
+  font-weight: var(--font-weight-strong);
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}

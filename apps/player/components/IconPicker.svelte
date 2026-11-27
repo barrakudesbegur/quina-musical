@@ -1,12 +1,12 @@
 <script lang="ts">
-  // "Icona": the ten card icons in five columns, each in full colour on a round paper chip with an ink border (D131,
-  // the user's mix "D" on board "Component-Icona-Opcions"). An icon another of the player's cards already uses sits
-  // on faded paper with whose it is on a dark tag along the chip's bottom edge (its name, else "#123"), and can't be
-  // picked while a free one is left. The chosen one wears the gold ring and pops as it gets it (ANIMATIONS.md
-  // `icon-pick`). A radio group, so it works with a screen reader and the keyboard; each cell is a full touch target.
+  // "Icona": the ten card icons in five columns, each in full colour on a round paper swatch (D131). This is the player
+  // app's preset over the generic IconPicker (B8; D-c, #50): an icon another of the player's cards already uses is
+  // disabled, tagged with whose it is (its name, else "#123", #54), while a free one is left. The chosen one wears the
+  // gold ring and pops as it gets it (ANIMATIONS.md `icon-pick`).
+  import Picker from '../../../packages/ui/components/IconPicker.svelte';
   import { PLAYER_CONFIG } from '../config.ts';
   import { CARD_MARKS, identityOf, markName } from '../logic/marks-identity.ts';
-  import { identityFree, type SavedCard } from '../logic/storage.ts';
+  import { cardLabel, identityFree, type SavedCard } from '../logic/storage.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
 
@@ -26,36 +26,20 @@
     CARD_MARKS.map(identityOf).filter((identity) => identity <= PLAYER_CONFIG.cardColors).map((identity) => {
       const owner = others.find((c) => c.color === identity);
       const free = identityFree(others, identity);
-      return { identity, label: S.markLabel(markName(identity)), free, owner: !free && owner ? (owner.name ?? S.cardNumber(owner.id)) : null };
+      return { value: identity, label: S.markLabel(markName(identity)), disabled: !free, tag: !free && owner ? cardLabel(owner) : null };
     }),
   );
-  /** The icon the player picked here (not the one the sheet opened with): only a pick pops. */
-  let picked = $state<number | null>(null);
 </script>
 
-<fieldset class="icon-picker">
-  <legend class="icon-picker__legend" class:visually-hidden={!legend}>{S.iconLabel}{#if legend}<span class="icon-picker__hint">{S.iconHint}</span>{/if}</legend>
-  <div class="icon-picker__grid">
-    {#each options as o (o.identity)}
-      <label class="icon-picker__option" class:is-selected={o.identity === selected} class:is-taken={!o.free}>
-        <input
-          type="radio"
-          name="card-icon"
-          class="icon-picker__input"
-          value={o.identity}
-          checked={o.identity === selected}
-          disabled={!o.free}
-          aria-label={o.owner ? S.iconTaken(o.label, o.owner) : o.label}
-          onchange={() => {
-            picked = o.identity;
-            onselect(o.identity);
-          }}
-        />
-        <span class="icon-picker__chip" data-anim={o.identity === selected && o.identity === picked ? 'icon-pick' : undefined} aria-hidden="true">
-          <span class="icon-picker__mark"><CardMark identity={o.identity} decorative /></span>
-          {#if o.owner}<span class="icon-picker__owner">{o.owner}</span>{/if}
-        </span>
-      </label>
-    {/each}
-  </div>
-</fieldset>
+<Picker
+  {options}
+  value={selected}
+  legend={S.iconLabel}
+  legendHidden={!legend}
+  hint={S.iconHint}
+  name="card-icon"
+  nameOf={(o) => (o.tag ? S.iconTaken(o.label, o.tag) : o.label)}
+  {onselect}
+>
+  {#snippet mark(o)}<CardMark identity={o.value} decorative />{/snippet}
+</Picker>

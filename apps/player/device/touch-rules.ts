@@ -20,7 +20,7 @@ export const PLAYER_TOUCH: TouchWiring = {
   // The lists people scroll: a control in them sounds at its click, so a scroll that starts on it stays silent.
   scrollers: '.drawer--horari, .drawer--premis, .drawer--ajustos, .drawer--any-passat, .cards, .song-list',
   // An icon another card has is a label over a disabled radio: the label itself isn't disabled.
-  unusable: ':disabled, [aria-disabled="true"], .is-taken',
+  unusable: ':disabled, [aria-disabled="true"], [data-disabled]',
   // A short vibration with each press (R4), where the phone can.
   haptics: true,
   // Typing a card's name (or any text field) with the phone's keyboard plays the keypad's sounds.

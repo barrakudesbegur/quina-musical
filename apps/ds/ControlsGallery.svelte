@@ -6,6 +6,9 @@
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import IconPicker from '../../packages/ui/components/IconPicker.svelte';
+  import NumberField from '../../packages/ui/components/NumberField.svelte';
+  import NumberPad from '../../packages/ui/components/NumberPad.svelte';
   import Slider from '../../packages/ui/components/Slider.svelte';
   import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
@@ -41,6 +44,25 @@
   let query = $state('Elefants');
   let vol = $state(80);
   let loud = $state(130);
+  let digits = $state('12');
+  let typed = $state('57');
+  let pick = $state(3);
+  const PICKS = [
+    { value: 1, label: 'Estrella', icon: 'star', disabled: true, tag: 'Àvia' },
+    { value: 2, label: 'Regal', icon: 'gift', disabled: true, tag: '#57' },
+    { value: 3, label: 'Música', icon: 'music' },
+    { value: 4, label: 'Trofeu', icon: 'trophy' },
+    { value: 5, label: 'Bandera', icon: 'flag' },
+    { value: 6, label: 'Rellotge', icon: 'clock' },
+    { value: 7, label: 'Bitllet', icon: 'ticket' },
+    { value: 8, label: 'Copa', icon: 'cup' },
+    { value: 9, label: 'Cara', icon: 'sad-face', disabled: true, tag: 'Un nom molt llarg' },
+    { value: 10, label: 'Ull', icon: 'eye' },
+  ] as const;
+  const press = (key: string) => {
+    if (key === 'back') digits = digits.slice(0, -1);
+    else if (key !== 'enter' && digits.length < 3) digits += key;
+  };
 </script>
 
 {#snippet cell(caption: string, body: Snippet)}
@@ -175,5 +197,41 @@
     {@render cell('at the default: the value muted', v3)}
     {#snippet v4()}<Slider label="Efectes" max={150} value={60} disabled lessLabel="Baixa 1%" moreLabel="Puja 1%" />{/snippet}
     {@render cell('disabled', v4)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b7">
+  <h2 id="b7">B7 · NumberField + NumberPad</h2>
+  <p class="ds-prose">
+    NumberField: <code>value</code>, <code>label</code>, <code>invalid</code>, <code>disabled</code>, <code>keyboard</code> (pad | system),
+    <code>trailing</code>. No <code>state</code> prop (D-c, #51): empty, typed and red come from the value and its validity.
+    NumberPad: <code>enabled</code> digits, <code>canDelete</code>, <code>enter</code> + <code>canEnter</code>, <code>deleteKey</code>,
+    <code>row</code>, <code>onkey</code>. Keys press like every piece (R4).
+  </p>
+  <div class="ds-gallery__grid ds-gallery__grid--wide">
+    {#snippet n1()}<div class="ds-gallery__pad"><NumberField label="Número del cartró" value={digits} /><NumberPad label="Teclat" backLabel="Esborra" enabled={new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].filter((d) => d !== '7'))} canDelete={digits !== ''} onkey={press} /></div>{/snippet}
+    {@render cell('pad: the field typed by the keys; «7» can’t lead to a card here (enabled)', n1)}
+    {#snippet n2()}<div class="ds-gallery__pad"><NumberField label="Número del cartró" value="" /><NumberPad label="Teclat" backLabel="Esborra" enter enterLabel="Entra" canEnter={false} canDelete={false} onkey={() => {}} /></div>{/snippet}
+    {@render cell('empty, with ↵ (disabled until a number is typed)', n2)}
+    {#snippet n3()}<NumberField label="Número del cartró" value="999" invalid />{/snippet}
+    {@render cell('invalid: «Aquest cartró no existeix» (the frame stays, #53)', n3)}
+    {#snippet n4()}<NumberField label="Número del cartró" keyboard="system" bind:value={typed} />{/snippet}
+    {@render cell('system: a real numeric input (the card’s edit drawer)', n4)}
+    {#snippet n5()}<NumberPad row label="Teclat" backLabel="Esborra" enter enterLabel="Mostra" onkey={() => {}} />{/snippet}
+    {@render cell('row: twelve keys in one line', n5)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b8">
+  <h2 id="b8">B8 · IconPicker</h2>
+  <p class="ds-prose">
+    Radios in a fieldset: <code>options</code> (<code>value</code>, <code>label</code>, <code>icon</code>, <code>disabled</code>,
+    <code>tag</code>; generic, D-c, #50), <code>value</code>, <code>legend</code>, <code>hint</code>, <code>mark</code> (a snippet: the phone
+    draws its card marks), <code>sound</code>. A tag overlaps its swatch’s foot (#54); the chosen swatch’s gold ring keeps one gap all
+    round (#55, #56).
+  </p>
+  <div class="ds-gallery__grid ds-gallery__grid--wide">
+    {#snippet p1()}<IconPicker legend="Icona" hint="Cada cartró en té una de diferent" options={PICKS} bind:value={pick} />{/snippet}
+    {@render cell('two disabled with a tag, a long tag clipped; the third chosen', p1)}
   </div>
 </section>

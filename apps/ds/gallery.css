@@ -276,3 +276,10 @@
   background: var(--color-surface);
   line-height: 1.4;
 }
+
+/* A field over its keypad (B7) */
+.ds-gallery__pad {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 22rem;
+}
