@@ -1419,3 +1419,12 @@ Frontend's calls from the audit (scratchpad/mwg/audit.md). The orchestrator had 
 - **Waiting on U187:** `@starting-style` exits and container queries.
 - **Later, with design:** the phone's Celebration as a real `<dialog>`, since it affects the open pad (D90).
 By: Frontend, noted by the orchestrator. Source: Frontend's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md.
+
+### D210 · The design system's props, as Frontend's v2 · 2026-11-27 · Active
+The user accepted all four recommendations of the props rework (temp/design-canvas/ds/components-v2.md):
+1. **The palette is named by colour:** `ice` → `cyan`, `lilac` → `purple`, and the new `pink`, `navy`, `grey` and `periwinkle`, so the prop, the token and the spoken word match.
+2. **A concept's whole look lives in one plain-data registry:** colour, icon, label, note, sound and Wii key. Shared concepts go in `packages/ui/concepts.ts`, and each app's controls in `apps/<app>/actions.ts`. There are no wrapper components per concept.
+3. **Each kind of control has a default UI sound,** which a preset can override or silence. Admin silences them all (D208).
+4. **The concept colour tokens** (`--action-talk`, `--color-calm`…) are deleted, so the registry is the only place that says the Hold is cyan.
+Generic components take only what they draw (`color`, `variant`, `size`, `floating`, `ring`, the slots, `sound`), never a game concept. One `ring` prop means two rings can't stack.
+By: the user. Source: open-questions.md › Answered (U190). Amends: D205. Lives in: packages/ui (Frontend).
