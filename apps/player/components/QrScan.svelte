@@ -8,6 +8,7 @@
   import { frameReader } from '../device/qr-reader.ts';
   import { readCardQr } from '../logic/qr.ts';
   import { S } from '../strings.ts';
+  import Icon from './Icon.svelte';
 
   let { onfound, onwrite }: { onfound: (cardId: number) => void; onwrite: () => void } = $props();
 
@@ -76,9 +77,7 @@
   {#if phase === 'denied' || phase === 'failed'}
     <div class="qr-scan__off" role="alert">
       <span class="qr-scan__off-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9.5 4.5h5l1.5 2h2a2 2 0 0 1 2 2V16M17 19H6a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h1" /><path d="M10 10a3.6 3.6 0 0 0 4.6 5" /><path d="M3 3l18 18" />
-        </svg>
+        <Icon name="cameraOff" alone />
       </span>
       <p class="qr-scan__off-title">{S.qrOffTitle}</p>
       <p class="qr-scan__off-text">{phase === 'denied' ? S.qrDenied : S.qrFailed}</p>
@@ -89,9 +88,7 @@
     <video class="qr-scan__video" bind:this={video} playsinline muted autoplay aria-label={S.qrCamera}></video>
     {#if phase === 'asking'}
       <span class="qr-scan__asking" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 8.5a2 2 0 0 1 2-2h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><circle cx="12" cy="12.6" r="3.6" />
-        </svg>
+        <Icon name="camera" alone />
       </span>
     {:else}
       <div class="qr-scan__finder" aria-hidden="true">

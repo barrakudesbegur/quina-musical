@@ -82,7 +82,6 @@
   flex: none;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -239,7 +238,6 @@
 .mini .icon {
   width: 1.125rem;
   height: 1.125rem;
-  stroke-width: 2.6;
 }
 
 .mini[aria-pressed='true'] {
@@ -481,9 +479,8 @@
 }
 
 .header__end .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  stroke-width: 2.6;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .header__end--night {
@@ -553,7 +550,6 @@
 .header__menu .icon {
   width: 1.375rem;
   height: 1.375rem;
-  stroke-width: 2.8;
 }
 
 /* The Heat meter with its Phase zones */
@@ -791,8 +787,8 @@
 }
 
 .now-line__chip--low .icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .now-line__song {
@@ -881,7 +877,6 @@
 .now-playing__chip .icon {
   width: 15px;
   height: 15px;
-  stroke-width: 3;
 }
 
 .now-playing__chip[data-state='spinning'] {
@@ -928,10 +923,6 @@
 .now-playing__music[data-music='error'] {
   background: var(--color-red-edge);
   color: #ffffff;
-}
-
-.now-playing__music .icon {
-  stroke-width: 2.6;
 }
 
 .now-playing__ring {
@@ -1175,7 +1166,6 @@
   width: 30px;
   height: 30px;
   stroke: #ffffff;
-  stroke-width: 2.2;
 }
 
 .now-ring[data-state^='manual'] .now-ring__centre .icon {
@@ -1194,14 +1184,12 @@
 .now-ring__centre .icon__under {
   fill: none;
   stroke: var(--color-ink);
-  stroke-width: 5;
 }
 
 .now-ring[data-state='suspense'] .now-ring__centre .icon {
   width: 34px;
   height: 34px;
   stroke: var(--color-text);
-  stroke-width: 2.6;
 }
 
 .now-ring__value {
@@ -1256,7 +1244,6 @@
 .now-ring__badge .icon {
   width: 18px;
   height: 18px;
-  stroke-width: 3;
 }
 
 .now-ring__badge[data-badge='autoOff'] {
@@ -1309,7 +1296,6 @@
 .pace__title .icon {
   width: 1rem;
   height: 1rem;
-  stroke-width: 2.6;
 }
 
 /* A new song's slot (D174), at the title row's end: plain words, the value in the text colour */
@@ -1357,8 +1343,8 @@
 }
 
 .pace__toggle .icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .pace__toggle[data-toggle='auto'][aria-pressed='true'] {
@@ -1434,7 +1420,6 @@
   width: 1.25rem;
   height: 1.25rem;
   stroke: var(--color-notice-line);
-  stroke-width: 2.6;
 }
 
 /* ---- tabs (the Tabs component; hook tab-switch) ------------------------------------------------------- */
@@ -1494,9 +1479,8 @@
 }
 
 .tabs__tab .icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  stroke-width: 2.6;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .tabs__tab:active:not(:disabled) {
@@ -1884,7 +1868,6 @@
 .search-box__clear .icon {
   width: 1rem;
   height: 1rem;
-  stroke-width: 3;
 }
 
 .search-box__hash,
@@ -1993,7 +1976,6 @@
   border-radius: 50%;
   background: var(--color-green);
   color: #ffffff;
-  stroke-width: 3.5;
 }
 
 /* The card's keypad: one row, so the tablet's keyboard never opens (board c) */
@@ -2088,7 +2070,6 @@
 .card-peek__verdict-head .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 3.5;
 }
 
 .card-peek__verdict-text {
@@ -2158,7 +2139,6 @@
 .card-peek__mark .icon {
   width: 0.9rem;
   height: 0.9rem;
-  stroke-width: 4;
 }
 
 .card-peek__ahead {
@@ -2449,9 +2429,8 @@
 }
 
 .ticket__sponsor .icon {
-  width: 0.875rem;
-  height: 0.875rem;
-  stroke-width: 2.6;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 /* The perforation, with a punched hole at each end in the panel's colour */
@@ -2816,7 +2795,6 @@
   width: 2.75rem;
   height: 2.75rem;
   stroke: var(--action-label);
-  stroke-width: 2.4;
 }
 
 .big-button .icon .icon__fill {
@@ -2826,23 +2804,16 @@
 .big-button .icon__under {
   fill: none;
   stroke: var(--color-ink);
-  stroke-width: 5.5;
 }
 
 .big-button .icon .icon__accent {
   stroke: var(--action-bg);
-  stroke-width: 2.8;
 }
 
-/* Comprovar's rosette is finer than the other icons: a thinner line keeps its waves readable */
+/* Comprovar's rosette: a little bigger, so its waves stay open at the family's stroke */
 .big-button[data-action='claim'] .icon {
   width: 2.875rem;
   height: 2.875rem;
-  stroke-width: 2.2;
-}
-
-.big-button[data-action='claim'] .icon__under {
-  stroke-width: 4.8;
 }
 
 .big-button__text {
@@ -3028,10 +2999,9 @@
 }
 
 .big-button .two-level__second .icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
   stroke: currentColor;
-  stroke-width: 2.6;
 }
 
 .two-level__count {
@@ -3071,7 +3041,6 @@
   width: 16px;
   height: 16px;
   stroke: var(--color-ink);
-  stroke-width: 2.6;
 }
 
 /* «Llançament» and «Tempesta» (the Consola-Llancament-Tempesta board; hooks throw-hold, throw-on): a striped sticker,
@@ -3193,22 +3162,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-.throw-button__eq,
-.throw-button__paused {
-  flex: none;
-  width: 20px;
-  height: 20px;
+/* Playing: music notes; paused: the pause bars. Ink line icons like the others (#15) */
+.throw-button__state {
+  display: contents;
+}
+
+.big-button .throw-button__state .icon {
+  width: 1.5rem;
+  height: 1.5rem;
   stroke: var(--color-ink);
-}
-
-.throw-button__eq rect {
-  fill: var(--action-bg);
-  stroke-width: 1.8;
-}
-
-.throw-button__paused rect {
-  fill: #fff;
-  stroke-width: 2;
 }
 
 .throw-button__total {
@@ -3293,7 +3255,6 @@
   width: 1.25rem;
   height: 1.25rem;
   stroke: currentColor;
-  stroke-width: 2.6;
 }
 
 .throw-button[data-state='pressing'] .two-level__fill,
@@ -3935,8 +3896,8 @@
 }
 
 .check-board__strip .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
   stroke: var(--color-ink);
 }
 
@@ -4174,9 +4135,8 @@
 }
 
 .check-verdict__line .icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  stroke-width: 3.2;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .check-verdict__fail {
@@ -4201,7 +4161,6 @@
 .check-verdict__cross .icon {
   width: 2rem;
   height: 2rem;
-  stroke-width: 3.4;
 }
 
 .check-verdict__word {
@@ -4268,7 +4227,6 @@
 .private-strip > .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 3.2;
 }
 
 .private-strip__text {
@@ -4318,8 +4276,8 @@
 }
 
 .warning-chip .icon {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 /* The card's 12 songs, 4 a row */
@@ -4402,7 +4360,6 @@
 .check-cell__mark .icon {
   width: 0.875rem;
   height: 0.875rem;
-  stroke-width: 3.4;
 }
 
 .check-cell[data-revealed] .check-cell__mark {
@@ -4578,8 +4535,8 @@
 }
 
 .claim-status > .icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.375rem;
+  height: 1.375rem;
   color: var(--color-orange-edge);
 }
 
@@ -4655,8 +4612,8 @@
 }
 
 .review-panel__chip .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .review-panel__talk {
@@ -4699,10 +4656,9 @@
 }
 
 .review-panel__against .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.25em;
+  height: 1.25em;
   stroke: var(--color-ink);
-  stroke-width: 2.6;
 }
 
 /* Against the card: confirm first (the dialog scales in) */
@@ -5455,7 +5411,6 @@ kbd {
 .menu-group__title .icon {
   width: 1rem;
   height: 1rem;
-  stroke-width: 2.6;
 }
 
 /* The QR card's title is a sentence, not a label */
@@ -6542,8 +6497,28 @@ kbd {
   translate: 0 -50%;
 }
 
+/* The + between two keys: a line as heavy as a key's border, its arms half a key tall (#11) */
 .wii-badge__plus {
-  font-size: 0.9375rem;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-linecap: round;
+}
+
+.wii-badge__plus path {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 3px;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__plus {
+  width: 16px;
+  height: 16px;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__plus path {
+  stroke-width: 2.25px;
 }
 
 /* B + A: the second key, a little apart */
@@ -6551,17 +6526,26 @@ kbd {
   margin-left: -1px;
 }
 
-/* The shake: the remote shaken three times, "×3" (the Consola-Joc board's glyph) */
+/* The shake: the remote shaken three times, "×3" (the Consola-Joc board's glyph). The upright remote is as tall as
+   a key (#13: 32 px, 22 px small) and drawn with a key's border */
 .wii-badge__shake {
-  width: 40px;
-  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.wii-badge__shake svg {
+  flex: none;
+  width: 34px;
+  height: 38px;
   overflow: visible;
 }
 
 .wii-badge__remote {
   fill: #ffffff;
   stroke: var(--color-ink);
-  stroke-width: 2;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
 }
 
 .wii-badge__remote-a {
@@ -6569,10 +6553,16 @@ kbd {
 }
 
 .wii-badge__times {
-  fill: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 1.125em;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__shake svg {
+  width: 23px;
+  height: 26px;
+}
+
+.wii-badge[data-size='sm'] .wii-badge__remote {
+  stroke-width: 2px;
 }
 
 /* A's badge gliding to where Pausa moved it (ANIMATIONS.md › a-glide): no pop on top */
@@ -6620,7 +6610,7 @@ kbd {
 }
 
 .two-level__second:has(> .wii-badge[data-wii='shake']) {
-  padding-left: 52px;
+  padding-left: 56px;
 }
 
 /* With B + A (and the shake) on the strip, the strip just names Suspens, as the board draws it */
@@ -6823,24 +6813,9 @@ kbd {
   color: #ffffff;
 }
 
-.podium-icon {
-  flex: none;
+.big-button .podium-icon {
   width: 1.875rem;
   height: 1.875rem;
-}
-
-.podium-icon__steps {
-  fill: #ffffff;
-  stroke: var(--color-ink);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.podium-icon__star {
-  fill: var(--color-gold);
-  stroke: var(--color-ink);
-  stroke-width: 6;
-  stroke-linejoin: round;
 }
 
 .finale-button__tag {
@@ -7020,14 +6995,6 @@ kbd {
   box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.22), 0 4px 0 var(--color-ink);
 }
 
-.pad-key--enter .icon {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .pad-key--enter:disabled {
   opacity: 0.55;
 }
@@ -7180,8 +7147,8 @@ kbd {
 }
 
 .finale-stage__saved .icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.375rem;
+  height: 1.375rem;
   fill: var(--color-gold);
   stroke: var(--color-ink);
 }
@@ -7213,9 +7180,8 @@ kbd {
 }
 
 .finale-stage__switch .icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  stroke-width: 2.6;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .finale-stage__switch[aria-checked='true'] .switch__track {
@@ -7292,7 +7258,6 @@ kbd {
 .finale-stage__cross .icon {
   width: 1.5rem;
   height: 1.5rem;
-  stroke-width: 4;
 }
 
 @keyframes finale-cross-in {
@@ -7344,7 +7309,6 @@ kbd {
 .finale-stage__remove .icon {
   width: 0.875rem;
   height: 0.875rem;
-  stroke-width: 3.4;
 }
 
 /* finale-safe: the ninos jump twice */

@@ -12,6 +12,7 @@
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
   import Drawer from './Drawer.svelte';
+  import Icon from './Icon.svelte';
   import IconPicker from './IconPicker.svelte';
   import PadLeave from './PadLeave.svelte';
   import QrScan from './QrScan.svelte';
@@ -154,9 +155,7 @@
             <span aria-hidden="true"></span>
           {:else if key === 'back'}
             <button type="button" class="number-pad__key number-pad__key--delete" aria-label={S.padDelete} disabled={!rules.canDelete} onclick={() => press(key)}>
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9 5h11v14H9l-6-7z" /><path d="M12.5 9.5l5 5M17.5 9.5l-5 5" />
-              </svg>
+              <Icon name="backspace" alone />
             </button>
           {:else}
             <button type="button" class="number-pad__key" data-key={key} disabled={!rules.digits.has(key)} onclick={() => press(key)}>{key}</button>
@@ -165,10 +164,8 @@
       </div>
       <div class="number-pad__footer">
         <button type="button" class="big-button tone-ok number-pad__save" disabled={!rules.canSave} onclick={save}>
-          <!-- The board's tick (CHECK_SVG): white over a thick ink stroke, like the outlined words. -->
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 12.5l4.5 4.5L19 7.5" stroke="var(--color-line)" stroke-width="7" /><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" />
-          </svg>
+          <!-- The tick in the outline look: white over the ink, like the outlined words. -->
+          <Icon name="tickOutlined" />
           {S.save}
         </button>
       </div>

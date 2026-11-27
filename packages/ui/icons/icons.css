@@ -1,0 +1,86 @@
+/*
+ * H1 · the line icons' stroke system (components-v2 H1, 27 Nov; the user's R8: "one family").
+ *
+ * - The ink: an icon's line is as heavy as the stem of the text beside it. Nunito's stems measure .155em (800) and
+ *   .18em (900), Londrina Solid's .17em; a line reads a little darker than a letter's stem, so the ink is .155em of
+ *   the font size the icon sits in. The stroke doesn't scale with the icon's box (`non-scaling-stroke`): a bigger
+ *   box gives more room, never a heavier line.
+ * - The size steps: an icon's box is about 1.4 × the text beside it (18 px by 13 px text, 20 by 15, 24 by 17,
+ *   28 by 20, 42 by Londrina 36), so the line is about 2.6 units of the 24 grid at every step.
+ * - The outline look (a big button's sticker icons, beside an outlined Londrina label): a line in the label's colour
+ *   over an ink line 2 × 2.5 px wider (2.5 px is the outside half of the label's own 5 px text stroke). The line is
+ *   .13em, not .155em: with the ink on both sides, a long outlined line reads as heavy as the label's outlined
+ *   stems (.17em) and the drawings stay open.
+ * - Alone (`alone`: no text beside it, a cover's placeholder, a badge, an icon-only key): the ink is the size step's,
+ *   2.6 units of the 24 grid (box ÷ 9.2), so it scales with the box; the outline adds 1.6 units each side.
+ * - One cap and join: round everywhere.
+ * A context sets the box (width, height) and the colour; it never sets a stroke width. `--icon-ink` exists to be
+ * read (the board generator, a sibling glyph), not to make one icon lighter or heavier.
+ */
+.icon {
+  --icon-ink: 0.155em;
+  --icon-ink-outlined: 0.13em;
+  --icon-outline: 2.5px;
+  --icon-scaling: non-scaling-stroke;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.icon path {
+  vector-effect: var(--icon-scaling);
+  stroke-width: var(--icon-ink);
+}
+
+.icon.icon--outline {
+  --icon-ink: var(--icon-ink-outlined);
+}
+
+.icon.icon--alone {
+  --icon-ink: 2.6;
+  --icon-outline: 1.6;
+  --icon-scaling: none;
+}
+
+.icon .icon__fill {
+  fill: currentColor;
+}
+
+.icon .icon__solid {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* A detail in the button's own colour (the outline look) */
+.icon .icon__accent {
+  stroke: var(--action-bg, var(--color-surface));
+}
+
+/* The two-tone icons (the finish flag): paper and ink on any colour */
+.icon .icon__paper {
+  fill: var(--color-paper);
+  stroke: none;
+}
+
+.icon .icon__ink {
+  stroke: var(--color-ink);
+}
+
+.icon .icon__inkSolid {
+  fill: var(--color-ink);
+  stroke: none;
+}
+
+/* The outline look: the ink line under, a little wider all round */
+.icon .icon__under path {
+  stroke: var(--color-ink);
+  stroke-width: calc(var(--icon-ink) + 2 * var(--icon-outline));
+}
+
+.icon .icon__under .icon__fill,
+.icon .icon__under .icon__solid {
+  fill: var(--color-ink);
+  stroke: var(--color-ink);
+}

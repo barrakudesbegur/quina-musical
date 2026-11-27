@@ -144,11 +144,7 @@
     {#if variant !== 'top'}<span class="big-button__note">{note}</span>{/if}
     {#if time && variant !== 'top'}
       <span class="throw-button__time" aria-hidden="true">
-        {#if songState === 'playing'}
-          <svg class="throw-button__eq" viewBox="0 0 24 24"><rect x="3" y="11" width="4" height="10" rx="1.5" /><rect x="10" y="4" width="4" height="17" rx="1.5" /><rect x="17" y="14" width="4" height="7" rx="1.5" /></svg>
-        {:else}
-          <svg class="throw-button__paused" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
-        {/if}
+        <span class="throw-button__state"><Icon name={songState === 'playing' ? 'music' : 'pause'} /></span>
         <span class="throw-button__clock">{throwClock(time.atSec)}</span>
         <span class="throw-button__bar" data-anim="throw-on">
           <span class="throw-button__bar-fill" style:--at={time.fraction}></span>

@@ -8,7 +8,7 @@
 </script>
 
 {#if songId === null || failed === songId}
-  <span class="cover cover--{size} cover--missing" data-morph={morph} aria-hidden="true"><Icon name="music" /></span>
+  <span class="cover cover--{size} cover--missing" data-morph={morph} aria-hidden="true"><Icon name="music" alone /></span>
 {:else}
   {#key songId}
     <img class="cover cover--{size}" data-morph={morph} src={coverUrl(songId)} alt="" onerror={() => (failed = songId)} />

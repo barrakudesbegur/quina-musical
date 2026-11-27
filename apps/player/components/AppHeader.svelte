@@ -17,6 +17,6 @@
     {/if}
   </h1>
   <button type="button" class="icon-button app-header__menu" data-testid="open-settings" aria-label={S.settings} aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })}>
-    <Icon name="settings" />
+    <Icon name="settings" alone />
   </button>
 </header>

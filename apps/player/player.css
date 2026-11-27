@@ -82,7 +82,6 @@
   --player-sticker-md: 7.5rem;
   --player-sticker-lg: 11.5rem;
   --kernel-size: 62%; /* of the cover */
-  --icon-stroke: 2.4;
 
   /* type */
   --player-text-body: 1.125rem;
@@ -489,7 +488,6 @@
 .app-header__menu .icon {
   width: 26px;
   height: 26px;
-  stroke-width: 2.2;
 }
 
 .app-header__actions {
@@ -521,7 +519,6 @@
 .icon {
   width: 1.5em;
   height: 1.5em;
-  stroke-width: var(--icon-stroke);
 }
 
 .icon-button .icon {
@@ -579,7 +576,6 @@
 .big-button .icon {
   width: 1.75rem;
   height: 1.75rem;
-  stroke-width: 3.4;
   overflow: visible;
   filter: drop-shadow(0 2px 0 var(--color-line));
 }
@@ -1574,14 +1570,12 @@
 .schedule__dot .icon--tick {
   width: 1rem;
   height: 1rem;
-  stroke-width: 3.4;
   color: var(--color-line);
 }
 
 .schedule__dot .round-mark[data-kind='desgraciat'] .icon {
   width: 1.125rem;
   height: 1.125rem;
-  stroke-width: 3;
 }
 
 .schedule__dot .round-mark[data-kind='special'] .icon {
@@ -1614,7 +1608,6 @@
 .schedule__chevron .icon {
   width: 1.125rem;
   height: 1.125rem;
-  stroke-width: 3;
 }
 
 /* Only the current round is paper, ringed in orange, with "Ara". */
@@ -1656,7 +1649,6 @@
 .schedule__moment .icon {
   width: 1rem;
   height: 1rem;
-  stroke-width: 2.6;
 }
 
 .schedule__moment :is(.icon--flag, .icon--ticket) {
@@ -1992,10 +1984,6 @@
   color: var(--color-accent);
 }
 
-.round-mark[data-kind='desgraciat'] .icon {
-  stroke-width: 3;
-}
-
 /* On paper (Premis' current round), the sad face is ink. */
 .prize-round[data-state='current'] .round-mark {
   color: var(--color-text-on-paper);
@@ -2182,7 +2170,6 @@ html:has(.drawer[open]) {
 .drawer__button .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 3;
 }
 
 .drawer__back .icon {
@@ -2433,6 +2420,11 @@ html:has(.drawer[open]) {
   height: 4rem;
   transform: translate(-50%, -50%);
   color: #3a4a99;
+}
+
+.qr-scan__asking .icon {
+  width: 100%;
+  height: 100%;
 }
 
 .qr-scan__finder {
@@ -2775,7 +2767,7 @@ html:has(.drawer[open]) {
 
 .drawer .number-pad__key--delete::after {
   background: var(--color-slate-deep-edge)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2346518F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5h11v14H9l-6-7z'/%3E%3Cpath d='M12.5 9.5l5 5M17.5 9.5l-5 5'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2346518F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22.5 4.5H8.5L1.5 12l7 7.5h14z'/%3E%3Cpath d='M13 9.5l5 5M18 9.5l-5 5'/%3E%3C/svg%3E")
     center / 1.75rem no-repeat;
 }
 
@@ -2813,11 +2805,11 @@ html:has(.drawer[open]) {
   filter: grayscale(0.7);
 }
 
-.number-pad__save svg {
+.player .number-pad__save .icon {
   width: 1.625rem;
   height: 1.625rem;
   flex: none;
-  overflow: visible;
+  filter: none;
 }
 
 /* Leaving the pad with a number typed (ANIMATIONS.md `pad-leave`): a small paper dialog in the middle, over a dark
@@ -2893,7 +2885,6 @@ html:has(.drawer[open]) {
 .pad-leave__discard .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 2.6;
 }
 
 .player .pad-leave__continue {
@@ -2911,7 +2902,6 @@ html:has(.drawer[open]) {
 .pad-leave__continue .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 2.6;
   filter: none;
 }
 
@@ -3130,9 +3120,10 @@ html:has(.drawer[open]) {
   box-shadow: inset 0 -4px 0 var(--color-accent-edge);
 }
 
+/* The family's size step for 17 px labels (H1): 22 px, so the line, as heavy as the label's stems, stays open (#37) */
 .view-switch__option .icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 /* The drum drawn small (Ara with the cards; board Mobil-B-J2): the same ring in a 112 px box at the left of a panel,
@@ -3434,7 +3425,6 @@ html:has(.drawer[open]) {
 .menu__card .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 2.6;
 }
 
 .menu__card .menu__grip .icon {
@@ -3511,7 +3501,6 @@ html:has(.drawer[open]) {
   width: 1.5rem;
   height: 1.5rem;
   flex: none;
-  stroke-width: 2.6;
 }
 
 .menu__label {
@@ -3529,7 +3518,6 @@ html:has(.drawer[open]) {
 .menu__row .menu__chevron .icon {
   width: 1.125rem;
   height: 1.125rem;
-  stroke-width: 3;
 }
 
 /* Sons: a real switch (ANIMATIONS.md `switch-toggle`): green with the knob right when on, slate with it left when
@@ -3727,20 +3715,36 @@ html:has(.drawer[open]) {
   stroke-linecap: round;
 }
 
+/* The legs are lines 3.6 wide: their border is that much wider, so the white clears them as it clears the body */
+.corner-icon__outline > .corner-icon__legs {
+  stroke-width: 9.7;
+}
+
+.corner-icon__sticker > .corner-icon__legs {
+  stroke-width: 6.2;
+}
+
+/* The art's ink lines are the icon family's (H1): the stem of the label beside them */
 .corner-icon__art * {
   stroke: var(--color-line);
-  stroke-width: 2.2;
+  stroke-width: 0.155em;
+  vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
 .corner-icon__box {
   fill: var(--color-ice);
+  stroke: none;
 }
 
 .corner-icon__shade {
   fill: var(--color-ice-edge);
   stroke: none;
+}
+
+.corner-icon__edge {
+  fill: none;
 }
 
 .corner-icon__lid {
@@ -3758,7 +3762,6 @@ html:has(.drawer[open]) {
 
 .corner-icon__face {
   fill: var(--color-paper);
-  stroke-width: 2;
 }
 
 .corner-icon__hand,
@@ -3766,8 +3769,10 @@ html:has(.drawer[open]) {
   fill: none;
 }
 
+/* A leg is a shape, not an outline: its width is the drawing's */
 .corner-icon__leg {
   stroke-width: 3.6;
+  vector-effect: none;
 }
 
 .corner-icon__pin {

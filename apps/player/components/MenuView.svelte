@@ -72,16 +72,16 @@
               onpointercancel={endDrag}
               onkeydown={(e) => keyMove(e, card.id, i)}
             >
-              <Icon name="grip" />
+              <Icon name="grip" alone />
             </button>
             <span class="menu__card-mark"><CardMark identity={card.color} decorative /></span>
             <span class="menu__card-name">{who}</span>
             <span class="menu__card-number">{S.cardNumber(card.id)}</span>
             <button type="button" class="menu__card-edit" aria-label={S.editLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'rename', cardId: card.id })}>
-              <Icon name="edit" />
+              <Icon name="edit" alone />
             </button>
             <button type="button" class="menu__card-remove" aria-label={S.removeLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'remove', cardId: card.id })}>
-              <Icon name="trash" />
+              <Icon name="trash" alone />
             </button>
           </li>
         {/each}

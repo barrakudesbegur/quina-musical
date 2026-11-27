@@ -55,15 +55,18 @@
     {@attach glide}
   >
     {#if button === 'shake'}
-      <svg class="wii-badge__shake" viewBox="0 0 37.2 24" focusable="false">
-        {#each REMOTES as r (r.angle)}
-          <g opacity={r.opacity} transform="rotate({r.angle} 9 21)">
-            <rect x="6" y="3" width="6" height="17" rx="1.6" class="wii-badge__remote" />
-            <circle cx="9" cy="7.6" r="1.3" class="wii-badge__remote-a" />
-          </g>
-        {/each}
-        <text x="16.5" y="18.1" class="wii-badge__times">×3</text>
-      </svg>
+      <!-- The remote shaken three times: the upright remote as tall as a key (#13), its outline a key's border. -->
+      <span class="wii-badge__shake">
+        <svg viewBox="-2.5 1.5 18 20.5" focusable="false">
+          {#each REMOTES as r (r.angle)}
+            <g opacity={r.opacity} transform="rotate({r.angle} 9 21)">
+              <rect x="6" y="3" width="6" height="17" rx="1.6" class="wii-badge__remote" />
+              <circle cx="9" cy="7.6" r="1.3" class="wii-badge__remote-a" />
+            </g>
+          {/each}
+        </svg>
+        <span class="wii-badge__times">×3</span>
+      </span>
     {:else}
       <span class="wii-badge__key">
         {#if button === 'home'}
@@ -75,7 +78,7 @@
         {/if}
       </span>
       {#if plus}
-        <span class="wii-badge__plus">+</span>
+        <svg class="wii-badge__plus" viewBox="0 0 24 24" focusable="false"><path d="M12 4v16M4 12h16" /></svg>
         <span class="wii-badge__key" style:--wii-colour={WII_COLOURS[plus]}>{LABEL[plus]}</span>
       {/if}
     {/if}

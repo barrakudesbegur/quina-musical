@@ -160,7 +160,7 @@
   oncontextmenu={(e) => e.preventDefault()}
 >
   <span class="two-level__main">
-    {#if locked}<span class="two-level__lock"><Icon name="lock" /><span class="visually-hidden">{S.cluster.talkLocked}</span></span>{/if}
+    {#if locked}<span class="two-level__lock"><Icon name="lock" alone /><span class="visually-hidden">{S.cluster.talkLocked}</span></span>{/if}
     <Icon name={t.icon} outline />
     <span class="big-button__text">
       <span class="big-button__label">{t.label}</span>

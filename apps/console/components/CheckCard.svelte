@@ -84,7 +84,7 @@
           <span class="check-cell__art">
             <Cover songId={cell.songId} size="md" />
             {#if cell.mark}
-              <span class="check-cell__mark" aria-hidden="true"><Icon name={cell.mark === 'bad' ? 'cross' : 'check'} /></span>
+              <span class="check-cell__mark" aria-hidden="true"><Icon name={cell.mark === 'bad' ? 'cross' : 'check'} alone /></span>
             {/if}
             {#if cell.next}<span class="check-cell__next" aria-hidden="true">{S.check.nextTag}</span>{/if}
           </span>
@@ -103,7 +103,7 @@
     {#if pass}
       <p class="check-verdict__line"><Icon name="check" /><span>{text}</span></p>
     {:else}
-      <p class="check-verdict__fail" aria-hidden="true"><span class="check-verdict__cross"><Icon name="cross" /></span><span class="check-verdict__word">{S.check.failed}</span></p>
+      <p class="check-verdict__fail" aria-hidden="true"><span class="check-verdict__cross"><Icon name="cross" alone /></span><span class="check-verdict__word">{S.check.failed}</span></p>
       {#if failedSong !== null}
         <div class="check-verdict__song" aria-hidden="true">
           <Cover songId={failedSong} size="md" />

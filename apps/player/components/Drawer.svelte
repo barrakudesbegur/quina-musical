@@ -142,12 +142,12 @@
     <span class="drawer__grab" aria-hidden="true"></span>
     <header class="drawer__header">
       {#if onback}
-        <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={onback}><Icon name="back" /></button>
+        <button type="button" class="drawer__button drawer__back" aria-label={S.back} onclick={onback}><Icon name="back" alone /></button>
       {:else if place.stacked}
-        <button type="button" class="drawer__button drawer__back" aria-label={S.back} data-touch-release="none" onclick={() => requestClose('top')}><Icon name="back" /></button>
+        <button type="button" class="drawer__button drawer__back" aria-label={S.back} data-touch-release="none" onclick={() => requestClose('top')}><Icon name="back" alone /></button>
       {/if}
       <h2 class="drawer__title" id="drawer-title-{name}">{title}</h2>
-      <button type="button" class="drawer__button drawer__close" aria-label={S.close} data-touch-release="none" onclick={() => requestClose(place.stacked && place.closeAll ? 'all' : 'top')}><Icon name="close" /></button>
+      <button type="button" class="drawer__button drawer__close" aria-label={S.close} data-touch-release="none" onclick={() => requestClose(place.stacked && place.closeAll ? 'all' : 'top')}><Icon name="close" alone /></button>
     </header>
   </div>
   <div class="drawer__body">

@@ -38,7 +38,7 @@
     {#if sound.kind === 'song'}
       <Cover songId={sound.songId} size="sm" />
     {:else}
-      <span class="cover cover--sm cover--missing" data-music={sound.kind === 'music' ? sound.music : undefined} aria-hidden="true"><Icon name="music" /></span>
+      <span class="cover cover--sm cover--missing" data-music={sound.kind === 'music' ? sound.music : undefined} aria-hidden="true"><Icon name="music" alone /></span>
     {/if}
     <div class="now-line__text" aria-hidden="true">
       <p class="panel__label now-line__label">

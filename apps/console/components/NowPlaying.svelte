@@ -61,7 +61,7 @@
 {#if snap && ring}
   <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring={ring.state} aria-labelledby="{uid}-title">
     {#if music}
-      <span class="cover cover--lg cover--missing now-playing__music" data-music={music} aria-hidden="true"><Icon name="music" /></span>
+      <span class="cover cover--lg cover--missing now-playing__music" data-music={music} aria-hidden="true"><Icon name="music" alone /></span>
     {:else}
       <Cover songId={snap.current?.songId ?? null} size="lg" morph="cover" />
     {/if}

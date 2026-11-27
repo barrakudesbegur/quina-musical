@@ -862,9 +862,16 @@
   white-space: nowrap;
 }
 
+/* A pill's icon: the icon family's size step (1.25 × the text) and ink (H1: the stem of the text beside it) */
 .night__pill-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 1.25em;
+  height: 1.25em;
+  overflow: visible;
+}
+
+.night__pill-icon :is(path, circle) {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 0.155em;
 }
 
 .night__pills {

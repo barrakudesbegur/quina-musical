@@ -24,7 +24,7 @@
 
 {#if music}
   <section class="panel now-playing interval-music" aria-labelledby="{uid}-title" data-set={music.set} data-throw={thrown ? (thrown.playing ? 'playing' : 'stopped') : undefined}>
-    <span class="cover cover--md cover--missing interval-music__tile" aria-hidden="true"><Icon name="music" /></span>
+    <span class="cover cover--md cover--missing interval-music__tile" aria-hidden="true"><Icon name="music" alone /></span>
     <div class="now-playing__song">
       {#if thrown?.playing}
         <h2 class="panel__label interval-music__label" id="{uid}-title">

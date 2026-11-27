@@ -40,7 +40,7 @@
         </h2>
         <div class="pace__row" role="group" aria-label={S.pace.presets}>
           <button type="button" class="mini pace__step" data-anim="press" disabled={!paceOk} aria-label={S.pace.minusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: -PACE_FINE_STEP_SEC })}>
-            <Icon name="minus" />
+            <Icon name="minus" alone />
           </button>
           {#each presets as preset (preset.sec)}
             {@const isRecommended = preset.sec === recommended}
@@ -66,7 +66,7 @@
             </button>
           {/each}
           <button type="button" class="mini pace__step" data-anim="press" disabled={!paceOk} aria-label={S.pace.plusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: PACE_FINE_STEP_SEC })}>
-            <Icon name="plus" />
+            <Icon name="plus" alone />
           </button>
         </div>
       </div>

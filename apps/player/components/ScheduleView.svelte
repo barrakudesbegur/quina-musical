@@ -43,7 +43,7 @@
             <button type="button" class="schedule__round-button" aria-label={S.prizesOf(name)} aria-haspopup="dialog" onclick={() => onround(number)}>
               <span class="schedule__round-time">{timeOf(row)}</span>
               <span class="schedule__dot">
-                {#if row.roundKind !== 'normal'}<RoundMark kind={row.roundKind} />{:else if row.state === 'done'}<Icon name="tick" />{/if}
+                {#if row.roundKind !== 'normal'}<RoundMark kind={row.roundKind} />{:else if row.state === 'done'}<Icon name="tick" alone />{/if}
               </span>
               <span class="schedule__round-name">{name}</span>
               {#if row.state === 'current'}<span class="schedule__round-state">{S.roundState.current}</span>{/if}
@@ -53,7 +53,7 @@
         {:else}
           <li class="schedule__moment" data-state={row.state} data-kind={row.kind}>
             <span class="schedule__round-time">{timeOf(row)}</span>
-            <span class="schedule__dot"><Icon name={MOMENT_ICON[row.kind]} /></span>
+            <span class="schedule__dot"><Icon name={MOMENT_ICON[row.kind]} alone /></span>
             <span class="schedule__moment-name">{momentName(row)}</span>
           </li>
         {/if}

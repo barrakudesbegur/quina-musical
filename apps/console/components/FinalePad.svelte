@@ -156,7 +156,7 @@
           </button>
           <button type="button" class="pad-key" data-anim="press" onclick={() => press('0')}>0</button>
           <button type="button" class="pad-key pad-key--enter" data-anim="press" data-testid="finale-enter" disabled={!pad.digits || full} onclick={enter}>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v7a3 3 0 0 1-3 3H6" /><path d="M10 11l-4 4 4 4" /></svg>
+            <Icon name="enter" />
             <span class="visually-hidden">{F.enter}</span>
           </button>
         </div>
@@ -182,7 +182,7 @@
                 <li class="check-cell" data-in data-revealed data-mark={song.landed ? 'bad' : 'good'} aria-label={`${title(song.songId)}: ${song.landed ? CA.landed : CA.notLanded}`}>
                   <span class="check-cell__art">
                     <Cover songId={song.songId} size="md" />
-                    <span class="check-cell__mark" aria-hidden="true"><Icon name={song.landed ? 'cross' : 'check'} /></span>
+                    <span class="check-cell__mark" aria-hidden="true"><Icon name={song.landed ? 'cross' : 'check'} alone /></span>
                   </span>
                   <span class="check-cell__title" aria-hidden="true">{title(song.songId)}</span>
                 </li>

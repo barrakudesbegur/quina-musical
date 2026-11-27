@@ -92,18 +92,18 @@
           <span class="now-ring__value" data-tick={view.state === 'autoLast' || undefined}>{seconds ?? '—'}{#if seconds !== null}<span class="now-ring__unit"> s</span>{/if}</span>
         {/key}
       {:else if view.state === 'suspense'}
-        <Icon name="suspense" />
+        <Icon name="suspense" alone />
         <span class="now-ring__value now-ring__value--small">{seconds ?? '—'}{#if seconds !== null}<span class="now-ring__unit"> s</span>{/if}</span>
       {:else if view.state === 'manual' || view.state === 'manualFinal'}
-        <span class="now-ring__pulse"><Icon name="next" outline /></span>
+        <span class="now-ring__pulse"><Icon name="next" outline alone /></span>
       {:else if view.state === 'lastStanding'}
-        <span class="now-ring__pulse"><Icon name="claim" outline /></span>
+        <span class="now-ring__pulse"><Icon name="claim" outline alone /></span>
       {:else if view.state === 'finaleWinner'}
-        <span class="now-ring__pulse"><Icon name="star" outline /></span>
+        <span class="now-ring__pulse"><Icon name="star" outline alone /></span>
       {:else if view.state === 'checking'}
-        <Icon name="claim" outline />
+        <Icon name="claim" outline alone />
       {:else if view.state === 'checkFailed'}
-        <Icon name="cross" outline />
+        <Icon name="cross" outline alone />
       {:else if view.state === 'waiting'}
         <span class="now-ring__value">—</span>
       {/if}
@@ -112,7 +112,7 @@
 
   {#if view.badge}
     <span class="now-ring__badge" data-badge={view.badge} title={S.nowPlaying.ring.badge[view.badge]}>
-      <Icon name={BADGE_ICON[view.badge]} /><span class="visually-hidden">{S.nowPlaying.ring.badge[view.badge]}</span>
+      <Icon name={BADGE_ICON[view.badge]} alone /><span class="visually-hidden">{S.nowPlaying.ring.badge[view.badge]}</span>
     </span>
   {/if}
 </span>

@@ -1,24 +1,14 @@
 <!--
-  A decorative icon in currentColor. Always paired with a visible text label (or one for assistive technology).
-  `outline`: the big buttons' sticker look, the same paths drawn first as a thick ink line underneath (the
-  accent detail stays clean).
+  A console icon: the shared line icon (packages/ui/icons, H1) under the console's own name (icons.ts), in
+  currentColor with the family's stroke. Always paired with a visible text label (or one for assistive technology).
+  `outline`: the big buttons' sticker look, the same line over a wider ink line (the accent detail stays clean).
+  `alone`: no text beside it (a cover's placeholder, a badge), so its ink comes from its own box.
 -->
 <script lang="ts">
-  import { ICONS, partClass, pathOf, type IconName, type IconPath } from '../icons.ts';
+  import LineIcon from '../../../packages/ui/icons/Icon.svelte';
+  import { CONSOLE_ICONS, type IconName } from '../icons.ts';
 
-  let { name, outline = false }: { name: IconName; outline?: boolean } = $props();
-  const paths: readonly IconPath[] = $derived(ICONS[name]);
+  let { name, outline = false, alone = false }: { name: IconName; outline?: boolean; alone?: boolean } = $props();
 </script>
 
-<svg class="icon icon--{name}" class:icon--outline={outline} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-  {#if outline}
-    <g class="icon__under">
-      {#each paths as p, i (i)}
-        {#if partClass(p) !== 'icon__accent'}<path d={pathOf(p)} />{/if}
-      {/each}
-    </g>
-  {/if}
-  {#each paths as p, i (i)}
-    <path d={pathOf(p)} class={partClass(p)} />
-  {/each}
-</svg>
+<LineIcon name={CONSOLE_ICONS[name]} {outline} {alone} class="icon--{name}" />
