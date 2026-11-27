@@ -22,7 +22,8 @@
   // all). The motion, the drag and the dismissal are the Sheet's (ANIMATIONS.md `drawer-*`). `canClose` lets the
   // content hold it open first (the pad asks before leaving with a number typed); it gets the way to go on closing.
   // A drawer opened from this one's content (the QR camera over the pad, `qr-scan`) stacks on it: this one steps back
-  // while it's open and forward as it starts to leave; its ✕ then asks this one to close as this one's ✕ would.
+  // while it's open and forward as it starts to leave. It is a step of this drawer, not a level of the app's stack
+  // (§8 Y3): it shows no ‹, and every way of closing it (✕, Esc or the back gesture, a drag) closes only it.
   import { getContext, onDestroy, setContext, type Snippet } from 'svelte';
   import Sheet from '../../../packages/ui/components/Sheet.svelte';
   import { S } from '../strings.ts';
@@ -34,6 +35,7 @@
     onclose,
     canClose,
     onback,
+    drag = 'free',
     children,
   }: {
     title: string;
@@ -44,6 +46,8 @@
     canClose?: (proceed: () => void) => boolean;
     /** A step inside the drawer to go back from: "‹", Esc and the back gesture do this instead. */
     onback?: () => void;
+    /** 'stiff' while it holds a form (§8 Y3): a strong rubber band, and only a long pull closes it (`drawer-drag`). */
+    drag?: 'free' | 'stiff';
     children: Snippet;
   } = $props();
 
@@ -54,9 +58,9 @@
   let covered = $state(false);
   setContext<DrawerPlace>(DRAWER_PLACE, {
     depth: 0,
-    stacked: true,
+    stacked: false,
     origin: 'bottom',
-    closeAll: () => sheet?.requestClose(place.stacked && place.closeAll ? 'all' : 'self'),
+    closeAll: null,
     here: (state) => (covered = state === 'open'),
   });
 
@@ -68,7 +72,12 @@
     onclose();
   }
 
-  /** ✕ on a stacked drawer: this one goes, then the ones under it (the app's stack, or the drawer that opened it). */
+  /** Closes it the way its ✕ does, with its motion and sound (the pad's «Fet»): the stack with it when it's stacked. */
+  export function dismiss(): void {
+    sheet?.requestClose(place.stacked && place.closeAll ? 'all' : 'self');
+  }
+
+  /** ✕ on a stacked drawer: this one goes, then the ones under it (the app's stack). */
   const closeAll = $derived(place.stacked && place.closeAll ? () => (gone(), place.closeAll?.()) : null);
 </script>
 
@@ -81,6 +90,7 @@
   depth={place.depth > 0 || covered ? 'under' : 'top'}
   back={place.stacked}
   {onback}
+  {drag}
   {canClose}
   onclose={gone}
   onleave={(which) => {

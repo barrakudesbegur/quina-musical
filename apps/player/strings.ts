@@ -66,6 +66,8 @@ export const S = {
   seeCard: 'Veure’l',
   /** Leaving the pad with a number typed (`pad-leave`). */
   discardTitle: (id: number) => `Descartar el #${id}?`,
+  /** Leaving «Editar» with an edit not saved (§8 Y3). */
+  discardEditTitle: 'Descartar els canvis?',
   discardText: 'Encara no l’has desat.',
   discardYes: 'Descartar',
   discardNo: 'Continuar',
@@ -77,6 +79,14 @@ export const S = {
     unknown: (id: number) => `No hi ha cap cartró amb el número ${id}.`,
   },
   added: (id: number) => `Cartró #${id} afegit`,
+  /** «Afegir cartró» after «Desar» (`pad-saved`, §8 Y3; replaces D200's banner): it confirms, then asks. */
+  savedTitle: (id: number) => `Cartró #${id} afegit!`,
+  savedYours: (count: number) => (count === 1 ? 'El teu cartró' : `Els teus ${count} cartrons`),
+  addAnotherAsk: 'Vols afegir un altre cartró?',
+  addAnotherHint: 'Si jugues amb més cartrons, o vols seguir els de la família, afegeix-los: el mòbil els segueix tots alhora.',
+  savedFull: (max: number) => `Ja en tens ${max}, que és el màxim.`,
+  addAnother: 'Un altre',
+  done: 'Fet',
 
   // Cards
   cardsTitle: 'Els teus cartrons',

@@ -71,9 +71,11 @@
             style:--card-color="var(--card-color-{card.color})"
             style:--shift="{drag?.id === card.id ? drag.dy : shiftOf(i)}px"
           >
+            <!-- The grip owns its gesture (data-own-gesture): a drag on it never drags the drawer (§8 Y3). -->
             <button
               type="button"
               class="menu__grip"
+              data-own-gesture
               aria-label={S.moveLabel(who)}
               onpointerdown={(e) => startDrag(e, card.id, i)}
               onpointermove={moveDrag}

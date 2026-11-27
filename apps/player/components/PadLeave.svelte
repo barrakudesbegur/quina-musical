@@ -9,10 +9,11 @@
   import { PLAYER } from '../actions.ts';
   import { S } from '../strings.ts';
 
-  let { id, ondiscard, oncontinue }: { id: number; ondiscard: () => void; oncontinue: () => void } = $props();
+  // «Editar» asks the same with its own title (`title`: «Descartar els canvis?», §8 Y3).
+  let { id, title = null, ondiscard, oncontinue }: { id: number; title?: string | null; ondiscard: () => void; oncontinue: () => void } = $props();
 </script>
 
-<Dialog class="pad-leave" fill="paper" title={S.discardTitle(id)} body={S.discardText} data-anim="pad-leave" oncancel={oncontinue}>
+<Dialog class="pad-leave" fill="paper" title={title ?? S.discardTitle(id)} body={S.discardText} data-anim="pad-leave" oncancel={oncontinue}>
   {#snippet actions()}
     <Button {...PLAYER.keepEditing} class="pad-leave__continue" autofocus onclick={oncontinue} />
     <Button {...PLAYER.discardChanges} class="pad-leave__discard" onclick={ondiscard} />

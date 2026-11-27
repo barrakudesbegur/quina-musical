@@ -3,6 +3,8 @@
   // the same NumberField as «Afegir cartró», typed on the phone's own number keyboard, with the QR button at its end:
   // the camera opens as its own drawer stacked over this one (as the pad's, D141) and writes the number it finds.
   // A number that isn't a card, or is another of the player's cards, turns the field red with the reason under it.
+  // It holds a form, so it drags stiff (§8 Y3, `drawer-drag`), and closing it with an edit not saved (✕, ‹, a drag, the
+  // back gesture) asks first, as the pad does (PadLeave, `pad-leave`); its own «Descartar» doesn't ask.
   import Button from '../../../packages/ui/components/Button.svelte';
   import NumberField from '../../../packages/ui/components/NumberField.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
@@ -12,6 +14,7 @@
   import { S } from '../strings.ts';
   import IconPicker from './IconPicker.svelte';
   import Drawer from './Drawer.svelte';
+  import PadLeave from './PadLeave.svelte';
   import QrButton from './QrButton.svelte';
   import QrScan from './QrScan.svelte';
 
@@ -45,6 +48,16 @@
   /** A QR has just filled the number in: the field's green ring (`qr-found`). */
   let found = $state(0);
 
+  /** The leave question is open; `proceed` closes the drawer the way the player asked. */
+  let leaving = $state<{ proceed: () => void } | null>(null);
+  const edited = $derived(number !== String(card.id) || value !== (card.name ?? '') || identity !== card.color);
+
+  function canClose(proceed: () => void): boolean {
+    if (!edited) return true;
+    leaving = { proceed };
+    return false;
+  }
+
   function scanned(cardId: number): void {
     number = String(cardId);
     scanOpen = false;
@@ -58,7 +71,7 @@
   });
 </script>
 
-<Drawer name="rename" title={S.editTitle} {onclose}>
+<Drawer name="rename" title={S.editTitle} drag="stiff" {onclose} {canClose}>
   <form
     class="rename"
     onsubmit={(e) => {
@@ -106,3 +119,15 @@
     </Drawer>
   {/if}
 </Drawer>
+{#if leaving}
+  <PadLeave
+    id={Number(number) || card.id}
+    title={S.discardEditTitle}
+    oncontinue={() => (leaving = null)}
+    ondiscard={() => {
+      const proceed = leaving?.proceed;
+      leaving = null;
+      proceed?.();
+    }}
+  />
+{/if}
