@@ -39,13 +39,14 @@ export function glideA(el: HTMLElement): void {
     // Gliding, it doesn't also pop in; and it's measured at its full size, not mid-pop.
     el.dataset.glide = '';
     const { dx, dy, sx, sy } = invert(start.box, boxOf(el));
-    const duration = parseCssDurationMs(getComputedStyle(el).getPropertyValue('--dur-a-glide'), FALLBACK_MS);
+    const style = getComputedStyle(el);
+    const duration = parseCssDurationMs(style.getPropertyValue('--dur-a-glide'), FALLBACK_MS);
     el.animate(
       [
         { transformOrigin: 'top left', transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
         { transformOrigin: 'top left', transform: 'none' },
       ],
-      { duration, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+      { duration, easing: style.getPropertyValue('--ease-out').trim() },
     );
   } catch {
     // Motion is a bonus: the badge is already in its place.

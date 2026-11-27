@@ -2,7 +2,7 @@
 // mark their parts with `data-morph="cover|title|artist"` and register their roots here. At the landing, before
 // the snapshot changes them, `capture()` records where the next song's parts are and clones Ara sona's old
 // content; once Ara sona shows the landed song, `play()` flies its parts in from there (transforms only) and
-// fades the clone out. Never throws; without the Web Animations API it does nothing.
+// fades the clone out, on the `--ease-out` token. Never throws; without the Web Animations API it does nothing.
 import { invert, type Box } from './logic/next-to-now.ts';
 
 const PARTS = ['cover', 'title', 'artist'] as const;
@@ -67,7 +67,7 @@ export function play(captured: Captured): void {
   try {
     const now = roots.now;
     if (!now || typeof now.animate !== 'function') return;
-    const ease = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const ease = getComputedStyle(now).getPropertyValue('--ease-out').trim();
     for (const part of PARTS) {
       const from = captured.from[part];
       const el = now.querySelector<HTMLElement>(`[data-morph="${part}"]`);
