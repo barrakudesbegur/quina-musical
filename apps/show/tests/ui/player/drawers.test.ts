@@ -1,8 +1,8 @@
-// The player app's drawers (D73, D87): the stack over the home screen, where each one comes from, when a drag closes
-// one, and moving a card in Ajustos.
+// The player app's drawers (D73, D87): the stack over the home screen, where each one comes from, and moving a
+// card in Ajustos.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { OPENABLE, depthOf, dragCloses, drawerOrigin, drawersOnCelebration, isOpenable, popDrawer, pushDrawer, type Drawer } from '../../../../player/logic/drawers.ts';
+import { OPENABLE, depthOf, drawerOrigin, drawersOnCelebration, isOpenable, popDrawer, pushDrawer, type Drawer } from '../../../../player/logic/drawers.ts';
 import { addCard, emptyData, moveCard } from '../../../../player/logic/storage.ts';
 
 test('drawers stack: a round\'s prizes over Horari, back to Horari, then home', () => {
@@ -24,14 +24,6 @@ test('Premis grows out of the bottom-left corner, Horari the bottom-right; the r
   assert.equal(drawerOrigin({ kind: 'premis', round: 2 }, true), 'bottom', "a round's prizes over Horari");
   for (const d of [{ kind: 'ajustos' }, { kind: 'pad' }, { kind: 'wipe' }, { kind: 'anyPassat' }] as Drawer[]) assert.equal(drawerOrigin(d, false), 'bottom');
   assert.equal(drawerOrigin({ kind: 'rename', cardId: 1 }, true), 'bottom');
-});
-
-test('a drag closes the drawer past 30 % of its height or on a downward flick; otherwise it springs back', () => {
-  assert.equal(dragCloses(200, 600, 0.1), true, 'a third of the way');
-  assert.equal(dragCloses(150, 600, 0.1), false);
-  assert.equal(dragCloses(40, 600, 0.8), true, 'a flick');
-  assert.equal(dragCloses(0, 600, 2), false, 'not moved');
-  assert.equal(dragCloses(40, 600, -0.8), false, 'flicked back up');
 });
 
 test('the review links open Premis, Horari, Ajustos or the pad', () => {

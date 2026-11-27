@@ -71,7 +71,6 @@
   --player-column: 32rem;
   --player-corner: 13rem; /* a corner button's disc (208 px); a quarter of it shows */
   --player-corner-space: 7.5rem; /* room at the bottom of the home screen, so the last row scrolls clear of the corners */
-  --player-drawer-top: 6rem; /* a tall drawer leaves the garland and the title showing above it */
   --reel-size: min(42vw, 10rem);
   --player-reel-flank: 0.74; /* the drum's side cards, relative to the centre one */
   --player-cover-row: 3.5rem;
@@ -199,7 +198,6 @@
 .now__next,
 .check-strip__text,
 .check-strip__result,
-.drawer__title,
 .now__summary-title,
 .pause-notice__title,
 .menu__card-name {
@@ -217,7 +215,6 @@
 .prize-round__title,
 .check-strip__text,
 .check-strip__result,
-.drawer__title,
 .now__summary-title,
 .now__when,
 .pause-notice__title,
@@ -1612,7 +1609,7 @@
 }
 
 .schedule__moment .schedule__dot {
-  background: var(--drawer-bg, var(--color-panel));
+  background: var(--sheet-bg, var(--color-panel));
   border: 2px dashed var(--schedule-muted);
   color: var(--schedule-muted);
 }
@@ -2009,219 +2006,33 @@
   width: 100%;
 }
 
-/* ---- drawers (D73; the J2 look, D87): one title, a grab handle, the content scrolls; ANIMATIONS.md `drawer-*` ---- */
-html:has(.drawer[open]) {
-  overflow: hidden;
+/* ---- drawers (D73; the J2 look, D87): the design system's Sheet (packages/ui/components/sheet.css, C3) with the
+   app's sizes: the tall ones reach up to the title (the pad is a little shorter: its own rule); the questions (remove,
+   wipe) stay as tall as their words. ---------------------------------------------------------------------------- */
+.drawer:is(.drawer--premis, .drawer--horari, .drawer--ajustos) {
+  height: calc(100dvh - var(--sheet-top));
 }
 
 .drawer {
-  /* the boards' sheet: a shade darker than the panels, so the settings panel stands out on it */
-  --drawer-bg: #1f2a60;
-  width: 100%;
-  max-width: var(--player-column, 32rem);
-  max-height: calc(100dvh - var(--player-drawer-top));
-  margin: auto auto 0;
-  padding: 0 0 env(safe-area-inset-bottom, 0px);
-  box-sizing: border-box;
-  background: var(--drawer-bg);
-  color: var(--color-text);
   font-size: var(--player-text-body);
   font-weight: var(--player-weight-body);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-bottom: 0;
-  border-radius: 1.875rem 1.875rem 0 0;
-  box-shadow: 0 -6px 0 rgb(10 14 38 / 0.5);
-  overflow: hidden;
-  transform: translateY(var(--drag-y, 0px));
-  transform-origin: 50% 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer {
-    transition: transform var(--dur-drawer-spring) var(--ease-out);
-  }
-}
-
-.drawer[open] {
-  display: flex;
-  flex-direction: column;
-}
-
-/* The tall drawers reach up to the title (the pad is a little shorter: its own rule); the questions (remove, wipe)
-   stay as tall as their words. */
-.drawer:is(.drawer--premis, .drawer--horari, .drawer--ajustos) {
-  height: calc(100dvh - var(--player-drawer-top));
-}
-
-.drawer::backdrop {
-  background: rgb(8 10 30 / 0.55);
-  animation: player-fade-in var(--dur-drawer-backdrop) var(--ease-out);
-}
-
-.drawer__top {
-  flex: none;
-  touch-action: none;
-  cursor: grab;
-}
-
-.drawer__grab {
-  display: block;
-  width: 2.875rem;
-  height: 0.375rem;
-  margin: 0.5625rem auto 0;
-  border-radius: 3px;
-  background: #8c99d9;
-}
-
-/* The title row starts 24 px from the drawer's top edge (the handle above it takes 15). */
-.drawer__header {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.5625rem var(--space-4) 0.625rem;
-}
-
-.drawer__title {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 2rem;
-  line-height: 1;
-  color: #fff;
-  -webkit-text-stroke-width: 5px;
-  letter-spacing: 0.03em;
-}
-
-.player .drawer__button,
-.drawer .drawer__button {
-  width: 2.75rem;
-  height: 2.75rem;
-  min-height: 0;
-  flex: none;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  box-sizing: border-box;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: #2c3878;
-  color: var(--color-text);
-  box-shadow: 0 3px 0 var(--color-night-shadow);
-  cursor: pointer;
-}
-
-.drawer__button .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.drawer__back .icon {
-  width: 1.375rem;
-  height: 1.375rem;
-}
-
-.drawer__body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: var(--space-4);
-  padding: 0 var(--space-4) var(--space-5);
 }
 
 /* Premis isn't designed yet (U30): it keeps its old room under the title, for its tiles' ribbons. */
-.drawer--premis .drawer__body {
+.drawer--premis .sheet__body {
   padding-top: var(--space-1);
 }
 
-.drawer__body > p,
+.drawer .sheet__body > p,
 .drawer__note {
   color: var(--color-text-soft);
-}
-
-/* Opening: out of its corner (Premis, Horari), else up from the bottom edge. */
-.drawer[data-state='open'][data-origin='left'] {
-  transform-origin: 0% 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='left'] {
-    animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
-  }
-}
-
-.drawer[data-state='open'][data-origin='right'] {
-  transform-origin: 100% 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='right'] {
-    animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='bottom'] {
-    animation: player-drawer-rise var(--dur-drawer-rise) var(--ease-out);
-  }
-}
-
-/* Following the finger: no spring until it lets go. */
-.drawer[data-dragging='true'] {
-  transition: none;
-}
-
-/* Another drawer over this one: it steps back. */
-.drawer[data-depth='under'] {
-  transform-origin: 50% 0%;
-  transform: translateY(-0.75rem) scale(0.94);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer[data-depth='under'] {
-    transition: transform var(--dur-drawer-stack) var(--ease-out);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .drawer[data-state='closing'] {
-    animation: player-drawer-out var(--dur-drawer-out) ease-in forwards;
-  }
-}
-
-@keyframes player-drawer-grow {
-  from {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  33% {
-    opacity: 1;
-  }
-}
-
-@keyframes player-drawer-rise {
-  from {
-    transform: translateY(100%);
-  }
-}
-
-@keyframes player-drawer-out {
-  from {
-    transform: translateY(var(--drag-y, 0px));
-  }
-  to {
-    transform: translateY(100%);
-  }
 }
 
 /* ---- "Afegir cartró" (boards "App · calaix per afegir un cartró", "afegir cartró: casos especials"): the number on a
    paper field, the name, the icons, the smart keypad and "Desar", 10 px apart. The drawer is a little shorter than
    the other tall ones (the board's starts 150 px down on an 844 px phone). ----------------------------------------- */
 .drawer.drawer--pad {
-  height: min(calc(100dvh - var(--player-drawer-top)), 43.375rem);
+  height: min(calc(100dvh - var(--sheet-top)), 43.375rem);
 }
 
 .number-pad {
@@ -2233,13 +2044,13 @@ html:has(.drawer[open]) {
 /* «Desar» is sticky (D188): pinned to the drawer's bottom on its own strip, the fields scrolling above it, so a small
    phone still shows it (board "afegir cartró: casos especials", the third frame). The pad fills the body, and the
    body's bottom padding moves into the strip, so the strip sits flush on the drawer's edge. */
-.drawer__body:has(> .number-pad) {
+.drawer .sheet__body:has(> .number-pad) {
   display: flex;
   flex-direction: column;
   padding-bottom: 0;
 }
 
-.drawer__body > .number-pad {
+.drawer .sheet__body > .number-pad {
   flex: 1 0 auto;
 }
 
@@ -2250,7 +2061,7 @@ html:has(.drawer[open]) {
   margin-top: auto;
   margin-inline: calc(-1 * var(--space-4));
   padding: var(--space-2) var(--space-4) var(--space-3);
-  background: var(--drawer-bg);
+  background: var(--sheet-bg);
   border-top: 2px solid #2c3878;
   box-shadow: 0 -14px 16px -10px rgb(8 10 30 / 0.9);
 }
@@ -3257,7 +3068,7 @@ html:has(.drawer[open]) {
   gap: 0.625rem;
   padding: var(--space-2) 2px;
   border-bottom: 2px solid var(--menu-line);
-  background: var(--drawer-bg, var(--color-panel));
+  background: var(--sheet-bg, var(--color-panel));
   transform: translateY(var(--shift, 0px));
 }
 

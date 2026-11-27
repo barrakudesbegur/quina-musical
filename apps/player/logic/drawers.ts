@@ -47,14 +47,6 @@ export const popDrawer = (stack: readonly Drawer[]): Drawer[] => stack.slice(0, 
 export const depthOf = (stack: readonly Drawer[], index: number): number => stack.length - 1 - index;
 
 /**
- * A drag on a drawer's handle ends: close it when pulled past `threshold` of its height, or flicked down faster than
- * `flick` px/ms (ANIMATIONS.md `drawer-drag`).
- */
-export function dragCloses(dy: number, height: number, velocity: number, threshold = 0.3, flick = 0.5): boolean {
-  return dy > 0 && (dy > height * threshold || velocity > flick);
-}
-
-/**
  * A Celebration starts (the user, D90): Premis, Horari and Ajustos close, with whatever is stacked on them, so the
  * phone shows it. The add-card pad stays open while a number is typed in it, and the drawers under it with it.
  */

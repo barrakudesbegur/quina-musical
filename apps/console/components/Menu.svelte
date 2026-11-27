@@ -11,10 +11,12 @@
   The remote's card also has the shake gesture's switch (D144, D148; the Consola-Menu board). Under the three columns,
   across them, the volume sliders (VolumeSliders; D139).
   Panic and "Acabar la nit" sit apart at the bottom, in a danger zone under a hazard stripe.
-  The sheet slides in (hook menu-sheet).
+  The design system's Sheet (packages/ui/components, C3) from the right edge (origin side-right, hook menu-sheet): ✕
+  «Tanca» and Esc close it, a tap outside doesn't (U188 open); it slides back out as it closes.
 -->
 <script lang="ts">
   import { PHASE_NAMES, type PhaseName } from '@quina/protocol';
+  import { untrack } from 'svelte';
   import { formatClock, formatDrift } from '../../../packages/rules/time.ts';
   import { CONSOLE, type Theme } from '../config.ts';
   import { getConsole, getWii } from '../context.ts';
@@ -31,6 +33,7 @@
   import VolumeSliders from './VolumeSliders.svelte';
   import { getConsoleSounds } from '../context.ts';
   import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
+  import Sheet from '../../../packages/ui/components/Sheet.svelte';
   import WinnersList from './WinnersList.svelte';
 
   /** `onwii`: open the Comandament dialog (the menu closes). */
@@ -40,7 +43,6 @@
   const wii = getWii();
   const sounds = getConsoleSounds();
   const uid = $props.id();
-  let dialog: HTMLDialogElement | undefined = $state();
   let labelDraft = $state('');
   let planBOpen = $state(false);
   const snap = $derived(model.show.state);
@@ -51,17 +53,17 @@
   const subtitle = $derived(S.menu.subtitle(model.label, snap && snap.round.number >= 1 ? S.roundOf(snap.round, model.plan, snap.game.roundsTotal) : null));
   const startable = $derived(flow.scene === 'before' && model.can('roundIntro'));
 
+  // Opening: fresh fields, and `menu-sheet`'s sound (☰ played its press, its release gives way to this).
+  let shown = false;
   $effect(() => {
-    if (!dialog) return;
-    if (open && !dialog.open) {
+    if (open === shown) return;
+    shown = open;
+    if (!open) return;
+    untrack(() => {
       labelDraft = model.label ?? '';
       planBOpen = false;
-      dialog.showModal();
-      // `menu-sheet`'s sound: ☰ played its press, its release gives way to this.
-      touchRelease('drawerOpen');
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
+    });
+    touchRelease('drawerOpen');
   });
 
   function saveLabel(e: SubmitEvent): void {
@@ -77,17 +79,18 @@
   const setPhase = (phaseOverride: PhaseName | null) => model.act('setGame', { phaseOverride });
 </script>
 
-<dialog bind:this={dialog} class="dialog menu-sheet" data-anim="menu-sheet" aria-labelledby="{uid}-title" onclose={() => {
-    open = false;
-    touchPress('drawerClose');
-  }}>
-  <header class="menu-sheet__head">
-    <h2 class="menu-sheet__title" id="{uid}-title">{S.menu.title}</h2>
-    {#if subtitle}<span class="menu-sheet__subtitle">{subtitle}</span>{/if}
-    <button type="button" class="mini menu-sheet__close" data-anim="press" data-touch-release="none" onclick={() => (open = false)}><Icon name="close" /><span>{S.menu.close}</span></button>
-  </header>
-
-  <div class="menu-sheet__body">
+<Sheet
+  bind:open
+  class="menu-sheet"
+  title={S.menu.title}
+  {subtitle}
+  origin="side-right"
+  dismiss="closerequest"
+  closeLabel={S.menu.close}
+  closeText
+  closeSound={null}
+  onclose={() => touchPress('drawerClose')}
+>
     <div class="menu-sheet__column">
       <section class="menu-group" aria-labelledby="{uid}-device">
         <h3 class="menu-group__title" id="{uid}-device"><Icon name="device" />{S.menu.device}</h3>
@@ -231,12 +234,13 @@
       />
     </section>
     {#if snap}<VolumeSliders />{/if}
-  </div>
 
-  <section class="menu-danger" aria-label={S.menu.danger}>
-    <LongPressButton {...ACTIONS.panic} disabled={!model.can('panic')} onconfirm={() => model.act('panic')} />
-    <span class="menu-danger__end">
-      <LongPressButton {...ACTIONS.endNight} disabled={flow.scene === 'after' || !model.can('endGame')} onconfirm={() => model.act('endGame')} />
-    </span>
-  </section>
-</dialog>
+  {#snippet footer()}
+    <section class="menu-danger" aria-label={S.menu.danger}>
+      <LongPressButton {...ACTIONS.panic} disabled={!model.can('panic')} onconfirm={() => model.act('panic')} />
+      <span class="menu-danger__end">
+        <LongPressButton {...ACTIONS.endNight} disabled={flow.scene === 'after' || !model.can('endGame')} onconfirm={() => model.act('endGame')} />
+      </span>
+    </section>
+  {/snippet}
+</Sheet>

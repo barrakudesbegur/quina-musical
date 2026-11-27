@@ -1,0 +1,338 @@
+/*
+ * C3 · Sheet (components-v2.md § 4; Sheet.svelte): the phone's stacked drawers and the console's menu, on the native
+ * modal <dialog>. Motion: ANIMATIONS.md `drawer-open`, `drawer-drag`, `drawer-close`, `drawer-stack` (the phone) and
+ * `menu-sheet` (the console). The entry is a transition from `@starting-style`; the exit a transition to the closed
+ * styles while the dialog is still open (`data-state="closing"`), then `close()`; `display` and `overlay` are
+ * transitioned too, so a close the browser makes by itself still animates (modern-web-guidance:
+ * animate-to-from-top-layer). Every size is a custom property in :where(), so an app's context tunes it.
+ */
+
+/* ---- the phone's sheet, the default: up from the bottom edge or out of a corner ------------------------------ */
+:where(.sheet) {
+  --sheet-bg: #1f2a60; /* the boards' sheet: a shade darker than the panels, so a settings panel stands out on it */
+  --sheet-top: 6rem; /* a tall sheet leaves the garland and the title showing above it */
+  --sheet-width: 32rem; /* the phone-wide column (D212) */
+  --sheet-radius: var(--radius-xl);
+  --sheet-border: var(--line-width-bold);
+  --sheet-shadow: 0 -6px 0 rgb(10 14 38 / 0.5);
+  --sheet-scrim: rgb(8 10 30 / 0.55);
+  /* R7: the corner buttons sit this far from the top and from the side (the grab handle floats above them) */
+  --sheet-inset: var(--space-4);
+  --sheet-corner-size: 3rem;
+  --sheet-corner-bg: #2c3878;
+  --sheet-title-size: 2rem;
+  --sheet-title-color: #fff;
+  --sheet-title-stroke: 5px;
+  --sheet-handle-color: #8c99d9;
+  --sheet-in: var(--dur-drawer-rise, 320ms);
+  --sheet-grow: var(--dur-drawer-grow, 360ms);
+  --sheet-out: var(--dur-drawer-out, 240ms);
+  --sheet-spring: var(--dur-drawer-spring, 200ms);
+  --sheet-stack: var(--dur-drawer-stack, 300ms);
+  --sheet-backdrop-in: var(--dur-drawer-backdrop, 240ms);
+  --sheet-backdrop-out: 200ms;
+}
+
+/* ---- the console's menu: a side sheet from the right (C3, Consola-Menu) ---------------------------------------- */
+:where(.sheet[data-origin='side-right']) {
+  --sheet-bg: var(--color-bg);
+  --sheet-width: min(56rem, 100vw);
+  --sheet-shadow: -6px 0 0 rgb(10 14 38 / 0.45);
+  --sheet-scrim: rgb(15 20 51 / 0.62);
+  --sheet-corner-bg: var(--color-surface);
+  --sheet-corner-size: 2.75rem;
+  --sheet-title-size: 2.375rem;
+  --sheet-title-color: var(--color-title);
+  --sheet-title-stroke: 0;
+  --sheet-in: var(--dur-menu-sheet, 200ms);
+  --sheet-out: 160ms;
+  --sheet-backdrop-in: var(--dur-menu-sheet, 200ms);
+  --sheet-backdrop-out: 160ms;
+}
+
+/* ---- the box ------------------------------------------------------------------------------------------------- */
+/* --sheet-from is the closed place: where it rises from and goes back to (down out of the screen; the menu: 48 px to
+   the right, with motion allowed). --sheet-offset is where the finger holds it (drawer-drag); 0 at rest. */
+.sheet {
+  --sheet-from: 0 100%;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--sheet-width);
+  max-height: calc(100dvh - var(--sheet-top));
+  margin: auto auto 0;
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
+  /* modern-web-guidance (prevent-page-scroll-under-modal-dialog): no scroll chains from the sheet to the page */
+  overscroll-behavior: contain;
+  border: var(--sheet-border) solid var(--color-line);
+  border-bottom: 0;
+  border-radius: var(--sheet-radius) var(--sheet-radius) 0 0;
+  background: var(--sheet-bg);
+  color: var(--color-text);
+  box-shadow: var(--sheet-shadow);
+  transform-origin: 50% 100%;
+  translate: var(--sheet-from);
+}
+
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  translate: 0 var(--sheet-offset, 0px);
+}
+
+/* Closing: back to the closed place while still open (Safari can't keep a closed element in the top layer), then
+   Sheet.svelte calls close(). */
+.sheet[open][data-state='closing'] {
+  translate: var(--sheet-from);
+  pointer-events: none;
+}
+
+/* The console's menu: a side sheet against the right edge; it fades in and out (opacity runs either way, D209). */
+.sheet[data-origin='side-right'] {
+  --sheet-from: 0 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border-bottom: var(--sheet-border) solid var(--color-line);
+  border-right: 0;
+  border-radius: var(--sheet-radius) 0 0 var(--sheet-radius);
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: var(--sheet-out);
+  transition-behavior: allow-discrete;
+}
+
+.sheet[data-origin='side-right'][open]:not([data-state='closing']) {
+  opacity: 1;
+  transition-duration: var(--sheet-in);
+}
+
+/* Another sheet over this one: it steps back (drawer-stack, below); the new one's backdrop darkens it. */
+.sheet[data-depth='under'] {
+  transform-origin: 50% 0%;
+}
+
+/* ---- the backdrop: fades either way (D209), lighter by the share pulled away (drawer-drag) ---------------------- */
+.sheet::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--sheet-scrim);
+  opacity: 0;
+  transition-property: opacity, display, overlay;
+  transition-duration: var(--sheet-backdrop-out);
+  transition-timing-function: var(--ease-in, ease-in);
+  transition-behavior: allow-discrete;
+}
+
+.sheet[open]:not([data-state='closing'])::backdrop {
+  opacity: calc(1 - var(--sheet-pull, 0));
+  transition-duration: var(--sheet-backdrop-in);
+  transition-timing-function: var(--ease-out);
+}
+
+.sheet[data-dragging]::backdrop {
+  transition: none;
+}
+
+/* ---- the entry (drawer-open, menu-sheet): from these styles to the open ones ------------------------------------ */
+@starting-style {
+  .sheet[open] {
+    translate: var(--sheet-from);
+  }
+
+  .sheet[open]:is([data-origin='left'], [data-origin='right']) {
+    translate: 0;
+    scale: 0.2;
+    opacity: 0;
+  }
+
+  .sheet[open][data-origin='side-right'] {
+    opacity: 0;
+  }
+
+  .sheet[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+.sheet[data-origin='left'] {
+  transform-origin: 0% 100%;
+}
+
+.sheet[data-origin='right'] {
+  transform-origin: 100% 100%;
+}
+
+/* ---- motion: moving things only with motion allowed (D209; the phone also needs data-motion="full") ------------ */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet {
+    transition-property: translate, scale, opacity, display, overlay;
+    transition-duration: var(--sheet-out);
+    transition-timing-function: var(--ease-in, ease-in);
+    transition-behavior: allow-discrete;
+  }
+
+  /* Open: rising (drawer-open), springing back to rest (drawer-drag let go), stepping back or forward (drawer-stack). */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open]:not([data-state='closing']) {
+    transition-duration: var(--sheet-in), var(--sheet-stack), var(--sheet-stack), 0s, 0s;
+    transition-timing-function: var(--ease-out);
+  }
+
+  /* Out of its corner: scale 0.2 → 1, fading in over its first third. */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open]:not([data-state='closing']):is([data-origin='left'], [data-origin='right']) {
+    transition-duration: var(--sheet-grow), var(--sheet-grow), calc(var(--sheet-grow) / 3), 0s, 0s;
+  }
+
+  /* Once it has risen, a let-go springs back in its own time (Sheet.svelte sets data-settled after the entry). */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-settled]:not([data-state='closing']) {
+    transition-duration: var(--sheet-spring), var(--sheet-stack), var(--sheet-stack), 0s, 0s;
+  }
+
+  /* Following the finger: no transition until it lets go. */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[data-dragging] {
+    transition: none;
+  }
+
+  /* A close from a drag goes on at the finger's speed (Sheet.svelte sets --sheet-out-drag). */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[data-state='closing'] {
+    transition-duration: var(--sheet-out-drag, var(--sheet-out));
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-depth='under'] {
+    translate: 0 -0.75rem;
+    scale: 0.94;
+  }
+
+  /* menu-sheet: in from 48 px to the right, and back out */
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[data-origin='side-right'] {
+    --sheet-from: 3rem 0;
+    transition-property: translate, opacity, display, overlay;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[data-origin='side-right'][open]:not([data-state='closing']) {
+    translate: 0;
+  }
+}
+
+/* ---- the title bar: the drag target on the phone ---------------------------------------------------------------- */
+.sheet__bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  /* R7: the corner buttons, the tallest things in the row, sit --sheet-inset from the top and from the sides */
+  padding: var(--sheet-inset) var(--sheet-inset) var(--space-3);
+}
+
+.sheet[data-draggable] .sheet__bar {
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet[data-dragging] .sheet__bar {
+  cursor: grabbing;
+}
+
+/* The grab handle floats in the band above the buttons: it never pushes the title row down (#68, R7). */
+.sheet__handle {
+  position: absolute;
+  top: calc((var(--sheet-inset) - 0.375rem) / 2);
+  left: 50%;
+  width: 2.875rem;
+  height: 0.375rem;
+  border-radius: 3px;
+  background: var(--sheet-handle-color);
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.sheet__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--sheet-title-color);
+  font-family: var(--font-display);
+  font-size: var(--sheet-title-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  -webkit-text-stroke: var(--sheet-title-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop-sm, none);
+}
+
+.sheet[data-origin='side-right'] .sheet__title {
+  flex: none;
+  letter-spacing: normal;
+  text-shadow: none;
+}
+
+.sheet__subtitle {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.sheet__title + .sheet__corner {
+  margin-inline-start: auto;
+}
+
+/* ---- the corner buttons: ‹ and ✕ (A7's framed look, the press resource R4) -------------------------------------- */
+:where(.sheet__corner) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 3px;
+  flex: none;
+}
+
+.sheet__corner > .ds-piece {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: var(--sheet-corner-size);
+  height: var(--sheet-corner-size);
+  padding: 0 var(--space-2);
+  box-sizing: border-box;
+  background: var(--sheet-corner-bg);
+  color: var(--color-text);
+  font-weight: var(--font-weight-strong);
+}
+
+.sheet__corner .icon {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.sheet__corner-text {
+  padding-inline-end: var(--space-1);
+}
+
+/* ---- the content: it scrolls, never the page under it ---------------------------------------------------------- */
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--space-4);
+  padding: 0 var(--space-4) var(--space-5);
+}
+
+/* The sticky footer (D188's «Desar»): pinned to the sheet's bottom on its own strip, the content scrolling above. */
+.sheet__footer {
+  flex: none;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 2px solid rgb(255 255 255 / 0.08);
+  background: var(--sheet-bg);
+}
