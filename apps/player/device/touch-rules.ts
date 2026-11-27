@@ -14,11 +14,12 @@ export const PLAYER_TOUCH: TouchWiring = {
     { selector: '.rename button[type="submit"]', cls: 'submit' },
     { selector: '.icon-picker__option', cls: 'iconPick', refuse: true },
     { selector: '.corner-button', cls: 'corner' },
-    { selector: '.cards__add', cls: 'floating' },
+    { selector: '.ara__add-button', cls: 'floating' },
     { selector: 'button, [role="button"]', cls: 'small' },
   ],
-  // The lists people scroll: a control in them sounds at its click, so a scroll that starts on it stays silent.
-  scrollers: '.drawer--horari, .drawer--premis, .drawer--ajustos, .drawer--any-passat, .cards, .song-list',
+  // The lists people scroll: a control in them sounds at its click, so a scroll that starts on it stays silent. The
+  // home's switch too: a swipe can start on it (home-swipe), so a tap sounds at its click.
+  scrollers: '.drawer--horari, .drawer--premis, .drawer--ajustos, .drawer--any-passat, .cards, .song-list, .view-switch',
   // An icon another card has is a label over a disabled radio: the label itself isn't disabled.
   unusable: ':disabled, [aria-disabled="true"], [data-disabled]',
   // A short vibration with each press (R4), where the phone can.

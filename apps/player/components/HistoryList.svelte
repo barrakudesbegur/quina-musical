@@ -3,7 +3,8 @@
   // list the player just scrolls. The song playing now is the first, styled like the rest. A song on one of the player's
   // cards shows that card's icon (never its number), packed zig-zag at the row's right edge (logic/markers.ts). Each
   // row is the design system's SongTile (`row`): long titles hyphenate and stop at two lines, and the cover's corners
-  // are concentric with the row's (#81).
+  // are concentric with the row's (#81). Near the bottom edge, under the corners, the rows shrink and fade very
+  // slightly as they go (ANIMATIONS.md `history-edge`, home.css).
   import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { historyOf, markedIdentities } from '../logic/view.ts';
@@ -24,7 +25,7 @@
     <p class="history__empty">{S.noHistory}</p>
   {:else}
     <p class="history__round-title">{S.roundName({ number: history.round, kind: history.kind }, app.plan)} · {S.songCount(history.landings.length)}</p>
-    <ol class="song-list" reversed>
+    <ol class="song-list" reversed data-anim="history-edge">
       {#each history.landings as l, i (l.position)}
         {@const identities = marks.get(l.songId) ?? []}
         <!-- The song playing now has no style of its own (the user, 26 Nov): it's simply the first row. -->

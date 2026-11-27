@@ -3,6 +3,7 @@
 import '../../packages/ui/tokens.css';
 import '../../packages/ui/base.css';
 import './player.css';
+import './home.css';
 import { mount } from 'svelte';
 import { loadCatalog } from '../../packages/ui/data/catalog.ts';
 import App from './App.svelte';

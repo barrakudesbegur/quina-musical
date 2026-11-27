@@ -1,9 +1,11 @@
 <script lang="ts">
-  import Button from '../../../packages/ui/components/Button.svelte';
-  import { PLAYER } from '../actions.ts';
-  // Cartrons: the player's cards that count in this round as grids, the others listed by name, and "Afegir
-  // cartró". The cards simply scroll (the stacking scroll waits for the user). Naming and removing them is in the
-  // menu. Cards never reorder, in the Desgraciat round too: people find their card by its place.
+  // Cartrons: the player's cards that count in this round as grids, then the others listed by name. The cards simply
+  // scroll (the stacking scroll waits for the user). «+ Cartró» floats over the home (AraHome, D218); with no cards the
+  // empty view keeps its own. Naming and removing cards is in the menu. Cards never reorder, in the Desgraciat round
+  // too: people find their card by its place.
+  // `end` is the list's last spot, where «+ Cartró» used to be: kept for «Instal·la l'app» (D221, the PWA's work stream
+  // W), which shows there once the floating «+ Cartró» has taken over and the phone can install. Nothing fills it yet.
+  import type { Snippet } from 'svelte';
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
   import { standUpPlace } from '../logic/desgraciat.ts';
@@ -12,13 +14,16 @@
   import CardPanel from './CardPanel.svelte';
   import Swatch from './Swatch.svelte';
 
-  let { app }: { app: PlayerApp } = $props();
-  // The card just added (or the pad's "Veure'l") is ringed in gold, and scrolled to at once (no motion).
+  let { app, active = true, end }: { app: PlayerApp; /** The view is the one shown (AraHome). */ active?: boolean; end?: Snippet } = $props();
+  // The card just added (or the pad's "Veure'l") is ringed in gold, and scrolled to at once (no motion) once this view
+  // is the one shown (after the home has set the view's own scroll, so the card wins).
   let section: HTMLElement | undefined = $state();
   // The song playing now (#74): the latest landing, while the round plays (not during a Check or a pause).
   const playingSong = $derived(app.scene === 'play' && !app.paused ? (app.latest?.songId ?? null) : null);
   $effect(() => {
-    if (app.highlightCard !== null) section?.querySelector('[data-highlight]')?.scrollIntoView({ block: 'center' });
+    if (app.highlightCard === null || !active) return;
+    const raf = requestAnimationFrame(() => section?.querySelector('[data-highlight]')?.scrollIntoView({ block: 'center' }));
+    return () => cancelAnimationFrame(raf);
   });
 </script>
 
@@ -56,8 +61,6 @@
         </ul>
       </section>
     {/if}
-    {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <Button {...PLAYER.addCard} class="cards__add" sound="floating" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })} />
-    {/if}
+    {#if end}<div class="cards__end">{@render end()}</div>{/if}
   {/if}
 </section>

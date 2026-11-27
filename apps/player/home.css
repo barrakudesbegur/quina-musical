@@ -1,0 +1,219 @@
+/*
+ * The phone's home (AraHome; D73, D218; boards Mobil-B-J2 ① ②): the drum on top, the Historial | Cartrons switch, the
+ * two views side by side, «+ Cartró» floating between the corners. Its motion (packages/ui/ANIMATIONS.md): `home-swipe`
+ * (JS follows the finger; logic/home-swipe.ts), `drum-collapse` (here: the page's scroll drives `--reel-collapse`; the
+ * drum's own looks are the Reel's, player.css), `history-edge` and `add-card-float`. Moving things move only with
+ * motion allowed (`.player[data-motion='full']`); reduced motion keeps the information still.
+ */
+
+/* ---- layout --------------------------------------------------------------------------------------------------- */
+.ara {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* The views' own headings repeat the switch's words, and the board shows no round line over the songs: kept for
+   screen readers only. */
+.ara :is(.history__heading, .history__round-title, .cards__heading) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ara :is(.history, .cards) > :first-child + * {
+  margin-top: 0;
+}
+
+/* ---- the drum's box: sticks to the top (under the status strips) and collapses (drum-collapse) ------------------ */
+/* It holds the strip's height and reserves the rest of the full drum below it, so it stays stuck all the way down
+   while the content scrolls on under it; its see-through parts let taps through to the rows (the ring tugs, and the
+   strip's panel covers what has scrolled under it). */
+.ara[data-drum] > .ara__top {
+  position: sticky;
+  top: var(--ara-alerts, 0px);
+  z-index: 3;
+  height: var(--reel-strip-height, 5.125rem);
+  pointer-events: none;
+}
+
+.ara[data-drum][data-view='historial'] > .ara__top {
+  margin-bottom: max(0px, calc(var(--ara-full) - var(--reel-strip-height, 5.125rem)));
+}
+
+.ara[data-drum] > .ara__top .drum,
+.ara[data-drum] > .ara__top .reel::before {
+  pointer-events: auto;
+}
+
+/* Cartrons always shows the strip. */
+.ara[data-drum][data-view='cartrons'] > .ara__top {
+  --reel-collapse: 1;
+}
+
+/* Historial: the page's scroll collapses it, over the drum's height difference once it has reached the top. Under
+   reduced motion it switches at once as it reaches the top (a stepped timing: the full drum never covers the switch, and
+   the room it leaves closes as the page scrolls on); with motion, it follows the scroll 1:1. */
+@keyframes drum-collapse {
+  from {
+    --reel-collapse: 0;
+  }
+
+  to {
+    --reel-collapse: 1;
+  }
+}
+
+.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > .now {
+  animation: drum-collapse linear both;
+  animation-timeline: scroll(root block);
+  animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
+  animation-timing-function: steps(1, jump-start);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > .now {
+    animation-timing-function: linear;
+  }
+}
+
+/* ---- the switch and the views (home-swipe) ---------------------------------------------------------------------- */
+/* The swipe's area: the switch and the views. The browser keeps the vertical scroll; sideways is the swipe's. The
+   views lie side by side and only the column shows (clipped at its edges, never a page that scrolls sideways). */
+.ara__swipe {
+  display: grid;
+  gap: var(--space-4);
+  margin-inline: calc(-1 * var(--player-gutter));
+  padding-inline: var(--player-gutter);
+  overflow-x: clip;
+  touch-action: pan-y;
+}
+
+.ara__switch {
+  position: relative;
+  z-index: 2;
+}
+
+.ara__track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 100% 100%;
+  column-gap: calc(2 * var(--player-gutter));
+  align-items: start;
+}
+
+.ara[data-view='cartrons'] .ara__track {
+  translate: calc(-100% - 2 * var(--player-gutter)) 0;
+}
+
+.ara__view {
+  grid-row: 1;
+  min-width: 0;
+}
+
+.ara__view[data-view='historial'] {
+  grid-column: 1;
+}
+
+.ara__view[data-view='cartrons'] {
+  grid-column: 2;
+}
+
+/* The view not shown waits beside the shown one, out of the page's height, unseen until a swipe brings it in. */
+.ara__view:not([data-active]) {
+  position: absolute;
+  inset: 0 0 auto;
+  visibility: hidden;
+}
+
+.ara[data-swiping] .ara__view {
+  visibility: visible;
+}
+
+/* Reduced motion: the views change by the whole home's crossfade (a view transition), opacity only. */
+html:active-view-transition-type(home-crossfade)::view-transition-old(root),
+html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+/* ---- Historial's rows at the bottom edge, under the corners (history-edge): they shrink and fade very slightly --- */
+@keyframes history-edge {
+  from {
+    scale: 0.96;
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    :where(.player[data-motion='full']) .song-list[data-anim='history-edge'] > .song-list__item {
+      animation: history-edge linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 7.5rem;
+    }
+
+    /* The newest row keeps its landing (player.css), which wins while it plays. */
+    :where(.player[data-motion='full']) .song-list[data-anim='history-edge'] > .song-list__item[data-anim='landing'] {
+      animation:
+        history-edge linear both,
+        player-rise-in var(--dur-player-landing) var(--ease-out) both;
+      animation-timeline: view(), auto;
+      animation-range: cover 0% cover 7.5rem, normal;
+    }
+  }
+}
+
+/* ---- «+ Cartró», floating between the corners (add-card-float; D188, D218) ------------------------------------- */
+.ara__add {
+  position: fixed;
+  z-index: 6;
+  inset-inline: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: var(--ara-add, 0);
+  transition: opacity 220ms var(--ease-out);
+}
+
+.ara__add[data-following] {
+  transition: none;
+}
+
+.ara__add:not([data-shown]) {
+  visibility: hidden;
+  transition:
+    opacity 220ms var(--ease-out),
+    visibility 0s linear 220ms;
+}
+
+/* Its own width (a phone's Button fills its row otherwise). */
+.ara__add-button {
+  width: auto;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .ara__add {
+    translate: 0 calc((1 - var(--ara-add, 0)) * 0.75rem);
+    scale: calc(0.9 + 0.1 * var(--ara-add, 0));
+    transition:
+      opacity 220ms var(--ease-out),
+      translate 220ms var(--ease-out),
+      scale 220ms var(--ease-out);
+  }
+
+  :where(.player[data-motion='full']) .ara__add[data-following] {
+    transition: none;
+  }
+
+  :where(.player[data-motion='full']) .ara__add:not([data-shown]) {
+    transition:
+      opacity 220ms var(--ease-out),
+      translate 220ms var(--ease-out),
+      scale 220ms var(--ease-out),
+      visibility 0s linear 220ms;
+  }
+}

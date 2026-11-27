@@ -79,7 +79,10 @@
     {#if app.state}<AraHome {app} />{/if}
   </main>
 
-  <CornerButtons onprizes={() => app.open({ kind: 'premis' })} onschedule={() => app.open({ kind: 'horari' })} />
+  <!-- The corners leave during a Celebration (U175 item 16), and come back when it's closed. -->
+  {#if !app.celebrationOpen}
+    <CornerButtons onprizes={() => app.open({ kind: 'premis' })} onschedule={() => app.open({ kind: 'horari' })} />
+  {/if}
 
   {#if app.celebrationOpen && app.celebration}
     {#key app.celebration.key}
