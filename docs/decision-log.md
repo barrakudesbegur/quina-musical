@@ -1653,3 +1653,18 @@ By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: packages
 ### D246 · Last year's files in R2 are deleted; nothing else expires · 2026-11-27 · Active
 "delete the old stuff now and leave the new files without expiring". An R2 lifecycle rule (`pools-before-d178`) expires `pools/` after one day: about 1,711 objects and 7.6 GB, last year's songs and the first copy of the Hold and Interval music. `repertoires/2026/` is untouched. Backend removes the rule once `pools/` is gone (28–29 Nov), so nothing else ever expires. It supersedes D113's "pruned after the night" for 2026's files.
 By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D113. Lives in: apps/cloud/docs/deploy-plan.md (step 6.5).
+
+### D247 · Last year's R2 copy is deleted today · 2026-11-27 · Active
+"can't you simply delete everything that is not needed now?", and "i would like to not have to wait until tomorrow". Backend deletes the old `pools/default/` keys from their own manifest (1,906 files, 7.74 GB) instead of waiting for D246's one-day rule. The rule goes once `pools/` is shown empty.
+By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D246.
+
+### D248 · R2 stores each file once, by its content · 2026-11-27 · Active; the laptop's side Pending (the user's answer to Backend)
+"i dont think it is a good idea to use pool folders because we have songs shared, so we should only store the files and know wat each is in our code", and "build it now, and you can make that my laptop has the same filenames anf folder structure so it is easier to work with".
+- R2 keeps each file once under its SHA-256, immutable.
+- Each repertoire has a private manifest mapping its readable paths to `{size, sha256}`. The shared Hold, Interval, voice, fx and stinger music is stored once for every repertoire.
+- A push uploads only the missing fingerprints, and a pull rebuilds the laptop's readable folders, checking every hash.
+- Prune deletes only the fingerprints no manifest names, after a dry run. Nothing expires by date (D246).
+- One deploy, with no second version kept beside it. 2026 is re-pushed, and its old copy is deleted after a test pull passes.
+
+Backend is confirming with the user that the laptops keep today's readable folders.
+By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: apps/cloud/docs (Backend); requirements/operations.md › Storage.
