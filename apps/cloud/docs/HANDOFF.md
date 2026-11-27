@@ -67,6 +67,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `837b4f33` (`66f0968`, repertoire 2026): Frontend's cascade layers (production orders CSS as development does; the hold buttons' `touch-action` in production) and the CSS order check.
     - `64ced39e` (`70065cb`, repertoire 2026): D251, «Quina del Desgraciat» on every screen; the 2026 card-types.json's especial side 1 «Desgraciat» (Sound engine updated the file; R2 got the one changed blob, and the old one was pruned).
     - `58be65b4` (`51c0d22`, repertoire 2026): the phone header's «Desgraciat» fallback below about 360 px (D251); comment-only renames.
+    - `3643c9ea` (`6652e44`, repertoire 2026): the phone drum's performance (each Spin solved in an inline Web Worker; only the ring restyled per frame; the solver's golden test). No CSP is set anywhere, so the `blob:` worker loads.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
