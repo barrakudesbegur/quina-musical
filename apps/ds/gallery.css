@@ -188,3 +188,16 @@
   border-radius: var(--radius-lg);
   background: var(--palette-solid);
 }
+
+/* The projector's page: the night sky, the 1440 px box's scale (stream S's components). */
+.ds-gallery[data-density='projector'] {
+  min-height: 100dvh;
+  padding: var(--space-5) clamp(var(--space-4), 4vw, var(--space-7)) var(--space-7);
+  background: var(--color-night);
+  color: var(--color-snow);
+  font-family: var(--font-body);
+  --color-text: var(--color-snow);
+  --color-text-muted: #afc0ff;
+  --color-line: var(--color-ink);
+  --color-shadow: var(--color-night-shadow);
+}

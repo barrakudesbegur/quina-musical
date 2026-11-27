@@ -14,11 +14,13 @@
   import ConsoleWii from '../console/components/DsWii.svelte';
   import type { WiiController } from '../console/wii/controller.svelte.ts';
   import { PLAYER } from '../player/actions.ts';
+  import StatusSections from './StatusSections.svelte';
 
-  let { density, theme }: { density: 'console' | 'phone'; theme: 'light' | 'dark' } = $props();
+  let { density, theme }: { density: 'console' | 'phone' | 'projector'; theme: 'light' | 'dark' } = $props();
 
   // The page's density is fixed for its life (main.ts reads it once from the URL and loads that app's stylesheet).
   const phone = untrack(() => density) === 'phone';
+  const projector = untrack(() => density) === 'projector';
   // The console's Wii keys, as if a remote were connected (the phone shows none).
   if (!phone) {
     setWii({ badges: true, shake: false } as unknown as WiiController);
@@ -71,16 +73,17 @@
 <div
   class="ds-gallery {phone ? 'player' : 'console'}"
   data-density={density}
-  data-theme={phone ? undefined : theme}
-  data-ground={phone || theme === 'dark' ? 'night' : 'paper'}
+  data-theme={phone || projector ? undefined : theme}
+  data-ground={phone || projector || theme === 'dark' ? 'night' : 'paper'}
   data-motion={phone ? (reduced ? 'reduced' : 'full') : undefined}
 >
   <header class="ds-gallery__header">
-    <h1>Design system · {phone ? 'phone' : `console, ${theme} theme`}</h1>
+    <h1>Design system · {phone ? 'phone' : projector ? 'projector' : `console, ${theme} theme`}</h1>
     <nav aria-label="Density and theme">
-      <a href="?density=console&amp;theme=light" aria-current={!phone && theme === 'light' ? 'page' : undefined}>Console · light</a>
-      <a href="?density=console&amp;theme=dark" aria-current={!phone && theme === 'dark' ? 'page' : undefined}>Console · dark</a>
+      <a href="?density=console&amp;theme=light" aria-current={!phone && !projector && theme === 'light' ? 'page' : undefined}>Console · light</a>
+      <a href="?density=console&amp;theme=dark" aria-current={!phone && !projector && theme === 'dark' ? 'page' : undefined}>Console · dark</a>
       <a href="?density=phone" aria-current={phone ? 'page' : undefined}>Phone</a>
+      <a href="?density=projector" aria-current={projector ? 'page' : undefined}>Projector</a>
     </nav>
     <p class="ds-prose">
       Development only (not in the build). Every button here is live: press one to feel R4's press, and Tab to see R5's
@@ -262,4 +265,6 @@
     </div>
     <p class="ds-gallery__note">Every family that takes a card colour shows both here (the K helper’s cards first).</p>
   </section>
+
+  <StatusSections {density} />
 </div>

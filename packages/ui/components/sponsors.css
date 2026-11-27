@@ -57,6 +57,11 @@
 
 /* A sponsor with no logo yet: its name, as big as fits. */
 .logo-tile__name {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   font-family: var(--font-body);
   font-size: var(--logo-tile-name);
   font-weight: 900;
@@ -211,7 +216,7 @@
   text-wrap: balance;
 }
 
-.logo-dialog__close {
+.logo-dialog .logo-dialog__close {
   position: absolute;
   top: var(--corner-inset, 8px);
   right: var(--corner-inset, 8px);
@@ -223,6 +228,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   background: none;
+  box-shadow: none;
   color: var(--color-ink);
   cursor: pointer;
 }

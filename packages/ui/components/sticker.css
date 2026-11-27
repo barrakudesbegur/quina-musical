@@ -80,6 +80,7 @@
   --plate-drop: 0.625rem;
   --plate-pad: 0.375rem 2.125rem 0.875rem;
   --plate-tilt: 0deg;
+  --plate-icon: 6rem;
 }
 
 :where([data-density='phone'], [data-density='console']) :where(.plate) {
@@ -89,6 +90,7 @@
   --plate-gloss: 3px;
   --plate-drop: 4px;
   --plate-pad: 0.125rem 0.875rem 0.375rem;
+  --plate-icon: 1.75rem;
 }
 
 .plate {
@@ -123,6 +125,11 @@
 }
 
 .plate__icon > svg {
-  width: 1.25em;
-  height: 1.25em;
+  width: var(--plate-icon);
+  height: var(--plate-icon);
+}
+
+/* one line: the plate grows sideways */
+.plate > .sticker-title {
+  white-space: nowrap;
 }
