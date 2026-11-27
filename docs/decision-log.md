@@ -1765,3 +1765,15 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 ### D268 · One repertoire holds every song once; pools only list them · 2026-11-27 · Active
 "it is wrong to think about the pools in a way they cannot share songs. they may want to repeat songs it is fine. our architecure and data model should account for it. we should simply save songs and we have have what pool has wat song but all songs are avilable in a shared pool, including the music from pause or break." A song may be in both pools, so pool 2 keeps its full 70, the 4 shared songs included, and the repertoire holds 136 songs. The Pausa and break music lives in the same repertoire. D248 already stores each file once, by its content. The plan (Sound engine, 27 Nov): songs.json's `pool` becomes `pools: [...]`, a shared song keeps its one id (pool 1's) and pool 2 lists it; Backend's readers move first; then the temporary cards are remade. Moving the music sets into the repertoire comes later, before the rehearsals, as a design agreed with Backend. The data model (songs, pools, ids, pools.py dropping the 4) is Sound engine's and Backend's to change. Answers U199, and amends D101 and D193 ("different songs").
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D101, D193, D238 (a shared song keeps one id). Lives in: GLOSSARY.md › Pool, Repertoire; requirements/songs-and-cards.md › The pool.
+
+### D269 · The playlists' last changes: one «Aserejé», two original recordings · 2026-11-27 · Active
+The user, through the card design session, around 23:55: "i already replaced the cover with the original. and songs moved in the playlist. tell the agent so the changes can propagate", then "i think part 1 was in the wrong order. now they should be in alphaetical order". Sound engine's fetch of both playlists, 70 + 70:
+- **Removed:** Grupo Arenas' «Aserejé» (old #5). Las Ketchup's «Aserejé» (old #128) is now in both pools, with one id, 62, and prints «Aserejé». That settles D261.
+- **Pool 2's #93:** Raffaella Carrà's «Hay Que Venir al Sur» now comes from her own «Sensational Hits», replacing a Various Artists compilation.
+- **Pool 2's #112:** «No Rompas Mi Corazón» is now Coyote Dax's original, the 2001 Spanish number one, replacing Trip Band's 2015 cover.
+- **The order:** both playlists are in exact letter-by-letter order (D238), so 66 songs change id.
+- **The result:** 135 songs. Pool 1 has ids 1–70. Pool 2 has 65 of its own (71–135) plus 5 shared: 5, 44, 46, 54 and 62.
+- **The covers:** U213's #5, #93 and #112 are moot, and #117 is still open.
+- **The three retired tracks' files** are moved aside, not deleted.
+Deploys wait until the renumbered covers, indexes, new songs and remade cards are all in place.
+By: the user (via the card design session). Source: Sound engine's report of 28 Nov. Amends: D230, D261, D268 (the counts). Lives in: event.md › The songs; requirements/songs-and-cards.md › The pool.

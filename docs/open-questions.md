@@ -152,12 +152,10 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U213 · Four covers that look wrong (D233)
-Sound engine's check (data/media/2026/output/covers-report.md, 27 Nov). #122 Saturday Night, which had a Christmas best-of, is already replaced with the 1995 album. #100 La Revolución Sexual's real cover is almost all white and may print pale. These four are the user's to decide:
-1. **#5 Aserejé (Grupo Arenas):** a budget compilation's bikini cover. (a) keep it; (b) a neutral image; (c) switch the track to Las Ketchup's original, which makes #5 and #128 the same recording (D261's open question).
-2. **#93 Hay Que Venir al Sur (Raffaella Carrà):** a Various Artists compilation listing other artists on its cover. (a) keep it; (b) her album «JOY»; (c) «Sensational Hits».
-3. **#112 No Rompas Mi Corazón (Trip Band):** «Las Bombas 2001», a compilation look, but the recording's only release. (a) keep it; (b) a neutral image.
-4. **#117 Pont Aeri-Chasis (Els Segadors):** a «?» vinyl, the real 1996 white label. (a) keep it; (b) a neutral image.
+### U213 · #117's cover (D233)
+#117 Pont Aeri-Chasis (Els Segadors) has a «?» vinyl, the real 1996 white label. The user wants its title to read «Els Segadors Remix» (Spotify has the title and artist swapped); the card design session sends the print names. The other three covers asked here are moot since D269.
+- (a) Keep the white label.
+- (b) A neutral image.
 
 ### U212 · Ask the organizers: covers in colour, or no covers in black and white
 The user: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". The card design session made an A3 sheet with last year's card and one card of each option at real size.
