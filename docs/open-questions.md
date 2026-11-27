@@ -300,11 +300,11 @@ It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cle
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
 
 ### U19 · Checks on real devices · before the rehearsals
-1. An iPhone with Safari and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap.
+1. An iPhone with Safari and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap. The touch sounds (D208): the iPhone's silent switch mutes them (Safari's "ambient" audio), and a tap on a faded key thuds or stays silent, either of which is fine.
 2. An older phone: smooth scrolling with 3–4 cards, usable at the end of a round.
 3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
-5. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console.
+5. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console. Note the tablet's model and iOS version (U187).
 6. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.
 
 ### U20 · More Hold music and victory tracks
