@@ -2227,7 +2227,7 @@
   color: var(--color-on-accent);
 }
 
-/* ---- the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada) ------------------- */
+/* ---- the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciat) ------------------- */
 /* The card on the left (with «Cartrons cantats» over it), the controls on the right where the game screen's cluster
    is, in three rows: Enrere · Revisió manual (2fr/3fr, short); + Candidat · Seguides (medium); the big button. */
 .check-board {

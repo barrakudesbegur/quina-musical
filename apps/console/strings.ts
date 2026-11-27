@@ -423,7 +423,7 @@ export const S = {
     start: 'Pausa',
   },
 
-  /** The presenter-paced Check (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada). */
+  /** The presenter-paced Check (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciat). */
   check: {
     /** "Cartró #57" (Londrina, in capitals by CSS). */
     card: (cardId: number) => `Cartró #${cardId}`,

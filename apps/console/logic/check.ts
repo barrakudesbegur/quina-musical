@@ -1,4 +1,4 @@
-// The Check as the presenters pace it (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciada).
+// The Check as the presenters pace it (D107–D126; boards Consola-Comprovacio-Ritme, -Casos, -Revisio, -Desgraciat).
 // The tablet sees everything at once and in private (D108): the whole card marked (the Claim's `markedCard`), where
 // the reveals stop (`revealUntil`), the verdict and the warnings. The room sees a song only when a press reveals it,
 // and the result only on the cue. Each press says which step it expects (`checkNext { claimId, step }`), so two

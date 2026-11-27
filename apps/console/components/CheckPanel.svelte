@@ -1,5 +1,5 @@
 <!--
-  The Check board, over the whole body under the header (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciada; the
+  The Check board, over the whole body under the header (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciat; the
   Review is ReviewPanel, -Revisio). The presenters pace it (D107):
   - left: «Ara sona» in one line (NowLine: the music from before the Check, far down; D196, D199), «Cartrons cantats»
     with 2 cards or more, then the claimed card, marked in private from the start (CheckCard);
