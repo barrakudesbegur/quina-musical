@@ -8,6 +8,7 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
 2. **Laptop**: plug in the power. Plug the **PA in with a cable** (headphone jack, USB or HDMI), never Bluetooth or AirPlay. Connect the **projector** by HDMI.
 3. **Keep the laptop awake**: in a terminal, run `caffeinate -dis` and leave it open.
 4. **Start the show** (each in its own terminal, and leave them open):
+   - **build first:** `cd apps/show && npm run build`. `npm start` serves the last build as it is, so without this the show can run an old version (it did on 27 Nov: a build from two days before, with no Pausa);
    - the relay: `cd apps/show && npm start -- --lan`. Without `--lan` it only listens on the laptop and the tablet can't reach it. At start it prints the tablet's pairing address with its **token** (`?t=…`);
    - the cloud link: `cd apps/cloud && npm run link`. It should say `cloud: connected`.
 5. **Open the show page on the projector**:
