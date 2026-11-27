@@ -82,6 +82,12 @@ export const CONSOLE_ICONS = {
   remote: 'wii-remote',
   /** «Final a l'escenari» (#92: a line icon like the others). */
   podium: 'podium',
+  /** The menu's «Sons automàtics» (D237): the sounds the show plays by itself. */
+  autoSounds: 'cycle',
+  /** «Prova de so» (D229). */
+  soundTest: 'speaker-loud',
+  /** «Cartrons venuts» (D234). */
+  cards: 'ticket',
 } as const satisfies Record<string, LineIconName>;
 
 export type IconName = keyof typeof CONSOLE_ICONS;

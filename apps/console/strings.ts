@@ -3,7 +3,7 @@
 // Maps keyed by protocol vocabulary are Partial with a fallback, so a new reason or command from the engine
 // shows something sensible instead of breaking the build; tests/ui/console/strings.test.ts checks that
 // every known value has its own text.
-import type { HoldReason, MusicSet, PhaseName, RejectReason, ShowStatus, SoundName, ThrowSong, VolumeKey } from '@quina/protocol';
+import type { AutoSound, BreakSet, HoldReason, MusicSet, PhaseName, RejectReason, ShowStatus, SoundName, SoundTestKind, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import { roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
@@ -586,6 +586,10 @@ export const S = {
     position: (set: string, index: number, count: number) => `${set} · cançó ${index} de ${count}`,
     waiting: 'Encara sona la música anterior; la llista entra tot seguit.',
     skip: 'Salta la cançó',
+    /** D228: in a break, which set plays (`intervalSet`); each break starts on the breaks' own. The picker's name
+     *  (spoken), and its two options, short: the line above already says «Música del descans» or «… de la pausa». */
+    pick: 'Música que sona',
+    picks: { breaks: 'Descans', pausa: 'Pausa' } satisfies Record<BreakSet, string>,
   },
 
   /** «Ara sona» in one line, over the pads, Cerca and the Check board (NowLine; D196, D199). */
@@ -828,8 +832,6 @@ export const S = {
     game: 'Joc',
     pause: 'Pausa',
     pauseNote: 'Projector i mòbils: «Tornem de seguida»',
-    finalLap: "«Última volta» automàtica",
-    finalLapNote: "La fanfàrria sona sola un cop per quina, quan arriba l'última volta. Des d'Efectes es pot tocar igualment.",
     phase: 'Fase',
     phaseAuto: 'Automàtica',
     winners: CA.winners,
@@ -846,6 +848,77 @@ export const S = {
     lanNote: "Escanegeu-lo amb un mòbil connectat al mateix punt d'accés.",
     lanLocalhost: "Obriu aquesta consola amb l'adreça IP del portàtil perquè el codi serveixi en un altre dispositiu.",
     lanLabel: 'Mòbil admin',
+  },
+
+  /** The menu's «Sons automàtics» (D237; AutoSounds.svelte): each sound the show plays by itself, on or off. */
+  autoSounds: {
+    title: 'Sons automàtics',
+    note: "Els sons que el show fa sol. Apagat, no sona encara que la barra de volum estigui alta. Es desa per a tota la nit.",
+    keys: {
+      drumTicks: { label: 'Tics del bombo', note: 'Els clics mentre el bombo gira' },
+      djFx: { label: 'Efectes de DJ', note: 'Pujades, cops i xiulets de les transicions entre cançons' },
+      finalLap: { label: '«Última volta»', note: "La fanfàrria, un cop per quina, quan arriba l'última volta. Des d'Efectes es pot tocar igualment" },
+      winFanfare: { label: 'Fanfàrria de victòria', note: 'La fanfàrria i el cop quan es confirma un premi' },
+      failFanfare: { label: 'Fanfàrria de fallada', note: "Quan la comprovació d'un cartró falla" },
+      voices: { label: 'Veus', note: "El nom de cada quina, el compte enrere de les portes i l'avís del descans" },
+    } satisfies Record<AutoSound, { label: string; note: string }>,
+  },
+
+  /** The PA's sound test (D229; SoundTest.svelte): each kind in turn, on a loop at its slider's level. */
+  soundTest: {
+    title: 'Prova de so',
+    note: 'Per ajustar els altaveus: cada so sona en bucle al seu volum; moveu-ne la barra mentre sona.',
+    start: 'Comença la prova',
+    /** Under the start button while the test can't run (`soundTest` is only allowed in `before`). */
+    unavailable: 'Només abans de la primera quina, amb res sonant.',
+    playing: 'Sona ara',
+    position: (n: number, count: number) => `${n} de ${count}`,
+    prev: 'Anterior',
+    next: 'Següent',
+    stop: 'Atura la prova',
+    /** What each kind plays in the test. */
+    plays: {
+      songs: 'Trossos de cançons, com a la quina',
+      songsParlem: 'Trossos de cançons, baixos com amb Parlem',
+      check: 'Trossos de cançó, com a la comprovació',
+      intros: 'La música de presentació de cada quina',
+      breaks: 'La llista del descans',
+      pausa: 'La llista de la pausa',
+      holdMusic: "La música d'espera",
+      end: 'La llista del final',
+      voices: 'Una frase de les portes, amb la campaneta',
+      throws: 'La cançó del llançament',
+      win: 'La música de victòria',
+      fail: 'La música de fallada',
+      finalLap: "La fanfàrria de l'última volta",
+      djFx: 'Una pujada i un cop',
+      padFx: "Els efectes de la pestanya Efectes, l'un rere l'altre",
+      ticks: 'Una ràfega de tics del bombo',
+    } satisfies Record<SoundTestKind, string>,
+  },
+
+  /** «Cartrons venuts» in the menu (D234; CardsAdd.svelte): add the cards sold on the night to the cards in play. */
+  cardsAdd: {
+    title: 'Cartrons venuts',
+    inPlay: (count: number) => (count === 1 ? '1 cartró en joc' : `${count} cartrons en joc`),
+    none: 'Encara no hi ha cap cartró en joc.',
+    field: 'Afegeix cartrons venuts',
+    placeholder: '400-450, 452',
+    hint: 'Un interval (400-450) o números solts, separats per comes.',
+    add: 'Afegeix',
+    preview: (count: number, ranges: string, already: number) =>
+      `${count === 1 ? `S'hi afegirà el ${ranges}` : `S'hi afegiran ${count} cartrons: ${ranges}`}${already ? ` · ${already === 1 ? '1 ja hi era' : `${already} ja hi eren`}` : ''}`,
+    error: {
+      token: (token: string) => `«${token}» no és ni un número ni un interval`,
+      tooLarge: (token: string) => `«${token}» és un interval massa gran`,
+      unknown: (ranges: string, count: number) => (count === 1 ? `El ${ranges} no és cap cartró imprès` : `No són cartrons impresos: ${ranges}`),
+      already: 'Ja són tots en joc',
+      tooLong: "La llista de cartrons en joc ja no hi cap: afegiu-los des de l'Admin",
+      inPlay: "No es pot llegir la llista de cartrons en joc: afegiu-los des de l'Admin",
+    },
+    /** The Notice once the engine has them. */
+    done: (count: number, ranges: string, total: number) =>
+      `${count === 1 ? `Afegit el ${ranges}` : `Afegits ${count} cartrons (${ranges})`}. Ara n'hi ha ${total} en joc.`,
   },
 
   resume: {
@@ -933,6 +1006,10 @@ export const S = {
     finale: 'Finalistes',
     finaleCue: 'Celebrem!',
     getUpcoming: 'Les properes cançons',
+    intervalSet: 'Música del descans',
+    setAutoSound: 'Sons automàtics',
+    soundTest: 'Prova de so',
+    setCardsInPlay: 'Cartrons venuts',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 

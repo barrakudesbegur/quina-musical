@@ -7,11 +7,17 @@
   While a throw song plays over it («Llançament» or «Tempesta», D138, D151), the panel names that song, with its chip,
   and says that the music underneath comes back when it ends; stopped by a tap, the music shows again with a word that
   the song is stopped and where («aturat a 1:05»).
+  In a break (the Interval scene), under «Salta la cançó», a picker of which set plays (D228, `intervalSet`):
+  «Descans | Pausa», the SegmentedControl (B2, BREAK_SET_OPTIONS, size s) showing the engine's `intervalMusic.set`;
+  each break starts on the breaks' own. Stacked with the skip, it keeps the panel's height (the column below keeps its
+  place). Motion: ANIMATIONS.md › break-set-pick.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';
   import { throwClock, throwProgress } from '../logic/throw-songs.ts';
-  import { ACTIONS } from '../actions.ts';
+  import { ACTIONS, BREAK_SET_OPTIONS } from '../actions.ts';
+  import { isBreakSet } from '../logic/scene.ts';
+  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
 
@@ -20,6 +26,8 @@
   const music = $derived(model.show.state?.intervalMusic ?? null);
   const track = $derived(music?.track ?? null);
   const thrown = $derived(model.show.state?.throwSong ?? null);
+  /** The Descans' picker: in a break, while one of its two sets plays. */
+  const pickable = $derived(model.show.flow.scene === 'interval' && music !== null && isBreakSet(music.set));
   const where = $derived(music && track ? S.intervalMusic.position(S.intervalMusic.sets[music.set], track.index, track.count) : null);
 </script>
 
@@ -45,15 +53,39 @@
         {/if}
       {/if}
     </div>
-    {#if !thrown?.playing}
-      <button type="button" class="action interval-music__skip" data-anim="press" disabled={!model.can('intervalSkip') || !track} onclick={() => model.act('intervalSkip')}>
-        <Icon name="next" /><span>{S.intervalMusic.skip}</span>
-      </button>
+    {#if !thrown?.playing || pickable}
+      <div class="interval-music__side">
+        {#if !thrown?.playing}
+          <button type="button" class="action interval-music__skip" data-anim="press" disabled={!model.can('intervalSkip') || !track} onclick={() => model.act('intervalSkip')}>
+            <Icon name="next" /><span>{S.intervalMusic.skip}</span>
+          </button>
+        {/if}
+        {#if pickable && isBreakSet(music.set)}
+          <SegmentedControl
+            size="s"
+            label={S.intervalMusic.pick}
+            options={BREAK_SET_OPTIONS}
+            value={music.set}
+            disabled={!model.can('intervalSet')}
+            data-testid="break-set"
+            onchange={(set) => model.act('intervalSet', { set })}
+          />
+        {/if}
+      </div>
     {/if}
   </section>
 {/if}
 
 <style>
+  /* «Salta la cançó» over the Descans' picker, at the panel's end; the picker as wide as the button. */
+  .interval-music__side {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
   .interval-music__label {
     display: flex;
     align-items: center;
@@ -77,6 +109,5 @@
   }
   .interval-music__skip {
     flex: none;
-    align-self: center;
   }
 </style>

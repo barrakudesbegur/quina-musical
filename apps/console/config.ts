@@ -75,6 +75,7 @@ export const CONSOLE_COMMANDS = [
   'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
   'celebrationMusic', 'interval', 'endGame', 'pause',
   'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm', 'finale', 'finaleCue', 'getUpcoming',
+  'intervalSet', 'setAutoSound', 'soundTest', 'setCardsInPlay',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 

@@ -3,6 +3,7 @@
 // The Desgraciat fixtures play Quina 5, the Quina Desgraciada (see DESGRACIAT_LANDED).
 // Song ids and titles are last year's pool (test material only).
 import {
+  AUTO_SOUNDS_DEFAULT,
   PROTOCOL_VERSION,
   STANDING_LIST_MAX,
   type CheckInfo,
@@ -132,6 +133,7 @@ export function baseState(now: number): FullState {
       holdMusicAfterSec: 45,
       nextRecipe: null,
       finalLapStinger: true,
+      autoSounds: { ...AUTO_SOUNDS_DEFAULT },
     },
     phase: 'late',
     heat: 0.71,
@@ -816,6 +818,17 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const paused = withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now + 1500, overlay: true }, hold: { sinceMs: now + 1500, reason: 'pause', holdMusic: true, holdMusicAtMs: null, ducked: true } });
     const back = withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now + 5500, reason: 'pause', holdMusic: false, holdMusicAtMs: null, ducked: true } });
     return { state: s, events: [{ afterMs: 1500, event: { ...paused, seq: 2 } }, { afterMs: 5500, event: { ...back, seq: 3 } }] };
+  },
+  /** A break playing Pausa's set (D228: picked in the Descans' music picker), track 2 of 18. */
+  intervalPausa: (now) => {
+    const s = FIXTURES.interval(now).state as FullState;
+    return { state: { ...s, intervalMusic: { set: 'pausa', track: { title: 'Snowman', artist: 'Sia', index: 2, count: 18, sinceMs: now - 12000 } } } };
+  },
+  /** At the doors, the PA's sound test playing «Cançons amb Parlem» (D229), with the voices and the drum's ticks off
+   *  (D237: «Sons automàtics»). */
+  soundTest: (now) => {
+    const s = FIXTURES.before(now).state as FullState;
+    return { state: { ...s, soundTest: { kind: 'songsParlem', sinceMs: now - 4000 }, game: { ...s.game, autoSounds: { ...AUTO_SOUNDS_DEFAULT, voices: false, drumTicks: false } } } };
   },
   /** A break with «Llançament» playing over the break music (D138), 42 s in: started at its hook 42 s ago. */
   intervalThrow: (now) => {

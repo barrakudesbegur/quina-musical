@@ -8,8 +8,10 @@
     confirmed without a Check);
   - the Game's Winners, plan B resume, and the Plan B cheat sheet (the laptop's keys and the setup
     checklist) behind a disclosure.
-  The remote's card also has the shake gesture's switch (D144, D148; the Consola-Menu board). Under the three columns,
-  across them, the volume sliders (VolumeSliders; D139).
+  The remote's card also has the shake gesture's switch (D144, D148; the Consola-Menu board). The night's card is
+  followed by «Cartrons venuts» (CardsAdd, D234). Under the three columns, across them: «Sons automàtics» (AutoSounds,
+  D237; the «Última volta» and voices switches live there now), «Prova de so» (SoundTest, D229) and the volume sliders
+  (VolumeSliders; D139).
   Panic and "Acabar la nit" sit apart at the bottom, in a danger zone under a hazard stripe.
   The design system's Sheet (packages/ui/components, C3) from the right edge (origin side-right, hook menu-sheet): ✕
   «Tanca» and Esc close it, a tap outside doesn't (U188 open); it slides back out as it closes.
@@ -34,6 +36,10 @@
   import TextField from '../../../packages/ui/components/TextField.svelte';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import VolumeSliders from './VolumeSliders.svelte';
+  import AutoSounds from './AutoSounds.svelte';
+  import CardsAdd from './CardsAdd.svelte';
+  import SoundTest from './SoundTest.svelte';
+  import { autoSoundsNow } from '../logic/auto-sounds.ts';
   import { getConsoleSounds } from '../context.ts';
   import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
   import Sheet from '../../../packages/ui/components/Sheet.svelte';
@@ -157,12 +163,20 @@
       </section>
 
       {#if snap}
+        <CardsAdd
+          inPlay={snap.cards.inPlay}
+          count={snap.cards.inPlayCount}
+          rules={{ known: model.padRules.known, max: CONSOLE.cardMax }}
+          disabled={!model.can('setCardsInPlay')}
+          onadd={(ranges) => model.act('setCardsInPlay', { ranges }) !== null}
+        />
+      {/if}
+
+      {#if snap}
         <section class="menu-group" aria-labelledby="{uid}-game">
           <h3 class="menu-group__title" id="{uid}-game"><Icon name="gauge" />{S.menu.game}</h3>
           <Switch label={S.menu.pause} note={S.menu.pauseNote} checked={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
           <Switch label={S.pace.autoFinal} checked={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
-          <!-- R2-Q18: the presenters can turn off the automatic "Final Lap!" fanfare (the Efectes pad still plays it by hand). -->
-          <Switch label={S.menu.finalLap} note={S.menu.finalLapNote} checked={snap.game.finalLapStinger} disabled={!model.can('setGame')} onchange={(finalLapStinger) => model.act('setGame', { finalLapStinger })} />
           <span class="menu-group__field" id="{uid}-phase">{S.menu.phase}</span>
           <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
             <MiniButton size="s" label={S.menu.phaseAuto} pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)} />
@@ -217,7 +231,18 @@
         onchange={(on) => model.setUiSounds(on)}
       />
     </section>
-    {#if snap}<VolumeSliders />{/if}
+    {#if snap}
+      <AutoSounds values={autoSoundsNow(snap.game)} disabled={!model.can('setAutoSound')} onchange={(key, on) => model.act('setAutoSound', { key, on })} />
+      <SoundTest
+        kind={snap.soundTest?.kind ?? null}
+        enabled={model.can('soundTest')}
+        volumes={snap.game.volumes}
+        volumesEnabled={model.can('setVolume')}
+        onkind={(kind) => model.act('soundTest', { kind })}
+        onvolume={(key, percent) => model.act('setVolume', { key, percent })}
+      />
+      <VolumeSliders />
+    {/if}
 
   {#snippet footer()}
     <section class="menu-danger" aria-label={S.menu.danger}>

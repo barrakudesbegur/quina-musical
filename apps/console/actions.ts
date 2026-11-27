@@ -3,7 +3,9 @@
 // from packages/ui/concepts.ts; this file adds what only the console shows (its notes, its icon set's drawings, the
 // remote's keys). Labels come from strings.ts, never typed here. Pure data and pure helpers, tested in
 // apps/show/tests/ui/ds/registry.test.ts.
+import { BREAK_SETS, type BreakSet } from '@quina/protocol';
 import { CONCEPTS } from '../../packages/ui/concepts.ts';
+import type { SegmentOption } from '../../packages/ui/components/control-types.ts';
 import type { ButtonColor, ButtonPreset, IconName, NoticePreset, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
 import type { LineIconName } from '../../packages/ui/icons/line.ts';
 import type { ToastTone } from './logic/toasts.ts';
@@ -137,7 +139,18 @@ export const MINI = {
   wiiClose: { icon: 'close', label: S.wii.close },
   winnerEdit: { size: 'xs', label: S.winnerForm.edit },
   resumeUseSaved: { size: 's', label: S.resume.useSaved },
+  /** «Cartrons venuts» (D234): adds the typed cards to the cards in play. */
+  cardsAdd: { icon: 'plus', label: S.cardsAdd.add },
+  // ---- the PA's sound test (D229, SoundTest)
+  soundTestStart: { color: 'orange', icon: 'play', label: S.soundTest.start },
+  soundTestPrev: { icon: 'chevron-left', label: S.soundTest.prev },
+  soundTestNext: { icon: 'chevron-right', label: S.soundTest.next },
+  soundTestStop: { icon: 'speaker-mute', label: S.soundTest.stop },
 } as const satisfies Record<string, MiniPreset>;
+
+/** The Descans' music picker (D228, SegmentedControl B2, in IntervalMusic): the breaks' set or Pausa's, words only
+ *  (Pausa's ‖ would read as the Pausa itself). */
+export const BREAK_SET_OPTIONS: readonly SegmentOption<BreakSet>[] = BREAK_SETS.map((id) => ({ id, label: S.intervalMusic.picks[id] }));
 
 /** The «Efectes» tab's two grids (SoundPad, A9; D-l): the fanfares gold in one column, the effects snow in four. */
 export const FX = {

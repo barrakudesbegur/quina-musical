@@ -1,7 +1,7 @@
 // Which controls the console offers right now. The engine is the authority: it checks every command against
 // the scene rules in @quina/protocol and rejects the rest (`wrongScene`), and the console shows that as a
 // toast. The console reads the same shared rules only to grey out what would be refused anyway. Pure.
-import { sceneAllows, type SceneContext, type ShowState } from '@quina/protocol';
+import { BREAK_SETS, sceneAllows, type BreakSet, type MusicSet, type SceneContext, type ShowState } from '@quina/protocol';
 import type { AnyCommandName, FlowFields } from '../../../packages/ui/flow.ts';
 
 /** The engine's scene rules, shared through @quina/protocol (protocol/scenes.ts), so the console can't drift. */
@@ -69,3 +69,6 @@ export function controlsModel(input: ControlsInput): ControlsModel {
     claim: { enabled: canSend('claim', input) },
   };
 }
+
+/** One of the two sets a break can play (D228: the Descans' picker shows while one of them plays, never the end's). */
+export const isBreakSet = (set: MusicSet): set is BreakSet => (BREAK_SETS as readonly MusicSet[]).includes(set);
