@@ -24,7 +24,8 @@
   import CardCell from '../../../packages/ui/components/CardCell.svelte';
   import { cellLook } from '../../../packages/ui/components/card-looks.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
-  import { ACTIONS, ICONS, asDefault } from '../actions.ts';
+  import { ACTIONS, ICONS, NOTICES, asDefault } from '../actions.ts';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
@@ -131,7 +132,7 @@
           </output>
         {/key}
         {#if pad.refused}
-          <p class="private-strip private-strip--bad" role="alert"><Icon name="cross" /><span class="private-strip__text">{F.refusal[pad.refused]}</span></p>
+          <Notice {...NOTICES.refused} class="private-strip" text={F.refusal[pad.refused]} />
         {:else if full}
           <p class="note">{F.full(CONSOLE.finale.maxFinalists)}</p>
         {/if}
@@ -196,7 +197,7 @@
           {/if}
           <span class="check-card__spacer"></span>
           {#if outcome}
-            <p class="private-strip" class:private-strip--bad={!outcome.ok} data-testid="finale-verdict"><Icon name={outcome.ok ? 'check' : 'cross'} /><span class="private-strip__text">{outcome.text}</span></p>
+            <Notice {...outcome.ok ? NOTICES.accepted : NOTICES.refused} live="off" class="private-strip" data-testid="finale-verdict" text={outcome.text} />
           {/if}
         {:else}
           <p class="note finale-pad__empty">{F.padHint}</p>

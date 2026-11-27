@@ -12,11 +12,12 @@
   import { getConsole } from '../context.ts';
   import { checkPasses, checkVerdict, nextReveal, reviewNeedsConfirm } from '../logic/check.ts';
   import { songTitleOf } from '../logic/show-data.ts';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
   import { S } from '../strings.ts';
   import Cover from './Cover.svelte';
   import Button from '../../../packages/ui/components/Button.svelte';
   import Dialog from '../../../packages/ui/components/Dialog.svelte';
-  import { ACTIONS } from '../actions.ts';
+  import { ACTIONS, NOTICES } from '../actions.ts';
   import Icon from './Icon.svelte';
   import HoldModeButton from './HoldModeButton.svelte';
 
@@ -83,7 +84,7 @@
 
 {#if asking}
   <Dialog bind:open={confirming} class="review-confirm" size="m" title={S.review.confirm.title[asking]} body={S.review.confirm.text[asking]} onclose={() => (asking = null)}>
-    {#snippet warning()}<p class="warning-box"><Icon name="alert" /><span class="warning-box__text">{warningText}</span></p>{/snippet}
+    {#snippet warning()}<Notice {...NOTICES.warning} class="warning-box" text={warningText} />{/snippet}
     {#snippet actions()}
       <Button {...ACTIONS.reviewConfirmBack} autofocus onclick={() => (confirming = false)} />
       <Button {...(asking === 'win' ? ACTIONS.reviewConfirmWin : ACTIONS.reviewConfirmLose)} onclick={confirm} />

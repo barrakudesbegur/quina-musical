@@ -15,7 +15,9 @@
   import { getConsole } from '../context.ts';
   import { DEFAULT_PACE_SEC } from '../logic/engine-rules.ts';
   import { recommendedPreset, recoveryNotice } from '../logic/pace-panel.ts';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
   import { S } from '../strings.ts';
+  import { NOTICES } from '../actions.ts';
   import Icon from './Icon.svelte';
 
   const model = getConsole();
@@ -66,7 +68,7 @@
       </div>
     </div>
     {#if notice}
-      <p class="pace__notice" role="status"><Icon name="timer" /><span>{S.pace.recovery(notice)}</span></p>
+      <Notice {...NOTICES.recovery} class="pace__notice" text={S.pace.recovery(notice)} />
     {/if}
   </section>
 {/if}

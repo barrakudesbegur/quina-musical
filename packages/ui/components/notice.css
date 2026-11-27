@@ -1,0 +1,159 @@
+/*
+ * E4 · Notice (components-v2.md § 6; Notice.svelte): a lasting message. The root class is `ds-notice` (the phone's
+ * `.notice` is Admin's message, an app class). Layouts:
+ *   strip  a full-width band, 46 high, its bottom border 4 (offline, the check line, Admin's message);
+ *   note   an inline note, border 3, radius md (the console's private strip, the pace's recovery note);
+ *   box    a note with room for a chip, its words in the colour's text shade (the review's warning);
+ *   scene  the drum's place: a figure (the children) over a Londrina title (the Pause, «TORNEM DE SEGUIDA»).
+ * Fill: `solid` (the palette's fill, its contrast words, an ink outline) or `subtle` (the palette's tint, outlined in
+ * the colour's dark edge). Sizes are variables in :where().
+ */
+:where(.ds-notice) {
+  --notice-pad: 0.4375rem 0.625rem;
+  --notice-gap: var(--space-2);
+  --notice-text: var(--text-sm);
+  --notice-icon: 1.25rem;
+  --notice-border: var(--line-width);
+  --notice-radius: var(--radius-md);
+}
+
+:where(.ds-notice[data-layout='box']) {
+  --notice-pad: var(--space-3);
+  --notice-text: var(--text-md);
+  --notice-icon: 1.5rem;
+}
+
+:where(.ds-notice[data-layout='strip']) {
+  --notice-pad: 0 var(--space-4);
+  --notice-text: 1rem;
+  --notice-icon: 1.25rem;
+}
+
+.ds-notice {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--notice-gap);
+  margin: 0;
+  padding: var(--notice-pad);
+  border: var(--notice-border) solid var(--color-line, var(--color-ink));
+  border-radius: var(--notice-radius);
+  font-family: var(--font-body);
+  font-size: var(--notice-text);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+.ds-notice[data-fill='solid'] {
+  background: var(--palette-solid);
+  color: var(--palette-contrast);
+}
+
+.ds-notice[data-fill='subtle'] {
+  border-color: var(--palette-edge);
+  background: var(--palette-subtle);
+  color: var(--color-ink);
+}
+
+.ds-notice[data-fill='subtle'] .ds-notice__icon {
+  color: var(--palette-edge);
+}
+
+.ds-notice[data-layout='box'][data-fill='subtle'] {
+  color: var(--palette-fg-paper, var(--palette-edge));
+}
+
+.ds-notice[data-layout='strip'] {
+  justify-content: center;
+  min-height: 2.875rem;
+  border-width: 0 0 4px;
+  border-radius: 0;
+  text-align: center;
+}
+
+.ds-notice[data-layout='strip'] .ds-notice__text {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-notice__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+}
+
+.ds-notice__icon > svg {
+  width: var(--notice-icon);
+  height: var(--notice-icon);
+}
+
+.ds-notice__text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* scene: the figure over a Londrina title, centred, no box */
+.ds-notice[data-layout='scene'] {
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.ds-notice[data-layout='scene'] .ds-notice__text {
+  flex: none;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--notice-scene-title, 2.25rem);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+  -webkit-text-stroke: var(--title-stroke-sm, 4px) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop-sm, 0 3px 0 var(--color-ink));
+}
+
+/* the check line's stepping dots (ANIMATIONS.md › check) */
+.ds-notice__dots {
+  display: inline-flex;
+  flex: none;
+  gap: 0.3em;
+}
+
+.ds-notice__dots > span {
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-notice__dots > span {
+    animation: ds-notice-dot 1.2s steps(1, end) infinite;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-notice__dots > span:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-notice__dots > span:nth-child(3) {
+    animation-delay: 0.8s;
+  }
+}
+
+@keyframes ds-notice-dot {
+  0% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.3;
+  }
+}

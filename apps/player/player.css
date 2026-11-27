@@ -199,7 +199,7 @@
 .check-strip__text,
 .check-strip__result,
 .now__summary-title,
-.pause-notice__title,
+/* (the Pause's title is the generic Notice's scene title, notice.css) */
 .menu__card-name {
   font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
@@ -217,7 +217,6 @@
 .check-strip__result,
 .now__summary-title,
 .now__when,
-.pause-notice__title,
 .menu__card-name {
   -webkit-text-stroke-width: var(--title-stroke-sm);
   letter-spacing: var(--title-tracking-sm);
@@ -245,7 +244,6 @@
 
 /* A sticker: a ninos figure on a pseudo-element, decoration only. */
 .now[data-scene]::before,
-.pause-notice__nino,
 .legacy-notice::before,
 .check-strip[data-state='valid']::before {
   background: center / contain no-repeat;
@@ -2865,30 +2863,15 @@
 
 /* The technical pause, in the drum's place: the meditating nino over "Tornem de seguida" (board "App · pausa
    tècnica"). Beside the cards it is a strip, like the drum. */
-.pause-notice {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-1);
-  padding-top: var(--space-2);
-  text-align: center;
+/* The Pause is the generic Notice's scene (notice.css) with the breathing Nino; here only its sizes and the strip. */
+.pause-notice .pause-notice__nino {
+  --nino-size: var(--player-sticker-lg);
+  --nino-drop: var(--player-sticker-shadow);
 }
 
-.pause-notice__nino {
-  width: var(--player-sticker-lg);
-  height: var(--player-sticker-lg);
-  background-image: var(--player-sticker-pause);
-}
-
-.pause-notice__title {
-  font-size: 2.25rem;
-  line-height: 1;
-  color: var(--color-text);
-}
-
-.pause-notice[data-size='strip'] {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  justify-items: start;
+.ds-notice.pause-notice[data-size='strip'] {
+  flex-direction: row;
+  justify-content: start;
   gap: var(--space-3);
   padding: var(--space-1) var(--space-3);
   text-align: left;
@@ -2901,12 +2884,11 @@
 }
 
 .pause-notice[data-size='strip'] .pause-notice__nino {
-  width: var(--player-sticker-sm);
-  height: var(--player-sticker-sm);
+  --nino-size: var(--player-sticker-sm);
 }
 
-.pause-notice[data-size='strip'] .pause-notice__title {
-  font-size: 1.75rem;
+.pause-notice[data-size='strip'] {
+  --notice-scene-title: 1.75rem;
 }
 
 /* ---- offline: the strip across the top, and the veil that greys the screen under it ------------------------ */
@@ -3696,12 +3678,6 @@
 /* The pause swaps in for the drum (and the drum back) with a 300 ms crossfade; the nino breathes. */
 .ara__top[data-anim='pause'] {
   animation: player-fade-in var(--dur-overlay) var(--ease-out) both;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .pause-notice__nino {
-    animation: player-breathe var(--dur-pause-breath) ease-in-out infinite;
-  }
 }
 
 /* The connection strip slides down and away (200 ms); the screen greys under it and back (400 ms). Both stay in

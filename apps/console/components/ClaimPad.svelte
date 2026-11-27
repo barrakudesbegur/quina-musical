@@ -16,9 +16,10 @@
   import { claimedCards } from '../logic/claim-pad.ts';
   import { PAD_DIGITS, padKeyFromKeyboard, type PadKey } from '../logic/numpad.ts';
   import { claimKindsOf } from '../logic/show-data.ts';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
   import { S } from '../strings.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
-  import { ACTIONS, ICONS, asDefault } from '../actions.ts';
+  import { ACTIONS, ICONS, NOTICES, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
@@ -137,9 +138,7 @@
         </div>
 
         {#if pad.refused || pad.chips.some((c) => c.unknown)}
-          <p class="private-strip private-strip--bad" role="alert">
-            <Icon name="cross" /><span class="private-strip__text">{S.numpad.unknown}</span>
-          </p>
+          <Notice {...NOTICES.refused} class="private-strip" text={S.numpad.unknown} />
         {:else if full}
           <p class="note">{S.numpad.full(model.padRules.maxCards)}</p>
         {/if}

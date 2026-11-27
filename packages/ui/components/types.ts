@@ -181,3 +181,15 @@ export interface SoundPadItem {
   label: string;
   wii?: WiiKeySpec | null;
 }
+
+/** E4 · Notice: the palettes a notice takes, and how it fills. */
+export type NoticeColor = Extract<PaletteColor, 'periwinkle' | 'navy' | 'orange' | 'red' | 'green' | 'gold'>;
+
+/** What a preset in the domain layer sets on a Notice: its look, never its words. */
+export interface NoticePreset {
+  readonly layout: 'strip' | 'note' | 'box' | 'scene';
+  readonly color: NoticeColor;
+  readonly fill: 'solid' | 'subtle';
+  readonly icon: IconName | null;
+  readonly live?: 'polite' | 'assertive' | 'off';
+}

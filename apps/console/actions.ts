@@ -4,7 +4,7 @@
 // remote's keys). Labels come from strings.ts, never typed here. Pure data and pure helpers, tested in
 // apps/show/tests/ui/ds/registry.test.ts.
 import { CONCEPTS } from '../../packages/ui/concepts.ts';
-import type { ButtonColor, ButtonPreset, IconName, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
+import type { ButtonColor, ButtonPreset, IconName, NoticePreset, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
 import type { LineIconName } from '../../packages/ui/icons/line.ts';
 import type { ToastTone } from './logic/toasts.ts';
 import { S } from './strings.ts';
@@ -182,3 +182,12 @@ export function asDefault<P extends ConsolePreset>(preset: P, isDefault: boolean
   if (!isDefault) return preset;
   return { ...preset, ring: preset.ring ?? 'orange', wii: WII.a };
 }
+
+/** The notes (E4, Notice): the pace's recovery note and the review's warning on orange's tint; the pads' private strip
+ *  in green when a card is fine, red when it's refused (ink words on the fill, 4.5:1 or better). */
+export const NOTICES = {
+  recovery: { layout: 'note', color: 'orange', fill: 'subtle', icon: 'stopwatch' },
+  warning: { layout: 'box', color: 'orange', fill: 'subtle', icon: 'warning', live: 'off' },
+  refused: { layout: 'note', color: 'red', fill: 'solid', icon: 'close', live: 'assertive' },
+  accepted: { layout: 'note', color: 'green', fill: 'solid', icon: 'check' },
+} as const satisfies Record<string, NoticePreset>;
