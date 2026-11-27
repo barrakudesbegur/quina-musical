@@ -86,7 +86,6 @@ _From event.md › The cards._
 - **Each side's title, centred on the card's width (D254):** the normal card's «QUINES 1–5» on side 1 and «QUINES 6–10» on side 2, white on black. The special card's «DESGRACIAT» and «ESPECIAL» (D252).
 - The faint background stamp is the logo only; the year is in the branding (D254).
 - **A sticker circle (D231, D253):** a dotted circle of about 15 mm with «GOMET» centred in it, for a coloured shape sticker matching the card's mark on the phone (D5) (sides pending U201). No name field (D250).
-- **One short line:** «MARCA NOMÉS AMB BLAT DE MORO», with no corn icon (D232, D250).
 - **The number** has a faded «#» before it (D250).
 - **Song covers (D233):** each song shows its cover, so players find it faster, printed in colour. The design is done with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392).
 - The price isn't printed.

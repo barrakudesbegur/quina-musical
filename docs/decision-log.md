@@ -1706,3 +1706,7 @@ The user's picks from the card design session's tests (Proposal 5 on its canvas)
 4. **Centring:** "the title should be centered to the page", on the card's width, not in the space between the side blocks.
 Answers U209. Amends D67 (no «3» in the printed name) and D250 (the event name is back, in the branding).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D255 · No corn-seeds line on the cards · 2026-11-27 · Active
+"remove the disclaimer at the bottom". The cards no longer say «MARCA NOMÉS AMB BLAT DE MORO». D232's message, that songs are marked only with corn seeds so the card serves every round, is now said by the presenters at the welcome and by the table setup. Drawn as Proposal 6. The design session also made a page of the four sides (normal 1 and 2, special 1 and 2), captioned in Catalan, for the user to show the other organizers.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D232, D250. Lives in: event.md › The night, step by step; requirements/songs-and-cards.md › The card.

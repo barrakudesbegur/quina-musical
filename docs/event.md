@@ -133,6 +133,7 @@ This page explains the event: what happens on the night, who does what, and how 
 3. **The welcome:** the presenters explain the game.
    - It opens with music or a fanfare that kicks off the show, maybe with a funny voice-over story that ends with the presenters coming on stage doing something funny (**new in 2026**).
    - They cover the number of rounds, the Desgraciat, which round is the Especial, the throws, and how winners are identified and collect their prizes. They remind everyone about the bar.
+   - They say songs are marked only with corn seeds, never stickers or markers, so the card serves every round. The cards don't say it (D255), so the presenters and the table setup do.
    - There are no written instructions anywhere.
 4. **The rounds** (see below), with an Interval between each two.
    - Each round's intro has its own music, played low under the presenters, chosen for each round (**new in 2026**).
