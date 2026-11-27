@@ -109,6 +109,12 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U187 · The oldest iOS / iPadOS the screens support
+Today the code supports iOS and iPadOS 15.4. Some modern features need 16 or later: the console's layout per orientation (container queries), exit animations, and a list method used in 9 places that would crash the page on iOS 15. Each has an older fallback, at some cost. The crowd brings old phones (the grandmother test), and nobody knows yet which tablet the presenters will use (U19).
+- (a) Keep 15.4 on the phones and the tablet, with the fallbacks.
+- (b) Raise everything to 16.
+- (c) Keep 15.4 on the phones, and raise only the tablet to 16. Its model and iOS version need checking.
+
 ### U181 · What the «Veus automàtiques» switch turns off (D204)
 Frontend's board (v104) has the switch on by default: «Apagat: cap veu més en tota la nit». Voices that fall due while it's off are dropped, not saved for later, since a late "15 minuts" would be wrong (D204's 60 s).
 - (a) Every voice, the round's name on «Comença la quina» included. The round fanfare's music still plays, so the presenters keep their cue before talking (D198).
