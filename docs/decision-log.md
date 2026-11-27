@@ -1668,3 +1668,10 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D246.
 
 **The laptop's side:** the user left it to Backend ("whatever is best long term"). The laptops keep today's readable folders, so Sound engine's layout and the relay's paths don't change. Only R2 stores by fingerprint, and a pull rebuilds the readable folders, as git does with its store and working tree. Last year's `pools/` is fully gone (D247, 27 Nov), and the one-day rule is removed.
 By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: apps/cloud/docs (Backend); requirements/operations.md › Storage.
+
+### D249 · After a Back or a cancelled Spin, the drum returns the card to its place · 2026-11-27 · Active
+So the phone's drum stays the same as the projector's (D237), the projector returns the card to its drumOrder place instead of wherever its drum stops:
+- a Back turns the shortest way onto the card's place, at most half a lap and about 1.6 s. It's usually the neighbouring card, as today;
+- a cancelled Spin brakes naturally, as today, then glides for at most about 1 s onto the card's place.
+There are no speed-ups and no long brakes. The motion is specced in ANIMATIONS.md before it's built, and the phone follows it. Sound engine held a subagent's working fix that changed the motion more (nearly a full lap back, brakes up to 4 s, some speed-ups) until it was specced.
+By: the orchestrator, within D237. Source: Sound engine's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md; apps/show/engine/src/wheel/drum.ts.
