@@ -152,10 +152,10 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U210 · How many cards per printed page
-The user is comparing five page layouts on the card design canvas's "Layouts" page, with nothing decided: 3×1 (today), 2×1 horizontal, 2×1 vertical, 2×2 horizontal and 2×2 vertical. The layout also sets the amounts: each card type is printed in whole pages, today a multiple of 3 (399 and 300), and duplex alignment is checked per layout on the proof sheet (U52).
-- (a) Keep 3×1.
-- (b) Another layout (say which).
+### U211 · How many normal cards (D256)
+Six cards a sheet means each type fills whole A3 sheets. The special card's 300 fits (50 sheets). The normal card's 399 (D68) doesn't. 2025 had about 190 normal cards played, and 2024 sold 214.
+- (a) 402 normal cards (67 sheets).
+- (b) 396 normal cards (66 sheets).
 
 ### U201 · Which sides get the sticker circle and the name space (D231)
 The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
@@ -363,6 +363,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U210 · Cards per printed page** (2026-11-27) → D256: six on an A3 sheet, portrait.
 - **U209 · The normal card's heading** (2026-11-27) → D254: «QUINES 1–5» / «QUINES 6–10» as the title; «QUINA QUINA!» with «BARRAKUDES · 2026» in the branding.
 - **U200 · The word in the sticker circle** (2026-11-27) → D253: «GOMET».
 - **U161 · A spare laptop's music** (2026-11-27): moot. Repertoire 2026 is in R2 with the Hold, Interval and voice music, so a spare can pull it (ca3c0a3d).

@@ -78,7 +78,7 @@ _From event.md › The songs; the Sound engine handoff._
 
 _From event.md › The cards._
 
-- A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
+- A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. **2026: six cards on each A3 sheet, portrait, in 2 columns × 3 rows, each card about 149 × 140 mm, printed duplex on the long edge** (D256).
 - **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2) (D193), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
 - **Last year's cards stay easy to spot** (D85): 2026's carry the year in the branding, the covers and the new side labels.
 - **The branding (D254):** beside the logo, «QUINA QUINA!» (no «3»), with «BARRAKUDES · 2026» under it.
@@ -107,7 +107,7 @@ _From event.md › The cards; the decisions doc › Changes._
 _From event.md › The cards (Amounts)._
 
 - Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
-- Each type's amount is a multiple of 3, to fill whole pages.
+- Each type's amount fills whole sheets: a multiple of 6 since D256 (it was 3). 2026: the normal amount is pending U211 (402 or 396), and the special stays 300.
 - 2024: 250 of each type printed; 214 normal and 147 special sold.
 - 2025: about 250 cards in play expected; about 190 normal and 151 special actually played.
 
