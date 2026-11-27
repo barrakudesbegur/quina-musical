@@ -42,7 +42,7 @@ import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { EMPTY_TAB_MEMORY, fallenBetween, helperTabAfter, type HelperTab, type TabMemory } from './logic/standing.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
 import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
-import { SentLog, dismissToast, isOwnRejection, pushToast, type Toast, type ToastTone } from './logic/toasts.ts';
+import { SentLog, dismissToast, holdToasts, isOwnRejection, pushToast, releaseToasts, shownToasts, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';
 import { readStored, writeStored } from './storage.ts';
 
@@ -111,6 +111,12 @@ export class ConsoleModel {
   theme = $state<Theme>(DEFAULT_THEME);
   checklist = $state.raw<readonly string[]>([]);
   toasts = $state.raw<readonly Toast[]>([]);
+  /** The toasts on screen (the others wait for an open dialog to close). */
+  readonly visibleToasts = $derived(shownToasts(this.toasts));
+  /** A modal dialog is open (the menu, «Comandament», a review's warning): new toasts wait behind it. */
+  private dialogOpen = false;
+  /** Each showing toast's timer, by id: a dialog that opens stops them. */
+  private readonly toastTimers = new Map<number, ReturnType<typeof setTimeout>>();
   /** The latest resume code seen on this device (plan B), kept across reloads. */
   savedResume = $state<string | null>(readStored(CONSOLE.storage.resume));
   /** The round's counted songs seen so far (each snapshot carries only the last 10), for the Futur tab. */
@@ -447,11 +453,27 @@ export class ConsoleModel {
 
   toast(tone: ToastTone, text: string, detail: string | null = null): void {
     const id = ++this.toastSeq;
-    this.toasts = pushToast(this.toasts, { id, tone, text, detail, untilMs: Date.now() + CONSOLE.toastMs }, CONSOLE.toastMax);
-    setTimeout(() => this.dismiss(id), CONSOLE.toastMs);
+    this.toasts = pushToast(this.toasts, { id, tone, text, detail, untilMs: this.dialogOpen ? null : Date.now() + CONSOLE.toastMs }, CONSOLE.toastMax);
+    if (!this.dialogOpen) this.toastTimers.set(id, setTimeout(() => this.dismiss(id), CONSOLE.toastMs));
+  }
+
+  /** A modal dialog opened or closed. Opening holds every toast; closing shows them again, each for its full time. */
+  setDialogOpen(open: boolean): void {
+    if (open === this.dialogOpen) return;
+    this.dialogOpen = open;
+    for (const timer of this.toastTimers.values()) clearTimeout(timer);
+    this.toastTimers.clear();
+    if (open) {
+      this.toasts = holdToasts(this.toasts);
+      return;
+    }
+    this.toasts = releaseToasts(this.toasts, Date.now() + CONSOLE.toastMs);
+    for (const t of this.toasts) this.toastTimers.set(t.id, setTimeout(() => this.dismiss(t.id), CONSOLE.toastMs));
   }
 
   dismiss(id: number): void {
+    clearTimeout(this.toastTimers.get(id));
+    this.toastTimers.delete(id);
     this.toasts = dismissToast(this.toasts, id);
   }
 

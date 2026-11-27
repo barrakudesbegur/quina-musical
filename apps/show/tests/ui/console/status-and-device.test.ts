@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { flowOf } from '../../../../../packages/ui/flow.ts';
 import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen, wiiLink } from '../../../../console/logic/status.ts';
-import { SentLog, dismissToast, isOwnRejection, liveToasts, pushToast, type Toast } from '../../../../console/logic/toasts.ts';
+import { SentLog, dismissToast, holdToasts, isOwnRejection, liveToasts, pushToast, releaseToasts, shownToasts, type Toast } from '../../../../console/logic/toasts.ts';
 import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../../console/logic/device.ts';
 import { defaultClaimKind, prizeRevealOf, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
@@ -79,6 +79,20 @@ test('toasts: bounded, expire, dismiss', () => {
   assert.deepEqual(liveToasts(list, 25).map((x) => x.id), [3]);
   assert.equal(liveToasts(list, 5), list, 'unchanged list when nothing expired');
   assert.deepEqual(dismissToast(list, 3).map((x) => x.id), [2]);
+});
+
+test('toasts wait behind an open dialog and show, for their full time, when it closes', () => {
+  const t = (id: number, untilMs: number | null): Toast => ({ id, tone: 'error', text: String(id), detail: null, untilMs });
+  const list = [t(1, 10), t(2, null)];
+  assert.deepEqual(shownToasts(list).map((x) => x.id), [1], 'a waiting toast is not on screen');
+  assert.deepEqual(liveToasts(list, 50).map((x) => x.id), [2], 'a waiting toast never expires');
+  const held = holdToasts(list);
+  assert.ok(held.every((x) => x.untilMs === null), 'a dialog opening holds the ones already showing too');
+  assert.equal(holdToasts(held), held, 'unchanged when all already wait');
+  const back = releaseToasts(held, 4000);
+  assert.deepEqual(back.map((x) => x.untilMs), [4000, 4000]);
+  assert.equal(shownToasts(back), back);
+  assert.equal(releaseToasts(back, 9000), back, 'unchanged when none waits');
 });
 
 test('only this console’s rejections are toasted', () => {
