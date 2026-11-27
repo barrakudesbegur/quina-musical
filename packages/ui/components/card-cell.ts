@@ -3,7 +3,7 @@
 // it, a centred badge, a tag on its bottom edge. Which game state looks like what is CardGrid's looks table
 // (card-looks.ts). The phone and the console draw it with CardCell.svelte; the projector (plain TS) builds the same
 // parts here and sets the same data attributes, so all three share card-cell.css.
-import { LINE_ICONS, partClass, pathOf, type LineIconName } from '../icons/line.ts';
+import { LINE_ICONS, isBehind, partClass, pathOf, type IconPath, type LineIconName } from '../icons/line.ts';
 import '../icons/icons.css';
 import './card-cell.css';
 
@@ -48,21 +48,44 @@ export function cellData(look: CellLook): Record<string, string | undefined> {
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
+let masks = 0;
 
-/** One icon of the family (line.ts) as an SVG element, for the projector's DOM (Icon.svelte's markup, `alone`). */
+/** One part of an icon as a `<path>`, with its part class. */
+function partPath(p: IconPath, cls = partClass(p)): SVGPathElement {
+  const path = document.createElementNS(SVG, 'path');
+  path.setAttribute('d', pathOf(p));
+  if (cls) path.setAttribute('class', cls);
+  return path;
+}
+
+/**
+ * One icon of the family (line.ts) as an SVG element, for the projector's DOM (Icon.svelte's markup, `alone`). Parts
+ * marked `behind` are drawn through the mask the other parts cut, as Icon.svelte does.
+ */
 export function iconElement(name: LineIconName): SVGSVGElement {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('class', 'icon icon--alone');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
-  for (const p of LINE_ICONS[name]) {
-    const path = document.createElementNS(SVG, 'path');
-    path.setAttribute('d', pathOf(p));
-    const cls = partClass(p);
-    if (cls) path.setAttribute('class', cls);
-    svg.append(path);
+  const parts = LINE_ICONS[name] as readonly IconPath[];
+  const back = parts.filter(isBehind);
+  const front = parts.filter((p) => !isBehind(p));
+  if (back.length) {
+    const id = `icon-mask-el-${++masks}`;
+    const mask = document.createElementNS(SVG, 'mask');
+    for (const [k, v] of Object.entries({ id, maskUnits: 'userSpaceOnUse', x: '-12', y: '-12', width: '48', height: '48' })) mask.setAttribute(k, v);
+    const reveal = document.createElementNS(SVG, 'rect');
+    for (const [k, v] of Object.entries({ class: 'icon__reveal', x: '-12', y: '-12', width: '48', height: '48' })) reveal.setAttribute(k, v);
+    mask.append(reveal, ...front.map((p) => partPath(p, 'icon__cut')));
+    const defs = document.createElementNS(SVG, 'defs');
+    defs.append(mask);
+    const g = document.createElementNS(SVG, 'g');
+    g.setAttribute('mask', `url(#${id})`);
+    g.append(...back.map((p) => partPath(p)));
+    svg.append(defs, g);
   }
+  svg.append(...front.map((p) => partPath(p)));
   return svg;
 }
 
