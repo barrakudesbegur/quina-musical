@@ -3,6 +3,7 @@
   runs the seconds to its landing, big, so a presenter can say it on the hit.
 -->
 <script lang="ts">
+  import Panel from '../../../packages/ui/components/Panel.svelte';
   import { getConsole } from '../context.ts';
   import { landingCountdown, suspenseCountdown } from '../logic/countdown.ts';
   import { S } from '../strings.ts';
@@ -26,7 +27,7 @@
 
 <!-- Nothing to show before a round's Queue exists. -->
 {#if snap && (next || snap.queue.length > 0)}
-  <section bind:this={root} class="panel panel--private next-song" data-testid="next-song" data-song-id={next?.songId ?? ''} data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
+  <Panel bind:element={root} fill="snow" border="dashed" shadow={false} class="next-song" data-testid="next-song" data-song-id={next?.songId ?? ''} data-private="true" data-state={landing ? 'landing' : suspense ? 'suspense' : 'waiting'} aria-labelledby="{uid}-title">
     {#if next && !finaleOver}
       <Cover songId={next.songId} morph="cover" />
       <div class="next-song__song">
@@ -49,5 +50,5 @@
         <p class="next-song__none">{finaleOver ? S.finale.nextDone : S.nextSong.none}</p>
       </div>
     {/if}
-  </section>
+  </Panel>
 {/if}
