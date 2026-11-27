@@ -94,7 +94,13 @@ interface LocalFile {
   sha256: string;
 }
 
-/** Every syncable file under the roots, hashed (cached by size and mtime). */
+/**
+ * Folders kept on this laptop only, at any depth: Sound engine's renumber (27–28 Nov) moves a song it drops to
+ * `_retired/<spotifyId>/` beside the live ones, so nothing is deleted, but no repertoire plays it.
+ */
+const LOCAL_ONLY_DIRS: ReadonlySet<string> = new Set(['_retired']);
+
+/** Every syncable file under the roots, hashed (cached by size and mtime); never dot files or LOCAL_ONLY_DIRS. */
 export async function scan(roots: readonly RootDir[], dataDir: string, skipped: string[] = []): Promise<Map<string, LocalFile>> {
   const indexFile = path.join(dataDir, 'media-index.json');
   let index: Record<string, Indexed> = {};
@@ -110,7 +116,7 @@ export async function scan(roots: readonly RootDir[], dataDir: string, skipped: 
       if (!entry.isFile()) continue;
       const abs = path.join(entry.parentPath, entry.name);
       const rel = path.relative(dir, abs).split(path.sep).join('/');
-      if (rel.split('/').some((s) => s.startsWith('.')) || rel.endsWith('.part') || rel.endsWith('.tmp') || exclude?.(rel)) continue;
+      if (rel.split('/').some((s) => s.startsWith('.') || LOCAL_ONLY_DIRS.has(s)) || rel.endsWith('.part') || rel.endsWith('.tmp') || exclude?.(rel)) continue;
       const syncPath = `${root}/${rel}`;
       if (!isSyncPath(syncPath)) {
         skipped.push(`${syncPath}: not a plain file name`);
