@@ -42,7 +42,7 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 - (b) Three, with Hold music too.
 
 ### U163 · The round total in "Quina 4 de N"
-The model numbers only normal rounds ("Quina 1"…; the specials are "Quina Especial" and "Quina Desgraciada", with no number). Today every screen shows the plan's position instead, specials included, so with a special earlier in the night a normal round's number is one too high. Frontend is fixing that. Left open: what the total "de N" counts. In 2026 that's 10 normal rounds plus 2 specials.
+The model numbers only normal rounds ("Quina 1"…; the specials are "Quina Especial" and "Quina del Desgraciat", with no number). Today every screen shows the plan's position instead, specials included, so with a special earlier in the night a normal round's number is one too high. Frontend is fixing that. Left open: what the total "de N" counts. In 2026 that's 10 normal rounds plus 2 specials.
 - (a) Normal rounds only: "Quina 4 de 10".
 - (b) Every round: "Quina 4 de 12", though only 10 rounds carry a number.
 
@@ -152,10 +152,12 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U200 · The word in the sticker circle (D231)
-The user wrote "GUMET". The usual Catalan word for these stickers is «gomet».
-- (a) «GOMET».
-- (b) «GUMET», as written.
+### U209 · The normal card's heading (D250)
+The user is trying four layouts on the card design canvas, "this is a test. if i like it i will do it in the design. keep those choices as open questions":
+- (a) «QUINES 1–5» / «QUINES 6–10» as the title.
+- (b) «QUINES» with the numbers 1 2 3 4 5.
+- (c) «PRIMERA PART» / «SEGONA PART» over a «QUINES 1–5» box.
+- (d) The event's name where «BARRAKUDES» is, with «BARRAKUDES» under it.
 
 ### U201 · Which sides get the sticker circle and the name space (D231)
 The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
@@ -187,9 +189,9 @@ Both final playlists have 70 songs and no repeats inside each (D230). But 4 of p
 - (c) Keep them in both pools.
 
 
-### U198 · The special card's side labels
-The Check shows one label for a card's type and side, so a player can see that the side checked is the round's (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The special card now has two sides (D226).
-- (a) By round: «Especial · Desgraciada» and «Especial · Quina Especial».
+### U198 · The special card's side labels on the screens
+The Check shows one label for a card's type and side (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The printed special card now says «DESGRACIAT» and «ESPECIAL» (D252).
+- (a) Like the printed card: «Especial · Desgraciat» and «Especial · Especial»… or just «Desgraciat» and «Especial».
 - (b) By pool, like the normal card: «Especial 1» and «Especial 2».
 
 ### U193 · Where the install button goes on the phone's home (D221)
@@ -363,6 +365,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U200 · The word in the sticker circle** (2026-11-27) → D253: «GOMET».
 - **U161 · A spare laptop's music** (2026-11-27): moot. Repertoire 2026 is in R2 with the Hold, Interval and voice music, so a spare can pull it (ca3c0a3d).
 - **U30 · The prizes drawer** (2026-11-27) → D244: P1's round selector with P2's content; «Premis sorpresa» for locked rounds.
 - **U170 · The Llançament and Tempesta icons** (2026-11-27) → D245: A and A, redrawn in the outline style.

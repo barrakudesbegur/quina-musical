@@ -1685,3 +1685,15 @@ The user's decisions with the card design session (canvas https://claude.ai/code
 5. **A faded «#» before the card number:** "in front of the cartro number add a faded #".
 Still open: U200, U201, U52 (the paper), U198, and whether the design is final by 1 Dec (Frontend estimates 2 days of building plus a proof round).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D67, D231, D233. Lives in: requirements/songs-and-cards.md › The card.
+
+### D251 · The round is "Quina del Desgraciat" · 2026-11-27 · Active
+"\"Quina Desgraciada\" is not the name. i want \"Quina del Desgraciat\", or simply desgraciat in some places." Every screen, label and voice line that says «Desgraciada» changes: the round's name, the side label in card-types.json, and the Desgraciat's round voice.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/screens.md › Every screen; requirements/game-rules.md › The night's rounds.
+
+### D252 · The special card has no parts: «DESGRACIAT» and «ESPECIAL» · 2026-11-27 · Active
+"on the special cards there are no parts. it is Quina del desgraciat, and quina especial", then "skip the quina word", since it may not fit. So side 1 says «DESGRACIAT» and side 2 «ESPECIAL». It replaces the design session's reading «1a PART · …» in D250.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D250. Lives in: requirements/songs-and-cards.md › The card.
+
+### D253 · «GOMET», in a circle of about 15 mm · 2026-11-27 · Active
+U200 answered (a): «GOMET». The circle is "less than 20mm, 15mm for example", with the word centred in it (D231 said about 19 mm).
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D231. Lives in: requirements/songs-and-cards.md › The card.

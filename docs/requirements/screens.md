@@ -12,7 +12,7 @@ What each screen must show, who uses it, and what it must never show: the projec
 _From event.md › The audience, Atmosphere and style, Fairness and trust._
 
 - **Everything is in Catalan,** in informal, natural language.
-  - A round is "Quina 1"…, the special round "Quina Especial" and the Desgraciat "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".
+  - A round is "Quina 1"…, the special round "Quina Especial" and the Desgraciat "Quina del Desgraciat", or simply "Desgraciat" where space is short (D251). Numbering only appears as "Quina 4 de 12".
   - A Line is "Línia", a full card "Quina!" ("premi de quina"). Card numbers are written "#123". Times use am/pm.
 - **A show, not a meeting:** a festive Christmas look, styled like a mobile game, "juicy" and full of animation. The projector and the player app get the full look; the console and Admin can be simpler. One design system covers all of them.
 - **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
@@ -36,7 +36,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | State | What it shows |
 |---|---|
 | Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the normal card: Quines 1–10; the special card: the Desgraciat and the Especial, D243); the price of a card for round 1 (D69: 15 €); a large "scan your card" QR on a pure white panel with generous padding (D216); the sponsors; a rough countdown |
-| A round's intro | "Quina N" (or "Quina Especial", "Quina Desgraciada") with its prize bundles and sponsors, revealed now as the presenters announce them |
+| A round's intro | "Quina N" (or "Quina Especial", "Quina del Desgraciat") with its prize bundles and sponsors, revealed now as the presenters announce them |
 | The Shuffle | Every cover in a grid, shaken, flying into the drum |
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
 | Hold ("Parlem") | No visible change |
@@ -156,7 +156,7 @@ _From event.md › Prizes and sponsors, The cards; the decisions doc › Admin._
 
 - **Setup** (pending U18, the night's plan):
   - the edition's name and the cards in play, as ranges;
-  - the rounds in order, each with its kind (regular, Desgraciada, Especial) and card type. Only one Desgraciat a night, with a single bundle;
+  - the rounds in order, each with its kind (regular, Desgraciat, Especial) and card type. Only one Desgraciat a night, with a single bundle;
   - prize bundles, sponsors (money donors too) and their logos, picked from the private logo library (pending U16);
   - bulk JSON import and export, so an AI agent can load the organizers' spreadsheet. Its private columns are never read;
   - the Schedule, with the throw breaks (after any round but the last, 5 minutes by default; the planned end counts them).

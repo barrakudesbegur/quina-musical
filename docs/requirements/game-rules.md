@@ -25,7 +25,7 @@ _From event.md › The night, step by step, One round, The special rounds._
 - Each round also plays one pool, and only the side printed from it counts (D101, D102). 2026 (D193, the organizers' decision): Quines 1–5 play pool 1 (side 1) and Quines 6–10 pool 2 (side 2). The special card has two sides too (D226): the Desgraciat plays pool 1 on side 1, and the Especial plays pool 2 on side 2. So each pool plays six rounds, and the change from pool 1 to pool 2 happens in the Descans. The presenters explain the sides in rounds 1 and 6.
 - **The order can change during the night.** Upcoming rounds can be reordered and edited live, for example to move the Desgraciat. Rounds already played stay fixed.
 - A round never starts by itself. The presenters start it when they've announced its prizes.
-- On screen a round is "Quina 1", "Quina 2"…. The special round is "Quina Especial", with no number, and the Desgraciat is "Quina Desgraciada". Numbering only appears as "Quina 4 de 12".
+- On screen a round is "Quina 1", "Quina 2"…. The special round is "Quina Especial", with no number, and the Desgraciat is "Quina del Desgraciat", or simply "Desgraciat" where space is short (D251). Numbering only appears as "Quina 4 de 12".
 
 ## A regular round
 
