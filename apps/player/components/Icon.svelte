@@ -45,6 +45,9 @@
     /** The QR reader: the camera, and the camera refused. */
     camera: 'camera',
     cameraOff: 'camera-off',
+    /** Ajustos's «Instal·la l'app» (D221), and «Ja tens l'app». */
+    install: 'phone-arrow-down',
+    installed: 'check',
   } as const satisfies Record<string, LineIconName>;
 
   export type IconName = keyof typeof PLAYER_ICONS;

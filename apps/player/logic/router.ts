@@ -3,9 +3,11 @@
 // - Development: the app lives at /player/, so the same route also works as a hash: /player/#/26/123.
 // - Last year's links: /?c=123 (several c= allowed). They get "Aquest cartró és de l'any passat".
 // - Development hints, for reviewing screens: &view=historial|cartrons (the home screen's switch),
-//   &open=premis|horari|ajustos|pad (a drawer), &cards=123,57 (demo cards).
+//   &open=premis|horari|ajustos|pad|install (a drawer), &cards=123,57 (demo cards), &install=prompt|steps|installed
+//   (what installing the app offers, D221; development and demos only).
 import { LEGACY, PLAYER_CONFIG } from '../config.ts';
 import { isOpenable, type OpenableDrawer } from './drawers.ts';
+import { isInstallOffer, type InstallOffer } from './install.ts';
 import { isAraView, type AraView } from './tabs.ts';
 
 export type Route =
@@ -95,6 +97,8 @@ export interface DevHints {
   open: OpenableDrawer | null;
   /** Demo cards: null to use the demo's own, [] for none. */
   cards: number[] | null;
+  /** What installing the app offers, whatever the browser says (main.ts honours it only in development and demos). */
+  install: InstallOffer | null;
 }
 
 /** Review hints in the query (development and demos). */
@@ -103,7 +107,9 @@ export function devHints(search: string): DevHints {
   const view = params.get('view');
   const open = params.get('open');
   const cards = params.get('cards');
+  const install = params.get('install');
   return {
+    install: isInstallOffer(install) ? install : null,
     view: isAraView(view) ? view : null,
     open: isOpenable(open) ? open : null,
     cards: cards === null ? null : cards.split(/\D+/).map(cardId).filter((id): id is number => id !== null),

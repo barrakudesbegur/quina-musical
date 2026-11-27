@@ -7,6 +7,7 @@ import { heatAt } from '../../packages/rules/heat.ts';
 import { touchRelease, touchTap } from '../../packages/ui/sounds/touch.ts';
 import { buzz } from '../../packages/ui/sounds/delegate.ts';
 import { PLAYER_CONFIG } from './config.ts';
+import { InstallState } from './device/install.svelte.ts';
 import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';
 import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
@@ -53,6 +54,8 @@ export interface PlayerAppOptions {
   initialState?: PublicState | null;
   /** Where each new state is kept for the next reload (sessionStorage; null: not kept). */
   bootStore?: StorageLike | null;
+  /** Installing the app (D221): what the browser offers. Without one, nothing is offered. */
+  install?: InstallState;
 }
 
 /** A toast: its words, and the identity of the card it is about (its icon), if any. */
@@ -161,7 +164,11 @@ export class PlayerApp {
   private freshTimer: ReturnType<typeof setTimeout> | null = null;
   private standUpTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor({ feed, storage, sounds, loadCatalog, edition = PLAYER_CONFIG.edition, initialState = null, bootStore = null }: PlayerAppOptions) {
+  /** Installing the app (D221): Ajustos's row and the home's InstallPrompt read `install.offer`. */
+  readonly install: InstallState;
+
+  constructor({ feed, storage, sounds, loadCatalog, edition = PLAYER_CONFIG.edition, initialState = null, bootStore = null, install = new InstallState() }: PlayerAppOptions) {
+    this.install = install;
     this.feed = feed;
     this.storage = storage;
     this.sounds = sounds;

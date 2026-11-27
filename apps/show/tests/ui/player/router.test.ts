@@ -53,12 +53,16 @@ test('after taking a link in, the address drops the card and c= but keeps dev hi
 });
 
 test('review hints: the home screen\'s view, a drawer to open and demo cards', () => {
-  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57] });
-  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null });
-  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null });
-  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null });
-  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null }, 'the tabs and the menu are gone (no fallback, D84)');
-  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [] });
+  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57], install: null });
+  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null, install: null });
+  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null, install: null });
+  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null, install: null });
+  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null, install: null }, 'the tabs and the menu are gone (no fallback, D84)');
+  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [], install: null });
+  // what installing the app offers (D221), for reviewing its screens
+  assert.equal(devHints('?install=steps').install, 'steps');
+  assert.equal(devHints('?install=prompt&open=install').open, 'install');
+  assert.equal(devHints('?install=yes').install, null);
 });
 
 test('the feed comes from the URL: demo, relay, cloud; dev on this machine or the LAN defaults to the relay', () => {

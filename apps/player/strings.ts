@@ -209,6 +209,23 @@ export const S = {
   soundsLabel: 'Sons',
   legacyMenuTitle: 'El cartró de l’any passat',
   legacyMenuText: 'Els cartrons de l’any passat ja no juguen. Els d’enguany porten un codi QR nou: escaneja’l, o afegeix-lo pel número.',
+  // Installing the app (D221): Ajustos's row, the home's button (Chrome), and the iPhone's drawer with the steps
+  install: 'Instal·la l’app',
+  installed: 'Ja tens l’app',
+  installTitle: 'Instal·la l’app',
+  installIntro: 'Posa la Quina Musical a la pantalla d’inici: s’obrirà com una app, amb els teus cartrons.',
+  installStepsLabel: 'Els passos',
+  /** The iPhone's steps (logic/install.ts installSteps): `{}` is the button's name, in bold. Safari's labels in
+   *  Catalan as the research has them: to check on a real iPhone set to Catalan (U19). */
+  installSteps: {
+    more: { text: 'Toca {} al costat de l’adreça', button: '⋯' },
+    shareSafari: { text: 'Toca {}', button: 'Compartir' },
+    shareOther: { text: 'Toca {} a la barra de l’adreça', button: 'Compartir' },
+    addHome: { text: 'Tria {}', button: 'Afegir a la pantalla d’inici' },
+    add: { text: 'Deixa «Obrir com a app web» activat i toca {}', button: 'Afegir' },
+  },
+  installAfter: 'Després obre-la des de la icona de la pantalla d’inici.',
+
   wipeData: 'Esborrar les dades d’aquest mòbil',
   wipeTitle: 'Esborrar totes les dades?',
   wipeText: 'Es trauran tots els teus cartrons i noms d’aquest mòbil.',

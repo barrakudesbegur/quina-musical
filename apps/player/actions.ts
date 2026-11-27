@@ -17,6 +17,11 @@ export const PLAYER = {
   addCardFloating: { color: 'navy', floating: true, size: 's', icon: 'plus', label: S.addCard, sound: 'floating' },
   /** The same in Ajustos: the smaller rounded rectangle (D189, D201). */
   addCardSmall: { color: 'orange', size: 's', icon: 'plus', label: S.addCard },
+  /**
+   * «Instal·la l'app» (D221; the home's InstallPrompt): shown only while Chrome holds an install prompt. A quiet pill,
+   * as the floating «+ Cartró» (navy on the night sky), so it never competes with the cards.
+   */
+  install: { color: 'navy', size: 's', icon: 'phone-arrow-down', label: S.install },
   /** The add-card pad's «Desar»: lit once the number is a card. */
   save: { color: 'green', size: 'm', icon: 'check', label: S.save, sound: 'submit' },
   /** The rename sheet's «Desar». */

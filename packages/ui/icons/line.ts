@@ -162,6 +162,14 @@ export const LINE_ICONS = {
   camera: ['M4 8.5a2 2 0 0 1 2-2h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z', circle(12, 12.6, 3.6)],
   'camera-off': ['M9.5 4.5h5l1.5 2h2a2 2 0 0 1 2 2V16', 'M17 19H6a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2h1', 'M10 10a3.6 3.6 0 0 0 4.6 5', 'M3 3l18 18'],
   tablet: ['M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M11 18h2'],
+  /** A phone with an arrow coming down into it: install the app (the player's Ajustos, D221). */
+  'phone-arrow-down': ['M7.5 2.5h9a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-15a2 2 0 0 1 2-2z', 'M12 6.5v8', 'M8.75 11.25L12 14.5l3.25-3.25', 'M10.5 18h3'],
+  /** ⋯ in a ring, as iOS Safari's page menu by the address bar (the iPhone's install steps, D221). */
+  dots: [circle(12, 12, 9.5), solid(circle(7.75, 12, 1.35)), solid(circle(12, 12, 1.35)), solid(circle(16.25, 12, 1.35))],
+  /** A tray with an arrow going up out of it: the iPhone's Share button. */
+  share: ['M8.5 9.5H7a1.5 1.5 0 0 0-1.5 1.5v8.5A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V11A1.5 1.5 0 0 0 17 9.5h-1.5', 'M12 2.75V14', 'M8.5 6.25L12 2.75l3.5 3.5'],
+  /** A plus in a rounded square: the iPhone's «Add to Home Screen». */
+  'plus-square': ['M7 3.5h10A3.5 3.5 0 0 1 20.5 7v10a3.5 3.5 0 0 1-3.5 3.5H7A3.5 3.5 0 0 1 3.5 17V7A3.5 3.5 0 0 1 7 3.5z', 'M12 8v8', 'M8 12h8'],
   wifi: ['M2.5 9a14 14 0 0 1 19 0', 'M5.5 12.5a9.5 9.5 0 0 1 13 0', 'M8.6 16a5 5 0 0 1 6.8 0', 'M12 19.5h.01'],
   'wifi-off': ['M2 8.5a15 15 0 0 1 20 0', 'M5.5 12a10 10 0 0 1 13 0', 'M9 15.5a5 5 0 0 1 6 0', 'M3 3l18 18', fill(circle(12, 19, 1.2))],
   keyboard: ['M3 7h18v10H3z', 'M7 11h.01', 'M11 11h.01', 'M15 11h.01', 'M8 14h8'],

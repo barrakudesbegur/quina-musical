@@ -18,6 +18,7 @@ import { CloudFeed, defaultFeedBase } from './feed/cloud-feed.ts';
 import { chooseFeed, type FeedChoice, type PlayerFeed } from './feed/feed.ts';
 import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/cleanup.ts';
 import { watchUpdates } from './device/updates.ts';
+import { InstallState } from './device/install.svelte.ts';
 import { devHints, homeHref, parseRoute, type DevHints } from './logic/router.ts';
 import { MemoryStorage, PlayerStorage, addCard, documentCookies, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
 import { loadBootState } from './logic/boot-cache.ts';
@@ -96,7 +97,11 @@ async function main(): Promise<void> {
   // A reload opens on the state this tab saw a moment ago, not on the before-the-night screen (never in a demo).
   const bootStore = choice.kind === 'demo' ? null : sessionStore();
   const initialState = loadBootState(bootStore, edition, Date.now());
-  const app = new PlayerApp({ feed, storage, sounds, edition, initialState, bootStore, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
+  // Installing the app (D221): Chrome's prompt can come at any time, so this listens before the app mounts. A review
+  // link's ?install= stands in for the browser in development and demos.
+  const install = new InstallState({ userAgent: navigator.userAgent, maxTouchPoints: navigator.maxTouchPoints, forced: import.meta.env.DEV || choice.kind === 'demo' ? hints.install : null });
+  install.watch(window);
+  const app = new PlayerApp({ feed, storage, sounds, edition, initialState, bootStore, install, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
 
   app.openRoute(route);
   if (route.kind !== 'home') history.replaceState(null, '', homeHref(location, { edition }));

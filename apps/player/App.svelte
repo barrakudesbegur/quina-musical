@@ -17,6 +17,7 @@
   import DrawerFrame from './components/DrawerFrame.svelte';
   import Heat from './components/Heat.svelte';
   import HomeFloats from './components/HomeFloats.svelte';
+  import InstallSteps from './components/InstallSteps.svelte';
   import LegacyNotice from './components/LegacyNotice.svelte';
   import MenuView from './components/MenuView.svelte';
   import NumberPad from './components/NumberPad.svelte';
@@ -126,6 +127,10 @@
       {:else if drawer.kind === 'anyPassat'}
         <Drawer name="any-passat" title={S.legacyMenuTitle} onclose={closeTop}>
           <p class="drawer__note">{S.legacyMenuText}</p>
+        </Drawer>
+      {:else if drawer.kind === 'install'}
+        <Drawer name="install" title={S.installTitle} onclose={closeTop}>
+          <InstallSteps browser={app.install.browser} />
         </Drawer>
       {:else if drawer.kind === 'pad'}
         <NumberPad

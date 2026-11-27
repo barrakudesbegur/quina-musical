@@ -16,13 +16,15 @@ export type Drawer =
   | { kind: 'pad' }
   /** Last year's card: what changed and what to do. */
   | { kind: 'anyPassat' }
+  /** The iPhone's «Instal·la l'app»: the steps to add it to the Home Screen (D221). */
+  | { kind: 'install' }
   | { kind: 'wipe' }
   | { kind: 'rename' | 'remove'; cardId: number };
 
 export type DrawerKind = Drawer['kind'];
 
 /** The drawers a review link may open (`?open=`). */
-export const OPENABLE = ['premis', 'horari', 'ajustos', 'pad'] as const satisfies readonly DrawerKind[];
+export const OPENABLE = ['premis', 'horari', 'ajustos', 'pad', 'install'] as const satisfies readonly DrawerKind[];
 export type OpenableDrawer = (typeof OPENABLE)[number];
 export const isOpenable = (v: unknown): v is OpenableDrawer => typeof v === 'string' && (OPENABLE as readonly string[]).includes(v);
 

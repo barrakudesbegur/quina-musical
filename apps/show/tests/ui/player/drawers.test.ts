@@ -27,7 +27,7 @@ test('Premis grows out of the bottom-left corner, Horari the bottom-right; the r
 });
 
 test('the review links open Premis, Horari, Ajustos or the pad', () => {
-  assert.deepEqual([...OPENABLE], ['premis', 'horari', 'ajustos', 'pad']);
+  assert.deepEqual([...OPENABLE], ['premis', 'horari', 'ajustos', 'pad', 'install']);
   assert.equal(isOpenable('ajustos'), true);
   assert.equal(isOpenable('menu'), false);
 });

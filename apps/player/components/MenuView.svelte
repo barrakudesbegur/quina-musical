@@ -6,7 +6,9 @@
   // The Ajustos drawer (D87; it was "Menú"; the J2 look, board Mobil-B-J2): the player's cards as plain rows, each
   // with its grip to reorder it (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon,
   // name and number, and its edit and remove buttons; "Afegir cartró"; the settings panel (the Sons switch,
-  // ANIMATIONS.md `switch-toggle`; last year's card); "Esborrar les dades d'aquest mòbil".
+  // ANIMATIONS.md `switch-toggle`; last year's card); "Esborrar les dades d'aquest mòbil". First among the settings,
+  // installing the app (D221; ANIMATIONS.md `install-row`): Chrome's own dialog where it holds a prompt, the steps'
+  // drawer on an iPhone, «Ja tens l'app» once installed, and no row where the browser can't install it.
   // A card's drawers open over this one, and closing them comes back here.
   import { PLAYER_CONFIG } from '../config.ts';
   import { cardLabel } from '../logic/storage.ts';
@@ -15,6 +17,8 @@
   import CardMark from './CardMark.svelte';
   import Icon from './Icon.svelte';
   import Switch from '../../../packages/ui/components/Switch.svelte';
+  import { fade } from 'svelte/transition';
+  import './install.css';
 
   let { app }: { app: PlayerApp } = $props();
 
@@ -96,6 +100,24 @@
   </section>
 
   <ul class="menu__settings">
+    {#if app.install.offer === 'installed'}
+      <li class="menu__row menu__row--installed" data-anim="install-row">
+        <span class="menu__row-content" in:fade={{ duration: 200 }}><Icon name="installed" /><span class="menu__label">{S.installed}</span></span>
+      </li>
+    {:else if app.install.offer !== 'none'}
+      <li class="menu__row" data-anim="install-row">
+        <button
+          type="button"
+          class="menu__row-button"
+          aria-haspopup={app.install.offer === 'steps' ? 'dialog' : undefined}
+          onclick={() => (app.install.offer === 'steps' ? app.open({ kind: 'install' }) : void app.install.prompt())}
+        >
+          <Icon name="install" />
+          <span class="menu__label">{S.install}</span>
+          <span class="menu__chevron"><Icon name="chevron" /></span>
+        </button>
+      </li>
+    {/if}
     <li class="menu__row menu__row--switch">
       <!-- The whole row is the switch (B1 `row`); it plays its own sound (PlayerApp.toggleSounds). -->
       <Switch icon={app.soundsOn ? 'speaker-loud' : 'speaker-mute'} label={S.soundsLabel} checked={app.soundsOn} sound={null} class="menu__switch" data-anim="switch-toggle" onchange={() => app.toggleSounds()} />
