@@ -162,12 +162,21 @@
   --dur-celebrate: 1200ms;
   --dur-hold-confirm: 900ms; /* long press to confirm a risky action */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* A spring (ANIMATIONS.md › Easing): fast start, overshoot to 1.11 at 35 %, one swing back to 0.99, settled at 100 %. */
+  --ease-bounce: linear(0, 0.06 1.7%, 0.142 3.6%, 0.242 5.6%, 0.497 10.4%, 0.614 12.7%, 0.73 15.2%, 0.824 17.5%, 0.917 20.2%, 0.99 22.9%, 1.045 25.7%, 1.084 28.6%, 1.1 30.6%, 1.11 32.7%, 1.113 35%, 1.11 37.5%, 1.093 41.8%, 1.019 56.1%, 1.002 61.3%, 0.992 66.7%, 0.988 76%, 1);
 
   /* Layers */
   --z-overlay: 50;
   --z-banner: 40;
   --z-toast: 60;
+}
+
+/* Without linear() (Safari before 17.2, under the console's iPadOS 15.4 floor) a var() holding it would void the whole
+   animation or transition, so those browsers keep the one-hump overshoot. */
+@supports not (animation-timing-function: linear(0, 1)) {
+  :root {
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

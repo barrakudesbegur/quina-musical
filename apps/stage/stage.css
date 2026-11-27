@@ -154,6 +154,7 @@
   --stage-dur-finale-back: 300ms;
   --stage-dur-finale-hops: 600ms;
   --stage-dur-finale-ribbon: 1.8s; /* in 120 ms, 1.5 s on screen, out 300 ms */
+  --stage-dur-finale-ribbon-pop: 200ms; /* its pop, 0.4 → 1 on --ease-bounce */
   --stage-dur-finale-light: 3.1s;
   --stage-dur-finale-beams: 3.7s;
   --stage-dur-finale-win: 600ms;
@@ -1631,7 +1632,9 @@
 }
 
 .finale[data-anim='finale-safe'] .finale__ribbon {
-  animation: stage-finale-ribbon var(--stage-dur-finale-ribbon) linear;
+  animation:
+    stage-finale-ribbon var(--stage-dur-finale-ribbon) linear,
+    stage-finale-ribbon-pop var(--stage-dur-finale-ribbon-pop) var(--ease-bounce);
 }
 
 .finale[data-anim='finale-safe'] .finale__light {
@@ -1668,11 +1671,8 @@
 }
 
 @keyframes stage-finale-stamp {
-  0% {
+  from {
     transform: scale(0);
-  }
-  60% {
-    transform: scale(1.25);
   }
 }
 
@@ -1702,16 +1702,13 @@
   }
 }
 
+/* The ribbon's run (linear): it fades in over 120 ms, stays 1.5 s and goes in 300 ms. Its pop is a second animation on
+   `scale`, on the spring, since a keyframe's own timing function can't read a var(). */
 @keyframes stage-finale-ribbon {
   0% {
     opacity: 0;
-    transform: scale(0.4);
   }
-  6.7% {
-    opacity: 1;
-    transform: scale(1.08);
-  }
-  11%,
+  6.7%,
   83% {
     opacity: 1;
     transform: none;
@@ -1719,6 +1716,12 @@
   100% {
     opacity: 0;
     transform: scale(0.9);
+  }
+}
+
+@keyframes stage-finale-ribbon-pop {
+  from {
+    scale: 0.4;
   }
 }
 
