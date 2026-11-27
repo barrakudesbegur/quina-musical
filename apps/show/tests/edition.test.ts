@@ -6,7 +6,7 @@ import { checkEdition, type CardTypeSides } from '@quina/protocol';
 
 const TYPES: CardTypeSides[] = [
   { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
+  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
 ];
 const songs = [
   ...Array.from({ length: 12 }, (_, i) => ({ id: i + 1, title: `S${i + 1}`, artist: 'A', pool: '1' })),

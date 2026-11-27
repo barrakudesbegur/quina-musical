@@ -15,8 +15,8 @@ import { setup, songs, type Harness } from './support/harness.ts';
 
 const TYPES: CardTypeSides[] = [
   { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1-5' }, { side: 2, pool: '2', label: '6-10' }] },
-  // D226: the especial card's side 1 (pool 1) plays the Desgraciat, its side 2 (pool 2) the Especial; card-types.json's labels.
-  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
+  // D226: the especial card's side 1 (pool 1) plays the Desgraciat, its side 2 (pool 2) the Especial; card-types.json's labels (D251: «Desgraciat», never «Desgraciada»).
+  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
 ];
 
 test('a card type\'s sides and pools, and the label the Check shows (D163)', () => {
