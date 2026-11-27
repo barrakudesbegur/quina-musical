@@ -762,6 +762,7 @@ export const S = {
     kind: 'Què canta?',
     kinds: kindLabel,
     display: 'Número de cartró',
+    keypad: 'Teclat del número',
     chip: (id: number) => `#${id}`,
     removeChip: (id: number) => `Treu el #${id}`,
     unknown: 'Aquest cartró no existeix',

@@ -19,7 +19,7 @@
   import { knownCardTypes } from '../../../packages/ui/data/card-types.ts';
   import { typeChip } from '../logic/check.ts';
   import { peekCard, roundSongIds, searchSongs } from '../logic/lookup.ts';
-  import { PAD_DIGITS, padKeyFromKeyboard, padPress, padValue, type PadKey } from '../logic/numpad.ts';
+  import { padKeyFromKeyboard, padPress, padValue, type PadKey } from '../logic/numpad.ts';
   import { hasPlayed, type SongStatus } from '../logic/upcoming.ts';
   import { S } from '../strings.ts';
   import CardPeek from './CardPeek.svelte';
@@ -27,6 +27,7 @@
   import PlayedList from './PlayedList.svelte';
   import SongRow from './SongRow.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
+  import NumberPad from '../../../packages/ui/components/NumberPad.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -194,13 +195,7 @@
       </ul>
     {/if}
   {:else if search.cardId === null}
-    <div class="card-keys" role="group" aria-label={S.cerca.keypad}>
-      {#each PAD_DIGITS as digit (digit)}
-        <button type="button" class="pad-key" data-anim="press" onclick={() => press(digit)}>{digit}</button>
-      {/each}
-      <button type="button" class="pad-key pad-key--back" data-anim="press" aria-label={S.cerca.erase} onclick={() => press('back')}><Icon name="backspace" /></button>
-      <button type="button" class="pad-key pad-key--enter" data-anim="press" aria-label={S.cerca.enter} disabled={padValue(search.digits, limits) === null} onclick={() => press('enter')}><Icon name="enter" /></button>
-    </div>
+    <NumberPad row label={S.cerca.keypad} backLabel={S.cerca.erase} enter enterLabel={S.cerca.enter} canEnter={padValue(search.digits, limits) !== null} onkey={press} />
     <p class="note">{S.cerca.hint}</p>
   {:else if peek?.status === 'ok' && snap}
     <CardPeek {peek} side={roundSide(snap.round)} future={search.cardFuture} />

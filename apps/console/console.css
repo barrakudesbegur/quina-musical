@@ -1416,24 +1416,6 @@
   color: #ffffff;
 }
 
-/* The card's keypad: one row, so the tablet's keyboard never opens (board c) */
-.card-keys {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.card-keys .pad-key {
-  min-height: 3.25rem;
-  font-size: var(--text-lg);
-}
-
-.card-keys .pad-key--enter {
-  background: var(--color-green);
-  color: #ffffff;
-  box-shadow: inset 0 -4px 0 var(--color-green-edge), 0 4px 0 var(--color-ink);
-}
-
 /* ---- Cerca › Cartró: the card's preview (boards ③, d, e) ---------------------------------------------------------- */
 .card-peek {
   display: grid;
@@ -3224,28 +3206,10 @@
   --icon-button-icon: 0.875rem;
 }
 
-/* The number being typed: «# 12|» in a field, red when refused (it shakes once) */
+/* The number being typed: the NumberField (B7, packages/ui/components/number-pad.css), red when refused; it shakes once */
 .claim-pad__display {
   flex: 1;
   min-width: 9rem;
-  display: flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-private);
-  color: var(--color-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-weight-strong);
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.claim-pad__display[data-state='refused'] {
-  border-color: var(--color-red);
-  background: #ffe1e1;
-  color: var(--color-red);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -3266,62 +3230,8 @@
   }
 }
 
-.claim-pad__hash {
-  margin-right: 0.15em;
-  color: var(--color-text-muted);
-  opacity: 0.6;
-}
-
-.claim-pad__caret {
-  width: 3px;
-  height: 0.9em;
-  margin-left: 2px;
-  background: var(--color-orange);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .claim-pad__caret {
-    animation: claim-pad-caret 1s steps(1) infinite;
-  }
-}
-
-@keyframes claim-pad-caret {
-  50% {
-    opacity: 0;
-  }
-}
-
 .claim-pad__spacer {
   flex: 1;
-}
-
-.claim-pad__keys {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.pad-key {
-  display: grid;
-  place-items: center;
-  min-height: 3.5rem;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-private);
-  color: var(--color-ink);
-  box-shadow: inset 0 -4px 0 var(--color-snow-edge), 0 4px 0 var(--color-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--font-weight-strong);
-}
-
-.pad-key--back {
-  background: var(--color-track, #e4ddcc);
-}
-
-.pad-key .icon {
-  width: 1.75rem;
-  height: 1.75rem;
 }
 
 .claim-pad__actions {
@@ -4041,8 +3951,8 @@ kbd {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .card-keys {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+  .search-tab .numpad[data-row] {
+    --numpad-columns: 6;
   }
 
   .now-playing {
@@ -4916,16 +4826,6 @@ kbd {
 
 .finale-pad .claim-pad__display {
   flex: none;
-}
-
-.pad-key--enter {
-  background: var(--color-green);
-  color: #ffffff;
-  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.22), 0 4px 0 var(--color-ink);
-}
-
-.pad-key--enter:disabled {
-  opacity: 0.55;
 }
 
 .finale-pad__actions {

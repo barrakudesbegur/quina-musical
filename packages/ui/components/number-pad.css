@@ -1,0 +1,250 @@
+/*
+ * B7 · NumberField + NumberPad (components-v2.md § 3; NumberField.svelte, NumberPad.svelte). Keys are paper pieces
+ * on the press resource (R4, ../ds/resources.css) with the paper's own edge (R2); ⌫ is the surface's track colour on
+ * the console and navy on the phone; ↵ green. A key that can't be used takes, on the phone, the dashed dark look
+ * (pad-keys: an overlay faded in), and on the console a plain fade. Every size is a custom property in :where().
+ */
+
+/* ---- the console's scale, the default (C10 ①: the claim pad) --------------------------------------------------- */
+:where(.numpad) {
+  --numpad-columns: 3;
+  --numpad-gap: var(--space-2);
+}
+
+:where(.numpad[data-row]) {
+  --numpad-columns: 12;
+  --numpad-gap: 6px;
+}
+
+:where(.numpad__key) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 4px;
+  --ds-edge: 4px;
+  --ds-shine: 0px;
+  --key-height: 3.5rem;
+  --key-font: var(--text-xl);
+  --key-icon: 1.75rem;
+}
+
+:where(.numpad[data-row] .numpad__key) {
+  --key-height: 3.25rem;
+  --key-font: var(--text-lg);
+}
+
+:where(.numpad__key--delete) {
+  --key-fill: var(--color-track, #e4ddcc);
+  --key-ink: var(--color-ink);
+}
+
+:where(.numpad__key--enter) {
+  --key-ink: var(--color-white);
+}
+
+/* ---- the phone's scale (M1 ⑤, M13: 50 px keys, a 7 px gap; ⌫ navy) --------------------------------------------- */
+:where([data-density='phone'] .numpad) {
+  --numpad-gap: 0.4375rem;
+}
+
+:where([data-density='phone'] .numpad__key) {
+  --ds-drop: 3px;
+  --ds-edge: 5px;
+  --key-height: 3.125rem;
+  --key-font: 1.75rem;
+}
+
+:where([data-density='phone'] .numpad__key--delete) {
+  --key-fill: var(--color-navy);
+  --key-ink: var(--color-snow);
+  --ds-edge: 0px;
+}
+
+/* ---- the keys ---------------------------------------------------------------------------------------------------- */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(var(--numpad-columns), minmax(0, 1fr));
+  gap: var(--numpad-gap);
+}
+
+.numpad__face {
+  display: grid;
+  place-items: center;
+  min-height: var(--key-height);
+  background: var(--key-fill, var(--palette-solid, var(--color-snow)));
+  color: var(--key-ink, var(--color-ink));
+  font-family: var(--font-display);
+  font-size: var(--key-font);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+}
+
+.numpad__face > svg {
+  width: var(--key-icon);
+  height: var(--key-icon);
+}
+
+/* A key that can't be used: the console fades it; the phone draws it dark and dashed, its digit dimmed (pad-keys). */
+.numpad__off {
+  position: absolute;
+  inset: calc(-1 * var(--ds-border));
+  display: none;
+  place-items: center;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.numpad__key:disabled {
+  cursor: default;
+}
+
+.numpad__key:disabled > .numpad__face {
+  opacity: 0.55;
+}
+
+:where([data-density='phone']) .numpad__off {
+  display: grid;
+  border: var(--ds-border) dashed var(--color-line);
+  background: var(--color-slate-deep-edge);
+  color: var(--color-disabled-ink, #46518f);
+  opacity: 0;
+  transition: opacity var(--dur-pad-keys, 120ms) var(--ease-out);
+}
+
+:where([data-density='phone']) .numpad__key:disabled > .numpad__face {
+  opacity: 1;
+}
+
+:where([data-density='phone']) .numpad__key:disabled .numpad__off {
+  opacity: 1;
+}
+
+/* A dashed key has no shadow under it either. */
+:where([data-density='phone']) .numpad__key:disabled::before {
+  opacity: 0;
+}
+
+/* ---- NumberField ------------------------------------------------------------------------------------------------- */
+/* The console's display row: «# 12|» in display letters on the private surface, red when invalid. */
+:where(.number-field) {
+  --field-height: auto;
+  --field-pad: var(--space-2) var(--space-3);
+  --field-border: var(--line-width);
+  --field-radius: var(--radius-md);
+  --field-fill: var(--color-surface-private);
+  --field-shadow: none;
+  --prefix-size: var(--text-2xl);
+  --prefix-color: var(--color-text-muted);
+  --prefix-opacity: 0.6;
+  --digits-size: var(--text-2xl);
+  --caret-height: 0.9em;
+}
+
+/* The phone's field (M1 ⑤): 72 px, the panel's radius, a 4 px line, an inset at its top; «#» 44 in lilac grey,
+   the digits 48. */
+:where([data-density='phone'] .number-field) {
+  --field-height: 4.5rem;
+  --field-pad: 0 0.5rem 0 var(--space-4);
+  --field-border: var(--line-width-bold);
+  --field-radius: 1.125rem;
+  --field-fill: var(--color-paper);
+  --field-shadow: inset 0 4px 0 rgb(23 19 43 / 0.12);
+  --prefix-size: 2.75rem;
+  --prefix-color: #a79fc4;
+  --prefix-opacity: 1;
+  --digits-size: 3rem;
+  --caret-height: 2.5rem;
+}
+
+.number-field {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--field-height);
+  padding: var(--field-pad);
+  border: var(--field-border) solid var(--color-line);
+  border-radius: var(--field-radius);
+  background: var(--field-fill);
+  box-shadow: var(--field-shadow);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.number-field__prefix {
+  color: var(--prefix-color);
+  font-size: var(--prefix-size);
+  line-height: 1;
+  opacity: var(--prefix-opacity);
+}
+
+.number-field__digits {
+  min-width: 0;
+  font-size: var(--digits-size);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+input.number-field__digits {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--digits-size);
+}
+
+/* A still caret after the digits (pad); it blinks on the console, where nothing else on the pad moves (cerca-caret) */
+.number-field__caret {
+  flex: none;
+  width: 3px;
+  height: var(--caret-height);
+  margin-left: 2px;
+  border-radius: 2px;
+  background: var(--color-orange);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console']) .number-field__caret {
+    animation: number-field-caret 1s steps(1) infinite;
+  }
+}
+
+@keyframes number-field-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.number-field__end {
+  display: flex;
+  flex: none;
+  margin-left: auto;
+}
+
+/* R5: the ring round the field when its input has a keyboard's focus */
+.number-field:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Invalid (the parent's validity: not a card): red, the frame kept (#53) */
+.number-field[data-invalid] {
+  border-color: var(--color-red);
+  background: var(--color-red-subtle, #ffe1de);
+  color: var(--color-red);
+}
+
+.number-field[data-disabled] {
+  opacity: 0.5;
+}

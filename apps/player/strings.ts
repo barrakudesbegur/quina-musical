@@ -43,6 +43,7 @@ export const S = {
   /** The number field's name for screen readers (the field shows only "#" and the digits). */
   padNumber: 'Número del cartró',
   padDelete: 'Esborrar l’última xifra',
+  padKeys: 'Teclat del número',
   /** The name field's placeholder: the name is optional. */
   padName: 'Nom',
   /** The add-card QR scan (D141, board Mobil-Afegir-QR). */
@@ -88,7 +89,8 @@ export const S = {
   sankBy: (title: string) => `Assegut: ha sonat «${title}»`,
   loadingCards: 'Carregant els cartrons…',
   catalogError: 'No s’han pogut carregar els cartrons. Ho tornem a provar…',
-  renameTitle: (id: number) => `Nom i icona del ${card(id).toLowerCase()}`,
+  /** The card's edit drawer (the user's phone test, 27 Nov): just «Editar». */
+  editTitle: 'Editar',
   iconLabel: 'Icona',
   iconHint: 'Cada cartró en té una de diferent',
   iconTaken: (icon: string, owner: string) => `${icon}: ja la fa servir ${owner}`,

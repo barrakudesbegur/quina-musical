@@ -8,8 +8,8 @@ import type { TouchWiring } from '../../../packages/ui/sounds/delegate.ts';
 export const PLAYER_TOUCH: TouchWiring = {
   rules: [
     { selector: '.menu__switch', cls: () => null },
-    { selector: '.number-pad__key--delete', cls: 'backspace', refuse: true },
-    { selector: '.number-pad__key', cls: 'digit', refuse: true },
+    { selector: '.numpad__key--delete', cls: 'backspace', refuse: true },
+    { selector: '.numpad__key', cls: 'digit', refuse: true },
     { selector: '.number-pad__save', cls: 'submit', refuse: true },
     { selector: '.rename button[type="submit"]', cls: 'submit' },
     { selector: '.icon-picker__option', cls: 'iconPick', refuse: true },

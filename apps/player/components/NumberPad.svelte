@@ -16,8 +16,10 @@
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
   import Drawer from './Drawer.svelte';
-  import Icon from './Icon.svelte';
   import IconPicker from './IconPicker.svelte';
+  import QrButton from './QrButton.svelte';
+  import NumberField from '../../../packages/ui/components/NumberField.svelte';
+  import NumberKeys from '../../../packages/ui/components/NumberPad.svelte';
   import PadLeave from './PadLeave.svelte';
   import QrScan from './QrScan.svelte';
 
@@ -74,12 +76,6 @@
   });
   $effect(() => () => ontyping?.(false));
 
-  const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'] as const;
-  const QR_DOTS = [
-    [12.1, 2.4, 2, 3.4], [12.1, 8, 2, 3.6], [2.4, 12.1, 3.4, 2], [8, 12.1, 2, 2], [14.2, 12.1, 3.6, 2], [19.8, 12.1, 2, 3.6],
-    [12.1, 14.2, 2, 2], [16.2, 16.2, 2, 2], [12.1, 18.2, 3.6, 2], [18.2, 18.2, 3.6, 2], [14.2, 20, 2, 2], [19.8, 20, 2, 2],
-  ] as const;
-
   function press(key: string): void {
     value = padValue(value, key);
     error = null;
@@ -102,28 +98,16 @@
 <Drawer name="pad" title={S.padTitle} {onclose} {canClose}>
   <div class="number-pad">
     {#key found}
-      <div class="number-pad__field" data-state={value ? 'typed' : 'empty'} data-anim={found ? 'qr-found' : undefined}>
-        <span class="number-pad__hash" aria-hidden="true">#</span>
-        <output class="number-pad__digits" aria-label={S.padNumber} aria-live="polite">{value}</output>
-        <span class="number-pad__caret" aria-hidden="true"></span>
-        <button
-          type="button"
-          class="number-pad__qr"
-          aria-label={S.qrButton}
-          onclick={() => {
-            scanning = true;
-            scanOpen = true;
-          }}
-        >
-          <!-- The softened QR (the user, 26 Nov): rounded finders and dots, no frame. -->
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            {#each [[2, 2], [14, 2], [2, 14]] as [x, y] (`${x},${y}`)}
-              <rect x={x + 1} y={y + 1} width="6" height="6" rx="1.9" fill="none" stroke="currentColor" stroke-width="2" /><rect x={x + 2.9} y={y + 2.9} width="2.2" height="2.2" rx=".8" />
-            {/each}
-            {#each QR_DOTS as [x, y, w, h] (`${x},${y}`)}<rect {x} {y} width={w} height={h} rx="1" />{/each}
-          </svg>
-        </button>
-      </div>
+      <NumberField class="number-pad__field" label={S.padNumber} value={value} data-anim={found ? 'qr-found' : undefined}>
+        {#snippet trailing()}
+          <QrButton
+            onclick={() => {
+              scanning = true;
+              scanOpen = true;
+            }}
+          />
+        {/snippet}
+      </NumberField>
     {/key}
     {#if owned}
       <p class="number-pad__note" role="status">
@@ -152,19 +136,7 @@
       legend={false}
       onselect={(n) => (identity = n)}
     />
-    <div class="number-pad__keys" data-anim="pad-keys">
-      {#each KEYS as key, i (i)}
-        {#if key === ''}
-          <span aria-hidden="true"></span>
-        {:else if key === 'back'}
-          <button type="button" class="number-pad__key number-pad__key--delete" aria-label={S.padDelete} disabled={!rules.canDelete} onclick={() => press(key)}>
-            <Icon name="backspace" alone />
-          </button>
-        {:else}
-          <button type="button" class="number-pad__key" data-key={key} disabled={!rules.digits.has(key)} onclick={() => press(key)}>{key}</button>
-        {/if}
-      {/each}
-    </div>
+    <NumberKeys class="number-pad__keys" label={S.padKeys} backLabel={S.padDelete} enabled={rules.digits} canDelete={rules.canDelete} onkey={press} />
     <div class="number-pad__footer">
       <Button {...PLAYER.save} class="number-pad__save" disabled={!rules.canSave} onclick={save} />
     </div>

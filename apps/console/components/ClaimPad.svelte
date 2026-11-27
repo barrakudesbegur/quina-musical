@@ -14,12 +14,14 @@
   import { onMount } from 'svelte';
   import { getConsole } from '../context.ts';
   import { claimedCards } from '../logic/claim-pad.ts';
-  import { PAD_DIGITS, padKeyFromKeyboard, type PadKey } from '../logic/numpad.ts';
+  import { padKeyFromKeyboard, type PadKey } from '../logic/numpad.ts';
   import { claimKindsOf } from '../logic/show-data.ts';
   import Notice from '../../../packages/ui/components/Notice.svelte';
   import { S } from '../strings.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
   import { ACTIONS, ICONS, NOTICES, asDefault } from '../actions.ts';
+  import NumberField from '../../../packages/ui/components/NumberField.svelte';
+  import NumberPad from '../../../packages/ui/components/NumberPad.svelte';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
@@ -122,15 +124,7 @@
             {/each}
           </ul>
           {#key shakes}
-            <output
-              class="claim-pad__display"
-              aria-live="polite"
-              aria-label={S.numpad.display}
-              data-state={pad.refused ? 'refused' : pad.digits ? 'typed' : 'empty'}
-              data-anim={shakes > 0 && pad.refused ? 'claim-chip-refused' : undefined}
-            >
-              <span class="claim-pad__hash" aria-hidden="true">#</span>{pad.digits}<span class="claim-pad__caret" aria-hidden="true"></span>
-            </output>
+            <NumberField class="claim-pad__display" label={S.numpad.display} value={pad.digits} invalid={pad.refused} data-anim={shakes > 0 && pad.refused ? 'claim-chip-refused' : undefined} />
           {/key}
         </div>
 
@@ -141,15 +135,7 @@
         {/if}
 
         <span class="claim-pad__spacer"></span>
-        <div class="claim-pad__keys">
-          {#each PAD_DIGITS.slice(0, 9) as d (d)}
-            <button type="button" class="pad-key" data-anim="press" onclick={() => press(d)}>{d}</button>
-          {/each}
-          <button type="button" class="pad-key pad-key--back" data-anim="press" onclick={() => press('back')}>
-            <Icon name="backspace" /><span class="visually-hidden">{S.numpad.back}</span>
-          </button>
-          <button type="button" class="pad-key" data-anim="press" onclick={() => press('0')}>0</button>
-        </div>
+        <NumberPad class="claim-pad__keys" label={S.numpad.keypad} backLabel={S.numpad.back} deleteKey="start" onkey={(key) => key !== 'enter' && press(key)} />
       </div>
     </div>
 

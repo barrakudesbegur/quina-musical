@@ -6,10 +6,8 @@ import type { TouchWiring } from '../../packages/ui/sounds/delegate.ts';
 
 export const CONSOLE_TOUCH: TouchWiring = {
   rules: [
-    { selector: '.sound-pad__cell, .long-press__button, .two-level, .claim-pad__add, .pad-key--enter', cls: () => null },
+    { selector: '.sound-pad__cell, .long-press__button, .two-level, .claim-pad__add', cls: () => null },
     { selector: '.switch', cls: (el) => (el.getAttribute('aria-checked') === 'true' ? 'switchOff' : 'switchOn') },
-    { selector: '.pad-key--back', cls: 'backspace' },
-    { selector: '.pad-key', cls: 'digit' },
     { selector: '.claim-pad__submit', cls: 'submit' },
     { selector: '.claim-chip__remove, .finale-stage__remove', cls: 'chipRemove' },
     { selector: '.tabs__tab', cls: 'tab' },
