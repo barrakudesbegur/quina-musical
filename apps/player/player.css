@@ -3628,6 +3628,26 @@ html:has(.drawer[open]) {
   transform: rotate(6deg);
 }
 
+/* corner-press (#27): the sticker tilts 4° further under the finger and swings back with the disc */
+@media (prefers-reduced-motion: no-preference) {
+  .player:where([data-motion='full']) .corner-icon {
+    transition: transform var(--dur-corner-back) var(--ease-kick);
+  }
+
+  .player:where([data-motion='full']) .corner:active .corner-icon {
+    transition-duration: var(--dur-corner-press);
+    transition-timing-function: var(--ease-out);
+  }
+
+  .player:where([data-motion='full']) .corner:active .corner-icon--premis {
+    transform: rotate(-10deg);
+  }
+
+  .player:where([data-motion='full']) .corner:active .corner-icon--horari {
+    transform: rotate(10deg);
+  }
+}
+
 .corner-icon__outline > * {
   fill: var(--color-line);
   stroke: var(--color-line);
