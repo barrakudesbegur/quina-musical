@@ -7,6 +7,7 @@ import {
   MemoryStorage,
   PlayerStorage,
   addCard,
+  cardLabel,
   dismiss,
   emptyData,
   nextColor,
@@ -182,4 +183,18 @@ test("the card marks go corn first, in D5's order, which the icon picker shows t
   assert.deepEqual(CARD_MARKS, ['corn', 'shootingStar', 'bauble', 'tree', 'heart', 'crown', 'grapes', 'snowflake', 'topHat', 'poop']);
   assert.equal(markName(1), 'corn');
   assert.equal(markName(identityOf('poop')), 'poop');
+});
+
+test('a card without a name is shown by its number only, never a generated name (the user, 27 Nov)', () => {
+  assert.equal(cardLabel({ id: 123, name: null }), '#123');
+  assert.equal(cardLabel({ id: 57, name: 'Àvia' }), 'Àvia');
+  // A name left empty or blank is stored as none, so it shows the number too.
+  const added = addCard(emptyData('2026'), 123, 0);
+  assert.ok(added.ok);
+  assert.equal(cardLabel(added.card), '#123');
+  for (const blank of ['', '   ']) {
+    const data = renameCard(added.data, 123, blank);
+    assert.equal(data.cards[0]?.name, null);
+    assert.equal(cardLabel(data.cards[0]!), '#123');
+  }
 });

@@ -35,6 +35,10 @@ export interface PlayerData {
   dismissed: string[];
 }
 
+/** A card's display name: the player's own name for it, else only its number («#123»). Never a generated name, such
+ *  as its icon's (the user, 27 Nov): the icon is shown beside it, not read as its name. */
+export const cardLabel = (card: Pick<SavedCard, 'id' | 'name'>): string => card.name ?? `#${card.id}`;
+
 export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, araView: null, gameId: null, dismissed: [] });
 
 export type LoadOutcome = 'fresh' | 'kept' | 'otherEdition' | 'corrupt';

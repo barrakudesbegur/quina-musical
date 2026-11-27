@@ -9,7 +9,7 @@
   // ANIMATIONS.md `switch-toggle`; last year's card); "Esborrar les dades d'aquest mòbil".
   // A card's drawers open over this one, and closing them comes back here.
   import { PLAYER_CONFIG } from '../config.ts';
-  import { markName } from '../logic/marks-identity.ts';
+  import { cardLabel } from '../logic/storage.ts';
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
@@ -58,7 +58,7 @@
     {#if app.data.cards.length}
       <ul class="menu__card-list">
         {#each app.data.cards as card, i (card.id)}
-          {@const who = card.name ?? S.markLabel(markName(card.color))}
+          {@const who = cardLabel(card)}
           <li
             class="menu__card"
             data-anim="card-reorder"
@@ -80,7 +80,7 @@
               <Icon name="grip" alone />
             </button>
             <span class="menu__card-mark"><CardMark identity={card.color} decorative /></span>
-            <span class="menu__card-name">{who}</span>
+            {#if card.name}<span class="menu__card-name">{card.name}</span>{/if}
             <span class="menu__card-number">{S.cardNumber(card.id)}</span>
             <IconButton {...PLAYER_ICONS.cardEdit} label={S.editLabel(who)} class="menu__card-edit" aria-haspopup="dialog" onclick={() => app.open({ kind: 'rename', cardId: card.id })} />
             <IconButton {...PLAYER_ICONS.cardRemove} label={S.removeLabel(who)} class="menu__card-remove" aria-haspopup="dialog" onclick={() => app.open({ kind: 'remove', cardId: card.id })} />

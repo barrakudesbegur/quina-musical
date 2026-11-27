@@ -20,7 +20,8 @@
 
   interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'children'> {
     identity: number;
-    name: string;
+    /** The player's own name for the card; empty or null shows the number alone (never a generated name). */
+    name: string | null;
     number: string;
     showNumber?: boolean;
     compact?: boolean;
@@ -67,7 +68,7 @@
     <header class="player-card__header">
       {@render mark?.()}
       <svelte:element this={`h${headingLevel}`} class="player-card__title">
-        <span class="player-card__name">{name}</span>
+        {#if name}<span class="player-card__name">{name}</span>{/if}
         {#if showNumber}<span class="player-card__number">{number}</span>{/if}
       </svelte:element>
       {@render perched?.()}

@@ -12,7 +12,6 @@
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import { PLAYER_CONFIG } from '../config.ts';
   import type { CardView } from '../logic/view.ts';
-  import { markName } from '../logic/marks-identity.ts';
   import { S } from '../strings.ts';
   import CardGrid from './CardGrid.svelte';
   import Swatch from './Swatch.svelte';
@@ -51,7 +50,7 @@
 
 <PlayerCard
   identity={view.saved.color}
-  name={view.saved.name ?? S.markLabel(markName(view.saved.color))}
+  name={view.saved.name}
   number={S.cardNumber(view.saved.id)}
   glow={glow ? 'gold' : standing || falling ? 'green' : null}
   sunk={seated}
