@@ -116,6 +116,11 @@
   --reel-collapse: 1;
 }
 
+/* The value isn't inherited (player.css › the drum's two looks): the panel passes the top's on to the drum. */
+.ara__top > .now {
+  --reel-collapse: inherit;
+}
+
 /* Historial: the page's scroll collapses it, over the drum's height difference once it has reached the top. Under
    reduced motion it switches at once as it reaches the top (a stepped timing: the full drum never covers the switch, and
    the room it leaves closes as the page scrolls on); with motion, it follows the scroll 1:1. */
