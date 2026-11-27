@@ -509,6 +509,32 @@
   white-space: nowrap;
 }
 
+/* D251: a name that doesn't fit beside the cog gives way to its short form ("QUINA DEL DESGRACIAT" → "DESGRACIAT", on
+   phones narrower than about 360 px). The title is the container, so the query follows the room it really has; 9.25em
+   is the full name's width at the title's own size (em in the condition is the container's font). The full name stays
+   in the accessibility tree, hidden only to the eye; the short one is aria-hidden. */
+.app-header__title {
+  container: app-header-title / inline-size;
+}
+
+.app-header__round-short {
+  display: none;
+}
+
+@container app-header-title (width < 9.25em) {
+  .app-header__round:has(.app-header__round-short) .app-header__round-full {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .app-header__round-short {
+    display: inline;
+  }
+}
+
 /* Ajustos: the plain cog on a rounded square, not a circle (the user, 25 Nov; IconButton, packages/ui). */
 .app-header__menu {
   --icon-button-icon: 26px;

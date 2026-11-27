@@ -2,7 +2,7 @@
 // "Quina N", a Line "Línia", a Bingo "Quina!", the night "Quina Musical"); this file adds the app's own copy.
 // COPY RULE: the phone never says "you won" and never announces a Line or a Quina: players claim them.
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import { roundTitle } from '../../packages/ui/plan.ts';
+import { roundShortTitle, roundTitle } from '../../packages/ui/plan.ts';
 import type { PublicWinKind } from './feed/public.ts';
 import type { HeatLevel } from '../../packages/ui/motion/garland.ts';
 import type { AraView } from './logic/tabs.ts';
@@ -18,6 +18,8 @@ export const S = {
   /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle; by
    * number only: logic/view.ts roundNameOf). */
   roundName: roundTitle,
+  /** Where the full name doesn't fit, the header's on a narrow phone (D251): "Desgraciat"; the other rounds keep theirs. */
+  roundShort: roundShortTitle,
   card,
   /** A card's number next to its name: "#123" (the user's decision on names on screen). */
   cardNumber: (id: number) => `#${id}`,

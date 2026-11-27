@@ -191,6 +191,10 @@ test("the Celebration for the last card standing: «Quina potra!» on the winner
 test('the round is "Quina del Desgraciat" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {
   assert.equal(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN), 'Quina del Desgraciat');
   assert.equal(S.roundName({ number: 7, kind: 'special' }, PLAN), 'Quina Especial', 'the Especial has no number either');
+  // D251: the header's short form on a narrow phone; a round without one renders its name once (AppHeader).
+  assert.equal(S.roundShort({ number: 3, kind: 'desgraciat' }, PLAN), 'Desgraciat');
+  assert.equal(S.roundShort({ number: 7, kind: 'special' }, PLAN), S.roundName({ number: 7, kind: 'special' }, PLAN));
+  assert.equal(S.roundShort({ number: 4, kind: 'normal' }, PLAN), S.roundName({ number: 4, kind: 'normal' }, PLAN));
   assert.equal(S.prizesOf(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN)), 'Premis de la Quina del Desgraciat');
   // PLAN's round 3 is the Desgraciat round, so round 4 is Quina 3; by number only, the kind comes from roundKindOf.
   assert.equal(S.nextRound(roundNameOf(4, state(), PLAN)), 'Següent: Quina 3');
