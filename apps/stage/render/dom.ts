@@ -1,6 +1,6 @@
 // Tiny DOM helpers for the stage's renderers. Text always goes in as text nodes (`textContent`), never as
 // markup, and every write is skipped when nothing changed, so a 60 fps loop stays cheap.
-import { coverUrl } from '../../../packages/ui/data/catalog.ts';
+import { coverElement } from '../../../packages/ui/components/cover.ts';
 import type { AnimName } from '../model/moments.ts';
 
 type Child = Node | string | null | undefined | false;
@@ -58,30 +58,20 @@ export function playAnim(el: HTMLElement, name: AnimName): void {
 }
 
 /**
- * A song's cover. A missing file (or no song) leaves the box empty with `is-missing`, so titles still show
- * without covers (the defined failure behaviour).
+ * A song's cover: the design system's Cover (D4, packages/ui/components/cover.ts), with the stage's `cover-art` hook.
+ * A missing file (or no song) leaves the box empty (`data-state="missing"`), so titles still show without covers (the
+ * defined failure behaviour).
  */
 export class CoverArt {
   readonly root: HTMLElement;
-  private readonly img: HTMLImageElement;
-  private songId: number | null = null;
+  private readonly cover: ReturnType<typeof coverElement>;
 
   constructor(extraClass = '') {
-    this.img = h('img', { class: 'cover-art__img', attrs: { alt: '', decoding: 'async', draggable: 'false' } });
-    this.root = h('div', { class: `cover-art ${extraClass}`.trim(), data: { state: 'empty' } }, this.img);
-    this.img.addEventListener('load', () => setData(this.root, 'state', 'loaded'));
-    this.img.addEventListener('error', () => setData(this.root, 'state', 'missing'));
+    this.cover = coverElement({ fallback: 'empty', className: `cover-art ${extraClass}`.trim() });
+    this.root = this.cover.root;
   }
 
   set(songId: number | null): void {
-    if (songId === this.songId) return;
-    this.songId = songId;
-    if (songId === null) {
-      this.img.removeAttribute('src');
-      setData(this.root, 'state', 'empty');
-      return;
-    }
-    setData(this.root, 'state', 'loading');
-    this.img.src = coverUrl(songId);
+    this.cover.set(songId);
   }
 }

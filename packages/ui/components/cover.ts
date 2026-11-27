@@ -2,6 +2,7 @@
 // and the projector's DOM version (`coverElement`), so the stage (plain TS) draws the same markup as Cover.svelte and
 // shares cover.css. JPEG XL with a JPEG fallback, never WebP (R2-Q28), wherever the server has the .jxl files.
 import { coverUrl } from '../data/catalog.ts';
+import './cover.css';
 
 /** Where an app's covers are served from: the relay serves only the JPEGs; production adds a JPEG XL of each. */
 export interface CoverSource {

@@ -388,22 +388,15 @@
   }
 }
 
+/* A song's cover: the design system's Cover (packages/ui/components/cover.css), with no frame of its own here; the
+   contexts below draw theirs. */
 .cover-art {
   position: relative;
   overflow: hidden;
   aspect-ratio: 1;
+  border: 0;
   border-radius: var(--radius-sm);
   background: var(--color-bg-deep);
-}
-
-.cover-art__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cover-art:is([data-state='missing'], [data-state='empty']) .cover-art__img {
-  display: none;
 }
 
 /* A prize: the design system's PrizeCard (PrizeBlock; packages/ui/components/paper-card.css, recipes/prizes.css). */
@@ -2237,7 +2230,7 @@
    sounded. A song replaying after a step back keeps its mark under the running ring. */
 
 /* On the image only, so the red ring keeps its colour. */
-.card-grid__cell[data-mark='bad'] .cover-art__img {
+.card-grid__cell[data-mark='bad'] .cover__img {
   filter: grayscale(1) brightness(0.7);
 }
 
