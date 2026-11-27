@@ -58,6 +58,11 @@ export interface CardTypeSide {
   pool: string;
   label?: string;
   mark?: string;
+  /** What the Check shows for a card of this type and side (D266): «Normal 1–5», «Normal 6–10», «Desgraciat»,
+   * «Especial». Written by apps/cards; absent in an older card-types.json (screens then join the name and label). */
+  checkLabel?: string;
+  /** The side's printed heading (apps/cards). Absent in an older card-types.json. */
+  heading?: string;
 }
 /** A card type as card-types.json gives it, as far as sides go (it has more fields: colour, title, price). */
 export interface CardTypeSides {
