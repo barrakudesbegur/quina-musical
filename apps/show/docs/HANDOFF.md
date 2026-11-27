@@ -223,7 +223,7 @@ Nothing: items 1 and 2 of the old queue and the Decoys retirement are done and p
 - **Hand tags scatter about ±2 beats.** The refine step suggests a one-bar shift for 45 of 386 tags, mostly a bar later. That fits the earlier finding that about 14% look a bar off. Until hooks are refined, phrase counting from a wrong hook is off too.
 - **Signatures are rarer.** 38 of 77 songs get an automatic pick, and they play in about 5% of transitions. Over A they need agreeing keys and tempos within 4%. The user can pick more by hand.
 - **The Pace is met on average.** Gaps between landings are whole phrases (8 bars at 120 bpm = 16 s), and the Drift nudge evens the round out.
-- **The relay gets killed by other sessions' restarts.** When another Vite dev server holds port 24678, `npm run dev` exits. Use `npm run build && npm start` (dist) instead.
+- **The relay gets killed by other sessions' restarts.** When another Vite dev server holds port 24678, `npm run dev` exits. Use `npm start` (it builds `dist/` first) instead.
 
 ## How to run, test and listen
 
@@ -231,7 +231,7 @@ From the repo root, once: `npm install` (workspaces). Then from `apps/show`:
 
 **Run it:**
 - `npm run dev`: relay plus Vite on http://localhost:5174, this laptop only. Add `-- --lan` for the hotspot, which pairs with the printed `?t=` token.
-- `npm run build && npm start`: the built pages (more robust when other sessions run Vite).
+- `npm start`: builds, then serves the built pages (more robust when other sessions run Vite); the relay refuses a stale `dist/`.
 
 **Pages:**
 - **Show page:** `http://localhost:5174/show/`. Parameters:

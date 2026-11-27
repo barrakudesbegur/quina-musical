@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node relay/server.ts",
-    "start": "node relay/server.ts --dist",
+    "start": "vite build && node relay/server.ts --dist",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && svelte-check --tsconfig ./tsconfig.json --threshold error",
     "test": "npm run typecheck && node --test \"tests/*.test.ts\" && npm run test:ui",

@@ -1,7 +1,8 @@
 // Relay: the pages, the audio and a dumb WebSocket hub. No game logic lives here; the show page owns the state.
 //   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist] [--repertoire NAME|PATH]
 // Pages are a Vite app (vite.config.ts): in development Vite runs here as middleware, so everything shares
-// one origin; with --dist the relay serves the built dist/ instead (`npm run build` first).
+// one origin; with --dist the relay serves the built dist/ instead (`npm start` builds it first) and refuses a dist
+// built from other sources than these (relay/build-stamp.ts).
 // The build is rooted at apps/ (vite.config.ts): the engine's pages are /show/engine/*, and /show/<page> still works.
 // The repertoire (--repertoire, else $QUINA_REPERTOIRE, else "default"; relay/repertoire.ts reads data/repertoires/<name>.json) decides
 // what the song routes serve; the URLs are the same for every repertoire. <cache> and <data> are its cacheDir and
@@ -32,6 +33,7 @@ import {
   PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readRemoteStatus, remoteStatusMessage, revealedRounds,
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
+import { distProblem } from './build-stamp.ts';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
@@ -405,7 +407,13 @@ type Middleware = (req: http.IncomingMessage, res: http.ServerResponse, next: ()
 let pages: Middleware;
 if (USE_DIST) {
   if (!fs.existsSync(path.join(DIST, 'show/engine/show.html'))) {
-    console.error('dist/ is missing or incomplete: run `npm run build` first.');
+    console.error('dist/ is missing or incomplete: run `npm start` (it builds first) or `npm run build`.');
+    process.exit(1);
+  }
+  // Never a stale build on the night (27 Nov: a test ran a dist two days older than the code).
+  const stale = distProblem(DIST, REPO);
+  if (stale) {
+    console.error(`${stale}.\nRun \`npm start\` (it builds first) or \`npm run build\`, then start again.`);
     process.exit(1);
   }
   pages = (req, res, next) => {

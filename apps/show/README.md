@@ -15,7 +15,7 @@ npm run prep                      # prepare the default repertoire: covers, deco
 npm run dev                       # relay + Vite on http://localhost:5174, this laptop only (a manual reload picks up edits)
 ```
 
-For a show, run the built pages instead: `npm run build && npm start` (the relay serves `dist/`). Add `-- --lan` so the hotspot's tablets and phones can connect. They pair with the relay token in the LAN URL the relay prints (`?t=…`, see docs/protocol.md › Relay).
+For a show, run the built pages instead: `npm start` builds them and serves `dist/`. The relay with `--dist` refuses a `dist/` built from other sources than the checkout's (`dist/build.json`, relay/build-stamp.ts), so a stale build never reaches the night. Add `-- --lan` so the hotspot's tablets and phones can connect. They pair with the relay token in the LAN URL the relay prints (`?t=…`, see docs/protocol.md › Relay).
 
 The Python venvs (never `/usr/bin/python3`, it is 3.9):
 - `uv venv --python /opt/homebrew/bin/python3.13 tools/prep/.venv && uv pip install --python tools/prep/.venv/bin/python -r tools/prep/requirements-layering.txt -r tools/prep/requirements-test.txt` (from the repo root) (the analysis, keys and tests);
