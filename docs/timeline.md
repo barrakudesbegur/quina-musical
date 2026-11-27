@@ -11,7 +11,7 @@ The playlist → the pool prepared and checked → the cards made → the hooks 
 | When | Milestone | Who |
 |---|---|---|
 | Now | Two pools of 70 (D100, D101). Pool 1 is final (25 Nov): Sound engine re-fetches it and remakes the temporary cards. Pool 2 is being filled by the organizers, then filtered to 70. The double-sided card's design: the user with Frontend (D102) | User, Sound engine, Frontend |
-| **Tue 1 Dec** | **Playlists final** (pool 1 already on 25 Nov) | User |
+| **Fri 27 Nov** | **Playlists final**, sorted (the user, D230; earlier than the planned 1 Dec) | User |
 | 1 Dec, first | `data/pools/2026.json` created, its cards at `apps/cards/dist/cards.json`; last year's test cards move to `data/pools/default/cards/`, and every test reads cards through its pool | Sound engine, then Frontend and Backend |
 | 1–3 Dec | The pool downloaded, prepared and quality-checked. Unusable songs are flagged at once, so the user can swap them; the user downloads only the leftovers by hand | Sound engine, user |
 | **4–5 Dec** | **The cards generated (`npm start -- --repertoire 2026` in apps/cards), proofed and printed**. No song changes after this | User, Frontend |

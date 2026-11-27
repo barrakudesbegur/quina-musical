@@ -84,6 +84,8 @@ This page explains the event: what happens on the night, who does what, and how 
 - **2026: the normal card is printed on both sides,** with the same number. Side 1 plays Quines 1–5 and side 2 plays Quines 6–10, each with its own songs (D193). Side 2 has its own design, and each side shows which rounds it's for. The presenters explain it in rounds 1 and 6 and keep reminding people during the round.
 - **Each edition** has a new title (the paper colour may stay), so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
+- **Nobody marks songs for good** (**new rule to explain in 2026**): no stickers or markers on the songs, or the card can't be reused in the next rounds. Kids sit with adults, so it shouldn't happen much. A card that gets spoilt can be exchanged for a new one if any are left, only between rounds, to keep it fair (D232).
+- **Each card gets its sticker** (**new in 2026**): the card has a dotted circle of about 19 mm with the word for sticker in it, and sheets of coloured shape stickers lie on the tables, in the same colours and shapes the phone uses for each card. There are markers on the tables too, and a space on the card for a name. So a player matches the paper card to its mark on the phone (D231).
 - **Printing:**
   - The cards are generated from the final song list, so no two cards or lines are the same.
   - Once they're printed, no song can change.

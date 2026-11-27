@@ -1554,3 +1554,63 @@ Pool 2's playlist has 64 of its 70 songs. "we can already download them and gene
 - **Hooks** (the orchestrator's reading, so the test can play at all): songs play with automatic hooks marked provisional, until the user's approval pass (U14).
 Also asked: a short "how to run it" section in the README for humans, an SVG diagram of the setup showing what runs on each screen and device, and a short explanation of how Admin manages production (resetting a game, starting, sending messages).
 By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The songs; requirements/operations.md (once built).
+
+### D228 · In the Descans, the presenters pick the break set or the Pausa set · 2026-11-27 · Active
+"in descans i would like to be able to pick if i want the descans pool or the pause pool". The console offers the choice during the Descans, and the engine plays the chosen set.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Console; requirements/show-and-music.md › Music for each moment.
+
+### D229 · A sound test for setting up the PA · 2026-11-27 · Active; the design Pending (Sound engine, Frontend)
+"I need a functionality somewhere that i can do a sound test to adjust all volumes and make sure everything sounds right on the day of the event. i would do it whens eting up the sound system." A console mode plays each kind of sound in turn at its slider's level: songs, songs in Parlem, the effects, the drum's ticks, the Check's sounds, Hold, the win, the fail, the stinger, intros, breaks, Pausa, the throw and the storm, the doors, the end and the voices.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Console; requirements/operations.md › Rehearsals.
+
+### D230 · Both playlists are final and sorted · 2026-11-27 · Active; the check Pending (Sound engine)
+"Now the playlists are final, and sorted." The organizers edited pool 1 too. Sound engine re-fetches both, checks 70 songs each, the order (U58) and any repeats between them, and numbers pool 1 1–70 and pool 2 71–140 (U57). This is earlier than the planned 1 Dec.
+By: the user. Source: the user's message of 27 Nov. Lives in: timeline.md; event.md › The songs.
+
+### D231 · A sticker circle and a name space on the cards · 2026-11-27 · Active; the word and the sides Pending (U200, U201)
+"on the printed cards, we can leave a ~19mm dotted circle with the word "GUMET" inside. and i buy colored shape stickers to put in it with the same colors we support. and on the tables we leave sticker sheets spread arround. we can also leave some markers and leave a space if they want to put the name as well." The sticker matches the card's mark on the phone (D5), so a player can tell which paper card is which in the app.
+By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The cards; requirements/songs-and-cards.md › The card.
+
+### D232 · No permanent marks; a spoilt card is exchanged between rounds · 2026-11-27 · Active
+"We have to make sure we make it clear to the people that they can't mark the songs permanently (with stickers or markers), or they woant be able to reuse the card for the following rounds." Kids are with adults, so it shouldn't happen much. A spoilt card can be exchanged for a new one if any are left, only between rounds, to keep it fair. The new card's number joins the cards in play (the console's in-game admin, D234).
+By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The cards; requirements/game-rules.md › Cards in play.
+
+### D233 · Song covers on the cards, printed in colour · 2026-11-27 · Active; the design Pending (the card design session)
+"to help players find the song faster we can add the song cover. but that would mean printing in colour, and therefore we should update the rest of the elements to take advantage of that. To make the cards, i want to first do the design with an agent/session." The user opened a fresh session for this task only (quina-musical-d1). The card design comes before the cards are made on 4–5 Dec.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D234 · The console does the night's admin, and every console stays in sync · 2026-11-27 · Active; the list Pending (U202, U203)
+- **In-game admin:** "in the presenter i should be able to add the cards in game and other admin things that will likely be needed during the game." Adding sold cards to the cards in play comes first. The rest of the list is U202.
+- **The tech's console:** "i forsee that maybe me (tech) also keep the presenter screen in the laptop in case the presenters want my help, so the info should be synced in realtime (the entire state." What "the entire state" covers is U203.
+- **Holds lock the other consoles:** "the hold gestures may be problematic, but we have a button lock state that it can be locked while someone is holding a button." While one console holds a two-level button, the others show it locked.
+By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Console.
+
+### D235 · The realistic run · 2026-11-27 · Active; the schedule's time Pending (U204)
+D227 grows: "Please prepare everythign so i can run a more realistic run (actual schedule, songs, prizes...)".
+- **Prizes:** from the organizers' Col·laboradors sheet (the newest found, temp/wip prizes, 25 Nov). The orchestrator made example bundles from it for the 12 rounds, in temp/wip prizes/2026-example-bundles.json:
+  - 58 sponsors, 47 of them with prizes;
+  - money donors are thanked, with no prize and no amounts (D112);
+  - the headline items with no sponsor are the organizers' own purchases.
+- **Logos:** from temp/Logos 2 (the organizers' Google Drive folder). "dont worry about editing logos, i will do it later, just make sure it at least shows something."
+- **Songs:** the final playlists (D230).
+- **The schedule:** D192's order with the 10-minute Descans.
+By: the user. Source: the user's message of 27 Nov. Amends: D227. Lives in: the cloud's plan; the edition file (D116).
+
+### D236 · Every change lands in code, the mockups and the design system · 2026-11-27 · Active
+A standing rule from the user (to Frontend): every change lands in the code, the mockups and the design system together. Nothing from earlier reviews may be lost.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: docs/team.md.
+
+### D237 · From the user's production test (to Frontend) · 2026-11-27 · Active
+The list is in temp/design-canvas/ds/comments-27nov.md §8. The main points:
+- **The phone's drum matches the projector's:** the same cover order, the same landing, the same effects, blur included. Sound engine says what the phones need.
+- **Automatic sounds:** the phone's drum stops clicking while it spins. The console switches each automatic sound (the drum's click and others) on or off; Sound engine defines the commands and state.
+- **Wake lock** on the player, the console and the projector.
+- **The your-song state:** particles from the card marks, yellow gradients, the theme colour, legible tabs and collapsed drum, and a vibration when your song lands.
+- **Cards:** the playing song marked very clearly; the "last song for a line" marking removed.
+- **The home:**
+  - a sticky garland and lower corner buttons;
+  - no «?» while the drum spins, and no layout shift;
+  - a tap on the drum scrolls to the card, and arrows point to off-screen cards.
+- **Drawers and forms:** the QR-close bug fixed; drag-to-close stays stiff on forms; the "add another card" flow researched and redone; toasts restyled; reordering fixed.
+- **A collapsed view of the cards:** boards only, no code.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md; packages/ui.

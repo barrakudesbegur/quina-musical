@@ -82,6 +82,8 @@ _From event.md › The cards._
 - **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2) (D193), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
 - Each edition has a new title, so last year's cards are easy to spot; the paper colour may stay (D85). 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
 - Each card carries a faint year stamp.
+- **A sticker circle and a name space (D231):** a dotted circle of about 19 mm with «GOMET» in it (spelling pending U200), for a coloured shape sticker matching the card's mark on the phone (D5), and a space to write a name (sides pending U201).
+- **Song covers (D233):** each song shows its cover, so players find it faster. That means printing in colour, and the card's other elements are redesigned to make the most of it. The card is designed first, with a design session.
 - The price isn't printed.
 
 ## Card types

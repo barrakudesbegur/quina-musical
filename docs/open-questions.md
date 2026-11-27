@@ -127,14 +127,43 @@ The research (docs/research/reports/ios-install-and-app-clip.md, 27 Nov) recomme
 - (b) Try it, submitting within about a week.
 
 ### U194 · Push notifications for 2026
-The research (docs/research/reports/push-notifications.md, 27 Nov) recommends skipping them. Everyone they could reach is already in the tent with the app open, the voice cues and the Admin banner already say the same things, iPhones need a Home Screen install that starts with no cards, and few would allow them (about 20–40% of Android players asked). Effort for the smallest version: about 3–5 days across Backend and Frontend.
-- (a) Skip push for 2026, and use what we have.
-- (b) Build the minimal Android-first version: an opt-in switch in Horari, at most two messages a night (mainly "El Descans s'acaba en 2 minuts" for people outside the tent), every subscription deleted the next morning.
+The research (docs/research/reports/push-notifications.md, 27 Nov) recommended skipping them. Then the user (27 Nov): "i think it would be nice to have push notifications, so if someone is using the phone on another app, he still gets the song. and if we make an android app, we maybe can make a nice live update notification". The research ruled out a push for each song because about 500 a night would annoy. That goes away with one notification replaced at each landing, silently (the same tag), showing the song that just landed. Android Chrome can do that with web push, with no app. iPhones get push only from a Home Screen install, which starts without the cards (the iOS research). Android's "Live Updates" style needs a native app, and the Play Store app was set aside (U197).
+- (a) Skip push for 2026.
+- (b) One silent notification per phone, updated in place at each landing, opt-in, Android first. About 3–5 days across Backend and Frontend, after the night's core is stable.
+- (c) Only the two-message version (the Descans ending, a thank-you).
 
 ### U195 · Do winners ever leave without collecting their prize?
 If they do, a reminder to an uncollected winner is the one push message with real value (U194), and Admin's winners list would need a "collected" mark.
 - (a) No, or very rarely.
 - (b) Yes, it happens.
+
+### U200 · The word in the sticker circle (D231)
+The user wrote "GUMET". The usual Catalan word for these stickers is «gomet».
+- (a) «GOMET».
+- (b) «GUMET», as written.
+
+### U201 · Which sides get the sticker circle and the name space (D231)
+The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
+- (a) Both sides, so the card is recognisable whichever side is up.
+- (b) Side 1 only.
+
+### U202 · What admin the console does during the night (D234)
+Admin isn't at hand on stage. The proposal for the console:
+1. Add sold cards to the cards in play: a range or single numbers.
+2. Exchange a spoilt card (D232): take the old number out and add the new one, between rounds only.
+3. Send a message to the phones (the banner).
+4. Reorder or edit the upcoming rounds, for example moving the Desgraciat ("the order can change during the night").
+- (a) These four.
+- (b) Change the list (say how).
+
+### U203 · What "the entire state" means for a second console (D234)
+Today every console already shares the show's state live: songs, Holds, claims, Checks, winners. A second console could also mirror the screen itself, so it shows the same tab, an open claim pad and the number being typed.
+- (a) The show's state only, as today, plus the hold locks. Each console keeps its own tabs and pads, so the tech can look something up without moving the presenters' screen.
+- (b) Mirror the screen too.
+
+### U204 · The realistic run's times (D235)
+- (a) The real night's times: doors at 5 pm, the start at 6 pm on 27 Dec. The Horari and the doors voices won't count down today.
+- (b) The same schedule, moved so it starts at a time today the user gives. The countdowns and the doors voices run for real, and it's put back to 27 Dec afterwards.
 
 ### U199 · Pool 2 for today's test
 Pool 2's playlist (64 entries, 27 Nov) isn't filtered yet. "Viva La Vida" is listed twice, 14 entries are pool 1's own tracks (positions 35, 44, 45, 50, 53–56, 59–64), and "NI BORRACHO" appears as both the single and pool 1's album track. That leaves 48 new songs. D101 and D193 say the pools have different songs. The download is the same 48 either way.

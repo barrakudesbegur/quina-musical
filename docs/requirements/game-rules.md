@@ -72,7 +72,7 @@ _From event.md › The cards (Knowing which cards are sold); the mixer decisions
 - Sellers take cards in order from stacks of 50, so the sold numbers form ranges.
 - The tech updates the ranges during the night. It's reliable but not exact: a range can contain unsold cards.
 - Each round counts only the cards in play of its card type.
-- One normal card serves every regular round: side 1 in Quines 1–5, side 2 in Quines 6–10 (D102, D193). The corn seeds come off easily between rounds.
+- One normal card serves every regular round: side 1 in Quines 1–5, side 2 in Quines 6–10 (D102, D193). The corn seeds come off easily between rounds. Nobody marks songs for good, with stickers or markers. A spoilt card can be exchanged for an unsold one, only between rounds; the new number joins the cards in play (D232).
 - One special card plays both the Desgraciat and the Quina Especial, as in 2025 (D81).
 
 ## Claims
