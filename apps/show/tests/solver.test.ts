@@ -15,9 +15,12 @@ test(`${CASES} random spins land on the target at exactly D, with a plausible ti
     const targetIndex = Math.floor(random() * cardCount);
     const durationSec = 5 + random() * 6;
     const isCalm = random() < 0.1;
-    const t0 = performance.now();
+    // CPU time, not the wall clock: on a laptop busy with other work a solve waits for the CPU, which says nothing
+    // about the solver (27 Nov: a wall-clock p95 of 69–93 ms at a load average of 69).
+    const t0 = process.cpuUsage();
     const s = solveSpin({ cardCount, fromIndex, targetIndex, durationSec, isCalm, random });
-    times.push(performance.now() - t0);
+    const used = process.cpuUsage(t0);
+    times.push((used.user + used.system) / 1000);
     assert.equal(landedIndex(s), targetIndex, `case ${i}`);
     if (s.method === 'analytic') {
       analytic++;
@@ -36,7 +39,7 @@ test(`${CASES} random spins land on the target at exactly D, with a plausible ti
   times.sort((a, b) => a - b);
   const p95 = times[Math.floor(times.length * 0.95)];
   assert.ok(analytic / CASES < 0.01, `analytic fallbacks ${analytic}/${CASES}`);
-  assert.ok(p95 < 60, `p95 solve time ${p95.toFixed(1)} ms`);
+  assert.ok(p95 < 60, `p95 solve CPU time ${p95.toFixed(1)} ms`);
 });
 
 test('reverse (back) spins may travel less than a lap but still land', () => {
