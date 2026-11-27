@@ -43,7 +43,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **Being built:**
 - **Frontend:** D195, D196, D199 (the console layout), D188 (the phone's add pad), D189 (the round-buttons pass), the D200 banner on the canvas first; U169 and U170 on the canvas; the design-system spec (U175+).
-- **No new agents until the running ones finish** (the user to Frontend, 27 Nov, lifted "in a few hours"). Frontend's PWA (W) and canvas redraw (X) wait. The user also stopped Frontend's D226 helper; why is being asked. D226 is on hold everywhere until then.
+- **No new agents until the running ones finish** (the user to Frontend, 27 Nov, lifted "in a few hours"). Frontend's PWA (W) and canvas redraw (X) wait. D226 (the two-sided special card) resumed on the user's go, 27 Nov: Frontend's card data and cards first, then Sound engine's tests and regenerated cards.
 - **Sound engine: important tasks only (the user, 27 Nov):** "the Sound engine can do important tasks, i want to still avoid the tasks that are not needed yet or aren't clearly valuable". The critical path is the songs and hooks (U55, U56). Not now: the garland's beat, the effect-playing state, the relay's caching, more D-pad effects.
 - **Sound engine and Backend: paused (the user, 26 Nov, late),** so the user can focus on the Frontend. Each finishes its current task only if past about half, otherwise parks it unpushed. Backend still pushes and deploys Frontend's tested commits. Nothing new for either until the user says so. Parked: the voices and padHold engine side (D198, D202–D204), and the voice sync root and clock checks.
 
