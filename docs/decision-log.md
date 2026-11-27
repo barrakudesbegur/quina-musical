@@ -1528,3 +1528,15 @@ By: the user. Source: the user's message of 27 Nov. Lives in: requirements/scree
 ### D224 · The QR opens the right platform flow directly · 2026-11-27 · Active; how Pending (research)
 The printed QR must take each player straight into the right flow for their phone, grandma-proof. The QR's URL is fixed when the cards are printed on 4–5 Dec (`/26/<number>`), so the routing works with it as it is. Research on 27 Nov covers iPhones (a one-tap install, an App Clip) and Android (a TWA on Play, the install prompt), and separately whether push notifications are worth it.
 By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Player app; docs/research/reports/ (ios-install-and-app-clip.md, android-twa-and-install.md, push-notifications.md).
+
+### D225 · The phone's reload and home details · 2026-11-27 · Active
+The user to Frontend:
+- **A reload must not flash the welcome screen** (built in 8912640):
+  - the tab keeps its last public state in sessionStorage, for 5 minutes at most, and a reload opens on it;
+  - with no state yet, the phone shows an empty sky;
+  - the first paint has no fades, so the offline overlay shows from the load instead of fading in;
+  - a phone that opened with no feed at all says «Sense connexió» after 20 s.
+- **«En aquesta quina només juga el …» is irrelevant,** and is removed from the home: the drum panel and the cards list.
+- **A card with no name** shows only its number, never a predefined or generated name.
+- **A seated card's tilt** must not cover the «No juguen en aquesta quina» label or throw it off centre. Rotations never hurt the layout.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Player app.
