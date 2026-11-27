@@ -1658,7 +1658,7 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D113. Liv
 "can't you simply delete everything that is not needed now?", and "i would like to not have to wait until tomorrow". Backend deletes the old `pools/default/` keys from their own manifest (1,906 files, 7.74 GB) instead of waiting for D246's one-day rule. The rule goes once `pools/` is shown empty.
 By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D246.
 
-### D248 · R2 stores each file once, by its content · 2026-11-27 · Active; the laptop's side Pending (the user's answer to Backend)
+### D248 · R2 stores each file once, by its content · 2026-11-27 · Active
 "i dont think it is a good idea to use pool folders because we have songs shared, so we should only store the files and know wat each is in our code", and "build it now, and you can make that my laptop has the same filenames anf folder structure so it is easier to work with".
 - R2 keeps each file once under its SHA-256, immutable.
 - Each repertoire has a private manifest mapping its readable paths to `{size, sha256}`. The shared Hold, Interval, voice, fx and stinger music is stored once for every repertoire.
@@ -1666,5 +1666,5 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D246.
 - Prune deletes only the fingerprints no manifest names, after a dry run. Nothing expires by date (D246).
 - One deploy, with no second version kept beside it. 2026 is re-pushed, and its old copy is deleted after a test pull passes.
 
-Backend is confirming with the user that the laptops keep today's readable folders.
+**The laptop's side:** the user left it to Backend ("whatever is best long term"). The laptops keep today's readable folders, so Sound engine's layout and the relay's paths don't change. Only R2 stores by fingerprint, and a pull rebuilds the readable folders, as git does with its store and working tree. Last year's `pools/` is fully gone (D247, 27 Nov), and the one-day rule is removed.
 By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: apps/cloud/docs (Backend); requirements/operations.md › Storage.
