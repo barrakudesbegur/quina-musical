@@ -61,9 +61,10 @@ export const PLAYER_CONFIG = Object.freeze({
   freshMs: 2000,
 
   /** The Heat garland across the top: its shape, in px of the 390 px design width (it stretches to the screen).
-   * Its lights twinkle in 3 groups (3 animated elements, whatever the count). With no Heat yet (before the
-   * Game, between feeds) it glows calm at `idleHeat`, as decoration only. */
-  garland: Object.freeze({ width: 390, height: 62, bulbs: 13, swags: 2, top: 6, sag: 16, idleHeat: 0.1 }),
+   * Its lights play the patterns of packages/ui/motion/garland.ts: one animated lamp per bulb (13), or 3 groups in
+   * `party`, with a flame behind every `flameEvery`-th bulb when very hot (4). With no Heat yet (before the Game,
+   * between feeds) it glows calm at `idleHeat`, as decoration only. */
+  garland: Object.freeze({ width: 390, height: 62, bulbs: 13, swags: 2, top: 6, sag: 16, idleHeat: 0.1, flameEvery: 3 }),
 
   /** Sounds: −24 dBFS peak, one at a time. */
   soundPeakGain: 0.063,

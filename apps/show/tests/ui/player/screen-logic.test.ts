@@ -12,7 +12,6 @@ import {
   cardViews,
   celebrationOf,
   focusRoundNumber,
-  heatLevel,
   historyOf,
   kernelTilt,
   markKeys,
@@ -28,6 +27,7 @@ import { publicPlan } from '../../../../../packages/ui/plan.ts';
 import { parseCards } from '../../../../../packages/ui/data/catalog.ts';
 import { S } from '../../../../player/strings.ts';
 import { songsOnCards } from '../../../../player/logic/your-song.ts';
+import { heatLevel } from '../../../../../packages/ui/motion/garland.ts';
 
 const T = 1_000_000;
 const playing = (patch: Partial<PublicState> = {}): PublicState => ({

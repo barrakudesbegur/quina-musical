@@ -1,7 +1,9 @@
 <script lang="ts">
   // One landing's your-song look (ANIMATIONS.md `your-song`; board "App · quan la cançó és teva (animació final)"):
   // behind the drum, Historial and the cards, the gold background and two stage spotlights; over the content, option
-  // A's particles (small and sparse, as on the board); over everything, for 600 ms, the flash that hides the colour
+  // A's particles (small and sparse, as on the board) and a comet falling from the sky (a new place and angle on every
+  // pass, the user's comment #93: picked when the last pass ends, never per frame); over everything, for 600 ms, the
+  // flash that hides the colour
   // change. The parent keys it per landing and removes it at the next Spin: each layer then leaves with its own out
   // transition (`|global`, so they play when the parent block goes). The entry is read once, at mount: a landing seen
   // live flashes, a later one (opening the app) fades in. The flash and the particles are over everything, open drawers
@@ -9,7 +11,7 @@
   // since the newest top-layer element is drawn on top. Where the browser has no popovers, they stay over the home.
   import { untrack } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
-  import { yourSongEntry, type YourSong } from '../logic/your-song.ts';
+  import { COMET, cometPass, yourSongEntry, type YourSong } from '../logic/your-song.ts';
   import CardMark from './CardMark.svelte';
 
   let { song, nowMs, reduced, layer = 0 }: { song: YourSong; nowMs: number; reduced: boolean; layer?: number } = $props();
@@ -20,6 +22,9 @@
   /** Once the particles have come in, showing the layer again doesn't fade them in again. */
   let settled = $state(false);
   let top: HTMLDivElement | undefined = $state();
+  /** The comet's pass: each one falls once, then the next is drawn somewhere else. */
+  let comet = $state({ n: 0, ...cometPass(Math.random) });
+  const nextComet = () => (comet = { n: comet.n + 1, ...cometPass(Math.random) });
 
   $effect(() => {
     const done = setTimeout(() => (flashing = false), FLASH_MS + 50);
@@ -72,7 +77,17 @@
 {#if entry !== 'still'}
   <div class="your-song-top" popover="manual" bind:this={top} aria-hidden="true">
     <div class="your-song-particles" data-entry={settled ? 'settled' : entry} out:fadeOut|global={{ duration: OUT.particles }}>
-      <span class="your-song-particles__streak"></span>
+      {#key comet.n}
+        <span
+          class="your-song-particles__comet"
+          style:--from-x="{comet.fromX}vw"
+          style:--from-y="{COMET.fromY}vh"
+          style:--to-y="{COMET.toY}vh"
+          style:--drift="{comet.driftVh}vh"
+          style:--angle="{comet.angle}deg"
+          onanimationend={nextComet}
+        ></span>
+      {/key}
       {#each PARTICLES as p, i (i)}
         <span class="your-song-particles__piece" style:left="{p.x}%" style:top="{p.y}%" style:--size="{p.size}px" style:--dur="{p.dur}s" style:--delay="{p.delay}s">
           <CardMark identity={p.mark} decorative />

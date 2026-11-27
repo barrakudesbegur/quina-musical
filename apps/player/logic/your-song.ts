@@ -49,3 +49,36 @@ export function songsOnCards(views: readonly { card: { lines: readonly (readonly
   for (const v of views) for (const line of v.card?.lines ?? []) for (const id of line) out.add(id);
   return out;
 }
+
+/** The comet (the user's comment #93): where each pass falls from, and how steeply. */
+export const COMET = Object.freeze({
+  /** Its start across the top, in % of the width. */
+  fromXMin: 10,
+  fromXMax: 90,
+  /** It starts above the top edge and ends below the bottom one, in % of the height (its tail trails behind). */
+  fromY: -12,
+  toY: 115,
+  /** Below the horizontal, in degrees, to the left or to the right. */
+  angleMin: 35,
+  angleMax: 70,
+});
+
+export interface CometPass {
+  /** Where the head starts, in vw (it starts `COMET.fromY` vh, above the top). */
+  fromX: number;
+  /** How far it goes sideways while it falls from `fromY` to `toY`, in vh (so the angle holds on any screen). */
+  driftVh: number;
+  /** The comet's heading, clockwise from pointing right: between `angleMin` and `angleMax`, or mirrored. */
+  angle: number;
+}
+
+/** One comet's fall from the sky to the ground: a random place across the top, a random angle, left or right. */
+export function cometPass(random: () => number): CometPass {
+  const r = () => Math.min(1, Math.max(0, random()));
+  const fromX = COMET.fromXMin + r() * (COMET.fromXMax - COMET.fromXMin);
+  const below = COMET.angleMin + r() * (COMET.angleMax - COMET.angleMin);
+  const side = r() < 0.5 ? -1 : 1;
+  const drift = (side * (COMET.toY - COMET.fromY)) / Math.tan((below * Math.PI) / 180);
+  const round1 = (v: number) => Math.round(v * 10) / 10;
+  return { fromX: round1(fromX), driftVh: round1(drift), angle: round1(side > 0 ? below : 180 - below) };
+}

@@ -44,14 +44,10 @@
   --dur-your-song-quiet: 300ms; /* opening the app while your song plays: a fade, no flash */
   --dur-your-song-sweep-left: 3.4s;
   --dur-your-song-sweep-right: 2.8s;
-  --dur-your-song-streak: 3.2s;
+  --dur-your-song-comet: 3.2s; /* one pass: the fall, then a rest until the next comet */
   --dur-reconnect: 200ms;
   --dur-countdown: 1s;
-  --dur-twinkle: 2.4s;
-  --dur-twinkle-cold: 3.2s; /* the garland's twinkle, by Heat level: slow white-blue … quick red chase */
-  --dur-twinkle-warm: 2.4s;
-  --dur-twinkle-hot: 1.6s;
-  --dur-twinkle-fire: 1s;
+  --dur-garland-flame: 0.9s; /* a flame's flicker, plus up to 0.4 s by its seed; the patterns' periods come from garland.ts */
   --dur-shuffle-jiggle: 400ms;
   --dur-pause-breath: 4s; /* the meditating nino breathes, scale 1 → 1.04 */
   --dur-offline-grey: 400ms; /* the screen greys, and the colour comes back */
@@ -105,6 +101,11 @@
   --player-bulb-cap-w: 10px;
   --player-bulb-cap-h: 9px;
   --player-bulb-halo: 46px;
+  --player-bulb-border: 3px;
+  --player-bulb-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  --player-flame-w: 32px;
+  --player-flame-h: 60px;
+  --player-flame-size: 24px;
 
   /* the drum's card backs: candy stripes in a paper frame, with a music-note badge */
   --player-back-red: repeating-linear-gradient(45deg, var(--color-red) 0 7px, color-mix(in srgb, var(--color-red) 86%, var(--color-line)) 7px 14px);
@@ -239,7 +240,11 @@
   pointer-events: none;
 }
 
-/* ---- the Heat garland ---------------------------------------------------------------------------------- */
+/* ---- the Heat garland (ANIMATIONS.md `heat` and "The garland's lights", D-t) ------------------------------------
+   Each bulb: a cap, its dark glass, the lamp (its light and halo, the only part that moves, by opacity) and its ink
+   outline. The lamps sit over every glass and under every outline (the bulbs aren't stacking contexts), so a halo
+   never covers ink. The pattern runs on CSS keyframes from each bulb's custom properties (`--i`, `--step`, `--seed`);
+   its moving rules are with the other opt-in motion, near the end of this file. */
 .heat {
   position: relative;
   flex: none;
@@ -248,19 +253,6 @@
   pointer-events: none;
   --heat-warm: clamp(0, (var(--heat, 0) - 0.2) * 4, 1);
   --heat-hot: clamp(0, (var(--heat, 0) - 0.6) * 5, 1);
-  --twinkle: var(--dur-twinkle-cold);
-}
-
-.heat[data-level='warm'] {
-  --twinkle: var(--dur-twinkle-warm);
-}
-
-.heat[data-level='hot'] {
-  --twinkle: var(--dur-twinkle-hot);
-}
-
-.heat[data-level='fire'] {
-  --twinkle: var(--dur-twinkle-fire);
 }
 
 .heat__wire {
@@ -278,14 +270,8 @@
   stroke-linecap: round;
 }
 
-.heat__garland {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
 .heat__garland,
-.heat__glow {
+.heat__layer {
   position: absolute;
   inset: 0;
 }
@@ -309,47 +295,67 @@
   --bulb-hot: var(--color-gold);
 }
 
-.heat__light,
-.heat__glow {
+/* The party colours (`party`, `win`), in order along the string. */
+[data-party='red'] {
+  --bulb-party: var(--color-red);
+}
+
+[data-party='orange'] {
+  --bulb-party: var(--color-orange);
+}
+
+[data-party='gold'] {
+  --bulb-party: var(--color-gold);
+}
+
+[data-party='green'] {
+  --bulb-party: var(--color-green);
+}
+
+[data-party='ice'] {
+  --bulb-party: var(--color-ice);
+}
+
+[data-party='lilac'] {
+  --bulb-party: var(--color-lilac);
+}
+
+/* A bulb's body, hanging from the wire at (x, y) under its cap, tilted around the hook: the glass, the lamp and the
+   outline are each drawn in this box, on their own layer. */
+.heat__piece {
   --bulb: color-mix(in oklab, color-mix(in oklab, var(--bulb-cool), var(--bulb-warm) calc(var(--heat-warm) * 100%)), var(--bulb-hot) calc(var(--heat-hot) * 100%));
-}
-
-.heat__light {
   position: absolute;
   left: calc(var(--x) * 100%);
-  top: var(--y);
+  top: calc(var(--y) + var(--player-bulb-cap-h));
   width: var(--player-bulb-w);
-  margin-left: calc(var(--player-bulb-w) / -2);
-  transform: rotate(var(--tilt, 0deg));
-  transform-origin: 50% 0;
-}
-
-.heat__light::before {
-  content: '';
-  display: block;
-  width: var(--player-bulb-cap-w);
-  height: var(--player-bulb-cap-h);
-  margin: 0 auto;
-  border-radius: 3px;
-  background: var(--color-line);
-}
-
-.heat__light::after {
-  content: '';
-  display: block;
   height: var(--player-bulb-h);
-  border: 3px solid var(--color-line);
-  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-  background: var(--bulb);
+  margin-left: calc(var(--player-bulb-w) / -2);
+  border-radius: var(--player-bulb-radius);
+  transform: rotate(var(--tilt, 0deg));
+  transform-origin: 50% calc(var(--player-bulb-cap-h) * -1);
 }
 
-/* The glow: a soft halo per light, bigger and brighter with the Heat. The halos twinkle in three groups. */
-.heat__halo {
+.heat[data-palette='party'] .heat__piece {
+  --bulb: var(--bulb-party);
+}
+
+/* Unlit: the bulb's own colour, deep in ink. A dim lamp lets it show; a lamp at 0 is a bulb switched off. */
+.heat__glass {
+  background: color-mix(in oklab, var(--bulb) 32%, var(--color-line));
+}
+
+.heat__lamp {
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+/* The halo: a soft glow under the light, bigger and brighter with the Heat. It doesn't move on its own. */
+.heat__lamp::before {
+  content: '';
   position: absolute;
-  left: calc(var(--x) * 100%);
-  top: calc(var(--y) + var(--player-bulb-cap-h) + var(--player-bulb-h) / 2);
+  left: 50%;
+  top: 50%;
   width: var(--player-bulb-halo);
-  aspect-ratio: 1;
+  height: var(--player-bulb-halo);
   margin: calc(var(--player-bulb-halo) / -2) 0 0 calc(var(--player-bulb-halo) / -2);
   border-radius: 50%;
   background: radial-gradient(circle closest-side, color-mix(in srgb, var(--bulb) 80%, transparent), transparent);
@@ -357,18 +363,87 @@
   transform: scale(calc(0.55 + var(--heat, 0) * 0.75));
 }
 
+/* The light: the colour inside the outline, with a small gloss. */
+.heat__lamp::after {
+  content: '';
+  position: absolute;
+  inset: var(--player-bulb-border);
+  border-radius: var(--player-bulb-radius);
+  background: radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.6) 0 12%, transparent 32%), var(--bulb);
+}
+
+.heat__shell {
+  border: var(--player-bulb-border) solid var(--color-line);
+}
+
+/* The cap, on top of the outline, under the hook. */
+.heat__shell::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc((var(--player-bulb-cap-h) + var(--player-bulb-border)) * -1);
+  width: var(--player-bulb-cap-w);
+  height: var(--player-bulb-cap-h);
+  margin-left: calc(var(--player-bulb-cap-w) / -2);
+  border-radius: 3px;
+  background: var(--color-line);
+}
+
+/* Cool: every 4th bulb rests dimmer (S2's look). The patterns animate over it; with reduced motion it stays. */
+.heat[data-level='cold'] .heat__lamp[data-dim] {
+  opacity: 0.6;
+}
+
+/* Very hot: a flame licks up behind some bulbs, from the bulb's foot past the wire. Upright, whatever the tilt. The
+   box flickers from its base; its ::before is the drawn flame, a teardrop (a square with one sharp corner, turned
+   point-up and stretched) filled from a gold core out to red. */
+.heat__flame {
+  position: absolute;
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) + var(--player-bulb-cap-h) + var(--player-bulb-h) + 6px - var(--player-flame-h));
+  width: var(--player-flame-w);
+  height: var(--player-flame-h);
+  margin-left: calc(var(--player-flame-w) / -2);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.heat__flame::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: var(--player-flame-size);
+  width: var(--player-flame-size);
+  height: var(--player-flame-size);
+  margin-left: calc(var(--player-flame-size) / -2);
+  border-radius: 0 50% 50% 50%;
+  background: radial-gradient(
+    circle at 62% 62%,
+    var(--color-gold-light) 0 14%,
+    var(--color-gold) 30%,
+    var(--color-orange) 52%,
+    color-mix(in srgb, var(--color-red) 85%, transparent) 72%,
+    color-mix(in srgb, var(--color-red) 0%, transparent) 100%
+  );
+  transform: translateY(50%) scaleY(1.7) rotate(45deg);
+}
+
+.heat[data-fire='on'] .heat__flame {
+  opacity: 1;
+}
+
 /* While a card is checked, the garland steps back. */
 .player[data-scene='check'] .heat {
   opacity: 0.45;
 }
 
-/* Offline: the lights go out. No glow and no twinkle, the bulbs dark: nothing on the string moves. */
-.heat[data-state='off'] .heat__glow {
+/* Offline: the lights go out. No pattern runs (`none`), the lamps fade out and the glass goes grey. */
+.heat[data-state='off'] .heat__lamp {
   opacity: 0;
-  animation: none;
 }
 
-.heat[data-state='off'] .heat__light {
+.heat[data-state='off'] .heat__piece {
   --bulb: var(--color-surface-sunk);
 }
 
@@ -4023,12 +4098,6 @@ html:has(.drawer[open]) {
   }
 }
 
-@keyframes player-twinkle {
-  50% {
-    opacity: 0.35;
-  }
-}
-
 @keyframes player-jiggle {
   to {
     transform: translate(2px, -2px) rotate(3deg);
@@ -4228,14 +4297,158 @@ html:has(.drawer[open]) {
   transition: opacity var(--dur-offline-grey) var(--ease-out);
 }
 
-/* The garland: three groups of glows twinkle, offset by a third, so it reads as a chase when hot. */
-.heat__glow {
-  animation-delay: calc(var(--group, 0) * var(--twinkle) / -3);
+/* The garland's lights (ANIMATIONS.md "The garland's lights"): one pattern at a time, each lamp (or, in `party`, each
+   group of a third of the bulbs) on its own keyframes, placed in the pattern by `--i`, `--step` and `--seed`. Opacity
+   and transform only. Opt-in motion (D209): with reduced motion the lamps stand lit and the flames still. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Cool or idle: each lamp breathes at its own random phase. */
+  :where(.player[data-motion='full']) .heat[data-pattern='breathe'] .heat__lamp {
+    animation: player-garland-breathe var(--period) ease-in-out calc(var(--seed) * var(--period) * -1) infinite alternate;
+  }
+
+  /* Warm: a swell of light rolls left to right. */
+  :where(.player[data-motion='full']) .heat[data-pattern='wave'] .heat__lamp {
+    animation: player-garland-wave var(--period) ease-in-out calc(var(--period) * (var(--i) / var(--n) - 1)) infinite;
+  }
+
+  /* Hot: the three-step chase, running left to right. */
+  :where(.player[data-motion='full']) .heat[data-pattern='chase'] .heat__lamp {
+    animation: player-garland-chase var(--period) linear calc(var(--period) * (var(--step) - 3) / 3) infinite;
+  }
+
+  /* Very hot: each lamp flickers at its own speed, and the flames dance. */
+  :where(.player[data-motion='full']) .heat[data-pattern='fire'] .heat__lamp {
+    animation: player-garland-flicker calc(var(--period) * (0.75 + var(--seed) * 0.5)) linear calc(var(--seed) * var(--period) * -1) infinite;
+  }
+
+  :where(.player[data-motion='full']) .heat[data-fire='on'] .heat__flame {
+    animation: player-garland-flame calc(var(--dur-garland-flame) + var(--seed) * 0.4s) ease-in-out calc(var(--seed) * -1.3s) infinite alternate;
+  }
+
+  /* Your song: the party colours blink in three groups, two lit at a time (3 animated elements, D-t's budget). */
+  :where(.player[data-motion='full']) .heat[data-pattern='party'] .heat__group {
+    animation: player-garland-party var(--period) linear calc(var(--period) * (var(--step) - 3) / 3) infinite;
+  }
+
+  /* A win: every lamp low, and a burst of light running along the string. */
+  :where(.player[data-motion='full']) .heat[data-pattern='win'] .heat__lamp {
+    animation: player-garland-win var(--period) ease-out calc(var(--period) * (var(--i) / var(--n) - 1)) infinite;
+  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .heat__glow {
-    animation: player-twinkle var(--twinkle) ease-in-out infinite;
+/* Hidden under the Celebration's screen: nothing to see, so nothing runs. After the patterns, whose `animation`
+   shorthand would set it running again. */
+.heat[data-covered='true'] :is(.heat__group, .heat__lamp, .heat__flame) {
+  animation-play-state: paused;
+}
+
+@keyframes player-garland-breathe {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+@keyframes player-garland-wave {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Lit for a third of the cycle, with short ramps, then the dark glass shows. */
+@keyframes player-garland-chase {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  36%,
+  94% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Irregular, never below half: a flame's light, not a blink. */
+@keyframes player-garland-flicker {
+  0% {
+    opacity: 1;
+  }
+  11% {
+    opacity: 0.72;
+  }
+  19% {
+    opacity: 0.96;
+  }
+  33% {
+    opacity: 0.58;
+  }
+  44% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.8;
+  }
+  71% {
+    opacity: 0.5;
+  }
+  83% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes player-garland-flame {
+  0% {
+    transform: scale(0.9, 0.8) skewX(3deg);
+    opacity: 0.85;
+  }
+  35% {
+    transform: scale(1.04, 1.08) skewX(-4deg);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.95, 0.94) skewX(2deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.02, 1.15) skewX(-2deg);
+    opacity: 1;
+  }
+}
+
+/* A group lit for 60 % of the cycle: two of the three are always on. */
+@keyframes player-garland-party {
+  0%,
+  54% {
+    opacity: 1;
+  }
+  60%,
+  94% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Lit at once when the burst reaches it, then back down to 50 %. */
+@keyframes player-garland-win {
+  0% {
+    opacity: 1;
+  }
+  22%,
+  100% {
+    opacity: 0.5;
   }
 }
 
@@ -4254,7 +4467,15 @@ html:has(.drawer[open]) {
    clipped to a cone, swept by transform). Over the content: option A's particles. Over everything, for 600 ms: the flash. */
 .player {
   --player-your-song-gold: radial-gradient(120% 80% at 50% 0%, var(--color-gold-light) 0%, #ffb020 40%, #b86a00 100%);
-  --player-your-song-beam: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 80%);
+  /* The beam's light along its length: eased, still about 10 % where it leaves the screen (#94), never a cut-off end. */
+  --player-your-song-beam: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.55),
+    rgb(255 255 255 / 0.32) 28%,
+    rgb(255 255 255 / 0.18) 52%,
+    rgb(255 255 255 / 0.1) 70%,
+    rgb(255 255 255 / 0.05) 100%
+  );
 }
 
 .your-song,
@@ -4307,15 +4528,22 @@ html:has(.drawer[open]) {
 .your-song__beam {
   position: absolute;
   top: -5%;
-  width: 36%;
-  height: 110%;
+  width: var(--player-your-song-beam-w);
+  height: var(--player-your-song-beam-h);
   transform-origin: 50% 0;
   background: var(--player-your-song-beam);
-  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  clip-path: polygon(42.4% 0, 57.6% 0, 100% 100%, 0 100%);
+}
+
+/* Long enough to pass the bottom edge at any angle of the ±24° sweep (#94): 145 % of the screen, the cone as wide as
+   before (7.2 % of the width at the top, 36 % where it used to end), the apexes where they were (23 % and 77 %). */
+.player {
+  --player-your-song-beam-w: 47.5%;
+  --player-your-song-beam-h: 145%;
 }
 
 .your-song__beam--left {
-  left: 5%;
+  left: -0.75%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -4325,7 +4553,7 @@ html:has(.drawer[open]) {
 }
 
 .your-song__beam--right {
-  left: 59%;
+  left: 53.25%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -4338,21 +4566,46 @@ html:has(.drawer[open]) {
   overflow: hidden;
 }
 
-.your-song-particles__streak {
+/* The comet (#93): its head is the element's origin (the right end, at 0 0), so the path is the head's. The glow is a
+   blurred copy of the tail's gradient under it (::before, a static blur rasterised once), so it fades with the tail
+   instead of a box-shadow clipped to the box. Each pass falls once (`animationend` draws the next one). */
+.your-song-particles__comet {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 260px;
-  height: 14px;
-  border-radius: 7px;
-  background: linear-gradient(90deg, rgb(255 255 255 / 0), #fff 70%, #fff6b0);
-  box-shadow: 0 0 24px 8px rgb(255 255 255 / 0.7);
+  left: calc(var(--player-comet-length) * -1);
+  top: calc(var(--player-comet-thick) / -2);
+  width: var(--player-comet-length);
+  height: var(--player-comet-thick);
+  transform-origin: 100% 50%;
   opacity: 0;
 }
 
+.your-song-particles__comet::before {
+  content: '';
+  position: absolute;
+  inset: -12px -12px -12px 20%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(255 246 176 / 0), rgb(255 246 176 / 0.55) 55%, rgb(255 255 255 / 0.95));
+  filter: blur(9px);
+}
+
+.your-song-particles__comet::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--player-comet-thick) / 2);
+  background: linear-gradient(90deg, rgb(255 255 255 / 0), #fff 70%, #fff6b0);
+}
+
+.player {
+  --player-comet-length: 260px;
+  --player-comet-thick: 14px;
+  /* A gentle ease-in: it speeds up as it falls, but a plain ease-in would keep it near the top for most of the pass. */
+  --player-comet-ease: cubic-bezier(0.3, 0.05, 0.7, 0.55);
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .your-song-particles__streak {
-    animation: player-your-song-streak var(--dur-your-song-streak) ease-in infinite;
+  :where(.player[data-motion='full']) .your-song-particles__comet {
+    animation: player-your-song-comet var(--dur-your-song-comet) var(--player-comet-ease) both;
   }
 }
 
@@ -4457,23 +4710,20 @@ html:has(.drawer[open]) {
   }
 }
 
-/* Corner to corner, top right to bottom left, then a rest until the next pass. */
-@keyframes player-your-song-streak {
+/* From above the top to below the bottom, at the pass's place and angle (speeding up), then a rest. */
+@keyframes player-your-song-comet {
   0% {
     opacity: 0;
-    transform: translate(110vw, -30vh) rotate(-35deg);
+    transform: translate(var(--from-x), var(--from-y)) rotate(var(--angle));
   }
-  10% {
+  8%,
+  62% {
     opacity: 1;
   }
-  45% {
-    opacity: 1;
-    transform: translate(-130vw, 45vh) rotate(-35deg);
-  }
-  55%,
+  70%,
   100% {
     opacity: 0;
-    transform: translate(-130vw, 45vh) rotate(-35deg);
+    transform: translate(calc(var(--from-x) + var(--drift)), var(--to-y)) rotate(var(--angle));
   }
 }
 

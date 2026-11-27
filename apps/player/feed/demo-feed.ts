@@ -70,6 +70,13 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
    * a regular round, then 20 is on #57 again. `lineDone` opens on one of your songs already playing (no flash). */
   yourSong: { fixture: 'play', cards: 'default', live: true, liveFirst: [69, 64, 74, 20] },
   special: { fixture: 'play', cards: 'default', patch: (s) => ({ ...s, round: { ...s.round, kind: 'special' } }) },
+  // The garland at each Heat level (ANIMATIONS.md "The garland's lights"): cool, warm, hot, very hot (flames).
+  heatCold: { fixture: 'playCold', cards: 'default' },
+  heatWarm: { fixture: 'playWarm', cards: 'default' },
+  heatHot: { fixture: 'playHot', cards: 'default' },
+  heatFire: { fixture: 'playFire', cards: 'default' },
+  /** Your song (the `party` lights) with the Heat very hot: the party colours and the flames. */
+  yourSongFire: { fixture: 'playFire', cards: 'default', live: true, liveFirst: [69, 64, 74, 20] },
   check: { fixture: 'check', cards: 'default' },
   checkValid: { fixture: 'checkValid', cards: 'default', patch: decided('valid') },
   checkInvalid: { fixture: 'check', cards: 'default', patch: decided('invalid') },

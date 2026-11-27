@@ -2,7 +2,7 @@
 // gold until the next Spin starts; never in the Desgraciat round; a flash only for a landing seen live.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { YOUR_SONG_LIVE_MS, songsOnCards, yourSongEntry, yourSongOf, type YourSongInput } from '../../../../player/logic/your-song.ts';
+import { COMET, YOUR_SONG_LIVE_MS, cometPass, songsOnCards, yourSongEntry, yourSongOf, type YourSongInput } from '../../../../player/logic/your-song.ts';
 import { PLAYER_DEMOS } from '../../../../player/feed/demo-feed.ts';
 
 const T = 1_000_000;
@@ -55,4 +55,26 @@ test('the songs on the playing cards; a card still loading has none', () => {
 test("the yourSong demo lands the phone's songs, two in a row, then one that isn't", () => {
   assert.deepEqual(PLAYER_DEMOS.yourSong.liveFirst, [69, 64, 74, 20]);
   assert.equal(PLAYER_DEMOS.yourSong.live, true);
+});
+
+test('each comet falls from above the top to below the bottom, at a random place and a random angle, left or right', () => {
+  const seq = (values: number[]) => {
+    let i = 0;
+    return () => values[i++ % values.length];
+  };
+  const right = cometPass(seq([0, 0, 0.9]));
+  assert.deepEqual(right, { fromX: COMET.fromXMin, driftVh: 181.4, angle: COMET.angleMin });
+  const left = cometPass(seq([1, 1, 0.1]));
+  assert.equal(left.fromX, COMET.fromXMax);
+  assert.equal(left.angle, 180 - COMET.angleMax);
+  assert.ok(left.driftVh < 0, 'falls to the left');
+  for (let k = 0; k < 200; k++) {
+    const pass = cometPass(Math.random);
+    assert.ok(pass.fromX >= COMET.fromXMin && pass.fromX <= COMET.fromXMax);
+    const below = pass.angle > 90 ? 180 - pass.angle : pass.angle;
+    assert.ok(below >= COMET.angleMin && below <= COMET.angleMax, 'always falling, never flat or straight down');
+    // The heading matches the path: the drift over the fall is the angle's.
+    const heading = (Math.atan2(COMET.toY - COMET.fromY, pass.driftVh) * 180) / Math.PI;
+    assert.ok(Math.abs(heading - pass.angle) < 0.2);
+  }
 });

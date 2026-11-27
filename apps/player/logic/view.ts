@@ -300,13 +300,3 @@ export function celebrationOf(state: PublicState | null, ownIds: readonly number
   if (!latest || round === undefined) return null;
   return { key: `celebration:${round}:${latest.kind}`, kind: latest.kind, round, ownCardIds: latest.cardIds.filter((id) => ownIds.includes(id)) };
 }
-
-export type HeatLevel = 'cold' | 'warm' | 'hot' | 'fire';
-
-/** The Heat's word-sized level, for the garland's colour and its label. */
-export function heatLevel(value: number): HeatLevel {
-  if (value < 0.25) return 'cold';
-  if (value < 0.5) return 'warm';
-  if (value < 0.75) return 'hot';
-  return 'fire';
-}

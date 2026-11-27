@@ -4,7 +4,7 @@
 import { CA } from '../../packages/ui/i18n/ca.ts';
 import { roundTitle } from '../../packages/ui/plan.ts';
 import type { PublicWinKind } from './feed/public.ts';
-import type { HeatLevel } from './logic/view.ts';
+import type { HeatLevel } from '../../packages/ui/motion/garland.ts';
 import type { AraView } from './logic/tabs.ts';
 
 const card = CA.card;

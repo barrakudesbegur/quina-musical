@@ -49,7 +49,7 @@
   {/if}
   <!-- Test hook: the latest landing, whatever drawer is open. -->
   <span hidden data-testid="now" data-song-id={app.latest?.songId ?? ''}></span>
-  <Heat value={app.heat} off={app.offline} />
+  <Heat value={app.heat} off={app.offline} party={app.yourSong !== null} win={app.scene === 'celebration'} covered={app.celebrationOpen} />
   <AppHeader {app} />
   <div class="player__alerts">
     <StatusStrip {app} />
