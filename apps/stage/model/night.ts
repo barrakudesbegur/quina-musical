@@ -18,7 +18,7 @@ export interface NightCardType {
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;
-  /** It plays the Quina Desgraciada (its own entry, with the sad face; not one of the numbered rounds). */
+  /** It plays the Quina del Desgraciat (its own entry, with the sad face; not one of the numbered rounds). */
   desgraciat: boolean;
 }
 

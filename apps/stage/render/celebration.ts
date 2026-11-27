@@ -2,9 +2,9 @@
 // round's prize and sponsor (a Quina's only: a Line's shows none for now, D242), a flash, rays and the slow paper confetti
 // raining (D185; ANIMATIONS.md `celebrate`). The
 // Desgraciat round's last one standing gets «QUINA POTRA!» (D186, amending D62; board Projector-Desgraciat-Dempeus):
-// the green title tilted, the orange «Quina Desgraciada» plate under it, the prize on paper, green rays and three ninos
-// around it. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's scene
-// changes. The Heat garland comes along across the top in the `win` pattern: the party colours, a burst of light
+// the green title tilted, the gold «Quina del Desgraciat» plate under it, the prize on paper, green rays and three
+// ninos around it. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
+// scene changes. The Heat garland comes along across the top in the `win` pattern: the party colours, a burst of light
 // running along the string, flames when very hot (#84, D-t; ANIMATIONS.md `celebrate` ⑦).
 import { STAGE } from '../config.ts';
 import type { GarlandLook } from '../model/garland.ts';
@@ -40,7 +40,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   /** G3's rays: gold, the Desgraciat's last one standing in live green. */
   private readonly rays = h('div', { class: 'ds-rays celebration__rays', data: { color: 'gold' }, attrs: { 'aria-hidden': 'true' } });
   private readonly shout: HTMLElement;
-  /** «Quina Desgraciada», under «QUINA POTRA!». */
+  /** «Quina del Desgraciat», under «QUINA POTRA!». */
   private readonly roundPlate: HTMLElement;
   private readonly prize = new PrizeBlock('celebration__prize');
   /** The last one standing's ninos around the title (left out when the stage has no sticker for a spot). */

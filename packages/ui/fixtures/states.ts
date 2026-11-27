@@ -1,6 +1,6 @@
 // Typed sample snapshots for every scene, for demo mode (`?demo=<name>`), design review and tests.
 // The story is "Quina 3": 24 songs in, Boig per tu just landed, card 57 and card 123 are 1 song from a Line.
-// The Desgraciat fixtures play Quina 5, the Quina Desgraciada (see DESGRACIAT_LANDED).
+// The Desgraciat fixtures play Quina 5, the Quina del Desgraciat (see DESGRACIAT_LANDED).
 // Song ids and titles are last year's pool (test material only).
 import {
   AUTO_SOUNDS_DEFAULT,
@@ -538,7 +538,7 @@ const LAST_CLAIM = { claimId: 'cl-13', cardId: DESGRACIAT_LAST_CARD.cardId };
 
 /** The Desgraciat round's demos (`?demo=<name>`). */
 const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
-  /** The intro of Quina 5, the Quina Desgraciada: its name, its one prize, and the hands-up nino. */
+  /** The intro of Quina 5, the Quina del Desgraciat: its name, its one prize, and the hands-up nino. */
   desgraciatIntro: (now) => {
     const s = baseState(now);
     return {
@@ -598,7 +598,7 @@ const DESGRACIAT_FIXTURES: Record<string, (now: number) => DemoScript> = {
       }),
     };
   },
-  /** The Interval before Quina 5: the next round is the Quina Desgraciada. */
+  /** The Interval before Quina 5: the next round is the Quina del Desgraciat. */
   intervalDesgraciat: (now) => {
     const s = baseState(now);
     return {

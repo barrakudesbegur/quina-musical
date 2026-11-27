@@ -41,10 +41,10 @@ export interface CheatPrize {
 
 export interface CheatRound {
   number: number;
-  /** "Quina 3" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
+  /** "Quina 3" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle). */
   label: string;
   special: boolean;
-  /** The Quina Desgraciada: one prize, the last card standing's, and no Line. */
+  /** The Quina del Desgraciat: one prize, the last card standing's, and no Line. */
   desgraciat: boolean;
   /** Line and Quina; for the Desgraciat round only the last card standing's. */
   prizes: CheatPrize[];

@@ -47,8 +47,8 @@ export interface RoundView {
   number: number;
   special: boolean;
   desgraciat: boolean;
-  /** Its name, "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle): `label`, as
-   * everywhere on the stage (`name` is a winner's, which never comes out). */
+  /** Its name, "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle): `label`,
+   * as everywhere on the stage (`name` is a winner's, which never comes out). */
   label: string;
 }
 

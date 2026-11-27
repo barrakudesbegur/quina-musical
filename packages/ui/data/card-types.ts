@@ -22,7 +22,7 @@ export interface PrintedCardType {
    * especial card). card-types.json may leave it out: then 'perRegularRound', as @quina/protocol roundCardPrice reads it. */
   priceRule?: CardPriceRule;
   /** Its printed sides (D178, D226): the normal card's 1 (pool 1, "1–5") and 2 (pool 2, "6–10"), the especial card's 1
-   * (pool 1, "Desgraciada") and 2 (pool 2, "Quina Especial"). A card-types.json from before sides gives one, side 1 on
+   * (pool 1, "Desgraciat") and 2 (pool 2, "Quina Especial"). A card-types.json from before sides gives one, side 1 on
    * pool 1 (@quina/protocol cardTypeSides). */
   sides: readonly CardTypeSide[];
 }
@@ -106,7 +106,7 @@ export function cardTypeLabel(type: string, types: readonly PrintedCardType[]): 
 /**
  * The Check's one label for a card type and the side checked (D163): the short name, then the side's label when the
  * type has several sides, or the short name alone. A label that is a range (it starts with a digit) joins with a
- * space ("Normal 1–5", "Normal 6–10"); a round's name joins with « · » ("Especial · Desgraciada", "Especial · Quina
+ * space ("Normal 1–5", "Normal 6–10"); a round's name joins with « · » ("Especial · Desgraciat", "Especial · Quina
  * Especial": D226, U198's option (a) until the user picks). A side with no label is its number. A type nobody lists
  * is its stand-in short name. (@quina/protocol sideLabel joins every label with a space.)
  */
@@ -123,11 +123,11 @@ export function typeSideLabel(type: string, side: number, types: readonly Printe
 export interface CardTypeRounds {
   type: string;
   /** The regular rounds it plays, by their Quina number ("Quina 4": plan.ts quinaNumber), in play order (not the Quina
-   * Especial or the Quina Desgraciada, which have none). */
+   * Especial or the Quina del Desgraciat, which have none). */
   regularRounds: number[];
   /** It plays the Quina Especial. */
   special: boolean;
-  /** It plays the Quina Desgraciada (named, not numbered, like the Especial). */
+  /** It plays the Quina del Desgraciat (named, not numbered, like the Especial). */
   desgraciat: boolean;
 }
 

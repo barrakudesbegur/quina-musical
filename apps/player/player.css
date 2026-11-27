@@ -1733,7 +1733,7 @@
   height: var(--kernel-size);
 }
 
-/* ---- the Desgraciat round (Quina Desgraciada) ------------------------------------------------------------ */
+/* ---- the Desgraciat round (Quina del Desgraciat) ------------------------------------------------------------ */
 /* A landed song: a red ✗ over a red-tinted cover (the song that sank the card, and any after it). */
 .card-grid__cell.is-crossed .cover::after {
   content: '';
@@ -1876,7 +1876,7 @@
 /* The seated card's drop and tilt: PlayerCard's `sunk` (packages/ui/components/player-card.css). */
 
 /* Round marks where rounds are listed: a soft gold star with no outline for the Quina Especial (the user, 25 Nov), a
-   sad face for the Quina Desgraciada. */
+   sad face for the Quina del Desgraciat. */
 .round-mark {
   display: inline-grid;
   place-items: center;

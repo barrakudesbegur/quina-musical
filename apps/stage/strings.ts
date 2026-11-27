@@ -35,7 +35,7 @@ export function priceLabel(cents: number | null): string | null {
 }
 
 /** The Interval's plate: "Següent: Quina 4 de 8" by its Quina number, "Següent: Quina 4" without a total, "Següent:
- * Quina Especial", "Següent: Quina Desgraciada" (plan.ts roundTitleOf; what the total counts is pending U163). */
+ * Quina Especial", "Següent: Quina del Desgraciat" (plan.ts roundTitleOf; what the total counts is pending U163). */
 export function nextRoundLabel(round: Pick<RoundPlan, 'number' | 'kind'>, plan: Pick<GamePlan, 'rounds'> | null, total: number | null): string {
   return CA.nextRound(roundTitleOf(round, plan, total));
 }

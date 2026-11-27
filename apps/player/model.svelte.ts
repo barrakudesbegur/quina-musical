@@ -110,7 +110,7 @@ export class PlayerApp {
   round = $derived(currentRound(this.state));
   scene = $derived(this.state?.scene ?? 'before');
   focusRound = $derived(focusRoundNumber(this.state));
-  /** The kind of the round the screens talk about ('desgraciat' names it "Quina Desgraciada"). */
+  /** The kind of the round the screens talk about ('desgraciat' names it "Quina del Desgraciat"). */
   focusKind = $derived(roundKindOf(this.focusRound, this.state, this.plan));
   /** The current round is the Desgraciat one: the cards stand or sit, and nothing is near a win. */
   desgraciat = $derived(isDesgraciat(this.round));

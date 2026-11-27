@@ -1,4 +1,4 @@
-// Round start: "Quina N" with its Line and Quina prizes while the presenters announce them (the Quina Desgraciada:
+// Round start: "Quina N" with its Line and Quina prizes while the presenters announce them (the Quina del Desgraciat:
 // its name, its one prize, and the hands-up nino bouncing in beside the name, the "everyone stand up" cue); then the Shuffle
 // (ANIMATIONS.md `shuffle`): every cover appears in a grid, the grid jiggles, the covers fly into the drum
 // one by one in a random VISUAL order (never the Queue's: the stage doesn't know it), and the drum settles.

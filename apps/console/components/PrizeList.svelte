@@ -2,8 +2,8 @@
   A round's Line and Quina prize bundles with their sponsors, from the Game plan (which may be missing), as two prize
   tickets (the design system's Ticket recipe, packages/ui/recipes; the Consola-Pestanyes board): a ribbon names the
   prize ("LÍNIA", "QUINA"); the headline prizes come first, big, with their sponsor; a perforation; then the rest of
-  the bundle (a real hamper holds 17–19 prizes; the tab scrolls). The Quina Desgraciada has one ticket, "DEMPEUS" (the
-  last card standing's prize), and no Line.
+  the bundle (a real hamper holds 17–19 prizes; the tab scrolls). The Quina del Desgraciat has one ticket, "DEMPEUS"
+  (the last card standing's prize), and no Line.
 -->
 <script lang="ts">
   import { getConsole } from '../context.ts';

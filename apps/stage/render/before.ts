@@ -1,6 +1,6 @@
 // Before the Game: the edition's name, a preview of the night (each card type that plays, in its colour, with
 // its price and its rounds: one band per type, so it's plain that the normal card plays Quines 1–10 and the special card
-// the Quina Especial and the Quina Desgraciada, D243; the Desgraciada gets its own pill with a sad face, like the
+// the Quina Especial and the Quina del Desgraciat, D243; the Desgraciat gets its own pill with a sad face, like the
 // Especial's star; the price only on round 1's type, D61: 15 € for this year's ten regular rounds, D69), a
 // rough countdown to the planned start, the player app's QR as large as possible (no text; the sitting nino
 // on its corner) and the sponsors' logos. No how-to-play text: the presenters explain.

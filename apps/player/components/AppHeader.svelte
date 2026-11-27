@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3", "Quina Especial", "Quina Desgraciada"),
-  // and Ajustos (D87): the player's cards, sounds, last year's card and "Esborrar dades" live in its drawer.
+  // The top bar: the edition's name (the plan's title) or where the show is ("Quina 3", "Quina Especial", "Quina del
+  // Desgraciat"), and Ajustos (D87): the player's cards, sounds, last year's card and "Esborrar dades" live in its drawer.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
   import IconButton from '../../../packages/ui/components/IconButton.svelte';

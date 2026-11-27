@@ -738,7 +738,7 @@
   gap: 0.75rem;
 }
 
-/* The Quina Desgraciada's sad face: ink features on an ice-blue disc. */
+/* The Quina del Desgraciat's sad face: ink features on an ice-blue disc. */
 .sad-icon__face {
   fill: var(--color-cyan);
   stroke: var(--color-line);
@@ -2683,7 +2683,7 @@
 }
 
 /* The Desgraciat round's last one standing: «QUINA POTRA!» (D186; board Projector-Desgraciat-Dempeus), green and
-   tilted, the orange «Quina Desgraciada» plate under it, the prize on paper, green rays and three ninos around it. */
+   tilted, the gold «Quina del Desgraciat» plate under it, the prize on paper, green rays and three ninos around it. */
 .celebration[data-kind='standing'] {
   display: block;
 }

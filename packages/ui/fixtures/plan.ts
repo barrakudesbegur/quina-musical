@@ -4,7 +4,8 @@
 // - Each Quina wins a hamper of 17–19 prizes: one headline prize (a ham or an appliance; the Quina Especial's is a
 //   TV, and the last Quina has two), 12 Christmas staples the club buys, and 4–6 sponsors' vouchers or products.
 // - Each Line wins something small: a bottle of white wine, a fuet, neules and a small sponsor's prize.
-// - Round 5 is the Quina Desgraciada (one hamper, the last card standing's, and no Line); round 7 the Quina Especial.
+// - Round 5 is the Quina del Desgraciat (one hamper, the last card standing's, and no Line); round 7 the Quina
+//   Especial.
 // - The sides (D193, as Admin's defaults): the first five normal rounds (Quines 1–5: plan rounds 1–4 and 6) play the
 //   normal card's side 1, Quina 6 (plan round 8) its side 2; the especial card's side 1 the Desgraciat, its side 2
 //   the Especial (D226).

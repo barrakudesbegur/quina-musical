@@ -48,7 +48,8 @@
                 {round.label}
               </th>
               {#each round.prizes as prize (prize.kind)}
-                <!-- The Quina Desgraciada has no Line: its one prize, the last card standing's, spans both columns. -->
+                <!-- The Quina del Desgraciat has no Line: its one prize, the last card standing's, spans both
+                     columns. -->
                 <td colspan={round.desgraciat ? 2 : undefined}>
                   {#if round.desgraciat}<span class="cheat-sheet__label">{prize.label}</span>{/if}
                   {#if prize.items.length}
@@ -142,7 +143,7 @@
 
 <style>
   @layer app {
-  /* The Quina Desgraciada's one prize names itself in its cell ("Premi de l'últim dempeus"): it has no Line. */
+  /* The Quina del Desgraciat's one prize names itself in its cell ("Premi de l'últim dempeus"): it has no Line. */
   .cheat-sheet__label {
     display: block;
     font-size: var(--text-xs);

@@ -15,7 +15,7 @@ const ORDINALS = ['Primer', 'Segon', 'Tercer', 'Quart', 'Cinquè', 'Sisè', 'Set
 
 export const S = {
   appTitle: CA.gameTitle,
-  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle; by
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle; by
    * number only: logic/view.ts roundNameOf). */
   roundName: roundTitle,
   card,

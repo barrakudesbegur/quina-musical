@@ -16,7 +16,7 @@ import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts
 import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
 import { ninoElement, setNino } from '../../../packages/ui/components/nino-dom.ts';
 
-/** The round's name (RoundView's): "Quina 4", "Quina Especial" or "Quina Desgraciada". */
+/** The round's name (RoundView's): "Quina 4", "Quina Especial" or "Quina del Desgraciat". */
 export class RoundTitle {
   readonly root: HTMLElement;
   private readonly name: HTMLElement;
@@ -289,7 +289,7 @@ export function starIcon(className: string): SVGSVGElement {
   return svg;
 }
 
-/** The Quina Desgraciada's sad face: two eyes and a frown in ink, on a paper disc (colours from stage.css). */
+/** The Quina del Desgraciat's sad face: two eyes and a frown in ink, on a paper disc (colours from stage.css). */
 export function sadIcon(className: string): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('class', `sad-icon ${className}`.trim());

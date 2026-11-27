@@ -28,7 +28,7 @@ export interface CheckStepView {
 export interface CardTypeBadge {
   /** 'normal', 'especial'… */
   type: string;
-  /** The type and the side checked in one label (D163, D226): "Normal 1–5", "Normal 6–10", "Especial · Desgraciada". */
+  /** The type and the side checked in one label (D163, D226): "Normal 1–5", "Normal 6–10", "Especial · Desgraciat". */
   label: string;
   color: string;
   /** It plays the Quina Especial (the mini card gets a star). */
