@@ -191,7 +191,6 @@
 .app-header__title,
 .reel__title,
 .player-card__name,
-.prize-round__title,
 .now__when,
 .now__next,
 .check-strip__text,
@@ -210,7 +209,6 @@
 
 .app-header__title,
 .player-card__name,
-.prize-round__title,
 .check-strip__text,
 .check-strip__result,
 .now__summary-title,
@@ -680,8 +678,7 @@
   margin-top: var(--space-5);
 }
 
-.player__main section > * + *,
-.drawer .prizes > * + * {
+.player__main section > * + * {
   margin-top: var(--space-3);
 }
 
@@ -1296,8 +1293,6 @@
   height: 1.5em;
 }
 
-/* Premis: every round as a tile, two by two. */
-.prizes__list,
 .schedule__rounds,
 .cards__list,
 .cards__resting-list {
@@ -1308,86 +1303,6 @@
   gap: var(--space-4);
 }
 
-.prizes__list {
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  gap: var(--space-3) var(--space-2);
-  padding-top: var(--space-2);
-}
-
-/* A round whose bundles show spans both columns: a 17–19-prize hamper in half of a phone would be a long, narrow
-   strip. Locked rounds stay small tiles, two by two. */
-.prize-round[data-open='true'] {
-  grid-column: 1 / -1;
-}
-
-.prize-round {
-  position: relative;
-  display: grid;
-  align-content: start;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-piece-sm);
-  --prize-soft: var(--color-text-muted);
-}
-
-.prize-round[data-state='done'] {
-  background: var(--color-surface-sunk);
-}
-
-.prize-round[data-state='current'] {
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  --prize-soft: var(--color-text-on-paper-muted);
-  box-shadow:
-    0 0 0 4px var(--color-accent),
-    0 5px 0 4px var(--color-shadow);
-}
-
-.prize-round__title {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  align-items: center;
-  font-size: 1.375rem;
-  line-height: 1;
-  text-transform: none;
-  color: var(--color-text);
-}
-
-/* "Ara", "Feta", "La següent": a ribbon pill on the tile's corner. */
-.prize-round__state {
-  position: absolute;
-  top: -0.75rem;
-  right: var(--space-2);
-  padding: 0 0.5625rem 0.125rem;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-strong);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  white-space: nowrap;
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: 2px solid var(--color-line);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 2px 0 var(--color-shadow);
-}
-
-.prize-round[data-state='current'] .prize-round__state {
-  background: var(--color-online);
-}
-
-.prize-round .prize-lines {
-  gap: var(--space-2);
-}
-
-.prize-round .prize-lines__row,
 .now__summary .prize-lines__row {
   padding: 0;
   background: none;
@@ -1397,39 +1312,26 @@
   box-shadow: none;
 }
 
-.prize-round .prize-lines__kind,
-.prize-round .prize-lines__sponsor,
-.prize-round .prize-lines__detail,
 .now__summary .prize-lines__kind,
 .now__summary .prize-lines__sponsor,
 .now__summary .prize-lines__detail {
   color: var(--prize-soft);
 }
 
-.prize-round .prize-lines__title,
 .now__summary .prize-lines__title {
   font-size: var(--text-md);
   line-height: 1.15;
 }
 
-.prize-round .prize-lines__others,
-.now__summary .prize-lines__others,
-.prize-round .prize-lines__locked {
+.now__summary .prize-lines__others {
   font-size: var(--text-xs);
 }
 
-.prize-round .prize-lines__locked {
-  padding: var(--space-2);
-}
-
-.prize-round .prize-lines__sponsor,
-.prize-round .prize-lines__detail,
 .now__summary .prize-lines__sponsor,
 .now__summary .prize-lines__detail {
   font-size: var(--text-xs);
 }
 
-.prize-round .prize-lines__won,
 .now__summary .prize-lines__won {
   font-size: var(--text-xs);
 }
@@ -1954,11 +1856,6 @@
   color: var(--color-accent);
 }
 
-/* On paper (Premis' current round), the sad face is ink. */
-.prize-round[data-state='current'] .round-mark {
-  color: var(--color-text-on-paper);
-}
-
 /* The intro of the Desgraciat round: its long name a little smaller, and the hands-up nino (everyone stand up). */
 .now[data-scene='roundStart'] > .now__heading[data-kind='desgraciat'] {
   font-size: var(--text-3xl);
@@ -1996,7 +1893,6 @@
 /* ---- Historial ----------------------------------------------------------------------------------------- */
 .history__round-title,
 .history__empty,
-.prizes__empty,
 .schedule__empty {
   color: var(--color-text-soft);
 }
@@ -2046,11 +1942,6 @@
 .drawer {
   font-size: var(--player-text-body);
   font-weight: var(--player-weight-body);
-}
-
-/* Premis isn't designed yet (U30): it keeps its old room under the title, for its tiles' ribbons. */
-.drawer--premis .sheet__body {
-  padding-top: var(--space-1);
 }
 
 .drawer .sheet__body > p,

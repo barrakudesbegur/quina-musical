@@ -49,6 +49,34 @@ const decided = (status: 'valid' | 'invalid') => (s: ShowState): ShowState => {
   return { ...flow, claims };
 };
 
+/**
+ * A made-up wordmark for the prizes demos (the Premis drawer, D244): an SVG data URL, short enough for the plan's
+ * 500-character logo field. Real sponsors' names and logos never live in this repo.
+ */
+const demoLogo = (w: number, h: number, fill: string, text: string): string =>
+  `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="${h / 5}" fill="${fill}"/><text x="50%" y="64%" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="${Math.round(Math.min(h / 2.6, (w * 1.4) / text.length))}" fill="#fff">${text}</text></svg>`)}`;
+
+/** Logos of every shape (wide, square, tall) for most of the sample plan's sponsors; a few keep none, as some will. */
+const DEMO_LOGOS: Readonly<Record<string, string>> = {
+  'patrocinador-1': demoLogo(300, 110, '#C45A00', 'P1'),
+  'patrocinador-2': demoLogo(120, 120, '#2D8FC4', 'P2'),
+  'patrocinador-3': demoLogo(100, 140, '#157140', 'P3'),
+  'patrocinador-4': demoLogo(260, 110, '#C42F7A', 'P4'),
+  'patrocinador-5': demoLogo(140, 140, '#7D4BC4', 'P5'),
+  'patrocinador-6': demoLogo(320, 90, '#17132B', 'P6'),
+  'patrocinador-8': demoLogo(200, 120, '#B8401A', 'P8'),
+  'patrocinador-9': demoLogo(120, 120, '#0B5C5E', 'P9'),
+  'patrocinador-10': demoLogo(280, 100, '#5A1A10', 'P10'),
+  'patrocinador-11': demoLogo(130, 130, '#3B1E6E', 'P11'),
+  'patrocinador-12': demoLogo(240, 110, '#1C8A6A', 'P12'),
+  'forn-del-poble': demoLogo(300, 100, '#A86A00', 'FORN'),
+  'botiga-esports': demoLogo(140, 140, '#2D5FC4', 'ESPORTS'),
+  'restaurant-port': demoLogo(100, 140, '#0F6E8C', 'PORT'),
+};
+
+/** The sample plan with those logos. */
+const PLAN_WITH_LOGOS: GamePlan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: DEMO_LOGOS[s.id] ?? s.logo })) };
+
 /** Every player state, by demo name. The README lists the URLs. */
 export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   before: { fixture: 'before', cards: 'none' },
@@ -104,6 +132,18 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   desgraciatMine: { fixture: 'celebrationStanding', cards: 'default' },
   /** Someone else's card (#57) is the last standing: the prize and confetti, no title, no card number. */
   desgraciatOther: { fixture: 'celebrationStanding', cards: [123, 412] },
+  /**
+   * The Premis drawer (D244) with sponsors' logos (made up): Quina 3 is on, 1 and 2 done (Quina 2's Line won by #57, one
+   * of the phone's cards), 4 to 8 locked («Premis sorpresa» and the sponsors). Open it with `&open=premis`.
+   */
+  prizes: {
+    fixture: 'play',
+    cards: 'default',
+    plan: PLAN_WITH_LOGOS,
+    patch: (s) => ({ ...s, winners: (s as ShowState & Partial<FlowFields>).winners?.map((w) => (w.round === 2 && w.kind === 'line' ? { ...w, cardId: 57 } : w)) }) as ShowState,
+  },
+  /** The same in the Interval before Quina 4 (its prizes still locked): «La següent» on the selector. */
+  prizesInterval: { fixture: 'interval', cards: 'default', plan: PLAN_WITH_LOGOS },
   /** Every prize kept secret until the presenters reveal it (GamePlan.prizeReveal 'allSecret'): Premis shows the
    * "Secrets" lock on every round not revealed yet. */
   prizesSecret: { fixture: 'play', cards: 'default', plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } },

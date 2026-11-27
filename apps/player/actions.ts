@@ -59,6 +59,9 @@ export const PLAYER_ICONS = {
   /** A sheet's ‹ and ✕ (R7 places them), navy on the sheet. */
   sheetBack: { icon: 'chevron-left', label: S.back, color: 'navy' },
   sheetClose: { icon: 'close', label: S.close, color: 'navy' },
+  /** The Premis drawer's round selector (D244, P1's stepper): ‹ and ›, navy on the sheet; the label names the round. */
+  prizesPrev: { icon: 'chevron-left', color: 'navy' },
+  prizesNext: { icon: 'chevron-right', color: 'navy' },
   /** A card's edit and remove in Ajustos: bare icons in the row. */
   cardEdit: { icon: 'pencil', variant: 'bare' },
   cardRemove: { icon: 'trash', variant: 'bare' },

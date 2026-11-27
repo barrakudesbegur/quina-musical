@@ -184,6 +184,20 @@ export const S = {
   /** A prize won by one of the phone's own cards (shown with that card's icon). */
   wonByYou: 'Guanyat amb el teu cartró',
   roundState: { done: 'Feta', current: 'Ara', next: 'La següent', later: '' },
+  /** The Premis drawer (D244): P1's round selector, P2's content, «Premis sorpresa» on a locked round. */
+  prizesRounds: 'Quines',
+  prizesPrev: (name: string | null) => (name ? `Quina anterior: ${name}` : 'Quina anterior'),
+  prizesNext: (name: string | null) => (name ? `Quina següent: ${name}` : 'Quina següent'),
+  /** Spoken after a round's name while its prizes are secret (the lock says it on screen). */
+  prizesSecretName: 'premis secrets',
+  /** A bundle's size, beside its kind: «17 premis». */
+  prizeCount: (n: number) => (n === 1 ? '1 premi' : `${n} premis`),
+  /** Before a bundle's plain prizes (a hamper's staples), on one line. */
+  prizesAlso: 'I també:',
+  prizesSurprise: 'Premis sorpresa',
+  prizesSurpriseNote: { intro: 'Es descobreixen quan comenci la quina.', presenters: 'Es descobriran durant la nit.' },
+  /** Above the night's sponsors on a locked round's page. */
+  prizesSponsors: 'Col·laboren aquesta nit',
 
   // Horari (first called "Programa")
   scheduleTitle: 'Horari',
