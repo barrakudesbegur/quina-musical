@@ -148,29 +148,6 @@
   --player-ribbon-edge: var(--color-primary-edge);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .player {
-    --dur-tab-switch: 0ms;
-    --dur-player-landing: 0ms;
-    --dur-mark-in: 0ms;
-    --dur-near-win: 0ms;
-    --dur-overlay: 0ms;
-    --dur-reconnect: 0ms;
-    --dur-offline-grey: 0ms;
-    --dur-celebrate-title: 0ms;
-    --dur-celebrate-prize: 0ms;
-    --delay-celebrate-prize: 0ms;
-    --dur-stand-up: 0ms;
-    --dur-stamp: 0ms;
-    --delay-sit: 0ms;
-    --dur-sit: 0ms;
-    --dur-veil: 0ms;
-    --dur-badge-flip: 0ms;
-    --delay-nino: 0ms;
-    --dur-nino-drop: 0ms;
-  }
-}
-
 /* ---- shell: the night sky ------------------------------------------------------------------------------ */
 .player {
   /* Its own stacking context, so the your-song layers (z-index −1) paint over the night sky and under the content. */
@@ -820,8 +797,10 @@
 }
 
 /* Still: a stop between two tiles settles onto the nearer one. */
-.drum__ring:not([data-turning]) {
-  transition: transform 300ms var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drum__ring:not([data-turning]) {
+    transition: transform 300ms var(--ease-out);
+  }
 }
 
 .drum__tile {
@@ -1738,8 +1717,10 @@
   opacity: 0.55;
 }
 
-.card-grid__cell[data-anim='near-win']::before {
-  animation: player-near-breathe var(--dur-near-win) ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .card-grid__cell[data-anim='near-win']::before {
+    animation: player-near-breathe var(--dur-near-win) ease-in-out infinite;
+  }
 }
 
 .card-grid__title {
@@ -2036,7 +2017,12 @@ html:has(.drawer[open]) {
   overflow: hidden;
   transform: translateY(var(--drag-y, 0px));
   transform-origin: 50% 100%;
-  transition: transform var(--dur-drawer-spring) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer {
+    transition: transform var(--dur-drawer-spring) var(--ease-out);
+  }
 }
 
 .drawer[open] {
@@ -2143,16 +2129,28 @@ html:has(.drawer[open]) {
 /* Opening: out of its corner (Premis, Horari), else up from the bottom edge. */
 .drawer[data-state='open'][data-origin='left'] {
   transform-origin: 0% 100%;
-  animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='left'] {
+    animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
+  }
 }
 
 .drawer[data-state='open'][data-origin='right'] {
   transform-origin: 100% 100%;
-  animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
 }
 
-.drawer[data-state='open'][data-origin='bottom'] {
-  animation: player-drawer-rise var(--dur-drawer-rise) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='right'] {
+    animation: player-drawer-grow var(--dur-drawer-grow) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer[data-state='open'][data-origin='bottom'] {
+    animation: player-drawer-rise var(--dur-drawer-rise) var(--ease-out);
+  }
 }
 
 /* Following the finger: no spring until it lets go. */
@@ -2164,11 +2162,18 @@ html:has(.drawer[open]) {
 .drawer[data-depth='under'] {
   transform-origin: 50% 0%;
   transform: translateY(-0.75rem) scale(0.94);
-  transition: transform var(--dur-drawer-stack) var(--ease-out);
 }
 
-.drawer[data-state='closing'] {
-  animation: player-drawer-out var(--dur-drawer-out) ease-in forwards;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer[data-depth='under'] {
+    transition: transform var(--dur-drawer-stack) var(--ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer[data-state='closing'] {
+    animation: player-drawer-out var(--dur-drawer-out) ease-in forwards;
+  }
 }
 
 @keyframes player-drawer-grow {
@@ -2408,7 +2413,12 @@ html:has(.drawer[open]) {
   border-radius: 2px;
   background: var(--color-accent);
   box-shadow: 0 0 14px 4px rgb(255 197 49 / 0.65);
-  animation: player-qr-sweep 1.6s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .qr-scan__line {
+    animation: player-qr-sweep 1.6s ease-in-out infinite alternate;
+  }
 }
 
 @keyframes player-qr-sweep {
@@ -2418,10 +2428,6 @@ html:has(.drawer[open]) {
   to {
     transform: translateY(5.5rem);
   }
-}
-
-.player[data-motion='reduced'] .qr-scan__line {
-  animation: none;
 }
 
 .qr-scan__note {
@@ -2442,7 +2448,12 @@ html:has(.drawer[open]) {
   font-weight: var(--font-weight-strong);
   font-size: 0.9375rem;
   line-height: 1.3;
-  animation: player-qr-note 200ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .qr-scan__note {
+    animation: player-qr-note 200ms var(--ease-out) both;
+  }
 }
 
 @keyframes player-qr-note {
@@ -2628,7 +2639,12 @@ html:has(.drawer[open]) {
   box-shadow:
     inset 0 -5px 0 #e4d6bc,
     0 3px 0 var(--color-shadow);
-  transition: transform var(--dur-pad-dip) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drawer .number-pad__key {
+    transition: transform var(--dur-pad-dip) var(--ease-out);
+  }
 }
 
 .drawer .number-pad__key::after {
@@ -2695,9 +2711,15 @@ html:has(.drawer[open]) {
     inset 0 -7px 0 rgb(0 0 0 / 0.22),
     inset 0 4px 0 rgb(255 255 255 / 0.35),
     0 5px 0 var(--color-shadow);
-  transition:
-    opacity var(--dur-pad-keys) var(--ease-out),
-    transform var(--dur-pad-dip) var(--ease-out);
+  transition: opacity var(--dur-pad-keys) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .player:where([data-motion='full']) .number-pad__save {
+    transition:
+      opacity var(--dur-pad-keys) var(--ease-out),
+      transform var(--dur-pad-dip) var(--ease-out);
+  }
 }
 
 .player .number-pad__save:disabled {
@@ -2725,7 +2747,12 @@ html:has(.drawer[open]) {
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: 1.5rem;
   box-shadow: 0 6px 0 var(--color-shadow);
-  animation: player-dialog-pop var(--dur-pad-leave) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .pad-leave {
+    animation: player-dialog-pop var(--dur-pad-leave) var(--ease-out);
+  }
 }
 
 .pad-leave::backdrop {
@@ -2809,17 +2836,6 @@ html:has(.drawer[open]) {
   }
 }
 
-/* The still fallbacks at the end of this file reach ::before and ::after, not a backdrop: it stops here. */
-@media (prefers-reduced-motion: reduce) {
-  .pad-leave::backdrop {
-    animation: none;
-  }
-}
-
-.player[data-motion='reduced'] .pad-leave::backdrop {
-  animation: none;
-}
-
 /* ---- the card icon picker ------------------------------------------------------------------------------ */
 .icon-picker {
   min-width: 0;
@@ -2882,8 +2898,10 @@ html:has(.drawer[open]) {
     0 3px 0 3px var(--color-shadow);
 }
 
-.icon-picker__chip[data-anim='icon-pick'] {
-  animation: player-chip-pop var(--dur-icon-pick) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .icon-picker__chip[data-anim='icon-pick'] {
+    animation: player-chip-pop var(--dur-icon-pick) var(--ease-bounce);
+  }
 }
 
 @keyframes player-chip-pop {
@@ -3251,8 +3269,10 @@ html:has(.drawer[open]) {
   transform: translateY(var(--shift, 0px));
 }
 
-.menu__card[data-moving='true'] {
-  transition: transform var(--dur-card-shift) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .menu__card[data-moving='true'] {
+    transition: transform var(--dur-card-shift) var(--ease-out);
+  }
 }
 
 .menu__card[data-dragging='true'] {
@@ -3439,6 +3459,7 @@ html:has(.drawer[open]) {
   background: var(--color-slate);
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-pill);
+  transition: background-color var(--dur-switch-toggle) var(--ease-out);
 }
 
 .player .menu__switch[aria-checked='true'] {
@@ -3455,7 +3476,12 @@ html:has(.drawer[open]) {
   background: var(--color-paper);
   border: 2px solid var(--color-line);
   border-radius: 50%;
-  transition: transform var(--dur-switch-toggle) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .menu__switch-knob {
+    transition: transform var(--dur-switch-toggle) var(--ease-out);
+  }
 }
 
 .menu__switch[aria-checked='true'] .menu__switch-knob {
@@ -3526,7 +3552,12 @@ html:has(.drawer[open]) {
   backdrop-filter: blur(10px);
   color: var(--color-text-on-paper);
   cursor: pointer;
-  transition: transform var(--dur-corner-back) var(--ease-kick);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .player:where([data-motion='full']) .corner {
+    transition: transform var(--dur-corner-back) var(--ease-kick);
+  }
 }
 
 .player .corner--left {
@@ -3996,17 +4027,23 @@ html:has(.drawer[open]) {
   animation: player-fade-in var(--dur-tab-switch) var(--ease-out) both;
 }
 
-.drum__landed[data-anim='landing'] {
-  animation: player-flip-in var(--dur-player-landing) var(--ease-bounce) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .drum__landed[data-anim='landing'] {
+    animation: player-flip-in var(--dur-player-landing) var(--ease-bounce) both;
+  }
 }
 
-.reel__caption[data-anim='landing'],
-.song-list__item[data-anim='landing'] {
-  animation: player-rise-in var(--dur-player-landing) var(--ease-out) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .reel__caption[data-anim='landing'],
+  :where(.player[data-motion='full']) .song-list__item[data-anim='landing'] {
+    animation: player-rise-in var(--dur-player-landing) var(--ease-out) both;
+  }
 }
 
-.card-grid__kernel[data-anim='mark-in'] {
-  animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .card-grid__kernel[data-anim='mark-in'] {
+    animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
+  }
 }
 
 /* The Desgraciat round. A ✗ stamps on its cell (`mark-in`, and step ① of `card-fall`): scale 2 → 1 at −12°. */
@@ -4058,13 +4095,20 @@ html:has(.drawer[open]) {
   }
 }
 
-.card-grid__cross[data-anim='mark-in'] {
-  animation: player-stamp var(--dur-stamp) var(--ease-bounce) var(--stagger, 0ms) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .card-grid__cross[data-anim='mark-in'] {
+    animation: player-stamp var(--dur-stamp) var(--ease-bounce) var(--stagger, 0ms) both;
+  }
 }
 
 .player-card-wrap[data-anim='card-fall'] {
   --sit-at: calc(var(--fall-delay, 0ms) + var(--delay-sit));
-  animation: player-sit var(--dur-sit) var(--ease-bounce) var(--sit-at) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .player-card-wrap[data-anim='card-fall'] {
+    animation: player-sit var(--dur-sit) var(--ease-bounce) var(--sit-at) both;
+  }
 }
 
 .player-card-wrap[data-anim='card-fall'] .player-card__veil {
@@ -4075,33 +4119,45 @@ html:has(.drawer[open]) {
   animation: player-fade-out var(--dur-veil) var(--ease-out) var(--sit-at) both;
 }
 
-.player-card-wrap[data-anim='card-fall'] .stand-badge--out {
-  animation: player-flip-away calc(var(--dur-badge-flip) / 2) ease-in var(--sit-at) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .player-card-wrap[data-anim='card-fall'] .stand-badge--out {
+    animation: player-flip-away calc(var(--dur-badge-flip) / 2) ease-in var(--sit-at) both;
+  }
 }
 
-.player-card-wrap[data-anim='card-fall'] .stand-badge[data-state='seated'] {
-  animation: player-flip-down calc(var(--dur-badge-flip) / 2) var(--ease-out) calc(var(--sit-at) + var(--dur-badge-flip) / 2) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .player-card-wrap[data-anim='card-fall'] .stand-badge[data-state='seated'] {
+    animation: player-flip-down calc(var(--dur-badge-flip) / 2) var(--ease-out) calc(var(--sit-at) + var(--dur-badge-flip) / 2) both;
+  }
 }
 
-.player-card-wrap[data-anim='card-fall'] .player-card__nino {
-  animation: player-nino-drop var(--dur-nino-drop) var(--ease-bounce) calc(var(--fall-delay, 0ms) + var(--delay-nino)) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .player-card-wrap[data-anim='card-fall'] .player-card__nino {
+    animation: player-nino-drop var(--dur-nino-drop) var(--ease-bounce) calc(var(--fall-delay, 0ms) + var(--delay-nino)) both;
+  }
 }
 
 /* `stand-up`: the DEMPEUS badge pops in (0.4 → 1, overshooting) and the green glow fades in, 80 ms apart. */
-.player-card-wrap[data-anim='stand-up'] .stand-badge {
-  animation: player-pop var(--dur-stand-up) var(--ease-bounce) var(--stand-delay, 0ms) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .player-card-wrap[data-anim='stand-up'] .stand-badge {
+    animation: player-pop var(--dur-stand-up) var(--ease-bounce) var(--stand-delay, 0ms) both;
+  }
 }
 
 .player-card-wrap[data-anim='stand-up'] .player-card__glow {
   animation: player-fade-in var(--dur-stand-up) var(--ease-out) var(--stand-delay, 0ms) both;
 }
 
-.check-strip[data-anim='check'] .check-strip__result {
-  animation: player-rise-in var(--dur-base) var(--ease-out) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .check-strip[data-anim='check'] .check-strip__result {
+    animation: player-rise-in var(--dur-base) var(--ease-out) both;
+  }
 }
 
-.check-strip__dots span {
-  animation: player-dot-step var(--dur-check-dots) steps(1) infinite;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .check-strip__dots span {
+    animation: player-dot-step var(--dur-check-dots) steps(1) infinite;
+  }
 }
 
 .check-strip__dots span:nth-child(2) {
@@ -4112,17 +4168,23 @@ html:has(.drawer[open]) {
   animation-delay: calc(var(--dur-check-dots) * 2 / 3);
 }
 
-.celebration[data-anim='celebrate'] .celebration__shout {
-  animation: player-shout var(--dur-celebrate-title) var(--ease-bounce) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .celebration[data-anim='celebrate'] .celebration__shout {
+    animation: player-shout var(--dur-celebrate-title) var(--ease-bounce) both;
+  }
 }
 
-.celebration[data-anim='celebrate'] .celebration__card,
-.celebration[data-anim='celebrate'] .celebration__prize {
-  animation: player-rise-in var(--dur-celebrate-prize) var(--ease-out) var(--delay-celebrate-prize) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .celebration[data-anim='celebrate'] .celebration__card,
+  :where(.player[data-motion='full']) .celebration[data-anim='celebrate'] .celebration__prize {
+    animation: player-rise-in var(--dur-celebrate-prize) var(--ease-out) var(--delay-celebrate-prize) both;
+  }
 }
 
-[data-anim='countdown'][data-state='final'] {
-  animation: player-tick var(--dur-countdown) var(--ease-out) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) [data-anim='countdown'][data-state='final'] {
+    animation: player-tick var(--dur-countdown) var(--ease-out) both;
+  }
 }
 
 /* The pause swaps in for the drum (and the drum back) with a 300 ms crossfade; the nino breathes. */
@@ -4130,14 +4192,18 @@ html:has(.drawer[open]) {
   animation: player-fade-in var(--dur-overlay) var(--ease-out) both;
 }
 
-.pause-notice__nino {
-  animation: player-breathe var(--dur-pause-breath) ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .pause-notice__nino {
+    animation: player-breathe var(--dur-pause-breath) ease-in-out infinite;
+  }
 }
 
 /* The connection strip slides down and away (200 ms); the screen greys under it and back (400 ms). Both stay in
    the page, so they can leave as smoothly as they came. */
-.connection-strip {
-  transition: transform var(--dur-reconnect) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .connection-strip {
+    transition: transform var(--dur-reconnect) var(--ease-out);
+  }
 }
 
 .offline-veil {
@@ -4152,13 +4218,23 @@ html:has(.drawer[open]) {
 
 /* The garland: three groups of glows twinkle, offset by a third, so it reads as a chase when hot. */
 .heat__glow {
-  animation: player-twinkle var(--twinkle) ease-in-out infinite;
   animation-delay: calc(var(--group, 0) * var(--twinkle) / -3);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .heat__glow {
+    animation: player-twinkle var(--twinkle) ease-in-out infinite;
+  }
+}
+
 .shuffle[data-state='running'] .shuffle__tile {
-  animation: player-jiggle var(--dur-shuffle-jiggle) ease-in-out infinite alternate;
   animation-delay: calc(var(--i, 0) * -70ms);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .shuffle[data-state='running'] .shuffle__tile {
+    animation: player-jiggle var(--dur-shuffle-jiggle) ease-in-out infinite alternate;
+  }
 }
 
 /* ---- your-song: the landed song is on one of your cards (ANIMATIONS.md `your-song`, D74) ------------------------
@@ -4228,12 +4304,22 @@ html:has(.drawer[open]) {
 
 .your-song__beam--left {
   left: 5%;
-  animation: player-your-song-sweep var(--dur-your-song-sweep-left) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song__beam--left {
+    animation: player-your-song-sweep var(--dur-your-song-sweep-left) ease-in-out infinite;
+  }
 }
 
 .your-song__beam--right {
   left: 59%;
-  animation: player-your-song-sweep var(--dur-your-song-sweep-right) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song__beam--right {
+    animation: player-your-song-sweep var(--dur-your-song-sweep-right) ease-in-out infinite;
+  }
 }
 
 .your-song-particles {
@@ -4250,7 +4336,12 @@ html:has(.drawer[open]) {
   background: linear-gradient(90deg, rgb(255 255 255 / 0), #fff 70%, #fff6b0);
   box-shadow: 0 0 24px 8px rgb(255 255 255 / 0.7);
   opacity: 0;
-  animation: player-your-song-streak var(--dur-your-song-streak) ease-in infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song-particles__streak {
+    animation: player-your-song-streak var(--dur-your-song-streak) ease-in infinite;
+  }
 }
 
 .your-song-particles__piece {
@@ -4258,7 +4349,12 @@ html:has(.drawer[open]) {
   width: var(--size);
   height: var(--size);
   opacity: 0;
-  animation: player-your-song-rise var(--dur) ease-in-out var(--delay) infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song-particles__piece {
+    animation: player-your-song-rise var(--dur) ease-in-out var(--delay) infinite;
+  }
 }
 
 .your-song-particles__piece > .card-mark {
@@ -4272,8 +4368,10 @@ html:has(.drawer[open]) {
   animation: player-fade-in var(--dur-your-song-gold) linear var(--delay-your-song-gold) both;
 }
 
-.your-song[data-entry='flash'] .your-song__beams {
-  animation: player-your-song-beams-in var(--dur-your-song-beams) var(--ease-out) var(--delay-your-song-beams) both;
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song[data-entry='flash'] .your-song__beams {
+    animation: player-your-song-beams-in var(--dur-your-song-beams) var(--ease-out) var(--delay-your-song-beams) both;
+  }
 }
 
 .your-song-particles[data-entry='flash'] {
@@ -4288,7 +4386,12 @@ html:has(.drawer[open]) {
 .your-song-flash {
   background: #fff;
   opacity: 0;
-  animation: player-your-song-flash var(--dur-your-song-flash) linear both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .your-song-flash {
+    animation: player-your-song-flash var(--dur-your-song-flash) linear both;
+  }
 }
 
 /* The texts that sit straight on the background turn ink (or white with the ink outline) on gold. */
@@ -4383,30 +4486,11 @@ html:has(.drawer[open]) {
   animation-play-state: paused !important;
 }
 
-/* Reduced motion and Data Saver: the still fallbacks (every hook keeps its information without moving). */
-@media (prefers-reduced-motion: reduce) {
-  .player *,
-  .player *::before,
-  .player *::after {
-    animation: none !important;
-    transition: none !important;
-  }
+/* Reduced motion and Data Saver (`data-motion='reduced'`, set from both): the moving and looping animations are declared
+   only for `data-motion='full'` under `prefers-reduced-motion: no-preference`, next to their rule; the colour and
+   opacity fades run either way (D209). The still fallbacks that show something else: */
 
-  /* A falling card appears seated at once: no DEMPEUS badge or glow left over it. */
-  .player .stand-badge--out,
-  .player .player-card-wrap[data-anim='card-fall'] .player-card__glow {
-    display: none;
-  }
-}
-
-.player[data-motion='reduced'] .stand-badge--out,
-.player[data-motion='reduced'] .player-card-wrap[data-anim='card-fall'] .player-card__glow {
+/* A falling card appears seated at once: the DEMPEUS badge that would flip away isn't left over it. */
+.player[data-motion='reduced'] .stand-badge--out {
   display: none;
-}
-
-.player[data-motion='reduced'] *,
-.player[data-motion='reduced'] *::before,
-.player[data-motion='reduced'] *::after {
-  animation: none !important;
-  transition: none !important;
 }
