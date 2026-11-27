@@ -19,6 +19,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - The Quina is their own event: they prepare it, run it and clean up. The first edition was in 2024. 2026 is the third.
 - **Roles on the night:**
   - **The presenters:** two members on stage all night, each with a microphone.
+    - They prepare their own notes: a document marking who says what, one colour per presenter, likely in parts (the intro, the prizes, notes for each Quina, the closing). They probably prefer it on paper.
   - **The bar:** drinks, snacks and the cards. At the start one to three people work the till. Later, whoever is free serves whoever comes to the bar.
   - **The tech** ("el tècnic"): one member who builds the software, prepares the songs and the cards, and runs the laptop. They sit near the laptop to fix problems and help the presenters.
   - **The others:** they sometimes walk between the tables to sell more cards, food or drinks.

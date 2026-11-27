@@ -26,6 +26,7 @@ Requirements say what must be true now. They hold no history: why something was 
 
 | File | Holds |
 |---|---|
+| [ideas.md](ideas.md) | Ideas the user wants kept but hasn't decided on, such as the presenters' notebook on the tablet |
 | [decision-log.md](decision-log.md) | Every decision with an ID (the interviews' Q1–Q38 and P1–P15, then D1, D2…), its date, status, what it supersedes, and where it lives now |
 | [adr/](adr) | The three big architectural decisions |
 | [mixer-design-decisions.md](mixer-design-decisions.md), [show-ui-and-platform-decisions.md](show-ui-and-platform-decisions.md) | The two interviews as first recorded (23 and 24 November). Frozen and partly superseded: read them for context, not for the current rules |

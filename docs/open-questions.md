@@ -275,6 +275,9 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
+### U191 · Ask the presenters about a notebook on the tablet
+The idea is in [ideas.md](ideas.md): their own colour-coded notes, imported and shown as a draggable notebook over half the console. First, do they want it at all, or do they prefer paper?
+
 ### U126 · Check for lost Admin edits on quina-dev
 Backend found a bug (fixed in 5fdc2c9): the cloud didn't save a plan edit that phones don't see, like a later round's prizes or the cheat sheet, and the edit was lost when the cloud restarted. If you edited those in Admin on quina-dev, check that the edits are still there.
 
