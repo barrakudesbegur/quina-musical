@@ -1,9 +1,12 @@
 // The edition file (D116): one JSON per edition with all it needs, kept in git and sent to the cloud by hand.
+//   npm run edition -- build 2026 [--plan data/editions/2026.plan.json] [--out data/editions/2026.json]
 //   npm run edition -- check <file> [--repertoire 2026]
 //   npm run edition -- upload <file> [--repertoire 2026] [--start "2026-11-27 19:00"] [--cloud https://…] [--yes]
 //   npm run edition -- logos <plan file> --from <list.json> --dir <folder> [--cloud https://…] [--yes]
-// <file> is a plan source (data/editions/2026.plan.json, a GamePlan), an edition file (its `plan`), or a backup
-// this tool saved (data/link/backups/…, to undo an upload).
+// <file> is a plan source (data/editions/2026.plan.json, a GamePlan), an edition file (checked whole with the
+// protocol's checkEdition, then its `plan`), or a backup this tool saved (data/link/backups/…, to undo an upload).
+// - build: the plan source, the repertoire's songs with their pools and its printed card types and cards, in one
+//   file checked with checkEdition (the cards' songs from their side's pool). Whether it's committed waits on U75.
 // - check: the plan as the cloud and the screens read it, and, with a repertoire, each round's card side against
 //   its card-types.json and each side's pool against its songs.
 // - upload: the same check, then what would change. With --yes it saves the cloud's plan to data/link/backups/
@@ -12,12 +15,14 @@
 // - logos: each sponsor's logo file (`--from`: a JSON whose `sponsors` have `id` and `logoFile`, in `--dir`), shrunk
 //   to the cloud's limit and uploaded; with --yes, the plan file gets their /media/ paths.
 // The cloud and the laptop's service token come from apps/cloud/.env.link, as for the link and the media sync.
-// Not yet (U68–U75 are with the user): `build` (the songs per pool, Sound engine's; the cards as uploaded data),
-// the cloud keeping every replaced version, a rehearsal reset.
+// Not yet (U68–U75 are with the user): the cards as uploaded data, the cloud keeping every replaced version, a
+// rehearsal reset.
 import fs from 'node:fs';
 import path from 'node:path';
 import { printedCardTypes, poolSongCounts } from '../../apps/cloud/laptop/preflight/checks.ts';
 import { loadRepertoire } from '../../apps/show/relay/repertoire.ts';
+import { checkEdition } from '@quina/protocol';
+import { buildEdition } from './build.ts';
 import { uploadLogos } from './logos.ts';
 import { checkPlan, venueTimeMs, withStart, type PlanContext } from './plan.ts';
 import { uploadPlan } from './upload.ts';
@@ -34,7 +39,8 @@ const flag = (name: string): string | undefined => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const usage = [
-  'usage: npm run edition -- check|upload <file> [--repertoire NAME] [--start "YYYY-MM-DD HH:MM"] [--cloud https://…] [--yes]',
+  'usage: npm run edition -- build <repertoire> [--plan <plan source>] [--out <edition file>]',
+  '       npm run edition -- check|upload <file> [--repertoire NAME] [--start "YYYY-MM-DD HH:MM"] [--cloud https://…] [--yes]',
   '       npm run edition -- logos <plan file> --from <list.json> --dir <folder> [--cloud https://…] [--yes]',
 ].join('\n');
 const fail = (message: string): never => {
@@ -110,12 +116,40 @@ async function logos(file: string): Promise<void> {
   console.log(`${file}: ${paths.size} sponsor logo path(s) written.`);
 }
 
+function build(name: string): void {
+  const repertoire = loadRepertoire(name);
+  const planFile = flag('--plan') ?? path.join(ROOT, 'data/editions', `${repertoire.name}.plan.json`);
+  const out = path.resolve(CALLER, flag('--out') ?? path.join(ROOT, 'data/editions', `${repertoire.name}.json`));
+  const result = buildEdition(repertoire, readJson(planFile));
+  for (const warning of result.warnings) console.warn(`WARN  ${warning}`);
+  if (!result.ok) {
+    for (const error of result.errors) console.error(`ERROR ${error}`);
+    return fail(`the edition from repertoire ${repertoire.name} doesn't fit: ${result.errors.length} error(s); nothing was written.`);
+  }
+  const { edition } = result;
+  fs.writeFileSync(out, `${JSON.stringify(edition, null, 2)}\n`);
+  console.log(`${path.relative(CALLER, out)}: repertoire ${edition.repertoire}, ${edition.plan.rounds.length} rounds, ${edition.songs.length} songs, ${edition.cards?.length ?? 0} cards${result.warnings.length ? `, ${result.warnings.length} warning(s)` : ''}.`);
+}
+
+const isEditionFile = (json: unknown): boolean => Boolean(json) && typeof json === 'object' && 'songs' in (json as object) && 'repertoire' in (json as object);
+
 async function main(): Promise<void> {
   const [action, file] = args;
-  if (!file || (action !== 'check' && action !== 'upload' && action !== 'logos')) return fail(usage);
+  if (!file || (action !== 'build' && action !== 'check' && action !== 'upload' && action !== 'logos')) return fail(usage);
   if (action === 'logos') return logos(file);
+  if (action === 'build') return build(file);
 
-  const report = checkPlan(readJson(file), context(flag('--repertoire')));
+  const json = readJson(file);
+  if (isEditionFile(json)) {
+    // A built edition is checked whole (songs, cards against their pools) before its plan goes anywhere.
+    const whole = checkEdition(json);
+    for (const warning of whole.warnings) console.warn(`WARN  ${warning}`);
+    if (!whole.ok) {
+      for (const error of whole.errors) console.error(`ERROR ${error}`);
+      return fail(`${file}: ${whole.errors.length} error(s); nothing was sent.`);
+    }
+  }
+  const report = checkPlan(json, context(flag('--repertoire')));
   for (const warning of report.warnings) console.warn(`WARN  ${warning}`);
   for (const error of report.errors) console.error(`ERROR ${error}`);
   if (!report.plan || report.errors.length > 0) return fail(`${file}: ${report.errors.length} error(s); nothing was sent.`);

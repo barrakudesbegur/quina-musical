@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { checkGamePlan, type CardTypeSides, type GamePlan } from '@quina/protocol';
+import { checkEdition, checkGamePlan, type CardTypeSides, type GamePlan } from '@quina/protocol';
+import { assembleEdition, editionCards } from './build.ts';
 import { checkPlan, planOf, planSummary, venueTimeMs, withStart } from './plan.ts';
 import { uploadPlan } from './upload.ts';
 import { imageType, MAX_LOGO_BYTES, uploadLogos } from './logos.ts';
@@ -153,4 +154,23 @@ test('logos: each prepared and uploaded only with --yes; a missing or foreign fi
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("build: cards.json's songs become ids (a card from before sides is its side 1), and the edition passes checkEdition", () => {
+  const song = (id: number) => ({ id, title: `t${id}` });
+  const line = (from: number) => [from, from + 1, from + 2, from + 3].map(song);
+  assert.deepEqual(
+    editionCards({ cards: [{ id: 7, type: 'normal', lines: [line(1), line(5), line(9)] }, { id: 8, type: 'normal', sides: [{ side: 2, lines: [[13, 14, 15, 16], line(17), line(21)] }] }] }),
+    [
+      { id: 7, type: 'normal', sides: [{ side: 1, lines: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]] }] },
+      { id: 8, type: 'normal', sides: [{ side: 2, lines: [[13, 14, 15, 16], [17, 18, 19, 20], [21, 22, 23, 24]] }] },
+    ],
+  );
+  const plan = checkPlan(SOURCE, { cardTypes: null }).plan!;
+  const songs = Array.from({ length: 24 }, (_, i) => ({ id: i + 1, title: `t${i + 1}`, artist: 'a', pool: i < 12 ? '1' : '2' }));
+  const cards = editionCards([{ id: 1, type: 'normal', sides: [{ side: 1, lines: [line(1), line(5), line(9)] }, { side: 2, lines: [line(13), line(17), line(21)] }] }]);
+  const edition = checkEdition(assembleEdition({ repertoire: '2026', plan, songs, cardTypes: TWO_SIDED, cards }));
+  assert.equal(edition.ok, true, edition.ok ? '' : edition.errors.join('\n'));
+  const wrongPool = checkEdition(assembleEdition({ repertoire: '2026', plan, songs, cardTypes: TWO_SIDED, cards: editionCards([{ id: 1, type: 'normal', sides: [{ side: 1, lines: [line(13), line(5), line(9)] }] }]) }));
+  assert.equal(wrongPool.ok, false);
 });
