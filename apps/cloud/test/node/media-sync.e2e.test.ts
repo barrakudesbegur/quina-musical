@@ -31,6 +31,12 @@ test('push, then pull on another laptop: the same files; only changes move; noth
       'covers/12.jpg': 'cover',
     });
     const cloud = { cloud: server.http, headers: {}, repertoire: 'default', log: () => {} };
+    const lines: string[] = [];
+    const preview = await push({ ...cloud, roots: main.roots, dataDir: main.dataDir, dryRun: true, log: (line) => lines.push(line) });
+    assert.equal(preview.moved, 0);
+    assert.match(lines.join('\n'), /would upload 3 files, .* to repertoires\/default\/; nothing was sent/);
+    const untouched = (await (await fetch(`${server.http}/api/sync/default/manifest`)).json()) as { files?: Record<string, unknown> };
+    assert.deepEqual(untouched.files ?? {}, {}, 'a dry run uploads nothing and writes no manifest');
     const first = await push({ ...cloud, roots: main.roots, dataDir: main.dataDir });
     assert.equal(first.moved, 3, 'not the stretch render');
 

@@ -27,6 +27,8 @@ export interface SyncOptions {
   roots: RootDir[];
   /** Where the hash index lives (the link's data folder). */
   dataDir: string;
+  /** Push only: say what would be uploaded, by root, and upload nothing (the manifest stays as it is). */
+  dryRun?: boolean;
   log?: (line: string) => void;
   concurrency?: number;
 }
@@ -136,6 +138,8 @@ function progress(verb: string, totalFiles: number, totalBytes: number, log: (li
   };
 }
 
+const megabytes = (bytes: number): string => (bytes / 1e6).toFixed(1);
+
 export async function push(o: SyncOptions): Promise<SyncReport> {
   const log = o.log ?? console.log;
   const skipped: string[] = [];
@@ -144,6 +148,21 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
   const todo = changedFiles(manifestFiles(local), remote.files);
   let bytes = 0;
   log(`media push: ${local.size} files here, ${todo.length} to upload`);
+  if (o.dryRun) {
+    const byRoot = new Map<string, { files: number; bytes: number }>();
+    for (const syncPath of todo) {
+      const root = syncPath.split('/')[0] ?? syncPath;
+      const entry = byRoot.get(root) ?? { files: 0, bytes: 0 };
+      entry.files += 1;
+      entry.bytes += local.get(syncPath)?.size ?? 0;
+      byRoot.set(root, entry);
+    }
+    for (const [root, { files, bytes: size }] of [...byRoot].sort((a, b) => b[1].bytes - a[1].bytes)) log(`  ${root}: ${files} files, ${megabytes(size)} MB`);
+    const total = todo.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0);
+    for (const line of skipped) log(`  skipped ${line}`);
+    log(`media push (dry run): would upload ${todo.length} files, ${megabytes(total)} MB, to repertoires/${o.repertoire}/; nothing was sent`);
+    return { files: local.size, moved: 0, bytes: 0, skipped };
+  }
   const moved = progress('uploaded', todo.length, todo.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0), log);
   await inParallel(todo, o.concurrency ?? 4, async (syncPath) => {
     const file = local.get(syncPath) as LocalFile;

@@ -1,5 +1,8 @@
 // Assemble the static files the Worker serves (wrangler.jsonc `assets.directory` = dist/), at deploy time:
 //   npm run assets -- [--quick] [--repertoire default] [--ui ../show/dist] [--out dist]
+// A deploy names its repertoire (QUINA_REPERTOIRE=2026 npm run deploy, or --repertoire): without it the deploy folder
+// would get the default repertoire's cards and covers, last year's test ones, on the QR domain. Only dist/ needs it;
+// a test's own --out (tools/e2e) still falls back to the default.
 // It copies static/ (committed: the kill switch for last year's service worker, _headers, a placeholder page).
 // Unless --quick, it then adds, as agreed with the UI session:
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
@@ -16,7 +19,7 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadRepertoire } from '../../show/relay/repertoire.ts';
+import { loadRepertoire, REPERTOIRE_ENV } from '../../show/relay/repertoire.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -39,6 +42,11 @@ const sizeOf = (dir: string): number =>
   fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true, withFileTypes: true }).filter((e) => e.isFile()).reduce((sum, e) => sum + fs.statSync(path.join(e.parentPath, e.name)).size, 0) : 0;
 const warnings: string[] = [];
 
+const deploying = !quick && OUT === path.join(ROOT, 'dist');
+if (deploying && !flag('--repertoire') && !process.env[REPERTOIRE_ENV]) {
+  console.error(`name the repertoire this deploy serves: ${REPERTOIRE_ENV}=2026 npm run deploy (or npm run assets -- --repertoire 2026)`);
+  process.exit(1);
+}
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.cpSync(path.join(ROOT, 'static'), OUT, { recursive: true });
 const lines = [`static/ → dist/`];

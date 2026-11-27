@@ -2,6 +2,7 @@
 // the edition's Game plan and its images into the link folder (a laptop's setup, without connecting as the show
 // laptop, which would take over from the one playing):
 //   npm run media -- push|pull|plan [--repertoire default] [--cloud https://quina-dev.barrakudesbegur.org]
+//   npm run media -- push --repertoire 2026 --dry-run   what a push would upload, by root, without sending anything
 // And to make room in the bucket (the free tier is 10 GB), e.g. for this year's repertoire: list them, or delete one:
 //   npm run media -- prune                             the repertoires in the bucket and their sizes
 //   npm run media -- prune --repertoire default        what deleting that one would free (a dry run)
@@ -29,7 +30,7 @@ const flag = (name: string): string | undefined => {
 
 const action = args[0];
 if (action !== 'push' && action !== 'pull' && action !== 'plan' && action !== 'prune') {
-  console.error('usage: npm run media -- push|pull|plan|prune [--repertoire NAME] [--yes] [--cloud https://…]');
+  console.error('usage: npm run media -- push|pull|plan|prune [--repertoire NAME] [--dry-run] [--yes] [--cloud https://…]');
   process.exit(1);
 }
 const wsUrl = process.env.QUINA_CLOUD_URL ?? 'ws://localhost:8787/ws/show';
@@ -45,6 +46,7 @@ const options = {
   repertoire: repertoire.name,
   roots: repertoireRoots(repertoire),
   dataDir: LINK,
+  dryRun: args.includes('--dry-run'),
 };
 if (action === 'plan') {
   // The whole plan, as the link would keep it (cloud-plan.json), then the images it uses.
