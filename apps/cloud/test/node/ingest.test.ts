@@ -2,10 +2,10 @@
 // broken entry stops the upload where it is. The record the cloud keeps always equals replaying what it stored.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyRecord, replayJournal, type JournalEntry } from '@quina/protocol';
+import { AUTO_SOUNDS_DEFAULT, emptyRecord, replayJournal, type JournalEntry } from '@quina/protocol';
 import { ingest } from '../../src/domain/ingest.ts';
 import { canonicalJson, checkJournalEntry } from '../../src/domain/journal-check.ts';
-import { JournalBuilder } from '../support/journal-builder.ts';
+import { JournalBuilder, LEGACY_SETTINGS } from '../support/journal-builder.ts';
 
 /** The cloud's side of a test: its record and what it stored. */
 function cloud(gameId: string) {
@@ -169,11 +169,21 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 100, laterSlider: 300 } } }).ok, 'a slider added later');
   // The remote's shake switch (D148): a boolean, absent in an older journal.
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, remoteShake: false } }).ok, 'the shake switch off');
+  // The automatic sounds (D237): `autoSounds` since, `finalLapStinger` and `voicesOn` before; a sound added later passes.
+  assert.equal('finalLapStinger' in changed.settings, false, 'the builder writes what the engine writes now');
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, autoSounds: { ...AUTO_SOUNDS_DEFAULT, voices: false } } }).ok, 'autoSounds, no finalLapStinger');
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...LEGACY_SETTINGS, voicesOn: false } }).ok, 'an older engine: finalLapStinger and voicesOn, no autoSounds');
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, autoSounds: { ...AUTO_SOUNDS_DEFAULT, newSound: true } } }).ok, 'a sound added later');
   const bad: [string, unknown][] = [
     ['a volume above its most (150%)', { ...changed, settings: { ...changed.settings, volumes: { master: 151 } } }],
     ['a volume as text', { ...started, settings: { ...changed.settings, volumes: { songs: '80' } } }],
     ['volumes as a list', { ...changed, settings: { ...changed.settings, volumes: [80] } }],
     ['the shake switch as text', { ...changed, settings: { ...changed.settings, remoteShake: 'on' } }],
+    ['an automatic sound as text', { ...changed, settings: { ...changed.settings, autoSounds: { voices: 'yes' } } }],
+    ['autoSounds not an object', { ...changed, settings: { ...changed.settings, autoSounds: true } }],
+    ['autoSounds as a list', { ...started, settings: { ...changed.settings, autoSounds: [true] } }],
+    ['the old final-lap switch as text', { ...changed, settings: { ...LEGACY_SETTINGS, finalLapStinger: 'on' } }],
+    ['the old voices switch as text', { ...changed, settings: { ...LEGACY_SETTINGS, voicesOn: 1 } }],
     ['win kind', { ...opened, winKind: 'quina' }],
     ['an outcome the protocol does not know', { ...decided, outcome: 'won' }],
     ['a slip longer than 16', { ...noted, slip: 'x'.repeat(17) }],

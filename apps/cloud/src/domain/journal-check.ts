@@ -3,7 +3,7 @@
 // Known fields must have the right type; extra fields are allowed, so an additive protocol change doesn't stall
 // uploads. An unknown `kind` is refused, because the cloud can't replay what it doesn't know.
 // There is one checker per kind, so tsc flags a kind added to the protocol until it gets one here.
-import { CHECK_OUTCOMES, isCardTypeId, isPhaseName, isShowScene, isSide, isVolumeKey, ROUND_KINDS, SIDE_MAX, VOLUME_MAX, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
+import { CHECK_OUTCOMES, isAutoSound, isCardTypeId, isPhaseName, isShowScene, isSide, isVolumeKey, ROUND_KINDS, SIDE_MAX, VOLUME_MAX, WIN_KINDS, type JournalEntry, type JournalEntryKind } from '@quina/protocol';
 import { CLOUD } from '../config.ts';
 
 export type EntryCheck = { ok: true; entry: JournalEntry } | { ok: false; error: string };
@@ -44,6 +44,20 @@ const volumes: FieldCheck = (value) => {
   return null;
 };
 
+/**
+ * The sounds the engine plays by itself, each on or off (D237, AUTO_SOUNDS; `setAutoSound`). The engine sends every
+ * key; a journal from before D237 has none (only `finalLapStinger` and `voicesOn`; autoSoundsOf reads either). A key
+ * this cloud doesn't know is let through, like any extra field: a refused entry stops the link's uploads, so a new
+ * sound must not stall them before the cloud is deployed.
+ */
+const autoSounds: FieldCheck = (value) => {
+  if (!isRecord(value)) return 'an object of on/off switches';
+  for (const [key, on] of Object.entries(value)) {
+    if (isAutoSound(key) && typeof on !== 'boolean') return `a boolean for ${key}`;
+  }
+  return null;
+};
+
 /** JournalSettings: every field the reducer and a resumed show read. */
 const settings: FieldCheck = (value) => {
   if (!isRecord(value)) return 'an object';
@@ -56,7 +70,10 @@ const settings: FieldCheck = (value) => {
     phaseOverride: nullable(phase),
     roundsTotal: integer(1, 99),
     holdMusicAfterSec: finite,
-    finalLapStinger: boolean,
+    // Before D237's autoSounds; the engine mirrors them for one deploy, then drops them.
+    finalLapStinger: optional(boolean),
+    voicesOn: optional(boolean),
+    autoSounds: optional(autoSounds),
     volumes: optional(volumes),
     remoteShake: optional(boolean),
   });

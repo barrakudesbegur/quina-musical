@@ -1,9 +1,9 @@
 // Builds Game journals for tests, as the show engine writes them: numbered entries for rounds, landings, undos,
 // Lines, scenes, claims and winners. The protocol's own replayJournal checks that what it builds is consistent.
 // Shared by the Node tests, the workerd tests and the load test, so it uses no Node or Workers API.
-import type { CheckOutcome, JournalEntry, JournalEntryBody, JournalSettings, RoundKind, ShowScene, WinKind } from '@quina/protocol';
+import { AUTO_SOUNDS_DEFAULT, type CheckOutcome, type JournalEntry, type JournalEntryBody, type JournalSettings, type RoundKind, type ShowScene, type WinKind } from '@quina/protocol';
 
-export const SETTINGS: JournalSettings = {
+const COMMON = {
   pace: 14,
   paceLocked: false,
   autoAdvance: true,
@@ -12,8 +12,17 @@ export const SETTINGS: JournalSettings = {
   phaseOverride: null,
   roundsTotal: 12,
   holdMusicAfterSec: 25,
-  finalLapStinger: true,
 };
+
+/**
+ * The settings as the engine writes them since D237: every automatic sound in `autoSounds`, without the old
+ * `finalLapStinger` and `voicesOn` (the engine drops those mirrors once the cloud takes them missing). The cast goes
+ * when the protocol's JournalSettings makes `finalLapStinger` optional.
+ */
+export const SETTINGS = { ...COMMON, autoSounds: { ...AUTO_SOUNDS_DEFAULT } } as JournalSettings;
+
+/** An older engine's settings (before D237): the two switches, no `autoSounds`. */
+export const LEGACY_SETTINGS: JournalSettings = { ...COMMON, finalLapStinger: true, voicesOn: true };
 
 /** A deterministic shuffle of songs 1..count (mulberry32). */
 export function shuffledQueue(seed: number, count = 77): number[] {
