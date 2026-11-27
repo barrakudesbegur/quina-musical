@@ -64,6 +64,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `a242fba5` (`a5db23c`, repertoire 2026): Frontend's phone drum matching the projector's (`3a0d00b`, D237, the drum's physics in packages/rules) and the cells' playing ring; Sound engine's `addCardsInPlay` (journaled as `cards.set`), `twoLevelHold` and the relay's `from` stamps, and the mirrors' removal (`717cbf3`).
     - `5cc26fce` (`f817bf9`, repertoire 2026): D248, R2 by content (blobs and v3 manifests); v2's routes gone.
     - `e3de22c4` (`51a5aa2`, repertoire 2026): Frontend's `7d68998` and everything under it (the Premis drawer, the throw and storm icons, the lock UI); D234's cloud ids; the blob PUT's 503 for R2's transient errors; the preflight's «Reduce motion» WARN.
+    - `837b4f33` (`66f0968`, repertoire 2026): Frontend's cascade layers (production orders CSS as development does; the hold buttons' `touch-action` in production) and the CSS order check.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
