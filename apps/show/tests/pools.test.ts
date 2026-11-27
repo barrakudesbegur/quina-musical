@@ -173,11 +173,10 @@ dataTest('first plays per pool (D174, D178): a round on a new pool starts with a
   assert.ok(left['1'].unplayed < left['1'].songs);
 });
 
-test("a song's pools as the analysis index gives them (D268), and an older index's `pool` for one deploy", () => {
-  assert.deepEqual(indexPools({ pool: '1', pools: ['2', '1'] }), ['1', '2'], 'sorted');
-  assert.deepEqual(indexPools({ pool: '2', pools: ['2'] }), ['2']);
-  assert.deepEqual(indexPools({ pool: '2' }), ['2'], 'an index from before D268');
-  assert.deepEqual(indexPools({}), ['1'], 'an index from before pools');
+test("a song's pools as the analysis index gives them (D268); none is pool 1", () => {
+  assert.deepEqual(indexPools({ pools: ['2', '1'] }), ['1', '2'], 'sorted');
+  assert.deepEqual(indexPools({ pools: ['2'] }), ['2']);
+  assert.deepEqual(indexPools({}), ['1'], 'a repertoire never split into pools');
   assert.deepEqual(indexPools({ pools: [] }), ['1']);
 });
 

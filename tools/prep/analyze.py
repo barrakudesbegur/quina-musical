@@ -283,14 +283,10 @@ def song_names(song: dict) -> dict:
 
 
 def song_pools(song: dict) -> dict:
-    """A song's pools for index.json, from songs.json (D178, D268): `pools`, sorted, and `pool`, its first, kept for one
-    deploy while the readers move to `pools` (D268's step 3 drops it). A songs.json from before D268 has only `pool`;
-    one from before pools has neither, and the index then carries neither (the engine reads that as pool "1")."""
+    """A song's pools for index.json, from songs.json (D178, D268): `pools`, sorted. A song without them is in pool
+    "1": a repertoire never split into pools is all pool 1."""
     pools = song.get("pools")
-    if not pools and song.get("pool") is None:
-        return {}
-    pools = sorted({str(p) for p in pools}) if pools else [str(song["pool"])]
-    return {"pool": str(song["pool"]) if song.get("pool") is not None else pools[0], "pools": pools}
+    return {"pools": sorted({str(p) for p in pools}) if pools else ["1"]}
 
 
 def index_row(a: dict) -> dict:

@@ -40,10 +40,8 @@ export interface IndexSong {
   id: number;
   title: string;
   artist: string;
-  /** Its pools (D178, D268), from songs.json: sorted, one or more; absent in an index from before D268. */
+  /** Its pools (D178, D268), from songs.json: sorted, one or more. Absent means pool "1" (DEFAULT_POOL). */
   pools?: string[];
-  /** Its first pool, kept beside `pools` for one deploy; absent before pools. Goes with D268's step 3. */
-  pool?: string;
   excluded: boolean;
   hooks: { id: string; valid: boolean }[];
 }
@@ -89,13 +87,12 @@ export function checkAnalysis(a: unknown): Analysis {
 }
 
 /**
- * A song's pools as the index gives them (D268): `pools`, each a pool id. An index from before D268 has only `pool`
- * (absent: DEFAULT_POOL); that fallback goes with D268's step 3, once every index carries `pools`.
+ * A song's pools as the index gives them (D268): `pools`, each a pool id, sorted. A row without them is in
+ * DEFAULT_POOL: a repertoire never split into pools is all pool 1.
  */
-export function indexPools(s: Pick<IndexSong, 'pool' | 'pools'>): string[] {
+export function indexPools(s: Pick<IndexSong, 'pools'>): string[] {
   const pools = Array.isArray(s.pools) ? s.pools.filter(isPoolId) : [];
-  if (pools.length) return [...new Set(pools)].sort();
-  return [isPoolId(s.pool) ? s.pool : DEFAULT_POOL];
+  return pools.length ? [...new Set(pools)].sort() : [DEFAULT_POOL];
 }
 
 /** The songs a round may use: in the index, not excluded, with at least one valid hook. */

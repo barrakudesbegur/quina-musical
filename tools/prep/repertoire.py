@@ -1,7 +1,7 @@
 """Song repertoires: which songs the offline preparation works on, and where each repertoire's files live.
 
 A Repertoire is an edition's prepared songs, all prepared together (GLOSSARY.md, D178): it holds the edition's
-pools (Pool 1, Pool 2), each song tagged with its `pool`. Song ids are unique within a repertoire and restart at 1 in
+pools (Pool 1, Pool 2), each song tagged with its `pools` (D268: a song can be in several). Song ids are unique within a repertoire and restart at 1 in
 every repertoire, so each repertoire keeps its own data, cache and overrides. A repertoire is described by a manifest,
 data/repertoires/<name>.json; apps/show/README.md › "Repertoires" documents the format, and
 apps/show/relay/repertoire.ts is the TypeScript twin of this module (tools/prep/tests/test_repertoire.py checks that

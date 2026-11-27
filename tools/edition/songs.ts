@@ -6,8 +6,8 @@ import { DEFAULT_POOL, type EditionSong } from '@quina/protocol';
 import type { Repertoire } from '../../apps/show/relay/repertoire.ts';
 
 /** songs.json's entries → the edition's songs, in its order: each with its print names (tools/prep/print_names.py)
- * as its plain title and artist, Spotify's own where it has none, and its `pools` (sorted; a songs.json from before
- * D268 has only `pool`, and a song with neither is in pool "1"). */
+ * as its plain title and artist, Spotify's own where it has none, and its `pools` (sorted; a song without them is in
+ * pool "1": a repertoire never split into pools is all pool 1). */
 export function songsOf(json: unknown): EditionSong[] {
   if (!Array.isArray(json)) throw new Error('songs.json: a list of songs');
   return json.map((s: Record<string, unknown>) => ({
@@ -20,7 +20,7 @@ export function songsOf(json: unknown): EditionSong[] {
 
 function poolsOf(s: Record<string, unknown>): string[] {
   const pools = Array.isArray(s.pools) ? s.pools.filter((p): p is string => typeof p === 'string') : [];
-  return pools.length ? [...new Set(pools)].sort() : [typeof s.pool === 'string' ? s.pool : DEFAULT_POOL];
+  return pools.length ? [...new Set(pools)].sort() : [DEFAULT_POOL];
 }
 
 export function editionSongs(repertoire: Pick<Repertoire, 'songsJson'>): EditionSong[] {

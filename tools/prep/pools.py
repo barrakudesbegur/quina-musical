@@ -3,8 +3,7 @@
 Each pool is a Spotify playlist fetched on its own (tools/prep/playlist-fetcher writes <folder>/output/songs.json).
 This step writes the repertoire's songs.json: every song once, with one id unique across the night, and the pools it
 is in (D268: "all songs are available in a shared pool"; each pool lists its songs, so a song can be in several).
-Each song has `pools` (sorted, one or more) and, for one deploy while its readers move to `pools`, `pool`: the pool
-that lists it first (D268's step 3 drops it). What to read is data/repertoires/<name>/pools.json:
+Each song has `pools`: sorted, one or more (D268's step 3 dropped the old `pool`). What to read is data/repertoires/<name>/pools.json:
 
     { "pools": [
         { "pool": "1", "songsJson": "data/media/2026/pool1/output/songs.json", "ids": "order", "firstId": 1 },
@@ -82,6 +81,8 @@ class PoolSpec:
 class Merged:
     songs: list[dict]
     notes: list[str] = field(default_factory=list)
+    # Each song id's own pool, the one whose playlist brought it in: for the summary only, not written (D268).
+    origin: dict[int, str] = field(default_factory=dict)
 
 
 class PoolsError(ValueError):
@@ -124,6 +125,7 @@ def merge(pools: list[tuple[PoolSpec, list[dict]]]) -> Merged:
     notes: list[str] = []
     by_track: dict[str, dict] = {}
     by_song: dict[tuple[str, str], dict] = {}
+    origin: dict[int, str] = {}  # id() of each kept entry → its own pool
     for spec, playlist in pools:
         kept: list[dict] = []
         in_this: set[str] = set()
@@ -141,14 +143,15 @@ def merge(pools: list[tuple[PoolSpec, list[dict]]]) -> Merged:
             # The earlier entry wins: its id, names and fields; this pool only joins its `pools`.
             if spec.pool not in earlier["pools"]:
                 earlier["pools"] = sorted([*earlier["pools"], spec.pool])
-            notes.append(f"pool {spec.pool} #{position} «{song.get('title')}»: shared with pool {earlier['pool']} (#{earlier.get('id')})")
+            notes.append(f"pool {spec.pool} #{position} «{song.get('title')}»: shared with pool {origin[id(earlier)]} (#{earlier.get('id')})")
         for song in out_of_order(kept):
             notes.append(f"pool {spec.pool} \"{song.get('title')}\" ({song.get('artist')}): out of title order")
         if spec.ids == "order":
-            numbered = [{**s, "id": spec.first_id + i, "pool": spec.pool, "pools": [spec.pool]} for i, s in enumerate(kept)]
+            numbered = [{**s, "id": spec.first_id + i, "pools": [spec.pool]} for i, s in enumerate(kept)]
         else:
-            numbered = [{**s, "pool": spec.pool, "pools": [spec.pool]} for s in kept]
+            numbered = [{**s, "pools": [spec.pool]} for s in kept]
         for s in numbered:
+            origin[id(s)] = spec.pool
             if s.get("spotifyId"):
                 by_track.setdefault(s["spotifyId"], s)
             by_song.setdefault(song_key(s), s)
@@ -160,13 +163,13 @@ def merge(pools: list[tuple[PoolSpec, list[dict]]]) -> Merged:
     dupes = sorted({i for i in ids if ids.count(i) > 1})
     if dupes:
         raise PoolsError(f"two pools give the same song id: {dupes[:10]} (move a pool's firstId past the earlier pools)")
-    return Merged(out, notes)
+    return Merged(out, notes, {s["id"]: origin[id(s)] for s in out})
 
 
 def with_print_names(merged: Merged, fixes: dict[str, dict]) -> Merged:
     """The merged songs with their print names: the rules, then the fixes by Spotify id; an unused fix is a note."""
     named = print_names.apply(merged.songs, fixes)
-    return Merged(named.songs, merged.notes + named.warnings)
+    return Merged(named.songs, merged.notes + named.warnings, merged.origin)
 
 
 def out_of_order(songs: list[dict]) -> list[dict]:
@@ -211,7 +214,7 @@ def main() -> int:
         print(f"⚠️  {note}")
     for spec in specs:
         ids = [s["id"] for s in merged.songs if spec.pool in s["pools"]]
-        own = [s["id"] for s in merged.songs if s["pool"] == spec.pool]
+        own = [s["id"] for s in merged.songs if merged.origin.get(s["id"]) == spec.pool]
         span = f"own ids {min(own)}–{max(own)}" if own else "no own songs"
         print(f"pool {spec.pool}: {len(ids)} songs, {len(ids) - len(own)} of them shared with an earlier pool; {span} ({spec.ids})")
     shared = [s["id"] for s in merged.songs if len(s["pools"]) > 1]
