@@ -1,12 +1,16 @@
 <script lang="ts">
   // The QR button at a card number field's end (D141; NumberField's `trailing`): just the softened QR code, no frame
   // (the user, 26 Nov: rounded finders and dots). The parent opens the camera; a found number goes into the field.
+  // The dots (§8 Y3, «put its dots in better places»): one lattice for everything, 2-unit modules 1 unit apart (rows and
+  // columns at 2, 5, 8, 11, 14, 17, 20 of the 24 grid), so every dot keeps the same 1-unit gap from the finders and
+  // from its neighbours; the finders fill the three 3 × 3 corners, and the dots the band between them and the fourth
+  // corner. A run of modules is one pill [x, y, w, h].
   import { S } from '../strings.ts';
 
   let { onclick }: { onclick: () => void } = $props();
   const QR_DOTS = [
-    [12.1, 2.4, 2, 3.4], [12.1, 8, 2, 3.6], [2.4, 12.1, 3.4, 2], [8, 12.1, 2, 2], [14.2, 12.1, 3.6, 2], [19.8, 12.1, 2, 3.6],
-    [12.1, 14.2, 2, 2], [16.2, 16.2, 2, 2], [12.1, 18.2, 3.6, 2], [18.2, 18.2, 3.6, 2], [14.2, 20, 2, 2], [19.8, 20, 2, 2],
+    [11, 2, 2, 5], [2, 11, 2, 2], [8, 11, 2, 2], [14, 11, 5, 2],
+    [14, 14, 2, 2], [20, 14, 2, 2], [11, 17, 2, 2], [17, 17, 2, 2], [11, 20, 8, 2],
   ] as const;
 </script>
 
