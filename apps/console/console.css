@@ -2597,7 +2597,8 @@
 }
 
 /* The verdict under the card, the presenters' only (D108): on a pass one centred line; on a fail a big ✗ «Fallada»
-   beside the song that failed it */
+   beside the song that failed it. The ✗ is the outline look, as heavy as the screen boards' (S1, 27 Nov): its line is
+   the word's stem (.13 × the word's size, over an ink line), not a lone icon's thinner size step. */
 .check-verdict {
   display: flex;
   flex-wrap: wrap;
@@ -2642,6 +2643,7 @@
   border-radius: 50%;
   background: var(--palette-solid);
   color: var(--color-white);
+  font-size: var(--text-2xl);
 }
 
 /* the fail's ✗ disc is the error red #E8363D, as every ✗ (U175 item 4, D211) */
@@ -2650,8 +2652,8 @@
 }
 
 .check-verdict__cross .icon {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
 .check-verdict__word {

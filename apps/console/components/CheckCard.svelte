@@ -112,7 +112,7 @@
     {#if pass}
       <p class="check-verdict__line"><Icon name="check" /><span>{text}</span></p>
     {:else}
-      <p class="check-verdict__fail" aria-hidden="true"><span class="check-verdict__cross"><Icon name="cross" alone /></span><span class="check-verdict__word">{S.check.failed}</span></p>
+      <p class="check-verdict__fail" aria-hidden="true"><span class="check-verdict__cross"><Icon name="cross" outline /></span><span class="check-verdict__word">{S.check.failed}</span></p>
       {#if failedSong !== null}
         <div class="check-verdict__song" aria-hidden="true">
           <Cover songId={failedSong} size="md" />

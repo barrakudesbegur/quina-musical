@@ -7,6 +7,7 @@
 <script lang="ts">
   import { untrack, type Snippet } from 'svelte';
   import Button from '../../packages/ui/components/Button.svelte';
+  import Icon from '../../packages/ui/icons/Icon.svelte';
   import LogoTile from '../../packages/ui/components/LogoTile.svelte';
   import Nino from '../../packages/ui/components/Nino.svelte';
   import Plate from '../../packages/ui/components/Plate.svelte';
@@ -196,11 +197,11 @@
   {#if !phone}
     <section class="ds-gallery__section" aria-labelledby="s-e5">
       <h2 id="s-e5">E5 · Verdict (console)</h2>
-      <p class="ds-prose">A recipe: VERDICT_LOOKS gives the outcome its palette; the words take its text shade, the ✗ disc its fill. The projector’s verdict draws through Plate, the rays and Nino.</p>
+      <p class="ds-prose">A recipe: VERDICT_LOOKS gives the outcome its palette; the words take its text shade, the ✗ disc its fill; the ✗ is the outline look, its line the word’s stem (S1). The projector’s verdict draws through Plate, the rays and Nino.</p>
       <div class="ds-gallery__grid ds-gallery__grid--wide">
-        {#snippet v1()}<div class="check-verdict" data-pass="true" data-color={VERDICT_LOOKS.pass.color}><p class="check-verdict__line"><span>Té línia: la fila 2 és completa</span></p></div>{/snippet}
+        {#snippet v1()}<div class="check-verdict" data-pass="true" data-color={VERDICT_LOOKS.pass.color}><p class="check-verdict__line"><Icon name="check" /><span>Té línia: la fila 2 és completa</span></p></div>{/snippet}
         {@render cell('pass · green', v1)}
-        {#snippet v2()}<div class="check-verdict" data-pass="false" data-color={VERDICT_LOOKS.fail.color}><p class="check-verdict__fail"><span class="check-verdict__cross">✗</span><span class="check-verdict__word">Fallada</span></p></div>{/snippet}
+        {#snippet v2()}<div class="check-verdict" data-pass="false" data-color={VERDICT_LOOKS.fail.color}><p class="check-verdict__fail"><span class="check-verdict__cross"><Icon name="close" outline /></span><span class="check-verdict__word">Fallada</span></p></div>{/snippet}
         {@render cell('fail · red', v2)}
       </div>
     </section>
