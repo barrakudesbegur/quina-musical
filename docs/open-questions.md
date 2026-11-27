@@ -152,6 +152,11 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U210 · How many cards per printed page
+The user is comparing five page layouts on the card design canvas's "Layouts" page, with nothing decided: 3×1 (today), 2×1 horizontal, 2×1 vertical, 2×2 horizontal and 2×2 vertical. The layout also sets the amounts: each card type is printed in whole pages, today a multiple of 3 (399 and 300), and duplex alignment is checked per layout on the proof sheet (U52).
+- (a) Keep 3×1.
+- (b) Another layout (say which).
+
 ### U201 · Which sides get the sticker circle and the name space (D231)
 The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
 - (a) Both sides, so the card is recognisable whichever side is up.
