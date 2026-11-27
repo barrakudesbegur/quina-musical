@@ -175,6 +175,23 @@ test('the relay, the LAN and the cloud', () => {
   assert.equal(c.clockCheck('sntp: Exchange failed: Timeout').status, 'warn');
 });
 
+test("Reduce motion: on warns (the projector's drum would spin in its calm mode, unlike the phones'), off or never set passes", () => {
+  const ok = (stdout: string) => ({ ok: true, stdout, stderr: '' });
+  const failed = (stderr: string) => ({ ok: false, stdout: '', stderr });
+  const on = c.reduceMotionCheck(ok('1\n'));
+  assert.equal(on.status, 'warn');
+  assert.match(on.detail, /Turn off Reduce motion: System Settings → Accessibility → Display/);
+  assert.equal(c.reduceMotionCheck(ok('0\n')).status, 'pass');
+  // defaults' own words when the key or the whole domain was never written: the default, off.
+  assert.equal(c.reduceMotionCheck(failed("Error: Could not find key 'reduceMotion' in domain 'com.apple.universalaccess'.\n")).status, 'pass');
+  assert.equal(c.reduceMotionCheck(failed("Error: Domain 'com.apple.universalaccess' not found.\n")).status, 'pass');
+  assert.equal(c.reduceMotionCheck(failed('The domain/default pair of (com.apple.universalaccess, reduceMotion) does not exist\n')).status, 'pass');
+  // Any other failure (a timeout, no defaults) or an odd answer: couldn't read it, look by hand.
+  assert.equal(c.reduceMotionCheck(failed('spawn defaults ENOENT')).status, 'warn');
+  assert.match(c.reduceMotionCheck(failed('')).detail, /^couldn't read it/);
+  assert.equal(c.reduceMotionCheck(ok('maybe')).status, 'warn');
+});
+
 test('voice cues (D198, D202–D204): FAIL a cue missing or without its file, WARN while any is a placeholder', () => {
   const names = [...VOICE_CUES, 'chime', 'fanfare'];
   const all = (placeholder: (name: string) => boolean) => ({ schemaVersion: 1, voices: names.map((name) => ({ name, durationSec: 1, placeholder: placeholder(name) })) });

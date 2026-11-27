@@ -51,6 +51,17 @@ async function shell(cmd: string, args: string[]): Promise<string | null> {
   }
 }
 
+/** As `shell`, but keeping a failure's stderr (to tell a setting never set from a failed read). */
+async function command(cmd: string, args: string[]): Promise<checks.CommandResult> {
+  try {
+    const { stdout, stderr } = await run(cmd, args, { timeout: 15_000 });
+    return { ok: true, stdout, stderr };
+  } catch (error) {
+    const e = error as { stdout?: string; stderr?: string; message?: string };
+    return { ok: false, stdout: e.stdout ?? '', stderr: e.stderr ?? e.message ?? '' };
+  }
+}
+
 async function getJson(url: string, headers: Record<string, string> = {}, timeoutMs = 5000): Promise<{ ok: boolean; status?: number; body?: unknown; error?: string; ms: number }> {
   const t0 = Date.now();
   try {
@@ -180,6 +191,7 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
     out.push(checks.audioOutputCheck(profile ? JSON.parse(profile) : null));
     const displays = await shell('system_profiler', ['SPDisplaysDataType', '-json']);
     out.push(checks.displaysCheck(displays ? JSON.parse(displays) : null, o.laptopOnly === true));
+    out.push(checks.reduceMotionCheck(await command('defaults', ['read', 'com.apple.universalaccess', 'reduceMotion'])));
     out.push(...checks.sleepChecks((await shell('pmset', ['-g'])) ?? '', (await shell('pmset', ['-g', 'assertions'])) ?? ''));
     out.push(checks.powerCheck((await shell('pmset', ['-g', 'batt'])) ?? ''));
     out.push(checks.clockCheck(await shell('sntp', ['-t', '3', 'time.apple.com'])));

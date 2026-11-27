@@ -236,6 +236,26 @@ export function clockCheck(sntpOutput: string | null): Check {
   return check('Laptop', 'Clock', 'pass', detail);
 }
 
+/** A command's outcome, for the checks that tell a missing setting from a failed read. */
+export interface CommandResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * macOS «Reduce motion», from `defaults read com.apple.universalaccess reduceMotion`: on, the projector's drum spins
+ * in its calm mode (`prefers-reduced-motion: reduce`), which the phones' drum (D237) doesn't model. WARN when it
+ * prints 1; a missing key (or domain) is the default, off.
+ */
+export function reduceMotionCheck(read: CommandResult): Check {
+  const value = read.ok ? read.stdout.trim() : null;
+  if (value === '1') return check('Laptop', 'Reduce motion', 'warn', "on: the projector's drum would spin in its calm mode and stop matching the phones'. Turn off Reduce motion: System Settings → Accessibility → Display");
+  if (value === '0') return check('Laptop', 'Reduce motion', 'pass', 'off');
+  if (!read.ok && /does not exist|Could not find key|not found/.test(read.stderr)) return check('Laptop', 'Reduce motion', 'pass', 'off (never set)');
+  return check('Laptop', 'Reduce motion', 'warn', "couldn't read it (defaults): check System Settings → Accessibility → Display → Reduce motion is off");
+}
+
 /** Free disk space where the show writes (the journal, the Blend renders). */
 export function diskCheck(freeBytes: number): Check {
   const gb = freeBytes / 1e9;
