@@ -19,7 +19,7 @@ import { chooseFeed, type FeedChoice, type PlayerFeed } from './feed/feed.ts';
 import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/cleanup.ts';
 import { watchUpdates } from './device/updates.ts';
 import { devHints, homeHref, parseRoute, type DevHints } from './logic/router.ts';
-import { MemoryStorage, PlayerStorage, addCard, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
+import { MemoryStorage, PlayerStorage, addCard, documentCookies, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
 import { loadBootState } from './logic/boot-cache.ts';
 
 const edition = PLAYER_CONFIG.edition;
@@ -87,7 +87,8 @@ async function main(): Promise<void> {
   const choice = chooseFeed({ search: location.search, hostname: location.hostname, dev: import.meta.env.DEV });
   const hints = devHints(location.search);
   const route = parseRoute(location, { edition });
-  const storage = choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore());
+  // The cards live in localStorage, with a copy in a cookie for an iPhone's Home Screen app (logic/card-cookie.ts).
+  const storage = choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore(), PLAYER_CONFIG.storageKey, documentCookies());
   const feed = await createFeed(choice);
   const sounds = new Sounds();
   registerTouchSounds(sounds);

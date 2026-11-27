@@ -3,8 +3,11 @@
 // round view of the current Game.
 // - Data of another edition is wiped automatically (on load, and when the feed reports a new edition).
 // - A new gameId (a rehearsal, then the real night) resets only the round view, never the cards.
-// The transforms are pure; PlayerStorage is the thin I/O wrapper around a Storage.
+// - The card list is also copied to a first-party cookie (logic/card-cookie.ts): an iPhone's Home Screen app starts
+//   with empty storage but a copy of the cookies, so it restores the cards from there (D221).
+// The transforms are pure; PlayerStorage is the thin I/O wrapper around a Storage and the cookie.
 import { PLAYER_CONFIG } from '../config.ts';
+import { cardCookieClear, cardCookieWrite, readCardCookie } from './card-cookie.ts';
 import { isAraView, type AraView } from './tabs.ts';
 
 export const DATA_VERSION = 1;
@@ -41,7 +44,8 @@ export const cardLabel = (card: Pick<SavedCard, 'id' | 'name'>): string => card.
 
 export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, araView: null, gameId: null, dismissed: [] });
 
-export type LoadOutcome = 'fresh' | 'kept' | 'otherEdition' | 'corrupt';
+/** `restored`: localStorage was empty, and the cards came back from the cookie's copy (an iPhone's Home Screen app). */
+export type LoadOutcome = 'fresh' | 'kept' | 'restored' | 'otherEdition' | 'corrupt';
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -199,29 +203,70 @@ export class MemoryStorage implements StorageLike {
   }
 }
 
-/** Loads and saves PlayerData. Storage may be missing or throw (private mode, quota): it never throws. */
+/** The page's cookies (document.cookie), or a fake in tests. */
+export interface CookieJarLike {
+  /** Every cookie of the page, `a=1; b=2`. */
+  read(): string;
+  /** One `document.cookie = …` assignment. */
+  write(assignment: string): void;
+  /** The page is on https (the cookie gets `Secure`). */
+  readonly secure: boolean;
+}
+
+/** document.cookie, if there is one. */
+export function documentCookies(): CookieJarLike | null {
+  if (typeof document === 'undefined') return null;
+  return {
+    read: () => document.cookie,
+    write: (assignment) => void (document.cookie = assignment),
+    secure: location.protocol === 'https:',
+  };
+}
+
+/** The cards kept in the cookie, as this edition's data (cleaned like any stored data), or null if it holds none. */
+export function restoreFromCookie(cookies: string, edition: string, nowMs: number): PlayerData | null {
+  const cards = readCardCookie(cookies, edition);
+  if (!cards?.length) return null;
+  const raw = JSON.stringify({ ...emptyData(edition), cards: cards.map((c) => ({ ...c, addedAtMs: nowMs })) });
+  const { data } = readData(raw, edition);
+  return data.cards.length ? data : null;
+}
+
+/** Loads and saves PlayerData. Storage and cookies may be missing or throw (private mode, quota): it never throws. */
 export class PlayerStorage {
   private readonly storage: StorageLike | null;
   private readonly key: string;
+  private readonly cookies: CookieJarLike | null;
 
-  constructor(storage: StorageLike | null, key = PLAYER_CONFIG.storageKey) {
+  constructor(storage: StorageLike | null, key = PLAYER_CONFIG.storageKey, cookies: CookieJarLike | null = null) {
     this.storage = storage;
     this.key = key;
+    this.cookies = cookies;
   }
 
-  load(edition: string): { data: PlayerData; outcome: LoadOutcome } {
+  load(edition: string, nowMs = Date.now()): { data: PlayerData; outcome: LoadOutcome } {
     let raw: string | null = null;
     try {
       raw = this.storage?.getItem(this.key) ?? null;
     } catch {
       raw = null;
     }
+    if (raw === null) {
+      const restored = this.cookies ? restoreFromCookie(this.readCookies(), edition, nowMs) : null;
+      if (restored) {
+        this.save(restored);
+        return { data: restored, outcome: 'restored' };
+      }
+    }
     const result = readData(raw, edition);
-    if (result.outcome === 'otherEdition' || result.outcome === 'corrupt') this.save(result.data);
+    // Another edition's or unreadable data is replaced; kept data refreshes the cookie's copy (cards added before
+    // the copy existed).
+    if (result.outcome !== 'fresh') this.save(result.data);
     return result;
   }
 
   save(data: PlayerData): boolean {
+    this.mirror(data);
     try {
       this.storage?.setItem(this.key, JSON.stringify(data));
       return Boolean(this.storage);
@@ -230,12 +275,35 @@ export class PlayerStorage {
     }
   }
 
-  /** "Esborrar dades": forget everything of this app on this phone. */
+  /** "Esborrar dades": forget everything of this app on this phone, the cookie's copy too. */
   clear(): void {
     try {
       this.storage?.removeItem(this.key);
     } catch {
       // nothing to clear
+    }
+    try {
+      this.cookies?.write(cardCookieClear(this.cookies.secure));
+    } catch {
+      // no cookies here
+    }
+  }
+
+  private readCookies(): string {
+    try {
+      return this.cookies?.read() ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** The card list's copy in the cookie (logic/card-cookie.ts). */
+  private mirror(data: PlayerData): void {
+    if (!this.cookies) return;
+    try {
+      this.cookies.write(cardCookieWrite(data.edition, data.cards, this.cookies.secure));
+    } catch {
+      // no cookies here (a sandboxed page): localStorage still has them
     }
   }
 
