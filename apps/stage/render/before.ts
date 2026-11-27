@@ -8,7 +8,7 @@ import type { NightCardType } from '../model/night.ts';
 import type { BeforeView, StageView } from '../view.ts';
 import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import { h, setData, setHidden, setText } from './dom.ts';
-import { CountdownChip, MiniCard, SponsorList, sadIcon, starIcon, stickerImage } from './parts.ts';
+import { CountdownChip, MiniCard, SponsorStrip, sadIcon, starIcon, stickerImage } from './parts.ts';
 import { QrBlock } from './qr.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
@@ -44,7 +44,7 @@ export class BeforeScene implements SceneRenderer<BeforeView> {
   private readonly night: HTMLElement;
   private readonly countdown = new CountdownChip('start');
   private readonly qr = new QrBlock('before__qr');
-  private readonly sponsors = new SponsorList(null, 'sponsors--strip before__sponsors', true);
+  private readonly sponsors = new SponsorStrip('before__sponsors');
   private body: BeforeView | null = null;
   private nightKey = '';
 

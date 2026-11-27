@@ -1,0 +1,46 @@
+/*
+ * G5 · QrBlock: the «scan your card» QR on its panel, before the Game only (components-v2.md § 8; the projector builds it
+ * in apps/stage/render/qr.ts). Since the user's canvas comment #89 (27 Nov) the panel is pure white, the QR's own
+ * paper, so the code and its panel read as one white square, with one more step of padding round it (18 → 24 px).
+ * Sizes are variables in :where(), so the scene sets the panel's size.
+ */
+:where(.qr-block) {
+  --qr-block-size: 34.25rem;
+  --qr-block-pad: 1.5rem;
+  --qr-block-border: 0.375rem;
+  --qr-block-radius: var(--radius-xl);
+  --qr-block-drop: 0.625rem;
+}
+
+.qr-block {
+  box-sizing: border-box;
+  display: block;
+  width: var(--qr-block-size);
+  aspect-ratio: 1;
+  padding: var(--qr-block-pad);
+  border: var(--qr-block-border) solid var(--color-ink);
+  border-radius: var(--qr-block-radius);
+  background: var(--color-white);
+  box-shadow: 0 var(--qr-block-drop) 0 var(--color-shadow, var(--color-night-shadow));
+  place-content: center;
+}
+
+.qr-block .qr__frame {
+  width: 100%;
+  height: 100%;
+}
+
+.qr-block .qr__code {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+}
+
+.qr-block .qr__paper {
+  fill: var(--color-white);
+}
+
+.qr-block .qr__ink {
+  fill: var(--color-ink);
+}

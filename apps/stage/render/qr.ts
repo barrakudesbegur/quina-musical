@@ -7,6 +7,7 @@ import { qrPathData } from '../model/qr.ts';
 import type { LinkView } from '../view.ts';
 import { STAGE_TEXT } from '../strings.ts';
 import { h, setHidden, setText } from './dom.ts';
+import '../../../packages/ui/components/qr-block.css';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -43,7 +44,7 @@ export class QrBlock {
   constructor(extraClass = '') {
     this.code = h('div', 'qr__frame');
     this.label = h('p', { class: 'qr__url', hidden: true });
-    this.root = h('figure', { class: `qr ${extraClass}`.trim(), attrs: { role: 'img' } }, this.code, this.label);
+    this.root = h('figure', { class: `qr qr-block ${extraClass}`.trim(), attrs: { role: 'img' } }, this.code, this.label);
   }
 
   set(link: LinkView): void {

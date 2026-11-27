@@ -78,8 +78,14 @@ export const STAGE = Object.freeze({
     confetti: Object.freeze({ count: 180, durationMs: 9000, origin: Object.freeze({ x: 0.5, y: 0.56 }), spread: 0.5 }),
     celebration: Object.freeze({ stickers: 'lastStanding' as NinoMoment | null }),
   }),
-  /** The sponsor strip before the Game and in the Interval (`sponsor-pages`): plates per row, and how long a page shows. */
-  sponsorsPerPage: 8,
+  /**
+   * The sponsor strip before the Game and in the Interval (G4; the user's canvas comment #88): `sponsor-pan`'s speed,
+   * and one tile's step (240 px tile + 24 px gap in sponsors.css; only used until the row is measured). Under reduced
+   * motion it pages instead (`sponsor-pages`): tiles per page (as many as fit the 1344 px row) and how long a page shows.
+   */
+  sponsorPanPxPerSec: 60,
+  sponsorTileStepPx: 264,
+  sponsorsPerPage: 5,
   sponsorPageMs: 8000,
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */

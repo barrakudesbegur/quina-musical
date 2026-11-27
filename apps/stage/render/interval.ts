@@ -10,7 +10,7 @@ import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '..
 import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
-import { CountdownChip, MiniCard, SponsorList, stickerImage } from './parts.ts';
+import { CountdownChip, MiniCard, SponsorStrip, stickerImage } from './parts.ts';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
@@ -81,7 +81,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
   private readonly plate: HTMLElement;
   private readonly ring = new CountdownRing();
   private readonly words = new CountdownChip('back');
-  private readonly sponsors = new SponsorList(null, 'sponsors--strip interval__sponsors', true);
+  private readonly sponsors = new SponsorStrip('interval__sponsors');
   /** The coming round's card and price (`price-tag`, U5). */
   private readonly price = new MiniCard('interval__price-card');
   private readonly priceText: HTMLElement;

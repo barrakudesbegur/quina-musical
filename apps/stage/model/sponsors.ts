@@ -19,3 +19,14 @@ export function sponsorPage<T>(list: readonly T[], perPage: number, nowMs: numbe
   const items = Array.from({ length: size }, (_, i) => list[(start + i) % list.length]);
   return { index, pages, items };
 }
+
+/**
+ * `sponsor-pan` (27 Nov, the user's canvas comment #88): one list's length (px, the doubled track's half) at a slow
+ * steady speed makes one loop; the loop starts at a random point (`random` in [0, 1)), so the first logos on screen
+ * differ each time. Returns CSS times in seconds: the duration and a negative delay.
+ */
+export function panTiming(listPx: number, pxPerSec: number, random: number): { durationS: number; delayS: number } {
+  const durationS = Math.max(1, listPx / Math.max(1, pxPerSec));
+  const at = Math.min(Math.max(random, 0), 0.999_999);
+  return { durationS, delayS: -at * durationS };
+}

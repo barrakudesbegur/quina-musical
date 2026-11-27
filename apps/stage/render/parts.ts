@@ -8,7 +8,8 @@ import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
-import { sponsorPage } from '../model/sponsors.ts';
+import { panTiming, sponsorPage } from '../model/sponsors.ts';
+import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
 import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
 import { ninoElement, setNino } from '../../../packages/ui/components/nino-dom.ts';
 
@@ -64,25 +65,56 @@ export class PrizeBlock {
   }
 }
 
-/** The sponsors, as logos when there are some, else as names. Hidden without sponsors. */
+/** The sponsors, as logos when there are some, else as names, all at once (the closing credits, which roll). Hidden
+ * without sponsors. Before the Game and in the Interval the strip is SponsorStrip. */
 export class SponsorList {
   readonly root: HTMLElement;
   private readonly list: HTMLUListElement;
   private key = '';
-  private sponsors: readonly SponsorView[] = [];
-  /** The page shown (`paged` strips), or -1 before the first. */
-  private page = -1;
 
-  /**
-   * `paged`: one row at a time, turning the page every STAGE.sponsorPageMs (`sponsor-pages`: before the Game and in
-   * the Interval); otherwise every sponsor at once (the closing credits, which roll).
-   */
-  private readonly paged: boolean;
-
-  constructor(title: string | null, extraClass = '', paged = false) {
-    this.paged = paged;
-    this.list = h('ul', { class: 'sponsors__list', data: paged ? { anim: 'sponsor-pages' } : {} });
+  constructor(title: string | null, extraClass = '') {
+    this.list = h('ul', 'sponsors__list');
     this.root = h('section', { class: `sponsors ${extraClass}`.trim(), hidden: true }, title ? h('h2', 'sponsors__title', title) : null, this.list);
+  }
+
+  set(sponsors: readonly SponsorView[]): void {
+    setHidden(this.root, sponsors.length === 0);
+    const key = sponsors.map((s) => `${s.label}|${s.logo ?? ''}`).join('\n');
+    if (key === this.key) return;
+    this.key = key;
+    this.list.replaceChildren(
+      ...sponsors.map((s) => {
+        const logo = s.logo ? logoPicture(s.logo, s.label) : null;
+        return h('li', 'sponsors__item', logo ?? h('span', 'sponsors__name', s.label));
+      }),
+    );
+  }
+}
+
+/**
+ * G4 · SponsorStrip before the Game and in the Interval (27 Nov, the user's canvas comment #88, D-v): one row of big
+ * logo tiles (packages/ui/components/sponsors.css) panning slowly without end, so every sponsor shows, from a random
+ * point of the loop each time the scene shows (`sponsor-pan`). With reduced motion it stands still and turns its page
+ * every STAGE.sponsorPageMs instead (`sponsor-pages`), from a random page. The tiles are decorative copies of the
+ * list for the loop; the first copy carries the names.
+ */
+export class SponsorStrip {
+  readonly root: HTMLElement;
+  private readonly track: HTMLUListElement;
+  private readonly reduced = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  private key = '';
+  private sponsors: readonly SponsorView[] = [];
+  private page = -1;
+  /** Where the pages start (reduced motion), a random page's worth of time. */
+  private pageOffsetMs = 0;
+  /** One list's length (px), once measured. */
+  private listPx = 0;
+  private lastTickMs = Number.NEGATIVE_INFINITY;
+
+  constructor(extraClass = '') {
+    this.track = h('ul', 'sponsor-strip__track');
+    this.root = h('section', { class: `sponsor-strip ${extraClass}`.trim(), hidden: true, data: { mode: 'pan' } }, this.track);
+    this.reduced?.addEventListener('change', () => this.redraw(0));
   }
 
   set(sponsors: readonly SponsorView[], nowMs = 0): void {
@@ -91,31 +123,61 @@ export class SponsorList {
     if (key === this.key) return;
     this.key = key;
     this.sponsors = sponsors;
-    this.page = -1;
-    if (this.paged) this.tick(nowMs);
-    else this.show(sponsors);
+    this.redraw(nowMs);
   }
 
-  /** A paged strip turns its page when the clock says so; the swap fades through the hook's CSS. */
+  /**
+   * Every frame while the scene is on screen. After a gap (the scene shows again) the loop starts from a new random
+   * point. Under reduced motion the page turns when the clock says so; the swap crossfades.
+   */
   tick(nowMs: number): void {
-    if (!this.paged || !this.sponsors.length) return;
-    const page = sponsorPage(this.sponsors, STAGE.sponsorsPerPage, nowMs, STAGE.sponsorPageMs);
+    const shownAgain = nowMs - this.lastTickMs > 1000;
+    this.lastTickMs = nowMs;
+    if (shownAgain && this.sponsors.length && this.listPx > 0) this.startAnywhere();
+    if (this.root.dataset.mode !== 'pages' || !this.sponsors.length) return;
+    const page = sponsorPage(this.sponsors, STAGE.sponsorsPerPage, nowMs + this.pageOffsetMs, STAGE.sponsorPageMs);
     if (page.index === this.page) return;
     const first = this.page === -1;
     this.page = page.index;
-    this.show(page.items);
-    setData(this.list, 'pages', String(page.pages));
-    if (!first) playAnim(this.list, 'sponsor-pages');
+    this.track.replaceChildren(...page.items.map((s) => tile(s, false)));
+    if (!first) playAnim(this.track, 'sponsor-pages');
   }
 
-  private show(sponsors: readonly SponsorView[]): void {
-    this.list.replaceChildren(
-      ...sponsors.map((s) => {
-        const logo = s.logo ? logoPicture(s.logo, s.label) : null;
-        return h('li', 'sponsors__item', logo ?? h('span', 'sponsors__name', s.label));
-      }),
-    );
+  private redraw(nowMs: number): void {
+    const pan = !this.reduced?.matches;
+    setData(this.root, 'mode', pan ? 'pan' : 'pages');
+    this.page = -1;
+    if (!pan) {
+      this.listPx = 1;
+      this.startAnywhere();
+      this.tick(nowMs);
+      return;
+    }
+    this.track.replaceChildren(...this.sponsors.map((s) => tile(s, false)), ...this.sponsors.map((s) => tile(s, true)));
+    // One list's length is half the doubled track (each tile carries its gap); measured once laid out.
+    requestAnimationFrame(() => {
+      this.listPx = this.track.scrollWidth / 2 || this.sponsors.length * STAGE.sponsorTileStepPx;
+      this.startAnywhere();
+    });
   }
+
+  /** A random point of the loop (or a random page). */
+  private startAnywhere(): void {
+    if (this.root.dataset.mode === 'pages') {
+      this.pageOffsetMs = Math.floor(Math.random() * Math.ceil(this.sponsors.length / STAGE.sponsorsPerPage)) * STAGE.sponsorPageMs;
+      this.page = -1;
+      return;
+    }
+    this.listPx = this.track.scrollWidth / 2 || this.listPx;
+    const { durationS, delayS } = panTiming(this.listPx, STAGE.sponsorPanPxPerSec, Math.random());
+    setVar(this.root, '--pan-duration', `${durationS.toFixed(2)}s`);
+    setVar(this.root, '--pan-delay', `${delayS.toFixed(2)}s`);
+  }
+}
+
+/** One sponsor's tile in the strip; the loop's second copy is hidden from assistive tech. */
+function tile(s: SponsorView, copy: boolean): HTMLElement {
+  return h('li', copy ? { attrs: { 'aria-hidden': 'true' } } : {}, logoTileElement({ name: s.label, logo: s.logo }));
 }
 
 /** A sponsor's logo: its JPEG XL where the browser reads it, else the PNG (packages/ui/data/media.ts). */

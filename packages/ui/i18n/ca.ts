@@ -28,6 +28,8 @@ export const CA = {
   potra: 'Quina potra!',
   prize: { line: 'Premi de línia', bingo: 'Premi de quina', standing: "Premi de l'últim dempeus" } satisfies Record<WinKind, string>,
   sponsoredBy: (name: string) => `Gentilesa de ${name}`,
+  /** The sponsors' logos (G4): the phone's list and its dialog. */
+  sponsors: { list: 'Patrocinadors', show: (name: string) => `${name}: mostra el logo més gran`, close: 'Tanca' },
   /** Under a bundle's headline prizes: how many smaller ones come with them. */
   morePrizes: (n: number) => (n === 1 ? 'i 1 premi més' : `i ${n} premis més`),
   checking: (id: number) => `Comprovant el cartró ${id}…`,

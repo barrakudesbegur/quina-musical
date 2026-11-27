@@ -1,0 +1,284 @@
+/*
+ * G4 · LogoTile, SponsorStrip (the projector) and SponsorList (the phone): components-v2.md § 8, redone after the user's
+ * canvas comments #88 and #90 (D-v): the logos much bigger; on the projector one row that pans slowly so every sponsor
+ * shows, from a random point (ANIMATIONS.md › sponsor-pan); on the phone a list of big tiles that scrolls, a tap opening
+ * the logo larger in a dialog that grows out of its tile (› logo-open). The projector builds the same markup in
+ * sponsors-dom.ts. Every size is a variable set in :where(), so a scene places the strip by setting variables.
+ */
+
+/* ---- LogoTile: a logo contained on white (many logos are dark on transparent, drawn for white paper) ----------- */
+:where(.logo-tile) {
+  --logo-tile-w: 10rem;
+  --logo-tile-h: 7.5rem;
+  --logo-tile-pad: var(--space-2) var(--space-3);
+  --logo-tile-border: var(--line-width);
+  --logo-tile-radius: var(--radius-md);
+  --logo-tile-drop: 4px;
+  --logo-tile-name: 1rem;
+}
+
+:where([data-density='projector']) :where(.logo-tile) {
+  --logo-tile-w: 15rem;
+  --logo-tile-h: 9.375rem;
+  --logo-tile-pad: 0.75rem 1.125rem;
+  --logo-tile-border: 0.3125rem;
+  --logo-tile-radius: 1.25rem;
+  --logo-tile-drop: 0.375rem;
+  --logo-tile-name: 1.75rem;
+}
+
+.logo-tile {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: var(--logo-tile-w);
+  height: var(--logo-tile-h);
+  margin: 0 0 var(--logo-tile-drop);
+  padding: var(--logo-tile-pad);
+  overflow: hidden;
+  border: var(--logo-tile-border) solid var(--color-ink);
+  border-radius: var(--logo-tile-radius);
+  background: var(--color-white);
+  box-shadow: 0 var(--logo-tile-drop) 0 var(--color-shadow, var(--color-night-shadow));
+  color: var(--color-ink);
+}
+
+.logo-tile__picture {
+  display: contents;
+}
+
+.logo-tile__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+/* A sponsor with no logo yet: its name, as big as fits. */
+.logo-tile__name {
+  font-family: var(--font-body);
+  font-size: var(--logo-tile-name);
+  font-weight: 900;
+  line-height: 1.05;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* ---- SponsorStrip (projector): one row, panning without end; still pages under reduced motion ---------------- */
+:where(.sponsor-strip) {
+  --sponsor-gap: 1.5rem;
+  --sponsor-fade: 4rem;
+  --pan-duration: 60s;
+  --pan-delay: 0s;
+}
+
+.sponsor-strip {
+  overflow: hidden;
+  padding-block: var(--space-2);
+  mask-image: linear-gradient(to right, transparent, #000 var(--sponsor-fade), #000 calc(100% - var(--sponsor-fade)), transparent);
+}
+
+.sponsor-strip__track {
+  display: flex;
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each tile carries the gap after it, so the doubled list is exactly twice one list and the loop has no seam. */
+.sponsor-strip__track > li {
+  flex: none;
+  padding-inline-end: var(--sponsor-gap);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sponsor-strip[data-mode='pan'] .sponsor-strip__track {
+    animation: sponsor-pan var(--pan-duration) linear var(--pan-delay) infinite;
+  }
+}
+
+@keyframes sponsor-pan {
+  to {
+    translate: -50% 0;
+  }
+}
+
+/* Reduced motion: one still page, centred, the next one crossfading in (sponsor-pages). */
+.sponsor-strip[data-mode='pages'] {
+  mask-image: none;
+}
+
+.sponsor-strip[data-mode='pages'] .sponsor-strip__track {
+  width: auto;
+  justify-content: center;
+  transition: opacity 400ms ease-in-out;
+}
+
+.sponsor-strip[data-mode='pages'] .sponsor-strip__track > li:last-child {
+  padding-inline-end: 0;
+}
+
+.sponsor-strip[data-mode='pages'] .sponsor-strip__track.is-entering {
+  opacity: 0;
+  transition: none;
+}
+
+/* ---- SponsorList (phone): big tiles, two a row, in a list that scrolls --------------------------------------- */
+.sponsor-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0 0 var(--space-1);
+  list-style: none;
+}
+
+.sponsor-list .logo-tile {
+  --logo-tile-w: 100%;
+  --logo-tile-h: auto;
+  aspect-ratio: 4 / 3;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sponsor-list .logo-tile:focus-visible {
+  outline: var(--ring-width, 4px) solid var(--color-focus, var(--color-gold));
+  outline-offset: var(--ring-gap, 4px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-motion='full']) .sponsor-list .logo-tile {
+    transition: translate var(--dur-press-up) var(--ease-bounce);
+  }
+
+  :where([data-density='console'], [data-motion='full']) .sponsor-list .logo-tile:active {
+    translate: 0 calc(var(--logo-tile-drop) - 1px);
+    box-shadow: 0 1px 0 var(--color-shadow, var(--color-night-shadow));
+    transition-duration: var(--dur-press);
+  }
+}
+
+/* ---- the logo's dialog (phone): the logo large on white, its name, a close button ---------------------------- */
+.logo-dialog {
+  box-sizing: border-box;
+  width: min(100% - 2 * var(--space-4), 30rem);
+  max-height: calc(100dvh - 2 * var(--space-6));
+  padding: var(--space-4);
+  overflow: auto;
+  border: var(--line-width-bold) solid var(--color-ink);
+  border-radius: var(--radius-xl);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 6px 0 var(--color-night-shadow);
+}
+
+.logo-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+.logo-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgb(10 14 38 / 0.72);
+}
+
+.logo-dialog[open] {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.logo-dialog__logo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+.logo-dialog__name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.375rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.logo-dialog__close {
+  position: absolute;
+  top: var(--corner-inset, 8px);
+  right: var(--corner-inset, 8px);
+  display: grid;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.logo-dialog__close > svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* logo-open: the logo morphs out of its tile (a view transition); the backdrop fades. Reduced motion: no morph,
+   the dialog and its backdrop fade (opacity only). */
+::view-transition-group(sponsor-logo) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(sponsor-logo),
+::view-transition-new(sponsor-logo) {
+  height: 100%;
+  object-fit: contain;
+}
+
+:root[data-logo-closing]::view-transition-group(sponsor-logo) {
+  animation-duration: 240ms;
+}
+
+.logo-dialog,
+.logo-dialog::backdrop {
+  transition:
+    opacity 200ms var(--ease-out),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+
+.logo-dialog:not([open]),
+.logo-dialog:not([open])::backdrop {
+  opacity: 0;
+}
+
+/* With a view transition the morph is the motion: no second fade under it. */
+.logo-dialog[data-morph],
+.logo-dialog[data-morph]::backdrop {
+  transition: none;
+}
+
+@starting-style {
+  .logo-dialog[open],
+  .logo-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(sponsor-logo),
+  ::view-transition-old(sponsor-logo),
+  ::view-transition-new(sponsor-logo) {
+    animation: none;
+  }
+}
