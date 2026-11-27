@@ -51,7 +51,8 @@
   vertical-align: middle;
 }
 
-.prizes__round > * + * {
+/* Each part after the first (as `* + *`, checked against every element of the page; `:where()` keeps its weight). */
+.prizes__round > :where(:not(:first-child)) {
   margin-inline-start: var(--space-2);
 }
 

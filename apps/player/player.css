@@ -722,11 +722,14 @@
   padding: var(--space-3) var(--player-gutter) var(--space-6);
 }
 
-.player__main > * + * {
+/* Each child after the first (`* + *`, written so a sibling is never looked at: as `* + *` it was checked against every
+   element of the page, which made adding or removing any element, a drum tile or a Historial row, restyle all its
+   siblings and everything inside them). `:where()` keeps the weight `* + *` had. */
+.player__main > :where(:not(:first-child)) {
   margin-top: var(--space-5);
 }
 
-.player__main section > * + * {
+.player__main section > :where(:not(:first-child)) {
   margin-top: var(--space-3);
 }
 
