@@ -265,3 +265,19 @@ export function swipeFrame(plan: SwipePlan, pos: number): SwipeFrame {
     comingY: plan.comingY - (plan.switchShown[1] ? left : 0),
   };
 }
+
+// ---- the card holding the playing song (`card-hint`) --------------------------------------------------------------
+
+export type HintSide = 'up' | 'down';
+
+/**
+ * Which way the card is, or null when it shows: `top`/`bottom` are the card's edges in the screen, `from`/`to` the band
+ * the home shows clear (under the stuck strip, above the corners). A card counts as shown once a quarter of the band or
+ * of the card is in it.
+ */
+export function hintSide(cards: readonly { top: number; bottom: number }[], from: number, to: number): HintSide | null {
+  if (!cards.length) return null;
+  const need = (c: { top: number; bottom: number }) => Math.min((to - from) / 4, (c.bottom - c.top) / 4);
+  if (cards.some((c) => Math.min(c.bottom, to) - Math.max(c.top, from) >= need(c))) return null;
+  return cards[0].bottom <= from ? 'up' : 'down';
+}

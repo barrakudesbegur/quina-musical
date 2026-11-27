@@ -194,3 +194,14 @@ test('the indicator and the floating «+ Cartró» follow the track, never past 
   assert.equal(swipeFrame(plan, 1.05).cartrons, 1);
   assert.equal(swipeFrame(plan, -0.05).collapse, 0, 'pulled the wrong way: the drum stays');
 });
+
+test('the hint to the card holding the song: none while one shows; else up or down to the first one (§8 Y2)', async () => {
+  const { hintSide } = await import('../../../../player/logic/home-swipe.ts');
+  const band = [160, 724] as const; // under the stuck strip, above the corners
+  assert.equal(hintSide([], ...band), null, 'no card holds it');
+  assert.equal(hintSide([{ top: 300, bottom: 740 }], ...band), null, 'it shows');
+  assert.equal(hintSide([{ top: 690, bottom: 1130 }], ...band), 'down', 'only its top edge peeks out above the corners: still a hint');
+  assert.equal(hintSide([{ top: 900, bottom: 1340 }], ...band), 'down');
+  assert.equal(hintSide([{ top: -500, bottom: -60 }, { top: 1400, bottom: 1840 }], ...band), 'up', 'the first one is above');
+  assert.equal(hintSide([{ top: -500, bottom: -60 }, { top: 400, bottom: 840 }], ...band), null, 'another one shows');
+});

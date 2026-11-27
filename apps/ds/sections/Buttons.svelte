@@ -127,7 +127,7 @@
     <CornerButton {...PLAYER_CORNERS.prizes} />
     <CornerButton {...PLAYER_CORNERS.schedule} expanded />
   </div>
-  <p class="ds-gallery__note">Placement: <code>--corner-button-column</code> (the player sets its column) and <code>--corner-button-size</code>; leave it out with <code>{'{#if}'}</code> during a Celebration (D-b).</p>
+  <p class="ds-gallery__note">Placement: <code>--corner-button-column</code> (the player sets its column) and <code>--corner-button-size</code>; leave it out with <code>{'{#if}'}</code> during a Celebration (D-b). It sits <code>--corner-button-drop</code> (12 px) lower than centred on the corner, and its dark outline is concentric, 4 px all round (§8 Y2).</p>
 </section>
 
 <section class="ds-gallery__section ds-buttons" aria-labelledby="a6">
@@ -137,6 +137,10 @@
     {@render cell('the quiet preset: navy on the night, the floating shadow (the user’s phone test)', f1)}
     {#snippet f2()}<Button color="orange" floating size="s" icon="plus" label="Cartró" sound="floating" />{/snippet}
     {@render cell('orange, for comparison', f2)}
+    {#snippet f3()}<IconButton floating icon="arrow-down" label="Veure el cartró que té aquesta cançó" class="ds-hint" />{/snippet}
+    {@render cell('the hint to the card holding the song, off screen (card-hint, §8 Y2): a 48 px paper disc, no words', f3)}
+    {#snippet f4()}<IconButton floating icon="arrow-up" label="Veure el cartró que té aquesta cançó" class="ds-hint" />{/snippet}
+    {@render cell('… pointing up, under the strip', f4)}
   </div>
 </section>
 

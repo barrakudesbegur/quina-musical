@@ -89,6 +89,9 @@ export const LINE_ICONS = {
   menu: ['M4 6h16', 'M4 12h16', 'M4 18h16'],
   'chevron-right': ['M9 5l7 7-7 7'],
   'chevron-left': ['M15 5l-7 7 7 7'],
+  /** The phone's hint to a card off screen (card-hint, §8 Y2). */
+  'arrow-up': ['M12 20V5', 'M6 11l6-6 6 6'],
+  'arrow-down': ['M12 4v15', 'M6 13l6 6 6-6'],
   /** ⌫: the ✗ sits in the box's middle, well clear of its right edge at any stroke (#49). */
   backspace: ['M22.5 4.5H8.5L1.5 12l7 7.5h14z', 'M13 9.5l5 5', 'M18 9.5l-5 5'],
   /** ↵ on a keypad. */

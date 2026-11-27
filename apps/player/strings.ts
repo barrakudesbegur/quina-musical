@@ -38,6 +38,8 @@ export const S = {
   addCard: 'Cartró',
   /** Those buttons' name for screen readers. */
   addCardLabel: 'Afegir un cartró',
+  /** The hint to the card holding the song, off screen (card-hint): its name is spoken, never drawn. */
+  cardHint: (card: string) => `Veure ${card}, que té aquesta cançó`,
   /** The add-card drawer's title (board Mobil-Afegir-Estats). */
   padTitle: 'Afegir cartró',
   /** The number field's name for screen readers (the field shows only "#" and the digits). */

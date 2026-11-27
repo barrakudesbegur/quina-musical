@@ -165,7 +165,6 @@
   overflow-x: clip;
   font-size: var(--player-text-body);
   font-weight: var(--player-weight-body);
-  padding-bottom: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
   background-color: var(--color-bg);
   background-image: var(--sky-stars);
   background-size: var(--sky-stars-size);
@@ -256,11 +255,13 @@
    outline. The lamps sit over every glass and under every outline (the bulbs aren't stacking contexts), so a halo
    never covers ink. The pattern runs on CSS keyframes from each bulb's custom properties (`--i`, `--step`, `--seed`);
    its moving rules are with the other opt-in motion, near the end of this file. */
+/* It stays at the top while the home scrolls under it (§8 Y2); the home fades out under its bulbs (.player__scroll). */
 .heat {
-  position: relative;
-  flex: none;
+  position: fixed;
+  z-index: 4;
+  top: env(safe-area-inset-top, 0px);
+  inset-inline: 0;
   height: var(--player-garland-height);
-  margin-top: env(safe-area-inset-top, 0px);
   pointer-events: none;
   --heat-warm: clamp(0, (var(--heat, 0) - 0.2) * 4, 1);
   --heat-hot: clamp(0, (var(--heat, 0) - 0.6) * 5, 1);
@@ -532,6 +533,7 @@
 /* ---- status strips ------------------------------------------------------------------------------------- */
 .player__alerts {
   position: sticky;
+  /* the scroll box's padding keeps it under the garland */
   top: 0;
   z-index: var(--z-banner);
   max-height: 45dvh;
@@ -659,7 +661,8 @@
 }
 
 /* ---- the column (D212): the garland, header, strips and home stay phone-wide; the sky fills the rest ----------- */
-.player > :where(.heat, .app-header, .player__alerts, .player__main) {
+.player > .heat,
+.player__scroll > :where(.app-header, .player__alerts, .player__main) {
   box-sizing: border-box;
   inline-size: 100%;
   max-inline-size: var(--player-column);
@@ -817,14 +820,14 @@
   cursor: grab;
 }
 
-/* The sides fade into the night, as the tiles turn away from the window. */
-.drum::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to right, rgb(24 32 74 / 0.7), rgb(24 32 74 / 0) 34%, rgb(24 32 74 / 0) 66%, rgb(24 32 74 / 0.7));
-  pointer-events: none;
+/* The sides fade as the tiles turn away from the window: a mask, so they fade into whatever is behind (the night, the
+   strip's panel, the your-song gold: §8 Y1), never a gradient painted in night blue. The mask narrows to the strip's
+   window as the drum collapses (player.css › the drum's two looks). */
+.drum {
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 0.3), #000 34%, #000 66%, rgb(0 0 0 / 0.3));
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 100% 100%;
 }
 
 .drum__ring {
@@ -2489,19 +2492,23 @@
   clip-path: inset(calc(var(--reel-c) * -1rem) calc(var(--reel-c) * (50% - 3.5rem / var(--reel-strip-scale))));
 }
 
-/* The strip's own shade at the window's sides, fading in as the night's fades out. */
-.reel .drum::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  inset: 0 calc(50% - 3.5rem / var(--reel-strip-scale));
-  background: linear-gradient(to right, rgb(35 46 102 / 0.55), rgb(35 46 102 / 0) 30%, rgb(35 46 102 / 0) 70%, rgb(35 46 102 / 0.55));
-  opacity: var(--reel-c);
-  pointer-events: none;
+/* The side fade's mask narrows from the drum's width to the strip's 112 px window. */
+.reel .drum {
+  mask-size: calc(100% - var(--reel-c) * (100% - 7rem / var(--reel-strip-scale))) 100%;
 }
 
-.reel .drum::after {
-  opacity: calc(1 - var(--reel-c));
+/* While it turns, the previous song's words stay, faded (reel-spin, §8 Y2): an opacity fade, with motion or not. */
+.reel__words > * {
+  transition: opacity 300ms var(--ease-out);
+}
+
+.reel[data-stale] .reel__words > * {
+  opacity: 0.45;
+}
+
+/* The whole drum is the way to the card holding the song (drum-pick). */
+.reel[data-pick] {
+  cursor: pointer;
 }
 
 .reel .drum__tile {
@@ -2534,8 +2541,8 @@
   inset: 0 1rem auto 8.5rem;
   height: var(--reel-strip-height);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
   text-align: left;
   opacity: var(--reel-in);
@@ -2544,8 +2551,31 @@
 }
 
 .reel__words[data-look='strip'] .reel__caption {
+  flex: 1;
   gap: 1px;
   min-width: 0;
+}
+
+/* The marks of the phone's cards holding the song, at the strip's right end (§8 Y2): overlapping a little when many. */
+.reel__marks {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.reel__mark {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  filter: drop-shadow(0 2px 0 rgb(23 19 43 / 0.45));
+}
+
+.reel__mark + .reel__mark {
+  margin-left: -0.5rem;
+}
+
+.reel__words[data-look='strip'] > .reel__waiting {
+  flex: 1;
 }
 
 .reel__words[data-look='strip'] .reel__title {
@@ -2895,17 +2925,6 @@
 }
 
 /* ---- the corner buttons (D73; style B, D87): paper discs centred on the bottom corners ---------------------- */
-.corners::before {
-  /* The home screen fades out under them, so a row passing behind never fights the buttons. */
-  content: '';
-  position: fixed;
-  inset: auto 0 0;
-  z-index: 4;
-  height: calc(var(--player-corner-space) + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to bottom, transparent, var(--color-bg) 70%);
-  pointer-events: none;
-}
-
 /* The discs are CornerButton (packages/ui): the player's column and disc size */
 .corners .corner-button {
   --corner-button-size: var(--player-corner);
@@ -3736,10 +3755,22 @@
   color: var(--color-line);
 }
 
-/* The artist's gold would vanish on the gold: it turns ink (the user, 25 Nov). */
-.player[data-your-song='on'] .reel__artist {
+/* The artist's gold would vanish on the gold: it turns ink (the user, 25 Nov), under the full drum only: the strip has
+   its own night panel, where the words keep the night's colours (§8 Y1: ink there was illegible). */
+.player[data-your-song='on'] .reel__words[data-look='full'] .reel__artist {
   color: var(--color-line);
   text-shadow: none;
+}
+
+/* On the gold (§8 Y1): the switch's track is a see-through amber with ink words, and the cards' «No juguen» line
+   turns ink; the cog turns to paper (AppHeader). */
+.player[data-your-song='on'] .view-switch {
+  --segment-track-fill: rgb(122 64 0 / 0.22);
+  --segment-text: var(--color-ink);
+}
+
+.player[data-your-song='on'] .cards__subheading {
+  color: var(--color-line);
 }
 
 /* 0 → 95 % → 15 % → 85 % → 0 over 600 ms: the board's flicker, from option B (without the bolt). */

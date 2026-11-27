@@ -58,6 +58,9 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   play: { fixture: 'play', cards: 'default' },
   live: { fixture: 'play', cards: 'default', live: true },
   spin: { fixture: 'spin', cards: 'default', live: true },
+  /** The home's spins (§8 Y2): «Waka Waka» lands (one line), then «Vivir Así Es Morir de Amor» (two lines: the full drum
+   *  grows, the views slide), then «Dancing in the Moonlight» (shorter again); the words stay, faded, while it turns. */
+  spinLong: { fixture: 'spin', cards: 'default', live: true, liveFirst: [73, 16, 69] },
   suspense: { fixture: 'suspense', cards: 'default' },
   hold: { fixture: 'hold', cards: 'default' },
   /** Card 123's top Line is complete: plain marks, nothing announced. */

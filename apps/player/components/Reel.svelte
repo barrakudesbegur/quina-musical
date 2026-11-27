@@ -9,12 +9,17 @@
   // The ring is a real cylinder (D-s, #82, #83): one transform per tile round the shared axis, the radius from the tile
   // count (player.css). While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff
   // wobble that never turns a hidden cover into view, logic/drum-tug.ts); a vertical drag scrolls the page.
+  // While it turns, the words never say «?»: the previous song stays under it, faded (`reel-spin`, §8 Y2), so nothing
+  // changes size as a Spin starts, turns or stops. `marks`: the identities of the phone's cards holding the song, shown
+  // in the strip (§8 Y2). `onpick`: a tap on the drum (never a tug) goes to the first of those cards (`drum-pick`). The
+  // sides fade into whatever is behind by a mask (§8 Y1: on the gold too), never a gradient painted in night blue.
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
   import { tugAngle, tugAxis } from '../logic/drum-tug.ts';
   import { DRUM_TILES, drumTurn, reelOffset, reelState } from '../logic/reel.ts';
   import { S } from '../strings.ts';
   import Cover from '../../../packages/ui/components/Cover.svelte';
+  import CardMark from './CardMark.svelte';
 
   let {
     spin,
@@ -26,6 +31,8 @@
     reduced,
     compact = false,
     stopped = false,
+    marks = [],
+    onpick,
     ontick,
   }: {
     spin: PublicSpin | null;
@@ -40,6 +47,10 @@
     reduced: boolean;
     compact?: boolean;
     stopped?: boolean;
+    /** The phone's cards holding the song (their identities), drawn in the strip. */
+    marks?: readonly number[];
+    /** A tap on the drum: go to the card holding the song. */
+    onpick?: () => void;
     ontick?: () => void;
   } = $props();
 
@@ -96,7 +107,21 @@
         springing = false;
       }
     }
-    if (drag?.axis === 'x') tug = tugAngle(dx);
+    if (drag?.axis === 'x') {
+      tug = tugAngle(dx);
+      tugged = true;
+    }
+  }
+  /** The last press tugged: its click isn't a pick. */
+  let tugged = false;
+  function pick(): void {
+    if (tugged) return void (tugged = false);
+    onpick?.();
+  }
+  function pickKey(e: KeyboardEvent): void {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    onpick?.();
   }
   function tugEnd(e: PointerEvent): void {
     if (!drag || e.pointerId !== drag.id) return;
@@ -138,7 +163,18 @@
   });
 </script>
 
-<div class="reel" data-testid="reel" data-state={reel.phase} data-size={compact ? 'strip' : 'full'} data-blur={landed ? undefined : 'true'}>
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+<div
+  class="reel"
+  data-testid="reel"
+  data-state={reel.phase}
+  data-size={compact ? 'strip' : 'full'}
+  data-blur={landed ? undefined : 'true'}
+  data-stale={turning ? 'true' : undefined}
+  data-pick={onpick ? 'true' : undefined}
+  onclick={onpick ? pick : undefined}
+  onpointerdown={() => (tugged = false)}
+>
   <!-- The tug is decorative play (aria-hidden, no action). -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
@@ -178,24 +214,31 @@
   </div>
   <!-- The words in both looks (`drum-collapse`): the big ones under the ring, and the strip's beside it (a copy screen
        readers skip). Which one shows, and the morph between them, follow `--reel-collapse` (player.css). -->
-  <div class="reel__words" data-look="full">{@render words(true)}</div>
-  <div class="reel__words" data-look="strip" aria-hidden="true">{@render words(false)}</div>
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div class="reel__words" data-look="full" role={onpick ? 'button' : undefined} tabindex={onpick ? 0 : undefined} onkeydown={onpick ? pickKey : undefined}>
+    {@render words(true)}
+  </div>
+  <div class="reel__words" data-look="strip" aria-hidden="true">
+    {@render words(false)}
+    {#if marks.length}
+      <span class="reel__marks">{#each marks as identity, i (i)}<span class="reel__mark"><CardMark {identity} decorative /></span>{/each}</span>
+    {/if}
+  </div>
 </div>
 
 {#snippet words(spoken: boolean)}
-  {#if landed}
-    {#key landed.position}
+  {#if latest}
+    {#key latest.position}
       <p class="reel__caption" data-anim="landing">
-        {#if spoken}<span class="reel__label">{S.nowPlaying}</span>{/if}
-        <strong class="reel__title">{songTitle(catalog, landed.songId)}</strong>
+        {#if spoken}<span class="reel__label">{turning ? S.reelSpinning : S.nowPlaying}</span>{/if}
+        <strong class="reel__title">{songTitle(catalog, latest.songId)}</strong>
         {#if song?.artist}<span class="reel__artist">{song.artist}</span>{/if}
       </p>
     {/key}
-  {:else if (reel.phase === 'spinning' || reel.phase === 'coasting') && reduced}
-    <p class="reel__still">{S.reelSpinning}</p>
-  {:else if reel.phase === 'spinning' || reel.phase === 'coasting'}
-    <p class="reel__caption"><strong class="reel__title" aria-label={spoken ? S.reelSpinning : undefined}>?</strong></p>
   {:else}
-    <p class="reel__waiting">{reel.phase === 'stopped' ? S.reelWaiting : S.noSongYet}</p>
+    <p class="reel__waiting">
+      {reel.phase === 'stopped' ? S.reelWaiting : S.noSongYet}
+      {#if spoken && turning}<span class="reel__label">{S.reelSpinning}</span>{/if}
+    </p>
   {/if}
 {/snippet}

@@ -270,6 +270,14 @@
       {@render cell('full, landed', d1)}
       {#snippet d2()}<Reel spin={null} latest={{ position: 4, songId: 1, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact />{/snippet}
       {@render cell('compact (the strip), a long title', d2)}
+      {#snippet d5()}<Reel spin={{ startAtMs: now - 1000, landAtMs: null }} latest={{ position: 4, songId: 7, atMs: now - 9000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={true} />{/snippet}
+      {@render cell('turning: the previous song stays, faded, never «?» (§8 Y2; held still here)', d5)}
+      {#snippet d6()}<Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1, 5, 9]} />{/snippet}
+      {@render cell('compact, with the marks of the cards holding the song (§8 Y2)', d6)}
+      {#snippet d7()}<div class="ds-gallery__gold"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
+      {@render cell('on the your-song gold: the sides fade by a mask, into the gold (§8 Y1)', d7)}
+      {#snippet d8()}<div class="ds-gallery__gold"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact marks={[1]} /></div>{/snippet}
+      {@render cell('the strip on the gold: its own night panel, the night’s words', d8)}
       {#snippet d4()}<div style:--reel-collapse="0.5"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
       {@render cell('halfway through the collapse (--reel-collapse 0.5)', d4)}
       {#snippet d3()}<Reel spin={null} latest={null} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}

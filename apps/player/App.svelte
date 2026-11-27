@@ -16,6 +16,7 @@
   import Drawer from './components/Drawer.svelte';
   import DrawerFrame from './components/DrawerFrame.svelte';
   import Heat from './components/Heat.svelte';
+  import HomeFloats from './components/HomeFloats.svelte';
   import LegacyNotice from './components/LegacyNotice.svelte';
   import MenuView from './components/MenuView.svelte';
   import NumberPad from './components/NumberPad.svelte';
@@ -25,7 +26,7 @@
   import StatusStrip from './components/StatusStrip.svelte';
   import Toast from './components/Toast.svelte';
   import YourSong from './components/YourSong.svelte';
-  import { prizeRounds, roundNameOf } from './logic/view.ts';
+  import { markedIdentities, prizeRounds, roundNameOf } from './logic/view.ts';
   import { S } from './strings.ts';
 
   let { app }: { app: PlayerApp } = $props();
@@ -52,12 +53,15 @@
   <!-- The landed song is on one of the player's cards: gold behind everything until the next Spin (`your-song`). -->
   {#if app.yourSong}
     {#key app.yourSong.key}
-      <YourSong song={app.yourSong} nowMs={app.cloudNow} reduced={app.reducedMotion} layer={app.drawers.length} />
+      <YourSong song={app.yourSong} nowMs={app.cloudNow} reduced={app.reducedMotion} layer={app.drawers.length} marks={markedIdentities(app.views).get(app.yourSong.songId) ?? []} />
     {/key}
   {/if}
   <!-- Test hook: the latest landing, whatever drawer is open. -->
   <span hidden data-testid="now" data-song-id={app.latest?.songId ?? ''}></span>
   <Heat value={app.heat} off={app.offline} party={app.yourSong !== null} win={app.scene === 'celebration'} covered={app.celebrationOpen} />
+  <!-- The home scrolls in its own box under the garland, masked at the top and bottom so the content fades to
+       see-through there (the night, the gold or the beams show behind, never a painted gradient: §8 Y1, Y2). -->
+  <div class="player__scroll">
   <AppHeader {app} />
   <div class="player__alerts">
     <StatusStrip {app} />
@@ -78,6 +82,9 @@
          never the before-the-night screen by default. -->
     {#if app.state}<AraHome {app} />{/if}
   </main>
+  </div>
+  <!-- Over the masked home: «+ Cartró» and the hint to the card holding the song (AraHome drives them). -->
+  {#if app.state}<HomeFloats {app} />{/if}
 
   <!-- The corners leave during a Celebration (U175 item 16), and come back when it's closed. -->
   {#if !app.celebrationOpen}

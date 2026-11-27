@@ -64,6 +64,13 @@
   background: var(--color-night);
 }
 
+/* The your-song ground (D74), for the drum on gold. */
+.ds-gallery__gold {
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--player-your-song-gold, var(--color-gold));
+}
+
 .ds-gallery__cells.check-grid {
   grid-template-columns: repeat(auto-fill, minmax(7rem, 8rem));
 }

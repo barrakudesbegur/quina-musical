@@ -22,7 +22,21 @@
   const sticker = (moment: NinoMoment, seed: number | null | undefined): string | undefined =>
     seed === null || seed === undefined ? undefined : `url("${ninoUrl(ninoFor(moment, seed))}")`;
 
-  let { app, compact = false, stopped = false }: { app: PlayerApp; compact?: boolean; stopped?: boolean } = $props();
+  let {
+    app,
+    compact = false,
+    stopped = false,
+    marks = [],
+    onpick,
+  }: {
+    app: PlayerApp;
+    compact?: boolean;
+    stopped?: boolean;
+    /** The phone's cards holding the song playing now (their identities), for the drum's strip (§8 Y2). */
+    marks?: readonly number[];
+    /** A tap on the drum goes to the first of those cards (`drum-pick`). */
+    onpick?: () => void;
+  } = $props();
   const prizes = $derived(prizeRounds(app.plan, app.state, app.data.cards.map((c) => c.id)));
   const focusPrizes = $derived(prizes.find((r) => r.number === app.focusRound) ?? null);
   const justPlayed = $derived(prizes.find((r) => r.number === app.round?.number) ?? null);
@@ -115,6 +129,8 @@
       reduced={app.reducedMotion}
       {compact}
       {stopped}
+      {marks}
+      {onpick}
       ontick={() => app.blip('tick')}
     />
   {/if}

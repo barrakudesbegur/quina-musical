@@ -6,6 +6,31 @@
  * motion allowed (`.player[data-motion='full']`); reduced motion keeps the information still.
  */
 
+/* ---- the home's scroll box (§8 Y1, Y2) ------------------------------------------------------------------------- */
+/* The header, the status strips and the home scroll in one box over the whole screen, under the garland (fixed at the
+   top, player.css). The box is masked: the content fades to see-through under the garland and under the corners, so
+   whatever is behind shows there (the night, the gold, the beams), never a gradient painted in one colour. No
+   pull-to-refresh, no scroll chaining to the page, no sideways scroll. */
+.player__scroll {
+  --home-fade-top: calc(env(safe-area-inset-top, 0px) + var(--player-garland-height));
+  --home-fade-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--player-corner-space));
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden auto;
+  overscroll-behavior: none;
+  padding-top: var(--home-fade-top);
+  padding-bottom: var(--home-fade-bottom);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--home-fade-top) * 0.35),
+    #000 var(--home-fade-top),
+    #000 calc(100% - var(--home-fade-bottom)),
+    transparent calc(100% - var(--home-fade-bottom) * 0.3)
+  );
+}
+
 /* ---- layout --------------------------------------------------------------------------------------------------- */
 .ara {
   display: grid;
@@ -33,7 +58,7 @@
    strip's panel covers what has scrolled under it). */
 .ara[data-drum] > .ara__top {
   position: sticky;
-  top: var(--ara-alerts, 0px);
+  top: var(--ara-sticky-top, 0px);
   z-index: 3;
   height: var(--reel-strip-height, 5.125rem);
   pointer-events: none;
@@ -46,6 +71,41 @@
 .ara[data-drum] > .ara__top .drum,
 .ara[data-drum] > .ara__top .reel::before {
   pointer-events: auto;
+}
+
+/* The way to the card holding the song (drum-pick): the ring, the strip's panel and, while they show, the big words.
+   They stop taking taps once they have faded (past 55 % of the collapse), so a row under them gets its own tap. */
+.ara[data-drum] > .ara__top .reel[data-pick] .reel__words[data-look='full'] {
+  pointer-events: auto;
+}
+
+.ara[data-drum][data-view='cartrons']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+  visibility: hidden;
+}
+
+@keyframes drum-words-hit {
+  0%,
+  55% {
+    visibility: visible;
+  }
+
+  56%,
+  100% {
+    visibility: hidden;
+  }
+}
+
+.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+  animation: drum-words-hit linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
+  animation-timing-function: steps(1, jump-start);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+    animation-timing-function: linear;
+  }
 }
 
 /* Cartrons always shows the strip. */
@@ -68,7 +128,7 @@
 
 .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > .now {
   animation: drum-collapse linear both;
-  animation-timeline: scroll(root block);
+  animation-timeline: scroll(nearest block);
   animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
   animation-timing-function: steps(1, jump-start);
 }
@@ -216,5 +276,52 @@ html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
       translate 220ms var(--ease-out),
       scale 220ms var(--ease-out),
       visibility 0s linear 220ms;
+  }
+}
+
+/* ---- the hint to the card holding the song, off screen (card-hint, §8 Y2) --------------------------------------- */
+.home-hint {
+  position: fixed;
+  z-index: 6;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.home-hint[data-side='down'] {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+}
+
+/* Over «+ Cartró» when it shows: its 54 px pill and a gap. */
+.home-hint[data-above-add] {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem + 3.375rem + 0.75rem);
+}
+
+.home-hint[data-side='up'] {
+  top: calc(var(--home-hint-top, 0px) + 0.5rem);
+}
+
+/* A bigger paper disc than the finalist's ✕: it has to be found at a glance. */
+.home-hint__button {
+  --icon-button-size: 3rem;
+  --icon-button-icon: 1.5rem;
+  pointer-events: auto;
+}
+
+@keyframes home-hint-nudge {
+  50% {
+    translate: 0 calc(var(--home-hint-way) * 4px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .home-hint {
+    --home-hint-way: 1;
+    animation: home-hint-nudge 1.6s ease-in-out infinite;
+  }
+
+  :where(.player[data-motion='full']) .home-hint[data-side='up'] {
+    --home-hint-way: -1;
   }
 }

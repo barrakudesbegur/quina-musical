@@ -40,3 +40,9 @@
 .ds-buttons .ds-gallery__stage > :is(.mini-button, .icon-button, .text-link) {
   justify-self: start;
 }
+
+/* The home's card-hint disc (home.css › .home-hint__button): bigger than the finalist's ✕. */
+.ds-buttons .ds-hint {
+  --icon-button-size: 3rem;
+  --icon-button-icon: 1.5rem;
+}

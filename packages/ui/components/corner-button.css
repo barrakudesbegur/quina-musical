@@ -8,6 +8,8 @@
   --corner-button-column: 100%;
   --corner-button-icon: 3.125rem;
   --corner-button-tilt: -6deg;
+  /* how far below centred on the corner the disc sits (§8 Y2: a little lower) */
+  --corner-button-drop: 0.75rem;
 }
 
 :where(.corner-button[data-side='right']) {
@@ -17,7 +19,7 @@
 .corner-button {
   position: fixed;
   z-index: 5;
-  bottom: calc(env(safe-area-inset-bottom, 0px) - var(--corner-button-size) / 2);
+  bottom: calc(env(safe-area-inset-bottom, 0px) - var(--corner-button-size) / 2 - var(--corner-button-drop));
   width: var(--corner-button-size);
   height: var(--corner-button-size);
   min-height: 0;
@@ -40,14 +42,14 @@
   left: calc(max(0px, (100% - var(--corner-button-column)) / 2) - var(--corner-button-size) / 2);
   box-shadow:
     inset -10px 10px 0 rgb(255 255 255 / 0.45),
-    0 -2px 0 4px rgb(10 14 38 / 0.35);
+    0 0 0 4px rgb(10 14 38 / 0.35);
 }
 
 .corner-button[data-side='right'] {
   right: calc(max(0px, (100% - var(--corner-button-column)) / 2) - var(--corner-button-size) / 2);
   box-shadow:
     inset 10px 10px 0 rgb(255 255 255 / 0.45),
-    0 -2px 0 4px rgb(10 14 38 / 0.35);
+    0 0 0 4px rgb(10 14 38 / 0.35);
 }
 
 /* Its press is its own (corner-press), never the generic button's sink */

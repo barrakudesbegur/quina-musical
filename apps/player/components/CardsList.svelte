@@ -34,7 +34,7 @@
   {:else}
     <ul class="cards__list">
       {#each app.playingViews as view, i (view.saved.id)}
-        <li class="cards__item" data-highlight={app.highlightCard === view.saved.id ? 'true' : undefined}>
+        <li class="cards__item" data-card-id={view.saved.id} data-highlight={app.highlightCard === view.saved.id ? 'true' : undefined}>
           <CardPanel
             {view}
             catalog={app.catalog}
