@@ -214,7 +214,11 @@ async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response
       try {
         await bucket.put(key, request.body, { sha256: target.sha256 });
       } catch (error) {
-        return text(400, `refused: ${error instanceof Error ? error.message : String(error)} (the content doesn't match its SHA-256?)`);
+        // Only R2's checksum refusal is the sender's fault (400). Anything else (`… (10001)`, R2's internal error, or
+        // unknown) is a 503 with its message: the laptop retries 5xx and 429, while a 400 stops the whole push.
+        const message = error instanceof Error ? error.message : String(error);
+        if (isDigestMismatch(message)) return text(400, `refused: the content doesn't match its SHA-256: ${message}`);
+        return text(503, `R2 failed, try again: ${message}`);
       }
       return json({ ok: true });
     }
@@ -267,6 +271,15 @@ async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response
       return json({ ok: true, deleted: hashes.length });
     }
   }
+}
+
+/**
+ * Whether R2 refused a put because the body doesn't hash to the checksum it was given: R2's BadDigest, code 10037,
+ * which the binding throws as `put: The SHA-256 checksum you specified did not match what we received. … (10037)`
+ * (miniflare's r2 bucket.worker.js, BadDigest, mirrors R2's wording and code).
+ */
+export function isDigestMismatch(message: string): boolean {
+  return /\(10037\)\s*$/.test(message) || /checksum you specified did not match/i.test(message);
 }
 
 /** Every blob in the bucket, hash → size: one list call per 1,000. */

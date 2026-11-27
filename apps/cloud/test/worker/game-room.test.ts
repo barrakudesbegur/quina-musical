@@ -1,6 +1,6 @@
 // The GameRoom end to end in workerd: the laptop uploads its journal, phones follow the public feed, the snapshot
 // survives the GameRoom restarting, and the export replays to the same record.
-import { env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
+import { createExecutionContext, env, evictDurableObject, runDurableObjectAlarm, runInDurableObject, SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
 import { PROTOCOL_VERSION, parseResumeToken, publicPlan, replayJournal, type GamePlan, type JournalEntry } from '@quina/protocol';
 import { followFeed, type PublicView } from '@quina/protocol';
@@ -8,7 +8,7 @@ import type { CloudMessage, LinkMessage } from '../../src/link-protocol.ts';
 import { CLOSE } from '../../src/link-protocol.ts';
 import type { EditionExport, RoomStats } from '../../src/api.ts';
 import type { GameRoom } from '../../src/game-room.ts';
-import { roomOf } from '../../src/worker.ts';
+import worker, { isDigestMismatch, roomOf } from '../../src/worker.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
 import { PLAN, SECRET_PRIZE } from '../support/plan.ts';
 
@@ -695,6 +695,26 @@ describe('the media sync (R2, content-addressed: D248)', () => {
     expect((await putBlob('0'.repeat(64), bytes)).status).toBe(400);
     expect(new Uint8Array(await (await SELF.fetch(`${BASE}/api/sync/blobs/${digest}`)).arrayBuffer())).toEqual(bytes);
     expect((await SELF.fetch(`${BASE}/api/sync/blobs/${'1'.repeat(64)}`)).status).toBe(404);
+  });
+
+  it("answers R2's other failures 503, so the laptop retries them: only a checksum mismatch is a 400", async () => {
+    // The Worker with a bucket whose put fails as R2 did on a real push (2026-11-27, after 874 of 2,785 blobs).
+    const failing = (message: string) => ({ put: async () => { throw new Error(message); } }) as unknown as R2Bucket;
+    const putWith = async (message: string) => {
+      const bytes = enc('fLaC pretend audio');
+      const request = new Request(`${BASE}/api/sync/blobs/${await sha(bytes)}`, { method: 'PUT', headers: { 'content-length': String(bytes.length) }, body: bytes });
+      return worker.fetch!(request as Parameters<NonNullable<typeof worker.fetch>>[0], { ...env, MEDIA: failing(message) } as never, createExecutionContext());
+    };
+    const internal = await putWith('put: We encountered an internal error. Please try again. (10001)');
+    expect(internal.status).toBe(503);
+    expect(await internal.text()).toContain('We encountered an internal error. Please try again. (10001)');
+    expect((await putWith('put: something new')).status).toBe(503);
+    expect((await putWith('put: The SHA-256 checksum you specified did not match what we received. (10037)')).status).toBe(400);
+    // The wording R2 (here miniflare) really throws for the wrong body is recognised, and nothing else.
+    expect(isDigestMismatch('put: We encountered an internal error. Please try again. (10001)')).toBe(false);
+    const wrong = await putBlob('0'.repeat(64), enc('other bytes'));
+    expect(wrong.status).toBe(400);
+    expect(await wrong.text()).toMatch(/checksum you specified did not match/);
   });
 
   it('refuses odd hashes, odd repertoire names, wrong methods and anyone but the laptop', async () => {
