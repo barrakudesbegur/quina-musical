@@ -1544,3 +1544,13 @@ By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requi
 ### D226 · The special card has two sides: the Desgraciat on pool 1, the Especial on pool 2 · 2026-11-27 · Active
 Confirmed with the team. The special card is printed on both sides, like the normal one. Side 1 has pool 1's songs and plays the Desgraciat, and side 2 has pool 2's songs and plays the Especial. "so the pool change happens on the break": Quines 1–5 and the Desgraciat play pool 1, the Descans comes, then Quines 6–10 and the Especial play pool 2. Six rounds per pool, which was D171's reason. One special card still plays both special rounds (D81). The Descans's "turn the card over" line (D202) now covers both cards. Answers U192 and U59, and supersedes D217.
 By: the user and the team. Source: the user's message of 27 Nov. Supersedes: D217. Lives in: requirements/game-rules.md › The night's rounds; requirements/songs-and-cards.md; event.md › The songs.
+
+### D227 · A temporary 2026 night in production, for a full manual test today · 2026-11-27 · Active; the edition file's details Pending (U68–U75)
+Pool 2's playlist has 64 of its 70 songs. "we can already download them and generate a temporary set of cards, to put into production something similar to the actual quina for this year. and build the settigns json. when i have the full playlist we generate again and update. it is because i would like to do a manual test of all the pieces later today". So:
+- **Pool 2:** download its 64 songs now, numbered and sorted by U57's and U58's defaults. They're regenerated when the playlist is final.
+- **Temporary cards:** from both pools, with the normal card's two sides (D193) and the special card's two sides (D226).
+- **Production:** the cloud gets a plan like this year's night (D192), the cards and the songs, so the user can test every piece by hand.
+- **The edition file (D116):** built now. Its open details are U68–U75.
+- **Hooks:** songs play with automatic hooks marked provisional, until the user's approval pass (U14).
+Also asked: a short "how to run it" section in the README for humans, an SVG diagram of the setup showing what runs on each screen and device, and a short explanation of how Admin manages production (resetting a game, starting, sending messages).
+By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The songs; requirements/operations.md (once built).
