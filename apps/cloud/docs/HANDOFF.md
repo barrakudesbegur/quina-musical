@@ -9,10 +9,11 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **The plan is up on quina-dev:** `data/editions/2026.plan.json` (tracked): D192's order with D193's and D226's sides, the 10-minute Descans after round 6, the Orchestrator's example bundles (96 prizes, 58 sponsors, 55 logos; no money), 27 Dec times. The old plan is saved in `data/link/backups/`. The test's start time is U204: re-upload with `--start`, then a plain upload restores 27 Dec.
   - **The 2026 temporary cards and covers are on both names** (`db958fd2`): deploys now name their repertoire (`QUINA_REPERTOIRE=2026 npm run deploy`; assets.ts refuses dist/ without one).
   - **The voice cues sync** (roots `voice-cache` and `voice-data`, D198, D202–D204; `voice/` left out of the default repertoire's `cache` and `data` roots), with a preflight check (FAIL a missing cue or file, WARN placeholders). The Worker's `SYNC_ROOTS` takes them, so they go up with the next push.
-  - **Left:** the 2026 media to R2 once Sound engine has prepared both pools: `npm run media -- push --repertoire 2026 --dry-run` first, then the push (6–8 GB, also a fresh copy of the Hold and Interval music and the voices).
+  - **The 2026 media is in R2** (27 Nov, 7:30 pm): 2,796 files, 8,175 MB under `repertoires/2026/` (the songs' cache 6.4 GB, the Interval music 1.5 GB, the Hold music, covers, voices, fx, stingers, the temporary cards). The first try died at 733 MB on an HTTP/2 stream reset; since `8659ff1` the push and pull retry each request up to 5 times (MEDIA_SYNC in src/config.ts) and a stopped push resumes from `media-push-<repertoire>.jsonl`. When Sound engine changes hooks or stems, push again (only the difference goes). `data/*/repertoires/2026-before-final` is the old fetch's, never pushed; deleting it waits on the user.
   - **The preflight** now FAILs a stale show build (Sound engine's build stamp, `distProblem`) and WARNs provisional hooks. My tests remove their temp folders (5,500 had piled up, 2.1 GB, deleted).
-- **In progress (27 Nov, evening), nothing half-built. Waiting on two relays:**
-  - **Sound engine's "ready for the R2 dry run":** stems and Signatures for all 136 songs, then 4 re-done songs (31, 47, 72, 97). Then, from the main checkout's `apps/cloud`: `npm run media -- push --repertoire 2026 --dry-run`, send the Orchestrator the numbers by root, then the push without `--dry-run` (6–8 GB; R2 past 10 GB is fine, D113). After it, step 6.5's lifecycle rule for the old `pools/` keys can be proposed (U161).
+- **In progress (27 Nov, evening), nothing half-built.**
+  - **Step 6.5, asked of the user directly:** let R2 expire the old `pools/` keys (last year's songs and the first copy of the music, about 8 GB, unreachable by the tools since D178). The bucket holds about 16 GB until then. U161 is moot: a spare can pull repertoire 2026, the shared music included.
+  - **Not deployed yet:** Sound engine's `1bcda80`–`717cbf3` (`addCardsInPlay`, `twoLevelHold`, the relay's `from` stamps, and setGame refusing the old mirrors). No cloud change needed; they ride the next deploy.
   - **U204, the test's start time, from the Orchestrator:** `npm run edition -- upload data/editions/2026.plan.json --repertoire 2026 --start "2026-11-27 HH:MM"` (preview), then the same with `--yes`. After the test, the same without `--start` restores 27 Dec 17:00/18:00.
   - **Every deploy from now:** `QUINA_REPERTOIRE=2026 npm run deploy`, from a detached worktree at the tested sha, after the e2e there.
 - **Resume here (the deploy cycle, as run all day on 27 Nov):**
@@ -59,6 +60,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `8ae5bf1d` (`067fd01`, repertoire 2026): the Worker's sync takes the voice cues' roots (`voice-cache`, `voice-data`).
     - `956645b2` (`48fda40`, repertoire 2026): Frontend's player PWA (D221–D223): `/player-sw.js`, `/player.webmanifest` and `/icons/*` served `no-cache` on both names; the deploy's PWA warning is gone.
     - `9ceb373f` (`ea5c234`, tested as `a38dba4`, repertoire 2026): D237's public drum seeds for phones (`PublicRound.drumSeed`, `PublicSpin.spinSeed`; the Spin's `drum` stays private, U206), and D229's `soundTest` through the cloud's command check. Frontend's dev copy of the feed (`apps/player/feed/project.ts`) doesn't carry the seeds yet: theirs, with the phone's drum.
+    - `ca3c0a3d` (`8659ff1`, tested as `3ded3ed`, repertoire 2026): Frontend's `3e3cb15` and `e190854` (the drawers, forms and toasts, add another; the console's Descans picker, Sons automàtics, Prova de so, Cartrons venuts); the media sync's retries and resume; the settings' `finalLapStinger`/`voicesOn` optional and `autoSounds` checked (D237), so the engine drops the mirrors.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
@@ -70,6 +72,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **R2:** the breaks set, the intro, the throw song and Pausa's set (in `pausa/`) are pushed. The old top-level `interval-*` keys left the manifest and wait for the post-night prune (agreed with Sound engine: under a cent a month). Hold's `audition/` is excluded.
   - **The plan-save bug** (`2503050`): edits that change nothing public were lost when the GameRoom restarted. U126 asks the user to check quina-dev.
 - **Next:**
+  - **D234's lock through the cloud** (Sound engine, 27 Nov): commands from cloud consoles reach the relay on the link's socket, so they all carry the link's clientId and count as one console for `twoLevelHold`. A fix: game-room stamps each cloud console's own clientId as `from`, the relay keeps a cloud-role `from`, and the cloud's console list reaches the relay on disconnects. Not built; only if wanted.
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
   - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
@@ -87,7 +90,6 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **U64**, a glance at Cloudflare's billing for R2's payment method;
   - **U79** and **U150**: whether phones show a Review, and the finale;
   - **U126**, whether any Admin edits on quina-dev were lost to the plan-save bug;
-  - **U161**, the spare laptop's music until December: (a) push only the shared music sets now (needs a `--shared-only` push first, about 1.7 GB), (b) push the default repertoire again (about 8 GB), or (c) wait for this year's push;
   - the permission rules for deploys and R2 pushes (`/permissions`), which only the user can add.
 
 **What this covers:** the cloud (`apps/cloud`: the Worker, one GameRoom Durable Object per edition, Access, R2), the laptop's cloud link, media sync and preflight (`apps/cloud/laptop`), the public feed for phones (with UI; `packages/protocol/public.ts`), the load test, CI (`.github/workflows/ci.yml`), the end-to-end test (`tools/e2e`) and the laptop setup (`tools/laptop`). The Game journal is shared with Sound engine.
