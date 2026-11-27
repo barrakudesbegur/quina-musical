@@ -217,25 +217,11 @@
 }
 
 .logo-dialog .logo-dialog__close {
+  --icon-button-icon: 1.75rem;
   position: absolute;
   top: var(--corner-inset, 8px);
   right: var(--corner-inset, 8px);
-  display: grid;
-  place-items: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: none;
-  box-shadow: none;
   color: var(--color-ink);
-  cursor: pointer;
-}
-
-.logo-dialog__close > svg {
-  width: 1.75rem;
-  height: 1.75rem;
 }
 
 /* logo-open: the logo morphs out of its tile (a view transition); the backdrop fades. Reduced motion: no morph,

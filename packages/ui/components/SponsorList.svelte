@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
   import { tick } from 'svelte';
-  import Icon from '../icons/Icon.svelte';
+  import IconButton from './IconButton.svelte';
   import { CA } from '../i18n/ca.ts';
   import { imageSources } from '../data/media.ts';
   import LogoTile from './LogoTile.svelte';
@@ -100,7 +100,7 @@
   onclose={closed}
 >
   {#if shown}
-    <button type="button" class="logo-dialog__close" aria-label={CA.sponsors.close} onclick={hide}><Icon name="close" alone /></button>
+    <IconButton class="logo-dialog__close" icon="close" label={CA.sponsors.close} variant="bare" onclick={hide} />
     {#if sources}
       <picture class="logo-tile__picture">
         {#if sources.jxl}<source type="image/jxl" srcset={sources.jxl} />{/if}

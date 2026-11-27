@@ -9,6 +9,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import Icon from '../icons/Icon.svelte';
+  import IconButton from './IconButton.svelte';
   import type { IconName, ToastColor } from './types.ts';
   import './toast.css';
 
@@ -51,6 +52,6 @@
     {#if detail}<p class="toast__detail">{detail}</p>{/if}
   </div>
   {#if onclose}
-    <button type="button" class="toast__close" data-touch="small" aria-label={closeLabel} onclick={onclose}><Icon name="close" alone /></button>
+    <IconButton class="toast__close" icon="close" label={closeLabel} variant="bare" onclick={onclose} />
   {/if}
 </div>

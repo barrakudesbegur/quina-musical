@@ -297,35 +297,17 @@
   margin-inline-start: auto;
 }
 
-/* ---- the corner buttons: ‹ and ✕ (A7's framed look, the press resource R4) -------------------------------------- */
-:where(.sheet__corner) {
-  --ds-radius: var(--radius-md);
-  --ds-border: var(--line-width);
-  --ds-drop: 3px;
+/* ---- the corner buttons: ‹ and ✕ (IconButton, A7; the console's «Tanca» with its word is a MiniButton, A4) ------- */
+.sheet__corner {
   flex: none;
+  --icon-button-size: var(--sheet-corner-size);
+  --icon-button-icon: 1.375rem;
+  --mini-height: var(--sheet-corner-size);
+  --mini-pad: var(--space-2);
 }
 
-.sheet__corner > .ds-piece {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  min-width: var(--sheet-corner-size);
-  height: var(--sheet-corner-size);
-  padding: 0 var(--space-2);
-  box-sizing: border-box;
+.sheet__close.mini-button > .mini-button__piece {
   background: var(--sheet-corner-bg);
-  color: var(--color-text);
-  font-weight: var(--font-weight-strong);
-}
-
-.sheet__corner .icon {
-  width: 1.375rem;
-  height: 1.375rem;
-}
-
-.sheet__corner-text {
-  padding-inline-end: var(--space-1);
 }
 
 /* ---- the content: it scrolls, never the page under it ---------------------------------------------------------- */

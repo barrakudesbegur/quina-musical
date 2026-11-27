@@ -17,7 +17,6 @@
   import { getWii } from '../context.ts';
   import { S, CA } from '../strings.ts';
   import { consoleWiiLegend } from '../wii/guide.ts';
-  import Icon from './Icon.svelte';
   import Switch from './Switch.svelte';
 
   let { open = $bindable(false) }: { open: boolean } = $props();

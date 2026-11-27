@@ -25,7 +25,8 @@
 <script lang="ts">
   import { tick, untrack, type Snippet } from 'svelte';
   import type { HTMLDialogAttributes } from 'svelte/elements';
-  import Icon from '../icons/Icon.svelte';
+  import IconButton from './IconButton.svelte';
+  import MiniButton from './MiniButton.svelte';
   import { touchPress } from '../sounds/touch.ts';
   import { barAxis, closeDuration, contentGesture, dragOffset, handsOver, pullShare, releaseCloses, releaseVelocity, type DragSample } from './sheet-drag.ts';
   import { lightDismiss, settled } from './top-layer.ts';
@@ -83,6 +84,9 @@
   }: Props = $props();
 
   const uid = $props.id();
+  /** The ‹ and ✕ (IconButton, A7): navy on the phone's sheet, the surface on the console's side sheet. */
+  const cornerColor = $derived(origin === 'side-right' ? 'surface' : 'navy');
+  const cornerSize = $derived(origin === 'side-right' ? 's' : 'm');
   let dialog: HTMLDialogElement | undefined = $state();
   let body: HTMLDivElement | undefined = $state();
   let closing = $state<'self' | 'all' | null>(null);
@@ -313,29 +317,31 @@
   <div class="sheet__bar" role="presentation" onpointerdown={onBarDown} onpointermove={onBarMove} onpointerup={onBarUp} onpointercancel={onBarUp}>
     {#if draggable}<span class="sheet__handle" aria-hidden="true"></span>{/if}
     {#if onback || back}
-      <button
-        type="button"
-        class="sheet__corner sheet__back ds-pushable"
-        aria-label={backLabel}
-        data-touch="small"
+      <IconButton
+        class="sheet__corner sheet__back"
+        icon="chevron-left"
+        label={backLabel}
+        color={cornerColor}
+        size={cornerSize}
         data-touch-release={onback ? undefined : 'none'}
         onclick={() => (onback ? onback() : requestClose('self'))}
-      >
-        <span class="ds-piece"><Icon name="chevron-left" alone /></span>
-      </button>
+      />
     {/if}
     <h1 class="sheet__title" id="{uid}-title">{title}</h1>
     {#if subtitle}<span class="sheet__subtitle">{subtitle}</span>{/if}
-    <button
-      type="button"
-      class="sheet__corner sheet__close ds-pushable"
-      aria-label={closeText ? undefined : closeLabel}
-      data-touch="small"
-      data-touch-release="none"
-      onclick={() => requestClose(closeAll ? 'all' : 'self')}
-    >
-      <span class="ds-piece"><Icon name="close" alone={!closeText} />{#if closeText}<span class="sheet__corner-text">{closeLabel}</span>{/if}</span>
-    </button>
+    {#if closeText}
+      <MiniButton class="sheet__corner sheet__close" icon="close" label={closeLabel} data-touch-release="none" onclick={() => requestClose(closeAll ? 'all' : 'self')} />
+    {:else}
+      <IconButton
+        class="sheet__corner sheet__close"
+        icon="close"
+        label={closeLabel}
+        color={cornerColor}
+        size={cornerSize}
+        data-touch-release="none"
+        onclick={() => requestClose(closeAll ? 'all' : 'self')}
+      />
+    {/if}
   </div>
   <div class="sheet__body" bind:this={body}>
     {@render children()}
