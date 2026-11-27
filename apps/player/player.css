@@ -3115,22 +3115,41 @@
 
 /* The confetti's canvas is G3's (packages/ui/components/confetti.css). */
 
-/* Under the header, where the board "afegir cartró: casos especials" puts "Cartró #88 afegit" (118 px down). The
-   toast is the generic Toast (packages/ui/components/toast.css): a card's is green across the whole width, any other
-   sits centred on paper. */
+/* Just under the garland and the safe area, where the home's content starts fading (§8 Y3: it sat too far down, under
+   the header). The toast is the generic Toast (packages/ui/components/toast.css), a passing notice hugging its words,
+   centred: a card's green with its mark, any other on paper. It takes no taps (`toast-drop`). */
 .toast-slot {
   position: fixed;
-  left: 1.5rem;
-  right: 1.5rem;
-  top: calc(env(safe-area-inset-top, 0px) + 7.375rem);
+  left: var(--player-gutter, 1rem);
+  right: var(--player-gutter, 1rem);
+  top: calc(env(safe-area-inset-top, 0px) + var(--player-garland-height) - 0.25rem);
   z-index: var(--z-toast);
   display: grid;
   justify-items: center;
   pointer-events: none;
 }
 
-.toast-slot > .toast[data-variant='solid'] {
-  justify-self: stretch;
+.toast-slot .toast {
+  pointer-events: none;
+}
+
+/* toast-drop: it drops in from 12 px above, fading in (the fade either way, D209); it leaves fading, 6 px up (the
+   slot's out transition, Toast.svelte). */
+.toast-slot .toast[data-anim='toast-drop'] {
+  animation: player-fade-in 220ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .toast-slot .toast[data-anim='toast-drop'] {
+    animation: player-toast-drop 220ms var(--ease-out) both;
+  }
+}
+
+@keyframes player-toast-drop {
+  from {
+    opacity: 0;
+    translate: 0 -0.75rem;
+  }
 }
 
 /* ---- animation hooks (ui/ANIMATIONS.md, Player). Transform and opacity only. --------------------------- */

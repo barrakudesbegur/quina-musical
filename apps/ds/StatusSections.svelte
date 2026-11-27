@@ -133,8 +133,10 @@
   <section class="ds-gallery__section" aria-labelledby="s-e3">
     <h2 id="s-e3">E3 · Toast</h2>
     <p class="ds-prose">
-      One radius, no pill. <code>solid</code>: the fill, white words, the ink outline and the fill’s own dark 3D edge (R2). <code>paper</code>: the
-      colour’s outline and its bottom edge in the colour’s dark shade, never ink (#85). Presets: the console’s TOASTS, the phone’s PLAYER_TOASTS.
+      A passing notice, never a control (27 Nov, §8 Y3): no ink outline, no 3D edge and no hard drop, only a soft shadow; one radius, no pill; it
+      hugs its words. <code>solid</code>: the fill, white words. <code>paper</code>: paper, the icon in the colour’s text shade, a hairline in its pale
+      shade. The phone places it just under the garland (<code>toast-drop</code>); the console stacks them above the cluster. Presets: the console’s
+      TOASTS, the phone’s PLAYER_TOASTS.
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--wide">
       {#snippet t1()}
@@ -143,13 +145,20 @@
       {/snippet}
       {@render cell('solid · green + a card’s mark: a card added (phone)', t1)}
       {#snippet t2()}<Toast {...TOASTS.error} text="Següent: deixeu anar Aguanta o el Suspens primer" detail="Ho ha rebutjat el portàtil." onclose={() => {}} />{/snippet}
-      {@render cell('paper · red, urgent (role alert), closable: a rejected command (#85: the bottom edge red)', t2)}
+      {@render cell('paper · red, urgent (role alert), closable: a rejected command', t2)}
       {#snippet t3()}<Toast {...TOASTS.info} text="Desat" onclose={() => {}} />{/snippet}
       {@render cell('paper · navy: a notice', t3)}
       {#snippet t4()}<Toast {...PLAYER_TOASTS.info} text="Aquest cartró ja el segueixes" />{/snippet}
       {@render cell('paper · navy, no icon (phone)', t4)}
       {#snippet t5()}<Toast color="orange" variant="solid" icon="warning" text="All I Want for Christmas Is You: SUPERESTRELLA no ha sonat encara" />{/snippet}
       {@render cell('solid · orange, long words wrap (R9)', t5)}
+      {#snippet t6()}
+        <div class="ds-gallery__toast-phone">
+          <span class="ds-gallery__toast-garland" aria-hidden="true"></span>
+          <Toast {...PLAYER_TOASTS.info} text="Dades esborrades" />
+        </div>
+      {/snippet}
+      {@render cell('the phone’s place: centred just under the garland and the safe area, over the header (toast-drop)', t6)}
     </div>
   </section>
 {/if}
