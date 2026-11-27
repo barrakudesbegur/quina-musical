@@ -8,6 +8,7 @@ import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/tim
 import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
+import { prizeCardText } from '../../../packages/ui/recipes/prizes.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { panTiming, sponsorPage } from '../model/sponsors.ts';
 import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
@@ -33,36 +34,44 @@ export class RoundTitle {
   }
 }
 
-/** A prize: its kind ("Premi de línia"), its title, and "Gentilesa de …". Hidden without a prize. */
+/**
+ * A headline prize: the design system's PrizeCard (C2, D-p) built in plain DOM, with its CSS and its words from the
+ * same recipe (packages/ui/recipes: paper-card.css, prizes.css, prizes.ts): the kind as the chip, the prize's name
+ * big, its detail, «Gentilesa de …», «i 3 premis més». Hidden without a prize.
+ */
 export class PrizeBlock {
   readonly root: HTMLElement;
-  private readonly kind: HTMLElement;
+  private readonly chip: HTMLElement;
   private readonly title: HTMLElement;
   private readonly detail: HTMLElement;
   private readonly sponsor: HTMLElement;
   private readonly more: HTMLElement;
 
   constructor(extraClass = '') {
-    this.kind = h('p', 'prize__kind');
-    this.title = h('p', 'prize__title');
-    this.detail = h('p', 'prize__detail');
-    this.sponsor = h('p', 'prize__sponsor');
-    this.more = h('p', 'prize__more');
-    this.root = h('article', { class: `prize ${extraClass}`.trim(), hidden: true }, this.kind, this.title, this.detail, this.sponsor, this.more);
+    this.chip = h('span', 'paper-card__ribbon');
+    this.title = h('p', 'prize-card__title');
+    this.detail = h('p', 'prize-card__detail');
+    this.sponsor = h('p', 'prize-card__sponsor');
+    this.more = h('p', 'prize-card__more');
+    const part = h('div', 'paper-card__part', this.title, this.detail, this.sponsor, this.more);
+    this.root = h('article', { class: `paper-card prize-card ${extraClass}`.trim(), data: { layout: 'hero' }, hidden: true }, this.chip, h('div', 'paper-card__paper', part));
   }
 
   set(prize: PrizeView | null): void {
     setHidden(this.root, prize === null);
     if (!prize) return;
+    const text = prizeCardText({ kind: prize.kind, headline: [{ title: prize.title, detail: prize.detail, sponsor: prize.sponsor }], more: prize.more });
     setData(this.root, 'kind', prize.kind);
-    setText(this.kind, STAGE_TEXT.prize[prize.kind]);
-    setText(this.title, prize.title);
-    setText(this.detail, prize.detail ?? '');
-    setHidden(this.detail, !prize.detail);
-    setText(this.sponsor, prize.sponsor ? STAGE_TEXT.sponsoredBy(prize.sponsor) : '');
-    setHidden(this.sponsor, !prize.sponsor);
-    setText(this.more, prize.more ? STAGE_TEXT.morePrizes(prize.more) : '');
-    setHidden(this.more, !prize.more);
+    this.root.setAttribute('aria-label', text.chip);
+    setText(this.chip, text.chip);
+    setData(this.chip, 'color', text.color);
+    setText(this.title, text.title);
+    setText(this.detail, text.detail ?? '');
+    setHidden(this.detail, !text.detail);
+    setText(this.sponsor, text.sponsor ?? '');
+    setHidden(this.sponsor, !text.sponsor);
+    setText(this.more, text.more ?? '');
+    setHidden(this.more, !text.more);
   }
 }
 

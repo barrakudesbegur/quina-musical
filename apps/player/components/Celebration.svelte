@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
+  import PrizeCard from '../../../packages/ui/recipes/PrizeCard.svelte';
   import { PLAYER } from '../actions.ts';
   // The Celebration (ANIMATIONS.md `celebrate`). No winning card numbers, ever: people only care when it's them.
   // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize. The
@@ -62,12 +63,7 @@
       </div>
     {/each}
     {#if prize?.headline.length}
-      <p class="celebration__prize">
-        <span class="celebration__prize-kind">{S.prize[celebration.kind]}:</span>
-        {prize.headline.map((p) => p.title).join(' · ')}
-        {#if prize.others.length}<span class="celebration__more">{S.morePrizes(prize.others.length)}</span>{/if}
-        {#if prize.headline[0].sponsor}<span class="celebration__sponsor">{S.sponsoredBy(prize.headline[0].sponsor)}</span>{/if}
-      </p>
+      <PrizeCard class="celebration__prize" prize={{ kind: celebration.kind, headline: prize.headline, more: prize.others.length }} />
     {/if}
     <Button {...PLAYER.close} class="celebration__close" onclick={onclose} />
   </div>

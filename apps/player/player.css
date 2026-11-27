@@ -1231,6 +1231,7 @@
   font-size: 1.5rem;
   font-weight: var(--font-weight-strong);
   line-height: 1.1;
+  text-wrap: balance; /* R6 (#65); the rest of the row inherits the dd's pretty */
 }
 
 .prize-lines__sponsor,
@@ -3550,35 +3551,9 @@
   transform: rotate(-3deg);
 }
 
+/* The prize: the design system's PrizeCard (packages/ui/recipes), across the panel. */
 .celebration__prize {
-  display: grid;
-  gap: 0.125rem;
   width: 100%;
-  padding: var(--space-3) var(--space-3) var(--space-3) 0.875rem;
-  text-align: left;
-  font-size: 1.375rem;
-  font-weight: var(--font-weight-strong);
-  line-height: 1.15;
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-piece);
-}
-
-.celebration__prize-kind {
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-on-paper-muted);
-}
-
-.celebration__more,
-.celebration__sponsor {
-  display: block;
-  font-size: var(--text-md);
-  font-weight: var(--player-weight-body);
-  color: var(--color-text-on-paper-muted);
 }
 
 .celebration__close {

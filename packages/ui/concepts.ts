@@ -34,7 +34,8 @@ export const CONCEPTS = {
   celebration: { color: 'gold', label: CA.concepts.celebration, icon: 'star' },
   checkFail: { color: 'red', label: CA.concepts.checkFail, icon: 'close' },
   line: { color: 'gold', label: CA.line, icon: null },
-  bingo: { color: 'gold', label: CA.bingo, icon: null },
+  /** Orange, not gold (27 Nov): the console's tickets already told the Line and the Bingo apart by their ribbons. */
+  bingo: { color: 'orange', label: CA.bingo, icon: null },
   lastStanding: { color: 'live', label: CA.concepts.lastStanding, icon: 'star' },
   fallen: { color: 'slate', label: CA.concepts.fallen, icon: 'figure-seated' },
   standing: { color: 'green', label: CA.standing, icon: 'figure-standing' },

@@ -16,6 +16,8 @@ import { loadPlanForPage, planStoreForPage, type PlanStore } from '../../package
 import type { GamePlan } from '../../packages/ui/plan.ts';
 import type { HeatSample } from '../../packages/rules/heat.ts';
 import '../../packages/ui/tokens.css';
+import '../../packages/ui/components/paper-card.css';
+import '../../packages/ui/recipes/prizes.css';
 import './stage.css';
 import { STAGE } from './config.ts';
 import { activeHeatSample, garlandLook, heatDisplay } from './model/garland.ts';

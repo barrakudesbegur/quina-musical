@@ -1,0 +1,148 @@
+/*
+ * C2 · PaperCard (components-v2.md § 4; PaperCard.svelte, and the projector's PrizeBlock builds the same DOM): a
+ * piece of paper on the night ground, in three layouts: `ticket` (the console's prize tickets: a perforation with a
+ * punched hole at each end), `hero` (the headline prize card: the phone's Celebration, the projector) and `row`.
+ *
+ *   article.paper-card[data-layout]          the whole piece; the ribbon hangs over its top edge
+ *     span.paper-card__ribbon[data-color]    the kind chip («LÍNIA», «PREMI DE QUINA»), optional
+ *     div.paper-card__paper                  the paper's hard shadow (a drop-shadow, so it follows the holes)
+ *       div.paper-card__part                 the paper; a ticket's second part follows its perforation
+ *
+ * The holes (D-o, #64) are cut by a CSS mask, not drawn as circles over the paper: each part is masked by two radial
+ * gradients at its ends on the perforation's line, and an ink ring drawn in the part's own background outlines each
+ * cut (modern-web-guidance: shaped-cutouts). Text never sits under the cuts (the parts' side padding clears them).
+ * Every size is a custom property in :where(), so a density or a context tunes it.
+ */
+
+/* ---- the console's scale, the default (the ticket: radius 14, border 3, drop 4) ------------------------------ */
+:where(.paper-card) {
+  --paper-bg: var(--color-snow);
+  --paper-fg: var(--color-ink);
+  --paper-muted: var(--color-ink-soft);
+  --paper-border: var(--line-width);
+  --paper-radius: var(--radius-md);
+  --paper-drop: 4px;
+  --paper-pad: 0.8125rem 0.75rem 0.5rem;
+  --paper-gap: 0.125rem;
+  /* the punched holes: their radius, and the gap between the perforation's dashes and each hole */
+  --paper-hole: 0.5rem;
+  --paper-ribbon-size: 0.75rem;
+  --paper-ribbon-inset: 0.625rem;
+  /* R1's ring (data-ring) follows the paper's corners */
+  --ds-radius: var(--paper-radius);
+}
+
+:where([data-density='phone'] .paper-card) {
+  --paper-radius: 1.125rem;
+  --paper-pad: var(--space-4) var(--space-4) var(--space-3);
+  --paper-gap: var(--space-1);
+  --paper-ribbon-size: 0.8125rem;
+  --paper-ribbon-inset: var(--space-3);
+}
+
+/* The projector's: 820 wide, border 5, radius 26, drop 8 (P7, P11); its chip is no smaller than its smallest text. */
+:where([data-density='projector'] .paper-card) {
+  --paper-border: 0.3125rem;
+  --paper-radius: 1.625rem;
+  --paper-drop: 8px;
+  --paper-pad: 2.25rem 2.5rem 1.75rem;
+  --paper-gap: var(--space-2);
+  --paper-ribbon-size: var(--stage-text-sm, 1.875rem);
+  --paper-ribbon-inset: 1.75rem;
+}
+
+:where(.paper-card[data-layout='row']) {
+  --paper-pad: var(--space-2) var(--space-3);
+  --paper-drop: 3px;
+}
+
+/* ---- the piece ----------------------------------------------------------------------------------------------- */
+.paper-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  color: var(--paper-fg);
+}
+
+/* Room above for the ribbon, which hangs half over the top edge. */
+.paper-card:has(> .paper-card__ribbon) {
+  padding-top: calc(var(--paper-ribbon-size) * 0.8);
+}
+
+.paper-card__paper {
+  display: grid;
+  min-width: 0;
+  filter: drop-shadow(0 var(--paper-drop) 0 var(--color-shadow));
+}
+
+.paper-card__part {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--paper-gap);
+  min-width: 0;
+  padding: var(--paper-pad);
+  border: var(--paper-border) solid var(--color-line);
+  border-radius: var(--paper-radius);
+  background: var(--paper-bg);
+}
+
+/* ---- the perforation: the first part's dashed bottom, a hole cut at each end of it ----------------------------- */
+.paper-card__part:not(:last-child) {
+  border-bottom-style: dashed;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  --hole-y: calc(100% - 0.5 * var(--paper-border));
+}
+
+.paper-card__part + .paper-card__part {
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  --hole-y: calc(-0.5 * var(--paper-border));
+}
+
+/* Each part next to the perforation: two half-holes cut (the mask: transparent inside the circle), and an ink ring
+   drawn round each cut, so the hole has the paper's outline. Both parts' circles sit on the dashed line's middle. */
+.paper-card__part:has(+ .paper-card__part),
+.paper-card__part + .paper-card__part {
+  --hole-cut: radial-gradient(circle at 0 var(--hole-y), #0000 var(--paper-hole), #000 calc(var(--paper-hole) + 0.5px));
+  --hole-cut-end: radial-gradient(circle at 100% var(--hole-y), #0000 var(--paper-hole), #000 calc(var(--paper-hole) + 0.5px));
+  --hole-ring: radial-gradient(circle at 0 var(--hole-y), #0000 var(--paper-hole), var(--color-line) calc(var(--paper-hole) + 0.5px) calc(var(--paper-hole) + var(--paper-border)), #0000 calc(var(--paper-hole) + var(--paper-border) + 0.5px));
+  --hole-ring-end: radial-gradient(circle at 100% var(--hole-y), #0000 var(--paper-hole), var(--color-line) calc(var(--paper-hole) + 0.5px) calc(var(--paper-hole) + var(--paper-border)), #0000 calc(var(--paper-hole) + var(--paper-border) + 0.5px));
+  background: var(--hole-ring), var(--hole-ring-end), var(--paper-bg);
+  background-origin: border-box;
+  mask:
+    var(--hole-cut) left / 51% 100% no-repeat border-box,
+    var(--hole-cut-end) right / 51% 100% no-repeat border-box;
+  padding-inline: calc(var(--paper-hole) + var(--paper-border) + 0.25rem);
+}
+
+/* ---- the ribbon: a chip over the top edge, in its palette (D210) ------------------------------------------------ */
+.paper-card__ribbon {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: var(--paper-ribbon-inset);
+  max-width: calc(100% - 2 * var(--paper-ribbon-inset));
+  padding: 0.05em 0.8em 0.12em;
+  overflow: hidden;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--palette-solid, var(--color-gold));
+  color: var(--palette-contrast, var(--color-ink));
+  font-family: var(--font-body);
+  font-size: var(--paper-ribbon-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The hero card is centred on the projector, so its chip is too. */
+:where([data-density='projector']) .paper-card[data-layout='hero'] > .paper-card__ribbon {
+  left: 50%;
+  translate: -50% 0;
+}

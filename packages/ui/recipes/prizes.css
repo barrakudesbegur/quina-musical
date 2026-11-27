@@ -1,0 +1,136 @@
+/*
+ * The prize recipes' words on their PaperCard (packages/ui/components/paper-card.css): the console's Ticket and the
+ * headline PrizeCard (phone, projector). R6: titles balanced, everything else pretty (#65); nothing is cut (every
+ * sponsor is read out).
+ */
+
+/* ---- Ticket (the console's «Premis» tab) --------------------------------------------------------------------- */
+.ticket__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-strong);
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.ticket__title + .ticket__title,
+.ticket__sponsor + .ticket__title,
+.ticket__detail + .ticket__title {
+  margin-top: 4px;
+}
+
+.ticket__detail,
+.ticket__sponsor,
+.ticket__none {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--paper-muted);
+  text-wrap: pretty;
+}
+
+.ticket__sponsor {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.ticket__sponsor .icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.ticket__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One of the rest: its title, then its sponsor, wrapping onto the next line rather than cut. A hamper's staples share
+   one item, wrapping between prizes, never inside one. */
+.ticket__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 5px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.ticket__item b {
+  font-weight: var(--font-weight-strong);
+}
+
+.ticket__item > span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--paper-muted);
+}
+
+.ticket__staple {
+  white-space: nowrap;
+}
+
+/* ---- PrizeCard (the headline prize): the name first, the sponsor second, the kind as the chip (D-p) ------------- */
+:where(.prize-card) {
+  --prize-title-size: 1.25rem;
+  --prize-small-size: 0.875rem;
+  --prize-logo-size: 2.5rem;
+  --prize-align: start;
+}
+
+:where([data-density='projector'] .prize-card) {
+  --prize-title-size: 3.375rem;
+  --prize-small-size: 1.625rem;
+  --prize-logo-size: 5rem;
+  --prize-align: center;
+}
+
+.prize-card .paper-card__part {
+  align-items: var(--prize-align);
+  text-align: var(--prize-align);
+}
+
+.prize-card p {
+  margin: 0;
+}
+
+/* The prize's name: Nunito 900, the biggest thing on the card, balanced (R6). Scoped by .prize-card so a page's
+   own paragraph reset (the projector's `font: inherit`) never wins over it. */
+.prize-card .prize-card__title {
+  font-family: var(--font-body);
+  font-size: var(--prize-title-size);
+  font-weight: 900;
+  line-height: 1.1;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.prize-card :is(.prize-card__detail, .prize-card__sponsor, .prize-card__more) {
+  font-size: var(--prize-small-size);
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--paper-muted);
+  text-wrap: pretty;
+}
+
+.prize-card .prize-card__sponsor {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.25em;
+}
+
+.prize-card__logo {
+  flex: none;
+  width: var(--prize-logo-size);
+  height: var(--prize-logo-size);
+  object-fit: contain;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+}

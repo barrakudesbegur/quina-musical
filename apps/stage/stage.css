@@ -406,33 +406,7 @@
   display: none;
 }
 
-.prize {
-  display: grid;
-  gap: var(--space-2);
-  align-content: center;
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--stage-radius);
-  background: var(--stage-panel);
-}
-
-.prize__kind,
-.prize__detail,
-.prize__more {
-  font-size: var(--stage-text-sm);
-  color: var(--color-text-muted);
-}
-
-.prize__title {
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-strong);
-  font-size: var(--stage-text-md);
-  line-height: 1.05;
-}
-
-.prize__sponsor {
-  font-size: var(--stage-text-sm);
-  color: var(--color-accent);
-}
+/* A prize: the design system's PrizeCard (PrizeBlock; packages/ui/components/paper-card.css, recipes/prizes.css). */
 
 .sponsors {
   display: grid;
@@ -2785,14 +2759,6 @@
   left: 50%;
   top: 620px;
   translate: -50% 0;
-  width: 820px;
-  padding: 28px 36px;
-  border: 0.3125rem solid var(--color-line);
-  border-radius: 1.625rem;
-  background: var(--color-paper);
-  box-shadow: 0 0.5rem 0 var(--color-shadow);
-  color: var(--color-line);
-  text-align: start;
 }
 
 .celebration[data-kind='standing'] :is(.prize__kind, .prize__detail, .prize__more, .prize__sponsor) {
@@ -2900,7 +2866,7 @@
 .celebration__prize {
   grid-row: 3;
   position: relative;
-  min-width: 50%;
+  width: min(820px, 90%);
 }
 
 /* `celebrate`: flash, the shout slams in (scale 3, −5°), then the prize rises. No card numbers. */
