@@ -152,11 +152,6 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U213 · #117's cover (D233)
-#117 Pont Aeri-Chasis (Els Segadors) has a «?» vinyl, the real 1996 white label. The user wants its title to read «Els Segadors Remix» (Spotify has the title and artist swapped); the card design session sends the print names. The other three covers asked here are moot since D269.
-- (a) Keep the white label.
-- (b) A neutral image.
-
 ### U212 · Ask the organizers: covers in colour, or no covers in black and white
 The user: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". The card design session made an A3 sheet with last year's card and one card of each option at real size.
 - (a) Covers in colour: the A3 card, 149 × 140 mm, six a sheet (D256), header C (D259).
@@ -348,6 +343,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U213 · #117's cover** (2026-11-28) → D270: keep the real 1996 white label; title «Els Segadors Remix», artist «Pont Aeri-Chasis».
 - **U198 · The special card's labels on the screens** (2026-11-27) → D266: «Desgraciat» and «Especial».
 - **U199 · The 4 songs in both playlists** (2026-11-27) → D268: a model change. One repertoire with every song once; a song may be in both pools; pool 2 keeps its 70.
 - **U201 · The sticker circle's sides** (2026-11-27) → D265: both sides.

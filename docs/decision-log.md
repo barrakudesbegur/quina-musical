@@ -1777,3 +1777,7 @@ The user, through the card design session, around 23:55: "i already replaced the
 - **The three retired tracks' files** are moved aside, not deleted.
 Deploys wait until the renumbered covers, indexes, new songs and remade cards are all in place.
 By: the user (via the card design session). Source: Sound engine's report of 28 Nov. Amends: D230, D261, D268 (the counts). Lives in: event.md › The songs; requirements/songs-and-cards.md › The pool.
+
+### D270 · #117's print names and cover · 2026-11-28 · Active
+Spotify has #117's title and artist swapped. Title «Els Segadors Remix» ("it is the correct song, a makina remix of the catalonia athem"), artist «Pont Aeri-Chasis» ("q20 yes"). Its «?» disc is the record's real 1996 art, and it stays. Answers U213. #100's nearly white cover goes on the proof sheet's checklist. The card generator with both layouts, the print names, the pools and the «MOSTRA» samples is on main as 7092e216, and apps/cards is Frontend's again.
+By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov. Lives in: requirements/songs-and-cards.md › The card.

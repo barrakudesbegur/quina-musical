@@ -88,7 +88,8 @@ _From event.md › The cards._
 - **A sticker circle (D231, D253):** a dotted circle of about 15 mm with «GOMET» centred in it, larger and letter-spaced (about 10.5 pt, 0.15 em), for a coloured shape sticker matching the card's mark on the phone (D5), on both sides (D265). No name field (D250).
 - **The number** has a faded «#» before it (D250).
 - **Song covers (D233, pending the organizers, U212):** each song shows its cover, so players find it faster, printed in colour. The other option is no covers, in black and white on coloured paper. Both are built behind one switch, with covers as the working default (D262).
-- **Paper (D267):** last year's coloured paper (blue for normal cards, pink for special ones), printed in colour, with a proof sheet first.
+- **Paper (D267):** last year's coloured paper (blue for normal cards, pink for special ones), printed in colour, with a proof sheet first. The proof sheet's checklist includes #100's nearly white cover (D270).
+- **The generator (7092e216):** both layouts behind `CARD_LAYOUT` (covers in colour by default, D262), the print names, the pools, the «MOSTRA» samples, and each side's `checkLabel` and `heading`.
 - **Song names (D260):** cleaned for print and screens. Spotify's tags come off the titles (" - Remix", "(feat. X)", " - 2012 Remaster"…), the artist is the main one (duets keep both), and a few are fixed by hand. They're for reference, so they don't need to be complete. The design is done with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392). The spec so far, the layouts being tested and what's open are in tools/card-mockup/README.md (008cf3b6). The page layout is pending U210.
 - The price isn't printed.
 

@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D270**, **U214**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D271**, **U214**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -27,7 +27,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - **Sound engine:** important tasks only (the user, 27 Nov). It's idle apart from replies.
 - **Frontend:** at most two agents in parallel. It's working through the user's comment list (temp/design-canvas/ds/comments-27nov.md §8, §11), the projector's end screen (board Projector-Final, waiting for the user's OK), and the Celebration-prize proposals (D242).
 - **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
-- **The card design session (quina-musical-d1):** cleared on 27 Nov evening. Its handoff is tools/card-mockup/HANDOFF.md (2d572401), with the spec in tools/card-mockup/README.md and the canvas at https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. A new card session resumes from there. It waits on the organizers (U212: covers in colour on the A3 card with header C, or no covers in black and white). Then the final design goes to Frontend to build in apps/cards, with a proof round before 4–5 Dec.
+- **The card design session (quina-musical-d1):** cleared on 27 Nov evening. Its handoff is tools/card-mockup/HANDOFF.md (2d572401), with the spec in tools/card-mockup/README.md and the canvas at https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. A new card session resumes from there. The generator with both options is on main (7092e216), and apps/cards is Frontend's again. Only the organizers' pick (U212) remains, then the proof round before 4–5 Dec.
 
 **Live (last deploy 58be65b4):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
