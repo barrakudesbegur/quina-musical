@@ -1734,7 +1734,8 @@
 }
 
 .card-grid__cell .cover {
-  border-radius: 0.625rem;
+  /* concentric with the cell (its highlight's corners): the cell's radius minus its padding */
+  border-radius: calc(var(--radius-md) - 3px);
 }
 
 /* A marked song's cover dims under its kernel (an overlay, not a filter). */

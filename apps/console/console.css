@@ -1398,6 +1398,8 @@
 .song-row .cover {
   width: 2.5rem;
   height: 2.5rem;
+  /* concentric with the row: its radius minus its border and padding */
+  border-radius: calc(var(--radius-md) - var(--line-width) - 4px);
 }
 
 .song-row[data-state='now'] {
