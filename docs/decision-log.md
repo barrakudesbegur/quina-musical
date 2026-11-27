@@ -1625,3 +1625,7 @@ By: the orchestrator, applying the user's instruction of 25 Nov. Source: Sound e
 - manual advance with no Hold, at the song's end.
 In both, the song loops its last phrase, or its last 4 bars when it has no phrase, until a presenter moves on. Parlem's 40 s switch to Hold music is U205. The other two things the user heard were the old build: Pausa as agreed (D128, D135) and Pausa playing the throw song or the intro.
 By: the user. Source: the user's message of 27 Nov; Sound engine's check of 27 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
+
+### D240 · Sessions delegate the work to subagents · 2026-11-27 · Active
+The user (to Backend), for every future session: "i want you to make more subagents and do less work. for futire sessions". Subagents do the work: features with their tests, docs, investigations, sweeps and long verify runs. The session plans and briefs, reviews each result before committing, commits, pushes and deploys, and talks to peers and the user. Subagents never push, deploy or message peers. Effort follows the existing rule. A limit the user sets on parallel agents (Frontend's two, 27 Nov) wins.
+By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: docs/team.md; the shared memory (feedback-delegate-to-subagents).
