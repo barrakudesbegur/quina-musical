@@ -1,7 +1,10 @@
 /*
  * Basic theme: a minimal, readable base on top of tokens.css. Deliberately plain; the game look comes later
- * as a theme that overrides tokens and adds decoration on the same class hooks.
+ * as a theme that overrides tokens and adds decoration on the same class hooks. The design resources every
+ * component shares (rings, the press, the on pattern, corners, long text) are in ds/resources.css.
  */
+@import './ds/resources.css';
+
 *,
 *::before,
 *::after {
@@ -40,6 +43,26 @@ h2,
 h3 {
   font-weight: var(--font-weight-strong);
   line-height: 1.1;
+}
+
+/* R6 (27 Nov): headings and titles balance their lines; body text avoids a lone last word. Components' own titles and
+   paragraphs that aren't these elements take .ds-title / .ds-prose (ds/resources.css). */
+h1,
+h2,
+h3,
+h4,
+legend,
+caption,
+th {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+figcaption,
+blockquote {
+  text-wrap: pretty;
 }
 
 button,
@@ -112,6 +135,13 @@ textarea {
   color: var(--color-text-on-paper);
 }
 
+/* A plain button in a palette colour (data-color, ds/palette.css): Admin's buttons and the console's small panel
+   buttons, until they move onto the components. Text in the palette's contrast colour (ink on most fills). */
+button:where([data-color]) {
+  background: var(--palette-solid, var(--color-surface));
+  color: var(--palette-contrast);
+}
+
 /* Role colours for buttons and badges: components add one of these */
 .tone-primary {
   background: var(--color-primary);
@@ -127,7 +157,7 @@ textarea {
   color: var(--color-text-on-paper);
 }
 .tone-calm {
-  background: var(--color-calm);
+  background: var(--color-cyan);
   color: var(--color-text-on-paper);
 }
 
@@ -149,7 +179,8 @@ textarea {
   color: var(--color-text-muted);
 }
 
-/* Read by screen readers, not drawn; it shows again while it holds the focus or is pressed. */
+/* Read by screen readers, not drawn; it shows again while it holds the focus or is pressed. (:focus-within here is a
+   behaviour, not a focus ring: rings use :focus-visible only, R5.) */
 .visually-hidden:where(:not(:focus-within, :active)) {
   position: absolute !important;
   clip-path: inset(50%) !important;

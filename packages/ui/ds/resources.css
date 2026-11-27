@@ -1,0 +1,303 @@
+/*
+ * The design resources: the look and motion every component shares, each fixed once here and never per button (the
+ * user's canvas comments of 27 Nov, rules R1–R11 in temp/design-canvas/ds/comments-27nov.md; motion in
+ * ANIMATIONS.md › Design resources). A component opts in by its structure and a few custom properties:
+ *
+ *   --ds-radius   its outer corner radius        --ds-border  its outline's width
+ *   --ds-drop     its hard shadow's depth         --ds-edge    its 3D edge's depth (--ds-shine: the top highlight)
+ *
+ * Resources (and the hooks a component uses for each):
+ *   R1 rings        data-ring="orange|gold|red" on an element whose box holds the whole control (its shadow too:
+ *                   the press structure's does; a control whose shadow hangs outside its box sets --ring-drop)
+ *   R2 3D edge      --edge-3d / --edge-3d-sunk (palette.css), in the fill's own --palette-edge
+ *   R3 on pattern   <span class="ds-pattern" data-pattern="stripes|dots"> inside the piece, rendered only while on
+ *   R4 press        .ds-pushable (static: the hit area, the shadow, the rings) > .ds-piece (moves); haptics in
+ *                   sounds/delegate.ts
+ *   R5 focus        :focus-visible only (base.css; tests/ui/ds/focus-lint.test.ts fails on a bare :focus)
+ *   R6 text-wrap    balance on headings and titles, pretty on body text (base.css, .ds-title / .ds-prose)
+ *   R7 corners      .ds-corner: the same inset from both sides, centred when the control is too short
+ *   R9 long text    .ds-long-text, .ds-clamp-2
+ *   R11 marks       recommended (ring gold + .ds-ribbon), suggested (data-variant="dashed": the 3D edge dashed too),
+ *                   default action (ring orange + the A key)
+ * Browser floor: iOS/iPadOS 15.4 (no nesting, no @container, no @starting-style); color-mix() only behind @supports.
+ */
+
+/* ---- R1: rings ------------------------------------------------------------------------------------------------
+   One even gap (--ring-gap) between the control and its ring on all four sides, the 3D edge and the hard shadow
+   included, drawn over the neighbours (behind nothing). A pseudo-element, not an outline, so it is round on every
+   Safari and never overrides the focus outline. The ring fades in (ring-in). */
+[data-ring] {
+  --ring-color: var(--default-ring);
+  --ring-w: var(--ring-width);
+  --ring-reach: calc(var(--ring-gap) + var(--ring-w));
+}
+
+:where([data-ring]) {
+  position: relative;
+}
+
+[data-ring]::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: calc(-1 * var(--ring-reach));
+  right: calc(-1 * var(--ring-reach));
+  bottom: calc(-1 * (var(--ring-reach) + var(--ring-drop, 0px)));
+  left: calc(-1 * var(--ring-reach));
+  border: var(--ring-w) solid var(--ring-color);
+  border-radius: calc(var(--ds-radius, var(--radius-lg)) + var(--ring-reach));
+  pointer-events: none;
+  animation: ds-ring-in var(--dur-default-ring) var(--ease-out);
+}
+
+[data-ring='gold'] {
+  --ring-color: var(--color-gold);
+  --ring-w: var(--ring-width-bold);
+}
+
+/* The fail cue: red at 45 %, mixed in oklab where the browser can (Safari 16.2+); a fixed pale red before. */
+[data-ring='red'] {
+  --ring-color: #f4a1a4;
+  --ring-w: var(--ring-width-bold);
+}
+
+@supports (color: color-mix(in oklab, red 45%, transparent)) {
+  [data-ring='red'] {
+    --ring-color: color-mix(in oklab, var(--color-red) 45%, transparent);
+  }
+}
+
+@keyframes ds-ring-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The focus outline (R5: :focus-visible only) keeps the same gap round a pushable control, its shadow included; with
+   a ring, it goes outside the ring, at the same gap again. */
+.ds-pushable:focus-visible {
+  outline-offset: var(--ring-gap);
+}
+
+[data-ring]:focus-visible {
+  outline-offset: calc(var(--ring-reach) + var(--ring-gap));
+}
+
+/* ---- R4: the press --------------------------------------------------------------------------------------------
+   .ds-pushable is the static part: the hit area, the hard shadow (::before, a copy of the piece's shape one drop
+   lower) and the rings. .ds-piece is what moves: it sinks onto its shadow by `translate`, never by an animated
+   box-shadow, and springs back. Reduced motion: no travel, the sunk shade only. */
+.ds-pushable {
+  --press-travel: calc(var(--ds-drop) - 1px);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  /* the shadow takes no room in the layout, as a box-shadow wouldn't: the box hangs one drop below its slot */
+  margin: 0 0 calc(-1 * var(--ds-drop));
+  padding: 0 0 var(--ds-drop);
+  border: 0;
+  border-radius: var(--ds-radius);
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The static part never moves or changes colour itself (the apps' plain `button:active` and `[aria-pressed]` rules). */
+.ds-pushable:active:not(:disabled),
+.ds-pushable[aria-pressed] {
+  transform: none;
+  box-shadow: none;
+  background: none;
+  color: inherit;
+}
+
+.ds-pushable::before {
+  content: '';
+  position: absolute;
+  top: var(--ds-drop);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: var(--ds-radius);
+  background: var(--color-shadow);
+  pointer-events: none;
+}
+
+.ds-piece {
+  position: relative;
+  min-width: 0;
+  border: var(--ds-border) solid var(--color-line);
+  border-radius: var(--ds-radius);
+  background: var(--palette-solid, var(--color-surface));
+  box-shadow: var(--edge-3d, none);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-piece {
+    transition: translate var(--dur-press-up) var(--ease-bounce);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable:active:not(:disabled) > .ds-piece,
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable[aria-pressed='true'] > .ds-piece,
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pushable[aria-busy='true'] > .ds-piece {
+    translate: 0 var(--press-travel);
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+/* The sunk shade: the pressed colour, with or without the travel. */
+.ds-pushable:active:not(:disabled) > .ds-piece,
+.ds-pushable[aria-pressed='true'] > .ds-piece,
+.ds-pushable[aria-busy='true'] > .ds-piece {
+  box-shadow: var(--edge-3d-sunk, none);
+}
+
+.ds-pushable:disabled {
+  cursor: not-allowed;
+}
+
+/* R11 · suggested: the dashed look, its 3D edge dashed too (#25), never a solid shadow under a dashed piece. */
+.ds-pushable[data-variant='dashed'] > .ds-piece {
+  border-style: dashed;
+}
+
+.ds-pushable[data-variant='dashed']::before {
+  border: var(--ds-border) dashed var(--color-shadow);
+  background: none;
+}
+
+/* ---- R3: the on pattern ---------------------------------------------------------------------------------------
+   A layer inside the piece, clipped to its inner corners (#14), one period wider than it so it pans seamlessly. The
+   component renders it only while on, and never while disabled or locked (#23). It pans with motion allowed and
+   stays still otherwise (ANIMATIONS.md › pattern-pan). */
+.ds-pattern {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--ds-radius, var(--radius-lg)) - var(--ds-border, 0px));
+  pointer-events: none;
+}
+
+.ds-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: calc(-1 * var(--pattern-period));
+  background-size: var(--pattern-period) var(--pattern-tile-height, var(--pattern-period));
+}
+
+/* 45° stripes, 16 px of white at 13 % then 16 px clear: 32 px across the stripes, 45.25 px along the row. */
+.ds-pattern[data-pattern='stripes'] {
+  --pattern-period: 45.25px;
+}
+
+.ds-pattern[data-pattern='stripes']::before {
+  background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.13) 0 16px, transparent 16px 32px);
+}
+
+/* Hexagonal dots: two rows of dots per tile, the second shifted by half a period. */
+.ds-pattern[data-pattern='dots'] {
+  --pattern-period: 16px;
+  --pattern-tile-height: 27.7px;
+}
+
+.ds-pattern[data-pattern='dots']::before {
+  background-image:
+    radial-gradient(circle at 8px 6.9px, rgb(255 255 255 / 0.3) 3px, transparent 3.6px),
+    radial-gradient(circle at 0 20.8px, rgb(255 255 255 / 0.3) 3px, transparent 3.6px),
+    radial-gradient(circle at 16px 20.8px, rgb(255 255 255 / 0.3) 3px, transparent 3.6px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .ds-pattern::before {
+    animation: ds-pattern-pan var(--dur-pattern-pan) linear infinite;
+  }
+}
+
+@keyframes ds-pattern-pan {
+  to {
+    translate: var(--pattern-period) 0;
+  }
+}
+
+/* ---- R7: corners ----------------------------------------------------------------------------------------------
+   A control in a corner (a Wii badge in a button, a sheet's ✕ or ‹) sits --corner-inset from both sides. When its
+   box is too short for that (shorter than the control plus twice the inset), it centres vertically instead.
+   --corner-size is the cornered control's own height. */
+.ds-corner {
+  position: absolute;
+  z-index: 2;
+  top: min(var(--corner-inset), calc(50% - var(--corner-size, 28px) / 2));
+  right: var(--corner-inset);
+}
+
+.ds-corner[data-corner='top-left'] {
+  right: auto;
+  left: var(--corner-inset);
+}
+
+/* ---- R9: long text --------------------------------------------------------------------------------------------
+   Song titles and other text that may be long: hyphens with the page's language first, then a break anywhere as the
+   last resort, so «SUPERESTRELLA» breaks cleanly. .ds-clamp-2 stops at two lines with an ellipsis. */
+.ds-long-text {
+  overflow-wrap: anywhere;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.ds-clamp-2 {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* ---- R11: the ribbon («RECOMANAT») ----------------------------------------------------------------------------
+   A paper chip centred on the control's top edge, over its border. It goes with ring="gold". */
+.ds-ribbon {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  translate: -50% -50%;
+  max-width: calc(100% - 2 * var(--corner-inset));
+  padding: 1px 10px;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: var(--radius-pill);
+  background: var(--color-gold);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* ---- R6: text-wrap for components' own titles and prose (base.css covers the elements) ------------------------ */
+.ds-title {
+  text-wrap: balance;
+}
+
+.ds-prose {
+  text-wrap: pretty;
+}

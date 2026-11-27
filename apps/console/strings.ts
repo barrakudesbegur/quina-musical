@@ -72,16 +72,16 @@ export const S = {
 
   cluster: {
     label: 'Controls principals',
-    next: 'Següent',
-    talk: 'Parlem',
+    next: CA.concepts.next,
+    talk: CA.concepts.hold,
     talkNote: 'toca: la música baixa',
-    stay: 'Aguanta',
+    stay: CA.concepts.stay,
     stayNote: 'toca: la cançó segueix',
     /** A pressed Parlem or Aguanta: pressing it again releases the Hold. */
     activeNote: 'prem per reprendre',
     /** The second levels, reached by holding Parlem or Aguanta. */
-    pauseLevel: 'Pausa',
-    suspense: 'Suspens',
+    pauseLevel: CA.concepts.pause,
+    suspense: CA.concepts.suspense,
     /** On the second-level strip: hold the button to get there. */
     holdFor: 'mantén',
     /** Spoken: what holding the button does. */
@@ -93,10 +93,10 @@ export const S = {
     suspenseOpen: 'deixa anar per aterrar',
     suspenseTap: 'toca per aterrar',
     suspenseAutoRelease: (s: number) => `s'allibera sol en ${s} s`,
-    back: 'Enrere',
+    back: CA.concepts.back,
     /** Under "Enrere" in its narrow button: just "hold, don't tap". */
     backHint: 'mantén',
-    claim: 'Comprovar cartró',
+    claim: CA.concepts.claim,
   },
 
   longPress: { hint: 'Mantén premut per confirmar', percent: (p: number) => `${p} %` },

@@ -44,6 +44,25 @@ export const CA = {
   nextRound: (name: string) => `Següent: ${name}`,
   thanks: 'Gràcies per venir!',
   winners: 'Guanyadors',
+  /** The game's concepts' names on screen (GLOSSARY.md), shared by every app through packages/ui/concepts.ts. */
+  concepts: {
+    hold: 'Parlem',
+    pause: 'Pausa',
+    stay: 'Aguanta',
+    suspense: 'Suspens',
+    back: 'Enrere',
+    next: 'Següent',
+    claim: 'Comprovar cartró',
+    checkReveal: 'Destapa',
+    review: 'Revisió manual',
+    celebration: 'Celebrem!',
+    checkFail: 'Fallada',
+    lastStanding: 'Quina potra!',
+    fallen: 'Assegut',
+    throw: 'Llançament',
+    storm: 'Tempesta',
+    break: 'Descans',
+  },
   /** The Wii remote's guide (the console's Comandament dialog and the printed cheat sheet): wii/legend.ts. */
   wii: {
     title: 'Comandament',

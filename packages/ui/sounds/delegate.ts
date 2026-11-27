@@ -11,6 +11,10 @@
 //   rule allows; the shake plays with sounds off too, since the motion is what says it.
 // `data-touch="<class>"` on an element overrides the rules; `data-touch="none"` silences it (the hold buttons play
 // their own, Sons plays its own).
+// Haptics (R4, 27 Nov; ANIMATIONS.md › press): where the wiring asks for them (the phone only, never the console or the
+// projector), each press the delegate sounds, the refused thud included, also gives a ~10 ms vibration, where the
+// browser has the Vibration API (Android's Chrome; iOS Safari has none). It follows the press, not the sounds' switch:
+// a phone with its sounds off still feels its taps.
 import { touchPress, touchRelease, touchTap } from './touch.ts';
 import type { TouchClass } from './types.ts';
 
@@ -28,6 +32,27 @@ export interface TouchWiring {
   scrollers: string;
   /** What "can't be used now" looks like. */
   unusable?: string;
+  /** A short vibration with each press (phones only). */
+  haptics?: boolean;
+}
+
+/** The press's vibration, in ms (R4). */
+export const HAPTIC_MS = 10;
+
+interface VibratingNavigator {
+  vibrate?: (pattern: number | number[]) => boolean;
+  userActivation?: { hasBeenActive: boolean };
+}
+
+/** One short buzz, where the browser can and the page may (after the first tap: browsers ignore it before). */
+export function buzz(nav: VibratingNavigator | undefined = typeof navigator === 'undefined' ? undefined : (navigator as VibratingNavigator)): boolean {
+  if (!nav || typeof nav.vibrate !== 'function') return false;
+  if (nav.userActivation && !nav.userActivation.hasBeenActive) return false;
+  try {
+    return nav.vibrate(HAPTIC_MS);
+  } catch {
+    return false;
+  }
 }
 
 const DEFAULT_UNUSABLE = ':disabled, [aria-disabled="true"]';
@@ -78,11 +103,16 @@ export function wireTouchSounds(doc: Document, wiring: TouchWiring): () => void 
   /** The last tap played at a click: a label's click forwarded to its input is the same tap. */
   let lastTap: { el: Element; atMs: number } | null = null;
 
+  const feel = () => {
+    if (wiring.haptics) buzz();
+  };
+
   const refused = (found: Found): boolean => {
     if (!found.el.matches(unusable)) return false;
     if (found.refuse) {
       shake(found.el);
       touchPress('refused');
+      feel();
     }
     return true;
   };
@@ -95,6 +125,7 @@ export function wireTouchSounds(doc: Document, wiring: TouchWiring): () => void 
     if (refused(found)) return;
     pressed = found.el;
     touchPress(found.cls);
+    feel();
     const release = playsRelease(found.el);
     const up = () => {
       stop();
@@ -118,6 +149,7 @@ export function wireTouchSounds(doc: Document, wiring: TouchWiring): () => void 
     lastTap = { el: found.el, atMs: e.timeStamp };
     if (refused(found)) return;
     touchTap(found.cls, playsRelease(found.el));
+    if (e.detail !== 0) feel();
   }
 
   const onKeyDown = () => {

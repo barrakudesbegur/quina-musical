@@ -1,0 +1,297 @@
+/*
+ * A1 · Button (components-v2.md § 2; Button.svelte). Built on the design resources (../ds/resources.css): the press
+ * structure (R4), the palette slots and the 3D edge (R2), the on pattern (R3), rings and the ribbon (R1, R11), and
+ * the corner inset for the Wii keys (R7). Every size and density value is a custom property here, so the apps'
+ * layouts tune a context (a grid slot, the portrait cluster) by setting variables, never by restyling the parts.
+ * Every rule that sets a variable is wrapped in :where() (zero specificity), so an app's context rule sets them
+ * (`.check-board__back { --button-label-size: … }`) whatever the order the stylesheets load in.
+ */
+
+/* ---- the console's scale, the default (D165: label 26 / 36 / 62) --------------------------------------------- */
+:where(.button) {
+  --ds-radius: var(--radius-lg);
+  --ds-border: var(--line-width-bold);
+  --ds-drop: 6px;
+  --ds-edge: 8px;
+  --ds-shine: 5px;
+  --button-min-height: var(--tap-big);
+  --button-pad-block: var(--space-2);
+  --button-pad-inline: var(--space-3);
+  --button-gap: var(--space-1);
+  --button-head-gap: var(--space-2);
+  --button-label-size: 2.25rem;
+  --button-label-line: 1.05;
+  --button-icon-size: 2.75rem;
+  --button-note-size: var(--text-sm);
+  --button-stroke: var(--title-stroke-md, 5px);
+  --button-label-drop: 0 3px 0 var(--color-ink);
+  --button-label-color: var(--color-white);
+  --button-tracking: normal;
+}
+
+:where(.button[data-size='xs']) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 4px;
+  --ds-edge: 5px;
+  --ds-shine: 3px;
+  --button-min-height: var(--tap-dense, 44px);
+  --button-pad-block: var(--space-1);
+  --button-pad-inline: var(--space-2);
+  --button-head-gap: var(--space-1);
+  --button-label-size: 1.125rem;
+  --button-icon-size: 1.25rem;
+  --button-note-size: var(--text-xs);
+  --button-stroke: 3px;
+  --button-label-drop: 0 2px 0 var(--color-ink);
+}
+
+:where(.button[data-size='s']) {
+  --button-label-size: 1.625rem;
+  --button-icon-size: 1.875rem;
+}
+
+:where(.button[data-size='l']) {
+  --button-head-gap: var(--space-4);
+  --button-label-size: clamp(2.5rem, 6vw, 3.875rem);
+  --button-icon-size: 3.75rem;
+}
+
+/* ---- the phone's scale (label 22 / 27 / 28; snow letters with the thinner outline) ----------------------------- */
+/* On the phone a Button fills its row (one thumb, the grandmother test), unless its context says otherwise. */
+:where([data-density='phone'] .button) {
+  width: 100%;
+  --button-pad-inline: var(--space-4);
+  --button-label-color: var(--color-snow);
+  --button-stroke: var(--title-stroke-sm);
+  --button-label-drop: var(--title-drop-sm);
+  --button-tracking: var(--title-tracking-sm);
+}
+
+:where([data-density='phone'] .button[data-size='xs']) {
+  --button-min-height: var(--tap-min);
+  --button-label-size: 1.125rem;
+  --button-icon-size: 1.25rem;
+  --button-stroke: 3px;
+}
+
+:where([data-density='phone'] .button[data-size='s']) {
+  --button-min-height: 3.375rem;
+  --button-label-size: 1.375rem;
+  --button-icon-size: 1.5rem;
+}
+
+:where([data-density='phone'] .button[data-size='m']) {
+  --button-min-height: 3.625rem;
+  --button-label-size: 1.6875rem;
+  --button-icon-size: 1.625rem;
+}
+
+:where([data-density='phone'] .button[data-size='l']) {
+  --button-head-gap: var(--space-2);
+  --button-pad-bottom: var(--space-3);
+  --button-label-size: 1.75rem;
+  --button-icon-size: 1.75rem;
+}
+
+/* ---- the parts ------------------------------------------------------------------------------------------------- */
+.button__piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-gap);
+  min-height: var(--button-min-height);
+  padding: var(--button-pad-block) var(--button-pad-inline) var(--button-pad-bottom, var(--button-pad-block));
+  text-align: center;
+}
+
+.button__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--button-gap);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.button__head {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-head-gap);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.button[data-icon-placement='top'] .button__head {
+  flex-direction: column;
+  gap: var(--button-gap);
+}
+
+.button__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--button-label-color);
+  /* the icon's line is as heavy as the label's stems beside it (icons.css: its ink is a share of this size) */
+  font-size: var(--button-label-size);
+}
+
+.button__icon > svg {
+  width: var(--button-icon-size);
+  height: var(--button-icon-size);
+}
+
+/* Londrina in capitals (D96) with the ink outline painted under the fill; it wraps by words, never truncated. */
+.button__label {
+  min-width: 0;
+  color: var(--button-label-color);
+  font-family: var(--font-display);
+  font-size: var(--button-label-size);
+  font-weight: var(--font-weight-strong);
+  line-height: var(--button-label-line);
+  letter-spacing: var(--button-tracking);
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  -webkit-hyphens: manual;
+  hyphens: manual;
+  -webkit-text-stroke: var(--button-stroke) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: var(--button-label-drop);
+}
+
+/* Nunito in its own case (D114), in the palette's contrast colour (ink on most fills, snow on navy). */
+.button__note {
+  display: block;
+  max-width: 100%;
+  color: var(--palette-contrast);
+  font-family: var(--font-body);
+  font-size: var(--button-note-size);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  text-wrap: balance;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* The `children` slot's content is the body's: no outline or display letters unless it asks for them. */
+.button__body > :not(.button__head, .button__note) {
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* ---- variants -------------------------------------------------------------------------------------------------- */
+/* soft: the palette's subtle tint, the thinner outline and drop, the label in Nunito in the palette's text colour */
+:where(.button[data-variant='soft']) {
+  --ds-border: var(--line-width);
+  --ds-drop: 4px;
+}
+
+.button[data-variant='soft'] > .button__piece {
+  background: var(--palette-subtle, var(--color-chip, var(--color-surface)));
+  box-shadow: none;
+}
+
+/* plain: the surface's fill, the label in the palette's text colour */
+.button[data-variant='plain'] > .button__piece {
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+.button:is([data-variant='soft'], [data-variant='plain']) .button__label {
+  color: var(--palette-fg, var(--color-text));
+  font-family: var(--font-body);
+  font-size: calc(var(--button-label-size) * 0.62);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.button:is([data-variant='soft'], [data-variant='plain']) .button__icon {
+  color: var(--palette-fg, var(--color-text));
+  font-size: calc(var(--button-label-size) * 0.62);
+}
+
+.button:is([data-variant='soft'], [data-variant='plain']) .button__note {
+  color: var(--color-text-muted);
+}
+
+/* floating (D189, D-a): the only pill, lifted over the content by a soft shadow under its hard one */
+:where(.button[data-floating]) {
+  --ds-radius: var(--radius-pill);
+}
+
+.button[data-floating]::before {
+  box-shadow: var(--shadow-floating);
+}
+
+/* ---- busy: the pressed look (resources.css) and three dots stepping (ANIMATIONS.md › busy) -------------------- */
+.button__dots {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.3em;
+  font-size: calc(var(--button-label-size) * 0.3);
+}
+
+.button__dots > span {
+  width: 1em;
+  height: 1em;
+  border: 0.25em solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--button-label-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .button__dots > span {
+    animation: button-busy-dot 1.2s steps(1, end) infinite;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .button__dots > span:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .button__dots > span:nth-child(3) {
+    animation-delay: 0.8s;
+  }
+}
+
+@keyframes button-busy-dot {
+  0% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.3;
+  }
+}
+
+/* ---- the Wii keys (R7: the same inset from the top and the side; centred when the button is too short) ----------- */
+:where(.button__wii) {
+  --corner-size: 32px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+:where(.button__wii[data-hold]) {
+  --corner-inset: 14px;
+}
+
+:where(.button__wii[data-size='sm']) {
+  --corner-size: 22px;
+  --corner-inset: 6px;
+}
+
+:where(.button__wii[data-size='sm'][data-hold]) {
+  --corner-inset: 10px;
+}
+
+/* A short button (xs, s) keeps its words clear of the keys, which centre on its end (R7). */
+.button:is([data-size='xs'], [data-size='s']):has(.button__wii > *) .button__piece {
+  padding-inline-end: calc(var(--button-pad-inline) + 2rem);
+}
