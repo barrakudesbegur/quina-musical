@@ -109,6 +109,14 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U197 · A Play Store app (TWA) for Android players
+The research (docs/research/reports/android-twa-and-install.md, 27 Nov) recommends passing.
+- **Too slow:** a personal account created after 13 Nov 2023 needs a 14-day closed test with 12 testers, then up to 7 days for production access and up to 7 or more for review. The earliest release would be about 18–25 Dec, with no room for a rejection, and bare web wrappers are often rejected.
+- **No gain:** it adds nothing an installed PWA lacks, and "Play Store, sign in, install" is harder than scanning.
+- **Removing it:** possible but imperfect. Unpublishing stops new installs, and an app on fewer than 1,000 devices can now be deleted, which burns its package name. Installed copies stay on phones.
+- (a) Pass.
+- (b) Try it. The user would first say whether the Play account is personal or an organisation's, and when it was created.
+
 ### U196 · An App Clip for iPhone players
 The research (docs/research/reports/ios-install-and-app-clip.md, 27 Nov) recommends passing.
 - **Review:** it needs a full parent app with the same features, and a parent that is just the site in a web view fails App Review's guideline 4.2. A new app's first approval takes about 2–7 days, often after a rejection, and Apple warns of slow reviews around 19–26 Dec.
@@ -313,7 +321,8 @@ Rounds in order, a card type and side per round, prize bundles, sponsors, the do
 3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
 5. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console. Note the tablet's model and iOS version (U187).
-6. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.
+6. Scanning a card on Android (a Samsung and an older phone) before the cards are printed on 4–5 Dec: the camera, the Quick Settings scanner and Google Lens. Each must open the card itself, with or without the installed app (D224).
+7. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.
 
 ### U20 · More Hold music and victory tracks
 Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/hold`, `data/media/celebration`). You'll add more.
