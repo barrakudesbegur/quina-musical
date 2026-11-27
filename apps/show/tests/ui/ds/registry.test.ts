@@ -11,9 +11,9 @@ import { CONCEPTS } from '../../../../../packages/ui/concepts.ts';
 import { PALETTE_COLORS } from '../../../../../packages/ui/components/types.ts';
 import { SPRITES } from '../../../../../packages/ui/sounds/sprites.ts';
 import { LINE_ICONS } from '../../../../../packages/ui/icons/line.ts';
-import { ACTIONS, SCREENS, WII, asDefault, type ConsolePreset } from '../../../../console/actions.ts';
+import { ACTIONS, FX, ICONS, MINI, SCREENS, WII, asDefault, type ConsolePreset } from '../../../../console/actions.ts';
 import { wiiBadgeButton } from '../../../../console/logic/wii-keys.ts';
-import { PLAYER, confirmColors, type PlayerPreset } from '../../../../player/actions.ts';
+import { PLAYER, PLAYER_CORNERS, PLAYER_ICONS, PLAYER_LINKS, confirmColors, type PlayerPreset } from '../../../../player/actions.ts';
 import { contrast, fillAndText, paletteBlock } from './palette.ts';
 
 const BUTTON_COLORS = ['orange', 'red', 'green', 'gold', 'cyan', 'purple', 'pink', 'navy', 'grey'];
@@ -101,4 +101,37 @@ test("the Wii keys map to the console's badges", () => {
   assert.equal(wiiBadgeButton(['a']), 'a');
   assert.equal(wiiBadgeButton(['up']), 'up');
   assert.equal(wiiBadgeButton(['a', 'b']), null);
+});
+
+test("the buttons family's other presets: words or a name, drawings the family has, sounds the sprite has", () => {
+  const consoleSounds = Object.keys(SPRITES.console.classes);
+  const playerSounds = Object.keys(SPRITES.player.classes);
+  for (const [id, mini] of entries<{ label?: string; icon?: string; sound?: string | null; wii?: { keys: readonly string[] } }>(MINI)) {
+    // an icon-only mini gets its name (aria-label) at the call site: it must have a drawing then
+    assert.ok(mini.label?.trim() || mini.icon, `${id}: neither words nor a drawing`);
+    if (mini.icon) assert.ok(drawn(mini.icon), `${id}: no drawing ${mini.icon}`);
+    if (mini.sound) assert.ok(consoleSounds.includes(mini.sound), `${id}: the console has no ${mini.sound} sound`);
+    if (mini.wii) assert.ok(wiiBadgeButton(mini.wii.keys), `${id}: the badge can't draw ${mini.wii.keys.join('+')}`);
+  }
+  for (const [id, icon] of entries<{ icon: string; sound?: string | null }>(ICONS)) {
+    assert.ok(drawn(icon.icon), `${id}: no drawing ${icon.icon}`);
+    if (icon.sound) assert.ok(consoleSounds.includes(icon.sound), `${id}: the console has no ${icon.sound} sound`);
+  }
+  for (const [id, icon] of entries<{ icon: string }>(PLAYER_ICONS)) assert.ok(drawn(icon.icon), `${id}: no drawing ${icon.icon}`);
+  for (const [id, link] of entries<{ label: string }>(PLAYER_LINKS)) assert.ok(link.label.trim(), `${id} has no words`);
+  for (const [id, corner] of entries<{ label: string }>(PLAYER_CORNERS)) assert.ok(corner.label.trim(), `${id} has no words`);
+  assert.notEqual(PLAYER_CORNERS.prizes.side, PLAYER_CORNERS.schedule.side, 'the two corners sit on different sides');
+  for (const sound of ['corner', 'floating', 'small']) assert.ok(playerSounds.includes(sound), `the phone has no ${sound} sound`);
+  for (const sound of ['small', 'chipRemove', 'holdDone']) assert.ok(consoleSounds.includes(sound), `the console has no ${sound} sound`);
+  for (const [id, grid] of entries<{ columns: number }>(FX)) assert.ok(Number.isInteger(grid.columns) && grid.columns > 0, `${id}: columns`);
+});
+
+test("the two-level presets: the strip's drawing and keys, and the hold's keys never collide with the tap's", () => {
+  for (const id of ['hold', 'stay'] as const) {
+    const preset = ACTIONS[id];
+    assert.ok(preset.level2 && drawn(preset.level2.icon), `${id}: its strip has no drawing`);
+    assert.ok(preset.wii && preset.level2?.wii, `${id}: the remote's keys on both levels`);
+    assert.ok(preset.level2.wii.hold, `${id}: level 2 is held`);
+  }
+  assert.ok(ACTIONS.throw.level2 && ACTIONS.storm.level2, 'the throw buttons restart from their strip');
 });
