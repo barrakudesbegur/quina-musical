@@ -1,6 +1,8 @@
 // The analysis JSON contract (written by tools/prep/analyze.py, schema v1). The engine checks every file as
 // it loads; a song whose analysis fails the check is left out of the round instead of breaking a landing.
 
+import { DEFAULT_POOL, isPoolId } from '@quina/protocol';
+
 export const ANALYSIS_SCHEMA_VERSION = 1;
 
 /** A hook of a song: the downbeat a landing puts at T, and the pickup before it. */
@@ -38,7 +40,9 @@ export interface IndexSong {
   id: number;
   title: string;
   artist: string;
-  /** Its pool (D178), from songs.json; absent before pools. */
+  /** Its pools (D178, D268), from songs.json: sorted, one or more; absent in an index from before D268. */
+  pools?: string[];
+  /** Its first pool, kept beside `pools` for one deploy; absent before pools. Goes with D268's step 3. */
   pool?: string;
   excluded: boolean;
   hooks: { id: string; valid: boolean }[];
@@ -82,6 +86,16 @@ export function checkAnalysis(a: unknown): Analysis {
   const problems = analysisProblems(a);
   if (problems.length) throw new Error(`analysis ${(isRecord(a) ? a.songId : undefined) ?? '?'}: ${problems.join(', ')}`);
   return a as Analysis; // analysisProblems checked every field the engine relies on
+}
+
+/**
+ * A song's pools as the index gives them (D268): `pools`, each a pool id. An index from before D268 has only `pool`
+ * (absent: DEFAULT_POOL); that fallback goes with D268's step 3, once every index carries `pools`.
+ */
+export function indexPools(s: Pick<IndexSong, 'pool' | 'pools'>): string[] {
+  const pools = Array.isArray(s.pools) ? s.pools.filter(isPoolId) : [];
+  if (pools.length) return [...new Set(pools)].sort();
+  return [isPoolId(s.pool) ? s.pool : DEFAULT_POOL];
 }
 
 /** The songs a round may use: in the index, not excluded, with at least one valid hook. */

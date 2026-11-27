@@ -32,18 +32,40 @@ def test_the_same_song_is_a_single_and_its_album_track_or_a_feat_suffix():
     assert pools.song_key(song("Judas", "Lady Gaga")) != pools.song_key(song("Judas", "Someone Else"))
 
 
-def test_pools_merge_with_night_wide_ids_and_report_what_they_leave_out():
-    pool1 = [song("Ave María", "Bisbal", "t1", 1), song("NI BORRACHO", "Quevedo", "t2", 2)]
+def test_pools_merge_with_night_wide_ids_and_share_the_songs_an_earlier_pool_has_d268():
+    pool1 = [song("Ave María", "Bisbal", "t1", 1), song("NI BORRACHO", "Quevedo", "t2", 2), song("Solo", "Z", "s", 3)]
     pool2 = [song("Abba", "X", "n1"), song("Ave María", "Bisbal", "t1"), song("NI BORRACHO", "Quevedo", "single"),
              song("Viva", "Coldplay", "v"), song("Viva", "Coldplay", "v"), song("Zeta", "Y", "n2")]
     merged = pools.merge([(spec("1"), pool1), (spec("2", "order", 71), pool2)])
-    assert [(s["id"], s["title"], s["pool"]) for s in merged.songs] == [
-        (1, "Ave María", "1"), (2, "NI BORRACHO", "1"), (71, "Abba", "2"), (72, "Viva", "2"), (73, "Zeta", "2")]
+    # Every song once; the shared ones keep their pool 1 ids and join pool 2, and pool 2's own songs are numbered
+    # from 71 in playlist order without them.
+    assert [(s["id"], s["title"], s["pool"], s["pools"]) for s in merged.songs] == [
+        (1, "Ave María", "1", ["1", "2"]), (2, "NI BORRACHO", "1", ["1", "2"]), (3, "Solo", "1", ["1"]),
+        (71, "Abba", "2", ["2"]), (72, "Viva", "2", ["2"]), (73, "Zeta", "2", ["2"])]
     assert merged.notes == [
-        'pool 2 #2 "Ave María" (Bisbal): the same track is in pool 1; left out',
-        'pool 2 #3 "NI BORRACHO" (Quevedo): the same song is in pool 1; left out',
+        "pool 2 #2 «Ave María»: shared with pool 1 (#1)",
+        "pool 2 #3 «NI BORRACHO»: shared with pool 1 (#2)",
         'pool 2 #5 "Viva" (Coldplay): listed twice in its playlist; kept once',
     ]
+
+
+def test_a_shared_song_keeps_its_earlier_entry_and_its_pools_stay_sorted():
+    pool_b = [song("Ave María", "Bisbal", "t1", 1)]
+    pool_a = [song("Ave María (feat. X)", "Bisbal", "other", 9)]
+    pool_c = [song("Ave Maria", "BISBAL", "t1"), song("Nova", "N", "n")]
+    merged = pools.merge([(spec("b"), pool_b), (spec("a"), pool_a), (spec("c", "order", 20), pool_c)])
+    assert merged.songs == [
+        {"id": 1, "title": "Ave María", "artist": "Bisbal", "spotifyId": "t1", "pool": "b", "pools": ["a", "b", "c"]},
+        {"id": 20, "title": "Nova", "artist": "N", "spotifyId": "n", "pool": "c", "pools": ["c"]},
+    ]
+    assert merged.notes == ["pool a #1 «Ave María (feat. X)»: shared with pool b (#1)",
+                            "pool c #1 «Ave Maria»: shared with pool b (#1)"]
+
+
+def test_a_shared_song_listed_twice_in_the_later_playlist_is_reported_once_as_shared():
+    merged = pools.merge([(spec("1"), [song("A", sid="t", id=1)]), (spec("2", "order", 71), [song("A", sid="t"), song("A", sid="t")])])
+    assert [(s["id"], s["pools"]) for s in merged.songs] == [(1, ["1", "2"])]
+    assert merged.notes == ["pool 2 #1 «A»: shared with pool 1 (#1)", 'pool 2 #2 "A" (A): listed twice in its playlist; kept once']
 
 
 def test_a_pool_out_of_title_order_is_reported_and_keeps_the_playlist_order():
@@ -87,3 +109,21 @@ def test_print_names_follow_the_spotify_id_not_the_song_number():
     assert not {"printTitle", "printArtist"} & set(by_track["freska"])  # nothing changes, nothing written
     assert [s["id"] for s in merged.songs] == [1, 2, 3]
     assert merged.notes == ["print-names.json: elsewhere isn't a song of this repertoire; its fix is unused"]
+
+
+def test_print_names_on_shared_songs_come_from_the_earlier_entry():
+    pool1 = [song("Un Beso Y Una Flor - Remastered 2016", "Nino Bravo", "beso", 1)]
+    pool2 = [song("Un Beso Y Una Flor", "Nino Bravo", "beso-single"), song("Timber", "Pitbull, Kesha", "timber")]
+    merged = pools.with_print_names(pools.merge([(spec("1"), pool1), (spec("2", "order", 71), pool2)]), {})
+    assert [(s["id"], s.get("printTitle"), s.get("printArtist"), s["pools"]) for s in merged.songs] == [
+        (1, "Un Beso Y Una Flor", None, ["1", "2"]), (71, None, "Pitbull", ["2"])]
+
+
+def test_the_analysis_index_carries_pools_and_for_one_deploy_pool_d268():
+    import analyze
+
+    assert analyze.song_pools({"id": 6, "pool": "1", "pools": ["2", "1"]}) == {"pool": "1", "pools": ["1", "2"]}
+    assert analyze.song_pools({"id": 71, "pool": "2", "pools": ["2"]}) == {"pool": "2", "pools": ["2"]}
+    assert analyze.song_pools({"id": 72, "pool": "2"}) == {"pool": "2", "pools": ["2"]}, "a songs.json from before D268"
+    assert analyze.song_pools({"id": 1, "pools": ["2", "1"]}) == {"pool": "1", "pools": ["1", "2"]}
+    assert analyze.song_pools({"id": 3}) == {}, "a songs.json from before pools"

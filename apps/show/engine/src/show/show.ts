@@ -569,8 +569,11 @@ export interface SongInfo {
   id: number;
   title: string;
   artist: string;
-  /** Its pool (D178): the songs a round on a side of that pool is shuffled from. Absent: DEFAULT_POOL. */
-  pool?: string;
+  /**
+   * Its pools (D178, D268): a round on a side of any of them may draw it, so one song can be in several. Absent or
+   * empty: DEFAULT_POOL only.
+   */
+  pools?: readonly string[];
 }
 
 /** Audio-clock times of the pending automatic Next and of the switch to Hold music. */
@@ -1354,18 +1357,20 @@ export class Show {
   }
 
   // ------------------------------------------------------------------------------------------ pools (D178)
-  /** A song's pool: its own, else DEFAULT_POOL. */
-  poolOf(songId: number): string {
-    return this.catalog.get(songId)?.pool ?? DEFAULT_POOL;
+  /** A song's pools (D268: a song may be in several): its own, else DEFAULT_POOL only. */
+  poolsOf(songId: number): readonly string[] {
+    const pools = this.catalog.get(songId)?.pools;
+    return pools?.length ? pools : [DEFAULT_POOL];
   }
 
   /**
-   * A pool's songs, in the catalogue's order (the order is part of the Shuffle's rule). A pool with no songs (a
-   * repertoire not split into pools yet) plays the whole repertoire, with a warning: a round never starts empty.
+   * A pool's songs, in the catalogue's order (the order is part of the Shuffle's rule), a song shared with another
+   * pool included (D268). A pool with no songs (a repertoire not split into pools yet) plays the whole repertoire,
+   * with a warning: a round never starts empty.
    */
   poolSongs(pool: string): number[] {
     const ids = [...this.catalog.keys()];
-    const songs = ids.filter((id) => this.poolOf(id) === pool);
+    const songs = ids.filter((id) => this.poolsOf(id).includes(pool));
     if (songs.length || !ids.length) return songs;
     this.out.push({ type: 'log', level: 'warn', message: `pool ${pool} has no songs: the round plays the whole repertoire` });
     return ids;
@@ -3760,15 +3765,22 @@ export class Show {
     return this.firstPlaysIn(this.position, roundSongs(this.round.kind, SCHEDULE, this.expectedSongs) - 1);
   }
 
-  /** Each pool's songs no round will have played by this round's expected end, for later rounds' first plays (D178). */
+  /**
+   * Each pool's songs no round will have played by this round's expected end, for later rounds' first plays (D178).
+   * A song in several pools counts in each (D268), and once played in any round it is played for all of them: the
+   * first plays are the Game's (D174), not a pool's.
+   */
   poolsLeft(): Record<string, { songs: number; unplayed: number }> {
     const end = roundSongs(this.round.kind, SCHEDULE, this.expectedSongs);
     const thisRound = new Set(this.queue.slice(0, end));
     const out: Record<string, { songs: number; unplayed: number }> = {};
     for (const id of this.catalog.keys()) {
-      const p = (out[this.poolOf(id)] ??= { songs: 0, unplayed: 0 });
-      p.songs++;
-      if (!this.played.has(id) && !thisRound.has(id)) p.unplayed++;
+      const unplayed = !this.played.has(id) && !thisRound.has(id);
+      for (const pool of this.poolsOf(id)) {
+        const p = (out[pool] ??= { songs: 0, unplayed: 0 });
+        p.songs++;
+        if (unplayed) p.unplayed++;
+      }
     }
     return out;
   }

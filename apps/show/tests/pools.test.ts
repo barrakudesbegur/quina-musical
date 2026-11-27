@@ -8,10 +8,13 @@ import {
   type CardTypeSides, type JournalEntry,
 } from '@quina/protocol';
 import { cardFace, validCards, type PrintedCard } from '../engine/src/game/cards.ts';
-import { FLOW } from '../engine/src/config.ts';
+import { FLOW, SCHEDULE } from '../engine/src/config.ts';
+import { roundSongs } from '../engine/src/plan/pace.ts';
 import { seededRandom } from '../engine/src/rng.ts';
 import { dataTest } from './support/data.ts';
 import { setup, songs, type Harness } from './support/harness.ts';
+import type { SongInfo } from '../engine/src/show/show.ts';
+import { indexPools } from '../engine/src/analysis.ts';
 
 const TYPES: CardTypeSides[] = [
   { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1-5' }, { side: 2, pool: '2', label: '6-10' }] },
@@ -71,11 +74,14 @@ test('the resume token carries a side other than 1 as C<n>', () => {
   assert.equal(parseResumeToken(`${text.slice(0, -1)}0`), null, 'side 0 is not a side');
 });
 
-/** The test songs split into two pools (the first 38 and the rest), and two-sided cards drawn from them: normal 1–40, especial 41–60. */
-function twoPools(seed = 3): { repertoire: typeof songs; cards: PrintedCard[]; pool1: Set<number>; pool2: Set<number> } {
-  const repertoire = songs.map((s, i) => ({ ...s, pool: i < 38 ? '1' : '2' }));
-  const pool1 = new Set(repertoire.filter((s) => s.pool === '1').map((s) => s.id));
-  const pool2 = new Set(repertoire.filter((s) => s.pool === '2').map((s) => s.id));
+/**
+ * The test songs split into two pools (the first 38 and the rest), and two-sided cards drawn from them: normal 1–40,
+ * especial 41–60. With `shared`, the first that many songs are in both pools (D268), as 2026's 4 are.
+ */
+function twoPools(seed = 3, shared = 0): { repertoire: SongInfo[]; cards: PrintedCard[]; pool1: Set<number>; pool2: Set<number> } {
+  const repertoire: SongInfo[] = songs.map((s, i) => ({ ...s, pools: i < shared ? ['1', '2'] : [i < 38 ? '1' : '2'] }));
+  const pool1 = new Set(repertoire.filter((s) => s.pools?.includes('1')).map((s) => s.id));
+  const pool2 = new Set(repertoire.filter((s) => s.pools?.includes('2')).map((s) => s.id));
   const rng = seededRandom(seed);
   const pick = (ids: number[]) => {
     const left = [...ids];
@@ -165,6 +171,65 @@ dataTest('first plays per pool (D174, D178): a round on a new pool starts with a
   assert.deepEqual(Object.keys(left).sort(), ['1', '2']);
   assert.equal(left['2'].unplayed, left['2'].songs, 'nothing of pool 2 is played in a pool 1 round');
   assert.ok(left['1'].unplayed < left['1'].songs);
+});
+
+test("a song's pools as the analysis index gives them (D268), and an older index's `pool` for one deploy", () => {
+  assert.deepEqual(indexPools({ pool: '1', pools: ['2', '1'] }), ['1', '2'], 'sorted');
+  assert.deepEqual(indexPools({ pool: '2', pools: ['2'] }), ['2']);
+  assert.deepEqual(indexPools({ pool: '2' }), ['2'], 'an index from before D268');
+  assert.deepEqual(indexPools({}), ['1'], 'an index from before pools');
+  assert.deepEqual(indexPools({ pools: [] }), ['1']);
+});
+
+dataTest('a song in both pools (D268) is in both rounds\' Queues and counts in each pool', () => {
+  const { repertoire, cards, pool1, pool2 } = twoPools(3, 4);
+  const shared = repertoire.slice(0, 4).map((s) => s.id);
+  assert.equal(pool1.size, 38);
+  assert.equal(pool2.size, songs.length - 38 + 4);
+  // Side 1 plays pool 1, side 2 pool 2: each Queue is a Shuffle of all its pool's members, the shared songs included.
+  const one = setup({ seed: 4, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-40', settings: { autoAdvance: false } });
+  one.send('unlock');
+  one.send('roundIntro', { number: 1, kind: 'normal', cardType: 'normal', side: 1 });
+  one.send('newRound');
+  assert.deepEqual([...one.show.queue].sort((a, b) => a - b), [...pool1].sort((a, b) => a - b));
+  const two = setup({ seed: 4, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-40', settings: { autoAdvance: false } });
+  sideTwo(two);
+  assert.deepEqual([...two.show.queue].sort((a, b) => a - b), [...pool2].sort((a, b) => a - b));
+  assert.ok(shared.every((id) => one.show.queue.includes(id) && two.show.queue.includes(id)));
+  assert.ok(two.show.phaseModel.valid.length > 0 && two.show.phaseModel.valid.every((c) => c.lines.flat().every((id) => pool2.has(id as number))));
+  // The pool counts: a shared song in each of its pools.
+  const left = two.show.poolsLeft();
+  assert.deepEqual([left['1'].songs, left['2'].songs], [pool1.size, pool2.size]);
+});
+
+dataTest('first plays are the Game\'s (D174, D268): a shared song played in a pool 1 round is no first play on pool 2', () => {
+  const { repertoire, cards, pool1, pool2 } = twoPools(3, 4);
+  const shared = repertoire.slice(0, 4).map((s) => s.id);
+  // Round 1 on pool 1 plays the shared songs first (a fixed Queue), then round 6 on side 2 draws its own Shuffle.
+  const fixed = [...shared, ...[...pool1].filter((id) => !shared.includes(id))];
+  const h = setup({ seed: 6, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-40', fixedQueue: fixed });
+  h.send('unlock');
+  h.send('next');
+  for (let k = 1; k <= 5; k++) h.until(() => h.show.position === k && h.show.status === 'playing', 80);
+  const playedInRound1 = h.show.queue.slice(0, h.show.position + 1);
+  assert.ok(shared.every((id) => playedInRound1.includes(id)));
+  // Each pool's unplayed songs: those no round has played or will have by this round's expected end.
+  const unplayed = (pool: Set<number>) => {
+    const thisRound = new Set(h.show.queue.slice(0, roundSongs(h.show.round.kind, SCHEDULE, h.show.expectedSongs)));
+    return [...pool].filter((id) => h.show.isFirstPlay(id) && !thisRound.has(id)).length;
+  };
+  let left = h.show.poolsLeft();
+  assert.deepEqual(left['2'], { songs: pool2.size, unplayed: pool2.size - shared.length }, 'a pool 1 round uses up the shared songs of pool 2 too');
+  assert.equal(left['1'].unplayed, unplayed(pool1));
+  h.show.fixedQueue = null;
+  // Mid-round, newRound names the next round's side itself (roundIntro waits for an Interval).
+  h.send('newRound', { number: 6, kind: 'normal', cardType: 'normal', side: 2 });
+  assert.equal(h.show.round.pool, '2');
+  assert.ok(shared.every((id) => h.show.queue.includes(id) && !h.show.isFirstPlay(id)), 'played on pool 1, so played for the Game');
+  assert.ok(h.show.queue.filter((id) => !shared.includes(id)).every((id) => h.show.isFirstPlay(id)), "pool 2's own songs are all new");
+  assert.equal(h.show.firstPlaysIn(0, h.show.queue.length), pool2.size - shared.length, 'the round\'s first plays leave out the shared songs');
+  left = h.show.poolsLeft();
+  assert.deepEqual([left['1'].unplayed, left['2'].unplayed], [unplayed(pool1), unplayed(pool2)]);
 });
 
 /** 2026's night (D192, D193, D226): Quines 1–5 on side 1, the Desgraciat on the especial card's side 1, the Descans,

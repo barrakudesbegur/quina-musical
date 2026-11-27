@@ -1,8 +1,10 @@
 """A repertoire's songs.json from its pools' playlists (D178, D193, D226).
 
 Each pool is a Spotify playlist fetched on its own (tools/prep/playlist-fetcher writes <folder>/output/songs.json).
-This step writes the repertoire's songs.json: every pool's songs, each tagged with its `pool`, with ids unique across
-the night. What to read is data/repertoires/<name>/pools.json:
+This step writes the repertoire's songs.json: every song once, with one id unique across the night, and the pools it
+is in (D268: "all songs are available in a shared pool"; each pool lists its songs, so a song can be in several).
+Each song has `pools` (sorted, one or more) and, for one deploy while its readers move to `pools`, `pool`: the pool
+that lists it first (D268's step 3 drops it). What to read is data/repertoires/<name>/pools.json:
 
     { "pools": [
         { "pool": "1", "songsJson": "data/media/2026/pool1/output/songs.json", "ids": "order", "firstId": 1 },
@@ -15,7 +17,9 @@ the night. What to read is data/repertoires/<name>/pools.json:
   T). Each song out of place is reported.
 - `ids: "keep"`: the playlist's own ids (the fetcher's stable ids), for a playlist numbered some other way.
 - A track listed twice in one playlist keeps its first place. A song already in an earlier pool (the same Spotify
-  track, or the same title and first artist) is left out of the later pool. Both are reported, never silent.
+  track, or the same title and first artist) is shared (D268): the later pool is added to the earlier song's `pools`,
+  and the song keeps its earlier id and entry; the later pool's own songs are numbered without it, so its ids don't
+  move. Both are reported, never silent.
 - Every song gets its print names (tools/prep/print_names.py): Spotify's tags off the title, the main artist only,
   then the hand fixes in data/repertoires/<name>/print-names.json (optional; keyed by Spotify id). `printTitle` /
   `printArtist` are written only where they differ from `title` / `artist`; a fix for a track not in the
@@ -111,39 +115,40 @@ def read_spec(path: Path) -> list[PoolSpec]:
 
 
 def merge(pools: list[tuple[PoolSpec, list[dict]]]) -> Merged:
-    """Every pool's songs in pool order, each tagged with its `pool` and given its night-wide id."""
+    """Every song once, in pool order, with its night-wide id and its `pools`: a later pool's song that an earlier pool
+    already has (the same track, or the same `song_key`) is shared, not repeated (D268)."""
     out: list[dict] = []
     notes: list[str] = []
-    seen_tracks: dict[str, str] = {}
-    seen_songs: dict[tuple[str, str], str] = {}
+    by_track: dict[str, dict] = {}
+    by_song: dict[tuple[str, str], dict] = {}
     for spec, playlist in pools:
         kept: list[dict] = []
         in_this: set[str] = set()
         for position, song in enumerate(playlist, start=1):
-            label = f"pool {spec.pool} #{position} \"{song.get('title')}\" ({song.get('artist')})"
             track = song.get("spotifyId")
             if track and track in in_this:
-                notes.append(f"{label}: listed twice in its playlist; kept once")
-                continue
-            if track and track in seen_tracks:
-                notes.append(f"{label}: the same track is in pool {seen_tracks[track]}; left out")
-                continue
-            if song_key(song) in seen_songs:
-                notes.append(f"{label}: the same song is in pool {seen_songs[song_key(song)]}; left out")
+                notes.append(f"pool {spec.pool} #{position} \"{song.get('title')}\" ({song.get('artist')}): listed twice in its playlist; kept once")
                 continue
             if track:
                 in_this.add(track)
-            kept.append(song)
+            earlier = (by_track.get(track) if track else None) or by_song.get(song_key(song))
+            if earlier is None:
+                kept.append(song)
+                continue
+            # The earlier entry wins: its id, names and fields; this pool only joins its `pools`.
+            if spec.pool not in earlier["pools"]:
+                earlier["pools"] = sorted([*earlier["pools"], spec.pool])
+            notes.append(f"pool {spec.pool} #{position} «{song.get('title')}»: shared with pool {earlier['pool']} (#{earlier.get('id')})")
         for song in out_of_order(kept):
             notes.append(f"pool {spec.pool} \"{song.get('title')}\" ({song.get('artist')}): out of title order")
         if spec.ids == "order":
-            numbered = [{**s, "id": spec.first_id + i, "pool": spec.pool} for i, s in enumerate(kept)]
+            numbered = [{**s, "id": spec.first_id + i, "pool": spec.pool, "pools": [spec.pool]} for i, s in enumerate(kept)]
         else:
-            numbered = [{**s, "pool": spec.pool} for s in kept]
+            numbered = [{**s, "pool": spec.pool, "pools": [spec.pool]} for s in kept]
         for s in numbered:
             if s.get("spotifyId"):
-                seen_tracks[s["spotifyId"]] = spec.pool
-            seen_songs.setdefault(song_key(s), spec.pool)
+                by_track.setdefault(s["spotifyId"], s)
+            by_song.setdefault(song_key(s), s)
         out.extend(numbered)
     ids = [s.get("id") for s in out]
     bad = [i for i in ids if not isinstance(i, int) or isinstance(i, bool) or i < 1]
@@ -197,9 +202,12 @@ def main() -> int:
     for note in merged.notes:
         print(f"⚠️  {note}")
     for spec in specs:
-        ids = [s["id"] for s in merged.songs if s["pool"] == spec.pool]
-        span = f"ids {min(ids)}–{max(ids)}" if ids else "no songs"
-        print(f"pool {spec.pool}: {len(ids)} songs, {span} ({spec.ids})")
+        ids = [s["id"] for s in merged.songs if spec.pool in s["pools"]]
+        own = [s["id"] for s in merged.songs if s["pool"] == spec.pool]
+        span = f"own ids {min(own)}–{max(own)}" if own else "no own songs"
+        print(f"pool {spec.pool}: {len(ids)} songs, {len(ids) - len(own)} of them shared with an earlier pool; {span} ({spec.ids})")
+    shared = [s["id"] for s in merged.songs if len(s["pools"]) > 1]
+    print(f"{len(merged.songs)} songs, {len(shared)} in more than one pool: {', '.join(map(str, shared)) or 'none'}")
     renamed = sum(1 for s in merged.songs if "printTitle" in s or "printArtist" in s)
     print(f"print names: {renamed} of {len(merged.songs)} songs print differently ({len(fixes)} hand fixes)")
     if args.check:

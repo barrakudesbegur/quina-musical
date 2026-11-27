@@ -4,16 +4,19 @@
 // names, resume codes, seeds or money (U68–U75's proposal). Which parts it carries beyond the plan and the songs
 // (the cards as uploaded data, U68; one file or split, U75) is still the user's call, so those parts are optional.
 import { checkGamePlan, roundCardType, roundSide, sideWarnings, type GamePlan } from './plan.ts';
-import { cardTypeSides, isCardTypeId, isPoolId, isSide, sidePool, DEFAULT_POOL, type CardTypeSides } from './vocabulary.ts';
+import { cardTypeSides, isCardTypeId, isPoolId, isSide, sidePool, type CardTypeSides } from './vocabulary.ts';
 
 export const EDITION_VERSION = 1;
 
-/** One song as the edition carries it: what screens and cards show, and the pool it's printed from (D178). */
+/**
+ * One song as the edition carries it: what screens and cards show, and the pools it's in (D178, D268): sorted, one
+ * or more, so a song shared by two pools is listed once, with one id.
+ */
 export interface EditionSong {
   id: number;
   title: string;
   artist: string;
-  pool: string;
+  pools: string[];
 }
 
 /** One side of a printed card: its 3 lines of 4 song ids. */
@@ -54,9 +57,10 @@ const MAX_ERRORS = 50;
 
 /**
  * An edition file as every reader takes it: the plan as the cloud reads it (checkGamePlan), the songs (unique ids,
- * a title, an artist and a pool each), and, when present, the card types and the cards: each card's type printed,
- * each side one its type has, 3 lines of 4 songs from that side's pool. A round on a side its card type lacks is an
- * error; a side no round plays and a pool with no songs are warnings (sideWarnings).
+ * a title, an artist and one or more pools each), and, when present, the card types and the cards: each card's type
+ * printed, each side one its type has, 3 lines of 4 songs that are members of that side's pool (a song shared by two
+ * pools is a member of both, D268). A round on a side its card type lacks is an error; a side no round plays and a
+ * pool with no songs are warnings (sideWarnings, counting a shared song in each of its pools).
  */
 export function checkEdition(doc: unknown): EditionCheck {
   const errors: string[] = [];
@@ -73,9 +77,9 @@ export function checkEdition(doc: unknown): EditionCheck {
   if (!plan.ok) for (const e of plan.errors) err(e.startsWith('plan') ? e : `plan: ${e}`);
 
   // ---- songs
-  const pools = new Map<number, string>();
+  const pools = new Map<number, readonly string[]>();
   const poolSongs: Record<string, number> = {};
-  if (!Array.isArray(doc.songs)) err('songs: a list of { id, title, artist, pool }');
+  if (!Array.isArray(doc.songs)) err('songs: a list of { id, title, artist, pools }');
   else doc.songs.forEach((song, i) => {
     const at = `songs[${i}]`;
     if (!isRecord(song)) return err(`${at}: not an object`);
@@ -83,10 +87,12 @@ export function checkEdition(doc: unknown): EditionCheck {
     if (pools.has(song.id)) return err(`${at}.id: ${song.id} is listed twice`);
     if (typeof song.title !== 'string' || !song.title) err(`${at}.title: a non-empty string`);
     if (typeof song.artist !== 'string') err(`${at}.artist: a string`);
-    if (!isPoolId(song.pool)) err(`${at}.pool: a pool id ("1", "2")`);
-    const pool = isPoolId(song.pool) ? song.pool : DEFAULT_POOL;
-    pools.set(song.id, pool);
-    poolSongs[pool] = (poolSongs[pool] ?? 0) + 1;
+    const own = Array.isArray(song.pools) ? song.pools : [];
+    if (!own.length || !own.every(isPoolId)) err(`${at}.pools: a non-empty list of pool ids (["1"], ["1", "2"])`);
+    else if (new Set(own).size !== own.length) err(`${at}.pools: lists a pool twice`);
+    const valid = [...new Set(own.filter(isPoolId))];
+    pools.set(song.id, valid);
+    for (const pool of valid) poolSongs[pool] = (poolSongs[pool] ?? 0) + 1;
   });
 
   // ---- card types and cards (optional together)
@@ -127,7 +133,7 @@ export function checkEdition(doc: unknown): EditionCheck {
             return err(`${at}: card ${card.id}'s side ${side.side} isn't ${LINES} lines of ${PER_LINE} songs`);
           }
           const ids = lines.flat();
-          const off = ids.filter((id) => !pools.has(id as number) || pools.get(id as number) !== pool);
+          const off = ids.filter((id) => !pools.get(id as number)?.includes(pool));
           if (off.length) err(`${at}: card ${card.id}'s side ${side.side} has song(s) ${off.join(', ')} outside pool ${pool}`);
           if (new Set(ids).size !== ids.length) err(`${at}: card ${card.id}'s side ${side.side} repeats a song`);
         }

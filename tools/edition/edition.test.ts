@@ -167,7 +167,7 @@ test("build: cards.json's songs become ids (a card from before sides is its side
     ],
   );
   const plan = checkPlan(SOURCE, { cardTypes: null }).plan!;
-  const songs = Array.from({ length: 24 }, (_, i) => ({ id: i + 1, title: `t${i + 1}`, artist: 'a', pool: i < 12 ? '1' : '2' }));
+  const songs = Array.from({ length: 24 }, (_, i) => ({ id: i + 1, title: `t${i + 1}`, artist: 'a', pools: [i < 12 ? '1' : '2'] }));
   const cards = editionCards([{ id: 1, type: 'normal', sides: [{ side: 1, lines: [line(1), line(5), line(9)] }, { side: 2, lines: [line(13), line(17), line(21)] }] }]);
   const edition = checkEdition(assembleEdition({ repertoire: '2026', plan, songs, cardTypes: TWO_SIDED, cards }));
   assert.equal(edition.ok, true, edition.ok ? '' : edition.errors.join('\n'));

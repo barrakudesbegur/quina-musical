@@ -282,6 +282,17 @@ def song_names(song: dict) -> dict:
     return {"title": song.get("printTitle") or song["title"], "artist": song.get("printArtist") or song["artist"]}
 
 
+def song_pools(song: dict) -> dict:
+    """A song's pools for index.json, from songs.json (D178, D268): `pools`, sorted, and `pool`, its first, kept for one
+    deploy while the readers move to `pools` (D268's step 3 drops it). A songs.json from before D268 has only `pool`;
+    one from before pools has neither, and the index then carries neither (the engine reads that as pool "1")."""
+    pools = song.get("pools")
+    if not pools and song.get("pool") is None:
+        return {}
+    pools = sorted({str(p) for p in pools}) if pools else [str(song["pool"])]
+    return {"pool": str(song["pool"]) if song.get("pool") is not None else pools[0], "pools": pools}
+
+
 def index_row(a: dict) -> dict:
     return {
         "id": a["songId"],
@@ -361,10 +372,8 @@ def main() -> int:
         path = out / f"{song['id']}.json"
         if path.exists() and song["id"] not in failed:  # a failed song's older file may be stale
             row = index_row(json.loads(path.read_text()))
-            # Its pool (D178) comes from songs.json as it is now: moving a song to another pool needs no new analysis.
-            if song.get("pool") is not None:
-                row["pool"] = str(song["pool"])
-            rows.append(row)
+            # Its pools (D178, D268) come from songs.json as it is now: moving a song to another pool needs no new analysis.
+            rows.append({**row, **song_pools(song)})
     write_text_if_changed(out / "index.json",
                           json.dumps({"schemaVersion": 1, "songs": rows}, ensure_ascii=False, indent=1))
     print(f"index.json ({repertoire.name}): {len(rows)} songs" + (f"; {len(failed)} failed" if failed else ""))

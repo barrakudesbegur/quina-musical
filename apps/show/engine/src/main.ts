@@ -51,7 +51,7 @@ import {
   type SoundName,
   type Volumes,
 } from '@quina/protocol';
-import { playableSongs } from './analysis.ts';
+import { indexPools, playableSongs } from './analysis.ts';
 import { ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
 import { drumTick } from './audio/synth/clicks.ts';
 import { seededRandom, secureRandom } from './rng.ts';
@@ -328,8 +328,8 @@ async function boot() {
       plan: plannerWithInputs({ stems, preverbs, blends }),
       random: secureRandom,
     },
-    // Each song with its pool (D178): a round's Queue is a Shuffle of its side's pool.
-    songs: songs.map((s) => ({ id: s.id, title: s.title, artist: s.artist, ...(isPoolId(s.pool) ? { pool: s.pool } : {}) })),
+    // Each song with its pools (D178, D268): a round's Queue is a Shuffle of its side's pool's members.
+    songs: songs.map((s) => ({ id: s.id, title: s.title, artist: s.artist, pools: indexPools(s) })),
     cards,
     cardTypes,
     cardsInPlay: params.get('cards') ?? readStored(cardsKey()) ?? '',

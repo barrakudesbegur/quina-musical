@@ -38,7 +38,8 @@ export const DEFAULT_CARD_TYPE: Readonly<Record<RoundKind, string>> = Object.fre
 export const defaultCardType = (kind: RoundKind): string => DEFAULT_CARD_TYPE[kind] ?? DEFAULT_CARD_TYPE.normal;
 /**
  * A pool's id (D178): each set of songs a round plays and a card's side is printed from ("1", "2"), as songs.json's
- * per-song `pool` and card-types.json's sides give it. A song without one is in DEFAULT_POOL.
+ * per-song `pools` (D268: a song may be in several) and card-types.json's sides give it. A song without any is in
+ * DEFAULT_POOL.
  */
 export const POOL_ID_RE = /^[a-z0-9]{1,8}$/;
 export const isPoolId = (value: unknown): value is string => typeof value === 'string' && POOL_ID_RE.test(value);
