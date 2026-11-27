@@ -22,18 +22,21 @@ const ROUND_4_ONLY = (() => {
   return titles(SAMPLE_PLAN.rounds[3]).filter((t) => !earlier.has(t));
 })();
 
-/** A tiny catalog: card 57 on both sides and card 123 as a card from before sides (side 1's songs as in the fixtures). */
+/** A tiny catalog: cards 57 and 508 (the especial one) on both sides, and card 123 as a card from before sides (the
+ * songs as in the fixtures). */
 const song = (id: number) => ({ id, title: `Song ${id}`, artist: `Artist ${id}` });
 const SIDE_2_OF_57 = [[1, 6, 27, 38], [9, 21, 59, 75], [2, 39, 67, 77]];
+const SIDE_2_OF_508 = [[17, 16, 68, 69], [18, 21, 24, 56], [62, 44, 60, 59]];
 const CATALOG: Catalog = {
   ...parseCards([
     { id: 57, type: 'normal', sides: [{ side: 1, lines: [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]].map((l) => l.map(song)) }, { side: 2, lines: SIDE_2_OF_57.map((l) => l.map(song)) }] },
     { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]].map((l) => l.map(song)) },
+    { id: 508, type: 'especial', sides: [{ side: 1, lines: [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]].map((l) => l.map(song)) }, { side: 2, lines: SIDE_2_OF_508.map((l) => l.map(song)) }] },
   ]),
   // card-types.json, as apps/cards writes it: the only source of the types' names, colours and sides.
   cardTypes: readPrintedCardTypes([
     { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1' }] },
+    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
   ]),
 };
 
@@ -468,7 +471,7 @@ test('a Check carries the card\'s printed type, which is public', () => {
   const wrong = cued('checkWrongType', 'fail');
   const failed = stageView(wrong, flowOf(wrong), SAMPLE_PLAN, CATALOG);
   if (failed.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Especial', color: '#ffd9e8', special: true, ok: false });
+  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Especial · Desgraciada', color: '#ffd9e8', special: true, ok: false }, 'a side-1 round: side 1 named');
   assert.equal(failed.body.check.verdict, 'notValid');
   assert.deepEqual(failed.body.check.cells, []);
 });
@@ -483,6 +486,21 @@ test("a side-2 round's Check draws the card's side 2 (CheckInfo.side), and its b
   if (two.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(two.body.check.cells.map((c) => c.songId), SIDE_2_OF_57.flat(), "side 2's 12 songs");
   assert.equal(two.body.check.cardType?.label, 'Normal 6–10');
+});
+
+test("the Especial round's Check draws the especial card's side 2, and its badge names it (D226)", () => {
+  const started = FIXTURES.checkStarted(NOW).state;
+  const round = { ...started.round, number: 7, kind: 'special' as const, cardType: 'especial', side: 2, pool: '2' };
+  const state: FlowState = { ...started, round, check: started.check && { ...started.check, cardId: 508, cardType: 'especial', side: 2 } };
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  if (view.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(view.body.check.cells.map((c) => c.songId), SIDE_2_OF_508.flat(), "side 2's 12 songs, never side 1's");
+  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Especial · Quina Especial', color: '#ffd9e8', special: true, ok: true });
+  const desgraciat: FlowState = { ...state, round: { ...round, number: 5, kind: 'desgraciat', side: 1, pool: '1' }, check: state.check && { ...state.check, side: 1 } };
+  const one = stageView(desgraciat, flowOf(desgraciat), SAMPLE_PLAN, CATALOG);
+  if (one.body.scene !== 'check') return assert.fail('not check');
+  assert.deepEqual(one.body.check.cells.slice(0, 4).map((c) => c.songId), [31, 32, 39, 74], "the Desgraciat round: side 1's top row");
+  assert.equal(one.body.check.cardType?.label, 'Especial · Desgraciada');
 });
 
 test('interval: the next round, the count and the countdown guide; no winners, no QR, no prizes', () => {

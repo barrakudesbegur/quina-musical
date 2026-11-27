@@ -240,7 +240,7 @@ export const reviewNeedsConfirm = (outcome: 'win' | 'lose', check: Pick<CheckInf
 export interface TypeChip {
   /** The short name ("Normal"): a wrong type's verdict and its big type name. */
   name: string;
-  /** The type and the side checked in one label (D163): "Normal 1–4", "Normal 5–10", "Especial". */
+  /** The type and the side checked in one label (D163, D226): "Normal 1–5", "Normal 6–10", "Especial · Desgraciada". */
   label: string;
   color: string;
   /** It plays the Quina Especial. */

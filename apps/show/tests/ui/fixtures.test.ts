@@ -16,6 +16,7 @@ import {
   FIXTURE_LANDED,
   FIXTURE_LANDED_LINE,
   FIXTURES,
+  cardFinding,
 } from '../../../../packages/ui/fixtures/states.ts';
 
 const CARDS_JSON = new URL('../../../cards/dist/cards.json', import.meta.url);
@@ -90,6 +91,21 @@ test('the Check fixtures claim printed cards, and reveal them as the engine does
   assert.deepEqual(side1(57)[2].map((id) => line57.has(id)), [true, true, true, false], "#57's third row misses «Elefants»");
   const line123 = new Set(FIXTURE_LANDED_LINE);
   assert.ok(side1(123)[0].every((id) => line123.has(id)), "#123's top row is complete once «Tots Som Súpers» lands");
+});
+
+test("a Check of the especial card reads the round's side (D226): side 1 in the Desgraciat round, side 2 in the Especial", () => {
+  const [side1, side2] = FIXTURE_CARDS[508].sides.map((s) => s.lines);
+  // Side 2's top row landed, and side 1's songs that aren't on side 2 too.
+  const landed = new Set([...side2[0], ...side1.flat().filter((id) => !side2.flat().includes(id))]);
+  const especial = cardFinding(508, 'line', landed, 'especial', 2);
+  assert.deepEqual([especial.outcome, especial.row], ['complete', 0]);
+  assert.deepEqual(especial.markedCard.map((s) => s.songId), side2.flat(), "the Especial round: side 2's 12 songs");
+  const bingo = cardFinding(508, 'bingo', landed, 'especial', 2);
+  assert.equal(bingo.outcome, 'incomplete', "side 1's landings don't fill side 2");
+  const desgraciat = cardFinding(508, 'standing', new Set(side2.flat().filter((id) => !side1.flat().includes(id))), 'especial', 1);
+  assert.equal(desgraciat.outcome, 'complete', 'the Desgraciat round: side 2 songs never sink side 1');
+  assert.deepEqual(desgraciat.markedCard.map((s) => s.songId), side1.flat());
+  assert.equal(cardFinding(508, 'line', landed, 'normal', 2).outcome, 'wrongType', 'a normal round on side 2 still rejects it');
 });
 
 test('the Check fixtures: nothing revealed, revealing, at the cue, past it, under review', () => {
