@@ -12,6 +12,7 @@ import type { IntervalView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorStrip, stickerImage } from './parts.ts';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
+import '../../../packages/ui/components/sticker.css';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
@@ -93,7 +94,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
   constructor() {
     this.root.dataset.testid = 'interval';
     this.title = h('h1', { class: 'interval__title', data: { anim: 'idle' } }, STAGE_TEXT.intervalTitle);
-    this.plate = h('p', 'interval__plate');
+    this.plate = h('p', { class: 'plate interval__plate', data: { color: 'gold' } });
     this.priceText = h('span', 'interval__price-text');
     this.priceTag = h('p', { class: 'interval__price', hidden: true, data: { testid: 'interval-price' } }, this.price.root, this.priceText);
     this.words.root.classList.add('interval__words');

@@ -35,6 +35,7 @@ import { checkResultDetail, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { MiniCard, pickSticker, stickerImage } from './parts.ts';
+import '../../../packages/ui/components/sticker.css';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 interface CellNodes {
@@ -122,7 +123,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
 
   constructor() {
     this.heading = h('h1', 'check__heading');
-    this.plate = h('div', 'check__plate', this.heading);
+    this.plate = h('div', { class: 'plate check__plate', data: { color: 'orange' } }, this.heading);
     // The failed Check's shake plays once: a scene shown again would otherwise restart it.
     this.plate.addEventListener('animationend', (e) => {
       if (e.target === this.plate) setData(this.plate, 'anim', null);
@@ -300,6 +301,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     this.placeResult(check);
     setHidden(this.result, result === null);
     setData(this.panel, 'verdict', result);
+    // G2's plate: orange «CARTRÓ #57», slate once the Check failed (§ 11's plate table).
+    setData(this.plate, 'color', result === 'incomplete' || result === 'fallen' || result === 'notValid' ? 'slate' : 'orange');
     setData(this.result, 'result', result);
     if (this.sticker) setHidden(this.sticker, !failed || (fallen && this.fallenSticker !== null));
     if (this.fallenSticker) setHidden(this.fallenSticker, !fallen);

@@ -14,6 +14,7 @@ import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { Garland } from './garland.ts';
 import { PrizeBlock, stickerImage } from './parts.ts';
+import '../../../packages/ui/components/sticker.css';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
@@ -47,7 +48,8 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     this.garland = new Garland(STAGE.garland, env.random);
     this.paper = h('canvas', { class: 'celebration__paper', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
-    this.roundPlate = h('p', { class: 'celebration__round', hidden: true }, STAGE_TEXT.desgraciatRoundName);
+    // G2's plate, gold: the round's name is always gold (U175 item 7; it was orange).
+    this.roundPlate = h('p', { class: 'plate celebration__round', hidden: true, data: { color: 'gold' } }, STAGE_TEXT.desgraciatRoundName);
     const moment = STAGE.finale.celebration.stickers;
     this.stickers = (['topLeft', 'topRight', 'bottomLeft'] as const).flatMap((spot) => {
       const img = stickerImage(moment, `celebration__sticker celebration__sticker--${spot}`);

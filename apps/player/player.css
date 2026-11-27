@@ -3945,8 +3945,10 @@ html:has(.drawer[open]) {
   pointer-events: none;
 }
 
-/* Under the header, where the board "afegir cartró: casos especials" puts "Cartró #88 afegit" (118 px down). */
-.toast {
+/* Under the header, where the board "afegir cartró: casos especials" puts "Cartró #88 afegit" (118 px down). The
+   toast is the generic Toast (packages/ui/components/toast.css): a card's is green across the whole width, any other
+   sits centred on paper. */
+.toast-slot {
   position: fixed;
   left: 1.5rem;
   right: 1.5rem;
@@ -3957,33 +3959,8 @@ html:has(.drawer[open]) {
   pointer-events: none;
 }
 
-.toast__text {
-  padding: var(--space-2) var(--space-4) 0.625rem;
-  font-weight: var(--font-weight-strong);
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-piece-sm);
-}
-
-/* About a card (one just added): green, the whole width, with the card's icon. */
-.toast__text[data-tone='card'] {
+.toast-slot > .toast[data-variant='solid'] {
   justify-self: stretch;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.875rem;
-  font-size: var(--text-md);
-  color: var(--color-text);
-  background: var(--color-ok);
-  border-radius: 1rem;
-}
-
-.toast__mark {
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: none;
 }
 
 /* ---- animation hooks (ui/ANIMATIONS.md, Player). Transform and opacity only. --------------------------- */

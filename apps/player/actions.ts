@@ -1,7 +1,7 @@
 // The player app's controls (components-v2.md § 11.4; D205, D210): each one's look, words and sound in one preset,
 // spread into a generic component: `<Button {...PLAYER.addCard} onclick={…} />`. Labels come from strings.ts, never
 // typed here. Pure data, tested in apps/show/tests/ui/ds/registry.test.ts.
-import type { ButtonColor, ButtonPreset } from '../../packages/ui/components/types.ts';
+import type { ButtonColor, ButtonPreset, ToastPreset } from '../../packages/ui/components/types.ts';
 import { S } from './strings.ts';
 
 /** A phone preset: a Button's look, its icon named by its drawing (packages/ui/icons). */
@@ -31,3 +31,10 @@ export type PlayerActionId = keyof typeof PLAYER;
 export function confirmColors(danger: boolean): { yes: ButtonColor; no: ButtonColor } {
   return danger ? { yes: 'red', no: 'navy' } : { yes: 'navy', no: 'orange' };
 }
+
+/** The toasts (E3, Toast.svelte): a card added is green with its mark (the board's «Cartró #88 afegit»); any other
+ *  notice is on paper, navy-edged (#85: the bottom edge in the toast's colour). */
+export const PLAYER_TOASTS = {
+  card: { color: 'green', variant: 'solid', icon: null },
+  info: { color: 'navy', variant: 'paper', icon: null },
+} as const satisfies Record<string, ToastPreset>;

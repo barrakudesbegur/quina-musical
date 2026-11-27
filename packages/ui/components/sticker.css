@@ -1,0 +1,128 @@
+/*
+ * G1 · StickerTitle and G2 · Plate (components-v2.md § 8; StickerTitle.svelte, Plate.svelte, sticker-dom.ts for the
+ * projector). The outlined Londrina titles that make the game look, and the sticker plate that carries a short label.
+ *
+ * StickerTitle: Londrina in capitals (D96; a `.unit` keeps its case, D114), a fill colour, an ink stroke painted under
+ * the fill, a hard ink drop, an optional tilt. `data-color`: white | gold | live | mist | title (the theme's role).
+ * `data-size` is the ramp: hero 280 · hero-2 170 · xl 150 · l 112 · m 76 · s 60 · xs 48 on the projector; the phone and
+ * the console scale it down. Headings balance (R6).
+ *
+ * Plate: a fill from the palette (`data-color`: gold | orange | slate | periwinkle | live | snow | red), an ink
+ * border, its 3D edge in the fill's own dark shade (R2), a top highlight, a hard drop. U175 item 7 (27 Nov): gold is
+ * always the round's name; orange only the Check's «CARTRÓ #57» (§ 11's plate table).
+ * Every size is a variable in :where(), so a scene sets them.
+ */
+
+/* ---- StickerTitle ---------------------------------------------------------------------------------------------- */
+:where(.sticker-title) {
+  --st-size: 4.75rem;
+  --st-stroke: 0.5625rem;
+  --st-drop: 0.4375rem;
+  --st-tilt: 0deg;
+  --st-fill: var(--color-white);
+}
+
+:where(.sticker-title[data-size='hero']) { --st-size: 17.5rem; --st-stroke: 1rem; --st-drop: 0.875rem; }
+:where(.sticker-title[data-size='hero-2']) { --st-size: 10.625rem; --st-stroke: 0.875rem; --st-drop: 0.75rem; }
+:where(.sticker-title[data-size='xl']) { --st-size: 9.375rem; --st-stroke: 0.875rem; --st-drop: 0.75rem; }
+:where(.sticker-title[data-size='l']) { --st-size: 7rem; --st-stroke: 0.625rem; --st-drop: 0.5rem; }
+:where(.sticker-title[data-size='m']) { --st-size: 4.75rem; --st-stroke: 0.5625rem; --st-drop: 0.4375rem; }
+:where(.sticker-title[data-size='s']) { --st-size: 3.75rem; --st-stroke: 0.5rem; --st-drop: 0.375rem; }
+:where(.sticker-title[data-size='xs']) { --st-size: 3rem; --st-stroke: 0.5rem; --st-drop: 0.3125rem; }
+
+/* The phone and the console: the same ramp at about a third (shout 84, title 48, plate 31). */
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title) {
+  --st-size: 2.25rem;
+  --st-stroke: var(--title-stroke-sm, 4px);
+  --st-drop: 3px;
+}
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title[data-size^='hero']) { --st-size: 5.25rem; --st-stroke: 6px; --st-drop: 4px; }
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title[data-size='xl']) { --st-size: 3rem; --st-stroke: 5px; --st-drop: 4px; }
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title[data-size='l']) { --st-size: 2.25rem; --st-stroke: 5px; --st-drop: 4px; }
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title[data-size='m']) { --st-size: 2rem; --st-stroke: 5px; --st-drop: 3px; }
+:where([data-density='phone'], [data-density='console']) :where(.sticker-title:is([data-size='s'], [data-size='xs'])) { --st-size: 1.5rem; --st-stroke: 4px; --st-drop: 3px; }
+
+:where(.sticker-title[data-color='gold']) { --st-fill: var(--color-gold); }
+:where(.sticker-title[data-color='live']) { --st-fill: var(--color-live); }
+:where(.sticker-title[data-color='mist']) { --st-fill: var(--color-mist); }
+:where(.sticker-title[data-color='title']) { --st-fill: var(--color-title, var(--color-gold)); }
+
+.sticker-title {
+  margin: 0;
+  color: var(--st-fill);
+  font-family: var(--font-display);
+  font-size: var(--st-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  -webkit-text-stroke: var(--st-stroke) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--st-drop) 0 var(--color-ink);
+  rotate: var(--st-tilt);
+}
+
+.sticker-title :where(.unit) {
+  text-transform: none;
+}
+
+.sticker-title[data-fit] {
+  white-space: nowrap;
+}
+
+/* ---- Plate ----------------------------------------------------------------------------------------------------- */
+:where(.plate) {
+  --plate-border: 0.375rem;
+  --plate-radius: 1.625rem;
+  --plate-edge: 0.75rem;
+  --plate-gloss: 0.375rem;
+  --plate-drop: 0.625rem;
+  --plate-pad: 0.375rem 2.125rem 0.875rem;
+  --plate-tilt: 0deg;
+}
+
+:where([data-density='phone'], [data-density='console']) :where(.plate) {
+  --plate-border: var(--line-width);
+  --plate-radius: var(--radius-md);
+  --plate-edge: 5px;
+  --plate-gloss: 3px;
+  --plate-drop: 4px;
+  --plate-pad: 0.125rem 0.875rem 0.375rem;
+}
+
+.plate {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  padding: var(--plate-pad);
+  border: var(--plate-border) solid var(--color-ink);
+  border-radius: var(--plate-radius);
+  background: var(--palette-solid);
+  box-shadow:
+    inset 0 calc(-1 * var(--plate-edge)) 0 var(--palette-edge),
+    inset 0 var(--plate-gloss) 0 rgb(255 255 255 / 0.4),
+    0 var(--plate-drop) 0 var(--color-shadow, var(--color-night-shadow));
+  rotate: var(--plate-tilt);
+  transition: background-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+/* snow's words are ink (a paper plate); every other plate's are white with the ink outline */
+.plate[data-color='snow'] .sticker-title {
+  --st-fill: var(--color-ink);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.plate__icon {
+  display: inline-grid;
+  flex: none;
+  color: var(--color-ink);
+}
+
+.plate__icon > svg {
+  width: 1.25em;
+  height: 1.25em;
+}

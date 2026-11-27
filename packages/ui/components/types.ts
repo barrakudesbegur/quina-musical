@@ -98,3 +98,21 @@ export interface ButtonLook {
 
 /** What a preset in the domain layer may set on a Button: everything but its state. */
 export type ButtonPreset = Pick<ButtonLook, 'color' | 'variant' | 'size' | 'floating' | 'pattern' | 'icon' | 'iconPlacement' | 'label' | 'note' | 'sound' | 'wii' | 'ring' | 'ribbon'>;
+
+/** E3 · Toast: the palettes a toast takes, and its two looks. */
+export type ToastColor = Extract<PaletteColor, 'green' | 'navy' | 'orange' | 'red'>;
+
+/** What a preset in the domain layer sets on a Toast: its look, never its words. */
+export interface ToastPreset {
+  readonly color: ToastColor;
+  readonly variant: 'solid' | 'paper';
+  readonly icon: IconName | null;
+  readonly urgent?: boolean;
+}
+
+/** G2 · Plate: the palettes a plate takes (§ 11: gold the round's name, orange «CARTRÓ #57», slate a failed Check,
+ *  periwinkle a Review, live «Salvats!», snow / red / gold the finalists). */
+export type PlateColor = Extract<PaletteColor, 'gold' | 'orange' | 'slate' | 'periwinkle' | 'live' | 'snow' | 'red'>;
+
+/** G1 · StickerTitle's ramp (projector px: hero 280, hero-2 170, xl 150, l 112, m 76, s 60, xs 48). */
+export type StickerTitleSize = 'hero' | 'hero-2' | 'xl' | 'l' | 'm' | 's' | 'xs';

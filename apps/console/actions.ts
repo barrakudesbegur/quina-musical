@@ -4,8 +4,9 @@
 // remote's keys). Labels come from strings.ts, never typed here. Pure data and pure helpers, tested in
 // apps/show/tests/ui/ds/registry.test.ts.
 import { CONCEPTS } from '../../packages/ui/concepts.ts';
-import type { ButtonColor, ButtonPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
+import type { ButtonColor, ButtonPreset, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
 import type { LineIconName } from '../../packages/ui/icons/line.ts';
+import type { ToastTone } from './logic/toasts.ts';
 import { S } from './strings.ts';
 
 /** A console preset: a Button's look, its icon named by its drawing (packages/ui/icons). Labels may be overridden where
@@ -87,6 +88,13 @@ export const ACTIONS = {
 } as const satisfies Record<string, ConsolePreset>;
 
 export type ConsoleActionId = keyof typeof ACTIONS;
+
+/** The toasts (E3, Toasts.svelte): a rejected command is red, urgent, with the alert; a notice is navy with the check.
+ *  Both on paper, their bottom edge in their colour (#85). */
+export const TOASTS = {
+  error: { color: 'red', variant: 'paper', icon: 'warning', urgent: true },
+  info: { color: 'navy', variant: 'paper', icon: 'check' },
+} as const satisfies Record<ToastTone, ToastPreset>;
 
 /** The controls that show together on one screen: no two may share a Wii key (the registry test checks it). */
 export const SCREENS = {

@@ -1,0 +1,126 @@
+/*
+ * E3 · Toast (components-v2.md § 6; Toast.svelte): a passing confirmation or rejection. One radius for every toast (no
+ * pill). Two looks, both built on the palette slots:
+ *   solid  the fill in the colour, white words, the ink outline and the fill's own dark 3D edge (R2): a card added;
+ *   paper  paper with the colour's outline, and its bottom edge in the colour's dark shade, never ink (the user's
+ *          canvas comment #85: "the bottom border is not colored"): a rejection, a notice.
+ * Placement is the app's (the phone's slot under the header, the console's stack above the cluster).
+ */
+:where(.toast) {
+  --toast-radius: 1rem;
+  --toast-border: var(--line-width);
+  --toast-edge: 5px;
+  --toast-drop: 4px;
+  --toast-pad: 0.625rem 0.875rem;
+  --toast-text: 1.0625rem;
+  --toast-detail: 0.9375rem;
+  --toast-lead: 1.75rem;
+  --toast-fg: var(--color-white);
+}
+
+:where(.toast[data-variant='paper']) {
+  --toast-fg: var(--color-ink);
+}
+
+.toast {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  margin: 0 0 var(--toast-drop);
+  padding: var(--toast-pad);
+  padding-bottom: calc(0.625rem + var(--toast-edge));
+  border: var(--toast-border) solid var(--color-ink);
+  border-radius: var(--toast-radius);
+  background: var(--palette-solid);
+  color: var(--toast-fg);
+  box-shadow:
+    inset 0 calc(-1 * var(--toast-edge)) 0 var(--palette-edge),
+    0 var(--toast-drop) 0 var(--color-shadow, var(--color-night-shadow));
+  font-family: var(--font-body);
+  font-weight: 900;
+  pointer-events: auto;
+}
+
+.toast[data-variant='paper'] {
+  border-color: var(--palette-solid);
+  background: var(--color-snow);
+  box-shadow:
+    inset 0 calc(-1 * var(--toast-edge)) 0 var(--palette-subtle, var(--palette-pale, var(--color-snow-edge))),
+    0 var(--toast-drop) 0 var(--palette-edge);
+}
+
+.toast__lead {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--toast-lead);
+  height: var(--toast-lead);
+}
+
+.toast__lead > :is(svg, img) {
+  width: 100%;
+  height: 100%;
+}
+
+/* the icon on paper takes the colour's text shade (the alert in red) */
+.toast[data-variant='paper'] .toast__lead {
+  color: var(--palette-fg-paper, var(--color-ink));
+}
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__text {
+  margin: 0;
+  font-size: var(--toast-text);
+  line-height: 1.25;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.toast__detail {
+  margin: 0.125rem 0 0;
+  font-size: var(--toast-detail);
+  font-weight: 800;
+  line-height: 1.25;
+  text-wrap: pretty;
+  opacity: 0.85;
+}
+
+.toast__close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: -0.5rem -0.5rem -0.5rem 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.toast__close > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* toast-in (ANIMATIONS.md): it slides up 16 px and fades in; reduced motion: it appears */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-motion='full']) .toast[data-anim~='toast-in'] {
+    animation: ds-toast-in var(--dur-toast, 200ms) var(--ease-out);
+  }
+}
+
+@keyframes ds-toast-in {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}
