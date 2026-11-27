@@ -1633,3 +1633,19 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: docs/te
 ### D241 · "Add another card" becomes a step inside the drawer · 2026-11-27 · Active
 The user asked for the "add another card" flow to be researched and redone (D237). Frontend followed government "add another" patterns: after «Desar», the drawer shows the card's mark with a ✓, «Cartró #N afegit!», the phone's cards, and «Vols afegir un altre cartró?» with «+ Un altre» (a fresh form) and «Fet» (closes, and rings the new card on the home), with a quiet cue and haptics. It replaces D200's banner over the cards list, so U174 is moot. Built in 3e3cb154, with the drawers' and forms' other fixes.
 By: Frontend, as the user asked (D237). Source: Frontend's report of 27 Nov. Supersedes: D200. Lives in: requirements/screens.md › Player app.
+
+### D242 · No prize panel in a Line's Celebration, for now · 2026-11-27 · Active; the design Pending (Frontend's proposals)
+On the canvas: the projector's and the phones' Line Celebration lose their prize panel («Premis de línia · Entrada al spa…»). Frontend draws proposals for how a Celebration shows its prize, for the user to pick.
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Projector, Player app.
+
+### D243 · The "Before the Game" screen names each card's rounds · 2026-11-27 · Active
+The normal card plays Quines 1–10, and the special card plays the Desgraciat and the Especial. The prices shown were out of date. They're D69's, from card-types.json: 1.50 € a regular round still to play, so 15 € before Quina 1 (the Desgraciat doesn't count), and 5 € for the special card before each special round (D81).
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Projector.
+
+### D244 · The player's prizes drawer · 2026-11-27 · Active
+The round selector from board P1 and the content from P2. A locked round shows «Premis sorpresa» with its sponsors under it. The sponsor cards are bigger, and the drawer scrolls. Answers U30. How prizes really work (U36–U39) is still open.
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D245 · The Llançament and Tempesta icons · 2026-11-27 · Active
+Llançament option A and Tempesta option A, redrawn from scratch in the design system's outline style. Answers U170 once drawn.
+By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: packages/ui icons.

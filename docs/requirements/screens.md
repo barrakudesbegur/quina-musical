@@ -35,7 +35,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 | State | What it shows |
 |---|---|
-| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the special card: the Desgraciat and the Especial); the price of a card for round 1; a large "scan your card" QR on a pure white panel with generous padding (D216); the sponsors; a rough countdown |
+| Before the Game | The edition's name; a preview of the night's rounds (regular, the Desgraciat with a sad face, the Especial with a star); each card type with its colour and the rounds it plays (the normal card: Quines 1–10; the special card: the Desgraciat and the Especial, D243); the price of a card for round 1 (D69: 15 €); a large "scan your card" QR on a pure white panel with generous padding (D216); the sponsors; a rough countdown |
 | A round's intro | "Quina N" (or "Quina Especial", "Quina Desgraciada") with its prize bundles and sponsors, revealed now as the presenters announce them |
 | The Shuffle | Every cover in a grid, shaken, flying into the drum |
 | In play | A big edge-to-edge drum of pending songs; the current song big after each landing; only the last 3 songs in a row under the drum; the round's name; the Heat |
@@ -43,7 +43,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | Pause | "Tornem de seguida" |
 | Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1–5", "Normal 6–10" or "Especial" (D163, D193), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. The Desgraciat has no public Check: its finale on stage replaces it (D166) |
-| Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum |
+| Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum. A Line's Celebration shows no prize panel for now, on the projector or the phones; how a Celebration shows its prize is pending Frontend's proposals (D242) |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
 | After the Game | Thanks and sponsor credits |
 
@@ -116,7 +116,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - Cards are kept on the phone for the whole edition. Last year's links show "Aquest cartró és de l'any passat".
 - **Layout (D73):** one home screen, two corner buttons and stacked drawers. The tabs are gone, with no fallback layout kept in the code (built in 71caa9c).
   - the home screen: the drum on top, then the current round's songs ("Historial", including the one playing now) and the player's cards as grids;
-  - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked;
+  - the Premis corner button opens the current round's bundle and sponsors, with future rounds locked. The drawer (D244): the round selector from board P1 and the content from P2; a locked round shows «Premis sorpresa» with its sponsors under it; bigger sponsor cards; it scrolls;
   - the sponsors show as big logos in a scrolling list, and a tap opens a logo larger in a dialog (D216);
   - the Horari corner button opens the schedule, with real times for what has happened and "~" predictions for what's next: "Venda de cartrons" first (D152), then the rounds with the night's one "Descans" among them, then "Fi" (D150, D192; a "Comencem" row and "+ llançament", pending U168). Breaks are "Descans" on every screen (D149);
   - more drawers: adding a card, the menu (the player's cards, sounds, last year's card, "Esborrar dades") and last year's card.

@@ -248,10 +248,6 @@ The user on the canvas: "in this screen we can swap +candidat for tempesta". But
 - (a) Keep "+ Candidat" in that Check, and give "Tempesta" a slimmer slot of its own.
 - (b) Swap them as written. During the last round's Check, a second claim can't be added.
 
-### U170 · The "Llançament" and "Tempesta" icons
-The user: "the tempesta and llancament icons dont match the style of the others. for llancament use 2 swords in a x or a catapult, or a person throwing something and for storm use a cloud raining corn. Make me some other alternatives to decide". Frontend is drawing an options board.
-- (a) Pick on the canvas.
-
 ### U166 · A review before anything was revealed
 D191 keeps the music far down under review, "as during the Check". But a Check only ducks the music from its first reveal. Before that, the music from before the Check plays at the claim's level. So in three cases a review has the music at the claim's level (Sound engine, 26 Nov):
 - the presenters send the Check to review before revealing any song;
@@ -328,10 +324,6 @@ Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper shee
 
 **Default:** the prizes drawer stays on hold until these are answered.
 
-### U30 · Pick the prizes drawer
-Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend redraws P1–P3 with real 2025 prizes and sponsor logos (on the private canvas or local boards only, never in the public repo), with P3's dashed circle cut out properly and its left corners rounded.
-**Default:** nothing built for the prizes drawer until the user picks.
-
 ## Tasks only the user can do
 
 ### U191 · Ask the presenters about a notebook on the tablet
@@ -370,6 +362,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U30 · The prizes drawer** (2026-11-27) → D244: P1's round selector with P2's content; «Premis sorpresa» for locked rounds.
+- **U170 · The Llançament and Tempesta icons** (2026-11-27) → D245: A and A, redrawn in the outline style.
 - **U174 · When "Vols afegir un altre cartró?" shows** (2026-11-27): moot. D241 replaces the banner with a step inside the add-card drawer.
 - **U58 · The alphabetical convention** (2026-11-27) → D238: letter by letter, as the user's sorting tool does and the playlists are.
 - **U192 · A two-sided special card** (2026-11-27) → D226: yes, agreed with the team; the Desgraciat on side 1 (pool 1), the Especial on side 2 (pool 2).
