@@ -152,6 +152,12 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U215 · A double-click start for the night laptop
+The user (28 Nov) asked whether a simple macOS, Windows and Linux app would be easy and a good idea, since the command line isn't ideal on a non-developer laptop. The research (docs/research/reports/laptop-app.md): the show needs Chrome with its flags (the engine and WebHID for the Wii remote), the relay's Python helper for the Blend, and macOS-only setup and preflight. Windows and Linux would be a port nobody can rehearse before the freeze, and R2-Q26 keeps the laptop installed, with "nothing installed" after this year.
+- (a) A launcher only: Backend builds one `npm run night` (caffeinate, the relay with `--lan`, the link, the show page in Chrome with its flags, the preflight) and a `Start the Quina.command` that runs it, before the tech rehearsal, so it's what the rehearsal runs. The spare Mac is prepared in advance by the tech (`npm run setup:laptop`). A desktop app waits until after the night.
+- (b) Nothing new: the runbook's four terminals, as today.
+- (c) A desktop app now (Electron, macOS only): reopens R2-Q26, needs a Wii picker of its own and the rehearsals run on the app.
+
 ### U214 · The grill format outside the card design session
 On 26 Nov the user told the orchestrator not to use the grill format. On 27 Nov, in the card design session, they asked for it ("the skill to check is grill with docs": numbered ❓ rounds, each with a ➡️ recommendation, worded so "yes" accepts it). On 28 Nov they restarted the orchestrator with "plain questions (one numbered question, one set of options, a recommendation)".
 - (a) The grill format only in a card design session; plain questions in every other session. The default meanwhile.
