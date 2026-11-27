@@ -1,5 +1,5 @@
-// Player-app settings as this device last had them (the cloud has no GET for them): the form starts from these.
-// Sending them to the phones is data/cloud-player-settings.ts. Never throws.
+// Player-app settings as this device last had them: the form starts from these, and served from the cloud it then takes
+// what the phones have now (GET /api/notice and /api/sounds, data/cloud-player-settings.ts). Never throws.
 import { MANAGE_CONFIG } from '../config.ts';
 import { DEFAULT_PLAYER_SETTINGS, readPlayerSettings, type PlayerSettings } from '../logic/player-settings.ts';
 

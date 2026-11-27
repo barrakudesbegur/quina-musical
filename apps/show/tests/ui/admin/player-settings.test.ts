@@ -4,8 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyPublic, emptyPublicState } from '@quina/protocol';
-import { sendPlayerSettings } from '../../../../admin/data/cloud-player-settings.ts';
-import { BANNER_MAX_LENGTH, DEFAULT_PLAYER_SETTINGS, noticeBody, soundsBody } from '../../../../admin/logic/player-settings.ts';
+import { fetchPlayerSettings, sendPlayerSettings, type GetFetch } from '../../../../admin/data/cloud-player-settings.ts';
+import { BANNER_MAX_LENGTH, DEFAULT_PLAYER_SETTINGS, fromCloud, noticeBody, readCloudSettings, soundsBody } from '../../../../admin/logic/player-settings.ts';
 import { S } from '../../../../admin/strings.ts';
 import type { FetchLike } from '../../../../../packages/ui/data/cloud-plan.ts';
 import { emptyData, soundsOn } from '../../../../player/logic/storage.ts';
@@ -66,4 +66,38 @@ test("on the phone: the cloud's changes from those bodies set the banner and the
   assert.equal(soundsOn(emptyData('26'), state.soundsDefault), false, 'no choice of their own: the default');
   assert.equal(soundsOn({ ...emptyData('26'), sounds: true }, state.soundsDefault), true);
   assert.equal(applyPublic(state, [{ kind: 'notice', notice: noticeBody({ ...ON, bannerOn: false }).notice }]).notice, null);
+});
+
+// §9: the form starts from what every phone has now (GET /api/notice → { notice }, GET /api/sounds → { soundsDefault }).
+test("the cloud's answers are checked: anything but the handlers' shapes is no answer", () => {
+  assert.deepEqual(readCloudSettings({ notice: 'Hola' }, { soundsDefault: false }), { notice: 'Hola', soundsDefault: false });
+  assert.deepEqual(readCloudSettings({ notice: null }, { soundsDefault: true }), { notice: null, soundsDefault: true });
+  assert.equal(readCloudSettings({ notice: 3 }, { soundsDefault: true }), null);
+  assert.equal(readCloudSettings({ notice: null }, { soundsDefault: 'yes' }), null);
+  assert.equal(readCloudSettings(undefined, { soundsDefault: true }), null);
+  assert.equal(readCloudSettings({ notice: null }, null), null);
+});
+
+test("the form's start: the phones' message switched on, none switches it off and keeps this device's text", () => {
+  const local = { soundsOnByDefault: true, banner: 'El text d’abans', bannerOn: false };
+  assert.deepEqual(fromCloud(local, { notice: 'El bar tanca a les 00:30', soundsDefault: false }), { soundsOnByDefault: false, banner: 'El bar tanca a les 00:30', bannerOn: true });
+  assert.deepEqual(fromCloud({ ...local, bannerOn: true }, { notice: null, soundsDefault: true }), { soundsOnByDefault: true, banner: 'El text d’abans', bannerOn: false });
+  assert.equal(fromCloud(local, { notice: 'x'.repeat(300), soundsDefault: true }).banner.length, BANNER_MAX_LENGTH);
+});
+
+test('fetchPlayerSettings GETs both and never throws', async () => {
+  const answers: Record<string, unknown> = { '/api/notice': { notice: 'Hola' }, '/api/sounds': { soundsDefault: false } };
+  const calls: string[] = [];
+  const ok: GetFetch = async (path, init) => {
+    calls.push(`${init?.method} ${path}`);
+    return { ok: true, status: 200, json: async () => answers[path] };
+  };
+  assert.deepEqual(await fetchPlayerSettings(ok), { notice: 'Hola', soundsDefault: false });
+  assert.deepEqual(calls.sort(), ['GET /api/notice', 'GET /api/sounds']);
+  const refused: GetFetch = async () => ({ ok: false, status: 403, json: async () => ({}) });
+  assert.equal(await fetchPlayerSettings(refused), null, 'Access refused: no answer');
+  const down: GetFetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+  assert.equal(await fetchPlayerSettings(down), null, 'no network: no answer');
 });

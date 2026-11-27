@@ -27,6 +27,29 @@ export function readPlayerSettings(json: unknown): PlayerSettings {
   };
 }
 
+/** What every phone has now, as the cloud tells it (GET /api/notice `{ notice }`, GET /api/sounds `{ soundsDefault }`). */
+export interface CloudPlayerSettings {
+  notice: string | null;
+  soundsDefault: boolean;
+}
+
+/** The cloud's two answers, checked; null when either isn't what the handlers send. Never throws. */
+export function readCloudSettings(noticeJson: unknown, soundsJson: unknown): CloudPlayerSettings | null {
+  const notice = typeof noticeJson === 'object' && noticeJson !== null ? (noticeJson as Record<string, unknown>).notice : undefined;
+  const sounds = typeof soundsJson === 'object' && soundsJson !== null ? (soundsJson as Record<string, unknown>).soundsDefault : undefined;
+  if (!(notice === null || typeof notice === 'string') || typeof sounds !== 'boolean') return null;
+  return { notice, soundsDefault: sounds };
+}
+
+/**
+ * The form's start (§9): what the phones have now wins over what this device last sent. A message on the phones is the
+ * banner, switched on; none switches it off and keeps this device's last text, ready to send again.
+ */
+export function fromCloud(local: PlayerSettings, cloud: CloudPlayerSettings): PlayerSettings {
+  const text = cloud.notice?.slice(0, BANNER_MAX_LENGTH) ?? '';
+  return { soundsOnByDefault: cloud.soundsDefault, banner: text || local.banner, bannerOn: text !== '' };
+}
+
 /** PUT /api/notice's body: the trimmed message while it's on, else null (the phones show none). */
 export function noticeBody(settings: PlayerSettings): { notice: string | null } {
   const text = settings.banner.trim().slice(0, BANNER_MAX_LENGTH);
