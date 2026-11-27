@@ -160,25 +160,6 @@ Today they're taps: up «tada», right an orchestra hit, down a sad trombone, le
 
 Left out on purpose: anything that changes the song's speed or pitch, like a tape stop or a scratch, because the landings follow the song's timing.
 
-### U175 · The design system's open choices (Frontend's spec, canvas page «Sistema de disseny»)
-Frontend's spec and audit cover 43 components and the tokens (temp/design-canvas/ds/components.md, board-audit.md). The canvas draws each recommendation marked «pendent · tria N». Already settled from earlier decisions (D201): what counts as a button under D189, «+ Cartró» everywhere, the marks' order, and the labels the glossary or the log already fix. The recommendations:
-2. **Desar's corners:** D95 said "square corners"; Frontend reads that as "not a pill", with the 14 px radius of every phone button.
-3. **The leave dialog's words:** «Segueix editant» / «Descarta els canvis» (imperatives, see 13), rather than the board's «Seguir editant» / «Descartar el cartró».
-4. **One red for Enrere:** fill it with #FF5A60, because ink labels on #E8363D only reach about 4:1 contrast. #E8363D stays for ✗ marks and errors.
-5. **Two "Recomanat" looks:** dashed for a default you may ignore (the pace presets), and a gold ring with a ribbon for an action to take now (the finale button, «Per dolenta»). Never together with A's ring.
-6. **One neutral grey,** #B9B2A3, for big secondary buttons («Torna a la quina», «Revisió manual», «Descarta»).
-7. **The projector's plates:** gold always means the round's name, and orange only «CARTRÓ #57». The Line and «Quina potra» plates turn gold.
-9. **The finalists' ninos on the tablet** grow as fewer remain, like the projector's (D184), capped by the tab's height.
-10. **The Desgraciat's tabs:** Dempeus replaces Estat, instead of coming first beside it. But Estat's right half is the round's song history, which the presenters may still want in the Desgraciat, so Dempeus should keep it.
-11. **A winner's own phone** shows the card's name and mark, not «#123», in a celebration (D32). The projector keeps the finalists' numbers.
-13. **Buttons are imperatives** («Tanca», not «Tancar»), and the user's own picks stay as they are (e.g. «Començar final»).
-14. **Ninos:** one nino per moment, from the spec's table, plus the meditating nino on the projector's Pausa.
-15. **The phone's win title** fits the width up to 84 px, and the card stays full width.
-16. **The phone's corner buttons** hide during a Celebration, since it closes the drawers (D90).
-17. **The console's dark theme (D2)** stays in code through the tokens, with a contrast check, but no more dark boards unless the user wants it on the night.
-- (a) All as recommended.
-- (b) Comment on the canvas where not.
-
 ### U174 · When "Vols afegir un altre cartró?" shows (D200)
 - (a) After every card added. "No" just closes it.
 - (b) After every card added, until the player taps "No" once; then never again on that phone.
@@ -331,6 +312,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U175 · The design system's open choices** (2026-11-27) → D211: answered on the canvas. The user commented on the Design system page and then called it "correct"; Frontend applies the comments and reports any item they changed.
 - **U190 · The design system's props rework** (2026-11-27) → D210: all as recommended.
 - **U182–U186 · The interface sounds** (2026-11-27) → D208: the tablet on by default with a switch; none in Admin; one switch on phones; a thud on a refused tap; the sounds picked for the user, wobbly and bouncy.
 - **U171 · More moments for automatic sounds and voices** (2026-11-26) → D202: 1–4 yes (the 4th may be dropped), 5 no; a drum roll instead (D203).

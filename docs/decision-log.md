@@ -1428,3 +1428,11 @@ The user accepted all four recommendations of the props rework (temp/design-canv
 4. **The concept colour tokens** (`--action-talk`, `--color-calm`…) are deleted, so the registry is the only place that says the Hold is cyan.
 Generic components take only what they draw (`color`, `variant`, `size`, `floating`, `ring`, the slots, `sound`), never a game concept. One `ring` prop means two rings can't stack.
 By: the user. Source: open-questions.md › Answered (U190). Amends: D205. Lives in: packages/ui (Frontend).
+
+### D211 · The design system is approved, and goes into code now · 2026-11-27 · Active
+The user finished commenting on the canvas's Design system page and part of the Player app page. They said the design system "is correct" and told Frontend to put the components and the design system into code now. That lifts D210's step 3, where the code waited until they'd seen the regenerated boards. U175 is answered through those comments. Frontend applies them in creation order and reports any of U175's items they changed. The user comments on the screen pages today and tomorrow, and comments that arrive later wait for their next "read the comments". To Frontend: "Work autonomously and use agents."
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Amends: D210 (the order). Lives in: packages/ui (Frontend).
+
+### D212 · The player app on desktops and tablets · 2026-11-27 · Active
+The player app must look decent on a desktop or a tablet. It's not a responsive redesign, just a maximum width, so the screen doesn't stretch.
+By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Player app.

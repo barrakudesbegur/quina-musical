@@ -90,6 +90,8 @@ _From event.md › Players' phones; the decisions doc › Changes._
 
 **Who uses it:** players who want to, on their own phones. The game works fully with paper and corn; phones are a companion.
 
+- **On a desktop or a tablet** it looks decent: the phone layout with a maximum width, so the screen doesn't stretch. It isn't a separate responsive design (D212).
+
 - **Getting in:** players scan the QR on their card, straight in the browser. There's nothing to install and no account.
   - They add more cards by scanning, or by typing the number on the big add-card pad, opened from the "+ Cartró" button (D188). Leaving the pad with a number typed asks first, and each of that question's buttons says what happens ("Descarta els canvis", "Segueix editant").
   - **"Add another?" (D200):** after a card is added, by the pad or a scan, a banner over the cards list asks "Vols afegir un altre cartró?" with "No" and "Sí". "Sí" opens the add-card pad. Most people play several cards and follow their relatives', and many don't know a phone can hold more than one. When it shows is pending U174.
