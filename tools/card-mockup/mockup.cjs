@@ -387,15 +387,17 @@ function Card({ g, layout, kind, side, num, position, qr, stats, cut, sample }) 
   const ids = cardSongs(kind, num, side, position);
   const stamp = Math.min(70, g.W * 0.17);
   return h(View, { style: [st.card, { width: g.W, height: g.H }, cut] },
-    // The faint logo stamp, with the year above it as on last year's card.
-    h(Svg, { viewBox: '0 0 1024 1024', style: { position: 'absolute', bottom: 22, right: 6, width: stamp, height: stamp, transform: 'rotate(15deg)' } },
-      h(Path, { d: STAMP_D, fillRule: 'evenodd', fill: '#000000', opacity: 0.09 })),
-    h(Text, { style: { position: 'absolute', bottom: 22 + stamp - 4, right: 6, width: stamp, textAlign: 'center', fontSize: 18, color: '#e8e8e8', transform: 'rotate(15deg)' } }, YEAR),
     h(Header, { g, kind, side, num, qr }),
     h(View, { style: [st.table, { height: g.gridH }] },
       [0, 1, 2].map((r) =>
         h(View, { key: r, style: st.row },
           ids.slice(r * 4, r * 4 + 4).map((id) => h(Cell, { key: id, g, id, titleMax: layout.titleMax, stats }))))),
+    // Over the songs, not under them: on the square card the corner cell's cover would hide it.
+    // The faint logo stamp, with the year above it as on last year's card.
+    h(Svg, { viewBox: '0 0 1024 1024', style: { position: 'absolute', bottom: 22, right: 6, width: stamp, height: stamp, transform: 'rotate(15deg)' } },
+      h(Path, { d: STAMP_D, fillRule: 'evenodd', fill: '#000000', opacity: 0.09 })),
+    // As last year's code: flush with the stamp's top, 5 pt in from its right, its own width, 18 pt, 9 % ink (#e8e8e8).
+    h(Text, { style: { position: 'absolute', bottom: 22 + stamp, right: 6 + 5, textAlign: 'center', fontSize: 18, color: '#000000', opacity: 0.09, transform: 'rotate(15deg)' } }, YEAR),
     g.style === 'footer' ? h(BrandFooter) : null,
     sample ? h(SampleMark, { g }) : null);
 }

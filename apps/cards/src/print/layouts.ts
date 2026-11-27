@@ -69,8 +69,13 @@ export const HEADING_BOX_PAD_Y = 7;
 export const GOMET = { diameter: 42.52, fontSize: 10.5, letterSpacingEm: 0.15 } as const;
 /** The grid's outer border and padding: a 1 pt border, 1 pt in, so with the cells' borders it reads as a double line. */
 export const GRID_FRAME = 4;
-/** The faint logo stamp in the bottom-right corner: its size, and the year above it (D263). */
-export const STAMP = { maxSize: 70, widthShare: 0.17, bottom: 22, right: 6, yearSize: 18, yearOverlap: 4 } as const;
+/**
+ * The faint logo stamp in the bottom-right corner: its size and place, and the year on top of it (D263). The year sits
+ * as on last year's card (its code: the stamp at bottom 10, right 10, 70 pt; the year at bottom 80, right 15, react-pdf's
+ * default 18 pt, #e8e8e8): flush with the stamp's top, its right edge 5 pt in from the stamp's, its own width, each
+ * turned 15° about its own centre.
+ */
+export const STAMP = { maxSize: 70, widthShare: 0.17, bottom: 22, right: 6, yearSize: 18, yearRightInset: 5 } as const;
 
 /** The branding (layout B): the figure 0.055 × its drawing (512 × 683), two lines of text, in a 170 pt block. */
 export const BRAND = { figureScale: 0.055, width: 170, gap: 6, topSize: 18, bottomSize: 11, letterSpacing: 1.08, lineGap: 9 } as const;

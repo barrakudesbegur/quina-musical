@@ -205,7 +205,8 @@ const Stamp: React.FC<{ g: CardGeometry }> = ({ g }) => {
       <Svg viewBox="0 0 1024 1024" style={{ position: 'absolute', bottom: STAMP.bottom, right: STAMP.right, width: size, height: size, transform: 'rotate(15deg)' }}>
         <Path d={STAMP_PATH} fillRule="evenodd" fill={INK} opacity={0.09} />
       </Svg>
-      <Text style={{ position: 'absolute', bottom: STAMP.bottom + size - STAMP.yearOverlap, right: STAMP.right, width: size, textAlign: 'center', fontSize: STAMP.yearSize, color: '#e8e8e8', transform: 'rotate(15deg)' }}>
+      {/* Last year's #e8e8e8 as the stamp's 9 % ink: the same on paper, and see-through over a cover. */}
+      <Text style={{ position: 'absolute', bottom: STAMP.bottom + size, right: STAMP.right + STAMP.yearRightInset, textAlign: 'center', fontSize: STAMP.yearSize, color: INK, opacity: 0.09, transform: 'rotate(15deg)' }}>
         {VERSION_STAMP}
       </Text>
     </>
@@ -238,7 +239,6 @@ const CardSide: React.FC<{ g: CardGeometry; card: Card; side: number; heading: s
   const lines = card.sides.find((s) => s.side === side)?.lines ?? [];
   return (
     <View style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: CARD_PADDING, fontFamily: FONT_FAMILY, lineHeight: 0.8, gap: CARD_GAP, width: g.card.width, height: g.card.height }}>
-      <Stamp g={g} />
       <Header g={g} heading={heading} boxed={side > 1} id={card.id} qr={qr} />
       <View style={{ border: `1 solid ${INK}`, padding: 1, display: 'flex', flexDirection: 'column', height: g.grid.height }}>
         {lines.map((line, r) => (
@@ -249,6 +249,8 @@ const CardSide: React.FC<{ g: CardGeometry; card: Card; side: number; heading: s
           </View>
         ))}
       </View>
+      {/* Over the songs, not under them: on the square card the corner cell's cover would hide it. */}
+      <Stamp g={g} />
       {sample && <SampleMark g={g} />}
     </View>
   );
