@@ -85,7 +85,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Each edition** has a new title (the paper colour may stay), so last year's cards are easy to spot and don't count. Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
 - **Corn seeds** are the markers: they're compostable, cheap and don't slide much. They come off easily, so one normal card serves every regular round.
 - **Nobody marks songs for good** (**new rule to explain in 2026**): no stickers or markers on the songs, or the card can't be reused in the next rounds. Kids sit with adults, so it shouldn't happen much. A card that gets spoilt can be exchanged for a new one if any are left, only between rounds, to keep it fair (D232).
-- **Each card gets its sticker** (**new in 2026**): the card has a dotted circle of about 19 mm with the word for sticker in it, and sheets of coloured shape stickers lie on the tables, in the same colours and shapes the phone uses for each card. There are markers on the tables too, and a space on the card for a name. So a player matches the paper card to its mark on the phone (D231).
+- **Each card gets its sticker** (**new in 2026**): the card has a dotted circle of about 19 mm with the word for sticker in it, and sheets of coloured shape stickers lie on the tables, in the same colours and shapes the phone uses for each card. There are markers on the tables too, and a space on the card for a name. So a player matches the paper card to its mark on the phone (D231). The circle is on both sides; a player who sticks different stickers on the two sides changes the card's mark in the app (D265).
 - **Printing:**
   - The cards are generated from the final song list, so no two cards or lines are the same.
   - Once they're printed, no song can change.
@@ -110,7 +110,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The pool** is the curated playlist the cards are printed from.
   - Over several weeks, everyone in the team adds songs to a shared Spotify playlist.
   - Then a few members meet and filter it down to the final count.
-  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–5 and one for Quines 6–10, as the organizers decided on 26 November (D193). The special card is printed on both sides too: the Desgraciat plays the first pool on one side, and the Especial the second pool on the other (D226), so the change of pool happens in the break. The first was final on 25 November; the second had 64 of its 70 songs on 27 November.
+  - **2026 has two pools of 70 songs each:** one for Quines 1–5 and one for Quines 6–10, as the organizers decided on 26 November (D193). A song may repeat in both pools; in 2026, 4 do (D268). The special card is printed on both sides too: the Desgraciat plays the first pool on one side, and the Especial the second pool on the other (D226), so the change of pool happens in the break. The first was final on 25 November; the second had 64 of its 70 songs on 27 November.
   - An archive playlist keeps past songs.
 - **The size is a hard choice** because it shapes the night: more songs mean longer rounds. 2024 had 87 songs, which was too many. 2025 had 77 (the plan said about 80, and fewer was fine). Each edition decides its own.
 - **The songs:** popular hits from every era and genre, including Catalan, Spanish and Christmas songs.

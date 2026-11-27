@@ -1729,3 +1729,39 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 ### D259 · The A3 card's header is option C · 2026-11-27 · Active; covers or not Pending (the organizers, U212)
 "okay i want the option c you made". The header is the GOMET circle, the Barrakudes figure, the 38 pt heading centred in the space between, then «CARTRÓ #n» next to its 16 mm QR, with no branding text. Then the user made covers an organizers' choice: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". So D233 and D256's A3 layout hold only if the organizers pick covers (U212). The other option is the 21 × 9.9 cm card they saw before, three to an A4 page, in black and white on coloured paper.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D257, D258; puts D233 and D256 up to the organizers. Lives in: requirements/songs-and-cards.md › The card.
+
+### D260 · Clean song names on paper and screens · 2026-11-27 · Active
+"i also want you to clean the song titles, and also artists (many times it is fine to not put all, it is just for reference doesnt need to be fully accurate)", then "Okay on the other name changes". Spotify's tags come off the titles (" - Remix", "(feat. X)", " - 2012 Remaster"…), and the artist becomes the main one. Three duets keep both names: #70 Travolta & Newton-John, #97 Carlos Vives & Shakira, #129 Pitbull & Kesha. Hand fixes: #6 «Bailando por Ahí», #22 «El Último Vals», #24 «Fashion Girl», #50 «Comando Tiburón», #55 and #106 «La Quinta Estación», #90 «En el Amor Todo Es Empezar», #93 «Hay Que Venir al Sur». 38 of 136 songs change. The names are the same on the cards and the screens. The data field is Sound engine's, with the rules in tools/card-mockup/print-titles.py.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D261 · «Aserejé», for now on both of its songs · 2026-11-27 · Active
+"Asereje should just be called asereje, not the ketchup song. Grupo Arenas seems like a cover, i thing who put it got confused, i will ask them. but for now keep asereje in both." #5 (Grupo Arenas, pool 1) and #128 (Las Ketchup, pool 2) both print «Aserejé». The user is asking the organizers about #5. No other song repeats by title across the two playlists.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
+
+### D262 · Both card options are built, covers first · 2026-11-27 · Active
+"they havent picked yet, but assume we do a. and you can code both so i decide the final later." Until the organizers choose (U212), the working default is covers in colour (the A3 card, six a sheet, header C). Both options are built into apps/cards behind one switch.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
+
+### D263 · «2026» goes back into the faint stamp · 2026-11-27 · Active
+"keep the year in the stamp yes, as the old code did." The background stamp carries the year again, as last year's did, so a 2025 card stays easy to spot (D85). Amends D254 and D257.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
+
+### D264 · The amounts stay 399 and 300, with sample cards on the spare places · 2026-11-27 · Active
+"i liked that tat the specials started on a round number, so based on the first digit i can know what card type it is. we can make that shose spaces simply repeat the last cards so we can use them as samples, please put a watermark, like a diagonal big word, like the stamp." Normal cards stay #1–399 and special cards #400–699 (D68), so the first digit tells the type. With six a sheet, the last normal sheet's 3 spare places repeat the last cards (#397–399), with a big faint diagonal «MOSTRA» on both sides. The 300 special cards fill 50 sheets exactly: 117 A3 sheets in all. Answers U211, and amends D256's "a multiple of 6".
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
+
+### D265 · The sticker circle on both sides · 2026-11-27 · Active
+"yes both sides. if a player makes the mistake to put a diferent sticker on each side, they simply edit the card in the app when necessary." Answers U201.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: event.md › The cards; requirements/songs-and-cards.md › The card.
+
+### D266 · The screens' special-card labels are «Desgraciat» and «Especial» · 2026-11-27 · Active
+Answers U198 with (a). During the Check the label is just those words. Frontend builds it, so the label's join (short name plus « · ») gives exactly that.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/screens.md › Projector.
+
+### D267 · Last year's coloured paper, printed in colour · 2026-11-27 · Active
+Blue for normal cards, pink for special ones, printed in colour, with a proof sheet first. Answers U52.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
+
+### D268 · One repertoire holds every song once; pools only list them · 2026-11-27 · Active
+"it is wrong to think about the pools in a way they cannot share songs. they may want to repeat songs it is fine. our architecure and data model should account for it. we should simply save songs and we have have what pool has wat song but all songs are avilable in a shared pool, including the music from pause or break." A song may be in both pools, so pool 2 keeps its full 70, the 4 shared songs included, and the repertoire holds 136 songs. The Pausa and break music lives in the same repertoire. D248 already stores each file once, by its content. The data model (songs, pools, ids, pools.py dropping the 4) is Sound engine's and Backend's to change. Answers U199, and amends D101 and D193 ("different songs").
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D101, D193, D238 (a shared song keeps one id). Lives in: GLOSSARY.md › Pool, Repertoire; requirements/songs-and-cards.md › The pool.

@@ -104,12 +104,12 @@ Whoever provides a prize: Barrakudes itself or an outside business.
 ### The music
 
 **Pool**:
-A set of songs one side of the cards is printed from (Pool 1, Pool 2). An edition can have several; each round plays one, and its queue is a shuffle of that whole pool (D178).
+A set of songs one side of the cards is printed from (Pool 1, Pool 2). An edition can have several; each round plays one, and its queue is a shuffle of that whole pool (D178). A pool picks its songs from the repertoire, and the same song may be in more than one pool (D268).
 _Avoid_: Part, playlist
 _Avoid_: Song list, catalogue
 
 **Repertoire**:
-All of an edition's prepared songs together, its pools included (2026: Pool 1 and Pool 2). The tools prepare, sync and deploy a repertoire as one; a round still plays one pool (D178).
+All of an edition's prepared songs and music together: every song once, which the pools pick from, and the music sets (Hold, Pausa, the breaks) too (D178, D268). The tools prepare, sync and deploy a repertoire as one; a round still plays one pool.
 _Avoid_: Library (that's the logo library), bundle (that's a round's prizes), catalogue
 
 **Queue**:

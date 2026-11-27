@@ -158,16 +158,6 @@ The user: "add another option that is the one we agreed before but without album
 - (b) No covers, black and white on coloured paper: the 21 × 9.9 cm card shown to them before, three to an A4 page, with «QUINA QUINA!» / «BARRAKUDES · 2026» and last year's 16 pt titles.
 The cards are made on 4–5 Dec, and the build takes about 2 days plus a proof round, so the answer is needed in the next few days. U211's amount follows the layout.
 
-### U211 · How many normal cards (D256)
-Six cards a sheet means each type fills whole A3 sheets. The special card's 300 fits (50 sheets). The normal card's 399 (D68) doesn't. 2025 had about 190 normal cards played, and 2024 sold 214.
-- (a) 402 normal cards (67 sheets).
-- (b) 396 normal cards (66 sheets).
-
-### U201 · Which sides get the sticker circle and the name space (D231)
-The normal card is turned over for Quines 6–10, and the special card for the Especial (D193, D226).
-- (a) Both sides, so the card is recognisable whichever side is up.
-- (b) Side 1 only.
-
 ### U202 · What admin the console does during the night (D234)
 Admin isn't at hand on stage. The proposal for the console:
 1. Add sold cards to the cards in play: a range or single numbers.
@@ -185,18 +175,6 @@ Today every console already shares the show's state live: songs, Holds, claims, 
 ### U204 · The realistic run's times (D235)
 - (a) The real night's times: doors at 5 pm, the start at 6 pm on 27 Dec. The Horari and the doors voices won't count down today.
 - (b) The same schedule, moved so it starts at a time today the user gives. The countdowns and the doors voices run for real, and it's put back to 27 Dec afterwards.
-
-### U199 · The 4 songs in both final playlists
-Both final playlists have 70 songs and no repeats inside each (D230). But 4 of pool 2's are the very same tracks as pool 1's: 7 Bailando por Ahi (Juan Magán) = pool 1's 6; 33 Mari Carmen (La Pegatina) = 45; 47 Only Girl (In The World) (Rihanna) = 47; 54 Que Te Quería (La Quinta Estacion) = 53. D101 and D193 say the pools have different songs. Today's run leaves them out of pool 2 (66 songs).
-- (a) Swap those 4 in pool 2's playlist for other songs (4 more downloads).
-- (b) Keep pool 2 at 66 songs.
-- (c) Keep them in both pools.
-
-
-### U198 · The special card's side labels on the screens
-The Check shows one label for a card's type and side (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The printed special card now says «DESGRACIAT» and «ESPECIAL» (D252).
-- (a) The printed titles: «Desgraciat» and «Especial», so the label matches what the player sees on the card.
-- (b) By pool, like the normal card: «Especial 1» and «Especial 2».
 
 ### U193 · Where the install button goes on the phone's home (D221)
 The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
@@ -290,10 +268,6 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U52 · Duplex printing and the paper
-Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
-**Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
-
 ### U55 · Old song data on the laptop's disk
 Both final pools are prepared (27 Nov). Two old sets are kept and wait for the user's OK to delete (D80): last year's 77 test songs (about 6 GB), and 2026's data from before the final playlists, set aside in `data/out|cache/repertoires/2026-before-final` (about 2.5 GB). The laptop has about 70 GiB free, so there's no hurry.
 - (a) Keep both for now.
@@ -369,6 +343,11 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U198 · The special card's labels on the screens** (2026-11-27) → D266: «Desgraciat» and «Especial».
+- **U199 · The 4 songs in both playlists** (2026-11-27) → D268: a model change. One repertoire with every song once; a song may be in both pools; pool 2 keeps its 70.
+- **U201 · The sticker circle's sides** (2026-11-27) → D265: both sides.
+- **U211 · How many normal cards** (2026-11-27) → D264: still 399, with the sheet's spare places as «MOSTRA» samples.
+- **U52 · Duplex printing and the paper** (2026-11-27) → D267: last year's coloured paper, in colour, a proof sheet first.
 - **U210 · Cards per printed page** (2026-11-27) → D256: six on an A3 sheet, portrait.
 - **U209 · The normal card's heading** (2026-11-27) → D254: «QUINES 1–5» / «QUINES 6–10» as the title; «QUINA QUINA!» with «BARRAKUDES · 2026» in the branding.
 - **U200 · The word in the sticker circle** (2026-11-27) → D253: «GOMET».

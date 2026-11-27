@@ -12,7 +12,7 @@ What the song pool, the song preparation and the printed cards must be, as it st
 _From event.md › The songs._
 
 - A **Pool** is a curated playlist a side of the cards is printed from. Each round plays one pool, and its Queue is a shuffle of that whole pool.
-- **2026 has two pools of 70 songs** with different songs (D101, D178), split by the organizers (D193): pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special card is printed on both sides like the normal one (D226): side 1 from pool 1 for the Desgraciat, side 2 from pool 2 for the Especial. Each pool plays six rounds.
+- **2026 has two pools of 70 songs** (D101, D178), split by the organizers (D193). A song may be in both pools: the repertoire holds each song once, and each pool lists its songs (D268). In 2026, 4 songs are in both, so the repertoire has 136 songs: pool 1 for Quines 1–5, pool 2 for Quines 6–10. The special card is printed on both sides like the normal one (D226): side 1 from pool 1 for the Desgraciat, side 2 from pool 2 for the Especial. Each pool plays six rounds.
 - The team builds it together:
   - over several weeks, everyone adds songs to a shared Spotify playlist;
   - then a few members filter it down to the final count;
@@ -84,10 +84,12 @@ _From event.md › The cards._
 - **The header, in one line (D257):** the GOMET circle on the left, the Barrakudes figure from the branding beside it, the heading at 38 pt, then «CARTRÓ #n» and the QR. The QR is never smaller than last year's 16 mm, and the heading never shrinks (D258). The card number sits next to the QR, since it's the QR's content (D258). The header is option C (D259): the figure beside the GOMET, the heading centred between the side blocks. The covers sit above the songs' titles. No branding text (it replaces D254's «QUINA QUINA!» and «BARRAKUDES · 2026»).
 - **The style is last year's printed card** (apps/cards/dist/cards-normal.pdf), with covers added: it's a printed document, not the app's look, so no web components (D250).
 - **Each side's title, centred on the card's width (D254):** the normal card's «QUINES 1–5» on side 1 and «QUINES 6–10» on side 2, white on black. The special card's «DESGRACIAT» and «ESPECIAL» (D252).
-- The faint background stamp is the logo only; the year is in the branding (D254).
-- **A sticker circle (D231, D253):** a dotted circle of about 15 mm with «GOMET» centred in it, larger and letter-spaced (about 10.5 pt, 0.15 em), for a coloured shape sticker matching the card's mark on the phone (D5) (sides pending U201). No name field (D250).
+- The faint background stamp carries the logo and «2026», as last year's did (D263).
+- **A sticker circle (D231, D253):** a dotted circle of about 15 mm with «GOMET» centred in it, larger and letter-spaced (about 10.5 pt, 0.15 em), for a coloured shape sticker matching the card's mark on the phone (D5), on both sides (D265). No name field (D250).
 - **The number** has a faded «#» before it (D250).
-- **Song covers (D233, pending the organizers, U212):** each song shows its cover, so players find it faster, printed in colour. The other option is no covers, in black and white on coloured paper. The design is done with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392). The spec so far, the layouts being tested and what's open are in tools/card-mockup/README.md (008cf3b6). The page layout is pending U210.
+- **Song covers (D233, pending the organizers, U212):** each song shows its cover, so players find it faster, printed in colour. The other option is no covers, in black and white on coloured paper. Both are built behind one switch, with covers as the working default (D262).
+- **Paper (D267):** last year's coloured paper (blue for normal cards, pink for special ones), printed in colour, with a proof sheet first.
+- **Song names (D260):** cleaned for print and screens. Spotify's tags come off the titles (" - Remix", "(feat. X)", " - 2012 Remaster"…), the artist is the main one (duets keep both), and a few are fixed by hand. They're for reference, so they don't need to be complete. The design is done with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392). The spec so far, the layouts being tested and what's open are in tools/card-mockup/README.md (008cf3b6). The page layout is pending U210.
 - The price isn't printed.
 
 ## Card types
@@ -107,7 +109,7 @@ _From event.md › The cards; the decisions doc › Changes._
 _From event.md › The cards (Amounts)._
 
 - Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
-- Each type's amount fills whole sheets: a multiple of 6 since D256 (it was 3). 2026: the normal amount is pending U211 (402 or 396), and the special stays 300.
+- The amounts stay as D68: normal cards #1–399 and special cards #400–699, so a card's first digit tells its type (D264). A sheet's places beyond the last card repeat the last cards (#397–399) as samples, marked on both sides with a big faint diagonal «MOSTRA» (D264). 2026 on A3: 67 + 50 = 117 sheets.
 - 2024: 250 of each type printed; 214 normal and 147 special sold.
 - 2025: about 250 cards in play expected; about 190 normal and 151 special actually played.
 
