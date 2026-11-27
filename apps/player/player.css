@@ -70,6 +70,9 @@
 
   /* layout */
   --player-gutter: var(--space-3);
+  /* D212: on tablets and desktops the app stays a phone-wide column in the middle of the sky (the drawers' width), so
+     it never stretches; not a responsive layout. */
+  --player-column: 32rem;
   --player-corner: 13rem; /* a corner button's disc (208 px); a quarter of it shows */
   --player-corner-space: 7.5rem; /* room at the bottom of the home screen, so the last row scrolls clear of the corners */
   --player-drawer-top: 6rem; /* a tall drawer leaves the garland and the title showing above it */
@@ -633,6 +636,14 @@
 
 .check-strip[data-state='invalid'] .check-strip__result {
   color: var(--color-text-on-fail);
+}
+
+/* ---- the column (D212): the garland, header, strips and home stay phone-wide; the sky fills the rest ----------- */
+.player > :where(.heat, .app-header, .player__alerts, .player__main) {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--player-column);
+  margin-inline: auto;
 }
 
 /* ---- main ---------------------------------------------------------------------------------------------- */
@@ -2001,7 +2012,7 @@ html:has(.drawer[open]) {
   /* the boards' sheet: a shade darker than the panels, so the settings panel stands out on it */
   --drawer-bg: #1f2a60;
   width: 100%;
-  max-width: 32rem;
+  max-width: var(--player-column, 32rem);
   max-height: calc(100dvh - var(--player-drawer-top));
   margin: auto auto 0;
   padding: 0 0 env(safe-area-inset-bottom, 0px);
@@ -3561,14 +3572,15 @@ html:has(.drawer[open]) {
 }
 
 .player .corner--left {
-  left: calc(var(--player-corner) / -2);
+  /* centred on the column's bottom corner (D212): the screen's corner on a phone */
+  left: calc(max(0px, (100% - var(--player-column)) / 2) - var(--player-corner) / 2);
   box-shadow:
     inset -10px 10px 0 rgb(255 255 255 / 0.45),
     0 -2px 0 4px rgb(10 14 38 / 0.35);
 }
 
 .player .corner--right {
-  right: calc(var(--player-corner) / -2);
+  right: calc(max(0px, (100% - var(--player-column)) / 2) - var(--player-corner) / 2);
   box-shadow:
     inset 10px 10px 0 rgb(255 255 255 / 0.45),
     0 -2px 0 4px rgb(10 14 38 / 0.35);
