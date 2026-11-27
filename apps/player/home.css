@@ -32,6 +32,12 @@
   );
 }
 
+/* Its rows never shrink to fit: the box scrolls instead. A row that scrolls itself (the status strips' box, which caps
+   its height) has no content minimum, so the column squeezed it to 0 px and the Check and Admin's notice never showed. */
+.player__scroll > :where(.app-header, .player__alerts, .player__main) {
+  flex-shrink: 0;
+}
+
 /* ---- layout --------------------------------------------------------------------------------------------------- */
 .ara {
   display: grid;
