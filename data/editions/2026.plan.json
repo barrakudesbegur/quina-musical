@@ -1,0 +1,311 @@
+{
+  "v": 3,
+  "edition": "26",
+  "title": "Quina Musical",
+  "prizeReveal": "perRound",
+  "rounds": [
+    {
+      "number": 1,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 1,
+      "line": [
+        {
+          "title": "Premi de prova 1",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 2",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 1,
+      "line": [
+        {
+          "title": "Premi de prova 3",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 4",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 1,
+      "line": [
+        {
+          "title": "Premi de prova 5",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 6",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 1,
+      "line": [
+        {
+          "title": "Premi de prova 7",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 8",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 1,
+      "line": [
+        {
+          "title": "Premi de prova 9",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 10",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "kind": "desgraciat",
+      "cardType": "especial",
+      "side": 1,
+      "line": [],
+      "bingo": [
+        {
+          "title": "Premi de prova 11",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 12",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 13",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 14",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 15",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 16",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 17",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 18",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 19",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "kind": "normal",
+      "cardType": "normal",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 20",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 21",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "kind": "special",
+      "cardType": "especial",
+      "side": 2,
+      "line": [
+        {
+          "title": "Premi de prova 22",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ],
+      "bingo": [
+        {
+          "title": "Premi de prova 23",
+          "detail": null,
+          "sponsorId": null,
+          "image": null,
+          "headline": true
+        }
+      ]
+    }
+  ],
+  "sponsors": [],
+  "schedule": {
+    "doorsAtMs": 1798387200000,
+    "startAtMs": 1798390800000,
+    "roundMinutes": 25,
+    "intervalMinutes": 3,
+    "throws": [
+      {
+        "afterRound": 6,
+        "minutes": 10
+      }
+    ]
+  },
+  "cheatSheet": {
+    "claimRules": [
+      "Guanya el primer que canta. Si dos canten amb la mateixa cançó, es reparteixen el premi.",
+      "Si algú canta tard i ningú més ha cantat, guanya igualment.",
+      "Un premi que ningú canta es perd."
+    ],
+    "specialRoundRules": [
+      "Només compten els cartrons especials."
+    ]
+  }
+}
