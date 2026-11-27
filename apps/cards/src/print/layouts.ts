@@ -41,12 +41,15 @@ export interface CardLayout {
   header: HeaderStyle;
   /** Each song's cover above its title (in colour), or no covers (black and white, the text alone). */
   covers: boolean;
+  /** With covers: the cover's side, in points, at most what the cell allows. */
+  coverSize?: number;
   /** The largest song title, in points (it is fitted down from there, fit.ts). */
   titleMax: number;
 }
 
 export const CARD_LAYOUTS: Record<CardLayoutId, CardLayout> = {
-  'a3-6': { id: 'a3-6', name: 'A3 · 6 a sheet, covers in colour (option A)', sheet: SHEETS.A3, cols: 2, rows: 3, header: 'gometFigure', covers: true, titleMax: 16 },
+  // Covers 17 mm (the user, 28 Nov: "make the cover a little smaller on the square version"; the cell allows 18.6 mm).
+  'a3-6': { id: 'a3-6', name: 'A3 · 6 a sheet, covers in colour (option A)', sheet: SHEETS.A3, cols: 2, rows: 3, header: 'gometFigure', covers: true, coverSize: 17 * (72 / 25.4), titleMax: 16 },
   'a4-3': { id: 'a4-3', name: 'A4 · 3 a sheet, no covers (option B)', sheet: SHEETS.A4, cols: 1, rows: 3, header: 'brand', covers: false, titleMax: 16 },
 };
 
@@ -116,8 +119,8 @@ export function cardGeometry(layout: CardLayout): CardGeometry {
   const cellSize = { width: (inner.width - GRID_FRAME) / 4, height: (grid.height - GRID_FRAME) / 3 };
   let cell: CellGeometry;
   if (layout.covers) {
-    // The cover above the title: as big as 55 % of the cell's height allows.
-    const cover = Math.min(cellSize.width - 10, (cellSize.height - 6) * 0.55);
+    // The cover above the title: the layout's size, never more than 55 % of the cell's height.
+    const cover = Math.min(layout.coverSize ?? Infinity, cellSize.width - 10, (cellSize.height - 6) * 0.55);
     const textWidth = cellSize.width - 8;
     cell = { kind: 'coverAbove', cover, padding: 4, gap: 4, textWidth, textBox: { width: textWidth - 3, height: cellSize.height - cover - 14 } };
   } else {

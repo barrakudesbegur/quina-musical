@@ -97,6 +97,7 @@ test("both layouts keep the hard rules: a 45 pt QR, 38 pt headings, the A3 · 6 
   const a = cardGeometry(CARD_LAYOUTS['a3-6']);
   assert.deepEqual([mm(a.card.width), mm(a.card.height)], [148.5, 140]);
   assert.equal(a.cell.kind, 'coverAbove');
+  assert.equal(a.cell.kind === 'coverAbove' && mm(a.cell.cover), 17, 'covers 17 mm on the square card (the user, 28 Nov)');
   const b = cardGeometry(CARD_LAYOUTS['a4-3']);
   assert.deepEqual([mm(b.card.width), mm(b.card.height)], [210, 99]);
   assert.equal(b.cell.kind, 'textOnly');

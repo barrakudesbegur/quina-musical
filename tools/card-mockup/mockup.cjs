@@ -83,7 +83,8 @@ const LAYOUTS = {
   'a3-6-gomet-nino': { name: 'A3 · 6, GOMET + figure, no branding text', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNino', cellMode: 'above' },
   // The QR can't shrink (the user, 27 Nov): GOMET + QR left, the figure + number right, the heading centred at 38 pt.
   // The user's order kept (27 Nov): GOMET + figure, the heading between, the number next to its QR.
-  'a3-6-gomet-nino-between': { name: 'A3 · 6, GOMET + figure, heading between, number + QR', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNinoBetween', cellMode: 'above' },
+  // Covers 17 mm (the user, 28 Nov: "make the cover a little smaller on the square version").
+  'a3-6-gomet-nino-between': { name: 'A3 · 6, GOMET + figure, heading between, number + QR', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNinoBetween', cellMode: 'above', cover: 17 * (72 / 25.4) },
   'a3-6-gomet-qr': { name: 'A3 · 6, GOMET + QR left, figure + number right', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometQr', cellMode: 'above' },
   'a3-6-gomet-left': { name: 'A3 · 6, GOMET left, no branding', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
   // One more try (the user, 27 Nov): 2×2 on A4 with a one-line header (no branding, the GOMET circle on the left), so
