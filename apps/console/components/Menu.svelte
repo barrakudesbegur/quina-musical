@@ -165,9 +165,9 @@
           <Switch label={S.menu.finalLap} note={S.menu.finalLapNote} checked={snap.game.finalLapStinger} disabled={!model.can('setGame')} onchange={(finalLapStinger) => model.act('setGame', { finalLapStinger })} />
           <span class="menu-group__field" id="{uid}-phase">{S.menu.phase}</span>
           <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
-            <button type="button" class="choice" data-anim="press" aria-pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)}>{S.menu.phaseAuto}</button>
+            <MiniButton size="s" label={S.menu.phaseAuto} pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)} />
             {#each PHASE_NAMES as phase (phase)}
-              <button type="button" class="choice" data-anim="press" aria-pressed={snap.game.phaseOverride === phase} disabled={!model.can('setGame')} onclick={() => setPhase(phase)}>{S.phase[phase]}</button>
+              <MiniButton size="s" label={S.phase[phase]} pressed={snap.game.phaseOverride === phase} disabled={!model.can('setGame')} onclick={() => setPhase(phase)} />
             {/each}
           </div>
         </section>

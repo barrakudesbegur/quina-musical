@@ -70,7 +70,7 @@ The controls family (components-v2.md § 3, B1–B10). Each control carries its 
 | `pad-keys` (B7) | A NumberPad key is pressed (both surfaces) | The key's piece sinks onto its edge (the shared `press`, R4). On the phone a key that can't lead to a card fades to its dashed, disabled look (unchanged, Player app) | Down 80 ms, up 240 ms `--ease-bounce` | `digit`, `backspace`; ↵ plays the entry's own (a chip's add or a refusal) | No travel: the sunk shade only |
 | `tab-press` (B3, #33) | An idle tab is pressed | It dips 3 px under the finger and springs back (the selected tab is already down in the panel) | Down 80 ms, up 240 ms `--ease-bounce` | `tab` | No dip |
 | `swatch-press` (B8, #33) | An IconPicker swatch is pressed | The swatch sinks onto its drop (its ring with it), then `icon-pick` pops it | Down 80 ms, up 240 ms `--ease-bounce` | `iconPick` (a disabled one: `refused-tap`) | No travel: the drop goes |
-| `qr-press` (phone, #33) | The QR button at a number field's end, or «Veure'l», is pressed | The QR code shrinks to 0.9 and springs back; «Veure'l» dims to 0.7 while held | Down 80 ms, up 240 ms `--ease-bounce` | `small` | The QR doesn't shrink; «Veure'l» dims |
+| `qr-press` (phone, #33) | The QR button at a number field's end is pressed | The QR code shrinks to 0.9 and springs back («Veure'l» is a TextLink, with its own press) | Down 80 ms, up 240 ms `--ease-bounce` | `small` | The QR doesn't shrink |
 | `slider-step` (B10) | A Slider's − or + is pressed (1 % a press) | The buttons press like any small control (R4); the thumb and the fill follow the value with no animation of their own (a range never lags the finger) | Press 80 ms | none (D139: the volume sliders are silent) | No travel |
 
 ## Projector (`apps/stage/`)

@@ -2389,24 +2389,6 @@
 }
 
 /* A link's look, with a taller touch target than its words. */
-.player .number-pad__see {
-  min-height: 0;
-  margin: -0.625rem -0.25rem;
-  padding: 0.625rem 0.25rem;
-  font: inherit;
-  color: var(--color-accent);
-  text-decoration: underline;
-  background: none;
-  border: 0;
-  box-shadow: none;
-}
-
-.player .number-pad__see:active {
-  transform: none;
-  box-shadow: none;
-  opacity: 0.7;
-}
-
 /* The smart keypad is the NumberPad (B7, packages/ui/components/number-pad.css; ANIMATIONS.md `pad-keys`). */
 /* "Desar": the whole width, square-ish corners, the tick; greyed until the number is a card it can save, then it
    lights up. */

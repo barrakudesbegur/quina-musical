@@ -1,7 +1,8 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
-  import { PLAYER } from '../actions.ts';
+  import TextLink from '../../../packages/ui/components/TextLink.svelte';
+  import { PLAYER, PLAYER_LINKS } from '../actions.ts';
   // "Afegir cartró" (boards "App · calaix per afegir un cartró" and "afegir cartró: casos especials"): the card's
   // number on a paper field, an optional name, its icon (the first free one preselected), the smart keypad and one
   // "Desar". A digit key works only while the number can still become a printed card's (logic/pad.ts); "Desar" lights
@@ -113,7 +114,7 @@
       <p class="number-pad__note" role="status">
         <span class="number-pad__note-mark" aria-hidden="true"><CardMark identity={owned.color} decorative /></span>
         <span class="number-pad__note-text">{S.alreadyYours(owned.name)}</span>
-        <button type="button" class="number-pad__see" onclick={() => onsee(owned.id)}>{S.seeCard}</button>
+        <TextLink {...PLAYER_LINKS.seeOwned} class="number-pad__see" onclick={() => onsee(owned.id)} />
       </p>
     {:else if error}
       <p class="number-pad__note" role="alert"><span class="number-pad__note-text">{error}</span></p>
