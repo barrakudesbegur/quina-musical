@@ -261,14 +261,17 @@
   {#if phone}
     <p class="ds-gallery__note">
       A real cylinder (#82, #83): one transform per tile round one axis, the radius from the tile count with a gap, back faces
-      hidden. Drag it sideways: a stiff wobble of at most 4° that springs back (drum-tug). <code>compact</code> is the strip a
-      parent can morph to.
+      hidden. Drag it sideways: a stiff wobble of at most 4° that springs back (drum-tug). It morphs from the full look to the strip
+      by <code>--reel-collapse</code> (0 → 1, transforms and opacity only: drum-collapse), which the phone home drives from its scroll
+      and its swipe; <code>compact</code> pins it to the strip.
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--wide">
       {#snippet d1()}<Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
       {@render cell('full, landed', d1)}
       {#snippet d2()}<Reel spin={null} latest={{ position: 4, songId: 1, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} compact />{/snippet}
       {@render cell('compact (the strip), a long title', d2)}
+      {#snippet d4()}<div style:--reel-collapse="0.5"><Reel spin={null} latest={{ position: 4, songId: 7, atMs: now - 5000 }} {catalog} songs={[5, 14, 18, 20, 25, 1, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} /></div>{/snippet}
+      {@render cell('halfway through the collapse (--reel-collapse 0.5)', d4)}
       {#snippet d3()}<Reel spin={null} latest={null} {catalog} songs={[5, 14, 18, 20, 25, 7, 60, 3, 11, 2]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
       {@render cell('idle: blurred, nothing landed yet', d3)}
     </div>

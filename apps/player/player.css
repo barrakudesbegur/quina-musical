@@ -2437,80 +2437,118 @@
   font-size: var(--text-lg);
 }
 
-/* ---- Ara: the drum (or the pause) on top, the Historial | Cartrons switch, the view ------------------------- */
-.ara {
-  display: grid;
-  gap: var(--space-4);
+/* ---- the drum's two looks (ANIMATIONS.md `drum-collapse`) ----------------------------------------------------
+   One layout, the full one; the compact strip (board Mobil-B-J2 ②: the ring in a 112 px window at the left of an 82 px
+   panel, the title and artist beside it) is where `--reel-collapse` 1 takes it, with transforms and opacity only: the
+   ring scales 1 → 0.52 and moves to the strip's left, clipped to its window; the big words rise and fade under the
+   ring; the strip's panel and words fade in. The tiles' corners and outline and the window's ring keep their drawn
+   thickness while the ring scales (paint only), so 1 is exactly the strip. A parent drives the value (the home: the
+   scroll and the swipe, home.css); `compact` pins it to 1 and the box to the strip's height. */
+@property --reel-collapse {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
 }
 
-/* The views' own headings repeat the switch's words, and the board shows no round line over the songs: kept for
-   screen readers only. */
-.ara .history__heading,
-.ara .history__round-title,
-.ara .cards__heading {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.reel {
+  --reel-c: clamp(0, var(--reel-collapse), 1);
+  --reel-strip-height: 5.125rem; /* 82 px */
+  --reel-strip-scale: 0.5167; /* the strip's 62 px tile over the full 120 */
+  --reel-strip-x: 4.25rem; /* the ring's middle in the strip: the border, 8 px, then half the 112 px window */
+  --reel-strip-y: 2.5625rem;
+  --reel-ring-y: 5.1875rem; /* the full ring's middle: the reel's 8 px top, then half the drum's 150 */
+  /* How far the big words rise with the content while the drum collapses (the home sets the measured one). */
+  --reel-rise: var(--reel-collapse-range, 9.375rem);
 }
 
-.ara .history > :first-child + *,
-.ara .cards > :first-child + * {
-  margin-top: 0;
-}
-
-/* The drum drawn small (Ara with the cards; board Mobil-B-J2): the same ring in a 112 px box at the left of a panel,
-   the song's title and artist beside it. */
 .reel[data-size='strip'] {
-  --tile: 3.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 4.875rem;
+  --reel-collapse: 1;
+  height: var(--reel-strip-height);
+}
+
+/* The strip's panel, behind the ring: it fades in over the second half. */
+.reel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--reel-strip-height);
   box-sizing: border-box;
-  padding: 0.375rem 0.75rem 0.375rem 0.5rem;
-  text-align: left;
   background: var(--color-surface);
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: 1.125rem;
   box-shadow: var(--shadow-piece);
+  opacity: clamp(0, (var(--reel-c) - 0.4) / 0.45, 1);
 }
 
-.reel[data-size='strip'] .drum {
-  flex: none;
-  width: 7rem;
-  height: var(--tile);
-  overflow: visible;
-  clip-path: inset(-0.5rem 0);
+.reel .drum {
+  z-index: 1;
+  transform-origin: 50% 50%;
+  translate: calc(var(--reel-c) * (var(--reel-strip-x) - 50%)) calc(var(--reel-c) * (var(--reel-strip-y) - var(--reel-ring-y)));
+  scale: calc(1 - var(--reel-c) * (1 - var(--reel-strip-scale)));
+  /* the side tiles narrow to the strip's 112 px window (and the window's glow may spill above and below it) */
+  clip-path: inset(calc(var(--reel-c) * -1rem) calc(var(--reel-c) * (50% - 3.5rem / var(--reel-strip-scale))));
 }
 
-.reel[data-size='strip'] .drum::after {
+/* The strip's own shade at the window's sides, fading in as the night's fades out. */
+.reel .drum::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0 calc(50% - 3.5rem / var(--reel-strip-scale));
   background: linear-gradient(to right, rgb(35 46 102 / 0.55), rgb(35 46 102 / 0) 30%, rgb(35 46 102 / 0) 70%, rgb(35 46 102 / 0.55));
+  opacity: var(--reel-c);
+  pointer-events: none;
 }
 
-.reel[data-size='strip'] .drum__tile {
-  border-width: var(--line-width);
-  border-radius: 0.6875rem;
+.reel .drum::after {
+  opacity: calc(1 - var(--reel-c));
 }
 
-.reel[data-size='strip'] .drum__window {
-  width: calc(var(--tile) + 0.375rem);
-  height: calc(var(--tile) + 0.375rem);
-  border-radius: 0.8125rem;
+.reel .drum__tile {
+  border-radius: calc(0.75rem + var(--reel-c) * (0.6875rem / var(--reel-strip-scale) - 0.75rem));
+  /* the strip's 3 px edge: the full 4 px scaled down, plus an outline inside it */
+  outline: calc(var(--reel-c) * (var(--line-width) / var(--reel-strip-scale) - var(--line-width-bold))) solid var(--color-line);
+  outline-offset: calc(-1 * (var(--line-width-bold) + var(--reel-c) * (var(--line-width) / var(--reel-strip-scale) - var(--line-width-bold))));
+}
+
+.reel .drum__window {
+  border-radius: calc(1rem + var(--reel-c) * (0.8125rem / var(--reel-strip-scale) - 1rem));
   box-shadow:
-    0 0 0 3px var(--color-accent),
-    0 0 0.875rem 0.1875rem rgb(255 197 49 / 0.55);
+    0 0 0 calc(4px + var(--reel-c) * (3px / var(--reel-strip-scale) - 4px)) var(--color-accent),
+    0 0 1.5rem 0.375rem rgb(255 197 49 / 0.6);
 }
 
-.reel[data-size='strip'] .reel__caption {
-  flex: 1;
+/* The big words rise with the content and fade (10 % → 55 %), sliding under the ring. */
+.reel__words[data-look='full'] {
+  --reel-out: clamp(0, (var(--reel-c) - 0.1) / 0.45, 1);
+  position: relative;
+  translate: 0 calc(var(--reel-c) * -1 * var(--reel-rise));
+  scale: calc(1 - 0.06 * var(--reel-out));
+  opacity: calc(1 - var(--reel-out));
+}
+
+/* The strip's words, beside the ring: they fade in late (55 % → 95 %), rising 8 px. */
+.reel__words[data-look='strip'] {
+  --reel-in: clamp(0, (var(--reel-c) - 0.55) / 0.4, 1);
+  position: absolute;
+  inset: 0 1rem auto 8.5rem;
+  height: var(--reel-strip-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   min-width: 0;
-  gap: 1px;
+  text-align: left;
+  opacity: var(--reel-in);
+  translate: 0 calc((1 - var(--reel-in)) * 0.5rem);
+  pointer-events: none;
 }
 
-.reel[data-size='strip'] .reel__title {
+.reel__words[data-look='strip'] .reel__caption {
+  gap: 1px;
+  min-width: 0;
+}
+
+.reel__words[data-look='strip'] .reel__title {
   font-size: 1.5625rem;
   line-height: 1.05;
   white-space: nowrap;
@@ -2519,7 +2557,7 @@
   overflow-wrap: normal;
 }
 
-.reel[data-size='strip'] .reel__artist {
+.reel__words[data-look='strip'] .reel__artist {
   font-size: 0.9375rem;
   text-shadow: none;
   white-space: nowrap;
@@ -2527,10 +2565,7 @@
   text-overflow: ellipsis;
 }
 
-.reel[data-size='strip'] > .reel__waiting,
-.reel[data-size='strip'] > .reel__still {
-  flex: 1;
-  min-width: 0;
+.reel__words[data-look='strip'] :is(.reel__waiting, .reel__still) {
   font-size: var(--text-md);
 }
 

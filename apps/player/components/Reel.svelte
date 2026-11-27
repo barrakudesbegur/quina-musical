@@ -3,8 +3,9 @@
   // 3D, the front one in the gold window. The tiles show songs still to come (`songs`, logic/reel.ts drumSongs), in an
   // order with nothing to do with the Queue, blurred until a landing is public; then the landed song flips in on the
   // front tile. The ring turns tile by tile and stops on a whole one (ANIMATIONS.md `reel-spin`, `landing`). Reduced
-  // motion: the ring stays still, with "Sona la ruleta…". `compact` draws it small in the strip over the cards (the
-  // collapsed look a parent can morph to: `data-size="strip"`); `stopped` holds it still while the phone is offline.
+  // motion: the ring stays still, with "Sona la ruleta…". It has two looks, full and the compact strip, and morphs
+  // between them by `--reel-collapse` (0 → 1, `drum-collapse`): a parent drives it (the home scrolls it and swipes it);
+  // `compact` pins it to the strip (`data-size="strip"`). `stopped` holds it still while the phone is offline.
   // The ring is a real cylinder (D-s, #82, #83): one transform per tile round the shared axis, the radius from the tile
   // count (player.css). While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff
   // wobble that never turns a hidden cover into view, logic/drum-tug.ts); a vertical drag scrolls the page.
@@ -175,10 +176,17 @@
     </div>
     <span class="drum__window"></span>
   </div>
+  <!-- The words in both looks (`drum-collapse`): the big ones under the ring, and the strip's beside it (a copy screen
+       readers skip). Which one shows, and the morph between them, follow `--reel-collapse` (player.css). -->
+  <div class="reel__words" data-look="full">{@render words(true)}</div>
+  <div class="reel__words" data-look="strip" aria-hidden="true">{@render words(false)}</div>
+</div>
+
+{#snippet words(spoken: boolean)}
   {#if landed}
     {#key landed.position}
       <p class="reel__caption" data-anim="landing">
-        <span class="reel__label">{S.nowPlaying}</span>
+        {#if spoken}<span class="reel__label">{S.nowPlaying}</span>{/if}
         <strong class="reel__title">{songTitle(catalog, landed.songId)}</strong>
         {#if song?.artist}<span class="reel__artist">{song.artist}</span>{/if}
       </p>
@@ -186,8 +194,8 @@
   {:else if (reel.phase === 'spinning' || reel.phase === 'coasting') && reduced}
     <p class="reel__still">{S.reelSpinning}</p>
   {:else if reel.phase === 'spinning' || reel.phase === 'coasting'}
-    <p class="reel__caption"><strong class="reel__title" aria-label={S.reelSpinning}>?</strong></p>
+    <p class="reel__caption"><strong class="reel__title" aria-label={spoken ? S.reelSpinning : undefined}>?</strong></p>
   {:else}
     <p class="reel__waiting">{reel.phase === 'stopped' ? S.reelWaiting : S.noSongYet}</p>
   {/if}
-</div>
+{/snippet}
