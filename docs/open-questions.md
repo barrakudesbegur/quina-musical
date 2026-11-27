@@ -247,8 +247,10 @@ Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
 ### U55 · Preparing pool 1 now, and the laptop's disk
-Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. Sound engine measured about 6 GB per set of 70 fully prepared, so about 12 GB for both pools, with 20 GB free. Preparing one set at a time, as each is final, fits. Last year's test cache (7.3 GB) could be freed once this year's are prepared, but nothing is deleted without the user's OK (D80).
-**Default:** nothing is prepared until the user says go. Last year's cache stays.
+Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. A set of 70 takes about 6 GB fully prepared. The laptop has 12 GiB free (Sound engine's df, 27 Nov; the earlier 20 GB was out of date). data/cache holds 11 GB: about 6 GB of last year's 77 test songs, 2 GB of this year's decoded pool and 1.4 GB of the break music. So pool 1 fits, leaving about 6 GiB, but both pools (about 12 GB) need last year's test cache freed or space found elsewhere. Nothing is deleted without the user's OK (D80).
+- (a) Go: prepare pool 1 now, and keep last year's test songs; decide about the space when pool 2 is final.
+- (b) Go, and free last year's test cache now, so both pools fit.
+- (c) Wait.
 
 ### U56 · Cutting the hook approval from 7 hours
 About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
