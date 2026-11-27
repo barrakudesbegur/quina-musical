@@ -40,6 +40,7 @@ import {
   type CardTypeSides,
   type CommandArgs,
   type CommandName,
+  MUSIC_SETS,
   type MusicSet,
   type ShowEvent,
   type ShowState,
@@ -471,8 +472,8 @@ function apply(effect: Effect): void {
       winningLoop.stop({ at: effect.at, fadeSec: effect.fadeSec });
       holdMusic.stop({ at: effect.at, fadeSec: effect.fadeSec });
       void holdMusic.starting?.then(() => holdMusic.stop({ fadeSec: effect.fadeSec })); // one still loading gives way too
-      // Another scene's set (the breaks' as the end's begins) fades out under it.
-      for (const set of ['breaks', 'end'] as const) if (set !== effect.set) sets[set].stop({ at: effect.at, fadeSec: effect.fadeSec });
+      // Another set (the breaks' as the end's begins, or Pausa's as a break switches back, D228) fades out under it.
+      for (const set of MUSIC_SETS) if (set !== effect.set) sets[set].stop({ at: effect.at, fadeSec: effect.fadeSec });
       return sets[effect.set].start({ levelDb: effect.levelDb, gameId: machine().gameId, from });
     }
     case 'intervalSkip':

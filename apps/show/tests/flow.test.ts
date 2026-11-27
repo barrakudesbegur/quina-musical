@@ -77,12 +77,12 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     // Parlem on a review's screen (D118); during the reveals the −/+ hold means review.
     ['check, under review', { scene: 'check', reviewing: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'hold']],
     ['check, the last round', { scene: 'check', lastRound: true }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic', 'storm']],
-    ['interval after the last round', { scene: 'interval', lastRound: true }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
+    ['interval after the last round', { scene: 'interval', lastRound: true }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'intervalSet', 'throw']],
     ['check', { scene: 'check' }, ['back', 'holdMusic', 'claim', ...CHECK, 'celebrationMusic']],
     // Parlem in every Celebration (D117).
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['hold', 'confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
-    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'throw']],
+    ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'intervalSet', 'throw']],
     ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'storm']],
     ['roundStart with a set still on', { scene: 'roundStart', intervalMusic: true }, ['next', 'newRound', 'intervalSkip']],
     ['play with the breaks\' set still on', { scene: 'play', intervalMusic: true }, [...PLAY, 'claim', 'finale', 'finaleCue', 'intervalSkip']],

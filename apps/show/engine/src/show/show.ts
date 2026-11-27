@@ -959,6 +959,10 @@ export class Show {
       case 'interval':
         this.startInterval();
         break;
+      case 'intervalSet':
+        // D228: the break's set, picked by the presenters; the scene rules keep it to a break.
+        this.playIntervalMusic(c.set);
+        break;
       case 'intervalSkip':
         // The scene rules let it through only while a set plays; the runtime picks the downbeat.
         this.out.push({ type: 'intervalSkip', set: this.pause ? 'pausa' : this.bedSet });
@@ -3351,7 +3355,10 @@ export class Show {
       if (this.throwSong) this.endThrow(0);
       return;
     }
-    this.out.push({ type: 'pausaMusic', on: false, at, fadeSec: PAUSA.musicFadeOutSec, levelDb: INTERVAL.volumeDb });
+    // A break playing Pausa's set (D228) was never paused: Pausa's music was already it, and it plays on.
+    if (!(this.bed === 'interval' && this.bedSet === 'pausa')) {
+      this.out.push({ type: 'pausaMusic', on: false, at, fadeSec: PAUSA.musicFadeOutSec, levelDb: INTERVAL.volumeDb });
+    }
     this.out.push({ type: 'resumePlayback', at, fadeSec: PAUSA.fadeInSec, song: cur ? { songId: cur.songId, offset: cur.offset, rate: cur.rate } : null, discard: false });
     const t = this.throwSong;
     if (t?.playing) {

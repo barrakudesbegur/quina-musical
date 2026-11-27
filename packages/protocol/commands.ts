@@ -7,6 +7,7 @@ import {
   PACE_LIMITS_SEC,
   SOUND_NAMES,
   CELEBRATION_MUSIC,
+  BREAK_SETS,
   CARD_TYPE_ID_RE,
   PAD_HOLD_EFFECTS,
   SIDE_MAX,
@@ -239,6 +240,9 @@ export const COMMANDS = Object.freeze({
   /** The playing music set (breaks, Pausa, end) moves on to its next track, with its usual transition on the
    * playing track's next downbeat. Only while one plays (state `intervalMusic`). */
   intervalSkip: {},
+  /** In a break (the Interval scene), which set plays (D228): the breaks' pop or Pausa's lofi; the music cross-fades
+   * to it. Each break starts on `breaks` again. Not journaled. */
+  intervalSet: { set: { type: 'string', oneOf: BREAK_SETS } },
   /**
    * "Llançament", the throw song (D138), at full volume while the break music fades out. A tap (no `restart`)
    * starts it from its throw hook, stops it while it plays, and resumes it where it stopped; `restart: true` (a long

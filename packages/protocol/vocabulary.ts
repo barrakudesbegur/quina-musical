@@ -227,6 +227,9 @@ export type Role = (typeof ROLES)[number];
  */
 export const MUSIC_SETS = ['breaks', 'pausa', 'end'] as const;
 export type MusicSet = (typeof MUSIC_SETS)[number];
+/** The sets a break can play (D228: in the Descans the presenters pick the breaks' or Pausa's); each break starts on the first. */
+export const BREAK_SETS = ['breaks', 'pausa'] as const satisfies readonly MusicSet[];
+export type BreakSet = (typeof BREAK_SETS)[number];
 
 /**
  * The songs played by hand for things thrown to and by the crowd: `throw` for a planned Throw (D138, "Llançament"),

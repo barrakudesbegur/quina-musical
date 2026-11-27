@@ -440,3 +440,27 @@ test('Hold music off: a Hold keeps the song ducked; switched back on, Hold music
   assert.equal(resumed.show.game.holdMusicOn, true);
   assert.deepEqual(resumed.show.snapshot().game.volumes, VOLUME_DEFAULTS);
 });
+
+test("D228: in a break the presenters pick the breaks' set or Pausa's; each break starts on the breaks'; Pausa leaves Pausa's set playing", () => {
+  const h = setup({ seed: 4, settings: { autoAdvance: false } });
+  h.send('unlock');
+  assert.deepEqual(rejected(h.send('intervalSet', { set: 'pausa' })), ['wrongScene'], 'only in a break');
+  // A break (as after a Bingo's Celebration).
+  h.show.startInterval();
+  assert.equal(find(h.advance(0.05), 'intervalMusic')?.set, 'breaks');
+  assert.equal(h.show.scene, 'interval');
+  const pick = h.send('intervalSet', { set: 'pausa' });
+  assert.deepEqual([find(pick, 'intervalMusic')?.set, h.show.snapshot().intervalMusic?.set], ['pausa', 'pausa']);
+  assert.equal(find(h.send('intervalSet', { set: 'pausa' }), 'intervalMusic'), undefined, 'already playing it');
+  assert.deepEqual(rejected(h.dispatch({ v: 1, type: 'cmd', cmd: 'intervalSet', reqId: 'r', set: 'end' })), ['invalid'], 'not a break set');
+  // Pausa over it: Pausa's music is already playing, so ending Pausa doesn't stop it.
+  h.send('pause', { on: true });
+  const resume = h.send('pause', { on: false });
+  assert.equal(resume.find((e) => e.type === 'pausaMusic' && !e.on), undefined);
+  assert.equal(h.show.snapshot().intervalMusic?.set, 'pausa');
+  assert.equal(find(h.send('intervalSet', { set: 'breaks' }), 'intervalMusic')?.set, 'breaks');
+  // The next break starts on the breaks' set again.
+  h.send('intervalSet', { set: 'pausa' });
+  h.show.startInterval();
+  assert.equal(find(h.advance(0.05), 'intervalMusic')?.set, 'breaks');
+});
