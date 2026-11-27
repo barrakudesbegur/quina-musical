@@ -1755,7 +1755,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: event.md › The cards; requirements/songs-and-cards.md › The card.
 
 ### D266 · The screens' special-card labels are «Desgraciat» and «Especial» · 2026-11-27 · Active
-Answers U198 with (a). During the Check the label is just those words. Frontend builds it, so the label's join (short name plus « · ») gives exactly that.
+Answers U198 with (a). During the Check the label is just those words. Frontend builds it from each side's `checkLabel` in card-types.json, with no join (30f7e61b).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/screens.md › Projector.
 
 ### D267 · Last year's coloured paper, printed in colour · 2026-11-27 · Active

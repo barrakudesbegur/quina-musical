@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D273**, **U216**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D273**, **U218**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -29,7 +29,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. The generator with both layouts is on main (7092e216, acd8f1a9, 4e4c0fe2), and apps/cards is Frontend's again. Decisions D250–D272.
 
-**Live (last deploy b488bafa, 28 Nov: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
+**Live (last deploy 3aa936b9 = aa4c4d68, 28 Nov, the phone's jank pass; before it b488bafa: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
 - the 2026 cards (699 temporary, both cards two-sided) and covers on the QR domain;
 - repertoire 2026 in R2's content-addressed layout (D248: manifests/2026.json, 2,772 blobs, 8.04 GB), with the final playlists (D230, D269: 135 songs, 5 shared), clean print names (D260, D270, D271), provisional hooks and placeholder voices;
@@ -43,6 +43,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
+- U216, U217: the Check's side label on a wrong-type card, and «Desgraciat» twice in the Desgraciat's Check header (Frontend, 28 Nov);
 - U215: a double-click start for the night laptop (research in docs/research/reports/laptop-app.md; recommended: a launcher only);
 - U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U206 (the drum's landing public 2.5 s early), U207 (✕ in a stack), U208 (the near-win sounds);

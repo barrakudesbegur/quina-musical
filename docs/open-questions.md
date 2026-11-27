@@ -152,6 +152,16 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U216 · The Check's side label on a card of the wrong type (D266)
+The console's Check chip and the projector's Check badge name the side being checked, from card-types.json (30f7e61b). So when a special card is wrongly claimed in a normal round (Quines 1–5), they read «Desgraciat», its side 1's label, while the verdict line says it's an especial card.
+- (a) Keep it: the chip and badge always name the side being checked. As built.
+- (b) A card of the wrong type is named by its type: «Especial».
+
+### U217 · «Desgraciat» twice in the Desgraciat round's Check header
+In the Desgraciat round, on a special card, the console's Check header shows «Desgraciat» twice: the round's chip and the side's chip.
+- (a) Keep both, so the side chip is always in the same place. As built.
+- (b) Drop the side chip when it repeats the round's name.
+
 ### U215 · A double-click start for the night laptop
 The user (28 Nov) asked whether a simple macOS, Windows and Linux app would be easy and a good idea, since the command line isn't ideal on a non-developer laptop. The research (docs/research/reports/laptop-app.md): the show needs Chrome with its flags (the engine and WebHID for the Wii remote), the relay's Python helper for the Blend, and macOS-only setup and preflight. Windows and Linux would be a port nobody can rehearse before the freeze, and R2-Q26 keeps the laptop installed, with "nothing installed" after this year.
 - (a) A launcher only: Backend builds one `npm run night` (caffeinate, the relay with `--lan`, the link, the show page in Chrome with its flags, the preflight) and a `Start the Quina.command` that runs it, before the tech rehearsal, so it's what the rehearsal runs. The spare Mac is prepared in advance by the tech (`npm run setup:laptop`). A desktop app waits until after the night.
