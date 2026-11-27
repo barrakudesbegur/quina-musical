@@ -2,16 +2,19 @@
   «Prova de so» in the menu (D229; logic/sound-test.ts): for setting up the PA before the night. «Comença la prova»
   plays the first kind of sound on a loop at its slider's level (`soundTest { kind }`); then the panel shows what plays
   («Sona ara · 3 de 16», the slider's name and what the test plays of it), «Anterior» and «Següent» either side of that
-  sound's own volume slider (a drag moves it live, `setVolume`), and «Atura la prova» (`kind: null`). The engine allows
+  sound's own volume slider (a drag moves it live, `setVolume`), and «Atura la prova» (`kind: null`). A kind whose
+  automatic sound is off in «Sons automàtics» (D237) plays anyway, and its step says «apagat a Sons automàtics» (an
+  orange note, NOTICES.autoSoundOff), so whoever sets the PA knows the night won't play it. The engine allows
   it only before the first round's intro with nothing playing, and ends it on any scene change or Panic; the state's
   `soundTest` is the truth, so every console shows the same test. Across the menu's columns, above the volume sliders.
   Motion: ANIMATIONS.md › sound-test-playing. Hooks: data-testid="sound-test", "sound-test-slider".
 -->
 <script lang="ts">
-  import type { SoundTestKind, VolumeKey } from '@quina/protocol';
+  import { AUTO_SOUNDS_DEFAULT, type AutoSounds, type SoundTestKind, type VolumeKey } from '@quina/protocol';
   import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
-  import { MINI } from '../actions.ts';
-  import { soundTestPlace, SOUND_TEST_ORDER } from '../logic/sound-test.ts';
+  import Notice from '../../../packages/ui/components/Notice.svelte';
+  import { MINI, NOTICES } from '../actions.ts';
+  import { soundTestAutoOff, soundTestPlace, SOUND_TEST_ORDER } from '../logic/sound-test.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import VolumeSlider from './VolumeSlider.svelte';
@@ -23,12 +26,14 @@
     enabled: boolean;
     volumes: Partial<Record<VolumeKey, number>> | undefined;
     volumesEnabled: boolean;
+    /** «Sons automàtics» (the Game's `autoSounds`): a step whose sound is off there says so. */
+    autoSounds?: Readonly<AutoSounds>;
     /** Play a kind, or stop the test (null). */
     onkind: (kind: SoundTestKind | null) => void;
     onvolume: (key: VolumeKey, percent: number) => void;
   }
 
-  let { kind, enabled, volumes, volumesEnabled, onkind, onvolume }: Props = $props();
+  let { kind, enabled, volumes, volumesEnabled, autoSounds = AUTO_SOUNDS_DEFAULT, onkind, onvolume }: Props = $props();
   const uid = $props.id();
   const place = $derived(kind ? soundTestPlace(kind) : null);
 </script>
@@ -41,6 +46,7 @@
       {#key kind}
         <p class="sound-test__name">{S.volumes.keys[kind].label}</p>
         <p class="note sound-test__plays">{S.soundTest.plays[kind]}</p>
+        {#if soundTestAutoOff(kind, autoSounds)}<Notice {...NOTICES.autoSoundOff} class="sound-test__off" text={S.soundTest.autoOff} />{/if}
       {/key}
     </div>
     <div class="sound-test__row">
@@ -116,8 +122,15 @@
   }
 
   /* sound-test-playing: the name and what plays cross-fade as the kind changes (opacity, so either way). */
+  /* The note sits under what plays, as wide as its words. */
+  .sound-test :global(.sound-test__off) {
+    justify-self: start;
+    margin-top: 4px;
+  }
+
   .sound-test__name,
-  .sound-test__plays {
+  .sound-test__plays,
+  .sound-test :global(.sound-test__off) {
     animation: sound-test-in 160ms var(--ease-out) both;
   }
 

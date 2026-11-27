@@ -2,8 +2,8 @@
 // `game.autoSounds`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AUTO_SOUNDS, SOUND_TEST_KINDS } from '@quina/protocol';
-import { SOUND_TEST_ORDER, soundTestPlace } from '../../../../console/logic/sound-test.ts';
+import { AUTO_SOUNDS, AUTO_SOUNDS_DEFAULT, SOUND_TEST_KINDS } from '@quina/protocol';
+import { SOUND_TEST_AUTO, SOUND_TEST_ORDER, soundTestAutoOff, soundTestPlace } from '../../../../console/logic/sound-test.ts';
 import { AUTO_SOUND_ORDER, autoSoundsNow } from '../../../../console/logic/auto-sounds.ts';
 import { isBreakSet } from '../../../../console/logic/scene.ts';
 import { S } from '../../../../console/strings.ts';
@@ -24,6 +24,20 @@ test('stepping stops at either end', () => {
   assert.equal(last.number, last.count);
   assert.equal(last.next, null);
   assert.equal(last.prev, SOUND_TEST_ORDER[SOUND_TEST_ORDER.length - 2]);
+});
+
+test('a step whose automatic sound is off says so; the test plays it anyway', () => {
+  const off = { ...AUTO_SOUNDS_DEFAULT, drumTicks: false, voices: false, winFanfare: false };
+  assert.equal(soundTestAutoOff('ticks', off), true);
+  assert.equal(soundTestAutoOff('voices', off), true);
+  assert.equal(soundTestAutoOff('djFx', off), false, 'on');
+  // The test's «Victòria» plays the victory music, which no switch turns off: no note for the fanfare's switch.
+  assert.equal(soundTestAutoOff('win', off), false);
+  assert.equal(soundTestAutoOff('songs', off), false);
+  for (const kind of SOUND_TEST_KINDS) assert.equal(soundTestAutoOff(kind, AUTO_SOUNDS_DEFAULT), false, `${kind} with all on`);
+  // Each automatic sound with a node of its own in the test has its step.
+  assert.deepEqual(Object.values(SOUND_TEST_AUTO).sort(), ['djFx', 'drumTicks', 'finalLap', 'voices']);
+  assert.ok(S.soundTest.autoOff);
 });
 
 test('the automatic sounds: every key a switch with words, read from game.autoSounds', () => {

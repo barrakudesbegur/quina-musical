@@ -873,6 +873,8 @@ export const S = {
     unavailable: 'Només abans de la primera quina, amb res sonant.',
     playing: 'Sona ara',
     position: (n: number, count: number) => `${n} de ${count}`,
+    /** On a step whose automatic sound is off (D237): the test plays it anyway, the night won't. */
+    autoOff: 'apagat a Sons automàtics',
     prev: 'Anterior',
     next: 'Següent',
     stop: 'Atura la prova',

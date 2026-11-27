@@ -197,9 +197,11 @@ export function asDefault<P extends ConsolePreset>(preset: P, isDefault: boolean
 
 /** The notes (E4, Notice): the pace's recovery note and the review's warning on orange's tint; the pads' private strip
  *  in green when a card is fine, red when it's refused (the error red #E8363D with white words, as every ✗: notice.css,
- *  U175 item 4). */
+ *  U175 item 4); a sound test step whose automatic sound is off, on orange's tint with the muted speaker (its panel
+ *  announces the step, so the note itself is quiet). */
 export const NOTICES = {
   recovery: { layout: 'note', color: 'orange', fill: 'subtle', icon: 'stopwatch' },
+  autoSoundOff: { layout: 'note', color: 'orange', fill: 'subtle', icon: 'speaker-mute', live: 'off' },
   warning: { layout: 'box', color: 'orange', fill: 'subtle', icon: 'warning', live: 'off' },
   refused: { layout: 'note', color: 'red', fill: 'solid', icon: 'close', live: 'assertive' },
   accepted: { layout: 'note', color: 'green', fill: 'solid', icon: 'check' },

@@ -1,8 +1,9 @@
 // The PA's sound test (D229): in the menu, before the night's first round, the engine plays one kind of sound on a loop
 // at its slider's level (`soundTest { kind }`, state `soundTest`), so whoever sets up the PA steps through them with
 // «Anterior» and «Següent» and moves each one's slider beside it. The kinds come in the menu's slider order
-// (VOLUME_GROUPS), so the test walks the sliders as they're drawn. Pure.
-import { SOUND_TEST_KINDS, type SoundTestKind, type VolumeKey } from '@quina/protocol';
+// (VOLUME_GROUPS), so the test walks the sliders as they're drawn. A kind whose automatic sound (D237) is switched off
+// still plays in the test (the engine lifts the mutes while it runs), so its step says it's off. Pure.
+import { SOUND_TEST_KINDS, type AutoSound, type AutoSounds, type SoundTestKind, type VolumeKey } from '@quina/protocol';
 import { VOLUME_GROUPS } from './volumes.ts';
 
 const isKind = (key: VolumeKey): key is SoundTestKind => (SOUND_TEST_KINDS as readonly string[]).includes(key);
@@ -27,4 +28,22 @@ export function soundTestPlace(kind: SoundTestKind): SoundTestPlace {
     prev: i > 0 ? SOUND_TEST_ORDER[i - 1] : null,
     next: i >= 0 && i < SOUND_TEST_ORDER.length - 1 ? SOUND_TEST_ORDER[i + 1] : null,
   };
+}
+
+/**
+ * The automatic sound (D237) that silences a kind at night when switched off: the drum's ticks, the DJ effects, the
+ * final-lap fanfare and the voices. `win` and `fail` aren't here: the test plays their music, which no switch turns
+ * off (the fanfares that «Fanfàrria de victòria» and «de fallada» turn off aren't in the test).
+ */
+export const SOUND_TEST_AUTO: Readonly<Partial<Record<SoundTestKind, AutoSound>>> = Object.freeze({
+  ticks: 'drumTicks',
+  djFx: 'djFx',
+  finalLap: 'finalLap',
+  voices: 'voices',
+});
+
+/** The kind plays in the test although its automatic sound is off (the step's «apagat a Sons automàtics»). */
+export function soundTestAutoOff(kind: SoundTestKind, autoSounds: Readonly<AutoSounds>): boolean {
+  const key = SOUND_TEST_AUTO[kind];
+  return key !== undefined && autoSounds[key] === false;
 }

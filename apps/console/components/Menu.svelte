@@ -238,6 +238,7 @@
         enabled={model.can('soundTest')}
         volumes={snap.game.volumes}
         volumesEnabled={model.can('setVolume')}
+        autoSounds={autoSoundsNow(snap.game)}
         onkind={(kind) => model.act('soundTest', { kind })}
         onvolume={(key, percent) => model.act('setVolume', { key, percent })}
       />

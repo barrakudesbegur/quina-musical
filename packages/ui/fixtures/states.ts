@@ -829,6 +829,12 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const s = FIXTURES.before(now).state as FullState;
     return { state: { ...s, soundTest: { kind: 'songsParlem', sinceMs: now - 4000 }, game: { ...s.game, autoSounds: { ...AUTO_SOUNDS_DEFAULT, voices: false, drumTicks: false } } } };
   },
+  /** The sound test on the drum's ticks, which are off in «Sons automàtics»: the test plays them anyway, and the step
+   *  says «apagat a Sons automàtics». */
+  soundTestOff: (now) => {
+    const s = FIXTURES.soundTest(now).state as FullState;
+    return { state: { ...s, soundTest: { kind: 'ticks', sinceMs: now - 3000 } } };
+  },
   /** A break with «Llançament» playing over the break music (D138), 42 s in: started at its hook 42 s ago. */
   intervalThrow: (now) => {
     const s = FIXTURES.interval(now).state as FullState;
