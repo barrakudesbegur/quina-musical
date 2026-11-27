@@ -69,6 +69,8 @@ const LAYOUTS = {
   'a3-6-footer': { name: 'A3 · 6, branding at the foot', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'footer' },
   // The user, 27 Nov: the 2×2 retry's header on the A3 · 6 card, with the branding's figure right of the GOMET circle.
   'a3-6-gomet-nino': { name: 'A3 · 6, GOMET + figure, no branding text', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNino', cellMode: 'above' },
+  // The QR can't shrink (the user, 27 Nov): GOMET + QR left, the figure + number right, the heading centred at 38 pt.
+  'a3-6-gomet-qr': { name: 'A3 · 6, GOMET + QR left, figure + number right', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometQr', cellMode: 'above' },
   'a3-6-gomet-left': { name: 'A3 · 6, GOMET left, no branding', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
   // One more try (the user, 27 Nov): 2×2 on A4 with a one-line header (no branding, the GOMET circle on the left), so
   // the grid is taller, and every song's cover above its title.
@@ -229,12 +231,13 @@ function geometry(layout) {
   // 'oneRow' (compact branding, heading, GOMET, number, QR), 'band' (branding + GOMET + number + QR, then the heading in
   // a band on the grid), 'footer' (heading, GOMET, number, QR; the branding in a line under the grid).
   const style = layout.header || (single ? 'single' : 'twoRows');
-  const qrSize = style === 'single' ? 45 : style === 'twoRows' ? 42 : style === 'gometNino' ? 35 : 40;
-  // The GOMET + figure header keeps the heading at 38 pt, centred on the card (the user: "dont make the text smaller"):
-  // its right side is slimmer (a 35 pt QR, the number box as wide as «#500», 6 pt gaps) and the black box's padding 4 pt.
+  // The QR is never smaller than last year's, 45 pt (16 mm): "it is already hard to scan. it is not negotiable".
+  const qrSize = 45;
+  // The GOMET headers keep the heading at 38 pt ("dont make the text smaller"), centred on the card where the side blocks
+  // allow it: the number box as wide as «#500», 6 pt gaps, a slimmer padding on the black box.
   const NINO_NUMBER_W = 54; // «#500», the widest number, is 52.8 pt
   const NINO_GAP = 6;
-  const headingPad = style === 'gometNino' ? 4 : 10;
+  const headingPad = style === 'gometNino' ? 4 : style === 'gometQr' ? 5 : 10;
   const rightW = GOMET.diameter + 8 + 62 + 8 + qrSize; // GOMET, number, QR
   const ROW = 46;
   const BAND_SIZE = 22;
@@ -248,6 +251,8 @@ function geometry(layout) {
     gometLeft: { headerH: ROW, room: innerW - rightW - 16, max: 38, footerH: 0 },
     // The heading centred on the card: it may reach as far as the nearer side block allows.
     gometNino: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + 8 + NINO_W) - NINO_GAP, innerW / 2 - (NINO_NUMBER_W + NINO_GAP + qrSize) - NINO_GAP), max: 38, footerH: 0 },
+    // GOMET + QR on the left, the figure + number on the right: two balanced sides leave room for a centred 38 pt heading.
+    gometQr: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + NINO_GAP + qrSize) - NINO_GAP, innerW / 2 - (NINO_W + NINO_GAP + NINO_NUMBER_W) - NINO_GAP), max: 38, footerH: 0 },
   }[style];
   const headerH = spec.headerH;
   const widest = Math.max(...[...HEADINGS.normal, ...HEADINGS.especial].map((t) => textWidth(REGULAR, t, 38) + 2 * headingPad));
@@ -258,7 +263,7 @@ function geometry(layout) {
   const top = layout.cellMode ? layout.cellMode === 'above' : cellH / cellW >= 0.7; // tall cells: the cover above the title
   const cover = layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
   const text = top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
-  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: style === 'gometNino' ? NINO_NUMBER_W : 62, numberGap: style === 'gometNino' ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
+  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: ['gometNino', 'gometQr'].includes(style) ? NINO_NUMBER_W : 62, numberGap: ['gometNino', 'gometQr'].includes(style) ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
 }
 
 function Header({ g, kind, side, num, qr }) {
@@ -278,6 +283,15 @@ function Header({ g, kind, side, num, qr }) {
   }
   if (g.style === 'footer') {
     return row([heading, right]);
+  }
+  if (g.style === 'gometQr') {
+    return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
+      h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: g.numberGap } }, h(Gomet), h(Image, { src: qr, style: { width: g.qrSize, height: g.qrSize } })),
+      centred(heading),
+      h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: g.numberGap } }, h(Nino),
+        h(View, { style: [st.numberBox, { width: g.numberW }] },
+          h(Text, { style: st.numberLabel }, 'CARTRÓ'),
+          h(Text, { style: st.numberValue }, h(Text, { style: { color: '#bdbdbd' } }, '#'), String(num)))));
   }
   if (g.style === 'gometNino') {
     return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
