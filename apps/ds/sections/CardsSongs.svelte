@@ -47,25 +47,32 @@
   const LONG_LANDED: PublicLanding = { position: 4, songId: 1, atMs: now - 5000 };
   const FEW = ORDER.slice(0, 4);
   const FEW_LANDED: PublicLanding = { position: 40, songId: FEW[1] as number, atMs: now - 5000 };
-  /** The live drum: a Spin every 12 s, 7 s long, landing on the next song of a fixed story. */
-  let live = $state<{ spin: PublicSpin | null; landings: PublicLanding[]; latest: PublicLanding | null; now: number }>({ spin: null, landings: [LANDED], latest: LANDED, now });
+  /** The live drum (phone density only): a Spin every 12 s, 7 s long, landing on the next song of a fixed story. The
+   *  effect only writes these (it reads none of them), so its own writes never run it again. */
+  let liveSpin = $state.raw<PublicSpin | null>(null);
+  let liveLanding = $state.raw<PublicLanding>(LANDED);
+  const liveLandings = $derived([liveLanding]);
+  let liveNow = $state(now);
   $effect(() => {
+    if (!phone) return;
     let n = 0;
     const cycle = () => {
       const t = Date.now();
       const spin: PublicSpin = { startAtMs: t + 1000, landAtMs: t + 8000, spinSeed: (n * 2654435761) >>> 0 };
-      live = { ...live, spin, now: t };
+      liveSpin = spin;
+      liveNow = t;
       const landAt = setTimeout(() => {
         const songId = ORDER[(n * 17 + 23) % ORDER.length] as number;
-        const landing: PublicLanding = { position: 5 + n, songId, atMs: spin.landAtMs ?? Date.now() };
-        live = { spin: null, landings: [landing], latest: landing, now: Date.now() };
+        liveSpin = null;
+        liveLanding = { position: 5 + n, songId, atMs: spin.landAtMs ?? Date.now() };
+        liveNow = Date.now();
         n += 1;
       }, 8300);
       return landAt;
     };
     let pending = cycle();
     const every = setInterval(() => (pending = cycle()), 12_000);
-    const clock = setInterval(() => (live = { ...live, now: Date.now() }), 250);
+    const clock = setInterval(() => (liveNow = Date.now()), 250);
     return () => {
       clearTimeout(pending);
       clearInterval(every);
@@ -304,7 +311,7 @@
       <code>compact</code> pins it to the strip. Silent (§8 Y4).
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--wide">
-      {#snippet d9()}<Reel spin={live.spin} latest={live.latest} {catalog} order={ORDER} landings={live.landings} nowMs={live.now} clockOffsetMs={0} reduced={false} />{/snippet}
+      {#snippet d9()}<Reel spin={liveSpin} latest={liveLanding} {catalog} order={ORDER} landings={liveLandings} nowMs={liveNow} clockOffsetMs={0} reduced={false} />{/snippet}
       {@render cell('live: a Spin every 12 s (its seed changes each time): the solver’s curve and motion blur, the creep, the glide and the selection', d9)}
       {#snippet d1()}<Reel spin={null} latest={LANDED} {catalog} order={ORDER} landings={[LANDED]} nowMs={now} clockOffsetMs={0} reduced={false} />{/snippet}
       {@render cell('full, landed: the landed tile forward, the others at 35 %', d1)}
