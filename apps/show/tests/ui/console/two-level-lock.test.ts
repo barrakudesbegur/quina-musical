@@ -2,7 +2,7 @@
 // and this console's presses from the touch screen and the Wii, told to the engine once each.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LOCK_BUTTON, LockPresses, NO_PRESSES, WiiLockGate, heldByOther, holderName, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
+import { LOCK_BUTTON, LockPresses, NO_PRESSES, WiiLockGate, heldByOther, holderName, isLockRefusal, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
 import { CONSOLE } from '../../../../console/config.ts';
 
 const OWN = 'Tauleta-3f2a';
@@ -126,4 +126,40 @@ test('the remote under the lock: a key of a button held elsewhere is refused who
   gate.press('b', stayHeld);
   gate.reset();
   assert.equal(gate.release('b'), false, 'the remote went away');
+});
+
+test('the refusals the lock explains: hold, pause, suspense or the mirror itself, busy, held by another console', () => {
+  const busy = (cmd: string, detail?: string) => ({ cmd, reason: 'busy' as const, detail });
+  for (const cmd of ['hold', 'pause', 'suspense', 'twoLevelHold']) assert.equal(isLockRefusal(busy(cmd, 'held by Mobil_admin-x1y2')), true, cmd);
+  assert.equal(isLockRefusal(busy('hold')), false, 'busy for another reason');
+  assert.equal(isLockRefusal(busy('endGame', 'held by x')), false);
+  assert.equal(isLockRefusal({ cmd: 'hold', reason: 'wrongScene', detail: 'held by x' }), false);
+  assert.equal(isLockRefusal({ cmd: null, reason: 'busy', detail: 'held by x' }), false);
+});
+
+test("a press the engine refused (another console's came first) isn't ours: the lock shows, and its let-go leaves no echo", () => {
+  const presses = new LockPresses();
+  presses.press('stay', 'touch', 1000);
+  const other = held('stay', 'cloud-link', 990);
+  assert.equal(lockedBy(other, 'stay', own(presses.presses), 1400, RULES), null, 'within the race, taken for ours');
+  presses.lose('stay');
+  assert.equal(presses.presses.holding.has('stay'), false);
+  assert.equal(lockedBy(other, 'stay', own(presses.presses), 1400, RULES), 'cloud-link', 'the lock shows at once');
+  assert.deepEqual(presses.release('stay', 'touch', 1500), { button: 'stay', on: false }, 'the mirror still hears the let-go');
+  assert.equal(presses.presses.releasedAtMs.stay, undefined, 'no echo');
+  assert.equal(lockedBy(other, 'stay', own(presses.presses), 1600, RULES), 'cloud-link');
+  // A new press is ours again; losing one that isn't pressed does nothing.
+  presses.press('stay', 'wii-b', 2000);
+  assert.equal(presses.presses.holding.get('stay'), 2000);
+  presses.lose('hold');
+  assert.equal(presses.presses.holding.size, 1);
+});
+
+test('the remote: a press refused late by the engine refuses the rest of it', () => {
+  const gate = new WiiLockGate();
+  gate.refuse('b');
+  assert.equal(gate.press('a', () => false), true, 'A while that B is down would be Suspens');
+  assert.equal(gate.release('a'), true);
+  assert.equal(gate.release('b'), true, 'its let-go does nothing');
+  assert.equal(gate.press('a', () => false), false);
 });

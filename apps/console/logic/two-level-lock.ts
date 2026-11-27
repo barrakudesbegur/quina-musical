@@ -5,7 +5,7 @@
 // `suspense` still do the work, and the engine refuses another console's press `busy`, which the lock explains (no
 // toast). The lock covers the remote too (WiiLockGate): a key whose button another console holds is refused whole, with
 // a short "no" rumble, since the remote has no screen. Pure.
-import type { ShowState, TwoLevelButton } from '@quina/protocol';
+import type { CommandRejected, ShowState, TwoLevelButton } from '@quina/protocol';
 import type { WiiButton } from '../wii/report.ts';
 import { labelForId } from '../../../packages/ui/client/endpoints.ts';
 import type { HoldMode } from './hold-modes.ts';
@@ -81,6 +81,18 @@ export function lockedBy(
   return by !== null && held && nowMs - held.sinceMs >= rules.afterMs ? by : null;
 }
 
+/** The commands D234's lock covers: the engine refuses them from any console but the holder's. */
+const LOCKED_COMMANDS: ReadonlySet<string> = new Set(['hold', 'pause', 'suspense', 'twoLevelHold']);
+
+/**
+ * A refusal the lock explains: `hold`, `pause`, `suspense` (or the mirror's own `twoLevelHold`) refused `busy`, «held by
+ * <clientId>», because another console holds a two-level button (the engine enforces D234: of two presses within the
+ * network latency, the first wins). No toast: the lock says so on the screen, and the remote rumbles its «no».
+ */
+export function isLockRefusal(rejection: Pick<CommandRejected, 'cmd' | 'reason' | 'detail'>): boolean {
+  return rejection.reason === 'busy' && LOCKED_COMMANDS.has(rejection.cmd ?? '') && (rejection.detail ?? '').startsWith('held by ');
+}
+
 /** Names the engine gives a console with no label of its own (the Bus's role default, the show page's own, a reqId's
  * bare prefix): those read as «una altra consola». */
 const UNNAMED = new Set(['tablet', 'admin', 'cloud', 'show', 'drum', 'local', 'r', 'device']);
@@ -105,6 +117,8 @@ export class LockPresses {
   #sources = new Map<TwoLevelButton, Set<LockSource>>();
   #pressedAtMs = new Map<TwoLevelButton, number>();
   #releasedAtMs: Partial<Record<TwoLevelButton, number>> = {};
+  /** Presses the engine refused (`busy`: another console holds the button): not ours, though a finger is still on. */
+  #lost = new Set<TwoLevelButton>();
 
   /** A source pressed `button` at `atMs` (the show's clock): the command to send, if this is its first. */
   press(button: TwoLevelButton, source: LockSource, atMs: number): { button: TwoLevelButton; on: true } | null {
@@ -112,8 +126,22 @@ export class LockPresses {
     const first = sources.size === 0;
     sources.add(source);
     this.#sources.set(button, sources);
-    if (first) this.#pressedAtMs.set(button, atMs);
+    if (first) {
+      this.#pressedAtMs.set(button, atMs);
+      this.#lost.delete(button);
+    }
     return first ? { button, on: true } : null;
+  }
+
+  /**
+   * The engine refused this console's press of `button` (`twoLevelHold` busy): another console holds it, so it isn't
+   * this press's echo. The press stays until it's let go, but `presses` no longer claims the hold, so the lock shows
+   * here at once (and a touch press under it drops); its let-go leaves no echo either.
+   */
+  lose(button: TwoLevelButton): void {
+    if (!this.#sources.has(button)) return;
+    this.#pressedAtMs.delete(button);
+    this.#lost.add(button);
   }
 
   /** A source let go of `button` at `atMs` (the show's clock): the command to send, if it was the last. */
@@ -122,7 +150,7 @@ export class LockPresses {
     if (!sources?.delete(source) || sources.size > 0) return null;
     this.#sources.delete(button);
     this.#pressedAtMs.delete(button);
-    this.#releasedAtMs = { ...this.#releasedAtMs, [button]: atMs };
+    if (!this.#lost.delete(button)) this.#releasedAtMs = { ...this.#releasedAtMs, [button]: atMs };
     return { button, on: false };
   }
 
@@ -153,6 +181,11 @@ export class WiiLockGate {
     const refused = button ? heldElsewhere(button) : key === 'a' && this.#refused.has('b');
     if (refused) this.#refused.add(key);
     return refused;
+  }
+
+  /** The engine refused what `key`'s press sent (the lock, in a race): the rest of that press is refused too. */
+  refuse(key: WiiButton): void {
+    this.#refused.add(key);
   }
 
   /** A key went up: whether its press was refused (so its release does nothing). */

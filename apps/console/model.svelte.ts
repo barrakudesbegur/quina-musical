@@ -21,7 +21,7 @@ import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel,
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundCards, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { addAnswer, refusalError, type CardsAddOutcome } from './logic/cards-add.ts';
-import { LockPresses, NO_PRESSES, heldByOther, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
+import { LockPresses, NO_PRESSES, heldByOther, isLockRefusal, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
 import {
@@ -156,6 +156,10 @@ export class ConsoleModel {
   private readonly lockPresses = new LockPresses();
   /** The same, for the lock (`lockedBy`). */
   ownPresses = $state.raw<OwnPresses>(NO_PRESSES);
+  /** The mirror's own presses sent (reqId → button), so a `busy` refusal of one tells this console it isn't the holder. */
+  private readonly twoLevelSent = new Map<string, TwoLevelButton>();
+  /** Who hears a refusal the lock explains (the Wii controller rumbles its «no» for the remote's). */
+  private readonly lockRefusalListeners = new Set<(reqId: string) => void>();
   /** The claim the pad sent last: the engine's `unknownCard` rejection brings it back, its chips marked (D126). */
   private padSent: { reqId: string; claim: CommandFields['claim'] } | null = null;
   /** The finalists' pad as it was sent: a refusal of the set brings it back, the refused numbers in red. */
@@ -453,7 +457,21 @@ export class ConsoleModel {
   twoLevelPress(button: TwoLevelButton, source: LockSource): void {
     const command = this.lockPresses.press(button, source, this.show.client.now());
     this.ownPresses = this.lockPresses.presses;
-    if (command) this.show.send('twoLevelHold', command);
+    if (!command) return;
+    const reqId = this.show.send('twoLevelHold', command);
+    if (reqId === null) return;
+    this.twoLevelSent.set(reqId, button);
+    // Only the latest few can still be answered.
+    for (const old of this.twoLevelSent.keys()) {
+      if (this.twoLevelSent.size <= 8) break;
+      this.twoLevelSent.delete(old);
+    }
+  }
+
+  /** Hear the refusals the lock explains (a reqId of this console's); returns a function that stops. */
+  onLockRefusal(listener: (reqId: string) => void): () => void {
+    this.lockRefusalListeners.add(listener);
+    return () => void this.lockRefusalListeners.delete(listener);
   }
 
   /** Let go of a two-level button here: the engine hears it when the last source lets go (Pausa's release included). */
@@ -501,7 +519,21 @@ export class ConsoleModel {
 
   /** A rejection arrived: toast it when it answers one of this console's commands. */
   rejected(rejection: CommandRejected): void {
+    // D234: this console's press of a two-level button lost to another console's (the mirror's `twoLevelHold`, sent
+    // quietly): the hold isn't ours, so the lock shows here.
+    const lost = rejection.reqId !== null && rejection.cmd === 'twoLevelHold' ? this.twoLevelSent.get(rejection.reqId) : undefined;
+    if (lost && isLockRefusal(rejection)) {
+      this.lockPresses.lose(lost);
+      this.ownPresses = this.lockPresses.presses;
+      return;
+    }
     if (!isOwnRejection(rejection, this.sent)) return;
+    // D234's lock, enforced by the engine: Parlem, Pausa, Aguanta or Suspens refused because another console holds the
+    // button (a race within the network latency). No toast: the lock explains it; the remote rumbles its «no».
+    if (isLockRefusal(rejection)) {
+      if (rejection.reqId !== null) for (const listener of this.lockRefusalListeners) listener(rejection.reqId);
+      return;
+    }
     // «Cartrons venuts»: numbers that aren't printed (`invalid`, named in its detail) go back to the field, in red,
     // privately; any other refusal is the usual toast.
     if (rejection.cmd === 'addCardsInPlay' && rejection.reqId !== null && rejection.reqId === this.cardsAddSent) {

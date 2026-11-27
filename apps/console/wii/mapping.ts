@@ -264,6 +264,54 @@ export class WiiMapper {
     return outs;
   }
 
+  /**
+   * The engine refused what a key's press sent (D234's lock, enforced: another console held that button first): forget
+   * that press, so letting go of it sends nothing. B's covers its Aguanta and its Suspens (and A's part in B + A); − and
+   * + share Parlem's. The caller refuses the rest of the press (WiiLockGate).
+   */
+  forget(button: WiiButton): void {
+    if (button === 'b') {
+      this.bHeld = false;
+      this.bStarted = null;
+      this.suspense = NO_SUSPENSE;
+      this.aWithB = false;
+      this.shake.reset();
+    } else if (button === 'minus' || button === 'plus') {
+      this.talkSince = null;
+    } else if (button === 'a') {
+      this.aSince = null;
+      this.aAuto = false;
+      this.aHeld = false;
+      this.aNext = false;
+    }
+  }
+
+  /** The key whose press a refused command belongs to: a Suspens or Aguanta is B's (B + A's too); Parlem's and Pausa's
+   * from − or +, or the default action's from A, are the key that sent them (`sentBy`). */
+  static ownerOf(command: WiiCommand, sentBy: WiiButton): WiiButton {
+    if (command.cmd === 'suspense' || (command.cmd === 'hold' && command.args.on && command.args.duck === false)) return 'b';
+    return sentBy;
+  }
+
+  /** The key behind a command `tick` sent: Pausa or «Revisió manual» from − or + held, «Seguides» from A, Enrere from 1
+   * or 2, and a Suspens's from B. */
+  static tickKey(command: WiiCommand): WiiButton {
+    switch (command.cmd) {
+      case 'pause':
+      case 'checkReview':
+      case 'hold':
+        return 'minus';
+      case 'checkAuto':
+      case 'default':
+        return 'a';
+      case 'back':
+      case 'checkBack':
+        return 'one';
+      default:
+        return 'b';
+    }
+  }
+
   /** The remote went away: forget held buttons (the caller releases a hold it started if it wants). */
   reset(): void {
     this.bHeld = false;

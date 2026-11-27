@@ -330,3 +330,35 @@ test("the remote's guide (Comandament dialog, printed cheat sheet) has B's Suspe
   assert.match(bA?.note ?? '', /A i, sense deixar-la, B: el gir que comença es fa Suspens/, 'A then B (D176)');
   assert.equal(items.find((i) => i.id === 'shake')?.shake, true);
 });
+
+test("a press the engine refused for D234's lock is forgotten: letting go of it sends nothing", () => {
+  // B's Aguanta, refused: B's release sends no «hold off» (it would end another console's Aguanta, or be refused again).
+  const m = new WiiMapper(WII);
+  assert.deepEqual(cmds(m.press('b', 0, idle)), [{ cmd: 'hold', args: { on: true, duck: false } }]);
+  m.forget('b');
+  assert.deepEqual(m.release('b', staying), []);
+  // B + A's Suspens, refused: its window beats stop, and neither key's let-go sends anything.
+  const s = new WiiMapper(WII);
+  s.press('b', 0, idle);
+  assert.deepEqual(cmds(s.press('a', 100, staying)), [{ cmd: 'suspense', args: { on: true } }]);
+  s.forget('b');
+  assert.deepEqual(s.tick(100 + beat, staying), [], 'no more beats');
+  assert.deepEqual(s.release('a', staying), []);
+  assert.deepEqual(s.release('b', staying), []);
+  // − held to Pausa, refused: the tap that a release would send doesn't come either.
+  const t = new WiiMapper(WII);
+  t.press('minus', 0, idle);
+  t.forget('plus');
+  assert.deepEqual(t.tick(WII.pauseHoldMs + 10, idle), []);
+  assert.deepEqual(t.release('minus', idle), []);
+});
+
+test("a refused command's press: Suspens and Aguanta are B's, the rest the key that sent them", () => {
+  assert.equal(WiiMapper.ownerOf({ cmd: 'suspense', args: { on: true } }, 'a'), 'b', "B + A's Suspens");
+  assert.equal(WiiMapper.ownerOf({ cmd: 'hold', args: { on: true, duck: false } }, 'b'), 'b');
+  assert.equal(WiiMapper.ownerOf({ cmd: 'hold', args: { on: true, duck: true } }, 'plus'), 'plus');
+  assert.equal(WiiMapper.ownerOf({ cmd: 'pause', args: { on: false } }, 'a'), 'a', "A's default action: «Acaba la pausa»");
+  assert.equal(WiiMapper.tickKey({ cmd: 'pause', args: { on: true } }), 'minus');
+  assert.equal(WiiMapper.tickKey({ cmd: 'suspense', args: { on: true } }), 'b', "the shake's");
+  assert.equal(WiiMapper.tickKey({ cmd: 'back' }), 'one');
+});

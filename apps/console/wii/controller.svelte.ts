@@ -88,6 +88,11 @@ export class WiiController {
   private readonly mapper = new WiiMapper(WII);
   /** The lock on the remote (D234): keys refused because another console holds their two-level button. */
   private readonly gate = new WiiLockGate();
+  /** What the remote sent lately (reqId → the command and the key that sent it), so a refusal the lock explains (the
+   * engine's, in a race) rumbles «no» and drops the rest of that press. */
+  private readonly sentBy = new Map<string, { command: WiiCommand; key: WiiButton }>();
+  /** The key whose press or release is being applied, else null (then the command says which: WiiMapper.tickKey). */
+  private applying: WiiButton | null = null;
   private remote: WiiRemote | null = null;
   private pressed: ReadonlySet<WiiButton> = new Set();
   private ticker: ReturnType<typeof setInterval> | null = null;
@@ -114,6 +119,7 @@ export class WiiController {
   /** Every console: other consoles' remote reports; the host also republishes whenever it (re)connects. */
   private listen(): () => void {
     const client = this.model.show.client;
+    const offRefusals = this.model.onLockRefusal((reqId) => this.lockRefused(reqId));
     const offMessages = client.bus.on((message, { local }) => {
       if (local) return;
       const report = readRemoteStatus(message);
@@ -127,6 +133,7 @@ export class WiiController {
     return () => {
       offMessages();
       offChange();
+      offRefusals();
     };
   }
 
@@ -240,15 +247,40 @@ export class WiiController {
       }
       const lock = wiiLockButton(b);
       if (lock) this.model.twoLevelPress(lock, `wii-${b}`);
-      this.apply(this.mapper.press(b, now, ctx));
+      this.applyFor(b, this.mapper.press(b, now, ctx));
     }
     for (const b of up) {
-      if (this.gate.release(b)) continue;
-      this.apply(this.mapper.release(b, ctx));
+      if (!this.gate.release(b)) this.applyFor(b, this.mapper.release(b, ctx));
+      // A press refused late (the engine's refusal) did tell the mirror: let it go.
       const lock = wiiLockButton(b);
       if (lock) this.model.twoLevelRelease(lock, `wii-${b}`);
     }
     if (report.accel) this.apply(this.mapper.motion(now, report.accel, ctx));
+  }
+
+  private applyFor(key: WiiButton, outputs: readonly WiiOutput[]): void {
+    this.applying = key;
+    try {
+      this.apply(outputs);
+    } finally {
+      this.applying = null;
+    }
+  }
+
+  /**
+   * The engine refused a command the remote sent, as the lock explains (another console held the button first, D234):
+   * the remote's «no», and the rest of that press is dropped (its let-go sends nothing; A while that B is down is
+   * refused, as at the press).
+   */
+  private lockRefused(reqId: string): void {
+    const sent = this.sentBy.get(reqId);
+    if (!sent) return;
+    this.sentBy.delete(reqId);
+    this.remote?.rumble(WII.rumble.refused);
+    const key = WiiMapper.ownerOf(sent.command, sent.key);
+    this.mapper.forget(key);
+    const keys: readonly WiiButton[] = key === 'minus' || key === 'plus' ? ['minus', 'plus'] : [key];
+    for (const k of keys) if (this.pressed.has(k)) this.gate.refuse(k);
   }
 
   private apply(outputs: readonly WiiOutput[]): void {
@@ -261,38 +293,42 @@ export class WiiController {
 
   /** Whether something was sent. */
   private send(c: WiiCommand): boolean {
+    const reqId = this.dispatch(c);
+    if (reqId) {
+      this.sentBy.set(reqId, { command: c, key: this.applying ?? WiiMapper.tickKey(c) });
+      // Only the latest few can still be answered.
+      for (const old of this.sentBy.keys()) {
+        if (this.sentBy.size <= 16) break;
+        this.sentBy.delete(old);
+      }
+    }
+    return c.cmd === 'default' ? reqId !== null : true;
+  }
+
+  /** Send one remote command as the console's own buttons do; its reqId, or null when nothing went. */
+  private dispatch(c: WiiCommand): string | null {
     switch (c.cmd) {
       case 'default':
         // Resolved now, from the console's current state: exactly what its highlighted control would send.
-        return sendDefault(this.model.act, this.model.defaultAction) !== null;
+        return sendDefault(this.model.act, this.model.defaultAction);
       case 'back':
-        this.model.act('back');
-        break;
+        return this.model.act('back');
       case 'checkBack':
-        this.model.act('checkBack', c.args);
-        break;
+        return this.model.act('checkBack', c.args);
       case 'checkReview':
-        this.model.act('checkReview', c.args);
-        break;
+        return this.model.act('checkReview', c.args);
       case 'checkAuto':
-        this.model.act('checkAuto', c.args);
-        break;
+        return this.model.act('checkAuto', c.args);
       case 'hold':
-        this.model.act('hold', c.args);
-        break;
+        return this.model.act('hold', c.args);
       case 'suspense':
-        this.model.act('suspense', c.args);
-        break;
+        return this.model.act('suspense', c.args);
       case 'pause':
-        this.model.act('pause', c.args);
-        break;
+        return this.model.act('pause', c.args);
       case 'setGame':
-        this.model.act('setGame', c.args);
-        break;
+        return this.model.act('setGame', c.args);
       case 'sfx':
-        this.model.act('sfx', c.args);
-        break;
+        return this.model.act('sfx', c.args);
     }
-    return true;
   }
 }
