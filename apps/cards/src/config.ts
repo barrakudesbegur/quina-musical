@@ -62,10 +62,10 @@ export const SAMPLE_WORD = 'MOSTRA';
  * from pool 1 and its side 2 the Quina Especial from pool 2 (one card for both rounds, D81; the pool changes in the
  * Break). Each side has
  * - `heading`: printed big at the top of the side (D252); side 2's is white on a black box;
- * - `checkLabel`: the side's whole label on the screens during the Check (U198 answered (a), D266), as printed:
- *   «Normal 1–5», «Normal 6–10», «Desgraciat», «Especial»;
- * - `label`: the older label the screens join after `shortName` ("Normal 1–5", "Especial · Desgraciat"), kept until
- *   every screen reads `checkLabel`.
+ * - `checkLabel`: the side's name on every screen (the Check above all: U198 answered (a), D266), as printed:
+ *   «Normal 1–5», «Normal 6–10», «Desgraciat», «Especial»; the screens read no card-types.json without it;
+ * - `label`: the older label the screens used to join after `shortName`; no screen reads it any more (the engine's and
+ *   the protocol's readers still carry it).
  */
 export const CARD_TYPES = [
   {

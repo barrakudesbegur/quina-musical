@@ -138,9 +138,9 @@ export const S = {
     moveLine: "Passar-los al premi de l'últim dempeus",
     cardType: 'Cartrons que hi juguen',
     side: 'Cara',
-    /** A side in the picker, with its label from card-types.json: the Quines it's printed for when it's a range (D171,
-     * "1–5"), else the round's name (D226, "Quina Especial"). */
-    sideOption: (side: number, label: string | null) => (label ? `Cara ${side} · ${/^\d/.test(label) ? `Quines ${label}` : label}` : `Cara ${side}`),
+    /** A side in the picker, with its name as every screen gives it (typeSideLabel, D266): «Cara 1 · Normal 1–5»,
+     * «Cara 2 · Especial»; a side its type doesn't print, just its number. */
+    sideOption: (side: number, label: string | null) => (label ? `Cara ${side} · ${label}` : `Cara ${side}`),
     /** The plan's side problems against the printed cards (sideWarnings): they don't stop saving. */
     sideWarnings: 'Cares dels cartrons',
     unknownCardType: (id: string) =>

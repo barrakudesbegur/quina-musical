@@ -1,6 +1,6 @@
 <!--
   Cerca › Cartró, a card's private preview (D162, D170; the Consola-Pestanyes-Noves board, frames ③, d and e). On the
-  left its type and side in one label (D163: «Normal 1–5»), «No venut» when it isn't sold, then how it stands: «6 de 12
+  left its side as printed (D163, D266: «Normal 1–5», «Especial»), «No venut» when it isn't sold, then how it stands: «6 de 12
   han sonat» with the songs it misses for a Line and its Quina; with «Mostra el futur», whether it can still win and
   why (green «Pot guanyar» or red «Ja no pot guanyar»). On the right its 12 songs: the played ones with a ✓, the rest
   dotted and faded, each with how far ahead it is (+N) once the future shows. In the Desgraciat round: standing or

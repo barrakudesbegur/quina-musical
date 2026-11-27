@@ -3,17 +3,26 @@
 // its side (`RoundPlan.side`), so screens take names and colours from here and which rounds a type plays from the
 // plan's rounds. Pure.
 import {
-  cardTypeSides, isCardTypeId, isPoolId, isSide, roundCardPrice, roundCardType,
+  isCardTypeId, isPoolId, isSide, roundCardPrice, roundCardType,
   type CardPriceRule, type CardTypeSide, type GamePlan, type RoundKind,
 } from '@quina/protocol';
 import { CA } from '../i18n/ca.ts';
+
+/**
+ * One printed side of a type, as apps/cards writes it: its number, its pool, and `checkLabel`, the side's whole name on
+ * the screens (D266: «Normal 1–5», «Normal 6–10», «Desgraciat», «Especial», the words printed on it; typeSideLabel).
+ * `label` ("1–5", "Desgraciat") and `heading` («QUINES 1–5») come along; no screen reads them.
+ */
+export interface PrintedCardTypeSide extends CardTypeSide {
+  checkLabel: string;
+}
 
 export interface PrintedCardType {
   /** Its id ('normal', 'especial'…), as each card's `type` in cards.json. */
   type: string;
   /** "Cartró normal". */
   name: string;
-  /** "Normal": the name in the Check's label with the side (D163, typeSideLabel). */
+  /** "Normal": the type alone, without a side (a wrong type's verdict and its big name in the console's Check). */
   shortName: string;
   color: string;
   title: string;
@@ -21,10 +30,9 @@ export interface PrintedCardType {
   /** How the price counts (U5): 'perRegularRound' (a normal card: × the regular rounds still to play) or 'fixed' (the
    * especial card). card-types.json may leave it out: then 'perRegularRound', as @quina/protocol roundCardPrice reads it. */
   priceRule?: CardPriceRule;
-  /** Its printed sides (D178, D226): the normal card's 1 (pool 1, "1–5") and 2 (pool 2, "6–10"), the especial card's 1
-   * (pool 1, "Desgraciat") and 2 (pool 2, "Quina Especial"). A card-types.json from before sides gives one, side 1 on
-   * pool 1 (@quina/protocol cardTypeSides). */
-  sides: readonly CardTypeSide[];
+  /** Its printed sides (D178, D226), each with its name (D266): the normal card's 1 (pool 1, «Normal 1–5») and 2 (pool
+   * 2, «Normal 6–10»), the especial card's 1 (pool 1, «Desgraciat») and 2 (pool 2, «Especial»). */
+  sides: readonly PrintedCardTypeSide[];
 }
 
 /** A type as a screen names it: card-types.json's name and colour, or a plain stand-in when it isn't listed. */
@@ -44,27 +52,32 @@ const COLOR_RE = /^#[0-9a-f]{6}$/i;
 /** The colour of a type no list has: a neutral paper tone, so it never passes for a real card's pastel. */
 export const UNKNOWN_CARD_TYPE_COLOR = '#e8e4da';
 
-/** A short name from a full one, for a card-types.json from before `shortName`: "Cartró normal" → "Normal". */
+/** A short name from a full one, for a type nobody lists: "Cartró plata" → "Plata". */
 export function shortNameOf(name: string): string {
   const short = name.trim().replace(/^cartr[óo]\s+/i, '');
   return short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : name.trim();
 }
 
-/** A type's sides from card-types.json: absent is one side 1 on pool 1; anything off is null. */
-function readSides(raw: unknown): CardTypeSide[] | null {
-  if (raw === undefined) return [...cardTypeSides(null)];
+const isText = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
+const optionalText = (value: unknown): boolean => value === undefined || typeof value === 'string';
+
+/** A type's sides from card-types.json, each with its Check label (D266); anything off, or a side without one, is null. */
+function readSides(raw: unknown): PrintedCardTypeSide[] | null {
   if (!Array.isArray(raw) || !raw.length) return null;
-  const sides: CardTypeSide[] = [];
+  const sides: PrintedCardTypeSide[] = [];
   for (const s of raw) {
     if (!s || typeof s !== 'object') return null;
-    const { side, pool, label } = s as Record<string, unknown>;
-    if (!isSide(side) || !isPoolId(pool) || sides.some((o) => o.side === side) || (label !== undefined && typeof label !== 'string')) return null;
-    sides.push({ side, pool, ...(typeof label === 'string' ? { label } : {}) });
+    const { side, pool, label, checkLabel, heading } = s as Record<string, unknown>;
+    if (!isSide(side) || !isPoolId(pool) || sides.some((o) => o.side === side) || !isText(checkLabel) || !optionalText(label) || !optionalText(heading)) return null;
+    sides.push({ side, pool, checkLabel: checkLabel.trim(), ...(typeof label === 'string' ? { label } : {}), ...(typeof heading === 'string' ? { heading } : {}) });
   }
   return sides;
 }
 
-/** The card types in card-types.json, or null when the file isn't what apps/cards writes. */
+/**
+ * The card types in card-types.json, or null when the file isn't what apps/cards writes: every type with its short name
+ * and its sides, every side with its Check label (D266; a file from before them reads as no types).
+ */
 export function readPrintedCardTypes(json: unknown): PrintedCardType[] | null {
   if (!Array.isArray(json) || json.length === 0) return null;
   const out: PrintedCardType[] = [];
@@ -80,9 +93,8 @@ export function readPrintedCardTypes(json: unknown): PrintedCardType[] | null {
     if (rule !== 'perRegularRound' && rule !== 'fixed') return null;
     const sides = readSides(c.sides);
     if (!sides) return null;
-    if (c.shortName !== undefined && (typeof c.shortName !== 'string' || !c.shortName.trim())) return null;
-    const shortName = typeof c.shortName === 'string' ? c.shortName.trim() : shortNameOf(c.name);
-    out.push({ type: c.type, name: c.name.trim(), shortName, color: c.color.toLowerCase(), title: typeof c.title === 'string' ? c.title : '', priceCents: price, priceRule: rule, sides });
+    if (!isText(c.shortName)) return null;
+    out.push({ type: c.type, name: c.name.trim(), shortName: c.shortName.trim(), color: c.color.toLowerCase(), title: typeof c.title === 'string' ? c.title : '', priceCents: price, priceRule: rule, sides });
   }
   return out;
 }
@@ -104,19 +116,15 @@ export function cardTypeLabel(type: string, types: readonly PrintedCardType[]): 
 }
 
 /**
- * The Check's one label for a card type and the side checked (D163): the short name, then the side's label when the
- * type has several sides, or the short name alone. A label that is a range (it starts with a digit) joins with a
- * space ("Normal 1–5", "Normal 6–10"); a round's name joins with « · » ("Especial · Desgraciat", "Especial · Quina
- * Especial": D226, U198's option (a) until the user picks). A side with no label is its number. A type nobody lists
- * is its stand-in short name. (@quina/protocol sideLabel joins every label with a space.)
+ * How every screen names a card type's side (D163, D266): that side's `checkLabel`, the words printed on it, «Normal
+ * 1–5», «Normal 6–10», «Desgraciat», «Especial». The Check's chip and badge, the claim's peek, the finale's pad and
+ * Admin's side picker all take it from here. A type nobody lists, or a side its type doesn't print, is named by the type
+ * alone (its short name, or the stand-in's).
  */
 export function typeSideLabel(type: string, side: number, types: readonly PrintedCardType[]): string {
   const known = types.find((t) => t.type === type);
   if (!known) return cardTypeLabel(type, types).shortName;
-  const sides = cardTypeSides(known);
-  if (sides.length < 2) return known.shortName;
-  const label = sides.find((s) => s.side === side)?.label ?? String(side);
-  return `${known.shortName}${/^\d/.test(label) ? ' ' : ' · '}${label}`;
+  return known.sides.find((s) => s.side === side)?.checkLabel ?? known.shortName;
 }
 
 /** Where a card type plays tonight. */

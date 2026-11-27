@@ -6,7 +6,7 @@
 import type { PlannedThrow } from '@quina/protocol';
 import { PLAN_VERSION, breakMinutes, quinaNumber, type CheatSheet, type GamePlan, type Prize, type PrizeBundle, type RoundPlan, type SchedulePlan } from '../../../packages/ui/plan.ts';
 import { cardTypeSides, defaultCardType, roundCardType, roundSide, type RoundKind } from '@quina/protocol';
-import type { PrintedCardType } from '../../../packages/ui/data/card-types.ts';
+import { typeSideLabel, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
 
 export const blankPrize = (headline = false): Prize => ({ title: '', detail: null, sponsorId: null, image: null, headline });
 
@@ -40,10 +40,12 @@ export function defaultSide(round: Pick<RoundPlan, 'number' | 'kind'> & { cardTy
   return sides.some((s) => s.side === wanted) ? wanted : (sides[0]?.side ?? 1);
 }
 
-/** The sides a round's picker offers: its card type's (card-types.json), plus the round's own when the type lacks it
- * (so the picker still shows what the plan says, next to its warning). */
+/** The sides a round's picker offers: its card type's (card-types.json), each named as every screen names it
+ * (typeSideLabel, D266: «Normal 1–5», «Desgraciat»), plus the round's own when the type lacks it (so the picker still
+ * shows what the plan says, next to its warning). Without card-types.json or for an unlisted type: side 1, unnamed. */
 export function sideChoices(types: readonly PrintedCardType[], cardType: string, current: number): { side: number; label: string | null }[] {
-  const sides = cardTypeSides(types.find((t) => t.type === cardType)).map((s) => ({ side: s.side, label: s.label ?? null }));
+  const known = types.find((t) => t.type === cardType);
+  const sides = known ? known.sides.map((s) => ({ side: s.side, label: typeSideLabel(cardType, s.side, types) })) : cardTypeSides(null).map((s) => ({ side: s.side, label: null }));
   return sides.some((s) => s.side === current) ? sides : [...sides, { side: current, label: null }];
 }
 

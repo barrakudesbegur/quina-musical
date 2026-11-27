@@ -35,8 +35,8 @@ const CATALOG: Catalog = {
   ]),
   // card-types.json, as apps/cards writes it: the only source of the types' names, colours and sides.
   cardTypes: readPrintedCardTypes([
-    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
+    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
+    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
   ]),
 };
 
@@ -181,8 +181,8 @@ test('before: start time, the night\'s card types, sponsors and the player app l
 test("before: card-types.json's names and colours; only round 1's card type shows its price (U5)", () => {
   const state = FIXTURES.before(NOW).state;
   const printed = readPrintedCardTypes([
-    { type: 'normal', name: 'Cartró blau', color: '#aaccee', title: '', priceCents: 200 },
-    { type: 'especial', name: 'Cartró rosa', color: '#eeaacc', title: '', priceCents: 500 },
+    { type: 'normal', name: 'Cartró blau', shortName: 'Blau', color: '#aaccee', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
+    { type: 'especial', name: 'Cartró rosa', shortName: 'Rosa', color: '#eeaacc', title: '', priceCents: 500, sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
   ]);
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, { ...CATALOG, cardTypes: printed });
   if (view.body.scene !== 'before') return assert.fail('not before');
@@ -203,8 +203,8 @@ const EDITION_PLAN = (() => {
   return { ...SAMPLE_PLAN, rounds };
 })();
 const EDITION_TYPES = readPrintedCardTypes([
-  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound' },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 500, priceRule: 'fixed' },
+  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound', sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
+  { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: 500, priceRule: 'fixed', sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
 ]);
 
 test('before, this year (D243): the normal card plays Quines 1–10 at 15 €; the special card the Especial and the Desgraciat, no price yet', () => {
@@ -242,7 +242,7 @@ function cued(name: string, cue: 'pass' | 'fail'): FlowState {
 }
 
 test("check: the badge is named from card-types.json; a wrong type's ✗ only from its cue", () => {
-  const printed = readPrintedCardTypes([{ type: 'especial', name: 'Cartró rosa', color: '#eeaacc', title: '', priceCents: null }]);
+  const printed = readPrintedCardTypes([{ type: 'especial', name: 'Cartró rosa', shortName: 'Rosa', color: '#eeaacc', title: '', priceCents: null, sides: [{ side: 1, pool: '1', checkLabel: 'Rosa' }] }]);
   const catalog = { ...CATALOG, cardTypes: printed };
   const before = FIXTURES.checkWrongType(NOW).state;
   const view = stageView(before, flowOf(before), SAMPLE_PLAN, catalog);
@@ -523,7 +523,7 @@ test('a Check carries the card\'s printed type, which is public', () => {
   const wrong = cued('checkWrongType', 'fail');
   const failed = stageView(wrong, flowOf(wrong), SAMPLE_PLAN, CATALOG);
   if (failed.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Especial · Desgraciat', color: '#ffd9e8', special: true, ok: false }, 'a side-1 round: side 1 named');
+  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Desgraciat', color: '#ffd9e8', special: true, ok: false }, 'a side-1 round: side 1 named, as printed (D266)');
   assert.equal(failed.body.check.verdict, 'notValid');
   assert.deepEqual(failed.body.check.cells, []);
 });
@@ -547,12 +547,12 @@ test("the Especial round's Check draws the especial card's side 2, and its badge
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   if (view.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(view.body.check.cells.map((c) => c.songId), SIDE_2_OF_508.flat(), "side 2's 12 songs, never side 1's");
-  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Especial · Quina Especial', color: '#ffd9e8', special: true, ok: true });
+  assert.deepEqual(view.body.check.cardType, { type: 'especial', label: 'Especial', color: '#ffd9e8', special: true, ok: true });
   const desgraciat: FlowState = { ...state, round: { ...round, number: 5, kind: 'desgraciat', side: 1, pool: '1' }, check: state.check && { ...state.check, side: 1 } };
   const one = stageView(desgraciat, flowOf(desgraciat), SAMPLE_PLAN, CATALOG);
   if (one.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(one.body.check.cells.slice(0, 4).map((c) => c.songId), [31, 32, 39, 74], "the Desgraciat round: side 1's top row");
-  assert.equal(one.body.check.cardType?.label, 'Especial · Desgraciat');
+  assert.equal(one.body.check.cardType?.label, 'Desgraciat');
 });
 
 test('interval: the next round, the count and the countdown guide; no winners, no QR, no prizes', () => {
@@ -569,7 +569,7 @@ test('interval: the next round, the count and the countdown guide; no winners, n
     price: null,
   });
   // With prices in card-types.json, the coming round's card and its price (U5): round 4 plays the normal card.
-  const priced = { ...CATALOG, cardTypes: readPrintedCardTypes([{ type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound' }]) };
+  const priced = { ...CATALOG, cardTypes: readPrintedCardTypes([{ type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound', sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] }]) };
   const withPrice = stageView(state, flowOf(state), SAMPLE_PLAN, priced);
   if (withPrice.body.scene !== 'interval') return assert.fail('not interval');
   const left = SAMPLE_PLAN.rounds.filter((r) => r.kind === 'normal' && r.number >= 4).length;

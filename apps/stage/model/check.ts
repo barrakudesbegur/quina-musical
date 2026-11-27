@@ -28,7 +28,7 @@ export interface CheckStepView {
 export interface CardTypeBadge {
   /** 'normal', 'especial'… */
   type: string;
-  /** The type and the side checked in one label (D163, D226): "Normal 1–5", "Normal 6–10", "Especial · Desgraciat". */
+  /** The side checked, as printed (D163, D266, typeSideLabel): "Normal 1–5", "Normal 6–10", "Desgraciat", "Especial". */
   label: string;
   color: string;
   /** It plays the Quina Especial (the mini card gets a star). */
@@ -39,7 +39,7 @@ export interface CardTypeBadge {
 }
 
 /**
- * The badge for a checked card's type: its label with the side checked (`side`, the round's: typeSideLabel) and its
+ * The badge for a checked card's type: the name of the side checked (`side`, the round's: typeSideLabel) and its
  * colour from the card types (card-types.json, or what stands in for it: knownCardTypes), its star when the plan's
  * Quina Especial plays it (without a plan: the special round's default type), and `ok` as the Check tells it publicly
  * (checkTypeOk). Null for an unknown card, whose type isn't known.

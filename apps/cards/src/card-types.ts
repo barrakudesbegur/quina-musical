@@ -16,10 +16,10 @@ export const SIDE_MAX = 9;
 
 /**
  * One printed side of a type (D101, D102, D178): its number (1, 2…), the pool its 12 songs are drawn from (sides.ts),
- * and its label ("1–5", the Quines it plays: D171, D193), which the Check shows after the type's short name (D163,
- * "Normal 1–5"). The same shape as the protocol's CardTypeSide, plus two optional fields a card-types.json from before
- * them lacks: `checkLabel`, the side's whole label on the screens during the Check (U198 answered (a), D266: «Normal
- * 1–5», «Desgraciat»), and `heading`, the big word printed at the top of the side («QUINES 1–5»).
+ * and its label ("1–5", the Quines it plays: D171, D193; no screen reads it any more). The same shape as the
+ * protocol's CardTypeSide, with two fields a card-types.json from before them lacks: `checkLabel`, the side's name on
+ * every screen (U198 answered (a), D266: «Normal 1–5», «Desgraciat»; the screens read no file without it), and
+ * `heading`, the big word printed at the top of the side («QUINES 1–5»).
  */
 export interface CardTypeSideSpec {
   side: number;
@@ -39,7 +39,8 @@ export interface CardTypeSpec {
   type: string;
   /** Its full name ("Cartró normal"). */
   name: string;
-  /** Its name in a label with its side (D163: "Normal 1–5", "Especial · Desgraciat"). */
+  /** The type alone, without a side ("Normal"): the console's wrong-type verdict and big type name. Each side's name is
+   * its `checkLabel`. */
   shortName: string;
   color: string;
   title: string;

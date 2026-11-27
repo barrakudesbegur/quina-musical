@@ -236,11 +236,11 @@ export function batchWinners(flow: Pick<FlowFields, 'check' | 'claims'>): number
 export const reviewNeedsConfirm = (outcome: 'win' | 'lose', check: Pick<CheckInfo, 'outcome' | 'kind'>): boolean =>
   (outcome === 'win') !== checkPasses(check);
 
-/** The claimed card's printed type as its chip shows it ("Normal 1–4", "Especial" with a star), from card-types.json. */
+/** The claimed card's printed type as its chip shows it ("Normal 1–5", "Desgraciat" with a star), from card-types.json. */
 export interface TypeChip {
   /** The short name ("Normal"): a wrong type's verdict and its big type name. */
   name: string;
-  /** The type and the side checked in one label (D163, D226): "Normal 1–5", "Normal 6–10", "Especial · Desgraciat". */
+  /** The side checked, as printed (D163, D266, typeSideLabel): "Normal 1–5", "Normal 6–10", "Desgraciat", "Especial". */
   label: string;
   color: string;
   /** It plays the Quina Especial. */

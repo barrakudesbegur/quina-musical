@@ -1,6 +1,6 @@
 <!--
   The claimed card on the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciat): «Cartró #57» with its
-  chips (what it claims; its printed type and the side checked in one label, D163: «Normal 1–4»), the warnings,
+  chips (what it claims; the side checked as printed, D163, D266: «Normal 1–5», «Desgraciat»), the warnings,
   then the card's 12 songs as the design system's CardCells (CardGrid's looks table, D2). Each song the Check plays
   carries its mark from the start (D108), centred (#75), dashed while only the presenters know it and full once the
   room has seen it (hook check-step); a song still to reveal is greyed with a dashed ring and counts down («Següent»,

@@ -174,17 +174,17 @@ test('the plate names the card being checked; the result plaque\'s words', () =>
 // ---- the card-type step: the badge, and when it gets its mark
 
 const TYPES = readPrintedCardTypes([
-  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 300, sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
-  { type: 'desgraciat', name: 'Cartró desgraciat', color: '#d8f0c8', title: '', priceCents: 100 },
+  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: 200, sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
+  { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: 300, sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
+  { type: 'desgraciat', name: 'Cartró desgraciat', shortName: 'Desgraciat', color: '#d8f0c8', title: '', priceCents: 100, sides: [{ side: 1, pool: '1', checkLabel: 'Desgraciat' }] },
 ]) ?? [];
 
-test("the type badge: the type and the side checked in one label (D163), its colour from card-types.json, its mark as the Check tells it", () => {
+test("the type badge: the side checked as printed (D163, D266), its colour from card-types.json, its mark as the Check tells it", () => {
   assert.deepEqual(cardTypeBadge('normal', 1, true, TYPES, SAMPLE_PLAN), { type: 'normal', label: 'Normal 1–5', color: '#cfe8ff', special: false, ok: true });
   assert.equal(cardTypeBadge('normal', 2, true, TYPES, SAMPLE_PLAN)?.label, 'Normal 6–10');
-  assert.deepEqual(cardTypeBadge('especial', 1, false, TYPES, SAMPLE_PLAN), { type: 'especial', label: 'Especial · Desgraciat', color: '#ffd9e8', special: true, ok: false }, "D226, U198 (a): a round's name joins with « · »");
-  assert.equal(cardTypeBadge('especial', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Especial · Quina Especial');
-  assert.equal(cardTypeBadge('desgraciat', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Desgraciat', 'a one-sided type: no side in its label');
+  assert.deepEqual(cardTypeBadge('especial', 1, false, TYPES, SAMPLE_PLAN), { type: 'especial', label: 'Desgraciat', color: '#ffd9e8', special: true, ok: false }, 'U198 answered (a): «Desgraciat» alone');
+  assert.equal(cardTypeBadge('especial', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Especial');
+  assert.equal(cardTypeBadge('desgraciat', 2, false, TYPES, SAMPLE_PLAN)?.label, 'Desgraciat', 'a side its type does not print: the type alone');
   assert.equal(cardTypeBadge(null, 1, null, TYPES, SAMPLE_PLAN), null, 'an unknown card has no type');
   // The star follows the plan's Quina Especial: here it plays the desgraciat cards.
   const plan = { rounds: SAMPLE_PLAN.rounds.map((r) => (r.kind === 'special' ? { ...r, cardType: 'desgraciat' } : r)) };

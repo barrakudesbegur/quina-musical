@@ -7,8 +7,9 @@ This project generates bingo cards for a musical bingo game. The cards are gener
 The output files are committed in [`dist`](./dist): `cards.json`, `card-types.json` and one PDF per card type
 (`cards-normal.pdf`, `cards-especial.pdf`). Until this year's playlist is final they are last year's test cards; don't
 regenerate them for real before then (the real cards are made after the final playlist, 1 Dec). The committed
-`card-types.json` predates the 2026 design (no `checkLabel` or `heading`, the title «QUINA QUINA! 3»), and the committed
-PDFs still show last year's one-sided cards, title and old cards #398 and #492.
+`card-types.json` is `CARD_TYPES` as written on 28 Nov (with `checkLabel` and `heading`, the title «QUINA QUINA!»), while
+`cards.json` and the PDFs were left as they were: the PDFs still show last year's one-sided cards, title and old cards
+#398 and #492.
 
 The JSON files are written before the PDF renderer loads, so `cards.json` and `card-types.json` are written even when
 the native `canvas` module is missing (the run then fails at the PDF step).
@@ -32,11 +33,12 @@ songs.json (`["1", "2"]`, D268, below), or before D268 its one `pool` (`"1"`, `"
 `cards.json` holds each card as `{ id, type, sides: [{ side, lines: [[{ id, title, artist } × 4] × 3] }] }`, and
 `card-types.json` each type's `sides: [{ side, pool, label, checkLabel, heading }]` and its `shortName` ("Normal"):
 
-- `checkLabel` is the side's whole label on the screens during the Check, as printed (U198 answered (a), D266):
-  «Normal 1–5», «Normal 6–10», «Desgraciat», «Especial». Every printed side has one.
+- `checkLabel` is the side's name on every screen (the Check above all), as printed (U198 answered (a), D266):
+  «Normal 1–5», «Normal 6–10», «Desgraciat», «Especial». Every printed side has one, and the screens read no
+  `card-types.json` without it (`packages/ui/data/card-types.ts`).
 - `heading` is the big word at the top of the printed side: «QUINES 1–5», «QUINES 6–10», «DESGRACIAT», «ESPECIAL».
-- `label` is the older label, which the screens join after `shortName` (D163: "Normal 1–5", "Especial ·
-  Desgraciat"); kept until every screen reads `checkLabel`.
+- `label` is the older label the screens used to join after `shortName`; no screen reads it any more (the engine's
+  and the protocol's readers still carry it).
 
 Readers take a card from before sides (`lines` and no `sides`) as its side 1.
 
