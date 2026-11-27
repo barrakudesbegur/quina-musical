@@ -43,6 +43,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **Being built:**
 - **Frontend:** D195, D196, D199 (the console layout), D188 (the phone's add pad), D189 (the round-buttons pass), the D200 banner on the canvas first; U169 and U170 on the canvas; the design-system spec (U175+).
+- **Sound engine: important tasks only (the user, 27 Nov):** "the Sound engine can do important tasks, i want to still avoid the tasks that are not needed yet or aren't clearly valuable". The critical path is the songs and hooks (U55, U56). Not now: the garland's beat, the effect-playing state, the relay's caching, more D-pad effects.
 - **Sound engine and Backend: paused (the user, 26 Nov, late),** so the user can focus on the Frontend. Each finishes its current task only if past about half, otherwise parks it unpushed. Backend still pushes and deploys Frontend's tested commits. Nothing new for either until the user says so. Parked: the voices and padHold engine side (D198, D202–D204), and the voice sync root and clock checks.
 
 **Waiting on the user:**
