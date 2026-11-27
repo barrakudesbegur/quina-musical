@@ -247,11 +247,10 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
-### U55 · Preparing pool 1 now, and the laptop's disk
-Pool 1 is final, so it can be prepared now: analysis, hooks proposed, stems. A set of 70 takes about 6 GB fully prepared. The laptop has 12 GiB free (Sound engine's df, 27 Nov; the earlier 20 GB was out of date). data/cache holds 11 GB: about 6 GB of last year's 77 test songs, 2 GB of this year's decoded pool and 1.4 GB of the break music. So pool 1 fits, leaving about 6 GiB, but both pools (about 12 GB) need last year's test cache freed or space found elsewhere. Nothing is deleted without the user's OK (D80).
-- (a) Go: prepare pool 1 now, and keep last year's test songs; decide about the space when pool 2 is final.
-- (b) Go, and free last year's test cache now, so both pools fit.
-- (c) Wait.
+### U55 · Last year's test songs on the laptop's disk
+The go to prepare this year's songs is covered by D227 (27 Nov): pool 1 is being prepared and pool 2 downloaded for today's test, in the tracked 2026 repertoire. The laptop had 12 GiB free; Sound engine expects 4–8 GB more and stops under about 3 GiB. Last year's 77 test songs take about 6 GB.
+- (a) Keep them; decide only if the space runs short.
+- (b) Delete them now.
 
 ### U56 · Cutting the hook approval from 7 hours
 About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
