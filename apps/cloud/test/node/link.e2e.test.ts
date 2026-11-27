@@ -4,7 +4,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { PROTOCOL_VERSION, replayJournal, type JournalEntry } from '@quina/protocol';
 import { CloudLink } from '../../laptop/link.ts';
@@ -14,6 +13,7 @@ import { followFeed, type PublicView } from '@quina/protocol';
 import type { EditionExport } from '../../src/api.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
 import { PLAN } from '../support/plan.ts';
+import { tempDir } from '../support/temp.ts';
 
 const v = PROTOCOL_VERSION;
 
@@ -35,7 +35,7 @@ function makeLink(relayUrl: string, cloudWs: string, lines: string[] = []) {
     relayUrl,
     cloudUrl: `${cloudWs}/ws/show`,
     cloudHeaders: {},
-    dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'quina-link-e2e-')),
+    dataDir: tempDir('quina-link-e2e-'),
     clientId: 'laptop-test',
     log: (line) => lines.push(line),
     reconnectFirstMs: 100,

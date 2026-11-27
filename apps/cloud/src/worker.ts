@@ -37,7 +37,6 @@ export default {
     switch (route.name) {
       case 'plan': {
         if (request.method === 'GET') return json({ plan: await room.getPlan(), savedAtMs: await room.getPlanSavedAtMs() });
-        if (identity.startsWith('service:')) return text(403, 'only organizers save the plan');
         const body = await readBody(request, CLOUD.maxPlanBytes);
         if (body === null) return text(413, `a plan of at most ${CLOUD.maxPlanBytes / 1024} KB`);
         let parsed: unknown;

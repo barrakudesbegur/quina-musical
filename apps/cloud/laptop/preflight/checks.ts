@@ -244,6 +244,33 @@ export function diskCheck(freeBytes: number): Check {
   return check('Laptop', 'Disk', 'pass', `${gb.toFixed(0)} GB free`);
 }
 
+/**
+ * Hooks bulk-approved as provisional (hooks_auto.py --provisional, D227): a song whose best valid hook carries
+ * `provisional: true` lands on a hook nobody has chosen yet. It only warns: the show plays them; the user decides each on
+ * the audition page, and the flag goes. Null with no playable songs (songsCheck says so).
+ */
+export function provisionalHooksCheck(songs: readonly { id: number; hooks: readonly unknown[] }[]): Check | null {
+  if (songs.length === 0) return null;
+  const isBestProvisional = (h: unknown) => Boolean(h) && typeof h === 'object' && (h as { tag?: unknown }).tag === 'best' && Boolean((h as { valid?: unknown }).valid) && (h as { provisional?: unknown }).provisional === true;
+  const ids = songs.filter((s) => s.hooks.some(isBestProvisional)).map((s) => s.id);
+  if (ids.length === 0) return check('Repertoire', 'Hooks', 'pass', "every song's best hook was chosen on the audition page");
+  const shown = ids.slice(0, 12).join(', ') + (ids.length > 12 ? '…' : '');
+  return check('Repertoire', 'Hooks', 'warn', `${ids.length} of ${songs.length} songs land on a provisional hook, not chosen yet: decide them on the audition page (songs ${shown})`);
+}
+
+/** How to rebuild the show the relay serves (`npm start` serves apps/show/dist). */
+export const DIST_FIX = 'cd apps/show && npm run build, then restart the relay';
+
+/**
+ * The show's build, apps/show/dist, what the relay serves with `npm start`: built from exactly the sources checked out
+ * (Sound engine's build stamp, dist/build.json, f89d972). On 27 Nov a production test ran a build two days old, with no
+ * Pausa, no paced Check and no voices. `problem`: distProblem's reason, or null when the stamp matches.
+ */
+export function distCheck(problem: string | null): Check {
+  if (problem) return check('Laptop', 'Show build', 'fail', `apps/show/${problem}: ${DIST_FIX}`);
+  return check('Laptop', 'Show build', 'pass', 'apps/show/dist was built from the sources checked out');
+}
+
 /** The show page's browser, from the process list: it must play sound without a click. */
 /**
  * Chrome must keep the show page's timers running even when its window isn't in front: a throttled page starves

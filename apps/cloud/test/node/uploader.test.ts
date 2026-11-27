@@ -2,17 +2,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { JournalCopy } from '../../laptop/journal-copy.ts';
 import { Uploader } from '../../laptop/uploader.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
+import { tempDir } from '../support/temp.ts';
 
 const game = JournalBuilder.sampleGame('g-up');
-const tempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'quina-link-'));
+const linkDir = () => tempDir('quina-link-');
 
 test('one upload in flight; the ack says where the next starts; a lost reply means a resend', () => {
-  const copy = new JournalCopy(tempDir());
+  const copy = new JournalCopy(linkDir());
   for (const entry of game.entries.slice(0, 25)) copy.add(entry);
   const uploader = new Uploader(copy, 10, 1000);
   assert.equal(uploader.next(0), null, 'nothing before the welcome');
@@ -35,7 +35,7 @@ test('one upload in flight; the ack says where the next starts; a lost reply mea
 });
 
 test('the cloud asks again from a missing entry; a conflict or a refused entry stops uploads', () => {
-  const copy = new JournalCopy(tempDir());
+  const copy = new JournalCopy(linkDir());
   for (const entry of game.entries.slice(0, 30)) copy.add(entry);
   const uploader = new Uploader(copy, 50, 1000);
   uploader.welcome('g-up', 20, 0);
@@ -48,7 +48,7 @@ test('the cloud asks again from a missing entry; a conflict or a refused entry s
 });
 
 test('the journal copy: duplicates, conflicts, holes, and it survives a restart', () => {
-  const dir = tempDir();
+  const dir = linkDir();
   const copy = new JournalCopy(dir);
   const entries = game.entries;
   assert.equal(copy.add(entries[0]), 'new');

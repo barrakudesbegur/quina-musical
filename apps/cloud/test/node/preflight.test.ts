@@ -175,6 +175,25 @@ test('the relay, the LAN and the cloud', () => {
   assert.equal(c.clockCheck('sntp: Exchange failed: Timeout').status, 'warn');
 });
 
+test('provisional hooks (D227): WARN while a playable song lands on a bulk-approved best hook', () => {
+  const song = (id: number, provisional?: boolean) => ({ id, hooks: [{ tag: 'best', valid: true, ...(provisional === undefined ? {} : { provisional }) }, { tag: 'alt', valid: true, provisional: true }] });
+  assert.equal(c.provisionalHooksCheck([]), null);
+  assert.equal(c.provisionalHooksCheck([song(1), song(2, false)])?.status, 'pass', "an alternative's flag doesn't count");
+  const warn = c.provisionalHooksCheck([song(1), song(7, true), song(9, true)])!;
+  assert.equal(warn.status, 'warn');
+  assert.match(warn.detail, /^2 of 3 songs land on a provisional hook.*audition page \(songs 7, 9\)$/);
+  const many = c.provisionalHooksCheck(Array.from({ length: 20 }, (_, i) => song(i + 1, true)))!;
+  assert.match(many.detail, /songs 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12…\)$/);
+});
+
+test("the show's build: FAIL, with the fix, unless apps/show/dist was built from the sources checked out", () => {
+  const stale = c.distCheck('dist/ was built on 25 Nov 2026, 05:39 from other sources: 3 file(s) changed since (apps/show/engine/src/pausa.ts)');
+  assert.equal(stale.status, 'fail');
+  assert.match(stale.detail, /^apps\/show\/dist\/ was built on 25 Nov 2026.*: cd apps\/show && npm run build, then restart the relay$/);
+  assert.equal(c.distCheck('dist/ has no build stamp (dist/build.json): it was built before stamps or by hand').status, 'fail');
+  assert.equal(c.distCheck(null).status, 'pass');
+});
+
 test('the cloud link and the Game', () => {
   const now = 1_000_000;
   const status: c.LinkStatusFile = { updatedAtMs: now - 3000, cloud: 'online', gameId: 'g1', journalled: 40, ackSeq: 40, pending: 0, uploader: { kind: 'syncing' } };

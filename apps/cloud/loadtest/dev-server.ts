@@ -36,6 +36,10 @@ export async function startDevServer({ port, persistTo, media = false, assets }:
   const chosen = port ?? (await freePort());
   const inspector = await freePort(); // its own debugger port, so several dev servers can run at once (parallel tests)
   const state = persistTo ?? fs.mkdtempSync(path.join(os.tmpdir(), 'quina-cloud-'));
+  /** A throwaway state folder is this server's own: removed when it stops (a caller's persistTo is kept). */
+  const removeState = () => {
+    if (!persistTo) fs.rmSync(state, { recursive: true, force: true });
+  };
   // Wrangler's own entry point, wherever npm put it (the workspace hoists it to the repo's node_modules).
   const wrangler = path.join(path.dirname(createRequire(import.meta.url).resolve('wrangler/package.json')), 'bin', 'wrangler.js');
   const config: string[] = [];
@@ -66,7 +70,10 @@ export async function startDevServer({ port, persistTo, media = false, assets }:
   const http = `http://127.0.0.1:${chosen}`;
   const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) throw new Error(`wrangler dev exited (${child.exitCode}):\n${output}`);
+    if (child.exitCode !== null) {
+      removeState();
+      throw new Error(`wrangler dev exited (${child.exitCode}):\n${output}`);
+    }
     try {
       const response = await fetch(`${http}/api/health`);
       if (response.ok) break;
@@ -77,6 +84,7 @@ export async function startDevServer({ port, persistTo, media = false, assets }:
   }
   if (Date.now() >= deadline) {
     child.kill('SIGTERM');
+    child.once('exit', removeState);
     throw new Error(`wrangler dev did not start:\n${output}`);
   }
   return {
@@ -87,6 +95,7 @@ export async function startDevServer({ port, persistTo, media = false, assets }:
       new Promise((resolve) => {
         const done = () => {
           for (const at of copies) fs.rmSync(at, { force: true });
+          removeState();
           resolve();
         };
         if (child.exitCode !== null) return done();

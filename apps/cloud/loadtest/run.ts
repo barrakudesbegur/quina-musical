@@ -19,6 +19,13 @@ import { startDevServer, type DevServer } from './dev-server.ts';
 import { fakeRelay, type FakeRelay } from './fake-relay.ts';
 import { FREE_PLAN, projectNight, NIGHT, type Measured } from './model.ts';
 
+/** A scratch folder for this run, removed when it exits. */
+function scratchDir(prefix: string): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  process.once('exit', () => fs.rmSync(dir, { recursive: true, force: true }));
+  return dir;
+}
+
 const args = process.argv.slice(2);
 const option = (name: string, fallback: number): number => {
   const i = args.indexOf(name);
@@ -198,7 +205,7 @@ async function main(): Promise<void> {
     relayUrl: relay.url,
     cloudUrl: `${server.ws}/ws/show`,
     cloudHeaders: {},
-    dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'quina-load-')),
+    dataDir: scratchDir('quina-load-'),
     clientId: 'laptop-load',
     log: () => {},
   });

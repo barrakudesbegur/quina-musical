@@ -3,13 +3,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { pull, push, type RootDir } from '../../laptop/media-sync.ts';
 import { startDevServer } from '../../loadtest/dev-server.ts';
+import { tempDir } from '../support/temp.ts';
 
 function laptop(files: Record<string, string> = {}) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-media-'));
+  const base = tempDir('quina-media-');
   const roots: RootDir[] = [
     { root: 'cache', dir: path.join(base, 'cache'), exclude: (rel) => rel.startsWith('stretch/') },
     { root: 'covers', dir: path.join(base, 'covers') },

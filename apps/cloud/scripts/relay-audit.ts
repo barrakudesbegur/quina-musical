@@ -17,6 +17,7 @@ const SHOW = path.resolve(import.meta.dirname, '../../show');
 const TOKEN = 'AUDITTOKEN234567';
 /** A scratch link folder, so the audit never reads or writes the laptop's real Game plan. */
 const LINK_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-relay-audit-link-'));
+process.once('exit', () => fs.rmSync(LINK_DIR, { recursive: true, force: true }));
 const v = 1;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

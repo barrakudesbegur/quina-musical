@@ -29,13 +29,15 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/ws/console': { name: 'console', websocket: true, access: PEOPLE, methods: GET },
   /** The Game plan: Admin reads it (GET) and saves it whole (PUT, checked with checkGamePlan). */
   // The laptop's service token may read it (a spare laptop's setup fetches it without connecting as the show
-  // laptop, which would take over from the one playing); only people save it.
+  // laptop, which would take over from the one playing) and save it: the edition tool sends the edition's plan up by
+  // hand with it (D116, D227), as the link could already do (link.plan). A token of its own for agents is U63.
   '/api/plan': { name: 'plan', websocket: false, access: ANYONE_SIGNED_IN, methods: ['GET', 'PUT'] },
   /**
    * Admin's media: POST a logo or prize picture (the body is the PNG or JPEG fallback, `?name=` optional; answers
-   * its /media/ path and key), GET the list for the picker.
+   * its /media/ path and key), GET the list for the picker. The laptop's token too: the edition tool uploads the
+   * sponsors' logos with the plan that names them.
    */
-  '/api/media': { name: 'upload', websocket: false, access: PEOPLE, methods: ['GET', 'POST'] },
+  '/api/media': { name: 'upload', websocket: false, access: ANYONE_SIGNED_IN, methods: ['GET', 'POST'] },
   /** The whole edition as JSON: every Game's journal and record (admins). */
   /** The edition's Games (rehearsals, the night), newest first: Admin's resume picker. */
   '/api/games': { name: 'games', websocket: false, access: PEOPLE, methods: GET },
@@ -62,7 +64,7 @@ export const MEDIA_ROUTE: Route = Object.freeze({ name: 'media', websocket: fals
 const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg|jxl)$/;
 
 /** Admin attaches the JPEG XL to an uploaded fallback: PUT /api/media/<key>.jxl (the body is the JXL). */
-export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: PEOPLE, methods: ['PUT'] });
+export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: ANYONE_SIGNED_IN, methods: ['PUT'] });
 const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
 
 /** The repertoire's media in R2 (C3): `/api/sync/<repertoire>/manifest` and `/api/sync/<repertoire>/file?path=…`. The laptops only. */

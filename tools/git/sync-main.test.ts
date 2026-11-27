@@ -35,6 +35,7 @@ function commit(dir: string, message: string, files: Record<string, string | nul
 /** origin with one commit, the shared checkout and a pusher, both cloned from it. */
 function setup(): { origin: string; shared: string; pusher: string } {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-sync-main-'));
+  process.once('exit', () => fs.rmSync(root, { recursive: true, force: true }));
   const origin = path.join(root, 'origin.git');
   git(root, 'init', '-q', '--bare', '-b', 'main', origin);
   const seed = path.join(root, 'seed');

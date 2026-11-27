@@ -3,18 +3,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { CloudLink } from '../../laptop/link.ts';
 import { runPreflight } from '../../laptop/preflight/gather.ts';
 import { startDevServer } from '../../loadtest/dev-server.ts';
 import { fakeRelay } from '../../loadtest/fake-relay.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
+import { tempDir } from '../support/temp.ts';
 
 test('preflight, cloud: signed in with a sane clock, the link in sync, the same Game here and there', async () => {
   const server = await startDevServer();
   const relay = await fakeRelay();
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-preflight-e2e-'));
+  const dataDir = tempDir('quina-preflight-e2e-');
   const link = new CloudLink({ relayUrl: relay.url, cloudUrl: `${server.ws}/ws/show`, cloudHeaders: {}, dataDir, clientId: 'laptop-preflight', log: () => {} });
   const options = { relay: 'http://127.0.0.1:9', cloud: server.http, headers: {}, dataDir, fast: true, only: ['Cloud'] as const };
   try {

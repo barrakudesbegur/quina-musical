@@ -9,6 +9,7 @@ import WebSocket from 'ws';
 import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES, readRemoteStatus, type RemoteStatus } from '@quina/protocol';
 import { playableSongs } from '../../../show/engine/src/analysis.ts';
 import { DATA, loadRepertoire, MEDIA, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
+import { distProblem } from '../../../show/relay/build-stamp.ts';
 import { CLOUD_PLAN_FILE } from '../../../show/relay/plan.ts';
 import { referenceFile, scan } from '../media-sync.ts';
 import { repertoireRoots } from '../repertoire-roots.ts';
@@ -128,14 +129,17 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   const songs = readJson(repertoire.songsJson);
   const pools = checks.songPools(songs);
   const songIds = new Set(pools.keys());
-  let playable: number[] = [];
+  let playableEntries: { id: number; hooks: unknown[] }[] = [];
   try {
-    playable = playableSongs(readJson(path.join(repertoire.dataDir, 'analysis', 'index.json'))).map((s) => s.id);
+    playableEntries = playableSongs(readJson(path.join(repertoire.dataDir, 'analysis', 'index.json')));
   } catch {
     // no index: no playable song
   }
+  const playable = playableEntries.map((s) => s.id);
   const missingAudio = playable.filter((id) => !fs.existsSync(path.join(repertoire.cacheDir, String(id), 'mix.flac')));
   out.push(checks.songsCheck(songIds, new Set(playable), missingAudio));
+  const hooks = checks.provisionalHooksCheck(playableEntries);
+  if (hooks) out.push(hooks);
   const printed = printedCards(repertoire);
   out.push(checks.cardsCheck(printed.cards, checks.printedCardTypes(printed.types), pools, new Set(playable)));
 
@@ -159,8 +163,12 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   }
   // Re-hashing reads every byte (about 8 s for 6 GB); --fast trusts the index kept by size and mtime.
   const indexDir = o.fast ? o.dataDir : fs.mkdtempSync(path.join(os.tmpdir(), 'quina-preflight-'));
-  const local = await scan(repertoireRoots(repertoire), indexDir);
-  out.push(checks.mediaCheck(reference, local, !o.fast));
+  try {
+    const local = await scan(repertoireRoots(repertoire), indexDir);
+    out.push(checks.mediaCheck(reference, local, !o.fast));
+  } finally {
+    if (!o.fast) fs.rmSync(indexDir, { recursive: true, force: true });
+  }
   return out;
 }
 
@@ -179,6 +187,7 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
   }
   const disk = fs.statfsSync(DATA);
   out.push(checks.diskCheck(disk.bavail * disk.bsize));
+  out.push(checks.distCheck(distProblem(path.join(REPO, 'apps/show/dist'), REPO)));
   out.push(checks.browserCheck(((await shell('ps', ['-axo', 'command'])) ?? '').split('\n')));
   return out;
 }
