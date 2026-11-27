@@ -978,39 +978,15 @@
 }
 
 .song-list__item {
-  display: grid;
-  grid-template-columns: var(--player-cover-row) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
+  --tile-cover: var(--player-cover-row);
+  --tile-title: var(--player-text-body);
   min-height: var(--tap-min);
-  padding: 3px 0.5rem 3px 3px;
-  background: var(--color-paper);
-  color: var(--color-text-on-paper);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-piece-sm);
 }
 
-.song-list__item .cover {
-  border-radius: 0.6875rem;
-}
-
-.song-list__title {
-  font-weight: var(--font-weight-strong);
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
-.song-list__text {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-}
-
-.song-list__artist {
+.song-list__item .song-tile__artist {
   color: var(--color-text-on-paper-muted);
   font-size: var(--text-sm);
-  line-height: 1.2;
 }
 
 .song-list__marks {
@@ -3185,12 +3161,6 @@ html:has(.drawer[open]) {
 
 .pause-notice[data-size='strip'] .pause-notice__title {
   font-size: 1.75rem;
-}
-
-/* Historial: a row's cover. */
-.song-list__cover {
-  position: relative;
-  display: block;
 }
 
 /* ---- offline: the strip across the top, and the veil that greys the screen under it ------------------------ */
