@@ -662,39 +662,149 @@ describe("a new laptop, and Admin's manual resume", () => {
   });
 });
 
-describe('the media sync (R2)', () => {
+describe('the media sync (R2, content-addressed: D248)', () => {
+  const enc = (text: string) => new TextEncoder().encode(text);
   const sha = async (bytes: Uint8Array) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map((b) => b.toString(16).padStart(2, '0')).join('');
-  const put = (path: string, bytes: Uint8Array, sha256: string, url = BASE) =>
-    SELF.fetch(`${url}/api/sync/default/file?path=${encodeURIComponent(path)}`, { method: 'PUT', headers: { 'x-sha256': sha256, 'content-length': String(bytes.length) }, body: bytes });
+  const putBlob = (sha256: string, bytes: Uint8Array, url = BASE) => SELF.fetch(`${url}/api/sync/blobs/${sha256}`, { method: 'PUT', headers: { 'content-length': String(bytes.length) }, body: bytes });
+  const putManifest = (repertoire: string, body: unknown, url = BASE) => SELF.fetch(`${url}/api/sync/manifests/${repertoire}`, { method: 'PUT', body: JSON.stringify(body) });
+  const manifestOf = (repertoire: string, files: Record<string, { size: number; sha256: string }>) => ({ v: 3, repertoire, files, updatedAtMs: 5 });
+  const prune = (hashes: unknown) => SELF.fetch(`${BASE}/api/sync/prune`, { method: 'POST', body: JSON.stringify({ sha256: hashes }) });
+  /** Every blob the bucket lists, paging with the cursor. */
+  const listed = async () => {
+    const all = new Map<string, number>();
+    let cursor: string | null = null;
+    do {
+      const page: { blobs: { sha256: string; size: number }[]; cursor: string | null } = await getJson(`/api/sync/blobs${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+      for (const b of page.blobs) all.set(b.sha256, b.size);
+      cursor = page.cursor;
+    } while (cursor);
+    return all;
+  };
 
-  it('stores a file only when its SHA-256 matches, and gives it back', async () => {
-    const bytes = new TextEncoder().encode('fLaC pretend audio');
+  it('stores a blob only under its own SHA-256, and gives it back, never cached', async () => {
+    const bytes = enc('fLaC pretend audio');
     const digest = await sha(bytes);
-    expect((await put('cache/12/mix.flac', bytes, digest)).status).toBe(200);
-    const back = await SELF.fetch(`${BASE}/api/sync/default/file?path=cache/12/mix.flac`);
+    expect((await putBlob(digest, bytes)).status).toBe(200);
+    const back = await SELF.fetch(`${BASE}/api/sync/blobs/${digest}`);
     expect(back.status).toBe(200);
-    expect(back.headers.get('x-sha256')).toBe(digest);
+    expect(back.headers.get('cache-control')).toBe('no-store');
     expect(new Uint8Array(await back.arrayBuffer())).toEqual(bytes);
-    expect((await put('cache/12/mix.flac', bytes, '0'.repeat(64))).status).toBe(400);
-    expect((await SELF.fetch(`${BASE}/api/sync/default/file?path=cache/13/mix.flac`)).status).toBe(404);
+    expect((await listed()).get(digest)).toBe(bytes.length);
+    // Other bytes under that hash, or these under another: R2 refuses them, so a key never holds other bytes.
+    expect((await putBlob(digest, enc('something else'))).status).toBe(400);
+    expect((await putBlob('0'.repeat(64), bytes)).status).toBe(400);
+    expect(new Uint8Array(await (await SELF.fetch(`${BASE}/api/sync/blobs/${digest}`)).arrayBuffer())).toEqual(bytes);
+    expect((await SELF.fetch(`${BASE}/api/sync/blobs/${'1'.repeat(64)}`)).status).toBe(404);
   });
 
-  it('refuses odd paths, odd repertoire names and anyone but the laptop', async () => {
-    const bytes = new Uint8Array([1]);
+  it('refuses odd hashes, odd repertoire names, wrong methods and anyone but the laptop', async () => {
+    for (const path of ['/api/sync/blobs/ABC', `/api/sync/blobs/${'a'.repeat(63)}`, `/api/sync/blobs/${'a'.repeat(64)}/x`, '/api/sync/manifests/Bad%20Pool', '/api/sync/manifests/x.json', '/api/sync/default/manifest', '/api/sync/x']) {
+      expect((await SELF.fetch(`${BASE}${path}`)).status, path).toBe(404);
+    }
+    expect((await SELF.fetch(`${BASE}/api/sync`, { method: 'PUT', body: '{}' })).status).toBe(405);
+    expect((await SELF.fetch(`${BASE}/api/sync/blobs/${'a'.repeat(64)}`, { method: 'DELETE' })).status).toBe(405);
+    expect((await SELF.fetch(`${BASE}/api/sync/prune`)).status).toBe(405);
+    expect((await SELF.fetch('https://quina.example/api/sync/manifests/default')).status).toBe(403);
+  });
+
+  it('keeps one manifest per repertoire: v3, checked, and only once every blob it names is in the bucket', async () => {
+    expect((await SELF.fetch(`${BASE}/api/sync/manifests/m-test`)).status).toBe(404);
+    const bytes = enc('cover for the manifest test');
     const digest = await sha(bytes);
-    for (const path of ['cache/../secrets', 'nowhere/x', 'cache/.hidden', 'cache', '../x']) expect((await put(path, bytes, digest)).status).toBe(400);
-    expect((await SELF.fetch(`${BASE}/api/sync/Bad%20Pool/manifest`)).status).toBe(404);
-    expect((await SELF.fetch('https://quina.example/api/sync/default/manifest')).status).toBe(403);
+    const file = { size: bytes.length, sha256: digest };
+    const manifest = manifestOf('m-test', { 'covers/1.jpg': file, 'cache/12/mix.flac': file });
+    const missing = await putManifest('m-test', manifest);
+    expect(missing.status).toBe(409);
+    expect(((await missing.json()) as { missing: string[] }).missing).toEqual([digest]);
+    expect((await SELF.fetch(`${BASE}/api/sync/manifests/m-test`)).status).toBe(404);
+    expect((await putBlob(digest, bytes)).status).toBe(200);
+    const saved = await putManifest('m-test', manifest);
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toEqual({ ok: true, files: 2, blobs: 1 });
+    expect(await getJson('/api/sync/manifests/m-test')).toEqual(manifest);
+    for (const bad of [
+      { ...manifest, v: 2 },
+      { ...manifest, repertoire: 'default' },
+      manifestOf('m-test', { '../x': file }),
+      manifestOf('m-test', { 'covers/1.jpg': { size: 1, sha256: 'A'.repeat(64) } }),
+      manifestOf('m-test', { 'covers/1.jpg': file, 'covers/2.jpg': { ...file, size: file.size + 1 } }),
+    ]) {
+      expect((await putManifest('m-test', bad)).status).toBe(400);
+    }
+    expect((await SELF.fetch(`${BASE}/api/sync/manifests/m-test`, { method: 'PUT', body: 'not json' })).status).toBe(400);
   });
 
-  it('keeps one manifest per repertoire, checked', async () => {
-    expect(await getJson('/api/sync/2026/manifest')).toEqual({ v: 2, repertoire: '2026', files: {}, updatedAtMs: 0 });
-    const manifest = { v: 2, repertoire: '2026', files: { 'covers/1.jpg': { size: 3, sha256: 'a'.repeat(64) } }, updatedAtMs: 5 };
-    const save = (body: unknown) => SELF.fetch(`${BASE}/api/sync/2026/manifest`, { method: 'PUT', body: JSON.stringify(body) });
-    expect((await save(manifest)).status).toBe(200);
-    expect(await getJson('/api/sync/2026/manifest')).toEqual(manifest);
-    expect((await save({ ...manifest, repertoire: 'default' })).status).toBe(400);
-    expect((await save({ ...manifest, files: { '../x': { size: 1, sha256: 'a'.repeat(64) } } })).status).toBe(400);
+  it('lists the repertoires and the bucket’s real size; prunes only blobs no manifest names', async () => {
+    const shared = enc('the Hold music, in every repertoire');
+    const own = enc('a song only p-one has');
+    const loose = enc('a replaced placeholder');
+    const [s, o, l] = await Promise.all([shared, own, loose].map(sha)) as [string, string, string];
+    for (const [digest, bytes] of [[s, shared], [o, own], [l, loose]] as const) expect((await putBlob(digest, bytes)).status).toBe(200);
+    expect((await putManifest('p-one', manifestOf('p-one', { 'hold-cache/a.flac': { size: shared.length, sha256: s }, 'cache/1/mix.flac': { size: own.length, sha256: o } }))).status).toBe(200);
+    expect((await putManifest('p-two', manifestOf('p-two', { 'hold-cache/a.flac': { size: shared.length, sha256: s } }))).status).toBe(200);
+
+    type Overview = { repertoires: { name: string; files: number; bytes: number; blobs: number }[]; blobs: { count: number; bytes: number }; unnamed: { count: number; bytes: number }; totalBytes: number; freeTierBytes: number };
+    const overview = await getJson<Overview>('/api/sync');
+    expect(overview.repertoires.filter((r) => r.name.startsWith('p-'))).toEqual([
+      { name: 'p-one', files: 2, bytes: shared.length + own.length, blobs: 2, updatedAtMs: 5 },
+      { name: 'p-two', files: 1, bytes: shared.length, blobs: 1, updatedAtMs: 5 },
+    ]);
+    const all = await listed();
+    expect(overview.blobs).toEqual({ count: all.size, bytes: [...all.values()].reduce((a, b) => a + b, 0) });
+    expect(overview.totalBytes).toBe(overview.blobs.bytes);
+    expect(overview.freeTierBytes).toBe(10e9);
+
+    // A blob a manifest names is never deleted, not even in a batch with others.
+    const refused = await prune([l, s]);
+    expect(refused.status).toBe(409);
+    expect(((await refused.json()) as { named: string[] }).named).toEqual([s]);
+    expect(all.has(l) && (await listed()).has(l)).toBe(true);
+    expect((await prune([])).status).toBe(400);
+    expect((await prune(['nope'])).status).toBe(400);
+    expect((await prune(Array.from({ length: 1001 }, () => l))).status).toBe(400);
+    expect(await (await prune([l])).json()).toEqual({ ok: true, deleted: 1 });
+    expect((await listed()).has(l)).toBe(false);
+
+    // Dropping a repertoire (named twice) leaves its blobs for a prune; the shared one stays named by p-two.
+    expect((await SELF.fetch(`${BASE}/api/sync/manifests/p-one`, { method: 'DELETE' })).status).toBe(400);
+    const dropped = await SELF.fetch(`${BASE}/api/sync/manifests/p-one`, { method: 'DELETE', headers: { 'x-confirm-repertoire': 'p-one' } });
+    expect(await dropped.json()).toEqual({ ok: true, existed: true });
+    expect((await listed()).has(o)).toBe(true);
+    expect((await prune([s])).status).toBe(409);
+    expect((await prune([o])).status).toBe(200);
+  });
+
+  it('never serves a blob or a manifest publicly: every sync route needs the laptop token, and no public path reads the bucket', async () => {
+    const bytes = enc('PRIVATE copyrighted song bytes');
+    const digest = await sha(bytes);
+    expect((await putBlob(digest, bytes)).status).toBe(200);
+    expect((await putManifest('privacy', manifestOf('privacy', { 'cache/1/mix.flac': { size: bytes.length, sha256: digest } }))).status).toBe(200);
+    for (const host of ['https://quina.barrakudesbegur.org', 'https://quina-dev.barrakudesbegur.org']) {
+      // Without the Access service token (here: not the localhost dev bypass), every sync route is refused.
+      for (const [method, path] of [
+        ['GET', '/api/sync'],
+        ['GET', '/api/sync/blobs'],
+        ['GET', `/api/sync/blobs/${digest}`],
+        ['PUT', `/api/sync/blobs/${digest}`],
+        ['GET', '/api/sync/manifests/privacy'],
+        ['PUT', '/api/sync/manifests/privacy'],
+        ['DELETE', '/api/sync/manifests/privacy'],
+        ['POST', '/api/sync/prune'],
+      ] as const) {
+        const response = await SELF.fetch(`${host}${path}`, { method, headers: { 'x-confirm-repertoire': 'privacy' }, body: method === 'GET' ? undefined : JSON.stringify({ sha256: [digest] }) });
+        expect(response.status, `${method} ${host}${path}`).toBe(403);
+        expect(await response.text()).not.toContain('PRIVATE');
+      }
+      // Paths a public reader might try: the bucket's keys, the public /media/ route (Admin's images, not R2), the player's pages.
+      for (const path of [`/blobs/${digest}`, '/manifests/privacy.json', `/media/${digest}`, `/media/${digest.slice(0, 32)}.png`, `/media/${digest.slice(0, 32)}.jxl`, `/26/blobs/${digest}`, `/api/sync/blobs/${digest}.flac`, `/covers/${digest}.jpg`]) {
+        const response = await SELF.fetch(`${host}${path}`);
+        const body = new Uint8Array(await response.arrayBuffer());
+        expect(new TextDecoder().decode(body), `${host}${path}`).not.toContain('PRIVATE');
+        expect(body.length === bytes.length && body.every((b, i) => b === bytes[i]), `${host}${path}`).toBe(false);
+      }
+    }
+    // Still there, for the laptop.
+    expect(new TextDecoder().decode(await (await SELF.fetch(`${BASE}/api/sync/blobs/${digest}`)).arrayBuffer())).toContain('PRIVATE');
   });
 });
 

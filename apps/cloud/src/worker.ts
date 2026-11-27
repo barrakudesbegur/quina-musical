@@ -2,8 +2,28 @@
 // edition's GameRoom. Static files never get here (wrangler.jsonc `run_worker_first`).
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
-import { findRoute, jxlUploadKey, mediaId, syncTarget, wantsJxl } from './domain/routes.ts';
-import { checkManifest, fileKey, isSha256, isSyncPath, manifestKey, MAX_SYNC_FILE_BYTES, REPERTOIRES_PREFIX } from './domain/media-sync.ts';
+import { findRoute, jxlUploadKey, mediaId, SYNC_METHODS, syncTarget, wantsJxl, type SyncTarget } from './domain/routes.ts';
+import {
+  BLOB_PAGE,
+  blobKey,
+  blobOfKey,
+  BLOBS_PREFIX,
+  checkManifest,
+  FREE_TIER_BYTES,
+  isSha256,
+  manifestKey,
+  MANIFESTS_PREFIX,
+  MAX_MANIFEST_BYTES,
+  MAX_PRUNE_BLOBS,
+  MAX_SYNC_FILE_BYTES,
+  missingBlobs,
+  namedBlobs,
+  repertoireOfKey,
+  unnamedBlobs,
+  type BlobPage,
+  type MediaManifest,
+  type SyncOverview,
+} from './domain/media-sync.ts';
 import { GameRoom, IDENTITY_HEADER } from './game-room.ts';
 
 export { GameRoom };
@@ -141,78 +161,148 @@ async function media(request: Request, env: Env, ctx: ExecutionContext, id: stri
 }
 
 /**
- * A repertoire's media in R2, for the laptops (Access service token). The manifest says what its files are;
- * a file is stored under its sync path, and R2 itself checks the SHA-256 the laptop sends with it.
+ * A repertoire's media in R2, for the laptops (Access service token), content-addressed (D248): each distinct file once
+ * as `blobs/<sha256>` (R2 itself checks the hash on the way in, so a key never holds other bytes), and one manifest per
+ * repertoire, `manifests/<name>.json`, mapping each path to its blob. Never public, never cached: no-store everywhere.
+ * Each request stays far under the Worker's ~1,000 R2 operations: one per blob page, one per blob, one per manifest.
  */
 async function sync(request: Request, env: MediaEnv, url: URL): Promise<Response> {
   const bucket = env.MEDIA;
   if (!bucket) return text(503, 'media sync is not configured: create the R2 bucket (docs/deploy-plan.md, step 4)');
-  // GET /api/sync: every repertoire in the bucket, from its manifest (for `media prune`: the free tier is 10 GB).
-  if (url.pathname === '/api/sync') {
-    if (request.method !== 'GET') return text(405, 'only GET');
-    const listed = await bucket.list({ prefix: REPERTOIRES_PREFIX, delimiter: '/' });
-    const repertoires = [];
-    for (const prefix of listed.delimitedPrefixes) {
-      const name = prefix.slice(REPERTOIRES_PREFIX.length, -1);
-      const object = await bucket.get(manifestKey(name));
-      const manifest = object ? (checkManifest(await object.json(), name) ?? null) : null;
-      const files = manifest ? Object.values(manifest.files) : [];
-      repertoires.push({ name, files: files.length, bytes: files.reduce((sum, f) => sum + f.size, 0), updatedAtMs: manifest?.updatedAtMs ?? 0 });
+  const target = syncTarget(url.pathname) as SyncTarget;
+  const methods = SYNC_METHODS[target.resource];
+  if (!methods.includes(request.method)) return text(405, `only ${methods.join(', ')}`);
+  switch (target.resource) {
+    case 'overview': {
+      // Every repertoire from its manifest, and the bucket's real size: each blob once (for `media prune`; the free tier is 10 GB).
+      const manifests = await allManifests(bucket);
+      if (manifests instanceof Response) return manifests;
+      const blobs = await allBlobs(bucket);
+      const unnamed = unnamedBlobs(blobs, manifests);
+      const sum = (sizes: Iterable<number>) => [...sizes].reduce((total, size) => total + size, 0);
+      const overview: SyncOverview = {
+        repertoires: manifests.map((m) => ({ name: m.repertoire, files: Object.keys(m.files).length, bytes: sum(Object.values(m.files).map((f) => f.size)), blobs: namedBlobs(m.files).size, updatedAtMs: m.updatedAtMs })),
+        blobs: { count: blobs.size, bytes: sum(blobs.values()) },
+        unnamed: { count: unnamed.length, bytes: sum(unnamed.map((b) => b.size)) },
+        totalBytes: sum(blobs.values()),
+        freeTierBytes: FREE_TIER_BYTES,
+      };
+      return json(overview);
     }
-    return json({ repertoires, totalBytes: repertoires.reduce((sum, r) => sum + r.bytes, 0), freeTierBytes: 10e9 });
-  }
-  const target = syncTarget(url.pathname) as { repertoire: string; resource: 'manifest' | 'file' };
-  if (target.resource === 'manifest') {
-    // DELETE: the whole repertoire goes (every file, then its manifest); x-confirm-repertoire must name it, against slips.
-    if (request.method === 'DELETE') {
-      if (request.headers.get('x-confirm-repertoire') !== target.repertoire) return text(400, `send x-confirm-repertoire: ${target.repertoire} to delete that repertoire`);
-      let deleted = 0;
-      let cursor: string | undefined;
-      do {
-        const page = await bucket.list({ prefix: `${REPERTOIRES_PREFIX}${target.repertoire}/files/`, cursor, limit: 1000 });
-        const keys = page.objects.map((o) => o.key);
-        if (keys.length) await bucket.delete(keys);
-        deleted += keys.length;
-        cursor = page.truncated ? page.cursor : undefined;
-      } while (cursor);
-      await bucket.delete(manifestKey(target.repertoire));
-      return json({ ok: true, deleted });
+    case 'blobs': {
+      // One page of the list (one R2 call): the laptop pages through with the cursor.
+      const page = await bucket.list({ prefix: BLOBS_PREFIX, cursor: url.searchParams.get('cursor') || undefined, limit: BLOB_PAGE });
+      const body: BlobPage = {
+        blobs: page.objects.flatMap((o) => {
+          const sha256 = blobOfKey(o.key);
+          return sha256 ? [{ sha256, size: o.size }] : [];
+        }),
+        cursor: page.truncated ? page.cursor : null,
+      };
+      return json(body);
     }
-    if (request.method === 'GET') {
-      const object = await bucket.get(manifestKey(target.repertoire));
-      return object ? new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }) : json({ v: 2, repertoire: target.repertoire, files: {}, updatedAtMs: 0 });
+    case 'blob': {
+      const key = blobKey(target.sha256);
+      if (request.method === 'GET') {
+        const object = await bucket.get(key);
+        if (!object) return text(404, 'no such blob');
+        return new Response(object.body, { headers: { 'content-type': 'application/octet-stream', 'content-length': String(object.size), 'cache-control': 'no-store' } });
+      }
+      const size = Number(request.headers.get('content-length'));
+      if (!request.headers.has('content-length') || !Number.isInteger(size) || size < 0 || size > MAX_SYNC_FILE_BYTES) return text(413, `a content-length up to ${MAX_SYNC_FILE_BYTES} bytes`);
+      if (!request.body) return text(400, 'no body');
+      try {
+        await bucket.put(key, request.body, { sha256: target.sha256 });
+      } catch (error) {
+        return text(400, `refused: ${error instanceof Error ? error.message : String(error)} (the content doesn't match its SHA-256?)`);
+      }
+      return json({ ok: true });
     }
-    const body = await readBody(request, 4 << 20);
-    let manifest = null;
-    try {
-      manifest = body ? checkManifest(JSON.parse(new TextDecoder().decode(body)), target.repertoire) : null;
-    } catch {
-      // answered below
+    case 'manifest': {
+      const key = manifestKey(target.repertoire);
+      if (request.method === 'GET') {
+        const object = await bucket.get(key);
+        if (!object) return text(404, `no manifest for repertoire ${target.repertoire}`);
+        return new Response(object.body, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      }
+      if (request.method === 'DELETE') {
+        // The manifest only: its blobs stay until a prune finds that no manifest names them. Named twice, against slips.
+        if (request.headers.get('x-confirm-repertoire') !== target.repertoire) return text(400, `send x-confirm-repertoire: ${target.repertoire} to drop that repertoire`);
+        const existed = (await bucket.head(key)) !== null;
+        if (existed) await bucket.delete(key);
+        return json({ ok: true, existed });
+      }
+      const body = await readBody(request, MAX_MANIFEST_BYTES);
+      if (body === null) return text(413, `a manifest of at most ${MAX_MANIFEST_BYTES >> 20} MB`);
+      let manifest: MediaManifest | null = null;
+      try {
+        manifest = checkManifest(JSON.parse(new TextDecoder().decode(body)), target.repertoire);
+      } catch {
+        // answered below
+      }
+      if (!manifest) return text(400, 'not a v3 manifest for this repertoire');
+      // Every blob it names must be in the bucket, so a pull never meets a hash that isn't there. One list call per
+      // 1,000 blobs (3 for 2026), not a HEAD per file (2,796, past the per-request limit).
+      const missing = missingBlobs(manifest.files, await allBlobs(bucket));
+      if (missing.length > 0) return json({ ok: false, error: `${missing.length} blob(s) it names are not in the bucket: upload them first`, missing: missing.slice(0, 20).map((b) => b.sha256) }, {}, 409);
+      await bucket.put(key, JSON.stringify(manifest), { httpMetadata: { contentType: 'application/json' } });
+      return json({ ok: true, files: Object.keys(manifest.files).length, blobs: namedBlobs(manifest.files).size });
     }
-    if (!manifest) return text(400, 'not a manifest for this repertoire');
-    await bucket.put(manifestKey(target.repertoire), JSON.stringify(manifest), { httpMetadata: { contentType: 'application/json' } });
-    return json({ ok: true, files: Object.keys(manifest.files).length });
+    case 'prune': {
+      // Delete these blobs (one R2 call, at most 1,000), only if no manifest names any of them now.
+      const body = await readBody(request, 128 << 10);
+      let hashes: unknown = null;
+      try {
+        hashes = body ? (JSON.parse(new TextDecoder().decode(body)) as { sha256?: unknown }).sha256 : null;
+      } catch {
+        // answered below
+      }
+      if (!Array.isArray(hashes) || hashes.length === 0 || hashes.length > MAX_PRUNE_BLOBS || !hashes.every(isSha256)) return text(400, `send { "sha256": [...] }, 1 to ${MAX_PRUNE_BLOBS} hashes`);
+      const manifests = await allManifests(bucket);
+      if (manifests instanceof Response) return manifests;
+      const named = new Set(manifests.flatMap((m) => [...namedBlobs(m.files).keys()]));
+      const refused = hashes.filter((h) => named.has(h));
+      if (refused.length > 0) return json({ ok: false, error: `${refused.length} of them are named by a manifest (pushed since the prune looked?): run it again`, named: refused.slice(0, 20) }, {}, 409);
+      await bucket.delete(hashes.map(blobKey));
+      return json({ ok: true, deleted: hashes.length });
+    }
   }
-  const path = url.searchParams.get('path');
-  if (!isSyncPath(path)) return text(400, 'path must be <root>/<file>, a known root and plain names');
-  const key = fileKey(target.repertoire, path);
-  if (request.method === 'DELETE') return text(405, 'delete a whole repertoire: DELETE /api/sync/<repertoire>/manifest');
-  if (request.method === 'GET') {
-    const object = await bucket.get(key);
-    if (!object) return text(404, 'not found');
-    return new Response(object.body, { headers: { 'content-length': String(object.size), 'x-sha256': object.customMetadata?.sha256 ?? '', 'cache-control': 'no-store' } });
-  }
-  const sha256 = request.headers.get('x-sha256');
-  const size = Number(request.headers.get('content-length'));
-  if (!isSha256(sha256)) return text(400, 'x-sha256 must be the hex SHA-256 of the file');
-  if (!Number.isInteger(size) || size < 0 || size > MAX_SYNC_FILE_BYTES) return text(413, `a content-length up to ${MAX_SYNC_FILE_BYTES} bytes`);
-  if (!request.body) return text(400, 'no body');
-  try {
-    await bucket.put(key, request.body, { sha256, customMetadata: { sha256 } });
-  } catch (error) {
-    return text(400, `refused: ${error instanceof Error ? error.message : String(error)} (the content doesn't match x-sha256?)`);
-  }
-  return json({ ok: true });
+}
+
+/** Every blob in the bucket, hash → size: one list call per 1,000. */
+async function allBlobs(bucket: R2Bucket): Promise<Map<string, number>> {
+  const blobs = new Map<string, number>();
+  let cursor: string | undefined;
+  do {
+    const page = await bucket.list({ prefix: BLOBS_PREFIX, cursor, limit: BLOB_PAGE });
+    for (const o of page.objects) {
+      const sha256 = blobOfKey(o.key);
+      if (sha256) blobs.set(sha256, o.size);
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return blobs;
+}
+
+/**
+ * Every repertoire's manifest, by name (one list call, then one get each). One that doesn't read is a 500: what it
+ * names is unknown, so nothing may be counted unnamed or pruned until it's fixed or dropped.
+ */
+async function allManifests(bucket: R2Bucket): Promise<MediaManifest[] | Response> {
+  const manifests: MediaManifest[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await bucket.list({ prefix: MANIFESTS_PREFIX, cursor });
+    for (const o of page.objects) {
+      const name = repertoireOfKey(o.key);
+      const object = name ? await bucket.get(o.key) : null;
+      const manifest = name && object ? checkManifest(await object.json().catch(() => null), name) : null;
+      if (!manifest) return text(500, `the bucket's ${o.key} is not a v3 manifest: drop it (DELETE /api/sync/manifests/<name>) or push it again`);
+      manifests.push(manifest);
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return manifests.sort((a, b) => (a.repertoire < b.repertoire ? -1 : 1));
 }
 
 /** The request body, or null when it is bigger than `limit` bytes. */

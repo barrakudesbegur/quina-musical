@@ -1,13 +1,18 @@
 // The laptop's side of the media sync (src/domain/media-sync.ts): push this laptop's prepared repertoire to the cloud's
-// private R2 bucket, or pull it onto a takeover laptop. Only changed files move (by SHA-256; hashes are cached
-// by size and mtime in <dataDir>/media-index.json, so 6 GB isn't hashed again every time). A pull writes each
-// file to `<file>.part`, checks its size and SHA-256, then renames it, so a cut-off download never leaves a
-// broken file behind; it never deletes anything local.
+// private R2 bucket, pull it onto a takeover laptop, or prune the bucket. The bucket is content-addressed (D248): each
+// distinct file once, as a blob named by its SHA-256, and a manifest per repertoire mapping each readable path to its
+// blob. Laptops keep their readable folders as they are; a pull rebuilds them from the manifest.
+// - Push: hash every file (cached by size and mtime in <dataDir>/media-index.json, so 6 GB isn't hashed again every
+//   time), list the bucket's blobs, upload only the hashes it lacks (two paths with the same content go up once, and
+//   what another repertoire already put there isn't sent again), then PUT the manifest last, so a pull never sees a
+//   hash that isn't there. A push that stopped resumes by itself: the bucket's list says what already went up.
+// - Pull: read the manifest and, for each path missing or different here, fetch its blob into `<file>.part`, check
+//   its size and SHA-256, then rename it into place; a blob several paths share is fetched once (or copied from an
+//   identical file already here). It never deletes anything local, and a pull run again resumes where it stopped.
+// - Prune: the blobs no manifest names (a replaced voice, an old hook, a dropped repertoire), deleted only with --yes.
 // Every request is tried again on a failure that may pass (a network error, HTTP 5xx or 429, a download cut off),
 // up to MEDIA_SYNC.attempts times with full-jitter backoff; any other answer (401/403: the token; 400, 409, 413) stops
-// at once. A push keeps a journal of the files it has put in the bucket (<dataDir>/media-push-<repertoire>.jsonl)
-// until its manifest is up, so a push that stopped resumes: a file the journal names is skipped only when the bucket
-// still holds it with that SHA-256, so the manifest never lists a file that isn't there.
+// at once.
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +21,21 @@ import { pipeline } from 'node:stream/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { reconnectDelayMs } from '@quina/protocol';
 import { MEDIA_SYNC } from '../src/config.ts';
-import { changedFiles, isSha256, isSyncPath, MAX_SYNC_FILE_BYTES, type ManifestFile, type MediaManifest, type SyncRoot } from '../src/domain/media-sync.ts';
+import {
+  changedFiles,
+  isSyncPath,
+  MAX_PRUNE_BLOBS,
+  MAX_SYNC_FILE_BYTES,
+  missingBlobs,
+  namedBlobs,
+  sameFiles,
+  unnamedBlobs,
+  type BlobEntry,
+  type BlobPage,
+  type MediaManifest,
+  type SyncOverview,
+  type SyncRoot,
+} from '../src/domain/media-sync.ts';
 
 /** A synced folder on this laptop. */
 export interface RootDir {
@@ -26,19 +45,13 @@ export interface RootDir {
   exclude?: (rel: string) => boolean;
 }
 
-export interface SyncOptions {
+/** Where the cloud is, and how hard to try. */
+export interface CloudOptions {
   /** The cloud's https origin, for example https://quina-dev.barrakudesbegur.org. */
   cloud: string;
   /** The Access service token headers (none for wrangler dev). */
   headers: Record<string, string>;
-  repertoire: string;
-  roots: RootDir[];
-  /** Where the hash index lives (the link's data folder). */
-  dataDir: string;
-  /** Push only: say what would be uploaded, by root, and upload nothing (the manifest stays as it is). */
-  dryRun?: boolean;
   log?: (line: string) => void;
-  concurrency?: number;
   /** Tries per request on a failure that may pass (MEDIA_SYNC.attempts; tests shorten the waits). */
   attempts?: number;
   /** The backoff before retry n: a random wait up to min(retryCapMs, retryFirstMs × 2^(n-1)). */
@@ -47,9 +60,22 @@ export interface SyncOptions {
   random?: () => number;
 }
 
+export interface SyncOptions extends CloudOptions {
+  repertoire: string;
+  roots: RootDir[];
+  /** Where the hash index lives (the link's data folder). */
+  dataDir: string;
+  /** Push only: say what would be uploaded, by root, and upload nothing (the manifest stays as it is). */
+  dryRun?: boolean;
+  concurrency?: number;
+}
+
 export interface SyncReport {
+  /** The files here (push) or in the manifest (pull). */
   files: number;
+  /** Push: the blobs uploaded. Pull: the files written into place. */
   moved: number;
+  /** The bytes sent or downloaded. */
   bytes: number;
   /** Paths left out, with why. */
   skipped: string[];
@@ -112,7 +138,7 @@ async function hashFile(file: string): Promise<string> {
   return hash.digest('hex');
 }
 
-const manifestFiles = (files: Map<string, LocalFile>): MediaManifest['files'] => Object.fromEntries([...files].map(([p, f]) => [p, { size: f.size, sha256: f.sha256 }]));
+const manifestFiles = (files: Map<string, LocalFile>): MediaManifest['files'] => Object.fromEntries([...files].sort(([a], [b]) => (a < b ? -1 : 1)).map(([p, f]) => [p, { size: f.size, sha256: f.sha256 }]));
 
 /** A failure that may pass: worth another try. */
 class Transient extends Error {}
@@ -144,7 +170,7 @@ async function send(url: string, init: RequestInit, what: string, accept: readon
 }
 
 /** Run `attempt` until it succeeds, a failure that won't pass, or the last try; one log line per retry. */
-async function withRetry<T>(o: SyncOptions, what: string, attempt: () => Promise<T>): Promise<T> {
+async function withRetry<T>(o: CloudOptions, what: string, attempt: () => Promise<T>): Promise<T> {
   const attempts = o.attempts ?? MEDIA_SYNC.attempts;
   for (let n = 1; ; n += 1) {
     try {
@@ -159,18 +185,40 @@ async function withRetry<T>(o: SyncOptions, what: string, attempt: () => Promise
   }
 }
 
-const fileUrl = (o: SyncOptions, syncPath: string): string => `${o.cloud}/api/sync/${o.repertoire}/file?path=${encodeURIComponent(syncPath)}`;
-const manifestUrl = (o: SyncOptions): string => `${o.cloud}/api/sync/${o.repertoire}/manifest`;
-
-function remoteManifest(o: SyncOptions): Promise<MediaManifest> {
-  return withRetry(o, "the cloud's manifest", async () => {
-    const response = await send(manifestUrl(o), { headers: o.headers }, "the cloud's manifest");
+/** A JSON answer, tried again on a failure that may pass (a body cut off too). null on an accepted 404. */
+function getJson<T>(o: CloudOptions, url: string, what: string, missingOk = false): Promise<T | null> {
+  return withRetry(o, what, async () => {
+    const response = await send(url, { headers: o.headers }, what, missingOk ? [404] : []);
+    if (response.status === 404) {
+      await response.body?.cancel().catch(() => {});
+      return null;
+    }
     try {
-      return (await response.json()) as MediaManifest;
+      return (await response.json()) as T;
     } catch (error) {
       throw new Transient(`its body: ${describe(error)}`, { cause: error });
     }
   });
+}
+
+const blobUrl = (o: CloudOptions, sha256: string): string => `${o.cloud}/api/sync/blobs/${sha256}`;
+const manifestUrl = (o: CloudOptions, repertoire: string): string => `${o.cloud}/api/sync/manifests/${repertoire}`;
+
+/** A repertoire's manifest in the bucket, or null when it has none. */
+function remoteManifest(o: CloudOptions, repertoire: string): Promise<MediaManifest | null> {
+  return getJson<MediaManifest>(o, manifestUrl(o, repertoire), `the cloud's manifest of ${repertoire}`, true);
+}
+
+/** Every blob in the bucket, hash → size: one request per 1,000 (3 for 2026). */
+async function bucketBlobs(o: CloudOptions): Promise<Map<string, number>> {
+  const blobs = new Map<string, number>();
+  let cursor: string | null = null;
+  do {
+    const page: BlobPage = (await getJson<BlobPage>(o, `${o.cloud}/api/sync/blobs${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, "the bucket's blobs")) as BlobPage;
+    for (const b of page.blobs) blobs.set(b.sha256, b.size);
+    cursor = page.cursor;
+  } while (cursor);
+  return blobs;
 }
 
 /** Run `work` over `items`, `limit` at a time. After a failure no new item starts; the ones under way finish, then it throws the first. */
@@ -191,42 +239,11 @@ async function inParallel<T>(items: readonly T[], limit: number, work: (item: T)
   if (failure) throw (failure as { error: unknown }).error;
 }
 
-/** The files a push has put in the bucket since the last manifest it PUT: one JSON line each, removed with the manifest. */
-export const pushJournalFile = (dataDir: string, repertoire: string): string => path.join(dataDir, `media-push-${repertoire}.jsonl`);
-
-/** The journal's files for this cloud, by sync path. A line cut off by a crash is left out. */
-function readPushJournal(o: SyncOptions): Map<string, ManifestFile> {
-  const files = new Map<string, ManifestFile>();
-  let text = '';
-  try {
-    text = fs.readFileSync(pushJournalFile(o.dataDir, o.repertoire), 'utf8');
-  } catch {
-    return files;
-  }
-  for (const line of text.split('\n')) {
-    try {
-      const entry = JSON.parse(line) as { cloud?: unknown; path?: unknown; size?: unknown; sha256?: unknown };
-      if (entry.cloud === o.cloud && isSyncPath(entry.path) && Number.isInteger(entry.size) && isSha256(entry.sha256)) files.set(entry.path, { size: entry.size as number, sha256: entry.sha256 });
-    } catch {
-      // an empty or cut-off line
-    }
-  }
-  return files;
-}
-
-/** Whether the bucket holds `syncPath` with this SHA-256 (R2 checked it on the way in; the Worker answers it as x-sha256). */
-function inBucket(o: SyncOptions, syncPath: string, sha256: string): Promise<boolean> {
-  return withRetry(o, `check ${syncPath}`, async () => {
-    const response = await send(fileUrl(o, syncPath), { headers: o.headers }, `check ${syncPath}`, [404]);
-    await response.body?.cancel().catch(() => {});
-    return response.ok && response.headers.get('x-sha256') === sha256;
-  });
-}
-
 /** The manifest this laptop last pushed or pulled: what the preflight checks the files against offline. */
 export const referenceFile = (dataDir: string, repertoire: string): string => path.join(dataDir, `media-manifest-${repertoire}.json`);
 
 function writeReference(o: SyncOptions, manifest: MediaManifest): void {
+  fs.mkdirSync(o.dataDir, { recursive: true });
   fs.writeFileSync(referenceFile(o.dataDir, o.repertoire), JSON.stringify(manifest));
 }
 
@@ -241,57 +258,55 @@ function progress(verb: string, totalFiles: number, totalBytes: number, log: (li
     bytes += size;
     if (Date.now() - lastMs < everyMs && files < totalFiles) return;
     lastMs = Date.now();
-    log(`  ${verb} ${files}/${totalFiles} files, ${mb(bytes)} of ${mb(totalBytes)} MB`);
+    log(`  ${verb} ${files}/${totalFiles}, ${mb(bytes)} of ${mb(totalBytes)} MB`);
   };
 }
 
 const megabytes = (bytes: number): string => (bytes / 1e6).toFixed(1);
+const sum = (sizes: Iterable<number>): number => [...sizes].reduce((total, size) => total + size, 0);
 
 /**
- * Upload what changed, then the manifest (last, so a pull never sees files that aren't there yet). Each file that
- * goes up is written to the push journal; a push that stops (a failure, a crash) leaves it, and the next one skips
- * what it names that the bucket still holds unchanged. The journal goes once the manifest is up.
+ * Upload the blobs the bucket lacks, then the manifest (last, so a pull never sees a hash that isn't there; the
+ * Worker refuses one that names a missing blob). A push that stops uploads no manifest, so pulls keep seeing the last
+ * whole push; run again, it lists the bucket and sends only what is still missing.
  */
 export async function push(o: SyncOptions): Promise<SyncReport> {
   const log = o.log ?? console.log;
   const skipped: string[] = [];
   const local = await scan(o.roots, o.dataDir, skipped);
-  const remote = await remoteManifest(o);
-  const todo = changedFiles(manifestFiles(local), remote.files);
-  let bytes = 0;
-  log(`media push: ${local.size} files here, ${todo.length} to upload`);
+  const files = manifestFiles(local);
+  const remote = await remoteManifest(o, o.repertoire);
+  const changed = changedFiles(files, remote?.files ?? {});
+  const removed = Object.keys(remote?.files ?? {}).filter((p) => !Object.hasOwn(files, p));
+  const inBucket = await bucketBlobs(o);
+  // Each blob goes up from the first path that holds it, in the order of those paths.
+  const sourceOf = new Map<string, { syncPath: string; file: LocalFile }>();
+  for (const [syncPath, file] of [...local].sort(([a], [b]) => (a < b ? -1 : 1))) if (!sourceOf.has(file.sha256)) sourceOf.set(file.sha256, { syncPath, file });
+  const pathOf = (sha256: string) => sourceOf.get(sha256)?.syncPath ?? '';
+  const uploads = missingBlobs(files, inBucket).sort((a, b) => (pathOf(a.sha256) < pathOf(b.sha256) ? -1 : 1));
+  const total = sum(uploads.map((b) => b.size));
+  log(
+    `media push: ${local.size} files here (${sourceOf.size} distinct), ${changed.length} new or changed and ${removed.length} gone since the cloud's manifest; ` +
+      `${uploads.length} blobs to upload (${megabytes(total)} MB), ${sourceOf.size - uploads.length} already in the bucket`,
+  );
   if (o.dryRun) {
-    const byRoot = new Map<string, { files: number; bytes: number }>();
-    for (const syncPath of todo) {
-      const root = syncPath.split('/')[0] ?? syncPath;
-      const entry = byRoot.get(root) ?? { files: 0, bytes: 0 };
-      entry.files += 1;
-      entry.bytes += local.get(syncPath)?.size ?? 0;
+    const byRoot = new Map<string, { blobs: number; bytes: number }>();
+    for (const blob of uploads) {
+      const root = sourceOf.get(blob.sha256)?.syncPath.split('/')[0] ?? '?';
+      const entry = byRoot.get(root) ?? { blobs: 0, bytes: 0 };
+      entry.blobs += 1;
+      entry.bytes += blob.size;
       byRoot.set(root, entry);
     }
-    for (const [root, { files, bytes: size }] of [...byRoot].sort((a, b) => b[1].bytes - a[1].bytes)) log(`  ${root}: ${files} files, ${megabytes(size)} MB`);
-    const total = todo.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0);
-    const journalled = readPushJournal(o);
-    const resumable = todo.filter((p) => journalled.get(p)?.sha256 === local.get(p)?.sha256 && journalled.get(p)?.size === local.get(p)?.size).length;
-    if (resumable) log(`  ${resumable} of them went up in a push that stopped: the push checks they are still in the bucket and skips them`);
+    for (const [root, { blobs, bytes }] of [...byRoot].sort((a, b) => b[1].bytes - a[1].bytes)) log(`  ${root}: ${blobs} blobs, ${megabytes(bytes)} MB`);
     for (const line of skipped) log(`  skipped ${line}`);
-    log(`media push (dry run): would upload ${todo.length} files, ${megabytes(total)} MB, to repertoires/${o.repertoire}/; nothing was sent`);
+    log(`media push (dry run): would upload ${uploads.length} blobs, ${megabytes(total)} MB, then manifests/${o.repertoire}.json; nothing was sent`);
     return { files: local.size, moved: 0, bytes: 0, skipped };
   }
-  const concurrency = o.concurrency ?? MEDIA_SYNC.concurrency;
-  // A push that stopped before its manifest: what its journal names, the bucket still holds and hasn't changed here is up.
-  const journal = pushJournalFile(o.dataDir, o.repertoire);
-  const journalled = readPushJournal(o);
-  const resumable = todo.filter((p) => journalled.get(p)?.sha256 === local.get(p)?.sha256 && journalled.get(p)?.size === local.get(p)?.size);
-  const kept = new Set<string>();
-  await inParallel(resumable, concurrency, async (syncPath) => {
-    if (await inBucket(o, syncPath, (local.get(syncPath) as LocalFile).sha256)) kept.add(syncPath);
-  });
-  if (resumable.length) log(`  ${kept.size} of them already in the bucket from a push that stopped`);
-  const uploads = todo.filter((p) => !kept.has(p));
-  const moved = progress('uploaded', uploads.length, uploads.reduce((sum, p) => sum + (local.get(p)?.size ?? 0), 0), log);
-  await inParallel(uploads, concurrency, async (syncPath) => {
-    const file = local.get(syncPath) as LocalFile;
+  let bytes = 0;
+  const moved = progress('uploaded', uploads.length, total, log);
+  await inParallel(uploads, o.concurrency ?? MEDIA_SYNC.concurrency, async ({ sha256 }) => {
+    const { syncPath, file } = sourceOf.get(sha256) as { syncPath: string; file: LocalFile };
     await withRetry(o, `upload ${syncPath}`, async () => {
       // A file rewritten since the scan would go up under a stale SHA-256 (R2 refuses it), or with more bytes than its
       // content-length (one way an HTTP/2 upload fails with PROTOCOL_ERROR). Each try opens a new read stream.
@@ -300,10 +315,10 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
       const stream = fs.createReadStream(file.abs, file.size > 0 ? { end: file.size - 1 } : {});
       try {
         const response = await send(
-          fileUrl(o, syncPath),
+          blobUrl(o, sha256),
           {
             method: 'PUT',
-            headers: { ...o.headers, 'x-sha256': file.sha256, 'content-length': String(file.size), 'content-type': 'application/octet-stream' },
+            headers: { ...o.headers, 'content-length': String(file.size), 'content-type': 'application/octet-stream' },
             body: Readable.toWeb(stream) as ReadableStream,
             duplex: 'half',
           } as RequestInit,
@@ -314,82 +329,192 @@ export async function push(o: SyncOptions): Promise<SyncReport> {
         stream.destroy();
       }
     });
-    fs.appendFileSync(journal, `${JSON.stringify({ cloud: o.cloud, path: syncPath, size: file.size, sha256: file.sha256 })}\n`);
     bytes += file.size;
     moved(file.size);
   });
-  const manifest: MediaManifest = { v: 2, repertoire: o.repertoire, files: manifestFiles(local), updatedAtMs: Date.now() };
+  for (const line of skipped) log(`  skipped ${line}`);
+  if (remote && sameFiles(files, remote.files)) {
+    writeReference(o, remote);
+    log(`media push: ${uploads.length} uploaded (${megabytes(bytes)} MB); the manifest is unchanged`);
+    return { files: local.size, moved: uploads.length, bytes, skipped };
+  }
+  const manifest: MediaManifest = { v: 3, repertoire: o.repertoire, files, updatedAtMs: Date.now() };
   await withRetry(o, 'the manifest', async () => {
-    const saved = await send(manifestUrl(o), { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) }, 'the manifest');
+    const saved = await send(manifestUrl(o, o.repertoire), { method: 'PUT', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify(manifest) }, 'the manifest');
     await saved.body?.cancel().catch(() => {});
   });
-  fs.rmSync(journal, { force: true });
   writeReference(o, manifest);
-  for (const line of skipped) log(`  skipped ${line}`);
-  log(`media push: ${uploads.length} uploaded (${(bytes / 1e6).toFixed(1)} MB)${kept.size ? `, ${kept.size} already there` : ''}`);
+  log(`media push: ${uploads.length} uploaded (${megabytes(bytes)} MB), then manifests/${o.repertoire}.json (${local.size} files)`);
   return { files: local.size, moved: uploads.length, bytes, skipped };
 }
 
-/** Download what this laptop lacks or has differently. Never deletes local files. */
+/** Write `source` (a whole file with the right content) to `target` through `<target>.part`, a copy-on-write clone where the disk can. */
+function copyInto(source: string, target: string, size: number): void {
+  const part = `${target}.part`;
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(source, part, fs.constants.COPYFILE_FICLONE);
+  if (fs.statSync(part).size !== size) {
+    fs.rmSync(part, { force: true });
+    throw new Error(`copy ${source} → ${target}: not ${size} bytes`);
+  }
+  fs.renameSync(part, target);
+}
+
+/**
+ * Write every path the manifest names that this laptop lacks or has differently, each into its readable place. A blob
+ * several paths share is downloaded once; one an unchanged file here already holds is copied from it. Never deletes.
+ */
 export async function pull(o: SyncOptions): Promise<SyncReport> {
   const log = o.log ?? console.log;
-  const remote = await remoteManifest(o);
+  const remote = await remoteManifest(o, o.repertoire);
+  if (!remote) throw new Error(`no repertoire ${o.repertoire} in the bucket (manifests/${o.repertoire}.json): push it from the main laptop first`);
   const local = await scan(o.roots, o.dataDir);
   const todo = changedFiles(remote.files, manifestFiles(local));
   const dirs = new Map(o.roots.map((r) => [r.root, r.dir]));
   const skipped: string[] = [];
-  let bytes = 0;
-  log(`media pull: ${Object.keys(remote.files).length} files in the cloud, ${todo.length} to download (a pull cut off resumes where it stopped)`);
-  const moved = progress('downloaded', todo.length, todo.reduce((sum, p) => sum + (remote.files[p]?.size ?? 0), 0), log);
-  await inParallel(todo, o.concurrency ?? MEDIA_SYNC.concurrency, async (syncPath) => {
-    const expected = remote.files[syncPath] as MediaManifest['files'][string];
+  // Where each path goes, grouped by blob.
+  const byBlob = new Map<string, { syncPath: string; target: string }[]>();
+  for (const syncPath of todo) {
     const [root, ...rest] = syncPath.split('/');
     const dir = dirs.get(root as SyncRoot);
     if (!dir) {
       skipped.push(`${syncPath}: no folder for ${root} on this laptop`);
-      return;
+      continue;
     }
     const target = path.join(dir, ...rest);
     if (!target.startsWith(path.resolve(dir) + path.sep)) throw new Error(`refusing to write outside ${dir}: ${syncPath}`);
-    const size = await withRetry(o, `download ${syncPath}`, async () => {
-      const response = await send(fileUrl(o, syncPath), { headers: o.headers }, `download ${syncPath}`);
-      if (!response.body) throw new Transient('no body');
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      // Every try starts the .part again; only a whole file with the right hash is renamed into place.
-      const part = `${target}.part`;
-      const hash = createHash('sha256');
-      let size = 0;
-      const body = Readable.fromWeb(response.body as import('node:stream/web').ReadableStream);
-      const file = fs.createWriteStream(part);
-      // pipeline passes the first error on to the other stream, so whichever reports first is where it came from.
-      let failed: 'body' | 'file' | undefined;
-      body.on('error', () => (failed ??= 'body'));
-      file.on('error', () => (failed ??= 'file'));
-      body.on('data', (chunk: Buffer) => {
-        hash.update(chunk);
-        size += chunk.length;
-      });
-      try {
-        await pipeline(body, file);
-      } catch (error) {
-        fs.rmSync(part, { force: true });
-        if (failed === 'body') throw new Transient(`cut off after ${size} of ${expected.size} bytes: ${describe(error)}`, { cause: error });
-        throw error;
-      }
-      const sha256 = hash.digest('hex');
-      if (size !== expected.size || sha256 !== expected.sha256) {
-        fs.rmSync(part, { force: true });
-        throw new Error(`download ${syncPath}: got ${size} bytes ${sha256.slice(0, 12)}…, expected ${expected.size} ${expected.sha256.slice(0, 12)}…`);
-      }
-      fs.renameSync(part, target);
-      return size;
-    });
-    bytes += size;
-    moved(size);
+    const sha256 = (remote.files[syncPath] as MediaManifest['files'][string]).sha256;
+    byBlob.set(sha256, [...(byBlob.get(sha256) ?? []), { syncPath, target }]);
+  }
+  // Files here that stay as they are and already hold a blob some path needs.
+  const writing = new Set(todo);
+  const here = new Map<string, string>();
+  for (const [syncPath, file] of local) if (!writing.has(syncPath) && !here.has(file.sha256)) here.set(file.sha256, file.abs);
+  const downloads = [...byBlob.keys()].filter((sha256) => !here.has(sha256));
+  const sizeOf = namedBlobs(remote.files);
+  const downloadBytes = sum(downloads.map((sha256) => sizeOf.get(sha256) ?? 0));
+  log(`media pull: ${Object.keys(remote.files).length} files in the cloud's manifest, ${todo.length - skipped.length} to write here: ${downloads.length} blobs to download (${megabytes(downloadBytes)} MB), the rest copied from identical files (a pull cut off resumes where it stopped)`);
+  const moved = progress('downloaded', downloads.length, downloadBytes, log);
+  let bytes = 0;
+  let written = 0;
+  await inParallel([...byBlob], o.concurrency ?? MEDIA_SYNC.concurrency, async ([sha256, targets]) => {
+    const size = sizeOf.get(sha256) as number;
+    let source = here.get(sha256);
+    let rest = targets;
+    if (!source) {
+      const [first, ...others] = targets as [{ syncPath: string; target: string }, ...{ syncPath: string; target: string }[]];
+      await download(o, sha256, size, first.target, first.syncPath);
+      bytes += size;
+      moved(size);
+      written += 1;
+      source = first.target;
+      rest = others;
+    }
+    for (const { target } of rest) {
+      copyInto(source, target, size);
+      written += 1;
+    }
   });
   await scan(o.roots, o.dataDir); // refresh the index with the new files
   if (skipped.length === 0) writeReference(o, remote);
   for (const line of skipped) log(`  skipped ${line}`);
-  log(`media pull: ${todo.length - skipped.length} downloaded (${(bytes / 1e6).toFixed(1)} MB)`);
-  return { files: Object.keys(remote.files).length, moved: todo.length - skipped.length, bytes, skipped };
+  log(`media pull: ${written} files written, ${downloads.length} blobs downloaded (${megabytes(bytes)} MB)`);
+  return { files: Object.keys(remote.files).length, moved: written, bytes, skipped };
+}
+
+/** One blob into `target`: through `<target>.part`, renamed only when its size and SHA-256 are right. */
+async function download(o: SyncOptions, sha256: string, expectedSize: number, target: string, syncPath: string): Promise<void> {
+  const what = `download ${syncPath}`;
+  await withRetry(o, what, async () => {
+    const response = await send(blobUrl(o, sha256), { headers: o.headers }, what);
+    if (!response.body) throw new Transient('no body');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    // Every try starts the .part again; only a whole file with the right hash is renamed into place.
+    const part = `${target}.part`;
+    const hash = createHash('sha256');
+    let size = 0;
+    const body = Readable.fromWeb(response.body as import('node:stream/web').ReadableStream);
+    const file = fs.createWriteStream(part);
+    // pipeline passes the first error on to the other stream, so whichever reports first is where it came from.
+    let failed: 'body' | 'file' | undefined;
+    body.on('error', () => (failed ??= 'body'));
+    file.on('error', () => (failed ??= 'file'));
+    body.on('data', (chunk: Buffer) => {
+      hash.update(chunk);
+      size += chunk.length;
+    });
+    try {
+      await pipeline(body, file);
+    } catch (error) {
+      fs.rmSync(part, { force: true });
+      if (failed === 'body') throw new Transient(`cut off after ${size} of ${expectedSize} bytes: ${describe(error)}`, { cause: error });
+      throw error;
+    }
+    const got = hash.digest('hex');
+    if (size !== expectedSize || got !== sha256) {
+      fs.rmSync(part, { force: true });
+      throw new Error(`${what}: got ${size} bytes ${got.slice(0, 12)}…, expected ${expectedSize} ${sha256.slice(0, 12)}…`);
+    }
+    fs.renameSync(part, target);
+  });
+}
+
+export interface PruneOptions extends CloudOptions {
+  /** Drop this repertoire's manifest first (with `yes`), so the blobs only it named go too. */
+  drop?: string;
+  /** Delete; without it, a dry run. */
+  yes?: boolean;
+}
+
+export interface PruneReport {
+  overview: SyncOverview;
+  /** The blobs no manifest names (once `drop` is dropped): what was, or would be, deleted. */
+  unnamed: BlobEntry[];
+  deleted: number;
+}
+
+/**
+ * The bucket's repertoires and size, and the blobs no manifest names; with `yes`, they go (after `drop`'s manifest).
+ * The Worker deletes a blob only while no manifest names it, so a push at the same time can't lose one it needs.
+ */
+export async function prune(o: PruneOptions): Promise<PruneReport> {
+  const log = o.log ?? console.log;
+  const gb = (bytes: number) => `${(bytes / 1e9).toFixed(2)} GB`;
+  const overview = (await getJson<SyncOverview>(o, `${o.cloud}/api/sync`, "the bucket's overview")) as SyncOverview;
+  log(`R2 bucket: ${gb(overview.totalBytes)} of the free tier's ${gb(overview.freeTierBytes)}, in ${overview.blobs.count} blobs (each distinct file once)`);
+  for (const r of overview.repertoires) {
+    const pushed = r.updatedAtMs ? new Date(r.updatedAtMs).toISOString().slice(0, 16).replace('T', ' ') : '?';
+    log(`  ${r.name.padEnd(12)} ${String(r.files).padStart(5)} files  ${gb(r.bytes).padStart(9)}  ${String(r.blobs).padStart(5)} blobs  pushed ${pushed} UTC`);
+  }
+  if (o.drop && !overview.repertoires.some((r) => r.name === o.drop)) throw new Error(`no repertoire "${o.drop}" in the bucket`);
+  const kept = await Promise.all(overview.repertoires.filter((r) => r.name !== o.drop).map((r) => remoteManifest(o, r.name)));
+  const unnamed = unnamedBlobs(await bucketBlobs(o), kept.filter((m): m is MediaManifest => m !== null));
+  const bytes = sum(unnamed.map((b) => b.size));
+  const what = o.drop ? `Dropping repertoire ${o.drop} leaves ${unnamed.length} blobs no manifest names` : `${unnamed.length} blobs no manifest names`;
+  log(`${what}, ${gb(bytes)}, leaving ${gb(overview.totalBytes - bytes)}${unnamed.length ? ':' : '.'}`);
+  for (const b of unnamed.slice(0, 20)) log(`  ${b.sha256}  ${megabytes(b.size).padStart(8)} MB`);
+  if (unnamed.length > 20) log(`  (+${unnamed.length - 20} more)`);
+  if (!o.yes) {
+    log(`Dry run: nothing deleted. Laptops keep their own copies. Run again with --yes to ${o.drop ? `drop ${o.drop}'s manifest and ` : ''}delete them.`);
+    return { overview, unnamed, deleted: 0 };
+  }
+  if (o.drop) {
+    const name = o.drop;
+    await withRetry(o, `drop ${name}`, async () => {
+      const dropped = await send(manifestUrl(o, name), { method: 'DELETE', headers: { ...o.headers, 'x-confirm-repertoire': name } }, `drop ${name}`);
+      await dropped.body?.cancel().catch(() => {});
+    });
+    log(`dropped repertoire ${name}'s manifest`);
+  }
+  let deleted = 0;
+  for (let i = 0; i < unnamed.length; i += MAX_PRUNE_BLOBS) {
+    const batch = unnamed.slice(i, i + MAX_PRUNE_BLOBS).map((b) => b.sha256);
+    await withRetry(o, 'prune', async () => {
+      const response = await send(`${o.cloud}/api/sync/prune`, { method: 'POST', headers: { ...o.headers, 'content-type': 'application/json' }, body: JSON.stringify({ sha256: batch }) }, 'prune');
+      await response.body?.cancel().catch(() => {});
+    });
+    deleted += batch.length;
+  }
+  log(`deleted ${deleted} blobs, ${gb(bytes)} freed`);
+  return { overview, unnamed, deleted };
 }

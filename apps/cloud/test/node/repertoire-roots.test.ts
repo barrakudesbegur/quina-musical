@@ -3,8 +3,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { CACHE, OUT, type Repertoire } from '../../../show/relay/repertoire.ts';
-import { repertoireRoots } from '../../laptop/repertoire-roots.ts';
+import { CACHE, loadRepertoire, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
+import { repertoireRoots, rootsUnder } from '../../laptop/repertoire-roots.ts';
 import { isSyncPath } from '../../src/domain/media-sync.ts';
 
 const repertoire = (name: string, dataDir: string, cacheDir: string): Repertoire => ({
@@ -62,4 +62,14 @@ test('the cloud accepts the shared roots in sync paths', () => {
   assert.equal(isSyncPath('voice-cache/round-1.flac'), true);
   assert.equal(isSyncPath('voice-data/index.json'), true);
   assert.equal(isSyncPath('interval/index.json'), false, 'unknown roots stay refused');
+});
+
+test('pull --into puts every folder at its place under another folder, keeping what each leaves out', () => {
+  const roots = repertoireRoots(loadRepertoire('2026')); // reads data/repertoires/2026.json, writes nothing
+  const under = rootsUnder(roots, '/tmp/empty', REPO);
+  assert.equal(under.length, roots.length);
+  for (const [i, r] of under.entries()) assert.equal(r.dir, path.join('/tmp/empty', path.relative(REPO, roots[i]?.dir ?? '')), r.root);
+  assert.equal(under.find((r) => r.root === 'hold-cache')?.dir, path.join('/tmp/empty', 'data', 'cache', 'hold'));
+  assert.equal(under.find((r) => r.root === 'cache')?.exclude?.('stretch/1/x.flac'), true);
+  assert.throws(() => rootsUnder([{ root: 'covers', dir: '/elsewhere/covers' }], '/tmp/empty', REPO), /outside the repo/);
 });

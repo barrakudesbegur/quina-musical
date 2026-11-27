@@ -154,7 +154,7 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
 
   let reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null = null;
   if (o.cloud) {
-    const remote = await getJson(`${o.cloud}/api/sync/${repertoire.name}/manifest`, o.headers);
+    const remote = await getJson(`${o.cloud}/api/sync/manifests/${repertoire.name}`, o.headers);
     const files = (remote.body as { files?: Record<string, { size: number; sha256: string }> } | undefined)?.files;
     if (remote.ok && files && Object.keys(files).length > 0) reference = { files, source: "the cloud's manifest" };
   }

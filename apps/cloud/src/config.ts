@@ -56,10 +56,10 @@ export const LINK = Object.freeze({
 
 /** The media sync (laptop/media-sync.ts, `npm run media -- push|pull`). */
 export const MEDIA_SYNC = Object.freeze({
-  /** Files moving at once. */
+  /** Blobs moving at once. */
   concurrency: 4,
   /**
-   * Tries per request (each file's upload or download, the manifest's GET and PUT) when the failure may pass: a
+   * Tries per request (each blob's upload or download, a page of the bucket's list, a manifest's GET and PUT, a prune) when the failure may pass: a
    * network error (an HTTP/2 stream reset killed a 2,796-file push once), HTTP 5xx or 429, or a download cut off.
    */
   attempts: 5,

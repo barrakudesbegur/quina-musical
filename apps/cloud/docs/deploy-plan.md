@@ -171,8 +171,8 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 - Switch the binding on in wrangler.jsonc: uncomment `"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "quina-media" }]`, then `npm run deploy`. Without it, `/api/sync` answers 503 and nothing else changes. With it and no bucket, a deploy fails.
 - No public `r2.dev` access and no custom domain on the bucket. Files only go in and out through the Worker, with the laptop's service token.
 - If the dashboard asks to enable R2, or to add a payment method first, that's the user's call. Copyrighted audio goes to the private bucket only, never to git.
-- Then, on the show laptop: `npm run media -- push --repertoire <name>`. On a takeover laptop: `npm run media -- pull --repertoire <name>` (it needs the same repertoire manifest in `data/repertoires/`). Each repertoire lives under `repertoires/<name>/` in the bucket (before D178, under `pools/<name>/`: see step 6).
-- Size: last year's songs are 6 GB in 1,085 files (1,086 requests to push). R2's free tier is 10 GB; going past it is fine (D113: a few cents a month).
+- Then, on the show laptop: `npm run media -- push --repertoire <name>`. On a takeover laptop: `npm run media -- pull --repertoire <name>` (it needs the same repertoire manifest in `data/repertoires/`). The bucket keeps each distinct file once as `blobs/<sha256>`, and each repertoire's manifest as `manifests/<name>.json` (D248; see step 6).
+- Size: 2026's repertoire is 8.2 GB in 2,796 files (about 2,800 requests to push the first time). R2's free tier is 10 GB; going past it is fine (D113: a few cents a month).
 - Undo: `npx wrangler r2 bucket delete quina-media` (empty it first).
 
 ### 5. If a free limit is hit on the night
@@ -184,15 +184,15 @@ Undo: delete the two Access applications and the service token, and `npx wrangle
 
 ### 6. This year's repertoire, once it's prepared
 
-Going past R2's 10 GB is fine (D113), so this year's repertoire goes up as soon as it's prepared, and the old copies go after. Laptops keep their own copies; only the bucket's copy goes.
+Going past R2's 10 GB is fine (D113), so this year's repertoire goes up as soon as it's prepared. The bucket is content-addressed (D248): each distinct file once as `blobs/<sha256>`, one manifest per repertoire (`manifests/<name>.json`) mapping each readable path to its hash. Laptops keep their readable folders; a pull rebuilds them. Laptops keep their own copies whatever the bucket drops. All commands run in `apps/cloud` (the cloud and the token from `.env.link`).
 
 1. On the main laptop, prepare the new repertoire (apps/show README › Repertoires): fetch the playlist (`tools/prep/playlist-fetcher`), write `data/repertoires/2026.json`, tag the hooks, `npm run prep -- --repertoire 2026` in `apps/show`, and set `cardsJson` once the cards are generated.
-2. In `apps/cloud`, push it: `npm run media -- push --repertoire 2026` (progress every few seconds; about an hour for 6–7 GB at home upload speeds). Do it at least the day before the show. The Hold and Interval music goes with it, as with every repertoire.
-3. Use it everywhere: the relay `npm start -- --repertoire 2026 --lan`, the preflight `npm run preflight -- --repertoire 2026`, and each spare laptop `npm run setup:laptop -- --repertoire 2026` (it pulls the new repertoire; its finished steps are skipped).
-4. See what's in the bucket: `npm run media -- prune` (every repertoire, its files and size). A repertoire pushed since D178 goes with `npm run media -- prune --repertoire <name>` (a dry run: what it would free), then the same with `--yes`.
-5. The keys from before D178, under `pools/` (last year's songs, and the first push of the Hold and Interval music), belong to no repertoire, so the tool doesn't list them. Only after step 2 (until then, they're R2's only copy of the music), let R2 expire them: `npx wrangler r2 bucket lifecycle add quina-media pools-before-d178 pools/ --expire-days 1`. A day or two later, once the dashboard shows `pools/` empty, remove the rule: `npx wrangler r2 bucket lifecycle remove quina-media --name pools-before-d178`.
+2. **Push:** `npm run media -- push --repertoire 2026 --dry-run` first (the blobs it would upload, by root, and their size; nothing is sent), then `npm run media -- push --repertoire 2026` (progress every few seconds; about an hour for 8 GB at home upload speeds). It uploads only the hashes the bucket lacks, then the manifest. Do it at least the day before the show. The Hold, Interval and voice music goes with it, stored once for every repertoire. If it stops (a network cut that 5 retries didn't cover), run it again: it lists the bucket and sends only what's missing. After a change (recorded voices replacing placeholders, approved hooks, new stems), push again: only the new hashes go up, and the manifest moves to them.
+3. **Pull** (each spare laptop): `npm run setup:laptop -- --repertoire 2026` at the repo root (its step 5 is `npm run media -- pull --repertoire 2026`; finished steps are skipped). It works into an empty data folder; after it, the laptop needs no internet for the media (the show never reads R2). Then the relay `npm start -- --repertoire 2026 --lan` and `npm run preflight -- --repertoire 2026` (it re-hashes every file against the cloud's manifest).
+4. **Size check:** `npm run media -- prune` (a dry run): every repertoire with its files, bytes and blobs, the bucket's real size (each blob once) against the free tier's 10 GB, and the blobs no manifest names, with their count and size. The same as JSON: `GET /api/sync` with the token.
+5. **Prune:** `npm run media -- prune --yes` deletes the blobs no manifest names (the old voices and hooks after step 2's re-push). A whole repertoire: `npm run media -- prune --repertoire <name>` (a dry run: what dropping it frees, not counting the blobs other repertoires share), then the same with `--yes` (it drops `manifests/<name>.json`, then deletes the blobs no manifest names). Nothing expires by date (D246).
 
-Undo: push again from a laptop that still has the repertoire (`npm run media -- push --repertoire <name>`). The expired `pools/` keys can't come back, but every file in them is on the main laptop, under the default repertoire and the Hold and Interval folders.
+Undo: push again from a laptop that still has the repertoire (`npm run media -- push --repertoire <name>`): every blob a prune deleted goes up again.
 
 ### 7. Point quina.barrakudesbegur.org at the Worker: DONE (2026-11-25, see the log), Access destinations left
 

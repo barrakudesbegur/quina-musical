@@ -1,7 +1,7 @@
 // Which folders of a repertoire the media sync covers on a laptop (laptop/media-sync.ts), by sync root: what the
 // relay serves for playback. Its locations come from relay/repertoire.ts, the one place that resolves a repertoire.
 import path from 'node:path';
-import { CACHE, MEDIA, OUT, type Repertoire } from '../../show/relay/repertoire.ts';
+import { CACHE, MEDIA, OUT, REPO, type Repertoire } from '../../show/relay/repertoire.ts';
 import type { RootDir } from './media-sync.ts';
 
 /** The repertoire's playback files on this laptop, by sync root (the relay serves them from these folders). */
@@ -34,4 +34,16 @@ export function repertoireRoots(repertoire: Repertoire): RootDir[] {
     roots.push({ root: 'cards', dir: path.dirname(repertoire.cardsJson), exclude: (rel) => !keep.has(rel) });
   }
   return roots;
+}
+
+/**
+ * The same folders under another one, each at its place relative to the repo (`data/cache/…` → `<into>/data/cache/…`):
+ * `npm run media -- pull --into <dir>`, a pull into an empty folder that shows the bucket alone rebuilds the repertoire.
+ */
+export function rootsUnder(roots: readonly RootDir[], into: string, repo = REPO): RootDir[] {
+  return roots.map((r) => {
+    const rel = path.relative(repo, r.dir);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`${r.dir} is outside the repo, so it has no place under ${into}`);
+    return { ...r, dir: path.join(into, rel) };
+  });
 }

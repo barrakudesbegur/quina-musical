@@ -67,21 +67,42 @@ const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg|jxl)$/;
 export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: ANYONE_SIGNED_IN, methods: ['PUT'] });
 const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
 
-/** The repertoire's media in R2 (C3): `/api/sync/<repertoire>/manifest` and `/api/sync/<repertoire>/file?path=…`. The laptops only. */
-export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT', 'DELETE'] });
-const SYNC_PATH = /^\/api\/sync\/([a-z0-9_-]{1,40})\/(manifest|file)$/;
+/**
+ * The repertoire's media in R2 (C3, D248), content-addressed: the laptops only (their service token), never public.
+ * `/api/sync` (the overview), `/api/sync/blobs` (a page of the list), `/api/sync/blobs/<sha256>`,
+ * `/api/sync/manifests/<repertoire>` and `/api/sync/prune`. Each resource's methods: SYNC_METHODS.
+ */
+export const SYNC_ROUTE: Route = Object.freeze({ name: 'sync', websocket: false, access: SERVICES, methods: ['GET', 'PUT', 'POST', 'DELETE'] });
+const SYNC_PATH = /^\/api\/sync(?:\/(blobs)(?:\/([0-9a-f]{64}))?|\/manifests\/([a-z0-9_-]{1,40})|\/(prune))?$/;
+
+/** What a sync path names. */
+export type SyncTarget = { resource: 'overview' } | { resource: 'blobs' } | { resource: 'blob'; sha256: string } | { resource: 'manifest'; repertoire: string } | { resource: 'prune' };
+
+/** The methods each sync resource takes. */
+export const SYNC_METHODS: Readonly<Record<SyncTarget['resource'], readonly string[]>> = Object.freeze({
+  overview: GET,
+  blobs: GET,
+  blob: ['GET', 'PUT'],
+  manifest: ['GET', 'PUT', 'DELETE'],
+  prune: ['POST'],
+});
 
 export function findRoute(pathname: string): Route | null {
   if (Object.hasOwn(ROUTES, pathname)) return ROUTES[pathname] ?? null;
-  if (SYNC_PATH.test(pathname) || pathname === '/api/sync') return SYNC_ROUTE;
+  if (SYNC_PATH.test(pathname)) return SYNC_ROUTE;
   if (MEDIA_JXL_PATH.test(pathname)) return MEDIA_JXL_ROUTE;
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
 }
 
-/** The repertoire and the resource of a sync path, or null. */
-export function syncTarget(pathname: string): { repertoire: string; resource: 'manifest' | 'file' } | null {
+/** What a sync path names, or null. */
+export function syncTarget(pathname: string): SyncTarget | null {
   const match = SYNC_PATH.exec(pathname);
-  return match ? { repertoire: match[1] as string, resource: match[2] as 'manifest' | 'file' } : null;
+  if (!match) return null;
+  const [, blobs, sha256, repertoire, prune] = match;
+  if (sha256) return { resource: 'blob', sha256 };
+  if (blobs) return { resource: 'blobs' };
+  if (repertoire) return { resource: 'manifest', repertoire };
+  return prune ? { resource: 'prune' } : { resource: 'overview' };
 }
 
 /** The media id in a /media/ path, or null. */

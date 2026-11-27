@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTPayload } from 'jose';
 import { requireAccess, type AccessEnv, type AccessIdentity, type AccessRule } from '../../src/access.ts';
-import { ROUTES, findRoute } from '../../src/domain/routes.ts';
+import { ROUTES, findRoute, syncTarget } from '../../src/domain/routes.ts';
 
 const TEAM = 'https://quina-test.cloudflareaccess.com';
 const AUD_APP = 'aud-app';
@@ -95,6 +95,12 @@ test('routes: phones and health are public, the laptop needs its service token, 
   assert.equal(findRoute('/'), null);
   assert.equal(findRoute('/toString'), null, 'no prototype keys');
   assert.equal(findRoute('/feed/'), null);
+  // The media sync (D248): blobs, manifests, the list and the prune are the laptop token's only, never public.
+  for (const path of ['/api/sync', '/api/sync/blobs', `/api/sync/blobs/${'a'.repeat(64)}`, '/api/sync/manifests/2026', '/api/sync/prune']) assert.deepEqual(findRoute(path)?.access, SERVICES, path);
+  for (const path of ['/api/sync/', '/api/sync/blobs/', `/api/sync/blobs/${'A'.repeat(64)}`, '/api/sync/2026/manifest', '/api/sync/2026/file', '/api/sync/manifests/2026.json', '/blobs/x', '/manifests/2026.json']) assert.equal(findRoute(path), null, path);
+  assert.deepEqual(syncTarget(`/api/sync/blobs/${'a'.repeat(64)}`), { resource: 'blob', sha256: 'a'.repeat(64) });
+  assert.deepEqual(syncTarget('/api/sync/manifests/2026'), { resource: 'manifest', repertoire: '2026' });
+  assert.deepEqual([syncTarget('/api/sync'), syncTarget('/api/sync/blobs'), syncTarget('/api/sync/prune')], [{ resource: 'overview' }, { resource: 'blobs' }, { resource: 'prune' }]);
   const open = Object.entries(ROUTES).filter(([, r]) => r.access === null).map(([path]) => path);
   assert.deepEqual(open.sort(), ['/api/health', '/feed'], 'nothing else is public');
 });
