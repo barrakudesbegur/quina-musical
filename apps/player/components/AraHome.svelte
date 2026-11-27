@@ -39,6 +39,7 @@
   } from '../logic/home-swipe.ts';
   import { ARA_VIEWS, type AraView } from '../logic/tabs.ts';
   import CardsList from './CardsList.svelte';
+  import InstallPrompt from './InstallPrompt.svelte';
   import HistoryList from './HistoryList.svelte';
   import NowPanel from './NowPanel.svelte';
   import PauseNotice from './PauseNotice.svelte';
@@ -430,7 +431,10 @@
           style:translate={frame ? `0 ${active ? frame.leavingY : frame.comingY}px` : undefined}
         >
           {#if view === 'cartrons'}
-            <CardsList {app} {active} />
+            <CardsList {app} {active}>
+              <!-- The list's end: «Instal·la l'app» while Chrome can install it (D221; nothing on an iPhone). -->
+              {#snippet end()}<InstallPrompt install={app.install} />{/snippet}
+            </CardsList>
           {:else}
             <HistoryList {app} />
           {/if}

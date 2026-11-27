@@ -15,6 +15,11 @@
   }
 }
 
+/* Its own width, as the floating «+ Cartró» (a phone's Button fills its row otherwise). */
+.install-prompt__button {
+  width: auto;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .player:where([data-motion='full']) .install-prompt {
     @starting-style {

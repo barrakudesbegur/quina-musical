@@ -4,7 +4,7 @@
   // empty view keeps its own. Naming and removing cards is in the menu. Cards never reorder, in the Desgraciat round
   // too: people find their card by its place.
   // `end` is the list's last spot, where «+ Cartró» used to be: kept for «Instal·la l'app» (D221, the PWA's work stream
-  // W), which shows there once the floating «+ Cartró» has taken over and the phone can install. Nothing fills it yet.
+  // W): AraHome passes InstallPrompt, which shows only while the phone can install.
   import type { Snippet } from 'svelte';
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
