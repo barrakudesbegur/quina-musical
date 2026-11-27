@@ -14,8 +14,10 @@ const TICK_LOOKAHEAD_SEC = 0.15;
 // drum order, and the drum moves onto it there with no speed-up and never more than half a lap.
 /** A Back's turn onto the card: 0.9 s for one card, rising smoothly to 1.6 s for half a lap. */
 const TURN_SEC: readonly [number, number] = [0.9, 1.6];
-/** A cancel's glide onto the card, once its natural brake is nearly still: 0.8 s for one card, 1 s for half a lap. */
-const GLIDE_SEC: readonly [number, number] = [0.8, 1];
+/** A cancel's glide onto the card, once its natural brake is nearly still: 0.8 s for one card, rising to the Back's
+ * 1.6 s for half a lap. Capped at 1 s, a half-lap glide on a 70-card drum peaked at about 54 cards/s, faster than a
+ * Spin, which read as a speed-up; at the Back's timing it peaks at about 34 cards/s, as a Back does. */
+const GLIDE_SEC: readonly [number, number] = [0.8, 1.6];
 /** Nearly still, in cards/s: a braking drum hands over to its glide at this speed, and a drum this slow just glides. */
 const GLIDE_FROM_SPEED = 1;
 
