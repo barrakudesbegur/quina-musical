@@ -246,7 +246,7 @@ test('prizes, progress and the planned times come from the plan and the winners'
   assert.deepEqual(rounds[2].lines[0].ownCardIds, [], 'nobody else\'s card is named');
   assert.equal(rounds[2].lines[1].won, false);
   assert.deepEqual(prizeRounds(PUBLIC, state, [57, 9])[2].lines[0].ownCardIds, [57], 'only the phone\'s own cards');
-  assert.deepEqual(rounds[2].lines[0].headline, [{ title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]' }]);
+  assert.deepEqual(rounds[2].lines[0].headline, [{ title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]', logo: null }]);
   assert.equal(rounds[2].lines[0].others.length, 3, 'the rest of the bundle, after the headline prize');
   assert.equal(rounds[2].lines[1].others.length, 16, "the rest of the Quina's hamper");
   assert.equal(rounds[6].kind, 'special');

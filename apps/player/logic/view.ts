@@ -192,6 +192,8 @@ export interface PrizeItem {
   detail: string | null;
   /** The sponsor's name, or null. */
   sponsor: string | null;
+  /** The sponsor's logo (`/media/<key>.png`, a `.jxl` beside it), or null: no sponsor, or none uploaded yet. */
+  logo: string | null;
 }
 
 export interface PrizeLine {
@@ -240,7 +242,10 @@ export function prizeRounds(plan: PublicPlan | null, state: PublicState | null, 
           : number === focus
             ? 'next'
             : 'later';
-      const item = (p: Prize): PrizeItem => ({ title: p.title, detail: p.detail, sponsor: plan?.sponsors.find((s) => s.id === p.sponsorId)?.name ?? null });
+      const item = (p: Prize): PrizeItem => {
+        const sponsor = plan?.sponsors.find((s) => s.id === p.sponsorId) ?? null;
+        return { title: p.title, detail: p.detail, sponsor: sponsor?.name ?? null, logo: sponsor?.logo ?? null };
+      };
       const line = (kind: PublicWinKind): PrizeLine => {
         // The Desgraciat round's last card standing wins its `bingo` bundle (ui/plan.ts prizeBundleOf).
         const { headline, others } = splitBundle((kind === 'line' ? planned?.line : planned?.bingo) ?? []);
