@@ -6,7 +6,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 - **In progress:** nothing half-built. **Paused by the user (27 Nov: the focus is the Frontend):** the voice cues' media sync and preflight check (D198, D202–D204), not started. Agreed with Sound engine: the protocol's `VOICE_CUES` plus `chime` and `fanfare`; `tools/prep/voices.py` prepares them into `data/cache/voice/<name>.flac` and `data/out/voice/index.json` (`{ schemaVersion: 1, voices: [{ name, durationSec, placeholder }] }`); placeholders never go in `data/media/voice/` (the user's recordings only, ignored by git). Mine, when resumed: sync roots `voice-cache` and `voice-data` (like the hold music; `voice/` left out of the default repertoire's `cache` and `data` roots), deployed before any laptop pushes them; a preflight check from the index: FAIL for a missing name or file, WARN while any is a placeholder. Meanwhile, keep pushing and deploying Frontend's tested commits.
 - **Just done (26 Nov):**
-  - **Seventeen deploys** (deploy-plan.md), each tested on its sha first:
+  - **Eighteen deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -24,6 +24,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `55028805` (`5fda630`): the audit's batch 2 and reduced motion (D209);
     - `057f4fcc` (`6aff25e`): the player's maximum width (D212) and the UI sounds (D206–D208).
     - `3cb67cbf` (`9a168b6`): screens only («Aquest cartró no existeix», the garland's lights, the falling comet, beams to the edge).
+    - `c7289263` (`a843dff`): screens only (the icon family, H1, R8).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
