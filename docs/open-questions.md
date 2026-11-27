@@ -111,11 +111,11 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 
 ### U197 · A Play Store app (TWA) for Android players
 The research (docs/research/reports/android-twa-and-install.md, 27 Nov) recommends passing.
-- **Too slow:** a personal account created after 13 Nov 2023 needs a 14-day closed test with 12 testers, then up to 7 days for production access and up to 7 or more for review. The earliest release would be about 18–25 Dec, with no room for a rejection, and bare web wrappers are often rejected.
+- **Timing:** the user's Play account is old, so it needs no 14-day closed test or production-access step (the user, 27 Nov). Only the new app's review remains, up to about 7 days, with room for one rejection before the night. Bare web wrappers are often rejected.
 - **No gain:** it adds nothing an installed PWA lacks, and "Play Store, sign in, install" is harder than scanning.
 - **Removing it:** possible but imperfect. Unpublishing stops new installs, and an app on fewer than 1,000 devices can now be deleted, which burns its package name. Installed copies stay on phones.
 - (a) Pass.
-- (b) Try it. The user would first say whether the Play account is personal or an organisation's, and when it was created.
+- (b) Try it: about 2–3 days of work, then the review.
 
 ### U196 · An App Clip for iPhone players
 The research (docs/research/reports/ios-install-and-app-clip.md, 27 Nov) recommends passing.
