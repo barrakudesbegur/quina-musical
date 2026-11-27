@@ -1,7 +1,7 @@
 // Keep the screen on while the page is visible: a Screen Wake Lock, re-acquired when the page becomes visible
 // again (the browser drops it when hidden). Feature-detected: without it (not a secure context, as the hotspot's
 // plain http on an iPad; battery saver), the screen simply follows the device's own settings. Used by the player
-// app and the console.
+// app, the console and the projector's stage (apps/stage/stage.ts, so the show page that mounts it too).
 
 /** Keep the screen on while the app is visible. Returns a function that stops it. */
 export function keepScreenOn(): () => void {

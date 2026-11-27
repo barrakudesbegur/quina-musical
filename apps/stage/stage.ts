@@ -15,6 +15,7 @@ import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { loadPlanForPage, planStoreForPage, type PlanStore } from '../../packages/ui/data/plan-store.ts';
 import type { GamePlan } from '../../packages/ui/plan.ts';
 import type { HeatSample } from '../../packages/rules/heat.ts';
+import { keepScreenOn } from '../../packages/ui/client/wake-lock.ts';
 import '../../packages/ui/tokens.css';
 import '../../packages/ui/components/paper-card.css';
 import '../../packages/ui/recipes/prizes.css';
@@ -182,6 +183,10 @@ class Stage {
     const resize = new ResizeObserver(() => this.layout());
     resize.observe(root);
     this.cleanups.push(() => resize.disconnect());
+    // The projector's screen never sleeps while the stage shows (§8 Y4): a Screen Wake Lock, taken again whenever the page
+    // is visible again. Both the show page (which mounts the stage) and the standalone /stage/ get it; where the browser
+    // refuses it (plain http on another device in split mode), the screen follows the device's own settings.
+    this.cleanups.push(keepScreenOn());
     this.leaveMs = parseCssTime(getComputedStyle(root).getPropertyValue('--dur-slow'), this.leaveMs);
     this.layout();
     this.update();
