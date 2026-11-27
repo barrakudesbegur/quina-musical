@@ -5,7 +5,7 @@
   `invalid` (the parent's validity: a number that isn't a card, «Aquest cartró no existeix»), dimmed by `disabled`.
   `keyboard`: `pad` (the digits come from a NumberPad: an <output> read out as it changes, with a caret after them,
   so the phone's keyboard never opens) or `system` (a real <input inputmode="numeric">: the card's edit drawer).
-  `trailing`: a control at the field's end (the phone's QR button, D141), whose found number the parent writes
+  `data-*` attributes stay on the field. `trailing`: a control at the field's end (the phone's QR button, D141), whose found number the parent writes
   into `value` (`bind:value`). A one-off flash (the QR's green ring, `qr-found`) is the parent's `data-anim` on it.
   Sizes come from the density: the phone's 72 px field, the console's display row.
 -->
@@ -39,6 +39,10 @@
     ...rest
   }: Props = $props();
 
+  /** `data-*` (a hook, a test id) go on the field; the rest on the input (system) or the field too (pad). */
+  const own = $derived(Object.fromEntries(Object.entries(rest).filter(([k]) => keyboard === 'pad' || k.startsWith('data-'))));
+  const inputAttrs = $derived(Object.fromEntries(Object.entries(rest).filter(([k]) => !k.startsWith('data-'))));
+
   /** Typing on the phone's own keyboard: digits only. */
   function oninput(e: Event & { currentTarget: HTMLInputElement }): void {
     const digits = e.currentTarget.value.replace(/\D+/g, '');
@@ -48,7 +52,7 @@
 </script>
 
 <div
-  {...(keyboard === 'pad' ? (rest as Record<string, unknown>) : {})}
+  {...own}
   class="number-field {className}"
   data-keyboard={keyboard}
   data-empty={value === '' || undefined}
@@ -62,7 +66,7 @@
   {:else}
     <input
       bind:this={element}
-      {...rest}
+      {...inputAttrs}
       class="number-field__digits"
       type="text"
       inputmode="numeric"

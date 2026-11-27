@@ -1,7 +1,7 @@
 <script lang="ts">
   // «Editar», a card's edit drawer (from Ajustos): its number, its optional name ("Àvia") and its icon. The number is
-  // the same NumberField as «Afegir cartró», typed on the phone's own number keyboard, with the QR button at its end
-  // when the app can scan (`onscan`: the camera opens as its own drawer and writes the number it finds into `number`).
+  // the same NumberField as «Afegir cartró», typed on the phone's own number keyboard, with the QR button at its end:
+  // the camera opens as its own drawer stacked over this one (as the pad's, D141) and writes the number it finds.
   // A number that isn't a card, or is another of the player's cards, turns the field red with the reason under it.
   import Button from '../../../packages/ui/components/Button.svelte';
   import NumberField from '../../../packages/ui/components/NumberField.svelte';
@@ -13,13 +13,13 @@
   import IconPicker from './IconPicker.svelte';
   import Drawer from './Drawer.svelte';
   import QrButton from './QrButton.svelte';
+  import QrScan from './QrScan.svelte';
 
   let {
     card,
     others,
     number = $bindable(),
     onsave,
-    onscan,
     onclose,
   }: {
     card: SavedCard;
@@ -28,8 +28,6 @@
     number?: string;
     /** Saves the edit; returns the error to show (the number isn't a card…), or null. */
     onsave: (to: number, name: string, identity: number) => string | null;
-    /** Opens the camera for the card's QR. */
-    onscan?: () => void;
     onclose: () => void;
   } = $props();
   // The drawer edits a copy of what it opened with.
@@ -41,6 +39,17 @@
   let identity = $state(card.color);
   let error = $state<string | null>(null);
   const uid = $props.id();
+  /** The camera's drawer over this one: mounted while `scanning`, closing once `scanOpen` goes. */
+  let scanning = $state(false);
+  let scanOpen = $state(false);
+  /** A QR has just filled the number in: the field's green ring (`qr-found`). */
+  let found = $state(0);
+
+  function scanned(cardId: number): void {
+    number = String(cardId);
+    scanOpen = false;
+    found += 1;
+  }
 
   // A new number clears the old refusal.
   $effect(() => {
@@ -57,18 +66,28 @@
       error = number ? onsave(Number(number), value, identity) : S.addError.invalid;
     }}
   >
-    <NumberField
-      class="rename__number"
-      keyboard="system"
-      label={S.padNumber}
-      bind:value={number}
-      invalid={error !== null}
-      maxlength={String(PLAYER_CONFIG.cardIdMax).length}
-      enterkeyhint="done"
-      aria-describedby={error ? `${uid}-error` : undefined}
-    >
-      {#snippet trailing()}{#if onscan}<QrButton onclick={onscan} />{/if}{/snippet}
-    </NumberField>
+    {#key found}
+      <NumberField
+        class="rename__number number-pad__field"
+        keyboard="system"
+        label={S.padNumber}
+        bind:value={number}
+        invalid={error !== null}
+        maxlength={String(PLAYER_CONFIG.cardIdMax).length}
+        enterkeyhint="done"
+        aria-describedby={error ? `${uid}-error` : undefined}
+        data-anim={found ? 'qr-found' : undefined}
+      >
+        {#snippet trailing()}
+          <QrButton
+            onclick={() => {
+              scanning = true;
+              scanOpen = true;
+            }}
+          />
+        {/snippet}
+      </NumberField>
+    {/key}
     {#if error}<p class="number-pad__note" id="{uid}-error" role="alert"><span class="number-pad__note-text">{error}</span></p>{/if}
     <TextField class="rename__name" label={S.nameLabel} bind:value maxlength={PLAYER_CONFIG.maxNameLength} placeholder={S.namePlaceholder} autocomplete="off" enterkeyhint="done" />
     <IconPicker
@@ -81,4 +100,9 @@
       <Button {...PLAYER.renameDiscard} onclick={onclose} />
     </div>
   </form>
+  {#if scanning}
+    <Drawer name="qr" title={S.qrTitle} bind:open={scanOpen} onclose={() => (scanning = false)}>
+      <QrScan onfound={scanned} onwrite={() => (scanOpen = false)} />
+    </Drawer>
+  {/if}
 </Drawer>
