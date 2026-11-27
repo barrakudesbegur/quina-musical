@@ -23,8 +23,9 @@ export function lightDismiss(dialog: HTMLDialogElement, dismiss: () => void): ()
     return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
   };
   let pressedOutside = false;
+  // Only the dialog itself is the target on its backdrop: a press in a dialog opened from its content isn't one.
   const down = (e: PointerEvent): void => {
-    pressedOutside = outside(e);
+    pressedOutside = e.target === dialog && outside(e);
   };
   const up = (e: PointerEvent): void => {
     if (pressedOutside && outside(e)) dismiss();

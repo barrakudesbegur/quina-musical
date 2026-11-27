@@ -76,3 +76,17 @@ export function contentGesture(dy: number, dx: number, scrollTop: number, d = SH
   if (Math.hypot(dx, dy) < d.slop) return null;
   return dy > 0 && Math.abs(dy) > Math.abs(dx) && scrollTop <= 0 ? 'drag' : 'scroll';
 }
+
+/**
+ * The content was scrolling and reaches its top while the finger goes on pulling down (`step`: this move's px, down
+ * positive): the same gesture becomes the sheet's drag, as a native sheet does.
+ */
+export function handsOver(scrollTop: number, step: number): boolean {
+  return scrollTop <= 0 && step > 0;
+}
+
+/** A drag on the title bar: after `slop` px, which axis it's on (`null`: not moved enough). Sideways never drags. */
+export function barAxis(dy: number, dx: number, d = SHEET_DRAG): 'y' | 'x' | null {
+  if (Math.hypot(dx, dy) < d.slop) return null;
+  return Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x';
+}

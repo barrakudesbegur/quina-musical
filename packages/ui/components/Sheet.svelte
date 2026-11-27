@@ -27,7 +27,7 @@
   import type { HTMLDialogAttributes } from 'svelte/elements';
   import Icon from '../icons/Icon.svelte';
   import { touchPress } from '../sounds/touch.ts';
-  import { closeDuration, contentGesture, dragOffset, pullShare, releaseCloses, releaseVelocity, type DragSample } from './sheet-drag.ts';
+  import { barAxis, closeDuration, contentGesture, dragOffset, handsOver, pullShare, releaseCloses, releaseVelocity, type DragSample } from './sheet-drag.ts';
   import { lightDismiss, settled } from './top-layer.ts';
   import type { UiSound } from './types.ts';
   import './sheet.css';
@@ -46,6 +46,8 @@
     onback?: () => void;
     canClose?: (proceed: () => void) => boolean;
     onclose?: () => void;
+    /** Its exit starts (the one under it may step forward meanwhile: drawer-stack). */
+    onleave?: (which: 'self' | 'all') => void;
     closeAll?: (() => void) | null;
     closeLabel: string;
     backLabel?: string;
@@ -68,6 +70,7 @@
     onback,
     canClose,
     onclose,
+    onleave,
     closeAll = null,
     closeLabel,
     backLabel = '',
@@ -83,8 +86,10 @@
   let dialog: HTMLDialogElement | undefined = $state();
   let body: HTMLDivElement | undefined = $state();
   let closing = $state<'self' | 'all' | null>(null);
-  /** The entry has finished: a let-go springs back in its own (shorter) time. */
+  /** The entry has finished: from then on its moves take the stack's time (drawer-stack), not the rise's. */
   let risen = $state(false);
+  /** Let go without closing: it springs back to rest in the spring's own time (drawer-drag). */
+  let springing = $state(false);
   let offset = $state(0);
   let height = $state(1);
   let outMs = $state<number | null>(null);
@@ -109,14 +114,17 @@
     }
   });
 
-  $effect(() => (dialog && dismiss === 'any' ? lightDismiss(dialog, () => request('self')) : undefined));
+  $effect(() => (dialog && dismiss === 'any' ? lightDismiss(dialog, () => requestClose('self')) : undefined));
 
-  /** A close the player asked for (✕, ‹, Esc, the backdrop, a drag): the content may hold it open first. */
-  function request(which: 'self' | 'all', fromDrag: number | null = null): void {
+  /**
+   * A close the player asked for (✕, ‹, Esc, the backdrop, a drag): the content may hold it open first. `all` finishes
+   * with `closeAll`. Exported, so a sheet opened from this one's content can ask it to close too (its ✕).
+   */
+  export function requestClose(which: 'self' | 'all', fromDrag: number | null = null): void {
     if (closing) return;
     outMs = fromDrag;
     if (canClose && !canClose(() => void leave(which, true))) {
-      offset = 0;
+      springBack();
       outMs = null;
       return;
     }
@@ -127,6 +135,7 @@
   async function leave(which: 'self' | 'all', heard: boolean): Promise<void> {
     if (closing || !dialog) return;
     closing = which;
+    onleave?.(which);
     // The close's sound as it starts to slide (not for the app's own closes).
     if (heard && closeSound) touchPress(closeSound);
     const shown = dialog;
@@ -146,6 +155,7 @@
   async function onNativeClose(): Promise<void> {
     if (closing || !dialog) return;
     closing = 'self';
+    onleave?.('self');
     await settled(dialog);
     finish('self');
   }
@@ -154,15 +164,17 @@
   function begin(y: number, t: number): void {
     if (!dialog) return;
     height = dialog.offsetHeight || 1;
+    springing = false;
     drag = { y0: y, samples: [{ y, t }] };
   }
 
-  function move(y: number, t: number): void {
+  /** Follows the finger; `band`: above its rest it resists (the title bar) rather than stopping at it. */
+  function move(y: number, t: number, band = true): void {
     if (!drag) return;
     drag.samples.push({ y, t });
     if (drag.samples.length > 12) drag.samples.shift();
     if (Math.abs(y - drag.y0) > 2) dragging = true;
-    offset = dragOffset(y - drag.y0);
+    offset = band ? dragOffset(y - drag.y0) : Math.max(0, y - drag.y0);
   }
 
   function end(): void {
@@ -170,43 +182,92 @@
     const v = releaseVelocity(drag.samples);
     drag = null;
     dragging = false;
-    if (releaseCloses(offset, height, v)) {
-      request('self', closeDuration(offset, height, v));
-    } else offset = 0;
+    if (releaseCloses(offset, height, v)) requestClose('self', closeDuration(offset, height, v));
+    else springBack();
   }
+
+  function springBack(): void {
+    if (offset === 0) return;
+    springing = true;
+    offset = 0;
+    if (dialog) void settled(dialog).then(() => (springing = false));
+  }
+
+  // The title bar (a finger or the mouse): the axis locks after a few px; sideways is never a drag.
+  let barStart: { x: number; y: number; t: number } | null = null;
 
   function onBarDown(e: PointerEvent): void {
     if (!canDrag || e.button !== 0 || (e.target as Element).closest('button')) return;
-    begin(e.clientY, e.timeStamp);
+    barStart = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   }
 
-  const onBarMove = (e: PointerEvent): void => move(e.clientY, e.timeStamp);
+  function onBarMove(e: PointerEvent): void {
+    if (barStart) {
+      const axis = barAxis(e.clientY - barStart.y, e.clientX - barStart.x);
+      if (axis === null) return;
+      const from = barStart;
+      barStart = null;
+      if (axis === 'x') return;
+      begin(from.y, from.t);
+    }
+    move(e.clientY, e.timeStamp);
+  }
 
-  // The content: a touch pulling down while it's scrolled to its top drags the sheet; anything else is its own scroll.
-  // Non-passive, so the drag can stop the browser's scroll (touch events: a pointer would be cancelled by the pan).
+  function onBarUp(): void {
+    barStart = null;
+    end();
+  }
+
+  // The content (a touch): pulling down while it's scrolled to its top drags the sheet; anything else is its own
+  // scroll. The two hand over within one gesture: a scroll back up that reaches the top and goes on pulling becomes the
+  // drag, and the sheet pushed back up past its rest scrolls the content again (by hand: the browser won't resume a
+  // scroll whose moves were taken). Non-passive, so the drag can keep the browser from scrolling.
   $effect(() => {
     const el = body;
     if (!el) return;
-    let start: { x: number; y: number; mode: 'drag' | 'scroll' | null } | null = null;
+    let touch: { x: number; y: number; lastY: number; mode: 'drag' | 'scroll' | 'by-hand' | null } | null = null;
     const down = (e: TouchEvent): void => {
-      const touch = e.touches[0];
-      start = canDrag && e.touches.length === 1 && touch ? { x: touch.clientX, y: touch.clientY, mode: null } : null;
+      const t = e.touches[0];
+      touch = canDrag && e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY, lastY: t.clientY, mode: null } : null;
     };
     const moveTouch = (e: TouchEvent): void => {
-      const touch = e.touches[0];
-      if (!start || !touch) return;
-      if (start.mode === null) {
-        start.mode = contentGesture(touch.clientY - start.y, touch.clientX - start.x, el.scrollTop);
-        if (start.mode === 'drag') begin(touch.clientY, e.timeStamp);
+      const t = e.touches[0];
+      if (!touch || !t) return;
+      const y = t.clientY;
+      const step = y - touch.lastY;
+      touch.lastY = y;
+      if (touch.mode === null) {
+        touch.mode = contentGesture(y - touch.y, t.clientX - touch.x, el.scrollTop);
+        if (touch.mode === null) return;
+        if (touch.mode === 'drag') begin(y, e.timeStamp);
+      } else if (touch.mode !== 'drag' && handsOver(el.scrollTop, step)) {
+        touch.mode = 'drag';
+        begin(y, e.timeStamp);
       }
-      if (start.mode !== 'drag') return;
-      e.preventDefault();
-      move(touch.clientY, e.timeStamp);
+      if (touch.mode === 'scroll') return;
+      if (e.cancelable) e.preventDefault();
+      if (touch.mode === 'by-hand') {
+        // A move the browser lets us take is scrolled by hand; one it won't (its own scroll is running) scrolls itself.
+        if (e.cancelable) el.scrollTop -= step;
+        return;
+      }
+      if (drag && y < drag.y0 && el.scrollHeight > el.clientHeight) {
+        // Pushed back past its rest: the content scrolls again from here.
+        drag = null;
+        dragging = false;
+        offset = 0;
+        touch.mode = 'by-hand';
+        return;
+      }
+      move(y, e.timeStamp, false);
+      // The browser's own scroll is running (it took the gesture first): the content stays at its top while the sheet
+      // moves, so the two never move at once.
+      if (!e.cancelable) el.scrollTop = 0;
     };
     const up = (): void => {
-      if (start?.mode === 'drag') end();
-      start = null;
+      if (touch?.mode === 'drag') end();
+      touch = null;
     };
     el.addEventListener('touchstart', down, { passive: true });
     el.addEventListener('touchmove', moveTouch, { passive: false });
@@ -236,6 +297,7 @@
   data-draggable={canDrag || undefined}
   data-dragging={dragging || undefined}
   data-settled={risen || undefined}
+  data-springing={springing || undefined}
   data-anim={hook}
   style:--sheet-offset="{offset}px"
   style:--sheet-pull={pullShare(offset, height)}
@@ -244,11 +306,11 @@
   oncancel={(e) => {
     e.preventDefault();
     if (onback) onback();
-    else request('self');
+    else requestClose('self');
   }}
   onclose={onNativeClose}
 >
-  <div class="sheet__bar" role="presentation" onpointerdown={onBarDown} onpointermove={onBarMove} onpointerup={end} onpointercancel={end}>
+  <div class="sheet__bar" role="presentation" onpointerdown={onBarDown} onpointermove={onBarMove} onpointerup={onBarUp} onpointercancel={onBarUp}>
     {#if draggable}<span class="sheet__handle" aria-hidden="true"></span>{/if}
     {#if onback || back}
       <button
@@ -257,7 +319,7 @@
         aria-label={backLabel}
         data-touch="small"
         data-touch-release={onback ? undefined : 'none'}
-        onclick={() => (onback ? onback() : request('self'))}
+        onclick={() => (onback ? onback() : requestClose('self'))}
       >
         <span class="ds-piece"><Icon name="chevron-left" alone /></span>
       </button>
@@ -270,7 +332,7 @@
       aria-label={closeText ? undefined : closeLabel}
       data-touch="small"
       data-touch-release="none"
-      onclick={() => request(closeAll ? 'all' : 'self')}
+      onclick={() => requestClose(closeAll ? 'all' : 'self')}
     >
       <span class="ds-piece"><Icon name="close" alone={!closeText} />{#if closeText}<span class="sheet__corner-text">{closeLabel}</span>{/if}</span>
     </button>

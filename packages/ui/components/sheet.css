@@ -108,11 +108,6 @@
   transition-duration: var(--sheet-in);
 }
 
-/* Another sheet over this one: it steps back (drawer-stack, below); the new one's backdrop darkens it. */
-.sheet[data-depth='under'] {
-  transform-origin: 50% 0%;
-}
-
 /* ---- the backdrop: fades either way (D209), lighter by the share pulled away (drawer-drag) ---------------------- */
 .sheet::backdrop {
   overflow: hidden;
@@ -184,8 +179,13 @@
     transition-duration: var(--sheet-grow), var(--sheet-grow), calc(var(--sheet-grow) / 3), 0s, 0s;
   }
 
-  /* Once it has risen, a let-go springs back in its own time (Sheet.svelte sets data-settled after the entry). */
+  /* Once it has risen (data-settled), its moves are the stack's steps: position and scale together, so its top edge
+     moves straight (drawer-stack); a let-go springs back in the spring's own time (data-springing). */
   :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-settled]:not([data-state='closing']) {
+    transition-duration: var(--sheet-stack), var(--sheet-stack), var(--sheet-stack), 0s, 0s;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-springing]:not([data-state='closing']) {
     transition-duration: var(--sheet-spring), var(--sheet-stack), var(--sheet-stack), 0s, 0s;
   }
 
@@ -199,9 +199,21 @@
     transition-duration: var(--sheet-out-drag, var(--sheet-out));
   }
 
+  /* Another sheet over this one: it steps back (drawer-stack), its top edge 12 px up, scaled round its own origin
+     (its corner or its bottom edge, never switched: switching the origin mid-scale made it jump, 27 Nov), so the
+     translate makes up the difference: 6 % of its height up, and 3 % of its width towards the middle from a corner.
+     The new one's backdrop darkens it. */
   :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-depth='under'] {
-    translate: 0 -0.75rem;
+    translate: 0 calc(-0.75rem - 6%);
     scale: 0.94;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-depth='under'][data-origin='left'] {
+    translate: 3% calc(-0.75rem - 6%);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sheet[open][data-depth='under'][data-origin='right'] {
+    translate: -3% calc(-0.75rem - 6%);
   }
 
   /* menu-sheet: in from 48 px to the right, and back out */
@@ -321,7 +333,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  /* none, not contain: at its top a pull hands over to the sheet's drag (drawer-drag), with no glow or bounce first */
+  overscroll-behavior: none;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;

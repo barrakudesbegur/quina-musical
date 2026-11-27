@@ -2,7 +2,7 @@
 // release a flick or the distance decides; a touch on the content drags the sheet only when the content is at its top.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHEET_DRAG, closeDuration, contentGesture, dragOffset, pullShare, releaseCloses, releaseVelocity } from '../../../../../packages/ui/components/sheet-drag.ts';
+import { SHEET_DRAG, barAxis, closeDuration, contentGesture, dragOffset, handsOver, pullShare, releaseCloses, releaseVelocity } from '../../../../../packages/ui/components/sheet-drag.ts';
 
 test('down it follows the finger 1:1; up it resists, a third as far and never past 24 px', () => {
   assert.equal(dragOffset(0), 0);
@@ -53,4 +53,18 @@ test('a touch on the content drags the sheet only pulling down from the top; any
   assert.equal(contentGesture(12, 2, 40), 'scroll', 'the content is scrolled: it scrolls back first');
   assert.equal(contentGesture(-12, 0, 0), 'scroll', 'pushing up scrolls');
   assert.equal(contentGesture(8, 20, 0), 'scroll', 'sideways');
+});
+
+test('a scroll back up that reaches the top and goes on pulling down becomes the drag (the hand-over)', () => {
+  assert.equal(handsOver(0, 4), true);
+  assert.equal(handsOver(12, 4), false, 'not at the top yet');
+  assert.equal(handsOver(0, -4), false, 'pushing up scrolls');
+  assert.equal(handsOver(0, 0), false);
+});
+
+test('the title bar locks its axis after 6 px: sideways never drags', () => {
+  assert.equal(barAxis(3, 2), null);
+  assert.equal(barAxis(10, 4), 'y');
+  assert.equal(barAxis(-10, 4), 'y', 'up: the rubber band');
+  assert.equal(barAxis(3, 12), 'x');
 });

@@ -7,7 +7,8 @@
   // up once it is one the player doesn't have (ANIMATIONS.md `pad-keys`); it stays pinned to the drawer's bottom while
   // the rest scrolls above it, so a small phone still shows it (D188). A number the player already has says whose
   // it is, with "Veure'l". Leaving with a number typed asks first (PadLeave, `pad-leave`). The QR button opens the
-  // camera in this same drawer (D141, QrScan): a card's QR fills the number in, keeping the name and icon picked.
+  // camera (D141, QrScan) as its own drawer stacked over this one (`qr-scan`, the user's phone test of 27 Nov): a
+  // card's QR closes it and fills the number in here, keeping the name and icon picked (`qr-found`); ‹ goes back here.
   import { PLAYER_CONFIG } from '../config.ts';
   import { leaveNeedsConfirm, padCatalog, padRules, padValue } from '../logic/pad.ts';
   import { nextColor, type SavedCard } from '../logic/storage.ts';
@@ -43,8 +44,9 @@
   let value = $state('');
   let name = $state('');
   let error = $state<string | null>(null);
-  /** The camera is open in place of the keypad (D141). */
+  /** The camera's drawer is over the pad (D141): mounted while `scanning`, closing (silently) once `scanOpen` goes. */
   let scanning = $state(false);
+  let scanOpen = $state(false);
   /** A QR has just filled the number in: the field's green ring (`qr-found`). */
   let found = $state(0);
   /** The leave question is open; `proceed` closes the drawer the way the player asked ("‹" or ✕). */
@@ -85,7 +87,7 @@
   function scanned(cardId: number): void {
     value = String(cardId);
     error = null;
-    scanning = false;
+    scanOpen = false;
     found += 1;
   }
 
@@ -96,78 +98,80 @@
   }
 </script>
 
-<Drawer name="pad" title={scanning ? S.qrTitle : S.padTitle} {onclose} {canClose} onback={scanning ? () => (scanning = false) : undefined}>
-  {#if scanning}
-    <QrScan onfound={scanned} onwrite={() => (scanning = false)} />
-  {:else}
-    <div class="number-pad">
-      {#key found}
-        <div class="number-pad__field" data-state={value ? 'typed' : 'empty'} data-anim={found ? 'qr-found' : undefined}>
-          <span class="number-pad__hash" aria-hidden="true">#</span>
-          <output class="number-pad__digits" aria-label={S.padNumber} aria-live="polite">{value}</output>
-          <span class="number-pad__caret" aria-hidden="true"></span>
-          <button
-            type="button"
-            class="number-pad__qr"
-            aria-label={S.qrButton}
-            onclick={() => {
-              scanning = true;
-            }}
-          >
-            <!-- The softened QR (the user, 26 Nov): rounded finders and dots, no frame. -->
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              {#each [[2, 2], [14, 2], [2, 14]] as [x, y] (`${x},${y}`)}
-                <rect x={x + 1} y={y + 1} width="6" height="6" rx="1.9" fill="none" stroke="currentColor" stroke-width="2" /><rect x={x + 2.9} y={y + 2.9} width="2.2" height="2.2" rx=".8" />
-              {/each}
-              {#each QR_DOTS as [x, y, w, h] (`${x},${y}`)}<rect {x} {y} width={w} height={h} rx="1" />{/each}
-            </svg>
+<Drawer name="pad" title={S.padTitle} {onclose} {canClose}>
+  <div class="number-pad">
+    {#key found}
+      <div class="number-pad__field" data-state={value ? 'typed' : 'empty'} data-anim={found ? 'qr-found' : undefined}>
+        <span class="number-pad__hash" aria-hidden="true">#</span>
+        <output class="number-pad__digits" aria-label={S.padNumber} aria-live="polite">{value}</output>
+        <span class="number-pad__caret" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="number-pad__qr"
+          aria-label={S.qrButton}
+          onclick={() => {
+            scanning = true;
+            scanOpen = true;
+          }}
+        >
+          <!-- The softened QR (the user, 26 Nov): rounded finders and dots, no frame. -->
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            {#each [[2, 2], [14, 2], [2, 14]] as [x, y] (`${x},${y}`)}
+              <rect x={x + 1} y={y + 1} width="6" height="6" rx="1.9" fill="none" stroke="currentColor" stroke-width="2" /><rect x={x + 2.9} y={y + 2.9} width="2.2" height="2.2" rx=".8" />
+            {/each}
+            {#each QR_DOTS as [x, y, w, h] (`${x},${y}`)}<rect {x} {y} width={w} height={h} rx="1" />{/each}
+          </svg>
+        </button>
+      </div>
+    {/key}
+    {#if owned}
+      <p class="number-pad__note" role="status">
+        <span class="number-pad__note-mark" aria-hidden="true"><CardMark identity={owned.color} decorative /></span>
+        <span class="number-pad__note-text">{S.alreadyYours(owned.name)}</span>
+        <button type="button" class="number-pad__see" onclick={() => onsee(owned.id)}>{S.seeCard}</button>
+      </p>
+    {:else if error}
+      <p class="number-pad__note" role="alert"><span class="number-pad__note-text">{error}</span></p>
+    {/if}
+    <input
+      class="number-pad__name"
+      bind:value={name}
+      maxlength={PLAYER_CONFIG.maxNameLength}
+      placeholder={S.padName}
+      aria-label={S.nameLabel}
+      autocomplete="off"
+      enterkeyhint="done"
+      onkeydown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+    />
+    <IconPicker
+      others={cards}
+      selected={identity}
+      legend={false}
+      onselect={(n) => (identity = n)}
+    />
+    <div class="number-pad__keys" data-anim="pad-keys">
+      {#each KEYS as key, i (i)}
+        {#if key === ''}
+          <span aria-hidden="true"></span>
+        {:else if key === 'back'}
+          <button type="button" class="number-pad__key number-pad__key--delete" aria-label={S.padDelete} disabled={!rules.canDelete} onclick={() => press(key)}>
+            <Icon name="backspace" alone />
           </button>
-        </div>
-      {/key}
-      {#if owned}
-        <p class="number-pad__note" role="status">
-          <span class="number-pad__note-mark" aria-hidden="true"><CardMark identity={owned.color} decorative /></span>
-          <span class="number-pad__note-text">{S.alreadyYours(owned.name)}</span>
-          <button type="button" class="number-pad__see" onclick={() => onsee(owned.id)}>{S.seeCard}</button>
-        </p>
-      {:else if error}
-        <p class="number-pad__note" role="alert"><span class="number-pad__note-text">{error}</span></p>
-      {/if}
-      <input
-        class="number-pad__name"
-        bind:value={name}
-        maxlength={PLAYER_CONFIG.maxNameLength}
-        placeholder={S.padName}
-        aria-label={S.nameLabel}
-        autocomplete="off"
-        enterkeyhint="done"
-        onkeydown={(e) => {
-          if (e.key === 'Enter') e.currentTarget.blur();
-        }}
-      />
-      <IconPicker
-        others={cards}
-        selected={identity}
-        legend={false}
-        onselect={(n) => (identity = n)}
-      />
-      <div class="number-pad__keys" data-anim="pad-keys">
-        {#each KEYS as key, i (i)}
-          {#if key === ''}
-            <span aria-hidden="true"></span>
-          {:else if key === 'back'}
-            <button type="button" class="number-pad__key number-pad__key--delete" aria-label={S.padDelete} disabled={!rules.canDelete} onclick={() => press(key)}>
-              <Icon name="backspace" alone />
-            </button>
-          {:else}
-            <button type="button" class="number-pad__key" data-key={key} disabled={!rules.digits.has(key)} onclick={() => press(key)}>{key}</button>
-          {/if}
-        {/each}
-      </div>
-      <div class="number-pad__footer">
-        <Button {...PLAYER.save} class="number-pad__save" disabled={!rules.canSave} onclick={save} />
-      </div>
+        {:else}
+          <button type="button" class="number-pad__key" data-key={key} disabled={!rules.digits.has(key)} onclick={() => press(key)}>{key}</button>
+        {/if}
+      {/each}
     </div>
+    <div class="number-pad__footer">
+      <Button {...PLAYER.save} class="number-pad__save" disabled={!rules.canSave} onclick={save} />
+    </div>
+  </div>
+  {#if scanning}
+    <Drawer name="qr" title={S.qrTitle} bind:open={scanOpen} onclose={() => (scanning = false)}>
+      <QrScan onfound={scanned} onwrite={() => (scanOpen = false)} />
+    </Drawer>
   {/if}
 </Drawer>
 {#if leaving}

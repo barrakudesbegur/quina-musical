@@ -2031,7 +2031,7 @@
 /* ---- "Afegir cartró" (boards "App · calaix per afegir un cartró", "afegir cartró: casos especials"): the number on a
    paper field, the name, the icons, the smart keypad and "Desar", 10 px apart. The drawer is a little shorter than
    the other tall ones (the board's starts 150 px down on an 844 px phone). ----------------------------------------- */
-.drawer.drawer--pad {
+.drawer:is(.drawer--pad, .drawer--qr) {
   height: min(calc(100dvh - var(--sheet-top)), 43.375rem);
 }
 
