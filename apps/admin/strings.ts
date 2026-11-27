@@ -14,7 +14,7 @@ const joinCa = (items: readonly (string | number)[]): string =>
 export const S = {
   pageTitle: 'Admin · Quina Musical',
   heading: 'Admin',
-  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle). */
   round: roundTitle,
   /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
   roundOf: roundTitleOf,
@@ -80,7 +80,7 @@ export const S = {
       const parts = [
         ...(regular.length ? [regular.length === 1 ? `la ${CA.round(regular[0])}` : `les quines ${joinCa(regular)}`] : []),
         ...(special ? ['la quina especial'] : []),
-        ...(desgraciat ? ['la quina desgraciada'] : []),
+        ...(desgraciat ? ['la quina del Desgraciat'] : []),
       ];
       return parts.length ? `Juga a ${joinCa(parts)}` : 'No juga a cap quina';
     },
@@ -117,7 +117,7 @@ export const S = {
 
   rounds: {
     title: 'Quines',
-    help: "Cada quina, normal, especial o desgraciada, amb el tipus de cartró i la cara que hi juguen, i els seus premis: de línia i de quina, o a la desgraciada només el de l'últim dempeus. Es numeren soles quan les mous.",
+    help: "Cada quina, normal, especial o del Desgraciat, amb el tipus de cartró i la cara que hi juguen, i els seus premis: de línia i de quina, o a la del Desgraciat només el de l'últim dempeus. Es numeren soles quan les mous.",
     liveHelp: 'Durant la nit, les quines jugades i la que està en joc queden fixades. Les següents es poden moure i editar en directe: el show, la pantalla i els mòbils ho veuen en desar.',
     played: 'Jugada',
     inPlay: 'En joc',
@@ -126,15 +126,15 @@ export const S = {
     kind: 'Tipus',
     normal: 'Normal',
     special: 'Especial',
-    desgraciat: 'Desgraciada',
+    desgraciat: 'Desgraciat',
     /** The option's name when another round already is the Desgraciat one (it is disabled). It has no number to name
-     * it by (S.round), and its row says "Quina Desgraciada". */
-    desgraciatTaken: "Desgraciada (ja n'hi ha una)",
-    oneDesgraciat: "Només hi pot haver una Quina Desgraciada per nit. Canvia'n una a normal.",
+     * it by (S.round), and its row says "Quina del Desgraciat". */
+    desgraciatTaken: "Desgraciat (ja n'hi ha una)",
+    oneDesgraciat: "Només hi pot haver una Quina del Desgraciat per nit. Canvia'n una a normal.",
     desgraciatHelp: "Tothom dempeus: un cartró s'asseu quan sona qualsevol de les seves cançons, i guanya l'últim que queda dempeus. No té línia.",
     linesMoved: (n: number) =>
-      n === 1 ? "La Quina Desgraciada no té línia: el seu premi de línia ara és un premi de l'últim dempeus." : `La Quina Desgraciada no té línia: els seus ${n} premis de línia ara són premis de l'últim dempeus.`,
-    lineInDesgraciat: "La Quina Desgraciada no té línia: aquests premis no es lliurarien. Passa'ls al premi de l'últim dempeus o treu-los.",
+      n === 1 ? "La Quina del Desgraciat no té línia: el seu premi de línia ara és un premi de l'últim dempeus." : `La Quina del Desgraciat no té línia: els seus ${n} premis de línia ara són premis de l'últim dempeus.`,
+    lineInDesgraciat: "La Quina del Desgraciat no té línia: aquests premis no es lliurarien. Passa'ls al premi de l'últim dempeus o treu-los.",
     moveLine: "Passar-los al premi de l'últim dempeus",
     cardType: 'Cartrons que hi juguen',
     side: 'Cara',

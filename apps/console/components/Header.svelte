@@ -1,6 +1,7 @@
 <!--
   Always visible, in three panels (they stack on a phone):
-  - the round: "Quina N" (or "Quina Especial", "Quina Desgraciada") and the real Heat, with the Phase marked on it (HeatMeter);
+  - the round: "Quina N" (or "Quina Especial", or "Desgraciat", the Quina del Desgraciat's short name: D251) and the
+    real Heat, with the Phase marked on it (HeatMeter);
   - the time: the clock, the round's and the night's expected ends (flag, moon), and the Drift chip;
   - the links: the connection chips and the menu. This device's label lives in the menu; it still names
     who pressed what.
@@ -32,7 +33,7 @@
 
 <header class="header" data-scene={flow.scene} data-stale={!model.online || undefined}>
   <div class="header__panel header__panel--round">
-    <p class="header__round">{round ? S.round(round, model.plan) : S.header.noRound}</p>
+    <p class="header__round">{round ? S.roundShort(round, model.plan) : S.header.noRound}</p>
     {#if snap}
       <HeatMeter percent={heatPercent(snap.heat)} phase={snap.phase} zones={ZONES} fixed={snap.game.phaseOverride !== null} climbing={snap.cards.climbingTo} />
     {/if}

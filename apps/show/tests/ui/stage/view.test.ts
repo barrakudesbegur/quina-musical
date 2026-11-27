@@ -36,7 +36,7 @@ const CATALOG: Catalog = {
   // card-types.json, as apps/cards writes it: the only source of the types' names, colours and sides.
   cardTypes: readPrintedCardTypes([
     { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
+    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'QUINA QUINA!', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
   ]),
 };
 
@@ -523,7 +523,7 @@ test('a Check carries the card\'s printed type, which is public', () => {
   const wrong = cued('checkWrongType', 'fail');
   const failed = stageView(wrong, flowOf(wrong), SAMPLE_PLAN, CATALOG);
   if (failed.body.scene !== 'check') return assert.fail('not check');
-  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Especial · Desgraciada', color: '#ffd9e8', special: true, ok: false }, 'a side-1 round: side 1 named');
+  assert.deepEqual(failed.body.check.cardType, { type: 'especial', label: 'Especial · Desgraciat', color: '#ffd9e8', special: true, ok: false }, 'a side-1 round: side 1 named');
   assert.equal(failed.body.check.verdict, 'notValid');
   assert.deepEqual(failed.body.check.cells, []);
 });
@@ -552,7 +552,7 @@ test("the Especial round's Check draws the especial card's side 2, and its badge
   const one = stageView(desgraciat, flowOf(desgraciat), SAMPLE_PLAN, CATALOG);
   if (one.body.scene !== 'check') return assert.fail('not check');
   assert.deepEqual(one.body.check.cells.slice(0, 4).map((c) => c.songId), [31, 32, 39, 74], "the Desgraciat round: side 1's top row");
-  assert.equal(one.body.check.cardType?.label, 'Especial · Desgraciada');
+  assert.equal(one.body.check.cardType?.label, 'Especial · Desgraciat');
 });
 
 test('interval: the next round, the count and the countdown guide; no winners, no QR, no prizes', () => {
@@ -618,11 +618,11 @@ test('without any state: the before scene, never a crash', () => {
 
 // ---- the Desgraciat round (Quina 5 in SAMPLE_PLAN) ----
 
-test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro and in the Interval before it', () => {
+test('the Desgraciat round is named "Quina del Desgraciat" in play, at its intro and in the Interval before it', () => {
   const play = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), SAMPLE_PLAN, CATALOG);
   assert.equal(play.body.scene, 'play');
   if (play.body.scene !== 'play') return;
-  assert.deepEqual(play.body.round, { number: 5, special: false, desgraciat: true, label: 'Quina Desgraciada' });
+  assert.deepEqual(play.body.round, { number: 5, special: false, desgraciat: true, label: 'Quina del Desgraciat' });
   // Without a plan, the state's round kind says it.
   const bare = stageView(FIXTURES.desgraciat(NOW).state, flowOf(FIXTURES.desgraciat(NOW).state), null, null);
   assert.ok(bare.body.scene === 'play' && bare.body.round?.desgraciat);
@@ -638,7 +638,7 @@ test('the Desgraciat round is named "Quina Desgraciada" in play, at its intro an
   const intervalState = FIXTURES.intervalDesgraciat(NOW).state;
   const interval = stageView(intervalState, flowOf(intervalState), SAMPLE_PLAN, CATALOG);
   assert.ok(interval.body.scene === 'interval' && interval.body.nextRound.desgraciat && interval.body.nextRound.number === 5);
-  assert.equal(interval.body.plate, 'Següent: Quina Desgraciada', 'no number, no total');
+  assert.equal(interval.body.plate, 'Següent: Quina del Desgraciat', 'no number, no total');
 });
 
 test('a normal round after a special one is named by its Quina number, everywhere the stage names it', () => {

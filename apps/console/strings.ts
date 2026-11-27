@@ -5,7 +5,7 @@
 // every known value has its own text.
 import type { AutoSound, BreakSet, HoldReason, MusicSet, PhaseName, RejectReason, ShowStatus, SoundName, SoundTestKind, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import { roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
+import { roundShortTitle, roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
@@ -27,8 +27,10 @@ const ordinal = (n: number) => `${n}a`;
 
 export const S = {
   pageTitle: 'Consola · Quina Musical',
-  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina Desgraciada" (plan.ts roundTitle). */
+  /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle). */
   round: roundTitle,
+  /** A round's name where space is short, the header's (D251): "Desgraciat" for the Desgraciat round. */
+  roundShort: roundShortTitle,
   /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
   roundOf: roundTitleOf,
 
@@ -427,8 +429,8 @@ export const S = {
     card: (cardId: number) => `Cartró #${cardId}`,
     /** Spoken: the panel with the claimed card. */
     cardLabel: (cardId: number) => `Comprovació del cartró ${cardId}`,
-    /** The claim's chip: "Línia", "Quina", and the Desgraciat round's "Desgraciada". */
-    kind: { line: CA.line, bingo: CA.bingo, standing: 'Desgraciada' } satisfies Record<WinKind, string>,
+    /** The claim's chip: "Línia", "Quina", and the Desgraciat round's short name, "Desgraciat" (D251). */
+    kind: { line: CA.line, bingo: CA.bingo, standing: CA.desgraciatShort } satisfies Record<WinKind, string>,
     /** "1 de 2": this card among the claimed ones. */
     ofCards: (n: number, total: number) => `${n} de ${total}`,
     verdict: {

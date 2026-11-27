@@ -12,7 +12,9 @@ export const CA = {
   round: (n: number) => `Quina ${n}`,
   roundOf: (n: number, total: number) => `Quina ${n} de ${total}`,
   specialRound: 'Quina Especial',
-  desgraciatRound: 'Quina Desgraciada',
+  desgraciatRound: 'Quina del Desgraciat',
+  /** The Desgraciat round's name where space is short (D251): the console's header, the Check's chip. */
+  desgraciatShort: 'Desgraciat',
   card: (id: number) => `Cartró ${id}`,
   /** A printed card type card-types.json doesn't name (its id, "Cartró daurat"). */
   cardType: (id: string) => `Cartró ${id}`,

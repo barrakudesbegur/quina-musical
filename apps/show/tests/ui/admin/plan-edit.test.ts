@@ -110,7 +110,7 @@ test("a new round plays its kind's default card type", () => {
 
 const SIDED = readPrintedCardTypes([
   { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
-  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
   { type: 'daurat', name: 'Cartró daurat', color: '#f5d77a', title: '', priceCents: null, sides: [{ side: 1, pool: '1' }] },
 ]) ?? [];
 
@@ -142,12 +142,12 @@ test('the side a round plays by default (D193, D226): the first five normal roun
 
 test("the side picker offers the type's sides; a new type keeps the side when it has it; a new kind moves a default side along", () => {
   assert.deepEqual(sideChoices(SIDED, 'normal', 1), [{ side: 1, label: '1–5' }, { side: 2, label: '6–10' }]);
-  assert.deepEqual(sideChoices(SIDED, 'especial', 2), [{ side: 1, label: 'Desgraciada' }, { side: 2, label: 'Quina Especial' }]);
+  assert.deepEqual(sideChoices(SIDED, 'especial', 2), [{ side: 1, label: 'Desgraciat' }, { side: 2, label: 'Quina Especial' }]);
   assert.deepEqual(sideChoices(SIDED, 'daurat', 2), [{ side: 1, label: null }, { side: 2, label: null }], "the plan's side stays shown, next to its warning");
   assert.deepEqual(sideChoices([], 'normal', 1), [{ side: 1, label: null }], 'without card-types.json');
   const named = (type: string) => sideChoices(SIDED, type, 1).map((c) => S.rounds.sideOption(c.side, c.label));
   assert.deepEqual(named('normal'), ['Cara 1 · Quines 1–5', 'Cara 2 · Quines 6–10'], 'a range: the Quines it is printed for');
-  assert.deepEqual(named('especial'), ['Cara 1 · Desgraciada', 'Cara 2 · Quina Especial'], "D226: a round's name as it is");
+  assert.deepEqual(named('especial'), ['Cara 1 · Desgraciat', 'Cara 2 · Quina Especial'], "D226: a round's name as it is");
   assert.deepEqual(named('daurat'), ['Cara 1'], 'no label: just the side');
   // Five normal rounds before it: the sixth is Quina 6, on side 2.
   const before = [1, 2, 3, 4, 5].map((n) => blankRound(n, 'normal', SIDED));

@@ -188,13 +188,13 @@ test("the Celebration for the last card standing: «Quina potra!» on the winner
   assert.equal(S.yourWin.standing, CA.potra);
 });
 
-test('the round is "Quina Desgraciada" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {
-  assert.equal(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN), 'Quina Desgraciada');
+test('the round is "Quina del Desgraciat" wherever it is named; its kind comes from the intro, the rounds or the plan', () => {
+  assert.equal(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN), 'Quina del Desgraciat');
   assert.equal(S.roundName({ number: 7, kind: 'special' }, PLAN), 'Quina Especial', 'the Especial has no number either');
-  assert.equal(S.prizesOf(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN)), 'Premis de la Quina Desgraciada');
+  assert.equal(S.prizesOf(S.roundName({ number: 3, kind: 'desgraciat' }, PLAN)), 'Premis de la Quina del Desgraciat');
   // PLAN's round 3 is the Desgraciat round, so round 4 is Quina 3; by number only, the kind comes from roundKindOf.
   assert.equal(S.nextRound(roundNameOf(4, state(), PLAN)), 'Següent: Quina 3');
-  assert.equal(roundNameOf(3, state({ rounds: [] }), PLAN), 'Quina Desgraciada');
+  assert.equal(roundNameOf(3, state({ rounds: [] }), PLAN), 'Quina del Desgraciat');
   assert.equal(roundNameOf(8, state(), PLAN), 'Quina 5', 'after three special rounds');
   assert.equal(roundNameOf(4, null, null), 'Quina 4', 'no plan: its plan number');
   assert.equal(roundKindOf(3, state(), null), 'desgraciat');

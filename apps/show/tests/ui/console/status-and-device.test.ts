@@ -54,13 +54,15 @@ test('round on screen: none before the night, the introduced one at round start'
   assert.deepEqual(roundOnScreen(start, flowOf(start)), { number: 7, kind: 'special' });
   // The header names them with no number ("Quina Especial", not "Quina 7 · especial").
   assert.equal(S.round({ number: 7, kind: 'special' }, SAMPLE_PLAN), 'Quina Especial');
-  // The Desgraciat round, at its intro and in play: the header reads "Quina Desgraciada".
+  // The Desgraciat round, at its intro and in play: the header reads "Desgraciat", its short name (D251).
   const intro = FIXTURES.desgraciatIntro(NOW).state;
   assert.deepEqual(roundOnScreen(intro, flowOf(intro)), { number: 5, kind: 'desgraciat' });
   const desgraciat = FIXTURES.desgraciat(NOW).state;
   const round = roundOnScreen(desgraciat, flowOf(desgraciat));
   assert.ok(round);
-  assert.equal(S.round(round, SAMPLE_PLAN), 'Quina Desgraciada');
+  assert.equal(S.roundShort(round, SAMPLE_PLAN), 'Desgraciat');
+  assert.equal(S.round(round, SAMPLE_PLAN), 'Quina del Desgraciat');
+  assert.equal(S.roundShort({ number: 7, kind: 'special' }, SAMPLE_PLAN), 'Quina Especial', 'the other rounds keep their names');
   assert.equal(S.round({ number: 3, kind: 'normal' }, SAMPLE_PLAN), 'Quina 3');
   // After the Desgraciat round 5, round 6 is Quina 5; without a plan, its plan number.
   assert.equal(S.round({ number: 6, kind: 'normal' }, SAMPLE_PLAN), 'Quina 5');

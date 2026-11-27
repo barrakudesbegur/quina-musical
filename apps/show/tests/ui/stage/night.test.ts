@@ -23,7 +23,7 @@ test('each card type lists the regular rounds it plays by Quina number (round 5,
   ]);
 });
 
-test('the Quina Desgraciada is its own entry (its sad-face pill), not one of the numbered rounds', () => {
+test('the Quina del Desgraciat is its own entry (its sad-face pill), not one of the numbered rounds', () => {
   const night = (desgraciatType: string) =>
     nightCardTypes({ rounds: [round(1, 'normal'), round(2, 'desgraciat', desgraciatType), round(3, 'normal'), round(4, 'special')] }, TYPES).map((t) => [t.type, t.regularRounds, t.special, t.desgraciat]);
   assert.deepEqual(night('normal'), [

@@ -43,8 +43,9 @@ export function breakMinutes(schedule: Pick<SchedulePlan, 'intervalMinutes' | 't
 
 /**
  * A normal round's Quina number, as the screens name it ("Quina N"): its place among the plan's normal rounds. The
- * special rounds have no number ("Quina Especial", "Quina Desgraciada"), so they don't count, wherever they sit in the
- * plan (screens.md; the card's printed mark reads "QUINES 1–5" / "QUINES 6–10", D171, D193). Null for a special round.
+ * special rounds have no number ("Quina Especial", "Quina del Desgraciat"), so they don't count, wherever they sit in
+ * the plan (screens.md; the card's printed mark reads "QUINES 1–5" / "QUINES 6–10", D171, D193). Null for a special
+ * round.
  */
 export function quinaNumber(round: Pick<RoundPlan, 'number' | 'kind'>, rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[]): number | null {
   if (round.kind !== 'normal') return null;
@@ -58,14 +59,19 @@ type RoundsOf = { readonly rounds: readonly RoundRef[] };
 
 /**
  * A round's name on every screen (screens.md): "Quina N" for a normal round, N its Quina number (quinaNumber); the
- * special rounds have no number: "Quina Especial", "Quina Desgraciada". Without the plan, or with one that lacks the
- * round (a screen before the plan loads, an old snapshot), a normal round falls back to its number in the plan
- * (`round.number`), which is only right until a special round has played.
+ * special rounds have no number: "Quina Especial", "Quina del Desgraciat" (D251; roundShortTitle where space is short).
+ * Without the plan, or with one that lacks the round (a screen before the plan loads, an old snapshot), a normal round
+ * falls back to its number in the plan (`round.number`), which is only right until a special round has played.
  */
 export function roundTitle(round: RoundRef, plan: RoundsOf | null): string {
   if (round.kind === 'special') return CA.specialRound;
   if (round.kind === 'desgraciat') return CA.desgraciatRound;
   return CA.round(quinaOf(round, plan));
+}
+
+/** roundTitle where space is short (D251): the Desgraciat round is "Desgraciat"; every other round keeps its name. */
+export function roundShortTitle(round: RoundRef, plan: RoundsOf | null): string {
+  return round.kind === 'desgraciat' ? CA.desgraciatShort : roundTitle(round, plan);
 }
 
 /** roundTitle with the night's total after a normal round's number, "Quina 4 de 8" (what the total counts is pending

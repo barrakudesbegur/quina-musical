@@ -29,7 +29,7 @@ test('every round with both bundles, their sponsors and the special flag', () =>
   assert.deepEqual(m.rounds[6].prizes[1].items[0], { title: 'Televisor', detail: '50 polzades', sponsor: '[Patrocinador 2]', headline: true });
   assert.equal(m.rounds[6].special, true);
   // By name: the special rounds have no number, and the normal rounds after them count only the normal ones.
-  assert.deepEqual(m.rounds.map((r) => r.label), ['Quina 1', 'Quina 2', 'Quina 3', 'Quina 4', 'Quina Desgraciada', 'Quina 5', 'Quina Especial', 'Quina 6']);
+  assert.deepEqual(m.rounds.map((r) => r.label), ['Quina 1', 'Quina 2', 'Quina 3', 'Quina 4', 'Quina del Desgraciat', 'Quina 5', 'Quina Especial', 'Quina 6']);
   assert.equal(m.hasSpecialRound, true);
   assert.deepEqual(m.claimRules, SAMPLE_PLAN.cheatSheet.claimRules);
   assert.deepEqual(m.specialRoundRules, SAMPLE_PLAN.cheatSheet.specialRoundRules);

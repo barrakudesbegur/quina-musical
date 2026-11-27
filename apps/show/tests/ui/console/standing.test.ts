@@ -176,7 +176,7 @@ test('Futur in the Desgraciat round: the songs until one card stands, and the co
 test('the round named, its intro and resume sending its kind, its one prize', () => {
   assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat'), side: 1 });
   // SAMPLE_PLAN: the Desgraciat round is round 5 (no number, no total), so round 6 is Quina 5; the total stays (U163).
-  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN, 8), 'Quina Desgraciada');
+  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN, 8), 'Quina del Desgraciat');
   assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN, 8), 'Quina 4 de 8');
   assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 6), SAMPLE_PLAN, 8), 'Quina 5 de 8');
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');
@@ -187,7 +187,8 @@ test('the round named, its intro and resume sending its kind, its one prize', ()
   assert.ok(normal.status === 'ok');
   assert.deepEqual(normal.prizes.bundles.map((b) => b.kind), ['line', 'bingo']);
   assert.equal(S.prizes.ribbon.standing, 'Dempeus');
-  assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN)), 'Premis de la Quina Desgraciada');
+  assert.equal(S.check.kind.standing, 'Desgraciat', "the Check's claim chip: the round's short name (D251)");
+  assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN)), 'Premis de la Quina del Desgraciat');
   assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN)), 'Premis de la Quina 4');
   assert.equal(S.cheatSheet.prizes(S.round(roundAt(SAMPLE_PLAN, 8), SAMPLE_PLAN)), 'Premis de la Quina 6', 'after both special rounds');
 });

@@ -70,9 +70,9 @@
   text-shadow: var(--title-drop-sm);
 }
 
-/* «Quina Desgraciada» is the longest name: a little smaller, so it fits on one line with its mark. */
+/* «Quina del Desgraciat» (D251) is the longest name: a little smaller, so it fits on one line with its mark. */
 .prizes__round[data-kind='desgraciat'] .prizes__name {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
 }
 
 .prizes__round .round-mark {

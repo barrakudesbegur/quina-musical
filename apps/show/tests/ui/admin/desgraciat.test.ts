@@ -36,7 +36,7 @@ test("a round made the Desgraciat one keeps its Line prizes in its one bundle, a
   assert.deepEqual(withLineMoved(stray).line, []);
   assert.equal(withLineMoved(stray).bingo.at(-1)?.title, 'Bufanda');
   assert.equal(withLineMoved(d), d, 'nothing to move');
-  assert.equal(S.rounds.linesMoved(2), "La Quina Desgraciada no té línia: els seus 2 premis de línia ara són premis de l'últim dempeus.");
+  assert.equal(S.rounds.linesMoved(2), "La Quina del Desgraciat no té línia: els seus 2 premis de línia ara són premis de l'últim dempeus.");
 });
 
 test('one Desgraciat round per night: the option is taken while another round has it, and checkGamePlan refuses two', () => {
@@ -44,7 +44,7 @@ test('one Desgraciat round per night: the option is taken while another round ha
   assert.equal(desgraciatTaken(rounds, 0), true, 'round 5 is the sample plan Desgraciat round');
   assert.equal(desgraciatTaken(rounds, 4), false, 'its own round can keep it');
   // The Desgraciat round has no number to name it by.
-  assert.equal(S.rounds.desgraciatTaken, "Desgraciada (ja n'hi ha una)");
+  assert.equal(S.rounds.desgraciatTaken, "Desgraciat (ja n'hi ha una)");
   const two: GamePlan = { ...SAMPLE_PLAN, rounds: rounds.map((r) => (r.number === 2 ? withRoundKind(r, 'desgraciat') : r)) };
   const check = checkGamePlan(two);
   assert.equal(check.ok, false);
@@ -60,7 +60,7 @@ test("the cheat sheet: the Desgraciat round's one prize, the last card standing'
   assert.deepEqual(r5.prizes[0].items.slice(0, 2).map((i) => [i.title, i.headline]), [['Pernil', true], ['Xocolata', false]], 'a whole hamper');
   assert.equal(r5.prizes[0].items.length, SAMPLE_PLAN.rounds[4].bingo.length);
   assert.deepEqual(cheatRound(SAMPLE_PLAN, SAMPLE_PLAN.rounds[0]).prizes.map((p) => p.kind), ['line', 'bingo']);
-  assert.equal(r5.label, 'Quina Desgraciada', 'no number');
+  assert.equal(r5.label, 'Quina del Desgraciat', 'no number');
   assert.equal(cheatRound(SAMPLE_PLAN, SAMPLE_PLAN.rounds[5]).label, 'Quina 5', 'round 6, after it, is Quina 5');
 });
 
@@ -69,7 +69,7 @@ test('the plan diff, the card types and the winners name the round and the win',
   const diff = diffPlans(before, SAMPLE_PLAN);
   assert.deepEqual(diff.rounds.kindChanged, [5]);
   assert.deepEqual(diff.prizes.filter((p) => p.round === 5).map((p) => p.kind).sort(), ['line', 'standing']);
-  assert.equal(S.plan.cardRounds([1, 2, 3, 4, 5, 6], false, true), 'Juga a les quines 1, 2, 3, 4, 5 i 6 i la quina desgraciada');
+  assert.equal(S.plan.cardRounds([1, 2, 3, 4, 5, 6], false, true), 'Juga a les quines 1, 2, 3, 4, 5 i 6 i la quina del Desgraciat');
   assert.deepEqual(S.night.kind, { line: 'Línia', bingo: 'Quina', standing: 'Últim cartró dempeus' });
   const rows = winnerRows([{ round: 5, kind: 'standing', cardId: 57, claimId: 'cl-13', winningSongId: 1, position: 21, atMs: 1, name: null, notes: null }], SAMPLE_PLAN);
   assert.equal(rows[0].prize, 'Pernil +18');
