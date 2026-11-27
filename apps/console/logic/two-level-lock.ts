@@ -3,7 +3,8 @@
 // one (`twoLevelHold { button, on }`), from the touch screen and from the Wii remote (B is Aguanta's, − and + Parlem's);
 // the state's `twoLevelHeld` names the holder (the relay's `from`, a clientId). Only a mirror: `hold`, `pause` and
 // `suspense` still do the work, and the engine refuses another console's press `busy`, which the lock explains (no
-// toast). Pure.
+// toast). The lock covers the remote too (WiiLockGate): a key whose button another console holds is refused whole, with
+// a short "no" rumble, since the remote has no screen. Pure.
 import type { ShowState, TwoLevelButton } from '@quina/protocol';
 import type { WiiButton } from '../wii/report.ts';
 import { labelForId } from '../../../packages/ui/client/endpoints.ts';
@@ -46,9 +47,28 @@ export interface LockRules {
 }
 
 /**
- * Who holds `button` on another console, by its `label`, or null when it isn't locked here: not held, held by this
- * console (its clientId; or, through the cloud, this console is pressing it, from about when the hold started, or just
- * let go of it), or held only for a moment so far.
+ * Who holds `button` on another console, by its `label`, or null: not held, or held by this console (its clientId; or,
+ * through the cloud, this console is pressing it, from about when the hold started, or just let go of it). The rule
+ * both the screen's lock and the remote's use.
+ */
+export function heldByOther(
+  held: ShowState['twoLevelHeld'],
+  button: TwoLevelButton,
+  own: { clientId: string; presses: OwnPresses },
+  nowMs: number,
+  rules: Pick<LockRules, 'raceMs' | 'echoMs'>,
+): string | null {
+  if (!held || held.button !== button || held.clientId === own.clientId) return null;
+  const pressedAt = own.presses.holding.get(button);
+  if (pressedAt !== undefined && held.sinceMs >= pressedAt - rules.raceMs) return null;
+  const released = own.presses.releasedAtMs[button];
+  if (released !== undefined && held.sinceMs <= released && nowMs - released < rules.echoMs) return null;
+  return held.label;
+}
+
+/**
+ * Who holds `button` on another console, while it shows locked on this screen; else null: `heldByOther`, once that
+ * hold has lasted `afterMs` (so a tap elsewhere never flashes the padlock).
  */
 export function lockedBy(
   held: ShowState['twoLevelHeld'],
@@ -57,13 +77,8 @@ export function lockedBy(
   nowMs: number,
   rules: LockRules,
 ): string | null {
-  if (!held || held.button !== button || held.clientId === own.clientId) return null;
-  const pressedAt = own.presses.holding.get(button);
-  if (pressedAt !== undefined && held.sinceMs >= pressedAt - rules.raceMs) return null;
-  const released = own.presses.releasedAtMs[button];
-  if (released !== undefined && held.sinceMs <= released && nowMs - released < rules.echoMs) return null;
-  if (nowMs - held.sinceMs < rules.afterMs) return null;
-  return held.label;
+  const by = heldByOther(held, button, own, nowMs, rules);
+  return by !== null && held && nowMs - held.sinceMs >= rules.afterMs ? by : null;
 }
 
 /** Names the engine gives a console with no label of its own (the Bus's role default, the show page's own, a reqId's
@@ -119,5 +134,34 @@ export class LockPresses {
   /** The presses now, for `lockedBy`. */
   get presses(): OwnPresses {
     return { holding: new Map(this.#pressedAtMs), releasedAtMs: this.#releasedAtMs };
+  }
+}
+
+/**
+ * The remote under the lock (D234): a key whose two-level button another console holds is refused at its press, whole:
+ * nothing is sent (no command, no `twoLevelHold`), the remote gives its "no" rumble (ANIMATIONS.md › wii-refused), and
+ * the key's release does nothing either. A while such a B is down is refused too: B + A is Aguanta's second level
+ * (Suspens). Decided at the press with `heldByOther`, the screen lock's own-vs-other rule, without its wait: the remote
+ * has no padlock to flash. A lock that ends while the key is still down doesn't start it: press again.
+ */
+export class WiiLockGate {
+  #refused = new Set<WiiButton>();
+
+  /** A key went down: whether it's refused. `heldElsewhere`: whether another console holds that button now. */
+  press(key: WiiButton, heldElsewhere: (button: TwoLevelButton) => boolean): boolean {
+    const button = wiiLockButton(key);
+    const refused = button ? heldElsewhere(button) : key === 'a' && this.#refused.has('b');
+    if (refused) this.#refused.add(key);
+    return refused;
+  }
+
+  /** A key went up: whether its press was refused (so its release does nothing). */
+  release(key: WiiButton): boolean {
+    return this.#refused.delete(key);
+  }
+
+  /** The remote went away. */
+  reset(): void {
+    this.#refused.clear();
   }
 }

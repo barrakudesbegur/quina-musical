@@ -2,7 +2,7 @@
 // and this console's presses from the touch screen and the Wii, told to the engine once each.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LOCK_BUTTON, LockPresses, NO_PRESSES, holderName, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
+import { LOCK_BUTTON, LockPresses, NO_PRESSES, WiiLockGate, heldByOther, holderName, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
 import { CONSOLE } from '../../../../console/config.ts';
 
 const OWN = 'Tauleta-3f2a';
@@ -87,4 +87,43 @@ test("the holder's name: its device label, accents back for the presets; none fo
   assert.equal(holderName('tablet-ab12c', presets), null, "the Bus's default");
   assert.equal(holderName('local', presets), null, "the show page's own");
   assert.equal(holderName('', presets), null);
+});
+
+test("the remote's rule is the same own-vs-other, without the screen's 300 ms wait", () => {
+  const other = held('stay', 'Mobil_admin-x1y2', 1000);
+  assert.equal(heldByOther(other, 'stay', own(), 1050, RULES), 'Mobil_admin-x1y2', 'at once');
+  assert.equal(lockedBy(other, 'stay', own(), 1050, RULES), null, 'the padlock waits');
+  assert.equal(heldByOther(held('stay', OWN, 1000), 'stay', own(), 1050, RULES), null, 'ours');
+  assert.equal(heldByOther(other, 'hold', own(), 1050, RULES), null, 'the other button');
+  // Through the cloud: our touch press of the same button makes it ours; a release just now too.
+  const presses = new LockPresses();
+  presses.press('stay', 'touch', 990);
+  assert.equal(heldByOther(held('stay', 'cloud-link', 1000), 'stay', own(presses.presses), 1100, RULES), null);
+  presses.release('stay', 'touch', 1200);
+  assert.equal(heldByOther(held('stay', 'cloud-link', 1000), 'stay', own(presses.presses), 1500, RULES), null, 'its release on the way');
+  assert.equal(heldByOther(held('stay', 'cloud-link', 1300), 'stay', own(presses.presses), 1500, RULES), 'cloud-link', 'a new hold after ours');
+});
+
+test('the remote under the lock: a key of a button held elsewhere is refused whole, the other button works', () => {
+  const gate = new WiiLockGate();
+  const stayHeld = (button: 'hold' | 'stay') => button === 'stay';
+  assert.equal(gate.press('b', stayHeld), true, 'B: Aguanta is held elsewhere');
+  assert.equal(gate.press('a', stayHeld), true, 'A with that B down would be Suspens');
+  assert.equal(gate.press('minus', stayHeld), false, 'Parlem stays usable');
+  assert.equal(gate.release('a'), true, 'its release does nothing');
+  assert.equal(gate.release('b'), true);
+  assert.equal(gate.release('minus'), false, 'a key that went through releases as usual');
+  assert.equal(gate.press('a', stayHeld), false, 'A alone is the default action');
+  assert.equal(gate.release('a'), false);
+  // The lock ends while the key is down: it stays refused until it's let go.
+  const holdHeld = (button: 'hold' | 'stay') => button === 'hold';
+  assert.equal(gate.press('plus', holdHeld), true);
+  assert.equal(gate.release('plus'), true);
+  assert.equal(gate.press('plus', () => false), false, 'pressed again once it is free');
+  // Keys of no two-level button never ask.
+  assert.equal(gate.press('home', () => { throw new Error('asked'); }), false);
+  assert.equal(gate.press('one', () => { throw new Error('asked'); }), false);
+  gate.press('b', stayHeld);
+  gate.reset();
+  assert.equal(gate.release('b'), false, 'the remote went away');
 });

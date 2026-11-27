@@ -20,7 +20,7 @@ import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type W
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
 import { dropReport, recentDrops } from './drops.ts';
-import { wiiLockButton } from '../logic/two-level-lock.ts';
+import { WiiLockGate, wiiLockButton } from '../logic/two-level-lock.ts';
 
 /** `lost`: a remote that was connected went away (worth a red chip); `disconnected`: none yet (optional, grey). */
 export type WiiStatus = 'unsupported' | 'disconnected' | 'connecting' | 'connected' | 'lost';
@@ -86,6 +86,8 @@ export class WiiController {
   private batteryTimer: ReturnType<typeof setInterval> | null = null;
   private readonly model: ConsoleModel;
   private readonly mapper = new WiiMapper(WII);
+  /** The lock on the remote (D234): keys refused because another console holds their two-level button. */
+  private readonly gate = new WiiLockGate();
   private remote: WiiRemote | null = null;
   private pressed: ReadonlySet<WiiButton> = new Set();
   private ticker: ReturnType<typeof setInterval> | null = null;
@@ -214,6 +216,7 @@ export class WiiController {
     for (const b of this.pressed) if (wiiLockButton(b)) this.model.twoLevelReleaseAll(`wii-${b}`);
     this.pressed = new Set();
     this.mapper.reset();
+    this.gate.reset();
     // A connected remote that goes away without "Desconnectar" dropped: out of range, or out of battery.
     if (this.status === 'connected' && !this.leaving) this.dropTimes = [...recentDrops(this.dropTimes, this.model.show.client.now(), WII.dropWindowMs), this.model.show.client.now()];
     this.leaving = false;
@@ -228,13 +231,19 @@ export class WiiController {
     const { down, up } = buttonChanges(this.pressed, report.pressed);
     this.pressed = report.pressed;
     // The lock mirror (D234): B is Aguanta's two-level button, − and + Parlem's. The engine hears the press before what
-    // it does, and the let-go after.
+    // it does, and the let-go after. A key whose button another console holds is refused whole, with the remote's «no»
+    // (and A while such a B is down: B + A is Suspens).
     for (const b of down) {
+      if (this.gate.press(b, (button) => this.model.heldElsewhereNow(button))) {
+        this.remote?.rumble(WII.rumble.refused);
+        continue;
+      }
       const lock = wiiLockButton(b);
       if (lock) this.model.twoLevelPress(lock, `wii-${b}`);
       this.apply(this.mapper.press(b, now, ctx));
     }
     for (const b of up) {
+      if (this.gate.release(b)) continue;
       this.apply(this.mapper.release(b, ctx));
       const lock = wiiLockButton(b);
       if (lock) this.model.twoLevelRelease(lock, `wii-${b}`);

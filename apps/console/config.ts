@@ -130,6 +130,8 @@ export const WII = Object.freeze({
     suspenseOn: [180],
     suspenseCancel: [40, 90, 40],
     jolt: [60],
+    /** «No» (D234): a key whose two-level button another console holds; three quick buzzes (ANIMATIONS.md › wii-refused). */
+    refused: [40, 50, 40, 50, 40],
     stop: [],
   },
   /** A gentler vibration after a rumble, repeated until the next one (D145: "oscillating or below full power"): the

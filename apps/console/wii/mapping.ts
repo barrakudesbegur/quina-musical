@@ -22,7 +22,7 @@ import { holdPress, type HoldMode } from '../logic/hold-modes.ts';
 import { magnitude, type Accel, type WiiButton } from './report.ts';
 import { ShakeDetector, type ShakeConfig } from './shake.ts';
 
-export type RumbleName = 'tap' | 'pause' | 'back' | 'autoOn' | 'autoOff' | 'suspenseStep' | 'suspenseOn' | 'suspenseCancel' | 'jolt' | 'stop';
+export type RumbleName = 'tap' | 'pause' | 'back' | 'autoOn' | 'autoOff' | 'suspenseStep' | 'suspenseOn' | 'suspenseCancel' | 'jolt' | 'refused' | 'stop';
 export type DpadButton = 'up' | 'right' | 'down' | 'left';
 
 export type WiiCommand =

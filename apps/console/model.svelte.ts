@@ -21,7 +21,7 @@ import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel,
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundCards, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { addAnswer, refusalError, type CardsAddOutcome } from './logic/cards-add.ts';
-import { LockPresses, NO_PRESSES, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
+import { LockPresses, NO_PRESSES, heldByOther, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
 import {
@@ -468,6 +468,11 @@ export class ConsoleModel {
     const commands = this.lockPresses.releaseAll(source, this.show.client.now());
     this.ownPresses = this.lockPresses.presses;
     for (const command of commands) this.show.send('twoLevelHold', command);
+  }
+
+  /** Whether another console holds `button` right now (the remote's lock, decided at a key's press). Not reactive. */
+  heldElsewhereNow(button: TwoLevelButton): boolean {
+    return heldByOther(this.show.client.state?.twoLevelHeld, button, { clientId: this.clientId, presses: this.lockPresses.presses }, this.show.client.now(), CONSOLE.lock) !== null;
   }
 
   /** Who holds `button` on another console (its label), while it's locked here; else null. Reactive. */
