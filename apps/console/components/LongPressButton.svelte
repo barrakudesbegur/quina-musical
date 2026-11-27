@@ -3,31 +3,34 @@
   press of --dur-hold-confirm. A short tap shows "Mantén premut per confirmar" (hook hold-hint). The fill
   sweeps the whole button (hook long-press-confirm) and drains back when released early; with reduced
   motion a percentage shows instead. `badge`: a decoration inside the button (a WiiBadge). The timing is logic/long-press.ts; this component only feeds it.
+  Its look is visual props (D205): `color`, a palette through `data-color`, and `variant` ('solid', or 'plain': the
+  surface's fill with the palette's text colour), from the presets in actions.ts. `big`: the cluster's sticker button.
 -->
 <script lang="ts">
   import { onDestroy, type Snippet } from 'svelte';
   import { CONSOLE } from '../config.ts';
-  import type { IconName } from '../icons.ts';
+  import type { LineIconName } from '../../../packages/ui/icons/line.ts';
   import { LONG_PRESS_IDLE, longPress, longPressProgress, parseCssDurationMs, type LongPressEvent, type LongPressState } from '../logic/long-press.ts';
   import { S } from '../strings.ts';
-  import Icon from './Icon.svelte';
+  import LineIcon from '../../../packages/ui/icons/Icon.svelte';
   import { holdSounds } from '../../../packages/ui/sounds/touch.ts';
+  import type { ButtonColor } from '../../../packages/ui/components/types.ts';
 
   interface Props {
     label: string;
     /** A smaller explanation line inside the button. */
     note?: string | null;
-    icon?: IconName | null;
-    tone?: 'danger' | 'primary' | 'ok' | 'calm' | 'accent';
+    /** A drawing of the one icon family (packages/ui/icons). */
+    icon?: LineIconName | null;
+    color?: ButtonColor;
+    variant?: 'solid' | 'plain';
     big?: boolean;
-    /** One of the big action buttons (console.css › big-button[data-action]): its colour and sticker icon. */
-    action?: string | null;
     disabled?: boolean;
     onconfirm: () => void;
     badge?: Snippet;
   }
 
-  let { label, note = null, icon = null, tone = 'danger', big = false, action = null, disabled = false, onconfirm, badge }: Props = $props();
+  let { label, note = null, icon = null, color = 'red', variant = 'solid', big = false, disabled = false, onconfirm, badge }: Props = $props();
 
   const uid = $props.id();
   let button: HTMLButtonElement | undefined = $state();
@@ -103,9 +106,10 @@
   <button
     bind:this={button}
     type="button"
-    class="long-press {action ? '' : `tone-${tone}`}"
+    class="long-press"
     class:big-button={big}
-    data-action={action}
+    data-color={color}
+    data-variant={variant}
     data-anim="press long-press-confirm"
     data-state={press.phase}
     style:--progress={progress}
@@ -121,7 +125,7 @@
   >
     <span class="long-press__fill" aria-hidden="true"></span>
     <span class="long-press__content">
-      {#if icon}<Icon name={icon} outline={action !== null} />{/if}
+      {#if icon}<LineIcon name={icon} outline={big} />{/if}
       <span class="long-press__text">
         <span class="long-press__label">{label}</span>
         {#if note}<span class="long-press__note">{note}</span>{/if}

@@ -59,7 +59,7 @@
 </script>
 
 {#if snap && ring}
-  <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring={ring.state} aria-labelledby="{uid}-title">
+  <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring-state={ring.state} aria-labelledby="{uid}-title">
     {#if music}
       <span class="cover cover--lg cover--missing now-playing__music" data-music={music} aria-hidden="true"><Icon name="music" alone /></span>
     {:else}

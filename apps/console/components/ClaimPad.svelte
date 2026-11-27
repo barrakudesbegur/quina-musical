@@ -16,9 +16,10 @@
   import { PAD_DIGITS, padKeyFromKeyboard, type PadKey } from '../logic/numpad.ts';
   import { claimKindsOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { ACTIONS, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
-  import WiiBadge from './WiiBadge.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
 
   const model = getConsole();
@@ -156,29 +157,20 @@
     </div>
 
     <div class="claim-pad__actions">
-      <button type="button" class="big-button claim-pad__cancel" data-action="cancel" data-anim="press" onclick={() => model.closePad()}>
-        <span class="big-button__label">{S.numpad.cancel}</span>
-      </button>
-      <button type="button" class="big-button claim-pad__add" data-action="add" data-anim="press" disabled={!pad.digits || full} onclick={add}>
-        <span class="big-button__row"><Icon name="plus" outline /><span class="big-button__label">{S.numpad.add}</span></span>
-      </button>
+      <Button {...ACTIONS.padCancel} class="claim-pad__cancel" onclick={() => model.closePad()} />
+      <Button {...ACTIONS.padAdd} class="claim-pad__add" disabled={!pad.digits || full} onclick={add} />
       <section class="panel claim-pad__more" aria-labelledby="{uid}-more">
         <h2 class="claim-pad__more-title" id="{uid}-more">{S.numpad.moreTitle}</h2>
         <p class="claim-pad__more-text">{S.numpad.moreText}</p>
       </section>
-      <button
-        type="button"
-        class="big-button claim-pad__submit"
-        data-action="pad-submit"
-        data-anim="press"
-        data-default={isDefault || undefined}
+      <Button
+        {...asDefault(ACTIONS.padSubmit, isDefault)}
+        class="claim-pad__submit"
+        label={S.numpad.submit(ids)}
+        note={S.numpad.submitNote(pad.kind, ids)}
         disabled={claim === null || !model.can('claim')}
         onclick={submit}
-      >
-        <span class="big-button__row"><Icon name="check" outline /><span class="big-button__label">{S.numpad.submit(ids)}</span></span>
-        <span class="big-button__note">{S.numpad.submitNote(pad.kind, ids)}</span>
-        {#if isDefault}<WiiBadge button="a" />{/if}
-      </button>
+      />
     </div>
   </section>
 {/if}

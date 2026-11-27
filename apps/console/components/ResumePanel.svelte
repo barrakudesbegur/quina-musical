@@ -11,6 +11,7 @@
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import { ACTIONS } from '../actions.ts';
   import LongPressButton from './LongPressButton.svelte';
 
   const model = getConsole();
@@ -68,10 +69,7 @@
   {/if}
 
   <LongPressButton
-    label={S.resume.send}
-    note={S.resume.sendNote}
-    icon="play"
-    tone="accent"
+    {...ACTIONS.resume}
     disabled={!parsed.point || !allowed}
     onconfirm={() => parsed.point && model.resume(parsed.point)}
   />

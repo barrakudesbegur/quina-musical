@@ -13,6 +13,8 @@
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Cover from './Cover.svelte';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
   import TwoLevelButton from './TwoLevelButton.svelte';
 
@@ -68,19 +70,12 @@
     <TwoLevelButton mode="talk" active={null} enabled={model.controls.hold.enabled} />
   </div>
 
-  <button type="button" class="big-button review-panel__continue" data-action="review-continue" data-anim="press" disabled={!canEnd} onclick={() => decide('continue')}>
-    <Icon name="eye" outline />
-    <span class="big-button__label">{S.review.continue}</span>
-    <span class="big-button__note">{S.review.continueNote(next ? title(next.songId) : null)}</span>
-  </button>
+  <Button {...ACTIONS.reviewContinue} class="review-panel__continue" note={S.review.continueNote(next ? title(next.songId) : null)} disabled={!canEnd} onclick={() => decide('continue')} />
 
-  {#each [{ outcome: 'win', icon: 'star', label: S.review.win, note: S.review.winNote, against: !passes }, { outcome: 'lose', icon: 'cross', label: S.review.lose, note: S.review.loseNote, against: passes }, { outcome: 'discard', icon: 'trash', label: S.review.discard, note: S.review.discardNote, against: false }] as const as d (d.outcome)}
-    <button type="button" class="big-button review-panel__decision" data-action="review-{d.outcome}" data-anim="press" data-against={d.against || undefined} disabled={!canEnd} onclick={() => decide(d.outcome)}>
+  {#each [{ outcome: 'win', preset: ACTIONS.reviewWin, against: !passes }, { outcome: 'lose', preset: ACTIONS.reviewLose, against: passes }, { outcome: 'discard', preset: ACTIONS.reviewDiscard, against: false }] as const as d (d.outcome)}
+    <Button {...d.preset} class="review-panel__decision" data-against={d.against || undefined} disabled={!canEnd} onclick={() => decide(d.outcome)}>
       {#if d.against}<span class="review-panel__against" title={S.review.against}><Icon name="alert" /><span class="visually-hidden">{S.review.against}</span></span>{/if}
-      <Icon name={d.icon} outline />
-      <span class="big-button__label">{d.label}</span>
-      <span class="big-button__note">{d.note}</span>
-    </button>
+    </Button>
   {/each}
 </div>
 
@@ -90,10 +85,8 @@
     <p class="warning-box"><Icon name="alert" /><span class="warning-box__text">{warning}</span></p>
     <p class="review-confirm__text">{S.review.confirm.text[asking]}</p>
     <div class="review-confirm__actions">
-      <button type="button" class="big-button" data-action="cancel" data-anim="press" onclick={() => dialog?.close()}><span class="big-button__label">{S.review.confirm.cancel}</span></button>
-      <button type="button" class="big-button" data-action="review-{asking}" data-anim="press" onclick={confirm}>
-        <span class="big-button__row"><Icon name={asking === 'win' ? 'star' : 'cross'} outline /><span class="big-button__label">{S.review.confirm.yes[asking]}</span></span>
-      </button>
+      <Button {...ACTIONS.reviewConfirmBack} onclick={() => dialog?.close()} />
+      <Button {...(asking === 'win' ? ACTIONS.reviewConfirmWin : ACTIONS.reviewConfirmLose)} onclick={confirm} />
     </div>
   {/if}
 </dialog>

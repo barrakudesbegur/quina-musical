@@ -46,7 +46,7 @@
     {#if wii.batteryLevel !== null}<span class="wii-battery" data-low={wii.batteryLevel < WII.batteryLow || undefined}>{S.wii.battery(wii.batteryLevel)}</span>{/if}
     <span class="wii-dialog__spacer"></span>
     {#if (wii.status === 'disconnected' || wii.status === 'lost') && !wii.anyConnected}
-      <button type="button" class="mini tone-primary" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
+      <button type="button" class="mini" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
     {/if}
     <button type="button" class="mini dialog__close" data-anim="press" onclick={() => (open = false)}><Icon name="close" /><span>{S.wii.close}</span></button>
   </header>

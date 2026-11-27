@@ -18,7 +18,9 @@
   import { modeCommand, secondLevel, type HoldMode } from '../logic/hold-modes.ts';
   import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../logic/two-level.ts';
   import { S } from '../strings.ts';
+  import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
+  import LineIcon from '../../../packages/ui/icons/Icon.svelte';
   import WiiBadge from './WiiBadge.svelte';
   import { holdSounds } from '../../../packages/ui/sounds/touch.ts';
 
@@ -34,11 +36,8 @@
   const model = getConsole();
   const wii = getWii();
   const uid = $props.id();
-  const TEXT = {
-    talk: { label: S.cluster.talk, note: S.cluster.talkNote, icon: 'hold', level: S.cluster.pauseLevel, levelIcon: 'pause' },
-    stay: { label: S.cluster.stay, note: S.cluster.stayNote, icon: 'stay', level: S.cluster.suspense, levelIcon: 'suspense' },
-  } as const;
-  const t = $derived(TEXT[mode]);
+  // Each mode's look and words: its preset (actions.ts), the level-2 strip in the same palette as the top (D-k).
+  const t = $derived(mode === 'talk' ? ACTIONS.hold : ACTIONS.stay);
 
   let press = $state<TwoLevelState>(TWO_LEVEL_IDLE);
   let progress = $state(0);
@@ -140,7 +139,7 @@
 <button
   type="button"
   class="big-button two-level"
-  data-action={mode}
+  data-color={t.color}
   data-anim="press escalate-hold{mode === 'stay' && level2.on ? ' suspense-hold' : ''}"
   data-state={press.phase}
   data-level2={level2.on || undefined}
@@ -161,7 +160,7 @@
 >
   <span class="two-level__main">
     {#if locked}<span class="two-level__lock"><Icon name="lock" alone /><span class="visually-hidden">{S.cluster.talkLocked}</span></span>{/if}
-    <Icon name={t.icon} outline />
+    <LineIcon name={t.icon} outline />
     <span class="big-button__text">
       <span class="big-button__label">{t.label}</span>
       <span class="big-button__note">{note}</span>
@@ -171,8 +170,8 @@
     <span class="two-level__fill" aria-hidden="true"></span>
     <span class="two-level__second-content">
       {#if !level2.on}<span class="two-level__how" aria-hidden="true">{S.cluster.holdFor}</span>{/if}
-      <Icon name={t.levelIcon} />
-      <span class="two-level__second-label">{t.level}</span>
+      <LineIcon name={t.level2.icon} />
+      <span class="two-level__second-label">{t.level2.label}</span>
       {#if countdown}<span class="two-level__count" role="timer">{S.cluster.suspenseAutoRelease(countdown.secondsLeft)}</span>{/if}
       <span class="two-level__percent" aria-hidden="true">{Math.round(progress * 100)} %</span>
     </span>
@@ -186,4 +185,4 @@
   </span>
   {#if mode === 'talk'}<WiiBadge button="talk" />{:else}<WiiBadge button="b" hold />{/if}
 </button>
-<span class="visually-hidden" id="{uid}-how">{S.cluster.holdForLong(t.level)}</span>
+<span class="visually-hidden" id="{uid}-how">{S.cluster.holdForLong(t.level2.label)}</span>

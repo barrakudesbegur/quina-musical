@@ -85,7 +85,7 @@
           <span class="standing__last-number">#{last}</span>
         </p>
         <div class="standing__last-side">
-          <button type="button" class="action action--big tone-primary standing__claim" data-testid="claim-last" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('claim')} onclick={() => claimLast(last)}>
+          <button type="button" class="action action--big standing__claim" data-color="orange" data-testid="claim-last" data-anim="press" data-default={isDefault || undefined} data-ring={isDefault ? 'orange' : undefined} disabled={!model.can('claim')} onclick={() => claimLast(last)}>
             <Icon name="claim" /><span>{S.standing.claimLast(last)}</span>
             {#if isDefault}<WiiBadge button="a" />{/if}
           </button>

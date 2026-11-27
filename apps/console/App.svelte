@@ -17,6 +17,8 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { setConsole, setConsoleSounds, setWii } from './context.ts';
+  import { provideDs } from '../../packages/ui/components/providers.ts';
+  import DsWii from './components/DsWii.svelte';
   import { CONSOLE_TOUCH } from './touch-rules.ts';
   import { ConsoleSounds } from './ui-sounds.ts';
   import { wireTouchSounds } from '../../packages/ui/sounds/delegate.ts';
@@ -50,6 +52,8 @@
   import WiiDialog from './components/WiiDialog.svelte';
 
   const model = setConsole(new ConsoleModel());
+  // The generic components (packages/ui/components) draw the console's Wii keys.
+  provideDs({ wii: DsWii });
   const wii = setWii(new WiiController(model));
   // The tablet's touch sounds (U182): this device's taps only, never on the show laptop.
   const sounds = setConsoleSounds(new ConsoleSounds(() => model.uiSounds));
@@ -101,7 +105,9 @@
 
 <div
   class="console"
+  data-density="console"
   data-theme={model.theme}
+  data-ground={model.theme === 'dark' ? 'night' : 'paper'}
   data-scene={flow.scene}
   data-board={board}
   data-status={snap?.status ?? 'none'}

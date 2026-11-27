@@ -21,10 +21,10 @@
   import { songTitleOf } from '../logic/show-data.ts';
   import { CA, S } from '../strings.ts';
   import Cover from './Cover.svelte';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { ACTIONS, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
-  import PodiumIcon from './PodiumIcon.svelte';
-  import WiiBadge from './WiiBadge.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
 
   const model = getConsole();
@@ -164,10 +164,7 @@
     </div>
 
     <div class="claim-pad__actions finale-pad__actions">
-      <button type="button" class="big-button claim-pad__cancel finale-pad__close" data-action="cancel" data-anim="press" onclick={() => model.closeFinalePad()}>
-        <span class="big-button__row"><Icon name="play" outline /><span class="big-button__label">{F.close}</span></span>
-        <span class="big-button__note">{F.closeNote[pad.mode]}</span>
-      </button>
+      <Button {...ACTIONS.finaleClose} class="claim-pad__cancel finale-pad__close" note={F.closeNote[pad.mode]} onclick={() => model.closeFinalePad()} />
 
       <section class="panel check-card finale-pad__card" aria-live="polite" data-testid="finale-card" data-card-id={shown?.cardId ?? ''} data-verdict={shown?.verdict ?? ''}>
         {#if shown}
@@ -200,21 +197,16 @@
         {/if}
       </section>
 
-      <button
-        type="button"
-        class="big-button claim-pad__submit finale-pad__go"
-        data-action="claim"
-        data-anim="press"
-        data-default={isDefault || undefined}
+      <Button
+        {...asDefault(ACTIONS.finaleGo, isDefault)}
+        class="claim-pad__submit finale-pad__go"
+        label={pad.mode === 'start' ? F.begin : F.join}
         data-testid="finale-go"
         disabled={command === null || !model.can('finale')}
         onclick={() => model.finalePadSubmit()}
       >
-        <PodiumIcon />
-        <span class="big-button__label">{pad.mode === 'start' ? F.begin : F.join}</span>
         <span class="finale-pad__count">{bigNote}</span>
-        {#if isDefault}<WiiBadge button="a" />{/if}
-      </button>
+      </Button>
     </div>
   </section>
 {/if}

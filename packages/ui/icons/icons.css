@@ -55,7 +55,7 @@
 
 /* A detail in the button's own colour (the outline look) */
 .icon .icon__accent {
-  stroke: var(--action-bg, var(--color-surface));
+  stroke: var(--palette-solid, var(--color-surface));
 }
 
 /* The two-tone icons (the finish flag): paper and ink on any colour */

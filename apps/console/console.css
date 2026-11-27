@@ -91,27 +91,12 @@
 }
 
 .icon .icon__accent {
-  stroke: var(--action-bg, var(--color-surface));
+  stroke: var(--palette-solid, var(--color-surface));
 }
 
-.console .tone-primary {
-  color: var(--color-on-primary);
-}
-.console .tone-danger {
-  color: var(--color-on-danger);
-}
-.console .tone-ok {
-  color: var(--color-on-ok);
-}
-.console .tone-accent {
-  color: var(--color-on-accent);
-}
-.console .tone-calm {
-  color: var(--color-on-calm);
-}
-
-/* The press hook: a short sink, the 3D edge shrinks (ANIMATIONS.md › press) */
-[data-anim~='press']:active:not(:disabled) {
+/* The press hook: a short sink, the 3D edge shrinks (ANIMATIONS.md › press). The generic components (ds-pushable) have
+   their own, the shared resource's (packages/ui/ds/resources.css). */
+[data-anim~='press']:not(.ds-pushable):active:not(:disabled) {
   transform: translateY(var(--line-width-thin));
   transition-duration: var(--dur-press);
 }
@@ -769,16 +754,11 @@
   padding: 0 8px;
   border: var(--line-width-thin) solid var(--color-ink);
   border-radius: var(--radius-pill);
-  background: var(--action-throw);
-  color: var(--color-ink);
+  background: var(--palette-solid);
+  color: var(--palette-contrast);
   font-size: var(--text-xs);
   letter-spacing: 0;
   text-transform: none;
-}
-
-.now-line__chip[data-song='storm'] {
-  background: var(--action-storm);
-  color: #fff6e5;
 }
 
 .now-line__chip--low {
@@ -2727,33 +2707,6 @@
   }
 }
 
-/* One colour per action */
-[data-action='back'] {
-  --action-bg: var(--action-back);
-}
-[data-action='talk'] {
-  --action-bg: var(--action-talk);
-}
-[data-action='stay'] {
-  --action-bg: var(--action-stay);
-}
-[data-action='claim'] {
-  --action-bg: var(--action-claim);
-}
-[data-action='suspense'] {
-  --action-bg: var(--action-suspense);
-}
-[data-action='next'],
-[data-action='round-intro'] {
-  --action-bg: var(--action-next);
-}
-[data-action='reject'] {
-  --action-bg: var(--action-reject);
-}
-[data-action='confirm'] {
-  --action-bg: var(--action-confirm);
-}
-
 /* The sticker button: white display letters with a thick ink outline, a 3D edge and a hard shadow. */
 .big-button {
   position: relative;
@@ -2768,8 +2721,8 @@
   overflow: hidden;
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: var(--radius-lg);
-  background: var(--action-bg, var(--color-surface));
-  color: var(--action-label);
+  background: var(--palette-solid, var(--color-surface));
+  color: var(--color-white);
   font-family: var(--font-display);
   font-size: calc(var(--text-2xl) * 0.9);
   font-weight: var(--font-weight-strong);
@@ -2778,43 +2731,42 @@
   -webkit-text-stroke: 5px var(--color-ink);
   paint-order: stroke fill;
   text-shadow: 0 3px 0 var(--color-ink);
-  box-shadow: inset 0 -9px 0 rgb(0 0 0 / 0.22), inset 0 5px 0 rgb(255 255 255 / 0.35), 0 5px 0 var(--color-ink);
+  /* R2: the 3D edge in the fill's own dark shade */
+  box-shadow: inset 0 -9px 0 var(--palette-edge, rgb(0 0 0 / 0.22)), inset 0 5px 0 rgb(255 255 255 / 0.35), 0 5px 0 var(--color-ink);
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .big-button[aria-pressed='true'] {
-  background: var(--action-bg, var(--color-surface));
-  color: var(--action-label);
-  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 0.7), inset 0 9px 0 rgb(0 0 0 / 0.25), 0 1px 0 var(--color-ink);
+  background: var(--palette-solid, var(--color-surface));
+  color: var(--color-white);
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 0.7), inset 0 9px 0 var(--palette-edge, rgb(0 0 0 / 0.25)), 0 1px 0 var(--color-ink);
   transform: translateY(4px);
 }
 
 .big-button .icon {
   width: 2.75rem;
   height: 2.75rem;
-  stroke: var(--action-label);
+  stroke: var(--color-white);
 }
 
 .big-button .icon .icon__fill {
-  fill: var(--action-label);
+  fill: var(--color-white);
 }
 
-.big-button .icon__under {
+/* The console's icons on the sticker buttons (Button's, packages/ui/components; and the older big buttons'): the
+   ink line under the outline look, the accent in the button's own fill (the stroke itself is icons.css's). */
+:is(.big-button, .button) .icon__under {
   fill: none;
   stroke: var(--color-ink);
 }
 
-.big-button .icon .icon__accent {
-  stroke: var(--action-bg);
+:is(.big-button, .button) .icon .icon__accent {
+  stroke: var(--palette-solid);
 }
 
-/* Comprovar's rosette: a little bigger, so its waves stay open at the family's stroke */
-.big-button[data-action='claim'] .icon {
-  width: 2.875rem;
-  height: 2.875rem;
-}
+
 
 .big-button__text {
   display: flex;
@@ -2835,60 +2787,48 @@
   font-size: var(--text-sm);
   font-weight: 800;
   line-height: 1.2;
-  color: var(--action-note);
+  color: var(--palette-contrast);
   -webkit-text-stroke: 0;
   text-shadow: none;
 }
 
-.big-button[data-action='claim'] {
-  font-size: var(--text-xl);
+/* «Comprovar cartró»: the rosette and the words on one line, a size between Button's s and m */
+.thumb-cluster__slot--claim .button {
+  --button-label-size: var(--text-xl);
+  --button-icon-size: 2.875rem;
+  --button-head-gap: var(--space-3);
 }
 
-.big-button[data-action='next'] {
-  flex-direction: row;
-  gap: var(--space-4);
-  font-size: clamp(var(--text-2xl), 6vw, 3.875rem);
+/* «+ Finalista» keeps its words on one line in the narrow slot */
+.thumb-cluster__slot--claim .button__label {
+  white-space: nowrap;
 }
 
-.big-button[data-action='next'] .icon {
-  width: 3.75rem;
-  height: 3.75rem;
-}
-
-/* «Comença la quina» in a break (D195): Següent's size, the play icon beside the words and the note under them */
-.big-button[data-action='round-intro'] {
-  font-size: clamp(var(--text-2xl), 5vw, 3.5rem);
-}
-
-.big-button[data-action='round-intro'] .big-button__row {
-  gap: var(--space-4);
-}
-
-.big-button[data-action='round-intro'] .icon {
-  width: 3.75rem;
-  height: 3.75rem;
+/* «Comença la quina» in a break (D195): Següent's size (Button l), a little smaller so its three words fit */
+.thumb-cluster__intro {
+  --button-label-size: clamp(var(--text-2xl), 5vw, 3.5rem);
 }
 
 /* Enrere: a long row, icon and text from the left */
 /* Enrere: narrow (a third of its row): the icon and the word on one line, a small "mantén" under them */
-.big-button[data-action='back'] {
+.thumb-cluster__slot--back .big-button {
   min-height: calc(var(--tap-big) + var(--space-2));
   padding-inline: var(--space-2);
   font-size: var(--text-xl);
 }
 
-.big-button[data-action='back'] .long-press__content {
+.thumb-cluster__slot--back .big-button .long-press__content {
   flex-wrap: wrap;
   column-gap: var(--space-2);
   row-gap: 0;
   width: 100%;
 }
 
-.big-button[data-action='back'] .long-press__text {
+.thumb-cluster__slot--back .big-button .long-press__text {
   display: contents;
 }
 
-.big-button[data-action='back'] .long-press__note {
+.thumb-cluster__slot--back .big-button .long-press__note {
   flex-basis: 100%;
   margin-top: -2px;
   color: #ffffff;
@@ -2897,15 +2837,9 @@
   opacity: 0.95;
 }
 
-.big-button[data-action='back'] .icon {
+.thumb-cluster__slot--back .big-button .icon {
   width: 2rem;
   height: 2rem;
-}
-
-/* Comprovar: the rosette and the word on one line */
-.big-button[data-action='claim'] {
-  flex-direction: row;
-  gap: var(--space-3);
 }
 
 /* Parlem and Aguanta with their second level (hooks escalate-hold, suspense-hold): a pale strip along the
@@ -2919,16 +2853,11 @@
   touch-action: none;
 }
 
-[data-action='talk'] {
-  --level2-pale: #bde6ff;
-  --level2-bg: var(--color-night);
+/* D-k (27 Nov): the strip uses its own button's palette, pale while idle and its dark edge while the level is on */
+.two-level {
+  --level2-pale: var(--palette-pale);
+  --level2-bg: var(--palette-edge);
   --level2-ink: #ffffff;
-}
-
-[data-action='stay'] {
-  --level2-pale: var(--color-gold-light);
-  --level2-bg: var(--action-suspense);
-  --level2-ink: var(--color-ink);
 }
 
 .two-level__main {
@@ -3046,17 +2975,6 @@
 /* «Llançament» and «Tempesta» (the Consola-Llancament-Tempesta board; hooks throw-hold, throw-on): a striped sticker,
    the name with its sticker icon, the tap's note, the song's chip while it's on, and the «Des del principi» strip that
    fills while held (in the top row there's no strip: the light sweeps the whole button) */
-[data-action='throw'] {
-  --action-bg: var(--action-throw);
-  --throw-pale: var(--action-throw-pale);
-}
-
-[data-action='storm'] {
-  --action-bg: var(--action-storm);
-  --throw-pale: var(--action-storm-pale);
-  --action-note: #fff6e5;
-}
-
 .throw-button {
   align-items: stretch;
   justify-content: stretch;
@@ -3064,6 +2982,7 @@
   padding: 0;
   touch-action: none;
   font-size: clamp(var(--text-2xl), 4.2vw, 3.125rem);
+  --throw-pale: var(--palette-pale);
   --throw-stripe: 45.25px; /* one period of the 32 px stripes, measured along the row */
 }
 
@@ -3148,7 +3067,8 @@
   gap: 10px;
   box-sizing: border-box;
   width: 86%;
-  padding: 18px 14px 9px;
+  /* #16: the «DROP» mark over the bar stays clear of the box's top border */
+  padding: 23px 14px 9px;
   border: var(--line-width) solid var(--color-ink);
   border-radius: 14px;
   background: #fff6e5;
@@ -3200,7 +3120,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--action-bg);
+  background: var(--palette-solid);
   transform: scaleX(var(--at, 0));
   transform-origin: left;
 }
@@ -3505,13 +3425,25 @@
     font-size: 0.75rem;
   }
 
-  .big-button[data-action='claim'] {
-    font-size: var(--text-lg);
+  /* Button, the same compact scale as the older big buttons here */
+  .button {
+    --button-min-height: 3.5rem;
+    --button-pad-block: var(--space-1);
+    --button-pad-inline: var(--space-2);
+    --button-label-size: var(--text-lg);
+    --button-icon-size: 1.75rem;
+    --button-note-size: 0.75rem;
+    --button-stroke: 3.5px;
+    --button-label-drop: 0 2px 0 var(--color-ink);
   }
 
-  .big-button[data-action='back'] {
+  .thumb-cluster__slot--back .big-button {
     min-height: 3.25rem;
     font-size: var(--text-md);
+  }
+
+  .thumb-cluster__slot--claim .button {
+    --button-label-size: var(--text-lg);
   }
 
   .two-level {
@@ -3530,19 +3462,15 @@
     font-size: var(--text-sm);
   }
 
-  .big-button[data-action='back'] .icon {
+  .thumb-cluster__slot--back .big-button .icon {
     width: 1.75rem;
     height: 1.75rem;
   }
 
-  .big-button[data-action='next'] {
-    min-height: 4rem;
-    font-size: var(--text-xl);
-  }
-
-  .big-button[data-action='next'] .icon {
-    width: 2rem;
-    height: 2rem;
+  .thumb-cluster__slot--next .button {
+    --button-min-height: 4rem;
+    --button-label-size: var(--text-xl);
+    --button-icon-size: 2rem;
   }
 
   /* The throw songs keep their strip under them, edge to edge */
@@ -3574,12 +3502,12 @@
     font-size: var(--text-md);
   }
 
-  .thumb-cluster[data-top] .big-button[data-action='claim'] .icon {
+  .thumb-cluster[data-top] .thumb-cluster__slot--claim .button__icon {
     display: none;
   }
 
-  .thumb-cluster[data-top] .big-button[data-action='claim'] {
-    font-size: var(--text-md);
+  .thumb-cluster[data-top] .thumb-cluster__slot--claim .button {
+    --button-label-size: var(--text-md);
   }
 }
 
@@ -3643,8 +3571,8 @@
 
 .check-board__back,
 .check-board__review {
-  min-height: 5.25rem;
-  font-size: calc(var(--text-xl) * 0.85);
+  --button-min-height: 5.25rem;
+  --button-label-size: calc(var(--text-xl) * 0.85);
 }
 
 .check-board__back {
@@ -3661,7 +3589,7 @@
 }
 
 .check-board__add {
-  font-size: var(--text-xl);
+  --button-label-size: var(--text-xl);
 }
 
 .check-board__go {
@@ -3684,49 +3612,6 @@
   min-height: 5.25rem;
 }
 
-/* The big sticker buttons of the Check, one colour each (Consola-Comprovacio) */
-.console {
-  --action-review: #b9b2a3;
-  --action-auto: var(--color-cyan);
-  --action-auto-on: #3fb4f0;
-  --action-revealing: #e87400;
-  --action-celebrate: var(--color-gold);
-  --action-fail: var(--color-red);
-  --action-fail-ring: #f4a1a4;
-}
-
-[data-action='check-back'] {
-  --action-bg: var(--action-back);
-}
-[data-action='review'],
-[data-action='cancel'],
-[data-action='review-discard'] {
-  --action-bg: var(--action-review);
-}
-[data-action='add'],
-[data-action='pad-submit'],
-[data-action='check-valid'] {
-  --action-bg: var(--action-claim);
-}
-[data-action='auto'] {
-  --action-bg: var(--action-auto);
-}
-[data-action='check-reveal'],
-[data-action='review-continue'] {
-  --action-bg: var(--action-next);
-}
-[data-action='check-revealing'] {
-  --action-bg: var(--action-revealing);
-}
-[data-action='check-celebrate'],
-[data-action='review-win'] {
-  --action-bg: var(--action-celebrate);
-}
-[data-action='check-fail'],
-[data-action='review-lose'] {
-  --action-bg: var(--action-fail);
-}
-
 /* Londrina is in capitals (D96); the Nunito notes inside keep their case (D114). */
 .check-board .big-button__label,
 .claim-pad .big-button__label,
@@ -3743,46 +3628,30 @@
   gap: var(--space-2);
 }
 
-.check-board__back .icon,
-.check-board__add .icon,
-.claim-pad__add .icon {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-/* The Wii's 1·2 and −/+ sit at the right of their buttons, like the board's discs */
 .check-board__back,
-.check-board__review {
-  padding-right: 2.75rem;
-}
-
-.check-board__back > .wii-badge,
-.check-board__review > .wii-badge {
-  top: 50%;
-  bottom: auto;
-  right: 10px;
-  translate: 0 -50%;
+.check-board__add,
+.claim-pad__add {
+  --button-icon-size: 1.75rem;
 }
 
 /* «Seguides»: a tile with an on/off strip along its bottom (pressed while on) */
 .check-board__auto {
-  padding-bottom: 3.25rem;
-  font-size: calc(var(--text-xl) * 0.85);
-  transition: background-color var(--dur-step-mark) var(--ease-out);
+  --button-pad-bottom: 3.25rem;
+  --button-label-size: calc(var(--text-xl) * 0.85);
+  --button-icon-size: 2rem;
 }
 
-.check-board__auto .icon {
-  width: 2rem;
-  height: 2rem;
-}
-
-.check-board__auto[aria-pressed='true'] {
-  --action-bg: var(--action-auto-on);
+/* Its strip and «Destapa»'s sit on the button's piece, at its foot (the body doesn't position them) */
+.check-board__auto .button__body,
+.check-board__go .button__body,
+.review-panel__decision .button__body {
+  position: static;
 }
 
 .check-board__switch {
   position: absolute;
   inset: auto 0 0;
+  border-radius: 0 0 calc(var(--ds-radius) - var(--ds-border)) calc(var(--ds-radius) - var(--ds-border));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3836,53 +3705,38 @@
   transform: translateX(1.125rem);
 }
 
-/* The big button: «Destapa» → «Destapant…» → the cue (hook check-pace: colour and label crossfade 150 ms) */
+/* The big button: «Destapa» → «Destapant…» (busy) → the cue, «Celebrem!» ringed in gold or «Fallada» in light red
+   (the presets' rings, R1) (hook check-pace: the label crossfades 150 ms) */
 .check-board__go {
-  font-size: clamp(var(--text-2xl), 4.5vw, 3.125rem);
+  --button-label-size: clamp(var(--text-2xl), 4.5vw, 3.125rem);
+  --button-icon-size: 3rem;
+}
+
+.check-board__go .button__piece {
   transition: background-color var(--dur-step-mark) var(--ease-out);
 }
 
-.check-board__go .big-button__row,
-.check-board__go .big-button__note {
+.check-board__go .button__head,
+.check-board__go .button__note {
   animation: check-pace-in var(--dur-step-mark) var(--ease-out);
 }
 
-.check-board__go .icon {
-  width: 3rem;
-  height: 3rem;
-}
-
-.check-board__go:has(.check-board__strip) {
-  padding-bottom: 3.25rem;
-}
-
-.check-board__go[data-action='check-revealing'] {
-  box-shadow: inset 0 8px 0 rgb(0 0 0 / 0.22), 0 1px 0 var(--color-ink);
-  transform: translateY(4px);
-}
-
-/* The cue: «Celebrem!» ringed in gold, «Fallada» in a light red (the board's outline) */
-.check-board__go[data-action='check-celebrate'] {
-  outline: 6px solid var(--action-celebrate);
-  outline-offset: 4px;
-}
-
-.check-board__go[data-action='check-fail'] {
-  outline: 6px solid var(--action-fail-ring);
-  outline-offset: 4px;
+.check-board__go[data-strip] {
+  --button-pad-bottom: 3.25rem;
 }
 
 /* Its strip: holding A reveals in a row */
 .check-board__strip {
   position: absolute;
   inset: auto 0 0;
+  border-radius: 0 0 calc(var(--ds-radius) - var(--ds-border)) calc(var(--ds-radius) - var(--ds-border));
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   height: 2.75rem;
   border-top: var(--line-width-bold) solid var(--color-line);
-  background: #ffd9a6;
+  background: var(--palette-pale);
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-md);
@@ -3891,7 +3745,7 @@
   text-shadow: none;
 }
 
-.check-board__go[data-action='check-revealing'] .check-board__strip {
+.check-board__go[aria-busy='true'] .check-board__strip {
   background: var(--color-snow);
 }
 
@@ -4003,21 +3857,20 @@
     grid-auto-rows: auto;
   }
 
-  .check-board .big-button,
-  .claim-pad .big-button,
-  .review-panel .big-button {
-    flex-direction: column;
-    min-height: 4rem;
+  .check-board .button,
+  .claim-pad .button,
+  .review-panel .button {
+    --button-min-height: 4rem;
   }
 
-  .check-board__go,
-  .claim-pad__submit {
-    min-height: 7rem;
+  .check-board .check-board__go,
+  .claim-pad .claim-pad__submit {
+    --button-min-height: 7rem;
   }
 
-  .check-board__auto,
-  .check-board__go:has(.check-board__strip) {
-    padding-bottom: 2.75rem;
+  .check-board .check-board__auto,
+  .check-board .check-board__go[data-strip] {
+    --button-pad-bottom: 2.75rem;
   }
 
   .check-board__switch,
@@ -4628,16 +4481,16 @@
 
 .review-panel__continue {
   grid-column: span 3;
-  font-size: calc(var(--text-xl) * 0.95);
+  --button-label-size: calc(var(--text-xl) * 0.95);
 }
 
 .review-panel__decision {
   grid-column: span 2;
-  font-size: calc(var(--text-xl) * 0.85);
+  --button-label-size: calc(var(--text-xl) * 0.85);
 }
 
-.review-panel__decision .big-button__note,
-.review-panel__continue .big-button__note {
+.review-panel__decision .button__note,
+.review-panel__continue .button__note {
   max-width: 14rem;
 }
 
@@ -4727,8 +4580,8 @@
   gap: var(--space-3);
 }
 
-.review-confirm__actions .big-button {
-  font-size: var(--text-lg);
+.review-confirm__actions .button {
+  --button-label-size: var(--text-lg);
 }
 
 /* ---- the claim pad (boards Consola-Comprovacio-Ritme ①, -Casos ⑤; hook claim-chip-add) ------------------------ */
@@ -4986,18 +4839,14 @@
 
 .claim-pad__cancel {
   grid-column: span 2;
-  min-height: 5.25rem;
-  font-size: var(--text-lg);
+  --button-min-height: 5.25rem;
+  --button-label-size: var(--text-lg);
 }
 
 .claim-pad__add {
   grid-column: span 4;
-  min-height: 5.25rem;
-  font-size: var(--text-xl);
-}
-
-.claim-pad__add .big-button__note {
-  color: #ffffff;
+  --button-min-height: 5.25rem;
+  --button-label-size: var(--text-xl);
 }
 
 .claim-pad__more {
@@ -5023,16 +4872,8 @@
 
 .claim-pad__submit {
   grid-column: span 6;
-  font-size: clamp(var(--text-xl), 3.6vw, 2.5rem);
-}
-
-.claim-pad__submit .icon {
-  width: 2.5rem;
-  height: 2.5rem;
-}
-
-.check-board__add .big-button__note {
-  color: #ffffff;
+  --button-label-size: clamp(var(--text-xl), 3.6vw, 2.5rem);
+  --button-icon-size: 2.5rem;
 }
 
 /* ---- celebration, winners ------------------------------------------------------------------------------- */
@@ -5763,15 +5604,16 @@ kbd {
   font-weight: 800;
 }
 
-.menu-danger .tone-danger {
+/* Pànic: the deeper red of the danger band, with white words (until LongPressButton moves onto the components) */
+.menu-danger .long-press[data-variant='solid'] {
   background: var(--color-red);
   color: #ffffff;
 }
 
-/* Acabar la nit: on the panel's colour, in red */
-.menu-danger__end .long-press.tone-danger {
+/* A plain long-press row (Acabar la nit): on the panel's colour, in the palette's text colour */
+.long-press:not(.big-button)[data-variant='plain'] {
   background: var(--color-surface);
-  color: var(--color-danger-text);
+  color: var(--palette-fg);
 }
 
 @media (max-width: 34rem) {
@@ -6384,18 +6226,11 @@ kbd {
 
 /* ---- the Wii remote: the default action, the badges, the Comandament dialog ----------------------------- */
 
-/* The default action's control (logic/default-action.ts): a ring in A's orange (ANIMATIONS.md › default-move).
-   The ring fades in when the default moves to it, with reduced motion too (a colour change, not a movement). */
-[data-default] {
-  outline: 4px solid var(--default-ring);
-  outline-offset: 3px;
-  animation: default-ring-in var(--dur-default-ring) var(--ease-out);
-}
-
-@keyframes default-ring-in {
-  from {
-    outline-color: transparent;
-  }
+/* The default action's control (logic/default-action.ts) carries the orange ring (ANIMATIONS.md › default-move): the
+   shared R1 resource (packages/ui/ds/resources.css), from asDefault() on a Button or data-ring on the panels' plain
+   buttons, which have no hard shadow below and the controls' smaller corners. */
+.action[data-ring] {
+  --ds-radius: var(--radius-md);
 }
 
 /* WiiBadge: which Wii button triggers a control (ANIMATIONS.md › wii-badge). Decorative and never in the way
@@ -6578,7 +6413,7 @@ kbd {
 }
 
 /* Enrere is narrow: its badge sits in the bottom corner, clear of the label */
-.big-button[data-action='back'] > .wii-badge {
+.thumb-cluster__slot--back .big-button > .wii-badge {
   top: auto;
   bottom: 9px;
 }
@@ -6643,7 +6478,7 @@ kbd {
   }
 
   .two-level__second .wii-badge,
-  .big-button[data-action='back'] > .wii-badge {
+  .thumb-cluster__slot--back .big-button > .wii-badge {
     display: none;
   }
 
@@ -6884,10 +6719,7 @@ kbd {
     flex-direction: column;
     font-size: 3.875rem;
     line-height: 0.92;
-    outline: 6px solid var(--color-gold);
-    outline-offset: 4px;
-    box-shadow: inset 0 -9px 0 rgb(0 0 0 / 0.22), inset 0 5px 0 rgb(255 255 255 / 0.35), 0 5px 0 var(--color-ink), 0 0 34px 10px rgb(255 197 49 / 0.55);
-    animation: finale-ring-in 200ms var(--ease-out);
+    box-shadow: inset 0 -9px 0 var(--palette-edge, rgb(0 0 0 / 0.22)), inset 0 5px 0 rgb(255 255 255 / 0.35), 0 5px 0 var(--color-ink), 0 0 34px 10px rgb(255 197 49 / 0.55);
   }
 
   /* The biggest: the podium over the label, on two lines */
@@ -6906,36 +6738,22 @@ kbd {
   }
 }
 
-@keyframes finale-ring-in {
-  from {
-    outline-color: transparent;
-  }
+/* «Final a l'escenari» at its largest: the gold ring is its slot's (R1), round the button and its hard shadow */
+.thumb-cluster__slot--claim[data-ring] {
+  --ring-drop: 5px;
+  --ds-radius: var(--radius-lg);
 }
 
-/* «Celebrem!»: the cue once one finalist is left, in Següent's place */
-[data-action='finale-cue'] {
-  --action-bg: var(--action-celebrate);
-}
-
+/* «Celebrem!»: the cue once one finalist is left, in Següent's place, ringed in gold (its preset) */
 .finale-cue {
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-  outline: 6px solid var(--action-celebrate);
-  outline-offset: 4px;
+  --button-label-size: clamp(2.5rem, 5vw, 4.5rem);
+  --button-icon-size: 3.25rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .finale-cue {
     animation: finale-win-in 300ms var(--ease-bounce);
   }
-}
-
-.finale-cue .big-button__note {
-  color: var(--color-ink);
-}
-
-.finale-cue .icon {
-  width: 3.25rem;
-  height: 3.25rem;
 }
 
 @keyframes finale-win-in {
@@ -7005,13 +6823,7 @@ kbd {
 
 .finale-pad__close {
   grid-column: span 6;
-  min-height: 4.25rem;
-  background: var(--color-track);
-  color: #ffffff;
-}
-
-.finale-pad__close .big-button__note {
-  color: var(--color-ink);
+  --button-min-height: 4.25rem;
 }
 
 .finale-pad__card {
@@ -7062,16 +6874,11 @@ kbd {
   }
 }
 
-.big-button.finale-pad__go {
+.finale-pad__go {
   grid-column: span 6;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: clamp(2rem, 4.2vw, 3.5rem);
-}
-
-.finale-pad__go .podium-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  --button-gap: 0.25rem;
+  --button-label-size: clamp(2rem, 4.2vw, 3.5rem);
+  --button-icon-size: 2.75rem;
 }
 
 .finale-pad__count {
@@ -7365,4 +7172,12 @@ kbd {
   gap: var(--space-5);
   border-bottom: 0;
   background: none;
+}
+
+/* The Wii keys inside a Button: the button places them (R7: the same inset from the top and the side, centred when
+   the button is short), so the badge itself stays in its box. After the badge's own corner rules, to win over them. */
+.button__wii > .wii-badge[data-size] {
+  position: relative;
+  inset: auto;
+  translate: none;
 }

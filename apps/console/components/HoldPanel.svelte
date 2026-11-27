@@ -34,7 +34,7 @@
         disabled={!model.can('setGame')}
         onchange={(on) => model.act('setGame', { holdMusicOn: on })}
       />
-      <button type="button" class="action tone-primary" data-anim="press" disabled={!model.can('hold')} onclick={() => model.act('hold', { on: false })}>
+      <button type="button" class="action" data-color="orange" data-anim="press" disabled={!model.can('hold')} onclick={() => model.act('hold', { on: false })}>
         <Icon name="play" /><span>{S.hold.resume}</span>
       </button>
     </div>

@@ -23,6 +23,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import LanQr from './LanQr.svelte';
+  import { ACTIONS } from '../actions.ts';
   import LongPressButton from './LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
@@ -126,7 +127,7 @@
         <p class="menu-wii__row">
           <span class="wii-status" data-state={wii.status}>{S.wii.status[wii.status]}</span>
           {#if wii.status === 'disconnected' || wii.status === 'lost'}
-            <button type="button" class="mini tone-primary" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
+            <button type="button" class="mini" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
           {/if}
           <button type="button" class="mini" data-anim="press" onclick={onwii}>{S.wii.open}</button>
         </p>
@@ -186,7 +187,7 @@
 
         <section class="menu-group" aria-labelledby="{uid}-tools">
           <h3 class="menu-group__title" id="{uid}-tools"><Icon name="check" />{S.menu.tools}</h3>
-          <LongPressButton label={S.menu.confirmLine} note={S.menu.confirmLineNote} icon="check" tone="ok" disabled={snap.round.lineConfirmed || !model.can('confirmLine')} onconfirm={() => model.act('confirmLine')} />
+          <LongPressButton {...ACTIONS.confirmLine} disabled={snap.round.lineConfirmed || !model.can('confirmLine')} onconfirm={() => model.act('confirmLine')} />
         </section>
       {/if}
     </div>
@@ -233,9 +234,9 @@
   </div>
 
   <section class="menu-danger" aria-label={S.menu.danger}>
-    <LongPressButton label={S.menu.panic} note={S.menu.panicNote} icon="alert" tone="danger" disabled={!model.can('panic')} onconfirm={() => model.act('panic')} />
+    <LongPressButton {...ACTIONS.panic} disabled={!model.can('panic')} onconfirm={() => model.act('panic')} />
     <span class="menu-danger__end">
-      <LongPressButton label={S.menu.end} note={S.menu.endNote} icon="power" tone="danger" disabled={flow.scene === 'after' || !model.can('endGame')} onconfirm={() => model.act('endGame')} />
+      <LongPressButton {...ACTIONS.endNight} disabled={flow.scene === 'after' || !model.can('endGame')} onconfirm={() => model.act('endGame')} />
     </span>
   </section>
 </dialog>

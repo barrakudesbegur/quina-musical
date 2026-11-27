@@ -32,6 +32,8 @@
   import ClaimsStrip from './ClaimsStrip.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { ACTIONS, asDefault } from '../actions.ts';
   import NowLine from './NowLine.svelte';
   import ReviewPanel from './ReviewPanel.svelte';
   import ThrowButton from './ThrowButton.svelte';
@@ -71,23 +73,23 @@
     return S.check.backDone(replayed === null ? null : title(replayed), b.autoWasOn);
   });
 
-  /** The big button's look and words, from the Check's stage. */
+  /** The big button's preset (actions.ts) and words, from the Check's stage. */
   const big = $derived.by(() => {
     const B = S.check.big;
     switch (state?.stage) {
       case 'reveal':
-        return { tone: 'reveal', icon: 'eye', label: B.reveal, note: B.revealNote, strip: true } as const;
+        return { ...ACTIONS.checkReveal, strip: true, busy: false } as const;
       case 'auto':
-        return { tone: 'revealing', icon: 'seguides', label: B.revealing, note: wii.badges ? B.revealingHeld : B.revealingNote, strip: true } as const;
+        return { ...ACTIONS.checkRevealing, note: wii.badges ? B.revealingHeld : B.revealingNote, strip: true, busy: true } as const;
       case 'cue':
-        if (!state.pass) return { tone: 'fail', icon: 'cross', label: B.fail, note: B.failNote, strip: false } as const;
-        return state.more
-          ? ({ tone: 'valid', icon: 'check', label: B.validNext, note: B.validNextNote, strip: false } as const)
-          : ({ tone: 'celebrate', icon: 'star', label: B.celebrate, note: B.celebrateNote, strip: false } as const);
+        if (!state.pass) return { ...ACTIONS.checkFail, strip: false, busy: false } as const;
+        return state.more ? ({ ...ACTIONS.checkValid, strip: false, busy: false } as const) : ({ ...ACTIONS.checkCelebrate, strip: false, busy: false } as const);
       case 'celebrateNext':
-        return { tone: 'celebrate', icon: 'star', label: B.celebrate, note: B.celebrateFor(winners), strip: false } as const;
+        return { ...ACTIONS.checkCelebrate, note: B.celebrateFor(winners), strip: false, busy: false } as const;
       case 'cued':
-        return { tone: state.pass ? 'valid' : 'fail', icon: state.pass ? 'check' : 'cross', label: state.pass ? B.cuedPass : B.cuedFail, note: B.cuedNote, strip: false } as const;
+        return state.pass
+          ? ({ ...ACTIONS.checkValid, label: B.cuedPass, note: B.cuedNote, strip: false, busy: false } as const)
+          : ({ ...ACTIONS.checkFail, label: B.cuedFail, note: B.cuedNote, strip: false, busy: false } as const);
       default:
         return null;
     }
@@ -128,46 +130,33 @@
     <ReviewPanel {check} {claim} />
   {:else}
     <div class="check-board__right" data-stage={state?.stage ?? 'none'} data-top={storm ?? undefined}>
-      <button type="button" class="big-button check-board__back" data-action="check-back" data-anim="press" disabled={!back || !model.can('checkBack')} onclick={() => back && model.act('checkBack', back)}>
-        <span class="big-button__row"><Icon name="back" outline /><span class="big-button__label">{S.check.back}</span></span>
-        <span class="big-button__note">{S.check.backNote}</span>
-        <WiiBadge button="back" size="sm" />
-      </button>
+      <Button {...ACTIONS.checkBack} class="check-board__back" disabled={!back || !model.can('checkBack')} onclick={() => back && model.act('checkBack', back)} />
       {#if storm}<div class="check-board__storm"><ThrowButton song={storm} variant="top" /></div>{/if}
-      <button type="button" class="big-button check-board__review" data-action="review" data-anim="press" disabled={!review || !model.can('checkReview')} onclick={() => review && model.act('checkReview', review)}>
-        <span class="big-button__label">{S.check.review}</span>
-        <span class="big-button__note">{S.check.reviewNote}</span>
-        <WiiBadge button="talk" hold size="sm" />
-      </button>
-      <button type="button" class="big-button check-board__add" data-action="add" data-anim="press" disabled={!model.can('claim')} onclick={onclaim}>
-        <span class="big-button__row"><Icon name="plus" outline /><span class="big-button__label">{S.check.add}</span></span>
-      </button>
-      <button
-        type="button"
-        class="big-button check-board__auto"
-        data-action="auto"
-        data-anim="press"
-        aria-pressed={autoOn}
+      <Button {...ACTIONS.checkReview} class="check-board__review" disabled={!review || !model.can('checkReview')} onclick={() => review && model.act('checkReview', review)} />
+      <Button {...ACTIONS.addCandidate} class="check-board__add" disabled={!model.can('claim')} onclick={onclaim} />
+      <Button
+        {...ACTIONS.checkAuto}
+        class="check-board__auto"
+        note={autoNote}
+        pressed={autoOn}
         disabled={!canToggleAuto(check) || !model.can('checkAuto')}
         onclick={() => model.act('checkAuto', { on: !autoOn })}
       >
-        <Icon name="seguides" outline />
-        <span class="big-button__label">{S.check.auto.label}</span>
-        <span class="big-button__note">{autoNote}</span>
         <span class="check-board__switch" aria-hidden="true"><span class="check-board__track"><span class="check-board__thumb"></span></span>{autoOn ? S.check.auto.yes : S.check.auto.no}</span>
-      </button>
+      </Button>
 
       {#if big}
-        <button
-          type="button"
-          class="big-button check-board__go"
-          data-action="check-{big.tone}"
-          data-anim="press check-pace"
-          data-default={isDefault || undefined}
+        {@const look = asDefault(big, isDefault)}
+        <Button
+          {...look}
+          class="check-board__go"
+          note={big.strip && next ? null : big.note}
+          busy={big.busy}
+          data-anim="check-pace"
+          data-strip={big.strip || undefined}
           disabled={!press || !model.can(press.cmd)}
           onclick={go}
         >
-          <span class="big-button__row"><Icon name={big.icon} outline /><span class="big-button__label">{big.label}</span></span>
           {#if big.strip && next}
             {#key next.songId}
               <span class="check-board__song" data-anim="check-pace" aria-label={S.check.nextLabel(song(next.songId).title, next.at, next.of)}>
@@ -178,15 +167,12 @@
                 </span>
               </span>
             {/key}
-          {:else}
-            <span class="big-button__note">{big.note}</span>
           {/if}
           {#if backNotice}<span class="check-board__notice" role="status">{backNotice}</span>{/if}
-          {#if isDefault}<WiiBadge button="a" />{/if}
           {#if big.strip}
             <span class="check-board__strip"><Icon name="seguides" /><span>{S.check.big.strip}</span><WiiBadge button="a" hold place="strip" size="sm" /></span>
           {/if}
-        </button>
+        </Button>
       {/if}
     </div>
   {/if}

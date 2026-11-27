@@ -75,7 +75,7 @@
   }
   .throw-icon__stripes {
     fill: none;
-    stroke: var(--action-throw, #ff4fa3);
+    stroke: var(--color-pink);
     stroke-width: 1.5;
   }
   .throw-icon__kernel {

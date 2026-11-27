@@ -30,7 +30,8 @@
   import { clusterLayout } from '../logic/cluster-layout.ts';
   import { roundIntroArgs } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
-  import Icon from './Icon.svelte';
+  import { ACTIONS, WII, asDefault } from '../actions.ts';
+  import Button from '../../../packages/ui/components/Button.svelte';
   import LongPressButton from './LongPressButton.svelte';
   import PodiumIcon from './PodiumIcon.svelte';
   import ThrowButton from './ThrowButton.svelte';
@@ -68,8 +69,8 @@
 
   {#if layout.backAndClaim}
   <div class="thumb-cluster__slot thumb-cluster__slot--back">
-    <LongPressButton big action="back" label={S.cluster.back} note={backBrings ? S.finale.backNote : S.cluster.backHint} icon="back" tone="danger" disabled={!c.back.enabled} onconfirm={() => model.act('back')}>
-      {#snippet badge()}<WiiBadge button="back" hold size="sm" />{/snippet}
+    <LongPressButton big color={ACTIONS.back.color} label={ACTIONS.back.label} note={backBrings ? S.finale.backNote : S.cluster.backHint} icon={ACTIONS.back.icon} disabled={!c.back.enabled} onconfirm={() => model.act('back')}>
+      {#snippet badge()}<WiiBadge button="back" hold={WII.back.hold} size={WII.back.size} />{/snippet}
     </LongPressButton>
   </div>
   {/if}
@@ -81,12 +82,13 @@
   {/if}
 
   {#if layout.backAndClaim}
-  <div class="thumb-cluster__slot thumb-cluster__slot--claim">
+  <!-- «Final a l'escenari» at its largest is ringed in gold (R1: the ring is the slot's, round the whole button). -->
+  <div class="thumb-cluster__slot thumb-cluster__slot--claim" data-ring={slot?.kind === 'start' && slot.size === 'large' ? 'gold' : undefined}>
     {#if slot?.kind === 'start'}
       <button
         type="button"
         class="big-button finale-button"
-        data-action="claim"
+        data-color={ACTIONS.claim.color}
         data-anim="press finale-button"
         data-size={slot.size}
         data-testid="finale-start"
@@ -98,15 +100,9 @@
         <span class="big-button__note">{slot.size === 'normal' ? S.finale.startNote.normal : S.finale.startNote[slot.size](slot.standing)}</span>
       </button>
     {:else if slot?.kind === 'add'}
-      <button type="button" class="big-button finale-button" data-action="claim" data-anim="press" data-size="normal" data-testid="finale-add" disabled={!slot.enabled || !model.can('finale')} onclick={() => model.openFinalePad()}>
-        <span class="finale-button__row"><Icon name="plus" outline /><span class="big-button__label">{S.finale.add}</span></span>
-        <span class="big-button__note">{S.finale.addNote}</span>
-      </button>
+      <Button {...ACTIONS.finaleAdd} data-testid="finale-add" disabled={!slot.enabled || !model.can('finale')} onclick={() => model.openFinalePad()} />
     {:else}
-      <button type="button" class="big-button" data-action="claim" data-anim="press" disabled={!c.claim.enabled} onclick={onclaim}>
-        <Icon name="claim" outline />
-        <span class="big-button__text"><span class="big-button__label">{S.cluster.claim}</span></span>
-      </button>
+      <Button {...ACTIONS.claim} disabled={!c.claim.enabled} onclick={onclaim} />
     {/if}
   </div>
   {/if}
@@ -119,31 +115,24 @@
 
   <div class="thumb-cluster__slot thumb-cluster__slot--next">
     {#if cue !== null && layout.big === 'next'}
-      <button type="button" class="big-button finale-cue" data-action="finale-cue" data-anim="press finale-win" data-default={cueIsDefault || undefined} data-testid="finale-cue" disabled={!model.can('finaleCue')} onclick={() => model.act('finaleCue')}>
-        <span class="big-button__row"><Icon name="star" outline /><span class="big-button__label">{S.finale.celebrate}</span></span>
-        <span class="big-button__note">{S.finale.celebrateNote(cue)}</span>
-        {#if cueIsDefault}<WiiBadge button="a" />{/if}
-      </button>
+      <Button
+        {...asDefault(ACTIONS.finaleCue, cueIsDefault)}
+        class="finale-cue"
+        note={S.finale.celebrateNote(cue)}
+        data-anim="finale-win"
+        data-testid="finale-cue"
+        disabled={!model.can('finaleCue')}
+        onclick={() => model.act('finaleCue')}
+      />
     {:else if layout.big === 'next'}
-      <button type="button" class="big-button" data-action="next" data-anim="press" data-default={nextIsDefault || undefined} disabled={!c.next.enabled} onclick={() => model.act('next')}>
-        <Icon name="next" outline />
-        <span class="big-button__text"><span class="big-button__label">{S.cluster.next}</span></span>
-        {#if nextIsDefault}<WiiBadge button="a" />{/if}
-      </button>
+      <Button {...asDefault(ACTIONS.next, nextIsDefault)} disabled={!c.next.enabled} onclick={() => model.act('next')} />
     {:else if layout.big === 'roundIntro'}
-      <button
-        type="button"
-        class="big-button"
-        data-action="round-intro"
-        data-anim="press"
-        data-default={introIsDefault || undefined}
+      <Button
+        {...asDefault(ACTIONS.roundIntro, introIsDefault)}
+        class="thumb-cluster__intro"
         disabled={!interval || !model.can('roundIntro')}
         onclick={() => interval && model.act('roundIntro', roundIntroArgs(model.plan, interval.nextRound))}
-      >
-        <span class="big-button__row"><Icon name="play" outline /><span class="big-button__label">{S.interval.start}</span></span>
-        <span class="big-button__note">{S.interval.startNote}</span>
-        {#if introIsDefault}<WiiBadge button="a" />{/if}
-      </button>
+      />
     {:else}
       <ThrowButton song={layout.big} />
     {/if}

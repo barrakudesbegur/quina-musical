@@ -10,6 +10,7 @@
   import { getConsole } from '../context.ts';
   import { nowLine } from '../logic/now-line.ts';
   import { nowRing } from '../logic/now-ring.ts';
+  import { ACTIONS } from '../actions.ts';
   import { S } from '../strings.ts';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
@@ -43,7 +44,7 @@
     <div class="now-line__text" aria-hidden="true">
       <p class="panel__label now-line__label">
         {S.nowLine.label}
-        {#if sound.kind === 'throw'}<span class="now-line__chip" data-song={sound.song}>{S.throws.names[sound.song].label}</span>{/if}
+        {#if sound.kind === 'throw'}<span class="now-line__chip" data-color={ACTIONS[sound.song].color}>{S.throws.names[sound.song].label}</span>{/if}
         {#if view.low}<span class="now-line__chip now-line__chip--low"><Icon name="sound" />{S.nowLine.low}</span>{/if}
       </p>
       <p class="now-line__song">{name.title}{#if name.artist}<span class="now-line__artist">{name.artist}</span>{/if}</p>

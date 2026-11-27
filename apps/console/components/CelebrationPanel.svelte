@@ -41,7 +41,7 @@
     {#if celebration.kind === 'line'}
       <p class="note">{S.celebration.continueLine}</p>
     {:else}
-      <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('interval')} onclick={() => model.act('interval')}>
+      <button type="button" class="action action--big" data-color="orange" data-anim="press" data-default={isDefault || undefined} data-ring={isDefault ? 'orange' : undefined} disabled={!model.can('interval')} onclick={() => model.act('interval')}>
         <Icon name="next" /><span>{S.celebration.toInterval}</span>
         {#if isDefault}<WiiBadge button="a" />{/if}
       </button>

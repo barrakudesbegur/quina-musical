@@ -7,14 +7,15 @@
  *
  * Contrast (WCAG 2.1), checked for both themes:
  * - text on bg / surface: light 15.6 / 18.0, dark 14.6 / 11.8; muted text: light 6.0 / 7.0, dark 8.8 / 7.1;
- * - small ink notes on the action buttons: red (#ff5a60) 5.9, ice 9.6, lilac 6.2, gold 11.4, orange 7.3,
- *   green 5.7, the throw song's pink 5.9; the storm's notes are #fff6e5 on its deep blue, 10.0; the big labels are
- *   white with a thick ink outline, so they read on every colour;
+ * - small ink notes on the action buttons (the palette's contrast slot, packages/ui/ds/palette.css): red (#ff5a60) 5.9,
+ *   cyan 9.6, purple 6.2, gold 11.4, orange 7.3, green 5.7, pink 5.9; navy's notes are snow, 10.0; the big labels
+ *   are white with a thick ink outline, so they read on every colour;
  * - the recovery notice: ink on #ffe3c2 14.6;
  * - focus ring on bg: light (night) 13.6, dark (gold) 9.9.
  *
  * Console-local tokens (not shared in ui/tokens.css) are the animation lengths from ui/ANIMATIONS.md ›
- * Console, the "on" colours for text on a role colour, the board's surfaces, and one colour per action button.
+ * Console, the "on" colours for text on a role colour and the board's surfaces. A button's colour is a palette
+ * through `data-color`, chosen by its preset in actions.ts (D210): no concept tokens here.
  */
 
 .console {
@@ -32,30 +33,12 @@
   --color-notice-line: var(--color-orange-edge);
   --color-on-notice: var(--color-ink);
 
-  /* One colour per action (Consola-Joc): Back, Parlem, Aguanta, Claim, Suspense, Next; Check: reject, confirm */
-  --action-back: #ff5a60;
-  --action-talk: var(--color-cyan);
-  --action-stay: var(--color-purple);
-  --action-claim: var(--color-green);
-  --action-suspense: var(--color-gold);
-  --action-next: var(--color-orange);
-  /* The throw songs (Consola-Llancament-Tempesta): «Llançament» pink, «Tempesta» deep blue; their strips pale */
-  --action-throw: #ff4fa3;
-  --action-throw-pale: #ffd0e6;
-  --action-storm: #2c3878;
-  --action-storm-pale: #c9d3ff;
-  --action-reject: #ff5a60;
-  --action-confirm: var(--color-green);
-  --action-label: #ffffff; /* big labels: white with an ink outline */
-  --action-note: var(--color-ink);
-
   /* The Heat bar: cold to hot */
   --heat-gradient: linear-gradient(90deg, var(--color-cyan), var(--color-gold) 45%, var(--color-orange) 70%, var(--color-red));
 
   /* ANIMATIONS.md › Console: press 80 ms, long-press drain 200 ms, hold-hint 150 ms in / 300 ms out,
      suspense-hold pulse 1.2 s → 0.5 s, check-step 150 ms, reveal 200 ms (bars 300 ms, 40 ms stagger),
      tab-switch 120 ms, toast-in 200 ms, conn-change 200 ms. The ring steps with the store's clock. */
-  --dur-press: 80ms;
   --dur-drain: 200ms;
   --dur-hint-in: 150ms;
   --dur-hint-out: 300ms;
@@ -78,7 +61,6 @@
   /* The menu sheet slides in (ANIMATIONS.md › menu-sheet) */
   --dur-menu-sheet: 200ms;
   /* The Wii remote (ANIMATIONS.md › default-move, wii-badge, wii-dialog) */
-  --dur-default-ring: 200ms;
   --dur-wii-badge: 240ms;
   --dur-wii-dialog: 200ms;
   --dur-a-glide: 320ms; /* a-glide: A's badge follows Pausa (D128) */

@@ -18,6 +18,7 @@
   import { getConsole } from '../context.ts';
   import { throwButtonState, throwClock, throwCommand, throwProgress } from '../logic/throw-songs.ts';
   import { TWO_LEVEL_IDLE, twoLevel, twoLevelProgress, type TwoLevelEvent, type TwoLevelState } from '../logic/two-level.ts';
+  import { ACTIONS } from '../actions.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import ThrowIcon from './ThrowIcon.svelte';
@@ -114,7 +115,7 @@
   type="button"
   class="big-button throw-button"
   data-testid="{song}-button"
-  data-action={song}
+  data-color={ACTIONS[song].color}
   data-variant={variant}
   data-anim="press throw-hold{songState === 'playing' ? ' throw-on' : ''}"
   data-state={press.phase}

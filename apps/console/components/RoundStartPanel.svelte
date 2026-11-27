@@ -27,7 +27,7 @@
   <PrizeList {round} />
 
   {#if model.scene.introduced}
-    <button type="button" class="action action--big tone-primary" data-anim="press" data-default={isDefault || undefined} disabled={!model.can('newRound')} onclick={() => model.act('newRound')}>
+    <button type="button" class="action action--big" data-color="orange" data-anim="press" data-default={isDefault || undefined} data-ring={isDefault ? 'orange' : undefined} disabled={!model.can('newRound')} onclick={() => model.act('newRound')}>
       <Icon name="shuffle" /><span>{S.roundStart.shuffle}</span>
       {#if isDefault}<WiiBadge button="a" />{/if}
     </button>
