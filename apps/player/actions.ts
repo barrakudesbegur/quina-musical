@@ -55,6 +55,18 @@ export const PLAYER_ICONS = {
   cardRemove: { icon: 'trash', variant: 'bare' },
 } as const satisfies Record<string, PlayerIconPreset>;
 
+/** The phone's text links (TextLink, A8): they only open something, never confirm (D188). */
+export const PLAYER_LINKS = {
+  wipe: { color: 'red', label: S.wipeData },
+  seeOwned: { color: 'gold', label: S.seeCard },
+} as const satisfies Record<string, { color: 'red' | 'gold'; label: string }>;
+
+/** The home's two corner discs (CornerButton, A5): their side, words and sticker. */
+export const PLAYER_CORNERS = {
+  prizes: { side: 'left', icon: 'gift', label: S.prizesTitle },
+  schedule: { side: 'right', icon: 'alarm-clock', label: S.scheduleTitle },
+} as const satisfies Record<string, { side: 'left' | 'right'; icon: 'gift' | 'alarm-clock'; label: string }>;
+
 /** A confirmation sheet's two answers: the risky yes in red, or the kind one in orange; the other is the neutral. */
 export function confirmColors(danger: boolean): { yes: ButtonColor; no: ButtonColor } {
   return danger ? { yes: 'red', no: 'navy' } : { yes: 'navy', no: 'orange' };

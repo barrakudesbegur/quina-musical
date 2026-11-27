@@ -1,7 +1,8 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
   import IconButton from '../../../packages/ui/components/IconButton.svelte';
-  import { PLAYER, PLAYER_ICONS } from '../actions.ts';
+  import TextLink from '../../../packages/ui/components/TextLink.svelte';
+  import { PLAYER, PLAYER_ICONS, PLAYER_LINKS } from '../actions.ts';
   // The Ajustos drawer (D87; it was "Menú"; the J2 look, board Mobil-B-J2): the player's cards as plain rows, each
   // with its grip to reorder it (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon,
   // name and number, and its edit and remove buttons; "Afegir cartró"; the settings panel (the Sons switch,
@@ -111,5 +112,5 @@
     </li>
   </ul>
 
-  <button type="button" class="menu__wipe" aria-haspopup="dialog" onclick={() => app.open({ kind: 'wipe' })}>{S.wipeData}</button>
+  <TextLink {...PLAYER_LINKS.wipe} class="menu__wipe" aria-haspopup="dialog" onclick={() => app.open({ kind: 'wipe' })} />
 </div>

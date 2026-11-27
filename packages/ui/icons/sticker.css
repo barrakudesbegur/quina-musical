@@ -1,0 +1,95 @@
+/*
+ * H1 · the sticker icons (StickerIcon.svelte): a flat drawing with a white sticker border and the family's ink line
+ * (the stem of the label beside it). Colours from the palette tokens; the context sets the box (width, height) and
+ * any tilt.
+ */
+.sticker-icon {
+  overflow: visible;
+}
+
+.sticker-icon__outline > * {
+  fill: var(--color-line);
+  stroke: var(--color-line);
+  stroke-width: 8.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sticker-icon__sticker > * {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* The legs are lines 3.6 wide: their border is that much wider, so the white clears them as it clears the body */
+.sticker-icon__outline > .sticker-icon__legs {
+  stroke-width: 9.7;
+}
+
+.sticker-icon__sticker > .sticker-icon__legs {
+  stroke-width: 6.2;
+}
+
+/* The art's ink lines are the icon family's (H1): the stem of the label beside them */
+.sticker-icon__art * {
+  stroke: var(--color-line);
+  stroke-width: 0.155em;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sticker-icon__box {
+  fill: var(--color-cyan);
+  stroke: none;
+}
+
+.sticker-icon__shade {
+  fill: var(--color-cyan-edge);
+  stroke: none;
+}
+
+.sticker-icon__edge {
+  fill: none;
+}
+
+.sticker-icon__lid {
+  fill: var(--color-cyan-light);
+}
+
+.sticker-icon__ribbon,
+.sticker-icon__body {
+  fill: var(--card-color-5);
+}
+
+.sticker-icon__bell {
+  fill: var(--color-cyan);
+}
+
+.sticker-icon__face {
+  fill: var(--color-paper);
+}
+
+.sticker-icon__hand,
+.sticker-icon__leg {
+  fill: none;
+}
+
+/* A leg is a shape, not an outline: its width is the drawing's */
+.sticker-icon__leg {
+  stroke-width: 3.6;
+  vector-effect: none;
+}
+
+.sticker-icon__pin {
+  fill: var(--color-line);
+  stroke: none;
+}
+
+.sticker-icon__shine {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.7);
+}
+

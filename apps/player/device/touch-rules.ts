@@ -13,7 +13,7 @@ export const PLAYER_TOUCH: TouchWiring = {
     { selector: '.number-pad__save', cls: 'submit', refuse: true },
     { selector: '.rename button[type="submit"]', cls: 'submit' },
     { selector: '.icon-picker__option', cls: 'iconPick', refuse: true },
-    { selector: '.corner', cls: 'corner' },
+    { selector: '.corner-button', cls: 'corner' },
     { selector: '.cards__add', cls: 'floating' },
     { selector: '.view-switch__option', cls: 'tab' },
     { selector: 'button, [role="button"]', cls: 'small' },

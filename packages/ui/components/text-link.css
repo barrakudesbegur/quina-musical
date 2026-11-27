@@ -1,0 +1,56 @@
+/*
+ * A8 · TextLink (components-v2.md § 2; TextLink.svelte): Nunito 900, underlined, in the palette's text colour on the
+ * ground; a hit area of the floor's height (the phone's 48). Press: ANIMATIONS.md › press (a frameless control's words
+ * travel).
+ */
+:where(.text-link) {
+  --text-link-size: var(--text-sm);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  box-shadow: none;
+  color: var(--palette-fg, currentColor);
+  font: inherit;
+  font-size: var(--text-link-size);
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.18em;
+  text-wrap: pretty;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.text-link:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.text-link__words {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .text-link__words {
+    transition: translate var(--dur-press-up) var(--ease-bounce);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .text-link:active:not(:disabled) .text-link__words {
+    translate: 0 2px;
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+.text-link:active:not(:disabled) .text-link__words {
+  opacity: 0.8;
+}

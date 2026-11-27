@@ -1,0 +1,114 @@
+/*
+ * A5 · CornerButton (components-v2.md § 2; CornerButton.svelte): the paper quarter-disc in a bottom corner of the
+ * page's column, with its sticker and its word in the quarter that shows (style B, D87). Motion: ANIMATIONS.md ›
+ * corner-press. The static backdrop blur is one of the phones' two budget exceptions.
+ */
+:where(.corner-button) {
+  --corner-button-size: 13rem;
+  --corner-button-column: 100%;
+  --corner-button-icon: 3.125rem;
+  --corner-button-tilt: -6deg;
+}
+
+:where(.corner-button[data-side='right']) {
+  --corner-button-tilt: 6deg;
+}
+
+.corner-button {
+  position: fixed;
+  z-index: 5;
+  bottom: calc(env(safe-area-inset-bottom, 0px) - var(--corner-button-size) / 2);
+  width: var(--corner-button-size);
+  height: var(--corner-button-size);
+  min-height: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: 50%;
+  /* B2 (the user, 25 Nov): the same paper disc on both corners, a little see-through, the home blurred behind it */
+  background: rgb(255 246 229 / 0.8);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--color-text-on-paper, var(--color-ink));
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* centred on the column's bottom corner: the screen's corner on a phone */
+.corner-button[data-side='left'] {
+  left: calc(max(0px, (100% - var(--corner-button-column)) / 2) - var(--corner-button-size) / 2);
+  box-shadow:
+    inset -10px 10px 0 rgb(255 255 255 / 0.45),
+    0 -2px 0 4px rgb(10 14 38 / 0.35);
+}
+
+.corner-button[data-side='right'] {
+  right: calc(max(0px, (100% - var(--corner-button-column)) / 2) - var(--corner-button-size) / 2);
+  box-shadow:
+    inset 10px 10px 0 rgb(255 255 255 / 0.45),
+    0 -2px 0 4px rgb(10 14 38 / 0.35);
+}
+
+/* Its press is its own (corner-press), never the generic button's sink */
+.corner-button:active:not(:disabled) {
+  transform: none;
+}
+
+.corner-button[data-side='left']:active {
+  transform-origin: 0 100%;
+}
+
+.corner-button[data-side='right']:active {
+  transform-origin: 100% 100%;
+}
+
+/* The icon and its word sit in the quarter that shows. */
+.corner-button__in {
+  position: absolute;
+  top: 0.5rem;
+  width: 5.375rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: var(--font-weight-strong);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+
+.corner-button[data-side='left'] .corner-button__in {
+  right: 0.75rem;
+}
+
+.corner-button[data-side='right'] .corner-button__in {
+  left: 0.75rem;
+}
+
+.corner-button .sticker-icon {
+  width: var(--corner-button-icon);
+  height: var(--corner-button-icon);
+  rotate: var(--corner-button-tilt);
+}
+
+/* corner-press (#27): the disc dips and springs back; the sticker tilts 4° further under the finger */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .corner-button,
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .corner-button .sticker-icon {
+    transition:
+      scale var(--dur-corner-back, 260ms) var(--ease-kick),
+      rotate var(--dur-corner-back, 260ms) var(--ease-kick);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .corner-button:active {
+    scale: 0.94;
+    transition-duration: var(--dur-corner-press, 90ms);
+    transition-timing-function: var(--ease-out);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .corner-button:active .sticker-icon {
+    rotate: calc(var(--corner-button-tilt) * 10 / 6);
+    transition-duration: var(--dur-corner-press, 90ms);
+    transition-timing-function: var(--ease-out);
+  }
+}
