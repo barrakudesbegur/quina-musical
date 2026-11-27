@@ -4,9 +4,11 @@
 // Vite as middleware, so the pages, /ws, /api and the audio share one origin on port 5174; `npm run build` writes
 // apps/show/dist/ and `npm start` builds it and serves that instead. Per-app builds can come later. Every build
 // stamps dist/build.json with its sources (relay/build-stamp.ts), so the relay never serves a stale one.
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { defineConfig, type Plugin } from 'vite';
+import { build, defineConfig, type Plugin, type Rolldown } from 'vite';
 import { pageApps, sourceHashes, writeStamp } from './relay/build-stamp.ts';
 
 const show = import.meta.dirname;
@@ -46,11 +48,67 @@ const input = Object.fromEntries(
   Object.entries({ ...SHOW_PAGES, ...appPages }).map(([name, file]) => [name, path.join(root, file)] as const),
 );
 
+/**
+ * The player's service worker (D222): apps/player/sw/player-sw.ts, bundled on its own once the pages are written, as
+ * one classic script at dist/player-sw.js (the cloud serves it at the root, no-cache). It gets the player page's own
+ * files to keep for offline and an id of them, so any deploy that changes the player changes the worker's bytes, and
+ * phones take the new version at their next update check. Never in development: the dev pages register no worker.
+ */
+function playerWorker(): Plugin {
+  let precache: string[] = [];
+  return {
+    name: 'quina-player-worker',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const chunks = new Map(Object.values(bundle).filter((f): f is Rolldown.OutputChunk => f.type === 'chunk').map((c) => [c.fileName, c]));
+      const entry = [...chunks.values()].find((c) => c.isEntry && c.name === 'player');
+      if (!entry) throw new Error('player-sw: no player entry in the bundle');
+      const files = new Set<string>();
+      const walk = (chunk: Rolldown.OutputChunk) => {
+        if (files.has(chunk.fileName)) return;
+        files.add(chunk.fileName);
+        for (const css of chunk.viteMetadata?.importedCss ?? []) files.add(css);
+        for (const asset of chunk.viteMetadata?.importedAssets ?? []) files.add(asset);
+        for (const name of chunk.imports) {
+          const next = chunks.get(name);
+          if (next) walk(next);
+        }
+      };
+      walk(entry);
+      // Chrome and Safari take the .woff2: its .woff twin would only weigh on the phone.
+      precache = [...files].filter((f) => !(f.endsWith('.woff') && [...files].some((o) => o.startsWith(f.replace(/-[\w-]+\.woff$/, '-')) && o.endsWith('.woff2')))).sort();
+    },
+    async closeBundle() {
+      const dist = path.join(show, 'dist');
+      // Only what was written (a chunk that held only CSS is dropped after generateBundle).
+      precache = precache.filter((f) => fs.existsSync(path.join(dist, f))).map((f) => `/${f}`);
+      const html = path.join(dist, 'player/index.html');
+      if (!fs.existsSync(html) || !precache.length) return;
+      const page = fs.readFileSync(html);
+      const buildId = createHash('sha256').update(page).update(precache.join('\n')).update(fs.readFileSync(path.join(root, 'player/sw/player-sw.ts'))).update(fs.readFileSync(path.join(root, 'player/sw/routing.ts'))).digest('hex').slice(0, 12);
+      await build({
+        configFile: false,
+        root: path.join(root, 'player/sw'),
+        publicDir: false,
+        logLevel: 'warn',
+        define: { __QUINA_BUILD__: JSON.stringify(buildId), __QUINA_PRECACHE__: JSON.stringify(precache) },
+        build: {
+          outDir: dist,
+          emptyOutDir: false,
+          target: 'es2023',
+          lib: { entry: path.join(root, 'player/sw/player-sw.ts'), formats: ['iife'], name: 'quinaPlayerWorker', fileName: () => 'player-sw.js' },
+        },
+      });
+    },
+  };
+}
+
 export default defineConfig({
   root,
-  // Audio, covers and data come from the relay, not from a Vite public folder.
-  publicDir: false,
-  plugins: [svelte(), buildStamp()],
+  // The player's installable app (D221, D223): its manifest and icons, copied to dist/ as they are and served at the
+  // site's root (apps/cloud's static/_headers: no-cache). Audio, covers and data come from the relay, not from here.
+  publicDir: path.join(root, 'player/public'),
+  plugins: [svelte(), buildStamp(), playerWorker()],
   // A live show page must never reload itself because a file changed: no HMR (a manual reload picks up edits).
   server: { hmr: false, fs: { allow: [repo] } },
   build: {

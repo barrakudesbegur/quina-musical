@@ -74,6 +74,12 @@ export const PLAYER_CONFIG = Object.freeze({
   /** A song lands on one of the phone's cards (§8 Y1): a da-dum, longer than a touch's 10 ms. */
   vibrateYourSong: [70, 50, 70] as readonly number[],
 
+  /** The installable app's updates (D222; apps/player/README.md "Updates and offline"): the service worker at the
+   * site's root, how often the page asks for a new one while it's on screen (and at most how often a focus asks), and
+   * how long without a touch, key or scroll counts as a quiet moment to reload into a new version (checked every
+   * `reloadPollMs` while one waits; logic/update-gate.ts). */
+  update: Object.freeze({ worker: '/player-sw.js', scope: '/', checkEveryMs: 5 * 60_000, minCheckGapMs: 30_000, quietMs: 4000, reloadPollMs: 1000 }),
+
   /** Storage keys (localStorage, this origin). */
   storageKey: 'quina.player.v1',
   cleanupKey: 'quina.player.cleanup',
@@ -85,9 +91,9 @@ export const PLAYER_CONFIG = Object.freeze({
  * data in the 'workbox-expiration' IndexedDB), and two sessionStorage keys. It used no localStorage.
  */
 export const LEGACY = Object.freeze({
-  /** Our own service worker, if one is ever added (it must not be called sw.js, last year's name). */
+  /** Our own service worker (D222: apps/player/sw/player-sw.ts; never sw.js, last year's name and now its kill switch). */
   ourWorker: /\/player-sw\.js$/,
-  /** Our own caches, if any. */
+  /** Our own worker's caches (apps/player/sw/routing.ts SW_CACHE_PREFIX). */
   ourCachePrefix: 'quina-player-',
   localKeys: [] as readonly string[],
   sessionKeys: ['spa-redirect', 'adminAuth'] as readonly string[],
