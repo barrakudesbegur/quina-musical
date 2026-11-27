@@ -31,12 +31,14 @@ test('a step whose automatic sound is off says so; the test plays it anyway', ()
   assert.equal(soundTestAutoOff('ticks', off), true);
   assert.equal(soundTestAutoOff('voices', off), true);
   assert.equal(soundTestAutoOff('djFx', off), false, 'on');
-  // The test's «Victòria» plays the victory music, which no switch turns off: no note for the fanfare's switch.
-  assert.equal(soundTestAutoOff('win', off), false);
+  // «Victòria» and «Fallada» play their fanfares too (75fcead1): their switches note them.
+  assert.equal(soundTestAutoOff('win', off), true);
+  assert.equal(soundTestAutoOff('fail', off), false, 'its fanfare is on');
+  assert.equal(soundTestAutoOff('fail', { ...off, failFanfare: false }), true);
   assert.equal(soundTestAutoOff('songs', off), false);
   for (const kind of SOUND_TEST_KINDS) assert.equal(soundTestAutoOff(kind, AUTO_SOUNDS_DEFAULT), false, `${kind} with all on`);
-  // Each automatic sound with a node of its own in the test has its step.
-  assert.deepEqual(Object.values(SOUND_TEST_AUTO).sort(), ['djFx', 'drumTicks', 'finalLap', 'voices']);
+  // Every automatic sound has its step.
+  assert.deepEqual(Object.values(SOUND_TEST_AUTO).sort(), [...AUTO_SOUNDS].sort());
   assert.ok(S.soundTest.autoOff);
 });
 

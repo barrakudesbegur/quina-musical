@@ -32,13 +32,15 @@ export function soundTestPlace(kind: SoundTestKind): SoundTestPlace {
 
 /**
  * The automatic sound (D237) that silences a kind at night when switched off: the drum's ticks, the DJ effects, the
- * final-lap fanfare and the voices. `win` and `fail` aren't here: the test plays their music, which no switch turns
- * off (the fanfares that «Fanfàrria de victòria» and «de fallada» turn off aren't in the test).
+ * final-lap fanfare, the voices, and the fanfares of «Victòria» and «Fallada» (the test plays them over their music since
+ * 75fcead1, at the start and every 12 s).
  */
 export const SOUND_TEST_AUTO: Readonly<Partial<Record<SoundTestKind, AutoSound>>> = Object.freeze({
   ticks: 'drumTicks',
   djFx: 'djFx',
   finalLap: 'finalLap',
+  win: 'winFanfare',
+  fail: 'failFanfare',
   voices: 'voices',
 });
 
