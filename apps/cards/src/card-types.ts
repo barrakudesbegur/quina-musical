@@ -29,7 +29,7 @@ export interface CardTypeSpec {
   type: string;
   /** Its full name ("Cartró normal"). */
   name: string;
-  /** Its name in a label with its side (D163: "Normal 1–5", "Especial · Desgraciada"). */
+  /** Its name in a label with its side (D163: "Normal 1–5", "Especial · Desgraciat"). */
   shortName: string;
   color: string;
   title: string;

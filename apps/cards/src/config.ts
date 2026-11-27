@@ -41,11 +41,11 @@ export const VERSION_STAMP = `20${EDITION}`;
  * to play (a normal card, 1.50 € a round in 2025), 'fixed' the price itself (the especial card).
  *
  * `sides` (D101, D102, D171, D193, D226): the normal card's side 1 plays Quines 1–5 from pool 1 and its side 2
- * Quines 6–10 from pool 2, under the same number and QR; the especial card's side 1 plays the Quina Desgraciada from
- * pool 1 and its side 2 the Quina Especial from pool 2 (one card for both rounds, D81; the pool changes in the Break).
- * The labels are what the Check shows after `shortName`: a range joins with a space ("Normal 1–5", "Normal 6–10",
- * an en dash as on the design boards), a round's name with « · » ("Especial · Desgraciada", "Especial · Quina
- * Especial": U198's option (a) until the user picks).
+ * Quines 6–10 from pool 2, under the same number and QR; the especial card's side 1 plays the Quina del Desgraciat
+ * from pool 1 and its side 2 the Quina Especial from pool 2 (one card for both rounds, D81; the pool changes in the
+ * Break). The labels are what the Check shows after `shortName`: a range joins with a space ("Normal 1–5", "Normal
+ * 6–10", an en dash as on the design boards), a round's name with « · » ("Especial · Desgraciat", the round's short
+ * name by D251; "Especial · Quina Especial": U198's option (a) until the user picks).
  */
 export const CARD_TYPES = [
   {
@@ -54,7 +54,7 @@ export const CARD_TYPES = [
   },
   {
     type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: CARD_TITLE, priceCents: 500, priceRule: 'fixed',
-    sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }],
+    sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }],
   },
 ] as const satisfies readonly CardTypeSpec[];
 

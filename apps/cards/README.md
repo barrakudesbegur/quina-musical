@@ -26,14 +26,14 @@ says which pool each side of a type is printed from (D171, provisional):
 
 - the normal card: side 1 plays Quines 1–5, from pool 1 (`label: "1–5"`); side 2 plays Quines 6–10, from pool 2
   (`label: "6–10"`, D193). The same number and QR on both;
-- the especial card (D226): side 1 plays the Quina Desgraciada, from pool 1 (`label: "Desgraciada"`); side 2 plays the
-  Quina Especial, from pool 2 (`label: "Quina Especial"`). It's one card for both rounds (D81), under the same number
-  and QR; the pool changes in the Break.
+- the especial card (D226): side 1 plays the Quina del Desgraciat (D251), from pool 1 (`label: "Desgraciat"`, its short
+  name); side 2 plays the Quina Especial, from pool 2 (`label: "Quina Especial"`). It's one card for both rounds (D81),
+  under the same number and QR; the pool changes in the Break.
 
 `cards.json` holds each card as `{ id, type, sides: [{ side, lines: [[{ id, title, artist } × 4] × 3] }] }`, and
 `card-types.json` each type's `sides: [{ side, pool, label? }]` and its `shortName` ("Normal"): the Check shows the
 type and side in one label (D163): a range label joins with a space, "Normal 1–5", "Normal 6–10"; a round's name with
-« · », "Especial · Desgraciada", "Especial · Quina Especial" (U198's option (a) until the user picks). Readers take a
+« · », "Especial · Desgraciat", "Especial · Quina Especial" (U198's option (a) until the user picks). Readers take a
 card from before sides (`lines` and no `sides`) as its side 1.
 
 **A pool with no songs** (a repertoire not split into pools yet, like `default`): that side is drawn from the whole
