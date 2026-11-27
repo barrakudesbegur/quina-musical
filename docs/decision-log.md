@@ -1288,7 +1288,7 @@ Decided by the organizers. The Quina Especial is the last round, not the Desgrac
 1. 🎫 Card sales, from 5 pm.
 2. 🎉 The start, at 6 pm.
 3. 1️⃣ Quines 1–5.
-4. ✴️ The Quina Desgraciada.
+4. ✴️ The Quina del Desgraciat.
 5. ☕️ One "Descans" with the throw, 10 minutes.
 6. 2️⃣ Quines 6–10.
 7. ✴️ The Quina Especial.
