@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drumOrder, replayJournal, type JournalEntry } from '@quina/protocol';
+import { dataTest } from './support/data.ts';
 import { setup } from './support/harness.ts';
 import { FLOW } from '../engine/src/config.ts';
 import type { Effect } from '../engine/src/show/show.ts';
@@ -18,7 +19,7 @@ test('drumOrder: the same songs and seed give the same order, whatever order the
   assert.deepEqual(drumOrder([], 1), []);
 });
 
-test("the round's drum follows its public drumSeed, journaled; each Spin carries its spinSeed, and a restart keeps the order", () => {
+dataTest("the round's drum follows its public drumSeed, journaled; each Spin carries its spinSeed, and a restart keeps the order", () => {
   const h = setup({ seed: 7, settings: { autoAdvance: false } });
   h.send('unlock');
   h.send('roundIntro');
@@ -44,7 +45,7 @@ test("the round's drum follows its public drumSeed, journaled; each Spin carries
   assert.equal(again?.selectId, last);
 });
 
-test("the state's round carries the round's public drumSeed, the journal's, and keeps it across a restart", () => {
+dataTest("the state's round carries the round's public drumSeed, the journal's, and keeps it across a restart", () => {
   const h = setup({ seed: 5, settings: { autoAdvance: false } });
   h.send('unlock');
   h.send('roundIntro');
@@ -58,7 +59,7 @@ test("the state's round carries the round's public drumSeed, the journal's, and 
   assert.equal(r.show.snapshot().round.drumSeed, started.drumSeed, 'a restarted page keeps the order');
 });
 
-test('Back, a cancelled Spin and a backed-out Suspense put the card back at its own place in the drum order, as the phones have it', () => {
+dataTest('Back, a cancelled Spin and a backed-out Suspense put the card back at its own place in the drum order, as the phones have it', () => {
   const h = setup({ seed: 7, settings: { autoAdvance: false, pace: 22 } });
   h.send('unlock');
   h.send('roundIntro');
