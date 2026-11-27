@@ -4,8 +4,9 @@
 //   node mockup.cjs                 every layout
 //   node mockup.cjs 3x1-h 2x1-v     some layouts
 //
-// Each PDF has four pages: the normal card's side 1 and side 2, then the special card's side 1 and side 2, printed
-// duplex: on a back page each row's cards are mirrored, so every card's side 2 lands behind its side 1.
+// Each PDF has the normal card's first sheet (side 1, side 2), the special card's, then, where a type's amount leaves
+// empty places, the last sheet with a «MOSTRA» sample. Printed duplex: on a back page each row's cards are mirrored, so
+// every card's side 2 lands behind its side 1.
 const fs = require('fs');
 const path = require('path');
 
@@ -14,7 +15,7 @@ const DATA = process.env.MOCKUP_DATA || path.join(__dirname, 'data');
 const OUT = process.env.MOCKUP_OUT || path.join(__dirname, 'out');
 const M = (m) => require(path.join(R, 'apps/cards/node_modules', m));
 const React = M('react');
-const { Document, Font, Image, Page, Path, Circle, Rect, render, StyleSheet, Svg, Text, View } = M('@react-pdf/renderer');
+const { Document, Font, G, Image, Page, Path, Circle, Rect, render, StyleSheet, Svg, Text, View } = M('@react-pdf/renderer');
 const fontkit = M('fontkit');
 const { generateQRCodeDataUri } = require(path.join(R, 'apps/cards/build/utils/qr.js'));
 const h = React.createElement;
@@ -26,6 +27,7 @@ Font.register({
   fonts: [
     { src: path.join(fontPath, 'LondrinaSolid-Regular.ttf'), fontWeight: 'normal' },
     { src: path.join(fontPath, 'LondrinaSolid-Light.ttf'), fontWeight: 'light' },
+    { src: path.join(fontPath, 'LondrinaSolid-Black.ttf'), fontWeight: 'heavy' },
   ],
 });
 Font.registerHyphenationCallback((word) => [word]);
@@ -49,6 +51,13 @@ const POOL = { 1: Object.values(songs).filter((s) => s.pool === '1').map((s) => 
 const BRAND = ['QUINA QUINA!', 'BARRAKUDES · 2026'];
 const HEADINGS = { normal: ['QUINES 1–5', 'QUINES 6–10'], especial: ['DESGRACIAT', 'ESPECIAL'] };
 const GOMET = { diameter: 42.52 /* 15 mm */, size: 10.5, spacingEm: 0.15 };
+// The faint year above the logo stamp, as last year's card had it (the user, 27 Nov: "keep the year in the stamp yes, as
+// the old code did"; D263).
+const YEAR = '2026';
+// The samples (the user, 27 Nov, D264): a sheet's empty places repeat the type's last cards, marked with a big diagonal
+// word, faint like the stamp.
+const SAMPLE_WORD = 'MOSTRA';
+const BLACK = fontkit.openSync(path.join(fontPath, 'LondrinaSolid-Black.ttf'));
 
 // The sheets a Catalan copy shop prints colour on (portrait, in points): A4, A3 and SRA3 (32 × 45 cm, the digital
 // presses' sheet). A layout cuts one sheet into cols × rows cards.
@@ -83,8 +92,22 @@ const LAYOUTS = {
   '2x2-h-gomet-left-beside': { name: '2×2 horizontal, GOMET left, cover beside', sheet: 'A4', landscape: true, cols: 2, rows: 2, titleMax: 16, header: 'gometLeft', cellMode: 'beside' },
   '2x2-v-gomet-left': { name: '2×2 vertical, GOMET left', sheet: 'A4', landscape: false, cols: 2, rows: 2, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
 };
-// Each type's amount fills whole sheets: last year's 399 normal and 300 special, rounded up.
-const AMOUNTS = (perPage) => ({ normal: Math.ceil(399 / perPage) * perPage, especial: Math.ceil(300 / perPage) * perPage });
+// The amounts stay last year's (the user, 27 Nov, D264): normal 1–399, special 400–699, so a card's first digit tells its
+// type. A sheet's empty places (6 a sheet: 3 on the normal card's last sheets) hold samples.
+const AMOUNTS = { normal: 399, especial: 300 };
+
+// The generator's order: page p holds cards p, p + pages, p + 2 × pages…, so each cut stack runs in number order. The
+// empty places, in page order, repeat the type's last cards as samples.
+function sheetsOf(amount, first, perPage) {
+  const pages = Math.ceil(amount / perPage);
+  const out = [...Array(pages)].map((_, p) => [...Array(perPage)].map((_, k) => {
+    const i = k * pages + p;
+    return i < amount ? { num: first + i, sample: false } : null;
+  }));
+  const empty = out.flatMap((page, p) => page.map((c, k) => (c ? null : [p, k])).filter(Boolean)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  empty.forEach(([p, k], j) => { out[p][k] = { num: first + amount - empty.length + j, sample: true }; });
+  return out;
+}
 
 // A seeded shuffle, so a mockup's cards are the same on every run.
 function rng(seed) {
@@ -349,47 +372,62 @@ function Cell({ g, id, titleMax, stats }) {
     cover, h(View, { style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 } }, words));
 }
 
-function Card({ g, layout, kind, side, num, position, qr, stats, cut }) {
+// «MOSTRA» across a sample card, along its diagonal, faint like the stamp.
+function SampleMark({ g }) {
+  const angle = (Math.atan2(g.H, g.W) * 180) / Math.PI;
+  const size = (0.72 * Math.hypot(g.W, g.H)) / ((BLACK.layout(SAMPLE_WORD).advanceWidth / BLACK.unitsPerEm) * 1.0);
+  const cap = (BLACK.capHeight / BLACK.unitsPerEm) * size;
+  return h(Svg, { viewBox: `0 0 ${g.W} ${g.H}`, style: { position: 'absolute', top: 0, left: 0, width: g.W, height: g.H } },
+    h(G, { transform: `translate(${g.W / 2}, ${g.H / 2}) rotate(${-angle})` },
+      h(Text, { x: 0, y: cap / 2, textAnchor: 'middle', fill: '#000000', opacity: 0.12, style: { fontFamily: 'LondrinaSolid', fontWeight: 'heavy', fontSize: size } }, SAMPLE_WORD)));
+}
+
+function Card({ g, layout, kind, side, num, position, qr, stats, cut, sample }) {
   const ids = cardSongs(kind, num, side, position);
   const stamp = Math.min(70, g.W * 0.17);
   return h(View, { style: [st.card, { width: g.W, height: g.H }, cut] },
-    // The faint logo stamp; the year now lives in the branding line («BARRAKUDES · 2026»).
+    // The faint logo stamp, with the year above it as on last year's card.
     h(Svg, { viewBox: '0 0 1024 1024', style: { position: 'absolute', bottom: 22, right: 6, width: stamp, height: stamp, transform: 'rotate(15deg)' } },
       h(Path, { d: STAMP_D, fillRule: 'evenodd', fill: '#000000', opacity: 0.09 })),
+    h(Text, { style: { position: 'absolute', bottom: 22 + stamp - 4, right: 6, width: stamp, textAlign: 'center', fontSize: 18, color: '#e8e8e8', transform: 'rotate(15deg)' } }, YEAR),
     h(Header, { g, kind, side, num, qr }),
     h(View, { style: [st.table, { height: g.gridH }] },
       [0, 1, 2].map((r) =>
         h(View, { key: r, style: st.row },
           ids.slice(r * 4, r * 4 + 4).map((id) => h(Cell, { key: id, g, id, titleMax: layout.titleMax, stats }))))),
-    g.style === 'footer' ? h(BrandFooter) : null);
+    g.style === 'footer' ? h(BrandFooter) : null,
+    sample ? h(SampleMark, { g }) : null);
 }
 
 async function build(key) {
   const layout = LAYOUTS[key];
   const g = geometry(layout);
   const perPage = layout.cols * layout.rows;
-  const amounts = AMOUNTS(perPage);
-  const numbers = {
-    normal: [...Array(perPage)].map((_, k) => 1 + (k * amounts.normal) / perPage),
-    especial: [...Array(perPage)].map((_, k) => amounts.normal + 1 + (k * amounts.especial) / perPage),
-  };
+  const amounts = AMOUNTS;
+  const sheets = { normal: sheetsOf(amounts.normal, 1, perPage), especial: sheetsOf(amounts.especial, amounts.normal + 1, perPage) };
+  // Drawn: each type's first sheet; then, where there are samples, the last sheet that has one.
+  const shown = [['normal', sheets.normal[0]], ['especial', sheets.especial[0]]];
+  for (const kind of ['normal', 'especial']) {
+    const last = sheets[kind].filter((page) => page.some((c) => c.sample)).pop();
+    if (last) shown.push([kind, last]);
+  }
   const qrs = {};
-  for (const n of [...numbers.normal, ...numbers.especial]) qrs[n] = await generateQRCodeDataUri(n);
+  for (const [, page] of shown) for (const { num } of page) qrs[num] = await generateQRCodeDataUri(num);
   const stats = [];
   const pages = [];
-  for (const kind of ['normal', 'especial']) {
+  for (const [kind, sheet] of shown) {
     for (const side of [1, 2]) {
       const rows = [...Array(layout.rows)].map((_, r) => {
-        let cards = numbers[kind].slice(r * layout.cols, (r + 1) * layout.cols).map((num, c) => ({ num, position: r * layout.cols + c, c }));
+        let cards = sheet.slice(r * layout.cols, (r + 1) * layout.cols).map(({ num, sample }, c) => ({ num, sample, position: r * layout.cols + c, c }));
         if (side === 2) cards = cards.slice().reverse(); // duplex: a back row is mirrored, so each card's side 2 is behind it
         return h(View, { key: r, style: { display: 'flex', flexDirection: 'row' } },
-          cards.map(({ num, position }, i) => {
+          cards.map(({ num, sample, position }, i) => {
             // Cut lines on the front only (D102), faint as last year's.
             const cut = side === 1 ? { borderRight: i < layout.cols - 1 ? '1px dashed #f0f0f0' : undefined, borderBottom: r < layout.rows - 1 ? '1px dashed #f0f0f0' : undefined } : {};
-            return h(Card, { key: num, g, layout, kind, side, num, position, qr: qrs[num], stats, cut });
+            return h(Card, { key: `${num}${sample ? 's' : ''}`, g, layout, kind, side, num, position, qr: qrs[num], stats, cut, sample });
           }));
       });
-      pages.push(h(Page, { key: kind + side, size: [g.page.w, g.page.h], style: { backgroundColor: '#ffffff' } }, rows));
+      pages.push(h(Page, { key: `${kind}${sheet[0].num}-${side}`, size: [g.page.w, g.page.h], style: { backgroundColor: '#ffffff' } }, rows));
     }
   }
   fs.mkdirSync(OUT, { recursive: true });
@@ -397,8 +435,8 @@ async function build(key) {
   await render(h(Document, null, pages), out);
   const ts = stats.map((s) => s.ts).sort((a, b) => a - b);
   const mm = (pt) => (pt / 2.8346).toFixed(0);
-  const sheets = Math.ceil(amounts.normal / perPage) + Math.ceil(amounts.especial / perPage);
-  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage} a ${layout.sheet} (${sheets} sheets for ${amounts.normal}+${amounts.especial}), cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, heading ${g.headingSize} pt, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
+  const samples = sheets.normal.flat().filter((c) => c.sample).length + sheets.especial.flat().filter((c) => c.sample).length;
+  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage} a ${layout.sheet} (${sheets.normal.length + sheets.especial.length} sheets for ${amounts.normal}+${amounts.especial}, ${samples} samples), cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, heading ${g.headingSize} pt, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
 }
 
 (async () => {

@@ -1,12 +1,14 @@
-# The 2026 printed cards: design so far
+# The 2026 printed cards: the design
 
 The design of this year's printed cards, made with the user in the card design session (27 Nov 2026), and the tool that
-draws it. **Nothing here is built into the generator yet.** Once the user agrees the design, Frontend builds it into
-`apps/cards/src` (the cards are made on 4–5 Dec, D83).
+draws it. **The design is final (27 Nov), in two options**, because the organizers choose between covers in colour (A, the
+working default) and no covers in black and white (B) (U212). The card design session builds both into `apps/cards/src`
+behind one switch (the user: "assume we do a. and you can code both so i decide the final later"); the cards are made on
+4–5 Dec (D83). The canvas's "Final (both options)" page shows every side of both.
 
 - **The boards:** the design canvas "Quina cards 2026" (https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392),
   one page per proposal, every version kept, plus a page for the organizers. It's private: the user shares it.
-- **The decisions:** D250–D253 and U209 in [docs/decision-log.md](../../docs/decision-log.md) and
+- **The decisions:** D250–D268 and U209 in [docs/decision-log.md](../../docs/decision-log.md) and
   [docs/open-questions.md](../../docs/open-questions.md); terms as in [GLOSSARY.md](../../GLOSSARY.md).
 
 ## The card (proposal 7)
@@ -17,27 +19,31 @@ needs:
 
 | Part | 2026 |
 |---|---|
-| Branding (top left) | The figure, «QUINA QUINA!» (no «3»), and «BARRAKUDES · 2026» under it |
+| Branding (top left) | B: the figure, «QUINA QUINA!» (no «3»), and «BARRAKUDES · 2026» under it. A (header C): the figure alone, beside the GOMET circle |
 | Heading (centred on the card, not between the side blocks) | Normal side 1 «QUINES 1–5»; side 2 «QUINES 6–10» in white on black. Special side 1 «DESGRACIAT»; side 2 «ESPECIAL» in white on black. The special card has no parts (D252) |
 | GOMET circle | Dashed, 15 mm, «GOMET» in Londrina Light at 10.5 pt, letter-spaced 0.15 em, centred on the circle's middle (D253) |
 | Number | «CARTRÓ», then the number with a faded «#» before it |
 | QR | As today: `/26/<number>` on white |
 | Each song | Its cover beside the title (16 mm in the 3×1 layout), or above it in tall cells; the title in Londrina Regular, capitals, fitted from 14 pt down (16 pt in the larger layouts), up to 3 lines, **never hyphenated**; the artist in Londrina Light, up to 2 lines, at 8 pt or more when it fits |
-| Stamp | The faint logo only; the year moved into the branding |
+| Stamp | The faint logo with «2026» above it, as last year's card (D263) |
 | Removed | The event title, the corn-seeds line, the name field |
 
 The two card types look the same; as last year, the paper colour tells them apart (pending U52). A duplex back mirrors
 each row, so every card's side 2 lands behind its side 1; cut lines are on the front only (D102).
 
-**Print titles** (a proposal, pending the user's OK): Spotify's tags come off («Dura - Remix» → «Dura»,
-«Titanium (feat. Sia)» → «Titanium»), at most two artists, and a hand fix where the rules fail (#90). 20 of the 136 songs
-change: [print-titles.py](print-titles.py) writes [data/songs-print.json](data/songs-print.json). If agreed, the field
-and its hand fixes become Sound engine's data, shown the same on paper and screens.
+**Print names** (agreed by the user, 27 Nov, D260): Spotify's tags come off («Dura - Remix» → «Dura»,
+«Titanium (feat. Sia)» → «Titanium»), the artist is the main one only (#70, #97 and #129 keep two), with hand fixes for
+typos and accents, and «Aserejé» for both #5 and #128 (D261). 38 of the 136 songs change:
+[print-titles.py](print-titles.py) writes [data/songs-print.json](data/songs-print.json). Sound engine owns the field
+(`printTitle` / `printArtist` in the repertoire's songs.json, its hand fixes keyed by Spotify id); paper and screens show
+the same names.
 
 ## Decided: A3, 6 cards a sheet (the user, 27 Nov)
 
-The card is 149 × 140 mm, six to an A3 portrait sheet (`a3-6`), printed «dúplex, vora llarga». Amounts must fill whole
-sheets, so 402 normal (not 399) and 300 special: 117 A3 sheets. Each back row is mirrored, and front and back line up:
+The card is 149 × 140 mm, six to an A3 portrait sheet (`a3-6`), printed «dúplex, vora llarga». The amounts stay
+last year's, normal 1–399 and special 400–699, so a card's first digit tells its type (the user, D264). The normal card's
+last sheets have 3 empty places: they repeat the last cards (#397–#399) as samples, with a big faint diagonal «MOSTRA»
+on both sides; samples aren't cards. 67 + 50 = 117 A3 sheets. Each back row is mirrored, and front and back line up:
 held up to the light, the back's grid falls exactly on the front's (the canvas's "Headers" page shows it).
 
 **The header, being chosen.** Two rules from the user: the heading stays at 38 pt ("dont make the text smaller"), and the QR never gets smaller than last year's 45 pt, 16 mm ("it is already hard to scan. it is not negotiable"). Centred on the card, the heading can only reach as far as the busier side allows, so it sits centred in the space between them; the card number always stays next to its QR ("it is the content of the qr"). The card is too narrow for last year's one-row header, so the songs lose height to a two-row one:
@@ -95,17 +101,20 @@ A4 can't cut. Page 1 of each layout is on the canvas's "Layouts" page.
   could grow too.
 - Cards narrower than 176 mm get a two-row header: branding with the number and QR, then the heading with the GOMET
   circle.
-- Amounts fill whole sheets: last year's 399 normal and 300 special, rounded up (400 for 2 or 4 a sheet, 402 for 6).
+- Amounts stay 399 normal and 300 special; a layout's empty places hold «MOSTRA» samples (D264).
 - Duplex: a portrait sheet flips on its long edge («dúplex, vora llarga»), a landscape one on its short edge
   («vora curta»), so the back reads the right way up. Either way each back row is mirrored.
 
-## Open with the user
+## Answered by the user (27 Nov, night; D260–D268)
 
-- U201: the GOMET circle on both sides.
-- U198: the special card's label on screens during the Check (proposed: «Desgraciat», «Especial», as printed).
-- U52: the paper (proposed: last year's coloured paper, a proof sheet first).
-- The print titles (above), the header (above), and 402 or 396 normal cards.
-- A final design by 1 Dec, so Frontend can build it (about 2 days) and proof it before 4–5 Dec.
+- U201: the GOMET circle on both sides. A player who sticks different gomets on the two sides changes the card's mark
+  in the app.
+- U198: the special card's Check label is the printed word, «Desgraciat» / «Especial» (card-types.json's `checkLabel`).
+- U52: last year's coloured paper (blue normal, pink special), printed in colour, a proof sheet first.
+- The print names (above); «2026» in the stamp; 399 + 300 with «MOSTRA» samples.
+- U199: pools may share songs (D268): one song library, pools reference songs, the Pausa and Break music included.
+
+**Still open:** U212, the organizers' pick (A or B).
 
 ## Drawing the mockups
 
