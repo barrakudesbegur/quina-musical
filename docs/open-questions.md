@@ -109,8 +109,19 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U188 · A tap outside the console's menu or Wii dialog
+The phone's drawers already close on a tap outside. On the console only ✕ and Esc close them.
+- (a) The menu closes on a tap outside; the Wii dialog doesn't, because it may be mid-pairing.
+- (b) Both close on a tap outside.
+- (c) Neither, as today.
+
+### U189 · Balanced line breaks on titles
+Two-line titles, like the drawers' and the Check's, would break into lines of even length, and paragraphs would avoid a lone last word. It changes line breaks on screens the user has already seen.
+- (a) Yes.
+- (b) No.
+
 ### U187 · The oldest iOS / iPadOS the screens support
-Today the code supports iOS and iPadOS 15.4. Some modern features need 16 or later: the console's layout per orientation (container queries), exit animations, and a list method used in 9 places that would crash the page on iOS 15. Each has an older fallback, at some cost. The crowd brings old phones (the grandmother test), and nobody knows yet which tablet the presenters will use (U19).
+Today the code supports iOS and iPadOS 15.4. Some modern features need 16 or later: the console's layout per orientation (container queries) and the drawers' and dialogs' exit animations. Each has an older fallback, at some cost. Nothing crashes on iOS 15 today (Frontend checked, 27 Nov). The crowd brings old phones (the grandmother test), and nobody knows yet which tablet the presenters will use (U19).
 - (a) Keep 15.4 on the phones and the tablet, with the fallbacks.
 - (b) Raise everything to 16.
 - (c) Keep 15.4 on the phones, and raise only the tablet to 16. Its model and iOS version need checking.

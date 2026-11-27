@@ -1406,3 +1406,16 @@ The user's answers to U182–U186:
 - **A tap on something that can't be used:** a dull thud, with a small "no" motion.
 - **The sounds:** "you can pick for me, if i dont like i will ask changing. i like wobly and bouncy sounds for the app". Frontend picks them from Josh Comeau's set, leaning wobbly and bouncy for the player app.
 By: the user. Source: open-questions.md › Answered (U182–U186). Amends: ANIMATIONS.md principle 4 (the tablet's silence). Lives in: requirements/screens.md › Console, Player app, Admin.
+
+### D209 · The modern-web audit's technical calls · 2026-11-27 · Active
+Frontend's calls from the audit (scratchpad/mwg/audit.md). The orchestrator had no objection:
+- **Reduced motion:** the colour and opacity fades that carry meaning stay (the connection chip, the switch track, the backdrops). The looping animations move behind `prefers-reduced-motion: no-preference`, instead of every duration dropping to zero. ANIMATIONS.md's fallbacks are updated first.
+- **The finale button's growing row** (D167) stays a documented exception to "never animate layout".
+- **Not done for now:**
+  - view transitions, which would freeze the ring's animation;
+  - `oklab` colour mixing, with no visible gain;
+  - `closedby="any"`, which Safari lacks;
+  - dropping the page scroll lock, since iPhones would scroll behind a drawer.
+- **Waiting on U187:** `@starting-style` exits and container queries.
+- **Later, with design:** the phone's Celebration as a real `<dialog>`, since it affects the open pad (D90).
+By: Frontend, noted by the orchestrator. Source: Frontend's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md.
