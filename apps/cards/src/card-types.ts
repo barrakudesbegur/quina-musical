@@ -29,7 +29,7 @@ export interface CardTypeSpec {
   type: string;
   /** Its full name ("Cartró normal"). */
   name: string;
-  /** Its name in a label with its side (D163: "Normal 1–5", "Especial"). */
+  /** Its name in a label with its side (D163: "Normal 1–5", "Especial · Desgraciada"). */
   shortName: string;
   color: string;
   title: string;
@@ -38,7 +38,7 @@ export interface CardTypeSpec {
    * the regular rounds still to play (a normal card); 'fixed', the price itself (the especial card). Optional:
    * 'perRegularRound' when absent. The same values as @quina/protocol's CardPriceRule. */
   priceRule?: 'perRegularRound' | 'fixed';
-  /** Its printed sides, numbered 1, 2… in order: the normal card has two, the especial card one. */
+  /** Its printed sides, numbered 1, 2… in order: the normal card and the especial card have two each (D226). */
   sides: readonly CardTypeSideSpec[];
 }
 

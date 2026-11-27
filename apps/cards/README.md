@@ -7,8 +7,9 @@ This project generates bingo cards for a musical bingo game. The cards are gener
 The output files are committed in [`dist`](./dist): `cards.json`, `card-types.json` and one PDF per card type
 (`cards-normal.pdf`, `cards-especial.pdf`). Until this year's playlist is final they are last year's test cards; don't
 regenerate them for real before then. `card-types.json` already carries this year's provisional title, prices and
-sides (D67, D69, D171), and `cards.json` the two sides (side 1 as before, side 2 from the whole repertoire, since its
-pool 2 is empty); the committed PDFs still show last year's one-sided cards, title and old cards #398 and #492.
+sides (D67, D69, D171, D226), and `cards.json` every card's two sides, the especial card's too (side 1 as before, side
+2 from the whole repertoire, since its pool 2 is empty); the committed PDFs still show last year's one-sided cards,
+title and old cards #398 and #492.
 
 The JSON files are written before the PDF renderer loads, so `cards.json` and `card-types.json` are written even when
 the native `canvas` module is missing (the run then fails at the PDF step).
@@ -25,12 +26,15 @@ says which pool each side of a type is printed from (D171, provisional):
 
 - the normal card: side 1 plays Quines 1–5, from pool 1 (`label: "1–5"`); side 2 plays Quines 6–10, from pool 2
   (`label: "6–10"`, D193). The same number and QR on both;
-- the especial card: one side, from pool 1 (the Desgraciat and the Especial play pool 1).
+- the especial card (D226): side 1 plays the Quina Desgraciada, from pool 1 (`label: "Desgraciada"`); side 2 plays the
+  Quina Especial, from pool 2 (`label: "Quina Especial"`). It's one card for both rounds (D81), under the same number
+  and QR; the pool changes in the Break.
 
 `cards.json` holds each card as `{ id, type, sides: [{ side, lines: [[{ id, title, artist } × 4] × 3] }] }`, and
 `card-types.json` each type's `sides: [{ side, pool, label? }]` and its `shortName` ("Normal"): the Check shows the
-type and side in one label, "Normal 1–5", "Normal 6–10", "Especial" (D163). Readers take a card from before sides
-(`lines` and no `sides`) as its side 1.
+type and side in one label (D163): a range label joins with a space, "Normal 1–5", "Normal 6–10"; a round's name with
+« · », "Especial · Desgraciada", "Especial · Quina Especial" (U198's option (a) until the user picks). Readers take a
+card from before sides (`lines` and no `sides`) as its side 1.
 
 **A pool with no songs** (a repertoire not split into pools yet, like `default`): that side is drawn from the whole
 repertoire, as the engine plays a round on an empty pool, and both `--check` and a generation say so:
@@ -40,7 +44,7 @@ whose `pool` no side is printed from, or a pool with 1 to 11 songs, stops the ru
 **Side 1 stays as it was:** its draw keeps the seed cards had before sides, so the same repertoire and seed give the same
 side 1; side 2 has its own seeds ([`src/sides.ts`](./src/sides.ts)).
 
-**The PDF:** each sheet prints side 1, then side 2 on the next page with the same cards in the same places (printed
+**The PDF:** each sheet prints side 1, then side 2 on the next page (both card types) with the same cards in the same places (printed
 double-sided, long-edge flip, each card's side 2 lands behind it). Side 2's design isn't decided (the user designs it
 with Frontend, D102): until then it prints in side 1's layout, stamped «CARA 2 PROVISIONAL · NO IMPRIMIR» across every
 card.

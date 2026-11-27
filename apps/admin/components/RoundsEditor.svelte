@@ -1,6 +1,6 @@
 <!-- The rounds plan: each round normal, special or the night's one Desgraciat round, the printed card type it plays
-     (card-types.json) and its side (D193's default: Quines 1–5 side 1, later normal rounds side 2, the Desgraciat and
-     the Especial side 1; sideWarnings says what doesn't fit the printed cards), with its Line's and Quina's prize
+     (card-types.json) and its side (D193's default: Quines 1–5 side 1, later normal rounds side 2, the Desgraciat
+     side 1, the Especial side 2 (D226); sideWarnings says what doesn't fit the printed cards), with its Line's and Quina's prize
      bundles (the Desgraciat round: only the last card standing's,
      its `bingo` bundle; Line prizes it had move there, with a notice). Rounds are added, removed
      and reordered here; they are renumbered 1, 2, 3… every time. During the night the rounds already played and
