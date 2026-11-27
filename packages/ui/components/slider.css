@@ -1,0 +1,226 @@
+/*
+ * B10 · Slider (components-v2.md § 3; Slider.svelte). A grid: the head over the track's column only, so the value
+ * ends flush with the track (#60); − and + at the track's ends. The track: a pill with a 2 px ink line, filled
+ * orange to the thumb (gold past the default's notch, D157); the thumb: a 28 px paper disc, 3 px ink, no drop, so
+ * the focus ring (R5) keeps one gap all round (#63). WebKit and Firefox pseudo-elements in separate rules
+ * (modern-web-guidance `slider`). Every size is a custom property in :where().
+ */
+
+:where(.slider) {
+  --slider-track: 10px;
+  --slider-line: var(--line-width-thin, 2px);
+  --slider-thumb: 28px;
+  --slider-thumb-line: var(--line-width);
+  --slider-fill: var(--color-orange);
+  --slider-over: var(--color-gold);
+  --slider-rest: var(--color-track, var(--color-chip));
+  --slider-step: var(--tap-dense, 44px);
+  --slider-gap: var(--space-2);
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px var(--slider-gap);
+  min-width: 0;
+}
+
+.slider__head {
+  grid-row: 1;
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  min-width: 0;
+}
+
+.slider__label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+}
+
+.slider__note {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* The value, at the head's end: the track's right end (#60) */
+.slider__value {
+  margin-inline-start: auto;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider[data-at-default] .slider__value {
+  color: var(--color-text-muted);
+}
+
+/* ---- − and + (#61) --------------------------------------------------------------------------------------------- */
+.slider__step {
+  display: grid;
+  place-items: center;
+  width: var(--slider-step);
+  height: var(--slider-step);
+  min-height: 0;
+  padding: 0;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-chip);
+  color: var(--color-text);
+  box-shadow: 0 3px 0 var(--color-shadow);
+}
+
+.slider__step > svg {
+  width: 45%;
+  height: 45%;
+}
+
+.slider__step[data-step='less'] {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.slider__step[data-step='more'] {
+  grid-row: 2;
+  grid-column: 3;
+}
+
+.slider__step:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(3px);
+}
+
+.slider__step:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+/* ---- the track ------------------------------------------------------------------------------------------------- */
+.slider__track {
+  grid-row: 2;
+  grid-column: 2;
+  position: relative;
+  display: block;
+  min-width: 0;
+  /* room under the track for the notch's words */
+  padding-block-end: 0.875rem;
+}
+
+/* The fill's end: the thumb's centre, which travels from half a thumb in to half a thumb from the end. */
+.slider__input {
+  --fill-to: calc(var(--slider-thumb) / 2 + (100% - var(--slider-thumb)) * var(--slider-at));
+  --over-from: calc(var(--slider-thumb) / 2 + (100% - var(--slider-thumb)) * min(var(--slider-at), var(--slider-default-at, 1)));
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: var(--slider-step);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.slider__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slider__input::-webkit-slider-runnable-track {
+  box-sizing: border-box;
+  height: var(--slider-track);
+  border: var(--slider-line) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--slider-fill) 0 var(--over-from),
+    var(--slider-over) var(--over-from) var(--fill-to),
+    var(--slider-rest) var(--fill-to) 100%
+  );
+}
+
+.slider__input::-moz-range-track {
+  box-sizing: border-box;
+  height: var(--slider-track);
+  border: var(--slider-line) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--slider-fill) 0 var(--over-from),
+    var(--slider-over) var(--over-from) var(--fill-to),
+    var(--slider-rest) var(--fill-to) 100%
+  );
+}
+
+.slider__input::-webkit-slider-thumb {
+  box-sizing: border-box;
+  width: var(--slider-thumb);
+  height: var(--slider-thumb);
+  margin-top: calc((var(--slider-track) - 2 * var(--slider-line) - var(--slider-thumb)) / 2);
+  border: var(--slider-thumb-line) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-snow);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.slider__input::-moz-range-thumb {
+  box-sizing: border-box;
+  width: var(--slider-thumb);
+  height: var(--slider-thumb);
+  border: var(--slider-thumb-line) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-snow);
+}
+
+/* R5 on the thumb, the control's grip: one even gap, then the ring (#63) */
+.slider__input:focus-visible {
+  outline: none;
+}
+
+.slider__input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 var(--ring-gap, 4px) var(--color-surface),
+    0 0 0 calc(var(--ring-gap, 4px) + 3px) var(--color-focus);
+}
+
+.slider__input:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 var(--ring-gap, 4px) var(--color-surface),
+    0 0 0 calc(var(--ring-gap, 4px) + 3px) var(--color-focus);
+}
+
+/* The default's notch: a tick across the track (under the input: the track hides its middle) where the thumb's centre sits at the default, its value under it */
+.slider__notch {
+  position: absolute;
+  top: calc(var(--slider-step) / 2 - var(--slider-track));
+  left: calc(var(--slider-thumb) / 2 + (100% - var(--slider-thumb)) * var(--slider-default-at));
+  width: 3px;
+  height: calc(var(--slider-track) * 2);
+  border-radius: 2px;
+  background: var(--color-line);
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.slider__notch-text {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 1px;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  white-space: nowrap;
+}

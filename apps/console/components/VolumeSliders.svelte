@@ -1,6 +1,6 @@
 <!--
   The volume sliders, in the menu (logic/volumes.ts; D139, D157–D159): every sound the engine mixes, 0–150 %, grouped,
-  each with a mark at its default and its value. A drag sends `setVolume` on every step, at once (the engine journals
+  each with a mark at its default and its value (the Slider, B10: − and + step 1%, Page Up / Down 10). A drag sends `setVolume` on every step, at once (the engine journals
   once the sliders are still); while the finger is down the slider shows the finger's value, then the engine's
   (`game.volumes`). The throws and the corn-seed storm share one slider (D159). Hooks: data-testid="volume-sliders",
   and "volume-<key>" on each slider.
@@ -11,6 +11,7 @@
   import { VOLUME_GROUPS, sliderPercent, volumeRow } from '../logic/volumes.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import Slider from '../../../packages/ui/components/Slider.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -19,8 +20,8 @@
   /** The finger's values while it drags (the engine's echo comes a moment later). */
   let drafts = $state<Partial<Record<VolumeKey, number>>>({});
 
-  function oninput(key: VolumeKey, e: Event): void {
-    const percent = sliderPercent(key, (e.currentTarget as HTMLInputElement).value);
+  function oninput(key: VolumeKey, value: number): void {
+    const percent = sliderPercent(key, value);
     if (percent === null) return;
     drafts = { ...drafts, [key]: percent };
     model.act('setVolume', { key, percent });
@@ -44,30 +45,22 @@
         {#each g.keys as key (key)}
           {@const row = volumeRow(key, volumes, drafts[key] ?? null)}
           {@const text = S.volumes.keys[key]}
-          <div class="volume" data-key={key} data-at-default={row.atDefault || undefined} style:--default-at={row.defaultAt}>
-            <label class="volume__head" for="{uid}-{key}">
-              <span class="volume__label">{text.label}</span>
-              <output class="volume__value" for="{uid}-{key}">{S.volumes.value(row.percent)}</output>
-            </label>
-            {#if text.note}<span class="volume__note">{text.note}</span>{/if}
-            <span class="volume__track">
-              <span class="volume__mark" aria-hidden="true" title={S.volumes.defaultValue(row.defaultPercent)}></span>
-              <input
-                id="{uid}-{key}"
-                type="range"
-                min="0"
-                max={row.max}
-                step="1"
-                value={row.percent}
-                disabled={!enabled}
-                data-testid="volume-{key}"
-                aria-describedby="{uid}-{key}-default"
-                oninput={(e) => oninput(key, e)}
-                onchange={() => onchange(key)}
-              />
-            </span>
-            <span class="visually-hidden" id="{uid}-{key}-default">{S.volumes.defaultValue(row.defaultPercent)}</span>
-          </div>
+          <Slider
+            class="volume"
+            label={text.label}
+            note={text.note}
+            value={row.percent}
+            max={row.max}
+            defaultValue={row.defaultPercent}
+            format={S.volumes.value}
+            description={S.volumes.defaultValue(row.defaultPercent)}
+            lessLabel={S.volumes.less(text.label)}
+            moreLabel={S.volumes.more(text.label)}
+            disabled={!enabled}
+            data-testid="volume-{key}"
+            oninput={(percent) => oninput(key, percent)}
+            onchange={() => onchange(key)}
+          />
         {/each}
       </div>
     {/each}

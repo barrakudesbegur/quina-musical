@@ -625,7 +625,7 @@ export const S = {
   /** The volume sliders, in the menu (logic/volumes.ts; D139, D157–D159). */
   volumes: {
     title: 'Volums',
-    note: 'Del 0 al 150 %. La marca de cada barra és on comença. Es desen per a tota la nit.',
+    note: 'Del 0 al 150%. La marca de cada barra és on comença. Es desen per a tota la nit.',
     groups: { general: 'General', songs: 'Cançons', music: 'Música de cada moment', moments: 'Moments forts', effects: 'Efectes' } satisfies Record<VolumeGroup, string>,
     keys: {
       master: { label: 'General', note: 'Tot el so alhora' },
@@ -647,9 +647,13 @@ export const S = {
       padFx: { label: 'Efectes', note: 'La pestanya Efectes' },
       ticks: { label: 'Bombo', note: 'Els tics mentre gira' },
     } satisfies Record<VolumeKey, { label: string; note: string | null }>,
-    value: (percent: number) => `${percent} %`,
+    /** «80%», no space (the user, #62). */
+    value: (percent: number) => `${percent}%`,
     /** Spoken with each slider, and on its default's mark. */
-    defaultValue: (percent: number) => `Per defecte: ${percent} %`,
+    defaultValue: (percent: number) => `Per defecte: ${percent}%`,
+    /** The − and + at a slider's ends: 1% a press (#61). */
+    less: (label: string) => `${label}: baixa 1%`,
+    more: (label: string) => `${label}: puja 1%`,
   },
 
   roundStart: {

@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import Slider from '../../packages/ui/components/Slider.svelte';
   import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
   import Tabs from '../../packages/ui/components/Tabs.svelte';
@@ -38,6 +39,8 @@
   let shown = $state(true);
   let name = $state('');
   let query = $state('Elefants');
+  let vol = $state(80);
+  let loud = $state(130);
 </script>
 
 {#snippet cell(caption: string, body: Snippet)}
@@ -152,5 +155,25 @@
     {@render cell('a title’s match', m1)}
     {#snippet m2()}<p class="ds-gallery__result"><b>All I Want for Christmas Is You</b><br /><mark class="ds-mark">Mar</mark>iah <mark class="ds-mark">C</mark>arey</p>{/snippet}
     {@render cell('an artist’s, in runs', m2)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b10">
+  <h2 id="b10">B10 · Slider</h2>
+  <p class="ds-prose">
+    A native range: <code>label</code>, <code>note</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code>,
+    <code>nudge</code> (− and +, 1), <code>page</code> (Page Up / Down, 10), <code>defaultValue</code> (the notch; past it the fill is
+    gold), <code>format</code> («80%», #62), <code>disabled</code>, <code>oninput</code> / <code>onchange</code>. The value ends flush with
+    the track (#60); the thumb’s focus ring keeps one gap all round (#63). Silent.
+  </p>
+  <div class="ds-gallery__grid ds-gallery__grid--wide">
+    {#snippet v1()}<Slider label="Cançons" note="Les cançons de la quina" max={150} defaultValue={100} value={vol} oninput={(v) => (vol = v)} lessLabel="Baixa 1%" moreLabel="Puja 1%" />{/snippet}
+    {@render cell('under the default: orange', v1)}
+    {#snippet v2()}<Slider label="Victòria" note="La fanfàrria i la música de victòria" max={150} defaultValue={100} value={loud} oninput={(v) => (loud = v)} lessLabel="Baixa 1%" moreLabel="Puja 1%" />{/snippet}
+    {@render cell('past the default: the fill turns gold (D157)', v2)}
+    {#snippet v3()}<Slider label="General" max={150} defaultValue={100} value={100} lessLabel="Baixa 1%" moreLabel="Puja 1%" />{/snippet}
+    {@render cell('at the default: the value muted', v3)}
+    {#snippet v4()}<Slider label="Efectes" max={150} value={60} disabled lessLabel="Baixa 1%" moreLabel="Puja 1%" />{/snippet}
+    {@render cell('disabled', v4)}
   </div>
 </section>
