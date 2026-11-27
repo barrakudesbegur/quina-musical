@@ -68,6 +68,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `64ced39e` (`70065cb`, repertoire 2026): D251, «Quina del Desgraciat» on every screen; the 2026 card-types.json's especial side 1 «Desgraciat» (Sound engine updated the file; R2 got the one changed blob, and the old one was pruned).
     - `58be65b4` (`51c0d22`, repertoire 2026): the phone header's «Desgraciat» fallback below about 360 px (D251); comment-only renames.
     - `3643c9ea` (`6652e44`, repertoire 2026): the phone drum's performance (each Spin solved in an inline Web Worker; only the ring restyled per frame; the solver's golden test). No CSP is set anywhere, so the `blob:` worker loads.
+    - `7617c6af` (`feaaa2e`, repertoire 2026): the new cover 122 (Sound engine swapped a wrong Christmas best-of for the song's own album); R2 got it with D260's 40 renamed analysis files (41 blobs, the 41 old ones pruned).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
@@ -79,6 +80,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **R2:** the breaks set, the intro, the throw song and Pausa's set (in `pausa/`) are pushed. The old top-level `interval-*` keys left the manifest and wait for the post-night prune (agreed with Sound engine: under a cent a month). Hold's `audition/` is excluded.
   - **The plan-save bug** (`2503050`): edits that change nothing public were lost when the GameRoom restarted. U126 asks the user to check quina-dev.
 - **Next:**
+  - **D268, ready but held:** `fbbcda1` (in `wt-step2`, not pushed) makes the preflight read each song's `pools` list only (a shared song counts in both pools; a song without a valid list FAILs the Songs check). Push it once Sound engine's step 1 (songs.json carries `pools` beside `pool`, the default repertoire too) is on main and in the data, after a rebase and the suites; then Sound engine drops `pool`.
   - **D234's lock through the cloud is live** (`e3de22c4`): each cloud console's commands carry `from: cloud:<its hello clientId>`, and the link hands the relay `cloud.consoles { ids }` (Sound engine's `ed63184`). A laptop's link must run the new code (`npm run link` restarted) to forward the list. Frontend checks it live.
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
