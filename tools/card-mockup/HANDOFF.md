@@ -10,7 +10,7 @@ the same day.
 - **Two options for the organizers (U212):** «Quadrat amb portades» (A3 · 6, 17 mm covers, the default) and «Apaïsat
   sense portades» (21 × 9.9 cm, black and white). «Apaïsat amb portades» (the mockup's `3x1-h`) was shown, then
   dropped (the user, Q21). The organizers got an image of card #1 in both on blue paper, made with
-  scratchpad `tools/share.swift` (each card multiplied onto the paper colour, the same scale), plus a short message in
+  [swift/share.swift](swift/share.swift) (each card multiplied onto the paper colour, the same scale), plus a short message in
   Catalan.
 - **Since the first push:** the square card's covers are 17 mm (acd8f1a9). «2026» sits on the stamp exactly as last
   year's code put it, and the stamp is drawn over the songs so a cover never hides it (4e4c0fe2). Summercat prints
