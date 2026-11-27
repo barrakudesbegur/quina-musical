@@ -28,12 +28,13 @@ export const SIDE_1_LAST_QUINA = 5;
 /**
  * The side a round plays unless set otherwise (D171). The normal rounds count on their own, as the screens and the
  * card's mark do (quinaNumber): the first five play side 1 and the rest side 2, wherever the specials sit in the plan
- * (`rounds`); the Desgraciat and the Especial play side 1 (pool 1). A card type that doesn't have that side (one printed
- * on one side) plays its first. Without card-types.json, D171's side.
+ * (`rounds`). The especial card plays both specials (D81, D226): the Desgraciat its side 1 (pool 1), the Especial its
+ * side 2 (pool 2, after the Break). A card type that doesn't have that side (one printed on one side) plays its first.
+ * Without card-types.json, the side wanted.
  */
 export function defaultSide(round: Pick<RoundPlan, 'number' | 'kind'> & { cardType?: string }, rounds: readonly Pick<RoundPlan, 'number' | 'kind'>[], types: readonly PrintedCardType[]): number {
   const quina = quinaNumber(round, rounds);
-  const wanted = quina !== null && quina > SIDE_1_LAST_QUINA ? 2 : 1;
+  const wanted = round.kind === 'special' || (quina !== null && quina > SIDE_1_LAST_QUINA) ? 2 : 1;
   const sides = types.find((t) => t.type === roundCardType(round))?.sides;
   if (!sides) return wanted;
   return sides.some((s) => s.side === wanted) ? wanted : (sides[0]?.side ?? 1);
