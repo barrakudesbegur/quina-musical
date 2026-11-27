@@ -293,10 +293,11 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
 
-### U55 · Last year's test songs on the laptop's disk
-The go to prepare this year's songs is covered by D227 (27 Nov): pool 1 is being prepared and pool 2 downloaded for today's test, in the tracked 2026 repertoire. The laptop had 12 GiB free; Sound engine expects 4–8 GB more and stops under about 3 GiB. Last year's 77 test songs take about 6 GB.
-- (a) Keep them; decide only if the space runs short.
-- (b) Delete them now.
+### U55 · Old song data on the laptop's disk
+Both final pools are prepared (27 Nov). Two old sets are kept and wait for the user's OK to delete (D80): last year's 77 test songs (about 6 GB), and 2026's data from before the final playlists, set aside in `data/out|cache/repertoires/2026-before-final` (about 2.5 GB). The laptop has about 70 GiB free, so there's no hurry.
+- (a) Keep both for now.
+- (b) Delete the 2026-before-final set only.
+- (c) Delete both.
 
 ### U56 · Cutting the hook approval from 7 hours
 About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
