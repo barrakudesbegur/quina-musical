@@ -14,12 +14,16 @@
   import SponsorList from '../../packages/ui/components/SponsorList.svelte';
   import StickerTitle from '../../packages/ui/components/StickerTitle.svelte';
   import Toast from '../../packages/ui/components/Toast.svelte';
+  import Notice from '../../packages/ui/components/Notice.svelte';
+  import PriceTag from '../../packages/ui/components/PriceTag.svelte';
+  import Confetti from '../../packages/ui/components/Confetti.svelte';
+  import '../../packages/ui/components/particles.css';
   import type { PlateColor, StickerTitleSize } from '../../packages/ui/components/types.ts';
   import type { SponsorLogo } from '../../packages/ui/components/sponsor-types.ts';
   import { NINO_FOR, type NinoMoment } from '../../packages/ui/concepts.ts';
   import { NINO_POSES } from '../../packages/ui/ninos.ts';
   import { FINALE_POSES } from '../../packages/rules/finale.ts';
-  import { ACTIONS, TOASTS } from '../console/actions.ts';
+  import { ACTIONS, NOTICES, TOASTS, VERDICT_LOOKS } from '../console/actions.ts';
   import { RING_BADGES, RING_LOOKS } from '../console/ring-looks.ts';
   import { RING_STATES } from '../console/logic/now-ring.ts';
   import { PLAYER_TOASTS } from '../player/actions.ts';
@@ -149,6 +153,64 @@
     </div>
   </section>
 {/if}
+
+<!-- ---- E4 · Notice -------------------------------------------------------------------------------------------- -->
+{#if !projector}
+  <section class="ds-gallery__section" aria-labelledby="s-e4">
+    <h2 id="s-e4">E4 · Notice</h2>
+    <p class="ds-prose">
+      One component, <code>layout</code> × <code>color</code> × <code>fill</code>: strip, note, box, scene; <code>solid</code> (the fill, its contrast
+      words) or <code>subtle</code> (the tint, outlined in the colour’s dark edge). Presets: the console’s NOTICES; the phone’s Pause.
+    </p>
+    <div class="ds-gallery__grid ds-gallery__grid--wide">
+      {#snippet n1()}<Notice {...NOTICES.recovery} text="Anem avançats: cada cançó dura 1 s més." />{/snippet}
+      {@render cell('note · orange · subtle: the pace’s recovery', n1)}
+      {#snippet n2()}<Notice {...NOTICES.warning} text="El cartró no passa: Falta «All I Want for Christmas Is You»." />{/snippet}
+      {@render cell('box · orange · subtle: the review’s warning (words in the colour’s text shade)', n2)}
+      {#snippet n3()}<Notice {...NOTICES.refused} live="off" text="Aquest cartró no existeix" />{/snippet}
+      {@render cell('note · red · solid: a pad’s refusal (ink on #FF5A60)', n3)}
+      {#snippet n4()}<Notice {...NOTICES.accepted} text="#57 és a la final" />{/snippet}
+      {@render cell('note · green · solid', n4)}
+      {#snippet n5()}<Notice layout="strip" color="periwinkle" icon="eye-off" live="off" text="Sense connexió · reconnectant…" />{/snippet}
+      {@render cell('strip · periwinkle: offline (M34)', n5)}
+      {#snippet n6()}<Notice layout="strip" color="navy" live="off" progress="dots" text="Comprovant el cartró 123" />{/snippet}
+      {@render cell('strip · navy · dots: the check line', n6)}
+      {#snippet n7()}<Notice layout="scene" color="navy" live="off" text="Tornem de seguida"><Nino pose="meditant" size={110} motion="breathe" /></Notice>{/snippet}
+      {@render cell('scene: the Pause (the breathing nino)', n7)}
+    </div>
+  </section>
+
+  <!-- ---- E5 · Verdict (the console's) --------------------------------------------------------------------------- -->
+  {#if !phone}
+    <section class="ds-gallery__section" aria-labelledby="s-e5">
+      <h2 id="s-e5">E5 · Verdict (console)</h2>
+      <p class="ds-prose">A recipe: VERDICT_LOOKS gives the outcome its palette; the words take its text shade, the ✗ disc its fill. The projector’s verdict draws through Plate, the rays and Nino.</p>
+      <div class="ds-gallery__grid ds-gallery__grid--wide">
+        {#snippet v1()}<div class="check-verdict" data-pass="true" data-color={VERDICT_LOOKS.pass.color}><p class="check-verdict__line"><span>Té línia: la fila 2 és completa</span></p></div>{/snippet}
+        {@render cell('pass · green', v1)}
+        {#snippet v2()}<div class="check-verdict" data-pass="false" data-color={VERDICT_LOOKS.fail.color}><p class="check-verdict__fail"><span class="check-verdict__cross">✗</span><span class="check-verdict__word">Fallada</span></p></div>{/snippet}
+        {@render cell('fail · red', v2)}
+      </div>
+    </section>
+  {/if}
+{/if}
+
+<!-- ---- E6 · PriceTag, G3 · Rays + Confetti ---------------------------------------------------------------------- -->
+<section class="ds-gallery__section" aria-labelledby="s-e6">
+  <h2 id="s-e6">E6 · PriceTag, G3 · Rays + Confetti</h2>
+  <p class="ds-prose">The price for the coming round only (D61): a gold tag, or a line. The rays: one resource in a palette colour; the confetti: one canvas, the palette’s colours.</p>
+  <div class="ds-s__night">
+    <PriceTag amount="10,50 €" />
+    <PriceTag amount="Cartró: 4,50 €" variant="line" />
+    <PriceTag amount="— €" />
+  </div>
+  <div class="ds-s__rays">
+    {#each ['gold', 'red', 'live'] as const as color (color)}
+      <figure class="ds-s__ray-cell"><div class="ds-rays ds-s__ray" data-color={color}></div><figcaption>rays · {color}</figcaption></figure>
+    {/each}
+    <figure class="ds-s__ray-cell ds-s__confetti"><Confetti count={projector ? 80 : 40} duration={60000} /><figcaption>confetti (reduced motion: none)</figcaption></figure>
+  </div>
+</section>
 
 <!-- ---- F1 · Nino ---------------------------------------------------------------------------------------------- -->
 <section class="ds-gallery__section" aria-labelledby="s-f1">
@@ -340,6 +402,52 @@
 
   .ds-s__code {
     color: var(--color-snow);
+  }
+
+  .ds-s__night {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    align-items: center;
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--color-night);
+    --color-text: var(--color-snow);
+    --color-bg: var(--color-night);
+  }
+
+  .ds-s__rays {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: var(--space-4);
+  }
+
+  .ds-s__ray-cell {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-night);
+    color: var(--color-snow);
+    font-size: var(--text-sm);
+    font-weight: 800;
+  }
+
+  .ds-s__ray {
+    width: 100%;
+    aspect-ratio: 1;
+  }
+
+  .ds-s__ray-cell figcaption {
+    padding: 0 var(--space-2) var(--space-2);
+  }
+
+  .ds-s__confetti {
+    min-height: 14rem;
+    align-content: end;
+    padding: var(--space-2);
   }
 
   .ds-s__phone {
