@@ -53,12 +53,14 @@
       <p class="prizes__round" aria-live="polite" data-kind={page.kind}>
         <RoundMark kind={page.kind} />
         <span class="prizes__name">{nameOf(page.number)}</span>
-        {#if page.lockedUntil}
-          <span class="prizes__lock"><Icon name="lock" /><span class="visually-hidden">{S.prizesSecretName}</span></span>
-        {:else if page.state === 'current'}
+        {#if page.state === 'current'}
           <Chip class="prizes__tag" label={S.roundState.current} color="orange" variant="solid" size="s" />
         {:else if page.state === 'next'}
-          <Chip class="prizes__tag" label={S.roundState.next} color="grey" size="s" />
+          <Chip class="prizes__tag" label={S.roundState.next} color="snow" variant="solid" size="s" />
+        {/if}
+        <!-- Its prizes still secret: the lock, beside its tag (an all-secret plan's round being played has both). -->
+        {#if page.lockedUntil}
+          <span class="prizes__lock"><Icon name="lock" /><span class="visually-hidden">{S.prizesSecretName}</span></span>
         {/if}
       </p>
       <IconButton {...PLAYER_ICONS.prizesNext} label={S.prizesNext(nameOf(next))} disabled={next === null} onclick={() => step(1)} />
