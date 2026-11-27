@@ -5,6 +5,7 @@ import {
   DEFAULT_CARD_TYPE, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, isPoolId, roundCardPrice, sideWarnings,
   type CardTypePrice, type CardTypeSides, type RemoteStatus,
 } from '@quina/protocol';
+import { readPrintedCardTypes, UNKNOWN_CARD_TYPE_COLOR } from '../../../../packages/ui/data/card-types.ts';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -32,6 +33,43 @@ export function printedCardTypes(json: unknown): CardTypeSides[] | null {
   const types = json.map((t: unknown) => (t && typeof t === 'object' ? (t as { type?: unknown; sides?: unknown }) : {}));
   if (!types.every((t) => isCardTypeId(t.type))) return null;
   return types.map((t) => ({ type: t.type as string, ...(Array.isArray(t.sides) ? { sides: t.sides as CardTypeSides['sides'] } : {}) }));
+}
+
+/**
+ * card-types.json as the screens read it (D266): packages/ui's readPrintedCardTypes, the very reader the phones, the
+ * projector and the console use. It reads a file whose types lack `shortName`, or whose sides lack `checkLabel`, as
+ * no card types at all, and then every screen names the cards by stand-ins ("Cartró normal", a side by the type
+ * alone) in a neutral grey instead of their pastels: FAIL. Null when there's no card-types.json (the cards check
+ * warns about that).
+ */
+export function cardTypesCheck(json: unknown): Check | null {
+  if (json === null || json === undefined) return null;
+  const read = readPrintedCardTypes(json);
+  const fallback = `so the phones and the projector show stand-in names ("Cartró <type>") in grey (${UNKNOWN_CARD_TYPE_COLOR}) instead of each card's name and colour`;
+  if (!read) {
+    const why = cardTypesMissing(json);
+    return check('Repertoire', 'Card types', 'fail', `card-types.json: ${why.length ? `${why.slice(0, 4).join('; ')}${why.length > 4 ? ` (+${why.length - 4} more)` : ''}` : 'not what apps/cards writes'}: the screens read no card types from it, ${fallback}; regenerate it with apps/cards`);
+  }
+  return check('Repertoire', 'Card types', 'pass', read.map((t) => `${t.shortName}: ${t.sides.map((s) => `«${s.checkLabel}»`).join(', ')}`).join('; '));
+}
+
+/** Which type or side lacks a field the screens' reader requires (D266): a type's `shortName`, a side's `checkLabel`.
+ * Only to say why readPrintedCardTypes read nothing; it decides. */
+function cardTypesMissing(json: unknown): string[] {
+  if (!Array.isArray(json)) return [];
+  const text = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+  return json.flatMap((raw: unknown, i) => {
+    const t = (raw && typeof raw === 'object' ? raw : {}) as { type?: unknown; shortName?: unknown; sides?: unknown };
+    const where = `card type ${typeof t.type === 'string' ? `"${t.type}"` : `#${i + 1}`}`;
+    const sides = Array.isArray(t.sides) ? (t.sides as unknown[]) : [];
+    return [
+      ...(text(t.shortName) ? [] : [`${where} has no shortName`]),
+      ...sides.flatMap((s, j) => {
+        const side = (s && typeof s === 'object' ? s : {}) as { side?: unknown; checkLabel?: unknown };
+        return text(side.checkLabel) ? [] : [`${where}, side ${typeof side.side === 'number' ? side.side : `#${j + 1}`} has no checkLabel`];
+      }),
+    ];
+  });
 }
 
 /** How many printed cards there are of each type. */

@@ -153,6 +153,8 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   if (hooks) out.push(hooks);
   const printed = printedCards(repertoire);
   out.push(checks.cardsCheck(printed.cards, checks.printedCardTypes(printed.types), pools, new Set(playable)));
+  const cardTypes = checks.cardTypesCheck(printed.types);
+  if (cardTypes) out.push(cardTypes);
 
   const missingSounds = [
     ...STINGER_NAMES.filter((n) => !fs.existsSync(path.join(MEDIA, 'stingers', `${n}.mp3`))),

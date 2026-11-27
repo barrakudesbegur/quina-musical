@@ -55,7 +55,7 @@ export const UNKNOWN_CARD_TYPE_COLOR = '#e8e4da';
 /** A short name from a full one, for a type nobody lists: "Cartró plata" → "Plata". */
 export function shortNameOf(name: string): string {
   const short = name.trim().replace(/^cartr[óo]\s+/i, '');
-  return short ? short[0].toLocaleUpperCase('ca') + short.slice(1) : name.trim();
+  return short ? short.charAt(0).toLocaleUpperCase('ca') + short.slice(1) : name.trim();
 }
 
 const isText = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';

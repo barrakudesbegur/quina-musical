@@ -136,6 +136,45 @@ test("card-types.json's types and sides, the songs' pools, and the printed cards
   assert.deepEqual([...(c.printedByType([{ type: 'normal' }, { type: 'normal' }, { type: 'especial' }]) ?? [])], [['normal', 2], ['especial', 1]]);
 });
 
+test("card types (D266): the screens' reader must read card-types.json, or every phone shows stand-in names in grey", () => {
+  const good = () => [
+    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: 'Quina', priceCents: 150, priceRule: 'perRegularRound', sides: [
+      { side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5', heading: 'QUINES 1–5' },
+      { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10', heading: 'QUINES 6–10' },
+    ] },
+    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: 'Quina', priceCents: 500, priceRule: 'fixed', sides: [
+      { side: 1, pool: '1', checkLabel: 'Desgraciat', heading: 'DESGRACIAT' },
+      { side: 2, pool: '2', checkLabel: 'Especial', heading: 'ESPECIAL' },
+    ] },
+  ] as Record<string, unknown>[];
+  const ok = c.cardTypesCheck(good());
+  assert.equal(ok?.status, 'pass');
+  assert.equal(ok?.detail, 'Normal: «Normal 1–5», «Normal 6–10»; Especial: «Desgraciat», «Especial»');
+
+  const noCheckLabel = good();
+  delete ((noCheckLabel[0]?.sides as Record<string, unknown>[])[1] as Record<string, unknown>).checkLabel;
+  const side = c.cardTypesCheck(noCheckLabel);
+  assert.equal(side?.status, 'fail');
+  assert.match(side?.detail ?? '', /^card-types\.json: card type "normal", side 2 has no checkLabel: the screens read no card types from it, so the phones and the projector show stand-in names/);
+  assert.match(side?.detail ?? '', /in grey/);
+
+  const noShortName = good();
+  delete noShortName[1]?.shortName;
+  const type = c.cardTypesCheck(noShortName);
+  assert.equal(type?.status, 'fail');
+  assert.match(type?.detail ?? '', /^card-types\.json: card type "especial" has no shortName: /);
+
+  const blankLabel = good();
+  ((blankLabel[1]?.sides as Record<string, unknown>[])[0] as Record<string, unknown>).checkLabel = '  ';
+  assert.match(c.cardTypesCheck(blankLabel)?.detail ?? '', /card type "especial", side 1 has no checkLabel/, 'blank is missing');
+
+  const badColour = good();
+  (badColour[0] as Record<string, unknown>).color = 'blue';
+  assert.match(c.cardTypesCheck(badColour)?.detail ?? '', /^card-types\.json: not what apps\/cards writes: /, 'anything else the reader refuses fails too');
+
+  assert.equal(c.cardTypesCheck(null), null, 'no card-types.json: the cards check warns');
+});
+
 test("songs' pools (D268): only `pools` counts, never the older `pool`; a song without a valid list is reported, not put in a pool", () => {
   const read = c.songPools([
     { id: 1, pools: ['1'] },
