@@ -27,7 +27,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - **Sound engine:** important tasks only (the user, 27 Nov). It's idle apart from replies.
 - **Frontend:** at most two agents in parallel. It's working through the user's comment list (temp/design-canvas/ds/comments-27nov.md §8, §11), the projector's end screen (board Projector-Final, waiting for the user's OK), and the Celebration-prize proposals (D242).
 - **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
-- **The card design session (quina-musical-d1):** cleared on 27 Nov evening. Its handoff is tools/card-mockup/HANDOFF.md (2d572401), with the spec in tools/card-mockup/README.md and the canvas at https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. A new card session resumes from there. The generator with both options is on main (7092e216), and apps/cards is Frontend's again. Only the organizers' pick (U212) remains, then the proof round before 4–5 Dec.
+- **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. The generator with both layouts is on main (7092e216, acd8f1a9, 4e4c0fe2), and apps/cards is Frontend's again. Decisions D250–D272.
 
 **Live (last deploy b488bafa, 28 Nov: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
@@ -41,16 +41,18 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **To run the show on the laptop:** `cd apps/show && npm start -- --lan --repertoire 2026` (it builds first and refuses a stale build), `cd apps/cloud && npm run link`, then `npm run preflight`.
 
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
-- U204: the realistic run's start time today, or 27 Dec;
-- the cards (the deadline is 4–5 Dec): U201 (the circle on both sides), U210 (cards per page), U198 (the screens' special labels), U52 (paper);
-- U199: the 4 songs in both final playlists (today pool 2 has 66);
-- U205 (Parlem's 40 s Hold music), U206 (the drum's landing), U207 (✕ in a stack), U208 (the near-win sounds);
-- U194 (push), U196 (App Clip), U197 (TWA): the research says pass;
-- U202, U203: the console's in-game admin and sync;
-- U55: the old song data on the laptop; U56: faster hook approval (before the rehearsals); U14: approving the hooks;
-- the question format: the grill format for everyone, or only the card session;
-- U68–U75: the edition file's details (it's built and passes; nothing is committed until U75);
-- older ones: U157–U160, U163, U166, U167 (closed), U168, U169, U173, U176–U179, U181, U188, U193, U36–U39, U12, U50, U79.
+- U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
+- U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
+- the question format: the grill format for every session, or only the card design session (memory's feedback-questions-to-user notes the exception);
+- U205 (Parlem's 40 s Hold music), U206 (the drum's landing public 2.5 s early), U207 (✕ in a stack), U208 (the near-win sounds);
+- U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
+- U202, U203: the console's in-game admin and second-console sync;
+- U55 (old song data on the laptop), U56 (faster hook approval) and U14 (approving the hooks), before the rehearsals;
+- U68–U75: the edition file's details (built and passing; not committed until U75);
+- older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U188, U193, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.
+- User tasks: U191 (ask the presenters about the notebook), U19 (the real-device checks, now with the iPad icon and Android scans), U126, U65, U64, U16, U18, U20, U13.
+
+**Sound engine's later item:** the Pausa, break and Hold music into the repertoire (D268's part C), designed with Backend before the rehearsals.
 
 **Ideas, not decided (docs/ideas.md):** the presenters' notebook on the tablet (U191: ask the presenters), and ordering from the tables to the bar.
 

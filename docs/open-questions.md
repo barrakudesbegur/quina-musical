@@ -278,14 +278,6 @@ Both final pools are prepared (27 Nov). Two old sets are kept and wait for the u
 About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options: (a) a quick-review mode on the audition page, playing the top automatic hook (Enter accepts, the arrows step through candidates, the next song loads by itself), so 30–40 s a song and about 1.4 hours, at half a day of work; (b) one approved hook per song instead of two, which also cuts stems, disk and storage (each song plays in 5 rounds now, not 10); (c) other organizers review one set each, on the same page over the local network.
 **Default:** (a) and (b); (c) if the user wants it.
 
-### U57 · pool 2's song numbers
-D103 numbers a final pool's songs alphabetically, so pool 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
-**Default:** Pool 2 continues at 71–140, not 1–70 again (no third pool since D171).
-
-### U61 · A pool's song we can't download
-D106 lets the Interval leave out a track nobody can get. A pool's songs are printed on the cards, and 70 is the count (D100). Pool 1 has no such song today; pool 2 isn't fetched yet.
-**Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the pool keeps 70.
-
 ### U63 · A credential so agents can edit the cloud's plan
 D116 has the user or an agent upload the edition's JSON to the cloud by hand, saving the old settings first. The upload tool is being proposed by Backend and Sound engine. To push without a Google login it needs its own Cloudflare Access service token, `quina-agent`, allowed only to read and save the plan, kept on the dev Mac only and revocable on its own. The user creates it in Zero Trust (a few clicks). About half a day of Backend's work.
 **Default:** nothing built until the user says yes.
@@ -343,6 +335,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U57 · Pool 2's song numbers** (2026-11-28) → D238, D269: pool 2 continues after pool 1 (71–135), and a shared song keeps pool 1's number.
+- **U61 · A pool's song we can't download** (2026-11-28): moot. All 135 songs downloaded (D269).
 - **U213 · #117's cover** (2026-11-28) → D270: keep the real 1996 white label; title «Els Segadors Remix», artist «Pont Aeri-Chasis».
 - **U198 · The special card's labels on the screens** (2026-11-27) → D266: «Desgraciat» and «Especial».
 - **U199 · The 4 songs in both playlists** (2026-11-27) → D268: a model change. One repertoire with every song once; a song may be in both pools; pool 2 keeps its 70.
