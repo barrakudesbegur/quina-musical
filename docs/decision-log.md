@@ -1551,6 +1551,6 @@ Pool 2's playlist has 64 of its 70 songs. "we can already download them and gene
 - **Temporary cards:** from both pools, with the normal card's two sides (D193) and the special card's two sides (D226).
 - **Production:** the cloud gets a plan like this year's night (D192), the cards and the songs, so the user can test every piece by hand.
 - **The edition file (D116):** built now. Its open details are U68–U75.
-- **Hooks:** songs play with automatic hooks marked provisional, until the user's approval pass (U14).
+- **Hooks** (the orchestrator's reading, so the test can play at all): songs play with automatic hooks marked provisional, until the user's approval pass (U14).
 Also asked: a short "how to run it" section in the README for humans, an SVG diagram of the setup showing what runs on each screen and device, and a short explanation of how Admin manages production (resetting a game, starting, sending messages).
 By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The songs; requirements/operations.md (once built).
