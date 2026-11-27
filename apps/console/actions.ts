@@ -184,7 +184,8 @@ export function asDefault<P extends ConsolePreset>(preset: P, isDefault: boolean
 }
 
 /** The notes (E4, Notice): the pace's recovery note and the review's warning on orange's tint; the pads' private strip
- *  in green when a card is fine, red when it's refused (ink words on the fill, 4.5:1 or better). */
+ *  in green when a card is fine, red when it's refused (the error red #E8363D with white words, as every ✗: notice.css,
+ *  U175 item 4). */
 export const NOTICES = {
   recovery: { layout: 'note', color: 'orange', fill: 'subtle', icon: 'stopwatch' },
   warning: { layout: 'box', color: 'orange', fill: 'subtle', icon: 'warning', live: 'off' },

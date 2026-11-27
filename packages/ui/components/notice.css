@@ -50,6 +50,13 @@
   color: var(--palette-contrast);
 }
 
+/* A red fill is the error red #E8363D (--color-red) with white words, as the ✗ marks (U175 item 4, D211): the palette's brighter red
+   is the button fills' only. */
+.ds-notice[data-fill='solid'][data-color='red'] {
+  --palette-solid: var(--color-red);
+  --palette-contrast: var(--color-white);
+}
+
 .ds-notice[data-fill='subtle'] {
   border-color: var(--palette-edge);
   background: var(--palette-subtle);

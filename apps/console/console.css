@@ -2950,7 +2950,12 @@
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: 50%;
   background: var(--palette-solid);
-  color: var(--palette-contrast);
+  color: var(--color-white);
+}
+
+/* the fail's ✗ disc is the error red #E8363D, as every ✗ (U175 item 4, D211) */
+.check-verdict[data-color='red'] {
+  --palette-solid: var(--color-red);
 }
 
 .check-verdict__cross .icon {

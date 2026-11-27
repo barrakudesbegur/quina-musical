@@ -19,3 +19,8 @@
   );
   mask-image: radial-gradient(circle, #000 var(--rays-inner), transparent var(--rays-outer));
 }
+
+/* the failed Check's beams: the error red #E8363D, as every ✗ (U175 item 4, D211) */
+.ds-rays[data-color='red'] {
+  --palette-solid: var(--color-red);
+}
