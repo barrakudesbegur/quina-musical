@@ -16,6 +16,7 @@
   import { PLAYER } from '../player/actions.ts';
   import StatusSections from './StatusSections.svelte';
   import CardsSongs from './sections/CardsSongs.svelte';
+  import PanelsSection from './PanelsSection.svelte';
 
   let { density, theme }: { density: 'console' | 'phone' | 'projector'; theme: 'light' | 'dark' } = $props();
 
@@ -187,6 +188,8 @@
       {@render cell('floating · s: the home’s «+ Cartró» (D188, D218)', f1)}
     </div>
   </section>
+
+  <PanelsSection {density} />
 
   <section class="ds-gallery__section" aria-labelledby="res">
     <h2 id="res">Design resources (R1–R11, 27 Nov)</h2>

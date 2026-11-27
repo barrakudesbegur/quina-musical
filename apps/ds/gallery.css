@@ -49,7 +49,7 @@
   margin-bottom: var(--space-7);
 }
 
-.ds-gallery__section h2 {
+.ds-gallery__section > h2 {
   font-size: var(--text-xl);
 }
 
@@ -200,4 +200,29 @@
   --color-text-muted: #afc0ff;
   --color-line: var(--color-ink);
   --color-shadow: var(--color-night-shadow);
+}
+
+/* The panels family's specimens (PanelsSection.svelte): a long list to scroll in a sheet, the review's warning. */
+.ds-gallery__rows {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 800;
+}
+
+.ds-gallery__rows > li {
+  padding: var(--space-2) 0;
+  border-bottom: 2px solid rgb(255 255 255 / 0.1);
+}
+
+.ds-gallery__warning {
+  margin: 0;
+  padding: var(--space-3);
+  border: var(--line-width) solid var(--color-orange-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-orange-subtle, var(--color-notice));
+  color: var(--color-orange-edge);
+  font-weight: var(--font-weight-strong);
 }
