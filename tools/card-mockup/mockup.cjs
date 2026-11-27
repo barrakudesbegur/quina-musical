@@ -38,8 +38,8 @@ const advance = (font, s, size) => (font.layout(s).advanceWidth * size) / font.u
 const textWidth = (font, s, size, spacingEm = 0) => advance(font, s, size) + spacingEm * size * s.length;
 
 // ── Last year's logo drawings, read from the generator so they stay identical. ──
-const src = fs.readFileSync(path.join(R, 'apps/cards/src/generate-cards-pdf.tsx'), 'utf8');
-const [STAMP_D, ICON_D] = [...src.matchAll(/<Path\s+d="([^"]+)"/g)].map((m) => m[1]);
+const src = fs.readFileSync(path.join(R, 'apps/cards/src/print/drawings.ts'), 'utf8');
+const [STAMP_D, ICON_D] = [...src.matchAll(/^  '(M[^']+)';$/gm)].map((m) => m[1]);
 
 // ── Data: the songs with their print titles, the sample cards, the covers (never in git). ──
 const songs = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(DATA, 'songs-print.json'), 'utf8')).map((s) => [s.id, s]));

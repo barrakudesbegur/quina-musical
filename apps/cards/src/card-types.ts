@@ -17,12 +17,22 @@ export const SIDE_MAX = 9;
 /**
  * One printed side of a type (D101, D102, D178): its number (1, 2…), the pool its 12 songs are drawn from (sides.ts),
  * and its label ("1–5", the Quines it plays: D171, D193), which the Check shows after the type's short name (D163,
- * "Normal 1–5"). The same shape as the protocol's CardTypeSide.
+ * "Normal 1–5"). The same shape as the protocol's CardTypeSide, plus two optional fields a card-types.json from before
+ * them lacks: `checkLabel`, the side's whole label on the screens during the Check (U198 answered (a), D266: «Normal
+ * 1–5», «Desgraciat»), and `heading`, the big word printed at the top of the side («QUINES 1–5»).
  */
 export interface CardTypeSideSpec {
   side: number;
   pool: string;
   label?: string;
+  checkLabel?: string;
+  heading?: string;
+}
+
+/** A side as the generator prints it: its heading and its Check label are required. */
+export interface PrintedSideSpec extends CardTypeSideSpec {
+  checkLabel: string;
+  heading: string;
 }
 
 export interface CardTypeSpec {
@@ -40,6 +50,11 @@ export interface CardTypeSpec {
   priceRule?: 'perRegularRound' | 'fixed';
   /** Its printed sides, numbered 1, 2… in order: the normal card and the especial card have two each (D226). */
   sides: readonly CardTypeSideSpec[];
+}
+
+/** A type as the generator prints it (config.ts's CARD_TYPES): every side with its heading and Check label. */
+export interface PrintedCardTypeSpec extends CardTypeSpec {
+  sides: readonly PrintedSideSpec[];
 }
 
 /** Every problem with the card types (empty when they're fine): ids, duplicates, names, colours, prices, sides. */
@@ -72,8 +87,22 @@ function sideProblems(t: CardTypeSpec): string[] {
     if (s.side !== i + 1) problems.push(`${where}: its sides must be numbered 1, 2… in order (side ${i + 1} is ${s.side})`);
     if (!POOL_ID_RE.test(s.pool)) problems.push(`${where}, side ${s.side}: the pool must be lowercase letters and digits, at most 8 ("1", "2")`);
     if (t.sides.length > 1 && !s.label?.trim()) problems.push(`${where}, side ${s.side}: a type with several sides needs a label on each ("1–5")`);
+    for (const field of ['checkLabel', 'heading'] as const) {
+      const value: unknown = s[field];
+      if (value !== undefined && (typeof value !== 'string' || !value.trim())) problems.push(`${where}, side ${s.side}: the ${field} must be text, or left out`);
+    }
   });
   return problems;
+}
+
+/** What the generator needs on top of cardTypeProblems to print a type: a heading and a Check label on every side
+ * (the screens show the Check label as it is, so every printed side has one). */
+export function printedTypeProblems(types: readonly CardTypeSpec[]): string[] {
+  return types.flatMap((t) =>
+    t.sides.flatMap((s) =>
+      (['checkLabel', 'heading'] as const).filter((field) => !s[field]?.trim()).map((field) => `card type "${t.type}", side ${s.side}: no ${field}`),
+    ),
+  );
 }
 
 /** Every card whose `type` isn't in the card types, as "card 12: type \"gold\"" (empty when all are listed). */

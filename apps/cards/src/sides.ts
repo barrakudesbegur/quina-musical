@@ -1,7 +1,9 @@
-// Each printed side of a card is drawn from its own pool (D101, D102, D178): a repertoire's songs carry `pool` ("1",
-// "2"; a song without one is in pool 1), and the card types say which pool each of their sides is printed from (the
-// normal card's side 1 from pool 1, its side 2 from pool 2, D171). Pure and self-contained (type imports only), so
-// the tests run it as it is.
+// Each printed side of a card is drawn from its own pool (D101, D102, D178): the card types say which pool each of their
+// sides is printed from (the normal card's side 1 from pool 1, its side 2 from pool 2, D171), and a repertoire's songs
+// say which pools they are in. Since D268 a song may be in several pools under one id: `pools: ["1", "2"]`. Before it,
+// a song had one, `pool: "1"`, and none was pool 1; during the change a song may carry both, and `pools` wins. So a
+// side 1 and a side 2 may share a song; within one pool, no card or line repeats (uniqueness.ts). Pure and
+// self-contained (type imports only), so the tests run it as it is.
 import type { CardTypeSideSpec } from './card-types';
 import type { DrawnByPool } from './uniqueness';
 
@@ -11,10 +13,24 @@ export const DEFAULT_POOL = '1';
 /** A song as far as pools go. */
 export interface PooledSong {
   id: number;
+  /** The pools it is in (D268). */
+  pools?: readonly string[];
+  /** Its one pool, from before D268; read only when `pools` is absent. */
   pool?: string;
 }
 
-export const songPool = (song: PooledSong): string => song.pool ?? DEFAULT_POOL;
+/** The pools a song is in: `pools ?? [pool ?? "1"]`. */
+export const songPools = (song: PooledSong): readonly string[] => song.pools ?? [song.pool ?? DEFAULT_POOL];
+
+/** Whether a song is in a pool. */
+export const inPool = (song: PooledSong, pool: string): boolean => songPools(song).includes(pool);
+
+/** Each pool's number of songs, in pool order (a song in two pools counts in both). */
+export function poolCounts(songs: readonly PooledSong[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const song of songs) for (const pool of songPools(song)) counts.set(pool, (counts.get(pool) ?? 0) + 1);
+  return new Map([...counts].sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true })));
+}
 
 /** What one side is drawn from: its pool's songs, or the whole repertoire when the pool has none. */
 export interface SideSource<S> {
@@ -29,7 +45,7 @@ export interface SideSource<S> {
 /** Each side of a type with the songs it is drawn from. */
 export function sideSources<S extends PooledSong>(sides: readonly CardTypeSideSpec[], songs: readonly S[]): SideSource<S>[] {
   return sides.map(({ side, pool }) => {
-    const own = songs.filter((s) => songPool(s) === pool);
+    const own = songs.filter((s) => inPool(s, pool));
     return { side, pool, songs: own.length ? own : songs, wholeRepertoire: !own.length };
   });
 }
@@ -42,9 +58,10 @@ export function sourceWarnings(type: string, sources: readonly SideSource<unknow
 }
 
 /**
- * Every problem with the songs' pools for these card types (empty when they're fine): a `pool` that isn't a string, a
- * pool no side is printed from (a typo, since its songs would be on no card), and a pool too small for a side. A pool
- * with no songs at all isn't a problem: sideSources draws it from the whole repertoire, with a warning.
+ * Every problem with the songs' pools for these card types (empty when they're fine): a `pool` that isn't a string,
+ * `pools` that isn't a list of distinct pool ids, a `pool` its `pools` leaves out, a pool no side is printed from (a
+ * typo, since its songs would be on no card), and a pool too small for a side. A pool with no songs at all isn't a
+ * problem: sideSources draws it from the whole repertoire, with a warning.
  */
 export function poolProblems(json: unknown, types: readonly { type: string; sides: readonly CardTypeSideSpec[] }[], songsPerSide: number): string[] {
   if (!Array.isArray(json)) return [];
@@ -53,10 +70,18 @@ export function poolProblems(json: unknown, types: readonly { type: string; side
   const problems: string[] = [];
   json.forEach((raw, i) => {
     if (!raw || typeof raw !== 'object') return;
-    const pool = (raw as { pool?: unknown }).pool ?? DEFAULT_POOL;
-    if (typeof pool !== 'string') return problems.push(`song ${i + 1}: the pool must be text ("1", "2")`);
-    if (!printed.has(pool)) problems.push(`song ${i + 1}: pool "${pool}" is not one any card side is printed from (${[...printed].join(', ')})`);
-    counts.set(pool, (counts.get(pool) ?? 0) + 1);
+    const where = `song ${i + 1}`;
+    const { pool, pools } = raw as { pool?: unknown; pools?: unknown };
+    if (pool !== undefined && typeof pool !== 'string') return problems.push(`${where}: the pool must be text ("1", "2")`);
+    if (pools !== undefined) {
+      if (!Array.isArray(pools) || !pools.length || pools.some((p) => typeof p !== 'string')) return problems.push(`${where}: the pools must be a list of pool ids (["1", "2"])`);
+      if (new Set(pools).size !== pools.length) problems.push(`${where}: a pool is listed twice in its pools (${pools.join(', ')})`);
+      if (pool !== undefined && !pools.includes(pool)) problems.push(`${where}: its pool "${pool}" is not in its pools (${pools.join(', ')})`);
+    }
+    for (const p of new Set(songPools({ id: 0, pool: pool as string | undefined, pools: pools as string[] | undefined }))) {
+      if (!printed.has(p)) problems.push(`${where}: pool "${p}" is not one any card side is printed from (${[...printed].join(', ')})`);
+      counts.set(p, (counts.get(p) ?? 0) + 1);
+    }
   });
   for (const t of types)
     for (const s of t.sides) {

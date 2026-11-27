@@ -1,7 +1,8 @@
 // Which repertoire the cards are made from (the edition's prepared songs, D178): data/repertoires/<name>.json, the
 // same file the song preparation (tools/prep) and the relay read. Its `songsJson` is the playlist the cards draw from,
 // and its `cardsJson` is where cards.json goes (card-types.json and the PDFs go next to it, which is the folder the
-// relay serves at /cards/). So this year's cards come from this year's repertoire, the same way the audio does:
+// relay serves at /cards/). Its `coversDir` holds the songs' album covers (`<id>.jpg`) for the cards with covers.
+// So this year's cards come from this year's repertoire, the same way the audio does:
 // `npm start -- --repertoire <name>`. Paths in a repertoire file are relative to the repo root. Pure apart from
 // reading the repertoire file. ("Pool" is Pool 1 and Pool 2: the songs a card side is printed from.)
 import { readFileSync } from 'fs';
@@ -17,6 +18,8 @@ export interface Repertoire {
   songsJson: string;
   /** Absolute path where cards.json is written; card-types.json and the PDFs go in the same folder. */
   cardsJson: string;
+  /** Absolute path of the songs' covers (`<songId>.jpg`), when the repertoire has them. */
+  coversDir?: string;
 }
 
 /** A repertoire's song, as the playlist fetcher writes it (extra fields are ignored). */
@@ -26,8 +29,19 @@ export interface RepertoireSong {
   artist: string;
   cover: string;
   spotifyId: string;
-  /** The pool it is in ("1", "2", D178); none is pool 1. Each side of a card is drawn from one pool (sides.ts). */
+  /** The pools it is in (D268: `["1", "2"]`); each side of a card is drawn from one pool (sides.ts). */
+  pools?: readonly string[];
+  /** Its one pool from before D268 ("1", "2", D178), read only without `pools`; none is pool 1. */
   pool?: string;
+  /** Its name on paper and screens when it differs from Spotify's `title` (D260: tags off, hand fixes). */
+  printTitle?: string;
+  /** Its artist on paper and screens when it differs from `artist` (D260: the main artist only). */
+  printArtist?: string;
+}
+
+/** A song's printed name (D260), which cards.json carries too, so the phones show what the card shows. */
+export function printName(song: Pick<RepertoireSong, 'title' | 'artist' | 'printTitle' | 'printArtist'>): { title: string; artist: string } {
+  return { title: song.printTitle ?? song.title, artist: song.printArtist ?? song.artist };
 }
 
 export const DEFAULT_REPERTOIRE = 'default';
@@ -48,7 +62,13 @@ export function parseRepertoire(name: string, json: unknown, repo: string): Repe
   if (!p || typeof p.songsJson !== 'string' || typeof p.cardsJson !== 'string') {
     throw new Error(`data/repertoires/${name}.json needs "songsJson" and "cardsJson" paths`);
   }
-  return { name, songsJson: path.resolve(repo, p.songsJson), cardsJson: path.resolve(repo, p.cardsJson) };
+  if (p.coversDir !== undefined && typeof p.coversDir !== 'string') throw new Error(`data/repertoires/${name}.json: "coversDir" must be a path`);
+  return {
+    name,
+    songsJson: path.resolve(repo, p.songsJson),
+    cardsJson: path.resolve(repo, p.cardsJson),
+    ...(typeof p.coversDir === 'string' ? { coversDir: path.resolve(repo, p.coversDir) } : {}),
+  };
 }
 
 export function loadRepertoire(name: string, repo: string = repoRoot()): Repertoire {
@@ -69,6 +89,10 @@ export function songProblems(json: unknown, songsPerCard: number): string[] {
     else ids.add(s.id as number);
     if (typeof s.title !== 'string' || !s.title.trim()) problems.push(`${where}: no title`);
     if (typeof s.artist !== 'string' || !s.artist.trim()) problems.push(`${where}: no artist`);
+    for (const field of ['printTitle', 'printArtist'] as const) {
+      const value: unknown = s[field];
+      if (value !== undefined && (typeof value !== 'string' || !value.trim())) problems.push(`${where}: the ${field} must be text, or left out`);
+    }
   });
   if (json.length < songsPerCard) problems.push(`a card needs ${songsPerCard} songs; the repertoire has ${json.length}`);
   return problems;

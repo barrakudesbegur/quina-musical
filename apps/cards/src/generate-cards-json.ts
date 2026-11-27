@@ -1,13 +1,13 @@
-import { pick, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { shuffleArrayWithSeed } from './utils/arrays';
 import { DrawnByPool } from './uniqueness';
 import { drawCard, type DrawnCard, type SideSource } from './sides';
-import type { RepertoireSong } from './repertoire';
+import { printName, type RepertoireSong } from './repertoire';
 
 const LINES = 3;
 const COLUMNS = 4;
 
-/** A song as a card prints it. */
+/** A song as a card prints it: its print name (D260), the same in cards.json, so the phones show what the card shows. */
 export type CardSong = {
   id: number;
   title: string;
@@ -17,7 +17,7 @@ export type CardSong = {
 /** A printed card as cards.json holds it: `{ id, type, sides: [{ side, lines: [[song × 4] × 3] }] }` (D178). */
 export type Card = DrawnCard<CardSong>;
 
-/** 12 songs from a seeded shuffle of `songs`, in 3 lines of 4, each line sorted by title. */
+/** 12 songs from a seeded shuffle of `songs`, in 3 lines of 4, with their print names, each line sorted by title. */
 function makeLines(songs: readonly RepertoireSong[], seed: string): CardSong[][] {
   const songsPerCard = LINES * COLUMNS;
   if (songs.length < songsPerCard) {
@@ -27,7 +27,7 @@ function makeLines(songs: readonly RepertoireSong[], seed: string): CardSong[][]
   return Array.from({ length: LINES }, (_, i) => {
     const start = i * COLUMNS;
     return sortBy(
-      shuffledSongs.slice(start, start + COLUMNS).map((song) => pick(song, ['id', 'title', 'artist'])),
+      shuffledSongs.slice(start, start + COLUMNS).map((song): CardSong => ({ id: song.id, ...printName(song) })),
       'title'
     );
   });
