@@ -69,7 +69,7 @@
 <section class="panel check-card" aria-label={S.check.cardLabel(check.cardId)} data-kind={check.kind} data-testid="check-card" data-card-id={check.cardId}>
   <header class="check-card__head">
     <h2 class="check-card__title">{S.check.card(check.cardId)}</h2>
-    <Chip color="ink" variant="solid" label={S.check.kind[check.kind]} />
+    <Chip class="card-type-chip" color="ink" variant="solid" label={S.check.kind[check.kind]} />
     {#if type}<Chip class="card-type-chip" color="snow" icon={type.special ? 'star' : null} label={type.label} />{/if}
     {#if of}<span class="check-card__of">{S.check.ofCards(of.n, of.total)}</span>{/if}
   </header>

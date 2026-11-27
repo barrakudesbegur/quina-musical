@@ -501,6 +501,7 @@
 .conn-chip > .chip {
   --chip-pad: 3px 10px;
   font-size: var(--text-xs);
+  line-height: normal;
 }
 
 .conn-chip[data-state='unknown'] > .chip {
@@ -2582,7 +2583,7 @@
   color: var(--color-text-muted);
 }
 
-/* The chips beside the card number (Chip, B4): what it claims (ink), its printed type (snow, cream in both themes:
+/* The chips beside the card number (Chip, B4), at the text's size: what it claims (ink), its printed type (snow, cream in both themes:
    the user, 26 Nov, the type's pink read as an error; only the wrong-type card's picture keeps its paper colour). A
    special type's star is gold. */
 .card-type-chip {
