@@ -37,6 +37,9 @@ import {
   isPhaseName,
   isPoolId,
   isSide,
+  AUTO_SOUNDS_DEFAULT,
+  VOLUME_DEFAULTS,
+  type AutoSounds,
   type CardTypeSides,
   type CommandArgs,
   type CommandName,
@@ -46,6 +49,7 @@ import {
   type ShowEvent,
   type ShowState,
   type SoundName,
+  type Volumes,
 } from '@quina/protocol';
 import { playableSongs } from './analysis.ts';
 import { ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
@@ -503,7 +507,10 @@ function apply(effect: Effect): void {
       if (effect.action === 'intensity') return drumRoll.setIntensity(effect.intensity);
       return drumRoll.release(effect.at, effect.land === true);
     case 'volumes':
-      return graph.setVolumes(effect.volumes, effect.autoSounds);
+      lastVolumes = effect.volumes;
+      lastAutoSounds = effect.autoSounds;
+      // During a sound test the switched-off sounds stay audible: the test plays its kind whatever its switch says.
+      return graph.setVolumes(effect.volumes, soundTestStop ? AUTO_SOUNDS_DEFAULT : effect.autoSounds);
     case 'bedDuck':
       return graph.glide(graph.bedDuck.gain, effect.db, effect.seconds);
     case 'pausePlayback':
@@ -831,12 +838,20 @@ async function playSfx(name: SoundName, at = ctx.currentTime + 0.01, out: AudioN
 // The sound test (D229): one kind at a time, on a loop, through that slider's node, so the tech sets the PA on the
 // day with the real levels. Songs and the Check play their 3 s hook snippets (trimmed as in a Check); the music
 // kinds play their own player; the short sounds repeat every few seconds. A new kind, or null, stops the last one.
+// A switched-off automatic sound (D237) mutes its node, so while a test plays the mutes are lifted, and stopping it puts
+// the last ones back.
 let soundTestStop: (() => void) | null = null;
 const testSnippets = new SnippetStore(ctx);
+/** The sliders and the automatic sounds the engine last sent (`volumes`), for the sound test's lifted mutes. */
+let lastVolumes: Readonly<Volumes> = VOLUME_DEFAULTS;
+let lastAutoSounds: Readonly<AutoSounds> = AUTO_SOUNDS_DEFAULT;
 function soundTest(effect: EffectOf<'soundTest'>): void {
+  const wasTesting = soundTestStop != null;
   soundTestStop?.();
   soundTestStop = null;
   const kind = effect.kind;
+  if (kind) graph.setVolumes(lastVolumes, AUTO_SOUNDS_DEFAULT);
+  else if (wasTesting) graph.setVolumes(lastVolumes, lastAutoSounds);
   if (!kind) return;
   const fade = 0.4;
   let alive = true;
