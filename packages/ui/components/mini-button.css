@@ -88,17 +88,9 @@
   min-width: 0;
 }
 
-/* A mini keeps its words' width in a row (it doesn't shrink below them, as the resource's min-width: 0 would let it) */
-.mini-button.ds-pushable {
-  min-width: auto;
-}
-
-/* One line: a mini's row is a fixed height, so a label too long for a width its context sets ends with an ellipsis
-   rather than wrapping. */
+/* One line, never wrapping (a mini's row is a fixed height); in a tight row the words may reach into the padding. */
 .mini-button__label {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .mini-button__sub {

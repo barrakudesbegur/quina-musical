@@ -3,7 +3,8 @@
   // and Ajustos (D87): the player's cards, sounds, last year's card and "Esborrar dades" live in its drawer.
   import type { PlayerApp } from '../model.svelte.ts';
   import { S } from '../strings.ts';
-  import Icon from './Icon.svelte';
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
+  import { PLAYER_ICONS } from '../actions.ts';
 
   let { app }: { app: PlayerApp } = $props();
 </script>
@@ -16,7 +17,5 @@
       <span class="app-header__round" data-kind={app.focusKind}>{S.roundName({ number: app.focusRound, kind: app.focusKind }, app.plan)}</span>
     {/if}
   </h1>
-  <button type="button" class="icon-button app-header__menu" data-testid="open-settings" aria-label={S.settings} aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })}>
-    <Icon name="settings" alone />
-  </button>
+  <IconButton {...PLAYER_ICONS.settings} class="app-header__menu" data-testid="open-settings" aria-haspopup="dialog" onclick={() => app.open({ kind: 'ajustos' })} />
 </header>

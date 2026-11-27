@@ -498,10 +498,9 @@
   white-space: nowrap;
 }
 
-/* Ajustos: the plain cog on a rounded square, not a circle (the user, 25 Nov; `.icon-button`). */
-.app-header__menu .icon {
-  width: 26px;
-  height: 26px;
+/* Ajustos: the plain cog on a rounded square, not a circle (the user, 25 Nov; IconButton, packages/ui). */
+.app-header__menu {
+  --icon-button-icon: 26px;
 }
 
 .app-header__actions {
@@ -510,34 +509,9 @@
   margin-left: auto;
 }
 
-/* A rounded square, not a circle: only floating buttons are round (D189). The header's Ajustos is one. */
-.icon-button {
-  width: var(--tap-min);
-  min-width: var(--tap-min);
-  height: var(--tap-min);
-  min-height: var(--tap-min);
-  padding: 0;
-  display: inline-grid;
-  place-items: center;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-piece-sm);
-}
-
-.icon-button[aria-pressed] {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
 .icon {
   width: 1.5em;
   height: 1.5em;
-}
-
-.icon-button .icon {
-  width: 1.5rem;
-  height: 1.5rem;
 }
 
 /* ---- buttons ------------------------------------------------------------------------------------------- */
@@ -547,10 +521,13 @@
     var(--shadow-piece-sm);
 }
 
+/* The controls not on the press resource yet look pressed too, not just moved (R4, the user's phone test): the edge
+   thins, the face darkens a little, the shadow is covered. */
 :where(.player) button:active:not(:disabled) {
   transform: translateY(3px);
   box-shadow:
-    var(--edge-piece-sm),
+    inset 0 -2px 0 rgb(0 0 0 / 0.22),
+    inset 0 0 0 100vmax rgb(23 19 43 / 0.07),
     0 1px 0 var(--color-shadow);
 }
 
@@ -3057,18 +3034,11 @@
   color: var(--color-text-muted);
 }
 
+/* A card's edit and remove: bare IconButtons in the row, 40 px drawn, 48 px to the finger */
 .player :is(.menu__card-edit, .menu__card-remove) {
-  width: 2.5rem;
-  height: 2.5rem;
-  min-height: 0;
-  flex: none;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  background: none;
+  --icon-button-size: 2.5rem;
+  --icon-button-icon: 1.25rem;
   color: var(--color-text-muted);
-  cursor: pointer;
 }
 
 .player .menu__card-remove {

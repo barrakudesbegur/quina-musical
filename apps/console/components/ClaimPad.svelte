@@ -10,6 +10,7 @@
   Candidat), Enter (Comprovar), Escape (Torna a la quina). The pad's state is the model's (logic/claim-pad.ts).
 -->
 <script lang="ts">
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
   import { onMount } from 'svelte';
   import { getConsole } from '../context.ts';
   import { claimedCards } from '../logic/claim-pad.ts';
@@ -17,7 +18,7 @@
   import { claimKindsOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
-  import { ACTIONS, asDefault } from '../actions.ts';
+  import { ACTIONS, ICONS, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
@@ -118,7 +119,7 @@
               <li class="claim-chip" data-unknown={chip.unknown || undefined} data-anim={added === chip.cardId ? 'claim-chip-add' : undefined}>
                 <span class="claim-chip__number">{S.numpad.chip(chip.cardId)}</span>
                 {#if chip.unknown}<span class="claim-chip__note">{S.numpad.unknownChip}</span>{/if}
-                <button type="button" class="claim-chip__remove" aria-label={S.numpad.removeChip(chip.cardId)} onclick={() => model.padRemove(chip.cardId)}><Icon name="close" /></button>
+                <IconButton {...ICONS.removeChip} label={S.numpad.removeChip(chip.cardId)} class="claim-chip__remove" onclick={() => model.padRemove(chip.cardId)} />
               </li>
             {/each}
           </ul>

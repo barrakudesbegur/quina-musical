@@ -1,0 +1,122 @@
+/*
+ * A7 · IconButton (components-v2.md § 2; IconButton.svelte). Framed and floating ones are on the press resource
+ * (../ds/resources.css, R4) with the fill's own edge (R2, #32); a bare one moves its icon (ANIMATIONS.md › press).
+ * Every size is a custom property in :where(), so a context (a sheet's header, a chip) tunes it by variables.
+ */
+:where(.icon-button) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 3px;
+  --ds-edge: 4px;
+  --ds-shine: 2px;
+  --icon-button-size: var(--tap-min);
+  --icon-button-icon: 1.5rem;
+  /* the hit area round a smaller frame: the console's floor, the phone's on the phone */
+  --icon-button-hit: var(--tap-dense, 44px);
+}
+
+:where([data-density='phone'] .icon-button) {
+  --icon-button-hit: var(--tap-min);
+}
+
+:where(.icon-button[data-size='s']) {
+  --icon-button-size: var(--tap-dense, 44px);
+  --icon-button-icon: 1.375rem;
+}
+
+/* The theme's surface: its edge a darker shade of it (a translucent night over the fill, never ink black) */
+:where(.icon-button[data-variant='framed']:not([data-color])) {
+  --ds-edge-color: rgb(10 14 38 / 0.32);
+}
+
+/* Floating (D189): the paper disc over content, a little smaller, its hit area kept at the console's floor */
+:where(.icon-button[data-floating]) {
+  --ds-radius: 50%;
+  --ds-drop: 3px;
+  --ds-edge: 3px;
+  --icon-button-size: 2rem;
+  --icon-button-icon: 1rem;
+}
+
+.icon-button {
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+.icon-button__piece {
+  display: grid;
+  place-items: center;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
+  box-sizing: border-box;
+}
+
+.icon-button__piece > .icon {
+  width: var(--icon-button-icon);
+  height: var(--icon-button-icon);
+}
+
+/* framed: its fill and the words' colour; the surface by default, or the palette's solid */
+.icon-button[data-variant='framed'] > .icon-button__piece {
+  background: var(--palette-solid, var(--color-surface));
+  color: var(--palette-contrast, var(--color-text));
+}
+
+.icon-button[data-variant='framed']:not([data-color]) > .icon-button__piece {
+  color: var(--color-text);
+}
+
+/* grey is the soft chip (the console's), as MiniButton's rest */
+.icon-button[data-color='grey'] > .icon-button__piece {
+  background: var(--color-chip);
+  color: var(--color-text);
+}
+
+.icon-button[data-floating] > .icon-button__piece {
+  color: var(--color-ink);
+}
+
+/* A frame smaller than the floor keeps a floor-sized hit area round it (the floating ✕, a chip's ✕, a card's edit) */
+.icon-button {
+  position: relative;
+}
+
+.icon-button:not([data-ring])::after {
+  content: '';
+  position: absolute;
+  inset: min(0px, calc((var(--icon-button-size) - var(--icon-button-hit)) / 2));
+}
+
+/* bare: the icon alone in its hit area; pressed, the icon travels (#33) */
+.icon-button[data-variant='bare'] {
+  display: inline-grid;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.icon-button[data-variant='bare']:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .icon-button[data-variant='bare'] > .icon-button__piece > .icon {
+    transition: translate var(--dur-press-up) var(--ease-bounce);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .icon-button[data-variant='bare']:active:not(:disabled) > .icon-button__piece > .icon {
+    translate: 0 2px;
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+.icon-button[data-variant='bare']:active:not(:disabled) > .icon-button__piece {
+  opacity: 0.8;
+}

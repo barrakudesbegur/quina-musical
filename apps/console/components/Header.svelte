@@ -6,6 +6,8 @@
     who pressed what.
 -->
 <script lang="ts">
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
+  import { ICONS } from '../actions.ts';
   import { clockParts, formatClock, formatDrift } from '../../../packages/rules/time.ts';
   import { getConsole, getWii } from '../context.ts';
   import { HEAT_BANDS } from '../logic/engine-rules.ts';
@@ -64,8 +66,6 @@
       {/each}
     </ul>
     {#if model.show.demo}<span class="header__demo">{S.header.demo(model.show.demo)}</span>{/if}
-    <button type="button" class="header__menu" data-anim="press" aria-haspopup="dialog" aria-label={S.header.menu} onclick={onmenu}>
-      <Icon name="menu" alone />
-    </button>
+    <IconButton {...ICONS.menu} class="header__menu" aria-haspopup="dialog" onclick={onmenu} />
   </div>
 </header>

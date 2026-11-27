@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
-  import { PLAYER } from '../actions.ts';
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
+  import { PLAYER, PLAYER_ICONS } from '../actions.ts';
   // The Ajustos drawer (D87; it was "Menú"; the J2 look, board Mobil-B-J2): the player's cards as plain rows, each
   // with its grip to reorder it (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon,
   // name and number, and its edit and remove buttons; "Afegir cartró"; the settings panel (the Sons switch,
@@ -79,12 +80,8 @@
             <span class="menu__card-mark"><CardMark identity={card.color} decorative /></span>
             <span class="menu__card-name">{who}</span>
             <span class="menu__card-number">{S.cardNumber(card.id)}</span>
-            <button type="button" class="menu__card-edit" aria-label={S.editLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'rename', cardId: card.id })}>
-              <Icon name="edit" alone />
-            </button>
-            <button type="button" class="menu__card-remove" aria-label={S.removeLabel(who)} aria-haspopup="dialog" onclick={() => app.open({ kind: 'remove', cardId: card.id })}>
-              <Icon name="trash" alone />
-            </button>
+            <IconButton {...PLAYER_ICONS.cardEdit} label={S.editLabel(who)} class="menu__card-edit" aria-haspopup="dialog" onclick={() => app.open({ kind: 'rename', cardId: card.id })} />
+            <IconButton {...PLAYER_ICONS.cardRemove} label={S.removeLabel(who)} class="menu__card-remove" aria-haspopup="dialog" onclick={() => app.open({ kind: 'remove', cardId: card.id })} />
           </li>
         {/each}
       </ul>

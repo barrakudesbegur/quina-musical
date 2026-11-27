@@ -98,6 +98,7 @@
    their own, the shared resource's (packages/ui/ds/resources.css). */
 [data-anim~='press']:not(.ds-pushable):active:not(:disabled) {
   transform: translateY(var(--line-width-thin));
+  filter: brightness(0.94);
   transition-duration: var(--dur-press);
 }
 
@@ -467,21 +468,8 @@
 }
 
 .header__menu {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: var(--tap-min);
-  min-width: var(--tap-min);
   margin-left: auto;
-  padding: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-chip);
-  box-shadow: var(--shadow-drop);
-}
-
-.header__menu .icon {
-  width: 1.375rem;
-  height: 1.375rem;
+  --icon-button-icon: 1.375rem;
 }
 
 /* The Heat meter with its Phase zones */
@@ -3560,22 +3548,15 @@
   color: var(--color-red-edge);
 }
 
-/* A typed number's ✕: a small rounded square, not a disc (D189: only floating buttons are round). */
+/* A typed number's ✕ (IconButton): a small rounded square in the chip, not a disc (D189: only floating buttons are
+   round); its hit area keeps the 44 px floor */
 .claim-chip__remove {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: var(--line-width-thin) solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-ink);
-}
-
-.claim-chip__remove .icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  --ds-radius: var(--radius-sm);
+  --ds-border: var(--line-width-thin);
+  --ds-drop: 2px;
+  --ds-edge: 3px;
+  --icon-button-size: 2rem;
+  --icon-button-icon: 0.875rem;
 }
 
 /* The number being typed: «# 12|» in a field, red when refused (it shakes once) */
@@ -5648,23 +5629,6 @@ kbd {
   position: absolute;
   top: -0.5rem;
   right: 0;
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: 50%;
-  background: #ffffff;
-  color: var(--color-ink);
-  box-shadow: var(--shadow-drop);
-}
-
-.finale-stage__remove .icon {
-  width: 0.875rem;
-  height: 0.875rem;
 }
 
 /* finale-safe: the ninos jump twice */

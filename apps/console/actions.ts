@@ -140,6 +140,27 @@ export const MINI = {
   resumeUseSaved: { size: 's', label: S.resume.useSaved },
 } as const satisfies Record<string, MiniPreset>;
 
+/** An IconButton's preset (A7); a label that names a card comes from the call site. */
+export interface IconPreset {
+  readonly icon: IconName;
+  readonly label?: string;
+  readonly variant?: 'framed' | 'bare';
+  readonly floating?: boolean;
+  readonly color?: 'surface' | 'navy' | 'grey' | 'red' | 'gold' | 'snow';
+  readonly size?: 's' | 'm';
+  readonly tooltip?: boolean;
+  readonly sound?: ButtonPreset['sound'];
+}
+
+/** The console's icon-only buttons (IconButton): every one also shows its name as the mouse's tooltip. */
+export const ICONS = {
+  menu: { icon: 'menu', label: S.header.menu, color: 'grey', tooltip: true },
+  /** A typed number's ✕ on its chip: a small rounded square, not a disc (D189). */
+  removeChip: { icon: 'close', size: 's', tooltip: true, sound: 'chipRemove' },
+  /** The ✕ on a standing finalist while editing: floating over the nino, so a disc (D189). */
+  removeFinalist: { icon: 'close', floating: true, tooltip: true, sound: 'chipRemove' },
+} as const satisfies Record<string, IconPreset>;
+
 /** The controls that show together on one screen: no two may share a Wii key (the registry test checks it). */
 export const SCREENS = {
   cluster: ['back', 'claim', 'hold', 'stay', 'next'],

@@ -9,6 +9,8 @@
   Nothing here brings a fallen finalist back: only «Enrere» undoes a landing (D183).
 -->
 <script lang="ts">
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
+  import { ICONS } from '../actions.ts';
   import type { FinaleInfo } from '@quina/protocol';
   import { flip } from 'svelte/animate';
   import { cubicOut } from 'svelte/easing';
@@ -92,9 +94,9 @@
           {/key}
           <span class="finale-stage__plate" aria-hidden="true">{F.chip(spot.cardId)}</span>
           {#if editing && spot.fate === 'standing'}
-            <button type="button" class="finale-stage__remove" aria-label={F.remove(spot.cardId)} data-testid="finale-remove" disabled={!model.can('finale')} onclick={() => model.removeFinalist(spot.cardId)} in:scale={{ start: 0.4, duration: ms(160) }}>
-              <Icon name="close" />
-            </button>
+            <span class="finale-stage__remove" in:scale={{ start: 0.4, duration: ms(160) }}>
+              <IconButton {...ICONS.removeFinalist} label={F.remove(spot.cardId)} data-testid="finale-remove" disabled={!model.can('finale')} onclick={() => model.removeFinalist(spot.cardId)} />
+            </span>
           {/if}
         </li>
       {/each}

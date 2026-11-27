@@ -11,6 +11,7 @@
   round). The pad's state is the model's (logic/finale.ts).
 -->
 <script lang="ts">
+  import IconButton from '../../../packages/ui/components/IconButton.svelte';
   import { onMount } from 'svelte';
   import { knownCardTypes } from '../../../packages/ui/data/card-types.ts';
   import { CONSOLE } from '../config.ts';
@@ -23,7 +24,7 @@
   import CardCell from '../../../packages/ui/components/CardCell.svelte';
   import { cellLook } from '../../../packages/ui/components/card-looks.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
-  import { ACTIONS, asDefault } from '../actions.ts';
+  import { ACTIONS, ICONS, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
@@ -141,7 +142,7 @@
             <li class="finale-pad__chip" data-fresh={fresh === id || undefined} data-anim={fresh === id ? 'finale-pad-card' : undefined}>
               <span class="finale-pad__number">{F.chip(id)}</span>
               {#if mine}
-                <button type="button" class="claim-chip__remove" aria-label={F.removeChip(id)} onclick={() => model.finalePadRemove(id)}><Icon name="close" /></button>
+                <IconButton {...ICONS.removeChip} label={F.removeChip(id)} class="claim-chip__remove" onclick={() => model.finalePadRemove(id)} />
               {/if}
             </li>
           {/each}

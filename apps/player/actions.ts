@@ -1,7 +1,7 @@
 // The player app's controls (components-v2.md § 11.4; D205, D210): each one's look, words and sound in one preset,
 // spread into a generic component: `<Button {...PLAYER.addCard} onclick={…} />`. Labels come from strings.ts, never
 // typed here. Pure data, tested in apps/show/tests/ui/ds/registry.test.ts.
-import type { ButtonColor, ButtonPreset, ToastPreset } from '../../packages/ui/components/types.ts';
+import type { ButtonColor, ButtonPreset, IconName, ToastPreset } from '../../packages/ui/components/types.ts';
 import { S } from './strings.ts';
 
 /** A phone preset: a Button's look, its icon named by its drawing (packages/ui/icons). */
@@ -33,6 +33,27 @@ export const PLAYER = {
 } as const satisfies Record<string, PlayerPreset>;
 
 export type PlayerActionId = keyof typeof PLAYER;
+
+/** An IconButton's preset (A7): its drawing, look and name; a card's own name comes from the call site. */
+export interface PlayerIconPreset {
+  readonly icon: IconName;
+  readonly label?: string;
+  readonly variant?: 'framed' | 'bare';
+  readonly color?: 'surface' | 'navy' | 'grey' | 'red' | 'gold' | 'snow';
+  readonly size?: 's' | 'm';
+}
+
+/** The phone's icon-only buttons (IconButton, components-v2.md § 11.4). */
+export const PLAYER_ICONS = {
+  /** The header's Ajustos: the plain cog on a rounded square (D87). */
+  settings: { icon: 'cog', label: S.settings },
+  /** A sheet's ‹ and ✕ (R7 places them), navy on the sheet. */
+  sheetBack: { icon: 'chevron-left', label: S.back, color: 'navy' },
+  sheetClose: { icon: 'close', label: S.close, color: 'navy' },
+  /** A card's edit and remove in Ajustos: bare icons in the row. */
+  cardEdit: { icon: 'pencil', variant: 'bare' },
+  cardRemove: { icon: 'trash', variant: 'bare' },
+} as const satisfies Record<string, PlayerIconPreset>;
 
 /** A confirmation sheet's two answers: the risky yes in red, or the kind one in orange; the other is the neutral. */
 export function confirmColors(danger: boolean): { yes: ButtonColor; no: ButtonColor } {
