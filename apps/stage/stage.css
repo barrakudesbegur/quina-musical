@@ -284,10 +284,12 @@
 }
 
 /* `finale-enter`: the band glides to its finale size and back (the show page's drum follows --stage-band-*). */
-.stage-root.is-band-moving {
-  transition:
-    --band-top var(--stage-dur-finale-band) var(--ease-out),
-    --band-h var(--stage-dur-finale-band) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .stage-root.is-band-moving {
+    transition:
+      --band-top var(--stage-dur-finale-band) var(--ease-out),
+      --band-h var(--stage-dur-finale-band) var(--ease-out);
+  }
 }
 
 /* `link-lost`: a small dot in the corner, red after 3 s without the relay. The scene stays. */
@@ -348,9 +350,15 @@
 .scene {
   position: absolute;
   inset: 0;
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scene {
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
 }
 
 .scene.is-leaving {
@@ -365,8 +373,10 @@
 }
 
 /* `idle`: titles before, between and after the rounds float gently. */
-.stage-root [data-anim='idle'] {
-  animation: stage-float var(--stage-dur-idle) var(--stage-ease-in-out) infinite alternate;
+@media (prefers-reduced-motion: no-preference) {
+  .stage-root [data-anim='idle'] {
+    animation: stage-float var(--stage-dur-idle) var(--stage-ease-in-out) infinite alternate;
+  }
 }
 
 .cover-art {
@@ -612,8 +622,10 @@
 }
 
 /* `idle` on a nino: it sways ±3° (each with its own period, so they never sync). */
-.stage-root .sticker[data-anim='idle'] {
-  animation: stage-sway var(--stage-dur-sway) var(--stage-ease-in-out) infinite alternate;
+@media (prefers-reduced-motion: no-preference) {
+  .stage-root .sticker[data-anim='idle'] {
+    animation: stage-sway var(--stage-dur-sway) var(--stage-ease-in-out) infinite alternate;
+  }
 }
 
 .countdown {
@@ -945,9 +957,15 @@
 }
 
 .scene[data-anim='scene-enter'] .round-start__sticker {
-  transition:
-    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-stand-up),
-    opacity var(--dur-fast) linear var(--stage-delay-stand-up);
+  transition: opacity var(--dur-fast) linear var(--stage-delay-stand-up);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scene[data-anim='scene-enter'] .round-start__sticker {
+    transition:
+      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-stand-up),
+      opacity var(--dur-fast) linear var(--stage-delay-stand-up);
+  }
 }
 
 .scene[data-anim='scene-enter'].is-entering .round-start__sticker {
@@ -994,7 +1012,12 @@
   top: var(--y);
   width: var(--size);
   height: var(--size);
-  transition: transform var(--fly-ms, 0ms) linear var(--fly-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle__tile {
+    transition: transform var(--fly-ms, 0ms) linear var(--fly-delay, 0ms);
+  }
 }
 
 .shuffle__lift,
@@ -1003,14 +1026,22 @@
   height: 100%;
 }
 
-.shuffle__lift {
-  transition: transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle__lift {
+    transition: transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+  }
 }
 
 .shuffle__spin {
-  transition:
-    transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms),
-    opacity var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+  transition: opacity var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle__spin {
+    transition:
+      transform var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms),
+      opacity var(--fly-ms, 0ms) var(--stage-ease-in) var(--fly-delay, 0ms);
+  }
 }
 
 .shuffle .cover-art {
@@ -1019,9 +1050,15 @@
 }
 
 .shuffle[data-phase='appear'] .shuffle__spin {
-  transition:
-    transform var(--appear-ms) var(--ease-bounce) calc(var(--seed) * var(--appear-ms) * 0.4),
-    opacity var(--appear-ms) var(--ease-out) calc(var(--seed) * var(--appear-ms) * 0.4);
+  transition: opacity var(--appear-ms) var(--ease-out) calc(var(--seed) * var(--appear-ms) * 0.4);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle[data-phase='appear'] .shuffle__spin {
+    transition:
+      transform var(--appear-ms) var(--ease-bounce) calc(var(--seed) * var(--appear-ms) * 0.4),
+      opacity var(--appear-ms) var(--ease-out) calc(var(--seed) * var(--appear-ms) * 0.4);
+  }
 }
 
 .shuffle[data-anim='shuffle'].is-entering .shuffle__spin {
@@ -1031,8 +1068,13 @@
 }
 
 .shuffle[data-phase='jiggle'] .shuffle__spin {
-  animation: stage-jiggle var(--stage-dur-jiggle) var(--stage-ease-in-out) infinite alternate;
   animation-delay: calc(var(--seed) * var(--stage-dur-jiggle) * -2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shuffle[data-phase='jiggle'] .shuffle__spin {
+    animation: stage-jiggle var(--stage-dur-jiggle) var(--stage-ease-in-out) infinite alternate;
+  }
 }
 
 .shuffle__tile.is-flying {
@@ -1096,8 +1138,13 @@
   background: var(--light-color);
   box-shadow: 0 0 calc(var(--stage-light) * (0.4 + var(--heat-glow))) calc(var(--stage-light) * 0.2 * var(--heat-glow)) var(--light-color);
   filter: brightness(calc(0.85 + var(--heat-glow) * 0.4));
-  animation: stage-twinkle var(--twinkle-ms) var(--stage-ease-in-out) infinite alternate;
   animation-delay: calc(var(--twinkle-ms) * -1 * (var(--light-seed) * (1 - var(--chase)) + var(--light-i) * var(--chase)));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .garland__light {
+    animation: stage-twinkle var(--twinkle-ms) var(--stage-ease-in-out) infinite alternate;
+  }
 }
 
 .garland__light:nth-child(even) {
@@ -1152,9 +1199,15 @@
 
 /* `spin`: the title slides down 40 px and fades to 30 % while the drum spins. */
 .play__now {
-  transition:
-    opacity var(--stage-dur-title-out) var(--stage-ease-in),
-    transform var(--stage-dur-title-out) var(--stage-ease-in);
+  transition: opacity var(--stage-dur-title-out) var(--stage-ease-in);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play__now {
+    transition:
+      opacity var(--stage-dur-title-out) var(--stage-ease-in),
+      transform var(--stage-dur-title-out) var(--stage-ease-in);
+  }
 }
 
 .play__now[data-anim='spin'] {
@@ -1164,15 +1217,27 @@
 
 /* `landing`: the title slams in (1.35 → 1, bounce); the artist follows 120 ms later. */
 .play__now[data-anim='landing'] {
-  transition:
-    transform var(--dur-landing) var(--ease-bounce),
-    opacity var(--dur-fast) linear;
+  transition: opacity var(--dur-fast) linear;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play__now[data-anim='landing'] {
+    transition:
+      transform var(--dur-landing) var(--ease-bounce),
+      opacity var(--dur-fast) linear;
+  }
 }
 
 .play__now[data-anim='landing'] .play__artist {
-  transition:
-    opacity var(--dur-base) var(--ease-out) var(--stage-artist-delay),
-    transform var(--dur-base) var(--ease-out) var(--stage-artist-delay);
+  transition: opacity var(--dur-base) var(--ease-out) var(--stage-artist-delay);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play__now[data-anim='landing'] .play__artist {
+    transition:
+      opacity var(--dur-base) var(--ease-out) var(--stage-artist-delay),
+      transform var(--dur-base) var(--ease-out) var(--stage-artist-delay);
+  }
 }
 
 .play__now[data-anim='landing'].is-entering {
@@ -1198,7 +1263,12 @@
   font-size: var(--stage-text-xl);
   line-height: 1;
   color: var(--color-accent);
-  animation: stage-breathe var(--breath-ms, 1600ms) var(--stage-ease-in-out) infinite alternate;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play__suspense {
+    animation: stage-breathe var(--breath-ms, 1600ms) var(--stage-ease-in-out) infinite alternate;
+  }
 }
 
 .scene--play[data-motion='suspense'] .play__now {
@@ -1263,9 +1333,15 @@
 
 /* `landing` in the row: the tiles shift one place right and the new one slides in from the left. */
 .play__recent[data-anim='landing'] .song-tile {
-  transition:
-    transform var(--stage-dur-tile-slide) var(--ease-out),
-    opacity var(--stage-dur-tile-slide) var(--ease-out);
+  transition: opacity var(--stage-dur-tile-slide) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play__recent[data-anim='landing'] .song-tile {
+    transition:
+      transform var(--stage-dur-tile-slide) var(--ease-out),
+      opacity var(--stage-dur-tile-slide) var(--ease-out);
+  }
 }
 
 .play__recent[data-anim='landing'].is-entering .song-tile {
@@ -1312,7 +1388,12 @@
   background: linear-gradient(var(--stage-finale-floor-top), var(--stage-finale-floor-bottom) 70%);
   border-top: 0.375rem solid var(--color-line);
   box-shadow: inset 0 0.4375rem 0 color-mix(in srgb, var(--color-accent) 45%, transparent);
-  animation: stage-finale-floor var(--stage-dur-finale-band) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale__floor {
+    animation: stage-finale-floor var(--stage-dur-finale-band) var(--ease-out);
+  }
 }
 
 .finale__row {
@@ -1329,7 +1410,12 @@
   width: 0;
   height: 0;
   transform: translateX(var(--x));
-  transition: transform var(--stage-dur-finale-room) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot {
+    transition: transform var(--stage-dur-finale-room) var(--ease-out);
+  }
 }
 
 .finale__body {
@@ -1338,20 +1424,33 @@
   top: 0;
   transform: scale(var(--s));
   transform-origin: 0 0;
-  transition: transform var(--stage-dur-finale-room) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale__body {
+    transition: transform var(--stage-dur-finale-room) var(--ease-out);
+  }
 }
 
 /* `finale-clear`: the fallen leave first, then the rest close up and grow. */
-.finale__row[data-shift='clear'] :is(.finale__slot, .finale__body) {
-  transition: transform var(--stage-dur-finale-close) var(--ease-out) var(--stage-dur-finale-leave);
+@media (prefers-reduced-motion: no-preference) {
+  .finale__row[data-shift='clear'] :is(.finale__slot, .finale__body) {
+    transition: transform var(--stage-dur-finale-close) var(--ease-out) var(--stage-dur-finale-leave);
+  }
 }
 
 .finale__slot.is-leaving {
   opacity: 0;
   transform: translateX(var(--x)) translateY(22px) scale(0.86);
-  transition:
-    opacity var(--stage-dur-finale-leave) var(--stage-ease-in-out),
-    transform var(--stage-dur-finale-leave) var(--stage-ease-in-out);
+  transition: opacity var(--stage-dur-finale-leave) var(--stage-ease-in-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot.is-leaving {
+    transition:
+      opacity var(--stage-dur-finale-leave) var(--stage-ease-in-out),
+      transform var(--stage-dur-finale-leave) var(--stage-ease-in-out);
+  }
 }
 
 .finale__cone {
@@ -1479,8 +1578,10 @@
   display: block;
 }
 
-.finale__slot[data-anim='finale-fall'] .finale__cross {
-  animation: stage-finale-stamp var(--stage-dur-finale-cross) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot[data-anim='finale-fall'] .finale__cross {
+    animation: stage-finale-stamp var(--stage-dur-finale-cross) var(--ease-bounce);
+  }
 }
 
 /* `finale-win`: the party nino steps forward, its plate and cone gold, gold rays turning behind. */
@@ -1494,7 +1595,12 @@
   background: repeating-conic-gradient(color-mix(in srgb, var(--color-accent) 26%, transparent) 0deg 8deg, transparent 8deg 16deg);
   mask-image: radial-gradient(circle, #000 18%, transparent 62%);
   display: none;
-  animation: stage-finale-turn var(--stage-dur-rays) linear infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale__rays {
+    animation: stage-finale-turn var(--stage-dur-rays) linear infinite;
+  }
 }
 
 .finale__slot[data-fate='win'] .finale__rays {
@@ -1522,19 +1628,28 @@
   font-size: calc(var(--stage-finale-plate) * 1.23);
 }
 
-.finale__slot[data-anim='finale-win'] .finale__hop {
-  animation: stage-finale-win var(--stage-dur-finale-win) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot[data-anim='finale-win'] .finale__hop {
+    animation: stage-finale-win var(--stage-dur-finale-win) var(--ease-bounce);
+  }
 }
 
 /* `finale-enter`: each nino pops in at its place with its cone, in order. */
 .finale__slot[data-anim='finale-enter'] :is(.finale__hop, .finale__label, .finale__cone) {
-  animation: stage-finale-pop var(--stage-dur-finale-pop) var(--ease-bounce) both;
   animation-delay: calc(var(--enter-i, 0) * var(--stage-finale-pop-stagger));
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot[data-anim='finale-enter'] :is(.finale__hop, .finale__label, .finale__cone) {
+    animation: stage-finale-pop var(--stage-dur-finale-pop) var(--ease-bounce) both;
+  }
+}
+
 /* `finale-back`: Enrere gives the fallen their colour back (the fates' own transitions), with a small pop. */
-.finale__slot[data-anim='finale-back'] .finale__label {
-  animation: stage-finale-pop var(--stage-dur-finale-back) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .finale__slot[data-anim='finale-back'] .finale__label {
+    animation: stage-finale-pop var(--stage-dur-finale-back) var(--ease-out);
+  }
 }
 
 /* `finale-safe`: «Salvats!» (D181). Two jumps, the ribbon, the light born from it, the phones' two spotlights. */
@@ -1628,34 +1743,46 @@
   height: 100%;
 }
 
-.finale[data-anim='finale-safe'] .finale__hop {
-  animation: stage-finale-hops var(--stage-dur-finale-hops) ease-in-out;
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__hop {
+    animation: stage-finale-hops var(--stage-dur-finale-hops) ease-in-out;
+  }
 }
 
-.finale[data-anim='finale-safe'] .finale__ribbon {
-  animation:
-    stage-finale-ribbon var(--stage-dur-finale-ribbon) linear,
-    stage-finale-ribbon-pop var(--stage-dur-finale-ribbon-pop) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__ribbon {
+    animation:
+      stage-finale-ribbon var(--stage-dur-finale-ribbon) linear,
+      stage-finale-ribbon-pop var(--stage-dur-finale-ribbon-pop) var(--ease-bounce);
+  }
 }
 
 .finale[data-anim='finale-safe'] .finale__light {
   animation: stage-finale-light var(--stage-dur-finale-light) ease-out;
 }
 
-.finale[data-anim='finale-safe'] .finale__light-rays {
-  animation: stage-finale-turn 44s linear;
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__light-rays {
+    animation: stage-finale-turn 44s linear;
+  }
 }
 
-.finale[data-anim='finale-safe'] .finale__beams {
-  animation: stage-finale-beams var(--stage-dur-finale-beams) cubic-bezier(0.22, 1, 0.36, 1);
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__beams {
+    animation: stage-finale-beams var(--stage-dur-finale-beams) cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
 
-.finale[data-anim='finale-safe'] .finale__beam--left {
-  animation: stage-finale-sweep 3.4s ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__beam--left {
+    animation: stage-finale-sweep 3.4s ease-in-out infinite;
+  }
 }
 
-.finale[data-anim='finale-safe'] .finale__beam--right {
-  animation: stage-finale-sweep 2.8s ease-in-out infinite reverse;
+@media (prefers-reduced-motion: no-preference) {
+  .finale[data-anim='finale-safe'] .finale__beam--right {
+    animation: stage-finale-sweep 2.8s ease-in-out infinite reverse;
+  }
 }
 
 @keyframes stage-finale-floor {
@@ -1930,8 +2057,10 @@
 }
 
 /* `check-type`: the mark stamps on like a song's (2 → 1, −12°); the badge bounces (✓) or shakes (✗). */
-.check__type[data-anim='check-type'] .check__type-mark {
-  transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .check__type[data-anim='check-type'] .check__type-mark {
+    transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+  }
 }
 
 .check__type[data-anim='check-type'].is-entering .check__type-mark {
@@ -1939,17 +2068,23 @@
   transition: none;
 }
 
-.check__type[data-anim='check-type'][data-state='ok'] {
-  animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .check__type[data-anim='check-type'][data-state='ok'] {
+    animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+  }
 }
 
-.check__type[data-anim='check-type'][data-state='wrong'] {
-  animation: stage-shake var(--stage-dur-shake) linear;
+@media (prefers-reduced-motion: no-preference) {
+  .check__type[data-anim='check-type'][data-state='wrong'] {
+    animation: stage-shake var(--stage-dur-shake) linear;
+  }
 }
 
 /* `check-enter`: the plate and the badge drop in; the card deals in, tile by tile. */
-.check[data-anim='check-enter'] .check__head {
-  transition: transform var(--stage-dur-ribbon) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .check[data-anim='check-enter'] .check__head {
+    transition: transform var(--stage-dur-ribbon) var(--ease-bounce);
+  }
 }
 
 .check[data-anim='check-enter'].is-entering .check__head {
@@ -1958,9 +2093,15 @@
 }
 
 .check[data-anim='check-enter'] .card-grid__cell {
-  transition:
-    transform var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger)),
-    opacity var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger));
+  transition: opacity var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check[data-anim='check-enter'] .card-grid__cell {
+    transition:
+      transform var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger)),
+      opacity var(--stage-dur-deal) var(--ease-out) calc(var(--deal-index) * var(--stage-deal-stagger));
+  }
 }
 
 .check[data-anim='check-enter'].is-entering .card-grid__cell {
@@ -2132,7 +2273,12 @@
   box-shadow:
     0 0 0 var(--stage-ring) var(--color-primary),
     0 0 3rem 1rem var(--stage-check-glow);
-  animation: stage-ring var(--stage-dur-ring) var(--stage-ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__cell[data-state='playing'] .card-grid__art::after {
+    animation: stage-ring var(--stage-dur-ring) var(--stage-ease-in-out) infinite;
+  }
 }
 
 .card-grid__cell[data-mark='ok'] .card-grid__cover {
@@ -2160,8 +2306,10 @@
   filter: grayscale(1) brightness(0.7);
 }
 
-.card-grid__cell[data-anim='check-step'] .card-grid__mark {
-  transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__cell[data-anim='check-step'] .card-grid__mark {
+    transition: transform var(--stage-dur-stamp) var(--ease-bounce);
+  }
 }
 
 .card-grid__cell[data-anim='check-step'].is-entering .card-grid__mark {
@@ -2169,12 +2317,16 @@
   transition: none;
 }
 
-.card-grid__cell[data-anim='check-step'][data-mark='ok'] {
-  animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__cell[data-anim='check-step'][data-mark='ok'] {
+    animation: stage-bounce var(--stage-dur-stamp) var(--ease-out);
+  }
 }
 
-.card-grid__cell[data-anim='check-step'][data-mark='bad'] {
-  animation: stage-shake var(--stage-dur-shake) linear;
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__cell[data-anim='check-step'][data-mark='bad'] {
+    animation: stage-shake var(--stage-dur-shake) linear;
+  }
 }
 
 /* `check-result`, failed: red light beams turn slowly behind the card (the Celebration's rays, in red), with
@@ -2210,7 +2362,12 @@
   width: 112.5rem;
   background: repeating-conic-gradient(var(--stage-fail-beam) 0 8deg, transparent 8deg 16deg);
   mask-image: radial-gradient(circle, #000 18%, transparent 62%);
-  animation: stage-spin var(--stage-dur-rays) linear infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check__rays {
+    animation: stage-spin var(--stage-dur-rays) linear infinite;
+  }
 }
 
 .check__glow {
@@ -2256,9 +2413,15 @@
     inset 0 -0.875rem 0 var(--plaque-edge),
     inset 0 0.5rem 0 var(--stage-gloss),
     0 0.875rem 0 var(--color-shadow);
-  transition:
-    transform var(--stage-dur-result) var(--ease-out),
-    opacity var(--stage-dur-result) var(--ease-out);
+  transition: opacity var(--stage-dur-result) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-result {
+    transition:
+      transform var(--stage-dur-result) var(--ease-out),
+      opacity var(--stage-dur-result) var(--ease-out);
+  }
 }
 
 /* Over one row only (a Line checked on the middle row): a compact plaque, or a smaller ✗, so it fits. */
@@ -2358,9 +2521,15 @@
   top: 43%;
   width: 57%;
   rotate: var(--stage-sticker-tilt);
-  transition:
-    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-sticker),
-    opacity var(--dur-fast) linear var(--stage-delay-sticker);
+  transition: opacity var(--dur-fast) linear var(--stage-delay-sticker);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-result__sticker {
+    transition:
+      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-sticker),
+      opacity var(--dur-fast) linear var(--stage-delay-sticker);
+  }
 }
 
 /* Valid: the plaque slides up. Failed: the ✗ slams in from big with a bounce, then the nino tumbles down. */
@@ -2381,8 +2550,10 @@
 }
 
 /* Failed: the plate turns slate with one shake (on `translate`, so it never fights the entrance drop). */
-.check__plate[data-anim='check-result'] {
-  animation: stage-shake-x var(--stage-dur-shake) linear;
+@media (prefers-reduced-motion: no-preference) {
+  .check__plate[data-anim='check-result'] {
+    animation: stage-shake-x var(--stage-dur-shake) linear;
+  }
 }
 
 /* `check-fallen` (the Desgraciat round: a standing claim's card has fallen). Like a failed Bingo (slate plate with a
@@ -2404,8 +2575,10 @@
   scale: var(--stage-lift);
 }
 
-.card-grid__cell[data-anim='check-fallen'] {
-  animation: stage-lift-pop var(--stage-dur-lift) var(--ease-bounce) var(--stage-delay-lift) both;
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__cell[data-anim='check-fallen'] {
+    animation: stage-lift-pop var(--stage-dur-lift) var(--ease-bounce) var(--stage-delay-lift) both;
+  }
 }
 
 @keyframes stage-lift-pop {
@@ -2420,8 +2593,10 @@
   }
 }
 
-.check__plate[data-anim='check-fallen'] {
-  animation: stage-shake-x var(--stage-dur-shake) linear;
+@media (prefers-reduced-motion: no-preference) {
+  .check__plate[data-anim='check-fallen'] {
+    animation: stage-shake-x var(--stage-dur-shake) linear;
+  }
 }
 
 .check-result[data-anim='check-fallen'].is-entering {
@@ -2437,9 +2612,15 @@
   top: 70%;
   width: 46%;
   rotate: 0deg;
-  transition:
-    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-fallen-nino),
-    opacity var(--dur-fast) linear var(--stage-delay-fallen-nino);
+  transition: opacity var(--dur-fast) linear var(--stage-delay-fallen-nino);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-result__sticker--fallen {
+    transition:
+      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-fallen-nino),
+      opacity var(--dur-fast) linear var(--stage-delay-fallen-nino);
+  }
 }
 
 .check[data-side='right'] .check-result__sticker--fallen {
@@ -2461,7 +2642,12 @@
 /* `check-unreveal`: a step back's mark lifts off its cover (1 → 1.25, fading out); the cover waits again. */
 .card-grid__mark--lift {
   pointer-events: none;
-  animation: stage-mark-lift var(--stage-dur-unreveal) var(--stage-ease-in) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-grid__mark--lift {
+    animation: stage-mark-lift var(--stage-dur-unreveal) var(--stage-ease-in) both;
+  }
 }
 
 .card-grid__mark--lift[data-mark='ok'] {
@@ -2507,9 +2693,17 @@
   transform: translateY(-60vh);
   visibility: hidden;
   transition:
-    transform var(--stage-dur-review-out) var(--stage-ease-in),
     opacity var(--stage-dur-review-out) var(--stage-ease-in),
     visibility 0s linear var(--stage-dur-review-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-review {
+    transition:
+      transform var(--stage-dur-review-out) var(--stage-ease-in),
+      opacity var(--stage-dur-review-out) var(--stage-ease-in),
+      visibility 0s linear var(--stage-dur-review-out);
+  }
 }
 
 .check[data-reviewing='true'] .check-review {
@@ -2517,9 +2711,17 @@
   transform: none;
   visibility: visible;
   transition:
-    transform var(--stage-dur-review-in) var(--ease-out),
     opacity var(--stage-dur-review-in) var(--ease-out),
     visibility 0s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check[data-reviewing='true'] .check-review {
+    transition:
+      transform var(--stage-dur-review-in) var(--ease-out),
+      opacity var(--stage-dur-review-in) var(--ease-out),
+      visibility 0s;
+  }
 }
 
 .check-review__icon {
@@ -2710,9 +2912,15 @@
 }
 
 .celebration[data-anim='celebrate'] .celebration__sticker {
-  transition:
-    transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-prize),
-    opacity var(--dur-fast) linear var(--stage-delay-prize);
+  transition: opacity var(--dur-fast) linear var(--stage-delay-prize);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebration[data-anim='celebrate'] .celebration__sticker {
+    transition:
+      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-prize),
+      opacity var(--dur-fast) linear var(--stage-delay-prize);
+  }
 }
 
 .celebration[data-anim='celebrate'].is-entering .celebration__sticker {
@@ -2731,7 +2939,12 @@
   background: repeating-conic-gradient(color-mix(in oklab, var(--color-accent) 22%, transparent) 0 10deg, transparent 10deg 20deg);
   mask-image: radial-gradient(circle, #000 20%, transparent 65%);
   transform: translate(-50%, -50%);
-  animation: stage-rays var(--stage-dur-rays) linear infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebration__rays {
+    animation: stage-rays var(--stage-dur-rays) linear infinite;
+  }
 }
 
 .shout {
@@ -2753,20 +2966,34 @@
 }
 
 /* `celebrate`: flash, the shout slams in (scale 3, −5°), then the prize rises. No card numbers. */
-.celebration[data-anim='celebrate'] .celebration__flash {
-  animation: stage-flash var(--stage-dur-flash) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .celebration[data-anim='celebrate'] .celebration__flash {
+    animation: stage-flash var(--stage-dur-flash) var(--ease-out);
+  }
 }
 
 .celebration[data-anim='celebrate'] .shout {
-  transition:
-    transform var(--stage-dur-slam) var(--ease-bounce),
-    opacity var(--dur-fast) linear;
+  transition: opacity var(--dur-fast) linear;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebration[data-anim='celebrate'] .shout {
+    transition:
+      transform var(--stage-dur-slam) var(--ease-bounce),
+      opacity var(--dur-fast) linear;
+  }
 }
 
 .celebration[data-anim='celebrate'] .celebration__prize {
-  transition:
-    transform var(--dur-slow) var(--ease-out) var(--stage-delay-prize),
-    opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
+  transition: opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebration[data-anim='celebrate'] .celebration__prize {
+    transition:
+      transform var(--dur-slow) var(--ease-out) var(--stage-delay-prize),
+      opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
+  }
 }
 
 .celebration[data-anim='celebrate'].is-entering .shout {
@@ -2899,7 +3126,12 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  transition: transform var(--stage-dur-rotate) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ring__face {
+    transition: transform var(--stage-dur-rotate) var(--ease-out);
+  }
 }
 
 .ring__value {
@@ -2986,8 +3218,10 @@
 }
 
 /* `credits`: the roll scrolls slowly upward when it doesn't fit. */
-.credits[data-anim='credits'] .credits__roll {
-  animation: stage-credits var(--credits-ms) linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .credits[data-anim='credits'] .credits__roll {
+    animation: stage-credits var(--credits-ms) linear infinite;
+  }
 }
 
 /* ----------------------------------------------------------------------------------------- motion */
@@ -3104,59 +3338,16 @@
   }
 }
 
-/* Reduced motion: every hook keeps its information with a still fallback (ANIMATIONS.md). The tokens in
-   ui/tokens.css drop to 0 ms; the stage's own drop here, and loops, slides and confetti stop. */
+/* Reduced motion: every hook keeps its information with a still fallback (ANIMATIONS.md). The moving and looping
+   animations are declared only under `prefers-reduced-motion: no-preference`, next to their rule; the colour and
+   opacity fades run either way (D209). What stays here shows something else instead. */
 @media (prefers-reduced-motion: reduce) {
-  /* `sponsor-pages`: the pages swap with no fade. */
-  .sponsors__list[data-anim='sponsor-pages'] {
-    transition: none;
-  }
-
+  /* `heat`: the colour changes in one 2 s fade, not the 20 s ease. */
   .stage-root {
-    --stage-dur-title-out: 0ms;
-    --stage-dur-tile-slide: 0ms;
-    --stage-artist-delay: 0ms;
-    --stage-dur-vignette: 0ms;
     --stage-dur-heat: var(--stage-dur-reduced-fade);
-    --stage-dur-ribbon: 0ms;
-    --stage-dur-deal: 0ms;
-    --stage-deal-stagger: 0ms;
-    --stage-dur-stamp: 0ms;
-    --stage-dur-result: 0ms;
-    --stage-dur-sticker: 0ms;
-    --stage-delay-sticker: 0ms;
-    --stage-dur-lift: 0ms;
-    --stage-delay-lift: 0ms;
-    --stage-dur-unreveal: 0ms;
-    --stage-dur-review-in: 0ms;
-    --stage-dur-review-out: 0ms;
-    --stage-dur-discard: 0ms;
-    --stage-delay-fallen-nino: 0ms;
-    --stage-delay-stand-up: 0ms;
-    --stage-dur-slam: 0ms;
-    --stage-delay-prize: 0ms;
-    --stage-dur-rotate: 0ms;
-    --stage-dur-pause: 0ms;
   }
 
-  .stage-root [data-anim='idle'],
-  .garland__light,
-  .play__suspense,
-  .shuffle[data-phase='jiggle'] .shuffle__spin,
-  .card-grid__cell[data-state='playing'] .card-grid__art::after,
-  .card-grid__cell[data-anim='check-step'],
-  .check__plate[data-anim='check-result'],
-  .check__plate[data-anim='check-fallen'],
-  .card-grid__cell[data-anim='check-fallen'],
-  .check__type[data-anim='check-type'],
-  .check__rays,
-  .stage-root .sticker[data-anim='idle'],
-  .celebration__rays,
-  .celebration[data-anim='celebrate'] .celebration__flash,
-  .credits[data-anim='credits'] .credits__roll {
-    animation: none;
-  }
-
+  /* The "from" states that would slide or scale in: the elements start where they end, and only fade. */
   .scene[data-anim='scene-enter'].is-entering,
   .play__now[data-anim='spin'],
   .play__now[data-anim='landing'].is-entering,
@@ -3181,31 +3372,13 @@
   .shuffle__caption {
     display: block;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  /* The finale on stage: fates, plates and the band change at once; «Salvats!» is the still ribbon for 1.5 s. */
-  .stage-root {
-    --stage-dur-finale-band: 0ms;
-    --stage-dur-finale-room: 0ms;
-    --stage-dur-finale-fade: 0ms;
-    --stage-dur-finale-cone: 0ms;
-    --stage-dur-finale-leave: 0ms;
-    --stage-dur-finale-close: 0ms;
-  }
-
-  .finale__floor,
-  .finale__rays,
-  .finale__slot[data-anim] :is(.finale__hop, .finale__label, .finale__cone, .finale__cross),
-  .finale[data-anim='finale-safe'] :is(.finale__hop, .finale__light, .finale__light-rays, .finale__beams, .finale__beam) {
-    animation: none;
-  }
-
-  .finale__row[data-shift='clear'] :is(.finale__slot, .finale__body) {
-    transition: none;
-  }
-
+  /* «Salvats!»: the still ribbon for 1.5 s, and no glow. */
   .finale[data-anim='finale-safe'] .finale__ribbon {
     animation: stage-finale-ribbon-still var(--stage-dur-finale-ribbon) step-end;
+  }
+
+  .finale[data-anim='finale-safe'] .finale__light {
+    animation: none;
   }
 }
