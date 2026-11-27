@@ -12,8 +12,9 @@
 
   Props say what it draws: `title`, `subtitle`, `origin` (the corner or edge it grows from), `depth` ('under': another
   sheet lies over it), `back` (a ‹ that closes this one; `onback` makes ‹, Esc and the back gesture a step back
-  inside it instead), `closeText` (the ✕ shows its label too: the console's «Tanca»), `dismiss`, `draggable`, and the
-  `closeSound`. `canClose` may hold it open (the pad asks first, D28) and is handed the way to go on. ✕ finishes with
+  inside it instead), `closeText` (the ✕ shows its label too: the console's «Tanca»), `dismiss`, `draggable`, `drag`
+  ('free', or 'stiff' for a sheet that holds a form: a strong rubber band and a long pull to close, §8 Y3), and the
+  `closeSound`. A touch that starts inside `[data-own-gesture]` (a list's grip) is never the sheet's drag. `canClose` may hold it open (the pad asks first, D28) and is handed the way to go on. ✕ finishes with
   `closeAll` when given (a stacked drawer's ✕ closes them all). Slots: `children` (scrolls), `footer` (sticky, D188).
   The app's own closes (after «Desar», a Celebration) unmount it: silent and at once, as ANIMATIONS.md says.
 -->
@@ -28,7 +29,19 @@
   import IconButton from './IconButton.svelte';
   import MiniButton from './MiniButton.svelte';
   import { touchPress } from '../sounds/touch.ts';
-  import { barAxis, closeDuration, contentGesture, dragOffset, handsOver, pullShare, releaseCloses, releaseVelocity, type DragSample } from './sheet-drag.ts';
+  import {
+    barAxis,
+    closeDuration,
+    contentGesture,
+    dragOffset,
+    handsOver,
+    pullShare,
+    releaseCloses,
+    releaseVelocity,
+    stiffOffset,
+    stiffReleaseCloses,
+    type DragSample,
+  } from './sheet-drag.ts';
   import { lightDismiss, settled } from './top-layer.ts';
   import type { UiSound } from './types.ts';
   import './sheet.css';
@@ -43,6 +56,8 @@
     dismiss?: 'any' | 'closerequest';
     /** Drags to close (the phone's sheets); the side sheet never does. */
     draggable?: boolean;
+    /** How the drag feels: 'free' (follows the finger), 'stiff' (a form: a rubber band, a long pull closes it). */
+    drag?: 'free' | 'stiff';
     back?: boolean;
     onback?: () => void;
     canClose?: (proceed: () => void) => boolean;
@@ -67,6 +82,7 @@
     open = $bindable(true),
     dismiss = 'any',
     draggable = origin !== 'side-right',
+    drag: dragFeel = 'free',
     back = false,
     onback,
     canClose,
@@ -97,7 +113,7 @@
   let offset = $state(0);
   let height = $state(1);
   let outMs = $state<number | null>(null);
-  let drag: { y0: number; samples: DragSample[] } | null = null;
+  let drag: { y0: number; samples: DragSample[]; raw: number } | null = null;
   let dragging = $state(false);
   const canDrag = $derived(draggable && depth === 'top' && closing === null);
 
@@ -169,7 +185,7 @@
     if (!dialog) return;
     height = dialog.offsetHeight || 1;
     springing = false;
-    drag = { y0: y, samples: [{ y, t }] };
+    drag = { y0: y, samples: [{ y, t }], raw: 0 };
   }
 
   /** Follows the finger; `band`: above its rest it resists (the title bar) rather than stopping at it. */
@@ -178,15 +194,17 @@
     drag.samples.push({ y, t });
     if (drag.samples.length > 12) drag.samples.shift();
     if (Math.abs(y - drag.y0) > 2) dragging = true;
-    offset = band ? dragOffset(y - drag.y0) : Math.max(0, y - drag.y0);
+    drag.raw = band ? y - drag.y0 : Math.max(0, y - drag.y0);
+    offset = dragFeel === 'stiff' ? stiffOffset(drag.raw, height) : band ? dragOffset(drag.raw) : drag.raw;
   }
 
   function end(): void {
     if (!drag) return;
     const v = releaseVelocity(drag.samples);
+    const closes = dragFeel === 'stiff' ? stiffReleaseCloses(drag.raw, height) : releaseCloses(offset, height, v);
     drag = null;
     dragging = false;
-    if (releaseCloses(offset, height, v)) requestClose('self', closeDuration(offset, height, v));
+    if (closes) requestClose('self', closeDuration(offset, height, v));
     else springBack();
   }
 
@@ -233,7 +251,9 @@
     let touch: { x: number; y: number; lastY: number; mode: 'drag' | 'scroll' | 'by-hand' | null } | null = null;
     const down = (e: TouchEvent): void => {
       const t = e.touches[0];
-      touch = canDrag && e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY, lastY: t.clientY, mode: null } : null;
+      // A control with a drag of its own (a list's grip, card-reorder) keeps the whole gesture (§8 Y3).
+      const own = e.target instanceof Element && e.target.closest('[data-own-gesture]') !== null;
+      touch = canDrag && !own && e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY, lastY: t.clientY, mode: null } : null;
     };
     const moveTouch = (e: TouchEvent): void => {
       const t = e.touches[0];
@@ -299,6 +319,7 @@
   data-depth={depth}
   data-state={closing ? 'closing' : 'open'}
   data-draggable={canDrag || undefined}
+  data-drag={canDrag ? dragFeel : undefined}
   data-dragging={dragging || undefined}
   data-settled={risen || undefined}
   data-springing={springing || undefined}

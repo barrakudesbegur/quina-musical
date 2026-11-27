@@ -1,7 +1,8 @@
 // C3 · Sheet: the drag to close (ANIMATIONS.md `drawer-drag`), as pure functions the component feeds with the
 // finger's positions. The sheet follows the finger 1:1 downwards and resists upwards (a rubber band); on release the
 // finger's speed over its last moments decides: a flick down closes it, a flick up keeps it, otherwise it closes when
-// pulled past a share of its height. Pure, so the feel is unit-tested (tests/ui/ds/sheet-drag.test.ts).
+// pulled past a share of its height. A sheet that holds a form is stiff (SHEET_STIFF). Pure, so the feel is unit-tested
+// (tests/ui/ds/sheet-drag.test.ts).
 
 /** One position of the finger: its y in px and its time in ms (an event's `timeStamp`). */
 export interface DragSample {
@@ -61,6 +62,31 @@ export function closeDuration(offset: number, height: number, velocity: number, 
   const left = Math.max(0, height - offset);
   const speed = Math.max(velocity, d.minCloseSpeed);
   return Math.round(Math.min(d.closeMs.max, Math.max(d.closeMs.min, left / speed)));
+}
+
+/**
+ * A sheet that holds a form (`drag="stiff"`, §8 Y3: «Afegir cartró» and «Editar» closed too easily): a strong rubber
+ * band downwards too, the way an iOS sheet with unsaved changes resists, and a close only after a long, deliberate pull.
+ */
+export const SHEET_STIFF = {
+  /** At first the sheet moves this share of the finger's travel… */
+  follow: 0.4,
+  /** …easing towards at most this share of its height. */
+  maxShare: 0.3,
+  /** It closes only when the finger has travelled this share of its height before letting go (no flick closes it). */
+  closeShare: 0.5,
+} as const;
+
+/** Where a stiff sheet sits for a finger `raw` px below where it started (`height`: the sheet's): a rubber band both ways. */
+export function stiffOffset(raw: number, height: number, s = SHEET_STIFF, d = SHEET_DRAG): number {
+  if (raw <= 0) return dragOffset(raw, d);
+  const max = Math.max(1, height * s.maxShare);
+  return max * (1 - Math.exp((-raw * s.follow) / max));
+}
+
+/** On release: does a stiff sheet close? Only after a long pull of the finger, whatever its speed. */
+export function stiffReleaseCloses(raw: number, height: number, s = SHEET_STIFF): boolean {
+  return height > 0 && raw >= height * s.closeShare;
 }
 
 /** The share of the sheet pulled away (0 at rest, 1 gone): the backdrop lightens by it. */

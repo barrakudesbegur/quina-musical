@@ -2,7 +2,20 @@
 // release a flick or the distance decides; a touch on the content drags the sheet only when the content is at its top.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHEET_DRAG, barAxis, closeDuration, contentGesture, dragOffset, handsOver, pullShare, releaseCloses, releaseVelocity } from '../../../../../packages/ui/components/sheet-drag.ts';
+import {
+  SHEET_DRAG,
+  SHEET_STIFF,
+  barAxis,
+  closeDuration,
+  contentGesture,
+  dragOffset,
+  handsOver,
+  pullShare,
+  releaseCloses,
+  releaseVelocity,
+  stiffOffset,
+  stiffReleaseCloses,
+} from '../../../../../packages/ui/components/sheet-drag.ts';
 
 test('down it follows the finger 1:1; up it resists, a third as far and never past 24 px', () => {
   assert.equal(dragOffset(0), 0);
@@ -67,4 +80,24 @@ test('the title bar locks its axis after 6 px: sideways never drags', () => {
   assert.equal(barAxis(10, 4), 'y');
   assert.equal(barAxis(-10, 4), 'y', 'up: the rubber band');
   assert.equal(barAxis(3, 12), 'x');
+});
+
+test('a stiff sheet (a form, §8 Y3) resists down too: a fraction of the finger, never past 30 % of its height', () => {
+  const h = 694;
+  assert.equal(stiffOffset(0, h), 0);
+  const first = stiffOffset(10, h);
+  assert.ok(first > 3.5 && first < 4.1, `a short pull moves about 40 %: ${first}`);
+  assert.ok(stiffOffset(300, h) < 300 * SHEET_STIFF.follow, 'it eases: less than 40 % further on');
+  assert.ok(stiffOffset(200, h) < stiffOffset(400, h), 'further is further');
+  assert.ok(stiffOffset(5000, h) <= h * SHEET_STIFF.maxShare, 'never past 30 % of its height');
+  assert.equal(stiffOffset(-30, h), dragOffset(-30), 'up, the usual band');
+});
+
+test('a stiff sheet closes only after the finger travels half its height, whatever the flick', () => {
+  const h = 694;
+  assert.equal(stiffReleaseCloses(h * 0.3, h), false, 'a free sheet would close here (30 %)');
+  assert.equal(releaseCloses(h * 0.31, h, 0), true, 'as this shows');
+  assert.equal(stiffReleaseCloses(h * 0.49, h), false);
+  assert.equal(stiffReleaseCloses(h * 0.5, h), true);
+  assert.equal(stiffReleaseCloses(100, 0), false, 'no height, no close');
 });
