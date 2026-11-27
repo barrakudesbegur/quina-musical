@@ -136,6 +136,12 @@ If they do, a reminder to an uncollected winner is the one push message with rea
 - (a) No, or very rarely.
 - (b) Yes, it happens.
 
+### U199 · Pool 2 for today's test
+Pool 2's playlist (64 entries, 27 Nov) isn't filtered yet. "Viva La Vida" is listed twice, 14 entries are pool 1's own tracks (positions 35, 44, 45, 50, 53–56, 59–64), and "NI BORRACHO" appears as both the single and pool 1's album track. That leaves 48 new songs. D101 and D193 say the pools have different songs. The download is the same 48 either way.
+- (a) Pool 2 is the 48 new songs, numbered 71–118.
+- (b) Pool 2 keeps every song once, 62 in all, including the 14 shared with pool 1, which get a second number.
+Also for the final playlist: were the 14 shared songs meant to be in both pools?
+
 ### U198 · The special card's side labels
 The Check shows one label for a card's type and side, so a player can see that the side checked is the round's (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The special card now has two sides (D226).
 - (a) By round: «Especial · Desgraciada» and «Especial · Quina Especial».
