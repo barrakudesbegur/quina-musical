@@ -1675,3 +1675,13 @@ So the phone's drum stays the same as the projector's (D237), the projector retu
 - a cancelled Spin brakes naturally, as today, then glides onto the card's place with the Back's timing, 0.8 s for one card up to 1.6 s for half a lap. Sound engine's change from "at most about 1 s": that cap made a half-lap glide whip round at about 54 cards a second, faster than a Spin. Now it peaks at about 34, like a Back.
 There are no speed-ups and no long brakes. Built in 7ec0b6af and 39a39f01. The motion is specced in ANIMATIONS.md before it's built, and the phone follows it. Sound engine held a subagent's working fix that changed the motion more (nearly a full lap back, brakes up to 4 s, some speed-ups) until it was specced.
 By: the orchestrator, within D237. Source: Sound engine's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md; apps/show/engine/src/wheel/drum.ts.
+
+### D250 · The printed cards: last year's style, with covers · 2026-11-27 · Active; the special card's labels Pending (the user)
+The user's decisions with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392):
+1. **Last year's style:** "It is a printed document, not a website!!!! dont use the web components. i want the same style as last year". The card is last year's (apps/cards/dist/cards-normal.pdf) plus the covers. The app-style colour panels are rejected.
+2. **No event name:** "the event name is unnecessary, remove it, and put "1a part" and "Quines 1-5". and the other side part 2 and 6-10." This replaces D67's printed title. D85's edition marker is now the faint «2026» stamp and the new look. For the special card, the design session asked about «1a PART · QUINA DESGRACIADA» and «2a PART · QUINA ESPECIAL»; not yet decided.
+3. **The corn-seeds line is very short, with no corn icon:** "make it very short, just a few words. and remove the corn icon". Drawn as «MARCA NOMÉS AMB BLAT DE MORO».
+4. **No name field:** "Remove the name field". The sticker circle stays.
+5. **A faded «#» before the card number:** "in front of the cartro number add a faded #".
+Still open: U200, U201, U52 (the paper), U198, and whether the design is final by 1 Dec (Frontend estimates 2 days of building plus a proof round).
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D67, D231, D233. Lives in: requirements/songs-and-cards.md › The card.

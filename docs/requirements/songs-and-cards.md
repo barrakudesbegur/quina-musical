@@ -80,10 +80,14 @@ _From event.md › The cards._
 
 - A card has 12 songs in 3 lines of 4, a number (written "#123") and a QR code. Three cards print on each page.
 - **The normal card is printed on both sides (D102):** side 1 plays Quines 1–5 (pool 1), side 2 Quines 6–10 (pool 2) (D193), with the same number on both. Side 2 has its own design, and each side shows which rounds it's for. Both are designed by the user with Frontend; nobody changes the card's design before then.
-- Each edition has a new title, so last year's cards are easy to spot; the paper colour may stay (D85). 2026, provisionally: "QUINA QUINA! 3", with last year's colours (D67; may change at print time).
+- **Last year's cards stay easy to spot** (D85): 2026's carry the faint «2026» stamp, the covers and the new side labels. There's no event name on the card (D250).
+- **The style is last year's printed card** (apps/cards/dist/cards-normal.pdf), with covers added: it's a printed document, not the app's look, so no web components (D250).
+- **Each side names its part:** «1a PART» with «QUINES 1-5», and «2a PART» with «QUINES 6-10» (D250). The special card's labels are pending the user.
 - Each card carries a faint year stamp.
-- **A sticker circle and a name space (D231):** a dotted circle of about 19 mm with «GOMET» in it (spelling pending U200), for a coloured shape sticker matching the card's mark on the phone (D5), and a space to write a name (sides pending U201).
-- **Song covers (D233):** each song shows its cover, so players find it faster. That means printing in colour, and the card's other elements are redesigned to make the most of it. The card is designed first, with a design session.
+- **A sticker circle (D231):** a dotted circle of about 19 mm with «GOMET» in it (spelling pending U200), for a coloured shape sticker matching the card's mark on the phone (D5) (sides pending U201). No name field (D250).
+- **One short line:** «MARCA NOMÉS AMB BLAT DE MORO», with no corn icon (D232, D250).
+- **The number** has a faded «#» before it (D250).
+- **Song covers (D233):** each song shows its cover, so players find it faster, printed in colour. The design is done with the card design session (canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392).
 - The price isn't printed.
 
 ## Card types
