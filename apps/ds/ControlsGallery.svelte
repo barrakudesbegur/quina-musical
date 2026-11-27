@@ -9,6 +9,7 @@
   import IconPicker from '../../packages/ui/components/IconPicker.svelte';
   import NumberField from '../../packages/ui/components/NumberField.svelte';
   import NumberPad from '../../packages/ui/components/NumberPad.svelte';
+  import WiiKey from '../../packages/ui/components/WiiKey.svelte';
   import Slider from '../../packages/ui/components/Slider.svelte';
   import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
@@ -233,5 +234,26 @@
   <div class="ds-gallery__grid ds-gallery__grid--wide">
     {#snippet p1()}<IconPicker legend="Icona" hint="Cada cartró en té una de diferent" options={PICKS} bind:value={pick} />{/snippet}
     {@render cell('two disabled with a tag, a long tag clipped; the third chosen', p1)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b5">
+  <h2 id="b5">B5 · WiiKey</h2>
+  <p class="ds-prose">
+    The remote’s keys a control answers to (the <code>wii</code> slot: <code>keys</code>, <code>hold</code>, <code>withA</code>,
+    <code>size</code>), drawn like the real keys and always white (the colours are the legend’s, C9). «− +» is two keys (D91). The
+    D-pad arm is a cross as tall as A, with soft corners (#46). Shown only while a remote is connected; decorative.
+  </p>
+  <div class="ds-gallery__grid">
+    {#snippet w1()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['a'] }} /><WiiKey spec={{ keys: ['b'] }} /><WiiKey spec={{ keys: ['minus', 'plus'] }} /><WiiKey spec={{ keys: ['one', 'two'] }} /><WiiKey spec={{ keys: ['home'] }} /></span>{/snippet}
+    {@render cell('md: A, B, − +, 1 2, HOME', w1)}
+    {#snippet w2()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['a'], size: 'sm' }} /><WiiKey spec={{ keys: ['b'], size: 'sm' }} /><WiiKey spec={{ keys: ['minus', 'plus'], size: 'sm' }} /><WiiKey spec={{ keys: ['one', 'two'], size: 'sm' }} /><WiiKey spec={{ keys: ['home'], size: 'sm' }} /></span>{/snippet}
+    {@render cell('sm: inside strips', w2)}
+    {#snippet w3()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['up'] }} /><WiiKey spec={{ keys: ['right'] }} /><WiiKey spec={{ keys: ['down'] }} /><WiiKey spec={{ keys: ['left'] }} /><WiiKey spec={{ keys: ['up'], size: 'sm' }} /></span>{/snippet}
+    {@render cell('the D-pad’s four arms (the Efectes pads), and one sm (#46)', w3)}
+    {#snippet w4()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['one', 'two'], hold: true }} /><WiiKey spec={{ keys: ['b'], hold: true, withA: true }} /></span>{/snippet}
+    {@render cell('held: the three-quarter ring; B + A held (Suspens)', w4)}
+    {#snippet w5()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['shake'] }} /><WiiKey spec={{ keys: ['shake'], size: 'sm' }} /></span>{/snippet}
+    {@render cell('shake ×3 (D94): the remote as tall as A', w5)}
   </div>
 </section>

@@ -283,3 +283,12 @@
   gap: var(--space-3);
   max-width: 22rem;
 }
+
+/* A row of Wii keys (B5), with room for the hold rings */
+.ds-gallery__keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2);
+}

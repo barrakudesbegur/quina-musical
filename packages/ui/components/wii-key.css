@@ -1,0 +1,167 @@
+/*
+ * B5 · WiiKey (components-v2.md § 3; WiiKey.svelte). White keys with an ink line and a thin white halo (so A stays
+ * clear on Següent's orange), Nunito 900 glyphs. Sizes (the boards'): round keys (−, +, 1, 2, HOME) 26 px, A 32 px,
+ * B a 22×32 trigger; inside strips (`sm`) 22, 28 and 18×28. The D-pad arm is a cross as tall as A, with rounded
+ * arms (#46). A held key has a static three-quarter ring round it. Every size is a custom property in :where().
+ */
+
+:where(.wii-key) {
+  --wii-round: 26px;
+  --wii-a: 32px;
+  --wii-b-w: 22px;
+  --wii-b-h: 32px;
+  --wii-line: var(--line-width);
+  --wii-halo: 2.5px;
+  --wii-font: 1rem;
+  --wii-ring-inset: -9px;
+  --wii-gap: 4px;
+}
+
+:where(.wii-key[data-size='sm']) {
+  --wii-round: 22px;
+  --wii-a: 28px;
+  --wii-b-w: 18px;
+  --wii-b-h: 28px;
+  --wii-line: var(--line-width-thin, 2px);
+  --wii-halo: 1.5px;
+  --wii-font: 0.8125rem;
+  --wii-ring-inset: -6px;
+  --wii-gap: 3px;
+}
+
+.wii-key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wii-gap);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--wii-font);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.wii-key__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wii-gap);
+}
+
+.wii-key__key {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--wii-round);
+  height: var(--wii-round);
+  border: var(--wii-line) solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-white, #fff);
+  box-shadow: 0 0 0 var(--wii-halo) var(--color-white, #fff);
+}
+
+.wii-key__key[data-shape='a'] {
+  width: var(--wii-a);
+  height: var(--wii-a);
+}
+
+/* B: the trigger under the remote, rounder at its foot */
+.wii-key__key[data-shape='b'] {
+  width: var(--wii-b-w);
+  height: var(--wii-b-h);
+  border-radius: 7px 7px 10px 10px;
+}
+
+/* The D-pad: the cross is the key itself (no disc), as tall as A */
+.wii-key__key[data-shape='dpad'] {
+  width: var(--wii-a);
+  height: var(--wii-a);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.wii-key__key svg {
+  width: 55%;
+  height: 55%;
+}
+
+.wii-key__key[data-shape='dpad'] svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.wii-key__fill {
+  fill: var(--color-ink);
+}
+
+.wii-key__cross {
+  fill: var(--color-white, #fff);
+  stroke: var(--color-ink);
+  stroke-width: var(--wii-line);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke fill;
+}
+
+/* A hold: a three-quarter ring round each key, "a ring that fills" */
+.wii-key[data-hold] .wii-key__key::after {
+  content: '';
+  position: absolute;
+  inset: var(--wii-ring-inset);
+  border-radius: 999px;
+  background: conic-gradient(var(--color-ink) 0 270deg, transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+}
+
+/* The + between B and A: a line as heavy as a key's, its arms half a key tall (#11) */
+.wii-key__plus {
+  flex: none;
+  width: calc(var(--wii-round) * 0.85);
+  height: calc(var(--wii-round) * 0.85);
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-linecap: round;
+}
+
+.wii-key__plus path {
+  vector-effect: non-scaling-stroke;
+  stroke-width: var(--wii-line);
+}
+
+/* The shake: the remote shaken three times, «×3», the upright remote as tall as A (#13) */
+.wii-key__shake {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.wii-key__shake svg {
+  flex: none;
+  width: calc(var(--wii-a) * 1.06);
+  height: calc(var(--wii-a) * 1.19);
+  overflow: visible;
+}
+
+.wii-key__remote {
+  fill: var(--color-white, #fff);
+  stroke: var(--color-ink);
+  stroke-width: var(--wii-line);
+  vector-effect: non-scaling-stroke;
+}
+
+.wii-key__remote-a {
+  fill: var(--color-ink);
+}
+
+.wii-key__times {
+  font-size: 1.125em;
+}

@@ -4362,38 +4362,6 @@ kbd {
   right: 13px;
 }
 
-.wii-badge__key {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 6px;
-  border: 3px solid var(--color-ink);
-  border-radius: 999px;
-  background: var(--wii-colour);
-  /* a white halo, so A stays clear on Següent's orange (and every badge on its own colour) */
-  box-shadow: 0 0 0 2.5px #ffffff;
-}
-
-.wii-badge__key svg {
-  width: 15px;
-  height: 15px;
-  fill: var(--color-ink);
-}
-
-/* A hold: a three-quarter ring around the key, "a ring that fills" */
-.wii-badge[data-hold] .wii-badge__key::after {
-  content: '';
-  position: absolute;
-  inset: -9px;
-  border-radius: 999px;
-  background: conic-gradient(var(--color-ink) 0 270deg, transparent 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
-}
-
 .wii-badge[data-size='sm'] {
   top: 4px;
   right: 4px;
@@ -4405,96 +4373,11 @@ kbd {
   right: 8px;
 }
 
-.wii-badge[data-size='sm'] .wii-badge__key {
-  min-width: 22px;
-  height: 22px;
-  padding: 0 4px;
-  border-width: 2px;
-  box-shadow: 0 0 0 1.5px #ffffff;
-}
-
-.wii-badge[data-size='sm'] .wii-badge__key svg {
-  width: 11px;
-  height: 11px;
-}
-
-.wii-badge[data-size='sm'][data-hold] .wii-badge__key::after {
-  inset: -6px;
-}
-
 /* On a two-level button's strip: at its right end, centred */
 .wii-badge[data-place='strip'] {
   top: 50%;
   right: 12px;
   translate: 0 -50%;
-}
-
-/* The + between two keys: a line as heavy as a key's border, its arms half a key tall (#11) */
-.wii-badge__plus {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: var(--color-ink);
-  stroke-linecap: round;
-}
-
-.wii-badge__plus path {
-  vector-effect: non-scaling-stroke;
-  stroke-width: 3px;
-}
-
-.wii-badge[data-size='sm'] .wii-badge__plus {
-  width: 16px;
-  height: 16px;
-}
-
-.wii-badge[data-size='sm'] .wii-badge__plus path {
-  stroke-width: 2.25px;
-}
-
-/* B + A: the second key, a little apart */
-.wii-badge__plus + .wii-badge__key {
-  margin-left: -1px;
-}
-
-/* The shake: the remote shaken three times, "×3" (the Consola-Joc board's glyph). The upright remote is as tall as
-   a key (#13: 32 px, 22 px small) and drawn with a key's border */
-.wii-badge__shake {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-}
-
-.wii-badge__shake svg {
-  flex: none;
-  width: 34px;
-  height: 38px;
-  overflow: visible;
-}
-
-.wii-badge__remote {
-  fill: #ffffff;
-  stroke: var(--color-ink);
-  stroke-width: 3px;
-  vector-effect: non-scaling-stroke;
-}
-
-.wii-badge__remote-a {
-  fill: var(--color-ink);
-}
-
-.wii-badge__times {
-  font-size: 1.125em;
-}
-
-.wii-badge[data-size='sm'] .wii-badge__shake svg {
-  width: 23px;
-  height: 26px;
-}
-
-.wii-badge[data-size='sm'] .wii-badge__remote {
-  stroke-width: 2px;
 }
 
 /* A's badge gliding to where Pausa moved it (ANIMATIONS.md › a-glide): no pop on top */
@@ -4549,16 +4432,14 @@ kbd {
     font-size: 0.75rem;
   }
 
-  .wii-badge .wii-badge__key {
-    min-width: 22px;
-    height: 22px;
-    padding: 0 4px;
-    border-width: 2px;
-    box-shadow: 0 0 0 1.5px #ffffff;
-  }
-
-  .wii-badge[data-hold] .wii-badge__key::after {
-    inset: -6px;
+  .wii-badge .wii-key {
+    --wii-round: 22px;
+    --wii-a: 28px;
+    --wii-b-w: 18px;
+    --wii-b-h: 28px;
+    --wii-line: var(--line-width-thin, 2px);
+    --wii-halo: 1.5px;
+    --wii-ring-inset: -6px;
   }
 
   .two-level__strip-wii,
