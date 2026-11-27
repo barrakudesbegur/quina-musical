@@ -70,6 +70,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `3643c9ea` (`6652e44`, repertoire 2026): the phone drum's performance (each Spin solved in an inline Web Worker; only the ring restyled per frame; the solver's golden test). No CSP is set anywhere, so the `blob:` worker loads.
     - `7617c6af` (`feaaa2e`, repertoire 2026): the new cover 122 (Sound engine swapped a wrong Christmas best-of for the song's own album); R2 got it with D260's 40 renamed analysis files (41 blobs, the 41 old ones pruned).
     - `b488bafa` (`b4aa6fb`, repertoire 2026): Sound engine's renumber (135 songs, 66 new ids, 2 new tracks), its 135 covers and the remade temporary cards (699, `checkLabel` in card-types.json); `/cards/*` byte-identical to the data on both names.
+    - `3aa936b9` (`aa4c4d6`, repertoire 2026): Frontend's phone jank pass (the reel's attribute is now `data-phase`); the live Desgraciat run then passed against quina-dev with `QUINA_REPERTOIRE=2026` (it leaves a rehearsal Game as the current Game, never a plan).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
