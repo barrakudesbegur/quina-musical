@@ -280,6 +280,10 @@ On a show page with no journal (a replacement laptop, offline), the presenters r
 - **The plan's check:** `sideWarnings(plan, cardTypes, poolSongs?)` lists a round on a side its type lacks, a side no round plays, and a pool without songs, for Admin and the preflight.
 - **First plays (D174):** later rounds expect their first plays from their own pool's songs still unplayed.
 
+## The edition file (D116)
+
+`packages/protocol/edition.ts`: `EditionFile` is `{ v: 1, repertoire, plan, songs: [{ id, title, artist, pool }], cardTypes?, cards? }`, one JSON per edition kept in git and uploaded by hand (tools/edition). `checkEdition(doc)` is the check every reader shares: the plan as `checkGamePlan` reads it; unique song ids, each with a title, an artist and a pool; when present, each card's type in `cardTypes`, each side one its type prints, 3 lines of 4 songs from that side's pool; a round on a side its type lacks is an error, a side no round plays or a pool without songs a warning (`sideWarnings`). The cards stay optional until U68 and U75. `tools/edition/songs.ts` (`editionSongs`) reads the songs from a repertoire's songs.json.
+
 ## Public feed (phones)
 
 Players' phones get the Game from the cloud, never from the relay. The cloud builds a whitelisted projection of what it keeps (cloud/src/domain/projection.ts); `public.ts` types it, and phones and the cloud apply it with the same reducer. Defined by Platform and UI together.
