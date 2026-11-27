@@ -5,7 +5,7 @@ import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { VOLUME_DEFAULTS, checkGamePlan, replayJournal, sceneAllows, volumeDb, type JournalEntry, type SceneContext } from '@quina/protocol';
+import { AUTO_SOUNDS_DEFAULT, VOLUME_DEFAULTS, autoSoundsOf, checkGamePlan, replayJournal, sceneAllows, volumeDb, type JournalEntry, type SceneContext } from '@quina/protocol';
 import { FLOW, INTERVAL, INTRO } from '../engine/src/config.ts';
 import { checkIntervalTrack, intervalSlugs, intervalTrackProblems, type IntervalTrack } from '../engine/src/interval/tracks.ts';
 import {
@@ -463,4 +463,25 @@ test("D228: in a break the presenters pick the breaks' set or Pausa's; each brea
   h.send('intervalSet', { set: 'pausa' });
   h.show.startInterval();
   assert.equal(find(h.advance(0.05), 'intervalMusic')?.set, 'breaks');
+});
+
+test('D237: each automatic sound on or off; the runtime mutes its node; journaled and restored; the old switches still work for one deploy', () => {
+  const h = setup({ seed: 4 });
+  h.send('unlock');
+  assert.deepEqual(h.show.snapshot().game.autoSounds, AUTO_SOUNDS_DEFAULT);
+  const off = h.send('setAutoSound', { key: 'drumTicks', on: false });
+  const effect = find(off, 'volumes');
+  assert.equal(effect?.autoSounds.drumTicks, false, 'the runtime gets it with the sliders');
+  const entry = journalOf(off).find((e) => e.kind === 'settings.changed');
+  assert.equal(entry?.kind === 'settings.changed' && entry.settings.autoSounds?.drumTicks, false, 'journaled');
+  assert.deepEqual(rejected(h.dispatch({ v: 1, type: 'cmd', cmd: 'setAutoSound', reqId: 'r', key: 'shuffle', on: false })), ['invalid']);
+  // The mirrors, both ways.
+  h.send('setAutoSound', { key: 'voices', on: false });
+  assert.equal(h.show.snapshot().game.voicesOn, false);
+  h.send('setGame', { finalLapStinger: false });
+  assert.deepEqual([h.show.snapshot().game.autoSounds?.finalLap, h.show.snapshot().game.finalLapStinger], [false, false]);
+  // A restarted page takes them from the journal; a journal from before them reads the old fields.
+  const r = setup({ seed: 5, restore: h.show.record() });
+  assert.deepEqual(r.show.snapshot().game.autoSounds, { ...AUTO_SOUNDS_DEFAULT, drumTicks: false, voices: false, finalLap: false });
+  assert.deepEqual(autoSoundsOf({ finalLapStinger: false }), { ...AUTO_SOUNDS_DEFAULT, finalLap: false });
 });

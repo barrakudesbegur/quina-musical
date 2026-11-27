@@ -227,6 +227,27 @@ export type Role = (typeof ROLES)[number];
  */
 export const MUSIC_SETS = ['breaks', 'pausa', 'end'] as const;
 export type MusicSet = (typeof MUSIC_SETS)[number];
+/**
+ * The sounds the engine plays by itself, each on or off from the console (D237): the drum's border clicks, the DJ
+ * moves' risers, impacts and whooshes, the final-lap stinger, the Celebration's fanfare and impact, a failed Check's
+ * fanfare, and the automatic voice cues (D204; a round's name keeps its fanfare music, U181). Music sets stay out.
+ */
+export const AUTO_SOUNDS = ['drumTicks', 'djFx', 'finalLap', 'winFanfare', 'failFanfare', 'voices'] as const;
+export type AutoSound = (typeof AUTO_SOUNDS)[number];
+export type AutoSounds = Record<AutoSound, boolean>;
+export const isAutoSound = (value: unknown): value is AutoSound =>
+  typeof value === 'string' && (AUTO_SOUNDS as readonly string[]).includes(value);
+/** All on. */
+export const AUTO_SOUNDS_DEFAULT: Readonly<AutoSounds> = Object.freeze(Object.fromEntries(AUTO_SOUNDS.map((k) => [k, true])) as AutoSounds);
+/**
+ * A settings object's sounds: its own `autoSounds`, else (a journal from before them) its `finalLapStinger` and
+ * `voicesOn`. Always a fresh object with every key.
+ */
+export function autoSoundsOf(settings: { autoSounds?: Partial<AutoSounds> | null; finalLapStinger?: boolean; voicesOn?: boolean }): AutoSounds {
+  const own = settings.autoSounds ?? { finalLap: settings.finalLapStinger !== false, voices: settings.voicesOn !== false };
+  return { ...AUTO_SOUNDS_DEFAULT, ...Object.fromEntries(Object.entries(own).filter(([k, v]) => isAutoSound(k) && typeof v === 'boolean')) };
+}
+
 /** The sets a break can play (D228: in the Descans the presenters pick the breaks' or Pausa's); each break starts on the first. */
 export const BREAK_SETS = ['breaks', 'pausa'] as const satisfies readonly MusicSet[];
 export type BreakSet = (typeof BREAK_SETS)[number];

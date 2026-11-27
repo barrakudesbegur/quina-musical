@@ -15,7 +15,7 @@
 //   throwDuck, the throw song [throws], the doors' music [doors], the Pausa set [pausa] → voiceDuck (the music under a voice cue) ┤
 //   the voice cues (chime, fanfare, voice) → [voices] ┤→ master → [master] → headroom (MIX.headroomDb) → limiter → destination
 
-import { VOLUME_KEYS, type VolumeKey } from '@quina/protocol';
+import { AUTO_SOUNDS, AUTO_SOUNDS_DEFAULT, VOLUME_KEYS, type AutoSound, type AutoSounds, type VolumeKey } from '@quina/protocol';
 import { MIX } from '../config.ts';
 
 /** A shared parameter the plans automate (recipes.ts ParamTarget), plus the master gain and the Hold duck. */
@@ -43,6 +43,11 @@ export interface ReverbBus {
 /** A slider's node: one per key, and a second for the ones that reach two places (win, fail: music and fanfares). */
 export type VolumeNode = VolumeKey | 'winFx' | 'failFx';
 const VOLUME_NODES: readonly VolumeNode[] = [...VOLUME_KEYS, 'winFx', 'failFx'];
+/** The node each automatic sound plays through (D237): switched off, it's silent whatever its slider says. The voices
+ * are the engine's (it schedules none), so they have no node here. */
+const AUTO_SOUND_NODES: Readonly<Record<AutoSound, readonly VolumeNode[]>> = Object.freeze({
+  drumTicks: ['ticks'], djFx: ['djFx'], finalLap: ['finalLap'], winFanfare: ['winFx'], failFanfare: ['failFx'], voices: [],
+});
 /** Which nodes each slider moves. `songsParlem` is the engine's Parlem duck (show.ts parlemDb), not a node here. */
 const SLIDER_NODES: Readonly<Record<VolumeKey, readonly VolumeNode[]>> = Object.freeze({
   ...Object.fromEntries(VOLUME_KEYS.map((k) => [k, [k]])) as Record<VolumeKey, VolumeNode[]>,
@@ -238,10 +243,12 @@ export class AudioGraph {
   }
 
   /** Every slider to its percent (D139), gliding: gain = (percent / 100)², protocol volumeDb. */
-  setVolumes(volumes: Readonly<Record<VolumeKey, number>>, seconds = 0.15): void {
+  setVolumes(volumes: Readonly<Record<VolumeKey, number>>, autoSounds: Readonly<AutoSounds> = AUTO_SOUNDS_DEFAULT, seconds = 0.15): void {
+    const muted = new Set(AUTO_SOUNDS.filter((k) => !autoSounds[k]).flatMap((k) => AUTO_SOUND_NODES[k]));
     for (const key of VOLUME_KEYS) {
-      const gain = Math.max(0, volumes[key] / 100) ** 2;
+      const slider = Math.max(0, volumes[key] / 100) ** 2;
       for (const node of SLIDER_NODES[key]) {
+        const gain = muted.has(node) ? 0 : slider;
         const p = this.vol[node].gain;
         const now = this.ctx.currentTime;
         p.cancelScheduledValues(now);

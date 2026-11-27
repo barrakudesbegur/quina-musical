@@ -502,7 +502,7 @@ function apply(effect: Effect): void {
       if (effect.action === 'intensity') return drumRoll.setIntensity(effect.intensity);
       return drumRoll.release(effect.at, effect.land === true);
     case 'volumes':
-      return graph.setVolumes(effect.volumes);
+      return graph.setVolumes(effect.volumes, effect.autoSounds);
     case 'bedDuck':
       return graph.glide(graph.bedDuck.gain, effect.db, effect.seconds);
     case 'pausePlayback':

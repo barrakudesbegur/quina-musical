@@ -49,6 +49,7 @@ const RULES = {
   resumeAt: ['before', 'interval', 'after'],
   setPace: 'any',
   setGame: 'any',
+  setAutoSound: 'any',
   setVolume: 'any',
   setCardsInPlay: 'any',
   sfx: 'any',

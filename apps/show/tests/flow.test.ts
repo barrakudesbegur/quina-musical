@@ -63,7 +63,7 @@ const lastClaimId = (h: Harness) => {
 
 // ---------------------------------------------------------------------------------------- the scene rules
 test('the scene rules: what each scene accepts (the agreed table, plus `before` acting as `play`)', () => {
-  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'getUpcoming', 'setPace', 'setGame', 'setVolume', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes'];
+  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'getUpcoming', 'setPace', 'setGame', 'setAutoSound', 'setVolume', 'setCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes'];
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const CHECK: CommandName[] = ['checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [

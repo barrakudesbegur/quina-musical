@@ -7,6 +7,7 @@ import {
   PACE_LIMITS_SEC,
   SOUND_NAMES,
   CELEBRATION_MUSIC,
+  AUTO_SOUNDS,
   BREAK_SETS,
   CARD_TYPE_ID_RE,
   PAD_HOLD_EFFECTS,
@@ -84,15 +85,19 @@ export const COMMANDS = Object.freeze({
     phaseOverride: { type: 'phase', optional: true, nullable: true },
     roundsTotal: { type: 'integer', optional: true, min: 1, max: 20 },
     holdMusicAfterSec: { type: 'number', optional: true, min: 0, max: 3600 },
+    /** Kept for one deploy while the console moves to `setAutoSound` (D237): sets `autoSounds.finalLap`. */
     finalLapStinger: { type: 'boolean', optional: true },
     /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
      * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
     holdMusicOn: { type: 'boolean', optional: true },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
-    /** The automatic voice cues on or off for the night (D204). */
+    /** The automatic voice cues on or off for the night (D204). Kept for one deploy while the console moves to
+     * `setAutoSound` (D237): sets `autoSounds.voices`. */
     voicesOn: { type: 'boolean', optional: true },
   },
+  /** One of the sounds the engine plays by itself on or off (D237, AUTO_SOUNDS); journaled with the settings. */
+  setAutoSound: { key: { type: 'string', oneOf: AUTO_SOUNDS }, on: { type: 'boolean' } },
   /** Stop the voice cue playing now (D204): the music under it comes back up. */
   voiceSkip: {},
   /**
