@@ -132,7 +132,7 @@
           <RenameSheet
             {card}
             others={app.data.cards.filter((c) => c.id !== card.id)}
-            onsave={(name, identity) => app.editCard(card.id, name, identity)}
+            onsave={(to, name, identity) => app.editCard(card.id, to, name, identity)}
             onclose={closeTop}
           />
         {/if}

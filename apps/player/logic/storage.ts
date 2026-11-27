@@ -122,6 +122,22 @@ export function setIdentity(data: PlayerData, id: number, identity: number): Pla
   return { ...data, cards: data.cards.map((c) => (c.id === id ? { ...c, color: identity } : c)) };
 }
 
+export type RenumberResult = { ok: true; data: PlayerData } | { ok: false; reason: 'invalid' | 'duplicate' | 'unknown' };
+
+/**
+ * The card's edit drawer gives it another number (a typo, or the QR of the right card): the card keeps its place, its
+ * name and its icon. Refused when the number can't be a card's, is another of the player's cards, or isn't printed
+ * (`printed`, once the catalogue has loaded).
+ */
+export function renumberCard(data: PlayerData, id: number, to: number, printed: { has(id: number): boolean } | null = null): RenumberResult {
+  if (to === id) return { ok: true, data };
+  if (!validId(to)) return { ok: false, reason: 'invalid' };
+  if (data.cards.some((c) => c.id === to)) return { ok: false, reason: 'duplicate' };
+  if (printed && !printed.has(to)) return { ok: false, reason: 'unknown' };
+  if (!data.cards.some((c) => c.id === id)) return { ok: false, reason: 'invalid' };
+  return { ok: true, data: { ...data, cards: data.cards.map((c) => (c.id === id ? { ...c, id: to } : c)) } };
+}
+
 export const removeCard = (data: PlayerData, id: number): PlayerData => ({ ...data, cards: data.cards.filter((c) => c.id !== id) });
 
 /** Moves a card to place `to` (0-based, clamped) in the player's list: the home screen shows the cards in this order. */

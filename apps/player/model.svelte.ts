@@ -25,6 +25,7 @@ import {
   noteGame,
   removeCard,
   renameCard,
+  renumberCard,
   setAraView,
   setIdentity,
   setSounds,
@@ -305,10 +306,13 @@ export class PlayerApp {
     this.closeTop();
   }
 
-  /** The card's sheet: its name and its icon. */
-  editCard(id: number, name: string, identity: number): void {
-    this.saveData(setIdentity(renameCard(this.data, id, name), id, identity));
+  /** The card's edit drawer («Editar»): its number, its name and its icon. Returns the error to show, or null. */
+  editCard(id: number, to: number, name: string, identity: number): string | null {
+    const moved = renumberCard(this.data, id, to, this.catalog?.cards ?? null);
+    if (!moved.ok) return moved.reason === 'duplicate' ? S.addError.duplicate(to) : moved.reason === 'unknown' ? S.addError.unknown(to) : S.addError.invalid;
+    this.saveData(setIdentity(renameCard(moved.data, to, name), to, identity));
     this.closeTop();
+    return null;
   }
 
   toggleSounds(): void {

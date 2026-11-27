@@ -16,6 +16,7 @@ import {
   readData,
   removeCard,
   renameCard,
+  renumberCard,
   setIdentity,
   setSounds,
   soundsOn,
@@ -197,4 +198,23 @@ test('a card without a name is shown by its number only, never a generated name 
     assert.equal(data.cards[0]?.name, null);
     assert.equal(cardLabel(data.cards[0]!), '#123');
   }
+});
+
+test('the edit drawer gives a card another number: it keeps its place, name and icon; refusals say why', () => {
+  let data = emptyData('2026');
+  for (const id of [12, 57]) {
+    const r = addCard(data, id, 0);
+    assert.ok(r.ok);
+    data = r.data;
+  }
+  data = renameCard(data, 12, 'Àvia');
+  const moved = renumberCard(data, 12, 123);
+  assert.ok(moved.ok);
+  assert.deepEqual(moved.data.cards.map((c) => c.id), [123, 57]);
+  assert.equal(moved.data.cards[0]?.name, 'Àvia');
+  assert.equal(moved.data.cards[0]?.color, data.cards[0]?.color);
+  assert.deepEqual(renumberCard(data, 12, 57), { ok: false, reason: 'duplicate' });
+  assert.deepEqual(renumberCard(data, 12, 0), { ok: false, reason: 'invalid' });
+  assert.deepEqual(renumberCard(data, 12, 124, new Set([123])), { ok: false, reason: 'unknown' });
+  assert.ok(renumberCard(data, 12, 12).ok);
 });

@@ -20,7 +20,8 @@ export const PLAYER = {
   /** The add-card pad's «Desar»: lit once the number is a card. */
   save: { color: 'green', size: 'm', icon: 'check', label: S.save, sound: 'submit' },
   /** The rename sheet's «Desar». */
-  renameSave: { color: 'orange', size: 'l', label: S.save, sound: 'submit' },
+  /** The edit drawer's «Desar»: green, as «Afegir cartró»'s (the user's phone test, 27 Nov). */
+  renameSave: { color: 'green', size: 'l', label: S.save, sound: 'submit' },
   renameDiscard: { color: 'navy', size: 'l', label: S.renameDiscard },
   /** «Escriure el número» under the camera (D141). */
   typeNumber: { color: 'orange', size: 's', label: S.qrWrite },
