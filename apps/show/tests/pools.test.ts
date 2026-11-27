@@ -1,4 +1,4 @@
-// Pools and card sides (step A, D178, D193): a repertoire's songs each belong to a pool; a card type's sides each play
+// Pools and card sides (step A, D178, D193, D226): a repertoire's songs each belong to a pool; a card type's sides each play
 // a pool (card-types.json); a round plays one side, so its Queue is a Shuffle of that side's pool and only that side's
 // lines count. The plan, the commands, the journal, the record and the resume token carry the side.
 import test from 'node:test';
@@ -15,18 +15,21 @@ import { setup, songs, type Harness } from './support/harness.ts';
 
 const TYPES: CardTypeSides[] = [
   { type: 'normal', name: 'Normal', sides: [{ side: 1, pool: '1', label: '1-5' }, { side: 2, pool: '2', label: '6-10' }] },
-  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1' }] },
+  // D226: the especial card's side 1 (pool 1) plays the Desgraciat, its side 2 (pool 2) the Especial; card-types.json's labels.
+  { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciada' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
 ];
 
 test('a card type\'s sides and pools, and the label the Check shows (D163)', () => {
   assert.deepEqual(cardTypeSides(TYPES[0]).map((s) => [s.side, s.pool]), [[1, '1'], [2, '2']]);
   assert.deepEqual(cardTypeSides({ type: 'old' }), [{ side: 1, pool: '1' }], 'a type from before sides');
   assert.equal(sidePool(TYPES, 'normal', 2), '2');
-  assert.equal(sidePool(TYPES, 'especial', 2), null, 'no such side');
+  assert.equal(sidePool(TYPES, 'especial', 2), '2', "the especial card's side 2 (D226)");
+  assert.equal(sidePool(TYPES, 'especial', 3), null, 'no such side');
   assert.equal(sidePool(TYPES, 'nope', 1), null, 'an unknown type');
   assert.equal(sidePool([], 'normal', 1), '1', 'without card-types.json: side 1 on pool 1');
   assert.equal(sidePool([], 'normal', 2), null);
-  assert.deepEqual([sideLabel(TYPES, 'normal', 1), sideLabel(TYPES, 'normal', 2), sideLabel(TYPES, 'especial', 1)], ['Normal 1-5', 'Normal 6-10', 'Especial']);
+  assert.deepEqual([sideLabel(TYPES, 'normal', 1), sideLabel(TYPES, 'normal', 2)], ['Normal 1-5', 'Normal 6-10']);
+  assert.equal(sideLabel([{ type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1' }] }], 'especial', 1), 'Especial', 'one side: no side in the label');
   assert.ok(isPoolId('1') && isPoolId('2') && !isPoolId('') && !isPoolId('Pool 1'));
 });
 
@@ -68,7 +71,7 @@ test('the resume token carries a side other than 1 as C<n>', () => {
   assert.equal(parseResumeToken(`${text.slice(0, -1)}0`), null, 'side 0 is not a side');
 });
 
-/** The test songs split into two pools (the first 38 and the rest), and two-sided cards drawn from them. */
+/** The test songs split into two pools (the first 38 and the rest), and two-sided cards drawn from them: normal 1–40, especial 41–60. */
 function twoPools(seed = 3): { repertoire: typeof songs; cards: PrintedCard[]; pool1: Set<number>; pool2: Set<number> } {
   const repertoire = songs.map((s, i) => ({ ...s, pool: i < 38 ? '1' : '2' }));
   const pool1 = new Set(repertoire.filter((s) => s.pool === '1').map((s) => s.id));
@@ -80,8 +83,8 @@ function twoPools(seed = 3): { repertoire: typeof songs; cards: PrintedCard[]; p
     while (out.length < 12) out.push(...left.splice(Math.floor(rng() * left.length), 1));
     return [out.slice(0, 4), out.slice(4, 8), out.slice(8, 12)];
   };
-  const cards: PrintedCard[] = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1, type: 'normal', sides: [{ side: 1, lines: pick([...pool1]) }, { side: 2, lines: pick([...pool2]) }],
+  const cards: PrintedCard[] = Array.from({ length: 60 }, (_, i) => ({
+    id: i + 1, type: i < 40 ? 'normal' : 'especial', sides: [{ side: 1, lines: pick([...pool1]) }, { side: 2, lines: pick([...pool2]) }],
   }));
   return { repertoire, cards, pool1, pool2 };
 }
@@ -131,7 +134,7 @@ dataTest('a side its card type lacks is refused; the plan gives a round its side
   const { repertoire, cards, pool1 } = twoPools();
   const h = setup({ seed: 4, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-40', settings: { autoAdvance: false } });
   h.send('unlock');
-  const out = h.send('roundIntro', { number: 2, kind: 'special', cardType: 'especial', side: 2 });
+  const out = h.send('roundIntro', { number: 2, kind: 'special', cardType: 'especial', side: 3 });
   assert.deepEqual(out.flatMap((e) => (e.type === 'reject' ? [e.reason] : [])), ['invalid']);
   // Side 1 plays pool 1.
   h.send('roundIntro', { number: 2, kind: 'normal', cardType: 'normal' });
@@ -162,4 +165,61 @@ dataTest('first plays per pool (D174, D178): a round on a new pool starts with a
   assert.deepEqual(Object.keys(left).sort(), ['1', '2']);
   assert.equal(left['2'].unplayed, left['2'].songs, 'nothing of pool 2 is played in a pool 1 round');
   assert.ok(left['1'].unplayed < left['1'].songs);
+});
+
+/** 2026's night (D192, D193, D226): Quines 1–5 on side 1, the Desgraciat on the especial card's side 1, the Descans,
+ * Quines 6–10 on side 2, and the Especial on the especial card's side 2. Each pool plays six rounds. */
+function night2026() {
+  const r = (number: number, kind: string, side: number) => ({ number, kind, side, line: [], bingo: [] });
+  const rounds = [
+    ...[1, 2, 3, 4, 5].map((n) => r(n, 'normal', 1)),
+    r(6, 'desgraciat', 1),
+    ...[7, 8, 9, 10, 11].map((n) => r(n, 'normal', 2)),
+    r(12, 'special', 2),
+  ];
+  return checkGamePlan({
+    v: 3, edition: '26', title: 'Q', prizeReveal: 'perRound', sponsors: [], rounds,
+    schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3 }, cheatSheet: { claimRules: [], specialRoundRules: [] },
+  });
+}
+
+dataTest("the two-sided especial card (D226): the Desgraciat plays its side 1 on pool 1, the Especial its side 2 on pool 2", () => {
+  const { repertoire, cards, pool1, pool2 } = twoPools();
+  const checked = night2026();
+  assert.ok(checked.ok);
+  assert.deepEqual(checked.plan.rounds.map((x) => [x.cardType, x.side]).slice(4, 7), [['normal', 1], ['especial', 1], ['normal', 2]]);
+  assert.deepEqual(sideWarnings(checked.plan, TYPES, { 1: pool1.size, 2: pool2.size }), [], 'every side of both cards plays');
+  const especialOnSide1 = { rounds: checked.plan.rounds.map((x) => (x.kind === 'special' ? { ...x, side: 1 } : x)) };
+  assert.deepEqual(sideWarnings(especialOnSide1, TYPES).map((w) => w.message), ['no round plays side 2 of card type "especial"']);
+
+  const especial = cards.filter((c) => c.type === 'especial').map((c) => c.id);
+  // Each special round from the plan alone: the command names neither the card type nor the side.
+  const play = (number: number, kind: 'desgraciat' | 'special') => {
+    const h = setup({ seed: 8, songs: repertoire, cards, cardTypes: TYPES, cardsInPlay: '1-60', settings: { autoAdvance: false } });
+    h.send('unlock');
+    h.show.setPlan(checked.plan);
+    h.send('roundIntro', { number, kind });
+    h.send('newRound');
+    h.advance(FLOW.shuffleSec + 0.1);
+    return h;
+  };
+  const faces = (h: Harness, pool: Set<number>) =>
+    h.show.phaseModel.valid.every((c) => c.lines.flat().every((id) => pool.has(id as number)));
+
+  const d = play(6, 'desgraciat');
+  assert.deepEqual([d.show.round.cardType, d.show.round.side, d.show.round.pool], ['especial', 1, '1']);
+  assert.ok(d.show.queue.length === pool1.size && d.show.queue.every((id) => pool1.has(id)), 'the Queue is a Shuffle of pool 1');
+  assert.deepEqual(d.show.phaseModel.valid.map((c) => c.id), especial, 'only the especial cards stand');
+  assert.ok(faces(d, pool1), "their side 1's songs count");
+
+  const e = play(12, 'special');
+  assert.deepEqual([e.show.round.cardType, e.show.round.side, e.show.round.pool], ['especial', 2, '2']);
+  assert.ok(e.show.queue.length === pool2.size && e.show.queue.every((id) => pool2.has(id)), 'the Queue is a Shuffle of pool 2');
+  assert.deepEqual(e.show.phaseModel.valid.map((c) => c.id), especial);
+  assert.ok(faces(e, pool2), "their side 2's songs count");
+  e.send('next');
+  e.until(() => e.show.status === 'playing');
+  e.send('claim', { cardId: especial[0], kind: 'line' });
+  const check = e.show.snapshot().check;
+  assert.deepEqual([check?.cardId, check?.cardType, check?.side], [especial[0], 'especial', 2], "the Check reads the especial card's side 2");
 });

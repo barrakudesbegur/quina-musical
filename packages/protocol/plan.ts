@@ -58,8 +58,9 @@ export interface RoundPlan {
    */
   cardType: string;
   /**
-   * The side of the card this round plays (D178, D193: the normal card's side 1 plays Pool 1 in Quines 1–5, side 2 Pool 2 in Quines 6–10): only its
-   * lines count, and its pool (card-types.json) is the Queue's songs. Absent means 1 (roundSide).
+   * The side of the card this round plays (D178, D193: the normal card's side 1 plays Pool 1 in Quines 1–5, side 2 Pool 2 in Quines 6–10; D226: the
+   * especial card's side 1 plays Pool 1 in the Desgraciat, side 2 Pool 2 in the Especial): only its lines count, and its pool (card-types.json) is
+   * the Queue's songs. Absent means 1 (roundSide).
    */
   side?: number;
   line: PrizeBundle;
