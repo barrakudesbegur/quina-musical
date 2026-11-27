@@ -15,6 +15,7 @@
   import type { WiiController } from '../console/wii/controller.svelte.ts';
   import { PLAYER } from '../player/actions.ts';
   import StatusSections from './StatusSections.svelte';
+  import CardsSongs from './sections/CardsSongs.svelte';
 
   let { density, theme }: { density: 'console' | 'phone' | 'projector'; theme: 'light' | 'dark' } = $props();
 
@@ -266,5 +267,6 @@
     <p class="ds-gallery__note">Every family that takes a card colour shows both here (the K helper’s cards first).</p>
   </section>
 
+  {#if !projector}<CardsSongs {phone} {cell} />{/if}
   <StatusSections {density} />
 </div>

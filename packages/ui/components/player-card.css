@@ -26,7 +26,12 @@
   box-shadow: 0 2px 0 var(--color-line);
 }
 
-/* "#123" ends the band when there's no count; with one, the number keeps its place and the pill follows it. */
+/* "#123" ends the band when there's no count; with one, the number keeps its place and the pill follows it on the
+   same line: a long name wraps inside the title, never the pill onto a line of its own. */
+.player-card__header:has(.player-card__count) {
+  flex-wrap: nowrap;
+}
+
 .player-card__header:has(.player-card__count) .player-card__title {
   flex: 1 1 auto;
 }

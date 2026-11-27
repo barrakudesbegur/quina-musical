@@ -31,7 +31,8 @@ export const CELL_LOOKS = {
   marked: { cover: 'played' },
   near: { tint: true },
   crossed: { cover: 'played' },
-  idle: { cover: 'faded' },
+  // The surface fades the whole cell or row that doesn't count (the console's cell, the projector's row): nothing more.
+  idle: {},
   pending: {},
   // #78: quick to spot, clearly not played, the cover still recognisable: desaturated and dimmed, a dashed grey
   // ring, the private mark dashed in the centre.

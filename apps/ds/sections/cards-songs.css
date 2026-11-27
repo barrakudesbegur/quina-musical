@@ -1,0 +1,74 @@
+/* The gallery's cards and songs section (development only): its own frames. */
+.ds-gallery__grid--cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+
+.ds-gallery__cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: var(--space-3);
+  list-style: none;
+}
+
+.ds-gallery__cells.card-grid {
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 6.5rem));
+  background: var(--color-paper);
+  border-radius: var(--radius-lg);
+}
+
+.ds-gallery__cellwrap {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.ds-gallery__bare {
+  display: contents;
+  list-style: none;
+}
+
+.ds-gallery__caption {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-wrap: pretty;
+}
+
+.ds-gallery__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.ds-gallery__row--end {
+  align-items: end;
+}
+
+.ds-gallery__stack {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.ds-gallery__band-card {
+  --mc-width: 9rem;
+}
+
+.ds-gallery__night {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-night);
+}
+
+.ds-gallery__cells.check-grid {
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 8rem));
+}
+
+/* Narrow frames, so the one-line layouts show their ellipsis. */
+.ds-gallery__narrow-tile {
+  max-width: 17rem;
+}

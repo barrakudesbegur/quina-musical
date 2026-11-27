@@ -20,7 +20,7 @@
 
 :where([data-density='phone'] .card-cell) {
   --cell-ring-w: 3px;
-  --cell-radius: 0.625rem;
+  --cell-radius: calc(var(--radius-md) - 3px); /* the cover, concentric with the cell */
   --cell-line: 2.5px;
 }
 
