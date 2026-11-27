@@ -55,6 +55,7 @@
 </section>
 
 <style>
+  @layer app {
   .logo-library {
     display: grid;
     gap: var(--space-3);
@@ -95,5 +96,6 @@
   .logo-library__name {
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
+  }
   }
 </style>

@@ -6,6 +6,7 @@
  * owner's name) overlaps its foot (#54). Every size is a custom property in :where().
  */
 
+@layer components {
 :where(.icon-picker) {
   --picker-columns: 5;
   --picker-chip: 3.25rem;
@@ -169,4 +170,5 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
+}
 }

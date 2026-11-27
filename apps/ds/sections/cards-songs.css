@@ -1,4 +1,6 @@
 /* The gallery's cards and songs section (development only): its own frames. */
+
+@layer app {
 .ds-gallery__grid--cards {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
 }
@@ -78,4 +80,5 @@
 /* Narrow frames, so the one-line layouts show their ellipsis. */
 .ds-gallery__narrow-tile {
   max-width: 17rem;
+}
 }

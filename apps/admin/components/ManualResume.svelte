@@ -122,6 +122,7 @@
 </section>
 
 <style>
+  @layer app {
   .manual-resume__code {
     font-family: var(--font-mono, ui-monospace, monospace);
     text-transform: uppercase;
@@ -161,5 +162,6 @@
   }
   .manual-resume__game-id {
     font-weight: var(--font-weight-strong);
+  }
   }
 </style>

@@ -6,6 +6,7 @@
  * (modern-web-guidance `slider`). Every size is a custom property in :where().
  */
 
+@layer components {
 :where(.slider) {
   --slider-track: 10px;
   --slider-line: var(--line-width-thin, 2px);
@@ -223,4 +224,5 @@
   font-size: 0.6875rem;
   font-weight: 900;
   white-space: nowrap;
+}
 }

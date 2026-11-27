@@ -4,6 +4,7 @@
  * hold-hint. Every size is a custom property in :where(), so an app's context tunes it without restyling the parts.
  */
 
+@layer components {
 .long-press {
   position: relative;
   display: flex;
@@ -232,4 +233,5 @@
   white-space: nowrap;
   -webkit-text-stroke: 0;
   text-shadow: none;
+}
 }

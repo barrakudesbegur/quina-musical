@@ -1,4 +1,6 @@
 /* The gallery's buttons family (sections/Buttons.svelte): only the specimens' frames. */
+
+@layer app {
 .ds-buttons__row {
   display: flex;
   flex-wrap: wrap;
@@ -45,4 +47,5 @@
 .ds-buttons .ds-hint {
   --icon-button-size: 3rem;
   --icon-button-icon: 1.5rem;
+}
 }

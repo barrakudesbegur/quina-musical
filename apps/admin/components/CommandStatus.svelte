@@ -18,6 +18,7 @@
 {/if}
 
 <style>
+  @layer app {
   .command-status {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
@@ -26,5 +27,6 @@
   .command-status[data-status='offline'],
   .command-status[data-status='noShow'] {
     color: var(--color-accent);
+  }
   }
 </style>

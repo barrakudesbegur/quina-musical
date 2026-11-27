@@ -6,6 +6,7 @@
  * (modern-web-guidance: animate-to-from-top-layer). Every size is a custom property in :where().
  */
 
+@layer components {
 /* ---- the phone's scale, the default: a small paper card (M13 ②) ---------------------------------------------- */
 :where(.dialog) {
   --dialog-width: 20rem;
@@ -206,4 +207,5 @@
 
 :where([data-density='console'] .dialog__actions .button) {
   --button-label-size: var(--text-lg);
+}
 }

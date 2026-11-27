@@ -77,6 +77,7 @@
 {/if}
 
 <style>
+  @layer app {
   /* «Salta la cançó» over the Descans' picker, at the panel's end; the picker as wide as the button. */
   .interval-music__side {
     display: flex;
@@ -109,5 +110,6 @@
   }
   .interval-music__skip {
     flex: none;
+  }
   }
 </style>

@@ -24,6 +24,7 @@
  * Browsers: the latest Chrome and Safari only (D219).
  */
 
+@layer resources {
 /* ---- R1: rings ------------------------------------------------------------------------------------------------
    One even gap (--ring-gap) between the control and its ring on all four sides, the 3D edge and the hard shadow
    included, drawn over the neighbours (behind nothing). A pseudo-element, not an outline, so it is round on every
@@ -344,4 +345,5 @@
 
 .ds-prose {
   text-wrap: pretty;
+}
 }

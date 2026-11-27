@@ -76,6 +76,7 @@
 </section>
 
 <style>
+  @layer app {
   .resume__code {
     display: block;
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -94,5 +95,6 @@
   }
   .resume__preview {
     font-weight: var(--font-weight-strong);
+  }
   }
 </style>

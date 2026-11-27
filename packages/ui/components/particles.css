@@ -4,6 +4,8 @@
  * the failed Check's red beams and the finale's lights (the mask was repeated five times). Its place, size and motion
  * are the scene's. Variables in :where().
  */
+
+@layer components {
 :where(.ds-rays) {
   --rays-strength: 26%;
   --rays-step: 8deg;
@@ -23,4 +25,5 @@
 /* the failed Check's beams: the error red #E8363D, as every ✗ (U175 item 4, D211) */
 .ds-rays[data-color='red'] {
   --palette-solid: var(--color-red);
+}
 }

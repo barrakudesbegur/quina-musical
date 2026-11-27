@@ -64,6 +64,7 @@
 </div>
 
 <style>
+  @layer components {
   .wii-remote {
     --wii-height-used: var(--wii-height, 22rem);
     display: flex;
@@ -98,5 +99,6 @@
   .wii-remote__letter {
     font-family: var(--font-display, 'Londrina Solid', system-ui, sans-serif);
     font-weight: 900;
+  }
   }
 </style>

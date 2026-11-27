@@ -123,6 +123,7 @@
 </section>
 
 <style>
+  @layer app {
   .cards-add__now {
     display: flex;
     flex-wrap: wrap;
@@ -161,5 +162,6 @@
     from {
       opacity: 0;
     }
+  }
   }
 </style>

@@ -12,6 +12,7 @@
  * 1440×1080 box with the scenes · the link dot. JS sets --box-x/-y/-scale and --band-top/-h (screen px).
  */
 
+@layer app {
 /* The drum's band (screen px, set by JS) glides when the Desgraciat's finale shrinks it (`finale-enter`). */
 @property --band-top {
   syntax: '<length>';
@@ -197,6 +198,10 @@
   letter-spacing: normal;
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 .stage-root *,
 .stage-root *::before,
 .stage-root *::after {
@@ -214,6 +219,9 @@
   display: block;
   max-width: 100%;
 }
+}
+
+@layer app {
 
 .stage-root [hidden] {
   display: none !important;
@@ -508,6 +516,10 @@
   font-size: var(--stage-text-md);
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 .qr {
   display: grid;
   gap: var(--space-3);
@@ -541,6 +553,9 @@
 .qr__ink {
   fill: var(--color-text-on-paper);
 }
+}
+
+@layer app {
 
 /* ------------------------------------------------------------------------------------------ before */
 /* The edition's name on top; the night's preview (one band per card type, colour-matched) and the start time
@@ -3248,4 +3263,5 @@
   .finale[data-anim='finale-safe'] .finale__light {
     animation: none;
   }
+}
 }

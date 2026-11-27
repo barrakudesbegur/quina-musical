@@ -74,6 +74,7 @@
 </section>
 
 <style>
+  @layer app {
   .game-status__facts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -92,5 +93,6 @@
   .game-controls__block {
     display: grid;
     gap: var(--space-2);
+  }
   }
 </style>

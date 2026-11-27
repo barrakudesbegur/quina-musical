@@ -2,6 +2,8 @@
  * D3 · TypeSideLabel (TypeSideLabel.svelte): a panel with the type's mini card and its label in Londrina caps; the
  * Check's ring (green or red, in the palette) and its corner badge. Sizes by density, each in :where().
  */
+
+@layer components {
 :where(.type-side-label) {
   --tsl-border: var(--line-width-bold);
   --tsl-radius: var(--radius-panel, 1.125rem);
@@ -82,4 +84,5 @@
 .type-side-label__badge .icon {
   width: 58%;
   height: 58%;
+}
 }

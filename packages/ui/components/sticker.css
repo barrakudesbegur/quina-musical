@@ -13,6 +13,7 @@
  * Every size is a variable in :where(), so a scene sets them.
  */
 
+@layer components {
 /* ---- StickerTitle ---------------------------------------------------------------------------------------------- */
 :where(.sticker-title) {
   --st-size: 4.75rem;
@@ -132,4 +133,5 @@
 /* one line: the plate grows sideways */
 .plate > .sticker-title {
   white-space: nowrap;
+}
 }

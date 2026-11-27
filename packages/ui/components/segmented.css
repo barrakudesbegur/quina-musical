@@ -5,6 +5,7 @@
  * containing block must come first in tree order. Every size is a custom property in :where().
  */
 
+@layer components {
 /* ---- the console's scale, the default ------------------------------------------------------------------------- */
 :where(.segmented) {
   --segment-height: var(--tap-min);
@@ -188,4 +189,5 @@
   font-size: 0.75em;
   font-weight: 800;
   opacity: 0.8;
+}
 }

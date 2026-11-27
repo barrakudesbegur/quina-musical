@@ -2,6 +2,7 @@
    «Instal·la l'app» and the iPhone's steps. Moving parts only under no-preference and the phone's full motion
    (D209 principle 5); the fades run either way. */
 
+@layer app {
 /* ---- the home's «Instal·la l'app» (InstallPrompt) ---- */
 .install-prompt {
   display: flex;
@@ -131,4 +132,5 @@
     font-weight: var(--font-weight-strong);
     color: var(--color-gold-light);
   }
+}
 }

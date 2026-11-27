@@ -71,6 +71,7 @@
 </svg>
 
 <style>
+  @layer app {
   .card-mark {
     display: block;
     width: 100%;
@@ -168,5 +169,6 @@
   .card-mark__jewel {
     fill: var(--color-red);
     stroke-width: 1.4;
+  }
   }
 </style>

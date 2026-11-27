@@ -63,6 +63,7 @@
 </section>
 
 <style>
+  @layer app {
   .logo-bulk {
     display: grid;
     gap: var(--space-3);
@@ -81,5 +82,6 @@
   }
   .logo-bulk__list li[data-state='failed'] .logo-bulk__state {
     color: var(--color-danger);
+  }
   }
 </style>

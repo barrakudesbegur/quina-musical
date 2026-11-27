@@ -4,6 +4,8 @@
  * (R11, #25). Every size is a custom property in :where(), so a context (the pace row, the finale's head, the menu)
  * tunes it by variables, never by restyling the parts.
  */
+
+@layer components {
 :where(.mini-button) {
   --ds-radius: var(--radius-md);
   --ds-border: var(--line-width);
@@ -109,4 +111,5 @@
   right: -9px;
   line-height: 1;
   pointer-events: none;
+}
 }

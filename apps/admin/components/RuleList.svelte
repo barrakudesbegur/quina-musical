@@ -22,6 +22,7 @@
 </fieldset>
 
 <style>
+  @layer app {
   .rule-list {
     display: grid;
     gap: var(--space-3);
@@ -38,5 +39,6 @@
     grid-template-columns: 1fr auto;
     gap: var(--space-2);
     align-items: end;
+  }
   }
 </style>

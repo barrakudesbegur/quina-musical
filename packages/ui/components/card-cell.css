@@ -8,6 +8,8 @@
  *   --cell-radius     the cover's corner radius   --cell-badge     the badge's size (of the cover's width)
  *   --cell-line       the badge and tag outline   --cell-tag-size  the tag's text size
  */
+
+@layer components {
 :where(.card-cell) {
   --cell-ring-w: 4px;
   --cell-ring-gap: 0px;
@@ -217,4 +219,4 @@
   line-clamp: var(--cell-title-lines, 2);
   transition: opacity var(--dur-stamp, 300ms) var(--ease-out);
 }
-
+}

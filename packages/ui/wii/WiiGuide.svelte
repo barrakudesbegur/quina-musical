@@ -53,6 +53,7 @@
 </div>
 
 <style>
+  @layer components {
   .wii-guide {
     display: flex;
     flex-wrap: wrap;
@@ -132,5 +133,6 @@
     color: var(--wii-muted, inherit);
     font-size: 0.875em;
     font-weight: 700;
+  }
   }
 </style>

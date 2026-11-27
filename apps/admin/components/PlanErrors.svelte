@@ -18,6 +18,7 @@
 {/if}
 
 <style>
+  @layer app {
   .plan-errors {
     display: grid;
     gap: var(--space-2);
@@ -27,5 +28,6 @@
   }
   .plan-errors__help {
     font-size: var(--text-xs);
+  }
   }
 </style>

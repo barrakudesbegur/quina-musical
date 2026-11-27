@@ -9,6 +9,7 @@
  * Every size is a custom property in :where().
  */
 
+@layer components {
 :where(.tabs) {
   --tabs-line: var(--line-width-bold);
   --tabs-idle-h: 42px;
@@ -265,4 +266,5 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+}
 }

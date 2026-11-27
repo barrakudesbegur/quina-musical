@@ -18,6 +18,7 @@
  * through `data-color`, chosen by its preset in actions.ts (D210): no concept tokens here.
  */
 
+@layer app {
 .console {
   --line-width-thin: 2px; /* inner details (the 3px --line-width is for chips and small buttons) */
   --shadow-drop: 0 4px 0 var(--color-ink); /* the sticker's hard shadow under panels and buttons */
@@ -119,4 +120,5 @@
   /* The menu's danger zone (Consola-Menu, light) */
   --color-danger-zone: #ffe1e1;
   --color-danger-text: #c4252c;
+}
 }

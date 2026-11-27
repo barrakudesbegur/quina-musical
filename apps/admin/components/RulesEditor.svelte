@@ -20,9 +20,11 @@
 </section>
 
 <style>
+  @layer app {
   .rules__lists {
     display: grid;
     gap: var(--space-4);
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  }
   }
 </style>

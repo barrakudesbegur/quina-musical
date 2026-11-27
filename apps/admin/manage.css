@@ -4,6 +4,7 @@
  * styles that are not shared live in each component.
  */
 
+@layer app {
 .manage {
   min-height: 100vh;
   display: grid;
@@ -241,4 +242,5 @@ a {
   .no-print {
     display: none !important;
   }
+}
 }

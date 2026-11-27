@@ -5,6 +5,7 @@
  * :where(), so a context (the «Seguides» strip, a dialog's row) tunes it by setting variables.
  */
 
+@layer components {
 /* ---- the console's scale, the default (C3, C14: a 50×30 track, a 22 px knob) ------------------------------------ */
 :where(.switch) {
   --switch-track-w: 50px;
@@ -180,4 +181,5 @@
 .switch__icon > svg {
   width: 1.375em;
   height: 1.375em;
+}
 }

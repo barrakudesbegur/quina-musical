@@ -3,6 +3,8 @@
  * (the stem of the label beside it). Colours from the palette tokens; the context sets the box (width, height) and
  * any tilt.
  */
+
+@layer components {
 .sticker-icon {
   overflow: visible;
 }
@@ -92,4 +94,4 @@
   fill: none;
   stroke: rgb(255 255 255 / 0.7);
 }
-
+}

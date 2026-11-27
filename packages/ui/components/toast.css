@@ -7,6 +7,8 @@
  *   paper  paper, the icon in the colour's text shade, a hairline in the colour's pale shade: a rejection, a notice.
  * Placement is the app's (the phone's slot just under the garland, the console's stack above the cluster).
  */
+
+@layer components {
 :where(.toast) {
   --toast-radius: 1rem;
   --toast-pad: 0.5rem 1rem 0.5rem 0.75rem;
@@ -108,4 +110,5 @@
     opacity: 0;
     translate: 0 1rem;
   }
+}
 }

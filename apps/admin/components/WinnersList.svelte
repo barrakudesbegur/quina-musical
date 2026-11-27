@@ -97,6 +97,7 @@
 </section>
 
 <style>
+  @layer app {
   .winners__scroll {
     overflow-x: auto;
   }
@@ -122,5 +123,6 @@
   .winners__action {
     display: grid;
     gap: var(--space-1);
+  }
   }
 </style>

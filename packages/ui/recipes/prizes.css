@@ -4,6 +4,7 @@
  * sponsor is read out).
  */
 
+@layer recipes {
 /* ---- Ticket (the console's «Premis» tab) --------------------------------------------------------------------- */
 .ticket__title {
   font-family: var(--font-display);
@@ -137,4 +138,5 @@
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
   background: var(--color-white);
+}
 }

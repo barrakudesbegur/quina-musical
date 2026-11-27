@@ -141,6 +141,7 @@
 </article>
 
 <style>
+  @layer app {
   /* The Quina Desgraciada's one prize names itself in its cell ("Premi de l'últim dempeus"): it has no Line. */
   .cheat-sheet__label {
     display: block;
@@ -269,5 +270,6 @@
       --wii-height: 15rem;
       --wii-muted: #000;
     }
+  }
   }
 </style>

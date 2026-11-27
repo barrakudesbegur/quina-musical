@@ -4,6 +4,8 @@
  * paper, so the code and its panel read as one white square, with one more step of padding round it (18 → 24 px).
  * Sizes are variables in :where(), so the scene sets the panel's size.
  */
+
+@layer components {
 :where(.qr-block) {
   --qr-block-size: 34.25rem;
   --qr-block-pad: 1.5rem;
@@ -43,4 +45,5 @@
 
 .qr-block .qr__ink {
   fill: var(--color-ink);
+}
 }

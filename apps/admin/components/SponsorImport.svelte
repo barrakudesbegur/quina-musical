@@ -78,6 +78,7 @@
 </section>
 
 <style>
+  @layer app {
   .sponsor-import {
     display: grid;
     gap: var(--space-3);
@@ -105,5 +106,6 @@
   .sponsor-import__meta {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
+  }
   }
 </style>

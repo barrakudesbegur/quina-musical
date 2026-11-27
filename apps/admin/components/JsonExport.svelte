@@ -42,8 +42,10 @@
 </section>
 
 <style>
+  @layer app {
   .json-export__text {
     font-family: var(--font-mono, monospace);
     font-size: var(--text-xs);
+  }
   }
 </style>

@@ -123,6 +123,7 @@
 </section>
 
 <style>
+  @layer app {
   .json-import__text {
     font-family: var(--font-mono, monospace);
     font-size: var(--text-xs);
@@ -135,5 +136,6 @@
   .json-import__diff ul {
     margin: 0;
     padding-left: var(--space-5);
+  }
   }
 </style>

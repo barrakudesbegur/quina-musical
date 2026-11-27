@@ -3,6 +3,8 @@
  * as the one line between cells; each cell's corners are rounded, so every crossing has rounded inner corners, and the
  * board's own corners are concentric with its corner cells'. Motion: ANIMATIONS.md › pad-press, pad-playing.
  */
+
+@layer components {
 :where(.sound-pad) {
   --sound-pad-line: var(--line-width);
   --sound-pad-inner: 8px;
@@ -153,4 +155,5 @@ button.sound-pad__cell:active:not(:disabled) {
   translate: 0 -50%;
   line-height: 1;
   pointer-events: none;
+}
 }

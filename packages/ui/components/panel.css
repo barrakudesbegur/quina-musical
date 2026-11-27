@@ -5,6 +5,8 @@
  * The box's rules are in :where() (no specificity): the apps' own context rules (`.next-song`, `.now-playing`) win
  * whatever order the stylesheets load in. The parts keep a class's weight, over base.css's h2 and p.
  */
+
+@layer components {
 :where(.panel) {
   --panel-bg: var(--color-surface);
   --panel-muted: var(--color-text-muted);
@@ -102,4 +104,5 @@
   margin: 0;
   font-size: var(--text-md);
   color: var(--panel-muted, var(--color-text-muted));
+}
 }

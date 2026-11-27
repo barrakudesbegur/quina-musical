@@ -118,6 +118,7 @@
 </section>
 
 <style>
+  @layer app {
   /* A time's clear button or its error doesn't stretch the fields beside it. */
   .schedule__times {
     align-items: start;
@@ -149,5 +150,6 @@
   }
   .schedule__throw input {
     width: 5rem;
+  }
   }
 </style>

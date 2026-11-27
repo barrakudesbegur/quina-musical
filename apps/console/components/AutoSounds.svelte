@@ -41,6 +41,7 @@
 </section>
 
 <style>
+  @layer app {
   .auto-sounds {
     grid-column: 1 / -1;
   }
@@ -51,5 +52,6 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
     align-items: start;
     gap: var(--space-3) var(--space-5);
+  }
   }
 </style>

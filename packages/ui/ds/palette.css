@@ -14,6 +14,8 @@
  * Also here: --edge-3d and --edge-3d-sunk, the coloured piece's 3D edge (R2) and its pressed shade, built from the
  * slot on the same element. Depths come from the component: --ds-edge (default 8 px) and --ds-shine (5 px).
  */
+
+@layer tokens {
 :where([data-color]) {
   --palette-solid: initial;
   --palette-edge: initial;
@@ -146,4 +148,5 @@
 :where([data-color]) {
   --edge-3d: inset 0 calc(-1 * var(--ds-edge, 8px)) 0 var(--palette-edge, rgb(0 0 0 / 0.22)), inset 0 var(--ds-shine, 5px) 0 rgb(255 255 255 / 0.35);
   --edge-3d-sunk: inset 0 0 0 4px rgb(255 255 255 / 0.7), inset 0 var(--ds-edge, 8px) 0 var(--palette-edge, rgb(0 0 0 / 0.25));
+}
 }

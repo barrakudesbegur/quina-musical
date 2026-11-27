@@ -7,6 +7,7 @@
  * transform and opacity, and no filter or blur ever animates.
  */
 
+@layer app {
 /* ---- player tokens ------------------------------------------------------------------------------------- */
 .player {
   /* motion */
@@ -184,6 +185,10 @@
   transition: none !important;
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 /* Outlined titles (".gt" on the boards): Londrina in white over a thick ink stroke and a hard ink shadow. Small
    ones get a thinner stroke and more letter-spacing, so they stay easy to read. Londrina is always in capitals
    (D96); a unit next to a number stays lowercase (`.unit`, D114), and so does Nunito inside a Londrina button. */
@@ -218,12 +223,19 @@
   letter-spacing: var(--title-tracking-sm);
   text-shadow: var(--title-drop-sm);
 }
+}
+
+@layer app {
 
 .unit,
 .button .nunito {
   text-transform: none;
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 :where(.player) h2 {
   font-size: var(--player-text-title);
   line-height: 1;
@@ -237,6 +249,9 @@
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
+}
+
+@layer app {
 
 /* A sticker: a ninos figure on a pseudo-element, decoration only. */
 .now[data-scene]::before,
@@ -505,10 +520,17 @@
   margin-left: auto;
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 .icon {
   width: 1.5em;
   height: 1.5em;
 }
+}
+
+@layer app {
 
 /* ---- buttons ------------------------------------------------------------------------------------------- */
 /* The app's own buttons, not the design system's: every component's button carries `data-touch` and draws its own
@@ -706,6 +728,10 @@
   vertical-align: middle;
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 .cover {
   position: relative;
   display: block;
@@ -715,6 +741,9 @@
   border: var(--line-width) solid var(--color-line);
   border-radius: 0.6875rem;
 }
+}
+
+@layer app {
 
 .cover--md {
   width: 4rem;
@@ -1557,6 +1586,10 @@
   box-shadow: var(--shadow-piece);
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 /* The header band is a grid, so a long name never pushes the rest onto lines of their own (the user's phone test): the
    mark, the name (two lines at most), the sitting nino's place, and at the end «#123» with the count pill beside it
    and the DEMPEUS / ASSEGUT badge under it. The title is `display: contents`, so the name and the number are its grid
@@ -1574,6 +1607,9 @@
   background: var(--card-color);
   border-bottom: var(--line-width-bold) solid var(--color-line);
 }
+}
+
+@layer app {
 
 .player-card__header :focus-visible {
   outline-color: var(--color-line);
@@ -3807,4 +3843,5 @@
 /* A falling card appears seated at once: the DEMPEUS badge that would flip away isn't left over it. */
 .player[data-motion='reduced'] .stand-badge--out {
   display: none;
+}
 }

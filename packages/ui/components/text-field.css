@@ -6,6 +6,7 @@
  * Every size is a custom property in :where().
  */
 
+@layer components {
 :where(.text-field) {
   --field-height: 48px;
   --field-border: var(--line-width);
@@ -168,4 +169,5 @@ textarea.text-field__input {
 
 .text-field[data-invalid] .text-field__hint {
   color: var(--color-red-text, var(--color-red));
+}
 }

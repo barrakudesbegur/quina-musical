@@ -6,6 +6,8 @@
  * right end; at 0 a gold pill with the rosette (complete: claim it). The DEMPEUS / ASSEGUT pill takes the same place
  * in the Desgraciat round (#73), in the compact card too.
  */
+
+@layer components {
 .player-card__count {
   grid-area: count;
   margin-left: var(--space-2);
@@ -107,4 +109,5 @@
   :where([data-motion='full']) .player-card-wrap[data-sunk] {
     transition: margin-block var(--dur-stamp, 300ms) var(--ease-out);
   }
+}
 }

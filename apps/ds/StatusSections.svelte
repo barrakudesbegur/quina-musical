@@ -354,6 +354,7 @@
 {/if}
 
 <style>
+  @layer app {
   .ds-s__ring {
     display: block;
     width: 112px;
@@ -485,5 +486,6 @@
   .ds-s__qr {
     width: 34.25rem;
     max-width: 100%;
+  }
   }
 </style>

@@ -60,6 +60,7 @@
 </section>
 
 <style>
+  @layer app {
   .plan-meta {
     display: grid;
     gap: var(--space-3);
@@ -94,5 +95,6 @@
   }
   .plan-meta__card-name {
     font-weight: 800;
+  }
   }
 </style>

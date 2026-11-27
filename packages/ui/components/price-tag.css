@@ -4,6 +4,8 @@
  * the ground's colour, tilted 7°, the amount in outlined Londrina. `line`: the amount alone in the palette's colour (the
  * Break's «Cartró: 4,50 €», beside a MiniCard). The unit keeps its case (D114). Variables in :where().
  */
+
+@layer components {
 :where(.price-tag) {
   --price-size: 4.5rem;
   --price-stroke: var(--stage-text-stroke, 0.5625rem);
@@ -64,4 +66,5 @@
 
 .price-tag :where(.unit) {
   text-transform: none;
+}
 }

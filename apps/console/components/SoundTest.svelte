@@ -65,6 +65,7 @@
 </section>
 
 <style>
+  @layer app {
   .sound-test {
     grid-column: 1 / -1;
   }
@@ -150,5 +151,6 @@
     50% {
       opacity: 0.4;
     }
+  }
   }
 </style>

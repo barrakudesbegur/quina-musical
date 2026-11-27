@@ -113,6 +113,7 @@
 </section>
 
 <style>
+  @layer app {
   .cards-in-play__form {
     display: grid;
     gap: var(--space-3);
@@ -128,5 +129,6 @@
   .cards-in-play__engine {
     font-size: var(--text-sm);
     overflow-wrap: anywhere;
+  }
   }
 </style>

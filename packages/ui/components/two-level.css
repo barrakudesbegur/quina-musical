@@ -4,6 +4,8 @@
  * throw-on, pattern-pan. Every size is a custom property in :where(), so an app's context (the console's cluster,
  * its break line, its top row) tunes it by variables.
  */
+
+@layer components {
 :where(.two-level) {
   --two-level-strip: 46px;
   --two-level-strip-size: 1.0625rem;
@@ -332,4 +334,5 @@
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
+}
 }

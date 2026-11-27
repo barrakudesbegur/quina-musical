@@ -5,6 +5,7 @@
  * shown (664 px) or hidden. Moving things move only with motion allowed (`.player[data-motion='full']`, D209).
  */
 
+@layer app {
 /* ---- the drawer's height: a form fits rather than scrolls -------------------------------------------------------- */
 /* It may rise to just under the top (the safe area, then 12 px): a sheet that scrolls with room above it read as a
    bug (§8 Y3). The camera over it keeps the usual top, so the pad stepping back still shows above it. */
@@ -310,4 +311,5 @@
     translate: 1.5rem 0;
     opacity: 0;
   }
+}
 }

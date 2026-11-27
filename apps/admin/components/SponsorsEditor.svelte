@@ -143,6 +143,7 @@
 </section>
 
 <style>
+  @layer app {
   .sponsors__list {
     display: grid;
     gap: var(--space-4);
@@ -165,5 +166,6 @@
     width: auto;
     padding: var(--space-2);
     border-radius: var(--radius-sm);
+  }
   }
 </style>

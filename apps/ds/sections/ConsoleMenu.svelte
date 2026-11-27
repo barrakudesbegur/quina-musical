@@ -123,6 +123,7 @@
 </section>
 
 <style>
+  @layer app {
   /* The menu's full-width cards: one per row, as wide as the menu's three columns. */
   .ds-console-menu__full {
     grid-template-columns: minmax(0, 1fr);
@@ -131,5 +132,6 @@
   /* The two-level buttons at the cluster's height, as in the buttons family. */
   .ds-console-menu__tall :global(.ds-gallery__stage > .two-level) {
     min-height: 12rem;
+  }
   }
 </style>

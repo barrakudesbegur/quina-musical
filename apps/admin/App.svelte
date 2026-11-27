@@ -112,9 +112,11 @@
 </div>
 
 <style>
+  @layer app {
   .manage__conflict {
     margin: var(--space-3) var(--space-4) 0;
     display: grid;
     gap: var(--space-2);
+  }
   }
 </style>

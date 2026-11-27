@@ -181,6 +181,7 @@
 </section>
 
 <style>
+  @layer app {
   .rounds__list {
     display: grid;
     gap: var(--space-4);
@@ -242,5 +243,6 @@
     display: grid;
     gap: var(--space-3);
     grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  }
   }
 </style>

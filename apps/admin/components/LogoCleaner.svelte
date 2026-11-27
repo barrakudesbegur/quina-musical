@@ -153,6 +153,7 @@
 </section>
 
 <style>
+  @layer app {
   .logo-cleaner {
     display: grid;
     gap: var(--space-3);
@@ -209,5 +210,6 @@
     border-radius: var(--radius-sm);
     background: var(--color-surface);
     color: var(--color-text);
+  }
   }
 </style>

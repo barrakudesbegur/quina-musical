@@ -3,6 +3,8 @@
  * it overrides the role tokens rather than styling components; black and white are not tokens yet (proposed
  * as --color-print-ink and --color-print-paper in ui/tokens.css), so they are set here.
  */
+
+@layer app {
 @page {
   size: A4;
   margin: 12mm;
@@ -43,4 +45,5 @@
     max-width: none;
     padding: 0;
   }
+}
 }

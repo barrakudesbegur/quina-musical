@@ -4,6 +4,8 @@
  * a <mark class="ds-mark"> per matched run, built from text spans (no {@html}). Gold's pale with gold's own edge
  * under it, like a highlighter stroke; the text keeps its colour.
  */
+
+@layer resources {
 .ds-mark {
   padding-inline: 1px;
   border-radius: 4px;
@@ -12,4 +14,5 @@
   color: inherit;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
 }

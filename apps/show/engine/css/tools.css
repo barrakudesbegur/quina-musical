@@ -1,3 +1,4 @@
+@layer app {
 :root {
   color-scheme: dark;
   --bg: #0e0a16;
@@ -194,4 +195,5 @@ table.hooks {
 
 [hidden] {
   display: none !important;
+}
 }

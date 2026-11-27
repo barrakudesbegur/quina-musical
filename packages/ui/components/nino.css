@@ -5,6 +5,8 @@
  * Every rule is in :where() (zero specificity), so a scene's placement (its height, tilt, entrance transition) always
  * wins, whatever order the stylesheets load in. Variables: --nino-size (its height), --nino-tilt, --nino-hue, --nino-drop.
  */
+
+@layer components {
 :where(.nino) {
   --nino-size: 100%;
   --nino-tilt: 0deg;
@@ -64,4 +66,5 @@
   to {
     transform: scale(1.04);
   }
+}
 }

@@ -4,6 +4,8 @@
  * palette slots; the console's NowRing is now its looks table (apps/console/ring-looks.ts). Durations: the console's
  * --dur-ring-* (theme.css), with defaults here so the ring works anywhere.
  */
+
+@layer components {
 :where(.ring) {
   --ring-step: var(--dur-ring-step, 250ms);
   --ring-spin: var(--dur-ring-spin, 1.2s);
@@ -331,4 +333,5 @@
 
 :where([data-density='projector']) .ring[data-framed] .ring__unit {
   font-size: 2.5rem;
+}
 }

@@ -45,9 +45,11 @@
 </div>
 
 <style>
+  @layer app {
   .status-bar {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
   }
 </style>

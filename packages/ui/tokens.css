@@ -7,6 +7,7 @@
 @import './fonts.css';
 @import './ds/palette.css';
 
+@layer tokens {
 :root {
   /* Palette, named by colour (D210: a `color` prop, its token and the word people say are one word). Each colour a
      component's `color` prop can name has its fixed slots: the fill, the 3D edge (the fill's own dark shade, R2),
@@ -209,4 +210,4 @@
   --z-banner: 40;
   --z-toast: 60;
 }
-
+}

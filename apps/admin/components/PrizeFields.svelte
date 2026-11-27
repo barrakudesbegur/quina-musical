@@ -99,6 +99,7 @@
 </fieldset>
 
 <style>
+  @layer app {
   .prize {
     display: grid;
     gap: var(--space-3);
@@ -141,5 +142,6 @@
     gap: var(--space-2);
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+  }
   }
 </style>

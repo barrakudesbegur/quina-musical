@@ -3,6 +3,8 @@
  * (../ds/resources.css, R4) with the fill's own edge (R2, #32); a bare one moves its icon (ANIMATIONS.md › press).
  * Every size is a custom property in :where(), so a context (a sheet's header, a chip) tunes it by variables.
  */
+
+@layer components {
 :where(.icon-button) {
   --ds-radius: var(--radius-md);
   --ds-border: var(--line-width);
@@ -121,4 +123,5 @@
 
 .icon-button[data-variant='bare']:active:not(:disabled) > .icon-button__piece {
   opacity: 0.8;
+}
 }

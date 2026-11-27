@@ -11,6 +11,8 @@
  *   --mc-pad     padding       --mc-bar          top bar     --mc-cell-border, --mc-cell-radius
  *   --mc-edge    the 3D edge   --mc-star         the star    --mc-tilt      its tilt
  */
+
+@layer components {
 :where(.mini-card) {
   --mc-width: 11.25rem;
   --mc-border: 0.375rem;
@@ -116,4 +118,5 @@
   --mc-cell-radius: 2px;
   --mc-edge: 3px;
   --mc-star: 1.625rem;
+}
 }

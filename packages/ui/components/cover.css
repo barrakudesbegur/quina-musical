@@ -4,6 +4,10 @@
  * then the ladder's rule sets the width, the border (≈ size / 30) and the radius (≈ size / 8.5). Every rule that a
  * context may tune is in :where(), so an app's own `.cover` rules win whatever order the stylesheets load in.
  */
+
+/* The zero-weight base sits with the apps' own defaults, which tune it: there, weight decides (packages/ui/README.md
+   › Cascade layers). */
+@layer defaults {
 :where(.cover) {
   position: relative;
   display: block;
@@ -22,7 +26,9 @@
   border-width: max(2px, round(calc(var(--cover-px) * 1px / 30), 1px));
   border-radius: calc(var(--cover-px) * 1px / 8.5);
 }
+}
 
+@layer components {
 .cover__picture {
   display: contents;
 }
@@ -65,4 +71,5 @@
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
 }

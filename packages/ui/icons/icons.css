@@ -20,6 +20,8 @@
  * A context sets the box (width, height) and the colour; it never sets a stroke width. `--icon-ink` exists to be
  * read (the board generator, a sibling glyph), not to make one icon lighter or heavier.
  */
+
+@layer components {
 .icon {
   --icon-ink: 0.155em;
   --icon-ink-outlined: 0.13em;
@@ -101,4 +103,5 @@
 .icon .icon__under .icon__solid {
   fill: var(--color-ink);
   stroke: var(--color-ink);
+}
 }

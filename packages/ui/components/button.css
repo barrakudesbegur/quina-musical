@@ -7,6 +7,7 @@
  * (`.check-board__back { --button-label-size: … }`) whatever the order the stylesheets load in.
  */
 
+@layer components {
 /* ---- the console's scale, the default (D165: label 26 / 36 / 62) --------------------------------------------- */
 :where(.button) {
   --ds-radius: var(--radius-lg);
@@ -298,4 +299,5 @@
 /* A short button (xs, s) keeps its words clear of the keys, which centre on its end (R7). */
 .button:is([data-size='xs'], [data-size='s']):has(.button__wii > *) .button__piece {
   padding-inline-end: calc(var(--button-pad-inline) + 2rem);
+}
 }

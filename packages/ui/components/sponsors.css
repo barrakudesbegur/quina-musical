@@ -6,6 +6,7 @@
  * sponsors-dom.ts. Every size is a variable set in :where(), so a scene places the strip by setting variables.
  */
 
+@layer components {
 /* ---- LogoTile: a logo contained on white (many logos are dark on transparent, drawn for white paper) ----------- */
 :where(.logo-tile) {
   --logo-tile-w: 10rem;
@@ -308,4 +309,5 @@
   ::view-transition-new(sponsor-logo) {
     animation: none;
   }
+}
 }

@@ -45,7 +45,7 @@ The show runs on the **show laptop**. The cloud only feeds the players' phones a
 | **Players' phones** | The **player app**, following their cards | They scan the QR on their card (`https://quina.barrakudesbegur.org/26/<card>`). Nothing to install |
 | **Spare laptop** | Ready to take over | `npm run setup:laptop` the day before ([runbook](docs/night-runbook.md#prepare-a-spare-laptop)) |
 
-To develop, run `npm run dev` at the root: the relay, with Vite serving the show page and the screens. `npm test` runs the tests, and `npm run test:e2e` plays one whole show headless.
+To develop, run `npm run dev` at the root: the relay, with Vite serving the show page and the screens. `npm test` runs the tests, and `npm run test:e2e` plays one whole show headless. `npm run check:css` (about 7 minutes, needs Chrome) compares every screen's computed styles on the dev server and in the build, and fails on any difference ([packages/ui/README.md › Cascade layers](packages/ui/README.md#cascade-layers)).
 
 ## Admin and production
 

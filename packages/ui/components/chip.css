@@ -5,6 +5,7 @@
  * palette's own glow round the pill. Every size is a custom property in :where().
  */
 
+@layer components {
 :where(.chip) {
   --chip-pad: 4px 10px;
   --chip-line: var(--line-width);
@@ -105,4 +106,5 @@
 
 .chip__dot[data-dot='alert'] {
   background: var(--color-red);
+}
 }

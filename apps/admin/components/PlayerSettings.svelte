@@ -104,8 +104,10 @@
 </section>
 
 <style>
+  @layer app {
   .player-settings__form {
     display: grid;
     gap: var(--space-3);
+  }
   }
 </style>

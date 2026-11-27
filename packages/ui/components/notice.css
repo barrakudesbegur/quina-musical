@@ -8,6 +8,8 @@
  * Fill: `solid` (the palette's fill, its contrast words, an ink outline) or `subtle` (the palette's tint, outlined in
  * the colour's dark edge). Sizes are variables in :where().
  */
+
+@layer components {
 :where(.ds-notice) {
   --notice-pad: 0.4375rem 0.625rem;
   --notice-gap: var(--space-2);
@@ -163,4 +165,5 @@
   33% {
     opacity: 0.3;
   }
+}
 }

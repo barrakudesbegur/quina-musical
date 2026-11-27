@@ -3,6 +3,8 @@
  * page's column, with its sticker and its word in the quarter that shows (style B, D87). Motion: ANIMATIONS.md ›
  * corner-press. The static backdrop blur is one of the phones' two budget exceptions.
  */
+
+@layer components {
 :where(.corner-button) {
   --corner-button-size: 13rem;
   --corner-button-column: 100%;
@@ -113,4 +115,5 @@
     transition-duration: var(--dur-corner-press, 90ms);
     transition-timing-function: var(--ease-out);
   }
+}
 }

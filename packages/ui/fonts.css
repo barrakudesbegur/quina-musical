@@ -3,8 +3,8 @@
  * LAN console have them with no internet at the venue: Londrina Solid for titles (the outlined game text) and
  * Nunito for everything else. Latin only (it covers Catalan: à, ç, l·l…), and only the weights in use.
  */
-@import '@fontsource/londrina-solid/latin-900.css';
-@import '@fontsource/nunito/latin-600.css';
-@import '@fontsource/nunito/latin-700.css';
-@import '@fontsource/nunito/latin-800.css';
-@import '@fontsource/nunito/latin-900.css';
+@import '@fontsource/londrina-solid/latin-900.css' layer(tokens);
+@import '@fontsource/nunito/latin-600.css' layer(tokens);
+@import '@fontsource/nunito/latin-700.css' layer(tokens);
+@import '@fontsource/nunito/latin-800.css' layer(tokens);
+@import '@fontsource/nunito/latin-900.css' layer(tokens);

@@ -5,6 +5,7 @@
  * data-anim (ui/ANIMATIONS.md › Console) and kept to feedback, never decoration.
  */
 
+@layer app {
 /* ---- layout ------------------------------------------------------------------------------------------- */
 /* Portrait (a phone): the header, one scrolling column, and the action cluster at the bottom. */
 .console {
@@ -75,6 +76,10 @@
 }
 
 /* ---- shared pieces ------------------------------------------------------------------------------------ */
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 .icon {
   display: block;
   width: 1.25em;
@@ -93,6 +98,9 @@
 .icon .icon__accent {
   stroke: var(--palette-solid, var(--color-surface));
 }
+}
+
+@layer app {
 
 /* The press hook: a short sink, the 3D edge shrinks (ANIMATIONS.md › press). The generic components (ds-pushable) have
    their own, the shared resource's (packages/ui/ds/resources.css). */
@@ -199,6 +207,10 @@
   gap: var(--space-2);
 }
 
+}
+
+/* The app's own defaults for what the components also draw: under them (packages/ui/README.md › Cascade layers). */
+@layer defaults {
 /* A song's cover (the design system's Cover, packages/ui/components/cover.css): the console's frame and sizes */
 .cover {
   flex: none;
@@ -206,6 +218,9 @@
   border-radius: var(--radius-md);
   background: var(--color-chip);
 }
+}
+
+@layer app {
 
 .cover--lg {
   width: calc(var(--tap-big) * 1.5);
@@ -502,10 +517,6 @@
   --chip-pad: 3px 10px;
   font-size: var(--text-xs);
   line-height: normal;
-}
-
-.conn-chip[data-state='unknown'] > .chip {
-  color: var(--color-text-muted);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2585,13 +2596,9 @@
   color: var(--color-text-muted);
 }
 
-/* The chips beside the card number (Chip, B4), at the text's size: what it claims (ink), its printed type (snow, cream in both themes:
+/* The chips beside the card number (Chip, B4), at the chip's own size: what it claims (ink), its printed type (snow, cream in both themes:
    the user, 26 Nov, the type's pink read as an error; only the wrong-type card's picture keeps its paper colour). A
    special type's star is gold. */
-.card-type-chip {
-  font-size: var(--text-sm);
-}
-
 .card-type-chip .chip__icon svg {
   fill: var(--color-gold);
 }
@@ -4892,4 +4899,5 @@ kbd {
   position: relative;
   inset: auto;
   translate: none;
+}
 }

@@ -6,6 +6,7 @@
  * motion allowed (`.player[data-motion='full']`); reduced motion keeps the information still.
  */
 
+@layer app {
 /* ---- the home's scroll box (§8 Y1, Y2) ------------------------------------------------------------------------- */
 /* The header, the status strips and the home scroll in one box over the whole screen, under the garland (fixed at the
    top, player.css). The box is masked: the content fades to see-through under the garland and under the corners, so
@@ -324,4 +325,5 @@ html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
   :where(.player[data-motion='full']) .home-hint[data-side='up'] {
     --home-hint-way: -1;
   }
+}
 }
