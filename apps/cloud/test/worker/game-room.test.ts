@@ -236,6 +236,33 @@ describe('the laptop and the phones', () => {
     expect(view.state.spin?.landAtMs).toBeGreaterThan(now());
   });
 
+  it("the drum's public seeds (D237) reach the phones, and a phone that connects after a restart still gets them", async () => {
+    const game = new JournalBuilder('g-seeds').startRound().land(1);
+    const drumSeed = (game.entries.find((e) => e.kind === 'round.started') as { drumSeed?: number }).drumSeed;
+    expect(typeof drumSeed).toBe('number');
+    const { client } = await laptop('g-seeds');
+    await upload(client, 'g-seeds', game.entries);
+    const p = await phone();
+    const secret = 987_654;
+    const spinSeed = 4_294_967_295;
+    client.send({
+      v,
+      type: 'link.event',
+      sentAtMs: now(),
+      event: { v, type: 'transition.scheduled', id: 't7', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000, spinSeed },
+    });
+    const view = await p.view();
+    expect(view.state.rounds.at(-1)?.drumSeed).toBe(drumSeed);
+    expect(view.state.spin?.spinSeed).toBe(spinSeed);
+    expect(JSON.stringify(p.seen)).not.toContain(String(secret));
+
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a restart: only SQLite remains
+    const late = await (await phone()).view();
+    expect(late.state.rounds.at(-1)?.drumSeed).toBe(drumSeed);
+    expect(late.state.spin).toMatchObject({ spinSeed });
+    expect(JSON.stringify(late)).not.toContain(String(secret));
+  });
+
   it('a silent laptop is marked offline by the alarm', async () => {
     await laptop(null);
     const p = await phone();

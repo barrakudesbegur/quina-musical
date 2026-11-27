@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import type { ShowState } from '@quina/protocol';
+import type { PublicMessage, ShowState } from '@quina/protocol';
 import { PLAN, SECRET_PRIZE } from '../../apps/cloud/test/support/plan.ts';
 import { Phone, startCloud, type Cloud } from './support/cloud.ts';
 import { REPO, hasPreparedRepertoire, startRelay, type Relay } from './support/relay.ts';
@@ -151,6 +151,14 @@ test('one whole show, every screen following', async ({ browser }) => {
   await soft(show.getByTestId('drum')).toHaveAttribute('data-landed-id', String(playing));
   await soft(phonePage.getByTestId('now')).toHaveAttribute('data-song-id', String(playing));
   await soft.poll(() => phone.view?.state.rounds.find((r) => r.number === 1)?.landings.length, { message: 'the phone counted three landings' }).toBe(3);
+  // The phone's drum matches the projector's (D237): the round's public drumSeed, and each Spin's spinSeed.
+  soft(typeof phone.view?.state.rounds.find((r) => r.number === 1)?.drumSeed, "round 1's drumSeed reached the phone").toBe('number');
+  const spins = phone.raw.flatMap((text) => {
+    const message = JSON.parse(text) as PublicMessage;
+    return message.type === 'public.delta' ? message.changes.flatMap((c) => (c.kind === 'spin' && c.spin ? [c.spin] : [])) : [];
+  });
+  soft(spins.length, 'the phone saw the Spins').toBeGreaterThan(0);
+  soft(spins.filter((spin) => typeof spin.spinSeed !== 'number'), 'every Spin came with its spinSeed').toEqual([]);
 
   // ---- Parlem (the song ducks), then Aguanta (it stays up) -------------------------------------------------
   await remote.command('hold', { on: true });
@@ -256,10 +264,11 @@ test('one whole show, every screen following', async ({ browser }) => {
 
   // What the phones got, all show long: a gap-free feed with nothing private in it. Not the Queue or the next
   // song, not possible winners or the Futur (nor the Desgraciat round's standing cards and curve), no Check
-  // outcome before the verdict, no seeds or resume codes, no cheat sheet, no Wii status.
+  // outcome before the verdict, no private seeds (the drum's are public, D237) or resume codes, no Spin's drum or
+  // target (U206), no cheat sheet, no Wii status.
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', '"drum":', '"targetId"', '"removeId"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
 });

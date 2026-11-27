@@ -15,6 +15,9 @@ test('a hello, an upload, a ping and the forwarded events pass', () => {
     { v, type: 'link.journal', gameId: 'g', entries: [], sentAtMs: 1 },
     { v, type: 'link.ping', sentAtMs: 1 },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5 } },
+    // D237's public spinSeed, a uint32 as the engine draws it (drumSpinSeed); an older engine sends none (above).
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5, spinSeed: 4_294_967_295 } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5, spinSeed: 0 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'suspense.started', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.landed' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'shuffle.scheduled', round: 2, startAtMs: 1, endAtMs: 2 } },
@@ -44,6 +47,8 @@ test('anything malformed, an unknown event type, or the journal as an event, is 
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'journal.entries', entries: [] } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'made.up' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1 } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, spinSeed: '7' } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, spinSeed: null } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: 5, interval: null, schedule: { gameEndMs: 9 } } },
     // Pausa says whether phones show it (D135).
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: { sinceMs: 3 }, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },

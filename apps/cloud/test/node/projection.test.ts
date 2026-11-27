@@ -169,6 +169,23 @@ test("a round's card side is public from its intro, only when it isn't 1, so pho
   assert.equal(project(r.entries).state.rounds.at(-1)?.side, 2, 'a manual resume carries it too');
 });
 
+test("a round's drumSeed is public, started or resumed, so phones lay out the projector's drum (D237); an older journal has none", () => {
+  const b = new JournalBuilder('g-drum').startRound();
+  const started = b.entries.find((e) => e.kind === 'round.started') as JournalEntry & { drumSeed: number };
+  assert.equal(typeof started.drumSeed, 'number');
+  assert.equal(project(b.entries).state.rounds.at(-1)?.drumSeed, started.drumSeed);
+  b.resume(3, 4);
+  const resumed = b.entries.at(-1) as JournalEntry & { drumSeed: number };
+  assert.notEqual(resumed.drumSeed, started.drumSeed, 'a resumed round draws a new one');
+  assert.equal(project(b.entries).state.rounds.at(-1)?.drumSeed, resumed.drumSeed, 'a manual resume carries it too');
+  const older = new JournalBuilder('g-drum-older');
+  older.drumSeeds = false;
+  older.startRound().resume(3, 4);
+  const { state, changes } = project(older.entries);
+  assert.deepEqual(state.rounds.map((r) => 'drumSeed' in r), [false, false], 'no seed, no field');
+  assert.equal(JSON.stringify(changes).includes('drumSeed'), false);
+});
+
 test("a round's card type is public from its intro: the one it names, else its kind's default", () => {
   const b = new JournalBuilder('g-types');
   b.scene('roundStart', 1, 'normal', 'groc');
@@ -285,6 +302,28 @@ test('Spin timing goes public on the cloud clock, never its song; a landing or a
     assert.deepEqual(projectEvent(spinning, { v: PROTOCOL_VERSION, type } as unknown as ShowEvent, ctx), [{ kind: 'spin', spin: null }]);
   }
   assert.deepEqual(projectEvent(state, { v: PROTOCOL_VERSION, type: 'transition.cancelled' } as unknown as ShowEvent, ctx), [], 'no Spin, no change');
+});
+
+test("a Spin's spinSeed is public (D237), never its drum or target (U206); a new seed on the same times is a change", () => {
+  const state = project(new JournalBuilder('g-spin-seed').startRound().land(2).entries).state;
+  const drum = { removeId: 1, targetId: 33, minLaps: 1 };
+  const scheduled = (spinSeed: unknown) =>
+    ({ v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 't1', to: 33, drum, spinStartAtMs: 1000, landAtMs: 9000, spinSeed }) as unknown as ShowEvent;
+  const spin = projectEvent(state, scheduled(4_294_967_295), ctx);
+  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 4_294_967_295 } }]);
+  const spinning = applyPublic(state, spin);
+  assert.equal(spinning.spin?.spinSeed, 4_294_967_295);
+  assert.deepEqual(projectEvent(spinning, scheduled(4_294_967_295), ctx), [], 'the same Spin again: no change');
+  assert.deepEqual(projectEvent(spinning, scheduled(7), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 7 } }], 're-sent with a new seed');
+  // A Suspense held open has no seed; its braking landing is a transition.scheduled with one.
+  const held = applyPublic(spinning, projectEvent(spinning, { v: PROTOCOL_VERSION, type: 'suspense.started', id: 't1', fromSpin: true, to: 33, drum, spinStartAtMs: 1000 } as unknown as ShowEvent, ctx));
+  assert.deepEqual(held.spin, { startAtMs: 1000 + OFFSET, landAtMs: null });
+  const braking = projectEvent(held, { ...(scheduled(99) as object), id: 's1', drum: { removeId: null, targetId: 33, minLaps: 0 }, landAtMs: 12_000 } as unknown as ShowEvent, ctx);
+  assert.deepEqual(braking, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 12_000 + OFFSET, spinSeed: 99 } }]);
+  assert.deepEqual(projectEvent(state, scheduled(undefined), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET } }], 'an older engine: no seed, no field');
+  const all = [spin, braking, projectEvent(spinning, scheduled(7), ctx)];
+  assert.deepEqual(forbiddenKeys(all), []);
+  assert.equal(JSON.stringify(all).includes('33'), false, 'the target song never goes public');
 });
 
 test('a late journal upload does not stop a newer Spin; the landing it belongs to does', () => {

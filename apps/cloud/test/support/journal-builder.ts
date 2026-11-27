@@ -42,6 +42,8 @@ export class JournalBuilder {
   queue: number[] = [];
   /** Queue index of the last counted landing. */
   position = -1;
+  /** The engine journals a public drumSeed with each round (D237); false builds an older engine's journal, without. */
+  drumSeeds = true;
   private claims = 0;
   /** A live clock: entries are stamped with it instead of stepping `nowMs` (the load test plays a show live). */
   private readonly clock: (() => number) | null;
@@ -120,6 +122,7 @@ export class JournalBuilder {
         settings: SETTINGS,
         shuffleSeed: 99 + this.round,
         shuffleAttempts: 0,
+        ...this.drumSeedFor(this.round),
       },
       5_000,
     );
@@ -147,10 +150,16 @@ export class JournalBuilder {
         position,
         lineConfirmedFrom,
         ...(side ? { side } : {}),
+        ...this.drumSeedFor(round),
       },
       5_000,
     );
     return this;
+  }
+
+  /** A round's drumSeed: a uint32 as the engine draws it (freshDrumSeed), each draw its own. */
+  private drumSeedFor(round: number): { drumSeed?: number } {
+    return this.drumSeeds ? { drumSeed: Math.imul(0x9e3779b9, round + this.entries.length) >>> 0 } : {};
   }
 
   /** Land the next `count` songs of the Queue. */

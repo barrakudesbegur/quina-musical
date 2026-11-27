@@ -248,7 +248,9 @@ function forwardedEventError(event: unknown): string | null {
       return null;
     }
     case 'transition.scheduled':
-      return isTime(event.spinStartAtMs) && isTime(event.landAtMs) ? null : 'transition.scheduled needs spinStartAtMs and landAtMs';
+      if (!isTime(event.spinStartAtMs) || !isTime(event.landAtMs)) return 'transition.scheduled needs spinStartAtMs and landAtMs';
+      // D237's public spinSeed; an older engine sends none.
+      return event.spinSeed === undefined || isTime(event.spinSeed) ? null : 'transition.scheduled.spinSeed must be a number';
     case 'suspense.started':
       return isTime(event.spinStartAtMs) ? null : 'suspense.started needs spinStartAtMs';
     case 'shuffle.scheduled':

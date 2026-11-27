@@ -129,6 +129,14 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   // The card's side a round plays (D178): absent for side 1, else 2 to 9.
   assert.ok(checkJournalEntry({ ...started, side: 2 }).ok, 'a round on side 2');
   assert.ok(checkJournalEntry({ ...intro, side: 2 }).ok, 'an intro on side 2');
+  // The drum's public order seed (D237): a uint32 as the engine draws it, absent in an older journal.
+  const resumed = { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null };
+  for (const entry of [started, resumed]) {
+    const { drumSeed: _drum, ...withoutSeed } = entry as JournalEntry & { drumSeed?: number };
+    assert.ok(checkJournalEntry({ ...entry, drumSeed: 4_294_967_295 }).ok, `${entry.kind} with the largest drumSeed`);
+    assert.ok(checkJournalEntry({ ...entry, drumSeed: 0 }).ok, `${entry.kind} with drumSeed 0`);
+    assert.ok(checkJournalEntry(withoutSeed).ok, `${entry.kind} from an older engine, without drumSeed`);
+  }
   const opened = entries.find((e) => e.kind === 'claim.opened') as JournalEntry;
   assert.ok(checkJournalEntry({ ...opened, winKind: 'standing' }).ok, 'a claim for the last card standing');
   const decided = entries.find((e) => e.kind === 'claim.decided') as JournalEntry;
@@ -176,6 +184,9 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
     ['side 0', { ...started, side: 0 }],
     ['side 10 (sides are 1 to 9)', { ...intro, side: 10 }],
     ['side as text', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, side: '2' }],
+    ['drumSeed as text', { ...started, drumSeed: '7' }],
+    ['drumSeed null', { ...started, drumSeed: null }],
+    ['a resumed drumSeed not finite', { ...started, kind: 'round.resumed', position: 0, lineConfirmedFrom: null, drumSeed: Number.NaN }],
     ['queue with a repeat', { ...started, queue: [1, 2, 2] }],
     ['queue of strings', { ...started, queue: ['1'] }],
     ['settings missing a field', { ...started, settings: { pace: 14 } }],

@@ -55,6 +55,9 @@ export interface PublicRound {
   cardType?: string;
   /** The card's side it plays (D178): phones mark that side's songs. Absent means 1. */
   side?: number;
+  /** PUBLIC (D237): the drum's tile order, `drumOrder(songIds, drumSeed)`, so a phone lays out the projector's drum.
+   * Drawn on its own: it tells nothing about the Queue. Absent from an older engine or cloud. */
+  drumSeed?: number;
   startedAtMs: number;
   lineConfirmed: boolean;
   /** The round is over (every landed song is already marked on the phones as it lands). */
@@ -63,11 +66,14 @@ export interface PublicRound {
   landings: PublicLanding[];
 }
 
-/** A Spin in progress: its timing only, never the song or the drum's target. */
+/** A Spin in progress: its timing and seed only, never the song or the drum's target (U206). */
 export interface PublicSpin {
   startAtMs: number;
   /** null while a Suspense is held open. */
   landAtMs: number | null;
+  /** PUBLIC (D237): the drum solver's seed, so a phone's solveSpin replays the projector's trajectory. Absent while a
+   * Suspense is held open, and from an older engine or cloud. */
+  spinSeed?: number;
 }
 
 /** The round's public Shuffle: the phone animates it between these times. Never the Queue. */

@@ -28,6 +28,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         ...sideOf(entry),
+        ...drumSeedOf(entry),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: false,
         ended: false,
@@ -51,6 +52,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
         kind: entry.roundKind,
         cardType: entry.cardType ?? defaultCardType(entry.roundKind),
         ...sideOf(entry),
+        ...drumSeedOf(entry),
         startedAtMs: ctx.toCloudMs(entry.startedAtMs),
         lineConfirmed: entry.lineConfirmedFrom !== null,
         ended: false,
@@ -141,7 +143,12 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
 export function projectEvent(state: PublicState, event: ShowEvent, ctx: ProjectionContext): PublicChange[] {
   switch (event.type) {
     case 'transition.scheduled':
-      return spinChange(state, { startAtMs: ctx.toCloudMs(event.spinStartAtMs), landAtMs: ctx.toCloudMs(event.landAtMs) });
+      // Its timing and its public spinSeed (D237); never `drum` (its targetId is the incoming song) or `to`.
+      return spinChange(state, {
+        startAtMs: ctx.toCloudMs(event.spinStartAtMs),
+        landAtMs: ctx.toCloudMs(event.landAtMs),
+        ...(event.spinSeed != null ? { spinSeed: event.spinSeed } : {}),
+      });
     case 'suspense.started':
       return spinChange(state, { startAtMs: ctx.toCloudMs(event.spinStartAtMs), landAtMs: null });
     case 'transition.cancelled':
@@ -186,8 +193,16 @@ function sideOf(entry: { side?: number }): { side?: number } {
   return entry.side && entry.side !== DEFAULT_SIDE ? { side: entry.side } : {};
 }
 
+/** The drum's public order seed (D237), only when the journal has it (an older engine's doesn't). */
+function drumSeedOf(entry: { drumSeed?: number }): { drumSeed?: number } {
+  return entry.drumSeed != null ? { drumSeed: entry.drumSeed } : {};
+}
+
 function spinChange(state: PublicState, spin: PublicSpin | null): PublicChange[] {
-  const same = spin === null ? state.spin === null : state.spin !== null && state.spin.startAtMs === spin.startAtMs && state.spin.landAtMs === spin.landAtMs;
+  const same =
+    spin === null
+      ? state.spin === null
+      : state.spin !== null && state.spin.startAtMs === spin.startAtMs && state.spin.landAtMs === spin.landAtMs && state.spin.spinSeed === spin.spinSeed;
   return same ? [] : [{ kind: 'spin', spin }];
 }
 
