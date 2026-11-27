@@ -152,6 +152,12 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U212 · Ask the organizers: covers in colour, or no covers in black and white
+The user: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". The card design session made an A3 sheet with last year's card and one card of each option at real size.
+- (a) Covers in colour: the A3 card, 149 × 140 mm, six a sheet (D256), header C (D259).
+- (b) No covers, black and white on coloured paper: the 21 × 9.9 cm card shown to them before, three to an A4 page, with «QUINA QUINA!» / «BARRAKUDES · 2026» and last year's 16 pt titles.
+The cards are made on 4–5 Dec, and the build takes about 2 days plus a proof round, so the answer is needed in the next few days. U211's amount follows the layout.
+
 ### U211 · How many normal cards (D256)
 Six cards a sheet means each type fills whole A3 sheets. The special card's 300 fits (50 sheets). The normal card's 399 (D68) doesn't. 2025 had about 190 normal cards played, and 2024 sold 214.
 - (a) 402 normal cards (67 sheets).
