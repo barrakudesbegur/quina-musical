@@ -22,7 +22,7 @@
   const projector = $derived(density === 'projector');
 
   const LINE = [
-    { title: 'Entrada al spa per a 2', detail: null, sponsor: 'Hotel Classic Begur', headline: true },
+    { title: 'Entrada al spa per a 2', detail: null, sponsor: '[Patrocinador 1]', headline: true },
     { title: 'Fuet', detail: null, sponsor: null, headline: false },
     { title: 'Neules', detail: null, sponsor: null, headline: false },
     { title: 'Coca de vidre', detail: null, sponsor: 'Forn del poble', headline: false },
@@ -103,8 +103,8 @@
   </div>
   {/if}
   <div class="ds-gallery__grid ds-gallery__grid--wide">
-    {#snippet h1()}<PrizeCard prize={{ kind: 'line', headline: [{ title: 'Entrada al spa per a 2', detail: null, sponsor: 'Hotel Classic Begur' }], more: 4 }} />{/snippet}
-    {@render cell('PrizeCard · line (the phone’s Celebration; the projector’s round start and Celebration)', h1)}
+    {#snippet h1()}<PrizeCard prize={{ kind: 'line', headline: [{ title: 'Entrada al spa per a 2', detail: null, sponsor: '[Patrocinador 1]' }], more: 4 }} />{/snippet}
+    {@render cell('PrizeCard · line (the projector’s round start; no Line’s Celebration shows it for now, D242)', h1)}
     {#snippet h2()}<PrizeCard prize={{ kind: 'bingo', headline: [{ title: 'Sopar per a dos', detail: 'Menú de migdia o de vespre', sponsor: 'Restaurant La Riera' }, { title: 'Pernil', detail: null, sponsor: 'Carnisseria Puig' }], more: 17 }} />{/snippet}
     {@render cell('PrizeCard · bingo, two headline prizes', h2)}
     {#snippet h3()}<PrizeCard prize={{ kind: 'standing', headline: [{ title: LONG[0]?.title ?? '', detail: null, sponsor: LONG[0]?.sponsor ?? null }], more: 0 }} />{/snippet}

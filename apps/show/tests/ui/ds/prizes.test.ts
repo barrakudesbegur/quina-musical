@@ -10,13 +10,13 @@ test('the kind chip: the Line gold, the Bingo orange, the last card standing gre
 });
 
 test('a prize card: the prize first, then the sponsor, then how many more; the kind is the chip', () => {
-  const text = prizeCardText({ kind: 'line', headline: [{ title: 'Entrada al spa per a 2', detail: 'Dissabte', sponsor: 'Hotel Classic Begur' }], more: 4 });
+  const text = prizeCardText({ kind: 'line', headline: [{ title: 'Entrada al spa per a 2', detail: 'Dissabte', sponsor: '[Patrocinador 1]' }], more: 4 });
   assert.deepEqual(text, {
     chip: 'Premi de línia',
     color: 'gold',
     title: 'Entrada al spa per a 2',
     detail: 'Dissabte',
-    sponsor: 'Gentilesa de Hotel Classic Begur',
+    sponsor: 'Gentilesa de [Patrocinador 1]',
     more: 'i 4 premis més',
   });
 });
