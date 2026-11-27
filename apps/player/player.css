@@ -1627,11 +1627,19 @@
   box-shadow: var(--shadow-piece);
 }
 
+/* The header band is a grid, so a long name never pushes the rest onto lines of their own (the user's phone test): the
+   mark, the name (two lines at most), the sitting nino's place, and at the end «#123» with the count pill beside it
+   and the DEMPEUS / ASSEGUT badge under it. The title is `display: contents`, so the name and the number are its grid
+   items and the heading still reads «Àvia #123». */
 .player-card__header {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas:
+    'mark name nino number count'
+    'mark name nino stand stand';
   align-items: center;
-  gap: 0.625rem;
+  column-gap: 0;
+  row-gap: 0;
   padding: 0.4375rem 0.75rem 0.4375rem 0.625rem;
   background: var(--card-color);
   border-bottom: var(--line-width-bold) solid var(--color-line);
@@ -1642,32 +1650,45 @@
 }
 
 .player-card__header .swatch {
+  grid-area: mark;
   width: 2.125rem;
   height: 2.125rem;
+  margin-right: 0.625rem;
 }
 
+/* The name and «#123» share one line: a long name (up to the name field's 20 letters, or a mark's own name such as
+   «Gra de blat de moro») wraps to two lines at most, hyphenated, with an ellipsis after that (R9), and the number
+   stays beside it instead of dropping onto a line of its own. */
 .player-card__title {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  align-items: center;
+  display: contents;
   font-size: inherit;
   letter-spacing: 0;
   text-transform: none;
 }
 
 .player-card__name {
+  grid-area: name;
+  min-width: 0;
+  /* room inside the clamp's box for the outline and the drop under the last line */
+  padding: 0.125rem 0.125rem 0.1875rem;
+  margin: -0.125rem var(--space-2) -0.1875rem -0.125rem;
   font-size: 1.625rem;
-  line-height: 1;
+  line-height: 1.05;
   color: var(--color-text);
+  display: -webkit-box;
+  overflow: hidden;
   overflow-wrap: anywhere;
+  hyphens: auto;
+  hyphenate-limit-chars: 8 4 4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 /* "#123" at the head's right end, outlined like the name (board Mobil-B-J2). */
 .player-card__number {
-  margin-left: auto;
+  grid-area: number;
+  justify-self: end;
   font-family: var(--font-display);
   font-size: 1.625rem;
   font-weight: var(--font-weight-strong);
@@ -1798,7 +1819,6 @@
 }
 
 .player-card-wrap[data-stand] .player-card__header {
-  flex-wrap: nowrap;
   border-radius: calc(var(--radius-lg) - var(--line-width-bold)) calc(var(--radius-lg) - var(--line-width-bold)) 0 0;
 }
 
@@ -1814,8 +1834,10 @@
 }
 
 .player-card__stand {
+  grid-area: stand;
+  justify-self: end;
   position: relative;
-  flex: none;
+  margin-top: 0.3125rem;
   perspective: 200px;
 }
 
@@ -1852,19 +1874,27 @@
   inset: 0;
 }
 
-/* The sitting nino's place beside the badge: kept in the round, so it never lands on the card number. */
+/* The sitting nino's place, between the name and the number's column: only while seated (an empty slot takes no room,
+   so a standing card's name keeps the space), never over the number or the badge. */
 .player-card__nino-slot {
+  grid-area: nino;
   position: relative;
-  flex: none;
   align-self: stretch;
-  width: var(--player-nino-seated);
+  width: calc(var(--player-nino-seated) * 0.75);
+  margin-right: var(--space-2);
+}
+
+.player-card__nino-slot:empty {
+  width: 0;
+  margin-right: 0;
 }
 
 .player-card__nino {
   position: absolute;
   z-index: 3;
-  left: 0;
-  right: 0;
+  left: 50%;
+  width: var(--player-nino-seated);
+  margin-left: calc(var(--player-nino-seated) * -0.62);
   bottom: 30%;
   aspect-ratio: 578 / 819;
   background: var(--player-sticker-seated) center bottom / contain no-repeat;

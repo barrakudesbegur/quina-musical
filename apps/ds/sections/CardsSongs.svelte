@@ -141,6 +141,19 @@
       {/snippet}
       {@render cell('the black card (identity 9, R10): its mark outlined in paper', c6)}
     </div>
+    <h4>Long names (R9): the name field's 20 letters, a mark's own name</h4>
+    <div class="ds-gallery__grid ds-gallery__grid--cards">
+      {#each [['Gra de blat de moro', 'standing'], ['Àvia Montserrat Puig', 'seated'], ['WWWWWWWWWWWWWWWWWWWW', 'count'], ['Superestrelladelanit', 'count']] as [name, kind] (name)}
+        {#snippet n()}
+          <PlayerCard identity={kind === 'seated' ? 3 : 1} {name} number="#412" compact glow={kind === 'standing' ? 'green' : null} showRemaining={kind === 'count'} remaining={2} remainingLabel="En falten 2" data-stand={kind === 'count' ? undefined : kind}>
+            {#snippet mark()}<span class="swatch"><CardMark identity={kind === 'seated' ? 3 : 1} decorative /></span>{/snippet}
+            {#snippet perched()}{#if kind !== 'count'}<span class="player-card__nino-slot" aria-hidden="true">{#if kind === 'seated'}<span class="player-card__nino"></span>{/if}</span>{/if}{/snippet}
+            {#snippet status()}{#if kind !== 'count'}<span class="player-card__stand"><span class="stand-badge" data-state={kind}>{kind === 'seated' ? 'Assegut' : 'Dempeus'}</span></span>{/if}{/snippet}
+          </PlayerCard>
+        {/snippet}
+        {@render cell(`«${name}», ${kind === 'count' ? 'counting' : kind === 'seated' ? 'ASSEGUT' : 'DEMPEUS'}: two lines at most, the number beside it`, n)}
+      {/each}
+    </div>
     <div class="ds-gallery__grid ds-gallery__grid--cards">
       {#snippet k1()}<PlayerCard identity={4} name="Germà" number="#312" compact showRemaining remaining={4} remainingLabel="En falten 4">{#snippet mark()}<span class="swatch"><CardMark identity={4} decorative /></span>{/snippet}</PlayerCard>{/snippet}
       {@render cell('compact, counting', k1)}
