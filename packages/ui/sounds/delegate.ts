@@ -34,6 +34,19 @@ export interface TouchWiring {
   unusable?: string;
   /** A short vibration with each press (phones only). */
   haptics?: boolean;
+  /** Typing in a text field with the device's keyboard sounds like the app's keypad: a character the digit's tap,
+   *  a deletion the backspace's (the user, 27 Nov). */
+  typing?: boolean;
+}
+
+/** The text fields whose typing sounds (not checkboxes, radios, ranges or buttons). */
+const TYPED = 'input:not([type]), input[type="text"], input[type="search"], input[type="tel"], input[type="number"], input[type="email"], input[type="url"], textarea, [contenteditable]';
+
+/** The touch class a keyboard edit sounds as: an insertion a digit, a deletion the backspace; anything else silent. */
+export function typingClass(inputType: string): TouchClass | null {
+  if (inputType.startsWith('insert')) return 'digit';
+  if (inputType.startsWith('delete')) return 'backspace';
+  return null;
 }
 
 /** The press's vibration, in ms (R4). */
@@ -156,10 +169,19 @@ export function wireTouchSounds(doc: Document, wiring: TouchWiring): () => void 
     pressed = null;
   };
 
+  function onBeforeInput(e: Event): void {
+    const target = e.target;
+    if (!(target instanceof Element) || !target.matches(TYPED)) return;
+    const cls = typingClass((e as InputEvent).inputType ?? '');
+    if (cls) touchTap(cls);
+  }
+
   doc.addEventListener('pointerdown', onPointerDown, { capture: true, passive: true });
   doc.addEventListener('click', onClick, { capture: true });
   doc.addEventListener('keydown', onKeyDown, { capture: true, passive: true });
+  if (wiring.typing) doc.addEventListener('beforeinput', onBeforeInput, { capture: true, passive: true });
   return () => {
+    doc.removeEventListener('beforeinput', onBeforeInput, { capture: true });
     doc.removeEventListener('keydown', onKeyDown, { capture: true });
     doc.removeEventListener('pointerdown', onPointerDown, { capture: true });
     doc.removeEventListener('click', onClick, { capture: true });

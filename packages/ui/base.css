@@ -14,6 +14,10 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Touch screens: no grey or blue flash on a tap (every control has its own pressed look, R4), and no
+     pull-to-refresh or overscroll glow, so a scroll during the show never reloads a screen (the user, 27 Nov). */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 body {

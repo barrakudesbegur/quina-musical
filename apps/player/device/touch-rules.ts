@@ -25,4 +25,6 @@ export const PLAYER_TOUCH: TouchWiring = {
   unusable: ':disabled, [aria-disabled="true"], .is-taken',
   // A short vibration with each press (R4), where the phone can.
   haptics: true,
+  // Typing a card's name (or any text field) with the phone's keyboard plays the keypad's sounds.
+  typing: true,
 };

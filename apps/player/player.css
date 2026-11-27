@@ -156,6 +156,10 @@
   /* Its own stacking context, so the your-song layers (z-index −1) paint over the night sky and under the content. */
   isolation: isolate;
   min-height: 100dvh;
+  /* An app, not a document: no text selection or long-press callout (the user, 27 Nov); typed fields stay selectable. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   display: flex;
   flex-direction: column;
   overflow-x: clip;
@@ -166,6 +170,11 @@
   background-image: var(--sky-stars);
   background-size: var(--sky-stars-size);
   background-position: var(--sky-stars-position);
+}
+
+.player :is(input, textarea, [contenteditable]) {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Outlined titles (".gt" on the boards): Londrina in white over a thick ink stroke and a hard ink shadow. Small
@@ -3225,7 +3234,10 @@ html:has(.drawer[open]) {
    menu keep working under it. */
 .offline-veil {
   position: fixed;
-  inset: 0;
+  /* The large viewport's height, not inset 0: when Android's URL bar hides mid-scroll, a fixed layer sized to the
+     small viewport lags a frame behind and the bright screen shows under it (the user, 27 Nov). */
+  inset: 0 0 auto;
+  height: 100lvh;
   z-index: var(--z-overlay);
   background: var(--player-offline-veil);
   opacity: 0;
@@ -4437,7 +4449,8 @@ html:has(.drawer[open]) {
 .your-song__gold,
 .your-song__beams {
   position: fixed;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 100lvh; /* as the offline veil: never a gap while the URL bar hides */
   pointer-events: none;
 }
 

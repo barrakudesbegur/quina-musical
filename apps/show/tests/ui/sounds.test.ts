@@ -186,3 +186,14 @@ test('the MIT notice ships with the recordings', () => {
   assert.match(notice, /Copyright \(c\) 2026-present Josh Comeau/);
   assert.match(notice, /Permission is hereby granted, free of charge/);
 });
+
+test("typing with the device's keyboard sounds like the keypad: a character a digit, a deletion the backspace", async () => {
+  const { typingClass } = await import('../../../../packages/ui/sounds/delegate.ts');
+  assert.equal(typingClass('insertText'), 'digit');
+  assert.equal(typingClass('insertCompositionText'), 'digit');
+  assert.equal(typingClass('insertFromPaste'), 'digit');
+  assert.equal(typingClass('deleteContentBackward'), 'backspace');
+  assert.equal(typingClass('deleteWordBackward'), 'backspace');
+  assert.equal(typingClass('historyUndo'), null);
+  assert.equal(typingClass(''), null);
+});
