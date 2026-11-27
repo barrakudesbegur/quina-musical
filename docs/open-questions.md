@@ -109,6 +109,15 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U190 · The design system's props rework (D205)
+Frontend's research and the rewritten props, with a slots table per component: temp/design-canvas/ds/props-research.md and components-v2.md. Generic components take only what they draw (`color`, `variant`, `size`, `floating`, `ring`, the slots, `sound`), never a game concept. A concept's whole look (colour, icon, label, note, sound, Wii key) is one preset. The recommendations:
+1. **Palette names:** `ice` becomes `cyan` and `lilac` becomes `purple`, and the new ones are named `pink`, `navy`, `grey`, `periwinkle`, so the prop, the token and the spoken word match.
+2. **Where a concept's look lives:** one plain-data registry (`packages/ui/concepts.ts`, plus each app's `actions.ts`), rather than one wrapper component per concept. Parlem is a button, a ring state, a chip and a Wii legend row, and the projector has no Svelte.
+3. **Default sounds:** each kind of control has a default UI sound, which a preset can override or silence (D208). Admin silences them all.
+4. **The concept colour tokens** (`--action-talk`, `--color-calm`…) are deleted, so the registry is the only place that says the Hold is cyan.
+- (a) All as recommended.
+- (b) Comment where not.
+
 ### U188 · A tap outside the console's menu or Wii dialog
 The phone's drawers already close on a tap outside. On the console only ✕ and Esc close them.
 - (a) The menu closes on a tap outside; the Wii dialog doesn't, because it may be mid-pairing.
