@@ -109,6 +109,15 @@ Today the song or Hold music drops very low (−32 dB) for the whole Check, unde
 - (a) As soon as the number is sent: "CARTRÓ #57" and the type check show while the presenter talks, and the first song waits for a press.
 - (b) Only on the presenters' first press.
 
+### U196 · An App Clip for iPhone players
+The research (docs/research/reports/ios-install-and-app-clip.md, 27 Nov) recommends passing.
+- **Review:** it needs a full parent app with the same features, and a parent that is just the site in a web view fails App Review's guideline 4.2. A new app's first approval takes about 2–7 days, often after a rejection, and Apple warns of slow reviews around 19–26 Dec.
+- **Little gain:** its only real gain is 8 hours of notifications, which would also need Apple push from our backend.
+- **Hard to remove:** it's hard to switch off (a deactivated experience kept loading 48+ hours later), and the App Store listing outlives the night with the seller's name and, in the EU, contact details.
+- **The plain link is already the simplest path:** camera, the yellow chip, Safari opens the card. An App Clip adds a card, a tap and a download.
+- (a) Pass.
+- (b) Try it, submitting within about a week.
+
 ### U194 · Push notifications for 2026
 The research (docs/research/reports/push-notifications.md, 27 Nov) recommends skipping them. Everyone they could reach is already in the tent with the app open, the voice cues and the Admin banner already say the same things, iPhones need a Home Screen install that starts with no cards, and few would allow them (about 20–40% of Android players asked). Effort for the smallest version: about 3–5 days across Backend and Frontend.
 - (a) Skip push for 2026, and use what we have.
@@ -299,7 +308,7 @@ It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cle
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
 
 ### U19 · Checks on real devices · before the rehearsals
-1. An iPhone with Safari and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap. The touch sounds (D208): the iPhone's silent switch mutes them (Safari's "ambient" audio), and a tap on a faded key thuds or stays silent, either of which is fine.
+1. An iPhone with Safari (iOS 26 or 27, set to Catalan, for the labels and screenshots) and an Android phone with Chrome: scan a test QR, add a second card by number, lock and unlock (it reconnects, and the screen stays awake), sounds after the first tap. The touch sounds (D208): the iPhone's silent switch mutes them (Safari's "ambient" audio), and a tap on a faded key thuds or stays silent, either of which is fine.
 2. An older phone: smooth scrolling with 3–4 cards, usable at the end of a round.
 3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
