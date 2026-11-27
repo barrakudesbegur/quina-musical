@@ -28,6 +28,7 @@
   import SongRow from './SongRow.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
   import NumberPad from '../../../packages/ui/components/NumberPad.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -165,9 +166,7 @@
         {/if}
       </div>
       {#if peek?.status === 'ok'}
-        <button type="button" class="mini search-tab__future" data-anim="press" aria-pressed={search.cardFuture} onclick={() => (search.cardFuture = !search.cardFuture)}>
-          <Icon name={search.cardFuture ? 'eyeOff' : 'eye'} /><span>{search.cardFuture ? S.cerca.hideFuture : S.cerca.showFuture}</span>
-        </button>
+        <Switch layout="inline" class="search-tab__future" icon="eye" label={S.cerca.showFuture} checked={search.cardFuture} onchange={(on) => (search.cardFuture = on)} />
       {/if}
     {/if}
   </div>

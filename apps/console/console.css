@@ -1340,18 +1340,9 @@
   }
 }
 
-.search-tab__future[aria-pressed='false'] {
-  background: var(--color-gold);
-  color: var(--color-ink);
-}
-
-.search-tab__future[aria-pressed='true'] {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-drop);
-}
-
-.search-tab__modes {
+/* «Mostra el futur»: a Switch (B1) beside the card's number */
+.search-tab__future {
+  --switch-label-size: var(--text-sm);
   flex: none;
 }
 

@@ -276,7 +276,6 @@ export const S = {
     clearCard: 'Un altre cartró',
     hint: 'El número del cartró. ↵ el mostra: les cançons que han sonat i les que no, només aquí.',
     showFuture: 'Mostra el futur',
-    hideFuture: 'Amaga el futur',
     notSold: 'No venut',
     noCards: 'Falten els cartrons impresos (cards.json): no es pot mirar cap cartró.',
     unknownCard: (id: number) => `No hi ha cap cartró #${id}.`,

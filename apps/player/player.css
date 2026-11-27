@@ -2088,6 +2088,18 @@
   cursor: pointer;
 }
 
+/* R4: the QR shrinks a little under the finger; «Veure'l» dims (qr-press, ANIMATIONS.md) */
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .number-pad__qr {
+    transition: scale var(--dur-press-up, 240ms) var(--ease-bounce);
+  }
+
+  :where(.player[data-motion='full']) .number-pad__qr:active {
+    scale: 0.9;
+    transition-duration: var(--dur-press, 80ms);
+  }
+}
+
 .number-pad__qr svg {
   width: 2.5rem;
   height: 2.5rem;
@@ -2392,6 +2404,7 @@
 .player .number-pad__see:active {
   transform: none;
   box-shadow: none;
+  opacity: 0.7;
 }
 
 /* The smart keypad is the NumberPad (B7, packages/ui/components/number-pad.css; ANIMATIONS.md `pad-keys`). */

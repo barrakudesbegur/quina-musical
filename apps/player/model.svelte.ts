@@ -5,6 +5,7 @@ import type { Catalog } from '../../packages/ui/data/catalog.ts';
 import { knownCardTypes } from '../../packages/ui/data/card-types.ts';
 import { heatAt } from '../../packages/rules/heat.ts';
 import { touchRelease, touchTap } from '../../packages/ui/sounds/touch.ts';
+import { buzz } from '../../packages/ui/sounds/delegate.ts';
 import { PLAYER_CONFIG } from './config.ts';
 import { vibrate } from './device/screen.ts';
 import type { Blip, Sounds } from './device/sounds.ts';
@@ -320,6 +321,8 @@ export class PlayerApp {
     this.sounds.unlock();
     this.saveData(setSounds(this.data, on));
     this.sounds.enabled = on;
+    // The switch plays its own sound (only turning on); the buzz comes either way (R4), as the delegate's would.
+    buzz();
     if (on) touchTap('switchOn');
   }
 

@@ -80,7 +80,21 @@
   --ring-w: var(--line-width);
 }
 
+/* R4: a swatch sinks onto its drop while pressed (the sunk look only, with reduced motion) */
+.icon-picker__option:not([data-disabled]):active .icon-picker__chip {
+  --ring-drop: 0px;
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-motion='full']) .icon-picker__option:not([data-disabled]):active .icon-picker__chip {
+    translate: 0 var(--picker-drop);
+  }
+
+  :where([data-density='console'], [data-motion='full']) .icon-picker__chip {
+    transition: translate var(--dur-press-up, 240ms) var(--ease-bounce);
+  }
+
   :where([data-density='console'], [data-motion='full']) .icon-picker__chip[data-anim='icon-pick'] {
     animation: icon-picker-pop var(--dur-icon-pick, 180ms) var(--ease-bounce);
   }

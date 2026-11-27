@@ -94,6 +94,21 @@
   transform: none;
 }
 
+/* R4 (tab-press): an idle tab dips under the finger; the selected one is already down in the panel. */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .tabs__tab {
+    transition:
+      height var(--tabs-dur) var(--ease-out),
+      translate var(--dur-press-up, 240ms) var(--ease-bounce),
+      background-color var(--tabs-dur) var(--ease-out);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .tabs__tab:active:not([aria-selected='true']) {
+    translate: 0 3px;
+    transition-duration: var(--tabs-dur), var(--dur-press, 80ms), var(--tabs-dur);
+  }
+}
+
 .tabs__tab[aria-pressed='true'] {
   background: var(--color-tab-idle);
 }
