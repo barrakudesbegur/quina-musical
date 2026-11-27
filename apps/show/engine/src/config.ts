@@ -841,7 +841,7 @@ export const ENGINE = Object.freeze({
   /** One-shot fanfares (data/media/stingers). */
   stingers: STINGER_NAMES,
   /** Played once per climb (towards the Line, then the Bingo) as the first Spin at or above
-   * `finalLapStingerPhase` starts; game.finalLapStinger turns it off. 'late' because late starts a random
+   * `finalLapStingerPhase` starts; game.autoSounds.finalLap turns it off. 'late' because late starts a random
    * 3–8 songs before the expected win and has false alarms, so the fanfare never gives the ending away
    * ('final' would: it is 1–3 songs before a likely win). Pending the user's answer (research Q18). */
   finalLapStinger: 'mkwii-final-lap' as StingerName, // widened: a setting, not a fixed literal

@@ -795,19 +795,17 @@ export class Show {
       autoAdvance: true,
       autoAdvanceFinal: false,
       remoteShake: true,
-      voicesOn: true,
       songsUntilWinner: 20,
       phaseOverride: null,
       roundsTotal: 5,
       holdMusicAfterSec: HOLD.holdMusicAfterSec,
       nextRecipe: null,
-      finalLapStinger: true,
       holdMusicOn: true,
       ...settings,
+      autoSounds: autoSoundsOf(settings),
     };
-    this.syncAutoSounds();
     this.takeVolumes(this.game);
-    if (AUTO_SOUNDS.some((k) => !this.game.autoSounds![k])) this.pushVolumes();
+    if (AUTO_SOUNDS.some((k) => !this.game.autoSounds[k])) this.pushVolumes();
     // Its effects wait for the runtime's first flush().
     if (restore?.round) {
       this.restore(restore, restore.round);
@@ -818,9 +816,7 @@ export class Show {
       this.setPlayed(restore.playedBefore ?? []);
     }
     if (restore?.settings) {
-      this.game = { ...this.game, ...restore.settings };
-      this.syncAutoSounds();
-      this.takeVolumes(this.game);
+      this.takeSettings(restore.settings);
     }
     const ranges = restore?.cardsInPlay || cardsInPlay;
     try {
@@ -1407,9 +1403,8 @@ export class Show {
     this.gameId = record.gameId;
     this.journalSeq = record.seq;
     if (record.settings) {
-      this.game = { ...this.game, ...record.settings, nextRecipe: null };
-      this.syncAutoSounds();
-      this.takeVolumes(this.game);
+      this.takeSettings(record.settings);
+      this.game.nextRecipe = null;
     }
     try {
       this.setCards(record.cardsInPlay);
@@ -1519,7 +1514,7 @@ export class Show {
 
   journalSettings(): JournalSettings {
     const { nextRecipe: _testOnly, volumes: _kept, ...rest } = this.game;
-    const settings = { ...rest, autoSounds: { ...this.game.autoSounds! } };
+    const settings = { ...rest, autoSounds: { ...this.game.autoSounds } };
     // Absent until this Game set them, so a fresh Game still takes the plan's (D139).
     return this.volumesSet ? { ...settings, volumes: { ...this.volumes } } : settings;
   }
@@ -1543,18 +1538,17 @@ export class Show {
 
   /** The sliders and the sounds switched off, for the runtime's gains. */
   pushVolumes() {
-    this.out.push({ type: 'volumes', volumes: { ...this.volumes }, autoSounds: { ...this.game.autoSounds! } });
+    this.out.push({ type: 'volumes', volumes: { ...this.volumes }, autoSounds: { ...this.game.autoSounds } });
   }
 
   /**
-   * `autoSounds` from the settings as they stand (a journal from before D237 has only `finalLapStinger` and
-   * `voicesOn`), and the two old fields as its mirrors, kept for one deploy while the console moves to setAutoSound.
+   * A journal's settings over the Game's: its sounds through autoSoundsOf (a journal from before D237 has only the old
+   * `finalLapStinger` and `voicesOn`, which the Game no longer keeps), its volumes to the sliders.
    */
-  syncAutoSounds() {
-    const sounds = autoSoundsOf(this.game);
-    this.game.autoSounds = sounds;
-    this.game.finalLapStinger = sounds.finalLap;
-    this.game.voicesOn = sounds.voices;
+  takeSettings(settings: JournalSettings) {
+    const { finalLapStinger: _old, voicesOn: _oldVoices, ...rest } = settings;
+    this.game = { ...this.game, ...rest, autoSounds: autoSoundsOf(settings) };
+    this.takeVolumes(this.game);
   }
 
   /** The drum after a resume: the songs not yet played and the last landing (under the pointer), in the round's
@@ -1589,9 +1583,7 @@ export class Show {
 
   /** One automatic sound on or off (D237): applied at once, journaled with the settings. */
   setAutoSound(key: AutoSound, on: boolean) {
-    this.game.autoSounds = { ...this.game.autoSounds!, [key]: on };
-    this.game.finalLapStinger = this.game.autoSounds.finalLap;
-    this.game.voicesOn = this.game.autoSounds.voices;
+    this.game.autoSounds = { ...this.game.autoSounds, [key]: on };
     this.pushVolumes();
     this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
   }
@@ -1742,7 +1734,7 @@ export class Show {
     // first time the Phase reaches ENGINE.finalLapStingerPhase.
     const climb = this.phaseModel.kind;
     const reached = PHASE_RANK[plan.phase] >= PHASE_RANK[ENGINE.finalLapStingerPhase];
-    if (this.game.autoSounds!.finalLap && reached && !this.stingerClimbs.has(climb)) {
+    if (this.game.autoSounds.finalLap && reached && !this.stingerClimbs.has(climb)) {
       this.stingerClimbs.add(climb);
       this.out.push({ type: 'sfx', name: ENGINE.finalLapStinger, at: plan.spinStart + 0.05, volume: 'finalLap' });
     }
@@ -2302,11 +2294,6 @@ export class Show {
 
   setGame(fields: CommandFields['setGame']) {
     for (const key of SET_GAME_FIELDS) assignDefined(this.game, fields, key);
-    // The old switches, for one deploy (D237): they set their sound in autoSounds.
-    if (fields.finalLapStinger != null || fields.voicesOn != null) {
-      this.game.autoSounds = { ...this.game.autoSounds!, finalLap: this.game.finalLapStinger, voices: this.game.voicesOn !== false };
-      this.pushVolumes();
-    }
     this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     this.rescheduleAuto();
     // Hold music switched on or off in a Hold with the song ducked: its timed switch goes or comes back.
@@ -3252,7 +3239,7 @@ export class Show {
    * music it leads into starts under it, dipped, and comes up as the voice ends.
    */
   pressCue(cue: VoiceCue | null) {
-    if (!cue || !this.game.autoSounds!.voices) return;
+    if (!cue || !this.game.autoSounds.voices) return;
     this.cutVoice();
     this.playVoice(cue, cue.startsWith('round-') ? 'fanfare' : 'chime');
   }
@@ -3330,7 +3317,7 @@ export class Show {
     const last = due.reduce((a, b) => (b.dueMs > a.dueMs ? b : a));
     for (const c of due) if (c !== last) this.voicesDone.add(c.key);
     const late = (nowMs - last.dueMs) / 1000 > VOICE.maxWaitSec;
-    if (late || !this.game.autoSounds!.voices) {
+    if (late || !this.game.autoSounds.voices) {
       this.voicesDone.add(last.key);
       return this.emitState();
     }
@@ -3342,7 +3329,7 @@ export class Show {
 
   /** The next timed cue, for the console: the one waiting, else the next due. */
   voiceNext(): { cue: VoiceCue; atMs: number } | null {
-    if (!this.game.autoSounds!.voices) return null;
+    if (!this.game.autoSounds.voices) return null;
     const nowMs = this.env.nowMs();
     const open = this.timedCues().filter((c) => !this.voicesDone.has(c.key) && nowMs - c.dueMs <= VOICE.maxWaitSec * 1000);
     const waiting = open.filter((c) => c.dueMs <= nowMs).sort((a, b) => b.dueMs - a.dueMs)[0];
@@ -3833,7 +3820,7 @@ export class Show {
       next: this.songInfo(this.queue[this.position + 1]),
       queue: { position: this.position, length: this.queue.length },
       round: { ...this.round },
-      game: { ...this.game, autoSounds: { ...this.game.autoSounds! }, volumes: { ...this.volumes } },
+      game: { ...this.game, autoSounds: { ...this.game.autoSounds }, volumes: { ...this.volumes } },
       phase: this.phaseName(),
       heat: this.phaseStep(this.position + 1)?.heat ?? null,
       cards: {

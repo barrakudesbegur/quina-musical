@@ -240,10 +240,21 @@ export const isAutoSound = (value: unknown): value is AutoSound =>
 /** All on. */
 export const AUTO_SOUNDS_DEFAULT: Readonly<AutoSounds> = Object.freeze(Object.fromEntries(AUTO_SOUNDS.map((k) => [k, true])) as AutoSounds);
 /**
+ * A settings object's sounds as a journal may carry them: `autoSounds` since D237; a journal from before has, instead,
+ * the two switches the engine wrote then (it no longer writes or takes them).
+ */
+export interface SoundSettings {
+  autoSounds?: Partial<AutoSounds> | null;
+  /** Before D237: the final-lap stinger on or off. */
+  finalLapStinger?: boolean;
+  /** Before D237: the automatic voice cues on or off (D204). */
+  voicesOn?: boolean;
+}
+/**
  * A settings object's sounds: its own `autoSounds`, else (a journal from before them) its `finalLapStinger` and
  * `voicesOn`. Always a fresh object with every key.
  */
-export function autoSoundsOf(settings: { autoSounds?: Partial<AutoSounds> | null; finalLapStinger?: boolean; voicesOn?: boolean }): AutoSounds {
+export function autoSoundsOf(settings: SoundSettings): AutoSounds {
   const own = settings.autoSounds ?? { finalLap: settings.finalLapStinger !== false, voices: settings.voicesOn !== false };
   return { ...AUTO_SOUNDS_DEFAULT, ...Object.fromEntries(Object.entries(own).filter(([k, v]) => isAutoSound(k) && typeof v === 'boolean')) };
 }

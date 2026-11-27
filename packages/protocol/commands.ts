@@ -87,16 +87,11 @@ export const COMMANDS = Object.freeze({
     phaseOverride: { type: 'phase', optional: true, nullable: true },
     roundsTotal: { type: 'integer', optional: true, min: 1, max: 20 },
     holdMusicAfterSec: { type: 'number', optional: true, min: 0, max: 3600 },
-    /** Kept for one deploy while the console moves to `setAutoSound` (D237): sets `autoSounds.finalLap`. */
-    finalLapStinger: { type: 'boolean', optional: true },
     /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
      * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
     holdMusicOn: { type: 'boolean', optional: true },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
-    /** The automatic voice cues on or off for the night (D204). Kept for one deploy while the console moves to
-     * `setAutoSound` (D237): sets `autoSounds.voices`. */
-    voicesOn: { type: 'boolean', optional: true },
   },
   /** The sound test (D229): plays `kind` on a loop at its slider's level (`setVolume` moves it live); null ends it.
    * Only before the first round's intro (scene `before`), with nothing playing; any scene change ends it. Not journaled. */

@@ -132,7 +132,6 @@ export function baseState(now: number): FullState {
       roundsTotal: 8,
       holdMusicAfterSec: 45,
       nextRecipe: null,
-      finalLapStinger: true,
       autoSounds: { ...AUTO_SOUNDS_DEFAULT },
     },
     phase: 'late',

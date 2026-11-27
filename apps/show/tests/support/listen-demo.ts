@@ -62,7 +62,8 @@ async function main(): Promise<void> {
     await remote.until('the show unlocked', (s) => s.status !== 'locked');
     await remote.command('setCardsInPlay', { ranges: '1-200' });
     await remote.command('setPace', { pace: PACE, locked: true });
-    await remote.command('setGame', { phaseOverride: 'early', finalLapStinger: true });
+    await remote.command('setGame', { phaseOverride: 'early' });
+    await remote.command('setAutoSound', { key: 'finalLap', on: true });
     // The round's intro, its Shuffle under the Interval music, then the recording starts on the first Next.
     await remote.command('roundIntro', { number: 1 });
     await remote.command('newRound', { number: 1 });

@@ -6,11 +6,14 @@
 // `extendJournal` share the one reducer every side uses, so they all agree on the result.
 // Live playback (decks, effects, the Spin in flight, a Check's snippets) is deliberately not in here: it
 // restarts fresh. PRIVATE as a whole: it holds the Queues and the Winners' names.
-import { DEFAULT_SIDE, defaultCardType, type CheckOutcome, type ClimbTarget, type RoundKind, type ShowScene, type WinKind } from './vocabulary.ts';
+import { DEFAULT_SIDE, defaultCardType, type AutoSounds, type CheckOutcome, type ClimbTarget, type RoundKind, type ShowScene, type SoundSettings, type WinKind } from './vocabulary.ts';
 import type { GameSettings, WinnerInfo } from './events.ts';
 
-/** The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). */
-export type JournalSettings = Omit<GameSettings, 'nextRecipe'>;
+/**
+ * The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). A journal from before
+ * D237 lacks `autoSounds` and has the old switches instead (SoundSettings); read its sounds with autoSoundsOf.
+ */
+export type JournalSettings = Omit<GameSettings, 'nextRecipe' | 'autoSounds'> & Omit<SoundSettings, 'autoSounds'> & { autoSounds?: AutoSounds };
 
 interface EntryBase {
   /** The Game this entry belongs to. */

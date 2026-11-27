@@ -165,7 +165,7 @@ test('the plan: one Desgraciat round at most, no Line prizes in it, and it plays
 });
 
 test('a Desgraciat round climbs to the last card standing in the journal, and its resume token reads D', () => {
-  const settings = { pace: 14, paceLocked: false, autoAdvance: true, autoAdvanceFinal: false, songsUntilWinner: 30, phaseOverride: null, roundsTotal: 3, holdMusicAfterSec: 20, finalLapStinger: true };
+  const settings = { pace: 14, paceLocked: false, autoAdvance: true, autoAdvanceFinal: false, songsUntilWinner: 30, phaseOverride: null, roundsTotal: 3, holdMusicAfterSec: 20 };
   const entry: JournalEntry = {
     gameId: 'g', seq: 1, atMs: 1, kind: 'round.started', round: 4, roundKind: 'desgraciat', cardType: 'especial', queue: [1, 2, 3],
     phaseSeed: 1, startedAtMs: 1, targetEndMs: 2, settings, shuffleSeed: 5, shuffleAttempts: 0,

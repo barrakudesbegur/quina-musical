@@ -22,7 +22,7 @@ function plan(over: Partial<GamePlan['schedule']> = {}, kinds = ['normal', 'norm
 }
 
 function show(): Harness {
-  const h = setup({ seed: 2, settings: { autoAdvance: false, voicesOn: true } });
+  const h = setup({ seed: 2, settings: { autoAdvance: false } });
   h.send('unlock');
   return h;
 }
@@ -50,14 +50,14 @@ test("a round's start: its fanfare and voice, by its Quina number, over its intr
   assert.deepEqual(voices(skip).map((v) => v.action), ['stop']);
   assert.equal(k.show.snapshot().voice, null);
   // Off for the night: journaled, and the music at once.
-  h.send('setGame', { voicesOn: false });
+  h.send('setAutoSound', { key: 'voices', on: false });
   const o = show();
-  o.send('setGame', { voicesOn: false });
+  o.send('setAutoSound', { key: 'voices', on: false });
   const off = o.send('roundIntro', { number: 2, kind: 'normal' });
   assert.deepEqual(voices(off), []);
   assert.ok(off.some((e) => e.type === 'introMusic'));
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
-  assert.equal(h.show.record().settings?.voicesOn, false);
+  assert.equal(h.show.record().settings?.autoSounds?.voices, false);
 });
 
 test('a cue whose end never comes (a missing file) ends by itself; the end of the night: the goodbye over the end set', () => {

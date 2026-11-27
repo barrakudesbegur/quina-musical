@@ -91,7 +91,7 @@ function render() {
   }
   $('auto', HTMLInputElement).checked = s.game.autoAdvance;
   $('auto-final', HTMLInputElement).checked = s.game.autoAdvanceFinal;
-  $('final-lap', HTMLInputElement).checked = s.game.finalLapStinger;
+  $('final-lap', HTMLInputElement).checked = s.game.autoSounds.finalLap;
   $('schedule').textContent = `Round ends ≈ ${clockTime(s.schedule.roundEndMs)} (${drift(s.schedule.roundDriftSec)}) · game ends ≈ ${clockTime(s.schedule.gameEndMs)}`;
   if (document.activeElement !== $('suw')) $('suw', HTMLInputElement).value = String(s.game.songsUntilWinner);
   if (document.activeElement !== $('cards-in-play')) $('cards-in-play', HTMLInputElement).value = s.cards.inPlay;
@@ -190,7 +190,7 @@ $('pace-up').addEventListener('click', () => send('setPace', { delta: PACE_FINE_
 $('pace-lock').addEventListener('change', (e) => send('setPace', { locked: targetOf(e, HTMLInputElement).checked }));
 $('auto').addEventListener('change', (e) => send('setGame', { autoAdvance: targetOf(e, HTMLInputElement).checked }));
 $('auto-final').addEventListener('change', (e) => send('setGame', { autoAdvanceFinal: targetOf(e, HTMLInputElement).checked }));
-$('final-lap').addEventListener('change', (e) => send('setGame', { finalLapStinger: targetOf(e, HTMLInputElement).checked }));
+$('final-lap').addEventListener('change', (e) => send('setAutoSound', { key: 'finalLap', on: targetOf(e, HTMLInputElement).checked }));
 $('suw').addEventListener('change', (e) => send('setGame', { songsUntilWinner: Math.max(0, Math.round(Number(targetOf(e, HTMLInputElement).value))) }));
 $('phase-override').addEventListener('change', (e) => {
   const phase = targetOf(e, HTMLSelectElement).value;

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { Show } from '../engine/src/show/show.ts';
 import { planTransition, type PlanRequest, type SignatureSource } from '../engine/src/plan/planner.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
-import { VOLUME_DEFAULTS, firstPlaySec, makeCommand, volumeDb } from '@quina/protocol';
+import { AUTO_SOUNDS_DEFAULT, VOLUME_DEFAULTS, firstPlaySec, makeCommand, volumeDb } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
 import { HOLD, ENGINE, FLOW, PACE, LOOP } from '../engine/src/config.ts';
 import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
@@ -426,7 +426,7 @@ test('a "final lap" stinger plays once per climb, as the Phase first reaches the
   assert.deepEqual(on.map(([phase]) => phase), ['mid', 'late', 'late', 'final']);
   const at = ['mid', 'late', 'late', 'final'].indexOf(ENGINE.finalLapStingerPhase);
   assert.deepEqual(on.map(([, s]) => s), on.map((_, i) => (i === at ? ['mkwii-final-lap'] : [])));
-  assert.deepEqual(run({ finalLapStinger: false }).map(([, s]) => s), [[], [], [], []]);
+  assert.deepEqual(run({ autoSounds: { ...AUTO_SOUNDS_DEFAULT, finalLap: false } }).map(([, s]) => s), [[], [], [], []]);
 });
 
 test('the next hook is chosen early; a Blend render is requested for tempo-matchable pairs and used when ready', () => {

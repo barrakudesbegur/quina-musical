@@ -91,21 +91,15 @@ export interface GameSettings {
    * switch. The engine only keeps it. Default true. Optional in the type only: an older journal lacks it.
    */
   remoteShake?: boolean;
-  /** The automatic voice cues for the night (D204). Default true. Optional in the type only: an older journal lacks it.
-   * Since D237 a read-only mirror of `autoSounds.voices`, kept for one deploy. */
-  voicesOn?: boolean;
-  /** The sounds the engine plays by itself, each on or off (D237, AUTO_SOUNDS; `setAutoSound`). The engine always
-   * sends every key; optional in the type only, since an older journal lacks it (autoSoundsOf reads one). */
-  autoSounds?: AutoSounds;
+  /** The sounds the engine plays by itself, each on or off (D237, AUTO_SOUNDS; `setAutoSound`), every key. A journal
+   * from before D237 lacks it (JournalSettings; autoSoundsOf reads its old switches). */
+  autoSounds: AutoSounds;
   /** Phase placeholder when no cards are in play. */
   songsUntilWinner: number;
   phaseOverride: PhaseName | null;
   roundsTotal: number;
   holdMusicAfterSec: number;
   nextRecipe: string | null;
-  /** A fanfare once per climb, as the Phase reaches the engine's Final Lap phase. Since D237 a read-only mirror of
-   * `autoSounds.finalLap`, kept for one deploy. */
-  finalLapStinger: boolean;
   /**
    * Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`; Hold music
    * still covers what would be silence (after Back, a cancelled Spin, a song that runs out). Default true.
