@@ -913,6 +913,13 @@ function soundTest(effect: EffectOf<'soundTest'>): void {
       const mood = kind === 'holdMusic' ? 'hold' : kind === 'win' ? 'celebration' : kind === 'fail' ? 'error' : 'intro';
       void holdMusic.switchTo({ at: ctx.currentTime + 0.05, levelDb: kind === 'intros' ? INTRO.levelDb : HOLD.holdMusicLevelDb, fadeSec: fade, mood });
       stops.push(() => holdMusic.stop({ fadeSec: fade }));
+      // Their sliders also move the fanfares (winFx, failFx): the Celebration's fanfare and impact, a failed Check's.
+      if (kind === 'win')
+        every(12, (t) => {
+          void playSfx(FLOW.celebration.fanfare, t, graph.vol.winFx);
+          void playSfx(FLOW.celebration.impact, t, graph.vol.winFx);
+        });
+      else if (kind === 'fail') every(12, (t) => void playSfx(FLOW.failureFanfare, t, graph.vol.failFx));
       return;
     }
     case 'breaks':
