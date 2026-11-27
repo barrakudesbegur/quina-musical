@@ -643,11 +643,17 @@
 }
 
 .night__rounds {
-  /* The balls shrink a little so up to 8 regular rounds fit on one line (`--balls`: how many). */
+  /* The balls shrink a little so up to 7 regular rounds fit on one line; more take two lines, half each (D243: 1–5 over
+     6–10). `--balls`: how many on a line (model/night.ts ballsPerRow). */
   --stage-ball: clamp(2.5rem, calc(21rem / var(--balls, 6) - 0.375rem), 3.25rem);
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  gap: 0.375rem;
+}
+
+.night__balls {
+  display: grid;
+  grid-template-columns: repeat(var(--balls, 6), var(--stage-ball));
   gap: 0.375rem;
 }
 
