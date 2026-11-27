@@ -43,6 +43,12 @@ export function yourSongEntry(song: Pick<YourSong, 'atMs'>, nowMs: number, reduc
   return nowMs - song.atMs < YOUR_SONG_LIVE_MS ? 'flash' : 'quiet';
 }
 
+/** The browser's bar (`theme-color`) while the look shows, and back at the night (tokens.css `--color-gold-light`,
+ *  `--color-bg` = `--color-night`). Known tokens, never read from computed style: a read right after a landing's DOM
+ *  changes forced a whole style recalc inside the landing's task (24–48 ms at 4–6× CPU). your-song.test.ts keeps
+ *  them equal to tokens.css. */
+export const THEME_COLOR = Object.freeze({ gold: '#ffe08a', night: '#18204a' });
+
 /** Every song on these cards (the playing ones: `PlayerApp.playingViews`). */
 export function songsOnCards(views: readonly { card: { lines: readonly (readonly number[])[] } | null }[]): Set<number> {
   const out = new Set<number>();

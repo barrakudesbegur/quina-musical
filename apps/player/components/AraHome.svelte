@@ -112,13 +112,7 @@
     const player = playerEl();
     const watched = [root, top?.firstElementChild, alertsEl(), ...headEls(), player?.querySelector('.player__main')].filter(Boolean) as Element[];
     const sc = box();
-    const onScroll = () => {
-      if (hintRaf) return;
-      hintRaf = requestAnimationFrame(() => {
-        hintRaf = 0;
-        updateHint();
-      });
-    };
+    const onScroll = () => scheduleHint();
     sc.addEventListener('scroll', onScroll, { passive: true });
     const ro = new ResizeObserver(() => measure());
     for (const el of watched) ro.observe(el);
@@ -154,6 +148,17 @@
     go('cartrons');
   }
 
+  /** Look again in the next animation frame, before it is drawn: the frame lays the page out anyway, so the cards'
+   *  places cost nothing extra there, where read right after the DOM changes (a landing, a Spin's start) they forced a
+   *  synchronous layout inside that task (17–30 ms at 4–6× CPU). The hint still changes in that same frame. */
+  function scheduleHint(): void {
+    if (hintRaf) return;
+    hintRaf = requestAnimationFrame(() => {
+      hintRaf = 0;
+      updateHint();
+    });
+  }
+
   /** On Cartrons, with the song on a card none of which shows: which way it is (`card-hint`). */
   function updateHint(): void {
     if (shown !== 'cartrons' || frame || !holders.length || !track) {
@@ -180,7 +185,7 @@
     void shown;
     void frame;
     void app.playingViews;
-    untrack(() => updateHint());
+    untrack(() => scheduleHint());
   });
   // The top's content is swapped by the pause and the scenes: watch the new one too.
   $effect(() => {

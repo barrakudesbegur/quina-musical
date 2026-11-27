@@ -13,7 +13,7 @@
   // the browser's bar (`theme-color`) is gold too, and back to the night when it goes.
   import { untrack } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
-  import { COMET, cometPass, yourSongEntry, type YourSong } from '../logic/your-song.ts';
+  import { COMET, THEME_COLOR, cometPass, yourSongEntry, type YourSong } from '../logic/your-song.ts';
   import CardMark from './CardMark.svelte';
 
   let {
@@ -24,13 +24,12 @@
     marks = [],
   }: { song: YourSong; nowMs: number; reduced: boolean; layer?: number; /** The identities of the cards holding the song. */ marks?: readonly number[] } = $props();
 
+  // The browser's bar: the tokens' colours as constants, so the landing's task never forces a style recalc to read them.
   $effect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) return;
-    const root = getComputedStyle(document.documentElement);
-    const gold = root.getPropertyValue('--color-gold-light').trim();
-    if (gold) meta.setAttribute('content', gold);
-    return () => meta.setAttribute('content', root.getPropertyValue('--color-bg').trim());
+    meta.setAttribute('content', THEME_COLOR.gold);
+    return () => meta.setAttribute('content', THEME_COLOR.night);
   });
   const entry = untrack(() => yourSongEntry(song, nowMs, reduced));
   /** The flash plays once, then goes, so showing the layer again never replays it. */
@@ -52,12 +51,18 @@
     };
   });
 
+  // Shown in the next animation frame, before it is drawn: `showPopover()` brings the page's style up to date, so
+  // called right after the landing's DOM changes it forced the whole recalc inside the landing's task (40 ms at 4×
+  // CPU); in the frame that recalc is the frame's own. It still shows in the landing's first frame.
   $effect(() => {
     void layer;
     const el = top;
     if (!el) return;
-    if (el.matches(':popover-open')) el.hidePopover();
-    el.showPopover();
+    const raf = requestAnimationFrame(() => {
+      if (el.matches(':popover-open')) el.hidePopover();
+      el.showPopover();
+    });
+    return () => cancelAnimationFrame(raf);
   });
 
   // The out transitions (ms): the gold fades back to night blue, the spotlights lift and fade, the particles fade.

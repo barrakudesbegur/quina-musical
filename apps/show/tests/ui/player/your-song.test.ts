@@ -2,7 +2,8 @@
 // gold until the next Spin starts; never in the Desgraciat round; a flash only for a landing seen live.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { COMET, YOUR_SONG_LIVE_MS, cometPass, songsOnCards, yourSongEntry, yourSongOf, type YourSongInput } from '../../../../player/logic/your-song.ts';
+import fs from 'node:fs';
+import { COMET, THEME_COLOR, YOUR_SONG_LIVE_MS, cometPass, songsOnCards, yourSongEntry, yourSongOf, type YourSongInput } from '../../../../player/logic/your-song.ts';
 import { PLAYER_DEMOS } from '../../../../player/feed/demo-feed.ts';
 
 const T = 1_000_000;
@@ -86,4 +87,12 @@ test('the phone vibrates as your song lands (§8 Y1); a fall keeps its own patte
   assert.equal(buzzFor({ cue: 'fall', freshMarks: ['57:12'] }, true), 'fall');
   assert.equal(buzzFor({ cue: null, freshMarks: ['57:12'] }, true), null, 'a ✗ on a seated card in the Desgraciat round');
   assert.equal(buzzFor({ cue: null, freshMarks: [] }, false), null, 'opening the app: quiet');
+});
+
+test('the browser bar’s gold and night are the tokens’ (constants, so a landing never reads computed style)', () => {
+  const css = String(fs.readFileSync(new URL('../../../../../packages/ui/tokens.css', import.meta.url)));
+  const token = (name: string) => css.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].trim().toLowerCase();
+  assert.equal(THEME_COLOR.gold, token('color-gold-light'));
+  assert.equal(token('color-bg'), 'var(--color-night)');
+  assert.equal(THEME_COLOR.night, token('color-night'));
 });
