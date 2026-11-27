@@ -50,15 +50,22 @@ const BRAND = ['QUINA QUINA!', 'BARRAKUDES · 2026'];
 const HEADINGS = { normal: ['QUINES 1–5', 'QUINES 6–10'], especial: ['DESGRACIAT', 'ESPECIAL'] };
 const GOMET = { diameter: 42.52 /* 15 mm */, size: 10.5, spacingEm: 0.15 };
 
-const A4 = { w: 595.28, h: 841.89 };
+// The sheets a Catalan copy shop prints colour on (portrait, in points): A4, A3 and SRA3 (32 × 45 cm, the digital
+// presses' sheet). A layout cuts one sheet into cols × rows cards.
+const SHEETS = { A4: { w: 595.28, h: 841.89 }, A3: { w: 841.89, h: 1190.55 }, SRA3: { w: 907.09, h: 1275.59 } };
 const LAYOUTS = {
-  '3x1-h': { name: '3×1 horizontal (today)', landscape: false, cols: 1, rows: 3, titleMax: 14, cover: 46 },
-  '2x1-h': { name: '2×1 horizontal', landscape: false, cols: 1, rows: 2, titleMax: 16 },
-  '2x1-v': { name: '2×1 vertical', landscape: true, cols: 2, rows: 1, titleMax: 16 },
-  '2x2-h': { name: '2×2 horizontal', landscape: true, cols: 2, rows: 2, titleMax: 16 },
-  '2x2-v': { name: '2×2 vertical', landscape: false, cols: 2, rows: 2, titleMax: 16 },
+  '3x1-h': { name: '3×1 horizontal (today)', sheet: 'A4', landscape: false, cols: 1, rows: 3, titleMax: 14, cover: 46 },
+  '2x1-h': { name: '2×1 horizontal', sheet: 'A4', landscape: false, cols: 1, rows: 2, titleMax: 16 },
+  '2x1-v': { name: '2×1 vertical', sheet: 'A4', landscape: true, cols: 2, rows: 1, titleMax: 16 },
+  '2x2-h': { name: '2×2 horizontal', sheet: 'A4', landscape: true, cols: 2, rows: 2, titleMax: 16 },
+  '2x2-v': { name: '2×2 vertical', sheet: 'A4', landscape: false, cols: 2, rows: 2, titleMax: 16 },
+  'sra3-6': { name: 'SRA3 · 6 a sheet', sheet: 'SRA3', landscape: true, cols: 2, rows: 3, titleMax: 15 },
+  'sra3-4': { name: 'SRA3 · 4 a sheet', sheet: 'SRA3', landscape: true, cols: 2, rows: 2, titleMax: 16 },
+  'a3-3': { name: 'A3 · 3 a sheet', sheet: 'A3', landscape: false, cols: 1, rows: 3, titleMax: 18 },
+  'a3-6': { name: 'A3 · 6 a sheet', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16 },
 };
-const AMOUNTS = (perPage) => (perPage === 3 ? { normal: 399, especial: 300 } : { normal: 400, especial: 300 });
+// Each type's amount fills whole sheets: last year's 399 normal and 300 special, rounded up.
+const AMOUNTS = (perPage) => ({ normal: Math.ceil(399 / perPage) * perPage, especial: Math.ceil(300 / perPage) * perPage });
 
 // A seeded shuffle, so a mockup's cards are the same on every run.
 function rng(seed) {
@@ -179,7 +186,8 @@ const NumberAndQr = ({ num, qr, qrSize }) =>
 
 // The geometry of one card in a layout: header, heading size, cells, cover, text box.
 function geometry(layout) {
-  const page = layout.landscape ? { w: A4.h, h: A4.w } : A4;
+  const sheet = SHEETS[layout.sheet];
+  const page = layout.landscape ? { w: sheet.h, h: sheet.w } : sheet;
   const W = page.w / layout.cols;
   const H = page.h / layout.rows;
   const innerW = W - 30;
@@ -272,7 +280,7 @@ async function build(key) {
             return h(Card, { key: num, g, layout, kind, side, num, position, qr: qrs[num], stats, cut });
           }));
       });
-      pages.push(h(Page, { key: kind + side, size: 'A4', orientation: layout.landscape ? 'landscape' : 'portrait', style: { backgroundColor: '#ffffff' } }, rows));
+      pages.push(h(Page, { key: kind + side, size: [g.page.w, g.page.h], style: { backgroundColor: '#ffffff' } }, rows));
     }
   }
   fs.mkdirSync(OUT, { recursive: true });
@@ -280,7 +288,8 @@ async function build(key) {
   await render(h(Document, null, pages), out);
   const ts = stats.map((s) => s.ts).sort((a, b) => a - b);
   const mm = (pt) => (pt / 2.8346).toFixed(0);
-  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage}/page, cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
+  const sheets = Math.ceil(amounts.normal / perPage) + Math.ceil(amounts.especial / perPage);
+  console.log(`${key.padEnd(6)} ${layout.name.padEnd(24)} card ${mm(g.W)}×${mm(g.H)} mm, ${perPage} a ${layout.sheet} (${sheets} sheets for ${amounts.normal}+${amounts.especial}), cell ${mm(g.cellW)}×${mm(g.cellH)} mm, cover ${mm(g.cover)} mm ${g.top ? 'above' : 'beside'}, title median ${ts[Math.floor(ts.length / 2)]} pt (min ${ts[0]}), ${stats.filter((s) => !s.ok).length} not fitting → ${out}`);
 }
 
 (async () => {
