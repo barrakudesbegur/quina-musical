@@ -2,7 +2,7 @@
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
 import {
-  DEFAULT_CARD_TYPE, DEFAULT_POOL, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
+  DEFAULT_CARD_TYPE, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, isPoolId, roundCardPrice, sideWarnings,
   type CardTypePrice, type CardTypeSides, type RemoteStatus,
 } from '@quina/protocol';
 
@@ -42,36 +42,52 @@ export function printedByType(cards: unknown): Map<string, number> | null {
   return counts;
 }
 
-/** Each of the repertoire's songs and its pool (songs.json's per-song `pool`, D178; none: DEFAULT_POOL). */
-export function songPools(songs: unknown): Map<number, string> {
-  const pools = new Map<number, string>();
-  if (!Array.isArray(songs)) return pools;
-  for (const song of songs as { id?: unknown; pool?: unknown }[]) {
-    if (Number.isInteger(song?.id)) pools.set(song.id as number, typeof song.pool === 'string' ? song.pool : DEFAULT_POOL);
+/**
+ * Each of the repertoire's songs and its pools (songs.json's per-song `pools`, D268: one repertoire holds every song
+ * once, and a song can be in more than one pool), with what's wrong in them. Only `pools` counts: the older per-song
+ * `pool` is ignored. A song whose `pools` is missing, empty, repeats a pool or holds a non-pool id is a problem, and
+ * stays in the map with no pools (it's in the repertoire, but no round can shuffle it).
+ */
+export function songPools(songs: unknown): { pools: Map<number, readonly string[]>; problems: string[] } {
+  const pools = new Map<number, readonly string[]>();
+  const problems: string[] = [];
+  if (!Array.isArray(songs)) return { pools, problems };
+  for (const song of songs as { id?: unknown; pools?: unknown }[]) {
+    if (!Number.isInteger(song?.id)) continue;
+    const id = song.id as number;
+    const list = song.pools;
+    if (Array.isArray(list) && list.length > 0 && list.every(isPoolId) && new Set(list).size === list.length) pools.set(id, list);
+    else {
+      pools.set(id, []);
+      problems.push(list === undefined ? `song ${id} has no pools` : `song ${id} has pools ${JSON.stringify(list)}, not a list of distinct pool ids ("1", "2")`);
+    }
   }
-  return pools;
+  return { pools, problems };
 }
 
-/** How many of the repertoire's songs each pool has. */
+/** How many of the repertoire's songs each pool has: a song in two pools counts in both (D268). */
 export function poolSongCounts(songs: unknown): Record<string, number> {
   const counts: Record<string, number> = {};
-  for (const pool of songPools(songs).values()) counts[pool] = (counts[pool] ?? 0) + 1;
+  for (const list of songPools(songs).pools.values()) for (const pool of list) counts[pool] = (counts[pool] ?? 0) + 1;
   return counts;
 }
+
+/** How many of the repertoire's songs are in more than one pool (D268). */
+export const sharedSongCount = (songs: unknown): number => [...songPools(songs).pools.values()].filter((list) => list.length > 1).length;
 
 /**
  * The printed cards against the repertoire (D178): every card has each side its type prints (card-types.json's
  * `sides`) and no other, each side 3 lines of 4, ids unique; every song on a side is in the repertoire, in that side's
- * pool (a round of that side shuffles only that pool) and PLAYABLE (analysed, with a valid hook), or that card could
+ * pool (a round of that side shuffles only that pool; a song in two pools fits a side of either, D268) and PLAYABLE (analysed, with a valid hook), or that card could
  * never be completed. Every card's type must be one of card-types.json's (`types`), or no round could ever play it.
  * Without that file, the default types stand in, sides and pools go unchecked, and it warns, since screens can't name
  * the types. A side whose pool has no songs here was drawn from the whole repertoire (apps/cards does that for test
  * cards): it warns.
  */
-export function cardsCheck(cards: unknown, types: readonly CardTypeSides[] | null, pools: ReadonlyMap<number, string>, playableIds: ReadonlySet<number>): Check {
+export function cardsCheck(cards: unknown, types: readonly CardTypeSides[] | null, pools: ReadonlyMap<number, readonly string[]>, playableIds: ReadonlySet<number>): Check {
   if (!Array.isArray(cards) || cards.length === 0) return check('Repertoire', 'Cards', 'fail', 'no cards.json, or it is empty: the cards are not generated yet');
   const known = types ?? [...new Set(Object.values(DEFAULT_CARD_TYPE))].map((type) => ({ type }));
-  const poolsHere = new Set(pools.values());
+  const poolsHere = new Set([...pools.values()].flat());
   const problems: string[] = [];
   const seen = new Set<number>();
   const unplayable = new Set<number>();
@@ -104,11 +120,11 @@ export function cardsCheck(cards: unknown, types: readonly CardTypeSides[] | nul
         continue;
       }
       for (const song of face.lines.flat()) {
-        const pool = pools.get(song?.id);
-        if (pool === undefined) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the repertoire`);
+        const songPoolList = pools.get(song?.id);
+        if (songPoolList === undefined) problems.push(`card ${raw.id} has song ${String(song?.id)}, not in the repertoire`);
         else {
-          if (want && pool !== want.pool) {
-            if (poolsHere.has(want.pool)) problems.push(`card ${raw.id} side ${face.side} has song ${song.id} from pool ${pool}, not pool ${want.pool}`);
+          if (want && !songPoolList.includes(want.pool)) {
+            if (poolsHere.has(want.pool)) problems.push(`card ${raw.id} side ${face.side} has song ${song.id} from ${songPoolList.length === 0 ? 'no pool' : `pool${songPoolList.length > 1 ? 's' : ''} ${songPoolList.join(', ')}`}, not pool ${want.pool}`);
             else unpooled.add(want.pool);
           }
           if (!playableIds.has(song.id)) unplayable.add(song.id);
@@ -129,8 +145,9 @@ export function cardsCheck(cards: unknown, types: readonly CardTypeSides[] | nul
 }
 
 /** The songs: how many the repertoire has, and how many are ready to play. */
-export function songsCheck(songIds: ReadonlySet<number>, playableIds: ReadonlySet<number>, missingAudio: readonly number[]): Check {
+export function songsCheck(songIds: ReadonlySet<number>, playableIds: ReadonlySet<number>, missingAudio: readonly number[], poolProblems: readonly string[]): Check {
   if (playableIds.size === 0) return check('Repertoire', 'Songs', 'fail', 'no playable song: pull the prepared media (npm run media -- pull, or npm run setup:laptop), or prepare the repertoire (npm run prep in apps/show)');
+  if (poolProblems.length > 0) return check('Repertoire', 'Songs', 'fail', `songs.json: ${poolProblems.slice(0, 4).join('; ')}${poolProblems.length > 4 ? ` (+${poolProblems.length - 4} more)` : ''}; no round can shuffle those songs`);
   if (missingAudio.length > 0) return check('Repertoire', 'Songs', 'fail', `playable songs without their decoded audio: ${missingAudio.slice(0, 10).join(', ')}${missingAudio.length > 10 ? '…' : ''}`);
   const notReady = [...songIds].filter((id) => !playableIds.has(id));
   if (notReady.length > 0) return check('Repertoire', 'Songs', 'warn', `${playableIds.size} of ${songIds.size} playable; not ready: ${notReady.slice(0, 10).join(', ')}${notReady.length > 10 ? '…' : ''}`);
@@ -562,7 +579,7 @@ export function cardPricesCheck(types: unknown, plan: unknown): Check | null {
  * type hasn't printed, or whose pool has no songs here, FAILs (that round can't be played); a printed side that no
  * round plays only WARNs. Null when there's no valid plan or no card-types.json (their own checks say why).
  */
-export function sidesCheck(plan: unknown, types: unknown, poolSongs: Readonly<Record<string, number>>): Check | null {
+export function sidesCheck(plan: unknown, types: unknown, poolSongs: Readonly<Record<string, number>>, sharedSongs: number): Check | null {
   const read = plan ? checkGamePlan(plan) : null;
   if (!read?.ok || !Array.isArray(types) || types.length === 0) return null;
   const warnings = sideWarnings(read.plan, types as CardTypeSides[], poolSongs).map((w) => {
@@ -574,8 +591,9 @@ export function sidesCheck(plan: unknown, types: unknown, poolSongs: Readonly<Re
   const blocking = warnings.filter((w) => w.blocking);
   if (blocking.length) return check('Cloud', 'Card sides', 'fail', list(blocking));
   if (warnings.length) return check('Cloud', 'Card sides', 'warn', list(warnings));
-  const pools = Object.entries(poolSongs).sort(([a], [b]) => a.localeCompare(b)).map(([pool, n]) => `pool ${pool}: ${n} songs`).join(', ');
-  return check('Cloud', 'Card sides', 'pass', `every round's side is printed, and every printed side is played${pools ? ` (${pools})` : ''}`);
+  const pools = Object.entries(poolSongs).sort(([a], [b]) => a.localeCompare(b)).map(([pool, n]) => `pool ${pool}: ${n} songs`);
+  if (sharedSongs > 0) pools.push(`${sharedSongs} in ${pools.length === 2 ? 'both' : 'more than one'}`);
+  return check('Cloud', 'Card sides', 'pass', `every round's side is printed, and every printed side is played${pools.length ? ` (${pools.join(', ')})` : ''}`);
 }
 
 /** Exit status: 1 when anything failed. */

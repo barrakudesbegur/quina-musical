@@ -138,7 +138,7 @@ function printedCards(repertoire: Repertoire): { cards: unknown; types: unknown 
 async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   const songs = readJson(repertoire.songsJson);
-  const pools = checks.songPools(songs);
+  const { pools, problems: poolProblems } = checks.songPools(songs);
   const songIds = new Set(pools.keys());
   let playableEntries: { id: number; hooks: unknown[] }[] = [];
   try {
@@ -148,7 +148,7 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   }
   const playable = playableEntries.map((s) => s.id);
   const missingAudio = playable.filter((id) => !fs.existsSync(path.join(repertoire.cacheDir, String(id), 'mix.flac')));
-  out.push(checks.songsCheck(songIds, new Set(playable), missingAudio));
+  out.push(checks.songsCheck(songIds, new Set(playable), missingAudio, poolProblems));
   const hooks = checks.provisionalHooksCheck(playableEntries);
   if (hooks) out.push(hooks);
   const printed = printedCards(repertoire);
@@ -250,7 +250,8 @@ async function cloudChecks(o: PreflightOptions, repertoire: Repertoire): Promise
   out.push(checks.planCheck(plan, checks.printedByType(printedCards(repertoire).cards)));
   const prices = checks.cardPricesCheck(printedCards(repertoire).types, plan);
   if (prices) out.push(prices);
-  const sides = checks.sidesCheck(plan, printedCards(repertoire).types, checks.poolSongCounts(readJson(repertoire.songsJson)));
+  const songs = readJson(repertoire.songsJson);
+  const sides = checks.sidesCheck(plan, printedCards(repertoire).types, checks.poolSongCounts(songs), checks.sharedSongCount(songs));
   if (sides) out.push(sides);
   return out;
 }

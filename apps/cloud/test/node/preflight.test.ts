@@ -58,7 +58,7 @@ const range = (from: number, to: number) => Array.from({ length: to - from + 1 }
 
 test('cards: every song on a card must be in the repertoire and playable, or that card can never be completed', () => {
   const card = (id: number, ids: number[], type = 'normal') => ({ id, type, sides: [{ side: 1, lines: lines(ids) }] });
-  const songs = new Map(range(1, 20).map((id) => [id, '1']));
+  const songs = new Map(range(1, 20).map((id) => [id, ['1']]));
   const playable = new Set(songs.keys());
   const ids = range(1, 12);
   const types = [{ type: 'normal' }, { type: 'especial' }];
@@ -81,7 +81,7 @@ test('cards: every song on a card must be in the repertoire and playable, or tha
 });
 
 test("cards in sides (D178): each side its type prints and no other, each side's songs from its pool; a card from before sides is its side 1", () => {
-  const pools = new Map([...range(1, 12).map((id) => [id, '1'] as const), ...range(13, 24).map((id) => [id, '2'] as const)]);
+  const pools = new Map<number, readonly string[]>([...range(1, 12).map((id) => [id, ['1']] as const), ...range(13, 24).map((id) => [id, ['2']] as const)]);
   const playable = new Set(pools.keys());
   const types = [
     { type: 'normal', sides: [{ side: 1, pool: '1', label: '1–5' }, { side: 2, pool: '2', label: '6–10' }] },
@@ -101,10 +101,29 @@ test("cards in sides (D178): each side its type prints and no other, each side's
   assert.equal(check({ id: 6, type: 'especial', lines: lines(range(1, 12)) }).status, 'pass');
   assert.match(check({ id: 7, type: 'normal', lines: lines(range(1, 12)) }).detail, /card 7 has no side 2/);
   // Today's test repertoire has no pool 2: apps/cards draws side 2 from the whole repertoire, and it warns.
-  const onePool = new Map(range(1, 24).map((id) => [id, '1']));
+  const onePool = new Map(range(1, 24).map((id) => [id, ['1']]));
   const test = c.cardsCheck([normal(8, range(1, 12), range(13, 24))], types, onePool, playable);
   assert.equal(test.status, 'warn');
   assert.match(test.detail, /pool 2 has no songs here/);
+});
+
+test('cards with songs in two pools (D268): a shared song fits a side of either pool; a song only in pool 2 fails on a pool 1 side', () => {
+  const pools = new Map<number, readonly string[]>([...range(1, 12).map((id) => [id, ['1']] as const), ...range(13, 24).map((id) => [id, ['2']] as const), [25, ['1', '2']]]);
+  const playable = new Set(pools.keys());
+  const types = [{ type: 'normal', sides: [{ side: 1, pool: '1' }, { side: 2, pool: '2' }] }];
+  const normal = (id: number, side1: number[], side2: number[]) => ({ id, type: 'normal', sides: [{ side: 1, lines: lines(side1) }, { side: 2, lines: lines(side2) }] });
+  // Song 25 is in both pools: on side 1 (pool 1) and on side 2 (pool 2) alike.
+  assert.equal(c.cardsCheck([normal(1, [...range(1, 11), 25], [...range(13, 23), 25])], types, pools, playable).status, 'pass');
+  const wrong = c.cardsCheck([normal(2, [...range(1, 11), 13], range(13, 24))], types, pools, playable);
+  assert.equal(wrong.status, 'fail');
+  assert.match(wrong.detail, /card 2 side 1 has song 13 from pool 2, not pool 1/);
+  // A song in no pool (its songs.json entry is bad: the Songs check says why) fits no side.
+  const none = c.cardsCheck([normal(3, [...range(1, 11), 26], range(13, 24))], types, new Map([...pools, [26, []]]), new Set([...playable, 26]));
+  assert.match(none.detail, /card 3 side 1 has song 26 from no pool, not pool 1/);
+  const shared = new Map<number, readonly string[]>([...pools, [27, ['2', '3']]]);
+  assert.match(c.cardsCheck([normal(4, [...range(1, 11), 27], range(13, 24))], types, shared, new Set([...playable, 27])).detail, /song 27 from pools 2, 3, not pool 1/);
+  // An unknown id is still not in the repertoire.
+  assert.match(c.cardsCheck([normal(5, [...range(1, 11), 99], range(13, 24))], types, pools, playable).detail, /card 5 has song 99, not in the repertoire/);
 });
 
 test("card-types.json's types and sides, the songs' pools, and the printed cards by type", () => {
@@ -112,8 +131,35 @@ test("card-types.json's types and sides, the songs' pools, and the printed cards
   assert.equal(c.printedCardTypes(null), null);
   assert.equal(c.printedCardTypes([]), null);
   assert.equal(c.printedCardTypes([{ type: 'Not-An-Id' }]), null);
-  assert.deepEqual([...c.songPools([{ id: 1 }, { id: 2, pool: '2' }, { title: 'no id' }])], [[1, '1'], [2, '2']]);
+  assert.deepEqual([...c.songPools([{ id: 1, pools: ['1'] }, { id: 2, pools: ['1', '2'] }, { title: 'no id', pools: ['1'] }]).pools], [[1, ['1']], [2, ['1', '2']]]);
+  assert.deepEqual(c.songPools([{ id: 1, pools: ['1'] }]).problems, []);
   assert.deepEqual([...(c.printedByType([{ type: 'normal' }, { type: 'normal' }, { type: 'especial' }]) ?? [])], [['normal', 2], ['especial', 1]]);
+});
+
+test("songs' pools (D268): only `pools` counts, never the older `pool`; a song without a valid list is reported, not put in a pool", () => {
+  const read = c.songPools([
+    { id: 1, pools: ['1'] },
+    { id: 2, pool: '1' },
+    { id: 3, pools: [] },
+    { id: 4, pools: ['Pool 1', 2] },
+    { id: 5, pools: ['1', '1'] },
+    { id: 6, pool: '1', pools: ['2'] },
+    { id: 7, pools: ['2', '1'] },
+  ]);
+  assert.deepEqual([...read.pools], [[1, ['1']], [2, []], [3, []], [4, []], [5, []], [6, ['2']], [7, ['2', '1']]], 'unsorted is fine; the bad ones stay in the repertoire with no pool');
+  assert.deepEqual(read.problems, [
+    'song 2 has no pools',
+    'song 3 has pools [], not a list of distinct pool ids ("1", "2")',
+    'song 4 has pools ["Pool 1",2], not a list of distinct pool ids ("1", "2")',
+    'song 5 has pools ["1","1"], not a list of distinct pool ids ("1", "2")',
+  ]);
+  // Both fields, disagreeing: `pools` wins, `pool` is ignored.
+  assert.deepEqual(c.poolSongCounts([{ id: 6, pool: '1', pools: ['2'] }]), { '2': 1 });
+  // The Songs check fails on them: no round can shuffle a song in no pool.
+  const songs = new Set([1, 2, 3]);
+  const bad = c.songsCheck(songs, songs, [], read.problems);
+  assert.equal(bad.status, 'fail');
+  assert.match(bad.detail, /^songs.json: song 2 has no pools; song 3 .*; song 5 .*; no round can shuffle those songs$/);
 });
 
 test("the Game plan: it must pass the protocol's check, and every round's card type must be printed", () => {
@@ -138,10 +184,10 @@ test("the Game plan: it must pass the protocol's check, and every round's card t
 
 test('songs, sounds and media files', () => {
   const songs = new Set([1, 2, 3]);
-  assert.equal(c.songsCheck(songs, songs, []).status, 'pass');
-  assert.equal(c.songsCheck(songs, new Set([1, 2]), []).status, 'warn');
-  assert.equal(c.songsCheck(songs, songs, [2]).status, 'fail');
-  assert.equal(c.songsCheck(songs, new Set(), []).status, 'fail');
+  assert.equal(c.songsCheck(songs, songs, [], []).status, 'pass');
+  assert.equal(c.songsCheck(songs, new Set([1, 2]), [], []).status, 'warn');
+  assert.equal(c.songsCheck(songs, songs, [2], []).status, 'fail');
+  assert.equal(c.songsCheck(songs, new Set(), [], []).status, 'fail');
   assert.deepEqual(c.soundsCheck([], 4, []).map((x) => x.status), ['pass', 'pass']);
   assert.deepEqual(c.soundsCheck(['mkwii-mission-clear'], 4, ['windows-error-remix']).map((x) => x.status), ['fail', 'fail']);
   const reference = { source: 'the cloud', files: { 'cache/1/mix.flac': { size: 3, sha256: 'a'.repeat(64) }, 'covers/1.jpg': { size: 1, sha256: 'b'.repeat(64) } } };
@@ -332,22 +378,27 @@ test('card prices (U5): every card type a round plays has a price and a known ru
 });
 
 test('card sides (D178): each round plays a printed side whose pool has songs; a printed side no round plays only warns', () => {
-  assert.deepEqual(c.poolSongCounts([{ id: 1 }, { id: 2, pool: '2' }, { id: 3, pool: '2' }]), { '1': 1, '2': 2 }, 'a song without a pool is in pool 1');
+  assert.deepEqual(c.poolSongCounts([{ id: 1, pools: ['1'] }, { id: 2, pools: ['2'] }, { id: 3, pools: ['1', '2'] }, { id: 4 }]), { '1': 2, '2': 2 }, 'a song in two pools counts in both (D268); one without pools in none');
+  assert.equal(c.sharedSongCount([{ id: 1, pools: ['1'] }, { id: 3, pools: ['1', '2'] }]), 1);
   const oneSide = [{ type: 'normal' }, { type: 'especial' }];
   const twoSides = [{ type: 'normal', sides: [{ side: 1, pool: '1' }, { side: 2, pool: '2' }] }, { type: 'especial' }];
-  assert.equal(c.sidesCheck(PLAN, oneSide, { '1': 70 })?.status, 'pass', 'a type from before sides: one side 1 on pool 1');
-  const unplayed = c.sidesCheck(PLAN, twoSides, { '1': 70, '2': 70 });
+  assert.equal(c.sidesCheck(PLAN, oneSide, { '1': 70 }, 0)?.status, 'pass', 'a type from before sides: one side 1 on pool 1');
+  const onBoth = { ...PLAN, rounds: PLAN.rounds.map((r) => (r.number === 2 ? { ...r, cardType: 'normal', side: 2 } : r)) };
+  const shared = c.sidesCheck(onBoth, [twoSides[0]], { '1': 70, '2': 70 }, 4);
+  assert.equal(shared?.status, 'pass', shared?.detail ?? '');
+  assert.match(shared?.detail ?? '', /\(pool 1: 70 songs, pool 2: 70 songs, 4 in both\)/);
+  const unplayed = c.sidesCheck(PLAN, twoSides, { '1': 70, '2': 70 }, 0);
   assert.equal(unplayed?.status, 'warn');
   assert.match(unplayed?.detail ?? '', /no round plays side 2 of card type "normal"/);
   const onSide2 = { ...PLAN, rounds: PLAN.rounds.map((r) => (r.number === 1 ? { ...r, side: 2 } : r)) };
-  const unprinted = c.sidesCheck(onSide2, oneSide, { '1': 70 });
+  const unprinted = c.sidesCheck(onSide2, oneSide, { '1': 70 }, 0);
   assert.equal(unprinted?.status, 'fail');
   assert.match(unprinted?.detail ?? '', /round 1: card type "normal" has no side 2/);
-  const noSongs = c.sidesCheck(onSide2, twoSides, { '1': 70 });
+  const noSongs = c.sidesCheck(onSide2, twoSides, { '1': 70 }, 0);
   assert.equal(noSongs?.status, 'fail');
   assert.match(noSongs?.detail ?? '', /round 1: side 2 plays pool 2, which has no songs/);
-  assert.equal(c.sidesCheck(null, oneSide, {}), null, 'no plan: the plan check speaks');
-  assert.equal(c.sidesCheck(PLAN, null, {}), null, 'no card-types.json: the cards check speaks');
+  assert.equal(c.sidesCheck(null, oneSide, {}, 0), null, 'no plan: the plan check speaks');
+  assert.equal(c.sidesCheck(PLAN, null, {}, 0), null, 'no card-types.json: the cards check speaks');
 });
 
 test("card prices as in 2025 (D69), the Desgraciat on special cards (D70): 15 € before round 1, the special card's 5 € before the Desgraciat", () => {
