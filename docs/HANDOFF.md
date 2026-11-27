@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D273**, **U214**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D273**, **U215**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -43,7 +43,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
-- the question format: the grill format for every session, or only the card design session (memory's feedback-questions-to-user notes the exception);
+- U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U206 (the drum's landing public 2.5 s early), U207 (✕ in a stack), U208 (the near-win sounds);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
 - U202, U203: the console's in-game admin and second-console sync;

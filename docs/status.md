@@ -2,39 +2,39 @@
 
 One screen: where each area stands, what's blocked, and what waits on the user. Written by the orchestrator from each handoff's "Now" block; the detail is in the handoffs. Dates are in [timeline.md](timeline.md), and the user's items (U1, U2…) in [open-questions.md](open-questions.md).
 
-**Updated:** 2026-11-25. **The night:** Sun 27 Dec. **The final playlist:** Tue 1 Dec. The cards are made on 4–5 Dec if the playlist is ready (D83); rehearsals have no fixed dates (D82).
+**Updated:** 2026-11-28. **The night:** Sun 27 Dec. **The playlists:** final since Fri 27 Nov (D230, D269). The cards are made on 4–5 Dec (D83); rehearsals have no fixed dates (D82).
 
 ## The critical path
 
 | Step | State |
 |---|---|
 | Card type per round, every screen and the cloud | **Done** |
-| The Desgraciat round: engine, cloud and screens | **Done**, including the shared win and no celebration title. Its default card type becomes the special card (D70) |
-| Songs downloaded | **Two pools of 70 (D100, D101).** Pool 1 is final: the 76 were downloaded and checked, and the temporary cards are remade from its 70. Pool 2 is still being filled; the special rounds play pool 1 (D171). Storage past 10 GB is fine (D113) |
-| The card generator ready | **Ready**, with provisional values (D67, D68) and the PDF's install-script approval still to do (U17) |
-| The pool prepared and validated (from 1 Dec) | Waits on the downloads. The pipeline and its quality check are ready |
-| Hooks approved | Waits on prep, then the user (U14). Draft approvals carry over to the final pool (D79) |
-| This year's pool in R2, laptops synced | Waits on the pool. Under 100 songs fits the free tier (D80) |
-| QR domain switched | **Done (25 Nov, 14:20 UTC):** the QR address serves this year's player; last year's app moved to its GitHub Pages address |
-| Rehearsals | **No fixed dates (D82):** the tech rehearsal when everything feels ready; maybe a presenters' one a day or two before or on the day |
-| Cards made | **4–5 Dec (D83)**, if the playlist is ready. Waits on the pool's quality check (1–3 Dec); the PDF's module is approved and built (U17). The generator now refuses repeated lines (65b74ef) |
+| The Desgraciat round: engine, cloud and screens | **Done**, as «Quina del Desgraciat» (D251) |
+| The playlists | **Done (27–28 Nov):** final (D230, D269). One repertoire of 135 songs: pool 1 has 70, pool 2 has 70, 5 of them shared (D268, d6bb94ae) |
+| The repertoire downloaded, checked and prepared | **Done (27–28 Nov):** every song downloaded and checked, renumbered in playlist order (3cb10aaa, 8e50cd01), with clean print names (D260, 0800e5e8). It plays on provisional hooks |
+| Hooks approved | Waits on the user (U14); U56 would make it faster. Placeholder voices until the user's recordings |
+| The repertoire in R2, deployed | **Done (28 Nov):** R2 by content (D248): manifests/2026.json, 8.04 GB. Last deploy b488bafa, with 699 temporary cards and the covers. Push again when hooks, stems or voices change |
+| QR domain switched | **Done (25 Nov)** |
+| The card generator | **Done:** both layouts, «Quadrat amb portades» (default, A3 six a sheet) and «Apaïsat sense portades» (A4 three a page) (7092e216, acd8f1a9, 4e4c0fe2). The organizers pick (U212) |
+| Cards made | **4–5 Dec (D83)**, after U212 and a proof sheet (D267) |
+| Rehearsals | **No fixed dates (D82).** The realistic run's plan is on quina-dev; its start time waits on U204 |
 
 ## By area
 
 | Area | Now | Next | Waiting on the user |
 |---|---|---|---|
-| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | **The new Check is out (26 Nov):** step 1 (a89826f) and step 2 (2d86b7a, deployed as ec6983b0): the paced Check and its review, Enrere inside a Check, Pausa's resume, the Hold rules, the music sets, the throw and the storm, the sliders. Then the follow-ups (Parlem in a review, `getUpcoming`, the music live from R2) and **the Desgraciat's finale on stage** (7742acb, deployed d963856b). First plays at 22 s (D174, D175) out (5bcf1e3, deployed 18f816f5). The A-then-B Suspens (D177), the repertoire rename (D178) and the Desgraciat's one winner (D180) are out (161c3f6, deployed c93f219c). The finale's no-bringing-back rule (D183), the round names fixed (Quina N for normal rounds only) and slow confetti are out (593fef2). **Card sides are complete end to end** (49fe19a, ec4912c, deployed 5a57015e): the engine, cloud, screens, Admin and generator. Side 2's look, the rounds mark, U50 and the special card's back wait on the user; temporary cards from pool 1's 70; the expected end at 70 done (8e6f563: Line ~14, Bingo ~46, last standing ~21 songs; 2025's night reproduced within 2 min a round); the side/pool protocol agreed | Pool 2 when filtered; prep by 3 Dec; the expected end for 70 songs | U13, U14, U51, U55–U58, U61 |
-| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | **Pushed 26 Nov:** the phone's drawers (D132, 3e8f8dd) and D90 (7a09247). **Building:** the QR scan (D141) and, from D140, the new Check, Pausa, Hold rules, music sets, throws and volumes. The 15 comments on `Mobil-B-J2` addressed on canvas v61 (D95, D96) | The double-sided card with the user (D102); the prizes drawer after U36–U39; build only on the user's "implement" | U12, U30, U50 |
-| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | The QR address live (D76); the same-day rehearsal rule | Deployed 26 Nov: the plan-save fix (94b395be) and step 1 of the new Check (fddfdc1d); the breaks set, the intro and the throw song in R2; the Check's cloud side (step 2); the edition's JSON proposal with Sound engine (D116) | pool 1 to R2 once prepared (U55); the plan tool if U63 | U16, U19, U63–U65 |
-| **Orchestrator** ([handoff](HANDOFF.md)) | D66–D140 logged on 25–26 Nov; the pool-size study and the 2025 data delivered | The Check's redesign (D107–D110, D117); the edition's JSON (D116); the prizes model once U36–U39 are answered | U36–U39, U52, U54, U59, U62 |
+| **Sound engine** ([handoff](../apps/show/docs/HANDOFF.md)) | Important tasks only. Idle: the renumbered 2026 is prepared, in R2 and deployed; D268 is complete (d6bb94ae) | The Pausa, break and Hold music into the repertoire (D268's part C), designed with Backend before the rehearsals; durable cover fixes | U14, U56, U55, U13, U205, U206, U166, U173, U176–U178 |
+| **Frontend** ([handoff](../packages/ui/HANDOFF.md)) | The user's comment list; the projector's end screen (board Projector-Final); the Celebration-prize proposals (D242). apps/cards is Frontend's again | The phone drum's jank; the canvas redraw; the screens switch to `checkLabel` | U206, U207, U157/U158, U169, U173, U177–U179, U181, U188, U193, U196, U197, U202, U203, U12 |
+| **Backend** ([handoff](../apps/cloud/docs/HANDOFF.md)) | Queue empty. The realistic run's plan is up on quina-dev (D235); 2026 in R2 and deployed (b488bafa) | Upload the plan with `--start` once U204 is relayed; push to R2 when Sound engine changes media | U204, U63–U65, U75, U19 |
+| **Card design** ([handoff](../tools/card-mockup/HANDOFF.md)) | Done except the pick: both layouts in the generator (D262, D272) | When the organizers pick, delete the other layout; the proof sheet, then the cards on 4–5 Dec | U212 |
+| **Orchestrator** ([handoff](HANDOFF.md)) | D141–D272 logged | Relay the user's answers | U36–U39, U194–U197, U214 |
 
-## Recently done (25–26 Nov)
+## Recently done (27–28 Nov)
 
-- Card type per round across the stack (plan v3); prices live with the card types, with a rule per type.
-- The Desgraciat end to end, run live on quina-dev with a phone: shared wins, no title, its Check.
-- The Check's result decides: the engine refuses to accept a failed Check, and the cloud only flags.
-- The winner's slip number; throw breaks in the Schedule and Admin; the night's expected end by round kind.
-- Fallbacks: the laptop-only setup in the runbook and the preflight, a USB clicker, the Wii range test.
-- Phones: no winning numbers, offline keeps the normal screen, the 3 tabs, add-card asks before leaving.
-- Prep: a quality check, the double-tempo fix, full-quality downloads once unblocked.
-- `npm run sync-main`; the docs restructure (event.md, requirements, the decision log, numbered open questions).
+- The playlists made final, and one repertoire with shared songs (D230, D268, D269): 135 songs, renumbered, clean print names.
+- Repertoire 2026 in R2 by content (D248) and deployed (b488bafa), with 699 temporary cards and covers.
+- The card design: last year's style, two options in the generator (D250–D272).
+- The realistic run's plan on quina-dev (D235): D192's order, 96 example prizes, 58 sponsors.
+- The installable player (D221–D223); the drum matching on the phone (D237, D249).
+- The console: the sold cards and the two-level lock (D234), the sound test (D229), the auto-sound switches (D237).
+- The design system in code (D211), with cascade layers.

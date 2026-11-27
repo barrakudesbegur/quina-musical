@@ -152,6 +152,11 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U214 · The grill format outside the card design session
+On 26 Nov the user told the orchestrator not to use the grill format. On 27 Nov, in the card design session, they asked for it ("the skill to check is grill with docs": numbered ❓ rounds, each with a ➡️ recommendation, worded so "yes" accepts it). On 28 Nov they restarted the orchestrator with "plain questions (one numbered question, one set of options, a recommendation)".
+- (a) The grill format only in a card design session; plain questions in every other session. The default meanwhile.
+- (b) Plain questions everywhere, the card design session too.
+
 ### U212 · Ask the organizers: which card
 The user (28 Nov): "third option is discarded. keep square for now as default, but that i can also generate the pdf for the other". The generator does both: `CARD_LAYOUT` 'a3-6' by default, and `--layout a4-3` for the other. The card design session made the organizers an image of card #1 in all three, on blue paper, and a short message in Catalan with the pros and cons.
 - (a) «Quadrat amb portades»: the A3 card, 149 × 140 mm, six a sheet, header C, 17 mm covers (D256, D259, D271). The working default (D262).
