@@ -132,13 +132,13 @@ test("the songs' pools are checked: text, a pool some side is printed from, and 
   assert.deepEqual(poolProblems([...songs.slice(0, 20), { id: 31, pool: '2' }], types, 12), ['card type "normal", side 2: pool 2 has 1 songs; a side needs 12']);
 });
 
-test('the committed cards (apps/cards/dist/cards.json): a normal card has two sides, an especial one; no card or line repeats within a pool', () => {
+test('the committed cards (apps/cards/dist/cards.json): every card has two sides (D226: the especial card too); no card or line repeats within a pool', () => {
   const cards = JSON.parse(readFileSync(new URL('../../../cards/dist/cards.json', import.meta.url), 'utf8')) as DrawnCard<{ id: number }>[];
   const types = JSON.parse(readFileSync(new URL('../../../cards/dist/card-types.json', import.meta.url), 'utf8'));
   assert.equal(cards.length, 699);
-  assert.ok(cards.every((c) => c.sides.map((s) => s.side).join() === (c.type === 'normal' ? '1,2' : '1')));
+  assert.ok(cards.every((c) => c.sides.map((s) => s.side).join() === '1,2'));
   const byPool = sidesByPool(cards, types);
-  assert.deepEqual([...byPool].map(([pool, sides]) => [pool, sides.length]), [['1', 699], ['2', 399]]);
+  assert.deepEqual([...byPool].map(([pool, sides]) => [pool, sides.length]), [['1', 699], ['2', 699]]);
   for (const sides of byPool.values()) {
     assert.deepEqual(repeatedLines(sides), []);
     assert.deepEqual(repeatedCards(sides), []);

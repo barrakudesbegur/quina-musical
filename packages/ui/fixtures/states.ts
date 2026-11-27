@@ -189,14 +189,14 @@ const withHeat = (s: FullState, value: number, now: number): DemoScript => ({
 // private card, the projector's reveals and the phones' strip agree.
 
 /** The printed cards the Check fixtures claim (apps/cards/dist/cards.json; tests/ui/fixtures.test.ts checks them): the
- * normal cards' two sides, the especial card's one. The fixtures' rounds play side 1. */
+ * both sides of every card (D226: the especial's too). The fixtures' rounds play side 1. */
 const fixtureCard = (id: number, type: string, ...sides: (readonly (readonly number[])[])[]): CatalogCard => ({ id, type, sides: sides.map((lines, i) => ({ side: i + 1, lines })) });
 export const FIXTURE_CARDS: Readonly<Record<number, CatalogCard>> = {
   23: fixtureCard(23, 'normal', [[27, 47, 73, 75], [7, 17, 41, 53], [3, 4, 71, 77]], [[62, 11, 52, 75], [23, 38, 57, 72], [26, 29, 61, 73]]),
   57: fixtureCard(57, 'normal', [[5, 14, 64, 75], [15, 18, 60, 69], [2, 62, 16, 20]], [[1, 6, 27, 38], [9, 21, 59, 75], [2, 39, 67, 77]]),
   123: fixtureCard(123, 'normal', [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]], [[35, 34, 72, 74], [31, 50, 54, 57], [18, 22, 53, 70]]),
   204: fixtureCard(204, 'normal', [[32, 45, 50, 58], [38, 46, 61, 69], [24, 52, 54, 56]], [[7, 38, 50, 68], [14, 27, 33, 54], [26, 71, 73, 75]]),
-  508: fixtureCard(508, 'especial', [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]]),
+  508: fixtureCard(508, 'especial', [[31, 32, 39, 74], [17, 48, 75, 12], [3, 35, 38, 54]], [[17, 16, 68, 69], [18, 21, 24, 56], [62, 44, 60, 59]]),
 };
 
 /** The engine's Check timing (engine config FLOW.check): a landed song's snippet, a ✗'s broken record, a standing ✓'s
