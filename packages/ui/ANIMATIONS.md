@@ -58,6 +58,18 @@ A card's cells look the same on the phone, the console and the projector (CardGr
 | `cell-played` (#70) | A cell's song has played: the phone's marked cells | The cover and the title fade a little (cover 0.72, title 0.6), so the songs still to come stand out; the mark stays at full strength. It fades as the mark stamps on (`mark-in`) | `--dur-stamp` 300 ms `--ease-out` (opacity) | — (`mark-in`'s "tock") | The same fade (opacity only) |
 | `cell-upcoming` (#78) | The console's Check: a cell the Check will reveal later (`inCheck`, not revealed yet) | No motion: the cover desaturated and dimmed (it stays recognisable), a dashed grey outline, the private mark (✓ / ✗, dashed) in the centre and a small count chip on the bottom edge: «SEGÜENT» on the next one (orange, with its orange ring), «+2», «+3»… after it. When its turn comes it crossfades into `cell-playing` | `--dur-step-mark` (150 ms) crossfade | — | The same crossfade |
 
+## Controls (every surface; `packages/ui/components/`, 27 Nov)
+
+The controls family (components-v2.md § 3, B1–B10). Each control carries its motion in its own stylesheet, so a screen gets it by using the component. Moving parts follow principle 5 (only under `prefers-reduced-motion: no-preference`, and on phones `data-motion='full'`); colour fades run either way.
+
+| Hook | Trigger | What moves | Time · easing | Sound · touch | Reduced motion |
+|---|---|---|---|---|---|
+| `switch-toggle` (B1) | A Switch is pressed and its value changes (the parent's `checked`) | The knob slides to the other end of the track (`translate`), and the track's colour fades (green on; the track colour, slate on the phone, off). While the finger is down the knob shrinks a little (scale 0.86), the switch's own press (R4): the row of words never dips | Slide `--dur-fast` 120 ms on the console, 160 ms on the phone, `--ease-out`; the knob's press `--dur-press` 80 ms | `switchOn` / `switchOff` by default; the phone's «Sons» plays its own (PlayerApp) | The knob jumps; the track's colour fades |
+| `segment-slide` (B2) | The chosen option of a SegmentedControl changes (a press, the arrow keys, or the parent) | The gold thumb slides from the old option to the new one under the segments (one element, `translate` and its width, tethered by the options' grid); the old option's text fades to muted and the new one's to ink | `--dur-slide` 280 ms `--ease-slide` | `tab` | The thumb appears under the new option at once |
+| `tab-switch` (B3) | A tab of the Tabs component is chosen | As before (Console): the chosen tab rises into the panel as the old one sinks; the panel's content cross-fades. When the bar is narrow (`tab-collapse`), the chosen tab also opens to its label and its extra control, and the old one closes to its icon | 120 ms ease-out; the open/close is the same 120 ms on `min-inline-size`/the label's opacity | `tab` | The tabs swap at once; the content cross-fades |
+| `pad-keys` (B7) | A NumberPad key is pressed (both surfaces) | The key's piece sinks onto its edge (the shared `press`, R4). On the phone a key that can't lead to a card fades to its dashed, disabled look (unchanged, Player app) | Down 80 ms, up 240 ms `--ease-bounce` | `digit`, `backspace`; ↵ plays the entry's own (a chip's add or a refusal) | No travel: the sunk shade only |
+| `slider-step` (B10) | A Slider's − or + is pressed (1 % a press) | The buttons press like any small control (R4); the thumb and the fill follow the value with no animation of their own (a range never lags the finger) | Press 80 ms | none (D139: the volume sliders are silent) | No travel |
+
 ## Projector (`apps/stage/`)
 
 | Hook | Trigger | What moves | Time · easing | Sound (engine) | Reduced motion |

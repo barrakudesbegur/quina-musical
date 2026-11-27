@@ -225,4 +225,17 @@
   background: var(--color-orange-subtle, var(--color-notice));
   color: var(--color-orange-edge);
   font-weight: var(--font-weight-strong);
+
+/* The controls family (ControlsGallery.svelte): a strip like the «Seguides» button's foot, for the embedded switch */
+.ds-gallery__strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border: var(--line-width-bold) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-cyan-light, #bde6ff);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 900;
 }

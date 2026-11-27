@@ -1,0 +1,180 @@
+/*
+ * B1 · Switch (components-v2.md § 3; Switch.svelte). The track is a pill with an ink outline; the knob a paper disc
+ * with a thinner ink outline, centred on the track's inside by the grid (#35), never by a hand-set top. Off: the
+ * surface's track colour (the phone: slate); on: green, the knob at the far end. Every size is a custom property in
+ * :where(), so a context (the «Seguides» strip, a dialog's row) tunes it by setting variables.
+ */
+
+/* ---- the console's scale, the default (C3, C14: a 50×30 track, a 22 px knob) ------------------------------------ */
+:where(.switch) {
+  --switch-track-w: 50px;
+  --switch-track-h: 30px;
+  --switch-border: var(--line-width);
+  --switch-knob: 22px;
+  --switch-knob-border: var(--line-width-thin, 2px);
+  --switch-off: var(--color-track);
+  --switch-on: var(--color-green);
+  --switch-gap: var(--space-3);
+  --switch-label-size: var(--text-md, 1rem);
+  --switch-note-size: var(--text-sm);
+  --switch-dur: var(--dur-fast);
+}
+
+/* ---- the phone's scale (M1 ④: a 56×32 track on the night ground, slate while off) ---------------------------- */
+:where([data-density='phone'] .switch) {
+  --switch-track-w: 56px;
+  --switch-track-h: 32px;
+  --switch-off: var(--color-slate);
+  --switch-label-size: 1.0625rem;
+  --switch-dur: var(--dur-switch-toggle, 160ms);
+}
+
+/* ---- the control ------------------------------------------------------------------------------------------------ */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: var(--switch-gap);
+  min-width: 0;
+  min-height: var(--tap-dense, 44px);
+  margin: 0;
+  padding: var(--space-1) 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.switch[data-layout='row'] {
+  width: 100%;
+}
+
+.switch[data-layout='inline'] {
+  display: inline-flex;
+}
+
+.switch[data-layout='embedded'] {
+  display: inline-flex;
+  gap: var(--space-2);
+  min-height: 0;
+  padding: 0;
+  cursor: inherit;
+}
+
+:where([data-density='phone']) .switch:not([data-layout='embedded']) {
+  min-height: var(--tap-min);
+}
+
+.switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.switch__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.switch[data-layout='inline'] .switch__text {
+  flex: none;
+}
+
+.switch__label {
+  font-size: var(--switch-label-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.switch__note {
+  color: var(--color-text-muted);
+  font-size: var(--switch-note-size);
+  font-weight: 700;
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+.switch__state {
+  font-weight: var(--font-weight-strong);
+}
+
+/* The track: a one-cell grid, so the knob is centred on its inside whatever the sizes (#35). */
+.switch__track {
+  display: grid;
+  flex: none;
+  align-items: center;
+  box-sizing: border-box;
+  width: var(--switch-track-w);
+  height: var(--switch-track-h);
+  padding-inline: calc((var(--switch-track-h) - 2 * var(--switch-border) - var(--switch-knob)) / 2);
+  border: var(--switch-border) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--switch-off);
+  transition: background-color var(--switch-dur) var(--ease-out);
+}
+
+.switch__knob {
+  box-sizing: border-box;
+  width: var(--switch-knob);
+  height: var(--switch-knob);
+  border: var(--switch-knob-border) solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-snow);
+}
+
+.switch[data-checked] .switch__track {
+  background: var(--switch-on);
+}
+
+/* On: the knob at the far end (its inside's width minus the knob). */
+.switch[data-checked] .switch__knob {
+  translate: calc(var(--switch-track-w) - var(--switch-track-h)) 0;
+}
+
+/* switch-toggle: the knob slides only with motion allowed (the phones also need data-motion="full"); the track's
+   colour fades either way (above). */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .switch__knob {
+    transition:
+      translate var(--switch-dur) var(--ease-out),
+      scale var(--dur-press) var(--ease-out);
+  }
+}
+
+/* The static row never moves: the press is the knob's (R4), not a 2 px dip of the whole line of words. */
+.switch:active:not(:disabled) {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .switch:active:not(:disabled) .switch__knob {
+    scale: 0.86;
+  }
+}
+
+/* R5: the focus ring round the track, not round a row of words. */
+.switch:focus-visible {
+  outline: none;
+}
+
+.switch:focus-visible .switch__track {
+  outline: 3px solid var(--color-focus);
+  outline-offset: var(--ring-gap, 4px);
+}
+
+.switch__icon {
+  display: inline-flex;
+  flex: none;
+  font-size: var(--switch-label-size);
+}
+
+.switch__icon > svg {
+  width: 1.375em;
+  height: 1.375em;
+}

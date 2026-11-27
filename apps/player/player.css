@@ -3150,46 +3150,19 @@
   height: 1.125rem;
 }
 
-/* Sons: a real switch (ANIMATIONS.md `switch-toggle`): green with the knob right when on, slate with it left when
-   off; only the knob moves. */
-.player .menu__switch {
-  position: relative;
-  width: 3.5rem;
-  height: 2rem;
-  min-height: 0;
-  flex: none;
-  padding: 0;
-  box-sizing: border-box;
-  background: var(--color-slate);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
-  transition: background-color var(--dur-switch-toggle) var(--ease-out);
+/* Sons: the whole row is the switch (B1, packages/ui/components/switch.css; ANIMATIONS.md `switch-toggle`). */
+.menu__row--switch {
+  padding-block: var(--space-1);
 }
 
-.player .menu__switch[aria-checked='true'] {
-  background: var(--color-ok);
+.menu__switch {
+  --switch-gap: var(--space-3);
+  --switch-label-size: var(--text-md);
 }
 
-.menu__switch-knob {
-  position: absolute;
-  left: 2px;
-  top: 2px;
-  width: 1.375rem;
-  height: 1.375rem;
-  box-sizing: border-box;
-  background: var(--color-paper);
-  border: 2px solid var(--color-line);
-  border-radius: 50%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .menu__switch-knob {
-    transition: transform var(--dur-switch-toggle) var(--ease-out);
-  }
-}
-
-.menu__switch[aria-checked='true'] .menu__switch-knob {
-  transform: translateX(1.5rem);
+.menu__switch .switch__icon > svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .menu__note,
@@ -3204,12 +3177,8 @@
 }
 
 /* Flat controls stay flat when pressed: no 3D edge appears on them (Horari's current round keeps its orange ring). */
-.player :is(.menu__grip, .menu__card-edit, .menu__card-remove, .menu__row-button, .menu__wipe, .menu__switch, .schedule__round:not([data-state='current']) .schedule__round-button):active:not(:disabled) {
+.player :is(.menu__grip, .menu__card-edit, .menu__card-remove, .menu__row-button, .menu__wipe, .schedule__round:not([data-state='current']) .schedule__round-button):active:not(:disabled) {
   box-shadow: none;
-}
-
-.player .menu__switch:active:not(:disabled) {
-  transform: none;
 }
 
 /* The header's Ajustos button stays on the right, even when the title is visually hidden (before the Game). */

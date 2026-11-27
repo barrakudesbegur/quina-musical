@@ -33,6 +33,7 @@
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
   import Button from '../../../packages/ui/components/Button.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
   import { ACTIONS, asDefault } from '../actions.ts';
   import NowLine from './NowLine.svelte';
   import ReviewPanel from './ReviewPanel.svelte';
@@ -142,7 +143,7 @@
         disabled={!canToggleAuto(check) || !model.can('checkAuto')}
         onclick={() => model.act('checkAuto', { on: !autoOn })}
       >
-        <span class="check-board__switch" aria-hidden="true"><span class="check-board__track"><span class="check-board__thumb"></span></span>{autoOn ? S.check.auto.yes : S.check.auto.no}</span>
+        <span class="check-board__switch"><Switch layout="embedded" checked={autoOn} label={S.check.auto.label} onText={S.check.auto.yes} offText={S.check.auto.no} /></span>
       </Button>
 
       {#if big}

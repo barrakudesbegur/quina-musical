@@ -228,72 +228,6 @@
   color: var(--color-text-muted);
 }
 
-/* Switch: role="switch" button drawn from the engine's state */
-.switch {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-1) 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  font-weight: var(--font-weight-body);
-}
-
-.switch__track {
-  position: relative;
-  flex: none;
-  width: calc(var(--tap-min) * 1.1);
-  height: var(--space-6);
-  border: var(--line-width-thin) solid var(--color-line);
-  border-radius: var(--radius-pill);
-  background: var(--color-track);
-  transition: background-color var(--dur-fast) var(--ease-out);
-}
-
-.switch__thumb {
-  position: absolute;
-  top: var(--line-width-thin);
-  left: var(--line-width-thin);
-  width: calc(var(--space-6) - var(--line-width-thin) * 4);
-  height: calc(var(--space-6) - var(--line-width-thin) * 4);
-  border-radius: 50%;
-  background: var(--color-text-muted);
-  transition: background-color var(--dur-fast) var(--ease-out);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .switch__thumb {
-    transition:
-      transform var(--dur-fast) var(--ease-out),
-      background-color var(--dur-fast) var(--ease-out);
-  }
-}
-
-.switch[aria-checked='true'] .switch__track {
-  background: var(--color-ok);
-}
-
-.switch[aria-checked='true'] .switch__thumb {
-  background: var(--color-paper);
-  transform: translateX(calc(var(--tap-min) * 1.1 - var(--space-6)));
-}
-
-.switch__text {
-  display: flex;
-  flex-direction: column;
-}
-
-.switch__label {
-  font-weight: var(--font-weight-strong);
-}
-
-.switch__note {
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
 /* A song's cover (the design system's Cover, packages/ui/components/cover.css): the console's frame and sizes */
 .cover {
   flex: none;
@@ -2613,38 +2547,11 @@
   background: var(--color-snow);
 }
 
-.check-board__track {
-  position: relative;
-  width: 2.5rem;
-  height: 1.375rem;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
-  background: var(--color-track, #e4ddcc);
-}
-
-.check-board__thumb {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 0.875rem;
-  height: 0.875rem;
-  border: 2px solid var(--color-line);
-  border-radius: 50%;
-  background: #ffffff;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .check-board__thumb {
-    transition: transform var(--dur-step-mark) var(--ease-out);
-  }
-}
-
-.check-board__auto[aria-pressed='true'] .check-board__track {
-  background: var(--color-green);
-}
-
-.check-board__auto[aria-pressed='true'] .check-board__thumb {
-  transform: translateX(1.125rem);
+/* The strip's switch is a drawing (B1 `embedded`): the button is the toggle. */
+.check-board__switch .switch {
+  --switch-track-w: 2.5rem;
+  --switch-track-h: 1.375rem;
+  --switch-knob: 0.875rem;
 }
 
 /* The big button: «Destapa» → «Destapant…» (busy) → the cue, «Celebrem!» ringed in gold or «Fallada» in light red
@@ -3934,8 +3841,8 @@ kbd {
   box-shadow: inset 0 -4px 0 var(--color-gold-edge), 0 3px 0 var(--color-ink);
 }
 
-.menu-group .switch__note {
-  font-size: 0.78rem;
+.menu-group .switch {
+  --switch-note-size: 0.78rem;
 }
 
 .menu-group__start > .mini-button__piece {
@@ -5404,29 +5311,10 @@ kbd {
 }
 
 .finale-stage__switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
+  --switch-gap: 0.45em;
+  --switch-label-size: var(--text-md);
+  min-height: 0;
   padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-text);
-  font-size: var(--text-md);
-  font-weight: 900;
-}
-
-.finale-stage__switch .icon {
-  width: 1.375rem;
-  height: 1.375rem;
-}
-
-.finale-stage__switch[aria-checked='true'] .switch__track {
-  background: var(--color-ok);
-}
-
-.finale-stage__switch[aria-checked='true'] .switch__thumb {
-  background: var(--color-paper);
-  transform: translateX(calc(var(--tap-min) * 1.1 - var(--space-6)));
 }
 
 /* The row: the ninos stand on a floor, their number plates under it */

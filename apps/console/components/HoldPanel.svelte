@@ -5,7 +5,7 @@
   import { elapsedSec, holdMusicCountdown } from '../logic/countdown.ts';
   import { S, holdReasonText } from '../strings.ts';
   import Icon from './Icon.svelte';
-  import Switch from './Switch.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
 
   const model = getConsole();
   const snap = $derived(model.show.state);
@@ -22,14 +22,14 @@
     <div class="hold-panel__actions">
       <Switch
         label={S.hold.holdMusic}
-        on={snap.holdMusic}
+        checked={snap.holdMusic}
         note={snap.holdMusic ? S.hold.holdMusicOn : null}
         disabled={snap.holdMusic || !model.can('holdMusic')}
         onchange={() => model.act('holdMusic')}
       />
       <Switch
         label={S.hold.autoMusic}
-        on={snap.game.holdMusicOn ?? true}
+        checked={snap.game.holdMusicOn ?? true}
         note={S.hold.autoMusicNote}
         disabled={!model.can('setGame')}
         onchange={(on) => model.act('setGame', { holdMusicOn: on })}

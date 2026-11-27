@@ -30,7 +30,7 @@
   import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
-  import Switch from './Switch.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
   import VolumeSliders from './VolumeSliders.svelte';
   import { getConsoleSounds } from '../context.ts';
   import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
@@ -136,7 +136,7 @@
           <MiniButton {...MINI.wiiOpen} onclick={onwii} />
         </p>
         <p class="note">{S.menu.wiiNote}</p>
-        <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} on={wii.shake} disabled={!wii.canSetShake} onchange={(on) => wii.setShake(on)} />
+        <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} checked={wii.shake} disabled={!wii.canSetShake} onchange={(on) => wii.setShake(on)} />
       </section>
 
       <section class="menu-group" aria-labelledby="{uid}-lan">
@@ -170,10 +170,10 @@
       {#if snap}
         <section class="menu-group" aria-labelledby="{uid}-game">
           <h3 class="menu-group__title" id="{uid}-game"><Icon name="gauge" />{S.menu.game}</h3>
-          <Switch label={S.menu.pause} note={S.menu.pauseNote} on={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
-          <Switch label={S.pace.autoFinal} on={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
+          <Switch label={S.menu.pause} note={S.menu.pauseNote} checked={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
+          <Switch label={S.pace.autoFinal} checked={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
           <!-- R2-Q18: the presenters can turn off the automatic "Final Lap!" fanfare (the Efectes pad still plays it by hand). -->
-          <Switch label={S.menu.finalLap} note={S.menu.finalLapNote} on={snap.game.finalLapStinger} disabled={!model.can('setGame')} onchange={(finalLapStinger) => model.act('setGame', { finalLapStinger })} />
+          <Switch label={S.menu.finalLap} note={S.menu.finalLapNote} checked={snap.game.finalLapStinger} disabled={!model.can('setGame')} onchange={(finalLapStinger) => model.act('setGame', { finalLapStinger })} />
           <span class="menu-group__field" id="{uid}-phase">{S.menu.phase}</span>
           <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
             <button type="button" class="choice" data-anim="press" aria-pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)}>{S.menu.phaseAuto}</button>
@@ -223,7 +223,7 @@
       <Switch
         label={S.menu.uiSounds}
         note={sounds.showLaptop ? S.menu.uiSoundsLaptop : S.menu.uiSoundsNote}
-        on={model.uiSounds && !sounds.showLaptop}
+        checked={model.uiSounds && !sounds.showLaptop}
         disabled={sounds.showLaptop}
         onchange={(on) => model.setUiSounds(on)}
       />

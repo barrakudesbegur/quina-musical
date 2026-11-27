@@ -24,6 +24,7 @@
   import { ninoFor } from '../../../packages/ui/concepts.ts';
   import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
 
   let { finale }: { finale: FinaleInfo } = $props();
 
@@ -68,10 +69,7 @@
           onclick={() => (model.finaleEditing = !model.finaleEditing)}
         />
       {/if}
-      <button type="button" class="finale-stage__switch" role="switch" aria-checked={model.finaleReversed} data-anim="press" data-testid="finale-reversed" onclick={() => model.setFinaleReversed(!model.finaleReversed)}>
-        <Icon name="swap" /><span class="finale-stage__switch-label">{F.reversed}</span>
-        <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
-      </button>
+      <Switch layout="inline" icon="swap" label={F.reversed} checked={model.finaleReversed} class="finale-stage__switch" data-testid="finale-reversed" onchange={(on) => model.setFinaleReversed(on)} />
     </div>
 
     <ul class="finale-stage__row" aria-label={F.row} data-count={view.spots.length}>

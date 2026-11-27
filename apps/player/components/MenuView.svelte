@@ -14,6 +14,7 @@
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
   import Icon from './Icon.svelte';
+  import Switch from '../../../packages/ui/components/Switch.svelte';
 
   let { app }: { app: PlayerApp } = $props();
 
@@ -95,13 +96,9 @@
   </section>
 
   <ul class="menu__settings">
-    <li class="menu__row">
-      <Icon name={app.soundsOn ? 'sound' : 'mute'} />
-      <!-- The label toggles the switch too, so the whole row is a target. -->
-      <label class="menu__label" id="menu-sounds-label" for="menu-sounds">{S.soundsLabel}</label>
-      <button type="button" class="menu__switch" id="menu-sounds" role="switch" aria-labelledby="menu-sounds-label" aria-checked={app.soundsOn} data-anim="switch-toggle" onclick={() => app.toggleSounds()}>
-        <span class="menu__switch-knob"></span>
-      </button>
+    <li class="menu__row menu__row--switch">
+      <!-- The whole row is the switch (B1 `row`); it plays its own sound (PlayerApp.toggleSounds). -->
+      <Switch icon={app.soundsOn ? 'speaker-loud' : 'speaker-mute'} label={S.soundsLabel} checked={app.soundsOn} sound={null} class="menu__switch" data-anim="switch-toggle" onchange={() => app.toggleSounds()} />
     </li>
     <li class="menu__row">
       <button type="button" class="menu__row-button" aria-haspopup="dialog" onclick={() => app.open({ kind: 'anyPassat' })}>
