@@ -8,7 +8,7 @@ import { promisify } from 'node:util';
 import WebSocket from 'ws';
 import { PROTOCOL_VERSION, SFX_NAMES, STINGER_NAMES, readRemoteStatus, type RemoteStatus } from '@quina/protocol';
 import { playableSongs } from '../../../show/engine/src/analysis.ts';
-import { DATA, loadRepertoire, MEDIA, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
+import { CACHE, DATA, loadRepertoire, MEDIA, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
 import { distProblem } from '../../../show/relay/build-stamp.ts';
 import { CLOUD_PLAN_FILE } from '../../../show/relay/plan.ts';
 import { referenceFile, scan } from '../media-sync.ts';
@@ -150,6 +150,7 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   const holdIndex = readJson(path.join(OUT, 'hold', 'index.json')) as { files?: { name: string; pcm: string }[] } | null;
   const hold = holdIndex?.files ?? [];
   out.push(...checks.soundsCheck(missingSounds, hold.length, hold.filter((h) => !fs.existsSync(path.resolve(REPO, h.pcm))).map((h) => h.name)));
+  out.push(checks.voicesCheck(readJson(path.join(OUT, 'voice', 'index.json')), (name) => fs.existsSync(path.join(CACHE, 'voice', `${name}.flac`))));
 
   let reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null = null;
   if (o.cloud) {

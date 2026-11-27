@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as c from '../../laptop/preflight/checks.ts';
-import { roundCardPrice, type GamePlan } from '@quina/protocol';
+import { VOICE_CUES, roundCardPrice, type GamePlan } from '@quina/protocol';
 import { PLAN } from '../support/plan.ts';
 
 const device = (name: string, transport: string, extra: Record<string, string> = {}) => ({
@@ -173,6 +173,21 @@ test('the relay, the LAN and the cloud', () => {
   assert.equal(c.clockCheck('+125.2 +/- 0.05 time.apple.com 17.253.14.45').status, 'fail');
   assert.equal(c.clockCheck(null).status, 'warn', 'no internet: compare it with a phone');
   assert.equal(c.clockCheck('sntp: Exchange failed: Timeout').status, 'warn');
+});
+
+test('voice cues (D198, D202–D204): FAIL a cue missing or without its file, WARN while any is a placeholder', () => {
+  const names = [...VOICE_CUES, 'chime', 'fanfare'];
+  const all = (placeholder: (name: string) => boolean) => ({ schemaVersion: 1, voices: names.map((name) => ({ name, durationSec: 1, placeholder: placeholder(name) })) });
+  assert.equal(c.voicesCheck(null, () => true).status, 'fail');
+  assert.equal(c.voicesCheck(all(() => false), () => true).status, 'pass');
+  const warn = c.voicesCheck(all((n) => n !== 'start'), () => true);
+  assert.equal(warn.status, 'warn');
+  assert.match(warn.detail, new RegExp(`^${names.length - 1} of ${names.length} voice cues are still placeholders`));
+  const noFile = c.voicesCheck(all(() => false), (n) => n !== 'goodbye');
+  assert.equal(noFile.status, 'fail');
+  assert.match(noFile.detail, /goodbye$/);
+  const unlisted = c.voicesCheck({ voices: all(() => false).voices.filter((v) => v.name !== 'fanfare') }, () => true);
+  assert.match(unlisted.detail, /: fanfare$/);
 });
 
 test('provisional hooks (D227): WARN while a playable song lands on a bulk-approved best hook', () => {

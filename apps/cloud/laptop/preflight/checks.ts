@@ -2,7 +2,7 @@
 // on its own. FAIL is anything that would hurt the show; WARN is worth a look. Details are plain language for
 // whoever sets the laptop up.
 import {
-  DEFAULT_CARD_TYPE, DEFAULT_POOL, DEFAULT_SIDE, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
+  DEFAULT_CARD_TYPE, DEFAULT_POOL, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, roundCardPrice, sideWarnings,
   type CardTypePrice, type CardTypeSides, type RemoteStatus,
 } from '@quina/protocol';
 
@@ -256,6 +256,23 @@ export function provisionalHooksCheck(songs: readonly { id: number; hooks: reado
   if (ids.length === 0) return check('Repertoire', 'Hooks', 'pass', "every song's best hook was chosen on the audition page");
   const shown = ids.slice(0, 12).join(', ') + (ids.length > 12 ? '…' : '');
   return check('Repertoire', 'Hooks', 'warn', `${ids.length} of ${songs.length} songs land on a provisional hook, not chosen yet: decide them on the audition page (songs ${shown})`);
+}
+
+/**
+ * The voice cues (D198, D202–D204): every cue and lead (chime, fanfare) in data/out/voice/index.json with its file in
+ * data/cache/voice/ (FAIL: the cue would play silence), and WARN while any is a placeholder, not the user's recording.
+ * `index`: the index's JSON (null: none); `hasFile(name)`: whether its prepared file exists.
+ */
+export function voicesCheck(index: unknown, hasFile: (name: string) => boolean): Check {
+  const names = [...VOICE_CUES, 'chime', 'fanfare'];
+  const voices = index && typeof index === 'object' && Array.isArray((index as { voices?: unknown }).voices) ? ((index as { voices: unknown[] }).voices as { name?: unknown; placeholder?: unknown }[]) : null;
+  if (!voices) return check('Repertoire', 'Voices', 'fail', 'no data/out/voice/index.json: prepare them with tools/prep/voices.py (or pull the media)');
+  const listed = new Map(voices.filter((v) => typeof v?.name === 'string').map((v) => [v.name as string, v.placeholder === true]));
+  const missing = names.filter((n) => !listed.has(n) || !hasFile(n));
+  if (missing.length) return check('Repertoire', 'Voices', 'fail', `${missing.length} voice cue(s) missing or without their file: ${missing.join(', ')}`);
+  const placeholders = names.filter((n) => listed.get(n));
+  if (placeholders.length) return check('Repertoire', 'Voices', 'warn', `${placeholders.length} of ${names.length} voice cues are still placeholders, not the user's recordings`);
+  return check('Repertoire', 'Voices', 'pass', `all ${names.length} voice cues recorded`);
 }
 
 /** How to rebuild the show the relay serves (`npm start` serves apps/show/dist). */

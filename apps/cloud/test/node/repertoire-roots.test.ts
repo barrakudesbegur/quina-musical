@@ -26,6 +26,8 @@ test("the Interval music syncs with every repertoire, under its own roots, like 
     assert.deepEqual(roots.find((r) => r.root === 'interval-cache')?.dir, path.join(CACHE, 'interval'), p.name);
     assert.deepEqual(roots.find((r) => r.root === 'interval-data')?.dir, path.join(OUT, 'interval'), p.name);
     assert.deepEqual(roots.find((r) => r.root === 'hold-cache')?.dir, path.join(CACHE, 'hold'), p.name);
+    assert.deepEqual(roots.find((r) => r.root === 'voice-cache')?.dir, path.join(CACHE, 'voice'), p.name);
+    assert.deepEqual(roots.find((r) => r.root === 'voice-data')?.dir, path.join(OUT, 'voice'), p.name);
   }
 });
 
@@ -33,8 +35,8 @@ test("the default repertoire's data and cache roots leave the shared music to it
   const roots = repertoireRoots(repertoire('default', OUT, CACHE));
   const cache = roots.find((r) => r.root === 'cache');
   const data = roots.find((r) => r.root === 'data');
-  for (const shared of ['interval/some-track.flac', 'hold/loop.flac']) assert.equal(cache?.exclude?.(shared), true, shared);
-  for (const shared of ['interval/index.json', 'hold/index.json']) assert.equal(data?.exclude?.(shared), true, shared);
+  for (const shared of ['interval/some-track.flac', 'hold/loop.flac', 'voice/round-1.flac']) assert.equal(cache?.exclude?.(shared), true, shared);
+  for (const shared of ['interval/index.json', 'hold/index.json', 'voice/index.json']) assert.equal(data?.exclude?.(shared), true, shared);
   assert.equal(cache?.exclude?.('1/mix.flac'), false, "a song's own files stay");
   assert.equal(cache?.exclude?.('repertoires/2026/1/mix.flac'), true, "another repertoire's files: its own push");
   assert.equal(data?.exclude?.('repertoires/2026/analysis/index.json'), true);
@@ -57,5 +59,7 @@ test('never synced: the relay\'s pairing token, the download tools, the listenin
 test('the cloud accepts the shared roots in sync paths', () => {
   assert.equal(isSyncPath('interval-cache/some-track.flac'), true);
   assert.equal(isSyncPath('interval-data/index.json'), true);
+  assert.equal(isSyncPath('voice-cache/round-1.flac'), true);
+  assert.equal(isSyncPath('voice-data/index.json'), true);
   assert.equal(isSyncPath('interval/index.json'), false, 'unknown roots stay refused');
 });

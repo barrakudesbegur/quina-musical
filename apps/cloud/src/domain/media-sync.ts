@@ -5,7 +5,7 @@
 // private bucket, through the laptop's Access service token; never to git, never public.
 
 /** The folders synced, by name (laptop/media-sync.ts maps them to the repertoire's folders on disk). */
-export const SYNC_ROOTS = ['cache', 'data', 'covers', 'overrides', 'cards', 'hold-cache', 'hold-data', 'interval-cache', 'interval-data', 'fx', 'stingers'] as const;
+export const SYNC_ROOTS = ['cache', 'data', 'covers', 'overrides', 'cards', 'hold-cache', 'hold-data', 'interval-cache', 'interval-data', 'voice-cache', 'voice-data', 'fx', 'stingers'] as const;
 export type SyncRoot = (typeof SYNC_ROOTS)[number];
 
 /** One file as the manifest lists it. */
