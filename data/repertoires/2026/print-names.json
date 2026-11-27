@@ -1,16 +1,63 @@
 {
-  "6yCM4N4v44c3xoMORrhLwW": { "printTitle": "Aserejé", "note": "the user (D261): «Aserejé» in both" },
-  "6sHBvzRsuGunQTfCk18KXi": { "printTitle": "Bailando por Ahí", "note": "card design (27 Nov): Spotify's «Ahi» lacks the accent" },
-  "4uofaK0hnyZQFDAepvPNl6": { "printTitle": "El Último Vals", "note": "card design (27 Nov): Spotify's «Ultimo» lacks the accent" },
-  "6EKUSdzaD9zRaaR5Yg0SoC": { "printTitle": "Fashion Girl", "note": "card design (27 Nov): «pt.2» off" },
-  "5RZTA3NhiHR2408da3HMNz": { "printArtist": "Comando Tiburón", "note": "card design (27 Nov): Spotify's «Tiburon» lacks the accent" },
-  "4wDk9P2WSvHOsRW6SDYE7L": { "printArtist": "La Quinta Estación", "note": "card design (27 Nov): Spotify's «Estacion» lacks the accent" },
-  "0B9x2BRHqj3Qer7biM3pU3": { "printArtist": "John Travolta, Olivia Newton-John", "note": "card design (27 Nov): a duet known by both names" },
-  "4bE1OpWxbtFOdNDF7rJMta": { "printTitle": "En el Amor Todo Es Empezar", "note": "card design (27 Nov): the rules keep «(A far l'amore comincia tu)»" },
-  "3vb3xZADNMONqL7aRQLVPJ": { "printTitle": "Hay Que Venir al Sur", "note": "card design (27 Nov): Spotify's typo «Quel»" },
-  "0Gx4VrHzS7pZOEAGrmXXBH": { "printArtist": "Carlos Vives, Shakira", "note": "card design (27 Nov): a duet known by both names" },
-  "3ri9fLG89OdSpjxheYxU7S": { "printArtist": "La Quinta Estación", "note": "card design (27 Nov): Spotify's «Estacion» lacks the accent" },
-  "6UEfyhyfhYQsyipxOd95Ie": { "printTitle": "Aserejé", "note": "the user (27 Nov): «Asereje should just be called asereje»" },
-  "3cHyrEgdyYRjgJKSOiOtcS": { "printArtist": "Pitbull, Kesha", "note": "card design (27 Nov): a duet known by both names" },
-  "6azT5xEjuB5FNW3YC4Ed3i": { "printTitle": "Els Segadors Remix", "printArtist": "Pont Aeri-Chasis", "note": "the user (q20, 28 Nov): the correct song, a makina remix of the Catalan anthem" }
+  "6yCM4N4v44c3xoMORrhLwW": {
+    "printTitle": "Aserejé",
+    "note": "the user (D261): «Aserejé» in both"
+  },
+  "6sHBvzRsuGunQTfCk18KXi": {
+    "printTitle": "Bailando por Ahí",
+    "note": "card design (27 Nov): Spotify's «Ahi» lacks the accent"
+  },
+  "4uofaK0hnyZQFDAepvPNl6": {
+    "printTitle": "El Último Vals",
+    "note": "card design (27 Nov): Spotify's «Ultimo» lacks the accent"
+  },
+  "6EKUSdzaD9zRaaR5Yg0SoC": {
+    "printTitle": "Fashion Girl",
+    "note": "card design (27 Nov): «pt.2» off"
+  },
+  "5RZTA3NhiHR2408da3HMNz": {
+    "printArtist": "Comando Tiburón",
+    "note": "card design (27 Nov): Spotify's «Tiburon» lacks the accent"
+  },
+  "4wDk9P2WSvHOsRW6SDYE7L": {
+    "printArtist": "La Quinta Estación",
+    "note": "card design (27 Nov): Spotify's «Estacion» lacks the accent"
+  },
+  "0B9x2BRHqj3Qer7biM3pU3": {
+    "printArtist": "John Travolta, Olivia Newton-John",
+    "note": "card design (27 Nov): a duet known by both names"
+  },
+  "4bE1OpWxbtFOdNDF7rJMta": {
+    "printTitle": "En el Amor Todo Es Empezar",
+    "note": "card design (27 Nov): the rules keep «(A far l'amore comincia tu)»"
+  },
+  "3vb3xZADNMONqL7aRQLVPJ": {
+    "printTitle": "Hay Que Venir al Sur",
+    "note": "card design (27 Nov): Spotify's typo «Quel»"
+  },
+  "0Gx4VrHzS7pZOEAGrmXXBH": {
+    "printArtist": "Carlos Vives, Shakira",
+    "note": "card design (27 Nov): a duet known by both names"
+  },
+  "3ri9fLG89OdSpjxheYxU7S": {
+    "printArtist": "La Quinta Estación",
+    "note": "card design (27 Nov): Spotify's «Estacion» lacks the accent"
+  },
+  "6UEfyhyfhYQsyipxOd95Ie": {
+    "printTitle": "Aserejé",
+    "note": "the user (27 Nov): «Asereje should just be called asereje»"
+  },
+  "3cHyrEgdyYRjgJKSOiOtcS": {
+    "printArtist": "Pitbull, Kesha",
+    "note": "card design (27 Nov): a duet known by both names"
+  },
+  "6azT5xEjuB5FNW3YC4Ed3i": {
+    "printTitle": "Els Segadors Remix",
+    "printArtist": "Pont Aeri-Chasis",
+    "note": "the user (q20, 28 Nov): the correct song, a makina remix of the Catalan anthem"
+  },
+  "5MwUr7hfHWWqezOCtDsFOn": {
+    "printTitle": "Hay Que Venir al Sur",
+    "note": "card design's approved fix for #93 (27 Nov), carried to the new track the user picked (28 Nov): Spotify's typo «Quel»"
+  }
 }
