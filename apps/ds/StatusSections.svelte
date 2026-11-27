@@ -119,8 +119,8 @@
       {/snippet}
       {@render cell(state, r)}
     {/each}
-    {#snippet big()}<Ring arc="progress" color="cyan" face="number" progress={0.7} value="2" unit=" min" label="Tornem d’aquí a uns 2 minuts" size={projector ? 390 : 170} />{/snippet}
-    {@render cell(`the Break’s countdown: cyan, ${projector ? '390' : '170'} px (the stage still draws its own CountdownRing)`, big)}
+    {#snippet big()}<Ring arc="progress" color="cyan" face="number" framed progress={0.7} value="2" unit="min" label="Tornem d’aquí a uns 2 minuts" size={projector ? 390 : 170} />{/snippet}
+    {@render cell(`framed: the Break’s countdown, cyan, ${projector ? '390' : '170'} px (the projector’s CountdownRing is this, ring-dom.ts)`, big)}
   </div>
 </section>
 

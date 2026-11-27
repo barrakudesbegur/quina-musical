@@ -9,25 +9,13 @@ import type { AnimDetail } from '../model/moments.ts';
 import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
 import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
-import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
+import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorStrip, stickerImage } from './parts.ts';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import '../../../packages/ui/components/sticker.css';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
+import { RingElement } from '../../../packages/ui/components/ring-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-/** The ring's radius in its 156-unit viewBox (as on the board). */
-const RING_R = 56;
-
-function circle(className: string, r: number): SVGCircleElement {
-  const c = document.createElementNS(SVG_NS, 'circle');
-  c.setAttribute('class', className);
-  c.setAttribute('cx', '78');
-  c.setAttribute('cy', '78');
-  c.setAttribute('r', String(r));
-  return c;
-}
 
 /** What the ring's face says: the rough minutes, "<1" under a minute, or the clock time when it's far off. */
 function ringFace(at: RoughCountdown, clock: (ms: number) => string): { value: string; unit: string } {
@@ -36,43 +24,29 @@ function ringFace(at: RoughCountdown, clock: (ms: number) => string): { value: s
   return { value: clock(at.atMs), unit: '' };
 }
 
-/** The Interval's countdown: a ring that empties linearly towards the guide end, with the minutes inside. */
+/** The Interval's countdown: the generic Ring (E1), framed, in cyan, emptying linearly towards the guide end, with the
+ * minutes inside (packages/ui/components/ring-dom.ts). Decorative: the words under it say the same. */
 class CountdownRing {
-  readonly root: HTMLElement;
-  private readonly fill: SVGCircleElement;
-  private readonly face: HTMLElement;
-  private readonly value: HTMLElement;
-  private readonly unit: HTMLElement;
+  private readonly ring = new RingElement('cyan', 'interval__ring');
+  readonly root = this.ring.root;
   private last: RoughCountdown | null = null;
 
   constructor() {
-    const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('class', 'ring__svg');
-    svg.setAttribute('viewBox', '0 0 156 156');
-    this.fill = circle('ring__fill', RING_R);
-    this.fill.setAttribute('pathLength', '1');
-    svg.append(circle('ring__plate', 72), circle('ring__track', RING_R), this.fill, circle('ring__hub', 44));
-    this.value = h('span', 'ring__value');
-    this.unit = h('span', 'ring__unit');
-    this.face = h('span', 'ring__face', this.value, this.unit);
-    this.root = h('div', { class: 'ring', attrs: { 'aria-hidden': 'true' } }, svg, this.face);
+    this.root.setAttribute('aria-hidden', 'true');
   }
 
   update(at: RoughCountdown | null, left: number | null, clock: (ms: number) => string): void {
     setHidden(this.root, at === null);
-    if (left !== null) setVar(this.root, '--ring-left', String(left));
+    if (left !== null) this.ring.setProgress(left);
     if (!at || sameCountdown(at, this.last)) return;
     this.last = at;
     const face = ringFace(at, clock);
-    setText(this.value, face.value);
-    setText(this.unit, face.unit);
-    setHidden(this.unit, !face.unit);
-    setData(this.face, 'long', face.value.length > 2 ? 'true' : null);
+    this.ring.setValue(face.value, face.unit);
   }
 
   /** `interval-rotate`: the number ticks when it changes. */
   tickAnim(): void {
-    playAnim(this.face, 'interval-rotate');
+    playAnim(this.ring.face, 'interval-rotate');
   }
 }
 

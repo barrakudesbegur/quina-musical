@@ -35,6 +35,7 @@
     tick = false,
     bold = false,
     iconLarge = false,
+    framed = false,
     progress = null,
     value = null,
     unit = null,
@@ -48,6 +49,8 @@
   const uid = $props.id();
   const offset = $derived(progress === null ? 0 : 100 - Math.min(1, Math.max(0, progress)) * 100);
   const disc = $derived(face === 'disc');
+  /** The track's radius: on the plate itself, or inside the frame. */
+  const r = $derived(framed ? 40 : 46);
 </script>
 
 <span
@@ -59,6 +62,7 @@
   data-tick={tick || undefined}
   data-bold={bold || undefined}
   data-icon-large={iconLarge || undefined}
+  data-framed={framed || undefined}
   role="timer"
   aria-label={label}
   title={label}
@@ -75,14 +79,16 @@
       </defs>
     {/if}
     {#if halo}<circle class="ring__halo" cx="56" cy="56" r="55" />{/if}
-    <circle class="ring__track" cx="56" cy="56" r="46" />
+    {#if framed}<circle class="ring__plate" cx="56" cy="56" r="51.5" />{/if}
+    <circle class="ring__track" cx="56" cy="56" {r} />
     {#if arc === 'progress'}
-      <circle class="ring__fill" cx="56" cy="56" r="46" pathLength="100" stroke-dasharray="100" stroke-dashoffset={offset} transform="rotate(-90 56 56)" />
+      <circle class="ring__fill" cx="56" cy="56" {r} pathLength="100" stroke-dasharray="100" stroke-dashoffset={offset} transform="rotate(-90 56 56)" />
     {:else if arc === 'segments'}
-      <g class="ring__spin"><circle class="ring__segments" cx="56" cy="56" r="46" pathLength="120" stroke-dasharray="6.2 3.8" /></g>
+      <g class="ring__spin"><circle class="ring__segments" cx="56" cy="56" {r} pathLength="120" stroke-dasharray="6.2 3.8" /></g>
     {:else if arc === 'full'}
-      <circle class="ring__full" cx="56" cy="56" r="46" style:stroke={pattern === 'hazard' ? `url(#${uid}-hazard)` : undefined} />
+      <circle class="ring__full" cx="56" cy="56" {r} style:stroke={pattern === 'hazard' ? `url(#${uid}-hazard)` : undefined} />
     {/if}
+    {#if framed}<circle class="ring__hub" cx="56" cy="56" r="31.5" />{/if}
     {#if face === 'record'}
       <g class="ring__record">
         <circle class="ring__record-disc" cx="56" cy="56" r="24" />
@@ -103,7 +109,7 @@
     <span class="ring__centre">
       {#if face === 'number'}
         {#key value}
-          <span class="ring__value" data-tick={tick || undefined}>{value ?? '—'}{#if unit && value !== null}<span class="ring__unit">{unit}</span>{/if}</span>
+          <span class="ring__value" data-tick={tick || undefined} data-long={value !== null && value.length > 2 ? '' : undefined}>{value ?? '—'}{#if unit && value !== null}<span class="ring__unit">{unit}</span>{/if}</span>
         {/key}
       {:else if face === 'icon' && icon}
         <span class="ring__pulse"><Icon name={icon} alone class="icon--{icon}" /></span>

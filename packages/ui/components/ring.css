@@ -266,3 +266,69 @@
   width: 18px;
   height: 18px;
 }
+
+/* ---- framed (27 Nov): the Break's countdown, as the projector drew it (P8, board E1: 390 px) and the phone's M32 ----
+   An ink-ringed plate in the surface colour, the track (night) and the arc inside it, a hub under the face; the number in
+   outlined Londrina, the unit in the arc's colour. Geometry is the 156-unit board's, scaled into the 112 box. */
+.ring[data-framed] .ring__plate {
+  fill: var(--color-surface);
+  stroke: var(--color-line, var(--color-ink));
+  stroke-width: 3.6;
+}
+
+.ring[data-framed] .ring__track {
+  fill: none;
+  stroke: var(--color-bg-deep, var(--color-night-deep));
+  stroke-width: 12.9;
+}
+
+.ring[data-framed] .ring__fill {
+  stroke-width: 12.9;
+}
+
+.ring[data-framed] .ring__hub {
+  fill: var(--color-bg, var(--color-night));
+  stroke: var(--color-line, var(--color-ink));
+  stroke-width: 2.9;
+}
+
+.ring[data-framed] .ring__value {
+  color: var(--color-white);
+  -webkit-text-stroke: var(--ring-value-stroke, 4px) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 var(--ring-value-drop, 3px) 0 var(--color-ink);
+}
+
+.ring[data-framed] .ring__unit {
+  display: block;
+  color: var(--palette-solid);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-strong);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.ring[data-framed] .ring__value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* the projector's 390 px ring: the number 170 px (a clock time, «10:14», 72 px), the unit 40 px */
+:where([data-density='projector']) .ring[data-framed] {
+  --ring-value-size: 10.625rem;
+  --ring-value-stroke: 0.75rem;
+  --ring-value-drop: 0.4375rem;
+}
+
+:where([data-density='projector']) .ring[data-framed] .ring__value {
+  line-height: 0.85;
+}
+
+:where([data-density='projector']) .ring[data-framed] .ring__value[data-long] {
+  font-size: 4.5rem;
+}
+
+:where([data-density='projector']) .ring[data-framed] .ring__unit {
+  font-size: 2.5rem;
+}

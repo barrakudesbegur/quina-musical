@@ -143,6 +143,9 @@ export interface RingLook {
   readonly bold?: boolean;
   /** The centre's icon one step bigger (the Check's rosette). */
   readonly iconLarge?: boolean;
+  /** The plate-and-hub frame (the Break's countdown, the projector's P8 and the phone's M32): an ink-ringed plate, the
+   *  track and arc inside it, an inner hub under the face. Without it the track itself is the plate (the console). */
+  readonly framed?: boolean;
 }
 
 export interface RingBadgeLook {
