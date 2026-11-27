@@ -153,10 +153,13 @@ export function comparePages(a: PageSnapshot, b: PageSnapshot, props: readonly s
 /**
  * A value as the build's minifier leaves it, where the dev server keeps the author's spelling with the same result:
  * `0%` as `0` in a position or origin (`background: none` becomes `0 0`), a gradient's side keyword as its angle (and
- * the default `to bottom` dropped), a computed `color(srgb …)` (from color-mix or a relative colour) as `rgba()`.
+ * the default `to bottom` dropped), a computed `color(srgb …)` (from color-mix or a relative colour) as `rgba()`; and
+ * a Svelte component's keyframes, named after a hash of its CSS.
  */
 export function canonical(prop: string, value: string): string {
   let v = value;
+  // Svelte names a component's keyframes after a hash of its CSS: the same animation under another hash.
+  if (prop === 'animation-name') v = v.replace(/\bsvelte-[a-z0-9]+-/g, 'svelte-');
   if (prop === 'background-position' || prop === 'transform-origin' || prop === 'object-position') v = v.replace(/(^|[\s,])0%(?=$|[\s,])/g, '$10px');
   if (v.includes('gradient(')) {
     const angles: Record<string, string> = { top: '0deg', right: '90deg', bottom: '180deg', left: '270deg' };

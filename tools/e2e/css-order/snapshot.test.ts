@@ -16,6 +16,7 @@ test("the minifier's spellings compare equal, a real change doesn't", () => {
   assert.equal(canonical('mask-image', 'linear-gradient(to right, red, blue)'), canonical('mask-image', 'linear-gradient(90deg, red, blue)'));
   assert.equal(canonical('stroke', 'color(srgb 1 1 1 / 0.5)'), 'rgba(255, 255, 255, 0.5)');
   assert.notEqual(canonical('color', 'rgb(255, 246, 229)'), canonical('color', 'rgb(23, 19, 43)'));
+  assert.equal(canonical('animation-name', 'svelte-g4agez-sound-test-in'), canonical('animation-name', 'svelte-3fg8rp-sound-test-in'));
 });
 
 test('a comparison lists each differing property of the matched elements', () => {
