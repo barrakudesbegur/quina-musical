@@ -11,20 +11,62 @@
       "side": 1,
       "line": [
         {
-          "title": "Premi de prova 1",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per una copa",
+          "detail": null,
+          "sponsorId": "la-lluna",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 2",
+          "title": "Pernil",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Sopar per a dues persones",
+          "detail": null,
+          "sponsorId": "sa-barra",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de productes de farmàcia",
+          "detail": null,
+          "sponsorId": "farmacia-sonia-torres",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Gorra",
+          "detail": null,
+          "sponsorId": "blauet",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val per a una pizza",
+          "detail": null,
+          "sponsorId": "sa-pizza",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -35,20 +77,62 @@
       "side": 1,
       "line": [
         {
-          "title": "Premi de prova 3",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per a una pizza",
+          "detail": null,
+          "sponsorId": "sa-pizza",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 4",
+          "title": "Cafetera",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Menú diari per a dues persones",
+          "detail": null,
+          "sponsorId": "can-pere",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Tall de cabell",
+          "detail": null,
+          "sponsorId": "botanical-hair-spa",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Pack de productes",
+          "detail": null,
+          "sponsorId": "el-taller",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val per a una smash burger",
+          "detail": null,
+          "sponsorId": "la-motxa",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -59,20 +143,62 @@
       "side": 1,
       "line": [
         {
-          "title": "Premi de prova 5",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per un braç de gitano",
+          "detail": null,
+          "sponsorId": "pa-de-pessic",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 6",
+          "title": "Fregidora d'aire",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Esmorzar per a dues persones",
+          "detail": null,
+          "sponsorId": "bar-de-placa",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Neteja dental",
+          "detail": null,
+          "sponsorId": "cambra-clinic",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Puzzle i nina",
+          "detail": null,
+          "sponsorId": "ca-l-angie",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "de-begur",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -83,20 +209,62 @@
       "side": 1,
       "line": [
         {
-          "title": "Premi de prova 7",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Ambientador i llumins",
+          "detail": null,
+          "sponsorId": "kumade",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 8",
+          "title": "Pernil",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Menú per a dues persones",
+          "detail": null,
+          "sponsorId": "farolillo",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Tractament",
+          "detail": null,
+          "sponsorId": "sals-de-mar",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Polsera",
+          "detail": null,
+          "sponsorId": "lebagu",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "tocineria-mario",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -107,20 +275,62 @@
       "side": 1,
       "line": [
         {
-          "title": "Premi de prova 9",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Paquet de ceràmica",
+          "detail": null,
+          "sponsorId": "141-ceramica",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 10",
+          "title": "Auriculars",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Menú doble (entre setmana)",
+          "detail": null,
+          "sponsorId": "carbo",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Jersei de dona",
+          "detail": null,
+          "sponsorId": "zig-zag",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "la-havana",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Paquet de plats, bol i drap",
+          "detail": null,
+          "sponsorId": "s-and-s",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -132,11 +342,39 @@
       "line": [],
       "bingo": [
         {
-          "title": "Premi de prova 11",
+          "title": "Bateig de submarinisme",
           "detail": null,
-          "sponsorId": null,
+          "sponsorId": "begur-dive",
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Lot d'ampolles",
+          "detail": null,
+          "sponsorId": "gourmet",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Cinturó i un detall per a la porta",
+          "detail": null,
+          "sponsorId": "dana-taboe",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Joc",
+          "detail": null,
+          "sponsorId": "esplai-autentic",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -147,20 +385,62 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 12",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per una copa",
+          "detail": null,
+          "sponsorId": "la-lluna",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 13",
+          "title": "Torradora",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Sopar per a dues persones",
+          "detail": null,
+          "sponsorId": "can-pol",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val descompte",
+          "detail": null,
+          "sponsorId": "la-petite",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Pilota",
+          "detail": null,
+          "sponsorId": "fundacio-esportiva",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "de-begur",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -171,20 +451,62 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 14",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per a una pizza",
+          "detail": null,
+          "sponsorId": "sa-pizza",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 15",
+          "title": "Pernil",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Menú doble (entre setmana)",
+          "detail": null,
+          "sponsorId": "can-ruben",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val per un drop in",
+          "detail": null,
+          "sponsorId": "bravos-crossbox",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Gorra",
+          "detail": null,
+          "sponsorId": "blauet",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val per a una smash burger",
+          "detail": null,
+          "sponsorId": "la-motxa",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -195,20 +517,62 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 16",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Bossa de tela",
+          "detail": null,
+          "sponsorId": "set-vetes",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 17",
+          "title": "Planxa",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Mensualitat de pàdel",
+          "detail": null,
+          "sponsorId": "padel-indians",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Sangria, vi negre i caldo",
+          "detail": null,
+          "sponsorId": "can-dolc",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Pack de productes",
+          "detail": null,
+          "sponsorId": "el-taller",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val de peix",
+          "detail": null,
+          "sponsorId": "peixos-arnau",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -219,20 +583,62 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 18",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Paquet de ceràmica",
+          "detail": null,
+          "sponsorId": "141-ceramica",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 19",
+          "title": "Pernil",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Menú doble (entre setmana)",
+          "detail": null,
+          "sponsorId": "carbo",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal i vi",
+          "detail": null,
+          "sponsorId": "l-autentic",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Polsera",
+          "detail": null,
+          "sponsorId": "lebagu",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val descompte",
+          "detail": null,
+          "sponsorId": "carnisseria-can-ribas",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -243,20 +649,62 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 20",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per una copa",
+          "detail": null,
+          "sponsorId": "la-lluna",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 21",
+          "title": "Cafetera",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Entrada al spa per a dues persones",
+          "detail": null,
+          "sponsorId": "classic-begur",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "platillos",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Pack de productes",
+          "detail": null,
+          "sponsorId": "el-taller",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val de peix",
+          "detail": null,
+          "sponsorId": "peixos-arnau",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     },
@@ -267,25 +715,379 @@
       "side": 2,
       "line": [
         {
-          "title": "Premi de prova 22",
+          "title": "Ampolla de vi, fuet i neules",
           "detail": null,
           "sponsorId": null,
           "image": null,
-          "headline": true
+          "headline": false
+        },
+        {
+          "title": "Val per a una pizza",
+          "detail": null,
+          "sponsorId": "sa-pizza",
+          "image": null,
+          "headline": false
         }
       ],
       "bingo": [
         {
-          "title": "Premi de prova 23",
+          "title": "Televisor",
           "detail": null,
           "sponsorId": null,
           "image": null,
           "headline": true
+        },
+        {
+          "title": "Casc de moto",
+          "detail": null,
+          "sponsorId": "motos-v-roses",
+          "image": null,
+          "headline": true
+        },
+        {
+          "title": "Entrada al spa per a dues persones",
+          "detail": null,
+          "sponsorId": "hotel-rosa",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Mensualitat de pàdel",
+          "detail": null,
+          "sponsorId": "padel-indians",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Sessió de tatuatge",
+          "detail": null,
+          "sponsorId": "17255-studio",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Panera de verdures",
+          "detail": null,
+          "sponsorId": "verdures-andreu",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Marxandatge i 4 inscripcions",
+          "detail": null,
+          "sponsorId": "perduts-begur",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Val regal",
+          "detail": null,
+          "sponsorId": "can-kai",
+          "image": null,
+          "headline": false
+        },
+        {
+          "title": "Lot de Nadal",
+          "detail": "Torrons, neules, cava, xocolata, fuet i una samarreta de Barrakudes",
+          "sponsorId": null,
+          "image": null,
+          "headline": false
         }
       ]
     }
   ],
-  "sponsors": [],
+  "sponsors": [
+    {
+      "id": "bar-de-placa",
+      "name": "Bar de Plaça",
+      "logo": "/media/a505830479e863d1076878a83442ca28.jpg"
+    },
+    {
+      "id": "can-kai",
+      "name": "Can Kai",
+      "logo": "/media/06582b140426330e881c9df0c53b1b9f.png"
+    },
+    {
+      "id": "can-pere",
+      "name": "Can Pere",
+      "logo": "/media/709cd2660f8714d25b51a238e3b42dd9.png"
+    },
+    {
+      "id": "can-pol",
+      "name": "Can Pol",
+      "logo": "/media/0a2fd3d39e2803f6ea97548254d2f935.jpg"
+    },
+    {
+      "id": "can-ruben",
+      "name": "Can Ruben",
+      "logo": "/media/f1a051ecf6e856be917471ff4f437fa9.jpg"
+    },
+    {
+      "id": "carbo",
+      "name": "Carbó",
+      "logo": "/media/6c9e9f73a6ad58abc37a7f755300a4ef.png"
+    },
+    {
+      "id": "de-begur",
+      "name": "De Begur",
+      "logo": "/media/4f3713b04fa02697d1eaf0564b7650f7.png"
+    },
+    {
+      "id": "farolillo",
+      "name": "Farolillo",
+      "logo": "/media/f3408b4238ad86cb691666143cb2ba70.png"
+    },
+    {
+      "id": "gourmet",
+      "name": "Gourmet",
+      "logo": "/media/2f4d7599e88a73dddb38ce4ada5f1d54.jpg"
+    },
+    {
+      "id": "l-autentic",
+      "name": "L'Autèntic",
+      "logo": "/media/87477e216783b3395298c30e11ece31c.jpg"
+    },
+    {
+      "id": "la-havana",
+      "name": "La Havana",
+      "logo": "/media/139a42c3781ecd24a538f6a6ba72784d.jpg"
+    },
+    {
+      "id": "la-lluna",
+      "name": "La Lluna",
+      "logo": "/media/ac898aa70e6bcc969f38f46b0139ec4e.jpg"
+    },
+    {
+      "id": "la-motxa",
+      "name": "La Motxa",
+      "logo": "/media/98f2576ef636290b2352968e310923cd.jpg"
+    },
+    {
+      "id": "platillos",
+      "name": "Platillos",
+      "logo": "/media/d769ee5176f577171a9ed7441b2c30d2.jpg"
+    },
+    {
+      "id": "sa-barra",
+      "name": "Sa Barra",
+      "logo": "/media/7fb3dea7cc14ea725f5dcb58cf1f9a03.png"
+    },
+    {
+      "id": "sa-pizza",
+      "name": "Sa Pizza",
+      "logo": "/media/0cd99305dc107301fd564b198b115ccf.jpg"
+    },
+    {
+      "id": "can-dolc",
+      "name": "Can Dolç",
+      "logo": "/media/0caf92090a4098c711ac2359a625cf5e.png"
+    },
+    {
+      "id": "pa-de-pessic",
+      "name": "Pa de Pessic",
+      "logo": "/media/baf25d0318f8423c4ca55d04c96c098d.png"
+    },
+    {
+      "id": "tocineria-mario",
+      "name": "Tocineria Mario",
+      "logo": "/media/4fd3d4934f697314f91967852eb4c70e.jpg"
+    },
+    {
+      "id": "verdures-andreu",
+      "name": "Verdures Andreu",
+      "logo": null
+    },
+    {
+      "id": "carnisseria-can-ribas",
+      "name": "Carnisseria Can Ribas",
+      "logo": "/media/881ef0f72f505b5c677f801682531a38.png"
+    },
+    {
+      "id": "botanical-hair-spa",
+      "name": "Botanical Hair Spa",
+      "logo": "/media/0ada1e3fbbaae00b79420122ff3dedba.png"
+    },
+    {
+      "id": "cambra-clinic",
+      "name": "Cambra Clinic",
+      "logo": "/media/9c92270db5cb42ddc4e60f3266205557.jpg"
+    },
+    {
+      "id": "farmacia-sonia-torres",
+      "name": "Farmàcia Sònia Torres",
+      "logo": "/media/e1daadc3453b80932c8e4adb75e48d04.jpg"
+    },
+    {
+      "id": "sals-de-mar",
+      "name": "Sals de Mar",
+      "logo": "/media/bfea468c37fabff03cae2b0bc3e83832.png"
+    },
+    {
+      "id": "141-ceramica",
+      "name": "141 Ceràmica d'Autor",
+      "logo": "/media/84368c298f57ed400029b7f4295a25d9.png"
+    },
+    {
+      "id": "17255-studio",
+      "name": "17255 Studio",
+      "logo": "/media/4a00a8022c8364b683e9431be428e5f9.jpg"
+    },
+    {
+      "id": "blauet",
+      "name": "Blauet",
+      "logo": "/media/f828789e4c3ff28d268ef043b2e9d8b2.png"
+    },
+    {
+      "id": "ca-l-angie",
+      "name": "Ca l'Angie",
+      "logo": "/media/0ae1791e5d317b0045b3b85ea65d3485.jpg"
+    },
+    {
+      "id": "dana-taboe",
+      "name": "Dana Taboe",
+      "logo": "/media/2503c6079a5387d0190c84929265bc3f.png"
+    },
+    {
+      "id": "el-taller",
+      "name": "El Taller",
+      "logo": "/media/717727baf6de8634842aea225d9868f3.jpg"
+    },
+    {
+      "id": "indians",
+      "name": "Indians",
+      "logo": "/media/24c20e824edf28cdb35c1eadca47b885.jpg"
+    },
+    {
+      "id": "kumade",
+      "name": "Kumade",
+      "logo": "/media/6355626222360fa0a3d829c2232fa92a.png"
+    },
+    {
+      "id": "la-petite",
+      "name": "La Petite",
+      "logo": "/media/1b1c58bad2e3c7bb72d44d2065cde8ac.jpg"
+    },
+    {
+      "id": "lebagu",
+      "name": "LeBagú",
+      "logo": "/media/6968bce1540d3f6ef4c8695985b9faa1.png"
+    },
+    {
+      "id": "s-and-s",
+      "name": "S&S",
+      "logo": null
+    },
+    {
+      "id": "set-vetes",
+      "name": "Set Vetes",
+      "logo": "/media/488f7e0a2913ac839ab3732305534bad.jpg"
+    },
+    {
+      "id": "zig-zag",
+      "name": "Zig Zag",
+      "logo": "/media/9ab1030d7beccf69b392a6ebea6d9061.jpg"
+    },
+    {
+      "id": "classic-begur",
+      "name": "Classic Begur",
+      "logo": "/media/bb510124ed5af69a60d498da88af1c56.png"
+    },
+    {
+      "id": "hotel-rosa",
+      "name": "Hotel Rosa",
+      "logo": "/media/7c30fc091ef91bdd51a32e26cc94b883.jpg"
+    },
+    {
+      "id": "begur-dive",
+      "name": "Begur Dive",
+      "logo": "/media/e6e8fb829c5678933ec03d62b2e86af8.png"
+    },
+    {
+      "id": "esplai-autentic",
+      "name": "Esplai Autèntic",
+      "logo": "/media/f8b6ce25b35dc9c3f178f2980e676166.jpg"
+    },
+    {
+      "id": "fundacio-esportiva",
+      "name": "Fundació Esportiva",
+      "logo": "/media/9adc021fabbd43982dfd44c39bd34f28.jpg"
+    },
+    {
+      "id": "motos-v-roses",
+      "name": "Motos V. Roses",
+      "logo": "/media/c9dd8e288beea12a45a295618db799d0.jpg"
+    },
+    {
+      "id": "padel-indians",
+      "name": "Pàdel Indians",
+      "logo": "/media/13697296db922914870133b35308c601.jpg"
+    },
+    {
+      "id": "perduts-begur",
+      "name": "Perduts Begur",
+      "logo": "/media/930570d5e4a1aa1ae83201682fd0eaca.jpg"
+    },
+    {
+      "id": "bravos-crossbox",
+      "name": "Bravos Crossbox",
+      "logo": "/media/0106917b131317bbb9e97533af3b2a67.jpg"
+    },
+    {
+      "id": "peixos-arnau",
+      "name": "Peixos Arnau",
+      "logo": null
+    },
+    {
+      "id": "figa-estudio",
+      "name": "Figa Estudio",
+      "logo": "/media/13618073285868ee8bdbfb4769499182.jpg"
+    },
+    {
+      "id": "villas-begur",
+      "name": "VillasBegur",
+      "logo": "/media/081ba44cd9517d9edb68a687e35c3bc4.png"
+    },
+    {
+      "id": "la-bionda",
+      "name": "La Bionda",
+      "logo": "/media/6d48638470021b54b83e84000d900cf0.jpg"
+    },
+    {
+      "id": "brava-social-media",
+      "name": "Brava Social Media",
+      "logo": "/media/0f8ca889a7fc93dcc804294e851c45a3.jpg"
+    },
+    {
+      "id": "recutrans",
+      "name": "Recutrans",
+      "logo": "/media/c07660819a54fcee497cb0fa06a8dce1.png"
+    },
+    {
+      "id": "installacions-poch",
+      "name": "Instal·lacions Poch",
+      "logo": "/media/591ebc94b2cc7dc3cdd70c654b3eb61b.png"
+    },
+    {
+      "id": "do2",
+      "name": "DO2",
+      "logo": "/media/6ba9f736b7e5f6f25a556275cdae6c0f.jpg"
+    },
+    {
+      "id": "ricard-cuadrado",
+      "name": "Ricard Cuadrado Construccions i Reformes",
+      "logo": "/media/b196d24bb3ec7e7b218c7582aec14eba.jpg"
+    },
+    {
+      "id": "construccions-bolivar",
+      "name": "Construccions Bolívar",
+      "logo": "/media/32bede8cc8c52f587d22aa16f1c5bbab.jpg"
+    },
+    {
+      "id": "galeria-mas-comangau",
+      "name": "Mas Comangau",
+      "logo": "/media/741a1e16acca878cdd38e94fa7dc6164.png"
+    }
+  ],
   "schedule": {
     "doorsAtMs": 1798387200000,
     "startAtMs": 1798390800000,

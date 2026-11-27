@@ -7,6 +7,7 @@ import path from 'node:path';
 import { checkGamePlan, type CardTypeSides, type GamePlan } from '@quina/protocol';
 import { checkPlan, planOf, planSummary, venueTimeMs, withStart } from './plan.ts';
 import { uploadPlan } from './upload.ts';
+import { imageType, MAX_LOGO_BYTES, uploadLogos } from './logos.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 /** The tracked plan source for 2026 (D192's order, D193's and D226's sides, D197's Descans). */
@@ -112,6 +113,43 @@ test('upload: shows the change and stops without --yes; with it, saves the old p
       uploadPlan({ cloud: 'https://cloud.test', headers: {}, plan, backupDir: dir, yes: true, fetch: fakeCloud(old, true).impl, log: () => {} }),
       /refused the plan \(HTTP 400\):\n {2}plan\.rounds: no\nIts old plan is unchanged, and saved in /,
     );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/** A 1×1 PNG and the first bytes of a JPEG. */
+const TINY_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+test('logos: PNG or JPEG by their bytes, whatever the name', () => {
+  assert.equal(imageType(TINY_PNG), 'image/png');
+  assert.equal(imageType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0])), 'image/jpeg');
+  assert.equal(imageType(new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"/>')), null);
+  assert.equal(imageType(new Uint8Array([0x52, 0x49, 0x46, 0x46])), null, 'WebP (RIFF) is refused, as the cloud does');
+});
+
+test('logos: each prepared and uploaded only with --yes; a missing or foreign file is reported', { skip: process.platform !== 'darwin' && 'sips is macOS only' }, async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-edition-logos-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'Motos V. Roses'), TINY_PNG);
+    fs.writeFileSync(path.join(dir, 'logo.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+    const files = new Map([
+      ['motos', path.join(dir, 'Motos V. Roses')],
+      ['vector', path.join(dir, 'logo.svg')],
+      ['gone', path.join(dir, 'nothing.png')],
+    ]);
+    const posts: string[] = [];
+    const post = async (bytes: Uint8Array, type: string, name: string) => {
+      posts.push(`${name} ${type} ${bytes.length <= MAX_LOGO_BYTES}`);
+      return `/media/${name}.png`;
+    };
+    const dry = await uploadLogos(files, { yes: false, post, log: () => {} });
+    assert.equal(posts.length, 0);
+    assert.deepEqual(dry.map((r) => [r.sponsorId, r.path, r.problem === null]), [['motos', null, true], ['vector', null, false], ['gone', null, false]]);
+    const real = await uploadLogos(files, { yes: true, post, log: () => {} });
+    assert.deepEqual(posts, ['motos image/png true']);
+    assert.equal(real[0]!.path, '/media/motos.png');
+    assert.equal(real[2]!.problem, 'no such file');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
