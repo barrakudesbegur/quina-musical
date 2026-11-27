@@ -12,18 +12,18 @@ the same day.
   - **A**, covers in colour, A3 · 6, header C: the working default;
   - **B**, no covers, black and white, 3 per A4.
   The organizers haven't picked (U212); the user: "assume we do a. and you can code both so i decide the final later".
-- **This session builds the generator** (`apps/cards`), both layouts behind one config switch. A helper does it in a
-  worktree, and I review and push. Frontend dropped its card build and won't touch apps/cards until I send the sha.
-- **Promised with the build:**
-  - Frontend: `checkLabel` on every side in card-types.json («Normal 1–5», «Normal 6–10», «Desgraciat», «Especial»);
-    Frontend switches the screens to it (U198).
-  - Sound engine: the generator reads `printTitle ?? title` / `printArtist ?? artist` and writes the clean names into
-    cards.json's lines (D260), and reads `pools` (D268, a song in several pools). Sound engine remakes the temporary
-    cards once I send the sha.
-- **Waiting:**
-  - Sound engine's cover audit (compilation and missing covers: #5 «Ritmo latino», #117 a «?» disc); it sends the list.
-  - The 1 Dec playlist, then the real cards on 4–5 Dec.
-  - When the organizers pick, delete the other layout (no fallbacks in code).
+- **The generator is built and pushed (7092e216):** both layouts behind `CARD_LAYOUT` (`'a3-6'` now, `--layout a4-3`
+  proofs B), print names, `pools`, «MOSTRA» samples, `checkLabel` + `heading` per side, tests in
+  `apps/show/tests/ui/cards-print.test.ts`. Frontend has apps/cards back and switches the screens to `checkLabel`.
+  Sound engine remakes the temporary cards with it. When the organizers pick, delete the other layout.
+- **The playlists changed (28 Nov, the user):** pool 1 is alphabetical with Las Ketchup's «Aserejé» (shared with pool
+  2) instead of Grupo Arenas; pool 2's #93 is Raffaella's own «Sensational Hits» release and #112 Coyote Dax's original.
+  Sound engine renumbers (ids follow the playlist order) and re-prepares; 135 songs, 5 shared.
+- **Covers:** Sound engine's audit replaced #122; #112 and #93 came right with the new tracks; #117's «?» disc is the
+  real 1996 art. #100's white cover goes on the proof sheet's checklist.
+- **Waiting on the user:** Q20, #117's print names: title «Els Segadors Remix» (the user), artist «Pont Aeri-Chasis»
+  proposed. Send both to Sound engine (print-names.json, by Spotify id 6azT5xEjuB5FNW3YC4Ed3i).
+- **Waiting:** U212, the organizers' pick; the 1 Dec playlist, then the real cards on 4–5 Dec (a proof sheet first).
 
 ## Decided with the user (all reported to the Orchestrator)
 
