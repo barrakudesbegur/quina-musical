@@ -137,6 +137,11 @@ If they do, a reminder to an uncollected winner is the one push message with rea
 - (a) No, or very rarely.
 - (b) Yes, it happens.
 
+### U205 · Parlem's switch to Hold music after 40 s
+The user: "When the presenter lets a song play it should always loop and not switch to pause music." D239 does that for Aguanta and for manual advance. Under Parlem, today's engine lets the ducked song give way to Hold music after 40 s («Música d'espera»), and at its end. Hold music exists for long waits, so a long Hold doesn't loop the same few bars for minutes. But there are no real Hold tracks yet: data/media/hold has only error tracks, the win, the intro and the throw (U20), so today it would be a synthesized placeholder.
+- (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
+- (b) Keep the 40 s takeover, with real Hold tracks added (U20).
+
 ### U200 · The word in the sticker circle (D231)
 The user wrote "GUMET". The usual Catalan word for these stickers is «gomet».
 - (a) «GOMET».
