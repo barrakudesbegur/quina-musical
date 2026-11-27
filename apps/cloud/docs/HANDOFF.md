@@ -58,6 +58,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `bc4113ec` (`81c8205`, `QUINA_REPERTOIRE=2026 npm run deploy`): Frontend's `96f6ee8` (the home's fixed garland, the drum's landing, your song's gold), the push's `--dry-run` and the deploy's repertoire guard; the 2026 cards and covers kept.
     - `8ae5bf1d` (`067fd01`, repertoire 2026): the Worker's sync takes the voice cues' roots (`voice-cache`, `voice-data`).
     - `956645b2` (`48fda40`, repertoire 2026): Frontend's player PWA (D221–D223): `/player-sw.js`, `/player.webmanifest` and `/icons/*` served `no-cache` on both names; the deploy's PWA warning is gone.
+    - `9ceb373f` (`ea5c234`, tested as `a38dba4`, repertoire 2026): D237's public drum seeds for phones (`PublicRound.drumSeed`, `PublicSpin.spinSeed`; the Spin's `drum` stays private, U206), and D229's `soundTest` through the cloud's command check. Frontend's dev copy of the feed (`apps/player/feed/project.ts`) doesn't carry the seeds yet: theirs, with the phone's drum.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
