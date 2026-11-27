@@ -53,12 +53,6 @@ Before the finale the engine only sees the cards in play, unsold ones included (
 - (c) Nothing: the presenters start the finale earlier (with about 5–10 standing, as the growing button suggests), so it doesn't happen.
 Built as (b) (Sound engine, 593fef2), as a reading of D180 applied among the finalists being entered. It's easy to change if the user picks otherwise.
 
-### U161 · A spare laptop's music until December
-Since the repertoire rename (D178, deployed c93f219c), R2 keeps each repertoire under `repertoires/<name>/`. The ~8 GB pushed before (last year's songs, plus today's Hold, Pausa and break music) stays under `pools/`, where the tools can't reach it. So until this year's repertoire is pushed in December, a spare laptop can't pull those music sets; they're all on the main laptop.
-- (a) Re-push only the music sets now (about 1.7 GB, 20–30 minutes), so a spare works for music. It needs a small tool change first (a `--shared-only` flag, tested and deployed).
-- (b) Re-push everything now with today's tool (about 8 GB and an hour, last year's 77 songs included, a few cents).
-- (c) Wait for December's push; nothing needed.
-
 ### U159 · The numbered slip for winners
 The user on the canvas: "What is this field? we dont papereta concept. please read glosary. If it is the card, it should be readonly or no field directly". The field was labelled "Papereta", which isn't the glossary's word. The model does have a **numbered slip**: the glossary's Winner is "noted by name or by a numbered slip handed to them", event.md says "their name, or a numbered slip we hand them", and the organizers' 2025 notes say "s'entrega un paper amb un número per a identificar posteriorment a la persona". The card's number is already known from the claim.
 - (a) Keep the slip: the winner form has an optional slip number next to the name, with a clearer label.
@@ -362,6 +356,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U161 · A spare laptop's music** (2026-11-27): moot. Repertoire 2026 is in R2 with the Hold, Interval and voice music, so a spare can pull it (ca3c0a3d).
 - **U30 · The prizes drawer** (2026-11-27) → D244: P1's round selector with P2's content; «Premis sorpresa» for locked rounds.
 - **U170 · The Llançament and Tempesta icons** (2026-11-27) → D245: A and A, redrawn in the outline style.
 - **U174 · When "Vols afegir un altre cartró?" shows** (2026-11-27): moot. D241 replaces the banner with a step inside the add-card drawer.
