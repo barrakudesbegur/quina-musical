@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cardTypeSides, checkGamePlan, formatResumeToken, isPoolId, parseResumeToken, replayJournal, sidePool, sideLabel, sideWarnings,
+  cardTypeSides, checkGamePlan, formatResumeToken, isPoolId, parseResumeToken, replayJournal, sidePool, sideWarnings,
   type CardTypeSides, type JournalEntry,
 } from '@quina/protocol';
 import { cardFace, validCards, type PrintedCard } from '../engine/src/game/cards.ts';
@@ -22,7 +22,7 @@ const TYPES: CardTypeSides[] = [
   { type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1', label: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial' }] },
 ];
 
-test('a card type\'s sides and pools, and the label the Check shows (D163)', () => {
+test('a card type\'s sides and pools', () => {
   assert.deepEqual(cardTypeSides(TYPES[0]).map((s) => [s.side, s.pool]), [[1, '1'], [2, '2']]);
   assert.deepEqual(cardTypeSides({ type: 'old' }), [{ side: 1, pool: '1' }], 'a type from before sides');
   assert.equal(sidePool(TYPES, 'normal', 2), '2');
@@ -31,8 +31,6 @@ test('a card type\'s sides and pools, and the label the Check shows (D163)', () 
   assert.equal(sidePool(TYPES, 'nope', 1), null, 'an unknown type');
   assert.equal(sidePool([], 'normal', 1), '1', 'without card-types.json: side 1 on pool 1');
   assert.equal(sidePool([], 'normal', 2), null);
-  assert.deepEqual([sideLabel(TYPES, 'normal', 1), sideLabel(TYPES, 'normal', 2)], ['Normal 1-5', 'Normal 6-10']);
-  assert.equal(sideLabel([{ type: 'especial', name: 'Especial', sides: [{ side: 1, pool: '1' }] }], 'especial', 1), 'Especial', 'one side: no side in the label');
   assert.ok(isPoolId('1') && isPoolId('2') && !isPoolId('') && !isPoolId('Pool 1'));
 });
 

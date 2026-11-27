@@ -59,7 +59,7 @@ export interface CardTypeSide {
   label?: string;
   mark?: string;
   /** What the Check shows for a card of this type and side (D266): «Normal 1–5», «Normal 6–10», «Desgraciat»,
-   * «Especial». Written by apps/cards; absent in an older card-types.json (screens then join the name and label). */
+   * «Especial». Written by apps/cards; the screens show it as it is (D266). */
   checkLabel?: string;
   /** The side's printed heading (apps/cards). Absent in an older card-types.json. */
   heading?: string;
@@ -79,18 +79,6 @@ export function sidePool(types: readonly CardTypeSides[], cardType: string, side
   if (!type) return types.length ? null : side === DEFAULT_SIDE ? DEFAULT_POOL : null;
   return cardTypeSides(type).find((s) => s.side === side)?.pool ?? null;
 }
-/**
- * The card type and side in one label (D163): "Normal 1-5", "Normal 6-10", or just "Especial" for a type with one
- * side. The type's `name` when it has one, else its id.
- */
-export function sideLabel(types: readonly CardTypeSides[], cardType: string, side: number = DEFAULT_SIDE): string {
-  const type = types.find((t) => t.type === cardType);
-  const name = type?.name ?? cardType;
-  const sides = cardTypeSides(type);
-  const label = sides.length > 1 ? sides.find((s) => s.side === side)?.label ?? String(side) : null;
-  return label ? `${name} ${label}` : name;
-}
-
 /** What the round's Phase is climbing towards: the Line, then the Bingo; in the Desgraciat round, the last card standing. */
 export type ClimbTarget = 'line' | 'bingo' | 'standing';
 /** What a Claim is for, and what a Winner won: a Line, the Bingo, or (Desgraciat round) being the last card standing. */

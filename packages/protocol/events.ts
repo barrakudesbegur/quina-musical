@@ -299,8 +299,8 @@ export interface CheckInfo {
   /** The card's printed type ('normal', 'especial'), shown as the Check's first step; null for `unknownCard`.
    * `wrongType`: it isn't the round's card type (`RoundInfo.cardType`). */
   cardType?: string | null;
-  /** The side checked: the round's (D163: the label shows the type and side together, sideLabel). Optional in the
-   * type only: absent means 1. */
+  /** The side checked: the round's (D163; the screens label it with the side's `checkLabel` from card-types.json,
+   * D266). Optional in the type only: absent means 1. */
   side?: number;
   /** When it came on screen. */
   startAtMs: number;
