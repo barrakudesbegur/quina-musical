@@ -1912,10 +1912,7 @@
   pointer-events: none;
 }
 
-.player-card-wrap[data-stand='seated'] {
-  transform: translateY(var(--player-seated-drop)) rotate(var(--player-seated-tilt));
-  transform-origin: 30% 100%;
-}
+/* The seated card's drop and tilt: PlayerCard's `sunk` (packages/ui/components/player-card.css). */
 
 /* Round marks where rounds are listed: a soft gold star with no outline for the Quina Especial (the user, 25 Nov), a
    sad face for the Quina Desgraciada. */

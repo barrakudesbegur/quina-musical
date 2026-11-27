@@ -46,8 +46,22 @@
   border-bottom: 0;
 }
 
-/* Sunk (the seated look): lowered and tilted under its veil (player.css draws the veil). */
+/* Sunk (the seated look): lowered and tilted under its veil (player.css draws the veil). It turns round its own
+   centre, so it stays centred in its column, and it keeps room for itself: a margin above for the corner the tilt
+   lifts, and below for the drop plus the corner it lowers (half the card's width × sin of the tilt; a margin's % is of
+   the column's width, the card's own). Nothing under it (the next card, «No juguen en aquesta quina») is covered. The
+   room opens with the fall (`card-fall`), as the card sits. */
 .player-card-wrap[data-sunk] {
-  transform: translateY(var(--player-seated-drop, 10px)) rotate(var(--player-seated-tilt, -2deg));
-  transform-origin: 30% 100%;
+  --sunk-drop: var(--player-seated-drop, 10px);
+  --sunk-tilt: var(--player-seated-tilt, -2deg);
+  --sunk-lift: calc(50% * max(sin(var(--sunk-tilt)), -1 * sin(var(--sunk-tilt))));
+  margin-block: var(--sunk-lift) calc(var(--sunk-lift) + var(--sunk-drop));
+  transform: translateY(var(--sunk-drop)) rotate(var(--sunk-tilt));
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-motion='full']) .player-card-wrap[data-sunk] {
+    transition: margin-block var(--dur-stamp, 300ms) var(--ease-out);
+  }
 }
