@@ -88,14 +88,15 @@ async function main(): Promise<void> {
   const choice = chooseFeed({ search: location.search, hostname: location.hostname, dev: import.meta.env.DEV });
   const hints = devHints(location.search);
   const route = parseRoute(location, { edition });
-  // The app settles on this year's home (/26/) before it reads the cards: a reload never adds a removed card again,
-  // and every page sits under the path of the cards' cookie (logic/router.ts settledHref).
+  // The address settles on this year's home (/26/) as the app opens: a reload never adds a removed card again, and an
+  // iPhone adds /26/ to its Home Screen, the path of the cards' cookie (logic/router.ts settledHref).
+  const loadPath = location.pathname;
   const settled = settledHref(location, { edition });
   if (settled) history.replaceState(null, '', settled);
   // The cards live in localStorage, with a copy in a cookie for an iPhone's Home Screen app (logic/card-cookie.ts),
   // scoped to the home's path, so it never rides on /api/ or /feed.
   const storage =
-    choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore(), PLAYER_CONFIG.storageKey, documentCookies(homePath(location, { edition })));
+    choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore(), PLAYER_CONFIG.storageKey, documentCookies(homePath(location, { edition }), loadPath));
   const feed = await createFeed(choice);
   const sounds = new Sounds();
   registerTouchSounds(sounds);

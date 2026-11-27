@@ -209,16 +209,25 @@ export interface CookieJarLike extends CookieScope {
   read(): string;
   /** One `document.cookie = …` assignment. */
   write(assignment: string): void;
+  /**
+   * The page can see our cookie: it was loaded under its path. A page loaded elsewhere (the root, `/`) still writes it,
+   * but never an empty list over a copy it can't see.
+   */
+  readonly readable: boolean;
 }
 
-/** document.cookie, with our cookie under `path` (the app's home, '/26/'), if there is a document. */
-export function documentCookies(path: string): CookieJarLike | null {
+/**
+ * document.cookie, with our cookie under `path` (the app's home, '/26/'), if there is a document. `loadPath`: the path
+ * the page was loaded at, before the address settled (the browser keeps it for document.cookie).
+ */
+export function documentCookies(path: string, loadPath: string): CookieJarLike | null {
   if (typeof document === 'undefined') return null;
   return {
     read: () => document.cookie,
     write: (assignment) => void (document.cookie = assignment),
     path,
     secure: location.protocol === 'https:',
+    readable: loadPath.startsWith(path),
   };
 }
 
@@ -298,7 +307,7 @@ export class PlayerStorage {
 
   /** The card list's copy in the cookie (logic/card-cookie.ts). */
   private mirror(data: PlayerData): void {
-    if (!this.cookies) return;
+    if (!this.cookies || (!this.cookies.readable && !data.cards.length)) return;
     try {
       this.cookies.write(cardCookieWrite(data.edition, data.cards, this.cookies));
     } catch {

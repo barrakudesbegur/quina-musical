@@ -12,6 +12,7 @@ class FakeJar implements CookieJarLike {
   readonly writes: string[] = [];
   readonly secure = true;
   readonly path = '/26/';
+  readable = true;
   read(): string {
     return [...this.jar].map(([k, v]) => `${k}=${v}`).join('; ');
   }
@@ -139,6 +140,7 @@ test('cookies that throw (a sandboxed page) never stop the storage', () => {
   const broken: CookieJarLike = {
     secure: true,
     path: '/26/',
+    readable: true,
     read: () => {
       throw new Error('denied');
     },
@@ -151,4 +153,18 @@ test('cookies that throw (a sandboxed page) never stop the storage', () => {
   assert.equal(storage.load('26').outcome, 'fresh');
   assert.ok(storage.save(cards(emptyData('26'), 3)));
   assert.doesNotThrow(() => storage.clear());
+});
+
+test('a page loaded outside the cookie’s path (the root) writes the cards, but never an empty list over a copy it can’t see', () => {
+  const jar = new FakeJar();
+  jar.write(cardCookieWrite('26', [{ id: 9, color: 1, name: null }], { path: '/26/', secure: true }));
+  jar.readable = false;
+  const storage = new PlayerStorage(new MemoryStorage(), 'k', jar);
+  storage.save(emptyData('26'));
+  assert.deepEqual(readCardCookie(jar.read(), '26'), [{ id: 9, color: 1, name: null }]);
+  storage.save(cards(emptyData('26'), 4));
+  assert.deepEqual(readCardCookie(jar.read(), '26')?.map((c) => c.id), [4]);
+  // "Esborrar dades" still forgets it
+  storage.clear();
+  assert.equal(jar.read(), '');
 });

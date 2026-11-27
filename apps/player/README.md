@@ -20,9 +20,11 @@ are in `strings.ts`, its numbers in `config.ts`, its controls' looks in `actions
 - **Cards on iPhones:** a Home Screen app starts with empty storage but a copy of the browser's cookies, so the card list
   (numbers, icons, names) is also kept in the `quina_cards` cookie (`logic/card-cookie.ts`), and an empty localStorage
   restores from it. The cookie holds players' own names, so it is scoped to the app's home: `Path=/26/` and
-  `SameSite=Strict`, never sent with `/api/` or `/feed`. That works because every player page settles on `/26/` before
-  it reads the cards (`logic/router.ts` `settledHref`): `/26/123`, the root `/` and last year's `/?c=` all become
-  `/26/`, which is also the address an iPhone adds to its Home Screen. A card's own link (`/26/123`) adds that card
+  `SameSite=Strict`, never sent with `/api/` or `/feed`. Every player page settles its address on `/26/` as it opens
+  (`logic/router.ts` `settledHref`): `/26/123`, the root `/` and last year's `/?c=` all show `/26/`, so that's the address
+  an iPhone adds to its Home Screen, and the Home Screen app, loaded at `/26/`, sees the cookie. (A page *loaded* at `/`
+  can't read it: the browser keeps the load's path for `document.cookie`, whatever replaceState shows. That page writes
+  the cookie all the same, never an empty list over a copy it can't see, and no Home Screen app opens there.) A card's own link (`/26/123`) adds that card
   from the URL alone, whatever browser opens it (Google Lens opens its own, with empty storage).
 
 ## Updates and offline (D222)
