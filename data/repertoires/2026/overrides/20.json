@@ -1,0 +1,9 @@
+{
+  "autoHooks": {
+    "20-auto-0": {
+      "tag": "best",
+      "downbeatSec": 125.0178,
+      "provisional": true
+    }
+  }
+}
