@@ -125,6 +125,23 @@ try {
   expect('the paired drum gets its Spin events', peers.drum.heard.some((m) => m.type === 'transition.scheduled'), `heard: ${types(peers.drum)}`);
   expect("the laptop's own tablet needs no token", peers.localTablet.heard.some((m) => m.type === 'state'), `heard: ${types(peers.localTablet)}`);
 
+  // D234's lock through the cloud: only the link's socket may speak for a cloud console (a cloud: from, cloud.consoles).
+  for (const p of [show, cloud, ...Object.values(peers)]) p.heard.length = 0;
+  const listsWith = (id: string) => show.heard.some((m) => m.type === 'relay.clients' && (m.clients as { clientId: string }[]).some((c) => c.clientId === id));
+  peers.tablet.send({ v, type: 'cmd', cmd: 'hold', reqId: 'tablet-poses', on: false, from: 'cloud:Tauleta-x' });
+  peers.tablet.send({ v, type: 'cloud.consoles', ids: ['cloud:lan-forged'] });
+  peers.fakeCloud.send({ v, type: 'cloud.consoles', ids: ['cloud:lan-forged-2'] });
+  cloud.send({ v, type: 'cmd', cmd: 'hold', reqId: 'cloud-console', on: false, from: 'cloud:Tauleta-x' });
+  await sleep(300);
+  cloud.send({ v, type: 'cloud.consoles', ids: ['cloud:Tauleta-x'] }); // the real link's: the list goes out with it
+  await sleep(300);
+  const posed = show.heard.find((m) => m.reqId === 'tablet-poses');
+  expect("a LAN console's cloud: from is replaced by its own clientId", posed?.from === 'lan-tablet', `from: ${JSON.stringify(posed?.from ?? null)}`);
+  const viaLink = show.heard.find((m) => m.reqId === 'cloud-console');
+  expect("the link's cloud: from is kept (each cloud console its own sender)", viaLink?.from === 'cloud:Tauleta-x', `from: ${JSON.stringify(viaLink?.from ?? null)}`);
+  const forgedList = listsWith('cloud:lan-forged') || listsWith('cloud:lan-forged-2');
+  expect("a LAN client's cloud.consoles is ignored (relay.clients unchanged)", !forgedList && listsWith('cloud:Tauleta-x'), forgedList ? 'LISTED' : listsWith('cloud:Tauleta-x') ? "ignored; the link's own is listed" : "the link's own list never went out");
+
   // HTTP from the hotspot.
   const status = async (p: string) => {
     try {

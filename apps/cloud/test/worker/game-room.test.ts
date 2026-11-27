@@ -340,6 +340,55 @@ describe('consoles through the cloud', () => {
     expect(stats.consolesConnected).toBe(0);
   });
 
+  it("D234: each console's command carries its own cloud:<clientId>, never the browser's; the link hears who is connected", async () => {
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // no consoles left over from other tests
+    const { client: link, greeting } = await laptop(null);
+    expect(greeting[0]).toMatchObject({ type: 'cloud.consoles', count: 0, ids: [] });
+    const consolesNow = async () => (await link.drain()).filter((m) => (m as CloudMessage).type === 'cloud.consoles').at(-1);
+
+    const a = await consoleClient('Tauleta-3f2a');
+    expect(await consolesNow()).toMatchObject({ count: 1, ids: ['cloud:Tauleta-3f2a'] });
+    const b = await consoleClient('Mobil_admin-x1y2', 'admin');
+    expect(await consolesNow()).toMatchObject({ count: 2, ids: ['cloud:Tauleta-3f2a', 'cloud:Mobil_admin-x1y2'] });
+    const odd = await consoleClient('Tauleta 3'); // not a plain id: listed by count, never by id, and stamps nothing
+    const twin = await consoleClient('Tauleta-3f2a'); // the same console twice (two tabs): one id
+    expect(await consolesNow()).toMatchObject({ count: 4, ids: ['cloud:Tauleta-3f2a', 'cloud:Mobil_admin-x1y2'] });
+    await Promise.all([a, b, odd, twin].map((c) => c.drain()));
+
+    const commandOf = async (c: Client, message: Record<string, unknown>) => {
+      c.send(message);
+      const got = (await link.next()) as CloudMessage;
+      expect(got.type).toBe('cloud.command');
+      return (got as Extract<CloudMessage, { type: 'cloud.command' }>).command;
+    };
+    expect((await commandOf(a, { v, type: 'cmd', cmd: 'hold', reqId: 'a-1', on: true })).from).toBe('cloud:Tauleta-3f2a');
+    expect((await commandOf(b, { v, type: 'cmd', cmd: 'hold', reqId: 'b-1', on: false, from: 'cloud:Tauleta-3f2a' })).from).toBe('cloud:Mobil_admin-x1y2');
+    const unstamped = await commandOf(odd, { v, type: 'cmd', cmd: 'hold', reqId: 'odd-1', on: true, from: 'cloud:Tauleta-3f2a' });
+    expect('from' in unstamped).toBe(false);
+
+    // Hibernation: the list comes from the sockets' attachments, so a link reconnecting after it still hears it.
+    await evictDurableObject(roomOf(env)); // memory gone, hibernated WebSockets kept
+    const again = await laptop(null);
+    expect(again.greeting[0]).toMatchObject({ type: 'cloud.consoles', count: 4, ids: ['cloud:Tauleta-3f2a', 'cloud:Mobil_admin-x1y2'] });
+    const order = (list: unknown) => (list as { ids: string[] }).ids;
+    b.ws.close();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const afterClose = (await again.client.drain()).filter((m) => (m as CloudMessage).type === 'cloud.consoles').at(-1);
+    expect(order(afterClose)).toEqual(['cloud:Tauleta-3f2a']);
+    for (const c of [a, odd, twin]) c.ws.close();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect((await again.client.drain()).filter((m) => (m as CloudMessage).type === 'cloud.consoles').at(-1)).toMatchObject({ count: 0, ids: [] });
+  });
+
+  it("a cloud console's own cloud: id from the relay is listed once, as the cloud sees it", async () => {
+    const { client: link } = await laptop(null);
+    const c = await consoleClient('Tauleta-7');
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show-1' }, { role: 'cloud', clientId: 'laptop-1' }, { role: 'console', clientId: 'cloud:Tauleta-7' }] } });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(clientsIn(await c.drain())?.clients).toEqual([{ role: 'show', clientId: 'show-1' }, { role: 'cloud', clientId: 'laptop-1' }, { role: 'tablet', clientId: 'Tauleta-7' }]);
+    c.ws.close();
+  });
+
   it('the laptop going offline takes the show off every console', async () => {
     const { client: link } = await laptop(null);
     link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'relay.clients', clients: [{ role: 'show', clientId: 'show-1' }] } });

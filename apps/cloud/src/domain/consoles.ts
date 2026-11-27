@@ -1,6 +1,6 @@
 // Consoles through the cloud (milestone C2). A console connected to `/ws/console` sees what it would see on the
 // relay: the show's events, raw, and a `relay.clients` list. Pure: what the laptop forwards, and who is listed.
-import type { RelayClients, Role } from '@quina/protocol';
+import { CLOUD_CONSOLES_MAX, CLOUD_FROM_PREFIX, isCloudConsoleId, type Command, type RelayClients, type Role } from '@quina/protocol';
 import { FORWARDED_EVENT_TYPES } from './projection.ts';
 
 /**
@@ -32,5 +32,32 @@ type Client = RelayClients['clients'][number];
  * Without the link, the show is not listed, so `showOnline` turns false on every cloud console.
  */
 export function mergedClients(relayClients: readonly Client[] | null, linkOnline: boolean, cloudConsoles: readonly Client[]): Client[] {
-  return [...(linkOnline && relayClients ? relayClients : []), ...cloudConsoles];
+  // The relay lists the cloud's consoles too (`cloud:<id>`, from `cloud.consoles`): listed once, as the cloud sees them.
+  const relay = linkOnline && relayClients ? relayClients.filter((c) => !isCloudConsoleId(c.clientId)) : [];
+  return [...relay, ...cloudConsoles];
+}
+
+/** A cloud console's sender id (D234's lock through the cloud): `cloud:` and its hello clientId, or null when that isn't a plain id. */
+export function cloudConsoleId(clientId: string | null): string | null {
+  const id = `${CLOUD_FROM_PREFIX}${clientId ?? ''}`;
+  return clientId && isCloudConsoleId(id) ? id : null;
+}
+
+/**
+ * A checked console command as the cloud hands it to the link: `from` is the sending console's cloud id, never one the
+ * browser set (so no console can pose as another), and none when its clientId isn't a plain id. The relay keeps a
+ * `cloud:` from only on the link's socket; the engine's two-level lock tells cloud consoles apart by it.
+ */
+export function stampCloudCommand(command: Command, clientId: string | null): Command {
+  const stamped: Command = { ...command };
+  delete stamped.from;
+  const from = cloudConsoleId(clientId);
+  if (from) stamped.from = from;
+  return stamped;
+}
+
+/** The ids the link forwards to the relay as `cloud.consoles`: each connected console's cloud id once, at most CLOUD_CONSOLES_MAX. */
+export function cloudConsoleIds(clientIds: readonly (string | null)[]): string[] {
+  const ids = clientIds.map(cloudConsoleId).filter((id): id is string => id !== null);
+  return [...new Set(ids)].slice(0, CLOUD_CONSOLES_MAX);
 }

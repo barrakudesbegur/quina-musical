@@ -36,7 +36,7 @@ import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { flaggedDecisions } from './domain/flags.ts';
 import { journalledVolumes, keepingVolumes, withVolumes } from './domain/volumes.ts';
-import { isConsoleRole, mergedClients, type ConsoleRole } from './domain/consoles.ts';
+import { cloudConsoleIds, isConsoleRole, mergedClients, stampCloudCommand, type ConsoleRole } from './domain/consoles.ts';
 import { UsageCounter, usageReport, type DailyUsage, type UsageReport } from './domain/usage.ts';
 import { ingest } from './domain/ingest.ts';
 import { projectEntry, projectEvent, type ProjectionContext } from './domain/projection.ts';
@@ -50,7 +50,7 @@ import {
   type PublicSnapshot,
   type PublicState,
 } from '@quina/protocol';
-import { CLOSE, checkLinkMessage, type CloudMessage, type LinkEvent, type LinkFetch, type LinkHello, type LinkJournal, type LinkPlan } from './link-protocol.ts';
+import { CLOSE, checkLinkMessage, type CloudConsoles, type CloudMessage, type LinkEvent, type LinkFetch, type LinkHello, type LinkJournal, type LinkPlan } from './link-protocol.ts';
 
 /** The header the Worker sets to tell the GameRoom who connected (after Access); never taken from a client. */
 export const IDENTITY_HEADER = 'x-quina-identity';
@@ -297,7 +297,7 @@ export class GameRoom extends DurableObject<RoomEnv> {
     if (hello.gameId !== null && hello.gameId !== this.room.game?.gameId) this.switchGame(hello.gameId);
     const ackSeq = hello.gameId !== null && this.room.game?.gameId === hello.gameId ? this.room.game.seq : 0;
     this.reply(ws, { type: 'cloud.welcome', edition: this.env.EDITION, gameId: hello.gameId, ackSeq, current });
-    this.reply(ws, { type: 'cloud.consoles', count: this.consoles().length });
+    this.reply(ws, this.consolesMessage(null));
     this.reply(ws, { type: 'cloud.plan', plan: this.room.plan ?? null, savedAtMs: this.planSavedAtMs() });
   }
 
@@ -403,7 +403,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
     if (!check.ok) return this.rejectCommand(ws, check.reqId, check.cmd, 'invalid', check.error);
     const show = this.sockets('show')[0];
     if (!show) return this.rejectCommand(ws, check.command.reqId, check.command.cmd, 'notReady', 'the show laptop is offline');
-    this.reply(show, { type: 'cloud.command', command: check.command });
+    // Stamped with this console's own cloud id (D234's lock tells consoles apart by it); a browser's `from` is dropped.
+    this.reply(show, { type: 'cloud.command', command: stampCloudCommand(check.command, attachment.clientId) });
     this.stats.commandsRelayed += 1;
   }
 
@@ -417,11 +418,17 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return this.sockets('console').filter((ws) => ws !== except && (ws.deserializeAttachment() as ConsoleAttachment).clientId !== null);
   }
 
-  /** A console came or went: tell the consoles who is here, and the laptop how many listen. */
+  /** A console came or went: tell the consoles who is here, and the laptop how many listen and which. */
   private consolesChanged(closing: WebSocket | null): void {
     this.sendClients(closing);
-    const count = this.consoles(closing).length;
-    for (const show of this.sockets('show')) this.reply(show, { type: 'cloud.consoles', count });
+    const message = this.consolesMessage(closing);
+    for (const show of this.sockets('show')) this.reply(show, message);
+  }
+
+  /** The consoles through the cloud, for the link: from the live sockets' attachments, so it survives hibernation. */
+  private consolesMessage(closing: WebSocket | null): Omit<CloudConsoles, 'v' | 'nowMs'> {
+    const consoles = this.consoles(closing);
+    return { type: 'cloud.consoles', count: consoles.length, ids: cloudConsoleIds(consoles.map((ws) => (ws.deserializeAttachment() as ConsoleAttachment).clientId)) };
   }
 
   /** The merged client list (the laptop's relay plus the cloud's consoles) to every console. */

@@ -2,7 +2,9 @@
 // keeps its own copy of the Game journal on disk, uploads it to the edition's GameRoom, and forwards live events
 // (domain/consoles.ts `shouldForward`: what phones need, and everything but the journal while a console listens
 // through the cloud; `state` at most every LINK.stateEveryMs). Towards the show it sends only `getJournal` and
-// the consoles' commands, which the cloud has already checked, so a cloud problem can't touch playback.
+// the consoles' commands, which the cloud has already checked, so a cloud problem can't touch playback, and the
+// list of consoles connected through the cloud (`cloud.consoles`, D234's lock: their `cloud:<id>`s, the `from` on
+// their commands), so the engine lets go of a two-level button a cloud console held when it goes.
 //
 // To the cloud it authenticates with an Access service token (headers, which a browser WebSocket can't set).
 // Offline, it keeps journalling to disk; on reconnect the cloud's ackSeq says where to resume. It also keeps the
@@ -14,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import WebSocket from 'ws';
-import { isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/protocol';
+import { cloudConsolesMessage, isEvent, newReqId, PROTOCOL_VERSION, type JournalEntry } from '@quina/protocol';
 import { LINK } from '../src/config.ts';
 import { shouldForward } from '../src/domain/consoles.ts';
 import { reconnectDelayMs } from '@quina/protocol';
@@ -74,6 +76,8 @@ export class CloudLink {
   private lastSentAtMs = 0;
   private latestState: ForwardableEvent | null = null;
   private consoles = 0;
+  /** The cloud's last list of its consoles' ids, as given to the relay; sent again whenever the relay socket reconnects. */
+  private consoleIds: string[] = [];
   private commands = 0;
   private plan: LinkStatus['plan'] = null;
   /** The cloud's plan as it last sent it on this connection (null until it does). */
@@ -147,6 +151,8 @@ export class CloudLink {
       this.log('relay: connected');
       ws.send(JSON.stringify({ v: PROTOCOL_VERSION, type: 'hello', role: 'cloud', clientId: this.options.clientId }));
       this.requestJournal(this.nextWanted());
+      // The relay dropped the cloud's consoles with the old socket.
+      if (this.consoleIds.length > 0) this.sendConsoleIds();
     });
     ws.on('message', (data) => this.onRelayMessage(String(data)));
     ws.on('close', () => {
@@ -246,6 +252,8 @@ export class CloudLink {
     ws.on('close', (code, reason) => {
       if (this.cloud === ws) this.cloud = null;
       this.uploader.disconnected();
+      // Those consoles are gone until the cloud says otherwise (its next cloud.consoles, after the welcome).
+      if (this.consoleIds.length > 0) this.keepConsoleIds([]);
       this.cloudPlan = null;
       this.offeredPlanAtMs = null;
       this.fetching = null; // a fetch cut off is asked again after the next welcome
@@ -315,9 +323,21 @@ export class CloudLink {
         this.consoles = message.count;
         if (before === 0 && message.count > 0 && this.latestState) this.sendCloud({ v: PROTOCOL_VERSION, type: 'link.event', event: this.latestState, sentAtMs: now } as LinkEvent);
         if (before !== message.count) this.log(`cloud: ${message.count} console(s) through the cloud`);
+        if (Array.isArray(message.ids)) this.keepConsoleIds(message.ids);
         return;
       }
     }
+  }
+
+  /** The cloud's consoles changed: keep the list and hand it to the relay (protocol `cloud.consoles`; it checks the ids). */
+  private keepConsoleIds(ids: readonly string[]): void {
+    if (ids.length === this.consoleIds.length && ids.every((id, i) => id === this.consoleIds[i])) return;
+    this.consoleIds = [...ids];
+    this.sendConsoleIds();
+  }
+
+  private sendConsoleIds(): void {
+    if (this.relay?.readyState === WebSocket.OPEN) this.relay.send(JSON.stringify(cloudConsolesMessage(this.consoleIds)));
   }
 
   /** Keep the cloud's plan on disk, for the laptop's screens with no internet; then settle a local plan. */

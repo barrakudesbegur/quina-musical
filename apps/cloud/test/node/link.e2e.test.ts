@@ -157,6 +157,41 @@ test('a tablet on the cloud drives the show through the link, and sees the full 
   }
 });
 
+test("D234: the link hands the relay the cloud's consoles, again after the relay reconnects, and none once the cloud drops", async () => {
+  const server = await startDevServer();
+  const relay = await fakeRelay();
+  const link = makeLink(relay.url, server.ws);
+  let serverStopped = false;
+  const lists = () => relay.received.filter((m) => (m as { type?: string }).type === 'cloud.consoles') as { v: number; ids: string[] }[];
+  const lastIds = () => lists().at(-1)?.ids;
+  try {
+    link.start();
+    await until('the link on the cloud', () => link.status().cloud === 'online');
+    const tablet = new WebSocket(`${server.ws}/ws/console`);
+    await new Promise((resolve) => tablet.addEventListener('open', resolve, { once: true }));
+    tablet.send(JSON.stringify({ v, type: 'hello', role: 'tablet', clientId: 'Tauleta-e2e' }));
+    await until('the relay to hear the tablet', () => JSON.stringify(lastIds()) === '["cloud:Tauleta-e2e"]');
+    assert.deepEqual(lists().at(-1), { v, type: 'cloud.consoles', ids: ['cloud:Tauleta-e2e'] }, "the protocol's own message");
+
+    tablet.send(JSON.stringify({ v, type: 'cmd', cmd: 'hold', reqId: 'Tauleta-r-1', on: true, from: 'Mobil-other' }));
+    await until('the command on the relay', () => relay.received.some((m) => (m as { reqId?: string }).reqId === 'Tauleta-r-1'));
+    assert.equal((relay.received.find((m) => (m as { reqId?: string }).reqId === 'Tauleta-r-1') as { from?: string }).from, 'cloud:Tauleta-e2e');
+
+    const before = lists().length;
+    relay.drop(); // the relay drops the cloud's consoles with the link's socket
+    await until('the list sent again on the new relay socket', () => lists().length > before && JSON.stringify(lastIds()) === '["cloud:Tauleta-e2e"]');
+
+    await server.stop();
+    serverStopped = true;
+    await until('an empty list once the cloud drops', () => JSON.stringify(lastIds()) === '[]');
+    tablet.close();
+  } finally {
+    link.stop();
+    await relay.close();
+    if (!serverStopped) await server.stop();
+  }
+});
+
 test("the laptop keeps Admin's Game plan on disk, so it has it with no internet", async () => {
   const server = await startDevServer();
   const relay = await fakeRelay();

@@ -16,7 +16,10 @@
 //                  cloud.conflict the cloud has a different entry `seq` for this Game: stop uploading, a person decides
 //                  cloud.refused a message it could not take (bad shape, broken entry)
 //                  cloud.command a console's command (checked), for the show: the link hands it to the relay
-//                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0)
+//                  cloud.consoles how many consoles listen through the cloud (the link forwards more while > 0), and
+//                                their ids (`cloud:<hello clientId>`, D234's lock): on the link's hello and whenever a
+//                                console comes or goes; the link hands the ids to the relay as protocol `cloud.consoles`.
+//                                An older link reads only `count` and ignores `ids`
 //                  cloud.plan    the Game plan and when it was saved, on hello and on every change (the laptop keeps
 //                                a copy: cloud-plan.json, which the relay pushes to the laptop's screens)
 //                  cloud.journal entries the link asked for, or Admin's resume pushed, in chunks (`done` on the last)
@@ -131,7 +134,7 @@ export interface CloudRefused {
   nowMs: number;
 }
 
-/** A console's command, already checked with `checkCommand`. */
+/** A console's command, already checked with `checkCommand`, its `from` the console's `cloud:<clientId>` (or none). */
 export interface CloudCommand {
   v: ProtocolVersion;
   type: 'cloud.command';
@@ -142,7 +145,14 @@ export interface CloudCommand {
 export interface CloudConsoles {
   v: ProtocolVersion;
   type: 'cloud.consoles';
+  /** Consoles that said hello. */
   count: number;
+  /**
+   * Their senders' ids, `cloud:<hello clientId>` (protocol `isCloudConsoleId`), each once, at most `CLOUD_CONSOLES_MAX`:
+   * the `from` the cloud stamps on their commands (a console whose clientId isn't a plain id has none and isn't listed).
+   * Added with D234's lock; a cloud from before it sends none.
+   */
+  ids?: string[];
   nowMs: number;
 }
 

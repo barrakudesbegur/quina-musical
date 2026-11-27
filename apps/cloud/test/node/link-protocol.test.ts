@@ -64,6 +64,10 @@ test('cloud messages are recognised on the laptop', () => {
   assert.ok(isCloudMessage({ v, type: 'cloud.ack', gameId: 'g', ackSeq: 3, nowMs: 1 }));
   assert.equal(isCloudMessage({ v, type: 'public.state' }), false);
   assert.equal(isCloudMessage({ v: 2, type: 'cloud.ack' }), false);
+  // D234 added ids to cloud.consoles: the same type, so an older link still takes it and reads only count.
+  assert.ok(isCloudMessage({ v, type: 'cloud.consoles', count: 1, ids: ['cloud:Tauleta-3f2a'], nowMs: 1 }));
+  // A type the link doesn't know is ignored (not a CloudMessage), never an error that drops the socket.
+  assert.equal(isCloudMessage({ v, type: 'cloud.someday', nowMs: 1 }), false);
 });
 
 test('the clock offset keeps the smallest delay seen', () => {

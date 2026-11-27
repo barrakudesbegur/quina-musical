@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EVENT_TYPES } from '@quina/protocol';
-import { ALWAYS_FORWARDED, mergedClients, shouldForward } from '../../src/domain/consoles.ts';
+import { ALWAYS_FORWARDED, cloudConsoleIds, mergedClients, shouldForward, stampCloudCommand } from '../../src/domain/consoles.ts';
+import type { Command } from '@quina/protocol';
 
 test('the journal and engine health never go out as events; what phones need always does', () => {
   for (const type of ['journal.entry', 'journal.entries', 'engine.health']) {
@@ -32,6 +33,25 @@ test("consoles see the laptop relay's list only while the laptop link is online,
   assert.deepEqual(mergedClients(relay, true, cloud), [...relay, ...cloud]);
   assert.deepEqual(mergedClients(relay, false, cloud), cloud, 'link offline: no show listed');
   assert.deepEqual(mergedClients(null, true, cloud), cloud, 'the relay has not said yet');
+  const echoed = [...relay, { role: 'console' as const, clientId: 'cloud:Tauleta-3f2a' }];
+  assert.deepEqual(mergedClients(echoed, true, cloud), [...relay, ...cloud], "the relay's cloud: echo of a cloud console: listed once");
+});
+
+test("D234 through the cloud: a console's command carries cloud:<its clientId>, never a from the browser set", () => {
+  const hold = { v: 1, type: 'cmd', cmd: 'hold', reqId: 'r-1', on: true } as Command;
+  assert.deepEqual(stampCloudCommand(hold, 'Tauleta-3f2a'), { ...hold, from: 'cloud:Tauleta-3f2a' });
+  assert.equal(stampCloudCommand({ ...hold, from: 'cloud:Mobil-admin-1' }, 'Tauleta-3f2a').from, 'cloud:Tauleta-3f2a', 'posing as another console');
+  for (const id of ['Tauleta 3', 'Tauleta:3', 'x'.repeat(65), '', null]) {
+    const stamped = stampCloudCommand({ ...hold, from: 'show-1' }, id);
+    assert.equal('from' in stamped, false, `no from for ${JSON.stringify(id)}`);
+  }
+  assert.equal('from' in hold, false, 'the checked command is left as it was');
+});
+
+test("the consoles' ids for the relay: each plain id once, as cloud:<id>, at most 64", () => {
+  assert.deepEqual(cloudConsoleIds(['Tauleta-3f2a', 'Mobil_admin-x1', 'Tauleta-3f2a', 'Tauleta 3', null]), ['cloud:Tauleta-3f2a', 'cloud:Mobil_admin-x1']);
+  assert.equal(cloudConsoleIds(Array.from({ length: 70 }, (_, i) => `t-${i}`)).length, 64);
+  assert.deepEqual(cloudConsoleIds([]), []);
 });
 
 test("the Wii Remote's status stays on the laptop: never forwarded, never a link event, never public", async () => {

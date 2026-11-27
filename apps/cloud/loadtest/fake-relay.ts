@@ -29,6 +29,10 @@ export async function fakeRelay() {
     journal(entries: readonly JournalEntry[]) {
       for (const entry of entries) this.emit({ v, type: 'journal.entry', entry });
     },
+    /** Cut every open connection (the relay restarting): the link reconnects. */
+    drop() {
+      for (const socket of clients) socket.terminate();
+    },
     /** Close, ending open connections first (ws waits for them otherwise). */
     close: () =>
       new Promise<void>((resolve) => {
