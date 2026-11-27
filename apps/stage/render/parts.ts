@@ -1,5 +1,6 @@
 // Building blocks shared by the scenes: a prize, the sponsors, a round title, a song tile, a countdown, a
 // mini card and a nino sticker. Each owns its DOM nodes and updates them from view data only.
+import { miniCardElement } from '../../../packages/ui/components/mini-card.ts';
 import type { RoundView, PrizeView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
@@ -273,24 +274,18 @@ export function sadIcon(className: string): SVGSVGElement {
  * A printed card in miniature: a title bar over its 3 × 4 grid, in the card type's colour (`--type-color`),
  * with the star when it plays the Quina Especial. Decorative: the type's name is said next to it.
  */
+/** The card-type drawing (D3): the design system's MiniCard (packages/ui/components/mini-card.ts). */
 export class MiniCard {
   readonly root: HTMLElement;
-  private readonly star: SVGSVGElement;
+  private readonly card: ReturnType<typeof miniCardElement>;
 
   constructor(extraClass = '') {
-    this.star = starIcon('mini-card__star');
-    this.root = h(
-      'div',
-      { class: `mini-card ${extraClass}`.trim(), attrs: { 'aria-hidden': 'true' } },
-      h('div', 'mini-card__bar'),
-      h('div', 'mini-card__grid', ...Array.from({ length: 12 }, () => h('span', 'mini-card__cell'))),
-      this.star,
-    );
+    this.card = miniCardElement(extraClass);
+    this.root = this.card.root;
   }
 
   set(color: string, special: boolean): void {
-    setVar(this.root, '--type-color', color);
-    this.star.style.display = special ? '' : 'none';
+    this.card.set(color, special);
   }
 }
 

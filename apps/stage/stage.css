@@ -510,63 +510,7 @@
 
 /* A printed card in miniature, in its type's colour (`--type-color`): a title bar over a 3 × 4 grid, with a
    star when it plays the Quina Especial. Its sizes are set per use. */
-.mini-card {
-  --mc-width: 11.25rem;
-  --mc-border: 0.375rem;
-  --mc-radius: 1rem;
-  --mc-pad: 0.625rem;
-  --mc-gap: 0.4375rem;
-  --mc-bar: 0.875rem;
-  --mc-cell-border: 0.1875rem;
-  --mc-cell-radius: 0.3125rem;
-  --mc-cell-gap: 0.375rem;
-  --mc-star: 4.125rem;
-  --mc-tilt: -5deg;
-  position: relative;
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--mc-gap);
-  width: var(--mc-width);
-  aspect-ratio: 180 / 140;
-  padding: var(--mc-pad);
-  border: var(--mc-border) solid var(--color-line);
-  border-radius: var(--mc-radius);
-  background: var(--type-color, var(--color-paper));
-  box-shadow: 0 calc(var(--mc-border) * 1.5) 0 color-mix(in srgb, var(--color-shadow) 50%, transparent);
-  rotate: var(--mc-tilt);
-}
-
-.mini-card__bar {
-  flex: none;
-  height: var(--mc-bar);
-  border-radius: calc(var(--mc-bar) * 0.4);
-  background: color-mix(in srgb, var(--color-line) 22%, transparent);
-}
-
-.mini-card__grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: var(--mc-cell-gap);
-}
-
-.mini-card__cell {
-  border: var(--mc-cell-border) solid var(--color-line);
-  border-radius: var(--mc-cell-radius);
-  background: var(--stage-logo-tile);
-}
-
-.mini-card__star {
-  position: absolute;
-  right: calc(var(--mc-star) * -0.45);
-  top: calc(var(--mc-star) * -0.48);
-  width: var(--mc-star);
-  height: var(--mc-star);
-  rotate: 12deg;
-}
-
+/* The mini card (D3) is the design system's (packages/ui/components/mini-card.css); the contexts below size it. */
 .star-icon path {
   fill: var(--color-accent);
   stroke: var(--color-line);
@@ -2112,12 +2056,9 @@
   --mc-width: 6.75rem;
   --mc-border: 0.3125rem;
   --mc-radius: 0.75rem;
-  --mc-pad: 0.375rem;
-  --mc-gap: 0.25rem;
-  --mc-bar: 0.5rem;
   --mc-cell-border: 0.125rem;
-  --mc-cell-radius: 0.1875rem;
-  --mc-cell-gap: 0.1875rem;
+  --mc-cell-radius: 0.25rem;
+  --mc-cell-gap: 0.25rem;
   --mc-star: 3.125rem;
   --mc-tilt: -4deg;
 }
@@ -2520,11 +2461,8 @@
   --mc-width: 103%;
   --mc-border: 0.625rem;
   --mc-radius: 2.125rem;
-  --mc-pad: 1.625rem;
-  --mc-gap: 1.125rem;
-  --mc-bar: 1.875rem;
   --mc-cell-border: 0.375rem;
-  --mc-cell-radius: 0.75rem;
+  --mc-cell-radius: 0.875rem;
   --mc-cell-gap: 1rem;
   --mc-star: 8.125rem;
   --mc-tilt: 1deg;
@@ -3183,9 +3121,7 @@
 
 .interval__price-card {
   --mc-width: 6rem;
-  --mc-pad: 0.375rem;
-  --mc-gap: 0.25rem;
-  --mc-bar: 0.5rem;
+  --mc-cell-gap: 0.25rem;
 }
 
 /* ------------------------------------------------------------------------------------------- after */

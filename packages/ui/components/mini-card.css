@@ -1,0 +1,119 @@
+/*
+ * D3 · MiniCard (components-v2.md § 5; MiniCard.svelte, mini-card.ts › miniCardElement for the projector): a card
+ * type drawn small, in the type's pastel from card-types.json (`--type-color`, data, never a token), with a star on
+ * the special card. Redrawn for #80 ("these squares look bad", D-r): the 12 cells are true squares with one even gap,
+ * the padding round them is one and a half gaps, every corner is rounded in proportion, and the card stands on a 3D
+ * edge in its own darker shade (R2: the pastel mixed towards ink, never ink itself). The height follows from the
+ * cells, so nothing stretches.
+ *
+ * A context sets the card's width (`--mc-width`) and may tune the rest, each in :where() so it wins at any order:
+ *   --mc-border  outline       --mc-radius       corners     --mc-cell-gap  the gap between cells (and under the bar)
+ *   --mc-pad     padding       --mc-bar          top bar     --mc-cell-border, --mc-cell-radius
+ *   --mc-edge    the 3D edge   --mc-star         the star    --mc-tilt      its tilt
+ */
+:where(.mini-card) {
+  --mc-width: 11.25rem;
+  --mc-border: 0.375rem;
+  --mc-radius: 1rem;
+  --mc-cell-gap: 0.4375rem;
+  --mc-pad: calc(var(--mc-cell-gap) * 1.5);
+  --mc-bar: calc(var(--mc-cell-gap) * 1.75);
+  --mc-cell-border: 0.1875rem;
+  --mc-cell-radius: 0.375rem;
+  --mc-edge: calc(var(--mc-border) * 1.25);
+  --mc-star: 4.125rem;
+  --mc-tilt: -5deg;
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-cell-gap);
+  box-sizing: border-box;
+  width: var(--mc-width);
+  padding: var(--mc-pad) var(--mc-pad) calc(var(--mc-pad) + var(--mc-edge));
+  border: var(--mc-border) solid var(--color-line);
+  border-radius: var(--mc-radius);
+  background: var(--type-color, var(--color-paper));
+  box-shadow:
+    inset 0 calc(-1 * var(--mc-edge)) 0 var(--mc-edge-color, color-mix(in oklab, var(--type-color, var(--color-paper)) 72%, var(--color-ink))),
+    0 calc(var(--mc-border) * 1.5) 0 color-mix(in srgb, var(--color-shadow) 50%, transparent);
+  rotate: var(--mc-tilt);
+}
+
+.mini-card__bar {
+  flex: none;
+  height: var(--mc-bar);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-line) 22%, transparent);
+}
+
+.mini-card__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--mc-cell-gap);
+}
+
+.mini-card__cell {
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border: var(--mc-cell-border) solid var(--color-line);
+  border-radius: var(--mc-cell-radius);
+  background: var(--color-white);
+}
+
+.mini-card__star {
+  position: absolute;
+  right: calc(var(--mc-star) * -0.45);
+  top: calc(var(--mc-star) * -0.48);
+  width: var(--mc-star);
+  height: var(--mc-star);
+  rotate: 12deg;
+}
+
+.mini-card__star path {
+  fill: var(--color-gold);
+  stroke: var(--color-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.mini-card:not([data-star]) .mini-card__star {
+  display: none;
+}
+
+/* The sizes a component can name (D3: chip, label, band); the projector's contexts set their own. */
+:where(.mini-card[data-size='chip']) {
+  --mc-width: 1.75rem;
+  --mc-border: 2px;
+  --mc-radius: 0.3125rem;
+  --mc-cell-gap: 1.5px;
+  --mc-pad: 2px;
+  --mc-bar: 2px;
+  --mc-cell-border: 1px;
+  --mc-cell-radius: 1px;
+  --mc-edge: 2px;
+  --mc-star: 0.875rem;
+  --mc-tilt: 0deg;
+}
+
+:where(.mini-card[data-size='label']) {
+  --mc-width: 6.75rem;
+  --mc-border: 0.3125rem;
+  --mc-radius: 0.75rem;
+  --mc-cell-gap: 0.25rem;
+  --mc-cell-border: 0.125rem;
+  --mc-cell-radius: 0.25rem;
+  --mc-star: 3.125rem;
+  --mc-tilt: -4deg;
+}
+
+:where([data-density='phone'] .mini-card[data-size='label'], [data-density='console'] .mini-card[data-size='label']) {
+  --mc-width: 3.5rem;
+  --mc-border: 3px;
+  --mc-radius: 0.5rem;
+  --mc-cell-gap: 2.5px;
+  --mc-cell-border: 1.5px;
+  --mc-cell-radius: 2px;
+  --mc-edge: 3px;
+  --mc-star: 1.625rem;
+}
