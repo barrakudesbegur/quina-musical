@@ -112,7 +112,7 @@
   }
   .card-mark__shade {
     fill: none;
-    stroke: #c98a00;
+    stroke: var(--color-gold-edge);
     stroke-width: 1.6;
     stroke-linecap: round;
   }
