@@ -1,7 +1,7 @@
 // The phrase loop (plan/loop.ts): which phrase repeats, counted from the hook the song landed on.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { firstRepeatAt, lastPhraseLoop, loopSeconds, nextPhraseLoop } from '../engine/src/plan/loop.ts';
+import { firstRepeatAt, lastBarsLoop, lastPhraseLoop, loopSeconds, nextPhraseLoop } from '../engine/src/plan/loop.ts';
 import type { Analysis } from '../engine/src/analysis.ts';
 
 /** A steady song: a downbeat every 2 s for 60 bars (120 s). */
@@ -25,4 +25,14 @@ test('Aguanta loops the last full 8-bar phrase before the outro, else a 4-bar on
   // Too close to the end for an 8-bar phrase that ends by 112 s: the last 4-bar one.
   assert.deepEqual(lastPhraseLoop(song, 175, 8), { fromSec: 100, toSec: 108, fromIndex: 50, bars: 4 });
   assert.equal(lastPhraseLoop(song, 190, 8), null, 'nothing left before the outro');
+});
+
+test("when no phrase fits, a song left playing loops its last 4 bars before the outro (D239)", () => {
+  // No landed hook, so no phrases: the last 4 bars that end by 112 s are bars 52–56 (104–112 s).
+  const noHook = { ...song, landedDownbeatIndex: null };
+  assert.equal(lastPhraseLoop(noHook, 175, 8), null);
+  assert.deepEqual(lastBarsLoop(noHook, 175, 8), { fromSec: 104, toSec: 112, fromIndex: 52, bars: 4 });
+  // Already inside those 4 bars (at 109 s): they still end ahead, so the deck jumps back from 112 s.
+  assert.deepEqual(lastBarsLoop(noHook, 189, 8), { fromSec: 104, toSec: 112, fromIndex: 52, bars: 4 });
+  assert.equal(lastBarsLoop(noHook, 193, 8), null, 'past them: nothing ahead to loop');
 });

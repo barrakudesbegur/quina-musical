@@ -82,7 +82,7 @@ import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
-import { firstRepeatAt, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
+import { firstRepeatAt, lastBarsLoop, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
 import { mixSeed, seededRandom } from '../rng.ts';
 import type { Analysis, Hook } from '../analysis.ts';
 import type { Card } from '../game/cards.ts';
@@ -1507,6 +1507,8 @@ export class Show {
     // From a Line's Celebration, back to the round.
     if (this.scene === 'celebration') this.leaveCelebration();
     if (this.status === 'hold') this.leaveHold(0.4);
+    // A song left playing on its loop (D239) plays on from the phrase it is in, as on leaving Aguanta.
+    if (this.loop?.purpose === 'stay') this.loop = null;
     // A song still decoding, or the Shuffle still animating: it starts as soon as both are done.
     if (!this.env.isDecoded(songId) || this.shuffleRunning()) {
       this.pending = { reqId, songId, targetPos };
@@ -1977,16 +1979,23 @@ export class Show {
 
   // ---------------------------------------------------------------------------------- the phrase loop
   /**
-   * Aguanta (a Hold at full volume) keeps the dancing going: near the song's end, its last full phrase (8 bars, else
-   * 4, before the outro) starts repeating. Without one in reach the song hands over to Hold music at its end.
+   * A song left playing never hands over to other music by itself (D239): in Aguanta (a Hold at full volume), or
+   * with auto-advance off and nobody pressing Next, near its end its last full phrase (8 bars, else 4, before the
+   * outro) starts repeating, else its last 4 bars. Only a song too short or with no beat grid still runs out (into
+   * Hold music, as before).
    */
   tickStay(now: number) {
     const cur = this.current;
-    if (this.status !== 'hold' || !this.hold || this.hold.ducked || this.holdMusic || !cur || this.loop) return;
-    if (now < cur.endCtx - LOOP.stayLookSec) return;
+    if (!cur || this.loop || this.holdMusic || this.transition || this.pending || this.suspense) return;
+    const leftPlaying = this.status === 'hold'
+      ? this.hold != null && !this.hold.ducked
+      : this.status === 'playing' && !this.autoAdvanceAllowed();
+    if (!leftPlaying || now < cur.endCtx - LOOP.stayLookSec) return;
     const analysis = this.env.analysis(cur.songId);
     if (!analysis) return;
-    const phrase = lastPhraseLoop({ analysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex }, now + LOOP.aheadSec + 0.05, LOOP.stayTailSec);
+    const after = now + LOOP.aheadSec + 0.05;
+    const phrase = lastPhraseLoop({ analysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex }, after, LOOP.stayTailSec)
+      ?? lastBarsLoop({ analysis, deck: cur }, after, LOOP.stayTailSec);
     if (phrase) this.loop = { songId: cur.songId, phrase, nextAt: firstRepeatAt(cur, phrase), until: null, purpose: 'stay' };
   }
 

@@ -261,14 +261,15 @@ test('Hold during a Spin cancels it too (no new song lands)', () => {
   assert.equal(h.show.position, 0);
 });
 
-test('final phase: auto-advance is off by default; a song running out hands over to Hold music', () => {
+test('final phase: auto-advance is off by default; a song left playing loops instead of handing over (D239)', () => {
   const h = setup({ settings: { songsUntilWinner: 1 } });
   startAndLand(h);
   assert.equal(h.show.phaseName(), 'final');
   assert.equal(h.show.timers.autoAt, null);
-  const out = h.until(() => h.show.status === 'hold', 600);
-  assert.ok(find(out, 'songToHoldMusic'), JSON.stringify(types(out)) + ' ' + JSON.stringify(h.show.hold) + ' cur ' + JSON.stringify(h.show.current) + ' t ' + h.clock.t);
-  assert.equal(h.show.holdMusic, true);
+  const endAt = h.show.current!.endCtx;
+  const out = h.until(() => h.clock.t > endAt + 30, 600);
+  assert.equal(find(out, 'songToHoldMusic'), undefined, JSON.stringify(types(out)));
+  assert.deepEqual([h.show.status, h.show.holdMusic, h.show.loop?.purpose], ['playing', false, 'stay']);
   // Keeping auto-advance on in final: the slot stretches (late/final timing) and the landing goes on a phrase
   // boundary near it.
   const k = setup({ seed: 5, settings: { songsUntilWinner: 1, autoAdvanceFinal: true, pace: 14 } });
@@ -614,6 +615,27 @@ test('Aguanta near the song\'s end: its last full phrase repeats on its downbeat
   const count = h.log.filter((e) => e.type === 'cue').length;
   h.advance(30);
   assert.equal(h.log.filter((e) => e.type === 'cue').length, count);
+});
+
+test("a song left playing with auto-advance off loops its last phrase and never hands over to Hold music (D239); Next goes on from the loop", () => {
+  const h = setup({ seed: 6, settings: { autoAdvance: false } });
+  startAndLand(h);
+  const cur = h.show.current;
+  assert.ok(cur);
+  const endAt = cur.endCtx;
+  const out = h.until(() => h.clock.t > endAt + 60, 400);
+  assert.equal(h.show.status, 'playing', 'no Hold of its own');
+  assert.equal(h.show.holdMusic, false);
+  assert.equal(find(out, 'songToHoldMusic'), undefined);
+  assert.equal(find(out, 'holdMusic'), undefined);
+  assert.ok(h.show.loop?.purpose === 'stay');
+  assert.ok(h.log.filter((e) => e.type === 'cue').length >= 3, 'it repeats');
+  // Next from the loop: the loop ends, and the next song comes in as usual.
+  const next = h.send('next');
+  assert.ok(find(next, 'startTransition'), `no transition: ${JSON.stringify(rejected(next))}`);
+  assert.equal(h.show.loop, null);
+  h.until(() => h.show.status === 'playing' && h.show.current?.songId !== cur.songId, 400);
+  assert.equal(h.show.position, 1);
 });
 
 test('the drum only ever shows songs still to play (and the last landing under the pointer): Next, Back, Hold, Aguanta and Suspense', () => {

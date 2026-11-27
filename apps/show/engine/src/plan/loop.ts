@@ -76,6 +76,24 @@ export function lastPhraseLoop(song: LoopSong, after: number, tailSec: number): 
   return null;
 }
 
+/**
+ * The song's last 4 bars before its tail, when no whole phrase fits (D239: a song left playing never hands over to
+ * other music by itself): the latest 4 bars that end by `tailSec` before the song does, and after `after`, so the
+ * deck reaches their end ahead and jumps back from there. They may have started already.
+ * @returns null when the song is already past its last 4 bars before the tail, or has fewer than 5 downbeats
+ */
+export function lastBarsLoop(song: { analysis: Analysis; deck: DeckClock }, after: number, tailSec: number, bars = 4): PhraseLoop | null {
+  const downbeats = song.analysis.downbeats;
+  const from = posAt(song.deck, after);
+  const until = song.analysis.source.durationSec - tailSec;
+  for (let k = downbeats.length - 1 - bars; k >= 0; k--) {
+    const toSec = downbeats[k + bars];
+    if (toSec > until) continue;
+    return toSec >= from ? { fromSec: downbeats[k], toSec, fromIndex: k, bars } : null;
+  }
+  return null;
+}
+
 /** When the deck first reaches the loop's end (its first repeat starts there). */
 export const firstRepeatAt = (deck: DeckClock, loop: PhraseLoop): number => clockAt(deck, loop.toSec);
 
