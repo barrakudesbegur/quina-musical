@@ -43,7 +43,7 @@
 }
 
 .type-side-label[data-ring-color='red'] {
-  --tsl-ring-color: var(--color-red-bright);
+  --tsl-ring-color: var(--color-danger);
 }
 
 .type-side-label__text {
@@ -59,7 +59,11 @@
   text-shadow: 0 calc(var(--tsl-text) / 9) 0 var(--color-ink);
 }
 
-/* The verdict's badge, on the top-right corner (as the Check's song badges, in the icon family). */
+/* The verdict's badge, on the top-right corner (as the Check's song badges, in the icon family); a ✗ in the error red. */
+.type-side-label__badge[data-color='red'] {
+  --palette-solid: var(--color-danger);
+}
+
 .type-side-label__badge {
   position: absolute;
   top: calc(var(--tsl-badge) * -0.4);

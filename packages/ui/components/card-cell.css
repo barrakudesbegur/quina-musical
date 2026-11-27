@@ -69,6 +69,13 @@
   filter: grayscale(1) brightness(0.7);
 }
 
+/* ---- ✗ marks are the error red (U175 item 4, D211): #E8363D (--color-danger), never the button fills' brighter
+   palette red (#FF5A60, kept for the ink labels' contrast on Enrere, «Fallada», «Per dolenta»). ------------------- */
+.card-cell__ring[data-color='red'],
+.card-cell__badge[data-color='red'] {
+  --palette-solid: var(--color-danger);
+}
+
 /* ---- the ring: one rect round the cover, dashes divided evenly (pathLength 100) -------------------------------- */
 .card-cell__ring {
   position: absolute;
