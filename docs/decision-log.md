@@ -1649,3 +1649,7 @@ By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirem
 ### D245 · The Llançament and Tempesta icons · 2026-11-27 · Active
 Llançament option A and Tempesta option A, redrawn from scratch in the design system's outline style. Answers U170 once drawn.
 By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: packages/ui icons.
+
+### D246 · Last year's files in R2 are deleted; nothing else expires · 2026-11-27 · Active
+"delete the old stuff now and leave the new files without expiring". An R2 lifecycle rule (`pools-before-d178`) expires `pools/` after one day: about 1,711 objects and 7.6 GB, last year's songs and the first copy of the Hold and Interval music. `repertoires/2026/` is untouched. Backend removes the rule once `pools/` is gone (28–29 Nov), so nothing else ever expires. It supersedes D113's "pruned after the night" for 2026's files.
+By: the user (to Backend). Source: Backend's report of 27 Nov. Amends: D113. Lives in: apps/cloud/docs/deploy-plan.md (step 6.5).
