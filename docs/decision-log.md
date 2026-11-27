@@ -1723,5 +1723,5 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 Two rules for the printed cards:
 - "qr code cannot be made smaller, it is already hard to scan. it is not negotiable": the QR is never smaller than last year's 45 pt (16 mm);
 - "no, dont make the text smaller": the side's heading stays at 38 pt.
-And "if doesnt fit remove the nino". So the header's balance is the user's pick: A puts the GOMET and the QR on the left and the figure and the number on the right, with the heading centred; B drops the figure and puts the heading between the GOMET and the number, about 1 cm left of centre.
+And "if doesnt fit remove the nino". And "card number has to go next to the qr code because it is the content of the qr". So the order stays: the GOMET (and the figure), the heading, then the number with the QR. The design session's option A, with the QR on the left, is rejected. The user picks between C (with the figure, the heading centred between the side blocks, about 5 mm left of the card's centre) and B (without the figure, about 11 mm).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D257 (its 28 pt). Lives in: requirements/songs-and-cards.md › The card.
