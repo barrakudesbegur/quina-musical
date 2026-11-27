@@ -54,7 +54,7 @@ A phone in a browser console: `new WebSocket('ws://localhost:8787/feed?cards=12,
 | `GET /api/stats` | admins (Access) | Connections, messages and SQLite rows since the GameRoom last woke |
 | `GET /api/ping` | signed in (the laptop's token, or organizers) | The cloud's clock, edition and current Game: the preflight's sign-in and clock check |
 | `GET /api/health` | anyone | `{ ok, edition }`, without waking the GameRoom |
-| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json` with `cards/card-types.json` (each printed type's name, colour, title and price), `covers/<id>.jxl` with `covers/<id>.jpg` as the fallback, and `sw.js`, which removes last year's service worker. Served without running the Worker |
+| anything else | anyone | Static files from `dist/` (`npm run assets`): the player app at the root (it takes every page, such as `/26/123`), `console/`, `admin/`, `assets/`, `cards/cards.json` with `cards/card-types.json` (each printed type's name, colour, title and price), `covers/<id>.jxl` with `covers/<id>.jpg` as the fallback, the player's PWA (D221, D222: `player-sw.js`, `player.webmanifest`, `icons/`, never kept by phones; hashed `assets/` kept a year), and `sw.js`, which removes last year's service worker. Served without running the Worker, with `static/_headers` |
 
 ## How it works
 

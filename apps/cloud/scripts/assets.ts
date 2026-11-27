@@ -4,6 +4,8 @@
 // Unless --quick, it then adds, as agreed with the UI session:
 //   - the UI build (`npm run build` in apps/show): the player at the root (the SPA fallback serves it for
 //     /26/123), console/, admin/, assets/; never stage/ (the projector runs on the laptop);
+//   - the player's PWA (D221, D222), at the root: player-sw.js, player.webmanifest and icons/ (static/_headers
+//     never lets phones keep them);
 //   - the repertoire's printed cards: cards/cards.json, and card-types.json from the same folder (each type's name,
 //     colour, title and price; rounds name the type they play);
 //   - the repertoire's covers, small, as JPEG XL with a JPEG fallback (the user's choice: JXL, never WebP):
@@ -58,6 +60,13 @@ if (!quick) {
     fs.cpSync(source, path.join(OUT, to), { recursive: true });
     lines.push(`${path.relative(ROOT, source)} → dist/${to}`);
   }
+
+  // ---- the player's PWA (D221, D222): its worker, manifest and icons, from the UI build's public folder ---------
+  const pwa = ['player-sw.js', 'player.webmanifest', 'icons'];
+  const missing = pwa.filter((name) => !fs.existsSync(path.join(uiDir, name)));
+  for (const name of pwa.filter((name) => !missing.includes(name))) fs.cpSync(path.join(uiDir, name), path.join(OUT, name), { recursive: true });
+  if (missing.length < pwa.length) lines.push(`the player's PWA (${pwa.filter((name) => !missing.includes(name)).join(', ')}) → dist/`);
+  if (missing.length > 0) warnings.push(`the UI build has no ${missing.join(', ')}: phones can't install the player (D221)`);
 
   // ---- the repertoire: cards and covers ----------------------------------------------------------------------
   const repertoire = loadRepertoire(flag('--repertoire'));

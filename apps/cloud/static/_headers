@@ -1,8 +1,25 @@
-# Static file headers (Workers static assets). The kill switch must never be cached, or an old phone could keep
-# last year's worker.
+# Static file headers (Workers static assets). Each path matches one rule only: two rules that set the same header
+# on one path would join their values. Pages keep the platform's `public, max-age=0, must-revalidate`.
+
+# The kill switch must never be cached, or an old phone could keep last year's worker.
 /sw.js
   Cache-Control: no-cache
   Content-Type: text/javascript; charset=utf-8
+
+# The player's PWA (D221, D222): its worker, manifest and icons always revalidate, so a new version reaches the
+# phones at once. The worker is player-sw.js (never sw.js, last year's name), registered with updateViaCache 'none'.
+/player-sw.js
+  Cache-Control: no-cache
+  Content-Type: text/javascript; charset=utf-8
+/player.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/icons/*
+  Cache-Control: no-cache
+
+# The UI build's files: every name carries its content's hash, so a new version is a new name.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
 
 # JPEG XL covers (and their JPEG fallback): say the type explicitly, and let phones keep them a day.
 /covers/*.jxl

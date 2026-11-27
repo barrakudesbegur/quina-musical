@@ -10,7 +10,7 @@ Guard-rails (from the user, through the orchestrator, 2026-11-24): never touch e
 |---|---|---|
 | Worker | `quina-cloud` | `src/worker.ts`; about 87 KiB (23 KiB gzipped) |
 | Durable Object class | `GameRoom` (SQLite) | migration `v1` (`new_sqlite_classes`); one object per edition, named `edition:26`, placed in western Europe |
-| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), `console/`, `admin/` and `assets/`; plus `cards/cards.json` and the covers as 256 px JPEG XL (about 15 KB each) with a JPEG fallback (about 27 KB). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
+| Static assets | `dist/`, built by `npm run assets` | `static/` (the kill switch for last year's service worker, `_headers`), plus the UI build: the player at the root (the SPA fallback serves it for `/26/123`), its PWA (`player-sw.js`, `player.webmanifest`, `icons/`, all `no-cache`), `console/`, `admin/` and `assets/` (hashed, kept a year); plus `cards/cards.json` and the covers as 256 px JPEG XL (about 15 KB each) with a JPEG fallback (about 27 KB). No `stage/`: the projector runs on the laptop. Static files are free and never run the Worker. `dist/` is gitignored |
 | Variable | `EDITION = "26"` | in wrangler.jsonc |
 | Secrets | `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `CF_ACCESS_EMAILS` (or `CF_ACCESS_EMAIL_DOMAIN`), `CF_ACCESS_SERVICE_TOKENS` | `wrangler secret put`; until they exist, every admin route and the laptop route answer 403 (fail-closed), and only `/feed` and `/api/health` work |
 
