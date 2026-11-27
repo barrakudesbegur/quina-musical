@@ -795,12 +795,12 @@
 }
 
 .now-playing__chip[data-state='spinning'] {
-  --chip-bg: var(--ring-chip-spin);
+  --chip-bg: var(--color-orange-subtle);
 }
 
 .now-playing__chip[data-state='suspense'],
 .now-playing__chip[data-state='paused'] {
-  --chip-bg: var(--ring-chip-gold);
+  --chip-bg: var(--color-gold-subtle);
 }
 
 .now-playing__chip[data-state='manual'],
@@ -810,19 +810,19 @@
 }
 
 .now-playing__chip[data-state='talk'] {
-  --chip-bg: var(--ring-chip-talk);
+  --chip-bg: var(--color-cyan-subtle);
 }
 
 .now-playing__chip[data-state='stay'] {
-  --chip-bg: var(--ring-chip-stay);
+  --chip-bg: var(--color-purple-subtle);
 }
 
 .now-playing__chip[data-state='checking'] {
-  --chip-bg: var(--ring-chip-ok);
+  --chip-bg: var(--color-green-subtle);
 }
 
 .now-playing__chip[data-state='checkFailed'] {
-  --chip-bg: var(--ring-chip-error);
+  --chip-bg: var(--color-red-subtle);
 }
 
 /* Hold music (navy, a blue note), the pause's (a gold note) or a failed Check's error music (red) */
@@ -1994,75 +1994,29 @@
   font-size: 0.8125rem;
 }
 
-/* The sound pad (Consola-Pestanyes): a launchpad, fanfares in a column, effects in a grid of LED pads */
-.sound-pad {
+/* The «Efectes» tab (EffectsPanel): the fanfares' grid in a narrow column, the effects' grid beside it (SoundPad,
+   packages/ui: one board each, D-l) */
+.sound-pad-tab {
   display: grid;
   grid-template-columns: minmax(6.5rem, 0.3fr) minmax(0, 1fr);
+  align-items: start;
   gap: 14px;
 }
 
 @media (max-width: 30rem) {
-  .sound-pad {
+  .sound-pad-tab {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.sound-pad__group {
+.sound-pad-tab__group {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
 
-.sound-pad__stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sound-pad__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 5.75rem), 1fr));
-  gap: 6px;
-}
-
-.pad {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3.25rem;
-  padding: 0;
-  overflow: hidden;
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-sm);
-  /* Paper in both themes: the icons are drawn with ink outlines (the board's look). */
-  background: var(--color-paper);
-  color: var(--color-ink);
-  box-shadow: 0 3px 0 var(--color-ink);
-}
-
-.pad:active:not(:disabled) {
-  box-shadow: 0 1px 0 var(--color-ink);
-}
-
-/* Each effect's LED strip on its left edge, in the effect's own colour (sound-icons.ts `led`) */
-.pad__led {
-  position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 6px;
-  width: 6px;
-  border-radius: 3px;
-  background: var(--led, var(--color-cyan));
-}
-
-.pad--stinger {
-  background: var(--color-gold);
-  box-shadow: inset 0 -4px 0 var(--color-gold-edge), 0 3px 0 var(--color-ink);
-}
-
-/* The sound icons (SoundIcon.svelte): each shape's tone comes from a token */
+/* The sound icons (SoundIcon.svelte): each shape's tone, named as the palette (D210), comes from a token */
 .sound-icon {
   width: 2.125rem;
   height: 2.125rem;
@@ -2071,30 +2025,25 @@
   stroke-linejoin: round;
 }
 
-.pad:disabled .sound-icon {
-  opacity: 0.45;
-}
-
-.pad[data-led='ink'], .sound-icon__fill-ink { --led: var(--color-ink); fill: var(--color-ink); }
-.pad[data-led='paper'], .sound-icon__fill-paper { --led: var(--color-paper); fill: var(--color-paper); }
-.pad[data-led='gold'], .sound-icon__fill-gold { --led: var(--color-gold); fill: var(--color-gold); }
-.pad[data-led='orange'], .sound-icon__fill-orange { --led: var(--color-orange); fill: var(--color-orange); }
-.pad[data-led='red'], .sound-icon__fill-red { --led: var(--color-red); fill: var(--color-red); }
-.pad[data-led='green'], .sound-icon__fill-green { --led: var(--color-green); fill: var(--color-green); }
-.pad[data-led='ice'], .sound-icon__fill-ice { --led: var(--color-cyan); fill: var(--color-cyan); }
-.pad[data-led='iceLight'], .sound-icon__fill-iceLight { --led: var(--color-cyan-light); fill: var(--color-cyan-light); }
-.pad[data-led='lilac'], .sound-icon__fill-lilac { --led: var(--color-purple); fill: var(--color-purple); }
-.pad[data-led='pink'], .sound-icon__fill-pink { --led: var(--card-color-5); fill: var(--card-color-5); }
-.pad[data-led='purple'], .sound-icon__fill-purple { --led: var(--card-color-7); fill: var(--card-color-7); }
-.pad[data-led='slate'], .sound-icon__fill-slate { --led: var(--color-slate); fill: var(--color-slate); }
-.pad[data-led='lemon'], .sound-icon__fill-lemon { --led: var(--color-gold-light); fill: var(--color-gold-light); }
+.sound-icon__fill-ink { fill: var(--color-ink); }
+.sound-icon__fill-paper { fill: var(--color-paper); }
+.sound-icon__fill-gold { fill: var(--color-gold); }
+.sound-icon__fill-goldLight { fill: var(--color-gold-light); }
+.sound-icon__fill-orange { fill: var(--color-orange); }
+.sound-icon__fill-red { fill: var(--color-red); }
+.sound-icon__fill-green { fill: var(--color-green); }
+.sound-icon__fill-cyan { fill: var(--color-cyan); }
+.sound-icon__fill-cyanLight { fill: var(--color-cyan-light); }
+.sound-icon__fill-purple { fill: var(--color-purple); }
+.sound-icon__fill-pink { fill: var(--color-pink); }
+.sound-icon__fill-slate { fill: var(--color-slate); }
 .sound-icon__fill-none { fill: none; }
 .sound-icon__stroke-none { stroke: none; }
 .sound-icon__stroke-ink { stroke: var(--color-ink); }
 .sound-icon__stroke-paper { stroke: var(--color-paper); }
 .sound-icon__stroke-gold { stroke: var(--color-gold); }
 .sound-icon__stroke-red { stroke: var(--color-red); }
-.sound-icon__stroke-ice { stroke: var(--color-cyan); }
+.sound-icon__stroke-cyan { stroke: var(--color-cyan); }
 
 /* ---- the action cluster (big sticker buttons) ------------------------------------------------------------ */
 .thumb-cluster {
@@ -2798,7 +2747,7 @@
   padding: var(--space-1) var(--space-3);
   border: var(--line-width-thin) solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: var(--ring-chip-error);
+  background: var(--color-red-subtle);
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-sm);
@@ -4634,7 +4583,7 @@ kbd {
   padding: 2px 10px;
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: var(--ring-chip-error);
+  background: var(--color-red-subtle);
   color: var(--color-red-edge);
   font-size: var(--text-sm);
   font-weight: 900;
@@ -4691,7 +4640,7 @@ kbd {
   padding: 0 9px;
   border: var(--line-width) solid var(--color-line);
   border-radius: 10px;
-  background: var(--ring-chip-ok);
+  background: var(--color-green-subtle);
   color: var(--color-ink);
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -5097,15 +5046,6 @@ kbd {
   }
 }
 
-/* Small hosts: the pads keep their text clear of the arrow; the Auto toggle wears HOME on its corner */
-.pad:has(> .wii-badge) {
-  padding-right: 26px;
-}
-
-.pad > .wii-badge {
-  top: 50%;
-  translate: 0 -50%;
-}
 
 .pause-panel .action > .wii-badge {
   top: -9px;
@@ -5689,7 +5629,7 @@ kbd {
 
 /* The Wii keys inside a Button: the button places them (R7: the same inset from the top and the side, centred when
    the button is short), so the badge itself stays in its box. After the badge's own corner rules, to win over them. */
-:is(.button__wii, .two-level__strip-wii, .mini-button__wii) > .wii-badge[data-size] {
+:is(.button__wii, .two-level__strip-wii, .mini-button__wii, .sound-pad__wii) > .wii-badge[data-size] {
   position: relative;
   inset: auto;
   translate: none;

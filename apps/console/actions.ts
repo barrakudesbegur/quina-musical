@@ -140,6 +140,12 @@ export const MINI = {
   resumeUseSaved: { size: 's', label: S.resume.useSaved },
 } as const satisfies Record<string, MiniPreset>;
 
+/** The «Efectes» tab's two grids (SoundPad, A9; D-l): the fanfares gold in one column, the effects snow in four. */
+export const FX = {
+  stingers: { color: 'gold', columns: 1 },
+  effects: { color: 'snow', columns: 4 },
+} as const satisfies Record<string, { color: 'gold' | 'snow'; columns: number }>;
+
 /** An IconButton's preset (A7); a label that names a card comes from the call site. */
 export interface IconPreset {
   readonly icon: IconName;

@@ -64,20 +64,10 @@
   --dur-wii-badge: 240ms;
   --dur-wii-dialog: 200ms;
   --dur-a-glide: 320ms; /* a-glide: A's badge follows Pausa (D128) */
-  /* throw-on: a playing throw song's stripes drift */
-  --dur-throw-stripes: 1.6s;
   --dur-standing-last: 300ms; /* standing-last: the last card grows (--ease-bounce) */
   --dur-standing-button: 200ms; /* standing-last: "Comprovar #57" slides up */
   /* The default action's ring: A's orange (the dark theme's), its darker edge on the light background */
   --default-ring: var(--color-orange);
-
-  /* The ring's state chips under the song (Consola-Anell): pale pills, ink text, the same in both themes */
-  --ring-chip-spin: #ffe3c2;
-  --ring-chip-gold: #fff0b8;
-  --ring-chip-talk: #d6f1ff;
-  --ring-chip-stay: #ebddff;
-  --ring-chip-ok: #d3f2df;
-  --ring-chip-error: #ffd9da;
 }
 
 /* Dark (Consola-Joc-Fosc): ui/tokens.css's night palette, with the board's surfaces. */

@@ -1,0 +1,156 @@
+/*
+ * A9 · SoundPad (components-v2.md § 2; D-l, #34; SoundPad.svelte): one board, the ink showing through a line-wide gap
+ * as the one line between cells; each cell's corners are rounded, so every crossing has rounded inner corners, and the
+ * board's own corners are concentric with its corner cells'. Motion: ANIMATIONS.md › pad-press, pad-playing.
+ */
+:where(.sound-pad) {
+  --sound-pad-line: var(--line-width);
+  --sound-pad-inner: 8px;
+  --sound-pad-cell: 3.25rem;
+  --sound-pad-art: 2.125rem;
+  --sound-pad-fill: var(--color-snow);
+  --sound-pad-rim: rgb(255 255 255 / 0.7);
+  --sound-pad-edge: var(--color-snow-edge);
+  --sound-pad-light: var(--color-orange);
+}
+
+:where(.sound-pad[data-color='gold']) {
+  --sound-pad-fill: var(--color-gold);
+  --sound-pad-rim: rgb(255 255 255 / 0.45);
+  --sound-pad-edge: var(--color-gold-edge);
+}
+
+.sound-pad {
+  display: grid;
+  grid-template-columns: repeat(var(--sound-pad-columns, 4), minmax(0, 1fr));
+  gap: var(--sound-pad-line);
+  border: var(--sound-pad-line) solid var(--color-ink);
+  border-radius: calc(var(--sound-pad-inner) + var(--sound-pad-line));
+  background: var(--color-ink);
+  box-shadow: 0 3px 0 var(--color-shadow, var(--color-ink));
+}
+
+/* A cell: a soft bump, a light rim along its top and its fill's dark shade along its bottom (flat bands, our style) */
+.sound-pad__cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: var(--sound-pad-cell);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sound-pad-inner);
+  background: var(--sound-pad-fill);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 3px 0 var(--sound-pad-rim),
+    inset 0 -4px 0 var(--sound-pad-edge);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sound-pad__cell--blank {
+  cursor: default;
+  box-shadow: inset 0 3px 0 var(--sound-pad-edge);
+  opacity: 0.55;
+}
+
+/* The focus ring sits inside the cell, clear of its neighbours (R5) */
+.sound-pad__cell:focus-visible {
+  outline-offset: -6px;
+}
+
+/* Pressed: a dip, the bands swapped (dark at the top, light at the bottom), the picture travels down */
+button.sound-pad__cell:active:not(:disabled) {
+  transform: none;
+  box-shadow:
+    inset 0 4px 0 var(--sound-pad-edge),
+    inset 0 -2px 0 var(--sound-pad-rim);
+}
+
+.sound-pad__art {
+  display: grid;
+  place-items: center;
+}
+
+.sound-pad__art > svg {
+  width: var(--sound-pad-art);
+  height: var(--sound-pad-art);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sound-pad__art {
+    transition: translate var(--dur-press-up) var(--ease-bounce);
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .sound-pad__cell:active:not(:disabled) .sound-pad__art {
+    translate: 0 2px;
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+.sound-pad__cell:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.sound-pad__cell:disabled .sound-pad__art {
+  opacity: 0.45;
+}
+
+/* ---- the light (pad-playing): a quarter of the inner ring, running round it while the sound plays ------------- */
+.sound-pad__light {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.sound-pad__light rect {
+  x: 3px;
+  y: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  rx: calc(var(--sound-pad-inner) - 3px);
+  fill: none;
+  stroke: var(--sound-pad-light);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--sound-pad-light));
+}
+
+.sound-pad__cell[data-playing] .sound-pad__light {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sound-pad__light rect {
+    stroke-dasharray: 25 75;
+  }
+
+  .sound-pad__cell[data-playing] .sound-pad__light rect {
+    animation: sound-pad-lap 1.2s linear infinite;
+  }
+}
+
+@keyframes sound-pad-lap {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+/* The remote's key (a D-pad arm, D92) at the cell's right end, centred */
+.sound-pad__wii {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  translate: 0 -50%;
+  line-height: 1;
+  pointer-events: none;
+}

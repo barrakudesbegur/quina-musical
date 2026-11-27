@@ -171,3 +171,10 @@ export interface Meter {
   /** The state's icon before the time (music notes while it plays, the pause bars while stopped). */
   icon?: IconName | null;
 }
+
+/** A SoundPad cell (A9): its id, its name (never drawn: the accessible name and tooltip, D35), its remote key. */
+export interface SoundPadItem {
+  id: string;
+  label: string;
+  wii?: WiiKeySpec | null;
+}

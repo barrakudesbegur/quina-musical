@@ -20,13 +20,12 @@ export const CONSOLE = Object.freeze({
   /** How long a silent relay connection waits before the console says the device isn't paired. */
   pairingGraceMs: 3000,
   labelPresets: ['Tauleta', 'Mòbil admin'] as const,
-  /** Long press: used only when the `--dur-hold-confirm` token can't be read. */
-  holdConfirmFallbackMs: 900,
   /** Holding Parlem or Aguanta this long reaches its second level, Pausa or Suspens (logic/two-level.ts;
    *  ANIMATIONS.md › escalate-hold). Long enough that a firm tap never escalates, short enough to feel direct. */
   escalateHoldMs: 800,
-  /** How long the "Mantén premut per confirmar" hint stays up (ANIMATIONS.md › hold-hint). */
-  holdHintMs: 1500,
+  /** An «Efectes» cell's light runs this long after its tap (ANIMATIONS.md › pad-playing): the snapshot has no playing
+   *  effect yet; to replace with the engine's when Sound engine sends one. */
+  padPlayingMs: 2000,
   /** A toast hides by itself after this long (ANIMATIONS.md › toast-in). */
   toastMs: 4000,
   /** At most this many toasts at once; the oldest goes first. */

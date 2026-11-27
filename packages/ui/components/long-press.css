@@ -60,7 +60,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .long-press__fill::before {
-    transition: transform var(--dur-drain) var(--ease-out);
+    transition: transform var(--dur-drain, 200ms) var(--ease-out);
   }
 }
 

@@ -17,7 +17,7 @@
   import FuturePanel from './FuturePanel.svelte';
   import PrizesPanel from './PrizesPanel.svelte';
   import SearchPanel from './SearchPanel.svelte';
-  import SoundPad from './SoundPad.svelte';
+  import EffectsPanel from './EffectsPanel.svelte';
   import StandingPanel from './StandingPanel.svelte';
   import StatePanel from './StatePanel.svelte';
   import Tabs from './Tabs.svelte';
@@ -40,7 +40,7 @@
 <section class="helpers" aria-label={S.tabs.label} data-typing={(model.helperTab === 'search' && model.search.typing) || undefined}>
   <Tabs {tabs} bind:selected={model.helperTab} label={S.tabs.label}>
     {#snippet panel(id: HelperTab)}
-      {#if id === 'state'}<StatePanel />{:else if id === 'standing'}<StandingPanel />{:else if id === 'search'}<SearchPanel />{:else if id === 'future'}<FuturePanel />{:else if id === 'prizes'}<PrizesPanel />{:else}<SoundPad />{/if}
+      {#if id === 'state'}<StatePanel />{:else if id === 'standing'}<StandingPanel />{:else if id === 'search'}<SearchPanel />{:else if id === 'future'}<FuturePanel />{:else if id === 'prizes'}<PrizesPanel />{:else}<EffectsPanel />{/if}
     {/snippet}
   </Tabs>
 </section>
