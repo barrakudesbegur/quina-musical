@@ -25,6 +25,9 @@ that lists it first (D268's step 3 drops it). What to read is data/repertoires/<
   `printArtist` are written only where they differ from `title` / `artist`; a fix for a track not in the
   repertoire is reported.
 
+Prepared data is keyed by song id: when a playlist change moves ids, run tools/prep/renumber.py (it reads the current
+songs.json as the old numbering) before this step writes the new songs.json.
+
 Run: tools/prep/.venv/bin/python tools/prep/pools.py [--repertoire NAME|PATH] [--check]
 Only the standard library.
 """
@@ -180,6 +183,20 @@ def print_names_path(repertoire: repertoires.Repertoire) -> Path:
     return repertoires.REPERTOIRES_DIR / repertoire.name / "print-names.json"
 
 
+def build(repertoire: repertoires.Repertoire) -> tuple[list[PoolSpec], Merged, dict[str, dict]]:
+    """The repertoire's pools merged, with their print names: what main writes as songs.json (tools/prep/renumber.py
+    reads it too). Raises PoolsError or print_names.PrintNamesError."""
+    specs = read_spec(pools_path(repertoire))
+    playlists = []
+    for spec in specs:
+        try:
+            playlists.append((spec, json.loads(spec.songs_json.read_text())))
+        except FileNotFoundError:
+            raise PoolsError(f"pool {spec.pool}: {repertoires.display(spec.songs_json)} not found (fetch its playlist first)") from None
+    fixes = print_names.read_fixes(print_names_path(repertoire))
+    return specs, with_print_names(merge(playlists), fixes), fixes
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     repertoires.add_argument(ap)
@@ -187,18 +204,9 @@ def main() -> int:
     args = ap.parse_args()
     repertoire = repertoires.from_args(args)
     try:
-        specs = read_spec(pools_path(repertoire))
-        playlists = []
-        for spec in specs:
-            try:
-                playlists.append((spec, json.loads(spec.songs_json.read_text())))
-            except FileNotFoundError:
-                raise PoolsError(f"pool {spec.pool}: {repertoires.display(spec.songs_json)} not found (fetch its playlist first)") from None
-        merged = merge(playlists)
-        fixes = print_names.read_fixes(print_names_path(repertoire))
+        specs, merged, fixes = build(repertoire)
     except (PoolsError, print_names.PrintNamesError) as err:
         sys.exit(f"pools error: {err}")
-    merged = with_print_names(merged, fixes)
     for note in merged.notes:
         print(f"⚠️  {note}")
     for spec in specs:

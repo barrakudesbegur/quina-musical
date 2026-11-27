@@ -50,18 +50,6 @@
   },
   {
     "id": 5,
-    "title": "Aserejé",
-    "artist": "Grupo Arenas",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273aba9c191384e7c8c9a08093d",
-    "durationMs": 211580,
-    "spotifyId": "6yCM4N4v44c3xoMORrhLwW",
-    "pool": "1",
-    "pools": [
-      "1"
-    ]
-  },
-  {
-    "id": 6,
     "title": "Bailando por Ahi",
     "artist": "Juan Magán",
     "cover": "https://i.scdn.co/image/ab67616d0000b2734fd9adda79bc5839feca9720",
@@ -75,7 +63,7 @@
     "printTitle": "Bailando por Ahí"
   },
   {
-    "id": 7,
+    "id": 6,
     "title": "Barbie Girl",
     "artist": "Aqua",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f405770969a2817b5d8dfb21",
@@ -87,7 +75,7 @@
     ]
   },
   {
-    "id": 8,
+    "id": 7,
     "title": "Beautiful Girls",
     "artist": "Sean Kingston",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736a45d20e414fbc456ecea553",
@@ -99,7 +87,7 @@
     ]
   },
   {
-    "id": 9,
+    "id": 8,
     "title": "Beauty And A Beat",
     "artist": "Justin Bieber, Nicki Minaj",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f1d02a6cec967f8b6b78f76e",
@@ -112,7 +100,7 @@
     "printArtist": "Justin Bieber"
   },
   {
-    "id": 10,
+    "id": 9,
     "title": "Believe",
     "artist": "Cher",
     "cover": "https://i.scdn.co/image/ab67616d0000b27306ce0d1f846c525e847d60e7",
@@ -124,7 +112,7 @@
     ]
   },
   {
-    "id": 11,
+    "id": 10,
     "title": "Besos",
     "artist": "El Canto Del Loco",
     "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",
@@ -136,7 +124,7 @@
     ]
   },
   {
-    "id": 12,
+    "id": 11,
     "title": "Blue (Da Ba Dee) - Gabry Ponte Ice Pop Radio",
     "artist": "Eiffel 65, Gabry Ponte",
     "cover": "https://i.scdn.co/image/ab67616d0000b27329cced2f38d87456e0b5c398",
@@ -150,7 +138,7 @@
     "printArtist": "Eiffel 65"
   },
   {
-    "id": 13,
+    "id": 12,
     "title": "Counting Stars",
     "artist": "OneRepublic",
     "cover": "https://i.scdn.co/image/ab67616d0000b2739e2f95ae77cf436017ada9cb",
@@ -162,7 +150,7 @@
     ]
   },
   {
-    "id": 14,
+    "id": 13,
     "title": "Cuando zarpa el amor",
     "artist": "Camela",
     "cover": "https://i.scdn.co/image/ab67616d0000b27353ba268b7a03aef76caa55e0",
@@ -174,7 +162,7 @@
     ]
   },
   {
-    "id": 15,
+    "id": 14,
     "title": "Dai Dai",
     "artist": "Shakira, Burna Boy",
     "cover": "https://i.scdn.co/image/ab67616d0000b27303cadf1b3fe324c1dc710ed4",
@@ -187,7 +175,7 @@
     "printArtist": "Shakira"
   },
   {
-    "id": 16,
+    "id": 15,
     "title": "Dance Again",
     "artist": "Jennifer Lopez, Pitbull",
     "cover": "https://i.scdn.co/image/ab67616d0000b273de83c517bc250ad5eff2c951",
@@ -200,7 +188,7 @@
     "printArtist": "Jennifer Lopez"
   },
   {
-    "id": 17,
+    "id": 16,
     "title": "Dragostea din tei",
     "artist": "O-Zone",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736ed1042195c7228f6bd3548e",
@@ -212,7 +200,7 @@
     ]
   },
   {
-    "id": 18,
+    "id": 17,
     "title": "DtMF",
     "artist": "Bad Bunny",
     "cover": "https://i.scdn.co/image/ab67616d0000b273bbd45c8d36e0e045ef640411",
@@ -224,7 +212,7 @@
     ]
   },
   {
-    "id": 19,
+    "id": 18,
     "title": "Dura - Remix",
     "artist": "Daddy Yankee, NATTI NATASHA, Becky G, Bad Bunny",
     "cover": "https://i.scdn.co/image/ab67616d0000b2738a31cacc2818b37d9e4e4bdc",
@@ -238,7 +226,7 @@
     "printArtist": "Daddy Yankee"
   },
   {
-    "id": 20,
+    "id": 19,
     "title": "El Baile del Gorila",
     "artist": "Melody",
     "cover": "https://i.scdn.co/image/ab67616d0000b273948183118003f702ff8a7608",
@@ -250,7 +238,7 @@
     ]
   },
   {
-    "id": 21,
+    "id": 20,
     "title": "Elefants",
     "artist": "Oques Grasses",
     "cover": "https://i.scdn.co/image/ab67616d0000b273471b1371438f4e9183aabbc8",
@@ -262,7 +250,7 @@
     ]
   },
   {
-    "id": 22,
+    "id": 21,
     "title": "El Ultimo Vals",
     "artist": "La Oreja de Van Gogh",
     "cover": "https://i.scdn.co/image/ab67616d0000b273863e3f1cdffcdd9f56ee30f8",
@@ -275,7 +263,7 @@
     "printTitle": "El Último Vals"
   },
   {
-    "id": 23,
+    "id": 22,
     "title": "El universo sobre mí",
     "artist": "Amaral",
     "cover": "https://i.scdn.co/image/ab67616d0000b273ce818a189052d9805c97e624",
@@ -287,7 +275,7 @@
     ]
   },
   {
-    "id": 24,
+    "id": 23,
     "title": "Fashion Girl pt.2",
     "artist": "Bad Gyal, Jadiel el Incomparable",
     "cover": "https://i.scdn.co/image/ab67616d0000b27381909f39477fbb311c77ef35",
@@ -301,7 +289,7 @@
     "printArtist": "Bad Gyal"
   },
   {
-    "id": 25,
+    "id": 24,
     "title": "Firework",
     "artist": "Katy Perry",
     "cover": "https://i.scdn.co/image/ab67616d0000b273937af329667311f4b2831616",
@@ -313,7 +301,7 @@
     ]
   },
   {
-    "id": 26,
+    "id": 25,
     "title": "Física o química",
     "artist": "Despistaos",
     "cover": "https://i.scdn.co/image/ab67616d0000b273eec2eefa5fdece4b5187c8d7",
@@ -325,7 +313,7 @@
     ]
   },
   {
-    "id": 27,
+    "id": 26,
     "title": "Flowers",
     "artist": "Miley Cyrus",
     "cover": "https://i.scdn.co/image/ab67616d0000b27366fd0917f38d472c8576754e",
@@ -337,7 +325,7 @@
     ]
   },
   {
-    "id": 28,
+    "id": 27,
     "title": "Flying Free - Original Mix",
     "artist": "Pont Aeri, Marian Dacal",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464",
@@ -351,7 +339,7 @@
     "printArtist": "Pont Aeri"
   },
   {
-    "id": 29,
+    "id": 28,
     "title": "Gasolina",
     "artist": "Daddy Yankee",
     "cover": "https://i.scdn.co/image/ab67616d0000b2737f68406bafad6162f6acdf8a",
@@ -363,7 +351,7 @@
     ]
   },
   {
-    "id": 30,
+    "id": 29,
     "title": "Give Me Everything (feat. Nayer)",
     "artist": "Pitbull, AFROJACK, Ne-Yo, Nayer",
     "cover": "https://i.scdn.co/image/ab67616d0000b2731dc7483a9fcfce54822a2f19",
@@ -377,7 +365,7 @@
     "printArtist": "Pitbull"
   },
   {
-    "id": 31,
+    "id": 30,
     "title": "Good Feeling",
     "artist": "Flo Rida",
     "cover": "https://i.scdn.co/image/ab67616d0000b27315785fa4f22f8c50902b3a42",
@@ -389,7 +377,7 @@
     ]
   },
   {
-    "id": 32,
+    "id": 31,
     "title": "Hey Ya!",
     "artist": "Outkast",
     "cover": "https://i.scdn.co/image/ab67616d0000b2736e88eb6508fd94cd1b745ce2",
@@ -401,7 +389,7 @@
     ]
   },
   {
-    "id": 33,
+    "id": 32,
     "title": "Hips Don't Lie (feat. Wyclef Jean)",
     "artist": "Shakira, Wyclef Jean",
     "cover": "https://i.scdn.co/image/ab67616d0000b27385432abc16fd92be0d435cb9",
@@ -415,7 +403,7 @@
     "printArtist": "Shakira"
   },
   {
-    "id": 34,
+    "id": 33,
     "title": "Jenifer",
     "artist": "Els Catarres",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f45d3d288294e7a6c84f761f",
@@ -427,7 +415,7 @@
     ]
   },
   {
-    "id": 35,
+    "id": 34,
     "title": "La Gozadera (feat. Marc Anthony)",
     "artist": "Gente De Zona, Marc Anthony",
     "cover": "https://i.scdn.co/image/ab67616d0000b2731e3b9d4d53e0ac334cd9eec4",
@@ -441,7 +429,7 @@
     "printArtist": "Gente De Zona"
   },
   {
-    "id": 36,
+    "id": 35,
     "title": "LA GRACIOSA",
     "artist": "Quevedo, Elvis Crespo",
     "cover": "https://i.scdn.co/image/ab67616d0000b2733fe5daaa1bf8480d1abf819c",
@@ -454,7 +442,7 @@
     "printArtist": "Quevedo"
   },
   {
-    "id": 37,
+    "id": 36,
     "title": "La Perla",
     "artist": "ROSALÍA, Yahritza Y Su Esencia",
     "cover": "https://i.scdn.co/image/ab67616d0000b27393ee2e2f2dfb7de9befcc164",
@@ -467,7 +455,7 @@
     "printArtist": "ROSALÍA"
   },
   {
-    "id": 38,
+    "id": 37,
     "title": "Las Divinas",
     "artist": "Brenda Asnicar",
     "cover": "https://i.scdn.co/image/ab67616d0000b273a71a3b021e23694e3fedd1bb",
@@ -479,7 +467,7 @@
     ]
   },
   {
-    "id": 39,
+    "id": 38,
     "title": "L'Empordà",
     "artist": "Sopa De Cabra",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730d9e5066c041517333356cd0",
@@ -491,7 +479,7 @@
     ]
   },
   {
-    "id": 40,
+    "id": 39,
     "title": "Let Me Out",
     "artist": "Dover",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730994ccb496af06a84bea05ea",
@@ -503,7 +491,7 @@
     ]
   },
   {
-    "id": 41,
+    "id": 40,
     "title": "Like a Prayer",
     "artist": "Madonna",
     "cover": "https://i.scdn.co/image/ab67616d0000b273744ce5f9db16330eb4027f26",
@@ -515,7 +503,7 @@
     ]
   },
   {
-    "id": 42,
+    "id": 41,
     "title": "Low (feat. T-Pain)",
     "artist": "Flo Rida, T-Pain",
     "cover": "https://i.scdn.co/image/ab67616d0000b2739c90c39df78a8c99275c81a2",
@@ -529,7 +517,7 @@
     "printArtist": "Flo Rida"
   },
   {
-    "id": 43,
+    "id": 42,
     "title": "Maladie",
     "artist": "Mauvais djo",
     "cover": "https://i.scdn.co/image/ab67616d0000b273b58ac27efd10a3803a93677c",
@@ -541,7 +529,7 @@
     ]
   },
   {
-    "id": 44,
+    "id": 43,
     "title": "Mamma Mia",
     "artist": "ABBA",
     "cover": "https://i.scdn.co/image/ab67616d0000b27392d0747a634fcc351c6ac3c2",
@@ -553,7 +541,7 @@
     ]
   },
   {
-    "id": 45,
+    "id": 44,
     "title": "Mari Carmen",
     "artist": "La Pegatina",
     "cover": "https://i.scdn.co/image/ab67616d0000b273185b362eb87ec454a91591a2",
@@ -566,7 +554,7 @@
     ]
   },
   {
-    "id": 46,
+    "id": 45,
     "title": "Marry You",
     "artist": "Bruno Mars",
     "cover": "https://i.scdn.co/image/ab67616d0000b2738a9eb5a1f701d1d367a5ea10",
@@ -578,7 +566,7 @@
     ]
   },
   {
-    "id": 47,
+    "id": 46,
     "title": "Only Girl (In The World)",
     "artist": "Rihanna",
     "cover": "https://i.scdn.co/image/ab67616d0000b27331548865f7c729290b96c794",
@@ -591,7 +579,7 @@
     ]
   },
   {
-    "id": 48,
+    "id": 47,
     "title": "On The Floor",
     "artist": "Jennifer Lopez, Pitbull",
     "cover": "https://i.scdn.co/image/ab67616d0000b273d7b2aa3834b82b1cbe899a48",
@@ -604,7 +592,7 @@
     "printArtist": "Jennifer Lopez"
   },
   {
-    "id": 49,
+    "id": 48,
     "title": "Pan y mantequilla",
     "artist": "Efecto Pasillo",
     "cover": "https://i.scdn.co/image/ab67616d0000b27399d1aa6403a287844b8a5670",
@@ -616,7 +604,7 @@
     ]
   },
   {
-    "id": 50,
+    "id": 49,
     "title": "Pasado pisado",
     "artist": "Comando Tiburon, Mach and Daddy",
     "cover": "https://i.scdn.co/image/ab67616d0000b273073685293d285b0bd74ab156",
@@ -629,7 +617,7 @@
     "printArtist": "Comando Tiburón"
   },
   {
-    "id": 51,
+    "id": 50,
     "title": "Poker Face",
     "artist": "Lady Gaga",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e691217483df8798445c82e2",
@@ -641,7 +629,7 @@
     ]
   },
   {
-    "id": 52,
+    "id": 51,
     "title": "Por la Raja de Tu Falda",
     "artist": "Estopa",
     "cover": "https://i.scdn.co/image/ab67616d0000b2731ed1c8aff132830890f91faa",
@@ -653,7 +641,7 @@
     ]
   },
   {
-    "id": 53,
+    "id": 52,
     "title": "Puedes Contar Conmigo",
     "artist": "La Oreja de Van Gogh",
     "cover": "https://i.scdn.co/image/ab67616d0000b273820f6e4afa04594a671e484f",
@@ -665,7 +653,7 @@
     ]
   },
   {
-    "id": 54,
+    "id": 53,
     "title": "Pump It",
     "artist": "Black Eyed Peas",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c6710b4a52539506c30e5354",
@@ -677,7 +665,7 @@
     ]
   },
   {
-    "id": 55,
+    "id": 54,
     "title": "Que Te Quería",
     "artist": "La Quinta Estacion",
     "cover": "https://i.scdn.co/image/ab67616d0000b27316d9de2977f84ab10e58a5e7",
@@ -691,7 +679,7 @@
     "printArtist": "La Quinta Estación"
   },
   {
-    "id": 56,
+    "id": 55,
     "title": "Rude",
     "artist": "MAGIC!",
     "cover": "https://i.scdn.co/image/ab67616d0000b273b1c2609c8b258ad621d4057b",
@@ -703,7 +691,7 @@
     ]
   },
   {
-    "id": 57,
+    "id": 56,
     "title": "Sé lo que hicisteis - 2006 Remastered Version",
     "artist": "Melendi",
     "cover": "https://i.scdn.co/image/ab67616d0000b27352ce1370223e498d7da83dfe",
@@ -716,7 +704,7 @@
     "printTitle": "Sé lo que hicisteis"
   },
   {
-    "id": 58,
+    "id": 57,
     "title": "She Doesn't Mind",
     "artist": "Sean Paul",
     "cover": "https://i.scdn.co/image/ab67616d0000b273a3a30ff3129ec0494f7a2969",
@@ -728,7 +716,7 @@
     ]
   },
   {
-    "id": 59,
+    "id": 58,
     "title": "Shin Chan Dance",
     "artist": "SX3",
     "cover": "https://i.scdn.co/image/ab67616d0000b273c2207f971db6eee841d11e39",
@@ -740,7 +728,7 @@
     ]
   },
   {
-    "id": 60,
+    "id": 59,
     "title": "Sígueme Y Te Sigo",
     "artist": "Daddy Yankee",
     "cover": "https://i.scdn.co/image/ab67616d0000b273437ff3e4cec8143d4e8527a9",
@@ -752,7 +740,7 @@
     ]
   },
   {
-    "id": 61,
+    "id": 60,
     "title": "Summercat",
     "artist": "Billie The Vision & The Dancers",
     "cover": "https://i.scdn.co/image/ab67616d0000b273ab05310618f89422ecf2d168",
@@ -764,7 +752,7 @@
     ]
   },
   {
-    "id": 62,
+    "id": 61,
     "title": "SUPERESTRELLA",
     "artist": "Aitana",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e9c382b5b9b3221428da47c2",
@@ -774,6 +762,20 @@
     "pools": [
       "1"
     ]
+  },
+  {
+    "id": 62,
+    "title": "The Ketchup Song (Aserejé) - Spanglish Version",
+    "artist": "Las Ketchup",
+    "cover": "https://i.scdn.co/image/ab67616d0000b27354dbaa284c53e085523cfec2",
+    "durationMs": 213973,
+    "spotifyId": "6UEfyhyfhYQsyipxOd95Ie",
+    "pool": "1",
+    "pools": [
+      "1",
+      "2"
+    ],
+    "printTitle": "Aserejé"
   },
   {
     "id": 63,
@@ -1151,14 +1153,13 @@
     "id": 93,
     "title": "Hay Quel Venir al Sur",
     "artist": "Raffaella Carrà",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273d0a0b75787a84861363ab426",
-    "durationMs": 231653,
-    "spotifyId": "3vb3xZADNMONqL7aRQLVPJ",
+    "cover": "https://i.scdn.co/image/ab67616d0000b273294845982ab50c6c59554124",
+    "durationMs": 232786,
+    "spotifyId": "5MwUr7hfHWWqezOCtDsFOn",
     "pool": "2",
     "pools": [
       "2"
-    ],
-    "printTitle": "Hay Que Venir al Sur"
+    ]
   },
   {
     "id": 94,
@@ -1384,10 +1385,10 @@
   {
     "id": 112,
     "title": "No Rompas Mi Corazón",
-    "artist": "Trip Band",
-    "cover": "https://i.scdn.co/image/ab67616d0000b273f2f01d3967e712532a469f76",
-    "durationMs": 203693,
-    "spotifyId": "7fB2UgHKhpHDpTTLFgUYEO",
+    "artist": "Coyote Dax",
+    "cover": "https://i.scdn.co/image/ab67616d0000b2731662214fb0d46d875363afe2",
+    "durationMs": 209760,
+    "spotifyId": "1mJYIA1fwPgw40Kp9KIouE",
     "pool": "2",
     "pools": [
       "2"
@@ -1451,7 +1452,9 @@
     "pool": "2",
     "pools": [
       "2"
-    ]
+    ],
+    "printTitle": "Els Segadors Remix",
+    "printArtist": "Pont Aeri-Chasis"
   },
   {
     "id": 118,
@@ -1577,19 +1580,6 @@
   },
   {
     "id": 128,
-    "title": "The Ketchup Song (Aserejé) - Spanglish Version",
-    "artist": "Las Ketchup",
-    "cover": "https://i.scdn.co/image/ab67616d0000b27354dbaa284c53e085523cfec2",
-    "durationMs": 213973,
-    "spotifyId": "6UEfyhyfhYQsyipxOd95Ie",
-    "pool": "2",
-    "pools": [
-      "2"
-    ],
-    "printTitle": "Aserejé"
-  },
-  {
-    "id": 129,
     "title": "Timber",
     "artist": "Pitbull, Kesha",
     "cover": "https://i.scdn.co/image/ab67616d0000b2732ffc2c580b6595a3e675a730",
@@ -1601,7 +1591,7 @@
     ]
   },
   {
-    "id": 130,
+    "id": 129,
     "title": "Tractor Amarillo",
     "artist": "Zapato Veloz",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f654846ec029e7aca60e20c6",
@@ -1613,7 +1603,7 @@
     ]
   },
   {
-    "id": 131,
+    "id": 130,
     "title": "Una Vaina Loca",
     "artist": "Fuego",
     "cover": "https://i.scdn.co/image/ab67616d0000b273f09b5be23683bcd69e247cfc",
@@ -1625,7 +1615,7 @@
     ]
   },
   {
-    "id": 132,
+    "id": 131,
     "title": "Un Beso Y Una Flor - Remastered 2016",
     "artist": "Nino Bravo",
     "cover": "https://i.scdn.co/image/ab67616d0000b273cd697913c7e2535b599204cf",
@@ -1638,7 +1628,7 @@
     "printTitle": "Un Beso Y Una Flor"
   },
   {
-    "id": 133,
+    "id": 132,
     "title": "Viva La Vida",
     "artist": "Coldplay",
     "cover": "https://i.scdn.co/image/ab67616d0000b273e21cc1db05580b6f2d2a3b6e",
@@ -1650,7 +1640,7 @@
     ]
   },
   {
-    "id": 134,
+    "id": 133,
     "title": "YMCA",
     "artist": "Village People",
     "cover": "https://i.scdn.co/image/ab67616d0000b273090447449097c54c1cca153b",
@@ -1662,7 +1652,7 @@
     ]
   },
   {
-    "id": 135,
+    "id": 134,
     "title": "You'll Always Find Your Way Back Home",
     "artist": "Hannah Montana",
     "cover": "https://i.scdn.co/image/ab67616d0000b2730e8ba185f3e9f15630a7b5fb",
@@ -1674,7 +1664,7 @@
     ]
   },
   {
-    "id": 136,
+    "id": 135,
     "title": "Zapatillas",
     "artist": "El Canto Del Loco",
     "cover": "https://i.scdn.co/image/ab67616d0000b273732969a215824cccc2febc7a",

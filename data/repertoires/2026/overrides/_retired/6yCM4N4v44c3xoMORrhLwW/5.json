@@ -1,8 +1,8 @@
 {
   "autoHooks": {
-    "136-auto-0": {
+    "5-auto-0": {
       "tag": "best",
-      "downbeatSec": 99.8889,
+      "downbeatSec": 21.1178,
       "provisional": true
     }
   }
