@@ -17,6 +17,7 @@ import { buzzFor, feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts
 import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
 import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
+import { gameLive } from './logic/awake.ts';
 import {
   addCard,
   dismiss,
@@ -144,6 +145,8 @@ export class PlayerApp {
   );
   soundsOn = $derived(soundsOn(this.data, this.state?.soundsDefault ?? true));
   heat = $derived(this.heatSamples.length ? heatAt(this.heatSamples, this.cloudNow, this.heatSamples[0].value) : null);
+  /** A game is live: the screen is kept on (logic/awake.ts, §8 Y4). */
+  awake = $derived(gameLive(this.state));
   /** Root data-state: what the whole screen is in. */
   screenState = $derived(this.offline ? 'offline' : this.paused ? 'pause' : this.state ? 'live' : 'connecting');
 

@@ -28,6 +28,7 @@
   import Toast from './components/Toast.svelte';
   import YourSong from './components/YourSong.svelte';
   import { markedIdentities, prizeRounds } from './logic/view.ts';
+  import { keepScreenOn } from './device/screen.ts';
   import { S } from './strings.ts';
 
   let { app }: { app: PlayerApp } = $props();
@@ -35,6 +36,11 @@
   provideDs({ covers: { base: PLAYER_CONFIG.coverBase, jxl: PLAYER_CONFIG.coverJxl && !isLocalHost(location.hostname) } });
   const named = (id: number) => app.data.cards.find((c) => c.id === id) ?? null;
   const celebrationRound = $derived(app.celebration ? (prizeRounds(app.plan, app.state).find((r) => r.number === app.celebration?.round) ?? null) : null);
+  // The screen stays on only while a game is live (§8 Y4, logic/awake.ts); keepScreenOn asks again whenever the page
+  // shows, and the browser drops the lock while it's hidden, so it never holds in the background.
+  $effect(() => {
+    if (app.awake) return keepScreenOn();
+  });
   const closeTop = () => app.closeTop();
   const closeAll = () => app.closeAll();
 </script>

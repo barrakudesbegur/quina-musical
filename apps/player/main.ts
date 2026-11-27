@@ -9,7 +9,7 @@ import { loadCatalog } from '../../packages/ui/data/catalog.ts';
 import App from './App.svelte';
 import { PlayerApp } from './model.svelte.ts';
 import { PLAYER_CONFIG } from './config.ts';
-import { keepScreenOn, watchReducedMotion } from './device/screen.ts';
+import { watchReducedMotion } from './device/screen.ts';
 import { Sounds } from './device/sounds.ts';
 import { PLAYER_TOUCH } from './device/touch-rules.ts';
 import { wireTouchSounds } from '../../packages/ui/sounds/delegate.ts';
@@ -121,7 +121,6 @@ async function main(): Promise<void> {
   target.replaceChildren();
   mount(App, { target, props: { app } });
   app.start();
-  keepScreenOn();
   themeColor();
   // The touch sounds' file, once the first screen is up (it decodes at the first tap).
   whenIdle(() => sounds.prefetch());
