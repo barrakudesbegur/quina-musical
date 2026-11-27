@@ -60,6 +60,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **The night's order (D192, the organizers', 26 Nov):** card sales 5 pm, start 6 pm, Quines 1–5, the Desgraciat, one 10-minute Descans with the throw, Quines 6–10, the Especial last, the end about 10 pm. The split is 1–5 / 6–10 (D193); the specials' pool is U167. Pool 2 isn't filtered or downloaded yet; download it only when the user says so.
 
 **Other threads:**
+- **The garland's lights on the beat** (the user: "only if it doesn't get convoluted"), for Sound engine once the pause lifts, and optional. Frontend's need, per landing and published only from its landAtMs so it never hints at the song: bpm, one downbeat time (epoch ms), beats per bar, and whether the tempo is stable. The screens fall back to tempo-free cycles. Today's garland follows the Heat (9a168b6).
 - The relay serves /assets/* as no-store with --dist; the hashed names would allow long caching (Frontend's note, 27 Nov; Sound engine's, when it's back, optional).
 - The playlist covers' canvas: "Portades Spotify", https://claude.ai/code/artifact/a14bdc4a-9b8a-4e63-aaf7-635262b35d62. Outside the product.
 - The listening pass and trying the remote (U13): the chaotic moments' loudness (D158), the 1.5 s window (D148), 600 ms before "Seguides".
