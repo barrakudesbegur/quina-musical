@@ -93,7 +93,7 @@ The presenters can do any of these at any time, from the console or the Wii remo
 | "Ritme" | The Pace: presets, −/+ and a lock | none |
 | Auto-advance | On, or off ("Avanç manual", D143) | HOME (a different rumble for each) |
 
-- **Two levels per button:** "Parlem" → "Pausa", and "Aguanta" → "Suspens". The console shows each pair visually.
+- **Two levels per button:** "Parlem" → "Pausa", and "Aguanta" → "Suspens". The console shows each pair visually. A button held on another console is locked there, on the touch screen and on the remote (D234).
 - **Every Hold mode shows that it's on** (D133): the pressed button and the ring's badge.
 - **Pausa (D128, D135):** "Tornem de seguida" only during a round, a Check or a Celebration; it resumes exactly where it was, fading in; during a review the −/+ hold is Pausa and A does nothing.
 - **The Suspense release** lands on the outgoing song's phrase boundary, up to about 9 s after letting go (pending U13). Default: the phrase.

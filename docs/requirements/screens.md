@@ -61,7 +61,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 
 _From event.md › The presenters (What they can do, What they see privately, Their equipment); the decisions doc › Changes._
 
-**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone, or on the laptop, to help. Every open console stays in sync, live (D234). While one console holds a two-level button (Parlem → Pausa, Aguanta → Suspens), the others show it locked until it's let go (D234). It has a light theme, simpler and with icons, and keeps its dark theme as the alternative (D2). The layout must be very well thought out: "Següent", Hold and the claim stay in the same places in landscape and portrait (R2-Q21): one cluster in the same order, the right column in landscape and fixed at the bottom in portrait. To be checked against R2-Q21 at the theme pass.
+**Who uses it:** the two presenters, on one shared tablet in landscape. The tech opens the same page in portrait on their phone, or on the laptop, to help. Every open console stays in sync, live (D234). While one console holds a two-level button (Parlem → Pausa, Aguanta → Suspens), the others show it locked until it's let go (D234); their Wii remote's press of that button is refused with a short "no" rumble. It has a light theme, simpler and with icons, and keeps its dark theme as the alternative (D2). The layout must be very well thought out: "Següent", Hold and the claim stay in the same places in landscape and portrait (R2-Q21): one cluster in the same order, the right column in landscape and fixed at the bottom in portrait. To be checked against R2-Q21 at the theme pass.
 
 - **Always visible:** the round, the Phase and the real Heat, the clock, the expected end of the round, the Drift and the connections (cloud or hotspot, phones' feed, Wii remote).
 - **"Ara sona"** is the playing song, with a ring that counts down to the next auto-advance and shows the state (manual, "Parlem", "Aguanta"…).
@@ -184,7 +184,7 @@ _From event.md › The presenters (Their equipment); the decisions doc › Chang
 
 - It pairs with the show laptop (desktop Chrome only). Its buttons are in [show-and-music.md › The presenters' actions](show-and-music.md#the-presenters-actions).
 - Every action rumbles. A deliberate shake pattern starts a Suspense, so dancing doesn't.
-- **The two-level lock covers the remote too (D234):** while another device holds Parlem → Pausa or Aguanta → Suspens, the remote's press on that button is refused, with a short "no" rumble.
+- **The two-level lock covers the remote too (D234):** while another console holds Parlem → Pausa or Aguanta → Suspens, the remote's press of that button (− or +, B, and A while a refused B is down) sends nothing and rumbles "no": three quick buzzes, 220 ms in all (4e9dfa9d). The other two-level button works as usual. Each console decides from its last snapshot, so two presses within the network's delay can both act; the engine enforcing it is proposed to Sound engine.
 - Its plan B is the tablet: the console can do everything the remote does. Its range is in [operations.md › Fallbacks](operations.md#fallbacks).
 - The console counts the remote's drops over the last 10 minutes and shows them in the "Comandament" dialog. From 2 drops it warns: come closer to the laptop, or keep the tablet at hand.
 - It still has to be tried on real hardware (pending U19).
