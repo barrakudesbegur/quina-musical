@@ -60,7 +60,15 @@ button {
   font-weight: var(--font-weight-strong);
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast);
+  transition: filter var(--dur-fast);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      filter var(--dur-fast);
+  }
 }
 
 button:active:not(:disabled) {

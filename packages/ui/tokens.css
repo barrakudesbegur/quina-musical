@@ -181,14 +181,3 @@
     --ease-kick: cubic-bezier(0.2, 3, 0.5, 1);
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-fast: 0ms;
-    --dur-base: 0ms;
-    --dur-slow: 0ms;
-    --dur-landing: 0ms;
-    --dur-check-step: 0ms;
-    --dur-celebrate: 0ms;
-  }
-}
