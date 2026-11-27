@@ -65,6 +65,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `5cc26fce` (`f817bf9`, repertoire 2026): D248, R2 by content (blobs and v3 manifests); v2's routes gone.
     - `e3de22c4` (`51a5aa2`, repertoire 2026): Frontend's `7d68998` and everything under it (the Premis drawer, the throw and storm icons, the lock UI); D234's cloud ids; the blob PUT's 503 for R2's transient errors; the preflight's «Reduce motion» WARN.
     - `837b4f33` (`66f0968`, repertoire 2026): Frontend's cascade layers (production orders CSS as development does; the hold buttons' `touch-action` in production) and the CSS order check.
+    - `64ced39e` (`70065cb`, repertoire 2026): D251, «Quina del Desgraciat» on every screen; the 2026 card-types.json's especial side 1 «Desgraciat» (Sound engine updated the file; R2 got the one changed blob, and the old one was pruned).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
