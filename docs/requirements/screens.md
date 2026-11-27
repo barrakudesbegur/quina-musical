@@ -124,7 +124,8 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - **Being built to match the boards (D132)**, the prizes drawer excepted.
 - **The card's side (D102):** a normal card has two sides with the same number. Pending U50, the phone shows the side of the current or coming round by itself.
 - **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text. The card types' preview: **Not built yet** (the phone shows the rounds and prizes).
-- **Marking:** every landed song is marked on the cards, the latest included. When a card is one song from a Line or the Quina, that song's cell gets a gentle highlight. There's no banner.
+- **Marking:** every landed song is marked on the cards, the latest included. The song that's playing has the design system's running ring, its cover undimmed. There's no near-win marking (D237; its sounds pending U208), and no banner.
+- **The drum matches the projector's** (D237): the same covers in the same order, the same spin and blur, and the same landing (3a0d00bf). How it lands before the song is public is U206.
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.
 - **Only the current round** shows in "Historial", and only the cards of the round's type count in it (only special cards in the Quina Especial).
 - **A confirmed win** only celebrates on a phone that holds the winning card ("La teva línia!"). The Desgraciat's winner phone says "Quina potra!", like the projector, with the glowing card, the nino and the confetti (D190).

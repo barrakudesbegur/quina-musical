@@ -135,6 +135,12 @@ If they do, a reminder to an uncollected winner is the one push message with rea
 The phones can already spin in time with the projector, and Sound engine proposes a public per-round order so the covers match too. To slow down onto the same cover as the projector, a phone needs the landing song about 2.5 s before it lands. Today nothing public names a song before it lands (Every screen: "motion never tells a secret"). The projector itself shows its slow-down in those last seconds. Knowing a song 2.5 s early changes nobody's card, so it's suspense, not fairness. One catch: "Enrere" can still cancel a Spin until its last moment, and then the song stays next, so a phone that was told it would know the next song early. A mitigation: the phone slows down onto a cover that stays blurred until the landing.
 - (a) Publish the landing song about 2.5 s early (never during a Suspens), so phones land exactly with the projector, behind the blur.
 - (b) Phones keep spinning until the landing and snap to the song. Nothing leaks, but they don't match the projector.
+Evidence (Frontend, 27 Nov): with the landing private, the phone's drum shows other covers during the spin, then glides to the landed cover at the landing, once 31 covers in about 1.4 s. Order and spin now match the projector (3a0d00bf). Frontend asked the user directly too.
+
+### U208 · The near-win chime and buzz on the phone
+With the "last song for a line" marking removed (D237), Frontend's helper also removed the phone's near-win chime and buzz. Frontend asked the user directly whether those go too.
+- (a) They go, with the marking.
+- (b) Keep the sound and the buzz, without the marking.
 
 ### U207 · ✕ in a stack of the app's own drawers
 In a stack such as Ajustos → the add-card pad, ✕ closes every drawer at once today. The QR camera's ✕ closes only the camera.
