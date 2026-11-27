@@ -142,6 +142,11 @@ The phones can already spin in time with the projector, and Sound engine propose
 - (a) Publish the landing song about 2.5 s early (never during a Suspens), so phones land exactly with the projector, behind the blur.
 - (b) Phones keep spinning until the landing and snap to the song. Nothing leaks, but they don't match the projector.
 
+### U207 · ✕ in a stack of the app's own drawers
+In a stack such as Ajustos → the add-card pad, ✕ closes every drawer at once today. The QR camera's ✕ closes only the camera.
+- (a) Keep it: ✕ closes the whole stack, and ‹ goes back one level.
+- (b) ✕ closes only the top drawer.
+
 ### U205 · Parlem's switch to Hold music after 40 s
 The user: "When the presenter lets a song play it should always loop and not switch to pause music." D239 does that for Aguanta and for manual advance. Under Parlem, today's engine lets the ducked song give way to Hold music after 40 s («Música d'espera»), and at its end. Hold music exists for long waits, so a long Hold doesn't loop the same few bars for minutes. But there are no real Hold tracks yet: data/media/hold has only error tracks, the win, the intro and the throw (U20), so today it would be a synthesized placeholder.
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
@@ -226,12 +231,6 @@ Today they're taps: up «tada», right an orchestra hit, down a sad trombone, le
 4. **Left: the crowd.** Held, applause swells; shaking adds cheers and whistles; letting go fades it, and past the threshold it ends in an ovation. It cues the tent to clap: the presenters' entrance, the sponsors, a winner. Among Us moves to the tablet's pad.
 
 Left out on purpose: anything that changes the song's speed or pitch, like a tape stop or a scratch, because the landings follow the song's timing.
-
-### U174 · When "Vols afegir un altre cartró?" shows (D200)
-- (a) After every card added. "No" just closes it.
-- (b) After every card added, until the player taps "No" once; then never again on that phone.
-- (c) Only after the first card.
-In all three, it closes by itself at the next landing if ignored, so it never sits over the cards during play.
 
 ### U173 · Starting the night from the big button at the doors
 D195 puts "Comença la quina" in the big slot in a break. At the doors, what comes next is starting the night, which today is only in the menu ("Començar la nit"). That's on purpose: "an A pressed while testing the remote mustn't start the show". With D198, starting it also plays the kick-off and the voice-over story in front of everyone.
@@ -371,6 +370,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U174 · When "Vols afegir un altre cartró?" shows** (2026-11-27): moot. D241 replaces the banner with a step inside the add-card drawer.
 - **U58 · The alphabetical convention** (2026-11-27) → D238: letter by letter, as the user's sorting tool does and the playlists are.
 - **U192 · A two-sided special card** (2026-11-27) → D226: yes, agreed with the team; the Desgraciat on side 1 (pool 1), the Especial on side 2 (pool 2).
 - **U59 · The special card's back** (2026-11-27) → D226: it's side 2, for the Especial.

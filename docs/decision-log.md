@@ -1334,7 +1334,7 @@ These follow from the user's own reasons. They can change them on the canvas.
 - **The Check screens** get the same compact line as the review board ("Ara sona · baixa, d'abans de la comprovació · …"), at the top of the left column, leaving room for the card's grid.
 By: the orchestrator, applying the user's D195 and D196 to Frontend's questions. Source: Frontend's report of 26 Nov (canvas v99). Lives in: requirements/screens.md › Console.
 
-### D200 · The phone asks whether to add another card · 2026-11-26 · Active; when it shows Pending (U174)
+### D200 · The phone asks whether to add another card · 2026-11-26 · Superseded by D241
 After a player adds a card, a banner over the cards list asks whether they want to add another, with "No" and "Sí" ("Vols afegir un altre cartró?"). "Sí" opens the add-card pad. Why: "i worry users dont know they can add more than 1 card", and most people buy several cards and follow their relatives' (event.md › The cards). The pad still has one save button (D95). The choice comes after the save, on the list, instead of D95's removed "Desar i afegir-ne un altre".
 By: the user. Source: the user's message of 26 Nov. Lives in: requirements/screens.md › Player app.
 
@@ -1629,3 +1629,7 @@ By: the user. Source: the user's message of 27 Nov; Sound engine's check of 27 N
 ### D240 · Sessions delegate the work to subagents · 2026-11-27 · Active
 The user (to Backend), for every future session: "i want you to make more subagents and do less work. for futire sessions". Subagents do the work: features with their tests, docs, investigations, sweeps and long verify runs. The session plans and briefs, reviews each result before committing, commits, pushes and deploys, and talks to peers and the user. Subagents never push, deploy or message peers. Effort follows the existing rule. A limit the user sets on parallel agents (Frontend's two, 27 Nov) wins.
 By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: docs/team.md; the shared memory (feedback-delegate-to-subagents).
+
+### D241 · "Add another card" becomes a step inside the drawer · 2026-11-27 · Active
+The user asked for the "add another card" flow to be researched and redone (D237). Frontend followed government "add another" patterns: after «Desar», the drawer shows the card's mark with a ✓, «Cartró #N afegit!», the phone's cards, and «Vols afegir un altre cartró?» with «+ Un altre» (a fresh form) and «Fet» (closes, and rings the new card on the home), with a quiet cue and haptics. It replaces D200's banner over the cards list, so U174 is moot. Built in 3e3cb154, with the drawers' and forms' other fixes.
+By: Frontend, as the user asked (D237). Source: Frontend's report of 27 Nov. Supersedes: D200. Lives in: requirements/screens.md › Player app.
