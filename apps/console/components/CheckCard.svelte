@@ -1,9 +1,11 @@
 <!--
   The claimed card on the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciada): «Cartró #57» with its
   chips (what it claims; its printed type and the side checked in one label, D163: «Normal 1–4»), the warnings,
-  then the card's 12 songs. Each song the Check plays carries its mark from the start (D108), dotted while only the
-  presenters know it and full once the room has seen it (hook check-step); the next one says «Següent»; the songs after
-  the reveals stop say «no es destaparà». A Line's other rows fade. A card of another type has no songs to reveal: its
+  then the card's 12 songs as the design system's CardCells (CardGrid's looks table, D2). Each song the Check plays
+  carries its mark from the start (D108), centred (#75), dashed while only the presenters know it and full once the
+  room has seen it (hook check-step); a song still to reveal is greyed with a dashed ring and counts down («Següent»,
+  «+2», #78); the playing one's ring runs round it with a play disc (#74, #76); the songs after the reveals stop say
+  «no es destaparà». A Line's other rows fade. A card of another type has no songs to reveal: its
   type shows big instead. Under the card, the private verdict: on a pass one centred line; on a fail a big ✗
   «Fallada» beside the song that failed it.
 -->
@@ -11,9 +13,11 @@
   import { knownCardTypes } from '../../../packages/ui/data/card-types.ts';
   import type { CheckInfo, ClaimInfo } from '../../../packages/ui/flow.ts';
   import { getConsole } from '../context.ts';
-  import { checkCells, checkVerdict, typeChip } from '../logic/check.ts';
+  import { checkCells, checkVerdict, typeChip, type CheckCell } from '../logic/check.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
+  import CardCell from '../../../packages/ui/components/CardCell.svelte';
+  import { cellLook, type CellState } from '../../../packages/ui/components/card-looks.ts';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
 
@@ -49,6 +53,14 @@
    * check-step transition from the previous card's cells. */
   const drawn = $derived(`${check.claimId}@${check.startAtMs}`);
   /** The song that failed the card (its first ✗, or the one that sank a standing card). */
+  /** A cell's state for CardGrid's looks table: the room's ✓ / ✗ once heard, the private mark before (D108, #78). */
+  function cellState(cell: CheckCell): CellState {
+    if (!cell.inCheck) return 'idle';
+    if (cell.skipped) return 'skipped';
+    if (cell.playing) return 'playing';
+    if (cell.revealed) return cell.mark === 'bad' ? 'missed' : 'landed';
+    return cell.mark === 'bad' ? 'upcomingFail' : 'upcomingOk';
+  }
   const failedSong = $derived(!pass && (verdict.kind === 'missing' || verdict.kind === 'fallen') ? verdict.songId : null);
 </script>
 
@@ -70,8 +82,13 @@
   {#if cells.length}
     <ol class="check-grid" data-kind={check.kind}>
       {#each cells as cell, i (`${drawn}:${i}`)}
-        <li
+        {@const songTitle = cell.skipped ? S.check.skipped : title(cell.songId)}
+        <CardCell
           class="check-cell"
+          songId={cell.songId}
+          title={songTitle}
+          label={S.check.cellLabel(title(cell.songId), cell.mark, cell.revealed, check.kind)}
+          {...cellLook(cellState(cell), { ahead: cell.ahead, nextTag: S.check.nextTag })}
           data-in={cell.inCheck || undefined}
           data-mark={cell.mark ?? undefined}
           data-revealed={cell.revealed || undefined}
@@ -79,17 +96,7 @@
           data-next={cell.next || undefined}
           data-skipped={cell.skipped || undefined}
           data-anim="check-step"
-          aria-label={S.check.cellLabel(title(cell.songId), cell.mark, cell.revealed, check.kind)}
-        >
-          <span class="check-cell__art">
-            <Cover songId={cell.songId} size="md" />
-            {#if cell.mark}
-              <span class="check-cell__mark" aria-hidden="true"><Icon name={cell.mark === 'bad' ? 'cross' : 'check'} alone /></span>
-            {/if}
-            {#if cell.next}<span class="check-cell__next" aria-hidden="true">{S.check.nextTag}</span>{/if}
-          </span>
-          <span class="check-cell__title" aria-hidden="true">{cell.skipped ? S.check.skipped : title(cell.songId)}</span>
-        </li>
+        />
       {/each}
     </ol>
   {:else if verdict.kind === 'wrongType' && type}

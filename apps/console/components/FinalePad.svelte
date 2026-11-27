@@ -20,7 +20,8 @@
   import { PAD_DIGITS, padKeyFromKeyboard, type PadKey } from '../logic/numpad.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { CA, S } from '../strings.ts';
-  import Cover from './Cover.svelte';
+  import CardCell from '../../../packages/ui/components/CardCell.svelte';
+  import { cellLook } from '../../../packages/ui/components/card-looks.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
   import { ACTIONS, asDefault } from '../actions.ts';
   import Icon from './Icon.svelte';
@@ -176,13 +177,17 @@
           {#if shown.songs}
             <ol class="check-grid finale-pad__grid">
               {#each shown.songs as song, i (i)}
-                <li class="check-cell" data-in data-revealed data-mark={song.landed ? 'bad' : 'good'} aria-label={`${title(song.songId)}: ${song.landed ? CA.landed : CA.notLanded}`}>
-                  <span class="check-cell__art">
-                    <Cover songId={song.songId} size="md" />
-                    <span class="check-cell__mark" aria-hidden="true"><Icon name={song.landed ? 'cross' : 'check'} alone /></span>
-                  </span>
-                  <span class="check-cell__title" aria-hidden="true">{title(song.songId)}</span>
-                </li>
+                <CardCell
+                  class="check-cell"
+                  songId={song.songId}
+                  title={title(song.songId)}
+                  label={`${title(song.songId)}: ${song.landed ? CA.landed : CA.notLanded}`}
+                  {...cellLook(song.landed ? 'missed' : 'landed')}
+                  ring={song.landed ? 'red' : null}
+                  data-in
+                  data-revealed
+                  data-mark={song.landed ? 'bad' : 'good'}
+                />
               {/each}
             </ol>
           {:else}
