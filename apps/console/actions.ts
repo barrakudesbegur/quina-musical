@@ -127,7 +127,6 @@ export const MINI = {
   pacePlus: { icon: 'plus' },
   // ---- Futur
   futureShow: { color: 'gold', icon: 'eye', label: S.future.show },
-  futureHide: { size: 's', icon: 'eye-off', label: S.future.hide },
   // ---- the menu and its dialogs
   labelSave: { label: S.menu.labelSave },
   nightStart: { color: 'orange', icon: 'play', label: S.menu.start },

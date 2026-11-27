@@ -8,6 +8,8 @@
   import type { Snippet } from 'svelte';
   import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
+  import Tabs from '../../packages/ui/components/Tabs.svelte';
+  import type { TabSpec } from '../../packages/ui/components/control-types.ts';
 
   let { phone }: { phone: boolean } = $props();
 
@@ -17,6 +19,22 @@
   let two = $state<'a' | 'b'>('a');
   let three = $state<'x' | 'y' | 'z'>('x');
   let view = $state<'list' | 'grid'>('grid');
+
+  // Neutral tabs (#42: the gallery shows the component, never a screen's story).
+  type TabId = 'one' | 'two' | 'three' | 'four' | 'five';
+  const FIVE: TabSpec<TabId>[] = [
+    { id: 'one', label: 'Primera', icon: 'chart' },
+    { id: 'two', label: 'Segona', icon: 'magnifier' },
+    { id: 'three', label: 'Tercera', icon: 'star' },
+    { id: 'four', label: 'Quarta', icon: 'gift', badge: 3 },
+    { id: 'five', label: 'Cinquena', icon: 'speaker' },
+  ];
+  let wide = $state<TabId>('one');
+  let narrow = $state<TabId>('two');
+  let withExtra = $state<TabId>('two');
+  let three3 = $state<TabId>('one');
+  let mode = $state<'a' | 'b'>('a');
+  let shown = $state(true);
 </script>
 
 {#snippet cell(caption: string, body: Snippet)}
@@ -76,5 +94,29 @@
     {@render cell('disabled', g6)}
     {#snippet g7()}<SegmentedControl label="Tria" options={[{ id: 'a', label: 'All I Want for Christmas Is You' }, { id: 'b', label: 'SUPERESTRELLA' }]} bind:value={two} />{/snippet}
     {@render cell('long labels: one line, an ellipsis (R9)', g7)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b3">
+  <h2 id="b3">B3 · Tabs</h2>
+  <p class="ds-prose">
+    Folder tabs over one panel: <code>tabs</code> (<code>id</code>, <code>label</code>, <code>icon</code>, <code>badge</code>),
+    <code>selected</code>, <code>label</code>, <code>panel</code> (a snippet), <code>extras</code> (a snippet per tab id: the tab’s own control,
+    drawn on the selected tab, D-g, #41), <code>sound</code>. The tabs and their focus ring sit behind the panel (#39); the bar’s insets
+    are equal (#40). When the tabs’ own width is too small, the tabs that aren’t selected show their icon only (a container query,
+    #44). Arrows, Home and End move and select.
+  </p>
+  {#snippet body(id: string)}<p class="ds-prose">Contingut de la pestanya «{FIVE.find((t) => t.id === id)?.label}».</p>{/snippet}
+  {#snippet modes()}<SegmentedControl size="s" class="ds-gallery__tab-modes" label="Mode" options={[{ id: 'a', label: 'Una', icon: 'music' }, { id: 'b', label: 'Altra', icon: 'grid' }]} bind:value={mode} />{/snippet}
+  {#snippet toggle()}<Switch layout="inline" class="ds-gallery__tab-switch" icon="eye" label="Visible" checked={shown} onchange={(v) => (shown = v)} />{/snippet}
+  <div class="ds-gallery__stack">
+    {#snippet t1()}<div class="ds-gallery__tabs" style:width="46rem"><Tabs tabs={FIVE} bind:selected={wide} label="Exemple" panel={body} /></div>{/snippet}
+    {@render cell('five tabs with room: every label shows; a badge on the fourth', t1)}
+    {#snippet t2()}<div class="ds-gallery__tabs" style:width="24rem"><Tabs tabs={FIVE} bind:selected={narrow} label="Exemple estret" panel={body} /></div>{/snippet}
+    {@render cell('narrow: only the selected tab keeps its label (#44)', t2)}
+    {#snippet t3()}<div class="ds-gallery__tabs" style:width="37rem"><Tabs tabs={FIVE} bind:selected={withExtra} label="Amb control" panel={body} extras={{ two: modes, three: toggle }} /></div>{/snippet}
+    {@render cell('extras: a segmented control on «Segona», a switch on «Tercera»; the others collapse to make room', t3)}
+    {#snippet t4()}<div class="ds-gallery__tabs" style:width="30rem"><Tabs tabs={FIVE.slice(0, 3)} bind:selected={three3} label="Tres" panel={body} /></div>{/snippet}
+    {@render cell('three tabs: wider padding', t4)}
   </div>
 </section>

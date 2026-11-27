@@ -1,7 +1,7 @@
 <!--
   The Futur tab, the crystal ball (D170; the Consola-Pestanyes-Noves board, frames f and g; PRIVATE: never the public
   feed, the projector or the phones). Hidden until a presenter taps «Mirar el futur», so the presenters stay curious
-  too; it hides again for a new round, or with «Amagar». Revealed (hook reveal: it unblurs and fades in):
+  too; it hides again for a new round, or with the «Visible» switch on its tab (HelperTabs). Revealed (hook reveal: it unblurs and fades in):
   - on the left, the songs left until the first possible Line and Quina, and the possible winners: the cards that get
     them first, with how far ahead (+4), unsold ones flagged; before the order arrives, the engine's cards that have a
     win now;
@@ -140,7 +140,6 @@
         <section class="future__upcoming" aria-labelledby="{uid}-upcoming">
           <header class="future__upcoming-head">
             <h3 class="panel__label" id="{uid}-upcoming">{S.future.upcoming}</h3>
-            <MiniButton {...MINI.futureHide} class="future__hide" onclick={() => model.revealFuture(false)} />
           </header>
           {#if rows === null}
             <p class="note">{S.future.waiting}</p>

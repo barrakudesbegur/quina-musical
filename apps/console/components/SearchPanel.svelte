@@ -1,6 +1,6 @@
 <!--
   The Cerca tab (D162, D170, D187; the Consola-Pestanyes-Noves board, frames ②, ③, b–e), PRIVATE: one tab with a
-  «Cançons / Cartró» switch.
+  «Cançons / Cartró» switch, on the tab itself (HelperTabs).
   - Cançons: with nothing typed, the round's played songs, newest first. Typing filters the round's songs with the
     fuzzy search (logic/fuzzy.ts), the matched letters marked, each saying whether it played («Ha sonat: la 14a, fa
     9», «Encara no ha sonat»), never when it will. While the box has the focus the tab grows over the column, so the
@@ -23,7 +23,6 @@
   import Icon from './Icon.svelte';
   import PlayedList from './PlayedList.svelte';
   import SongRow from './SongRow.svelte';
-  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -31,7 +30,6 @@
   const snap = $derived(model.show.state);
   const songs = $derived(model.roundSongs);
   const limits = { maxDigits: CONSOLE.cardDigits, max: CONSOLE.cardMax };
-  const MODES = ['songs', 'card'] as const;
 
   // ---- Cançons
   const query = $derived(search.query.trim());
@@ -62,11 +60,6 @@
   $effect(() => () => {
     search.typing = false;
   });
-
-  function setMode(mode: 'songs' | 'card'): void {
-    search.mode = mode;
-    search.typing = false;
-  }
 
   function press(key: PadKey | 'enter'): void {
     if (key !== 'enter') {
@@ -141,7 +134,6 @@
         </button>
       {/if}
     {/if}
-    <SegmentedControl class="search-tab__modes" label={S.cerca.modeLabel} options={MODES.map((mode) => ({ id: mode, label: S.cerca.modes[mode], icon: mode === 'songs' ? 'music' : 'grid' }))} value={search.mode} onchange={setMode} />
   </div>
 
   {#if search.mode === 'songs'}

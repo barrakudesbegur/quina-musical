@@ -180,7 +180,8 @@ export const S = {
   future: {
     hiddenNote: 'Qui pot guanyar i les cançons que vindran, en ordre. Amagat perquè també us agafi per sorpresa.',
     show: 'Mirar el futur',
-    hide: 'Amagar',
+    /** The switch on the Futur tab (D-g): on while the future shows. */
+    visible: 'Visible',
     unknown: '—',
     firstLine: 'Primera línia',
     bingo: 'Quina',

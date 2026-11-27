@@ -976,95 +976,25 @@
   min-height: 14rem;
 }
 
-.tabs {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+/* The tabs themselves are the Tabs component's (packages/ui/components/tabs.css). A tab's own control sits on it
+   (D-g): compact enough for the tab's 44 px inside, its options still reaching the tab's full height. */
+.helpers__modes {
+  --segment-height: 1.75rem;
+  --segment-pad: 2px;
+  --segment-border: var(--line-width-thin);
+}
+
+.helpers__modes .segmented__option::before {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+
+.helpers__future {
+  --switch-gap: var(--space-2);
+  --switch-label-size: var(--text-sm);
   min-height: 0;
-}
-
-/* The tabs start inside the panel's corner radius, on its top line. */
-.tabs__list {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex: none;
-  align-items: flex-end;
-  gap: 4px;
-  min-width: 0;
-  /* Five tabs, «Dempeus» among them, fit the tablet's left column (about 588 px at 1180) with labels and icons whole */
-  padding-inline: var(--space-2);
-  overflow-x: auto;
-}
-
-.tabs__tab {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--space-2);
-  height: var(--tap-min);
-  min-height: var(--tap-min);
-  margin: 0;
-  padding: 0 var(--space-2);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-bottom: 0;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  background: var(--color-tab-idle);
-  color: var(--color-text-muted);
-  font-size: var(--text-md);
-  transition: background-color var(--dur-tab-switch) var(--ease-out);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .tabs__tab {
-    transition:
-      height var(--dur-tab-switch) var(--ease-out),
-      margin-bottom var(--dur-tab-switch) var(--ease-out),
-      background-color var(--dur-tab-switch) var(--ease-out);
-  }
-}
-
-.tabs__tab .icon {
-  width: 1.375rem;
-  height: 1.375rem;
-}
-
-.tabs__tab:active:not(:disabled) {
-  transform: none;
-}
-
-/* The selected tab: 6 px taller, dropping over the panel's 4 px top line so it joins the panel. */
-.tabs__tab[aria-selected='true'] {
-  position: relative;
-  z-index: 2;
-  height: calc(var(--tap-min) + 6px);
-  margin-bottom: calc(-1 * var(--line-width-bold));
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.tabs__panel {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--space-3) var(--space-4);
-  border: var(--line-width-bold) solid var(--color-line);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-drop);
-}
-
-.tabs__panel[hidden] {
-  display: none;
-}
-
-.tabs__content {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  animation: fade-in var(--dur-tab-switch) var(--ease-out);
+  padding: 0;
 }
 
 /* ---- the helpers' tabs: Estat, Cerca, Futur (the Consola-Pestanyes-Noves board) ------------------------------- */
@@ -1073,10 +1003,6 @@
   .helpers {
     flex: 1 1 0;
   }
-}
-
-.tabs__content {
-  min-height: 0;
 }
 
 /* Cerca's search box has the focus: the tab grows over the column, above the tablet's keyboard (board ②). Only
@@ -1796,7 +1722,6 @@
 .future__box[data-state='now'] .future__box-value {
   color: var(--color-ink);
 }
-
 
 /* An upcoming song's tag: the songs left until the next win, or the win it brings (green) */
 .upcoming-tag {

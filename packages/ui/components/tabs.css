@@ -1,0 +1,252 @@
+/*
+ * B3 · Tabs (components-v2.md § 3; Tabs.svelte). Folder tabs on a bar, one panel under them.
+ * Layers (#39): the tabs (and their focus rings) are behind the panel; the panel is in front; the bridge (the tabs'
+ * ::after, tethered to the selected tab by anchor positioning) is in front of the panel and hides its top line under
+ * the selected tab, so the two read as one piece; the extra control is in front of all.
+ * Narrow (#44): a container query collapses the tabs that aren't selected to their icon. The widths below are the
+ * tab bars' natural widths (five tabs ≈ 34.5 rem with their labels, 35.75 with «Dempeus»; with a selected tab's extra control, more), so
+ * a bar collapses exactly when its labels would no longer fit.
+ * Every size is a custom property in :where().
+ */
+
+:where(.tabs) {
+  --tabs-line: var(--line-width-bold);
+  --tabs-idle-h: 42px;
+  --tabs-selected-h: 48px;
+  --tabs-gap: 4px;
+  /* the bar's inset, the same at both ends (#40) */
+  --tabs-inset: var(--space-2);
+  --tabs-pad-inline: var(--space-2);
+  --tabs-radius: var(--radius-md);
+  --tabs-font: var(--text-md);
+  --tabs-icon: 1.375rem;
+  --tabs-panel-radius: var(--radius-lg);
+  --tabs-dur: var(--dur-tab-switch, 120ms);
+}
+
+:where(.tabs:is([data-count='2'], [data-count='3'])) {
+  --tabs-pad-inline: var(--space-4);
+}
+
+.tabs {
+  container: tabs / inline-size;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---- the bar ----------------------------------------------------------------------------------------------------- */
+.tabs__bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  min-width: 0;
+  padding-inline: var(--tabs-inset);
+}
+
+.tabs__list {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: var(--tabs-gap);
+  min-width: 0;
+}
+
+/* A last resort past the breakpoints (labels longer than the console's): idle tabs shrink, their labels truncated;
+   the selected one never does (modern-web-guidance tabs, strategy 3). */
+.tabs__tab {
+  position: relative;
+  z-index: 0;
+  display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--tabs-idle-h);
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--tabs-pad-inline);
+  border: var(--tabs-line) solid var(--color-line);
+  border-bottom: 0;
+  border-radius: var(--tabs-radius) var(--tabs-radius) 0 0;
+  background: var(--color-tab-idle);
+  box-shadow: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--tabs-font);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+  transition: background-color var(--tabs-dur) var(--ease-out);
+}
+
+/* The hit area keeps the selected tab's height (the 44 px floor), though an idle tab draws shorter. */
+.tabs__tab::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--tabs-idle-h) - var(--tabs-selected-h)) calc(-1 * var(--tabs-gap) / 2) 0;
+}
+
+.tabs__tab:active:not(:disabled) {
+  transform: none;
+}
+
+.tabs__tab[aria-pressed='true'] {
+  background: var(--color-tab-idle);
+}
+
+/* The selected tab: taller, down over the panel's top line (the bridge opens the line under it). */
+.tabs__tab[aria-selected='true'] {
+  flex-shrink: 0;
+  height: calc(var(--tabs-selected-h) + var(--tabs-line));
+  margin-bottom: calc(-1 * var(--tabs-line));
+  anchor-name: var(--tabs-anchor);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabs__tab {
+    transition:
+      height var(--tabs-dur) var(--ease-out),
+      background-color var(--tabs-dur) var(--ease-out);
+  }
+}
+
+/* R5: the ring behind the panel too (#39): no offset below the tab, where the panel starts. */
+.tabs__tab:focus-visible {
+  outline-offset: 2px;
+}
+
+.tabs__icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.tabs__icon > svg {
+  width: var(--tabs-icon);
+  height: var(--tabs-icon);
+}
+
+.tabs__badge {
+  min-width: 1.5em;
+  padding: 0 6px;
+  border: var(--line-width-thin) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-chip);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.tabs__room {
+  flex: none;
+}
+
+/* ---- the extra control: on the selected tab, at its end ------------------------------------------------------ */
+.tabs__extra {
+  position: absolute;
+  z-index: 3;
+  position-anchor: var(--tabs-anchor);
+  top: calc(anchor(top) + var(--tabs-line));
+  bottom: calc(anchor(bottom) + var(--tabs-line));
+  right: calc(anchor(right) + var(--tabs-line) + var(--tabs-pad-inline) / 2);
+  display: flex;
+  align-items: center;
+}
+
+/* ---- the panel and the bridge --------------------------------------------------------------------------------- */
+.tabs__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  border: var(--tabs-line) solid var(--color-line);
+  border-radius: var(--tabs-panel-radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-drop);
+}
+
+.tabs__panel[hidden] {
+  display: none;
+}
+
+.tabs::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  position-anchor: var(--tabs-anchor);
+  top: calc(anchor(bottom) - var(--tabs-line));
+  left: calc(anchor(left) + var(--tabs-line));
+  right: calc(anchor(right) + var(--tabs-line));
+  height: var(--tabs-line);
+  background: var(--color-surface);
+  pointer-events: none;
+}
+
+.tabs__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  animation: fade-in var(--tabs-dur) var(--ease-out);
+}
+
+/* ---- narrow: the tabs that aren't selected keep only their icon (#44) ---------------------------------------- */
+/* The size query (on the tabs' own width) sets a flag on the bar; a style query hides the labels under it, so the
+   look is written once. The label stays in the DOM: it's still the tab's accessible name. */
+.tabs__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container tabs (width < 28rem) {
+  .tabs[data-count='4']:not([data-extra]) > .tabs__bar {
+    --tabs-collapsed: yes;
+  }
+}
+
+@container tabs (width < 36rem) {
+  .tabs[data-count='5']:not([data-extra]) > .tabs__bar {
+    --tabs-collapsed: yes;
+  }
+}
+
+@container tabs (width < 41rem) {
+  .tabs[data-count='6']:not([data-extra]) > .tabs__bar {
+    --tabs-collapsed: yes;
+  }
+}
+
+/* With the selected tab's extra control (a segmented control or a switch, up to about 14 rem) */
+@container tabs (width < 42rem) {
+  .tabs[data-extra]:is([data-count='2'], [data-count='3']) > .tabs__bar {
+    --tabs-collapsed: yes;
+  }
+}
+
+@container tabs (width < 52rem) {
+  .tabs[data-extra]:is([data-count='4'], [data-count='5'], [data-count='6']) > .tabs__bar {
+    --tabs-collapsed: yes;
+  }
+}
+
+@container style(--tabs-collapsed: yes) {
+  .tabs__tab:not([aria-selected='true']) > :is(.tabs__label, .tabs__badge) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

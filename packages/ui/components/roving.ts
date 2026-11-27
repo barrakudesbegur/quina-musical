@@ -1,12 +1,12 @@
 // The arrow keys in a group with one Tab stop (a roving tabindex): radios, segmented options, tabs (the ARIA radio
 // group and tabs patterns). Pure, so the components share it and the tests read it.
 
-/** The index the key moves to from `index`, skipping disabled items and wrapping round; null when the key isn't one
+/** The index the key moves to from `index`, skipping items with `disabled: true` and wrapping round; null when the key isn't one
  *  of the group's (←/↑ previous, →/↓ next, Home first, End last) or nothing else is usable. */
-export function nextEnabled(items: readonly { readonly disabled?: boolean }[], index: number, key: string): number | null {
+export function nextEnabled(items: readonly object[], index: number, key: string): number | null {
   const n = items.length;
   if (n === 0) return null;
-  const usable = (i: number) => !items[i]?.disabled;
+  const usable = (i: number) => !(items[i] as { disabled?: boolean } | undefined)?.disabled;
   const scan = (from: number, step: 1 | -1): number | null => {
     for (let k = 1; k <= n; k++) {
       const i = (((from + step * k) % n) + n) % n;

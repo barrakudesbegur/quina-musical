@@ -6,7 +6,7 @@ import { flowOf } from '../../../../../packages/ui/flow.ts';
 import { looksUnpaired, consoleAlert, heatPercent, linksOf, roundOnScreen, wiiLink } from '../../../../console/logic/status.ts';
 import { SentLog, dismissToast, holdToasts, isOwnRejection, liveToasts, pushToast, releaseToasts, shownToasts, type Toast } from '../../../../console/logic/toasts.ts';
 import { consoleLinkFor, lastSpinOf, normalizeLabel, parseChecklist, resolveLabel, resolveTheme, senderOf } from '../../../../console/logic/device.ts';
-import { defaultClaimKind, prizeRevealOf, roundPrizes, tabIndexForKey, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
+import { defaultClaimKind, prizeRevealOf, roundPrizes, winnersByRound, celebrationWinners, songTitleOf } from '../../../../console/logic/show-data.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import { PROTOCOL_VERSION } from '@quina/protocol';
 import { S } from '../../../../console/strings.ts';
@@ -196,14 +196,6 @@ test('a Claim defaults to what the Phase climbs towards', () => {
   assert.equal(defaultClaimKind(s), 'line');
   assert.equal(defaultClaimKind({ ...s, round: { ...s.round, lineConfirmed: true } }), 'bingo');
   assert.equal(defaultClaimKind(null), 'line');
-});
-
-test('tab keys wrap around', () => {
-  assert.equal(tabIndexForKey(2, 'ArrowRight', 3), 0);
-  assert.equal(tabIndexForKey(0, 'ArrowLeft', 3), 2);
-  assert.equal(tabIndexForKey(1, 'Home', 3), 0);
-  assert.equal(tabIndexForKey(1, 'End', 3), 2);
-  assert.equal(tabIndexForKey(1, 'a', 3), null);
 });
 
 test('an unpaired device is told so: connected, silent relay, after the grace, not on the laptop itself', () => {

@@ -119,22 +119,3 @@ export function defaultClaimKind(state: ShowState | null): ClaimKind {
 /** The kinds the claim pad offers this round (winKindsOf): Line and Quina, or only the last card standing, which
  * needs no choice. */
 export const claimKindsOf = (state: ShowState | null): readonly ClaimKind[] => winKindsOf(state?.round.kind ?? 'normal');
-
-/** Tabs: the index after an arrow, Home or End key (wrapping), or null for any other key. */
-export function tabIndexForKey(current: number, key: string, count: number): number | null {
-  if (count <= 0) return null;
-  switch (key) {
-    case 'ArrowRight':
-    case 'ArrowDown':
-      return (current + 1) % count;
-    case 'ArrowLeft':
-    case 'ArrowUp':
-      return (current - 1 + count) % count;
-    case 'Home':
-      return 0;
-    case 'End':
-      return count - 1;
-    default:
-      return null;
-  }
-}
