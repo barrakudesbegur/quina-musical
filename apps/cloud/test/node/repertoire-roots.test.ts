@@ -3,9 +3,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { CACHE, loadRepertoire, OUT, REPO, type Repertoire } from '../../../show/relay/repertoire.ts';
-import { repertoireRoots, rootsUnder } from '../../laptop/repertoire-roots.ts';
+import type { Repertoire } from '../../../show/relay/repertoire.ts';
 import { isSyncPath } from '../../src/domain/media-sync.ts';
+
+// repertoire.ts reads where data/out and data/link are when it loads, so these tests clear the variables that move
+// them before importing it: they test the checkout's own folders, whatever the caller's shell sets (the deploy cycle
+// sets QUINA_OUT_DIR to the main checkout's data/out for the e2e, which is outside a worktree's repo).
+delete process.env.QUINA_OUT_DIR;
+delete process.env.QUINA_LINK_DIR;
+delete process.env.QUINA_REPERTOIRE;
+const { CACHE, loadRepertoire, OUT, REPO } = await import('../../../show/relay/repertoire.ts');
+const { repertoireRoots, rootsUnder } = await import('../../laptop/repertoire-roots.ts');
 
 const repertoire = (name: string, dataDir: string, cacheDir: string): Repertoire => ({
   name,
