@@ -29,7 +29,7 @@ _The user, 27 Nov 2026. First the user asks the presenters whether they want it 
 _The organizers' request, through the user, 27 Nov 2026. The user thinks it's worth it, but it's not for now: "i wont implement yet, just keep it written down". The plan: discuss the details, make the design, discuss the implementation, then write an implementation doc and plan to hand to a session. It needs extensive research on this kind of software first, "to make a solution that is well done and adapted to our needs, and not bloated". The user is open to more ideas._
 
 **The idea:**
-- **Remote orders:** players order drinks, snacks and cards from their phone. The items and prices are in the organizers' files (temp/info-from-2025/prices.md and preus-cartrons.md; event.md › Money and the bar).
+- **Remote orders:** players order drinks, snacks and cards from their phone. The items and prices are in the organizers' files (temp/info-from-2025/prices.md and preus-cartrons.md; event.md › Money).
 - **The bar's side:** the bar gets the orders on a tablet, a laptop or their phones.
 - **The tables:** 3D-printed holders on the tables hold the corn seeds and show the table's number, with a QR that opens the app with that table as a parameter.
 - **Paying:**
