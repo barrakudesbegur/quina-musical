@@ -23,6 +23,13 @@ export const CONSOLE = Object.freeze({
   /** Holding Parlem or Aguanta this long reaches its second level, Pausa or Suspens (logic/two-level.ts;
    *  ANIMATIONS.md › escalate-hold). Long enough that a firm tap never escalates, short enough to feel direct. */
   escalateHoldMs: 800,
+  /**
+   * The lock mirror (D234, logic/two-level-lock.ts): Parlem or Aguanta held on another console shows locked here once
+   * the press has lasted `afterMs` (a tap elsewhere never flashes it; well under `escalateHoldMs`). After this console
+   * lets go of one, a lock of it that started before stays its own for `echoMs`, while the engine's release is on its
+   * way (through the cloud every console shares the link's clientId, so only the timing tells them apart).
+   */
+  lock: Object.freeze({ afterMs: 300, echoMs: 1500 }),
   /** An «Efectes» cell's light runs this long after its tap (ANIMATIONS.md › pad-playing): the snapshot has no playing
    *  effect yet; to replace with the engine's when Sound engine sends one. */
   padPlayingMs: 2000,
@@ -75,7 +82,7 @@ export const CONSOLE_COMMANDS = [
   'roundIntro', 'claim', 'checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd', 'winnerInfo',
   'celebrationMusic', 'interval', 'endGame', 'pause',
   'intervalSkip', 'resumeAt', 'revealPrizes', 'setVolume', 'throw', 'storm', 'finale', 'finaleCue', 'getUpcoming',
-  'intervalSet', 'setAutoSound', 'soundTest', 'setCardsInPlay',
+  'intervalSet', 'setAutoSound', 'soundTest', 'addCardsInPlay', 'twoLevelHold',
 ] as const satisfies readonly CommandName[];
 export type ConsoleCommand = (typeof CONSOLE_COMMANDS)[number];
 

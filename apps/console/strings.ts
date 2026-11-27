@@ -92,6 +92,11 @@ export const S = {
     talkLocked: 'Parlem queda posat mentre dura la pausa',
     suspenseOpen: 'deixa anar per aterrar',
     suspenseTap: 'toca per aterrar',
+    /** D234: the button held on another console (`twoLevelHeld`), locked here until it's let go: its note, and the
+     *  padlock's spoken label. `anotherConsole`: a holder with no device label of its own. */
+    heldElsewhere: (name: string) => `la manté ${name}`,
+    heldElsewhereLong: (name: string) => `La manté ${name}: queda bloquejat fins que la deixi anar`,
+    anotherConsole: 'una altra consola',
     suspenseAutoRelease: (s: number) => `s'allibera sol en ${s} s`,
     back: CA.concepts.back,
     /** Under "Enrere" in its narrow button: just "hold, don't tap". */
@@ -916,11 +921,16 @@ export const S = {
       unknown: (ranges: string, count: number) => (count === 1 ? `El ${ranges} no és cap cartró imprès` : `No són cartrons impresos: ${ranges}`),
       already: 'Ja són tots en joc',
       tooLong: "La llista de cartrons en joc ja no hi cap: afegiu-los des de l'Admin",
-      inPlay: "No es pot llegir la llista de cartrons en joc: afegiu-los des de l'Admin",
+      refused: "El show no els ha acceptat: torneu-ho a provar o afegiu-los des de l'Admin",
     },
-    /** The Notice once the engine has them. */
-    done: (count: number, ranges: string, total: number) =>
-      `${count === 1 ? `Afegit el ${ranges}` : `Afegits ${count} cartrons (${ranges})`}. Ara n'hi ha ${total} en joc.`,
+    /** The Notice once the engine has merged them (`cards.lastAdd`): what joined, what was in already (another console
+     *  may have added them a moment before), and the cards in play now. */
+    done: (added: { count: number; ranges: string }, already: { count: number; ranges: string }, total: number) => {
+      const was = already.count === 1 ? `el ${already.ranges} ja hi era` : `${already.count} ja hi eren (${already.ranges})`;
+      if (added.count === 0) return `${already.count === 1 ? `El ${already.ranges} ja hi era` : `Ja hi eren tots: ${already.ranges}`}. N'hi ha ${total} en joc.`;
+      const joined = added.count === 1 ? `Afegit el ${added.ranges}` : `Afegits ${added.count} cartrons (${added.ranges})`;
+      return `${joined}${already.count ? `; ${was}` : ''}. Ara n'hi ha ${total} en joc.`;
+    },
   },
 
   resume: {
@@ -1011,7 +1021,8 @@ export const S = {
     intervalSet: 'Música del descans',
     setAutoSound: 'Sons automàtics',
     soundTest: 'Prova de so',
-    setCardsInPlay: 'Cartrons venuts',
+    addCardsInPlay: 'Cartrons venuts',
+    twoLevelHold: 'Parlem o Aguanta',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 

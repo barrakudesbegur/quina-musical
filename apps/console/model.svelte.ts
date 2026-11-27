@@ -4,7 +4,7 @@
 // Futur), the Cerca tab's search, the claim pad, the finalists' pad and the Dempeus tab's finale switches, and the
 // toasts. It derives what the components need from the pure logic in logic/, and `act` is the one way commands leave
 // the console.
-import { roundCardType, roundSide, type CommandFields, type CommandRejected, type ResumePoint, type ShowState } from '@quina/protocol';
+import { roundCardType, roundSide, type CommandFields, type CommandRejected, type ResumePoint, type ShowState, type TwoLevelButton } from '@quina/protocol';
 import { createShow, type ShowStore } from '../../packages/ui/client/show.svelte.ts';
 import { loadCatalog, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { followPlanPushes, loadPlanForPage, planStoreForPage } from '../../packages/ui/data/plan-store.ts';
@@ -20,6 +20,8 @@ import { CONSOLE, DEFAULT_THEME, type Theme } from './config.ts';
 import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel, type LastSpin } from './logic/device.ts';
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundCards, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
+import { addAnswer, refusalError, type CardsAddOutcome } from './logic/cards-add.ts';
+import { LockPresses, NO_PRESSES, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
 import {
@@ -145,6 +147,15 @@ export class ConsoleModel {
   finaleEditing = $state(false);
   /** The last step back inside a Check. */
   stepBack = $state.raw<StepBack | null>(null);
+  /** The engine's answer to this console's last «Cartrons venuts» add (CardsAdd.svelte shows it until the field is typed
+   *  in again): what joined and what was in already, or why it was refused. */
+  cardsAddOutcome = $state.raw<CardsAddOutcome | null>(null);
+  /** The add this console sent (its reqId), until the engine answers: `cards.lastAdd`, or a refusal. Not reactive. */
+  private cardsAddSent: string | null = null;
+  /** This console's presses of Parlem and Aguanta, from the touch screen and the Wii (the lock mirror, D234). */
+  private readonly lockPresses = new LockPresses();
+  /** The same, for the lock (`lockedBy`). */
+  ownPresses = $state.raw<OwnPresses>(NO_PRESSES);
   /** The claim the pad sent last: the engine's `unknownCard` rejection brings it back, its chips marked (D126). */
   private padSent: { reqId: string; claim: CommandFields['claim'] } | null = null;
   /** The finalists' pad as it was sent: a refusal of the set brings it back, the refused numbers in red. */
@@ -250,6 +261,12 @@ export class ConsoleModel {
         if (kept) this.upcoming = kept;
       }
       if (event.type === 'state') {
+        // «Cartrons venuts»: the engine merged this console's add (`cards.lastAdd` names its reqId).
+        const answer = addAnswer(event.cards.lastAdd, this.cardsAddSent);
+        if (answer) {
+          this.cardsAddOutcome = answer;
+          this.cardsAddSent = null;
+        }
         this.landingLog = recordLandings(this.landingLog, event);
         this.followStanding(event);
         // a-glide: Pausa turns on or off, so A's badge moves: note where it is before the screen changes (D128).
@@ -423,6 +440,50 @@ export class ConsoleModel {
     writeStored(CONSOLE.storage.finaleReversed, on ? '1' : '0');
   }
 
+  /** This console's clientId: the relay stamps it on its commands (`from`), so the engine's `twoLevelHeld` names it. */
+  get clientId(): string {
+    return this.show.client.bus.clientId;
+  }
+
+  /**
+   * Parlem (`hold`) or Aguanta (`stay`) pressed here, on the touch screen or a Wii key: the engine hears the first press
+   * (`twoLevelHold { on: true }`), so the other consoles show it locked (D234). Quietly: it's only a mirror, so neither
+   * a command that can't leave nor a refusal toasts (`busy`: another console holds it, and its lock says so).
+   */
+  twoLevelPress(button: TwoLevelButton, source: LockSource): void {
+    const command = this.lockPresses.press(button, source);
+    this.ownPresses = this.lockPresses.presses;
+    if (command) this.show.send('twoLevelHold', command);
+  }
+
+  /** Let go of a two-level button here: the engine hears it when the last source lets go (Pausa's release included). */
+  twoLevelRelease(button: TwoLevelButton, source: LockSource): void {
+    const command = this.lockPresses.release(button, source, this.show.client.now());
+    this.ownPresses = this.lockPresses.presses;
+    if (command) this.show.send('twoLevelHold', command);
+  }
+
+  /** Every two-level button a source still holds, let go (the Wii remote went away). */
+  twoLevelReleaseAll(source: LockSource): void {
+    const commands = this.lockPresses.releaseAll(source, this.show.client.now());
+    this.ownPresses = this.lockPresses.presses;
+    for (const command of commands) this.show.send('twoLevelHold', command);
+  }
+
+  /** Who holds `button` on another console (its label), while it's locked here; else null. Reactive. */
+  heldElsewhere(button: TwoLevelButton): string | null {
+    return lockedBy(this.show.state?.twoLevelHeld, button, { clientId: this.clientId, presses: this.ownPresses }, this.show.now, CONSOLE.lock);
+  }
+
+  /** «Cartrons venuts»' «Afegeix»: the typed cards go to the engine, which merges them (D234). False when not sent. */
+  addCards(ranges: string): boolean {
+    const reqId = this.act('addCardsInPlay', { ranges });
+    if (reqId === null) return false;
+    this.cardsAddSent = reqId;
+    this.cardsAddOutcome = null;
+    return true;
+  }
+
   /** Plan B: resume a round by hand on this laptop (a replacement one, or after a restart). */
   resume(point: ResumePoint): string | null {
     return this.act('resumeAt', resumeCommand(point));
@@ -436,6 +497,15 @@ export class ConsoleModel {
   /** A rejection arrived: toast it when it answers one of this console's commands. */
   rejected(rejection: CommandRejected): void {
     if (!isOwnRejection(rejection, this.sent)) return;
+    // «Cartrons venuts»: numbers that aren't printed (`invalid`, named in its detail) go back to the field, in red,
+    // privately; any other refusal is the usual toast.
+    if (rejection.cmd === 'addCardsInPlay' && rejection.reqId !== null && rejection.reqId === this.cardsAddSent) {
+      this.cardsAddSent = null;
+      if (rejection.reason === 'invalid') {
+        this.cardsAddOutcome = { kind: 'refused', error: refusalError(rejection.detail) };
+        return;
+      }
+    }
     // A number that isn't a printed card (D126): privately, on the pad, never as a toast.
     const sent = this.padSent;
     if (rejection.reason === 'unknownCard' && sent?.reqId === rejection.reqId) {

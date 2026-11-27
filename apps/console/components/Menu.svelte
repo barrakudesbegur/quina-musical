@@ -167,8 +167,9 @@
           inPlay={snap.cards.inPlay}
           count={snap.cards.inPlayCount}
           rules={{ known: model.padRules.known, max: CONSOLE.cardMax }}
-          disabled={!model.can('setCardsInPlay')}
-          onadd={(ranges) => model.act('setCardsInPlay', { ranges }) !== null}
+          disabled={!model.can('addCardsInPlay')}
+          outcome={model.cardsAddOutcome}
+          onadd={(ranges) => model.addCards(ranges)}
         />
       {/if}
 

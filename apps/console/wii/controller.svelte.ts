@@ -20,6 +20,7 @@ import { knownWiiRemote, onWiiConnection, requestWiiRemote, wiiSupported, type W
 import { WiiMapper, type WiiCommand, type WiiContext, type WiiOutput } from './mapping.ts';
 import { buttonChanges, type WiiButton, type WiiReport } from './report.ts';
 import { dropReport, recentDrops } from './drops.ts';
+import { wiiLockButton } from '../logic/two-level-lock.ts';
 
 /** `lost`: a remote that was connected went away (worth a red chip); `disconnected`: none yet (optional, grey). */
 export type WiiStatus = 'unsupported' | 'disconnected' | 'connecting' | 'connected' | 'lost';
@@ -209,6 +210,8 @@ export class WiiController {
     this.batteryTimer = null;
     this.battery = null;
     this.remote = null;
+    // Held keys let go with the remote (the lock mirror, D234), as the mapper forgets them.
+    for (const b of this.pressed) if (wiiLockButton(b)) this.model.twoLevelReleaseAll(`wii-${b}`);
     this.pressed = new Set();
     this.mapper.reset();
     // A connected remote that goes away without "Desconnectar" dropped: out of range, or out of battery.
@@ -224,8 +227,18 @@ export class WiiController {
     const ctx = this.context();
     const { down, up } = buttonChanges(this.pressed, report.pressed);
     this.pressed = report.pressed;
-    for (const b of down) this.apply(this.mapper.press(b, now, ctx));
-    for (const b of up) this.apply(this.mapper.release(b, ctx));
+    // The lock mirror (D234): B is Aguanta's two-level button, − and + Parlem's. The engine hears the press before what
+    // it does, and the let-go after.
+    for (const b of down) {
+      const lock = wiiLockButton(b);
+      if (lock) this.model.twoLevelPress(lock, `wii-${b}`);
+      this.apply(this.mapper.press(b, now, ctx));
+    }
+    for (const b of up) {
+      this.apply(this.mapper.release(b, ctx));
+      const lock = wiiLockButton(b);
+      if (lock) this.model.twoLevelRelease(lock, `wii-${b}`);
+    }
     if (report.accel) this.apply(this.mapper.motion(now, report.accel, ctx));
   }
 

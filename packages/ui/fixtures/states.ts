@@ -811,6 +811,17 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
     const s = baseState(now);
     return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 6000, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ducked: false } }) };
   },
+  /** Aguanta held on another console (D234's lock mirror): «Mòbil admin» has held it for 2 s, toward Suspens, so this
+   *  console shows it locked («la manté Mòbil admin»). */
+  stayHeldElsewhere: (now) => {
+    const s = FIXTURES.stay(now).state as FullState;
+    return { state: { ...s, twoLevelHeld: { button: 'stay', clientId: 'Mobil_admin-x1y2', label: 'Mobil_admin-x1y2', sinceMs: now - 2000 } } };
+  },
+  /** Parlem held on another console (the «Tauleta»), toward Pausa, while Parlem is on. */
+  holdHeldElsewhere: (now) => {
+    const s = FIXTURES.hold(now).state as FullState;
+    return { state: { ...s, twoLevelHeld: { button: 'hold', clientId: 'Tauleta-7k2m', label: 'Tauleta-7k2m', sinceMs: now - 600 } } };
+  },
   /** In play; 1.5 s in, Pausa starts (A's badge glides to «Acaba la pausa», D128), and 4 s later it ends. */
   pauseStart: (now) => {
     const s = baseState(now);

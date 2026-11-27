@@ -6,7 +6,9 @@
   It knows nothing of the game: a preset gives its look (`color`, `pattern`, `icon` or the `art` snippet, `label`,
   `sub`, `note`, `wii`, and `level2`: the strip's words, icon and keys), and the app's thin wrapper gives its state
   and gets its gestures: `active` (null, 1 or 2: which level is on), `canEscalate`, `disabled`, and `ontap`,
-  `onescalate` (the hold crossed `holdMs`, finger still down), `onrelease` (an escalated press ended).
+  `onescalate` (the hold crossed `holdMs`, finger still down), `onrelease` (an escalated press ended); `onpress` and
+  `onletgo` say when any press starts and ends (let go, or taken away: cancelled, blurred, disabled, the page hidden,
+  unmounted), whatever it turns out to be (the console's lock mirror, D234).
 
   The look of each state (R3, D-k, #14, #17–#23):
   - off: the body in its palette, no pattern; the strip pale (its palette's `pale`), «mantén» before its words;
@@ -65,6 +67,10 @@
     ontap?: () => void;
     onescalate?: () => void;
     onrelease?: () => void;
+    /** A press started (finger or key down); `onletgo` always follows, after the press's own actions. */
+    onpress?: () => void;
+    /** The press ended: let go, or taken away. */
+    onletgo?: () => void;
     class?: string;
     element?: HTMLButtonElement;
   };
@@ -96,6 +102,8 @@
     ontap,
     onescalate,
     onrelease,
+    onpress,
+    onletgo,
     class: className = '',
     element = $bindable(),
     ...rest
@@ -114,6 +122,7 @@
     progress: (s, at) => twoLevelProgress(s, at, config()),
     step(state, event) {
       const result = twoLevel(state, event, config());
+      if (event.type === 'down' && state.phase === 'idle') onpress?.();
       if (sound !== null) {
         if (event.type === 'down' && state.phase === 'idle') sounds.down();
         if (result.actions.includes('escalate')) sounds.done();
@@ -125,6 +134,7 @@
         else if (action === 'escalate') onescalate?.();
         else onrelease?.();
       }
+      if (state.phase !== 'idle' && result.state.phase === 'idle') onletgo?.();
       return result.state;
     },
   });
