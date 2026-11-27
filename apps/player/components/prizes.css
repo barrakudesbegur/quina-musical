@@ -6,6 +6,7 @@
  * only with motion allowed (`.player[data-motion='full']`, D209); `prizes-step` in ANIMATIONS.md.
  */
 
+@layer app {
 /* The selector is sticky: a control focused under it (a sponsor's tile) scrolls into view below it, never behind. */
 .drawer--premis .sheet__body {
   scroll-padding-top: 5rem;
@@ -374,4 +375,5 @@
     translate: -1.5rem 0;
     opacity: 0;
   }
+}
 }
