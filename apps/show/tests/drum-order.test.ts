@@ -43,3 +43,17 @@ test("the round's drum follows its public drumSeed, journaled; each Spin carries
   assert.deepEqual(again?.ids, drumOrder(started.queue, started.drumSeed!).filter((id) => id === last || started.queue.indexOf(id) > 0));
   assert.equal(again?.selectId, last);
 });
+
+test("the state's round carries the round's public drumSeed, the journal's, and keeps it across a restart", () => {
+  const h = setup({ seed: 5, settings: { autoAdvance: false } });
+  h.send('unlock');
+  h.send('roundIntro');
+  const started = journalOf(h.send('newRound')).find((e) => e.kind === 'round.started');
+  assert.ok(started?.kind === 'round.started' && typeof started.drumSeed === 'number');
+  assert.equal(h.show.snapshot().round.drumSeed, started.drumSeed);
+  h.advance(FLOW.shuffleSec + 0.1);
+  h.send('next');
+  h.until(() => h.show.status === 'playing');
+  const r = setup({ seed: 9, restore: replayJournal(journalOf(h.log)), startSec: 0.5 });
+  assert.equal(r.show.snapshot().round.drumSeed, started.drumSeed, 'a restarted page keeps the order');
+});

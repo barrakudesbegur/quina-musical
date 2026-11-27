@@ -3819,7 +3819,7 @@ export class Show {
       current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, firstPlay: this.isFirstPlay(cur.songId), posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
       next: this.songInfo(this.queue[this.position + 1]),
       queue: { position: this.position, length: this.queue.length },
-      round: { ...this.round },
+      round: { ...this.round, drumSeed: this.drumSeed },
       game: { ...this.game, autoSounds: { ...this.game.autoSounds }, volumes: { ...this.volumes } },
       phase: this.phaseName(),
       heat: this.phaseStep(this.position + 1)?.heat ?? null,

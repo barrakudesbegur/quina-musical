@@ -72,6 +72,10 @@ export interface RoundInfo {
   side?: number;
   /** The pool its Queue is a Shuffle of: the side's (card-types.json). Optional in the type only, like `side`. */
   pool?: string;
+  /** PUBLIC (D237): the round's drum order, `drumOrder(songIds, drumSeed)`, as journaled on `round.started` and
+   * `round.resumed`, so the relay's feed can give it to phones on the venue LAN. Optional in the type only (added
+   * later in v1): the engine always sends it. */
+  drumSeed?: number;
   startedAtMs: number;
   targetEndMs: number;
   lineConfirmed: boolean;

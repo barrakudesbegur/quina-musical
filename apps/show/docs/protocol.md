@@ -165,7 +165,7 @@ holdMusic     boolean
 current       { songId, title, artist, hookId, firstPlay, posSec, endsAtMs } | null   firstPlay: the song's first play in this Game (D174): its slot is pace.firstPlaySec and it landed on its best hook
 next          { songId, title, artist } | null
 queue         { position, length }   position = Queue index of the last counted landing (−1 before the first)
-round         { number, kind, cardType, side, pool, startedAtMs, targetEndMs, lineConfirmed }   cardType: the printed card type it plays; only those cards count, any other fails its Check as wrongType; side: the card's side it plays (D178), pool: that side's pool, whose songs its Queue is a Shuffle of
+round         { number, kind, cardType, side, pool, drumSeed, startedAtMs, targetEndMs, lineConfirmed }   drumSeed: PUBLIC, the round's drum order (D237, below), as journaled; cardType: the printed card type it plays; only those cards count, any other fails its Check as wrongType; side: the card's side it plays (D178), pool: that side's pool, whose songs its Queue is a Shuffle of
 game          { pace, paceLocked, autoAdvance, autoAdvanceFinal, remoteShake, autoSounds, songsUntilWinner, phaseOverride, roundsTotal, holdMusicAfterSec, holdMusicOn, volumes, nextRecipe }
                 holdMusicOn and volumes are optional in the type only: the engine always sends them, volumes with every VOLUME_KEYS key (percent)
 phase         'early' | 'mid' | 'late' | 'final'   (the coming transition's)
@@ -288,7 +288,7 @@ On a show page with no journal (a replacement laptop, offline), the presenters r
 
 ## The drum's order and Spins (D237)
 
-The phones lay out and spin the same drum as the projector. A round's tiles are its Queue's songs (its pool's, which are public) in `drumOrder(songIds, drumSeed)` (packages/protocol/drum.ts: sorted by id, then a seeded Fisher–Yates), the ones still to play plus the last landing. `drumSeed` is PUBLIC, journaled on `round.started` and `round.resumed` (drawn on its own, so it tells nothing about the Queue; the record keeps it, and a restart keeps the order). Each Spin's `transition.scheduled` carries a PUBLIC `spinSeed`: with `spinStartAtMs`, `landAtMs`, `drum.minLaps` and the landing tile, `solveSpin` (apps/show/engine/src/wheel/solver.ts, pure) gives the projector's very trajectory. The landing tile stays private until `landAtMs` (U206). Backend projects both seeds for the phones, as `PublicRound.drumSeed` and `PublicSpin.spinSeed`.
+The phones lay out and spin the same drum as the projector. A round's tiles are its Queue's songs (its pool's, which are public) in `drumOrder(songIds, drumSeed)` (packages/protocol/drum.ts: sorted by id, then a seeded Fisher–Yates), the ones still to play plus the last landing. `drumSeed` is PUBLIC, journaled on `round.started` and `round.resumed` (drawn on its own, so it tells nothing about the Queue; the record keeps it, and a restart keeps the order). Each Spin's `transition.scheduled` carries a PUBLIC `spinSeed`: with `spinStartAtMs`, `landAtMs`, `drum.minLaps` and the landing tile, `solveSpin` (apps/show/engine/src/wheel/solver.ts, pure) gives the projector's very trajectory. The landing tile stays private until `landAtMs` (U206). Backend projects both seeds for the phones, as `PublicRound.drumSeed` and `PublicSpin.spinSeed`. The engine's state carries it too, as `round.drumSeed` (the same value as the round's `round.started` or `round.resumed`), so the relay's own feed can give it to phones on the venue LAN.
 
 ## The edition file (D116)
 
