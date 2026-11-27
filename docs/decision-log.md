@@ -1718,3 +1718,10 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 ### D257 · The A3 card's header, in one line · 2026-11-27 · Active; the year stamp Pending (the card design session)
 "make the a3 2x3 vertical also the same edits in the header. but on the right of the gomet put the nino from branding." The header is one line: the GOMET circle on the left, the Barrakudes figure from the branding beside it, the heading centred on the card (about 28 pt), then «CARTRÓ #n» and the QR. The covers sit above the songs' titles. «QUINA QUINA!» and «BARRAKUDES · 2026» leave the card. With the year also gone from the faint stamp (D254), nothing on the card names the edition any more, which was D85's way to spot last year's cards. The design session is asking whether «2026» goes back into the stamp, and whether this header is final.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D254. Lives in: requirements/songs-and-cards.md › The card.
+
+### D258 · The card's QR and heading never shrink · 2026-11-27 · Active
+Two rules for the printed cards:
+- "qr code cannot be made smaller, it is already hard to scan. it is not negotiable": the QR is never smaller than last year's 45 pt (16 mm);
+- "no, dont make the text smaller": the side's heading stays at 38 pt.
+And "if doesnt fit remove the nino". So the header's balance is the user's pick: A puts the GOMET and the QR on the left and the figure and the number on the right, with the heading centred; B drops the figure and puts the heading between the GOMET and the number, about 1 cm left of centre.
+By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D257 (its 28 pt). Lives in: requirements/songs-and-cards.md › The card.
