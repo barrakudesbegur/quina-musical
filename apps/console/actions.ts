@@ -4,7 +4,7 @@
 // remote's keys). Labels come from strings.ts, never typed here. Pure data and pure helpers, tested in
 // apps/show/tests/ui/ds/registry.test.ts.
 import { CONCEPTS } from '../../packages/ui/concepts.ts';
-import type { ButtonColor, ButtonPreset, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
+import type { ButtonColor, ButtonPreset, IconName, ToastPreset, WiiKeySpec } from '../../packages/ui/components/types.ts';
 import type { LineIconName } from '../../packages/ui/icons/line.ts';
 import type { ToastTone } from './logic/toasts.ts';
 import { S } from './strings.ts';
@@ -105,6 +105,40 @@ export const TOASTS = {
   error: { color: 'red', variant: 'paper', icon: 'warning', urgent: true },
   info: { color: 'navy', variant: 'paper', icon: 'check' },
 } as const satisfies Record<ToastTone, ToastPreset>;
+
+/** A MiniButton's preset (A4): its look and words; a toggle's `pressed` and a preset's `variant` come from the show. */
+export interface MiniPreset {
+  readonly label?: string;
+  readonly icon?: IconName;
+  readonly color?: 'grey' | 'gold' | 'green' | 'orange';
+  readonly pressedColor?: 'gold' | 'green';
+  readonly size?: 'xs' | 's' | 'm' | 'l';
+  readonly sound?: ButtonPreset['sound'];
+  readonly wii?: WiiKeySpec;
+}
+
+/** The console's small buttons (MiniButton, components-v2.md § 11.3: lock, auto, pace, future…). */
+export const MINI = {
+  // ---- Ritme (PacePanel)
+  lock: { icon: 'lock', label: S.pace.lock },
+  /** «Auto»: green while on, with HOME on its corner. */
+  auto: { icon: 'cycle', label: S.pace.auto, pressedColor: 'green', wii: { keys: ['home'], size: 'sm' } },
+  paceMinus: { icon: 'minus' },
+  pacePlus: { icon: 'plus' },
+  // ---- Futur
+  futureShow: { color: 'gold', icon: 'eye', label: S.future.show },
+  futureHide: { size: 's', icon: 'eye-off', label: S.future.hide },
+  // ---- the menu and its dialogs
+  labelSave: { label: S.menu.labelSave },
+  nightStart: { color: 'orange', icon: 'play', label: S.menu.start },
+  roundsMinus: { size: 's', icon: 'minus' },
+  roundsPlus: { size: 's', icon: 'plus' },
+  wiiConnect: { label: S.wii.connect },
+  wiiOpen: { label: S.wii.open },
+  wiiClose: { icon: 'close', label: S.wii.close },
+  winnerEdit: { size: 'xs', label: S.winnerForm.edit },
+  resumeUseSaved: { size: 's', label: S.resume.useSaved },
+} as const satisfies Record<string, MiniPreset>;
 
 /** The controls that show together on one screen: no two may share a Wii key (the registry test checks it). */
 export const SCREENS = {

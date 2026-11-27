@@ -12,6 +12,8 @@
   count's curve, with no possible winners (Dempeus says who is left); the list counts down to the last one standing.
 -->
 <script lang="ts">
+  import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
+  import { MINI } from '../actions.ts';
   import { roundCardType, roundSide } from '@quina/protocol';
   import { songTitle } from '../../../packages/ui/data/catalog.ts';
   import { getConsole } from '../context.ts';
@@ -20,7 +22,6 @@
   import { standingFuture } from '../logic/standing.ts';
   import { forecastTargets, upcomingRows, type Target, type UpcomingTag } from '../logic/upcoming.ts';
   import { S } from '../strings.ts';
-  import Icon from './Icon.svelte';
   import SongRow from './SongRow.svelte';
 
   const model = getConsole();
@@ -74,9 +75,7 @@
     {#if !model.futureRevealed}
       <div class="future__hidden">
         <p class="future__hidden-note">{S.future.hiddenNote}</p>
-        <button type="button" class="mini future__show" data-anim="press" aria-controls="{uid}-body" onclick={() => model.revealFuture(true)}>
-          <Icon name="eye" /><span>{S.future.show}</span>
-        </button>
+        <MiniButton {...MINI.futureShow} class="future__show" aria-controls="{uid}-body" onclick={() => model.revealFuture(true)} />
       </div>
     {:else}
       <div class="future__body" id="{uid}-body" data-anim="reveal" data-testid={standing ? 'future-standing' : 'future'}>
@@ -141,9 +140,7 @@
         <section class="future__upcoming" aria-labelledby="{uid}-upcoming">
           <header class="future__upcoming-head">
             <h3 class="panel__label" id="{uid}-upcoming">{S.future.upcoming}</h3>
-            <button type="button" class="mini future__hide" data-anim="press" onclick={() => model.revealFuture(false)}>
-              <Icon name="eyeOff" /><span>{S.future.hide}</span>
-            </button>
+            <MiniButton {...MINI.futureHide} class="future__hide" onclick={() => model.revealFuture(false)} />
           </header>
           {#if rows === null}
             <p class="note">{S.future.waiting}</p>

@@ -147,7 +147,7 @@
   color: var(--color-on-danger);
 }
 
-/* A small sticker button (Bloquejar, Auto, the presets, Mirar el futur…) */
+/* A small sticker button not on MiniButton yet (Cerca's future toggle; the rest are MiniButton, packages/ui) */
 .mini {
   position: relative;
   display: inline-flex;
@@ -973,21 +973,14 @@
 
 .pace__toggle {
   flex: 1;
+  --mini-height: 0;
+  --mini-pad: 10px;
+  --mini-label: var(--text-sm);
+  --mini-icon: 1.25rem;
+}
+
+.pace__toggle > .mini-button__piece {
   justify-content: flex-start;
-  min-height: 0;
-  padding: 0 10px;
-  font-size: var(--text-sm);
-}
-
-.pace__toggle .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.pace__toggle[data-toggle='auto'][aria-pressed='true'] {
-  background: var(--color-ok);
-  color: var(--color-on-ok);
-  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.22), var(--shadow-drop);
 }
 
 .pace__row {
@@ -997,46 +990,25 @@
 
 .pace__step {
   flex: none;
-  min-width: 40px;
-  min-height: 52px;
-  padding: 0;
+  --mini-height: 52px;
+  --mini-width: 40px;
 }
 
-/* A preset: its name, with its seconds small and faded underneath */
+/* A preset: its name, with its seconds small and faded underneath (MiniButton's sub); the recommended one dashed
+   (R11), whatever is selected */
 .pace__preset {
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  min-height: 52px;
-  padding: 0 6px;
-  font-size: var(--text-sm);
+  --mini-height: 52px;
+  --mini-pad: 6px;
+  --mini-label: var(--text-sm);
   line-height: 1.05;
-  text-align: center;
-  white-space: normal;
   font-variant-numeric: tabular-nums;
-}
-
-.pace__name,
-.pace__sec {
-  white-space: nowrap;
 }
 
 /* A preset without a name ("30 s") needs only its seconds' width */
 .pace__preset:not([data-named]) {
   flex: none;
-  padding-inline: 8px;
-}
-
-.pace__sec {
-  font-size: 0.75rem;
-  font-weight: 800;
-  opacity: 0.6;
-}
-
-/* The recommended preset: a dashed border, whatever is selected */
-.pace__preset[data-recommended] {
-  border-style: dashed;
+  --mini-pad: 8px;
 }
 
 /* The Schedule recovery notice (orange) */
@@ -1831,11 +1803,9 @@
 }
 
 .future__show {
-  min-height: calc(var(--tap-min) + 4px);
-  padding: 0 1.25rem;
-  background: var(--color-gold);
-  color: var(--color-ink);
-  font-size: 1.125rem;
+  --mini-height: calc(var(--tap-min) + 4px);
+  --mini-pad: 1.25rem;
+  --mini-label: 1.125rem;
 }
 
 /* The upcoming songs get the wider side: their tags are long ("quina: falten 26") */
@@ -1902,15 +1872,6 @@
   color: var(--color-ink);
 }
 
-/* «Amagar», beside the upcoming songs' title */
-.future__hide {
-  min-height: 34px;
-  padding: 0 10px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  font-size: var(--text-sm);
-  box-shadow: 0 3px 0 var(--color-ink);
-}
 
 /* An upcoming song's tag: the songs left until the next win, or the win it brings (green) */
 .upcoming-tag {
@@ -3872,13 +3833,6 @@
 
 .menu-group .winners-list__edit {
   flex: none;
-  min-height: 30px;
-  padding: 0 9px;
-  border-width: var(--line-width-thin);
-  border-radius: var(--radius-sm);
-  background: var(--color-chip);
-  font-size: 0.8125rem;
-  box-shadow: 0 2px 0 var(--color-ink);
 }
 
 .menu-group .winners-list__notes {
@@ -4105,13 +4059,16 @@ kbd {
   font-size: 0.78rem;
 }
 
-.menu-group__start {
+.menu-group__start > .mini-button__piece {
   justify-content: flex-start;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
 }
 
+/* Disabled once the night has started: the chip's quiet grey, not a faded orange, with no edge */
 .menu-group__start:disabled {
+  --ds-edge: 0px;
+}
+
+.menu-group__start:disabled > .mini-button__piece {
   background: var(--color-chip);
   color: var(--color-text-muted);
   box-shadow: none;
@@ -4415,16 +4372,6 @@ kbd {
   white-space: nowrap;
 }
 
-.menu-group .stepper__button {
-  width: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: var(--radius-sm);
-  background: var(--color-chip);
-  box-shadow: 0 2px 0 var(--color-ink);
-}
 
 .menu-group .stepper__value {
   min-width: 2ch;
@@ -5179,11 +5126,6 @@ kbd {
   translate: 0 -50%;
 }
 
-.pace__toggle > .wii-badge {
-  top: -9px;
-  right: -9px;
-}
-
 .pause-panel .action > .wii-badge {
   top: -9px;
   right: -9px;
@@ -5783,7 +5725,7 @@ kbd {
 
 /* The Wii keys inside a Button: the button places them (R7: the same inset from the top and the side, centred when
    the button is short), so the badge itself stays in its box. After the badge's own corner rules, to win over them. */
-:is(.button__wii, .two-level__strip-wii) > .wii-badge[data-size] {
+:is(.button__wii, .two-level__strip-wii, .mini-button__wii) > .wii-badge[data-size] {
   position: relative;
   inset: auto;
   translate: none;

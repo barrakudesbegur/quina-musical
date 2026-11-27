@@ -9,13 +9,14 @@
   final phase is in the menu.
 -->
 <script lang="ts">
+  import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
+  import { MINI } from '../actions.ts';
   import { PACE_FINE_STEP_SEC, PACE_PRESETS_SEC } from '@quina/protocol';
   import { getConsole } from '../context.ts';
   import { DEFAULT_PACE_SEC } from '../logic/engine-rules.ts';
   import { recommendedPreset, recoveryNotice } from '../logic/pace-panel.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
-  import WiiBadge from './WiiBadge.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -39,45 +40,29 @@
           <span class="pace__first" title={S.pace.firstPlayNote} data-testid="pace-first-play">{S.pace.firstPlay} <b>{S.pace.value(Math.round(snap.pace.firstPlaySec))}</b></span>
         </h2>
         <div class="pace__row" role="group" aria-label={S.pace.presets}>
-          <button type="button" class="mini pace__step" data-anim="press" disabled={!paceOk} aria-label={S.pace.minusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: -PACE_FINE_STEP_SEC })}>
-            <Icon name="minus" alone />
-          </button>
+          <MiniButton {...MINI.paceMinus} class="pace__step" disabled={!paceOk} aria-label={S.pace.minusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: -PACE_FINE_STEP_SEC })} />
           {#each presets as preset (preset.sec)}
             {@const isRecommended = preset.sec === recommended}
-            <button
-              type="button"
-              class="mini pace__preset"
-              data-anim="press"
+            <MiniButton
+              class="pace__preset"
+              label={preset.name ?? S.pace.value(preset.sec)}
+              sub={preset.name ? S.pace.value(preset.sec) : null}
+              variant={isRecommended ? 'dashed' : 'solid'}
               data-pace={preset.sec}
               data-named={preset.name !== null || undefined}
-              data-recommended={isRecommended || undefined}
               title={isRecommended ? S.pace.recommended : undefined}
               aria-label={S.pace.presetLabel(preset.name, preset.sec, isRecommended)}
-              aria-pressed={snap.pace.sec === preset.sec}
+              pressed={snap.pace.sec === preset.sec}
               disabled={!paceOk}
               onclick={() => model.act('setPace', { pace: preset.sec })}
-            >
-              {#if preset.name}
-                <span class="pace__name">{preset.name}</span>
-                <span class="pace__sec">{S.pace.value(preset.sec)}</span>
-              {:else}
-                <span class="pace__name">{S.pace.value(preset.sec)}</span>
-              {/if}
-            </button>
+            />
           {/each}
-          <button type="button" class="mini pace__step" data-anim="press" disabled={!paceOk} aria-label={S.pace.plusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: PACE_FINE_STEP_SEC })}>
-            <Icon name="plus" alone />
-          </button>
+          <MiniButton {...MINI.pacePlus} class="pace__step" disabled={!paceOk} aria-label={S.pace.plusLabel(PACE_FINE_STEP_SEC)} onclick={() => model.act('setPace', { delta: PACE_FINE_STEP_SEC })} />
         </div>
       </div>
       <div class="pace__toggles">
-        <button type="button" class="mini pace__toggle" data-toggle="lock" data-anim="press" aria-pressed={snap.pace.locked} title={S.pace.lockNote} disabled={!paceOk} onclick={() => model.act('setPace', { locked: !snap.pace.locked })}>
-          <Icon name="lock" /><span>{S.pace.lock}</span>
-        </button>
-        <button type="button" class="mini pace__toggle" data-toggle="auto" data-anim="press" aria-pressed={snap.game.autoAdvance} title={S.pace.autoNote} disabled={!gameOk} onclick={() => model.act('setGame', { autoAdvance: !snap.game.autoAdvance })}>
-          <Icon name="auto" /><span>{S.pace.auto}</span>
-          <WiiBadge button="home" size="sm" />
-        </button>
+        <MiniButton {...MINI.lock} class="pace__toggle" data-toggle="lock" pressed={snap.pace.locked} title={S.pace.lockNote} disabled={!paceOk} onclick={() => model.act('setPace', { locked: !snap.pace.locked })} />
+        <MiniButton {...MINI.auto} class="pace__toggle" data-toggle="auto" pressed={snap.game.autoAdvance} title={S.pace.autoNote} disabled={!gameOk} onclick={() => model.act('setGame', { autoAdvance: !snap.game.autoAdvance })} />
       </div>
     </div>
     {#if notice}

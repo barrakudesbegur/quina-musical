@@ -6,12 +6,13 @@
   and the preview shows only what is already public (the round, how many songs, the last landed song).
 -->
 <script lang="ts">
+  import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
   import { getConsole } from '../context.ts';
   import { readResume, resumeSummary } from '../../../packages/rules/resume.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
-  import { ACTIONS } from '../actions.ts';
+  import { ACTIONS, MINI } from '../actions.ts';
   import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
 
   const model = getConsole();
@@ -58,7 +59,7 @@
     />
   </label>
   {#if model.savedResume && readResume(draft).text !== readResume(model.savedResume).text}
-    <button type="button" class="choice" data-anim="press" onclick={() => (draft = model.savedResume ?? '')}>{S.resume.useSaved}</button>
+    <MiniButton {...MINI.resumeUseSaved} onclick={() => (draft = model.savedResume ?? '')} />
   {/if}
 
   {#if summary}

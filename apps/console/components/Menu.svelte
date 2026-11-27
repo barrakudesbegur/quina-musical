@@ -15,6 +15,7 @@
   «Tanca» and Esc close it, a tap outside doesn't (U188 open); it slides back out as it closes.
 -->
 <script lang="ts">
+  import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
   import { PHASE_NAMES, type PhaseName } from '@quina/protocol';
   import { untrack } from 'svelte';
   import { formatClock, formatDrift } from '../../../packages/rules/time.ts';
@@ -25,7 +26,7 @@
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
   import LanQr from './LanQr.svelte';
-  import { ACTIONS } from '../actions.ts';
+  import { ACTIONS, MINI } from '../actions.ts';
   import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
@@ -99,7 +100,7 @@
             <span class="field__label">{S.menu.labelField}</span>
             <input id="{uid}-label" type="text" maxlength={CONSOLE.labelMaxLength} autocomplete="off" bind:value={labelDraft} />
           </label>
-          <button type="submit" class="mini" data-anim="press">{S.menu.labelSave}</button>
+          <MiniButton {...MINI.labelSave} type="submit" />
         </form>
         <div class="choice-group" role="group" aria-label={S.menu.labelField}>
           {#each CONSOLE.labelPresets as preset (preset)}
@@ -130,9 +131,9 @@
         <p class="menu-wii__row">
           <span class="wii-status" data-state={wii.status}>{S.wii.status[wii.status]}</span>
           {#if wii.status === 'disconnected' || wii.status === 'lost'}
-            <button type="button" class="mini" data-anim="press" onclick={() => void wii.connect()}>{S.wii.connect}</button>
+            <MiniButton {...MINI.wiiConnect} onclick={() => void wii.connect()} />
           {/if}
-          <button type="button" class="mini" data-anim="press" onclick={onwii}>{S.wii.open}</button>
+          <MiniButton {...MINI.wiiOpen} onclick={onwii} />
         </p>
         <p class="note">{S.menu.wiiNote}</p>
         <Switch label={S.wii.shake} note={`${S.wii.shakeNote}. ${S.wii.shakeDefault}`} on={wii.shake} disabled={!wii.canSetShake} onchange={(on) => wii.setShake(on)} />
@@ -150,13 +151,9 @@
         {#if snap}
           <div class="menu-group__row stepper">
             <span class="stepper__label" id="{uid}-rounds">{S.menu.roundsTotal}</span>
-            <button type="button" class="stepper__button" data-anim="press" aria-label={S.menu.roundsMinus} disabled={!model.can('setGame') || snap.game.roundsTotal <= 1} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal - 1 })}>
-              <Icon name="minus" />
-            </button>
+            <MiniButton {...MINI.roundsMinus} class="stepper__button" aria-label={S.menu.roundsMinus} disabled={!model.can('setGame') || snap.game.roundsTotal <= 1} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal - 1 })} />
             <output class="stepper__value" aria-labelledby="{uid}-rounds">{snap.game.roundsTotal}</output>
-            <button type="button" class="stepper__button" data-anim="press" aria-label={S.menu.roundsPlus} disabled={!model.can('setGame') || snap.game.roundsTotal >= 20} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal + 1 })}>
-              <Icon name="plus" />
-            </button>
+            <MiniButton {...MINI.roundsPlus} class="stepper__button" aria-label={S.menu.roundsPlus} disabled={!model.can('setGame') || snap.game.roundsTotal >= 20} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal + 1 })} />
           </div>
           <p class="menu-end">
             <span class="menu-end__text">
@@ -166,9 +163,7 @@
             <span class="menu-end__drift" data-tone={driftTone(snap.schedule.gameDriftSec)}>{formatDrift(snap.schedule.gameDriftSec)}</span>
           </p>
         {/if}
-        <button type="button" class="mini menu-group__start" data-anim="press" disabled={!startable} title={flow.scene !== 'before' ? S.menu.started : undefined} onclick={startNight}>
-          <Icon name="play" /><span>{S.menu.start}</span>
-        </button>
+        <MiniButton {...MINI.nightStart} class="menu-group__start" disabled={!startable} title={flow.scene !== 'before' ? S.menu.started : undefined} onclick={startNight} />
         <p class="note">{S.menu.startNote}</p>
       </section>
 

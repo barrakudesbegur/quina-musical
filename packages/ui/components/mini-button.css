@@ -1,0 +1,119 @@
+/*
+ * A4 · MiniButton (components-v2.md § 2; MiniButton.svelte), on the design resources (../ds/resources.css): the press
+ * (R4), the palette slots and the coloured edge (R2), the ring (R1), the dashed «suggested» look with its dashed edge
+ * (R11, #25). Every size is a custom property in :where(), so a context (the pace row, the finale's head, the menu)
+ * tunes it by variables, never by restyling the parts.
+ */
+:where(.mini-button) {
+  --ds-radius: var(--radius-md);
+  --ds-border: var(--line-width);
+  --ds-drop: 4px;
+  --ds-edge: 4px;
+  --ds-shine: 0px;
+  --mini-height: var(--tap-min);
+  --mini-pad: var(--space-3);
+  --mini-gap: 0.45em;
+  --mini-label: var(--text-md);
+  --mini-icon: 1.125rem;
+  --mini-sub: 0.75rem;
+}
+
+/* At rest, grey is the soft chip with no edge (a coloured fill keeps its own, R2) */
+:where(.mini-button[data-rest='grey']) {
+  --ds-edge: 0px;
+}
+
+/* D-h (#41, #87): the compact height for tight spots («Editar» on the finale's head) */
+:where(.mini-button[data-size='xs']) {
+  --ds-drop: 3px;
+  --ds-edge: 3px;
+  --mini-height: 2rem;
+  --mini-pad: var(--space-2);
+  --mini-label: var(--text-sm);
+  --mini-icon: 1rem;
+}
+
+:where(.mini-button[data-size='s']) {
+  --mini-height: var(--tap-dense, 44px);
+  --mini-pad: var(--space-2);
+  --mini-label: var(--text-sm);
+}
+
+:where(.mini-button[data-size='l']) {
+  --mini-height: 3.75rem;
+  --mini-label: 1.3125rem;
+  --mini-icon: 1.5rem;
+  --mini-sub: 0.8125rem;
+}
+
+.mini-button__piece {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mini-gap);
+  min-height: var(--mini-height);
+  padding: 0 var(--mini-pad);
+  color: var(--palette-contrast);
+  font-family: var(--font-body);
+  font-size: var(--mini-label);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* At rest, grey is the soft chip in the theme's text colour, with no edge (a coloured fill keeps its own, R2). */
+/* At rest, grey is the soft chip in the theme's text colour. */
+.mini-button[data-rest='grey'] > .mini-button__piece {
+  background: var(--color-chip);
+  color: var(--color-text);
+  box-shadow: none;
+}
+
+.mini-button__piece > .icon {
+  flex: none;
+  width: var(--mini-icon);
+  height: var(--mini-icon);
+}
+
+.mini-button[data-icon-only] > .mini-button__piece {
+  padding: 0;
+  min-width: var(--mini-width, var(--mini-height));
+}
+
+.mini-button__words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* A mini keeps its words' width in a row (it doesn't shrink below them, as the resource's min-width: 0 would let it) */
+.mini-button.ds-pushable {
+  min-width: auto;
+}
+
+/* One line: a mini's row is a fixed height, so a label too long for a width its context sets ends with an ellipsis
+   rather than wrapping. */
+.mini-button__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-button__sub {
+  font-size: var(--mini-sub);
+  font-weight: 800;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The Wii key on its top-right corner, overhanging it (HOME on «Auto») */
+.mini-button__wii {
+  position: absolute;
+  z-index: 2;
+  top: -9px;
+  right: -9px;
+  line-height: 1;
+  pointer-events: none;
+}
