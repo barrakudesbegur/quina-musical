@@ -7,7 +7,7 @@
 //   with empty storage but a copy of the cookies, so it restores the cards from there (D221).
 // The transforms are pure; PlayerStorage is the thin I/O wrapper around a Storage and the cookie.
 import { PLAYER_CONFIG } from '../config.ts';
-import { cardCookieClear, cardCookieWrite, readCardCookie } from './card-cookie.ts';
+import { cardCookieClear, cardCookieWrite, readCardCookie, type CookieScope } from './card-cookie.ts';
 import { isAraView, type AraView } from './tabs.ts';
 
 export const DATA_VERSION = 1;
@@ -203,22 +203,21 @@ export class MemoryStorage implements StorageLike {
   }
 }
 
-/** The page's cookies (document.cookie), or a fake in tests. */
-export interface CookieJarLike {
-  /** Every cookie of the page, `a=1; b=2`. */
+/** The page's cookies (document.cookie), or a fake in tests, and where ours lives. */
+export interface CookieJarLike extends CookieScope {
+  /** Every cookie the page sees, `a=1; b=2`. */
   read(): string;
   /** One `document.cookie = …` assignment. */
   write(assignment: string): void;
-  /** The page is on https (the cookie gets `Secure`). */
-  readonly secure: boolean;
 }
 
-/** document.cookie, if there is one. */
-export function documentCookies(): CookieJarLike | null {
+/** document.cookie, with our cookie under `path` (the app's home, '/26/'), if there is a document. */
+export function documentCookies(path: string): CookieJarLike | null {
   if (typeof document === 'undefined') return null;
   return {
     read: () => document.cookie,
     write: (assignment) => void (document.cookie = assignment),
+    path,
     secure: location.protocol === 'https:',
   };
 }
@@ -283,7 +282,7 @@ export class PlayerStorage {
       // nothing to clear
     }
     try {
-      this.cookies?.write(cardCookieClear(this.cookies.secure));
+      if (this.cookies) this.cookies.write(cardCookieClear(this.cookies));
     } catch {
       // no cookies here
     }
@@ -301,7 +300,7 @@ export class PlayerStorage {
   private mirror(data: PlayerData): void {
     if (!this.cookies) return;
     try {
-      this.cookies.write(cardCookieWrite(data.edition, data.cards, this.cookies.secure));
+      this.cookies.write(cardCookieWrite(data.edition, data.cards, this.cookies));
     } catch {
       // no cookies here (a sandboxed page): localStorage still has them
     }

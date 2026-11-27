@@ -2,7 +2,7 @@
 // the address after a link is taken in, the review hints, and which feed the URL picks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { devHints, homeHref, legacyCardIds, parseRoute } from '../../../../player/logic/router.ts';
+import { devHints, homeHref, homePath, legacyCardIds, parseRoute, settledHref } from '../../../../player/logic/router.ts';
 import { chooseFeed, isLocalHost } from '../../../../player/feed/feed.ts';
 
 const opts = { edition: '26', base: '/player/' };
@@ -50,6 +50,23 @@ test('after taking a link in, the address drops the card and c= but keeps dev hi
   assert.equal(homeHref(url('/', '?c=123'), opts), '/26/');
   assert.equal(homeHref(url('/player/', '?demo=play', '#/26/123'), opts), '/player/?demo=play');
   assert.equal(homeHref(url('/player/', '?c=1&feed=relay'), opts), '/player/?feed=relay');
+});
+
+test('the app settles on this year’s home before it reads the cards, the root included (the cards’ cookie path)', () => {
+  const prod = { edition: '26' };
+  assert.equal(settledHref(url('/26/123'), prod), '/26/');
+  assert.equal(settledHref(url('/'), prod), '/26/');
+  assert.equal(settledHref(url('/index.html'), prod), '/26/');
+  assert.equal(settledHref(url('/', '?c=123'), prod), '/26/');
+  assert.equal(settledHref(url('/25/88'), prod), '/26/');
+  assert.equal(settledHref(url('/26'), prod), '/26/');
+  assert.equal(settledHref(url('/26/'), prod), null);
+  assert.equal(settledHref(url('/26/', '?feed=relay'), prod), null);
+  assert.equal(settledHref(url('/player/', '?demo=play'), opts), null);
+  assert.equal(settledHref(url('/player/', '', '#/26/123'), opts), '/player/');
+  assert.equal(homePath(url('/26/123'), prod), '/26/');
+  assert.equal(homePath(url('/', '?feed=relay'), prod), '/26/');
+  assert.equal(homePath(url('/player/', '?demo=play'), opts), '/player/');
 });
 
 test('review hints: the home screen\'s view, a drawer to open and demo cards', () => {

@@ -3,8 +3,9 @@
 // storage, and iOS copies only the browser's cookies into it, once, when it's added. The app restores the cards
 // from this copy when its localStorage holds nothing (PlayerStorage.load), so the icon opens on the player's cards.
 //
-// It holds only what a card list needs: each card's number, icon and name, for this edition. It is sent with every
-// request to our own site (that's what a cookie is) and read by nothing on the server. Pure: the cookie string in,
+// It holds only what a card list needs: each card's number, icon and name, for this edition. Its path is the app's
+// home (`/26/`, where every player page settles: logic/router.ts settledHref) and it's SameSite=Strict, so it rides
+// only on the player's own page loads, never on /api/ or /feed; nothing on the server reads it. Pure: the cookie string in,
 // the cookie string out; logic/storage.ts does the document.cookie I/O.
 import { PLAYER_CONFIG } from '../config.ts';
 import type { SavedCard } from './storage.ts';
@@ -33,13 +34,21 @@ export function cardCookieValue(edition: string, cards: readonly CookieCard[]): 
   return value();
 }
 
-/** The `document.cookie` assignment that keeps this list (`secure` on https; a page on localhost may lack it). */
-export function cardCookieWrite(edition: string, cards: readonly CookieCard[], secure: boolean): string {
-  return `${CARD_COOKIE}=${cardCookieValue(edition, cards)}; Path=/; Max-Age=${MAX_AGE_S}; SameSite=Lax${secure ? '; Secure' : ''}`;
+/** Where the cookie lives: the app's home path ('/26/'), and `secure` on https (a page on localhost may lack it). */
+export interface CookieScope {
+  readonly path: string;
+  readonly secure: boolean;
+}
+
+const attributes = ({ path, secure }: CookieScope): string => `Path=${path}; SameSite=Strict${secure ? '; Secure' : ''}`;
+
+/** The `document.cookie` assignment that keeps this list. */
+export function cardCookieWrite(edition: string, cards: readonly CookieCard[], scope: CookieScope): string {
+  return `${CARD_COOKIE}=${cardCookieValue(edition, cards)}; Max-Age=${MAX_AGE_S}; ${attributes(scope)}`;
 }
 
 /** The `document.cookie` assignment that forgets it ("Esborrar dades"). */
-export const cardCookieClear = (secure: boolean): string => `${CARD_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure ? '; Secure' : ''}`;
+export const cardCookieClear = (scope: CookieScope): string => `${CARD_COOKIE}=; Max-Age=0; ${attributes(scope)}`;
 
 const validId = (id: number): boolean => Number.isInteger(id) && id >= PLAYER_CONFIG.cardIdMin && id <= PLAYER_CONFIG.cardIdMax;
 

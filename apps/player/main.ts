@@ -19,7 +19,7 @@ import { chooseFeed, type FeedChoice, type PlayerFeed } from './feed/feed.ts';
 import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/cleanup.ts';
 import { watchUpdates } from './device/updates.ts';
 import { InstallState } from './device/install.svelte.ts';
-import { devHints, homeHref, parseRoute, type DevHints } from './logic/router.ts';
+import { devHints, homePath, parseRoute, settledHref, type DevHints } from './logic/router.ts';
 import { MemoryStorage, PlayerStorage, addCard, documentCookies, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
 import { loadBootState } from './logic/boot-cache.ts';
 
@@ -88,8 +88,14 @@ async function main(): Promise<void> {
   const choice = chooseFeed({ search: location.search, hostname: location.hostname, dev: import.meta.env.DEV });
   const hints = devHints(location.search);
   const route = parseRoute(location, { edition });
-  // The cards live in localStorage, with a copy in a cookie for an iPhone's Home Screen app (logic/card-cookie.ts).
-  const storage = choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore(), PLAYER_CONFIG.storageKey, documentCookies());
+  // The app settles on this year's home (/26/) before it reads the cards: a reload never adds a removed card again,
+  // and every page sits under the path of the cards' cookie (logic/router.ts settledHref).
+  const settled = settledHref(location, { edition });
+  if (settled) history.replaceState(null, '', settled);
+  // The cards live in localStorage, with a copy in a cookie for an iPhone's Home Screen app (logic/card-cookie.ts),
+  // scoped to the home's path, so it never rides on /api/ or /feed.
+  const storage =
+    choice.kind === 'demo' ? await demoStorage(choice.demo ?? 'play', hints) : new PlayerStorage(localStore(), PLAYER_CONFIG.storageKey, documentCookies(homePath(location, { edition })));
   const feed = await createFeed(choice);
   const sounds = new Sounds();
   registerTouchSounds(sounds);
@@ -104,7 +110,6 @@ async function main(): Promise<void> {
   const app = new PlayerApp({ feed, storage, sounds, edition, initialState, bootStore, install, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
 
   app.openRoute(route);
-  if (route.kind !== 'home') history.replaceState(null, '', homeHref(location, { edition }));
   if (hints.view) app.araSession = hints.view;
   if (hints.open) app.drawers = [{ kind: hints.open }];
 

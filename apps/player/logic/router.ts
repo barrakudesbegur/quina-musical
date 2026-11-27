@@ -90,6 +90,20 @@ export function homeHref(url: UrlParts, { edition, base = PLAYER_CONFIG.devBase 
   return `${path}${query}`;
 }
 
+/**
+ * The address the app settles on as it opens, before it reads the player's cards: this year's home (`/26/`, or
+ * `/player/` in development) whatever link opened it, the root (`/`) and last year's `/?c=` included. So every
+ * production page sits under `/<edition>/`, the path of the cards' cookie (logic/card-cookie.ts), and an iPhone adds
+ * that address to its Home Screen. Null when the address is already it.
+ */
+export function settledHref(url: UrlParts, options: RouterOptions): string | null {
+  const href = homeHref(url, options);
+  return href === `${url.pathname}${url.search}${url.hash}` ? null : href;
+}
+
+/** The cookie path the app's home lives under ('/26/', or '/player/' in development). */
+export const homePath = (url: UrlParts, options: RouterOptions): string => homeHref(url, options).replace(/\?.*$/, '');
+
 export interface DevHints {
   /** The home screen's view (the switch under the drum). */
   view: AraView | null;

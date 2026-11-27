@@ -11,6 +11,7 @@ class FakeJar implements CookieJarLike {
   readonly jar = new Map<string, string>();
   readonly writes: string[] = [];
   readonly secure = true;
+  readonly path = '/26/';
   read(): string {
     return [...this.jar].map(([k, v]) => `${k}=${v}`).join('; ');
   }
@@ -68,10 +69,11 @@ test('a long list stays under the size a browser keeps: the last names go first,
   assert.equal(back?.at(-1)?.name, null);
 });
 
-test('the cookie: the whole site, a year and more, first-party only, Secure on https', () => {
-  assert.equal(cardCookieWrite('26', [{ id: 5, color: 1, name: null }], true), `${CARD_COOKIE}=1~26~5.1.; Path=/; Max-Age=34560000; SameSite=Lax; Secure`);
-  assert.doesNotMatch(cardCookieWrite('26', [], false), /Secure/);
-  assert.match(cardCookieClear(true), /Max-Age=0/);
+test('the cookie: only the app’s own pages (/26/), a year and more, never sent from another site, Secure on https', () => {
+  const scope = { path: '/26/', secure: true };
+  assert.equal(cardCookieWrite('26', [{ id: 5, color: 1, name: null }], scope), `${CARD_COOKIE}=1~26~5.1.; Max-Age=34560000; Path=/26/; SameSite=Strict; Secure`);
+  assert.doesNotMatch(cardCookieWrite('26', [], { path: '/player/', secure: false }), /Secure/);
+  assert.equal(cardCookieClear(scope), `${CARD_COOKIE}=; Max-Age=0; Path=/26/; SameSite=Strict; Secure`);
 });
 
 test('every save copies the card list into the cookie', () => {
@@ -107,7 +109,7 @@ test('an iPhone’s Home Screen app: empty localStorage, the copied cookie → t
 
 test('the cookie never overrides data the app already has, even an empty list (the cards were removed)', () => {
   const jar = new FakeJar();
-  jar.write(cardCookieWrite('26', [{ id: 9, color: 1, name: null }], true));
+  jar.write(cardCookieWrite('26', [{ id: 9, color: 1, name: null }], { path: '/26/', secure: true }));
   const local = new MemoryStorage();
   local.setItem('k', JSON.stringify(emptyData('26')));
   const { data, outcome } = new PlayerStorage(local, 'k', jar).load('26');
@@ -119,7 +121,7 @@ test('the cookie never overrides data the app already has, even an empty list (t
 
 test('another edition’s cookie restores nothing', () => {
   const jar = new FakeJar();
-  jar.write(cardCookieWrite('25', [{ id: 9, color: 1, name: null }], true));
+  jar.write(cardCookieWrite('25', [{ id: 9, color: 1, name: null }], { path: '/26/', secure: true }));
   assert.equal(new PlayerStorage(new MemoryStorage(), 'k', jar).load('26').outcome, 'fresh');
 });
 
@@ -136,6 +138,7 @@ test('"Esborrar dades" forgets the cookie too, so nothing comes back', () => {
 test('cookies that throw (a sandboxed page) never stop the storage', () => {
   const broken: CookieJarLike = {
     secure: true,
+    path: '/26/',
     read: () => {
       throw new Error('denied');
     },
