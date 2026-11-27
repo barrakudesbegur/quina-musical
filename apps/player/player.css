@@ -4422,9 +4422,8 @@ html:has(.drawer[open]) {
 }
 
 /* The flash and the particles: a manual popover, in the top layer over any open drawer (D90). Its browser styles
-   (a centred, bordered box) are undone: it covers the screen and never takes a tap. No :popover-open in the selector:
-   a browser without popovers would drop the whole rule, and these author styles beat the browser's anyway. */
-.your-song-top {
+   (a centred, bordered box) are undone: it covers the screen and never takes a tap. */
+.your-song-top:popover-open {
   position: fixed;
   inset: 0;
   width: 100%;

@@ -38,7 +38,7 @@
   $effect(() => {
     void layer;
     const el = top;
-    if (!el || typeof el.showPopover !== 'function') return;
+    if (!el) return;
     if (el.matches(':popover-open')) el.hidePopover();
     el.showPopover();
   });

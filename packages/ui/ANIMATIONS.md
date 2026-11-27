@@ -35,7 +35,6 @@ Status: a draft for the user's review (2026-11-24). Numbers are starting points,
    - `--ease-bounce` is a real spring, drawn with CSS `linear()`. It starts fast, overshoots to 1.11 at about 35 % of the time, swings back once to 0.99 and settles by the end. Every "bounce", "pop", "slam" and "stamp" below uses it, so the overshoot of a move is about 11 % of its distance: scale 2 → 1 dips to 0.89; 0.4 → 1 peaks at 1.07.
    - Keyframes don't fake an overshoot with extra stops. The timing function does it. Stops stay only where the motion itself has steps, such as a squash or a pop that settles somewhere else.
    - `--ease-kick` is the same spring let go with a push: it shoots past the end to 1.66 of the distance at about 17 % of the time, dips once to 0.93 and settles. Only `corner-press` uses it, so a 6 % dip springs back to 1.04.
-   - Browsers without `linear()` (Safari before 17.2) get one-hump curves instead: `cubic-bezier(0.34, 1.56, 0.64, 1)` for `--ease-bounce`, `cubic-bezier(0.2, 3, 0.5, 1)` for `--ease-kick`.
 
 ## Design resources (every surface; `packages/ui/ds/resources.css`)
 

@@ -155,7 +155,6 @@
   text-transform: uppercase;
   text-wrap: balance;
   overflow-wrap: break-word;
-  -webkit-hyphens: manual;
   hyphens: manual;
   -webkit-text-stroke: var(--button-stroke) var(--color-ink);
   paint-order: stroke fill;

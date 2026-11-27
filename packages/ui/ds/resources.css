@@ -19,7 +19,7 @@
  *   R9 long text    .ds-long-text, .ds-clamp-2
  *   R11 marks       recommended (ring gold + .ds-ribbon), suggested (data-variant="dashed": the 3D edge dashed too),
  *                   default action (ring orange + the A key)
- * Browser floor: iOS/iPadOS 15.4 (no nesting, no @container, no @starting-style); color-mix() only behind @supports.
+ * Browsers: the latest Chrome and Safari only (D219).
  */
 
 /* ---- R1: rings ------------------------------------------------------------------------------------------------
@@ -55,16 +55,10 @@
   --ring-w: var(--ring-width-bold);
 }
 
-/* The fail cue: red at 45 %, mixed in oklab where the browser can (Safari 16.2+); a fixed pale red before. */
+/* The fail cue: red at 45 %, mixed in oklab (the guide's default for mixing). */
 [data-ring='red'] {
-  --ring-color: #f4a1a4;
+  --ring-color: color-mix(in oklab, var(--color-red) 45%, transparent);
   --ring-w: var(--ring-width-bold);
-}
-
-@supports (color: color-mix(in oklab, red 45%, transparent)) {
-  [data-ring='red'] {
-    --ring-color: color-mix(in oklab, var(--color-red) 45%, transparent);
-  }
 }
 
 @keyframes ds-ring-in {
@@ -253,7 +247,6 @@
    last resort, so «SUPERESTRELLA» breaks cleanly. .ds-clamp-2 stops at two lines with an ellipsis. */
 .ds-long-text {
   overflow-wrap: anywhere;
-  -webkit-hyphens: auto;
   hyphens: auto;
 }
 
@@ -261,7 +254,6 @@
   display: -webkit-box;
   overflow: hidden;
   overflow-wrap: anywhere;
-  -webkit-hyphens: auto;
   hyphens: auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

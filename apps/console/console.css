@@ -1796,7 +1796,8 @@
   background: var(--color-surface-private);
 }
 
-.search-box:focus-within {
+/* R5: a keyboard's focus only, like every other ring */
+.search-box:has(:focus-visible) {
   outline: 3px solid var(--color-focus);
   outline-offset: 1px;
 }

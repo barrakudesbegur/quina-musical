@@ -210,11 +210,3 @@
   --z-toast: 60;
 }
 
-/* Without linear() (Safari before 17.2, under the console's iPadOS 15.4 floor) a var() holding it would void the whole
-   animation or transition, so those browsers keep the one-hump overshoot. */
-@supports not (animation-timing-function: linear(0, 1)) {
-  :root {
-    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ease-kick: cubic-bezier(0.2, 3, 0.5, 1);
-  }
-}
