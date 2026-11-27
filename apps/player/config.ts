@@ -73,6 +73,10 @@ export const PLAYER_CONFIG = Object.freeze({
   vibrateFall: [60] as readonly number[],
   /** A song lands on one of the phone's cards (§8 Y1): a da-dum, longer than a touch's 10 ms. */
   vibrateYourSong: [70, 50, 70] as readonly number[],
+  /** A card saved on «Afegir cartró» (`pad-saved`, §8 Y3): a short double tick. */
+  vibrateAdded: [16, 60, 24] as readonly number[],
+  /** `pad-saved`: its buttons take taps this long after «Desar», so a double tap never lands on them. */
+  padSavedArmMs: 240,
 
   /** The installable app's updates (D222; apps/player/README.md "Updates and offline"): the service worker at the
    * site's root, how often the page asks for a new one while it's on screen (and at most how often a focus asks), and

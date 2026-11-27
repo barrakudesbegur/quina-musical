@@ -24,7 +24,10 @@ export const PLAYER = {
   install: { color: 'navy', size: 's', icon: 'phone-arrow-down', label: S.install },
   /** The add-card pad's «Desar»: lit once the number is a card. */
   save: { color: 'green', size: 'm', icon: 'check', label: S.save, sound: 'submit' },
-  /** The rename sheet's «Desar». */
+  /** After «Desar» (`pad-saved`, §8 Y3): add another card, in the add colour… */
+  addAnother: { color: 'orange', size: 'm', icon: 'plus', label: S.addAnother },
+  /** …or finish: the drawers close and the new card shows on the home. */
+  padDone: { color: 'green', size: 'm', icon: 'check', label: S.done },
   /** The edit drawer's «Desar»: green, as «Afegir cartró»'s (the user's phone test, 27 Nov). */
   renameSave: { color: 'green', size: 'l', label: S.save, sound: 'submit' },
   renameDiscard: { color: 'navy', size: 'l', label: S.renameDiscard },

@@ -136,7 +136,7 @@
         <NumberPad
           cards={app.data.cards}
           printed={app.catalog?.cards ?? null}
-          onadd={(id, identity, name) => app.addCard(id, true, identity, name)}
+          onadd={(id, identity, name) => app.addCard(id, true, identity, name, true)}
           onsee={(id) => app.seeCard(id)}
           onclose={closeTop}
           ontyping={(typing) => app.setPadTyping(typing)}

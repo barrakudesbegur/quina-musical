@@ -285,13 +285,19 @@ export class PlayerApp {
 
   /**
    * Add a card by number, with the icon and the name the pad gave it. With `checkCatalog`, a number that isn't a
-   * printed card is refused (the pad); a scanned link is trusted. Returns the error to show, or null.
+   * printed card is refused (the pad); a scanned link is trusted. Returns the error to show, or null. `inPad`: the pad
+   * saved it and stays open to confirm and ask for another (`pad-saved`, §8 Y3), so no toast and no trip home yet.
    */
-  addCard(id: number, checkCatalog = true, identity?: number, name = ''): string | null {
+  addCard(id: number, checkCatalog = true, identity?: number, name = '', inPad = false): string | null {
     if (checkCatalog && this.catalog && !this.catalog.cards.has(id)) return S.addError.unknown(id);
     const result = addCard(this.data, id, Date.now(), identity);
     if (!result.ok) return result.reason === 'duplicate' ? S.addError.duplicate(id) : result.reason === 'full' ? S.addError.full(PLAYER_CONFIG.maxCards) : S.addError.invalid;
     this.saveData(name ? renameCard(result.data, id, name) : result.data);
+    if (inPad) {
+      this.sounds.play('added');
+      vibrate(PLAYER_CONFIG.vibrateAdded);
+      return null;
+    }
     // Added (board "afegir cartró: casos especials", the third frame): straight to the cards, never back to the
     // drawers it was opened from, with the new card ringed and a green toast with its icon.
     this.showToast(S.added(id), result.card.color);

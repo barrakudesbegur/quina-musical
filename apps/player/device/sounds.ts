@@ -15,8 +15,8 @@ import type { TouchSounds } from '../../../packages/ui/sounds/touch.ts';
 import type { TouchClass, TouchVariant } from '../../../packages/ui/sounds/types.ts';
 import spriteUrl from '../../../packages/ui/sounds/player.mp3?url';
 
-/** The game cues ("cue" is the Shuffle's and the stand-up's blip; "tick" the reel's). */
-export type Blip = Cue | 'cue' | 'tick';
+/** The game cues ("cue" is the Shuffle's and the stand-up's blip; "tick" the reel's; "added" a card saved on the pad). */
+export type Blip = Cue | 'cue' | 'tick' | 'added';
 
 /** A note: frequency (Hz), start and length (s) within the blip, waveform, and the pitch it slides to (a glide). */
 type Note = [freq: number, at: number, len: number, wave?: OscillatorType, glideTo?: number];
@@ -33,6 +33,11 @@ const BLIPS: Record<Blip, Note[]> = {
     [780, 0.04, 0.08],
   ],
   mark: [[300, 0, 0.06, 'triangle']],
+  /** A card saved on «Afegir cartró» (`pad-saved`): two quiet rising notes, G5 then D6 (180 ms in all). */
+  added: [
+    [784, 0, 0.07],
+    [1175, 0.07, 0.11],
+  ],
   nearWin: [
     [660, 0, 0.08],
     [990, 0.09, 0.1],
