@@ -3035,21 +3035,26 @@
   --throw-stripe: 45.25px; /* one period of the 32 px stripes, measured along the row */
 }
 
-/* The stripes, pressed or not (the pressed look resets the background) */
-.big-button.throw-button,
-.big-button.throw-button[aria-pressed='true'] {
+/* The stripes, pressed or not: a layer one period wider than the button (it starts a period to the left, so the
+   pattern lines up as the button's own background would), under the content and clipped by the button. Moving it
+   by `translate` keeps the drift on the compositor. */
+.throw-button::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 calc(var(--throw-stripe) * -1);
   background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.13) 0 16px, transparent 16px 32px);
   background-size: var(--throw-stripe) var(--throw-stripe);
+  pointer-events: none;
 }
 
-/* Playing: pressed (the shared aria-pressed look), and the stripes drift */
-.throw-button[data-anim~='throw-on'] {
+/* Playing: pressed (the shared aria-pressed look), and the stripes drift one period per loop */
+.throw-button[data-anim~='throw-on']::before {
   animation: throw-stripes var(--dur-throw-stripes) linear infinite;
 }
 
 @keyframes throw-stripes {
   to {
-    background-position: var(--throw-stripe) 0;
+    translate: var(--throw-stripe) 0;
   }
 }
 
@@ -3155,13 +3160,23 @@
   background: #e4ddcc;
 }
 
+/* The fill: a bar the track's full width, scaled from the left (`scaleX`, on the compositor), inside a clip with the
+   fill's old 5 px corners, so its rounded left end never squashes. */
 .throw-button__bar-fill {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--at, 0) * 100%);
-  border-radius: 5px 0 0 5px;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.throw-button__bar-fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--action-bg);
-  transition: width 250ms linear;
+  transform: scaleX(var(--at, 0));
+  transform-origin: left;
+  transition: transform 250ms linear;
 }
 
 .throw-button__drop {
@@ -3187,7 +3202,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .throw-button__bar-fill {
+  .throw-button__bar-fill::before {
     transition: none;
   }
 }
@@ -6281,7 +6296,7 @@ kbd {
     display: inline;
   }
 
-  .throw-button[data-anim~='throw-on'] {
+  .throw-button[data-anim~='throw-on']::before {
     animation: none;
   }
 
