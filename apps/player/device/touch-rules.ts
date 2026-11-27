@@ -15,7 +15,6 @@ export const PLAYER_TOUCH: TouchWiring = {
     { selector: '.icon-picker__option', cls: 'iconPick', refuse: true },
     { selector: '.corner-button', cls: 'corner' },
     { selector: '.cards__add', cls: 'floating' },
-    { selector: '.view-switch__option', cls: 'tab' },
     { selector: 'button, [role="button"]', cls: 'small' },
   ],
   // The lists people scroll: a control in them sounds at its click, so a scroll that starts on it stays silent.

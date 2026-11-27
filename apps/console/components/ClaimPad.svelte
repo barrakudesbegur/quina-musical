@@ -20,6 +20,7 @@
   import { S } from '../strings.ts';
   import Button from '../../../packages/ui/components/Button.svelte';
   import { ACTIONS, ICONS, NOTICES, asDefault } from '../actions.ts';
+  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import Icon from './Icon.svelte';
   import NowLine from './NowLine.svelte';
   import { touchPress, touchTap } from '../../../packages/ui/sounds/touch.ts';
@@ -107,11 +108,7 @@
         </div>
 
         {#if kinds.length > 1}
-          <div class="segmented claim-pad__kind" role="radiogroup" aria-label={S.numpad.kind}>
-            {#each kinds as k (k)}
-              <button type="button" class="segmented__option" role="radio" aria-checked={pad.kind === k} data-anim="press" onclick={() => model.padKind(k)}>{S.numpad.kinds[k]}</button>
-            {/each}
-          </div>
+          <SegmentedControl class="claim-pad__kind" label={S.numpad.kind} options={kinds.map((k) => ({ id: k, label: S.numpad.kinds[k] }))} value={pad.kind} onchange={(k) => model.padKind(k)} />
         {/if}
 
         <div class="claim-pad__numbers">

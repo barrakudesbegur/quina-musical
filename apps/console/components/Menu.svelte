@@ -31,6 +31,7 @@
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
   import Switch from '../../../packages/ui/components/Switch.svelte';
+  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import VolumeSliders from './VolumeSliders.svelte';
   import { getConsoleSounds } from '../context.ts';
   import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
@@ -102,19 +103,9 @@
           </label>
           <MiniButton {...MINI.labelSave} type="submit" />
         </form>
-        <div class="choice-group" role="group" aria-label={S.menu.labelField}>
-          {#each CONSOLE.labelPresets as preset (preset)}
-            <button type="button" class="choice" data-anim="press" aria-pressed={model.label === preset} onclick={() => ((labelDraft = preset), model.setLabel(preset))}>{preset}</button>
-          {/each}
-        </div>
+        <SegmentedControl size="s" label={S.menu.labelField} options={CONSOLE.labelPresets.map((preset) => ({ id: preset, label: preset }))} value={model.label} onchange={(preset) => ((labelDraft = preset), model.setLabel(preset))} />
         <p class="note">{S.menu.labelNote}</p>
-        <div class="choice-group" role="group" aria-label={S.menu.theme}>
-          {#each THEMES as theme (theme)}
-            <button type="button" class="choice" data-anim="press" aria-pressed={model.theme === theme} onclick={() => model.setTheme(theme)}>
-              <Icon name={theme === 'light' ? 'sun' : 'moon'} /><span>{S.menu.themes[theme]}</span>
-            </button>
-          {/each}
-        </div>
+        <SegmentedControl size="s" label={S.menu.theme} options={THEMES.map((theme) => ({ id: theme, label: S.menu.themes[theme], icon: theme === 'light' ? 'sun' : 'moon' }))} value={model.theme} onchange={(theme) => model.setTheme(theme)} />
       </section>
 
       <section class="menu-group" aria-labelledby="{uid}-links">

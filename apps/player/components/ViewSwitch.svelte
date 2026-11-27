@@ -1,27 +1,14 @@
 <script lang="ts">
-  // Ara's Historial | Cartrons switch under the drum: a segmented control, as tabs over the view below it.
+  // Ara's Historial | Cartrons switch under the drum: the generic SegmentedControl (B2) as tabs over the view below
+  // it (its panel is labelled by `ara-view-<view>`). The words and icons are this app's.
+  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
+  import type { SegmentOption } from '../../../packages/ui/components/control-types.ts';
   import { ARA_VIEWS, type AraView } from '../logic/tabs.ts';
   import { S } from '../strings.ts';
-  import Icon, { type IconName } from './Icon.svelte';
 
-  let { value, panel, onselect }: { value: AraView; /** The id of the view it controls. */ panel: string; onselect: (view: AraView) => void } = $props();
-  const ICONS: Record<AraView, IconName> = { historial: 'history', cartrons: 'cards' };
+  let { value, onselect }: { value: AraView; onselect: (view: AraView) => void } = $props();
+  const ICONS = { historial: 'clock', cartrons: 'grid-rounded' } as const;
+  const options: SegmentOption<AraView>[] = ARA_VIEWS.map((view) => ({ id: view, label: S.araViews[view], icon: ICONS[view] }));
 </script>
 
-<div class="view-switch" role="tablist" aria-label={S.araSwitch}>
-  {#each ARA_VIEWS as view (view)}
-    <button
-      type="button"
-      class="view-switch__option"
-      role="tab"
-      id="ara-view-{view}"
-      aria-selected={view === value}
-      aria-controls={panel}
-      data-view={view}
-      onclick={() => onselect(view)}
-    >
-      <Icon name={ICONS[view]} />
-      {S.araViews[view]}
-    </button>
-  {/each}
-</div>
+<SegmentedControl {options} {value} semantics="tabs" idPrefix="ara-view" label={S.araSwitch} class="view-switch" onchange={onselect} />

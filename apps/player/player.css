@@ -2749,45 +2749,6 @@
   margin-top: 0;
 }
 
-/* The switch: a dark track with the chosen side on a gold plate, as the tab bar's chosen tab. */
-.view-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: var(--color-bg-deep);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-lg);
-}
-
-.player .view-switch__option {
-  min-height: var(--tap-min);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-strong);
-  color: var(--color-text-soft);
-  background: transparent;
-  border: var(--line-width) solid transparent;
-  border-radius: var(--radius-md);
-  box-shadow: none;
-}
-
-.player .view-switch__option[aria-selected='true'] {
-  color: var(--color-text-on-paper);
-  background: var(--color-accent);
-  border-color: var(--color-line);
-  box-shadow: inset 0 -4px 0 var(--color-accent-edge);
-}
-
-/* The family's size step for 17 px labels (H1): 22 px, so the line, as heavy as the label's stems, stays open (#37) */
-.view-switch__option .icon {
-  width: 1.375rem;
-  height: 1.375rem;
-}
-
 /* The drum drawn small (Ara with the cards; board Mobil-B-J2): the same ring in a 112 px box at the left of a panel,
    the song's title and artist beside it. */
 .reel[data-size='strip'] {

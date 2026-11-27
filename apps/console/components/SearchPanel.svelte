@@ -23,6 +23,7 @@
   import Icon from './Icon.svelte';
   import PlayedList from './PlayedList.svelte';
   import SongRow from './SongRow.svelte';
+  import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -140,13 +141,7 @@
         </button>
       {/if}
     {/if}
-    <div class="segmented search-tab__modes" role="radiogroup" aria-label={S.cerca.modeLabel}>
-      {#each MODES as mode (mode)}
-        <button type="button" class="segmented__option" role="radio" aria-checked={search.mode === mode} data-anim="press" onclick={() => setMode(mode)}>
-          <Icon name={mode === 'songs' ? 'music' : 'grid'} /><span>{S.cerca.modes[mode]}</span>
-        </button>
-      {/each}
-    </div>
+    <SegmentedControl class="search-tab__modes" label={S.cerca.modeLabel} options={MODES.map((mode) => ({ id: mode, label: S.cerca.modes[mode], icon: mode === 'songs' ? 'music' : 'grid' }))} value={search.mode} onchange={setMode} />
   </div>
 
   {#if search.mode === 'songs'}

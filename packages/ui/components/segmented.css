@@ -1,0 +1,169 @@
+/*
+ * B2 · SegmentedControl (components-v2.md § 3; SegmentedControl.svelte). An inset track with the options side by
+ * side; the thumb is the track's ::after, a gold piece tethered to the chosen option by anchor positioning, so it
+ * slides between options of any width (segment-slide). ::after, not ::before: an anchor sharing the thumb's
+ * containing block must come first in tree order. Every size is a custom property in :where().
+ */
+
+/* ---- the console's scale, the default ------------------------------------------------------------------------- */
+:where(.segmented) {
+  --segment-height: var(--tap-min);
+  --segment-track-fill: var(--color-chip);
+  --segment-pad: var(--space-1);
+  --segment-gap: var(--space-1);
+  --segment-pad-inline: var(--space-3);
+  --segment-radius: 10px;
+  --segment-border: var(--line-width);
+  --segment-font: var(--text-md);
+  --segment-icon: 1.125rem;
+  --segment-text: var(--color-text-muted);
+  --segment-dur: var(--dur-slide, 280ms);
+  --segment-ease: var(--ease-slide, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+
+:where(.segmented[data-size='s']) {
+  --segment-height: var(--tap-dense, 44px);
+  --segment-font: var(--text-sm);
+  --segment-icon: 1rem;
+  --segment-pad-inline: var(--space-2);
+}
+
+:where(.segmented[data-size='l']) {
+  --segment-height: 4rem;
+  --segment-font: 1.0625rem;
+  --segment-icon: 1.5rem;
+}
+
+/* ---- the phone's scale: the night ground's deep track, the soft text (M1) ------------------------------------- */
+:where([data-density='phone'] .segmented) {
+  --segment-track-fill: var(--color-bg-deep, var(--color-night-deep));
+  --segment-text: var(--color-text-soft, var(--color-text-muted));
+  --segment-icon: 1.375rem;
+}
+
+/* ---- the track -------------------------------------------------------------------------------------------------- */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--segment-gap);
+  min-width: 0;
+  padding: var(--segment-pad);
+  border: var(--segment-border) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--segment-track-fill);
+}
+
+/* The thumb: a gold piece with its own dark edge (R2), under the chosen option's words. */
+.segmented::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  position-anchor: var(--segment-anchor);
+  top: anchor(top);
+  bottom: anchor(bottom);
+  left: anchor(left);
+  right: anchor(right);
+  box-sizing: border-box;
+  border: var(--segment-border) solid var(--color-line);
+  border-radius: var(--segment-radius);
+  background: var(--color-gold);
+  box-shadow: inset 0 -4px 0 var(--color-gold-edge);
+  pointer-events: none;
+}
+
+/* No option chosen (a parent's value that isn't one of them): no thumb. */
+.segmented:not(:has(> [data-chosen]))::after {
+  content: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) .segmented::after {
+    transition:
+      top var(--segment-dur) var(--segment-ease),
+      bottom var(--segment-dur) var(--segment-ease),
+      left var(--segment-dur) var(--segment-ease),
+      right var(--segment-dur) var(--segment-ease);
+  }
+}
+
+.segmented[aria-disabled='true']::after {
+  opacity: 0.45;
+}
+
+/* ---- the options ------------------------------------------------------------------------------------------------ */
+.segmented__option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  min-height: var(--segment-height);
+  margin: 0;
+  padding: 0 var(--segment-pad-inline);
+  /* the same width as the thumb's border, so the words don't move when chosen */
+  border: var(--segment-border) solid transparent;
+  border-radius: var(--segment-radius);
+  background: none;
+  box-shadow: none;
+  color: var(--segment-text);
+  font: inherit;
+  font-size: var(--segment-font);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+  transition: color var(--segment-dur) var(--ease-out);
+}
+
+.segmented__option[data-chosen] {
+  anchor-name: var(--segment-anchor);
+  color: var(--color-ink);
+}
+
+/* The base button's dip and pressed fill belong to other buttons: the thumb is the chosen look. */
+.segmented__option:active:not(:disabled) {
+  transform: none;
+}
+
+.segmented__option[aria-pressed='true'],
+.segmented__option:disabled {
+  background: none;
+}
+
+.segmented__option:disabled {
+  opacity: 0.4;
+}
+
+.segmented__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.segmented__icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.segmented__icon > svg {
+  width: var(--segment-icon);
+  height: var(--segment-icon);
+}
+
+.segmented__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.segmented__note {
+  font-size: 0.75em;
+  font-weight: 800;
+  opacity: 0.8;
+}

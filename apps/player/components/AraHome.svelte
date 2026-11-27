@@ -24,7 +24,7 @@
       {/if}
     </div>
   {/key}
-  <ViewSwitch value={app.araView} panel="ara-view" onselect={(view) => app.selectAraView(view)} />
+  <ViewSwitch value={app.araView} onselect={(view) => app.selectAraView(view)} />
   {#key app.araView}
     <div class="ara__view" id="ara-view" role="tabpanel" aria-labelledby="ara-view-{app.araView}" data-anim="tab-switch">
       {#if app.araView === 'cartrons'}

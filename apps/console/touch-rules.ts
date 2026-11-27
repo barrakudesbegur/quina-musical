@@ -12,7 +12,7 @@ export const CONSOLE_TOUCH: TouchWiring = {
     { selector: '.pad-key', cls: 'digit' },
     { selector: '.claim-pad__submit', cls: 'submit' },
     { selector: '.claim-chip__remove, .finale-stage__remove', cls: 'chipRemove' },
-    { selector: '.tabs__tab, .segmented__option', cls: 'tab' },
+    { selector: '.tabs__tab', cls: 'tab' },
     { selector: '.big-button, .action', cls: 'big' },
     { selector: 'button, [role="button"]', cls: 'small' },
   ],

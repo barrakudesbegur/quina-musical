@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
 
   let { phone }: { phone: boolean } = $props();
@@ -13,6 +14,9 @@
   // Live examples: a press changes them, as in the apps.
   let on = $state(true);
   let off = $state(false);
+  let two = $state<'a' | 'b'>('a');
+  let three = $state<'x' | 'y' | 'z'>('x');
+  let view = $state<'list' | 'grid'>('grid');
 </script>
 
 {#snippet cell(caption: string, body: Snippet)}
@@ -47,4 +51,30 @@
     {@render cell('a long label wraps (R6); the track keeps its size', s7)}
   </div>
   {#if phone}<p class="ds-gallery__note">The phone’s track is 56×32, slate while off.</p>{/if}
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b2">
+  <h2 id="b2">B2 · SegmentedControl</h2>
+  <p class="ds-prose">
+    One of a few options in place: <code>options</code> (<code>id</code>, <code>label</code>, <code>icon</code>, <code>note</code>,
+    <code>disabled</code>), <code>value</code>, <code>size</code> (s | m | l), <code>weights</code>, <code>semantics</code> (radio | tabs),
+    <code>disabled</code>, <code>sound</code>. The gold thumb slides to the chosen option (segment-slide: anchor positioning); one Tab
+    stop, the arrows, Home and End choose.
+  </p>
+  <div class="ds-gallery__grid ds-gallery__grid--wide">
+    {#snippet g1()}<SegmentedControl label="Tipus" options={[{ id: 'a', label: 'Línia' }, { id: 'b', label: 'Quina' }]} bind:value={two} />{/snippet}
+    {@render cell('radio · m: two words', g1)}
+    {#snippet g2()}<SegmentedControl label="Vista" semantics="tabs" options={[{ id: 'list', label: 'Historial', icon: 'clock' }, { id: 'grid', label: 'Cartrons', icon: 'grid-rounded' }]} bind:value={view} />{/snippet}
+    {@render cell('tabs · m: icon + label (switches the view below)', g2)}
+    {#snippet g3()}<SegmentedControl size="s" label="Tema" options={[{ id: 'x', label: 'Clar', icon: 'sun' }, { id: 'y', label: 'Fosc', icon: 'moon' }, { id: 'z', label: 'Auto', disabled: true }]} bind:value={three} />{/snippet}
+    {@render cell('s, with a disabled option (skipped by the arrows)', g3)}
+    {#snippet g4()}<SegmentedControl label="Música" weights={[1.5, 1, 1]} options={[{ id: 'x', label: 'Cançó guanyadora', note: 'suggerida' }, { id: 'y', label: 'Victòria' }, { id: 'z', label: 'Música de fons' }]} bind:value={three} />{/snippet}
+    {@render cell('weights 1.5 : 1 : 1, an option with a note', g4)}
+    {#snippet g5()}<SegmentedControl size="l" label="Opció" options={[{ id: 'a', label: 'Una', icon: 'music' }, { id: 'b', label: 'Una altra', icon: 'star' }]} bind:value={two} />{/snippet}
+    {@render cell('l (64 px)', g5)}
+    {#snippet g6()}<SegmentedControl label="Tipus" disabled options={[{ id: 'a', label: 'Línia' }, { id: 'b', label: 'Quina' }]} value="a" />{/snippet}
+    {@render cell('disabled', g6)}
+    {#snippet g7()}<SegmentedControl label="Tria" options={[{ id: 'a', label: 'All I Want for Christmas Is You' }, { id: 'b', label: 'SUPERESTRELLA' }]} bind:value={two} />{/snippet}
+    {@render cell('long labels: one line, an ellipsis (R9)', g7)}
+  </div>
 </section>
