@@ -15,8 +15,9 @@
   - level 1 on: the body sunk (aria-pressed), its `pattern` (stripes) panning;
   - escalating: the strip fills with light left to right (hook escalate-hold), clipped to the strip;
   - level 2 on: the strip in its palette's dark `edge`, white words, the hexagonal dots panning; the body sunk with
-    no pattern (level 2 is what's on). `badge` draws a small disc in its top-left corner (the padlock while Parlem is
-    locked on during a Pausa, #23: locked never shows a pattern);
+    no pattern (level 2 is what's on). `badge` draws a small disc in its top-left corner and means the button is
+    locked on (the padlock while Parlem is locked on during a Pausa): the body then pans the zigzag, never the
+    stripes (#23, 2b853e91);
   - `level2={null}`: no strip; the hold's light sweeps the whole body (the last round's top row).
   `pulse` (0..1) makes the strip pulse while level 2 is on, faster towards 1 (hook suspense-hold); `timer` is the
   strip's countdown text; `meter` a time bar in the body (a Throw song's position). Structure as Button's
@@ -137,8 +138,11 @@
 
   /** Level 2 shows on while it's on, and from the moment the hold reaches it (finger still down). */
   const level2On = $derived(active === 2 || hold.state.phase === 'escalated');
-  /** R3: level 1's pattern only while level 1 is what's on, never disabled or with a badge (locked, #23). */
-  const bodyPattern = $derived(active === 1 && !disabled && !badge && pattern !== 'none' ? pattern : null);
+  /**
+   * The body's pattern (R3): locked on (a badge) pans the zigzag, never the stripes (#23, 2b853e91); otherwise level 1's
+   * pattern only while level 1 is what's on; nothing while disabled.
+   */
+  const bodyPattern = $derived(disabled ? null : badge ? 'zigzag' : active === 1 && pattern !== 'none' ? pattern : null);
   const howText = $derived([badge?.label, how ?? (level2 ? CA.controls.holdFor(level2.label) : null)].filter(Boolean).join('. '));
   const describedBy = $derived([note ? `${uid}-note` : null, howText ? `${uid}-how` : null, rest['aria-describedby'] ?? null].filter(Boolean).join(' ') || undefined);
 </script>

@@ -61,8 +61,8 @@
   <h2 id="a3">A3 · TwoLevelButton</h2>
   <p class="ds-prose">
     A tap is level 1, a hold escalates to level 2 on the strip at its foot, in its own palette (D-k). Off has no
-    pattern; level 1 on pans the stripes; level 2 on is the strip's dark shade with the dots panning; locked never shows
-    a pattern (R3, #17–#23). The Throw's two buttons are the same component with a meter; their icons are line icons in the outline look (D245).
+    pattern; level 1 on pans the stripes; level 2 on is the strip's dark shade with the dots panning; locked on pans
+    the zigzag, never the stripes (R3, #17–#23, 2b853e91). The Throw's two buttons are the same component with a meter; their icons are line icons in the outline look (D245).
   </p>
   <div class="ds-gallery__grid ds-buttons__tall">
     {#snippet t1()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" lead="mantén" />{/snippet}
@@ -72,7 +72,7 @@
     {#snippet t3()}<TwoLevelButton {...ACTIONS.stay} iconPlacement="top" active={2} level2={{ ...ACTIONS.stay.level2, wii: null }} note="toca per aterrar" timer="s'allibera sol en 8 s" pulse={0.4} />{/snippet}
     {@render cell('level 2 on: the strip’s edge shade, dots panning, the countdown pulsing', t3)}
     {#snippet t4()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" active={2} note="en pausa · toca per tornar" badge={{ icon: 'lock', label: 'Parlem queda posat' }} />{/snippet}
-    {@render cell('locked on (the padlock): no pattern on the body (#23)', t4)}
+    {@render cell('locked on (the padlock): the zigzag panning on the body, no stripes (2b853e91)', t4)}
     {#snippet t5()}<TwoLevelButton {...ACTIONS.stay} iconPlacement="top" lead="mantén" level2={{ ...ACTIONS.stay.level2, wii: phone ? null : SHAKE_OR }} />{/snippet}
     {@render cell('the strip’s keys: «×3 / B+A», OR is «/» (D-j, #12)', t5)}
     {#snippet t6()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" lead="mantén" disabled />{/snippet}

@@ -10,7 +10,8 @@
  *   R1 rings        data-ring="orange|gold|red" on an element whose box holds the whole control (its shadow too:
  *                   the press structure's does; a control whose shadow hangs outside its box sets --ring-drop)
  *   R2 3D edge      the piece's edge layers (R4 below), in the fill's own --palette-edge (or --ds-edge-color)
- *   R3 on pattern   <span class="ds-pattern" data-pattern="stripes|dots"> inside the piece, rendered only while on
+ *   R3 on pattern   <span class="ds-pattern" data-pattern="stripes|dots|zigzag"> inside the piece, rendered only while on
+ *                   (zigzag: locked on, 2b853e91)
  *   R4 press        .ds-pushable (static: the hit area, the shadow, the rings) > .ds-piece (moves, its edge shrinking
  *                   and its face darkening); held down by :active, aria-pressed="true", aria-busy="true" or data-sunk
  *                   (a hold held by a key); haptics in sounds/delegate.ts. --ds-edge: 0px for a control with no edge
@@ -208,8 +209,9 @@
 
 /* ---- R3: the on pattern ---------------------------------------------------------------------------------------
    A layer inside the piece, clipped to its inner corners (#14), one period wider than it so it pans seamlessly. The
-   component renders it only while on, and never while disabled or locked (#23). It pans with motion allowed and
-   stays still otherwise (ANIMATIONS.md › pattern-pan). */
+   component renders it only while on, and never while disabled. Locked on (a TwoLevelButton's padlock: Parlem during
+   a Pausa) shows the zigzag, never the stripes (#23, 2b853e91). It pans with motion allowed and stays still otherwise
+   (ANIMATIONS.md › pattern-pan). */
 .ds-pattern {
   position: absolute;
   inset: 0;
@@ -237,6 +239,20 @@
   background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.13) 0 16px, transparent 16px 32px);
 }
 
+/* The zigzag (locked on, 2b853e91): bands of white at 13 % stepping up at 45°, 32 px steps, one band 16 px thick,
+   then as much clear. It pans along its bands, (32 px, −32 px) per loop: 45.25 px, the stripes' distance and pace. The
+   tile is 64 px square with no seam inside it. */
+.ds-pattern[data-pattern='zigzag'] {
+  --pattern-period: 32px;
+  --pattern-rise: -32px;
+}
+
+.ds-pattern[data-pattern='zigzag']::before {
+  bottom: var(--pattern-rise);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath fill='%23fff' fill-opacity='.13' d='M48 0h16v32H32v32H0V48h16V16h32zM48 48h16v16H48z'/%3E%3C/svg%3E");
+  background-size: 64px 64px;
+}
+
 /* Hexagonal dots: two rows of dots per tile, the second shifted by half a period. */
 .ds-pattern[data-pattern='dots'] {
   --pattern-period: 16px;
@@ -258,7 +274,7 @@
 
 @keyframes ds-pattern-pan {
   to {
-    translate: var(--pattern-period) 0;
+    translate: var(--pattern-period) var(--pattern-rise, 0px);
   }
 }
 

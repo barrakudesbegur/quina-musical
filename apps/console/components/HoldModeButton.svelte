@@ -6,7 +6,8 @@
   Suspens pulses with its auto-release countdown (hook suspense-hold).
   With a Wii remote connected: Parlem −+ (a tap) and Pausa −+ held; Aguanta B held, Suspens B + A held at the strip's
   right end (D144, D147), after the shake «×3 / » while the shake is switched on (D148, D-j), until a Suspens is open.
-  During Pausa Parlem shows on and locked (D128): a padlock, no pattern (#23); a tap ends Pausa.
+  During Pausa Parlem shows on and locked (D128): a padlock and the panning zigzag, never the stripes (#23, 2b853e91);
+  a tap ends Pausa.
   The lock mirror (D234, logic/two-level-lock.ts): every press and let-go of this button here, and of its Wii keys
   (wii/controller.svelte.ts), tells the engine (`twoLevelHold`); while another console holds it (`twoLevelHeld`), this
   one shows it locked: disabled, the padlock, «la manté <console>» as its note, no pattern (ANIMATIONS.md ›
