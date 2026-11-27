@@ -36,10 +36,11 @@ export interface TabSpec<T extends string = string> {
 }
 
 /** B4 · Chip. */
-export type ChipColor = Extract<PaletteColor, 'grey' | 'ink' | 'green' | 'red' | 'orange' | 'cyan' | 'purple' | 'gold' | 'live' | 'slate'>;
+export type ChipColor = Extract<PaletteColor, 'grey' | 'ink' | 'green' | 'red' | 'orange' | 'cyan' | 'purple' | 'gold' | 'live' | 'slate' | 'snow'>;
 export type ChipVariant = 'subtle' | 'solid';
 export type ChipSize = 's' | 'm';
-export type ChipDot = 'on' | 'off' | 'live';
+/** The status dot: green (on), grey (off), the live green with its glow, red (alert). */
+export type ChipDot = 'on' | 'off' | 'live' | 'alert';
 
 /** B8 · one IconPicker option: a mark, whether it can be picked, and a tag on it (the owner's name). */
 export interface IconPickerOption<T extends string | number = number> {

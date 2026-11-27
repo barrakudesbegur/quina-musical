@@ -1,0 +1,108 @@
+/*
+ * B4 · Chip (components-v2.md § 3; Chip.svelte). A pill: `m` 4 × 10 with a 3 px ink line, Nunito 900 13; `s` 2 × 8
+ * with a 2 px line, 12. `subtle` fills with the palette's subtle slot (its solid where it has none), `solid` with
+ * its fill in its contrast colour; green and red subtle chips write in their own dark shade. `glow` (D-d) adds the
+ * palette's own glow round the pill. Every size is a custom property in :where().
+ */
+
+:where(.chip) {
+  --chip-pad: 4px 10px;
+  --chip-line: var(--line-width);
+  --chip-font: 0.8125rem;
+  --chip-icon: 1rem;
+  --chip-dot: 9px;
+  --chip-gap: 6px;
+}
+
+:where(.chip[data-size='s']) {
+  --chip-pad: 2px 8px;
+  --chip-line: var(--line-width-thin, 2px);
+  --chip-font: 0.75rem;
+  --chip-icon: 0.875rem;
+  --chip-dot: 7px;
+  --chip-gap: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--chip-gap);
+  max-width: 100%;
+  padding: var(--chip-pad);
+  border: var(--chip-line) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--chip-custom, var(--palette-subtle, var(--palette-solid)));
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--chip-font);
+  font-weight: 900;
+  line-height: 1.25;
+  white-space: nowrap;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* grey's subtle slot is the surface's chip colour, so its text follows the theme */
+.chip[data-color='grey'][data-variant='subtle'] {
+  color: var(--color-text);
+}
+
+.chip:is([data-color='green'], [data-color='red'])[data-variant='subtle'] {
+  color: var(--palette-fg-paper);
+}
+
+.chip[data-variant='solid'] {
+  background: var(--chip-custom, var(--palette-solid));
+  color: var(--palette-contrast);
+}
+
+.chip[data-border='edge'] {
+  border-color: var(--palette-edge);
+}
+
+.chip[data-glow] {
+  box-shadow: 0 0 14px 3px color-mix(in oklab, var(--palette-solid) 55%, transparent);
+}
+
+.chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.chip__icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.chip__icon > svg {
+  width: var(--chip-icon);
+  height: var(--chip-icon);
+}
+
+.chip__dot {
+  flex: none;
+  width: var(--chip-dot);
+  height: var(--chip-dot);
+  border-radius: 50%;
+  background: #8a8fb0;
+  transition: background-color var(--dur-conn, 300ms);
+}
+
+.chip__dot[data-dot='on'] {
+  background: var(--color-green);
+}
+
+.chip__dot[data-dot='live'] {
+  background: var(--color-live);
+  box-shadow: 0 0 6px 1px color-mix(in oklab, var(--color-live) 70%, transparent);
+}
+
+.chip__dot[data-dot='alert'] {
+  background: var(--color-red);
+}

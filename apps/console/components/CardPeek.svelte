@@ -14,6 +14,7 @@
   import type { CardPeek } from '../logic/lookup.ts';
   import { hasPlayed } from '../logic/upcoming.ts';
   import { S } from '../strings.ts';
+  import Chip from '../../../packages/ui/components/Chip.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
 
@@ -37,7 +38,7 @@
 <div class="card-peek" data-future={future || undefined} data-testid="card-peek" data-card-id={peek.cardId}>
   <div class="card-peek__side">
     <p class="card-peek__chips">
-      {#if chip}<span class="chip chip--side">{#if chip.special}<Icon name="star" />{/if}{chip.label}</span>{/if}
+      {#if chip}<Chip class="card-type-chip" color="cyan" icon={chip.special ? 'star' : null} label={chip.label} />{/if}
       {#if peek.notSold}<span class="candidate-list__warn" title={S.future.notSoldLong}>{S.cerca.notSold}</span>{/if}
     </p>
 

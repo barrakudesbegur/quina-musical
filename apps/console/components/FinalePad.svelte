@@ -26,6 +26,7 @@
   import Button from '../../../packages/ui/components/Button.svelte';
   import { ACTIONS, ICONS, NOTICES, asDefault } from '../actions.ts';
   import Notice from '../../../packages/ui/components/Notice.svelte';
+  import Chip from '../../../packages/ui/components/Chip.svelte';
   import NumberField from '../../../packages/ui/components/NumberField.svelte';
   import NumberPad from '../../../packages/ui/components/NumberPad.svelte';
   import Icon from './Icon.svelte';
@@ -164,7 +165,7 @@
         {#if shown}
           <header class="check-card__head">
             <h2 class="check-card__title">{F.card(shown.cardId)}</h2>
-            {#if shownType}<span class="chip chip--type">{#if shownType.special}<Icon name="star" />{/if}{shownType.label}</span>{/if}
+            {#if shownType}<Chip class="card-type-chip" color="snow" icon={shownType.special ? 'star' : null} label={shownType.label} />{/if}
             <span class="finale-pad__legend">{F.legend}</span>
           </header>
           {#if shown.songs}

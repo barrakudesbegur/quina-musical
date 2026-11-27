@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import Chip from '../../packages/ui/components/Chip.svelte';
   import IconPicker from '../../packages/ui/components/IconPicker.svelte';
   import NumberField from '../../packages/ui/components/NumberField.svelte';
   import NumberPad from '../../packages/ui/components/NumberPad.svelte';
@@ -255,5 +256,28 @@
     {@render cell('held: the three-quarter ring; B + A held (Suspens)', w4)}
     {#snippet w5()}<span class="ds-gallery__keys"><WiiKey spec={{ keys: ['shake'] }} /><WiiKey spec={{ keys: ['shake'], size: 'sm' }} /></span>{/snippet}
     {@render cell('shake ×3 (D94): the remote as tall as A', w5)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b4">
+  <h2 id="b4">B4 · Chip</h2>
+  <p class="ds-prose">
+    A status label, never tappable: <code>color</code> × <code>variant</code> (subtle | solid), <code>glow</code> (a separate boolean,
+    D-d, #45), <code>border</code> (ink | edge), <code>size</code> (m | s), <code>customColor</code>, <code>dot</code> or
+    <code>icon</code>, <code>label</code>, <code>value</code>.
+  </p>
+  <div class="ds-gallery__grid">
+    {#snippet c1()}<span class="ds-gallery__keys"><Chip label="Avanç manual" /><Chip color="ink" variant="solid" label="#57" /><Chip color="green" label="Línia · vàlid" /><Chip color="red" label="Cartró descartat" /></span>{/snippet}
+    {@render cell('grey, ink solid, green and red subtle', c1)}
+    {#snippet c2()}<span class="ds-gallery__keys"><Chip color="cyan" label="Parlem · des de fa 0:42" /><Chip color="purple" label="Aguanta · des de fa 0:15" /><Chip color="gold" label="Suspens obert" /><Chip color="orange" label="Girant · aterra en 6 s" /></span>{/snippet}
+    {@render cell('cyan, purple, gold, orange subtle', c2)}
+    {#snippet c3()}<span class="ds-gallery__keys"><Chip color="red" variant="solid" label="+2 min" /><Chip color="orange" border="edge" icon="warning" label="No registrat com a venut" /></span>{/snippet}
+    {@render cell('red solid (the drift); orange with its edge (a warning)', c3)}
+    {#snippet c4()}<span class="ds-gallery__dark"><Chip color="green" variant="solid" glow label="Dempeus" /><Chip color="slate" variant="solid" label="Assegut" /></span>{/snippet}
+    {@render cell('glow: a separate prop on green solid (D-d); slate solid', c4)}
+    {#snippet c5()}<span class="ds-gallery__keys"><Chip dot="on" label="LAN" /><Chip dot="off" label="Wii" /><Chip dot="off" label="Mòbils" value="312" /><Chip color="red" dot="alert" label="Núvol" /></span>{/snippet}
+    {@render cell('dots (on, off, alert) and a value', c5)}
+    {#snippet c6()}<span class="ds-gallery__keys"><Chip size="s" color="ink" variant="solid" label="Línia" /><Chip size="s" label="falten 3" /><Chip customColor="#cfe8ff" label="Normal 1–5" /><Chip customColor="#ffd9e8" icon="star" label="Especial" /></span>{/snippet}
+    {@render cell('s; customColor (the card types’ pastels)', c6)}
   </div>
 </section>

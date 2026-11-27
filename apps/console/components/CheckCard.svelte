@@ -19,6 +19,7 @@
   import { VERDICT_LOOKS } from '../actions.ts';
   import CardCell from '../../../packages/ui/components/CardCell.svelte';
   import { cellLook, type CellState } from '../../../packages/ui/components/card-looks.ts';
+  import Chip from '../../../packages/ui/components/Chip.svelte';
   import Cover from './Cover.svelte';
   import Icon from './Icon.svelte';
 
@@ -68,15 +69,15 @@
 <section class="panel check-card" aria-label={S.check.cardLabel(check.cardId)} data-kind={check.kind} data-testid="check-card" data-card-id={check.cardId}>
   <header class="check-card__head">
     <h2 class="check-card__title">{S.check.card(check.cardId)}</h2>
-    <span class="chip chip--ink">{S.check.kind[check.kind]}</span>
-    {#if type}<span class="chip chip--type">{#if type.special}<Icon name="star" />{/if}{type.label}</span>{/if}
+    <Chip color="ink" variant="solid" label={S.check.kind[check.kind]} />
+    {#if type}<Chip class="card-type-chip" color="snow" icon={type.special ? 'star' : null} label={type.label} />{/if}
     {#if of}<span class="check-card__of">{S.check.ofCards(of.n, of.total)}</span>{/if}
   </header>
 
   {#if notSold || completeSince !== null}
     <ul class="check-card__warnings">
-      {#if notSold}<li class="warning-chip"><Icon name="alert" />{S.check.warnings.notSold}</li>{/if}
-      {#if completeSince !== null}<li class="warning-chip"><Icon name="alert" />{S.check.warnings.completeSince(completeSince, check.kind)}</li>{/if}
+      {#if notSold}<li><Chip color="orange" border="edge" icon="warning" label={S.check.warnings.notSold} /></li>{/if}
+      {#if completeSince !== null}<li><Chip color="orange" border="edge" icon="warning" label={S.check.warnings.completeSince(completeSince, check.kind)} /></li>{/if}
     </ul>
   {/if}
 
