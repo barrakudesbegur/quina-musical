@@ -26,13 +26,11 @@ test('stepping stops at either end', () => {
   assert.equal(last.prev, SOUND_TEST_ORDER[SOUND_TEST_ORDER.length - 2]);
 });
 
-test('the automatic sounds: every key a switch with words, read from game.autoSounds only', () => {
+test('the automatic sounds: every key a switch with words, read from game.autoSounds', () => {
   assert.deepEqual([...AUTO_SOUND_ORDER], [...AUTO_SOUNDS]);
   for (const key of AUTO_SOUNDS) assert.ok(S.autoSounds.keys[key].label && S.autoSounds.keys[key].note, `no words for ${key}`);
-  // All on until the engine says; the old mirrors are never read.
+  // All on until the engine says.
   assert.deepEqual(autoSoundsNow(undefined), { drumTicks: true, djFx: true, finalLap: true, winFanfare: true, failFanfare: true, voices: true });
-  const old = { finalLapStinger: false, voicesOn: false } as unknown as Parameters<typeof autoSoundsNow>[0];
-  assert.equal(autoSoundsNow(old).finalLap, true);
   assert.equal(autoSoundsNow({ autoSounds: { drumTicks: false, djFx: true, finalLap: false, winFanfare: true, failFanfare: true, voices: false } }).voices, false);
 });
 

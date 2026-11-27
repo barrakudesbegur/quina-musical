@@ -1,7 +1,6 @@
 // The automatic sounds (D237): the sounds the engine plays by itself, each switched on or off from the menu's «Sons
 // automàtics» (`setAutoSound { key, on }`), in the protocol's order (AUTO_SOUNDS). Off is silent whatever its volume
-// slider says. Read from `game.autoSounds` only: the old `finalLapStinger` and `voicesOn` are the engine's mirrors for
-// one deploy, and the console no longer reads them. Pure.
+// slider says. Read from `game.autoSounds`, the engine's only switches since 717cbf35. Pure.
 import { AUTO_SOUNDS, AUTO_SOUNDS_DEFAULT, type AutoSound, type AutoSounds, type GameSettings } from '@quina/protocol';
 
 /** The switches in the menu's order. */
