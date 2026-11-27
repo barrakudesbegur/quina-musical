@@ -108,17 +108,18 @@
   translate: calc(-100% - 2 * var(--player-gutter)) 0;
 }
 
+/* Both lines named: an absolutely placed grid item's `auto` line is the container's edge, not the next line. */
 .ara__view {
-  grid-row: 1;
+  grid-row: 1 / 2;
   min-width: 0;
 }
 
 .ara__view[data-view='historial'] {
-  grid-column: 1;
+  grid-column: 1 / 2;
 }
 
 .ara__view[data-view='cartrons'] {
-  grid-column: 2;
+  grid-column: 2 / 3;
 }
 
 /* The view not shown waits beside the shown one, out of the page's height, unseen until a swipe brings it in. */
