@@ -77,6 +77,17 @@ button[aria-pressed='true'] {
   color: var(--color-text-on-paper);
 }
 
+/* A modal dialog (the drawers, the menu, the questions): scrolling inside it or over its backdrop never scrolls the
+   page behind. Where a browser ignores this on a box that doesn't overflow, showModal() still makes the page inert. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
